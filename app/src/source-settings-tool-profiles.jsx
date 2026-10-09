@@ -29,6 +29,13 @@ const PERMISSION_ITEMS = [
   { value: 'plan', label: t('Plan mode') },
 ];
 
+/** The editor's Model items: Keep current, the running core's models, and a saved model it does not list (a profile
+ *  made under another core keeps its model, and the select shows it rather than a blank trigger). */
+export function profileModelItems(models, saved) {
+  const items = [{ value: '', label: t('Keep current') }, ...(models || []).map(model => ({ value: model.model, label: model.displayName || model.model }))];
+  return saved && !items.some(item => item.value === saved) ? [...items, { value: saved, label: saved }] : items;
+}
+
 function useNestedDialogMark() {
   useEffect(() => {
     const parent = document.querySelector('.ss-settings-dialog');
@@ -50,7 +57,7 @@ function ProfileEditor({ initial, catalog, models, onCancel, onSubmit }) {
     try { await onSubmit(form); }
     catch (failure) { setError(failure?.message || SAVE_ERROR); setSaving(false); }
   };
-  const modelItems = [{ value: '', label: t('Keep current') }, ...models.map(model => ({ value: model.model, label: model.displayName || model.model }))];
+  const modelItems = profileModelItems(models, initial?.model);
   const tools = catalog?.tools ?? [], servers = catalog?.servers ?? [];
   return <SourceDialog open size="md" layer={SETTINGS_LAYER} title={initial?.id ? t('Edit profile') : t('New profile')} className="ccmd-dialog tprof-dialog"
     description={t('Turned-off tools are removed from the model’s tool list for sessions using this profile.')}
