@@ -451,6 +451,20 @@ export function movePinned(orderedIds, id, direction) {
   return next;
 }
 
+/**
+ * The stored pinned order after the shown pinned rows were reordered to `shownIds` (Move up / Move down). Pinned
+ * sessions the list hides (archived ones under the Active filter) keep their stored slots: the shown ids take the
+ * slots the shown rows held, in their new order, and an unranked shown id (orderPinned sorts it last) gets a slot
+ * at the end first.
+ */
+export function withPinnedOrder(stored = [], shownIds = []) {
+  const list = (Array.isArray(stored) ? stored : []).filter((id) => typeof id === "string");
+  const shown = new Set(shownIds);
+  const full = [...list, ...shownIds.filter((id) => !list.includes(id))];
+  let next = 0;
+  return full.map((id) => (shown.has(id) ? shownIds[next++] : id));
+}
+
 // Host records -> current shared-21 pz/gG. Failed, unread and working are
 // mutually exclusive in that order; approvals may belong to a sub-agent.
 export function nestedStubCounts(rows, { isFailed = row => row.hasError, isUnread = row => row.isUnread, isWorking = row => row.liveStatus === 'running' || row.isResponding === true } = {}) {

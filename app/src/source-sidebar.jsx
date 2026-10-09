@@ -12,7 +12,7 @@ import { SourceMenu, menuTriggerProps } from "./source-menu";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import {
   buildSidebarGroups, buildNestedRuns, bulkTargets, CLASSIC_GROUP_OPTIONS, CLASSIC_SORT_OPTIONS,
-  CLASSIC_STATUS_OPTIONS, clearSidebarFilters, folderName, hasSidebarFilters, lineageKind, movePinned,
+  CLASSIC_STATUS_OPTIONS, clearSidebarFilters, folderName, hasSidebarFilters, lineageKind, movePinned, withPinnedOrder,
   nestedStubCounts, nestedRowNeedsInput, splitNestedRun, normalizeSidebarPreferences, sessionArchived, sessionName, sessionState, showAllSessionsPreferences, sidebarEmptyHasNonDefaultFilter, sidebarEmptyVariant, truncateRuns,
   showFewerRows, stickyListFailure, toggleCollapsedGroup, expandCollapsedGroup,
   OTHER_PROJECT_KEY, customOrderKey, isCustomOrderKey, moveSection, sectionOrderKeys, sortSectionsAlphabetically, withSectionOrder,
@@ -1331,7 +1331,7 @@ export function SourceSidebar({
       void (async () => {
         try {
           if (outcome.type === "pin") await onSessionAction("pin", session);
-          await onSessionAction("pinned-order", session, { ids: order });
+          await onSessionAction("pinned-order", session, { ids: withPinnedOrder(pinnedOrder, order) });
         } catch (reason) { notifyError(reason); }
       })();
     },
@@ -1896,7 +1896,7 @@ export function SourceSidebar({
       onClose={() => setMenu(null)}>
       {menu.kind === "filter" && <SourceSidebarFilterMenu showMetadataOption={false} preferences={preferences} onChange={updatePreferences} onClose={() => setMenu(null)} knownFolders={folders} customGroups={customGroups} />}
       {menu.kind === "session" && <SourceSidebarSessionMenu session={menu.session} metadata={sessionMetadata[menu.session.id]} customGroups={customGroups}
-        state={state} onAction={runAction} onClose={() => setMenu(null)} onRename={() => setRenaming(menu.session.id)}
+        state={state} onAction={(action, target, payload) => runAction(action, target, action === "pinned-order" ? { ...payload, ids: withPinnedOrder(pinnedOrder, payload.ids) } : payload)} onClose={() => setMenu(null)} onRename={() => setRenaming(menu.session.id)}
         unarchiving={!!unarchiving?.has?.(menu.session.id)}
         onCreateGroup={onCreateGroup ? (targets) => setGroupDialog({ kind: "create", sessions: targets }) : undefined} sectionCopy={sectionsModel ? sectionMessages : null}
         onDelete={(target) => requestDelete([target])} onFork={(target) => runAction("fork", target)} forkUnavailable={forkUnavailable}
