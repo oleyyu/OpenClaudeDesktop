@@ -183,3 +183,16 @@ test('cov8-02 vetTrackingRef: an unconfirmable probe refuses, a git that cannot 
     });
   } finally { console.warn = warn; }
 });
+
+test('a repository opened through a symlinked path still keeps its worktree folder out of its status', async (t) => {
+  const { base, root } = await repo();
+  t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+  // macOS: /tmp → /private/tmp, a project under a linked folder; git reports the real top level.
+  const link = path.join(base, 'link');
+  fs.symlinkSync(root, link);
+  const folder = path.join(link, '.code', 'worktrees');
+  fs.mkdirSync(folder, { recursive: true });
+  await git(link, 'worktree', 'add', '-q', '-b', 'deepseek/y', path.join(folder, 'repo-2'), 'HEAD');
+  assert.equal(await worktrees.excludeWorktreeRoot(run, link, folder), '/.code/worktrees/');
+  assert.equal((await git(link, 'status', '--porcelain')).stdout.trim(), '');
+});
