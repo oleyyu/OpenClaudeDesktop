@@ -63,7 +63,8 @@ export function workflowSummary(summary,description){
  const shown=localizeBridgeText(text);
  return shown!==text?shown:text[0].toUpperCase()+text.slice(1);
 }
-export function mergeWorkflow(runs,run){const existing=runs.find(r=>r.id===run.id);if(existing&&existing.sequence>=run.sequence)return runs;return [...runs.filter(r=>r.id!==run.id),run].sort((a,b)=>a.startedAt-b.startedAt);}
+// A resume keeps the run id and starts its sequence over: a later attempt (startedAt) wins, an earlier one never returns.
+export function mergeWorkflow(runs,run){const existing=runs.find(r=>r.id===run.id);if(existing&&(existing.startedAt>run.startedAt||existing.startedAt===run.startedAt&&existing.sequence>=run.sequence))return runs;return [...runs.filter(r=>r.id!==run.id),run].sort((a,b)=>a.startedAt-b.startedAt);}
 // Compressed grids use Claude's four buckets plus skipped; stalled is included in running when compressed.
 export function workflowCells(agents,capacity){
  if(agents.length<=capacity)return agents;
