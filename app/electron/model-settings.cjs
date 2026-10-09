@@ -139,7 +139,8 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       try { base = await relayProxy.start(connection.relayBaseURL); }
       catch (error) { console.warn("Couldn’t start the relay forwarder; using the relay directly:", error?.message || error); base = connection.relayBaseURL; }
     } else await relayProxy.stop();
-    profile.setCoreEnv("DEEPSEEK_API_KEY", key ?? inherited.DEEPSEEK_API_KEY ?? null);
+    // The key the app was launched with is for DeepSeek (or its own base URL), never for a third-party relay.
+    profile.setCoreEnv("DEEPSEEK_API_KEY", key ?? (relay ? null : inherited.DEEPSEEK_API_KEY) ?? null);
     profile.setCoreEnv("DEEPSEEK_BASE_URL", base);
     await exportSearchKey(relay, keys);
   }

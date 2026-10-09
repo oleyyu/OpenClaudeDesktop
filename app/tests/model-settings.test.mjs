@@ -526,3 +526,26 @@ test('a key that can’t be stored saves nothing: no relay connection or provide
   await assert.rejects(settings.run({ op: 'provider-save', provider: { route: 'gw', baseURL: 'https://gw.example.com/v1', models: ['m1'] }, apiKey: 'sk-secret' }), /Secure storage/);
   assert.deepEqual((await settings.run({ op: 'providers-read' })).providers, [], 'the provider is not saved without its key');
 });
+
+test('relay mode never sends the launch environment’s DeepSeek key to the relay', async (t) => {
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-relay-inherit-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const saved = { key: process.env.DEEPSEEK_API_KEY, url: process.env.DEEPSEEK_BASE_URL };
+  process.env.DEEPSEEK_API_KEY = 'sk-official-from-shell'; delete process.env.DEEPSEEK_BASE_URL;
+  t.after(() => { if (saved.key !== undefined) process.env.DEEPSEEK_API_KEY = saved.key; else delete process.env.DEEPSEEK_API_KEY; if (saved.url !== undefined) process.env.DEEPSEEK_BASE_URL = saved.url; });
+  let readable = true;
+  const safeStorage = { isEncryptionAvailable: () => true, encryptString: text => Buffer.from(`enc:${Buffer.from(text).toString('base64')}`),
+    decryptString: buffer => { if (!readable) throw new Error('Keychain access denied'); return Buffer.from(String(buffer).slice(4), 'base64').toString(); } };
+  const env = new Map();
+  const profile = { setManagedRow: async () => {}, removeManagedRow: async () => {}, setCoreEnv: (key, value) => { if (value == null) env.delete(key); else env.set(key, value); } };
+  const forwarder = { async start() { return 'http://127.0.0.1:4321/anthropic'; }, async stop() {} };
+  const options = { getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir, relayProxy: forwarder };
+  await createModelSettings(options).run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://relay.test/anthropic' }, relayKey: 'sk-relay' });
+  // Next launch: the saved keys can't be read (Keychain denied), the connection still says relay.
+  env.clear(); readable = false;
+  const next = createModelSettings({ ...options, app: { whenReady: async () => {} } });
+  await next.ready();
+  assert.equal(env.get('DEEPSEEK_BASE_URL'), 'http://127.0.0.1:4321/anthropic');
+  assert.notEqual(env.get('DEEPSEEK_API_KEY'), 'sk-official-from-shell', 'the official key must not go to the relay');
+});
