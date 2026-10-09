@@ -315,3 +315,20 @@ for (const stopReason of ['cancelled', 'error']) test(`members still queued when
   for (const event of history) replay.apply(event)
   assert.deepEqual(agents(runOf(replay)).map(agent => agent.state), ['skipped', 'skipped'])
 })
+
+test('a resumed run’s new attempt retires the Resume of the card it continues, live and in replay', () => {
+  const history = [], p = new ThreadProjector({ threadId: 'resumed' })
+  const apply = event => { history.push(event); return p.apply(event) }
+  startWorkflow({ apply }, 'w1', { script: 'export const meta={name:"audit",description:"Audit"};return 1' })
+  apply(ev('tool-workflow/run-start', { runId: 'wf_resume-me', attemptId: 'attempt-1', name: 'audit', scriptPath: '/saved/audit.js' }))
+  apply(ev('tool-workflow/run-end', { runId: 'wf_resume-me', attemptId: 'attempt-1', stopReason: 'cancelled', error: 'workflow run cancelled' }))
+  assert.equal(runOf(p).resumable, true)
+  apply(ev('tool/call', { turn: 1, step: 2, callId: 'w2', name: 'Workflow', arguments: JSON.stringify({ scriptPath: '/saved/audit.js', resumeFromRunId: 'wf_resume-me' }) }))
+  const notes = apply(ev('tool-workflow/run-start', { runId: 'wf_resume-me', attemptId: 'attempt-2', name: 'audit', scriptPath: '/saved/audit.js' }))
+  assert.equal(runOf(p, 'w2').id, 'attempt-2')
+  assert.equal(runOf(p).resumable, false)
+  assert.ok(notes.some(note => note.params.item?.id === 'w1' && note.params.item.workflowRun.resumable === false), 'the earlier card is re-announced without Resume')
+  const replay = new ThreadProjector({ threadId: 'resumed' })
+  for (const event of history) replay.apply(event)
+  assert.equal(runOf(replay).resumable, false)
+})

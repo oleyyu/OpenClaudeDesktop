@@ -1208,15 +1208,17 @@ export class ThreadProjector {
   applyWorkflow(notes, data, reduce, starting = false) {
     const key = data?.attemptId ?? data?.runId
     let entry = typeof key === 'string' ? this.workflowItems.get(key) : undefined
-    if (starting && entry) {
-      const index = entry.turn.items.findIndex(item => item.id === entry.itemId)
-      const prior = entry.turn.items[index]?.workflowRun
+    // A new attempt has its own key: the card it continues is the latest one of the same engine run id.
+    const previous = starting ? entry ?? (typeof data?.runId === 'string' ? this.workflowItems.get(data.runId) : undefined) : undefined
+    if (previous) {
+      const index = previous.turn.items.findIndex(item => item.id === previous.itemId)
+      const prior = previous.turn.items[index]?.workflowRun
       if (prior?.attemptId !== data.attemptId) {
         // A new attempt of the same run (Workflow resumeFromRunId): the earlier card has been resumed.
         if (prior?.resumable === true) {
-          const item = { ...entry.turn.items[index], workflowRun: { ...prior, resumable: false, sequence: (prior.sequence ?? 0) + 1 } }
-          entry.turn.items[index] = item
-          if (entry.turn.id) notes.push({ method: item.status === 'inProgress' ? 'item/started' : 'item/completed', params: { item, threadId: this.threadId, turnId: entry.turn.id } })
+          const item = { ...previous.turn.items[index], workflowRun: { ...prior, resumable: false, sequence: (prior.sequence ?? 0) + 1 } }
+          previous.turn.items[index] = item
+          if (previous.turn.id) notes.push({ method: item.status === 'inProgress' ? 'item/started' : 'item/completed', params: { item, threadId: this.threadId, turnId: previous.turn.id } })
         }
         entry = undefined
       }
