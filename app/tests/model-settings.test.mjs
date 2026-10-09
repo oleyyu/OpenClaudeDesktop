@@ -549,3 +549,25 @@ test('relay mode never sends the launch environment’s DeepSeek key to the rela
   assert.equal(env.get('DEEPSEEK_BASE_URL'), 'http://127.0.0.1:4321/anthropic');
   assert.notEqual(env.get('DEEPSEEK_API_KEY'), 'sk-official-from-shell', 'the official key must not go to the relay');
 });
+
+test('relay forwarder: stop returns at once while a reply is still streaming (switching to the official API never waits for a turn)', async (t) => {
+  const http = await import('node:http');
+  const { createRelayProxy } = require('../electron/relay-proxy.cjs');
+  let finish;
+  const relay = http.createServer((req, res) => { res.writeHead(200, { 'content-type': 'text/event-stream' }); res.write('data: one\n\n'); finish = () => res.end('data: two\n\n'); });
+  await new Promise(resolve => relay.listen(0, '127.0.0.1', resolve));
+  const proxy = createRelayProxy();
+  t.after(() => { relay.closeAllConnections(); relay.close(); });
+  const base = await proxy.start(`http://127.0.0.1:${relay.address().port}/anthropic`);
+  const response = await fetch(`${base}/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  const reader = response.body.getReader();
+  assert.equal(new TextDecoder().decode((await reader.read()).value), 'data: one\n\n');
+  const outcome = await Promise.race([proxy.stop().then(() => 'stopped'), new Promise(resolve => setTimeout(() => resolve('waiting'), 1000))]);
+  assert.equal(outcome, 'stopped');
+  assert.equal(proxy.running, false);
+  // The turn already under way still gets the rest of its reply.
+  finish();
+  let rest = '';
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) rest += new TextDecoder().decode(chunk.value);
+  assert.equal(rest, 'data: two\n\n');
+});

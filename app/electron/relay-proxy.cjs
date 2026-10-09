@@ -61,7 +61,9 @@ function createRelayProxy({ fetchImpl = (...args) => globalThis.fetch(...args) }
   async function stop() {
     const current = server;
     server = null; target = null; port = 0;
-    if (current) await new Promise(resolve => current.close(() => resolve()));
+    // No new connections from here on; a reply still streaming (a running turn) finishes on its own. Waiting for it
+    // would hold a Settings › Models save until the turn ends.
+    if (current) { current.close(); current.closeIdleConnections?.(); }
   }
 
   return { start, stop, get running() { return !!server; } };
