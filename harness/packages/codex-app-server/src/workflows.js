@@ -229,6 +229,12 @@ export function workflowInterrupted(run, time) {
   return settle(clone(run), 'stopped', time, 'Stopped')
 }
 
+/** A background run whose job the registry no longer has: it ended with the core process that ran it. */
+export function workflowJobLost(run, time) {
+  if (run.status !== 'running' || !run.background) return run
+  return settle(clone(run), 'stopped', time, 'Stopped')
+}
+
 function settle(run, status, time, summary) {
   run.status = status
   run.completedAt = time

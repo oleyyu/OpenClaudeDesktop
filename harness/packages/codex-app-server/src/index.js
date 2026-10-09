@@ -730,8 +730,15 @@ export function apply(ctx, config) {
    * outcome of settled ones; a job the registry no longer has died with its process.
    */
   function syncJobs(holder, { quiet = false } = {}) {
-    if ((!holder?.projector?.jobs?.size && !holder?.projector?.agentJobs?.size) || !ctx.get('jobs')) return
+    const workflowJobs = holder?.projector?.runningWorkflowJobs?.() ?? []
+    if ((!holder?.projector?.jobs?.size && !holder?.projector?.agentJobs?.size && !workflowJobs.length) || !ctx.get('jobs')) return
     const views = ownedJobs(holder.id)
+    // A background model workflow is a job too: one the registry no longer has ended with the process that ran it.
+    for (const { runId, jobId } of workflowJobs) {
+      if (views.some((job) => job.id === jobId)) continue
+      const notes = holder.projector.settleWorkflowJob(runId)
+      if (!quiet) emitNotes(notes)
+    }
     // Background commands and background delegations (whose rows run on as their job) alike.
     for (const jobId of holder.projector.trackedJobIds()) {
       const view = views.find((job) => job.id === jobId)

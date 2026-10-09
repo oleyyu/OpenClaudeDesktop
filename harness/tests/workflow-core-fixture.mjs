@@ -56,21 +56,33 @@ export async function core(t, respond) {
     HOME: home, DSH_HOME: path.join(home, 'dsh'), CODE_DESKTOP_CORE_STATE: path.join(home, 'state'),
     DEEPSEEK_BASE_URL: `http://127.0.0.1:${server.address().port}`, DEEPSEEK_API_KEY: 'sk-local-fixture',
   })
-  const client = new CodexClient({ binary: path.join(root, 'bin/codex-app-server.mjs'), initializeTimeout: 60000 })
   const events = []
-  client.on('event', (event) => events.push(event))
+  const connect = async () => {
+    const client = new CodexClient({ binary: path.join(root, 'bin/codex-app-server.mjs'), initializeTimeout: 60000 })
+    client.on('event', (event) => events.push(event))
+    await client.start()
+    return client
+  }
+  let client = null
   t.after(async () => {
-    client.stop()
+    client?.stop()
     for (const res of hanging) res.destroy()
     server.closeAllConnections()
     server.close()
     await rm(home, { recursive: true, force: true })
   })
-  await client.start()
+  client = await connect()
   const models = await client.request('model/list', { limit: 100 })
   const model = models.data.find((entry) => entry.isDefault)?.id ?? models.data[0]?.id
   const workspace = path.join(home, 'ws')
   await mkdir(workspace)
   const thread = async (params = {}) => (await client.request('thread/start', { cwd: workspace, model, approvalPolicy: 'never', sandbox: 'workspace-write', ...params })).thread.id
-  return { client, events, requests, hanging, thread, workspace }
+  // The app's quit and relaunch: the same state folders, a new core process.
+  const restart = async () => {
+    await client.stopAndWait()
+    for (const res of hanging) res.destroy()
+    client = await connect()
+    return client
+  }
+  return { client, events, requests, hanging, thread, workspace, model, restart }
 }

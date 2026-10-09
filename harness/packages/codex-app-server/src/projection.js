@@ -31,7 +31,7 @@ import { readFileSync, statSync } from 'node:fs'
 import { basename, isAbsolute, resolve } from 'node:path'
 import { unifiedDiff } from './diff.js'
 import { promptText, toCodexInputs } from './input.js'
-import { isWorkflowTool, isWorkflowRecord, workflowInterrupted, workflowPhase, workflowRecord, workflowRunOf, workflowToolResult } from './workflows.js'
+import { isWorkflowTool, isWorkflowRecord, workflowInterrupted, workflowJobLost, workflowPhase, workflowRecord, workflowRunOf, workflowToolResult } from './workflows.js'
 import { STRUCTURED_OUTPUT_TOOL } from './structured.js'
 import { AssistantUsageFold, assistantSegmentBlocks } from './assistant-response.js'
 import { SHELL_TOOLS, backgroundJobOf, jobReadOutput, jobStatusOf, killJobOf, noticeJobOf, settledAgentJobItem, settledJobItem, subagentJobOf } from './jobs.js'
@@ -1032,6 +1032,23 @@ export class ThreadProjector {
   workflowPhase(runId, title, time = Date.now()) {
     const notes = []
     if (this.workflowItems.has(runId)) this.applyWorkflow(notes, { runId }, (run) => workflowPhase(run, title, time))
+    return notes
+  }
+
+  /** Background model workflow runs still shown running, with the job that runs each. */
+  runningWorkflowJobs() {
+    const running = new Map()
+    for (const entry of this.workflowItems.values()) {
+      const run = entry.turn.items.find((candidate) => candidate.id === entry.itemId)?.workflowRun
+      if (run?.status === 'running' && run.background && typeof run.jobId === 'string') running.set(run.id, run.jobId)
+    }
+    return [...running].map(([runId, jobId]) => ({ runId, jobId }))
+  }
+
+  /** A background run whose job no longer exists settles as stopped. @returns {any[]} the item notifications */
+  settleWorkflowJob(runId, time = Date.now()) {
+    const notes = []
+    this.applyWorkflow(notes, { runId }, (run) => workflowJobLost(run, time))
     return notes
   }
 
