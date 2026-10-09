@@ -370,8 +370,9 @@ async function comparison(ctx, branch, preferredBase, resolved) {
 }
 
 async function currentBranch(ctx) {
-  const branch = await git(ctx, ['symbolic-ref', '--quiet', '--short', 'HEAD'], { allowed: [0, 1] });
-  return branch.code === 0 ? branch.output.trim() : null;
+  // The full ref, not --short: a branch that shares its name with a tag would read as heads/<name>.
+  const branch = await git(ctx, ['symbolic-ref', '--quiet', 'HEAD'], { allowed: [0, 1] });
+  return branch.code === 0 ? branch.output.trim().replace(/^refs\/heads\//, '') : null;
 }
 
 /** Base branch and ahead/behind for a workspace; null for a non-repository. */
@@ -712,7 +713,7 @@ async function workspaceGitCommits(cwd, { preferredBase, base, limit = 51, trace
 async function workspaceGitBranches(cwd, { trace } = {}) {
   const ctx = await repository(cwd, trace);
   if (!ctx) return [];
-  const listed = await git(ctx, ['for-each-ref', '--format=%(refname:short)', 'refs/heads/'], { paths: true });
+  const listed = await git(ctx, ['for-each-ref', '--format=%(refname:lstrip=2)', 'refs/heads/'], { paths: true });
   return listed.output.split('\n').map((line) => line.trim()).filter(validBranchName);
 }
 

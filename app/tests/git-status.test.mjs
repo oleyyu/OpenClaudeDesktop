@@ -539,3 +539,17 @@ test('main.cjs workspace-info: the branch picker lists branch names as git switc
   const listed = (await git(cwd, ['branch', format])).stdout.trim().split('\n').sort();
   assert.deepEqual(listed, ['feature', 'main']);
 });
+
+test('branches named like a tag keep their own names (Compare against, current branch)', async (t) => {
+  const { cwd } = await remoteRepo(t);
+  await git(cwd, ['branch', 'feature']);
+  await git(cwd, ['tag', 'feature']);
+  await git(cwd, ['checkout', '-q', '-b', 'work']);
+  await git(cwd, ['tag', 'work']);
+  await commitFile(cwd, 'work.txt', 'work\n');
+  assert.deepEqual((await workspaceGitBranches(cwd)).sort(), ['feature', 'main', 'work']);
+  const listed = await workspaceGitCommits(cwd, { base: 'feature' });
+  assert.equal(listed.base, 'feature');
+  assert.deepEqual(listed.commits.map((entry) => entry.subject), ['Fixture baseline'], 'compared against the branch, not HEAD');
+  assert.equal((await workspaceGitStatus(cwd)).branch, 'work');
+});
