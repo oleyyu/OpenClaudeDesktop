@@ -593,3 +593,13 @@ test("connector add/remove: a dotted name stays one config key", async () => {
   await ops.run({ operation: "mcp-add", name: "fx-new", command: "npx" });
   assert.equal(requests.at(-2).params.edits[0].keyPath, "mcp_servers.fx-new");
 });
+
+test("connector add: the app's own tools server name is refused", async () => {
+  const requests = [];
+  const client = connectorClient(requests);
+  const ops = createCustomizeOperations({ getClient: () => client, getConfig: () => ({ threadIds: [], archivedThreadIds: [] }), knownCwd: (cwd) => cwd });
+  await ops.run({ operation: "mcp" });
+  // Hidden from the listing (Settings › Code controls it), and never written to the user's config.
+  await assert.rejects(ops.run({ operation: "mcp-add", name: "code_desktop", command: "evil" }), /code_desktop/);
+  assert.equal(requests.some((r) => r.method === "config/batchWrite"), false);
+});
