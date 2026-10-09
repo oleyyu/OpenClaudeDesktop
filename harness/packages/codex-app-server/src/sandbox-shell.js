@@ -37,7 +37,9 @@ export default class CodeDesktopSandbox extends LocalSandboxProvider {
 
   runnerArgv(runner, policy) {
     if (runner !== 'seatbelt') return super.runnerArgv(runner, policy)
-    const forms = ['(version 1)', '(allow default)', '(deny file-write*)', '(allow file-write* (literal "/dev/null"))']
+    // The process's own stdio devices: `> /dev/stderr` or a `>(…)` substitution reopens an fd it already holds (macOS
+    // dups it with the original access), so denying them only turns harmless commands into escalation cards.
+    const forms = ['(version 1)', '(allow default)', '(deny file-write*)', '(allow file-write* (literal "/dev/null") (literal "/dev/stdout") (literal "/dev/stderr") (regex #"^/dev/fd/[0-9]+$"))']
     const roots = writableRoots(policy)
     if (roots.length) forms.push(`(allow file-write* ${roots.map((root) => `(subpath ${sbplString(root)})`).join(' ')})`)
     return [this.seatbeltExec(), '-p', forms.join(' ')]
