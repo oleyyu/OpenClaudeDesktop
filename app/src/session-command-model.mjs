@@ -145,7 +145,8 @@ export function parseSessionCommand(text, context={}) {
   if(skill)return {id:skill.name,args:value.slice(named[0].length).trim(),requested:named[1].toLowerCase(),command:null,skill,suggestion:null,error:null};
   const core=named&&!findCommand(named[1].toLowerCase())?findCore(named[1].toLowerCase(),context):null;
   if(core)return {id:core.name,args:value.slice(named[0].length).trim(),requested:named[1].toLowerCase(),command:null,skill:null,custom:null,coreCommand:core,suggestion:null,error:/[\r\n]/.test(value)?t('/{command} only works on a single line. Remove the extra lines and try again.',{command:named[1].toLowerCase()}):null};
-  const match=/^\/([a-z0-9][a-z0-9_-]*)\b/i.exec(value);
+  // The name takes every name character (as `named` above); a \b here backtracked, so '/compact-' was /compact '-'.
+  const match=/^\/([a-z0-9][a-z0-9_:.-]*)/i.exec(value);
   if(!match || value[match[0].length]==='/')return null;
   const requested=match[1].toLowerCase(),command=findCommand(requested),id=command?.id||requested,args=value.slice(match[0].length).trim();
   const suggestion=command?null:commandSuggestion(requested);

@@ -86,7 +86,7 @@ test('a known skill parses with no error and exposes the skill; unknown names st
  assert.match(parse('/nope',{skills}).error,/isn’t a command here/);
  assert.equal(parse('/review x',{skills}).command.id,'review','a host command wins over a same-named skill');
  assert.equal(parse('/fx:lint src',{skills}).skill.name,'fx:lint','a plugin-qualified skill name parses whole');
- assert.equal(parse('/pdf:x',{skills}).error,'/pdf isn’t a command here.','a longer token is not the pdf skill');
+ assert.equal(parse('/pdf:x',{skills}).error,'/pdf:x isn’t a command here.','a longer token is not the pdf skill');
 });
 // cc43287c9-BMbiZYzF.js:28880-28916 vG.
 test('/plan follows vG: switch, pane, draft and the already-in-plan notices',()=>{
@@ -168,4 +168,20 @@ test("slash menu: headers first, rows, then the loading skeleton; an overriding 
   const custom = rows.filter((row) => row.kind === 'custom');
   assert.deepEqual(custom.map((row) => [row.id, row.subtitle]), [['pdf', CUSTOM_COMMAND_SUBTITLE], ['pdq', undefined]]);
   assert.equal(rows.some((row) => row.kind === 'skill' && row.id === 'pdf'), false, 'the overridden skill stays hidden');
+});
+
+test("a command name runs to its last name character: '/compact-' or '/plugin:foo' is not /compact or /plugin with arguments", () => {
+  // The name used to backtrack to a word boundary, so '/compact-' compacted with the instructions "-" and '/model:x'
+  // asked for model ":x".
+  for (const [text, requested] of [["/compact-", "compact-"], ["/plugin:foo", "plugin:foo"], ["/model:x", "model:x"], ["/clear.", "clear."]]) {
+    const parsed = parse(text, {});
+    assert.equal(parsed.command, undefined, text);
+    assert.equal(parsed.requested, requested, text);
+    assert.equal(parsed.error, `/${requested} isn’t a command here.`, text);
+  }
+  // Arguments still start right after the name, with or without a space.
+  assert.equal(parse("/compact keep the plan", {}).args, "keep the plan");
+  assert.equal(parse("/compact保留计划", {}).args, "保留计划");
+  assert.equal(parse("/compact保留计划", {}).command?.id, "compact");
+  assert.equal(parse("/usr/bin/env", {}), null, "a path is not a command");
 });
