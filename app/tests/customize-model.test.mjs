@@ -570,3 +570,26 @@ test("Add connector: env and headers reach the core's config; an OAuth client on
   assert.throws(() => mcpServerConfigValue({ url: "https://m.example/mcp", oauth: { clientId: "", scope: "read" } }), /client ID/);
   assert.equal(mcpRows({ data: [{ name: "sso", runtimeStatus: "failed", codeDesktop: { oauthClientRequired: true } }] })[0].oauthClient, true);
 });
+
+const connectorClient = (requests) => ({ start: async () => {}, request: async (method, params) => {
+  requests.push({ method, params });
+  if (method === "mcpServerStatus/list") return { data: [{ name: "github" }, { name: "my.server" }, { name: "code_desktop" }], nextCursor: null };
+  return {};
+} });
+
+test("connector add/remove: a dotted name stays one config key", async () => {
+  const requests = [];
+  const client = connectorClient(requests);
+  const ops = createCustomizeOperations({ getClient: () => client, getConfig: () => ({ threadIds: [], archivedThreadIds: [] }), knownCwd: (cwd) => cwd });
+  await ops.run({ operation: "mcp" });
+  // Unquoted, `mcp_servers.my.server` is key `server` of a server `my`, and `github.env` is the github server's env table.
+  await ops.run({ operation: "mcp-remove", name: "my.server" });
+  assert.deepEqual(requests.at(-2).params.edits, [{ keyPath: 'mcp_servers."my.server"', value: null, mergeStrategy: "replace" }]);
+  await ops.run({ operation: "mcp-remove", name: "github.env" });
+  assert.deepEqual(requests.at(-2).params.edits, [{ keyPath: 'mcp_servers."github.env"', value: null, mergeStrategy: "replace" }]);
+  await ops.run({ operation: "mcp-add", name: "new.srv", command: "npx" });
+  assert.equal(requests.at(-2).params.edits[0].keyPath, 'mcp_servers."new.srv"');
+  // Plain names keep the plain key path the bridges parse.
+  await ops.run({ operation: "mcp-add", name: "fx-new", command: "npx" });
+  assert.equal(requests.at(-2).params.edits[0].keyPath, "mcp_servers.fx-new");
+});
