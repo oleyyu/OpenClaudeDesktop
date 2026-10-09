@@ -2391,6 +2391,8 @@ export function apply(ctx, config) {
     let descendants = []
     try { descendants = descendantIds(ctx.agents.list?.() ?? [], thread.id) } catch {}
     for (const id of descendants) if (ctx.agents.get?.(id)?.status === 'running') runningChildren = true
+    // A manual workflow run (codeDesktop/workflow/startScript) is the parent of its agents until released.
+    if (workflowExecutions.holds(thread)) runningChildren = true
     let queued = 0
     try { queued = thread.agent.inbox?.nextTurn?.length ?? 0 } catch {}
     return mustStayLoaded({
