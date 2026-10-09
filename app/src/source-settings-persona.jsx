@@ -28,6 +28,15 @@ export function isDefaultPersona(persona) {
   return Object.keys(PERSONA_DEFAULT).every(key => value[key] === PERSONA_DEFAULT[key]);
 }
 
+// The saved persona strings are trimmed (normalizePersona), so the field compares its draft trimmed: "Bob " saved as
+// "Bob" settles on the saved value instead of keeping Save / Discard up for an edit that can never be stored.
+export const personaDraftDirty = (draft, value) => draft.trim() !== value;
+/** The draft once the saved value changes: an untouched field, or an edit the save stored, follows the saved value. */
+export function settledPersonaDraft(current, value, edited) {
+  if (!edited || current.trim() === value) return { draft: value, edited: false };
+  return { draft: current, edited: true };
+}
+
 /** Manual-save text field (SourceProfileSetting pattern) for one persona string. */
 export function PersonaTextField({ label, value, placeholder, maxLength, validate, onSave, help }) {
   const [draft, setDraft] = useState(value), [status, setStatus] = useState({ saving: false, error: '' });
@@ -37,8 +46,8 @@ export function PersonaTextField({ label, value, placeholder, maxLength, validat
     const controller = createManualTextSave({ save: text => latest.current.onSave(text), validate: text => { const error = validate(text); if (error) throw new Error(error); }, onState: setStatus });
     owner.current = controller; return () => { controller.dispose(); owner.current = null; };
   }, []);
-  useEffect(() => { setDraft(current => { if (!edited.current) return value; if (current === value) edited.current = false; return current; }); }, [value]);
-  const dirty = draft !== value;
+  useEffect(() => { setDraft(current => { const next = settledPersonaDraft(current, value, edited.current); edited.current = next.edited; return next.draft; }); }, [value]);
+  const dirty = personaDraftDirty(draft, value);
   return <form className="ss-profile-setting persona-field" onSubmit={event => { event.preventDefault(); event.stopPropagation(); if (!composing.current && dirty) void owner.current?.submit(draft); }}>
     <input ref={input} data-cds="TextInput" className="cds-input cds-reset" aria-label={label} value={draft} maxLength={maxLength} placeholder={placeholder}
       aria-invalid={status.error ? true : undefined} data-invalid={status.error ? '' : undefined}
