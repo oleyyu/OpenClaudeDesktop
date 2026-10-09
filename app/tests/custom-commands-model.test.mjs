@@ -122,3 +122,13 @@ test('store loads per cwd and reloads on change events', async () => {
   unsubscribe();
   assert.equal(handlers.length, 0);
 });
+
+test('a description or hint that YAML would read as null, a number or a boolean survives save and reload as written', () => {
+  for (const description of ['null', '~', '0x10', '1e3', '1.50', '007', 'true', 'Null', '.inf']) {
+    const parsed = parseCommandFile(serializeCommandFile({ description, argumentHint: description, body: 'Do it.' }));
+    assert.equal(parsed.description, description, description);
+    assert.equal(parsed.argumentHint, description, `hint ${description}`);
+  }
+  // Ordinary text stays unquoted in the file.
+  assert.match(serializeCommandFile({ description: 'Review the diff', body: 'x' }), /^---\ndescription: Review the diff\n---/);
+});
