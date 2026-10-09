@@ -44,7 +44,7 @@ export const workflowAgentState=(agent,now)=>agent.state==='progress'?(agent.pro
 export const WORKFLOW_AGENTS_GROUP=Number.MAX_SAFE_INTEGER;
 export function workflowPhases(run,now){
  const groups=new Map();
- const group=(index,title)=>{let p=groups.get(index);if(!p){p={index,title:title??`Phase ${index+1}`,agents:[]};groups.set(index,p);}else if(title&&p.title.startsWith('Phase '))p.title=title;return p;};
+ const generated=new Set(),group=(index,title)=>{let p=groups.get(index);if(!p){p={index,title:title??t('Phase {number}',{number:index+1}),agents:[]};groups.set(index,p);if(title==null)generated.add(p);}else if(title&&generated.delete(p))p.title=title;return p;};
  for(const p of run.workflowProgress||[]){
   if(p.type==='workflow_phase'){group(p.index,p.title);continue;}
   if(p.type!=='workflow_agent')continue;

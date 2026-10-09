@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fork } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mergeWorkflow } from '../src/workflow-progress-model.mjs';
+import { mergeWorkflow, workflowPhases } from '../src/workflow-progress-model.mjs';
+import * as i18n from '../electron/i18n/index.mjs';
 const require = createRequire(import.meta.url);
 const service = require('../electron/workflow-service.cjs');
 
@@ -62,4 +63,16 @@ test('a pause that arrives before the runtime exists is applied, not reported as
     assert.ok(events.some((event) => event.type === 'start'));
     assert.ok(events.some((event) => event.type === 'result'));
   } finally { child.kill('SIGKILL'); await fs.rm(dir, { recursive: true, force: true }); }
+});
+
+// An agent whose phase was never announced sits in a generated phase, whose title reads in the UI language.
+test('a generated phase title is translated and still gives way to the real title', () => {
+  const before = i18n.getLocale();
+  try {
+    i18n.setLocale('zh-CN');
+    const agent = { type: 'workflow_agent', id: 'a', index: 1, state: 'done', label: 'A' };
+    assert.equal(workflowPhases({ workflowProgress: [{ ...agent, phaseIndex: 0 }] }, 0)[0].title, '阶段 1');
+    assert.equal(workflowPhases({ workflowProgress: [{ ...agent, phaseIndex: 2 }, { type: 'workflow_phase', index: 2, title: 'Review' }] }, 0)[0].title, 'Review');
+    assert.equal(workflowPhases({ workflowProgress: [{ type: 'workflow_phase', index: 2, title: 'Phase two' }, { ...agent, phaseIndex: 2, phaseTitle: 'Later' }] }, 0)[0].title, 'Phase two', 'a real title is kept');
+  } finally { i18n.setLocale(before); }
 });
