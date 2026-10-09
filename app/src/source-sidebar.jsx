@@ -555,6 +555,11 @@ function coreHistory(engine) {
   return { name, place: location ? `${name} (${location})` : name };
 }
 
+/** A bulk Delete never deletes the open session (runBulk skips it), so its confirm is built from the rest only. */
+export function bulkDeleteTargets(targets, currentId) {
+  return (targets || []).filter((session) => session?.id !== currentId);
+}
+
 /** sidebar-session.js:13885-13924 delete confirm copy; a core that deletes its own history names it too. */
 export function deleteConfirmCopy(sessions, { engine, intl } = {}) {
   const count = sessions.length, history = deletesCoreHistory(engine) ? coreHistory(engine) : null;
@@ -1906,7 +1911,7 @@ export function SourceSidebar({
             return { pin: pin ? { ...pin, sessions: pinTargets(selectedSessions, sessionMetadata, true) } : null,
               unpin: unpin ? { ...unpin, sessions: pinTargets(selectedSessions, sessionMetadata, false) } : null };
           })(),
-          onBulk: (action, targets, payload) => action === "delete" ? requestDelete(targets) : runBulk(action, targets, payload) } : undefined} />}
+          onBulk: (action, targets, payload) => action === "delete" ? bulkDeleteTargets(targets, current).length && requestDelete(bulkDeleteTargets(targets, current)) : runBulk(action, targets, payload) } : undefined} />}
       {menu.kind === "group" && (() => {
         const group = menu.group, custom = groupMenuKind(group) === "custom";
         const archivable = bulkTargets(group.sessions, { metadata: sessionMetadata, currentId: current, state, action: "archive" });
