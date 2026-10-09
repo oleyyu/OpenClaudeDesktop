@@ -4066,7 +4066,7 @@ app.whenReady().then(async () => {
         if (p.op === "pick") {
           const chosen = extensionPacks.pickOverride();
           if (chosen) return chosen;
-          const result = await dialog.showOpenDialog(win, { title: "Import extension pack", buttonLabel: "Import", properties: ["openFile", "openDirectory"], filters: [{ name: "Extension Pack", extensions: ["zip"] }] });
+          const result = await dialog.showOpenDialog(win, { title: i18n.t("Import extension pack"), buttonLabel: i18n.t("Import"), properties: ["openFile", "openDirectory"], filters: [{ name: i18n.t("Extension pack"), extensions: ["zip"] }] });
           return result.canceled ? null : result.filePaths[0] ?? null;
         }
         if (p.op === "inspect") return extensionPacks.inspect(p.path);

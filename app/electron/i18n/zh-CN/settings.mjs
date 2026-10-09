@@ -887,6 +887,8 @@ export default {
   'Drop to import': '松开即可导入',
   'Add another agent with an extension pack': '用扩展包添加其他智能体',
   'Import extension pack…': '导入扩展包…',
+  'Import extension pack': '导入扩展包',
+  'Extension pack': '扩展包',
   'Extension packs': '扩展包',
   'Add another agent': '添加其他智能体',
   'No extension packs yet': '还没有扩展包',
