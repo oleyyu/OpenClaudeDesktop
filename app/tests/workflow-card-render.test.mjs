@@ -97,3 +97,13 @@ test('a core\'s own run: Pause only where the core pauses it (Qwen), Resume only
   assert.doesNotMatch(card({ run: { ...stopped, resumable: undefined }, onResume: async () => {} }), /Resume this workflow/);
   assert.doesNotMatch(card({ run: stopped }), /Resume this workflow/, 'no resume without a handler');
 });
+
+test('the card\'s token total reads in the UI language', async () => {
+  const i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
+  const before = i18n.getLocale();
+  try {
+    i18n.setLocale('zh-CN');
+    const html = card({ run: run({ usage: { totalTokens: 1200 } }) });
+    assert.match(html, /<span class="swf-value">1\.2k<\/span> 个 token/);
+  } finally { i18n.setLocale(before); }
+});
