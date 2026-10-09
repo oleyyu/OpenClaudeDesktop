@@ -511,3 +511,18 @@ test('relay mode: web search reads its own key variable, set only from the offic
   assert.equal(env.has('CODE_DESKTOP_DEEPSEEK_SEARCH_KEY'), false);
   assert.equal(env.get('DEEPSEEK_API_KEY'), 'sk-official');
 });
+
+test('a key that can’t be stored saves nothing: no relay connection or provider without its key', async (t) => {
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-nostore-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const safeStorage = { isEncryptionAvailable: () => false, encryptString: () => { throw new Error('unavailable'); }, decryptString: () => { throw new Error('unavailable'); } };
+  const env = new Map(), rows = new Map();
+  const profile = { setManagedRow: async (id, row) => { rows.set(id, row); }, removeManagedRow: async id => { rows.delete(id); }, setCoreEnv: (key, value) => { if (value == null) env.delete(key); else env.set(key, value); } };
+  const forwarder = { async start() { return 'http://127.0.0.1:4321/anthropic'; }, async stop() {} };
+  const settings = createModelSettings({ getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir, relayProxy: forwarder });
+  await assert.rejects(settings.run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://relay.test/anthropic' }, relayKey: 'sk-relay' }), /Secure storage/);
+  assert.equal((await settings.run({ op: 'connection-read' })).mode, 'official', 'relay mode is not saved without its key');
+  await assert.rejects(settings.run({ op: 'provider-save', provider: { route: 'gw', baseURL: 'https://gw.example.com/v1', models: ['m1'] }, apiKey: 'sk-secret' }), /Secure storage/);
+  assert.deepEqual((await settings.run({ op: 'providers-read' })).providers, [], 'the provider is not saved without its key');
+});

@@ -177,8 +177,11 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
   async function applyProviders(providers, keys, previousRoutes) {
     const profile = getHarnessProfile();
     if (!profile?.setManagedRow) throw new Error("Custom providers need Settings › Harness, which isn’t available.");
-    writeAtomic(providersFile(), JSON.stringify({ version: 1, providers }, null, 2) + "\n", 0o644);
+    // The keys first, as connection-save: a provider is never saved without the key it was given.
+    const previousKeys = readKeys();
     writeKeys(keys);
+    try { writeAtomic(providersFile(), JSON.stringify({ version: 1, providers }, null, 2) + "\n", 0o644); }
+    catch (error) { try { writeKeys(previousKeys); } catch {} throw error; }
     const row = prefs().providerOverlayRow(providers);
     if (row) await profile.setManagedRow(prefs().PROVIDER_ROW_ID, row);
     else await profile.removeManagedRow(prefs().PROVIDER_ROW_ID);
@@ -384,8 +387,12 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
         } else if (value === null) delete keys[name];
       }
       if (connection.mode === "relay" && !keys[prefs().CONNECTION_KEY_RELAY]) throw new Error("Enter the relay’s API key.");
-      writeAtomic(connectionFile(), JSON.stringify({ version: 1, ...connection }, null, 2) + "\n", 0o644);
+      // The key first: a failed key write (no secure storage) changes nothing, and a failed connection.json write
+      // puts the previous keys back, so relay mode is never saved without its key.
+      const previousKeys = readKeys();
       writeKeys(keys);
+      try { writeAtomic(connectionFile(), JSON.stringify({ version: 1, ...connection }, null, 2) + "\n", 0o644); }
+      catch (error) { try { writeKeys(previousKeys); } catch {} throw error; }
       await exportConnection(connection, keys);
       // The relay's model ids replace the adapter's catalog (deepseek-flash / deepseek-v4-pro).
       const profile = getHarnessProfile(), row = prefs().relayCatalogRow(connection);
