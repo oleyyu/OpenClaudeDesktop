@@ -2066,7 +2066,9 @@ async function openPopout({ sessionId, pane, position, bounds: requestedBounds =
   window.webContents.on("will-navigate", (e, url) => {
     if (url !== window.webContents.getURL()) e.preventDefault();
   });
-  window.webContents.once("destroyed", () => void fileSearch.cancelAll());
+  // Only this window's own searches (fileSearchScope keys them by sender id); the other windows' keep running.
+  const senderId = window.webContents.id;
+  window.webContents.once("destroyed", () => void fileSearch.cancelScopes(`${senderId}:`));
   window.on("closed", () => {
     if (popouts.get(key) === entry) popouts.delete(key);
     if (appPane) windowRegistry.unregister(window);
@@ -2291,8 +2293,10 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   watchZoom(window);
   attachContextMenu(window);
-  window.webContents.on("render-process-gone", () => void fileSearch.cancelAll());
-  window.webContents.once("destroyed", () => void fileSearch.cancelAll());
+  // Only this window's own searches (fileSearchScope keys them by sender id); the other windows' keep running.
+  const senderId = window.webContents.id;
+  window.webContents.on("render-process-gone", () => void fileSearch.cancelScopes(`${senderId}:`));
+  window.webContents.once("destroyed", () => void fileSearch.cancelScopes(`${senderId}:`));
   window.webContents.on("will-navigate", (e, url) => {
     if (url !== window.webContents.getURL()) e.preventDefault();
   });

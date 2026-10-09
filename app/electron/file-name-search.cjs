@@ -158,9 +158,20 @@ function createFileNameSearch(options = {}) {
     await Promise.all(done);
   }
 
+  // One window's searches (scopes `${senderId}:…`), when that window goes away; the other windows' keep running.
+  async function cancelScopes(prefix) {
+    const jobs = [...active, ...pending].filter(job => typeof prefix === 'string' && prefix && job.request.scope.startsWith(prefix));
+    const done = jobs.map(job => new Promise(resolve => {
+      const original = job.resolve;
+      job.resolve = value => { original(value); resolve(); };
+    }));
+    for (const job of jobs) fail(job, 'CANCELLED', 'Filename search was cancelled.');
+    await Promise.all(done);
+  }
+
   async function close() { closed = true; await cancelAll(); }
 
-  return { search, cancel, cancelAll, dispose: close, close, limits: { ...limits } };
+  return { search, cancel, cancelAll, cancelScopes, dispose: close, close, limits: { ...limits } };
 }
 
 module.exports = { createFileNameSearch, DEFAULT_LIMITS };

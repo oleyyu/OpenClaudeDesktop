@@ -343,3 +343,19 @@ test('a trailing-slash query with folders lists real folders, scoped and safe', 
   const noSlash = await api.search({ ...request(f.root, 'src'), folders: true });
   assert.ok(noSlash.matches.every(match => match.directory === false), 'folders only for a query ending in /');
 });
+
+test('closing one window cancels only its own searches (cancelScopes by sender prefix)', async t => {
+  const f = await fixture(t), api = service(t);
+  await f.file('Needle.js');
+  const mine = api.search(request(f.root, 'needle', '7:files:main'));
+  const other = api.search(request(f.root, 'needle', '17:files:main'));
+  await api.cancelScopes('7:');
+  assert.equal((await mine).error.code, 'CANCELLED');
+  const result = await other;
+  assert.equal(result.error, null, 'window 17 keeps its search');
+  assert.deepEqual(names(result), ['Needle.js']);
+  // main.cjs: a window going away (closed, or its renderer gone) cancels its own sender's scopes only.
+  const main = await fs.readFile(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(main, /\.(?:on|once)\("(?:destroyed|render-process-gone)"[^\n]*fileSearch\.cancelAll\(\)/);
+  assert.match(main, /fileSearch\.cancelScopes\(`\$\{senderId\}:`\)/);
+});
