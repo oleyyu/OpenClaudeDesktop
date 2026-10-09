@@ -286,7 +286,8 @@ export function apply(ctx, config) {
       this.queue = new ThreadQueue({ agent: this.agent, threadId: this.id, notify, inputMessage: (input) => inputMessage(input, this), imagePath })
       // {controller, startedTurn} while a thread/compact/start runs.
       this.compaction = null
-      // {turnId, previous} while a review/start turn runs: its read-only permission, and the one it replaced.
+      // {turnId, messageId, dshTurn, previous} while a review/start turn runs: its prompt, the Harness turn that claimed
+      // it, and the permission the read-only review replaced.
       this.review = null
     }
 
@@ -334,7 +335,9 @@ export function apply(ctx, config) {
         // An ask the approval service settled without a card (policy, abort) leaves its id.
         this.askedCalls.clear()
         const ended = this.projector.byDshTurn.get(event.data.turn)
-        if (this.review && (ended?.id === this.review.turnId || ended?.review)) void endReview(this)
+        // The turn that claimed the review prompt ends the review even when the prompt never reached the log (stopped or
+        // blocked at its start): nothing else would leave the read-only review mode.
+        if (this.review && (ended?.id === this.review.turnId || ended?.review || event.data.turn === this.review.dshTurn)) void endReview(this)
       }
       // A child this thread just made: its label names it in thread/list.
       if (event.type === 'subagent/catalog') rememberLabel(event.data?.childId, this.projector.childLabel(event.data?.childId))
@@ -796,7 +799,13 @@ export function apply(ctx, config) {
   // Queue edits, follow-ups and claims all surface as inbox events.
   ctx.on('agent/inbox/inserted', ({ agent }) => byAgent(agent)?.queue.changed())
   ctx.on('agent/inbox/discarded', ({ agent }) => byAgent(agent)?.queue.changed())
-  ctx.on('agent/inbox/claimed', ({ agent, message }) => byAgent(agent)?.queue.claimed(message))
+  ctx.on('agent/inbox/claimed', ({ agent, message, turn }) => {
+    const thread = byAgent(agent)
+    if (!thread) return
+    thread.queue.claimed(message)
+    // The Harness turn that owns the review prompt (startReview): its end is the review's end.
+    if (thread.review && message?.id === thread.review.messageId) thread.review.dshTurn = turn
+  })
   ctx.on('agent/error', ({ agent, turn, error }) => {
     const thread = byAgent(agent)
     if (!thread) return
@@ -1305,7 +1314,7 @@ export function apply(ctx, config) {
     const previous = thread.permission.mode === 'review' ? thread.beforeReview ?? null : { ...thread.permission, extraRoots: [...thread.permission.extraRoots] }
     // on-request: the read-only sandbox is the guard, so no Ask-mode card stops the review's git commands.
     Object.assign(thread.permission, { approvalPolicy: 'on-request', sandbox: 'read-only', mode: 'review', extraRoots: [] })
-    const review = { turnId: `turn-${message.id}`, previous }
+    const review = { turnId: `turn-${message.id}`, messageId: message.id, dshTurn: undefined, previous }
     thread.review = review
     try {
       syncPlanMode(thread, permissionServices().planMode, permissionServices().warn)
