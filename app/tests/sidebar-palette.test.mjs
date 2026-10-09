@@ -238,3 +238,9 @@ test('pointer-opened menus highlight nothing; the account menu has no invented a
   assert.match(sidebar, /onMenu\?\.\("connection", event\.currentTarget, undefined, keyboardEntry\(event\)\)/);
   assert.doesNotMatch(main, /t\("Dark appearance"\)|t\("Light appearance"\)/);
 });
+
+test("palette match highlight: a title with U+0130 (İ) bolds the matched characters, not one to the right", () => {
+  // "İ".toLowerCase() is two UTF-16 units; the ranges index the title as shown.
+  assert.deepEqual(matchRanges("İzmir notes", "notes"), [[6, 11]]);
+  assert.deepEqual(matchRanges("İzmir notes", "NOTES"), [[6, 11]]);
+});

@@ -3,6 +3,7 @@
 // (Quick actions + Recents; typing adds the 'New session “…”' send row), "search" (sessions and projects with
 // the Pu type tabs and the date filter) and "actions" (Tab: Settings → / Customize → rows and app commands).
 import { folderName, sessionArchived, sessionName, sessionUpdatedAt } from "./sidebar-model.js";
+import { foldCase } from "./transcript-find-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { shortcutLabels } from "./shortcut-model.mjs";
 import { hideAllNestedSessionsCopy, showAllNestedSessionsCopy, nestedSessionsSearchHints } from "./generated/code-current/nested-session-palette-copy.mjs";
@@ -58,7 +59,8 @@ export function hasPaletteFilters(filters = EMPTY_PALETTE_FILTERS) {
 
 /** Ranges of `query` (case-insensitive, every occurrence) inside `text`, for the bold match highlight (ra). */
 export function matchRanges(text, query) {
-  const needle = String(query || "").trim().toLowerCase(), hay = String(text || "").toLowerCase();
+  // An index-preserving fold: toLowerCase() turns U+0130 into two units and would shift every later range.
+  const needle = foldCase(String(query || "").trim()), hay = foldCase(String(text || ""));
   if (!needle) return [];
   const ranges = [];
   for (let at = hay.indexOf(needle); at !== -1; at = hay.indexOf(needle, at + needle.length)) ranges.push([at, at + needle.length]);
