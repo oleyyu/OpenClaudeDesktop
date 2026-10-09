@@ -24,7 +24,8 @@ export function workflowEvent(run,event,at){
   // A skipped agent (the runner's and the engines' 'skipped by user') is not a failure.
   if(agent&&event.type==='end'){agent.state=event.status==='skipped'||event.error==='skipped by user'?'skipped':event.status&&event.status!=='completed'?'error':'done';agent.error=agent.state==='skipped'?undefined:event.error||(agent.state==='error'?`Agent ${event.status}`:undefined);if(event.model)agent.model=event.model;if(Number.isFinite(event.tokens))agent.tokens=event.tokens;if(Number.isFinite(event.ms))agent.durationMs=event.ms;}
  }
- if(event.type==='settled'){next.status=event.status;next.completedAt=event.recovered?undefined:at;next.durationMs=event.recovered?undefined:Math.max(0,at-run.startedAt);next.summary=event.error;next.result=event.result;for(const p of progress)if(p.type==='workflow_agent'&&p.state==='progress'){p.state='error';p.error=event.status==='stopped'?'Stopped before completion':'Workflow ended before completion';}}
+ // A member still queued never gets an end event from the engine: settling ends it as skipped (not run), as the harness does.
+ if(event.type==='settled'){next.status=event.status;next.completedAt=event.recovered?undefined:at;next.durationMs=event.recovered?undefined:Math.max(0,at-run.startedAt);next.summary=event.error;next.result=event.result;for(const p of progress)if(p.type==='workflow_agent'&&p.state==='progress'){p.state='error';p.error=event.status==='stopped'?'Stopped before completion':'Workflow ended before completion';}else if(p.type==='workflow_agent'&&p.state==='start'){p.state='skipped';delete p.error;}}
  if(event.type==='plan-agent')next.plannedAgents=(next.plannedAgents||0)+1;
  // A failed parallel/pipeline slot or nested workflow (the runner's slot-failure): the <task-notification>'s <failures>.
  if(event.type==='slot-failure'&&typeof event.message==='string'&&event.message)next.slotFailures=[...(run.slotFailures||[]),event.message].slice(-100);
@@ -40,7 +41,8 @@ export function workflowEvent(run,event,at){
 }
 export const workflowAgentState=(agent,now)=>agent.state==='progress'?(agent.progressSupported!==false&&!(agent.activeTools>0)&&Number.isFinite(agent.lastProgressAt)&&now-agent.lastProgressAt>90000?'stalled':'running'):agent.state==='done'?'done':agent.state==='error'?'error':agent.state==='skipped'?'skipped':'pending';
 // c62da1b56 ge/he: agents without a phase gather in one last group, 'Agents' (or 'Other agents' beside real phases);
-// a settled run's phase whose agents never started reads 'Not run' (status notRun), not 'Pending'.
+// a settled run's phase whose agents never started reads 'Not run' (status notRun), not 'Pending' -- also once settling
+// has ended its queued agents as skipped.
 export const WORKFLOW_AGENTS_GROUP=Number.MAX_SAFE_INTEGER;
 export function workflowPhases(run,now){
  const groups=new Map();
@@ -52,7 +54,7 @@ export function workflowPhases(run,now){
  }
  const settled=run.status&&run.status!=='running',others=groups.get(WORKFLOW_AGENTS_GROUP);
  if(others)others.title=groups.size>1?t('Other agents'):t('Agents');
- return [...groups.values()].sort((a,b)=>a.index-b.index).map(p=>({...p,done:p.agents.filter(a=>a.state==='done').length,status:p.agents.some(a=>a.state==='error')?'error':p.agents.some(a=>a.state==='progress')?(settled?'done':'running'):!p.agents.length||p.agents.every(a=>a.displayState==='pending')?(settled?'notRun':'pending'):p.agents.every(a=>a.state==='done'||a.state==='skipped')||settled?'done':'running',tokens:p.agents.reduce((sum,a)=>sum+(a.tokens||0),0)}));
+ return [...groups.values()].sort((a,b)=>a.index-b.index).map(p=>({...p,done:p.agents.filter(a=>a.state==='done').length,status:p.agents.some(a=>a.state==='error')?'error':p.agents.some(a=>a.state==='progress')?(settled?'done':'running'):!p.agents.length||p.agents.every(a=>a.displayState==='pending')?(settled?'notRun':'pending'):settled&&p.agents.every(a=>a.state==='skipped')?'notRun':p.agents.every(a=>a.state==='done'||a.state==='skipped')||settled?'done':'running',tokens:p.agents.reduce((sum,a)=>sum+(a.tokens||0),0)}));
 }
 export function workflowSummary(summary,description){
  if(!summary||summary===description)return '';

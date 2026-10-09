@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fork } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mergeWorkflow, workflowPhases } from '../src/workflow-progress-model.mjs';
+import { mergeWorkflow, workflowPhases, workflowEvent } from '../src/workflow-progress-model.mjs';
 import * as i18n from '../electron/i18n/index.mjs';
 const require = createRequire(import.meta.url);
 const service = require('../electron/workflow-service.cjs');
@@ -95,4 +95,30 @@ test('agentIds includes the agents of a resumed run that settles with the same s
     assert.equal((await settled(runner, first.id)).status, 'completed');
     assert.deepEqual([...runner.agentIds()].sort(), ['thread-first', 'thread-second']);
   } finally { await runner.dispose(); await fs.rm(root, { recursive: true, force: true }); }
+});
+
+// The engine never ends a member still queued when the run settles: settling must, live and on a recovered reload.
+test('a settled run ends its still-queued members as skipped, whatever the terminal status', () => {
+  for (const settle of [{ status: 'completed' }, { status: 'failed', error: 'boom' }, { status: 'stopped', error: 'Stopped' }, { status: 'failed', recovered: true, error: 'gone' }]) {
+    let run = { id: 'w', status: 'running', startedAt: 0, workflowProgress: [] };
+    run = workflowEvent(run, { type: 'start', id: 'a', label: 'A' }, 1);
+    run = workflowEvent(run, { type: 'admission', id: 'q', seq: 2, label: 'Q', state: 'queued', queuedAt: 1, lastProgressAt: 1 }, 1);
+    run = workflowEvent(run, { type: 'end', id: 'a' }, 2);
+    run = workflowEvent(run, { type: 'settled', ...settle }, 3);
+    const queued = run.workflowProgress.find(p => p.id === 'q');
+    assert.equal(queued.state, 'skipped', JSON.stringify(settle));
+    assert.equal(queued.error, undefined);
+    const [phase] = workflowPhases(run, 4);
+    assert.deepEqual(phase.agents.map(a => a.displayState), ['done', 'skipped']);
+    assert.equal(phase.status, 'done');
+  }
+  // A phase whose agents were all still queued did not run: it keeps reading 'Not run', not 'Done'.
+  let run = { id: 'w', status: 'running', startedAt: 0, workflowProgress: [] };
+  run = workflowEvent(run, { type: 'phase', title: 'Scan' }, 0);
+  run = workflowEvent(run, { type: 'start', id: 's', label: 'S', phase: 'Scan' }, 1);
+  run = workflowEvent(run, { type: 'end', id: 's' }, 2);
+  run = workflowEvent(run, { type: 'phase', title: 'Fix' }, 2);
+  run = workflowEvent(run, { type: 'admission', id: 'q', seq: 2, label: 'Q', phase: 'Fix', state: 'queued', queuedAt: 2, lastProgressAt: 2 }, 2);
+  run = workflowEvent(run, { type: 'settled', status: 'stopped', error: 'Stopped' }, 3);
+  assert.deepEqual(workflowPhases(run, 4).map(p => [p.title, p.status]), [['Scan', 'done'], ['Fix', 'notRun']]);
 });
