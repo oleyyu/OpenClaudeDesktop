@@ -3791,7 +3791,7 @@ app.whenReady().then(async () => {
         try {
           const [branch, branches, originHead] = await Promise.all([
             run("git", ["-C", cwd, "branch", "--show-current"]),
-            run("git", ["-C", cwd, "branch", "--format=%(refname:short)"]),
+            run("git", ["-C", cwd, "branch", "--format=%(refname:lstrip=2)"]), // not :short, which reads heads/<name> beside a same-named tag
             // The branch picker pins the repo default first (cc43287c9 :12062-12071); origin/HEAD names it.
             run("git", ["-C", cwd, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"]).catch(() => ({ stdout: "" })),
           ]);

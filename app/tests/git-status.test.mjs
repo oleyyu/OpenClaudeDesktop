@@ -528,3 +528,14 @@ test('B34 workspaceGitImage: before at the scope base, after in the working tree
   await assert.rejects(workspaceGitImage(cwd, { filePath: 'logo.png', side: 'sideways' }), TypeError);
   assert.equal(await workspaceGitImage(await directory(t, false), { filePath: 'logo.png', side: 'after' }), null, 'not a repository');
 });
+
+test('main.cjs workspace-info: the branch picker lists branch names as git switch takes them, even beside a same-named tag', async (t) => {
+  const main = await fs.readFile(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const format = /case "workspace-info"[\s\S]*?"branch", "(--format=[^"]+)"/.exec(main)?.[1];
+  assert.ok(format, 'workspace-info lists branches with an explicit format');
+  const { cwd } = await remoteRepo(t);
+  await git(cwd, ['branch', 'feature']);
+  await git(cwd, ['tag', 'feature']);
+  const listed = (await git(cwd, ['branch', format])).stdout.trim().split('\n').sort();
+  assert.deepEqual(listed, ['feature', 'main']);
+});
