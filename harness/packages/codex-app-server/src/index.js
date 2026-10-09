@@ -906,7 +906,8 @@ export function apply(ctx, config) {
     // sub-agent's call is refused here on its root thread's selection.
     const owner = thread ?? rootThreadFor(exec.agent, threads, headerOf)
     if (owner && isToolDenied(exec.name, owner.tools?.current)) return Promise.resolve({ kind: 'deny', reason: 'This tool is turned off for this session in OpenClaude Desktop.' })
-    if (!thread && exec.name === 'mcp__code_desktop__Workflow') return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
+    // Native spellings too (Workflow, its RunWorkflow alias): a delegated sub-agent keeps the tool in its schema.
+    if (!thread && (exec.name === 'mcp__code_desktop__Workflow' || isWorkflowTool(exec.name))) return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
     // The task list and the next-step box are the main conversation's (2.42304.0 index.chunk-CFJssAFf: a PreToolUse with
     // agent_id on mcp__ccd_turn__update_plan / wrap_up is denied with index.chunk-B5tintml `ot`).
     if (!thread && SUBAGENT_TURN_TOOLS.has(exec.name)) return Promise.resolve({ kind: 'deny', reason: SUBAGENT_TURN_TOOL_REFUSAL })
