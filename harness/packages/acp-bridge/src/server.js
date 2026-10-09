@@ -2120,6 +2120,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       if (adapter.turnEvents && localReply === null) retries = setInterval(() => publishTurnEvents(thread, state), 500)
       // An agent still winding down a stopped turn refuses a new prompt for a moment (MiniMax, Kimi): retry.
       for (let attempt = 0; localReply === null; attempt++) {
+        // Stopped while the agent was still starting (or between retries): the prompt never goes out.
+        if (state.cancelled) break
         try {
           result = await host.call('session/prompt', { sessionId: thread.id, prompt: blocks, ...(continuation && adapter.continueMeta ? { _meta: { ...adapter.continueMeta } } : {}) }, 0)
           break
