@@ -332,3 +332,23 @@ test('a resumed run’s new attempt retires the Resume of the card it continues,
   for (const event of history) replay.apply(event)
   assert.equal(runOf(replay).resumable, false)
 })
+
+// Claude Code inputs always launch in the background, so the call's run is "background" before anything starts. A call
+// stopped before its tool result (the turn interrupted on its "Run a dynamic workflow?" card) never started a run.
+test('a background-input call stopped before any run started settles as stopped, live and in replay', () => {
+  const history = [], p = new ThreadProjector({ threadId: 'never-started' })
+  const apply = event => { history.push(event); return p.apply(event) }
+  startWorkflow({ apply }, 'w1', { script: 'export const meta={name:"intr",description:"Interrupted"};return 1' })
+  assert.equal(runOf(p).background, true)
+  apply(ev('turn/end', { turn: 1, reason: { kind: 'aborted', reason: { kind: 'user' } } }))
+  assert.equal(runOf(p).status, 'stopped')
+  const replay = new ThreadProjector({ threadId: 'never-started' })
+  for (const event of history) replay.apply(event)
+  assert.equal(runOf(replay).status, 'stopped')
+  // A launched background run (the engine named it) keeps running past its call.
+  const launched = new ThreadProjector({ threadId: 'launched' })
+  startWorkflow(launched, 'w1', { script: 'export const meta={name:"bg",description:"Background"};return 1' })
+  launched.apply(ev('tool-workflow/run-start', { runId: 'wf_launched', attemptId: 'a1', name: 'bg' }))
+  launched.apply(ev('turn/end', { turn: 1, reason: { kind: 'aborted', reason: { kind: 'user' } } }))
+  assert.equal(runOf(launched).status, 'running')
+})

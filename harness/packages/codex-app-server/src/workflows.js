@@ -220,9 +220,12 @@ export function workflowToolResult(run, { isError, text: output }, time) {
   return settle(clone(run), stopped ? 'stopped' : 'failed', time, message)
 }
 
-/** The tool call ended without a result (turn interrupted, session restarted). */
+/**
+ * The tool call ended without a result (turn interrupted, session restarted). A background run goes on past its call
+ * only once the engine started it (run-start named it): a call stopped before that (on its approval card) ran nothing.
+ */
 export function workflowInterrupted(run, time) {
-  if (run.status !== 'running' || run.background) return run
+  if (run.status !== 'running' || (run.background && run.runId !== null)) return run
   return settle(clone(run), 'stopped', time, 'Stopped')
 }
 
