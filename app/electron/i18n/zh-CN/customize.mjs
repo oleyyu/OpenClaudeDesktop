@@ -98,6 +98,7 @@ export default {
   'Add custom connector': '添加自定义连接器',
   'Add connector': '添加连接器',
   'A connector named {name} is already in {file}. Remove it first or choose another name.': '{file} 中已有名为 {name} 的连接器。请先移除它，或换一个名称。',
+  'Project instructions can’t live in your home folder or at the top of the disk. Open a project folder first.': '项目说明不能放在主文件夹或磁盘根目录中。请先打开一个项目文件夹。',
   '{name} is reserved for Code Desktop’s own tools. Choose another name.': '{name} 是 Code Desktop 自带工具的保留名称，请换一个名称。',
   'The connector could not be added.': '无法添加连接器。',
   'A stdio server needs a command (and optional arguments); a streamable HTTP server needs a URL.': 'stdio 服务器需要一个命令（参数可选）；可流式 HTTP 服务器需要一个 URL。',

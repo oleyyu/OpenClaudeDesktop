@@ -191,3 +191,12 @@ test('service op system-prompt: asks the DeepSeek core with the saved values and
   client.serverInfo = serverInfo;
   assert.deepEqual(systemPromptResult(null), { text: '', defaultText: '', defaultTemplate: '', custom: false, exact: false, sections: [], tools: [], model: null, cwd: null, threadId: null });
 });
+
+test('create-file refuses a home-folder session: a file there is never read', async (t) => {
+  const { home, cleanup } = tree(); t.after(cleanup);
+  const opened = [];
+  const svc = createInstructionsService({ getConfig: () => ({ cwd: home }), getClient: () => ({ serverInfo: {} }), shell: { openPath: async p => { opened.push(p); return ''; } }, home, knownCwd: c => c });
+  await assert.rejects(svc.run({ op: 'create-file', cwd: home }), /home folder/);
+  assert.equal(fs.existsSync(path.join(home, '.code-desktop', 'instructions.md')), false);
+  assert.deepEqual(opened, []);
+});

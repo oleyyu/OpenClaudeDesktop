@@ -421,6 +421,10 @@ function createInstructionsService({ getConfig, getClient, shell, knownCwd, home
       }
       case "create-file": {
         const target = projectFileTarget(prefs(), cwd, { home, fs: fsys });
+        // findProjectFile never reads a file in the home folder or at the root, so none is created there.
+        const folder = path.dirname(path.dirname(target));
+        if (folder === home || folder === path.parse(folder).root)
+          throw new Error(i18n.t("Project instructions can’t live in your home folder or at the top of the disk. Open a project folder first."));
         fsys.mkdirSync(path.dirname(target), { recursive: true });
         try { fsys.writeFileSync(target, TEMPLATE, { flag: "wx" }); } catch (error) { if (error?.code !== "EEXIST") throw error; }
         const error = await shell.openPath(target);
