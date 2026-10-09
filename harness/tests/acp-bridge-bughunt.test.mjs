@@ -79,3 +79,19 @@ test('terminal output keeps a multi-byte character that arrives split across two
   assert.equal(output, '中\n')
   assert.equal(deltas.join(''), '中\n')
 })
+
+test('a permission request that arrives after Stop is answered cancelled, never auto-approved', async () => {
+  const b = bridge()
+  try {
+    const { thread } = await b.call('thread/start', { cwd: b.home, ...mode('bypass'), approvalPolicy: 'never', sandbox: 'danger-full-access' })
+    const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'late-bash 400 rm -rf build', text_elements: [] }] })
+    await b.waitFor((method, params) => method === 'item/started' && params.item?.id === 'late-bash-1')
+    await b.call('turn/interrupt', { threadId: thread.id, turnId: turn.id })
+    const done = await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === turn.id)
+    assert.equal(done.turn.status, 'interrupted')
+    const outcome = b.agentLog().find((entry) => entry.method === 'late-bash-outcome')
+    assert.deepEqual(outcome?.params, { outcome: { outcome: 'cancelled' } }, 'the stopped turn\'s tool is not approved')
+  } finally {
+    await b.close()
+  }
+})

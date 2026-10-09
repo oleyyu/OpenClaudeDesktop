@@ -155,6 +155,20 @@ async function prompt(params) {
     chunk(id, 'prompt done')
     return { stopReason: 'end_turn' }
   }
+  // "late-bash <ms> <command>": the Bash permission request goes out <ms> after the prompt (crossing a session/cancel);
+  // the outcome is logged as 'late-bash-outcome'.
+  if (text.startsWith('late-bash ')) {
+    const [, ms, ...rest] = text.split(' ')
+    const command = rest.join(' ')
+    toolUpdate(id, { sessionUpdate: 'tool_call', toolCallId: 'late-bash-1', title: `Running: ${command}`, kind: 'execute', status: 'pending', rawInput: { command } })
+    await sleep(Number(ms) || 0)
+    const result = await transport.call('session/request_permission', {
+      sessionId: id, toolCall: { toolCallId: 'late-bash-1', title: 'Bash', kind: 'execute', rawInput: { command } },
+      options: [{ optionId: 'approve_once', name: 'Approve once', kind: 'allow_once' }, { optionId: 'reject', name: 'Reject', kind: 'reject_once' }],
+    })
+    log('late-bash-outcome', result)
+    return { stopReason: result?.outcome?.outcome === 'cancelled' ? 'cancelled' : 'end_turn' }
+  }
   if (text.startsWith('kimi-bash ')) {
     const command = text.slice('kimi-bash '.length)
     toolUpdate(id, { sessionUpdate: 'tool_call', toolCallId: 'bash-1', title: `Running: ${command}`, kind: 'execute', status: 'pending' })

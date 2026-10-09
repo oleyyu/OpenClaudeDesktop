@@ -1701,6 +1701,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     // its card shows the call, but no row joins the parent turn (the run's agents are in its workflow card).
     const fromWorkflow = toolCall?._meta?.workflowApproval === true || /^workflow:/.test(String(toolCall?.toolCallId ?? ''))
     const detached = fromWorkflow && !projector.calls.has(call.toolCallId)
+    // The user stopped the turn: a tool the agent still asks to run (its request crossed session/cancel) never runs,
+    // whatever the mode would have allowed (ACP: permission requests after a cancel are answered cancelled).
+    if (thread.prompt?.cancelled && !fromWorkflow) return { outcome: { outcome: 'cancelled' } }
     // A request outside any turn (the agent working on its own: MiniMax's background-task follow-up) opens an agent turn
     // that closes once the agent goes quiet, or that the agent's log adopts (agentTurnLog): never a turn left open.
     if (!detached && !child && !thread.prompt && !thread.agentTurn && !thread.projector.activeTurn && startAgentTurn(thread, { idleClose: true })) {
