@@ -359,3 +359,16 @@ test('closing one window cancels only its own searches (cancelScopes by sender p
   assert.doesNotMatch(main, /\.(?:on|once)\("(?:destroyed|render-process-gone)"[^\n]*fileSearch\.cancelAll\(\)/);
   assert.match(main, /fileSearch\.cancelScopes\(`\$\{senderId\}:`\)/);
 });
+
+test('a newer query for a scope takes its predecessor\'s place even when the queue is full', async t => {
+  const f = await fixture(t), api = service(t, { maxConcurrent: 1, maxPending: 1 });
+  await f.file('Needle.js');
+  const first = api.search(request(f.root, 'old', 'pane'));
+  const other = api.search(request(f.root, 'needle', 'composer'));
+  const replacement = api.search(request(f.root, 'needle', 'pane'));
+  assert.equal((await first).error.code, 'SUPERSEDED');
+  const result = await replacement;
+  assert.equal(result.error, null, 'the replacement is queued, not refused as BUSY');
+  assert.deepEqual(names(result), ['Needle.js']);
+  assert.equal((await other).error, null);
+});

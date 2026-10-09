@@ -125,7 +125,9 @@ function createFileNameSearch(options = {}) {
     // promise still settles with its own identifier; it cannot replace the new.
     const previous = latest.get(request.scope);
     if (previous) fail(previous, 'SUPERSEDED', 'A newer filename query replaced this request.');
-    if (active.size >= limits.maxConcurrent && pending.length >= limits.maxPending) return Promise.resolve({
+    // A superseded worker stays active until its process exits; its slot belongs to the request replacing it.
+    const running = active.size - (previous && active.has(previous) ? 1 : 0);
+    if (running >= limits.maxConcurrent && pending.length >= limits.maxPending) return Promise.resolve({
       ...envelope(request), generation: ++generation, elapsedMs: 0,
       error: { code: 'BUSY', message: 'Filename search capacity is occupied; retry the current query.' },
     });
