@@ -163,6 +163,17 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
   const ledger = new UsageLedger(ownDir, runnerRole ? { outbox: usageInbox } : { inbox: usageInbox })
   let version = program.version || ''
   let closed = false
+  // Every agent process this bridge made and has not seen exit. A request still preparing one when the bridge shuts
+  // down (MiniMax's first-run npm install, a slow spawn) gets a host that is already stopped, so it never spawns, and a
+  // shutdown stops the ones no thread holds yet: no agent outlives its bridge.
+  const hosts = new Set()
+  function newHost(options) {
+    const host = new AgentHost(options)
+    hosts.add(host)
+    void host.exit.then(() => hosts.delete(host))
+    if (closed) void host.stop()
+    return host
+  }
   // Turns whose usage is still being read after they ended (finishTurn's refreshContext): a shutdown waits for them.
   const usageSettles = new Set()
   let clientReady = false
@@ -236,7 +247,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const launch = adapter.launch(ctx, { threadDir: dir, utility: true })
         // Unsandboxed (it lists and deletes the agent's own sessions), but never past the files no agent process may write.
         const line = wrapLaunch(commandLine(program, launch.args), { profile: 'none', writable: [], agentPaths: [], profileFile: path.join(dir, 'utility.sb'), ...sandboxExtras() })
-        const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-utility` })
+        const host = newHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-utility` })
         host.on('exit', () => { if (utility && utility === current) utility = null })
         const current = utility
         await host.start()
@@ -627,7 +638,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     if (launch.agentHome && !thread.agentHome) { thread.agentHome = launch.agentHome; thread.remember() }
     const line = commandLine(program, launch.args)
     const wrapped = wrapLaunch(line, { profile: config.sandbox, writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'agent.sb'), ...sandboxExtras() })
-    const host = new AgentHost({ stopSignal: adapter?.stopSignal,
+    const host = newHost({ stopSignal: adapter?.stopSignal,
       command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: thread.cwd,
       clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(thread), log, label: `${adapter.id}:${thread.id.slice(0, 8)}`,
     })
@@ -2629,7 +2640,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     draft.appToolsInLaunch = launch.appToolsInLaunch === true
     const line = commandLine(program, launch.args)
     const wrapped = wrapLaunch(line, { profile: config.sandbox, writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'agent.sb'), ...sandboxExtras() })
-    const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: draft.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(draft), log, label: `${adapter.id}:new` })
+    const host = newHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: draft.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(draft), log, label: `${adapter.id}:new` })
     settleOnExit(host, launch)
     draft.hostKey = keyOf(config)
     draft.sandboxed = wrapped.sandboxed
@@ -2684,7 +2695,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     thread.appToolsInLaunch = launch.appToolsInLaunch === true
     const line = commandLine(program, launch.args)
     const wrapped = wrapLaunch(line, { profile: config.sandbox, writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'agent.sb'), ...sandboxExtras() })
-    const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(thread), log, label: `${adapter.id}:${thread.id.slice(0, 8)}` })
+    const host = newHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(thread), log, label: `${adapter.id}:${thread.id.slice(0, 8)}` })
     settleOnExit(host, launch)
     const projector = new ThreadProjector({ threadId: thread.id, cwd: thread.cwd, classify: (call) => adapter.classify?.(call, ctx) ?? null, commandResult: adapter.commandResult })
     let last = Date.now()
@@ -3022,7 +3033,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
           const launch = adapter.launch(ctx, { threadDir: dir, ephemeral: true, sandbox: 'read-only' })
           // Read-only, as a side question runs: a throwaway home may write only itself (never the user's dotfiles).
           const line = wrapLaunch(commandLine(program, launch.args), { profile: 'read-only', writable: [], agentPaths: [...adapter.agentPaths(agentEnv), stateDir, dir], profileFile: path.join(stateDir, 'discover.sb'), ...sandboxExtras() })
-          ephemeral = host = new AgentHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-discover` })
+          ephemeral = host = newHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-discover` })
           await host.start()
         } else host = await utilityHost()
         const cwd = ephemeral ? path.join(stateDir, 'discover') : path.join(stateDir, 'utility')
@@ -3355,7 +3366,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const config = { ...launchConfig({ ...draft, custom: customization }), threadDir: dir, sandbox: 'none', appToolsEntry: null }
       const launch = adapter.launch(ctx, config)
       const line = commandLine(program, launch.args)
-      const host = new AgentHost({ stopSignal: adapter?.stopSignal, ...line, env: { ...agentEnv, ...launch.env, ...adapter.previewEnv(file) }, cwd, clientCapabilities: adapter.clientCapabilities, log, label: `${adapter.id}-preview` })
+      const host = newHost({ stopSignal: adapter?.stopSignal, ...line, env: { ...agentEnv, ...launch.env, ...adapter.previewEnv(file) }, cwd, clientCapabilities: adapter.clientCapabilities, log, label: `${adapter.id}-preview` })
       try {
         await host.start()
         const created = await host.call('session/new', { cwd, mcpServers: [] }, 60000)
@@ -3416,7 +3427,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const line = commandLine(program, launch.args)
       const wrapped = wrapLaunch(line, { profile: 'read-only', writable: [], agentPaths: [...adapter.agentPaths(agentEnv), stateDir, dir], profileFile: path.join(dir, 'agent.sb'), ...sandboxExtras() })
       let text = ''
-      const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env, ...(launch.sideEnv ?? {}) }, cwd: dir, clientCapabilities: {}, handlers: { permission: async (request) => selected(optionFor(request.options, 'reject_once', 'reject_always')) }, log, label: `${adapter.id}-btw` })
+      const host = newHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env, ...(launch.sideEnv ?? {}) }, cwd: dir, clientCapabilities: {}, handlers: { permission: async (request) => selected(optionFor(request.options, 'reject_once', 'reject_always')) }, log, label: `${adapter.id}-btw` })
       controller.host = host
       let sessionId = null
       try {
@@ -4381,7 +4392,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       threads.clear()
       store.flush()
       return Promise.allSettled([...live.map((thread) => closeThread(thread, 'OpenClaude Desktop core stopped.')), utility?.then((host) => host.stop())])
-    }).then(() => undefined)
+    }).then(() => Promise.allSettled([...hosts].map((host) => host.stop()))).then(() => undefined)
     return shuttingDown
   }
 
