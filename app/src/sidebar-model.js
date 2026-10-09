@@ -502,7 +502,9 @@ export function buildNestedRuns(sessions = [], metadata = {}, {currentLayout=fal
     const parent = sessionParentId(session, metadata);
     if (parent && ids.has(parent)) parentOf.set(session.id, parent);
   }
-  for (const [child, parent] of [...parentOf]) if (parentOf.has(parent)) parentOf.delete(child);
+  // Judged against the full map, never the one being pruned: otherwise the result followed the sort order.
+  const nested = new Map(parentOf);
+  for (const [child, parent] of nested) if (nested.has(parent)) parentOf.delete(child);
   if (parentOf.size === 0) return { runs: sessions.length ? [{ parentId: null, rows: [...sessions] }] : [], parentOf, ordered: [...sessions] };
   const children = new Map();
   for (const session of sessions) {

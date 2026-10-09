@@ -137,6 +137,16 @@ test("nested runs: real lineage only, restricted to the bucket, chains flattened
   assert.deepEqual(buildNestedRuns([]).runs, []);
 });
 
+test("nested runs: a fork chain nests the same way whatever order the rows are sorted in", () => {
+  // a <- b <- c <- d: only b's parent is a top-level row, so only b nests; c and d (parents with parents) stay
+  // top-level. Before, the result followed the sort: oldest-first left d nested under c, newest-first did not.
+  const chain = [thread("a"), thread("b", { forkedFromId: "a" }), thread("c", { forkedFromId: "b" }), thread("d", { forkedFromId: "c" })];
+  for (const order of [chain, [...chain].reverse(), [chain[2], chain[0], chain[3], chain[1]]]) {
+    const { parentOf } = buildNestedRuns(order);
+    assert.deepEqual([...parentOf].sort(), [["b", "a"]], order.map((s) => s.id).join(","));
+  }
+});
+
 test("bulk targets skip pinned, open, running and (for archive) archived sessions", () => {
   const sessions = [thread("pin"), thread("open"), thread("run"), thread("gone", { archived: true }), thread("ok")];
   const options = { metadata: { pin: { pinned: true } }, currentId: "open", state: { active: { run: "turn" } } };
