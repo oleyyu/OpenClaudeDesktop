@@ -37,3 +37,29 @@ test('a resumed run replaces its earlier attempt in the renderer, not only once 
     assert.deepEqual(view[0].workflowProgress.map(p => p.title), ['Resumed']);
   } finally { await runner.dispose(); await fs.rm(root, { recursive: true, force: true }); }
 });
+
+// /workflows p right after the launch: the runner child has no runtime yet (its core is still starting).
+test('a pause that arrives before the runtime exists is applied, not reported as an unpausable run', { timeout: 60000 }, async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cd-wf-ui-pause-')), cwd = path.join(dir, 'ws'), home = path.join(dir, 'home');
+  await fs.mkdir(cwd, { recursive: true }); await fs.mkdir(home, { recursive: true }); await fs.mkdir(path.join(dir, 'run'));
+  const env = { PATH: process.env.PATH, HOME: home, CODEX_HOME: path.join(home, '.codex'), CODE_DESKTOP_WORKFLOW_RUNNER: '1', CLAUDE_CODE_WORKFLOW_PREFIX_STAGGER_MS: '0' };
+  const source = 'export const meta={name:"p",description:"pause"};\nreturn await agent("FAST",{label:"a1"});';
+  const child = fork(path.resolve(import.meta.dirname, '../electron/workflow-child.mjs'), [], { cwd, stdio: ['ignore', 'ignore', 'pipe', 'ipc'], env });
+  let stderr = '';
+  child.stderr.on('data', (data) => { stderr += data; });
+  const events = [];
+  const finished = new Promise((resolve) => child.on('exit', resolve));
+  child.on('message', (message) => { if (message?.event?.type) events.push(message.event); });
+  try {
+    child.send({ directory: path.join(dir, 'run'), source, cwd, plan: false, access: 'read-only', resume: false, model: 'fixture', command: path.resolve(import.meta.dirname, 'fixtures/workflow-runner-server.cjs'), version: 't', runId: 'wf_earlypause1', workflowScripts: false });
+    child.send({ control: 'pause', paused: true });
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    assert.equal(events.some((event) => event.type === 'pausable' && event.pausable === false), false, 'the local runner can pause');
+    assert.ok(events.some((event) => event.type === 'paused' && event.paused === true));
+    assert.equal(events.some((event) => event.type === 'start'), false, 'no agent starts while paused');
+    child.send({ control: 'pause', paused: false });
+    assert.equal(await finished, 0, stderr);
+    assert.ok(events.some((event) => event.type === 'start'));
+    assert.ok(events.some((event) => event.type === 'result'));
+  } finally { child.kill('SIGKILL'); await fs.rm(dir, { recursive: true, force: true }); }
+});

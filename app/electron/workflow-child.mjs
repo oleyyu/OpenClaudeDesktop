@@ -9,9 +9,11 @@ import {codexAgent,getClient,shutdownClient} from '../third-party/codex-workflow
 import {startCodexSession} from '../third-party/codex-workflows-runner/src/codexSession.js';
 import {joinSharedBudget} from '../third-party/codex-workflows-runner/src/shared-budget.js';
 import {outputSpent,subscribeMeter} from '../third-party/codex-workflows-runner/src/meter.js';
-let finishing=false,runtime,scriptFailure,outputText;
+let finishing=false,runtime,scriptFailure,outputText,pendingPause;
 // /workflows p: pause stops admitting agents (runtime.js setWorkflowPaused); a hosted engine has no pause.
-process.on('message',message=>{if(message?.control==='pause'){try{if(typeof runtime?.pause!=='function'){send({type:'pausable',pausable:false});return;}runtime.pause(message.paused===true);send({type:'paused',paused:message.paused===true});}catch(error){send({type:'log',message:error.message});}return;}if(message?.control)Promise.resolve(runtime?.controlMember(message.memberId,message.control)).catch(error=>send({type:'log',message:error.message}));});
+// A pause before the runtime exists (its core still starting) is held and applied when the runtime arrives.
+const adopt=value=>{runtime=value;if(pendingPause!==undefined&&typeof value?.pause==='function')value.pause(pendingPause);pendingPause=undefined;};
+process.on('message',message=>{if(message?.control==='pause'){try{if(!runtime){pendingPause=message.paused===true;send({type:'paused',paused:pendingPause});return;}if(typeof runtime.pause!=='function'){send({type:'pausable',pausable:false});return;}runtime.pause(message.paused===true);send({type:'paused',paused:message.paused===true});}catch(error){send({type:'log',message:error.message});}return;}if(message?.control)Promise.resolve(runtime?.controlMember(message.memberId,message.control)).catch(error=>send({type:'log',message:error.message}));});
 const send=event=>{if(process.connected)process.send({event,at:Date.now()});};
 // A stop cancels the run first (interrupts turns, removes clean worktrees, closes sessions), then the app-server goes.
 // It tells the service a cancel is under way, so the force-kill waits (bounded) for it to finish.
@@ -37,7 +39,7 @@ process.once('message',async options=>{
   const clientOptions={command:options.command,...(Array.isArray(options.commandArgs)?{args:options.commandArgs}:{}),clientInfo:{name:'code-desktop-workflows',title:'OpenClaude Desktop',version:options.version}};
   if(!options.plan){
    const client=await getClient(clientOptions);send({type:'connection',pid:client.pid});
-   const hosted=await runHarnessWorkflow(client,options,send,value=>{runtime=value;if(typeof value?.pause!=='function')send({type:'pausable',pausable:false});});
+   const hosted=await runHarnessWorkflow(client,options,send,value=>{adopt(value);if(typeof value?.pause!=='function')send({type:'pausable',pausable:false});});
    if(hosted.supported){await publishResult(options.directory,hosted.value,hosted.outputFile);await close(0);return;}
   }
   // The access comes from the session's Mode at launch (permission-policy.mjs workflowAccess);
@@ -58,7 +60,7 @@ process.once('message',async options=>{
   // script's own opts never set it.
   const controlled=opts=>{const out={...opts,cwd:options.cwd,sandbox,clientOptions};if(forced&&!pinned)delete out.model;delete out.userRelay;if(typeof options.userRequest==='string'&&options.userRequest.trim())out.userRelay=options.userRequest;return out;};
   const result=await runWorkflowSource(options.source,{
-   onRuntime:value=>{runtime=value;},onOutput:text=>{outputText=text;},
+   onRuntime:adopt,onOutput:text=>{outputText=text;},
    args:options.args,plan:options.plan,journal,defaultModel:subagentModel??options.model,ignoreRequestedModel:forced,...(pinned?{pinnedModel:pinned}:{}),
    // budget.total: the token target of the user's "+500k" directive in the turn that started the run (model runs only).
    ...(Number.isSafeInteger(options.budgetTotal)&&options.budgetTotal>0?{budgetTotal:options.budgetTotal}:{}),
