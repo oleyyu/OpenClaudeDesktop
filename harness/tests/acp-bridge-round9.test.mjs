@@ -118,8 +118,14 @@ test('Kimi: OpenClaude Desktop\'s tools instructions join the session\'s SYSTEM.
 })
 
 test('MiniMax: OpenClaude Desktop\'s tools instructions join the thread\'s AGENTS.md next to its code_desktop server', async () => {
-  // The bridge's own copy of mcode's SQLite module (as the smoke test uses): without one, thread/start would npm-install it.
-  const b = bridge({ adapter: adapterById('minimax'), env: { ...TOOLS, MAVIS_SQLITE3_MODULE_PATH: path.resolve(import.meta.dirname, '../../work/agents/acp-bridge/minimax-native') } })
+  // A stand-in for the bridge's copy of mcode's SQLite module (the fake agent never loads it): without one, thread/start
+  // would npm-install the real module from the registry first, a network download inside the test.
+  const native = tmp()
+  fs.mkdirSync(path.join(native, 'node_modules', 'better-sqlite3'), { recursive: true })
+  fs.writeFileSync(path.join(native, 'package.json'), '{"name":"r9-native","private":true}\n')
+  fs.writeFileSync(path.join(native, 'node_modules', 'better-sqlite3', 'package.json'), '{"name":"better-sqlite3","main":"index.js"}\n')
+  fs.writeFileSync(path.join(native, 'node_modules', 'better-sqlite3', 'index.js'), 'module.exports = {}\n')
+  const b = bridge({ adapter: adapterById('minimax'), env: { ...TOOLS, MAVIS_SQLITE3_MODULE_PATH: native } })
   try {
     await b.call('initialize', {})
     const { thread } = await b.call('thread/start', { cwd: b.home, config: { [SESSION_CONFIG_KEY]: 'start-mm' }, ...mode('auto') })
