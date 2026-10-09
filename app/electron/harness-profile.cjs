@@ -195,6 +195,16 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
     return result.canceled || !result.filePaths?.length ? null : result.filePaths[0];
   }
 
+  // Every overlay change reads overlay.json, edits it and writes it whole: one at a time, each from the last one's
+  // result, so a page click racing a managed-row write (model-settings) loses neither.
+  let writes = Promise.resolve();
+  function serial(task) {
+    const result = writes.then(task);
+    writes = result.catch(() => {});
+    return result;
+  }
+  const mutate = (next) => serial(async () => writeState(await next()));
+
   async function run(p = {}) {
     const mod = await lib;
     switch (p.op) {
@@ -205,24 +215,24 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
       }
       case "set-enabled": {
         const entries = await ensureEntries();
-        await writeState(mod.setRowEnabled(readState(), { id: p.id, enabled: p.enabled }, entries));
+        await mutate(() => mod.setRowEnabled(readState(), { id: p.id, enabled: p.enabled }, entries));
         return read();
       }
       case "mcp-add": {
         const entries = await ensureEntries();
         const existingNames = entries.map((entry) => entry.serverName).filter(Boolean);
-        await writeState(mod.mcpInsert({ ...p, existingNames }, readState()));
+        await mutate(() => mod.mcpInsert({ ...p, existingNames }, readState()));
         return read();
       }
       case "mcp-remove":
       case "remove-insert":
-        await writeState(mod.removeInsert(readState(), p.id));
+        await mutate(() => mod.removeInsert(readState(), p.id));
         return read();
       case "hooks-add":
-        await writeState(mod.hooksInsert(readState(), { format: p.format, configPath: p.configPath }));
+        await mutate(() => mod.hooksInsert(readState(), { format: p.format, configPath: p.configPath }));
         return read();
       case "skill-dirs":
-        await writeState(mod.setSkillDirs(readState(), p.dirs));
+        await mutate(() => mod.setSkillDirs(readState(), p.dirs));
         return read();
       case "pick-skill-dir":
         return { path: await pick({ title: "Choose a skill folder", properties: ["openDirectory", "createDirectory"] }) };
@@ -243,7 +253,7 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
         return openPath(files.user);
       }
       case "reset-overlay":
-        await writeState({ rows: {}, inserts: [] });
+        await mutate(() => ({ rows: {}, inserts: [] }));
         return read();
       default:
         throw new Error("Unknown Harness profile operation.");
@@ -253,8 +263,11 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
   // C5 seams: provider rows and the env vars the core process needs.
   // An unchanged row writes nothing and asks for no restart (model-settings re-applies its rows at startup).
   async function setManagedRow(id, row) {
-    const mod = await lib, current = readState(), next = mod.setManagedRow(current, id, row);
-    return JSON.stringify(mod.normalizeOverlay(current)) === JSON.stringify(next) ? next : writeState(next);
+    const mod = await lib;
+    return serial(() => {
+      const current = readState(), next = mod.setManagedRow(current, id, row);
+      return JSON.stringify(mod.normalizeOverlay(current)) === JSON.stringify(next) ? next : writeState(next);
+    });
   }
   async function removeManagedRow(id) { return setManagedRow(id, null); }
   // pending:false sets a value before the first core spawn (nothing to restart yet); an unchanged value marks nothing.
