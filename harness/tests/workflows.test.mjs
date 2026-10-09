@@ -293,3 +293,25 @@ test('the "Run a dynamic workflow?" card names the script: name, description, ph
   assert.equal(workflowApprovalCommand({ script: 'export const meta={name:`scan`,description:`Look around`};return 1' }), 'Workflow: scan\nLook around')
   assert.equal(workflowApprovalCommand({ name: 'review-changes' }), 'Workflow: review-changes')
 })
+
+// dsh-workflow-ptc ends only started members when a run settles: a member still queued for a concurrency slot gets
+// no agent-end and no failed admission, so the settled card must not keep showing it as queued.
+for (const stopReason of ['cancelled', 'error']) test(`members still queued when the run ends (${stopReason}) settle as skipped, live and in replay`, () => {
+  const history = [], p = new ThreadProjector({ threadId: 'queued-stop' })
+  const apply = event => { history.push(event); return p.apply(event) }
+  startWorkflow({ apply }, 'w1', { script: 'export const meta={name:"queue",description:"Queue"};return 1' })
+  for (const [type, data] of [
+    ['tool-workflow/run-start', { runId: 'wf_queued-stop', attemptId: 'a1', name: 'queue' }],
+    ['tool-workflow/agent-admission', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 1, label: 'running', state: 'queued', queuedAt: 1, lastProgressAt: 1 }],
+    ['tool-workflow/agent-admission', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 2, label: 'waiting', state: 'queued', queuedAt: 2, lastProgressAt: 2 }],
+    ['tool-workflow/agent-start', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 1, label: 'running', childId: 'c1' }],
+    ['tool-workflow/agent-end', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 1, outcome: 'cancelled' }],
+    ['tool-workflow/run-end', { runId: 'wf_queued-stop', attemptId: 'a1', stopReason }],
+  ]) apply(ev(type, data))
+  const run = runOf(p)
+  assert.equal(run.status, stopReason === 'cancelled' ? 'stopped' : 'failed')
+  assert.deepEqual(agents(run).map(agent => [agent.label, agent.state]), [['running', 'skipped'], ['waiting', 'skipped']])
+  const replay = new ThreadProjector({ threadId: 'queued-stop' })
+  for (const event of history) replay.apply(event)
+  assert.deepEqual(agents(runOf(replay)).map(agent => agent.state), ['skipped', 'skipped'])
+})

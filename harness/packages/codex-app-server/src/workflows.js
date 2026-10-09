@@ -235,7 +235,10 @@ function settle(run, status, time, summary) {
   // completed agent calls return their cached results): the card's Resume (codeDesktop/workflow/resume, index.js).
   if (status !== 'completed' && run.source === 'model' && /^wf_[a-z0-9-]{6,}$/u.test(run.runId ?? '') && text(run.scriptPath)) run.resumable = true
   for (const entry of run.workflowProgress) {
-    if (entry.type !== 'workflow_agent' || entry.state !== 'progress') continue
+    if (entry.type !== 'workflow_agent') continue
+    // A member still queued for a slot never started: the engine ends only started members, so it is skipped here.
+    if (entry.state === 'start') { entry.state = 'skipped'; continue }
+    if (entry.state !== 'progress') continue
     entry.state = 'error'
     entry.error = status === 'stopped' ? 'Stopped before completion' : 'Workflow ended before completion'
   }
