@@ -163,7 +163,8 @@ export class ClientServices {
   kill(term) {
     if (term.exit) return
     try { process.kill(-term.child.pid, 'SIGTERM') } catch { try { term.child.kill('SIGTERM') } catch {} }
-    setTimeout(() => { if (!term.exit) try { process.kill(-term.child.pid, 'SIGKILL') } catch {} }, 2000).unref?.()
+    // The whole group, even once the shell itself has exited: a child that ignored SIGTERM would outlive it.
+    setTimeout(() => { try { process.kill(-term.child.pid, 'SIGKILL') } catch {} }, 2000).unref?.()
   }
 
   /** Running terminals, for thread/backgroundTerminals/list. */

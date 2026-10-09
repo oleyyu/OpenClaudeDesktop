@@ -114,3 +114,24 @@ test('thread/delete of "." or ".." never removes the bridge\'s state folder or o
     await b.close()
   }
 })
+
+test('terminal/kill also ends a command\'s children that outlive their shell (SIGTERM ignored)', async () => {
+  const { ClientServices } = await import('../packages/acp-bridge/src/client-services.js')
+  const dir = tmp()
+  const pidFile = path.join(dir, 'child.pid')
+  const services = new ClientServices({ thread: () => ({ cwd: dir, permission: { mode: 'bypass' } }), profileFile: path.join(dir, 'terminal.sb') })
+  // The shell dies on SIGTERM; the background child ignores it (as a process trapping TERM would) and keeps running.
+  const { terminalId } = services.create({ command: `sh -c 'trap "" TERM; echo $$ > ${pidFile}; while :; do sleep 1; done' & wait`, cwd: dir })
+  for (let i = 0; i < 100 && !(fs.existsSync(pidFile) && fs.readFileSync(pidFile, 'utf8').trim()); i++) await sleep(20)
+  const pid = Number(fs.readFileSync(pidFile, 'utf8').trim())
+  const alive = () => { try { process.kill(pid, 0); return true } catch { return false } }
+  assert.ok(alive())
+  try {
+    await services.terminal('terminal/kill', { terminalId })
+    await services.terminal('terminal/wait_for_exit', { terminalId })
+    for (let i = 0; i < 60 && alive(); i++) await sleep(100)
+    assert.equal(alive(), false, 'the child that ignored SIGTERM is gone too')
+  } finally {
+    try { process.kill(pid, 'SIGKILL') } catch {}
+  }
+})
