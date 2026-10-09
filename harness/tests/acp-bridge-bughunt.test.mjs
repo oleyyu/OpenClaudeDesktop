@@ -64,3 +64,18 @@ test('a turn stopped before its prompt reached the agent never sends that prompt
     await b.close()
   }
 })
+
+test('terminal output keeps a multi-byte character that arrives split across two reads', async () => {
+  const { ClientServices } = await import('../packages/acp-bridge/src/client-services.js')
+  const dir = tmp()
+  const deltas = []
+  const services = new ClientServices({ thread: () => ({ cwd: dir, permission: { mode: 'bypass' } }), profileFile: path.join(dir, 'terminal.sb'), onOutput: (id, chunk) => deltas.push(chunk) })
+  // '中' is E4 B8 AD: its first two bytes and its last one reach the pipe 150 ms apart (two reads).
+  const script = "process.stdout.write(Buffer.from([0xe4, 0xb8])); setTimeout(() => process.stdout.write(Buffer.from([0xad, 0x0a])), 150)"
+  const { terminalId } = services.create({ command: process.execPath, args: ['-e', script], cwd: dir })
+  await services.terminal('terminal/wait_for_exit', { terminalId })
+  await sleep(50)
+  const { output } = await services.terminal('terminal/output', { terminalId })
+  assert.equal(output, '中\n')
+  assert.equal(deltas.join(''), '中\n')
+})

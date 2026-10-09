@@ -150,6 +150,9 @@ export class ClientServices {
       }
       this.options.onOutput?.(id, text)
     }
+    // Decoded per stream, so a multi-byte character split across two reads stays whole.
+    child.stdout.setEncoding('utf8')
+    child.stderr.setEncoding('utf8')
     child.stdout.on('data', onData)
     child.stderr.on('data', onData)
     this.terminals.set(id, term)
