@@ -84,7 +84,7 @@ import { configReadResponse, fiberPhase, latestThreadIn, mcpClientEntries, mcpSe
 import { goalMutate, goalViewOf, setGoal, threadGoal } from './goals.js'
 import { coreSettingsRead, coreSettingsWrite } from './core-settings.js'
 import { exportSessionLog, sessionLogExportReady } from './session-log-export.js'
-import { SessionGrants, acceptsEdit, applyPermissions as applyThreadPermissions, applyPreset as applyThreadPreset, approvalAnswer, approvalDecision, childApproval, childDecision, livePermissions, preExecuteDecision, rootThreadFor, syncPlanMode } from './approval.js'
+import { SessionGrants, acceptsEdit, applyPermissions as applyThreadPermissions, applyPreset as applyThreadPreset, approvalAnswer, approvalDecision, childApproval, childDecision, livePermissions, preExecuteDecision, rootThreadFor, syncPlanMode, updatePermission } from './approval.js'
 import { sourceFilter, threadLineage } from './subagents.js'
 import { afterPlanPermission, approvedAfterPlan, codexQuestions, harnessAnswer, isPlanApproval, questionFailure, questionItemId } from './questions.js'
 import { DEEPSEEK_KEY_REF, accountReadResponse, providerAccountResponse } from './account.js'
@@ -1395,6 +1395,18 @@ export function apply(ctx, config) {
     const before = thread.permission.mode !== 'review' && thread.appMode === true ? { ...thread.permission, extraRoots: [...(thread.permission.extraRoots ?? [])] } : null
     thread.gateWorkflows(params)
     thread.gateTools(params)
+    if (thread.review) {
+      // A review turn stays read-only (review.js), as for codeDesktop/thread/permissions: a mode that a thread/resume or
+      // turn/start names meanwhile is the one the review's end restores, never applied to the running review.
+      const base = thread.review.previous ?? thread.permission
+      const next = { ...base, extraRoots: [...(base.extraRoots ?? [])] }
+      await updatePermission(next, params, thread.cwd)
+      if (next.mode !== 'review') {
+        thread.review.previous = next
+        if (typeof params?.codeDesktop?.permissionMode === 'string') thread.appMode = true
+      }
+      return
+    }
     await applyThreadPermissions(thread, params, permissionServices())
     if (thread.permission.mode !== 'review') {
       thread.beforeReview = null

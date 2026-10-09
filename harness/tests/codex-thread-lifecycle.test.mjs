@@ -13,8 +13,8 @@ import { LineTransport } from '../packages/acp-bridge/src/transport.js'
 const root = path.resolve(import.meta.dirname, '..')
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-/** A scripted model: every request gets one short text answer. */
-async function fakeModel() {
+/** A scripted model: `script(body)` (may be async) answers {text} or {tool: {name, input}}; by default one short text. */
+async function fakeModel(script = () => ({ text: 'hello' })) {
   const requests = []
   const server = http.createServer(async (req, res) => {
     let raw = ''
@@ -26,21 +26,24 @@ async function fakeModel() {
     }
     const body = JSON.parse(raw)
     requests.push(body)
+    const answer = (await script(body)) ?? { text: 'hello' }
     const id = `msg_${requests.length}`
     const usage = { input_tokens: 10, output_tokens: 5 }
-    const text = 'hello'
+    const blocks = answer.tool ? [{ type: 'tool_use', id: `toolu_${requests.length}`, name: answer.tool.name, input: answer.tool.input }] : [{ type: 'text', text: answer.text }]
+    const stop = answer.tool ? 'tool_use' : 'end_turn'
     if (body.stream === false) {
       res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ id, type: 'message', role: 'assistant', model: body.model, content: [{ type: 'text', text }], stop_reason: 'end_turn', stop_sequence: null, usage }))
+      res.end(JSON.stringify({ id, type: 'message', role: 'assistant', model: body.model, content: blocks, stop_reason: stop, stop_sequence: null, usage }))
       return
     }
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' })
     const send = (event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
     send('message_start', { type: 'message_start', message: { id, type: 'message', role: 'assistant', model: body.model, content: [], stop_reason: null, stop_sequence: null, usage } })
-    send('content_block_start', { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } })
-    send('content_block_delta', { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } })
+    const [block] = blocks
+    send('content_block_start', { type: 'content_block_start', index: 0, content_block: block.type === 'tool_use' ? { ...block, input: {} } : { type: 'text', text: '' } })
+    send('content_block_delta', { type: 'content_block_delta', index: 0, delta: block.type === 'tool_use' ? { type: 'input_json_delta', partial_json: JSON.stringify(block.input) } : { type: 'text_delta', text: block.text } })
     send('content_block_stop', { type: 'content_block_stop', index: 0 })
-    send('message_delta', { type: 'message_delta', delta: { stop_reason: 'end_turn', stop_sequence: null }, usage: { output_tokens: 5 } })
+    send('message_delta', { type: 'message_delta', delta: { stop_reason: stop, stop_sequence: null }, usage: { output_tokens: 5 } })
     send('message_stop', { type: 'message_stop' })
     res.end()
   })
@@ -59,11 +62,11 @@ async function until(check, label, ms = 60000) {
 }
 
 /** The core on a private home; `run(call, notes, home)` drives it. */
-async function withCore(run) {
+async function withCore(run, { script } = {}) {
   const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cd-lifecycle-')))
   const workspace = path.join(home, 'w')
   fs.mkdirSync(workspace)
-  const model = await fakeModel()
+  const model = await fakeModel(script)
   const stderr = []
   const child = spawn(process.execPath, [path.join(root, 'bin/codex-app-server.mjs'), 'app-server', '--stdio'], {
     cwd: home,
@@ -86,7 +89,7 @@ async function withCore(run) {
     const call = (method, params, ms = 60000) => client.call(method, params, ms)
     await call('initialize', { clientInfo: { name: 'code_desktop_test', title: 'test', version: '0.0.0' }, capabilities: { experimentalApi: true } }, 120000)
     client.notify('initialized', {})
-    await run({ call, notes, home, workspace })
+    await run({ call, notes, home, workspace, model })
   } catch (error) {
     error.message += `\n--- core stderr ---\n${stderr.join('').slice(-4000)}`
     throw error
@@ -119,4 +122,41 @@ test('a review stopped before its prompt was logged ends review mode: the thread
     const again = await call('review/start', { threadId: thread.id, target: { type: 'uncommittedChanges' } })
     assert.equal(again.reviewThreadId, thread.id)
   })
+})
+
+test('a thread/resume while a review runs keeps the review read-only; the mode it names applies when the review ends', { timeout: 180000 }, async () => {
+  let release
+  const gate = new Promise((resolve) => { release = resolve })
+  let reviewAsked = false
+  let target
+  const answered = (body) => body.messages.at(-1)?.content?.some?.((block) => block.type === 'tool_result')
+  const script = async (body) => {
+    const all = JSON.stringify(body.messages.filter((message) => message.role === 'user').at(-1)?.content ?? '')
+    const write = (body.tools ?? []).find((tool) => tool.name === 'write')
+    if (!write || answered(body)) return { text: 'done' }
+    if (all.includes('Review the uncommitted changes')) {
+      reviewAsked = true
+      await gate
+      return { tool: { name: 'write', input: { file_path: path.join(target, 'review-wrote.txt'), content: 'changed by a review\n' } } }
+    }
+    if (all.includes('WRITE_AFTER')) return { tool: { name: 'write', input: { file_path: path.join(target, 'after.txt'), content: 'after\n' } } }
+    return { text: 'hello' }
+  }
+  await withCore(async ({ call, notes, workspace }) => {
+    target = workspace
+    const models = await call('model/list', {})
+    const model = models.data.find((entry) => entry.isDefault)?.id ?? models.data[0]?.id
+    const { thread } = await call('thread/start', { cwd: workspace, model, approvalPolicy: 'on-request', sandbox: 'workspace-write', codeDesktop: { permissionMode: 'auto' } })
+    const review = await call('review/start', { threadId: thread.id, target: { type: 'uncommittedChanges' } })
+    await until(() => reviewAsked, 'the review request', 90000)
+    // The user comes back to the session while the review runs: the app resumes it with the session's mode.
+    await call('thread/resume', { threadId: thread.id, approvalPolicy: 'on-request', sandbox: 'workspace-write', codeDesktop: { permissionMode: 'auto' } })
+    release()
+    await until(() => notes.some((note) => note.method === 'turn/completed' && note.params.turn.id === review.turn.id), 'the review turn', 90000)
+    assert.equal(fs.existsSync(path.join(workspace, 'review-wrote.txt')), false, 'the review turn wrote a file')
+    // After the review the session writes again under the mode the resume named.
+    const { turn } = await call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'WRITE_AFTER', text_elements: [] }] })
+    await until(() => notes.some((note) => note.method === 'turn/completed' && note.params.turn.id === turn.id), 'the next turn', 90000)
+    assert.equal(fs.readFileSync(path.join(workspace, 'after.txt'), 'utf8'), 'after\n')
+  }, { script })
 })
