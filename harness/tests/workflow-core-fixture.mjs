@@ -14,12 +14,15 @@ const root = path.resolve(import.meta.dirname, '..')
 export const textOf = (content) => typeof content === 'string' ? content : Array.isArray(content) ? content.map((block) => block.type === 'text' ? block.text : block.type === 'tool_result' ? textOf(block.content) : '').join('') : ''
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export async function until(check, label, ms = 30000) {
+// The real core does several model round trips and starts sub-agents before most waits are met: on a loaded machine
+// (the whole suite runs files in parallel) that takes far longer than alone, as the suite's other real-core tests allow.
+// A timeout names what was awaited and what the fixture saw (`label` may be a function, read at the timeout).
+export async function until(check, label, ms = 60000) {
   const end = Date.now() + ms
   for (;;) {
     const value = check()
     if (value) return value
-    if (Date.now() > end) throw new Error(`timed out waiting for ${label}`)
+    if (Date.now() > end) throw new Error(`timed out after ${ms / 1000}s waiting for ${typeof label === 'function' ? label() : label}`)
     await sleep(25)
   }
 }
@@ -84,5 +87,7 @@ export async function core(t, respond) {
     client = await connect()
     return client
   }
-  return { client, events, requests, hanging, thread, workspace, model, restart }
+  // What the fixture has seen, for a timeout's message.
+  const seen = () => `${requests.length} model request(s), ${hanging.size} held open; last core events: ${events.slice(-8).map((event) => event.method).join(', ') || 'none'}`
+  return { client, events, requests, hanging, thread, workspace, model, restart, seen }
 }

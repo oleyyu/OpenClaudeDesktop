@@ -11,11 +11,12 @@ test('a background workflow whose job died with the previous core settles as sto
     if (textOf(body.messages.at(-1)?.content).startsWith('go')) return { name: 'Workflow', input: { script: 'export const meta={name:"restart",description:"Restart"}; return await agent("CHILD_HANG a",{label:"a"})' } }
     return { text: 'ROOT_DONE' }
   })
-  const { events, hanging, thread, workspace, model } = fixture
+  const { events, hanging, thread, workspace, model, seen } = fixture
   const params = { approvalPolicy: 'never', sandbox: 'danger-full-access', codeDesktop: { dynamicWorkflows: true } }
   const threadId = await thread(params)
   await fixture.client.request('turn/start', { threadId, input: [{ type: 'text', text: 'go' }] })
-  await until(() => hanging.size === 1 && events.some((event) => event.method === 'turn/completed' && event.params.threadId === threadId), 'the running background run')
+  // The run's agent holds its model request open (a retried request may briefly overlap the dropped one: at least one).
+  await until(() => hanging.size >= 1 && events.some((event) => event.method === 'turn/completed' && event.params.threadId === threadId), () => `the running background run (its agent's held request and the root turn/completed): ${seen()}`)
   // While its job lives, the run is running (the tool result's job sync leaves it be).
   assert.equal(events.filter((event) => event.params?.threadId === threadId && event.params?.item?.workflowRun).at(-1).params.item.workflowRun.status, 'running')
   const client = await fixture.restart()
