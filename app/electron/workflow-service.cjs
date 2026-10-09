@@ -151,14 +151,14 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
  async function member(id,memberId,action){await ready;const run=trusted(id);if(!['retry','skip'].includes(action)||!run.workflowProgress.some(p=>p.type==='workflow_agent'&&p.id===memberId&&p.state==='progress'))throw fail('Unknown active workflow member.');return running.get(id)?.member(memberId,action)??{accepted:false};}
  const get=id=>runs.get(id)??null;
  // The core threads every run's agents ran in (the journal's and result.json's agentId): never the user's sessions
- // ('Resume a session'). A settled run's set is read once.
+ // ('Resume a session'). A settled run's set is read once (per attempt: a resume adds agents to the same run).
  const agentCache=new Map();
- const runAgentIds=run=>{const cached=agentCache.get(run.id);if(cached&&cached.status===run.status&&run.status!=='running')return cached.ids;const ids=new Set();
+ const runAgentIds=run=>{const cached=agentCache.get(run.id);if(cached&&cached.status===run.status&&cached.startedAt===run.startedAt&&run.status!=='running')return cached.ids;const ids=new Set();
   const take=value=>{if(typeof value==='string'&&value&&value.length<=200)ids.add(value);};
   try{for(const line of fs.readFileSync(path.join(root,run.id,'journal.jsonl'),'utf8').split('\n')){if(!line)continue;try{take(JSON.parse(line)?.agentId);}catch{}}}catch{}
   try{const text=fs.readFileSync(path.join(root,run.id,'result.json'),'utf8');if(text){const value=JSON.parse(text);for(const entry of Array.isArray(value?.workflowProgress)?value.workflowProgress:[])if(entry?.type==='workflow_agent')take(entry.agentId);}}catch{}
   for(const entry of run.workflowProgress||[])if(entry?.type==='workflow_agent')take(entry.agentId);
-  agentCache.set(run.id,{status:run.status,ids});return ids;};
+  agentCache.set(run.id,{status:run.status,startedAt:run.startedAt,ids});return ids;};
  const agentIds=()=>{const out=new Set();for(const run of runs.values())for(const id of runAgentIds(run))out.add(id);return out;};
  return {list,start,stop,member,pause,save,get,dispose,ready,agentIds,orphans,orphanDelivered};
 }

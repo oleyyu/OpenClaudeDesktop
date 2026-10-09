@@ -76,3 +76,23 @@ test('a generated phase title is translated and still gives way to the real titl
     assert.equal(workflowPhases({ workflowProgress: [{ type: 'workflow_phase', index: 2, title: 'Phase two' }, { ...agent, phaseIndex: 2, phaseTitle: 'Later' }] }, 0)[0].title, 'Phase two', 'a real title is kept');
   } finally { i18n.setLocale(before); }
 });
+
+// The runner's agent threads are hidden from 'Resume a session': a resumed run's new agents must be too.
+test('agentIds includes the agents of a resumed run that settles with the same status as before', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'cd-wf-ui-agents-'));
+  const child = path.join(root, 'child.cjs');
+  await fs.writeFile(child, `const fs=require('node:fs'),path=require('node:path');process.once('message',o=>{fs.appendFileSync(path.join(o.directory,'journal.jsonl'),JSON.stringify({key:o.resume?'k2':'k1',agentId:o.resume?'thread-second':'thread-first'})+'\\n');
+    process.send({event:{type:'result',result:1}},()=>process.exit(0));});`);
+  const file = path.join(root, 'demo.workflow.js');
+  await fs.writeFile(file, 'export const meta={name:"demo",description:"Demo"}; return 1');
+  const runner = service.createWorkflowService({ root: path.join(root, 'runs'), getConfig: () => ({ threadIds: ['t'], cwd: root, dynamicWorkflows: true }), version: 'test', command: '/nonexistent',
+    emit() {}, spawn: (_file, args, options) => fork(child, args, options) });
+  try {
+    const first = await runner.start({ threadId: 't', file });
+    assert.equal((await settled(runner, first.id)).status, 'completed');
+    assert.deepEqual([...runner.agentIds()], ['thread-first']);
+    await runner.start({ threadId: 't', file, resumeId: first.id });
+    assert.equal((await settled(runner, first.id)).status, 'completed');
+    assert.deepEqual([...runner.agentIds()].sort(), ['thread-first', 'thread-second']);
+  } finally { await runner.dispose(); await fs.rm(root, { recursive: true, force: true }); }
+});
