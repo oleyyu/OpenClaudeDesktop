@@ -743,9 +743,9 @@ function parseRemoteUrl(url) {
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) {
     let parsed;
     try { parsed = new URL(value); } catch { return null; }
-    if (parsed.protocol === 'file:') return { host: null, owner: null, name: remoteRepoName(decodeURIComponent(parsed.pathname)) };
-    host = parsed.hostname || null;
     try { route = decodeURIComponent(parsed.pathname); } catch { route = parsed.pathname; }
+    if (parsed.protocol === 'file:') return { host: null, owner: null, name: remoteRepoName(route) };
+    host = parsed.hostname || null;
   } else {
     const scp = /^(?:[^@/\s]+@)?([^:/\s]+):(?!\/)(.+)$/.exec(value);
     if (!scp) return { host: null, owner: null, name: remoteRepoName(value) };
