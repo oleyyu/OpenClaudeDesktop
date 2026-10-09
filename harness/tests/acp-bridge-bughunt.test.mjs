@@ -95,3 +95,22 @@ test('a permission request that arrives after Stop is answered cancelled, never 
     await b.close()
   }
 })
+
+test('thread/delete of "." or ".." never removes the bridge\'s state folder or other threads\' history', async () => {
+  const b = bridge()
+  try {
+    const { thread } = await b.call('thread/start', { cwd: b.home, ...mode('auto') })
+    const state = path.join(b.home, 'state')
+    const history = fs.readdirSync(path.join(state, 'threads')).find((name) => name.endsWith('.json'))
+    assert.ok(history, 'the new thread has its history file')
+    for (const id of ['..', '.']) await b.call('thread/delete', { threadId: id }).catch(() => {})
+    assert.ok(fs.existsSync(path.join(state, 'threads', history)), 'the other thread\'s history stays')
+    assert.ok(fs.existsSync(path.join(state, 'index.json')) || fs.existsSync(path.join(state, 'threads')), 'the state folder stays')
+    const { ThreadStore } = await import('../packages/acp-bridge/src/store.js')
+    const store = new ThreadStore(path.join(b.home, 'probe'))
+    for (const id of ['.', '..']) assert.equal(path.dirname(store.threadDir(id)), path.join(b.home, 'probe', 'threads'), `${id} stays inside threads/`)
+    void thread
+  } finally {
+    await b.close()
+  }
+})

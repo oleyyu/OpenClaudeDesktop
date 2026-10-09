@@ -28,7 +28,8 @@ export function writeJson(file, value) {
   fs.renameSync(temp, file)
 }
 
-const safeId = (id) => String(id).replace(/[^A-Za-z0-9._-]/g, (ch) => `~${ch.charCodeAt(0).toString(16)}`)
+// '.' and '..' are path segments of their own (threads/.. is the store itself): their dots are encoded too.
+const safeId = (id) => (/^\.+$/.test(String(id)) ? String(id).replace(/\./g, '~2e') : String(id).replace(/[^A-Za-z0-9._-]/g, (ch) => `~${ch.charCodeAt(0).toString(16)}`))
 
 export class ThreadStore {
   constructor(dir) {
