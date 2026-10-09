@@ -239,3 +239,12 @@ test('Theme page: groups, rows and controls per the settings IA', () => {
   assert.match(html, /<datalist id="[^"]+"><option value="SF Pro"/);
   assert.match(html, /class="ss-theme-custom-preview" aria-hidden="true" inert=""/);
 });
+
+test('Theme page: a saved quarter-step corner radius (a theme file’s 1.25) is shown, not a blank select', () => {
+  // RADIUS_SCALE keeps 0.25 steps (normalizeTheme / validateTheme), wider than the five named options.
+  const html = render(React.createElement(Page, { config: { customTheme: { preset: 'custom', radiusScale: 1.25 } }, desktopCall: async () => null, onSave: async () => ({}), onOpenSetting: () => {} }));
+  const radius = html.match(/aria-label="Corner radius"[^>]*>.*?<span class="sselect-value">([^<]*)<\/span>/)?.[1];
+  assert.equal(radius, '125%');
+  const named = render(React.createElement(Page, { config: { customTheme: { preset: 'custom', radiusScale: 1.5 } }, desktopCall: async () => null, onSave: async () => ({}), onOpenSetting: () => {} }));
+  assert.equal(named.match(/aria-label="Corner radius"[^>]*>.*?<span class="sselect-value">([^<]*)<\/span>/)?.[1], 'Round');
+});
