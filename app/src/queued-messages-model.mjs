@@ -102,7 +102,15 @@ export function optimisticReorder(queue, fromId, toId) {
   const entries = reorderEntries(queue.entries, fromId, toId);
   if (entries === queue.entries) return { queue, rollback: () => queue, ids: queue.entries.map((entry) => entry.id) };
   const next = { ...queue, entries, revision: queue.revision + 1 };
-  return { queue: next, rollback: (current = next) => ({ ...current, entries: queue.entries, revision: current.revision + 1 }), ids: entries.map((entry) => entry.id) };
+  // The rollback undoes the move only: the entries still queued go back to their earlier order (their current
+  // objects), and one that arrived meanwhile stays after them; one that left meanwhile is not brought back.
+  const rollback = (current = next) => {
+    const live = new Map(current.entries.map((entry) => [entry.id, entry]));
+    const before = new Set(queue.entries.map((entry) => entry.id));
+    const restored = queue.entries.filter((entry) => live.has(entry.id)).map((entry) => live.get(entry.id));
+    return { ...current, entries: [...restored, ...current.entries.filter((entry) => !before.has(entry.id))], revision: current.revision + 1 };
+  };
+  return { queue: next, rollback, ids: entries.map((entry) => entry.id) };
 }
 
 // ↑ in an empty editor takes back the newest entry that can still be cancelled (cc43287c9-BMbiZYzF.js
