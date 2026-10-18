@@ -115,6 +115,13 @@
 .source-transcript-content > :is(.source-message, .stf-footer):has(+ .source-transcript-status) {
   margin-bottom: 0;
 }
+/* A running tool row whose turn-mark box sits in the tail outlet (turn-mark Wa: only its empty `contents` home is
+   left in place) draws nothing. The desktop's entry is a flex column with item gaps, where that home makes no flex
+   item; this host spaces rows with margins, so the empty row (and its wrapper) makes no box either and its
+   neighbours' margins meet as they do without it — otherwise every handoff of the mark between the row and the
+   working line moves the tail by a gap. */
+.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty),
+.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty) > * { display: contents; }
 /* A loaded but empty thread has no preceding row and therefore no turn gap. */
 .source-transcript-content > .source-transcript-status:first-child { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {

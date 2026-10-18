@@ -4,6 +4,9 @@
 //
 // What the props mean to w8 (official names):
 //   isActuallyWorking   the turn is running and not stopping or waiting on the user (T8 `k`)
+//   markHeld / quiet    a running tool row holds the turn's mark (T8 `c = ev()`, the broker's held flag): w8 leaves the
+//                       mark to that row and, while it just works, goes quiet — invisible in the tail cell's
+//                       `grid-area:1/1` under the outlet, so the handoff moves neither the mark nor the rows below
 //   isStopping          a stop was asked while it ran (`w = t && C`) → "Stopping…"
 //   waitingOnUser       running but waiting on an approval / question (T8 `M`) → the blocked "Needs your input" row
 //   spawnLabel / spawnDetail / spawnAction   a named step instead of the stats (Home's worktree steps, B29)
@@ -49,9 +52,20 @@ function retryProps(retry, retrying) {
  */
 export function workingLineProps(view, {
   retrying = null, elapsed = null, outputTokens = null, activity = null, thinking = null, waiting = null,
-  runningTaskCount = 0, finishedTaskCount = 0, onToggleTasksPane = null, tasksPaneOpen = false,
+  runningTaskCount = 0, finishedTaskCount = 0, onToggleTasksPane = null, tasksPaneOpen = false, markHeld = false,
 } = {}) {
   if (!view?.visible) return null;
+  const line = runningProps(view, { retrying, elapsed, outputTokens, activity, thinking, waiting,
+    runningTaskCount, finishedTaskCount, onToggleTasksPane, tasksPaneOpen });
+  // c96d752d0 T8: `quiet: c && k && !w && !y && m !== "compacting" && _ === null && i === void 0, markHeld: c`
+  // (y, the drained queue, has no host state).
+  const held = !!markHeld;
+  return { ...line, markHeld: held,
+    quiet: held && line.isActuallyWorking && !line.isStopping && !line.isDraining && !line.isCompacting && line.apiRetry === null && line.spawnLabel === undefined };
+}
+
+function runningProps(view, { retrying, elapsed, outputTokens, activity, thinking, waiting,
+  runningTaskCount, finishedTaskCount, onToggleTasksPane, tasksPaneOpen }) {
   const props = {
     quiet: false, markHeld: false, sessionId: null, turnStartTime: null, labelAnnouncedByHost: false, markStandalone: false,
     onThinkingStatusPainted: null, linkEnded: false, isDraining: false,

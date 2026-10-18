@@ -6,6 +6,8 @@ import { createThinkingReader, elapsedTurnSeconds, subscribeThinkingClock, subsc
 import { turnWaiting, workingLineProps, workingLineThinking } from "./working-line-model.mjs";
 import { SourceWorkingLine } from "./source-working-line.jsx";
 import { TranscriptTail } from "./source-transcript-rows.jsx";
+// cb6930dae Ja (c96d752d0 `ev`): whether a running tool row holds the turn's mark (the transcript's TurnMarkBroker).
+import { Ja as useTurnMarkHeld } from "./generated/working-line/morph.mjs";
 
 // The static path now lives in source-spark.jsx; re-exported for existing imports.
 export const TRANSCRIPT_SPARK_PATH = SPARK_PATH;
@@ -52,8 +54,10 @@ export function SourceTranscriptStatus({ textSize = "m", turnId, turnStats, item
   // ITe: `open` while the thought streams; without a clock thinkingState reports only a streaming thought.
   const thinking = working ? workingLineThinking(thought, thinkingState(turnId, items || [], itemPhases || {}) !== null) : null;
   const waiting = working ? turnWaiting(turnId, items || [], itemPhases || {}, activity) : null;
+  // T8 `c = ev()`: w8's markHeld / quiet, so the line steps back (same grid cell) while a tool row holds the mark.
+  const markHeld = useTurnMarkHeld();
   const line = workingLineProps(view, { retrying: state.retrying, elapsed, outputTokens: owned?.outputTokens, activity, thinking, waiting,
-    runningTaskCount, finishedTaskCount, onToggleTasksPane, tasksPaneOpen });
+    runningTaskCount, finishedTaskCount, onToggleTasksPane, tasksPaneOpen, markHeld });
   // Every invisible local presentation is a source state without a row (home, loading, hideLoader when the approval
   // card replaces the loader), so the tasks button never resurrects the row on its own.
   if (!line) return null;

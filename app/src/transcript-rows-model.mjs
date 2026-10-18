@@ -21,8 +21,17 @@ export { sdkToolOf };
 export function transcriptLiveScope({ sessionKey = null, turnId = null, items = [], itemPhases = {}, responding = false, turnStats = null, awaiting = false } = {}) {
   const live = turnId && responding ? liveTurnItems(turnId, items || [], itemPhases || {}) : [];
   const running = live.filter(item => TOOL_TYPES.has(item.type));
-  const turnTools = turnId && responding ? (items || []).filter(item => item?.turnId === turnId && TOOL_TYPES.has(item.type)) : [];
-  const lastTool = turnTools.length ? sdkToolOf(turnTools.at(-1)) : null;
+  // cb6930dae mo: over the turn's items in order, a thinking block forgets the tools before it; the last running tool
+  // wins over the last tool (`lastTool: c ?? s`), so a thought after a tool leaves the mark its own (think) activity.
+  let last = null, runningTool = null;
+  if (turnId && responding) for (const item of items || []) {
+    if (item?.turnId !== turnId) continue;
+    if (item.type === "reasoning") { last = runningTool = null; continue; }
+    if (!TOOL_TYPES.has(item.type)) continue;
+    last = item;
+    if (running.includes(item)) runningTool = item;
+  }
+  const lastTool = runningTool ?? last ? sdkToolOf(runningTool ?? last) : null;
   const owned = turnStats && turnStats.turnId === turnId ? turnStats : null;
   return {
     sessionId: sessionKey,

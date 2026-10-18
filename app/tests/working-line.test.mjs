@@ -250,3 +250,29 @@ test('morph: the original ja over the desktop framer-motion renders its keyed sp
   const adapters = fs.readFileSync(path.join(app, 'src/source-working-line-adapters.jsx'), 'utf8');
   assert.doesNotMatch(adapters, /export (function|const) (useReducedMotion|AnimatePresence|motion|Spark)\b/);
 });
+
+// c96d752d0 T8 `quiet: c && k && !w && !y && m !== "compacting" && _ === null && i === void 0, markHeld: c` (c = ev(),
+// the broker's held flag): while a running tool row holds the turn's mark, the line steps back into the tail cell's
+// grid-area 1/1 instead of taking a second grid row, so the mark's handoff moves nothing.
+test('mark held by a tool row: T8 quiet / markHeld, the line steps back in the same cell', () => {
+  const held = state => Model.workingLineProps(view(state), { elapsed: 5, markHeld: true, ...state.extra });
+  const running = held({ running: true });
+  assert.equal(running.markHeld, true); assert.equal(running.quiet, true);
+  assert.equal(Model.workingLineProps(view({ running: true }), { elapsed: 5 }).quiet, false, 'not held: not quiet');
+  assert.equal(Model.workingLineProps(view({ running: true }), { elapsed: 5 }).markHeld, false);
+  // Not quiet while it stops, compacts, retries or names a step (w, m, _, i); the mark stays with the row (markHeld).
+  for (const line of [held({ running: true, stopping: true }), held({ running: true, extra: { activity: { kind: 'compacting' } } }),
+    held({ running: true, retrying: { error: 'Rate limited', errorType: 'rate_limit', attempt: 1, maxRetries: 5 }, extra: { retrying: { errorType: 'rate_limit', attempt: 1, maxRetries: 5 } } }),
+    held({ running: true, waiting: true })]) {
+    assert.equal(line.quiet, false); assert.equal(line.markHeld, true);
+  }
+  const html = renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line: running }));
+  assert.match(html, /^<div data-testid="code-working-line" data-quiet="true" data-turn-working="true" class="invisible flex min-h-control flex-col" aria-hidden="true">/);
+  assert.doesNotMatch(html, /TurnStatusClayMark|TurnStatusLeftMark/);
+  const status = fs.readFileSync(path.join(app, 'src/source-transcript-status.jsx'), 'utf8');
+  assert.match(status, /import \{ Ja as useTurnMarkHeld \} from "\.\/generated\/working-line\/morph\.mjs";/);
+  assert.match(status, /const markHeld = useTurnMarkHeld\(\);\n[^\n]*workingLineProps\([^)]*\n[^)]*markHeld \}\);/);
+  // The held row's in-place remains (an empty `contents` home) make no box, so the tail does not move by its margin.
+  const css = fs.readFileSync(path.join(app, 'src/source-transcript-status.css'), 'utf8');
+  assert.ok(css.includes('.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty) > * { display: contents; }'));
+});

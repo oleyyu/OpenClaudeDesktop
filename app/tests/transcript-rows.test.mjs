@@ -118,6 +118,18 @@ test('model: SDK tool names for the mark\'s activity, the live scope, the runnin
   assert.equal(Model.stepState('unknown'), 'done');
 });
 
+// cb6930dae mo (`lastTool: c ?? s`, a "thinking" item resetting both): the mark's activity input while the turn responds.
+test('model: the live scope\'s last tool follows mo: a thought forgets earlier tools, a running tool wins', () => {
+  const tool = (id, command, status = 'completed') => ({ id, turnId: 't', type: 'commandExecution', command, status });
+  const last = items => Model.transcriptLiveScope({ sessionKey: 's', turnId: 't', items, responding: true }).lastTool;
+  assert.equal(last([tool('a', 'ls'), { id: 'r', turnId: 't', type: 'reasoning' }]), null, 'thinking after a tool: think');
+  assert.equal(last([{ id: 'r', turnId: 't', type: 'reasoning' }, tool('a', 'ls')])?.input.command, 'ls');
+  assert.equal(last([tool('a', 'npm test', 'inProgress'), tool('b', 'ls')])?.input.command, 'npm test', 'the running tool over the last one');
+  assert.equal(last([tool('a', 'ls'), tool('b', 'pwd')])?.input.command, 'pwd');
+  assert.equal(last([tool('x', 'ls'), { id: 'o', turnId: 'other', type: 'reasoning' }])?.input.command, 'ls', 'only the turn\'s own items');
+  assert.equal(Model.transcriptLiveScope({ sessionKey: 's', turnId: 't', items: [tool('a', 'ls')], responding: false }).lastTool, null);
+});
+
 // The tool rows themselves (user ruling: the transcript follows the desktop): c96d752d0 n0 (v2e) / e0 / Uz (JIe) / HZ over
 // the SDK tool calls the host converts its engine items to (transcript-sdk-tools.mjs), mounted by
 // source-transcript-tool-rows.jsx; the host's bodies, cards and file opener through the adapters.
