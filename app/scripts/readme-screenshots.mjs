@@ -1,6 +1,6 @@
 // README screenshots: the real app (dist/) on the fixture core with made-up demo sessions, in an isolated
 // throwaway profile, so no real session, folder, account or key can appear. Writes docs/images/*.png
-// (Chinese, README.md) or, with README_LOCALE=en, docs/images/*-en.png (English, README.en.md).
+// (Chinese, README.zh-CN.md) or, with README_LOCALE=en, docs/images/*-en.png (English, README.md).
 //   cd app && npx vite build && node scripts/readme-screenshots.mjs && README_LOCALE=en node scripts/readme-screenshots.mjs
 import {execFileSync} from 'node:child_process';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
 import {_electron as electron} from '../../tools/node_modules/playwright/index.mjs';
