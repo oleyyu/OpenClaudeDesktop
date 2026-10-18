@@ -756,7 +756,7 @@ export function officialToolItem(item) {
 // tool result bodies are the originals (cb6930dae Tu over the SDK tool call and its result, transcript-sdk-tools.mjs);
 // what the host still draws under a row is an item's deliverables (codeDesktop.artifacts, where the desktop draws the
 // files a tool attached: cb6930dae iu).
-function useToolRunHost({ agentContext, sessionKey, cwd, onOpenFileRef, onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested }) {
+function useToolRunHost({ agentContext, sessionKey, cwd, onOpenFileRef, onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested, liveTail = false }) {
   return useMemo(() => {
     const renderAttachedFiles = (item) => {
       if (!item || !isGenericTool(item)) return null;
@@ -790,9 +790,9 @@ function useToolRunHost({ agentContext, sessionKey, cwd, onOpenFileRef, onOpenCh
     const liveOutputTask = agentContext?.onTask ? (item) => (item?.type === "commandExecution" && item.processId && (item.status === "inProgress" || item.status === "running") ? item.id : undefined) : null;
     const openLiveOutput = agentContext?.onTask ? (taskId) => agentContext.onTask(taskId) : null;
     return { sessionKey, cwd, transcriptView, pendingApprovalItemIds, renderHostRow, renderCard, renderImages, renderMarkdown, renderAttachedFiles, openFilePath, openDiff,
-      liveOutputTask, openLiveOutput,
+      liveOutputTask, openLiveOutput, liveTail: !!liveTail,
       isMcpAppTool: (name) => typeof name === "string" && name.startsWith("mcp__") };
-  }, [agentContext, sessionKey, cwd, onOpenFileRef, onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested]);
+  }, [agentContext, sessionKey, cwd, onOpenFileRef, onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested, liveTail]);
 }
 export { useToolRunHost };
 function SourceOfficialToolMessage(props) {
@@ -803,16 +803,16 @@ function SourceOfficialToolMessage(props) {
   return <SourceToolRun items={[item]} host={host} rest={{ "data-transcript-item-id": item.id, "data-turn-start": props.turnStart || undefined }} />;
 }
 
-export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null, officialChecked = false }) {
+export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null, officialChecked = false, liveTail = false }) {
   if (isHiddenTranscriptItem(item, transcriptView)) return null;
   if (!inToolGroup && !officialChecked && officialToolItem(item))
     return <SourceOfficialToolMessage isInterrupting={isInterrupting} item={item} agentContext={agentContext} agentNested={agentNested} turnStart={turnStart} isStreaming={isStreaming}
       sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItemIds}
-      turnStartedAtMs={turnStartedAtMs} reasoningPlacement={reasoningPlacement} userActions={userActions} />;
+      turnStartedAtMs={turnStartedAtMs} reasoningPlacement={reasoningPlacement} userActions={userActions} liveTail={liveTail} />;
   const stepDefaults = { forcedOpen: transcriptView === "verbose", sessionKey };
   if (item.type === "collabAgentToolCall") return <SourceAgentTool item={item} context={agentContext} inGroup={inToolGroup} Step={SourceStep} pendingApprovalItemIds={pendingApprovalItemIds} {...stepDefaults} />;
   if (item.type === "fileToolGroup") return <SourceToolGroup agentContext={agentContext} item={item} pendingApprovalItemIds={pendingApprovalItemIds} transcriptView={transcriptView} isStreaming={isStreaming} agentNested={agentNested}
-    cwd={cwd} sessionKey={sessionKey} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges}
+    liveTail={liveTail} cwd={cwd} sessionKey={sessionKey} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges}
     renderItem={member => <SourceMessage agentContext={agentContext} agentNested={agentNested} inToolGroup item={member} turnStart={false} isStreaming={isStreaming} sessionKey={sessionKey} cwd={cwd}
       onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItemIds} />} />;
 

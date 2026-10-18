@@ -26,6 +26,13 @@
   align-items: center;
   flex: none;
 }
+/* 2.42304.0 shared-styles: the collapsed content reserves the chrome's extent plus 8px before the titlebar
+   (--df-collapsed-chrome-clearance: max(0px, calc(var(--df-trigger-right) + 8px - var(--df-content-gutter-start)))
+   on .dframe-content-inner, applied as the title row's start clearance). The host's chrome sits in the titlebar row,
+   so the same 8px follow it there. */
+.st-toolbar .df-collapsed-chrome {
+  margin-inline-end: 8px;
+}
 .df-collapsed-nav {
   position: relative;
   display: flex;

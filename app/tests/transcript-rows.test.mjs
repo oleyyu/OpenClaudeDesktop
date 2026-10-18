@@ -209,3 +209,29 @@ test('reasoning under the gate is the original HZ', () => {
   assert.match(html, /Thought process/);
   assert.match(html, /Weighing options/);
 });
+
+// c96d752d0 M4e `liveTail: q && g && a && e.id === i2(t.items, !1)` (i2 skips trailing thinking; a: the last visible
+// row): a tools row stays the live tail across the thinking between its calls, so it keeps the turn's mark (v2e tail).
+test('model: a tools row is the live tail while only hidden thinking follows it in the running turn', () => {
+  const cmd = (id, turnId = 't') => ({ id, turnId, type: 'commandExecution', status: 'completed' });
+  const group = { id: 'c1', turnId: 't', type: 'fileToolGroup', toolGroup: [cmd('c1'), { id: 'e1', turnId: 't', type: 'fileChange', status: 'completed' }] };
+  const thought = (id, text = 'plan') => ({ id, turnId: 't', type: 'reasoning', summary: [text], content: [] });
+  const user = { id: 'u', turnId: 't', type: 'userMessage' };
+  const tail = (rows, index, live = 't', view) => Model.toolRunLiveTail(rows, index, live, view);
+  assert.equal(tail([user, group], 1), true);
+  assert.equal(tail([user, group, thought('r1'), thought('r2')], 1), true, 'thinking after the calls (hidden in the normal view)');
+  assert.equal(tail([user, cmd('c1'), thought('r1')], 1), true, 'a single call too');
+  assert.equal(tail([user, group, thought('r1')], 1, 't', 'thinking'), false, 'a shown thought is the last row');
+  assert.equal(tail([user, group, thought('r1', '')], 1, 't', 'thinking'), true, 'an empty thought draws no row');
+  assert.equal(tail([user, group, { id: 'm', turnId: 't', type: 'agentMessage', text: '' }], 1), false, 'text after the calls');
+  assert.equal(tail([user, group, cmd('c2')], 1), false, 'a later tools row is the tail');
+  assert.equal(tail([user, group], 1, null), false, 'the turn is not live');
+  assert.equal(tail([user, group], 1, 'other'), false);
+  assert.equal(tail([user, group], 0), false, 'not a tools row');
+  for (const file of ['src/main.jsx', 'src/source-btw-pane.jsx']) assert.match(fs.readFileSync(path.join(app, file), 'utf8'), /liveTail=\{toolRunLiveTail\(/, file);
+  const session = fs.readFileSync(path.join(app, 'src/source-session.jsx'), 'utf8');
+  assert.match(session, /userActions=\{userActions\} liveTail=\{liveTail\} \/>/);
+  assert.match(session, /liveTail=\{liveTail\} cwd=\{cwd\}/);
+  assert.match(session, /liveOutputTask, openLiveOutput, liveTail: !!liveTail,/);
+  assert.match(fs.readFileSync(path.join(app, 'src/source-tool-group.jsx'), 'utf8'), /isStreaming, agentNested, liveTail \}\);/);
+});

@@ -13,6 +13,7 @@ import { lastDequeueable } from './queued-messages-model.mjs';
 import { btwDrafts } from './use-btw-pane.jsx';
 import { ownBtwItems } from './btw-pane-controller.mjs';
 import { groupFileTools } from './file-tool-model.mjs';
+import { toolRunLiveTail } from './transcript-rows-model.mjs';
 import { useMcpAppRowGrouping } from './source-mcp-app.jsx';
 import { isItemStreaming, ownerThreadId } from './state.js';
 import { visibleApprovals, isPlanReviewRequest } from './approval-draft-model.mjs';
@@ -228,7 +229,7 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
                     the u9 row boundary, gated on the child's own session. */}
                 <SourceTranscriptRowBoundary sessionId={sessionId} item={item} isStreaming={isItemStreaming(state, sessionId, item)}>
                 <SourceMessage item={item} sessionKey={sessionId} cwd={thread?.cwd} isStreaming={isItemStreaming(state, sessionId, item)} turnStart={index === 0 || rows[index - 1].turnId !== item.turnId}
-                  pendingApprovalItemIds={pendingItems} onOpenFileRef={onOpenFile}/></SourceTranscriptRowBoundary>
+                  pendingApprovalItemIds={pendingItems} liveTail={toolRunLiveTail(rows, index, state.active[sessionId] ?? null)} onOpenFileRef={onOpenFile}/></SourceTranscriptRowBoundary>
                 {/* R4i-transcript TR2: the error card is an item of the reply in 2.42304.0 (c96d752d0 `case"error":g(s,VK(n.id,u,"error",`),
                     so it sits in its own row boundary with the reply's copy (D34). Only the card draws actions: the marker
                     gets no callbacks, as the main transcript's does not. The card's own, session-independent actions are the

@@ -3,6 +3,7 @@
 // transcript-rows manifest); this host derives them from its engine items. Pure: no React, no timers.
 import { sdkToolOf } from "./transcript-sdk-tools.mjs";
 import { liveTurnItems } from "./transcript-runtime-stats.mjs";
+import { isHiddenTranscriptItem } from "./transcript-item-visibility.mjs";
 
 const TOOL_TYPES = new Set(["commandExecution", "fileChange", "mcpToolCall", "dynamicToolCall", "collabAgentToolCall", "webSearch", "computerUse", "imageGeneration"]);
 
@@ -56,4 +57,24 @@ export function runningCandidate(item, members = [item]) {
 // "unknown" (a tool whose outcome the engine did not report) has no CDS state: the step is done and says so trailing.
 export function stepState(state) {
   return ["busy", "blocked", "failed", "stopped", "denied"].includes(state) ? state : "done";
+}
+
+/**
+ * c96d752d0 M4e's `liveTail: q && g && a && e.id === i2(t.items, !1)` for a host transcript row: the turn is live (g),
+ * the row is the turn's last visible row (a: the assistant rows the builder keeps, hidden thinking left out) and every
+ * item after it is thinking (i2 skips trailing thinking, then answers the tools item's id). A tools row that is the live
+ * tail keeps the turn's mark between its calls (v2e `tail`: ZM tailHeld, XAe busy with the last call's label) instead of
+ * settling to "Ran N commands" while the model thinks. `rows`: the transcript's displayed rows; `view`: the transcript
+ * view (whether thoughts are rows); `live`: the turn id that is running, or null. q (turnStatusRows) is the caller's.
+ */
+export function toolRunLiveTail(rows, index, live, view = "normal") {
+  const row = rows?.[index];
+  if (!live || !row || row.turnId !== live || !(row.type === "fileToolGroup" || TOOL_TYPES.has(row.type))) return false;
+  for (let at = index + 1; at < rows.length; at++) {
+    const next = rows[at];
+    // The host's roll-up evidence is no row of the desktop's entry.
+    if (next?.turnId !== live || next.type === "subAgentActivity") continue;
+    if (next.type !== "reasoning" || !isHiddenTranscriptItem(next, view)) return false;
+  }
+  return true;
 }

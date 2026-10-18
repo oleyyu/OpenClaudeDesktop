@@ -6,9 +6,12 @@ import { COLUMN_MAX, TAIL_DELTA, TOP_DELTA, USER_ROW_DELTA, classifyMode, compar
   deriveUi029BaselineMode, expectedColumnInner, fadeLayoutMode, paintIssues, probeIssues, widthInvariant } from "../scripts/scrollbar-mode-gate.mjs";
 
 const evidence = path.resolve(import.meta.dirname, "../../analysis/batch-20260920");
-const readJson = async name => JSON.parse(await fs.readFile(path.join(evidence, name), "utf8"));
+// The frozen 0.2.8 / 0.2.7 baselines are local evidence (analysis/ is not in the repository): the comparisons against
+// them run where it exists and are skipped, with the reason, where it does not (a fresh clone).
+const readJson = async name => { try { return JSON.parse(await fs.readFile(path.join(evidence, name), "utf8")); } catch (error) { if (error.code === "ENOENT") return null; throw error; } };
 const ui029Baseline = await readJson("ui029-baseline-report.json");
 const fadeBaseline = await readJson("transcript-fade-baseline-report.json");
+const needsBaselines = { skip: ui029Baseline && fadeBaseline ? false : "frozen baseline reports in analysis/batch-20260920 are not present" };
 const classicProbe = { feedReserved: 22, probeBothEdges: 22, laneThin: 11, laneAuto: 15, feedScrollbarGutter: "stable both-edges", feedScrollbarWidth: "thin" };
 const overlayProbe = { feedReserved: 0, probeBothEdges: 0, laneThin: 0, laneAuto: 0, feedScrollbarGutter: "stable both-edges", feedScrollbarWidth: "thin" };
 
@@ -65,7 +68,7 @@ test("scrollbar paint is the single design-system html,[data-theme] color inheri
   assert.match(paintIssues(paint, { hovered: { "nav.source-session-list": "rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0)" } }).join(), /\(hovered\): .* no hover override/);
 });
 
-test("the frozen 0.2.8 ui029 baseline derives overlay mode from its window-780 row width", () => {
+test("the frozen 0.2.8 ui029 baseline derives overlay mode from its window-780 row width", needsBaselines, () => {
   const derived = deriveUi029BaselineMode(ui029Baseline);
   assert.equal(derived.mode, "overlay"); assert.equal(derived.reserved, 0);
   assert.match(derived.derivation, /window-780: \(780 - 288 sidebar - 40\) - rows\[0\]\.width 452 = 0/);
@@ -95,7 +98,7 @@ function ui029Current(before, { gutter = 0, narrowGrowth = 0 } = {}) {
   return { width: before.width, height: before.height, rows, contentHeight: before.contentHeight + grow, scrollHeight: before.scrollHeight + grow };
 }
 
-test("ui029 same-mode comparison reproduces the pre-gate full checks against the 0.2.8 baseline", () => {
+test("ui029 same-mode comparison reproduces the pre-gate full checks against the 0.2.8 baseline", needsBaselines, () => {
   for (const [name, before] of Object.entries(ui029Baseline.metrics.layouts)) {
     const after = ui029Current(before);
     const { failures, record } = compareUi029Layout(name, before, after, { kind: "same-mode-full" });
@@ -110,7 +113,7 @@ test("ui029 same-mode comparison reproduces the pre-gate full checks against the
   assert.match(compareUi029Layout("wide-1468", before, after, { kind: "same-mode-full" }).failures.join("\n"), /top-reserve correction/);
 });
 
-test("ui029 cross-mode: wide layouts keep the full comparison, narrow layouts assert width algebra and gaps only", () => {
+test("ui029 cross-mode: wide layouts keep the full comparison, narrow layouts assert width algebra and gaps only", needsBaselines, () => {
   const G = 22;
   for (const name of ["wide-1468", "default-1324"]) {
     const before = ui029Baseline.metrics.layouts[name];
@@ -157,7 +160,7 @@ function fadeCurrent(before, { gutter = 0, narrowGrowth = 0 } = {}) {
     items: project(before.items, false), tailItems: project(before.tailItems, true) };
 }
 
-test("fade same-mode comparison equals the pre-gate 0.2.7 comparison, including the padding-equivalence guard", () => {
+test("fade same-mode comparison equals the pre-gate 0.2.7 comparison, including the padding-equivalence guard", needsBaselines, () => {
   for (const [name, before] of Object.entries(fadeBaseline.metrics.layouts)) {
     const after = fadeCurrent(before);
     const { failures, record } = compareFadeLayout(name, before, after, { kind: "same-mode-full" });
@@ -172,7 +175,7 @@ test("fade same-mode comparison equals the pre-gate 0.2.7 comparison, including 
   assert.match(compareFadeLayout("wide-1468", before, moved, { kind: "same-mode-full" }).failures.join("\n"), /fade-0-b height/);
 });
 
-test("fade cross-mode: width-invariant layouts keep every box; narrow layouts assert width/x algebra and gaps", () => {
+test("fade cross-mode: width-invariant layouts keep every box; narrow layouts assert width/x algebra and gaps", needsBaselines, () => {
   const G = 22;
   for (const name of ["wide-1468", "default-1324"]) {
     const before = fadeBaseline.metrics.layouts[name];
@@ -204,7 +207,7 @@ test("fade cross-mode: width-invariant layouts keep every box; narrow layouts as
   }
 });
 
-test("columnDelta shifts the width algebra without touching x, and forces the algebra path in same mode", () => {
+test("columnDelta shifts the width algebra without touching x, and forces the algebra path in same mode", needsBaselines, () => {
   const before = ui029Baseline.metrics.layouts["pane-280"];
   // The frozen 0.2.8 rows predate the user flag; mark the first row as the current suite would.
   const widened = { ...before, rows: before.rows.map((row, index) => ({ ...row, user: index === 0, width: row.width + 40 })) };

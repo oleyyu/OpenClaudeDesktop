@@ -166,6 +166,7 @@ import { SourceTurnFooter } from "./source-turn-footer.jsx";
 import { SourceChapterHeading, useChapterStoreState } from "./source-chapters.jsx";
 import { chapterStore, pinnedChaptersForRow, reuseChapters, rowSeedText, seedChapterTitle, sessionChapterState, sessionChapters, turnPinAnchor } from "./session-chapters-model.mjs";
 import { isHiddenTranscriptItem } from "./transcript-item-visibility.mjs";
+import { toolRunLiveTail } from "./transcript-rows-model.mjs";
 import { userMessageActions } from "./message-actions-model.mjs";
 import { acceptedSend, failedSend, pendingSend, pendingStillShown, pendingUserRow, retriedSend, withKnownItems } from "./pending-send-model.mjs";
 import { SourceTurnError } from "./source-turn-error.jsx";
@@ -6904,6 +6905,7 @@ function App({ side = 0, initialSession = null }) {
                         cwd={workdir} onOpenFileRef={openFileRef} onOpenChanges={() => { if (!canViewChanges) return false; setPanel("changes"); return true; }} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItems}
                         turnStartedAtMs={item.type === "userMessage" ? turnSecondsToMs(state.turnTimes?.[current]?.[item.turnId]?.startedAt) : null}
                         reasoningPlacement={item.type === "reasoning" ? reasoningPlacement(displayedItems, index, transcriptView) : undefined}
+                        liveTail={toolRunLiveTail(displayedItems, index, running ? state.active[current] ?? null : null, transcriptView)}
                         userActions={item.type === "userMessage" ? userMessageActions({ turnId: item.turnId, itemId: item.id, activeTurnId: state.active[current], running,
                           onRestartFrom: coworkActions?.onRestartFromHere ? (uuid) => void coworkActions.onRestartFromHere({ uuid }) : null,
                           onEditFrom: coworkActions?.onEditMessage ? (uuid) => coworkMessageEdits.start(current, uuid) : null, isLastHuman: !!coworkLastHuman && coworkLastHuman.uuid === item.id,

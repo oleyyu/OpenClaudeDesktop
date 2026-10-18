@@ -45,11 +45,11 @@ export function SourceToolGroup(props) {
   // labels and outgoing animation snapshots must not cross that boundary.
   return <ToolGroupBody key={identity} {...props} expansionKey={identity}/>;
 }
-function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptView, agentContext, expansionKey, isStreaming = false, agentNested = false, ...pathProps }) {
+function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptView, agentContext, expansionKey, isStreaming = false, agentNested = false, liveTail = false, ...pathProps }) {
   const id = useId(), tools = item.toolGroup;
   const statusRows = useTurnStatusRows();
   const host = useToolRunHost({ agentContext, sessionKey: pathProps.sessionKey, cwd: pathProps.cwd, onOpenFileRef: pathProps.onOpenFileRef,
-    onOpenChanges: pathProps.onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested });
+    onOpenChanges: pathProps.onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested, liveTail });
   const remembered=useSyncExternalStore(toolGroupExpansion.subscribe,()=>toolGroupExpansion.get(expansionKey),()=>toolGroupExpansion.get(expansionKey));
   const forcedOpen=transcriptView==='verbose',open=forcedOpen||(remembered??false);
   const [mountedKey,setMountedKey]=useState(open?expansionKey:null);
