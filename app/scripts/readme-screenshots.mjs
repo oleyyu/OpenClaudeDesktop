@@ -58,7 +58,7 @@ async function profile(name,{threads={},threadIds=[],account=keyed,theme='light'
  git('init','-q');git('add','.');git('commit','-qm','init');
  await fs.writeFile(path.join(workspace,'style.css'),DARK_CSS);
  const write=(file,value)=>fs.writeFile(path.join(dir,file),JSON.stringify(value));
- await write('preferences.json',{cwd:workspace,theme,mode:'code',model:'deepseek-v4-pro',effort:'high',permission:'ask',locale,threadIds,sidebarWidth:280,whatsNewSeen:'999.0.0'});
+ await write('preferences.json',{cwd:workspace,theme,mode:'code',model:'deepseek-v4-pro',effort:'high',permission:'ask',locale,threadIds,sidebarWidth:280,whatsNewSeen:'999.0.0',displayName:english?'Alex Morgan':'林晓'});
  await write('fixture-core.json',{engine:'deepseek-harness',capabilities:{codeStats:true},models});
  await write('fixture-usage.json',account);
  for(const thread of Object.values(threads))thread.cwd=workspace;
@@ -116,7 +116,8 @@ try{
  await shot('home.png');
  await page.getByText(D.dark).first().click();
  await page.getByText(D.done).waitFor();
- await page.getByText(D.group).first().click();
+ // The tool group's header (the official v2e summary, its wording follows the group's members).
+ await page.locator('[data-tool-group] button').first().click();
  await shot('session.png');
  const editor=page.locator('[data-cds="ChatComposerEditor"]').first();
  await editor.focus();await page.keyboard.insertText('/');
