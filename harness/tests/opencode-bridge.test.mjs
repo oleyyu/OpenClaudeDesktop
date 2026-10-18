@@ -316,7 +316,7 @@ test('item helpers: MiMo snake_case args, actor children, errors, titles', () =>
   assert.ok(isDefaultTitle('New session - 2026-10-04T13:07:38.702Z'))
   assert.ok(isDefaultTitle('Untitled'))
   assert.ok(!isDefaultTitle('Fix the bug'))
-  assert.deepEqual(tokenBreakdown({ input: 1, output: 2, reasoning: 3, cache: { read: 4, write: 5 } }), { totalTokens: 15, inputTokens: 10, cachedInputTokens: 4, cacheWriteInputTokens: 5, outputTokens: 2, reasoningOutputTokens: 3 })
+  assert.deepEqual(tokenBreakdown({ input: 1, output: 2, reasoning: 3, cache: { read: 4, write: 5 } }), { totalTokens: 15, inputTokens: 10, cachedInputTokens: 4, cacheWriteInputTokens: 5, outputTokens: 5, reasoningOutputTokens: 3 })
   assert.deepEqual(planOf([{ content: 'x', status: 'completed' }, { content: 'y', status: 'pending' }]), [{ step: 'x', status: 'completed' }, { step: 'y', status: 'pending' }])
   // A cancelled todo is struck through but marked abandoned (the checklist's X and Abandoned tag), never done.
   assert.deepEqual(planOf([{ content: 'Migrate the database', status: 'cancelled' }, { content: 'z', status: 'in_progress' }]), [

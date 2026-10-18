@@ -43,12 +43,12 @@ test('<html> carries data-dframe so the loaded desktop-layout cursor rules apply
   assert.match(root, /class="cds-root"/);
   assert.match(root, /data-platform="desktop"/);
   // The rules themselves come from the loaded shared-styles copy, not from local CSS.
-  assert.match(html, /<link rel="stylesheet" href="\/assets\/v1\/shared-styles-CTu5t_TM\.css"/);
-  const shared = readFileSync(path.join(official, 'shared-styles-CTu5t_TM.css'), 'utf8');
-  // 2.31226.0 (shared-styles-CTu5t_TM.css) keeps explicit grab/move/resize cursors out of both rules.
+  assert.match(html, /<link rel="stylesheet" href="\/assets\/v1\/shared-styles-Bl9zqrv-\.css"/);
+  const shared = readFileSync(path.join(official, 'shared-styles-Bl9zqrv-.css'), 'utf8');
+  // 2.31226.0 (shared-styles-Bl9zqrv-.css) keeps explicit grab/move/resize cursors out of both rules.
   const keep = ':where(:not([class*=cursor-grab],[class*=cursor-move],[class*=cursor-all-scroll],[class*=cursor-][class*=-resize]))';
   assert.ok(shared.includes([':root[data-dframe] button', ':root[data-dframe] [role=button]', ':root[data-dframe] [role=menuitem]', ':root[data-dframe] a:not([target=_blank])', ':root[data-dframe] .cursor-pointer', ':root[data-dframe] .cursor-interactive'].map((selector) => selector + keep).join(',') + '{cursor:default}'));
-  assert.ok(shared.includes(':root[data-dframe] a[href]:not([role=button]):not([role=menuitem]):not(.df-link-card):not([data-cds=Button])' + keep + ','));
+  assert.ok(shared.includes(':root[data-dframe] a[href]:not([role=button],[role=tab],[role=option],[role=switch],[role=checkbox],[role=radio]):not([role^=menuitem]):not(.df-link-card):not([data-cds=Button])' + keep + ','));
   assert.match(shared, /:root\[data-dframe\] button\.df-link-btn:not\(:disabled\)\{cursor:pointer\}/);
 });
 

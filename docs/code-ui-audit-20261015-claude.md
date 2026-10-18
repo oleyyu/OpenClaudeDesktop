@@ -23,8 +23,11 @@
    - 结果：新版 155,033 个单元，其中 unchanged 84,921、moved 52,754、changed 7,955、added 9,403；旧版 removed 3,520。
 4. 另外建了三份辅助索引：GrowthBook 判定点索引（shared-25 中的 `bh`/`Xe`/`Oh`/`ch`… 及调用点）、en-US 文案增删（+1080/−339）与定义它们的 chunk、以及服务端下发文案。服务端下发文案指 shared-104 `Ql` 渲染的 6 位 id，包内没有正文。
 5. 按 15 个区并行分析，每区一名分析员、一名对抗式复核员。复核员逐条重开源码行，核对变化真实性、开关归类和本地状态。
-   - 复核结果：241 条保留（182 confirmed、55 corrected、4 条为复核员补充），3 条驳回。
-6. 覆盖扫描：把 656 个有变化的 chunk 分 12 桶，找出没有被任何区认领的 changed/added 单元并分诊（见文末）。
+6. 覆盖扫描：把 656 个有变化的 chunk 分 12 桶，找出没有被任何区认领的 changed/added 单元并分诊，新发现的条目同样经过复核（见文末）。
+7. 最终结果：
+   - 334 条保留：253 confirmed、73 corrected（以复核员的更正为准）、8 条为复核员补充；4 条驳回。
+   - 来源：分区 266 条，覆盖扫描 68 条。
+   - 说明：工具卡片区的分析员因 API 断连重跑过一次。主流程恢复时缓存没有命中，其余 14 区又完整地分析、复核了一遍。本文与 `regions/*` 都以第二遍结果为准。
 
 **证据分级。**
 - **源码确认**：默认路径可见，调用链上没有开关。
@@ -49,8 +52,10 @@
 - **默认可见、与开关无关的改动集中在四处：**
   - 侧栏：组间距收紧；菜单按语义分组，并新增 Collapse all / Expand all；嵌套家族缩进改了，折叠后显示失败计数。
   - 标题栏：Files 开关移到标题栏。
-  - Files：HTML 默认显示源码；树缩进 10px，选中项的祖先常驻指引线；按会话记忆源码/预览视图；空文件卡；下载状态。
+  - Files：HTML 默认显示源码；树缩进 10px，选中项的祖先常驻指引线；按会话记忆源码/预览视图；空文件卡；下载状态；Markdown 预览能识别空 frontmatter。
   - 设计系统样式包整体换版：约 280 个 left/right 工具类换成 start/end，新增 RTL 变体，Shortcut 字距收紧。
+  - 应用外壳新增“磁盘空间不足”提示（可用空间低于 10 GB）。
+  - 侧栏 ⇧⌘⌫ 和 ⌥⌘A 两个归档快捷键都会跳过置顶或运行中的会话。
 - **主进程（preview 服务）：** dev server 默认改为“占用时顺延到下一个空闲端口”，启动后还会校验监听进程是否属于自己。GrowthBook 2711562102，默认 true。
 - **大量新功能本地不适用**，原因是只在云端或账号下出现，或需要新后端：
   - SSH 环境与主机密钥重连；
@@ -68,22 +73,25 @@
 
 | 区域 | 变化 | P1 | P2 | P3 | 源码确认 | 功能开关 | 需运行态 | 需调整 | 部分 | 已一致 | 不适用 | 未知 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| home 首页 | 17 | 4 | 5 | 8 | 3 | 13 | 1 | 8 | 1 | 2 | 5 | 1 |
-| sidebar 侧栏 | 18 | 2 | 9 | 7 | 10 | 6 | 2 | 10 | 2 | 1 | 5 | 0 |
-| topbar 顶部栏 | 13 | 1 | 4 | 8 | 6 | 7 | 0 | 6 | 1 | 3 | 3 | 0 |
-| composer 输入框 | 18 | 1 | 6 | 11 | 6 | 11 | 1 | 9 | 1 | 3 | 5 | 0 |
-| transcript 对话内容 | 17 | 0 | 2 | 15 | 7 | 6 | 4 | 1 | 1 | 3 | 10 | 2 |
-| toolcards 工具卡片 | 22 | 0 | 2 | 20 | 5 | 11 | 6 | 5 | 3 | 1 | 12 | 1 |
-| files | 22 | 2 | 10 | 10 | 18 | 4 | 0 | 12 | 6 | 0 | 4 | 0 |
-| diffgit Diff/Git | 15 | 0 | 4 | 11 | 10 | 5 | 0 | 7 | 3 | 1 | 4 | 0 |
-| terminal | 18 | 0 | 7 | 11 | 11 | 5 | 2 | 11 | 1 | 2 | 3 | 1 |
-| preview | 11 | 1 | 3 | 7 | 5 | 6 | 0 | 6 | 2 | 0 | 3 | 0 |
-| tasks 任务与子代理 | 10 | 0 | 1 | 9 | 2 | 7 | 1 | 3 | 1 | 0 | 6 | 0 |
-| settings 设置 | 17 | 0 | 1 | 16 | 1 | 13 | 3 | 1 | 0 | 2 | 14 | 0 |
-| menus 菜单 | 15 | 0 | 2 | 13 | 2 | 10 | 3 | 2 | 0 | 5 | 8 | 0 |
-| layout 分屏与弹窗 | 14 | 0 | 3 | 11 | 5 | 6 | 3 | 3 | 3 | 4 | 4 | 0 |
-| global 全局样式 | 14 | 1 | 2 | 11 | 9 | 5 | 0 | 6 | 0 | 3 | 4 | 1 |
-| **合计** | **241** | **12** | **61** | **168** | **100** | **115** | **26** | **90** | **25** | **30** | **90** | **6** |
+| home 首页 | 19 | 4 | 5 | 10 | 3 | 15 | 1 | 8 | 1 | 2 | 7 | 1 |
+| sidebar 侧栏 | 30 | 2 | 10 | 18 | 12 | 14 | 4 | 12 | 4 | 1 | 13 | 0 |
+| topbar 顶部栏 | 14 | 1 | 4 | 9 | 6 | 8 | 0 | 6 | 1 | 3 | 4 | 0 |
+| composer 输入框 | 29 | 1 | 6 | 22 | 6 | 21 | 2 | 10 | 1 | 5 | 13 | 0 |
+| transcript 对话内容 | 33 | 0 | 3 | 30 | 10 | 14 | 9 | 4 | 4 | 4 | 20 | 1 |
+| toolcards 工具卡片 | 24 | 0 | 2 | 22 | 5 | 12 | 7 | 5 | 3 | 1 | 14 | 1 |
+| files | 29 | 1 | 12 | 16 | 23 | 6 | 0 | 16 | 6 | 2 | 5 | 0 |
+| diffgit Diff/Git | 18 | 0 | 4 | 14 | 12 | 6 | 0 | 10 | 2 | 2 | 4 | 0 |
+| terminal | 18 | 0 | 7 | 11 | 12 | 5 | 1 | 11 | 2 | 2 | 3 | 0 |
+| preview | 19 | 1 | 3 | 15 | 9 | 9 | 1 | 6 | 5 | 0 | 8 | 0 |
+| tasks 任务与子代理 | 17 | 0 | 0 | 17 | 5 | 10 | 2 | 5 | 2 | 0 | 10 | 0 |
+| settings 设置 | 24 | 0 | 1 | 23 | 2 | 17 | 5 | 1 | 0 | 2 | 21 | 0 |
+| menus 菜单 | 18 | 0 | 2 | 16 | 2 | 12 | 4 | 2 | 0 | 5 | 11 | 0 |
+| layout 分屏与弹窗 | 18 | 0 | 2 | 16 | 5 | 9 | 4 | 3 | 3 | 5 | 7 | 0 |
+| global 全局样式 | 21 | 1 | 3 | 17 | 13 | 8 | 0 | 7 | 0 | 4 | 10 | 0 |
+| 未归区（覆盖扫描） | 3 | 0 | 0 | 3 | 0 | 3 | 0 | 0 | 0 | 1 | 2 | 0 |
+| **合计** | **334** | **11** | **64** | **259** | **125** | **169** | **40** | **106** | **34** | **39** | **152** | **3** |
+
+各区数字已包含覆盖扫描归到该区的条目。
 
 ## P1 变化清单
 
@@ -98,9 +106,8 @@
 | sidebar-09 | Code 列表组间距收紧：`--df-group-band-mt` 从 18px 改为 8px，导航块下补 10px，组 caret 只在悬停时显示 | shared-styles-C6yuIsHz.css:388-397，455-466 | old shared-styles-CTu5t_TM.css:387-397 | 源码确认 | 需调整：app/src/source-sidebar.css |
 | topbar-01 | Files 开关移到标题栏的 inline 开关末尾（Folder 图标，快捷键 toggleBrowser），View options 里不再有单独的 Files 行 | ca80fca8d:33441-33578（可用条件在 :33463-33466） | old ca80fca8d:31910-32032 | 源码确认 | 需调整：app/src/source-titlebar.jsx:476-560 |
 | files-01 | Files 窗格打开 .htm/.html 时默认显示源码，Eye「Preview」再切到渲染 | cccc2cf0a:6723（`defaultView: sr.test(path) ? "source"`），shared-28:15591 | old cccc2cf0a:6588 | 源码确认 | 需调整：app/src/source-file-viewer.jsx:796-802 |
-| files-08 | 文件树常驻指引线：选中项和当前文件的祖先不悬停也显示指引（`--file-tree-kept-guides`） | cccc2cf0a:5439-5455，5548-5551 | old cccc2cf0a:5805 | 源码确认 | 需调整：app/src/source-session.css:878-885 |
 | preview-01 | dev server 端口被占用时顺延到下一个空闲端口：从配置端口向上找 20 个，跳过运行中或被其他条目钉住的端口，脚本写死端口时不顺延；以前是直接失败 | main__index.chunk-BWk6pVUt.js:254432-254450 | old main__index.chunk-CiiI592G.js:251842-251866 | GrowthBook 2711562102（默认 true） | 需调整：app/electron/preview-launch.mjs:127、preview-service.cjs |
-| global-01 | 设计系统样式包整体换版：shared-styles 规则 499→543；c6a992d55 约 280 个物理→逻辑工具类替换，约 770 个新增类；Anthropicons 新增 ListCard 字形 | shared-styles-C6yuIsHz.css；c6a992d55-CNGsCU46.css；shared-frame-CegduNQ2.css | old shared-styles-CTu5t_TM.css；old c6a992d55-C0zTICcS.css | 源码确认 | 需调整：app/scripts/prepare-ui.mjs:13-15（换源）；见 global-02 |
+| global-01 | 设计系统样式包整体换版：shared-styles 3014→3358 行（Code 侧栏 band 间距、家族导轨、43 条 `[dir=rtl]` 规则）；c6a992d55 类选择器删 527 增 1107，其中约 280 个是物理→逻辑替换；Anthropicons 新增 ListCard 字形 | shared-styles-C6yuIsHz.css:388-640；c6a992d55-CNGsCU46.css；shared-frame-CegduNQ2.css:3 | old shared-styles-CTu5t_TM.css:387-616；old c6a992d55-C0zTICcS.css | 源码确认 | 需调整：app/scripts/prepare-ui.mjs:15、28、84-87（换源）；连带 global-v01 |
 
 ## 主要 P2（源码确认、需调整）
 
@@ -121,9 +128,10 @@
 | transcript-03 | Suggested task 卡标题最多 6 行，并发布底边位置变量 | cf74bc599:2827-2832 | app/src/source-suggested-tasks.jsx:51 |
 | toolcards-01 | 审批卡“读完门”扩展到所有 MCP 工具和桌面连接器（loose 模式） | cd5a31703:7578-7591、13146、13200-13207 | app/src/source-approval-card.jsx:41 |
 | toolcards-02 / preview-02 | dev server 启动审批的副标题加 “(or the next free port)” | cd5a31703:10675-10682、13002-13037 | app/src/approval-card-model.mjs:518-528 |
+| files-08 | 文件树常驻指引线：选中项和当前文件的祖先不悬停也显示（`--file-tree-kept-guides`）；复核后从 P1 降为 P2 | cccc2cf0a:5439-5455、5548-5551、4824 | app/src/source-session.css:878-885 |
 | files-02..07, 12, 13, 16 | 源码/预览视图按会话+路径记忆（32 项 LRU）；空文件卡；Create file 后切到源码；卡片文案去句号，CSV 失败卡拆分；Auto save 去掉开关；树缩进 8→10px；图片右键 Copy image；下载时的替换字符警告与原始字节下载；CodeMirror 更新 | cd2efac6e、cccc2cf0a、ce9ca5630、cbd02b8f2（见 regions/files.md） | app/src/source-file-viewer.jsx、file-tree-row-model.mjs、file-context-menu-model.mjs 等 |
 | diffgit-01 | Review 发现卡改版：Claude 头部、图标化的 Next、底部 Fix this one、Line/Lines 标签 | c44d00c7f:2447-2626 | app/src/source-pane-review.jsx:70-96 |
-| diffgit-02 / v01 | Uncommitted 范围按会话持久化（最多 50 个）；工作树干净时不提供 Uncommitted | c03935b01:887-916；cb61be3a2:473-478、689-690 | app/src/source-diff-scope.jsx:112-124 |
+| diffgit-02 / 15 | Uncommitted 范围按会话持久化（最多 50 个）；工作树干净时不提供 Uncommitted | c03935b01:887-916；cb61be3a2:473-478、689-690 | app/src/source-diff-scope.jsx:112-124 |
 | diffgit-03 | Changes 树缩进 10px，悬停显示指引线，活动文件常驻指引线 | ce9ca5630:4-80；c44d00c7f:6053-6065 | app/src/source-diff.jsx:430-433 |
 | terminal-01/02/04/10/11 | 有选区时单击链接不打开；Cmd/Opt+←/→ 先滚到底；附加选区时保留首行缩进；标签和溢出菜单按 Delete/Backspace 关闭时要求没有按修饰键 | c6bf19e8f:2425-2439、3253-3265；cccc2cf0a:2324-2361；cfe7c4b3b:160-262、438-449 | app/src/source-terminal-pane.jsx、terminal-navigation.mjs 等 |
 | terminal-03/08 | ESC c 清除命令标记；标题里的 `~`、`/` 正确显示（适配器需按新版重新提取） | c6bf19e8f:2167-2182；cf718f694:114-133 | app/src/generated/code-editor/* |
@@ -133,7 +141,11 @@
 | menus-01 / global-06 | Shortcut text 变体字距 0.3em→0.15em | shared-frame-BjUcQ1Qc.js:2523-2566 | app/src/source-shortcut.css:23-28 |
 | menus-02 | ⌥⌘A 归档 chord 对置顶或运行中的会话静默不响应 | cf74bc599:15418-15419、15598-15625 | app/src/main.jsx:2605 |
 | layout-01/02/03 | 分屏分隔条支持 Home/End；侧聊按住 Escape 时吞掉重复事件；Open in main window 会先显示主窗口再聚焦 | shared-23:18856-18883；cccc2cf0a:14771-14802；c5638815a:546-607 | app/src/source-split-view.jsx:118-153；source-side-chat.jsx:156；app/electron/main.cjs:2549 |
-| global-02 | 换样式包后 `pl-[var(--df-row-px)]` 类被删除，本地账户行会失去左内边距（这是 527 个被删类在本地唯一的命中） | c6a992d55-CNGsCU46.css | app/src/source-sidebar.jsx:1728 |
+| global-v01 | 新包删除了 `.mr-xs` 和 `.pl-[2px]`。本地两个从旧版抽出的生成模块仍在用，换包后间距会丢，需要按新版重新抽取或改成 `me-xs`/`ps-[2px]` | c6a992d55-CNGsCU46.css:5833、20668；ca80fca8d:7208；cfe7c4b3b:273 | app/src/generated/code-editor/preview-element-chip.mjs:99、preview-tab-overflow.mjs:131 |
+| cov7-01 | 侧栏 ⇧⌘⌫ 归档跳过置顶和运行中的会话，并且不调用 preventDefault | shared-16:7725-7792（:7748-7757） | app/src/source-sidebar.jsx:1101-1113 |
+| cov3-01 | 附件文件卡的文件名按情况截断为 2–4 行，过长时保留结尾 12 个字形和扩展名（用户消息附件和 composer 附件都用这个组件） | shared-2:1031-1047、1818-1921 | app/src/source-session.jsx:520-534；source-composer-attachments.jsx:20-47 |
+| cov9-01 | Markdown 预览能识别空 frontmatter（`---` 紧跟 `---`）。旧版会画两条分隔线或吞掉一段正文 | c3fde7009:2213-2229、2739-2749 | app/src/file-markdown-model.mjs:237-245 |
+| cov0-04 | 应用外壳新增 DesktopLowDiskToast：可用空间低于 10 GB 时提示 “Low disk space: {free} free”，带 Manage storage，7 天内只提醒一次（只在桌面宿主出现） | cf615570b:8-70；shared-23:21131-21150、24339 | 本地无；存储设置页 app/src/source-settings-pages.jsx:120-167 |
 
 P3 以及“不适用”的条目（SSH 环境、`/subtask`、PR/CI 卡片、统一插件页、组织策略、turn box、云端会话等）见 `regions/ALL-CHANGES.md` 和各区报告。
 
@@ -189,26 +201,28 @@ P3 以及“不适用”的条目（SSH 环境、`/subtask`、PR/CI 卡片、统
   - 入口：split host `q4`（shared-23:19671-19845）、pane store（shared-16:821-1131）、分隔条 `X2/$2/e4`、拖入覆盖层与停放、窗格菜单（shared-20:8668-8891）。
 - **全局（global）**
   - 入口：c6a992d55、shared-styles、shared-frame 的 CSS，Anthropicons 字体与码点表、Shortcut、Button 按压缩放。
-  - 本地换版：`prepare-ui.mjs` 指向 installed-2.37337.1，同步改 `source-sidebar.jsx:1728` 的 `pl-` → `ps-`。
+  - 本地换版：`prepare-ui.mjs` 指向 installed-2.37337.1。另外两个生成模块要跟着改，见 global-v01。
+  - global-02（账户行 `pl-[var(--df-row-px)]` 类被删）复核后改判为已一致：本地 `style.css:394-403` 有非 layer 规则覆盖，换版后像素不变。
   - RTL：新包已自带逻辑属性，本地没有 RTL 语言，不必另做 RTL 工作；RTL 专用的 8 条文案不翻译。
 
 ## 建议实施顺序
 
 1. **样式包换版（global-01/02/06，menus-01）。** 先做，因为后面各区的 CSS 比对都以新包为准。
-   - 改 `prepare-ui.mjs` 的源和文件名，修 `source-sidebar.jsx:1728`，`.scds` 字距 0.15em。
+   - 改 `prepare-ui.mjs` 的源和文件名；按 2.37337.1 重新抽取 `generated/code-editor`，或手改 `mr-xs`/`pl-[2px]`（global-v01）；`.scds` 字距 0.15em。
    - 验证：`npm run build`、tooltip-ui-test（3.6px 断言要改）、settings-ui-test、sidebar-ui-test 的截图比对。
-2. **Files 与 Diff 树（files-01..08/12/13，diffgit-03）。** 都是源码确认的条目，相互独立。
+2. **Files 与 Diff 树（files-01..08/12/13，cov9-01，diffgit-03）。** 都是源码确认的条目，相互独立。
    - 验证：files-pane-ui-test、file-editor-ui-test、changes-pane-ui-test，单元测试 file-tree-row-model。
 3. **标题栏 Files 开关和开关顺序（topbar-01/03/04）。**
    - 验证：titlebar-ui-test、files-pane-ui-test、menus-states-ui-test 的 View options 期望。
-4. **侧栏 CSS 与菜单分组（sidebar-02..11，topbar-05，menus-02）。**
+4. **侧栏 CSS、菜单分组和归档快捷键（sidebar-02..11，topbar-05，menus-02，cov7-01）。**
    - 验证：sidebar-ui-test、sidebar-rest-ui-test、sidebar-chrome；补 zh-CN（Collapse all / Expand all / {count} failed）。
 5. **presets 新首页与单行输入框（home-01..07，composer-01..04/11，sidebar-01）。** 改动面最大。
    - 建议加一个本地偏好（默认开，与截图一致），旧问候语路径继续保留。
    - 验证：home-page-ui-test、composer-states-ui-test，并在已安装的 2.37337.1 截图对照。
 6. **Preview 主进程（preview-01/03/05，toolcards-02）。**
    - 验证：preview-ui-test，新增“端口被占用→顺延”和“端口被抢→身份不符”两个场景，approval-card 单元测试。
-7. **键盘与焦点细节**：terminal-01..13、transcript-02 / tasks-01（共享 tab-focus-release 模块）、layout-01/02/03、composer-07/08、diffgit-01/02/v01。
+7. **键盘与焦点细节**：terminal-01..13、transcript-02 / tasks-01（共享 tab-focus-release 模块）、layout-01/02/03、composer-07/08、diffgit-01/02/15、cov3-01 附件卡截断。
+   - 如需对齐，可在这一步加磁盘空间提示（cov0-04）：主进程要新增 `getFreeDiskSpace`。
    - 验证：terminal-ui-test、transcript-scroll-ui-test、split-windows-ui-test、changes-pane-ui-test。
 8. **新文案补 zh-CN。** Code chunk 内新增约 300 条文案，只翻译实际移植的那部分。验证：`tests/i18n.test.mjs`。
 
@@ -235,8 +249,31 @@ P3 以及“不适用”的条目（SSH 环境、`/subtask`、PR/CI 卡片、统
 
 - home-17：“Action Center 删除 fix_ci 建议”。复核发现 cd4f82e77:225 仍有 fix_ci，规则集 :281-287 也还包含它。
 - composer-09：“发送后忘记撤销历史”。`rC/iC`（shared-28:6931-6964）没有导出给 Code composer。
-- menus-15：“面板关闭后焦点归还忽略 focus guard”。旧版 ca1d33d05:1364、1435-1439 已经是同样的逻辑。
+- cov2-04：“Artifact 链接卡显示作者和更新时间”。只在 c19e90103 的 at-rest 或 qy 路径出现，不是 Code 转录的变化。
+- cov5-06：“Projects 页可按 id 搜索、导入页新增入口”。c17beaa76 只服务 claude.ai 的 /projects 路由（c1b9abf13:224），不是 Code 界面。
+- 第一遍复核中另有一条驳回：menus-15“面板关闭后焦点归还忽略 focus guard”，旧版 ca1d33d05:1364、1435-1439 已是同样逻辑；第二遍分析没有再报这一条。
 
 ## 覆盖扫描
 
-（扫描完成后补充：各桶分诊计数，以及区外新发现的条目。）
+12 个桶共分诊 20,430 个单元，范围是有变化的 chunk 里所有 changed、added，以及归到这些 chunk 的 removed 单元：
+
+| 已被各区覆盖 | 非 Code 界面 | 非 UI 管道 | 噪声（格式、压缩名、重排） | 未覆盖的 Code UI |
+|---|---|---|---|---|
+| 2,400 | 3,032 | 6,294 | 7,730 | 974 |
+
+- 974 个未覆盖单元归并成 68 条变化，逐条复核后驳回 2 条（cov2-04、cov5-06），其余写进 `regions/coverage-<n>.md|json`，并按 region 字段合并到上面的统计。
+- 默认可见、需要本地跟进的只有 4 条 P2：cov7-01、cov3-01、cov9-01、cov0-04。
+- 其余是 P3，大部分不适用。主要有四类：
+  - Projects (Beta) 页与 Artifacts 页的内部改版（cov0-01/02、cov11-03/04、cov5-04、cov9-05、cov6-02）；
+  - 云端或自托管环境与 Routine 表单（cov3-02、cov5-05、cov9-08、cov5-11）；
+  - SSH 会话错误（cov2-02、cov5-03）；
+  - iOS 模拟器（cov10-03、cov4-01、cov3-05）。
+- 本地值得考虑的 P3：
+  - Routine 启动失败的 toast 带上原因（cov11-01）、分支选择器区分“无分支”和“无匹配”（cov1-03）；
+  - “Session not found on disk” 空态对已归档会话不再显示 Archive（cov2-05）；
+  - 侧栏宽度拖拽在窗口外松开时自动结束（cov8-01）；
+  - Ctrl+Tab 循环切换会话时，进入折叠分组会自动展开（cov7-02）；
+  - 新建 worktree 时拒绝符号化的 remote-tracking ref 作为起点（cov8-02）。
+- 局限：
+  - 各桶的“噪声”和“非 UI 管道”是分诊员按 chunk 和单元抽查判定的，没有逐个人工复核。
+  - 主进程 7 MB chunk 里包含打包的依赖，它的 added/changed 单元大多归入这两类。

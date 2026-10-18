@@ -18,8 +18,15 @@ import { t } from "../electron/i18n/index.mjs";
 export const DIFF_FILE_LIST_WIDTH = Object.freeze({ DEFAULT: 240, MIN: 160, MAX: 640 });
 // So: the column fits only when the diff body is at least this wide.
 export const DIFF_FILE_LIST_MIN_PANE = DIFF_FILE_LIST_WIDTH.DEFAULT + 160;
-// Qe: additions + deletions above this collapse every file.
+// Qe/$e (2.42304.0 c44d00c7f Al): additions + deletions above the limit collapse every file. The limit is
+// `He ? Rt : Pt` (cd14a8022 j=2e4 / A=5e3): 20000 for the single-list renderer Bs (main window, perFileList unset),
+// 5000 for the per-file list hl (Be: rendered into another window, or perFileList). The local Changes body is the
+// per-file list (one FileDiff per section, like hl) in every window, so it takes Pt (diffgit-08, host adapter).
 export const LARGE_DIFF_LINES = 5000;
+export const LARGE_DIFF_LINES_SINGLE_LIST = 20000;
+// kl / Ol (c44d00c7f): the >300-file "changed but no patch, and no hunk anywhere" heuristic.
+export const LARGE_DIFF_FILES = 300;
+const HUNK_HEADER = /(?:^|\n)@@/;
 export const DIFF_FILE_KINDS = Object.freeze(["test", "build", "generated"]);
 
 export const DIFF_FILE_LIST_LABELS = Object.freeze({
@@ -259,9 +266,24 @@ export function diffTotals(entries) {
   }
   return { additions, deletions };
 }
-export function isLargeDiff(entries) {
+// $e, ported branch for branch:
+//   lines > limit ? true : Qe === void 0 ? Fe !== void 0 && (some changed && none has a patch
+//     || files > kl && some changed without a patch && no patch has an @@ line) : Qe
+// withheld = comparison.patches_withheld (Qe; only a boolean counts), lazyPatches = fetchFilePatch is defined (Fe),
+// singleList = He. A file's rawFile is {changes, patch} as the official comparison file (absent: unchanged, no patch).
+// Officially Qe and Fe arrive together: c5da7eb42 asks getGitDiff for the inline budget
+// ({includePatches:false, inlinePatchesMaxChangedLines:2e4}) and sets lazy_file_hunks only when getGitDiffFilePatch
+// exists; the main process answers patches_withheld only to that budgeted call (index.chunk-BAdej_RQ je).
+export function isLargeDiff(entries, { withheld, lazyPatches = false, singleList = false } = {}) {
   const { additions, deletions } = diffTotals(entries);
-  return additions + deletions > LARGE_DIFF_LINES;
+  if (additions + deletions > (singleList ? LARGE_DIFF_LINES_SINGLE_LIST : LARGE_DIFF_LINES)) return true;
+  if (typeof withheld === "boolean") return withheld;
+  if (!lazyPatches) return false;
+  const files = entries ?? [];
+  const changed = (file) => (file?.rawFile?.changes ?? 0) > 0;
+  const patch = (file) => file?.rawFile?.patch;
+  return files.some(changed) && !files.some(patch)
+    || files.length > LARGE_DIFF_FILES && files.some((file) => changed(file) && !patch(file)) && !files.some((file) => HUNK_HEADER.test(patch(file) ?? ""));
 }
 
 // La: selecting a file re-opens every collapsed folder above it.
@@ -317,3 +339,67 @@ export function diffFileListLimit(paneWidth) {
 export function diffFileListCanFit(paneWidth) {
   return !(paneWidth > 0) || paneWidth >= DIFF_FILE_LIST_MIN_PANE;
 }
+
+// ---- R4i-files FI2 (diffgit-08-lazy): withheld patches and per-file patch reads ---------------------------------------
+// c5da7eb42 asks the working-tree diff for the inline budget only where getGitDiffFilePatch exists:
+// `e?{includePatches:!1,inlinePatchesMaxChangedLines:2e4}:void 0` (CxZMGoHL PANE_INLINE_PATCHES_MAX_CHANGED_LINES=2e4).
+export const INLINE_PATCHES_MAX_CHANGED_LINES = 20000;
+export const INLINE_PATCH_BUDGET = Object.freeze({ includePatches: false, inlinePatchesMaxChangedLines: INLINE_PATCHES_MAX_CHANGED_LINES });
+// CxZMGoHL PER_FILE_FETCH_CONCURRENCY=4: at most four per-file patch reads run at once (Expand all on a withheld diff).
+export const PER_FILE_FETCH_CONCURRENCY = 4;
+
+// The main process's comparison files ({filename, status, additions, deletions, changes, previous_filename}) onto the
+// parsed sections: a withheld file arrives as a header-only block (no hunks), so its counts come from the comparison
+// and it is marked lazyPatch {previousPath} (Ko: no patch and changes > 0). Sections with hunks are left as parsed. A
+// modified file's header-only block has no change metadata, which diff-model marks HEADER_ONLY_FALLBACK; with a
+// comparison entry that is the withheld patch, not a parse failure, so the fallback is cleared.
+const HEADER_ONLY_FALLBACK = "No complete text hunks or change metadata";
+export function withComparisonFiles(sections, files) {
+  if (!Array.isArray(files) || !files.length) return sections;
+  const byPath = new Map();
+  for (const file of files) if (file && typeof file.filename === "string" && file.filename) byPath.set(file.filename, file);
+  let changed = false;
+  const next = (sections ?? []).map((section) => {
+    if (section?.type !== "file" || !section.path || section.hunks?.length || section.binary) return section;
+    if (section.fallbackReason && section.fallbackReason !== HEADER_ONLY_FALLBACK) return section;
+    const file = byPath.get(section.path);
+    if (!file || !(file.changes > 0) || !Number.isFinite(file.additions) || !Number.isFinite(file.deletions)) return section;
+    changed = true;
+    const previousPath = typeof file.previous_filename === "string" && file.previous_filename ? file.previous_filename : undefined;
+    // R4i-files fix: hashInput is c44d00c7f Br's lazy contentHash input (`${n}:${t.status}:${t.additions}:${t.deletions}:${t.previous_filename??""}`,
+    // less merge_base, which the host comparison does not carry): the patch query key, so a change re-reads the row.
+    return { ...section, fallbackReason: null, added: file.additions, removed: file.deletions,
+      lazyPatch: { previousPath, hashInput: `${file.status ?? ""}:${file.additions}:${file.deletions}:${previousPath ?? ""}` } };
+  });
+  return changed ? next : sections;
+}
+
+// The rawFile of a listed entry as the official comparison file ({changes, patch}), for isLargeDiff's no-patch branch:
+// a lazy (withheld) section has no patch, any other section's patch is its own text.
+export function withRawFiles(entries, sections) {
+  const byPath = new Map();
+  for (const section of sections ?? []) if (section?.type === "file" && section.path && !byPath.has(section.path)) byPath.set(section.path, section);
+  return (entries ?? []).map((entry) => {
+    const section = byPath.get(entry.filePath);
+    const changes = (Number.isFinite(entry.additions) ? entry.additions : 0) + (Number.isFinite(entry.deletions) ? entry.deletions : 0);
+    return { ...entry, rawFile: { changes, patch: section?.lazyPatch ? undefined : (section?.raw || undefined) } };
+  });
+}
+
+// A FIFO limiter for the per-file reads: schedule(run) resolves with run()'s result once a slot is free.
+export function createPatchFetchQueue(limit = PER_FILE_FETCH_CONCURRENCY) {
+  let active = 0;
+  const waiting = [];
+  const pump = () => {
+    while (active < limit && waiting.length) {
+      const job = waiting.shift();
+      active++;
+      Promise.resolve().then(job.run).then(job.resolve, job.reject).finally(() => { active--; pump(); });
+    }
+  };
+  return (run) => new Promise((resolve, reject) => { waiting.push({ run, resolve, reject }); pump(); });
+}
+// c5da7eb42 `e=!s&&!o&&!r&&!!V?.getGitDiffFilePatch`: only the local working-tree diff is budgeted and read per file; a
+// commit's own diff (getCommitDiff) carries every patch. workspace-git-diff scope params: 'branch' (the default),
+// 'uncommitted', 'commit:<sha>'.
+export const lazyDiffScope = (param) => param === undefined || param === null || param === "branch" || param === "uncommitted";

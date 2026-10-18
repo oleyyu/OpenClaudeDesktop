@@ -86,6 +86,7 @@ test("only backward navigation keys signal reading upward", () => {
   for (const key of ["ArrowUp", "PageUp", "Home"])
     assert.equal(isUpNavigationKey({ key }), true);
   assert.equal(isUpNavigationKey({ key: " ", shiftKey: true }), true);
+  // c7f8992b4 C (the classifier) reads Shift+Tab as "up"; only its consumer stops releasing on it (TT-05 below).
   assert.equal(isUpNavigationKey({ key: "Tab", shiftKey: true }), true);
   for (const modifier of ["ctrlKey", "altKey", "metaKey"])
     assert.equal(isUpNavigationKey({ key: "Home", [modifier]: true }), false);
@@ -129,13 +130,35 @@ test("Space activates historical rows before generic downward navigation, preser
     transcriptKeyIntent({ key: "Enter" }, { ...row, inViewport: false }),
     "none",
   );
+  // TT-05 (c7f8992b4 T: a classified "up" only records the intent): Shift+Tab, from anywhere, never releases at
+  // keydown; it only marks the next upward scroll as the reader's. attachTabFocusRelease decides the release.
   assert.equal(
     transcriptKeyIntent(
       { key: "Tab", shiftKey: true },
       { editable: true, inViewport: false },
     ),
-    "up",
+    "intent",
   );
+  assert.equal(transcriptKeyIntent({ key: "Tab", shiftKey: true }, row), "intent");
+  assert.equal(transcriptKeyIntent({ key: "Tab" }, row), "none");
+  assert.equal(transcriptKeyIntent({ key: "Tab", shiftKey: true, metaKey: true }, row), "none");
+  // The other up keys classify as "up"; since R3-topbar TT-05 that is the same intent-only handling (see below).
+  assert.equal(transcriptKeyIntent({ key: "ArrowUp" }, { ...row, inItem: false }), "up");
+});
+
+test("TT-05: the transcript's keydown turns Shift+Tab and the up keys into a timed intent only, never release()", async () => {
+  const fs = await import("node:fs");
+  const source = fs.readFileSync(new URL("../src/use-transcript-scroll.js", import.meta.url), "utf8");
+  const onKey = source.slice(source.indexOf("function onKey(event)"), source.indexOf("function onPointer(event)"));
+  const branch = onKey.slice(onKey.indexOf('else if (intent === "up" || intent === "intent") {'), onKey.indexOf('} else if (intent === "down")'));
+  assert.ok(branch.length > 0, "one branch handles up and intent");
+  assert.match(branch, /upKeyAt = performance\.now\(\);/);
+  assert.doesNotMatch(branch, /release\(\)/);
+  assert.equal((onKey.match(/release\(\)/g) ?? []).length, 1, "only the row activation (Enter/Space) releases at keydown");
+  assert.match(source, /import \{ keyScrollIntentMs \} from '\.\/generated\/code-current\/tab-focus-key-scroll\.mjs';/);
+  assert.match(source, /explicitIntent: userScrollPending \|\| dragActive \|\| keyIntent \|\| upKeyIntent\(\),/);
+  // The helper that decides the Tab release stays mounted on the viewport.
+  assert.match(source, /attachTabFocusRelease\(viewport, \{ isPinned: \(\) => following, setPinned: value => \{ if \(!value\) release\(\); \} \}\)/);
 });
 
 test("during a layout change an upward movement is the user's only with a real intent", () => {

@@ -5,6 +5,7 @@ import { validateTheme } from './prefs/theme.mjs';
 import { validateHarnessProfile } from './prefs/harness-profile.mjs';
 import { validateInstructions } from './prefs/instructions.mjs';
 import { validateModelSettings } from './prefs/model-settings.mjs';
+import { validateModelNames } from './prefs/model-names.mjs';
 import { validateCustomCommands } from './prefs/custom-commands.mjs';
 import { validatePersona } from './prefs/persona.mjs';
 import { LOCALE_CODES } from './i18n/index.mjs';
@@ -145,6 +146,8 @@ export function settingsPatch(config, patch, models = []) {
   if ('persona' in patch) { const v = validatePersona(patch.persona); if (v === null) delete next.persona; else next.persona = v; }
   if ('customCommands' in patch) { const v = validateCustomCommands(patch.customCommands); if (v === null) delete next.customCommands; else next.customCommands = v; }
   if ('modelSettings' in patch) { const v = validateModelSettings(patch.modelSettings); if (v === null) delete next.modelSettings; else next.modelSettings = v; }
+  // Settings › Models › Display names (prefs/model-names.mjs): {'<coreId>:<modelId>': name}; null clears them all.
+  if ('modelNames' in patch) { const v = validateModelNames(patch.modelNames); if (v === null) delete next.modelNames; else next.modelNames = v; }
   if ('customInstructions' in patch) { const v = validateInstructions(patch.customInstructions); if (v === null) delete next.customInstructions; else next.customInstructions = v; }
   if ('harnessProfile' in patch) { const v = validateHarnessProfile(patch.harnessProfile); if (v === null) delete next.harnessProfile; else next.harnessProfile = v; }
   if ('customTheme' in patch) { const v = validateTheme(patch.customTheme); if (v === null) delete next.customTheme; else next.customTheme = v; }

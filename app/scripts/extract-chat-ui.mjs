@@ -160,6 +160,19 @@ adapters['c8ff922bb-BPSJpmre.js'] = { f:['../../source-calendar-adapters.jsx','C
 adapters['caaf77b85-DdXwb3ur.js'] = { x:['../../source-routine-detail-adapters.jsx','RoutineSwitch'], S:['../../source-routine-form-adapters.jsx','FormSelect'], D:['../../source-routine-adapters.jsx','useRoutineIntl'],
   k:['../../source-routine-form-adapters.jsx','FormCatalogPicker'], j:['../../source-routine-form-adapters.jsx','identity'], A:['../../source-routine-form-adapters.jsx','formModelName'], d:['../../source-routine-form-adapters.jsx','formModelName'], y:'HostCollapsible' };
 adapters['c615abdf4-CsD8WvEj.js'] = { n:['../../source-routine-adapters.jsx','useRoutineIntl'] };
+// SC-7: the two unreachable modules that render a TextInput (caaf77b85's cron field in the scheduled form and
+// cf35aed38's page-header search) import the 2.42304.0 TextInput (shared-frame tx) by its view-tabs semantic
+// name instead of pulling in the 2.2553.1 Bh. Checked before writing: each local is that module's import of
+// shared-frame Bh, and view-tabs publishes CdsTextInput from the file named here.
+const viewTabsTextInput = ['../view-tabs/shared-frame-BfjMqbuN.js', 'CdsTextInput'];
+const textInputRedirects = [['caaf77b85-DdXwb3ur.js', 'w'], ['cf35aed38-CgXOe11O.js', 'b']];
+for (const [file, local] of textInputRedirects) adapters[file][local] = viewTabsTextInput;
+// SC-7: the native-field registry (source-field-adapters.jsx) learns this family's parts from the family module
+// itself, as code-current environment-field-controls and source-routines do for theirs. The adapter module used to
+// import them from shared-frame, which imports the adapter module back: whichever of the two loaded first decided
+// whether the registry held the parts or undefined.
+const registrations = { 'shared-frame-C_2npUJq.js': { call: 'registerNativeFieldComponents', from: '../../source-field-adapters.jsx',
+  parts: { Field: '_y', Label: 'vy', Description: 'yy', ErrorText: 'by', TextInput: 'Bh', TextArea: '$v' } } };
 async function get(name) {
   if (modules.has(name)) return modules.get(name);
   const code = await fs.readFile(path.join(source,name),'utf8');
@@ -216,7 +229,8 @@ async function addCalendarInitializers(m) {
     for (const name of dependencies) await add(m, name);
   }
 }
-for (const exported of ['Ga','qa']) { const mod = await get('shared-14-BOJVa-jT.js'); await add(mod, mod.exports.get(exported)); }
+// SC-7: shared-14 Ga/qa (tv/ev, the 2.2553.1 artifact body and header classes) are no longer forced in: nothing
+// imported them. The live artifact body class is current-chat shared-9 xf (source-artifact-viewer.jsx).
 const shell=await get('shared-11-CDihEvbJ.js');
 await add(await get('vendor-frame-BmPfNbgY.js'), 'qt');
 await add(await get('vendor-frame-BmPfNbgY.js'), 'Wt');
@@ -233,6 +247,9 @@ for (const name of ['fo', 'co', 'so']) await add(await get('ccd3f68fe-JzfLnZNI.j
 addSourceLiteral(await get('ccd3f68fe-JzfLnZNI.js'), 'uo', 'routineTemplateGridClass', 'grid w-full grid-cols-1 gap-x-6');
 await add(await get('vendor-intl-Cf4IuK3L.js'), 'kt');
 addSourceLiteral(await get('ccd3f68fe-JzfLnZNI.js'), 'Zo', 'routineGridClass', 'mb-3 grid auto-rows-fr grid-cols-1');
+// The field family (registered with the native-field registry, see `registrations`) and the Spark (bd). Bh, the
+// 2.2553.1 TextInput, stays for this family's TextField (Sy) and for the host CsvTextInput (source-csv-adapters.jsx,
+// also SidebarSectionsInput); the Code UI terminal find already uses view-tabs CdsTextInput (2.42304.0 tx).
 for (const name of ['Bh', '$v', 'bd', 'Sy', '_y', 'vy', 'yy', 'by']) await add(await get('shared-frame-C_2npUJq.js'), name);
 await add(await get('shared-24-C4QZCHDk.js'), 'tE');
 await add(await get('shared-24-C4QZCHDk.js'), 'TD');
@@ -256,15 +273,32 @@ for (const name of ['yu', 'bu', 'xu']) await add(activity, name);
 const activityLayout = await get('cc5a62f6f-ylJcImQa.js');
 for (const name of ['O', 'A', 'm', 'h', 'v', '_', 'y']) await add(activityLayout, name);
 for (const [file, names] of [['ca324bb72-DogKBzRY.js',['yt','It']], ['cabf52553-BGQcEv7j.js', ['Le','Ee']], ['cfcabf2fa--2rO5Hd_.js', ['f','p']], ['c71dee58b-CFLphdFa.js', ['wl']], ['c75e89812-U9wOm6Ly.js', ['i', 'a']], ['cbcaf521a-CrWJ5SHy.js', ['e']], ['cf8745532-uXq2n8pj.js', ['l']], ['cbef3b9e7-kx1HRu8z.js', ['s']], ['c193cfc9b-B8oGoJPG.js', ['g']]]) { const mod = await get(file); for (const name of names) await add(mod, name); }
+const viewTabsManifest = JSON.parse(await fs.readFile(path.join(root, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+if (viewTabsManifest.publicNames?.[viewTabsTextInput[1]]?.file !== path.basename(viewTabsTextInput[0]))
+  throw Error(`view-tabs does not publish ${viewTabsTextInput[1]} from ${path.basename(viewTabsTextInput[0])}`);
+for (const [file, local] of textInputRedirects) {
+  const m = modules.get(file), binding = m?.program.scope.getBinding(local);
+  const from = binding?.path.isImportSpecifier() ? binding.path.parent.source.value.slice(2) : null;
+  if (from !== 'shared-frame-C_2npUJq.js' || (await get(from)).exports.get(binding.path.node.imported.name) !== 'Bh')
+    throw Error(`${file}:${local} is not that module's import of shared-frame Bh`);
+  if (m.imports.get(local) !== viewTabsTextInput) throw Error(`${file}:${local} was not redirected`);
+}
 await fs.mkdir(output,{recursive:true});
 const provenance=[];
 for(const m of modules.values()) {
-  const imports=[...m.imports].map(([local,[from,name]])=>`import { ${name} as ${local} } from ${JSON.stringify(from)};`).join('\n');
+  const registration = registrations[m.name];
+  if (registration) {
+    if (m.program.scope.hasBinding(registration.call)) throw Error(`${m.name} already binds ${registration.call}`);
+    for (const [role, local] of Object.entries(registration.parts)) if (!m.selected.has(local)) throw Error(`${m.name}: ${role} part ${local} is not extracted`);
+  }
+  const imports=[...m.imports].map(([local,[from,name]])=>`import { ${name} as ${local} } from ${JSON.stringify(from)};`).join('\n')
+    + (registration ? `\nimport { ${registration.call} } from ${JSON.stringify(registration.from)};` : '');
+  const register = registration ? `${registration.call}({ ${Object.entries(registration.parts).map(([role, local]) => `${role}: ${local}`).join(', ')} });\n` : '';
   const declarations=[...m.selected.values(), ...m.initializers.values()].sort((a,b)=>a.node.start-b.node.start).map(p=>(p.isVariableDeclarator()?'var ':'')+m.code.slice(p.node.start,p.node.end)+(p.isVariableDeclarator()?';':'')).join('\n').replaceAll('\"/images/illustrations/', '\"./images/illustrations/').replaceAll('\"/assets/v1/', '\"./assets/v1/');
   const literals=[...m.literals].map(([name,node])=>`var ${name}=${m.code.slice(node.start,node.end)};`).join('\n');
-  const body=`// Extracted from Claude Desktop 2.2553.1 ${m.name}. Only asset URLs are made relative. Do not edit.\n${imports}\n${declarations}\n${literals}\nexport { ${[...m.selected.keys(), ...m.literals.keys(), ...m.imports.keys()].join(', ')} };\n`;
+  const body=`// Extracted from Claude Desktop 2.2553.1 ${m.name}. Only asset URLs are made relative. Do not edit.\n${imports}\n${declarations}\n${literals}\n${register}export { ${[...m.selected.keys(), ...m.literals.keys(), ...m.imports.keys()].join(', ')} };\n`;
   await fs.writeFile(path.join(output,m.name),body);
-  provenance.push({source:m.name,outputSha256:createHash('sha256').update(body).digest('hex'),assetUrls:'Root paths made relative for Electron file loading',sha256:createHash('sha256').update(m.code).digest('hex'),declarations:[...m.selected.keys()],literals:[...m.literals].map(([name,node])=>({name,start:node.start,end:node.end})),...(m.initializers.size ? { initializers: [...m.initializers.values()].map(p => ({ start:p.node.start, end:p.node.end })) } : {}),boundaries:[...m.imports].filter(([,v])=>!v[0].startsWith('./shared'))});
+  provenance.push({source:m.name,outputSha256:createHash('sha256').update(body).digest('hex'),assetUrls:'Root paths made relative for Electron file loading',sha256:createHash('sha256').update(m.code).digest('hex'),declarations:[...m.selected.keys()],literals:[...m.literals].map(([name,node])=>({name,start:node.start,end:node.end})),...(m.initializers.size ? { initializers: [...m.initializers.values()].map(p => ({ start:p.node.start, end:p.node.end })) } : {}),...(registration ? { registrations: [registration] } : {}),boundaries:[...m.imports].filter(([,v])=>!v[0].startsWith('./shared'))});
 }
 await fs.writeFile(path.join(output,'provenance.json'),JSON.stringify(provenance,null,2)+'\n');
 console.log(`Chat UI: extracted ${provenance.reduce((n,m)=>n+m.declarations.length,0)} declarations from ${modules.size} source modules.`);

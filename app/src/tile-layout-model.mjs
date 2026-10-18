@@ -26,7 +26,7 @@ export const CHAT_TILE_ID = "chat";
 export const CHAT_OVERFLOW_MIN = Object.freeze({ width: 320, anchor: "left" });
 // Local pane kinds with real data. Official ids differ (file/diff/plan); the
 // side ratio rule keys them by kind name (panes-state-current.js:1552 ii).
-export const PANE_KINDS = Object.freeze(["files", "changes", "plan", "tasks", "terminal", "preview"]);
+export const PANE_KINDS = Object.freeze(["files", "changes", "plan", "tasks", "terminal", "preview", "session"]);
 // "preview" is one of the official wide panes (panes-state-current.js:1554 ii): side 3 against chat 2.
 const WIDE_SIDE_KINDS = new Set(["files", "changes", "preview"]);
 

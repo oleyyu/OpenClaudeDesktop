@@ -7,6 +7,8 @@ import {
   orderedTileIds, parentAtPath, resolveLayout, withChatMinimum,
 } from "./tile-layout-model.mjs";
 import { createDragSnapshot, hitTest, indicatorOutset } from "./tile-drop-zones.mjs";
+// 2.42304.0 cc43287c9 Rre / B9 over cf53e1812's tile math (generated): room for the chat when a pane opens.
+import { fitOpenedLayout } from "./generated/code-current/tile-fit-opened.mjs";
 import "./source-tile-layout.css";
 import { tileRegion } from "./focus-region-model.mjs";
 
@@ -263,7 +265,7 @@ function useContentHosts() {
   }), []);
 }
 
-export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config = TILE_CONFIG, onTileTearOff, hasPane = true, dataAttributes, restoreKey = null, onRestoreLayout }) {
+export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config = TILE_CONFIG, onTileTearOff, hasPane = true, dataAttributes, restoreKey = null, onRestoreLayout, tileHosts = null }) {
   const containerRef = useRef(null);
   const viewportRef = useRef(null);
   const nodeEls = useRef(new Map());
@@ -327,6 +329,25 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
     if (onRestoreLayout) onRestoreLayout(next, restoreKey);
     else onLayoutChange(next, [CHAT_TILE_ID]);
   }, [restoreKey, layout, containerSize, tileById, config, onRestoreLayout, onLayoutChange]);
+
+  // cc43287c9 `Ne = Lt((layout, rootRowOnly) => Rre({layout, containerWidth: root width, splitConfig: Me, tileById: G9,
+  // rootRowOnly}))`, registered as the store's tileHost while mounted (removed only if it is still the one there). The
+  // host reads the latest width, config and tiles when called (Lt). Me is the tile config with paddingEnd padding + the
+  // inspector dock (none locally); the official container's 1px border (contentBox's default borderPx) is not drawn
+  // here (source-tile-layout.css), so borderPx is 0. Locally the store is shared by the window's split panes: the host
+  // is kept under this layout's owner (restoreKey).
+  const fitOpened = useRef(null);
+  fitOpened.current = (next, rootRowOnly) => {
+    const element = containerRef.current;
+    return element === null ? next : fitOpenedLayout({ layout: next, containerWidth: element.getBoundingClientRect().width,
+      splitConfig: { ...config, borderPx: config.borderPx ?? 0 }, tileById, rootRowOnly });
+  };
+  const tileHost = useMemo(() => ({ fitOpenedLayout: (next, rootRowOnly) => fitOpened.current(next, rootRowOnly) }), []);
+  useLayoutEffect(() => {
+    if (!tileHosts) return undefined;
+    tileHosts.setTileHost(restoreKey, tileHost);
+    return () => { if (tileHosts.tileHost(restoreKey) === tileHost) tileHosts.setTileHost(restoreKey, null); };
+  }, [tileHosts, restoreKey, tileHost]);
 
   const registerNodeEl = useCallback((key) => (element) => {
     if (element) nodeEls.current.set(key, element);

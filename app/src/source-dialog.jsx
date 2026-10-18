@@ -70,8 +70,8 @@ export function useDialogRetention(current) {
   };
 }
 
-export function SourceDialogFooter({ className = "", children }) {
-  return <footer className={`sdlg-footer ${className}`.trim()}>{children}</footer>;
+export function SourceDialogFooter({ className = "", align = "end", children }) {
+  return <footer data-align={align === 'end' ? undefined : align} className={`sdlg-footer ${className}`.trim()}>{children}</footer>;
 }
 
 export function SourceDialogCloseButton({ flush = false, label = t("Close"), onClick }) {
@@ -89,9 +89,10 @@ export function SourceDialog({ open = true, onExited, ...props }) {
 
 function DialogPopup({
   presence, open, onClose, title, description, descriptionClassName = "", size = "md", alert = false,
-  sourceVersion, showClose = true, bleed = false, footer, initialFocusRef, density, className = "", children, onKeyDown, layer = MODAL_LAYER, ...rest
+  sourceVersion, showClose = true, bleed = false, footer, initialFocusRef, popupRef, density, className = "", children, onKeyDown, layer = MODAL_LAYER, ...rest
 }) {
   const popup = presence.popup, titleId = useId(), descriptionId = useId();
+  const setPopup = React.useCallback(node => { popup.current = node; if (typeof popupRef === 'function') popupRef(node); else if (popupRef) popupRef.current = node; }, [popup, popupRef]);
   const close = useRef(onClose);
   close.current = onClose;
   // The opener is read while rendering, before any child (autoFocus, effects) can move focus.
@@ -189,7 +190,7 @@ function DialogPopup({
           event.preventDefault();
           if (!alert && open) close.current?.("outside-press");
         }}>
-        <section {...rest} ref={popup} role={alert ? "alertdialog" : "dialog"} aria-modal="true" aria-labelledby={titleId}
+        <section {...rest} ref={setPopup} role={alert ? "alertdialog" : "dialog"} aria-modal="true" aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : rest["aria-describedby"]} tabIndex={-1}
           data-cds={alert ? "ConfirmationDialog" : "Dialog"} data-dialog-size={size} data-alert={alert ? "" : undefined}
           data-open={open && presence.visible ? "" : undefined} data-closed={ending ? "" : undefined}

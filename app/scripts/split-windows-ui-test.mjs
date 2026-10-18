@@ -346,22 +346,23 @@ try {
   await poll(async () => (await focusedSide()) === 1, "⌃] focuses the secondary side");
   await page.keyboard.press("Control+Backquote");
   await terminalIn(page.locator(".split-pane-secondary")).waitFor({ state: "detached" });
-  // Each side's titlebar offers the Terminal pane with its ⌘J chord: as its own toggle, or — only while that titlebar is
-  // cramped (usePaneViewItems, panes-toggle-current.js:3215-3290) — as a View options item.
+  // Each side's titlebar offers the Terminal pane with its ⌘J chord: as its own toggle, or — once the titlebar folded it
+  // (R3-topbar TT-03: 2.42304.0 cd54a5401 un + c73f45bc3 jh fold toggles one by one, Vh lists the folded ones) — as a
+  // View options item.
   const secondaryTrailing = page.locator(".split-pane-secondary .st-trailing");
-  // The side widens once its terminal closes; SourceTitlebar re-measures data-cramped a frame later (ResizeObserver ->
-  // requestAnimationFrame), so read it only once it holds steady.
-  const settledCramped = async () => {
+  // The side widens once its terminal closes; the fold measure settles over a few frames (ResizeObserver ->
+  // requestAnimationFrame), so read whether the toggle is inline only once that holds steady.
+  const settledInline = async () => {
     let last, same = 0;
     for (let attempt = 0; attempt < 60 && same < 4; attempt += 1) {
-      const value = await secondaryTrailing.getAttribute("data-cramped");
+      const value = await secondaryTrailing.locator('[data-pane-toggle="terminal"]').count();
       same = value === last ? same + 1 : 0;
       last = value;
       await page.waitForTimeout(50);
     }
     return last;
   };
-  if (await settledCramped() === null) {
+  if (await settledInline() > 0) {
     const terminalToggle = secondaryTrailing.locator('[data-pane-toggle="terminal"]');
     await terminalToggle.waitFor();
     assert.match(await terminalToggle.getAttribute("aria-keyshortcuts"), /^Meta\+J\b/);

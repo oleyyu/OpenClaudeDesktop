@@ -2,6 +2,10 @@
 // Keep this model free of UI/browser state so Codex records remain the source.
 import { hasPendingApproval, latestTurnError } from "./state.js";
 import { t, tn } from "../electron/i18n/index.mjs";
+import {orderSidebarFamilies,splitSidebarFamilies} from './generated/code-current/sidebar-family-sort.mjs';
+import {currentSidebarDateGroups} from './generated/code-current/sidebar-date-groups.mjs';
+import { currentSidebarComparator,sidebarSortRecord } from './sidebar-filter-current-model.mjs';
+import { nestedSessionCounts, nestedSessionNeedsInput } from './generated/code-current/nested-session-model.mjs';
 export const CLASSIC_GROUP_OPTIONS = Object.freeze([
   ["date", "Date"],
   ["project", "Folder"],
@@ -27,6 +31,8 @@ export const DEFAULT_SIDEBAR_PREFERENCES = Object.freeze({
   showEmptyGroups: false,
   // Filter menu 'Show PR status' (shared-23 xF, show_pr_status; on by default).
   showPrStatus: true,
+  showMetadata: false,
+  ascending: false,
   collapsedNested: [],
   // shared-50 G collapsedGroups (persisted with the sidebar store): folded group/bucket keys.
   collapsedGroups: [],
@@ -43,6 +49,8 @@ export function normalizeSidebarPreferences(value = {}) {
       ? value.stateActivityDays : 7,
     showEmptyGroups: value.showEmptyGroups === true,
     showPrStatus: value.showPrStatus !== false,
+    showMetadata: value.showMetadata === true,
+    ascending: value.ascending === true,
     // sidebar-groups vc().keys: folded nested heads persist as parent ids.
     collapsedNested: Array.isArray(value.collapsedNested)
       ? [...new Set(value.collapsedNested.filter((id) => typeof id === "string" && id))] : [],
@@ -215,11 +223,13 @@ export function buildSidebarGroups({
   state = {}, search = "", fallbackCwd = "", now = Date.now(), locale, pinnedOrder = [],
   repoIdentities = {}, projectOrder = [],
   // Sessions whose conversation matches the search (a core with full-text search: Codex thread/search), by id.
-  contentMatches = null,
+  contentMatches = null, currentLayout = false,
 } = {}) {
-  const prefs = normalizeSidebarPreferences(preferences);
+  const prefs = {...normalizeSidebarPreferences(preferences),...(currentLayout?{status:"active"}:{})};
   const query = search.trim().toLocaleLowerCase(locale);
-  const compare = compareSessions(prefs.sortBy, locale);
+  const record = session => ({...sidebarSortRecord(session,sessionUpdatedAt(session),timestampMs(session.createdAt ?? session.createdAtMs)),
+    ref:{kind:'code',id:session.id},source:{kind:'code',data:{sideParentId:sessionParentId(session,metadata)}}});
+  const compare = currentLayout ? currentSidebarComparator(prefs.sortBy,prefs.ascending,record) : compareSessions(prefs.sortBy, locale);
   const seen = new Set();
   const list = sessions.filter((session) => {
     if (!session?.id || seen.has(session.id)) return false;
@@ -228,7 +238,7 @@ export function buildSidebarGroups({
     if (prefs.status === "archived" && !sessionArchived(session)) return false;
     if (query && !sessionName(session).toLocaleLowerCase(locale).includes(query) && !contentMatches?.has?.(session.id)) return false;
     const time = sessionUpdatedAt(session);
-    if (prefs.groupBy === "state" && prefs.stateActivityDays > 0 && time
+    if (!currentLayout && prefs.groupBy === "state" && prefs.stateActivityDays > 0 && time
       && !metadata[session.id]?.pinned && now - time > prefs.stateActivityDays * 86400000) return false;
     return true;
   }).sort(compare);
@@ -240,6 +250,15 @@ export function buildSidebarGroups({
     return output;
   }
   if (prefs.groupBy === "date") {
+    if (currentLayout) {
+      const date = new Date(now);
+      const day = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+      const records = rest.map(session=>({...record(session),session}));
+      const intl = {formatMessage:message=>t(message.defaultMessage),formatDate:(value,options)=>new Intl.DateTimeFormat(locale,options).format(value)};
+      return [...output,...currentSidebarDateGroups(records,Infinity,intl,day,true,{byCreated:prefs.sortBy==='created',oldestFirst:prefs.ascending})
+        .map(group=>({...group,kind:'date',sessions:group.sessions.map(row=>row.session),
+          ...(group.bulkScope ? {bulkScope:group.bulkScope.map(row=>row.session)} : {})}))];
+    }
     const days = localDayBoundaries(now);
     const buckets = Array.from({ length: 8 }, () => []);
     for (const session of rest) {
@@ -298,8 +317,10 @@ export function buildSidebarGroups({
   // an owner, else ' · {parent folder}' of its local path.
   const nameCount = new Map();
   for (const bucket of named) nameCount.set(bucket.name, (nameCount.get(bucket.name) || 0) + 1);
+  const nameParts = new Map();
   const folderGroups = named.map((bucket) => {
     const extra = nameCount.get(bucket.name) > 1 ? bucket.identity?.owner || bucket.identity?.parent || parentFolder(bucket.cwd) : null;
+    nameParts.set(`project:${bucket.key}`, [bucket.name, extra ?? ""]);
     return { key: `project:${bucket.key}`, projectKey: bucket.key, label: extra ? `${bucket.name} · ${extra}` : bucket.name,
       cwd: bucket.cwd, sessions: bucket.sessions, kind: "project" };
   });
@@ -311,12 +332,19 @@ export function buildSidebarGroups({
   // project, ranked buckets come first in that order and the rest follow; otherwise the local sort applies.
   const rank = new Map((Array.isArray(projectOrder) ? projectOrder : []).filter((key) => !isCustomOrderKey(key)).map((key, index) => [key, index]));
   const manual = folderGroups.some((group) => rank.has(group.projectKey));
+  // R3-sections (WI-4): the current layout orders folder buckets as 2.42304.0 shared-22 nT does (`Tr(…, Ln(U, W), U)`,
+  // shared-19 c2 / s$): by name, then the disambiguation (`Dg(e.name, t.name) || Dg(e.disambiguationText ?? "", …)`),
+  // whatever the sort, until a stored order names a present folder ("Sort A to Z" clears it back to this); then the ranked
+  // ones in that order and the rest after them, the most recently active first (`n.latestTimestamp - t.latestTimestamp`).
+  const latest = (group) => group.sessions.reduce((max, session) => Math.max(max, sessionUpdatedAt(session)), 0);
+  const byName = (a, b) => collator.compare(nameParts.get(a.key)[0], nameParts.get(b.key)[0]) || collator.compare(nameParts.get(a.key)[1], nameParts.get(b.key)[1]);
   folderGroups.sort((a, b) => {
     if (manual) {
       const left = rank.get(a.projectKey), right = rank.get(b.projectKey);
       if (left !== undefined || right !== undefined) return left === undefined ? 1 : right === undefined ? -1 : left - right;
+      if (currentLayout) return latest(b) - latest(a);
     }
-    return byDefault(a, b);
+    return currentLayout ? byName(a, b) : byDefault(a, b);
   });
   if (other.length) folderGroups.push({ key: `project:${OTHER_PROJECT_KEY}`, projectKey: OTHER_PROJECT_KEY, label: t("Other"), sessions: other, kind: "project" });
   return output.concat(folderGroups);
@@ -423,34 +451,33 @@ export function movePinned(orderedIds, id, direction) {
   return next;
 }
 
-/** sidebar-groups.js:13721-13729 ZF: hidden-child counts for the fold stub.
- * An unread row is counted as unread only; running rows that are not unread
- * count as working. */
-export function nestedStubCounts(rows, { isUnread = () => false, isWorking = () => false } = {}) {
-  let unread = 0, working = 0;
-  for (const row of rows) {
-    if (isUnread(row)) unread += 1;
-    else if (isWorking(row)) working += 1;
-  }
-  return { count: rows.length, unread, working };
+// Host records -> current shared-21 pz/gG. Failed, unread and working are
+// mutually exclusive in that order; approvals may belong to a sub-agent.
+export function nestedStubCounts(rows, { isFailed = row => row.hasError, isUnread = row => row.isUnread, isWorking = row => row.liveStatus === 'running' || row.isResponding === true } = {}) {
+  return nestedSessionCounts(rows.map(row => ({ hasError: isFailed(row), isUnread: isUnread(row), isResponding: !!isWorking(row) })));
 }
-
-/** sidebar-session.js:19617-19626 + :19660-19662 jK: "{#} nested session(s)",
- * or "{#} more nested session(s)" while some children stay listed. */
-export function nestedStubText(hiddenCount, someListed = false) {
-  return someListed ? tn(hiddenCount, "{count} more nested session", "{count} more nested sessions")
-    : tn(hiddenCount, "{count} nested session", "{count} nested sessions");
+export function nestedRowNeedsInput(session, state = {}) {
+  return nestedSessionNeedsInput(session) || hasPendingApproval(state, session.id);
+}
+export function splitNestedRun(run, collapsed, { state = {}, openIds = new Set() } = {}) {
+  if (!collapsed) return { collapsed: false, kept: run.rows, hidden: [] };
+  const kept = [], hidden = [];
+  for (const row of run.rows) (nestedRowNeedsInput(row, state) || openIds.has(row.id) ? kept : hidden).push(row);
+  return { collapsed: true, kept, hidden };
 }
 
 /** Lineage parent from real Codex Thread fields (forkedFromId, parentThreadId)
- * or the local fork operation's metadata; never guessed from titles. */
+ * or the local fork operation's metadata; never guessed from titles. A session detached to top level
+ * (R3-nested NBS-4: 2.42304.0 detachFromParent's lineageDetached, which F_ reads as no lineage) has none. */
 export function sessionParentId(session, metadata = {}) {
+  if (metadata[session?.id]?.lineageDetached === true) return null;
   const candidates = [session?.forkedFromId, session?.parentThreadId, metadata[session?.id]?.forkedFrom];
   const parent = candidates.find((value) => typeof value === "string" && value);
   return parent && parent !== session.id ? parent : null;
 }
 
 export function lineageKind(session, metadata = {}) {
+  if (metadata[session?.id]?.lineageDetached === true) return null;
   if (typeof session?.forkedFromId === "string" && session.forkedFromId) return "fork";
   if (typeof session?.parentThreadId === "string" && session.parentThreadId) return "side_session";
   return metadata[session?.id]?.forkedFrom ? "fork" : null;
@@ -462,7 +489,13 @@ export function lineageKind(session, metadata = {}) {
  * emitted right after their parent at the first family member's position, and
  * the ordered rows split into runs {parentId, rows}.
  */
-export function buildNestedRuns(sessions = [], metadata = {}) {
+export function buildNestedRuns(sessions = [], metadata = {}, {currentLayout=false,sortBy='recency'} = {}) {
+  if (currentLayout) {
+    const records=sessions.map(session=>({ref:{kind:'code',id:session.id},source:{kind:'code',data:{sideParentId:sessionParentId(session,metadata),sideSpawnerId:session.sideSpawnerId}},session}));
+    const result=orderSidebarFamilies(records,sortBy==='recency'?'best-member':'parent');
+    return {parentOf:result.parentOf,ordered:result.ordered.map(row=>row.session),
+      runs:splitSidebarFamilies(result.ordered,result.parentOf).map(run=>({parentId:run.parentId??null,rows:run.rows.map(row=>row.session)}))};
+  }
   const ids = new Set(sessions.map((session) => session.id));
   const parentOf = new Map();
   for (const session of sessions) {

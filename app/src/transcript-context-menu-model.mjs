@@ -128,3 +128,25 @@ export function messageItemText(item) {
 // cf74bc599 df / attachTerminalOutput "cmd+shift+l": ⇧⌘L (or ⇧⌃L) attaches a selection made inside the transcript.
 export const attachSelectionChord = (event) => !!event && !event.altKey && !!event.shiftKey && !!event.metaKey !== !!event.ctrlKey
   && typeof event.key === "string" && event.key.toLowerCase() === "l";
+
+// ---- Where a right-click came from (2.42304.0 c96d752d0-BOCqU7c2.js, the message ContextMenu) ----------------------
+// The row's onContextMenu reads `byKeyboard: e.button === -1` (a keyboard-invoked menu: the ContextMenu key or
+// Shift+F10) and TNe re-dispatches it on the hidden trigger as `PointerEvent("contextmenu", {button: -1})` for a
+// keyboard opening and `MouseEvent("contextmenu", {button: 2})` for a pointer one, so a keyboard opening lands on the
+// first item and a pointer one does not. Locally the transcript opens SourceMenu at the point directly (no hidden
+// trigger), so the caller passes byKeyboard on as initialHighlight "first".
+export function contextMenuOrigin(event) {
+  const x = Number(event?.clientX), y = Number(event?.clientY);
+  return { byKeyboard: event?.button === -1, point: { x: Number.isFinite(x) ? x : 0, y: Number.isFinite(y) ? y : 0 } };
+}
+
+// ENe's Popup carries `onContextMenu: xNe` (`e.preventDefault()`): a right-click on the open menu — its popup, or one
+// of its submenus, whose events bubble through the popup's React tree — shows neither the native menu nor another
+// one. Locally the popups are SourceMenu portals: the root is data-cds="ContextMenu", a submenu a nested role="menu".
+export const OPEN_CONTEXT_MENU = '[data-cds="ContextMenu"], [role="menu"][data-nested]';
+export function preventMenuContextMenu(event) {
+  const node = event?.target?.nodeType === 1 ? event.target : event?.target?.parentElement;
+  if (!node?.closest?.(OPEN_CONTEXT_MENU)) return false;
+  event.preventDefault();
+  return true;
+}

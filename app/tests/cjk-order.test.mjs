@@ -56,7 +56,7 @@ test('preferredSystemLanguages normalises like JDr', () => {
 
 // The loaded design-system CSS reorders the CJK chains and widens --cds-font-system for any data-cjk-order value.
 test('the loaded CSS has the data-cjk-order rules the attribute drives', () => {
-  const css = readFileSync(path.join(app, 'public/assets/v1/c6a992d55-C0zTICcS.css'), 'utf8');
+  const css = readFileSync(path.join(app, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
   assert.ok(css.includes('html[data-cjk-order=zh-hant],:root:lang(zh-Hant){--font-cjk-sans-fallback:var(--font-cjk-sans-tc)'));
   assert.ok(css.includes('html[data-cjk-order=ja],:root:lang(ja){'));
   assert.ok(css.includes('html[data-cjk-order=ko],:root:lang(ko){'));

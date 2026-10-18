@@ -55,8 +55,10 @@ test('agentToolCard: the terminal, preview and workflow cards read as Claude’s
   assert.deepEqual(terminal.allows.map((action) => action.key), ['accept'], 'no session grant for a command typed into the terminal');
   const site = card({ kind: 'preview-site', host: 'example.com', url: 'https://example.com/a' });
   assert.equal(site.heading.action, 'use example.com in the preview');
-  const server = card({ kind: 'preview-server', name: 'web' }, { command: 'npm run dev' });
-  assert.deepEqual([server.heading.action, server.heading.meta, server.detail.text], ['start the dev server “web”', null, 'npm run dev']);
+  const server = card({ kind: 'preview-server', name: 'web', port: 3000, portMayReassign: false }, { command: 'npm run dev' });
+  // 2.42304.0 c96d752d0 Kk preview_start: "start" + the name as meta, and wA's line from the port main passes on.
+  assert.deepEqual([server.heading.action, server.heading.meta, server.detail.text], ['start', 'web', 'npm run dev']);
+  assert.deepEqual(server.context.map((part) => part.text), ['Runs in /w on port 3000']);
   // An approved site or server stays approved for the session (preview-service.cjs), and the button says so.
   assert.deepEqual([site.allows.map((action) => action.label), server.allows.map((action) => action.label)], [['Allow for this session'], ['Allow for this session']]);
   const workflow = card({ kind: 'workflow', name: 'review', description: 'Review the diff', phases: [{ title: 'Scan' }, { title: 'Fix' }], always: true });
@@ -73,4 +75,17 @@ test('agentToolCard: the terminal, preview and workflow cards read as Claude’s
   assert.match(bare.detail.script, /agent\("go"\)/);
   const phased = card({ kind: 'workflow', name: 'review', phases: [{ title: 'Scan' }], script: 'x', scriptTruncated: true });
   assert.deepEqual([phased.detail.scriptOpen, phased.detail.scriptTruncated], [false, true]);
+});
+
+test('main.cjs agentToolCard passes the dev server’s launch.json port and portMayReassign to the card', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const main = await readFile(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const line = main.split('\n').find((text) => text.includes('if (kind === "preview-server") { const env = launchEnvSummary(request.env);'));
+  assert.ok(line, 'the preview-server branch of agentToolCard');
+  // A positive integer port only (preview-launch normalizes "port"); the reassign flag is a strict boolean.
+  assert.ok(line.includes('...(Number.isInteger(request.port) && request.port > 0 ? { port: request.port } : {})'), line);
+  assert.ok(line.includes('portMayReassign: request.portMayReassign === true'), line);
+  // The card model reads exactly those two fields.
+  const model = approvalCardModel({ method: 'item/commandExecution/requestApproval', params: { threadId: 't', cwd: '/w', command: 'npm run dev', codeDesktop: { agentTool: { kind: 'preview-server', name: 'web', port: 8080, portMayReassign: false } } } }, null);
+  assert.deepEqual(model.context.map((part) => [part.key, part.text]), [['description', 'Runs in /w on port 8080']]);
 });

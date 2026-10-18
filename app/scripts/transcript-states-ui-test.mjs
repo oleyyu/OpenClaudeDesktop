@@ -38,8 +38,8 @@ async function shot(name){await page.screenshot({path:path.join(directory,name+'
 // Geometry of the pending skeleton, measured against its own containers.
 const measure=()=>page.evaluate(()=>{const sk=document.querySelector('[data-transcript-skeleton]'),status=sk.closest('[role=status]'),scroller=document.querySelector('.transcript');
  const r=n=>n.getBoundingClientRect(),bars=[...sk.querySelectorAll('[data-cds=Skeleton]')],bubble=bars[0],bubbleRow=bubble.parentElement;
- const paragraphs=[...sk.querySelectorAll('.pl-\\[var\\(--msg-text-inset\\,0\\.5rem\\)\\] > .flex.flex-col')].map(p=>[...p.querySelectorAll('[data-cds=Skeleton]')].map(b=>Math.round(r(b).width/r(p).width*1000)/10));
- const column=sk.querySelector('.pl-\\[var\\(--msg-text-inset\\,0\\.5rem\\)\\]'),cs=getComputedStyle(column);
+ const paragraphs=[...sk.querySelectorAll('.ps-\\[var\\(--msg-text-inset\\,0\\.5rem\\)\\] > .flex.flex-col')].map(p=>[...p.querySelectorAll('[data-cds=Skeleton]')].map(b=>Math.round(r(b).width/r(p).width*1000)/10));
+ const column=sk.querySelector('.ps-\\[var\\(--msg-text-inset\\,0\\.5rem\\)\\]'),cs=getComputedStyle(column);
  return {statusRole:status?.getAttribute('role'),statusLoading:status?.classList.contains('loading-state'),srText:status?.querySelector(':scope > .sr-only')?.textContent,ariaHidden:sk.getAttribute('aria-hidden'),paddingTop:getComputedStyle(sk).paddingTop,
   bars:bars.length,bubble:{width:r(bubble).width,right:r(bubble).right,rowRight:r(bubbleRow).right,rowWidth:r(bubbleRow).width,rootFont:parseFloat(getComputedStyle(document.documentElement).fontSize),
    height:r(bubble).height,boxSizing:getComputedStyle(bubble).boxSizing,lineHeight:parseFloat(getComputedStyle(bubble).lineHeight),padMd:(()=>{const probe=document.createElement('div');probe.style.cssText='position:absolute;height:var(--cds-pad-md)';bubble.append(probe);const v=parseFloat(getComputedStyle(probe).height);probe.remove();return v;})()},paragraphs,paragraphInsets:[cs.paddingLeft,cs.paddingRight],

@@ -25,8 +25,8 @@ const effortsOf = model => (model?.supportedReasoningEfforts || []).map(item => 
  * (else its default, with the user's per-model override from modelSettings). null for an
  * empty catalog.
  */
-export function pickCoreModel(models, wanted, modelSettings) {
-  const list = withEffortDefaults(models, modelSettings).filter(model => isRecord(model) && catalogId(model));
+export function pickCoreModel(models, wanted, modelSettings, coreId = null) {
+  const list = withEffortDefaults(models, modelSettings, coreId).filter(model => isRecord(model) && catalogId(model));
   if (!list.length) return null;
   const id = typeof wanted?.model === 'string' ? wanted.model : '';
   const chosen = (id && (list.find(model => catalogId(model) === id) || list.find(model => model.id === id)))
@@ -86,7 +86,7 @@ export function reconcileCoreModel(config, coreId, models) {
   if (!Array.isArray(models) || !models.length) return null;
   const remembered = coreId ? validateCoreModels(config?.coreModels)?.[coreId] : undefined;
   const wanted = remembered ?? { model: config?.model, effort: config?.effort };
-  const picked = pickCoreModel(models, wanted, config?.modelSettings);
+  const picked = pickCoreModel(models, wanted, config?.modelSettings, coreId);
   if (!picked) return null;
   const patch = {};
   if (picked.model !== config?.model) patch.model = picked.model;

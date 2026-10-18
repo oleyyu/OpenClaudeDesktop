@@ -39,29 +39,52 @@ html.cds-root {
 body {
   margin: 0;
 }
-button,
-input,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
+/* D26 (R3-style): the native-control resets sit in @layer base, the layer of the 2.42304.0 preflight they shadow
+   (c6a992d55-sXiDGMFQ.css @layer base: `button,input,select,optgroup,textarea{font:inherit;color:inherit;…;
+   background-color:#0000;border-radius:0}`, `*{border:0 solid;padding:0}`, `:where(.cds-root) :where(button,…)
+   {cursor:var(--cds-cursor-interactive)}`, default under .cds-root[data-platform=desktop], and `:where(a,button,
+   input,…){app-region:no-drag}`). Unlayered they beat every @layer components / utilities class on a control,
+   whatever its specificity: R1 TT-04, the revert-layer releases (source-code-start, source-composer, …) and the
+   .df-user-menu-btn restatement, all since removed. In base those classes win as in the source; these rules come after the official
+   preflight, so where the two differ the host value stays (border-style none, -webkit-app-region and the host-only
+   disabled text colour: the source has none, its Buttons dim with opacity). */
+@layer base {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  button {
+    cursor: default;
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+  button:disabled {
+    color: var(--cds-text-disabled);
+    cursor: default;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    -webkit-app-region: no-drag;
+  }
 }
-button {
-  cursor: default;
-  border: 0;
-  background: transparent;
-  padding: 0;
-}
-button:disabled {
+/* Hand-written host controls whose own unlayered colour lost to the old unlayered button:disabled (0,1,1), a one-class
+   rule or a (0,1,1) one from a sheet the bundle orders before this one, keep that disabled colour: same specificity,
+   same place in the bundle, so their cascade is the old one. tests/style-control-reset-layer.test.mjs derives the
+   list from the JSX and the sheets; official classes on every other control are no longer overridden. */
+button:where(.code-icon-button, .icon-button, .hac-main, .msx-image-chip, .sac-button, .sac-feedback-toggle,
+  .sc-usage-compact, .sc-usage-row, .sca-remove, .session-title, .sg-button, .sgs-action, .sh-retry, .slp-option,
+  .sob-agent, .sob-chip, .sob-preset, .source-icon-button, .ssn-action, .sua-copy, .suc-show-more):disabled,
+:where(.session-operation-status, .sfs-error, .sfv-comment-actions, .swf-member-controls) button:disabled,
+:where(.sfs-clear-slot, .sfs-result-row) > button:disabled {
   color: var(--cds-text-disabled);
-  cursor: default;
 }
-button,
-input,
-textarea,
-select {
-  -webkit-app-region: no-drag;
-}
+/* end D26 control resets */
 /* Buttons and links keep the loaded @layer base ring (design-system.css
    :1200-1216, outline 2px hsl(var(--accent-100)), offset 2px); an unlayered
    rule here would override it. ToolButtons are the CDS ghost icon Button,
@@ -169,41 +192,8 @@ textarea:focus {
 .sidebar-toolbar [data-cds="Icon"] {
   font-weight: 533.3 !important;
 }
-.mode-switch {
-  margin-left: auto;
-  display: flex;
-  flex-shrink: 0;
-  padding: 2px;
-  border-radius: 7px;
-  background: var(--cds-alpha-1);
-}
-.mode-switch > button {
-  width: 32px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--cds-text-secondary);
-  border-radius: 5px;
-}
-.mode-switch > [aria-checked="true"] {
-  background: var(--cds-surface-3);
-  box-shadow:
-    0 0 0 0.5px var(--cds-alpha-2),
-    0 1px 2px #0000000a;
-  color: var(--cds-text-primary);
-}
-.mode-switch > [aria-checked="false"] {
-  opacity: 0.7;
-}
-/* shared-7 SR segment: transition-shadow duration-fast focus-visible:shadow-focus (never the browser outline). */
-.mode-switch > button {
-  outline: none;
-  transition: box-shadow var(--cds-dur-fast);
-}
-.mode-switch > button:focus-visible {
-  box-shadow: var(--cds-focus-shadow);
-}
+/* R2-appswitch: the titlebar mode switch is the original df-app-switch + CDS SegmentedControl
+   (source-app-switch.jsx); its sizes and colours are the loaded shared-styles-Bl9zqrv-.css rules. */
 .dframe-sidebar-body {
   flex: 1;
   display: flex;
@@ -391,22 +381,6 @@ textarea:focus {
 .source-sidebar .df-bottom-tray {
   margin: 0 -8px;
 }
-/* pw's utilities sit in @layer utilities / components of the loaded
-   c6a992d55-C0zTICcS.css, so the unlayered button reset at the top of this
-   file (padding 0, transparent background, focus-visible outline) wins over
-   them whatever their specificity. Restate only the colliding declarations
-   from pw's class string: pl-[var(--df-row-px)] pr-2,
-   hover:bg-[var(--df-hover)] and outline-none (cds-reset); the rest
-   (height, radius, gap, focus-visible:shadow-focus) applies as loaded. */
-.df-user-menu-btn {
-  padding: 0 8px 0 var(--df-row-px);
-}
-.df-user-menu-btn:hover {
-  background-color: var(--df-hover);
-}
-.df-user-menu-btn:focus-visible {
-  outline: none;
-}
 /* Sidebar resize handle (sidebar-groups.js uw -> shared-19 Os): geometry,
    ring and pill come from Os's utility classes; the loaded shared-styles copy
    of desktop-layout.css supplies :1462-1468 (z-index 25, clip-path inset(0 0
@@ -510,6 +484,28 @@ html[data-reduce-motion="true"] .dframe-root.sidebar-collapsed .source-sidebar .
 }
 html[data-reduce-motion="true"] .dframe-root.sidebar-collapsed[data-peeked] .source-sidebar .dframe-sidebar-body {
   transition: opacity 0.14s ease, visibility 0s linear 0.14s;
+}
+/* R2-appswitch W2: the peek card's mode switch (2.42304.0 shared-22 DN `ae`: div.df-peek-mode-switch.mb-2.flex.shrink-0
+   at the top of .dframe-sidebar-body). The loaded shared-styles-Bl9zqrv-.css places it in the peek band on the macOS
+   desktop (data-variant=web, no data-web, no data-wco) with rules keyed on [data-collapsed]:
+     .dframe-root[data-variant=web]:not([data-web]):not([data-wco])[data-collapsed] .dframe-sidebar-body {--df-peek-band:46px}
+     .dframe-root[data-variant=web][data-collapsed] .dframe-sidebar .dframe-sidebar-body {padding:calc(var(--df-peek-band) + 4px) 8px 6px}
+     .dframe-root[data-variant=web][data-collapsed]:not([data-wco]) .df-peek-mode-switch {top:0;height:var(--df-peek-band);align-items:center;margin:0;position:absolute;inset-inline-end:8px}
+     .dframe-root[data-variant=web]:not([data-web]):not([data-wco])[data-collapsed] .df-peek-mode-switch {padding-top:2px}
+   This root writes [data-collapsed] as .sidebar-collapsed (F08 above), so they are ported onto it. The card keeps its
+   F08 geometry; only the band's top padding is taken, and only while the card holds the switch. */
+.dframe-root.sidebar-collapsed .source-sidebar .dframe-sidebar-body:has(> .df-peek-mode-switch) {
+  --df-peek-band: 46px;
+  padding-top: calc(var(--df-peek-band) + 4px);
+}
+.dframe-root.sidebar-collapsed .df-peek-mode-switch {
+  top: 0;
+  height: var(--df-peek-band);
+  align-items: center;
+  margin: 0;
+  position: absolute;
+  inset-inline-end: 8px;
+  padding-top: 2px;
 }
 .workspace {
   flex: 1;

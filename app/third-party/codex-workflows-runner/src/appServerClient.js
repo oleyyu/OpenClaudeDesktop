@@ -298,8 +298,11 @@ function defaultServerResponse(req) {
   throw new Error("This workflow runtime does not support interactive server requests.");
 }
 
-function sanitizeEnv(env, cwd) {
+export function sanitizeEnv(env, cwd) {
   const next = { ...env, PWD: cwd };
+  // Local: Code Desktop's runner runs as Node under Electron (workflow-service ELECTRON_RUN_AS_NODE); its core does not,
+  // unless the core's own launch asked for it, or an Electron program an agent runs would start as plain Node.
+  if (next.CODE_DESKTOP_WORKFLOW_RUNNER === "1" && next.CODE_DESKTOP_CORE_RUN_AS_NODE !== "1") delete next.ELECTRON_RUN_AS_NODE;
   for (const k of Object.keys(next)) {
     if (k === "DYLD_INSERT_LIBRARIES" || k === "DYLD_LIBRARY_PATH" || k === "DYLD_FRAMEWORK_PATH") {
       delete next[k];

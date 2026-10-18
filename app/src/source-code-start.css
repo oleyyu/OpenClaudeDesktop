@@ -1,0 +1,15 @@
+/* Mount the original measured start-card slot in the local transcript scrollport.
+   All card/row geometry, focus/hover states and height-based hiding are official. */
+.source-chat-tile-content[data-surface="code"][data-home] .source-transcript-content {
+  height: 100%; display: flex; flex-direction: column; padding-block: 0;
+}
+.source-chat-tile-content[data-surface="code"][data-home] .welcome {
+  flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column;
+}
+.oc-start-slot { flex: 1; min-height: 0; }
+/* SourcePopover's unlayered .sp-popup sizes (zT max-w-[320px], max-h) stand in for
+   the CDS popup classes; the official class a start-card popup passes wins there
+   (tailwind-merge in the source): a6's max-w-[min(26rem,90vw)] on the rest list,
+   hR's preview-card min/max width and no max height on the task preview. */
+.sp-popup.oc-start-popup { max-width: revert-layer; }
+.sp-popup.oc-start-preview { max-width: revert-layer; max-height: revert-layer; }

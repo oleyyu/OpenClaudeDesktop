@@ -5,6 +5,8 @@
 // counterpart. Each click is a desktop event; main.cjs handles the window,
 // zoom and log events itself and forwards the rest to the renderer.
 const { ZOOM_STEP } = require("./window-chrome.cjs");
+// R4e-zoom: the original 2.42304.0 Zoom In / Zoom Out enabled checks (_Pi / vPi) and the four-item refresh (PPi).
+const { bindZoomMenu } = require("./generated/r4e-zoom.cjs");
 // Labels are translated when a template is built (installAppMenu runs again
 // after the main process sets the locale or the language preference changes).
 const { t, getLocale } = require("./i18n/index.mjs");
@@ -158,20 +160,30 @@ function goMenuItems({ canGoBack, canGoForward, emit }) {
 // their accelerators (acceleratorWorksWhenHidden). wNr/TNr step the level by
 // lNr=.5 and SNr resets it; here each click is a {kind:"zoom"} desktop event
 // that main.cjs applies (ONr/CNr, then aF moves the traffic lights).
-function zoomMenuItems({ zoomed, emit }) {
+// 2.42304.0 yPi adds id "zoom-in" (enabled:_Pi(), level below PHn=log 5/log 1.2) and id "zoom-out" (enabled:vPi(),
+// level above NHn=log .25/log 1.2) to the visible Zoom In / Zoom Out; the hidden twins still have neither. Here the
+// level is passed in (main.cjs: the main window's, undefined without one), so the checks are bound without a view:
+// no level reads as gPi()'s void 0, i.e. enabled.
+const zoomLimits = bindZoomMenu();
+function zoomMenuItems({ zoomed, zoomLevel, emit }) {
   const reset = () => emit({ kind: "zoom", reset: true });
   const zoomIn = () => emit({ kind: "zoom", delta: ZOOM_STEP }), zoomOut = () => emit({ kind: "zoom", delta: -ZOOM_STEP });
   const hidden = { visible: false, acceleratorWorksWhenHidden: true };
+  const level = Number.isFinite(zoomLevel) ? zoomLevel : undefined;
   return [
     { id: "actual-size", label: t("Actual Size"), accelerator: "CmdOrCtrl+0", enabled: zoomed === true, click: reset },
-    { label: t("Zoom In"), accelerator: "CmdOrCtrl+Plus", click: zoomIn },
+    { id: "zoom-in", label: t("Zoom In"), accelerator: "CmdOrCtrl+Plus", enabled: zoomLimits.canZoomIn(level), click: zoomIn },
     { label: "Zoom In (indie cooler version)", accelerator: "CmdOrCtrl+=", ...hidden, click: zoomIn },
-    { label: t("Zoom Out"), accelerator: "CmdOrCtrl+-", click: zoomOut },
+    { id: "zoom-out", label: t("Zoom Out"), accelerator: "CmdOrCtrl+-", enabled: zoomLimits.canZoomOut(level), click: zoomOut },
     { label: "Zoom In (numpad)", accelerator: "CmdOrCtrl+numadd", ...hidden, click: zoomIn },
     { label: "Zoom Out (numpad)", accelerator: "CmdOrCtrl+numsub", ...hidden, click: zoomOut },
     { id: "actual-size-numpad", label: "Actual Size (numpad)", accelerator: "CmdOrCtrl+num0", ...hidden, enabled: zoomed === true, click: reset },
   ];
 }
+// 2.42304.0 I$ → PPi, run after every reset (APi) and step (FPi): one pass sets actual-size / actual-size-numpad
+// (level !== 0) and zoom-in / zoom-out (_Pi / vPi) on the application menu from the main view's level. The host's main
+// window stands in for the view V (same .webContents); Menu is electron's.
+const refreshZoomMenu = (window, Menu) => bindZoomMenu(window, { Menu }).refreshZoomMenu();
 // bNr: one gNr Show/Hide item per session pane with a local counterpart
 // (Changes CmdOrCtrl+Shift+D, Files CmdOrCtrl+Shift+F, Terminal Command+J; Preview and
 // Side Chat have none), labelled Hide only while the pane is enabled and open,
@@ -205,7 +217,7 @@ function paneMenuItems({ panes, closePane }, emit) {
 // CmdOrCtrl+R) and Enter/Exit Full Screen (Control+Command+F, xNr toggles the
 // focused window). Developer tools live in the source's hidden Developer
 // menu; locally Toggle Developer Tools stays in View for unpackaged builds.
-function viewMenuItems({ sidebarOpen, zoomed, fullScreen, allowDevTools, state, splitState, emit }) {
+function viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevTools, state, splitState, emit }) {
   return [
     { label: t("Command Palette…"), accelerator: "CmdOrCtrl+K", click: dispatch(emit, { kind: "open-search", toggle: true }) },
     { label: sidebarOpen ? t("Hide Sidebar") : t("Show Sidebar"), accelerator: "CmdOrCtrl+B", click: () => emit({ kind: "toggle-sidebar" }) },
@@ -214,7 +226,7 @@ function viewMenuItems({ sidebarOpen, zoomed, fullScreen, allowDevTools, state, 
     SEPARATOR,
     splitViewSubmenu(splitMenuState(splitState), emit),
     SEPARATOR,
-    ...zoomMenuItems({ zoomed, emit }),
+    ...zoomMenuItems({ zoomed, zoomLevel, emit }),
     SEPARATOR,
     { role: "reload", ...roleLabel("Reload") },
     ...(allowDevTools ? [{ role: "toggleDevTools", ...roleLabel("Toggle Developer Tools") }] : []),
@@ -275,12 +287,12 @@ function helpMenu(emit) {
     ],
   };
 }
-function appMenuTemplate({ sidebarOpen, canGoBack = false, canGoForward = false, zoomed = false, fullScreen = false, allowDevTools = false, menuState: state = menuState(), splitState, newWindow = true, emit }) {
+function appMenuTemplate({ sidebarOpen, canGoBack = false, canGoForward = false, zoomed = false, zoomLevel, fullScreen = false, allowDevTools = false, menuState: state = menuState(), splitState, newWindow = true, emit }) {
   return [
     appSubmenu(emit),
     { label: t("File"), submenu: fileMenuItems({ closePane: state.closePane.enabled, session: state.session, reopenClosed: state.reopenClosed, newWindow, emit }) },
     { label: t("Edit"), submenu: editMenuItems(emit, state.findInFiles) },
-    { label: t("View"), submenu: viewMenuItems({ sidebarOpen, zoomed, fullScreen, allowDevTools, state, splitState, emit }) },
+    { label: t("View"), submenu: viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevTools, state, splitState, emit }) },
     { label: t("Go"), submenu: goMenuItems({ canGoBack, canGoForward, emit }) },
     windowMenu(emit),
     helpMenu(emit),
@@ -334,5 +346,5 @@ function activateAction({ exists, minimized, visible, hasVisibleWindows }) {
   if (minimized) return hasVisibleWindows ? null : "restore";
   return visible ? null : "show";
 }
-module.exports = { appMenuTemplate, zoomMenuItems, goMenuItems, sidebarCollapsedPatch, navigationState, menuState, sameMenuState,
+module.exports = { appMenuTemplate, zoomMenuItems, refreshZoomMenu, goMenuItems, sidebarCollapsedPatch, navigationState, menuState, sameMenuState,
   closeAction, activateAction, rendererOwned, splitMenuState };

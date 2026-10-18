@@ -26,7 +26,7 @@ import { DeveloperServers, StorageDialog } from './source-settings-pages.jsx';
 import { useModalPresence } from './use-modal-presence';
 import { settingsTabIndex } from './modal-presence.mjs';
 import { holdModalInert } from './modal-inert.mjs';
-import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors } from './settings-model.mjs';
+import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore } from './settings-model.mjs';
 import { settingsCore, accountCore, accountGroupTitle, engineCopy } from './settings-core-copy.mjs';
 import { workflowSettingsGroup } from './source-settings-workflows.jsx';
 import { coreName, coreForEngine, coreCapabilities, coreSupports } from '../electron/core-registry.mjs';
@@ -44,6 +44,8 @@ import { withEffortDefaults } from '../electron/prefs/model-settings.mjs';
 import { personaGroup } from './source-settings-persona.jsx';
 import { SettingRow } from './source-settings-kit.jsx';
 import { SourceInstructionsSettings } from './source-settings-instructions.jsx';
+import { hasAdvancedRows, advancedEmptyNotice } from './settings-advanced-model.mjs';
+import { bootModelsCoreId, namedModels } from './model-names-model.mjs';
 import { settingsNavSections, settingsInitialFocus, NOTIFICATION_LEVEL_ITEMS, notificationLevel, drawAttentionDisabled, keepAwakeEnabled, PREVIEW_STORAGE_ITEMS, previewStorageChoice, promptSuggestionsEnabled } from './settings-shell-model.mjs';
 import { previewLinksStore } from './preview-links-model.mjs';
 import { SourcePreviewAllowedSites } from './source-preview-allowed-sites.jsx';
@@ -118,21 +120,25 @@ const tabs = [
   {id:'code',label:'Code',icon:'Code',group:'Settings'},
   {id:'instructions',label:'Instructions',icon:'BookText',group:'Settings',keywords:['custom instructions','system prompt','agents.md','project instructions'],page:SourceInstructionsSettings},
   {id:'commands',label:'Commands',icon:'SlashShortcutCommand',group:'Settings',keywords:['slash commands','prompt templates','custom commands'],page:SourceCommandsSettings},
-  {id:'profiles',label:'Profiles',icon:'Tool',group:'Settings',keywords:['tool profiles','tools','mcp','turn off tools','disable tools'],page:SourceToolProfilesSettings},
-  {id:'models',label:'Models',icon:'Lightning',group:'Settings',keywords:['api key','relay','base url','proxy','max tokens','temperature','pricing','prices','cost'],page:SourceModelsSettings},
+  {id:'models',label:'Models',icon:'Lightning',group:'Settings',keywords:['api key','relay','base url','proxy','max tokens','temperature','pricing','prices','cost','display name','rename model'],page:SourceModelsSettings},
   // ZC searchHints JC: 'desktop' finds the This computer pages.
   {id:'general',label:'System',icon:'Computer',group:'This computer',keywords:['desktop','general']},
   {id:'developer',label:'Developer',icon:'Wrench',group:'This computer',keywords:['desktop']},
   {id:'cores',label:'Cores',icon:'Box',group:'This computer',keywords:['core','agent','codex','deepseek harness','download','install','sdk','engine'],page:SourceCoresSettings},
-  {id:'harness',label:'Harness',icon:'CommandLine',group:'This computer',keywords:['cordis','profile','bundles','hooks','harness plugins','overlay'],page:SourceHarnessSettings},
   {id:'customize-skills',label:'Skills',icon:'Scroll',group:'Customize',customize:true,keywords:['custom instructions','agent skills']},
   {id:'customize-connectors',label:'Connectors',icon:'Connectors',group:'Customize',customize:true,keywords:['mcp','integrations','tools']},
   {id:'customize-plugins',label:'Plugins',icon:'Plugin',group:'Customize',customize:true,keywords:['marketplace','extensions']},
+  // Advanced (last in the nav; the official 2.42304.0 nav has no such group): the host's developer-facing pages and rows,
+  // moved out of Code, This computer and Customize. Ids stay, so 'tab#row' anchors and the palette keep resolving.
+  // Core options holds the rows that tune the running core itself (settings-advanced-model.mjs ADVANCED_GROUP_TITLES).
+  {id:'advanced',label:'Core options',icon:'Wrench',group:'Advanced',keywords:['advanced','developer','experimental','beta features','timeout','sub-agents','permission profile','settings.json']},
+  {id:'harness',label:'Harness',icon:'CommandLine',group:'Advanced',keywords:['cordis','profile','bundles','hooks','harness plugins','overlay','advanced'],page:SourceHarnessSettings},
   // The core's lifecycle hooks (hooks/list): Codex's /hooks review, trust and on/off; another core's, read-only. shell:
   // 'customize' draws it in the Customize page shell (its own h-14 header, close button absolute) like its siblings.
-  {id:'customize-hooks',label:'Hooks',icon:'CommandLine',group:'Customize',shell:'customize',keywords:['hooks','pre tool use','lifecycle','trust','review'],page:SourceHooksSettings},
+  {id:'customize-hooks',label:'Hooks',icon:'CommandLine',group:'Advanced',shell:'customize',keywords:['hooks','pre tool use','lifecycle','trust','review','advanced'],page:SourceHooksSettings},
+  {id:'profiles',label:'Profiles',icon:'Tool',group:'Advanced',keywords:['tool profiles','tools','mcp','turn off tools','disable tools','advanced'],page:SourceToolProfilesSettings},
 ];
-const navGroups = ['Settings','This computer','Customize'];
+const navGroups = ['Settings','This computer','Customize','Advanced'];
 export const SETTINGS_SECTIONS = tabs.map(t=>t.id);
 const baseNavTabs = settingsNavSections(tabs);
 // Shown labels; tabs keep the English copy, which settingsSearch also matches ('System' has its own heading entry).
@@ -168,6 +174,10 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   // ca80fca8d jN ne → /customize/connectors?connector=…).
   useEffect(()=>{if(tabs.some(t=>t.id===section)){setTab(section);setUsageFocused(section==='usage');setQuery('');
     if(section==='customize-connectors'&&anchorRow){setFocus({connectorName:decodeURIComponent(anchorRow)});return;}
+    // 'general#open-storage': the low-disk toast's Manage storage (cov0-04; shared-3 Ck pushes
+    // /settings/desktop?open_storage=true, shared-156 maps it to the desktop page's open-storage action): the System page
+    // with its Storage dialog open.
+    if(section==='general'&&anchorRow==='open-storage'){setFocus(null);setStorage(true);return;}
     setFocus(null);if(anchorRow)setHighlight({id:anchorRow});}},[initialSection]);
   const catalog=useSyncExternalStore(customize?.store?.subscribe||noCatalogSubscription,customize?.store?.getSnapshot||emptyCatalog,customize?.store?.getSnapshot||emptyCatalog);
   useEffect(()=>{
@@ -177,7 +187,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     // simultaneous consumers such as the composer and the actual page.
     void Promise.allSettled([store.loadSkills({cwd}),store.loadPlugins({cwd}),store.loadMcp({cwd,threadId:threadId??null})]);
   },[customize?.store,customize?.cwd,customize?.threadId]);
-  const [desktop,setDesktop]=useState(null),[desktopRevision,setDesktopRevision]=useState(0),[storage,setStorage]=useState(null),[rowErrors,setRowErrors]=useState({}),[searchOpen,setSearchOpen]=useState(false),[searchIndex,setSearchIndex]=useState(0),[highlight,setHighlight]=useState(null),[narrow,setNarrow]=useState(()=>innerWidth<=767);
+  const [desktop,setDesktop]=useState(null),[desktopRevision,setDesktopRevision]=useState(0),[storage,setStorage]=useState(()=>(section==='general'&&anchorRow==='open-storage')||null),[rowErrors,setRowErrors]=useState({}),[searchOpen,setSearchOpen]=useState(false),[searchIndex,setSearchIndex]=useState(0),[highlight,setHighlight]=useState(null),[narrow,setNarrow]=useState(()=>innerWidth<=767);
   // BD zy.Tabs (activateOnFocus:false): arrowing moves the roving tab stop with the highlighted tab, not the selection.
   const [tabHighlight,setTabHighlight]=useState(null);
   useEffect(()=>setTabHighlight(null),[tab]);
@@ -261,7 +271,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   useEffect(()=>{if(!highlight || !presence.visible)return;return bindSettingsAnchor(presence.popup.current,highlight.id,()=>setHighlight(current=>current===highlight?null:current));},[highlight,tab,presence.visible,presence.popup]);
   useEffect(()=>{if(tab==='usage'&&usageFocused)presence.popup.current?.focus({preventScroll:true});},[tab]);
   const root=presence.popup, search=useRef(null), titleId=useId(), close=useRef(onClose);close.current=onClose;
-  const prefs=appearancePreferences(config), account=boot?.account?.account, models=withEffortDefaults(boot?.models || [], config.modelSettings), chosen=models.find(m=>m.model===model), fast=fastTierForModel(chosen)||speedTiersForModel(chosen)[0]||null, speeds=speedTiersForModel(chosen);
+  const prefs=appearancePreferences(config), account=boot?.account?.account, models=namedModels(boot?.models || [],config,bootModelsCoreId(boot,config)), chosen=models.find(m=>m.model===model), fast=fastTierForModel(chosen)||speedTiersForModel(chosen)[0]||null, speeds=speedTiersForModel(chosen);
   useEffect(()=>{let live=true;fetch('./build-info.json').then(r=>r.json()).then(value=>live&&setBuild(value)).catch(()=>{});return()=>{live=false;};},[]);
   // The opener is read in a layout effect, before any passive effect moves focus: the tab==='usage' effect above
   // is declared first and already focused the popup, so /usage (main.jsx:1352) captured the popup itself and, it
@@ -322,7 +332,9 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   // Settings › Harness edits DeepSeek Harness profile overlays only: other cores keep it out of the nav and the
   // narrow tabs (search still finds it, and its page explains the scope); an open Harness page keeps its entry.
   // Hooks: a core that lists them (capabilities.hooksList: Codex, the bridges whose agents have hooks).
-  const navTabs=baseNavTabs.filter(section=>(section.id!=='harness'||tab==='harness'||coreSupports(engine,'harnessProfile'))&&(section.id!=='customize-hooks'||tab==='customize-hooks'||coreSupports(engine,'hooksList')));
+  // Advanced › Core options: listed while the running core has rows for it (settings-advanced-model.mjs).
+  const advancedListed=hasAdvancedRows({coreSettings,harnessSettings,codexFeatures,codexPermissions:codexNative?desktop?.codexPermissions:null});
+  const navTabs=baseNavTabs.filter(section=>(section.id!=='harness'||tab==='harness'||coreSupports(engine,'harnessProfile'))&&(section.id!=='customize-hooks'||tab==='customize-hooks'||coreSupports(engine,'hooksList'))&&(section.id!=='advanced'||tab==='advanced'||advancedListed));
   // The narrow tabs' roving tab stop: the arrowed (highlighted) tab while it is listed, else the selected one.
   const rovingTab=navTabs.some(entry=>entry.id===tabHighlight)?tabHighlight:tab;
   // A core without MCP config writes (DeepSeek: capabilities.mcpConfigWrite false) offers no Delete.
@@ -391,7 +403,9 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       ...(coreSupports(engine,'promptSuggestion')?[booleanRow('promptSuggestions',t('Prompt suggestions'),t('Show a suggested next prompt in the message box after DeepSeek replies. Suggestions add a little to your usage.'),{checked:promptSuggestionsEnabled(shownValue('promptSuggestions',config.promptSuggestions))})]:[]),
       row('archiveInactiveDays',t('Archive inactive sessions'),t('Automatically archive local sessions after a period of no activity. Sessions that are running or have background work are never archived, and a worktree with uncommitted changes is kept on disk.'),<SourceSelect label={t('Archive inactive sessions')} align="end" className="sselect-width-160" value={shownValue('archiveInactiveDays',config.archiveInactiveDays)||0} onChange={value=>save('archiveInactiveDays',Number(value))} items={[0,1,2,7,14,30].map(d=>({value:d,label:d?tn(d,'{count} day','{count} days'):t('Never')}))}/>),
       // c71860c77:2376-2398 g: the custom choice goes through the folder picker; only the saved location shows.
-      row('worktreeLocation',t('Worktree location'),t('Where to store Git worktrees for isolated coding sessions.'),<div className="ss-worktree-control"><SourceSelect label={t('Worktree location')} align="end" value={shownValue('worktreeLocation',config.worktreeLocation)||'project'} title={config.worktreeLocation==='custom'?config.worktreeDirectory:'.code/worktrees'} onChange={value=>value==='custom'?commit('worktreeLocation',{},async()=>{const c=await desktopCall('desktop-worktree-folder');if(c)await onSave({worktreeLocation:c.worktreeLocation});setDesktopRevision(n=>n+1);}):save('worktreeLocation','project')} items={[{value:'project',label:t('Inside project'),description:'.code/worktrees'},{value:'custom',label:t('Custom…')}]}/>{config.worktreeLocation==='custom'&&config.worktreeDirectory&&<div className="ss-worktree-path" title={config.worktreeDirectory}>{config.worktreeDirectory}</div>}</div>),
+      // settings-01 (2.42304.0 cd19fedd2 worktreeLocation P0gQiUc0+j): "…on this computer." The SSH variant (c71860c77
+      // dnMG5c8GDx, only while SSH connections are available) has no local counterpart: no core runs over SSH.
+      row('worktreeLocation',t('Worktree location'),t('Where to store Git worktrees for isolated coding sessions on this computer.'),<div className="ss-worktree-control"><SourceSelect label={t('Worktree location')} align="end" value={shownValue('worktreeLocation',config.worktreeLocation)||'project'} title={config.worktreeLocation==='custom'?config.worktreeDirectory:'.code/worktrees'} onChange={value=>value==='custom'?commit('worktreeLocation',{},async()=>{const c=await desktopCall('desktop-worktree-folder');if(c)await onSave({worktreeLocation:c.worktreeLocation});setDesktopRevision(n=>n+1);}):save('worktreeLocation','project')} items={[{value:'project',label:t('Inside project'),description:'.code/worktrees'},{value:'custom',label:t('Custom…')}]}/>{config.worktreeLocation==='custom'&&config.worktreeDirectory&&<div className="ss-worktree-path" title={config.worktreeDirectory}>{config.worktreeDirectory}</div>}</div>),
       row('sandbox',t('Sandbox mode'),t(facts.reason),<span>{facts.mode||t('Unavailable')}</span>),
       // turn/start sandboxPolicy.networkAccess for workspace-write turns (permission-policy.mjs turnPermissionParams).
       // A core without a sandbox (descriptor or reported capability sandbox: false) has nothing to open.
@@ -416,6 +430,10 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
           <SourceSettingsButton variant="secondary" size="sm" onClick={()=>setAllowedSites(true)}>{t('Manage')}</SourceSettingsButton>),
       ]:[]),
     ]},
+    // R4i-mcp MC1: the visualize group (agent-tools/visualize.mjs, config.agentVisualize; unset reads as on, D35). The
+    // official row is claude.ai Settings › Capabilities › Visuals › Inline visualizations (c71860c77 ze, behind
+    // claudeai_mcp_apps_visualize); Code has none, as its visualize server is the main process's GrowthBook 3444158716.
+    {tab:'code',title:'Visuals',rows:[booleanRow('agentVisualize',t('Inline visualizations'),t('Allow DeepSeek to generate interactive visualizations, charts, and diagrams directly in the conversation.'),{checked:shownValue('agentVisualize',config.agentVisualize)!==false})]},
     {tab:'code',title:'Model and permissions',rows:[
       // Disabled only where the original disables: the model and effort pickers while a turn is busy.
       row('model',t('Model'),t('Used for your next message.'),<SourceSelect label={t('Default model')} value={shownValue('model',model)} disabled={busy||!boot?.connected} items={models.map(m=>({value:m.model,label:m.displayName||m.model}))} onChange={value=>{const next=models.find(m=>m.model===value);if(next)commit('model',{model:next.model,effort:next.defaultReasoningEffort});}}/>),
@@ -440,24 +458,24 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
         // Codex's /import: the Claude Code setup (CLAUDE.md, MCP servers, skills, hooks, commands, sessions).
         row('codexImport',t('Import from Claude Code'),t('Bring over your CLAUDE.md, MCP servers, skills, hooks, commands and recent sessions. You choose what to import.'),
           <SourceSettingsButton size="sm" disabled={!boot?.connected} onClick={()=>setClaudeImport(true)}>{t('Import…')}</SourceSettingsButton>),
-        // Codex's permission profiles (codex-permissions.mjs; its /permissions): what Auto, Manual and Accept edits may
-        // write and reach. 'Follow config.toml' keeps default_permissions; Plan and Bypass keep their own sandbox.
-        ...(desktop?.codexPermissions?[(()=>{const info=desktop.codexPermissions,profiles=info.profiles||[],configured=info.configured&&!info.configured.startsWith(':')?info.configured:null;
+      ]:[]),
+      row('permissions',t('Permission mode'),t('Auto asks when needed. Manual always asks before making changes. Accept edits applies file edits without asking. Plan is read-only.'),<SourceSelect label={t('Default permission mode')} value={shownValue('permission',permission)} disabled={busy} onChange={value=>save('permission',value,'permissions')} items={[{value:'auto',label:t('Auto')},{value:'ask',label:t('Manual')},{value:'acceptEdits',label:t('Accept edits')},{value:'plan',label:t('Plan')},
+        // Bypass as the default only while its opt-in (Code › Allow bypass permissions mode) is on; main re-checks it.
+        ...(config.allowBypassPermissions===true?[{value:'bypass',label:t('Bypass permissions')}]:[])]}/>),
+    ]},
+    // Advanced › Codex permissions: Codex's permission profiles (codex-permissions.mjs; its /permissions): what Auto, Manual
+    // and Accept edits may write and reach. 'Follow config.toml' keeps default_permissions; Plan and Bypass keep their own sandbox.
+    ...(codexNative&&desktop?.codexPermissions?[{tab:'advanced',title:'Codex permissions',rows:[(()=>{const info=desktop.codexPermissions,profiles=info.profiles||[],configured=info.configured&&!info.configured.startsWith(':')?info.configured:null;
           const saved=shownValue('codexPermissionProfile',info.choice??null),value=saved===null||saved===undefined?'config':saved===''?'app':saved;
           const appDescription=info.writableRoots?.length||info.networkAccess?t('The session folder plus the writable folders and network setting in your Codex config.toml.'):t('The session folder, as set by the mode.');
           return row('codexPermissionProfile',t('Permission profile'),t('What Codex may write and reach in Auto, Manual and Accept edits. Plan and Bypass keep their own access. Applies to your next message.'),
             <SourceSelect label={t('Permission profile')} align="end" value={value} disabled={busy} onChange={next=>save('codexPermissionProfile',next==='config'?null:next==='app'?'':next)}
               items={[{value:'config',label:configured?t('Follow config.toml ({profile})',{profile:configured}):t('Follow config.toml'),description:configured?(profiles.find(p=>p.id===configured)?.description??null):appDescription},
                 {value:'app',label:t('OpenClaude Desktop sandbox'),description:appDescription},
-                ...profiles.map(profile=>({value:profile.id,label:profile.id,description:profile.allowed?profile.description:t('Not allowed by your organization'),disabled:!profile.allowed}))]}/>);})()]:[]),
-      ]:[]),
-      row('permissions',t('Permission mode'),t('Auto asks when needed. Manual always asks before making changes. Accept edits applies file edits without asking. Plan is read-only.'),<SourceSelect label={t('Default permission mode')} value={shownValue('permission',permission)} disabled={busy} onChange={value=>save('permission',value,'permissions')} items={[{value:'auto',label:t('Auto')},{value:'ask',label:t('Manual')},{value:'acceptEdits',label:t('Accept edits')},{value:'plan',label:t('Plan')},
-        // Bypass as the default only while its opt-in (Code › Allow bypass permissions mode) is on; main re-checks it.
-        ...(config.allowBypassPermissions===true?[{value:'bypass',label:t('Bypass permissions')}]:[])]}/>),
-    ]},
+                ...profiles.map(profile=>({value:profile.id,label:profile.id,description:profile.allowed?profile.description:t('Not allowed by your organization'),disabled:!profile.allowed}))]}/>);})()]}]:[]),
     // The agent's own settings it lets OpenClaude Desktop change (core-settings-model.mjs labels): applied when its process
     // next starts (an idle session restarts at once).
-    ...(coreSettings?.settings?.length?[{tab:'code',title:t('{core} settings',{core:coreName(boot?.core)}),rows:coreSettings.settings.map(setting=>{
+    ...(coreSettings?.settings?.length?[{tab:'advanced',title:t('{core} settings',{core:coreName(boot?.core)}),rows:coreSettings.settings.map(setting=>{
       const {label,description}=coreSettingLabel(setting.key,boot?.core),id=`core-${setting.key}`,current=setting.value??setting.default;
       const control=setting.type==='boolean'?<SettingSwitch label={label} checked={current===true} disabled={busy} onChange={value=>writeCoreSetting(setting.key,value)}/>
         :setting.type==='select'?<SourceSelect label={label} align="end" value={setting.value??'__default'} disabled={busy} onChange={value=>writeCoreSetting(setting.key,value==='__default'?null:value)}
@@ -468,7 +486,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
           onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur();}}/>;
       return row(id,label,description,control);
     })}]:[]),
-    ...(harnessSettings?.settings?.length?[{tab:'code',title:'DeepSeek settings',rows:harnessSettings.settings.map(setting=>{
+    ...(harnessSettings?.settings?.length?[{tab:'advanced',title:'DeepSeek settings',rows:harnessSettings.settings.map(setting=>{
       const {label,description,scale=1,suffix=''}=harnessSettingCopy(setting),id=`dsh-${setting.ns}-${setting.key}`;
       const shown=value=>value===null||value===undefined?'':setting.type==='integer'?String(Math.round(value/scale*100)/100):String(value);
       const control=<span className="ss-dsh-setting">
@@ -514,7 +532,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       ]:[]),
     ]}]:[]),
     // Codex /experimental: its beta features (Worktrees and Prevent sleep are OpenClaude Desktop's own). Codex reads them at start.
-    ...(codexFeatures?.beta?.length?[{tab:'code',title:'Beta features',rows:[
+    ...(codexFeatures?.beta?.length?[{tab:'advanced',title:'Beta features',rows:[
       ...codexFeatures.beta.map(feature=>row(`codex-beta-${feature.name}`,t(feature.displayName),
         [t(feature.description),feature.name==='realtime_conversation'?t('Voice isn’t in OpenClaude Desktop yet; it works with /voice in the Codex terminal.'):''].filter(Boolean).join(' '),
         <SettingSwitch label={t(feature.displayName)} checked={feature.enabled} disabled={busy} onChange={value=>codexFeature(`codex-beta-${feature.name}`,{op:'set-feature',name:feature.name,enabled:value},{restart:true})}/>)),
@@ -617,7 +635,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     }}>{navTabs.map(t=><button role="tab" aria-selected={tab===t.id} tabIndex={rovingTab===t.id?0:-1} key={t.id} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}>{navLabel[t.id]}</button>)}</div></header>:<nav className="ss-nav" aria-label={t('Settings')}>{searchField}<div className="ss-nav-scroll scroll-fade-y scroll-fade-size-6">{navGroups.map(group=><div key={group}><p>{settingsHeading(group)}</p><ul>{navTabs.filter(t=>t.group===group).map(t=><li key={t.id}><button aria-current={tab===t.id?'page':undefined} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}><Icon name={t.icon} size={20}/><span>{navLabel[t.id]}</span></button></li>)}</ul></div>)}</div></nav>}
     <div className="ss-pane" data-customize={!!activeTab?.customize||activeTab?.shell==='customize'}>
     {!usagePage&&!narrow&&<div className="ss-page-header">{closeButton}</div>}
-    <div className="ss-content" key={tab} data-page={tab}>{error&&<p className="ss-error" role="alert">{error}</p>}{['code','developer'].includes(tab)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}{tab==='developer'&&<DeveloperServers desktop={desktop} connected={boot?.connected} pending={!!pending} error={rowErrors['mcp-config']} onRemove={customize?.call&&mcpWritable ? removeServer : undefined} onEditConfig={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))} onDocs={()=>action('mcp-config',()=>desktopCall('external',{url:'https://modelcontextprotocol.io/quickstart'}))}/>} {customizePage}{activeTab?.page&&<activeTab.page {...pageProps}/>}{tab==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={boot?.models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>} {shown.map(group=><section className="ss-group" key={group.tab+group.title}><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{settingsHeading(group.title)}</h3><div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>)}
+    <div className="ss-content" key={tab} data-page={tab}>{error&&<p className="ss-error" role="alert">{error}</p>}{['code','developer','advanced'].includes(tab)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}{tab==='advanced'&&!shown.length&&<p className="ss-connection-notice" role="status">{advancedEmptyNotice(boot?.core&&typeof boot.core==='object'?coreName(boot.core):windowCore()?.name??(typeof engine==='string'?coreName(engine):null))}</p>}{tab==='developer'&&<DeveloperServers desktop={desktop} connected={boot?.connected} pending={!!pending} error={rowErrors['mcp-config']} onRemove={customize?.call&&mcpWritable ? removeServer : undefined} onEditConfig={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))} onDocs={()=>action('mcp-config',()=>desktopCall('external',{url:'https://modelcontextprotocol.io/quickstart'}))}/>} {customizePage}{activeTab?.page&&<activeTab.page {...pageProps}/>}{tab==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>} {shown.map(group=><section className="ss-group" key={group.tab+group.title}><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{settingsHeading(group.title)}</h3><div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>)}
       {claudeImport&&<ClaudeImportDialog open desktopCall={desktopCall} cwds={[customize?.cwd].filter(Boolean)} onClose={()=>setClaudeImport(false)}
         onDone={()=>{void customize?.store?.loadSkills?.({cwd:customize?.cwd,force:true});void customize?.store?.loadMcp?.({cwd:customize?.cwd,threadId:customize?.threadId??null,force:true});setDesktopRevision(n=>n+1);}}/>}</div></div>
   </section>{storage&&<StorageDialog call={desktopCall} settingsRoot={root} onClose={()=>setStorage(false)}/>}

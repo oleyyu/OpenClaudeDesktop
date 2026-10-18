@@ -1,4 +1,4 @@
-import {terminalSelectionText} from './generated/code-editor/terminal-output.mjs';
+import {terminalSelectionText} from './generated/code-current/terminal-output.mjs';
 // 2.31226.0 c6bf19e8f Lr: let the window session cycler handle Ctrl+Tab;
 // copy selected text without allowing Ctrl+Shift+C to interrupt a shell command.
 export function routeTerminalKey(event,term,writeText) {

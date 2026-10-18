@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Icon } from './icons';
 import { createResponseTableStore, nearestTableHeading, observeTableOverflow, transitionMilliseconds } from './response-table-model.mjs';
 import { holdModalInert } from './modal-inert.mjs';
+import { useTableColumnFreeze } from './generated/r3b-transcript/table-column-freeze.mjs';
 import './source-response-table.css';
 import { t } from '../electron/i18n/index.mjs';
 
@@ -31,6 +32,11 @@ export function SourceResponseTable({ children, isStreaming, wrapSnapshot, ...pr
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const owner = useId(), scroller = useRef(null), trigger = useRef(null);
   const [overflow, setOverflow] = useState(false);
+  // cov1-06 (2.42304.0 c89efce1a Mc `s = jc(Ze(), t)`): while the message streams, the header cells' min-width is frozen
+  // at their measured widths and re-measured only when the table outgrows them, or after Ac(rows) more rows
+  // (min(16, max(1, floor(rows / 16)))); it clears once the message settles. This replaces the fixed table layout the
+  // host used while streaming.
+  const tableRef = useTableColumnFreeze(isStreaming === true, children);
   useLayoutEffect(() => {
     if (isStreaming || !scroller.current) return;
     return observeTableOverflow(scroller.current, setOverflow);
@@ -42,7 +48,7 @@ export function SourceResponseTable({ children, isStreaming, wrapSnapshot, ...pr
       props, ...tablePresentation(element), source: element, trigger: trigger.current, document: element.ownerDocument });
   };
   return <div className="smd-table">
-    <div ref={scroller} className="source-table-scroll"><table {...props} style={{ ...props.style, ...(isStreaming ? { tableLayout: 'fixed' } : {}) }}>{children}</table></div>
+    <div ref={scroller} className="source-table-scroll"><table ref={tableRef} {...props}>{children}</table></div>
     {(!isStreaming && overflow || selected) && <span className="smd-table-action" data-not-prose=""><button type="button" ref={trigger} className="smd-table-button" aria-label={t("Expand table")} onClick={expand}><Icon name="Expand" size={16}/></button></span>}
   </div>;
 }

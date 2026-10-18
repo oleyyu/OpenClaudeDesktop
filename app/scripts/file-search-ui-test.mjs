@@ -49,12 +49,12 @@ const input = () =>
 const results = () =>
   panel().locator('.sfs-results[role="tree"][aria-label="Project files"]');
 const tree = () =>
-  panel().locator('.source-tree-content[role="tree"][aria-label="Project files"]');
+  panel().locator('.sfs-kept-tree [role="tree"][aria-label="Project files"]');
 const resultButton = (pathname) =>
   results().getByRole("button", { name: pathname, exact: true });
 // These fixture paths are ASCII CSS strings; quoting also keeps '/' literal.
 const treeRow = (pathname) =>
-  tree().locator(`.source-tree-row[data-file-path=${JSON.stringify(pathname)}]`); // 0.2.97: rows have no native title (panes-tile-current.js:5692 Wr.Trigger).
+  tree().locator(`[data-tree-row-body]:has(> [data-tree-primary][data-file-path=${JSON.stringify(pathname)}])`); // 0.2.97: rows have no native title (panes-tile-current.js:5692 Wr.Trigger).
 const tabs = () => panel().locator(".source-file-tab");
 const tabPaths = () =>
   tabs().evaluateAll((nodes) => nodes.map((node) => node.dataset.filePath));
@@ -602,9 +602,9 @@ try {
     .click();
   await treeRow(deepFile).waitFor({ state: "visible" });
   await assertFocused(input());
-  // 0.2.14 tree rows: aria-current sits on the treeitem wrapper (2.2553.1
-  // panes-tile-current.js:5710-5722), the inner [data-tree-primary] button is plain.
-  assert.equal(await treeRow(deepFile).locator("..").getAttribute("aria-current"), "page");
+  // 2.42304.0 tree rows (cccc2cf0a NS / source-session.jsx:1273): boolean aria-current="true"
+  // sits on the treeitem wrapper, while the inner [data-tree-primary] button is plain.
+  assert.equal(await treeRow(deepFile).locator("..").getAttribute("aria-current"), "true");
   assert.equal(
     await treeRow("kept").locator("..").getAttribute("aria-expanded"),
     "true",

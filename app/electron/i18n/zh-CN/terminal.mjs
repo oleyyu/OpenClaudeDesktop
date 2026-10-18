@@ -15,14 +15,12 @@ export default {
   "A command is still running in {name}. Closing the terminal stops it.": "{name} 中仍有命令在运行。关闭终端会停止该命令。",
   "A command is still running in one of the other terminals. Closing them stops it.": "其他终端中仍有一个命令在运行。关闭它们会停止该命令。",
   "Commands are still running in {count} of the other terminals. Closing them stops those commands.": "其他 {count} 个终端中仍有命令在运行。关闭它们会停止这些命令。",
-  "Switch to this terminal first": "请先切换到此终端",
   "Terminal (command running)": "终端（命令运行中）",
   "Press Delete or Backspace to close the terminal": "按 Delete 或 Backspace 键关闭终端",
   "Press Control+Shift+Left Arrow or Right Arrow to move the terminal": "按 Control+Shift+左箭头或右箭头移动终端",
   "Shell exited.": "Shell 已退出。",
   "Restart shell": "重启 Shell",
   "Limited terminal: the terminal module couldn’t load, so the window size can’t change while a program runs.": "受限终端：终端模块无法加载，程序运行时无法调整窗口大小。",
-  "Couldn’t load the terminal. Reload the page to try again.": "无法加载终端。请重新加载页面后重试。",
   "Failed to open terminal tab": "无法打开终端标签页",
   "Failed to list terminal tabs": "无法列出终端标签页",
   "Show Terminal": "显示终端",
@@ -84,4 +82,18 @@ export default {
   "Can’t insert this path. It isn’t one the terminal can be given safely.": "无法插入此路径。无法安全地将它交给终端。",
   "Can’t insert a path. Drop a file or folder that is saved on this computer.": "无法插入路径。请拖入保存在这台电脑上的文件或文件夹。",
   "Reload": "重新加载",
+  // R3-terminal: 2.42304.0 terminal overlays and menu (c6bf19e8f Xr / pi, cccc2cf0a Ay / Zy). "Claude" stays as written (D23).
+  "Shell exited": "Shell 已退出",
+  "Failed to start shell": "无法启动 Shell",
+  "Failed to load terminal": "无法加载终端",
+  "Additional terminal tabs require a newer Claude desktop app. Restart Claude to update.": "更多终端标签页需要更新版本的 Claude 桌面应用。请重启 Claude 以完成更新。",
+  "Couldn’t load the terminal": "无法加载终端",
+  "Reload the page to try again.": "请重新加载页面后重试。",
+  "No terminal to clear": "没有可清空的终端",
+  "Switch to this terminal first.": "请先切换到此终端。",
+  // R3-terminal FT-15: the shared strip's overflow menu (cfe7c4b3b se/ce) — Preview's default row close label.
+  "Close tab": "关闭标签页",
+  // R4e-terminal (terminal-17): terminal-service.cjs "run" when a leftover run survives Ctrl-C and SIGKILL (after 2.42304.0
+  // runCommand's desktop_ccd_bash_shell_reset advice).
+  "The previous command could not be interrupted, so its terminal tab was closed. Re-run your command; if the previous one needs interactive input, run it in the terminal pane.": "上一条命令无法中断，因此已关闭它的终端标签页。请重新运行你的命令；如果上一条命令需要交互输入，请在终端面板中运行它。",
 };

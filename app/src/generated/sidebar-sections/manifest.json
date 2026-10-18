@@ -1,0 +1,3972 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-sidebar-sections.mjs",
+  "adapterModule": "src/source-sidebar-sections-adapters.jsx",
+  "modules": [
+    {
+      "target": "define-messages.mjs",
+      "source": "vendor-intl-Db7hDWRO.js",
+      "sourceSha256": "f26cedebafa9295e3e1f8443b074e29877472083867d8e5bb7a8d522d3ae6762",
+      "sha256": "3e15a3d7623fa2bc35790c4bd4247ddc503336f9d07a089ab9318b473af9fd74",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "410fbaf6c14e23a3b3685e1527ab83e3c1bd894052aeafb61047b20d0828190f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tn": "defineMessages"
+      }
+    },
+    {
+      "target": "error-text.mjs",
+      "source": "preload-helper-D0dM6GpB.js",
+      "sourceSha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
+      "sha256": "cc11f9180c20c39f720be00980a0cf81879b85f6a73e8f56f0333a0442e01597",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "ae3a24deb2952bf4ae6ec64cd91df0be80ff083fa511d11220eebc272b2d36cf"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "tagErrorText"
+      }
+    },
+    {
+      "target": "zustand.mjs",
+      "source": "vendor-all-0-CTKbbUUg.js",
+      "sourceSha256": "691e5601fc021fbcb4e8e06a217d9030952ea2ba88dc65e8bcb39803143ef2d4",
+      "sha256": "ab115e8b4d2333f258f44874eb55259af9b561e221a34dd69a3730e2ec584e61",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "e1972cb952383610293070541afe1c464ca39093d0480fec9e49621437ef67ca"
+        },
+        {
+          "name": "v",
+          "sha256": "bc2323aaca24c37a31bd4775f0721a2b4173057576adce68c875ec4ede43edd3"
+        },
+        {
+          "name": "y",
+          "sha256": "97bb9f321cf9fd638a5b539f56d68b249acd231ef72743bd82a7739336c8c5d2"
+        },
+        {
+          "name": "b",
+          "sha256": "ba1aec749bf0fb115e4e7ad8baed39b0aa3ead8c7b61846ee77eeaac885504a7"
+        },
+        {
+          "name": "x",
+          "sha256": "7776d942fedcbbccc5d7e9768084604c4332eef7458fcc7c2e781a259dd62add"
+        },
+        {
+          "name": "ee",
+          "sha256": "9c9767661c2bdbf10935cfc782ce9018f1501d79fd35c755fdf12f94913144ef"
+        }
+      ],
+      "imports": [
+        {
+          "local": "c",
+          "from": "react",
+          "name": "default",
+          "via": "vendor-frame-DfPJ1QmD.js:so",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "ee": "create"
+      }
+    },
+    {
+      "target": "debounced-callback.mjs",
+      "source": "vendor-all-0-CTKbbUUg.js",
+      "sourceSha256": "691e5601fc021fbcb4e8e06a217d9030952ea2ba88dc65e8bcb39803143ef2d4",
+      "sha256": "d8014126fe6c240ef4d0693f2b11d7db0bd20522688abfb50cd321f44babc2bd",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "he",
+          "sha256": "f4b24c08d60680c681d6207f9a38e7cc3222afd2efe4e48238d28926d4d4e83b"
+        },
+        {
+          "name": "ge",
+          "sha256": "63b525201a3fac058d727a6e7c7806b8f25f0652b5f54590c4528331e4601cac"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "ge": "useDebouncedCallback"
+      }
+    },
+    {
+      "target": "direction.mjs",
+      "source": "vendor-frame-DfPJ1QmD.js",
+      "sourceSha256": "c96b504f7ecd3b5749b6913c9bad6b7950719b38636083e1496002b219e6bbdc",
+      "sha256": "6bc4e906057c9d6e7bfd4c23b8724712edafbcddf36f23cc01956c38d469af04",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Td",
+          "sha256": "f99457fd3fb999f9a53ad335420fc392e078bba71db7391f38363f0b7cb34a6f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "N",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:N",
+          "kind": "react"
+        },
+        {
+          "local": "wd",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "DirectionContext",
+          "via": "vendor-frame-DfPJ1QmD.js:wd",
+          "kind": "external",
+          "original": "vendor-frame-DfPJ1QmD.js:wd"
+        }
+      ],
+      "exports": {
+        "Td": "useDirection"
+      }
+    },
+    {
+      "target": "cds-helpers.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "867f16971ef2d250ab309fbe4836be301ecf78ba4da6b92a6327f85b27495030",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ja",
+          "sha256": "02fceb356ec7247c071188474c1e3ce110bb25f838659ef1c6be1310b4ef2eba"
+        },
+        {
+          "name": "lc",
+          "sha256": "bfafb1276c4fdebce03eddd5f5b8698609056b97f525c95e9a622356b5bd2dcd"
+        }
+      ],
+      "imports": [
+        {
+          "local": "W",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "la",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDensityContext",
+          "via": "shared-frame-BfjMqbuN.js:la",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:la"
+        }
+      ],
+      "exports": {
+        "ja": "useCdsDensity",
+        "lc": "elementOrNull"
+      }
+    },
+    {
+      "target": "dialog-presence.mjs",
+      "source": "shared-5-kdJVRUsT.js",
+      "sourceSha256": "16e886add0fefb7a9996ef68bdc72f36d104376a551cb55350b559e8b2a83fcd",
+      "sha256": "c6eeb2484f347918caade102b67a951d5e01491262c2389e34634753e82cf239",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "XA",
+          "sha256": "adc5bd6c5b9cc385fd3736b7c5ccffc98b173b360d5091ec77eb623faac98e0b"
+        }
+      ],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "z",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "H",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "XA": "useDialogPresence"
+      }
+    },
+    {
+      "target": "session-keys.mjs",
+      "source": "shared-78-D6VXYXaQ.js",
+      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "sha256": "a2fb84793faea76fd84df41c611efa2a0a29c4cabe9c8037415fbb618789c87c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Kd",
+          "sha256": "5faaa1cc6c7667eb187546f9e2ce8d98ed388ccb03877e7a42302a77220d1730"
+        },
+        {
+          "name": "U",
+          "sha256": "54ed6668e1facfd63e3a5720e9958d956b7aa190c4e9b05189cf5430f724e106"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "U": "sessionRefKey",
+        "Kd": "PanelLayoutContext"
+      }
+    },
+    {
+      "target": "sections-model.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "8135038aeba47188d87ea92e41f109d0e32fd1742bb95a46e5df653b93dc63f5",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "U",
+          "sha256": "949d3f9afb848f4f7e58d80c3013e9e3c1ed3c509f8ec51d50c4915a9fff97c8"
+        },
+        {
+          "name": "W",
+          "sha256": "f2b4024a51955371d425133566665a45e0feedef7a674c145b11d89ba107d9b4"
+        },
+        {
+          "name": "np",
+          "sha256": "407db80c3964973327baafc5799a7d4e3bc9a4d43fbaafe5bffee7dbd0a7a8ea"
+        },
+        {
+          "name": "rp",
+          "sha256": "0a5193b4607ed871f9f3468c45286db394ae4d4e5b18e0168bfda79aace14816"
+        },
+        {
+          "name": "ip",
+          "sha256": "ad19cafb1de0359d8cadf81761044736cbaafc5374f22c530f9ae8cb509ae9f8"
+        },
+        {
+          "name": "ap",
+          "sha256": "c6492f0f9e4fa06108c3beafcac89b260dc467fb55310222183f583dc9a4cf03"
+        },
+        {
+          "name": "op",
+          "sha256": "e6e11c8370cac7369e1ed6b4b730e67f91091dc2a799b32ce7ed4906e4b3eced"
+        },
+        {
+          "name": "sp",
+          "sha256": "43fab642ad3fb6b10947ec3ad9a18bdd03597b1887c96091c80c49dd68fa54c9"
+        },
+        {
+          "name": "cp",
+          "sha256": "fcbb41dcda861d5c7313a0f2fb0fa4abb4b9935bd35b31c4424af2077780f260"
+        },
+        {
+          "name": "lp",
+          "sha256": "a67b140ba5d6b9e7e6a2ac632970a72499a13888102dffa37306fc987a6e07b3"
+        },
+        {
+          "name": "up",
+          "sha256": "3b2f95fad0001b8135cc35ba4e8b000922222f7f6952f440aa2f257974a595d4"
+        },
+        {
+          "name": "dp",
+          "sha256": "6079310436dde99dd0f5e4aed61030433c11a95d157e12fb5f7d85e7c7a1ebdd"
+        },
+        {
+          "name": "fp",
+          "sha256": "7eac2db6024666be7309e43311bb923f423e4d9a356006719c1c564f14d89db9"
+        },
+        {
+          "name": "pp",
+          "sha256": "862e6b9283b321e998bf7be5412c3e6368aa24e902c1fe6a42ed16f0b242e7d8"
+        },
+        {
+          "name": "mp",
+          "sha256": "609fd98d42bcd527dafa8f0e49c7c128d59c5607fc9695814010486258c245aa"
+        },
+        {
+          "name": "hp",
+          "sha256": "79a7508836a99c2550fba8f2a1e156e45e1f109ccb26ee6b207c0229a3642484"
+        },
+        {
+          "name": "gp",
+          "sha256": "ecd640f09790c9477db7ecdefb8fe86e24a98077236be942937b7eccca98d3a7"
+        },
+        {
+          "name": "_p",
+          "sha256": "e586fd95aa8fba5219442199bd2c7410826622043c1ea3d4669c5c4b566d50d0"
+        },
+        {
+          "name": "vp",
+          "sha256": "cb51581875f30c6a2bd9f9a8d4188e8578cd740cb834eac039fe16edad01c599"
+        },
+        {
+          "name": "yp",
+          "sha256": "71c446f00dd3d630190d347fcd826894747b52d6853fdbdfc394ff911cd7781c"
+        },
+        {
+          "name": "bp",
+          "sha256": "9ecf784eb2463612b648c32afc56fc9cf1a4f4dbc2d1219dd4c5807a23781605"
+        },
+        {
+          "name": "xp",
+          "sha256": "1532b4e6dded41280d8be0793bf0acfe76f8480d7b984804d1b9ea5c5eaf7c87"
+        },
+        {
+          "name": "Sp",
+          "sha256": "a011ee751347a0b3d459adeb81c174a63e67cc475c9db858e9f72dcfddc95589"
+        },
+        {
+          "name": "Cp",
+          "sha256": "5367603bbed4187c7e5bdb5e4bacd892237dfb352059200a310ff14f703e7076"
+        },
+        {
+          "name": "wp",
+          "sha256": "5ce7de2c943b4544646e66a05e9acace27b95457e4bbe1e160ab50db0f59913e"
+        },
+        {
+          "name": "Tp",
+          "sha256": "37e8e62c1ca986f604d25ca3e1ac3bfe6356fe9154d14a617a02ecf11f3f0f0f"
+        },
+        {
+          "name": "Ep",
+          "sha256": "bda82b431db731a0d92e4f7d86458794476ecf0f4b9118bfdfe749c9a4297e64"
+        },
+        {
+          "name": "Dp",
+          "sha256": "de5e0ba7e00c1f2d2357298c43674fcf14d470feccdc775986eda5afbe417423"
+        },
+        {
+          "name": "Op",
+          "sha256": "3ac16b71bc6c0e977dd8d08b870f403567c15f68fe635ef56af2c3eb02988ade"
+        },
+        {
+          "name": "kp",
+          "sha256": "f01a0db4fbc0f316a1be2bc6ddf54ed8225004a4a143bf0689d8bc136340dec2"
+        },
+        {
+          "name": "Ap",
+          "sha256": "42a6856836596ec1dd51216ef6d0a23fbed3d89fa4ec1349a8e6dac82da9ec04"
+        },
+        {
+          "name": "jp",
+          "sha256": "2a081d320f62198cf7f48e94222f31cc06e712ecfaa7739ed7e1479b9168530e"
+        },
+        {
+          "name": "Mp",
+          "sha256": "fdb1523d5784b72b9e84338d3f6bccab1fd054d1781e33b186c2b9880df6ada4"
+        },
+        {
+          "name": "Np",
+          "sha256": "518180f7bce1d923373bb4117017edb7ddbb514a2a0dff0bac3b57d13349748e"
+        },
+        {
+          "name": "Pp",
+          "sha256": "9ac304e35d75886b31678b2634fdc62b93f0b43a2947fcb47e831d3e947ba082"
+        },
+        {
+          "name": "Fp",
+          "sha256": "7f9d66dd798412158725419bfd709144aab24dff7cfae9e26609fb6707bc5c0a"
+        },
+        {
+          "name": "Ip",
+          "sha256": "eb1c4905c9536cf36fd75230bfa931b30f7caf4de737aac22c31bc0497a9aa6b"
+        },
+        {
+          "name": "Lp",
+          "sha256": "4e3168e7aeb33a6d279251d4288df8e2f5a9613800d113d8ac405439963558e5"
+        },
+        {
+          "name": "Rp",
+          "sha256": "8e57ea2b58f1ba5a2ffe13e898d62c370a0af8f0bd974ac25f93eb9659c0c59d"
+        },
+        {
+          "name": "zp",
+          "sha256": "a6ec59d4fcfa1aa409ecaa9716173039aef8ae3d87a88f3595fdc244c5043348"
+        },
+        {
+          "name": "Bp",
+          "sha256": "38ddef0313c23ee881ef9bd0065d15d53bd93714dda6ba9d4cf98609e2684565"
+        },
+        {
+          "name": "lm",
+          "sha256": "3abc27d1dc94d4f4a2c8b8b2fd7525879a529d33d04732eb82dcba45ce8b65b1"
+        },
+        {
+          "name": "um",
+          "sha256": "4e7415c001846b3574a288b2b173546042b998afc6c95494266429b24d0038f8"
+        },
+        {
+          "name": "dm",
+          "sha256": "6f5aceb74838879f3edcc1c51c028f52b0c30b131c20edcfc730484f4fe0506b"
+        },
+        {
+          "name": "fm",
+          "sha256": "f30d30a8c4196abcf959964771ed541b4cea88ea6d6c5fab8808a462ad5a64ee"
+        },
+        {
+          "name": "pm",
+          "sha256": "f05461629322606b862622d043e6cc4bb51aea1ee809235df032ba0fb513da5d"
+        },
+        {
+          "name": "mm",
+          "sha256": "ced97cd98d13db7c201a0fb226acb33a3b7e30e46f853bcefa4d4710f86f7bbe"
+        },
+        {
+          "name": "hm",
+          "sha256": "33656b36a3132d24b0d93cc6e47a44e060f7c27761c6ab865919cbc626e89dbe"
+        },
+        {
+          "name": "gm",
+          "sha256": "3ddc2d6db33df59f1e93b331fe18059364586845ebc58f48eb491fde6b2fab64"
+        },
+        {
+          "name": "_m",
+          "sha256": "583fc286a9bb79acf3145e80522e6cc1db062abedd21586cdca90728601bbce8"
+        },
+        {
+          "name": "wm",
+          "sha256": "2680493e14de298ed2bf464c1e1637c1a19a5e7784faefe0fc548d619e78bb83"
+        },
+        {
+          "name": "Tm",
+          "sha256": "ccb335d89fae12efcc11384009ce2bc32713ee919d160c45d95b069148628dde"
+        },
+        {
+          "name": "Em",
+          "sha256": "7b6aa74be1b276ebb59c2d2011b62fc9af45da2e8f260e404f3f4aa3edae2573"
+        },
+        {
+          "name": "Dm",
+          "sha256": "4be8c3a392954dc699ecd018f18dc04cf4fb2c3757fcce0eb0b3504affda3219"
+        },
+        {
+          "name": "Om",
+          "sha256": "1b2f28a02022343825d5cb4eb39f155a89675c6c7b1428fdd78f126a6c84c17c"
+        },
+        {
+          "name": "km",
+          "sha256": "b591273f88d84945a1c5e3ce556dd667522575abe9fa81502dd620e17eeab253"
+        },
+        {
+          "name": "Mm",
+          "sha256": "2f6be0f46b997d26fda3a283084e5349733fd6c5c624800862286a1cb5d8a27e"
+        },
+        {
+          "name": "_h",
+          "sha256": "ca805a7874e24f8959f3e18c5aae4fa9a0712cf5f39d4f758edbbce4ffa4cd30"
+        },
+        {
+          "name": "vh",
+          "sha256": "80a3fc286b1d6dd804db7f1a39deaf6a1532230cbde04f5d456e56a147b55240"
+        },
+        {
+          "name": "yh",
+          "sha256": "1e64c38a20b35f52baf301bd0eebf17e6dc7a94cee43f622979de329ba993005"
+        },
+        {
+          "name": "jh",
+          "sha256": "e75bff41ddc362540c6b4e3e02ead95505e9cafee3a77f030d256089fb1a85a4"
+        }
+      ],
+      "sourceSelections": [
+        {
+          "binding": "sectionsStoreActions",
+          "kind": "storeActions",
+          "anchor": "addSection",
+          "parameters": [
+            "e",
+            "t"
+          ],
+          "properties": [
+            {
+              "name": "toggleGroupCollapsed",
+              "sha256": "0cae6bdd542798791d294ba15180103c634943f68ba9607ad092ba02c0474b1b"
+            },
+            {
+              "name": "expandGroup",
+              "sha256": "a94c0763b895e5338698c010ca7cc81703637bd4e77a4cd6b93ff613829910e7"
+            },
+            {
+              "name": "addCustomGroup",
+              "sha256": "79f4ff68827e5bc9c360c9262a50e801f3af371afaf044b0becbe18f3d894f72"
+            },
+            {
+              "name": "keepGroupWhileEmpty",
+              "sha256": "124ecee33c3ee2b345a7a0dd8520c48ffdfc632ab454c162da10f2011c71b701"
+            },
+            {
+              "name": "renameCustomGroup",
+              "sha256": "a4620b00861b577ccb3552d450f2dddf30311a79f00b48c10797d69497a69b53"
+            },
+            {
+              "name": "deleteCustomGroup",
+              "sha256": "e45f922138d8bccdee561215857459ae4a4d8e2ffbdf23d84da1da3572ea38a7"
+            },
+            {
+              "name": "assignToCustomGroup",
+              "sha256": "b19c8545ce7a33b7966d44d46a9e4300d901f812c41812449fa89bb2e85382c2"
+            },
+            {
+              "name": "setCustomGroupOrder",
+              "sha256": "3809176f92f779cac0060b1aa924d10fc5e60e4a88634998aa25a44cef6ebe68"
+            },
+            {
+              "name": "moveCustomGroup",
+              "sha256": "97524dbdd073928288f71e5b3a06cae0e4b7676c44b733e2d07ef7cd0c07da9c"
+            },
+            {
+              "name": "addSection",
+              "sha256": "871e9a4281869f097923df997a74cfa0a65940ef97a598292c3ed109eb7e656f"
+            },
+            {
+              "name": "renameSection",
+              "sha256": "6bf577a2144885371c9afdd303a5028f04010b4c27d6028e89cb179a9a4808b8"
+            },
+            {
+              "name": "deleteSection",
+              "sha256": "b42b224f520fd1b593342fd4976e46b7324da0f0a6341fa890d8ac20585df876"
+            },
+            {
+              "name": "moveSection",
+              "sha256": "601fedabfde89b0c0a26e63dcb44a7c697e525bd08260b3bd8a8960d45dcacd6"
+            },
+            {
+              "name": "setSectionView",
+              "sha256": "22d025e7627191c4e3caa8777855a9d5c50c5cf71288b94a2971e0af1dbe62fa"
+            },
+            {
+              "name": "assignToSection",
+              "sha256": "f2ad5bc493e13d74b93a581f4dd809e28f00d58a9db363a966a40353083687f0"
+            },
+            {
+              "name": "setOverflowMenuOpen",
+              "sha256": "f41a8da570379438311586b45f9b53ed61abde26e5e501c59a3489862bd7672e"
+            }
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "local": "p",
+          "from": "./error-text.mjs",
+          "name": "tagErrorText",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "U": "stringArray",
+        "W": "isPlainRecord",
+        "np": "sectionSchemaVersion",
+        "rp": "sectionMetadataSchemaVersion",
+        "ip": "sectionCarriesMetadata",
+        "ap": "pinnedSectionId",
+        "op": "routinesSectionId",
+        "sp": "sessionsSectionId",
+        "cp": "sectionViewDefaults",
+        "lp": "routinesCollapsedByDefault",
+        "up": "createSection",
+        "dp": "defaultSections",
+        "fp": "defaultSection",
+        "pp": "defaultCodeSidebar",
+        "mp": "sessionsGroupByFromLegacy",
+        "hp": "legacyGroupByFromSessions",
+        "gp": "sectionGroupBys",
+        "_p": "sectionSortBys",
+        "vp": "sectionKinds",
+        "yp": "isSectionGroupBy",
+        "bp": "isSectionSortBy",
+        "xp": "normalizeSectionView",
+        "Sp": "normalizeSections",
+        "Cp": "normalizeCodeSidebarByScope",
+        "wp": "withSectionId",
+        "Tp": "dedupeSections",
+        "Ep": "ensureFixedSections",
+        "Dp": "customGroupMembers",
+        "Op": "sameMembers",
+        "kp": "reconcileSections",
+        "Ap": "defaultSectionCollapsed",
+        "jp": "resetSectionCollapse",
+        "Mp": "restoreSectionCollapse",
+        "Np": "migrateSectionMetadata",
+        "Pp": "sectionsAtDefaults",
+        "Fp": "sameSections",
+        "Ip": "patchSectionView",
+        "Lp": "setSectionView",
+        "Rp": "inheritSessionsView",
+        "zp": "moveSection",
+        "Bp": "seedSectionPrefs",
+        "lm": "customGroupKeyPrefix",
+        "um": "customGroupKey",
+        "dm": "emptyCustomGroups",
+        "fm": "isEmptyCustomGroups",
+        "pm": "normalizeCustomGroups",
+        "mm": "normalizeCustomGroupsByScope",
+        "hm": "nonEmptyCustomGroups",
+        "gm": "selectCustomGroups",
+        "_m": "findCustomGroupByName",
+        "wm": "mergeCustomGroups",
+        "Tm": "selectCodeSidebar",
+        "Em": "reconcileCodeSidebar",
+        "Dm": "reconcileCodeSidebarPatch",
+        "Om": "updateCustomGroups",
+        "km": "updateSections",
+        "Mm": "keptWhileEmptyWith",
+        "_h": "defaultGroupBy",
+        "vh": "effectiveGroupBy",
+        "yh": "groupByShowsCustom",
+        "jh": "codeKeyPrefix",
+        "sectionsStoreActions": "sectionsStoreActions"
+      }
+    },
+    {
+      "target": "sections-hooks.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "a7adefd661380cbdb9a880b0cd88ab6ffbce49f7a3ce1c3248eb7f7e1aac7079",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ih",
+          "sha256": "a9aa1870c687eaf8aaf1dce3c7214c656e14667ba1681e87801af359e49bde16"
+        }
+      ],
+      "imports": [
+        {
+          "local": "G",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarFrameStore",
+          "via": "shared-52-DGviI8xb.js:G",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "rh",
+          "from": "../sidebar-resize/sidebar-width.mjs",
+          "name": "sidebarHidden",
+          "via": "shared-52-DGviI8xb.js:rh",
+          "kind": "external",
+          "original": "shared-52-DGviI8xb.js:rh"
+        }
+      ],
+      "exports": {
+        "ih": "useSidebarHidden"
+      }
+    },
+    {
+      "target": "group-copy.mjs",
+      "source": "shared-18-D4XxL6Tg.js",
+      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "sha256": "d81cbebfd4b416bb13d57186ff9076adf8092302cc5bc5ad655fc7dd8c91aa73",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "vE",
+          "sha256": "9dfecdc24a7cd1219ed6e6a20bbd535eec91d6fab592d64b0a9401e71565c464"
+        },
+        {
+          "name": "yE",
+          "sha256": "89cb5de6b20e6e64d3315e6fc85c8cf30fa9700f1da9e353848d9abeb883ba75"
+        },
+        {
+          "name": "bE",
+          "sha256": "2e05f084420f95dfdfad0544767c87c37cf32a752f8e902e706378da2de56fbc"
+        },
+        {
+          "name": "xE",
+          "sha256": "ec2c7c40132df5628d9be2f3c01c6fcbaa788449cf11143df7a17bad54595a1c"
+        },
+        {
+          "name": "SE",
+          "sha256": "5a441069a3de9b9327017012378c1a0aad71b4a4fecd2ad5134f8bfef94f7c52"
+        },
+        {
+          "name": "CE",
+          "sha256": "340b80ad77256dd136e473643f5fef12bcbd594a663dbadd49910f2760050468"
+        }
+      ],
+      "imports": [
+        {
+          "local": "X",
+          "from": "./define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated"
+        },
+        {
+          "local": "Ss",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "sg",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarOverlayGate",
+          "via": "shared-16-B0xHzPjj.js:et",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:Pp"
+        }
+      ],
+      "exports": {
+        "vE": "groupMessages",
+        "yE": "folderMessages",
+        "bE": "sectionMessageCatalog",
+        "xE": "sectionMessages",
+        "SE": "groupCopyFor",
+        "CE": "useGroupCopy"
+      }
+    },
+    {
+      "target": "group-label.mjs",
+      "source": "shared-18-D4XxL6Tg.js",
+      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "sha256": "e457db3af69fe52f1c284e15ae832645f3fcfc7d61b7c2ab39fd3d77f4121f57",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "TE",
+          "sha256": "5f3659de0f427cbe279695f28ef25a7fcf63390b7f75807871a95dac3d4f5f3b"
+        },
+        {
+          "name": "lD",
+          "sha256": "f285bf9426c335eb574b06a12a75a3e79d66a2dde6e1f29c800ce92e37f80da8"
+        },
+        {
+          "name": "uD",
+          "sha256": "28e840978cf097a47a60b07b466cfd43a3f0ed6a67391c48e89a3cdaf9db3e3f"
+        },
+        {
+          "name": "dD",
+          "sha256": "cad9c7efae6933c85715efaa12cf8f9161e5cbea2522bcaf437a4ccf26c0a146"
+        },
+        {
+          "name": "fD",
+          "sha256": "b7062998a6e5a339eca5cbbd7f324522f47e775502cac376ccfafee403f3fe36"
+        }
+      ],
+      "imports": [
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useImperativeHandle",
+          "via": "vendor-frame-DfPJ1QmD.js:_o",
+          "kind": "react"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "CE",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:CE",
+          "kind": "generated"
+        },
+        {
+          "local": "PE",
+          "from": "../code-current/sidebar-row-view.mjs",
+          "name": "useSidebarRename",
+          "via": "shared-18-D4XxL6Tg.js:PE",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:PE"
+        },
+        {
+          "local": "FE",
+          "from": "../code-current/sidebar-row-view.mjs",
+          "name": "SidebarRenameInput",
+          "via": "shared-18-D4XxL6Tg.js:FE",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:FE"
+        },
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "L",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "external",
+          "original": "vendor-frame-DfPJ1QmD.js:ge"
+        },
+        {
+          "local": "Yd",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:Jo"
+        },
+        {
+          "local": "wE",
+          "from": "../code-current/sidebar-row-primitive.mjs",
+          "name": "sidebarHitRowClass",
+          "via": "shared-18-D4XxL6Tg.js:wE",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:wE"
+        },
+        {
+          "local": "aD",
+          "from": "../code-current/sidebar-fade-label.mjs",
+          "name": "SidebarFadeLabel",
+          "via": "shared-18-D4XxL6Tg.js:aD",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:aD"
+        }
+      ],
+      "exports": {
+        "uD": "SidebarGroupLabel",
+        "dD": "SidebarGroupRenameLabel",
+        "fD": "renderSidebarGroupLabel",
+        "lD": "sidebarGroupLabelMinHeight",
+        "TE": "sidebarGroupToggleHitClass"
+      }
+    },
+    {
+      "target": "group-mode.mjs",
+      "source": "shared-16-B0xHzPjj.js",
+      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
+      "sha256": "87735e7e0eaddb0f097725c97313d9ba8f7258e4ddb9dfaafb52118b82bb820a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Gf",
+          "sha256": "f16d1e0dda3373a557a19c26d5e254a2fe982a99a711ae371425020830f279b1"
+        },
+        {
+          "name": "Kf",
+          "sha256": "fe7cb5f2834d8bcc48f98840e80a59c410b16b2e23a4b500bd47899c84fb181d"
+        },
+        {
+          "name": "qf",
+          "sha256": "21dd63d2bdda98d5f1963a6eb3a741d6de36fd60529ab6a28f59d63e05fb571d"
+        },
+        {
+          "name": "Qf",
+          "sha256": "251109bbde4dec2f347252aa7048da78b492b0058efc28e73902c3ce2e86571b"
+        },
+        {
+          "name": "$f",
+          "sha256": "dc1a3bb58830ecb43c203c9b85e22cb8b14b3b8ee0a5b5ac9f0f8fcc65a9fb71"
+        },
+        {
+          "name": "ep",
+          "sha256": "aeae9530da7c304bed94def85f7acc8045743d5df96096ef879ee7f68a5cab4a"
+        },
+        {
+          "name": "ip",
+          "sha256": "3b4092fb06100a4deb13513928ca5a6458b21573777936177c60ced3f45d66ff"
+        },
+        {
+          "name": "ap",
+          "sha256": "c5f4dae6c7b9ce7644b5e16047fdd8e66c0f98a4012fde51fd49dc355dd0cc01"
+        },
+        {
+          "name": "op",
+          "sha256": "136cb52b5a63f6ad6535fcefc29388502bac8efc4cf7b9aaf0d40b7fbd5ed9bd"
+        },
+        {
+          "name": "cp",
+          "sha256": "dedd9292062dba6111c7cddf406138f94ae3d857109125f8331376de1a8a0b01"
+        },
+        {
+          "name": "Np",
+          "sha256": "8c04c9f590662f3b70229a528d1c41cf0a408386e98c3a513f8477a1865c851b"
+        },
+        {
+          "name": "Fp",
+          "sha256": "9951f7ba76a1fe8b187b6f759e6632516855f2495d645222d9e251dbac040bc7"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Pp",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarOverlayGate",
+          "via": "shared-16-B0xHzPjj.js:Pp",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:Pp"
+        },
+        {
+          "local": "on",
+          "from": "./sections-model.mjs",
+          "name": "groupByShowsCustom",
+          "via": "shared-52-DGviI8xb.js:gf",
+          "kind": "generated"
+        },
+        {
+          "local": "E",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useIsDesktopApp",
+          "via": "shared-25-DP8p7i1Z.js:Rm",
+          "kind": "adapter",
+          "original": "shared-25-DP8p7i1Z.js:ml"
+        },
+        {
+          "local": "Gt",
+          "from": "./sections-model.mjs",
+          "name": "effectiveGroupBy",
+          "via": "shared-52-DGviI8xb.js:Df",
+          "kind": "generated"
+        },
+        {
+          "local": "W",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "Ri",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "usePresetsGate",
+          "via": "shared-11-BuQ3CK5I.js:Ya",
+          "kind": "adapter",
+          "original": "shared-11-BuQ3CK5I.js:rc"
+        },
+        {
+          "local": "nn",
+          "from": "./sections-model.mjs",
+          "name": "legacyGroupByFromSessions",
+          "via": "shared-52-DGviI8xb.js:bp",
+          "kind": "generated"
+        },
+        {
+          "local": "sn",
+          "from": "./sections-model.mjs",
+          "name": "sessionsSectionId",
+          "via": "shared-52-DGviI8xb.js:gp",
+          "kind": "generated"
+        },
+        {
+          "local": "pn",
+          "from": "./sections-model.mjs",
+          "name": "selectCodeSidebar",
+          "via": "shared-52-DGviI8xb.js:sf",
+          "kind": "generated"
+        },
+        {
+          "local": "gn",
+          "from": "./sections-model.mjs",
+          "name": "defaultSection",
+          "via": "shared-52-DGviI8xb.js:yp",
+          "kind": "generated"
+        },
+        {
+          "local": "Wt",
+          "from": "./sections-model.mjs",
+          "name": "sessionsGroupByFromLegacy",
+          "via": "shared-52-DGviI8xb.js:Cp",
+          "kind": "generated"
+        },
+        {
+          "local": "Oi",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "presetsGateNow",
+          "via": "shared-11-BuQ3CK5I.js:Ja",
+          "kind": "adapter",
+          "original": "shared-11-BuQ3CK5I.js:ic"
+        }
+      ],
+      "exports": {
+        "Np": "useCustomGroupOverlay",
+        "cp": "showsCustomGroups",
+        "ep": "useEffectiveGroupBy",
+        "$f": "useStoredGroupBy",
+        "Qf": "sessionsGroupByAsLegacy",
+        "Gf": "sectionOrDefault",
+        "Fp": "groupByShown",
+        "ip": "writeSessionsGroupBy",
+        "op": "writeSessionsSortBy",
+        "ap": "clearSessionsGroupBy"
+      }
+    },
+    {
+      "target": "sessions-view-writers.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "63379abfe24c3cc48c2f4f5e9f14ce5cb9b84b8aa4b1cd252a841cfc9367ab75",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "TS",
+          "sha256": "768d75dd20240b72fe03d2a24b1d36fba338296d0499662a89cdc50546c30341"
+        },
+        {
+          "name": "ES",
+          "sha256": "ec387ce3dc23c796328cd2ae89e7fd98a7750c6be3d7ca02fc7ae0a2fcfd1d51"
+        }
+      ],
+      "imports": [
+        {
+          "local": "U",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "ga",
+          "from": "./sections-model.mjs",
+          "name": "sessionsSectionId",
+          "via": "shared-52-DGviI8xb.js:gp",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "ES": "writeSessionsAscending",
+        "TS": "writeSessionsMetadata"
+      }
+    },
+    {
+      "target": "section-membership.mjs",
+      "source": "shared-21-IP-SVetq.js",
+      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "sha256": "7652d651fc10d369a052e49c95f45ab9ec6f78edbac78a1d92719822f9e640ac",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ZR",
+          "sha256": "6c1232872ddf8af4882cb39a93313abb23d580f0a095f39e9e3e0f7cc61bc795"
+        },
+        {
+          "name": "QR",
+          "sha256": "2398e7129a2398225ceec918cce3cd84bff06e3baafdc2544097aa5bfa5b798d"
+        },
+        {
+          "name": "sK",
+          "sha256": "ababb468401b6be99c5f3e882ea4c583e9c05ff06145d32d699f19ee1d6d6ce7"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J",
+          "from": "./session-keys.mjs",
+          "name": "sessionRefKey",
+          "via": "shared-78-D6VXYXaQ.js:Ib",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "sK": "scheduledTaskGroup",
+        "QR": "membershipKey",
+        "ZR": "sideParentId"
+      }
+    },
+    {
+      "target": "section-filter-controls.mjs",
+      "source": "shared-21-IP-SVetq.js",
+      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "sha256": "7d95d2ae11f23aeb1cab8cb1b5eb9637cfdd4b559d340b73ac731ce0de5b5e30",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "OF",
+          "sha256": "a2b0635f1cbac9b3fd18aeacb89b579ffe3cee51cf6aa67e1ba429c1b6dd9a7d"
+        },
+        {
+          "name": "kF",
+          "sha256": "df51341eb964262d950c20c1ac2716dbe324cd138db482ec29466641ff77c450"
+        },
+        {
+          "name": "uB",
+          "sha256": "c613af0bada1bad9ab553e570f08529c643a3de8d851174b9d36d5afa5e810a8"
+        },
+        {
+          "name": "dB",
+          "sha256": "4692243aafcc7b46f2cbd70bf34865e70d9c866b9b98532b4b6c2fc8b9ed42f0"
+        },
+        {
+          "name": "vB",
+          "sha256": "9b810127013f785a63e9c0b5a6d6c38aeee693056a97f6154bc3c252341f625b"
+        },
+        {
+          "name": "CB",
+          "sha256": "f76a2f75982fa4ec3ad5e35aa46b331d83c1976981599e7471984044b50102dd"
+        },
+        {
+          "name": "KH",
+          "sha256": "2376b541f7545d65bc91dbb61275e0301d4b3dfd0275fbfd4baa19be457afa53"
+        },
+        {
+          "name": "qH",
+          "sha256": "531c71113f3900d3f9db8b4eb16249cf12878ec8fc8482f1c05ea25e83b1936b"
+        },
+        {
+          "name": "YH",
+          "sha256": "cc6c163ab9e53e3e2f1e2dbbf0c085ab4443d1c8f352e4306db28f85d9ecbe59"
+        },
+        {
+          "name": "XH",
+          "sha256": "8b25fdc7f06019a5ce2eae513fde366b1b54b4efd0c71c568cb3cfaff7671d0c"
+        },
+        {
+          "name": "eU",
+          "sha256": "c1cff994e65b919f4a32e79326c3f12fc374f4a5d4e8a3f564d4fd603942fb08"
+        },
+        {
+          "name": "aU",
+          "sha256": "36b1b43cfe4c5f3751786988de59844e91786ada1a522d79a325c14dc201d831"
+        },
+        {
+          "name": "sU",
+          "sha256": "d5ab3ebbaa680a2350b93127f203a150a7c854ac393a41c219f965e6dfb00c42"
+        },
+        {
+          "name": "cU",
+          "sha256": "819673499b57ebce0b7b9bd2bcc7350b7bfe08389f349bafe778bcc9ee6c314c"
+        },
+        {
+          "name": "lU",
+          "sha256": "eaf1b831f9cc19105812b1d4e46ec2caa65201d0963816835bea69f728fb3c32"
+        },
+        {
+          "name": "uU",
+          "sha256": "787b1a5a0e477c288246d0a37dd17cd4d178497976784d43fba1f2f5ee10e283"
+        },
+        {
+          "name": "dU",
+          "sha256": "14d24a3a4965f4efceabcba9c15ae7276a25debaecda2188351c0a09a36bb95b"
+        },
+        {
+          "name": "hU",
+          "sha256": "cdbeb08963890ffed2cdcfc1c069031b258ee40a2d0adcc3f4b6e99c752fb20d"
+        },
+        {
+          "name": "gU",
+          "sha256": "f79c15650add59d910b0a8b0a0d7d647564b0a8a8c029b65e75b89411e504be7"
+        }
+      ],
+      "imports": [
+        {
+          "local": "wp",
+          "from": "./define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ja",
+          "kind": "react"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "./direction.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "generated"
+        },
+        {
+          "local": "N",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "external",
+          "original": "vendor-frame-DfPJ1QmD.js:ge"
+        },
+        {
+          "local": "X",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDropdown",
+          "via": "shared-frame-BfjMqbuN.js:qa",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:EC"
+        },
+        {
+          "local": "xp",
+          "from": "../sidebar-resize/logical-side.mjs",
+          "name": "physicalSide",
+          "via": "shared-28-DcgD7xXH.js:bo",
+          "kind": "external",
+          "original": "shared-28-DcgD7xXH.js:Pm"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "Wp",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:Es",
+          "kind": "generated"
+        },
+        {
+          "local": "Ep",
+          "from": "./zustand.mjs",
+          "name": "create",
+          "via": "vendor-all-0-CTKbbUUg.js:I",
+          "kind": "generated"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "Ul",
+          "from": "../view-tabs/shared-4-CJsHhp5n.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-CJsHhp5n.js:co",
+          "kind": "external",
+          "original": "shared-4-CJsHhp5n.js:jf"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "mf",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:Zp"
+        },
+        {
+          "local": "Sf",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:$l"
+        }
+      ],
+      "exports": {
+        "eU": "sidebarFilterMessages",
+        "uU": "SidebarOptionMenu",
+        "dU": "SidebarSortMenu",
+        "lU": "useSidebarSortOptions",
+        "sU": "SidebarViewResetItems",
+        "cU": "SidebarViewAllItem",
+        "qH": "useSidebarViewAll",
+        "YH": "sortAscendingShown",
+        "XH": "sortAscendingStored",
+        "uB": "newSectionOpener",
+        "dB": "openNewSection",
+        "vB": "useNewSectionOpener",
+        "kF": "PanelChromeContext",
+        "OF": "panelChromeActive",
+        "CB": "trailingControlClass",
+        "KH": "SidebarViewAllContext",
+        "hU": "focusSidebarAfterRegroup",
+        "gU": "useSidebarRegroupFocus",
+        "aU": "SidebarFilterTrigger"
+      }
+    },
+    {
+      "target": "section-visibility.mjs",
+      "source": "shared-22-HztmyUTM.js",
+      "sourceSha256": "28629418dc0265d7ffb911e9df66066349a1d650feca61743e4f49aaab9a1ad1",
+      "sha256": "aebda76dfbad8a2e3a016e343fc1d489f2997816c405aae3eaacfcfb76a98667",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "GO",
+          "sha256": "b3d0bf8f4fca9b1ee4cb1dc3b10545251657ce45cb6a597f4b760a73bdda5105"
+        },
+        {
+          "name": "KO",
+          "sha256": "72d3dff52a567e191ea1ddd1bc0f87192330261ed62e281bb3b01336db0dd4cc"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Z",
+          "from": "./session-keys.mjs",
+          "name": "sessionRefKey",
+          "via": "shared-78-D6VXYXaQ.js:Ib",
+          "kind": "generated"
+        },
+        {
+          "local": "Rv",
+          "from": "./section-membership.mjs",
+          "name": "scheduledTaskGroup",
+          "via": "shared-21-IP-SVetq.js:hn",
+          "kind": "generated"
+        },
+        {
+          "local": "by",
+          "from": "./section-membership.mjs",
+          "name": "membershipKey",
+          "via": "shared-21-IP-SVetq.js:oi",
+          "kind": "generated"
+        },
+        {
+          "local": "go",
+          "from": "./sections-model.mjs",
+          "name": "codeKeyPrefix",
+          "via": "shared-52-DGviI8xb.js:tf",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "KO": "visibleCustomGroups",
+        "GO": "keyInMode"
+      }
+    },
+    {
+      "target": "group-reasons.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "ba1b84b3a3d03049defbc6987d03c316aacb26116d29b6ed1b7733864bc1813d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ZX",
+          "sha256": "967ddaa1daa410672d489f48b5ee7078ff40d8574d1814fec4b0fe9cb376f75e"
+        },
+        {
+          "name": "QX",
+          "sha256": "a11b4f19368ad550f59a60bd0f1d1cbfc2639db71ebb8e44c5742d8d95fad3b6"
+        },
+        {
+          "name": "$X",
+          "sha256": "047612e5664700d144312636eb3f37c9cf018c7bb2b81bb4cfcb5de4094c096e"
+        },
+        {
+          "name": "eZ",
+          "sha256": "17cd82ae6d92e556e3fbbfba222ca715077089e8c69d63647683095cf889e54e"
+        },
+        {
+          "name": "tZ",
+          "sha256": "504092b12e98b7b9b62ffec1a427c6fb66bfb5dec7036907e6e659b3ea3e91da"
+        }
+      ],
+      "imports": [
+        {
+          "local": "lg",
+          "from": "./define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "ZX": "groupMenuKind",
+        "tZ": "groupDisabledReasons",
+        "QX": "groupReasonMessages",
+        "$X": "newSessionReasonMessages",
+        "eZ": "tooFewToSelectMessage"
+      }
+    },
+    {
+      "target": "menu-triggers.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "6623ac25ea78bb6a615277b68346308bde20240aecbf03b0652afbd1be3121d7",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "kX",
+          "sha256": "283666e9f401c56feab6138c75ac6cb689a3d6f39aa6a15e9fddac72f7143a3a"
+        },
+        {
+          "name": "AX",
+          "sha256": "83cfd885ee8aadfde900af22f92e8eb3f20e13b1fd057be6d7d6fc6f70052bf6"
+        },
+        {
+          "name": "L$",
+          "sha256": "4cb1c7bf1942e0d00beae84b857a77fb101a8193f6144cbf3763558edc9e6624"
+        }
+      ],
+      "imports": [
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "L",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "Fc",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "tl",
+          "from": "./sections-hooks.mjs",
+          "name": "useSidebarHidden",
+          "via": "shared-52-DGviI8xb.js:Rf",
+          "kind": "generated"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "m",
+          "from": "react-dom",
+          "name": "flushSync",
+          "via": "vendor-frame-DfPJ1QmD.js:Ca",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "C",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "CdsMenuCreateHandle",
+          "via": "vendor-frame-DfPJ1QmD.js:Wt",
+          "kind": "external",
+          "original": "vendor-frame-DfPJ1QmD.js:bm"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "AX": "useCloseWhenSidebarHides",
+        "kX": "useOverflowMenuFlag",
+        "L$": "useLazyMenu"
+      }
+    },
+    {
+      "target": "group-organize.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "b7af5f0c56afaaf02b65bf47cffe9818c9e51c8a67c4038f6828a85730847238",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "rZ",
+          "sha256": "eced4c77010aa5b7f966df432a68cda82bf3c845d80e4900c2faf882d0334ab2"
+        },
+        {
+          "name": "iZ",
+          "sha256": "fe5d26087ce5ed6e90ac77a90c76dad12149cc8a6715de37aec7bcfa95e6f556"
+        },
+        {
+          "name": "aZ",
+          "sha256": "7334de8f336bec7ff8a2635825f6679a40cfdbccd338a7f21d2702125df27805"
+        }
+      ],
+      "imports": [
+        {
+          "local": "m",
+          "from": "react-dom",
+          "name": "flushSync",
+          "via": "vendor-frame-DfPJ1QmD.js:Ca",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "md",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSelectionStore",
+          "via": "shared-6-Cby4X-ms.js:Lo",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:PD"
+        },
+        {
+          "local": "X",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "iS",
+          "from": "../code-current/sidebar-menu-groups.mjs",
+          "name": "SidebarMenuItem",
+          "via": "shared-16-B0xHzPjj.js:Zn",
+          "kind": "external",
+          "original": "shared-16-B0xHzPjj.js:au"
+        },
+        {
+          "local": "nZ",
+          "from": "../code-current/sidebar-group-view.mjs",
+          "name": "SidebarListContext",
+          "via": "shared-19-CkPOiIKm.js:nZ",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:nZ"
+        },
+        {
+          "local": "rd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarVisibleKeys",
+          "via": "shared-6-Cby4X-ms.js:Co",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:mO"
+        },
+        {
+          "local": "kd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarBucketKeys",
+          "via": "shared-6-Cby4X-ms.js:bo",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:uO"
+        },
+        {
+          "local": "Wd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarRowRecord",
+          "via": "shared-6-Cby4X-ms.js:xo",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:aO"
+        },
+        {
+          "local": "eZ",
+          "from": "./group-reasons.mjs",
+          "name": "tooFewToSelectMessage",
+          "via": "shared-19-CkPOiIKm.js:eZ",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "aZ": "SidebarGroupSelectAll",
+        "rZ": "selectableGroupKeys",
+        "iZ": "tooFewToSelectReason"
+      }
+    },
+    {
+      "target": "group-archive.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "126bd40cf37ec3d6656a818f4aecb7b79f08f4bfffa8d82781e6d9bb3601609c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "HX",
+          "sha256": "6fd719407d833d98299296c3957629ba9ce5df890368e300c7597ba1f1deea98"
+        },
+        {
+          "name": "UX",
+          "sha256": "e05fe499fe9e3c80e9c8b26ee70f2af25a8be1dfdf1cee6466b218b167cad918"
+        },
+        {
+          "name": "GX",
+          "sha256": "1dcdc8f65f1b96b30b1639bed79702124a377f97a5847660b4bc9e2eab7f6ada"
+        },
+        {
+          "name": "KX",
+          "sha256": "c502ed512efd2a000c405385caaf3c4d72d3477f86781f485161eb05f63e1e84"
+        },
+        {
+          "name": "XX",
+          "sha256": "d685d03cc1245a8a47d1f68144de1094aa50189b22ee435eaaaae79935bd402f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "U",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useCurrentAccount",
+          "via": "shared-25-DP8p7i1Z.js:lr",
+          "kind": "adapter",
+          "original": "shared-25-DP8p7i1Z.js:Z"
+        },
+        {
+          "local": "kd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarBucketKeys",
+          "via": "shared-6-Cby4X-ms.js:bo",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:uO"
+        },
+        {
+          "local": "X",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "iS",
+          "from": "../code-current/sidebar-menu-groups.mjs",
+          "name": "SidebarMenuItem",
+          "via": "shared-16-B0xHzPjj.js:Zn",
+          "kind": "external",
+          "original": "shared-16-B0xHzPjj.js:au"
+        },
+        {
+          "local": "Wd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarRowRecord",
+          "via": "shared-6-Cby4X-ms.js:xo",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:aO"
+        },
+        {
+          "local": "sS",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "isStartedByAccount",
+          "via": "shared-16-B0xHzPjj.js:en",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:of"
+        },
+        {
+          "local": "PX",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarOpenSessionKeys",
+          "via": "shared-19-CkPOiIKm.js:PX",
+          "kind": "adapter",
+          "original": "shared-19-CkPOiIKm.js:PX"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "qX",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useArchiveAllEnabled",
+          "via": "shared-19-CkPOiIKm.js:qX",
+          "kind": "adapter",
+          "original": "shared-19-CkPOiIKm.js:qX"
+        },
+        {
+          "local": "YX",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarBulkArchive",
+          "via": "shared-19-CkPOiIKm.js:YX",
+          "kind": "adapter",
+          "original": "shared-19-CkPOiIKm.js:YX"
+        }
+      ],
+      "exports": {
+        "XX": "SidebarGroupArchiveAll",
+        "GX": "UnloadedRowsContext",
+        "UX": "archivableSessions",
+        "HX": "emptyBulkScope",
+        "KX": "useUnloadedRows"
+      }
+    },
+    {
+      "target": "group-reorder.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "d8ec9794c440b78f81c2bb20ee4b11f9e8e769426191365ba71a81dfa2b0464d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "PQ",
+          "sha256": "b37f05221d25ee807105206db9b9b1bad226425520f1d0eec3200381c8e5c001"
+        },
+        {
+          "name": "d$",
+          "sha256": "7690a523472d1ee01d585b78757a50113ea690d86fc3a64f68f2dec29d047099"
+        },
+        {
+          "name": "f$",
+          "sha256": "68f62b281d3fe6b66dd90371ecca7abd7bf730f33edb33a33dae1a924c8f5938"
+        },
+        {
+          "name": "p$",
+          "sha256": "b96be462b6b160cde9cf61e2f48f6385cd0c70bffbc28a15a798b34b802dff14"
+        },
+        {
+          "name": "m$",
+          "sha256": "a61a7920ce4597e92b833fa4843b3338405af71dda2f15f0bfabc140b185da11"
+        },
+        {
+          "name": "h$",
+          "sha256": "1c52030323e2220b02793ff864ce5f18048d5530fff4bfbd45f86e369384e66d"
+        },
+        {
+          "name": "g$",
+          "sha256": "c47216d92cfa0c2ae9990c6a2ea5bf32ac3d1f50699fd7b81819e8af33e84e4d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "O",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "X",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "iS",
+          "from": "../code-current/sidebar-menu-groups.mjs",
+          "name": "SidebarMenuItem",
+          "via": "shared-16-B0xHzPjj.js:Zn",
+          "kind": "external",
+          "original": "shared-16-B0xHzPjj.js:au"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "Fc",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "Rf",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "SidebarContextMenu",
+          "via": "shared-frame-BfjMqbuN.js:Ii",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:iD"
+        },
+        {
+          "local": "MX",
+          "from": "../code-current/sidebar-menu-order.mjs",
+          "name": "SidebarOrderedMenu",
+          "via": "shared-19-CkPOiIKm.js:MX",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:MX"
+        },
+        {
+          "local": "XX",
+          "from": "./group-archive.mjs",
+          "name": "SidebarGroupArchiveAll",
+          "via": "shared-19-CkPOiIKm.js:XX",
+          "kind": "generated"
+        },
+        {
+          "local": "aZ",
+          "from": "./group-organize.mjs",
+          "name": "SidebarGroupSelectAll",
+          "via": "shared-19-CkPOiIKm.js:aZ",
+          "kind": "generated"
+        },
+        {
+          "local": "uZ",
+          "from": "../code-current/sidebar-group-view.mjs",
+          "name": "SidebarGroupViewItems",
+          "via": "shared-19-CkPOiIKm.js:uZ",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:uZ"
+        }
+      ],
+      "exports": {
+        "d$": "SectionReorderContext",
+        "m$": "SectionReorderItems",
+        "h$": "SectionReorderActions",
+        "p$": "SectionReorderHandle",
+        "g$": "SectionReorderMenu",
+        "PQ": "insideRowAction",
+        "f$": "SectionReorderGate"
+      }
+    },
+    {
+      "target": "section-hover.mjs",
+      "source": "shared-21-IP-SVetq.js",
+      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "sha256": "3ad6e55eb4ce62cfc12f1069f8a7733ad66165d0ff69a4066284a744e90fc7db",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "jk",
+          "sha256": "45404e59b62c3741004a2a813d2226cbb8c799dd6034cd657ed1dad4ae3d1802"
+        },
+        {
+          "name": "Mk",
+          "sha256": "aa48d2cfddfef6f8fe22e1302ceef51bd9239161b7c9440193eaf83ca49f9d1b"
+        },
+        {
+          "name": "Nk",
+          "sha256": "10828f5886fc3342494630a95c5f6b31761eaf17985eff789c3d49069e9e580a"
+        },
+        {
+          "name": "Pk",
+          "sha256": "8d0cb21ab2ddd2d0173e84b82b4daba59bc1fa975ac48f2ed38f91d75c200e88"
+        },
+        {
+          "name": "Fk",
+          "sha256": "74729d24b159b5f902fe85f57e6da03f40d84d8904f44dfe224317bb3948fcea"
+        },
+        {
+          "name": "Ik",
+          "sha256": "ca521fb4a9e2a7052679622022364712ebf21119cf9df8261c8217881711ec62"
+        },
+        {
+          "name": "Lk",
+          "sha256": "36e16f823e14021afb109f63561155d1ce693192eabe02e3369df87e94555596"
+        },
+        {
+          "name": "Rk",
+          "sha256": "86582d4b24a5290f7e069eeb01f072a2d925340d84367dafbaa2eea047bd27d4"
+        },
+        {
+          "name": "zk",
+          "sha256": "ebdb2ce19ae6c6987df5f28a172b7f22afa8669b3cc7d802afc16e9f4b47a9ee"
+        },
+        {
+          "name": "Bk",
+          "sha256": "9093661971f770836c931a85ff58ad61910f77d3ba8448f4a77228a7500202f8"
+        },
+        {
+          "name": "Vk",
+          "sha256": "dcfa8e0c3c0d88687fe59b1231e21ded4f64c4f9d350aefcb5feda2989fa5338"
+        },
+        {
+          "name": "Hk",
+          "sha256": "346cd70c526ab97a32388df071af4566e5e187de85a2f953b44ff5be3f24d632"
+        },
+        {
+          "name": "Uk",
+          "sha256": "86449a4cf3ba429c5920834ddf4285f63217eaa73ae3881710135e05bb1df6d9"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Uk": "sectionHoverHandlers",
+        "jk": "hoverWithinAttribute",
+        "Mk": "focusWithinAttribute"
+      }
+    },
+    {
+      "target": "section-focus.mjs",
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "1dd01ea9ac96d8943e536b89655dfab3c223359d1b817673c6a35e9c8b6a2c82",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Vb",
+          "sha256": "c6a943a603c2d3f0e4f2fac348599abee0fef7285482ec2ab24c0dd248dec5a0"
+        },
+        {
+          "name": "Ub",
+          "sha256": "50aa16a932a49980951077d8a33c85545925ac546fac6fc27b2396bc2be12548"
+        },
+        {
+          "name": "Wb",
+          "sha256": "3ba45df8d3a25d63c4e98293880807383e388fc0f09baa461887f61691b29652"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ub": "markSectionFocus",
+        "Wb": "takeSectionFocus"
+      }
+    },
+    {
+      "target": "section-sortable.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "69bcccc41bb48d747c0a9b92a28bd04dc96b5b349752b3df6f222d97656e7696",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "_$",
+          "sha256": "b54a5ccefacf500ebf639b4ba6d00845d69eae6325fc88bbd914e73b570b39b1"
+        },
+        {
+          "name": "v$",
+          "sha256": "0dac081aad44d43a3fd0f9ccda272015f5c7a536fa6c43ee03d379a6d7d11e5c"
+        },
+        {
+          "name": "y$",
+          "sha256": "23bc7ebb653fd5264a3cf4f9b845117df28cd8224a4a6b5e8ad658525ccd9a25"
+        },
+        {
+          "name": "x$",
+          "sha256": "37178860d8fe941c291e0a1584476fe2643208d3c08f30bb3db45d07ebb49798"
+        }
+      ],
+      "imports": [
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "L",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "dx",
+          "from": "./section-focus.mjs",
+          "name": "takeSectionFocus",
+          "via": "shared-11-BuQ3CK5I.js:D",
+          "kind": "generated"
+        },
+        {
+          "local": "xx",
+          "from": "./section-focus.mjs",
+          "name": "markSectionFocus",
+          "via": "shared-11-BuQ3CK5I.js:N",
+          "kind": "generated"
+        },
+        {
+          "local": "d$",
+          "from": "./group-reorder.mjs",
+          "name": "SectionReorderContext",
+          "via": "shared-19-CkPOiIKm.js:d$",
+          "kind": "generated"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-DfPJ1QmD.js:wo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "x$": "SectionSortable",
+        "v$": "SectionDragBridgeContext",
+        "_$": "SectionDragBridge",
+        "y$": "useSectionDrag"
+      }
+    },
+    {
+      "target": "section-view-menu.mjs",
+      "source": "shared-22-HztmyUTM.js",
+      "sourceSha256": "28629418dc0265d7ffb911e9df66066349a1d650feca61743e4f49aaab9a1ad1",
+      "sha256": "7c5b1103502df4e057f99ac61d7a3fcb9707edc2ac1540333077b6c94a4d489e",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "eO",
+          "sha256": "fecbc4f1654ef5d41b83e6214b3e79a8c3c602863e86d9fc128bc6c9921e806c"
+        },
+        {
+          "name": "tO",
+          "sha256": "e697817abc72447630b6aec463cc92b6bdb3b9bc49338a6f5a6f684948e7cbd6"
+        },
+        {
+          "name": "nO",
+          "sha256": "44cfbf214302311c73af5be2f6f7a67f58173df3dff2c82834de677aa05d3d0f"
+        },
+        {
+          "name": "rO",
+          "sha256": "412efa09c5aef47a30d4ed1770dbf66b10ce83e103e7bc67842286c2093fcb16"
+        },
+        {
+          "name": "aO",
+          "sha256": "02c3f7ad8ce90efe34283f570379c616e98bfbd0ec9a3ef409b2520fd696b004"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-DfPJ1QmD.js:lo",
+          "kind": "react"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "tn",
+          "from": "./menu-triggers.mjs",
+          "name": "useCloseWhenSidebarHides",
+          "via": "shared-19-CkPOiIKm.js:Ga",
+          "kind": "generated"
+        },
+        {
+          "local": "dn",
+          "from": "./menu-triggers.mjs",
+          "name": "useOverflowMenuFlag",
+          "via": "shared-19-CkPOiIKm.js:Ka",
+          "kind": "generated"
+        },
+        {
+          "local": "An",
+          "from": "./menu-triggers.mjs",
+          "name": "useLazyMenu",
+          "via": "shared-19-CkPOiIKm.js:Ti",
+          "kind": "generated"
+        },
+        {
+          "local": "ri",
+          "from": "./session-keys.mjs",
+          "name": "PanelLayoutContext",
+          "via": "shared-78-D6VXYXaQ.js:YS",
+          "kind": "generated"
+        },
+        {
+          "local": "Po",
+          "from": "../view-tabs/shared-4-CJsHhp5n.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-CJsHhp5n.js:co",
+          "kind": "external",
+          "original": "shared-4-CJsHhp5n.js:jf"
+        },
+        {
+          "local": "Js",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:Zp"
+        },
+        {
+          "local": "Ys",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:$l"
+        },
+        {
+          "local": "Qs",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDropdown",
+          "via": "shared-frame-BfjMqbuN.js:qa",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:EC"
+        },
+        {
+          "local": "ec",
+          "from": "./cds-helpers.mjs",
+          "name": "useCdsDensity",
+          "via": "shared-frame-BfjMqbuN.js:su",
+          "kind": "generated"
+        },
+        {
+          "local": "Uc",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "ev",
+          "from": "./section-filter-controls.mjs",
+          "name": "sidebarFilterMessages",
+          "via": "shared-21-IP-SVetq.js:ar",
+          "kind": "generated"
+        },
+        {
+          "local": "yv",
+          "from": "./section-filter-controls.mjs",
+          "name": "PanelChromeContext",
+          "via": "shared-21-IP-SVetq.js:ea",
+          "kind": "generated"
+        },
+        {
+          "local": "hy",
+          "from": "./section-filter-controls.mjs",
+          "name": "panelChromeActive",
+          "via": "shared-21-IP-SVetq.js:na",
+          "kind": "generated"
+        },
+        {
+          "local": "zb",
+          "from": "./section-filter-controls.mjs",
+          "name": "trailingControlClass",
+          "via": "shared-21-IP-SVetq.js:zr",
+          "kind": "generated"
+        },
+        {
+          "local": "m",
+          "from": "./direction.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "generated"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "wr",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useStatusGrouping",
+          "via": "shared-19-CkPOiIKm.js:wr",
+          "kind": "adapter",
+          "original": "shared-19-CkPOiIKm.js:e2"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "Ac",
+          "from": "../sidebar-resize/logical-side.mjs",
+          "name": "physicalSide",
+          "via": "shared-28-DcgD7xXH.js:bo",
+          "kind": "external",
+          "original": "shared-28-DcgD7xXH.js:Pm"
+        },
+        {
+          "local": "Hc",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "Id",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "trackSectionChange",
+          "via": "shared-8-B5lJ8U5C.js:Bl",
+          "kind": "adapter",
+          "original": "shared-8-B5lJ8U5C.js:iv"
+        },
+        {
+          "local": "Gv",
+          "from": "./section-filter-controls.mjs",
+          "name": "SidebarSortMenu",
+          "via": "shared-21-IP-SVetq.js:ir",
+          "kind": "generated"
+        },
+        {
+          "local": "sy",
+          "from": "./section-filter-controls.mjs",
+          "name": "sortAscendingShown",
+          "via": "shared-21-IP-SVetq.js:lr",
+          "kind": "generated"
+        },
+        {
+          "local": "vy",
+          "from": "./section-filter-controls.mjs",
+          "name": "SidebarViewResetItems",
+          "via": "shared-21-IP-SVetq.js:nr",
+          "kind": "generated"
+        },
+        {
+          "local": "Cy",
+          "from": "./section-filter-controls.mjs",
+          "name": "useSidebarSortOptions",
+          "via": "shared-21-IP-SVetq.js:or",
+          "kind": "generated"
+        },
+        {
+          "local": "eb",
+          "from": "./section-filter-controls.mjs",
+          "name": "SidebarOptionMenu",
+          "via": "shared-21-IP-SVetq.js:tr",
+          "kind": "generated"
+        },
+        {
+          "local": "ob",
+          "from": "./section-filter-controls.mjs",
+          "name": "sortAscendingStored",
+          "via": "shared-21-IP-SVetq.js:ur",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "eO": "SectionViewButton",
+        "tO": "SectionViewMenu",
+        "aO": "toggleSectionCollapsed",
+        "rO": "sectionSortableId",
+        "nO": "noSections"
+      }
+    },
+    {
+      "target": "group-menu.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "d460f680ed21983fc98a6b4af936353605c1aba644d85e30edcea7142b5e57aa",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "fx",
+          "sha256": "1e4e4e54e1af4e0eef47c6b90a4ed86d31c2f2690e1ad32a07a095fa3d22c7ac"
+        },
+        {
+          "name": "px",
+          "sha256": "1e99a647408352f2aa35c2f2c7c70cd2454aff9cbb05b7db84ab77f56435de0b"
+        },
+        {
+          "name": "mx",
+          "sha256": "20ee09e06aba939617be67044bd057b9377b14aeb25df3f222bab20e7496feb3"
+        },
+        {
+          "name": "hx",
+          "sha256": "df306fb0fb9ec48631ac5369d39083cd53d757d94fc0ccfadd8ce3030d78718c"
+        },
+        {
+          "name": "gx",
+          "sha256": "fcab5b27b056a79f3e391d8da1e53c1bfe6c0f4db8ee719f75a437932941f384"
+        },
+        {
+          "name": "_x",
+          "sha256": "8a1341db7a0170262418365fc307d02b95220f7075bb5937730b2cc965c8e5c6"
+        },
+        {
+          "name": "vx",
+          "sha256": "1cba53248809cf605f7227af48c5c176f018100badb8be0d7f07e38063803dc3"
+        },
+        {
+          "name": "yx",
+          "sha256": "31b60fec68d17fffddc26d6d0edb293354949c23dc5ac592fa0aeaeedc92125d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "a",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "$t",
+          "from": "./group-reorder.mjs",
+          "name": "SectionReorderItems",
+          "via": "shared-19-CkPOiIKm.js:Ni",
+          "kind": "generated"
+        },
+        {
+          "local": "tn",
+          "from": "./group-archive.mjs",
+          "name": "SidebarGroupArchiveAll",
+          "via": "shared-19-CkPOiIKm.js:Oa",
+          "kind": "generated"
+        },
+        {
+          "local": "un",
+          "from": "../code-current/sidebar-group-view.mjs",
+          "name": "SidebarGroupViewItems",
+          "via": "shared-19-CkPOiIKm.js:Sa",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:uZ"
+        },
+        {
+          "local": "mn",
+          "from": "../code-current/sidebar-menu-order.mjs",
+          "name": "SidebarOrderedMenu",
+          "via": "shared-19-CkPOiIKm.js:Ua",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:MX"
+        },
+        {
+          "local": "er",
+          "from": "./group-organize.mjs",
+          "name": "SidebarGroupSelectAll",
+          "via": "shared-19-CkPOiIKm.js:wa",
+          "kind": "generated"
+        },
+        {
+          "local": "U",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "la",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useAnalytics",
+          "via": "shared-52-DGviI8xb.js:Zo",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:EO"
+        },
+        {
+          "local": "da",
+          "from": "./sections-model.mjs",
+          "name": "selectCustomGroups",
+          "via": "shared-52-DGviI8xb.js:cf",
+          "kind": "generated"
+        },
+        {
+          "local": "Vs",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "SidebarContextMenu",
+          "via": "shared-frame-BfjMqbuN.js:Ii",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:iD"
+        },
+        {
+          "local": "ec",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsConfirmationDialog",
+          "via": "shared-frame-BfjMqbuN.js:qs",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:M_"
+        },
+        {
+          "local": "nc",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsRoot",
+          "via": "shared-frame-BfjMqbuN.js:tu",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:Za"
+        },
+        {
+          "local": "J",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "Lc",
+          "from": "./debounced-callback.mjs",
+          "name": "useDebouncedCallback",
+          "via": "vendor-all-0-CTKbbUUg.js:T",
+          "kind": "generated"
+        },
+        {
+          "local": "Yc",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:Es",
+          "kind": "generated"
+        },
+        {
+          "local": "vd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "countGroupSessions",
+          "via": "shared-11-BuQ3CK5I.js:ji",
+          "kind": "adapter",
+          "original": "shared-11-BuQ3CK5I.js:Zu"
+        },
+        {
+          "local": "Ed",
+          "from": "./group-mode.mjs",
+          "name": "useCustomGroupOverlay",
+          "via": "shared-16-B0xHzPjj.js:$",
+          "kind": "generated"
+        },
+        {
+          "local": "Vd",
+          "from": "../code-current/sidebar-menu-groups.mjs",
+          "name": "SidebarMenuItem",
+          "via": "shared-16-B0xHzPjj.js:Zn",
+          "kind": "external",
+          "original": "shared-16-B0xHzPjj.js:au"
+        },
+        {
+          "local": "Jd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "trackCustomGroupChange",
+          "via": "shared-16-B0xHzPjj.js:ft",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:dp"
+        },
+        {
+          "local": "rc",
+          "from": "./cds-helpers.mjs",
+          "name": "elementOrNull",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "./direction.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "yx": "SidebarGroupMenu",
+        "fx": "renameDelayMs",
+        "mx": "pressAboveGroupLabel",
+        "vx": "BidiGroupName"
+      }
+    },
+    {
+      "target": "group-dialog.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "b2de85cdcc7eaae6efe6bc4e6afa808899833aa35f43c3b1852d068b22c51266",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "dx",
+          "sha256": "f6fccb6643ae6a4e9bbb9c64c00a78b63be87116a6de975d31c3dc9ad62ffa86"
+        },
+        {
+          "name": "bx",
+          "sha256": "74dd224139bbf71ba797a525392d004606ca44dbb19f4c6406faeae9384b765c"
+        },
+        {
+          "name": "xx",
+          "sha256": "94f0099055d2c0d07a95c64f7c054c55f682b9775a7a97d8b1f047f63c89269a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "U",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "la",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useAnalytics",
+          "via": "shared-52-DGviI8xb.js:Zo",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:EO"
+        },
+        {
+          "local": "Ea",
+          "from": "./sections-model.mjs",
+          "name": "findCustomGroupByName",
+          "via": "shared-52-DGviI8xb.js:pf",
+          "kind": "generated"
+        },
+        {
+          "local": "Ed",
+          "from": "./group-mode.mjs",
+          "name": "useCustomGroupOverlay",
+          "via": "shared-16-B0xHzPjj.js:$",
+          "kind": "generated"
+        },
+        {
+          "local": "Jd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "trackCustomGroupChange",
+          "via": "shared-16-B0xHzPjj.js:ft",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:dp"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "Hs",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDialog",
+          "via": "shared-frame-BfjMqbuN.js:Js",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:k_"
+        },
+        {
+          "local": "Ys",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:$l"
+        },
+        {
+          "local": "Zs",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTextInput",
+          "via": "shared-frame-BfjMqbuN.js:ho",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:tx"
+        },
+        {
+          "local": "nc",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsRoot",
+          "via": "shared-frame-BfjMqbuN.js:tu",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:Za"
+        },
+        {
+          "local": "bc",
+          "from": "./dialog-presence.mjs",
+          "name": "useDialogPresence",
+          "via": "shared-5-kdJVRUsT.js:V",
+          "kind": "generated"
+        },
+        {
+          "local": "J",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "Y",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "Yc",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:Es",
+          "kind": "generated"
+        },
+        {
+          "local": "qd",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarOverlayGate",
+          "via": "shared-16-B0xHzPjj.js:et",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:Pp"
+        },
+        {
+          "local": "rf",
+          "from": "./group-mode.mjs",
+          "name": "showsCustomGroups",
+          "via": "shared-16-B0xHzPjj.js:mt",
+          "kind": "generated"
+        },
+        {
+          "local": "_f",
+          "from": "./group-mode.mjs",
+          "name": "useEffectiveGroupBy",
+          "via": "shared-16-B0xHzPjj.js:yt",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "dx": "useCreateGroupDialog",
+        "xx": "CreateGroupDialog",
+        "bx": "GroupNameDialog"
+      }
+    },
+    {
+      "target": "move-to-menu.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "2fda0a6dcc70deca17b73348b4b859f69a323c06ed783fd06e0147e165bc4a88",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Sx",
+          "sha256": "b87983801c659a1a074803db724a90c3cc48cedaea0fa70f71b0daf7662f84f1"
+        },
+        {
+          "name": "Cx",
+          "sha256": "032a3528c5720ca7badc93d1c56d8f76e528e81eb7cde8466bdf7d9ea2da8dd6"
+        },
+        {
+          "name": "wx",
+          "sha256": "7e3c0c183c81efcce5a8aafdce0a02dd825d5c5e71fb07fc1e21db21e307eb79"
+        }
+      ],
+      "imports": [
+        {
+          "local": "s",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "./direction.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "generated"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "q",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "SidebarSectionsMenu",
+          "via": "shared-frame-BfjMqbuN.js:qa",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:EC"
+        },
+        {
+          "local": "Ec",
+          "from": "../sidebar-resize/logical-side.mjs",
+          "name": "physicalSide",
+          "via": "shared-28-DcgD7xXH.js:bo",
+          "kind": "external",
+          "original": "shared-28-DcgD7xXH.js:Pm"
+        },
+        {
+          "local": "J",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "Yc",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:Es",
+          "kind": "generated"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "wx": "MoveToSubmenu",
+        "Cx": "MoveToItems",
+        "Sx": "RemoveFromGroupLabel"
+      }
+    },
+    {
+      "target": "blank-area-menu.mjs",
+      "source": "shared-21-IP-SVetq.js",
+      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "sha256": "d1fab3aefd02b3f1713114d6b871ecaaab8c54d55a045442498b12dd1ae6a762",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "mB",
+          "sha256": "67b8406319c21a743893385c0937d34cc6be6639a4d585a95f7e797a9c120145"
+        },
+        {
+          "name": "hB",
+          "sha256": "1fd0900cfc0896303981d92db7ff6b59f440fdeeca4dd59fd65d8af8d98be605"
+        },
+        {
+          "name": "_B",
+          "sha256": "8a8528f44174c1ff6ef0d5df17c28f25d2a9ec9cd3d7d5f27e8f6e06a50f07d8"
+        },
+        {
+          "name": "yB",
+          "sha256": "f16b21e5e44acd878db771b3ea50f3c503093dbab89164fda418b2eec4e0921c"
+        },
+        {
+          "name": "bB",
+          "sha256": "9126bd2be6aea877b864c7b12452186707f317b29c3f051aaa3308649c0c8d15"
+        }
+      ],
+      "imports": [
+        {
+          "local": "u",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "A",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "Ke",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useCurrentAccount",
+          "via": "shared-25-DP8p7i1Z.js:lr",
+          "kind": "adapter",
+          "original": "shared-25-DP8p7i1Z.js:Z"
+        },
+        {
+          "local": "wi",
+          "from": "./group-archive.mjs",
+          "name": "emptyBulkScope",
+          "via": "shared-19-CkPOiIKm.js:Ma",
+          "kind": "generated"
+        },
+        {
+          "local": "Ni",
+          "from": "../code-current/sidebar-group-view.mjs",
+          "name": "SidebarListContext",
+          "via": "shared-19-CkPOiIKm.js:Ta",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:nZ"
+        },
+        {
+          "local": "$i",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarBulkArchive",
+          "via": "shared-19-CkPOiIKm.js:ka",
+          "kind": "adapter",
+          "original": "shared-19-CkPOiIKm.js:YX"
+        },
+        {
+          "local": "Y",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSectionsStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "shared-52-DGviI8xb.js:G"
+        },
+        {
+          "local": "wu",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarVisibleKeys",
+          "via": "shared-6-Cby4X-ms.js:Co",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:mO"
+        },
+        {
+          "local": "Nu",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarSelectionStore",
+          "via": "shared-6-Cby4X-ms.js:Lo",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:PD"
+        },
+        {
+          "local": "uf",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "SidebarContextMenu",
+          "via": "shared-frame-BfjMqbuN.js:Ii",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:iD"
+        },
+        {
+          "local": "U_",
+          "from": "./group-dialog.mjs",
+          "name": "useCreateGroupDialog",
+          "via": "shared-20-B7UqYfsi.js:yi",
+          "kind": "generated"
+        },
+        {
+          "local": "vB",
+          "from": "./section-filter-controls.mjs",
+          "name": "useNewSectionOpener",
+          "via": "shared-21-IP-SVetq.js:vB",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "mi",
+          "from": "../code-current/sidebar-group-view.mjs",
+          "name": "sidebarHasCollapsedGroups",
+          "via": "shared-19-CkPOiIKm.js:Ca",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:sZ"
+        },
+        {
+          "local": "ji",
+          "from": "../code-current/sidebar-group-view.mjs",
+          "name": "SidebarGroupViewItems",
+          "via": "shared-19-CkPOiIKm.js:Sa",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:uZ"
+        },
+        {
+          "local": "Qi",
+          "from": "./group-archive.mjs",
+          "name": "useUnloadedRows",
+          "via": "shared-19-CkPOiIKm.js:ja",
+          "kind": "generated"
+        },
+        {
+          "local": "Ua",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useHomeRoutes",
+          "via": "shared-78-D6VXYXaQ.js:Lr",
+          "kind": "adapter",
+          "original": "shared-78-D6VXYXaQ.js:wq"
+        },
+        {
+          "local": "Vu",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "sidebarRowKeys",
+          "via": "shared-6-Cby4X-ms.js:So",
+          "kind": "adapter",
+          "original": "shared-6-Cby4X-ms.js:iO"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "Qg",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "startCodeDraft",
+          "via": "shared-20-B7UqYfsi.js:Tn",
+          "kind": "adapter",
+          "original": "shared-20-B7UqYfsi.js:ST"
+        },
+        {
+          "local": "Sb",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "usePresetsGate",
+          "via": "shared-11-BuQ3CK5I.js:do",
+          "kind": "adapter",
+          "original": "shared-11-BuQ3CK5I.js:Qo"
+        },
+        {
+          "local": "mx",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useSidebarNavigate",
+          "via": "shared-16-B0xHzPjj.js:E",
+          "kind": "adapter",
+          "original": "shared-16-B0xHzPjj.js:zm"
+        },
+        {
+          "local": "Rx",
+          "from": "../code-current/sidebar-menu-groups.mjs",
+          "name": "OrderedSidebarMenuGroups",
+          "via": "shared-16-B0xHzPjj.js:Yn",
+          "kind": "external",
+          "original": "shared-16-B0xHzPjj.js:lu"
+        },
+        {
+          "local": "zx",
+          "from": "../code-current/sidebar-menu-groups.mjs",
+          "name": "SidebarMenuItem",
+          "via": "shared-16-B0xHzPjj.js:Zn",
+          "kind": "external",
+          "original": "shared-16-B0xHzPjj.js:au"
+        },
+        {
+          "local": "lB",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "requestNewEnvironment",
+          "via": "shared-21-IP-SVetq.js:lB",
+          "kind": "adapter",
+          "original": "shared-21-IP-SVetq.js:lB"
+        },
+        {
+          "local": "Wp",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:Es",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "_B": "SidebarBlankAreaHost",
+        "bB": "SidebarBlankAreaMenu",
+        "mB": "BlankAreaNewSessionItem",
+        "hB": "BlankAreaNewSectionItem",
+        "yB": "blankAreaMenuOrder"
+      }
+    },
+    {
+      "target": "status-dot.mjs",
+      "source": "shared-18-D4XxL6Tg.js",
+      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "sha256": "b650b6efc9c4dbc68fd630582e496bd55a0281636acd14fe87c705af83e67daa",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ND",
+          "sha256": "411f28de4c25c1a8604127c5931665da57fc8451f3c74f036b780f8d5a8dd080"
+        },
+        {
+          "name": "PD",
+          "sha256": "972c21ae40e65357a2b67706a421e2ecb5a6b12d3137806a7914f800293af284"
+        },
+        {
+          "name": "FD",
+          "sha256": "019ba07250fca9f0bf504a94ab24565f7149fa057bf0922f6d9b4352d201ae00"
+        },
+        {
+          "name": "zD",
+          "sha256": "e377c6fb232c73712df42430f4cbff65e83e6e830eb9c10e24085de0906e0627"
+        },
+        {
+          "name": "BD",
+          "sha256": "60f32fe64d325b04a204bbf45c95d2544becf691bbf415fc924aab6de972fb34"
+        }
+      ],
+      "imports": [
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "xf",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsPulse",
+          "via": "shared-frame-BfjMqbuN.js:yr",
+          "kind": "external",
+          "original": "shared-frame-BfjMqbuN.js:eN"
+        },
+        {
+          "local": "G_",
+          "from": "../code-current/nested-session-parts.mjs",
+          "name": "synchronizeStatusAnimation",
+          "via": "shared-18-D4XxL6Tg.js:G_",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:G_"
+        },
+        {
+          "local": "uE",
+          "from": "../code-current/sidebar-status-glyph.mjs",
+          "name": "SidebarStatusLayout",
+          "via": "shared-18-D4XxL6Tg.js:uE",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:uE"
+        },
+        {
+          "local": "K_",
+          "from": "../code-current/nested-session-parts.mjs",
+          "name": "NestedStatusDot",
+          "via": "shared-18-D4XxL6Tg.js:K_",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:K_"
+        },
+        {
+          "local": "xx",
+          "from": "../app-switch/app-switch-frame.mjs",
+          "name": "ClayStatusDot",
+          "via": "shared-18-D4XxL6Tg.js:xx",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:xx"
+        },
+        {
+          "local": "Ox",
+          "from": "../../source-sidebar-section-badge-adapters.jsx",
+          "name": "useStatusDotLook",
+          "via": "shared-18-D4XxL6Tg.js:Ox",
+          "kind": "adapter",
+          "original": "shared-18-D4XxL6Tg.js:Ox"
+        },
+        {
+          "local": "Ax",
+          "from": "../app-switch/app-switch-frame.mjs",
+          "name": "hubAttention",
+          "via": "shared-18-D4XxL6Tg.js:Ax",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:Ax"
+        }
+      ],
+      "exports": {
+        "FD": "SidebarStatusDot",
+        "BD": "sidebarErrorInk"
+      }
+    },
+    {
+      "target": "section-badge.mjs",
+      "source": "shared-21-IP-SVetq.js",
+      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "sha256": "01a799a78b6ab76e1002ddab7eed7db579b464cbe0a5aec27711649c03fcc7c4",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "IG",
+          "sha256": "48af73d0a3a7f8795ae55bf3882b17ac5aae96dc5e0aa00ec0472b36ca62b215"
+        },
+        {
+          "name": "LG",
+          "sha256": "30f2c8248ec3b551f19218ef23cce461ffdc7bae8217af770fd7b6c75fc162bb"
+        },
+        {
+          "name": "zG",
+          "sha256": "4e344fc836fbf43ef3148b2b109dd87403f32068e2e6ed916cc005e5b5aca3ef"
+        },
+        {
+          "name": "BG",
+          "sha256": "fd63deb317a60c6dee65ab7a0f91665c7a8e238dd8be3f03e6c84edfc6573e74"
+        },
+        {
+          "name": "VG",
+          "sha256": "ceba9a53c063a3c62e1c04e7c894d9f19b2218da9e5c0d8435ff23047a71446f"
+        },
+        {
+          "name": "HG",
+          "sha256": "b39842f1a8fe8cdfb9d52a067ca7ba97e266d72b1cdcc472e7e26360d4589ee2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Rb",
+          "from": "../../source-sidebar-section-badge-adapters.jsx",
+          "name": "useRespondingSessionIds",
+          "via": "shared-11-BuQ3CK5I.js:mn",
+          "kind": "adapter",
+          "original": "shared-11-BuQ3CK5I.js:n_"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-sidebar-sections-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "Wp",
+          "from": "./group-copy.mjs",
+          "name": "useGroupCopy",
+          "via": "shared-18-D4XxL6Tg.js:Es",
+          "kind": "generated"
+        },
+        {
+          "local": "Jp",
+          "from": "../code-current/nested-session-parts.mjs",
+          "name": "NestedErrorIcon",
+          "via": "shared-18-D4XxL6Tg.js:Go",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:VD"
+        },
+        {
+          "local": "Xp",
+          "from": "../code-current/sidebar-status-glyph.mjs",
+          "name": "sidebarErrorColors",
+          "via": "shared-18-D4XxL6Tg.js:Hs",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:MT"
+        },
+        {
+          "local": "cm",
+          "from": "./status-dot.mjs",
+          "name": "SidebarStatusDot",
+          "via": "shared-18-D4XxL6Tg.js:Qo",
+          "kind": "generated"
+        },
+        {
+          "local": "xm",
+          "from": "../code-current/sidebar-status-glyph.mjs",
+          "name": "sidebarStatusMessages",
+          "via": "shared-18-D4XxL6Tg.js:Yo",
+          "kind": "external",
+          "original": "shared-18-D4XxL6Tg.js:DD"
+        },
+        {
+          "local": "Om",
+          "from": "./status-dot.mjs",
+          "name": "sidebarErrorInk",
+          "via": "shared-18-D4XxL6Tg.js:as",
+          "kind": "generated"
+        },
+        {
+          "local": "th",
+          "from": "../../source-sidebar-section-badge-adapters.jsx",
+          "name": "sidebarErrorTitle",
+          "via": "shared-18-D4XxL6Tg.js:os",
+          "kind": "adapter",
+          "original": "shared-18-D4XxL6Tg.js:wD"
+        }
+      ],
+      "exports": {
+        "HG": "SectionStatusBadge",
+        "VG": "SectionStatusGlyph",
+        "BG": "sectionStatusKind",
+        "zG": "rowStatusKind",
+        "LG": "rowAwaitingYou",
+        "IG": "sectionStatusOrder"
+      }
+    },
+    {
+      "target": "../../../electron/generated/sidebar-sections-error-text.mjs",
+      "source": "preload-helper-D0dM6GpB.js",
+      "sourceSha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
+      "sha256": "cc11f9180c20c39f720be00980a0cf81879b85f6a73e8f56f0333a0442e01597",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "ae3a24deb2952bf4ae6ec64cd91df0be80ff083fa511d11220eebc272b2d36cf"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "tagErrorText"
+      }
+    },
+    {
+      "target": "../../../electron/generated/sidebar-sections-model.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "6631a1e2f87f27d7a8737b72c426d7a96e8218be192534901a9027542254b22c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "U",
+          "sha256": "949d3f9afb848f4f7e58d80c3013e9e3c1ed3c509f8ec51d50c4915a9fff97c8"
+        },
+        {
+          "name": "W",
+          "sha256": "f2b4024a51955371d425133566665a45e0feedef7a674c145b11d89ba107d9b4"
+        },
+        {
+          "name": "np",
+          "sha256": "407db80c3964973327baafc5799a7d4e3bc9a4d43fbaafe5bffee7dbd0a7a8ea"
+        },
+        {
+          "name": "rp",
+          "sha256": "0a5193b4607ed871f9f3468c45286db394ae4d4e5b18e0168bfda79aace14816"
+        },
+        {
+          "name": "ip",
+          "sha256": "ad19cafb1de0359d8cadf81761044736cbaafc5374f22c530f9ae8cb509ae9f8"
+        },
+        {
+          "name": "ap",
+          "sha256": "c6492f0f9e4fa06108c3beafcac89b260dc467fb55310222183f583dc9a4cf03"
+        },
+        {
+          "name": "op",
+          "sha256": "e6e11c8370cac7369e1ed6b4b730e67f91091dc2a799b32ce7ed4906e4b3eced"
+        },
+        {
+          "name": "sp",
+          "sha256": "43fab642ad3fb6b10947ec3ad9a18bdd03597b1887c96091c80c49dd68fa54c9"
+        },
+        {
+          "name": "cp",
+          "sha256": "fcbb41dcda861d5c7313a0f2fb0fa4abb4b9935bd35b31c4424af2077780f260"
+        },
+        {
+          "name": "lp",
+          "sha256": "a67b140ba5d6b9e7e6a2ac632970a72499a13888102dffa37306fc987a6e07b3"
+        },
+        {
+          "name": "up",
+          "sha256": "3b2f95fad0001b8135cc35ba4e8b000922222f7f6952f440aa2f257974a595d4"
+        },
+        {
+          "name": "dp",
+          "sha256": "6079310436dde99dd0f5e4aed61030433c11a95d157e12fb5f7d85e7c7a1ebdd"
+        },
+        {
+          "name": "fp",
+          "sha256": "7eac2db6024666be7309e43311bb923f423e4d9a356006719c1c564f14d89db9"
+        },
+        {
+          "name": "pp",
+          "sha256": "862e6b9283b321e998bf7be5412c3e6368aa24e902c1fe6a42ed16f0b242e7d8"
+        },
+        {
+          "name": "mp",
+          "sha256": "609fd98d42bcd527dafa8f0e49c7c128d59c5607fc9695814010486258c245aa"
+        },
+        {
+          "name": "hp",
+          "sha256": "79a7508836a99c2550fba8f2a1e156e45e1f109ccb26ee6b207c0229a3642484"
+        },
+        {
+          "name": "gp",
+          "sha256": "ecd640f09790c9477db7ecdefb8fe86e24a98077236be942937b7eccca98d3a7"
+        },
+        {
+          "name": "_p",
+          "sha256": "e586fd95aa8fba5219442199bd2c7410826622043c1ea3d4669c5c4b566d50d0"
+        },
+        {
+          "name": "vp",
+          "sha256": "cb51581875f30c6a2bd9f9a8d4188e8578cd740cb834eac039fe16edad01c599"
+        },
+        {
+          "name": "yp",
+          "sha256": "71c446f00dd3d630190d347fcd826894747b52d6853fdbdfc394ff911cd7781c"
+        },
+        {
+          "name": "bp",
+          "sha256": "9ecf784eb2463612b648c32afc56fc9cf1a4f4dbc2d1219dd4c5807a23781605"
+        },
+        {
+          "name": "xp",
+          "sha256": "1532b4e6dded41280d8be0793bf0acfe76f8480d7b984804d1b9ea5c5eaf7c87"
+        },
+        {
+          "name": "Sp",
+          "sha256": "a011ee751347a0b3d459adeb81c174a63e67cc475c9db858e9f72dcfddc95589"
+        },
+        {
+          "name": "Cp",
+          "sha256": "5367603bbed4187c7e5bdb5e4bacd892237dfb352059200a310ff14f703e7076"
+        },
+        {
+          "name": "wp",
+          "sha256": "5ce7de2c943b4544646e66a05e9acace27b95457e4bbe1e160ab50db0f59913e"
+        },
+        {
+          "name": "Tp",
+          "sha256": "37e8e62c1ca986f604d25ca3e1ac3bfe6356fe9154d14a617a02ecf11f3f0f0f"
+        },
+        {
+          "name": "Ep",
+          "sha256": "bda82b431db731a0d92e4f7d86458794476ecf0f4b9118bfdfe749c9a4297e64"
+        },
+        {
+          "name": "Dp",
+          "sha256": "de5e0ba7e00c1f2d2357298c43674fcf14d470feccdc775986eda5afbe417423"
+        },
+        {
+          "name": "Op",
+          "sha256": "3ac16b71bc6c0e977dd8d08b870f403567c15f68fe635ef56af2c3eb02988ade"
+        },
+        {
+          "name": "kp",
+          "sha256": "f01a0db4fbc0f316a1be2bc6ddf54ed8225004a4a143bf0689d8bc136340dec2"
+        },
+        {
+          "name": "Ap",
+          "sha256": "42a6856836596ec1dd51216ef6d0a23fbed3d89fa4ec1349a8e6dac82da9ec04"
+        },
+        {
+          "name": "jp",
+          "sha256": "2a081d320f62198cf7f48e94222f31cc06e712ecfaa7739ed7e1479b9168530e"
+        },
+        {
+          "name": "Mp",
+          "sha256": "fdb1523d5784b72b9e84338d3f6bccab1fd054d1781e33b186c2b9880df6ada4"
+        },
+        {
+          "name": "Np",
+          "sha256": "518180f7bce1d923373bb4117017edb7ddbb514a2a0dff0bac3b57d13349748e"
+        },
+        {
+          "name": "Pp",
+          "sha256": "9ac304e35d75886b31678b2634fdc62b93f0b43a2947fcb47e831d3e947ba082"
+        },
+        {
+          "name": "Fp",
+          "sha256": "7f9d66dd798412158725419bfd709144aab24dff7cfae9e26609fb6707bc5c0a"
+        },
+        {
+          "name": "Ip",
+          "sha256": "eb1c4905c9536cf36fd75230bfa931b30f7caf4de737aac22c31bc0497a9aa6b"
+        },
+        {
+          "name": "Lp",
+          "sha256": "4e3168e7aeb33a6d279251d4288df8e2f5a9613800d113d8ac405439963558e5"
+        },
+        {
+          "name": "Rp",
+          "sha256": "8e57ea2b58f1ba5a2ffe13e898d62c370a0af8f0bd974ac25f93eb9659c0c59d"
+        },
+        {
+          "name": "zp",
+          "sha256": "a6ec59d4fcfa1aa409ecaa9716173039aef8ae3d87a88f3595fdc244c5043348"
+        },
+        {
+          "name": "Bp",
+          "sha256": "38ddef0313c23ee881ef9bd0065d15d53bd93714dda6ba9d4cf98609e2684565"
+        },
+        {
+          "name": "lm",
+          "sha256": "3abc27d1dc94d4f4a2c8b8b2fd7525879a529d33d04732eb82dcba45ce8b65b1"
+        },
+        {
+          "name": "um",
+          "sha256": "4e7415c001846b3574a288b2b173546042b998afc6c95494266429b24d0038f8"
+        },
+        {
+          "name": "dm",
+          "sha256": "6f5aceb74838879f3edcc1c51c028f52b0c30b131c20edcfc730484f4fe0506b"
+        },
+        {
+          "name": "fm",
+          "sha256": "f30d30a8c4196abcf959964771ed541b4cea88ea6d6c5fab8808a462ad5a64ee"
+        },
+        {
+          "name": "pm",
+          "sha256": "f05461629322606b862622d043e6cc4bb51aea1ee809235df032ba0fb513da5d"
+        },
+        {
+          "name": "mm",
+          "sha256": "ced97cd98d13db7c201a0fb226acb33a3b7e30e46f853bcefa4d4710f86f7bbe"
+        },
+        {
+          "name": "hm",
+          "sha256": "33656b36a3132d24b0d93cc6e47a44e060f7c27761c6ab865919cbc626e89dbe"
+        },
+        {
+          "name": "gm",
+          "sha256": "3ddc2d6db33df59f1e93b331fe18059364586845ebc58f48eb491fde6b2fab64"
+        },
+        {
+          "name": "_m",
+          "sha256": "583fc286a9bb79acf3145e80522e6cc1db062abedd21586cdca90728601bbce8"
+        },
+        {
+          "name": "wm",
+          "sha256": "2680493e14de298ed2bf464c1e1637c1a19a5e7784faefe0fc548d619e78bb83"
+        },
+        {
+          "name": "Tm",
+          "sha256": "ccb335d89fae12efcc11384009ce2bc32713ee919d160c45d95b069148628dde"
+        },
+        {
+          "name": "Em",
+          "sha256": "7b6aa74be1b276ebb59c2d2011b62fc9af45da2e8f260e404f3f4aa3edae2573"
+        },
+        {
+          "name": "Dm",
+          "sha256": "4be8c3a392954dc699ecd018f18dc04cf4fb2c3757fcce0eb0b3504affda3219"
+        },
+        {
+          "name": "Om",
+          "sha256": "1b2f28a02022343825d5cb4eb39f155a89675c6c7b1428fdd78f126a6c84c17c"
+        },
+        {
+          "name": "km",
+          "sha256": "b591273f88d84945a1c5e3ce556dd667522575abe9fa81502dd620e17eeab253"
+        },
+        {
+          "name": "Mm",
+          "sha256": "2f6be0f46b997d26fda3a283084e5349733fd6c5c624800862286a1cb5d8a27e"
+        },
+        {
+          "name": "_h",
+          "sha256": "ca805a7874e24f8959f3e18c5aae4fa9a0712cf5f39d4f758edbbce4ffa4cd30"
+        },
+        {
+          "name": "vh",
+          "sha256": "80a3fc286b1d6dd804db7f1a39deaf6a1532230cbde04f5d456e56a147b55240"
+        },
+        {
+          "name": "yh",
+          "sha256": "1e64c38a20b35f52baf301bd0eebf17e6dc7a94cee43f622979de329ba993005"
+        },
+        {
+          "name": "jh",
+          "sha256": "e75bff41ddc362540c6b4e3e02ead95505e9cafee3a77f030d256089fb1a85a4"
+        }
+      ],
+      "sourceSelections": [
+        {
+          "binding": "sectionsStoreActions",
+          "kind": "storeActions",
+          "anchor": "addSection",
+          "parameters": [
+            "e",
+            "t"
+          ],
+          "properties": [
+            {
+              "name": "toggleGroupCollapsed",
+              "sha256": "0cae6bdd542798791d294ba15180103c634943f68ba9607ad092ba02c0474b1b"
+            },
+            {
+              "name": "expandGroup",
+              "sha256": "a94c0763b895e5338698c010ca7cc81703637bd4e77a4cd6b93ff613829910e7"
+            },
+            {
+              "name": "addCustomGroup",
+              "sha256": "79f4ff68827e5bc9c360c9262a50e801f3af371afaf044b0becbe18f3d894f72"
+            },
+            {
+              "name": "keepGroupWhileEmpty",
+              "sha256": "124ecee33c3ee2b345a7a0dd8520c48ffdfc632ab454c162da10f2011c71b701"
+            },
+            {
+              "name": "renameCustomGroup",
+              "sha256": "a4620b00861b577ccb3552d450f2dddf30311a79f00b48c10797d69497a69b53"
+            },
+            {
+              "name": "deleteCustomGroup",
+              "sha256": "e45f922138d8bccdee561215857459ae4a4d8e2ffbdf23d84da1da3572ea38a7"
+            },
+            {
+              "name": "assignToCustomGroup",
+              "sha256": "b19c8545ce7a33b7966d44d46a9e4300d901f812c41812449fa89bb2e85382c2"
+            },
+            {
+              "name": "setCustomGroupOrder",
+              "sha256": "3809176f92f779cac0060b1aa924d10fc5e60e4a88634998aa25a44cef6ebe68"
+            },
+            {
+              "name": "moveCustomGroup",
+              "sha256": "97524dbdd073928288f71e5b3a06cae0e4b7676c44b733e2d07ef7cd0c07da9c"
+            },
+            {
+              "name": "addSection",
+              "sha256": "871e9a4281869f097923df997a74cfa0a65940ef97a598292c3ed109eb7e656f"
+            },
+            {
+              "name": "renameSection",
+              "sha256": "6bf577a2144885371c9afdd303a5028f04010b4c27d6028e89cb179a9a4808b8"
+            },
+            {
+              "name": "deleteSection",
+              "sha256": "b42b224f520fd1b593342fd4976e46b7324da0f0a6341fa890d8ac20585df876"
+            },
+            {
+              "name": "moveSection",
+              "sha256": "601fedabfde89b0c0a26e63dcb44a7c697e525bd08260b3bd8a8960d45dcacd6"
+            },
+            {
+              "name": "setSectionView",
+              "sha256": "22d025e7627191c4e3caa8777855a9d5c50c5cf71288b94a2971e0af1dbe62fa"
+            },
+            {
+              "name": "assignToSection",
+              "sha256": "f2ad5bc493e13d74b93a581f4dd809e28f00d58a9db363a966a40353083687f0"
+            },
+            {
+              "name": "setOverflowMenuOpen",
+              "sha256": "f41a8da570379438311586b45f9b53ed61abde26e5e501c59a3489862bd7672e"
+            }
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "local": "p",
+          "from": "./sidebar-sections-error-text.mjs",
+          "name": "tagErrorText",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "U": "stringArray",
+        "W": "isPlainRecord",
+        "np": "sectionSchemaVersion",
+        "rp": "sectionMetadataSchemaVersion",
+        "ip": "sectionCarriesMetadata",
+        "ap": "pinnedSectionId",
+        "op": "routinesSectionId",
+        "sp": "sessionsSectionId",
+        "cp": "sectionViewDefaults",
+        "lp": "routinesCollapsedByDefault",
+        "up": "createSection",
+        "dp": "defaultSections",
+        "fp": "defaultSection",
+        "pp": "defaultCodeSidebar",
+        "mp": "sessionsGroupByFromLegacy",
+        "hp": "legacyGroupByFromSessions",
+        "gp": "sectionGroupBys",
+        "_p": "sectionSortBys",
+        "vp": "sectionKinds",
+        "yp": "isSectionGroupBy",
+        "bp": "isSectionSortBy",
+        "xp": "normalizeSectionView",
+        "Sp": "normalizeSections",
+        "Cp": "normalizeCodeSidebarByScope",
+        "wp": "withSectionId",
+        "Tp": "dedupeSections",
+        "Ep": "ensureFixedSections",
+        "Dp": "customGroupMembers",
+        "Op": "sameMembers",
+        "kp": "reconcileSections",
+        "Ap": "defaultSectionCollapsed",
+        "jp": "resetSectionCollapse",
+        "Mp": "restoreSectionCollapse",
+        "Np": "migrateSectionMetadata",
+        "Pp": "sectionsAtDefaults",
+        "Fp": "sameSections",
+        "Ip": "patchSectionView",
+        "Lp": "setSectionView",
+        "Rp": "inheritSessionsView",
+        "zp": "moveSection",
+        "Bp": "seedSectionPrefs",
+        "lm": "customGroupKeyPrefix",
+        "um": "customGroupKey",
+        "dm": "emptyCustomGroups",
+        "fm": "isEmptyCustomGroups",
+        "pm": "normalizeCustomGroups",
+        "mm": "normalizeCustomGroupsByScope",
+        "hm": "nonEmptyCustomGroups",
+        "gm": "selectCustomGroups",
+        "_m": "findCustomGroupByName",
+        "wm": "mergeCustomGroups",
+        "Tm": "selectCodeSidebar",
+        "Em": "reconcileCodeSidebar",
+        "Dm": "reconcileCodeSidebarPatch",
+        "Om": "updateCustomGroups",
+        "km": "updateSections",
+        "Mm": "keptWhileEmptyWith",
+        "_h": "defaultGroupBy",
+        "vh": "effectiveGroupBy",
+        "yh": "groupByShowsCustom",
+        "jh": "codeKeyPrefix",
+        "sectionsStoreActions": "sectionsStoreActions"
+      }
+    }
+  ]
+}

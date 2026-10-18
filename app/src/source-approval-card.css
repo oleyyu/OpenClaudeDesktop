@@ -11,7 +11,10 @@
   font-family: var(--cds-font-sans); outline: none; transform-origin: top;
   animation: sac-inline-enter 160ms ease-out;
 }
-.sac-card:focus-visible { outline: 1px solid var(--cds-fill-accent); outline-offset: 2px; }
+/* R4i-transcript TR2: the card's own focus outline is the official utility string on the element (source-approval-card.jsx
+   CARD_FOCUS_OUTLINE, 2.42304.0 c12c146ad R), not a rule here: the landing ring c227f4d5e Zw adds (Yw) carries
+   focus-visible:outline-none, which the compiled sheet orders after focus-visible:outline-1, so a landed card shows
+   only the ::after ring, as the original does. A local rule here would draw the outline under that ring as well. */
 .sac-body {
   display: flex; flex-direction: column; gap: 24px; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain;
@@ -121,7 +124,7 @@ button.sac-heading:focus-visible { box-shadow: var(--cds-focus-shadow); }
 }
 .sac-button[data-variant="primary"] { color: var(--cds-on-primary); font-weight: var(--cds-font-weight-medium, 500); }
 .sac-button-backdrop { position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; transform-origin: 50%; transition: transform var(--cds-dur-slow) var(--cds-btn-spring); }
-.sac-button:active:not(:disabled):not([aria-disabled="true"]) .sac-button-backdrop { transform: scale(.975); transition: transform var(--cds-dur-fast) ease-out; }
+.sac-button:active:not(:disabled):not([aria-disabled="true"]) .sac-button-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast) ease-out; }
 .sac-button[data-variant="primary"] .sac-button-backdrop { inset: .5px; }
 .sac-button [data-cds-part="paint"] {
   position: absolute; inset: 0; border-radius: inherit; background: var(--cds-fill-secondary);
@@ -161,9 +164,16 @@ button.sac-heading:focus-visible { box-shadow: var(--cds-focus-shadow); }
 @container source-approval (width <= 420px) {
   .sac-actions, .sac-allows { flex-direction: column; align-items: stretch; }
   .sac-allows > .sac-button { width: 100%; }
+  /* An allow the read gate holds sits in SourceTooltip's disabled-reason wrapper (Rj Cj disabledReason): it
+     stretches with the stacked allows too. */
+  .sac-allows > .source-tooltip-disabled-trigger, .sac-allows > .source-tooltip-disabled-trigger > .sac-button { width: 100%; }
   /* Deny sits in .sac-deny (beside Add feedback): stretch it with the stacked allows. */
   .sac-deny { display: flex; }
   .sac-deny > .sac-button { flex: 1 1 auto; }
+  /* 2.42304.0 c96d752d0 injected style "c9bddf7be", verbatim:
+     @container (width<=420px){.epitaxy-approval-read-hint{text-align:center}} — the read-gate hint line (Rj At) is
+     centred in a narrow card. Unlayered like the official injection, so it wins over the hint's .text-end utility. */
+  .epitaxy-approval-read-hint { text-align: center; }
 }
 @keyframes sac-inline-enter { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sac-spin { to { transform: rotate(360deg); } }

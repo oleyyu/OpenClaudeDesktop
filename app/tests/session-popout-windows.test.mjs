@@ -101,7 +101,8 @@ test('relaunch: session popouts are saved beside the pane popouts with their own
   const main = read('electron/main.cjs');
   assert.match(main, /const RESTORABLE_POPOUT_KINDS = new Set\(\[\.\.\.\[\.\.\.POPOUT_KINDS\]\.filter\(\(kind\) => kind !== "side-chat"\), "session"\]\);/);
   assert.match(main, /for \(const \{ window, sessionId \} of windowRegistry\.sessionPopouts\(\)\) \{\n\s+if \(!sessionId \|\| !liveContents\(window\)\) continue;/, 'a draft popout is not restored');
-  assert.match(main, /if \(item\.pane === popoutRestore\.SESSION_PANE\) \{\n\s+await openSessionPopout\(\{ sessionId: item\.sessionId, restore:/);
+  // R4i-transcript TR3: a /btw popout (pane "session" with a view, open-btw-popouts.json) is a pane window, not a session popout.
+  assert.match(main, /if \(item\.pane === popoutRestore\.SESSION_PANE && !item\.view\) \{\n\s+await openSessionPopout\(\{ sessionId: item\.sessionId, restore:/);
 });
 
 test('a window without split view keeps only its primary pane (c2189a16b popout_has_no_panes)', () => {
@@ -168,9 +169,9 @@ test('main.cjs: Open in new window, ⌘-click, tear-off and File › New Window 
   assert.match(main, /case "session-popout-pin": \{[\s\S]{0,300}window\.setAlwaysOnTop\(value\);/);
   assert.match(main, /const next = splitMenuState\(windowRegistry\.isSessionPopout\(window\) \? null : payload\);/);
   assert.doesNotMatch(main, /async function openWindow\(/, 'no full window for a single session any more');
-  // Pane windows for Tasks, Terminal and Side chat run the session's App.
-  assert.match(main, /const POPOUT_KINDS = new Set\(\["files", "changes", "plan", "tasks", "terminal", "side-chat"\]\);/);
-  assert.match(main, /const APP_POPOUT_KINDS = new Set\(\["tasks", "terminal", "side-chat"\]\);/);
+  // Pane windows for Tasks, Terminal, Side chat and (R4i-transcript TR3) the /btw side pane run the session's App.
+  assert.match(main, /const POPOUT_KINDS = new Set\(\["files", "changes", "plan", "tasks", "terminal", "side-chat", "session"\]\);/);
+  assert.match(main, /const APP_POPOUT_KINDS = new Set\(\["tasks", "terminal", "side-chat", "session"\]\);/);
   assert.match(main, /if \(appPane\) windowRegistry\.register\(window, \{ key: newWindowKey\(\), layout: \{ current: sessionId, split: null \}, kind: WINDOW_KINDS\.PANE \}\);/);
   assert.match(main, /const query = appPane \? \{ window: "pane", popout: sessionId, pane, cwd \} : \{ popout: sessionId, pane, cwd \};/);
 });
@@ -199,4 +200,69 @@ test('main.jsx: the popout renders without sidebar or split, ends its titlebar w
   const sideChat = read('src/source-side-chat.jsx');
   assert.match(sideChat, /icon="WindowNew" iconSize=\{16\} iconOnly aria-label=\{t\('Open in new window'\)\}/);
   assert.match(sideChat, /icon="ArrowInSquare" iconSize=\{16\} iconOnly aria-label=\{t\('Open in main window'\)\}/);
+});
+
+// R4g-btw BT3 (X7-14): the windows' reported /btw children suppress automatic unread marks in other windows, and an
+// archived or deleted session's pane windows close without docking back (shared-11 closeSidePanePopoutsForSession,
+// called by c03935b01 evictEpitaxySession).
+test('main.cjs takes each window\'s shown /btw children and closes a removed session\'s pane windows', () => {
+  const main = read('electron/main.cjs');
+  assert.match(main, /case "window-side-sessions": return windowRegistry\.setSideSessions\(windowRegistry\.windowForSender\(e\.sender\), p\?\.sessions\);/);
+  const automatic = main.slice(main.indexOf('if (p.automatic === true && p.patch?.unread === true) {'));
+  assert.match(automatic.slice(0, 500), /if \(windowRegistry\.windowsShowing\(p\.id, \{ side: true \}\)\.length\) return sidebarSnapshot\(\);/);
+  assert.doesNotMatch(main, /if \(windowRegistry\.windowsShowing\(p\.id\)\.length\) return sidebarSnapshot\(\);/);
+  const archive = main.slice(main.indexOf('if (p.method === "thread/archive") {\n          agentTools.cancelSession'));
+  assert.match(archive.slice(0, 1400), /if \(!windowRegistry\.windowsShowing\(params\.threadId, \{ panes: true, side: true \}\)\.length\) closeSidePanePopoutsForSession\(params\.threadId\);/);
+  assert.doesNotMatch(main, /if \(!windowRegistry\.windowsShowing\((params\.threadId|thread\.id)\)\.length\) closeSidePanePopoutsForSession/);
+  const remove = main.slice(main.indexOf('if (p.method === "thread/delete") {\n          const id = params.threadId;'));
+  assert.match(remove.slice(0, 1200), /closeSidePanePopoutsForSession\(id\);/);
+  const changed = main.slice(main.indexOf('onChanged: (op, thread) => {'));
+  assert.match(changed.slice(0, 600), /if \(!windowRegistry\.windowsShowing\(thread\.id, \{ panes: true, side: true \}\)\.length\) closeSidePanePopoutsForSession\(thread\.id\);/);
+  assert.match(main, /entryPoint: entry\.removed \? "session-removed" : entry\.closed \? "close" : entry\.docked \? "dock" : "window-close"/);
+  // The function itself, run over fake pane windows.
+  const start = main.indexOf('function closeSidePanePopoutsForSession(sessionId) {');
+  const body = main.slice(start, main.indexOf('\n}\n', start) + 2);
+  const closed = [];
+  const fake = (sessionId, pane, destroyed = false) => ({ sessionId, pane, window: { isDestroyed: () => destroyed, close() { closed.push(`${sessionId}:${pane}`); } } });
+  const popouts = new Map([['a', fake('s', 'terminal')], ['b', fake('s', 'files', true)], ['c', fake('t', 'tasks')]]);
+  const run = new Function('popouts', 'sidePanePopoutsForSession', `${body}; return closeSidePanePopoutsForSession;`)(popouts, registryModule.sidePanePopoutsForSession);
+  run('s');
+  assert.deepEqual(closed, ['s:terminal'], 'a destroyed window is skipped; other sessions keep theirs');
+  assert.equal(popouts.get('a').removed, true);
+  assert.equal(popouts.get('c').removed, undefined);
+});
+
+// R4g fix (review of BT3): the official archive path evicts only at `refCount===0`, checked once on idle (c6b8adeaf Ti →
+// shared-25 Wc requestIdleCallback), and a side-pane popout holds its own session (c5638815a PopoutEpitaxyPaneContent
+// `ve(k)` = c5da7eb42 lF → openSession, refCount+1). releaseSession only drops the bucket; nothing closes popouts later.
+// So an archived session's pane windows stay while anything — they themselves included — holds it.
+test('archive keeps pane windows that hold the session, as the official refCount does', () => {
+  const ref = '/Users/oleyyu/claude-ui-lab/reference/installed-2.42304.0-20261017/ion-dist/assets/v1';
+  const count = (name, needle) => fs.readFileSync(path.join(ref, name), 'utf8').split(needle).length - 1;
+  assert.equal(count('c5638815a-D1NXo6h5.js', 'it as ve'), 1);
+  assert.equal(count('c5638815a-D1NXo6h5.js', 've(k);let{isFocused:j}=Q();ke({sessionRef:k,placement:f.Popout,paneFocused:j,viewOnly:!0})'), 1);
+  assert.equal(count('c5da7eb42-B8cTG8SI.js', 'lF as it'), 1);
+  assert.equal(count('c5da7eb42-B8cTG8SI.js', 'if(e)return i(p,e,_(p,m)),yu({id:p,type:m},e),()=>o(p)'), 1);
+  assert.equal(count('c06cf64bb-BE5q2vSr.js', 'releaseSession(e){let t=q(e);if(!t)return;let n=Math.max(0,t.refCount-1);'), 1);
+  assert.equal(count('c06cf64bb-BE5q2vSr.js', 'closeSidePanePopoutsForSession'), 0, 'the bucket release path never closes popouts');
+  assert.equal(count('c03935b01-CyJKQj4N.js', 'closeSidePanePopoutsForSession'), 1, 'only evictEpitaxySession (and jT onSessionRemoved) close them');
+  const registry = createWindowRegistry({ timers: quietTimers });
+  const main = new FakeWindow(), pane = new FakeWindow();
+  registry.register(main, { key: 'main', layout: { current: 'x' } });
+  registry.register(pane, { key: 'w-pane', layout: { current: 's' }, kind: WINDOW_KINDS.PANE });
+  registry.setSideSessions(main, ['child']);
+  const holders = (id) => registry.windowsShowing(id, { panes: true, side: true });
+  assert.deepEqual(holders('s'), [pane], 'the pane window holds its archived session: not closed');
+  assert.deepEqual(holders('child'), [main], 'a /btw child shown in a pane is held');
+  assert.deepEqual(holders('x'), [main]);
+  assert.deepEqual(holders('gone'), [], 'nothing holds it: its popouts close');
+  pane.destroyed = true;
+  assert.deepEqual(holders('s'), []);
+});
+
+test('main.jsx does not dock back a pane window closed for a removed session', () => {
+  const source = read('src/main.jsx');
+  // R4i-transcript TR3: nor a /btw popout whose last tab closed with it (entryPoint "close").
+  assert.match(source, /else if \(e\.kind === "popout-docked" && typeof e\.sessionId === "string" && side === 0 && e\.entryPoint !== "session-removed" && !\(e\.pane === "session" && e\.entryPoint === "close"\)\) openPaneTile\(e\.pane, e\.sessionId\);/);
+  assert.doesNotMatch(source, /else if \(e\.kind === "popout-docked" && typeof e\.sessionId === "string" && side === 0\) openPaneTile/);
 });

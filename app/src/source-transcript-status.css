@@ -10,6 +10,9 @@
   font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
   color: var(--cds-text-secondary);
 }
+/* Working line (turnStatusRows, 2.42304.0 w8): the row inside is the original Het / CDS TurnStatus. The busy wrapper
+   keeps the legacy .source-working marker for the UI harnesses; this neutralizes that class's row layout. */
+.source-transcript-status.source-working { display: flex; flex-direction: column; align-items: stretch; gap: 0; min-height: 0; padding: 0; color: var(--cds-text-secondary); }
 .source-transcript-status > .sts-row {
   display: flex;
   align-items: center;

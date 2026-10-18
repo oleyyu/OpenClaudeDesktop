@@ -17,7 +17,10 @@ import { reduce } from '../src/state.js';
 // the tabbed split strip's chrome, the Rewind / status / keep-awake / fork-marker surfaces. Node-only (SSR via Vite).
 // The CDS Dialog portals into document.body: render it in place (as cross-r5-render.test.mjs does).
 createRequire(path.resolve(import.meta.dirname, '..', 'package.json'))('react-dom').createPortal = (children) => children;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null } };
+// D21: original modules probe the document while they evaluate — the view-tab graph's preload helper
+// reads `document.createElement("link").relList` (no relList: it falls back to "preload"), and the
+// sidebar width module asks `documentElement.hasAttribute(<artifact composed>)` (absent here).
+globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false }, createElement: () => ({}) };
 let server, Split, Store, Sidebar, Actions, Lineage;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
@@ -102,11 +105,20 @@ test('a reopened layout gives a chat dragged to its floor its 320 px back, keepi
   assert.match(read('src/main.jsx'), /restoreKey=\{tileOwner\} onRestoreLayout=\{restoreTileLayout\}/);
 });
 
-test('titlebar: the lead clips, and a cramped row lets Preview and Terminal step into ⋯', () => {
+// R3-topbar TT-03: the all-or-nothing data-cramped gave way to the 2.42304.0 fold (cd54a5401 un measures, c73f45bc3 jh
+// folds inactive toggles first, one at a time, and Vh lists the folded ones in View options); tests/titlebar-fold covers it.
+test('titlebar: the lead clips, and a narrow row folds its toggles one by one into ⋯', () => {
   const css = read('src/source-titlebar.css');
   assert.match(css, /\.st-lead \{[^}]*overflow: clip;/);
-  assert.match(css, /\.st-toolbar \.st-trailing\[data-cramped\] \[data-pane-toggle\] \{\n  display: none;\n\}/);
-  assert.match(read('src/source-titlebar.jsx'), /data-cramped=\{cramped \|\| undefined\}/);
+  assert.doesNotMatch(css, /\[data-cramped\]/);
+  const jsx = read('src/source-titlebar.jsx');
+  assert.doesNotMatch(jsx, /data-cramped=|setCramped/);
+  assert.match(jsx, /useTitlebarFold\(\{/);
+  assert.match(jsx, /foldTitlebarToggles\(specs, foldable \? hiddenMainPanes : 0\)/);
+  // R4h-topbar K1 moved the View options rows into session-chord-model.mjs titlebarViewOptionsItems (behaviour tests in
+  // tests/session-chord-model.test.mjs); main.jsx hands it the same inputs and the titlebar's hidden count.
+  assert.match(read('src/main.jsx'), /titlebarViewOptionsItems\(\{ surface: mode, session: !!menu\.data, terminalAvailable, previewAvailable, filesAvailable, panes: openPanes,\s+hiddenCount: titlebarHidden,/);
+  assert.match(read('src/session-chord-model.mjs'), /titlebarFoldedToggles\(\{ surface, session, terminalAvailable, previewAvailable, filesAvailable, panes: open \}, hiddenCount\)/);
 });
 
 test('narrow split view (u1): a window ≤ 700px parks the extra panes instead of showing a tab strip', () => {

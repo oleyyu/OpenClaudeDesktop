@@ -143,9 +143,19 @@ export const useCurrentFormCopy = () => ({ ...useContext(RoutineContext).copy, j
 export function FormMessage({ defaultMessage, id, values }) {
   return useRoutineIntl().formatMessage({ defaultMessage, id }, values);
 }
+// 2.42304.0 shared-frame Cd (TextLink, exported as Xc; the routine form c97b955f1 imports it as Zt):
+// _d = `${hd} ${gd} inline` (hd "cds-reset cds-text-link", gd "cds-text-link-underline"); inheritColor adds vd
+// (text-inherit, the underline resting at 35% instead of .cds-text-link's 60%); the link's className is
+// X(X(_d, p && vd), "cursor-pointer", className) and p adds data-inherit-color="". view-tabs has no TextLink
+// semantic name, so the two class strings are restated here and pinned against the official chunk by
+// tests/r4e-small-routine-link.test.mjs. Every utility is compiled in the loaded c6a992d55 CSS.
+export const TEXT_LINK_CLASS = 'cds-reset cds-text-link cds-text-link-underline inline';
+export const TEXT_LINK_INHERIT_COLOR_CLASS = 'text-inherit [transition-property:text-decoration-color,box-shadow] [&:not(:hover,:focus-visible)]:[--_text-link-line:color-mix(in_srgb,currentColor,transparent_35%)]';
+export const formLinkClassName = (inheritColor, className = '') =>
+  [TEXT_LINK_CLASS, inheritColor && TEXT_LINK_INHERIT_COLOR_CLASS, 'cursor-pointer', className].filter(Boolean).join(' ');
 export function FormLink({ external, inheritColor, href, children, className = '', ...props }) {
   const host = useContext(RoutineContext);
-  return <a {...props} data-cds="TextLink" href={href} className={`underline underline-offset-2 ${inheritColor ? 'text-inherit' : 'text-link'} ${className}`}
+  return <a {...props} data-cds="TextLink" data-inherit-color={inheritColor ? '' : undefined} href={href} className={formLinkClassName(inheritColor, className)}
     onClick={event => { event.preventDefault(); host.call('external', { url: href }).catch(error => host.error(error.message)); }}>{children}</a>;
 }
 export const useNoRoutineReview = () => ({ holdsForReview: false, heldForReview: false });

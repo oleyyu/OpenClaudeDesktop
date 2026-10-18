@@ -3,7 +3,8 @@
 // lookups) to the value they already held still queued a default-lane update because the composer always had work
 // pending, so every commit left one behind. React 19 counts that as a nested update and threw "Maximum update depth
 // exceeded" (#185) after ~50 keystrokes (composer-states-ui-test fast typing). The resets now skip values in place.
-// Also: the suggested-tasks strip and the transcript under it are siblings and need distinct keys.
+// Also: the transcript keeps its own key. (The floating suggested-tasks strip that was its keyed sibling is retired: on
+// the presets-on branch, D10, 2.42304.0 draws proposals as the transcript's inline group card — R4f-proposal P5.)
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -25,7 +26,8 @@ test('per-keystroke resets in the composer skip a value that is already in place
   assert.match(composer, /if \(mentionDismissed !== null\) setMentionDismissed\(null\); requestAnimationFrame/);
 });
 
-test('the suggested tasks and the transcript of a session have different keys', () => {
-  assert.match(main, /<SourceSuggestedTasks key=\{`suggested:\$\{current\}`\}/);
+test('the transcript of a session keeps its key; the floating suggested-tasks strip beside it is gone', () => {
+  // cf74bc599 Xx mounts the floating card only on `!lr` (presets off); the inline card is inside the transcript.
+  assert.doesNotMatch(main, /<SourceSuggestedTasks\b/);
   assert.match(main, /<SourceTranscript\s+key=\{current \?\? "draft"\}/);
 });

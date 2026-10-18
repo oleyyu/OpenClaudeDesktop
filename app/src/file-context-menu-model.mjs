@@ -1,4 +1,5 @@
-import { canOpenFileInEditor } from "./generated/code-editor/file-editor-path.mjs";
+// R3-files FT-05 (files-27): the 2.42304.0 editor-path rule (shared-28 Fk over shared-104 bP; extract-files-changes.mjs).
+import { canOpenFileInEditor } from "./generated/files-changes/file-editor-path.mjs";
 // File items of the Files pane menus (2.2553.1). Mn
 // (ion-dist/assets/v1/c856385e2-k3utJqnh.js, prettier-formatted, :962-1060):
 // "Attach as context" while a composer exists, the "Copy" submenu (Absolute
@@ -59,7 +60,14 @@ export function fileCopyChoices(root, path) {
   };
 }
 
-export function fileContextMenu({ surface = "file_browser", root, path, canAttach = false, canShowInFinder = false, canRevealInTree = false, editors = [], canOpenTerminal = false, directory = false, line } = {}) {
+// R3-files FT-05 (files-11 / files-v01): `gone` is the right-click check of 2.42304.0 (c856385e2 V, answered before the
+// menu opens). xn: `d = n.openIn !== false && n.gone !== true` gates gn (the "Open in" submenu and the reveal item) and
+// wn (the folder's "Open in terminal"), so a path that no longer exists keeps only Attach and Copy (and a tab's reveal).
+export function fileContextMenu({ surface = "file_browser", root, path, canAttach = false, canShowInFinder = false, canRevealInTree = false, editors = [], canOpenTerminal = false, directory = false, line, gone = false } = {}) {
+  if (gone === true) { editors = []; canShowInFinder = false; canOpenTerminal = false; }
+  // R3-files FT-06: cd2efac6e Ps (the breadcrumb segment's items) adds its "Reveal in file tree" section only when
+  // `!h && …`, h being the segment's gone answer from cfac349aa Jt.
+  if (gone === true && surface === "file_breadcrumb") canRevealInTree = false;
   const choices = fileCopyChoices(root, path);
   const copy = (label, value) => value ? { kind: "item", action: "copy", label, value: stripClipboardControls(value) } : null;
   const entries = [];
@@ -98,11 +106,13 @@ export function fileContextMenu({ surface = "file_browser", root, path, canAttac
 // code): Attach as context (Rd), the Tn "Copy" submenu (qd), Yd (separator, "Open in" editors, Show in Finder),
 // then — after a separator when anything came before — "Copy file contents" (Cl: the text is loaded) and
 // "Download file" (yd). `entries` are the pane's fileContextMenu entries for surface "file_viewer".
-export function fileViewerMenu(entries = [], { canCopyContents = false, canDownload = false } = {}) {
-  const items = Array.isArray(entries) ? [...entries] : [];
+export function fileViewerMenu(entries = [], { canCopyContents = false, canCopyImage = false, canDownload = false, downloading = false } = {}) {
+  const items = (Array.isArray(entries) ? entries : []).filter(entry => !(canCopyImage && entry.kind === 'submenu' && entry.label === FILE_MENU_LABELS.copy));
+  while (items[0]?.kind === 'separator') items.shift();
   const tail = [];
   if (canCopyContents) tail.push({ kind: "item", action: "copy-file-contents", label: t("Copy file contents") });
-  if (canDownload) tail.push({ kind: "item", action: "download-file", label: t("Download file") });
+  if (canCopyImage) tail.push({ kind: 'item', action: 'copy-image', label: t('Copy image') });
+  if (canDownload) tail.push({ kind: "item", action: "download-file", label: t("Download file"), ...(downloading ? { disabled: true, disabledReason: t('Downloading…') } : {}) });
   if (tail.length && items.length) items.push({ kind: "separator" });
   return [...items, ...tail];
 }

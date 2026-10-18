@@ -1,13 +1,17 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SourceConfirmationDialog } from "./source-dialog.jsx";
 import { t } from "../electron/i18n/index.mjs";
-import { WORKTREE_DIRTY_GUARD_MS, createWorktreeDisposeCheck, worktreeChangeList, worktreeConfirmCopy, worktreeProbe } from "./worktree-dispose-model.mjs";
+import { createWorktreeDisposeCheck, worktreeChangeList, worktreeConfirmCopy, worktreeConfirmReady, worktreeProbe } from "./worktree-dispose-model.mjs";
+import { WorktreeChecking } from "./generated/files-changes/worktree-checking.mjs";
 
 /*
  * Archive / delete confirms for a session in its own worktree (2.31226.0 shared-19-DmuztgN-.js, readable
  * analysis/code-ui-sync-20261013/readable/shared-19-DmuztgN-.js.readable.js):
  * - EK :19165-19178 "Checking for uncommitted changes…" footnote: invisible while it only reserves its line
- *   (phase confirm), animate-placeholder-reveal + aria-busy while the check runs.
+ *   (phase confirm), animate-placeholder-reveal + aria-busy while the check runs. Since 2.42304.0 it is shared-19 jY
+ *   (generated/files-changes/worktree-checking.mjs, the original): text-muted-as-secondary, its text a CDS ShimmerText
+ *   (variant muted) that shimmers except while reserving; mt-md unless `afterHeader` (only the nested-sessions confirm
+ *   passes it, so both confirms here keep mt-md).
  * - DK :19179-19203 the changed files: a <pre> of the first ten porcelain lines and "… and {more} more".
  * - BK :19420-19700 over IK :19373-19418: the single "Delete session?" confirm that turns into the dirty / couldn't-check
  *   copy in place (title, description, "Delete anyway"), moves focus to Cancel when that copy appears and accepts the
@@ -17,10 +21,7 @@ import { WORKTREE_DIRTY_GUARD_MS, createWorktreeDisposeCheck, worktreeChangeList
  * The probe is main's worktree-status (worktrees.cjs worktreeStatus: count + porcelain lines).
  */
 
-export function WorktreeChecking({ hold }) {
-  const className = ["mt-md text-footnote text-muted", hold === "reserve" && "invisible", hold === "reveal" && "animate-placeholder-reveal"].filter(Boolean).join(" ");
-  return <p className={className} aria-busy={hold === "reveal" || undefined}>{t("Checking for uncommitted changes…")}</p>;
-}
+export { WorktreeChecking };
 
 export function WorktreeChangeList({ changes }) {
   const { shown, more } = worktreeChangeList(changes);
@@ -79,18 +80,19 @@ export function SourceSessionDeleteDialog({ open, onExited, title, body, confirm
 /**
  * SK: the confirm an archive (or a bulk delete) opens when its worktree-status probe found uncommitted changes (or, for
  * a delete, could not read them). `status` is the worktree-status answer. The confirms wait in a queue (cK): `more`
- * shows "More sessions with uncommitted changes will follow." when a dirty one waits behind this one, and after the
- * queue advanced (`guardSince`) a press counts only after 500 ms. `onConfirm()` / `onClose()` answer the waiting action
+ * shows "More sessions with uncommitted changes will follow." when a dirty one waits behind this one, and a press counts
+ * only 500 ms after the later of the queue advancing (`guardSince`) and the confirm opening after another dialog
+ * (`openedAt`, 2.42304.0 EY S). `onConfirm()` / `onClose()` answer the waiting action
  * (yK resolve), which then archives / deletes outside the dialog, as SK's x(!0) does.
  */
-export function SourceWorktreeDirtyDialog({ open, onExited, action, status, more = false, guardSince = 0, onConfirm, onClose }) {
+export function SourceWorktreeDirtyDialog({ open, onExited, action, status, more = false, guardSince = 0, openedAt = 0, onConfirm, onClose }) {
   const probe = worktreeProbe(status), phase = probe.status === "dirty" ? "dirty" : "unknown";
   const copy = worktreeConfirmCopy(action === "archive" ? "archive" : "delete", phase, probe.count);
   return <SourceConfirmationDialog open={open} onExited={onExited} className="source-confirm-dialog" descriptionClassName="source-confirm-body"
     title={copy.title} body={copy.description} confirmLabel={copy.confirmLabel} confirmVariant="danger" initialFocus="cancel"
     onCancel={onClose}
-    onConfirm={() => { if (guardSince && Date.now() - guardSince < WORKTREE_DIRTY_GUARD_MS) return; onConfirm?.(); }}>
+    onConfirm={() => { if (worktreeConfirmReady({ guardSince, openedAt })) onConfirm?.(); }}>
     {phase === "dirty" && probe.changes.length > 0 && <WorktreeChangeList changes={probe.changes} />}
-    {more && <p className="mt-md text-footnote text-muted">{t("More sessions with uncommitted changes will follow.")}</p>}
+    {more && <p className="mt-md text-footnote text-muted-as-secondary">{t("More sessions with uncommitted changes will follow.")}</p>}
   </SourceConfirmationDialog>;
 }

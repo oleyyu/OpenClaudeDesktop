@@ -5,6 +5,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import {readFile,writeFile} from 'node:fs/promises';
+import {workflowEvent} from '../src/workflow-progress-model.mjs';
 
 // The Tasks pane workflow card: Retry/Skip only where the engine controls members,
 // skipped agents read as Skipped, and a turn-scoped Stop says so.
@@ -22,6 +24,27 @@ const run = (extra = {}) => ({ id: 'attempt-1', runId: 'r1', status: 'running', 
     { type: 'workflow_agent', index: 1, id: '1', label: 'scan a', state: 'progress', phaseIndex: 0, phaseTitle: 'Scan', startedAt: now, lastProgressAt: now },
     { type: 'workflow_agent', index: 2, id: '2', label: 'scan b', state: 'skipped', phaseIndex: 0, phaseTitle: 'Scan' }], ...extra });
 const card = props => renderToStaticMarkup(React.createElement(W.WorkflowCard, { onStop: async () => {}, onMember: async () => {}, ...props }));
+
+test('compatibility notices survive replay, deduplicate and appear in the Tasks card', async () => {
+  const messages=[
+    "model: 'sonnet' (Claude) → 'fixture'",
+    "Workflow compatibility [review]: this core returns structured results through prompted JSON with validation and retries, rather than Claude's StructuredOutput tool.",
+    "workflow agent [review]: read-only (Bash excluded); compatibility: the core keeps its sandboxed shell for reads instead of removing Claude's individual tools",
+  ];
+  let value=run({status:'completed',durationMs:1234});
+  for(const message of [...messages,messages[1].replace('[review]','[next]'),'ordinary script log'])value=workflowEvent(value,{type:'log',message},now);
+  assert.equal(value.compatibilityNotes.length,3);
+  const html=card({run:value});
+  assert.match(html,/Compatibility differences \(3\)/);
+  assert.match(html,/prompted JSON with validation and retries/);
+  assert.match(html,/sandboxed shell for reads/);
+  assert.doesNotMatch(html,/ordinary script log/);
+  assert.doesNotMatch(card({run:run()}),/swf-compatibility/);
+  if(process.env.WORKFLOW_COMPATIBILITY_PREVIEW){
+    const css=await readFile(new URL('../src/source-workflow.css',import.meta.url),'utf8');
+    await writeFile(process.env.WORKFLOW_COMPATIBILITY_PREVIEW,`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Workflow compatibility card fixture</title><style>:root{--cds-text-secondary:#504f49;--cds-text-muted:#706f68;--cds-alpha-1:#efeee8;--cds-font-size-footnote:12px;--cds-leading-footnote:18px;--cds-leading-body:20px;--cds-pad-md:8px}body{font-family:system-ui;background:#faf9f5;color:#282721;margin:24px}main{max-width:430px}button{font:inherit;color:inherit;background:none;border:0}svg{width:16px;height:16px}${css}</style><main><p>Tasks card · compatibility fixture</p>${html}</main></html>`);
+  }
+});
 
 test('model runs show Retry/Skip only when they declare member controls', () => {
   assert.doesNotMatch(card({ run: run({ source: 'model', itemId: 'w1' }) }), /Retry agent/, 'Qwen/MiMo runs');

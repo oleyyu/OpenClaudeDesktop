@@ -498,7 +498,7 @@ try {
   assert.equal(await detail.getByRole("button", { name: /Show in Finder|Use in message/ }).count(), 0);
   checks.push("Drill back = CDS ghost Button size sm (page-shell size:c = Za → sm outside pageLayout; ArrowLeft auto masters, own sm h-control/--cds-radius, flush -sm pad-md, hover paint --cds-fill-ghost-hover without underline); F13 header actions Try in chat (primary) · Enable skill switch (sm, no label) · ⋮ More options (ghost icon-only) at size:te = sm; a disabled skill disables Try in chat at --cds-opacity-disabled with 'Enable skill to try in chat'");
   // F13 c9a7e510b D (drill isModal branch): wrapper "flex flex-col h-full px-6 pb-6 gap-3", header "flex justify-between
-  // min-h-14 items-center py-3 -mr-6 pr-md", h2 font-large-bold; facts row and the Description block below it.
+  // min-h-14 items-center py-3 -me-6 pe-md" (2.42304.0 logical; LTR computed margin-right -24 / padding-right pad-md), h2 font-large-bold; facts row and the Description block below it.
   metrics.skillDetail = await detail.evaluate(node => { const style = getComputedStyle(node), head = node.querySelector(".cz-skill-head"), headStyle = getComputedStyle(head), title = head.querySelector("h2");
     return { display: style.display, direction: style.flexDirection, gap: parseFloat(style.rowGap), paddingBottom: parseFloat(style.paddingBottom), paddingLeft: parseFloat(style.paddingLeft), paddingRight: parseFloat(style.paddingRight),
       headMinHeight: parseFloat(headStyle.minHeight), headHeight: head.getBoundingClientRect().height, headPadding: [parseFloat(headStyle.paddingTop), parseFloat(headStyle.paddingBottom)], headMarginRight: parseFloat(headStyle.marginRight), headPaddingRight: parseFloat(headStyle.paddingRight), headAlign: headStyle.alignItems,
@@ -529,7 +529,7 @@ try {
   assert.equal(await infoPopup.count(), 1, "a clicked InfoTip stays open after the pointer leaves");
   await page.keyboard.press("Escape");
   await infoPopup.waitFor({ state: "detached" });
-  checks.push(`F13 skill detail geometry px 24 / pb 24 / gap 12, header min-h ${metrics.skillDetail.headHeight}px py 12 -mr-24 pr-md, h2 font-large-bold; facts Added by / Last updated; Description h3 + InfoTip tooltip; files mt-2`);
+  checks.push(`F13 skill detail geometry px 24 / pb 24 / gap 12, header min-h ${metrics.skillDetail.headHeight}px py 12 -me-6 (-24px) pe-md, h2 font-large-bold; facts Added by / Last updated; Description h3 + InfoTip tooltip; files mt-2`);
   await page.locator("[data-skill-file]").waitFor();
   // c2eed normal + shared-16 inherit Markdown: rendered preview by default;
   // the previous raw-text assertion is retained below in the explicit Code mode.

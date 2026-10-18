@@ -1,0 +1,1826 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-session-rail-context.mjs",
+  "adapterModule": "src/source-session-rail-context-adapters.jsx",
+  "modules": [
+    {
+      "target": "context-tokens.mjs",
+      "source": "shared-8-B5lJ8U5C.js",
+      "sourceSha256": "09a1c33cf2e31d076f8e1908ab42933e1e6d702120136cd67418793a7657d086",
+      "sha256": "0d63a366e73cbde9e7214a71cbd2c911e9b5d035f6eea83a62fe1a963e2e2ae2",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "kV",
+          "sha256": "4dee6f4c75aaec75a4389890e3b4e15762061372110e9df85c837907e2526935"
+        },
+        {
+          "name": "jV",
+          "sha256": "c876fbfd8547e5b22aa84d3ecd67b0e87a177472fa4106ba4af8a146470b2cd7"
+        },
+        {
+          "name": "MV",
+          "sha256": "f4b84146f7ef7edfaec9b3ebb9ae948c55a5141c8ce1388ffc41da014fe06c07"
+        },
+        {
+          "name": "qV",
+          "sha256": "ef9bced994ff4b5e4b8d12e7d92738dac2ae15ce5a9b1dde001891898806c208"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "qV": "contextSummary",
+        "kV": "formatContextTokens"
+      }
+    },
+    {
+      "target": "context-usage-shape.mjs",
+      "source": "shared-104-Cqo2-vQh.js",
+      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "sha256": "c7500b183da9f91ce5a8635309069fb908768544093f27c66be9df3b15863e30",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Bx",
+          "sha256": "6f85f6e80d8d84758d90349a28635fc86110530977ea83ab403193507c934e98"
+        },
+        {
+          "name": "Vx",
+          "sha256": "c3a9d462de7baf99a53d95da1a8656cfdef0c8e9dd0346ef4eb5cea84690b7cc"
+        },
+        {
+          "name": "Hx",
+          "sha256": "825ffef61b00164a22ef1a714633e6e22cf7b6362619376e492393fd0c371833"
+        },
+        {
+          "name": "Ux",
+          "sha256": "fb51176a19665d9a5f1545deb6b1ef820de14ba3cbfbb1ed6ca12d8544b42cdd"
+        },
+        {
+          "name": "Gx",
+          "sha256": "358b88358802e30c1008f0f76866743ca9414a735ab8d1e2a92b8b8a43970d3e"
+        },
+        {
+          "name": "qx",
+          "sha256": "849897b59aa5e78eaed2a7fc9b392e5173f316d630356c0e412f0a8f71568a3b"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Gx": "flattenContextUsage",
+        "qx": "clampContextUsage",
+        "Bx": "isFreeSpaceCategory",
+        "Vx": "isBufferCategory",
+        "Ux": "isDeferredCategory"
+      }
+    },
+    {
+      "target": "mcp-names.mjs",
+      "source": "shared-130-DnUXVlYq.js",
+      "sourceSha256": "699331f0e4329cc5405e11fbb6eeba57b4715aefd2166a934e363d4acda2af8e",
+      "sha256": "b15fedec70785753038c79fddc35c87e0cfe769caf570bec03bf944499eba6ab",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "nF",
+          "sha256": "d8f7a6b073cc33d90bdd81b09b60ce9f436aebbdf8455fad46aafc189e2f9d31"
+        },
+        {
+          "name": "rF",
+          "sha256": "92c89cf735c42f905d7157dbd9f083c65ae78c563c8e175be6cff67bd15a31f8"
+        },
+        {
+          "name": "iF",
+          "sha256": "5f703ed9d904c2b3472911b3a351f49bbf8da478a0cf928dd1ccf67db95254a7"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "rF": "humanizeServerName",
+        "iF": "mcpToolShortName"
+      }
+    },
+    {
+      "target": "cds-frame-helpers.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "a02697d294e8cb1c05cd336463040fbba98879897fc012dad5928c35e32b6347",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Tn",
+          "sha256": "966e47b6d11166c3c615bb7ddf4b2d2e3dcd0ab5c30895d9f1d17440f7a76494"
+        },
+        {
+          "name": "En",
+          "sha256": "4f72f521d07d3d4f6651f5ab83c9d8c0031e6120305b9f3708cc8275f2158d00"
+        },
+        {
+          "name": "Dn",
+          "sha256": "0d4b1b030005de5e5e4adb9bbee299952d7e39686963fe083cee4939a89f8873"
+        },
+        {
+          "name": "bu",
+          "sha256": "3815dd39429a3fbf457a7518947f373f08528011100e591224ea851956cecaf4"
+        }
+      ],
+      "imports": [
+        {
+          "local": "U",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "Dn": "useCdsMergedRefs",
+        "bu": "elementResizeObserverClass"
+      }
+    },
+    {
+      "target": "chart-kit.mjs",
+      "source": "c389a02dd-q1NLRpaV.js",
+      "sourceSha256": "fba45e56ce5530210d5d87142a6a2624f5123ecbb05f6259913dfb58ab3948ed",
+      "sha256": "ef632a82304dd31dc768fe16c1b1ef8e38d2d2975f732a818806888bc7979572",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "f",
+          "sha256": "11bfa9858ff1a0bb080fac0ba564ef5ee7a4cbada2db4c3bc0e12e299f182e87"
+        },
+        {
+          "name": "m",
+          "sha256": "23e94b69709ea8abd47240681dac56c268d81b8d9efa34ed1dfe2c48a08fc3be"
+        },
+        {
+          "name": "h",
+          "sha256": "0afc6909e1a0e6a86cb3d83d751e7a471558723a1b0ae91534a21ba84cbe4986"
+        },
+        {
+          "name": "g",
+          "sha256": "e4e013e42abf9405d7ad57a64b031f26ba0cb5cbac99fde4d7c296ea8da1990c"
+        },
+        {
+          "name": "_",
+          "sha256": "9a185bf786209048b9141d43abe56e78c30506e97563e0d671b615c97dfcb53f"
+        },
+        {
+          "name": "v",
+          "sha256": "4db8e8972e8ddb517362c8fb9267df012140697da017d80d6ab00ea50c677fc3"
+        },
+        {
+          "name": "y",
+          "sha256": "126e07349b4c9b420bdf2dbce0bcb65bce9e4ca39d941ff7b7ccc158385b6117"
+        },
+        {
+          "name": "ne",
+          "sha256": "37b6f7c3ececf59681b6f9cb1bf44c71bd6313a73b0db09316e9bb58a11628fd"
+        },
+        {
+          "name": "b",
+          "sha256": "86f35827a0af30d8cbfbcaad8ea80d767ac625587e25a770b3581b2897dcc5ff"
+        },
+        {
+          "name": "x",
+          "sha256": "a4a1feebc773d93037d4f834c8c3818768a01ec35857a9c87cef8e27ecda74c6"
+        },
+        {
+          "name": "S",
+          "sha256": "916ae0386666febe6c3c98fc106e0c21e030a6aac635f9210f58829ce2a7da6e"
+        },
+        {
+          "name": "L",
+          "sha256": "e38418ccc8cc5d1b76d829c5db51143f5d4d86078c081cce6c82be4db45d04de"
+        },
+        {
+          "name": "R",
+          "sha256": "94c59e281467d473cb8bd30e8f863ebf02bc2c8266eaf3415cc86f0696444055"
+        },
+        {
+          "name": "H",
+          "sha256": "ef41f1628fd027ec899ad9fa3351b2da7660ee3479ee2c79b54d5c43be9e50e1"
+        },
+        {
+          "name": "U",
+          "sha256": "3b64d7b5201e1278a00d100c0dcc7eceada58a78b18b5610ce748e3ff36f130d"
+        },
+        {
+          "name": "K",
+          "sha256": "6bf17fbd8ca398587e6f5892eb579b0db16247dcca4e8723e9dfb87d29fa24e4"
+        },
+        {
+          "name": "q",
+          "sha256": "ba5da3db6ad6a8c4ba65baaf31eeddf66ef703afec60dac7b21a48e463c4d953"
+        },
+        {
+          "name": "J",
+          "sha256": "9b5d303b1774207e91af093885731370267125ff77fea6cfcfb167e5dd11c282"
+        },
+        {
+          "name": "Y",
+          "sha256": "e64596cdb282469f1afad0454a4d91946e6f20c91b1e41671ddb1bddc038a42d"
+        },
+        {
+          "name": "X",
+          "sha256": "01a6ffd0fe28c0a531d9c800ef149abb928f257744478e8299be95e41c726b55"
+        },
+        {
+          "name": "re",
+          "sha256": "b2ddb19f46049d0ccdfc551d79741ec980671613f5fe3f80397a6d055f5cd89c"
+        },
+        {
+          "name": "ie",
+          "sha256": "952f96e454957b5e4bdd23c88162733a90a7520ca83f93285a230c43e78563ef"
+        },
+        {
+          "name": "Z",
+          "sha256": "4e9995ff343096532f72bb29488ab14e6587a02bac6d202f7341d9b977171570"
+        },
+        {
+          "name": "Q",
+          "sha256": "970745a82f78c325cb45330da0658618cc444901df6183830d87a8a9cf84efea"
+        },
+        {
+          "name": "ae",
+          "sha256": "91c6aebbf671ef35f0bd5ca287434a8fe79930b9730b2b1718a46fceb209480c"
+        },
+        {
+          "name": "oe",
+          "sha256": "3d47f3950adfa1211487fd6115e92f1b41cfbe3a1d152077416432c3d1682986"
+        },
+        {
+          "name": "se",
+          "sha256": "dd3ad929da8508fea762ff126b76c642aba922a9807529c37193784e07b992fa"
+        },
+        {
+          "name": "le",
+          "sha256": "a5bcaa4a116e6db30b9e9db60fde33b0e8aa9c94d02e41d58c5b6aa9cffe98d8"
+        }
+      ],
+      "imports": [
+        {
+          "local": "l",
+          "from": "../session-rail-kit/cds-tokens.mjs",
+          "name": "cdsTokens",
+          "via": "c25d7186f-CHE_J2eY.js:t",
+          "kind": "session-rail-kit",
+          "original": "c25d7186f-CHE_J2eY.js:i"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "./cds-frame-helpers.mjs",
+          "name": "elementResizeObserverClass",
+          "via": "shared-frame-BfjMqbuN.js:al",
+          "kind": "generated",
+          "original": "shared-frame-BfjMqbuN.js:bu"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "le": "resolveSeriesPaints",
+        "re": "seriesInk",
+        "H": "axisNumberFormat",
+        "J": "compactNumberFormat",
+        "R": "useElementWidth",
+        "v": "ChartLegendProvider",
+        "h": "ChartMarkKindsProvider",
+        "y": "useChartLegend",
+        "g": "useChartMarkKinds",
+        "S": "ChartSwatchMark",
+        "f": "CHART_CHROME_KEY"
+      }
+    },
+    {
+      "target": "chart-meter.mjs",
+      "source": "c91b6e9db-BH3ya6oe.js",
+      "sourceSha256": "5f1ce349783c61e042195f1e482e75bb6bfcc4bf0deeb9dfa555ac75d8e82323",
+      "sha256": "7c6d9d270d5c8aeef69488806b2a787e1509e40c7c2db8e6dc4807d06ffb0b22",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "C",
+          "sha256": "bdef1edb2a748e7efe0eea4fff7c1b3ada8259e72aab5c2e2d3269ef88eec62c"
+        },
+        {
+          "name": "w",
+          "sha256": "0d5fd73b823618951e4cf4ee89a2ed5ebb1c174639f9809ecb615029529d55f2"
+        },
+        {
+          "name": "T",
+          "sha256": "1cd3a93d454cab64472745bf21a6b1517359af4a9621040b1dce0cfd55e54077"
+        },
+        {
+          "name": "E",
+          "sha256": "2d869061c6e68c7ac2aa7fde714c369908456760f8f246c27b05c2d4bbcf9d91"
+        },
+        {
+          "name": "D",
+          "sha256": "25aacb2b89493fe30ce780d29fd6d0e4c16daec091f6e03774942323c1ed6455"
+        },
+        {
+          "name": "O",
+          "sha256": "02c067540ab664abf238a559be1c74081e5f72658b257a87eecc3790ffb0ec72"
+        },
+        {
+          "name": "k",
+          "sha256": "52fbb0ce83e4fcc2051cdce5fc63ff73f310811e05d838fb9a13e53be9a773ab"
+        },
+        {
+          "name": "A",
+          "sha256": "6543803cd0ebc80c104b25bfa10a493e9536ded485ff550fd0847dcd4db85a4f"
+        },
+        {
+          "name": "j",
+          "sha256": "8a0ee4ceebb20f405df7bc32cbafb082291b252b97328c69b53261bb13098a80"
+        },
+        {
+          "name": "M",
+          "sha256": "ddd188cedf8654f407a14e24a9f8dce8a1b2f6d796a3d11bce2b994c834c2537"
+        }
+      ],
+      "imports": [
+        {
+          "local": "p",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "useCdsLocale",
+          "via": "shared-frame-BfjMqbuN.js:uu",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Ka"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "./chart-kit.mjs",
+          "name": "resolveSeriesPaints",
+          "via": "c389a02dd-q1NLRpaV.js:i",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:le"
+        },
+        {
+          "local": "b",
+          "from": "./chart-kit.mjs",
+          "name": "seriesInk",
+          "via": "c389a02dd-q1NLRpaV.js:n",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:re"
+        },
+        {
+          "local": "x",
+          "from": "./chart-kit.mjs",
+          "name": "axisNumberFormat",
+          "via": "c389a02dd-q1NLRpaV.js:s",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:H"
+        },
+        {
+          "local": "_",
+          "from": "./chart-kit.mjs",
+          "name": "compactNumberFormat",
+          "via": "c389a02dd-q1NLRpaV.js:c",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:J"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "./chart-kit.mjs",
+          "name": "ChartLegendProvider",
+          "via": "c389a02dd-q1NLRpaV.js:O",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:v"
+        },
+        {
+          "local": "y",
+          "from": "./chart-kit.mjs",
+          "name": "ChartMarkKindsProvider",
+          "via": "c389a02dd-q1NLRpaV.js:j",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:h"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-DfPJ1QmD.js:ro",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "../view-tabs/preload-helper-D0dM6GpB.js",
+          "name": "tagErrorText",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "view-tabs",
+          "original": "preload-helper-D0dM6GpB.js:e"
+        },
+        {
+          "local": "S",
+          "from": "./chart-kit.mjs",
+          "name": "useElementWidth",
+          "via": "c389a02dd-q1NLRpaV.js:u",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:R"
+        },
+        {
+          "local": "c",
+          "from": "./cds-frame-helpers.mjs",
+          "name": "useCdsMergedRefs",
+          "via": "shared-frame-BfjMqbuN.js:$u",
+          "kind": "generated",
+          "original": "shared-frame-BfjMqbuN.js:Dn"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "useInsideCdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:jc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:xm"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Zp"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "../code-current/terminal-tab-size-attrs.mjs",
+          "name": "cdsSizeAttributes",
+          "via": "shared-frame-BfjMqbuN.js:ou",
+          "kind": "code-current",
+          "original": "shared-frame-BfjMqbuN.js:aa"
+        },
+        {
+          "local": "m",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:X"
+        },
+        {
+          "local": "h",
+          "from": "../session-rail-kit/cds-tokens.mjs",
+          "name": "cdsTokens",
+          "via": "c25d7186f-CHE_J2eY.js:t",
+          "kind": "session-rail-kit",
+          "original": "c25d7186f-CHE_J2eY.js:i"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:kc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Sm"
+        }
+      ],
+      "exports": {
+        "O": "StackedMeterGroup",
+        "M": "StackedMeter"
+      }
+    },
+    {
+      "target": "chart-legend.mjs",
+      "source": "c50772270-BKebDpNN.js",
+      "sourceSha256": "4ac1552c5f34594a4aa7541ffc252d4a1671bdce100f65a9f73ee50a1bb7b488",
+      "sha256": "57770c477a13d8e76e9643038e942bfe6b785714ab2ec128b346fd838b2a6694",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "l",
+          "sha256": "e1210f6e8643140bf878b4b29ea4adf685dba3d85a859c00a75ce1158bfd28a0"
+        },
+        {
+          "name": "u",
+          "sha256": "77307c38432d9bc450f71480011c45b767c32cdd8e46eea9362f6611acaaef79"
+        },
+        {
+          "name": "d",
+          "sha256": "8203b32977e11554614dc3adcf32459c59f95429c099574fed904a5bdc1b42ca"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-DfPJ1QmD.js:ro",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "./chart-kit.mjs",
+          "name": "useChartLegend",
+          "via": "c389a02dd-q1NLRpaV.js:k",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:y"
+        },
+        {
+          "local": "s",
+          "from": "./chart-kit.mjs",
+          "name": "useChartMarkKinds",
+          "via": "c389a02dd-q1NLRpaV.js:I",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:g"
+        },
+        {
+          "local": "e",
+          "from": "../view-tabs/preload-helper-D0dM6GpB.js",
+          "name": "tagErrorText",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "view-tabs",
+          "original": "preload-helper-D0dM6GpB.js:e"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:X"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "./chart-kit.mjs",
+          "name": "ChartSwatchMark",
+          "via": "c389a02dd-q1NLRpaV.js:D",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:S"
+        },
+        {
+          "local": "a",
+          "from": "./chart-kit.mjs",
+          "name": "CHART_CHROME_KEY",
+          "via": "c389a02dd-q1NLRpaV.js:A",
+          "kind": "generated",
+          "original": "c389a02dd-q1NLRpaV.js:f"
+        }
+      ],
+      "exports": {
+        "d": "ChartLegend"
+      }
+    },
+    {
+      "target": "version-compare.mjs",
+      "source": "cf97b43fb-BkLgyu5g.js",
+      "sourceSha256": "e70b64a708f8e214672bb8d5fa0c43994e0a9142f576ecd1715ab6ba3fcd3d53",
+      "sha256": "9baec777c9831af79daee7d4259a903b883275526bf9d6d36b0b7776d3f91541",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "9cd9c5463cb00365bbad2739ff8b94a0c542e1f75d45850a25cb1871418f77fa"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "t": "compareVersions"
+      }
+    },
+    {
+      "target": "telemetry-session-type.mjs",
+      "source": "c68c4283d-CPuRD0vx.js",
+      "sourceSha256": "8ca8d5244c828c24831eceaeb650f239b19789aacd67aeb1e036ae37d46e9369",
+      "sha256": "e6c6eab93fd5cb30aeb4f61bd2ff3bef8f612a40792cd08c2bceb5b200c2f0cb",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "g",
+          "sha256": "3beb654a7817470100cc4c3e735ed5dec08a0c114a65d57f39a7f4f4fd3f7fd4"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "g": "telemetrySessionType"
+      }
+    },
+    {
+      "target": "compact-messages.mjs",
+      "source": "ce660512f-DsMrnGjx.js",
+      "sourceSha256": "4844ca1c4bc3d8e5f3b1c5e426b9bb7c7d0f65495c225fc149a55d3dd31205ac",
+      "sha256": "f5839ad440ba91b74ac6699b39fe8d8e4ea5a9052417bcf2fc887c5903cef64d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "a42a30e60baa1b38430e996ebf4697e1e61f1f3c45a7df12b2516a039e2b16b3"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "../session-rail-kit/define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "session-rail-kit",
+          "original": "vendor-intl-Db7hDWRO.js:tn"
+        }
+      ],
+      "exports": {
+        "t": "compactMessages"
+      }
+    },
+    {
+      "target": "context-panel.mjs",
+      "source": "c2d611398-D9vRECA9.js",
+      "sourceSha256": "9c727ac56e7ce6f1c316533e653726ea3330be697c0b08d6825496eae7f0d242",
+      "sha256": "645608bc356939a78582232985e2fb496a129fdc641e2f734b1f02e42438fe5e",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "z",
+          "sha256": "eacb70a5453f5be88a0f332136081b9c6b5b760e2765ca5260c01957591d5560"
+        },
+        {
+          "name": "B",
+          "sha256": "7716e790669ef8d7c9f6e005a9456750d7ac2ae5c886da3916a6514e846e1b2b"
+        },
+        {
+          "name": "oe",
+          "sha256": "3f8c5847ff3cadb1b7ef4816fdc72d8944d03cd5b53215260f460f11c9461072"
+        },
+        {
+          "name": "se",
+          "sha256": "723946c454c063f346ce6c87059616a206874ad669f5431a5317af6ac04ce1de"
+        },
+        {
+          "name": "ce",
+          "sha256": "a8d63e8ed30ec6e043da19ec326b0de0c6ed1fe8162376e6bf507f11c665f4ac"
+        },
+        {
+          "name": "le",
+          "sha256": "b28dc91e3c469941816edf2d169fc7013e942c3b6cd26e1f46e1613daa111639"
+        },
+        {
+          "name": "V",
+          "sha256": "fde211a9467e6162d5e7b1efaa675e30a07ada2f4ac931920c266b8be5779745"
+        },
+        {
+          "name": "H",
+          "sha256": "e0dde3f87922f62f5c7e330429d97fad5b9ed242c6bc2cae124c20de7dfeb0d9"
+        },
+        {
+          "name": "U",
+          "sha256": "4236866574ad5cfddc6680bcdc2526cd85b9d201508f68de7168a95e4cf9b572"
+        },
+        {
+          "name": "ue",
+          "sha256": "6cb91e36756d6bee3fad666fab6fdbf2bfc9153cc5f7099f28a3fd78677955a3"
+        },
+        {
+          "name": "de",
+          "sha256": "b69fc67277331233d9addc2125d53c131545583355e6a86ecaf92af8ef008654"
+        },
+        {
+          "name": "W",
+          "sha256": "4baa93ec6ce0c1d28d0fa948670611732acc5e1912019dcaeb9d0de51337768e"
+        },
+        {
+          "name": "G",
+          "sha256": "a61d3a17e0de36c2d3a763b38ec4faf6fbc639e329e30a32e33e379168c5cc21"
+        },
+        {
+          "name": "K",
+          "sha256": "a8d993505f99653ca2fce539099fc99550fe0b742290d5f28edad77c1641f36f"
+        },
+        {
+          "name": "fe",
+          "sha256": "f150ab20faf0de646c6f451d21d0abd597658c04e2f4f747c14b2432c015ca02"
+        },
+        {
+          "name": "q",
+          "sha256": "b12f3476a24593d78238e40276d88f71da14e419dfc53e72caab47814162e42e"
+        },
+        {
+          "name": "Y",
+          "sha256": "df81878480baf06d845e6f8555105a60ecb53b4c4e38027fecc4e3f2d1ba4d09"
+        },
+        {
+          "name": "ye",
+          "sha256": "11c83acc8ca4cddfa827469f384f6a750dcfbc89d2902ea4656f6977043f0a7a"
+        },
+        {
+          "name": "xe",
+          "sha256": "07f0096a8aab0c3a89a93dc68a9a017d24d21dde82b49363e0346960f93a974c"
+        },
+        {
+          "name": "De",
+          "sha256": "78eac98f28ae7ed1a5ddd5b6898bddd0de3666b8ac41426a20206396a14e2e49"
+        },
+        {
+          "name": "Oe",
+          "sha256": "3ce57086ce791b163c584bf605e35b0e491997ae1cb2af16e1c120e7a9b724e1"
+        },
+        {
+          "name": "ke",
+          "sha256": "83bc6d1cafb2fc1f09de7206346a8e9c6038522a412a849e304edc33c3442ba2"
+        },
+        {
+          "name": "Ae",
+          "sha256": "1779ad03491ae9e29161d538b2cf104516aa7149a5d1dbfd0d98d465387908b5"
+        },
+        {
+          "name": "je",
+          "sha256": "2b463cc15b426cb8d77c33dd235ca91e3062a32fccbb797d280b865232d95036"
+        },
+        {
+          "name": "Me",
+          "sha256": "e7020b0d5e9bfe67d1d2ca4003a95ef9128af950abcb1afcadbe8503dcd01461"
+        },
+        {
+          "name": "Ne",
+          "sha256": "a3164592e48140018e263ce9a39d1f7cd7ae60584c7a4771bd15b1c17efd925e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "P",
+          "from": "../../source-session-rail-kit-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "N",
+          "from": "../../source-session-rail-kit-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "A",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Jo"
+        },
+        {
+          "local": "O",
+          "from": "../turn-box/spinner.mjs",
+          "name": "Spinner",
+          "via": "shared-frame-BfjMqbuN.js:Cl",
+          "kind": "turn-box",
+          "original": "shared-frame-BfjMqbuN.js:Zs"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "useMcpServerRegistry",
+          "via": "shared-156-Bikz018e.js:Qf",
+          "kind": "adapter",
+          "original": "shared-156-Bikz018e.js:Pb"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "E",
+          "from": "./context-usage-shape.mjs",
+          "name": "isFreeSpaceCategory",
+          "via": "shared-104-Cqo2-vQh.js:tl",
+          "kind": "generated",
+          "original": "shared-104-Cqo2-vQh.js:Bx"
+        },
+        {
+          "local": "S",
+          "from": "./context-usage-shape.mjs",
+          "name": "isBufferCategory",
+          "via": "shared-104-Cqo2-vQh.js:$c",
+          "kind": "generated",
+          "original": "shared-104-Cqo2-vQh.js:Vx"
+        },
+        {
+          "local": "T",
+          "from": "./context-usage-shape.mjs",
+          "name": "isDeferredCategory",
+          "via": "shared-104-Cqo2-vQh.js:el",
+          "kind": "generated",
+          "original": "shared-104-Cqo2-vQh.js:Ux"
+        },
+        {
+          "local": "x",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "findMcpToolForLabel",
+          "via": "shared-26-CgdP_nTj.js:gc",
+          "kind": "adapter",
+          "original": "shared-26-CgdP_nTj.js:ob"
+        },
+        {
+          "local": "ne",
+          "from": "./mcp-names.mjs",
+          "name": "humanizeServerName",
+          "via": "shared-130-DnUXVlYq.js:qo",
+          "kind": "generated",
+          "original": "shared-130-DnUXVlYq.js:rF"
+        },
+        {
+          "local": "te",
+          "from": "./mcp-names.mjs",
+          "name": "mcpToolShortName",
+          "via": "shared-130-DnUXVlYq.js:Yo",
+          "kind": "generated",
+          "original": "shared-130-DnUXVlYq.js:iF"
+        },
+        {
+          "local": "ie",
+          "from": "./chart-legend.mjs",
+          "name": "ChartLegend",
+          "via": "c50772270-BKebDpNN.js:t",
+          "kind": "generated",
+          "original": "c50772270-BKebDpNN.js:d"
+        },
+        {
+          "local": "F",
+          "from": "./context-tokens.mjs",
+          "name": "formatContextTokens",
+          "via": "shared-8-B5lJ8U5C.js:E",
+          "kind": "generated",
+          "original": "shared-8-B5lJ8U5C.js:kV"
+        },
+        {
+          "local": "L",
+          "from": "./chart-meter.mjs",
+          "name": "StackedMeterGroup",
+          "via": "c91b6e9db-BH3ya6oe.js:n",
+          "kind": "generated",
+          "original": "c91b6e9db-BH3ya6oe.js:O"
+        },
+        {
+          "local": "R",
+          "from": "./chart-meter.mjs",
+          "name": "StackedMeter",
+          "via": "c91b6e9db-BH3ya6oe.js:t",
+          "kind": "generated",
+          "original": "c91b6e9db-BH3ya6oe.js:M"
+        },
+        {
+          "local": "I",
+          "from": "../session-rail-kit/keyboard-click.mjs",
+          "name": "severityFillClass",
+          "via": "shared-8-B5lJ8U5C.js:x",
+          "kind": "session-rail-kit",
+          "original": "shared-8-B5lJ8U5C.js:zV"
+        },
+        {
+          "local": "re",
+          "from": "../session-rail-kit/keyboard-click.mjs",
+          "name": "usageSeverity",
+          "via": "shared-8-B5lJ8U5C.js:w",
+          "kind": "session-rail-kit",
+          "original": "shared-8-B5lJ8U5C.js:IV"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "k",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDisabledReason",
+          "via": "shared-frame-BfjMqbuN.js:Ec",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Qp"
+        },
+        {
+          "local": "M",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:$l"
+        },
+        {
+          "local": "ae",
+          "from": "./compact-messages.mjs",
+          "name": "compactMessages",
+          "via": "ce660512f-DsMrnGjx.js:t",
+          "kind": "generated",
+          "original": "ce660512f-DsMrnGjx.js:t"
+        },
+        {
+          "local": "D",
+          "from": "../view-tabs/shared-2-Cb74JByF.js",
+          "name": "CdsRelativeTime",
+          "via": "shared-2-Cb74JByF.js:H",
+          "kind": "view-tabs",
+          "original": "shared-2-Cb74JByF.js:oX"
+        }
+      ],
+      "exports": {
+        "ke": "ContextUsagePanel",
+        "H": "ContextBreakdown",
+        "B": "contextUsedTokens",
+        "Me": "RailContextHeadline",
+        "je": "ContextProgressBar",
+        "Ne": "CompactActionRow",
+        "Ae": "ContextBreakdownLoading",
+        "xe": "StaleEngineNotice",
+        "De": "RAIL_CONTEXT_SUMMARY_ATTR",
+        "Oe": "RAIL_CONTEXT_PCT_ATTR"
+      }
+    },
+    {
+      "target": "context-compact.mjs",
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "91bf4be46124239082265c032929901649b0a01dc5c55566843deaf13fb0fdb8",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Bz",
+          "sha256": "fe6cce342fdd6299e968ee69aed7885986835531d5bab34e1b3eea7aa640a0e2"
+        },
+        {
+          "name": "Vz",
+          "sha256": "b1a8f4f4bf9b8ecb682e6a1bad7a5efdbe56476c32d8903b35794bf87d23ba4b"
+        },
+        {
+          "name": "Hz",
+          "sha256": "942a492431da1af0ee6a59725aaee7cd85029f58d57c9810b30da37f3ff1ed44"
+        },
+        {
+          "name": "Uz",
+          "sha256": "96860603f03b5e54b5d6f00af84d4447d5c26b8981d72fce719a82d3631d5fa4"
+        },
+        {
+          "name": "Gz",
+          "sha256": "36540dc9b9b73cc1f294792b9567bac12f68a11444923a3a9133510bee612e55"
+        },
+        {
+          "name": "qz",
+          "sha256": "57c46a45ad0d71e6450b5f8061330f66a0a8f51c2d523eb49eaea7a2db976eb8"
+        },
+        {
+          "name": "Jz",
+          "sha256": "0df0d7b7334f38de1bd54048ce2a23227ae6de9ddbe79090473a3caf5e083d4b"
+        },
+        {
+          "name": "Yz",
+          "sha256": "943fd980ae8049c1296643c48c21117fbbfe6d7d957d4078a7f7038361f497b6"
+        },
+        {
+          "name": "Xz",
+          "sha256": "4119317a2cffe206654532423022c18146eed951daa2aacddcf6b449457f4a68"
+        },
+        {
+          "name": "Zz",
+          "sha256": "de7820eaf1d67a8bc85ebd719566e6c7101b234881acd1745f721269bd3e175f"
+        },
+        {
+          "name": "Qz",
+          "sha256": "77e9dae485ee925dac628c7ee98ab18e8ada5a9232c823278f85fcae28e79eff"
+        },
+        {
+          "name": "$z",
+          "sha256": "8af1976eef8f884d43a88d62ab0f3291e9d574834fc087c2d8becc09b3e33791"
+        },
+        {
+          "name": "eB",
+          "sha256": "4a3290a2071adadb10204ef9df15068ed5b56d4a4b4c9ce629a4cbe112c7a467"
+        },
+        {
+          "name": "tB",
+          "sha256": "fc297ee331301a1622d1c134e245a58e626d1f07203c7915ba89cf7b5e2dc161"
+        },
+        {
+          "name": "oB",
+          "sha256": "085b376f39182c453c6dbfbfe048050c476a20e5117eab697d26d43c838bb5f3"
+        },
+        {
+          "name": "lB",
+          "sha256": "8a88d6ed57860b296e7f2050d8d8be9518603c155851dd6437c92942ecb74165"
+        },
+        {
+          "name": "RX",
+          "sha256": "ffc63090b5f09ef0f0379ff0133e245f2ec2f9abc45d532fd39eceb3361b568b"
+        },
+        {
+          "name": "zX",
+          "sha256": "4028250eca1256f71df6d2299b8460be9c2965361a9d1a0b378e6329799b05a6"
+        },
+        {
+          "name": "BX",
+          "sha256": "76cc290434941e3ebb0e16cbf68104a5292872a2f5b6b80ae4032efb21aada7c"
+        },
+        {
+          "name": "VX",
+          "sha256": "d92008eec9110b9f332ed6b4b26f3d0298754f9a7810e51ffe8698cf05f27ee7"
+        },
+        {
+          "name": "HX",
+          "sha256": "af19e4bc1ec70496dadc4eb00e269419d1b056fffbd95e499da91ea71fa27558"
+        },
+        {
+          "name": "UX",
+          "sha256": "e7bdf696d508132771cc77cc18cd7d32af9ebb1a13af40b7a489506aaf6a9982"
+        },
+        {
+          "name": "WX",
+          "sha256": "13badd6f4208d10528b45f604b0dc5c1b3cb46c82d9fd9cb83fc23045cb33b30"
+        },
+        {
+          "name": "GX",
+          "sha256": "b316ffaa544f43cb1753633cd04548e8919ce799fe2d089a8323233c79b6597d"
+        },
+        {
+          "name": "KX",
+          "sha256": "37d7bf7b62b872677546c42505bc4cc16430008033de97a8fc4bf1a2f9342dfb"
+        },
+        {
+          "name": "qX",
+          "sha256": "a6ec2162ecacb0eda1a3e5a2811f8a74b61123004fb88eebcfbbab0d6868c124"
+        },
+        {
+          "name": "gZ",
+          "sha256": "be046bbfa885427f527acf10da2678488fca8046165207e4c41ac46826870109"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Q",
+          "from": "../../source-session-rail-kit-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useId",
+          "via": "vendor-frame-DfPJ1QmD.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "we",
+          "from": "../../source-session-rail-sections-adapters.jsx",
+          "name": "useGrowthBookFeature",
+          "via": "shared-25-DP8p7i1Z.js:Th",
+          "kind": "adapter",
+          "original": "shared-25-DP8p7i1Z.js:Zs"
+        },
+        {
+          "local": "cB",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "useCompactSendState",
+          "via": "c227f4d5e-Ba-r--Rl.js:cB",
+          "kind": "adapter",
+          "original": "c227f4d5e-Ba-r--Rl.js:cB"
+        },
+        {
+          "local": "Me",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "useGrowthBookValue",
+          "via": "shared-25-DP8p7i1Z.js:_h",
+          "kind": "adapter",
+          "original": "shared-25-DP8p7i1Z.js:bc"
+        },
+        {
+          "local": "Wz",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "STALE_COMPACT_BAND_SCHEMA",
+          "via": "c227f4d5e-Ba-r--Rl.js:Wz",
+          "kind": "adapter",
+          "original": "c227f4d5e-Ba-r--Rl.js:Wz"
+        },
+        {
+          "local": "Bc",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "useScopedPreference",
+          "via": "shared-28-DcgD7xXH.js:fs",
+          "kind": "adapter",
+          "original": "shared-28-DcgD7xXH.js:ep"
+        },
+        {
+          "local": "zc",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "usePreferencesSettled",
+          "via": "shared-28-DcgD7xXH.js:ds",
+          "kind": "adapter",
+          "original": "shared-28-DcgD7xXH.js:Hf"
+        },
+        {
+          "local": "M",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "ua",
+          "from": "./context-usage-shape.mjs",
+          "name": "flattenContextUsage",
+          "via": "shared-104-Cqo2-vQh.js:Zc",
+          "kind": "generated",
+          "original": "shared-104-Cqo2-vQh.js:Gx"
+        },
+        {
+          "local": "mh",
+          "from": "./telemetry-session-type.mjs",
+          "name": "telemetrySessionType",
+          "via": "c68c4283d-CPuRD0vx.js:m",
+          "kind": "generated",
+          "original": "c68c4283d-CPuRD0vx.js:g"
+        },
+        {
+          "local": "Y",
+          "from": "../view-tabs/shared-0-ByI5P0CP.js",
+          "name": "useEventCallback",
+          "via": "shared-0-ByI5P0CP.js:xx",
+          "kind": "view-tabs",
+          "original": "shared-0-ByI5P0CP.js:_e"
+        },
+        {
+          "local": "y_",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "useSessionTurnPending",
+          "via": "c06cf64bb-BE5q2vSr.js:ut",
+          "kind": "adapter",
+          "original": "c06cf64bb-BE5q2vSr.js:Vv"
+        },
+        {
+          "local": "$m",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "logCompactClicked",
+          "via": "c68c4283d-CPuRD0vx.js:Pt",
+          "kind": "adapter",
+          "original": "c68c4283d-CPuRD0vx.js:gn"
+        },
+        {
+          "local": "Eu",
+          "from": "./context-tokens.mjs",
+          "name": "formatContextTokens",
+          "via": "shared-8-B5lJ8U5C.js:E",
+          "kind": "generated",
+          "original": "shared-8-B5lJ8U5C.js:kV"
+        },
+        {
+          "local": "D",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "og",
+          "from": "./context-panel.mjs",
+          "name": "ContextUsagePanel",
+          "via": "c2d611398-D9vRECA9.js:t",
+          "kind": "generated",
+          "original": "c2d611398-D9vRECA9.js:ke"
+        },
+        {
+          "local": "lt",
+          "from": "../routines-shared/shared-0-ByI5P0CP.mjs",
+          "name": "yv",
+          "via": "shared-0-ByI5P0CP.js:Vg",
+          "kind": "routines-shared",
+          "original": "shared-0-ByI5P0CP.js:yv"
+        },
+        {
+          "local": "L_",
+          "from": "./version-compare.mjs",
+          "name": "compareVersions",
+          "via": "cf97b43fb-BkLgyu5g.js:n",
+          "kind": "generated",
+          "original": "cf97b43fb-BkLgyu5g.js:t"
+        },
+        {
+          "local": "wa",
+          "from": "./context-usage-shape.mjs",
+          "name": "clampContextUsage",
+          "via": "shared-104-Cqo2-vQh.js:rl",
+          "kind": "generated",
+          "original": "shared-104-Cqo2-vQh.js:qx"
+        }
+      ],
+      "exports": {
+        "gZ": "RailContextPanel",
+        "oB": "useCompactAction",
+        "Gz": "useStaleCompactBand",
+        "Jz": "compactAvailability",
+        "Yz": "compactSendAvailability",
+        "Xz": "compactReach",
+        "eB": "autoCompactHint",
+        "Zz": "autoCompactThreshold",
+        "tB": "autoCompactHintText",
+        "lB": "compactDisabledReason",
+        "KX": "contextWindowMax",
+        "qX": "contextWindowView",
+        "qz": "COMPACT_HIDDEN_FLAG",
+        "Uz": "STALE_COMPACT_DEFAULTS"
+      }
+    },
+    {
+      "target": "context-card.mjs",
+      "source": "c73f45bc3-CFrHin0p.js",
+      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "sha256": "3ea2b6590023447a56d8fd06201dc2c46610c04b8020eaa1dfc16b53ff4dbd45",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ry",
+          "sha256": "65243a69c8cc387b52bd75e7210ee2f3828c1d512dcfccfe866537bc6b418473"
+        },
+        {
+          "name": "iy",
+          "sha256": "4ec94255865bfc079e042f908a97e5c2589d47f4e6a5c841a52ecbeb61a2de67"
+        },
+        {
+          "name": "ay",
+          "sha256": "65ad50e7b7f4c7ec643dd91f3153a214e15a608adc40e5ad012516b1d3f0873e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "v",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "Q_",
+          "from": "../../source-session-rail-context-adapters.jsx",
+          "name": "useRailContextBridge",
+          "via": "c73f45bc3-CFrHin0p.js:Q_",
+          "kind": "adapter",
+          "original": "c73f45bc3-CFrHin0p.js:Q_"
+        },
+        {
+          "local": "c",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "bi",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "useRailSessionKey",
+          "via": "c227f4d5e-Ba-r--Rl.js:P",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:MZ"
+        },
+        {
+          "local": "gi",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "useRailSectionOpen",
+          "via": "c227f4d5e-Ba-r--Rl.js:M",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:WZ"
+        },
+        {
+          "local": "_i",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "railSectionsStore",
+          "via": "c227f4d5e-Ba-r--Rl.js:N",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:VZ"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "Xv",
+          "from": "../session-rail-kit/rail-card.mjs",
+          "name": "RailCard",
+          "via": "c73f45bc3-CFrHin0p.js:Xv",
+          "kind": "session-rail-kit",
+          "original": "c73f45bc3-CFrHin0p.js:Xv"
+        },
+        {
+          "local": "q",
+          "from": "../../source-session-rail-kit-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "No",
+          "from": "./context-panel.mjs",
+          "name": "RAIL_CONTEXT_SUMMARY_ATTR",
+          "via": "c2d611398-D9vRECA9.js:r",
+          "kind": "generated",
+          "original": "c2d611398-D9vRECA9.js:De"
+        },
+        {
+          "local": "ui",
+          "from": "../../source-session-rail-context.jsx",
+          "name": "RailContextUsage",
+          "via": "c227f4d5e-Ba-r--Rl.js:F",
+          "kind": "adapter",
+          "original": "c227f4d5e-Ba-r--Rl.js:hZ"
+        }
+      ],
+      "exports": {
+        "iy": "SessionRailContext",
+        "ay": "RailContextCard",
+        "ry": "railContextRollup"
+      }
+    }
+  ],
+  "publicNames": {
+    "contextSummary": {
+      "file": "shared-8-B5lJ8U5C.js",
+      "local": "qV",
+      "target": "context-tokens.mjs"
+    },
+    "formatContextTokens": {
+      "file": "shared-8-B5lJ8U5C.js",
+      "local": "kV",
+      "target": "context-tokens.mjs"
+    },
+    "flattenContextUsage": {
+      "file": "shared-104-Cqo2-vQh.js",
+      "local": "Gx",
+      "target": "context-usage-shape.mjs"
+    },
+    "clampContextUsage": {
+      "file": "shared-104-Cqo2-vQh.js",
+      "local": "qx",
+      "target": "context-usage-shape.mjs"
+    },
+    "isFreeSpaceCategory": {
+      "file": "shared-104-Cqo2-vQh.js",
+      "local": "Bx",
+      "target": "context-usage-shape.mjs"
+    },
+    "isBufferCategory": {
+      "file": "shared-104-Cqo2-vQh.js",
+      "local": "Vx",
+      "target": "context-usage-shape.mjs"
+    },
+    "isDeferredCategory": {
+      "file": "shared-104-Cqo2-vQh.js",
+      "local": "Ux",
+      "target": "context-usage-shape.mjs"
+    },
+    "humanizeServerName": {
+      "file": "shared-130-DnUXVlYq.js",
+      "local": "rF",
+      "target": "mcp-names.mjs"
+    },
+    "mcpToolShortName": {
+      "file": "shared-130-DnUXVlYq.js",
+      "local": "iF",
+      "target": "mcp-names.mjs"
+    },
+    "useCdsMergedRefs": {
+      "file": "shared-frame-BfjMqbuN.js",
+      "local": "Dn",
+      "target": "cds-frame-helpers.mjs"
+    },
+    "elementResizeObserverClass": {
+      "file": "shared-frame-BfjMqbuN.js",
+      "local": "bu",
+      "target": "cds-frame-helpers.mjs"
+    },
+    "resolveSeriesPaints": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "le",
+      "target": "chart-kit.mjs"
+    },
+    "seriesInk": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "re",
+      "target": "chart-kit.mjs"
+    },
+    "axisNumberFormat": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "H",
+      "target": "chart-kit.mjs"
+    },
+    "compactNumberFormat": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "J",
+      "target": "chart-kit.mjs"
+    },
+    "useElementWidth": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "R",
+      "target": "chart-kit.mjs"
+    },
+    "ChartLegendProvider": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "v",
+      "target": "chart-kit.mjs"
+    },
+    "ChartMarkKindsProvider": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "h",
+      "target": "chart-kit.mjs"
+    },
+    "useChartLegend": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "y",
+      "target": "chart-kit.mjs"
+    },
+    "useChartMarkKinds": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "g",
+      "target": "chart-kit.mjs"
+    },
+    "ChartSwatchMark": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "S",
+      "target": "chart-kit.mjs"
+    },
+    "CHART_CHROME_KEY": {
+      "file": "c389a02dd-q1NLRpaV.js",
+      "local": "f",
+      "target": "chart-kit.mjs"
+    },
+    "StackedMeterGroup": {
+      "file": "c91b6e9db-BH3ya6oe.js",
+      "local": "O",
+      "target": "chart-meter.mjs"
+    },
+    "StackedMeter": {
+      "file": "c91b6e9db-BH3ya6oe.js",
+      "local": "M",
+      "target": "chart-meter.mjs"
+    },
+    "ChartLegend": {
+      "file": "c50772270-BKebDpNN.js",
+      "local": "d",
+      "target": "chart-legend.mjs"
+    },
+    "compareVersions": {
+      "file": "cf97b43fb-BkLgyu5g.js",
+      "local": "t",
+      "target": "version-compare.mjs"
+    },
+    "telemetrySessionType": {
+      "file": "c68c4283d-CPuRD0vx.js",
+      "local": "g",
+      "target": "telemetry-session-type.mjs"
+    },
+    "compactMessages": {
+      "file": "ce660512f-DsMrnGjx.js",
+      "local": "t",
+      "target": "compact-messages.mjs"
+    },
+    "ContextUsagePanel": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "ke",
+      "target": "context-panel.mjs"
+    },
+    "ContextBreakdown": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "H",
+      "target": "context-panel.mjs"
+    },
+    "contextUsedTokens": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "B",
+      "target": "context-panel.mjs"
+    },
+    "RailContextHeadline": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "Me",
+      "target": "context-panel.mjs"
+    },
+    "ContextProgressBar": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "je",
+      "target": "context-panel.mjs"
+    },
+    "CompactActionRow": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "Ne",
+      "target": "context-panel.mjs"
+    },
+    "ContextBreakdownLoading": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "Ae",
+      "target": "context-panel.mjs"
+    },
+    "StaleEngineNotice": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "xe",
+      "target": "context-panel.mjs"
+    },
+    "RAIL_CONTEXT_SUMMARY_ATTR": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "De",
+      "target": "context-panel.mjs"
+    },
+    "RAIL_CONTEXT_PCT_ATTR": {
+      "file": "c2d611398-D9vRECA9.js",
+      "local": "Oe",
+      "target": "context-panel.mjs"
+    },
+    "RailContextPanel": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "gZ",
+      "target": "context-compact.mjs"
+    },
+    "useCompactAction": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "oB",
+      "target": "context-compact.mjs"
+    },
+    "useStaleCompactBand": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "Gz",
+      "target": "context-compact.mjs"
+    },
+    "compactAvailability": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "Jz",
+      "target": "context-compact.mjs"
+    },
+    "compactSendAvailability": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "Yz",
+      "target": "context-compact.mjs"
+    },
+    "compactReach": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "Xz",
+      "target": "context-compact.mjs"
+    },
+    "autoCompactHint": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "eB",
+      "target": "context-compact.mjs"
+    },
+    "autoCompactThreshold": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "Zz",
+      "target": "context-compact.mjs"
+    },
+    "autoCompactHintText": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "tB",
+      "target": "context-compact.mjs"
+    },
+    "compactDisabledReason": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "lB",
+      "target": "context-compact.mjs"
+    },
+    "contextWindowMax": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "KX",
+      "target": "context-compact.mjs"
+    },
+    "contextWindowView": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "qX",
+      "target": "context-compact.mjs"
+    },
+    "COMPACT_HIDDEN_FLAG": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "qz",
+      "target": "context-compact.mjs"
+    },
+    "STALE_COMPACT_DEFAULTS": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "Uz",
+      "target": "context-compact.mjs"
+    },
+    "SessionRailContext": {
+      "file": "c73f45bc3-CFrHin0p.js",
+      "local": "iy",
+      "target": "context-card.mjs"
+    },
+    "RailContextCard": {
+      "file": "c73f45bc3-CFrHin0p.js",
+      "local": "ay",
+      "target": "context-card.mjs"
+    },
+    "railContextRollup": {
+      "file": "c73f45bc3-CFrHin0p.js",
+      "local": "ry",
+      "target": "context-card.mjs"
+    }
+  },
+  "callSites": [
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "role": "fO gives the rail its Context section, not while read-only (c73f45bc3 p = iy; host: SessionRailHostView)",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "raw": true,
+      "features": [
+        "contextSection:o?void 0:u(cg,{scopeStore:t,sessionRef:e})",
+        "p as cg"
+      ]
+    },
+    {
+      "source": "c73f45bc3-CFrHin0p.js",
+      "role": "iy is the chunk's export p (fO's cg)",
+      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "raw": true,
+      "features": [
+        "iy as p"
+      ]
+    },
+    {
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "role": "hZ (export F): the inline branch the rail card renders (host: RailContextUsage)",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "raw": true,
+      "features": [
+        "hZ as F",
+        "G=U===null&&A!==null&&!te?W??null:null",
+        "Me=A??(Ae?rg(Ae):null)",
+        "Ie=!O&&!fe&&(e===null||Fe)",
+        "Be=fe||Ie||G!==null",
+        "He=Y(()=>{Ve(),r?.()})",
+        "qe=r!==void 0&&!O&&(U!==null||G!==null)&&!Ke",
+        "Je=A===null&&(V?.stale===!0||V?.resets!==void 0&&V.resets<Ge)",
+        "td(Ne,Oe,A===null&&V?.stale===!1,!w)",
+        "se=V?.stale||w&&V?.midTurn&&oe?V.fetchedAt:null",
+        "oe=ne||ae",
+        "kt=w?ze||!Be:ze||c&&!Be",
+        "surface:w?\"rail_card\":\"ring_popover\"",
+        "return D(gZ,",
+        "contextUsage:Ae,windowFacts:je,isFetching:At,staleSince:se,turnRunning:oe,noData:kt,reportDue:Mt,staleEngineNotice:Pe,expanded:u,onToggle:de,memoryFileLink:ue"
+      ]
+    }
+  ],
+  "adapted": {
+    "source": "c227f4d5e-Ba-r--Rl.js",
+    "binding": "hZ",
+    "export": "F",
+    "adapter": "RailContextUsage",
+    "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+    "declarations": 115,
+    "bytes": 28856,
+    "imports": 132,
+    "chunks": 35
+  }
+}

@@ -122,6 +122,30 @@ test('Actions catalog: the open session and pane commands with registry labels, 
   assert.deepEqual(paletteActionGroups(actions).map((group) => group.title), ['Navigation', 'Chat', 'Session', 'Settings', 'General']);
 });
 
+test('Actions catalog: hide_all_nested_sessions / show_all_nested_sessions (shared-20 _S, moved out of Group and sort in 2.42304.0)', async () => {
+  const PaletteCopy = await import('../src/generated/code-current/nested-session-palette-copy.mjs');
+  const ran = [];
+  const nested = { anyShown: true, anyHidden: true, onHideAll: () => ran.push('hide'), onShowAll: () => ran.push('show') };
+  const actions = paletteActions({ session: { canArchive: true, canDelete: true, canFork: true, onAction() {} }, nested });
+  const session = actions.filter((action) => action.group === 'session').map((action) => action.id);
+  // shared-1 registry order: … fork_code_session, hide/show_all_nested_sessions, … new_code_session_from_current.
+  assert.deepEqual(session.slice(session.indexOf('fork_code_session'), session.indexOf('new_code_session_from_current') + 1),
+    ['fork_code_session', 'hide_all_nested_sessions', 'show_all_nested_sessions', 'new_code_session_from_current']);
+  const byId = Object.fromEntries(actions.map((action) => [action.id, action]));
+  assert.deepEqual([byId.hide_all_nested_sessions.label, byId.hide_all_nested_sessions.icon, byId.hide_all_nested_sessions.hints],
+    [PaletteCopy.hideAllNestedSessionsCopy.description.defaultMessage, 'Collapse', ['Collapse', 'Fold sessions']]);
+  assert.deepEqual([byId.show_all_nested_sessions.label, byId.show_all_nested_sessions.icon, byId.show_all_nested_sessions.hints],
+    [PaletteCopy.showAllNestedSessionsCopy.description.defaultMessage, 'Expand', ['Expand', 'Unfold sessions']]);
+  byId.hide_all_nested_sessions.run(); byId.show_all_nested_sessions.run();
+  assert.deepEqual(ran, ['hide', 'show']);
+  // `_t(id, t.anyShown ? n : void 0)`: each is registered only while it applies, with or without an open session.
+  const only = (value) => paletteActions({ nested: { onHideAll() {}, onShowAll() {}, ...value } }).map((action) => action.id);
+  assert.deepEqual(only({ anyShown: true, anyHidden: false }), ['hide_all_nested_sessions']);
+  assert.deepEqual(only({ anyShown: false, anyHidden: true }), ['show_all_nested_sessions']);
+  assert.deepEqual(only({ anyShown: false, anyHidden: false }), []);
+  assert.deepEqual(filterPaletteActions(actions, 'fold').map((action) => action.id), ['hide_all_nested_sessions', 'show_all_nested_sessions']);
+});
+
 test('Actions catalog: a titled session names itself (cfb613cf0 t), cut at 40 characters; Unarchive waits for one in flight', () => {
   const titled = sessionCommands({ session: { title: 'Fix login' } }).actions;
   assert.deepEqual(titled.filter((action) => /_code_session$/.test(action.id)).map((action) => action.label),
@@ -194,7 +218,7 @@ test('every palette string has a zh-CN entry', () => {
     'Jump to next prompt', 'Keyboard shortcuts', 'Add files or photos', 'upload', 'hide', 'remove', 'trash', 'restore', 'star', 'favorite',
     'duplicate', 'clone', 'same settings', 'carry over', 'shell', 'console', 'diff', 'preview', 'web', 'tree', 'explorer', 'btw', 'question', 'panel',
     'scroll back message history', 'Archive “{name}”', 'Delete “{name}”', 'Unarchive “{name}”', 'Rename “{name}”', 'Pin “{name}”', 'Unpin “{name}”',
-    'Fork “{name}”']) assert.ok(zh[s], s);
+    'Fork “{name}”', 'Hide all nested sessions', 'Show all nested sessions', 'Collapse', 'Expand', 'Fold sessions', 'Unfold sessions']) assert.ok(zh[s], s);
 });
 
 test('the sidebar has no standalone Routines label; Routines is only the nav row', () => {

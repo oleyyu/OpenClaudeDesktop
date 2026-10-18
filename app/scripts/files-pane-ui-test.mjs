@@ -53,10 +53,10 @@ async function shot(name){await page.screenshot({path:path.join(directory,name+'
 // Every rendered treeitem: its primary button holds exactly one 12px icon in --cds-text-muted and a --cds-text-primary name.
 const rows=()=>tree().evaluate(treeNode=>{const probe=document.createElement('span');treeNode.append(probe);const color=v=>{probe.style.color=`var(${v})`;return getComputedStyle(probe).color;};
  const muted=color('--cds-text-muted'),primary=color('--cds-text-primary');probe.remove();
- return {muted,primary,rows:[...treeNode.querySelectorAll('[role="treeitem"]')].map(row=>{const button=row.querySelector(':scope > [data-tree-primary]'),icons=[...button.querySelectorAll('[data-cds="Icon"]')],icon=icons[0],s=icon&&getComputedStyle(icon),name=button.querySelector(':scope > span:last-child');
-  return {name:button.getAttribute('aria-label'),path:button.dataset.filePath,level:Number(row.getAttribute('aria-level')),expanded:row.getAttribute('aria-expanded'),icons:icons.length,glyph:icon?.textContent,fontSize:s?.fontSize,color:s?.color,
-   transform:s?.transform,transitionDuration:s?.transitionDuration,transitionProperty:s?.transitionProperty,nameColor:getComputedStyle(name).color,rowTitle:row.getAttribute('title'),buttonTitle:button.getAttribute('title'),titled:row.querySelectorAll(':scope > [data-tree-primary] [title]').length,
-   height:button.getBoundingClientRect().height,paddingLeft:getComputedStyle(button).paddingLeft};})};});
+ return {muted,primary,rows:[...treeNode.querySelectorAll('[role="treeitem"]')].map(row=>{const body=row.querySelector(':scope > [data-tree-row-body]'),button=body.querySelector(':scope > [data-tree-primary]'),icons=[...button.querySelectorAll('[data-cds="Icon"]')],icon=icons[0],s=icon&&getComputedStyle(icon),name=button.querySelector(':scope > span.truncate');
+  return {name:name?.textContent,path:button.dataset.filePath,level:Number(row.getAttribute('aria-level')),expanded:row.getAttribute('aria-expanded'),icons:icons.length,glyph:icon?.textContent,fontSize:s?.fontSize,color:s?.color,
+   transform:s?.transform,transitionDuration:s?.transitionDuration,transitionProperty:s?.transitionProperty,nameColor:getComputedStyle(name).color,rowTitle:row.getAttribute('title'),buttonTitle:button.getAttribute('title'),titled:row.querySelectorAll(':scope > [data-tree-row-body] [title]').length,
+   height:body.getBoundingClientRect().height,paddingLeft:getComputedStyle(body).paddingLeft};})};});
 function assertRows(snapshot,label){assert.ok(snapshot.rows.length>=12,label+': rows rendered');for(const row of snapshot.rows){const where=`${label} ${row.path}`;
  assert.equal(row.icons,1,where+': exactly one icon');assert.equal(row.fontSize,'12px',where+': 12px icon');assert.equal(row.color,snapshot.muted,where+': icon colour = --cds-text-muted');
  assert.equal(row.nameColor,snapshot.primary,where+': name = --cds-text-primary');assert.equal(row.glyph,glyph(row.expanded===null?fileKindIcon(row.name):'CaretRight'),where+': glyph');
@@ -68,8 +68,8 @@ try{
  step('tree-light');await openFiles();
  await tree().getByRole('button',{name:'nested',exact:true}).click();await tree().getByRole('button',{name:'deep.txt',exact:true}).waitFor();
  // B33 (cccc2cf0a av/ne :3970-3984, :5484-5503): expanding skills auto-expands its single-child folder chain (demo), so demo is not clicked again.
- await tree().getByRole('button',{name:'skills',exact:true}).click();await tree().getByRole('button',{name:'SKILL.md',exact:true}).waitFor();assert.equal(await page.evaluate(()=>document.querySelector('[role="treeitem"] > [data-file-path="skills/demo"]')?.parentElement.getAttribute('aria-expanded')),'true','single-child chain auto-expanded');
- await page.waitForFunction(()=>[...document.querySelectorAll('.source-tree-caret')].every(n=>n.getAnimations().every(a=>a.playState==='finished')));await frames();
+ await tree().getByRole('button',{name:'skills',exact:true}).click();await tree().getByRole('button',{name:'SKILL.md',exact:true}).waitFor();assert.equal(await page.evaluate(()=>document.querySelector('[role="treeitem"] > [data-tree-row-body] > [data-file-path="skills/demo"]')?.closest('[role="treeitem"]')?.getAttribute('aria-expanded')),'true','single-child chain auto-expanded');
+ await page.waitForFunction(()=>[...document.querySelectorAll('[role="treeitem"][aria-expanded] > [data-tree-row-body] [data-cds="Icon"]')].every(n=>n.getAnimations().every(a=>a.playState==='finished')));await frames();
  let snapshot=await rows();assertRows(snapshot,'light');report.metrics.light=snapshot;
  const expect={'README.md':'Note','index.html':'Globe','app.tsx':'Code','data.csv':'Spreadsheet','store.sqlite':'Database','deck.pptx':'Slides','bundle.zip':'Archive','photo.png':'Image','notes.txt':'File','Makefile':'File','config.json':'Code','SKILL.md':'Scroll','deep.txt':'File'};
  for(const [name,icon] of Object.entries(expect))assert.equal(byName(snapshot,name)?.glyph,glyph(icon),`${name} shows ${icon}`);
@@ -85,15 +85,15 @@ try{
  report.checks.push('Directories show only CaretRight: expanded rotate(90deg) with a transform transition of --cds-dur-fast, collapsed unrotated; file glyphs do not transition');
  step('reduced-motion');await page.evaluate(()=>{document.documentElement.dataset.localMotion='reduce';window.dispatchEvent(new Event('local-motion-change'));});await frames();
  snapshot=await rows();assert.equal(byName(snapshot,'nested').transitionDuration,'0s','no caret transition under data-local-motion=reduce');assert.match(byName(snapshot,'nested').transform,/^matrix\((?:6\.12323e-17|0), 1, -1/);
- await tree().getByRole('button',{name:'nested',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[role="treeitem"] > [data-file-path="nested"]')?.parentElement.getAttribute('aria-expanded')==='false');
- assert.equal(await tree().locator('[data-file-path="nested"] .source-tree-caret').evaluate(n=>getComputedStyle(n).transform),'none','collapsing under reduced motion snaps to unrotated');
+ await tree().getByRole('button',{name:'nested',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[role="treeitem"] > [data-tree-row-body] > [data-file-path="nested"]')?.closest('[role="treeitem"]')?.getAttribute('aria-expanded')==='false');
+ assert.equal(await tree().locator('[data-file-path="nested"] [data-cds="Icon"]').evaluate(n=>getComputedStyle(n).transform),'none','collapsing under reduced motion snaps to unrotated');
  await tree().getByRole('button',{name:'nested',exact:true}).click();await tree().getByRole('button',{name:'deep.txt',exact:true}).waitFor();
  await page.evaluate(()=>{document.documentElement.dataset.localMotion='auto';window.dispatchEvent(new Event('local-motion-change'));});await frames();
- assert.notEqual(await tree().locator('[data-file-path="nested"] .source-tree-caret').evaluate(n=>getComputedStyle(n).transitionDuration),'0s','transition returns when the local motion setting is off');
+ assert.notEqual(await tree().locator('[data-file-path="nested"] [data-cds="Icon"]').evaluate(n=>getComputedStyle(n).transitionDuration),'0s','transition returns when the local motion setting is off');
  report.checks.push('html[data-local-motion=reduce] makes the caret transition 0s (collapse snaps to none, expand to rotate(90deg)); restoring the setting restores the transition');
  step('keyboard');await pane().getByRole('textbox',{name:'Filter files',exact:true}).focus();await page.keyboard.press('Tab');await page.waitForFunction(()=>document.activeElement?.getAttribute('role')==='treeitem');
- await page.keyboard.press('Home');const firstRow=await page.evaluate(()=>document.activeElement.querySelector('[data-tree-primary]').getAttribute('aria-label'));
- const order=[];for(let i=0;i<4;i++){order.push(await page.evaluate(()=>document.activeElement.querySelector('[data-tree-primary]').getAttribute('aria-label')));await page.keyboard.press('ArrowDown');}
+ await page.keyboard.press('Home');const firstRow=await page.evaluate(()=>document.activeElement.querySelector('[data-tree-primary] > span.truncate').textContent);
+ const order=[];for(let i=0;i<4;i++){order.push(await page.evaluate(()=>document.activeElement.querySelector('[data-tree-primary] > span.truncate').textContent));await page.keyboard.press('ArrowDown');}
  assert.equal(order[0],firstRow);assert.equal(new Set(order).size,4,'ArrowDown walks distinct rows');
  await page.keyboard.press('Home');for(let i=0;i<order.indexOf('nested');i++)await page.keyboard.press('ArrowDown');
  assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('aria-expanded')),'true');await page.keyboard.press('ArrowLeft');await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-expanded')==='false');
@@ -228,9 +228,9 @@ try{
  // tree-row ContextMenu Copy ▸ Relative path, ⌘⇧Y with its CDS tooltip, and "More files" once the tabs overflow.
  await saveClipboard();
  await openTab('deep.txt',true);await pane().locator('[data-file-viewer] .cm-line').first().waitFor();
- const viewer=await pane().evaluate(n=>{const b=n.querySelector('.sfv-path'),rows=[...n.querySelectorAll('[data-file-viewer] .cm-line')],probe=document.createElement('span');n.append(probe);probe.style.color='var(--cds-text-muted)';const muted=getComputedStyle(probe).color;probe.style.color='var(--cds-text-secondary)';const secondary=getComputedStyle(probe).color;probe.remove();
+ const viewer=await pane().evaluate(n=>{const wrap=n.querySelector('.source-file-breadcrumb'),b=wrap.querySelector(':scope > div'),crumb=b.querySelector('[data-file-breadcrumb]'),segs=[...crumb.querySelectorAll('[data-breadcrumb-segment]')],rows=[...n.querySelectorAll('[data-file-viewer] .cm-line')],probe=document.createElement('span');n.append(probe);probe.style.color='var(--cds-text-muted)';const muted=getComputedStyle(probe).color;probe.style.color='var(--cds-text-secondary)';const secondary=getComputedStyle(probe).color;probe.remove();
   const sub=n.querySelector('.sfv-subheader').getBoundingClientRect();
-  return {label:b.getAttribute('aria-label'),lister:b.hasAttribute('data-breadcrumb-lister'),tag:b.tagName,segments:[...b.querySelectorAll('[data-breadcrumb-segment]')].map(s=>s.textContent),title:b.getAttribute('title'),crumb:n.querySelector('.sfv-breadcrumb').textContent,dirColor:getComputedStyle(n.querySelector('.sfv-crumb-dir')).color,muted,secondary,buttonColor:getComputedStyle(b).color,subHeight:sub.height,
+  return {label:b.getAttribute('aria-label'),lister:wrap.hasAttribute('data-breadcrumb-lister'),tag:b.tagName,segments:segs.map(s=>s.textContent),title:segs.at(-1)?.getAttribute('aria-description')??null,crumb:crumb.textContent,dirColor:getComputedStyle(segs[0]).color,muted,secondary,buttonColor:getComputedStyle(b).color,subHeight:sub.height,
    rows:rows.map((r,i)=>[String(i+1),r.textContent]),gutterColor:getComputedStyle(n.querySelector('.cm-gutters')).color,whiteSpace:getComputedStyle(n.querySelector('.cm-content')).whiteSpace,
    back:!!n.querySelector('[aria-label="Back to files"], .source-file-location')};});
  report.metrics.viewer=viewer;
@@ -238,10 +238,10 @@ try{
  assert.equal(viewer.label,null);assert.equal(viewer.lister,true);assert.equal(viewer.tag,'DIV');assert.deepEqual(viewer.segments,['nested','deep.txt']);assert.ok(viewer.title.endsWith('/nested/deep.txt'),viewer.title);assert.equal(viewer.crumb,'nested/deep.txt');
  assert.equal(viewer.dirColor,viewer.muted,'folder segment text-muted');assert.equal(viewer.buttonColor,viewer.secondary,'breadcrumb button text-secondary');assert.ok(Math.abs(viewer.subHeight-32)<=.5,'2rem subheader');
  assert.deepEqual(viewer.rows,[['1','NESTED_DEEP_FILE'],['2','']]);assert.equal(viewer.gutterColor,viewer.muted,'muted gutter');assert.equal(viewer.whiteSpace,'break-spaces');assert.equal(viewer.back,false,'no Back to files / location row');
- const folderSegment=pane().locator('.sfv-path [data-breadcrumb-segment]',{hasText:'nested'}).first();await folderSegment.click();
- const folderPopover=page.getByRole('tree',{name:'Files in nested',exact:true});await folderPopover.waitFor();
+ const folderSegment=pane().locator('[data-file-breadcrumb] [data-breadcrumb-segment]',{hasText:'nested'}).first();await folderSegment.click();
+ const folderPopover=page.getByRole('dialog',{name:'Files in nested',exact:true});await folderPopover.waitFor();
  assert.equal(await folderSegment.getAttribute('aria-expanded'),'true');
- assert.deepEqual(await folderPopover.locator('[data-folder-row]').evaluateAll(rows=>rows.map(r=>[r.querySelector('.sfv-folder-name').textContent,r.hasAttribute('data-selected')])),[['inner',false],['deep.txt',true]],'folders first, the open file is the selected row');
+ assert.deepEqual(await folderPopover.locator('[data-folder-tree] [data-folder-tree-row]').evaluateAll(rows=>rows.map(r=>[r.querySelector('bdi').textContent,r.getAttribute('aria-current')==='true'])),[['inner',false],['deep.txt',true]],'folders first, the open file is the selected row');
  await shot('breadcrumb-folder-popover');await page.keyboard.press('Escape');await folderPopover.waitFor({state:'detached'});/* Escape closes only the popover (source-session.jsx: a portaled layer's Escape never closes the pane) */assert.equal(await pane().count(),1,'the Files pane stays open');
  if(!(await tree().isVisible()))await pane().getByRole('button',{name:'Show file tree',exact:true}).click();
  await tree().getByRole('button',{name:'notes.txt',exact:true}).click({button:'right'});const rowMenu=page.locator('[data-cds="ContextMenu"][data-open]');await rowMenu.waitFor();await frames();
@@ -291,7 +291,7 @@ try{
  assert.deepEqual(await searchButton.evaluate(b=>({title:b.getAttribute('title'),ghost:b.classList.contains('spc-ghost'),icons:b.querySelectorAll('[data-cds="Icon"]').length,text:b.textContent.length})),{title:null,ghost:true,icons:1,text:1});
  await searchButton.hover();await page.locator('.source-tooltip-popup').filter({hasText:'Go to file or search'}).waitFor();await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('.source-tooltip-popup'));
  const paneState=()=>pane().evaluate(n=>{const body=n.querySelector('.source-file-body'),tree=n.querySelector('.source-files-tree');return {treeVisible:body.dataset.treeVisible,column:body.dataset.treeColumn,treeShown:!!tree&&!tree.hidden&&tree.getClientRects().length>0,
-  preview:n.querySelector('.sfv-breadcrumb')?.textContent??null,selected:n.querySelector('.source-file-tab[data-selected]')?.dataset.filePath??null,tabs:[...n.querySelectorAll('.source-file-tab')].map(t=>t.dataset.filePath),paneWidth:n.querySelector('.source-file-panel').clientWidth};});
+  preview:n.querySelector('[data-file-breadcrumb]')?.textContent??null,selected:n.querySelector('.source-file-tab[data-selected]')?.dataset.filePath??null,tabs:[...n.querySelectorAll('.source-file-tab')].map(t=>t.dataset.filePath),paneWidth:n.querySelector('.source-file-panel').clientWidth};});
  const focusedFilter=()=>page.evaluate(()=>{const n=document.activeElement;return n?.getAttribute('aria-label')==='Filter files'?{value:n.value,start:n.selectionStart,end:n.selectionEnd}:null;});
  // Tree shown: the button only focuses and selects.
  await filterBox.fill('notes');await pane().locator('.sfs-browser[data-search-phase="success"]').waitFor();await page.evaluate(()=>document.activeElement?.blur());
@@ -436,7 +436,7 @@ try{
  await fs.writeFile(path.join(profile,'fixture-threads.json'),JSON.stringify(selectionFixture));
  await launch();await open();if(!(await pane().count()))await openFiles();await tree().getByRole('button',{name:'README.md',exact:true}).waitFor();
  if(!(await tree().getByRole('button',{name:'deep.txt',exact:true}).count())){await tree().getByRole('button',{name:'nested',exact:true}).click();await tree().getByRole('button',{name:'deep.txt',exact:true}).waitFor();}
- await page.waitForFunction(()=>[...document.querySelectorAll('.source-tree-caret')].every(n=>n.getAnimations().every(a=>a.playState==='finished')));await frames();
+ await page.waitForFunction(()=>[...document.querySelectorAll('[role="treeitem"][aria-expanded] > [data-tree-row-body] [data-cds="Icon"]')].every(n=>n.getAnimations().every(a=>a.playState==='finished')));await frames();
  snapshot=await rows();assertRows(snapshot,'dark');report.metrics.dark=snapshot;
  await page.mouse.move(2,2);await frames();const pressedDark=await pressedPaint();report.metrics.pressedDark=pressedDark;
  assert.equal(pressedDark.label,'Hide file tree');assert.equal(pressedDark.color,pressedDark.accent.color,'dark pressed ListBullet colour = --cds-text-accent');
@@ -940,7 +940,7 @@ try{
  await contentFilter.fill('');await pane().locator('.sfs-results[hidden]').waitFor({state:'attached'});
  report.checks.push('Question-mark content search scans real unopened files, groups matching lines, applies case/whole-word/regexp options and invalid-pattern states, supports hierarchical keyboard navigation, opens exact lines with the query/options in file Find, reports no matches and caps each file at five visible hits');
  step('nested-tree-selection');
- const plainTree=()=>pane().locator('.source-tree-content');
+ const plainTree=()=>pane().locator('.sfs-kept-tree [role="tree"][aria-label="Project files"]');
  const plainButton=name=>plainTree().getByRole('button',{name,exact:true});
  const selectedTree=()=>plainTree().locator('[data-tree-row][aria-selected="true"]');
  await plainTree().locator('[data-tree-row]').first().focus();await page.keyboard.press('Meta+a');await page.keyboard.press('Escape');
@@ -951,7 +951,7 @@ try{
  const treePaths=await selectedTree().evaluateAll(nodes=>nodes.map(n=>n.querySelector('[data-tree-primary]').dataset.filePath));
  await plainButton('notes.txt').click({button:'right'});await fileActionsMenu().getByText('2 items selected',{exact:true}).waitFor();
  await page.waitForFunction(()=>document.activeElement?.closest('[role=menu]'));
- assert.equal(await plainTree().locator('.source-tree-row').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).boxShadow!=='none').length),0,'only the keyboard-focused tree row can show a focus ring');
+ assert.equal(await plainTree().locator('[data-tree-row-body]').evaluateAll(nodes=>nodes.filter(n=>getComputedStyle(n).boxShadow!=='none').length),0,'only the keyboard-focused tree row can show a focus ring');
  await shot('nested-tree-multi-menu');
  await saveClipboard();await fileActionsMenu().getByRole('menuitem',{name:'Copy',exact:true}).hover();await page.getByRole('menuitem',{name:'Relative paths',exact:true}).click();
  assert.equal(await app.evaluate(({clipboard})=>clipboard.readText()),treePaths.join('\n'));await restoreClipboard();
@@ -962,7 +962,8 @@ try{
  await plainButton('nested').click({button:'right'});await fileActionsMenu().waitFor();assert.equal(await selectedTree().count(),1);
  await fileActionsMenu().getByRole('menuitem',{name:'Attach as context',exact:true}).click();
  const folderPill=page.locator('[data-cds-attachment]').filter({has:page.getByRole('button',{name:'nested',exact:true})});await folderPill.waitFor();
- assert.equal(await folderPill.locator('.sca-extension').count(),0,'attached directory keeps its Folder glyph');
+ // R4i-gui GU1 (R4g-composer CP4): composer-attachment-tiles.mjs _r badges a directory "Folder" (a file: its upper-case extension).
+ assert.match(await folderPill.textContent(),/Folder/,'attached directory keeps its Folder badge');
  await folderPill.hover();await page.getByRole('button',{name:'Remove nested',exact:true}).click();
  if(await plainButton('nested').evaluate(n=>n.closest('[data-tree-row]').getAttribute('aria-expanded'))!=='true')await plainButton('nested').click();
  await plainButton('deep.txt').waitFor();await plainButton('deep.txt').click({modifiers:['Meta']});
@@ -974,23 +975,29 @@ try{
  await page.keyboard.press('Escape');await fileActionsMenu().waitFor({state:'detached'});assert.equal(await plainTree().evaluate(n=>n.contains(document.activeElement)),true);
  report.checks.push('Nested file tree uses original multi-selection/range/anchor state; modified clicks preserve preview, batch context Copy and Attach operate on visual order, directory attachments retain Folder identity, Shift navigation crosses visible nesting, Escape clears selection and keyboard context menus restore tree focus');
  step('file-context-drag');
- const composerDrop=page.locator('form[data-cds="ChatComposer"]');
- const removeStaged=async()=>{for(const name of await page.locator('[data-cds-attachment] .sca-body').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label')))){await page.locator('[data-cds-attachment]').getByRole('button',{name,exact:true}).hover();await page.getByRole('button',{name:`Remove ${name}`,exact:true}).click();}};
+ // R4i-gui GU1 (R4i-graph GR3): in a Code session the drop target is the pane, not the card: main.jsx wraps
+ // div.source-chat-tile-content in SourcePaneDropZone (generated c4c113f6f f, useFileDropTarget over cc63499d2 u) whose
+ // appDrag accepts the owned file-context drag; while a drag is over it the zone draws the cc63499d2 d halo
+ // (shadow-[inset_0_0_0_2px_var(--cds-fill-accent)]). The card has no drop handlers then (source-composer.jsx paneDrop).
+ const composerDrop=page.locator('div:has(> .source-chat-tile-content)').first();
+ const paneHalo=()=>composerDrop.evaluate(zone=>!!zone.querySelector(':scope > [class*="shadow-[inset_0_0_0_2px_var(--cds-fill-accent)]"]'));
+ // Each tile's remove control is button[data-cds-attachment-remove] named "Remove {item}" (chat-composer-attachments.mjs dp/_p).
+ const removeStaged=async()=>{for(const label of await page.locator('[data-cds-attachment] [data-cds-attachment-remove]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label')))){const name=label.replace(/^Remove /,'');await page.locator('[data-cds-attachment]').getByRole('button',{name,exact:true}).hover();await page.getByRole('button',{name:label,exact:true}).click();}};
  const dragTransfer=()=>page.evaluateHandle(()=>new DataTransfer());
- const dragRow=button=>button.locator('xpath=..');
+ const dragRow=button=>button.locator('xpath=ancestor::*[@data-tree-row-body][1]');
  await plainTree().locator('[data-tree-row]').first().focus();await page.keyboard.press('Meta+a');await page.keyboard.press('Escape');
  await plainButton('notes.txt').click({modifiers:['Meta']});await plainButton('README.md').click({modifiers:['Meta']});
  const dt=await dragTransfer();const dragSource=dragRow(plainButton('notes.txt'));assert.equal(await dragSource.getAttribute('draggable'),'true');
  await dragSource.dispatchEvent('dragstart',{dataTransfer:dt});
  assert.deepEqual(await dt.evaluate(d=>[...d.types]),['application/x-claude-file-context']);assert.equal(await dt.evaluate(d=>d.getData('text/plain')),'');
- await composerDrop.dispatchEvent('dragover',{dataTransfer:dt});await poll(async()=>await composerDrop.getAttribute('data-drag-over')==='true','composer accepts the owned file-context drag');
+ await composerDrop.dispatchEvent('dragenter',{dataTransfer:dt});await composerDrop.dispatchEvent('dragover',{dataTransfer:dt});await poll(paneHalo,'the session pane accepts the owned file-context drag (drop halo)');
  await composerDrop.dispatchEvent('drop',{dataTransfer:dt});await dragSource.dispatchEvent('dragend',{dataTransfer:dt});
  for(const name of ['notes.txt','README.md'])await page.locator('[data-cds-attachment]').getByRole('button',{name,exact:true}).waitFor();assert.equal(await page.locator('[data-cds-attachment]').count(),2);
  await shot('tree-drag-attachments');await removeStaged();
  // A drag outside the existing selection only carries that directory; cancellation clears its pending action.
  const folderSource=dragRow(plainButton('nested')),folderTransfer=await dragTransfer();
  await folderSource.dispatchEvent('dragstart',{dataTransfer:folderTransfer});await composerDrop.dispatchEvent('drop',{dataTransfer:folderTransfer});await folderSource.dispatchEvent('dragend',{dataTransfer:folderTransfer});
- assert.equal(await page.locator('[data-cds-attachment]').count(),1);assert.equal(await page.locator('[data-cds-attachment] .sca-extension').count(),0);await removeStaged();
+ assert.equal(await page.locator('[data-cds-attachment]').count(),1);assert.match(await page.locator('[data-cds-attachment]').textContent(),/Folder/);await removeStaged();
  const cancelledTransfer=await dragTransfer();await dragSource.dispatchEvent('dragstart',{dataTransfer:cancelledTransfer});await dragSource.dispatchEvent('dragend',{dataTransfer:cancelledTransfer});
  await composerDrop.dispatchEvent('drop',{dataTransfer:cancelledTransfer});assert.equal(await page.locator('[data-cds-attachment]').count(),0);
  // Blank-area press + click clears selection; pointercancel prevents the clearing click.

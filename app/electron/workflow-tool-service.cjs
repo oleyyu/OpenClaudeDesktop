@@ -64,6 +64,11 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
   // threadId → {base, last}: the session's cumulative output tokens when the budgeted message arrived and now
   // (thread/tokenUsage/updated), so a run's budget.spent() starts from what the turn already spent (Claude's turn budget).
   const turnOutput = new Map();
+  const budgetLedgers = new Map(); // session -> cumulative spend, shared even across overlapping user turns
+  function budgetLedger(threadId) {
+    if (!budgetLedgers.has(threadId)) budgetLedgers.set(threadId, { main: 0 });
+    return budgetLedgers.get(threadId);
+  }
   const outputTotal = (usage) => Number.isFinite(usage?.total?.outputTokens) ? usage.total.outputTokens : null;
   // Sessions whose latest turn was started by a scheduled prompt or a Monitor event, not by the user: a workflow it starts
   // is automated, so no earlier typed message is relayed as the request that triggered it (Claude: kind 'automated').
@@ -89,12 +94,24 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     const target = typed ? (await load("workflow-tool-model.mjs")).turnTokenTarget(typed) : null;
     if (target) budgets.set(threadId, target); else budgets.delete(threadId);
     const last = turnOutput.get(threadId)?.last ?? null;
-    turnOutput.set(threadId, { base: last, last });
+    const ledger = budgetLedger(threadId);
+    turnOutput.set(threadId, { base: last, last, baseline: ledger.pool?.spent() ?? ledger.main });
   }
   /** The output tokens the session spent since its budgeted message (0 when unknown). */
   function turnSpent(threadId) {
     const entry = turnOutput.get(threadId);
     return entry && Number.isFinite(entry.base) && Number.isFinite(entry.last) ? Math.max(0, entry.last - entry.base) : 0;
+  }
+  async function sharedTurnBudget(threadId) {
+    const state = turnOutput.get(threadId);
+    if (!state) throw new Error('Missing workflow turn budget state');
+    const ledger = budgetLedger(threadId);
+    ledger.poolPromise ??= load('../third-party/codex-workflows-runner/src/shared-budget.js').then(({ createSharedBudget }) => {
+      ledger.pool = createSharedBudget(path.join(dataRoot, threadId, 'workflows', 'budgets'), ledger.main);
+      return ledger.pool;
+    });
+    const pool = await ledger.poolPromise;
+    return { ...pool.descriptor, baseline: state.baseline ?? 0 };
   }
   /** A steered message (turn/steer): the user's latest request from now on. */
   async function userInput(threadId, input) {
@@ -180,7 +197,15 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
       const entry = turnOutput.get(p.threadId);
       // No total known when the message arrived: this report's own request is the turn's first spend.
       const lastRequest = Number.isFinite(p.tokenUsage?.last?.outputTokens) ? p.tokenUsage.last.outputTokens : 0;
-      turnOutput.set(p.threadId, { base: entry ? entry.base ?? Math.max(0, total - lastRequest) : null, last: total });
+      const current = entry ?? { base: null, last: total };
+      const ledger = budgetLedger(p.threadId);
+      // Ignore history preceding the first observed user request. Thereafter
+      // count fresh deltas, including usage from a reset core counter.
+      ledger.main += Number.isFinite(entry?.last) && total >= entry.last ? total - entry.last : entry ? lastRequest : 0;
+      ledger.pool?.recordMain(ledger.main);
+      if (current.base === null && entry) current.base = Math.max(0, total - lastRequest);
+      current.last = total;
+      turnOutput.set(p.threadId, current);
       return;
     }
     if (event.method === "turn/started") {
@@ -286,11 +311,12 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     // run at xhigh instead, so a run never stacks a second orchestration under every one of its agents.
     const sessionEffort = typeof entry?.params?.effort === "string" && entry.params.effort ? entry.params.effort : undefined;
     const turnEffort = sessionEffort === "ultra" ? "xhigh" : sessionEffort;
+    const budgetPool = turnOutput.has(sessionId) && !automated.has(sessionId) ? await sharedTurnBudget(sessionId) : null;
     const run = await workflowService.start({ threadId: sessionId, file: scriptFile, source, args: input.args, access, cwd, model: turnModel, effort: turnEffort,
       resumeId: input.resumeFromRunId, runId, origin: "tool", taskId, toolUseId, scriptPath: scriptFile, engine: "codeDesktop", structuredOutput: core()?.structuredOutput,
       // Claude's provenance relay: the user's request goes with every agent's framed task (only while provenance is on).
       ...(resolved.promptProvenance?.value !== false && requests.has(sessionId) && !automated.has(sessionId) ? { userRequest: requests.get(sessionId) } : {}),
-      ...(budgets.has(sessionId) && !automated.has(sessionId) ? { budgetTotal: budgets.get(sessionId), budgetSpent: turnSpent(sessionId) } : {}),
+      ...(budgetPool ? { budgetTotal: budgets.get(sessionId), budgetSpent: turnSpent(sessionId), budgetPool } : {}),
       // The transcript item of the tool call (Codex's mcpToolCall id): the run's card sits right after it.
       ...(typeof after === "string" && after ? { after } : {}) });
     return model.workflowLaunchText({ taskId, summary: parsed.meta.description, transcriptDir: run.transcriptDir, scriptPath: scriptFile, runId: run.id });

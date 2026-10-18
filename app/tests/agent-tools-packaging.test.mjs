@@ -40,7 +40,9 @@ test.before(async () => {
 });
 
 const TOOL_FILES = ['agent-tools-server.mjs', 'agent-tools-host.cjs', 'agent-tools-instructions.cjs', 'agent-tool-approval.cjs', 'agent-tools/preview.mjs', 'agent-tools/terminal.mjs',
-  'preview-launch.mjs', 'terminal-model.mjs'];
+  'preview-launch.mjs', 'terminal-model.mjs',
+  // preview-launch.mjs imports the official autoPort/port checks (R3b-preview, scripts/extract-r3b-preview.mjs).
+  'generated/r3b-preview-launch-fields.mjs'];
 
 test('the package script keeps the agent tools server, its host and the tool modules (inside app.asar, not unpacked)', async () => {
   for (const file of TOOL_FILES) assert.equal(await filter(path.join(app, 'electron', file)), true, `electron/${file} is packaged`);

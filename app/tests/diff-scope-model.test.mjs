@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_DIFF_SCOPE, UNCOMMITTED_DIFF_SCOPE, DIFF_SCOPE_COMMIT_LIMIT, branchSearchEmptyLabel, commitScopeLabel, compareAgainstBranches,
   diffScopeParam, diffScopeSections, diffScopeTrigger, filterSearchItems, resolveDiffScope, sameDiffScope,
-  carriedOverDiff, commitScopeGone, commitsSearchEmptyLabel, commitsSubmenuHint,
+  carriedOverDiff, commitScopeGone, commitsSearchEmptyLabel, commitsSubmenuHint, diffScopePick, uncommittedScopeAvailable,
 } from '../src/diff-scope-model.mjs';
 
 // 2.2553.1 readable/panes-tile-current.js:2842-3117 (Fm, Im, zm, Bm) and
@@ -144,4 +144,40 @@ test('commitScopeGone (cccc2cf0a te): a picked sha missing from a complete list 
   assert.equal(commitScopeGone(picked, { list: [], total: 0, failed: true }), false);
   assert.equal(commitScopeGone(picked, { list: [], total: 0 }), true, 'no commits ahead any more');
   assert.equal(commitScopeGone(DEFAULT_DIFF_SCOPE, { list, total: 2 }), false);
+});
+
+// FT-08 (diffgit-15): 2.42304.0 cb61be3a2 Ze `He = V && Ve !== i.Clean`.
+test('uncommittedScopeAvailable: a repository unless its working tree is known clean; the menu then drops the row', () => {
+  assert.equal(uncommittedScopeAvailable({ isRepo: true, workingTreeDirty: true }), true);
+  assert.equal(uncommittedScopeAvailable({ isRepo: true }), true, 'not read yet: still offered');
+  assert.equal(uncommittedScopeAvailable({ isRepo: true, workingTreeDirty: false }), false);
+  assert.equal(uncommittedScopeAvailable({ isRepo: false, workingTreeDirty: true }), false);
+  assert.equal(uncommittedScopeAvailable(null), false);
+  const clean = uncommittedScopeAvailable({ isRepo: true, workingTreeDirty: false });
+  assert.deepEqual(shape(diffScopeSections({ base: 'main', uncommittedAvailable: clean }))[0], ['diff-scope', ['All changes']]);
+  assert.deepEqual(resolveDiffScope(UNCOMMITTED_DIFF_SCOPE, { base: 'main', uncommittedAvailable: clean }), DEFAULT_DIFF_SCOPE, 'a remembered Uncommitted shows All changes');
+});
+
+// FT-08 (diffgit-02): cccc2cf0a mb S/C and Xb V decide what a pick sets and what c03935b01 Rn remembers.
+test('diffScopePick: same pick no-op; scope rows remember a changed All changes / Uncommitted; commits and bases never', () => {
+  const commitScope = { kind: 'commit', sha: commit(1).sha };
+  const pick = (options) => diffScopePick({ picked: DEFAULT_DIFF_SCOPE, shown: DEFAULT_DIFF_SCOPE, uncommittedAvailable: true, ...options });
+  assert.deepEqual(pick({ next: DEFAULT_DIFF_SCOPE, via: 'scope' }), { set: false, changed: false, remember: null });
+  assert.deepEqual(pick({ next: UNCOMMITTED_DIFF_SCOPE, via: 'scope' }), { set: true, changed: true, remember: 'uncommitted' });
+  assert.deepEqual(pick({ next: UNCOMMITTED_DIFF_SCOPE, via: 'scope', uncommittedAvailable: false }), { set: true, changed: true, remember: null });
+  // The remembered Uncommitted while the tree is clean: All changes is shown, so picking it changes nothing on screen.
+  assert.deepEqual(pick({ picked: UNCOMMITTED_DIFF_SCOPE, shown: DEFAULT_DIFF_SCOPE, next: DEFAULT_DIFF_SCOPE, via: 'scope' }), { set: true, changed: false, remember: null });
+  assert.deepEqual(pick({ picked: UNCOMMITTED_DIFF_SCOPE, shown: UNCOMMITTED_DIFF_SCOPE, next: DEFAULT_DIFF_SCOPE, via: 'scope' }), { set: true, changed: true, remember: 'branch' });
+  assert.equal(pick({ next: commitScope }).remember, null, 'a commit row');
+  assert.equal(pick({ next: UNCOMMITTED_DIFF_SCOPE }).remember, null, 'Compare against / unnamed callers');
+  // The Commits section remembers while its Uncommitted row is offered (B).
+  assert.equal(pick({ picked: commitScope, shown: commitScope, next: DEFAULT_DIFF_SCOPE, via: 'commit_list', uncommittedOffered: true }).remember, 'branch');
+  assert.equal(pick({ picked: commitScope, shown: commitScope, next: DEFAULT_DIFF_SCOPE, via: 'commit_list', uncommittedOffered: false }).remember, null);
+  assert.equal(pick({ picked: commitScope, shown: commitScope, next: commitScope, via: 'commit_list', uncommittedOffered: true }).set, false);
+  // diffScopeSections: only the scope rows name themselves (mb C); commits and bases are plain picks (mb S).
+  const calls = [];
+  const sections = diffScopeSections({ base: 'main', defaultBase: 'main', commits: [commit(1)], branches: { list: ['alpha'], loaded: true },
+    onSelectScope: (scope, meta) => calls.push([scope.kind, meta?.via]) });
+  sections[0].items[0].onSelect(); sections[0].items[1].onSelect(); sections[2].items[0].items[0].onSelect(); sections[1].items[0].items[1].onSelect();
+  assert.deepEqual(calls, [['branch', 'scope'], ['uncommitted', 'scope'], ['commit', undefined], ['branch', undefined]]);
 });

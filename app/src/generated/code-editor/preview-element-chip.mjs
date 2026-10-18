@@ -96,7 +96,7 @@ export function createSelectedElementChipBody({ Button: Mf }) {
         F("span", {
           className: te(
             "flex items-center justify-center shrink-0",
-            s && i !== void 0 && "mr-xs",
+            s && i !== void 0 && "me-xs",
           ),
           children: t,
         }),

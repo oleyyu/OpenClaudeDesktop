@@ -9,8 +9,8 @@ test('each reason has the exact source title and body', () => {
   assert.deepEqual([copy.outside_root.title, copy.outside_root.body], ['This file is outside the working directory', 'It can’t be opened here, but it may still exist on disk.']);
   assert.deepEqual([copy.too_large.title, copy.too_large.body], ['Preview isn’t available for this file', 'It’s too large to preview here.']);
   assert.deepEqual([copy.read_error.title, copy.read_error.body], ['Couldn’t read this file', 'It may be unreadable, or the session’s connection may have dropped.']);
-  assert.deepEqual([copy.binary.title, copy.binary.body, copy.binary.action], ['This file looks like binary data and can’t be previewed as text.', null, 'view-as-text']);
-  assert.deepEqual([copy.empty.title, copy.empty.body, copy.empty.action], ['This file is empty.', null, null]);
+  assert.deepEqual([copy.binary.title, copy.binary.body, copy.binary.action], ['This file looks like binary data and can’t be previewed as text', null, 'view-as-text']);
+  assert.deepEqual([copy.empty.title, copy.empty.body, copy.empty.action], ['This file is empty', null, null]);
   assert.equal(VIEW_AS_TEXT_LABEL, 'View as text anyway');
 });
 

@@ -6,6 +6,9 @@ import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { SourceTooltip } from "./source-tooltip";
 import { SourceShortcut } from "./source-shortcut";
+import { tooltipContentKey } from "./generated/code-current/tooltip-structure.mjs";
+import { suppressNativeContextMenu } from "./generated/files-changes/menu-context-guard.mjs";
+import { preventContextMenu } from "./generated/files-changes/diff-context-guard.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import {
   CONTEXT_MENU_LAYER_OFFSET, MENU_LAYER_OFFSET, NESTED_SIDE_OFFSET, ROOT_SIDE_OFFSET, SAFE_POLYGON_LINGER,
@@ -29,8 +32,15 @@ import "./source-menu.css";
  *   data-side/align, data-starting-style for one frame, data-ending-style
  *   until the element's animations finish (instant on desktop).
  * - One data-highlighted item that also owns DOM focus; data-disabled items are
- *   never highlighted; disabledReason renders a right-side tooltip plus a
- *   hidden span joined into aria-describedby.
+ *   never highlighted. disabledReason (2.42304.0 shared-frame XS `ie`, `I = disabled && Wc(p)`, Wc = `!!e`) is any
+ *   ReactNode — a string or the chunks' <FormattedMessage> element: an Item that is given one (even an enabled one)
+ *   sits in a role="none" wrapper under a right-side multiline tooltip that does not close on click, next to the Yc
+ *   hidden [data-cds-disabled-reason] span keyed by qc (tooltipContentKey); only a disabled Item with a truthy
+ *   reason fills the tooltip and the span and joins the span's id into aria-describedby.
+ * - Popup header / footer / maxVisibleItems (2.42304.0 shared-frame KS → Hx): with a header or a footer the body
+ *   becomes Hx's flex column — the header (zx) and footer (Bx) stay put while only the list between them scrolls
+ *   (Rx, `pt-0` under a header); SearchablePopup (yC) passes its search field as the header. maxVisibleItems caps
+ *   the list at `calc(n * max(--cds-h-control, --cds-leading-body) + gutters)` (Vx).
  * - Close reasons (Cg/Id): escape-key restores the trigger, focus-out does
  *   not, outside-press restores only when focus is still inside/body,
  *   item-click goes to finalFocus (or the trigger). A pending outside-press
@@ -39,6 +49,13 @@ import "./source-menu.css";
  * - SubmenuTrigger (Base UI, mouse only): opens 100ms after the pointer
  *   enters and rests, closes with closeDelay 0 through a safe polygon toward
  *   the child popup while the parent popup's other rows are pointer-inert.
+ * - Popup onContextMenu is opt-in, as in 2.42304.0, where the CDS Popup has no handler of its own and only some
+ *   call sites pass one (React events from a submenu's portal bubble to the root popup's handler):
+ *   contextMenuGuard (true / "editable") = ca5db7aaf F — the pane settings, diff-scope, Files tree, Files search
+ *   and file viewer menus: a right-click inside the open menu never opens the native menu over it, except in a text
+ *   field (shared-156 KB, e.g. a menu's search box); contextMenuGuard="always" = c82eca2bd Be and its copies
+ *   (c0cdf4a08 p, cfe7c4b3b F/V, c96d752d0 xNe …) — the Changes, commit, breadcrumb, terminal and tab-strip menus:
+ *   always prevented. An explicit onContextMenu handler takes precedence over the guard.
  * - Sheet branch gated by matchMedia('(pointer: coarse)') (eh/mm); it is the
  *   only place a transition exists (ih/oh/lh classes, duration-sheet ease-out,
  *   motion-reduce none). The lazily-loaded official MenuSheetPopup module is
@@ -119,6 +136,24 @@ export function menuTriggerProps({ open, onOpen, disabled = false }) {
   };
 }
 
+/**
+ * The Popup's onContextMenu: an explicit handler wins; otherwise contextMenuGuard picks the generated original
+ * (true / "editable": ca5db7aaf F, "always": c82eca2bd Be); otherwise none (the 2.42304.0 Popup default).
+ */
+export function menuContextMenuHandler(contextMenuGuard, onContextMenu) {
+  if (onContextMenu !== undefined) return onContextMenu;
+  if (contextMenuGuard === true || contextMenuGuard === "editable") return suppressNativeContextMenu;
+  if (contextMenuGuard === "always") return preventContextMenu;
+  return undefined;
+}
+
+// Hx (shared-frame): Vx row height, and the scroll body's max-height for maxVisibleItems.
+const MENU_ROW_HEIGHT = "max(var(--cds-h-control), var(--cds-leading-body))";
+export function menuListMaxHeight(maxVisibleItems, hasHeader) {
+  if (maxVisibleItems === undefined) return undefined;
+  return `calc(${maxVisibleItems} * ${MENU_ROW_HEIGHT} + ${hasHeader ? "var(--cds-menu-gutter, 0.25rem) + 0.25rem" : "2 * var(--cds-menu-gutter, 0.25rem)"})`;
+}
+
 function MenuPopup(props) {
   const submenu = useContext(SubmenuContext);
   if (submenu && !submenu.open) return null;
@@ -128,8 +163,10 @@ function MenuPopup(props) {
 function PopupImpl({
   submenu, anchor: anchorProp, trigger: triggerProp, point, side, align = "start", sideOffset, alignOffset = 0, collisionPadding = 8,
   layer: layerKind = "menu", label, labelledBy, dataCds = "Menu", className = "", onClose, finalFocus, initialHighlight, children, id: idProp,
-  onKeyDown: consumerKeyDown, style, popupRef: externalPopupRef, layerBase: rootLayerBase,
+  onKeyDown: consumerKeyDown, style, popupRef: externalPopupRef, layerBase: rootLayerBase, onContextMenu: contextMenuHandler, contextMenuGuard,
+  header, footer, maxVisibleItems,
 }) {
+  const onContextMenu = menuContextMenuHandler(contextMenuGuard, contextMenuHandler);
   const parentTree = useContext(TreeContext);
   const nested = !!submenu;
   const coarse = useCoarsePointer();
@@ -406,6 +443,11 @@ function PopupImpl({
   const treeValue = useMemo(() => ({ layerBase: layer.layerBase, sheet, popups, setCovered, rootClose, depth }), [layer.layerBase, sheet, popups, rootClose, depth]);
   const portalAttributes = useMemo(() => portalContext(anchor ?? document.body), [anchor]);
   const portalStyle = { "--cds-portal-z": layer.z, "--cds-layer-base": layer.layerBase };
+  const listMaxHeight = menuListMaxHeight(maxVisibleItems, !!header);
+  const body = (
+    <div className="smenu-body scroll-fade-y" data-after-header={header ? "" : undefined} data-cds-sheet-scroll={sheet ? "" : undefined}
+      style={listMaxHeight === undefined ? undefined : { maxHeight: listMaxHeight }}>{children}</div>
+  );
 
   const popup = (
     <div ref={(node) => { popupRef.current = node; if (externalPopupRef) externalPopupRef.current = node; }}
@@ -413,8 +455,15 @@ function PopupImpl({
       data-cds={dataCds} data-open="" data-nested={nested ? "" : undefined} data-menu-depth={depth} data-cds-sheet={sheet ? "" : undefined}
       data-cds-sheet-covered={sheet && covered ? "" : undefined}
       className={`smenu-popup cds-reset rounded-card shadow-panel ${sheet ? "smenu-sheet" : ""} ${className}`.trim()}
-      style={style} onKeyDown={onKeyDown}>
-      <div className="smenu-body scroll-fade-y" data-cds-sheet-scroll={sheet ? "" : undefined}>{children}</div>
+      style={style} onKeyDown={onKeyDown} onContextMenu={onContextMenu}>
+      {header || footer
+        // Hx with a header or footer: only the list scrolls; the header (zx) and footer (Bx) stay in place.
+        ? <div className="smenu-frame">
+            {header && <div className="smenu-frame-header">{header}</div>}
+            {body}
+            {footer && <div className="smenu-frame-footer">{footer}</div>}
+          </div>
+        : body}
     </div>
   );
   const portal = sheet
@@ -447,7 +496,8 @@ const MenuItem = forwardRef(function MenuItem({
     else if (forwardedRef) forwardedRef.current = node;
   };
   const role = roleProp ?? (checked === undefined ? "menuitem" : checkedRole === "radio" ? "menuitemradio" : "menuitemcheckbox");
-  const showReason = disabled && typeof disabledReason === "string" && disabledReason.trim() !== "";
+  // XS: `I = E.disabled === !0 && Wc(p)` with Wc = `!!e` — a string or a ReactNode (<FormattedMessage>) reason.
+  const showReason = !!disabled && !!disabledReason;
   const highlightedNow = !!popup && popup.highlighted !== null && popup.highlighted === nodeRef.current;
   const hasCheckSlot = checked !== undefined;
   const bareCheck = hasCheckSlot && !hint && !shortcut;
@@ -500,14 +550,17 @@ const MenuItem = forwardRef(function MenuItem({
       )}
     </div>
   );
-  if (!showReason) return item;
-  // Nu contract: right-side multiline tooltip that does not close on click,
-  // anchored to a role="none" wrapper because the item itself has no pointer events.
+  // XS `ie`: no wrapper only when no disabledReason is given at all (`p === void 0`); otherwise Gv (the right-side
+  // multiline Tooltip, closeOnClick false, Zp default hoverable = true) over a role="none" wrapper, because the item
+  // itself has no pointer events, holding the item and Yc. The wrapper stays while the item toggles enabled, with an
+  // empty tooltip and span.
+  if (disabledReason === undefined) return item;
+  const reason = showReason ? disabledReason : null;
   return (
-    <SourceTooltip content={disabledReason} side="right" multiline closeOnClick={false} hoverable={false}>
+    <SourceTooltip content={reason ?? undefined} side="right" multiline closeOnClick={false}>
       <div role="none" className="smenu-reason">
         {item}
-        <span id={reasonId} hidden data-cds-disabled-reason="">{disabledReason}</span>
+        <span key={tooltipContentKey(reason)} id={reasonId} hidden data-cds-disabled-reason="">{reason}</span>
       </div>
     </SourceTooltip>
   );

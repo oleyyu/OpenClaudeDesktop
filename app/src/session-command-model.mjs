@@ -11,6 +11,12 @@ export const sessionCommands = [
   {id:'btw',label:t('Side question'),description:t('Ask a quick side question without adding to the session'),argumentHint:'[question]',session:true,icon:'Chat'},
   {id:'review',label:t('Review code'),description:t('Review changes, a branch, commit, or instructions'),argumentHint:'[instructions]',session:true,idle:true,icon:'Search'},
   {id:'fork',label:t('Fork session'),description:t('Fork this session into a new one'),argumentHint:'[prompt]',session:true,idle:true,icon:'GitBranch'},
+  // R3b-tasks /subtask <task> (2.42304.0 cc183b3ab: description 5B10ybRftQ, argumentHint "<task>", neverReachesCli,
+  // enableGate "subtaskCommand", gate O(e) && canForkSession && subtaskCommand; cc43287c9 parses /^\/subtask(?:\s+(.*))?$/is,
+  // so the task may span lines). r3b-tasks-subtask.mjs runs it: a fork that gets the task in the background while the
+  // composer stays here. Idle only, as /fork: the host's fork (session-operations) refuses a running session.
+  // context.subtaskCommand false (the official appFeatures.sideSessions gate closed) takes it out.
+  {id:'subtask',label:t('Subtask'),description:t('Fork this session to work on a task while you stay here'),argumentHint:'<task>',session:true,idle:true,multiline:true},
   // Codex /cd (tui app/working_directory.rs): the session continues in another folder, as a fork that keeps its history.
   {id:'cd',label:t('Change directory'),description:t('Continue this session in another folder'),argumentHint:'[path]',session:true,idle:true,icon:'Folder'},
   {id:'rename',aliases:['name'],label:t('Rename session'),description:t('Rename this session'),argumentHint:'[new title]',session:true},
@@ -38,6 +44,10 @@ export const sessionCommands = [
   // Existing local plugin management is real; unsupported /plugin install is not advertised.
   {id:'plugin',aliases:['plugins','marketplace'],label:t('Plugins'),description:t('Manage plugins')},
   {id:'help',label:t('Help'),description:t('Get help and support')},
+  // R3-composer /copy [N] (2.42304.0 cc183b3ab: description X7oz/QBPDV, argumentHint "[N]", terminalAction "copy-reply",
+  // gate hostInterceptSurface && hasSession): an open session's reply to the clipboard, offline and mid-turn included
+  // (the command itself refuses while a reply streams). composer-copy-reply.mjs runs it.
+  {id:'copy',label:t('Copy reply'),description:t('Copy Claude’s latest reply, or /copy 2 or higher for an earlier one'),argumentHint:'[N]',hasSession:true},
   // Sign-in and core updates belong to the frame (Settings › Preferences account, Settings › Cores): an agent's own
   // /auth, /login, /connect or /update would send a beginner to a terminal or npm (Qwen Code's ACP mode does).
   {id:'login',aliases:['auth','connect'],label:t('Sign in'),description:t('Sign in or add an API key in account settings')},
@@ -141,7 +151,7 @@ export function parseSessionCommand(text, context={}) {
   const suggestion=command?null:commandSuggestion(requested);
   let error=null;
   if(!command)error=['feedback','bug','share','login','logout','ultrareview'].includes(requested)?t('/{command} isn’t available in the app.',{command:requested}):t('/{command} isn’t a command here.',{command:requested});
-  else if(/[\r\n]/.test(value))error=t('/{command} only works on a single line. Remove the extra lines and try again.',{command:requested});
+  else if(/[\r\n]/.test(value)&&!command.multiline)error=t('/{command} only works on a single line. Remove the extra lines and try again.',{command:requested});
   else if(args&&!command.argumentHint)error=t('/{command} doesn’t take arguments here. Remove the text after the command and try again.',{command:requested});
   return {id,args,requested,command,suggestion,error};
 }
@@ -201,7 +211,7 @@ export function agentWorkflowPrompt(args='') {
 // The core request behind each session action. A core lists the ones it
 // cannot serve in initialize capabilities.unsupportedMethods (boot.core);
 // context.sideQuestions / context.workflows false: the core can't serve /btw or /workflow.
-const COMMAND_METHODS={fork:'thread/fork',cd:'thread/fork',review:'review/start',rewind:'thread/revert',compact:'thread/compact/start'};
+const COMMAND_METHODS={fork:'thread/fork',subtask:'thread/fork',cd:'thread/fork',review:'review/start',rewind:'thread/revert',compact:'thread/compact/start'};
 export function unsupportedCommand(id, context={}) {
   const unsupported=context.unsupportedMethods?.includes(COMMAND_METHODS[id])||((id==='btw'||id==='recap')&&context.sideQuestions===false)||(id==='workflow'&&context.workflows===false)||(id==='import'&&context.claudeImport!==true)||(id==='cd'&&context.forkCwd===false&&context.moveCwd!==true);
   if(!unsupported)return '';
@@ -212,15 +222,17 @@ export function commandUnavailable(command, context={}) {
   const unsupported=unsupportedCommand(command.id,context);
   if(unsupported)return unsupported;
   if(command.id==='workflow'&&context.dynamicWorkflows!==true)return t('Enable Dynamic workflows in Code settings first');
+  // R3b-tasks: cc43287c9 Enaro/mK/n, the official refusal of /subtask where subtasks don't run.
+  if(command.id==='subtask'&&context.subtaskCommand===false)return t('Subtasks aren’t available for this session.');
   if(command.id==='status'&&context.running)return t('Session info is available when DeepSeek finishes this turn.');
   if(command.id==='fast'&&context.fastAvailable===false)return t('Fast mode is not available for this model');
   if(command.id==='effort'&&context.effortAvailable===false)return t('Reasoning effort is not available for this model');
-  if(command.session&&!context.current)return t('Open a session first');
+  if((command.session||command.hasSession)&&!context.current)return t('Open a session first');
   if(command.session&&context.archived)return t('Restore this archived session first');
   if((command.session||command.connected)&&!context.connected)return t('Reconnect to DeepSeek first');
   if((command.session||command.idle)&&context.loading)return t('Wait for the session to load');
   if(command.idle&&(context.running||context.sending||context.pending))return t('Wait for the current task to finish or stop it');
-  if(['compact','fork','cd','review','rewind','recap'].includes(command.id)&&!context.hasHistory)return t('Send a message first');
+  if(['compact','fork','subtask','cd','review','rewind','recap'].includes(command.id)&&!context.hasHistory)return t('Send a message first');
   return '';
 }
 export function slashQuery(text) {

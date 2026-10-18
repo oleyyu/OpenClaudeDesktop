@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseUnifiedDiff } from '../src/diff-model.js';
 import {
-  DIFF_FILE_KINDS, DIFF_FILE_LIST_LABELS, DIFF_FILE_LIST_MIN_PANE, DIFF_FILE_LIST_WIDTH, LARGE_DIFF_LINES,
+  DIFF_FILE_KINDS, DIFF_FILE_LIST_LABELS, DIFF_FILE_LIST_MIN_PANE, DIFF_FILE_LIST_WIDTH, LARGE_DIFF_FILES, LARGE_DIFF_LINES, LARGE_DIFF_LINES_SINGLE_LIST,
   clampDiffFileListWidth, compareDiffPaths, diffFileEntries, diffFileFlat, diffFileKind, diffFileList, diffFileListCanFit, diffFileListLimit,
   diffFileTree, diffTotals, groupFilesByKind, isLargeDiff, isTestPath, kindSectionOpen, openKindSections, orderDiffFiles, orderDiffSections,
   revealCollapsed, toggleCollapsed, treeRowTarget,
@@ -119,6 +119,31 @@ test('Qe large diff: the summed additions + deletions above 5000', () => {
   assert.equal(isLargeDiff([entry('a', 2500, 2500)]), false);
   assert.equal(isLargeDiff([entry('a', 2500, 2500), entry('b', 1, 0)]), true);
   assert.equal(isLargeDiff([]), false);
+});
+
+test('diffgit-08 $e: line limit (He), then patches_withheld, then the no-patch heuristics only with fetchFilePatch', () => {
+  assert.equal(LARGE_DIFF_LINES_SINGLE_LIST, 20000);
+  assert.equal(LARGE_DIFF_FILES, 300);
+  // He picks the limit: 20000 for the single list, 5000 (the default here) for the per-file list.
+  assert.equal(isLargeDiff([entry('a', 12000, 0)]), true);
+  assert.equal(isLargeDiff([entry('a', 12000, 0)], { singleList: true }), false);
+  assert.equal(isLargeDiff([entry('a', 20001, 0)], { singleList: true }), true);
+  // Over the limit wins over patches_withheld:false; under it a boolean Qe decides on its own.
+  assert.equal(isLargeDiff([entry('a', 5001, 0)], { withheld: false }), true);
+  assert.equal(isLargeDiff([entry('a', 1, 0)], { withheld: true }), true);
+  assert.equal(isLargeDiff([entry('a', 1, 0)], { withheld: false, lazyPatches: true }), false);
+  // A non-boolean Qe counts as absent.
+  assert.equal(isLargeDiff([entry('a', 1, 0)], { withheld: 'yes' }), false);
+  const raw = (changes, patch) => ({ ...entry('f', changes, 0), rawFile: { changes, patch } });
+  // Qe absent: changed files with no patch at all collapse, but only where patches can be fetched (Fe).
+  assert.equal(isLargeDiff([raw(3, undefined)], { lazyPatches: true }), true);
+  assert.equal(isLargeDiff([raw(3, undefined)]), false);
+  assert.equal(isLargeDiff([raw(3, undefined), raw(1, '@@ -1 +1 @@\n-a\n+b\n')], { lazyPatches: true }), false);
+  // >300 files, some changed without a patch, and no patch carries an @@ line.
+  const many = (patch) => [...Array.from({ length: 300 }, () => raw(0, patch)), raw(1, undefined)];
+  assert.equal(isLargeDiff(many('diff --git a/x b/x\nnew file mode 100644\n'), { lazyPatches: true }), true);
+  assert.equal(isLargeDiff(many('diff --git a/x b/x\n@@ -0,0 +1 @@\n+a\n'), { lazyPatches: true }), false);
+  assert.equal(isLargeDiff(many('diff --git a/x b/x\nnew file mode 100644\n').slice(1), { lazyPatches: true }), false);
 });
 
 test('selection: La reveals collapsed ancestors, Ia kind sections, Ga row targets', () => {

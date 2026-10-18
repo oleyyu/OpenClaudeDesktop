@@ -5,7 +5,8 @@ import { t, tn } from "../electron/i18n/index.mjs";
 // The per-turn edits card (2.2553.1 approval-current.js:54158-54188 v8/Ipe, :54299-54517 Vpe 'turn_edits_card'):
 // every file a finished turn's completed edits touched, with its +/− counts. Here the edits are the turn's completed
 // fileChange items (Codex FileUpdateChange {path, kind, diff}); a later add of a path restarts its counts, as a Write
-// does in Ipe. Pure.
+// does in Ipe (2.42304.0 c96d752d0 w2e). `calls` are the fileChange items that touched the file, in order (w2e's tool
+// calls; the card keys its See all state on the first file's first call). Pure.
 export function turnEdits(items, { activeTurnId = null } = {}) {
   const turns = new Map();
   for (const item of items || []) {
@@ -15,8 +16,9 @@ export function turnEdits(items, { activeTurnId = null } = {}) {
       const path = changePath(change);
       if (!path) continue;
       const preview = changePreview(change);
-      const previous = changeKind(change) === "add" ? null : files.get(path);
-      files.set(path, { path, additions: (previous?.additions ?? 0) + preview.added, deletions: (previous?.deletions ?? 0) + preview.removed });
+      const existing = files.get(path), previous = changeKind(change) === "add" ? null : existing;
+      const calls = existing?.calls.at(-1)?.id === item.id ? existing.calls : [...(existing?.calls ?? []), { id: item.id }];
+      files.set(path, { path, additions: (previous?.additions ?? 0) + preview.added, deletions: (previous?.deletions ?? 0) + preview.removed, calls });
     }
     if (files.size) turns.set(item.turnId, files);
   }
@@ -93,49 +95,5 @@ export function turnEditsLabel(edits) {
   return files.length === 1 ? t("Edited {file}", { file: fileBasename(files[0].path) }) : tn(files.length, "Edited a file", "Edited {count} files");
 }
 
-// 2.31226.0 cd5a31703 h0 (readable :71733-71757): three rows before 'Show {count} more'.
-export const TURN_EDITS_LIST_LIMIT = 3;
-export function turnEditsListView(files, expanded) {
-  const list = files || [];
-  return { shown: expanded ? list : list.slice(0, TURN_EDITS_LIST_LIMIT), hidden: Math.max(0, list.length - TURN_EDITS_LIST_LIMIT) };
-}
-// 2.31226.0 cd5a31703 n0/r0/c2e/l2e/u2e/i0 (readable :71442-71488): entries that share a label get, as their
-// description, the shortest trailing run of their detail's folders that no other same-label entry ends with; a run
-// that would stop just under a root ('', '/', 'C:') becomes the whole folder. Identical folders get none. Pure.
-function detailSegments(entry) {
-  const detail = entry.detail ?? "", parts = detail.split("/").filter((part) => part !== "");
-  return detail.startsWith("//") ? ["/", ...parts] : detail.startsWith("/") ? ["", ...parts] : parts;
-}
-const sameSegments = (a, b) => a.length === b.length && a.every((part, index) => part === b[index]);
-const isRootSegment = (part) => part === "" || part === "/" || /^[A-Za-z]:$/.test(part ?? "");
-const joinSegments = (parts) => parts.join("/") || "/";
-function uniqueSuffix(own, others) {
-  if (own.length === 0 || others.every((other) => sameSegments(other, own))) return undefined;
-  for (let n = 1; n < own.length; n++) {
-    const tail = own.slice(-n).join("/");
-    if (others.every((other) => other.slice(-n).join("/") !== tail)) return n === own.length - 1 && isRootSegment(own[0]) ? joinSegments(own) : tail;
-  }
-  return joinSegments(own);
-}
-export function disambiguateLabels(entries) {
-  const byLabel = new Map();
-  for (const entry of entries) byLabel.set(entry.label, [...(byLabel.get(entry.label) ?? []), entry]);
-  if (![...byLabel.values()].some((group) => group.length > 1)) return entries;
-  return entries.map((entry) => {
-    const group = byLabel.get(entry.label);
-    if (!group || group.length < 2) return entry;
-    const description = uniqueSuffix(detailSegments(entry), group.filter((other) => other !== entry).map(detailSegments));
-    return description === undefined ? entry : { ...entry, description };
-  });
-}
-/** g2e: path -> folder hint for rows whose file name repeats in the card. The folders are the full ones (RO(path,
- *  undefined) only normalizes separators), so a file at the session root is named by its folder too. */
-export function turnEditFolderHints(files) {
-  const entries = disambiguateLabels((files || []).map((file) => {
-    const shown = String(file.path).replace(/\\/g, "/"), slash = shown.lastIndexOf("/");
-    return { path: file.path, label: fileBasename(file.path) || file.path, detail: slash < 0 ? undefined : shown.slice(0, slash) || "/" };
-  }));
-  const hints = new Map();
-  for (const entry of entries) if (entry.description !== undefined) hints.set(entry.path, entry.description);
-  return hints;
-}
+// The card itself (its three rows before See all / Show {count} more, the folder hints of repeated names, the row
+// stops) is the generated 2.42304.0 original: src/generated/r3b-transcript/turn-edits-card.mjs (src/source-turn-edits.jsx).

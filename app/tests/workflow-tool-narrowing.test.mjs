@@ -62,7 +62,7 @@ test('Codex narrowing: read-only, web search and sub-agents off, MCP servers and
   assert.deepEqual(params, { sandbox: 'read-only', cwd: '/w', approvalPolicy: 'never', config: { web_search: 'disabled', 'features.multi_agent': false, 'features.multi_agent_v2': false, 'features.default_mode_request_user_input': false,
     'mcp_servers.github.disabled_tools': ['a', 'create_issue'], 'mcp_servers.my.srv.enabled': false } });
   assert.deepEqual(requests, [{ method: 'config/read', params: { cwd: '/w' } }]);
-  assert.match(logs[0], /^workflow agent \[rev\]: read-only \(Edit excluded\); web search off .*; sub-agents off .*; MCP narrowed .*; no separate tool to remove for TodoWrite$/);
+  assert.match(logs[0], /^workflow agent \[rev\]: read-only \(Edit excluded\); compatibility: the core keeps its sandboxed shell for reads instead of removing Claude\x27s individual tools; web search off .*; sub-agents off .*; MCP narrowed .*; no separate tool to remove for TodoWrite$/);
   const all = await narrowThreadParams(client, { sandbox: 'workspace-write', cwd: '/w' }, { toolControls: 'codex', disallowedTools: ['mcp__*'] });
   assert.deepEqual(all.config, { 'features.multi_agent': false, 'features.multi_agent_v2': false, 'features.default_mode_request_user_input': false, 'mcp_servers.github.enabled': false, 'mcp_servers.my.srv.enabled': false, 'features.apps': false });
   assert.equal(all.sandbox, 'workspace-write');

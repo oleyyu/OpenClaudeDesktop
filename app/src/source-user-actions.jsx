@@ -1,3 +1,4 @@
+import { buttonPressHandlers } from './button-press.mjs';
 // Ordinary user-message actions row. The row always occupies one control
 // height (24px) so that revealing controls never moves the following turn;
 // until the turn is interacted with, only an aria-hidden reservation and a
@@ -52,12 +53,12 @@ function useUserCopyFeedback(identity, text, button) {
 // wi.Action: a ghost icon button with its label as the tooltip; a disabled one (jY under Wr) explains why instead.
 // cd5a31703 NI / PI (:25793-25843): an enabled Rewind / Fork also explains itself — the tooltip's detail line and the
 // button's aria-description (EI.rewind / EI.fork); a disabled Rewind shows only its reason.
-function UserAction({ icon, label, detail = null, onClick = null, disabledReason = null, action }) {
+function UserAction({ icon, label, detail = null, onClick = null, disabledReason = null, action, testId }) {
   const disabled = typeof onClick !== 'function';
   return <SourceTooltip content={label} detail={disabled ? undefined : detail || undefined} automatic={true} hoverable={false} disabledReason={disabled ? disabledReason || undefined : undefined}>
     <button type="button" className="sua-copy sua-action" data-cds="Button" data-variant="ghost" data-cds-icon-only="" data-cds-ghost=""
-      data-message-action={action} aria-label={label} aria-description={disabled ? undefined : detail || undefined} disabled={disabled} tabIndex={-1}
-      onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && event.repeat) event.preventDefault(); }}
+      data-message-action={action} data-testid={testId} aria-label={label} aria-description={disabled ? undefined : detail || undefined} disabled={disabled} tabIndex={-1}
+      {...buttonPressHandlers}
       onClick={disabled ? undefined : () => onClick()}>
       <span className="sua-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
       <Icon name={icon} size={16} />
@@ -106,13 +107,22 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
               const editable = Boolean(event.target.closest?.("input:not([type='hidden']):not([disabled]),[contenteditable]:not([contenteditable='false']),textarea:not([disabled])"));
               if (preventRepeatedSelection({ detail: event.detail, button: event.button, editable })) event.preventDefault();
             }}
-            onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && event.repeat) event.preventDefault(); }}
+            {...buttonPressHandlers}
             onClick={() => { void copy(); }}>
             <span className="sua-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
             <Icon name={copied ? 'Check' : 'Copy'} size={16} />
           </button>
         </SourceTooltip>
-        {rewind && <UserAction action="rewind" icon="ArrowCounterClockwise" label={t("Rewind to here")} detail={t("Removes this message and everything after it.")}
+        {/* R4i-cowork CW3: a Cowork session's 2.42304.0 cc1aae219 DN — ghost icon-only ArrowCounterClockwise,
+            "data-testid":"user-message-rewind", aria-label formatMessage(r_().restartFromHere) (shared-78 lHlImYcnSM
+            "Restart conversation from here"), onClick e(t) = mk's mo. DN carries no detail line. */}
+        {rewind?.kind === 'restart' && <UserAction action="restart" testId="user-message-rewind" icon="ArrowCounterClockwise"
+          label={t("Restart conversation from here")} onClick={rewind.onClick ?? null} />}
+        {/* R4i-cowork CW4: cc1aae219 `xe.showEdit&&o&&y(Hs.EditAction,{"data-testid":"user-message-edit",…,onClick:()=>{…o()}})`
+            — shared-2 pX: ghost icon-only "Edit", aria-label G("edit","Edit"); `o` is VY's startEdit (the editor opens). */}
+        {rewind?.kind === 'restart' && typeof rewind.edit === 'function' && <UserAction action="edit" testId="user-message-edit" icon="Edit"
+          label={t("Edit")} onClick={rewind.edit} />}
+        {rewind && rewind.kind !== 'restart' && <UserAction action="rewind" icon="ArrowCounterClockwise" label={t("Rewind to here")} detail={t("Removes this message and everything after it.")}
           onClick={rewind.onClick ?? null} disabledReason={rewind.disabledReason} />}
         {typeof onFork === 'function' && <UserAction action="fork" icon="ArrowSplitRight" label={t("Fork from here")}
           detail={t("Starts a new session from this point. This one stays as it is.")} onClick={onFork} />}
@@ -124,7 +134,8 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
 
 /** Mounted by the user article only when the message has copyable text. The
  * article owns the pointer/focus latch and the hover reveal scope. */
-// rewind: null (not offered) | {onClick} | {disabledReason} (offered, unavailable while the agent works); onFork: null | fn.
+// rewind: null (not offered) | {onClick} | {disabledReason} (offered, unavailable while the agent works)
+//   | {kind: 'restart', onClick} (a Cowork session's Restart conversation from here, R4i-cowork CW3); onFork: null | fn.
 export function SourceUserActions({ sessionKey, itemId, text = '', startedAtMs = null, interacted = false, rewind = null, onFork = null }) {
   const identity = JSON.stringify(['user', sessionKey, itemId]);
   return <UserActions key={identity} identity={identity} itemId={itemId} text={text} startedAtMs={startedAtMs} interacted={interacted} rewind={rewind} onFork={onFork} />;

@@ -1,0 +1,493 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-session-load-error.mjs",
+  "adapterModule": "src/source-session-load-error-adapters.jsx",
+  "modules": [
+    {
+      "target": "error-page.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "d792d7aa3f25392c11c4736306a3c8c259e4cfdddd81824779fc2f9a8ae059d6",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "T9",
+          "sha256": "96e5427851719ce6df66a3cb5befc4a1756549e8d2b405f761e8283a3968c0af"
+        }
+      ],
+      "imports": [
+        {
+          "local": "He",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "useRouter",
+          "via": "shared-25-DP8p7i1Z.js:Wf",
+          "kind": "adapter",
+          "original": "Jf"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "J",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "X",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        }
+      ],
+      "exports": {
+        "T9": "ErrorPage"
+      }
+    },
+    {
+      "target": "chunk-reload-state.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "cc842cf96dc8242c1a04622442ce8cba02f4e369e1a02da405273ff4dcae66c3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "fd",
+          "sha256": "6859024e567f094a25558c72b97759abfa2408b863bb425ed12dd9f7903c4cd9"
+        },
+        {
+          "name": "hd",
+          "sha256": "fa1260d22dce8f5746a78942ffa1aed7dbd42888bbc25db416a064a8c09d4762"
+        },
+        {
+          "name": "_d",
+          "sha256": "8561c1634f876a9efd7855c6c2c43255fa5f8216f1ed16f032b9cd0c8ee5ca4e"
+        },
+        {
+          "name": "Od",
+          "sha256": "7da3e1dd4ead334e891a619eb4ed1653263898cbdd08d52699bee379e4c3a2a6"
+        },
+        {
+          "name": "kd",
+          "sha256": "f66025c51e65b02ffdaf55ea9460656a0b79598cb7db1514dc7a23a81b4cf1aa"
+        },
+        {
+          "name": "Ad",
+          "sha256": "9816e48b552ba7d50fd98dc45b0983b533fbe2301fc199ebf92b71017f12e9f7"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "fd": "CHUNK_RELOAD_SPACING_MS",
+        "Ad": "markPageUnloading",
+        "_d": "isChunkReloadPending"
+      }
+    },
+    {
+      "target": "chunk-heal-probe.mjs",
+      "source": "shared-26-CgdP_nTj.js",
+      "sourceSha256": "a9f80593fcdb91be8a2cf93eb71c572d3798b903ef16b8adb42480656cb3c026",
+      "sha256": "771fc82b96a9eee727a4f2f9b1152c920001dc6635fbcaff46d0210d9cdf83c6",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "zu",
+          "sha256": "0efd7087ae2b3e0e623f11dfdb1481a7b4d88351be7115ce351e90b7004e9bba"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "zu": "CHUNK_HEAL_PROBE_MS"
+      }
+    },
+    {
+      "target": "chunk-heal-gate.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "44696028bcd93a9d8d220c1e2ecb6aea920d65e519e3fbfbd957d75f61cd2522",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Yg",
+          "sha256": "19d65f8a0289905f266f63d2988641980608fb06597b6ebbf9f7dbbfc44fd09b"
+        },
+        {
+          "name": "Xg",
+          "sha256": "f9175c30f885c20e7bbca61065be263cbb6d14e0b25d8821c26fc2e07a6cf9e8"
+        },
+        {
+          "name": "g_",
+          "sha256": "47aeec08f3f43705ed455acde48991ccde00ad86acb9796380ddd5effd2c268a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "$e",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "growthBookValue",
+          "via": "shared-0-ByI5P0CP.js:gy",
+          "kind": "adapter",
+          "original": "no"
+        },
+        {
+          "local": "__",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "resolveChunkHealTarget",
+          "via": "shared-20-B7UqYfsi.js:__",
+          "kind": "adapter",
+          "original": "__"
+        }
+      ],
+      "exports": {
+        "g_": "chunkHealTarget",
+        "Yg": "CHUNK_HEAL_FLAG",
+        "Xg": "chunkHealFlagOn"
+      }
+    },
+    {
+      "target": "pane-retry-claim.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "cc64addf57c03a37ec285efac4cbae77863e874067a78d00feae15e8b39282b3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "S_",
+          "sha256": "ffe274e96b0eb836cccee9bad94299d9aff47afd85a38a28e1d945e6bf48bf68"
+        },
+        {
+          "name": "w_",
+          "sha256": "999bfe2e898f75747aaa7199a90394beebff568ebdd912418532d0cd1fc7598a"
+        },
+        {
+          "name": "O_",
+          "sha256": "1a2a6ec7eab1a6e9d2bcf6605917bd408a320d9b7059f9aeb234f8e2dd4b8a7c"
+        },
+        {
+          "name": "k_",
+          "sha256": "d8fd7a65a214e46698d549aac071429ca61452c203ccbdf96e8bce8a525a547b"
+        },
+        {
+          "name": "j_",
+          "sha256": "add3d84505b958aef40f6509e29c92db5e0938f3b61f42f3a5c3766fa9aefe49"
+        },
+        {
+          "name": "M_",
+          "sha256": "f7d5768ad9164611c03280738b891948438e039d5d2a656a78c0754bcee2e804"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "j_": "claimPaneRetry",
+        "O_": "PANE_RETRY_CLAIM_PREFIX"
+      }
+    },
+    {
+      "target": "reload-blockers.mjs",
+      "source": "shared-104-Cqo2-vQh.js",
+      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "sha256": "d36b376bdae55d57bda7aad37464ec436b84b3c17bcc0147d689b50227140f34",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Lo",
+          "sha256": "12f0ec797214b5afd39c5667b22dda25b6fc5dd11b2055635f14ef163ec60155"
+        },
+        {
+          "name": "Ro",
+          "sha256": "fc46605fddfa3c5c284188a389c7fcc7f93a90adb3a8d1b7821b954e3f0b1f47"
+        },
+        {
+          "name": "Vo",
+          "sha256": "36e178dd0c51d629f17e00f29e0c5eecf3644ac22c6e6390e7f9c1793526b377"
+        },
+        {
+          "name": "Ho",
+          "sha256": "0b0fc548a9ce55a66436e3f66e46a67e59d9624f821b41da45addf684274b533"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ho": "reloadBlocker",
+        "Ro": "registerReloadBlocker"
+      }
+    },
+    {
+      "target": "unload-veto.mjs",
+      "source": "c7f0c0d23-BDc3qEXV.js",
+      "sourceSha256": "dce663c41ec9a09269cfeedfb72cb6c90d36f65e09cfc0918b0fdd38074fa8b3",
+      "sha256": "d5c6497410c19b652909c6d4af60e7a40848c208c3e132eade3817425db5587f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "a",
+          "sha256": "b948af37b11cae871e6b34628f828ba198c60f8508477b921f70ca9b8f31e5aa"
+        },
+        {
+          "name": "o",
+          "sha256": "8e7c09c01ff3d032ed88137a8e1844649dc4d18d8f86269435deedc004bfe57d"
+        },
+        {
+          "name": "s",
+          "sha256": "d518de5578cd768fff177281c5bdd55fa349b59ee2556b6623da0c627bab7239"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "o": "unloadHeld"
+      }
+    },
+    {
+      "target": "session-load-error.mjs",
+      "source": "cc43287c9-DAfOi8yP.js",
+      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "sha256": "608ad8cc3d724b422eacd90b3f4d2d8eec93a8a28dc823bd309149daa898ed7d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "dV",
+          "sha256": "78c9851ec82b2b58e5164546b2f5ab880e8ce41a8e1d47419811f3c23801eba8"
+        },
+        {
+          "name": "fV",
+          "sha256": "08bdd4aa5f71ef679e90d385c809d60d48331364ed36f24184a37f329fc377ea"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Q",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "A",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "$A",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "forgetScrollAnchors",
+          "via": "cd14a8022-DDLlDKpQ.js:l",
+          "kind": "adapter",
+          "original": "T"
+        },
+        {
+          "local": "jP",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "forgetRowExpansion",
+          "via": "cc6e9624e-Dw5fc5HL.js:a",
+          "kind": "adapter",
+          "original": "u"
+        },
+        {
+          "local": "$a",
+          "from": "./chunk-heal-probe.mjs",
+          "name": "CHUNK_HEAL_PROBE_MS",
+          "via": "shared-26-CgdP_nTj.js:_p",
+          "kind": "generated"
+        },
+        {
+          "local": "Xo",
+          "from": "./chunk-reload-state.mjs",
+          "name": "CHUNK_RELOAD_SPACING_MS",
+          "via": "shared-52-DGviI8xb.js:qp",
+          "kind": "generated"
+        },
+        {
+          "local": "qo",
+          "from": "./chunk-reload-state.mjs",
+          "name": "markPageUnloading",
+          "via": "shared-52-DGviI8xb.js:nm",
+          "kind": "generated"
+        },
+        {
+          "local": "Jh",
+          "from": "./chunk-heal-gate.mjs",
+          "name": "chunkHealTarget",
+          "via": "shared-20-B7UqYfsi.js:ya",
+          "kind": "generated"
+        },
+        {
+          "local": "xc",
+          "from": "./reload-blockers.mjs",
+          "name": "reloadBlocker",
+          "via": "shared-104-Cqo2-vQh.js:lh",
+          "kind": "generated"
+        },
+        {
+          "local": "YP",
+          "from": "./unload-veto.mjs",
+          "name": "unloadHeld",
+          "via": "c7f0c0d23-BDc3qEXV.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "uo",
+          "from": "./chunk-reload-state.mjs",
+          "name": "isChunkReloadPending",
+          "via": "shared-52-DGviI8xb.js:$p",
+          "kind": "generated"
+        },
+        {
+          "local": "vh",
+          "from": "./pane-retry-claim.mjs",
+          "name": "claimPaneRetry",
+          "via": "shared-20-B7UqYfsi.js:_a",
+          "kind": "generated"
+        },
+        {
+          "local": "lo",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "reportChunkCacheHeal",
+          "via": "shared-26-CgdP_nTj.js:yp",
+          "kind": "adapter",
+          "original": "qu"
+        },
+        {
+          "local": "v",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "gi",
+          "from": "./error-page.mjs",
+          "name": "ErrorPage",
+          "via": "shared-19-CkPOiIKm.js:y",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "fV": "SessionLoadError",
+        "dV": "canReloadPane"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c11959232-Dx4NfIyJ.js",
+      "binding": "Nm",
+      "role": "Main pane: EpitaxyChatPanel boundary (resetOn = mountKey), fallback fV with the session id",
+      "sourceSha256": "ae0db7e8daafb631da8155ce106127ade06a3c461c383f473dafcd4532cd63cd",
+      "sha256": "24789d65b8c7ad57610e0460c13b4a204153d6b4d2bff05643b9b6c617022139",
+      "features": [
+        "componentName: \"EpitaxyChatPanel\",",
+        "resetOn: i,",
+        "tags: { feature: \"epitaxy\" },",
+        "metadata: { sessionId: r },",
+        "fallback: (e, t) => s(qo, { error: e, reset: t, sessionId: r }),",
+        "componentName: \"EpitaxyAgentGraphView\","
+      ],
+      "imports": {
+        "qo": "cc43287c9-DAfOi8yP.js:C (fV)",
+        "Zt": "shared-26-CgdP_nTj.js:Vp (kl)"
+      }
+    },
+    {
+      "source": "c11959232-Dx4NfIyJ.js",
+      "binding": "Pm",
+      "role": "Secondary pane: the same boundary, resetOn = the session id or the pane draft key",
+      "sourceSha256": "ae0db7e8daafb631da8155ce106127ade06a3c461c383f473dafcd4532cd63cd",
+      "sha256": "17bb5160a6f975971fb5a8b75b993c7365a4302da2afc3264c7301991ac7664b",
+      "features": [
+        "let p = n ?? `pane-draft-${r ?? i}`;",
+        "resetOn: p,",
+        "componentName: \"EpitaxyChatPanel\",",
+        "tags: { feature: \"epitaxy\", pane: \"secondary\" },",
+        "fallback: (e, t) => s(qo, { error: e, reset: t, sessionId: n }),"
+      ],
+      "imports": {
+        "qo": "cc43287c9-DAfOi8yP.js:C (fV)",
+        "Zt": "shared-26-CgdP_nTj.js:Vp (kl)"
+      }
+    },
+    {
+      "source": "c5638815a-D1NXo6h5.js",
+      "binding": "lt",
+      "role": "Pop-out window: the same boundary with its own sanitizer; a chunk failure (p) rethrows past it",
+      "sourceSha256": "23256ab51cac0f66e039232852258ae0f5688b7fba65498e0dc2a229e363136c",
+      "sha256": "239b44dcf37a463ac38a0d7e5da0b25d8b08b060e4acf9cf03288a68d4bb2e37",
+      "features": [
+        "componentName: \"EpitaxyChatPanel\",",
+        "tags: { feature: \"epitaxy\", pane: \"popout\" },",
+        "sanitizeError: ct,",
+        "if (p(e)) throw e;",
+        "return n(Se, { error: e, reset: t, sessionId: a });"
+      ],
+      "imports": {
+        "Se": "cc43287c9-DAfOi8yP.js:C (fV)",
+        "w": "shared-26-CgdP_nTj.js:Vp (kl)"
+      }
+    },
+    {
+      "source": "cc43287c9-DAfOi8yP.js",
+      "role": "fV is exported as C, and dV is the reload check it reads",
+      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "raw": true,
+      "features": [
+        "Something went wrong loading this session",
+        "id:\"z0PjNhLbSp\"",
+        "lo(e,\"pane_retry\",$a,void 0,t)",
+        "function dV(){return xc()===null&&!YP()}",
+        "fV as C"
+      ]
+    },
+    {
+      "source": "shared-20-B7UqYfsi.js",
+      "role": "The chunk heal gate and its GrowthBook flag",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "raw": true,
+      "features": [
+        "function g_(e){return Xg(Yg)?__(e):void 0}",
+        "Yg=\"__gb__982582273\"",
+        "__gb__982582273"
+      ]
+    },
+    {
+      "source": "shared-19-CkPOiIKm.js",
+      "role": "The error page layout",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "raw": true,
+      "features": [
+        "min-h-screen flex flex-col items-center justify-center px-4"
+      ]
+    }
+  ]
+}

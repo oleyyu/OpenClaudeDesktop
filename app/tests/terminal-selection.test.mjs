@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {terminalSelectionEndRow,terminalSelectionBox,isWholeTerminalSelection,wholeTerminalSelectionAnchor,terminalSelectionPillPosition} from '../src/generated/code-editor/terminal-selection.mjs';
+// 2.42304.0 c6bf19e8f $r..ci (generated/code-current/terminal-geometry, R3-terminal FT-03; identical to the 2.31226.0 Br..Yr).
+import {terminalSelectionEndRow,terminalSelectionBox,isWholeTerminalSelection,wholeTerminalSelectionAnchor,terminalSelectionPillPosition} from '../src/generated/code-current/terminal-geometry.mjs';
 import {observeTerminalSelection} from '../src/terminal-selection-controller.mjs';
 function fixture(){
  const doc=new EventTarget(),element=new EventTarget();

@@ -434,7 +434,9 @@ try {
   routineDialog = page.getByRole('dialog', { name: 'Edit scheduled task', exact: true });
   await routineDialog.getByLabel('Name', { exact: true }).fill('Renamed morning notes');
   await routineDialog.getByRole('combobox', { name: 'Permissions', exact: true }).click();
-  await page.getByRole('option', { name: /^Manual\b/ }).click();
+  // R4i-gui GU1 (R4g-routines RTC host difference 3): the 2.42304.0 Cowork form (c97b955f1 Ca) offers Default / Auto /
+  // Skip all approvals; Default is the host's 'ask' (source-routine-cowork-page-adapters.jsx toHostPermission).
+  await page.getByRole('option', { name: /^Default\b/ }).click();
   await routineDialog.getByRole('combobox', { name: 'Frequency', exact: true }).click();
   await page.getByRole('option', { name: 'Weekly', exact: true }).click();
   await routineDialog.getByLabel('Time', { exact: true }).fill('14:35');
@@ -459,7 +461,7 @@ try {
   assert.equal(firedTask.enabled, false); assert.equal(firedTask.nextRunAt, null); assert.equal(firedTask.runs.length, 1);
   assert.equal(firedTask.runs[0].trigger, 'scheduled');
   await page.evaluate(id => window.desktop.call('local-routines', { action: 'delete', id }), timed.id);
-  checks.push('Original scheduled form, detail and menu create, pause, edit, persist and run Cowork tasks; cron validation, weekly presets, permissions, unsaved-change confirmation, instruction preview, history and deletion work through local services');
+  checks.push('Original scheduled form, detail and menu create, pause, edit, persist and run Cowork tasks; cron validation, weekly presets, permissions (Default → ask), unsaved-change confirmation, instruction preview, history and deletion work through local services');
   // Resize last: hidden macOS Electron windows can stop servicing capturePage
   // after native resizing, though their renderer continues to lay out correctly.
   for (const surface of ['Chat', 'Cowork']) {

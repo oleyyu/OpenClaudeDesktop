@@ -17,6 +17,10 @@ export const IMAGE_PROCESS_ERROR = t("Failed to process image. You can try again
 // Local addition for a catalog model without image input (the DeepSeek core
 // rejects such a turn); Codex catalogs either list "image" or say nothing.
 export const IMAGE_MODEL_ERROR = t("The selected model doesn’t support image input.");
+// Image input turned off for the model in Settings › Models (prefs/model-settings.mjs images:false → model.imagesOff).
+export const IMAGE_OFF_ERROR = t("Image input is off for this model. Turn it on in Settings › Models.");
+/** The notice for an image the chosen model refuses: the user's own switch, else the catalog's text-only model. */
+export const imageRefusedNotice = (model) => (model?.imagesOff === true ? IMAGE_OFF_ERROR : IMAGE_MODEL_ERROR);
 // A core that hands images to a vision model itself when the chosen model has none (capabilities.imageFallback 'path':
 // MiMo's read tool and its vision sub-agent): the image goes as a file reference instead of being refused.
 export const IMAGE_FALLBACK_NOTE = t("This model can’t see images. DeepSeek will ask a vision model to look at them.");
@@ -75,13 +79,14 @@ function nextId(make, index) {
 //                with the type toast instead of becoming file entries.
 //   maxImages  — official min(maxImages ?? 5, lane cap); 5 here.
 //   imagesAllowed — false when the chosen model takes no image input
-//                (modelAcceptsImages): images are refused with IMAGE_MODEL_ERROR.
+//                (modelAcceptsImages): images are refused with imageNotice (IMAGE_MODEL_ERROR, or IMAGE_OFF_ERROR
+//                when the user turned image input off: imageRefusedNotice).
 //   makeId     — injectable id factory for deterministic tests.
 // Returns the next entries, the added entries and the toast notices in the
 // official order: type, size, then the cap trim (the model notice first).
 // imageFallback — the model takes no images but the core reads them as files (IMAGE_FALLBACK_NOTE in infos): images
 //                are staged as before and marked asFile, so attachmentInputs sends them as file mentions.
-export function stageFiles(entries, files, { imagesOnly = false, imagesAllowed = true, imageFallback = false, maxImages = IMAGE_CAP, makeId } = {}) {
+export function stageFiles(entries, files, { imagesOnly = false, imagesAllowed = true, imageFallback = false, imageNotice = IMAGE_MODEL_ERROR, maxImages = IMAGE_CAP, makeId } = {}) {
   const notices = [], infos = [];
   const asFile = !imagesAllowed && imageFallback;
   if (asFile) imagesAllowed = true;
@@ -89,7 +94,7 @@ export function stageFiles(entries, files, { imagesOnly = false, imagesAllowed =
   const list = Array.isArray(files) ? files : [];
   const images = [], others = [];
   for (const file of list) (isImageFile(file) ? images : others).push(file);
-  if (!imagesAllowed && images.length > 0) { notices.push(IMAGE_MODEL_ERROR); images.length = 0; }
+  if (!imagesAllowed && images.length > 0) { notices.push(imageNotice); images.length = 0; }
   else if (imagesOnly && list.length > 0 && images.length === 0) notices.push(IMAGE_TYPE_ERROR);
   let tooLarge = false;
   const accepted = [];

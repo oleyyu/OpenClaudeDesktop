@@ -90,12 +90,15 @@ try {
   await templates.click();
   const seeded = page.getByRole('dialog',{name:'Create scheduled task',exact:true});
   assert.equal(await seeded.getByLabel('Name',{exact:true}).inputValue(),'Daily briefing');
-  assert.ok((await seeded.getByLabel('Instructions',{exact:true}).inputValue()).length > 30);
+  // R4i-gui GU1 (R4g-routines RTC host difference 1): the 2.42304.0 templates (ccd3f68fe Xc) carry no promptBody, so the
+  // host's template flow opens the form with the name, description and cron only; the instructions start empty.
+  assert.equal(await seeded.getByLabel('Instructions',{exact:true}).inputValue(), '');
   await seeded.getByRole('button',{name:'Cancel',exact:true}).click();
   const discard = page.getByRole('alertdialog',{name:'Discard unsaved changes?',exact:true});
-  if(await discard.isVisible()) await discard.getByRole('button',{name:'Discard changes',exact:true}).click();
+  // c97b955f1 Ca's discard confirmation: cancel "Keep editing", confirm "Discard" (nmpevlUATU).
+  if(await discard.isVisible()) await discard.getByRole('button',{name:'Discard',exact:true}).click();
   await seeded.waitFor({state:'hidden'});
-  checks.push('Six installed templates include source illustrations, schedule hints and working prefilled creation');
+  checks.push('Six installed templates (2.42304.0 Xc on the empty page) include the stopwatch pictogram, schedule hints and a creation form prefilled with name/description/cron (no instructions: Xc has no promptBody)');
   await page.getByRole('button', { name: 'New task', exact: true }).click();
   let routineDialog = page.getByRole('dialog', { name: 'Create scheduled task', exact: true });
   await routineDialog.getByLabel('Name', { exact: true }).fill('Morning notes');
@@ -156,7 +159,9 @@ try {
   routineDialog = page.getByRole('dialog', { name: 'Edit scheduled task', exact: true });
   await routineDialog.getByLabel('Name', { exact: true }).fill('Renamed morning notes');
   await routineDialog.getByRole('combobox', { name: 'Permissions', exact: true }).click();
-  await page.getByRole('option', { name: /^Manual\b/ }).click();
+  // R4i-gui GU1 (RTC host difference 3): the 2.42304.0 Cowork form offers Default / Auto / Skip all approvals; Default is the
+  // host's 'ask' (source-routine-cowork-page-adapters.jsx toHostPermission).
+  await page.getByRole('option', { name: /^Default\b/ }).click();
   await routineDialog.getByRole('combobox', { name: 'Frequency', exact: true }).click();
   await page.getByRole('option', { name: 'Weekly', exact: true }).click();
   await routineDialog.getByLabel('Time', { exact: true }).fill('14:35');
@@ -182,7 +187,8 @@ try {
   checks.push('Installed template grid changes from two columns to one; detail fits 700/900/1440 widths and both themes');
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   const deleteDialog=page.getByRole('alertdialog', { name: 'Delete scheduled task?', exact: true });
-  assert.match(await deleteDialog.innerText(),/Existing conversations and files are kept/);
+  // ccd3f68fe qo's own confirmation (Fn: title We.deleteEntity, body gi(…) "Delete “{taskName}”? …").
+  assert.match(await deleteDialog.innerText(),/Delete “Renamed morning notes”\?/);
   await deleteDialog.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByText('No scheduled tasks yet.', { exact: true }).waitFor();
   assert.ok((await read('preferences.json')).threadIds.includes(routineRun.threadId));
@@ -197,7 +203,7 @@ try {
   assert.equal(firedTask.enabled, false); assert.equal(firedTask.nextRunAt, null); assert.equal(firedTask.runs.length, 1);
   assert.equal(firedTask.runs[0].trigger, 'scheduled');
   await page.evaluate(id => window.desktop.call('local-routines', { action: 'delete', id }), timed.id);
-  checks.push('Original scheduled form, detail and menu create, pause, edit, persist and run tasks with the isolated Codex fixture runner; cron validation, weekly presets, permissions, unsaved-change confirmation, instruction preview, history and deletion work through local services');
+  checks.push('Original scheduled form, detail and menu create, pause, edit, persist and run tasks with the isolated Codex fixture runner; cron validation, weekly presets, permissions (Default → ask), unsaved-change confirmation (Keep editing / Discard), instruction preview, history and deletion work through local services');
 
   assert.deepEqual(errors,[]);passed=true;
 } catch (error) {

@@ -219,8 +219,9 @@ function CiGlyph({ status }) {
 
 /** c219730b0 un/fn/pn (:808-950): the local GitHub CLI hint — a secondary trigger ("GitHub CLI unavailable" /
  * "GitHub CLI signed out" + caret) opening a popover above, end-aligned, w-72, with the explanation and either the
- * Install GitHub CLI link or the `gh auth login` command row (Run in terminal, Copy command). */
-function GhHint({ cause, onRunInTerminal, onInstall }) {
+ * Install GitHub CLI link or the `gh auth login` command row (Run in terminal, Copy command). Exported for the session
+ * rail PR row (R4i-rail fix: c96d752d0 nze `Un = w && Hn ? b(kye, {cause: Hn, onRunInTerminal: ct})`, kye = c219730b0 dn). */
+export function GhHint({ cause, onRunInTerminal, onInstall }) {
   const [anchor, setAnchor] = useState(null);
   const [copied, setCopied] = useState(false);
   const text = prStatusHintText(cause);

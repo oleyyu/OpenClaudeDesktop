@@ -9,7 +9,7 @@ const ORDER = ["ctrl", "control", "alt", "option", "shift", "cmd", "command", "m
 const MAC_MODIFIER = { ctrl: "⌃", control: "⌃", alt: "⌥", option: "⌥", shift: "⇧", cmd: "⌘", command: "⌘", meta: "⌘" }; // ao
 const OTHER_MODIFIER = { ctrl: "Ctrl", control: "Ctrl", alt: "Alt", option: "Alt", shift: "Shift", cmd: "Ctrl", command: "Ctrl", meta: "Ctrl" }; // oo
 const COMMON_KEYS = { escape: "Esc", esc: "Esc", up: "↑", down: "↓", left: "←", right: "→",
-  pageup: "Page Up", pagedown: "Page Down", home: "Home", end: "End", insert: "Insert", enter: "⏎", return: "⏎" };
+  pageup: "Page Up", pagedown: "Page Down", home: "Home", end: "End", insert: "Insert", enter: "⏎", return: "⏎", plus: "+" };
 const MAC_KEYS = { ...COMMON_KEYS, space: "␣", delete: "⌫", backspace: "⌫", tab: "⇥" }; // so
 const OTHER_KEYS = { ...COMMON_KEYS, space: "Space", delete: "Backspace", backspace: "Backspace", tab: "Tab" }; // co
 const SPOKEN = { cmd: "Command", command: "Command", meta: "Command", ctrl: "Control", control: "Control",

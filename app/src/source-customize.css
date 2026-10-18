@@ -123,7 +123,7 @@ html[data-reduce-motion="true"] .cz-search { transition: none; }
 @media(max-width:780px) { .cz-header{flex-wrap:wrap;} .cz-field{grid-template-columns:minmax(0,1fr);} }
 
 /* Drill-ins (page shell W): ArrowLeft back header + the detail body. The skill body is c9a7e510b D's utility
-   markup ("flex flex-col h-full px-6 pb-6 gap-3", header "min-h-14 items-center py-3 -mr-6 pr-md"); the
+   markup ("flex flex-col h-full px-6 pb-6 gap-3", header "min-h-14 items-center py-3 -me-6 pe-md"); the
    connector body is c08e79e85 En's. */
 .cz-drill { display:flex; min-height:0; flex:1; flex-direction:column; }
 .cz-drill-header { display:flex; flex-shrink:0; min-height:56px; align-items:center; gap:var(--cds-gap-sm,12px); padding-inline:var(--cds-pad-xl,24px) calc(var(--cds-pad-md,12px) + var(--cds-h-control,32px)); }

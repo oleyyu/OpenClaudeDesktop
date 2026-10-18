@@ -234,12 +234,6 @@
       ],
       "sha256": "8f220772bfdf4999f92f63c4aeb92ae29c6f3f2e229f4b841badb5248da6bbe0",
       "bytes": 26464
-    },
-    {
-      "name": "c0f671921-CWPPK3vl.woff2",
-      "imports": [],
-      "sha256": "3313e3a3960272153792a10314910f57b1113b807541b44b64e207aa6d9b9260",
-      "bytes": 102292
     }
   ],
   "adapters": [
@@ -421,17 +415,18 @@
     },
     {
       "name": "side-chat-geometry.mjs",
-      "sha256": "92eb114944639fd225d9bf7ea29e7994655cd55e2d3e5dcfb5779d64a7322060",
+      "sha256": "155c6b5ecc701b9184adaf547b42e261da7be6efca902f72180d9e276583ea09",
       "sources": [
         {
-          "name": "cd97b284f-cW3UmTvk.js",
-          "sha256": "ba4a9d9ea76c470fb92ba85b6f567b1dd43a960a847cc6e4c1e2cdbeae693a29"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd97b284f-Cpvb2TuL.js",
+          "sha256": "9a985317a58616c37b2eba247a38513e0e693d0e1eec96833351e8aa9c5a80ae"
         },
         {
-          "name": "cccc2cf0a-DHtZKTKW.js",
-          "sha256": "0f13bcdc39572e06d535ff0234b319ad15f63d92445a570c656c56bc8b1a41cb"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cccc2cf0a-B0D--VZp.js",
+          "sha256": "4f75e5db4ff595b4fc4f22a9092dfa245b4af29f964bb207276b868a606964cb"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "side-chat-context.mjs",
@@ -604,16 +599,6 @@
       ]
     },
     {
-      "name": "preview-tab-overflow.mjs",
-      "sha256": "ec0e25ad155439b4b8caeb59816209e603f7de8f689824e2cc1a817f4f9e58b6",
-      "sources": [
-        {
-          "name": "cfe7c4b3b-C2Lhkd1Y.js",
-          "sha256": "e23248f2f2576e178ccc2fc247f4e72f45a1a699df2f9b9ed0c2702437b52b49"
-        }
-      ]
-    },
-    {
       "name": "preview-address-parser.mjs",
       "sha256": "bc1bb34a1fb0a7929ba128cdd76239cda092d53b68a985c894ac6d024cfa06fc",
       "sources": [
@@ -699,13 +684,14 @@
     },
     {
       "name": "preview-element-chip.mjs",
-      "sha256": "e82370c3f9179cf7dc2fda646231f1e2b38c237d137bd77721257138cf3087cb",
+      "sha256": "125fc0f53b838d379441ac02017d6ca9dd0512c9f9dd44f00541f56b5e563392",
       "sources": [
         {
           "name": "ca80fca8d-uAxy5Mjj.js",
           "sha256": "61c76a540331b8cac4946a37cb8ab3ade4ef471e96d8b0829e7901949c931414"
         }
-      ]
+      ],
+      "styleCompatibility": "2.37337.1 logical-direction utility rename; behavior and original source provenance retained"
     },
     {
       "name": "preview-element-parser.mjs",
@@ -745,79 +731,89 @@
     },
     {
       "name": "preview-sketch-icons.mjs",
-      "sha256": "a401b28b949fcb8713030d8bccda780cb573235aa97ecff6087422fe698e87ed",
+      "sha256": "22e0ffc922985f5b8259cb028eca8ad4b8fb2a108b79d5a2018dd1d498bfcb14",
       "sources": [
         {
-          "name": "shared-frame-DVFSKIcx.js",
-          "sha256": "f6fd9c03a7ac6a64d2857822597d3ff47e6c9dbdc4f702ca10c3b26498609cfc"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
+          "sha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "preview-sketch-toolbar.mjs",
-      "sha256": "ca19c864b4098d822f64001a02c027d99feaf00f07be6f1d415f9178ebc86c64",
+      "sha256": "4a6f1a204ea836f6cd87424b723e516c4ac2c2943f0fc334650acc2e871a6ac9",
       "sources": [
         {
-          "name": "c467aa787-Dtc0Q8kR.js",
-          "sha256": "55d865d07b32fddd39f1d3f660ff46649e4fe9c5b60706c2862972d78d0f2e5d"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c467aa787-B4L-l_bi.js",
+          "sha256": "d70917b1ca85fb3495e08d8937cfb1c3cb841647706f97b32401b2bc60df17b2"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "preview-sketch-canvas.mjs",
-      "sha256": "c0771e681c36ebe4f7b532715de997d1a1bfb487c4faa209589ec1d4babb0b8e",
+      "sha256": "e146e7a21f6fc615d24e901dbf5f8ba4ca1532b531a923f78e8ccdd8fe47662a",
       "sources": [
         {
-          "name": "c467aa787-Dtc0Q8kR.js",
-          "sha256": "55d865d07b32fddd39f1d3f660ff46649e4fe9c5b60706c2862972d78d0f2e5d"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c467aa787-B4L-l_bi.js",
+          "sha256": "d70917b1ca85fb3495e08d8937cfb1c3cb841647706f97b32401b2bc60df17b2"
         },
         {
-          "name": "cf80fba0c-CT5qqVq9.js",
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf80fba0c-CT5qqVq9.js",
           "sha256": "574ad3d88136d8ed6d49adae1507f740cc62637e0cbd9fe0fb103606d7408012"
         },
         {
-          "name": "shared-125-CbVXqztB.js",
-          "sha256": "2e26a008616482738d4295e45439b868d7af195f3bf6cc5ef9a2babbd1ef1476"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-130-DnUXVlYq.js",
+          "sha256": "699331f0e4329cc5405e11fbb6eeba57b4715aefd2166a934e363d4acda2af8e"
         },
         {
-          "name": "c25d7186f-D8bdmkZe.js",
-          "sha256": "b21c5d5fb8f9ff18f00959f0fb38277a967e722f6036d6518fcfbd3276e2b11a"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c25d7186f-CHE_J2eY.js",
+          "sha256": "c9b3c57bc6d37f46187cfc489bcb56cb4afdda36404303f2acac5877f52e8a10"
+        },
+        {
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/preload-helper-D0dM6GpB.js",
+          "sha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "preview-sketch-keys.mjs",
-      "sha256": "049a10d7a4b50faa9255c222b49da2098de3b99d53437b393b7f2e4c25ba5b2d",
+      "sha256": "9e7df44034ac878ecf4c68283e8cfe7e0de1d12dc73ec0570972c892647883fe",
       "sources": [
         {
-          "name": "shared-19-DmuztgN-.js",
-          "sha256": "5887024578e7aba500d4d40f78de306327da348f60b9853cc557aac0192e4801"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
+          "sha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "preview-sketch-state.mjs",
-      "sha256": "4fcf6fbdb194ba776533852092f79dc2718027a579c847c6c124cd8fc80b75e8",
+      "sha256": "42531d7a606169a3bdfd2de084c6eb704c48ebbf3f31655b7c25f2b8080e303f",
       "sources": [
         {
-          "name": "c467aa787-Dtc0Q8kR.js",
-          "sha256": "55d865d07b32fddd39f1d3f660ff46649e4fe9c5b60706c2862972d78d0f2e5d"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c467aa787-B4L-l_bi.js",
+          "sha256": "d70917b1ca85fb3495e08d8937cfb1c3cb841647706f97b32401b2bc60df17b2"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "preview-sketch-host.mjs",
-      "sha256": "d35ad081e44c0c1ae47677c1353c1221f513530585f2ec72e5d81c4709ec4e5f",
+      "sha256": "5a508d71dca97a8b93683ebf619d727b4188460caf9c90e14d055d111517dad0",
       "sources": [
         {
-          "name": "cda4f50bb-z5ULw2rQ.js",
-          "sha256": "0ea6f8b7ecddf3c3470ed00b77534276da2f40e16d7869232977965981caad28"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cda4f50bb-DheueVFA.js",
+          "sha256": "264a4645d470a14e891849282d88711bfc6db4675d57164a7079688b2ab0e5a4"
         },
         {
-          "name": "cf0fecf2c-CeTWsDvV.js",
-          "sha256": "a76012cabb545003a8f996266f352a0a59f6ce2b54182f1af65fd02fee28457e"
+          "name": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf0fecf2c-2cWleVY5.js",
+          "sha256": "42ed0c7f8482eebc84540cea515b1c4e31282b23fa7a105f7e5ac9a827dcfea0"
         }
-      ]
+      ],
+      "referenceVersion": "2.42304.0"
     },
     {
       "name": "preview-menu-items.mjs",

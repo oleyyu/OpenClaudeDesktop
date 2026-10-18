@@ -84,6 +84,26 @@ export function codeBlockRunId(sessionKey, command, scope) {
   return `block:${sessionKey ?? ""}:${scope ?? ""}:${command}`;
 }
 
+// ---- The block's kept output (2.42304.0 c19e90103-muBq-gyt.js Ng ≡ 2.37337.1 sy, Bg ≡ py) ----------------------
+
+/**
+ * Ng commandDone: `t.inlineRun?.id === e && t.inlineRun.endedBy === "idle"` — the tracked run ended at an idle prompt.
+ * Only "idle" counts, as in the source: "silence", "cancel", "shell-exit", "error", "superseded" and the local
+ * dedicated tab's "exit" (terminal-store runDedicated, a tab running just the command) do not.
+ */
+export function inlineCommandDone(run) {
+  return !!run && run.endedBy === "idle";
+}
+
+/**
+ * Bg `me = (!se || fe) && ae ? ie : void 0`: the run record (ie, c26fb8b6b jn) shows in the kept box once the block
+ * shows runs (ae), unless its run is still tracked (se) and has not ended at the prompt (fe = commandDone). The live box
+ * wins while there is live output or an error (`pe || ue ? Lg(...) : me === void 0 ? null : Lg(kept)`).
+ */
+export function keptRunVisible({ tracked = false, commandDone = false, showsRun = false } = {}) {
+  return (!tracked || commandDone) && !!showsRun;
+}
+
 // ---- Which tab a run is typed into, and whether the pane opens ---------------------------------------------------
 
 /**

@@ -3,6 +3,8 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { guestWorkdir } from './session-paths.mjs';
 import { outputSnapshot, changedOutputs } from './deliverables.mjs';
+import { readRewindTranscript, sessionConfigDir, decideRewind, assistantMidTurn, isToolResultUser, isForkRefusal, validCliSessionId,
+  REWIND_SEND_RACE, REWIND_START_RACE } from './rewind-chain.mjs';
 
 const clone = value => structuredClone(value);
 const now = () => Math.floor(Date.now() / 1000);
@@ -10,11 +12,21 @@ export const COWORK_ENGINE = 'cowork-vm';
 
 // Main-owned thread/turn facade. The renderer never chooses executable paths,
 // mount sources, environment variables or native process IDs.
+/** CB6cNSrW tg over a host userMessage item: its text parts, joined. */
+const promptText = item => Array.isArray(item?.content) ? item.content.filter(part => part.type === 'text').map(part => part.text).join('\n') : null;
+/** The host message buffer for ag: each turn's prompt (uuid = the item id the host sends to the CLI) and its CLI records. */
+const rewindBuffer = row => row.thread.turns.flatMap(turn => {
+  const prompt = turn.items[0];
+  return [...(prompt?.type === 'userMessage' ? [{ type: 'user', uuid: prompt.id, message: { content: prompt.content } }] : []), ...(row.cliRecords?.[turn.id] || [])];
+});
+
 export class CoworkSessions {
   constructor({ dataDir, host, provider, approveFolder, approval, emit, onThread = () => {}, runtime = {} }) {
     Object.assign(this, { dataDir, host, provider, approveFolder, approval, emit, onThread, runtime });
     this.root = path.join(dataDir, 'cowork-runtime', 'threads');
     this.rows = new Map(); this.live = new Map(); this.approvals = new Map();
+    // R4i-cowork CW2: 2.42304.0 CB6cNSrW `_sendCommitGen` — a send committed while a rewind reads aborts the rewind.
+    this.sendGen = new Map();
     host.on('event', event => this.observe(event));
   }
   owns(id) { return typeof id === 'string' && /^cw-[a-f0-9-]{36}$/.test(id); }
@@ -74,6 +86,7 @@ export class CoworkSessions {
       finally { this.finish(id, 'interrupted'); }
       return {};
     }
+    if (method === 'cowork/rewind') return this.rewind(row, params.targetMessageUuid);
     if (method !== 'turn/start') throw new Error(`Cowork does not support ${method}.`);
     if (this.live.has(id)) throw new Error('A Cowork task is already running in this session.');
     if (params.cwd && params.cwd !== row.thread.cwd) throw new Error('Open a new Cowork session to change its folder.');
@@ -86,8 +99,9 @@ export class CoworkSessions {
     if (permission === 'bypass' || params.sandboxPolicy?.type === 'dangerFullAccess') throw new Error('Cowork VM requires tool approvals; bypass mode is not enabled.');
     const permissionMode = permission === 'plan' || params.collaborationMode?.mode === 'plan' || params.sandboxPolicy?.type === 'readOnly' ? 'plan' : permission === 'acceptEdits' ? 'acceptEdits' : 'default';
     const turn = { id: randomUUID(), items: [], status: 'inProgress', error: null, startedAt: now(), completedAt: null };
+    this.sendGen.set(id, (this.sendGen.get(id) ?? 0) + 1);
     row.thread.turns.push(turn); row.thread.updatedAt = now(); row.thread.preview ||= text.slice(0, 160); row.model = params.model || row.model;
-    const live = { row, turn, streams: new Map(), cancelled: false, permissionMode, outputs: outputSnapshot(row.thread.cwd) };
+    const live = { row, turn, streams: new Map(), cancelled: false, permissionMode, outputs: outputSnapshot(row.thread.cwd), launch: this.launchFor(row) };
     this.live.set(id, live); this.save(row);
     this.note('turn/started', id, { turn });
     this.item(live, { id: randomUUID(), type: 'userMessage', content: clone(params.input) }, true);
@@ -104,11 +118,53 @@ export class CoworkSessions {
   async run(live, provider, text) {
     const { row } = live, sessionId = row.thread.id;
     if (live.cancelled || this.live.get(sessionId) !== live) return;
-    await this.host.request('open', { runtime: { dataDir: this.dataDir, ...this.runtime }, sessionId, turnId: live.turn.id, sdkSessionId: row.sdkSessionId,
-      resume: row.sdkStarted, cwd: row.thread.cwd, provider, permissionMode: live.permissionMode,
+    const { launch } = live;
+    await this.host.request('open', { runtime: { dataDir: this.dataDir, ...this.runtime }, sessionId, turnId: live.turn.id, sdkSessionId: launch.sdkSessionId,
+      resume: launch.resume, ...(launch.fork ? { fork: { ...launch.fork } } : {}), cwd: row.thread.cwd, provider, permissionMode: live.permissionMode,
       instructions: `${row.instructions}\nWork in the selected folder mounted as your current directory. Save deliverables in ./outputs. Use the available tools to complete the task. Do not claim to have created files unless you actually wrote them.` }, 180_000);
     if (live.cancelled || this.live.get(sessionId) !== live) { await this.host.request('close', { sessionId, turnId: live.turn.id }); return; }
-    await this.host.request('send', { sessionId, turnId: live.turn.id, sdkSessionId: row.sdkSessionId, text, messageId: live.turn.items[0].id });
+    await this.host.request('send', { sessionId, turnId: live.turn.id, sdkSessionId: launch.sdkSessionId, text, messageId: live.turn.items[0].id });
+  }
+  // R4i-cowork CW2: CB6cNSrW launch (`let lt=K?.pendingRewindTo`): a pending rewind resumes the CLI session at the fork
+  // point with forkSession (`X.resume=K.cliSessionId,X.resumeSessionAt=lt,X.forkSession=!0`); "" (first-message
+  // rewind) starts fresh. Host: the fork names its new SDK session (--session-id beside --fork-session, allowed by CLI
+  // 2.1.280) so init still proves the identity; a CLI that answers with its own new id is adopted (see message()).
+  launchFor(row) {
+    const pending = row.pendingRewindTo;
+    if (pending === undefined) return { sdkSessionId: row.sdkSessionId, resume: row.sdkStarted };
+    if (pending && row.sdkStarted) return { sdkSessionId: randomUUID(), resume: false, fork: { from: row.sdkSessionId, at: pending } };
+    return { sdkSessionId: randomUUID(), resume: false };
+  }
+  // R4i-cowork CW2: the host rewindSessionV2 (2.42304.0 CB6cNSrW `async rewindSessionV2(`, reached from preload
+  // `LocalAgentModeSessions_$_rewindV2` through bqqpX_jW `n.rewindSessionV2(e,r)`). It never touches files: read the
+  // target's text and the CLI transcript, decide the fork point (rewind-chain.mjs), stop the session, record
+  // pendingRewindTo for the next launch and return {prefill} or {refusal}. The host also cuts the turns from the target
+  // on, which the official view does by reading the transcript only up to pendingRewindTo.
+  async rewind(row, targetUuid) {
+    const id = row.thread.id;
+    if (typeof targetUuid !== 'string' || !targetUuid) throw new Error('Unknown Cowork message.');
+    const wasLive = this.live.has(id), gen = this.sendGen.get(id) ?? 0;
+    const turnIndex = row.thread.turns.findIndex(turn => turn.items[0]?.type === 'userMessage' && turn.items[0].id === targetUuid);
+    let text = turnIndex >= 0 ? promptText(row.thread.turns[turnIndex].items[0]) : null;
+    const foundInBuffer = text !== null, buffer = rewindBuffer(row);
+    const { chain, targetText } = await readRewindTranscript({ configDir: sessionConfigDir(this.dataDir, id),
+      cliSessionId: row.sdkStarted ? row.sdkSessionId : undefined, targetUuid });
+    if (text === null) text = targetText;
+    const decision = decideRewind({ chain, buffer, targetUuid, text, foundInBuffer });
+    if (!wasLive && this.live.has(id)) throw new Error(REWIND_START_RACE);
+    if (decision.refusal) return { refusal: decision.refusal };
+    const raced = () => { if ((this.sendGen.get(id) ?? 0) !== gen) throw new Error(REWIND_SEND_RACE); };
+    raced();
+    if (this.live.has(id)) await this.request('turn/interrupt', { threadId: id });
+    raced();
+    // Await the prior CLI process (official `_priorVmProcessId` wait); the runtime retires it before answering.
+    if (row.sdkStarted) await this.host.request('close', { sessionId: id }, 15_000).catch(() => {});
+    raced();
+    const removed = turnIndex >= 0 ? row.thread.turns.splice(turnIndex) : [];
+    for (const turn of removed) if (row.cliRecords) delete row.cliRecords[turn.id];
+    if (decision.forkAt !== undefined) row.pendingRewindTo = decision.forkAt;
+    row.thread.updatedAt = now(); this.save(row);
+    return { prefill: text };
   }
   observe(event) {
     if (event.event === 'status') { this.emit({ kind: 'cowork-runtime', ...event }); return; }
@@ -129,11 +185,25 @@ export class CoworkSessions {
     const { row, turn } = live, id = row.thread.id;
     const hostText = text => String(text).replaceAll(`${guestWorkdir(id)}/`, row.thread.cwd.replace(/\/$/, '') + '/').replaceAll(`/sessions/${id}/mnt/work/`, row.thread.cwd.replace(/\/$/, '') + '/');
     if (record.type === 'system' && record.subtype === 'init') {
-      if (record.session_id !== row.sdkSessionId) throw new Error('Cowork SDK returned a different session identity.');
+      const { launch } = live;
+      if (!live.initialized) {
+        // A fork's CLI may name the new session itself; adopt it unless it is the session being forked (not verified live).
+        const adopt = !!launch.fork && validCliSessionId(record.session_id) && record.session_id !== launch.fork.from;
+        if (record.session_id !== launch.sdkSessionId && !adopt) throw new Error('Cowork SDK returned a different session identity.');
+        live.initialized = true; row.sdkSessionId = record.session_id;
+        // CB6cNSrW onSystemInit: `r.pendingRewindTo=void 0`.
+        delete row.pendingRewindTo;
+      } else if (record.session_id !== row.sdkSessionId) throw new Error('Cowork SDK returned a different session identity.');
       row.sdkStarted = true; this.save(row);
     }
     // Nested agent output remains in its tool result, not the parent's reply.
     if (record.parent_tool_use_id) return;
+    // R4i-cowork CW2: the host's message buffer for the rewind (official `messageBuffer`, read by ag): top-level CLI
+    // record uuids per turn, kept beside the thread (never sent to the renderer).
+    if (typeof record.uuid === 'string' && record.uuid !== turn.items[0]?.id && (record.type === 'assistant' || (record.type === 'user' && isToolResultUser(record)))) {
+      const records = ((row.cliRecords ||= {})[turn.id] ||= []);
+      records.push(record.type === 'assistant' ? { type: 'assistant', uuid: record.uuid, midTurn: assistantMidTurn(record) === true } : { type: 'user', uuid: record.uuid, toolResult: true });
+    }
     if (record.type === 'stream_event') {
       const event = record.event;
       if (event.type === 'message_start') { live.messageId = event.message.id; live.streams.clear(); }
@@ -147,12 +217,15 @@ export class CoworkSessions {
       }
     }
     if (record.type === 'assistant') {
+      // R4i-cowork CW4 (X2 CW-7): a refused reply keeps the API's stop_reason / stop_details on each of its rows, the
+      // fields 2.42304.0 shared-52 _B reads off the last assistant record (`e.stop_reason==="refusal"?{stopDetails:…}`).
+      const stop = record.message?.stop_reason === 'refusal' ? { codeDesktop: { stopReason: 'refusal', stopDetails: record.message.stop_details ?? null } } : {};
       for (const [index, block] of (record.message?.content || []).entries()) {
-        if (block.type === 'text') this.item(live, { id: `${record.message.id}:${index}`, type: 'agentMessage', text: hostText(block.text), phase: 'commentary' }, true);
-        if (block.type === 'thinking') this.item(live, { id: `${record.message.id}:${index}`, type: 'reasoning', summary: [], content: [block.thinking] }, true);
+        if (block.type === 'text') this.item(live, { id: `${record.message.id}:${index}`, type: 'agentMessage', text: hostText(block.text), phase: 'commentary', ...stop }, true);
+        if (block.type === 'thinking') this.item(live, { id: `${record.message.id}:${index}`, type: 'reasoning', summary: [], content: [block.thinking], ...stop }, true);
         if (block.type === 'tool_use') {
           this.item(live, { id: block.id, type: 'dynamicToolCall', namespace: null, tool: block.name,
-            arguments: block.input, status: 'inProgress', contentItems: null, success: null, durationMs: null });
+            arguments: block.input, status: 'inProgress', contentItems: null, success: null, durationMs: null, ...stop });
           if (block.name === 'TodoWrite' && Array.isArray(block.input?.todos)) {
             this.note('turn/plan/updated', id, { turnId: turn.id, explanation: null,
               plan: block.input.todos.filter(todo => typeof todo.content === 'string').map(todo => ({ step: todo.content,
@@ -209,6 +282,9 @@ export class CoworkSessions {
     this.live.delete(id);
     for (const [key, controller] of this.approvals) if (key.startsWith(`${id}:`)) { controller.abort(); this.approvals.delete(key); }
     const { row, turn } = live;
+    // R4i-cowork CW2: CB6cNSrW takeRewindRefusal — the CLI refused the fork point (muI2IV6k Qzt "No message found with
+    // message.uuid") before init: drop the fork so the next turn resumes the session as it was.
+    if (status === 'failed' && live.launch?.fork && !live.initialized && isForkRefusal(message) && row.pendingRewindTo === live.launch.fork.at) delete row.pendingRewindTo;
     if (status === 'completed') {
       const deliverables = changedOutputs(row.thread.cwd, live.outputs);
       if (deliverables.length) this.item(live, { id: randomUUID(), type: 'dynamicToolCall', tool: 'present', namespace: null,

@@ -91,7 +91,7 @@ const sample = [
 ]
 
 test('history: turns by ZCode turn id with stable item ids, plan and usage', () => {
-  const { turns, plan, lastUsage } = turnsFromMessages(sample, { threadId: 'sess_1', cwd: '/w' })
+  const { turns, plan, lastUsage, totalUsage } = turnsFromMessages(sample, { threadId: 'sess_1', cwd: '/w' })
   assert.deepEqual(turns.map((turn) => turn.id), ['turn_1', 'turn_2'])
   assert.deepEqual(turns[0].items.map((item) => `${item.type}:${item.id}`), ['userMessage:msg_u1', 'reasoning:msg_a1#r0', 'agentMessage:msg_a1#t0', 'commandExecution:toolu_1', 'agentMessage:msg_a2#t0'])
   assert.equal(turns[0].status, 'completed')
@@ -101,6 +101,8 @@ test('history: turns by ZCode turn id with stable item ids, plan and usage', () 
   assert.equal(turns[1].status, 'interrupted', 'an unfinished turn in an idle session ended')
   assert.deepEqual(plan, [{ step: 'x', status: 'pending' }])
   assert.equal(lastUsage.input, 100)
+  // Every step's tokens added up: a reopened thread's total starts there, not at zero.
+  assert.deepEqual(totalUsage, { input: 100, output: 20, reasoning: 0, cache: { read: 10, write: 0 } })
   assert.equal(previewOf(sample), 'RUN it')
   const live = turnsFromMessages(sample, { threadId: 'sess_1', cwd: '/w', running: true, activeTurnId: 'turn_2' })
   assert.equal(live.turns[1].status, 'inProgress')

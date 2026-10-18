@@ -71,11 +71,35 @@ test('every local animation and movement transition has an OS and an in-app redu
   assert.deepEqual(missing, []);
 });
 
-test('the composer submit swap keeps its visibility transition under reduced motion without !important', () => {
+// R2 composer-send-cell: the Send/Stop swap is the original 2.42304.0 c227f4d5e Ij with its own utility classes (Nj/Pj/Fj,
+// generated composer-card-tokens.mjs). The loaded official sheet carries their reduced-motion handling: Pj's entry
+// animation and Fj's opacity transition are motion-safe (no-preference media and not under [data-reduce-motion=true]),
+// and Fj's visibility transition, whose transitionend unmounts the old layer, is unconditional. No local rule is left.
+test('the composer submit swap keeps its visibility transition under reduced motion (official Ij classes, no local rules)', async () => {
   const css = readFileSync(path.join(src, 'source-composer.css'), 'utf8');
-  assert.doesNotMatch(css, /sc-submit-layer\[data-leaving\][^{]*\{[^}]*!important/);
-  assert.match(css, /html\[data-reduce-motion="true"\] \.sc-composer \.sc-submit-layer\[data-leaving\] \{ transition: visibility 0s linear 80ms; \}/);
-  assert.match(css, /html\[data-reduce-motion="true"\] \.sc-composer \.sc-submit-layer\[data-entering\] \{ animation: none; \}/);
+  assert.doesNotMatch(css, /sc-submit|@keyframes cds-fade-in/);
+  const Card = await import('../src/generated/code-composer/composer-card-tokens.mjs');
+  assert.equal(Card.submitLayerEnterClass, 'motion-safe:animate-[cds-fade-in_0.12s_ease-out_0.08s_backwards]');
+  assert.equal(Card.submitLayerExitClass, 'pointer-events-none invisible opacity-0 [transition:visibility_0s_linear_80ms] motion-safe:[transition:opacity_80ms_ease-out,visibility_0s_linear_80ms]');
+  const official = postcss.parse(readFileSync(path.resolve(src, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8'));
+  const keys = ['.motion-safe\\:animate-\\[cds-fade-in_0\\.12s_ease-out_0\\.08s_backwards\\]', '.motion-safe\\:\\[transition\\:opacity_80ms_ease-out\\,visibility_0s_linear_80ms\\]', '.\\[transition\\:visibility_0s_linear_80ms\\]'];
+  const found = {};
+  official.walkRules((rule) => {
+    const key = keys.find((selector) => rule.selector.startsWith(selector));
+    if (key) found[key] = { selector: rule.selector, context: contextOf(rule), body: rule.toString() };
+  });
+  const [enter, exit, visibility] = keys.map((key) => found[key]);
+  assert.ok(enter && exit && visibility, Object.keys(found).join(' | '));
+  for (const motion of [enter, exit]) {
+    assert.match(motion.context, /prefers-reduced-motion:no-preference/);
+    assert.match(motion.selector, /:not\(:where\(\[data-reduce-motion=true\],\[data-reduce-motion=true\] \*\)\)$/);
+  }
+  assert.match(enter.body, /animation:\.12s ease-out 80ms backwards cds-fade-in/);
+  assert.doesNotMatch(visibility.context, /prefers-reduced-motion/);
+  assert.match(visibility.body, /transition:visibility 0s linear 80ms/);
+  let keyframes = false;
+  official.walkAtRules('keyframes', (rule) => { if (rule.params === 'cds-fade-in') keyframes = true; });
+  assert.ok(keyframes, 'the official sheet defines cds-fade-in');
 });
 
 // Wave integration decision (fidelity LOG "Wave integration"): the source's reduce handling for the MessageActions

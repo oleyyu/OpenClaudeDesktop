@@ -1,0 +1,6137 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-mcp-app-card.mjs",
+  "adapterModule": "src/source-mcp-app-card-adapters.jsx",
+  "hostLibrary": "src/generated/mcp-app-host",
+  "hostLibraryModulesSha256": "8239f09cf997b060f7a6facc8fdb45df21ae269cdbe349be759546027afc7ae6",
+  "modules": [
+    {
+      "target": "c03935b01.mjs",
+      "source": "c03935b01-CyJKQj4N.js",
+      "sourceSha256": "f9a982192fb8f0a1894714c0cf58b9a0be001e29e797492d6165fa408f02a6d9",
+      "sha256": "30d3a532400ddeb2cc9ad511e368a46a05583c3428e7860e9aa2786578d5225b",
+      "referenceVersion": "2.42304.0",
+      "statements": 3,
+      "bindings": [
+        {
+          "name": "z",
+          "sha256": "1b1ae21d7815ee42e24cf6c90776726f6e5cd79c37835c3f0441978c8ca986a2"
+        },
+        {
+          "name": "uo",
+          "sha256": "8c256ce2e921b8ca72d1c5c29bb6ae238cb2702605c2d15e70f6a9cd343e91d6"
+        },
+        {
+          "name": "yc",
+          "sha256": "c13bd411baf6bf9a8b2a137a2fd4fdfb996d33858f2a77b520f7fa6c8083aa71"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "b",
+          "from": "./cf53e1812.mjs",
+          "name": "F",
+          "via": "cf53e1812-CivLPgES.js:F",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "K": "uo",
+        "W": "z",
+        "Y": "yc"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c0532af3d.mjs",
+      "source": "c0532af3d-CvAg_NYA.js",
+      "sourceSha256": "920886db1ed0e5bda6e8ecd7bea90a7ab4a1d296b7a162e5e3df78bc7ac14c7e",
+      "sha256": "2a62e113d629006b4d12393f4752da93c2ca6f6ef8f717ce140f56b07c4410e6",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "5cb08172aadf9c13eef79b7156e33f5ef2e4c15b239a880dda1a3131f6818479"
+        },
+        {
+          "name": "t",
+          "sha256": "0dd638b2d9100394ac4701e780f20dfdf3f6d7a02aa9b8e842d2558a98ff5e3b"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "t": "t"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c16f659b9.mjs",
+      "source": "c16f659b9-Lmh4bP4f.js",
+      "sourceSha256": "cf7739e77901d450ce6a013e2e515cb40e3a66986477df14baf1bc422c7d8a3d",
+      "sha256": "a3ca16a8db93ceb62f2be92110ab41d5b55f2284e70720a179fee70a9f3ed371",
+      "referenceVersion": "2.42304.0",
+      "statements": 9,
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "b369c3743609ec6fd20ee6a89acad95e84aa9e43429e1ab7ca151b40fe0f9a35"
+        },
+        {
+          "name": "t",
+          "sha256": "26f5e6fc8dd9515c4c034d43d02822b2f214e48aa048f62162ad8accfcb26b05"
+        },
+        {
+          "name": "n",
+          "sha256": "866d76efe539ab90d2166211dca19753a4ebcca3970740217fc419bf50fa5462"
+        },
+        {
+          "name": "r",
+          "sha256": "b0a8994da5756f6210cd803eea69f0dd8b0998001dbddac47d6b97c98410143c"
+        },
+        {
+          "name": "i",
+          "sha256": "810dab28bae3313e73f658f7b644867ea669c9886f951862e29d78fb7bb71024"
+        },
+        {
+          "name": "a",
+          "sha256": "fe484e7f6b0c23e43e5fee52e7089ab1b9693cb7b8ef74572c667e77455e45c1"
+        },
+        {
+          "name": "o",
+          "sha256": "00ce43965e69ef97e6152161101ec29ce0479261c4a28976490aa66f94578b8b"
+        },
+        {
+          "name": "c",
+          "sha256": "e15db947e2f8e1a1bbe7c8b711629a06cf12c1d8e10bb250f7532c02bcc6d6ba"
+        },
+        {
+          "name": "f",
+          "sha256": "d1a200248a14584adcdb6229ebc4c33bede9a607324ad69fee5ca565701ff1fc"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "r": "f"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c19e90103.mjs",
+      "source": "c19e90103-muBq-gyt.js",
+      "sourceSha256": "243eb96d38a16bf17459844dcc0864ce8ba537219efbd4b304900fe7485a3479",
+      "sha256": "44bcbc2ce60601062a110977ed83420dfea24feee75b1d404986cc81f34fcfdc",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "il",
+          "sha256": "74e37933daa67053be5373a1621c4efcd218971bad46782ee500a7fc8a087d2d"
+        },
+        {
+          "name": "al",
+          "sha256": "09776f333a6ebe4ca6baacd57ac899c66d961d87a212606bf9885d053037d9b9"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [
+        "c4a70913c-C9EYof6i.js"
+      ],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "fr": "al"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c227f4d5e.mjs",
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "4b46d023d461aa21bb05dc360dc6948345fec7f6e9d8abef07d667c0d693391f",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "dM",
+          "sha256": "330fe827b155d40bc3fb46fd767ccb611850b53b40c526ebe361fe88c8b0c9fb"
+        },
+        {
+          "name": "fM",
+          "sha256": "914468dcc5f91d3568849b9c7c8e32c113f7d60ed0be36dcb5a1edd8ec1cec7b"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "yh",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "reportRendererError",
+          "via": "c68c4283d-CPuRD0vx.js:t",
+          "kind": "adapter",
+          "original": "ye"
+        },
+        {
+          "local": "ss",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "cleanSendText",
+          "via": "shared-3-DnHYUZdJ.js:Ss",
+          "kind": "adapter",
+          "original": "QN"
+        },
+        {
+          "local": "$_",
+          "from": "./c8f38bf1f.mjs",
+          "name": "t",
+          "via": "c8f38bf1f-D_EZalnr.js:t",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "Go": "fM"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c26909c77.mjs",
+      "source": "c26909c77-D7pbz1nX.js",
+      "sourceSha256": "7fa7e4c3ead1a0e4e2e0f13a47a46b152ec74e5ef2cc6ab6debf66944b0bc7ae",
+      "sha256": "28f6d9c20a29e9860f4dea152fe00e39caec162a653d24c2365d678e9b608c5a",
+      "referenceVersion": "2.42304.0",
+      "statements": 3,
+      "bindings": [
+        {
+          "name": "o",
+          "sha256": "cf5edfbf81ce4eeb87d19f1c5deb928b4b82110dacde87a2b8c7db4e3dfb4df0"
+        },
+        {
+          "name": "s",
+          "sha256": "9043de754b6bf2d0e19df3928538320dac9af9daf012d2e8d3ded876cedc5438"
+        },
+        {
+          "name": "c",
+          "sha256": "463b32b479f359961cd959f865202a1691591cf631f2e1b75b3414abfe23e3ae"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-DfPJ1QmD.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "./shared-25.mjs",
+          "name": "Ci",
+          "via": "shared-25-DP8p7i1Z.js:Ci",
+          "kind": "generated"
+        },
+        {
+          "local": "a",
+          "from": "./shared-25.mjs",
+          "name": "a_",
+          "via": "shared-25-DP8p7i1Z.js:a_",
+          "kind": "generated"
+        },
+        {
+          "local": "i",
+          "from": "./shared-25.mjs",
+          "name": "Si",
+          "via": "shared-25-DP8p7i1Z.js:Si",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "t": "c"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c425fb3cf.mjs",
+      "source": "c425fb3cf-CEgSkv8l.js",
+      "sourceSha256": "abbb85b1ce1c1bfc0e880398dcad9ed0b521fd5db8d3dcbbd2cddb5fb049470c",
+      "sha256": "95cab8639c6164496257f6b88891f0315b44174232d6c75ff7eae5ff534a49f4",
+      "referenceVersion": "2.42304.0",
+      "statements": 7,
+      "bindings": [
+        {
+          "name": "N",
+          "sha256": "e0caa06ac879f4505718cec9756ccec2183543e18da4d08ccb05d11e834d4911"
+        },
+        {
+          "name": "F",
+          "sha256": "79f5754e2d1187db088e0a6042f1a9e8cc06ff7b6dd10935678291c9f1dcfe2f"
+        },
+        {
+          "name": "se",
+          "sha256": "bd3660deb0a01a85163b1c64e6b6e21c079e90d02c7c8755991f37964e5923c4"
+        },
+        {
+          "name": "Z",
+          "sha256": "b0c37663d358ed488753a6626c51e240ffec68d42fd7900ad552950d3ee0ef12"
+        },
+        {
+          "name": "ue",
+          "sha256": "2828a7fe182ca56ebc41ce7d997552ef69047dd8178c0e033e9b132b8ff081af"
+        },
+        {
+          "name": "de",
+          "sha256": "6ccd21310501d51bef172b5696c90f5272ef18857a668f73d2df0cd0853eb73b"
+        },
+        {
+          "name": "Q",
+          "sha256": "c52e1265c38f35bdb9f1476203743396e16f1da1d467ea0345bd7f8e64b9b3bb"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "c",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "a": "F",
+        "c": "ue",
+        "d": "de",
+        "r": "Q",
+        "u": "Z",
+        "v": "se"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c4a70913c.mjs",
+      "source": "c4a70913c-C9EYof6i.js",
+      "sourceSha256": "3d09b7bb1e06ccb1923b6bc1bbee82616cc9d5395f7aa3f9a0191b0f01b2c532",
+      "sha256": "4a9e0e79f85b1bc30d2dfcb3deb2dbedeecec5479081cf14ece1d5dd75624341",
+      "referenceVersion": "2.42304.0",
+      "statements": 3,
+      "bindings": [
+        {
+          "name": "f",
+          "sha256": "13e9e7ab8bd3a031dd5fa96a6f6b0481f01ed267a80861a504ccf8f4bb070cec"
+        },
+        {
+          "name": "y",
+          "sha256": "f70052aed3e75dd70b1aca0d2113620adf665655bb4fb9cee9779fc54089268c"
+        },
+        {
+          "name": "b",
+          "sha256": "4be75ac9f28105b31acad441750d337ea8f7a4a1790efdf36cdf4c076a31d780"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "c": "b",
+        "l": "y",
+        "u": "f"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c4a9ee384.mjs",
+      "source": "c4a9ee384-ZZIKqgNM.js",
+      "sourceSha256": "98e36b8bba172fc197d9726cfbae88889b56ccbbcac7ea93a560204a7b82a91a",
+      "sha256": "a5c1c2c960902963991e982ca2f7198077f1d1612aef67991ab29c93d7a513a3",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "up",
+          "sha256": "a420afb5bd7099272c05a0c19a24421aea32e3954fa50eccaaa02437b908c714"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "c": "up"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c4acc1503.mjs",
+      "source": "c4acc1503-B_cdqucS.js",
+      "sourceSha256": "7a6bd3439eb8d12ecea88c314fb0ec4e21aa1e02441a64e0141dad7acc521e69",
+      "sha256": "19920c993d3b620e77cafa2eeedb1b75fab09bc15364f79e5c48e377e0aa223e",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "cec4a530702df0d5feae307e6fc79df16b79d95d4b308e6bbcd14e281bc3a9bc"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "e",
+          "from": "./shared-0.mjs",
+          "name": "Df",
+          "via": "shared-0-ByI5P0CP.js:Df",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "./shared-0.mjs",
+          "name": "Ub",
+          "via": "shared-0-ByI5P0CP.js:Ub",
+          "kind": "generated"
+        },
+        {
+          "local": "n",
+          "from": "./shared-0.mjs",
+          "name": "Kb",
+          "via": "shared-0-ByI5P0CP.js:Kb",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "./shared-52.mjs",
+          "name": "no",
+          "via": "shared-52-DGviI8xb.js:no",
+          "kind": "generated"
+        },
+        {
+          "local": "o",
+          "from": "./shared-0.mjs",
+          "name": "mx",
+          "via": "shared-0-ByI5P0CP.js:mx",
+          "kind": "generated"
+        },
+        {
+          "local": "i",
+          "from": "./shared-0.mjs",
+          "name": "cx",
+          "via": "shared-0-ByI5P0CP.js:cx",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "a": "_"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c7407a74b.mjs",
+      "source": "c7407a74b-CeQLL5tW.js",
+      "sourceSha256": "461260b6a2437a49c962b5bf981db51e004565582dcf6bacf2a32f35e9e5a19d",
+      "sha256": "e6a3de2d9d1ebda1537f1de3dd1e7c99586c6d23836fb57e5a5be10b815e2a7e",
+      "referenceVersion": "2.42304.0",
+      "statements": 12,
+      "bindings": [
+        {
+          "name": "a",
+          "sha256": "561bd52eab06b0f2fc2040d9c7775fb872b28198bbc8a32ddd9ea19199b4e05d"
+        },
+        {
+          "name": "o",
+          "sha256": "6c791c75809c578c3521cca6c467b9db194470ae29cef0ed131d1c2d5b62fc52"
+        },
+        {
+          "name": "s",
+          "sha256": "6cb9c334ae4927fda6b7dc7ce01322294568ce9a4dc311432123ac59e7636e9d"
+        },
+        {
+          "name": "c",
+          "sha256": "ce4ee64b95dce319bd5e584dcd95d6fccb7f50fbcd60034f3f8859601de6379f"
+        },
+        {
+          "name": "l",
+          "sha256": "635e44266dc23eb6e404b65a52f440ee66cab8bd26be52f0f1ce4224fd1d3880"
+        },
+        {
+          "name": "d",
+          "sha256": "34197476610b0d5a841212c5ea90627e0e5de16fa108f1fac97be0f19e22bd57"
+        },
+        {
+          "name": "f",
+          "sha256": "244566f7d4df92198f3783e51909d0f0f16fb0e9991251ce63ad705c73d4199f"
+        },
+        {
+          "name": "p",
+          "sha256": "b2b8427884f7fab9857df10085b3aa6cb7c0f3c3d7aedfd4a4563e1a2e4346d6"
+        },
+        {
+          "name": "m",
+          "sha256": "8e892ee57f59071e9549e62adf30b8121fe53e0edec4aa142922c8912731525f"
+        },
+        {
+          "name": "h",
+          "sha256": "c9ed1e919e8013b634210097b52fc98007b9066d58eb4dba81448779e5984365"
+        },
+        {
+          "name": "g",
+          "sha256": "1dd6dc1e7384520668ef635e511f8a1f297427768258312934c0d8a8a674a4ed"
+        },
+        {
+          "name": "_",
+          "sha256": "7bb62b8b3b925b6115c6598ce9248dc50d1b29b53ab949632944c7f040be66bd"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "i",
+          "from": "./c9081d688.mjs",
+          "name": "l",
+          "via": "c9081d688-Blaoes4B.js:l",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "./tool-names.mjs",
+          "name": "lf",
+          "via": "shared-156-Bikz018e.js:lf",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "r": "l"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c81ea1931.mjs",
+      "source": "c81ea1931-ChuE7vym.js",
+      "sourceSha256": "ad82887242c4d2027078f12971d6f74b22be0af5264fee71d76f9cb33eef7076",
+      "sha256": "a5d4261d68c3fec18331392445a8129b3dc833dfb2d612ec6098361f208d67a8",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "6b87fe405a4514f73daa223d0fff7b0f2b4bb3c2ccb9a6670857bf11aec98062"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "t": "e"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c87a7a2df.mjs",
+      "source": "c87a7a2df-DdjUUMHE.js",
+      "sourceSha256": "ed2248031d4b31d1ad91065bb14ae400a549c973fcb677629257637932259f19",
+      "sha256": "483b68b5d344dc40a2afa92ee39c1b8715f1f9e9f3e54fa5b3e9b852f8e836fb",
+      "referenceVersion": "2.42304.0",
+      "statements": 8,
+      "bindings": [
+        {
+          "name": "c",
+          "sha256": "74f6a081a888795f391ef505cfe2b56b589d7cabab7abcd3e95cca834ed8fd61"
+        },
+        {
+          "name": "l",
+          "sha256": "5a05c2ffdc43f5882caa0a9051f55a4eb36c0566eaeb4b372ae90f13ea4dd2be"
+        },
+        {
+          "name": "u",
+          "sha256": "af072f6811a1070b96534f602af8a99282cdc15dfc3095c7b5c5c8c9d3fd6be8"
+        },
+        {
+          "name": "d",
+          "sha256": "37321d3a4bd516e02bb56e34bae0f32c4417ae237713fbd3cbbe6bb6743f0022"
+        },
+        {
+          "name": "f",
+          "sha256": "4c2473b7c0327ddc9459282944565a1a2ec33c097f905635e1f6cb27b0f5c377"
+        },
+        {
+          "name": "p",
+          "sha256": "d383619b9893b613d0588c8437e02a99a5ac7cc0acc542d15c4cd6de75924042"
+        },
+        {
+          "name": "h",
+          "sha256": "5e529634eb9d54b4e152ff4b848fbc4dcd37bee26991c912268ffc6057bd4a2c"
+        },
+        {
+          "name": "g",
+          "sha256": "5b1cee6bd1d58a377a1acdb9232088162c142da801eac5dafa03c6d10ad1414e"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react-dom",
+          "name": "createPortal",
+          "via": "vendor-frame-DfPJ1QmD.js:Sa",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "./shared-frame.mjs",
+          "name": "vl",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "n": "g",
+        "t": "h"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c8e12f1a8.mjs",
+      "source": "c8e12f1a8-6AP_7dPS.js",
+      "sourceSha256": "4364bad3845a5591535339386edcf8dcdac0e483498c1d5830ead1967d355cac",
+      "sha256": "b74d1d5c79b2613c976405bfb9c44c95485bdeaec211c0b1b1fc8aa6e65481b7",
+      "referenceVersion": "2.42304.0",
+      "statements": 15,
+      "bindings": [
+        {
+          "name": "ie",
+          "sha256": "2d2fe9273e8ce003e0e2f0bac1479d9ffca4481e164f5d4c56a21740234c9b14"
+        },
+        {
+          "name": "ae",
+          "sha256": "a80fec25571c19da26b5e4c40c107a4880dc89ea61ef91a9e6ec3b5698c9e20c"
+        },
+        {
+          "name": "oe",
+          "sha256": "29cdafeb70f2714ae6fb64944aafed5694ea32e40248b6c6f77f53f598a9d8d1"
+        },
+        {
+          "name": "se",
+          "sha256": "4bb50ea4135a3f6bb6a98177aed574470f09eb865edf58cdfd5a58320ce1141d"
+        },
+        {
+          "name": "ce",
+          "sha256": "e084579440f3d8ef62511b34909450b9e80ab36d3c199ff8697a316898d22867"
+        },
+        {
+          "name": "z",
+          "sha256": "12e86cab084587fbed6ddf08173da6436516ecfba66a01a87d8fdd509fbf84f9"
+        },
+        {
+          "name": "B",
+          "sha256": "61b4bf5b66cf1dfebc809c0589aaa543c399ca409cf9767238ebf6d2dca52793"
+        },
+        {
+          "name": "V",
+          "sha256": "b848cdb541c9de64a3d3ad62265340a2c75c6cfcd5a0f84a2240cfae33f2580f"
+        },
+        {
+          "name": "H",
+          "sha256": "f5724651eccc419f6b8b051b967843e624d86685537ca3600497ce4a5b769329"
+        },
+        {
+          "name": "U",
+          "sha256": "1c55210f016b20f4614dfbbe757a97739a25ad3a88e9676d390063dd64e230f4"
+        },
+        {
+          "name": "W",
+          "sha256": "6cc413fd83e4846062be58e0343eb767b9f35d4e1034112b5b2a9e711b395d71"
+        },
+        {
+          "name": "le",
+          "sha256": "6704b29a197e95cec1a34abf7a36b82bf825d049e98e1d5135e82810ef87fbd9"
+        },
+        {
+          "name": "pe",
+          "sha256": "cc139c3884b8acb386b571d2491287ef3f558ff8af5f28b275d6b3f0022bfbd4"
+        },
+        {
+          "name": "me",
+          "sha256": "1f1386b1e045330fc08fc1e93f9fcd9aabc865e895ffde4faca9801d64215a22"
+        },
+        {
+          "name": "he",
+          "sha256": "58a8371d6d9f124503f1b0d7046424e019ffa9ae2e6f328b0d37a6e5e32f7a21"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "g",
+          "from": "./shared-0.mjs",
+          "name": "fb",
+          "via": "shared-0-ByI5P0CP.js:fb",
+          "kind": "generated"
+        },
+        {
+          "local": "h",
+          "from": "./shared-0.mjs",
+          "name": "db",
+          "via": "shared-0-ByI5P0CP.js:db",
+          "kind": "generated"
+        },
+        {
+          "local": "_",
+          "from": "./shared-0.mjs",
+          "name": "oy",
+          "via": "shared-0-ByI5P0CP.js:oy",
+          "kind": "generated"
+        },
+        {
+          "local": "y",
+          "from": "../view-tabs/shared-0-ByI5P0CP.js",
+          "name": "useEventCallback",
+          "via": "shared-0-ByI5P0CP.js:xx",
+          "kind": "view-tabs",
+          "original": "_e"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "A",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSaveFile",
+          "via": "cc61d0d63-DhbBdZx8.js:i",
+          "kind": "adapter",
+          "original": "st"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "k",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "M",
+          "from": "./c26909c77.mjs",
+          "name": "t",
+          "via": "c26909c77-D7pbz1nX.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "D",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsConfirmationDialog",
+          "via": "shared-frame-BfjMqbuN.js:qs",
+          "kind": "view-tabs",
+          "original": "M_"
+        },
+        {
+          "local": "j",
+          "from": "./file-save.mjs",
+          "name": "r",
+          "via": "cc61d0d63-DhbBdZx8.js:r",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "b": "le",
+        "h": "pe",
+        "s": "he",
+        "S": "ae",
+        "x": "B",
+        "y": "W"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c8f38bf1f.mjs",
+      "source": "c8f38bf1f-D_EZalnr.js",
+      "sourceSha256": "1162507fd44eeb7e143310455c8f3ba70858e6a85ddb8f22e22e87af0a2cfff5",
+      "sha256": "36a82c969a1ae5ce85434f6406ab185bcc98cbee5b7071949c72b643a1fda241",
+      "referenceVersion": "2.42304.0",
+      "statements": 3,
+      "bindings": [
+        {
+          "name": "n",
+          "sha256": "85f772d94f304ef7d7d96f7b7fb16313e848ba1d82c3ee1a1640d3bb5a67e818"
+        },
+        {
+          "name": "r",
+          "sha256": "b2d9daabf6f4f57be5ec93ac5db3d843149c66b3dee02abae517a0d6a331fcb2"
+        },
+        {
+          "name": "i",
+          "sha256": "87ceb39750d6571d48ccf541e8f85491962b2f2db2e8b22808d8e43774f64f01"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "t",
+          "from": "./shared-182.mjs",
+          "name": "Uf",
+          "via": "shared-182-eT1kXtya.js:Uf",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "./shared-0.mjs",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "t": "i"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "c9081d688.mjs",
+      "source": "c9081d688-Blaoes4B.js",
+      "sourceSha256": "7277ee07b0f72061a18a4bd6f67d1ec2b9add0fd1fcbe45099b130258a84037f",
+      "sha256": "bff11ed39ce516e72e84ab09c7ffcf2e3a5e337ff649ee0721d81be024726553",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "f",
+          "sha256": "161b567186df379c3f8c0437b86379ac07642e4e7cfe35b82597bba50d52811e"
+        },
+        {
+          "name": "p",
+          "sha256": "96787caa3b8c7bf0e070ce2ccf5a9626d28166d3238cc97eee1d8032da5d09fd"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "l": "p"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "ccef66963.mjs",
+      "source": "ccef66963-DLJuiL6B.js",
+      "sourceSha256": "a513c7a46d13228d73c3ed017a6a5bbb838a1a910fc7fa4027ba1316c9fae19a",
+      "sha256": "2bdd5a9ed6f35ff5631f7e69cb822aca708939fb89f7123ca490be5b1e6bfe97",
+      "referenceVersion": "2.42304.0",
+      "statements": 5,
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "aab8924d66c60251d03bd5810dafdd4010a7b08496015f157ac2340ee243ff27"
+        },
+        {
+          "name": "i",
+          "sha256": "0ceceeeaf06de4a3bf026ed00afa5e1d0261745e41a6419f317782fa3cc0c611"
+        },
+        {
+          "name": "a",
+          "sha256": "42ef778f82c0b9edc6cd5441aad698b68cf53c2b7fe1367bf66a26459c362652"
+        },
+        {
+          "name": "o",
+          "sha256": "d8f89ecb3e3be951416cbf81a3866db474be538ba845cd18b6590a4af768d933"
+        },
+        {
+          "name": "s",
+          "sha256": "4e57aa25f31b044eac2c0ca521f96ccdae3fe82af14c8b04c48e226d7bf7baa3"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "n",
+          "from": "./shared-4.mjs",
+          "name": "qr",
+          "via": "shared-4-CJsHhp5n.js:qr",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "./shared-0.mjs",
+          "name": "Yb",
+          "via": "shared-0-ByI5P0CP.js:Yb",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "./shared-52.mjs",
+          "name": "fo",
+          "via": "shared-52-DGviI8xb.js:fo",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "n": "a",
+        "t": "s"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "cef1e6037.mjs",
+      "source": "cef1e6037-8DivyY4m.js",
+      "sourceSha256": "0c89671721e96ce49dd888cc11133e10b4333a052753409418dd3ca97f3fe159",
+      "sha256": "8104e9854c538731d32cb0387297d78a3597771db0c24245a7df174854a74ee0",
+      "referenceVersion": "2.42304.0",
+      "statements": 6,
+      "bindings": [
+        {
+          "name": "dt",
+          "sha256": "bfc9e890994b11a9be6657f551e0cd936d62eb84f0495e645c075c1a62138fb8"
+        },
+        {
+          "name": "ft",
+          "sha256": "151ce8ef24389131c63f33875477c5b5f60fe3d2fa292a4015ccd83b6bdf8b15"
+        },
+        {
+          "name": "pt",
+          "sha256": "06dd3552e85dec60f38b31de1f559791ea00780bf872da53b2553dc507d1a35e"
+        },
+        {
+          "name": "It",
+          "sha256": "9a9983250bdfcd478e04bcb5d30a269721999ec7f632696d2ee5871dc9171496"
+        },
+        {
+          "name": "Rt",
+          "sha256": "1abda7b9f735c130ae7e28d809b6129bb34ba5becfe7a82703661521829e364b"
+        },
+        {
+          "name": "zt",
+          "sha256": "3d410645762f2cc3c6a3ffc7d569e8219ec35f8efe3ccff1255f41d31a4134f9"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "T",
+          "from": "../mcp-app-host/sandbox-frame.mjs",
+          "name": "jl",
+          "via": "shared-78-D6VXYXaQ.js:jl",
+          "kind": "mcp-app-host",
+          "original": "xL"
+        },
+        {
+          "local": "Qe",
+          "from": "./c0532af3d.mjs",
+          "name": "t",
+          "via": "c0532af3d-CvAg_NYA.js:t",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "A": "zt",
+        "R": "It",
+        "w": "pt",
+        "z": "ft"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "cf53e1812.mjs",
+      "source": "cf53e1812-CivLPgES.js",
+      "sourceSha256": "779d07e3b298eb5e7f85c861a026e5f48036c0017a5c3c8ebcec60a9809c6a24",
+      "sha256": "2b7d866bdccebd26c3913ba23768855b212f5a6b9f9c36e5852e423d46c4ca23",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "Q",
+          "sha256": "d87cab15885c47a0b5b2d669fa8a2c7d11fd117234a9d3c66675e71e6b2554ac"
+        },
+        {
+          "name": "ce",
+          "sha256": "cb8762d00422761b36ba0361e4718fea626f8dd99b6ad02b1b3249d2c86e604a"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "F": "Q",
+        "t": "ce"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "cfdfec14c.mjs",
+      "source": "cfdfec14c-3LbBfVtj.js",
+      "sourceSha256": "c87c50e704d9a73539e89e0b57674c6ee5ff2e3344816450909f9d341787913e",
+      "sha256": "6e1d82f6791bf885f5fc9628b52bb8d87824de82bfa89ea7b14073db856ed21d",
+      "referenceVersion": "2.42304.0",
+      "statements": 42,
+      "bindings": [
+        {
+          "name": "g",
+          "sha256": "f83e1bd9681622463483a3577a0f6de1a2bf8f37724fafad13e8307b53555c52"
+        },
+        {
+          "name": "_",
+          "sha256": "7a6719b228109cbb30aadf4afd31e8a89dc2400a2cf1288bdf9b919c59f7a421"
+        },
+        {
+          "name": "v",
+          "sha256": "a798de8ee75aeb5519c5266239190385c84b21ae031ff12cbebfed7cd2c84fde"
+        },
+        {
+          "name": "y",
+          "sha256": "5989ae676d12b491db1a81ccb114b3d4cc0cf15fa66b8cc277cb96c45f0c9e5f"
+        },
+        {
+          "name": "b",
+          "sha256": "2ef14a7372f02f9da86053ac68ec8636c41b731fd1658277cff5c981a38d0d65"
+        },
+        {
+          "name": "x",
+          "sha256": "4702746a965382e817bf5509690e47e9bbb0d26f991a3827074e72f25cd281c3"
+        },
+        {
+          "name": "S",
+          "sha256": "ec6bfa74810f3602f336eb6b51306bc102f47e4d5437d210b329cca07181fc08"
+        },
+        {
+          "name": "C",
+          "sha256": "410152fbb764081210e65ad5b3ebbe57d501faee1c8f455aa96262c6d9004fc7"
+        },
+        {
+          "name": "w",
+          "sha256": "9bbb22f9fd7928c2275c0b25b9951aa400f39b508ace8801ad93a51e8346be00"
+        },
+        {
+          "name": "T",
+          "sha256": "9fed22f3f39ce57055d81bb5e9c41b3cdb5b7acce93ec025620a4438dfb914e3"
+        },
+        {
+          "name": "E",
+          "sha256": "c4f0d9e36a14a2cbc27ae3eff5da4518475ee57a50b2792594a056aca2b8b487"
+        },
+        {
+          "name": "D",
+          "sha256": "2eb8147d7d039b2df4d8a142870219d275f63c418ecc0e52a39a0fc9b953f91f"
+        },
+        {
+          "name": "O",
+          "sha256": "0d619422f335dd700a90c8b1d30161a557586399288ebd047e13521f6bd1d2ba"
+        },
+        {
+          "name": "k",
+          "sha256": "e92c152fe189e86973617cbe9a0e7222dc117de7dca979a6f8aac52c1826ae25"
+        },
+        {
+          "name": "A",
+          "sha256": "10130faa2510006b70bdc56481ce66037f0148b234365a27da0673e7e843a788"
+        },
+        {
+          "name": "j",
+          "sha256": "f59b4fa0d3bacb046369904b7713a10de1023a7028c084395aa17a8adc19427e"
+        },
+        {
+          "name": "M",
+          "sha256": "7bb2107bf87fa66ca053e3ee3158cfc5e454c9e95a00bb833799b13b4a06db2f"
+        },
+        {
+          "name": "N",
+          "sha256": "3684f53990202d7d5ee3307a41b9f3df5578d5a05b6e0296dcb9ede5d1efbe03"
+        },
+        {
+          "name": "P",
+          "sha256": "a21869f808c31a23b56f47a1c1a29f501509580f1ccf2d9706eaa471183d9d2b"
+        },
+        {
+          "name": "F",
+          "sha256": "45fb34570c87c538a58241ade222cdccef0de53f87f5ab726e1fd87f2636c6e3"
+        },
+        {
+          "name": "I",
+          "sha256": "9d1d8d57afe5e81de03648a78ce2f1cd3fcf0b2933391a7659a998bb502124d3"
+        },
+        {
+          "name": "L",
+          "sha256": "8772c7c3b7e8d79b20064c451de7da5f27988206b3816f3cde6fd54757f5bb3b"
+        },
+        {
+          "name": "R",
+          "sha256": "1a1726d9e6b9aa9b0e8bf1403dfcbf028f26da98e80428992fd3cb734cc5e0a0"
+        },
+        {
+          "name": "z",
+          "sha256": "3193fa98aab6436487401788323ea5c0ecd3c313a25862536efdbf983366247b"
+        },
+        {
+          "name": "B",
+          "sha256": "b512f153f91eae2024c267185d59996372878765cfb58ac805990f870adf48cf"
+        },
+        {
+          "name": "V",
+          "sha256": "3bcaea73135e30b48ff76e000560ac0861c1d13c24d8b24d3e9af9841f822350"
+        },
+        {
+          "name": "H",
+          "sha256": "b6d6757ba843c6a472952255d77b5b898aa49ece3f07f981517ca676d2c728c0"
+        },
+        {
+          "name": "re",
+          "sha256": "3db7263ce3b0da84f6795e42fa8293657e23cd07c0e25d9700d3246f9ac7edc5"
+        },
+        {
+          "name": "U",
+          "sha256": "c873dd7343528590fe37510eb43d72785c66572ccf7ea15fb0ddf7775f997a27"
+        },
+        {
+          "name": "W",
+          "sha256": "0b0d1485020b8f307abe526814a3829c1f47cbaad6674074efc625a3cadbb61c"
+        },
+        {
+          "name": "G",
+          "sha256": "4a2e7581b0aac2e08e7fbbe698f3d330cee9500ccb002e4cea0135543e007e20"
+        },
+        {
+          "name": "K",
+          "sha256": "69ee74826b955e700d563a9974fc1e4e8803376d8d05c6f1c3133a0f92f1cd92"
+        },
+        {
+          "name": "q",
+          "sha256": "fe380946e3de40f75cd472cde25acf647e48c1d84b15b5d49677e587ee207d42"
+        },
+        {
+          "name": "J",
+          "sha256": "005e615a19e4bbbc097704e225178e248261bbcf721cfd318e9490f0c31035a3"
+        },
+        {
+          "name": "ie",
+          "sha256": "e4b639d8ce052a413430947cb923a5c4bd71c46b3c9b2da3e2e5479fe116c1bd"
+        },
+        {
+          "name": "Y",
+          "sha256": "e7dc746b03b76c471f086046dd07e6b68b6e2ef3d3be4cd68b56a91ac6d89025"
+        },
+        {
+          "name": "ae",
+          "sha256": "258ce7ddd6d3038ac81d32a1474038404a148aae746a15c8bf1ca6e4e3adcec3"
+        },
+        {
+          "name": "oe",
+          "sha256": "d66492f4e4844c748c845f0f1e68d3a0838e5a9b0c76ccef393d8cea43a45cb3"
+        },
+        {
+          "name": "X",
+          "sha256": "ab38419f63300ca1d334fbdd8cae163eb93717769f13c27c8ab699ef571f6411"
+        },
+        {
+          "name": "le",
+          "sha256": "2ae0de03db6affe044e837d199b1bf53df6e4881a73c673d208935b776888736"
+        },
+        {
+          "name": "Q",
+          "sha256": "580802c9eec14e654ab93129208350dd0023a427a62c94ee9694d25c82b5b955"
+        },
+        {
+          "name": "ue",
+          "sha256": "a4ddd420911e138f08429a5afee1d74d02d4ea450ba1f7c0dfde6a1d369d630f"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "m",
+          "from": "./shared-5.mjs",
+          "name": "V",
+          "via": "shared-5-kdJVRUsT.js:V",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "te",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "./shared-52.mjs",
+          "name": "Zo",
+          "via": "shared-52-DGviI8xb.js:Zo",
+          "kind": "generated"
+        },
+        {
+          "local": "ee",
+          "from": "../view-tabs/shared-0-ByI5P0CP.js",
+          "name": "useEventCallback",
+          "via": "shared-0-ByI5P0CP.js:xx",
+          "kind": "view-tabs",
+          "original": "_e"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "./c26909c77.mjs",
+          "name": "t",
+          "via": "c26909c77-D7pbz1nX.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsConfirmationDialog",
+          "via": "shared-frame-BfjMqbuN.js:qs",
+          "kind": "view-tabs",
+          "original": "M_"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ja",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsCheckbox",
+          "via": "shared-frame-BfjMqbuN.js:ui",
+          "kind": "view-tabs",
+          "original": "wA"
+        },
+        {
+          "local": "s",
+          "from": "./shared-25.mjs",
+          "name": "sn",
+          "via": "shared-25-DP8p7i1Z.js:sn",
+          "kind": "generated"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "c",
+          "from": "./shared-0.mjs",
+          "name": "au",
+          "via": "shared-0-ByI5P0CP.js:au",
+          "kind": "generated"
+        },
+        {
+          "local": "l",
+          "from": "./shared-0.mjs",
+          "name": "ru",
+          "via": "shared-0-ByI5P0CP.js:ru",
+          "kind": "generated"
+        },
+        {
+          "local": "o",
+          "from": "./shared-25.mjs",
+          "name": "in",
+          "via": "shared-25-DP8p7i1Z.js:in",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "t": "le"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "file-save.mjs",
+      "source": "cc61d0d63-DhbBdZx8.js",
+      "sourceSha256": "8931d4001679c54deb2cc940d83cb4ae45dcd8be247a9a6bccf72ba3a70e32ac",
+      "sha256": "8b37492534dff390c935ecbd72e1809ac7b573c34f6648b98f9d47eb612691e2",
+      "referenceVersion": "2.42304.0",
+      "statements": 3,
+      "bindings": [
+        {
+          "name": "E",
+          "sha256": "8f4907879c15ca2542f5f1365ebc28633ab7962e688e55407b49ab3f0f6e478f"
+        },
+        {
+          "name": "D",
+          "sha256": "a4a6652921ca2ae3a8e165ecc1a7304f716414152307cf79a4e30da911fae5c6"
+        },
+        {
+          "name": "xt",
+          "sha256": "05c09ea279ade1b65cf4e057dec3701468bb311461907be5f3d01db4271deb02"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "downloadBlob": "D",
+        "r": "xt"
+      },
+      "features": {
+        "D": [
+          "(a.download = t),",
+          "a.click(),",
+          "setTimeout(() => URL.revokeObjectURL(i), E));"
+        ]
+      },
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-0.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "80a031622bea694d339ec14ddab7cf842e2b79b3903e5dd4eec8df519b854d2d",
+      "referenceVersion": "2.42304.0",
+      "statements": 177,
+      "bindings": [
+        {
+          "name": "j",
+          "sha256": "dee3a7e150e2abae96a869706758dddb54d4cd9a70cd3cf45f029d2777eae460"
+        },
+        {
+          "name": "M",
+          "sha256": "86f6d7e7eb46683fd97da3d1b882d625d1d036ead0710b01e331d16024c3a00d"
+        },
+        {
+          "name": "De",
+          "sha256": "b829e1a38392ac2762233e47f38a65365e09062d1f7d24f044c75ac4df0b27f1"
+        },
+        {
+          "name": "P",
+          "sha256": "6eb16b41951dcc5a1dc99e89f9725a2ccd6950047d06c13a1ec419cc5b692243"
+        },
+        {
+          "name": "We",
+          "sha256": "abc8c0785634c826ba954840500060e488f185e65d28c0ac7e47af655bfc6a81"
+        },
+        {
+          "name": "Ge",
+          "sha256": "1527d603f01b105c2e6c23c38810e2d6eadce05455a4035768ecc4ea09033a96"
+        },
+        {
+          "name": "Ke",
+          "sha256": "33edde1621989c6bd4d26e355dbdb33534fd3d6096233b26c61dc8f4b8569bcb"
+        },
+        {
+          "name": "qe",
+          "sha256": "132bf5815a9b8031707ffec8160c8bdbd5dd6c03b77930407b8bda26f720da1c"
+        },
+        {
+          "name": "Je",
+          "sha256": "2667b6054252cad0f69b7f19e48cecb924b9be0de6aebdf1511c2fc8440a1f35"
+        },
+        {
+          "name": "Ye",
+          "sha256": "8eb4088a8a29f33c977ca67bd2e513633e15d4ceebed97da604ec3c02e2b1777"
+        },
+        {
+          "name": "Xe",
+          "sha256": "76f7d36480e7e6e39b1bee3875385243692bf38118163190a1a749d7cb554846"
+        },
+        {
+          "name": "Ze",
+          "sha256": "7d005f5015369f459b389bce043e3993d47385c0d08a6924bcf1071949ca2e11"
+        },
+        {
+          "name": "Qe",
+          "sha256": "e8d785195368d55d9443e82d4fb012b8056d24072434547ddf7e6da01e5fc5dd"
+        },
+        {
+          "name": "$e",
+          "sha256": "c55e7275eb7014a54496b164f81df24d8e1990a3eacf26ae97a3672c24685f6d"
+        },
+        {
+          "name": "et",
+          "sha256": "494c2de25bfaa7f6975f5cdebbf566c545fd3d839d45d1bc2ca9409f92fd40e7"
+        },
+        {
+          "name": "tt",
+          "sha256": "05fcb56447c73c90b66df338fc39a2afb1fca5849a1c14187d7ff4acb36f477c"
+        },
+        {
+          "name": "nt",
+          "sha256": "8c01af1e2d590ecd287c2ea301b2859ffefb19c50153665ae71f0fa9aed14f8e"
+        },
+        {
+          "name": "rt",
+          "sha256": "6d7ee856f884de3dcf4ac48e54447c06f4775939b9dd1c4a5301ca453e001f79"
+        },
+        {
+          "name": "it",
+          "sha256": "06a9885425d42544e3570c904ac7a469ca7a33d94ae3e79281004676e68f42f7"
+        },
+        {
+          "name": "at",
+          "sha256": "8dd6ab8e1467c9428fca0394185431cb1928c8eb5ddcd66a65a7451b7c4e6729"
+        },
+        {
+          "name": "ot",
+          "sha256": "47c6c4d2fd094ec0f7b971037478bee49315e839976cf11ecca38879f8177b63"
+        },
+        {
+          "name": "st",
+          "sha256": "9b55f09821e21bdfe7e6666ecd5533a3bf1228ce6f42423415c52d990d98b704"
+        },
+        {
+          "name": "ct",
+          "sha256": "0baf36277a707d40c04b0588b484ce5ac12e7a58558ac908f7ec6b7989a9d360"
+        },
+        {
+          "name": "lt",
+          "sha256": "78a76e4884c4cd0eeb64dd7a8ffb6b95493f6a53be0db987dbcd7f961c5bc179"
+        },
+        {
+          "name": "ut",
+          "sha256": "69a9d60b796158ba53a03f0448e34e01ddd0e193851f901b420652410ceacfb1"
+        },
+        {
+          "name": "dt",
+          "sha256": "87ea8afd0f5ff007d7e42f9918c74415861168fe4da496b816da924683f72ea4"
+        },
+        {
+          "name": "ft",
+          "sha256": "3b8db0126a96b49d22128479270aed7036d501d5c12f133905aa1aedd7a6b205"
+        },
+        {
+          "name": "pt",
+          "sha256": "08d2fb3dd4fe88f3c6cdbd819ec9ca061b4f6792e3523627a3845da7f608e73f"
+        },
+        {
+          "name": "mt",
+          "sha256": "0206640ceb0c0d93ed6bafd6d727bf20e90a9f153a358f8a875c11bb6487ee32"
+        },
+        {
+          "name": "ht",
+          "sha256": "7d402c210c5af378f9b84c296e06f119a3ba220f719164d00c1d9f8a52029df8"
+        },
+        {
+          "name": "gt",
+          "sha256": "27ecd25cb1ea11f745cbfe579e3fdc59e57dbebb8ab8d92f24f56f658d22f385"
+        },
+        {
+          "name": "_t",
+          "sha256": "62a4bbf8a2c035185eb84360b37e4c29dbe38a28491e23e461908d6116c40131"
+        },
+        {
+          "name": "vt",
+          "sha256": "ead83a2dedc194c84a6881cccf2e9431cae1b98104ed82b304b3f6725fb206e3"
+        },
+        {
+          "name": "yt",
+          "sha256": "efac65308a9ee93597e81b72d078a83cb6ac7c6edc7e3e4b2a6e97fb8ce0b225"
+        },
+        {
+          "name": "bt",
+          "sha256": "8017f009748d2e66e155bbb77a43b09ea6a3069c7ff5215747157ff06a0caacd"
+        },
+        {
+          "name": "xt",
+          "sha256": "a6e9e4cd2147ec62281670b390a61018ca9807316ce7f8d3e0b78b76262322df"
+        },
+        {
+          "name": "St",
+          "sha256": "45871c4843e76764118c0a5d421a50174ec44fa9c2e4b510786ed2994d14bb42"
+        },
+        {
+          "name": "Ct",
+          "sha256": "ad045416d303a9b2eb2a8e500ef26755f2e7050dcb9f2530f384a186768da707"
+        },
+        {
+          "name": "wt",
+          "sha256": "b5c006a34bec6cfd5072c8dce53676f7c1995e40e3a961b322a88f9480222f7f"
+        },
+        {
+          "name": "Tt",
+          "sha256": "be308f90f5c45cc5275e2228a5f400c53aaeb293c16a92eea9bc2c954bfe305b"
+        },
+        {
+          "name": "Et",
+          "sha256": "39ed6406d207e83aaf5f9d31c4bfe3043a67d1d83eeb05c3c2eb31d3f423f116"
+        },
+        {
+          "name": "Dt",
+          "sha256": "cf80c1ed27278857fe1bfa951e7deb4cceba9e9ca8f029cc1bab75b96b2478b9"
+        },
+        {
+          "name": "Ot",
+          "sha256": "f1050d479c693c0d0b7caef7ec790e3b19bc1c1346a2d863955b8dd5755a5a23"
+        },
+        {
+          "name": "kt",
+          "sha256": "40c1968808f2d7a6ad38dcaa1e01782b0b3fa59b506247d911ba972266613028"
+        },
+        {
+          "name": "At",
+          "sha256": "30b9242f1197937f1d704206a4c78f72eb2314522e0ad9333dae147dfbfc255c"
+        },
+        {
+          "name": "jt",
+          "sha256": "5fd040f5af42be449f0793861d672efab0f4a2fee8cca7f9840f1756d38c18d6"
+        },
+        {
+          "name": "Mt",
+          "sha256": "d9b9f61f43d12b33178484b413576fa49f60b1ef2d749aaa3e93341b7e34f5f5"
+        },
+        {
+          "name": "Nt",
+          "sha256": "7ba96209d2eec065db4e97838d69eda7bddfc0f7a70b3149c7032ca93634f734"
+        },
+        {
+          "name": "Pt",
+          "sha256": "61ffdd18671bbe2b4d1735b1d289ff097b0c679c76bbd8bca0de703cd760f2f6"
+        },
+        {
+          "name": "Ft",
+          "sha256": "935a0523c73a8bc9fb49a159a2f73ab5edfd33fecc8bedabeb1ac509091eaabe"
+        },
+        {
+          "name": "It",
+          "sha256": "e2a8f228e7a3eba59b6216df27c933ba456427358ce9351a4b1ae6fa410f2fb9"
+        },
+        {
+          "name": "Lt",
+          "sha256": "f9439a254461b150bffae999f28a1f18f40449f90395bc017a3d274dc4a820a9"
+        },
+        {
+          "name": "Rt",
+          "sha256": "03576b923e57f419ff90d0b6190bb7fbaa7f262c4649b2db1ba0400ab8a0918b"
+        },
+        {
+          "name": "zt",
+          "sha256": "c25ca4f4b7ea8ef6376729682a43c9e9683d131fe7e5deb512970f130a85b9e9"
+        },
+        {
+          "name": "Bt",
+          "sha256": "53e5e040d3cbaad9d558e3e5ae742c82d680c61dbf56eeab02c887c613b28c8a"
+        },
+        {
+          "name": "Vt",
+          "sha256": "5a62f3a33fccc02a8f6da292cc59e04ad149246ce273d23a9d8cc978b107eefc"
+        },
+        {
+          "name": "Ht",
+          "sha256": "c98c7bb862022af50b01ada98ea5e995bb4c3a8b7c7092ede4a388c69691faef"
+        },
+        {
+          "name": "Ut",
+          "sha256": "f8787516f75e2e11517702214fef73b855b1a8b9c49002de24070a36835a91eb"
+        },
+        {
+          "name": "Wt",
+          "sha256": "d4ff1e7e9bb36ccf80e0fa3a0ab6fdf4074c8176bd38e30022fce0e70d176da1"
+        },
+        {
+          "name": "Gt",
+          "sha256": "989ec8f450d59e9152aca63ec1de603f52d7a2b12e47290faacbecf7c7711e14"
+        },
+        {
+          "name": "Kt",
+          "sha256": "a1dbb7c0b8c6c033ef5f2ed2abbb29b9950402b39b031a0d223d45625e3061cd"
+        },
+        {
+          "name": "qt",
+          "sha256": "794e83a4cf43506036e3b948dae1ec4923b9b1c336e9a2fd77470c7fdae90001"
+        },
+        {
+          "name": "Jt",
+          "sha256": "51386db1cb4b768d51163162be095d705ff0d8bfbb9527c61137c7d68e4d6c71"
+        },
+        {
+          "name": "Yt",
+          "sha256": "3af01fd1567806788e18a932259859e39a25689969a0bdb4be488de4179047cc"
+        },
+        {
+          "name": "Xt",
+          "sha256": "3825f19ae46119fb242b9ff88f7665ef24d65a6a82dcbb716f10dd865c2ac196"
+        },
+        {
+          "name": "Zt",
+          "sha256": "e62896d88d44700fae05adafed696bdf9d49e5a23365ebebb68782b7e3886665"
+        },
+        {
+          "name": "Qt",
+          "sha256": "92f7344b87e39f233b4da49821a9ea2f2cb6f2f2d86452e287c3f4d50e68b7e0"
+        },
+        {
+          "name": "$t",
+          "sha256": "010fdd15cac1ee56b5d39429a7fe85d3696f08866302c62bbe4289f9389c932c"
+        },
+        {
+          "name": "en",
+          "sha256": "96c387024ce4dcdc9977fd2a57c4eaf10d13c0e9d08ce60bfcc607cf29b48298"
+        },
+        {
+          "name": "tn",
+          "sha256": "25422e599c5281d49f46e0ff8fc2b9a7a7666923457ba034912673dfd111675d"
+        },
+        {
+          "name": "fn",
+          "sha256": "8fbe933fb4c257969df409aec68b89aea77c6d7d9065e415f90c85eb2e9dc3a4"
+        },
+        {
+          "name": "gn",
+          "sha256": "4b0f20b3e8da0b05fa8b5986642ca284ebd7ba25f0cedea43eb4a298878f0ba4"
+        },
+        {
+          "name": "_n",
+          "sha256": "8801392995138321d4cce5fd67b6c33ecc1631209c33dddab91fed9e379baab1"
+        },
+        {
+          "name": "vn",
+          "sha256": "ea70d74ff57da4ac2b085e7646d8a2a0810e98ed65a2f0bc2a8e3c8e7cfcb3e1"
+        },
+        {
+          "name": "yn",
+          "sha256": "2ba59da5174f640b1d907799c9a04a3307e9fe22e7c3ff79db858d162c532d72"
+        },
+        {
+          "name": "bn",
+          "sha256": "a3d886acfc37a53e1e16cf8411f99abb7665dbca2b57edd253abbaab1c29ee66"
+        },
+        {
+          "name": "xn",
+          "sha256": "af564b484c25c62d4bf9043e80d4c2ec75b012d4101d80863d65253e00cbc2b5"
+        },
+        {
+          "name": "Sn",
+          "sha256": "85632bcc7c5da319235eef135ae755b7d57311882e1ce71b75fdad28303c13fb"
+        },
+        {
+          "name": "Cn",
+          "sha256": "b838a1860cdc44dd1bccd7b7b2b035b96ab49fad0069035341dae0c63cff479d"
+        },
+        {
+          "name": "wn",
+          "sha256": "3ed6e800a2c75790b7efd98921e8404dadc3cc05170ec7c1f13d6bbec24dddaa"
+        },
+        {
+          "name": "Tn",
+          "sha256": "3b0cfae980cb489dd2f1c6026af812167369bd7d5c72b32a221b3f76c05d6c81"
+        },
+        {
+          "name": "Dn",
+          "sha256": "ca95f2c318a06c3079c5d2728b615acbdeb3001b2a372dd728ead90e02d80787"
+        },
+        {
+          "name": "On",
+          "sha256": "89e72cb6ea6186bc59f52a2cbf2d5ab255d6680c11fbb5cd15fb22b7ba99fc60"
+        },
+        {
+          "name": "kn",
+          "sha256": "6c7f371c189a6f04dfa2672f5f8a30a62abfcbf2dd7e041c04ac4d5d52d3c4f8"
+        },
+        {
+          "name": "An",
+          "sha256": "3d7ded4205048d8156b6b68ea153a539058f8fbbc0f7170fa31ae31901efa1b4"
+        },
+        {
+          "name": "jn",
+          "sha256": "4f202207c6532d6bf3feb910188c0a22871b140fdc28c2ffff20f35f2225a957"
+        },
+        {
+          "name": "Mn",
+          "sha256": "32fb824c36d584a62fefa30a1aff8e32400671f9a931e15a4611b8fd6fe32f17"
+        },
+        {
+          "name": "Nn",
+          "sha256": "21bd89bb3d53eccb917f84f50d4f34ac8f3f300a168fcafbd89d985f4f8f3d35"
+        },
+        {
+          "name": "Pn",
+          "sha256": "5a9ccc260c000eac591647eb695ef51baac5ab4cc77b1348099b8c42854f13fe"
+        },
+        {
+          "name": "Fn",
+          "sha256": "8c14204fc59b1354321f772a78b66c0e7e3b61ee0cb20b655d45964c170112be"
+        },
+        {
+          "name": "In",
+          "sha256": "d59122fa38a64e34e8935319e11437d59e41588e29bb3cbebf6ddfcf88a71dcc"
+        },
+        {
+          "name": "Ln",
+          "sha256": "2070e48220e0455d20b642debffb22d8bd53d058f7a10c1d0d072e4fec8b3d31"
+        },
+        {
+          "name": "Rn",
+          "sha256": "a24b549610d260f63b3fd57f38f4832e01d467e1df602efc50ebfafd55725740"
+        },
+        {
+          "name": "zn",
+          "sha256": "86399c442546e89ff18a83d4e26f58c9157a96b66a6a0c94b5b14507aafd31d1"
+        },
+        {
+          "name": "Bn",
+          "sha256": "018e36dcc605f32bdb2e05c45cb073f8db57deee8544047cf5b52d715601f93d"
+        },
+        {
+          "name": "Vn",
+          "sha256": "52f25a87618e2e05c65eabd3a410d73560d8f1181abc93b41579ca60088f71b6"
+        },
+        {
+          "name": "Hn",
+          "sha256": "d88fe439f73689b8d1d44e7aa6f29ce47f8eec3dc4f7f017f6dfc9c0e7d27da4"
+        },
+        {
+          "name": "Un",
+          "sha256": "a4f31882bc2538f516cad816b665f2270cb3233b604d32b8fb7d1acb5040287e"
+        },
+        {
+          "name": "Wn",
+          "sha256": "4b1ef3f6d05731b53b8701363af1a4450f8bf5ed1e0a4a5745ed33321a925d16"
+        },
+        {
+          "name": "Gn",
+          "sha256": "c9320befb182311e2a5c29ecdb05fc26d64d1c416ddd361cf9436101a43cd9ed"
+        },
+        {
+          "name": "Kn",
+          "sha256": "334703d096b4e48abd6ebd0206312fce92e83315b61b0618b0d454b77e6c29dd"
+        },
+        {
+          "name": "qn",
+          "sha256": "c08fcc058acc48bcb1dbef36e5d3c41ec6cd1b3f63ae967548fdd90ee797b362"
+        },
+        {
+          "name": "Jn",
+          "sha256": "54413bdc65056c95a1e7074b21d7d7b15dacacc70c7a6bc5c51e0aa375f6961d"
+        },
+        {
+          "name": "Yn",
+          "sha256": "11c00e2fcccd9ab6bdf1119911793ab523496d880115ab5816ce8d2b1630a815"
+        },
+        {
+          "name": "Xn",
+          "sha256": "b78f65db1edc5d3b9c93b6392cc206cc9e99101dac692284022166f1b7205a23"
+        },
+        {
+          "name": "Zn",
+          "sha256": "02f50c93c24dbc469ceddfa9ebadfa6f19da9aaac500cc1a746e89d4119210b8"
+        },
+        {
+          "name": "Qn",
+          "sha256": "39d9c0808738b44ca69c3a09282ea34fa665a4df10e786df1fb4d6cd0ecf216b"
+        },
+        {
+          "name": "rr",
+          "sha256": "0f0aec1f176e2298e8eec74c742cc58cadc5f60b77f3cc99190b3059187c6d6e"
+        },
+        {
+          "name": "ir",
+          "sha256": "b4ba55b6467e1307e5aee7600ba153ad76efb90ccb5fcebdf0049d916e20a64c"
+        },
+        {
+          "name": "ar",
+          "sha256": "c2d0ea144d8588fa23203803bcce26afc4f12831007af01bfe36f9263c68d156"
+        },
+        {
+          "name": "I",
+          "sha256": "6c0b72ce80b345b42606719dbf357e708d31b6e5370daa31655d41d4f06b2af2"
+        },
+        {
+          "name": "Xr",
+          "sha256": "e1b85359069acb4d67f87e8dc86fba4bf8f379f53b4a4998503ded5a35bc843c"
+        },
+        {
+          "name": "Zr",
+          "sha256": "709a2bbe1cc6ca7844db081ccce25344eb503c2d630b3e26fb7657ef32c1cf00"
+        },
+        {
+          "name": "Qr",
+          "sha256": "1fd1a27a88099f772c397866f5179958b401a6052c13e862869eb0f3553a45d9"
+        },
+        {
+          "name": "$r",
+          "sha256": "123bd919cf330a46bbcaf4ef9cdbcd53b55e3cf1e75d44b98502004d78ac11f0"
+        },
+        {
+          "name": "Hi",
+          "sha256": "70954d35fa9ddf932eb0bd948f344f7b14454a6bb992bada54b460832f08d544"
+        },
+        {
+          "name": "Ui",
+          "sha256": "82d84830ffa1e88fe0a5a91230a0b6cd8c39af4fa2ee543466bcb1b8fd312839",
+          "alsoInMcpAppHost": "url-redaction.mjs"
+        },
+        {
+          "name": "Wi",
+          "sha256": "0f2568bfd4cce7b3764ed0e4b2b06b1467f6c99bd8b7fccf6a1965443000cb0d"
+        },
+        {
+          "name": "Gi",
+          "sha256": "8202b0d730b1b86540ad44063097671df9238cabeed75ce752f53ffb59e69196"
+        },
+        {
+          "name": "Pa",
+          "sha256": "d9ee9423d75a34dc28de4615aaa6b3e4f5f6b53f610eb073b1325181d36f77e3"
+        },
+        {
+          "name": "bo",
+          "sha256": "79e3a04c93287679bd9c74117bc42a85d79a0eee3af2116b85835ba406f85ccc"
+        },
+        {
+          "name": "xo",
+          "sha256": "47594258c5dfaceb7640286b3aa2e89a978857fbc0aa6c08a59e464bb81f8047"
+        },
+        {
+          "name": "Zo",
+          "sha256": "27d5f072064049d76151be1888643d9661caaa515d35e921484fe16f71857321"
+        },
+        {
+          "name": "Qo",
+          "sha256": "a82055a4fc498dc52e7c7437aca530b6f6877882af9c3160306736517e3dce9c"
+        },
+        {
+          "name": "$o",
+          "sha256": "1345dec493a167182b75c7ca4c9692d7f7c25fafd435b83d8884e5f6f66ea657"
+        },
+        {
+          "name": "es",
+          "sha256": "5817750b3202241001e7685aec881ebeae5826d8e702925378b928db5071937a"
+        },
+        {
+          "name": "bD",
+          "sha256": "f5f83c0b2774cfb014a110a455f7b3202da91f242c22e5f7edcd6408cfa63712"
+        },
+        {
+          "name": "xD",
+          "sha256": "13abc74eec69f197994a14f034653040bcbd0f9293e5e8ee3e22dc7fc86c46b9"
+        },
+        {
+          "name": "SD",
+          "sha256": "e6c09df659d277c75ba78451de4285a09183c9a96472858ec6a6a985322b95d2"
+        },
+        {
+          "name": "jD",
+          "sha256": "26b310fa946dde759a90fb4ecffa4d2ca1ed63d2822f332b613ead5494564c1a"
+        },
+        {
+          "name": "MD",
+          "sha256": "10cd553b763424bf7acf586b2bc51efe76aa5f6e69b50698659051cac34321dc"
+        },
+        {
+          "name": "ND",
+          "sha256": "01826a83375a5d9e9eafeb37ea7ce0adc0e08285037e60b357c28b9435c2316c"
+        },
+        {
+          "name": "PD",
+          "sha256": "a622583b211f540ae34567cbaa4e2bc1b3dbb4017898a452005d5e9566535d19"
+        },
+        {
+          "name": "FD",
+          "sha256": "e54623bf181204c638371a86df2ab6b992ed069320bc650b1009c5e72dab0f5f"
+        },
+        {
+          "name": "ID",
+          "sha256": "1183b69c95b503538726bbe6fcb3247791cfba545cf05170c4849b865c673e4b"
+        },
+        {
+          "name": "LD",
+          "sha256": "47870220b6a67e221dbe3cac2ba434813df2779070817602a4b3fe94efda69be"
+        },
+        {
+          "name": "RD",
+          "sha256": "78e411da526ddca07f74677acfa9e5c7c602698709c2ab5d5d3eeb09f0efc574"
+        },
+        {
+          "name": "zD",
+          "sha256": "4b203cceb73724b1160f8d968c64fa6d30c8780401994b4b7467c23a97d047b5"
+        },
+        {
+          "name": "BD",
+          "sha256": "4d6f5cd0a00ed85db3a83bd90a39bf3634feef9fb970e34166ef6cb98a6863a2"
+        },
+        {
+          "name": "VD",
+          "sha256": "d6f3d3d886f6e69cc1b884f3d3d899932da2af8260320d1f1ba28a49198f2725"
+        },
+        {
+          "name": "HD",
+          "sha256": "f9fe98569a68ce27f0f53c5b9047cb41b1117ab24db1687f35ded4cfc28bc3b7"
+        },
+        {
+          "name": "UD",
+          "sha256": "1e039a3a718f0f39b59881623855715a566d2d720cc2af003b6914ed3adc2616"
+        },
+        {
+          "name": "K",
+          "sha256": "b9318dca23f5da754b74dc199ac6c7fa4ed1377dce3dcc36aaa11b22f2ec1437"
+        },
+        {
+          "name": "WD",
+          "sha256": "fdf2e5d6d1351c8578f5db3fcf42cbd4078a2bbcebd31fc3933bf3dc1eea8e42"
+        },
+        {
+          "name": "GD",
+          "sha256": "ebed4f4b0ae82d522fc46e0b0e53c0b6eed91f9427acdcc221cb6e9fa3ded058"
+        },
+        {
+          "name": "KD",
+          "sha256": "4882e8a047874faf57c58fc5fcc8a1a0832a4eea9c025354bbedd66d27bc722b"
+        },
+        {
+          "name": "YD",
+          "sha256": "c5d45e3ede4362bff63b753f784d139d35b14a17fc42d6604324ad973e6a88c9"
+        },
+        {
+          "name": "XD",
+          "sha256": "fade7b2db505d2c46a7d381bcc02e4a64c3d95ea2d2056be2a5f61eaea8a1c2a"
+        },
+        {
+          "name": "ZD",
+          "sha256": "4a1be52cbeefcd567e2c38e9cbab193bf5b8d7eb90e0999e74c2c1ef3930f8de"
+        },
+        {
+          "name": "QD",
+          "sha256": "319384747994a880143326ff30bf9524f9fbeed66c73a917b23f1c826675a72c"
+        },
+        {
+          "name": "aO",
+          "sha256": "c2803a9c84c3cf69212f25c76967a3886c6ee64d18acbc2686fae32ec76533f5"
+        },
+        {
+          "name": "oO",
+          "sha256": "6706722298cc30873e74e8f00e08d5c8591814e85424a87701730a53d961da14"
+        },
+        {
+          "name": "sO",
+          "sha256": "4c1c732d47b6c039fa5929fb1c2b19c6f4e5ddf7d4e707a46788d8f8a49db94d"
+        },
+        {
+          "name": "cO",
+          "sha256": "c98da9ec5d851b65a4eff9e6bd09de902d62a1c1aeb5db2e2e1b77a2cd04a95d"
+        },
+        {
+          "name": "lO",
+          "sha256": "a345ae7e1352c76073975956ac9d4c9a5d4c87decd9e4e350f10ebb09fff269f"
+        },
+        {
+          "name": "uO",
+          "sha256": "04e4237015203da355dc0baa515e9b78a07f7cca1ce9e9532708fe1065993846"
+        },
+        {
+          "name": "dO",
+          "sha256": "209bf5e67d04bb65e6f7b0c283433242faf694557c4e4e72e615f9349263e38b"
+        },
+        {
+          "name": "fO",
+          "sha256": "a5a34faa606317d6a88ea21caf54b0940561804af7834cda6f15903b0b20abc7"
+        },
+        {
+          "name": "pO",
+          "sha256": "8598dfc941854a5a323a12d95da5b04f5b4db4916247227fb468d1ddb1c88abe"
+        },
+        {
+          "name": "mO",
+          "sha256": "d033199653a92c81173f73b7566d30f3ea671a5bcb17d39123e1b2b5b21a1c1b"
+        },
+        {
+          "name": "hO",
+          "sha256": "a05c318ae10e38d92bf0f6f8fcb0822468e1ce1e2252e7cafa9e177fa411ccb0"
+        },
+        {
+          "name": "gO",
+          "sha256": "aea340a6bbaf970dacc095955c1e1d5d6de41911d5b2dfc5accbe5ede370b3df"
+        },
+        {
+          "name": "_O",
+          "sha256": "71d70e6c7223fbbc355d3eb202ef7014e101678e6ee12fff78d352a8095dd2b8"
+        },
+        {
+          "name": "vO",
+          "sha256": "b77591f05ed24f0f9099d4c2cc6cfb10bf9f4e411c786b3c566481ed88ff3ab0"
+        },
+        {
+          "name": "yO",
+          "sha256": "cec137b587689facfc39a9926e916985a73bd57a49e911eeabaf9cd1d7a7ccd6"
+        },
+        {
+          "name": "OO",
+          "sha256": "5a74fb1e00047c1e909389d47267e27633dfccb63b3bddc76e62d69ee7d136ee"
+        },
+        {
+          "name": "kO",
+          "sha256": "a5650a6f3a45a610909184136ed15d1e21bd2f12fc6260b87a8249986ad83b8d"
+        },
+        {
+          "name": "MO",
+          "sha256": "7d2902b30dd53d217f9f28f6448f6b066f327a42c68eb9120befe18bf2cd14ef"
+        },
+        {
+          "name": "NO",
+          "sha256": "94ef8a2810ffe0f8a4d24a0ba764d66183f7ceef1df1b7be703d5aee3ff17ff0"
+        },
+        {
+          "name": "PO",
+          "sha256": "8d4d3902d388cf8e689e0c32e4d8e5ca5b6d511366c5c3b413747dd1061ded0b"
+        },
+        {
+          "name": "JP",
+          "sha256": "b811fc6104896906a17d4ba3dd3f886525f668b42c5af7b2f96439d91ed5365d"
+        },
+        {
+          "name": "YP",
+          "sha256": "7b1dac9d5179796c48d0bb61715ed5eae500672fd21275102c1b4e7c32354276"
+        },
+        {
+          "name": "$P",
+          "sha256": "0e1aee93338e5f2f0e3b18aba52ab30123f1841189e584ae0d603127986fe0a2"
+        },
+        {
+          "name": "oF",
+          "sha256": "60ece2555696c530d379cb116066f351c8d3a5dea34dfcde6de9fe175d9b0bb5"
+        },
+        {
+          "name": "sF",
+          "sha256": "f84f50affc8b17ca278f1c2314fccb6fa136026f4a92b8597920fe5bd3493a5d"
+        },
+        {
+          "name": "cF",
+          "sha256": "18ac40015a7503a3d80ecbc61aa045b12dc88a73a68ad97396c4dbe25b737d47"
+        },
+        {
+          "name": "lF",
+          "sha256": "e07322494a9fb56bf549852c3c8ecd94f0c7fbb347069a4b3fd5539c830376cd"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "au": "$P",
+        "Bb": "Ln",
+        "cx": "et",
+        "db": "I",
+        "Df": "PO",
+        "dx": "Xe",
+        "fb": "$r",
+        "Gb": "Rn",
+        "Hb": "zn",
+        "Kb": "ir",
+        "mx": "Ye",
+        "My": "Gi",
+        "Ny": "Ui",
+        "ox": "We",
+        "oy": "es",
+        "Py": "Hi",
+        "Ql": "YP",
+        "ru": "sF",
+        "tx": "tn",
+        "Ub": "ar",
+        "Vb": "Xn",
+        "Yb": "fn"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-1.mjs",
+      "source": "shared-1-CAAiD7E3.js",
+      "sourceSha256": "c608dab61da6ed8864d0d5356426b3d89eeaec1436e537cfb328004739144f65",
+      "sha256": "828033fa3a524c1bcd4b7681df82f46e5c739f91ac63f81f348fd0b70e642037",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "gP",
+          "sha256": "7ff3d247c78c7a35e5684389cfab98acfe9af9cd4fe5ec709670957ce2529cec"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "ei": "gP"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-10.mjs",
+      "source": "shared-10-THQui8pC.js",
+      "sourceSha256": "867ee9b6b48666cb8e1b941819ae5e73f68b89a2da71ff594ff32f1a3b883efc",
+      "sha256": "f87b810f9a7d6231b134349364e8adbf75a80d6991241f18cd286bf51d3f737b",
+      "referenceVersion": "2.42304.0",
+      "statements": 3,
+      "bindings": [
+        {
+          "name": "Wr",
+          "sha256": "29cfa8acf572705539eb665a308043207d33b87c23af40c3b1e2533085e5c367"
+        },
+        {
+          "name": "Gr",
+          "sha256": "aa438ee2363d72ae41a1ad346d770b48e706e80f78a4cfb8bf653a4a0912740e"
+        },
+        {
+          "name": "Kr",
+          "sha256": "ab9d725bc7c193d2d5504c288db8760156cc69bd6f3a43214e188c6d9e14e2b6"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "ee",
+          "from": "./shared-25.mjs",
+          "name": "r_",
+          "via": "shared-25-DP8p7i1Z.js:r_",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "Vi": "Kr"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-104.mjs",
+      "source": "shared-104-Cqo2-vQh.js",
+      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "sha256": "c5e0cb7e5291be588162a1a26146469a5badf9b0082f473c7ee84b3d4dfaaf12",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "Oo",
+          "sha256": "997a1f0307a93d3382438cfa7e5c5df35439681f4eac0ec9895b4525010ed8c0"
+        },
+        {
+          "name": "ko",
+          "sha256": "f221c4409567036fd3f6f651be593c3b528c2e2a0aec1f2bab0163acd5648491"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "ph": "ko"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-11.mjs",
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "2d51c182616f67fabe10ffe71a8f7d3debeb0dc20dd8306deeac4ab400c7fb65",
+      "referenceVersion": "2.42304.0",
+      "statements": 12,
+      "bindings": [
+        {
+          "name": "Gl",
+          "sha256": "681a9f646562b3baa86b7697d24d6bc3b941742d76c3377d0292368e202a650a"
+        },
+        {
+          "name": "Kl",
+          "sha256": "ebf1c136cc6ef4207005453dadf56b7fec60cea75d11aa142f671dbbc59416c4"
+        },
+        {
+          "name": "ql",
+          "sha256": "7828d2035fa26fb7d24a6fdfaf649f70c3723739397d4d5c1f426c657daa8eb5"
+        },
+        {
+          "name": "Jl",
+          "sha256": "01fec6bfb933c3d5b65d75e6eaca265de8e547fec18e12af8a8042c611b9ac63"
+        },
+        {
+          "name": "Xl",
+          "sha256": "6632e9f9a7675a435af97a245a9810c76869c341f283ecaed38570eccf1e9021"
+        },
+        {
+          "name": "Zl",
+          "sha256": "f56c3ddef272a901d711c83b4a07c5a1b4c1ec2cd1f83ade63f6825829fbafaf"
+        },
+        {
+          "name": "Ql",
+          "sha256": "bc82f997071180df1a3bc825b2baa851fa13a501d4f32314a5885432bee7e353"
+        },
+        {
+          "name": "$l",
+          "sha256": "3b96aa684b0544afd818d807248132914e5732447159ef7f8e57cadf237e45e3"
+        },
+        {
+          "name": "eu",
+          "sha256": "731f665f54abe4617c5e5414f0a85516121fb81bd97c41fbee090f9695c30175"
+        },
+        {
+          "name": "tu",
+          "sha256": "9d8a79782c1db9562e395ac37b1e30bff7c9e0d2904a2521586b01b50c5d3586"
+        },
+        {
+          "name": "nu",
+          "sha256": "3fdde312c735b742f30787bde8d4e6393341cb85b2752fd6e0aa424da48a5250"
+        },
+        {
+          "name": "iu",
+          "sha256": "b9bc3d8abe5bcb69da76a489e0793e21ccebcc87a80b3be34007f8b1507d7c96"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "Hi": "nu",
+        "Ui": "iu"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-182.mjs",
+      "source": "shared-182-eT1kXtya.js",
+      "sourceSha256": "3e43880437752c6cf6b5dacb804d3231103b5a751286085c1eb62febf30ff489",
+      "sha256": "e9e4c833619860dd40b573384ac5491bdd0ecccc65ab7f072e696f30b7436b2f",
+      "referenceVersion": "2.42304.0",
+      "statements": 14,
+      "bindings": [
+        {
+          "name": "tC",
+          "sha256": "481dfb55618d266cb4ca1f875c63cc8ba7f4f5b501d9b46fc64ba8a29c224226"
+        },
+        {
+          "name": "nC",
+          "sha256": "e698085e44fe5f847e6b977cdddb09d68bcd0918afae865b5cef49cb4e7ee397"
+        },
+        {
+          "name": "RC",
+          "sha256": "3c0cfafa8580977b5c2a474a78ac245f50c144e2b9fd4c0d0db3151045dafc1c"
+        },
+        {
+          "name": "zC",
+          "sha256": "a88839f0fc5390b652dcc63dc9c5a84036e423f30452961ab19ecfaf63d358e4"
+        },
+        {
+          "name": "BC",
+          "sha256": "d4351822959c94cc8bf13e5180e5e15b9b4ef2391b20aebd5973b3d164a1740b"
+        },
+        {
+          "name": "VC",
+          "sha256": "3ecd889a91e7b26d12225a20d650269695604f29d9be279708445e166cd5ac94"
+        },
+        {
+          "name": "HC",
+          "sha256": "278b5f9e24f81b38f317109048b2258e3b9825aee93e84c5625a8914add867df"
+        },
+        {
+          "name": "WC",
+          "sha256": "215cd873c71e835f608b226b55072d9d8e999aaf97575f746180585d52101806"
+        },
+        {
+          "name": "KC",
+          "sha256": "31b8371b3c3125b29bd89402b653ead98c40442705e5f4df5697524351a9a325"
+        },
+        {
+          "name": "qC",
+          "sha256": "02a65e2cf48f0503b04a471e58977e70424bb1dd01a37cfdbd565268b437893a"
+        },
+        {
+          "name": "JC",
+          "sha256": "8b7982fb98f0f948309f999a96c7fceb609976d9555c1d68c87d7da4395ac64c"
+        },
+        {
+          "name": "iw",
+          "sha256": "ecfc37c7d2f15ae3af257f990ed259b88b2ae4ffeaa439ef2b07afa7204229b0"
+        },
+        {
+          "name": "aw",
+          "sha256": "c6508428fb743ed1a56785b94c1a7726f44faedeefcdc04d698ef1b43f606595"
+        },
+        {
+          "name": "sw",
+          "sha256": "ad647164e23bb79825be1a51e2a5e1fd10081091092dc2d4481fca69fb96a756"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [
+        "vendor-tiptap-B2NVTMBY.js"
+      ],
+      "imports": [
+        {
+          "local": "I",
+          "from": "./shared-0.mjs",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "If": "qC",
+        "Uf": "nC",
+        "zf": "iw"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-19.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "914e13bd53942e36f0ca5c8c4a0354f5134b40bd63e4dcf6f97c20a90225dd40",
+      "referenceVersion": "2.42304.0",
+      "statements": 2,
+      "bindings": [
+        {
+          "name": "M5",
+          "sha256": "6f176834056f13ef89246e3a004be58d6dc916ecdcd65bf5117aebd712ec238b"
+        },
+        {
+          "name": "N5",
+          "sha256": "4cb540f6e89868df44c8b7f1f6724824ffcbe46d20a87d6401600a7af3e78cd0"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "mx",
+          "from": "./shared-11.mjs",
+          "name": "Hi",
+          "via": "shared-11-BuQ3CK5I.js:Hi",
+          "kind": "generated"
+        },
+        {
+          "local": "Ox",
+          "from": "./shared-11.mjs",
+          "name": "Ui",
+          "via": "shared-11-BuQ3CK5I.js:Ui",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "vt": "N5"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-25.mjs",
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "25ca8006696b99d52cf887af0e99acb5f67367cb8250c445f495382589a86e35",
+      "referenceVersion": "2.42304.0",
+      "statements": 20,
+      "bindings": [
+        {
+          "name": "mi",
+          "sha256": "692434a45ffac0d97f47e5e9791dfd7befcccf4392ab12b568d3bdf185549727"
+        },
+        {
+          "name": "_i",
+          "sha256": "3e2536e1a682c37ffc22c79e969d2121f43f6a1bcac4f7899987c30b55196453",
+          "alsoInMcpAppHost": "owner-window.mjs"
+        },
+        {
+          "name": "vi",
+          "sha256": "dda1698a6ad6d37d7fb99d82e6d425b15a5cea85507c7ada8222c498b44d0cfc",
+          "alsoInMcpAppHost": "owner-window.mjs"
+        },
+        {
+          "name": "cp",
+          "sha256": "8239f5a507546dc92f1d6ed1a736b3fb8157bc25f998c20dd53d9a6becdebb10",
+          "alsoInMcpAppHost": "owner-window.mjs"
+        },
+        {
+          "name": "lp",
+          "sha256": "bd3b3652441ecfa1cb809eade26efc1c897a609cde6e6db0b370f785bc262b93",
+          "alsoInMcpAppHost": "owner-window.mjs"
+        },
+        {
+          "name": "up",
+          "sha256": "e2535cc0c3961998373007bc950e291f054a34981bf2615b1393b5cb0b029b7b",
+          "alsoInMcpAppHost": "owner-window.mjs"
+        },
+        {
+          "name": "pR",
+          "sha256": "e0bea6a139f4502299d3084bc67eafa337755299a3bf01b3abe2884529c5f4e8"
+        },
+        {
+          "name": "mR",
+          "sha256": "55795d70232c96eb2da209f57dbbfb3223ea2724b31a77937680d9299981ff15"
+        },
+        {
+          "name": "fH",
+          "sha256": "16cfd5ea47da451d32cac48c7eb2e7315908b7c34694df04218eeab7b7bd9b9d"
+        },
+        {
+          "name": "vH",
+          "sha256": "aac3d40339bc838464e3d36717ce45b8004ff6ac5ac210e2bc4d18d0256a9fbb"
+        },
+        {
+          "name": "yH",
+          "sha256": "5631c8436468b47c1476f737cdf5ef6f48d73839719e2bdac40772d754627f49"
+        },
+        {
+          "name": "AH",
+          "sha256": "05011a0536fb138ddf3efb6f66eb0238e6b4a11055d5cec3af6adc9e54e0f3be"
+        },
+        {
+          "name": "jH",
+          "sha256": "a2f9ea414d65cbd10ac41eddc6c80d5c8e727313d10a903b32760c93b63a3af9"
+        },
+        {
+          "name": "NH",
+          "sha256": "e31ef3c1479c6e27a30b7e211d3fe48687f46e848bff976f83e9cd24e4324493"
+        },
+        {
+          "name": "zH",
+          "sha256": "f7b0b0804aa81ea0934365f1f3f09b20a9c531d1911829d59bbafc3de3814489"
+        },
+        {
+          "name": "KH",
+          "sha256": "962c012733d300688cd80c950fe1dda2e7c60e72d6e0f2d6c34191da241ebd38"
+        },
+        {
+          "name": "JH",
+          "sha256": "a56b3197ec9a6366a690d804e8e92a6933f320518f946d3fc574bf374095e74c"
+        },
+        {
+          "name": "OU",
+          "sha256": "c94952e737ac5f997a5515c6948ccf575db353d88c9a451cf4d9e533f7a9126d"
+        },
+        {
+          "name": "kU",
+          "sha256": "95cb802f41c5f631e66f057f2e319614777f7102d91f26a82b9e1cae5d6942c7"
+        },
+        {
+          "name": "jU",
+          "sha256": "9f1a9cd1caf4082ed0b44fe4b50e08a05b25a5fe04a12d2c9ce89b47bf65242b"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "Jt",
+          "from": "./shared-0.mjs",
+          "name": "fb",
+          "via": "shared-0-ByI5P0CP.js:fb",
+          "kind": "generated"
+        },
+        {
+          "local": "L",
+          "from": "./shared-0.mjs",
+          "name": "db",
+          "via": "shared-0-ByI5P0CP.js:db",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "a_": "_i",
+        "Ci": "pR",
+        "Ff": "up",
+        "gn": "vH",
+        "in": "JH",
+        "r_": "mi",
+        "Si": "mR",
+        "sn": "KH",
+        "Vt": "jU"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-26.mjs",
+      "source": "shared-26-CgdP_nTj.js",
+      "sourceSha256": "a9f80593fcdb91be8a2cf93eb71c572d3798b903ef16b8adb42480656cb3c026",
+      "sha256": "0f7e1c93ab2e0df0a2fddb225b53a137e20e6c61668bde1849bf5a715f61415e",
+      "referenceVersion": "2.42304.0",
+      "statements": 9,
+      "bindings": [
+        {
+          "name": "ib",
+          "sha256": "0c4c498ed67f61096975273cc1b90ce82b44927640e05ef5d47c80b85f423806"
+        },
+        {
+          "name": "XS",
+          "sha256": "4bef2ebae65a8587487ffef4f2a81c29213cc9c6251a7dda37845758d9444c06"
+        },
+        {
+          "name": "pC",
+          "sha256": "9668dd0ceb8d189765cf9ed8078b3343eac876f5521e5b2986ab496903006656"
+        },
+        {
+          "name": "mC",
+          "sha256": "4b3e447386d06da9f9d44c91dbcde492cddd7644dc258f63011c0944133d2111"
+        },
+        {
+          "name": "hC",
+          "sha256": "c553b2e48dcfe8a38545c7baa7d0a0d1666a4f62607ae52bc77c2fc3d2fa882d"
+        },
+        {
+          "name": "vC",
+          "sha256": "27a05a2ecc8574e0f530700dbe88eb71467f423027d5a4a360f2e6e0f707342b"
+        },
+        {
+          "name": "yC",
+          "sha256": "fb3af3045fee7633eedd339a5bfa60803e6a94a38a9e006d854b6b6648536bf3"
+        },
+        {
+          "name": "hP",
+          "sha256": "1d352f97a4cb1d1c6e0988b7e76a815fa5dfce78cb4347b7485dcdd7cf989025"
+        },
+        {
+          "name": "gP",
+          "sha256": "985b17d8b5e1cc54d2498961933f7db85892cb039c4833423c13412f9e23db19"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "bs": "yC",
+        "Es": "hC",
+        "kt": "gP",
+        "Ss": "vC",
+        "xc": "ib",
+        "ys": "XS"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-28.mjs",
+      "source": "shared-28-DcgD7xXH.js",
+      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "sha256": "a07496aa664b08c988db760b16c792d24ca801c8220384982b30bb40a8000251",
+      "referenceVersion": "2.42304.0",
+      "statements": 17,
+      "bindings": [
+        {
+          "name": "Hh",
+          "sha256": "7ae98acc9e841dd50c85f572c804c1542d8b9eccb6d852aba09146f98d9e73df"
+        },
+        {
+          "name": "Uh",
+          "sha256": "14eb34a6981d6b383c3c07f0eb898dcedb45a2cba1523f811a05980acf0c3414"
+        },
+        {
+          "name": "Wh",
+          "sha256": "a1c22b7fc8e9e853621132439d5ded64bb49d122e054e291fe06c9c56e5fda1a"
+        },
+        {
+          "name": "Gh",
+          "sha256": "fd55c4c6294674d87ae5003e56f1a7ff21b1444d136ebf14d420d3915f7f75de"
+        },
+        {
+          "name": "Kh",
+          "sha256": "97a5433fd95b95c785d45fbf1f76e2252fd5c56acb156ba7ba5472e603e45e3d"
+        },
+        {
+          "name": "qh",
+          "sha256": "ba2d483489c0d2bfdc9c3dd52dc817abc0bf0f028dafc79ba90befb102a53676"
+        },
+        {
+          "name": "Jh",
+          "sha256": "77864c1a45230da282c7a8c0c017603ade05fd76d2f1268fa6aaa8a75a33d437"
+        },
+        {
+          "name": "Yh",
+          "sha256": "2ccf124eb55297d94cbc9104a49e067c6694ee361d481e27511f364f18e0de21"
+        },
+        {
+          "name": "Xh",
+          "sha256": "563b0a6865452a348361f7b36403a2bc73da9e35a9613f47ceb5f4a4b3e5b6e3"
+        },
+        {
+          "name": "Zh",
+          "sha256": "e3dd76e3bff5336b83ffe3d02cf826c2d85eb56a2ffb5c0e486b5c75d704dcdd"
+        },
+        {
+          "name": "Qh",
+          "sha256": "862d26b78430383fd0bf905b593732fbfca4483cb5bcec2bc83dc7ce48609c11"
+        },
+        {
+          "name": "$h",
+          "sha256": "242f8d5b54a3fdeb3161e8d6c7255fc630954674bfb2e94687ae9183844e1eda"
+        },
+        {
+          "name": "eg",
+          "sha256": "aa311b460fb3bbe78ce932be44b9936bb97aad6185b3bc1b17c9f5978991aa66"
+        },
+        {
+          "name": "tg",
+          "sha256": "b5398a1b431dcdcfe19e77ef4960c0f8bb2a19f1218aff51744d676daaa81abc"
+        },
+        {
+          "name": "ng",
+          "sha256": "9d6f4cb9ecc34f64c52b30b9ee03b5ca9076586daddb46e15e6357184da1f6a3"
+        },
+        {
+          "name": "rg",
+          "sha256": "b4bfeb9842330db8a8439a093f0458cea1f95c765f6fc27b19032d2f56331d26"
+        },
+        {
+          "name": "ig",
+          "sha256": "b6b714762761f82c31ffd9eca6c5490ae768d299e7cb09db443a5ea05882ea13"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "Rc",
+          "from": "./vendor-all-0.mjs",
+          "name": "I",
+          "via": "vendor-all-0-CTKbbUUg.js:I",
+          "kind": "generated"
+        },
+        {
+          "local": "ve",
+          "from": "./shared-25.mjs",
+          "name": "gn",
+          "via": "shared-25-DP8p7i1Z.js:gn",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "Ga": "ig",
+        "Ha": "rg"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-4.mjs",
+      "source": "shared-4-CJsHhp5n.js",
+      "sourceSha256": "3717d241e98e981a2f35a9279167f35109c1ceac72664237533561c7aad86da4",
+      "sha256": "aa6062864c212aed4cf7f9fa2ac56d0559e7bac3caf0d8545eeda54ee7dacbdf",
+      "referenceVersion": "2.42304.0",
+      "statements": 5,
+      "bindings": [
+        {
+          "name": "vv",
+          "sha256": "5af4dbdc0a51da055d553a930b0ed5b0cfa97560dc7a21cadec4d6976da9dbd4"
+        },
+        {
+          "name": "yv",
+          "sha256": "93f23991a5f052f501d77d7b90ddb707ecc72b8a5dd34ab8225e7c8cdd78b6fc"
+        },
+        {
+          "name": "bv",
+          "sha256": "91e1a9198722618adc7257f6ba9448a499c7a70671513f609f9c94ee232d9a78"
+        },
+        {
+          "name": "xv",
+          "sha256": "16cdb187f8683a0169f81352687dd50be56d452b2a3a5aa3f0616ab4665b1ee4"
+        },
+        {
+          "name": "Sv",
+          "sha256": "f28727772632c157b64a7bbf2d2d57b1cffa6f097feb8bef4a6ab8082a3cb335"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [
+        "vendor-markdown-g03xKyml.js"
+      ],
+      "imports": [
+        {
+          "local": "yt",
+          "from": "./shared-0.mjs",
+          "name": "My",
+          "via": "shared-0-ByI5P0CP.js:My",
+          "kind": "generated"
+        },
+        {
+          "local": "xi",
+          "from": "./shared-52.mjs",
+          "name": "za",
+          "via": "shared-52-DGviI8xb.js:za",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "qr": "Sv"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-5.mjs",
+      "source": "shared-5-kdJVRUsT.js",
+      "sourceSha256": "16e886add0fefb7a9996ef68bdc72f36d104376a551cb55350b559e8b2a83fcd",
+      "sha256": "077b308807239c702d6276e798d5ebd889b45cf8116b2374fe89a26bdff6a147",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "XA",
+          "sha256": "4c0b6ca5310b73dd3a54f3be3728418d35ef87f9620b419621be4607178f0421"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "z",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "H",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "V": "XA"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-52.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "3a51dc301073a3a606c42ca6b5387cea350ebc816bdc9f324616e115387a1bec",
+      "referenceVersion": "2.42304.0",
+      "statements": 97,
+      "bindings": [
+        {
+          "name": "Uf",
+          "sha256": "5cc4b8ff2721aa6dbc64f69c5c449cf9680da20553bc68fbc7370267c7b55fca"
+        },
+        {
+          "name": "Wf",
+          "sha256": "ba406c79c9ac539ad8739ad1ff5edc2bfda59481bca0cf094edd6ccf0128bcd3"
+        },
+        {
+          "name": "Gf",
+          "sha256": "3eb4d13a2f1d25a1fe6e141c09fb038b893c1def299a5fd45d0c5993bbe08de8"
+        },
+        {
+          "name": "Kf",
+          "sha256": "7d528e645e1b67f7e54710e55d3e06e7487c55e49c4611483fb9e9c16c6f8074"
+        },
+        {
+          "name": "qf",
+          "sha256": "ab00b80c87efc2506dc8036e358f95bece4fdc2f6f34e2f20d6310d0682ddee7"
+        },
+        {
+          "name": "Jf",
+          "sha256": "3d4b26219e67cdeb28dec45470b891e5e755f6afa27fc072a7782298a1d61342"
+        },
+        {
+          "name": "Yf",
+          "sha256": "2dfc9efa34cdee1df89626aaf6b0886bd54650c25eef795217c99182f9687986"
+        },
+        {
+          "name": "Xf",
+          "sha256": "364a126de41679b3be05e7528c0796ceef32f1e2946efb5a569c281dfca5df73"
+        },
+        {
+          "name": "Zf",
+          "sha256": "49492cb6ee81dd6dc2ce1dfcfde84e870263d43fc61eedac362d5c44b67b49b1"
+        },
+        {
+          "name": "Qf",
+          "sha256": "7a8d33ac7563bd7be3e3839be89f5fcbb856d74a326b180ea0078357c3f349cb"
+        },
+        {
+          "name": "Ug",
+          "sha256": "fdbc8e1ecc59e4c0e99a100be89540f2a891ad9902bf891c92cf3fb6cb111323"
+        },
+        {
+          "name": "Wg",
+          "sha256": "e6033ca436d0af96520cba261d51790acc57841fcf23967cd319873a65333628"
+        },
+        {
+          "name": "Gg",
+          "sha256": "d5413c5040a524b6291f53d6758918a3c1f674af10162caee5adbe13bb025c8b"
+        },
+        {
+          "name": "Kg",
+          "sha256": "2b63f8bb5eee76f7828faf8c192359c0fcdcb83c1221e9f87a5ed12840509d0f"
+        },
+        {
+          "name": "qg",
+          "sha256": "c270c7e5b2dfd9ab635ee0ef3635995681628c69a6ec92a408c1a5029d6a75de"
+        },
+        {
+          "name": "Jg",
+          "sha256": "35a8d47683f7121e95e06d4d0085223483b72bc18119f1685b3b851d68a910e9"
+        },
+        {
+          "name": "Yg",
+          "sha256": "39f28f87a05552278c15e6bb03962686fa77fbe8b967ebc7860e53d84a7a475c"
+        },
+        {
+          "name": "Xg",
+          "sha256": "4ae7a7817188f53cb2f4f1a86ad83affec9da638f26f57aff1d0be867d708ebe"
+        },
+        {
+          "name": "Qg",
+          "sha256": "3bd05456973601718fe3c75c492b2a1d18e13ca4d67efef5b20985dfdc9d8e10"
+        },
+        {
+          "name": "EO",
+          "sha256": "6da749f39d5d6180bd7892fedaab1510463669c33acb3dbe5cbd5cae2afaeece"
+        },
+        {
+          "name": "Z",
+          "sha256": "ce6ddd7ebc5c83c155e20cfd8c6de209b449379316f16543aa4b33044ebba169"
+        },
+        {
+          "name": "AO",
+          "sha256": "9ea3cb0df5329e94cbfb07cc616d7254369efc308266c92919b0999a42978654"
+        },
+        {
+          "name": "jO",
+          "sha256": "07206e6187e252230b49fb93d15e27201bc7aceb7a09b79617823a9808df7733"
+        },
+        {
+          "name": "MO",
+          "sha256": "1a5d128b1ed78993b2cb6d8f0e4441084bb25dc752e38fa1fa7f2f12d1425107"
+        },
+        {
+          "name": "NO",
+          "sha256": "7fa6bcb2ea21c447b5e02fa4a02eb9938405fbd588969e9d33b8aa3c3fda9d7e"
+        },
+        {
+          "name": "FO",
+          "sha256": "3f438c7fce1d1cfcdf1a49a96b0dfc741c29db4065a57452229d03a6694d9e3a"
+        },
+        {
+          "name": "IO",
+          "sha256": "549c7726585ef9f0f8dd9ab3b78775e5cca4ce8650a7f4c2fba55462b7dfdeb3"
+        },
+        {
+          "name": "LO",
+          "sha256": "5c11c29bae373d098767499f8f3c2070be6d89b33ee234052bc9d1a37ae8d287"
+        },
+        {
+          "name": "RO",
+          "sha256": "aeff079773f14fb6a8cc598ea359b6eaece2ce07d11cf1207bcc39b4af56846e"
+        },
+        {
+          "name": "zO",
+          "sha256": "0e9219e308969254ebe02964e12eb17168e7ece5626f2204ebe731336b710228"
+        },
+        {
+          "name": "BO",
+          "sha256": "22488cf29681fdb44336ed2b9f32eee08ed1825649f506348573344931508247"
+        },
+        {
+          "name": "VO",
+          "sha256": "306bf658ae0a8996d6a6288a1196fb893392e72bb3cfcdfe075cfc96d735fae2"
+        },
+        {
+          "name": "HO",
+          "sha256": "d9b1b673af65cab0eb7f7d9588ff1e0df40acabaf5b5fe4a02c750c6641129dc"
+        },
+        {
+          "name": "UO",
+          "sha256": "c81644f1657e9f0f6aca071ecea28652681120e0bd4df32832a8461fe2c8b826"
+        },
+        {
+          "name": "WO",
+          "sha256": "23e07bd971ef947d40ffebec249ebc558e0c83ff2885862aad6f4efb9b5a5b34"
+        },
+        {
+          "name": "GO",
+          "sha256": "e5d303475f0aed0d590c0ff87c31dddfa0274d3b90a501eb5890e386bcfb1f6a"
+        },
+        {
+          "name": "KO",
+          "sha256": "7b7151e80ea2a5b559a129c286284be1c4629f0ec567548e94bea13ff21002a8"
+        },
+        {
+          "name": "qO",
+          "sha256": "76a5c14e67d3152820476801fd0775b4ff77e3adcc1b63647ee851275208ff30"
+        },
+        {
+          "name": "JO",
+          "sha256": "388598067df22631d817400d33194e027ebf71e2acdca3cee3f27135ab377d7d"
+        },
+        {
+          "name": "YO",
+          "sha256": "219b6a350d87bd1c80790ba33b933a1d7665f6f6e03b5ecc7e30a4d64d1e404b"
+        },
+        {
+          "name": "XO",
+          "sha256": "31fc2a3f173494cf8adb4e0c2b9777cf325b0bc150dbb04943dea1428dde08bd"
+        },
+        {
+          "name": "ZO",
+          "sha256": "2a7b0b492c0e70ace7c5b8f6a729345755dc5f0a47fa9e644189484e48c75074"
+        },
+        {
+          "name": "QO",
+          "sha256": "f3b3616828b06e6c9f566030508ab700c6393d1738ca18cd1171d6777564a6b1"
+        },
+        {
+          "name": "$O",
+          "sha256": "149a14f18f1fd341627c51c99e3a6b2fc304797c3cd3569697756b118f1cb4f2"
+        },
+        {
+          "name": "ek",
+          "sha256": "777ba9bcdca794e7fc4fbde8302cb778786e4688cd5e65af5b06358460bf02a6"
+        },
+        {
+          "name": "tk",
+          "sha256": "d11f1b66362a7778d8c0916eaad39c3a77959b3e44ec6dafdc2377241dd9dacc"
+        },
+        {
+          "name": "nk",
+          "sha256": "d635e95dacc20bdaa119b890ca8f0d19ac19aa8a7c298af95cbe95aed7365443"
+        },
+        {
+          "name": "rk",
+          "sha256": "8539250102be3b755b08dacb895d3b335a0819999b9ae7e0750dc58ecd1819e8"
+        },
+        {
+          "name": "ik",
+          "sha256": "986790fc2032bd5ef593f51e46868b2b7aab137a4ec08b78c39d665fb782754b"
+        },
+        {
+          "name": "ak",
+          "sha256": "30c313a9cca2c7817c40d8045075453267849466380e70c01c835cc7c609a4ca"
+        },
+        {
+          "name": "ok",
+          "sha256": "39f0141352ecb0aa8b1744c2a8bdec1d76a9078d2cb62195ef6fd6b90ed5b44e"
+        },
+        {
+          "name": "sk",
+          "sha256": "030c00fc8d2c732a644fa7f347f0c9605b91d68a72375931d04b7d4a0a7cad19"
+        },
+        {
+          "name": "ck",
+          "sha256": "3a6ddda4f1068a38790a2548d1bdc479d6536e9b69dc54790390b17664e87427"
+        },
+        {
+          "name": "lk",
+          "sha256": "49de5a027e1c4a9bfca2dbc5490e206bf8f17ed5e51df1d2c0b9559065e1aa53"
+        },
+        {
+          "name": "uk",
+          "sha256": "a500e2007835084a063fa1180052bcca09337cf6fdef654a0c1dbd2d200c9af6"
+        },
+        {
+          "name": "dk",
+          "sha256": "ac99c51a44858535ad4df213ac117f1f62d12f588d68fb21a12ad4cd98cfad1b"
+        },
+        {
+          "name": "fk",
+          "sha256": "e8334f375dc5c9621017df563d3dc640f11090133ceb902094b4612539c36507"
+        },
+        {
+          "name": "pk",
+          "sha256": "0fdb997ade28c9b14079769b686c8937f63378ed4e97a5836ef2be6417b96088"
+        },
+        {
+          "name": "mk",
+          "sha256": "4f4f6b232ecd16df631598f7bfa7263932b73d475be7df106b82a4635571f1f4"
+        },
+        {
+          "name": "aA",
+          "sha256": "b1068df69540781eba603066abbaa2f6aa80506714abab538be517f04b4e0029"
+        },
+        {
+          "name": "oA",
+          "sha256": "127658f8cbcd9e9f1b02cb64032635b7e560a3b1fc950e63dfc86b174c00f0ea"
+        },
+        {
+          "name": "sA",
+          "sha256": "7d1145d7c1d3822abdfef9955f1327abb540c353a8776d2ad52a27e33f42def5"
+        },
+        {
+          "name": "cA",
+          "sha256": "5072a521032e7a4e6107ca37d91b19c6859dcb0254916ca9f7d92ef11a373777"
+        },
+        {
+          "name": "lA",
+          "sha256": "2f8a06db409226fcd5847e73b47246cbddf0998216c62ef0c05d43a39d030427"
+        },
+        {
+          "name": "uA",
+          "sha256": "a3fb08f83788cb6109074fd3dd34a8c4ec7f474366c8ba5e93f0a638e3d13d96"
+        },
+        {
+          "name": "dA",
+          "sha256": "15ec53e24319d4775060a660386416e935cb5013e835c86bcc0cf41189ace429"
+        },
+        {
+          "name": "fA",
+          "sha256": "e401d7245705761cb46a3ff0f0b4769010131bae8694e869f331571502426874"
+        },
+        {
+          "name": "pA",
+          "sha256": "b537caf8521ae200c4a2e22b92c1d83d7ca22430bf85606ed4e6ee7ccebed7a8"
+        },
+        {
+          "name": "mA",
+          "sha256": "c60e5df0d9256d74c6dc5fff9e7016a55c7d0c1b7b9f285dc8dbca0cf1809b32"
+        },
+        {
+          "name": "gA",
+          "sha256": "3b29498eec80cd30f602e7b8a036fe1689e5a6a2199907da2de07020e8cb6c63"
+        },
+        {
+          "name": "_A",
+          "sha256": "d5583de9c388594d31763ff4d03dadf76eeb20e5076751c791cba26b9a108b57"
+        },
+        {
+          "name": "vA",
+          "sha256": "696c400f8b7981426cb27c58ddc878748bb7871702fa5478593e097fb69c91d1"
+        },
+        {
+          "name": "yA",
+          "sha256": "0678b8a54eb0f51e1dfc167c5af7031130e92e6f4e4e9a1eb0d59037d7e13213"
+        },
+        {
+          "name": "bA",
+          "sha256": "cc87bc9ed965a3e6fb4b3cf070ac2e0521d7f213d670b3f01afe6921f1c576a0"
+        },
+        {
+          "name": "xA",
+          "sha256": "39257ab8cff8098340a9f84e3cd895563ae77db07e2d457e55c37064ec05080a"
+        },
+        {
+          "name": "SA",
+          "sha256": "1830bebc067f9e8d2bbd03e5e02c937f7e3af4c4da7ef0ab58da939c15426345"
+        },
+        {
+          "name": "CA",
+          "sha256": "268743b676e3f76b696ce941aade302bb7f9d94563a9b8f6104a135bcf609d82"
+        },
+        {
+          "name": "wA",
+          "sha256": "83400228192b64cd737f5cddcce403dcdd5fa8eaf25ac837eb019d791d0b77bc"
+        },
+        {
+          "name": "TA",
+          "sha256": "a46e41e1ba8295da73becbf4decd295912ff1847876399d41a642ed41285c44e"
+        },
+        {
+          "name": "EA",
+          "sha256": "5a4ed5d76d00be6be9f03cfb37b7587f686a631739341ef5c70309b331966e51"
+        },
+        {
+          "name": "DA",
+          "sha256": "800e2e701a72c99e4a3ec165c9ad87476c94c2a31e1f9233b1a0fa7abfc74922"
+        },
+        {
+          "name": "OA",
+          "sha256": "f7964d8ce216c64c088b932e3b4f7d249d97cdfb19a15f59bb27ec94e1e46139"
+        },
+        {
+          "name": "kA",
+          "sha256": "cfa43f9a80ac236c4cc622e6f37337efb0da785e4294cc4d3a14aaebb5e68e79"
+        },
+        {
+          "name": "PA",
+          "sha256": "ccc06443f32f982118088541869d65d5703629cbdf341e7a344e7472e4d8fe26"
+        },
+        {
+          "name": "Mj",
+          "sha256": "fa7cc3231e5e81581c761205d311e110830357570bd1b8277a3e2a586ed8e959"
+        },
+        {
+          "name": "Pj",
+          "sha256": "7d4fe80d9e3b1e41ae17dfee19c8dbf3e8b4d920d066b07b868e2b856abcb7a6"
+        },
+        {
+          "name": "Fj",
+          "sha256": "2e202ec2c4d1365143533ed3a2fd486f5bffceccc4a8ae6a1f8412963073bf04"
+        },
+        {
+          "name": "Ij",
+          "sha256": "2630b43d034a214d9086048214b381182c9bf97085571b0a573bea5c3f57ff63"
+        },
+        {
+          "name": "Lj",
+          "sha256": "62c3dc558d91ea1f154984799b8c8a07184d3d091881cdabaf1b7cefa7aaf991"
+        },
+        {
+          "name": "Rj",
+          "sha256": "d3b995465d4f30f659fb3eee9d0c475ca7400805aef893cee0f6a735fb2f5f60"
+        },
+        {
+          "name": "Bj",
+          "sha256": "4f8bf893cd8e0dc3545e0a92cfd9125393d58be0b5440bd288e4a9fa5485fa44"
+        },
+        {
+          "name": "Uj",
+          "sha256": "09f3afa345fff3537851f7816ba807915fd8eb9ccfdabd5290ea4947c9096264"
+        },
+        {
+          "name": "Gj",
+          "sha256": "daa04dbaa41747a51bcfffe434f0eb3876c2e4861d1e76e1fb2ae3fb315f4ac2"
+        },
+        {
+          "name": "Kj",
+          "sha256": "26cf49dda06c1a4dcdf9fe6dfae119393c0fdc23b8ad6d841a9621917e90647f"
+        },
+        {
+          "name": "qj",
+          "sha256": "3b7dfda4d2926b830382dcfaa8172ac1ffd08740f11bce6bbbff08de31aa4897"
+        },
+        {
+          "name": "Jj",
+          "sha256": "05fba2d7939a91b85b93824e39c69d14f76b3b721504d0616a84d4ce9e18bbe1"
+        },
+        {
+          "name": "Yj",
+          "sha256": "2c677f670065cb9e794c49b8d504d602c727c7c90c63a19c064a299703cacb48"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "jn",
+          "from": "./shared-0.mjs",
+          "name": "Yb",
+          "via": "shared-0-ByI5P0CP.js:Yb",
+          "kind": "generated"
+        },
+        {
+          "local": "Cr",
+          "from": "./shared-0.mjs",
+          "name": "ox",
+          "via": "shared-0-ByI5P0CP.js:ox",
+          "kind": "generated"
+        },
+        {
+          "local": "F",
+          "from": "./shared-0.mjs",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "../mcp-app-host/error-text.mjs",
+          "name": "n",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "mcp-app-host",
+          "original": "e"
+        },
+        {
+          "local": "Rr",
+          "from": "./shared-0.mjs",
+          "name": "tx",
+          "via": "shared-0-ByI5P0CP.js:tx",
+          "kind": "generated"
+        },
+        {
+          "local": "fn",
+          "from": "./shared-0.mjs",
+          "name": "Ql",
+          "via": "shared-0-ByI5P0CP.js:Ql",
+          "kind": "generated"
+        },
+        {
+          "local": "xt",
+          "from": "./shared-0.mjs",
+          "name": "Bb",
+          "via": "shared-0-ByI5P0CP.js:Bb",
+          "kind": "generated"
+        },
+        {
+          "local": "Cn",
+          "from": "./shared-0.mjs",
+          "name": "Vb",
+          "via": "shared-0-ByI5P0CP.js:Vb",
+          "kind": "generated"
+        },
+        {
+          "local": "Ft",
+          "from": "./shared-0.mjs",
+          "name": "Gb",
+          "via": "shared-0-ByI5P0CP.js:Gb",
+          "kind": "generated"
+        },
+        {
+          "local": "zt",
+          "from": "./shared-0.mjs",
+          "name": "Hb",
+          "via": "shared-0-ByI5P0CP.js:Hb",
+          "kind": "generated"
+        },
+        {
+          "local": "on",
+          "from": "./shared-0.mjs",
+          "name": "Ny",
+          "via": "shared-0-ByI5P0CP.js:Ny",
+          "kind": "generated"
+        },
+        {
+          "local": "B",
+          "from": "./shared-0.mjs",
+          "name": "fb",
+          "via": "shared-0-ByI5P0CP.js:fb",
+          "kind": "generated"
+        },
+        {
+          "local": "R",
+          "from": "./shared-0.mjs",
+          "name": "db",
+          "via": "shared-0-ByI5P0CP.js:db",
+          "kind": "generated"
+        },
+        {
+          "local": "Kn",
+          "from": "./shared-0.mjs",
+          "name": "dx",
+          "via": "shared-0-ByI5P0CP.js:dx",
+          "kind": "generated"
+        },
+        {
+          "local": "hr",
+          "from": "./shared-0.mjs",
+          "name": "mx",
+          "via": "shared-0-ByI5P0CP.js:mx",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "Ad": "Ug",
+        "fo": "kA",
+        "ja": "Pj",
+        "Ma": "Uj",
+        "no": "PA",
+        "Pa": "Fj",
+        "Pp": "Qf",
+        "Ra": "Bj",
+        "za": "Mj",
+        "Zo": "EO"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-7.mjs",
+      "source": "shared-7-B8UIMGDr.js",
+      "sourceSha256": "e5b37f61c326e1d291a559d936b7ace0dec38449778a3ccdc532182f4185a3e5",
+      "sha256": "ae758a7bbbb21482078fe7d891cc33f167c65a5ef68cd6d3d8b97267bfc4a581",
+      "referenceVersion": "2.42304.0",
+      "statements": 4,
+      "bindings": [
+        {
+          "name": "Bk",
+          "sha256": "b6776ba3e5dff1cdf93adcc0053509412e96c6f1424a5368613ff0801dd1f46a"
+        },
+        {
+          "name": "Vk",
+          "sha256": "05ff6ffb5f0b57c788ce089d39f594abcbb9311bccf5e6d5fba39d5cc8c76b54"
+        },
+        {
+          "name": "Hk",
+          "sha256": "8b23beaa2b034a9741d7d59e9f20e0bd180e3fc868c5bf067f3ad0b8f8d8d59a"
+        },
+        {
+          "name": "Uk",
+          "sha256": "5415d0270fb5e139e6edfc14eb65bd93e9f8f5614233178a67ea42fa71eaf2fe"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [
+        "shared-styles-euCkqVId.js"
+      ],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "Bt": "Uk",
+        "Rt": "Bk",
+        "zt": "Hk"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-78.mjs",
+      "source": "shared-78-D6VXYXaQ.js",
+      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "sha256": "69c13076e9da1238c37d52edaa29f4af38ef9d83a0da0360b2db83959615c1ff",
+      "referenceVersion": "2.42304.0",
+      "statements": 27,
+      "bindings": [
+        {
+          "name": "i_",
+          "sha256": "4ce3e68b0d52f57661ef8e1996ed6d6451db53447c0ee4de19f4b43c231c117a"
+        },
+        {
+          "name": "a_",
+          "sha256": "5c2704a8e26bb9c843d5cedad513d1a76477b06b091a20e4812cc939932ff8d6"
+        },
+        {
+          "name": "s_",
+          "sha256": "3869b7e8e107f3c397885d20b1d1f33e7e95402594fd12b45e5abdfbf12e6f05"
+        },
+        {
+          "name": "c_",
+          "sha256": "ff956e43fabb08330eb2b7dd54ed034491f7b715f22140fa8431f57b02084c17"
+        },
+        {
+          "name": "H",
+          "sha256": "bb32e0efae5147d3df8f6e45df58f6b3fffe2a0d4edf0c03cd08fb5164846fdc"
+        },
+        {
+          "name": "ww",
+          "sha256": "b06ab10db40b9c3156b97af5217b7c67bd07dea3b366c4470a47638b5e16d732"
+        },
+        {
+          "name": "Tw",
+          "sha256": "6a0a8d47be32abfa6123fc5e76c3a15c8813b87a2229e86296f5bb02540b6cbe"
+        },
+        {
+          "name": "Ew",
+          "sha256": "29ae6953604252526b93d9103506f193aeabe9f8c9686a29889dac81b4b98261"
+        },
+        {
+          "name": "Aw",
+          "sha256": "793fd8b7173c9e37a85f8f61c75fdb5a5d9a7a97e0378c20554c5928cd852084"
+        },
+        {
+          "name": "jw",
+          "sha256": "fcb1a3c71812fa2f8390e4e67776c0e5e94fa5f2a2c8cd3b39e4d28294239dd5"
+        },
+        {
+          "name": "Nw",
+          "sha256": "9a5153d2a9b5a49e70c8b16ec9dbfb0bf8fcc2146c6baf5a89e6279a78a2afc5"
+        },
+        {
+          "name": "Pw",
+          "sha256": "2f09249606ad9940fbd4c7ab220d1fe74a453945de3195a940207a57dbab0b4a"
+        },
+        {
+          "name": "Fw",
+          "sha256": "fd85aeb2913a6dae10a2bec47fb2a658ff9dd7f7cc38a6191aa8e4334452772b"
+        },
+        {
+          "name": "Iw",
+          "sha256": "177c85f4fb9e0ff4e910f77550cf0a9add46c7e55350c3c108861f3d73f32051"
+        },
+        {
+          "name": "Lw",
+          "sha256": "da39da6ad8aa743239b28a9d196e69454f7203fa58391ea61e1da12abaf5b92f"
+        },
+        {
+          "name": "Rw",
+          "sha256": "40c06b006e185bbe07fa7c457b33ae5d5c6b4e0b93485c91b9ea4c3ad5662ba9"
+        },
+        {
+          "name": "Hw",
+          "sha256": "ce3a37c3c55d605dc7ede8a8cc6b362e4d6beab4696419a61c7e784b68186c20"
+        },
+        {
+          "name": "Jw",
+          "sha256": "3c770e0f860415b1e0aac81c1280cfd3316259588854d2f4251655a68c131c26"
+        },
+        {
+          "name": "qD",
+          "sha256": "4e13bafa52df29dd97641d4bd8902f28c22b536c9c9c7acad3b1bacd72dd904f"
+        },
+        {
+          "name": "tO",
+          "sha256": "7dbe8c756dc052dee16958d24eb1f39c65c90300229516e01b4ab398de85c833"
+        },
+        {
+          "name": "oO",
+          "sha256": "19c5ff394916efd1042e455ef571a34d553801d3a8461acea2e77f9c8c52e144"
+        },
+        {
+          "name": "fO",
+          "sha256": "207ced3b21e627f4206c5388e1d04f5897fae24cbd762a32b9b591fb232c793c"
+        },
+        {
+          "name": "mO",
+          "sha256": "2fe9671579ffffba6e79a7d00f9920886da37922e9afedd9b7bd6f54390ae842"
+        },
+        {
+          "name": "_O",
+          "sha256": "1a81f6a819bc3cd3f7cd5631b3142336970b4671b20b0e103137aa9fb6427bc4"
+        },
+        {
+          "name": "vO",
+          "sha256": "03c0618d6fafa0640f95f11a82fec3464c5d5b62439b809e274081eb14567782"
+        },
+        {
+          "name": "wk",
+          "sha256": "db8ae4eaf79bfa5e6360615ee6a87d0587a62e461aee94f2ece8ea9f3d31e7eb"
+        },
+        {
+          "name": "ZF",
+          "sha256": "5b8c931acc7c810fadeb26b5229b2ba2b7a1d76993d4b0b823dd05819012550b"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "p",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "Rr",
+          "from": "./shared-52.mjs",
+          "name": "Ma",
+          "via": "shared-52-DGviI8xb.js:Ma",
+          "kind": "generated"
+        },
+        {
+          "local": "Hr",
+          "from": "./shared-52.mjs",
+          "name": "Pa",
+          "via": "shared-52-DGviI8xb.js:Pa",
+          "kind": "generated"
+        },
+        {
+          "local": "Gr",
+          "from": "./shared-52.mjs",
+          "name": "Ra",
+          "via": "shared-52-DGviI8xb.js:Ra",
+          "kind": "generated"
+        },
+        {
+          "local": "Ce",
+          "from": "./shared-25.mjs",
+          "name": "Vt",
+          "via": "shared-25-DP8p7i1Z.js:Vt",
+          "kind": "generated"
+        },
+        {
+          "local": "KD",
+          "from": "../mcp-app-host/sandbox-frame.mjs",
+          "name": "VISUALIZE_SERVER_UUID",
+          "kind": "mcp-app-host",
+          "original": "KD"
+        },
+        {
+          "local": "dn",
+          "from": "./shared-0.mjs",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        },
+        {
+          "local": "Oi",
+          "from": "./shared-52.mjs",
+          "name": "ja",
+          "via": "shared-52-DGviI8xb.js:ja",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "ax": "H",
+        "b_": "Hw",
+        "Bp": "wk",
+        "eh": "vO",
+        "hx": "i_",
+        "Pl": "ZF",
+        "Zm": "oO"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-8.mjs",
+      "source": "shared-8-B5lJ8U5C.js",
+      "sourceSha256": "09a1c33cf2e31d076f8e1908ab42933e1e6d702120136cd67418793a7657d086",
+      "sha256": "7872b192cfe82c57b0bb9c83fe67904e2ee0004f3183d7bebaeae746b70436bf",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "xM",
+          "sha256": "5b1e3502a85a9669175dcfe7542f9c9b626f3a42029ba1a53ffb4ab399493032"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [
+        "shared-styles-euCkqVId.js"
+      ],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "Cr": "xM"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "shared-frame.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "a00ec2eb73981846618dca2739a2aabdce63b831462334b3d120df7d0f5cb339",
+      "referenceVersion": "2.42304.0",
+      "statements": 11,
+      "bindings": [
+        {
+          "name": "Ji",
+          "sha256": "bf9312790d12155e2b54f5abe1bc4c71ed21f2afffb100aec738ef71176a52a3"
+        },
+        {
+          "name": "oa",
+          "sha256": "c90ca580edc2ca2e7e2f3975c00a852c756127c475bde2d372370325c5151a48"
+        },
+        {
+          "name": "sa",
+          "sha256": "a60ac4b4803847e025c929965e529bac273694e3aabe61466e500f3b28560b06"
+        },
+        {
+          "name": "ca",
+          "sha256": "8d201be7c22bddfcc4063ccf91534da2d956eadbaae2d490517285731b512cd5"
+        },
+        {
+          "name": "ja",
+          "sha256": "c19f2810060f5e897298dbe973d00723ae47d98e51cd263f89f7ef1cb7eba229"
+        },
+        {
+          "name": "Ya",
+          "sha256": "e776583f10c3d9cffee55e717eedede7e2af0fd17ad0ad3c2a6012a080454ce9"
+        },
+        {
+          "name": "lc",
+          "sha256": "b1e1d78d1ee6d2f41bd7548d71941afd94b446a28ca0a5a7a98ba857c3fe0023"
+        },
+        {
+          "name": "zd",
+          "sha256": "13344edcaaf774861765110a744bbe757160e51b48eb4166457e615bddf0d6af"
+        },
+        {
+          "name": "Vd",
+          "sha256": "6745dc8bbf4f61e07903aeefff77f1a71a6932996e1dfab4c0b35a757b55727f"
+        },
+        {
+          "name": "Gd",
+          "sha256": "067ee43b612eea16ec01b0f3e604dead91edaea54f65f0bae52c72c30f0c1284"
+        },
+        {
+          "name": "Jd",
+          "sha256": "d6d88788e4997b62e0d9718cccd5cb00986263f4beb33cdd1713cf3644d59438"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "W",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "Oa",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsOwnerWindowContext",
+          "kind": "view-tabs",
+          "original": "Oa"
+        },
+        {
+          "local": "la",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDensityContext",
+          "kind": "view-tabs",
+          "original": "la"
+        },
+        {
+          "local": "G",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "iu": "ca",
+        "mu": "Ya",
+        "su": "ja",
+        "Uc": "Jd",
+        "useOwnerWindow": "Ya",
+        "vl": "lc"
+      },
+      "features": {
+        "Ya": [
+          "return Ji(W(Oa));"
+        ]
+      },
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "tool-card.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "67a772cdfcc4a0ba75da2b625ed8ac98b8ac4ce44885e858ee622ab2c2d26162",
+      "referenceVersion": "2.42304.0",
+      "statements": 103,
+      "bindings": [
+        {
+          "name": "__vite__mapDeps",
+          "sha256": "d89f849e957699f46c8c0df126090f117ff5b9abdc57a5ec1bd5e679387dc1ed"
+        },
+        {
+          "name": "pT",
+          "sha256": "0656406705470008462882d631262d259ab648060c668b5d1323eb5fe2ea4fde"
+        },
+        {
+          "name": "yEe",
+          "sha256": "68bc58292ac3621f426df6d15df4ab887f138e94ac3b48190ea8a0d3182cf081"
+        },
+        {
+          "name": "bEe",
+          "sha256": "3749f0c29a132d45cae82ede5f6dafa707d464093d2fcd88d3ca587dd4113ca2"
+        },
+        {
+          "name": "xEe",
+          "sha256": "5951561ba9484658680ecf2f08866db008ee1036d686c27b7b814363d04ced26"
+        },
+        {
+          "name": "SEe",
+          "sha256": "ab4281c1a63cac02885a403e50848c9d42992dd63c11895c39e5dee6e0e4f793"
+        },
+        {
+          "name": "mT",
+          "sha256": "1bba30f9efe580a2794f6c15a8e35856404f0f0576e8ba2c602d0ae9296838b1"
+        },
+        {
+          "name": "wEe",
+          "sha256": "e88e4fd8aef9c126b60f7878795f647928cb2038ae72dfeb39e24e1901711176"
+        },
+        {
+          "name": "dI",
+          "sha256": "c5d89dbf55af4874a16447c4ec697677035317f127172a806488120a500f2c39"
+        },
+        {
+          "name": "jZe",
+          "sha256": "cb62df4ac9628b85a7906fa636d0f5b514746a8f83b1930ee8717318c307a517"
+        },
+        {
+          "name": "XY",
+          "sha256": "0fc5a3665d48d1886cb064f1630284641fc89e02a94c3d35c6ac6195f5da6a71"
+        },
+        {
+          "name": "ZY",
+          "sha256": "2ffa6fe50183e8852ccb4925f1f1ef6d16199a7bb89bbc2960f01d41228bbbc0"
+        },
+        {
+          "name": "QY",
+          "sha256": "a197057c1e5ddc50de603c8fd2dd84c789abd4617364b421e95ef311630fba1d"
+        },
+        {
+          "name": "NZe",
+          "sha256": "0711a1bbe95f4e7c759be16f5591845ecb95d5045ab850404951d78c62504917"
+        },
+        {
+          "name": "RZe",
+          "sha256": "c6320377e8a57314a6bfc93f5fafa152d85f21176cc415baf87a1ffeaf4c8bfc"
+        },
+        {
+          "name": "nX",
+          "sha256": "db5c6bbe5c870bda02b6600ad0bb587911ca1b5e603055d9756edb8717963666"
+        },
+        {
+          "name": "VZe",
+          "sha256": "8aa7a724ea51c1254189773e3a5a1b81107ffb6b0b213889c7e6e0d139a48729"
+        },
+        {
+          "name": "HZe",
+          "sha256": "f2f2051a0dcd0844216f8473ee529493822bac0d83a469164d345f809a17cd50"
+        },
+        {
+          "name": "rX",
+          "sha256": "d5c8f7460d2f08fa88fa6e987c42ca83e2fe6eea6f84c0a047c5726a3829d15d"
+        },
+        {
+          "name": "iX",
+          "sha256": "9168ed16afca9ee7c03e9f82f49e4500ecb197fbe752f40c040be3742fe2ce82"
+        },
+        {
+          "name": "aX",
+          "sha256": "d80517b01e0a600953970886552a49903be18791674c6eee956d0c42aadd5462"
+        },
+        {
+          "name": "oX",
+          "sha256": "3256f5861612cbb8f477b9889af39c9acc74b33f7f4fea3cd218059cffdbb46f"
+        },
+        {
+          "name": "UZe",
+          "sha256": "5e66b960da650dd941cb33824d08b50c71609095306d0d366607d31cfc485d48"
+        },
+        {
+          "name": "sX",
+          "sha256": "042d235f186c8208a00984d6e433a20c966eb015db8c23504ad5fefd3e246d4e"
+        },
+        {
+          "name": "cX",
+          "sha256": "5d5ff2479501508f4d919e2c5142499d1eb0b0a2348e0f7e558c35986c562af8"
+        },
+        {
+          "name": "lX",
+          "sha256": "898e9ed5ec3b3fb75f110d671397dffd0d89d0f87c06cc8649992b11be8b752f"
+        },
+        {
+          "name": "WZe",
+          "sha256": "59dcf02fdeadb1db2c64af438e4794b361df8c6056a2a6598cda6b5eca3abcf7"
+        },
+        {
+          "name": "GZe",
+          "sha256": "d5982a0ddc13dcff3f3030ee4b87b5f85c7bacf30dd2ff4e246fdff6b27b3d34"
+        },
+        {
+          "name": "KZe",
+          "sha256": "b3d6e182b0d58ff97be4a66c6dee407007eb2cf244a82d3ac48eebd0421afed2"
+        },
+        {
+          "name": "qZe",
+          "sha256": "b46488b8df5ee0d527b92c77baae647536b7ef7efa074eb734785c8a01118cc8"
+        },
+        {
+          "name": "JZe",
+          "sha256": "fb1d76b402b047c60e311f1779e37f237b953171cc5f6a0060a5f86069af508f"
+        },
+        {
+          "name": "uX",
+          "sha256": "3b4245eabbc352f24f80d7e72f7fd3bf960db9c9074177bdf6d296a3fbed869f"
+        },
+        {
+          "name": "YZe",
+          "sha256": "76b66b0dd7c07b53cbb1d1d779fabeb4c89cddcc4752182b5f382b3d1dba7e67"
+        },
+        {
+          "name": "XZe",
+          "sha256": "b1b939ebdfada43765387fa9732a7e04863f727681f578af059c999460b42153"
+        },
+        {
+          "name": "ZZe",
+          "sha256": "565d23c8080cb74dfe3afa80d70e3b6f25b49ac914c63c3dc11ba7fdef82d949"
+        },
+        {
+          "name": "QZe",
+          "sha256": "ff1750691bf63a9db3cc0bf88c7fcc5e8d48d7ef6975a7dc967d86589f8a4ae5"
+        },
+        {
+          "name": "$Ze",
+          "sha256": "b2863c989e420b6cf1731f99f4ed30ae498a900b5838be106c504e755b54df0d"
+        },
+        {
+          "name": "eQe",
+          "sha256": "4ad996f05a826c30889f88084bfde0c4c339a5e78a3250491ebe01470bd3f9af"
+        },
+        {
+          "name": "dX",
+          "sha256": "637b3956250596f9928499b5a9e8a9273d23d1d612a35dc4b1ded0e03c70ea68"
+        },
+        {
+          "name": "fX",
+          "sha256": "1aa124b2b1f7f1973142c2629043d289acf36dfd4d2d2623434598276dd9388b"
+        },
+        {
+          "name": "pX",
+          "sha256": "46023b851d92fc746f9be50ee326fb4528bd85761c72f77599f8f8388511051c"
+        },
+        {
+          "name": "mX",
+          "sha256": "30d5e7b347d4c836c06b31f93c4cd7ae42231f5fe259226261021c586ab5afe6"
+        },
+        {
+          "name": "hX",
+          "sha256": "1f2c90cf2822f9706993ece9508ebc83a3f2335b7004d691da1317b473ef11a8"
+        },
+        {
+          "name": "gX",
+          "sha256": "838c1b3e1d7fd4de0fd69f7f2ba9a9b79d83ae986e047f31c6c500aa3ea0c46f"
+        },
+        {
+          "name": "_X",
+          "sha256": "abe1deb6fb53fc96905c828a891a2c9fe4b4708c916e3e8fe0c588ef085d9b0b"
+        },
+        {
+          "name": "vX",
+          "sha256": "12c089f6c02d7e6a8dc83449c60e72aa37c30e2b3036292d74e7a6e30c526e05"
+        },
+        {
+          "name": "yX",
+          "sha256": "21821d096ab413b8264928d6d057f9494edbbf31038b7cc5132bad525c3fb692"
+        },
+        {
+          "name": "bX",
+          "sha256": "cf0ba73d6a60068f663920384c9d99a12cea8783c4b105d4fe02bd01148257e8"
+        },
+        {
+          "name": "tQe",
+          "sha256": "c579bad40b4d76ab957e68109c4341abedcaca877b53375bcc8c8d205938083e"
+        },
+        {
+          "name": "nQe",
+          "sha256": "ba274be28b425b75e243de28925860f0e41d69db53d144989268e24c6929be0e"
+        },
+        {
+          "name": "xX",
+          "sha256": "acbbad1426b0bfeb7c696e644396311cc8cdce0efa46d02b0ef64170a98707e5"
+        },
+        {
+          "name": "rQe",
+          "sha256": "f1aea2047295d335a2618063ada1cb0efe6aae9afeaeb26bbeb2efce673313aa"
+        },
+        {
+          "name": "iQe",
+          "sha256": "26624f9b441314c9f2f1f4be82f407f53002679b574e76cbcfa186d624985b3b"
+        },
+        {
+          "name": "SX",
+          "sha256": "5ff00904fb1eb75f023bd770ea16f6398b53e202c4f738ec1ad066135d468948"
+        },
+        {
+          "name": "aQe",
+          "sha256": "b2435dbeeddd8535f991fc43e7600a043d03188d1962e5e000e577cd2cea2c07"
+        },
+        {
+          "name": "oQe",
+          "sha256": "f0fb0c5768c2055fda6321c76fd3527c717babb891b5ed3e719206317fd35f6f"
+        },
+        {
+          "name": "sQe",
+          "sha256": "a59f2c659e3e858c00903b932ba713c380e5dd93d55a538ffafd3efa11c324b9"
+        },
+        {
+          "name": "cQe",
+          "sha256": "3121bf4f5bbdd30126703617a17d4ed567d23ec6dbbe5674421243e03e0a4cd8"
+        },
+        {
+          "name": "lQe",
+          "sha256": "234f7462a5d4adcfc55d621f90b1b7c9a84bacc368abe06f7ceeba6898104339"
+        },
+        {
+          "name": "uQe",
+          "sha256": "4618dff1079672987ba214858f279f7b64a882d68411cd517bf86ebfd16ccffd"
+        },
+        {
+          "name": "CX",
+          "sha256": "b85a68136b71991cf64d9ee663557a068c4708cee54fbfcd849fda8a39c509da"
+        },
+        {
+          "name": "dQe",
+          "sha256": "e2b318d722151f92c683e8348520686a6fc29ae138fa4a6667a0ae79cbad1408"
+        },
+        {
+          "name": "wX",
+          "sha256": "eef59d59a7f0d4ba0c96d7dec4c229f55d5aa442eabdc1932f1a05ec9788effa"
+        },
+        {
+          "name": "fQe",
+          "sha256": "401e45e593fcaf2567a373bd01bc924be0b1cb49b75db1e357fdc23ce2755323"
+        },
+        {
+          "name": "TX",
+          "sha256": "f26c2535122e1bbe59d08f30e77e816dd18a851e832541b6a575e00e3a0d49bc"
+        },
+        {
+          "name": "EX",
+          "sha256": "f082ca2ee436fd5b0297280b2ec08363f2ddba87be835013dceb18e0dab9fc33"
+        },
+        {
+          "name": "DX",
+          "sha256": "6762c7393196f265771599ed2ecdebc3d881626154ff8503444b38cf5ca5c9f0"
+        },
+        {
+          "name": "pQe",
+          "sha256": "7e7ccb561d0912514a11c6261f3fbe311a52b63d235e8ddae9832362b7c4886c"
+        },
+        {
+          "name": "OX",
+          "sha256": "7e934ae6d10a71984091785cef5e31698d49e293d0350b01df776b20d18db786"
+        },
+        {
+          "name": "mQe",
+          "sha256": "2116e2501c7b18bdb275137527c0cb58c7405577e077460ba34010a2e65e6d1a"
+        },
+        {
+          "name": "kX",
+          "sha256": "fe9800a274cb772eb0aacf7e1f316f1fe08fdee23a4dc88fa3cbb7f426fdff2d"
+        },
+        {
+          "name": "AX",
+          "sha256": "f0f441c0f656c4e852eedb24bc71d27a4d2d305e06fec9bb566fe747768820a0"
+        },
+        {
+          "name": "jX",
+          "sha256": "850e2aa0f574d62d830d607733d62d9abc320ebe989f2ff908565cb488033165"
+        },
+        {
+          "name": "hQe",
+          "sha256": "8e042c46fe442873754140f1a965dca3b788042515eaeaabe9108e6229c2ea32"
+        },
+        {
+          "name": "gQe",
+          "sha256": "a1c6f78c229b2fb02cde5f6d1f2b947a83a8add54ae4d5382274204e0d788580"
+        },
+        {
+          "name": "_Qe",
+          "sha256": "36635422dd425f8de15fd2ab18878c279c9c529b6896a8920040b4973904d67d"
+        },
+        {
+          "name": "vQe",
+          "sha256": "75e90429989331985685648a2161c5998a3b3b637cb8706c6917837209c5e998"
+        },
+        {
+          "name": "MX",
+          "sha256": "75d5eed57258e7e1418ec724824768ed82fc445b6cc576bad083d0d0dee470dd"
+        },
+        {
+          "name": "yQe",
+          "sha256": "f0c46185de7a0ae2c7c2ceb7574531599ff0670554542c08fdb0c5935c068e05"
+        },
+        {
+          "name": "bQe",
+          "sha256": "09629df5edff49f877f2d08addfcafd035893418c6707c9c40a2687b2f5ab6d6"
+        },
+        {
+          "name": "xQe",
+          "sha256": "c03848ad9b42f95a9ce45054f4988eeb1b042348346d7116d4414b73b638e0c9"
+        },
+        {
+          "name": "SQe",
+          "sha256": "498437f8e678000772ea8ae2b0ced27c18f1591da25c123077958e1ba1cce860"
+        },
+        {
+          "name": "NX",
+          "sha256": "a71c304b9eec5220404b13eeb9cfca9470089317a27660847591d9500eb71150"
+        },
+        {
+          "name": "CQe",
+          "sha256": "92cd0c61a8948262f819030b150a776b09d3f5e656c65b3c53ebdbbd0b08a631"
+        },
+        {
+          "name": "PX",
+          "sha256": "89e42852e4dc09ecffe63e3b2128b11467a18a47ec387e78416c398d00d35945"
+        },
+        {
+          "name": "FX",
+          "sha256": "adf02dd669bdb32468d0b2d76d49042e9767984db25bc7048abb6bea29646c61"
+        },
+        {
+          "name": "wQe",
+          "sha256": "3d041e38292050720f98200730f6205c9eaa33d29ebb9f1246271dcb0a0f1c9f"
+        },
+        {
+          "name": "TQe",
+          "sha256": "023593e78482af2f08067ad723cb5720ed7a46654d44c43ca246c97d13063afd"
+        },
+        {
+          "name": "EQe",
+          "sha256": "4a5019d7d4e97ca5f9741754b8a1d48a1894edbd038c3df90c34fb085e811976"
+        },
+        {
+          "name": "DQe",
+          "sha256": "3baa72c1baea3b6e0607dd7ece46312382dfaae30a2e7d65208f2a5e7b8c75d2"
+        },
+        {
+          "name": "OQe",
+          "sha256": "c7c5499c6554e35541dca47d6ce0cddf74b750bff11f7a58e96e08a776f2ae33"
+        },
+        {
+          "name": "IX",
+          "sha256": "0d390544e18b3c7bfae94f4d55c994429ffe8f4f2a05e42beb79d4bfab9aa20b"
+        },
+        {
+          "name": "kQe",
+          "sha256": "c839b3bc5f1d4be37af9e30df4a8655e27efe037a1f23f6615529ebfbe4a4559"
+        },
+        {
+          "name": "AQe",
+          "sha256": "fd80301bae7767c26533091f6305caa52da6235eef78a26c21e8c3d6e46b5b0a"
+        },
+        {
+          "name": "LX",
+          "sha256": "c0da68ae762a9790303e2a327874d6c8d1216f5597e95e09f5d947227506f292"
+        },
+        {
+          "name": "RX",
+          "sha256": "9c7baedc98303d90c516db0ced8e699a36b7b1fcbd26d96fffafd5a680dc69ee"
+        },
+        {
+          "name": "jQe",
+          "sha256": "7e5ef81f93c16420607850f17cdaca4c4b73f9e1c7d93cb0e8ba96697c8e44f4"
+        },
+        {
+          "name": "zX",
+          "sha256": "0a58d3227a2d8868abe6085cb00ed4f14ac4f0c18b1eceb1c6f9468110f1d3db"
+        },
+        {
+          "name": "MQe",
+          "sha256": "3ffac48ea4700341666f6d0ecf1bfbe27718e078bc4dd7f9f1c6803a5b463674"
+        },
+        {
+          "name": "NQe",
+          "sha256": "085176bd6e418148685718afaf9203f2e935f12f8577476115ff9907a4cab35e"
+        },
+        {
+          "name": "BX",
+          "sha256": "b51174894368cb8049abb94352313370b902102332740cf2781130e76596d040"
+        },
+        {
+          "name": "PQe",
+          "sha256": "25c904f21e10808872286c669cd01289e9ed4ab06860f80322ecbab703d674e4"
+        },
+        {
+          "name": "VX",
+          "sha256": "2b070d8235b444c314e88cccf7581827734d8bccf5d4abfdc372c85d2a281621"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "qr",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useMcpAppsEnabled",
+          "via": "shared-78-D6VXYXaQ.js:Ko",
+          "kind": "adapter",
+          "original": "oH"
+        },
+        {
+          "local": "it",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useHostConfiguration",
+          "via": "shared-0-ByI5P0CP.js:Rt",
+          "kind": "adapter",
+          "original": "zJ"
+        },
+        {
+          "local": "Xu",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "toolApprovalStore",
+          "via": "shared-11-BuQ3CK5I.js:Wn",
+          "kind": "adapter",
+          "original": "X"
+        },
+        {
+          "local": "bpe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSessionMcpState",
+          "via": "cef1e6037-8DivyY4m.js:P",
+          "kind": "adapter",
+          "original": "Vt"
+        },
+        {
+          "local": "ln",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "matchSessionMcpTool",
+          "via": "shared-156-Bikz018e.js:Dd",
+          "kind": "adapter",
+          "original": "$b"
+        },
+        {
+          "local": "Zt",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "findMcpAppToolServer",
+          "via": "shared-1-CAAiD7E3.js:ni",
+          "kind": "adapter",
+          "original": "dP"
+        },
+        {
+          "local": "hr",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "isSessionOwnedServer",
+          "via": "shared-156-Bikz018e.js:tf",
+          "kind": "adapter",
+          "original": "Vb"
+        },
+        {
+          "local": "gpe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSshServerHold",
+          "via": "cef1e6037-8DivyY4m.js:F",
+          "kind": "adapter",
+          "original": "Ot"
+        },
+        {
+          "local": "Cpe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useConnectorRowsHere",
+          "via": "cef1e6037-8DivyY4m.js:j",
+          "kind": "adapter",
+          "original": "kt"
+        },
+        {
+          "local": "vpe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useProxiedConnectorCall",
+          "via": "cef1e6037-8DivyY4m.js:L",
+          "kind": "adapter",
+          "original": "Ft"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "xpe",
+          "from": "./cef1e6037.mjs",
+          "name": "R",
+          "via": "cef1e6037-8DivyY4m.js:R",
+          "kind": "generated"
+        },
+        {
+          "local": "hpe",
+          "from": "./cef1e6037.mjs",
+          "name": "A",
+          "via": "cef1e6037-8DivyY4m.js:A",
+          "kind": "generated"
+        },
+        {
+          "local": "ype",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSessionMcpClient",
+          "via": "cef1e6037-8DivyY4m.js:M",
+          "kind": "adapter",
+          "original": "_t"
+        },
+        {
+          "local": "or",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "mcpClientsStore",
+          "via": "shared-156-Bikz018e.js:op",
+          "kind": "adapter",
+          "original": "X"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "Cn",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "connectRemoteMcpServer",
+          "via": "shared-156-Bikz018e.js:Td",
+          "kind": "adapter",
+          "original": "Ky"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "cTe",
+          "from": "../mcp-app-host/sandbox-origin.mjs",
+          "name": "c",
+          "via": "cbc7fd025-CAGIpAIM.js:c",
+          "kind": "mcp-app-host",
+          "original": "x"
+        },
+        {
+          "local": "xt",
+          "from": "./shared-0.mjs",
+          "name": "fb",
+          "via": "shared-0-ByI5P0CP.js:fb",
+          "kind": "generated"
+        },
+        {
+          "local": "vt",
+          "from": "./shared-0.mjs",
+          "name": "db",
+          "via": "shared-0-ByI5P0CP.js:db",
+          "kind": "generated"
+        },
+        {
+          "local": "nS",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useTranscriptRowExpanded",
+          "via": "cc6e9624e-Dw5fc5HL.js:u",
+          "kind": "adapter",
+          "original": "h"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "Epe",
+          "from": "./cef1e6037.mjs",
+          "name": "z",
+          "via": "cef1e6037-8DivyY4m.js:z",
+          "kind": "generated"
+        },
+        {
+          "local": "gS",
+          "from": "./c7407a74b.mjs",
+          "name": "r",
+          "via": "c7407a74b-CeQLL5tW.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "hn",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useLazyChunkState",
+          "via": "shared-156-Bikz018e.js:Ir",
+          "kind": "adapter",
+          "original": "dB"
+        },
+        {
+          "local": "gi",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useInCodeRoute",
+          "via": "shared-78-D6VXYXaQ.js:gr",
+          "kind": "adapter",
+          "original": "bJ"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "useEffectEvent",
+          "via": "vendor-frame-DfPJ1QmD.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Uz",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "ToolRowFallback",
+          "via": "c96d752d0-BOCqU7c2.js#Uz",
+          "kind": "adapter",
+          "original": "Uz"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "m_",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useInsideStepList",
+          "via": "c26fb8b6b-DfPeiuGP.js:T",
+          "kind": "adapter",
+          "original": "We"
+        },
+        {
+          "local": "Pl",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "mcpAppRecentUse",
+          "via": "shared-10-THQui8pC.js:Bi",
+          "kind": "adapter",
+          "original": "zr"
+        },
+        {
+          "local": "nu",
+          "from": "./shared-10.mjs",
+          "name": "Vi",
+          "via": "shared-10-THQui8pC.js:Vi",
+          "kind": "generated"
+        },
+        {
+          "local": "fe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "readGrowthBookGate",
+          "via": "shared-25-DP8p7i1Z.js:Th",
+          "kind": "adapter",
+          "original": "Zs"
+        },
+        {
+          "local": "Iee",
+          "from": "./shared-78.mjs",
+          "name": "ax",
+          "via": "shared-78-D6VXYXaQ.js:ax",
+          "kind": "generated"
+        },
+        {
+          "local": "Kde",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useApprovedFrameDomains",
+          "via": "c9d6d9802-CEv9o01T.js:t",
+          "kind": "adapter",
+          "original": "s"
+        },
+        {
+          "local": "uTe",
+          "from": "../mcp-app-host/widget-size.mjs",
+          "name": "r",
+          "via": "c06a5ffab-BHsFLtx8.js:r",
+          "kind": "mcp-app-host",
+          "original": "d"
+        },
+        {
+          "local": "_pe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSessionCliMcpServers",
+          "via": "cef1e6037-8DivyY4m.js:I",
+          "kind": "adapter",
+          "original": "Bt"
+        },
+        {
+          "local": "tTe",
+          "from": "../mcp-app-host/host-context.mjs",
+          "name": "useFindServerTool",
+          "via": "c8e12f1a8-6AP_7dPS.js:r",
+          "kind": "mcp-app-host",
+          "original": "Ae"
+        },
+        {
+          "local": "Tpe",
+          "from": "./cef1e6037.mjs",
+          "name": "w",
+          "via": "cef1e6037-8DivyY4m.js:w",
+          "kind": "generated"
+        },
+        {
+          "local": "Mee",
+          "from": "../mcp-app-host/sandbox-frame.mjs",
+          "name": "toolUiResourceUri",
+          "via": "shared-78-D6VXYXaQ.js:X_",
+          "kind": "mcp-app-host",
+          "original": "vC"
+        },
+        {
+          "local": "oe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "readGrowthBookFlag",
+          "via": "shared-25-DP8p7i1Z.js:Nh",
+          "kind": "adapter",
+          "original": "ec"
+        },
+        {
+          "local": "ene",
+          "from": "./shared-26.mjs",
+          "name": "ys",
+          "via": "shared-26-CgdP_nTj.js:ys",
+          "kind": "generated"
+        },
+        {
+          "local": "vie",
+          "from": "./shared-28.mjs",
+          "name": "Ga",
+          "via": "shared-28-DcgD7xXH.js:Ga",
+          "kind": "generated"
+        },
+        {
+          "local": "ic",
+          "from": "./shared-28.mjs",
+          "name": "Ha",
+          "via": "shared-28-DcgD7xXH.js:Ha",
+          "kind": "generated"
+        },
+        {
+          "local": "bte",
+          "from": "./shared-26.mjs",
+          "name": "Ss",
+          "via": "shared-26-CgdP_nTj.js:Ss",
+          "kind": "generated"
+        },
+        {
+          "local": "tte",
+          "from": "./shared-26.mjs",
+          "name": "Es",
+          "via": "shared-26-CgdP_nTj.js:Es",
+          "kind": "generated"
+        },
+        {
+          "local": "jte",
+          "from": "./shared-26.mjs",
+          "name": "bs",
+          "via": "shared-26-CgdP_nTj.js:bs",
+          "kind": "generated"
+        },
+        {
+          "local": "$we",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useAppSignInParking",
+          "via": "c8e12f1a8-6AP_7dPS.js:o",
+          "kind": "adapter",
+          "original": "De"
+        },
+        {
+          "local": "One",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useDynamicConfig",
+          "via": "shared-52-DGviI8xb.js:zp",
+          "kind": "adapter",
+          "original": "Ff"
+        },
+        {
+          "local": "Jwe",
+          "from": "./c8e12f1a8.mjs",
+          "name": "h",
+          "via": "c8e12f1a8-6AP_7dPS.js:h",
+          "kind": "generated"
+        },
+        {
+          "local": "Xwe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "startWidgetLoadTiming",
+          "via": "c8e12f1a8-6AP_7dPS.js:l",
+          "kind": "adapter",
+          "original": "ve"
+        },
+        {
+          "local": "nTe",
+          "from": "./c8e12f1a8.mjs",
+          "name": "s",
+          "via": "c8e12f1a8-6AP_7dPS.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "Gwe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "endWidgetLoadTiming",
+          "via": "c8e12f1a8-6AP_7dPS.js:c",
+          "kind": "adapter",
+          "original": "Ee"
+        },
+        {
+          "local": "eTe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "markWidgetHandoff",
+          "via": "c8e12f1a8-6AP_7dPS.js:p",
+          "kind": "adapter",
+          "original": "Se"
+        },
+        {
+          "local": "Zwe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "markWidgetResultClean",
+          "via": "c8e12f1a8-6AP_7dPS.js:m",
+          "kind": "adapter",
+          "original": "Ce"
+        },
+        {
+          "local": "Kwe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "cancelWidgetLoadTiming",
+          "via": "c8e12f1a8-6AP_7dPS.js:d",
+          "kind": "adapter",
+          "original": "we"
+        },
+        {
+          "local": "iTe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "markWidgetInitialized",
+          "via": "c8e12f1a8-6AP_7dPS.js:u",
+          "kind": "adapter",
+          "original": "ye"
+        },
+        {
+          "local": "qwe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "markWidgetLoadError",
+          "via": "c8e12f1a8-6AP_7dPS.js:f",
+          "kind": "adapter",
+          "original": "be"
+        },
+        {
+          "local": "_ee",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useMcpAppPaneSupported",
+          "via": "shared-78-D6VXYXaQ.js:Go",
+          "kind": "adapter",
+          "original": "sH"
+        },
+        {
+          "local": "Fhe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useMainPaneHost",
+          "via": "c03935b01-CyJKQj4N.js:st",
+          "kind": "adapter",
+          "original": "bc"
+        },
+        {
+          "local": "ooe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSidePanePortalHost",
+          "via": "c87a7a2df-DdjUUMHE.js:i",
+          "kind": "adapter",
+          "original": "m"
+        },
+        {
+          "local": "Jh",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "usePaneStoreContext",
+          "via": "c03935b01-CyJKQj4N.js:mt",
+          "kind": "adapter",
+          "original": "_c"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useId",
+          "via": "vendor-frame-DfPJ1QmD.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "Yh",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "usePaneStore",
+          "via": "c03935b01-CyJKQj4N.js:pt",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "Wh",
+          "from": "./c03935b01.mjs",
+          "name": "Y",
+          "via": "c03935b01-CyJKQj4N.js:Y",
+          "kind": "generated"
+        },
+        {
+          "local": "Km",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "logSidePaneToggled",
+          "via": "c68c4283d-CPuRD0vx.js:Cd",
+          "kind": "adapter",
+          "original": "H"
+        },
+        {
+          "local": "Sge",
+          "from": "./c19e90103.mjs",
+          "name": "fr",
+          "via": "c19e90103-muBq-gyt.js:fr",
+          "kind": "generated"
+        },
+        {
+          "local": "te",
+          "from": "./shared-25.mjs",
+          "name": "Ff",
+          "via": "shared-25-DP8p7i1Z.js:Ff",
+          "kind": "generated"
+        },
+        {
+          "local": "ul",
+          "from": "./shared-8.mjs",
+          "name": "Cr",
+          "via": "shared-8-B5lJ8U5C.js:Cr",
+          "kind": "generated"
+        },
+        {
+          "local": "Qwe",
+          "from": "../mcp-app-host/host-context.mjs",
+          "name": "useMcpAppHostContext",
+          "via": "c8e12f1a8-6AP_7dPS.js:n",
+          "kind": "mcp-app-host",
+          "original": "Pe"
+        },
+        {
+          "local": "dTe",
+          "from": "../mcp-app-host/widget-size.mjs",
+          "name": "t",
+          "via": "c06a5ffab-BHsFLtx8.js:t",
+          "kind": "mcp-app-host",
+          "original": "h"
+        },
+        {
+          "local": "Tee",
+          "from": "../mcp-app-host/sandbox-frame.mjs",
+          "name": "VISUALIZE_SERVER_NAME",
+          "via": "shared-78-D6VXYXaQ.js:Nm",
+          "kind": "mcp-app-host",
+          "original": "GD"
+        },
+        {
+          "local": "rTe",
+          "from": "../mcp-app-host/host-context.mjs",
+          "name": "useKeepMenuClear",
+          "via": "c8e12f1a8-6AP_7dPS.js:t",
+          "kind": "mcp-app-host",
+          "original": "Ie"
+        },
+        {
+          "local": "fCe",
+          "from": "../mcp-app-host/host-styles.mjs",
+          "name": "MCP_APP_STYLE_VARIABLES",
+          "via": "cbc4150d0-BRaVNt32.js:n",
+          "kind": "mcp-app-host",
+          "original": "a"
+        },
+        {
+          "local": "xw",
+          "from": "../mcp-app-host/widget-size.mjs",
+          "name": "i",
+          "via": "c06a5ffab-BHsFLtx8.js:i",
+          "kind": "mcp-app-host",
+          "original": "s"
+        },
+        {
+          "local": "yi",
+          "from": "./shared-78.mjs",
+          "name": "hx",
+          "via": "shared-78-D6VXYXaQ.js:hx",
+          "kind": "generated"
+        },
+        {
+          "local": "lm",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "isBridgeHeldSession",
+          "via": "cef1e6037-8DivyY4m.js:k",
+          "kind": "adapter",
+          "original": "yt"
+        },
+        {
+          "local": "gr",
+          "from": "./tool-names.mjs",
+          "name": "tn",
+          "via": "shared-156-Bikz018e.js:tn",
+          "kind": "generated"
+        },
+        {
+          "local": "Jr",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "cachedResourceMeta",
+          "via": "shared-78-D6VXYXaQ.js:Kp",
+          "kind": "adapter",
+          "original": "Wk"
+        },
+        {
+          "local": "ls",
+          "from": "./shared-frame.mjs",
+          "name": "Uc",
+          "via": "shared-frame-BfjMqbuN.js:Uc",
+          "kind": "generated"
+        },
+        {
+          "local": "Mt",
+          "from": "../view-tabs/shared-0-ByI5P0CP.js",
+          "name": "useEventCallback",
+          "via": "shared-0-ByI5P0CP.js:xx",
+          "kind": "view-tabs",
+          "original": "_e"
+        },
+        {
+          "local": "sTe",
+          "from": "./c8e12f1a8.mjs",
+          "name": "y",
+          "via": "c8e12f1a8-6AP_7dPS.js:y",
+          "kind": "generated"
+        },
+        {
+          "local": "yhe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "logQuestionForm",
+          "via": "c68c4283d-CPuRD0vx.js:kn",
+          "kind": "adapter",
+          "original": "ws"
+        },
+        {
+          "local": "pC",
+          "from": "../mcp-app-host/user-activation.mjs",
+          "name": "n",
+          "via": "c89766c40-D_7i6Bva.js:n",
+          "kind": "mcp-app-host",
+          "original": "s"
+        },
+        {
+          "local": "ba",
+          "from": "./shared-26.mjs",
+          "name": "kt",
+          "via": "shared-26-CgdP_nTj.js:kt",
+          "kind": "generated"
+        },
+        {
+          "local": "fpe",
+          "from": "./ccef66963.mjs",
+          "name": "n",
+          "via": "ccef66963-DLJuiL6B.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "Wwe",
+          "from": "./c8e12f1a8.mjs",
+          "name": "b",
+          "via": "c8e12f1a8-6AP_7dPS.js:b",
+          "kind": "generated"
+        },
+        {
+          "local": "ppe",
+          "from": "./ccef66963.mjs",
+          "name": "t",
+          "via": "ccef66963-DLJuiL6B.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "km",
+          "from": "./c4acc1503.mjs",
+          "name": "a",
+          "via": "c4acc1503-B_cdqucS.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "Ybe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useOpenConfirmedLink",
+          "via": "cc6e65d4b-CKlso-Pn.js:r",
+          "kind": "adapter",
+          "original": "m"
+        },
+        {
+          "local": "rfe",
+          "from": "./c16f659b9.mjs",
+          "name": "r",
+          "via": "c16f659b9-Lmh4bP4f.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "oTe",
+          "from": "./c8e12f1a8.mjs",
+          "name": "x",
+          "via": "c8e12f1a8-6AP_7dPS.js:x",
+          "kind": "generated"
+        },
+        {
+          "local": "Ywe",
+          "from": "../mcp-app-host/host-context.mjs",
+          "name": "copyWidgetImage",
+          "via": "c8e12f1a8-6AP_7dPS.js:i",
+          "kind": "mcp-app-host",
+          "original": "Oe"
+        },
+        {
+          "local": "Uwe",
+          "from": "../mcp-app-host/host-context.mjs",
+          "name": "copyWidgetText",
+          "via": "c8e12f1a8-6AP_7dPS.js:a",
+          "kind": "mcp-app-host",
+          "original": "ke"
+        },
+        {
+          "local": "Ay",
+          "from": "./visual-messages.mjs",
+          "name": "m",
+          "via": "c52b02f3f-DUwt0Dsx.js:m",
+          "kind": "generated"
+        },
+        {
+          "local": "Zy",
+          "from": "./c425fb3cf.mjs",
+          "name": "d",
+          "via": "c425fb3cf-CEgSkv8l.js:d",
+          "kind": "generated"
+        },
+        {
+          "local": "fC",
+          "from": "../mcp-app-host/user-activation.mjs",
+          "name": "i",
+          "via": "c89766c40-D_7i6Bva.js:i",
+          "kind": "mcp-app-host",
+          "original": "r"
+        },
+        {
+          "local": "Eh",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "logSidePaneOpened",
+          "via": "c68c4283d-CPuRD0vx.js:yd",
+          "kind": "adapter",
+          "original": "_u"
+        },
+        {
+          "local": "Ip",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "questionPromptsStore",
+          "via": "c5da7eb42-B8cTG8SI.js:Hn",
+          "kind": "adapter",
+          "original": "ux"
+        },
+        {
+          "local": "Lh",
+          "from": "./cf53e1812.mjs",
+          "name": "t",
+          "via": "cf53e1812-CivLPgES.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "eme",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useSidePaneAutoOpen",
+          "via": "cd4f82e77-BZMvPH7p.js:v",
+          "kind": "adapter",
+          "original": "Wt"
+        },
+        {
+          "local": "kb",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "pendingTurnArmedAt",
+          "via": "c06cf64bb-BE5q2vSr.js:mt",
+          "kind": "adapter",
+          "original": "Jv"
+        },
+        {
+          "local": "Vh",
+          "from": "./c03935b01.mjs",
+          "name": "K",
+          "via": "c03935b01-CyJKQj4N.js:K",
+          "kind": "generated"
+        },
+        {
+          "local": "R",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "Cue",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "keepSplitForTile",
+          "via": "c227f4d5e-Ba-r--Rl.js:fc",
+          "kind": "adapter",
+          "original": "jT"
+        },
+        {
+          "local": "Uh",
+          "from": "./c03935b01.mjs",
+          "name": "W",
+          "via": "c03935b01-CyJKQj4N.js:W",
+          "kind": "generated"
+        },
+        {
+          "local": "Fxe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "canExpandTile",
+          "via": "ca5db7aaf-DNznjmvJ.js:u",
+          "kind": "adapter",
+          "original": "M"
+        },
+        {
+          "local": "Hwe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "AppSignInPrompt",
+          "via": "c8e12f1a8-6AP_7dPS.js:_",
+          "kind": "adapter",
+          "original": "ue"
+        },
+        {
+          "local": "Us",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "X"
+        },
+        {
+          "local": "Kt",
+          "from": "./shared-1.mjs",
+          "name": "ei",
+          "via": "shared-1-CAAiD7E3.js:ei",
+          "kind": "generated"
+        },
+        {
+          "local": "mee",
+          "from": "./shared-78.mjs",
+          "name": "Bp",
+          "via": "shared-78-D6VXYXaQ.js:Bp",
+          "kind": "generated"
+        },
+        {
+          "local": "Sn",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "RemoteMcpClient",
+          "via": "shared-156-Bikz018e.js:Sp",
+          "kind": "adapter",
+          "original": "Jg"
+        },
+        {
+          "local": "aTe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "AppSignInOverlay",
+          "via": "c8e12f1a8-6AP_7dPS.js:v",
+          "kind": "adapter",
+          "original": "fe"
+        },
+        {
+          "local": "Ss",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "i_",
+          "from": "./c81ea1931.mjs",
+          "name": "t",
+          "via": "c81ea1931-ChuE7vym.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "wl",
+          "from": "./c87a7a2df.mjs",
+          "name": "n",
+          "via": "c87a7a2df-DdjUUMHE.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "soe",
+          "from": "./c87a7a2df.mjs",
+          "name": "t",
+          "via": "c87a7a2df-DdjUUMHE.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Gde",
+          "from": "./cfdfec14c.mjs",
+          "name": "t",
+          "via": "cfdfec14c-3LbBfVtj.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "up",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "StepList",
+          "via": "c734f318c-BRH2gAJZ.js:t",
+          "kind": "adapter",
+          "original": "jt"
+        },
+        {
+          "local": "db",
+          "from": "./c425fb3cf.mjs",
+          "name": "v",
+          "via": "c425fb3cf-CEgSkv8l.js:v",
+          "kind": "generated"
+        },
+        {
+          "local": "ks",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsShimmer",
+          "via": "shared-frame-BfjMqbuN.js:oi",
+          "kind": "view-tabs",
+          "original": "Aj"
+        },
+        {
+          "local": "cb",
+          "from": "./c425fb3cf.mjs",
+          "name": "r",
+          "via": "c425fb3cf-CEgSkv8l.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "Xy",
+          "from": "./c425fb3cf.mjs",
+          "name": "c",
+          "via": "c425fb3cf-CEgSkv8l.js:c",
+          "kind": "generated"
+        },
+        {
+          "local": "ub",
+          "from": "./c425fb3cf.mjs",
+          "name": "u",
+          "via": "c425fb3cf-CEgSkv8l.js:u",
+          "kind": "generated"
+        },
+        {
+          "local": "zZe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "GatedServerToolLabel",
+          "via": "c96d752d0-BOCqU7c2.js#zZe",
+          "kind": "adapter",
+          "original": "zZe"
+        },
+        {
+          "local": "os",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "view-tabs",
+          "original": "Zp"
+        },
+        {
+          "local": "BZe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "GatedServerHeaderRow",
+          "via": "c96d752d0-BOCqU7c2.js#BZe",
+          "kind": "adapter",
+          "original": "BZe"
+        },
+        {
+          "local": "Yy",
+          "from": "./c425fb3cf.mjs",
+          "name": "a",
+          "via": "c425fb3cf-CEgSkv8l.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "Is",
+          "from": "./shared-frame.mjs",
+          "name": "su",
+          "via": "shared-frame-BfjMqbuN.js:su",
+          "kind": "generated"
+        },
+        {
+          "local": "Wu",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "appearanceSettingsStore",
+          "via": "shared-14-u0TSV9dR.js:et",
+          "kind": "adapter",
+          "original": "L"
+        },
+        {
+          "local": "Bre",
+          "from": "./shared-frame.mjs",
+          "name": "iu",
+          "via": "shared-frame-BfjMqbuN.js:iu",
+          "kind": "generated"
+        },
+        {
+          "local": "lTe",
+          "from": "../mcp-app-host/widget-size.mjs",
+          "name": "n",
+          "via": "c06a5ffab-BHsFLtx8.js:n",
+          "kind": "mcp-app-host",
+          "original": "m"
+        },
+        {
+          "local": "Um",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "useResolvedFontToken",
+          "via": "c8748971a-B4mdzZFm.js:t",
+          "kind": "adapter",
+          "original": "f"
+        },
+        {
+          "local": "rr",
+          "from": "./tool-names.mjs",
+          "name": "nf",
+          "via": "shared-156-Bikz018e.js:nf",
+          "kind": "generated"
+        },
+        {
+          "local": "er",
+          "from": "./tool-names.mjs",
+          "name": "lf",
+          "via": "shared-156-Bikz018e.js:lf",
+          "kind": "generated"
+        },
+        {
+          "local": "ule",
+          "from": "./c227f4d5e.mjs",
+          "name": "Go",
+          "via": "c227f4d5e-Ba-r--Rl.js:Go",
+          "kind": "generated"
+        },
+        {
+          "local": "Lee",
+          "from": "./shared-78.mjs",
+          "name": "b_",
+          "via": "shared-78-D6VXYXaQ.js:b_",
+          "kind": "generated"
+        },
+        {
+          "local": "aye",
+          "from": "./c8f38bf1f.mjs",
+          "name": "t",
+          "via": "c8f38bf1f-D_EZalnr.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "oae",
+          "from": "./shared-182.mjs",
+          "name": "zf",
+          "via": "shared-182-eT1kXtya.js:zf",
+          "kind": "generated"
+        },
+        {
+          "local": "Yc",
+          "from": "./shared-182.mjs",
+          "name": "If",
+          "via": "shared-182-eT1kXtya.js:If",
+          "kind": "generated"
+        },
+        {
+          "local": "Co",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "defineLazyChunk",
+          "via": "shared-104-Cqo2-vQh.js:fh",
+          "kind": "adapter",
+          "original": "Fo"
+        },
+        {
+          "local": "woe",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "chunkGateAttributes",
+          "via": "shared-10-THQui8pC.js:zi",
+          "kind": "adapter",
+          "original": "Hr"
+        },
+        {
+          "local": "s",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "preloadChunk",
+          "via": "preload-helper-D0dM6GpB.js:t",
+          "kind": "adapter",
+          "original": "s"
+        },
+        {
+          "local": "Do",
+          "from": "./shared-104.mjs",
+          "name": "ph",
+          "via": "shared-104-Cqo2-vQh.js:ph",
+          "kind": "generated"
+        },
+        {
+          "local": "Zte",
+          "from": "./shared-26.mjs",
+          "name": "xc",
+          "via": "shared-26-CgdP_nTj.js:xc",
+          "kind": "generated"
+        },
+        {
+          "local": "Hee",
+          "from": "./shared-78.mjs",
+          "name": "eh",
+          "via": "shared-78-D6VXYXaQ.js:eh",
+          "kind": "generated"
+        },
+        {
+          "local": "si",
+          "from": "./shared-78.mjs",
+          "name": "Zm",
+          "via": "shared-78-D6VXYXaQ.js:Zm",
+          "kind": "generated"
+        },
+        {
+          "local": "pn",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "isConnectorToolOfServer",
+          "via": "shared-156-Bikz018e.js:Hd",
+          "kind": "adapter",
+          "original": "Cb"
+        },
+        {
+          "local": "Eme",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "logWidgetFallback",
+          "via": "c68c4283d-CPuRD0vx.js:An",
+          "kind": "adapter",
+          "original": "Ss"
+        },
+        {
+          "local": "_he",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "logWidgetMounted",
+          "via": "c68c4283d-CPuRD0vx.js:jn",
+          "kind": "adapter",
+          "original": "Cs"
+        },
+        {
+          "local": "Ds",
+          "from": "./shared-frame.mjs",
+          "name": "mu",
+          "via": "shared-frame-BfjMqbuN.js:mu",
+          "kind": "generated"
+        },
+        {
+          "local": "doe",
+          "from": "./shared-7.mjs",
+          "name": "Rt",
+          "via": "shared-7-B8UIMGDr.js:Rt",
+          "kind": "generated"
+        },
+        {
+          "local": "hoe",
+          "from": "./shared-7.mjs",
+          "name": "zt",
+          "via": "shared-7-B8UIMGDr.js:zt",
+          "kind": "generated"
+        },
+        {
+          "local": "coe",
+          "from": "./shared-7.mjs",
+          "name": "Bt",
+          "via": "shared-7-B8UIMGDr.js:Bt",
+          "kind": "generated"
+        },
+        {
+          "local": "rne",
+          "from": "./shared-52.mjs",
+          "name": "Ad",
+          "via": "shared-52-DGviI8xb.js:Ad",
+          "kind": "generated"
+        },
+        {
+          "local": "Vwe",
+          "from": "./c8e12f1a8.mjs",
+          "name": "S",
+          "via": "c8e12f1a8-6AP_7dPS.js:S",
+          "kind": "generated"
+        },
+        {
+          "local": "xi",
+          "from": "../mcp-app-host/sandbox-frame.mjs",
+          "name": "jl",
+          "via": "shared-78-D6VXYXaQ.js:jl",
+          "kind": "mcp-app-host",
+          "original": "xL"
+        },
+        {
+          "local": "hl",
+          "from": "../../source-mcp-app-card-adapters.jsx",
+          "name": "sessionsStore",
+          "via": "shared-8-B5lJ8U5C.js:Wd",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "Ma",
+          "from": "./shared-52.mjs",
+          "name": "Pp",
+          "via": "shared-52-DGviI8xb.js:Pp",
+          "kind": "generated"
+        },
+        {
+          "local": "dce",
+          "from": "./c4a9ee384.mjs",
+          "name": "c",
+          "via": "c4a9ee384-ZZIKqgNM.js:c",
+          "kind": "generated"
+        },
+        {
+          "local": "uxe",
+          "from": "./c4a70913c.mjs",
+          "name": "l",
+          "via": "c4a70913c-C9EYof6i.js:l",
+          "kind": "generated"
+        },
+        {
+          "local": "aS",
+          "from": "./c4a70913c.mjs",
+          "name": "u",
+          "via": "c4a70913c-C9EYof6i.js:u",
+          "kind": "generated"
+        },
+        {
+          "local": "lxe",
+          "from": "./c4a70913c.mjs",
+          "name": "c",
+          "via": "c4a70913c-C9EYof6i.js:c",
+          "kind": "generated"
+        },
+        {
+          "local": "ws",
+          "from": "../mcp-app-host/font-size-table.mjs",
+          "name": "hi",
+          "via": "shared-frame-BfjMqbuN.js:hi",
+          "kind": "mcp-app-host",
+          "original": "kO"
+        },
+        {
+          "local": "wt",
+          "from": "./shared-0.mjs",
+          "name": "oy",
+          "via": "shared-0-ByI5P0CP.js:oy",
+          "kind": "generated"
+        },
+        {
+          "local": "Eee",
+          "from": "./shared-78.mjs",
+          "name": "Pl",
+          "via": "shared-78-D6VXYXaQ.js:Pl",
+          "kind": "generated"
+        },
+        {
+          "local": "lee",
+          "from": "./shared-19.mjs",
+          "name": "vt",
+          "via": "shared-19-CkPOiIKm.js:vt",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [
+        {
+          "binding": "DX",
+          "rewrites": {
+            "cd9b7fccf-C8-F2T2b.js": "../mcp-app-host/app-renderer.mjs"
+          }
+        }
+      ],
+      "exports": {
+        "appRendererChunk": "DX",
+        "AUTO_PANE_GATE": "eQe",
+        "COLLAPSED_WIDGET_HEIGHT": "xX",
+        "INLINE_DISPLAY_MODES": "ZZe",
+        "isVisualizeMatch": "jX",
+        "LazyAppRenderer": "pQe",
+        "mcpAppSkipReason": "YZe",
+        "McpAppToolCard": "VX",
+        "McpAppToolCardBody": "kQe",
+        "McpAppWidgetCard": "PQe",
+        "messageTextForComposer": "AX",
+        "NO_SAFE_AREA_INSETS": "XZe",
+        "PANE_DISPLAY_MODES": "QZe",
+        "rememberedWidgetHeight": "fQe",
+        "SERVER_HEADER_GATE": "nQe",
+        "SKIP_REASON_OUTCOME": "xQe",
+        "stripToolServerPrefix": "kX",
+        "truncateMiddle": "MX",
+        "useHostFontVariables": "JZe",
+        "visualizeStatus": "hQe",
+        "visualizeStatusLabel": "gQe"
+      },
+      "features": {
+        "kQe": [
+          "\"[Epitaxy MCP App] conversation hash failed; widget disabled\",",
+          "headerlessUnverified: _ && !jX(T, e.name),",
+          "[K, ae] = nS(`mcpApp:${e.id}`),",
+          "ue = v && !!E && !B && !!te && !ce && !le,",
+          "return c ?? b(Uz, { tool: e });",
+          "conversationHash: ie ?? void 0,",
+          "hostResident: de === \"resident\",",
+          "onToggleExpanded: () => ae(!q),"
+        ],
+        "PQe": [
+          "...(K && { _keepMenuClear: it }),",
+          "...(K && { _hostHandlesNotSent: !0 }),",
+          "availableDisplayModes: ze === null ? ZZe : QZe,",
+          "variables: { ...(tt.styles?.variables ?? fCe), ...nt },",
+          "\"data-mcp-app-card\": \"\",",
+          "retrySandboxSetupAfterLoadMs: V ? mee : 0,",
+          "defaultMessage: \"Widget from {server}\", id: \"FhYnU4Hl8w\"",
+          "defaultMessage: \"Widget from a server on {host}: {server}\",",
+          "id: \"g+nyx1GzSt\",",
+          "defaultMessage: \"A server on {host}: {server}\",",
+          "id: \"Ez4vnGyxQa\",",
+          "defaultMessage: \"Rendering widget\",",
+          "defaultMessage: \"Showing in another pane\",",
+          "defaultMessage: \"Show here\",",
+          "defaultMessage: \"Show more\",",
+          "onmessage: i && K ? cn : r ? tn : void 0,",
+          "ondownloadfile: K ? vn : void 0,",
+          "onDisplayModeChange: ze === null ? void 0 : Jn,",
+          "onCopyImage: K ? xn : void 0,",
+          "if (r !== \"https:\" && !fpe(e))",
+          "\"[Epitaxy MCP App] ui/message without iframe-originated user activation blocked\",",
+          "Ot = yi(oe(nQe, !K)) && !K && !g,",
+          "let t = Number.isFinite(e) && e > 8;",
+          "let t = Math.min(e, xw);"
+        ],
+        "YZe": [
+          "? \"unverified\"",
+          "\"connector_rows_from_elsewhere\"",
+          "? \"conversation_hash_pending\"",
+          "? \"host_chunk_failed\"",
+          "\"host_chunk_not_resident\"",
+          "? \"pending_approval\"",
+          "? \"result_payload_missing\"",
+          "? \"call_not_run\"",
+          ": \"sandbox_url_missing\"",
+          "? \"local_client_missing\"",
+          ": \"remote_client_missing\"",
+          ": \"server_unknown\"",
+          ": \"gate_off\";"
+        ],
+        "JZe": [
+          "t = Wu((e) => dI[e.chatTextSize]),",
+          "r = lTe(qZe[n - 1]),",
+          "i = Um(\"font-sans\"),",
+          "...uX(\"--font-mono\", a)"
+        ],
+        "jX": [
+          "return e?.server.isBuiltIn === !0 && rr(t);"
+        ],
+        "hQe": [
+          "? \"settled\"",
+          "? \"failed\"",
+          "? \"making\"",
+          "? \"made\""
+        ],
+        "gQe": [
+          "return e.formatMessage(Ay.making);",
+          "return e.formatMessage(Ay.made);",
+          "return e.formatMessage(Ay.failed);"
+        ],
+        "AX": [
+          "n = ule(Lee(t)).text;",
+          "if (aye(n)) return null;",
+          "let r = oae(Yc(n));"
+        ],
+        "fQe": [
+          "return Number.isFinite(t) && t > 8 ? Math.min(t, xw) : 0;"
+        ],
+        "xX": [
+          "xX = 280"
+        ],
+        "ZZe": [
+          "ZZe = [\"inline\"]"
+        ],
+        "QZe": [
+          "QZe = [\"inline\", \"fullscreen\"]"
+        ],
+        "XZe": [
+          "XZe = { top: 0, right: 0, bottom: 0, left: 0 }"
+        ],
+        "eQe": [
+          "eQe = \"__gb__2398473450\""
+        ],
+        "nQe": [
+          "nQe = \"__gb__3106245306\""
+        ],
+        "DX": [
+          "id: \"epitaxy_mcp_app_host\",",
+          "tier: \"T1\",",
+          "pick: (e) => e.AppRenderer,",
+          "ssr: !1,",
+          "loading: Do(\"placeholder-would-mislead\"),",
+          "onChunkError: \"fail-open\","
+        ],
+        "VX": [
+          "VX = M(kQe)"
+        ]
+      },
+      "raw": [
+        [
+          "[Epitaxy MCP App] conversation hash failed; widget disabled",
+          1
+        ],
+        [
+          "function PQe(",
+          1
+        ],
+        [
+          "_keepMenuClear:",
+          1
+        ],
+        [
+          "\"data-mcp-app-card\"",
+          1
+        ],
+        [
+          "retrySandboxSetupAfterLoadMs:",
+          1
+        ],
+        [
+          "Widget from {server}",
+          1
+        ],
+        [
+          "Widget from a server on {host}: {server}",
+          1
+        ],
+        [
+          "A server on {host}: {server}",
+          1
+        ],
+        [
+          "Rendering widget",
+          1
+        ],
+        [
+          "Showing in another pane",
+          1
+        ],
+        [
+          "id:\"epitaxy_mcp_app_host\"",
+          1
+        ],
+        [
+          "eQe=\"__gb__2398473450\"",
+          1
+        ],
+        [
+          "nQe=\"__gb__3106245306\"",
+          1
+        ],
+        [
+          "NQe=\"mcp_apps_telemetry_config\"",
+          1
+        ]
+      ],
+      "localCuts": {
+        "Uz": {
+          "name": "ToolRowFallback",
+          "features": [
+            "(e) => e.epitaxyEngineToolRow,"
+          ]
+        },
+        "zZe": {
+          "name": "GatedServerToolLabel",
+          "features": [
+            "b($Y, { server: e, size: 16 }),"
+          ]
+        },
+        "BZe": {
+          "name": "GatedServerHeaderRow",
+          "features": [
+            "b(LZe, { server: e, toolName: t, manageable: i }),"
+          ]
+        }
+      }
+    },
+    {
+      "target": "tool-names.mjs",
+      "source": "shared-156-Bikz018e.js",
+      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
+      "sha256": "9ce7928d85063d0e2a227e68fd34aa9a6a015c4ed9daafce9ecd62689f92ce3f",
+      "referenceVersion": "2.42304.0",
+      "statements": 6,
+      "bindings": [
+        {
+          "name": "q_",
+          "sha256": "9ab4916661d53772970bb510b23d63e6b10550818eb31205db23497b22f1a201"
+        },
+        {
+          "name": "pb",
+          "sha256": "ce6642c2d4b8af1bd56d7c3d9e3d99bdc2993da84b7d2a9c4794b0a0f7b84724"
+        },
+        {
+          "name": "dU",
+          "sha256": "e57f58d2bbf75e21d3b5bb96a0dc385e45e02a1d2f85ebff303af8c70475bd36"
+        },
+        {
+          "name": "bU",
+          "sha256": "e58500449aab0dffdd5820f7be175551210ee3c564a75cf3397fb3a066790c44"
+        },
+        {
+          "name": "xU",
+          "sha256": "bd78e2111b895423eee6b60866f43523491953d7540db4b6f82b12a53a1c2d50"
+        },
+        {
+          "name": "SU",
+          "sha256": "d8ecdf205694247b91b763449dc5cd7207ce7af2a667f3a14ae3adc88bbb6c26"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "Pn",
+          "from": "./shared-0.mjs",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "isVisualizeToolName": "q_",
+        "lf": "pb",
+        "nf": "q_",
+        "tn": "SU"
+      },
+      "features": {
+        "q_": [
+          "e.startsWith(\"visualize:\")",
+          "e.startsWith(\"mcp__visualize__\")",
+          "e.startsWith(\"mcp__6f616b42-0ed8-571e-823f-ee4aca6b7ce9__\")"
+        ]
+      },
+      "raw": [
+        [
+          "e.startsWith(\"mcp__visualize__\")",
+          1
+        ]
+      ],
+      "localCuts": {}
+    },
+    {
+      "target": "vendor-all-0.mjs",
+      "source": "vendor-all-0-CTKbbUUg.js",
+      "sourceSha256": "691e5601fc021fbcb4e8e06a217d9030952ea2ba88dc65e8bcb39803143ef2d4",
+      "sha256": "75e69e5bf812cb3633b6093ac4f9d59f49e011c90a240ea700dbac1e028d5270",
+      "referenceVersion": "2.42304.0",
+      "statements": 6,
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "5af90f11a7f367288317ed262d652aa1e49aa18b9fd68ee9a44342901ee221db"
+        },
+        {
+          "name": "v",
+          "sha256": "9cba6a6ac210c6144c39a3ff0decc9389dbad37e6ce98b57e12b58fea5a84a7a"
+        },
+        {
+          "name": "y",
+          "sha256": "cfbb8f2016f700cfb95f1edde356525503bec2137e52416acc29b5fcace645d2"
+        },
+        {
+          "name": "b",
+          "sha256": "5cfe55a000f357bc84544e680325bf77ec10a51bebe43333bc5ce13457faf998"
+        },
+        {
+          "name": "x",
+          "sha256": "3611303704733b0480ce6cdae95cc5a3fefd9a22f42b6f0b887066e2ac443f85"
+        },
+        {
+          "name": "ee",
+          "sha256": "f6c79c9574847fb078f7489ac30d350840224f66e426d12d55c3b0d94961fe4b"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "c",
+          "from": "react",
+          "name": "default",
+          "via": "vendor-frame-DfPJ1QmD.js:so",
+          "kind": "react"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "I": "ee"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "vendor-intl.mjs",
+      "source": "vendor-intl-Db7hDWRO.js",
+      "sourceSha256": "f26cedebafa9295e3e1f8443b074e29877472083867d8e5bb7a8d522d3ae6762",
+      "sha256": "530759cfe2c92ae9e5df538c32fcf9f239a10dd3245eb73d47f4bf6a0a1d2510",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "e8bcfdd6704487bca47d7ebe2c3a799667e4da8daef469e53da344bbb77d91e2"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [],
+      "dynamicImports": [],
+      "exports": {
+        "f": "tn"
+      },
+      "features": {},
+      "raw": [],
+      "localCuts": {}
+    },
+    {
+      "target": "visual-messages.mjs",
+      "source": "c52b02f3f-DUwt0Dsx.js",
+      "sourceSha256": "12ac311eab45e042fc9ec919a12057c9ff8108b5c9583159a965adcf8f222872",
+      "sha256": "a3a27aa7d08b4ce854825b5e95d8821ee8e4f2be44e66581317cae617120f0ee",
+      "referenceVersion": "2.42304.0",
+      "statements": 1,
+      "bindings": [
+        {
+          "name": "R",
+          "sha256": "1de55e902288a4a1996910992acb01d61f8bc984cd45ebdf47c484d133a0f5ad"
+        }
+      ],
+      "sideEffects": [],
+      "droppedBareImports": [],
+      "imports": [
+        {
+          "local": "_",
+          "from": "./vendor-intl.mjs",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated"
+        }
+      ],
+      "dynamicImports": [],
+      "exports": {
+        "m": "R",
+        "VISUAL_MESSAGES": "R"
+      },
+      "features": {
+        "R": [
+          "defaultMessage: \"Making a visual\"",
+          "defaultMessage: \"Made a visual\"",
+          "defaultMessage: \"Failed to make a visual\"",
+          "defaultMessage: \"Visual from Claude\""
+        ]
+      },
+      "raw": [
+        [
+          "defaultMessage:\"Visual from Claude\"",
+          1
+        ]
+      ],
+      "localCuts": {}
+    }
+  ],
+  "publicNames": {
+    "McpAppToolCard": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "VX"
+    },
+    "McpAppToolCardBody": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "kQe"
+    },
+    "McpAppWidgetCard": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "PQe"
+    },
+    "mcpAppSkipReason": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "YZe"
+    },
+    "SKIP_REASON_OUTCOME": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "xQe"
+    },
+    "useHostFontVariables": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "JZe"
+    },
+    "isVisualizeMatch": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "jX"
+    },
+    "stripToolServerPrefix": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "kX"
+    },
+    "visualizeStatus": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "hQe"
+    },
+    "visualizeStatusLabel": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "gQe"
+    },
+    "truncateMiddle": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "MX"
+    },
+    "messageTextForComposer": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "AX"
+    },
+    "rememberedWidgetHeight": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "fQe"
+    },
+    "COLLAPSED_WIDGET_HEIGHT": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "xX"
+    },
+    "NO_SAFE_AREA_INSETS": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "XZe"
+    },
+    "INLINE_DISPLAY_MODES": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "ZZe"
+    },
+    "PANE_DISPLAY_MODES": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "QZe"
+    },
+    "appRendererChunk": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "DX"
+    },
+    "LazyAppRenderer": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "pQe"
+    },
+    "AUTO_PANE_GATE": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "eQe"
+    },
+    "SERVER_HEADER_GATE": {
+      "module": "tool-card.mjs",
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "nQe"
+    },
+    "VISUAL_MESSAGES": {
+      "module": "visual-messages.mjs",
+      "file": "c52b02f3f-DUwt0Dsx.js",
+      "local": "R"
+    },
+    "downloadBlob": {
+      "module": "file-save.mjs",
+      "file": "cc61d0d63-DhbBdZx8.js",
+      "local": "D"
+    },
+    "useOwnerWindow": {
+      "module": "shared-frame.mjs",
+      "file": "shared-frame-BfjMqbuN.js",
+      "local": "Ya"
+    },
+    "isVisualizeToolName": {
+      "module": "tool-names.mjs",
+      "file": "shared-156-Bikz018e.js",
+      "local": "q_"
+    }
+  },
+  "callSites": [
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "KBe",
+      "role": "Transcript row kinds: a tool the session marks as an MCP App tool is its own \"mcp_app\" row, not a tool group member",
+      "sha256": "d23966da5ddca04e8adffec234a6b6aa2bb4a6db3733962e675590bef37d1c32",
+      "features": [
+        "t.isMcpAppTool?.(e.name)",
+        "? \"mcp_app\""
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "m2e",
+      "role": "Solo tool row: in an owned session an MCP App tool is VX (no fallback; VX falls back to Uz)",
+      "sha256": "554a5fa34ed060a16b0525bfe550a4c87cee4bc598226adcf187d380354f8caa",
+      "features": [
+        "if (a && r?.(e.tools[0].name))",
+        "return b(VX, { tool: e.tools[0], sessionRef: t, onPrefillComposer: n });"
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "e0",
+      "role": "Grouped tool row: the same VX with the group row as fallback",
+      "sha256": "65ace4502a1fa2b50526d5c9643a593e19226b6147f7185b89eadb385e5bf939",
+      "features": [
+        "o && r?.(d.name)",
+        "? b(VX, { tool: d, sessionRef: i, onPrefillComposer: a, fallback: _ })"
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "UQe",
+      "role": "Channel visualize widget (Cowork / channels, not the Code transcript): VX with sharesWithSession false and the channel props",
+      "sha256": "979a255555c26a6929a9f65ad2cba03ad0124bf3b027139026983d2f2a391ff0",
+      "features": [
+        "\"data-testid\": \"channel-widget-visualize\",",
+        "sharesWithSession: !1,"
+      ]
+    }
+  ]
+}

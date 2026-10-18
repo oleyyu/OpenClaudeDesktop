@@ -18,6 +18,8 @@ const CHORDS = Object.freeze([
 // (:2206-2219) sorts modifiers by io = [ctrl, control, alt, option, shift, cmd, command, meta] (:2136), so it reads
 // ⇧⌘M on macOS, not ⌘⇧M. source-composer.jsx formats these keys with the shortcutCaps port of po/ho.
 export const MODE_MENU_KEYS = "cmd+shift+m";
+// openModelMenu's raw key (the environment bar's model trigger tooltip, x6 `Hr("openModelMenu", h)`).
+export const MODEL_MENU_KEYS = "cmd+shift+i";
 // Local menu kinds of the three chin menus (main.jsx setMenu kinds) ↔ c360a9e1c qd (:4626-4630) menus.
 export const CHIN_MENU_KINDS = Object.freeze({ mode: "permission", model: "model", effort: "effort" });
 export const chinKindOfMenu = (menuKind) => Object.keys(CHIN_MENU_KINDS).find((kind) => CHIN_MENU_KINDS[kind] === menuKind) ?? null;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { tools, group, MAX_AGENT_TABS } from '../electron/agent-tools/terminal.mjs';
+import { tools, group, MAX_AGENT_TABS, NO_TABS_TO_READ } from '../electron/agent-tools/terminal.mjs';
 
 // agent-tools/terminal.mjs over a real terminal service (/bin/sh in a temp folder): read-only list/read, and
 // run_in_terminal only after ctx.requestApproval says yes.
@@ -45,7 +45,10 @@ test('list and read only see the calling session’s terminals; read needs a tab
   await assert.rejects(tool('list_terminal_tabs').handler({}, { sessionId: 's1' }), /isn’t available/);
   await assert.rejects(tool('list_terminal_tabs').handler({}, ctx('nope')), /Unknown session/);
   assert.deepEqual(JSON.parse(textOf(await tool('list_terminal_tabs').handler({}, ctx()))).tabs, []);
-  await assert.rejects(tool('read_terminal').handler({}, ctx()), /No terminal tabs/);
+  // R4e-terminal (terminal-14): nothing to read is a result, worded after 2.42304.0's read_terminal (no primary terminal here).
+  const none = await tool('read_terminal').handler({}, ctx());
+  assert.equal(none.isError, undefined);
+  assert.equal(textOf(none), NO_TABS_TO_READ);
   const sender = { send() {}, isDestroyed: () => false, once() {} };
   const user = await service.call('create', { sessionId: 's1' }, sender);
   service.input(sender, user.id, 'echo user-was-here\r');
@@ -61,7 +64,9 @@ test('list and read only see the calling session’s terminals; read needs a tab
   assert.match(screen, /user-was-here/);
   // Session 2 can neither list nor read session 1's tab.
   assert.deepEqual(JSON.parse(textOf(await tool('list_terminal_tabs').handler({}, ctx('s2')))).tabs, []);
-  await assert.rejects(tool('read_terminal').handler({ tab_id: user.id }, ctx('s2')), /No terminal tabs|Unknown terminal/);
+  const elsewhere = textOf(await tool('read_terminal').handler({ tab_id: user.id }, ctx('s2')));
+  assert.equal(elsewhere, `No shell is running in a terminal tab with id "${user.id}" (there may be no such tab, or it was closed, which ended its shell). No terminal tabs are open in this session, so there is nothing to read.`);
+  assert.doesNotMatch(elsewhere, /user-was-here/);
   // stop_terminal_tab never touches a tab the user opened.
   await assert.rejects(tool('stop_terminal_tab').handler({ tab_id: user.id }, ctx()), /only stop tabs you opened/);
   service.agent.close('s1', user.id);

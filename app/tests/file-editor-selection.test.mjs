@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EditorState,EditorSelection} from '../src/code-editor-core.mjs';
-import {B as codeFolding,q as foldEffect} from '../src/generated/code-editor/c148e7537-Ks6hIVju.js';
-import {lineRangeSelection,lineSelectionAnchor,selectionTooltipAnchor,selectionTooltipCoords} from '../src/generated/code-editor/selection.mjs';
+import {codeFoldingState as codeFolding,foldEffect} from '../src/code-editor-core.mjs';
+import {lineRangeSelection,lineSelectionAnchor,selectionTooltipAnchor,selectionTooltipCoords} from '../src/generated/code-editor-current/wrapper.mjs';
 test('original gutter selects whole lines in either direction and expands hidden folded lines',()=>{
  let state=EditorState.create({doc:'a\nb\nc\nd'});assert.deepEqual(lineRangeSelection(state,2,3).toJSON(),EditorSelection.single(2,6).toJSON());assert.deepEqual(lineRangeSelection(state,3,2).toJSON(),EditorSelection.single(6,2).toJSON());
  state=state.update({selection:lineRangeSelection(state,3,2)}).state;assert.equal(lineSelectionAnchor(state),3);

@@ -5,6 +5,7 @@
 import { folderName, sessionArchived, sessionName, sessionUpdatedAt } from "./sidebar-model.js";
 import { t } from "../electron/i18n/index.mjs";
 import { shortcutLabels } from "./shortcut-model.mjs";
+import { hideAllNestedSessionsCopy, showAllNestedSessionsCopy, nestedSessionsSearchHints } from "./generated/code-current/nested-session-palette-copy.mjs";
 
 export const PALETTE_MODES = Object.freeze(["default", "search", "actions"]);
 // wu: type options (the code list's Sessions and Projects; this app has no searchable chats, tasks or
@@ -92,19 +93,19 @@ export function paletteProjects({ folders = [], sessions = [], query = "", filte
 }
 
 // c2771e1f6 :9634-10079 'Settings → {section}' / 'Customize → {section}' rows for the local Settings sections
-// (source-settings.jsx tabs: General first, This computer › System; B23 shared-19 ZC).
+// (source-settings.jsx tabs: General first, This computer › System; B23 shared-19 ZC; the Advanced group last,
+// settings-advanced-model.mjs).
 export const PALETTE_SETTINGS_SECTIONS = Object.freeze([
   ["preferences", "General", "Settings"], ["usage", "Usage", "UsageGaugeMiddle"], ["theme", "Theme", "Palette"], ["code", "Code", "Code"],
-  ["instructions", "Instructions", "BookText"], ["commands", "Commands", "SlashShortcutCommand"], ["profiles", "Profiles", "Tool"],
+  ["instructions", "Instructions", "BookText"], ["commands", "Commands", "SlashShortcutCommand"],
   ["models", "Models", "Lightning"], ["general", "System", "Computer"], ["developer", "Developer", "Wrench"], ["cores", "Cores", "Box"],
-  ["harness", "Harness", "CommandLine"],
+  ["advanced", "Core options", "Wrench"], ["harness", "Harness", "CommandLine"], ["customize-hooks", "Hooks", "CommandLine"], ["profiles", "Profiles", "Tool"],
 ]);
 // The Settings nav's own copy for a page name ('System' is the page there, not the theme choice: settings-model
 // settingsHeading's 'settings heading: …' entries).
 const settingsSectionLabel = (label) => { const key = `settings heading: ${label}`, shown = t(key); return shown === key ? t(label) : shown; };
 export const PALETTE_CUSTOMIZE_SECTIONS = Object.freeze([
   ["customize-skills", "Skills", "Scroll"], ["customize-connectors", "Connectors", "Connectors"], ["customize-plugins", "Plugins", "Plugin"],
-  ["customize-hooks", "Hooks", "CommandLine"],
 ]);
 
 // gn's jump_to_* palette commands (focus-region-model.mjs JUMP_COMMANDS; shared-1-BPVqFfwb.js :10700-10760 aj/oj/cj/
@@ -157,12 +158,17 @@ export function sessionCommandLabels(title) {
  * - `panes`: c11959232 Ud (:2340-2390) toggle_terminal_pane / toggle_diff_pane / toggle_preview_pane /
  *   toggle_files_pane / toggle_side_chat ({enabled, shown} each, 'Show …' / 'Hide …') and close_side_pane;
  * - `prompts`: cf74bc599 :3600-3626 jump_prev_prompt / jump_next_prompt (left out while there are none);
- * - onShortcuts (shortcuts_modal) and onFileUpload (file_upload), shared-21 wj :5641-5643.
+ * - onShortcuts (shortcuts_modal) and onFileUpload (file_upload), shared-21 wj :5641-5643;
+ * - `nested`: the Code list's hide_all_nested_sessions / show_all_nested_sessions (R3-sections step 3, WI-5; 2.42304.0
+ *   moved them out of the Group and sort menu): shared-20 _S registers each only while it applies ({anyShown, anyHidden,
+ *   onHideAll, onShowAll}, src/sidebar-filter-current-model.mjs sidebarNestedCommands); the copy is shared-1 IM / LM /
+ *   RM (generated nested-session-palette-copy.mjs), the icons the registry's DL / OL (Collapse / Expand), group session,
+ *   between fork_code_session and new_code_session_from_current as the shared-1 registry orders them.
  * hiddenFromCommandPalette commands (search_palette, settings, btw_side_chat, toggle_read_code_session,
  * open_code_session_pr, archive_code_session_chord …) are left out; copy_code_session_link needs a claude.ai URL.
  */
 export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSettings, jumps = [], onJump,
-  session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload } = {}) {
+  session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload, nested = null } = {}) {
   const rows = [];
   const push = (row) => rows.push({ hints: [], ...row });
   if (onNew) push({ id: "new-session", group: "navigation", label: t("New session"), icon: "Add", shortcut: "⌘N", run: onNew });
@@ -183,8 +189,14 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
       ? { id: "unpin_code_session", group: "session", label: named.unpin ?? t("Unpin session"), icon: "PinSlash", shortcut: capsOf("cmd+alt+p"), hints: [t("star"), t("favorite")], run: act("pin") }
       : { id: "pin_code_session", group: "session", label: named.pin ?? t("Pin session"), icon: "Pin", shortcut: capsOf("cmd+alt+p"), hints: [t("star"), t("favorite")], run: act("pin") });
     if (session.canFork) push({ id: "fork_code_session", group: "session", label: named.fork ?? t("Fork session"), icon: "ArrowSplitRight", shortcut: capsOf("cmd+alt+o"), hints: [t("duplicate"), t("clone")], run: act("fork") });
+  }
+  if (nested?.anyShown && nested.onHideAll) push({ id: "hide_all_nested_sessions", group: "session", label: t(hideAllNestedSessionsCopy.description.defaultMessage),
+    icon: "Collapse", hints: [t(nestedSessionsSearchHints.collapse.defaultMessage), t(nestedSessionsSearchHints.fold.defaultMessage)], run: nested.onHideAll });
+  if (nested?.anyHidden && nested.onShowAll) push({ id: "show_all_nested_sessions", group: "session", label: t(showAllNestedSessionsCopy.description.defaultMessage),
+    icon: "Expand", hints: [t(nestedSessionsSearchHints.expand.defaultMessage), t(nestedSessionsSearchHints.unfold.defaultMessage)], run: nested.onShowAll });
+  if (session?.onAction) {
     push({ id: "new_code_session_from_current", group: "session", label: t("New session with current settings"), icon: "ChatAdd", shortcut: capsOf("cmd+shift+n"),
-      hints: [t("same settings"), t("carry over"), t("duplicate")], run: act("new-from-current") });
+      hints: [t("same settings"), t("carry over"), t("duplicate")], run: () => session.onAction("new-from-current") });
   }
   if (panes && onTogglePane) {
     const pane = (kind, id, show, hideLabel, icon, spec, hints) => {

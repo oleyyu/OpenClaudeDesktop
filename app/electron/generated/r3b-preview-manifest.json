@@ -1,0 +1,496 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r3b-preview.mjs",
+  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
+  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+  "targets": {
+    "r3b-preview-ports.mjs": {
+      "factory": "createPreviewPortPolicy",
+      "host": {
+        "n": {
+          "role": "node:path",
+          "sourceSha256": "2beb77bbda40cfbfbb625f7ce3a2bef02d2f234e8c48b1cfc85932af087878f6",
+          "members": [
+            "basename",
+            "join",
+            "resolve"
+          ],
+          "calls": 0,
+          "values": 0
+        },
+        "p": {
+          "role": "node:fs/promises",
+          "sourceSha256": "5c23d6c07acc42aa7e495472861cfab9fad14520d71eb7ba024a36fa886a4ca6",
+          "members": [
+            "lstat"
+          ],
+          "calls": 0,
+          "values": 0
+        },
+        "g": {
+          "role": "node:net",
+          "sourceSha256": "042ed212adb02b87443c0670598e17d845aaae2882bf6f96296f7215712f43d9",
+          "members": [
+            "Socket",
+            "createServer"
+          ],
+          "calls": 0,
+          "values": 0
+        },
+        "N": {
+          "role": "logger (info / warn / error / debug)",
+          "sourceSha256": "6755c5edbd0a8106bb387820056876fbe448e7788da40b85dc6a450771337e90",
+          "members": [
+            "warn"
+          ],
+          "calls": 0,
+          "values": 0
+        },
+        "ih": {
+          "role": "sleep(ms, signal?)",
+          "sourceSha256": "52b47f512edd1dab0b9d5be73ad473b5896b4f5d9342ae0c8e85ef863fe9463f",
+          "members": [],
+          "calls": 1,
+          "values": 0
+        },
+        "xi": {
+          "role": "@ant/claude-native loader: { listTcpListeners, getProcessLineage } or null",
+          "sourceSha256": "fa65a0fe39fa6816b3c8bf1581f54aaab718fec481e8f2ca5dcd8f409f064b2d",
+          "members": [],
+          "calls": 3,
+          "values": 0
+        },
+        "zy": {
+          "role": "isRealpathWithin(path, root, options) → real path | false",
+          "sourceSha256": "af98d218bee2279e9ab1aa9d5a095002d6187b53e1190eb269f47f72c7ae5476",
+          "members": [],
+          "calls": 2,
+          "values": 0
+        },
+        "Y0": {
+          "role": "read a file as text → string | null",
+          "sourceSha256": "35f80cb7039e0c909cc0d238a690d08becfb7469bab906b27460c704a9807731",
+          "members": [],
+          "calls": 1,
+          "values": 0
+        },
+        "J0": {
+          "role": "path guard options passed to zy",
+          "sourceSha256": "577ccad9ead24855f9c9cfae879a2b86a2949030841f9a891af12d9a61bbd103",
+          "members": [],
+          "calls": 0,
+          "values": 2
+        },
+        "a2": {
+          "role": "server registry: `.servers` → [{ serverId, name, port, status, cwd, sessionId }]",
+          "sourceSha256": "32fbb549c0df8ccd40d1c338b6e21120b033bc2f48ef36acbf1dd35608380e32",
+          "members": [
+            "servers"
+          ],
+          "calls": 0,
+          "values": 0
+        },
+        "mM": {
+          "role": "in-app Browser preview enabled",
+          "sourceSha256": "6d3db2d3034c341537843518562c5947f1ded8708b69a6cf99831497fc34749e",
+          "members": [],
+          "calls": 1,
+          "values": 0
+        },
+        "$0": {
+          "role": "GrowthBook 2711562102 (default true)",
+          "sourceSha256": "3c1bfcf6f9489d5bb912ee23b4928e38cf451070f4420164e637207dcac22780",
+          "members": [],
+          "calls": 2,
+          "values": 0
+        }
+      },
+      "bindings": {
+        "UN": {
+          "sha256": "aeabf4859c08d382209b9f55e7d62b6780bba6de7d0f23d11f35b5ece7dbbe2d",
+          "exportedAs": "messageName"
+        },
+        "k1i": {
+          "sha256": "fe85be2a995e0290d1c197e33a7927054d59d79bd2ecae1fa5114a8b29ea7972",
+          "exportedAs": "rewritePortArgs"
+        },
+        "A1i": {
+          "sha256": "ee19e95161bae6b878c09c1b4c3f9c05f8a64f9efeef85405870152d372d44e4"
+        },
+        "j1i": {
+          "sha256": "d4483f3f86175d15222996782b75c1c00dc0597ee5727852091a2b756a0cad39"
+        },
+        "M1i": {
+          "sha256": "bcc79cb0f256d819d9c936c8e8f44e49ad2938d95538ece9fb104bbc5a54c645"
+        },
+        "Z0": {
+          "sha256": "e9bddf15ea4d2fca8a4e9308a1dcb5b14c9228c5a2a6a7113d2ea5ad11e3dd57"
+        },
+        "N1i": {
+          "sha256": "886c684d33d012db673b7d2aaf5ce1bb942cb9a55484cdeacfb90fbcee3e92ac"
+        },
+        "P1i": {
+          "sha256": "5c3ab13b4038189df1dcf7b62c245f63778d42fc67507779f4337675110bbb93"
+        },
+        "F1i": {
+          "sha256": "d1830ae70de35b09b3fd100268f2a03befad0f8d82527cdb1a08a92071945dc7"
+        },
+        "I1i": {
+          "sha256": "f2dc0cecd86245667e788353d815e7b64f5a2ff785076e68e94957a78483e653"
+        },
+        "L1i": {
+          "sha256": "6f53ce21410d8dc4b4f7beac25380ce4cf5e7e910e4fe985b335a0ba3262ae9e"
+        },
+        "R1i": {
+          "sha256": "04ddd5685a25250c3b549b30fb5a76ac4baa84c2af32eea31917a8b59c050234"
+        },
+        "z1i": {
+          "sha256": "e1669f647093b7094f42b6098aa54023d7a01a8ad4507f44658c830779ff2cb8"
+        },
+        "B1i": {
+          "sha256": "f6922624198fce77c6a0191d1110590c08a40059a26a66a94dec4ea96d636a8d"
+        },
+        "V1i": {
+          "sha256": "eb255c87da3cd203c5361335d6a7cc469cc149a75285651aaf2654be67756b85"
+        },
+        "H1i": {
+          "sha256": "e70bb95a36dac68670612c0806b6517b485ef0f70f0b9fcab5b364a2849b447f"
+        },
+        "U1i": {
+          "sha256": "0426211643fb96021f884fdae4e745c9a5f870fd27f4fcec04d33daaa9f285c0"
+        },
+        "W1i": {
+          "sha256": "3ba9add670fd63ebbc7e0d23bf36b99409d8a4b075e01f40dd42805543488a29"
+        },
+        "G1i": {
+          "sha256": "93e07c71df69fdfbdfd745a04c7db489c4d9d094811728c71164f836b8444087"
+        },
+        "K1i": {
+          "sha256": "08a1c66efd9be6ea822b6e12a2df9f0f6de6db0c9c37186afc59ccde022d5fa8"
+        },
+        "q1i": {
+          "sha256": "866ac08bd4ac4cbdf5f3e1fdae5c8975013a3008ef587ee75ff5294c74e46c0b"
+        },
+        "J1i": {
+          "sha256": "229829949aba40413fc811d5d0745b27ce1485c83c9d3358467afce9ce39d303"
+        },
+        "Y1i": {
+          "sha256": "fe9bfffa30094241a46abfd0976f050ba014b1f445f3447cc41ba0701dee64c4"
+        },
+        "X1i": {
+          "sha256": "4c876089d347bfb03f283df1a890ee3406678f6fbe0d5e6896a05279a24ed670"
+        },
+        "Z1i": {
+          "sha256": "4cdaf40914902818a62636923c0a5b80b3704c9f15db48c6b86cd44fb9965896"
+        },
+        "Q1i": {
+          "sha256": "099212b8f69eeed9bd4613127e682a1525932d22d6ac8001c0f6981c0d474aa4"
+        },
+        "$1i": {
+          "sha256": "cea526706daf1abe3574e1405cfc6bd30f217ca9a5ce0326236feb6cc1e8d580"
+        },
+        "e0i": {
+          "sha256": "d6f100627ce4168204f662e26af06a9bdbde489d30459e73f3c4dd2416f54180"
+        },
+        "t0i": {
+          "sha256": "7c5d0b52367605b0621cf3bd0099f20d49e25fee79834bdff0688e6f9cc57474",
+          "exportedAs": "pinnedPortsOf"
+        },
+        "n0i": {
+          "sha256": "1edc199245ec540d97363a9bba1408aa401d63ac03efd33e1ff484f9966e4707"
+        },
+        "Q0": {
+          "sha256": "61b4d18d93c621558175eb86669063edcc165f45ba2086de1b18935304ddb158"
+        },
+        "r0i": {
+          "sha256": "ba2b6adf012936c36c4b6e32b3f491faf13b925577cd09537b60896cbc4b5bec"
+        },
+        "i0i": {
+          "sha256": "e75600eb53d540a444e8c572c7f067b6cf68f32604bc54f408e592accb40c8f5"
+        },
+        "a0i": {
+          "sha256": "f897db68f5e4b361e4c3ee86df74f39c5f510a1faee9a267a6dba673c84211ea",
+          "exportedAs": "portMayReassign"
+        },
+        "o0i": {
+          "sha256": "24e96043b11c849ad966e7e26090faf8b905f25b937cbfa9a0abcf2a5b5c76a7",
+          "exportedAs": "portRetargetability"
+        },
+        "m0i": {
+          "sha256": "4c0099e55b112ddcfff3dfa5a612326c3df6e769b035bcbaecbe36a28cf08826"
+        },
+        "h0i": {
+          "sha256": "0c44153723863fd17334860d14efa76cd8ef9f6686f70f97f8609361f9078032"
+        },
+        "g0i": {
+          "sha256": "a6407447cf302c670a0216b4f7ae44f036c4a47334af20dd0e03cb83449b0c24"
+        },
+        "_0i": {
+          "sha256": "935961c958590462debb443d8c2236dad8502d79adf3c9fc9a96923fff489671"
+        },
+        "v0i": {
+          "sha256": "754613a0c4bb52c8150bdb1aef99c68bf1409a980ffc90e7c6009e5180a2699a"
+        },
+        "e2": {
+          "sha256": "bab0f1c5d192b191d3ab55449921e2934b6a4951c9ea5042f7e2a1c10f9f2d31",
+          "exportedAs": "lsofHint"
+        },
+        "y0i": {
+          "sha256": "db1f9b5032b4b995cfc0329863a8b44a719b9666417d4a3d08e26a697ca319da"
+        },
+        "b0i": {
+          "sha256": "bbbf278f8b1484b25d91301a2e8ff32a3c8e8b4be73620e2f732c81e122a6176"
+        },
+        "x0i": {
+          "sha256": "fccbfff36272469b874634a9e6772c115e3b6279f99d148dec1722bb2eab9396"
+        },
+        "S0i": {
+          "sha256": "f1ec2e476a9b4c4b918dff4b33a77e1f64cdf0ca0f45148d79d6e2899381426f"
+        },
+        "C0i": {
+          "sha256": "0dcba4e1e5b51785af389924c97e674ea2bcce4fb2b9f7023e1b18baf0451653"
+        },
+        "w0i": {
+          "sha256": "f4653ae6cd3391135bdc644d7a37f0669a94891ee35b69e5e5c33424f7aa9215"
+        },
+        "T0i": {
+          "sha256": "420b688c70728fc7fa45891ebe99cdf9724caf39e7b445ce58946ba356fdfa1f"
+        },
+        "E0i": {
+          "sha256": "65f439c6d6abf50ce15d9305f034562bf4ba3ffc51197d41825794f856453276"
+        },
+        "D0i": {
+          "sha256": "a42e9906fac4191cf6202e673d789b96f9e614eb4be856c3530bf887e1a3879b"
+        },
+        "O0i": {
+          "sha256": "ef47f334d2dd06790c8b20c17b0fea805efc1fb7bbbeec9b2b6f68f29a2ffa89",
+          "exportedAs": "verifyServerIdentity"
+        },
+        "P0i": {
+          "sha256": "adf49b974047c2d7c5a99e713f307b29b3d54e36a3b0febf1fc8cc0bde14a4df"
+        },
+        "F0i": {
+          "sha256": "36c1cd8610868d8c99f245a5f5d1405dd7a5eb14b762d7de383769a849e8a127"
+        },
+        "I0i": {
+          "sha256": "1ac068cf87909975f4437948579b78bcb3ba090abe8d96d28ebd6c604bd11bb8"
+        },
+        "L0i": {
+          "sha256": "ebde906e3af9ce48b70d8401eb5ca830871b17f5e943f79f28c1defe8ec77980"
+        },
+        "z0i": {
+          "sha256": "e67e5c0b44b2a88738903546cff8d8934d10c771eab76d632ee3274bad1d5a7f"
+        },
+        "B0i": {
+          "sha256": "3b6cfbc5ecead38b299162f087e5785958c29f8616cbde775fe075a503a6996f"
+        },
+        "V0i": {
+          "sha256": "e1dc9f0eb7dafe95fcfed0e091b10aaafb0f496d59bc55b60f1212b6321aa6e4"
+        },
+        "H0i": {
+          "sha256": "fc30c24d878ceda4f4d58a29765120978add5f35eb6a675d93a09602425550c2"
+        },
+        "U0i": {
+          "sha256": "c55be89f01db5990751857d69cdea48e8f019c8fa8cd458e00682e17565b86ae"
+        },
+        "E2i": {
+          "sha256": "cacc9835b90fc2b2d696ba1aa3ffb14110751cfb85985771cca47c793bf08818"
+        },
+        "D2i": {
+          "sha256": "0ccd955161744a24d6a1d273c7d4b797a51f1552e2f28a43307045486384715f"
+        },
+        "O2i": {
+          "sha256": "3ec86097862eb3c77a1c37fc000a01cab54fd41a440c2707cccaca3d90c783bd"
+        },
+        "k2i": {
+          "sha256": "e331f6f7c1781d1299dde349dcc980b5715aac398cce4c2fb5c651a756194646"
+        },
+        "A2i": {
+          "sha256": "e86412fa3828e261caa5e422e394bdf5d1298a00ab9f9952bf0a7518fd420ee9"
+        },
+        "j2i": {
+          "sha256": "3fa3ecff7ea79a651943cdc26c877bc2d506d32e3b2c13965dc574cffdcb2a87"
+        },
+        "t2": {
+          "sha256": "26a65a7fb10f5fab9a92a6c7bb45b6a80fa96824b9ae0c4b76bd3ea37739b9af",
+          "exportedAs": "pendingAllocations"
+        },
+        "n2": {
+          "sha256": "e5ec8689748181eaa348180240f5411ee68e93e81e0b734d06f0489efd8393e8",
+          "exportedAs": "exactPortBinds"
+        },
+        "M2i": {
+          "sha256": "80577a3e3900a362f2bdc0dfd3f7d5653cac80b734bdf68fdf7884424bb43ea2",
+          "exportedAs": "releasePort"
+        },
+        "N2i": {
+          "sha256": "8ece45ee9acdfc1e3e903f27359a85b92f148a5be3400ce2147f5627dd789d86",
+          "exportedAs": "scanSpan"
+        },
+        "P2i": {
+          "sha256": "d9ec2b67fdc45b5089457df42d90ca53e572e6fec8128046a54c72fc3a8b445f"
+        },
+        "F2i": {
+          "sha256": "56c2545603a9e2f56a5cb32aef0ac199914caee9fafd8b3bec01e5404881f309",
+          "exportedAs": "portOccupancy"
+        },
+        "I2i": {
+          "sha256": "60d9e5f66ddc234fb415ce544bd1b86e1f28e12db0b85a0a0c5e0b274f6a627f",
+          "exportedAs": "resolvePort"
+        },
+        "r2": {
+          "sha256": "59d8f12b66e1640dcc6a5feb26e1728942cc67ec346da87c5bb9a3f864799038",
+          "exportedAs": "PortInUseError"
+        },
+        "K4i": {
+          "sha256": "333a2f75b227baa71a466cfb3176c2c6cc519deadc44624006862a4b6d5b3561"
+        },
+        "q4i": {
+          "sha256": "1d3cd3733483b0a496578488707c88651437fd5bba70f61b793c8a17408f0547",
+          "exportedAs": "conflictingServers"
+        }
+      },
+      "globals": [
+        "Array",
+        "Date",
+        "Error",
+        "JSON",
+        "Map",
+        "Math",
+        "Number",
+        "Object",
+        "Promise",
+        "Set",
+        "String",
+        "process"
+      ],
+      "callSites": {
+        "a2": {
+          "sha256": "32fbb549c0df8ccd40d1c338b6e21120b033bc2f48ef36acbf1dd35608380e32",
+          "needles": [
+            "let e=F2i(this.servers,a,t.port,r),i=this.collectSiblingRoots(a,r),o=await O0i(n,t.port,c.pid,e,i);if(u.status!==\"starting\")return;",
+            "pendingAllocation:t2.has(t.port),exactPortBind:n2.has(t.port)};d.set(a,u),M2i(t.port)"
+          ]
+        },
+        "D3i": {
+          "sha256": "d4efe5144e493612b8c3c58230d6e5c0bf7a838312bd291e60a45b713c188971",
+          "needles": [
+            "let _=await I2i(r.port,r.autoPort,a,d,g,f),v=_.port",
+            "y.args=k1i(r.args,v,{joinedShortForm:d,command:r.command})",
+            "g=await t0i(((await new X0(s).getConfigFile())?.servers??[]).filter((e=>e.name!==r.name)),s)",
+            "..._.movedFrom===void 0?{}:{configuredPort:_.movedFrom}"
+          ]
+        },
+        "E3i": {
+          "sha256": "58a4897245b2046d7eaa62bb81b37a7b5597e41a78aab8c708f09ed9652f5822",
+          "needles": [
+            "await o0i(m,d,g)",
+            "portMayReassign:await a0i(m,g,_)"
+          ]
+        },
+        "y6i": {
+          "sha256": "7448cabf4fbecb8d4d3f2bb452e901e67c03b8825d1fcd95e7f659d7aabd01b9",
+          "needles": [
+            "let t=q4i(a2.servers,i.config,e,n);",
+            "portMayReassign:await a0i(i.config,o,s)",
+            "(i.config.autoPort===!0||o&&s)"
+          ]
+        }
+      },
+      "sha256": "557d10deb9b82bf9cccf65bc5542075ec28b9800d4bf6f69165f5ef0df0353e2"
+    },
+    "r3b-preview-user-agent.mjs": {
+      "bindings": {
+        "CIt": {
+          "sha256": "82eb03683a6f969c3824f9a768dc22dd1d79f7b999184c11ea8aa2f84ebbc63f"
+        },
+        "wIt": {
+          "sha256": "3ba92b344ab0d9b432bdd2eef7f21aaea396368d63b7ad3fcc24959bd9ff668a"
+        },
+        "TIt": {
+          "sha256": "7c9eefd3e374214d7f8aae2259c3f84b5590cbf70d6715d3178eca8fba5b802f"
+        },
+        "Mv": {
+          "sha256": "9597a94344fdeeda8ed8c036616dd7c5eca61e3ffc23706e58aa21bf79d3b03f"
+        },
+        "Nv": {
+          "sha256": "f35a2368b0913925694a4cf57785a981b4ae06eb47c2df4803099bc7a5bec2c0"
+        },
+        "DIt": {
+          "sha256": "86a4a3830e7c138af1b5d265de6d28715ae761567d7254aa0bb8d42d6d1cd724"
+        },
+        "kIt": {
+          "sha256": "a7509c722ebbdc7deb1a3aa63da8b746676d45c5420702d1b704868a93b470b2"
+        },
+        "hA": {
+          "sha256": "c10a6a25d1bb40289616840aca1f869869a62e4d16bc6b94f3274e4ed50a725f"
+        },
+        "kAn": {
+          "sha256": "51ca107d78eace404f60be1d6f118350ac7398a797e1e4855aee92dfa2b4083c"
+        },
+        "AAn": {
+          "sha256": "15666f84b50f9f64e330faf5e272f390ba23089ddefebb6613a98e663b7e9dee"
+        },
+        "xA": {
+          "sha256": "c81de5617da3f65445842026f15a52dc05acc5e70c283a8f4b32e9e83aa17e0c"
+        },
+        "wA": {
+          "sha256": "961135a0823c569fc8ba43d290d51458e1f981997658629bf6bc43baa6b78ea7"
+        },
+        "lai": {
+          "sha256": "4ae8275eae2a8adc7f88d3ffaee4292999ed7cc423763d5deb7e75527383c94d"
+        },
+        "uai": {
+          "sha256": "eecf1cba8dcf6f9a589dd7aa91cace99fe509feb1d4f972626991132844b9ae3",
+          "exportedAs": "isClaudeHost"
+        },
+        "ydi": {
+          "sha256": "b953f83853dc71fdbe5d7bb31fa03c1b1a5a1bf3cd775b8634036fa7dc7f4064",
+          "exportedAs": "previewUserAgents"
+        },
+        "bdi": {
+          "sha256": "62f2fff452b12fe24295847d3a5e5003ee1f798513361b03b95759862e21917d",
+          "exportedAs": "previewRequestUserAgent"
+        }
+      },
+      "globals": [
+        "Object",
+        "Set",
+        "URL"
+      ],
+      "callSites": {
+        "Pfi": {
+          "sha256": "139e4495ab22ec1721f70ae835428f4c287a12ad11d41970af58238dde15485f",
+          "needles": [
+            "let t=ydi(e),n=()=>hy(\"3868149774\");",
+            "o.setUserAgent?.(n()?t.claudeHosts:t.sites),o.webRequest.onBeforeSendHeaders(",
+            "o=bdi(t,r[a],n()||uai(xA(e.url)?.hostname??\"\"))",
+            "e?.includes(\" Electron/\")"
+          ]
+        }
+      },
+      "sha256": "1360e6ed466688989d23d6ce8754d7f9ec9239ee66d99ff87a52301600858758"
+    },
+    "r3b-preview-launch-fields.mjs": {
+      "from": "X0.parseConfiguration",
+      "statementSha256": [
+        "61d0a7482ddbfd1b2fcd5bfbb987d9feb09d09d53249a976b07037ad1f61fa37",
+        "cbc417c5fc1673fd9c17dba4f0a1ba33c1e7c2c6765bdc907c4f015624eea184",
+        "a3bcaabec28f87cc3f9574751e2c4219430202a9ae2f49033d9397d3f2c6a1de",
+        "c6b173274d792742c5fa82c82f58775bd4821f4a7e7090b5c00659c292ba2f98"
+      ],
+      "exports": [
+        "launchPortFields",
+        "launchUrlPortMismatch"
+      ],
+      "globals": [
+        "Error",
+        "JSON",
+        "Number"
+      ],
+      "callSites": {},
+      "sha256": "2cf063e7e810c106f7313845988f738fe8b99be9371c16e3dc50997598319d4d"
+    }
+  }
+}

@@ -126,3 +126,139 @@ test('Cowork questions, plan steps and actual output files populate the existing
   assert.equal(item.codeDesktop.deliverables[0].path, path.join(f.dataDir, 'outputs/report.md'));
   const restored = await f.service.request('thread/read', { threadId: f.id }); assert.equal(restored.thread.historyMode, 'legacy');
 });
+
+// R4i-cowork CW2 (X2 CW-2): the host rewindSessionV2 — fixture transcripts and the injected host only.
+import { sessionConfigDir, REWIND_SEND_RACE, REWIND_FORK_REFUSED } from '../electron/cowork-runtime/rewind-chain.mjs';
+
+async function conversation(f, texts) {
+  for (const text of texts) {
+    await f.service.request('turn/start', { threadId: f.id, input: [{ type: 'text', text }] }); await setImmediate();
+    const open = f.calls.filter(call => call.method === 'open').at(-1).params;
+    f.message({ type: 'system', subtype: 'init', session_id: open.sdkSessionId });
+    f.message({ type: 'assistant', uuid: `a-${text}`, message: { id: `m-${text}`, stop_reason: 'end_turn', content: [{ type: 'text', text: `Reply ${text}` }] } });
+    f.message({ type: 'result', subtype: 'success', is_error: false });
+  }
+  const { thread } = await f.service.request('thread/read', { threadId: f.id });
+  return thread.turns.map(turn => turn.items[0].id);
+}
+async function transcript(f, uuids, texts, sdkSessionId = f.service.rows.get(f.id).sdkSessionId) {
+  const dir = path.join(sessionConfigDir(f.dataDir, f.id), 'projects', '-sessions-cw-x-mnt-work');
+  await fs.mkdir(dir, { recursive: true });
+  const lines = uuids.flatMap((uuid, index) => [
+    { type: 'user', uuid, parentUuid: index ? `a-${texts[index - 1]}` : null, message: { role: 'user', content: [{ type: 'text', text: texts[index] }] } },
+    { type: 'assistant', uuid: `a-${texts[index]}`, parentUuid: uuid, message: { content: [{ type: 'text', text: `Reply ${texts[index]}` }] } }]);
+  await fs.writeFile(path.join(dir, `${sdkSessionId}.jsonl`), lines.map(line => JSON.stringify(line)).join('\n') + '\n');
+}
+
+test('cowork/rewind: the fork point is the assistant before the target, turns are cut and the next turn forks the CLI session', async t => {
+  const f = await fixture(t);
+  const uuids = await conversation(f, ['One', 'Two', 'Three']);
+  const old = f.service.rows.get(f.id).sdkSessionId;
+  await transcript(f, uuids, ['One', 'Two', 'Three']);
+  assert.deepEqual(await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: uuids[1] }), { prefill: 'Two' });
+  const row = JSON.parse(await fs.readFile(f.service.file(f.id), 'utf8'));
+  assert.equal(row.pendingRewindTo, 'a-One');
+  assert.equal(row.thread.turns.length, 1);
+  assert.deepEqual(Object.keys(row.cliRecords), [row.thread.turns[0].id], 'the cut turns lose their buffer records');
+  assert.equal('cliRecords' in (await f.service.request('thread/read', { threadId: f.id })).thread, false, 'the buffer never reaches the renderer');
+  await f.service.request('turn/start', { threadId: f.id, input: [{ type: 'text', text: 'Two, again' }] }); await setImmediate();
+  const open = f.calls.filter(call => call.method === 'open').at(-1).params;
+  assert.deepEqual(open.fork, { from: old, at: 'a-One' }); assert.equal(open.resume, false); assert.notEqual(open.sdkSessionId, old);
+  assert.equal(f.calls.at(-1).params.sdkSessionId, open.sdkSessionId, 'the send names the forked session');
+  f.message({ type: 'system', subtype: 'init', session_id: open.sdkSessionId });
+  const forked = f.service.rows.get(f.id);
+  assert.equal(forked.sdkSessionId, open.sdkSessionId); assert.equal(forked.sdkStarted, true); assert.equal('pendingRewindTo' in forked, false);
+  f.message({ type: 'result', subtype: 'success', is_error: false });
+  await f.service.request('turn/start', { threadId: f.id, input: [{ type: 'text', text: 'Next' }] }); await setImmediate();
+  const after = f.calls.filter(call => call.method === 'open').at(-1).params;
+  assert.equal(after.resume, true); assert.equal(after.fork, undefined); assert.equal(after.sdkSessionId, open.sdkSessionId);
+});
+
+test('cowork/rewind: a first-message rewind starts a fresh CLI session; a target that never reached the CLI is dropped', async t => {
+  const f = await fixture(t);
+  const uuids = await conversation(f, ['One']);
+  const old = f.service.rows.get(f.id).sdkSessionId;
+  await transcript(f, uuids, ['One']);
+  assert.deepEqual(await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: uuids[0] }), { prefill: 'One' });
+  assert.equal(f.service.rows.get(f.id).pendingRewindTo, '');
+  await f.service.request('turn/start', { threadId: f.id, input: [{ type: 'text', text: 'Fresh' }] }); await setImmediate();
+  const open = f.calls.filter(call => call.method === 'open').at(-1).params;
+  assert.equal(open.resume, false); assert.equal(open.fork, undefined); assert.notEqual(open.sdkSessionId, old);
+  f.message({ type: 'system', subtype: 'init', session_id: old });
+  assert.match(f.events.at(-1).params.turn.error.message, /identity/, 'the old session cannot answer for the fresh one');
+
+  const g = await fixture(t);
+  await g.service.request('turn/start', { threadId: g.id, input: [{ type: 'text', text: 'Never sent' }] }); await setImmediate();
+  g.host.emit('event', { event: 'failure', sessionId: g.id, error: 'boot failed' });
+  const target = (await g.service.request('thread/read', { threadId: g.id })).thread.turns[0].items[0].id;
+  assert.deepEqual(await g.service.request('cowork/rewind', { threadId: g.id, targetMessageUuid: target }), { prefill: 'Never sent' });
+  assert.equal('pendingRewindTo' in g.service.rows.get(g.id), false, 'no fork when the CLI never started');
+  assert.equal(g.service.rows.get(g.id).thread.turns.length, 0);
+});
+
+test('cowork/rewind refusals leave the session untouched: dead branch, unknown target, empty transcript', async t => {
+  const f = await fixture(t);
+  const uuids = await conversation(f, ['One', 'Two']);
+  await transcript(f, uuids, ['One', 'Two']);
+  const file = path.join(sessionConfigDir(f.dataDir, f.id), 'projects', '-sessions-cw-x-mnt-work', `${f.service.rows.get(f.id).sdkSessionId}.jsonl`);
+  await fs.appendFile(file, JSON.stringify({ type: 'user', uuid: 'side', parentUuid: null }) + '\n' + JSON.stringify({ type: 'assistant', uuid: 'side-a', parentUuid: 'side' }) + '\n');
+  const before = await fs.readFile(f.service.file(f.id), 'utf8');
+  assert.deepEqual(await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: uuids[1] }), { refusal: 'dead' });
+  assert.deepEqual(await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: 'nope' }), { refusal: 'unknown' });
+  await fs.writeFile(file, '');
+  assert.deepEqual(await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: uuids[1] }), { refusal: 'unknown' });
+  assert.equal(await fs.readFile(f.service.file(f.id), 'utf8'), before);
+  await assert.rejects(f.service.request('cowork/rewind', { threadId: f.id }), /Unknown Cowork message/);
+});
+
+test('cowork/rewind stops a running task first, and a send that lands during the rewind aborts it with the original copy', async t => {
+  const f = await fixture(t);
+  const uuids = await conversation(f, ['One', 'Two']);
+  await transcript(f, uuids, ['One', 'Two']);
+  await f.service.request('turn/start', { threadId: f.id, input: [{ type: 'text', text: 'Three' }] }); await setImmediate();
+  assert.equal(f.service.live.has(f.id), true);
+  assert.deepEqual(await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: uuids[1] }), { prefill: 'Two' });
+  assert.equal(f.service.live.has(f.id), false);
+  const stopped = f.calls.findLastIndex(call => call.method === 'close' && call.params.turnId);
+  assert.ok(stopped >= 0 && f.calls.findLastIndex(call => call.method === 'close' && !call.params.turnId) > stopped, 'interrupt, then wait for the CLI to exit');
+  assert.equal(f.service.rows.get(f.id).thread.turns.length, 1);
+
+  const g = await fixture(t);
+  const ids = await conversation(g, ['One', 'Two']);
+  await transcript(g, ids, ['One', 'Two']);
+  const request = g.host.request;
+  g.host.request = async (method, params) => {
+    if (method === 'close' && !params.turnId) await g.service.request('turn/start', { threadId: g.id, input: [{ type: 'text', text: 'Sneaked in' }] });
+    return request(method, params);
+  };
+  await assert.rejects(g.service.request('cowork/rewind', { threadId: g.id, targetMessageUuid: ids[1] }), error => error.message === REWIND_SEND_RACE);
+  assert.equal('pendingRewindTo' in g.service.rows.get(g.id), false);
+  assert.equal(g.service.rows.get(g.id).thread.turns.length, 3, 'nothing was cut');
+});
+
+test('a fork the CLI refuses is dropped; a fork init under a new CLI id is adopted, never under the forked id', async t => {
+  const f = await fixture(t);
+  const uuids = await conversation(f, ['One', 'Two']);
+  const old = f.service.rows.get(f.id).sdkSessionId;
+  await transcript(f, uuids, ['One', 'Two']);
+  await f.service.request('cowork/rewind', { threadId: f.id, targetMessageUuid: uuids[1] });
+  await f.service.request('turn/start', { threadId: f.id, input: [{ type: 'text', text: 'Again' }] }); await setImmediate();
+  f.host.emit('event', { event: 'failure', sessionId: f.id, error: REWIND_FORK_REFUSED });
+  assert.equal('pendingRewindTo' in f.service.rows.get(f.id), false);
+  assert.equal(f.service.rows.get(f.id).sdkSessionId, old, 'the next turn resumes the session as it was');
+
+  const g = await fixture(t);
+  const ids = await conversation(g, ['One', 'Two']);
+  const before = g.service.rows.get(g.id).sdkSessionId;
+  await transcript(g, ids, ['One', 'Two']);
+  await g.service.request('cowork/rewind', { threadId: g.id, targetMessageUuid: ids[1] });
+  await g.service.request('turn/start', { threadId: g.id, input: [{ type: 'text', text: 'Again' }] }); await setImmediate();
+  g.message({ type: 'system', subtype: 'init', session_id: before });
+  assert.match(g.events.at(-1).params.turn.error.message, /identity/);
+  assert.equal(g.service.rows.get(g.id).pendingRewindTo, 'a-One', 'the fork is still pending');
+  await g.service.request('turn/start', { threadId: g.id, input: [{ type: 'text', text: 'Again' }] }); await setImmediate();
+  g.message({ type: 'system', subtype: 'init', session_id: 'cli-chosen-id' });
+  assert.equal(g.service.rows.get(g.id).sdkSessionId, 'cli-chosen-id');
+  g.message({ type: 'system', subtype: 'init', session_id: 'yet-another' });
+  assert.match(g.events.at(-1).params.turn.error.message, /identity/, 'a second init must keep the adopted id');
+});

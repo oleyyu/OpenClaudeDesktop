@@ -56,7 +56,7 @@ const badgedLabel = (label, labelId, kind) => kind
 // agents / agentValue / defaultAgent / onAgentChange: a core whose sessions can run as one of its own primary agents
 // (OpenCode's and MiMo's build, docs, compose…) adds an 'Agent' group; Plan still runs the core's plan agent.
 export function SourcePermissionMenu({ anchor, value, defaultValue, onChange, onClose, onSelectComplete, initialHighlight, bypassEnabled = false, bypassOffer = null, onEnableBypass,
-  agents = null, agentValue = null, defaultAgent = null, onAgentChange }) {
+  bypassKept = false, agents = null, agentValue = null, defaultAgent = null, onAgentChange }) {
   const prefix = useId(), headingId = `${prefix}-heading`, agentHeadingId = `${prefix}-agent-heading`;
   const modeOptions = PERMISSION_OPTIONS.filter(option => option.value !== "bypass" || bypassEnabled);
   const badges = permissionBadges({ value, defaultValue, values: modeOptions.map((option) => option.value) });
@@ -71,7 +71,7 @@ export function SourcePermissionMenu({ anchor, value, defaultValue, onChange, on
           const selected = option.value === value, labelId = `${prefix}-${option.value}-label`;
           const descriptionId = `${prefix}-${option.value}-description`, digit = index + 1, badge = badges[option.value];
           return <SourceMenu.Item key={option.value} className="sp-permission-item" checked={selected} checkedRole="radio"
-            label={option.label} description={option.description} labelId={badge ? undefined : labelId} descriptionId={descriptionId}
+            label={option.label} description={bypassKept && option.value === "bypass" ? t("Turns on when Claude finishes working.") : option.description} labelId={badge ? undefined : labelId} descriptionId={descriptionId}
             aria-labelledby={labelId} aria-describedby={descriptionId} shortcut={String(digit)} digit={digit}
             data-permission-value={option.value} onClick={() => { if (option.value !== value) onChange?.(option.value); }}>
             {badgedLabel(option.label, labelId, badge)}

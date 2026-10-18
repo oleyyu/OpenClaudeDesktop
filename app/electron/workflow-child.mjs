@@ -7,6 +7,8 @@ import {runWorkflowSource,parseClaudeWorkflowScript} from '../third-party/codex-
 import {Journal} from '../third-party/codex-workflows-runner/src/journal.js';
 import {codexAgent,getClient,shutdownClient} from '../third-party/codex-workflows-runner/src/codexAgent.js';
 import {startCodexSession} from '../third-party/codex-workflows-runner/src/codexSession.js';
+import {joinSharedBudget} from '../third-party/codex-workflows-runner/src/shared-budget.js';
+import {outputSpent,subscribeMeter} from '../third-party/codex-workflows-runner/src/meter.js';
 let finishing=false,runtime,scriptFailure,outputText;
 // /workflows p: pause stops admitting agents (runtime.js setWorkflowPaused); a hosted engine has no pause.
 process.on('message',message=>{if(message?.control==='pause'){try{if(typeof runtime?.pause!=='function'){send({type:'pausable',pausable:false});return;}runtime.pause(message.paused===true);send({type:'paused',paused:message.paused===true});}catch(error){send({type:'log',message:error.message});}return;}if(message?.control)Promise.resolve(runtime?.controlMember(message.memberId,message.control)).catch(error=>send({type:'log',message:error.message}));});
@@ -29,6 +31,8 @@ process.once('message',async options=>{
   const {meta}=parseClaudeWorkflowScript(options.source);send({type:'metadata',name:meta.name,title:meta.title,description:meta.description});
   await fs.writeFile(path.join(options.directory,'result.json'),'',{mode:0o600,flush:true});
   const journal=new Journal(path.join(options.directory,'journal.jsonl'),{reuse:options.resume});await journal.load();
+  const sharedBudget=options.budgetPool?joinSharedBudget(options.budgetPool):undefined;
+  if(sharedBudget){const baseline=outputSpent();subscribeMeter(()=>sharedBudget.record(Math.max(0,outputSpent()-baseline)));}
   // commandArgs: the core's arguments (the DeepSeek bridge script + app-server --stdio); absent = the runner's Codex default.
   const clientOptions={command:options.command,...(Array.isArray(options.commandArgs)?{args:options.commandArgs}:{}),clientInfo:{name:'code-desktop-workflows',title:'OpenClaude Desktop',version:options.version}};
   if(!options.plan){
@@ -55,11 +59,12 @@ process.once('message',async options=>{
   const controlled=opts=>{const out={...opts,cwd:options.cwd,sandbox,clientOptions};if(forced&&!pinned)delete out.model;delete out.userRelay;if(typeof options.userRequest==='string'&&options.userRequest.trim())out.userRelay=options.userRequest;return out;};
   const result=await runWorkflowSource(options.source,{
    onRuntime:value=>{runtime=value;},onOutput:text=>{outputText=text;},
-   args:options.args,plan:options.plan,journal,defaultModel:subagentModel??options.model,...(pinned?{pinnedModel:pinned}:{}),
+   args:options.args,plan:options.plan,journal,defaultModel:subagentModel??options.model,ignoreRequestedModel:forced,...(pinned?{pinnedModel:pinned}:{}),
    // budget.total: the token target of the user's "+500k" directive in the turn that started the run (model runs only).
    ...(Number.isSafeInteger(options.budgetTotal)&&options.budgetTotal>0?{budgetTotal:options.budgetTotal}:{}),
    // What that turn's main model already spent (Claude's budget.spent() is the turn's output tokens, not only the run's).
    ...(Number.isSafeInteger(options.budgetSpent)&&options.budgetSpent>0?{budgetSpentBefore:options.budgetSpent}:{}),
+   ...(sharedBudget?{sharedBudget}:{}),
    // structuredOutput false (a core without outputSchema / dynamic tools): schema agents ask for JSON (runner jsonAgent.js).
    defaults:{cwd:options.cwd,sandbox,effort:options.effort,clientOptions,...(options.structuredOutput===false||options.structuredOutput==='outputSchema'?{structuredOutput:options.structuredOutput}:{}),...(typeof options.runId==='string'?{runId:options.runId}:{})},
    runAgent:Object.assign((prompt,opts)=>codexAgent(prompt,controlled(opts)),{preflight:opts=>codexAgent.preflight(controlled(opts))}),

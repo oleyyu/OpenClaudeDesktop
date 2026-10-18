@@ -4,7 +4,7 @@ import {
   buildSidebarGroups, CLASSIC_GROUP_OPTIONS, CLASSIC_SORT_OPTIONS,
   normalizeSidebarPreferences, clearSidebarFilters, hasSidebarFilters,
   localDayBoundaries, sessionState, timestampMs, buildNestedRuns, bulkTargets, movePinned, orderPinned,
-  sessionParentId, lineageKind, nestedStubCounts, nestedStubText, truncateRuns, sidebarEmptyVariant,
+  sessionParentId, lineageKind, nestedStubCounts, truncateRuns, sidebarEmptyVariant,
   showAllSessionsPreferences, sidebarEmptyHasNonDefaultFilter,
   toggleCollapsedGroup, expandCollapsedGroup, stickyListFailure, showFewerRows,
 } from "../src/sidebar-model.js";
@@ -17,11 +17,11 @@ const atDay = (days, hour = 12) => {
 const thread = (id, fields = {}) => ({ id, name: id, cwd: "/work/project", createdAt: atDay(5), updatedAt: atDay(0), ...fields });
 const ids = (groups) => groups.flatMap((group) => group.sessions.map((session) => session.id));
 
-test("classic settings reject sessionList-only options and preserve only valid choices", () => {
+test("sidebar settings reject invalid choices and preserve metadata visibility", () => {
   assert.deepEqual(CLASSIC_GROUP_OPTIONS.map(([key]) => key), ["date", "project", "state", "custom", "none"]);
   assert.deepEqual(CLASSIC_SORT_OPTIONS.map(([key]) => key), ["alpha", "created", "recency"]);
   assert.deepEqual(normalizeSidebarPreferences({ groupBy: "status", sortBy: "lastUpdated", status: "running", stateActivityDays: 14 }), {
-    groupBy: "project", sortBy: "recency", status: "active", stateActivityDays: 7, showEmptyGroups: false, showPrStatus: true, collapsedNested: [], collapsedGroups: [],
+    groupBy: "project", sortBy: "recency", status: "active", stateActivityDays: 7, showEmptyGroups: false, showPrStatus: true, showMetadata: false, ascending: false, collapsedNested: [], collapsedGroups: [],
   });
   // lI 'Show PR status' (show_pr_status): on by default, off only when saved false.
   assert.equal(normalizeSidebarPreferences({ showPrStatus: false }).showPrStatus, false);
@@ -156,15 +156,13 @@ test("pinned order: persisted order first, unknown ids keep sort order, Move up/
   assert.deepEqual(groups[0].sessions.map((s) => s.id), ["b", "a"]);
 });
 
-test("fold stub: ZF counts (unread wins over working) and jK 'more' wording while some children stay listed", () => {
+test("fold stub: current pz counts failed before unread before working", () => {
   const rows = [thread("a"), thread("b"), thread("c"), thread("d")];
   const unread = new Set(["a", "b"]), working = new Set(["b", "c"]);
-  assert.deepEqual(nestedStubCounts(rows, { isUnread: (row) => unread.has(row.id), isWorking: (row) => working.has(row.id) }), { count: 4, unread: 2, working: 1 });
-  assert.deepEqual(nestedStubCounts([]), { count: 0, unread: 0, working: 0 });
-  assert.equal(nestedStubText(2, false), "2 nested sessions");
-  assert.equal(nestedStubText(1, false), "1 nested session");
-  assert.equal(nestedStubText(1, true), "1 more nested session");
-  assert.equal(nestedStubText(3, true), "3 more nested sessions");
+  const adapter = { isUnread: row => unread.has(row.id), isWorking: row => working.has(row.id) };
+  assert.deepEqual(nestedStubCounts(rows, adapter), { count: 4, failed: 0, unread: 2, working: 1 });
+  assert.deepEqual(nestedStubCounts(rows, { ...adapter, isFailed: row => row.id === 'b' }), { count: 4, failed: 1, unread: 1, working: 1 });
+  assert.deepEqual(nestedStubCounts([]), { count: 0, failed: 0, unread: 0, working: 0 });
 });
 
 // sidebar-groups.js bF/xF + shared-16 dc/fc: code-mode buckets cut at 20 rows.
@@ -356,13 +354,43 @@ test("custom groups follow the stored 'ccg::' order; unranked groups keep creati
   assert.deepEqual(sectionOrderKeys(groups), [customOrderKey("g3"), customOrderKey("g2"), customOrderKey("g1")]);
 });
 
+test("R2-sections: the seeded sections (sidebar-sections-store, kp/Bp) keep the classic custom list's groups, order and members", async () => {
+  const Store = await import("../electron/sidebar-sections-store.mjs");
+  const customGroups = [{ id: "g1", name: "One" }, { id: "g2", name: "Two" }, { id: "g3", name: "Three" }];
+  const metadata = { a: { customGroupId: "g1" }, b: { customGroupId: "g3" }, c: { customGroupId: "g3" }, d: { pinned: true } };
+  const sessions = [thread("a"), thread("b"), thread("c"), thread("d"), thread("e")];
+  const projectOrder = [customOrderKey("g3"), "/w/other", customOrderKey("g2"), customOrderKey("g1")];
+  const preferences = { groupBy: "custom", showEmptyGroups: true };
+  const classic = buildSidebarGroups({ sessions, metadata, customGroups, preferences, projectOrder, now });
+  const sections = Store.sidebarSectionsFor({ customGroups, sessionMetadata: metadata, projectOrder, sidebarPreferences: preferences });
+  const manual = sections.filter((section) => section.kind === "manual");
+  assert.deepEqual(manual.map((section) => section.name), classic.filter((group) => group.customGroupId).map((group) => group.label));
+  for (const group of classic.filter((g) => g.customGroupId))
+    assert.deepEqual([...manual.find((s) => s.id === group.customGroupId).members].sort(), group.sessions.map((s) => `code:${s.id}`).sort(), group.label);
+  // Ungrouped becomes Sessions (custom → none), after the manual sections; Pinned leads.
+  assert.deepEqual(sections.map((section) => section.kind), ["pinned", "routines", "manual", "manual", "manual", "sessions"]);
+  assert.equal(sections.at(-1).groupBy, "none");
+  // Host difference, as officially (shared-22 Qb → Bp): a group without a "ccg::" key, which the classic list shows
+  // first (xB / i$ rank it -Infinity), follows the ranked ones once seeded (Bp ranks it r.size + index).
+  const partial = [customOrderKey("g2")];
+  assert.deepEqual(orderCustomGroups(customGroups, partial).map((group) => group.id), ["g1", "g3", "g2"]);
+  assert.deepEqual(Store.sidebarSectionsFor({ customGroups, sessionMetadata: metadata, projectOrder: partial, sidebarPreferences: preferences })
+    .filter((section) => section.kind === "manual").map((section) => section.id), ["g2", "g1", "g3"]);
+});
+
 test("main.cjs persists the section order (sidebar-state project-order) and drops a deleted group's key", () => {
   const main = readFileSync(path.resolve(import.meta.dirname, "../electron/main.cjs"), "utf8");
   assert.match(main, /p\.operation === "project-order"/);
   assert.match(main, /config\.projectOrder = \[\.\.\.p\.ids\]/);
   assert.match(main, /projectOrder: Array\.isArray\(config\.projectOrder\) \? config\.projectOrder : \[\]/);
-  assert.match(main, /config\.projectOrder = config\.projectOrder\.filter\(key => key !== "ccg::" \+ p\.id\)/);
   assert.match(main, /case "repo-identities":/);
+  // R2-sections: create/rename/delete-group moved into electron/sidebar-sections-store.mjs (sections kept in step);
+  // delete-group still drops the group's "ccg::" key, and the snapshot carries the sections.
+  assert.match(main, /sidebarSectionsStore\.applySidebarSectionOperation\(config, p, \{/);
+  assert.match(main, /sidebarSections: sidebarSectionsStore \? sidebarSectionsStore\.sidebarSectionsFor\(config\)/);
+  assert.doesNotMatch(main, /p\.operation === "(create|rename|delete)-group"/);
+  const store = readFileSync(path.resolve(import.meta.dirname, "../electron/sidebar-sections-store.mjs"), "utf8");
+  assert.match(store, /config\.projectOrder = config\.projectOrder\.filter\(key => key !== "ccg::" \+ p\.id\)/);
 });
 
 test("collapsedGroups persist in the sidebar preferences (shared-50 G toggleGroupCollapsed / expandGroup / mm)", () => {

@@ -77,13 +77,18 @@ const render = (props) => renderToStaticMarkup(React.createElement(C.SourceCompo
 
 test("bash mode: purple ring flag, the 'bash' pro badge, 'Enter a shell command', the sr-only status; the '!' stays out of the editor", () => {
   const html = render({ shellMode: "core", draft: "!ls -la", historyResetKey: "code:t1" });
-  assert.match(html, /<form[^>]*data-bash-mode="true"/);
-  assert.match(html, /<span class="sc-bash-badge" data-cds="Badge" data-variant="pro" data-size="sm" title="Run as a shell command">bash<\/span>/);
-  assert.match(html, /data-placeholder="Enter a shell command"/);
+  // R3-composer step 3 (composer-shell): uM's root div carries data-bash-mode; the card takes tM 'inset-ring-1
+  // inset-ring-pro' (cardClassName) and the view-tabs CdsBadge {pro, sm} sits in lc.Actions' trailing slot (pt).
+  assert.match(html, /<div class="sc-composer epitaxy-prompt [^"]*" data-bash-mode="true"/);
+  assert.match(html, /<div class="bg-surface-3 [^"]* inset-ring-1 inset-ring-pro [^"]*sc-card"/);
+  assert.match(html, /<div data-cds="ChatComposerActions" class="contents">.*<span data-cds="Badge" data-size="sm" aria-hidden="true" title="Run as a shell command" class="[^"]*bg-tint-violet text-pro"><span class="pb-\[0\.05em\]">bash<\/span><\/span>/);
+  // R4g-composer CP2 (X7-08): the editor is not empty ('ls -la'), so cm shows no placeholder span; the grow ghost stays.
+  assert.doesNotMatch(html, /data-composer-placeholder=""/);
+  assert.match(html, /data-composer-placeholder-ghost="Enter a shell command"/);
   assert.match(html, /role="status" data-bash-status="">Bash mode\. Press Escape to return to chat\.</);
   assert.doesNotMatch(html, /shell-mode-hint/);
   const chat = render({ shellMode: "core", draft: "" });
-  assert.doesNotMatch(chat, /data-bash-mode|sc-bash-badge/);
+  assert.doesNotMatch(chat, /data-bash-mode|inset-ring-pro|data-cds="Badge"/);
   assert.match(chat, /data-bash-status="">Chat mode</);
   const none = render({ shellMode: null, draft: "!ls" });
   assert.doesNotMatch(none, /data-bash-mode|data-bash-status/, "a core without shell mode keeps '!' as text");
@@ -91,10 +96,11 @@ test("bash mode: purple ring flag, the 'bash' pro badge, 'Enter a shell command'
 
 test("prompt suggestion: bare ghost overlay, the placeholder cleared, no '(Tab to use)'", () => {
   const html = render({ suggestion: "Run the tests" });
-  assert.match(html, /<div class="sc-suggestion-ghost" aria-hidden="true" data-prompt-suggestion-ghost="">Run the tests<\/div>/);
-  assert.match(html, /data-placeholder=""/);
+  // lc.Overlay (composer-shell): uM's ghost verbatim, `truncate text-muted-as-secondary`, alone in its overlay.
+  assert.match(html, /<div data-cds="ChatComposerOverlay" class="absolute inset-0 overflow-hidden [^"]*pointer-events-none"><div aria-hidden="true" data-prompt-suggestion-ghost="true" class="truncate text-muted-as-secondary">Run the tests<\/div><\/div>/);
+  assert.doesNotMatch(html, /data-composer-placeholder/, 'the placeholder is cleared (K ? ""): no span, no ghost');
   assert.doesNotMatch(html, /Tab to use/);
-  assert.doesNotMatch(render({ suggestion: "Run the tests", draft: "x" }), /sc-suggestion-ghost/);
+  assert.doesNotMatch(render({ suggestion: "Run the tests", draft: "x" }), /data-prompt-suggestion-ghost/);
 });
 
 test("every new composer string has a zh-CN entry", () => {

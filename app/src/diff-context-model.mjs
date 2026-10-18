@@ -1,8 +1,11 @@
 // Only the workspace Git adapter can assert completeContext. Historical
 // transcript patches remain partial, including patches beginning at line one.
+// patchesWithheld: the main process's comparison.patches_withheld (2.42304.0 index.chunk-BAdej_RQ je, the
+// diffgit-08 large-diff input), carried only when it is a boolean (index.chunk-muI2IV6k cv).
 export function diffPayload(value) {
   return typeof value === 'string' ? { patch: value, completeContext: false }
-    : { patch: typeof value?.patch === 'string' ? value.patch : '', completeContext: value?.completeContext === true };
+    : { patch: typeof value?.patch === 'string' ? value.patch : '', completeContext: value?.completeContext === true,
+      ...(typeof value?.patches_withheld === 'boolean' ? { patchesWithheld: value.patches_withheld } : {}) };
 }
 
 export function contextRegions(file, completeContext) {

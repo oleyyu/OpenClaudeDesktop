@@ -6,6 +6,13 @@ export function workflowEvent(run,event,at){
  const progress=next.workflowProgress,agents=progress.filter(p=>p.type==='workflow_agent');
  const phase=(title,details={})=>{let found=progress.findLast(p=>p.type==='workflow_phase'&&p.title===title);if(!found){found={type:'workflow_phase',index:details.index??Math.max(0,...progress.filter(p=>p.type==='workflow_phase').map(p=>p.index))+1,title,...details.kind?{kind:details.kind}:{}};progress.push(found);}return found;};
  if(event.type==='metadata'){if(event.name)next.name=event.name;if(typeof event.title==='string')next.title=event.title;if(event.description)next.description=event.description;}
+ // Keep compatibility notices visible in Tasks and in event replay. Ordinary
+ // script logs are not notices. Bound and de-duplicate messages across agents.
+ if(event.type==='log'&&typeof event.message==='string'&&(/^(Workflow compatibility|model:)/.test(event.message)||/^workflow agent .*compatibility:/.test(event.message))){
+  const message=event.message.replace(/^Workflow compatibility \[[^\]]*\]/,'Workflow compatibility').slice(0,2000);
+  const notices=run.compatibilityNotes||[];
+  if(!notices.includes(message))next.compatibilityNotes=[...notices,message].slice(0,32);
+ }
  if(event.type==='phase')phase(String(event.title),event);
  if(['admission','start','end','cached','progress'].includes(event.type)&&event.kind!=='human'&&event.id){
   let agent=agents.find(a=>a.id===event.id);

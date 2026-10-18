@@ -203,3 +203,31 @@ test('SDK completion preserves native string errors instead of an empty failure 
   assert.ok(f.failures[0] instanceof Error);
   assert.match(f.failures[0].message, /useradd: invalid user name/);
 });
+
+// R4i-cowork CW2 (X2 CW-2): rewind forks resume at the fork point under a new, host-named session.
+import { sdkSessionOptions } from '../electron/cowork-runtime/runtime-worker.mjs';
+
+test('a rewind fork passes --resume, --fork-session, --resume-session-at and --session-id in the SDK transport order', () => {
+  const base = ['--output-format', 'stream-json', '--verbose', '--input-format', 'stream-json',
+    '--permission-prompt-tool', 'stdio', '--include-partial-messages', '--permission-mode', 'default', '--setting-sources='];
+  assert.deepEqual(sdkArguments({ model: 'm', ...sdkSessionOptions({ sdkSessionId: 'new-id', fork: { from: 'old-id', at: 'assistant-uuid' } }) }),
+    [...base, '--model', 'm', '--resume=old-id', '--fork-session', '--resume-session-at=assistant-uuid', '--session-id=new-id']);
+  assert.deepEqual(sdkSessionOptions({ sdkSessionId: 's', resume: true }), { resume: 's' });
+  assert.deepEqual(sdkSessionOptions({ sdkSessionId: 's' }), { sessionId: 's' });
+  assert.deepEqual(sdkArguments({ resume: 'old', forkSession: true }), [...base, '--resume=old', '--fork-session']);
+  assert.throws(() => sdkArguments({ resume: 'old', sessionId: 'new' }), /either/, 'a new id beside --resume still needs --fork-session');
+  assert.throws(() => sdkArguments({ forkSession: true, sessionId: 'new' }), /fork needs/);
+  assert.throws(() => sdkArguments({ resumeSessionAt: 'a', sessionId: 'new' }), /fork needs/);
+  assert.throws(() => sdkArguments({ resume: 'old', resumeSessionAt: 'a\0b', forkSession: true }), /resumeSessionAt/);
+  assert.throws(() => sdkArguments({ resume: 'old', forkSession: 'yes' }), /forkSession/);
+  const launch = sdkLaunch({ cwd: '/sessions/cw-test/mnt/work', ...sdkSessionOptions({ sdkSessionId: 'n', fork: { from: 'o', at: 'a' } }) });
+  assert.deepEqual(launch.args.slice(-4), ['--resume=o', '--fork-session', '--resume-session-at=a', '--session-id=n']);
+});
+
+test('the runtime forwards only the fixed fork-refusal marker from CLI diagnostics', async () => {
+  const fs = await import('node:fs');
+  const source = fs.readFileSync(new URL('../electron/cowork-runtime/runtime-worker.mjs', import.meta.url), 'utf8');
+  assert.equal(source.split("send({ event: 'failure', sessionId: params.sessionId, turnId: params.turnId, error: REWIND_FORK_REFUSED })").length - 1, 1);
+  assert.equal(source.split('isResume: !!params.resume || !!params.fork').length - 1, 1);
+  assert.equal(source.split('...sdkSessionOptions(params)').length - 1, 1);
+});

@@ -79,15 +79,60 @@ export function failedServer(state, lastStarted) {
 export function serverErrorText(error, name) {
   switch (error?.code) {
     case "not-found": return t("The command for {name} wasn’t found. Check “runtimeExecutable” in .claude/launch.json.", { name });
-    case "port-in-use": return t("Port {port} is already in use. Stop whatever is using it, or set “autoPort”: true in .claude/launch.json.", { port: /Port (\d+)/.exec(error.message ?? "")?.[1] ?? "" });
+    // R4e-preview (preview-01): main's port error is the original's own (2.42304.0 index.chunk-muI2IV6k D2i / E2i / k2i /
+    // O2i / A2i), and the original's start-failed card shows it as it came (cf580efe9 `logLine: Wr(t.message)`, with
+    // c227f4d5e `message: r.error`); a port that can't move is no longer an "autoPort": true hint.
+    case "port-in-use": return error.message ? String(error.message) : t("Couldn’t start the dev server.");
+    // preview-03: the identity check's guidance is for the agent (it goes to the output, as a2.start's stderr line, and
+    // to the agent with the output); the card says what happened in the user's words.
+    case "identity": return t("Another process is also answering on port {port}, so the preview could show it instead of this dev server. Check its output below.", { port: identityPort(error) });
     case "port-held": return t("Port {port} is already in use by a dev server in another session. Stop that server, then try again.", { port: heldPort(error) ?? "" });
     case "exited": return t("The dev server exited during startup. Check its output below.");
     case "timeout": return t("The dev server didn’t answer in time.");
-    case "no-config": return t("This folder has no .claude/launch.json yet.");
-    case "no-server": return t("{name} isn’t in .claude/launch.json.", { name });
+    case "no-config": case "no-server": return launchEntryMissingText(name);
     default: return error?.message ? String(error.message) : t("Couldn’t start the dev server.");
   }
 }
+
+// The port an identity failure is about: main sets it (preview-service.cjs spawnServer), else the guidance names it
+// (O0i's E0i / D0i: "… its assigned port N …").
+function identityPort(error) {
+  if (Number.isInteger(error?.port) && error.port > 0) return error.port;
+  return /\bassigned port (\d+)/.exec(String(error?.message ?? ""))?.[1] ?? "";
+}
+
+// preview-05 (2.42304.0 cf580efe9-b-DCvKJg si / ui, 2.37337.1 Xr): a Run that found no usable .claude/launch.json entry
+// for the name. startFromConfig answers {} when Y4i resolves "deny" (main index.chunk-muI2IV6k: no launch.json, or no
+// entry by that name with denyUnmatchedName); the local main process answers code "no-config" / "no-server". The pane
+// then refreshes the configurations (yn) and, while the session is still the current one, toasts uV3BfEC8hz.
+export const noLaunchEntry = (result) => result?.code === "no-config" || result?.code === "no-server";
+export const launchEntryMissingText = (name) => t("Couldn’t start {name}. Check that .claude/launch.json has a usable entry for it.", { name });
+
+// preview-06 (2.42304.0 cf580efe9-b-DCvKJg _a): the active tab shows the start page — no origin, or one that isn't
+// http, https or file.
+export function startPageOrigin(url) {
+  if (!url) return true;
+  try {
+    const protocol = new URL(url).protocol;
+    return protocol !== "http:" && protocol !== "https:" && protocol !== "file:";
+  } catch { return true; }
+}
+// Aa `ei = V || Y || !w` (2.37337.1 `ti = B || X || !C`): element picking turns itself off (rr(!1)) once the page can't
+// be picked — the server is gone (V, the stopped card: surface "stopped" here), the start page shows (Y, _a of the
+// active tab's origin; here also no live page at all), or nothing would receive the element (!sendsToSession: the pane
+// has no onAttachElement).
+export function pickUnavailable(state, { surface = null, sendsToSession = true } = {}) {
+  return !sendsToSession || surface === "stopped" || !state?.hasPage || startPageOrigin(state?.url);
+}
+// cf550b864-DG_op2XB `ue = 2e4` (cf580efe9 Mn): limits.awaitCaptureMs, how long the sketch waits for its capture before it
+// opens without a backdrop (onBackdrop(null)); since 2.37337.1 also while picking. A capture that lands later still
+// replaces the empty backdrop (N's `i === "null"` state).
+export const SKETCH_AWAIT_CAPTURE_MS = 20000;
+
+// preview-13 (2.42304.0 c224804cc-CT77R4xB U, imported by cf580efe9 as lr): createDisabled from the ninth tab.
+export const previewTabCapReached = (count) => count > 8;
+// cfe7c4b3b-CP-IQXj8 oe.newTabAtCap.
+export const PREVIEW_TAB_CAP_TEXT = "Tab limit reached. Close a tab to open a new one.";
 
 // ca80fca8d xq: the port another session's dev server holds (the start-failed card then says so instead of sending the
 // error to the agent). Locally main sets error.heldPort with code "port-held" (preview-service.cjs spawnServer).
@@ -99,13 +144,17 @@ export function heldPort(error) {
 
 /** The start failure as one text (the reference's start error): the message, then the output tail without colors. */
 export function startFailureText(error, lines = []) {
+  const message = String(error?.message ?? "").trim();
   const output = (lines ?? []).map((line) => stripAnsi(String(line))).filter((line, index) => !(index === 0 && line.startsWith("$ ")));
-  return [String(error?.message ?? "").trim(), output.slice(-40).join("\n").trim()].filter(Boolean).join("\n\n");
+  while (message && output.length > 0 && output[output.length - 1].trim() === message) output.pop();
+  return [message, output.slice(-40).join("\n").trim()].filter(Boolean).join("\n\n");
 }
 
-/** cf580efe9 Er: the failure card's chip, the last non-empty line of the error. */
-export function failureLogLine(text) {
-  const lines = String(text ?? "").split("\n").map((line) => line.trim()).filter(Boolean);
+/** cf580efe9 Wr: the failure card's chip, the last non-empty line of the error (for an identity mismatch, the card's
+ * own sentence rather than the agent guidance main wrote at the end of the output). */
+export function failureLogLine(text, error = null) {
+  const source = error?.code === "identity" ? serverErrorText(error) : text;
+  const lines = String(source ?? "").split("\n").map((line) => line.trim()).filter(Boolean);
   return lines[lines.length - 1];
 }
 

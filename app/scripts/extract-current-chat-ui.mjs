@@ -148,29 +148,9 @@ function literal(m,owner,name,prefix){const matches=[];m.program.scope.getBindin
 for(const file of ['caa9df187-DFQv8cbo.js','cff2bf6cb-BcVMRZW0.js','c6a2ab736-DT3u3_eh.js','shared-125-CbVXqztB.js','cfa4655f9-BAdHT16K.js','cfccd3f04-BiyDqLUX.js','c46686c0b-DmFpsCbb.js','c0efc2620-BdXsfbkU.js','c97b955f1-BIk31E_b.js','shared-150-CLvmPbZG.js','ca0c38004-CEGIs7-p.js','c32f7beb9-Bs2-KYZS.js','vendor-icons-DDsFzYXd.js','c3d5d2a6f-Cb6r-Pna.js','c9e1458cd-C-OdbuDq.js','c2d1766e9-BvFJMdLU.js','c07677de0-_OwZl_d6.js','c95f03c33-DhBxw_e-.js','c1c6ea9ac-9gbw1jMB.js','c1dd841c3-Cvf1IRsf.js','c0efc2620-BdXsfbkU.js','ccd3f68fe-CZhDe3qc.js','cdbc75b4b-B7cRd8zz.js','c511d59b8-uRWjm_YF.js','c0958e5bf-DgQg_ba5.js','cc09daa9b-_uZIwQg7.js','shared-75-BauJ3twV.js','shared-0-tP5vNlHv.js','shared-50-Bmc9oUMm.js','rolldown-runtime-C3OYiQ02.js','c2bb74286-D8NXeKVk.js','c028ce168-BgWF3hW2.js','shared-9-CAAkBVM3.js','c193cfc9b-2wgBbI8O.js','cf8745532-BMxkFAAg.js','cbef3b9e7-CuJuDnSt.js','cf35aed38-kaP0vyce.js','c71dee58b-X8_F3dre.js','c75e89812-Cz6W_Gc9.js','c230724a2-BxatGObJ.js','cd75b47e6-DZ61gJR_.js','c042dc97b-DCdI16Un.js','shared-16-OoLrhcjl.js','shared-10-DDvJOzr_.js','shared-28-MgJrblDu.js','shared-3-DVMvy2kM.js'])allowed.add(file);
 Object.assign(adapters['c230724a2-BxatGObJ.js'],{ge:['../../source-chat-adapters.jsx','LocalLink'],_t:['../../source-chat-adapters.jsx','SourceIcon'],ut:['../../source-chat-adapters.jsx','HostTooltip'],ot:['../../source-chat-adapters.jsx','ThemePortal'],pt:['../../source-chat-adapters.jsx','HostTooltip'],ci:['../../source-artifact-adapters.jsx','renderArtifactMenu']});
 for(const [file,names] of Object.entries({'c2bb74286-D8NXeKVk.js':['ui','mi'],'shared-9-CAAkBVM3.js':['bf','xf'],'c193cfc9b-2wgBbI8O.js':['_'],'cf8745532-BMxkFAAg.js':['l'],'cbef3b9e7-CuJuDnSt.js':['s'],'c71dee58b-X8_F3dre.js':['pu'],'c75e89812-Cz6W_Gc9.js':['i','a'],'c230724a2-BxatGObJ.js':['Vi','Jr']}))for(const name of names)await add(await get(file),name);
-await add(await get('shared-18-DaJGQi6_.js'), 'GV');
-await add(await get('cdbc75b4b-B7cRd8zz.js'), 'Fi');
-await add(await get('cdbc75b4b-B7cRd8zz.js'), 'yi');
-await add(await get('cdbc75b4b-B7cRd8zz.js'), 'Ii');
-await add(await get('shared-150-CLvmPbZG.js'), 'dL');
-await add(await get('ca0c38004-CEGIs7-p.js'), 'n');
-await add(await get('c97b955f1-BIk31E_b.js'), 'ga');
-// Audited calendar locale assignments and DOM focus/transition initialization.
-const calendar=await get('cff2bf6cb-BcVMRZW0.js');
-for(const statement of calendar.program.get('body')) {
- if(!statement.isExpressionStatement())continue;
- calendar.initializers.set(statement.node.start,statement);
- const deps=new Set();
- statement.traverse({ReferencedIdentifier(p){if(p.scope.getBinding(p.node.name)?.scope===calendar.program.scope)deps.add(p.node.name)},AssignmentExpression(p){const left=p.get('left');if(left.isIdentifier()&&left.scope.getBinding(left.node.name)?.scope===calendar.program.scope)deps.add(left.node.name)}});
- for(const name of deps)await add(calendar,name);
-}
-
-const routines=await get('ccd3f68fe-CZhDe3qc.js');
-await add(await get('shared-16-OoLrhcjl.js'), 'Id');
-for(const name of ['gc','fc','dc','_o']) await add(routines,name);
-literal(routines,'hc','routineTemplateGridClass','grid w-full grid-cols-1 gap-x-6 gap-y-md');
-literal(routines,'mc','routineTemplateColumnsClass','md:grid-cols-2');
-literal(routines,'Jo','routineGridClass','mb-3 grid auto-rows-fr grid-cols-1 gap-3');
+// R4g-routines RTC (CW-1): the Cowork Scheduled page's roots (shared-18 GV, cdbc75b4b Fi / yi / Ii, shared-150 dL,
+// ca0c38004 n, c97b955f1 ga with its calendar initializers, shared-16 Id, ccd3f68fe gc / fc / dc / _o and the three grid
+// literals) moved to 2.42304.0: scripts/extract-cowork-scheduled.mjs over scripts/extract-routines-shared.mjs.
 for (const name of ['GF','xI']) await add(await get('shared-23-CuGEZNcW.js'), name);
 for (const name of ['gD','uD','Ry']) await add(await get('shared-18-DaJGQi6_.js'), name);
 await add(await get('c2bf50d9e-Borm-ayr.js'), 'o');
@@ -184,4 +164,6 @@ const activity=await get('c21f11e6d-CxD82rYo.js'); for(const name of ['Px','Fx']
 const panel=await get('cc5a62f6f-BgHG1Ree.js');for(const name of ['j','N','m','v','_','y'])await add(panel,name);
 await fs.mkdir(output,{recursive:true});const manifest=[];
 for(const m of modules.values()){const imports=[...m.imports].map(([local,[from,name]])=>`import { ${name} as ${local} } from ${JSON.stringify(from)};`).join('\n');const declarations=[...m.selected.values(),...m.initializers.values()].sort((a,b)=>a.node.start-b.node.start).map(p=>(p.isVariableDeclarator()?'var ':'')+m.code.slice(p.node.start,p.node.end)+(p.isVariableDeclarator()?';':'')).join('\n').replaceAll('"/images/illustrations/', '"./images/illustrations/').replaceAll('"/assets/v1/', '"./assets/v1/');const literals=[...m.literals].map(([name,n])=>`var ${name}=${m.code.slice(n.start,n.end)};`).join('\n');const body=`// Extracted from installed Claude Desktop 2.31226.0. Do not edit.\n${imports}\n${declarations}\n${literals}\nexport { ${[...m.selected.keys(),...m.imports.keys(),...m.literals.keys()].join(', ')} };\n`;await fs.writeFile(path.join(output,m.name),body);manifest.push({source:m.name,sha256:createHash('sha256').update(m.code).digest('hex'),outputSha256:createHash('sha256').update(body).digest('hex'),declarations:[...m.selected.keys()],initializers:[...m.initializers.values()].map(p=>({start:p.node.start,end:p.node.end})),boundaries:[...m.imports]});}
+// A module no root reaches any more is removed with the roots that reached it (RTC).
+for(const file of await fs.readdir(output))if(file.endsWith('.js')&&!modules.has(file))await fs.rm(path.join(output,file));
 await fs.writeFile(path.join(output,'provenance.json'),JSON.stringify({reference,version:'2.31226.0',modules:manifest},null,2)+'\n');console.log(`Current Chat: ${manifest.length} modules`);

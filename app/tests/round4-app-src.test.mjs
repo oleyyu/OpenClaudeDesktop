@@ -38,8 +38,9 @@ test('View changes is never a dead button: the pane falls back to the session ed
   assert.match(main, /const editsDiff = useMemo\(\(\) => editsNeeded \? fileChangesDiff\(items, \{ cwd: workdir \}\) : ""/);
   // B15: the repo diff goes through carriedOverDiff (the previous scope's comparison stays while the next loads).
   assert.match(main, /diff=\{gitStatus\?\.isRepo \? shownGitDiff\.diff : sessionDiff\}/);
-  // B16: v2e f reveals the first file the diff lists, then opens Changes; still gated on canViewChanges.
-  assert.match(main, /onView=\{canViewChanges \? \(\) => \{ const hit = edits\.files\.find\(\(file\) => turnFileInChanges\(file\.path\)\); if \(hit\) requestDiffReveal\(hit\.path\); setPanel\("changes"\); \} : undefined\}/);
+  // B16, now R3b-transcript (2.42304.0 M2e m): the card reveals the first file the diff lists, else opens Changes; its
+  // diff opener and pane exist only when canViewChanges (source-turn-edits.jsx; tests/r3b-transcript-turn-edits.test.mjs).
+  assert.match(main, /canViewChanges=\{canViewChanges\} fileInChanges=\{turnFileInChanges\}\n\s+onRevealInChanges=\{\(path\) => \{ requestDiffReveal\(path\); setPanel\("changes"\); \}\} onOpenChanges=\{\(\) => setPanel\("changes"\)\}/);
   assert.doesNotMatch(main, /if \(!gitStatus\?\.isRepo && !state\.diffs\[current\]\) return;/);
   assert.match(main, /pane: "changes", data: \{ diff \}/, 'a popped-out Changes pane gets the same diff');
 });

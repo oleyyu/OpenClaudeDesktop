@@ -171,21 +171,14 @@ test('main.cjs wires the store to every core spawn and to desktop:call local-env
   assert.match(main, /managedKeys: \(\) => \{ let tools = \{\}; try \{ tools = agentTools\.launchEnv\(\) \?\? \{\}; \} catch \{ tools = \{\}; \} return \[\.\.\.coreSecretEnvKeys\(\), \.\.\.Object\.keys\(tools\)\]; \}/);
 });
 
-test('cc43287c9 Ft: the Local row is a checked radio with the Settings button and ArrowRight, and no other rows', async () => {
+test('local environment menu opens the real environment editor and persists through the host store', async () => {
   const main = await fs.readFile(path.join(root, 'src/main.jsx'), 'utf8');
   const local = main.slice(main.indexOf('      case "local": {'), main.indexOf('      case "home-folder":'));
-  assert.match(local, /<SourceMenu\.Item checked checkedRole="radio" data-testid="env-picker-local"/);
-  assert.match(local, /event\.key === "ArrowRight"\) \{ event\.preventDefault\(\); event\.stopPropagation\(\); openEnvironment\(\); \}/);
-  assert.match(local, /trailing=\{<button type="button" tabIndex=\{-1\} aria-hidden="true" className="sc-env-settings"/);
-  assert.match(local, /openEnvironment\(\); \}\}><Icon name="Settings" size=\{16\} \/><\/button>\}>/);
-  assert.match(local, /\{t\("Local"\)\}<span className="sc-sr-only">\{t\(", environment settings, right arrow"\)\}<\/span>/);
-  assert.equal(local.match(/<SourceMenu\.(?:Item|Submenu|Separator)\b/g).length, 1, 'the Local row alone');
-  assert.doesNotMatch(local, /t\("Environment settings"\)/);
+  assert.match(local, /const openEnvironment = \(\) => \{ closeMenu\(\); setLocalEnvOpen\(true\); \};/);
+  assert.match(local, /<SourceLocalEnvironmentMenu onOpenSettings=\{openEnvironment\} \/>/);
   assert.match(main, /\{localEnvOpen && <SourceLocalEnvironmentDialog onClose=\{\(\) => setLocalEnvOpen\(false\)\}/);
   assert.match(main, /load=\{\(\) => call\("local-environment", \{ op: "get" \}\)\}/);
   assert.match(main, /save=\{\(variables\) => call\("local-environment", \{ op: "save", variables \}\)\}/);
-  const css = await fs.readFile(path.join(root, 'src/source-composer.css'), 'utf8');
-  assert.match(css, /\.smenu-item\[data-highlighted\] \.sc-env-settings \{ opacity: 1; pointer-events: auto; \}/);
 });
 
 test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR)', async (context) => {
@@ -197,6 +190,8 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   context.after(() => server.close());
   const D = await server.ssrLoadModule('/src/source-local-environment-dialog.jsx');
+  const { SourceLocalEnvironmentMenu } = await server.ssrLoadModule('/src/source-environment-menu.jsx');
+  const { EnvironmentAction } = await server.ssrLoadModule('/src/generated/code-current/environment-menu-controls.mjs');
   const noop = () => {};
   const form = (props) => renderToStaticMarkup(React.createElement(D.EnvironmentForm, {
     loadedText: '', onDirtyChange: noop, onClose: noop, pending: false, setPending: noop, save: async () => ({}), ...props }));
@@ -210,7 +205,8 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
   assert.match(html, /<div class="sle-hint" id="[^"]+">In <a href="https:\/\/github\.com\/motdotla\/dotenv#[^"]+" class="sle-link">\.env format<\/a>\. These are stored securely and passed to your sessions\.<\/div>/);
   assert.doesNotMatch(html, /sle-error/);
   assert.match(html, /<button type="submit" hidden="" aria-hidden="true" tabindex="-1"><\/button>/);
-  assert.match(html, /<footer class="sdlg-footer sle-footer"><button type="button" data-cds="Button" data-variant="secondary"[^>]*>.*?<span class="ssb-content">Cancel<\/span><\/button><button type="button" data-cds="Button" data-variant="primary"[^>]*>.*?<span class="ssb-content">Save changes<\/span><\/button><\/footer>/);
+  assert.match(html, /<div class="-mx-pad-xl mt-auto border-t px-xl pt-lg"><footer class="sdlg-footer mt-0"><button type="button" data-cds="Button" data-variant="secondary"[^>]*>.*?<span class="ssb-content">Cancel<\/span><\/button><button type="button" data-cds="Button" data-variant="primary"[^>]*>.*?<span class="ssb-content">Save changes<\/span><\/button><\/footer><\/div>/);
+  assert.match(html, /scroll-fade-y px-xl pt-3 pb-sm supports-\[min-height:calc-size\(auto,size\)\]:min-h-\[calc-size\(min-content,min\(size,6rem\)\)\]/);
   // A managed key: the error under the field (aria-invalid, described by it) and Save disabled.
   const invalid = form({ loadedText: 'PATH=/bin' });
   assert.match(invalid, /aria-invalid="true"/);
@@ -224,4 +220,30 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
   const pending = form({ loadedText: 'A=1', pending: true });
   assert.match(pending, /<button disabled="" type="button" data-cds="Button" data-variant="secondary"/);
   assert.match(pending, /<button disabled="" type="button" data-cds="Button" data-variant="primary"[^>]*aria-busy="true"|aria-busy="true"[^>]*data-variant="primary"/);
+
+  // Exercise the actual source controls through the host menu. Keyboard and
+  // pointer activation must open once, without selecting the enclosing row.
+  const savedDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  context.after(() => {
+    if (savedDocument) Object.defineProperty(globalThis, 'document', savedDocument);
+    else delete globalThis.document;
+  });
+  let opens = 0, stops = 0, prevents = 0;
+  const onOpenSettings = () => { opens += 1; };
+  for (const dir of ['ltr', 'rtl']) {
+    Object.defineProperty(globalThis, 'document', { value: { documentElement: { dir } }, configurable: true });
+    const menu = SourceLocalEnvironmentMenu({ onOpenSettings });
+    const html = renderToStaticMarkup(menu);
+    assert.match(html, /role="menuitemradio"[^>]*aria-checked="true"|aria-checked="true"[^>]*role="menuitemradio"/);
+    // 2.42304.0 c227f4d5e zK mutes the row actions as secondary text (2.37337.1 ca80fca8d tX: text-muted-control).
+    assert.match(html, /text-muted-as-secondary opacity-0/); assert.doesNotMatch(html, /text-muted-control/);
+    assert.match(html, /pointer-coarse:opacity-100/);
+    assert.ok(html.includes(`, environment settings, ${dir === 'rtl' ? 'left' : 'right'} arrow`));
+    const key = dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+    for (const pressed of ['ArrowUp', key]) menu.props.onKeyDown({ key: pressed, preventDefault() { prevents += 1; }, stopPropagation() { stops += 1; } });
+  }
+  assert.deepEqual({ opens, stops, prevents }, { opens: 2, stops: 2, prevents: 2 });
+  EnvironmentAction({ icon: 'Settings', onPress: onOpenSettings }).props.onClick({ stopPropagation() { stops += 1; } });
+  assert.equal(opens, 3);
+  assert.equal(stops, 3);
 });

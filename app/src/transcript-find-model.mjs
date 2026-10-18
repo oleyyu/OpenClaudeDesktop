@@ -79,6 +79,14 @@ function hiddenFromFind(element) {
     || element.hasAttribute?.("hidden")
     || SR_ONLY_CLASSES.some((name) => hasClass(element, name));
 }
+// 2.42304.0 shared-15 Ca: `if(Ye(i)||i.matches(ha))return;` with Ye = shared-6 yV
+// (the Icon selector, `:not(svg)`) and ha (the Avatar selector). An icon glyph or an
+// avatar is skipped without a run break, so the text on both sides stays one run
+// (a forge chip's "See <icon>acme/widgets#42" finds "See acme").
+function skippedWithoutBreak(element) {
+  const kind = element.getAttribute?.("data-cds");
+  return (kind === "Icon" && String(element.tagName).toLowerCase() !== "svg") || kind === "Avatar";
+}
 function hasIncludedDescendant(element) {
   for (let child = element.firstChild; child; child = child.nextSibling)
     if (child.nodeType === ELEMENT_NODE && (child.hasAttribute(FIND_INCLUDED) || hasIncludedDescendant(child))) return true;
@@ -104,12 +112,15 @@ export function collectFindText(root, { exclude } = {}) {
     }
     let next = included;
     if (node.nodeType === ELEMENT_NODE) {
-      if (exclude?.has(node) || node.hasAttribute(FIND_GUTTER) || hiddenFromFind(node)) { gap = true; return; }
+      if (exclude?.has(node) || node.hasAttribute(FIND_GUTTER)) { gap = true; return; }
       if (node.hasAttribute(FIND_INCLUDED)) next = true;
       else if (node.hasAttribute(FIND_OMITTED)) {
         if (!hasIncludedDescendant(node)) { gap = true; return; }
         next = false;
       }
+      if (skippedWithoutBreak(node)) return;
+      // Spec F10 (local): other hidden subtrees still end the run.
+      if (hiddenFromFind(node)) { gap = true; return; }
       if (next !== included) gap = true;
       if (BLOCK_TAGS.has(String(node.tagName).toUpperCase())) {
         gap = true;

@@ -7,7 +7,9 @@ import path from 'node:path';
 const app = path.resolve(import.meta.dirname, '..');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null } };
+// D21: source-session.jsx reaches the view-tabs graph (R2-topbar TT-07 attachment name), whose preload-helper calls
+// document.createElement("link") when it is evaluated, so the stub has one.
+globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null }, createElement: () => ({}) };
 let server, React, render, load;
 before(async () => {
   React = (await import('react')).default;

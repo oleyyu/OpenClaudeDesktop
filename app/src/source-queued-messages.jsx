@@ -106,7 +106,7 @@ function Row({ entry, locked, steering = false, steerBusy = false, onCancel, onE
   );
 }
 
-function MultiEntry({ entries, lockedIds, steeringId = null, sendNow, onCancel, onEdit, onSteer, onReorder }) {
+function MultiEntry({ entries, lockedIds, steeringId = null, sendNow, onCancel, onEdit, onSteer, onReorder, onClearAll }) {
   const [expanded, setExpanded] = useState(false);
   const collapsedButton = useRef(null), collapseButton = useRef(null), handoff = useRef(false);
   const [drag, setDrag] = useState(null);
@@ -122,7 +122,7 @@ function MultiEntry({ entries, lockedIds, steeringId = null, sendNow, onCancel, 
     return () => { document.body.style.cursor = ""; document.body.style.userSelect = ""; };
   }, [drag]);
   const toggle = (next, ref) => { handoff.current = document.activeElement === ref.current; setExpanded(next); };
-  const clearAll = () => { if (onCancel) for (const entry of entries) if (!locked(entry.id)) onCancel(entry.id); };
+  const clearAll = () => { if (onClearAll) { onClearAll(); return; } if (onCancel) for (const entry of entries) if (!locked(entry.id)) onCancel(entry.id); };
   const dragStart = (id, event) => {
     if (!onReorder || event.button !== 0) return;
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -184,12 +184,12 @@ function MultiEntry({ entries, lockedIds, steeringId = null, sendNow, onCancel, 
   );
 }
 
-export function SourceQueuedMessages({ entries = [], lockedIds = [], steeringId = null, sendNow, coreName, onCancel, onEdit, onSteer, onReorder }) {
+export function SourceQueuedMessages({ entries = [], lockedIds = [], steeringId = null, sendNow, coreName, onCancel, onEdit, onSteer, onReorder, onClearAll }) {
   if (!entries.length) return null;
   const head = entries[0], headLocked = lockedIds.includes(head.id);
   const content = entries.length === 1
     ? <SingleRow entry={head} locked={headLocked} steering={steeringId === head.id} coreName={coreName} onCancel={onCancel} onEdit={headLocked ? undefined : onEdit}
       onSteer={onSteer && !headLocked && (!sendNow || sendNow(head.id)) ? onSteer : undefined} />
-    : <MultiEntry entries={entries} lockedIds={lockedIds} steeringId={steeringId} sendNow={sendNow} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} onReorder={onReorder} />;
+    : <MultiEntry entries={entries} lockedIds={lockedIds} steeringId={steeringId} sendNow={sendNow} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} onReorder={onReorder} onClearAll={onClearAll} />;
   return <div className="sqm-band epitaxy-band-enter" data-queued-messages="" data-count={entries.length}>{content}</div>;
 }

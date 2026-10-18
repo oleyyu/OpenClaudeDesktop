@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isComposingEvent, keyKind, escapeAction, enterAction, submitPriority, windowEscapeAction, escapeExemptTarget, emptyArrowUpDequeues, createDoubleEscape } from "../src/composer-keys-model.mjs";
+import { isComposingEvent, keyKind, escapeAction, enterAction, submitPriority, windowEscapeAction, escapeExemptTarget, emptyArrowUpDequeues, createDoubleEscape, strayEnterSwallowed } from "../src/composer-keys-model.mjs";
 
 const key = (overrides) => ({ key: "Enter", shiftKey: false, altKey: false, metaKey: false, ctrlKey: false, repeat: false, isComposing: false, keyCode: 13, ...overrides });
 
@@ -98,4 +98,25 @@ test("Esc Esc within 500 ms opens Rewind; anything else between, a claimed or mo
   clock = 1500; esc(); clock = 1550; assert.equal(esc({ repeat: true }), false, "a held key is not a double press");
   clock = 2000; esc(); tracker.reset(); clock = 2100; assert.equal(esc(), false, "a stop resets the count");
   clock = 2200; assert.equal(esc(), true);
+});
+
+// R2 composer-focus-yield: 2.42304.0 c227f4d5e OP keydown — `(e.repeat || Date.now() < Xr.current) && (e.metaKey ||
+// e.ctrlKey || zs())` swallows Enter (not Shift/Alt) for rP = 500ms after ignoreStrayEnter(); Xr starts at -Infinity.
+test("strayEnterSwallowed: 0 and 499ms into the rP window swallow, 500ms passes; Shift/Alt pass; a repeat always swallows", () => {
+  const set = 1_000, until = set + 500;
+  assert.equal(strayEnterSwallowed({ event: key(), until, now: set }), true, "0ms");
+  assert.equal(strayEnterSwallowed({ event: key(), until, now: set + 499 }), true, "499ms");
+  assert.equal(strayEnterSwallowed({ event: key(), until, now: set + 500 }), false, "500ms");
+  assert.equal(strayEnterSwallowed({ event: key({ metaKey: true }), until, now: set + 10 }), true, "Cmd+Enter in the window");
+  assert.equal(strayEnterSwallowed({ event: key({ ctrlKey: true }), until, now: set + 10 }), true, "Ctrl+Enter in the window");
+  assert.equal(strayEnterSwallowed({ event: key({ shiftKey: true }), until, now: set }), false, "Shift+Enter is a newline");
+  assert.equal(strayEnterSwallowed({ event: key({ altKey: true }), until, now: set }), false, "Alt+Enter is a newline");
+  assert.equal(strayEnterSwallowed({ event: key({ altKey: true, metaKey: true }), until, now: set }), false, "Cmd+Alt+Enter (fork) is never swallowed here");
+  assert.equal(strayEnterSwallowed({ event: key({ repeat: true }), now: 5 }), true, "a key repeat with no window set");
+  assert.equal(strayEnterSwallowed({ event: key({ repeat: true, shiftKey: true }), now: 5 }), false);
+  assert.equal(strayEnterSwallowed({ event: key(), now: 5 }), false, "Xr = -Infinity: no window until ignoreStrayEnter()");
+  assert.equal(strayEnterSwallowed({ event: key({ key: "a" }), until, now: set }), false);
+  // zs() false (Cmd+Enter sends) would leave a plain Enter alone; the desktop app always has it on.
+  assert.equal(strayEnterSwallowed({ event: key(), until, now: set, plainEnterSends: false }), false);
+  assert.equal(strayEnterSwallowed({ event: key({ metaKey: true }), until, now: set, plainEnterSends: false }), true);
 });

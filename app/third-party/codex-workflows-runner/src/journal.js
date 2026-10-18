@@ -3,8 +3,9 @@
 // A changed/missing/failed call invalidates the ordered suffix. A prior started
 // attempt without any result or failure is respawned without invalidating it.
 // Results win over later started/failed records, as in the native journal reader.
-// Local v4 keys intentionally do not reuse branch-scoped v3 keys: the latter
-// cannot prove global call order. human/session extensions keep their keyspace.
+// Local v5 keys use Claude's authored-option identity. v4 included host defaults
+// and v3 used branch scopes; neither can establish the same identity. Their
+// history stays on disk, but is not reused. human/session keep their keyspace.
 
 import { readFile, appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
@@ -26,6 +27,26 @@ function identityValue(prompt, opts = {}) {
   const identity = { prompt: String(prompt) };
   for (const k of IDENTITY_KEYS) if (opts[k] !== undefined) identity[k] = opts[k];
   return stableStringify(identity);
+}
+
+// Claude Code 2.1.280 lo/pr: hash only authored, normalized agent options, not
+// the host's cwd/sandbox/system prompt or its resolved model/effort defaults.
+export function canonicalAgentOptions(opts = {}) {
+  const selected = {};
+  for (const key of ['schema', 'model', 'effort', 'isolation', 'agentType', 'disallowedTools', 'bashCommandClamp']) {
+    if (opts[key] !== undefined && typeof opts[key] !== 'function') selected[key] = opts[key];
+  }
+  function canonical(value) {
+    if (typeof value === 'function') return undefined;
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === 'object') {
+      const result = {};
+      for (const key of Object.keys(value).sort()) if (key !== '__proto__') result[key] = canonical(value[key]);
+      return result;
+    }
+    return value;
+  }
+  return JSON.stringify(canonical(selected));
 }
 
 export function identityHash(prompt, opts = {}) {
@@ -77,7 +98,7 @@ export class Journal {
           const e = JSON.parse(line);
           if (typeof e?.key === 'string') {
             this.#cache.set(e.key, e);
-            if (e.key.startsWith('v4:')) {
+            if (e.key.startsWith('v5:')) {
               if (succeeded(e)) this.#results.set(e.key, e);
               else if (e.outcome === 'started') this.#started.add(e.key);
               else this.#failed.add(e.key);
@@ -93,7 +114,7 @@ export class Journal {
   // Allocate before awaiting provider or disk work, once for every agent call.
   // Empty combinators and changes to source structure do not advance this chain.
   nextKey(prompt, opts) {
-    const key = `v4:${createHash("sha256").update(this.#previousKey).update("\0").update(identityValue(prompt, opts)).digest("hex")}`;
+    const key = `v5:${createHash("sha256").update(this.#previousKey).update("\0").update(String(prompt)).update("\0").update(canonicalAgentOptions(opts)).digest("hex")}`;
     this.#previousKey = key;
     if (this.#reuse && !this.#invalidated && this.#results.has(key)) this.#eligible.add(key);
     else if (!this.#reuse || this.#invalidated || !this.#started.has(key) || this.#failed.has(key)) this.#invalidated = true;
@@ -102,7 +123,8 @@ export class Journal {
 
   hit(key) {
     if (!this.#reuse || !this.#cache.has(key)) return false;
-    if (key.startsWith('v4:')) return this.#eligible.has(key);
+    if (key.startsWith('v5:')) return this.#eligible.has(key);
+    if (/^v\d+:/.test(key)) return false;
     return this.#cache.get(key)?.outcome !== 'started' && this.#cache.get(key)?.outcome !== 'failed';
   }
 

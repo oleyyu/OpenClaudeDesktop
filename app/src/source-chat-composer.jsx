@@ -31,12 +31,9 @@ export function SourceChatComposer({ editorNode, attachments, draft, scope, curr
     aria-label={t('Send message')} type="submit" disabled={!canSend} busy={sending} />;
   const stop = <Button variant="ghost" iconOnly icon="StopCircle" iconSize={20}
     aria-label={t('Stop response')} onClick={() => onStop?.({ trigger: 'button' })} />;
-  const voiceReason = t('Voice is not available with this provider');
-  const voice = <div className="flex items-center gap-xs source-chat-voice">
-    <SourceTooltip content={voiceReason}><span><Button variant="ghost" iconOnly icon="Microphone" iconSize={20} disabled aria-label={t('Dictate')} /></span></SourceTooltip>
-    <SourceTooltip content={voiceReason}><span><Button variant="ghost" iconOnly icon="Voice" iconSize={20} disabled aria-label={t('Use voice mode')} /></span></SourceTooltip>
-    <Icon name="CaretDown" size={12} />
-  </div>;
+  // R4g-composer CP7 (cov0-03): 2.42304.0 c227f4d5e CQ returns null for hideDictation and Code passes
+  // hideDictation:!Lf (cc43287c9); shared-8's voice control returns only its portal host when neither dictation
+  // nor voice mode is available. This host has neither, so no microphone / voice slot is rendered at all.
   const modelControl = <Button variant="ghost" className="sc-model-trigger surface-model" size="xs" disabled={sending || modelsLoading || !model}
     aria-label={t('Model')} aria-haspopup="menu" onClick={open('model')}>
     <span>{model?.displayName || model?.model || t('Default model')}</span>
@@ -46,9 +43,7 @@ export function SourceChatComposer({ editorNode, attachments, draft, scope, curr
     aria-haspopup="menu" disabled={sending || !permission} onClick={open('permission')}>{permissionLabel(permission)}</Button>;
   const addControl = <Button variant="ghost" iconOnly icon="Add" iconSize={20}
     aria-label={t('Add')} disabled={sending} onClick={open('add')} />;
-  const replyLeading = <div className="flex items-center">{addControl}
-    <SourceTooltip content={voiceReason}><span><Button variant="ghost" iconOnly icon="Microphone" iconSize={20} disabled aria-label={t('Dictate')} /></span></SourceTooltip><Icon name="CaretDown" size={12} />
-  </div>;
+  const replyLeading = addControl;
   const leading = <Button variant="ghost" size="xs" className="surface-folder-trigger" aria-label={t('Project or folder')}
     aria-haspopup="menu" aria-expanded={!!folderAnchor} disabled={sending}
     onClick={event => setFolderAnchor(folderAnchor ? null : event.currentTarget)}>
@@ -65,7 +60,7 @@ export function SourceChatComposer({ editorNode, attachments, draft, scope, curr
       {attachments && <Attachments>{attachments}</Attachments>}
       <Actions gap="tight" leading={current ? null : addControl}
         send={<SourceTooltip content={t(showStop ? 'Stop' : 'Send')} shortcut={showStop ? 'escape' : 'enter'}>{showStop ? stop : send}</SourceTooltip>}
-        idle={!current ? voice : null} />
+        idle={null} />
       <Chin leading={current ? replyLeading : leading} trailing={<>{modelControl}{permissionControl}</>} />
     </Composer>
     {folderAnchor && <SourceMenu.Popup anchor={folderAnchor} side="bottom" align="start" label={t('Project or folder')} onClose={() => setFolderAnchor(null)}>

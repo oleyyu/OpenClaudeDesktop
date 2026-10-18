@@ -1,12 +1,14 @@
 import React,{useId,useLayoutEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createPortal} from 'react-dom';
-import {EditorState,Selection} from 'prosemirror-state';
+import {EditorState,Selection,AllSelection,TextSelection} from 'prosemirror-state';
+import {createComposerFocusApi} from './composer-focus-api.mjs';
 import {EditorView,Decoration,DecorationSet} from 'prosemirror-view';
 import {Plugin} from 'prosemirror-state';
 import {baseKeymap} from 'prosemirror-commands';
 import {keymap} from 'prosemirror-keymap';
 import {history,undo,redo,closeHistory} from 'prosemirror-history';
+import {compositionEdgePlugins,finishCompositionBeforePaste,trackComposition} from './generated/code-current/composer-composition.mjs';
 import {composerSchema,composerDocument,composerText,composerTextOffset,composerPosition,composerSelection,selectCommandBefore,commandTransaction,caretRunStart,mentionTransaction,skillTransaction,reconcileComposerText,composerArgumentHint,commandSeparatorPlugin,leafText,mentionLabel,composerEchoTracker,inputRuleTransaction,pasteTransaction,caretInCode,activeLink,editLinkTransaction,removeLinkTransaction,linkHrefValid,LINK_PROTOCOL,toggleInlineCode,toggleCodeBlock,clearCodeBlock,exitCodeBlockUp,exitCodeBlockDown} from './composer-editor-model.mjs';
 import {SourceDialog} from './source-dialog.jsx';
 import {SourceSettingsButton} from './source-settings-button.jsx';
@@ -135,8 +137,11 @@ function hintPlugin(onHint){let editor=null;
 
 // mentions / chips: the restored draft's '@path' picks and the known '/name' commands and skills, turned back into
 // their nodes when the editor is filled from text (a session switch, a history recall).
-export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onKeyDown,onPaste,onFocusInsert,mentions,chips,mentionActions,keywordHighlight=false,emoticons=true,bashMode=false,...props}) {
- const host=useRef(null),view=useRef(null),latest=useRef(null),pendingValue=useRef(null),syncValue=useRef(null),echoes=useRef(null),hintId=useId(),[hint,setHint]=useState('');latest.current={value,onChange,inputRef,scope,disabled,onKeyDown,onPaste,onFocusInsert,mentions,chips,mentionActions,keywordHighlight,emoticons,bashMode,props};
+// autoHeight: the editor sizes itself to its content up to its max-height (the side chat's row). The Code card's CDS
+// ChatComposer shell (source-composer-shell.jsx) turns it off: there the ChatComposerEditor box around the editor scrolls
+// (shared-26 qa max-h-96 + the maxHeight style), as around shared-9's tiptap editor.
+export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onKeyDown,onPaste,onFocusInsert,mentions,chips,mentionActions,keywordHighlight=false,emoticons=true,bashMode=false,autoHeight=true,...props}) {
+ const host=useRef(null),view=useRef(null),latest=useRef(null),pendingValue=useRef(null),syncValue=useRef(null),echoes=useRef(null),hintId=useId(),[hint,setHint]=useState('');latest.current={value,onChange,inputRef,scope,disabled,onKeyDown,onPaste,onFocusInsert,mentions,chips,mentionActions,keywordHighlight,emoticons,bashMode,autoHeight,props};
  const documentFor=text=>composerDocument(text,{mentions:latest.current.mentions||[],chips:latest.current.chips||[]});
  // KM: the link under the caret {link, rect} while the bubble shows; editing: the Edit link dialog's range (qM).
  const [bubble,setBubble]=useState(null),[editing,setEditing]=useState(null),reportLink=useRef(null);
@@ -152,13 +157,24 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   const input=host.current;
   // Mod-e inline code (Tiptap Code), Mod-Alt-c code block (CodeBlock), Backspace in an empty or leading code block
   // (CodeBlock clearNodes), and the arrows that leave a code block at the draft's ends (shared-5 Bk; exitOnArrowDown).
-  const plugins=()=>[hintPlugin(setHint),keywordPlugin(()=>latest.current.keywordHighlight===true),linkBubblePlugin(view=>reportLink.current?.(view)),commandSeparatorPlugin(),history(),keymap({'Backspace':(state,dispatch)=>selectCommandBefore(state,dispatch)||clearCodeBlock(state,dispatch),'Shift-Enter':(state,dispatch)=>{dispatch(state.tr.insertText('\n'));return true;},'Alt-Enter':(state,dispatch)=>{dispatch(state.tr.insertText('\n'));return true;},'Mod-z':undo,'Shift-Mod-z':redo,'Mod-y':redo,'Mod-e':toggleInlineCode,'Mod-Alt-c':toggleCodeBlock,'ArrowUp':exitCodeBlockUp,'ArrowDown':exitCodeBlockDown}),keymap(baseKeymap)];
+  const plugins=()=>[...compositionEdgePlugins(),hintPlugin(setHint),keywordPlugin(()=>latest.current.keywordHighlight===true),linkBubblePlugin(view=>reportLink.current?.(view)),commandSeparatorPlugin(),history(),keymap({'Backspace':(state,dispatch)=>selectCommandBefore(state,dispatch)||clearCodeBlock(state,dispatch),'Shift-Enter':(state,dispatch)=>{dispatch(state.tr.insertText('\n'));return true;},'Alt-Enter':(state,dispatch)=>{dispatch(state.tr.insertText('\n'));return true;},'Mod-z':undo,'Shift-Mod-z':redo,'Mod-y':redo,'Mod-e':toggleInlineCode,'Mod-Alt-c':toggleCodeBlock,'ArrowUp':exitCodeBlockUp,'ArrowDown':exitCodeBlockDown}),keymap(baseKeymap)];
+  // OP Fi's `X.commands.focus(caret)` (scroll into view) and focusPreservingSelection's view.focus() on this view.
+  const focusApi=createComposerFocusApi({dom:input,editable:()=>view.current===editor&&!editor.isDestroyed&&!latest.current.disabled,
+   nativeFocus:options=>HTMLElement.prototype.focus.call(input,options),
+   placeCaret:caret=>{const doc=editor.state.doc,selection=caret==='start'?Selection.atStart(doc):caret==='end'?Selection.atEnd(doc):caret==='all'?new AllSelection(doc):null;
+    editor.dispatch((selection?editor.state.tr.setSelection(selection):editor.state.tr).scrollIntoView());editor.focus();},
+   focusView:()=>{if(view.current===editor&&!editor.isDestroyed)editor.focus();}});
   const editor=new EditorView({mount:input},{state:EditorState.create({schema:composerSchema,doc:documentFor(latest.current.value),plugins:plugins()}),editable:()=>!latest.current.disabled,attributes:()=>({class:latest.current.props.className}),nodeViews:{command_chip:commandNodeView,mention:(node,current,getPos)=>mentionNodeView(node,current,getPos,latest)},
    dispatchTransaction(tr){const state=editor.state.applyTransaction(tr).state;editor.updateState(state);input.dataset.empty=composerText(state.doc)?'false':'true';if(tr.docChanged&&!pendingValue.current){echoes.current.sent(composerText(state.doc));latest.current.onChange?.({target:input,currentTarget:input});}},
-   handleDOMEvents:{keydown(_view,event){if(latest.current.disabled)return true;latest.current.onKeyDown?.(event);
+   handleDOMEvents:{keydown(_view,event){if(latest.current.disabled)return true;
+    // c227f4d5e OP keydown: a repeated Enter, or one inside the ignoreStrayEnter() window, is swallowed before any
+    // popup or the composer's own keys see it (composer-focus-api.mjs).
+    if(focusApi.swallowsEnter(event)){event.preventDefault();event.stopPropagation();return true;}
+    latest.current.onKeyDown?.(event);
     // Escape is no editing key: one the composer left alone (an open menu's, an idle blur) goes on unprevented to the
     // document listeners (SourceMenu dismiss, main.jsx layers) instead of PM's captureKeyDown preventDefault.
-    if(event.key==='Escape'&&!event.defaultPrevented)return true;return event.defaultPrevented;},paste(_view,event){if(latest.current.disabled)return false;latest.current.onPaste?.(event);return event.defaultPrevented;},compositionend(){
+    if(event.key==='Escape'&&!event.defaultPrevented)return true;return event.defaultPrevented;},paste(current,event){if(latest.current.disabled)return false;finishCompositionBeforePaste(current,event);latest.current.onPaste?.(event);return event.defaultPrevented;},compositionstart:trackComposition,compositionupdate:trackComposition,compositionend(current,event){
+    trackComposition(current,event);
     // Run after PM's compositionend handler and its queued DOM-observer flush.
     // A controlled draft replacement must not be overwritten by the IME's old document.
     queueMicrotask(()=>queueMicrotask(()=>{if(view.current!==editor||editor.composing)return;const next=pendingValue.current;pendingValue.current=null;if(next&&next.scope===latest.current.scope)syncValue.current?.(next.value);}));return false;
@@ -178,7 +194,7 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
    clipboardTextSerializer:slice=>slice.content.textBetween(0,slice.content.size,'\n',leafText),
   });view.current=editor;
   // Every block is watched (a code block below the first paragraph grows the editor too).
-  const measure=()=>{input.style.height='auto';input.style.height=`${Math.max(24,Math.min(input.scrollHeight,parseFloat(getComputedStyle(input).maxHeight)||384))}px`;};
+  const measure=()=>{if(latest.current.autoHeight===false){input.style.height='';return;}input.style.height='auto';input.style.height=`${Math.max(24,Math.min(input.scrollHeight,parseFloat(getComputedStyle(input).maxHeight)||384))}px`;};
   const resize=new input.ownerDocument.defaultView.ResizeObserver(measure);let watched=new Set();
   const watch=()=>{const next=new Set(input.children);for(const node of watched)if(!next.has(node))resize.unobserve(node);for(const node of next)if(!watched.has(node))resize.observe(node);watched=next;};watch();
   const children=new input.ownerDocument.defaultView.MutationObserver(()=>{watch();measure();});children.observe(input,{childList:true});measure();
@@ -191,6 +207,13 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   // PM's own focusPreventScroll re-enters here and gets the native focus.
   let focusing=false;
   input.focus=function(options){if(focusing||view.current!==editor)return HTMLElement.prototype.focus.call(input,options);focusing=true;try{editor.focus();}finally{focusing=false;}};
+  // c227f4d5e OP's focus API on this element (composer-focus-api.mjs): scheduleFocus(caret,{yieldsToUser}),
+  // focusPreservingSelection(), ignoreStrayEnter(). placeCaret is Tiptap's commands.focus(caret) on this view.
+  input.scheduleFocus=focusApi.scheduleFocus;input.focusPreservingSelection=focusApi.focusPreservingSelection;input.ignoreStrayEnter=focusApi.ignoreStrayEnter;
+  // shared-5 vp (the shell's storeCaret): `e.commands.setTextSelection(e.view.posAtDOM(t, n)), e.view.focus()` — a click the
+  // ChatComposer shell resolved to a DOM position beside the text (sd) puts the caret there.
+  input.placeCaretAtDom=(target,offset)=>{if(view.current!==editor||editor.isDestroyed)return;let pos;try{pos=editor.posAtDOM(target,offset);}catch{return;}
+   const doc=editor.state.doc;editor.dispatch(editor.state.tr.setSelection(TextSelection.near(doc.resolve(Math.max(0,Math.min(pos,doc.content.size))))));editor.focus();};
   // range: the caret's '/' token (slashToken) — only it becomes the chip; none replaces the whole draft.
   input.insertCommand=(command,range=null)=>{if(latest.current.disabled)return;editor.dispatch(closeHistory(commandTransaction(editor.state,command,range)));editor.dispatch(closeHistory(editor.state.tr));editor.focus();};
   Object.defineProperty(input,'textRunStart',{configurable:true,get:()=>caretRunStart(editor.state)});
@@ -223,7 +246,7 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   input.resetComposer=()=>{pendingValue.current=null;echoes.current.clear();editor.updateState(EditorState.create({schema:composerSchema,doc:documentFor(latest.current.value),plugins:plugins()}));};
   syncValue.current=text=>{if(text===''&&composerText(editor.state.doc)!=='')input.resetComposer();else {const tr=reconcileComposerText(editor.state,text,{mentions:latest.current.mentions||[],chips:latest.current.chips||[]});if(tr)editor.dispatch(tr);}input.dataset.empty=composerText(editor.state.doc)?'false':'true';};
   input.dataset.empty=value?'false':'true';latest.current.inputRef?.(input);
-  return()=>{latest.current.inputRef?.(null);view.current=null;syncValue.current=null;pendingValue.current=null;resize.disconnect();children.disconnect();editor.destroy();editor.dom.removeEventListener('focus',report);editor.dom.removeEventListener('blur',report);setBubble(null);for(const key of ['value','selectionStart','selectionEnd','textRunStart','caretInCode','setSelectionRange','focus','insertCommand','insertMention','insertSkill','getCaretViewportRect','caretAtEdge','recallText','resetComposer','replaceText','focusAndInsert'])delete input[key];};
+  return()=>{latest.current.inputRef?.(null);view.current=null;syncValue.current=null;pendingValue.current=null;resize.disconnect();children.disconnect();editor.destroy();editor.dom.removeEventListener('focus',report);editor.dom.removeEventListener('blur',report);setBubble(null);for(const key of ['value','selectionStart','selectionEnd','textRunStart','caretInCode','setSelectionRange','focus','insertCommand','insertMention','insertSkill','getCaretViewportRect','caretAtEdge','recallText','resetComposer','replaceText','focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom'])delete input[key];};
  },[]);
  const previousScope=useRef(scope);
  // The keyword highlight follows Dynamic workflows, the trigger setting and alt+w (keywordHighlight).

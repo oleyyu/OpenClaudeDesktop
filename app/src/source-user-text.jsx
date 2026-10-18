@@ -1,3 +1,4 @@
+import { buttonPressHandlers } from './button-press.mjs';
 import React, { useId, useMemo, useRef, useState } from "react";
 import { parseOrdinaryUserSegments, userCodeDisplayText } from "./user-segments-model.mjs";
 import { parseInlineRuns, hasLeadingSlashCommand, chipPathOpenable } from "./user-inline-model.mjs";
@@ -130,6 +131,7 @@ export function SourceUserText({ text = "", sessionKey = null, itemId, cwd = nul
   return <>
     {column}
     <button type="button" className="suc-show-more" data-cds="Button" data-cds-ghost="" data-step="1"
+      {...buttonPressHandlers}
       aria-expanded={expanded} data-find-omitted=""
       onMouseDown={(event) => event.preventDefault()}
       onClick={() => setExpanded((value) => !value)}>

@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import animationData from "../public/reference/clawd-laptop.json";
+import { clawdClassName, clawdReplayButtonClassName } from "./generated/code-start/pet.mjs";
 import "./source-composer.css";
 
 let playerPromise;
 const loadPlayer = () => playerPromise ??= import("../public/reference/lottie-player.js").then((module) => module.default);
 
-// Original ClawdLaptopInner: exact animation data, player, 80px geometry and replay.
+// Original ClawdLaptopInner: exact animation data, player, 80px geometry and replay. The button is its replayOnClick
+// branch with the original classes (generated/code-start/pet.mjs): k7's O7 position (right-[-13px],
+// bottom-[calc(var(--cds-ring-outer,0px)-144px/11)], 80px, mirrored) and the inner button's own classes, where only the
+// sprite's painted paths take a click. The slot is k7's wrapper (relative, height 0, no pointer events) at its layer
+// z-index 2 (rd(2) over the root layer). The lottie player, reduced motion and the replay token stay the host's.
 export function SourcePet({ replayToken, listeningLoop = false, className = "" }) {
   const container = useRef(null);
   const animation = useRef(null);
@@ -65,11 +70,11 @@ export function SourcePet({ replayToken, listeningLoop = false, className = "" }
   }, [replayToken, reduceMotion]);
 
   return (
-    <div className={`sc-pet-slot ${className}`} aria-hidden="true">
-      <button className="sc-pet" type="button" tabIndex={-1}
+    <div className={`sc-pet-slot ${className}`} aria-hidden="true" style={{ zIndex: 2 }}>
+      <button type="button" tabIndex={-1} aria-hidden="true" data-clawd="" className={`${clawdClassName} ${clawdReplayButtonClassName}`}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => { if (!reduceMotion) animation.current?.goToAndPlay(0, true); }}>
-        <span className="sc-pet-animation" ref={container} data-ready={ready || undefined} />
+        <span className="sc-pet-animation w-full h-full" ref={container} data-ready={ready || undefined} />
       </button>
     </div>
   );

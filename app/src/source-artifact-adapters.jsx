@@ -1,14 +1,19 @@
 import React, { useMemo } from 'react';
 import { Jr as OriginalArtifactGlyph } from './generated/current-chat/c230724a2-BxatGObJ.js';
 import { t, getLocale } from '../electron/i18n/index.mjs';
+import { useStartIntl, StartMessage } from './source-code-start-adapters.jsx';
 
 export function useArtifactIntl() {
+  const startIntl = useStartIntl();
   const locale = getLocale();
-  return useMemo(() => ({ locale, formatDate: (value, options) => new Intl.DateTimeFormat(locale, options).format(value), formatMessage: ({ defaultMessage }, values) => t(defaultMessage, values) }), [locale]);
+  return useMemo(() => ({
+    ...startIntl,
+    locale,
+    formatDate: (value, options) => new Intl.DateTimeFormat(locale, options).format(value),
+  }), [startIntl, locale]);
 }
-export function ArtifactMessage({ defaultMessage, values = {} }) {
-  const message = t(defaultMessage);
-  return message.split(/(\{\w+\})/g).map((part, i) => <React.Fragment key={i}>{part.startsWith('{') ? values[part.slice(1, -1)] ?? part : part}</React.Fragment>);
+export function ArtifactMessage({ values, ...message }) {
+  return <StartMessage {...message} values={values} />;
 }
 export const useArtifactOwners = () => () => undefined;
 export const isSharedArtifact = () => false;

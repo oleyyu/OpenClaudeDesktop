@@ -1,5 +1,7 @@
+import { useSyncExternalStore } from 'react';
 import { t } from '../electron/i18n/index.mjs';
-// 2.31226.0 cf718f694 C/w/T/E, D/O/k/A and cccc2cf0a Jw.
+// cf718f694 keys, choices, defaults and normalization (2.42304.0 T/E/D/O, k/A/j, M; unchanged since 2.31226.0 C/w/T/E,
+// D/O/k/A) and the cccc2cf0a View options items.
 export const TERMINAL_VIEW_KEYS = Object.freeze({cursorStyle:'epitaxy-terminal-cursor-style',cursorBlink:'epitaxy-terminal-cursor-blink',copyOnSelect:'epitaxy-terminal-copy-on-select',scrollback:'epitaxy-terminal-scrollback'});
 export const CURSOR_STYLES = ['block','bar','underline'];
 export const SCROLLBACK_OPTIONS = [1000,5000,10000];
@@ -29,4 +31,14 @@ let shared;
 export function terminalViewSettings(){
  if(!shared){let storage;try{storage=window.localStorage;}catch{}shared=createTerminalViewSettings({storage,subscribeStorage:fn=>{if(typeof window==='undefined')return()=>{};window.addEventListener('storage',fn);return()=>window.removeEventListener('storage',fn);}});}
  return shared;
+}
+// cf718f694 z reads the Blink cursor preference through shared-28 gs (Xf, the persisted-preference hook) by its storage
+// key; here the same keys live in this store, so generated/code-current/terminal-idle-cursor.mjs reads them from it.
+const VIEW_FIELD_BY_KEY = Object.freeze(Object.fromEntries(Object.entries(TERMINAL_VIEW_KEYS).map(([field,key])=>[key,field])));
+export function readTerminalPreference(key,fallback,settings=terminalViewSettings()){
+ const field=VIEW_FIELD_BY_KEY[key];return field?settings.getSnapshot()[field]:fallback;
+}
+export function useTerminalPreference(key,fallback){
+ const settings=terminalViewSettings();
+ return useSyncExternalStore(settings.subscribe,()=>readTerminalPreference(key,fallback,settings),()=>readTerminalPreference(key,fallback,settings));
 }

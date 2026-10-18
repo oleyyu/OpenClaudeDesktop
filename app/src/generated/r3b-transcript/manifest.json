@@ -1,0 +1,2018 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r3b-transcript.mjs",
+  "adapterModule": "src/source-r3b-transcript-adapters.jsx",
+  "modules": [
+    {
+      "target": "owner-resize-observer.mjs",
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "d5819eeef5331545cd803297bcbabb4fb90b55d09f70999df1c9b87e177ce61a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "cp",
+          "sha256": "7ed2ce621141bd6ae41dbbde8e1d912b8f1bd7554aea85066ec9dba338386526"
+        },
+        {
+          "name": "lp",
+          "sha256": "f48d0483592d2423270d6aaa7bd759bc380b3d6aa78cc097ac0341abda5ac986"
+        },
+        {
+          "name": "up",
+          "sha256": "a8cd6293683e92a5b0eed0ca3414f797a1ffc52680e1970907b82687f6d7db0f"
+        },
+        {
+          "name": "pp",
+          "sha256": "4b5c73f972b763f701191703daff5eef3f7aa68640d139de1af9ab845eda2bb4"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "pp": "ownerResizeObserver"
+      }
+    },
+    {
+      "target": "transcript-region-edge.mjs",
+      "source": "cf74bc599-D9NZWRyl.js",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "15c50e9f815ae3be192f3345adb38e11a83b3e99a7c9116552e99948e613ca71",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "jv",
+          "sha256": "a506b3a0a7c84a33b17c292d7c1b428f44224ba74e9f4183c0e02dc92e4514f0"
+        },
+        {
+          "name": "Mv",
+          "sha256": "09ccd28acbe741d5fe0f1ffe4244fec5ac28bcd01fced84e76a85eef952e493b"
+        },
+        {
+          "name": "Nv",
+          "sha256": "814925ef1bd1c4bf80112808a88fd7130b8ee9d1e86d7d0c1e1c875615a0a39d"
+        },
+        {
+          "name": "ab",
+          "sha256": "6119c2efc8f7e49ae770111bcb645e3fbb2d19aea62fb065e6e09fdf2ffcdca2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "M",
+          "from": "./owner-resize-observer.mjs",
+          "name": "ownerResizeObserver",
+          "via": "shared-25-DP8p7i1Z.js:Nf",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Nv": "useTranscriptRegionEdge",
+        "jv": "SUGGESTED_TASK_END",
+        "Mv": "STICKY_PROMPT_END",
+        "ab": "SUGGESTED_TASK_EDGE_OFFSET"
+      }
+    },
+    {
+      "target": "table-column-freeze.mjs",
+      "source": "c89efce1a-8S3RzgR0.js",
+      "sourceSha256": "0e5b14689e1ed8e70e5f2ab4647d2c5be5db7e5436e1fc33fca6d0798dc97008",
+      "sha256": "8a2a3ecb2cbc8a596329235c5e9cacba2fd6185ece43eb82ced7f43ea2649d8c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ec",
+          "sha256": "e25f3b39c05cb5e9079e8633202ce8c643f0ed32946a8453512fe64972e7e13f"
+        },
+        {
+          "name": "Dc",
+          "sha256": "1727d352defbfc6eaca278240a274faefafbb2b604f6d16c1829dda2994c5a39"
+        },
+        {
+          "name": "Oc",
+          "sha256": "b189de2b92d751cbfab134f74470068dc364e55dba6b0ec985b74a1fc5b19f65"
+        },
+        {
+          "name": "kc",
+          "sha256": "57b5025311b74e46cb20e7176f1848ac75227622eb143fee3dbf68a39c19a34c"
+        },
+        {
+          "name": "Ac",
+          "sha256": "69260343abbf67d1a5ead87f50cec00b43729c5fac508957cf700be85b0504c1"
+        },
+        {
+          "name": "jc",
+          "sha256": "43bbb360422003b91bc7fa694dd4654d1eb33b89e63783c82d0beb339638deed"
+        }
+      ],
+      "imports": [
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "jc": "useTableColumnFreeze",
+        "Ac": "tableRemeasureStride"
+      }
+    },
+    {
+      "target": "define-messages.mjs",
+      "source": "vendor-intl-Db7hDWRO.js",
+      "sourceSha256": "f26cedebafa9295e3e1f8443b074e29877472083867d8e5bb7a8d522d3ae6762",
+      "sha256": "58574459ac786a6bdbe4ca3d54cbeec72621cd0ee7fe809b1ede3d8d7503fe78",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "410fbaf6c14e23a3b3685e1527ab83e3c1bd894052aeafb61047b20d0828190f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tn": "defineMessages"
+      }
+    },
+    {
+      "target": "row-crash-messages.mjs",
+      "source": "c05b96c7f-DklIyA-P.js",
+      "sourceSha256": "a4c103fd3fff4a58725bd05738e604ade516501d08d9f661222180182faabac5",
+      "sha256": "db5ed77b10ead51c7bf8285d11f3ba5cf88b6015474a6506123c37aba1660e4f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "sl",
+          "sha256": "b304da08002bdc0dcd7b1ed6405fb71a956053abf02afc5e1775a24890f8a0ba"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Mn",
+          "from": "./define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "sl": "transcriptRowCrashMessages"
+      }
+    },
+    {
+      "target": "chunk-load-error.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "43875278b9196fd2fdc8f02d0f06131612b4e782d4e6880b97c2f6dd9ab0a33a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "pE",
+          "sha256": "6615f662da619b75feea4ca9b704b1d8b22ddcb3bde483f8a7f51a16cd4bd747"
+        },
+        {
+          "name": "mE",
+          "sha256": "5c21e001a0d74be5f27a3359cd9bb9c606275b2e38277172c3499f0ed9817973"
+        },
+        {
+          "name": "hE",
+          "sha256": "dd195aa05f6678637b8527a51a9fca7eac80d403792b26ca0e8dde725fc17949"
+        },
+        {
+          "name": "gE",
+          "sha256": "1f7177c15a8181733fc40cae990c3916da86cbdbb83a1a4c301afd9d3b561a0d"
+        },
+        {
+          "name": "_E",
+          "sha256": "9fb3479dff8f78ff1a7cc65b14d03070ffe1eb4d698c7b20961596724993e20f"
+        },
+        {
+          "name": "vE",
+          "sha256": "77bc5d2de950b5b80decefc6f361b30161eed209e6869763bee43de5f8d98994"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "vE": "isChunkLoadError",
+        "gE": "chunkLoadErrorLiteral"
+      }
+    },
+    {
+      "target": "error-stack.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "d5c3a8e0f1f8311759c1f75729e963e88f6835a486afa91f434c73022ea4d8e4",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "pS",
+          "sha256": "158435acfd29e90332dadec8d34679174bbc95950139e946b49081f443bde7b8"
+        },
+        {
+          "name": "mS",
+          "sha256": "93cdcb6f794da442296b26c4d9735a6a171bba78281436c526747f805531672f"
+        },
+        {
+          "name": "hS",
+          "sha256": "fd2f137a9318cff9fc53f8d568fc764d853ae3c6c3725c8b84d5eac06e190871"
+        },
+        {
+          "name": "gS",
+          "sha256": "473236a5453bc07944b449c5f78d95d8862bd8dd3d67277a5bec13c0926f4ee7"
+        },
+        {
+          "name": "_S",
+          "sha256": "8218ac97d70b0e999318018d010eb5a8c8c62e1c409adcc1bc9556f4bd5dacd4"
+        },
+        {
+          "name": "vS",
+          "sha256": "cdc89bb431eee4b74c020193cb6e7f0661e728b104431c69a289d488f74e4c33"
+        },
+        {
+          "name": "yS",
+          "sha256": "e362c94bbdbec53dca1d53ae7262b282b73ad1d90e2f282afa775ee7162a71c7"
+        },
+        {
+          "name": "bS",
+          "sha256": "310d90a23a3c15e48967951a3b1d7dd971b41cab9e3ec38a8c24f4eed74d3168"
+        },
+        {
+          "name": "xS",
+          "sha256": "f315004d316b0e12f2cdd2fd4732df649e21136937632233ac96ebc91284ae66"
+        },
+        {
+          "name": "SS",
+          "sha256": "59fd53c540d0a92f607330ed6fcc0d9d527cbf3e0d647789096edcfab99453fb"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "xS": "withOriginalStack"
+      }
+    },
+    {
+      "target": "render-error-boundary.mjs",
+      "source": "shared-26-CgdP_nTj.js",
+      "sourceSha256": "a9f80593fcdb91be8a2cf93eb71c572d3798b903ef16b8adb42480656cb3c026",
+      "sha256": "187a5ee11aa6819ac8b55a4f270e20bb9aaa84d2c4a4dc96c002b208a543c3fe",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "bl",
+          "sha256": "6b710102e2274d015f17a414d7fa884aa4e691c97e92929cb50b0878c296366e"
+        },
+        {
+          "name": "xl",
+          "sha256": "7804cfce79ab2d77cd711f396f04aae45c56ed9733b7425b88c7b15bdc1a316a"
+        },
+        {
+          "name": "Sl",
+          "sha256": "16c53dbd0c5d1edf2337b487655449b11c22a1dce52a68d7488128f61b9b9a13"
+        },
+        {
+          "name": "Cl",
+          "sha256": "3486426368ddda0f0b00bf54e8d7ba34c33ba29769cc4a034452d5c5dc1e4841"
+        },
+        {
+          "name": "wl",
+          "sha256": "957e1bc81d9c593b3b99858bdc2a1168bf8a6a6aab1e1fd4cef1a1ea38a7f748"
+        },
+        {
+          "name": "Tl",
+          "sha256": "22a82c9168b45cdeedffc9ce9bc384137dd6f72a68c8195f75dfbaccb87b0503"
+        },
+        {
+          "name": "El",
+          "sha256": "123be3c18d9aa5b5a553f692d55380ff068bfd530ecd1e973876afbcb6766788"
+        },
+        {
+          "name": "Dl",
+          "sha256": "fc39a82d5689d554973df637d9ffecb50f5b0e48504c84fa767e6d0ab7c8ea02"
+        },
+        {
+          "name": "Ol",
+          "sha256": "8d8218930b374c366cb919228f8ed23bd330574bc42bf00b901f9c3ae2302c75"
+        },
+        {
+          "name": "kl",
+          "sha256": "5a6d9364387689318d8c8f3c4effa3e5fa15c5b56d38a551fbfc4ad3ec07fb4e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "x",
+          "from": "react",
+          "name": "Component",
+          "via": "vendor-frame-DfPJ1QmD.js:qa",
+          "kind": "react"
+        },
+        {
+          "local": "ze",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "reportRenderError",
+          "via": "shared-0-ByI5P0CP.js:Ju",
+          "kind": "adapter",
+          "original": "LA"
+        },
+        {
+          "local": "lt",
+          "from": "./chunk-load-error.mjs",
+          "name": "isChunkLoadError",
+          "via": "shared-0-ByI5P0CP.js:np",
+          "kind": "generated"
+        },
+        {
+          "local": "dt",
+          "from": "./chunk-load-error.mjs",
+          "name": "chunkLoadErrorLiteral",
+          "via": "shared-0-ByI5P0CP.js:rp",
+          "kind": "generated"
+        },
+        {
+          "local": "Ke",
+          "from": "./error-stack.mjs",
+          "name": "withOriginalStack",
+          "via": "shared-0-ByI5P0CP.js:Pp",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "kl": "RenderErrorBoundary",
+        "Dl": "renderErrorSanitizer",
+        "Tl": "renderErrorClass"
+      }
+    },
+    {
+      "target": "transcript-row-boundary.mjs",
+      "source": "c4a9ee384-ZZIKqgNM.js",
+      "sourceSha256": "98e36b8bba172fc197d9726cfbae88889b56ccbbcac7ea93a560204a7b82a91a",
+      "sha256": "5ceaab1fbff9dc1a1ad95634199a38cd734e181fd86fdcb0f8a62d4391c0d722",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ep",
+          "sha256": "da4ac044b488ef0946d1fa4db824ce201c911cd93e9b34509ead51f2f1a586e2"
+        },
+        {
+          "name": "tp",
+          "sha256": "d28f78524498772c3bbab22069b7e26922eb23c0d5392c5f343a9111bc85c42e"
+        },
+        {
+          "name": "np",
+          "sha256": "02c058b6801a2b2453a3245aed7ac45e6d6baabbaba19065f4de7c8c8812717e"
+        },
+        {
+          "name": "rp",
+          "sha256": "4c10f9f9aa0e2d31b6c6c092e7a044cc3723e346147dd1e202e452be10f74010"
+        },
+        {
+          "name": "ip",
+          "sha256": "47edda453adea9ecab57e964d1fdad1b60632ca67d6f9ec248e853692cb5ab23"
+        },
+        {
+          "name": "ap",
+          "sha256": "f5f68e659d0e03323a4c6f45e8cb6bfc1306e73b9c6a2c253b4003ffbb53be17"
+        },
+        {
+          "name": "op",
+          "sha256": "4e7b6b46443a724238a9c001f2edd36674f1b6c07745ecd34e9b6573ba14893c"
+        },
+        {
+          "name": "sp",
+          "sha256": "2341e433f190dc339139f10f3f24719806b9f9873f3340571361bb9b13c4b257"
+        },
+        {
+          "name": "cp",
+          "sha256": "cb666d2d5b5fb628e52cfdbcd5692dcef107452c0249535a77c4c00068d792a5"
+        },
+        {
+          "name": "lp",
+          "sha256": "fb2c756f9810398e5b801aaaf7b4fb226ba36cde3b316c7eb1e2a4ff5a6b1b78"
+        }
+      ],
+      "imports": [
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "oe",
+          "from": "./chunk-load-error.mjs",
+          "name": "isChunkLoadError",
+          "via": "shared-0-ByI5P0CP.js:np",
+          "kind": "generated"
+        },
+        {
+          "local": "Se",
+          "from": "./render-error-boundary.mjs",
+          "name": "renderErrorSanitizer",
+          "via": "shared-26-CgdP_nTj.js:Hp",
+          "kind": "generated"
+        },
+        {
+          "local": "we",
+          "from": "./render-error-boundary.mjs",
+          "name": "RenderErrorBoundary",
+          "via": "shared-26-CgdP_nTj.js:Vp",
+          "kind": "generated"
+        },
+        {
+          "local": "Ve",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "Ge",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "Ye",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useLayerOwnerWindow",
+          "via": "shared-frame-BfjMqbuN.js:mu",
+          "kind": "adapter",
+          "original": "Ya"
+        },
+        {
+          "local": "Xe",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "CdsBanner",
+          "via": "shared-frame-BfjMqbuN.js:oa",
+          "kind": "adapter",
+          "original": "gT"
+        },
+        {
+          "local": "ct",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "ln",
+          "from": "./row-crash-messages.mjs",
+          "name": "transcriptRowCrashMessages",
+          "via": "c05b96c7f-DklIyA-P.js:Tn",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "Qt",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useViewPinnedFlag",
+          "via": "c3320899b-D2hx0jCW.js:n",
+          "kind": "adapter",
+          "original": "i"
+        }
+      ],
+      "exports": {
+        "ap": "TranscriptRowBoundary",
+        "op": "TranscriptRowCrashed",
+        "cp": "useTranscriptRowBoundaryGate",
+        "sp": "TRANSCRIPT_ROW_BOUNDARY_FLAG"
+      }
+    },
+    {
+      "target": "empty-state.mjs",
+      "source": "cc0a875c8-DJjH3aQ_.js",
+      "sourceSha256": "bdd302675d24423970d8787987d9a1e1d1693c5bdf1e4a3005ca1d744cc3733f",
+      "sha256": "73283f25d9edca091e5fd00ed7abd2abc4040bf65f0555a5f45c4017bd7d3be7",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "91bcf34316fb36dca7e6d4b0b295eaec3e51a4e8f58001d33a8530c55242fe87"
+        },
+        {
+          "name": "i",
+          "sha256": "e4d82458563c7ec36be20166a084bd6fdb99d49e3739c7958ea0bb9aa6adf51d"
+        },
+        {
+          "name": "a",
+          "sha256": "6f53bb4e535dfb36f45e35970de90d299855510914886a635f26567ad79073dc"
+        },
+        {
+          "name": "o",
+          "sha256": "26b9456a225f3306594440b9202eebbcbfd5d9b15ab48a7bf4d1c8c977265892"
+        },
+        {
+          "name": "s",
+          "sha256": "fef3c1e2989a67f8cbf85d8cdc5adf62db96b717297980537c60d579864a21c5"
+        },
+        {
+          "name": "c",
+          "sha256": "dde4b2d9d3a4d4d2d3f337ccb632e5dbd81486f08f874da065652a12fa64e518"
+        },
+        {
+          "name": "l",
+          "sha256": "1b10ef8939f249d401995e1d8a55550c8c561b1eead7f3278d2f4537879bbab9"
+        },
+        {
+          "name": "u",
+          "sha256": "223ac192cf938eda1666714ddd0a3bd5982247990dd3851e46873f647c990cb4"
+        },
+        {
+          "name": "d",
+          "sha256": "5526a086faa9958388ce66eab739d401f4cb4ba6df023284a10460b49f12d9e9"
+        },
+        {
+          "name": "f",
+          "sha256": "5aeebbb6ae2c089ad466d5858ffb82bc4a2a750e8bc0b73fb70bd49eba9c1ebf"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        }
+      ],
+      "exports": {
+        "f": "EmptyState",
+        "d": "EmptyStateIcon"
+      }
+    },
+    {
+      "target": "prevent-mouse-down.mjs",
+      "source": "c81ea1931-ChuE7vym.js",
+      "sourceSha256": "ad82887242c4d2027078f12971d6f74b22be0af5264fee71d76f9cb33eef7076",
+      "sha256": "03d0b04144610b4cb5e4154a607ac659662a7d925edd3a21019804ba5be4d06e",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "e1d9bd88641e08c7b9d3149ccd9a0b96e456122a723775975bec217f8cc096a0"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "preventMouseDown"
+      }
+    },
+    {
+      "target": "transcript-unavailable.mjs",
+      "source": "cf74bc599-D9NZWRyl.js",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "6d523a990d361d5931d9b902eadb58e2ce6e35c9da0784e50911b643ec12579a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Wv",
+          "sha256": "64b5a42e6ebb91416cce8d3111230535f6bbd56e8c18a4b28ddb4aac7bae927e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "_t",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useRetentionMayHaveExpired",
+          "via": "shared-78-D6VXYXaQ.js:Gs",
+          "kind": "adapter",
+          "original": "uV"
+        },
+        {
+          "local": "Dn",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useDialogPreloadProps",
+          "via": "shared-104-Cqo2-vQh.js:a",
+          "kind": "adapter",
+          "original": "Dz"
+        },
+        {
+          "local": "kr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "Pr",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useLayerOwnerWindow",
+          "via": "shared-frame-BfjMqbuN.js:mu",
+          "kind": "adapter",
+          "original": "Ya"
+        },
+        {
+          "local": "X",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "$i",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useCliSessionImport",
+          "via": "shared-20-B7UqYfsi.js:Di",
+          "kind": "adapter",
+          "original": "Ib"
+        },
+        {
+          "local": "ca",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "openCliSessionImport",
+          "via": "shared-20-B7UqYfsi.js:Oi",
+          "kind": "adapter",
+          "original": "Ub"
+        },
+        {
+          "local": "la",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "cliImportDialog",
+          "via": "shared-20-B7UqYfsi.js:Ti",
+          "kind": "adapter",
+          "original": "Xb"
+        },
+        {
+          "local": "mp",
+          "from": "./empty-state.mjs",
+          "name": "EmptyState",
+          "via": "cc0a875c8-DJjH3aQ_.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Rp",
+          "from": "./prevent-mouse-down.mjs",
+          "name": "preventMouseDown",
+          "via": "c81ea1931-ChuE7vym.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "pg",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useSessionRemoved",
+          "via": "c73f45bc3-CFrHin0p.js:tr",
+          "kind": "adapter",
+          "original": "Ec"
+        },
+        {
+          "local": "c_",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useSessionArchiveDelete",
+          "via": "c48ea26ad-B9mFPusd.js:o",
+          "kind": "adapter",
+          "original": "ge"
+        }
+      ],
+      "exports": {
+        "Wv": "TranscriptUnavailable"
+      }
+    },
+    {
+      "target": "summary-card.mjs",
+      "source": "c425fb3cf-CEgSkv8l.js",
+      "sourceSha256": "abbb85b1ce1c1bfc0e880398dcad9ed0b521fd5db8d3dcbbd2cddb5fb049470c",
+      "sha256": "4bd21c45076eb5bd5c71ba7050d997f1bf6369d2bbcec434210151c3203c736c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "V",
+          "sha256": "47d3e87e010af3dbc48b9e53420b2eaf11e2966835c5b4c96320a58980bc1fcc"
+        },
+        {
+          "name": "re",
+          "sha256": "3845ffa4b5c11871a0eef3166f295389f585ed1f692f05653a8af9ed349aa0a7"
+        },
+        {
+          "name": "W",
+          "sha256": "6feeab491864dbee7b729d649f9b3f71172bdbff229ecbbb7056bfec8fa45a3f"
+        },
+        {
+          "name": "G",
+          "sha256": "9994d65c0c3723b19dec886697a3e0d6780b67bc3c198d7c2cb835fd2fdc1c17"
+        },
+        {
+          "name": "Q",
+          "sha256": "8de6b3112af6c1b70448a745aa2872864cb6157665b255c99f3f6916f3a71692"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        }
+      ],
+      "exports": {
+        "G": "SummaryCardList",
+        "W": "SummaryCardDivider",
+        "Q": "DisclosureCaret",
+        "V": "SUMMARY_CARD_CLASS",
+        "re": "SUMMARY_CARD_SEE_ALL_CLASS"
+      }
+    },
+    {
+      "target": "file-basename.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "c16db3e98fdaec949dbea2961fb30d630e136c3a774d3ec5d645f326c65c4db9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "n_",
+          "sha256": "3ba7116f8d6397dd542200bf06cbf06afc167d1861bc06b44253b2a2f0580cff"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "n_": "fileBasename"
+      }
+    },
+    {
+      "target": "windows-path.mjs",
+      "source": "shared-26-CgdP_nTj.js",
+      "sourceSha256": "a9f80593fcdb91be8a2cf93eb71c572d3798b903ef16b8adb42480656cb3c026",
+      "sha256": "e6ab662fd12406821e8ee7ff696e194b7397a923cefadbb40ffd55fd22d82efc",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Wb",
+          "sha256": "02173ff071237731112c7a4099abaab581f11ab009809531229d29f0bce33926"
+        },
+        {
+          "name": "Gb",
+          "sha256": "0ea0cf15e8fe557c163e8d1fa3b137621d1f76ebfd0157f9782689eff6fe14cb"
+        },
+        {
+          "name": "Kb",
+          "sha256": "35bcf1cd5a692e0447d87539cef789097384e9413a2137ca867fdd68181bee15"
+        },
+        {
+          "name": "qb",
+          "sha256": "4e29c535f7182a1e0d8969a55a0365e4afe6bc0f01b7bc8af93500920f76e431"
+        },
+        {
+          "name": "Jb",
+          "sha256": "141ea4d9ff3890bbd55356a76f9eadc8f872d4741abf8bf3ce4eaa6e711846b5"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Jb": "isWindowsPath",
+        "Wb": "WINDOWS_DRIVE",
+        "Gb": "WINDOWS_UNC"
+      }
+    },
+    {
+      "target": "relative-path.mjs",
+      "source": "shared-28-DcgD7xXH.js",
+      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "sha256": "bb3e1e5883f40d9eb51634d1d9b814b5faac7dd09c7eaf6445650e34ca1c1b90",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "PO",
+          "sha256": "835badd1c8a790f4fdd83c662c9f39eff2950814a1f487ddd0a27b9e81a33755"
+        },
+        {
+          "name": "BO",
+          "sha256": "6c63c96e6f965ac499e6f00f3c3dd8e8ab1547a76ca3c6b6426db39c2880ada3"
+        },
+        {
+          "name": "VO",
+          "sha256": "84c214a21fb6ea01623516980d54061eed67ee796c356b8453b4656e3db30f9f"
+        },
+        {
+          "name": "HO",
+          "sha256": "27ef6eba2d4c89aae8da0b02e0bb6b802ed54d8475cfe855c4046b4518a12234"
+        },
+        {
+          "name": "UO",
+          "sha256": "0d343f30f9a084a7ba69138d9379f8dbb54d02800db86ae1886fa2d2b37f6b11"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Fr",
+          "from": "./windows-path.mjs",
+          "name": "WINDOWS_UNC",
+          "via": "shared-26-CgdP_nTj.js:tc",
+          "kind": "generated"
+        },
+        {
+          "local": "Mr",
+          "from": "./windows-path.mjs",
+          "name": "WINDOWS_DRIVE",
+          "via": "shared-26-CgdP_nTj.js:nc",
+          "kind": "generated"
+        },
+        {
+          "local": "kr",
+          "from": "./windows-path.mjs",
+          "name": "isWindowsPath",
+          "via": "shared-26-CgdP_nTj.js:ac",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "HO": "relativePath"
+      }
+    },
+    {
+      "target": "muted-action-class.mjs",
+      "source": "c219730b0-B08P7Rqk.js",
+      "sourceSha256": "cb771181de3a34f4091c87a7f99f8e691daa004928433cdd5836440cf735cd0e",
+      "sha256": "bf5456b4a381109b35e67c7a540ac1b5494a854840972d5222332851b06a2909",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "nn",
+          "sha256": "c3b6140da506b66f80b1b2a4b105bc5ec610291cb55c03fb232d17aab1384817"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "nn": "MUTED_ACTION_CLASS"
+      }
+    },
+    {
+      "target": "session-output-files.mjs",
+      "source": "c19ad462c-Z3P--eUg.js",
+      "sourceSha256": "87bfa4b440d3726a3cd2f65793da5eab2305f5d7613ec4e9e4f811e4f9e44853",
+      "sha256": "300e03dc76cbce9bba78bcd97c597f602b5357f6b84a70b76d6ee22780371d2d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "n",
+          "sha256": "e7f640f2c34c4bb80647806de395e32b38d87df8a993b1ce9d4ea9f0ec6a921c"
+        },
+        {
+          "name": "r",
+          "sha256": "0586722c5a4f2ebb7b6fb36e68e719f1f6cc1aa8b591a1efe7d4d9da2078c5c8"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-DfPJ1QmD.js:lo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "n": "SessionOutputFilesContext",
+        "r": "useSessionOutputFiles"
+      }
+    },
+    {
+      "target": "file-icon-override.mjs",
+      "source": "shared-2-Cb74JByF.js",
+      "sourceSha256": "eba35a1da5c881718b063b0602d7d7fb0fd547c62e3079b2110fa9f7e39a4cff",
+      "sha256": "9289e2782fff60cc3d950a073da9804ca5c17bf1d210a1e645b9b6b321a978c9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Aq",
+          "sha256": "284dea8ac8ad6156c31f46cea63d727518cb7d6e0345e0353d317109c20be8ae"
+        },
+        {
+          "name": "jq",
+          "sha256": "6fa7d51bc4fffb5f9621d1c13eb677c158f20dfd84cc716befaa1ebd072c77e8"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "jq": "fileIconOverride"
+      }
+    },
+    {
+      "target": "source-extensions.mjs",
+      "source": "shared-6-Cby4X-ms.js",
+      "sourceSha256": "d637cb22b602b75eeaa11ee8c4a1f072b8ea7f7ac799688ed7744c3304fe80f0",
+      "sha256": "5b0dfa22867a44b5399874a763e014bebbb349d307a830ad3f642e622e67c1b3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Yk",
+          "sha256": "c87883a338487fe63a1796ce852f7f451d30ba93fbac38fb53665ba9ee0001ce"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Yk": "SOURCE_EXTENSIONS"
+      }
+    },
+    {
+      "target": "file-kind-tables.mjs",
+      "source": "shared-104-Cqo2-vQh.js",
+      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "sha256": "0b2a21b528afb587ce1d526a424418a26968525fa5d56e23cc3ef6e32480c8ba",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "dP",
+          "sha256": "ff3c85cc345822499b79727bfef0e3ac5225f8da41ab83a651e5947871bfebbd"
+        },
+        {
+          "name": "jP",
+          "sha256": "033fb55df7218a725acc92e038625b551476731b1b4815e894b51a72b8edc517"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "dP": "RASTER_IMAGE_EXTENSIONS",
+        "jP": "HIGHLIGHT_LANGUAGES"
+      }
+    },
+    {
+      "target": "file-icon-name.mjs",
+      "source": "shared-9-D7uuiUv7.js",
+      "sourceSha256": "f1a676395b43bcae1fed011716ad24497d93f814ece1671a851682890377d205",
+      "sha256": "8400e0cf6dc7413410f12f5be5ba52fc2759e5a5ed9d3d5cfe17a3d838cfa650",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "kh",
+          "sha256": "1b26d593bbc49c02714dd3761cdf0dc1b7960901ba84056cb08c84c4a67aa1f6"
+        },
+        {
+          "name": "qh",
+          "sha256": "ea1a72d301de0218831fcf7a9d561b7db0d3f1c426163dbf5f3b74977dc1e05e"
+        },
+        {
+          "name": "Yh",
+          "sha256": "5a947f5e968c08b0ae65e48dbb0b53d3b910521cb36cd3465f593b0f6cfc4aa8"
+        },
+        {
+          "name": "Xh",
+          "sha256": "fec1ca65545ec0e0123b0455e51572a1ab186aa7d584b2010d4bd879f3a0cb1e"
+        },
+        {
+          "name": "Zh",
+          "sha256": "826a7528e575a224d34677c5f38783345d321c1be933e0abf3f8f1039b262967"
+        },
+        {
+          "name": "Qh",
+          "sha256": "58f1875aaccadddf89aa51aa019c2e4ab80fbb6581e5b7c2842f3a620e8413e2"
+        },
+        {
+          "name": "$h",
+          "sha256": "b2ac890d58342a9c2e2303d08f64d4bf30913a9a040e62a5965ea5cf4eaa0fd1"
+        },
+        {
+          "name": "eg",
+          "sha256": "5df249b139350ebe47a343f2a741021256b1aad915c22166add8c7573340f12e"
+        },
+        {
+          "name": "tg",
+          "sha256": "2aa330f5b35f5c5ff4f8bb8797efb100e4d89ddb76601b96bd02bc06fd87d72c"
+        },
+        {
+          "name": "ng",
+          "sha256": "2e0be95fceb86bb22aa198f6be7e318e3f168a808ff985f076c6f950712d195a"
+        },
+        {
+          "name": "ag",
+          "sha256": "c702ce0c1fa6ff878b52093a2f219ce1024f22bc3d0a97fe0ca5836fd165b9ab"
+        },
+        {
+          "name": "og",
+          "sha256": "936a72fd96bab361c7cf2e3e804ee2612a270a06235b5fe7e33edcfaa7a4b5de"
+        },
+        {
+          "name": "sg",
+          "sha256": "1186e0d0f4351c5f98521ed849db72974533709c45feba21a0d83e925a99f8c1"
+        },
+        {
+          "name": "cg",
+          "sha256": "206c4a44bb60071a7d70e2640bbb64b56baa87d5314c69170bea9ff090f16cea"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Vn",
+          "from": "./file-icon-override.mjs",
+          "name": "fileIconOverride",
+          "via": "shared-2-Cb74JByF.js:Rt",
+          "kind": "generated"
+        },
+        {
+          "local": "Sn",
+          "from": "./source-extensions.mjs",
+          "name": "SOURCE_EXTENSIONS",
+          "via": "shared-6-Cby4X-ms.js:Va",
+          "kind": "generated"
+        },
+        {
+          "local": "cn",
+          "from": "./file-kind-tables.mjs",
+          "name": "RASTER_IMAGE_EXTENSIONS",
+          "via": "shared-104-Cqo2-vQh.js:Vn",
+          "kind": "generated"
+        },
+        {
+          "local": "fn",
+          "from": "./file-kind-tables.mjs",
+          "name": "HIGHLIGHT_LANGUAGES",
+          "via": "shared-104-Cqo2-vQh.js:ir",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "cg": "fileIconName"
+      }
+    },
+    {
+      "target": "session-file-access.mjs",
+      "source": "c856385e2-DVsjb2QL.js",
+      "sourceSha256": "4bef99d594e5a22f4936d01bb4c379945c2950d8cdcc30ec00d86fdb10b3c3f9",
+      "sha256": "12ee617cc2f64d2817783d110eaca4bbf13cb84dcb585848257ef0f01988c0aa",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ot",
+          "sha256": "12ff73093858a5ccb286fbe2810e50677dcca4676514ac5e1bf90068819f8fd0"
+        },
+        {
+          "name": "st",
+          "sha256": "12834a971eb9ad3eace0c63f563dee6900990ab2e617987796993aaf4d1fe7f6"
+        },
+        {
+          "name": "W",
+          "sha256": "29a360c83cef528938fcd4c2296c1b4a0aa12037f346b12774c61138459faa6a"
+        },
+        {
+          "name": "_t",
+          "sha256": "ed62bf6a9104f1d6cb81aa2c99d7d9a02a0c9b6ef64fe7b5a734d19285134edb"
+        },
+        {
+          "name": "vt",
+          "sha256": "4f406d9161bf626f5c1d620eb1aadf338e0e4f0ca619bab79e3a66420b68fb78"
+        },
+        {
+          "name": "J",
+          "sha256": "2e8bb92eacbc937ff2cad96e27aa451cfff6dd58227252f4be1a25c0470826a8"
+        },
+        {
+          "name": "Y",
+          "sha256": "4018fec1cd7c3640db3a5584ea65022aa6e51a10bbaf8b155ac345f92d19b52b"
+        },
+        {
+          "name": "yt",
+          "sha256": "09ca1e8dc925f297c56145b720ded104ae498a00a22d74baec8e6c3d03aad7eb"
+        },
+        {
+          "name": "bt",
+          "sha256": "ce16884b86e423bf1857d25b0e3dc779822264f9327e77b16b9a25bac57f144e"
+        },
+        {
+          "name": "xt",
+          "sha256": "d659aa6939e9020bec4b4b8f91df366f93c14a5a0a5577a35367850f4ea919a8"
+        },
+        {
+          "name": "Vt",
+          "sha256": "af2ab9b95a3fe603a6b4217b443ab30d2a5c9feabf91b39f9d1af8ba7db7ec92"
+        },
+        {
+          "name": "Ht",
+          "sha256": "31a6d93216a914bde4c9f079dd4e4e6bdae3b790014eada5426dafa86015627b"
+        },
+        {
+          "name": "X",
+          "sha256": "49412a19d8d9666dae308ce39e1465207e400cf00ef7ff43a09789323052ef87"
+        },
+        {
+          "name": "Ut",
+          "sha256": "bf86a5cc56199165442fb3ab5cd38f733defe50f7fc617ccfa4cd3640481c64f"
+        },
+        {
+          "name": "Wt",
+          "sha256": "7ea3cf6b8704fc9a312e86b94e717849fc41301c92749f2c436439e746a9ceae"
+        },
+        {
+          "name": "Gt",
+          "sha256": "09c64cf8988ddc8fbb720a1dc198a4dcabfba90e693746bd3ba77ec8cb5b517c"
+        },
+        {
+          "name": "Kt",
+          "sha256": "987ece3fee39669560c8f769933d2353e0e40845f0641fef2d39593c116f6b37"
+        },
+        {
+          "name": "Bn",
+          "sha256": "b4466380817914c6cd9379afb833acaeb6fcf2426133cf98deb2354e740b6250"
+        }
+      ],
+      "imports": [
+        {
+          "local": "l",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-DfPJ1QmD.js:lo",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "z",
+          "from": "./session-output-files.mjs",
+          "name": "useSessionOutputFiles",
+          "via": "c19ad462c-Z3P--eUg.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "ie",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "CdsDisabledReason",
+          "via": "shared-frame-BfjMqbuN.js:Ec",
+          "kind": "adapter",
+          "original": "Qp"
+        },
+        {
+          "local": "ae",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "X"
+        },
+        {
+          "local": "P",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        }
+      ],
+      "exports": {
+        "W": "useSessionFileOpener",
+        "st": "SessionFileOpenerProvider",
+        "X": "useDiffOpener",
+        "Ht": "DiffOpenerProvider",
+        "Gt": "useDiffPlacement",
+        "Wt": "DiffPlacementProvider",
+        "yt": "ReadRefusalProvider",
+        "xt": "useOutsideRootsCheck",
+        "J": "useSessionLinksBlock",
+        "vt": "SessionLinksBlockProvider",
+        "Bn": "SessionFileBlock",
+        "Y": "ReadRefusalContext",
+        "Ut": "DiffPlacementContext",
+        "Kt": "useDiffPlacementWhenRefusing",
+        "bt": "isOutsideRoots"
+      }
+    },
+    {
+      "target": "turn-edits-card.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "ac4e57f2b9dbaa8e59818193881eceb4b2eb4800574f32400a6d27a825e9fee8",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ET",
+          "sha256": "a6e8b77e24ae137548ed86a4ed56a85a73e9e617f64492ff38119a7b4c1acded"
+        },
+        {
+          "name": "r0",
+          "sha256": "a2db4ff6952d358c38c30ac1f3582f1be1f1aa891b962af95be0405d1df01c68"
+        },
+        {
+          "name": "i0",
+          "sha256": "4aa49c2755d93ff8a3dab685382a829decec9794c344c15f01f545223949616e"
+        },
+        {
+          "name": "b2e",
+          "sha256": "6a1c67ab7d1a13e24c59aa73848f88e6ed705b4e61174b173a367a66d9ca192c"
+        },
+        {
+          "name": "x2e",
+          "sha256": "153c94dbc9b6407cb4b1396dbb9e693b0f6c2a294b6575d2e902c23d6cf4d4ca"
+        },
+        {
+          "name": "S2e",
+          "sha256": "ec774001f5951f3a50ba4ca8b2de5603c6719c2b0131e8527631811d0bdb7080"
+        },
+        {
+          "name": "a0",
+          "sha256": "2374d180822581952341d10fc6bf0c14a30811a25a67c66d5d02df1e668460da"
+        },
+        {
+          "name": "o0",
+          "sha256": "62c5a2d5f4c0981882749905db3cc48cf24cdb21457924acaf3cbf7eebf0affd"
+        },
+        {
+          "name": "T2e",
+          "sha256": "3fddb1173e6026813af7f8bd527bdaf4b1fc7c693be8a38ac9e2c1ebb7e89fd3"
+        },
+        {
+          "name": "E2e",
+          "sha256": "f9cff7d1b038973af01b9cd343ba80cfbe9a0d0556ddc1d5e64776bd1dac7708"
+        },
+        {
+          "name": "D2e",
+          "sha256": "4680fc52b5ab4b573ca6442940c223dc7961552baa68d4c5d2847fccdfe456d0"
+        },
+        {
+          "name": "c0",
+          "sha256": "bcf10e2eed2a1196fc1c4f6deb491946efae49a75274c854432145d22e6bfe86"
+        },
+        {
+          "name": "l0",
+          "sha256": "a617155a6dfb102f845cacdcfe55703fc013f268466a94741a19591153d5897f"
+        },
+        {
+          "name": "u0",
+          "sha256": "ac45ef0643c528459bf0e3e017c68bae636432f4e7a951ed597a157dc4d19d36"
+        },
+        {
+          "name": "O2e",
+          "sha256": "08953270d39586258d23d3fa812ea1696b0101e23ae9b28f95c8f7ae723bb265"
+        },
+        {
+          "name": "d0",
+          "sha256": "6d0aabe07e009287093d7c42bc208d11e30745c4ffe3ad247c03cf1a428c5555"
+        },
+        {
+          "name": "f0",
+          "sha256": "67607eef2c919ddbe66f52dbb27550fa860955ae5ce56a279a2e0dce87196238"
+        },
+        {
+          "name": "p0",
+          "sha256": "a6bc263d3a23d58b479c5a30a048c8a06ce7a649627929b4f71f3fe1fedbddff"
+        },
+        {
+          "name": "m0",
+          "sha256": "e1aaa64412017797ac1954c6ffc8cef58679fea81daa4d9712d90302df790ff9"
+        },
+        {
+          "name": "h0",
+          "sha256": "7c7ff72a61a4ba543eb0f2c1297e5d948c1ba7affd6c63700ee39e1b1f1864ff"
+        },
+        {
+          "name": "g0",
+          "sha256": "0ba730ed3d7893af24176e0e20582c1f1fdc55281bfbd8a713e84772bbe243b1"
+        },
+        {
+          "name": "_0",
+          "sha256": "ea47b3a829b7678d490c26029a3eaebbe4d4e779965d37326a0c613704805d68"
+        },
+        {
+          "name": "v0",
+          "sha256": "ad3410d247d8688639705f8752c997d4a12837d1becc32181638cbc7f6220128"
+        },
+        {
+          "name": "y0",
+          "sha256": "adaf62f569a0e916c281e93c3e6ddf7775de7e5fddb37eaa9411cd73fc01f02d"
+        },
+        {
+          "name": "b0",
+          "sha256": "7c1c06e0ddb5d4475d8e73453441f8b00ea36e6c09687de4eac6a3ac561d4fb5"
+        },
+        {
+          "name": "k2e",
+          "sha256": "0b4bf80c72eb548af1ca54754db8b57281f2a1b476e4fd2605091c65294b8726"
+        },
+        {
+          "name": "A2e",
+          "sha256": "a17b8e63682b0be83aede4882b61588b90a8d4f827a5da376c5b0a3424d9ba8e"
+        },
+        {
+          "name": "x0",
+          "sha256": "cbbbd1e51420853e6e63f97cef390971094dad8c06b84cd17b6e28707b9abf2c"
+        },
+        {
+          "name": "j2e",
+          "sha256": "7f8e0a148aad57a3d01087872ad4730bf56379a870b1c9dcbfb0bede39927b0f"
+        },
+        {
+          "name": "M2e",
+          "sha256": "8c2ecffcc7c4087879c7e12610636242eefb65ff615dfdcf504a4270752a156b"
+        },
+        {
+          "name": "N2e",
+          "sha256": "1149f51efbbc05e6e5decf0375895f1cf00417ccd40a701d9f04145dbd1e5ff6"
+        },
+        {
+          "name": "F2e",
+          "sha256": "f6043f1f391413041ba04184cd373d1fe91c511f43f0174eb5bb3c3099d85916"
+        },
+        {
+          "name": "S0",
+          "sha256": "319532a15bc6f439b40c4f74396c6fb9ea752b6e27439a9022458745853af5b6"
+        }
+      ],
+      "imports": [
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "os",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "view-tabs",
+          "original": "Zp"
+        },
+        {
+          "local": "bs",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "CdsCollapsible",
+          "via": "shared-frame-BfjMqbuN.js:ca",
+          "kind": "adapter",
+          "original": "Qw"
+        },
+        {
+          "local": "Ss",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "Ts",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:kc",
+          "kind": "view-tabs",
+          "original": "Sm"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Zu",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useSessionPresetsMain",
+          "via": "shared-11-BuQ3CK5I.js:do",
+          "kind": "adapter",
+          "original": "Qo"
+        },
+        {
+          "local": "qh",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "usePaneStoreState",
+          "via": "c03935b01-CyJKQj4N.js:ft",
+          "kind": "adapter",
+          "original": "gc"
+        },
+        {
+          "local": "Jh",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "usePaneStoreContext",
+          "via": "c03935b01-CyJKQj4N.js:mt",
+          "kind": "adapter",
+          "original": "_c"
+        },
+        {
+          "local": "Yh",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "usePaneStore",
+          "via": "c03935b01-CyJKQj4N.js:pt",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "qg",
+          "from": "./session-file-access.mjs",
+          "name": "useDiffOpener",
+          "via": "c856385e2-DVsjb2QL.js:k",
+          "kind": "generated"
+        },
+        {
+          "local": "Xg",
+          "from": "./session-file-access.mjs",
+          "name": "useDiffPlacement",
+          "via": "c856385e2-DVsjb2QL.js:tt",
+          "kind": "generated"
+        },
+        {
+          "local": "i_",
+          "from": "./prevent-mouse-down.mjs",
+          "name": "preventMouseDown",
+          "via": "c81ea1931-ChuE7vym.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "zy",
+          "from": "./summary-card.mjs",
+          "name": "SummaryCardList",
+          "via": "c425fb3cf-CEgSkv8l.js:A",
+          "kind": "generated"
+        },
+        {
+          "local": "sve",
+          "from": "./summary-card.mjs",
+          "name": "SUMMARY_CARD_SEE_ALL_CLASS",
+          "via": "c425fb3cf-CEgSkv8l.js:C",
+          "kind": "generated"
+        },
+        {
+          "local": "rb",
+          "from": "./summary-card.mjs",
+          "name": "SummaryCardDivider",
+          "via": "c425fb3cf-CEgSkv8l.js:k",
+          "kind": "generated"
+        },
+        {
+          "local": "fb",
+          "from": "./summary-card.mjs",
+          "name": "SUMMARY_CARD_CLASS",
+          "via": "c425fb3cf-CEgSkv8l.js:x",
+          "kind": "generated"
+        },
+        {
+          "local": "Yb",
+          "from": "./muted-action-class.mjs",
+          "name": "MUTED_ACTION_CLASS",
+          "via": "c219730b0-B08P7Rqk.js:T",
+          "kind": "generated"
+        },
+        {
+          "local": "s0",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "turnEditsSummary",
+          "via": "c96d752d0-BOCqU7c2.js:s0",
+          "kind": "adapter",
+          "original": "s0"
+        },
+        {
+          "local": "ts",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "Wg",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "FilePathMenu",
+          "via": "c856385e2-DVsjb2QL.js:i",
+          "kind": "adapter",
+          "original": "On"
+        },
+        {
+          "local": "Xge",
+          "from": "./session-file-access.mjs",
+          "name": "SessionFileBlock",
+          "via": "c856385e2-DVsjb2QL.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "x",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "adapter",
+          "original": "Td"
+        },
+        {
+          "local": "Ba",
+          "from": "./file-basename.mjs",
+          "name": "fileBasename",
+          "via": "shared-52-DGviI8xb.js:wd",
+          "kind": "generated"
+        },
+        {
+          "local": "ame",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "FileTypeIcon",
+          "via": "c280f9bbb-Dw5U-PIG.js:t",
+          "kind": "adapter",
+          "original": "B"
+        },
+        {
+          "local": "$x",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useToolGroupExpanded",
+          "via": "cc6e9624e-Dw5fc5HL.js:l",
+          "kind": "adapter",
+          "original": "v"
+        },
+        {
+          "local": "cb",
+          "from": "./summary-card.mjs",
+          "name": "DisclosureCaret",
+          "via": "c425fb3cf-CEgSkv8l.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "bie",
+          "from": "./relative-path.mjs",
+          "name": "relativePath",
+          "via": "shared-28-DcgD7xXH.js:Kn",
+          "kind": "generated"
+        },
+        {
+          "local": "Bg",
+          "from": "./session-file-access.mjs",
+          "name": "useSessionLinksBlock",
+          "via": "c856385e2-DVsjb2QL.js:A",
+          "kind": "generated"
+        },
+        {
+          "local": "Vg",
+          "from": "./session-file-access.mjs",
+          "name": "useOutsideRootsCheck",
+          "via": "c856385e2-DVsjb2QL.js:N",
+          "kind": "generated"
+        },
+        {
+          "local": "Kg",
+          "from": "./session-file-access.mjs",
+          "name": "useSessionFileOpener",
+          "via": "c856385e2-DVsjb2QL.js:j",
+          "kind": "generated"
+        },
+        {
+          "local": "P2e",
+          "from": "../../source-r3b-transcript-adapters.jsx",
+          "name": "useArtifactPageLink",
+          "via": "c96d752d0-BOCqU7c2.js:P2e",
+          "kind": "adapter",
+          "original": "P2e"
+        }
+      ],
+      "exports": {
+        "N2e": "TurnEditsCard",
+        "S0": "useTurnEditStop",
+        "F2e": "useTurnEditFileOpener",
+        "A2e": "turnEditFolderHints"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "binding": "lb",
+      "role": "Suggested task card: title clamp 6, bottom edge published while shown",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "de00248a31057b8720eaa1cbb15a26a49e5ac3827866f8461c8fd2be3946ab00",
+      "features": [
+        "me = k && D",
+        "ge = Nv(jv, me, ab)",
+        "ref: ge",
+        "absolute top-[12px] inset-x-0",
+        "\"text-body text-primary break-words line-clamp-6\"",
+        "`text-footnote text-secondary break-words ${C ? \"line-clamp-6\" : \"line-clamp-3\"}`"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "binding": "Uv",
+      "role": "Sticky prompt bubble: the other publisher of the region edge (not in this host)",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "3bbff3b14d87f4e060a35d2c2bc9d24bf1997bed4b0317763c978ff24d311533",
+      "features": [
+        "w = Nv(Mv, C, 0)"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c89efce1a-8S3RzgR0.js",
+      "binding": "Mc",
+      "role": "Markdown table: the freeze hook reads the streaming flag and the rows",
+      "sourceSha256": "0e5b14689e1ed8e70e5f2ab4647d2c5be5db7e5436e1fc33fca6d0798dc97008",
+      "sha256": "c8ccaf103ec5d205a4912095f05ca17c228a60e8bd3e7b349e7da26a1d367ba6",
+      "features": [
+        "s = jc(Ze(), t)",
+        "c(\"table\", { ref: s,"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "u9",
+      "role": "Feed row wrapper: reply for assistant rows, row otherwise",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "28d0fd7950bba56dad6015f8f60a0a2f4ff49cf5f8c1c6f440a8e24a57529b51",
+      "features": [
+        "e ? b(jce, { kind: t.kind === \"assistant\" || t.kind === \"assistantItem\" ? \"reply\" : \"row\", surface: n, tagsOf: t9, resetOn: r, onRetry: i, children: a, }) : a"
+      ],
+      "imports": {
+        "jce": "c4a9ee384-ZZIKqgNM.js:u (ap)"
+      }
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "d9",
+      "role": "Row retry: forget the session tool expansion",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "61d18266d625cbdd6dddada3b08d89d499d1c541b8d0062863d63e73e3474699",
+      "features": [
+        "(eS(e), t !== null && axe(t))"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "f9",
+      "role": "Code feed: gate per session, resetOn = the row is the live tail",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "2dc1a8ec380151d92acbaf3966ef7f9323da42f744bcf2cca986cb6346727d34",
+      "features": [
+        "gt = Vd(i, !$e)",
+        "_t = d9(qe.toolExpansionStore, i)",
+        "S = t.kind === \"loader\" ? r : r && f",
+        "u9( gt, t, e.codesOwnView === !0 ? \"code\" : \"code_feed\", S, _t,"
+      ],
+      "imports": {
+        "Vd": "c4a9ee384-ZZIKqgNM.js:l (cp)"
+      }
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "binding": "Xx",
+      "role": "Session pane: Wv when the transcript is unavailable",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "79d5e93179497e64fbd3f29e6ea6917dc1d41936259d91b7673fd2071b80dafb",
+      "features": [
+        "T?.transcriptUnavailable && t ? u(Wv, { sessionRef: t, title: T.title, isArchived: T.isArchived === !0, onSessionRemoved: d, })"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "v2",
+      "role": "Turn edits card gate: claudeai_cc_epitaxy_turn_edits_card, not under a turn summary block",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "f5ee51068af171993a0bcbc5e0772937ca4ef61d78e9493e80a61810bfa98220",
+      "features": [
+        "l = fe(\"claudeai_cc_epitaxy_turn_edits_card\")",
+        "d = l && !u"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "p2",
+      "role": "Turn edits card row: data-find-omitted contents, at the finished turn tail; Undo only for the last entry",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "31297ddc462c1a0c3f315751fefa632a465f8419cc878923cb1925bcbcde049c",
+      "features": [
+        "u = o && !s && a && !r && e.synthetic !== !0",
+        "\"data-find-omitted\": \"\"",
+        "className: \"contents\"",
+        "sessionRef: i ? t : void 0"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "C0",
+      "role": "Turn edits card: hidden when the edit is the turn's sole visible edit row (o0)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "9ce83761bc467bfce04ed6f65f52df9f4284589d2f3389be795c8fe15b1bbc1d",
+      "features": [
+        "return o0(a, n)",
+        "b(L2e, {"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "I2e",
+      "role": "Undo: sends C2e as the next message (host: main.jsx sendUndoTurn with undoTurnText)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "ee8934d2a5ad1e95918bde3d704d8d1384ccf24bc85ac9b6fcfc37fb65bbefcc",
+      "features": [
+        "qb(\"turn_edits_undo\")",
+        "text: C2e(t)"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "C2e",
+      "role": "Undo message text (host: turn-edits-model.mjs undoTurnText, in the UI language)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "1b9ef093d98380360a98bdf8d7f98f7948124417f8146693735cfc08759825fb",
+      "features": [
+        "`Undo the changes you made to ${t[0]} in your last turn and restore it to its previous state.`",
+        "`Undo the changes you made to these ${t.length} files in your last turn and restore them to their previous state:`"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "ZM",
+      "role": "Running mark: runningIds keep the mark across wire gaps (turnStatusRows candidates only)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "0bb5fb019554c4e452a64eea933b718fd6482dad90bc35d9317194941e902b0a",
+      "features": [
+        "s = e?.runningIds?.some(a) ?? !1",
+        "u = s || (r === !0 && e !== void 0 && !e.wireRunning && c === e.key)",
+        "tailHeld: p && !o && !u"
+      ],
+      "imports": {
+        "xv": "cb6930dae-BD0W5ZM9.js:q (Ya)",
+        "tv": "cb6930dae-BD0W5ZM9.js:K (Ra)",
+        "av": "cb6930dae-BD0W5ZM9.js:R (_o)"
+      }
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "v2e",
+      "role": "Tool group: the candidate (with runningIds) exists only under turnStatusRows; classic keeps uM 650 ms",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "677d00fa347253ec0187091e6f17948527e279d1de1d4bbcf4e18b31c3fef80d",
+      "features": [
+        "ye = m_()",
+        "He = uM(Ve, 650, ye ? cv : void 0)",
+        "runningIds: e.flatMap((e) => e.status === \"running\" ? [e.id] : [],",
+        "if (ye) {",
+        "b(XAe, { candidate: F,",
+        "morphKey: nt ? Ue : \"settled\""
+      ],
+      "imports": {
+        "m_": "c26fb8b6b-DfPeiuGP.js:T (We)"
+      }
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "uM",
+      "role": "Held key: each shown key stays at least t ms (no rest key in the classic branch)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "95af6dff5b01354248e57d262a5786806032100fa5c28925183218caa8f7144c",
+      "features": [
+        "i = Math.max(t - r, f ? u - (n - (v.current ?? n)) : 0);"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "nat",
+      "role": "Next renderer feed: forces turnStatusRows on",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "ead323f7bd44b43de10a21c41a8790b907b76fa32e4a5c6903a24fa15092bc0b",
+      "features": [
+        "b(p_, { value: !0, children: b(Ga, { children: En }), })"
+      ],
+      "imports": {
+        "p_": "c26fb8b6b-DfPeiuGP.js:C (Ue)"
+      }
+    },
+    {
+      "source": "c26fb8b6b-DfPeiuGP.js",
+      "binding": "He",
+      "role": "turnStatusRows: GrowthBook __gb__2846116625 unless a provider says otherwise",
+      "sourceSha256": "cc22ba3c601241c07e07d428d572bafda1cff561df965e422078c0635e4a5536",
+      "sha256": "e25cf1cd8152da2827d4af914174df9f5b1d7b61139022ac982b20a1cfa6e078",
+      "features": [
+        "n = f(Ve);",
+        "value: t ?? n"
+      ],
+      "imports": {}
+    },
+    {
+      "source": "c26fb8b6b-DfPeiuGP.js",
+      "binding": "Ve",
+      "role": "turnStatusRows flag",
+      "sourceSha256": "cc22ba3c601241c07e07d428d572bafda1cff561df965e422078c0635e4a5536",
+      "sha256": "53f434a90f13ae623a39d1e3d602f5660e853a227fb95a6c7b29b1de33970a6b",
+      "features": [
+        "Ve = \"__gb__2846116625\""
+      ],
+      "imports": {}
+    }
+  ],
+  "inlineStyles": [
+    {
+      "target": "summary-card.css",
+      "source": "c425fb3cf-CEgSkv8l.js",
+      "id": "cbbd9b21e",
+      "sourceSha256": "abbb85b1ce1c1bfc0e880398dcad9ed0b521fd5db8d3dcbbd2cddb5fb049470c",
+      "sha256": "894d30194d15a1ac45a9bf33b29ae71b84e59d74de10d7a57b3ec5257369ce79",
+      "features": [
+        ".epitaxy-root .epitaxy-summary-card-control-text{font-size:var(--cds-font-size-body--own,var(--cds-font-size-body));line-height:var(--cds-leading-body--own,var(--cds-leading-body))}"
+      ]
+    }
+  ]
+}

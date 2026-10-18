@@ -23,6 +23,7 @@ import {
   ADD_SERVER_PROMPT, anyServerRunning, LOGS_HEIGHT, SHOW_RETRY_MS, SERVER_SETTLE_MS, boundsOf, clampLogsHeight, failedServer, failureLogLine, heldPort, isOccluded, logTone,
   logsServer, logsSourceLabel, PREVIEW_LOGS_EXPANDED_KEY, readLogsExpanded, serverStartHold, startFailurePrompt, startFailureText, writeLogsExpanded,
   pageError, pageRefused, pageServer, previewSurface, stoppedServer, sameBounds, serverErrorText, serverRows, serverMenuRows, serverStatus, showsPage, viewportLabel, viewportRows,
+  launchEntryMissingText, noLaunchEntry, pickUnavailable, SKETCH_AWAIT_CAPTURE_MS,
 } from "./preview-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-preview-pane.css";
@@ -323,7 +324,8 @@ export function PreviewStartFailedCard({ logLine, onCopyLog, actions = null, met
 
 // cf580efe9 mr (readable 667-731): the stopped server — a rounded alpha-1 row with Cache, the server's name, a muted
 // "Stopped" and a secondary xxs Restart (busy while it runs), the caption under it, and Show start page when it can be
-// dismissed. Without a name (fa main pane 5919-5935): the Rt empty state that only offers Close.
+// dismissed. Classes follow 2.42304.0 cf580efe9-b-DCvKJg Mr: "py-md ps-[9px] pe-md" (logical since 2.37337.1) and
+// text-muted-as-secondary for "Stopped" and the caption (2.37337.1: text-muted). Without a name (fa main pane 5919-5935): the Rt empty state that only offers Close.
 export function PreviewStoppedCard({ serverLabel, onRestart, restartPending = false, onDismiss, onClose, caption, className = "", contentClassName = "" }) {
   if (!serverLabel) {
     return (
@@ -334,14 +336,14 @@ export function PreviewStoppedCard({ serverLabel, onRestart, restartPending = fa
   return (
     <div role="status" className={`flex h-full w-full items-center justify-center overflow-y-auto p-lg ${className}`.trim()} data-preview-stopped={serverLabel}>
       <div className={`flex w-full max-w-[400px] flex-col gap-sm ${contentClassName}`.trim()}>
-        <div className="flex items-center gap-sm rounded bg-alpha-1 py-md pl-[9px] pr-md">
+        <div className="flex items-center gap-sm rounded bg-alpha-1 py-md ps-[9px] pe-md">
           <Icon name="Cache" size={16} className="shrink-0 text-secondary" />
           <span className="min-w-0 flex-1 truncate text-body text-secondary">{serverLabel}</span>
-          <span className="shrink-0 text-footnote text-muted">{t("Stopped")}</span>
+          <span className="shrink-0 text-footnote text-muted-as-secondary">{t("Stopped")}</span>
           <SourceSettingsButton size="xxs" variant="secondary" busy={restartPending} aria-label={t("Restart {serverName}", { serverName: serverLabel })}
             onClick={onRestart} onMouseDown={(event) => event.preventDefault()} className="shrink-0">{t("Restart")}</SourceSettingsButton>
         </div>
-        <p className="m-0 text-center text-caption text-muted">{caption ?? t("The dev server stopped. Restart it, or close the preview.")}</p>
+        <p className="m-0 text-center text-caption text-muted-as-secondary">{caption ?? t("The dev server stopped. Restart it, or close the preview.")}</p>
         {onDismiss && <SourceSettingsButton size="xs" variant="ghost" onClick={onDismiss} className="self-center">{t("Show start page")}</SourceSettingsButton>}
       </div>
     </div>
@@ -496,7 +498,10 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
   // Annotate (2.2553.1 mt / bt): {token, backdrop} while sketching; backdrop undefined until the capture arrives.
   const [sketch, setSketch] = useState(null);
   const [requestingPick, setRequestingPick] = useState(false);
-  const [switchToPick, setSwitchToPick] = useState(false);
+  // preview-07 (2.42304.0 cf580efe9-b-DCvKJg Aa Kr): the action waiting on "Discard your annotations?" — "picking"
+  // (Select element over a sketch with marks). The original's other two, "popOut" and "dock" (the Dock of a Preview
+  // pane window, c41956fd9's context from c5638815a bt), have no host here: Preview never runs in a pane window.
+  const [pendingDiscard, setPendingDiscard] = useState(null);
   const pickSequence = useRef(0);
   const sketchRef = useRef(null);
   const sketchToken = useRef(0);
@@ -514,6 +519,9 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
   const call = useCallback((action, params = {}) => (desktop?.call ? desktop.call(action, { sessionId, ...params }) : Promise.reject(new Error(t("Open OpenClaude Desktop to use the preview.")))), [desktop, sessionId]);
   // The main process words its refusals in English (preview-service.cjs): shown in the UI language, as terminalError does.
   const report = useCallback((error) => { if (error?.message) onError?.(t(error.message)); }, [onError]);
+  // preview-05: si's u() — whether the session a Run was for is still the one this pane shows.
+  const liveSession = useRef(null);
+  useEffect(() => { liveSession.current = sessionId; return () => { liveSession.current = null; }; }, [sessionId]);
 
   // State: the snapshot, then every change main pushes for this session.
   useEffect(() => {
@@ -575,6 +583,8 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
   const picking = requestingPick || !!state?.selection?.enabled;
   const toolsOpen = picking || !!sketch || showTools;
   const pageVisible = wantsPage && !occlusion.covered;
+  // Kr's reset (`!Q || V`): the pending action goes once the sketch has closed or the server is gone.
+  if (pendingDiscard !== null && (!sketch || surface === "stopped")) setPendingDiscard(null);
 
   // Bounds: the viewport rectangle (CSS px; main scales by the window zoom), re-sent whenever it moves.
   const sync = useCallback((force = false) => {
@@ -662,8 +672,15 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
     try {
       const result = await call("preview-server-start", { name });
       if (result?.ok) { setFailureNote(null); return; }
-      // A failure without a server entry (no such server) is a notice; one with it shows the failure card.
-      if (["no-config", "no-server", "error"].includes(result?.code)) { report(new Error(serverErrorText(result, name))); return; }
+      // preview-05 (2.42304.0 cf580efe9-b-DCvKJg si / ui): no usable launch.json entry — refresh the configurations
+      // (yn: the snapshot re-reads launch.json) and, while the session is still shown, the uV3BfEC8hz notice.
+      if (noLaunchEntry(result)) {
+        call("preview-state").then((next) => { if (liveSession.current === sessionId && next?.sessionId === sessionId) setState(next); }, () => {});
+        if (liveSession.current === sessionId) onError?.(launchEntryMissingText(name));
+        return;
+      }
+      // Any other failure without a server entry is a notice; one with it shows the failure card.
+      if (result?.code === "error") { report(new Error(serverErrorText(result, name))); return; }
       if (result?.code === "stopped") return;
       // ca80fca8d / cf580efe9 Rr, zr: unless another session's server holds the port, the error goes to the agent.
       if (heldPort(result) !== undefined || !askAgent.current) { setFailureNote({ name, sent: false }); return; }
@@ -673,7 +690,7 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
       setFailureNote((note) => (note?.name === name ? { name, sent: sent === true } : note));
     } catch (error) { report(error); }
     finally { if (!inPlace) setStarting(null); }
-  }, [call, report]);
+  }, [call, report, onError, sessionId]);
   const restart = useCallback((name, from) => {
     const id = sessionId;
     if (!name || restartRef.current === id) return;
@@ -717,15 +734,33 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
       if (sequence === pickSequence.current) { setState(next); setRequestingPick(false); }
     } catch (error) { if (sequence === pickSequence.current) { setRequestingPick(false); report(error); } }
   }, [state?.hasPage, onAttachElement, closeSketch, call, instanceId, report]);
+  // Zr: a pending action isn't stacked over another open alert dialog.
+  const askDiscard = (action) => { if (!pane.current?.ownerDocument?.querySelector('[data-open][role="alertdialog"]')) setPendingDiscard(action); };
   const togglePick = () => {
-    if (sketch && sketchRef.current?.hasMarks()) { setSwitchToPick(true); return; }
+    if (sketch && sketchRef.current?.hasMarks()) { askDiscard("picking"); return; }
     if (picking) cancelPick(); else void beginPick();
+  };
+  // si: Discard closes the sketch, then runs the pending action (picking only while the page can still be picked).
+  const discardAndContinue = () => {
+    const action = pendingDiscard;
+    setPendingDiscard(null); closeSketch();
+    if (action === "picking" && !pickBlocked) void beginPick();
   };
   const closeTools = () => { setShowTools(false); cancelPick(); closeSketch(); };
   useEffect(() => {
-    pickSequence.current++; setRequestingPick(false); setSwitchToPick(false);
+    pickSequence.current++; setRequestingPick(false); setPendingDiscard(null);
     return () => { pickSequence.current++; };
   }, [sessionId, state?.activeTabId]);
+  // preview-06 (2.42304.0 cf580efe9-b-DCvKJg Aa `ei !== ti && (ni(ei), ei && rr(!1))`): picking turns itself off when the
+  // page stops being pickable (start page, no page, the server gone, nothing to send the element to), not only on a
+  // session or tab switch; main's selection would otherwise stay on.
+  const pickBlocked = pickUnavailable(state, { surface, sendsToSession: !!onAttachElement });
+  const pickWasBlocked = useRef(pickBlocked);
+  useEffect(() => {
+    const was = pickWasBlocked.current;
+    pickWasBlocked.current = pickBlocked;
+    if (pickBlocked && !was && picking) cancelPick();
+  }, [pickBlocked]);
   useEffect(() => {
     if (!picking) return;
     const escape = event => {
@@ -748,7 +783,11 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
       if (sketchToken.current !== token || !viewport.current?.isConnected) return;
       await call('preview-attach', { instanceId, bounds: boundsOf(viewport.current.getBoundingClientRect()), visible: true });
       if (sketchToken.current !== token) return;
-      const shot = await call("preview-capture");
+      // preview-06 (cf550b864 N limits.awaitCaptureMs, picking or not): past SKETCH_AWAIT_CAPTURE_MS the sketch opens
+      // without a backdrop; a capture that still lands replaces it.
+      const late = setTimeout(() => setSketch((now) => (now?.token === token && now.backdrop === undefined ? { token, backdrop: null } : now)), SKETCH_AWAIT_CAPTURE_MS);
+      let shot;
+      try { shot = await call("preview-capture"); } finally { clearTimeout(late); }
       const bytes = shot?.bytes instanceof Uint8Array ? shot.bytes : new Uint8Array(shot?.bytes ?? []);
       const src = bytes.length ? await captureDataUrl(bytes) : null;
       const size = src ? await imageSize(src) : null;
@@ -781,7 +820,10 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
 
   // cf580efe9 Or start-failed: the error text (localized), its last line in the chip, and the meta line.
   const failureHeld = failure ? heldPort(failure.error) : undefined;
-  const failureText = failure ? startFailureText({ message: serverErrorText(failure.error, failure.name) }, failureLines) : "";
+  const failureMessage = failure ? serverErrorText(failure.error, failure.name) : "";
+  const failureText = failure ? startFailureText({ message: failureMessage }, failureLines) : "";
+  const failureChip = !failure || failureHeld !== undefined ? undefined
+    : failureLogLine(failure.error?.code === "identity" ? failureMessage : failureText, failure.error);
   const ownFailure = !!failure && failureNote?.name === failure.name;
   const failureMeta = !failure ? undefined
     : failureHeld !== undefined ? t("Port {port} is already in use by a dev server in another session. Stop that server, then try again.", { port: failureHeld })
@@ -903,7 +945,7 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
               agentUsesPreview={agentUsesPreview} onTurnOnAgentPreview={onTurnOnAgentPreview} onSetUp={onAskAgent ? () => onAskAgent(ADD_SERVER_PROMPT) : undefined} />)}
           {surface === "failed" && failure && (
             <div className="absolute inset-0" data-preview-failure={failure.name}>
-              <PreviewStartFailedCard meta={failureMeta} logLine={failureHeld === undefined ? failureLogLine(failureText) : undefined} onCopyLog={copyFailure}
+              <PreviewStartFailedCard meta={failureMeta} logLine={failureChip} onCopyLog={copyFailure}
                 actions={<>
                   <SourceSettingsButton variant="secondary" busy={restartPending} onClick={() => restart(failure.name, { surface: "failed", failure })}>{t("Try again")}</SourceSettingsButton>
                   {/* Sending the error didn't go through (a turn was running): it can be sent from here once the agent is free. */}
@@ -940,9 +982,10 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
         {downloadNotice && <DownloadNotice download={downloadNotice} onReveal={() => call("preview-download-reveal").catch(report)} onDismiss={() => setDismissedDownload(downloadNotice.at)} />}
         {logsOpen && (logsSource || drawerLines.length > 0) && <LogsDrawer source={logsSourceLabel(logsSource)} lines={drawerLines} height={logsHeight} paneHeight={paneHeight} onResize={setLogsHeight} onClose={() => setLogsOpen(false)} />}
       </div>
-      {switchToPick && <SourceConfirmationDialog title={t('Discard your annotations?')} body={t('You have unsaved marks on this image. Discarding removes them.')}
+      {/* c9c84d68b-DMgxSiTd r (T): the pane's own Discard your annotations? for the pending action (Gn, open: Kr !== null). */}
+      {pendingDiscard !== null && <SourceConfirmationDialog title={t('Discard your annotations?')} body={t('You have unsaved marks on this image. Discarding removes them.')}
         confirmLabel={t('Discard')} cancelLabel={t('Keep editing')} confirmVariant="danger" initialFocus="cancel"
-        onCancel={() => setSwitchToPick(false)} onConfirm={() => { setSwitchToPick(false); void beginPick(); }} />}
+        onCancel={() => setPendingDiscard(null)} onConfirm={discardAndContinue} />}
       <SourcePreviewClearDataDialog isOpen={sessionData} previewStorage={state?.previewStorage ?? 'none'}
         onClose={() => setSessionData(false)} onConfirm={() => {
           setSessionData(false);call('preview-clear-data').then(next => { if (next) setState(next); }, report);

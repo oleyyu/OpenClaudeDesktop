@@ -17,11 +17,11 @@ for (const [key, name] of [['HOME', 'home'], ['XDG_CONFIG_HOME', 'xdg-config'], 
 test.after(() => fs.rm(SANDBOX, { recursive: true, force: true }));
 
 const R = '../third-party/codex-workflows-runner/src/';
-const { codexAgent, getClient, shutdownClient, parseSchemaResult, checkSchemaResult, strictifySchema, wireSchema, buildTurnParams } = await import(R + 'codexAgent.js');
+const { codexAgent, getClient, shutdownClient, parseSchemaResult, checkSchemaResult, strictifySchema, wireSchema, buildTurnParams, attachAgentMessageCollector, isThrottled, isRetryable } = await import(R + 'codexAgent.js');
 const { runWorkflowSource } = await import(R + 'runWorkflow.js');
 const { createRuntime } = await import(R + 'runtime.js');
 const { Journal } = await import(R + 'journal.js');
-const { recordTokenUsage, resetMeter } = await import(R + 'meter.js');
+const { recordTokenUsage, resetMeter, outputSpent } = await import(R + 'meter.js');
 const { loadAgentType } = await import(R + 'agentTypes.js');
 const { createWorktree } = await import(R + 'worktree.js');
 const { default: service } = await import('../electron/workflow-service.cjs');
@@ -220,6 +220,40 @@ test('R9: queued agents are withdrawn as soon as the budget ceiling is reached',
   assert.deepEqual(failed.sort(), ['q1', 'q2', 'q3']);
   assert.ok(!calls.some(p => p.startsWith('q')));
   assert.deepEqual(plain(value).slice(-3), [null, null, null]);
+});
+
+test('a running agent\'s tokens reach its progress events (earlier attempts included) before it ends', async () => {
+  resetMeter();
+  const progress = [];
+  await run('return await agent("p")', {
+    onEvent: e => { if (e.type === 'progress' && Number.isFinite(e.tokens)) progress.push(e.tokens); },
+    runAgent: async (p, opts) => { opts.onActivity({ activeTools: 0, tokens: 1200 }); opts.onActivity({ activeTools: 1, toolCalls: 1 }); opts.onActivity({ activeTools: 0, tokens: 3400 }); return p; },
+  });
+  assert.deepEqual(progress, [1200, 3400]);
+});
+
+test('the agent\'s reply is its own message, not a bridge\'s turn-end note (phase commentary)', async () => {
+  const { EventEmitter } = await import('node:events');
+  const client = new EventEmitter();
+  const collector = attachAgentMessageCollector(client, 't1');
+  const done = (item) => client.emit('notification', { method: 'item/completed', params: { threadId: 't1', item: { type: 'agentMessage', ...item } } });
+  done({ id: 'a', text: 'the answer' });
+  done({ id: 'note-1', text: '_The turn hit the agent\'s step limit._', phase: 'commentary' });
+  assert.equal(collector.text(), 'the answer');
+  collector.detach();
+});
+
+test('a failure whose code names nothing (OpenCode\'s "other") is judged by its message: a 429 is throttling', () => {
+  const error = Object.assign(new Error('429 Too Many Requests'), { codexErrorInfo: 'other' });
+  assert.equal(isThrottled(error), true);
+  assert.equal(isRetryable(Object.assign(new Error('invalid model id'), { codexErrorInfo: 'other' })), false);
+});
+
+test('the output budget counts reasoning once: outputTokens already includes it', () => {
+  resetMeter();
+  recordTokenUsage({ threadId: 'r', tokenUsage: { total: { inputTokens: 1000, outputTokens: 300, reasoningOutputTokens: 200, totalTokens: 1300 } } });
+  assert.equal(outputSpent(), 300);
+  resetMeter();
 });
 
 test('budget ceiling (Claude 2.1.286 semantics): later agents inside a running combinator resolve null; new combinators and agent() throw', async () => {

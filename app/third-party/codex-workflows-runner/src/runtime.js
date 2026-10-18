@@ -205,9 +205,11 @@ export function createRuntime({
   budgetTotal = null,
   budgetMeter = "output", // "total" (input+output, default) | "output" (native pool)
   budgetSpentBefore = 0, // Local: what the turn that launched the run already spent (Claude's budget is the turn's)
+  sharedBudget, // Host-owned turn pool, shared across independent runner processes.
   defaults = {},
   defaultModel,
   pinnedModel,
+  ignoreRequestedModel = false,
   autoEffort = false,
   pinnedEffort = null,
   plan = false, // --plan dry run: count agents, never call a model
@@ -263,7 +265,7 @@ export function createRuntime({
   // Local: the whole run's spend (parent + nested children share executionState),
   // excluding anything metered in this process before the run began.
   const spentBefore = Number.isFinite(budgetSpentBefore) && budgetSpentBefore > 0 ? budgetSpentBefore : 0;
-  const meterSpent = () => spentBefore + (budgetMeter === "output"
+  const meterSpent = () => sharedBudget ? sharedBudget.spent() : spentBefore + (budgetMeter === "output"
     ? Math.max(0, outputSpent() - executionState.meterBase.output)
     : Math.max(0, tokensSpent() - executionState.meterBase.total));
 
@@ -330,6 +332,7 @@ export function createRuntime({
     // Claude Code 2.1.280: a malformed disallowedTools / bashCommandClamp refuses the spawn; both are normalized
     // (sorted, de-duplicated, [] = unset) before they join the journal identity (toolNarrowing.js).
     opts = withNormalizedToolOptions(opts);
+    if (ignoreRequestedModel) opts = { ...opts, model: undefined };
     bumpAgentCount();
     const invocation = executionState.agentCount;
     const queuedAt=Date.now();
@@ -347,8 +350,8 @@ export function createRuntime({
     //   layer-width policy (--auto-effort)  1->xhigh, >=2->high (floor)
     //   defaults.effort (--effort)         flat fallback
     //   undefined                          Codex config default (effort omitted)
-    // The effective effort is written back onto `merged`, so it both reaches the
-    // agent and participates in the journal identity (a policy change busts cache).
+    // The effective effort reaches the agent; Claude's journal identity uses
+    // authored options only, before host defaults and policies are applied.
     const width = currentLayerWidth();
     const { effort: resolvedEffort } = resolveEffort(opts, width);
     if (resolvedEffort === undefined) delete merged.effort;
@@ -365,12 +368,11 @@ export function createRuntime({
 
     // Resume journal: allocate a stable key (called on every run, even a cache
     // miss, to keep the invocation chain aligned) and short-circuit on a hit.
-    // Identity includes the *effective* model (pinned, else script opt, else CLI
-    // default) and effort (set above on `merged`) so a model/effort change busts
-    // the cache; --fresh forces a full re-run.
+    // Claude matches normalized authored options, not host defaults. Forced
+    // model selection discards the requested override before matching too.
     if (journal) scopeTag(currentScope(), 'a'); // retain human/session extension positions
     const key = journal
-      ? journal.nextKey(prompt, { ...merged, model: pinnedModel ?? opts.model ?? defaultModel })
+      ? journal.nextKey(prompt, pinnedModel != null ? { ...opts, model: undefined } : opts)
       : `member-${invocation}`;
     if (journal && key && journal.hit(key) && journal.get(key) !== null) {
       const now=Date.now();
@@ -452,8 +454,9 @@ export function createRuntime({
             // Local: the provider seam (codexAgent.js) frames the prompt (provenance.js) and staggers same-prefix siblings.
             value = await runAgent(prompt, {
               ...merged, defaultModel, pinnedModel, log: onLog, signal, framePrompt: framed, ...defaults.runId ? { worktreeName: `${defaults.runId}-${invocation}` } : {},
-              onMetrics: m => { reportedTokens ||= m.tokens?.total!=null; attemptToolCalls=m.toolCalls??attemptToolCalls; workflowOutput?.agent(invocation,{...m.agentId?{agentId:m.agentId}:{},...m.tokens?.total==null?{}:{tokens:totalTokens+m.tokens.total},...m.toolCalls==null?{}:{toolCalls:totalToolCalls+m.toolCalls}}); metrics=m; totalTokens += m.tokens?.total ?? 0; outputTokens += (m.tokens?.output ?? 0) + (m.tokens?.reasoning ?? 0); },
-              onActivity: activity => { attemptToolCalls=activity.toolCalls??attemptToolCalls; workflowOutput?.agent(invocation,{lastProgressAt:Date.now(),...activity.toolCalls===undefined?{}:{toolCalls:totalToolCalls+activity.toolCalls},...activity.lastToolName===undefined?{}:{lastToolName:activity.lastToolName}}); activeTools = activity.activeTools ?? activeTools; arm(); noteSpend(); onEvent?.({type:'progress',id:key,label,...activity,attempt:attempts}); },
+              onMetrics: m => { reportedTokens ||= m.tokens?.total!=null; attemptToolCalls=m.toolCalls??attemptToolCalls; workflowOutput?.agent(invocation,{...m.agentId?{agentId:m.agentId}:{},...m.tokens?.total==null?{}:{tokens:totalTokens+m.tokens.total},...m.toolCalls==null?{}:{toolCalls:totalToolCalls+m.toolCalls}}); metrics=m; totalTokens += m.tokens?.total ?? 0; outputTokens += m.tokens?.output ?? 0; },
+              // Local: activity.tokens is this attempt's spend so far; earlier attempts' totals come first.
+              onActivity: activity => { const tokens=Number.isFinite(activity.tokens)?{tokens:totalTokens+activity.tokens}:{}; attemptToolCalls=activity.toolCalls??attemptToolCalls; workflowOutput?.agent(invocation,{lastProgressAt:Date.now(),...activity.toolCalls===undefined?{}:{toolCalls:totalToolCalls+activity.toolCalls},...activity.lastToolName===undefined?{}:{lastToolName:activity.lastToolName},...tokens}); activeTools = activity.activeTools ?? activeTools; arm(); noteSpend(); onEvent?.({type:'progress',id:key,label,...activity,...tokens,attempt:attempts}); },
               onProgress: text => { workflowOutput?.agent(invocation,{lastProgressAt:Date.now()}); arm(); onProgress?.(label,text,key); },
             });
           } catch (error) {
@@ -621,9 +624,12 @@ export function createRuntime({
       args: subArgs,
       budgetTotal,
       budgetMeter,
+      budgetSpentBefore,
+      sharedBudget,
       defaults,
       defaultModel,
       pinnedModel,
+      ignoreRequestedModel,
       autoEffort,
       pinnedEffort,
       plan,

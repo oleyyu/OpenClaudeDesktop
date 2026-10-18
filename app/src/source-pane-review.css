@@ -22,71 +22,13 @@
 .spr-action { flex: none; }
 .spr-dismiss { color: var(--cds-text-muted); }
 
-/* Rn: px-md py-xs slot; the card rounded border bg-surface-2 px-2.5 py-md, gap-1.25, border-alpha-2 (accent + ring
-   when current). */
-.spr-card-slot {
-  padding: var(--cds-pad-xs, 4px) var(--cds-pad-md);
-  font-family: var(--cds-font-sans);
-  white-space: normal;
-}
-.spr-card {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: var(--cds-pad-md) 10px;
-  border: 1px solid var(--cds-alpha-2);
-  border-radius: var(--cds-radius, 6px);
-  background: var(--cds-surface-2);
-  outline: none;
-}
-.spr-card[data-current] {
-  border-color: var(--cds-fill-accent);
-  box-shadow: 0 0 0 1px var(--cds-fill-accent);
-}
-.spr-card-top { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
-.spr-badges { display: flex; min-width: 0; align-items: center; gap: 5px; }
-.spr-card-dismiss { flex-shrink: 0; }
-.spr-badge {
-  display: inline-flex;
-  min-width: 0;
-  max-width: 12rem;
-  align-items: center;
-  height: var(--cds-h-control-nested, 16px);
-  padding: 0 var(--cds-pad-xs, 4px);
-  overflow: hidden;
-  border-radius: 4px;
-  background: var(--cds-alpha-1);
-  color: var(--cds-text-secondary);
-  font-size: var(--cds-font-size-caption, 10px);
-  font-weight: var(--cds-font-weight-medium, 500);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.spr-badge[data-variant="success"] { background: var(--cds-bg-success); color: var(--cds-text-success); }
-.spr-badge[data-variant="danger"] { background: var(--cds-bg-danger); color: var(--cds-text-danger); }
-.spr-badge[data-variant="warning"] { background: var(--cds-bg-warning); color: var(--cds-text-warning); }
-.spr-summary,
-.spr-detail {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
-}
-.spr-summary { color: var(--cds-text-primary); font-weight: var(--cds-font-weight-medium, 500); }
-.spr-detail { color: var(--cds-text-muted); }
-.spr-card-actions { display: flex; gap: var(--cds-gap-xs, 6px); font-size: var(--cds-font-size-body); }
-.spr-fix,
-.spr-next {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  cursor: var(--cds-cursor-interactive, default);
-}
-.spr-fix { color: var(--cds-text-accent, var(--cds-fill-accent)); }
-.spr-fix:hover { text-decoration: underline; }
-.spr-next { color: var(--cds-text-muted); }
-.spr-next:hover { color: var(--cds-text-primary); }
-.spr-fix:focus-visible,
-.spr-next:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 3px; }
+/* The finding card is the original 2.42304.0 c44d00c7f ya (generated/review-findings/review-finding-card.mjs): its
+   own classes (px-md py-xs slot, the --diff-widget-* skin, the header, badges, buttons and footer) come from the loaded
+   official CSS. The slot here only sits in the local diff's row flow (DiffHunk renderAfter, inside pre-wrap rows):
+   the official diff renders annotations in their own slot, outside the code text. */
+.spr-card-slot { white-space: normal; }
+/* Inside the Changes diff (root `.source-diff.diff`), message-style.css's unlayered `.diff span { display: block;
+   white-space: pre-wrap }` would beat the card's layered utilities (the CdsBadge's inline-flex, truncate's nowrap, the
+   CdsButton and CdsIcon spans), so the card's spans fall back to the layers — the revert source-diff.css applies to its
+   own header spans for the same rule. */
+.diff .spr-card-slot span { display: revert-layer; white-space: revert-layer; }

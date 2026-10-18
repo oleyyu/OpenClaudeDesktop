@@ -59,9 +59,10 @@ test('chrome: General / Usage / This computer › System nav, search field witho
   const html = page('preferences');
   const nav = html.slice(html.indexOf('<nav class="ss-nav"'), html.indexOf('</nav>'));
   // B23 shared-19 ZC/BC: Settings (General first, Usage listed), This computer (System, Developer…), Customize.
-  assert.deepEqual([...nav.matchAll(/<p>([^<]+)<\/p>/g)].map(match => match[1]), ['Settings', 'This computer', 'Customize']);
-  assert.deepEqual([...nav.matchAll(/<span>([^<]+)<\/span><\/button>/g)].map(match => match[1]).slice(0, 11),
-    ['General', 'Usage', 'Theme', 'Code', 'Instructions', 'Commands', 'Profiles', 'Models', 'System', 'Developer', 'Cores']);
+  // The host's developer-facing pages (Profiles, Harness, Hooks, Core options) sit in an Advanced group, last.
+  assert.deepEqual([...nav.matchAll(/<p>([^<]+)<\/p>/g)].map(match => match[1]), ['Settings', 'This computer', 'Customize', 'Advanced']);
+  assert.deepEqual([...nav.matchAll(/<span>([^<]+)<\/span><\/button>/g)].map(match => match[1]).slice(0, 10),
+    ['General', 'Usage', 'Theme', 'Code', 'Instructions', 'Commands', 'Models', 'System', 'Developer', 'Cores']);
   assert.match(nav, /<button aria-current="page"><span[^>]*>[^<]*<\/span><span>General<\/span>/);
   assert.match(nav, /<div class="ss-search"><span[^>]*data-cds="Icon"[^>]*>[^<]*<\/span><input aria-label="Search settings"[^>]*\/><\/div>/, 'icon + input only');
   assert.equal(html.includes('Clear settings search'), false);
@@ -77,7 +78,7 @@ test('chrome: General / Usage / This computer › System nav, search field witho
     // Customization pages (C1–C6) join the Settings and This computer groups; Customize stays last.
     // Harness (DeepSeek Harness profile overlays) is listed only on a core with harnessProfile; the fixture is Codex.
     // Hooks (hooks/list) is listed on a core with hooksList: the Codex fixture lists it, the DeepSeek core doesn't.
-    assert.deepEqual(tabs, ['General', 'Usage', 'Theme', 'Code', 'Instructions', 'Commands', 'Profiles', 'Models', 'System', 'Developer', 'Cores', 'Skills', 'Connectors', 'Plugins', 'Hooks']);
+    assert.deepEqual(tabs, ['General', 'Usage', 'Theme', 'Code', 'Instructions', 'Commands', 'Models', 'System', 'Developer', 'Cores', 'Skills', 'Connectors', 'Plugins', 'Hooks', 'Profiles']);
     const deepseek = page('preferences', {}, { boot: { connected: true, models: [], core: { engine: 'deepseek', capabilities: {} } } });
     assert.ok([...deepseek.matchAll(/role="tab"[^>]*>([^<]+)</g)].map(match => match[1]).includes('Harness'));
     assert.equal([...deepseek.matchAll(/role="tab"[^>]*>([^<]+)</g)].map(match => match[1]).includes('Hooks'), false);
@@ -140,7 +141,9 @@ test('Models: capability-driven — the DeepSeek bridge keeps its connection and
   assert.match(codex, /role="radiogroup" aria-label="Codex provider"/);
   assert.match(codex, /<h3[^>]*>Codex models<\/h3>/);
   assert.match(codex, /GPT-6 Astra<span class="msx-badge">Default<\/span>/);
-  for (const gone of ['aria-label="API provider"', '>Pricing<', 'Custom providers', 'Quick setup', 'Advanced']) assert.equal(codex.includes(gone), false, gone);
+  // The page itself (the nav lists the Advanced group of pages; the Models page has no Advanced disclosure on Codex).
+  const codexPage = codex.slice(codex.indexOf('data-page="models"'));
+  for (const gone of ['aria-label="API provider"', '>Pricing<', 'Custom providers', 'Quick setup', 'Advanced']) assert.equal(codexPage.includes(gone), false, gone);
   const deepseek = page('models', {}, { boot: { connected: true, models: [], core: { engine: 'deepseek-harness', capabilities: {} } }, onQuickSetup() {} });
   assert.ok(deepseek.includes('aria-label="API provider"') && deepseek.includes('Quick setup') && deepseek.includes('Advanced'));
   assert.equal(deepseek.includes('aria-label="Codex provider"'), false);

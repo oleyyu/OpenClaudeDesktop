@@ -1,5 +1,9 @@
-// B34 next / previous change in Changes (2.31226 c44d00c7f Qr/$r/ei/Eo, shared-19 m6 nextDiffChange/prevDiffChange):
-// pure parts of the F7 / ⇧F7 navigation (⌥F5 / ⇧⌥F5 off Linux) between the changed blocks of the Changes pane.
+// B34 next / previous change in Changes (shared-19 m6 nextDiffChange/prevDiffChange; c44d00c7f Nt / Ho): the pure parts of
+// the F7 / ⇧F7 navigation (⌥F5 / ⇧⌥F5 off Linux) between the changed blocks of the Changes pane.
+// R3-files FT-07 (diffgit-09): the anchors and the step are the 2.42304.0 originals (generated/files-changes/
+// diff-change-nav.mjs: c44d00c7f pi / mi / hi, with hi's `belowPane` case); this module keeps the key bindings and the
+// host's hunk shape.
+import { adjacentChange, changeAnchors, sameChangeAnchor } from "./generated/files-changes/diff-change-nav.mjs";
 
 /** shared-19 m6: { command, key, when }; `!isLinux` rows are dropped on Linux. */
 export function diffChangeShortcuts({ linux = false } = {}) {
@@ -20,60 +24,46 @@ export function diffChangeCommand(event, { linux = false } = {}) {
   return null;
 }
 
-/** Qr(id, diff): one target per change block (a run of removed / added rows between context rows). The target names
- * the additions side when the block adds lines (its first new line), else the deletions side (its first old line);
- * oldLine / newLine are where the block starts on each side and `removes` whether it deletes lines. A hunk with an
- * empty side starts that side at the line after its header's (+(count === 0)), as @pierre/diffs counts. */
-export function diffChangeTargets(id, hunks = []) {
-  const targets = [];
-  for (const hunk of hunks ?? []) {
-    let oldLine = hunk.oldStart + (hunk.oldCount === 0 ? 1 : 0);
-    let newLine = hunk.newStart + (hunk.newCount === 0 ? 1 : 0);
-    const rows = hunk.rows ?? [];
-    for (let at = 0; at < rows.length;) {
-      const row = rows[at];
-      if (row.type === "context") { oldLine++; newLine++; at++; continue; }
-      if (row.type !== "added" && row.type !== "removed") { at++; continue; }
-      let additions = 0, deletions = 0;
-      for (; at < rows.length && rows[at].type !== "context"; at++) {
-        if (rows[at].type === "added") additions++;
-        else if (rows[at].type === "removed") deletions++;
+/** Host adapter: the local parser's hunks (diff-model rows) in the @pierre/diffs shape pi reads — each side's start and
+ * count, and hunkContent as runs of `{type: "context", lines}` and `{type: "change", additions, deletions}` (a run of
+ * removed / added rows between context rows). "\ No newline at end of file" notes are not lines and break no run. */
+export function pierreDiffHunks(hunks = []) {
+  return (hunks ?? []).map((hunk) => {
+    const hunkContent = [];
+    for (const row of hunk.rows ?? []) {
+      let last = hunkContent[hunkContent.length - 1];
+      if (row.type === "context") {
+        if (last?.type === "context") last.lines++;
+        else hunkContent.push({ type: "context", lines: 1 });
+      } else if (row.type === "added" || row.type === "removed") {
+        if (last?.type !== "change") hunkContent.push(last = { type: "change", additions: 0, deletions: 0 });
+        if (row.type === "added") last.additions++;
+        else last.deletions++;
       }
-      const side = additions > 0 ? "additions" : "deletions";
-      targets.push({ id, side, lineNumber: side === "additions" ? newLine : oldLine, oldLine, newLine, removes: deletions > 0 });
-      oldLine += deletions;
-      newLine += additions;
     }
-  }
-  return targets;
+    return { deletionStart: hunk.oldStart, deletionCount: hunk.oldCount, additionStart: hunk.newStart, additionCount: hunk.newCount, hunkContent };
+  });
 }
 
-/** $r */
+/** pi(id, diff): one target per change block. The target names the additions side when the block adds lines (its first
+ * new line), else the deletions side (its first old line); oldLine / newLine are where the block starts on each side
+ * and `removes` whether it deletes lines. A hunk with an empty side starts that side at the line after its header's. */
+export function diffChangeTargets(id, hunks = []) {
+  return changeAnchors(id, { hunks: pierreDiffHunks(hunks) });
+}
+
+/** mi, null-safe for the host's "no previous press". */
 export function sameDiffChange(a, b) {
-  return !!a && !!b && a.id === b.id && a.side === b.side && a.lineNumber === b.lineNumber;
+  return !!a && !!b && sameChangeAnchor(a, b);
 }
 
-/** ei(targets, fileOrder, {last, viewport}, direction): the change to go to. `last` is the change the previous press
+/** hi(targets, fileOrder, {last, viewport}, direction): the change to go to. `last` is the change the previous press
  * went to while it is still on screen (step from it); otherwise `viewport` is the topmost visible line ({id, side,
- * lineNumber}; lineNumber 0 = the top of a file) and the next change is the first one below it, the previous the last
- * one above it (skipping the change that line itself starts). */
+ * lineNumber, belowPane?}; lineNumber 0 = the top of a file) and the next change is the first one below it, the previous
+ * the last one above it (skipping the change that line itself starts). With `belowPane` (that line is below the bottom
+ * of the pane) the change starting at the line itself is still ahead. */
 export function pickDiffChange(targets, order, { last = null, viewport = null } = {}, direction) {
-  if (!targets.length) return null;
-  const index = last ? targets.findIndex((entry) => sameDiffChange(entry, last)) : -1;
-  if (index !== -1) return targets[index + direction] ?? null;
-  if (!viewport) return direction === 1 ? targets[0] ?? null : null;
-  const fileIndex = order.indexOf(viewport.id);
-  const below = targets.findIndex((entry) => (entry.id === viewport.id
-    ? (viewport.side === "additions" ? entry.newLine : entry.oldLine) > viewport.lineNumber
-    : order.indexOf(entry.id) > fileIndex));
-  if (direction === 1) return below === -1 ? null : targets[below] ?? null;
-  const at = (below === -1 ? targets.length : below) - 1;
-  const candidate = targets[at];
-  if (!candidate) return null;
-  const startsHere = candidate.id === viewport.id && (viewport.side === "additions"
-    ? candidate.side === "additions" && candidate.newLine === viewport.lineNumber
-    : candidate.removes && candidate.oldLine === viewport.lineNumber);
-  return startsHere ? targets[at - 1] ?? null : candidate;
+  return adjacentChange(targets, order, { last, viewport }, direction);
 }
 
 /** Wo: the sticky file header's height, 2rem at the root font size. */

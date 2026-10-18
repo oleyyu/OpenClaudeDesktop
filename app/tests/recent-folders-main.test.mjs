@@ -114,7 +114,9 @@ test('createDetectedProjects: first read waits, later reads serve the cache and 
 
 test('main.cjs records the worktree origin, answers the Recent IPC and saves a Recent pick as the session folder', async () => {
   const main = fs.readFileSync(path.join(root, 'electron/main.cjs'), 'utf8');
-  assert.match(main, /config\.worktreeOrigins = \{ \.\.\.\(config\.worktreeOrigins[^\n]*\[dest\]: cwd \}/);
+  // R4g-routines RT3: main.cjs's prepare-worktree case is worktree-prepare.mjs now (the same write).
+  assert.match(main, /case "prepare-worktree": return await prepareWorktreeInMain\(p\);/);
+  assert.match(fs.readFileSync(path.join(root, 'electron/worktree-prepare.mjs'), 'utf8'), /config\.worktreeOrigins = \{ \.\.\.\(config\.worktreeOrigins[^\n]*\[dest\]: cwd \}/);
   assert.match(main, /config\.sessionMetadata\[result\.thread\.id\] = \{ \.\.\.config\.sessionMetadata\[result\.thread\.id\], originCwd \}/);
   assert.match(main, /case "recent-folder-sessions": \{/);
   assert.match(main, /case "detected-projects": \{/);

@@ -153,5 +153,5 @@ test("Action Center rows show the repo slug from repo-identities, and no meta ou
   const main = await fs.readFile(path.join(app, "src/main.jsx"), "utf8");
   assert.match(main, /const repoFolderKey = \[\.\.\.new Set\(\[cwd, \.\.\.sessions\.map\(\(thread\) => thread\.cwd\)\]/, "identities for cwd and every session cwd, whatever the grouping");
   assert.doesNotMatch(main, /groupBy === "project"\s*\n?\s*\? \[\.\.\.new Set\(\[cwd/);
-  assert.match(main, /<SourceActionCenter rows=\{attentionRows\}[^\n]*repoIdentities=\{repoIdentities\}/);
+  assert.match(main, /sessions=\{startCardSessions\} onOpenSession=\{navigate\}/, "presets receives real awaiting sessions, including pinned sessions");
 });

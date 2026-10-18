@@ -66,7 +66,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
  // source: an inline script (the Workflow tool), persisted at `file` by the caller; else `file` is read. origin 'tool': the
  // model started it (its notification goes back to the model); taskId/toolUseId/scriptPath: what the tool reported.
  // No per-app limit on concurrent runs (as in Claude Code). structuredOutput false: the core has no outputSchema/dynamic tools.
- async function startRun({threadId,file,source:inline,args,plan=false,access='read-only',resumeId,model:chosenModel,effort,cwd:requestedCwd,after,runId,origin='user',taskId,toolUseId,scriptPath,structuredOutput,engine,userRequest,budgetTotal,budgetSpent}){
+ async function startRun({threadId,file,source:inline,args,plan=false,access='read-only',resumeId,model:chosenModel,effort,cwd:requestedCwd,after,runId,origin='user',taskId,toolUseId,scriptPath,structuredOutput,engine,userRequest,budgetTotal,budgetSpent,budgetPool}){
   await ready;if(disposed)throw fail('Application is closing.');const config=getConfig();
   if(!workflowsOn())throw fail('Dynamic workflows are disabled.');
   if(!config.threadIds.includes(threadId))throw fail('Choose a session before starting a workflow.');
@@ -86,8 +86,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   if(typeof inline!=='string'&&(!/\.(?:m?js|cjs)$/.test(script)||fs.statSync(script).size>1048576))throw fail('Select a JavaScript workflow smaller than 1 MB.');
   const source=typeof inline==='string'?inline:fs.readFileSync(script,'utf8'),hash=crypto.createHash('sha256').update(source).update(args===undefined?'':JSON.stringify(args)).update(cwd).update(chosenModel||'').update(effort||'').update(access==='read-only'?'':access).digest('hex');
   // A resume continues the same run (Claude Code: resumeFromRunId is the run id and its transcript folder): its journal
-  // replays unchanged agent() calls whatever the model, effort, Mode or folder now are (changed defaults just miss the
-  // cache). Refused only for another session's run, a run still running, or one with no journal — before anything
+  // replays unchanged authored agent() calls even when the host model, effort, Mode or folder has changed. Refused only for another session's run, a run still running, or one with no journal — before anything
   // is written.
   if(resumeId){const previous=trusted(resumeId);if(previous.threadId!==threadId)throw fail('Unknown workflow.');
    if(previous.status==='running'||running.has(resumeId))throw new Error(i18n.t('Workflow {id} is still running. Stop it first in the Tasks pane before resuming.',{id:resumeId}));
@@ -111,7 +110,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   // CODE_DESKTOP_WORKFLOW_RUNNER: the runner's own bridge core shares the app bridge's state folder; it keeps its threads,
   // usage and generated config apart (the bridges' runner role), so neither process overwrites the other's files and
   // workflow agents never become the user's sessions.
-  const env={...process.env,...(launch.env||{}),...(runnerEnv()||{}),ELECTRON_RUN_AS_NODE:'1',CODE_DESKTOP_WORKFLOW_RUNNER:'1'};for(const key of AGENT_TOOLS_ENV)delete env[key];
+  const env={...process.env,...(launch.env||{}),...(runnerEnv()||{}),ELECTRON_RUN_AS_NODE:'1',CODE_DESKTOP_WORKFLOW_RUNNER:'1',...(launch.env?.ELECTRON_RUN_AS_NODE?{CODE_DESKTOP_CORE_RUN_AS_NODE:'1'}:{})};for(const key of AGENT_TOOLS_ENV)delete env[key];
   let child;try{child=spawn(path.join(__dirname,'workflow-child.mjs'),[],{cwd,detached:true,stdio:['ignore','ignore','pipe','ipc'],env});}catch(error){record({type:'settled',status:'failed',error:error.message});settle();return run;}
   let stderr='',outcome=null,stopRequested=false,quitStop=false,killTimer=null;
   const completion=new Promise(resolve=>{
@@ -131,7 +130,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   // engine 'codeDesktop': Settings chose OpenClaude Desktop's engine for a core that has its own, so the launcher script is
   // never handed to the core's engine (workflow-harness.mjs); structuredOutput false: schema agents ask for JSON.
   const scripts=engine==='codeDesktop'?{workflowScripts:false}:typeof launch.workflowScripts==='boolean'?{workflowScripts:launch.workflowScripts}:{};
-  child.send({directory,source,cwd,...(args!==undefined?{args}:{}),plan:!!plan,access,resume:!!resumeId,model:chosenModel,effort,command,commandArgs,version,runId:id,...scripts,...(structuredOutput===false||structuredOutput==='outputSchema'?{structuredOutput}:{}),...(typeof userRequest==='string'&&userRequest.trim()?{userRequest}:{}),...(Number.isSafeInteger(budgetTotal)&&budgetTotal>0?{budgetTotal,...(Number.isSafeInteger(budgetSpent)&&budgetSpent>0?{budgetSpent}:{})}:{}),...(folders().length?{workflowFolders:folders()}:{})});return run;
+  child.send({directory,source,cwd,...(args!==undefined?{args}:{}),plan:!!plan,access,resume:!!resumeId,model:chosenModel,effort,command,commandArgs,version,runId:id,...scripts,...(structuredOutput===false||structuredOutput==='outputSchema'?{structuredOutput}:{}),...(typeof userRequest==='string'&&userRequest.trim()?{userRequest}:{}),...(Number.isSafeInteger(budgetTotal)&&budgetTotal>0?{budgetTotal,...(Number.isSafeInteger(budgetSpent)&&budgetSpent>0?{budgetSpent}:{})}:{}),...(budgetPool?{budgetPool}:{}),...(folders().length?{workflowFolders:folders()}:{})});return run;
   function settle(){try{onSettled(run);}catch(error){console.warn('Workflow settle hook failed:',error);}}
  }
  async function start(params){return startRun(params);}

@@ -51,5 +51,5 @@ export function whitespaceTheme(color) {
 export function fileBehaviorMenu(settings, set) {
   return { key: 'files-behavior', items: [{ value: 'files-preview-tabs', label: t('Preview tabs'),
     checked: settings.previewTabs, checkedRole: 'checkbox', keepOpen: true,
-    onSelect: () => set('previewTabs', !settings.previewTabs) }, {value:'files-thimble', label:t('Auto-save'), checked:settings.autoSave, checkedRole:'checkbox', keepOpen:true, onSelect:()=>set('autoSave', !settings.autoSave)}, {value: 'files-tab-indents', label: t('Tab key indents'), checked: settings.tabIndents, checkedRole: 'checkbox', keepOpen: true, onSelect: () => set('tabIndents', !settings.tabIndents)}] };
+    onSelect: () => set('previewTabs', !settings.previewTabs) }, {value:'files-thimble', label:t('Auto save'), checked:settings.autoSave, checkedRole:'checkbox', keepOpen:true, onSelect:()=>set('autoSave', !settings.autoSave)}, {value: 'files-tab-indents', label: t('Tab key indents'), checked: settings.tabIndents, checkedRole: 'checkbox', keepOpen: true, onSelect: () => set('tabIndents', !settings.tabIndents)}] };
 }

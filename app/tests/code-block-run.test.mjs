@@ -2,8 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   codeBlockRun, codeBlockRunId, createInlineOutput, diffSegments, feedInlineOutput, followsOutput, hasHiddenCharacters,
-  inlineOutputText, isPlainTextCommand, isRunLanguage, outputDiffMode, pickRunTab, promptAfterInput, runOpensPane,
+  inlineCommandDone, inlineOutputText, isPlainTextCommand, isRunLanguage, keptRunVisible, outputDiffMode, pickRunTab,
+  promptAfterInput, runOpensPane,
 } from "../src/code-block-run-model.mjs";
+import fs from "node:fs";
+import path from "node:path";
 
 // B20 / P8: the pure half of a code block's "Run in terminal" (c19e90103 Bg/Lg/Pg, c7146e7f4, c26fb8b6b qn/Xn,
 // ca41b3815 inline run, c03935b01 It/Vt).
@@ -126,4 +129,42 @@ test('noteUserInput (B20 review): xterm replies to the shell (zn) leave the prom
   assert.equal(promptAfterInput('clean', '\x1b[?1;2c'), 'clean');
   assert.equal(promptAfterInput('dirty', '\x1b[I'), 'dirty');
   assert.equal(promptAfterInput('clean', 'ls'), 'dirty');
+});
+
+// TT-10 / FT-13 (toolcards-04 / terminal-15): 2.42304.0 c19e90103-muBq-gyt.js Ng (≡ 2.37337.1 sy) and Bg (≡ py).
+const OFFICIAL = path.resolve(import.meta.dirname, "../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c19e90103-muBq-gyt.js");
+
+test("the official source: commandDone is endedBy === \"idle\" only; the kept box is (!tracked || commandDone) && showsRun", () => {
+  const source = fs.readFileSync(OFFICIAL, "utf8");
+  assert.match(source, /t\.inlineRun\?\.id===e&&t\.inlineRun\.endedBy==="idle"\);return\{tracked:n,/);
+  assert.match(source, /commandDone:l\}/);
+  assert.match(source, /me=\(!se\|\|fe\)&&ae\?ie:void 0/);
+  assert.match(source, /defaultMessage:"\(no output\)",id:"pndT4iky5F"\}\),altScreen:!1,error:me\.error\|\|null,onOpenInTerminal:se\?De:null/);
+});
+
+test("Ng commandDone: only a run that ended at an idle prompt", () => {
+  assert.equal(inlineCommandDone({ endedBy: "idle" }), true);
+  for (const endedBy of ["exit", "silence", "cancel", "shell-exit", "error", "superseded", null, undefined])
+    assert.equal(inlineCommandDone({ endedBy }), false, String(endedBy));
+  assert.equal(inlineCommandDone(null), false);
+});
+
+test("Bg me: the kept record shows untracked, or tracked once done at the prompt; never before the block shows runs", () => {
+  assert.equal(keptRunVisible({ tracked: true, commandDone: true, showsRun: true }), true, "tracked + idle");
+  assert.equal(keptRunVisible({ tracked: true, commandDone: inlineCommandDone({ endedBy: "exit" }), showsRun: true }), false, "tracked + exit");
+  assert.equal(keptRunVisible({ tracked: true, commandDone: inlineCommandDone({ endedBy: null }), showsRun: true }), false, "tracked + running");
+  assert.equal(keptRunVisible({ tracked: false, commandDone: false, showsRun: true }), true, "not tracked, with a record");
+  assert.equal(keptRunVisible({ tracked: false, commandDone: false, showsRun: false }), false, "a growing fence that has not shown runs");
+  assert.equal(keptRunVisible({ tracked: true, commandDone: true, showsRun: false }), false);
+  assert.equal(keptRunVisible(), false);
+});
+
+test("source-code-block.jsx: useBlockRun exposes commandDone, kept uses keptRunVisible, the kept box opens the terminal while tracked", () => {
+  const source = fs.readFileSync(path.resolve(import.meta.dirname, "../src/source-code-block.jsx"), "utf8");
+  assert.match(source, /commandDone: inlineCommandDone\(mine\),/);
+  assert.match(source, /const kept = keptRunVisible\(\{ tracked: live\.tracked, commandDone: live\.commandDone, showsRun \}\) \? live\.record : undefined;/);
+  const keptBox = source.slice(source.indexOf(': kept === undefined ? null'));
+  assert.match(keptBox, /output=\{kept\.output \|\| t\("\(no output\)"\)\}/);
+  assert.match(keptBox, /onOpenInTerminal=\{live\.tracked && actions \? \(\) => actions\.openInTerminal\(runId\) : null\}/);
+  assert.doesNotMatch(source, /onOpenInTerminal=\{null\}/);
 });

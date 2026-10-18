@@ -1,10 +1,11 @@
-// Original panel placement, viewport rebasing, resize handles and cursors.
+// Original panel placement, viewport rebasing, resize handles and cursors (2.42304.0).
 function e({
   saved: e,
   anchor: n,
   viewport: r,
   topInset: i = 0,
   endInset: a = 0,
+  rtl: o = !1,
 }) {
   if (e) {
     let n = e.viewport ?? r,
@@ -17,19 +18,23 @@ function e({
       top: t(e.top, e.height, o, n.height, r.height, i),
     };
   }
-  let o = Math.max(160, Math.min(340, n ? n.height - 16 : r.height * 0.6));
+  let s = Math.max(160, Math.min(340, n ? n.height - 16 : r.height * 0.6));
   return n
     ? {
         width: 320,
-        height: o,
-        left: Math.max(0, n.right - a - 320),
-        top: Math.max(i, n.bottom - 8 - o),
+        height: s,
+        left: o
+          ? Math.max(0, Math.min(n.left + a, r.width - 320))
+          : Math.max(0, n.right - a - 320),
+        top: Math.max(i, n.bottom - 8 - s),
       }
     : {
         width: 320,
-        height: o,
-        left: Math.max(0, r.width - 320 - 24),
-        top: Math.max(i, r.height - o - 88),
+        height: s,
+        left: o
+          ? Math.max(0, Math.min(24, r.width - 320))
+          : Math.max(0, r.width - 320 - 24),
+        top: Math.max(i, r.height - s - 88),
       };
 }
 function t(e, t, n, r, i, a = 0) {
@@ -37,7 +42,7 @@ function t(e, t, n, r, i, a = 0) {
     s = o < e - a ? i - o - n : e;
   return Math.max(a, Math.min(s, i - n));
 }
-function pT(e) {
+function sk(e) {
   return (e.n && e.w) || (e.s && e.e)
     ? "nwse-resize"
     : (e.n && e.e) || (e.s && e.w)
@@ -46,12 +51,9 @@ function pT(e) {
         ? "ns-resize"
         : "ew-resize";
 }
-const mT = [
-  { edges: { n: !0 }, className: "-top-[3px] left-[8px] right-[8px] h-[6px]" },
-  {
-    edges: { s: !0 },
-    className: "-bottom-[3px] left-[8px] right-[8px] h-[6px]",
-  },
+const ck = [
+  { edges: { n: !0 }, className: "-top-[3px] inset-x-[8px] h-[6px]" },
+  { edges: { s: !0 }, className: "-bottom-[3px] inset-x-[8px] h-[6px]" },
   { edges: { w: !0 }, className: "-left-[3px] top-[8px] bottom-[8px] w-[6px]" },
   {
     edges: { e: !0 },
@@ -76,6 +78,6 @@ const mT = [
 ];
 export {
   e as sideChatRect,
-  pT as sideChatResizeCursor,
-  mT as sideChatResizeHandles,
+  sk as sideChatResizeCursor,
+  ck as sideChatResizeHandles,
 };

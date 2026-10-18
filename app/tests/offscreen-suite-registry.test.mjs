@@ -19,7 +19,8 @@ test('every offscreen suite is a standard script that writes its canonical repor
     assert.match(canonical, /^analysis\//, `${name}: report under analysis`);
     const source = fs.readFileSync(path.join(app, 'scripts', script), 'utf8');
     assert.ok(source.includes(JSON.stringify(path.basename(canonical))) || source.includes(`'${path.basename(canonical)}'`) || source.includes('`' + path.basename(canonical) + '`') || source.includes('/' + path.basename(canonical)), `${name}: writes ${path.basename(canonical)}`);
-    assert.match(source, /\bpassed\s*:/, `${name}: report carries passed`);
+    // `{passed, checks, …}` (shorthand, the current-* scripts) carries the field as well as `passed: …`.
+    assert.match(source, /\bpassed\s*:|[{,]\s*passed\s*[,}]/, `${name}: report carries passed`);
   }
 });
 
@@ -44,7 +45,8 @@ test('0.2.119 registers pane/pane-layout/file-search/diff/transcript-fade/ui029 
   for (const [name, floors] of Object.entries(calls)) {
     assert.ok(suites[name], name);
     for (const launch of Array.isArray(floors) ? floors : [floors])
-      for (const method of Object.keys(launch)) assert.ok(['read', 'write', 'writeText'].includes(method), `${name}: ${method}`);
+      for (const method of Object.keys(launch)) assert.ok(['read', 'write', 'writeText', 'readText'].includes(method), `${name}: ${method}`);
+  // readText: memory-clipboard.cjs records it (`readText(){record('readText');…}`); preview and file-editor paste back.
   }
   // changes-pane copies once (c219730b0 $e / c3e58cab4 Copy > Relative path) in its first launch only.
   assert.deepEqual(calls['changes-pane'], [{ read: 1, writeText: 1 }, {}]);

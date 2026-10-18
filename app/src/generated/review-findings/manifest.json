@@ -1,0 +1,270 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-review-findings.mjs",
+  "adapterModule": "src/source-review-findings-adapters.jsx",
+  "modules": [
+    {
+      "target": "pane-focus-return.mjs",
+      "source": "cae42d46f-8Va5mKUX.js",
+      "sourceSha256": "43f45df8bec5d933a1394b296f95925db9dbe3acb9bb6977f64e360d5bee01cf",
+      "sha256": "cb75c8324e05abcfe607e2049e1d18d023832a6a71dff4c304cb93a50f61132f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "o",
+          "sha256": "23808085a74a9aeef0230ee2102ffdee016c508b381e63772b9bb58f654499cb"
+        },
+        {
+          "name": "s",
+          "sha256": "83600054e43ba77b3eac50188c9fa69cf32dd67aa70bb35ac67fa64bb5f36a7c"
+        },
+        {
+          "name": "c",
+          "sha256": "d033d5cc5f2278d93228b303e6f3acaa5bfe19b8d7f7ae8f35a3db473b762a5b"
+        },
+        {
+          "name": "u",
+          "sha256": "d5aaed911ceb744610aecdebba97c51939e809fb1d970084132b437ae92b694d"
+        },
+        {
+          "name": "d",
+          "sha256": "164623acc5449b8a86f06e92e485587d5e5b2fd4baa9c3944047e66e7e0a4624"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "s": "focusReturnRegion",
+        "u": "returnFocusSoon"
+      }
+    },
+    {
+      "target": "finding-category.mjs",
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "f339805c00768d94d5342bd0ee743ad15193d6338b445d33019fc6c32b4e6da6",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "jq",
+          "sha256": "4daf94831fd65045a78ac30d6c03d8a1a7d33c4947e7b2751fcf3e086cbad06d"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "jq": "findingCategoryLabel"
+      }
+    },
+    {
+      "target": "review-finding-card.mjs",
+      "source": "c44d00c7f-zUAG9XyS.js",
+      "sourceSha256": "1c22acc2085aa1a4f30ddba06de3f2fc7f9f7673e0872e2e8882d16ce262be9d",
+      "sha256": "2101338bc86d1734e7c73ea901270d92bd18123e7ca6640b1ecc3b3a481b05e9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Zi",
+          "sha256": "8be70024164433ac858c8c7d1c9b1a067518645edceb8c9a4ca42de8311a9741"
+        },
+        {
+          "name": "ea",
+          "sha256": "760d3ae20889159af9a77bf609869943bdcbf2138a3298e737217a0005dea74f"
+        },
+        {
+          "name": "ya",
+          "sha256": "19a0e4bdc7c8e0b2c607e3c16d133bc57af2d66b2502a372606f8cc9a95623e1"
+        },
+        {
+          "name": "ba",
+          "sha256": "ebc9429d2540600a5c6fc2b31765d164ebd84d3f2a5be29a63f21bd9710f69f5"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "w",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "view-tabs",
+          "original": "ge"
+        },
+        {
+          "local": "R",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "ReviewSpark",
+          "via": "shared-frame-BfjMqbuN.js:$i",
+          "kind": "adapter",
+          "original": "NT"
+        },
+        {
+          "local": "fe",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsOverflowTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Dc",
+          "kind": "view-tabs",
+          "original": "gm"
+        },
+        {
+          "local": "_e",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsBadge",
+          "via": "shared-frame-BfjMqbuN.js:Vl",
+          "kind": "view-tabs",
+          "original": "cs"
+        },
+        {
+          "local": "U",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "Se",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:kc",
+          "kind": "view-tabs",
+          "original": "Sm"
+        },
+        {
+          "local": "W",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "G",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Ve",
+          "from": "./pane-focus-return.mjs",
+          "name": "returnFocusSoon",
+          "via": "cae42d46f-8Va5mKUX.js:l",
+          "kind": "generated"
+        },
+        {
+          "local": "Ue",
+          "from": "./pane-focus-return.mjs",
+          "name": "focusReturnRegion",
+          "via": "cae42d46f-8Va5mKUX.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "In",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useIsCurrentFinding",
+          "via": "cc8941b7b-CZT9QwXr.js:Q",
+          "kind": "adapter",
+          "original": "rt"
+        },
+        {
+          "local": "$n",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useFindingStatus",
+          "via": "cc8941b7b-CZT9QwXr.js:tt",
+          "kind": "adapter",
+          "original": "it"
+        }
+      ],
+      "exports": {
+        "ba": "ReviewFindingCard",
+        "ea": "findingLinesLabel",
+        "Zi": "DIFF_WIDGET_CARD"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c44d00c7f-zUAG9XyS.js",
+      "binding": "Aa",
+      "role": "Diff annotation renderer: a finding is ba with Fix / Next (only with more findings) / Dismiss",
+      "sourceSha256": "1c22acc2085aa1a4f30ddba06de3f2fc7f9f7673e0872e2e8882d16ce262be9d",
+      "sha256": "be3342f98d55a431cdb61b896bcb12b7387012ea559721b61e7abb457119659e",
+      "features": [
+        "if (n.kind === \"finding\")",
+        "annotation: n.finding,",
+        "onFix: f ? () => f(n.finding) : void 0,",
+        "onNext: n.hasNext",
+        "? () => Dn.stepReviewFinding(r, n.finding.id, s)",
+        "p ? p(n.finding) : Dn.dismissReviewFinding(r, n.finding.id, s),"
+      ]
+    },
+    {
+      "source": "c44d00c7f-zUAG9XyS.js",
+      "binding": "xa",
+      "role": "Annotation list: a finding sits under its end line (lineNumber: endLine), hasNext from the pane",
+      "sourceSha256": "1c22acc2085aa1a4f30ddba06de3f2fc7f9f7673e0872e2e8882d16ce262be9d",
+      "sha256": "35cf1023f98a838af6179430caa05c9a08f24c71b7036502c656ae21bc86d7fd",
+      "features": [
+        "key: `finding:${e.id}`,",
+        "lineNumber: e.endLine,",
+        "metadata: { kind: \"finding\", finding: e, hasNext: i },"
+      ]
+    },
+    {
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "binding": "Mq",
+      "role": "ReportFindings finding parser: category is jq(category), line only when a number",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "1d88f280a064a3e095a9665f203f7bb0b987e60a94f1c15505cf8899e0502775",
+      "features": [
+        "line: typeof t.line == \"number\" ? t.line : void 0,",
+        "category: jq(t.category),",
+        "t.verdict === \"CONFIRMED\" || t.verdict === \"PLAUSIBLE\""
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "role": "Findings card: the annotation each reported finding becomes (host: review-findings-model.mjs findingAnnotation)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "raw": true,
+      "features": [
+        "id:`finding-${e.id}-${n}`,filePath:t.file,side:\"additions\",startLine:t.line??1,endLine:t.line??1,line:t.line,body:t.summary,detail:t.failure_scenario,source:\"finding\",category:t.category,verdict:t.verdict"
+      ]
+    }
+  ]
+}

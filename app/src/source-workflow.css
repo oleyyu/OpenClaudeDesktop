@@ -132,3 +132,5 @@ html[data-reduce-motion="true"] .swf-cell[data-state=ghost]{opacity:.45;animatio
 .swf-artifact-detail{font-size:11px;color:var(--cds-text-muted)}
 .swf-settings-note{margin:0;font-size:11px;color:var(--cds-text-muted)}
 .swf-field{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+
+.swf-compatibility{font-size:var(--cds-font-size-footnote,12px);line-height:var(--cds-leading-footnote,18px);color:var(--cds-text-secondary);overflow-wrap:anywhere}.swf-compatibility summary{cursor:var(--cds-cursor-interactive,default);color:var(--cds-text-muted)}.swf-compatibility p{margin:6px 0}.swf-compatibility ul{margin:0;padding-left:18px;max-height:180px;overflow:auto}.swf-compatibility li+li{margin-top:6px}

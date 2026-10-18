@@ -1,157 +1,158 @@
-// Original Preview sketch host, mode switch, focus, export and toolbar composition.
+// Original Preview sketch host (2.42304.0), mode switch, focus, export and toolbar composition.
 import {
   useState as e,
-  useImperativeHandle as t,
-  useEffect as n,
-  useEffectEvent as r,
-  useLayoutEffect as i,
-  useRef as a,
-  useCallback as s,
+  useImperativeHandle as i,
+  useEffect as o,
+  useEffectEvent as a,
+  useLayoutEffect as te,
+  useRef as n,
+  useCallback as c,
   useMemo as ee,
-  memo as u,
+  memo as s,
 } from "react";
-import { jsx as o, jsxs as c } from "react/jsx-runtime";
+import { jsx as r, jsxs as t } from "react/jsx-runtime";
 export function createPreviewSketchHost({
-  usePlatform: te,
-  isTextInput: re,
-  isApplication: ne,
-  popupSelector: f,
-  hasOtherEscapeOwner: ce,
-  openPopupSelector: le,
-  asElement: m,
-  ownerWindow: ae,
-  suppressContextMenu: p,
-  releaseEscape: ie,
-  DisabledReasonTooltip: h,
-  Button: g,
-  useIntl: se,
-  useErrors: oe,
-  Toolbar: ue,
-  useSketch: de,
-  colors: fe,
-  Canvas: pe,
+  usePlatform: re,
+  isTextInput: ae,
+  isApplication: ie,
+  popupSelector: d,
+  hasOtherEscapeOwner: le,
+  openPopupSelector: ue,
+  asElement: h,
+  ownerWindow: ne,
+  suppressContextMenu: f,
+  releaseEscape: oe,
+  DisabledReasonTooltip: p,
+  Button: m,
+  useIntl: ce,
+  useErrors: se,
+  Toolbar: de,
+  useSketch: fe,
+  colors: pe,
+  Canvas: me,
 }) {
   const l = (...parts) => parts.filter(Boolean).join(" "),
-    d = "data-escape-owner",
-    me = "#1F1E1D";
-  const he = (() => {
-    function l(e) {
+    u = "data-escape-owner",
+    he = "#1F1E1D";
+  const ge = (() => {
+    function u(e) {
       return { width: e.pixelWidth / e.dpr, height: e.pixelHeight / e.dpr };
     }
-    return l;
+    return u;
   })();
-  var ge = "bottom-2.5",
-    _ = "--sketch-bar-reach",
-    v = "--sketch-bar-drop",
-    _e =
+  var _e = "bottom-2.5",
+    g = "--sketch-bar-reach",
+    _ = "--sketch-bar-drop",
+    ve =
       "top-[calc(100%+var(--sketch-bar-drop,0px))] mt-2.5 -mx-[var(--sketch-bar-reach,0px)]",
-    y = "h-[calc(var(--cds-h-control)+var(--cds-pad-xs)*2+1.25rem)]",
-    b = "pb-[calc(var(--cds-h-control)+var(--cds-pad-xs)*2+1.25rem)]",
-    ve = `${f},[${d}]`,
-    ye = { [d]: "" };
-  function be(e) {
+    v = "h-[calc(var(--cds-h-control)+var(--cds-pad-xs)*2+1.25rem)]",
+    y = "pb-[calc(var(--cds-h-control)+var(--cds-pad-xs)*2+1.25rem)]",
+    b = "[data-sketch-tools] button:not(:disabled)",
+    ye = `${d},[${u}]`,
+    be = { [u]: "" };
+  function xe(e) {
     return e.isComposing || e.keyCode === 229;
   }
-  function xe(e) {
+  function Se(e) {
     return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
   }
   function x({
-    backdrop: u,
-    onCancel: d,
-    onAttach: f,
-    scopeTokens: p = !1,
-    source: _,
-    pageTool: v,
-    barUnder: y = !1,
-    rescaleOnResize: b = !1,
-    attachHeld: x,
-    focusHandoverRef: S,
-    ref: C,
+    backdrop: s,
+    onCancel: u,
+    onAttach: d,
+    scopeTokens: f = !1,
+    source: g,
+    pageTool: _,
+    barUnder: v = !1,
+    rescaleOnResize: y = !1,
+    attachHeld: b,
+    focusHandoverRef: x,
+    ref: S,
   }) {
-    let [w, T] = e(null),
-      E = v?.picking ?? !1,
-      D = v?.resting !== void 0,
-      O = E || D;
-    O && w !== null && T(null);
-    let k = O ? void 0 : w ? w.backdrop : u,
-      A = k?.src ?? null,
-      j = k?.pixelWidth === void 0 ? null : he(k),
-      M = j === null,
-      N = a(null),
-      P = a(null),
-      F = s(() => {
-        let e = ae(N.current);
-        (e && ie(e), P.current?.requestClose());
+    let [C, w] = e(null),
+      T = _?.picking ?? !1,
+      E = _?.resting !== void 0,
+      D = T || E;
+    D && C !== null && w(null);
+    let O = D ? void 0 : C ? C.backdrop : s,
+      k = O?.src ?? null,
+      A = O?.pixelWidth === void 0 ? null : ge(O),
+      j = A === null,
+      M = n(null),
+      N = n(null),
+      P = c(() => {
+        let e = ne(M.current);
+        (e && oe(e), N.current?.requestClose());
       }, []),
       {
-        canvasRef: Ce,
-        redactEnabled: we,
-        tool: I,
-        setTool: L,
-        color: R,
-        redactStyle: z,
-        handleRedactStyleChange: Te,
-        redactionSelected: Ee,
-        handleSelectionChange: De,
-        hasStrokes: B,
-        canUndo: Oe,
-        canRedo: ke,
-        handleHistoryChange: V,
-        gestureActive: Ae,
-        handleGestureActiveChange: je,
-        handleUndo: Me,
-        handleRedo: Ne,
-        handleKeyDown: Pe,
-        undoShortcut: Fe,
-        redoShortcut: Ie,
-        handleClear: Le,
-        handleToolDone: Re,
-        handleColorChange: ze,
-        exportSketch: H,
-        cancel: U,
-        textTargets: Be,
-        handleTextTargetRedacted: Ve,
-        textRedactionCount: W,
-      } = de(
-        F,
-        _,
-        A
+        canvasRef: we,
+        redactEnabled: Te,
+        tool: F,
+        setTool: I,
+        color: L,
+        redactStyle: R,
+        handleRedactStyleChange: Ee,
+        redactionSelected: De,
+        handleSelectionChange: Oe,
+        hasStrokes: z,
+        canUndo: ke,
+        canRedo: Ae,
+        handleHistoryChange: B,
+        gestureActive: je,
+        handleGestureActiveChange: Me,
+        handleUndo: Ne,
+        handleRedo: Pe,
+        handleKeyDown: Fe,
+        undoShortcut: Ie,
+        redoShortcut: Le,
+        handleClear: Re,
+        handleToolDone: ze,
+        handleColorChange: Be,
+        exportSketch: V,
+        cancel: H,
+        textTargets: Ve,
+        handleTextTargetRedacted: He,
+        textRedactionCount: U,
+      } = fe(
+        P,
+        g,
+        k
           ? {
-              url: A,
+              url: k,
               host: "preview",
-              scale: k?.pixelWidth === void 0 ? void 0 : k.dpr,
+              scale: O?.pixelWidth === void 0 ? void 0 : O.dpr,
             }
           : void 0,
       );
-    O && I === "select" && L("pen");
-    let He = s(
+    D && F === "select" && I("pen");
+    let Ue = c(
         (e) => {
-          (V(e), e.count > 0 && u !== void 0 && T((e) => e ?? { backdrop: u }));
+          (B(e), e.count > 0 && s !== void 0 && w((e) => e ?? { backdrop: s }));
         },
-        [V, u],
+        [B, s],
       ),
-      G = !O;
-    (t(
-      C,
+      W = !D;
+    (i(
+      S,
       () => ({
-        hasMarks: () => G && B,
-        requestClose: () => P.current?.requestClose(),
+        hasMarks: () => W && z,
+        requestClose: () => N.current?.requestClose(),
       }),
-      [G, B],
+      [W, z],
     ),
-      n(() => {
-        let e = N.current;
-        G &&
+      o(() => {
+        let e = M.current;
+        W &&
           e &&
           !e.contains(e.ownerDocument.activeElement) &&
           e.focus({ preventScroll: !0 });
-      }, [G]));
-    let K = a(null),
-      Ue = r(() => {
-        !D ||
-          v?.mayTakeFocus?.() === !1 ||
+      }, [W]));
+    let G = n(null),
+      We = a(() => {
+        !E ||
+          _?.mayTakeFocus?.() === !1 ||
           queueMicrotask(() => {
-            let e = N.current,
+            let e = M.current,
               t = e?.ownerDocument.activeElement;
             e &&
               (t === null || t === e.ownerDocument.body) &&
@@ -160,222 +161,224 @@ export function createPreviewSketchHost({
                 ?.focus({ preventScroll: !0 });
           });
       });
-    (i(
+    (te(
       () => (
-        S.current && Ue(),
-        (S.current = !1),
+        x.current && We(),
+        (x.current = !1),
         () => {
-          let e = K.current;
-          S.current = e !== null && e === e.ownerDocument.activeElement;
+          let e = G.current;
+          x.current = e !== null && e === e.ownerDocument.activeElement;
         }
       ),
-      [S],
+      [x],
     ),
-      n(() => {
-        G || U();
-      }, [G, U]),
-      n(() => {
-        let e = N.current,
+      o(() => {
+        W || H();
+      }, [W, H]),
+      o(() => {
+        let e = M.current,
           t = e?.ownerDocument;
-        if (!e || !t || !G) return;
+        if (!e || !t || !W) return;
         let n = (n) => {
-          if (n.key !== "Escape" || n.defaultPrevented || be(n) || xe(n))
+          if (n.key !== "Escape" || n.defaultPrevented || xe(n) || Se(n))
             return;
-          let r = m(n.target);
-          if (r && (e.contains(r) || re(r) || ne(r) || r.closest(ve) !== null))
+          let r = h(n.target);
+          if (r && (e.contains(r) || ae(r) || ie(r) || r.closest(ye) !== null))
             return;
           let i = e.closest("[data-pane-root]"),
-            a =
+            ee =
               r === null ||
               r === t.body ||
               r === t.documentElement ||
               (i !== null && i.contains(r)),
-            o = i ? ce(i, e) : t.querySelector(le) !== null;
-          !a || o || (n.preventDefault(), n.stopPropagation(), n.repeat || F());
+            a = i ? le(i, e) : t.querySelector(ue) !== null;
+          !ee ||
+            a ||
+            (n.preventDefault(), n.stopPropagation(), n.repeat || P());
         };
         return (
           t.addEventListener("keydown", n, !0),
           () => t.removeEventListener("keydown", n, !0)
         );
-      }, [F, G]));
-    let q = se(),
-      J = oe(),
-      Y = s(async () => {
-        let e = q.formatMessage({
+      }, [P, W]));
+    let K = ce(),
+      q = se(),
+      J = c(async () => {
+        let e = K.formatMessage({
             defaultMessage: "Couldn\u2019t save your annotations. Try again.",
             id: "VRJcpQWzaV",
           }),
           t = !1,
           n;
         try {
-          n = await H(async (e) => {
+          n = await V(async (e) => {
             let n;
             return (
-              A
-                ? (n = await e.toComposite(A))
+              k
+                ? (n = await e.toComposite(k))
                 : ((n = e.toPNG("#ffffff")),
                   e
                     .getStrokes()
                     .some(
                       (e) => e.kind !== "redact" && e.color === "#FFFFFF",
-                    ) && (n = e.toPNG(me))),
+                    ) && (n = e.toPNG(he))),
               (t = e.getStrokes().length > 0),
-              !t && A?.startsWith("data:image/png") ? A : n
+              !t && k?.startsWith("data:image/png") ? k : n
             );
           });
         } catch (t) {
-          J?.addError(e, {
+          q?.addError(e, {
             error: t,
             messageForLogging: "Preview annotation composite failed",
           });
           return;
         }
         if (n !== null) {
-          if (!n.startsWith("data:") || (t && n === A)) {
-            J?.addError(e, {
+          if (!n.startsWith("data:") || (t && n === k)) {
+            q?.addError(e, {
               messageForLogging: "Preview annotation composite fail-safe",
             });
             return;
           }
-          f(n, { annotated: t, textRedactions: W() });
+          d(n, { annotated: t, textRedactions: U() });
         }
-      }, [A, f, H, J, q, W]),
-      We = s(() => {
-        (U(), d());
-      }, [U, d]),
-      X = v?.onDraw,
-      Ge = s(
+      }, [k, d, V, q, K, U]),
+      Ge = c(() => {
+        (H(), u());
+      }, [H, u]),
+      Y = _?.onDraw,
+      Ke = c(
         (e) => {
-          (L(e), X?.());
+          (I(e), Y?.());
         },
-        [L, X],
+        [I, Y],
       ),
-      Ke = ee(
+      qe = ee(
         () =>
-          v?.label === void 0
+          _?.label === void 0
             ? void 0
             : {
-                label: v.label,
-                detail: v.detail,
-                shortcut: v.shortcut,
-                pressed: v.picking,
-                onPress: v.onTogglePick,
+                label: _.label,
+                detail: _.detail,
+                shortcut: _.shortcut,
+                pressed: _.picking,
+                onPress: _.onTogglePick,
               },
-        [v],
+        [_],
       ),
-      Z = q.formatMessage({ defaultMessage: "Add to chat", id: "oBu4r1Zt46" }),
-      qe = !G || (!B && A === null),
-      Je = qe || x !== void 0,
-      Q = E
-        ? q.formatMessage({
+      X = K.formatMessage({ defaultMessage: "Add to chat", id: "oBu4r1Zt46" }),
+      Z = !W || (!z && k === null),
+      Je = Z || b !== void 0,
+      Q = T
+        ? K.formatMessage({
             defaultMessage: "Click an element on the page to add it.",
             id: "ORl9wEfAbK",
           })
-        : qe
-          ? q.formatMessage({
+        : Z
+          ? K.formatMessage({
               defaultMessage: "Nothing to add yet",
               id: "gW2ifrLbxu",
             })
-          : x,
-      Ye = o(g, {
+          : b,
+      Ye = r(m, {
         variant: "primary",
         disabled: Je,
-        onClick: () => void Y(),
-        children: Z,
+        onClick: () => void J(),
+        children: X,
       }),
-      Xe = o(g, {
+      Xe = r(m, {
         variant: "primary",
         iconOnly: !0,
         icon: "Add",
-        "aria-label": Z,
+        "aria-label": X,
         disabled: Je,
-        onClick: () => void Y(),
+        onClick: () => void J(),
       }),
-      Ze = te();
-    return c("div", {
-      ref: N,
-      ...(G ? ye : void 0),
+      Ze = re();
+    return t("div", {
+      ref: M,
+      ...(W ? be : void 0),
       tabIndex: -1,
       onFocus: (e) => {
-        let t = m(e.target);
-        K.current = t?.matches(":focus-visible") ? t : null;
+        let t = h(e.target);
+        G.current = t?.matches(":focus-visible") ? t : null;
       },
       onBlur: () => {
-        K.current = null;
+        G.current = null;
       },
-      onKeyDown: G ? Pe : void 0,
-      onContextMenu: Ze ? Se : void 0,
+      onKeyDown: W ? Fe : void 0,
+      onContextMenu: Ze ? Ce : void 0,
       className: l(
         "absolute inset-0 outline-none draggable-none",
-        p && "epitaxy-root text-body text-primary break-words",
-        O && "pointer-events-none",
+        f && "epitaxy-root text-body text-primary break-words",
+        D && "pointer-events-none",
       ),
       children: [
-        k === null && o("div", { className: "absolute inset-0 bg-surface-3" }),
-        k !== void 0 &&
-          o("div", {
+        O === null && r("div", { className: "absolute inset-0 bg-surface-3" }),
+        O !== void 0 &&
+          r("div", {
             className:
               "absolute inset-0 flex items-start justify-center-safe overflow-clip",
-            children: c("div", {
-              className: l("relative", j ? "shrink-0" : "h-full w-full"),
-              style: j ?? void 0,
+            children: t("div", {
+              className: l("relative", A ? "shrink-0" : "h-full w-full"),
+              style: A ?? void 0,
               children: [
-                k &&
-                  o("img", {
-                    src: k.src,
+                O &&
+                  r("img", {
+                    src: O.src,
                     alt: "",
                     draggable: !1,
                     className: l(
                       "absolute inset-0 h-full w-full max-w-none select-none pointer-events-none",
-                      M && "object-cover object-left-top",
+                      j && "object-cover object-left-top",
                     ),
                   }),
-                o(pe, {
-                  ref: Ce,
+                r(me, {
+                  ref: we,
                   className: "absolute inset-0 h-full w-full",
-                  tool: I,
-                  color: R,
-                  redactStyle: z,
-                  textTargets: Be,
-                  onTextTargetRedacted: Ve,
-                  onSelectionChange: De,
-                  backdropCover: M,
-                  rescaleOnResize: b,
+                  tool: F,
+                  color: L,
+                  redactStyle: R,
+                  textTargets: Ve,
+                  onTextTargetRedacted: He,
+                  onSelectionChange: Oe,
+                  backdropCover: j,
+                  rescaleOnResize: y,
                   strokeWidth: 4,
-                  onHistoryChange: He,
-                  onToolDone: Re,
-                  onGestureActiveChange: je,
+                  onHistoryChange: Ue,
+                  onToolDone: ze,
+                  onGestureActiveChange: Me,
                 }),
               ],
             }),
           }),
-        o(ue, {
-          className: y ? _e : ge,
-          tool: G ? I : "select",
-          onToolChange: G ? L : Ge,
-          leadingTool: Ke,
-          toolsDisabled: O && v?.canDraw === !1,
-          resting: v?.resting,
-          colors: fe,
-          color: R,
-          onColorChange: ze,
-          redactEnabled: we,
-          redactStyle: z,
-          onRedactStyleChange: Te,
-          redactionSelected: Ee,
-          hasStrokes: G && B,
-          canUndo: G && Oe,
-          canRedo: G && ke,
-          onUndo: Me,
-          onRedo: Ne,
-          undoShortcut: Fe,
-          redoShortcut: Ie,
-          onClear: Le,
-          onClose: We,
-          handleRef: P,
-          concealed: G && Ae,
-          positiveAction: o(h, { hoverable: !1, reason: Q, children: Ye }),
-          positiveActionIconOnly: o(h, {
+        r(de, {
+          className: v ? ve : _e,
+          tool: W ? F : "select",
+          onToolChange: W ? I : Ke,
+          leadingTool: qe,
+          toolsDisabled: D && _?.canDraw === !1,
+          resting: _?.resting,
+          colors: pe,
+          color: L,
+          onColorChange: Be,
+          redactEnabled: Te,
+          redactStyle: R,
+          onRedactStyleChange: Ee,
+          redactionSelected: De,
+          hasStrokes: W && z,
+          canUndo: W && ke,
+          canRedo: W && Ae,
+          onUndo: Ne,
+          onRedo: Pe,
+          undoShortcut: Ie,
+          redoShortcut: Le,
+          onClear: Re,
+          onClose: Ge,
+          handleRef: N,
+          concealed: W && je,
+          positiveAction: r(p, { hoverable: !1, reason: Q, children: Ye }),
+          positiveActionIconOnly: r(p, {
             hoverable: !1,
             reason: Q,
             children: Xe,
@@ -384,13 +387,13 @@ export function createPreviewSketchHost({
       ],
     });
   }
-  function Se(e) {
-    p(e, e.currentTarget) && e.preventDefault();
+  function Ce(e) {
+    f(e, e.currentTarget) && e.preventDefault();
   }
   function S({ layerKey: e, ...t }) {
-    let n = a(!1);
-    return o(x, { ...t, focusHandoverRef: n }, e);
+    let i = n(!1);
+    return r(x, { ...t, focusHandoverRef: i }, e);
   }
-  var C = u(S);
+  var C = s(S);
   return C;
 }

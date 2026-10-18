@@ -70,6 +70,35 @@ test("case-insensitive counts: inline runs join, blocks never do", () => {
   assert.equal(findMatches(h("p", {}, "aaaa"), "aa").length, 2);
 });
 
+test("cov4-03: icon glyphs and avatars are skipped without a run break (2.42304.0 shared-15 Ca)", () => {
+  // shared-15 Ca: `if(Ye(i)||i.matches(ha))return;` (Ye = [data-cds="Icon"]:not(svg), ha = [data-cds="Avatar"]) —
+  // no s = true, so no NUL: the text on both sides of an icon stays one run.
+  const glyph = String.fromCodePoint(0xe0a1);
+  const icon = () => h("span", { "aria-hidden": "true", "data-cds": "Icon" }, glyph);
+  const root = h("p", {}, "See ", h("a", {}, h("span", {}, h("span", {}, icon()), "acme/widgets#42")), " now.");
+  assert.equal(collectFindText(root).text, "\0See acme/widgets#42 now.");
+  assert.deepEqual(findMatches(root, glyph), []);
+  const across = findMatches(root, "See acme");
+  assert.equal(across.length, 1);
+  assert.equal(across[0].startNode.data, "See ");
+  assert.equal(across[0].endNode.data, "acme/widgets#42");
+  assert.equal(across[0].endOffset, 4);
+  // An avatar (with or without aria-hidden) is skipped the same way; its text is never searched.
+  const avatar = h("p", {}, "by ", h("span", { "data-cds": "Avatar" }, "AB"), "Ada");
+  assert.equal(collectFindText(avatar).text, "\0by Ada");
+  assert.equal(findMatches(avatar, "by Ada").length, 1);
+  assert.deepEqual(findMatches(avatar, "AB"), []);
+  // An inline <svg data-cds="Icon"> is not matched by Ye (`:not(svg)`), so the F10 aria-hidden rule still breaks the run …
+  const svg = h("p", {}, "left ", h("svg", { "aria-hidden": "true", "data-cds": "Icon" }, "x"), "right");
+  assert.equal(collectFindText(svg).text, "\0left \0right");
+  // … as does any other aria-hidden / sr-only / hidden / gutter / omitted subtree (local spec F10).
+  for (const attrs of [{ "aria-hidden": "true" }, { class: "sr-only" }, { hidden: "" }, { "data-gutter": "" }, { "data-find-omitted": "" }]) {
+    const broken = h("p", {}, "left ", h("span", attrs, "x"), "right");
+    assert.equal(collectFindText(broken).text, "\0left \0right", JSON.stringify(attrs));
+    assert.equal(findMatches(broken, "left right").length, 0);
+  }
+});
+
 test("foldCase keeps every UTF-16 index in place (shared-18 q)", () => {
   for (const sample of ["İstanbul", "ΣΑΣ", "Ünïcödé", "emoji 😀 Text", "ﬀ ligature"]) {
     const folded = foldCase(sample);

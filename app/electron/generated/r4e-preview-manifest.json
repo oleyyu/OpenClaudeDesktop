@@ -1,0 +1,115 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r4e-preview.mjs",
+  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
+  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+  "targets": {
+    "r4e-preview-coordinates.mjs": {
+      "factory": "createPreviewCoordinateCheck",
+      "host": {
+        "Cvi": {
+          "role": "the tab's current geometry: { scale, width, height } (readVisualViewportGeometry)",
+          "sourceSha256": "e59e51ebb4cadf1445b8c05a36066094fd8fb9fcc9897a94ec6024c0ae6ff0df"
+        }
+      },
+      "bindings": {
+        "Esi": {
+          "sha256": "f900d7136f15914c2563060a180e6b58b261f58c5af1bdb2b4ef1b5430dc3de3",
+          "exportedAs": "zoomedIn"
+        },
+        "Dsi": {
+          "sha256": "f8406fe3ba5dcec8876b3c2c78772cd435fcc2a946b91f2e4e69793ecd5f4430"
+        },
+        "Osi": {
+          "sha256": "6594b1200e7ea1d117442ff16a07ca7d5068734b2b711e4d927e66e1ab60ff42",
+          "exportedAs": "partlyVisible"
+        },
+        "g4i": {
+          "sha256": "eb7410551d7454045bc4dc07eb47c1c3a3be39105a9bc9fb6b723204b1e26c73",
+          "exportedAs": "sizeTolerance"
+        },
+        "_4i": {
+          "sha256": "a6d9f2adf0fa69e2201af35127782ec92f473756bae3158d3c5371c50546531c",
+          "exportedAs": "zoomOrSizeChanged"
+        },
+        "v4i": {
+          "sha256": "0c5721d1c04e88b775204a93fa1d937b45fd643c0f6e6500cff66932f5f81775",
+          "exportedAs": "visiblePart"
+        },
+        "y4i": {
+          "sha256": "25897fca7af607769069ee1951fbca51a4604a1746102e9ae5bd0834ed1be959",
+          "exportedAs": "frameToViewport"
+        },
+        "b4i": {
+          "sha256": "74dc954186796b07e78cc62eaf1aac1f91a9ea9279a553cd85c646eb062faad6",
+          "exportedAs": "dispatchPoint"
+        },
+        "x4i": {
+          "sha256": "b0d5ddd3235e92b114e28303c5f3e4158fe6033350a2b90569d168190ae39eb0"
+        },
+        "S4i": {
+          "sha256": "37d861f052c7200d12c7a5ddb17a032a669c7805541197e6704f074fd98a7acc",
+          "exportedAs": "coordinateProblem"
+        }
+      },
+      "messages": {
+        "zoomChangedError": {
+          "from": "C4i",
+          "sha256": "cc79bbe6d5b1e43c21420e06ccd66973e03b430f0bf2d043786ff92ba4c35f5a"
+        },
+        "pageChangedError": {
+          "from": "C4i",
+          "sha256": "9daf00c1c704a8ca8a89d3351b1a5dc79bf2fff88ad2266d7afca31946cbcfea"
+        }
+      },
+      "globals": [
+        "Math",
+        "Number"
+      ],
+      "hostCalls": {
+        "Cvi": 1
+      },
+      "callSites": {
+        "C4i": {
+          "sha256": "a0cff1e0ddfc36287fc54cd32707915a5d072da6e0d9d049ff55f67ca966e48f",
+          "needles": [
+            "i=()=>{let e=d2.get(r);return e&&e.screenshotWidth>0&&e.screenshotHeight>0?e:void 0},a=i();",
+            "if(a&&await _4i(e,t,a))return m2(e,t,!0),{error:",
+            "errorClass:\"needs_screenshot\"};if(a=i(),!a&&f2.get(r)!==!0){",
+            "return a?{dims:a}:{error:f2.get(r)===!0?"
+          ]
+        },
+        "c4i": {
+          "sha256": "96d2426f1a6247883d3d18d149271c9bd70771a4a1437ca7e911b9efe0cecc4b",
+          "needles": [
+            "d2.set(o,{viewportWidth:r?.w||1280,viewportHeight:r?.h||800,screenshotWidth:i.frameWidth??i.width,screenshotHeight:i.frameHeight??i.height,",
+            "visible:r&&r.visible.width>0&&r.visible.height>0?r.visible:null}),(!a||!f2.has(o))&&f2.set(o,!1)"
+          ]
+        },
+        "h4i": {
+          "sha256": "fa8fbe79756b9b593a51035f06002d789880b24afd61caf5516e56ba159e8acb",
+          "needles": [
+            "a=Math.max(1,i.scale);return{w:r.w/a,h:r.h/a,visible:i}"
+          ]
+        },
+        "m2": {
+          "sha256": "c69ee4b81a2ad0cbbc407889d88abb185637994af2eec38cad2497cdfb550dd8",
+          "needles": [
+            "d2.delete(r),n&&f2.has(r)&&f2.set(r,!0);return"
+          ]
+        },
+        "k4i": {
+          "sha256": "f89f4eefe703213c66a00a2ae875e3b845afcafd69766a2a9083186f4fe9301b",
+          "needles": [
+            "if(n.coordinate){let r=await C4i(e,t,o);if(\"error\"in r)return r;",
+            "let i=S4i(r.dims,n.coordinate[0],n.coordinate[1]);return i?{error:`${o}: ${i}`,errorClass:\"coordinate_out_of_bounds\"}:{dispatch:b4i(r.dims,n.coordinate[0],n.coordinate[1]),echo:[Math.round(n.coordinate[0]),Math.round(n.coordinate[1])]}",
+            "let a=S4i(i.dims,n.coordinate[0],n.coordinate[1]);if(a)return BN(`scroll: ${a}`,\"coordinate_out_of_bounds\");let s=b4i(i.dims,n.coordinate[0],n.coordinate[1])",
+            "text:`Screenshot size: ${o.width}x${o.height}${c}${l}`"
+          ]
+        }
+      },
+      "sha256": "8cc40a861b808809cc1d0c389c9f4bf09e77435f1ff9ad555677e63efdcf031b"
+    }
+  }
+}

@@ -6,6 +6,22 @@ import { selectOptions, selectHighlight } from './select-model.mjs';
 import { t } from '../electron/i18n/index.mjs';
 import './source-select.css';
 
+// 2.42304.0 shared-frame zk/Bk (the Combobox trigger's onKeyDown): once an Escape has
+// closed the popup, the held key's auto-repeats on the same trigger are swallowed
+// (preventDefault + stopPropagation) so they never reach an outer Dialog; a fresh
+// (non-repeat) Escape clears the mark and behaves normally again.
+const escapeClosedTriggers = new WeakSet();
+export function markEscapeClosed(owner) {
+  if (owner) escapeClosedTriggers.add(owner);
+}
+export function swallowRepeatedEscape(event) {
+  const owner = event.currentTarget;
+  if (event.key !== 'Escape' || event.defaultPrevented) return false;
+  if (event.repeat && escapeClosedTriggers.has(owner)) { event.preventDefault(); event.stopPropagation(); return true; }
+  escapeClosedTriggers.delete(owner);
+  return false;
+}
+
 // Independent CDS Combobox single/select branch (shared-frame xb → Tb → Eb).
 // Options are the caller's actual data; selection never changes on mere focus.
 // triggerProps: extra attributes for the combobox button (a form's id, aria-describedby/-invalid/-required, data-*).
@@ -25,6 +41,7 @@ export function SourceSelect({ label, value, items, onChange, disabled = false, 
       data-value={value ?? ''} disabled={disabled} className="sselect-trigger"
       onClick={() => open ? close(false) : show('selected')}
       onKeyDown={event => {
+        if (swallowRepeatedEscape(event)) return;
         if (event.nativeEvent.isComposing || event.altKey || event.metaKey || event.ctrlKey) return;
         if (['ArrowDown', 'ArrowUp'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); show(event.key); }
       }}>
@@ -99,7 +116,7 @@ function SelectPopup({ id, label, items, value, searchable, trigger, initial, al
     // this popup naturally when the parent focuses its search field.
     if (event.altKey || event.metaKey || event.ctrlKey) return;
     event.stopPropagation();
-    if (event.key === 'Escape') { event.preventDefault(); onClose(true); return; }
+    if (event.key === 'Escape') { event.preventDefault(); markEscapeClosed(trigger.current); onClose(true); return; }
     if (event.key === 'Tab') {
       event.preventDefault();
       const owner = trigger.current, scope = owner?.closest('[role=dialog],[role=alertdialog]') || document.body;

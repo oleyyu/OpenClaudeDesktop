@@ -4,7 +4,8 @@ import { assistantName, escapeRegExp } from "./persona-store.mjs";
 import { t, tn } from "../electron/i18n/index.mjs";
 import { computerUseAction, computerUseLabel } from "./computer-use-model.mjs";
 import { displayCommand } from "./shell-command-model.mjs";
-const COMMAND = "item/commandExecution/requestApproval";
+import { devServerDescription } from "./generated/code-current/dev-server-description.mjs";
+const COMMAND ="item/commandExecution/requestApproval";
 const FILE = "item/fileChange/requestApproval";
 const PERMISSIONS = "item/permissions/requestApproval";
 // McpServerElicitationRequest (codex-schema-0.155.1): MCP tool-call approvals
@@ -269,6 +270,12 @@ function toolParamsDetail(meta) {
   }
   return argumentsDetail(plainObject(meta?.tool_params) ?? null);
 }
+// c96d752d0 Kk (2.42304.0) mcp__ branch: an MCP tool's "What Claude sent" rows carry a read gate,
+// `rowsReadGate: {hint: e.formatMessage(gD.rowsHint), ...(SD(d)?.server === "terminal" ? {} : {loose: !0})}`
+// ("5yDiNk/eg2"). Only a desktop connector's terminal server (mOe) is strict; OpenClaude has no desktop connectors, so
+// the gate is always loose (approval-read-gate-model.mjs: held only when the rows can't show whole or aren't laid out).
+// D23: the original wording keeps "Claude".
+export const rowsReadGate = () => ({ hint: t("Scroll through what Claude sent to allow it."), loose: true });
 /** The elicitation's presentation: mode, copy, fields and the actions it offers. */
 export function elicitationModel(params, item) {
   const meta = plainObject(params?._meta) ?? {};
@@ -322,9 +329,10 @@ export function elicitationModel(params, item) {
     const toolName = nonempty(meta.tool_title) ?? fallback;
     const heading = toolName ? { action: t("use {tool} ({server})", { tool: toolName, server }), meta: null } : fromItem?.heading ?? null;
     const metaParams = "tool_params" in meta || Array.isArray(meta.tool_params_display);
+    const detail = metaParams ? toolParamsDetail(meta) : fromItem?.detail ?? null;
     return { mode: "approval", server, message: fallback ? null : message, heading,
       title: heading ? t("Allow {name} to {action}?", { name: who, action: heading.action }) : t("Allow {name} to use a tool from {server}?", { name: who, server }),
-      toolDescription: nonempty(meta.tool_description), detail: metaParams ? toolParamsDetail(meta) : fromItem?.detail ?? null, deny: decline(t("Deny")), allows };
+      toolDescription: nonempty(meta.tool_description), detail, ...(detail && { rowsReadGate: rowsReadGate() }), deny: decline(t("Deny")), allows };
   }
   const fields = params?.mode === "form" ? elicitationFields(params.requestedSchema) : null;
   if (fields) return { mode: "form", server, message, fields, title: t("{server} is asking for information", { server }),
@@ -380,7 +388,7 @@ export function approvalCardModel(request, item) {
     const detail = (elicitation.mode === "url" || elicitation.mode === "toolSuggestion") && elicitation.url ? { kind: "url", text: elicitation.url, value: elicitation.url } : elicitation.detail ?? null;
     const { deny, allows, title, heading } = elicitation;
     return { kind: "elicitation", supported: true, title, ...(heading && { heading }), reason: null,
-      message: elicitation.message ?? null, context, detail, deny, allows, elicitation };
+      message: elicitation.message ?? null, context, detail, ...(elicitation.rowsReadGate && detail && { rowsReadGate: elicitation.rowsReadGate }), deny, allows, elicitation };
   }
   const kind = method === COMMAND ? "command" : method === FILE ? "file"
     : method === PERMISSIONS ? "permissions" : "unsupported";
@@ -468,7 +476,10 @@ export function approvalCardModel(request, item) {
   // codeDesktop.declineFeedback (the OpenCode bridge): Deny may carry what to do instead, which the core gets as the
   // rejection's message (OpenCode continues with it); without it Deny stops the agent as the core decides.
   const declineFeedback = supported && (kind === "command" || kind === "file") && deny?.key === "decline" && params.codeDesktop?.declineFeedback === true;
-  return { kind, supported, title, ...(heading && { heading }), ...(clampTitle && { clampTitle }), reason, context, detail, deny, allows, ...(declineFeedback && { declineFeedback }) };
+  // Kk mcp__ branch: a core's command approval for an MCP tool call (the item names it) gates its arguments as the
+  // elicitation's tool card does.
+  const mcpRows = !!derived && item?.type === "mcpToolCall" && detail?.kind === "arguments";
+  return { kind, supported, title, ...(heading && { heading }), ...(clampTitle && { clampTitle }), reason, context, detail, ...(mcpRows && { rowsReadGate: rowsReadGate() }), deny, allows, ...(declineFeedback && { declineFeedback }) };
 }
 
 const byteSize = bytes => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : tn(bytes, "{count} byte", "{count} bytes");
@@ -489,6 +500,10 @@ function samplingCard(params) {
     reason: t("Model requests from a connector are billed like your own messages."), context, detail, deny: { key: "decline", label: t("Deny"), primary: false }, allows,
     ...(params.codeDesktop?.declineFeedback === true ? { declineFeedback: true } : {}), sampling: true };
 }
+
+// wA's intl (the generated helper calls e.formatMessage({defaultMessage, id}, values)): the local dictionary keys
+// are the English source strings.
+const DEV_SERVER_INTL = Object.freeze({ formatMessage: (message, values) => t(message.defaultMessage, values) });
 
 // The official 2.2553.1 wording: 'run a command in your terminal' ('In {folder}, in a tab named {title}'), 'preview
 // this page', 'run a dynamic workflow {name}' with the token warning and its Tasks pane pointer.
@@ -517,14 +532,20 @@ function agentToolCard(params) {
       reason: t("{assistant} will be able to read this site and click and type on it in this session. Only allow sites you trust.", { assistant: who }), allows: forSession });
   }
   if (tool.kind === "preview-server") {
-    add("cwd", folder ? t("In {folder}", { folder }) : null);
+    // c96d752d0 Kk (2.42304.0) preview_start branch: `overrideDescription: wA(e, p("cwd"), port, f.portMayReassign === !0)`
+    // (generated devServerDescription; "Runs in {cwd} on port {port}" …). The launch.json port comes from
+    // preview-service.cjs approveServer; portMayReassign stays false there until the port policy is the original's
+    // next-free-port scan (preview-01), so the "(or the next free port)" suffix is never claimed.
+    add("description", devServerDescription(DEV_SERVER_INTL, folder ?? undefined, typeof tool.port === "number" ? tool.port : undefined, tool.portMayReassign === true));
     // launch.json's env (main.cjs agentToolCard): every variable, and a warning for those that change what runs.
     const env = Array.isArray(tool.env) ? tool.env.filter((line) => typeof line === "string" && line) : [];
     if (env.length) add("env", [t("With these environment variables:"), ...env, ...(Number(tool.envMore) > 0 ? [t("and {count} more", { count: Number(tool.envMore) })] : [])].join("\n"));
     const risky = Array.isArray(tool.envRisky) ? tool.envRisky.filter((name) => typeof name === "string" && name) : [];
     if (risky.length) add("env-warning", t("Warning: {names} can make it run a different program or load other code than the command shows. Allow it only if you set these yourself.", { names: risky.join(", ") }));
+    // Kk: `action: t ? "start" ("zTylMMruGq") : "start a dev server" ("/dKfET3Xgr"), meta: t, clampTitle: !0` — the
+    // server's name is the title's meta ("Allow … to start web?").
     const name = nonempty(tool.name);
-    return card({ action: name ? t("start the dev server “{name}”", { name }) : t("start a dev server"), meta: null }, { detail: exactCommandDetail(params.command),
+    return card({ action: name ? t("start") : t("start a dev server"), meta: name }, { detail: exactCommandDetail(params.command), clampTitle: true,
       reason: t("The command runs on your computer outside {assistant}’s sandbox, with your permissions and network access. Only allow commands you trust.", { assistant: who }), allows: forSession });
   }
   // Monitor (agent-tools/monitor.mjs): the command, its folder, and where it is stopped.
@@ -768,13 +789,4 @@ export function pendingElicitationItemIds(approvals = [], items = []) {
 // newest turn when it holds a non-empty plan item, nothing runs or waits for an answer, the session is still in Plan
 // (code mode) and the user has not answered it for that turn. A core with permission hints has its own plan review
 // (the DeepSeek bridge's exit_plan_mode card), so it never gets one. Returns {turnId, planItemId} or null.
-export function planHandoff({ items = [], hints = false, permission, mode = "code", running = false, waiting = false,
-  turnErrors = null, answered = null } = {}) {
-  if (hints === true || permission !== "plan" || mode !== "code" || running || waiting || !Array.isArray(items)) return null;
-  const turnId = items.findLast(item => typeof item?.turnId === "string" && item.turnId)?.turnId;
-  if (!turnId || turnErrors?.[turnId]) return null;
-  if (answered && (typeof answered.has === "function" ? answered.has(turnId) : answered === turnId)) return null;
-  const plan = items.findLast(item => item?.type === "plan" && item.turnId === turnId);
-  if (!plan || !nonempty(plan.text) || ["inProgress", "running", "interrupted", "failed"].includes(plan.status)) return null;
-  return { turnId, planItemId: plan.id ?? null };
-}
+export { planHandoff } from '../electron/plan-handoff.mjs';

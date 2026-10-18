@@ -16,8 +16,9 @@ export function useMacShortcuts() {
 // qa: one grapheme -> Ga square cap, otherwise Ka min-width cap.
 const capClass = label => `scds-key ${Array.from(label ?? "").length === 1 ? "scds-key-square" : "scds-key-wide"}`;
 
-// Ya: keycap = caps with a 2px gap; text = bare <kbd> glyphs (Ja) with a 0.3em gap,
-// and off mac the spoken name as the text with "+" joiners (s = text && !mac).
+// Ya: keycap = caps with a 2px gap; text = bare <kbd> glyphs (Ja) with a 0.15em gap (2.42304.0 shared-frame Es.text,
+// menus-01), and off mac the spoken name as the text with "+" joiners (s = text && !mac; mx-[-0.15em]). The original
+// component is the view-tabs CdsShortcut (ks); this host copy stays for its callers' className/mac props.
 export function SourceShortcut({ keys, variant = "keycap", onFill = false, className = "", mac, ...rest }) {
   const detected = useMacShortcuts();
   const isMac = mac ?? detected;

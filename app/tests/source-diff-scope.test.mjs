@@ -61,3 +61,76 @@ test('Changes pane header: the scope trigger replaces the title; without it (no 
   // Other tabs never show the scope control.
   assert.doesNotMatch(panel({ tab: 'plan', diffScopeControl: control }), /Diff scope:/);
 });
+
+// A hook dispatcher (as tests/sessions-page-current.test.mjs): calls a hook outside React; setters land on the next render().
+function hookFixture(hook, props) {
+  let cursor = 0, result;
+  const cells = [], same = (a, b) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+  const hooks = {
+    useContext: (context) => context._currentValue,
+    useState(initial) { const i = cursor++; cells[i] ??= { value: typeof initial === 'function' ? initial() : initial }; return [cells[i].value, (value) => { cells[i].value = typeof value === 'function' ? value(cells[i].value) : value; }]; },
+    useRef(initial) { const i = cursor++; cells[i] ??= { value: { current: initial } }; return cells[i].value; },
+    useMemo(fn, deps) { const i = cursor++; if (!cells[i] || !same(cells[i].deps, deps)) cells[i] = { value: fn(), deps }; return cells[i].value; },
+    useCallback(fn, deps) { return hooks.useMemo(() => fn, deps); },
+    useEffect() { cursor++; },
+    useSyncExternalStore(subscribe, getSnapshot) { cursor++; return getSnapshot(); },
+  };
+  hooks.useLayoutEffect = hooks.useEffect;
+  const render = (next = props) => {
+    props = next; cursor = 0;
+    const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
+    internal.H = hooks;
+    try { return (result = hook(props)); } finally { internal.H = old; }
+  };
+  render();
+  return { get result() { return result; }, render };
+}
+
+// FT-08 (diffgit-02/15): 2.42304.0 c03935b01 Cc/Ln/Rn and cb61be3a2 Ze He through the real hook.
+test('useDiffScope: a scope-row Uncommitted pick is remembered per session; a clean tree shows All changes without the row', async () => {
+  const values = new Map();
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => values.get(k) ?? null, setItem: (k, v) => values.set(k, String(v)), removeItem: (k) => values.delete(k) } });
+  try {
+    const { useDiffScope } = await server.ssrLoadModule('/src/source-diff-scope.jsx');
+    const { notifySessionEvicted } = await server.ssrLoadModule('/src/source-files-changes-adapters.jsx');
+    const KEY = 'persisted.epitaxy-diff-uncommitted-sessions';
+    const stored = () => Object.keys(JSON.parse(values.get(KEY) ?? '{}'));
+    const dirty = { isRepo: true, scopeBase: 'main', branch: 'feature', workingTreeDirty: true };
+    const props = (sessionId, status = dirty) => ({ call: async () => ({ commits: [], total: 0 }), cwd: '/repo', sessionId, status });
+    const rows = (f) => f.result.control.props.sections[0].items;
+    const first = hookFixture(useDiffScope, props('s1'));
+    assert.equal(first.result.kind, 'branch');
+    assert.deepEqual(rows(first).map((row) => row.value), ['branch', 'uncommitted']);
+    rows(first)[1].onSelect();
+    first.render();
+    assert.equal(first.result.kind, 'uncommitted');
+    assert.equal(first.result.param, 'uncommitted');
+    assert.deepEqual(stored(), ['s1'], 'persisted.epitaxy-diff-uncommitted-sessions names the session');
+    // A new window (or relaunch) has no in-memory pick: the remembered one applies to s1 only.
+    assert.equal(hookFixture(useDiffScope, props('s1')).result.kind, 'uncommitted');
+    assert.equal(hookFixture(useDiffScope, props('s2')).result.kind, 'branch');
+    // workingTreeDirty false: no Uncommitted row and All changes is shown; the memory stays for when it is dirty again.
+    const clean = hookFixture(useDiffScope, props('s1', { ...dirty, workingTreeDirty: false }));
+    assert.equal(clean.result.kind, 'branch');
+    assert.deepEqual(rows(clean).map((row) => row.value), ['branch']);
+    rows(clean)[0].onSelect();
+    assert.deepEqual(stored(), ['s1'], 'All changes was already on screen: nothing is forgotten');
+    // workingTreeDirty unknown: still offered (only a known clean tree drops it).
+    const unknown = hookFixture(useDiffScope, props('s1', { isRepo: true, scopeBase: 'main' }));
+    assert.equal(unknown.result.kind, 'uncommitted');
+    // Picking All changes from the menu forgets the session.
+    rows(unknown)[0].onSelect();
+    unknown.render();
+    assert.equal(unknown.result.kind, 'branch');
+    assert.deepEqual(stored(), []);
+    // A commit pick changes the pane but not the memory; deleting a session drops it from the memory.
+    const second = hookFixture(useDiffScope, props('s2'));
+    rows(second)[1].onSelect();
+    assert.deepEqual(stored(), ['s2']);
+    notifySessionEvicted('s2');
+    assert.deepEqual(stored(), []);
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous); else delete globalThis.localStorage;
+  }
+});

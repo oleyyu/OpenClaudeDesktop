@@ -87,9 +87,35 @@ function sanitizeLayout(raw) {
   const active = Number.isInteger(value.active) && value.active >= 0 && value.active <= panes.length ? value.active : 0;
   return { current, split: { panes, colWeights, rowSplit: clampRatio(value.rowSplit), active } };
 }
-function layoutSessions(layout) {
+// R4g-btw BT3 (X7-14, btw-read-01): the /btw child sessions a window's session tiles show (its renderer's shown list,
+// src/btw-read-state.mjs useReportShownSession). 2.42304.0 x_ (shared-11 `function x_(e){h_.has(e)||__.includes(e)||y_.getState().markUnread(e)}`)
+// skips a child in the renderer's shown list __; the official popouts are window.open children of that one renderer
+// (cd377abb5 `window.open("about:blank",j,"")`), so __ covers every window. Locally each window is its own renderer and
+// main.cjs makes the automatic unread decision, so every window reports its list and the windows' layouts count them.
+const MAX_SIDE_SESSIONS = 16;
+function sanitizeSideSessions(value) {
+  const list = [];
+  for (const entry of Array.isArray(value) ? value : []) {
+    const sessionId = validSessionId(entry);
+    if (sessionId && !list.includes(sessionId)) list.push(sessionId);
+    if (list.length >= MAX_SIDE_SESSIONS) break;
+  }
+  return list;
+}
+// The sessions a window's layout shows; with `sideSessions`, also the /btw children its session tiles show.
+function layoutSessions(layout, sideSessions = []) {
   const { current, split } = sanitizeLayout(layout);
-  return [current, ...(split?.panes ?? []).map((pane) => pane.sessionId)].filter(Boolean);
+  const list = [current, ...(split?.panes ?? []).map((pane) => pane.sessionId)].filter(Boolean);
+  for (const sessionId of sanitizeSideSessions(sideSessions)) if (!list.includes(sessionId)) list.push(sessionId);
+  return list;
+}
+// 2.42304.0 shared-11 closeSidePanePopoutsForSession (called by c03935b01 evictEpitaxySession `lc` when a session is
+// archived or deleted): the side-pane popouts of that session, and a session-tile popout whose view shows it.
+// `popouts`: main.cjs's pane popout entries ({ sessionId, pane, sessionView? }).
+function sidePanePopoutsForSession(popouts, sessionId) {
+  const id = validSessionId(sessionId);
+  if (!id) return [];
+  return [...(popouts ?? [])].filter((entry) => entry && (entry.sessionId === id || (entry.pane === "session" && entry.sessionView?.sessionId === id)));
 }
 // Where one desktop event goes: "all" main windows, the window showing a session, or one window by id.
 function routeEvent(event) {
@@ -177,7 +203,7 @@ function createWindowRegistry({ file = null, fs = nodeFs, timers = { setTimeout,
   function register(window, { key = MAIN_WINDOW_KEY, layout = null, kind = WINDOW_KINDS.MAIN } = {}) {
     const entryKind = kind === WINDOW_KINDS.SESSION || kind === WINDOW_KINDS.PANE ? kind : WINDOW_KINDS.MAIN;
     const entry = { window, key: validWindowKey(key) ?? newWindowKey(), kind: entryKind,
-      layout: singleSession(entryKind) ? launchLayout(null, layout, entryKind) : sanitizeLayout(layout), focusedAt: ++focusSeq, state: new Map(), launch: null };
+      layout: singleSession(entryKind) ? launchLayout(null, layout, entryKind) : sanitizeLayout(layout), focusedAt: ++focusSeq, state: new Map(), launch: null, sideSessions: [] };
     entry.launch = launchLayout(entry.key, entry.layout, entry.kind);
     entries.set(window, entry);
     schedule();
@@ -202,10 +228,12 @@ function createWindowRegistry({ file = null, fs = nodeFs, timers = { setTimeout,
     for (const entry of list) if (!best || entry.focusedAt > best.focusedAt) best = entry;
     return best;
   }
-  function windowsShowing(sessionId, { panes = false } = {}) {
+  // side: also count the /btw children a window reports (a pane window's own session still needs `panes`).
+  function windowsShowing(sessionId, { panes = false, side = false } = {}) {
     const id = validSessionId(sessionId);
     if (!id) return [];
-    return liveEntries().filter((entry) => (panes || entry.kind !== WINDOW_KINDS.PANE) && layoutSessions(entry.layout).includes(id)).map((entry) => entry.window);
+    return liveEntries().filter((entry) => layoutSessions(panes || entry.kind !== WINDOW_KINDS.PANE ? entry.layout : null, side ? entry.sideSessions : []).includes(id))
+      .map((entry) => entry.window);
   }
   function send(window, event) {
     if (!live(window)) return false;
@@ -283,6 +311,8 @@ function createWindowRegistry({ file = null, fs = nodeFs, timers = { setTimeout,
       if (!entry) return null;
       entry.launch = entry.loaded ? sanitizeLayout(entry.layout) : launchLayout(entry.key, entry.layout, entry.kind);
       entry.loaded = true;
+      // A new page has not shown any /btw child yet; it reports its own once it does (X7-14).
+      entry.sideSessions = [];
       return entry.launch;
     },
     launchLayoutOf: (window) => entries.get(window)?.launch ?? sanitizeLayout(null),
@@ -293,6 +323,15 @@ function createWindowRegistry({ file = null, fs = nodeFs, timers = { setTimeout,
       if (JSON.stringify(next) !== JSON.stringify(entry.layout)) { entry.layout = next; if (entry.kind === WINDOW_KINDS.MAIN) schedule(); }
       return entry.layout;
     },
+    // R4g-btw BT3 (X7-14): a window's report of the /btw children its session tiles show ("window-side-sessions").
+    // Not written to open-windows.json: the children come back with their panes.
+    setSideSessions: (window, list) => {
+      const entry = entries.get(window);
+      if (!entry) return [];
+      entry.sideSessions = sanitizeSideSessions(list);
+      return entry.sideSessions;
+    },
+    sideSessionsOf: (window) => entries.get(window)?.sideSessions ?? [],
     // Per-window slots main.cjs keeps beside the window (menu reports, the hidden-by-close flag).
     getState: (window, name) => entries.get(window)?.state.get(name),
     setState: (window, name, value) => { entries.get(window)?.state.set(name, value); return value; },
@@ -302,4 +341,4 @@ function createWindowRegistry({ file = null, fs = nodeFs, timers = { setTimeout,
 }
 
 module.exports = { MAIN_WINDOW_KEY, OPEN_WINDOWS_FILE, MAX_WINDOWS, MAX_SESSION_POPOUTS, WINDOW_KINDS, SAVE_DELAY_MS, EVENT_CHANNEL, WINDOW_SCOPED,
-  sanitizeLayout, layoutSessions, routeEvent, restorableWindows, launchLayout, newWindowKey, createWindowRegistry };
+  sanitizeLayout, layoutSessions, sanitizeSideSessions, sidePanePopoutsForSession, MAX_SIDE_SESSIONS, routeEvent, restorableWindows, launchLayout, newWindowKey, createWindowRegistry };

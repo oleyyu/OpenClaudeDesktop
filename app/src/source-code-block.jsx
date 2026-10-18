@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { CodeBlockActionsContext } from "./code-block-actions.mjs";
-import { codeBlockRun, codeBlockRunId, diffSegments, followsOutput, outputDiffMode } from "./code-block-run-model.mjs";
+import { codeBlockRun, codeBlockRunId, diffSegments, followsOutput, inlineCommandDone, keptRunVisible, outputDiffMode } from "./code-block-run-model.mjs";
 import { hasAnsi } from "./ansi-model.mjs";
 import { SourceSpinner } from "./source-pane-states.jsx";
 import { Icon } from "./icons.jsx";
@@ -13,6 +13,7 @@ import { normalizeLanguage, tokenCSS } from "./highlight-model.mjs";
 import { detectSecrets, maskSecrets } from "./secret-redaction-model.mjs";
 import { SourceAnsiText } from "./source-ansi-text.jsx";
 import { useTripleClickSelect } from "./use-triple-click-select.js";
+import { CodeBlockLabelContext, CodeBlockOverflowContext, HEADER_GUTTER, codeBlockLayout } from "./code-block-layout-model.mjs";
 import "./source-code-block.css";
 import "./highlight-tokens.css";
 import { t, tn } from "../electron/i18n/index.mjs";
@@ -45,7 +46,7 @@ function SecretToggle({ revealed, count, onToggle }) {
 
 const noSubscribe = () => () => {};
 const noRun = () => null;
-// Pg: the tracked run of this block (the store tracks one run at a time), and what its box shows.
+// Pg (2.42304.0 Ng): the tracked run of this block (the store tracks one run at a time), and what its box shows.
 function useBlockRun(actions, id) {
   const run = useSyncExternalStore(actions?.subscribeInline ?? noSubscribe, actions?.inlineRun ?? noRun, noRun);
   const mine = run && id !== null && run.id === id ? run : null;
@@ -57,6 +58,8 @@ function useBlockRun(actions, id) {
     error: mine?.errorKind === "shell-exited" ? t("Shell exited.") : mine?.error ? t(mine.error) : null,
     running: !!mine && !mine.settled,
     finished: !!mine && mine.settled && mine.dispatched,
+    // Ng commandDone: the tracked run ended at an idle prompt (endedBy "idle" only).
+    commandDone: inlineCommandDone(mine),
     // c26fb8b6b jn: a finished run whose output went to the model.
     record: id !== null ? actions?.runRecord?.(id) : undefined,
   };
@@ -171,7 +174,9 @@ export function SourceCodeBlock({ text = "", language = "text", isFrontier = fal
   if (!isFrontier && !showsRun) setShowsRun(true);
   const output = showsRun && live.tracked ? live.output : null;
   const error = showsRun && live.tracked ? live.error : null;
-  const kept = !live.tracked && showsRun ? live.record : undefined;
+  // Bg me: the kept record also shows while its run is still tracked once that run is done at the prompt (TT-10 /
+  // FT-13); the live box below still wins while there is live output or an error.
+  const kept = keptRunVisible({ tracked: live.tracked, commandDone: live.commandDone, showsRun }) ? live.record : undefined;
   const armed = runnable && !!actions?.bashTurn;
   const runLabel = armed ? t("Run in terminal and send output to {core}", { core: actions.bashTurn.target }) : t("Run in terminal");
   const run = () => { if (armed) actions.bashTurn.run(runId, blockRun.command); else actions.run(runId, blockRun.command); };
@@ -179,22 +184,39 @@ export function SourceCodeBlock({ text = "", language = "text", isFrontier = fal
   const controls = 1 + (runControl ? 1 : 0) + (secrets ? 1 : 0);
   const copied = copyState === "copied";
   const failed = copyState === "error";
-  const singleLine = !/[\r\n]/.test(text.trimEnd()); // Geometry only; never the copy payload.
+  // R4g-files FV1 (toolcards-05): c19e90103 Bg I/L/at/ot/st/ct under the ph/mh contexts (wrap + row unless the
+  // Markdown document typography provides scroll + beside-actions). Geometry only; never the copy payload.
+  const overflow = useContext(CodeBlockOverflowContext), labelPlacement = useContext(CodeBlockLabelContext);
+  const layout = codeBlockLayout({ overflow, labelPlacement, language, text, controls });
+  const centred = layout.centred ? " scb-single-line" : "";
+  const pre = <pre className="scb-pre"><code ref={codeRef} className="scb-code" data-highlight-source={source}>{tokens
+            ? [...tokens.map((token, index) => <span key={index} data-code-token="" style={tokenCSS(token)}>{token.text}</span>), trailing || null]
+            : <PlainCodeText key={scopeKey} text={shown} isFrontier={isFrontier} ansi={ansi}/>}</code></pre>;
   const message = copied ? t("Copied") : failed ? t("Couldn’t copy to the clipboard. Try again.") : "";
   return <div className="scb-flow" data-not-prose="">
     {!languageSettled ? <pre className="scb-language-placeholder" aria-hidden="true" /> :
       <div className="scb-block" data-language={language} data-frontier={isFrontier || undefined}
         data-secrets={secrets ? (masked ? "masked" : "revealed") : undefined}
         data-run={runControl ? (live.running ? "running" : "idle") : undefined} data-output={output || error ? "" : undefined}
-        style={{ "--scb-controls": controls }}>
+        data-overflow={layout.scroll ? "scroll" : undefined} data-label={layout.beside ? "beside-actions" : undefined}
+        style={layout.scroll ? { "--scb-controls": controls, "--scb-line-end": layout.paddingEnd } : { "--scb-controls": controls }}>
         <div className="scb-fence">
         <div ref={bodyRef} className="scb-body" data-code-text={!isFrontier ? shown : undefined}>
-          <pre className="scb-pre"><code ref={codeRef} className="scb-code" data-highlight-source={source}>{tokens
-            ? [...tokens.map((token, index) => <span key={index} data-code-token="" style={tokenCSS(token)}>{token.text}</span>), trailing || null]
-            : <PlainCodeText key={scopeKey} text={shown} isFrontier={isFrontier} ansi={ansi}/>}</code></pre>
+          {/* Sg: the language header (unless beside the actions), the epitaxy-code-scroll scroller with its w-max
+              min-w-full content, and for one line the endInset margin plus the 1ch fade into the card background. */}
+          {layout.scroll ? <div className="scb-scroll-frame">
+            {!layout.beside && <div dir="ltr" className="scb-language-row" style={{ paddingRight: HEADER_GUTTER }}>
+              <span data-code-language={layout.label} className="scb-language" /></div>}
+            <div className="epitaxy-code-scroll scb-scroller" style={layout.endInset === null ? undefined : { marginInlineEnd: layout.endInset }}>
+              <div className="scb-scroll-content">{pre}</div>
+            </div>
+            {layout.endInset !== null && <div aria-hidden="true" className="scb-scroll-fade" style={{ insetInlineEnd: layout.endInset }} />}
+          </div> : pre}
         </div>
-        {(!isFrontier || live.running) && <div className="scb-actions-track">
-          <div className={`scb-actions${singleLine ? " scb-single-line" : ""}`}>
+        {(!isFrontier || live.running) && <div className="scb-actions-track" data-card-surface={layout.beside || undefined}>
+          {/* wg + Eg: beside the actions, the language label fades in over the card background. */}
+          {layout.beside && <span data-code-label={layout.label} className={`scb-code-label${centred}`} />}
+          <div className={`scb-actions${centred}`}>
             {runControl && (live.running
               ? <SourceTooltip content={t("Running — click to cancel")} automatic={true} hoverable={false}>
                 <button type="button" className="scb-copy scb-run scb-cancel" aria-label={t("Cancel")}
@@ -225,7 +247,9 @@ export function SourceCodeBlock({ text = "", language = "text", isFrontier = fal
           ? <RunOutput command={blockRun.command} output={output} altScreen={live.altScreen} error={error}
             onOpenInTerminal={actions ? () => actions.openInTerminal(runId) : null} />
           : kept === undefined ? null
-          : <RunOutput command={blockRun.command} output={kept.output || t("(no output)")} altScreen={false} error={kept.error === "shell-exited" ? t("Shell exited.") : kept.error || null} onOpenInTerminal={null} />}
+          // Bg: the kept box offers Open in terminal while its run is the tracked one (`onOpenInTerminal: se ? De : null`).
+          : <RunOutput command={blockRun.command} output={kept.output || t("(no output)")} altScreen={false} error={kept.error === "shell-exited" ? t("Shell exited.") : kept.error || null}
+            onOpenInTerminal={live.tracked && actions ? () => actions.openInTerminal(runId) : null} />}
       </div>}
     <span id={statusId} className="scb-status" role="status" aria-live="polite">{message}</span>
   </div>;

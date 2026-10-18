@@ -233,9 +233,10 @@ export function mentionOptions(matches = [], { limit = MENTION_RESULT_LIMIT } = 
         tooltip: match.target || name, positions: [], target: match.target, kind: "reference" };
     }
     const path = String(match.path || "").replace(/\\/g, "/");
-    const slash = path.lastIndexOf("/");
-    const label = slash === -1 ? path : path.slice(slash + 1);
-    const dir = slash === -1 ? "" : path.slice(0, slash);
+    const shownPath = typeof match.shownPath === 'string' ? match.shownPath.replace(/\\/g, '/') : path;
+    const slash = shownPath.lastIndexOf("/");
+    const label = slash === -1 ? shownPath : shownPath.slice(slash + 1);
+    const dir = slash === -1 ? "" : shownPath.slice(0, slash);
     return {
       id: `file-${path}`,
       label,
@@ -243,6 +244,7 @@ export function mentionOptions(matches = [], { limit = MENTION_RESULT_LIMIT } = 
       isDirectory: match.directory === true,
       path,
       renderedText: path,
+      ...(shownPath !== path ? { shownPath } : {}),
       positions: Array.isArray(match.positions) ? match.positions.filter(Number.isInteger) : [],
     };
   });
@@ -251,7 +253,7 @@ export function mentionOptions(matches = [], { limit = MENTION_RESULT_LIMIT } = 
 // Official Pp: positions are relative to the full path; the label is lit when
 // any position falls in its tail, the description when any falls before it.
 export function optionHighlights(option) {
-  const full = option.renderedText ?? option.label;
+  const full = option.shownPath ?? option.renderedText ?? option.label;
   if (!full.endsWith(option.label)) return { label: null, description: null };
   const offset = full.length - option.label.length;
   const positions = option.positions || [];

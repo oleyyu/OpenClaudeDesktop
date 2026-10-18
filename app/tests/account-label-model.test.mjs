@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { accountIdentity, accountMenuLines, accountOrgLine, connectionMenuHeader } from "../src/account-label-model.mjs";
+import { accountFooter, accountIdentity, accountMenuLines, accountOrgLine, connectionMenuHeader } from "../src/account-label-model.mjs";
 import { setAssistantName } from "../electron/i18n/index.mjs";
 import { coreName } from "../electron/core-registry.mjs";
 
@@ -55,16 +55,17 @@ test("the Connection settings header names the running core", () => {
 
 test("main.jsx renders the IO identity in the header and footer, with no 'Local user' fallback", async () => {
   const main = await fs.readFile(path.join(root, "src/main.jsx"), "utf8");
-  assert.match(main, /const accountLines = accountIdentity\(displayName, boot\?\.account, boot\?\.core \|\| boot\?\.config\?\.core \|\| undefined\);\s*const accountLabel = accountLines\.orgPrimary \?\? "";/);
+  assert.match(main, /const accountLines = accountIdentity\(displayName, boot\?\.account, boot\?\.core \|\| boot\?\.config\?\.core \|\| undefined\);/);
+  assert.match(main, /const accountButton = accountFooter\(displayName, boot\?\.account, boot\?\.core \|\| boot\?\.config\?\.core \|\| undefined\);/);
   assert.match(main, /data-testid="user-menu-header">\{accountLines\.identity\}</);
   assert.match(main, /\{accountLines\.orgPrimary && <span className="smenu-header-line smenu-header-secondary" data-testid="user-menu-header-org">\{accountOrgLine\(accountLines\)\}<\/span>\}/);
-  assert.match(main, /displayName=\{accountLines\.identity\}\s+accountLabel=\{accountLabel\}/);
+  assert.match(main, /displayName=\{accountButton\.name\}\s+accountLabel=\{accountButton\.plan\}\s+avatarName=\{accountButton\.avatarName\}/);
   assert.match(main, /<SourceMenu\.Header>\{connectionMenuHeader\(engine, !!boot\?\.connected\)\}<\/SourceMenu\.Header>/);
   assert.doesNotMatch(main, /Local user/);
   assert.doesNotMatch(main, /\{accountLabel\} · DeepSeek/);
   assert.doesNotMatch(main, /planType \|\| "DeepSeek API"/);
   const sidebar = await fs.readFile(path.join(root, "src/source-sidebar.jsx"), "utf8");
-  assert.doesNotMatch(sidebar, /displayName\.split\(" "\)\[0\]/, "the footer shows the whole identity");
+  assert.doesNotMatch(sidebar, /displayName\.split\(/, "the first-name rule lives in accountFooter");
   assert.match(sidebar, /<span className="whitespace-nowrap text-secondary max-w-full shrink-0 truncate">\{accountName\}<\/span>/);
 });
 
@@ -104,4 +105,30 @@ test("without a reported core the account label names the window's core, not 'De
     setAssistantName("DeepSeek");
     assert.equal(accountIdentity("", undefined).identity, "DeepSeek API");
   } finally { setAssistantName("DeepSeek"); }
+});
+
+// shared-19 E0 footer, user ruling 2026-10-18: CDS Avatar of the full name (C0 / x0), the first word (VWt), `· plan`.
+test("account footer: initials name, first name, and 'API' / the plan / the core as the suffix", () => {
+  const key = { account: { type: "apiKey" }, requiresOpenaiAuth: false };
+  assert.deepEqual(accountFooter("Oley Yu", key, "deepseek"), { avatarName: "Oley Yu", name: "Oley", plan: "API" });
+  assert.deepEqual(accountFooter("  Oley   Yu ", { account: { type: "apiKey" }, deepseek: { apiKey: { configured: true } } }, "deepseek").name, "Oley");
+  // A DeepSeek key reported only by the extension still reads as a key.
+  assert.equal(accountFooter("Oley Yu", { account: null, deepseek: { apiKey: { configured: true } } }, "deepseek").plan, "API");
+  // Codex's ChatGPT sign-in: planLabel(planType).
+  const chatgpt = (planType) => ({ account: { type: "chatgpt", email: "fixture@example.com", planType }, requiresOpenaiAuth: true });
+  assert.equal(accountFooter("Oley Yu", chatgpt("plus"), "codex").plan, "Plus");
+  assert.equal(accountFooter("Oley Yu", chatgpt("pro"), "codex").plan, "Pro");
+  // A bridge's own sign-in name is shown as reported.
+  assert.equal(accountFooter("Oley Yu", { account: { type: "chatgpt", planType: "Z.ai Coding Plan" } }, "zcode").plan, "Z.ai Coding Plan");
+  // A subscription sign-in without a plan ('unknown' / none) falls back to the core's name.
+  assert.equal(accountFooter("Oley Yu", chatgpt("unknown"), "codex").plan, coreName("codex"));
+  assert.equal(accountFooter("Oley Yu", chatgpt(undefined), "codex").plan, coreName("codex"));
+  // No account: the provider label, as before.
+  assert.equal(accountFooter("Oley Yu", { account: null }, "deepseek").plan, "DeepSeek API");
+  // No preferred name: the signed-in email, else the provider label, never repeated as the suffix.
+  assert.deepEqual(accountFooter("", chatgpt("plus"), "codex"), { avatarName: "fixture@example.com", name: "fixture@example.com", plan: "Plus" });
+  assert.deepEqual(accountFooter(null, { account: null }, "deepseek"), { avatarName: "DeepSeek API", name: "DeepSeek API", plan: "" });
+  assert.deepEqual(accountFooter("", key, "deepseek"), { avatarName: "DeepSeek API", name: "DeepSeek API", plan: "API" });
+  // A name without spaces (CJK) is kept whole.
+  assert.equal(accountFooter("张三", key, "deepseek").name, "张三");
 });

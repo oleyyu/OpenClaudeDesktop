@@ -22,7 +22,9 @@
 //
 // Dev servers come from the session folder's .claude/launch.json (preview-launch.mjs) and are shared by every
 // session of that folder: spawned in the folder with the app's environment (login-shell PATH, no app secrets) plus
-// PORT, logs kept, ready once the port answers, stopped as a process group. Closing a pane or a window never stops
+// PORT, logs kept, ready once the port answers (and, as 2.42304.0 checks, answers from the server's own processes),
+// stopped as a process group. A busy port moves to the next free one unless "autoPort": false or the start script pins
+// it (the original port policy, r3b-preview-host.mjs). Closing a pane or a window never stops
 // them; Stop (the pane's menu, preview_stop) or quitting the app does. Such a command runs outside the core's sandbox,
 // so the agent (preview_start) starts one only after the user approved that exact configuration in this session; the
 // user's own Start in the pane never asks.
@@ -50,6 +52,11 @@ const { previewLinkOrigin, externalOnlyLink } = require("./generated/preview-lin
 const { createPreviewElementInspector } = require("./generated/preview-element-inspector.mjs");
 const { createPreviewSelection } = require("./preview-selection.mjs");
 const allowedOrigins = require("./preview-allowed-origins.mjs");
+// R3b-preview (preview-01/03/12/14): the 2.42304.0 port policy, identity check and preview user agent, and their host side.
+const previewHost = require("./r3b-preview-host.mjs");
+// R4e-preview (preview-15): the 2.42304.0 check that a point from the agent's screenshot still fits the page (C4i);
+// R4f-preview-coords (F2): the point in the screenshot's pixels, checked against its frame and mapped (S4i, b4i).
+const { createPreviewCoordinateGuard, imageSize } = require("./r4e-preview-coordinates.mjs");
 
 // Cookies and local storage of previewed pages (2.2553.1 legacy preview "Keep cookies"): by default an in-memory session
 // for this app run (EPHEMERAL_PARTITION); with Servers & settings › Keep cookies, the on-disk one, kept across restarts.
@@ -101,23 +108,17 @@ function previewShortcut(input) {
   return null;
 }
 
-function portAnswers(port, host, timeout = 600) {
+function portAnswers(port, host, timeout = 600, netApi = net) {
   return new Promise((resolve) => {
-    const socket = net.connect({ port, host });
+    const socket = netApi.connect({ port, host });
     const done = (value) => { socket.destroy(); resolve(value); };
     socket.setTimeout(timeout, () => done(false));
     socket.once("connect", () => done(true));
     socket.once("error", () => done(false));
   });
 }
-const portOpen = async (port) => (await portAnswers(port, "127.0.0.1")) || (await portAnswers(port, "::1"));
-function freePort() {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => { const { port } = server.address(); server.close(() => resolve(port)); });
-  });
-}
+// The port a dev server gets (2.42304.0 I2i: the configured one, else the next free one, else an OS-assigned one) comes
+// from the original policy (r3b-preview-host.mjs → generated/r3b-preview-ports.mjs), not from a local probe.
 
 /**
  * @param {object} options
@@ -129,7 +130,11 @@ function freePort() {
  */
 function createPreviewService({ electron, getSession, spawnEnv = async () => ({ ...process.env }), broadcast = () => {}, logger = console, home = process.env.HOME || "", hostWindow = null, reapHiddenMs = REAP_HIDDEN_MS,
   keepCookies = () => false, setKeepCookies = () => {}, getStorageMode = () => undefined, setStorageMode = () => {}, isCoworkSession = () => false, getStoredPartitions = () => [], setStoredPartitions = () => {},
-  frameDir = null, getAllowedOrigins = () => [], setAllowedOrigins = () => {} }) {
+  frameDir = null, getAllowedOrigins = () => [], setAllowedOrigins = () => {},
+  // R3b-preview seams (tests pass stand-ins; no real port, process or lsof): the sockets the port policy and readiness
+  // use, how a command starts, the native process calls (hostProcessInfo: lsof / ps), GrowthBook 2711562102, the
+  // policy's retry delay.
+  net: netApi = net, spawnProcess = spawn, processInfo = previewHost.hostProcessInfo(), autoPortGate = () => previewHost.AUTO_PORT_GATE_DEFAULT, portWait = sleep }) {
   const { WebContentsView, BrowserWindow, session: electronSession, shell, nativeTheme } = electron;
   // The window a renderer request came from (main.cjs: window-registry hostWindow(sender), which knows every main
   // window and pane popout); both split sides of a window are one webContents, so a side's pane rect is a region of it.
@@ -140,6 +145,16 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
   const allPreviews = () => [...previews.values()].flatMap(entry => [...entry.group.tabs.values()]);
   const servers = new Map(); // cwd \0 name → server
   const launchCache = new Map(); // cwd → { mtime, parsed }
+  // The original's a2.servers rows for the port policy (r3b-preview-host.mjs): command servers only (an attach entry
+  // runs nothing), a server still choosing its port holds none yet (its reservation does), and a server's "session" is
+  // its folder (one folder's servers are shared by its chats). serverId is the name preview_stop takes here.
+  const registryView = (exclude = null) => [...servers.values()].filter((server) => server !== exclude && !server.attach).map((server) => ({
+    serverId: server.name, name: server.name, port: server.allocating ? undefined : server.port, status: server.status, cwd: server.cwd, sessionId: server.cwd, local: server,
+  }));
+  const ports = previewHost.createPreviewPortHost({ registry: () => registryView(), logger, netApi, wait: portWait, processes: processInfo, autoPortGate });
+  const portOpen = async (port) => (await portAnswers(port, "127.0.0.1", 600, netApi)) || (await portAnswers(port, "::1", 600, netApi));
+  // R4e-preview (preview-15): each tab's frame and geometry at the agent's last screenshot (r4e-preview-coordinates.mjs).
+  const coordinates = createPreviewCoordinateGuard({ geometry: (entry) => viewportGeometry(entry) });
   const listening = new WeakSet(); // page contents whose debugger events are wired
   let parking = null;
   const partitionsReady = new Set();
@@ -168,6 +183,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     const localOrigin = (value) => { try { return launch.isLocalHost(new URL(value).hostname); } catch { return false; } };
     ses.setPermissionRequestHandler((_contents, permission, callback, details) => callback(permission === "clipboard-sanitized-write" && localOrigin(details?.requestingUrl)));
     ses.setPermissionCheckHandler((_contents, permission, origin) => permission === "clipboard-sanitized-write" && localOrigin(origin));
+    // preview-12 (2.42304.0 Pfi): sites see a plain browser user agent; Claude's own hosts get the app's, minus Electron.
+    previewHost.applyPreviewUserAgent(ses, { logger });
     // Downloads (2.2553.1 lets preview downloads run): a page shown in a pane gets the system Save dialog over that
     // window, starting in Downloads, and the saved file is quarantined like a browser download. A page nobody sees
     // (parked, or the agent's unseen page) can't put a dialog in front of anyone: the download is cancelled, and the
@@ -644,17 +661,34 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     const w = Math.max(1, Math.round(width * scale)), h = Math.max(1, Math.round(height * scale));
     return { x: pane.x + Math.round((pane.width - w) / 2), y: pane.y + Math.round((pane.height - h) / 2), width: w, height: h, scale };
   }
+  // The page's emulated viewport, one rule for applyEmulation and viewportGeometry (R4f-preview-coords): responsive is the
+  // pane's own size with no override (a page without a pane is laid out at place()'s 1280 × 800); a preset or custom
+  // size is its CSS width × height at the fit-to-pane scale, a phone (under 768 px) at deviceScaleFactor 2, else the
+  // display's own (0).
+  function emulatedViewport(entry) {
+    const { preset, width, height } = entry.viewport;
+    const rect = viewRect(entry);
+    if (preset === "responsive" || !width || !height) return { override: false, width: rect?.width ?? 1280, height: rect?.height ?? 800, scale: 1, deviceScaleFactor: 0, mobile: false };
+    const mobile = width < 768;
+    return { override: true, width, height, scale: rect?.scale ?? 1, deviceScaleFactor: mobile ? 2 : 0, mobile };
+  }
+  // preview-15: the page's viewport as applyEmulation sets it (CSS width × height, the emulation scale, deviceScaleFactor
+  // with 0 the display's own). The preview never pinch-zooms, so its layout size is its size.
+  function viewportGeometry(entry) {
+    const { width, height, scale, deviceScaleFactor } = emulatedViewport(entry);
+    return { width, height, scale, deviceScaleFactor, layoutWidth: width, layoutHeight: height };
+  }
   async function applyEmulation(entry) {
     if (!alive(entry) || !entry.debugger) return;
-    const { preset, width, height, colorScheme } = entry.viewport;
-    const rect = viewRect(entry);
-    if (preset === "responsive" || !width || !height) {
+    const { colorScheme } = entry.viewport;
+    const metrics = emulatedViewport(entry);
+    if (!metrics.override) {
       await cdp(entry, "Emulation.clearDeviceMetricsOverride").catch(() => {});
       await cdp(entry, "Emulation.setTouchEmulationEnabled", { enabled: false }).catch(() => {});
       await cdp(entry, "Emulation.setUserAgentOverride", { userAgent: entry.view.webContents.session.getUserAgent() }).catch(() => {});
     } else {
-      const mobile = width < 768;
-      await cdp(entry, "Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: mobile ? 2 : 0, mobile, scale: rect?.scale ?? 1 }).catch(() => {});
+      const { width, height, deviceScaleFactor, mobile, scale } = metrics;
+      await cdp(entry, "Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor, mobile, scale }).catch(() => {});
       await cdp(entry, "Emulation.setTouchEmulationEnabled", { enabled: mobile, maxTouchPoints: mobile ? 5 : 1 }).catch(() => {});
       if (mobile) {
         const chrome = process.versions.chrome || "140.0.0.0";
@@ -1141,11 +1175,18 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     let reused = false;
     if (server && (server.status === "running" || server.status === "starting")) reused = true;
     else {
+      // 2.42304.0 E3i / startFromConfig: whether the port may move is settled before anything is asked or stopped
+      // (GrowthBook 2711562102, "autoPort", and a start script that pins the port).
+      const plan = config.attach ? null : await portPlan(entry.cwd, config);
       // The agent starting a command (not the user's own Start): the user approves that exact configuration first.
-      if (agent && !config.attach) await agent.approveServer(config);
+      if (agent && !config.attach) await agent.approveServer(config, { portMayReassign: plan.portMayReassign });
       server = servers.get(key);
       if (server && (server.status === "running" || server.status === "starting")) reused = true;
-      else server = await spawnServer(entry.cwd, config, key);
+      else {
+        // startFromConfig (the user's own Run, q4i): a port that can't move is first freed of this folder's other server.
+        if (!agent && plan && !plan.reassignable) await stopConflicting(entry.cwd, config);
+        server = await spawnServer(entry.cwd, config, key, plan);
+      }
     }
     entry.lastServer = config.name;
     notifyFolder(entry.cwd);
@@ -1154,41 +1195,83 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     if (!ready.ok) throw Object.assign(new Error(ready.message), { code: ready.code, logs: server.logs.slice(-40).map(stripAnsi), ...(ready.heldPort ? { heldPort: ready.heldPort } : {}) });
     let page = null;
     if (open) page = await navigate(sessionId, server.url, { agent });
-    return { server: serverView(server), reused, page, assignedPort: server.assignedPort ?? null, configuredPort: config.port };
+    // movedFrom: D3i's `configuredPort` (the scan moved the server off its configured port, rather than autoPort's
+    // OS-assigned fallback), which the original's preview_start result words differently.
+    return { server: serverView(server), reused, page, assignedPort: server.assignedPort ?? null, configuredPort: config.port, ...(server.movedFrom !== undefined ? { movedFrom: server.movedFrom } : {}) };
   }
-  async function spawnServer(cwd, config, key) {
-    const server = { key, cwd, name: config.name, config, child: null, status: "starting", port: config.port, url: launch.configUrl(config), logs: [], error: null, attach: config.attach, startedAt: Date.now(), exitCode: null, ready: null };
+  // The port plan of one configuration (2.42304.0 E3i: o0i, a0i). `reassignable` is startFromConfig's `l`: the port may
+  // move (autoPort true, or not false with the gate on and no script pinning it).
+  async function portPlan(cwd, config) {
+    const gate = (await autoPortGate()) !== false;
+    const policyEntry = previewHost.portEntry(config);
+    const { portRetargetable, scriptPinnedPorts } = await ports.portRetargetability(policyEntry, cwd, gate);
+    return {
+      gate, portRetargetable, scriptPinnedPorts,
+      portMayReassign: await ports.portMayReassign(policyEntry, gate, portRetargetable),
+      reassignable: config.autoPort !== false && (config.autoPort === true || (gate && portRetargetable)),
+    };
+  }
+  // startFromConfig's q4i: the live servers of this folder (the local "session") on the configuration's port under
+  // another name, stopped and waited for (a2.stopAndWait).
+  async function stopConflicting(cwd, config) {
+    for (const row of ports.conflictingServers(registryView(), previewHost.portEntry(config), cwd, cwd)) await haltServer(row.local);
+  }
+  // a2.collectSiblingRoots: the other live servers' process roots, this folder's as "same-session".
+  const siblingRoots = (own) => [...servers.values()].filter((other) => other !== own && (other.status === "running" || other.status === "starting") && other.child?.pid !== undefined)
+    .map((other) => ({ rootPid: other.child.pid, session: other.cwd !== own.cwd ? "cross-session" : "same-session" }));
+  async function spawnServer(cwd, config, key, plan = null) {
+    const server = { key, cwd, name: config.name, config, child: null, status: "starting", port: config.port, url: launch.configUrl(config), logs: [], error: null, attach: config.attach, startedAt: Date.now(), exitCode: null, ready: null, allocating: !config.attach };
     servers.set(key, server);
     const log = (text) => { for (const line of String(text).split(/\r?\n/)) if (line.length) push(server.logs, line.slice(0, 4000), LOG_LIMIT); };
-    const fail = (code, message, extra = {}) => { server.status = "failed"; server.error = { code, message, ...extra }; notifyFolder(cwd); return { ok: false, code, message, ...extra }; };
+    const fail = (code, message, extra = {}) => { server.allocating = false; server.status = "failed"; server.error = { code, message, ...extra }; notifyFolder(cwd); return { ok: false, code, message, ...extra }; };
+    const halted = () => server.status === "stopping" || server.status === "stopped";
+    const stopped = { ok: false, code: "stopped", message: "The server was stopped." };
     server.ready = (async () => {
       if (config.attach) {
         server.status = "running";
         return { ok: true };
       }
-      if (config.port && await portOpen(config.port)) {
-        // ca80fca8d xq: the port is one another session's dev server holds (another folder's server of this app); the
-        // card then names it instead of sending the error to the agent.
-        const holder = [...servers.values()].find((other) => other !== server && other.cwd !== cwd && !other.attach && other.port === config.port && (other.status === "running" || other.status === "starting"));
-        if (holder && !config.autoPort) return fail("port-held", `Port ${config.port} is in use by another chat's dev server ("${holder.name}" in ${holder.cwd}). Stop that server, then try again.`, { heldPort: config.port });
-        if (!config.autoPort) return fail("port-in-use", `Port ${config.port} is already in use. Stop whatever is using it, or set "autoPort": true for "${config.name}" in .claude/launch.json.`);
-        server.port = await freePort();
-        server.assignedPort = server.port;
-        server.url = launch.configUrl(config, server.port);
-      }
-      let env;
-      try { env = await spawnEnv(); } catch { env = { ...process.env }; }
       // The folder launch.json named was inside the project when it was read (and approved); a link swapped in since
       // doesn't move the command outside it.
       if (!launch.insideFolderReal(cwd, config.cwd)) return fail("cwd", `The "cwd" of “${config.name}” in .claude/launch.json is outside the project folder (it may be a link to another folder). Nothing was run.`);
+      // preview-01 / preview-14 (2.42304.0 D3i → I2i): the configured port, else (when it may move) the next free one
+      // up to 20 above it — skipping live servers' ports, the ones other starts hold (pending / exact-bind reservations)
+      // and the ones this folder's other launch.json entries pin — else an OS-assigned one; or the original's error.
+      const policy = plan ?? await portPlan(cwd, config);
+      let pinned;
+      if (policy.gate && config.autoPort !== false && (config.autoPort === true || policy.portRetargetable)) {
+        try { pinned = await ports.pinnedPortsOf(launchInfo(cwd).configs.filter((other) => other.name !== config.name).map(previewHost.portEntry), cwd); } catch { pinned = undefined; }
+        if (policy.scriptPinnedPorts?.size) pinned = new Set([...(pinned ?? []), ...policy.scriptPinnedPorts]);
+      }
+      let allocation;
+      try { allocation = await ports.resolvePort(config.port, config.autoPort, cwd, policy.gate, pinned, policy.portRetargetable); }
+      catch (error) {
+        if (!(error instanceof ports.PortInUseError)) return fail("port", `Couldn’t pick a port for “${config.name}”: ${error?.message ?? error}`);
+        // Another folder's server (another chat's, which preview_stop can't reach) holds it: the card names the port (ca80fca8d xq).
+        const held = registryView(server).some((row) => row.port === config.port && (row.status === "running" || row.status === "starting") && row.cwd !== cwd);
+        return held ? fail("port-held", error.message, { heldPort: config.port }) : fail("port-in-use", error.message);
+      }
+      const port = allocation.port;
+      // a2.start: the server holds its port in the registry from here, so the reservation that kept it is released (M2i).
+      server.port = port;
+      server.allocating = false;
+      ports.releasePort(port);
+      if (halted()) return stopped;
+      if (port !== config.port) { server.assignedPort = port; server.url = launch.configUrl(config, port); }
+      if (allocation.movedFrom !== undefined) server.movedFrom = allocation.movedFrom;
+      // D3i: a moved server's own --port / -p / --port= argument follows it (k1i).
+      const args = port !== config.port ? ports.rewritePortArgs(config.args, port, { joinedShortForm: policy.gate, command: config.command }) : config.args;
+      let env;
+      try { env = await spawnEnv(); } catch { env = { ...process.env }; }
+      if (halted()) return stopped;
       let child;
       try {
-        child = spawn(config.command, config.args, { cwd: config.cwd, env: { ...env, FORCE_COLOR: "1", ...config.env, ...(server.port ? { PORT: String(server.port) } : {}) }, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+        child = spawnProcess(config.command, args, { cwd: config.cwd, env: { ...env, FORCE_COLOR: "1", ...config.env, PORT: String(port) }, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
       } catch (error) {
         return fail("spawn", `Couldn’t start \`${config.command}\`: ${error.message}`);
       }
       server.child = child;
-      log(`$ ${[config.command, ...config.args].join(" ")}`);
+      log(`$ ${[config.command, ...args].join(" ")}`);
       child.stdout.setEncoding("utf8");
       child.stderr.setEncoding("utf8");
       child.stdout.on("data", log);
@@ -1211,15 +1294,39 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
         ? fail("not-found", `Command not found: \`${config.command}\`. Check the "runtimeExecutable" field in .claude/launch.json and make sure it's installed and on PATH.`)
         : exited?.error ? fail("spawn", `Couldn’t start \`${config.command}\` (${exited.error.code || exited.error.message}).`)
           : fail("exited", `The dev server exited during startup (code ${exited?.code ?? exited?.signal}). Fix the error in the output, then start it again.`);
+      // preview-03 (2.42304.0 a2.start readiness → O0i): who answers the port. Run only with the gate on, as there.
+      const identity = async (answering) => {
+        if (!policy.gate || !child.pid) return { outcome: "running" };
+        try { return await ports.verifyServerIdentity(answering, port, child.pid, ports.portOccupancy(registryView(server), undefined, port, cwd), siblingRoots(server)); }
+        catch { return { outcome: "running" }; }
+      };
       const deadline = Date.now() + READY_TIMEOUT_MS;
       while (Date.now() < deadline) {
         if (exited) return describeExit();
-        if (server.status === "stopping" || server.status === "stopped") return { ok: false, code: "stopped", message: "The server was stopped." };
-        if (!server.port || await portOpen(server.port)) { server.status = "running"; notifyFolder(cwd); return { ok: true }; }
+        if (halted()) return stopped;
+        if (await portOpen(port)) {
+          const verdict = await identity(true);
+          if (exited) return describeExit();
+          if (halted()) return stopped;
+          // Another process answers this server's port: its guidance goes to the log, and (unlike the original, which
+          // leaves the process up in "error") the process is stopped, as a failed start here is.
+          // R4e-preview: the original's log line first (a2.start: N.warn(…, {serverId, port})); the card names the port.
+          if (verdict.outcome === "mismatch") {
+            logger.warn?.("[Preview] Server identity check failed %o", { serverId: server.name, port });
+            log(verdict.guidance); stopProcess(server); return fail("identity", verdict.guidance, { port });
+          }
+          if (verdict.advisory !== undefined) log(verdict.advisory);
+          server.status = "running";
+          notifyFolder(cwd);
+          return { ok: true };
+        }
         await Promise.race([sleep(250), exit]);
       }
+      // The original keeps a server that never answered as running with this advisory; here it is the timeout's detail.
+      const { advisory } = await identity(false);
+      if (advisory !== undefined) log(advisory);
       stopProcess(server);
-      return fail("timeout", `The dev server didn’t answer on port ${server.port} within ${READY_TIMEOUT_MS / 1000} seconds.`);
+      return fail("timeout", `The dev server didn’t answer on port ${port} within ${READY_TIMEOUT_MS / 1000} seconds.${advisory !== undefined ? `\n\n${advisory}` : ""}`);
     })();
     // A start that fails before the process runs leaves no zombie entry behind in "starting".
     server.ready.then((result) => { if (!result.ok && server.status === "starting") server.status = "failed"; });
@@ -1245,6 +1352,11 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     const server = servers.get(serverKey(entry.cwd, String(name || entry.lastServer || "")));
     if (!server) throw new Error(`No server named “${name}” is running.`);
     if (server.attach) { servers.delete(server.key); notifyFolder(entry.cwd); return { stopped: true, attach: true }; }
+    await haltServer(server);
+    return { stopped: true };
+  }
+  // Stop a server and wait (at most four seconds) for its process to exit (a2.stopAndWait).
+  async function haltServer(server) {
     if (server.child) {
       server.status = "stopping";
       const exited = new Promise((resolve) => server.child.once("exit", resolve));
@@ -1252,8 +1364,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       await Promise.race([exited, sleep(4000)]);
     }
     server.status = "stopped";
-    notifyFolder(entry.cwd);
-    return { stopped: true };
+    notifyFolder(server.cwd);
   }
   function serverLogs(sessionId, name, { lines = 200, ansi = true } = {}) {
     const entry = preview(sessionId);
@@ -1295,12 +1406,15 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     };
     // A launch.json command runs outside the core's sandbox, as the user: the agent starts one only after the user
     // approved that exact configuration in this session (an edited launch.json asks again).
-    const approveServer = async (config) => {
+    const approveServer = async (config, { portMayReassign = false } = {}) => {
       const item = entry();
-      const fingerprint = crypto.createHash("sha256").update(JSON.stringify([config.command, config.args, config.cwd, config.env ?? {}, config.port ?? null, !!config.autoPort])).digest("hex");
+      const fingerprint = crypto.createHash("sha256").update(JSON.stringify([config.command, config.args, config.cwd, config.env ?? {}, config.port ?? null, config.autoPort ?? null])).digest("hex");
       if (item.approvedServers.has(fingerprint)) return;
       if (stopped()) throw stopped();
-      const ok = await ask({ kind: "preview-server", name: config.name, command: config.command, args: config.args, cwd: config.cwd, env: config.env ?? {} });
+      // The card's "Runs in {cwd} on port {port}" (c96d752d0 Kk / wA): the original's ask carries zIn's `port` (the
+      // configured one) and HIn adds portMayReassign when a0i says the port may move (startServer's port plan), which
+      // the card words as "(or the next free port)".
+      const ok = await ask({ kind: "preview-server", name: config.name, command: config.command, args: config.args, cwd: config.cwd, env: config.env ?? {}, port: config.port ?? null, portMayReassign: portMayReassign === true });
       if (stopped()) throw stopped();
       if (!ok) throw Object.assign(new Error(`The user didn’t allow starting “${config.name}”. Nothing was run.`), { code: "declined" });
       item.approvedServers.add(fingerprint);
@@ -1372,9 +1486,12 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
         return navigate(sessionId, target, { agent });
       },
       async screenshot({ quality = 80 } = {}) {
-        await requirePage();
-        const data = (await capture(sessionId, { format: "jpeg", quality: Math.max(30, Math.min(95, Math.round(quality))) })).toString("base64");
-        return { data, mimeType: "image/jpeg" };
+        const item = await requirePage();
+        const bytes = await capture(sessionId, { format: "jpeg", quality: Math.max(30, Math.min(95, Math.round(quality))) });
+        // c4i: the frame (the image's own pixels, 2× the page's CSS pixels on a Retina display) and the tab's geometry,
+        // which the agent's points from this screenshot belong to (R4f: S4i / b4i map them back).
+        const shot = coordinates.remember(item, imageSize(bytes));
+        return { data: bytes.toString("base64"), mimeType: "image/jpeg", ...(shot.screenshotWidth > 0 && shot.screenshotHeight > 0 ? { width: shot.screenshotWidth, height: shot.screenshotHeight } : {}) };
       },
       async readPage({ filter = "all", maxChars = 50000 } = {}) {
         const item = await requirePage();
@@ -1386,10 +1503,13 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       },
       async click({ ref = null, selector = null, x = null, y = null, doubleClick = false } = {}) {
         const item = await requirePage();
+        // preview-15 (C4i): a point from a screenshot taken before the page's zoom or size changed is refused; R4f (S4i,
+        // b4i): one outside the screenshot's frame is refused, and the rest go to the page in its CSS pixels.
+        const at = !ref && !selector && Number.isFinite(x) && Number.isFinite(y) ? await coordinates.point(item, "click", x, y) : { x, y };
         const since = Date.now();
         const count = doubleClick ? 2 : 1;
         if (onScreen(item)) {
-          let point = { x, y, label: "" };
+          let point = { x: at.x, y: at.y, label: "" };
           if (ref || selector) {
             point = await isolated(item, scripts.locateScript({ ref, selector }));
             if (point?.error) throw new Error(point.error);
@@ -1402,7 +1522,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
           return { clicked: point.label || (ref || selector || `(${x}, ${y})`), ...(await settle(item, since)) };
         }
         if (!ref && !selector && (!Number.isFinite(x) || !Number.isFinite(y))) throw new Error("Name an element (ref or selector) or a point (x, y).");
-        const result = await isolated(item, scripts.domClickScript({ ref, selector, x, y, clickCount: count }), true);
+        const result = await isolated(item, scripts.domClickScript({ ref, selector, x: at.x, y: at.y, clickCount: count }), true);
         if (result?.error) throw new Error(result.error);
         return { clicked: ref || selector || `(${x}, ${y})`, ...(await settle(item, since)) };
       },
@@ -1447,15 +1567,17 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       async scroll({ ref = null, selector = null, x = null, y = null, direction = null, amount = 3 } = {}) {
         const item = await requirePage();
         if (!ref && !selector && direction === null) throw new Error("Name an element (ref or selector) to scroll into view, or a direction to scroll.");
-        const result = await isolated(item, scripts.scrollScript({ ref, selector, x, y, direction, amount }));
+        const at = !ref && !selector && Number.isFinite(x) && Number.isFinite(y) ? await coordinates.point(item, "scroll", x, y) : { x, y };
+        const result = await isolated(item, scripts.scrollScript({ ref, selector, x: at.x, y: at.y, direction, amount }));
         if (result?.error) throw new Error(result.error);
         return result;
       },
       async hover({ ref = null, selector = null, x = null, y = null } = {}) {
         const item = await requirePage();
         if (!ref && !selector && (!Number.isFinite(x) || !Number.isFinite(y))) throw new Error("Name an element (ref or selector) or a point (x, y).");
+        const at = !ref && !selector ? await coordinates.point(item, "hover", x, y) : { x, y };
         if (onScreen(item)) {
-          let point = { x, y, label: "" };
+          let point = { x: at.x, y: at.y, label: "" };
           if (ref || selector) {
             point = await isolated(item, scripts.locateScript({ ref, selector }));
             if (point?.error) throw new Error(point.error);
@@ -1464,7 +1586,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
           await sleep(100);
           return { hovered: point.label || ref || selector || `(${x}, ${y})` };
         }
-        const result = await isolated(item, scripts.domHoverScript({ ref, selector, x, y }), true);
+        const result = await isolated(item, scripts.domHoverScript({ ref, selector, x: at.x, y: at.y }), true);
         if (result?.error) throw new Error(result.error);
         return { hovered: result.hovered || ref || selector || `(${x}, ${y})` };
       },

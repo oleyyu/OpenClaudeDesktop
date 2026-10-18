@@ -5,6 +5,9 @@
 // else 3000 for a command). Pure: the caller reads the file and spawns (insideFolderReal only resolves symlinks).
 import fs from "node:fs";
 import path from "node:path";
+// preview-04: 2.42304.0 X0.parseConfiguration's "autoPort" / "port" type checks and its localhost-url port error,
+// verbatim (scripts/extract-r3b-preview.mjs).
+import { launchPortFields, launchUrlPortMismatch } from "./generated/r3b-preview-launch-fields.mjs";
 
 export const LAUNCH_FILE = path.join(".claude", "launch.json");
 export const LAUNCH_EXAMPLE = `{
@@ -80,7 +83,10 @@ export function normalizeConfiguration(entry, root, index = 0) {
   if (entry.runtimeArgs !== undefined && !strings(entry.runtimeArgs)) return malformed("runtimeArgs");
   if (entry.program !== undefined && (typeof entry.program !== "string" || !entry.program.trim())) return malformed("program");
   if (entry.args !== undefined && !strings(entry.args)) return malformed("args");
-  if (entry.port !== undefined && !validPort(entry.port)) return malformed("port");
+  // "autoPort" is the JSON boolean or absent; "port" a number from 1 to 65535 or its digits as a string (an empty or
+  // zero "port" counts as absent), else the original's message.
+  let entryPort;
+  try { entryPort = launchPortFields(entry); } catch (error) { return { problem: `configuration ${index + 1}: ${error.message}` }; }
   if (entry.env !== undefined && (!entry.env || typeof entry.env !== "object" || Array.isArray(entry.env) || !Object.values(entry.env).every((value) => typeof value === "string"))) return malformed("env");
   if (entry.cwd !== undefined && typeof entry.cwd !== "string") return malformed("cwd");
   if (entry.name !== undefined && (typeof entry.name !== "string" || !entry.name.trim() || entry.name.length > 100)) return malformed("name");
@@ -108,12 +114,12 @@ export function normalizeConfiguration(entry, root, index = 0) {
   for (const key of Object.keys(env)) env[key] = substitute(env[key], root);
   const urlPort = url ? Number(url.port || (url.protocol === "https:" ? 443 : 80)) : null;
   const envPort = validPort(Number(env.PORT)) ? Number(env.PORT) : null;
-  const port = entry.port ?? (url && url.port ? urlPort : null) ?? envPort ?? (command ? portFromArgs(args) : null) ?? (command ? 3000 : (url ? urlPort : 0));
+  const port = entryPort ?? (url && url.port ? urlPort : null) ?? envPort ?? (command ? portFromArgs(args) : null) ?? (command ? 3000 : (url ? urlPort : 0));
 
   if (url && isLocalHost(url.hostname)) {
     // A localhost url is the server's own origin: no path or query, and the entry's port.
     if ((url.pathname && url.pathname !== "/") || url.search || url.hash) return { problem: `configuration ${index + 1}: "url" is a localhost address with a path or query; use the bare origin` };
-    if (entry.port !== undefined && urlPort !== entry.port) return { problem: `configuration ${index + 1}: "url" port ${urlPort} doesn't match "port" ${entry.port}` };
+    if (entryPort !== undefined && urlPort !== entryPort) return { problem: `configuration ${index + 1}: ${launchUrlPortMismatch(url, entryPort)}` };
   }
   const cwd = entry.cwd ? path.resolve(root, substitute(entry.cwd, root)) : root;
   // Symlinks followed: a "cwd" that is a link inside the project to a folder outside it (web -> ~) is outside it, so
@@ -124,7 +130,9 @@ export function normalizeConfiguration(entry, root, index = 0) {
   return {
     config: {
       name, command, args, cwd, env, port,
-      autoPort: entry.autoPort === true,
+      // Three states, as the original keeps it: true (always movable), false (never), absent (movable unless the
+      // start script pins the port; preview-01).
+      autoPort: entry.autoPort,
       url: url ? url.href.replace(/\/$/, isLocalHost(url.hostname) ? "" : "/") : null,
       attach: !command,
     },

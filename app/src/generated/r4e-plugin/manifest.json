@@ -1,0 +1,520 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r4e-plugin.mjs",
+  "adapterModule": "src/source-r4e-plugin-adapters.jsx",
+  "modules": [
+    {
+      "target": "lazy-value.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "eb4333c955672de94f775c9eca2d1e2b59af553e31a4f3972c4ed034a299e665",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Hi",
+          "sha256": "259fec1f4d3e93f3a196b191fd4dd54e22b94e519ee975fe1eaa667237f29865"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Hi": "lazyValue"
+      }
+    },
+    {
+      "target": "clsx.mjs",
+      "source": "vendor-frame-DfPJ1QmD.js",
+      "sourceSha256": "c96b504f7ecd3b5749b6913c9bad6b7950719b38636083e1496002b219e6bbdc",
+      "sha256": "2d0fa1b7438e137a0c4329590cd7328c729cd8415479cdee21716c72bbe770a4",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "he",
+          "sha256": "8df1c934bd199c52b318559d814e52aba56aee4a2eb1b6b3c194d7e9ccd152b3"
+        },
+        {
+          "name": "ge",
+          "sha256": "fa7a5fc8bfd534c12841fdc266de1a949f6b2893bd2103fb190b54b25a3c9093"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ge": "clsx"
+      }
+    },
+    {
+      "target": "text-sanitize.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "aeb630a95a994491674402fbd28c1266d4cecc2b83224e5b8ab5eb2764695ebf",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "DV",
+          "sha256": "ec0afdee597e4683b40c5d698f03ca48f167e7a42e7a72b0d4e11c3a86efd6e0"
+        },
+        {
+          "name": "OV",
+          "sha256": "31b3d2b7ef0e55cc14a68386ec997dbaa69fb3e27f4e4ab6da68644bd61bee70"
+        },
+        {
+          "name": "kV",
+          "sha256": "963003f33fdea2b09fd1f930504e7c75845d2c3c7737855095750b0bd279c4ad"
+        },
+        {
+          "name": "AV",
+          "sha256": "ace6942932a81ccb7a976301ac96df59b165ae7380ee397bb3b8d3de9b2a39f3"
+        },
+        {
+          "name": "jV",
+          "sha256": "2a48f2fd0d53c31c8f2cf4e91dbf4c1db4ed5b83eb69d641d9de213ddf293243"
+        }
+      ],
+      "imports": [
+        {
+          "local": "F",
+          "from": "./lazy-value.mjs",
+          "name": "lazyValue",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "jV": "sanitizeMultilineText",
+        "kV": "sanitizeText"
+      }
+    },
+    {
+      "target": "overview-layout.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "e4cf6bfb1776083b3e1daecb9d93711efe0c25f99c3f457c903ce7cf9c1aacea",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "gE",
+          "sha256": "f4675d28374ba8ed22edeccfb7c2a32a006bfb7db08dfd5341293302e7048937"
+        },
+        {
+          "name": "RE",
+          "sha256": "b9a1f299bbca2a128d69f358c3f090073b2252b66a4e7dc15e53aa678e0cd21c"
+        },
+        {
+          "name": "OD",
+          "sha256": "722c3612af1650dd398e30bf33ecaccac91d29f3d029d87e42cdb44549b8d13a"
+        },
+        {
+          "name": "kD",
+          "sha256": "3da695f223b620d4b754de9eccef114f2af7d3fd65b7984dbb3b49ef935496ca"
+        },
+        {
+          "name": "AD",
+          "sha256": "583becd840b141cd388f322e69e3b6dc572f00421fc2a1291fd48fca5aba6998"
+        }
+      ],
+      "imports": [
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "R",
+          "from": "./clsx.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "generated"
+        },
+        {
+          "local": "hh",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "usePageLayout",
+          "via": "shared-5-kdJVRUsT.js:_s",
+          "kind": "adapter",
+          "original": "Jm"
+        },
+        {
+          "local": "lp",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "OverviewCard",
+          "via": "shared-frame-BfjMqbuN.js:ol",
+          "kind": "adapter",
+          "original": "yu"
+        }
+      ],
+      "exports": {
+        "kD": "PluginOverviewLayout",
+        "AD": "OverviewRailCard",
+        "RE": "OVERVIEW_HEADING_LEADING"
+      }
+    },
+    {
+      "target": "overview-sections.mjs",
+      "source": "cae01a6fc-FlNR9WHF.js",
+      "sourceSha256": "6bbd4d3ee68451e1e9a11dc0f8685d6957237a94509df65f6464d4c1110c3d3d",
+      "sha256": "497bd2dffe6f62fede7adde3cc075177742724bfb9b96c9d70705c565298ef6a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "U",
+          "sha256": "fda4aab3aebab9d79d9229530e90c0c888015cf094867b26fbdae2d802bd067b"
+        },
+        {
+          "name": "W",
+          "sha256": "2cf33239703388da3efb48ed68fa07d6d37418c6703d85c24534d4979545248b"
+        },
+        {
+          "name": "J",
+          "sha256": "c945b2eb65d1ebba09daee93cc1387edab516139bc72f7598f40c60e472ca93c"
+        },
+        {
+          "name": "X",
+          "sha256": "51ae726d7f1d5c08dc14986ff900174ebef673923f94c49cccd9303e3257de48"
+        },
+        {
+          "name": "se",
+          "sha256": "e87bceaa974b8f5a1d995115c6bbd7aeaba343c33d8f12edc53370f34da2b903"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "useUnifiedPluginsUi",
+          "via": "shared-52-DGviI8xb.js:Go",
+          "kind": "adapter",
+          "original": "gk"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "./clsx.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "generated"
+        },
+        {
+          "local": "o",
+          "from": "./overview-layout.mjs",
+          "name": "OVERVIEW_HEADING_LEADING",
+          "via": "shared-19-CkPOiIKm.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "s",
+          "from": "./text-sanitize.mjs",
+          "name": "sanitizeMultilineText",
+          "via": "shared-52-DGviI8xb.js:C",
+          "kind": "generated"
+        },
+        {
+          "local": "b",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "R",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "useLinkifiedDescription",
+          "via": "c79fa23ba-vPN4ZRvE.js:r",
+          "kind": "adapter",
+          "original": "g"
+        },
+        {
+          "local": "z",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "linkifyDescription",
+          "via": "c79fa23ba-vPN4ZRvE.js:t",
+          "kind": "adapter",
+          "original": "_"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "OverviewOverflowText",
+          "via": "shared-frame-BfjMqbuN.js:Dc",
+          "kind": "adapter",
+          "original": "gm"
+        },
+        {
+          "local": "m",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "OverviewIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "adapter",
+          "original": "Jo"
+        },
+        {
+          "local": "g",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "OverviewInfoTip",
+          "via": "shared-frame-BfjMqbuN.js:Xi",
+          "kind": "adapter",
+          "original": "oE"
+        },
+        {
+          "local": "_",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "OverviewButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "adapter",
+          "original": "$l"
+        },
+        {
+          "local": "y",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "usePageLayout",
+          "via": "shared-5-kdJVRUsT.js:_s",
+          "kind": "adapter",
+          "original": "Jm"
+        },
+        {
+          "local": "x",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        }
+      ],
+      "exports": {
+        "U": "OverviewSectionHeading",
+        "W": "OverviewDescription",
+        "X": "OverviewRow",
+        "J": "OverviewRailGroup",
+        "se": "OverviewConnectorsAndTools"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c24c8737b--Vxi4LBp.js",
+      "binding": "pc",
+      "role": "Plugin page: the tab list Kt (Overview first, Tool permissions only for a non-empty resolved list, then the content tabs), Overview as the initial and fallback tab, and its panel",
+      "sourceSha256": "8bcb4d057c683085538f264320dbdee6fd0d8246de7339c6f9443c4c13737e7a",
+      "sha256": "ef0bb70621acb23ed89a63760033cfb379030edf228156bdcf69ec66257fd01a",
+      "features": [
+        "hostToolPermissionsServers: xe,",
+        "[U, Te] = n(() => ne(ge) ?? \"overview\"),",
+        "K = we(),",
+        "Ut = Ht !== \"loading\" && Ht.length > 0,",
+        "let e = [ { id: \"overview\", href: F(\"overview\"), label: a(Z, { defaultMessage: \"Overview\", id: \"9uOFF3L8kp\" }), }, ];",
+        "Ut === !0 && e.push({ id: \"permissions\", href: F(\"permissions\"), label: a(Ks, {}), }),",
+        "w && e.push({ id: \"contents\",",
+        "ht.length > 0 && e.push({ id: \"skills\",",
+        "gt.length > 0 && e.push({ id: \"commands\",",
+        "kt && e.push({ id: \"connectors\",",
+        "(xt > 0 || Ct) && e.push({ id: \"hooks\",",
+        "(wt.length > 0 || Tt) && e.push({ id: \"monitors\",",
+        "Et.length > 0 && e.push({ id: \"language-servers\",",
+        "Dt.length > 0 && e.push({ id: \"agents\",",
+        "bt(is(e, Ce), Gt)",
+        "qt = Kt.some((e) => e.id === U) ? U : \"overview\";",
+        "Dn = u(() => Ee(\"connectors\"), [Ee]),",
+        "qt === \"overview\" && a(pa, {",
+        "onOpenConnectors: Kt.some((e) => e.id === \"connectors\") ? Dn : void 0,",
+        "qt === \"permissions\" && Ht !== \"loading\" && a(Us, { connectors: Ht, connectorPageStyle: R }),"
+      ]
+    },
+    {
+      "source": "c24c8737b--Vxi4LBp.js",
+      "binding": "xs",
+      "role": "Tool permissions servers: the host servers only with the unified plugins UI; otherwise the listed servers, enabled only with that UI too",
+      "sourceSha256": "8bcb4d057c683085538f264320dbdee6fd0d8246de7339c6f9443c4c13737e7a",
+      "sha256": "9b4c83fe409816368acaa4477a33f1dde9dc335fa98f13ace73c37710b00bc69",
+      "features": [
+        "return e === !0 && n !== void 0 && n.length > 0",
+        "? { servers: n, serversSettled: !0, enabled: !0, hostConnector: r }",
+        "enabled: e === !0 && (t === !0 || r !== void 0),"
+      ]
+    },
+    {
+      "source": "c24c8737b--Vxi4LBp.js",
+      "binding": "Ks",
+      "role": "Tool permissions tab label",
+      "sourceSha256": "8bcb4d057c683085538f264320dbdee6fd0d8246de7339c6f9443c4c13737e7a",
+      "sha256": "14768464212f575e77e5a89fc9e9aadb0fb1acee47f04c1f189ca7bef27be617",
+      "features": [
+        "defaultMessage: \"Tool permissions\", id: \"xq9OFmeici\""
+      ]
+    },
+    {
+      "source": "c24c8737b--Vxi4LBp.js",
+      "binding": "is",
+      "role": "A plugin blocked by the sales cloud access check keeps only Overview, Tool permissions and Connectors",
+      "sourceSha256": "8bcb4d057c683085538f264320dbdee6fd0d8246de7339c6f9443c4c13737e7a",
+      "sha256": "bcbd3dec34da5108e8677bc7b2425c6a130021ee7300b3667f67d6b886110634",
+      "features": [
+        "return t ? e.filter((e) => rs.some((t) => t === e.id)) : e;"
+      ]
+    },
+    {
+      "source": "shared-18-D4XxL6Tg.js",
+      "binding": "Q_",
+      "role": "Kt bt(…, Gt): the tab list is unchanged unless the unified UI and the connector page style both hold",
+      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "sha256": "47fc51d5a35d4a1ef0ca52163188ae622f5df3d30546f16b77c72bbfbacfff0b",
+      "features": [
+        "if (t === !1) return e;"
+      ]
+    },
+    {
+      "source": "c76f00e40-CN9FziLk.js",
+      "binding": "gr",
+      "role": "The only caller that passes hostToolPermissionsServers: the directory connector record shown as a plugin page",
+      "sourceSha256": "7e6395db70abfc1b0dd52e18ddaa18729064d64ac4f78ef2ed1825a5d01f42df",
+      "sha256": "839a123f41ab39f46ee5bda248406450b96dd31f0b395ff41081ff0c8765bfb1",
+      "features": [
+        "connectorPageStyle: !0,",
+        "hostDirectoryPlugin: e,",
+        "hostToolPermissionsServers: ee,"
+      ]
+    },
+    {
+      "source": "c12456454-Dz_kF7My.js",
+      "binding": "ni",
+      "role": "Overview: org usage (Dr), what’s new, the Description, categories, the degraded-read warning, Try it; the rail lists Connectors & tools",
+      "sourceSha256": "bdfaae382ad4ec6cfe20be4a763a92cbf0b2505adc52a594d7215001a0a14cf9",
+      "sha256": "cf46cc1d1c02cbd89a5e46fd4ae943af4538553a47e9a11bd50e877523e0be53",
+      "features": [
+        "re = ti(t, D?.examplePrompts),",
+        "O = Ct(u, {",
+        "k = a !== null && t.provenance.source === \"shared\" ? i(xt, { credit: o }) : null,",
+        "ue = j === !1 && (k !== null || O.length > 0),",
+        "i(Dr, {",
+        "i(vt, { backendId: t.plugin?.backend_id, connectorPageStyle: f }),",
+        "R === !1 && i(bt, { description: ii({ item: t, directoryPlugin: h, signedInRecord: E }), connectorPageStyle: f, }),",
+        "i(St, { categories: ce(t), connectorPageStyle: f }),",
+        "i(_t, { plugin: u }),",
+        "ae && a !== null && i(gn, {",
+        "slashCommand: u?.skills.some(Me) ? `/${t.name}` : void 0,",
+        ": ue === !0 ? n(w, { children: [k, O.length > 0 && i(yt, { rows: O })] }) : y ? void 0"
+      ]
+    },
+    {
+      "source": "c12456454-Dz_kF7My.js",
+      "binding": "gn",
+      "role": "Try it: nothing without prompts; the “…or type {command} in any chat.” line lives inside it",
+      "sourceSha256": "bdfaae382ad4ec6cfe20be4a763a92cbf0b2505adc52a594d7215001a0a14cf9",
+      "sha256": "3a5ad10a44bd74ed0b01db79cdadafb3e5d03cab3918484f42170e655e74c9c7",
+      "features": [
+        "if (e.length === 0) return null;",
+        "defaultMessage: \"Try it\", id: \"g3Yfya3FKa\"",
+        "a && r === \"ready\" && i(\"p\", { className: \"text-footnote text-muted-as-secondary\",",
+        "defaultMessage: \"\\u2026or type {command} in any chat.\", id: \"04Z43F3yGZ\","
+      ]
+    },
+    {
+      "source": "c12456454-Dz_kF7My.js",
+      "binding": "ei",
+      "role": "Try it prompts: the curated catalog’s suggested prompts, for default-catalog plugins only",
+      "sourceSha256": "bdfaae382ad4ec6cfe20be4a763a92cbf0b2505adc52a594d7215001a0a14cf9",
+      "sha256": "3210bf689b8a39bd6b90c380012789cd5a93f622e2d133ee034395724c8961b7",
+      "features": [
+        ")?.suggested_prompts;",
+        "e.provenance.source === \"default\" && t ? t.map((e) => ({ ...e, origin: \"curated\" })) : $r,"
+      ]
+    },
+    {
+      "source": "c12456454-Dz_kF7My.js",
+      "binding": "ti",
+      "role": "Try it prompts: a directory listing’s example prompts win over the curated ones",
+      "sourceSha256": "bdfaae382ad4ec6cfe20be4a763a92cbf0b2505adc52a594d7215001a0a14cf9",
+      "sha256": "801d033cdbac9d7edb03b49f30864cd0d473cb5d20a6ee5d37a1ffce2b25571a",
+      "features": [
+        "t === void 0 || t.length === 0 ? n : t.map((e) => ({ prompt: e.prompt, origin: \"directory_listing\" })),"
+      ]
+    },
+    {
+      "source": "c12456454-Dz_kF7My.js",
+      "binding": "ii",
+      "role": "Description: the item’s own description without a directory listing or signed-in record",
+      "sourceSha256": "bdfaae382ad4ec6cfe20be4a763a92cbf0b2505adc52a594d7215001a0a14cf9",
+      "sha256": "4f9cc45bc4f5c5a16a231d0caa95ae7fd94b3590c40b069e1cc1ef62b5c1e24a",
+      "features": [
+        "return t === null || t === \"loading\" ? n === void 0 || n.summary.trim() === \"\" ? e.description : n.summary : t.oneLiner;"
+      ]
+    },
+    {
+      "source": "cae01a6fc-FlNR9WHF.js",
+      "binding": "ae",
+      "role": "Connectors & tools rows: reach rows, one row per MCP server (display name, the server name as the note when it differs, opens Connectors), CLI components",
+      "sourceSha256": "6bbd4d3ee68451e1e9a11dc0f8685d6957237a94509df65f6464d4c1110c3d3d",
+      "sha256": "cca5c3862ea6b27fcfceb4b6e1eb683d854cdd619515bba0c815ba3c8fe11383",
+      "features": [
+        "e.reach &&",
+        "e.mcpServers.forEach((s, c) => {",
+        "f = u(s.name);",
+        "key: `mcp:${c}:${s.name}`,",
+        "icon: r(L, { server: l, size: Q, glyphSize: 12 }),",
+        "label: d,",
+        "note: d === f ? void 0 : f,",
+        "onClick: n,",
+        "e.type === \"cli\" &&"
+      ]
+    },
+    {
+      "source": "cd14a8022-CnQTOs75.js",
+      "binding": "x",
+      "role": "A server’s display name: the directory / sync-source / connector name, else its own name (sanitized)",
+      "sourceSha256": "cc4d2d8eee3a2385ab03e7ada740e32d5a138debf65d7740df2deca994c8db81",
+      "sha256": "472f22b7693289ef246fe40ac808c8e4f87610b8567dc09659688db787bf419c",
+      "features": [
+        "e.connector?.name ??",
+        "e.name,"
+      ]
+    },
+    {
+      "source": "c28f9f509-CoVhao0t.js",
+      "binding": "u",
+      "role": "A server without an icon: the kind glyph (connector: Connectors) at the glyph size, text-muted-as-secondary",
+      "sourceSha256": "4332edca854a918b36df2bf2078a0d92ba03f24bde9149eec2e9aa135572b280",
+      "sha256": "322836b5d00fd53f6c5e9400341b2fec566e18271fa57101c5aa5e60dd0dd7b3",
+      "features": [
+        "let o = e(n, { name: f(t), customSize: r, className: \"text-muted-as-secondary\", });"
+      ]
+    },
+    {
+      "source": "c28f9f509-CoVhao0t.js",
+      "binding": "h",
+      "role": "Kind glyphs",
+      "sourceSha256": "4332edca854a918b36df2bf2078a0d92ba03f24bde9149eec2e9aa135572b280",
+      "sha256": "2167b1ae2e4dda13e9f04667217062f9414f2def6098aadcd2966f89db9dd3f2",
+      "features": [
+        "connector: \"Connectors\""
+      ]
+    }
+  ]
+}

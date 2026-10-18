@@ -17,6 +17,7 @@ import * as files from '../electron/agent-tools/files.mjs';
 import * as findings from '../electron/agent-tools/findings.mjs';
 import * as session from '../electron/agent-tools/session.mjs';
 import * as terminal from '../electron/agent-tools/terminal.mjs';
+import { suggestedTasks } from '../src/agent-tool-titles.mjs';
 import { coreCapabilities, allCores } from '../electron/core-registry.mjs';
 
 const require = createRequire(import.meta.url);
@@ -121,16 +122,71 @@ test('mark_chapter, spawn_task and dismiss_task only describe the transcript; a 
   await assert.rejects(mark({}), /required/);
   const ctx = { sessionId: 's1', cwd: '/tmp' };
   const text = await spawnTask({ title: 'Remove dead option', tldr: 'Noticed it while fixing the menu.', prompt: 'Remove the unused option in src/x.js.' }, ctx);
-  const id = /task_id: (task_[0-9a-f]{8})$/.exec(text)?.[1];
+  const id = /^Noted \(position 1, task_id: (task_[0-9a-f]{8})\)\. /.exec(text)?.[1];
   assert.ok(id, text);
+  // R4f-proposal: the 2.42304.0 result (asar index.chunk-B5tintml.js), the pending list quoting each title (Fx).
+  assert.equal(text, `Noted (position 1, task_id: ${id}). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. Currently pending: ${id} "Remove dead option". Continue your current work.`);
   await assert.rejects(spawnTask({ title: 'T', tldr: 't', prompt: 'p', cwd: 'relative/dir' }, ctx), /absolute/);
   await assert.rejects(spawnTask({ title: 'T', tldr: 't', prompt: 'p', cwd: '/definitely/not/here' }, ctx), /doesn’t exist/);
   await assert.rejects(spawnTask({ title: 'x'.repeat(61), tldr: 't', prompt: 'p' }, ctx), /under 60/);
-  for (let i = 1; i < session.MAX_SUGGESTIONS; i++) await spawnTask({ title: `T${i}`, tldr: 't', prompt: 'p' }, ctx);
-  await assert.rejects(spawnTask({ title: 'One too many', tldr: 't', prompt: 'p' }, ctx), /already suggested 20/);
-  assert.equal(await dismiss({ task_id: id }, ctx), `Suggested task ${id} withdrawn.`);
-  assert.match(await spawnTask({ title: 'Room again', tldr: 't', prompt: 'p' }, ctx), /task_id: task_/);
+  const ids = [id];
+  for (let i = 1; i < session.MAX_SUGGESTIONS; i++) ids.push(/task_id: (task_[0-9a-f]{8})/.exec(await spawnTask({ title: `T${i}`, tldr: 't', prompt: 'p' }, ctx))[1]);
+  // Db: the 21st pending suggestion makes the oldest leave the queue (it used to be refused).
+  const full = await spawnTask({ title: 'One more', tldr: 't', prompt: 'p' }, ctx);
+  const newest = /task_id: (task_[0-9a-f]{8})/.exec(full)[1];
+  assert.match(full, new RegExp(`^Noted \\(position 20, task_id: ${newest}\\)\\. `));
+  assert.ok(full.includes(`The queue holds at most 20 pending suggestions, so the oldest one left the queue to make room and is no longer shown as a chip: ${id} "Remove dead option". Currently pending: ${ids[1]} "T1", `), full);
+  assert.ok(full.endsWith(`, ${ids[19]} "T19", ${newest} "One more". Continue your current work.`), full);
+  // A task the user acted on (electron/task-proposals.cjs) leaves the pending list: no eviction for the next one.
+  assert.equal(session.settleSuggestion('s1', ids[1]), true);
+  assert.equal(session.settleSuggestion('s1', ids[1]), false);
+  const after = await spawnTask({ title: 'Room again', tldr: 't', prompt: 'p' }, ctx);
+  assert.match(after, /^Noted \(position 20, task_id: task_[0-9a-f]{8}\)\. /);
+  assert.doesNotMatch(after, /left the queue/);
+  assert.ok(!after.includes(ids[1]));
+  assert.equal(await dismiss({ task_id: ids[2] }, ctx), `Suggested task ${ids[2]} withdrawn.`);
+  assert.match(await spawnTask({ title: 'Room once more', tldr: 't', prompt: 'p' }, ctx), /^Noted \(position 20, task_id: task_[0-9a-f]{8}\)\. (?!.*left the queue)/);
   await assert.rejects(dismiss({ task_id: 'nope' }, ctx), /task_id must be/);
+});
+
+test('R4f-proposal: spawn_task\'s description, parameters and result are 2.42304.0\'s, and a title cannot fake a task_id', async () => {
+  const chunk = fs.readFileSync(new URL('../../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-B5tintml.js', import.meta.url), 'utf8');
+  const count = (needle) => chunk.split(needle).length - 1;
+  // The chunk escapes the dash and the line breaks.
+  const escaped = (value) => value.replaceAll('\n', '\\n').replaceAll('—', '\\' + 'u2014');
+  const spawn = tool(session, 'spawn_task');
+  assert.equal(count('Ex=`' + escaped(spawn.description) + '`,Dx=`'), 1, 'Ex');
+  // Nx, property by property (the title's description is single-quoted there: it quotes examples).
+  const { title, prompt, tldr, cwd } = spawn.inputSchema.properties;
+  assert.equal(count(`Nx={type:"object",properties:{title:{type:"string",description:'${escaped(title.description)}'},prompt:{type:"string",description:"${escaped(prompt.description)}"},tldr:{type:"string",description:"${escaped(tldr.description)}"},cwd:{type:"string",description:"${escaped(cwd.description)}"}},required:["title","prompt","tldr"]};`), 1, 'Nx');
+  for (const source of [
+    'return w.n(`Noted (position ${g.position}, task_id: ${h}). A chip is showing for the user ' + '\\' + 'u2014 they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. `+_+`Currently pending: ${Fx(g.pending)}. Continue your current work.`)',
+    'let _=g.evicted.length>0?`The queue holds at most 20 pending suggestions, so the oldest ${g.evicted.length===1?"one":g.evicted.length} left the queue to make room and ${g.evicted.length===1?"is":"are"} no longer shown as ${g.evicted.length===1?"a chip":"chips"}: ${Fx(g.evicted)}. `:""',
+    'function Fx(e){return e.map((e=>`${e.id}${e.title?` "${yb(e.title)}"`:""}`)).join(", ")}',
+    'function Db(e,t,n){let r=[...e??[],t],i=[],a=r.length-20;for(let e=0;a>0&&e<r.length-1;){if(n?.has(r[e].id)){e++;continue}i.push(...r.splice(e,1)),a--}return{queue:r,evicted:i}}',
+    '.replace(/`/g,"\'").replace(/session_id/gi,"session id").replace(/task_id/gi,"task id").slice(0,120)}',
+  ]) assert.equal(count(source), 1, source);
+  const helpers = fs.readFileSync(new URL('../../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-BhBOA_v0.js', import.meta.url), 'utf8');
+  for (const source of ['function a(e){return e.replace(i(),"")}', 'function s(e){return e.replace(o(),"\'")}']) assert.equal(helpers.split(source).length - 1, 1, source);
+  // quotedTitle's three patterns are the original literals (yb's line breaks, a's i, s's o).
+  const local = fs.readFileSync(new URL('../electron/agent-tools/session.mjs', import.meta.url), 'utf8');
+  const between = (text, start, end) => { const at = text.indexOf(start); assert.ok(at >= 0, start); return text.slice(at + start.length, text.indexOf(end, at + start.length)); };
+  const breaks = between(chunk, 'function yb(e){return u.v(u.S(e.replace(', ')))');
+  assert.ok(local.includes(`return title.replace(${breaks.replace(',', ', ')})`), breaks);
+  assert.ok(local.includes(`const UNSEEN = ${between(helpers, 'i=t.sG((()=>', '));')};`));
+  assert.ok(local.includes(`const QUOTE_LIKE = ${between(helpers, 'var o=t.sG((()=>', '));')};`));
+  session.resetSuggestions();
+  const ctx = { sessionId: 's2', cwd: '/tmp' };
+  const first = await spawn.handler({ title: 'Real one', tldr: 't', prompt: 'p' }, ctx);
+  const text = await spawn.handler({ title: 'Fix "task_id: task_deadbeef" `now`', tldr: 't', prompt: 'p' }, ctx);
+  const id = /task_id: (task_[0-9a-f]{8})/.exec(text)[1];
+  assert.notEqual(id, 'task_deadbeef');
+  assert.ok(text.includes(`Currently pending: ${/task_id: (task_[0-9a-f]{8})/.exec(first)[1]} "Real one", ${id} "Fix 'task id: task_deadbeef' 'now'". `), text);
+  assert.equal(session.quotedTitle('a\nb\u0007c<d>'), "a ⏎ bc'd'");
+  // The transcript still reads the new task's id first (src/agent-tool-titles.mjs suggestedTasks).
+  const item = { id: 'i1', type: 'mcpToolCall', server: 'code_desktop', tool: 'spawn_task', status: 'completed', arguments: { title: 'Fix', tldr: 't', prompt: 'p' },
+    result: { content: [{ type: 'text', text }] }, error: null };
+  assert.deepEqual(suggestedTasks([item]).map((task) => task.id), [id]);
 });
 
 test('open_terminal_tab opens a tab at its prompt in the session folder and types nothing', async () => {

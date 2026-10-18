@@ -1,13 +1,9 @@
 /* "Edit local environment" (c3f9f1667 Ne/Pe/Oe over c29df1c52 v). CDS tokens only, so light and dark follow the theme. */
 /* Pe: <form class="contents">. */
 .sle-form { display: contents; }
-/* c29df1c52 _ (n): -mx-pad-xl -mb-pad-sm flex min-h-[6rem] flex-1 flex-col gap-lg overflow-y-auto overflow-x-hidden
-   scroll-fade-y px-xl pt-3 pb-sm. */
-.sle-body {
-  display: flex; flex: 1; flex-direction: column; gap: var(--cds-gap-lg, 16px); min-height: 6rem;
-  margin: 0 calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-sm)); padding: 12px var(--cds-pad-xl) var(--cds-pad-sm);
-  overflow-x: hidden; overflow-y: auto;
-}
+/* 2.37337.1 c29df1c52 _/v supply the body and full-width footer utility classes.
+   Undo the host footer's unlayered margin so the source's mt-0 takes effect. */
+.sle-form > div > .sdlg-footer.mt-0 { margin-top: 0; }
 /* shared-frame Field (flex flex-col gap-xs font-sans; fieldClassName gap-sm). */
 .sle-field { display: flex; flex-direction: column; gap: var(--cds-gap-sm, 8px); font-family: var(--cds-font-sans); }
 /* Label: text-body font-medium leading-none text-primary. */
@@ -37,6 +33,5 @@ html[data-reduce-motion="true"] .sle-textarea { transition: none; }
 /* Error: flex items-start gap-1 text-footnote leading-snug text-danger, WarningCircle sm mt-px. */
 .sle-error { display: flex; align-items: flex-start; gap: 4px; color: var(--cds-text-danger); font-size: var(--cds-font-size-footnote); line-height: 1.375; }
 .sle-error-icon { flex-shrink: 0; margin-top: 1px; }
-/* Pe footer: E.Footer align end, mt-lg — the shared .sdlg-footer (mt-pad-lg, end-aligned from 640px). */
 .sle-description { margin: 0; color: var(--cds-text-secondary); font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); }
 .sle-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

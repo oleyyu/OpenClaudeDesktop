@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createTerminalStore, ownerKeyOf } from '../src/terminal-store.mjs';
 import { MAX_CACHED_TERMINALS } from '../src/terminal-pane-model.mjs';
+import { inlineCommandDone, keptRunVisible } from '../src/code-block-run-model.mjs';
 
 // The renderer's terminal store over a fake preload bridge: owners keyed per session (two sessions at once), output
 // routed to kept-alive views, attach replay without duplicates, and agent-opened tabs announced.
@@ -275,5 +276,45 @@ test('inline run (B20 review): a dedicated run whose output and exit come before
   assert.equal(store.inlineRun().settled, true);
   assert.equal(store.inlineRun().endedBy, 'exit');
   assert.equal(store.inlineRun().exitCode, 0);
+  store.dispose();
+});
+
+// TT-10 / FT-13 (2.42304.0 c19e90103 Ng commandDone = endedBy === "idle", Bg me = (!tracked || commandDone) && showsRun):
+// what the store's endings mean for a block's kept box. Only an idle prompt (OSC 133 D) is "done"; the local dedicated
+// tab's "exit" is not (the source has no such ending), so its record shows once another run takes the tracking.
+test('inline run → kept box: an idle-settled tracked run is commandDone; a dedicated run that exits is not', async () => {
+  const bridge = fakeBridge();
+  const store = createTerminalStore({ bridge });
+  const typed = await store.runInline({ id: 'block:s1:m:true', sessionId: 's1', command: 'true' });
+  bridge.emit({ kind: 'data', id: typed.ptyKey, data: 'true\r\n\x1b]133;C\x07\x1b]133;D;0\x07% ', end: 30 });
+  let run = store.inlineRun();
+  assert.equal(run.endedBy, 'idle');
+  assert.equal(run.output, '');
+  assert.equal(inlineCommandDone(run), true);
+  // Synthetic: production never records a typed inline run. The only recordRun caller is main.jsx runCodeBlockTurn,
+  // i.e. the dedicated bash-turn tab, whose ending is always "exit" (D20: commandDone stays "idle"-only, no adapter for
+  // "exit"). Recording this idle-settled typed run here only exercises the source's tracked + idle path of the kept box,
+  // which the host cannot reach today (see R1/R2-transcript reports).
+  store.recordRun('block:s1:m:true');
+  assert.deepEqual(store.runRecord('block:s1:m:true'), { output: '', error: null, exitCode: 0 });
+  assert.equal(keptRunVisible({ tracked: true, commandDone: inlineCommandDone(run), showsRun: true }), true,
+    'tracked, done at the prompt, no live output: the kept box ("(no output)") with Open in terminal');
+
+  const info = await store.runDedicated({ id: 'turn', sessionId: 's1', command: 'true' });
+  bridge.emit({ kind: 'state', info: { ...info, status: 'exited', exitCode: 0 } });
+  run = store.inlineRun();
+  assert.equal(run.endedBy, 'exit');
+  assert.equal(inlineCommandDone(run), false, 'the source only counts "idle"');
+  store.recordRun('turn');
+  assert.equal(keptRunVisible({ tracked: true, commandDone: inlineCommandDone(run), showsRun: true }), false);
+  // Another run takes the tracking: the dedicated run's block is no longer tracked and shows its record.
+  await store.runInline({ id: 'block:s1:m:other', sessionId: 's1', command: 'ls' });
+  assert.notEqual(store.inlineRun().id, 'turn');
+  assert.equal(keptRunVisible({ tracked: false, commandDone: false, showsRun: true }), true);
+  assert.deepEqual(store.runRecord('turn'), { output: '', error: null, exitCode: 0 });
+  // Cancel and silence endings are not "done" either.
+  store.cancelInlineRun();
+  assert.equal(store.inlineRun().endedBy, 'cancel');
+  assert.equal(inlineCommandDone(store.inlineRun()), false);
   store.dispose();
 });

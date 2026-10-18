@@ -78,6 +78,17 @@ export function emptyArrowUpDequeues({ event, empty = false, popupOpen = false }
   return empty && !popupOpen;
 }
 
+// 2.42304.0 c227f4d5e OP keydown (the editor's capture handler, ahead of popups and the composer's own keys):
+// `if (!(e.shiftKey || e.altKey)) { if ((e.repeat || Date.now() < Xr.current) && (e.metaKey || e.ctrlKey || zs()))
+// { e.preventDefault(); e.stopPropagation(); return; } }`. Xr is the ignoreStrayEnter() deadline (now + rP, 500ms;
+// -Infinity until set); zs() is the Enter-sends preference, always on in the desktop app (shared-frame en: " Electron/").
+// True: swallow this Enter (a key repeat, or one inside the window after focus was handed to the composer).
+export function strayEnterSwallowed({ event, until = -Infinity, now = Date.now(), plainEnterSends = true } = {}) {
+  if (event?.key !== "Enter" || event.shiftKey || event.altKey) return false;
+  if (!(event.repeat || now < until)) return false;
+  return !!(event.metaKey || event.ctrlKey || plainEnterSends);
+}
+
 // Enter inside the focused editor (Shift/Alt pass through as a newline).
 //  - "newline": Shift+Enter / Alt+Enter.
 //  - "ignore": key repeat, IME composition, Cmd+Enter while composing.

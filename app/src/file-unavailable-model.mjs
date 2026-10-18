@@ -15,8 +15,8 @@ const COPY = Object.freeze({
   outside_root: { title: t("This file is outside the working directory"), body: t("It can’t be opened here, but it may still exist on disk."), role: "alert", showsPath: true },
   too_large: { title: t("Preview isn’t available for this file"), body: t("It’s too large to preview here."), role: "alert", showsPath: true },
   read_error: { title: t("Couldn’t read this file"), body: t("It may be unreadable, or the session’s connection may have dropped."), role: "alert", showsPath: true },
-  binary: { title: t("This file looks like binary data and can’t be previewed as text."), body: null, role: undefined, showsPath: false, action: "view-as-text" },
-  empty: { title: t("This file is empty."), body: null, role: undefined, showsPath: false },
+  binary: { title: t("This file looks like binary data and can’t be previewed as text"), body: null, role: undefined, showsPath: false, action: "view-as-text" },
+  empty: { title: t("This file is empty"), body: null, role: undefined, showsPath: false },
 });
 
 // Media read without their bytes (electron/files.cjs): the viewer shows them
@@ -46,6 +46,21 @@ export function fileTabReason(tab) {
   if (typeof tab.unavailable === "string") return Object.hasOwn(COPY, tab.unavailable) ? tab.unavailable : "read_error";
   if (tab.text === "") return "empty";
   return null;
+}
+
+// R4g-files FV1 (files-03): 2.42304.0 cd2efac6e-C1jvGOgh.js shows the empty card over a shown preview when
+// `(J==="markdown"||J==="text")&&Fp===void 0&&(q?.contents===""||!Sc&&q?.contents.trim()==="")` with
+// `Sc=q?.truncated===!0`: an empty body, or an untruncated whitespace-only one. Only the preview kinds; a
+// whitespace-only source file keeps its code view (fileTabReason is unchanged). The sandbox arm (Hl: html, svg) has
+// its own card, `Hu=X!==null&&(X.content===""||…byteLength===0)` with X = {mime:Yn, content:q?.contents}: only a
+// body that is exactly empty. Locally there is no "text" arm (hn: .txt/.text in the document presentation), no
+// native-preview X and no Fp render override.
+export function filePreviewEmpty(kind, tab) {
+  const text = tab?.text;
+  if (typeof text !== "string") return false;
+  if (kind === "html" || kind === "svg") return text === "";
+  if (kind !== "markdown" && kind !== "text") return false;
+  return text === "" || (tab.truncated !== true && text.trim() === "");
 }
 
 /** {title, body, role, showsPath, action} for a reason; unknown reasons read as read_error. */

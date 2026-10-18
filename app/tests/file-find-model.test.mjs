@@ -68,14 +68,14 @@ test('⋮ file items follow qa: Find in file (⌘F), Copy file contents, Downloa
 });
 
 test('the breadcrumb with a lister: segment buttons instead of the Copy path button', () => {
-  const lister = { rootLabel: 'work', list: async () => [], onOpenFile() {} };
+  const lister = { root: '/tmp/work', list: async () => [], onOpenFile() {} };
   const html = renderToStaticMarkup(React.createElement(V.SourceFileBreadcrumb, { displayPath: 'src/app.js', fullPath: '/tmp/work/src/app.js', lister }));
   assert.match(html, /data-breadcrumb-lister=""/);
-  assert.match(html, /<button type="button" class="sfv-crumb sfv-crumb-button sfv-crumb-dir"[^>]*data-breadcrumb-segment=""[^>]*aria-haspopup="dialog"[^>]*>src<\/button>/);
-  assert.match(html, /class="sfv-crumb sfv-crumb-button sfv-crumb-name"[^>]*>app\.js<\/button>/);
+  assert.match(html, /<button type="button" data-breadcrumb-segment="true"[^>]*aria-haspopup="dialog"[^>]*>src<\/button>/);
+  assert.match(html, /<button type="button" data-breadcrumb-segment="true"[^>]*>app\.js<\/button>/);
   assert.doesNotMatch(html, /Copy path/);
   const outside = renderToStaticMarkup(React.createElement(V.SourceFileBreadcrumb, { displayPath: '/etc/hosts', fullPath: '/etc/hosts', lister }));
   assert.doesNotMatch(outside, /data-breadcrumb-segment/);
   const plain = renderToStaticMarkup(React.createElement(V.SourceFileBreadcrumb, { displayPath: 'src/app.js', fullPath: '/tmp/work/src/app.js', onCopyPath() {} }));
-  assert.match(plain, /aria-label="Copy path src\/app\.js"/);
+  assert.match(plain, /aria-label="Copy path \/tmp\/work\/src\/app\.js"/);
 });

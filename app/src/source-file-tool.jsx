@@ -128,7 +128,8 @@ function DetailsBody({ item, action, state }) {
     </div><CommandCopyButton text={[input, stripAnsi(output.text)].filter(Boolean).join('\n\n')} />
   </div>;
 }
-export function FileToolMessage({ item, Step, pendingApprovalItemIds, defaultOpen, forcedOpen, inCard = false, after = null, ...props }) {
+// images: false when the caller draws the output images itself (the original tool rows' gv, source-transcript-tool-rows).
+export function FileToolMessage({ item, Step, pendingApprovalItemIds, defaultOpen, forcedOpen, inCard = false, after = null, images: drawImages = true, ...props }) {
   const items = item.fileRun || [item], state = fileRunState(items, pendingApprovalItemIds);
   const summary = fileToolSummary(items, state), counts = fileRunCounts(items);
   const preferDiff = item.type === 'fileChange' && !['failed', 'denied', 'stopped'].includes(state);
@@ -146,7 +147,7 @@ export function FileToolMessage({ item, Step, pendingApprovalItemIds, defaultOpe
       // thumbnails (approval-current.js:7398-7445) — here in a group row's body (FN :17324),
       // hoisted under a standalone row by SourceMessage (RN :17302) — never '[image]'.
       const images = toolOutputImages(member);
-      if (images.length) return <React.Fragment key={member.id}><DetailsBody item={member} action={action} state={memberState} />{inCard ? <SourceToolImages images={images} itemId={member.id} /> : null}</React.Fragment>;
+      if (images.length) return <React.Fragment key={member.id}><DetailsBody item={member} action={action} state={memberState} />{inCard && drawImages ? <SourceToolImages images={images} itemId={member.id} /> : null}</React.Fragment>;
       if (action?.type === 'read' && !['failed', 'denied', 'stopped'].includes(memberState)) return <ReadBody key={member.id} item={member} action={action} scopeKey={`${props.sessionKey}:${member.id}:read`} inCard={inCard} {...props} />;
       return <DetailsBody key={member.id} item={member} action={action} state={memberState} />;
     })}

@@ -96,6 +96,46 @@ async function noTooltip() {
   await page
     .locator(".source-tooltip-popup")
     .waitFor({ state: "detached", timeout: 3000 });
+  await page
+    .locator(cdsTipSelector)
+    .waitFor({ state: "detached", timeout: 3000 });
+}
+// R4i-gui GU1 (R4g-composer CP1–CP7): the Code composer's triggers (Add: source-composer-add-menu.jsx ComposerAddTrigger;
+// Mode / Effort / Usage: source-composer-row-chin.jsx; Send / Stop: generated composer-send-cell.mjs lM) sit under the
+// view-tabs CdsTooltip (shared-frame Zp: side "top", sideOffset 4), not the host SourceTooltip: its positioner is
+// [data-cds="Tooltip"] (data-side) and its popup [role="tooltip"]; a multiline content is lM's rows (sM: the label then a
+// [data-cds="Shortcut"] of kbd caps).
+const cdsTipSelector = '[data-cds="Tooltip"] [role="tooltip"]';
+async function cdsTooltip(label) {
+  await page.waitForFunction(
+    ({ selector, label }) => [...document.querySelectorAll(selector)].some((node) => {
+      const style = getComputedStyle(node), text = node.querySelector(":scope span span")?.textContent ?? node.textContent;
+      return (text === label || node.textContent.startsWith(label)) && Number(style.opacity) === 1 &&
+        node.getAnimations().every((animation) => animation.playState === "finished" || animation.playState === "idle");
+    }),
+    { selector: cdsTipSelector, label },
+    { timeout: 3000 },
+  );
+  return page.locator(cdsTipSelector);
+}
+async function cdsTipMetrics() {
+  return page.locator(cdsTipSelector).evaluate((node) => {
+    const r = node.getBoundingClientRect(), p = node.closest('[data-cds="Tooltip"]'), pr = p.getBoundingClientRect();
+    return { bottom: r.bottom, positionerBottom: pr.bottom, side: p.dataset.side };
+  });
+}
+// lM's rows: [label, keys] per sM row (or the single content with its shortcut).
+async function cdsTipRows() {
+  return page.locator(cdsTipSelector).evaluate((node) => {
+    const keys = (scope) => [...(scope?.querySelectorAll('[data-cds="Shortcut"] kbd') ?? [])].map((kbd) => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join("");
+    const rows = [...node.querySelectorAll("span.inline-flex.flex-col > span")];
+    return rows.length ? rows.map((row) => [row.childNodes[0]?.textContent ?? null, keys(row)]) : [[node.textContent.replace(node.querySelector('[data-cds="Shortcut"]')?.textContent ?? "", ""), keys(node)]];
+  });
+}
+async function cdsHover(locator, label) {
+  await neutral();
+  await locator.hover();
+  return cdsTooltip(label);
 }
 async function neutral({ cool = false } = {}) {
   await page.mouse.move(120, 700);
@@ -332,8 +372,9 @@ try {
   assert.equal(metrics.changesShortcut.variant, "text");
   assert.equal(metrics.changesShortcut.fontSize, "12px");
   assert.equal(metrics.changesShortcut.ink, true);
-  assert.equal(metrics.changesShortcut.gap, "3.6px");
-  checks.push("Changes tooltip shortcut is the CDS Shortcut text variant: kbd ⇧, ⌘, D in that order (spoken Shift/Command), 12px muted ink, 0.3em gap");
+  // menus-01 (2.42304.0 shared-frame Es.text gap-[0.15em]): 12px × 0.15em.
+  assert.equal(metrics.changesShortcut.gap, "1.8px");
+  checks.push("Changes tooltip shortcut is the CDS Shortcut text variant: kbd ⇧, ⌘, D in that order (spoken Shift/Command), 12px muted ink, 0.15em gap");
   const changesBox = await geometry(changes);
   assert.equal(metrics.light.side, "bottom");
   metrics.light.actualPopupGap = metrics.light.y - changesBox.bottom;
@@ -467,7 +508,15 @@ try {
   // c360a9e1c-GPs-MV9u.js mm (7387-7420) / Fp (6760-6810): since 0.2.114 the
   // title and folder pill use Zt CDS tooltips ("Rename" / cwd), not native titles.
   assert.equal(await page.locator(".st-title").getAttribute("title"), null);
-  assert.equal(await page.locator(".st-folder").getAttribute("title"), null);
+  // R4i-gui GU1: rail mode (source-titlebar.jsx:471/:475 gate .st-folder on !railMode) moves the folder to the rail's
+  // Environment card, whose chip (repo-name-chip.mjs pLe) is a CdsButton under a CdsTooltip ("Working folder" + the
+  // path), never a native title.
+  assert.equal(await page.locator(".st-toolbar .st-folder").count(), 0);
+  const railFolderTitles = await page.getByRole("complementary", { name: "Session details", exact: true })
+    .locator("section[data-rail-section] button[aria-haspopup='menu']")
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("title")));
+  assert.ok(railFolderTitles.length > 0, "the rail Environment card shows the folder chip");
+  assert.deepEqual(railFolderTitles.filter((title) => title !== null), []);
   // 0.2.120 correction (HANDOFF 0.2.120): the earlier expectation of native titles on Model/Effort was the
   // local ComposerButton title={label} fallback, not source. shared-14 :7160-7226: the Model pill has NO tooltip
   // unless a warning exists (none locally) → no title; c8e04f916 (prettier :236-262) wraps the effort trigger
@@ -505,9 +554,9 @@ try {
     // ie=false, so ge (tooltip) and Se (aria-label) are both 'Usage'.
     [usage, "Usage"],
   ]) {
-    await hover(trigger, label);
+    await cdsHover(trigger, label);
     const b = await geometry(trigger),
-      t = await tipMetrics();
+      t = await cdsTipMetrics();
     assert.equal(t.side, "top");
     near(t.positionerBottom, b.y - 4, `${label} positioner top offset`);
     metrics.composer[label] = {
@@ -516,9 +565,11 @@ try {
       triggerTop: b.y,
     };
     assert.equal(await trigger.getAttribute("title"), null);
+    // R4i-gui GU1: the presets card's + is ChatComposerActions' leading (source-composer.jsx Actions leading
+    // CARD_ADD_TRIGGER); Mode / Effort / Usage are the row chin's (ChatComposerChin, source-composer.jsx:743).
     assert.equal(
       await trigger.evaluate((node) =>
-        node.parentElement.className.includes("sc-chin-"),
+        !!node.closest('[data-cds="ChatComposerActions"], [data-cds="ChatComposerChin"]'),
       ),
       true,
     );
@@ -536,47 +587,39 @@ try {
     "Add/Mode/Effort/Usage keep native button parents and open top hints; real Add/Permission menus suppress hints and preserve Escape focus return",
   );
 
+  // R4i-gui GU1 (composer-send-cell.mjs lM, presets card: sendOnDraftOnly, idleSendAction null): an empty draft shows no
+  // Send at all (the slot keeps only the invisible size-control placeholder); Send appears with a draft.
   const send = page.locator('[data-testid="code-prompt-send"]:not([inert] *)');
-  assert.equal(await send.isDisabled(), true);
-  const sendSlot = page.locator(".sc-submit-layer:not([data-leaving]) .sc-submit-slot");
-  await hover(sendSlot, "Send");
-  // Fidelity F02: the 'enter' spec draws ⏎ (shared-frame so/co enter), read from the visible glyph.
-  // ca80fca8d vP :13164-13170: an open idle session whose core can fork adds the ⌥⌘⏎ 'Send in a forked session' row.
-  assert.deepEqual(
-    await page.locator(`${tipSelector} .source-tooltip-label-line`).evaluateAll((lines) => lines.map((line) => line.querySelector(".source-tooltip-label").textContent)),
-    ["Send", "Send in a forked session"],
-  );
-  assert.equal(
-    await page.locator(`${tipSelector} .source-tooltip-shortcut`).first().evaluate((node) => [...node.querySelectorAll("kbd")].map((kbd) => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join("")),
-    "⏎",
-  );
-  near((await geometry(sendSlot)).width, 24, "Explicit Send wrapper width");
-  near((await geometry(sendSlot)).height, 24, "Explicit Send wrapper height");
-  assert.equal(await send.getAttribute("title"), null);
+  assert.equal(await send.count(), 0, "no Send in the presets card without a draft");
   await page
     .getByRole("textbox", { name: "Message DeepSeek", exact: true })
     .fill("fixture:scroll");
+  await send.waitFor();
+  // lM `ne`: the Send button sits in a div.flex under CdsTooltip; with fork on offer (y) the content is multiline rows.
+  const sendSlot = send.locator("xpath=..");
+  await cdsHover(sendSlot, "Send");
+  // Fidelity F02: the 'enter' spec draws ⏎, read from the visible glyph. ca80fca8d vP: an open idle session whose core can
+  // fork adds the ⌥⌘⏎ 'Send in a forked session' row.
+  metrics.sessionSendTooltip = await cdsTipRows();
+  assert.deepEqual(metrics.sessionSendTooltip.map(([label]) => label), ["Send", "Send in a forked session"]);
+  assert.equal(metrics.sessionSendTooltip[0][1], "⏎");
+  near((await geometry(send)).width, 24, "Send width");
+  near((await geometry(send)).height, 24, "Send height");
+  assert.equal(await send.getAttribute("title"), null);
   await send.click();
   const stop = page.locator('[data-testid="code-prompt-stop"]:not([inert] *)');
   await stop.waitFor();
-  await hover(page.locator(".sc-submit-layer:not([data-leaving]) .sc-submit-slot"), "Stop");
+  await cdsHover(stop.locator("xpath=.."), "Stop");
   assert.equal(await stop.getAttribute("title"), null);
-  // Official Em: the Stop tooltip carries the escape shortcut (rendered "Esc")
-  // unless another surface has claimed Escape; Escape in the editor really
-  // issues turn/interrupt, so the hint is a real shortcut, not decoration.
-  assert.equal(
-    await page.locator(`${tipSelector} .source-tooltip-shortcut`).count(),
-    1,
-  );
-  assert.equal(
-    await page.locator(`${tipSelector} .source-tooltip-shortcut`).evaluate((node) => [...node.querySelectorAll("kbd")].map((kbd) => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join("")),
-    "Esc",
-  );
+  // Official lM `B = S ? void 0 : "escape"`: the Stop tooltip carries the escape shortcut (rendered "Esc") unless another
+  // surface has claimed Escape; Escape in the editor really issues turn/interrupt, so the hint is a real shortcut.
+  assert.equal(await page.locator(`${cdsTipSelector} [data-cds="Shortcut"]`).count(), 1);
+  assert.equal((await cdsTipRows()).at(-1)[1], "Esc");
   await stop.click();
   await stop.waitFor({ state: "detached" });
   await noTooltip();
   checks.push(
-    "Disabled Send wrapper remains 24px and explains the real Enter shortcut; streaming Stop has no duplicate title, shows the official Esc shortcut and still stops the fixture",
+    "Presets card: no Send without a draft; with one the 24px Send shows the CDS 'Send' ⏎ + fork rows; streaming Stop has no duplicate title, shows the official Esc shortcut and still stops the fixture",
   );
 
   // 0.2.113 product correction: the former disabled-reason phase targeted the fabricated always-disabled
@@ -585,9 +628,9 @@ try {
   // chin control carries a disabled reason. The Pu disabled-reason wrapper (tabindex 0, hidden
   // data-cds-disabled-reason description, hover/keyboard) stays covered by git-band-ui-test on the real
   // disabled Commit reason.
-  assert.equal(await page.locator('.sc-chin .sc-dictation, .sc-chin [data-cds="SplitDropdownButton"]').count(), 0);
+  assert.equal(await page.locator('.sc-chin [data-cds="SplitDropdownButton"], [data-cds="ChatComposer"] [data-cds="SplitDropdownButton"]').count(), 0);
   assert.equal(await page.getByRole("button", { name: "Dictate", exact: true }).count(), 0);
-  assert.equal(await page.locator(".sc-chin .source-tooltip-disabled-trigger").count(), 0);
+  assert.equal(await page.locator(".sc-chin [data-cds-disabled-reason-wrapper], .sc-chin .source-tooltip-disabled-trigger").count(), 0);
   checks.push(
     "No dictation control (source hideDictation branch): no SplitDropdownButton, no Dictate button and no disabled-reason trigger in the chin",
   );
@@ -654,12 +697,15 @@ try {
 
   // R05 (c099c328d :8870-8895 Tm rows; cc43287c9 :28620 stayOnDraftHint = Home draft): on Home the Send tooltip is
   // two rows, 'Send' ⏎ and 'Send and stay here' ⌘⏎ (no ⌘⌥⏎ fork row: thread/fork is unsupported).
-  await hover(page.locator(".sc-submit-layer:not([data-leaving]) .sc-submit-slot"), "Send");
-  metrics.homeSendTooltip = await page.locator(tipSelector).evaluate((node) =>
-    [...node.querySelectorAll(".source-tooltip-label-line")].map((line) => [
-      line.querySelector(".source-tooltip-label")?.textContent,
-      [...line.querySelectorAll(".source-tooltip-shortcut kbd")].map((kbd) => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join(""),
-    ]));
+  // R4i-gui GU1: the Home draft's presets card also shows Send only with a draft (lM sendOnDraftOnly).
+  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("home tooltip probe");
+  const homeSend = page.locator('[data-testid="code-prompt-send"]:not([inert] *)');
+  await homeSend.waitFor();
+  await page.mouse.move(120, 700);
+  await noTooltip();
+  await homeSend.locator("xpath=..").hover();
+  await cdsTooltip("Send");
+  metrics.homeSendTooltip = await cdsTipRows();
   assert.deepEqual(metrics.homeSendTooltip, [["Send", "⏎"], ["Send and stay here", "⌘⏎"]]);
   await neutral({ cool: true });
   checks.push("R05 Home Send tooltip: two kbd rows, 'Send' ⏎ and 'Send and stay here' ⌘⏎");

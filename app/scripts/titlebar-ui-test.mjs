@@ -106,6 +106,19 @@ async function openSession(id) {
     .click();
   await page.locator(".st-title").waitFor();
 }
+// R4i-gui GU1: the rail's Environment card. rail-view.mjs rD renders aside[aria-label="Session details"]; each card is
+// rail-card.mjs Xv, a section[data-rail-section] labelled by its h3 ("Environment" + the summary). The rail is shown by
+// default (rail-shown-store.mjs `shown: !0`); if a previous step hid it, the titlebar toggle (rail-shell.mjs EH,
+// aria-label "Show session rail") brings it back.
+async function railEnvironmentCard() {
+  const toggle = page.locator(".st-toolbar").getByRole("button", { name: "Show session rail", exact: true });
+  if (await toggle.count()) await toggle.click();
+  const rail = page.getByRole("complementary", { name: "Session details", exact: true });
+  await rail.waitFor();
+  const card = rail.locator("section[data-rail-section]").filter({ has: page.locator("h3", { hasText: /^Environment/ }) });
+  await card.waitFor();
+  return card;
+}
 try {
   page = await app.firstWindow();
   page.on("pageerror", (e) => errors.push(e.message));
@@ -126,9 +139,11 @@ try {
       titleFont: getComputedStyle(node.querySelector(".st-title")).fontSize,
       controlHeight: node.querySelector(".st-title").getBoundingClientRect()
         .height,
-      folderIconDisplay: getComputedStyle(
-        node.querySelector(".st-folder-glyph"),
-      ).display,
+      // R4i-gui GU1: in rail mode (main.jsx railMode={sessionRail.railMode}, c73f45bc3 w_ `origin: null, pill: null`)
+      // the Code lead has no origin glyph and no folder pill; source-titlebar.jsx:372 renders the empty
+      // LEAD_NO_ORIGIN_CLASS slot instead and :471/:475 gate both .st-folder variants on !railMode.
+      folderPills: node.querySelectorAll(".st-folder").length,
+      origins: node.querySelectorAll(".st-origin").length,
     };
   });
   assert.equal(metrics.header.height, 40);
@@ -137,9 +152,10 @@ try {
   assert.equal(metrics.header.topPadding, "8px");
   assert.equal(metrics.header.titleFont, "13px");
   assert.equal(metrics.header.controlHeight, 24);
-  assert.equal(metrics.header.folderIconDisplay, "none");
+  assert.equal(metrics.header.folderPills, 0, "rail mode: no titlebar folder pill (w_ pill: null)");
+  assert.equal(metrics.header.origins, 0, "rail mode: no titlebar origin glyph (w_ origin: null)");
   checks.push(
-    "Code header 40px = 8px top inset + 32px inner, title13px/control24px, normal folder text only",
+    "Code header 40px = 8px top inset + 32px inner, title13px/control24px; rail mode drops the origin glyph and folder pill (the rail's Environment card carries the folder)",
   );
 
   const title = page.locator(".st-title"),
@@ -231,27 +247,21 @@ try {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()[0].setSize(760, 650),
   );
-  await page.waitForFunction(() =>
-    document.querySelector(".st-lead")?.hasAttribute("data-pills-compact"),
-  );
+  await page.waitForFunction(() => innerWidth < 800);
+  // R4i-gui GU1: rail mode has no folder pill to compact (source-titlebar.jsx:471/:475), so the narrow check is the
+  // title against the trailing controls only.
   metrics.narrow = await page.locator(".st-toolbar").evaluate((node) => {
     const title = node.querySelector(".st-title"),
-      pill = node.querySelector(".st-folder"),
       controls = node.querySelector(".st-trailing");
     return {
       viewport: innerWidth,
       title: title.getBoundingClientRect().toJSON(),
-      pill: pill.getBoundingClientRect().toJSON(),
       controls: controls.getBoundingClientRect().toJSON(),
-      labelDisplay: getComputedStyle(node.querySelector(".st-folder-label"))
-        .display,
-      iconDisplay: getComputedStyle(node.querySelector(".st-folder-glyph"))
-        .display,
+      folderPills: node.querySelectorAll(".st-folder").length,
     };
   });
-  assert.equal(metrics.narrow.labelDisplay, "none");
-  assert.ok(["flex", "inline-flex"].includes(metrics.narrow.iconDisplay));
-  assert.ok(metrics.narrow.pill.right <= metrics.narrow.controls.left + 1);
+  assert.equal(metrics.narrow.folderPills, 0);
+  assert.ok(metrics.narrow.title.right <= metrics.narrow.controls.left + 1);
   assert.ok(metrics.narrow.title.width > 30);
   await page.screenshot({
     path: path.join(evidence, "titlebar-source-narrow.png"),
@@ -285,7 +295,7 @@ try {
     path: path.join(evidence, "titlebar-source-collapsed.png"),
   });
   checks.push(
-    "760px window collapses folder to glyph without tool overlap; collapsed sidebar leaves88px native traffic-light clearance",
+    "760px window keeps the title clear of the trailing tools (rail mode: no folder pill); collapsed sidebar leaves88px native traffic-light clearance",
   );
   await page
     .getByRole("button", { name: "Show sidebar", exact: true })
@@ -293,37 +303,36 @@ try {
   await app.evaluate(({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()[0].setSize(1468, 852),
   );
-  await page.waitForFunction(
-    () =>
-      !document.querySelector(".st-lead")?.hasAttribute("data-pills-compact"),
-  );
+  await page.waitForFunction(() => innerWidth > 1400);
   checks.push(
-    "Widening window restores folder label after measured hysteresis threshold",
+    "Window restored to 1468px (rail mode: the folder lives on the rail's Environment card, not a titlebar pill)",
   );
-  // Fidelity F03: the folder pill opens the CDS menu (c360a9e1c-GPs-MV9u.js:6760-6830 Fp → Gt.Popup side bottom,
-  // align start) holding the Ep Group labelled 'Working directory' (:6555-6588) over the shared repo items
-  // (cc70f2bdf Ko/qo → git-rail-model gitRepoMenuItems); ArrowDown/typeahead move the highlight, Escape restores the pill.
-  const folderPill = page.locator(".st-toolbar .st-folder");
+  // R4i-gui GU1 (R4f-rail SR-7/SR-8): in rail mode the folder pill's actions live on the rail's Environment card. The
+  // working folder row is rail-view.mjs gD (c96d752d0 rD → gD → Qu/Jo): repo-name-chip.mjs pLe, a ghost CdsButton named
+  // by the folder's basename under CdsTooltip {content "Working folder", detail: the path}, opening CdsDropdown.Popup
+  // side bottom / align start over renderMenuItems(railRepoMenuItems(...)) (source-session-rail.jsx:379: reveal, Copy
+  // path, Open in terminal, one group each, so two separators). The menu has no group label (no 'Working directory').
+  const railEnvironment = await railEnvironmentCard();
+  const folderPill = railEnvironment.getByRole("button", { name: path.basename(workspace), exact: true });
   await folderPill.click();
-  const folderMenu = page.getByRole("menu", { name: "Working directory", exact: true });
+  const folderMenu = page.getByRole("menu").filter({ has: page.getByRole("menuitem", { name: "Copy path", exact: true }) });
   await folderMenu.waitFor();
-  await page.waitForFunction(() => document.activeElement?.closest('[role="menu"]')?.getAttribute("aria-label") === "Working directory");
-  metrics.folderMenu = await folderMenu.evaluate((menu) => {
-    const group = menu.querySelector('[role="group"]'), label = group?.querySelector(".smenu-group-label");
-    const pill = document.querySelector(".st-toolbar .st-folder"), anchor = pill.getBoundingClientRect(), box = menu.getBoundingClientRect();
+  await page.waitForFunction(() => !!document.activeElement?.closest('[role="menu"]'));
+  metrics.folderMenu = await folderPill.evaluate((pill) => {
+    const menu = [...document.querySelectorAll('[role="menu"]')].find((node) => [...node.querySelectorAll('[role="menuitem"]')].some((item) => item.textContent === "Copy path"));
+    const anchor = pill.getBoundingClientRect(), box = menu.getBoundingClientRect();
     return {
-      cds: menu.dataset.cds, side: menu.dataset.side, align: menu.dataset.align,
-      label: label?.textContent, labelledBy: !!label?.id && group.getAttribute("aria-labelledby") === label.id,
+      side: menu.dataset.side, align: menu.dataset.align,
+      groupLabels: menu.querySelectorAll('[role="group"][aria-labelledby]').length,
       items: [...menu.querySelectorAll('[role="menuitem"]')].map((node) => node.textContent),
-      separators: menu.querySelectorAll('[role="separator"]').length, expanded: pill.getAttribute("aria-expanded"),
-      below: box.top >= anchor.bottom, startGap: Math.abs(Math.round(box.left - anchor.left)),
-      highlighted: menu.querySelector("[data-highlighted]")?.textContent ?? null,
+      separators: menu.querySelectorAll('[role="separator"]').length, haspopup: pill.getAttribute("aria-haspopup"), expanded: pill.getAttribute("aria-expanded"),
+      below: box.top >= anchor.bottom, highlighted: menu.querySelector("[data-highlighted]")?.textContent ?? null,
     };
   });
-  assert.deepEqual(metrics.folderMenu, { cds: "Menu", side: "bottom", align: "start", label: "Working directory", labelledBy: true,
-    // F12: the shared repo items use the c18ab0d94 b() reveal label "Show in Finder"; the last group is Open in terminal.
-    // focusItemOnOpen "auto" (vendor-frame-BmPfNbgY.js:20180-20190): a mouse open highlights nothing; ArrowDown starts at the first row.
-    items: ["Show in Finder", "Copy path", "Open in terminal"], separators: 2, expanded: "true", below: true, startGap: 0, highlighted: null });
+  assert.deepEqual(metrics.folderMenu, { side: "bottom", align: "start", groupLabels: 0,
+    // revealLabel (source-session-rail.jsx:354, c18ab0d94 C) is "Show in Finder" on macOS; the last group is Open in terminal.
+    // focusItemOnOpen "auto": a mouse open highlights nothing; ArrowDown starts at the first row.
+    items: ["Show in Finder", "Copy path", "Open in terminal"], separators: 2, haspopup: "menu", expanded: "true", below: true, highlighted: null });
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction(() => document.querySelector('[role="menu"] [data-highlighted]')?.textContent === "Show in Finder");
   await page.keyboard.press("ArrowDown");
@@ -332,10 +341,10 @@ try {
   await page.waitForFunction(() => document.querySelector('[role="menu"] [data-highlighted]')?.textContent === "Show in Finder");
   await page.keyboard.press("Escape");
   await folderMenu.waitFor({ state: "detached" });
-  await page.waitForFunction(() => document.activeElement === document.querySelector(".st-toolbar .st-folder"));
+  assert.equal(await folderPill.evaluate((node) => document.activeElement === node), true, "Escape refocuses the folder chip");
   assert.equal(await folderPill.getAttribute("aria-expanded"), "false");
   checks.push(
-    "F03 folder pill: role=menu 'Working directory' below the pill (side bottom, align start) with a Group labelled 'Working directory' over Show in Finder / separator / Copy path; nothing highlighted after a mouse open, ArrowDown and typeahead move the highlight, Escape closes and refocuses the pill",
+    "R4i-gui GU1 rail folder chip (rail Environment card, repo-name-chip pLe): role=menu below the chip (side bottom, align start), no group label, Show in Finder / separator / Copy path / separator / Open in terminal; nothing highlighted after a mouse open, ArrowDown and typeahead move the highlight, Escape closes and refocuses the chip",
   );
   // R03 (c856385e2 X0Ntx9olgx; sidebar-groups.js:15393-15402 addError): a failed session action is a danger toast with
   // the catalog copy, never the composer banner with Electron's "Error invoking remote method" text. The offscreen

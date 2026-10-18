@@ -7,6 +7,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
+// Legacy layout coverage (codeLayout=classic), retained for alternate callers.
 // Fidelity F03: environment chips (cc43287c9-BMbiZYzF.js dH :21863-22100, lH :21638-21850, hT :22009-22035),
 // the usage panel (c360a9e1c vd :4240-4285 over c2d611398 I/V/z) and the retired code-ui Popover/MenuItem.
 const app = path.resolve(import.meta.dirname, '..');
@@ -19,7 +20,7 @@ before(async () => {
 after(() => server?.close());
 const noop = () => {};
 const render = (props) => renderToStaticMarkup(React.createElement(C.SourceComposer, {
-  draft: '', setDraft: noop, onSubmit: noop, onMenu: noop, onStop: noop, running: false, sending: false,
+  codeLayout: 'classic', draft: '', setDraft: noop, onSubmit: noop, onMenu: noop, onStop: noop, running: false, sending: false,
   permission: 'ask', model: { model: 'fixture', displayName: 'Fixture' }, workdir: '/tmp/fixture/project', showContext: true,
   workspaceInfo: { isRepo: true, branch: 'main', branches: ['main'] }, onAddFolder: noop, setWorktree: noop, ...props }));
 const contextRow = (html) => {
@@ -128,7 +129,7 @@ test('effort control: its title names the popover; the section no longer carries
 
 // Purple top tier (c8e04f916 effort.js:59-112/:150-153, c360a9e1c:5257, c2d9b9a76 slider.js:194/:240-247): the accent follows
 // the previewed id 'ultra'; the lit overlay sits inside the fill only when the last level is ultra, and data-at-max marks the top stop.
-test('effort control: ultra gets the purple accent, the 4-layer glow label and the lit overlay; DeepSeek max gets nothing', () => {
+test('effort control: the highest level gets the purple accent, the 4-layer glow label and the lit overlay (user decision 2026-10-18: ultra, max or xhigh alike)', () => {
   const effort = (levels, value, extra = {}) => renderToStaticMarkup(React.createElement(C.EffortControl, { levels, value, onChange: noop, ...extra }));
   const slider = (html) => /<div class="sc-slider"[^>]*>/.exec(html)?.[0] || '';
   const top = effort(['low', 'high', { reasoningEffort: 'ultra', description: 'Maximum reasoning with automatic task delegation' }], 'ultra');
@@ -142,9 +143,10 @@ test('effort control: ultra gets the purple accent, the 4-layer glow label and t
   assert.match(low, /data-slider-overlay=""/, 'the overlay is mounted for an ultra model at any stop');
   assert.doesNotMatch(slider(low), /data-at-max/); assert.doesNotMatch(low, /data-accent|data-on=""|<canvas/, 'unlit: no accent, ground off, canvas not yet mounted');
   const deepseek = effort([{ reasoningEffort: 'off' }, { reasoningEffort: 'low' }, { reasoningEffort: 'high' }, { reasoningEffort: 'max' }], 'max');
-  assert.doesNotMatch(deepseek, /data-slider-overlay|data-at-max|data-accent|sc-effort-lit/, 'DeepSeek max is not the purple tier');
-  assert.match(deepseek, /<div class="sc-slider-fill"><\/div>/);
-  assert.doesNotMatch(effort(['low', 'medium', 'high', 'xhigh', 'max'], 'max'), /data-slider-overlay|data-accent/, 'gpt-5.6-luna max is not the tier');
+  assert.match(deepseek, /data-slider-overlay=""/, 'DeepSeek max is its highest level: the purple tier');
+  assert.match(deepseek, /data-accent=""/);
+  assert.match(effort(['low', 'medium', 'high', 'xhigh', 'max'], 'max'), /data-accent=""/, 'gpt-5.6-luna max is its highest level');
+  assert.doesNotMatch(effort(['low', 'medium', 'high', 'xhigh', 'max'], 'xhigh'), /data-accent/, 'a lower level has no accent');
   assert.doesNotMatch(effort(['ultra'], 'ultra'), /data-slider-overlay|data-at-max/, 'a single level is unavailable: no overlay');
   assert.doesNotMatch(effort(['low', 'ultra'], 'ultra', { disabled: true }), /data-slider-overlay/, 'disabled: no overlay');
 });

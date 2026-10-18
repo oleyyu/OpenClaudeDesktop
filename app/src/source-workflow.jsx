@@ -99,6 +99,7 @@ export function WorkflowCard({run,onStop,onMember,onPause,onResume,onSave,onArti
    </div>
    {run.name&&run.description!==run.name&&<p className="swf-description">{run.description}</p>}
    {run.plan&&<p className="swf-description">{t('Plan · {count} agents estimated. Dynamic fan-outs may add more.',{count:run.plannedAgents||0})}</p>}
+   {run.compatibilityNotes?.length>0&&<details className="swf-compatibility"><summary>{t('Compatibility differences ({count})',{count:run.compatibilityNotes.length})}</summary><p>{t('This run uses model, output or permission mappings. Its behavior may differ from Claude.')}</p><ul>{run.compatibilityNotes.map((message,index)=><li key={index}>{message}</li>)}</ul></details>}
    {summary&&['failed','stopped'].includes(run.status)&&<div className="swf-reason" data-status={run.status}><span>{run.status==='failed'?t('Error'):t('Stopped')}</span><span tabIndex={0} role="region" aria-label={run.status==='failed'?t('Error'):t('Stopped')}>{summary}</span></div>}
    {error&&<p role="alert">{error}</p>}
    {active&&Array.isArray(run.pendingQuestions)&&run.pendingQuestions.length>0&&<WorkflowQuestions questions={run.pendingQuestions} now={now}/>}

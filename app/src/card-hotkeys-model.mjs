@@ -14,6 +14,12 @@ export const CARD_HOTKEY_OWNERS = '[role="dialog"], [role="alertdialog"], dialog
 export const CARD_HOTKEY_EDITORS = 'input, textarea, select, [contenteditable]:not([contenteditable="false"]), '
   + '[role="textbox"], [role="combobox"], [role="searchbox"]';
 
+// Current zS is a full child conversation. Document hotkeys belong to the
+// pane with focus; an unfocused page continues to belong to the main session.
+export function sameApprovalPane(a, b) {
+  return (a?.closest?.('[data-side-session-pane]') ?? null) === (b?.closest?.('[data-side-session-pane]') ?? null);
+}
+
 /**
  * Where keyboard focus is, for a key that reached the document while a card is pending.
  * @param {Element | null | undefined} active - document.activeElement

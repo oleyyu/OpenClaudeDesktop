@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { FILE_MENU_LABELS, fileContextMenu, fileCopyChoices, fileLinkLabel } from '../src/file-context-menu-model.mjs';
 
 // Mn (c856385e2-k3utJqnh.js :962-1060), Gg/Kg (panes-tile-current.js:6030-6085), l_ (:6809-6862), Rg (:5572-5588).
@@ -70,7 +71,13 @@ test('source multi-file menu snapshots visual order, sanitizes each copied path,
 
 test('original editor eligibility excludes binary/media paths while retaining text, SVG and directories', async()=>{
  const {multiFileContextMenu,fileContextMenu}=await import('../src/file-context-menu-model.mjs');
- const {canOpenFileInEditor}=await import('../src/generated/code-editor/file-editor-path.mjs');
+ // R3-files FT-05: the menus read the 2.42304.0 rule (shared-28 Fk over shared-104 bP), same answers as the 2.31226.0 one.
+ const {canOpenFileInEditor}=await import('../src/generated/files-changes/file-editor-path.mjs');
+ const {canOpenFileInEditor:previous}=await import('../src/generated/code-editor/file-editor-path.mjs');
+ for(const path of ['photo.PNG','pic.avif','vector.svg','clip.mp4','archive.tar.gz','book.pdf','doc.docx','icon.ico','db.sqlite3','font.woff2','lib.so.2','app.ts','Makefile','file.unknown','.env','dir/'])assert.equal(canOpenFileInEditor(path),previous(path),path);
+ const source=fs.readFileSync(new URL('../src/file-context-menu-model.mjs',import.meta.url),'utf8');
+ assert.match(source,/import \{ canOpenFileInEditor \} from "\.\/generated\/files-changes\/file-editor-path\.mjs";/);
+ assert.doesNotMatch(source,/generated\/code-editor\/file-editor-path/);
  const editors=[{type:'vscode',name:'VS Code'}];
  for(const path of ['photo.PNG','clip.mp4','archive.tar.gz','book.pdf','doc.docx','icon.ico','db.sqlite3','font.woff2','lib.so.2'])assert.equal(canOpenFileInEditor(path),false,path);
  for(const path of ['app.ts','Makefile','icon.svg','file.unknown'])assert.equal(canOpenFileInEditor(path),true,path);
@@ -142,4 +149,35 @@ test('B32 file_breadcrumb: a folder segment ends with Open in terminal, then Rev
     name: { label: 'a.js', path: 'src/lib/a.js', directory: false, outside: false } });
   assert.deepEqual(breadcrumbSegmentTargets('/etc/hosts').dirs, [{ label: 'etc', path: '/etc', directory: true, outside: true }]);
   assert.deepEqual(breadcrumbSegmentTargets('~/notes.md'), { dirs: [], name: null }, 'a "~" path is not absolute: no menu');
+});
+
+// R3-files FT-05 (files-11 / files-v01): 2.42304.0 c856385e2 xn — `d = n.openIn !== false && n.gone !== true` gates gn
+// (the "Open in" submenu and the reveal item) and wn (a folder's "Open in terminal"), so a gone path keeps Attach and Copy.
+test('gone: no Open in, Show in Finder or Open in terminal; Attach and Copy stay', () => {
+  const editors = [{ type: 'vscode', name: 'VS Code' }];
+  const live = fileContextMenu({ root: '/repo', path: 'src/app.ts', canAttach: true, canShowInFinder: true, editors });
+  assert.deepEqual(live.map((entry) => entry.kind === 'separator' ? '-' : entry.label), ['Attach as context', 'Copy', '-', 'Open in', 'Show in Finder']);
+  const gone = fileContextMenu({ root: '/repo', path: 'src/app.ts', canAttach: true, canShowInFinder: true, editors, gone: true });
+  assert.deepEqual(gone.map((entry) => entry.label), ['Attach as context', 'Copy']);
+  assert.deepEqual(gone[1].items.map((item) => item.label), ['Absolute path', 'Relative path', 'Filename']);
+  const folder = fileContextMenu({ root: '/repo', path: 'src', directory: true, canAttach: true, canShowInFinder: true, editors, canOpenTerminal: true });
+  assert.equal(folder.at(-1).action, 'open-in-terminal');
+  const goneFolder = fileContextMenu({ root: '/repo', path: 'src', directory: true, canAttach: true, canShowInFinder: true, editors, canOpenTerminal: true, gone: true });
+  assert.deepEqual(goneFolder.map((entry) => entry.label), ['Attach as context', 'Copy']);
+  // A tab keeps its own "Reveal in file tree" section (cccc2cf0a's tab menu has no gone check; it hides on "missing").
+  const tab = fileContextMenu({ surface: 'file_tab', root: '/repo', path: 'src/app.ts', canRevealInTree: true, editors, gone: true });
+  assert.equal(tab.at(-1).action, 'reveal-in-tree');
+  assert.deepEqual(fileContextMenu({ root: '/repo', path: 'a.ts', editors, gone: false }), fileContextMenu({ root: '/repo', path: 'a.ts', editors }));
+});
+
+// R3-files FT-06 (files-v01): a breadcrumb segment (cd2efac6e Ps over cfac349aa Jt's gone answer) also drops its
+// "Reveal in file tree" section (`x = !h && …`) and a folder's "Open in terminal", keeping Attach and Copy.
+test('gone breadcrumb segment: no Open in, Show in Finder, Open in terminal or Reveal in file tree', () => {
+  const editors = [{ type: 'vscode', name: 'VS Code' }];
+  const live = fileContextMenu({ surface: 'file_breadcrumb', root: '/repo', path: 'src', directory: true, canAttach: true, canShowInFinder: true, canRevealInTree: true, editors, canOpenTerminal: true });
+  assert.deepEqual(live.filter((entry) => entry.kind !== 'separator').map((entry) => entry.label), ['Attach as context', 'Copy', 'Open in', 'Show in Finder', 'Open in terminal', 'Reveal in file tree']);
+  const gone = fileContextMenu({ surface: 'file_breadcrumb', root: '/repo', path: 'src', directory: true, canAttach: true, canShowInFinder: true, canRevealInTree: true, editors, canOpenTerminal: true, gone: true });
+  assert.deepEqual(gone.map((entry) => entry.label), ['Attach as context', 'Copy']);
+  const file = fileContextMenu({ surface: 'file_breadcrumb', root: '/repo', path: 'src/a.ts', canRevealInTree: true, editors, gone: true });
+  assert.deepEqual(file.map((entry) => entry.label), ['Copy']);
 });

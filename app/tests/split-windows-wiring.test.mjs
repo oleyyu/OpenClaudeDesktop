@@ -73,7 +73,8 @@ test('main.cjs routes through the window registry: any main window is trusted, e
   assert.match(main, /p\.method === "thread\/unsubscribe" && typeof params\.threadId === "string"\n\s+&& windowRegistry\.windowsHolding\(params\.threadId\)\.some/);
   // Pane popouts dock back into the window that opened them.
   // B27: the side chat window's X closes it ("close"), and it hands its conversation back (data).
-  assert.match(main, /emit\(\{ kind: "popout-docked", sessionId, pane, entryPoint: entry\.closed \? "close" : entry\.docked \? "dock" : "window-close", \.\.\.\(entry\.handback \? \{ data: entry\.handback \} : \{\}\), \.\.\.\(entry\.ownerId !== null \? \{ windowId: entry\.ownerId \} : \{\}\) \}\);/);
+  // R4g-btw BT3 (X7-14): a pane window closed for an archived or deleted session reports "session-removed" (no dock back).
+  assert.match(main, /emit\(\{ kind: "popout-docked", sessionId, pane, entryPoint: entry\.removed \? "session-removed" : entry\.closed \? "close" : entry\.docked \? "dock" : "window-close", \.\.\.\(entry\.handback \? \{ data: entry\.handback \} : \{\}\), \.\.\.\(entry\.sessionView \? \{ sessionView: entry\.sessionView \} : \{\}\), \.\.\.\(entry\.ownerId !== null \? \{ windowId: entry\.ownerId \} : \{\}\) \}\);/);
   // Session list, sidebar and settings changes reach every window.
   for (const pattern of [/emitSessionList\("added", result\.thread\)/, /emitSessionList\("deleted", params\.threadId\)/, /emit\(\{ kind: "sidebar-state", state: sidebarSnapshot\(\) \}\);/, /emitConfig\(\);\n\s+return config;/])
     assert.match(main, pattern);
@@ -103,7 +104,9 @@ test('main.jsx mounts the window as split sides; only the focused side takes win
   assert.match(jsx, /if \(splitView\.open\) \{ splitStore\.close\(side\); return; \}/, '⌘W closes the focused side first');
   assert.match(jsx, /const setSettings = side === 0 \? setSettingsState : \(value\) => \{ if \(!splitStore\.toPrimary\("settings", value\)\) setSettingsState\(value\); \};/);
   // Keys in pane components stand down in the side that is not focused.
-  assert.match(read('src/source-composer.jsx'), /panelActive(?::| =) !!node\?\.isConnected && !node\.closest\("\[inert\], \[data-split-inactive\]"\)/);
+  // 2026-10-18: the composer also takes its isPanelActive prop first (the /btw side-session composer passes false); the split
+  // check is unchanged.
+  assert.match(read('src/source-composer.jsx'), /panelActive(?::| =) (?:state\.isPanelActive && )?!!node\?\.isConnected && !node\.closest\("\[inert\], \[data-split-inactive\]"\)/);
   assert.match(read('src/use-card-hotkeys.js'), /card\.closest\("\[inert\], \[data-split-inactive\]"\)/);
   assert.match(read('src/source-find-bar.jsx'), /if \(!enabled \|\| !shortcuts\) return undefined;/);
 });

@@ -27,6 +27,7 @@ import {
   safeHoverHull,
 } from "./source-tooltip-model.js";
 import { SourceShortcut } from "./source-shortcut";
+import { tooltipContentKey } from "./generated/code-current/tooltip-structure.mjs";
 import "./source-tooltip.css";
 
 const GroupContext = createContext(null);
@@ -163,13 +164,46 @@ export function useExplicitSourceTooltip() {
   return useContext(ExplicitTooltipContext);
 }
 
-export function SourceTooltip({ children, disabledReason, wrapperClassName, ...props }) {
+// shared-frame-BfjMqbuN Uc's class (inline-flex + Vc, whose focus ring is dc).
+const REASON_WRAPPER_CLASS =
+  "inline-flex rounded outline-none focus-visible:outline-hidden [&[data-initial-focus]:focus]:outline-hidden transition-shadow duration-fast focus-visible:shadow-focus [&[data-initial-focus]:focus]:shadow-focus";
+
+export function SourceTooltip({ children, disabledReason, wrapperClassName, keepReasonWrapper = false, ...props }) {
   const reasonId = useId();
   const child = Children.only(children);
   if (!isValidElement(child) || child.type === React.Fragment)
     throw new TypeError(
       "SourceTooltip needs one element that forwards its DOM ref, or an explicit DOM wrapper.",
     );
+  // keepReasonWrapper (R4e-preview, preview-13): shared-frame Qp (DisabledReason) as the original renders it — the Uc
+  // wrapper and the Yc reason span stay mounted with or without a reason (tabIndex 0 and aria-describedby only while
+  // there is one), so the control inside is never re-parented and keeps its focus when the reason comes or goes. The
+  // reason shows whenever it is given (Wc), as Qp's does, also around a child that is not itself the disabled control.
+  if (keepReasonWrapper) {
+    const reason = emptyTooltipContent(disabledReason) ? null : disabledReason;
+    return (
+      <TooltipCore
+        {...props}
+        content={reason}
+        multiline={props.multiline ?? true}
+        closeOnClick={false}
+        openOnHandedBackFocus={true}
+        descriptionId={reasonId}
+      >
+        <span
+          tabIndex={reason ? 0 : -1}
+          aria-describedby={reason ? reasonId : undefined}
+          data-cds-disabled-reason-wrapper=""
+          className={`${REASON_WRAPPER_CLASS} ${wrapperClassName ?? ""}`.trim()}
+        >
+          {child}
+          <span key={tooltipContentKey(reason)} id={reasonId} hidden data-cds-disabled-reason="">
+            {reason}
+          </span>
+        </span>
+      </TooltipCore>
+    );
+  }
   // This path never enables or installs click behavior on the disabled action.
   // Keep the actual native disabled button and give only its reason a focus stop.
   const showReason =
@@ -190,7 +224,7 @@ export function SourceTooltip({ children, disabledReason, wrapperClassName, ...p
           aria-describedby={reasonId}
         >
           {cloneElement(child, { title: undefined })}
-          <span id={reasonId} hidden data-cds-disabled-reason="">
+          <span key={tooltipContentKey(disabledReason)} id={reasonId} hidden data-cds-disabled-reason="">
             {disabledReason}
           </span>
         </span>
@@ -792,12 +826,12 @@ function TooltipCore({
           >
             <div className="cds-dark-scope source-tooltip-ink" data-mode="dark">
               <span className="source-tooltip-label-line">
-                <span className="source-tooltip-label">{contentValue}</span>
+                <span key={tooltipContentKey(contentValue)} className="source-tooltip-label">{contentValue}</span>
                 {shortcut && <TooltipShortcut keys={shortcut} />}
               </span>
               {secondaryHint && (
                 <span className="source-tooltip-label-line">
-                  <span className="source-tooltip-label">
+                  <span key={tooltipContentKey(secondaryHint.label)} className="source-tooltip-label">
                     {secondaryHint.label}
                   </span>
                   {secondaryHint.shortcut && (
@@ -807,12 +841,12 @@ function TooltipCore({
               )}
               {tertiaryHint && (
                 <span className="source-tooltip-label-line">
-                  <span className="source-tooltip-label">{tertiaryHint.label}</span>
+                  <span key={tooltipContentKey(tertiaryHint.label)} className="source-tooltip-label">{tertiaryHint.label}</span>
                   {tertiaryHint.shortcut && <TooltipShortcut keys={tertiaryHint.shortcut} />}
                 </span>
               )}
               {detail && (
-                <span className="source-tooltip-detail">{detail}</span>
+                <span key={tooltipContentKey(detail)} className="source-tooltip-detail">{detail}</span>
               )}
             </div>
           </div>

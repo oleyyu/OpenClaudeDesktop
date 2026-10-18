@@ -19,7 +19,8 @@ const FAMILIES = Object.freeze([
   { family: 'openai-o', brand: 'openai', match: /^o\d(?:-|$)/, name: '', strip: /^/, reasoning: true, image: true },
   { family: 'gemini', brand: 'gemini', match: /^gemini-/, name: 'Gemini', strip: /^gemini-/, reasoning: true, older: /^gemini-(?:1|2\.0)/, image: true },
   { family: 'deepseek', brand: 'deepseek', match: /^deepseek-/, name: 'DeepSeek', strip: /^deepseek-/, reasoning: true, older: /^deepseek-(?:chat|coder|v2|v3(?![.\d]))/, efforts: ['low', 'high', 'max'], image: /flash/ },
-  { family: 'glm', brand: 'zhipu', match: /^glm-/, name: 'GLM', strip: /^glm-/, reasoning: true, image: /^glm-[\d.]+v|(?:^|-)v(?:-|$)|vision/ },
+  // GLM's vision models (glm-4.5v, …-vision), and GLM-5.3-Flash/FlashX: natively multimodal, the first of GLM-5 (Z.ai docs).
+  { family: 'glm', brand: 'zhipu', match: /^glm-/, name: 'GLM', strip: /^glm-/, reasoning: true, image: /^glm-[\d.]+v|(?:^|-)v(?:-|$)|vision|^glm-5\.3-flash/ },
   { family: 'kimi', brand: 'kimi', match: /^kimi-/, name: 'Kimi', strip: /^kimi-/, reasoning: true, image: /vl|vision/ },
   { family: 'qwen', brand: 'qwen', match: /^(?:qwen|qwq)/, name: 'Qwen', strip: /^qwen-?/, reasoning: true, older: /^qwen-?(?:1|2)(?:[.-]|$)/, image: /vl|omni|vision/ },
   { family: 'minimax', brand: 'minimax', match: /^minimax-/, name: 'MiniMax', strip: /^minimax-/, reasoning: true, image: /vl|vision/ },

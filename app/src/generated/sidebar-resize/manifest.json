@@ -1,0 +1,600 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-sidebar-resize.mjs",
+  "adapterModule": "src/source-sidebar-resize-adapters.jsx",
+  "modules": [
+    {
+      "target": "class-names.mjs",
+      "source": "vendor-frame-DfPJ1QmD.js",
+      "sourceSha256": "c96b504f7ecd3b5749b6913c9bad6b7950719b38636083e1496002b219e6bbdc",
+      "sha256": "dd3d23741c520d673eddee65b97585869d4413ac548656d54872b13ededaef34",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "he",
+          "sha256": "8df1c934bd199c52b318559d814e52aba56aee4a2eb1b6b3c194d7e9ccd152b3"
+        },
+        {
+          "name": "ge",
+          "sha256": "fa7a5fc8bfd534c12841fdc266de1a949f6b2893bd2103fb190b54b25a3c9093"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ge": "clsx"
+      }
+    },
+    {
+      "target": "layout-effect.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "fc094d72e7d285e453129d98e5c09e367b7c5b3396526e57e79179863f5a7e94",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Q",
+          "sha256": "4ac1e26bfc6b74706a404eb3c6fb395cb726ac3c7f3257e0bf56b259f5549939"
+        }
+      ],
+      "imports": [
+        {
+          "local": "K",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "wt",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "Q": "useIsomorphicLayoutEffect"
+      }
+    },
+    {
+      "target": "resize-handle.mjs",
+      "source": "shared-15-Cc9xvKlF.js",
+      "sourceSha256": "ea1fc6daf88e365b17cc582776945acd1b25be1f9e01c79664b360bba776db97",
+      "sha256": "d93b2d658ca0510fefb10add0a789bdbb8899c0e2e16efe767a99635de0fd264",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ht",
+          "sha256": "19621e50cb3cae725f09cd944ec41ab07d260e3cbbd0c480c15cacb5c6489025"
+        },
+        {
+          "name": "Ut",
+          "sha256": "1f74707566c2b1457535c43b95cd09615432740539f23c2cafa12c8b3022c632"
+        },
+        {
+          "name": "Wt",
+          "sha256": "a7043a3bed36aa624ede1af60d4facb85fc2608f0cb24240c4fbada9f5ff6582"
+        },
+        {
+          "name": "Gt",
+          "sha256": "bef7b681eaa8055f38f9b8877a91ad8ef836e2470d05efde8ca3a4a17b59d14f"
+        },
+        {
+          "name": "Kt",
+          "sha256": "917040d683b384b93c6924e105f6b7c482f7322d0fc703c4dc8c5130bb2deef0"
+        },
+        {
+          "name": "qt",
+          "sha256": "3b403296bc14e14691048f1792c0bc9e7eda1105a37e674259fcbf01bb60c013"
+        },
+        {
+          "name": "Jt",
+          "sha256": "6488b045e79c1c3a616edf572114d1610fccb339ce199a2ef31a309e51fb9383"
+        }
+      ],
+      "imports": [
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-DfPJ1QmD.js:ro",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "./class-names.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "generated"
+        },
+        {
+          "local": "ot",
+          "from": "./layout-effect.mjs",
+          "name": "useIsomorphicLayoutEffect",
+          "via": "shared-frame-BfjMqbuN.js:Qu",
+          "kind": "generated"
+        },
+        {
+          "local": "st",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useCdsFeature",
+          "via": "shared-frame-BfjMqbuN.js:Uu",
+          "kind": "adapter",
+          "original": "vr"
+        },
+        {
+          "local": "gt",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "adapter",
+          "original": "X"
+        }
+      ],
+      "exports": {
+        "Jt": "ResizeHandle",
+        "Ht": "resizeDragThreshold",
+        "Ut": "resizeKeyStep",
+        "Wt": "resizeKeyStepLarge",
+        "Gt": "resizeHandleSideClasses",
+        "Kt": "resizePillClasses",
+        "qt": "resizeLineClasses"
+      }
+    },
+    {
+      "target": "composed-frame.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "801d93e84a0ebf917e8bf60ec82de4d284fefa08a44cab9f0199a48c536dcd35",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "dI",
+          "sha256": "4e05eeb9541b2f976b4d394d4df9528af0b0513c228ff266c37bd3c2b8e613e3"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "dI": "artifactComposedAttribute"
+      }
+    },
+    {
+      "target": "sidebar-width.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "6b2a8ed97c7df6c9846d0dafb7ba25c3e05769407323abe2416bd2cf48de2e96",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Yu",
+          "sha256": "28245998f081c0bd9d07adf8dbe5dfcb2bf3e5707811e8010a1528bba9c74a2e"
+        },
+        {
+          "name": "Xu",
+          "sha256": "51256528774ef2d22e45301e62c228eaca4a8c3b82558627a0a6bd431bb8ae3f"
+        },
+        {
+          "name": "$u",
+          "sha256": "ae309a895c3bd2c9276a172fa878d4f9c70743121a115d448a97514674e8d8aa"
+        },
+        {
+          "name": "Vp",
+          "sha256": "93c78cf122ef3d27e419bdf1d1809511805ea7018680062fbb7fa4f0bdf6b771"
+        },
+        {
+          "name": "Rm",
+          "sha256": "0c88eb8a3177770d3911acb81500bb76361dd9a8c984a316b848108261cd4603"
+        },
+        {
+          "name": "Bm",
+          "sha256": "909ea5a5f2204b044092d329b549b994d201b8aa11d987983fb2d01ff532f458"
+        },
+        {
+          "name": "rh",
+          "sha256": "1a4c01a3629bd3b2dd8fb21b6c5776b205b2b9d2693fd13d6a9d698c5f995de3"
+        },
+        {
+          "name": "uh",
+          "sha256": "09766cdf1fecdb252ebe9690429a421897cd2b7d5710f90c614da89af7f2ea68"
+        },
+        {
+          "name": "fh",
+          "sha256": "28f198c38d5f300816f38504c35a12dd88392f84c427def26ed74289d70df9c0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "G",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useSidebarFrameStore",
+          "via": "shared-52-DGviI8xb.js:G",
+          "kind": "adapter",
+          "original": "G"
+        },
+        {
+          "local": "Wn",
+          "from": "./composed-frame.mjs",
+          "name": "artifactComposedAttribute",
+          "via": "shared-0-ByI5P0CP.js:dl",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Yu": "sidebarWidthBounds",
+        "Xu": "clampSidebarWidth",
+        "$u": "sidebarMaxWidth",
+        "uh": "useSidebarWidth",
+        "fh": "useSidebarResizing",
+        "rh": "sidebarHidden",
+        "Bm": "sidebarForcedClosed"
+      }
+    },
+    {
+      "target": "hide-threshold.mjs",
+      "source": "shared-16-B0xHzPjj.js",
+      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
+      "sha256": "02d96260b2f60f5b2ae81e4452fba03e4d0172f8c1a6928f60a139edaaa1f83e",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "pc",
+          "sha256": "953257fb4c5e32ebb4798ff2978227e5cf2983eb7a58b309f16b911d66cb6e47"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "pc": "keepsSidebarOpen"
+      }
+    },
+    {
+      "target": "escape-hold.mjs",
+      "source": "shared-156-Bikz018e.js",
+      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
+      "sha256": "794d5f47d45d16aaacce1797869aa51fadf33778d8de579bf48b51734a92655f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "uV",
+          "sha256": "ad60a1db7867775a63aeb0bc93dd123d23cf1b466cb2d0aa1036ca5ffc846894"
+        },
+        {
+          "name": "dV",
+          "sha256": "ed6eed3cd97450f4f7dc12eb497d60ff093cc076b679a03553290a6c72a11118"
+        },
+        {
+          "name": "fV",
+          "sha256": "806097b98f3d1903e5686df67b8f77b3aede628c6356684909c3884a41ca1e26"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "dV": "holdEscape",
+        "fV": "escapeHeld"
+      }
+    },
+    {
+      "target": "escape-cancel.mjs",
+      "source": "shared-18-D4XxL6Tg.js",
+      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "sha256": "faab61b460cdb6673dd90d9a1e42b99f6b236a8f1a1b53c78ca43af0d9ead36d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "XL",
+          "sha256": "bf9654d2d8362e470161911643bbbeb2e5bae005b16f3120b8e2ef1a57089176"
+        }
+      ],
+      "imports": [
+        {
+          "local": "kr",
+          "from": "./escape-hold.mjs",
+          "name": "holdEscape",
+          "via": "shared-156-Bikz018e.js:nr",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "XL": "onEscapeCancel"
+      }
+    },
+    {
+      "target": "logical-side.mjs",
+      "source": "shared-28-DcgD7xXH.js",
+      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "sha256": "09a26b840de95479bf2c4ff8eb282407563512bb02d27d4cc5ed86cbd0cae7ec",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Pm",
+          "sha256": "bdf884c1a4c64043da4762e72758e77a3728fae1920f9bbb79257242b93b0c7d"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Pm": "physicalSide"
+      }
+    },
+    {
+      "target": "focus-origin.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "772a792d29c6802ec58ee86547f7033104612cfe9fb908bd6c6552b3ad4674c9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "JY",
+          "sha256": "026e596cbecd2941bffe053dcc96967f0e9a0e4b75f3613c67b2f5990c5805d4"
+        },
+        {
+          "name": "YY",
+          "sha256": "7a809b4b6b63d78be22e7184a7f1cd581d3b4ffba19d2d470c7c41a89fec43f0"
+        },
+        {
+          "name": "ZY",
+          "sha256": "57e75ed8eb199b3add66ffd496a040a0b120c1666be7f24a524d6517a89a22cd"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ZY": "rememberFocusOrigin",
+        "JY": "focusOrigins",
+        "YY": "toggleFocusOrigin"
+      }
+    },
+    {
+      "target": "sidebar-resize-handle.mjs",
+      "source": "shared-21-IP-SVetq.js",
+      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "sha256": "33f84db6df688806709aa9790933b9f7eaa60bcb40085bb37bdc10561b8fc4e2",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "_k",
+          "sha256": "b1d1190ac7737d31d56609547a4e72ebbd4db24441afd0f828bc2cb12053bd4a"
+        },
+        {
+          "name": "vk",
+          "sha256": "4dc3d6a1a8a01d351433d92089f6ee74a922c5c8b24c2540fb55a0cb78167924"
+        },
+        {
+          "name": "yk",
+          "sha256": "4aa5597c323bc5b0ddd67a49a15e2badf600349b403b8ffd5c597b9828fd66d1"
+        },
+        {
+          "name": "Tk",
+          "sha256": "32d1515f5c3cb5fc894da6133d996eea844a87d4df93a94be116b439942c6ff2"
+        },
+        {
+          "name": "Ek",
+          "sha256": "86fd2d55b31c85fbd7b226011ff31b11f1e90a7f5df429e343b52e48d222dac1"
+        },
+        {
+          "name": "TF",
+          "sha256": "63ee3b90f0bc64026eafa8cde95c5f410c847be841536b7240d778688cfed72a"
+        },
+        {
+          "name": "EF",
+          "sha256": "13e63b714ce541b8781f39069a2e1ad0979f5ffed76bea738d8e4539cd60c592"
+        },
+        {
+          "name": "DF",
+          "sha256": "48f255b4f4e5457dcf1d5d9bf38da98a1779f65859d11f27d590797bf8152b05"
+        }
+      ],
+      "imports": [
+        {
+          "local": "l",
+          "from": "react-dom",
+          "name": "flushSync",
+          "via": "vendor-frame-DfPJ1QmD.js:Ca",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "adapter",
+          "original": "Td"
+        },
+        {
+          "local": "A",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "Zi",
+          "from": "./focus-origin.mjs",
+          "name": "rememberFocusOrigin",
+          "via": "shared-19-CkPOiIKm.js:io",
+          "kind": "generated"
+        },
+        {
+          "local": "Y",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useSidebarFrameStore",
+          "via": "shared-52-DGviI8xb.js:If",
+          "kind": "adapter",
+          "original": "G"
+        },
+        {
+          "local": "kc",
+          "from": "./sidebar-width.mjs",
+          "name": "useSidebarWidth",
+          "via": "shared-52-DGviI8xb.js:Qf",
+          "kind": "generated"
+        },
+        {
+          "local": "Lc",
+          "from": "./sidebar-width.mjs",
+          "name": "useSidebarResizing",
+          "via": "shared-52-DGviI8xb.js:Wf",
+          "kind": "generated"
+        },
+        {
+          "local": "Wc",
+          "from": "./sidebar-width.mjs",
+          "name": "sidebarWidthBounds",
+          "via": "shared-52-DGviI8xb.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "jl",
+          "from": "./sidebar-width.mjs",
+          "name": "sidebarMaxWidth",
+          "via": "shared-52-DGviI8xb.js:wm",
+          "kind": "generated"
+        },
+        {
+          "local": "mf",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "SidebarResizeTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "adapter",
+          "original": "Zp"
+        },
+        {
+          "local": "xp",
+          "from": "./logical-side.mjs",
+          "name": "physicalSide",
+          "via": "shared-28-DcgD7xXH.js:bo",
+          "kind": "generated"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "sm",
+          "from": "./escape-cancel.mjs",
+          "name": "onEscapeCancel",
+          "via": "shared-18-D4XxL6Tg.js:Qn",
+          "kind": "generated"
+        },
+        {
+          "local": "Pv",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useHideSidebarIntent",
+          "via": "shared-8-B5lJ8U5C.js:Wl",
+          "kind": "adapter",
+          "original": "J_"
+        },
+        {
+          "local": "Yv",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "sidebarCanHide",
+          "via": "shared-8-B5lJ8U5C.js:iu",
+          "kind": "adapter",
+          "original": "w_"
+        },
+        {
+          "local": "py",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "reportSidebarStateSet",
+          "via": "shared-8-B5lJ8U5C.js:xl",
+          "kind": "adapter",
+          "original": "q_"
+        },
+        {
+          "local": "My",
+          "from": "./resize-handle.mjs",
+          "name": "ResizeHandle",
+          "via": "shared-15-Cc9xvKlF.js:Zt",
+          "kind": "generated"
+        },
+        {
+          "local": "Bx",
+          "from": "./hide-threshold.mjs",
+          "name": "keepsSidebarOpen",
+          "via": "shared-16-B0xHzPjj.js:Zr",
+          "kind": "generated"
+        },
+        {
+          "local": "Dc",
+          "from": "./sidebar-width.mjs",
+          "name": "sidebarHidden",
+          "via": "shared-52-DGviI8xb.js:Of",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "DF": "SidebarResizeHandle",
+        "vk": "sidebarLiveWidthActive",
+        "yk": "liveSidebarWidth",
+        "_k": "liveSidebarWidthTargets",
+        "Ek": "endEdgeResize",
+        "EF": "swallowFollowUpClicks"
+      }
+    }
+  ]
+}

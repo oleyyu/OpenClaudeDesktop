@@ -21,71 +21,9 @@
   padding-inline: var(--cds-pad-md);
   min-width: 0;
 }
-/* Yo copy-path button: text-body text-secondary flex flex-1 min-w-0 text-left
-   rounded-[3px] -mx-0.75 hover:bg-fill-ghost-hover focus-visible:shadow-focus. */
-.sfv-path {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  margin: 0 calc(var(--spacing, 0.25rem) * -0.75);
-  padding: 0;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--cds-text-secondary);
-  font-family: var(--cds-font-sans);
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
-  text-align: left;
-  cursor: var(--cds-cursor-interactive, default);
-}
-button.sfv-path:hover {
-  background-color: var(--cds-fill-ghost-hover);
-}
-button.sfv-path:focus-visible {
-  outline: none;
-  box-shadow: var(--cds-focus-shadow);
-}
-/* Ma: -mx-1 -my-1 flex min-w-0 overflow-x-auto px-1 py-1 whitespace-nowrap
-   [direction:rtl] with a hidden scrollbar; the ltr path is "flex min-w-full
-   shrink-0 items-baseline"; folders and the separator are shrink-0 text-muted,
-   segments px-0.75. */
-.sfv-breadcrumb {
-  display: flex;
-  min-width: 0;
-  margin: calc(var(--spacing, 0.25rem) * -1);
-  padding: calc(var(--spacing, 0.25rem) * 1);
-  overflow-x: auto;
-  white-space: nowrap;
-  direction: rtl;
-  scrollbar-width: none;
-}
-.sfv-breadcrumb::-webkit-scrollbar {
-  display: none;
-}
-.sfv-breadcrumb-path {
-  display: flex;
-  min-width: 100%;
-  flex-shrink: 0;
-  align-items: baseline;
-}
-.sfv-crumb {
-  flex-shrink: 0;
-  padding-inline: calc(var(--spacing, 0.25rem) * 0.75);
-}
-.sfv-crumb-lead {
-  flex-shrink: 0;
-  padding-left: calc(var(--spacing, 0.25rem) * 0.75);
-  color: var(--cds-text-muted);
-}
-.sfv-crumb-dir,
-.sfv-crumb-separator {
-  flex-shrink: 0;
-  color: var(--cds-text-muted);
-}
-.sfv-crumb-name {
-  color: var(--cds-text-primary);
-}
+/* The current source owns breadcrumb classes and geometry; its buttons' utilities apply over the layered
+   native-button reset (D26). */
+.source-file-breadcrumb { display: contents; }
 .sfv-body {
   display: flex;
   flex: 1;
@@ -221,16 +159,8 @@ button.sfv-path:focus-visible {
 .sfv-view-toggle {
   flex: none;
 }
-/* ki frontmatter grid and the ji plain <pre>: the loaded utilities assume
-   the source's preflight (no UA margins on dl/dd/pre), which the local
-   stylesheet does not carry. */
-.sfv-frontmatter {
-  margin-top: 0;
-  margin-inline: 0;
-}
-.sfv-frontmatter > dd {
-  margin: 0;
-}
+/* The ji plain <pre>. (R3-files FT-18: the frontmatter <dl> is the generated c3fde7009 Ei; its dl/dd margins come from
+   the official preflight, c6a992d55 @layer base `*{margin:0;padding:0}`, as in the source.) */
 .sfv-plain-source {
   margin: 0;
 }
@@ -257,62 +187,12 @@ button.sfv-path:focus-visible {
   margin-top: 4px;
 }
 
-/* Breadcrumb segments with a lister (Na): rounded-[3px] px-0.75, ghost hover, held while the popover is open. */
-.sfv-crumb-button {
-  margin: 0;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  font: inherit;
-  text-align: left;
-  cursor: var(--cds-cursor-interactive, default);
-}
-.sfv-crumb-button.sfv-crumb-dir { color: var(--cds-text-muted); }
-.sfv-crumb-button.sfv-crumb-name { color: var(--cds-text-primary); }
-.sfv-crumb-button:hover,
-.sfv-crumb-button[data-popup-open] { background-color: var(--cds-fill-ghost-hover); }
-.sfv-crumb-button:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-/* Ta: "Files in {folder}" popover, w-72 max-h-[min(24rem,var(--available-height))]. */
-.sfv-folder-popover { width: 18rem; max-height: min(24rem, var(--available-height, 24rem)); overflow-y: auto; }
-.sfv-folder-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; min-width: 0; }
-.sfv-folder-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-  min-width: 0;
-  height: var(--cds-h-control, 24px);
-  padding: 0 var(--cds-pad-sm, 8px);
-  border: 0;
-  border-radius: var(--cds-radius, 6px);
-  background: transparent;
-  color: var(--cds-text-primary);
-  font: inherit;
-  font-size: var(--cds-font-size-body);
-  text-align: left;
-  cursor: var(--cds-cursor-interactive, default);
-}
-.sfv-folder-row:hover { background: var(--cds-fill-ghost-hover); }
-.sfv-folder-row:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.sfv-folder-row[data-selected] { background: var(--cds-alpha-2); }
-.sfv-folder-caret { display: inline-flex; flex: none; width: 12px; color: var(--cds-text-muted); transition: transform 150ms ease-out; }
-.sfv-folder-caret.sfv-open { transform: rotate(90deg); }
-.sfv-folder-icon { flex: none; color: var(--cds-text-secondary); }
-.sfv-folder-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Ra: flex items-center h-control px-md text-footnote text-muted. */
-.sfv-folder-note {
-  display: flex;
-  align-items: center;
-  height: var(--cds-h-control, 24px);
-  margin: 0;
-  padding: 0 var(--cds-pad-md, 12px);
-  color: var(--cds-text-muted);
-  font-size: var(--cds-font-size-footnote);
-}
-.sfv-folder-skeleton { display: flex; flex-direction: column; gap: 6px; padding: var(--cds-pad-xs, 4px); }
-.sfv-folder-skeleton > span { display: block; height: 12px; border-radius: 4px; background: var(--cds-alpha-2); }
-.sfv-folder-skeleton > span:nth-child(odd) { width: 70%; }
-.sfv-folder-skeleton > span:nth-child(even) { width: 50%; }
+/* R3-files FT-16: the "Files in {folder}" popover is cfac349aa Pt / Lt with ca7840910's compact tree (generated
+   files-changes breadcrumb-folder.mjs, file-tree-compact.mjs); its classes are the official utilities. The host popup
+   (source-popover.css .sp-popup) caps max-height at --available-height unlayered, which would beat Pt's
+   max-h-[min(24rem,var(--available-height))] in @layer utilities: release it to that layer (like .oc-start-popup's
+   max-width in source-code-start.css). */
+.sp-popup.sfv-folder-popover { max-height: revert-layer; }
 
 /* Xi: the find bar under the subheader (flex items-center gap-[4px] px-md, h-control field). */
 .sfv-find {
@@ -349,8 +229,9 @@ button.sfv-path:focus-visible {
 .sfv-find-status { flex: none; color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote); font-variant-numeric: tabular-nums; }
 .sfv-find-button:disabled { color: var(--cds-text-disabled); }
 .sfv-line[data-find-active] { background: rgba(255, 213, 0, .08); }
-@media (prefers-reduced-motion: reduce) { .sfv-folder-caret { transition: none; } }
-html[data-reduce-motion="true"] .sfv-folder-caret { transition: none; }
+/* R3-files (correcting FT-16): no host reduce-motion rule for the folder tree caret. The official motion-reduce:transition-none
+   covers both the media query and the in-app setting (c6a992d55: `.motion-reduce\:transition-none:where([data-reduce-motion=true],
+   [data-reduce-motion=true] *)`), which appearance-root.mjs writes as html[data-reduce-motion="true"]. */
 
 /* 2.31226.0 Files view options, adapted to the existing read-only token renderer. */
 .sfv-scroller[data-word-wrap="false"] { overflow-x: auto; }
@@ -360,13 +241,8 @@ html[data-reduce-motion="true"] .sfv-folder-caret { transition: none; }
 .sfv-space { background-image: var(--sfv-space-paint); background-size: 1ch 100%; }
 .sfv-tab { background-image: var(--sfv-tab-paint); background-position: left center; background-repeat: no-repeat; }
 
-/* 2.31226.0 CodeMirror file viewer: Ii theme and the compact save-conflict bar. */
+/* 2.37337.1 CodeMirror file viewer: original ia theme owns editor paint. */
 .sfv-editor { flex: 1; min-height: 0; height: 100%; overflow: hidden; font: var(--cds-font-size-code) / var(--cds-leading-code) var(--cds-font-mono); background: light-dark(var(--code-theme-light-bg, transparent), var(--code-theme-dark-bg, transparent)); color: light-dark(var(--code-theme-light-fg, var(--cds-text-primary)), var(--code-theme-dark-fg, var(--cds-text-primary))); }
-.sfv-editor .cm-highlightSpace { background-image: var(--sfv-space-paint); }
-.sfv-editor .cm-highlightTab { background-image: var(--sfv-tab-paint); }
-.sfv-editor-find { background: rgba(255,213,0,.25); border-radius: 2px; }
-.sfv-editor-find-current { background: rgba(255,213,0,.55); color: black; border-radius: 2px; }
-.sfv-editor-jump { background: var(--bg-200, #eee); }
 .sfv-edit-error { display: flex; align-items: center; gap: 4px; padding: 5px 12px; background: var(--alpha-2, #8881); flex-shrink: 0; font-size: 12px; }
 .sfv-edit-error > span { flex: 1; }
 .sfv-go-to-line .sfv-find-input[aria-invalid="true"] { border-color: var(--cds-text-danger); }

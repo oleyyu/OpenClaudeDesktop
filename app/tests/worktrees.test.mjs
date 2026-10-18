@@ -105,3 +105,81 @@ test('B29 gitUnavailable: missing git, the macOS stub, a blocked exec and a brok
   assert.equal(worktrees.gitUnavailable({ code: 128, stderr: "fatal: not a git repository" }), null);
   assert.equal(worktrees.gitUnavailable(null), null);
 });
+
+// cov8-02 (FT-12; asar 2.42304.0 index.chunk-BAdej_RQ.js readVettedTrackingRef / vetTrackingRef / probeSymbolicRef / Ea,
+// unchanged from 2.37337.1 apart from names): a symbolic remote-tracking ref is never a worktree start point.
+test('cov8-02 refreshedStartPoint refuses a symbolic refs/remotes/origin/<branch> and adds no worktree', async (t) => {
+  const { base, root } = await repo();
+  t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+  worktrees._resetSourceRefFetches();
+  const clone = path.join(base, 'clone');
+  await run('git', ['clone', '-q', root, clone]);
+  // origin is unreachable from now on: the fetch fails and the refs on disk decide (a failed fetch never throws).
+  await git(clone, 'remote', 'set-url', 'origin', path.join(base, 'gone'));
+  const plain = (await git(clone, 'rev-parse', 'refs/remotes/origin/main')).stdout.trim();
+  assert.deepEqual(await worktrees.vetTrackingRef(run, clone, 'refs/remotes/origin/main'), { kind: 'commit', oid: plain });
+  assert.deepEqual(await worktrees.vetTrackingRef(run, clone, 'refs/remotes/origin/missing'), { kind: 'absent' });
+  assert.equal(await worktrees.readVettedTrackingRef(run, clone, 'refs/remotes/origin/missing'), null);
+  // origin/HEAD (a symbolic ref git clone makes) is followed once to origin/main.
+  assert.deepEqual(await worktrees.vetTrackingRef(run, clone, 'refs/remotes/origin/HEAD'), { kind: 'commit', oid: plain });
+  // The branch ref itself made symbolic (git never does that; a fetch would write through it).
+  await git(clone, 'update-ref', 'refs/remotes/origin/other', plain);
+  await git(clone, 'symbolic-ref', 'refs/remotes/origin/main', 'refs/remotes/origin/other');
+  const calls = [];
+  const logged = (command, args, options) => { calls.push(args.slice(2)); return run(command, args, options); };
+  await assert.rejects(worktrees.refreshedStartPoint(logged, clone, 'main'), (error) => {
+    assert.ok(error instanceof worktrees.WorktreeStartRefused);
+    assert.equal(error.code, 'tracking_ref_untrusted');
+    assert.equal(error.message, 'OpenClaude Desktop could not create a worktree: this repository\'s remote-tracking ref for the branch is a symbolic ref, which git itself never creates there, so the remote\'s copy of the branch cannot be read from it. Delete it (git symbolic-ref --delete refs/remotes/origin/main), then run "git fetch" in the repository and try again.');
+    return true;
+  });
+  assert.ok(calls.some((args) => args[0] === 'symbolic-ref' && args.at(-1) === 'refs/remotes/origin/main'), 'probed');
+  assert.ok(!calls.some((args) => args[0] === 'worktree'), 'no worktree add');
+  assert.equal(fs.readdirSync(base).sort().join(), 'clone,repo', 'nothing was created next to the repository');
+  // origin/HEAD → origin/main → origin/other: git symbolic-ref prints the end of the chain, a plain ref of the same
+  // remote, so the HEAD is vetted as that ref (as in the original).
+  assert.deepEqual(await worktrees.vetTrackingRef(run, clone, 'refs/remotes/origin/HEAD'), { kind: 'commit', oid: plain });
+  // A remote HEAD that leads out of its remote is refused with the HEAD copy.
+  await git(clone, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/elsewhere/main');
+  assert.deepEqual(await worktrees.vetTrackingRef(run, clone, 'refs/remotes/origin/HEAD'), { kind: 'symbolic', ref: 'refs/remotes/origin/HEAD' });
+  await assert.rejects(worktrees.readVettedTrackingRef(run, clone, 'refs/remotes/origin/HEAD'), /remote HEAD leads through a symbolic remote-tracking ref/);
+  assert.match(worktrees.trackingRefRefusal('refs/remotes/origin/HEAD', 'symbolic'), /remote HEAD leads through a symbolic remote-tracking ref/);
+  assert.match(worktrees.trackingRefRefusal('refs/remotes/origin/a b', 'symbolic'), /\(git symbolic-ref --delete refs\/remotes\/<remote>\/<branch>\)/, 'Ca: an unquotable name');
+  assert.match(worktrees.trackingRefRefusal('refs/remotes/origin/main', 'unconfirmed'), /could not read this repository's remote-tracking ref for the branch to confirm it is a plain ref/);
+  // Back to a plain ref: the worktree starts from it again.
+  await git(clone, 'symbolic-ref', '--delete', 'refs/remotes/origin/main');
+  await git(clone, 'update-ref', 'refs/remotes/origin/main', plain);
+  assert.equal((await worktrees.refreshedStartPoint(run, clone, 'main')).start, plain);
+});
+
+test('cov8-02 vetTrackingRef: an unconfirmable probe refuses, a git that cannot start is a git refusal', async () => {
+  const oid = 'a'.repeat(40);
+  const runner = (answers) => async (command, args) => {
+    const answer = answers[args[2]];
+    if (typeof answer === 'function') return answer(args);
+    if (answer instanceof Error) throw answer;
+    return { stdout: answer ?? '', stderr: '' };
+  };
+  const exit = (code, stderr = '') => Object.assign(new Error(`exit ${code}`), { code, stderr });
+  const warn = console.warn; const warnings = [];
+  console.warn = (...args) => warnings.push(args);
+  try {
+    // symbolic-ref exits 128 (not 0/1): unconfirmed unless check-ref-format also rejects the name and nothing is listed.
+    const unconfirmed = runner({ 'symbolic-ref': exit(128, 'fatal: weird'), 'for-each-ref': `refs/remotes/origin/x\0\0${oid}\n`, 'check-ref-format': '' });
+    assert.deepEqual(await worktrees.vetTrackingRef(unconfirmed, '/r', 'refs/remotes/origin/x'), { kind: 'unconfirmed', ref: 'refs/remotes/origin/x' });
+    assert.equal(warnings.length, 1);
+    await assert.rejects(worktrees.readVettedTrackingRef(unconfirmed, '/r', 'refs/remotes/origin/x'), /could not read this repository's remote-tracking ref/);
+    const badName = runner({ 'symbolic-ref': exit(128), 'for-each-ref': '', 'check-ref-format': exit(1) });
+    assert.deepEqual(await worktrees.vetTrackingRef(badName, '/r', 'refs/remotes/origin/x'), { kind: 'absent' });
+    // for-each-ref lists it with a symref column while symbolic-ref says "not": still symbolic.
+    const listed = runner({ 'symbolic-ref': exit(1), 'for-each-ref': `refs/remotes/origin/x\0refs/remotes/origin/y\0${oid}\n` });
+    assert.deepEqual(await worktrees.vetTrackingRef(listed, '/r', 'refs/remotes/origin/x'), { kind: 'symbolic', ref: 'refs/remotes/origin/x' });
+    // git did not start (no exit code): readVettedTrackingRef refuses with the git error attached.
+    const missing = runner({ 'symbolic-ref': Object.assign(new Error('spawn git ENOENT'), { code: 'ENOENT' }), 'for-each-ref': '' });
+    await assert.rejects(worktrees.readVettedTrackingRef(missing, '/r', 'refs/remotes/origin/x'), (error) => {
+      assert.equal(error.message, 'git could not probe a tracking ref');
+      assert.deepEqual(error.gitStartup, { error: 'spawn git ENOENT', detail: 'ENOENT', kind: 'failed' });
+      return true;
+    });
+  } finally { console.warn = warn; }
+});

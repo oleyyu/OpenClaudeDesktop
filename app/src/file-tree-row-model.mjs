@@ -25,19 +25,69 @@ export function treeEntryOpenable(entry) {
   return !entry?.link || entry.link.state === "ok";
 }
 
-// ce9ca5630 i/a/s/g (:4-30): rows indent 8px + 8px per level; below the root each row paints one 1px guide per
-// ancestor level (the border token every 8px), starting at the centre of the root's xs (12px) icon.
+// 2.42304.0 ca7840910 (was ce9ca5630): rows indent 10px per level, with the original ancestor-guide
+// geometry starting at the centre of the root's xs (12px) icon. The icon size is E(): "sm" only when the
+// fizzy-lake "panels" part is on (shared-4 jf), which this build never enables (Ef=Cf=[]), so it stays "xs".
+// fileTreeRowStyle is V (= L + B), the style the original error row Ll(depth) and kept rows use.
 export const FILE_TREE_PAD = 8;
-export const FILE_TREE_INDENT = 8;
-const FILE_TREE_ICON_PX = 12;
-export function fileTreeGuideStyle(level) {
-  if (!Number.isInteger(level) || level <= 0) return {};
-  return {
-    "--file-tree-guides": `repeating-linear-gradient(to right, var(--cds-border) 0 1px, transparent 1px ${FILE_TREE_INDENT}px)`,
-    backgroundPosition: `${FILE_TREE_PAD + FILE_TREE_ICON_PX / 2}px 0`,
-    backgroundRepeat: "no-repeat",
-    backgroundSize: `${level * FILE_TREE_INDENT}px 100%`,
-  };
+export const FILE_TREE_INDENT = 10;
+export { fileTreeGuideStyle, treeIndent, fileTreeRowStyle } from './generated/code-current/file-tree-style.mjs';
+
+// ---- R3-files FT-14 (files-08 / files-v03): the tree's official classes. ----
+// 2.42304.0 cccc2cf0a Nx / NS / AS over ca7840910 A/j/N/I/F, shared-6 _h/vh, shared-frame Cx (the CDS menu-item
+// variants) and the row parts dx/fx/px, all generated (generated/files-changes). OpenClaude's tree is nested DOM (a
+// treeitem holds its row and its children's group) rather than the official flat virtual list, so the treeitem wrapper
+// carries the ARIA and focus while an inner row element carries what the official treeitem paints.
+import { cdsClassNames } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { clsx } from './generated/view-tabs/vendor-frame-DfPJ1QmD.js';
+import { menuItemClasses } from './generated/files-changes/menu-item-classes.mjs';
+import { fileTreeRowBase, fileTreeRowSelected, fileTreeRowPrimary, keptGuideFolders, keptGuidesOfRow } from './generated/files-changes/file-tree-row.mjs';
+import { fileTreeGroup, fileTreePadding, fileTreeKeptGuides, fileTreeRowCurrent, fileTreeRowIdle } from './generated/files-changes/file-tree-row-classes.mjs';
+import { appListRowMin } from './generated/files-changes/app-list-row.mjs';
+export { fileTreeIconSize } from './generated/code-current/file-tree-style.mjs';
+export { fileTreeRowPrimary };
+
+// Nx's tree element: `${Rl} flex-1 min-h-0 overflow-y-auto [contain:strict] ${Nl} outline-none hide-focus-ring`.
+export const FILE_TREE_CONTAINER_CLASS = `${fileTreeGroup} flex-1 min-h-0 overflow-y-auto [contain:strict] ${fileTreePadding} outline-none hide-focus-ring`;
+// AS (a subfolder that could not be read): `flex items-center ${Dn} px-lg text-body text-muted-as-secondary outline-none ${zl}`.
+export const FILE_TREE_ERROR_ROW_CLASS = `flex items-center ${appListRowMin} px-lg text-body text-muted-as-secondary outline-none ${fileTreeKeptGuides}`;
+// NS's guide layer below the root (its literal is ca7840910 j after the positioning classes).
+export const FILE_TREE_GUIDE_LAYER_CLASS = `pointer-events-none absolute inset-0 ${fileTreeKeptGuides}`;
+
+/** NS: `Er(vr(), dx, I ? Ul : ee ? fx : Wl, m !== void 0 && "transition-colors duration-300")` — current file, selected, idle. */
+export function fileTreeRowClassName({ current = false, selected = false, revealing = false } = {}) {
+  return cdsClassNames(menuItemClasses(), fileTreeRowBase, current ? fileTreeRowCurrent : selected ? fileTreeRowSelected : fileTreeRowIdle,
+    revealing && 'transition-colors duration-300');
+}
+/** NS's glyph: a folder's CaretRight (it toggles: fe) turns with the folder; a file's type icon is muted-control when it opens. */
+export function fileTreeIconClassName({ directory = false, openable = true, expanded = false } = {}) {
+  return directory
+    ? clsx('shrink-0 self-center', 'text-muted-as-secondary', 'transition-transform duration-fast motion-reduce:transition-none', expanded && 'rotate-90')
+    : clsx('shrink-0 self-center', openable ? 'text-muted-control' : 'text-muted-as-secondary');
+}
+/** NS's name: primary when the row opens (no search positions in the tree), else muted (a broken / external link). */
+export function fileTreeNameClassName(openable = true) {
+  return clsx('truncate', openable ? 'text-primary' : 'text-muted-as-secondary');
+}
+
+/**
+ * DS's kept guides (cccc2cf0a xS / SS) over the rendered rows, in tree order: rows carry aria-level, data-parent-index
+ * (indexTreeRows) and, for entries, aria-selected / aria-current; an error row (AS) has no aria-selected. Each row gets
+ * the gradients of its open ancestors that hold a selected or current row (Lx sets them on the row as
+ * `--file-tree-kept-guides`). The nested rows inherit custom properties, so a row with none says `none`.
+ */
+export function keptGuideRows(rows) {
+  const model = rows.map((row) => ({
+    kind: row.hasAttribute('aria-selected') ? 'entry' : 'error',
+    entry: { kept: row.getAttribute('aria-selected') === 'true' || row.hasAttribute('aria-current') },
+    depth: Number(row.getAttribute('aria-level') ?? '1') - 1,
+    parentIndex: row.hasAttribute('data-parent-index') ? Number(row.getAttribute('data-parent-index')) : -1,
+  }));
+  const kept = keptGuideFolders(model, (entry) => entry.kept);
+  return model.map((_, index) => keptGuidesOfRow(model, kept, index));
+}
+export function applyKeptGuides(rows) {
+  keptGuideRows(rows).forEach((value, index) => rows[index].style.setProperty('--file-tree-kept-guides', value ?? 'none'));
 }
 
 // cccc2cf0a My (:5655-5669): a row revealed by "Reveal in file tree" (not the follow reveal of the open file)

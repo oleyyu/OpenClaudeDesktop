@@ -12,7 +12,7 @@ import { serve } from '../packages/acp-bridge/src/server.js'
 import { LineTransport } from '../packages/acp-bridge/src/transport.js'
 import { adapterById } from '../packages/acp-bridge/src/agents/index.js'
 import { userSystemPrompt } from '../packages/acp-bridge/src/agents/kimi.js'
-import { sessionTurnUsage, restoreSession } from '../packages/acp-bridge/src/agents/gemini.js'
+import { sessionTurnUsage, restoreSession, liveSessionUsage } from '../packages/acp-bridge/src/agents/gemini.js'
 import { minimaxLogin, skillLocationUri } from '../packages/acp-bridge/src/agents/minimax.js'
 import { threadConfigYaml, threadPermissionFile, readAgentsBlock, ruleFromString, storedRule } from '../packages/acp-bridge/src/agents/minimax-config.js'
 
@@ -62,6 +62,65 @@ function bridge({ adapter = adapterById('kimi'), env = {}, answer } = {}) {
   const items = (turnId, type) => notes.filter((note) => note.method === 'item/completed' && note.params.turnId === turnId && note.params.item.type === type).map((note) => note.params.item)
   return { home, call, turn, notes, requests, waitFor, items, close: () => server.shutdown() }
 }
+
+// ------------------------------------------------------------------ live usage (Gemini)
+
+test('an agent that reports a turn\'s tokens only at its end has them published while the turn runs', async () => {
+  let spent = 0
+  const adapter = Object.assign(Object.create(adapterById('kimi')), { liveTurnUsage: () => (spent ? { usage: { inputTokens: spent, outputTokens: 10 }, contextUsed: spent } : null) })
+  const b = bridge({ adapter })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '1' } })
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    spent = 500
+    const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 5000', text_elements: [] }] })
+    const usage = (total) => (method, params) => method === 'thread/tokenUsage/updated' && params.turnId === turn.id && params.tokenUsage.total.totalTokens === total
+    const first = await b.waitFor(usage(510))
+    assert.equal(first.tokenUsage.last.totalTokens, 500, 'the context fill of the latest call')
+    spent = 900
+    await b.waitFor(usage(910))
+    await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === turn.id)
+    assert.equal(b.notes.filter((note) => usage(510)(note.method, note.params)).length, 1, 'an unchanged reading is not sent again')
+  } finally { b.close() }
+})
+
+test('usage frames a turn adds up (Qwen) are published while it runs, for an agent with no live reader', async () => {
+  const adapter = Object.assign(Object.create(adapterById('kimi')), {
+    liveTurnUsage: undefined,
+    filterUpdate: (update) => (update.sessionUpdate === 'agent_message_chunk' ? { update, usage: { inputTokens: 100, outputTokens: 1 } } : { update }),
+  })
+  const b = bridge({ adapter })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '1' } })
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 3000', text_elements: [] }] })
+    const live = await b.waitFor((method, params) => method === 'thread/tokenUsage/updated' && params.turnId === turn.id && params.tokenUsage.total.totalTokens > 0)
+    assert.equal(live.tokenUsage.total.totalTokens % 101, 0)
+    await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === turn.id)
+  } finally { b.close() }
+})
+
+test('Kimi: a running turn\'s usage records, read on from the last look and from the turn\'s start', () => {
+  const kimi = adapterById('kimi')
+  const home = tmp()
+  const ctx = { env: { HOME: home, KIMI_CODE_HOME: path.join(home, '.kimi-code') } }
+  const id = 'k1'
+  const main = path.join(home, '.kimi-code', 'sessions', 'ws', id, 'agents', 'main', 'wire.jsonl')
+  fs.mkdirSync(path.dirname(main), { recursive: true })
+  const record = (usage) => `${JSON.stringify({ type: 'usage.record', model: 'k2', usage })}\n`
+  fs.writeFileSync(main, record({ inputOther: 999, output: 9 }))
+  const thread = { id }
+  kimi.beforeTurn(ctx, thread)
+  assert.equal(kimi.liveTurnUsage(ctx, thread, { since: 1 }), null, 'the previous turn\'s records are not this one\'s')
+  fs.appendFileSync(main, record({ inputOther: 100, output: 10, inputCacheRead: 50 }))
+  assert.deepEqual(kimi.liveTurnUsage(ctx, thread, { since: 1 }).usage, { inputTokens: 150, cachedInputTokens: 50, outputTokens: 10 })
+  const sub = path.join(path.dirname(path.dirname(main)), 'agent-0', 'wire.jsonl')
+  fs.mkdirSync(path.dirname(sub), { recursive: true })
+  fs.writeFileSync(sub, record({ inputOther: 20, output: 2 }))
+  assert.deepEqual(kimi.liveTurnUsage(ctx, thread, { since: 1 }).usage, { inputTokens: 170, cachedInputTokens: 50, outputTokens: 12 })
+  // The next turn starts over from where settleUsage left the cursor.
+  assert.equal(kimi.liveTurnUsage(ctx, { ...thread, kimiUsageCursor: { [main]: fs.statSync(main).size, [sub]: fs.statSync(sub).size } }, { since: 2 }), null)
+})
 
 // ------------------------------------------------------------------ agent-started turns (Qwen)
 
@@ -214,6 +273,30 @@ test('Gemini: never its own sandbox, full token split per turn, retention-delete
   ] }
   assert.deepEqual(sessionTurnUsage(chat), { usage: { inputTokens: 322, cachedInputTokens: 120, outputTokens: 53, reasoningOutputTokens: 13, totalTokens: 375 }, model: 'gemini-2.5-pro' })
   assert.equal(sessionTurnUsage({ messages: [{ type: 'user', content: [{ text: 'q' }] }] }), null)
+  // A turn that failed before Gemini recorded its prompt: the file's last prompt is the previous turn's, not counted again.
+  const stamped = { messages: [{ type: 'user', timestamp: '2026-10-17T14:00:00.000Z', content: [{ text: 'old' }] }, { type: 'gemini', tokens: { input: 50, output: 5, total: 55 } }] }
+  assert.equal(sessionTurnUsage(stamped, { since: Date.parse('2026-10-17T14:05:00.000Z') }), null)
+  assert.equal(sessionTurnUsage(stamped, { since: Date.parse('2026-10-17T14:00:02.000Z') }).usage.totalTokens, 55)
+
+  // A running turn's tokens, read from where the last read left off (a line written in two pieces counts once whole).
+  const sessionId = 'c0ffee12-0000-4000-8000-000000000001'
+  const chats = path.join(home, '.gemini', 'tmp', 'live', 'chats')
+  fs.mkdirSync(chats, { recursive: true })
+  const live = path.join(chats, 'session-2026-10-17T14-26-c0ffee12.jsonl')
+  const line = (record) => `${JSON.stringify(record)}\n`
+  const promptAt = Date.parse('2026-10-17T14:26:16.000Z')
+  fs.writeFileSync(live, line({ sessionId, projectHash: 'h', startTime: '2026-10-17T14:26:16.000Z', lastUpdated: '2026-10-17T14:26:16.000Z' })
+    + line({ id: 'u1', timestamp: '2026-10-17T14:26:16.000Z', type: 'user', content: [{ text: 'go' }] }))
+  assert.equal(liveSessionUsage(ctx.env, sessionId, promptAt), null)
+  const call = line({ id: 'g1', timestamp: '2026-10-17T14:26:40.000Z', type: 'gemini', content: '', tokens: { input: 1000, output: 40, cached: 0, thoughts: 10, tool: 0, total: 1050 } })
+  fs.appendFileSync(live, call.slice(0, 30))
+  assert.equal(liveSessionUsage(ctx.env, sessionId, promptAt), null)
+  fs.appendFileSync(live, call.slice(30))
+  assert.deepEqual(liveSessionUsage(ctx.env, sessionId, promptAt), { usage: { inputTokens: 1000, cachedInputTokens: 0, outputTokens: 50, reasoningOutputTokens: 10, totalTokens: 1050 }, contextUsed: 1040 })
+  fs.appendFileSync(live, line({ id: 'g2', timestamp: '2026-10-17T14:27:00.000Z', type: 'gemini', content: 'ok', tokens: { input: 1200, output: 20, cached: 900, thoughts: 0, tool: 0, total: 1220 } }))
+  assert.equal(liveSessionUsage(ctx.env, sessionId, promptAt).usage.totalTokens, 2270)
+  // The file's last prompt is from before this turn was sent: the previous turn's tokens are not this one's.
+  assert.equal(liveSessionUsage(ctx.env, sessionId, promptAt + 60_000), null)
 
   // A project Gemini knows (tmp/<slug>/.project_root) whose session file is gone: the bridge's history becomes one again.
   const workspace = path.join(home, 'workspace')

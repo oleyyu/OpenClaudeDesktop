@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react";
-import { createFinishedTaskHold, sparkState, taskButtonLabel, transcriptSparkSize, transcriptStatusPresentation } from "./transcript-status-model.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
-import { SourceSpark, SPARK_PATH } from "./source-spark.jsx";
+import React, { useCallback, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react";
+import { createFinishedTaskHold, transcriptStatusPresentation } from "./transcript-status-model.mjs";
+import { SPARK_PATH } from "./source-spark.jsx";
 import "./source-transcript-status.css";
-import { t } from "../electron/i18n/index.mjs";
-import { createThinkingReader, elapsedTurnSeconds, runtimeStatLabels, subscribeThinkingClock, subscribeTurnClock, thinkingChangeAt, turnActivity } from './transcript-runtime-stats.mjs';
-import { createActivityLabelStore } from './activity-label-store.mjs';
+import { createThinkingReader, elapsedTurnSeconds, subscribeThinkingClock, subscribeTurnClock, thinkingChangeAt, thinkingState, turnActivity } from './transcript-runtime-stats.mjs';
+import { turnWaiting, workingLineProps, workingLineThinking } from "./working-line-model.mjs";
+import { SourceWorkingLine } from "./source-working-line.jsx";
+import { TranscriptTail } from "./source-transcript-rows.jsx";
 
 // The static path now lives in source-spark.jsx; re-exported for existing imports.
 export const TRANSCRIPT_SPARK_PATH = SPARK_PATH;
 
 const noElapsedOnServer = () => null;
-// Whe :58132-58145 over createFinishedTaskHold (the timer lives in the model).
+// Whe :58132-58145 over createFinishedTaskHold (the timer lives in the model); 2.42304.0 zet holds the same 1500 ms.
 export function useFinishedTaskHold(running, owner = null) {
   const [, rerender] = useReducer(count => count + 1, 0);
   const [hold] = useState(() => createFinishedTaskHold(rerender));
@@ -29,8 +29,15 @@ function useThinkingState(turnId, items, itemPhases, enabled) {
   const snapshot = () => read(Date.now());
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
+// The transcript's loading line. Since the turnStatusRows ruling it is the original 2.42304.0 w8 in its gate-on branch
+// (source-working-line.jsx); this component takes the host's turn state and turns it into w8's props
+// (working-line-model.mjs). The wrapper keeps the host's transcript placement (turn gap,
+// the `.source-transcript-content` sibling rules) and the `.source-working` busy marker the UI harnesses wait on.
 export function SourceTranscriptStatus({ textSize = "m", turnId, turnStats, items, itemPhases,
-  runningTaskCount = 0, tasksPaneOpen = false, onToggleTasksPane = null, onToggleThinking = null, thinkingShown = false, onOpenLink = null, ...state }) {
+  runningTaskCount = 0, tasksPaneOpen = false, onToggleTasksPane = null, ...rest }) {
+  // main.jsx still passes the classic row's onToggleThinking / thinkingShown / onOpenLink; the desktop's line has no
+  // thinking toggle and no retry link, so they are not part of the presentation input.
+  const { onToggleThinking: _toggle, thinkingShown: _shown, onOpenLink: _link, ...state } = rest;
   const view = transcriptStatusPresentation(state);
   const finishedTaskCount = useFinishedTaskHold(runningTaskCount, state.sessionKey ?? null);
   const owned = turnId && turnStats?.turnId === turnId ? turnStats : null;
@@ -38,89 +45,27 @@ export function SourceTranscriptStatus({ textSize = "m", turnId, turnStats, item
   const subscribe = useCallback(notify => subscribeTurnClock(startedAt, notify), [startedAt]);
   const snapshot = useCallback(() => elapsedTurnSeconds(startedAt, Date.now()), [startedAt]);
   const elapsed = useSyncExternalStore(subscribe, snapshot, noElapsedOnServer);
-  // apiRetry replaces the activity label (and token stat) until Codex resumes.
+  // apiRetry replaces the activity (and the token stat) until the turn resumes.
   const working = view.phase === 'running' && !view.retry;
-  const thinking = useThinkingState(turnId, items, itemPhases, working);
-  const activity = working ? turnActivity(turnId, items, itemPhases, elapsed, thinking) : null;
-  const immediateLabel = activity?.label || view.label;
-  const waiting = working && (!activity || activity.kind === 'tools');
-  const owner = JSON.stringify([state.sessionKey, turnId, view.phase]);
-  const [labels] = useState(() => createActivityLabelStore({ owner, waiting, label: immediateLabel }));
-  const settledLabel = useSyncExternalStore(labels.subscribe, labels.getSnapshot, () => immediateLabel);
-  useLayoutEffect(() => { labels.update({ owner, waiting, label: immediateLabel }); }, [labels, owner, waiting, immediateLabel]);
-  // Stop/approval/disconnect must never announce held tool activity.
-  const label = waiting ? settledLabel : immediateLabel;
-  // Y5 :58637-58668: while thinking is active the label is a button that shows
-  // or hides reasoning in the transcript; "Thought for Ns" (done) is a plain,
-  // non-shimmering span (z = R !== null && p?.kind !== "done").
-  const thinkingLabelShown = !waiting && activity?.kind === 'thinking';
-  const thinkingToggle = thinkingLabelShown && activity.thinking?.kind === 'active' && typeof onToggleThinking === 'function';
-  const thoughtLabel = thinkingLabelShown && activity.thinking?.kind === 'done';
-  const stats = view.phase === 'running' ? runtimeStatLabels(elapsed, owned?.outputTokens) : [];
-  // Y5 apiRetry keeps only the elapsed clock, after the retry text.
-  const retryElapsed = view.retry ? stats[0] : undefined;
-  // Y5 K/P (scroll-messages-current.js:58273-58327): ghost xs flush Button,
-  // pressed while the tasks pane is open, shown only with a pane toggle and a
-  // running or held-finished count. The apiRetry branch (F) has no q().
-  const taskLabel = onToggleTasksPane && !view.retry ? taskButtonLabel(runningTaskCount, finishedTaskCount) : null;
-  // Every invisible local presentation is a source state without a Y5 row
-  // (home, loading, hideLoader when the approval card replaces the loader),
-  // so the button never resurrects the row on its own.
-  if (!view.visible) return null;
-  const size = transcriptSparkSize(textSize);
-  const separator = <span className="sts-separator" aria-hidden="true">·</span>;
-  const tasks = taskLabel && <SourceSettingsButton variant="ghost" size="xs" flush="both" className="sts-tasks"
-    aria-pressed={!!tasksPaneOpen} onClick={onToggleTasksPane}><span className="sts-tasks-label">{taskLabel}</span></SourceSettingsButton>;
-  // G (:58293-58298): stopping = label · q(true); idle (not working, P) = q(false);
-  // otherwise the stats branch (:58615-58628) = stats [·] q · status.
-  const idleTasks = tasks && view.phase === "idle";
-  const shown = view.announce || !!tasks;
+  const thought = useThinkingState(turnId, items, itemPhases, working);
+  const activity = working ? turnActivity(turnId, items, itemPhases, elapsed, thought) : null;
+  // ITe: `open` while the thought streams; without a clock thinkingState reports only a streaming thought.
+  const thinking = working ? workingLineThinking(thought, thinkingState(turnId, items || [], itemPhases || {}) !== null) : null;
+  const waiting = working ? turnWaiting(turnId, items || [], itemPhases || {}, activity) : null;
+  const line = workingLineProps(view, { retrying: state.retrying, elapsed, outputTokens: owned?.outputTokens, activity, thinking, waiting,
+    runningTaskCount, finishedTaskCount, onToggleTasksPane, tasksPaneOpen });
+  // Every invisible local presentation is a source state without a row (home, loading, hideLoader when the approval
+  // card replaces the loader), so the tasks button never resurrects the row on its own.
+  if (!line) return null;
   return (
     <div
-      className="source-transcript-status"
+      className={`source-transcript-status${view.busy ? " source-working" : ""}`}
       data-testid="code-transcript-status"
       data-transcript-status={view.phase}
-      aria-hidden={!shown || undefined}
+      data-working-row={view.busy ? "" : undefined}
     >
-      <div
-        className={`sts-row${view.busy ? " source-working" : ""}`}
-        data-testid={view.busy ? "code-working-line" : undefined}
-        data-working-row={view.busy ? "" : undefined}
-      >
-        {/* Classic Y5: Spark state is "thinking" whenever working or stopping;
-            reduced motion, a missing strip or a load failure keep the static svg. */}
-        <SourceSpark className="sts-spark" size={size} state={sparkState(view)} />
-        <span
-          className="sts-label"
-          data-visible={shown}
-          aria-hidden={!shown || undefined}
-          role={view.announce ? "status" : undefined}
-          aria-live={view.announce ? "polite" : undefined}
-          aria-atomic={view.announce || undefined}
-          aria-label={view.announce ? label : undefined}
-        >
-          {view.retry ? <>
-            <span className="sts-activity" data-retry-error="">{view.retry.error}</span><span className="sts-separator" aria-hidden="true">·</span>
-            <span className="sts-stat" data-retrying="">{view.retry.label}</span>
-            {view.retry.later && <><span className="sts-separator" aria-hidden="true">·</span><span className="sts-stat" data-retry-next="">{view.retry.later}</span></>}
-            {retryElapsed && !view.retry.later && <><span className="sts-separator" aria-hidden="true">·</span><span className="sts-stat" data-runtime-stat="elapsed">{retryElapsed}</span></>}
-            {view.retry.detail && <><span className="sts-separator" aria-hidden="true">·</span><span className="sts-stat sts-retry-detail" data-retry-detail="" title={view.retry.detail}>{view.retry.detail}</span></>}
-            {view.retry.link && onOpenLink && <><span className="sts-separator" aria-hidden="true">·</span>
-              <button type="button" className="sts-retry-link" data-retry-link="" onClick={() => onOpenLink(view.retry.link.url)}>{view.retry.link.label}</button></>}
-          </> : idleTasks ? tasks : view.phase === "stopping" ? <>
-            <span className="source-shimmer sts-activity">{label}</span>
-            {tasks && <>{separator}{tasks}</>}
-          </> : <>
-            {stats.map((stat, index) => <React.Fragment key={index}>
-              <span className="sts-stat" data-runtime-stat={index === 0 ? 'elapsed' : 'tokens'}>{stat}</span><span className="sts-separator" aria-hidden="true">·</span>
-            </React.Fragment>)}
-            {tasks && <>{tasks}{separator}</>}
-            {thinkingToggle ? <button aria-label={t(thinkingShown ? '{label}, hide from transcript' : '{label}, show in transcript', { label })} type="button"
-              className="source-shimmer sts-activity sts-thinking-toggle" onClick={onToggleThinking}>{label}</button>
-              : <span className={view.busy && !thoughtLabel ? 'source-shimmer sts-activity' : 'sts-activity'}>{label}</span>}
-          </>}
-        </span>
-      </div>
+      {/* f9's tail cell: the turn mark's outlet and the working line share one grid cell (source-transcript-rows.jsx). */}
+      <TranscriptTail><SourceWorkingLine line={line} textSize={textSize} /></TranscriptTail>
     </div>
   );
 }

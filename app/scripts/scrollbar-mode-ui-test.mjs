@@ -245,24 +245,25 @@ try {
   checks.push(`Seven real layouts keep the column at min(768, clientWidth-64) (or clientWidth-40 at <=780) centered by half the reserved gutters (${metrics.layouts["wide-1468"].viewport.reservedInlineGutters}px) with full-width strips; composer content box is 768 and centered on the column at 1468/1324`);
 
   // 3. Pane scrollers reserve stable both-edges gutters (pane still 560 wide).
-  metrics.tree = await scroller(".source-tree-content"); assertBothEdges("tree", metrics.tree);
+  metrics.tree = await scroller('.sfs-kept-tree [role="tree"][aria-label="Project files"]'); assertBothEdges("tree", metrics.tree);
   const input = panel().getByRole("textbox", { name: "Filter files", exact: true });
   await input.fill("Needle");
   await panel().locator('.sfs-browser[data-search-phase="success"]').waitFor();
   await panel().locator(".sfs-result-row").first().waitFor();
   metrics.results = await scroller(".sfs-results"); assertBothEdges("search results", metrics.results);
   await input.fill(""); await panel().locator('.sfs-results[hidden]').waitFor({ state: "attached" });
-  await panel().locator('.source-tree-row[data-file-path="kept/NeedleFile.txt"]').waitFor().catch(() => {});
-  const fileRow = panel().locator(".source-tree-row").filter({ hasText: "NeedleFile.txt" }).first();
-  if (await fileRow.count() === 0) { await panel().locator(".source-tree-row").filter({ hasText: "kept" }).first().click(); }
-  await panel().locator(".source-tree-row").filter({ hasText: "NeedleFile.txt" }).first().click();
+  await panel().locator('[data-tree-row-body]:has(> [data-tree-primary][data-file-path="kept/NeedleFile.txt"])').waitFor().catch(() => {});
+  const fileRow = panel().locator("[data-tree-row-body]").filter({ hasText: "NeedleFile.txt" }).first();
+  if (await fileRow.count() === 0) { await panel().locator("[data-tree-row-body]").filter({ hasText: "kept" }).first().click(); }
+  await panel().locator("[data-tree-row-body]").filter({ hasText: "NeedleFile.txt" }).first().click();
   await panel().locator(".source-file-preview").waitFor();
   await page.waitForFunction(() => document.querySelector(".source-file-preview")?.textContent.includes("preview line 79"));
   metrics.preview = await scroller(".source-file-preview"); assertBothEdges("file preview", metrics.preview);
   assert.ok(metrics.preview.overflowing, "preview fixture overflows vertically");
   await closeFiles();
-  // F12: the counts Button is named by its sr-only counts; "View changes" is only its tooltip (shared-21 OV).
-  await page.locator(".sg-row .sg-diff").click();
+  // R4i-gui GU1 (R4i-rail RL2): no band in rail mode; the rail Changes row's counts button (changes-row.mjs OLe,
+  // "Open changes, {added} added, {removed} removed") opens the Changes pane (main.jsx sessionRailHost changes.onOpen).
+  await page.locator('aside[aria-label="Session details"] nav[aria-label="Repository and pull request controls"] [data-rail-changes-row]').getByRole("button", { name: /^Open changes, / }).click();
   await page.locator(".source-diff").filter({ hasText: "+replacement" }).waitFor();
   metrics.changes = await scroller(".source-changes"); assertBothEdges("changes", metrics.changes);
   await shot("changes-pane");

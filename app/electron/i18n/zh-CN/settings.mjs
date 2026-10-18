@@ -190,7 +190,6 @@ export default {
   '{count} days': '{count} 天',
   'Never': '从不',
   'Worktree location': '工作树位置',
-  'Where to store Git worktrees for isolated coding sessions.': '为隔离的编码会话存放 Git 工作树的位置。',
   'Inside project': '项目内',
   'Custom…': '自定义…',
   'Sandbox mode': '沙盒模式',
@@ -1529,4 +1528,52 @@ export default {
   // B39 Code › Browser › Allowed sites (cdc95db1a m).
   'Sites where DeepSeek can use its Browser tools without a permission prompt.': 'DeepSeek 无需请求权限即可使用浏览器工具的网站。',
   'Manage': '管理',
+  // R3b-settings: settings-01 Worktree location (2.42304.0 cd19fedd2 P0gQiUc0+j); cov0-04 low-disk toast (cf615570b 3oiLa8/rQB, N1UcONKmyo).
+  'Where to store Git worktrees for isolated coding sessions on this computer.': '在这台电脑上为隔离的编码会话存放 Git 工作树的位置。',
+  'Low disk space: {free} free': '磁盘空间不足：剩余 {free}',
+  'Manage storage': '管理存储空间',
+  // R4g-mcp (MA-9): Settings › Code › agent tools, the "visualize" group (agent-tools/visualize.mjs, config.agentVisualize,
+  // on unless switched off, D35). A host row: the official visualize server has no setting (GrowthBook 3444158716).
+  'Visuals': '可视化',
+  'DeepSeek can draw charts, diagrams and interactive widgets right in the conversation. They run in a sandboxed frame.': 'DeepSeek 可以直接在对话中绘制图表、示意图和交互式小组件。它们在沙盒框架中运行。',
+  // R4g-mcp end.
+  // R4i-mcp (MC1): Settings › Code › Visuals, the official row copy (claude.ai Capabilities, c71860c77 5lU0AsuNui / y2KtEE7RW9).
+  'Inline visualizations': '内联可视化',
+  'Allow DeepSeek to generate interactive visualizations, charts, and diagrams directly in the conversation.': '允许 DeepSeek 直接在对话中生成交互式可视化内容、图表和示意图。',
+  // R4i-mcp end.
+  // R-settings-advanced: the Advanced nav group (settings-advanced-model.mjs) and Settings › Models › Display names
+  // (source-settings-model-names.jsx, prefs/model-names.mjs). 'Advanced' itself is above ('高级').
+  'Core options': '内核选项',
+  'Codex permissions': 'Codex 权限',
+  '{core} has no advanced options to change here.': '{core} 没有可在此更改的高级选项。',
+  'The agent core has no advanced options to change here.': '智能体内核没有可在此更改的高级选项。',
+  'settings keyword: advanced': '高级|高级设置',
+  'settings keyword: developer': '开发者',
+  'settings keyword: experimental': '实验|实验性',
+  'settings keyword: beta features': '测试版功能|测试版',
+  'settings keyword: timeout': '超时',
+  'settings keyword: sub-agents': '子智能体|子代理',
+  'settings keyword: permission profile': '权限配置',
+  'settings keyword: settings.json': 'settings.json',
+  'settings keyword: display name': '显示名称|显示名|模型名称',
+  'settings keyword: rename model': '重命名模型|模型改名|自定义模型名',
+  'Display names': '显示名称',
+  '{name} display name': '{name} 的显示名称',
+  'Reset {name} display name': '重置 {name} 的显示名称',
+  'Enter a model name.': '请输入模型名称。',
+  'Invalid model names.': '模型名称无效。',
+  'Rename {max} models or fewer.': '最多可重命名 {max} 个模型。',
+  // Settings › Models per-model options (each model a collapsible entry; prefs keyed '<coreId>:<modelId>').
+  'Shown in the model menu, the model button and sessions. Empty uses the default name.': '显示在模型菜单、模型按钮和会话中。留空则使用默认名称。',
+  'Renamed': '已重命名',
+  '{name} options': '{name} 选项',
+  'Image input': '图片输入',
+  '{name} image input': '{name} 图片输入',
+  'Attach and paste images for this model. Off keeps images out of the message box.': '允许为此模型附加和粘贴图片。关闭后输入框不接受图片。',
+  '{core} lists this model as text only, so images can’t be sent to it.': '{core} 将此模型列为仅文本，因此无法向它发送图片。',
+  '{core} keeps its own context window and output limits, so they aren’t set here.': '{core} 自行管理上下文窗口和输出上限，因此不在这里设置。',
+  'Pricing and custom providers': '价格和自定义提供商',
+  'Image input can only be turned off here.': '这里只能关闭图片输入。',
+  'Image input is off for this model. Turn it on in Settings › Models.': '此模型的图片输入已关闭。可在“设置 › 模型”中开启。',
+  // R-settings-advanced end.
 };

@@ -129,14 +129,15 @@ html[data-reduce-motion="true"] .sdiff-caret { transition: none; }
 .sdiff-changes-layout { position:relative; display:flex; flex:1; min-height:0; min-width:0; }
 .sdiff-changes-main { display:flex; flex-direction:column; flex:1; min-width:0; min-height:0; }
 .sdiff-changes-main > .source-changes { flex:1; min-height:0; }
-.sdiff-file-list { border-right:1px solid var(--cds-border); }
-/* c621b1e2d rows restated unlayered: style.css's `button` reset (background,
-   padding) beats the layered bg-alpha-0 / pr-md / bg-fill-control utilities. */
-.sdiff-tree-row { padding-right:var(--cds-pad-md); background:var(--cds-alpha-0); border-radius:var(--cds-radius); color:var(--cds-text-primary);
-  font-size:var(--cds-font-size-body); line-height:var(--cds-leading-body); }
-.sdiff-tree-row:hover { background:var(--cds-fill-ghost-hover); }
-.sdiff-tree-row[aria-current], .sdiff-tree-row[aria-current]:hover { background:var(--cds-fill-control); }
-.sdiff-tree-row:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+/* R3-files FT-07: the column's edge is the official border-e (c44d00c7f, colour from the c6a992d55 base layer) and the
+   Changed files rows carry the 2.42304.0 ca7840910 row classes; with D26's layered button reset nothing here restates
+   them (an unlayered background would also hide the rows' --file-tree-kept-guides / --file-tree-guides images). */
+/* c44d00c7f Jr's path tooltips ask for max-w-[min(480px,var(--available-width))] (c0fbbe82d mn); the host tooltip
+   (SourceTooltip) keeps 240px on its positioner and popup unlayered and has no Floating UI size middleware, so the cap is
+   restated here for those popups, with the viewport less SourceTooltip's 5px collision padding on each side standing in
+   for --available-width. */
+.source-tooltip-positioner:has(> .source-tooltip-popup[class~="max-w-[min(480px,var(--available-width))]"]),
+.source-tooltip-popup[class~="max-w-[min(480px,var(--available-width))]"] { max-width: min(480px, 100vw - 10px); }
 /* B15 Commits section (c44d00c7f Zr/Kr/Wr): the same `button` reset beats the rows' layered px-xs py-[6px],
    text-body, text-primary/secondary and the ce9ca5630 a/c fills, so they are restated unlayered too.
    scroll-mt-(--cds-pad-md) (Kr) is in the 2.31226.0 c6a992d55 copy but not in the loaded one. */

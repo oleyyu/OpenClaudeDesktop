@@ -10,6 +10,6 @@ export function SourceFileMenuEntries({ entries, onSelect }) {
           <SourceFileMenuEntries entries={entry.items} onSelect={onSelect} />
         </SourceMenu.Popup>
       </SourceMenu.Submenu>
-    : <SourceMenu.Item key={index} disabled={entry.disabled} description={entry.description} onClick={() => onSelect(entry)}>{entry.label}</SourceMenu.Item>);
+    : <SourceMenu.Item key={index} disabled={entry.disabled} disabledReason={entry.disabledReason} description={entry.description} onClick={() => onSelect(entry)}>{entry.label}</SourceMenu.Item>);
 }
 

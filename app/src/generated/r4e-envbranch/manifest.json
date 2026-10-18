@@ -1,0 +1,70 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r4e-envbranch.mjs",
+  "adapterModule": "src/source-r4e-envbranch-adapters.mjs",
+  "modules": [
+    {
+      "target": "start-branch-missing.mjs",
+      "sha256": "8cebec4450c38803c739c5f4a66aeea44a58188c9a10b16a7180c5ba7649b1d5",
+      "sources": {
+        "cc43287c9-DAfOi8yP.js": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+        "cc0051c10-pi8fKHOz.js": "da8ab6ee87808d5a6c6e17b4233ec2f19bdd705c4aca1813d9865b70a102c2ba"
+      },
+      "bindings": [
+        {
+          "file": "cc43287c9-DAfOi8yP.js",
+          "name": "qZ",
+          "sha256": "796e9a899f3afbbdd39a9646b6ed5db0494dbd2d81ba132b3de1675b93a56723",
+          "exportedAs": "startBranchMissing"
+        },
+        {
+          "file": "cc0051c10-pi8fKHOz.js",
+          "name": "te.branchMissing",
+          "sha256": "c5a1781ad4046f488c5192c76e365622e939940cbbb1e20fcd8089c27d2ad7f0",
+          "exportedAs": "branchMissingMessage"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J",
+          "name": "LocalSessions",
+          "from": "../../source-r4e-envbranch-adapters.mjs",
+          "via": "./shared-0-ByI5P0CP.js:Om (Ix)"
+        }
+      ],
+      "callSites": {
+        "JZ": {
+          "sha256": "65e03d530e1df963ff2817308e3abf5c8cf85c0fdb7096fb4449b4b124511f5e",
+          "needles": [
+            "let Te=A(async(e,t)=>{let n={target:t};_e(n);let r=!0;try{J?.checkBranchSwitchConflict?r=await J.checkBranchSwitchConflict(e,t):J?.isWorkingTreeDirty&&(r=await J.isWorkingTreeDirty(e))}catch{}let i=r&&await qZ(e,t,B);",
+            "if(ye(n),ue.current===e&&we.current===t){if(i){M(void 0),pe(void 0);let e=de.current,{environments:n,selectedEnvironmentId:r}=$P.getState();f(u.formatMessage(FA.branchMissing,{branch:t,known:e?\"yes\":\"no\",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?\"yes\":\"no\"}),{uniqueKey:`branch-missing:${t}`})}else r?pe(t):M(t)}",
+            "G=A(e=>{if(we.current=e,!k&&!l&&!ie&&!p&&e!==void 0&&e!==L&&ee!==!1){",
+            "r.trusted?await Te(t,e)",
+            "_e(void 0),M(e)},[",
+            "{addError:d,addWarning:f}=Ao()",
+            "{branches:R,isAvailable:z,refetch:B}=yC(h,m)",
+            "ue=_(n),de=_(L);P(()=>{ue.current=n,de.current=L},[n,L])",
+            "handleSelectSourceBranch:G,"
+          ]
+        },
+        "me": {
+          "in": "y4",
+          "needle": "me=(t,n,r)=>{let i=n.kind===\"ssh\"||n.kind===\"local\"&&!!n.wslDistro,a=t.worktree??e.settings.worktree.preference,o=n.kind===\"local\"&&!!n.variant,s=i&&!a||o?void 0:t.branch;!s&&e.branch&&!r?e.onSelectBranch(void 0):s&&e.branch!==s&&e.onSelectBranch(s)}"
+        },
+        "onSelectBranch": {
+          "in": "Mte",
+          "needle": "onSelectBranch:q.setSourceBranch,"
+        },
+        "setSourceBranch": {
+          "in": "_Q",
+          "needle": "setSourceBranch:Cn,"
+        },
+        "stableHandler": {
+          "in": "_Q",
+          "needle": "Cn=Lt(Yt);"
+        }
+      }
+    }
+  ]
+}

@@ -30,6 +30,7 @@
  *                          and it asks for a Bash approval ('1:call_bg1'); the answer is logged ('bg-agent-approval')
  *              "gemini-mcp-error"  a failed MCP call whose text is Gemini CLI's "reported tool error …" wrapping
  *              "quota-usage"  usage only in the PromptResponse's _meta.quota (Gemini's shape)
+ *              "slow <ms>"  a chunk, then another every 200 ms for <ms>, then end_turn (a long-running model turn)
  *              "kimi-sub-bash <command>" / "kimi-sub-write <path>"  a Kimi sub-agent's permission request (tool name
                           only; its call in the sub-agent's interaction.request record); the outcome is echoed
               "kimi-bg-ask"  a background AskUserQuestion: the turn ends with the question open; the answer is logged
@@ -404,6 +405,12 @@ async function prompt(params) {
     return { stopReason: 'end_turn' }
   }
   // Usage only in the PromptResponse (Gemini's _meta.quota), as Gemini CLI reports it.
+  if (text.startsWith('slow ')) {
+    const until = Date.now() + Number(text.slice(5))
+    chunk(id, 'working')
+    while (Date.now() < until) { await sleep(200); chunk(id, '.') }
+    return { stopReason: 'end_turn' }
+  }
   if (text === 'quota-usage') {
     chunk(id, 'counted')
     return { stopReason: 'end_turn', _meta: { quota: { token_count: { input_tokens: 100, output_tokens: 10 }, model_usage: [{ model: session?.model ?? 'm-plain' }] } } }

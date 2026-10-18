@@ -85,3 +85,17 @@ test('a comment on a line the diff no longer shows moves to the last row (outdat
   assert.ok(html.indexOf('data-comment-line="3"') < html.indexOf('data-comment-key="additions:40"'));
   assert.doesNotMatch(html, /Outdated/, 'a partial patch: the line may still exist past the last hunk');
 });
+
+// FT-10 (diffgit-16/17, 2.42304.0): the card's field and the chip use the Escape-repeat suppression (controlled events in
+// tests/files-changes-current.test.mjs); the body menu takes c82eca2bd Be as its Popup onContextMenu.
+test('the comment field and the selection chip are wired to the 2.42304.0 Escape handling; the body menu blocks the native menu', async () => {
+  const fsm = await import('node:fs');
+  const read = (file) => fsm.readFileSync(path.resolve(import.meta.dirname, '..', file), 'utf8');
+  const card = read('src/source-file-comments.jsx'), body = read('src/source-diff-comments.jsx');
+  assert.match(card, /onKeyDown=\{event=>commentFieldKeyDown\(event,\{save,cancel\}\)\}/);
+  assert.match(card, /else if\(event\.key==='Escape'\)\{event\.preventDefault\(\);const view=ownerWindow\(event\.currentTarget\);if\(view\)suppressEscapeRepeat\(view\);cancel\(\);\}/);
+  assert.match(body, /const key = selectionChipEscape\(doc, hide\);/);
+  assert.match(body, /onContextMenu=\{preventContextMenu\}/);
+  const html = render({ commentScope: 'scope-wiring' });
+  assert.match(html, /class="sdiff-file-body"[^>]*data-diff-body-menu-trigger=""/);
+});

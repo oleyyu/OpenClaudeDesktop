@@ -17,15 +17,18 @@ test("loadStats() starts in the mount effect beside init() and home-shape, not a
   assert.match(mount, /^ {4}init\(\);\n[\s\S]*loadStats\(\);\n\s*$/, "the mount effect calls loadStats() right after starting init()");
   // The 'stats' push event still refreshes the snapshot after turns, and Retry reloads it.
   assert.match(main, /e\.kind === "stats" && e\.stats && Array\.isArray\(e\.stats\.dailyActivity\)\) setStatsSnapshot\(e\.stats\)/);
-  assert.match(main, /onRetry=\{loadStats\}/);
+  assert.doesNotMatch(main, /<SourceStatsCard/, "presets replaces the home stats view");
   assert.equal(main.match(/loadStats\(\);/g)?.length, 1, "one load per mount");
 });
 
 // F09: the card renders the original stats object only (no account/ledger mixing),
 // and its hold skeleton's reveal counts from the home mount (Zk Lo startedAt).
-test("the stats card takes the stats object and the home mount time; account usage is gone", async () => {
+test("presets home uses saved environments; the standalone stats renderer still uses core stats", async () => {
   const main = await fs.readFile(path.join(root, "src/main.jsx"), "utf8");
-  assert.match(main, /<SourceStatsCard stats=\{statsSnapshot\} startedAt=\{homeStartedAt\} /);
+  const start = main.slice(main.indexOf('<SourceCodeStart'), main.indexOf('<SourceCodeStart') + 600);
+  assert.match(start, /ready=\{sessionsLoaded && recentFolderFields !== null && detectedProjects !== null && savedEnvironments.ready\}/);
+  assert.match(start, /savedEnvironments=\{savedEnvironments.environments\}/);
+  assert.match(start, /onSelectEnvironment=\{selectSavedEnvironment\}/);
   assert.match(main, /const homeStartedAt = useHomeStartedAt\(section === "new" && !current\);/);
   assert.doesNotMatch(main, /readAccountUsage=|accountIdentity=|accountPending=/);
   const home = await fs.readFile(path.join(root, "src/source-home.jsx"), "utf8");

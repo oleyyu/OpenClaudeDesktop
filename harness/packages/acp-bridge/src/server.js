@@ -61,6 +61,8 @@ const REPLAY_WAIT_MS = 30000
 const AGENT_TURN_QUIET_MS = 2500
 const AGENT_TURN_STALL_MS = 90000
 const AGENT_WORK_UPDATES = new Set(['agent_message_chunk', 'agent_thought_chunk', 'tool_call', 'tool_call_update'])
+/** How often a running turn's usage is read for an agent that reports it only at the turn's end (adapter.liveUsageMs: its own). */
+const LIVE_USAGE_MS = 2000
 
 const seconds = (ms) => Math.floor((ms ?? Date.now()) / 1000)
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -481,6 +483,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     if (!state || thread.prompt) return
     clearTimeout(state.timer)
     thread.agentTurn = null
+    clearTimeout(thread.liveUsage?.timer)
+    thread.liveUsage = null
     thread.agentTurnUntil = state.idleClose && status === 'completed' ? Date.now() + 60000 : 0
     abortTurnRequests(thread, 'Turn ended.')
     const turn = thread.projector.activeTurn
@@ -1117,6 +1121,33 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     return thread.projector.turns.some((turn) => turn !== active && turn.id !== active?.id && (turn.items ?? []).some((item) => item?.id === id))
   }
 
+  /**
+   * A running turn's tokens so far, for an agent that reports a turn's usage only once it ends: what it recorded so far
+   * (adapter.liveTurnUsage: Gemini's session file, Kimi's logs, MiniMax's usage table; sync or async), else the usage
+   * frames the turn added up (Qwen). Read at most every LIVE_USAGE_MS while the agent works and published as provisional
+   * totals (what the thread had plus the turn so far), so a workflow card counts while its agents run. thread.usage is
+   * left alone: the turn's own totals replace these when it ends.
+   */
+  function scheduleLiveUsage(thread) {
+    // A prompted turn, or one the agent started itself (Qwen's cron and /loop runs, Kimi's task turns).
+    const running = () => thread.prompt ?? thread.agentTurn ?? null
+    const turn = running()
+    if (!turn || thread.liveUsage?.timer) return
+    const live = thread.liveUsage ??= { tokens: 0, timer: null }
+    live.timer = setTimeout(async () => {
+      let reported = null
+      try { reported = adapter.liveTurnUsage ? await adapter.liveTurnUsage(ctx, thread, { since: turn.startedAtMs }) : thread.usage.turn ? { usage: thread.usage.turn } : null } catch (error) { log(`live usage: ${error?.message ?? error}`) }
+      live.timer = null
+      if (running() !== turn) return
+      const usage = normalizeUsage(reported?.usage)
+      if (!usage || usage.totalTokens <= live.tokens) return
+      live.tokens = usage.totalTokens
+      const tokenUsage = threadTokenUsage({ total: addUsage(thread.usage.total, usage), last: usage, contextUsed: reported.contextUsed ?? thread.usage.contextUsed ?? null, contextWindow: thread.usage.contextWindow ?? adapter.contextWindow?.(thread.model) ?? null })
+      notify('thread/tokenUsage/updated', { threadId: thread.id, turnId: thread.projector.activeTurn?.id ?? '', tokenUsage })
+    }, adapter.liveUsageMs ?? LIVE_USAGE_MS)
+    live.timer.unref?.()
+  }
+
   function onUpdate(thread, rawUpdate) {
     thread.lastUpdateAt = Date.now()
     const filtered = adapter.filterUpdate ? adapter.filterUpdate(rawUpdate, thread) : { update: rawUpdate }
@@ -1129,6 +1160,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     if (!filtered.drop && !thread.suppress && !thread.prompt && !thread.projector.activeTurn && thread.agentTurnUntil > Date.now() && AGENT_WORK_UPDATES.has(rawUpdate?.sessionUpdate)) startAgentTurn(thread, { idleClose: true })
     if (thread.agentTurn?.idleClose) armAgentTurnClose(thread, Boolean(filtered.usage))
     if (filtered.usage) thread.usage.turn = addUsage(thread.usage.turn, normalizeUsage(filtered.usage))
+    if (!thread.suppress && AGENT_WORK_UPDATES.has(rawUpdate?.sessionUpdate)) scheduleLiveUsage(thread)
     if (filtered.mode) { if (filtered.mode === adapter.modeIds?.plan && thread.acp.mode !== filtered.mode && !isReadOnlyMode(thread.permission.mode)) agentEnteredPlan(thread); thread.acp.mode = filtered.mode }
     if (filtered.compaction && !thread.suppress) onCompaction(thread, filtered.compaction)
     if (filtered.goal !== undefined && !thread.suppress) applyGoal(thread, filtered.goal)
@@ -2297,6 +2329,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     let note = turnNote
     const state = thread.prompt
     thread.prompt = null
+    clearTimeout(thread.liveUsage?.timer)
+    thread.liveUsage = null
     abortTurnRequests(thread, 'Turn ended.')
     fillTurnArguments(thread)
     const turn = thread.projector.activeTurn
@@ -2318,7 +2352,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     if (!note && thread.pendingNote && turn && status === 'completed') { note = thread.pendingNote; thread.pendingNote = null }
     if (note && turn && status === 'completed') {
       const notes = []
-      thread.projector.pushItem(notes, turn, { type: 'agentMessage', id: thread.projector.nextId('note'), text: `_${note}_`, phase: null, memoryCitation: null, delivery: null, questions: null })
+      thread.projector.pushItem(notes, turn, { type: 'agentMessage', id: thread.projector.nextId('note'), text: `_${note}_`, phase: 'commentary', memoryCitation: null, delivery: null, questions: null })
       emit(notes)
     }
     if (error) notify('error', { error, willRetry: false, threadId: thread.id, turnId })
@@ -2355,7 +2389,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     }
     if (!adapter.settleUsage) {
       let reported = null
-      try { reported = adapter.turnUsage?.(result, { ctx, thread }) ?? null } catch (error) { log(`turn usage: ${error?.message ?? error}`) }
+      try { reported = adapter.turnUsage?.(result, { ctx, thread, since: state?.startedAtMs }) ?? null } catch (error) { log(`turn usage: ${error?.message ?? error}`) }
       recordUsage(reported)
       if (holdCompletion) {
         if (thread.usage.last) thread.publishUsage(turnId)

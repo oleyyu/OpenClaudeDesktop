@@ -1,0 +1,7 @@
+/* R3-home. The environment picker's official popup widths are layered utilities on the host SourceMenu.Popup, whose
+   unlayered .smenu-popup min-width (source-menu.css) would win: h2's SearchablePopup "min-w-[260px]" and its More
+   popups' s2 "min-w-[220px]" (cc43287c9). */
+.smenu-popup.environment-picker-popup,
+.smenu-popup.environment-picker-more { min-width: revert-layer; }
+/* cd8823d73 ge's popupClassName "w-max min-w-48 max-w-96" on the host popup of the Folders field's "+ Add" Select. */
+.smenu-popup.environment-select-popup { min-width: revert-layer; max-width: revert-layer; }

@@ -63,11 +63,11 @@ test('the main window and pane windows share the writer; pane windows get the sa
   assert.match(emitConfig, /for \(const entry of popouts\.values\(\)\)[\s\S]*kind: "config-updated"/);
 });
 
-// B38: c6a992d55-C0zTICcS.css [data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:15px;--chat-leading:1.46667};
+// B38: c6a992d55-sXiDGMFQ.css [data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:15px;--chat-leading:1.46667};
 // Small keeps the 1.42857 leading, and the turn/item gaps follow both variables.
 test('transcript text size Large is 15px over 1.46667, like the reference', () => {
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-settings.css'), 'utf8');
-  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-C0zTICcS.css'), 'utf8');
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
   assert.ok(official.includes('[data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:calc(.9375rem * var(--cds-rem-scale,1));--chat-leading:1.46667}'));
   assert.ok(css.includes('html[data-local-transcript-size=l] .source-transcript-content { --chat-body:15px; --chat-leading:1.46667; }'));
   assert.ok(css.includes('html[data-local-transcript-size=s] .source-transcript-content { --chat-body:13px; }'));

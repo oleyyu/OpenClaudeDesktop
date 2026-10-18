@@ -553,4 +553,7 @@ export default {
   "Remove skill?": "移除技能？",
   "Last updated: {when}": "上次更新：{when}",
   "This plugin’s commands and skills will no longer be available. You can add it back later.": "此插件的命令和技能将不再可用。你之后可以重新添加它。",
+  // R4e-plugin: plugin page Overview (c12456454 / cae01a6fc) and the Tool permissions tab label (c24c8737b Ks).
+  "Connectors & tools": "连接器与工具",
+  "Tool permissions": "工具权限",
 };

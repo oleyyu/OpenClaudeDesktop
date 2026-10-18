@@ -112,10 +112,12 @@ test('F13 plugin and SKILL.md skeletons follow c9d36aa51 and customize-skill-det
   // An error keeps the page with the alert instead of the skeleton.
   const failed = renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: { id: 'p', name: 'P', enabled: true }, detail: null, error: 'Read failed', skills: [], view: null, onView() {}, onBack() {}, onSkill() {} }));
   assert.match(failed, /role="alert">Read failed/); assert.doesNotMatch(failed, /plugin-page-skeleton/);
-  // A plugin with no skills or agents: c36b3644c D copy in "flex flex-col items-center gap-2 px-6 py-10 text-center".
+  // A plugin with no skills or agents: 2.42304.0 c24c8737b pc Kt still lists the unconditional Overview (settings-14);
+  // no 2.42304.0 chunk has the old c36b3644c "doesn’t have any skills or agents" empty state.
   const none = renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: { id: 'p', name: 'P', enabled: true }, detail: {}, skills: [], view: null, onView() {}, onBack() {}, onSkill() {} }));
-  assert.match(none, /<div class="flex flex-col items-center gap-2 px-6 py-10 text-center" data-plugin-empty=""><span class="font-base text-secondary">This plugin doesn’t have any skills or agents\.<\/span><\/div>/);
-  assert.doesNotMatch(none, /No skills, hooks, or MCP servers were reported|cz-empty/);
+  assert.deepEqual([...none.matchAll(/role="tab"[^>]*>([^<]*)</g)].map(m => m[1]), ['Overview']);
+  assert.match(none, /role="tabpanel"[^>]*><div class="-mx-6" data-plugin-overview="">/);
+  assert.doesNotMatch(none, /No skills, hooks, or MCP servers were reported|cz-empty|data-plugin-empty|doesn’t have any skills or agents/);
   // SKILL.md loading: p-3 around one full-width 200px rounded-md shimmer bar, one sr-only Loading.
   const skills = [{ id: 'a', name: 'fx-alpha', skillName: 'fx-alpha', path: '/a/SKILL.md', scope: 'user', enabled: true }];
   const snapshot = { skills: { skills, errors: [], status: 'ready', cwd: '/fixture' }, plugins: { rows: [], status: 'ready', cwd: '/fixture' }, mcp: { rows: [], status: 'ready', cwd: '/fixture', threadId: null } };
@@ -207,8 +209,8 @@ test('F13 connector drill-in replaces the list with the page-shell drill and c08
   const gh = drill('gh');
   assert.match(gh, /^<div class="cz-page" data-cz-page="connectors" data-detail=""><div class="cz-drill" data-cz-detail="connector"><div class="cz-drill-header"><button [^>]*data-variant="ghost"[^>]*data-size="sm"[^>]*>.*?Connectors<\/span><\/button><\/div>/);
   assert.doesNotMatch(gh, /<table|<aside|cz-header|cz-detail"|Filter by status|cz-broken/);
-  // Connected: px-6 pb-6, N header (min-h-14 py-3 -mr-6 pr-md), 24/16 tile, h2 name, secondary Reconnect, Sn ⋮.
-  assert.match(gh, /<div class="px-6 pb-6" data-connector-view="connected"><div class="flex items-center justify-between min-h-14 py-3 -mr-6 pr-md"><div class="flex items-center gap-3 min-w-0"><span aria-hidden="true" class="cz-connector-tile">/);
+  // Connected: px-6 pb-6, N header (min-h-14 py-3 -me-6 pe-md), 24/16 tile, h2 name, secondary Reconnect, Sn ⋮.
+  assert.match(gh, /<div class="px-6 pb-6" data-connector-view="connected"><div class="flex items-center justify-between min-h-14 py-3 -me-6 pe-md"><div class="flex items-center gap-3 min-w-0"><span aria-hidden="true" class="cz-connector-tile">/);
   assert.match(gh, /<h2 class="font-large-bold text-primary \[overflow-wrap:anywhere\]">GitHub<\/h2>/);
   assert.match(gh, /<button type="button" data-cds="Button" data-variant="secondary" class="source-settings-button "[^>]*>.*?Reconnect<\/span><\/button><button aria-label="More options for GitHub" aria-haspopup="menu" aria-expanded="false" type="button" data-cds="Button" data-variant="ghost" data-cds-icon-only=""/);
   assert.match(gh, /<p class="font-base text-secondary">Repos and issues<\/p>/);
@@ -299,7 +301,7 @@ test('DeepSeek Skills: ObjectBulb empty state with the Harness roots, and the c9
   assert.doesNotMatch(detail, />Enabled<|disable-model-invocation|data-cds-disabled-reason/, 'no visible Enabled label or switch reason');
   assert.doesNotMatch(detail, /DeepSeek Harness has no per-skill switch|cz-muted|cz-skill-meta|cz-switch-row/);
   // Wrapper and header geometry classes (D isModal branch).
-  assert.match(detail, /<div class="cz-skill-detail flex flex-col h-full px-6 pb-6 gap-3"><div class="cz-skill-head flex justify-between min-h-14 items-center py-3 -mr-6 pr-md"><div class="flex flex-1 flex-col min-w-0"><div class="flex min-w-0 items-center gap-xs"><h2 class="min-w-0 font-large-bold text-primary truncate">figma<\/h2>/);
+  assert.match(detail, /<div class="cz-skill-detail flex flex-col h-full px-6 pb-6 gap-3"><div class="cz-skill-head flex justify-between min-h-14 items-center py-3 -me-6 pe-md"><div class="flex flex-1 flex-col min-w-0"><div class="flex min-w-0 items-center gap-xs"><h2 class="min-w-0 font-large-bold text-primary truncate">figma<\/h2>/);
   // wt order: primary sm Try in chat, then the ghost ⋮ "More options for figma" (no switch on this core).
   const actions = detail.match(/<div class="cz-skill-actions flex items-center gap-2">(.*?)<\/div><\/div><div class="cz-skill-facts/)[1];
   const order = [...actions.matchAll(/<button[^>]*?(?:aria-label="([^"]+)"[^>]*)?data-cds="(Button|Switch)"(?: data-variant="(\w+)")?[^>]*>/g)].map(match => match[2] === 'Switch' ? 'switch' : `${match[3]}:${match[1] ?? ''}`);
@@ -456,7 +458,8 @@ test('R04 connector feedback: no page paragraphs or inline confirm, and every ou
 test('R04 plugin drill: DeepSeek tab copy, c26958849 connector rows, the empty pe line and Last updated —', () => {
   const detail = { mcpServers: ['fx-off', 'fx-on'] };
   const mcp = { rows: [{ name: 'fx-on', title: 'Fixture On', kind: 'connected' }, { name: 'fx-off', title: 'fx-off', kind: 'signIn' }], loading: false };
-  const render = (props = {}) => renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: { id: 'p', name: 'P', enabled: true, source: 'git' }, detail, error: '', skills: [], view: null, onView() {}, onBack() {}, onSkill() {}, onConnector() {}, mcp, ...props }));
+  // settings-14: Kt opens on Overview (`qt=Kt.some(e=>e.id===U)?U:"overview"`), so the drill selects Connectors.
+  const render = (props = {}) => renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: { id: 'p', name: 'P', enabled: true, source: 'git' }, detail, error: '', skills: [], view: { tab: 'connectors', query: '' }, onView() {}, onBack() {}, onSkill() {}, onConnector() {}, mcp, ...props }));
   const html = render();
   assert.doesNotMatch(html, /Claude/);
   assert.match(html, /<p class="cz-plugin-tab-description">Tools and data sources this plugin connects to\. Connect each one so Codex can use it\.<\/p>/);
@@ -477,6 +480,6 @@ test('R04 plugin drill: DeepSeek tab copy, c26958849 connector rows, the empty p
   // c26e90ba3 qt: `!local && Last updated` with the muted "—".
   assert.match(html, /<div><span>Last updated<\/span><div><span class="text-muted">—<\/span><\/div><\/div>/);
   assert.doesNotMatch(render({ plugin: { id: 'p', name: 'P', enabled: true, source: 'local' } }), /Last updated/);
-  const skills = renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: { id: 'p', name: 'P', enabled: true, source: 'local' }, detail: { skills: [{ name: 'a' }] }, error: '', skills: [], view: null, onView() {}, onBack() {}, onSkill() {} }));
+  const skills = renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: { id: 'p', name: 'P', enabled: true, source: 'local' }, detail: { skills: [{ name: 'a' }] }, error: '', skills: [], view: { tab: 'skills', query: '' }, onView() {}, onBack() {}, onSkill() {} }));
   assert.match(skills, /Invoke by typing \/ in chat, or let Codex use them automatically for relevant tasks\./);
 });

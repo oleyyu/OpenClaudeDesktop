@@ -163,3 +163,164 @@ test('runner uses Cowork policies, registers before sending and refuses model/co
   host = { ...host, coreId: 'fixture', models: [] };
   await assert.rejects(launch({ options }, { attach() {} }), /unavailable/);
 });
+
+// R4g-routines RT1 (research/r4-code-routines.md WI-1): Code and Cowork stores, worktree fields, missedRuns.
+test('legacy rows become Cowork rows without losing history; list filters by kind', async t => {
+  const f = await fixture(t);
+  const legacy = await f.create();
+  await f.service.request({ action: 'run', id: legacy.id });
+  const persisted = f.state().map(({ kind, ...row }) => row);
+  assert.equal(persisted[0].kind, undefined);
+  f.restore(persisted);
+  assert.deepEqual((await f.service.request({ action: 'list', kind: 'cowork' })).map(task => task.id), [legacy.id]);
+  f.service.start();
+  assert.equal(f.state()[0].kind, 'cowork');
+  assert.equal(f.state()[0].runs.length, 1);
+  const code = await f.create({ kind: 'code', folder: f.dataDir });
+  assert.equal(code.kind, 'code');
+  assert.deepEqual((await f.service.request({ action: 'list', kind: 'code' })).map(task => task.id), [code.id]);
+  assert.deepEqual((await f.service.request({ action: 'list', kind: 'cowork' })).map(task => task.id), [legacy.id]);
+  assert.equal((await f.service.request({ action: 'list' })).length, 2);
+  assert.deepEqual(f.service.list('code').map(task => task.id), [code.id]);
+  await assert.rejects(f.service.request({ action: 'list', kind: 'cloud' }), /kind/);
+  await assert.rejects(f.create({ kind: 'cloud' }), /kind/);
+  await assert.rejects(f.service.request({ action: 'update', id: legacy.id, name: 'x', prompt: 'y', cron: legacy.cron, kind: 'code' }), /move between Code and Cowork/);
+  const renamed = await f.service.request({ action: 'update', id: code.id, name: 'Renamed', prompt: 'y', cron: code.cron });
+  assert.equal(renamed.kind, 'code');
+});
+
+test('Code tasks need a folder and validate worktree source branches', async t => {
+  const f = await fixture(t);
+  await assert.rejects(f.create({ kind: 'code' }), /^Error: Select a folder\.$/);
+  await assert.rejects(f.create({ useWorktree: true }), /only available for Code/);
+  for (const sourceBranch of ['-main', 'a..b', 'feat/', 'a b', 'x.lock', 'a/.hidden', 'a@{1}', '@', 'a~1', 'a\\b', 'a//b'])
+    await assert.rejects(f.create({ kind: 'code', folder: f.dataDir, useWorktree: true, sourceBranch }), /valid branch/, sourceBranch);
+  await assert.rejects(f.create({ kind: 'code', folder: f.dataDir, useWorktree: 'yes' }), /worktree/);
+  const task = await f.create({ kind: 'code', folder: f.dataDir, useWorktree: true, sourceBranch: 'feature/x-1' });
+  assert.equal(task.cwd, f.dataDir);
+  assert.equal(task.useWorktree, true);
+  assert.equal(task.sourceBranch, 'feature/x-1');
+  assert.deepEqual(task.missedRuns, []);
+  const kept = await f.service.request({ action: 'update', id: task.id, name: task.name, prompt: task.prompt, cron: task.cron });
+  assert.equal(kept.cwd, f.dataDir); assert.equal(kept.sourceBranch, 'feature/x-1');
+  const plain = await f.service.request({ action: 'update', id: task.id, name: task.name, prompt: task.prompt, cron: task.cron, useWorktree: false });
+  assert.equal(plain.useWorktree, false); assert.equal('sourceBranch' in plain, false);
+  const current = await f.service.request({ action: 'update', id: task.id, name: task.name, prompt: task.prompt, cron: task.cron, useWorktree: true, sourceBranch: '' });
+  assert.equal(current.useWorktree, true); assert.equal('sourceBranch' in current, false);
+  const cowork = await f.create();
+  assert.equal(cowork.kind, 'cowork'); assert.equal('useWorktree' in cowork, false);
+});
+
+test('missedRuns record overlap, restart and sleep skips, newest first and at most 50', async t => {
+  let release;
+  const f = await fixture(t, async (task, { attach }) => { attach('thread'); await new Promise(resolve => { release = resolve; }); });
+  f.service.start(); const task = await f.create();
+  const first = task.nextRunAt;
+  f.setTime(first); const pending = f.service.tick();
+  f.setTime(first + 60000); await f.service.tick();
+  assert.deepEqual(f.state()[0].missedRuns, [{ time: new Date(first + 60000).toISOString(), reason: 'per_task_limit' }]);
+  f.service.observe({ method: 'turn/completed', params: { threadId: 'thread', turn: { id: 'turn', status: 'completed' } } });
+  release(); await pending;
+  // A late timer (sleep) runs the latest occurrence and records the one before it.
+  const deadline = f.state()[0].nextRunAt;
+  f.setTime(deadline + 5 * 60000 + 30000);
+  const late = f.service.tick(); release(); await late;
+  assert.equal(f.state()[0].missedRuns[0].time, new Date(deadline + 4 * 60000).toISOString());
+  assert.equal('reason' in f.state()[0].missedRuns[0], false);
+  // Restart: the latest occurrence while the app was closed, without a reason.
+  const persisted = f.state(); const closed = persisted[0].nextRunAt;
+  const again = await fixture(t);
+  again.restore(persisted.map(row => ({ ...row, runs: [] }))); again.setTime(closed + 3 * 3600000); again.service.start();
+  assert.equal(again.state()[0].missedRuns[0].time, new Date(closed + 3 * 3600000).toISOString());
+  assert.equal(again.state()[0].missedRuns.length, 3);
+  // Cap and 7-day window.
+  const old = Array.from({ length: 60 }, (_, index) => ({ time: new Date(again.now() - (index + 1) * 60000).toISOString() }));
+  again.restore([{ ...again.state()[0], missedRuns: [...old, { time: new Date(again.now() - 8 * 864e5).toISOString() }], nextRunAt: again.now() - 1 }]);
+  const restarted = await fixture(t); restarted.restore(again.state()); restarted.setTime(again.now()); restarted.service.start();
+  assert.equal(restarted.state()[0].missedRuns.length, 50);
+  assert.equal(restarted.state()[0].missedRuns[0].time, new Date(again.now()).toISOString());
+});
+
+test('a one-shot missed while closed is recorded at its fire time', async t => {
+  const f = await fixture(t); const task = await f.create({ cron: '', fireAt: f.now() + 60000 });
+  const persisted = f.state(); f.setTime(task.fireAt + 3600000); f.restore(persisted); f.service.start();
+  assert.deepEqual(f.state()[0].missedRuns, [{ time: new Date(task.fireAt).toISOString() }]);
+  assert.equal(f.state()[0].enabled, false);
+});
+
+test('scheduled launch failures before a session are missed runs; Code Run now rethrows the launch error', async t => {
+  let failure = new Error('Folder not found: /gone [ccdErrorCategory:cwd_not_found]'), attachFirst = false;
+  const f = await fixture(t, async (task, { attach }) => { if (attachFirst) attach('thread'); throw failure; });
+  f.service.start();
+  const code = await f.create({ kind: 'code', folder: f.dataDir });
+  f.setTime(code.nextRunAt); await f.service.tick();
+  const row = () => f.state().find(task => task.id === code.id);
+  assert.equal(row().runs[0].status, 'failed');
+  assert.equal(row().runs[0].error, failure.message);
+  assert.deepEqual(row().missedRuns, [{ time: new Date(code.nextRunAt).toISOString(), reason: 'folder_missing', detail: failure.message }]);
+  failure = new Error('The core is not connected.');
+  f.setTime(row().nextRunAt); await f.service.tick();
+  assert.equal(row().missedRuns[0].reason, 'start_failed');
+  assert.equal(row().missedRuns.length, 2);
+  attachFirst = true; failure = new Error('turn/start failed');
+  f.setTime(row().nextRunAt); await f.service.tick();
+  assert.equal(row().missedRuns.length, 2, 'a failure after the session exists is shown in History, not as a missed run');
+  assert.equal(row().runs[0].threadId, 'thread');
+  attachFirst = false; failure = new Error('Folder not found: /gone [ccdErrorCategory:cwd_not_found]');
+  await assert.rejects(f.service.request({ action: 'run', id: code.id }), error => error === failure);
+  assert.equal(row().runs[0].trigger, 'manual');
+  assert.equal(row().runs[0].status, 'failed');
+  assert.equal(row().missedRuns.length, 2);
+  const cowork = await f.create({ name: 'Cowork brief' });
+  const run = await f.service.request({ action: 'run', id: cowork.id });
+  assert.equal(run.status, 'failed'); assert.equal(run.error, failure.message);
+});
+
+// R4g-routines RT6 (WI-6, hostGap 7): a Code task's Always allowed rules (routine-approvals.mjs adds them from main only).
+test('Code tasks keep Always allowed rules: main adds them, remove-approval removes by the official key', async t => {
+  const f = await fixture(t);
+  const code = await f.create({ kind: 'code', folder: f.dataDir });
+  const rule = { toolName: 'Bash', ruleContent: 'npm test', cwd: '' };
+  assert.equal(f.service.rememberApproval(code.id, rule), true);
+  assert.equal(f.service.rememberApproval(code.id, { ...rule }), false, 'the same rule is stored once');
+  assert.equal(f.service.rememberApproval(code.id, { ...rule, cwd: 'pkg' }), true, 'another folder is another rule');
+  assert.equal(f.service.rememberApproval(code.id, { ...rule, ruleContent: 'npm run lint', escalation: 'danger-full-access' }), true);
+  for (const invalid of [{ toolName: 'Edit', ruleContent: 'x', cwd: '' }, { toolName: 'Bash', cwd: '' }, { ...rule, cwd: '../up' },
+    { ...rule, cwd: '/abs' }, { ...rule, ruleContent: 'a\0b' }, { ...rule, escalation: 'x y' }, null])
+    assert.equal(f.service.rememberApproval(code.id, invalid), false, JSON.stringify(invalid));
+  const cowork = await f.create({ name: 'Cowork brief' });
+  assert.equal(f.service.rememberApproval(cowork.id, rule), false, 'Cowork tasks keep no rules');
+  assert.equal(f.service.rememberApproval('missing', rule), false);
+  const row = () => f.state().find(task => task.id === code.id);
+  assert.deepEqual(row().approvedPermissions.map(({ approvedAt, ...value }) => (assert.equal(approvedAt, f.now()), value)), [
+    rule, { ...rule, cwd: 'pkg' }, { toolName: 'Bash', ruleContent: 'npm run lint', cwd: '', escalation: 'danger-full-access' }]);
+  // The renderer cannot add a rule: there is no such request action.
+  await assert.rejects(f.service.request({ action: 'add-approval', id: code.id, ...rule }), /Unknown scheduled task operation/);
+  // Edits in the same folder keep them.
+  const edited = await f.service.request({ action: 'update', id: code.id, name: 'Renamed', prompt: code.prompt, cron: code.cron, folder: f.dataDir });
+  assert.equal(edited.approvedPermissions.length, 3);
+  await assert.rejects(f.service.request({ action: 'remove-approval', id: code.id }), /approval to remove/);
+  await assert.rejects(f.service.request({ action: 'remove-approval', id: 'missing', toolName: 'Bash' }), /not found/);
+  // The official key (toolName\0ruleContent) removes both folders' rules for that command.
+  const removed = await f.service.request({ action: 'remove-approval', id: code.id, toolName: 'Bash', ruleContent: 'npm test' });
+  assert.deepEqual(removed.approvedPermissions.map(value => value.ruleContent), ['npm run lint']);
+  assert.equal((await f.service.request({ action: 'remove-approval', id: code.id, toolName: 'Bash', ruleContent: 'nothing' })).approvedPermissions.length, 1);
+  // No ruleContent removes every rule of the tool; the field goes with the last one.
+  const cleared = await f.service.request({ action: 'remove-approval', id: code.id, toolName: 'Bash' });
+  assert.equal('approvedPermissions' in cleared, false);
+  assert.equal('approvedPermissions' in row(), false);
+  // A task moved to another folder loses its rules.
+  const other = await fs.mkdtemp(path.join(os.tmpdir(), 'local-routines-other-'));
+  t.after(() => fs.rm(other, { recursive: true, force: true }));
+  const g = await (async () => {
+    let state = structuredClone(f.state());
+    const service = createLocalRoutines({ getState: () => state, commit: value => { state = structuredClone(value); }, dataDir: f.dataDir,
+      approveFolder: value => value, captureOptions: async () => f.options, launch: async () => {}, now: f.now, setTimer: () => 1, clearTimer: () => {} });
+    t.after(() => service.dispose());
+    return { service, state: () => state };
+  })();
+  g.service.rememberApproval(code.id, rule);
+  const moved = await g.service.request({ action: 'update', id: code.id, name: 'Renamed', prompt: code.prompt, cron: code.cron, folder: other });
+  assert.equal(moved.cwd, other);
+  assert.equal('approvedPermissions' in moved, false);
+});

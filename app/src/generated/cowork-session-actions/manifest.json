@@ -1,0 +1,203 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-cowork-session-actions.mjs",
+  "adapterModule": "src/source-cowork-session-actions-adapters.jsx",
+  "modules": [
+    {
+      "target": "refusal.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "a56ffe60851ce27c31a0a803859f2767d74085d53f104292ff3fcd2de4f39aba",
+      "bindings": [
+        {
+          "name": "By",
+          "sha256": "f5eee98fcfeee266118c96bca19f92319b412e743644ffdeae69df97d79dffe2"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "By": "LocalRewindRefusal"
+      },
+      "features": {
+        "By": [
+          "e.Dead = \"dead\"",
+          "e.NoText = \"no_text\"",
+          "e.Unsupported = \"unsupported\"",
+          "e.Unknown = \"unknown\""
+        ]
+      }
+    },
+    {
+      "target": "error-text.mjs",
+      "source": "preload-helper-D0dM6GpB.js",
+      "sourceSha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
+      "sha256": "364d04af0f8445f5ee0fbd283aae41524c73b6138c877306a922a92c976bf297",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "ae3a24deb2952bf4ae6ec64cd91df0be80ff083fa511d11220eebc272b2d36cf"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "withErrorText"
+      },
+      "features": {
+        "e": [
+          "Symbol.for(\"ant.o11y.errorText\")",
+          "value: { text: t, kind: n }"
+        ]
+      }
+    },
+    {
+      "target": "rewind-bridge.mjs",
+      "source": "cb1e253a0-DQ4zAGBV.js",
+      "sourceSha256": "2d818a45475391045b142f7f6971449d7f6dbff62496639c9dcc2b285261542c",
+      "sha256": "84e93be4e1a01ae6461e663d5cdefb981bfa61bccdc1e1a1b95f6d41a62f4671",
+      "bindings": [
+        {
+          "name": "gm",
+          "sha256": "a5490949bf732815e860ab3414743e888ddf8c96826c1bf5070882a6bc7d938b"
+        },
+        {
+          "name": "vm",
+          "sha256": "a53989d321e83ffeab065560f8be2ceb0248909b46cfda50e4167b3cafe64b16"
+        },
+        {
+          "name": "ym",
+          "sha256": "831a5cda391326ceaae7d23b58317fae8f4a80271d5cbeab930343d11273680e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "./error-text.mjs",
+          "name": "withErrorText",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "generated",
+          "original": "e"
+        },
+        {
+          "local": "H",
+          "from": "./refusal.mjs",
+          "name": "LocalRewindRefusal",
+          "via": "shared-0-ByI5P0CP.js:Ch",
+          "kind": "generated",
+          "original": "By"
+        }
+      ],
+      "exports": {
+        "vm": "hasRewindBridge",
+        "ym": "rewindLocalSession"
+      },
+      "features": {
+        "vm": [
+          "e?.rewindV2 ?? e?.rewind"
+        ],
+        "ym": [
+          "await e.rewindV2(t, r)",
+          "!gm.has(i) ? H.Unknown : i",
+          "await e.rewind(t, r)",
+          "\"rewind IPC unavailable\"",
+          "\"literal\""
+        ]
+      }
+    },
+    {
+      "target": "rewind-messages.mjs",
+      "source": "c21f11e6d-Bd0v2A97.js",
+      "sourceSha256": "1167d11da89ad839d4853976ef44ce1368a5a72223e64c7ec1c2522e56e9f341",
+      "sha256": "bf2c3a8b6022ea0ddc9b011f34e5d932bd1b674c2c58fb9c5ae0c251bc361ff7",
+      "bindings": [
+        {
+          "name": "cO",
+          "sha256": "3cd39b5f3420750ca4cda412d7db1aa1669e0e1281e02951685b8e538dc42ed1"
+        },
+        {
+          "name": "lO",
+          "sha256": "c30af95f55a95edc4c151d8dc7243659e255bc292e29246215acd0ce80cfe59e"
+        },
+        {
+          "name": "uO",
+          "sha256": "e0ea73b882c421126c00ab69680abb7f7d9b2805d52da63955f410bbda1e42d8"
+        },
+        {
+          "name": "dO",
+          "sha256": "4ecf4fec999ba731c747c86411828d698b78c131098983a05bfc4d6ee71c3baa"
+        },
+        {
+          "name": "dk",
+          "sha256": "9fb918122f90bc62a4b15179fc69ee47135e8f72cba5c818fa9506db6371fca0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ke",
+          "from": "./refusal.mjs",
+          "name": "LocalRewindRefusal",
+          "via": "shared-0-ByI5P0CP.js:Ch",
+          "kind": "generated",
+          "original": "By"
+        }
+      ],
+      "exports": {
+        "cO": "remoteRewindRejectionMessage",
+        "lO": "localRewindRefusalMessage",
+        "uO": "rewindFailureMessage",
+        "dO": "rewindOutcomeToast",
+        "dk": "lastHumanBubbleWhenRewindable"
+      },
+      "features": {
+        "cO": [
+          "case \"turn running\":",
+          "case \"commands queued\":",
+          "case \"stale target\":",
+          "case \"unseen later turn\":",
+          "case \"target not found\":",
+          "id: \"QfDweriZQj\"",
+          "id: \"N4pAEIJK4/\"",
+          "id: \"K1/egsMFpR\"",
+          "id: \"cnZntAZvlD\"",
+          "id: \"TW8yay5oV+\"",
+          "id: \"pcv56liZj9\""
+        ],
+        "lO": [
+          "case ke.Dead:",
+          "case ke.NoText:",
+          "case ke.Unsupported:",
+          "id: \"YmzbNCp+kq\"",
+          "id: \"/FZxzzWOs5\"",
+          "id: \"SC1NI+O8Y4\""
+        ],
+        "uO": [
+          "case \"restart\":",
+          "case \"refusal_retry\":",
+          "case \"edit\":",
+          "id: \"N6n//LvbO8\"",
+          "id: \"EMw1vE8dOU\"",
+          "id: \"fUE4seXTv0\""
+        ],
+        "dO": [
+          "let { surface: r } = t",
+          "case \"sent\":",
+          "case \"timeout\":",
+          "case \"rejected\":",
+          "case \"error\":",
+          "case \"empty\":",
+          "id: \"JAqfKwYq8j\"",
+          "id: \"SgdArTNAT/\"",
+          "id: \"kvjiUWTVfc\"",
+          "t.isRemoteSession",
+          "\"CoworkSessionView edit rewind timeout\"",
+          "cO(e.error.reason, n)",
+          "lO(e.refusal, n)"
+        ],
+        "dk": [
+          "e.canRewindToMessage",
+          "e.findLastHumanBubble()"
+        ]
+      }
+    }
+  ]
+}

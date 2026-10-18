@@ -166,10 +166,14 @@ async function waitCount(method, count) {
 // 0.2.103 usage trigger (c360a9e1c-GPs-MV9u.js:4065-4295 hd/_d; shared-14-BOJVa-jT.js:9700-9793 xT/ST/dT):
 // ghost icon-only button whose aria-label is Se and whose icon is the 12px xT ring.
 const usageTrigger = () => page.locator(".sc-chin .sc-usage-trigger");
+// R4i-gui GU1: the ring is the generated shared-8 KV (usage-ring.mjs UsageRing): circle[data-ring-track] then
+// circle[data-ring-arc]; an open session's presets row chin sizes it 14px on the alpha-4 track (source-composer.jsx
+// ringSize CONTEXT_RING_ROW_SIZE, context-usage-model.mjs:39-41), so r = (14 - 2) / 2 = 6.
+const RING = { size: 14, r: 6, track: "--cds-alpha-4" };
 async function usageRing() {
-  await page.waitForFunction(() => document.querySelector(".sc-usage-trigger .sc-context-ring-value")?.getAnimations().every(animation => animation.playState === "finished"));
+  await page.waitForFunction(() => document.querySelector(".sc-usage-trigger circle[data-ring-arc]")?.getAnimations().every(animation => animation.playState === "finished"));
   return page.evaluate(() => {
-    const button = document.querySelector(".sc-chin .sc-usage-trigger"), svg = button.querySelector("svg"), circles = [...svg.querySelectorAll("circle")], value = circles[1], box = svg.getBoundingClientRect();
+    const button = document.querySelector(".sc-chin .sc-usage-trigger"), svg = button.querySelector("svg"), circles = [svg.querySelector("circle[data-ring-track]"), svg.querySelector("circle[data-ring-arc]")], value = circles[1], box = svg.getBoundingClientRect();
     const resolve = variable => { const probe = document.createElement("span"); probe.style.color = `var(${variable})`; document.body.appendChild(probe); const color = getComputedStyle(probe).color; probe.remove(); return color; };
     return { label: button.getAttribute("aria-label"), title: button.getAttribute("title"), circles: circles.length, hidden: svg.getAttribute("aria-hidden"), viewBox: svg.getAttribute("viewBox"),
       width: box.width, height: box.height, rotate: getComputedStyle(svg).rotate, button: [button.getBoundingClientRect().width, button.getBoundingClientRect().height],
@@ -177,7 +181,7 @@ async function usageRing() {
       dasharray: Number(value?.getAttribute("stroke-dasharray")), offset: Number(value?.getAttribute("stroke-dashoffset")), computedOffset: parseFloat(getComputedStyle(value).strokeDashoffset),
       linecap: getComputedStyle(value).strokeLinecap, stroke: getComputedStyle(value).stroke, track: getComputedStyle(circles[0]).stroke,
       transition: [getComputedStyle(value).transitionProperty, getComputedStyle(value).transitionDuration],
-      accent: resolve("--cds-fill-accent"), alpha2: resolve("--cds-alpha-2") };
+      accent: resolve("--cds-fill-accent"), alpha2: resolve("--cds-alpha-4") };
   });
 }
 const stopButton = () => page.locator('[data-testid="code-prompt-stop"]:not([inert] *)');
@@ -185,19 +189,40 @@ const sendButton = () => page.locator('[data-testid="code-prompt-send"]:not([ine
 // 0.2.112 c099c328d sm crossfade: the outgoing Send/Stop layer stays mounted (inert, aria-hidden, om)
 // until its own visibility transition ends. Role locators already skip it; raw DOM probes and CSS
 // locators must target the active layer (a correction for the shared cell, not a loosening).
-const activeSlot = () => page.locator(".sc-submit-layer:not([data-leaving]) .sc-submit-slot");
+// R4i-gui GU1: the cell is the generated c227f4d5e lM (composer-send-cell.mjs): in the presets card
+// [data-testid="code-prompt-send-cell"] holds an inert size-control placeholder and a layer holding Ij, the crossfade
+// grid ("grid items-center justify-items-end") whose children are the layers (Nj "col-start-1 row-start-1 …"): the
+// active one (with Pj's motion-safe cds-fade-in once a swap happened) and, while it fades, the outgoing one (inert,
+// aria-hidden, Fj). The hovered slot is the active layer (its CdsTooltip trigger div.flex holds the button).
+const CROSSFADE = '[data-testid="code-prompt-send-cell"] > div:not([inert]) > div.grid';
+const activeSlot = () => page.locator(`${CROSSFADE} > div:not([inert])`);
+const cdsTip = () => page.locator('[data-cds="Tooltip"] [role="tooltip"]');
+// R4i-gui GU1 (R4g-composer CP4, R4i-graph GR3): the Code card's strip is c0fbbe82d Ri's 2.42304.0 tiles
+// (source-composer-tiles.jsx ComposerAttachmentTiles over chat-composer-attachments.mjs): each tile root carries
+// data-cds-attachment (rootProps hf) and data-cds MessageAttachmentsImage / MessageAttachmentsFile, data-state, and
+// aria-busy while pending (Cp: `C === "pending"`); the remove control is button[data-cds-attachment-remove] named
+// "Remove {item}" (dp); a file tile opens through its CdsCard.Link ([data-cds="CardLink"]), an image tile through its img.
+const IMAGE_TILE = '[data-cds-attachment][data-cds="MessageAttachmentsImage"]', FILE_TILE = '[data-cds-attachment][data-cds="MessageAttachmentsFile"]';
+const READY_IMAGE = `${IMAGE_TILE}:not([aria-busy])`;
+// lM's tooltip rows: sM spans (the label, then a [data-cds="Shortcut"] of kbd caps), or the single content + shortcut.
+const cdsTipRows = () => cdsTip().evaluate(node => {
+  const keys = scope => { const chip = scope?.querySelector('[data-cds="Shortcut"]'); return chip ? [...chip.querySelectorAll("kbd")].map(kbd => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join("") : null; };
+  const rows = [...node.querySelectorAll("span.inline-flex.flex-col > span")];
+  return rows.length ? rows.map(row => ({ label: row.childNodes[0]?.textContent ?? null, shortcut: keys(row) }))
+    : [{ label: [...node.querySelectorAll("span")].find(span => !span.closest('[data-cds="Shortcut"]') && span.children.length === 0)?.textContent ?? node.textContent, shortcut: keys(node) }];
+});
 // Arm a MutationObserver that, the moment the layer holding `leavingLabel` turns [data-leaving],
 // records both layers, pauses its transitions and finishes only the opacity one (so the resting
 // opacity is read while the 80ms visibility transition — the one that unmounts it — is still held).
 async function armSwap(leavingLabel) {
   await page.evaluate(leavingLabel => {
-    const cell = document.querySelector(".sc-submit-cell");
+    const cell = document.querySelector('[data-testid="code-prompt-send-cell"]');
     globalThis.__submitSwap = null; globalThis.__submitSwapHeld = [];
     const observer = new MutationObserver(() => {
-      const leaving = cell.querySelector(".sc-submit-layer[data-leaving]");
+      const leaving = cell.querySelector(':scope > div:not([inert]) > div.grid > [inert]');
       if (!leaving || leaving.querySelector("button")?.getAttribute("aria-label") !== leavingLabel) return;
       observer.disconnect();
-      const entering = cell.querySelector(".sc-submit-layer:not([data-leaving])"), style = getComputedStyle(leaving), enter = getComputedStyle(entering);
+      const entering = cell.querySelector(':scope > div:not([inert]) > div.grid > div:not([inert])'), style = getComputedStyle(leaving), enter = getComputedStyle(entering);
       const snapshot = { transition: style.transition, property: style.transitionProperty, duration: style.transitionDuration, delay: style.transitionDelay, pointer: style.pointerEvents };
       const animations = leaving.getAnimations(), opacity = animations.find(animation => animation.transitionProperty === "opacity");
       animations.forEach(animation => animation.pause()); opacity?.finish();
@@ -206,7 +231,7 @@ async function armSwap(leavingLabel) {
       leaving.addEventListener("transitionend", event => { if (event.target === leaving) globalThis.__submitSwapEnds.push(event.propertyName); });
       globalThis.__submitSwap = { leaving: { label: leavingLabel, inert: leaving.hasAttribute("inert"), hidden: leaving.getAttribute("aria-hidden"), ...snapshot,
           opacity: getComputedStyle(leaving).opacity, visibility: getComputedStyle(leaving).visibility, held: globalThis.__submitSwapHeld.map(animation => animation.transitionProperty) },
-        entering: { label: entering.querySelector("button")?.getAttribute("aria-label"), entering: entering.hasAttribute("data-entering"), inert: entering.hasAttribute("inert"),
+        entering: { label: entering.querySelector("button")?.getAttribute("aria-label"), entering: entering.className.includes("animate-[cds-fade-in"), inert: entering.hasAttribute("inert"),
           animation: enter.animationName, duration: enter.animationDuration, delay: enter.animationDelay, fill: enter.animationFillMode, easing: enter.animationTimingFunction } };
     });
     observer.observe(cell, { subtree: true, childList: true, attributes: true });
@@ -217,18 +242,18 @@ async function swapSnapshot() { await page.waitForFunction(() => globalThis.__su
 // 'visibility') is the only thing that unmounts the outgoing layer. Before releasing, a layer-level
 // 'opacity' transitionend and a bubbled 'visibility' one from the button must both leave it mounted.
 async function releaseSwap() {
-  await page.evaluate(() => { const leaving = document.querySelector(".sc-submit-layer[data-leaving]");
+  await page.evaluate(CROSSFADE => { const leaving = document.querySelector(`${CROSSFADE} > [inert]`);
     leaving.dispatchEvent(new TransitionEvent("transitionend", { bubbles: true, propertyName: "opacity" }));
-    leaving.querySelector("button").dispatchEvent(new TransitionEvent("transitionend", { bubbles: true, propertyName: "visibility" })); });
+    leaving.querySelector("button").dispatchEvent(new TransitionEvent("transitionend", { bubbles: true, propertyName: "visibility" })); }, CROSSFADE);
   await frames(4);
-  const present = await page.evaluate(() => !!document.querySelector(".sc-submit-layer[data-leaving]"));
+  const present = await page.evaluate(CROSSFADE => !!document.querySelector(`${CROSSFADE} > [inert]`), CROSSFADE);
   await page.evaluate(() => globalThis.__submitSwapHeld.forEach(animation => animation.play()));
-  await page.waitForFunction(() => !document.querySelector(".sc-submit-layer[data-leaving]"));
-  return page.evaluate(present => ({ present, last: globalThis.__submitSwapEnds.at(-1), layers: document.querySelectorAll(".sc-submit-cell > .sc-submit-layer").length }), present);
+  await page.waitForFunction(CROSSFADE => !document.querySelector(`${CROSSFADE} > [inert]`), CROSSFADE);
+  return page.evaluate(({ present, CROSSFADE }) => ({ present, last: globalThis.__submitSwapEnds.at(-1), layers: document.querySelectorAll(`${CROSSFADE} > div`).length }), { present, CROSSFADE });
 }
 // Idle = no Stop control, no pending send (the fixture's turn/start log line is
 // written before the renderer has the response, so the spinner is the gate).
-async function idle() { await stopButton().waitFor({ state: "detached" }); await page.waitForFunction(() => !document.querySelector(".sc-spinner")); await page.locator('[data-transcript-status="idle"], .source-transcript-status').first().waitFor({ state: "attached" }).catch(() => {}); }
+async function idle() { await stopButton().waitFor({ state: "detached" }); await page.waitForFunction(() => !document.querySelector('.sc-spinner, [data-testid="code-prompt-send"][aria-busy="true"]')); await page.locator('[data-transcript-status="idle"], .source-transcript-status').first().waitFor({ state: "attached" }).catch(() => {}); }
 try {
   build = JSON.parse(await fs.readFile(path.join(root, "dist/build-info.json"), "utf8"));
   await verifySource();
@@ -247,58 +272,51 @@ try {
   // 0.2.103: a resumed session without tokenUsage has hd ie=false → ge/Se 'Usage', le 0 (empty xT ring).
   metrics.usageBefore = await usageRing();
   assert.equal(metrics.usageBefore.label, "Usage"); assert.equal(metrics.usageBefore.title, null);
-  assert.equal(metrics.usageBefore.circles, 2); assert.equal(metrics.usageBefore.hidden, "true"); assert.equal(metrics.usageBefore.viewBox, "0 0 12 12");
-  near(metrics.usageBefore.width, 12, "ring svg width", .01); near(metrics.usageBefore.height, 12, "ring svg height", .01);
-  assert.equal(metrics.usageBefore.rotate, "-90deg"); assert.deepEqual(metrics.usageBefore.radius, [5, 5]); assert.deepEqual(metrics.usageBefore.strokeWidth, [2, 2]);
-  near(metrics.usageBefore.offset, 2 * Math.PI * 5, "empty ring dashoffset = C", .05); near(metrics.usageBefore.dasharray, 2 * Math.PI * 5, "ring dasharray = C", .05);
+  assert.equal(metrics.usageBefore.circles, 2); assert.equal(metrics.usageBefore.hidden, "true"); assert.equal(metrics.usageBefore.viewBox, `0 0 ${RING.size} ${RING.size}`);
+  near(metrics.usageBefore.width, RING.size, "ring svg width", .01); near(metrics.usageBefore.height, RING.size, "ring svg height", .01);
+  assert.equal(metrics.usageBefore.rotate, "-90deg"); assert.deepEqual(metrics.usageBefore.radius, [RING.r, RING.r]); assert.deepEqual(metrics.usageBefore.strokeWidth, [2, 2]);
+  near(metrics.usageBefore.offset, 2 * Math.PI * RING.r, "empty ring dashoffset = C", .05); near(metrics.usageBefore.dasharray, 2 * Math.PI * RING.r, "ring dasharray = C", .05);
   assert.equal(metrics.usageBefore.stroke, metrics.usageBefore.accent); assert.equal(metrics.usageBefore.track, metrics.usageBefore.alpha2);
   assert.equal(metrics.usageBefore.linecap, "round"); assert.deepEqual(metrics.usageBefore.transition, ["stroke-dashoffset", "0.3s"]);
   await page.emulateMedia({ reducedMotion: "reduce" });
   metrics.usageReducedMotion = (await usageRing()).transition;
   await page.emulateMedia({ reducedMotion: null });
   assert.equal(metrics.usageReducedMotion[0], "none", "prefers-reduced-motion disables the ring transition");
-  checks.push("0.2.103 usage trigger before any turn: aria-label 'Usage', 12×12 aria-hidden xT svg rotated -90deg with 2 r=5 stroke-2 circles, empty ring (dashoffset = 2π·5), --cds-fill-accent over --cds-alpha-2, 300ms dashoffset transition that reduced motion disables");
+  checks.push("Usage trigger before any turn: aria-label 'Usage', 14×14 aria-hidden KV svg (presets row chin) rotated -90deg with data-ring-track / data-ring-arc r=6 stroke-2 circles, empty ring (dashoffset = 2π·6), --cds-fill-accent over --cds-alpha-4, 300ms dashoffset transition that reduced motion disables");
 
   // shared-14:19954 setEditable drives contenteditable, not textarea.disabled; preserve true/false expectations.
   // 1. Baseline geometry with no attachments and no queue bar.
+  // R4i-gui GU1 (R4g-composer CP1–CP3, R4i-graph GR3): an open session's Code composer is the presets card
+  // (source-composer.jsx:179 singleRowCard, codeLayout "presets"): the + is ChatComposerActions' leading
+  // (CARD_ADD_TRIGGER, c73f45bc3 pv), the row chin's leading slot (chat-composer-shell.mjs Chin: "flex items-center
+  // self-start") holds only ROW_CHIN_LEADING_CLASS's span around the Mode trigger (bQ row branch), and lM shows no Send
+  // without a draft (sendOnDraftOnly, idleSendAction null → only the inert size-control placeholder).
   metrics.baseline = await page.evaluate(() => {
-    const card = document.querySelector(".sc-composer"), chin = document.querySelector(".sc-chin"), leading = chin.querySelector(".sc-chin-leading");
-    const add = leading.querySelector(':scope > [aria-label="Add"]').getBoundingClientRect(), mode = leading.querySelector(':scope > [aria-label="Permission mode"]').getBoundingClientRect();
-    return { card: card.getBoundingClientRect().height, chin: chin.getBoundingClientRect().height,
-      dictation: { nodes: chin.querySelectorAll('.sc-dictation, [data-cds="SplitDropdownButton"]').length,
+    const card = document.querySelector(".sc-composer"), chin = document.querySelector('.sc-chin[data-cds="ChatComposerChin"]'), leading = chin.querySelector("div.flex.items-center.self-start");
+    const actions = card.querySelector('[data-cds="ChatComposerActions"]');
+    return { card: card.getBoundingClientRect().height, chin: chin.getBoundingClientRect().height, rowLayout: chin.dataset.chinLayout ?? null,
+      dictation: { nodes: card.querySelectorAll('[data-cds="SplitDropdownButton"]').length + chin.querySelectorAll('[data-cds="SplitDropdownButton"]').length,
         named: [...document.querySelectorAll(".sc-composer button, .sc-chin button")].filter(button => /^Dictat/.test(button.getAttribute("aria-label") ?? "")).length },
-      leading: [...leading.children].map(node => node.getAttribute("aria-label")), leadingGap: getComputedStyle(leading).columnGap, addToMode: mode.left - add.right,
+      leading: [...leading.querySelectorAll("button")].map(node => node.getAttribute("aria-label")),
+      addInActions: !!actions?.querySelector(':scope > div button[aria-label="Add"]'), addInChin: !!chin.querySelector('button[aria-label="Add"]'),
       attachments: document.querySelector("[data-cds-composer-attachments]"), queued: document.querySelector("[data-queued-messages]"), disabled: card.hasAttribute("data-disabled"), editorDisabled: !document.querySelector(".sc-input").isContentEditable };
   });
-  near(metrics.baseline.card, 40, "empty composer card height"); near(metrics.baseline.chin, 20, "chin height");
-  // 0.2.113 product correction (not a loosened check): c360a9e1c:4892-4907 bH{…empty:hidden gap-xs} holds only
-  // nf, which returns null for hideDictation (:5067-5095; Code hideDictation:!dictationEnabled, cc43287c9:36836).
-  // No dictation here → no SplitDropdownButton, no 'Dictate', and the leading slot is exactly [Add, Mode]. The
-  // resolved gap is the shared-11 cu leading slot's ('flex items-center self-start', no gap class → 0px); gap-xs
-  // only spaces children inside the hidden bH cluster.
+  // Pixel heights of the presets card and row chin are recorded, not asserted: the old 40px / 20px baselines were the
+  // classic layout's; they need a runtime re-baseline (not run in this static step).
+  assert.equal(metrics.baseline.rowLayout, "row", "an open session's chin is the presets row chin");
   assert.deepEqual(metrics.baseline.dictation, { nodes: 0, named: 0 }, "no dictation control when the client has no dictation");
-  assert.deepEqual(metrics.baseline.leading, ["Add", "Permission mode"], "chin leading children are exactly Add then Mode");
-  assert.equal(metrics.baseline.leadingGap, "0px", "cu leading slot has no gap");
-  near(metrics.baseline.addToMode, parseFloat(metrics.baseline.leadingGap), "Mode.left - Add.right equals the resolved leading gap", .5);
+  assert.deepEqual(metrics.baseline.leading, ["Permission mode"], "the row chin's leading slot holds only Mode");
+  assert.deepEqual([metrics.baseline.addInActions, metrics.baseline.addInChin], [true, false], "the + leads the card's actions, not the chin");
   assert.equal(metrics.baseline.attachments, null); assert.equal(metrics.baseline.queued, null);
   assert.equal(metrics.baseline.disabled, false); assert.equal(metrics.baseline.editorDisabled, false);
-  // 0.2.112 c099c328d ga/Nh/Fh/jh: the empty-draft Send is disabled but not faded (Fh opacity-100),
-  // its ArrowReturn turns --cds-text-disabled, aria-keyshortcuts nn('enter') = 'Enter', and the
-  // non-compact jh ::before extends the hit box 10px up/right/down without changing the 40px card.
-  metrics.disabledSend = await page.evaluate(() => {
-    const cell = document.querySelector(".sc-submit-cell"), button = cell.querySelector('[data-testid="code-prompt-send"]'), before = getComputedStyle(button, "::before");
-    const probe = document.createElement("span"); probe.style.color = "var(--cds-text-disabled)"; document.body.appendChild(probe); const disabledColor = getComputedStyle(probe).color; probe.remove();
-    return { layers: cell.querySelectorAll(":scope > .sc-submit-layer").length, entering: cell.querySelector("[data-entering]") !== null, grid: getComputedStyle(cell).display,
-      disabled: button.disabled, busy: button.getAttribute("aria-busy"), keys: button.getAttribute("aria-keyshortcuts"), opacity: getComputedStyle(button).opacity,
-      icon: getComputedStyle(button.querySelector('[data-cds="Icon"]')).color, disabledColor, glyph: button.querySelector('[data-cds="Icon"]').textContent.codePointAt(0),
-      before: { content: before.content, position: before.position, left: before.left, top: before.top, right: before.right, bottom: before.bottom }, position: getComputedStyle(button).position,
-      size: [button.getBoundingClientRect().width, button.getBoundingClientRect().height] };
+  metrics.emptySend = await page.evaluate(() => {
+    const cell = document.querySelector('[data-testid="code-prompt-send-cell"]');
+    return { cell: !!cell, grid: cell ? getComputedStyle(cell).display : null, placeholder: !!cell?.querySelector(':scope > [inert] .size-control'),
+      sends: document.querySelectorAll('[data-testid="code-prompt-send"]').length, crossfades: cell?.querySelectorAll(':scope > div:not([inert]) > div.grid').length ?? null };
   });
-  assert.deepEqual({ ...metrics.disabledSend, icon: undefined, disabledColor: undefined }, { layers: 1, entering: false, grid: "grid", disabled: true, busy: null, keys: "Enter", opacity: "1", icon: undefined, disabledColor: undefined,
-    glyph: glyphs.ArrowReturn, before: { content: '""', position: "absolute", left: "0px", top: "-10px", right: "-10px", bottom: "-10px" }, position: "relative", size: [24, 24] });
-  assert.equal(metrics.disabledSend.icon, metrics.disabledSend.disabledColor, "disabled Send glyph uses resolved --cds-text-disabled");
-  checks.push("0.2.112 disabled empty-draft Send (c099c328d ga): one sm layer on first mount (no fade-in), aria-keyshortcuts 'Enter', opacity 1 (Fh), ArrowReturn in --cds-text-disabled, 24×24 with a jh ::before hit box at 0/-10/-10/-10");
-  checks.push("Connected session: 40px card, 20px chin, no dictation control (c360a9e1c:4893-4907 hideDictation branch: no SplitDropdownButton, no Dictate), chin leading exactly [Add, Permission mode] with Mode.left - Add.right = resolved leading gap 0px, no attachment slot or queue bar mounted");
+  assert.deepEqual(metrics.emptySend, { cell: true, grid: "grid", placeholder: true, sends: 0, crossfades: 0 });
+  checks.push("Presets card without a draft (c227f4d5e lM sendOnDraftOnly / idleSendAction null): code-prompt-send-cell holds only the inert size-control placeholder, no Send and no crossfade");
+  checks.push("Connected session: presets row chin (data-chin-layout row), no dictation control (hideDictation: no SplitDropdownButton, no Dictate), the row chin's leading slot holds only Permission mode and the + leads ChatComposerActions; no attachment slot or queue bar mounted");
   metrics.placeholderSession = await expectPlaceholder("Type / for commands", "an existing session's empty composer shows the Yn copy");
   checks.push("0.2.98: the empty composer of an existing session paints 'Type / for commands' (cc43287c9 :28686 Yn branch) via data-placeholder + [data-empty=true]::before");
 
@@ -306,23 +324,23 @@ try {
   // Record the actual loading DOM transition before paste. Fast disk staging can
   // finish between two Playwright evaluations; sampling only afterwards misses
   // a real intermediate state. This neither injects a pill nor delays staging.
-  await page.evaluate(()=>{
+  await page.evaluate(IMAGE_TILE=>{
     globalThis.composerLoadingSeen=null;
     globalThis.composerLoadingObserver=new MutationObserver(()=>{
-      const status=document.querySelector('[data-cds-attachment] [role="status"]');
-      if(status)globalThis.composerLoadingSeen=status.textContent;
+      const pending=document.querySelector(`${IMAGE_TILE}[aria-busy="true"]`);
+      if(pending)globalThis.composerLoadingSeen=pending.dataset.state??"busy";
     });
     globalThis.composerLoadingObserver.observe(document.querySelector('.sc-composer'),{childList:true,subtree:true});
-  });
+  },IMAGE_TILE);
   const pastePrevented = await pasteFiles([{ name: "pasted.png", type: "image/png", bytes: PNG.toString("base64") }]);
   assert.equal(pastePrevented, true, "image paste is consumed by the composer");
   await page.waitForFunction(()=>globalThis.composerLoadingSeen!==null);
   const loadingSeen=await page.evaluate(()=>{globalThis.composerLoadingObserver.disconnect();delete globalThis.composerLoadingObserver;return globalThis.composerLoadingSeen;});
   metrics.pasteLoading = loadingSeen;
-  assert.equal(loadingSeen, "Processing image", "the pill starts in the loading state with the sr-only status text");
-  await page.locator('[data-cds-attachment][data-status="ready"]').waitFor();
-  const pasted = await page.locator("[data-cds-attachment]").first().evaluate(node => ({ kind: node.dataset.kind, status: node.dataset.status, img: !!node.querySelector("img"), src: node.querySelector("img")?.getAttribute("src") }));
-  assert.equal(pasted.kind, "image"); assert.equal(pasted.status, "ready"); assert.equal(pasted.img, true);
+  assert.equal(loadingSeen, "pending", "the image tile starts pending (aria-busy, data-state pending)");
+  await page.locator(READY_IMAGE).first().waitFor();
+  const pasted = await page.locator("[data-cds-attachment]").first().evaluate(node => ({ cds: node.dataset.cds, busy: node.getAttribute("aria-busy"), img: !!node.querySelector("img"), src: node.querySelector("img")?.getAttribute("src") }));
+  assert.equal(pasted.cds, "MessageAttachmentsImage"); assert.equal(pasted.busy, null); assert.equal(pasted.img, true);
   const stagedFiles = await fs.readdir(path.join(profile, "attachments"));
   assert.equal(stagedFiles.length, 1, "one staged clipboard image on disk");
   assert.equal((await fs.readFile(path.join(profile, "attachments", stagedFiles[0]))).equals(PNG), true, "staged bytes are the pasted PNG");
@@ -334,7 +352,7 @@ try {
     document.querySelector(".sc-input").dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: transfer }));
   });
   assert.equal(await page.locator("[data-cds-attachment]").count(), 1, "text paste creates no pill");
-  checks.push("Pasting clipboardData.files=[image/png] stages one loading pill (role=status 'Processing image') that settles to ready once the main process persisted the real file; text paste is unaffected");
+  checks.push("Pasting clipboardData.files=[image/png] stages one MessageAttachmentsImage tile that starts pending (aria-busy, data-state pending) and settles once the main process persisted the real file; text paste is unaffected");
 
   // 3. Add files or photos through the (patched) native dialog: image with a path + a document file.
   await app.evaluate(({ dialog }, paths) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: paths }); }, [path.join(workspace, "docs/photo.png"), path.join(workspace, "docs/readme.md")]);
@@ -353,53 +371,33 @@ try {
   checks.push("R05 Add menu order: Add files or photos, Add folder, Slash commands (then Skills/Plugins), no separators and no 'Mention a file'");
   await page.getByRole("menuitem", { name: "Add files or photos", exact: true }).click();
   await page.locator("[data-cds-attachment]").nth(2).waitFor();
-  // The enter transition (scale .92 → 1 over 180ms) must settle before geometry is read.
-  await page.waitForFunction(() => [...document.querySelectorAll("[data-cds-attachment], [data-cds-composer-attachments]")].every(node => getComputedStyle(node).transform === "none" && getComputedStyle(node).opacity === "1"));
-  // The menuitem click leaves the pointer where the new pills land, so
-  // .sca-pill:hover starts the 180ms remove-control fade (read mid-way as
-  // 0.849 in 0.2.94–0.2.98 runs). Park the pointer at the suite's neutral
-  // spot and let those transitions finish so the resting opacity is measured.
+  // R4i-gui GU1: the tiles' sizes and the slot padding are the 2.42304.0 tiles' (7.5rem tiles, natural-size images), not
+  // the retired 40px host pills; they are recorded for a runtime re-baseline, not asserted. The asserted part is the
+  // tile set, the remove control's name and its hover reveal.
   await page.mouse.move(100, 700);
-  await page.waitForFunction(() => [...document.querySelectorAll("[data-cds-attachment] .epitaxy-pill-remove")].every(node => node.getAnimations().length === 0));
+  await page.waitForFunction(() => [...document.querySelectorAll("[data-cds-attachment]")].every(node => node.getAnimations().every(animation => animation.playState !== "running")));
   metrics.slot = await page.evaluate(() => {
-    const slot = document.querySelector("[data-cds-composer-attachments]"), strip = slot.firstElementChild;
-    const probe = document.createElement("span"); probe.style.background = "var(--cds-alpha-2)"; document.body.appendChild(probe);
-    const alpha2 = getComputedStyle(probe).backgroundColor; probe.remove();
-    const pills = [...document.querySelectorAll("[data-cds-attachment]")].map(node => {
-      const body = node.querySelector(".epitaxy-pill-body"), remove = node.querySelector(".epitaxy-pill-remove");
-      const box = body.getBoundingClientRect(), wrap = node.getBoundingClientRect(), removeBox = remove.getBoundingClientRect();
-      const img = node.querySelector("img");
-      return { kind: node.dataset.kind, width: box.width, height: box.height, background: getComputedStyle(body).backgroundColor, shadow: getComputedStyle(body).boxShadow,
-        img: img ? getComputedStyle(img).objectFit : null, extension: node.querySelector(".sca-extension")?.textContent ?? null,
-        remove: { width: removeBox.width, height: removeBox.height, top: removeBox.top - wrap.top, right: wrap.right - removeBox.right, opacity: getComputedStyle(remove).opacity,
-          duration: getComputedStyle(remove).transitionDuration, label: remove.getAttribute("aria-label"), tabindex: remove.getAttribute("tabindex") } };
+    const slot = document.querySelector("[data-cds-composer-attachments]");
+    const tiles = [...document.querySelectorAll("[data-cds-attachment]")].map(node => {
+      const box = node.getBoundingClientRect(), remove = node.querySelector("[data-cds-attachment-remove]"), img = node.querySelector("img");
+      return { cds: node.dataset.cds, width: box.width, height: box.height, img: img ? getComputedStyle(img).objectFit : null,
+        remove: remove ? { label: remove.getAttribute("aria-label"), opacity: getComputedStyle(remove).opacity } : null };
     });
-    return { padding: getComputedStyle(slot).padding, gap: getComputedStyle(strip).gap, slotTransition: getComputedStyle(slot).transitionDuration, alpha2, pills };
+    return { padding: slot ? getComputedStyle(slot).padding : null, tiles };
   });
-  assert.equal(metrics.slot.padding, "4px 4px 10px"); assert.equal(metrics.slot.gap, "4px");
-  assert.equal(metrics.slot.pills.length, 3);
-  for (const pill of metrics.slot.pills) {
-    near(pill.width, 40, `${pill.kind} pill width`); near(pill.height, 40, `${pill.kind} pill height`);
-    near(pill.remove.width, 16, "remove width"); near(pill.remove.height, 16, "remove height");
-    near(pill.remove.top, -6, "remove top offset"); near(pill.remove.right, -6, "remove right offset");
-    assert.equal(pill.remove.opacity, "0"); assert.equal(pill.remove.duration, "0.18s"); assert.equal(pill.remove.tabindex, "-1");
-  }
-  const filePill = metrics.slot.pills.find(pill => pill.kind === "file");
-  assert.equal(filePill.background, metrics.slot.alpha2, "file pill uses var(--cds-alpha-2)"); assert.equal(filePill.shadow, "none");
-  assert.equal(filePill.extension, "md"); assert.equal(filePill.remove.label, "Remove readme.md");
-  assert.ok(metrics.slot.pills.filter(pill => pill.kind === "image").every(pill => pill.img === "cover"), "image pills render an object-fit cover img");
-  await page.locator("[data-cds-attachment]").nth(1).hover();
-  await page.waitForFunction(() => Number(getComputedStyle(document.querySelectorAll("[data-cds-attachment] .epitaxy-pill-remove")[1]).opacity) === 1);
-  await page.mouse.move(100, 700);
-  await page.waitForFunction(() => Number(getComputedStyle(document.querySelectorAll("[data-cds-attachment] .epitaxy-pill-remove")[1]).opacity) === 0);
-  checks.push("Attachment slot padding 4/4/10 with a 4px strip; 40x40 pills (quiet file pill = alpha-2, no shadow, lowercase extension; image pills object-fit cover); 16px remove control at -6/-6 with 0→1 hover opacity over 180ms, tabindex -1 and 'Remove {name}'");
+  assert.equal(metrics.slot.tiles.length, 3);
+  assert.deepEqual(metrics.slot.tiles.map(tile => tile.cds).sort(), ["MessageAttachmentsFile", "MessageAttachmentsImage", "MessageAttachmentsImage"]);
+  assert.ok(metrics.slot.tiles.every(tile => tile.remove !== null), "every tile has its remove control");
+  assert.equal(metrics.slot.tiles.find(tile => tile.cds === "MessageAttachmentsFile").remove.label, "Remove readme.md");
+  checks.push("Add files or photos stages two MessageAttachmentsImage tiles and one MessageAttachmentsFile tile, each with a button[data-cds-attachment-remove] ('Remove readme.md' on the file tile); tile geometry recorded for re-baseline");
 
   // 3b. R06 pill click (c099c328d :3143-3160 Ue → Za, :3542-3590 Kl/ql → Gl): the pasted image pill opens the
   // image viewer on its own preview; Escape closes it and focus returns to the pill. A .txt pill opens in the
   // Files pane; it and the pane are removed again so the later steps see the same three pills.
-  const pastedPill = page.locator('[data-cds-attachment][data-kind="image"]').first();
+  const pastedPill = page.locator(IMAGE_TILE).first(); // images keep insertion order: the pasted one first
   const pastedPreview = await pastedPill.locator("img").getAttribute("src");
-  await pastedPill.locator(".epitaxy-pill-body").click();
+  // Bi's press opens the viewer from the image (source-composer-tiles.jsx onOpen(image, tile)).
+  await pastedPill.locator("img").click();
   const imageViewer = page.getByRole("dialog", { name: "pasted.png", exact: true });
   await imageViewer.waitFor();
   metrics.attachmentViewer = await imageViewer.evaluate(node => ({ src: node.querySelector("img")?.getAttribute("src"), alt: node.querySelector("img")?.getAttribute("alt"),
@@ -409,21 +407,21 @@ try {
   await page.screenshot({ path: path.join(directory, "attachment-viewer.png") });
   await page.keyboard.press("Escape");
   await imageViewer.waitFor({ state: "detached" });
-  assert.equal(await pastedPill.locator(".epitaxy-pill-body").evaluate(node => node === document.activeElement), true, "Escape returns focus to the pill");
+  assert.equal(await pastedPill.evaluate(node => node.contains(document.activeElement)), true, "Escape returns focus to the tile");
   await app.evaluate(({ dialog }, paths) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: paths }); }, [path.join(workspace, "fixture-a.txt")]);
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await page.getByRole("menu", { name: "Add", exact: true }).waitFor();
   await page.getByRole("menuitem", { name: "Add files or photos", exact: true }).click();
-  const textPill = page.locator('[data-cds-attachment][data-kind="file"]').filter({ has: page.locator(".sca-extension", { hasText: /^txt$/ }) });
+  const textPill = page.locator(FILE_TILE).filter({ has: page.locator('[data-cds-attachment-remove][aria-label="Remove fixture-a.txt"]') });
   await textPill.waitFor();
-  await textPill.locator(".epitaxy-pill-body").click();
+  await textPill.locator('[data-cds="CardLink"]').click();
   await page.getByRole("complementary", { name: "Files panel", exact: true }).waitFor();
   await page.waitForFunction(() => document.querySelector('.source-file-tab[data-file-path$="fixture-a.txt"]'));
   metrics.attachmentFileOpened = await page.locator('.source-file-tab[data-file-path$="fixture-a.txt"]').first().getAttribute("data-file-path");
   await page.getByRole("button", { name: "Close panel", exact: true }).click();
   await page.locator(".source-side-tile").waitFor({ state: "detached" });
   await textPill.hover();
-  await textPill.locator(".epitaxy-pill-remove").click();
+  await textPill.locator("[data-cds-attachment-remove]").click();
   await page.mouse.move(100, 700);
   await page.waitForFunction(() => document.querySelectorAll("[data-cds-attachment]").length === 3);
   checks.push("R06 pill click: the pasted image pill opens a role=dialog image viewer (img src = the pill preview, alt pasted.png, 'Close image preview', no Annotate); Escape closes it with focus back on the pill; a .txt pill opens fixture-a.txt in the Files pane");
@@ -443,14 +441,14 @@ try {
   await pasteFiles(["c1", "c2", "c3", "c4"].map(name => ({ name: `${name}.png`, type: "image/png", bytes: PNG.toString("base64") })));
   await page.locator(".composer-error").waitFor();
   assert.equal(await errorText(), "Maximum of 5 images allowed.");
-  await page.waitForFunction(() => document.querySelectorAll('[data-cds-attachment][data-kind="image"][data-status="ready"]').length === 5);
+  await page.waitForFunction(READY_IMAGE => document.querySelectorAll(READY_IMAGE).length === 5, READY_IMAGE);
   assert.equal(await page.locator("[data-cds-attachment]").count(), 6, "five images plus the file reference");
   await dismissError();
   // Remove the three extra images through the hover-revealed control.
   for (let index = 0; index < 3; index++) {
-    const pill = page.locator('[data-cds-attachment][data-kind="image"]').last();
+    const pill = page.locator(IMAGE_TILE).last();
     await pill.hover();
-    await pill.locator(".epitaxy-pill-remove").click();
+    await pill.locator("[data-cds-attachment-remove]").click();
   }
   assert.equal(await page.locator("[data-cds-attachment]").count(), 3);
   checks.push("Image lane validation: .bmp → type toast, 31457281-byte PNG → 30 MB toast, sixth image dropped with 'Maximum of 5 images allowed.'; the hover-revealed remove control removes pills");
@@ -640,10 +638,20 @@ try {
     const probe = document.createElement("span"); probe.style.color = "var(--cds-text-secondary)"; document.body.appendChild(probe); const secondary = getComputedStyle(probe).color; probe.remove();
     const icon = node.querySelector('[data-cds="Icon"]'), before = getComputedStyle(node, "::before");
     return { glyph: icon.textContent.codePointAt(0), fontSize: getComputedStyle(icon).fontSize, color: getComputedStyle(icon).color === secondary, keys: node.getAttribute("aria-keyshortcuts"),
-      before: [before.left, before.top, before.right, before.bottom], size: [node.getBoundingClientRect().width, node.getBoundingClientRect().height] };
+      before: [before.left, before.top, before.right, before.bottom], size: [node.getBoundingClientRect().width, node.getBoundingClientRect().height],
+      control: (() => { const box = document.createElement("span"); box.className = "size-control"; box.style.position = "absolute"; node.appendChild(box);
+        const width = box.getBoundingClientRect().width; box.remove(); return width; })() };
   });
-  assert.deepEqual(metrics.stopControl, { glyph: glyphs.StopCircle, fontSize: "16px", color: true, keys: "Escape", before: ["0px", "-10px", "-10px", "-10px"], size: [24, 24] });
-  await page.locator("form.sc-composer").screenshot({ path: path.join(directory, "stop-control.png") });
+  // R4i-gui GU1: lM's Stop is a view-tabs CdsButton (iconOnly, StopCircle md in the presets glyph box cy, shortcut
+  // "escape" → aria-keyshortcuts). The host jh ::before hit box and the 24px size were the retired host cell's; they are
+  // recorded for a runtime re-baseline, not asserted.
+  assert.deepEqual({ glyph: metrics.stopControl.glyph, keys: metrics.stopControl.keys }, { glyph: glyphs.StopCircle, keys: "Escape" });
+  // R4i-gui fix: the size itself is source-derived, not a host baseline: CdsButton iconOnly is "aspect-square w-control px-0"
+  // (view-tabs shared-frame Il) and .w-control / .size-control are width var(--cds-h-control), so Stop is a square as wide as
+  // a .size-control probe inside it (inheriting its --cds-h-control).
+  assert.ok(Math.abs(metrics.stopControl.size[0] - metrics.stopControl.size[1]) < 0.5 && Math.abs(metrics.stopControl.size[0] - metrics.stopControl.control) < 0.5,
+    "Stop is the square --cds-h-control CdsButton: " + JSON.stringify(metrics.stopControl));
+  await page.locator(".sc-composer").screenshot({ path: path.join(directory, "stop-control.png") });
   const glyph = metrics.stopControl.glyph;
   // 2.31226.0 vP draws 'StopCircle' (57579); 0.2.112's c099c328d Ih was the plain 'Stop' square (57578).
   assert.equal(glyph, 57579, "StopCircle glyph (ca80fca8d vP)");
@@ -653,17 +661,17 @@ try {
   // Official Em: the Stop tooltip lists the escape shortcut while nothing else claims Escape.
   await page.mouse.move(100, 700);
   await activeSlot().hover();
-  await page.locator(".source-tooltip-popup").waitFor();
-  metrics.stopTooltip = await page.locator(".source-tooltip-popup").evaluate(node => ({ label: node.querySelector(".source-tooltip-label")?.textContent ?? node.textContent, shortcuts: [...node.querySelectorAll(".source-tooltip-shortcut")].map(chip => [...chip.querySelectorAll("kbd")].map(kbd => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join("")) }));
-  assert.equal(metrics.stopTooltip.label, "Stop"); assert.deepEqual(metrics.stopTooltip.shortcuts, ["Esc"]);
+  await cdsTip().waitFor();
+  metrics.stopTooltip = await cdsTipRows();
+  assert.deepEqual(metrics.stopTooltip, [{ label: "Stop", shortcut: "Esc" }]);
   await page.mouse.move(900, 120);
-  await page.locator(".source-tooltip-popup").waitFor({ state: "detached" });
+  await cdsTip().waitFor({ state: "detached" });
   // The "@" lookup must survive the streaming re-renders (App re-renders on every delta).
   await fillComposer(page,editor(),"while streaming @src");
   await dropdown.waitFor();
   await page.waitForFunction(() => document.querySelector('[data-cds="MentionDropdown"] .smd-description'));
   // With content in the editor the Send control has replaced Stop (Ki); the turn itself keeps running.
-  assert.equal(await page.locator("form.sc-composer").getAttribute("data-busy"), "true", "the card stays busy while the mention popup is open");
+  assert.equal(await page.locator(".sc-composer").getAttribute("data-busy"), "true", "the card stays busy while the mention popup is open");
   assert.equal((await readThreads()).threads[A].turns.at(-1).status, "inProgress", "the turn keeps running while the mention popup is open");
   await page.keyboard.press("Escape");
   await dropdown.waitFor({ state: "detached" });
@@ -676,11 +684,11 @@ try {
   await sendButton().waitFor();
   await page.mouse.move(100, 700);
   await activeSlot().hover();
-  await page.locator(".source-tooltip-popup").waitFor();
+  await cdsTip().waitFor();
   metrics.enabledSend = await sendButton().evaluate(node => { const probe = document.createElement("span"); probe.style.color = "var(--cds-text-secondary)"; document.body.appendChild(probe); const secondary = getComputedStyle(probe).color; probe.remove();
     return { disabled: node.disabled, keys: node.getAttribute("aria-keyshortcuts"), opacity: getComputedStyle(node).opacity, secondary: getComputedStyle(node.querySelector('[data-cds="Icon"]')).color === secondary }; });
   assert.deepEqual(metrics.enabledSend, { disabled: false, keys: "Enter", opacity: "1", secondary: true }, "enabled Send keeps Nh text-secondary");
-  metrics.runningTooltip = await page.locator(".source-tooltip-popup").evaluate(node => [...node.querySelectorAll(".source-tooltip-label-line")].map(line => ({ label: line.querySelector(".source-tooltip-label").textContent, shortcut: (chip => chip && [...chip.querySelectorAll("kbd")].map(kbd => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join(""))(line.querySelector(".source-tooltip-shortcut")) ?? null })));
+  metrics.runningTooltip = await cdsTipRows();
   // Fidelity F02: the 'enter' / 'cmd+enter' specs draw ⏎ (shared-frame so/co), read from the visible glyphs.
   assert.deepEqual(metrics.runningTooltip, [{ label: "Send", shortcut: "⏎" }, { label: "Queue for later", shortcut: "⌘⏎" }]);
   await page.mouse.move(100, 700);
@@ -845,10 +853,12 @@ try {
   await fillComposer(page,editor(),"busy send probe");
   await armSwap("Stop");
   await page.keyboard.press("Enter");
-  await page.waitForFunction(() => document.querySelector('.sc-submit-cell [data-testid="code-prompt-send"]:not([inert] *)')?.getAttribute("aria-busy") === "true");
-  metrics.busy = await sendButton().evaluate(node => ({ busy: node.getAttribute("aria-busy"), disabled: node.disabled, spinner: !!node.querySelector(".sc-spinner"), sr: node.querySelector(".sc-sr-only")?.textContent ?? null, glyph: node.querySelector('[data-cds="Icon"]')?.textContent ?? null, cardBusy: node.closest(".sc-composer").getAttribute("data-busy") }));
-  assert.deepEqual(metrics.busy, { busy: "true", disabled: true, spinner: true, sr: "Sending", glyph: null, cardBusy: "true" });
-  await page.waitForFunction(() => document.querySelector('.sc-submit-cell [data-testid="code-prompt-send"]:not([inert] *)')?.getAttribute("aria-busy") !== "true");
+  // R4i-gui GU1: lM passes submitQueued as the CdsButton's busy (aria-busy) with busyLabel 'Sending'; the busy glyph is
+  // the CdsButton's own (recorded, not asserted: the host .sc-spinner / .sc-sr-only markup is gone).
+  await page.waitForFunction(() => document.querySelector('[data-testid="code-prompt-send-cell"] [data-testid="code-prompt-send"]:not([inert] *)')?.getAttribute("aria-busy") === "true");
+  metrics.busy = await sendButton().evaluate(node => ({ busy: node.getAttribute("aria-busy"), disabled: node.disabled, text: node.textContent, cardBusy: node.closest(".sc-composer").getAttribute("data-busy") }));
+  assert.deepEqual({ busy: metrics.busy.busy, cardBusy: metrics.busy.cardBusy }, { busy: "true", cardBusy: "true" });
+  await page.waitForFunction(() => document.querySelector('[data-testid="code-prompt-send-cell"] [data-testid="code-prompt-send"]:not([inert] *)')?.getAttribute("aria-busy") !== "true");
   await page.locator(".assistant-message").filter({ hasText: "Delayed fixture response" }).waitFor();
   // 0.2.112 reverse swap when the turn completes: Stop leaves with om, Send enters with am.
   metrics.swapOnComplete = await swapSnapshot();
@@ -858,10 +868,11 @@ try {
   metrics.swapOnCompleteRelease = await releaseSwap();
   assert.deepEqual(metrics.swapOnCompleteRelease, { present: true, last: "visibility", layers: 1 });
   checks.push("0.2.112 on turn completion the reverse Stop → Send swap fades Send in (cds-fade-in 0.12s/0.08s) while the inert, aria-hidden Stop layer fades out over 80ms and unmounts on its visibility transitionend");
-  checks.push("While turn/start is pending the Send button is aria-busy with the spinner in the ArrowReturn slot and an sr-only 'Sending' label; the card carries data-busy");
+  checks.push("While turn/start is pending the Send button is aria-busy (lM submitQueued → CdsButton busy, busyLabel 'Sending'); the card carries data-busy");
 
-  // 11b. Interrupting: once Stop is pressed the control yields to the disabled Send glyph
-  // (official showStop = busy && !interrupting) until the backend confirms the interrupt.
+  // 11b. Interrupting: once Stop is pressed Stop unmounts (official showStop = busy && !interrupting). R4i-gui GU1: in the
+  // presets card lM drops the Send layer too without a draft (`w && !j ? null : ne`: sendOnDraftOnly and nothing to
+  // send), so the cell is empty until the backend confirms the interrupt; the card stays data-busy.
   await open(D, `${D}-answer-0`);
   await fillComposer(page,editor(),"fixture:hold");
   await page.keyboard.press("Enter");
@@ -871,19 +882,14 @@ try {
   await stopButton().click();
   await stopButton().waitFor({ state: "detached" });
   await waitCount("turn/interrupt", interruptsBefore + 1);
-  metrics.interrupting = await sendButton().evaluate(node => ({ disabled: node.disabled, busy: node.getAttribute("aria-busy"), glyph: node.querySelector('[data-cds="Icon"]')?.textContent.codePointAt(0) ?? null, spinner: !!node.querySelector(".sc-spinner"), cardBusy: node.closest(".sc-composer").getAttribute("data-busy"), stops: document.querySelectorAll('.sc-submit-cell [data-testid="code-prompt-stop"]:not([inert] *)').length }));
+  metrics.interrupting = await page.evaluate(() => ({ sends: document.querySelectorAll('[data-testid="code-prompt-send-cell"] [data-testid="code-prompt-send"]:not([inert] *)').length,
+    stops: document.querySelectorAll('[data-testid="code-prompt-send-cell"] [data-testid="code-prompt-stop"]:not([inert] *)').length, cardBusy: document.querySelector(".sc-composer").getAttribute("data-busy") }));
   assert.equal((await readThreads()).threads[D].turns.at(-1).status, "inProgress", "the fixture interrupt is still pending");
-  assert.deepEqual(metrics.interrupting, { disabled: true, busy: null, glyph: 57359, spinner: false, cardBusy: "true", stops: 0 });
-  await page.mouse.move(100, 700);
-  await activeSlot().hover();
-  await page.locator(".source-tooltip-popup").waitFor();
-  metrics.interruptingTooltip = await page.locator(".source-tooltip-popup").evaluate(node => [...node.querySelectorAll(".source-tooltip-label-line")].map(line => ({ label: line.querySelector(".source-tooltip-label").textContent, shortcut: (chip => chip && [...chip.querySelectorAll("kbd")].map(kbd => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join(""))(line.querySelector(".source-tooltip-shortcut")) ?? null })));
-  assert.equal(await page.locator("form.sc-composer").getAttribute("data-busy"), "true", "the tooltip was read while the interrupt was still pending");
-  assert.deepEqual(metrics.interruptingTooltip, [{ label: "Send", shortcut: "⏎" }], "no 'Queue for later' hint while interrupting");
+  assert.deepEqual(metrics.interrupting, { sends: 0, stops: 0, cardBusy: "true" });
   await page.mouse.move(900, 120);
   await page.waitForFunction(() => !document.querySelector(".sc-composer").hasAttribute("data-busy"));
   assert.equal((await readThreads()).threads[D].turns.at(-1).status, "interrupted");
-  checks.push("After Stop is pressed the Stop control unmounts and the disabled Send glyph (ArrowReturn, no aria-busy, no queue hint) holds the slot while the card stays data-busy until turn/interrupt completes");
+  checks.push("After Stop is pressed the Stop control unmounts and the empty-draft presets cell shows no Send (lM sendOnDraftOnly) while the card stays data-busy until turn/interrupt completes");
 
   // 12. Archived session: card data-disabled, editor and send disabled.
   await page.getByRole("button", { name: /^Filter(?: \(active\))?$/ }).click();
@@ -893,9 +899,11 @@ try {
   await filterMenu.waitFor({ state: "detached" });
   await page.locator(`[data-source-session-id="${B}"] .source-session-open`).click();
   await page.getByRole("button", { name: "Restore session", exact: true }).waitFor();
-  metrics.archived = await page.evaluate(() => ({ card: document.querySelector(".sc-composer").hasAttribute("data-disabled"), editor: !document.querySelector(".sc-input").isContentEditable, send: document.querySelector('.sc-submit-cell [data-testid="code-prompt-send"]:not([inert] *)').disabled, cursor: getComputedStyle(document.querySelector(".sc-surface")).cursor }));
-  assert.deepEqual(metrics.archived, { card: true, editor: true, send: true, cursor: "default" });
-  checks.push("An archived session marks the card data-disabled with a disabled editor and Send");
+  // R4i-gui GU1: the card is the shell's (cardClassName sc-card, chat-composer-shell.mjs `We ? "cursor-default"`); an empty
+  // draft shows no Send in the presets card.
+  metrics.archived = await page.evaluate(() => ({ card: document.querySelector(".sc-composer").hasAttribute("data-disabled"), editor: !document.querySelector(".sc-input").isContentEditable, sends: document.querySelectorAll('[data-testid="code-prompt-send"]:not([inert] *)').length, cursor: getComputedStyle(document.querySelector(".sc-card")).cursor }));
+  assert.deepEqual(metrics.archived, { card: true, editor: true, sends: 0, cursor: "default" });
+  checks.push("An archived session marks the card data-disabled with a disabled editor, a default cursor on the card and no Send");
   await page.getByRole("button", { name: /^Filter(?: \(active\))?$/ }).click();
   await filterMenu.getByRole("menuitem", { name: /^Status/ }).click();
   await page.getByRole("menu", { name: "Status", exact: true }).getByRole("menuitemradio", { name: "Active", exact: true }).click();
@@ -961,15 +969,16 @@ try {
   await page.waitForFunction(() => document.querySelector(".sc-chin .sc-usage-trigger")?.getAttribute("aria-label")?.startsWith("Usage: Context 100"));
   metrics.usageAfter = await usageRing();
   assert.equal(metrics.usageAfter.label, "Usage: Context 100 / 128k (0%)"); assert.match(metrics.usageAfter.label, /^Usage: Context/);
-  assert.equal(metrics.usageAfter.circles, 2); near(metrics.usageAfter.width, 12, "ring svg width after usage", .01); near(metrics.usageAfter.height, 12, "ring svg height after usage", .01);
-  near(metrics.usageAfter.offset, 2 * Math.PI * 5, "0% ring dashoffset", .05); near(metrics.usageAfter.computedOffset, 2 * Math.PI * 5, "0% ring computed dashoffset", .05);
+  assert.equal(metrics.usageAfter.circles, 2); near(metrics.usageAfter.width, RING.size, "ring svg width after usage", .01); near(metrics.usageAfter.height, RING.size, "ring svg height after usage", .01);
+  near(metrics.usageAfter.offset, 2 * Math.PI * RING.r, "0% ring dashoffset", .05); near(metrics.usageAfter.computedOffset, 2 * Math.PI * RING.r, "0% ring computed dashoffset", .05);
   assert.equal(metrics.usageAfter.stroke, metrics.usageAfter.accent, "normal threshold paints --cds-fill-accent");
   const usageBox = await usageTrigger().boundingBox();
   await page.mouse.move(usageBox.x + usageBox.width / 2, usageBox.y + usageBox.height / 2);
-  await page.locator('.source-tooltip-popup[data-state="open"]').waitFor();
-  metrics.usageTooltip = await page.locator(".source-tooltip-popup .source-tooltip-label").textContent();
+  // R4i-gui GU1: yZ's ring sits under the view-tabs CdsTooltip (source-composer-row-chin.jsx ComposerUsageRing).
+  await cdsTip().waitFor();
+  metrics.usageTooltip = (await cdsTipRows())[0].label;
   assert.equal(metrics.usageTooltip, "Context 100 / 128k (0%)");
-  assert.equal(await page.locator(".source-tooltip-popup .source-tooltip-detail").count(), 0, "no plan-limit detail exists locally");
+  assert.equal(await cdsTip().textContent(), "Context 100 / 128k (0%)", "no plan-limit detail exists locally");
   await page.screenshot({ path: path.join(directory, "usage-ring-tooltip.png") });
   // _d Zt open = popover open ? false : undefined: opening the popover closes the tooltip and it stays closed while hovered.
   await usageTrigger().click();
@@ -978,7 +987,7 @@ try {
   // there is no visible 'Usage' heading and no menuitem row.
   const usagePopover = page.getByRole("dialog", { name: "Usage", exact: true });
   await usagePopover.waitFor();
-  await page.locator(".source-tooltip-popup").waitFor({ state: "detached" });
+  await cdsTip().waitFor({ state: "detached" });
   metrics.usagePopover = await usagePopover.evaluate((node) => {
     const box = node.getBoundingClientRect(), trigger = document.querySelector(".sc-chin .sc-usage-trigger").getBoundingClientRect();
     const title = node.querySelector("h2"), body = node.querySelector("[data-cds-popover-body]"), probe = document.createElement("span");
@@ -998,14 +1007,14 @@ try {
   assert.equal(await usagePopover.locator(".sc-usage-compact-row").count(), 0, "no compact row below 50%");
   await page.mouse.move(usageBox.x + usageBox.width / 2 + 1, usageBox.y + usageBox.height / 2);
   await page.waitForTimeout(900);
-  metrics.usageTooltipWhileOpen = await page.locator(".source-tooltip-popup").count();
+  metrics.usageTooltipWhileOpen = await cdsTip().count();
   assert.equal(metrics.usageTooltipWhileOpen, 0, "no tooltip while the usage popover is open");
   await page.screenshot({ path: path.join(directory, "usage-popover-open.png") });
   await page.mouse.move(100, 700);
   await page.keyboard.press("Escape");
   await usagePopover.waitFor({ state: "detached" });
-  await page.locator(".source-tooltip-popup").waitFor({ state: "detached" });
-  checks.push("0.2.103 usage trigger: the draft reads 'Usage: Context 0'; after the fixture turn (last 100 / window 128000) aria-label is 'Usage: Context 100 / 128k (0%)', ring dashoffset 2π·5 in resolved --cds-fill-accent, 12×12 svg, hover tooltip 'Context 100 / 128k (0%)' without detail, and no tooltip while the usage popover is open; F03: the popover is a 360px [data-cds=Popover] dialog named by an sr-only 'Usage' title, 8px above the ring with its end edge aligned, padding none, surface-3, holding 'Context window 100 / 128k (0%)' and 'See detailed breakdown' with no heading and no menuitem");
+  await cdsTip().waitFor({ state: "detached" });
+  checks.push("0.2.103 usage trigger: the draft reads 'Usage: Context 0'; after the fixture turn (last 100 / window 128000) aria-label is 'Usage: Context 100 / 128k (0%)', ring dashoffset 2π·6 in resolved --cds-fill-accent, 14×14 svg, hover tooltip 'Context 100 / 128k (0%)' without detail, and no tooltip while the usage popover is open; F03: the popover is a 360px [data-cds=Popover] dialog named by an sr-only 'Usage' title, 8px above the ring with its end edge aligned, padding none, surface-3, holding 'Context window 100 / 128k (0%)' and 'See detailed breakdown' with no heading and no menuitem");
   // R05 compact action (c2d611398 H row; cf6ae6197 Tw minPct 50 / Ow; c360a9e1c hd oe): the codex fixture always
   // reports last 100 tokens, so a 64000 / 128000 (50%) tokenUsage notification for this session is delivered on the
   // renderer's core event channel, then the original 100 is restored.
@@ -1041,14 +1050,16 @@ try {
   // Em Nn.Header + wm :8580-8633/:9012-9015, shared-11 uu :1430-1446; cc43287c9 :28625-28628 resetKey only
   // for an existing session). History = the open thread's userMessage text, oldest → newest.
   const historyState = () => page.evaluate(() => {
-    const node = document.querySelector('[data-cds="ChatComposerEditor"]'), header = document.querySelector(".sc-history-header"), grid = document.querySelector(".sc-history-header-grid");
-    const probe = document.createElement("span"); probe.style.fontSize = "var(--cds-font-size-footnote)"; probe.style.color = "var(--cds-text-muted)"; document.querySelector(".sc-surface").appendChild(probe);
+    // R4i-gui GU1 (R4g-composer CP1/CP2): the strip is the shell's Header part (chat-composer-shell.mjs Jd,
+    // data-cds ChatComposerHeader), mounted in the card (sc-card) inside Qo.Div's grid with hu's cds-grid-rows-in.
+    const node = document.querySelector('[data-cds="ChatComposerEditor"]'), header = document.querySelector('.sc-composer [data-cds="ChatComposerHeader"]'), grid = header?.closest("div.grid.overflow-hidden");
+    const probe = document.createElement("span"); probe.style.fontSize = "var(--cds-font-size-footnote)"; probe.style.color = "var(--cds-text-muted)"; document.querySelector(".sc-card").appendChild(probe);
     const footnote = getComputedStyle(probe).fontSize, muted = getComputedStyle(probe).color; probe.remove();
     const count = header?.querySelector(".sc-history-count");
     return { value: node.value, start: node.selectionStart, end: node.selectionEnd, focused: node.contains(document.activeElement) || document.activeElement === node,
       status: document.querySelector("[data-history-status]")?.textContent ?? null, statusRole: document.querySelector("[data-history-status]")?.getAttribute("role") ?? null,
       strip: header ? { text: header.textContent, hidden: header.getAttribute("aria-hidden"), cds: header.dataset.cds, countText: count?.textContent, numeric: count ? getComputedStyle(count).fontVariantNumeric : null,
-        fontSize: getComputedStyle(header).fontSize, footnote, color: getComputedStyle(header).color, muted, whiteSpace: getComputedStyle(header).whiteSpace, inCard: !!header.closest(".sc-surface"),
+        fontSize: getComputedStyle(header).fontSize, footnote, color: getComputedStyle(header).color, muted, whiteSpace: getComputedStyle(header).whiteSpace, inCard: !!header.closest(".sc-card"),
         beforeEditor: !!(header.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING), animation: getComputedStyle(grid).animationName, duration: getComputedStyle(grid).animationDuration } : null };
   });
   // The New draft (resetKey undefined) has no history.
@@ -1061,7 +1072,7 @@ try {
   await fillComposer(page, editor(), "");
   await page.keyboard.press("ArrowUp");
   await page.waitForFunction(() => document.querySelector('[data-cds="ChatComposerEditor"]').value === "Second history prompt.");
-  await page.locator(".sc-history-header").waitFor();
+  await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').waitFor();
   metrics.historyNewest = await historyState();
   assert.equal(metrics.historyNewest.start, "Second history prompt.".length, "caret after recall is at the end"); assert.equal(metrics.historyNewest.end, metrics.historyNewest.start);
   assert.equal(metrics.historyNewest.strip.text, "History 2/2"); assert.equal(metrics.historyNewest.strip.countText, "History 2/2");
@@ -1097,7 +1108,7 @@ try {
   await page.keyboard.press("End");
   await page.keyboard.type("x");
   await page.waitForFunction(() => document.querySelector('[data-cds="ChatComposerEditor"]').value === "First history prompt.x");
-  await page.locator(".sc-history-header").waitFor({ state: "detached" });
+  await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').waitFor({ state: "detached" });
   assert.equal((await historyState()).status, "");
   // A non-empty draft never enters history.
   await fillComposer(page, editor(), "");
@@ -1109,10 +1120,10 @@ try {
   // ArrowUp then ArrowDown past the newest entry restores the (empty) draft and clears the strip.
   await fillComposer(page, editor(), "");
   await page.keyboard.press("ArrowUp");
-  await page.locator(".sc-history-header").waitFor();
+  await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').waitFor();
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction(() => document.querySelector('[data-cds="ChatComposerEditor"]').value === "");
-  await page.locator(".sc-history-header").waitFor({ state: "detached" });
+  await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').waitFor({ state: "detached" });
   metrics.historyRestored = await historyState();
   assert.equal(metrics.historyRestored.value, ""); assert.equal(metrics.historyRestored.status, "");
   // An open slash popup keeps ArrowUp (c099c328d ya :11185 `!t && gi(e)`).
@@ -1132,12 +1143,12 @@ try {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await fillComposer(page, editor(), "");
   await page.keyboard.press("ArrowUp");
-  await page.locator(".sc-history-header").waitFor();
+  await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').waitFor();
   metrics.historyReducedMotion = (await historyState()).strip.animation;
   await page.emulateMedia({ reducedMotion: "no-preference" });
   assert.equal(metrics.historyReducedMotion, "none");
   await page.keyboard.press("ArrowDown");
-  await page.locator(".sc-history-header").waitFor({ state: "detached" });
+  await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').waitFor({ state: "detached" });
   checks.push("0.2.110 prompt history: the New draft ignores ArrowUp; in a 2-turn session ArrowUp in the empty editor recalls 'Second history prompt.' with the caret at the end and the aria-hidden ChatComposerHeader strip above the editor in the card reads 'History 2/2' (tabular-nums, footnote size, text-muted, nowrap, 0.3s cds-grid-rows-in) with an sr-only role=status copy; ArrowUp → 'History 1/2', again → swallowed at 1/2; typing ends it; a non-empty draft cannot enter; ArrowUp+ArrowDown restores the empty draft; an open slash menu keeps ArrowUp; reduced motion has no animation; light/dark screenshots");
 
   // 16. 0.2.120 composer chin chords (chin-shortcuts.mjs): sidebar-rows.js:14191-14200 openModeMenu cmd+shift+m /
@@ -1236,19 +1247,20 @@ try {
   // order, shared-frame-C_2npUJq.js:2136/:2206-2219); no native titles on Mode/Model/Effort.
   const modeBox = await modeTrigger().boundingBox();
   await page.mouse.move(modeBox.x + modeBox.width / 2, modeBox.y + modeBox.height / 2);
-  await page.locator('.source-tooltip-popup[data-state="open"]').waitFor();
-  metrics.chinModeTooltip = await page.locator(".source-tooltip-popup").evaluate(node => ({ label: node.querySelector(".source-tooltip-label")?.textContent, shortcuts: [...node.querySelectorAll(".source-tooltip-shortcut")].map(chip => [...chip.querySelectorAll("kbd")].map(kbd => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent).join("")) }));
+  // R4i-gui GU1: tQ's CdsTooltip (source-composer-row-chin.jsx ComposerModeTrigger) with the openModeMenu shortcut.
+  await cdsTip().waitFor();
+  metrics.chinModeTooltip = await cdsTipRows().then(([row]) => ({ label: row.label, shortcuts: row.shortcut === null ? [] : [row.shortcut] }));
   assert.deepEqual(metrics.chinModeTooltip, { label: "Mode", shortcuts: ["⇧⌘M"] });
   await page.screenshot({ path: path.join(directory, "chin-mode-tooltip.png") });
   await page.mouse.move(100, 700);
-  await page.locator(".source-tooltip-popup").waitFor({ state: "detached" });
+  await cdsTip().waitFor({ state: "detached" });
   const effortBox = await page.locator(".sc-chin .sc-effort-trigger").boundingBox();
   await page.mouse.move(effortBox.x + effortBox.width / 2, effortBox.y + effortBox.height / 2);
-  await page.locator('.source-tooltip-popup[data-state="open"]').waitFor();
-  metrics.chinEffortTooltip = await page.locator(".source-tooltip-popup .source-tooltip-label").textContent();
+  await cdsTip().waitFor();
+  metrics.chinEffortTooltip = (await cdsTipRows())[0].label;
   assert.equal(metrics.chinEffortTooltip, "Effort");
   await page.mouse.move(100, 700);
-  await page.locator(".source-tooltip-popup").waitFor({ state: "detached" });
+  await cdsTip().waitFor({ state: "detached" });
   metrics.chinTitles = await page.evaluate(() => [".sc-permission", ".sc-model-trigger", ".sc-effort-trigger"].map(selector => document.querySelector(`.sc-chin ${selector}`).getAttribute("title")));
   assert.deepEqual(metrics.chinTitles, [null, null, null]);
   // ⌥⌘F toggles the fixture's Fast tier; the sr-only role=status text follows; a second press restores it.
@@ -1294,6 +1306,32 @@ try {
   await settingsDialog.waitFor({ state: "detached" });
   checks.push("0.2.120 chin chords: a repeated ⌘⇧I is preventDefault'ed but opens nothing; ⌘⇧I opens Models (same chord closes, Escape closes); ⌘⇧E opens the effort popover (fixture has 4 efforts) and ⌘⇧I is ignored while it is open; ⌘⇧M opens Mode and, dispatched on the editor outside the popup (capture path only), Digit0 is claimed but selects nothing and Digit2 is claimed and selects the 2nd item, a plain digit is unclaimed with Mode closed, ⌥⌘M + a repeated digit restores; hovering Mode shows CDS 'Mode' + ⇧⌘M, Effort shows 'Effort', no native title on Mode/Model/Effort; ⌥⌘F toggles the fixture Fast tier (sr-only role=status 'Fast mode on'/'off', persisted fastMode) and back; a chord dispatched in the commit window right after 'Fast mode on' (Scheduler forced to yield before passive effects) is claimed and turns Fast off; under Settings no chord is claimed or acts");
 
+  // R4i-gui fix §17-env: the presets Home draft has no .sc-context-row (source-composer.jsx:770 shows it only with extra
+  // folders or a draft group); its chips are the environment bar's (source-composer-environment-bar.jsx over the generated
+  // cc43287c9 l0 / u0): the place chip [data-testid="environment-bar-trigger"] named "Environment: {value}" under h2's CdsTooltip
+  // "Where DeepSeek runs", and the folder chip [data-testid="environment-bar-folder"] named "Folder: {paths}" (F7 home-relative;
+  // the fixture workspace lives under the temp dir, so F7 leaves it as is) with the paths as native title.
+  await page.mouse.move(100, 700);
+  await page.getByRole("button", { name: "New", exact: true }).click();
+  await expectPlaceholder("Describe a task or ask a question", "New draft for the environment bar");
+  const envPlace = page.locator('[data-testid="environment-bar-trigger"]'), envFolder = page.locator('[data-testid="environment-bar-folder"]');
+  await envFolder.waitFor();
+  metrics.envBar = { rows: await page.locator(".sc-context-row").count(), place: /^Environment: .+/.test(await envPlace.getAttribute("aria-label") ?? ""),
+    folderName: await envFolder.getAttribute("aria-label"), folderTitle: await envFolder.getAttribute("title"),
+    folderText: (await envFolder.textContent()).includes(path.basename(workspace)) };
+  assert.deepEqual(metrics.envBar, { rows: 0, place: true, folderName: `Folder: ${workspace}`, folderTitle: workspace, folderText: true }, "environment bar chips on the Home draft");
+  await envPlace.hover();
+  await cdsTip().filter({ hasText: "Where DeepSeek runs" }).first().waitFor();
+  await page.mouse.move(100, 700);
+  checks.push("R4i §17-env: the Home draft has no .sc-context-row; the environment bar's place chip is named 'Environment: …' with the CDS tooltip 'Where DeepSeek runs', the folder chip is named 'Folder: <workspace>' with the path as native title and the basename as its label");
+
+  // R4i-gui fix: §17–17c below still drive the classic .sc-context-row (folder / branch / worktree chips, lH Recent menu,
+  // hT branch search, 'Send and stay here'), which the presets Home draft no longer renders, so they are skipped unless
+  // COMPOSER_STATES_CLASSIC_CONTEXT_ROW=1 until their runtime-checked rewrite onto the "home-folder" menu
+  // (source-environment-folder-adapters.jsx) lands. No later section reads a binding from them.
+  if (process.env.COMPOSER_STATES_CLASSIC_CONTEXT_ROW !== "1") {
+    checks.push("SKIPPED §17–17c (classic .sc-context-row; awaiting the environment-bar 'home-folder' rewrite)");
+  } else {
   // 17. Fidelity F03 environment chips on the New draft (cc43287c9-BMbiZYzF.js dH :21863-22100): CDS tooltips with the
   // source copy (no native title in the row), the lH Recent folder picker (radio rows, Delete dismisses a non-current
   // recent and persists it, 'Open folder…' browses with the 'Select folder for local session' dialog) and the hT branch
@@ -1569,6 +1607,7 @@ try {
   assert.deepEqual(metrics.stayWorktree, { starts: 2, distinct: 2, inRepo: 0, worktrees: 2, folder: path.basename(pickerRepo), checked: true, branch: "zeta-topic" });
   await worktreeBox.uncheck();
   checks.push("R05 review: with the worktree checkbox on, two ⌘⏎ launches from Home start in two different new worktrees (.code/worktrees), and Home keeps the picker-repo folder chip, the checked Worktree box and the zeta-topic checkout");
+  } // end of the skipped classic §17–17c
 
   // 18. Fidelity F05 composer behaviour.
   // 18a. Per-session drafts (code-workspace.js:1888-1915 Ul; cc43287c9-BMbiZYzF.js:28617, :6425-6450): text and a staged
@@ -1577,17 +1616,17 @@ try {
   await open(G, `${G}-answer-0`);
   await fillComposer(page, editor(), "half-written");
   await pasteFiles([{ name: "draft.png", type: "image/png", bytes: PNG.toString("base64") }]);
-  await page.locator('[data-cds-attachment][data-status="ready"]').waitFor();
+  await page.locator(READY_IMAGE).waitFor();
   await open(E, `${E}-answer-1`);
   metrics.draftOther = { value: await editor().evaluate(node => node.value), pills: await page.locator("[data-cds-attachment]").count() };
   assert.deepEqual(metrics.draftOther, { value: "", pills: 0 }, "the other session's composer is empty");
   await open(G, `${G}-answer-0`);
   await page.waitForFunction(() => document.querySelector(".sc-input").value === "half-written");
   metrics.draftBack = await page.evaluate(() => ({ value: document.querySelector(".sc-input").value,
-    pills: [...document.querySelectorAll("[data-cds-attachment]")].map(node => [node.dataset.kind, node.dataset.status, !!node.querySelector("img")?.getAttribute("src")]) }));
-  assert.deepEqual(metrics.draftBack, { value: "half-written", pills: [["image", "ready", true]] }, "the draft and its pill come back");
-  await page.locator('[data-cds-attachment][data-kind="image"]').hover();
-  await page.locator('[data-cds-attachment] .epitaxy-pill-remove').click();
+    pills: [...document.querySelectorAll("[data-cds-attachment]")].map(node => [node.dataset.cds, node.getAttribute("aria-busy"), !!node.querySelector("img")?.getAttribute("src")]) }));
+  assert.deepEqual(metrics.draftBack, { value: "half-written", pills: [["MessageAttachmentsImage", null, true]] }, "the draft and its tile come back");
+  await page.locator(IMAGE_TILE).hover();
+  await page.locator("[data-cds-attachment] [data-cds-attachment-remove]").click();
   await fillComposer(page, editor(), "fixture:complete draft send");
   const startsDraft = (await requests("turn/start")).length;
   await page.keyboard.press("Enter");
@@ -1622,7 +1661,7 @@ try {
   await page.locator(".loading-state").waitFor();
   await editor().focus();
   await page.keyboard.type("abc");
-  metrics.heldResume = { loading: await page.locator(".loading-state").count(), value: await editor().evaluate(node => node.value), card: await page.locator("form.sc-composer").getAttribute("data-disabled") };
+  metrics.heldResume = { loading: await page.locator(".loading-state").count(), value: await editor().evaluate(node => node.value), card: await page.locator(".sc-composer").getAttribute("data-disabled") };
   assert.deepEqual(metrics.heldResume, { loading: 1, value: "abc", card: null }, "typed while thread/resume is held");
   await page.locator(`[data-transcript-item-id="${F}-answer-0"]`).waitFor();
   await page.locator(".loading-state").waitFor({ state: "detached" });
@@ -1673,7 +1712,7 @@ try {
   await page.waitForFunction(() => document.querySelector(".sc-input").value === "queued two");
   await waitCount("thread/queue/delete", queueDeletes + 1);
   await page.locator('[data-queued-messages] .sqm-single').waitFor();
-  metrics.dequeue = { value: await editor().evaluate(node => node.value), count: await page.locator("[data-queued-messages] .sqm-count").textContent(), history: await page.locator(".sc-history-header").count(),
+  metrics.dequeue = { value: await editor().evaluate(node => node.value), count: await page.locator("[data-queued-messages] .sqm-count").textContent(), history: await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').count(),
     left: (await readThreads()).threads[G].queue.map(entry => entry.input[0].text) };
   assert.deepEqual(metrics.dequeue, { value: "queued two", count: "1 message queued", history: 0, left: ["queued one"] });
   await page.getByRole("button", { name: "Remove from queue", exact: true }).click();
@@ -1731,7 +1770,7 @@ try {
     await page.evaluate((mode) => { document.documentElement.dataset.mode = mode; }, mode);
     metrics.mentionChipModes[mode] = await mentionChip().evaluate((node) => { const label = node.querySelector(".sc-mention-chip-label"), probe = document.createElement("span"); probe.style.color = "var(--cds-text-accent)"; node.closest(".sc-composer").appendChild(probe); const accent = getComputedStyle(probe).color; probe.remove(); return [getComputedStyle(label).color, accent]; });
     assert.equal(metrics.mentionChipModes[mode][0], metrics.mentionChipModes[mode][1], `${mode} chip uses --cds-text-accent`);
-    await page.locator("form.sc-composer").screenshot({ path: path.join(directory, `mention-chip-${mode}.png`) });
+    await page.locator(".sc-composer").screenshot({ path: path.join(directory, `mention-chip-${mode}.png`) });
   }
   assert.notEqual(metrics.mentionChipModes.dark[0], metrics.mentionChipModes.light[0], "the accent follows the mode");
   await mentionChip().click();

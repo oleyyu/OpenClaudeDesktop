@@ -69,7 +69,9 @@ function safeEqual(a, b) {
 /** A handler's return value as an MCP CallToolResult. */
 function toolResult(value) {
   if (value && typeof value === "object" && Array.isArray(value.content)) {
-    return { content: value.content.filter((part) => part && typeof part === "object" && typeof part.type === "string"), ...(value.isError ? { isError: true } : {}), ...(value.structuredContent !== undefined ? { structuredContent: value.structuredContent } : {}) };
+    return { content: value.content.filter((part) => part && typeof part === "object" && typeof part.type === "string"), ...(value.isError ? { isError: true } : {}), ...(value.structuredContent !== undefined ? { structuredContent: value.structuredContent } : {}),
+      // An MCP result _meta passes through (the ccd_turn wrap_up answer carries {"claude/endTurn": true}).
+      ...(value._meta && typeof value._meta === "object" && !Array.isArray(value._meta) ? { _meta: value._meta } : {}) };
   }
   if (typeof value === "string") return { content: [{ type: "text", text: value.slice(0, MAX_TEXT) }] };
   if (value && typeof value === "object" && value.image && typeof value.image.data === "string") {
@@ -232,6 +234,18 @@ function createAgentToolsHost({
     const pending = pendingGroups(connection);
     if (pending.length) out.push(loadToolDefinition(pending));
     return out;
+  }
+  /** context-breakdown (session rail Context card): the tool definitions a session's code_desktop server lists to its
+   * core right now (`tools`, load_tools included while groups wait) and the deferred groups' tools it does not list yet
+   * (`deferred`). A session without a live server is answered as a fresh one (nothing loaded). */
+  function sessionToolLists(threadId) {
+    const named = (identity) => (typeof identity === "string" && START_TOKEN.test(identity) ? startTokens.get(identity) ?? null : identity);
+    const connection = [...connections].find((entry) => named(entry.identity) === threadId) ?? { identity: threadId, loaded: new Set() };
+    const listed = typeof isGroupListed === "function" ? isGroupListed : isGroupEnabled;
+    const pending = new Set(pendingGroups(connection));
+    const deferredTools = [...tools.values()].filter((entry) => pending.has(entry.group) && listed(entry.group) && servedToCore(entry, connection.identity))
+      .map(({ tool }) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema && typeof tool.inputSchema === "object" ? tool.inputSchema : { type: "object", properties: {} } }));
+    return { tools: listTools(connection), deferred: deferredTools };
   }
   /** load_tools on one connection: the groups join its list, and the core is told to read it again. */
   function loadGroups(connection, args) {
@@ -488,6 +502,9 @@ function createAgentToolsHost({
     // keeps *TOKEN* names by default), so a command the agent runs would otherwise be able to drive any session's
     // terminal and preview tools. Blank them for every command, as the Codex endpoint key is (prefs/codex-provider.mjs).
     for (const key of ["CODE_DESKTOP_AGENT_TOOLS_TOKEN", "CODE_DESKTOP_AGENT_TOOLS_SOCKET", "CODE_DESKTOP_AGENT_TOOLS_SERVER"]) out.push("-c", `shell_environment_policy.set.${key}=""`);
+    // A tool that takes the place of one Codex has built in (codexBuiltin: agent-tools/turn-plan.mjs update_plan) turns
+    // Codex's own off, so its model sees one tool of that name (config [tools] <name>.enabled).
+    for (const { tool } of tools.values()) if (typeof tool.codexBuiltin === "string" && /^[a-z_]{1,64}$/.test(tool.codexBuiltin)) out.push("-c", `tools.${tool.codexBuiltin}.enabled=false`);
     for (const { tool } of tools.values()) if (tool.approval === "prompt") out.push("-c", `mcp_servers.${SERVER_NAME}.tools.${tool.name}.approval_mode="prompt"`);
     for (const [key, value] of Object.entries(env)) out.push("-c", `mcp_servers.${SERVER_NAME}.env.${key}=${toml(value)}`);
     return out;
@@ -523,7 +540,7 @@ function createAgentToolsHost({
     for (const { send } of connections) send({ type: "list_changed" });
   }
   return {
-    start, stop, ready, provide, call, cancelSession, cancelThread, recentImages, listTools, launchEnv, codexArgs, sessionIdentity, bindThread, sessionConfig, sessionToken, notifyListChanged,
+    start, stop, ready, provide, call, cancelSession, cancelThread, recentImages, listTools, sessionToolLists, launchEnv, codexArgs, sessionIdentity, bindThread, sessionConfig, sessionToken, notifyListChanged,
     serverCommand, get socketPath() { return socketPath; }, get connectionCount() { return connections.size; }, get revision() { return revision; }, SERVER_NAME,
   };
 }

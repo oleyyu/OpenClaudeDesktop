@@ -1,12 +1,13 @@
 import React, { createContext, useContext } from 'react';
 import { HostMenuButton } from './source-chat-adapters.jsx';
 import { t, getLocale } from '../electron/i18n/index.mjs';
+import { useStartIntl } from './source-code-start-adapters.jsx';
 export { HostButton, LocalizedMessage, useDesktopFrame, ThemePortal } from './source-chat-adapters.jsx';
 
 // The source header owns its layout; account services are replaced at this boundary.
 export const LocalProjectContext = createContext(null);
 export const useProjectAnalytics = () => ({ track() {} });
-export const useProjectIntl = () => ({ locale: getLocale(), formatMessage: ({ defaultMessage }, values) => t(defaultMessage, values) });
+export const useProjectIntl = useStartIntl;
 export const useNoProjectSharing = () => false;
 export const NoProjectSharing = () => null;
 export const LocalProjectMarker = () => null;

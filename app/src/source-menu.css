@@ -43,6 +43,20 @@
   border-bottom: var(--cds-ring-inner, 0px) solid transparent;
   padding: 4px;
 }
+/* 2.42304.0 shared-frame Hx with a header or footer: "flex min-h-0 flex-col overflow-hidden rounded-[inherit]";
+   header zx "shrink-0 px-[var(--cds-menu-gutter,0.25rem)] pt-[var(--cds-menu-gutter,0.25rem)]"; the list Rx
+   "min-h-0 flex-1 overflow-y-auto …" with " pt-0" under a header (its border-radius stays on the frame); footer Bx
+   "-mt-[var(--cds-menu-gutter,0.25rem)] shrink-0 px-[…] pb-[…]". forced-colors:border-b-0 as in Lx/Rx. */
+.smenu-frame { display: flex; min-height: 0; flex-direction: column; overflow: hidden; border-radius: inherit; }
+.smenu-frame-header { flex-shrink: 0; padding: var(--cds-menu-gutter, .25rem) var(--cds-menu-gutter, .25rem) 0; }
+.smenu-frame > .smenu-body { flex: 1; border-radius: 0; }
+.smenu-body[data-after-header] { padding-top: 0; }
+.smenu-frame-footer {
+  flex-shrink: 0;
+  margin-top: calc(-1 * var(--cds-menu-gutter, .25rem));
+  padding: 0 var(--cds-menu-gutter, .25rem) var(--cds-menu-gutter, .25rem);
+}
+@media (forced-colors: active) { .smenu-body { border-bottom-width: 0; } }
 
 /* Wg/Gg item */
 .smenu-item {

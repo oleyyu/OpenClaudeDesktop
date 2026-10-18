@@ -108,7 +108,9 @@ try {
   await page.locator(`[data-source-session-id="${threadId}"] .source-session-open`).click();
   await page.locator(".st-title").waitFor();
   await page.evaluate(() => document.fonts.ready);
-  await page.locator(".sg-row").waitFor();
+  // R4i-gui GU1 (R4i-rail RL2): rail mode hides the band (main.jsx railHidesBand); the session's git row is the rail
+  // Changes card's (changes-row.mjs OLe, data-rail-changes-row).
+  await page.locator('aside[aria-label="Session details"] nav[aria-label="Repository and pull request controls"] [data-rail-changes-row]').waitFor();
   // panes-toggle-current.js:3165 cl label is "Changes" (was the non-source "Show changes").
   await page.getByRole("button", { name: "Changes", exact: true }).click();
   const changes = page.getByRole("complementary", { name: "Changes panel" });

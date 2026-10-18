@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import React from 'react';
+import { tooltipContentKey } from '../src/generated/code-current/tooltip-structure.mjs';
 import {
   computeTooltipPosition,
   createTooltipGroupState,
@@ -40,6 +42,23 @@ function clock() {
     },
   };
 }
+
+test('tooltip identity follows content structure, retaining text-only updates and replacing component changes', () => {
+  const key = tooltipContentKey;
+  for (const value of [null, undefined, '', true, false]) assert.equal(key(value), 'none');
+  assert.equal(key('one'), key('two'));
+  assert.notEqual(key('0'), key(0));
+  const text = value => React.createElement('b', { key: 'label' }, value);
+  assert.equal(key(text('one')), key(text('two')));
+  assert.notEqual(key(text('one')), key(React.createElement('span', { key: 'label' }, 'one')));
+  assert.notEqual(key(text('one')), key(React.createElement('b', { key: 'other' }, 'one')));
+  assert.equal(key([text('one'), null]), key([text('two'), false]));
+  assert.notEqual(key(React.createElement(React.Fragment, null, text('one'))), key(text('one')));
+  const A = () => null, B = () => null;
+  assert.equal(key(React.createElement(A, { value: 1 })), key(React.createElement(A, { value: 2 })));
+  assert.notEqual(key(React.createElement(A)), key(React.createElement(B)));
+  assert.notEqual(key(React.createElement(React.memo(A))), key(React.createElement(A)));
+});
 
 test("source-empty content does not create a tooltip, but zero remains useful content", () => {
   for (const value of [null, undefined, "", false, true, [false, [null, ""]]])

@@ -1,3 +1,5 @@
+import { createBreadcrumbLister } from './file-breadcrumb-model.mjs';
+import { readFileView } from './generated/code-current/file-view-memory.mjs';
 import {useBlankTreeSelection} from "./use-blank-tree-selection.jsx";
 import {selectFileRange,selectAllFiles} from "./file-tree-selection.mjs";
 import { SourceFileMenuEntries } from "./source-file-menu-entries.jsx";
@@ -14,13 +16,16 @@ import {reasoningText,isHiddenTranscriptItem} from './transcript-item-visibility
 import {useResponsePacing} from './use-response-pacing.js';
 import {SourceResponseBoundary,SourceBlockBoundary} from './source-response-boundary.jsx';
 import {SourceGenericToolBody} from './source-generic-tool.jsx';
+// R4g-mcp MA-7: an MCP call whose tool is an MCP App tool of the session is the 2.42304.0 widget card (VX), else this row.
+import {SourceMcpAppRow,isMcpCallItem} from './source-mcp-app.jsx';
 import {SourcePlanPane, SourcePlanCopyButton} from './source-plan-pane.jsx';
-import { SourceReviewFindingsBar } from './source-pane-review.jsx';
-import { fixFindingsPrompt, latestReviewFindings, reportedFindings, reportedFindingsReview } from './review-findings-model.mjs';
+import { useChangesPaneReview } from './source-pane-review.jsx'; // R4f-findings-store
+import { SourceFindingsCard, reportFindingsCardTool } from './source-findings-card.jsx';
 import {plainReasoningText,thinkingQuote} from './reasoning-model.mjs';
 import {createClipboardFeedback} from './clipboard-feedback.mjs';
 import {clipboardEnvironment,writeClipboardPayload} from './clipboard-payload.mjs';
 import {useSourceToasts} from './source-toast.jsx';
+import { downloadFileContents, fileDownloadPlan } from './file-download-model.mjs';
 import {SourceSettingsButton} from './source-settings-button.jsx';
 import {isGenericTool,observedGenericTool,genericToolLabel,genericToolBody} from './generic-tool-model.mjs';
 import {questionOutcome,questionReceipt,toolOutputImages} from './generic-tool-model.mjs';
@@ -39,10 +44,10 @@ import { SourceQuestionCard } from "./source-question-card.jsx";
 import { SourceArtifacts, SourceDeliverables, itemDeliverables } from "./source-deliverables.jsx";
 import { chapterOf } from "./agent-tool-titles.mjs";
 import { SourceClaudeChapter } from "./source-chapters.jsx";
-import "./source-suggested-tasks.css";
 import { localizeBridgeNote } from "./bridge-text-model.mjs";
 import { approvalIdentity, isPlanReviewRequest } from "./approval-draft-model.mjs";
 import { SourcePlanApprovalCard, planTargetOf, planAcceptOptions, PlanMoreOptions } from "./source-plan-card.jsx";
+import { useCardHotkeys } from './use-card-hotkeys.js';
 import "./source-plan-card.css";
 import { userMessageContent, shownUserItem } from "./composer-attachments-model.mjs";
 import { WebLinkContext } from "./web-link-context.mjs";
@@ -72,14 +77,15 @@ import { responseImageTarget } from './response-image-model.mjs';
 import { ResponseTaskInput, ResponseTaskItem } from './source-response-task.jsx';
 import { Icon } from "./icons";
 import { SourceTooltip, SourceTooltipGroup } from "./source-tooltip.jsx";
+import { SourceUserFileCard } from "./source-user-file-card.jsx"; // R2-topbar TT-07
 import { SourceMenu } from "./source-menu.jsx";
 import { FILE_TAB_LABELS, fileViewerMenuItems, fileTabsToRight, insertFileTab, moveFileTab, tabDetail, tabMenuItems, tabRelativePath, tabTooltip } from "./file-tab-menu-model.mjs";
 import { fileContextMenu, multiFileContextMenu, fileCopyChoices, fileLinkLabel } from "./file-context-menu-model.mjs";
+import { CurrentSessionIdContext, useFileGone, inMultiSelection, openWhenChecked } from "./file-gone-menu.mjs"; // R3-files FT-05
 import { stableIds, tabOverflowLayout } from "./file-tab-overflow-model.mjs";
 import { SourceSessionFileViewer, FILE_VIEWER_LABELS } from "./source-file-viewer.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import { menuTriggerProps } from "./source-menu.jsx";
-import { fileKindIcon } from "./file-kind-icon.mjs";
 import { SourceTaskEvent } from "./source-task-event.jsx";
 import { workflowTaskEvent } from "./task-event-model.mjs";
 import { useSourcePointerResize } from "./use-pointer-resize.js";
@@ -106,8 +112,16 @@ import { SourceForgeRepoContext, SourceForgeRef } from './source-forge-ref.jsx';
 import { SourceFilesSearch } from "./source-files-search";
 import { useFileTreeReveal } from "./use-file-tree-reveal";
 import { revealChild } from "./files-search-model.mjs";
-import { singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, onEnterReleased,
+import { singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, treeIndent, onEnterReleased,
   fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux } from "./file-tree-row-model.mjs";
+// R3-files FT-14: the tree's official classes and kept guides (file-tree-row-model.mjs over generated/files-changes),
+// its glyphs (CDS Icon, the c280f9bbb file-type icon), the multi-selection Escape (c856385e2 nt) and the worktree start folder.
+import { FILE_TREE_CONTAINER_CLASS, FILE_TREE_GUIDE_LAYER_CLASS, fileTreeRowClassName, fileTreeRowPrimary, fileTreeIconClassName,
+  fileTreeNameClassName, fileTreeIconSize, applyKeptGuides } from "./file-tree-row-model.mjs";
+import { CdsIcon } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
+import { useMultiSelectionEscape } from "./generated/files-changes/file-selection-escape.mjs";
+import { FilesQueryScope, useTreeStartFolder, startRevealNonce } from "./file-tree-start-folder.jsx";
 import { SourceCoachmark } from "./source-coachmark.jsx";
 import { readMarkdownCodeBlock } from "./code-fence-model.mjs";
 import { detectSecrets, maskSecret, maskSecrets, secretLabel } from "./secret-redaction-model.mjs";
@@ -118,6 +132,13 @@ import { SourceToolGroup } from "./source-tool-group.jsx";
 import { ApprovalFileChangeBody, FileToolMessage } from "./source-file-tool.jsx";
 import { fileAction } from "./file-tool-model.mjs";
 import { rowExpansionKey, toolRowExpansion } from "./tool-group-expansion.mjs";
+import { StatusStep, useTurnStatusRows } from "./source-transcript-rows.jsx";
+import { runningCandidate } from "./transcript-rows-model.mjs";
+import { SourceToolRun } from "./source-transcript-tool-rows.jsx";
+import { ThoughtProcessStep, ToolRow } from "./generated/transcript-rows/group-status.mjs";
+import { TranscriptToolScope } from "./transcript-tool-scope.mjs";
+const TOOL_SCOPE_DEFAULTS = Object.freeze({ showThinking: true, surface: null, pendingApprovalItemIds: null, renderImages: null, renderMarkdown: null, renderAttachedFiles: null, renderCard: null, liveOutputTask: null, openLiveOutput: null });
+import { pathChoices } from "./file-tool-model.mjs";
 import "./source-session.css";
 import { getLocale, t, tn } from "../electron/i18n/index.mjs";
 import { formatTokenCount } from "./usage-cost-model.mjs";
@@ -397,6 +418,18 @@ function SourceStep({
   const mounted = open || mountedKey === expansionKey;
   const toggle = () => { if (!forcedOpen) toolRowExpansion.set(expansionKey, !open); };
   const hasBody = children != null;
+  // turnStatusRows (GrowthBook __gb__2846116625, on): the row is the desktop's CDS TurnStatus.Step (c96d752d0 qP / $Ae /
+  // HZ), and while its tool runs ZAe's busy row that takes the turn's mark (source-transcript-rows.jsx). The classic
+  // markup below is the gate-off branch.
+  const statusRows = useTurnStatusRows();
+  if (statusRows) {
+    const unknown = state === "unknown" ? <span className="shrink-0 text-muted">{STEP_OUTCOME_WORD.unknown}</span> : null;
+    return <StatusStep state={state} label={label} meta={meta} metaTitle={metaTitle || (typeof meta === "string" ? meta : undefined)}
+      trailing={unknown ? <>{trailing}{unknown}</> : trailing} actions={actions ?? undefined} actionsLabel={actions ? actionsLabel || t("Message actions") : undefined}
+      open={open} onOpenChange={next => { if (!forcedOpen && next !== open) toolRowExpansion.set(expansionKey, next); }}
+      candidate={state === "busy" ? runningCandidate(item) : undefined} after={after}
+      rest={{ "data-transcript-item-id": item.id, className: `source-message ${className}`.trim() }}>{children}</StatusStep>;
+  }
   return (
     <div
       className={`source-message source-step ${classic ? 'source-step-classic' : ''} ${className}`}
@@ -458,6 +491,28 @@ function SourceStep({
   );
 }
 
+// c96d752d0 UZ: the classic italic thought block (zZ) without turnStatusRows, with it the original HZ (generated
+// ThoughtProcessStep): the open "Thought process" up.Step with its copy action, "Thinking actions". Verbose opens it.
+function SourceReasoningRow({ item, text, stepDefaults, preceding = false }) {
+  const statusRows = useTurnStatusRows();
+  const scope = useMemo(() => ({ ...TOOL_SCOPE_DEFAULTS, transcriptView: stepDefaults?.forcedOpen ? "verbose" : "normal" }), [stepDefaults?.forcedOpen]);
+  if (statusRows)
+    return <div className="source-message source-reasoning source-reasoning-step" data-transcript-item-id={item.id}>
+      <TranscriptToolScope.Provider value={scope}><ThoughtProcessStep text={text} expansionKey={`${stepDefaults?.sessionKey ?? ""}:${item.id}:thinking`} /></TranscriptToolScope.Provider>
+    </div>;
+  if (preceding)
+    return <SourceStep item={item} label={t("Thought process")} className="source-reasoning source-reasoning-step" defaultOpen {...stepDefaults}
+      actions={<SourceCopyQuote text={text} variant="action" />} actionsLabel={t("Thinking actions")}>
+      <div className="source-reasoning-step-text"><bdi>{text}</bdi></div>
+    </SourceStep>;
+  return (
+    <div className="source-message source-reasoning source-reasoning-block" data-transcript-item-id={item.id}>
+      <div className="source-reasoning-text">{text}</div>
+      <div className="source-reasoning-copy"><SourceCopyQuote text={text} /></div>
+    </div>
+  );
+}
+
 function Diff({ value = "", scopeKey, ...props }) {
   return <SourceDiff value={value} scopeKey={scopeKey} {...props} />;
 }
@@ -478,10 +533,6 @@ function attachmentSource(part) {
 }
 function isImagePart(part) {
   return typeof part.type === "string" && part.type.toLowerCase().includes("image");
-}
-function extensionBadge(name) {
-  const match = /\.([A-Za-z0-9]{1,8})$/.exec(name);
-  return match ? match[1].toUpperCase() : "";
 }
 
 // ep -> $f (scroll-shared-10): a tile is natural only when the frame setting
@@ -515,23 +566,10 @@ function UserImageTile({ part, index }) {
   );
 }
 
-// lp/sp (scroll-shared-10): a real non-image path part becomes a square file
-// card with a two-line footnote name and an uppercase extension badge.
+// R2-topbar TT-07 (2.42304.0 shared-2 Pp/Np): a real non-image path part becomes the square file card of
+// source-user-file-card.jsx, its name in 2–4 adaptive lines with the head/…/tail split.
 function UserFileCard({ part }) {
-  const name = basename(part.path);
-  const badge = extensionBadge(name);
-  return (
-    <div data-cds="MessageAttachmentsFile" className="source-user-attachment-file" title={part.path}>
-      <div data-cds="Card" className="source-user-attachment-card">
-        <span aria-hidden="true" className="source-user-attachment-fill" />
-        <div className="source-user-attachment-file-body">
-          <span aria-hidden="true" className="source-user-attachment-name"><bdi>{name}</bdi></span>
-          <span className="sr-only">{name}</span>
-          {badge && <span className="source-user-attachment-badge">{badge}</span>}
-        </div>
-      </div>
-    </div>
-  );
+  return <SourceUserFileCard name={basename(part.path)} path={part.path} />;
 }
 
 // Errors a language server found after an edit: a muted list of location and message (no motion).
@@ -703,11 +741,77 @@ function SourceCopyQuote({ text, variant = "hover" }) {
 // (approval-current.js:54035-54063): command and Read/Edit bodies take the
 // inCard layouts of Uoe/GO (:6874-6941) and UO (:6784-6837).
 const NO_PENDING_APPROVALS = new Set();
-export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null }) {
+// turnStatusRows on (GrowthBook __gb__2846116625, host-growthbook.mjs): a standalone tool row is the 2.42304.0 tool group
+// n0 over its SDK tool call (source-transcript-tool-rows.jsx), as every tools entry of the desktop's transcript is. The
+// host keeps its own cards for what it draws as one: chapters, deliverables, findings, answered questions, workflow
+// runs, agents, computer use and image / sleep / hook items (the last ones also inside original groups, through the
+// engine surface).
+export function officialToolItem(item) {
+  if (!item || item.workflowRun || chapterOf(item) || itemDeliverables(item) || reportFindingsCardTool(item)) return false;
+  if (item.type === "commandExecution" || item.type === "fileChange" || fileAction(item)) return true;
+  if (!isGenericTool(item) || item.type === "functionCallOutput") return false;
+  return !questionReceipt(item, commandRowState(item));
+}
+// The host's side of the original tool rows (SourceToolRun's `host`): its cards, images, markdown and file openers. The
+// tool result bodies are the originals (cb6930dae Tu over the SDK tool call and its result, transcript-sdk-tools.mjs);
+// what the host still draws under a row is an item's deliverables (codeDesktop.artifacts, where the desktop draws the
+// files a tool attached: cb6930dae iu).
+function useToolRunHost({ agentContext, sessionKey, cwd, onOpenFileRef, onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested }) {
+  return useMemo(() => {
+    const renderAttachedFiles = (item) => {
+      if (!item || !isGenericTool(item)) return null;
+      const observed = observedGenericTool(item, agentContext?.state, sessionKey);
+      return Array.isArray(observed.codeDesktop?.artifacts) && observed.codeDesktop.artifacts.length ? <SourceArtifacts artifacts={observed.codeDesktop.artifacts} sessionKey={sessionKey} /> : null;
+    };
+    const renderMarkdown = (text) => <SourceMarkdown text={text} sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} />;
+    const renderHostRow = (item, props = {}) => <SourceMessage agentContext={agentContext} agentNested={agentNested} inToolGroup={props.inGroup !== false} item={item} isStreaming={isStreaming}
+      sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItemIds ?? NO_PENDING_APPROVALS} />;
+    const renderCard = (kind, props) => {
+      const item = props.tool?.hostItem;
+      if (!item) return undefined;
+      if (kind === "mcp-app" && isMcpCallItem(item))
+        return <SourceMcpAppRow item={item} sessionKey={sessionKey} awaitingApproval={!!pendingApprovalItemIds?.has(item.id)} fallback={props.fallback ?? <ToolRow tool={props.tool} />} />;
+      if (kind === "findings" && reportFindingsCardTool(item))
+        return <SourceFindingsCard item={item} sessionKey={sessionKey} items={agentContext?.state?.items?.[sessionKey] ?? null}
+          turnErrors={agentContext?.state?.turnErrors?.[sessionKey] ?? null} turnTimes={agentContext?.state?.turnTimes?.[sessionKey] ?? null} />;
+      if (kind === "question") {
+        const observed = observedGenericTool(item, agentContext?.state, sessionKey);
+        const pairs = questionReceipt(observed, commandRowState(observed, !!pendingApprovalItemIds?.has(item.id)));
+        return pairs ? <SourceQuestionReceipt item={item} pairs={pairs} sessionKey={sessionKey} /> : undefined;
+      }
+      return undefined;
+    };
+    const renderImages = (images, path) => <SourceToolImages images={images.map(image => `data:${image.mimeType};base64,${image.data}`)} itemId={path || undefined} />;
+    const openFilePath = onOpenFileRef ? (path, { line, endLine } = {}) => {
+      onOpenFileRef({ path: pathChoices(path, cwd)?.absolute || path, ...(Number.isFinite(line) ? { line } : {}), ...(Number.isFinite(endLine) ? { endLine } : {}) });
+    } : null;
+    const openDiff = onOpenChanges ? (path) => onOpenChanges(path) === true : null;
+    // _M: a running command with a background process, when the tasks pane can show it.
+    const liveOutputTask = agentContext?.onTask ? (item) => (item?.type === "commandExecution" && item.processId && (item.status === "inProgress" || item.status === "running") ? item.id : undefined) : null;
+    const openLiveOutput = agentContext?.onTask ? (taskId) => agentContext.onTask(taskId) : null;
+    return { sessionKey, cwd, transcriptView, pendingApprovalItemIds, renderHostRow, renderCard, renderImages, renderMarkdown, renderAttachedFiles, openFilePath, openDiff,
+      liveOutputTask, openLiveOutput,
+      isMcpAppTool: (name) => typeof name === "string" && name.startsWith("mcp__") };
+  }, [agentContext, sessionKey, cwd, onOpenFileRef, onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested]);
+}
+export { useToolRunHost };
+function SourceOfficialToolMessage(props) {
+  const statusRows = useTurnStatusRows();
+  const host = useToolRunHost(props);
+  if (!statusRows) return <SourceMessage {...props} officialChecked />;
+  const item = props.item.type === "webSearch" ? observedGenericTool(props.item, props.agentContext?.state, props.sessionKey) : props.item;
+  return <SourceToolRun items={[item]} host={host} rest={{ "data-transcript-item-id": item.id, "data-turn-start": props.turnStart || undefined }} />;
+}
+
+export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null, officialChecked = false }) {
   if (isHiddenTranscriptItem(item, transcriptView)) return null;
+  if (!inToolGroup && !officialChecked && officialToolItem(item))
+    return <SourceOfficialToolMessage isInterrupting={isInterrupting} item={item} agentContext={agentContext} agentNested={agentNested} turnStart={turnStart} isStreaming={isStreaming}
+      sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItemIds}
+      turnStartedAtMs={turnStartedAtMs} reasoningPlacement={reasoningPlacement} userActions={userActions} />;
   const stepDefaults = { forcedOpen: transcriptView === "verbose", sessionKey };
   if (item.type === "collabAgentToolCall") return <SourceAgentTool item={item} context={agentContext} inGroup={inToolGroup} Step={SourceStep} pendingApprovalItemIds={pendingApprovalItemIds} {...stepDefaults} />;
-  if (item.type === "fileToolGroup") return <SourceToolGroup agentContext={agentContext} item={item} pendingApprovalItemIds={pendingApprovalItemIds} transcriptView={transcriptView}
+  if (item.type === "fileToolGroup") return <SourceToolGroup agentContext={agentContext} item={item} pendingApprovalItemIds={pendingApprovalItemIds} transcriptView={transcriptView} isStreaming={isStreaming} agentNested={agentNested}
     cwd={cwd} sessionKey={sessionKey} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges}
     renderItem={member => <SourceMessage agentContext={agentContext} agentNested={agentNested} inToolGroup item={member} turnStart={false} isStreaming={isStreaming} sessionKey={sessionKey} cwd={cwd}
       onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItemIds} />} />;
@@ -746,19 +850,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
     // Thinking before tools is H2, an open "Thought process" step; any other
     // thought is the classic U2 block (scroll-messages-current.js:44475-44545).
     // Both are plain text: no Markdown and no reveal pacing.
-    if (reasoningPlacement === "preceding-tools")
-      return (
-        <SourceStep item={item} label={t("Thought process")} className="source-reasoning source-reasoning-step" defaultOpen {...stepDefaults}
-          actions={<SourceCopyQuote text={text} variant="action" />} actionsLabel={t("Thinking actions")}>
-          <div className="source-reasoning-step-text"><bdi>{text}</bdi></div>
-        </SourceStep>
-      );
-    return (
-      <div className="source-message source-reasoning source-reasoning-block" data-transcript-item-id={item.id}>
-        <div className="source-reasoning-text">{text}</div>
-        <div className="source-reasoning-copy"><SourceCopyQuote text={text} /></div>
-      </div>
-    );
+    return <SourceReasoningRow item={item} text={text} stepDefaults={stepDefaults} preceding={reasoningPlacement === "preceding-tools"} />;
   }
   if (item.type === "fileChange" || fileAction(item)) {
     // QO under a standalone row, inside the row root after its body (RN approval-current.js:17302);
@@ -804,13 +896,12 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
   const chapter = chapterOf(item);
   if (chapter) return <SourceClaudeChapter sessionId={sessionKey} id={chapter.id} title={chapter.title} itemId={item.id} />;
   if (itemDeliverables(item)) return <SourceDeliverables item={item} sessionKey={sessionKey} failed={item.status === "failed" || item.success === false} />;
-  // A finished ReportFindings call (OpenClaude Desktop's agent tools) reads as the review it reported, like a review mode's
-  // Review result (exitedReviewMode below); its findings also drive the Changes pane's findings bar.
-  const reported = reportedFindings(item, cwd);
-  if (reported)
-    return <SourceStep item={item} {...stepDefaults} label={t("Review result")} meta={reported.length ? tn(reported.length, "{count} finding", "{count} findings") : undefined} state="done">
-      <SourceMarkdown text={reportedFindingsReview(reported)} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} />
-    </SourceStep>;
+  // R4e-findings (toolcards-18): a finished ReportFindings call (OpenClaude Desktop's agent tools) is the 2.42304.0
+  // findings card (c96d752d0 X$ / h0e, source-findings-card.jsx); its findings also drive the Changes pane's findings bar.
+  // An input the card cannot read stays the generic tool row below (X$'s fallback).
+  if (reportFindingsCardTool(item))
+    return <SourceFindingsCard item={item} sessionKey={sessionKey} items={agentContext?.state?.items?.[sessionKey] ?? null}
+      turnErrors={agentContext?.state?.turnErrors?.[sessionKey] ?? null} turnTimes={agentContext?.state?.turnTimes?.[sessionKey] ?? null} />;
   if (isGenericTool(item)) {
     const observed=observedGenericTool(item,agentContext?.state,sessionKey);
     const state=commandRowState(observed,pendingApprovalItemIds.has(item.id));
@@ -828,12 +919,14 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
     // Files and links the core attached to the call (codeDesktop.artifacts: Qwen's recorded artifacts).
     const artifacts=Array.isArray(observed.codeDesktop?.artifacts)&&observed.codeDesktop.artifacts.length?<SourceArtifacts artifacts={observed.codeDesktop.artifacts} sessionKey={sessionKey}/>:null;
     const column=images.length||artifacts?<>{images.length?<SourceToolImages images={images} itemId={item.id}/>:null}{artifacts}</>:null;
-    return <SourceStep item={item} {...stepDefaults} {...genericToolLabel(observed,state)}
+    const row=<SourceStep item={item} {...stepDefaults} {...genericToolLabel(observed,state)}
       state={state} classic caretSize={14} className="source-generic-step" trailing={outcome?<span className="source-step-outcome">{outcome}</span>:undefined}
       after={inToolGroup?null:column}>
       {/* KO :6943-6944: an MCP body is the standalone WO card only outside a group row. */}
       {inToolGroup&&column?<>{body}{column}</>:body}
     </SourceStep>;
+    // KBe "mcp_app" / m2e / e0 (c96d752d0): VX with this row as its fallback (source-mcp-app.jsx).
+    return isMcpCallItem(item)?<SourceMcpAppRow item={item} sessionKey={sessionKey} awaitingApproval={pendingApprovalItemIds.has(item.id)} turnStart={turnStart} fallback={row}/>:row;
   }
   // Codex image generation, view_image, the sleep tool and hook-injected context (media-item-model.mjs).
   if (isMediaItem(item)) {
@@ -919,7 +1012,7 @@ export const PLAN_HANDOFF_LABELS = Object.freeze({
   auto: t("Implement and auto mode"),
   bypass: t("Implement and bypass permissions"),
 });
-export function planHandoffActions(target, { bypass = false } = {}) {
+export function planHandoffActions(target, { bypass = false, acceptModes } = {}) {
   const mode = planTargetOf(target, { bypass });
   return {
     left: [{ key: "stay", label: t("Stay in Plan"), primary: false, keycap: "esc", shortcut: "Escape" }],
@@ -928,11 +1021,11 @@ export function planHandoffActions(target, { bypass = false } = {}) {
         keycap: "cmd+shift+enter", shortcut: "Meta+Shift+Enter Control+Shift+Enter" }] : []),
       { key: "primary", label: PLAN_HANDOFF_LABELS[mode], primary: true, keycap: "cmd+enter", shortcut: "Meta+Enter Control+Enter" },
     ],
-    more: planAcceptOptions({ bypass }).filter((option) => option !== mode).map((option) => ({ mode: option, label: PLAN_HANDOFF_LABELS[option] })),
+    more: planAcceptOptions({ bypass }).filter((option) => option !== mode && (!acceptModes || acceptModes.includes(option))).map((option) => ({ mode: option, label: PLAN_HANDOFF_LABELS[option] })),
   };
 }
 const composingKey = (event) => event.isComposing || event.nativeEvent?.isComposing || event.keyCode === 229 || event.nativeEvent?.keyCode === 229;
-export function SourcePlanHandoffCard({ handoffKey, target, bypassAvailable = false, busy = false, isActive = true, menuOpen = false, onImplement, onStay, onOpenPlan }) {
+export function SourcePlanHandoffCard({ handoffKey, target, bypassAvailable = false, acceptModes, captureHotkeys = false, busy = false, isActive = true, menuOpen = false, onImplement, onStay, onOpenPlan }) {
   const root = useRef(null), headingId = useId();
   const [pressed, setPressed] = useState(null);
   const clickArmed = useAllowArming(root, handoffKey, isActive);
@@ -959,7 +1052,14 @@ export function SourcePlanHandoffCard({ handoffKey, target, bypassAvailable = fa
     if (event.repeat || !hotkeyArmed() || !currentlyVisible(root.current)) return;
     act(event.shiftKey && mode !== "ask" ? "accept" : "primary");
   }
-  const { left, right, more } = planHandoffActions(mode, { bypass: bypassAvailable });
+  useCardHotkeys(root, captureHotkeys && shortcutEnabled, (key, event) => {
+    event.preventDefault(); event.stopPropagation();
+    if (event.repeat) return;
+    if (key === 'escape') { act('stay'); return; }
+    if (!hotkeyArmed() || !currentlyVisible(root.current)) return;
+    act(key === 'submit-shift' && mode !== 'ask' ? 'accept' : 'primary');
+  }, currentlyVisible);
+  const { left, right, more } = planHandoffActions(mode, { bypass: bypassAvailable, acceptModes });
   const button = (action) => <ActionButton key={action.key} action={action} busy={busy} busyAction={pressed}
     enabled={actionable} onAction={act} keycap={keycapShown ? action.keycap : undefined}
     shortcut={shortcutEnabled ? action.shortcut : undefined} />;
@@ -1088,7 +1188,7 @@ export function treeKeyDown(event, tree, filterInput, selection, onEnterOpen = n
   const go = next => {const at=Math.max(0,Math.min(last,next));focusTreeRow(rows[at]);const entry=selection?.nav.entryAt(at);if(entry&&!modified&&!event.shiftKey)selection.store.getState().moveAnchor(entry.absPath);};
   if(selection){
     if(modified&&event.key.toLowerCase()==='a'&&!event.shiftKey){event.preventDefault();selectAllFiles(selection.store,selection.nav);return;}
-    if(event.key==='Escape'&&!modified&&!event.shiftKey&&selection.store.getState().selected.size>1){event.preventDefault();event.stopPropagation();selection.store.getState().clear();return;}
+    // R3-files FT-18 (files-26): Escape on a multi-selection is c856385e2 nt (useMultiSelectionEscape on the tree element).
     if(event.key===' '&&(modified||event.shiftKey)&&index>=0){event.preventDefault();const entry=selection.nav.entryAt(index);if(modified){if(entry)selection.store.getState().toggle(entry);}else selectFileRange(selection.store,selection.nav,index,index);return;}
   }
   const extend=at=>{if(selection&&event.shiftKey&&index>=0)selectFileRange(selection.store,selection.nav,Math.max(0,Math.min(last,at)),index);};
@@ -1156,6 +1256,9 @@ function SourceTreeNode({
   revealGeneration = 0,
   // B33: false for an explicit "Reveal in file tree" (centre + highlight flash), true for following the open file.
   revealFollow = true,
+  // R3-files FT-14 (cccc2cf0a Nx/DS start reveal): the worktree start folder; onStartShown is DS's onStartFolderShown.
+  revealStart = false,
+  onStartShown = null,
   treeVisible = true,
   expandedPaths,
   onExpandedChange,
@@ -1176,7 +1279,10 @@ function SourceTreeNode({
     else setLocalOpen(value);
   }, [controlled, onExpandedChange, entry.path]);
   const rowRef = useRef(null);
-  const reveal = useFileTreeReveal({ entry, revealPath, revealGeneration, revealFollow, treeVisible,
+  // R3-files FT-14: the treeitem wraps its children's group too, so its name is its row's button (name + link mark), the
+  // content NS's treeitem is named from, not the whole subtree's text.
+  const labelId = useId();
+  const reveal = useFileTreeReveal({ entry, revealPath, revealGeneration, revealFollow, revealStart, onStartShown, treeVisible,
     expand: setOpen, rowRef });
   // B33 cccc2cf0a My P = ol(e) (cd2efac6e Qo): a broken, circular or external link row stays inert.
   const openable = treeEntryOpenable(entry);
@@ -1222,15 +1328,22 @@ function SourceTreeNode({
     if (name && name.scrollWidth > name.clientWidth) return entry.name;
     return detail && pointerInside.current ? entry.name : null;
   };
+  // R3-files FT-05 (cccc2cf0a NS `G`/`Kf(G, G)`): the row's "path gone" check (file-gone-menu.mjs).
+  const goneAt = fileMenu ? fileCopyChoices(cwd, entry.path).absolute ?? undefined : undefined;
+  const { gone, beforeOpen } = useFileGone(goneAt, goneAt);
   const multi=menu?.selected?.length>1;
-  const entries = menu && fileMenu ? (multi?fileMenu.multiEntries(menu.selected.map(e=>e.path),{directories:menu.selected.filter(e=>e.directory).map(e=>e.path)}):fileMenu.entries(entry.path, { surface: "file_browser", directory: !!entry.directory, linkState: entry.link?.state })) : null;
+  const entries = menu && fileMenu ? (multi?fileMenu.multiEntries(menu.selected.map(e=>e.path),{directories:menu.selected.filter(e=>e.directory).map(e=>e.path)}):fileMenu.entries(entry.path, { surface: "file_browser", directory: !!entry.directory, linkState: entry.link?.state, gone })) : null;
   function contextMenu(event){
     if(!fileMenu||event.target.closest?.('[role="treeitem"]')!==event.currentTarget)return;
     event.preventDefault();event.stopPropagation();
+    // R3-files FT-05 (NS `ue` → Yf): asked before the selection moves, never for a row of a multi-selection; the menu
+    // opens when the answer arrives (c0cdf4a08 h).
+    const pending=inMultiSelection(selection.store,entry.path,true)?undefined:beforeOpen();
     const state=selection.store.getState();if(state.selected.has(entry.path))state.reorder(selection.nav.indexOfKey);else state.selectOnly(selectionEntry);
     const rect=rowRef.current.getBoundingClientRect(),keyboard=event.type==='keydown'||event.clientX===0&&event.clientY===0;
+    const point=keyboard?{x:rect.left,y:rect.bottom}:{x:event.clientX,y:event.clientY};
     menuReturnFocus.current=event.currentTarget.ownerDocument.activeElement;
-    setMenu({point:keyboard?{x:rect.left,y:rect.bottom}:{x:event.clientX,y:event.clientY},keyboard,selected:[...selection.store.getState().selected.values()]});
+    openWhenChecked(event.currentTarget,pending,()=>setMenu({point,keyboard,selected:[...selection.store.getState().selected.values()]}));
   }
   function clickEntry(event){
     setMenu(null);
@@ -1241,71 +1354,81 @@ function SourceTreeNode({
     if(entry.directory)toggleOpen();else onOpen(entry,{preview:event.detail===1});
   }
   const expanded = open && openable;
+  const current = activePath === entry.path, selected = selectionState.selected.has(entry.path);
+  // R3-files FT-14: 2.42304.0 cccc2cf0a NS. The official treeitem is the painted row; here the treeitem wraps the row
+  // and its children's group (nested DOM), so it keeps the ARIA, focus and menus while the row element inside carries
+  // NS's classes (fileTreeRowClassName: Cx + dx + Ul/fx/Wl), indent (Bl = treeIndent), data-highlighted and drag.
   return (
     <div
       role="treeitem"
       data-tree-row=""
       aria-level={level + 1}
       aria-expanded={entry.directory ? expanded : undefined}
-      aria-selected={selectionState.selected.has(entry.path)}
-      aria-current={activePath === entry.path ? "page" : undefined}
+      aria-selected={selected}
+      aria-current={current || undefined}
       aria-disabled={!openable || undefined}
       tabIndex={-1}
-      className="source-tree-item"
+      className="source-tree-item outline-none"
+      aria-labelledby={labelId}
       data-popup-open={menu ? "" : undefined}
-      draggable={!!fileMenu?.drag && openable}
-      onDragStart={event=>{
-        if(!openable){event.preventDefault();return;}
-        if(event.target.closest('[data-tree-row]')!==event.currentTarget)return;
-        const state=selection.store.getState();let entries=[selectionEntry];
-        if(state.selected.size>=2&&state.selected.has(entry.path)){state.reorder(selection.nav.indexOfKey);entries=[...selection.store.getState().selected.values()];}
-        fileMenu?.drag?.(event,entries);
-      }}
       onContextMenu={contextMenu}
       onKeyDown={event=>{if(event.key==='ContextMenu'||event.key==='F10'&&event.shiftKey)contextMenu(event);}}
     >
       <SourceTooltip content={tooltipContent} detail={menu ? null : detail} side="bottom" align="start" delay={700} hoverable={false}>
-      <button
+      <div
         ref={rowRef}
+        // data-tree-row-body: the row that paints the treeitem's focus (source-session.css, the one host rule).
+        data-tree-row-body=""
+        className={fileTreeRowClassName({ current, selected, revealing: reveal.target })}
+        style={treeIndent(level)}
+        // NS is a Base UI ContextMenu.Trigger, whose open state is data-popup-open + data-pressed (vendor-frame Ni):
+        // F's data-[pressed]:bg-fill-ghost-hover keeps an idle row lit while its menu is open.
+        data-popup-open={menu ? "" : undefined}
+        data-pressed={menu ? "" : undefined}
+        // B33 My: the reveal target flashes (data-highlighted 1200ms, Cx data-[highlighted]:bg-fill-ghost-hover).
+        data-highlighted={reveal.highlighted ? "" : undefined}
+        data-reveal-target={reveal.target || undefined}
+        draggable={(!!fileMenu?.drag && openable) || undefined}
+        onDragStart={event=>{
+          if(!openable){event.preventDefault();return;}
+          const state=selection.store.getState();let entries=[selectionEntry];
+          if(state.selected.size>=2&&state.selected.has(entry.path)){state.reorder(selection.nav.indexOfKey);entries=[...selection.store.getState().selected.values()];}
+          fileMenu?.drag?.(event,entries);
+        }}
+        onPointerEnter={() => { pointerInside.current = true; }}
+        onPointerLeave={() => { pointerInside.current = false; }}
+      >
+        {/* NS: below the root, the guide layer (ca7840910 j) whose --file-tree-guides paint on tree hover or focus. */}
+        {level > 0 && <span aria-hidden="true" className={FILE_TREE_GUIDE_LAYER_CLASS} style={fileTreeGuideStyle(level)} />}
+      <button
         type="button"
-        className="source-tree-row"
+        id={labelId}
+        className={fileTreeRowPrimary}
         data-tree-primary=""
         tabIndex={-1}
-        aria-label={entry.name}
-        style={{ paddingLeft: 8 + level * 8 }}
         onClick={clickEntry}
         onMouseDown={event=>{if(event.button===1&&!entry.directory&&openable)event.preventDefault();}}
         onAuxClick={event=>{if(event.button===1&&!entry.directory&&openable){event.preventDefault();onOpen(entry,{preview:false});}}}
         onDoubleClick={() =>
           !entry.directory && openable && onOpen(entry, { preview: false })
         }
-        onPointerEnter={() => { pointerInside.current = true; }}
-        onPointerLeave={() => { pointerInside.current = false; }}
         data-file-path={entry.path}
         data-link-state={entry.link?.state}
-        // B33 My: the reveal target flashes (data-highlighted 1200ms) with "transition-colors duration-300".
-        data-highlighted={reveal.highlighted ? "" : undefined}
-        data-reveal-target={reveal.target || undefined}
       >
-        {/* B33 My/ce9ca5630 g: below the root, the indent guides painted on tree hover or focus. */}
-        {level > 0 && <span aria-hidden="true" className="source-tree-guides" style={fileTreeGuideStyle(level)} />}
-        {/* panes-tile-current.js:5692-5770: one xs (12px) text-muted glyph,
-            ae = directory ? CaretRight (rotate-90 when open) : zr(name)
-            (shared-14 cP); no native title on the row; a symlink adds the xs
-            muted ArrowUpRight mark whose alt is the Rg link text. */}
-        <Icon
-          name={entry.directory ? "CaretRight" : fileKindIcon(entry.name)}
-          size={12}
-          className={entry.directory ? "source-tree-caret" : undefined}
-        />
-        <span ref={nameRef} className="source-tree-name" data-inert={!openable || undefined}>{entry.name}</span>
-        {linkText && <Icon name="ArrowUpRight" size={12} role="img" aria-hidden={undefined} aria-label={linkText}
-          data-testid="file-tree-link-mark" className="source-tree-link-mark" />}
+        {/* NS: a folder's CaretRight (rotate-90 when open) or the file-type icon (c280f9bbb), size Fl() = ca7840910 E
+            ("xs"); the name; a symlink's xs ArrowUpRight whose alt is the link text (MS). */}
+        {entry.directory
+          ? <CdsIcon name="CaretRight" size={fileTreeIconSize()} className={fileTreeIconClassName({ directory: true, openable, expanded })} />
+          : <FileTypeIcon fileName={entry.name} size={fileTreeIconSize()} className={fileTreeIconClassName({ openable })} />}
+        <span ref={nameRef} className={fileTreeNameClassName(openable)}>{entry.name}</span>
+        {linkText && <CdsIcon name="ArrowUpRight" size="xs" alt={linkText} data-testid="file-tree-link-mark"
+          className="shrink-0 self-center text-muted-as-secondary" />}
       </button>
+      </div>
       </SourceTooltip>
       {entries && (
         <SourceMenu.Popup anchor={rowRef.current} trigger={rowRef.current?.closest('[role="treeitem"]')} point={menu.point} initialHighlight={menu.keyboard?"first":"popup"} side="bottom" align="start"
-          sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
+          sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard
           label={t("File actions")} onClose={() => setMenu(null)} finalFocus={() => {
             // Base UI returns focus to where it was before the context menu opened.
             const previous = menuReturnFocus.current;
@@ -1336,6 +1459,8 @@ function SourceTreeNode({
                 revealPath={revealPath}
                 revealGeneration={revealGeneration}
                 revealFollow={revealFollow}
+                revealStart={revealStart}
+                onStartShown={onStartShown}
                 treeVisible={treeVisible}
                 expandedPaths={expandedPaths}
                 onExpandedChange={onExpandedChange}
@@ -1353,27 +1478,37 @@ function SourceTreeNode({
 // visible row; row indices are refreshed whenever the subtree changes.
 function SourceTree({ children, busy, filterInputSelector, selectionStore, active = true, onEnterOpen = null }) {
   const ref = useRef(null);
+  // c856385e2 nt (Nx `If(z, H.store)`): Escape clears a multi-selection of the tree element and swallows its repeats.
+  const [treeElement, setTreeElement] = useState(null);
+  const treeRef = useCallback((node) => { ref.current = node; setTreeElement(node); }, []);
   const selection=useMemo(()=>{const entries=new Map(),store=selectionStore;const rows=()=>treeRows(ref.current);const nav={get count(){return rows().length;},entryAt:index=>entries.get(rows()[index]?.querySelector('[data-tree-primary]')?.dataset.filePath),indexOfKey:key=>rows().findIndex(row=>row.querySelector('[data-tree-primary]')?.dataset.filePath===key)};return {entries,store,nav};},[selectionStore]);
   const blankSelection=useBlankTreeSelection(()=>selection.store.getState().clear());
+  useMultiSelectionEscape(active ? treeElement : null, selection.store);
   useLayoutEffect(() => {
     const tree = ref.current;
     if (!tree) return undefined;
-    const refresh=()=>{if(!active)return;indexTreeRows(tree);selection.store.getState().retain(path=>selection.nav.indexOfKey(path)>=0);};
+    const refresh=()=>{
+      if(!active)return;
+      indexTreeRows(tree);
+      selection.store.getState().retain(path=>selection.nav.indexOfKey(path)>=0);
+      // R3-files FT-14 (files-08): cccc2cf0a xS / SS per row, as Lx sets --file-tree-kept-guides on each row.
+      applyKeptGuides(treeRows(tree));
+    };
     refresh();
     const observer = new MutationObserver(refresh);
-    observer.observe(tree, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-level", "hidden"] });
+    observer.observe(tree, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-level", "hidden", "aria-selected", "aria-current", "aria-expanded"] });
     return () => observer.disconnect();
   }, [active,selection]);
   return (
     <FileTreeSelectionContext.Provider value={selection}><div
-      ref={ref}
+      ref={treeRef}
       {...blankSelection}
       role="tree"
       aria-label={t("Project files")}
       aria-busy={busy || undefined}
       aria-multiselectable="true"
       tabIndex={0}
-      className="source-tree-content"
+      className={FILE_TREE_CONTAINER_CLASS}
       // Only a keyboard arrival from outside the tree is redirected to the
       // current row (official yg guards): focus handed back from a row
       // (Shift+Tab on its way out) or a pointer press on the background
@@ -1395,6 +1530,8 @@ function SourceTree({ children, busy, filterInputSelector, selectionStore, activ
     </div></FileTreeSelectionContext.Provider>
   );
 }
+// R3-files FT-14: the tree and its rows, exported for SSR tests (tests/file-tree-current.test.mjs).
+export { SourceTree as SourceFileTree, SourceTreeNode as SourceFileTreeNode };
 
 // Files pane tab (2.2553.1 readable/panes-tabs-current.js:333-491 he; model
 // panes-tile-current.js:6656-6710 ce/le). Local adaptations: no Base UI Tabs /
@@ -1518,6 +1655,7 @@ function SourceFileTab({ file, cwd, selected, tabIndex, solo, posinset, setsize,
           align="start"
           dataCds="ContextMenu"
           layer="contextmenu"
+          contextMenuGuard="always"
           finalFocus={restoreTarget}
           onClose={(reason) => {
             setMenuOpen(false);
@@ -1561,7 +1699,7 @@ function SourceFileTabOverflow({ tabs, cwd, onActivate, onClose }) {
         className="source-file-tabs-more" {...menuTriggerProps({ open: !!open, onOpen: (entry) => setOpen(entry) })}
         onClick={() => setOpen((value) => (value ? null : "click"))} />
     </SourceTooltip>
-    {open && <SourceMenu.Popup anchor={button.current} side="bottom" align="end" label={FILE_TAB_LABELS.moreTabs}
+    {open && <SourceMenu.Popup anchor={button.current} side="bottom" align="end" label={FILE_TAB_LABELS.moreTabs} contextMenuGuard="always"
       initialHighlight={open === "first" || open === "last" ? open : undefined} onClose={() => setOpen(null)}>
       <span id={hintId} className="source-sr-only">{FILE_TAB_LABELS.closeTabHint}</span>
       {tabs.map((file) => {
@@ -1593,7 +1731,9 @@ function SourceFileTabOverflow({ tabs, cwd, onActivate, onClose }) {
 }
 
 export function SourceFilePanel(props) {
-  return <FilePane key={`${props.sessionId ?? "home"}:${props.searchPane ?? "main"}:${props.cwd || "no-folder"}`} {...props} />;
+  // R3-files FT-05: the session id context (c9b8e0296) the gone hook reads, as the official session pane provides it.
+  // R3-files FT-14: the pane's QueryClient (FilesQueryScope), which the worktree start folder's git info query reads.
+  return <FilesQueryScope><CurrentSessionIdContext.Provider value={props.sessionId ?? null}><FilePane key={`${props.sessionId ?? "home"}:${props.searchPane ?? "main"}:${props.cwd || "no-folder"}`} {...props} /></CurrentSessionIdContext.Provider></FilesQueryScope>;
 }
 
 // Controlled/uncontrolled bridge: the session workspace owns the file view in
@@ -1676,6 +1816,8 @@ function FilePane({
   filesInvalidate = null,
   // dropRestoredFileTab closePaneIfLast: a pop-out file window (xb) keeps its pane when its last restored tab is gone.
   closeIfRestoredGone = true,
+  // R3-files FT-14 (files-10): the folder a worktree session was started from (sessionMetadata.originCwd), from main.jsx.
+  worktreeOrigin = null,
 }) {
   const toasts = useSourceToasts();
   const [diffPreferences, setDiffPreference] = useDiffViewPreferences();
@@ -1739,10 +1881,19 @@ function FilePane({
   // follow: true while following the open file (search cleared), false for an explicit "Reveal in file tree"
   // (B33: that one clears the filter, centres and flashes the row — cccc2cf0a revealInFilesTree vs followInFilesTree).
   const [treeReveal, setTreeReveal] = useState({ path: null, generation: 0, follow: true });
+  // R3-files FT-14 (cccc2cf0a Nx, files-10): until the tree has shown the worktree start folder (DS onStartFolderShown)
+  // or another reveal arrives (`r !== void 0 && !M && P(!0)`), the reveal is the start folder's: "dir/" (that folder's
+  // row is the target), nonce Rx, start.
+  const treeStartFolder = useTreeStartFolder({ cwd, originCwd: worktreeOrigin });
+  const [startFolderShown, setStartFolderShown] = useState(false);
+  if (treeReveal.generation > 0 && !startFolderShown) setStartFolderShown(true);
+  const onStartFolderShown = useCallback(() => setStartFolderShown(true), []);
+  const shownReveal = treeReveal.generation === 0 && !startFolderShown && treeStartFolder
+    ? { path: `${treeStartFolder}/`, generation: startRevealNonce, follow: false, start: true } : treeReveal;
   // B33 oy: the last file openFile opened ({seq, path}) and the pending hand-off of focus to it.
   const opened = useRef({ seq: 0, path: null });
   const [fileFocusRequest, setFileFocusRequest] = useState(null);
-  const includeRootChild = revealChild("", treeReveal.path);
+  const includeRootChild = revealChild("", shownReveal.path);
   const [paneWidth, setPaneWidth] = useState(0);
   const [treeShown, setTreeShown] = useViewState(view, onViewChange, "treeShown", false);
   const [treePeek, setTreePeek] = useState(false);
@@ -1859,21 +2010,21 @@ function FilePane({
     const token = {};
     reads.current.set(path, token);
     if (force) forcedReads.current.add(path);
-    const asText = force || forcedReads.current.has(path);
+    const asText = force || forcedReads.current.has(path) || !!readFileView(sessionId ? `${sessionId}\u0000${path}` : null)?.forcedText;
     return Promise.resolve()
       // B32: sessionId lets main read an outside-root file from one of the session's added folders.
       .then(() => call("file", { cwd, relative: path, ...(sessionId ? { sessionId } : {}), ...(asText ? { force: true } : {}) }))
       .then((file) => (file && typeof file === "object" ? file : { unavailable: "read_error" }),
         () => ({ unavailable: "read_error" }))
       .then(async (file) => {
-        if (typeof file.text === "string") {
+        if (typeof file.text === "string" && (!file.encoding || file.encoding === 'utf-8')) {
           const editable = await call("file:edit-read", { cwd, relative: path }).catch(() => null);
           if (editable?.hash && typeof editable.text === "string") file = { ...file, text: editable.text, editHash: editable.hash };
         }
         if (!mounted.current || reads.current.get(path) !== token) return;
         reads.current.delete(path);
         readAt.current.set(path, Date.now());
-        const result = typeof file.text === "string" ? { text: file.text, editHash: file.editHash } : { unavailable: file.unavailable ?? "read_error", ...(Number.isFinite(file.size) ? { size: file.size } : {}), ...(typeof file.creatable === "boolean" ? { creatable: file.creatable } : {}) };
+        const result = typeof file.text === "string" ? { text: file.text, size: file.size, encoding: file.encoding, editHash: file.editHash, forcedText: asText } : { unavailable: file.unavailable ?? "read_error", ...(Number.isFinite(file.size) ? { size: file.size } : {}), ...(typeof file.creatable === "boolean" ? { creatable: file.creatable } : {}) };
         const now = latest.current;
         const keepRestored = treeReturnPath.current;
         if (applyFileRead(now.fileTabs, path, result, { keepRestored }).dropped) {
@@ -1916,12 +2067,20 @@ function FilePane({
     setReloadingPath(path);
     loadFile(path).finally(() => { if (mounted.current) setReloadingPath((current) => (current === path ? null : current)); });
   };
-  const downloadFile = (file) => {
-    const name = String(file.path).split(/[\\/]/).pop() || "file.txt";
-    const url = URL.createObjectURL(new Blob([file.text], { type: "text/plain;charset=utf-8" }));
-    const link = Object.assign(document.createElement("a"), { href: url, download: name });
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  const downloads = useRef(new Set());
+  const [downloadingPaths, setDownloadingPaths] = useState(() => new Set());
+  const downloadFile = async (file) => {
+    if (downloads.current.has(file.path)) return;
+    downloads.current.add(file.path);
+    setDownloadingPaths(new Set(downloads.current));
+    try {
+      return await downloadFileContents(file, { document: pane.current?.ownerDocument ?? document,
+        loadDocument: cwd ? path => call('file:document-bytes', { cwd, relative: path, sessionId }) : undefined,
+        notify: (message, options) => toasts?.add(message, options), dismiss: (id) => toasts?.close?.(id) });
+    } finally {
+      downloads.current.delete(file.path);
+      if (mounted.current) setDownloadingPaths(new Set(downloads.current));
+    }
   };
   // openFile is a hoisted declaration below; the ref keeps the lister stable across renders.
   const openFileRef = useRef(null);
@@ -1932,11 +2091,11 @@ function FilePane({
     register: (text, path) => call("file:preview-frame", { cwd, relative: path, text }),
     release: (url) => { void Promise.resolve(call("file:preview-frame-release", { url })).catch(() => {}); },
   } : null), [cwd, call]);
-  const folderLister = useMemo(() => (cwd ? {
-    rootLabel: String(cwd).replace(/[\\/]+$/, "").split(/[\\/]/).pop() || String(cwd),
+  const folderLister = useMemo(() => (cwd ? createBreadcrumbLister({
+    root: cwd,
     list: (dir) => call("files", { cwd, relative: dir }),
-    onOpenFile: (path) => openFileRef.current?.({ path }, { preview: true }),
-  } : null), [cwd, call]);
+    onOpenFile: (path, { keep = false } = {}) => openFileRef.current?.({ path }, { preview: !keep }),
+  }) : null), [cwd, call]);
   // Tabs restored from the persisted store carry only path/preview; the
   // active one is re-read through the same scoped file IPC.
   useEffect(() => {
@@ -2203,8 +2362,14 @@ function FilePane({
     setTreeError("");
     setTreeRefreshing(true);
     call("files", { cwd, relative: "", includeChild: includeRootChild })
-      .then((data) => {
-        if (live) setEntries(data);
+      .then(async (data) => {
+        if (!live) return;
+        setEntries(data);
+        // 2.37337.1 cb/Fv: the first opening also expands a single-directory chain.
+        if (expandedList === null) {
+          const chain = await singleChildFolderChain("", relative => relative === "" ? Promise.resolve(data) : call("files", { cwd, relative }));
+          if (live) setExpandedList(list => Array.isArray(list) ? list : chain);
+        }
       })
       .catch((e) => {
         if (live) setTreeError(errorMessage(e));
@@ -2358,8 +2523,8 @@ function FilePane({
       return fileActions.onDragFiles(event,paths,directories);
     } : null,
     multiEntries: (paths,{directories=[]}={}) => multiFileContextMenu({root:cwd,paths,directories,canAttach:!!fileActions?.onAttachFiles,editors:fileActions?.onOpenInEditor?fileActions.editors:[]}),
-    entries: (path, { surface = "file_browser", directory = false, unavailable, linkState, line } = {}) => fileContextMenu({
-      surface, root: cwd, path, directory, line,
+    entries: (path, { surface = "file_browser", directory = false, unavailable, linkState, line, gone = false } = {}) => fileContextMenu({
+      surface, root: cwd, path, directory, line, gone, // R3-files FT-05
       canAttach: !!fileActions?.onAttachFile,
       // The reveal IPC resolves inside the session folder only: no broken, external or looping link.
       canShowInFinder: !!fileActions?.onRevealFile && unavailable !== "missing" && unavailable !== "outside_root" && (!linkState || linkState === "ok")
@@ -2402,55 +2567,9 @@ function FilePane({
     treeToggleRef.current = toggle;
     return () => { if (treeToggleRef.current === toggle) treeToggleRef.current = null; };
   }, [treeToggleRef, tab, diffListAvailable, toggleDiffTree]);
-  // hh / Rn: the session's latest review findings (review-findings-model.mjs) as the Changes subheader and inline
-  // cards. Dismissed findings, the fix statuses and the current finding reset with each new review. A fix sends a
-  // follow-up turn; its findings read "Fixing…" until that turn ends, then "Fixed".
-  const reviewResult = useMemo(() => (tab === "changes" ? latestReviewFindings(review?.items, cwd) : null), [tab, review?.items, cwd]);
-  const [reviewMarks, setReviewMarks] = useState({ key: null, cleared: false, dismissed: [], statuses: {}, currentId: null, seq: 0 });
-  const marks = reviewMarks.key === reviewResult?.key ? reviewMarks : { key: reviewResult?.key ?? null, cleared: false, dismissed: [], statuses: {}, currentId: null, seq: 0 };
-  const updateMarks = (change) => setReviewMarks((previous) => change(previous.key === (reviewResult?.key ?? null) ? previous : { key: reviewResult?.key ?? null, cleared: false, dismissed: [], statuses: {}, currentId: null, seq: 0 }));
-  const findings = reviewResult && !marks.cleared ? reviewResult.findings.filter((entry) => !marks.dismissed.includes(entry.id)) : [];
-  const findingIndex = Math.max(0, findings.findIndex((entry) => entry.id === marks.currentId));
-  const reviewTurn = useRef({ active: false, sent: false });
-  useEffect(() => {
-    const was = reviewTurn.current, active = !!review?.active;
-    reviewTurn.current = { active, sent: was.sent && !(was.active && !active) };
-    if (was.sent && was.active && !active)
-      updateMarks((previous) => ({ ...previous, statuses: Object.fromEntries(Object.entries(previous.statuses).map(([id, status]) => [id, status === "fixing" ? "addressed" : status])) }));
-  }, [review?.active]); // eslint-disable-line react-hooks/exhaustive-deps
-  const goToFinding = (index) => {
-    const entry = findings[index];
-    if (entry) updateMarks((previous) => ({ ...previous, currentId: entry.id, seq: previous.seq + 1 }));
-  };
-  useLayoutEffect(() => {
-    if (!marks.currentId || !marks.seq) return;
-    const frame = requestAnimationFrame(() => {
-      const card = pane.current?.querySelector(`[data-review-finding="${CSS.escape(marks.currentId)}"]`);
-      const scroller = card?.closest(".source-changes");
-      if (!card) return;
-      if (scroller) scroller.scrollTop += card.getBoundingClientRect().top - scroller.getBoundingClientRect().top - scroller.clientHeight / 3;
-      else card.scrollIntoView?.({ block: "center" });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [marks.currentId, marks.seq]); // eslint-disable-line react-hooks/exhaustive-deps
-  const fixFindings = (ids) => {
-    const chosen = findings.filter((entry) => ids.includes(entry.id) && (marks.statuses[entry.id] ?? "open") === "open");
-    if (!chosen.length || !review?.onSend || review.active) return;
-    updateMarks((previous) => ({ ...previous, statuses: { ...previous.statuses, ...Object.fromEntries(chosen.map((entry) => [entry.id, "fixing"])) } }));
-    reviewTurn.current = { ...reviewTurn.current, sent: true };
-    Promise.resolve().then(() => review.onSend(fixFindingsPrompt(chosen))).catch(() => {
-      updateMarks((previous) => ({ ...previous, statuses: { ...previous.statuses, ...Object.fromEntries(chosen.map((entry) => [entry.id, "open"])) } }));
-    });
-  };
-  const diffReview = findings.length ? {
-    findings, statuses: marks.statuses, currentId: findings[findingIndex]?.id ?? null, currentSeq: marks.seq,
-    onDismiss: (id) => updateMarks((previous) => ({ ...previous, dismissed: [...previous.dismissed, id] })),
-    onFix: review?.onSend ? (id) => fixFindings([id]) : null,
-    onNext: findings.length > 1 ? (id) => { const at = findings.findIndex((entry) => entry.id === id); goToFinding((at + 1) % findings.length); } : null,
-  } : null;
-  const reviewBar = findings.length ? <SourceReviewFindingsBar findings={findings} statuses={marks.statuses} currentIndex={findingIndex} onStep={goToFinding}
-    onApply={review?.onSend ? () => fixFindings(findings.map((entry) => entry.id)) : null} onRerun={review?.onRerun ?? null} busy={!!review?.active}
-    onDismiss={() => updateMarks((previous) => ({ ...previous, cleared: true }))} /> : null;
+  // hh / Rn: the session's latest review findings as the Changes subheader and inline cards, over the session review
+  // store the transcript's findings card writes (R4f-findings-store: source-pane-review.jsx useChangesPaneReview).
+  const { diffReview, reviewBar } = useChangesPaneReview({ sessionId, review, cwd, enabled: tab === "changes", pane, content: diffView.patch });
   const title = tab === "files" ? t("Files") : tab === "plan" ? t("Plan") : t("Changes");
   const displayTitle =
     tab === "changes" && diffScope === "uncommitted"
@@ -2464,7 +2583,8 @@ function FilePane({
       ? [{ key: "file-actions", items: viewerText ? fileViewerMenuItems({
           onFind: () => setFindRequest((value) => value + 1),
           onCopyContents: () => copyText(viewerText.text),
-          onDownload: () => downloadFile(viewerText),
+          onDownload: fileDownloadPlan(viewerText, { documentLoader: !!cwd }).available ? () => downloadFile(viewerText) : null,
+          downloading: downloadingPaths.has(viewerText.path),
           onReload: () => reloadFile(viewerText.path), reloading: reloadingPath === viewerText.path }) : [] },
         { key: "files-tree", items: [{ value: "files-tree", label: t("Show file tree"), checked: treeVisible, checkedRole: "checkbox", keepOpen: true,
           // f_ (panes-tile-current.js:6872-6900): the item carries the ⌘⇧Y shortcut.
@@ -2744,9 +2864,11 @@ function FilePane({
                       refreshKey={refreshKey}
                       dirRefresh={dirRefresh}
                       call={call}
-                      revealPath={treeReveal.path}
-                      revealGeneration={treeReveal.generation}
-                      revealFollow={treeReveal.follow}
+                      revealPath={shownReveal.path}
+                      revealGeneration={shownReveal.generation}
+                      revealFollow={shownReveal.follow}
+                      revealStart={shownReveal.start === true}
+                      onStartShown={onStartFolderShown}
                       treeVisible={treeVisible && !filtered}
                       expandedPaths={expandedPaths}
                       onExpandedChange={onExpandedChange}
@@ -2805,7 +2927,9 @@ function FilePane({
                 onDeleteComment={fileActions?.onDeleteComment}
                 onAttachFile={fileActions?.onAttachFile ? () => fileActions.onAttachFile(full) : null}
                 onAttachSelection={fileActions?.onAttachSelection ? selection => fileActions.onAttachSelection(selection.text, fileSelectionLabel(relative, selection)) : null}
-                onDownload={text => downloadFile({ ...preview, text })} onEdit={preview.preview ? () => keepFile(preview.path) : null} sessionId={sessionId} onSaveFile={async (text, expectedHash) => {
+                onDownload={text => downloadFile({ ...preview, text })} downloading={downloadingPaths.has(preview.path)} canLoadDocument={!!cwd}
+                onCopyImage={dataUrl => call('image:copy', { dataUrl })}
+                onEdit={preview.preview ? () => keepFile(preview.path) : null} sessionId={sessionId} onSaveFile={async (text, expectedHash) => {
                 const result = await call("file:save", { cwd, relative: preview.path, text, expectedHash });
                 if (result?.status === "saved") setFileTabs(files => files.map(file => file.path === preview.path ? { ...file, text, editHash: result.hash, preview: false } : file));
                 return result;
@@ -2813,7 +2937,7 @@ function FilePane({
                 line={lineMark?.line} endLine={lineMark?.endLine} scrollNonce={lineMark?.nonce}
                 contentFind={lineMark?.findQuery?lineMark:null}
                 scopeKey={JSON.stringify(["file-viewer", sessionId, cwd, preview.path])}
-                onCopyPath={() => copyText(relative, FILE_VIEWER_LABELS.pathCopied)}
+                onCopyPath={() => copyText(full, FILE_VIEWER_LABELS.pathCopied)}
                 onViewAsText={() => loadFile(preview.path, { force: true })}
                 cardActions={{
                   // B32 cd2efac6e fp / Tp / Gl / tp+pp: re-read the tab, create the missing file through the editor's
@@ -2849,7 +2973,7 @@ function FilePane({
         // R10: SourceDiff lays the body out beside the Changed files column and
         // owns the .source-changes scroller (ChangesFileLayout). B15 (c44d00c7f cl emptyPlaceholder): with
         // commits, an empty comparison keeps the column (Commits section) beside the empty state.
-        <Diff value={diffView.patch || ""} emptyPlaceholder={<SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} />} completeContext={diffView.completeContext} scopeKey={JSON.stringify([sessionId, cwd, diffStale ? diffStale.scope : diffScope])} layout={diffPreferences.layout} wordWrap={diffPreferences.wordWrap} wordDiff={diffPreferences.wordDiff} hideWhitespace={diffPreferences.hideWhitespace} onCanFitSplitChange={setDiffCanFitSplit} foldAll={diffFoldAll} placement="changes" fileActions={diffFileActions} commentScope={sessionId ? JSON.stringify([sessionId, cwd]) : null}
+        <Diff value={diffView.patch || ""} emptyPlaceholder={<SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} />} completeContext={diffView.completeContext} patchesWithheld={diffView.patchesWithheld} comparisonFiles={Array.isArray(diff?.files) ? diff.files : undefined} scopeKey={JSON.stringify([sessionId, cwd, diffStale ? diffStale.scope : diffScope])} layout={diffPreferences.layout} wordWrap={diffPreferences.wordWrap} wordDiff={diffPreferences.wordDiff} hideWhitespace={diffPreferences.hideWhitespace} onCanFitSplitChange={setDiffCanFitSplit} foldAll={diffFoldAll} placement="changes" fileActions={diffFileActions} commentScope={sessionId ? JSON.stringify([sessionId, cwd]) : null}
           onIsLargeChange={setDiffIsLarge} review={diffReview} fileList={{ shown: diffShowTree, width: diffTreeWidth, tree: diffFileTree, groupByKind: diffGroupByKind,
             onShownChange: setDiffShowTree, onWidthChange: setDiffTreeWidth, onCanFitChange: setDiffCanFitTree }}
           stale={!!diffStale} commits={diffCommits ? { ...diffCommits, collapsed: diffCommitsCollapsed, onCollapsedChange: setDiffCommitsCollapsed } : null} />

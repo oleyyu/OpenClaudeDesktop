@@ -8,7 +8,7 @@
 const { execFile } = require('node:child_process');
 const path = require('node:path');
 
-const PR_FIELDS = 'number,url,state,isDraft,title,baseRefName,headRefName,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup';
+const PR_FIELDS = 'number,url,state,isDraft,title,baseRefName,headRefName,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,additions,deletions';
 const LOOKUP_TTL_MS = 30000;
 const LOOKUP_TIMEOUT_MS = 15000;
 const CACHE_LIMIT = 200;
@@ -75,7 +75,9 @@ function parsePullRequest(json) {
   return { number, url, state, title: typeof json.title === 'string' ? json.title : null,
     baseRefName: typeof json.baseRefName === 'string' ? json.baseRefName : null,
     headRefName: typeof json.headRefName === 'string' ? json.headRefName : null,
-    ci: ciStatus(checks), checks };
+    ci: ciStatus(checks), checks,
+    ...(Number.isInteger(json.additions) && json.additions >= 0 ? { additions: json.additions } : {}),
+    ...(Number.isInteger(json.deletions) && json.deletions >= 0 ? { deletions: json.deletions } : {}) };
 }
 
 /** c5da7eb42 qE/JE (:11760-11780): a gh failure's kind for the band's status warning (cd5a31703 sze). */

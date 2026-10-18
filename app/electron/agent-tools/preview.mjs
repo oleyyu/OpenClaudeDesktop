@@ -29,8 +29,11 @@ function startText(result, name) {
   const parts = [];
   if (server.attach) parts.push(`Attached the preview to the configured url (${server.url}); no process was started.`);
   else if (result.reused) parts.push(`Server “${server.name}” was already running and has been reused. No new process was started.`);
-  else parts.push(`Server “${server.name ?? name}” started successfully on port ${server.port}.`);
-  if (result.assignedPort && result.configuredPort && result.assignedPort !== result.configuredPort) parts.push(`Configured port ${result.configuredPort} was in use, so port ${result.assignedPort} was assigned instead (autoPort is enabled).`);
+  // R4e-preview (preview-01): the original's three ways to say it started (2.42304.0 index.chunk-D7qSpOOc.js
+  // preview_start: D3i's `configuredPort` — here movedFrom — when the scan moved it, else whether the port changed).
+  else if (result.movedFrom !== undefined && result.movedFrom !== null) parts.push(`Server started. Configured port ${result.movedFrom} was unavailable, so port ${server.port} was assigned instead. The preview is available at http://localhost:${server.port}. If this server needs port ${result.movedFrom} specifically (e.g. OAuth callbacks, webhooks, CORS): free it if another process holds it, or pick a different "port" in .claude/launch.json if the OS reserves it; setting "autoPort": false there makes the start fail instead of moving.`);
+  else if (result.configuredPort && server.port !== result.configuredPort) parts.push(`Server started. Configured port ${result.configuredPort} was unavailable, so port ${server.port} was assigned instead (autoPort is enabled). The preview is available at http://localhost:${server.port}.`);
+  else parts.push(`Server started on port ${server.port}.`);
   if (result.page) parts.push(result.page.ok === false ? `The page at ${result.page.url} failed to load: ${result.page.description}.` : `The preview shows ${result.page.url}${result.page.title ? ` (“${result.page.title}”)` : ""}.`);
   parts.push("Use read_page (or screenshot, if you can see images) to check it, and preview_logs if something looks wrong.");
   return parts.join(" ");
@@ -131,6 +134,9 @@ export const tools = [
     annotations: { readOnlyHint: true },
     async handler({ quality }, ctx) {
       const shot = await preview(ctx).screenshot({ quality });
+      // R4f-preview-coords (2.42304.0 k4i, screenshot): the image, then its size — the pixels a point for click, hover
+      // or scroll is given in (`Screenshot size: ${o.width}x${o.height}`; no scale or capture origin here).
+      if (shot.width > 0 && shot.height > 0) return { content: [{ type: "image", data: shot.data, mimeType: shot.mimeType || "image/jpeg" }, { type: "text", text: `Screenshot size: ${shot.width}x${shot.height}` }] };
       return { image: shot };
     },
   },
@@ -162,7 +168,7 @@ export const tools = [
   {
     name: "click",
     title: "Click",
-    description: "Click an element in the preview: a ref from read_page, a CSS selector, or a point (x, y in page pixels from a screenshot).",
+    description: "Click an element in the preview: a ref from read_page, a CSS selector, or a point (x, y in the pixels of your last screenshot, whose result gives its size).",
     inputSchema: object({
       ref: { type: "string", description: "A ref from read_page, e.g. ref_3." },
       selector: { type: "string", description: "A CSS selector." },
@@ -297,7 +303,7 @@ export const tools = [
   {
     name: "scroll",
     title: "Scroll",
-    description: "Scroll the page in the preview. Without a direction, scrolls an element (a ref from read_page or a CSS selector) into view. With a direction, scrolls the scrollable area holding that element or the point (x, y in page pixels from a screenshot), else the page, by amount wheel ticks (about 100 px each).",
+    description: "Scroll the page in the preview. Without a direction, scrolls an element (a ref from read_page or a CSS selector) into view. With a direction, scrolls the scrollable area holding that element or the point (x, y in the pixels of your last screenshot), else the page, by amount wheel ticks (about 100 px each).",
     inputSchema: object({
       ref: { type: "string", description: "A ref from read_page or find, e.g. ref_3." },
       selector: { type: "string", description: "A CSS selector." },
@@ -316,7 +322,7 @@ export const tools = [
   {
     name: "hover",
     title: "Hover",
-    description: "Move the pointer over an element in the preview (a ref from read_page or find, a CSS selector, or a point x, y in page pixels) without clicking, e.g. to reveal a tooltip or a hover menu. Take a screenshot or read the page afterwards to see what appeared.",
+    description: "Move the pointer over an element in the preview (a ref from read_page or find, a CSS selector, or a point x, y in the pixels of your last screenshot) without clicking, e.g. to reveal a tooltip or a hover menu. Take a screenshot or read the page afterwards to see what appeared.",
     inputSchema: object({
       ref: { type: "string", description: "A ref from read_page or find, e.g. ref_3." },
       selector: { type: "string", description: "A CSS selector." },

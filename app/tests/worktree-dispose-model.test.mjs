@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { setLocale, DEFAULT_LOCALE } from '../electron/i18n/index.mjs';
 import {
   WORKTREE_CHANGES_SHOWN, WORKTREE_DIRTY_GUARD_MS, WORKTREE_PROBE_DEADLINE_MS,
-  createWorktreeDisposeCheck, worktreeChangeList, worktreeConfirmCopy, worktreeProbe,
+  createWorktreeDisposeCheck, worktreeChangeList, worktreeConfirmCopy, worktreeConfirmReady, worktreeProbe,
 } from '../src/worktree-dispose-model.mjs';
 
 // B37: shared-19 RG/zG, TK, DK/bK, IK, fK (readable shared-19-DmuztgN-.js:18651-18676, 19084-19203, 19373-19418).
@@ -123,4 +123,16 @@ test('IK: a failed check and the 5 s deadline show the couldn’t-check copy; a 
   assert.equal(cancelled.timers.size, 0);
   cancelled.check.press();
   assert.equal(cancelled.decisions.length, 0);
+});
+
+// FT-11 (diffgit-10): 2.42304.0 shared-19 EY S `Date.now() - Math.max(d.current ?? 0, n.openedAt ?? 0) < 500 || y(!0)`.
+test('worktreeConfirmReady: 500 ms from the later of the queue advancing and the confirm opening after another dialog', () => {
+  assert.equal(WORKTREE_DIRTY_GUARD_MS, 500);
+  assert.equal(worktreeConfirmReady({ now: 1000 }), true, 'neither known: the press counts');
+  assert.equal(worktreeConfirmReady({ now: 1000, guardSince: 700 }), false);
+  assert.equal(worktreeConfirmReady({ now: 1200, guardSince: 700 }), true);
+  assert.equal(worktreeConfirmReady({ now: 1200, guardSince: 700, openedAt: 900 }), false, 'opened after a dialog more recently');
+  assert.equal(worktreeConfirmReady({ now: 1400, guardSince: 700, openedAt: 900 }), true);
+  assert.equal(worktreeConfirmReady({ now: 1400, guardSince: 1000, openedAt: 100 }), false, 'the later of the two');
+  assert.equal(worktreeConfirmReady({ now: 1400, guardSince: null, openedAt: undefined }), true);
 });

@@ -1,6 +1,7 @@
 // zh-CN: panes area (Changes, Files, Plan, Background tasks, find bar, branch switch).
 // Keys are the exact English source strings.
 export default {
+  'Selection deleted': '已删除选区',
   "Go to file or search": "转到文件或搜索",
   "Go to file in changes or files": "在更改或文件中转到文件",
   "Absolute paths": "绝对路径",
@@ -21,7 +22,8 @@ export default {
   "Copy on select": "选中即复制",
   "Scrollback": "滚动历史",
   "{count} lines": "{count} 行",
-  "Auto-save": "自动保存",
+  // R4g-files FV1 (files-06): the label is cccc2cf0a jC "Auto save" (BNj0YDCyBr); "Auto-save" had no caller.
+  "Auto save": "自动保存",
   "Search options": "搜索选项",
   "Match case": "区分大小写",
   "Match whole word": "全字匹配",
@@ -363,6 +365,16 @@ export default {
   "Preview": "预览",
   "View source": "查看源代码",
   "Table preview": "表格预览",
+  "Filter rows": "筛选行",
+  "Sort by {column}": "按{column}排序",
+  "{total, plural, one {# row} other {# rows}}": "{total, plural, one {# 行} other {# 行}}",
+  "{shown, number} of {total, plural, one {# row} other {# rows}}": "{total, plural, one {共 # 行} other {共 # 行}}，显示 {shown, number} 行",
+  "This preview may be missing its end.": "此预览可能未包含文件末尾。",
+  "Long cells are shortened.": "较长的单元格已截短。",
+  "This table is the start of a larger file: only its first {rowCount, number} rows and {columnCount, number} columns are here.": "此表格仅显示较大文件的开头：前 {rowCount, number} 行和 {columnCount, number} 列。",
+  "Showing the first {rowCount, plural, one {# row} other {# rows}} and {columnCount, number} columns.{cellsCut, select, yes { Long cells are shortened.} other {}} Switch to Source to see more.": "仅显示前 {rowCount, plural, one {# 行} other {# 行}}和 {columnCount, number} 列。{cellsCut, select, yes {较长的单元格已截短。} other {}}切换到源代码可查看更多。",
+  "Showing the first {rowCount, plural, one {# row} other {# rows}}.{cellsCut, select, yes { Long cells are shortened.} other {}} Switch to Source to see more.": "仅显示前 {rowCount, plural, one {# 行} other {# 行}}。{cellsCut, select, yes {较长的单元格已截短。} other {}}切换到源代码可查看更多。",
+  "Showing the first {columnCount, plural, one {# column} other {# columns}}.{cellsCut, select, yes { Long cells are shortened.} other {}} Switch to Source to see more.": "仅显示前 {columnCount, plural, one {# 列} other {# 列}}。{cellsCut, select, yes {较长的单元格已截短。} other {}}切换到源代码可查看更多。",
   "Couldn’t load the preview": "无法加载预览",
   "Open external link": "打开外部链接",
   "You’re leaving Claude to visit an external link:": "你即将离开 Claude，访问外部链接：",
@@ -423,6 +435,8 @@ export default {
   "Next match": "下一个匹配项",
   "Copy file contents": "复制文件内容",
   "Download file": "下载文件",
+  "Downloading…": "正在下载…",
+  "Some characters in this file couldn’t be read, so the download has {replacement} in their place.": "此文件中的部分字符无法读取，下载文件会以 {replacement} 替代这些字符。",
   "Reload file": "重新加载文件",
   "Files in {folder}": "{folder} 中的文件",
   "Empty folder": "空文件夹",
@@ -440,7 +454,6 @@ export default {
   "Plausible": "可能",
   "Dismiss finding": "忽略此发现",
   "Fix this one": "修复此项",
-  "Next →": "下一个 →",
   "With these environment variables:": "使用以下环境变量：",
   "and {count} more": "还有 {count} 个",
   "Warning: {names} can make it run a different program or load other code than the command shows. Allow it only if you set these yourself.": "警告：{names} 可能使它运行与命令所示不同的程序，或加载其他代码。仅当这些变量是你自己设置的时才允许。",
@@ -500,4 +513,22 @@ export default {
   "{name} after the change": "更改后的 {name}",
   "{width} × {height}": "{width} × {height}",
   "Image not available": "图片不可用",
+  // R3-files FT-16: the breadcrumb folder popover's compact tree (ca7840910 X / Q).
+  "Collapse folder {name}": "收起文件夹 {name}",
+  "Expand folder {name}": "展开文件夹 {name}",
+  "{count, plural, one {# more item not shown} other {# more items not shown}}": "{count, plural, one {另有 # 项未显示} other {另有 # 项未显示}}",
+  // R3-terminal FT-09: the 2.42304.0 finding card (c44d00c7f ya RkGf6cYgK5, the ArrowDown button's name). Its "Claude"
+  // header stays as written (D23) and has no entry.
+  "Next finding after the one on line {line}": "第 {line} 行的发现之后的下一个发现",
+  // R4i-files FI1 (files-13): the 2.42304.0 download failure toast (c56477982 k's V, ut+EuwPib9 and its cause
+  // descriptions) and the truncated-download warning (cd2efac6e cGEVamcSKC).
+  "Couldn’t download {name}": "无法下载 {name}",
+  "This session isn’t reachable right now. Try again.": "目前无法连接此会话，请重试。",
+  "This file is no longer available.": "此文件已不可用。",
+  "This file is outside this session’s folders. You can ask Claude to copy it into one of them, then download the copy.": "此文件不在此会话的文件夹中。你可以让 Claude 把它复制到其中一个文件夹，再下载副本。",
+  "This file is too large to download.": "此文件太大，无法下载。",
+  "Some characters in this file can’t be copied exactly, so nothing was saved.": "此文件中有些字符无法原样复制，因此没有保存任何内容。",
+  "Right-click the file’s tab, choose Reload file, then try again.": "右键点击该文件的标签页，选择“重新加载文件”，然后重试。",
+  "Couldn’t read this file.": "无法读取此文件。",
+  "This file is too large to load in full, so the download is incomplete.": "此文件太大，无法完整加载，因此下载的内容不完整。",
 };

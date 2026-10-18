@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   TURNS_PAGE_LIMIT, isLegacyHistory, historyRoute, resumeParams, readParams, forkParams,
-  turnsListParams, itemsListParams, mergeTurnPages, applyItemEntries, loadThreadHistory,
+  turnsListParams, itemsListParams, mergeTurnPages, applyItemEntries, loadThreadHistory, historyMissing,
 } from "../src/thread-history-model.mjs";
 
 const overrides = { threadId: "a", approvalPolicy: "on-request", sandbox: "workspace-write", approvalsReviewer: "user" };
@@ -171,4 +171,20 @@ test("a cursor that never terminates is stopped by the page cap", async () => {
   assert.equal(result.turnPages, 4);
   assert.equal(result.truncated, true);
   assert.equal(served, 4);
+});
+
+test("cov2-05: a fresh session with no rollout stays empty; only a thread with a recorded first message counts as missing", async () => {
+  const notSupported = () => { throw Object.assign(new Error("list_turns is not supported yet"), { code: -32601 }); };
+  const { rpc } = recorder({ "thread/turns/list": notSupported });
+  const history = await loadThreadHistory(rpc, { threadId: "a", thread: { historyMode: "paginated" } });
+  // thread/start then navigate: nothing sent, preview empty → "No messages yet", never "Session not found on disk".
+  assert.equal(historyMissing(history, { id: "a", preview: "" }, { id: "a", preview: "" }), false);
+  assert.equal(historyMissing(history, undefined, { id: "a" }), false);
+  assert.equal(historyMissing(history, { id: "a", preview: "   " }), false);
+  // The core recorded a first message yet can list no turns: the transcript is gone.
+  assert.equal(historyMissing(history, { id: "a", preview: "fix the build" }, { id: "a", preview: "" }), true);
+  assert.equal(historyMissing(history, null, { id: "a", preview: "fix the build" }), true);
+  // History that loaded is never missing, whatever the preview says.
+  assert.equal(historyMissing({ turns: [], mode: "paginated" }, { id: "a", preview: "fix the build" }), false);
+  assert.equal(historyMissing(null, { id: "a", preview: "x" }), false);
 });

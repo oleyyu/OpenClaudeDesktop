@@ -131,14 +131,24 @@ test('source: raw read errors never render and subfolders add no loading/empty n
 test('Lg subfolder error row: treeitem at depth+1, no activation button, muted control-height row', () => {
   const row = html(P.SourceTreeErrorRow, { depth: 1 });
   // B33 (cccc2cf0a ky): the row also carries the Ec indent-guide layer (style xc = padding + ce9ca5630 g).
-  assert.equal(row, '<div role="treeitem" aria-level="2" data-tree-row="" tabindex="-1" class="source-tree-error source-tree-guided flex items-center min-h-control px-lg text-body text-muted outline-none" style="padding-left:16px;--file-tree-guides:repeating-linear-gradient(to right, var(--cds-border) 0 1px, transparent 1px 8px);background-position:14px 0;background-repeat:no-repeat;background-size:8px 100%"><span class="truncate">Couldn’t read this folder.</span></div>');
+  // R2-files FT-01, 2.42304.0 cccc2cf0a AS: style Ll(t) = ca7840910 V (padding-inline-start 8 + depth * 10, guides
+  // from --file-tree-guides-x 14px), and the muted copy is text-muted-as-secondary.
+  // R3-files FT-14: the class is AS's own, generated: shared-6 vh (Dn) "min-h-control app-list-row-min" and ca7840910 j
+  // (zl), the kept-guide layer painting on the row itself; no host class.
+  assert.equal(row, '<div role="treeitem" aria-level="2" data-tree-row="" tabindex="-1" class="flex items-center min-h-control app-list-row-min px-lg text-body text-muted-as-secondary outline-none bg-(image:--file-tree-kept-guides) group-hover/file-tree:bg-(image:--file-tree-guides) group-focus-within/file-tree:bg-(image:--file-tree-guides) [&amp;:where(:root[dir=rtl]_:dir(rtl))]:bg-[position:right_var(--file-tree-guides-x)_top_0]!" style="padding-inline-start:18px;--file-tree-guides:repeating-linear-gradient(var(--file-tree-guides-to, to right), var(--cds-border) 0 1px, transparent 1px 10px);--file-tree-guides-x:14px;background-position:14px 0;background-repeat:no-repeat;background-size:10px 100%"><span class="truncate">Couldn’t read this folder.</span></div>');
   assert.doesNotMatch(row, /data-tree-primary|<button|role="alert"/);
-  assert.match(html(P.SourceTreeErrorRow, { depth: 3 }), /aria-level="4"[^>]*style="padding-left:32px;[^"]*background-size:24px 100%"/);
-  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.css'), 'utf8');
-  const rule = css.slice(css.indexOf('.source-tree-error {'), css.indexOf('}', css.indexOf('.source-tree-error {')));
-  assert.match(rule, /min-height: var\(--cds-h-control\);/);
-  assert.match(rule, /padding-inline: var\(--cds-pad-lg\);/);
-  assert.match(rule, /color: var\(--cds-text-muted\);/);
+  assert.match(html(P.SourceTreeErrorRow, { depth: 3 }), /aria-level="4"[^>]*style="padding-inline-start:38px;[^"]*background-size:30px 100%"/);
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/cccc2cf0a-B0D--VZp.js'), 'utf8');
+  assert.match(official, /className:`flex items-center \$\{[\w$]+\} px-lg text-body text-muted-as-secondary outline-none \$\{[\w$]+\}`,style:([\w$]+)\(t\)/);
+  assert.match(official, /h as Ll,[^}]*\}from"\.\/ca7840910-DSVFtTw1\.js"/);
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/ca7840910-DSVFtTw1.js'), 'utf8'), /V as h[,}]/);
+  assert.match(official, /,ff as Dn[,}][^;]*from"\.\/shared-6-Cby4X-ms\.js"|[{,]ff as Dn[,}]/);
+  assert.match(official, /l as zl,[^}]*\}from"\.\/ca7840910-DSVFtTw1\.js"/);
+  // No host rule styles the row any more (the hand-written .source-tree-error / .source-tree-guided are gone); the
+  // color, height and guides are official @layer utilities rules.
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(css, /\.source-tree-(error|guided|guides)\b/);
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8'), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
 });
 
 test('empty preview: the three exact source title/body pairs in EmptyState yu with icon Folder', () => {

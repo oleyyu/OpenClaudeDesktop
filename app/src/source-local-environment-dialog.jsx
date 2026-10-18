@@ -4,6 +4,8 @@ import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { Icon } from "./icons";
 import { t } from "../electron/i18n/index.mjs";
 import { ENVIRONMENT_PLACEHOLDER, parseEnvironmentText, serializeEnvironment, validateEnvironmentText } from "../electron/prefs/local-environment.mjs";
+import { environmentBodyClass, EnvironmentFooter } from "./generated/code-current/environment-form-layout.mjs";
+import { localEnvironmentRevision } from "./source-environment-menu-adapters.jsx";
 import "./source-local-environment-dialog.css";
 
 /*
@@ -105,6 +107,8 @@ export function EnvironmentForm({ loadedText, onDirtyChange, onClose, pending, s
     setPending(true);
     try {
       const result = await save(parseEnvironmentText(text));
+      // c3f9f1667 Me: je.getState().bump() — an open environment picker re-reads whether this machine has variables.
+      localEnvironmentRevision.getState().bump();
       onSaved?.(result);
       onClose();
     } catch {
@@ -115,14 +119,14 @@ export function EnvironmentForm({ loadedText, onDirtyChange, onClose, pending, s
   }, [valid, pending, text, save, onSaved, onClose, onError, setPending]);
   return (
     <form className="sle-form" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-      <div className="sle-body">
+      <div className={environmentBodyClass}>
         <EnvironmentVariablesField value={text} onChange={edit} error={shown} disabled={pending} autoFocus />
       </div>
       <button type="submit" hidden aria-hidden="true" tabIndex={-1} disabled={pending} />
-      <SourceDialogFooter className="sle-footer">
+      <EnvironmentFooter>
         <SourceSettingsButton variant="secondary" disabled={pending} onClick={() => close()}>{t("Cancel")}</SourceSettingsButton>
         <SourceSettingsButton variant="primary" disabled={!valid || pending} busy={pending} onClick={() => void submit()}>{t("Save changes")}</SourceSettingsButton>
-      </SourceDialogFooter>
+      </EnvironmentFooter>
     </form>
   );
 }

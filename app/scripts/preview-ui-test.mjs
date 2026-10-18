@@ -155,7 +155,7 @@ try{
  const divider=page.locator('.tiles-handle[aria-orientation=vertical]').first();await divider.press('Home');await poll(async()=>await sketchPanel().getAttribute('data-layout')==='full','wide source toolbar');
  assert.ok(await sketchLayer().getByRole('button',{name:'White',exact:true}).isVisible());
  const sourceTools=await sketchLayer().evaluate(root=>{const named=name=>root.querySelector(`button[aria-label="${name}"]`),icon=name=>{const node=named(name).querySelector('[data-cds=Icon]');return {point:node.textContent.codePointAt(0),font:getComputedStyle(node).fontFamily};};return {line:icon('Line'),arrow:icon('Arrow'),text:icon('Text'),whiteShadow:getComputedStyle(named('White').firstElementChild).boxShadow,barTop:root.querySelector('[data-layout]').getBoundingClientRect().top,viewportBottom:root.closest('.spv-viewport').getBoundingClientRect().bottom};});
- assert.equal(sourceTools.line.point,57669);assert.equal(sourceTools.arrow.point,57657);assert.equal(sourceTools.text.point,57678);assert.equal(sourceTools.text.font,'PreviewSketchIcons');assert.notEqual(sourceTools.whiteShadow,'none');assert.ok(sourceTools.barTop>=sourceTools.viewportBottom+9);report.metrics.sketchTools=sourceTools;
+ assert.equal(sourceTools.line.point,57669);assert.equal(sourceTools.arrow.point,57657);assert.equal(sourceTools.text.point,57678);assert.equal(sourceTools.text.font,'Anthropicons-Variable');assert.notEqual(sourceTools.whiteShadow,'none');assert.ok(sourceTools.barTop>=sourceTools.viewportBottom+9);report.metrics.sketchTools=sourceTools;
 
  await shot('sketch-source-wide');
  await divider.press('End');await poll(async()=>await sketchPanel().getAttribute('data-layout')==='minimal','minimal source toolbar');

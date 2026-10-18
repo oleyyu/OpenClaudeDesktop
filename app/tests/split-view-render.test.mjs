@@ -116,7 +116,7 @@ test('session row menu: Split view and New window live in the Open in submenu (c
   const sidebar = (props) => renderToStaticMarkup(React.createElement(Sidebar.SourceSidebar, { sessions: [thread('s1')], knownFolders: ['/fixture/work'], ...props }));
   // B10 (shared-19 DY): rows are pointer drags (data-drag-key; source-sidebar-drag.jsx), never native drags.
   const draggableRow = sidebar({ windowActions: actions({ kind: 'open' }), onSessionAction() {} });
-  assert.match(draggableRow, /data-source-session-id="s1"[^>]*data-drag-key="s1"[^>]*>.*?<button type="button" class="source-session-open"[^>]*draggable="false"/s);
+  assert.match(draggableRow, /data-source-session-id="s1"[^>]*data-drag-key="s1"[^>]*>.*?<button type="button"[^>]*data-row-main-button=""[^>]*draggable="false"/s);
   assert.doesNotMatch(draggableRow, /draggable="true"/);
   assert.doesNotMatch(sidebar({}), /draggable="true"/);
 });
@@ -127,8 +127,8 @@ test('the split CSS never sets cursor:pointer, keeps reduced motion, and the sto
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /html\[data-reduce-motion="true"\] \.split-host \.dframe-pane-extra/);
   // The grid rules are the reference's own (the loaded shared-styles sheet), not copies.
-  const sheet = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/shared-styles-CTu5t_TM.css'), 'utf8');
-  assert.match(readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /href="\/assets\/v1\/shared-styles-CTu5t_TM\.css"/);
+  const sheet = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/shared-styles-Bl9zqrv-.css'), 'utf8');
+  assert.match(readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /href="\/assets\/v1\/shared-styles-Bl9zqrv-\.css"/);
   for (const rule of ['.dframe-pane-host{', '.dframe-pane-col{', '.dframe-pane-resize-col{', '.dframe-pane-resize-row{', '.dframe-pane-resize-corner{', '.dframe-pane-grip{', '.dframe-drop-overlay-badge{', '.dframe-drop-overlay-label{'])
     assert.ok(sheet.includes(rule), rule);
   assert.equal(Split.SESSION_DRAG_TYPE, 'application/x-code-desktop-session');

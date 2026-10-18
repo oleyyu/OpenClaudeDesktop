@@ -184,7 +184,7 @@
   transition: background-color var(--cds-dur-fast, 60ms);
 }
 .suc-show-more:hover .suc-show-more-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
-.suc-show-more:active .suc-show-more-backdrop { transform: scale(.975); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
+.suc-show-more:active .suc-show-more-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
 .suc-show-more-label { display: inline-flex; min-width: 0; align-items: center; }
 @media (prefers-reduced-motion: reduce) {
   .suc-show-more, .suc-show-more-backdrop, .suc-show-more-backdrop > [data-cds-part="paint"] { transition: none; }

@@ -22,9 +22,12 @@
 }
 /* hh.tileContainer carries a 1px transparent border officially; the local
    container omits it so the already verified 8px inset (chat header at y=8,
-   frozen ui029/transcript-fade pane layouts) keeps its exact geometry. */
+   frozen ui029/transcript-fade pane layouts) keeps its exact geometry. The
+   bottom edge alone takes the border back: 2.42304.0 shared-20 Zf pads the
+   bottom `n + r` (padding 8 + borderPx 1), so the docked composer and the
+   Home environment bar sit 9px above the window edge, not 8. */
 .source-pane-layout[data-has-pane="false"] > .tiles-container {
-  padding-bottom: 8px;
+  padding-bottom: 9px;
 }
 .tiles-container {
   display: flex;

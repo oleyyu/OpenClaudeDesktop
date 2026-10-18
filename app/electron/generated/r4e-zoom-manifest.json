@@ -1,0 +1,150 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r4e-zoom.mjs",
+  "output": "r4e-zoom.cjs",
+  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
+  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+  "bindings": [
+    {
+      "name": "jHn",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "594ed497c84177c97bb9c9f3daaf8e8ddb596cff3f27d3cf058b4c05387d06b8",
+      "features": [
+        "jHn=.25"
+      ]
+    },
+    {
+      "name": "MHn",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "6e2d01c976190a1256f8d60cb8b5645db263b26e4d0229b1c9451a473cd42b5b",
+      "features": [
+        "MHn=Math.log(1.2)"
+      ]
+    },
+    {
+      "name": "NHn",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "00d3f19b14a40cc78d730d050a5c49b37f74fbdb348b57e6a086bd74ed501d5d",
+      "features": [
+        "NHn=Math.log(jHn)/MHn"
+      ]
+    },
+    {
+      "name": "PHn",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "dd3569c791c0fe4f0c91b5ad1d6e3e2dd7da1066633db389133a03ab300239e8",
+      "features": [
+        "PHn=Math.log(5)/MHn"
+      ]
+    },
+    {
+      "name": "FHn",
+      "kind": "function",
+      "scope": "module",
+      "sha256": "9bfc184ce83e63861089a1750467a07539c21eee4bc32d9825341bd38af9f377",
+      "features": [
+        "return Math.min(PHn,Math.max(NHn,e))"
+      ]
+    },
+    {
+      "name": "mPi",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "5c81d537ed8a090a5b10d7960300bae8fa00640b7430022a3a51a6e1212bb847",
+      "features": [
+        "mPi=.5"
+      ]
+    },
+    {
+      "name": "gPi",
+      "kind": "var",
+      "scope": "bindZoomMenu",
+      "sha256": "591f43f1880026a8f93ea889e1cbe77ad340519c4da870e01f7a297f18e65e68",
+      "features": [
+        "V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0"
+      ]
+    },
+    {
+      "name": "_Pi",
+      "kind": "var",
+      "scope": "bindZoomMenu",
+      "sha256": "3ca10c81e55c5862cc5001c340d2df9fc5cddf6bc5fcb6b90ee0489a438e6201",
+      "features": [
+        "_Pi=(e=gPi())=>e===void 0||e<PHn"
+      ]
+    },
+    {
+      "name": "vPi",
+      "kind": "var",
+      "scope": "bindZoomMenu",
+      "sha256": "6e8046809c0f6ed41603aaa02a10ad86ff78b641cbc42d07d03e2ae1bfb051e2",
+      "features": [
+        "vPi=(e=gPi())=>e===void 0||e>NHn"
+      ]
+    },
+    {
+      "name": "PPi",
+      "kind": "function",
+      "scope": "bindZoomMenu",
+      "sha256": "74d2c7d2f2e327cfcf34107a45dcede8caba0af6148181970b73210fd87fdfdf",
+      "features": [
+        "if(!V?.webContents||V.webContents.isDestroyed())return;",
+        "let e=V.webContents.getZoomLevel(),t=a.Menu.getApplicationMenu()",
+        "n=[[\"actual-size\",e!==0],[\"actual-size-numpad\",e!==0],[\"zoom-in\",_Pi(e)],[\"zoom-out\",vPi(e)]]",
+        "for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}"
+      ]
+    }
+  ],
+  "exportsAs": {
+    "NHn": "ZOOM_LEVEL_MIN",
+    "PHn": "ZOOM_LEVEL_MAX",
+    "FHn": "clampZoomLevel",
+    "mPi": "ZOOM_STEP"
+  },
+  "boundAs": {
+    "gPi": "zoomLevel",
+    "_Pi": "canZoomIn",
+    "vPi": "canZoomOut",
+    "PPi": "refreshZoomMenu"
+  },
+  "hostParams": {
+    "V": [
+      "webContents"
+    ],
+    "a": [
+      "Menu"
+    ]
+  },
+  "callers": {
+    "yPi": [
+      "{id:\"actual-size\",",
+      "enabled:hPi(),click:APi}",
+      "{id:\"zoom-in\",",
+      "accelerator:\"CmdOrCtrl+Plus\",enabled:_Pi(),click:MPi}",
+      "{id:\"zoom-out\",",
+      "accelerator:\"CmdOrCtrl+-\",enabled:vPi(),click:NPi}",
+      "{id:\"actual-size-numpad\",label:\"Actual Size (numpad)\""
+    ],
+    "APi": [
+      "V.webContents.setZoomLevel(0),jPi(0),I$(),F$()"
+    ],
+    "FPi": [
+      "n=FHn(e===0?t:Math.round((t+e)/mPi)*mPi+0);V.webContents.setZoomLevel(n),jPi(n),I$(),F$()"
+    ],
+    "MPi": [
+      "FPi(mPi)"
+    ],
+    "NPi": [
+      "FPi(-.5)"
+    ],
+    "I$": [
+      "function I$(){PPi()}"
+    ]
+  },
+  "sha256": "cbd767420ffc864690b102fa221d0debfd692c4681516f17361fdd0735b01aff"
+}

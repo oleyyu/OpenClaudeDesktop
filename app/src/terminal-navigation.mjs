@@ -22,7 +22,7 @@ export function handleTerminalNavigation(event,term,write,{mac=true,linux=false,
  if(!action)return false;
  event.preventDefault();
  if(action==='top')term.scrollToTop();else if(action==='bottom')term.scrollToBottom();else {
-  if(action==='deleteToLineStart')term.scrollToBottom();
+  term.scrollToBottom();
   write(keys[action]);
  }
  return true;

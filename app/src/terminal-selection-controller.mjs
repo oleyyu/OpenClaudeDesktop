@@ -1,5 +1,5 @@
-import {terminalSelectionEndRow,terminalSelectionBox,isWholeTerminalSelection,wholeTerminalSelectionAnchor} from './generated/code-editor/terminal-selection.mjs';
-// Original c6bf19e8f selection callbacks and scroll anchoring, adapted to a local xterm view.
+import {terminalSelectionEndRow,terminalSelectionBox,isWholeTerminalSelection,wholeTerminalSelectionAnchor} from './generated/code-current/terminal-geometry.mjs';
+// 2.42304.0 c6bf19e8f pi selection callbacks (onSelectionChange ri/oi/si/ii) and scroll anchoring, adapted to a local xterm view.
 export function observeTerminalSelection(term,root,{onChange,suppressed=()=>false}) {
  let point=null,anchor=null,releaseOff=null;
  const set=value=>{anchor=value;onChange(value);};

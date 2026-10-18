@@ -7,11 +7,12 @@ import { useTranscriptScroll } from "./use-transcript-scroll";
 import { pathChoices } from "./file-tool-model.mjs";
 import { clipboardEnvironment, writeClipboardPayload } from "./clipboard-payload.mjs";
 import { markdownToClipboardHtml } from "./rich-copy-html.mjs";
-import { attachSelectionChord, attachableSelection, fileRefMenu, linkTarget, messageMenu } from "./transcript-context-menu-model.mjs";
+import { attachSelectionChord, attachableSelection, contextMenuOrigin, fileRefMenu, linkTarget, messageMenu, preventMenuContextMenu } from "./transcript-context-menu-model.mjs";
 import { useTranscriptFeedNav } from "./use-transcript-feed-nav.js";
 import { SourceChapterToc } from "./source-chapters.jsx";
 import { ResponseImageMenuContext } from "./source-response-image.jsx";
 import { chapterAnchorId } from "./session-chapters-model.mjs";
+import { TranscriptRowsScope } from "./source-transcript-rows.jsx";
 import "./source-transcript.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -46,7 +47,7 @@ function MenuEntries({ entries, run }) {
 }
 
 export const SourceTranscript = forwardRef(function SourceTranscript(
-  { sessionKey, ready = true, pendingInput = false, interactionHandlers, messageActions = null, responding = false, onFeedEscape = null, findBarRef = null, chapters = null, chapterSessionId = null, children },
+  { sessionKey, ready = true, pendingInput = false, interactionHandlers, messageActions = null, responding = false, onFeedEscape = null, findBarRef = null, chapters = null, chapterSessionId = null, turnScope = null, children },
   ref,
 ) {
   const scroll = useTranscriptScroll({ sessionKey, ready });
@@ -67,15 +68,19 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
   // assistant row (or a file reference chip) opens the CDS ContextMenu at the
   // pointer, as source-response-image.jsx does; preventDefault keeps the
   // native menu (F04) closed. Rows without message text keep the native menu.
+  // TT-06 (2.42304.0 c96d752d0 row onContextMenu: `byKeyboard: e.button === -1`): a keyboard-invoked menu (the
+  // ContextMenu key, Shift+F10) opens with its first item highlighted, a pointer one with none.
   function onContextMenu(event) {
     interactionHandlers?.onContextMenu?.(event);
     if (event.defaultPrevented) return;
     const target = event.target?.nodeType === 1 ? event.target : event.target?.parentElement;
-    if (openMessageMenu(target, { x: event.clientX, y: event.clientY })) event.preventDefault();
+    const origin = contextMenuOrigin(event);
+    if (openMessageMenu(target, origin.point, null, origin.byKeyboard)) event.preventDefault();
   }
   // dI / TI: the menu for what is under the pointer. image: a response image of the message (its src, file name and own
-  // Copy image / Save image), which puts the image items first. Returns whether a menu opened.
-  function openMessageMenu(target, point, image = null) {
+  // Copy image / Save image), which puts the image items first. byKeyboard: the menu was invoked from the keyboard.
+  // Returns whether a menu opened.
+  function openMessageMenu(target, point, image = null, byKeyboard = false) {
     const current = actions.current, viewport = scroll.viewportRef.current;
     if (!current || !viewport) return false;
     if (!target || !viewport.contains(target) || target.closest(EDITABLE)) return false;
@@ -84,7 +89,7 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
       const path = fileNode.dataset.fileRef, choices = pathChoices(path, current.cwd);
       const entries = fileRefMenu({ absolute: choices?.absolute, relative: choices?.relative, filename: choices?.filename || path,
         canAttach: !!current.onAttachFile, canOpen: !!current.onOpenFile, canReveal: !!current.onRevealFile && !!choices?.relative });
-      setMenu({ kind: "file", point, entries, path, choices,
+      setMenu({ kind: "file", point, byKeyboard, entries, path, choices,
         line: fileNode.dataset.fileLine ? Number(fileNode.dataset.fileLine) : undefined,
         endLine: fileNode.dataset.fileEndLine ? Number(fileNode.dataset.fileEndLine) : undefined });
       return true;
@@ -104,7 +109,7 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
       ...link, canOpenInPreview: link.canOpenInPreview && !!current.onOpenInPreview, messageText: text, canAttach: !!current.onAttachText,
       canPin: !!(pin && current.onTogglePin), pinned: !!pin?.pinned,
       canRewind: !!(turn?.user && current.onRewindTo), canFork: !!(turn?.turnId && current.onForkFrom) });
-    setMenu({ kind: "message", point, entries, text, code, link: link.linkHref, selectionText, turnId: turn?.turnId ?? null,
+    setMenu({ kind: "message", point, byKeyboard, entries, text, code, link: link.linkHref, selectionText, turnId: turn?.turnId ?? null,
       itemId: row.dataset.transcriptItemId, image });
     return true;
   }
@@ -112,7 +117,7 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
   // One stable opener for the images below (they re-render only with their own props).
   const openMenuRef = useRef(openMessageMenu);
   openMenuRef.current = openMessageMenu;
-  const openImageMenu = useCallback((target, point, image) => openMenuRef.current(target, point, image), []);
+  const openImageMenu = useCallback((target, point, image, byKeyboard = false) => openMenuRef.current(target, point, image, byKeyboard), []);
 
   function run(id) {
     const current = actions.current, viewport = scroll.viewportRef.current;
@@ -203,6 +208,9 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
       className="source-transcript-frame"
       data-following={scroll.following}
       data-scroll-fade={scroll.showFade}
+      // xNe (c96d752d0 ENe Popup onContextMenu): the open menu is portaled, but its React events bubble through
+      // this frame; a right-click on it (or on one of its submenus) is prevented, so no native menu opens over it.
+      onContextMenu={preventMenuContextMenu}
     >
       <div
         ref={scroll.viewportRef}
@@ -226,7 +234,9 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
           data-testid="transcript-sizer"
           data-transcript-spacing={sessionKey && ready ? "regular" : undefined}
         >
-          {children}
+          {/* cb6930dae ho / c26fb8b6b He: the rows' scope (turnStatusRows gate, live scope, turn mark broker). */}
+          <TranscriptRowsScope sessionKey={sessionKey} turnId={turnScope?.turnId ?? null} items={turnScope?.items ?? null} itemPhases={turnScope?.itemPhases ?? null}
+            turnStats={turnScope?.turnStats ?? null} responding={responding} awaiting={pendingInput}>{children}</TranscriptRowsScope>
           <div
             ref={scroll.endRef}
             className="source-transcript-end"
@@ -277,6 +287,7 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
         scrollKey={sessionKey} onJump={jumpToChapter} />}
       <SourceTranscriptSelection containerRef={scroll.viewportRef} actions={messageActions} hidden={!!menu}/>
       {menu && <SourceMenu.Popup anchor={scroll.viewportRef.current} point={menu.point} dataCds="ContextMenu" layer="contextmenu"
+        initialHighlight={menu.byKeyboard ? "first" : undefined}
         label={menu.kind === "file" ? t("File actions") : t("Message actions")} onClose={() => setMenu(null)}>
         <MenuEntries entries={menu.entries} run={run} />
       </SourceMenu.Popup>}

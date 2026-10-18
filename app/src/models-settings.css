@@ -118,3 +118,13 @@ html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
 .msx-local { display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; }
 .msx-local-dot { display:inline-block; width:6px; height:6px; margin-inline-end:6px; border-radius:9999px; background:var(--cds-alpha-2); vertical-align:middle; }
 .msx-local-dot[data-running] { background:var(--cds-fill-success, #3a9d5d); }
+/* Settings › Models per-model options (source-settings-model-names.jsx): each model a collapsible entry over its rows. */
+.msx-model-entry { border-bottom:0.5px solid var(--cds-alpha-2); }
+.msx-model-entry:last-of-type { border-bottom:0; }
+.msx-model-trigger { width:100%;align-items:flex-start;gap:var(--cds-gap-sm,8px);padding:var(--cds-pad-md,12px) 0;text-align:start;color:var(--cds-text-primary); }
+.msx-model-trigger > svg { margin-top:2px;flex-shrink:0; }
+.msx-model-head { display:flex;flex-direction:column;gap:4px;min-width:0;flex:1; }
+.msx-model-ids { display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:var(--cds-gap-sm,8px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px); }
+.msx-model-rows { padding:0 0 var(--cds-pad-sm,6px) 24px; }
+.msx-name-control { display:inline-flex; align-items:center; gap:6px; }
+.msx-name-id { font-family:var(--cds-font-mono, ui-monospace, monospace); font-size:12px; color:var(--cds-text-secondary); }

@@ -34,8 +34,9 @@ test('a pane window reads its own pin state and appearance, and relays Add to pr
   assert.match(popout, /if \(typeof state\.alwaysOnTop === "boolean"\) setAlwaysOnTop\(state\.alwaysOnTop\)/);
   assert.match(popout, /window\.addEventListener\(ADD_TO_PROMPT_EVENT, relay\)/);
   assert.match(popout, /call\("popout-add-to-prompt", \{ text \}\)/);
-  // The main window queues it for the session and opens that session when no side shows it.
-  assert.match(main, /e\.kind === "add-to-prompt" && side === 0[\s\S]{0,200}promptAdditions\.queue\(e\.sessionId, e\.text, e\.meta\)[\s\S]{0,120}openInFocusedSide\(e\.sessionId\)/);
+  // The main window queues it for the session and opens that session when no side shows it (R4f-popout F3: through the
+  // 2.42304.0 relay in popout-r4f-relay.mjs, tests/popout-r4f-relay.test.mjs).
+  assert.match(main, /e\.kind === "add-to-prompt" && side === 0[\s\S]{0,200}relayPanePrompt\(e, \{ shown: \(id\) => splitStore\.isShown\(id\) \|\| currentRef\.current === id[\s\S]{0,120}write: \(id, text, meta\) => promptAdditions\.queue\(id, text, meta\), open: \(id\) => openInFocusedSide\(id\)/);
   // B27: a popped-out Terminal's selection keeps its tab label (meta).
   assert.match(main, /promptAdditions\.takeEntries\(sessionId\)\.map\(\(entry\) => makeSnippet\(entry\.text, entry\.meta\)\)/);
 });

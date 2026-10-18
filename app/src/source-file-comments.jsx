@@ -2,6 +2,18 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { Icon } from './icons';
 import { SourceTooltip } from './source-tooltip.jsx';
 import { t } from '../electron/i18n/index.mjs';
+import { suppressEscapeRepeat } from './generated/code-editor-current/keyboard-repeat.mjs';
+import { ownerWindow } from './generated/files-changes/owner-window.mjs';
+
+/** The comment field's keydown (c82eca2bd Se me): Enter saves ('⌘/Ctrl+Enter' also submits) unless composing or held,
+ * Escape cancels. 2.42304.0: before cancelling, Escape swallows its own auto-repeat in the owner window until the key is
+ * released (`let t = f(e.currentTarget); t && te(t)`: shared-25 up + shared-19 pZ), so holding Escape closes the card
+ * and does not go on to close the pane, menu or dialog behind it. */
+export function commentFieldKeyDown(event,{save,cancel}){
+  event.stopPropagation();if(event.nativeEvent?.isComposing||event.keyCode===229)return;
+  if(event.key==='Enter'&&!event.shiftKey&&!event.altKey){event.preventDefault();if(!event.repeat)save(true,event.metaKey||event.ctrlKey);}
+  else if(event.key==='Escape'){event.preventDefault();const view=ownerWindow(event.currentTarget);if(view)suppressEscapeRepeat(view);cancel();}
+}
 
 // c82eca2bd H/U/ot, inline variant with canPostToGitHub=false (Files Wc).
 // placeholder: the Changes pane passes ga's 'Tell Claude what to change'; outdated: ot isOutdated, the label then
@@ -19,11 +31,7 @@ export function FileCommentCard({entry,active,store,onSave,onDelete,placeholder,
       <div className="sfv-comment-label">{outdated?<span className="sfv-comment-label-row">{label}<span className="sfv-comment-badge" data-cds="Badge" data-variant="neutral" data-size="xs">{t('Outdated')}</span></span>:label}</div>
       <div className="sfv-comment-row">
         {editing?<textarea ref={input} aria-label={inputLabel} placeholder={placeholder??t('Add a comment')} rows={1} value={entry.body}
-          onChange={event=>store.edit(entry.id,event.target.value)} onKeyDown={event=>{
-            event.stopPropagation();if(event.nativeEvent.isComposing||event.keyCode===229)return;
-            if(event.key==='Enter'&&!event.shiftKey&&!event.altKey){event.preventDefault();if(!event.repeat)save(true,event.metaKey||event.ctrlKey);}
-            else if(event.key==='Escape'){event.preventDefault();cancel();}
-          }} onBlur={event=>{if(entry.savedBody!==undefined||card.current?.contains(event.relatedTarget))return;requestAnimationFrame(()=>{if(input.current&&!input.current.value.trim())cancel();});}}/>
+          onChange={event=>store.edit(entry.id,event.target.value)} onKeyDown={event=>commentFieldKeyDown(event,{save,cancel})} onBlur={event=>{if(entry.savedBody!==undefined||card.current?.contains(event.relatedTarget))return;requestAnimationFrame(()=>{if(input.current&&!input.current.value.trim())cancel();});}}/>
           :<div role="button" tabIndex={0} className="sfv-comment-body" onClick={event=>{const selection=event.currentTarget.ownerDocument.getSelection();if(selection?.isCollapsed===false&&(event.currentTarget.contains(selection.anchorNode)||event.currentTarget.contains(selection.focusNode)))return;store.activate(entry.id);}}
             onKeyDown={event=>{if(event.metaKey||event.ctrlKey||event.altKey)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();if(event.key==='Enter')store.activate(entry.id);}}}
             onKeyUp={event=>{if(event.key===' '&&!event.metaKey&&!event.ctrlKey&&!event.altKey){event.preventDefault();store.activate(entry.id);}}}>{entry.savedBody}</div>}

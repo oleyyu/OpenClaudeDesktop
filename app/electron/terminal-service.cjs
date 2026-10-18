@@ -28,6 +28,26 @@ const SWEEP_MS = 15000;
 const KILL_GRACE_MS = 1500;
 const SHELL_PROXY_WAIT_MS = 400;
 const READY_QUIET_MS = 250, READY_MAX_MS = 5000;
+// R4e-terminal (terminal-17): shell mode runs one command at a time per session, after 2.42304.0's runCommand
+// (asar index.chunk-D7Sj9EoB.js; token for token the same as 2.37337.1's). A run someone still waits on is refused
+// (runCommandInFlight). A run left going after its wait gave up (the 30-minute deadline, or a window that went away) is
+// cleared before the next one starts, as the official probe path clears a leftover foreground command: Ctrl-C, then
+// SIGKILL, each followed by a poll every Rt=100 ms for up to Lt=1500 ms; still running, it is reset and the new command
+// is refused with the advice to re-run it (desktop_ccd_bash_shell_reset). Here a run is its own tab, so "reset" closes
+// that tab; a run tab the user has typed into is theirs and is left running.
+const RUN_STALE_STEP_MS = 1500, RUN_STALE_POLL_MS = 100;
+// A run's caller sends its "wait" right after the reply: until then (or this long), the run counts as waited on.
+const RUN_CLAIM_MS = 5000;
+const RUN_IN_FLIGHT = "A shell command is already running";
+const RUN_STUCK = "The previous command could not be interrupted, so its terminal tab was closed. Re-run your command; if the previous one needs interactive input, run it in the terminal pane.";
+
+/**
+ * 2.42304.0 index.chunk-D7Sj9EoB.js Bt: parse `ps -o pgid= -o tpgid= -p <pid>` output into `{pgid, tpgid, busy}`.
+ */
+function parseForegroundProcessGroup(stdout) {
+  const [pgid, tpgid] = String(stdout ?? "").trim().split(/\s+/).map(Number);
+  return !(pgid > 0) || !(tpgid > 1) ? null : { pgid, tpgid, busy: pgid !== tpgid };
+}
 
 let ptyLoad = null;
 /** node-pty, or { error } when the native module cannot load here. Loaded once, lazily. */
@@ -96,6 +116,8 @@ function createTerminalService(options = {}) {
     version = "",
     loadPty = loadNodePty,
     forceScript = false,
+    processTable = null,
+    killProcess = null,
     onChange = () => {},
   } = options;
   const records = new Map();
@@ -285,7 +307,7 @@ function createTerminalService(options = {}) {
     if (!proc) return;
     try { proc.kill(signal); } catch {}
     const pid = proc.pid;
-    if (Number.isInteger(pid)) {
+    if (Number.isInteger(pid) && processTable === null && typeof killProcess !== "function") {
       const target = proc.group ? -pid : pid;
       const timer = setTimeout(() => { try { process.kill(target, 0); process.kill(target, "SIGKILL"); } catch {} }, KILL_GRACE_MS);
       timer.unref?.();
@@ -333,6 +355,10 @@ function createTerminalService(options = {}) {
     record.kept = 0;
     record.pending = "";
     record.userTyped = false;
+    // A run tab the user restarted from its overlay runs its command again on the user's behalf: like one they typed
+    // into, it is theirs now, so a later shell-mode run neither interrupts nor waits on it (userTyped stays false so the
+    // pane's typed-exit auto-close does not apply to it).
+    if (typeof record.runCommand === "string") record.userRestarted = true;
     record.error = null;
     await start(record, record.size);
     publish(record);
@@ -482,6 +508,139 @@ function createTerminalService(options = {}) {
     return { owner: model.ownerKey(sessionId, cwd), sessionId, cwd };
   }
 
+  // ---- Shell-mode runs (R4e-terminal, terminal-17; see RUN_STALE_STEP_MS) ----
+  const runsStarting = new Set(); // owners whose "run" is clearing a leftover or starting its tab
+  /** A run whose result is still waited on: a "wait" in progress, or a run just started whose "wait" is on its way. */
+  function runInFlight(record) {
+    if (typeof record.runCommand !== "string" || record.status === "exited") return false;
+    return record.runWaits > 0 || (!record.runWaited && Date.now() - record.createdAt < RUN_CLAIM_MS);
+  }
+  /**
+   * 2.42304.0 index.chunk-D7Sj9EoB.js probeForegroundProcessGroup: `ps -o pgid= -o tpgid= -p <pid>` via execFile
+   * (no shell), or an injected `processTable` in tests.
+   */
+  async function probeForegroundProcessGroup(record) {
+    const pid = record?.proc?.pid;
+    if (record?.status !== "running" || records.get(record?.id) !== record || !Number.isInteger(pid) || pid <= 0) return null;
+    if (processTable !== null && processTable !== undefined) {
+      let raw = null;
+      if (typeof processTable === "function") raw = await processTable(pid);
+      else if (processTable instanceof Map) raw = processTable.get(pid) ?? processTable.get(String(pid)) ?? null;
+      else if (Array.isArray(processTable)) raw = processTable.find((row) => Number(row?.pid) === pid) ?? null;
+      else if (typeof processTable === "object") {
+        raw = typeof processTable.probe === "function" ? await processTable.probe(pid) : processTable[pid] ?? null;
+      }
+      if (typeof raw === "string") return parseForegroundProcessGroup(raw);
+      if (raw && typeof raw === "object") return parseForegroundProcessGroup(`${raw.pgid ?? pid} ${raw.tpgid}`);
+      return null;
+    }
+    if (record.backend !== "pty") return null;
+    return new Promise((resolve) => {
+      execFile("/bin/ps", ["-o", "pgid=", "-o", "tpgid=", "-p", String(pid)], { timeout: 1500 }, (error, stdout) => {
+        resolve(error ? null : parseForegroundProcessGroup(stdout));
+      });
+    });
+  }
+  function killProcessGroup(pgid, signal = "SIGKILL") {
+    if (!Number.isInteger(pgid) || pgid <= 1) return false;
+    if (typeof killProcess === "function") {
+      killProcess(-pgid, signal);
+      return true;
+    }
+    if (processTable !== null && processTable !== undefined) {
+      if (Array.isArray(processTable.kills)) processTable.kills.push({ target: -pgid, pgid, signal });
+      if (typeof processTable.kill === "function") {
+        processTable.kill(-pgid, signal);
+        return true;
+      }
+      if (processTable instanceof Map) {
+        for (const [key, row] of [...processTable.entries()]) {
+          if (!row || typeof row !== "object" || row.ignoreKill) continue;
+          const rowPgid = Number(row.pgid ?? key);
+          if (rowPgid === pgid) processTable.delete(key);
+          else if (Number(row.tpgid) === pgid) row.tpgid = rowPgid;
+        }
+        return true;
+      }
+      if (Array.isArray(processTable)) {
+        for (let index = processTable.length - 1; index >= 0; index -= 1) {
+          const row = processTable[index];
+          if (!row || typeof row !== "object" || row.ignoreKill) continue;
+          const rowPgid = Number(row.pgid ?? row.pid);
+          if (rowPgid === pgid) processTable.splice(index, 1);
+          else if (Number(row.tpgid) === pgid) row.tpgid = rowPgid;
+        }
+        return true;
+      }
+      return true;
+    }
+    process.kill(-pgid, signal);
+    return true;
+  }
+  /**
+   * 2.42304.0 index.chunk-D7Sj9EoB.js runCommand: probe the shell's foreground process group (`ps -o pgid= -o tpgid= -p`),
+   * send Ctrl-C and then `process.kill(-tpgid, "SIGKILL")` (falling back to the shell's process group `-pid` when `ps`
+   * cannot find `tpgid`), polling every Rt=100 ms for up to Lt=1500 ms until the foreground group is no longer busy.
+   */
+  async function interruptRun(record) {
+    const ended = () => record.status !== "running" || records.get(record.id) !== record;
+    const isRunTab = typeof record.runCommand === "string";
+    for (const step of ["\u0003", "SIGKILL"]) {
+      if (ended()) return step === "SIGKILL" ? "sigint" : "idle";
+      const probe = await probeForegroundProcessGroup(record);
+      let stepProbe = Boolean(probe), stepBusy = Boolean(probe?.busy);
+      // Official interactive -l bash PTYs sit idle at a prompt with pgid === tpgid (!probe.busy). Host run tabs
+      // run a dedicated non-interactive -lc <command> shell (job control off by default, so pgid === tpgid while the
+      // command runs) and are only done once the -lc shell itself exits (ended()).
+      if (probe && !probe.busy && !isRunTab) return step === "SIGKILL" ? "sigint" : "idle";
+      const shellPid = Number.isInteger(record.proc?.pid) && record.proc.pid > 1 ? record.proc.pid : null;
+      const targetPgid = probe?.tpgid > 1 ? probe.tpgid : shellPid;
+      let killedShell = !stepProbe || (processTable === null && targetPgid === shellPid);
+      if (step === "SIGKILL") {
+        if (targetPgid !== null) {
+          try { killProcessGroup(targetPgid, "SIGKILL"); } catch {}
+          if (killedShell) { try { record.proc?.kill("SIGKILL"); } catch {} }
+        } else {
+          try { record.proc?.kill("SIGKILL"); } catch {}
+        }
+      } else {
+        write(record, step, { source: "agent" });
+      }
+      const deadline = Date.now() + RUN_STALE_STEP_MS;
+      while (Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, RUN_STALE_POLL_MS));
+        if (ended()) return step === "SIGKILL" ? "sigkill" : "sigint";
+        const next = await probeForegroundProcessGroup(record);
+        if (next) stepProbe = true;
+        if (next?.busy) stepBusy = true;
+        const groupCleared = stepBusy ? !next?.busy : (stepProbe && next === null);
+        if (groupCleared) {
+          if (!ended() && step === "SIGKILL" && !killedShell) {
+            killedShell = true;
+            if (shellPid !== null && shellPid !== targetPgid) {
+              try { killProcessGroup(shellPid, "SIGKILL"); } catch {}
+            }
+            try { record.proc?.kill("SIGKILL"); } catch {}
+            await new Promise((resolve) => queueMicrotask(resolve));
+          }
+          if (ended() || !isRunTab) return step === "SIGKILL" ? "sigkill" : "sigint";
+        }
+      }
+    }
+    return "stuck";
+  }
+  /** Before a run: the owner's leftover runs are interrupted (true when one was); one that won't end is closed (throws). */
+  async function clearLeftoverRuns(owner) {
+    let interrupted = false;
+    for (const record of ownerRecords(owner)) {
+      if (typeof record.runCommand !== "string" || record.status !== "running" || runInFlight(record) || record.userTyped || record.userRestarted) continue;
+      const outcome = await interruptRun(record);
+      if (outcome === "stuck") { close(record); throw new Error(RUN_STUCK); }
+      if (outcome === "sigint" || outcome === "sigkill") interrupted = true;
+    }
+    return interrupted;
+  }
+
   /** Wait for the shell's startup files (first output, then a short quiet spell); throws when it never got there. */
   async function shellReady(record) {
     const startedAt = Date.now();
@@ -556,9 +715,17 @@ function createTerminalService(options = {}) {
         const command = typeof params.command === "string" ? params.command.trim() : "";
         if (!command || command.length > 8000 || command.includes("\0")) throw new Error("Enter a shell command.");
         if (sessionId === null) throw new Error("Start a local session first to run shell commands.");
-        if (ownerRecords(owner).some((record) => typeof record.runCommand === "string" && record.status === "running")) throw new Error("A shell command is already running");
-        subscribe(sender, owner);
-        const opened = await create({ owner, sessionId, cwd, cols: params.cols, rows: params.rows, title: command.split("\n")[0].slice(0, 40), runCommand: command });
+        // R4e-terminal (terminal-17): refused only while a run is still waited on; a leftover one is interrupted first.
+        if (runsStarting.has(owner) || ownerRecords(owner).some(runInFlight)) throw new Error(RUN_IN_FLIGHT);
+        runsStarting.add(owner);
+        let opened, interruptedPrevious;
+        try {
+          interruptedPrevious = await clearLeftoverRuns(owner);
+          subscribe(sender, owner);
+          opened = await create({ owner, sessionId, cwd, cols: params.cols, rows: params.rows, title: command.split("\n")[0].slice(0, 40), runCommand: command });
+        } finally { runsStarting.delete(owner); }
+        // The official bash turn tells the model (interruptedPrevious); "wait" hands it back with the run's output.
+        if (interruptedPrevious) { const record = records.get(opened.id); if (record) record.interruptedPrevious = true; opened = { ...opened, interruptedPrevious: true }; }
         // quiet: a code block's run whose output goes to the model (B20) doesn't open the pane (c03935b01 Vt).
         if (params.quiet !== true) toEveryone({ kind: "opened", id: opened.id, owner, sessionId, openedBy: "user" });
         return opened;
@@ -591,12 +758,19 @@ function createTerminalService(options = {}) {
         const { owner } = ownerOf(params);
         const record = owned(owner, params.id);
         const deadline = Date.now() + Math.min(30 * 60 * 1000, Math.max(0, Number(params.timeoutMs) || 0));
-        while (record.status === "running" && records.get(record.id) === record && Date.now() < deadline) {
-          await new Promise((resolve) => { const timer = setTimeout(resolve, 1000); const wake = () => { clearTimeout(timer); record.waiters.delete(wake); resolve(); }; record.waiters.add(wake); });
-        }
+        // R4e-terminal (terminal-17): the run counts as waited on until this returns (runInFlight); a window that went
+        // away stops waiting, so its run can be cleared by the next one.
+        record.runWaits = (record.runWaits ?? 0) + 1;
+        record.runWaited = true;
+        try {
+          while (record.status === "running" && records.get(record.id) === record && Date.now() < deadline && (sender === null || live(sender))) {
+            await new Promise((resolve) => { const timer = setTimeout(resolve, 1000); const wake = () => { clearTimeout(timer); record.waiters.delete(wake); resolve(); }; record.waiters.add(wake); });
+          }
+        } finally { record.runWaits -= 1; }
         flush(record);
         const text = model.lastLines(output(record), 400, record.size?.cols);
-        return { running: record.status === "running", exitCode: record.exitCode, signal: record.signal, output: text.length > 20000 ? text.slice(-20000) : text, closed: records.get(record.id) !== record };
+        return { running: record.status === "running", exitCode: record.exitCode, signal: record.signal, output: text.length > 20000 ? text.slice(-20000) : text, closed: records.get(record.id) !== record,
+          ...(record.interruptedPrevious ? { interruptedPrevious: true } : {}) };
       }
       case "adopt": {
         // A session started from the New session page takes that page's terminals (same folder): they stay open, with
@@ -760,4 +934,4 @@ function createTerminalService(options = {}) {
     get size() { return records.size; } };
 }
 
-module.exports = { createTerminalService, resolveShell, terminalEnv, loadNodePty };
+module.exports = { createTerminalService, resolveShell, terminalEnv, loadNodePty, parseForegroundProcessGroup };

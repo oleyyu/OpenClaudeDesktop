@@ -6,6 +6,11 @@
 // per-agent attribution for the run journal / viewer (`tokensForThread`).
 
 const perThread = new Map(); // threadId -> { input, output, reasoning, total }
+const listeners = new Set();
+export function subscribeMeter(listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
 // Threads re-attached via thread/resume may report a cumulative total that
 // includes PRIOR-run history. On such a thread's first notification this process,
@@ -50,6 +55,7 @@ export function recordTokenUsage(params) {
     reasoning: Math.max(0, n.reasoning - base.reasoning),
     total: Math.max(0, n.total - base.total),
   } : n);
+  for (const listener of listeners) listener();
 }
 
 // Total tokens across all threads (input + output + reasoning) — the default
@@ -60,11 +66,14 @@ export function tokensSpent() {
   return sum;
 }
 
-// Output-only tokens (generated + reasoning) across all threads — matches the
+// Output-only tokens (generated, reasoning included) across all threads — matches the
 // native runtime's output-token budget pool (`--budget-meter output`).
+// Local: a TokenUsageBreakdown's outputTokens already includes its reasoning
+// (Codex accounting; reasoningOutputTokens is the part of it that was thinking),
+// so reasoning is not added again.
 export function outputSpent() {
   let sum = 0;
-  for (const v of perThread.values()) sum += v.output + v.reasoning;
+  for (const v of perThread.values()) sum += v.output;
   return sum;
 }
 

@@ -59,7 +59,7 @@ export function subscribeTurnClock(startedAt, notify, host = globalThis) {
 }
 
 const tools = new Set(['commandExecution', 'fileChange', 'mcpToolCall', 'dynamicToolCall', 'collabAgentToolCall', 'webSearch', 'computerUse']);
-const liveTurnItems = (turnId, items, phases) => items.filter(item => item.turnId === turnId
+export const liveTurnItems = (turnId, items, phases) => items.filter(item => item.turnId === turnId
   && (phases[item.id] === 'streaming' || ['inProgress', 'running'].includes(item.status)) && phases[item.id] !== 'completed');
 
 // approval-shared-current.js:1966-1981 Du: Tu = minimum time "active" is

@@ -43,7 +43,10 @@ const field = (input, ...names) => {
   return undefined
 }
 
-/** OpenCode token counts → Codex TokenUsageBreakdown. */
+/**
+ * OpenCode token counts → Codex TokenUsageBreakdown. OpenCode counts reasoning apart from output; Codex's outputTokens
+ * includes it (reasoningOutputTokens is the thinking part), as the other cores report it and Usage (usage.js) counts it.
+ */
 export function tokenBreakdown(tokens) {
   const input = tokens?.input ?? 0
   const read = tokens?.cache?.read ?? 0
@@ -51,7 +54,7 @@ export function tokenBreakdown(tokens) {
   const output = tokens?.output ?? 0
   const reasoning = tokens?.reasoning ?? 0
   const inputTokens = input + read + write
-  return { totalTokens: tokens?.total ?? inputTokens + output + reasoning, inputTokens, cachedInputTokens: read, cacheWriteInputTokens: write, outputTokens: output, reasoningOutputTokens: reasoning }
+  return { totalTokens: tokens?.total ?? inputTokens + output + reasoning, inputTokens, cachedInputTokens: read, cacheWriteInputTokens: write, outputTokens: output + reasoning, reasoningOutputTokens: reasoning }
 }
 
 export function addBreakdown(total, add) {

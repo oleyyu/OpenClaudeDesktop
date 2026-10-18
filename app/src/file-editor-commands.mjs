@@ -1,5 +1,6 @@
 import { EditorSelection, EditorView, undo, redo, undoDepth, redoDepth, selectAll, findClusterBreak } from './code-editor-core.mjs';
 import { unfoldEditorRange } from './file-editor-folds.mjs';
+import { selectedEditorContext } from './generated/code-editor-current/wrapper.mjs';
 
 // 2.31226.0 cbd02b8f2 sn/U/cn/dn/fn: preserve linewise copy semantics
 // across the context menu and native keyboard clipboard operations.
@@ -109,16 +110,8 @@ export function goToLineShortcut(event) {
 // cbd02b8f2 gi/_i: attach the contiguous selected block containing the primary
 // caret. Exclude a trailing newline from both text and the last line label.
 export function editorSelectedContext(state) {
-  const groups = []; let primary = 0;
-  const endLine = range => { const line = state.doc.lineAt(range.to); return !range.empty && range.to === line.from ? line.number - 1 : line.number; };
-  state.selection.ranges.forEach((range, index, ranges) => {
-    if (!index || state.doc.lineAt(range.from).number > endLine(ranges[index - 1]) + 1) groups.push([]);
-    if (index === state.selection.mainIndex) primary = groups.length - 1;
-    if (!range.empty) groups.at(-1).push(range);
-  });
-  const ranges = groups[primary]?.length ? groups[primary] : groups.find(group => group.length) ?? [];
-  const text = ranges.map(range => state.sliceDoc(range.from, range.to).replace(/\r\n?|[\u2028\u2029]/g, '\n').replace(/\n$/, '')).join('\n');
-  return text.trim() ? { text, fromLine: state.doc.lineAt(ranges[0].from).number, toLine: endLine(ranges.at(-1)) } : null;
+  const selected = selectedEditorContext(state);
+  return selected ? {text: selected.text, ...selected.range} : null;
 }
 export function fileSelectionLabel(path, selection) {
   return `${path}:L${selection.fromLine}${selection.toLine === selection.fromLine ? '' : `-L${selection.toLine}`}`;

@@ -26,8 +26,11 @@ test('modelSettings strict validate throws user-facing messages', () => {
   assert.throws(() => validate({ params: {}, other: 1 }), /Invalid model settings/);
   assert.throws(() => validate({ prices: { m: { offPeak: tier(1, 2, 3) } } }), /off-peak and peak/);
   assert.throws(() => validate({ prices: { m: { offPeak: tier(1, 2, 3), peak: tier(1, 2, 10001) } } }), /0 to 10,000/);
-  const many = Object.fromEntries(Array.from({ length: 51 }, (_, i) => [`m${i}`, { maxTokens: 1000 }]));
-  assert.throws(() => validate({ params: many }), /50 models or fewer/);
+  // Per-model params carry the core id since per-model options, so their cap is 200 (prices keep 50).
+  const many = Object.fromEntries(Array.from({ length: 201 }, (_, i) => [`m${i}`, { maxTokens: 1000 }]));
+  assert.throws(() => validate({ params: many }), /200 models or fewer/);
+  const prices = Object.fromEntries(Array.from({ length: 51 }, (_, i) => [`m${i}`, { offPeak: tier(0, 1, 2), peak: tier(0, 1, 2) }]));
+  assert.throws(() => validate({ prices }), /50 models or fewer/);
   // Empty entries are dropped; empty prices mean the official table.
   assert.deepEqual(validate({ params: { m: { maxTokens: '' } }, prices: {} }), { params: {}, prices: null });
   assert.equal(modelParamError('maxTokens', undefined), null);
@@ -162,6 +165,8 @@ test('model families: a relay id is named and described like the vendor model', 
   assert.equal(modelFamily('gpt-4.1-mini').reasoning, false);
   assert.equal(modelFamily('qwen3-235b-a22b-instruct').reasoning, false);
   assert.equal(modelFamily('my-model'), null);
+  // GLM-5.3-Flash/FlashX take images (Z.ai: the first natively multimodal GLM-5); GLM-5.3 itself is text only.
+  assert.deepEqual(['glm-5.3-flash', 'glm-5.3-flashx', 'zhipu/glm-5.3-flash', 'glm-5.3', 'glm-4.5v'].map(id => modelFamily(id).image), [true, true, true, false, true]);
   const relay = { route: 'relay', baseURL: 'https://relay.example', models: ['claude-opus-5-5'] };
   assert.deepEqual(providerModelEntry(relay, 'claude-opus-5-5').input, ['text', 'image'], 'family images apply until the user marks');
   assert.equal('input' in providerModelEntry({ ...relay, imageModels: [] }, 'claude-opus-5-5'), false, 'an empty mark list means none');

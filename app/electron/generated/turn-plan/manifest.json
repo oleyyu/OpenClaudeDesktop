@@ -1,0 +1,591 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-turn-plan.mjs",
+  "adapterModule": "electron/turn-plan-adapters.mjs",
+  "modules": [
+    {
+      "target": "tool-result.mjs",
+      "source": "index.chunk-BemIcaFh.js",
+      "sourceSha256": "e90b4d6f40a113d3f51643913980b0e75ba805e41ede5802227be24e89c362f7",
+      "sha256": "72c2a788e84865d3a3be065678d149559c4ca77366b6305a08381ee3f6c169a3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "cdfe7acd80d39597a9679442adf0b17ece28ac2e2e130e6c48056a1a577050d9"
+        },
+        {
+          "name": "t",
+          "sha256": "7ca14b215c912c953c91baf8aea318d017e21bb179e9197df74c2849ab91038a"
+        }
+      ],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "e",
+        "t"
+      ]
+    },
+    {
+      "target": "text-guards.mjs",
+      "source": "index.chunk-muI2IV6k.js",
+      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+      "sha256": "106b2e1ecff4721304d1ee8e623555bb2b7ae3d6132740a1bc75ec5254f252ca",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "MC",
+          "sha256": "b9fef34451490ab0152891e6553f978562c08a8179de2d2e361b02cbbefc71f9"
+        },
+        {
+          "name": "vE",
+          "sha256": "38569b713f7f17cf085f7a9304d781fa7f5a87a83d9cc74186f678403931edff"
+        },
+        {
+          "name": "OV",
+          "sha256": "47b258efecd0cf8e14f86e1f9e1b3c9de50994406e983a18e58ee354508673d6"
+        },
+        {
+          "name": "$rr",
+          "sha256": "1daccd2f3ba4ca5b864db317ff4e1902237f3386c182149de67996a106974c3e"
+        },
+        {
+          "name": "kV",
+          "sha256": "da86be9a7ae92a5b29bf6b249c8ffa620285d2940b5ba75304c1e213d92d0893"
+        },
+        {
+          "name": "eir",
+          "sha256": "881003154be0b255eca38737acfbf59200a50219e84e4819c0c3db55756a3e97"
+        },
+        {
+          "name": "AV",
+          "sha256": "282f3d4820f58bf0c6d0c7e4344bcb6257859335c6adb4b49690bcb9d891eb00"
+        },
+        {
+          "name": "jV",
+          "sha256": "9192b1609db0076fa6417fd83f22469fc8586ae293f01102a74ddc6992de89fb"
+        },
+        {
+          "name": "MV",
+          "sha256": "976c7f3d2c11e29cb2a6abd76948d6dc3cb154e81cb28de015dec7a8e03c7777"
+        },
+        {
+          "name": "tir",
+          "sha256": "9ff97eddc78d4fe39b0ceb5c310b5e4418484bec964afa6e2a49910b0fc9602c"
+        },
+        {
+          "name": "nir",
+          "sha256": "3b47b44aec717bd30e9f33724b4da04967012890a332e88c2beca84d3463ec92"
+        },
+        {
+          "name": "rir",
+          "sha256": "bd079a3ad1d803b96097abdca3969be44c8b9da4abbdea93a198b02a32fb3baa"
+        },
+        {
+          "name": "iir",
+          "sha256": "979821a136441925be46f656661d8641f15c4554cfb018db677999bd993e5f59"
+        },
+        {
+          "name": "NV",
+          "sha256": "09b8e2ec461c4b2f66ff2f245b6b1049d3fd7f8d7924ee79080aed213060d153"
+        },
+        {
+          "name": "air",
+          "sha256": "c7fd55934dfa9cc95db236c8bba24bf43aaf6c3cbd1746aaa1e6d2ba7c33ebb9"
+        },
+        {
+          "name": "oir",
+          "sha256": "16051523a30d1d9250c270d8a625c10f432da28cd7c98e8edcdc566f6f57885c"
+        },
+        {
+          "name": "sir",
+          "sha256": "1cba065380febfa989066c53f6fec6c7ddeab83674876dfc5495620cd0a148ba"
+        },
+        {
+          "name": "cir",
+          "sha256": "5dbbbee418a1abbbe1284493656bae87397d1bcaecb76d936d9d73b8b4a7d552"
+        },
+        {
+          "name": "lir",
+          "sha256": "128457ba4a5eba375e2c8f27ff00a109eda2e2e5d50a8bc0983e0f53781d44ad"
+        },
+        {
+          "name": "uir",
+          "sha256": "fdb2bee95866e0fd9671b3550eb8d84b8203715ca8d60902542afb898ac31f47"
+        },
+        {
+          "name": "dir",
+          "sha256": "5d694d580dc2022a9e363842efff73a7295eb2fd00f8186d8f748f1d7cb6bf02"
+        },
+        {
+          "name": "fir",
+          "sha256": "6b2c6fe8ae59451f8fe2cb9468d2f7f8732ab10f8204cffdc9ecf9672e49dc56"
+        },
+        {
+          "name": "pir",
+          "sha256": "5bbbb40d416670ab3f1512549649037595f69d1d2d4294bf7d7d4f6f867d2a11"
+        },
+        {
+          "name": "mir",
+          "sha256": "d6b3a1ced7aceacc960ded19fbed05472d2a29dc549633c0bfd256ff03144156"
+        },
+        {
+          "name": "PV",
+          "sha256": "50492052e1b147e68a91678c304ffbd46d958bbb67cbbc93d44695d0efddefd7"
+        },
+        {
+          "name": "hir",
+          "sha256": "0c7cd507c89ace3526b92e3559a97e1040003e9f8c7ca3e03be895c63958b623"
+        },
+        {
+          "name": "gir",
+          "sha256": "58cbdaaa6100779593b58b8651513613737352196c844e002d469cdd5b13a3ee"
+        },
+        {
+          "name": "_ir",
+          "sha256": "7cf672a81a3fd643c48fd374edfc4c64cda73a2775e11eabcdfd94828cefb24b"
+        },
+        {
+          "name": "vir",
+          "sha256": "0d72cf5a959de8389032226f78a6251dec38fcc6f49a34ed5d636c9c2bfdc942"
+        },
+        {
+          "name": "yir",
+          "sha256": "a4203059365ef6b025eeb017659d7b86645cc661ec302509c75688e202132e4e"
+        },
+        {
+          "name": "bir",
+          "sha256": "2a1b8931ec38aaa21326106a9d0b7a081a119b21d22986b496aa8d8ad6da0afb"
+        },
+        {
+          "name": "xir",
+          "sha256": "af7ebfbae15b530d56102c9e680c414555fee3589c7335add83703b97cd0806a"
+        },
+        {
+          "name": "Sir",
+          "sha256": "c53e99cdeeedb5eee52ee4248bc91f52a1689c0b2577cb21afbb6a9e59ef0de9"
+        },
+        {
+          "name": "Cir",
+          "sha256": "7056e85c54ae1a6618fc585d27cff80753ffa8c54e859c1370f34d1f79952e56"
+        },
+        {
+          "name": "wir",
+          "sha256": "8ae58806bfad31ec6650522a68319bb531c3beb32c8f8c4359b9b5529f031bc5"
+        },
+        {
+          "name": "Tir",
+          "sha256": "cd590750b41dddadedc19b04796028297508dc5c204e383dbb0bd3e0b8b88d4c"
+        },
+        {
+          "name": "Eir",
+          "sha256": "d77e72ac085e1fa4c9086c5b65efab5a848790c419facbd0b4c5373b21207e05"
+        },
+        {
+          "name": "Dir",
+          "sha256": "dbc070129eeaa49e192a98af6b1e0b46a72fd1ecf4f14932bab5e81f5ebb1989"
+        },
+        {
+          "name": "Oir",
+          "sha256": "a9fd74d3aaed91ae1c1744c0db893eaf1d005e024692e21d40b22e3aadb8be3d"
+        },
+        {
+          "name": "kir",
+          "sha256": "e2dee75d6ee0eddf1554df26ea6c14c6cb210f4125416d3f19124b7ac5923d32"
+        },
+        {
+          "name": "Air",
+          "sha256": "2d36f478ccd54b9323b043f50106bbae1b003eefd88bb2ee88e78fa36fbcb4c0"
+        },
+        {
+          "name": "jir",
+          "sha256": "3d87f95d42412fc76a7029aa096442426f59377682b6ae43d49c295b19406ae2"
+        },
+        {
+          "name": "Mir",
+          "sha256": "5e6dc5a6313e411b2d683afe81e6d7d75b4e178ba1ed4d3425580f3c4cc359da"
+        },
+        {
+          "name": "Nir",
+          "sha256": "fb4729fe8e311b57b34e408cd179b949226832d01c0587fc923fe7633b32a987"
+        },
+        {
+          "name": "Pir",
+          "sha256": "750bcb4c495b56535c446eda72dcabcd147c5c076eaefbc74e74bb5e4bcfed01"
+        },
+        {
+          "name": "Fir",
+          "sha256": "b70248632043a4ba526fde5b25eeef0ddf49534859b0f63b1251e9e828a993ed"
+        },
+        {
+          "name": "Iir",
+          "sha256": "8d67e09be1383932f78ebd2f2a92f3e0542a80d6b4b70d6f186e591d412af8b8"
+        },
+        {
+          "name": "Lir",
+          "sha256": "bd19c9942d31dd4ddda2e71c482fd0e76503c9271490f902bc609eb158d52765"
+        },
+        {
+          "name": "Rir",
+          "sha256": "e88eec745cfb7bb19ce3ec76cbab007eace5ab71241e8a3ae2c88025859975e3"
+        },
+        {
+          "name": "zir",
+          "sha256": "26e3bf8e3601b40c08ee7293f594b1aa8b63de449fd895642fc7e885b2a135c2"
+        },
+        {
+          "name": "Bir",
+          "sha256": "df6dc8f74438f6433587d1cb0ad6d2a41b58d1012d9d32ac7689c3b18ddcb721"
+        },
+        {
+          "name": "FV",
+          "sha256": "fbea233555edf2b959139a882b1336f9b4b3b8de3d1b2ca3a7ea23f6d6aba42c"
+        },
+        {
+          "name": "Vir",
+          "sha256": "e73d87facdb0f9dfe85712a2f570fb6971d1c7e241f638029bae02b6e23e6534"
+        },
+        {
+          "name": "Hir",
+          "sha256": "26448a3879eaf63f32c30cfa8efb3d8603ca019347d7d86590ba778ac105426e"
+        },
+        {
+          "name": "Uir",
+          "sha256": "502d7c6d250ec2bbd470c7e068802158cdd825c17cc8f6146b8f55389acb45a9"
+        },
+        {
+          "name": "Wir",
+          "sha256": "0434ea3139d8b374da77d9397f9578a9e9eaa0265e1aea45189a22389d46d788"
+        },
+        {
+          "name": "OIi",
+          "sha256": "fa2c4787dce5d73db1fe1bf0876015869b4b797bf3202e08e659a814e201579e"
+        },
+        {
+          "name": "kIi",
+          "sha256": "3eb380b680f21110b6c3b7009e97386caaa4806b7fa7d7222aef969e12a90c5a"
+        }
+      ],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "FV",
+        "OIi",
+        "Wir"
+      ]
+    },
+    {
+      "target": "ccd-turn.mjs",
+      "source": "index.chunk-B5tintml.js",
+      "sourceSha256": "f5d162e3e6047c12ca0cee15d72574e316513df6a65d52e89e2d456a4a3022ff",
+      "sha256": "a8b7d732787bb7ba45f528b29c18b46d6cd67f862cba105e7e2ad403e6086d14",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ze",
+          "sha256": "845d4c53be78785f3d128843d7840e9dd6a1db7352b37687b4a6c5f782029385"
+        },
+        {
+          "name": "Qe",
+          "sha256": "6a1ca5afb4f9993eae6312c6a824434e8e1e862195feccbb71ef666ba54dc23f"
+        },
+        {
+          "name": "$e",
+          "sha256": "d3b536a38b9c5578c3766f957459c487de763e686968326407b0f6d7b5d28cdf"
+        },
+        {
+          "name": "et",
+          "sha256": "580ff33249841544766cc8eb3f0ae74c03f5a12471c2f1d64ab8b18e495d0a83"
+        },
+        {
+          "name": "tt",
+          "sha256": "3a3cbb11176ad0f5f236bc865ae5f39fc9a378d4dc026b63665289d50416e3d5"
+        },
+        {
+          "name": "nt",
+          "sha256": "e2903587709e31a6ef533ddbe741609b6793e9bfc317f3f6d23505423a3384d6"
+        },
+        {
+          "name": "rt",
+          "sha256": "f8a07f8a303218261a592f271110b339c3519350a53f8aabbef12357866a62a5"
+        },
+        {
+          "name": "it",
+          "sha256": "672af35e917db82a5b764cf9ab17a5564dedcde228fec2782b0bc5c4b0e08c03"
+        },
+        {
+          "name": "at",
+          "sha256": "ed772e6db6d140e756f2aca308518196662c44b6d087d00bc38b7b5b70ce425d"
+        },
+        {
+          "name": "ot",
+          "sha256": "0eaa85a15b2ce1f4691acecf46856a6e5975f24ab0ebb5df3ca2e5ad7b2e5d8a"
+        },
+        {
+          "name": "st",
+          "sha256": "7a201f0edb5ffd2cbdb57481734ab7fbb1d5f8fd5a52df2e06c9004c091abe9d"
+        },
+        {
+          "name": "ct",
+          "sha256": "b8ec6431c2bf74e362b6994b331f375e29696130fdbe60eda055ef13adc5340b"
+        },
+        {
+          "name": "ft",
+          "sha256": "60e1d7015f4e1de080d95776356664ffb7bdb92d0bcbc628202daf6f454d7060"
+        },
+        {
+          "name": "mt",
+          "sha256": "8aa02f927ccc1f37145ba8d45beed5e6af8fac2cfe3d1d4bc9a14242315e5435"
+        },
+        {
+          "name": "ht",
+          "sha256": "3c3f74f212ac99827fe9820a845678dd9f258d128078e72a2d560e56cb76e996"
+        },
+        {
+          "name": "gt",
+          "sha256": "5951f8bb577d25898cd680c7b4c20681300ac9ab9005f885d9cd9bd98b7c7320"
+        },
+        {
+          "name": "_t",
+          "sha256": "a3a15ce679e3ab03a540fe1afa631b0122f2543e6ba1c2cf2f75c8c50ae9fd77"
+        },
+        {
+          "name": "vt",
+          "sha256": "acbd6602c02c0da69e824af7690b36dd00536900632c6e1784aebe852df3975f"
+        },
+        {
+          "name": "yt",
+          "sha256": "822c8decfa2afde2334111e6443f8b51be1d0371acfbe9498252da63b7f0088b"
+        },
+        {
+          "name": "bt",
+          "sha256": "12ed1fe9c62175f2d1b343d844d763f473a48cb05f51d37aae2140b3f84218db"
+        },
+        {
+          "name": "xt",
+          "sha256": "07866e8ca0d57355ba5588d905293d79bda37e5b0f803c03d1072403e2c92802"
+        },
+        {
+          "name": "St",
+          "sha256": "c0e2bef07b69c41bf7a776ed8b4a3ae0316ed01387bc92938d4b9992380f2bad"
+        },
+        {
+          "name": "Ct",
+          "sha256": "0d17224d3a42ef8981d8ef692e1e30a822b76392520fc11f1fcd0c9f98e41cb3"
+        },
+        {
+          "name": "wt",
+          "sha256": "822ec787745416614fdc5d0b8d4b6330c13f5964fe1e7065347b019a2c0a1b26"
+        },
+        {
+          "name": "Tt",
+          "sha256": "75984c1cdd529e57f5114e156ea2e7868812548c234542d505a80d10fdf20469"
+        },
+        {
+          "name": "Et",
+          "sha256": "7da2a73fbb2f2f3bdccea3149b61babdb0b374760347ee9f5c55727211880245"
+        },
+        {
+          "name": "N",
+          "sha256": "b42e7128652f59d087ff43847de5fc15f61bd7edba222dd57ad779fe30103807"
+        },
+        {
+          "name": "Dt",
+          "sha256": "8bf60f795b92800300656a36ef29f84e76da339b48cce8601cd6834028f866c1"
+        },
+        {
+          "name": "Ot",
+          "sha256": "642d599370b9806822f24cc4cc56fd849f5d8986f319145bdce1da849e9f87b0"
+        },
+        {
+          "name": "kt",
+          "sha256": "39eaab64e4311bcc28c7fdb900d9f298af1ff5679e3696d1b0606861b36f6cd5"
+        },
+        {
+          "name": "At",
+          "sha256": "90cdf985e8c8070316562b6730b0fe12bea0886d1466ce0036d1cfa453533c19"
+        },
+        {
+          "name": "jt",
+          "sha256": "ee79c4e7cd7ead345d632ef6d51554c9f1512b40145a46f8426a3d08fd4691af"
+        },
+        {
+          "name": "Mt",
+          "sha256": "b3b3735b5afdcf6cb6d522e3f7ee1119e39fda9b00aeb41c111a23aab2de1a43"
+        },
+        {
+          "name": "Nt",
+          "sha256": "76e30738ae4c9e7d1ef21e59c161fd95cd68a002376d8d84bbeead41a7cc9d59"
+        },
+        {
+          "name": "Pt",
+          "sha256": "0eaa2eaf267a0e4fe53eb245576edb09c447eda6ae435f6925bf2de9be5d2fde"
+        },
+        {
+          "name": "Ft",
+          "sha256": "0e427d0cfaea61f87989299b94adcc328d3dcdc8a7fb9a53c906439972bb44ee"
+        },
+        {
+          "name": "It",
+          "sha256": "328cdf8659e325949ca0baccc991858d11cecf7bec2cf74ea1152942d2780994"
+        },
+        {
+          "name": "Lt",
+          "sha256": "2c330b5436a7671cd19d87f5aaecf141808ad97c31cf9b449834fce215e46c7f"
+        },
+        {
+          "name": "Bt",
+          "sha256": "caf068a02b4ab60066afe70e06cef9a222aed51c1320a75f079833ba50ba5103"
+        },
+        {
+          "name": "Vt",
+          "sha256": "fcf4cdbbb802d1f9ffd2adbe9e7017432b3a29bb3cebdee71bd94be3d314f86b"
+        },
+        {
+          "name": "Ht",
+          "sha256": "747ea6d9952d699269bfcc88b57a7a93170a059c3d1eb9cf6e150f55b10deea2"
+        },
+        {
+          "name": "Ut",
+          "sha256": "20eb62abb19a9d50e30567aab1d40c57034341ce49e09b410d189a6ad2bd288d"
+        },
+        {
+          "name": "Wt",
+          "sha256": "0c6f3840338b44ae67252d95c867a907e1883dbcee20da796f897a6a0a1920f0"
+        },
+        {
+          "name": "Gt",
+          "sha256": "e1ed813de7093cb26afc04860fa9d96bc00dacf7aa0c84a08b3c0b5e306b18f5"
+        },
+        {
+          "name": "Kt",
+          "sha256": "b304e7d169a58ced639ceaa8947412a3696cf49f25dcaa1c023474152d938de0"
+        },
+        {
+          "name": "qt",
+          "sha256": "38d6b57c088e54a71f96ae88c0919b3ca5de21fcc2eb18796b1434f34d83e364"
+        },
+        {
+          "name": "Jt",
+          "sha256": "986594f8226afac1d35ea53d652f6d258a09f3bcddbb7b2a811d7ff75c81f26b"
+        },
+        {
+          "name": "Yt",
+          "sha256": "c9a7ce4e6d9b0f163c4d6ad5269f97019c3b4e40006d3f6349e24b2b6809286f"
+        },
+        {
+          "name": "Xt",
+          "sha256": "97aa993667bf7637d070491918d49ab73392854e4b76055917363ea2d7ecef81"
+        },
+        {
+          "name": "Zt",
+          "sha256": "c31cdefae4c2686297d50e07630eb033f68f218ac87810cea186e0c7e9322473"
+        },
+        {
+          "name": "Qt",
+          "sha256": "be3734d36c06618c4c09aab01da6e5ad590fd14ae0f74356b4e6fa49247f2759"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t$Ep",
+          "from": "./text-guards.mjs",
+          "name": "OIi",
+          "via": "index.chunk-muI2IV6k.js:Ep",
+          "kind": "generated"
+        },
+        {
+          "local": "t$LZ",
+          "from": "../../turn-plan-adapters.mjs",
+          "name": "growthBookOn",
+          "via": "index.chunk-muI2IV6k.js:LZ",
+          "kind": "adapter",
+          "original": "hy"
+        },
+        {
+          "local": "t$_j",
+          "from": "./text-guards.mjs",
+          "name": "FV",
+          "via": "index.chunk-muI2IV6k.js:_j",
+          "kind": "generated"
+        },
+        {
+          "local": "t$gj",
+          "from": "./text-guards.mjs",
+          "name": "Wir",
+          "via": "index.chunk-muI2IV6k.js:gj",
+          "kind": "generated"
+        },
+        {
+          "local": "t$iz",
+          "from": "../../turn-plan-adapters.mjs",
+          "name": "logEvent",
+          "via": "index.chunk-muI2IV6k.js:iz",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "w$n",
+          "from": "./tool-result.mjs",
+          "name": "e",
+          "via": "index.chunk-BemIcaFh.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "w$t",
+          "from": "./tool-result.mjs",
+          "name": "t",
+          "via": "index.chunk-BemIcaFh.js:t",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Qt": "turnServerDefinition",
+        "Zt": "createTurnToolHandler",
+        "ot": "SUBAGENT_TURN_TOOL_REFUSAL",
+        "ct": "emptyTurnPlan",
+        "Qe": "applyPlanStatuses",
+        "et": "planStatusLine",
+        "$e": "badStepNumberText",
+        "Ze": "isStepNumber",
+        "at": "UPDATE_PLAN_TOOL_NAME",
+        "it": "WRAP_UP_TOOL_NAME",
+        "rt": "UPDATE_PLAN",
+        "tt": "TURN_SERVER",
+        "nt": "WRAP_UP",
+        "ft": "turnPlanHooks",
+        "Nt": "END_TURN_META"
+      },
+      "sharedExports": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "index.chunk-B5tintml.js",
+      "role": "Main process: the ccd_turn tools are on behind GrowthBook 2371478310 (ht, exported Au); Qt is pushed with sideSessions (a!==!1); the server is for Code sessions with the turn box mounted",
+      "sourceSha256": "f5d162e3e6047c12ca0cee15d72574e316513df6a65d52e89e2d456a4a3022ff",
+      "raw": true,
+      "features": [
+        "function ht(){return t.LZ(\"2371478310\")}",
+        "c.push(Qt(a!==!1))",
+        "isEnabled:e=>e.sessionType===\"ccd\"&&e.turnBoxEnabled===!0",
+        "Object.defineProperty(exports,\"Au\",{enumerable:!0,get:function(){return ht}})",
+        "Object.defineProperty(exports,\"zu\",{enumerable:!0,get:function(){return ot}})",
+        "Object.defineProperty(exports,\"Bu\",{enumerable:!0,get:function(){return at}})",
+        "Object.defineProperty(exports,\"ku\",{enumerable:!0,get:function(){return pt}})"
+      ]
+    },
+    {
+      "source": "index.chunk-CFJssAFf.js",
+      "role": "Main process: a sub-agent's update_plan / wrap_up is denied with ot (PreToolUse); the tools are allowed without asking (allowedTools ku); turnBoxEnabled = Au() && turnBoxMounted",
+      "sourceSha256": "abff2bf8cd6fa8d3d18964636ebaa6034e93997a9eea16a8802eaec0f759c9b7",
+      "raw": true,
+      "features": [
+        "e.agent_id&&(e.tool_name===n.Bu||e.tool_name===n.Vu)?(t.iz(\"desktop_ccd_permission_auto_denied\",{session_id:r,tool_name:e.tool_name,reason:\"subagent_turn_tool\"}),{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:n.zu}})",
+        "..._.ccd_turn?n.ku:[]",
+        "turnBoxEnabled:n.Au()&&this.sessions.get(e)?.turnBoxMounted===!0"
+      ]
+    }
+  ]
+}

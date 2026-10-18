@@ -1,5 +1,6 @@
 // The preview service's renderer requests and safety rules (electron/preview-service.cjs) with stand-in Electron
-// objects; dev servers are real child processes in a temp folder. The real WebContentsView path runs in
+// objects; dev servers are stand-in processes on stand-in sockets (tests/fixtures/preview-r3b-world.mjs: no real port,
+// process, lsof or ps), run from a temp folder's .claude/launch.json. The real WebContentsView path runs in
 // preview-service-electron.test.mjs (opt-in).
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,6 +10,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { EventEmitter } from 'node:events';
 import { createRequire } from 'node:module';
+import { processWorld, worldOptions } from './fixtures/preview-r3b-world.mjs';
 
 const require = createRequire(import.meta.url);
 const { createPreviewService, previewShortcut } = require('../electron/preview-service.cjs');
@@ -62,7 +64,10 @@ function fakeElectron() {
     partition, cdp, sender, windows, opened };
 }
 
-const freePort = () => new Promise((resolve) => { const server = net.createServer(); server.listen(0, '127.0.0.1', () => { const { port } = server.address(); server.close(() => resolve(port)); }); });
+// One stand-in world for the file; each test's ports are its own (nothing in the world holds them until a test does).
+const world = processWorld();
+let nextTestPort = 41000;
+const freePort = async () => nextTestPort++;
 function project(configurations) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-service-'));
   fs.mkdirSync(path.join(dir, '.claude'));
@@ -72,7 +77,7 @@ function project(configurations) {
 }
 
 function service(cwd, fake = fakeElectron()) {
-  const instance = createPreviewService({ electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null), spawnEnv: async () => ({ ...process.env }), logger: { warn() {} } });
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null), spawnEnv: async () => ({ ...process.env }), logger: { warn() {} } });
   return { fake, instance };
 }
 
@@ -231,7 +236,7 @@ test('a page nobody shows is closed after the reap delay and reopens at its addr
   const port = await freePort();
   const cwd = project([{ name: 'web', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port }]);
   const fake = fakeElectron();
-  const instance = createPreviewService({ electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null), spawnEnv: async () => ({ ...process.env }), logger: { warn() {} }, reapHiddenMs: 40 });
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null), spawnEnv: async () => ({ ...process.env }), logger: { warn() {} }, reapHiddenMs: 40 });
   t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
   const sender = fake.sender();
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -306,12 +311,11 @@ test('viewport presets and the color scheme go to CDP emulation; screenshots com
 
 test('dev servers: start from launch.json, reuse, logs, stop; busy port, autoPort and a missing command', async (t) => {
   const port = await freePort();
-  const busy = net.createServer().listen(0, '127.0.0.1');
-  await new Promise((resolve) => busy.once('listening', resolve));
-  const busyPort = busy.address().port;
+  const busyPort = await freePort();
+  const busy = { close: world.occupy(busyPort) };
   const cwd = project([
     { name: 'web', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port },
-    { name: 'clash', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port: busyPort },
+    { name: 'clash', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port: busyPort, autoPort: false },
     { name: 'auto', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port: busyPort, autoPort: true },
     { name: 'ghost', runtimeExecutable: 'definitely-not-a-command-xyz', port: await freePort() },
   ]);
@@ -330,13 +334,20 @@ test('dev servers: start from launch.json, reuse, logs, stop; busy port, autoPor
   assert.deepEqual(serverAsks, [], 'a server already running starts nothing, so nothing is asked');
   const logs = await instance.call(sender, 'preview-server-logs', { sessionId: 's1', name: 'web' });
   assert.ok(logs.lines.some((line) => line.includes(`listening ${port}`)), logs.lines.join('\n'));
+  // "autoPort": false never moves (2.42304.0 I2i → k2i).
   const clash = await instance.call(sender, 'preview-server-start', { sessionId: 's1', name: 'clash' });
   assert.deepEqual({ ok: clash.ok, code: clash.code }, { ok: false, code: 'port-in-use' });
+  assert.match(clash.message, new RegExp(`^Port ${busyPort} is required by this server but is in use by another process\\.`));
+  // "autoPort": true takes the next free port (P2i), no longer an OS-assigned one.
   const auto = await agent.start({ name: 'auto' });
-  assert.notEqual(auto.server.port, busyPort);
+  assert.equal(auto.server.port, busyPort + 1);
   assert.equal(auto.assignedPort, auto.server.port);
+  assert.equal(auto.movedFrom, busyPort);
   assert.deepEqual(serverAsks.map(({ kind, name, command, args, cwd: folder }) => ({ kind, name, command, args, folder })),
     [{ kind: 'preview-server', name: 'auto', command: process.execPath, args: ['server.js'], folder: cwd }], 'the agent starting a command asks first, with the exact command line');
+  // The card's "Runs in {cwd} on port {port}" (2.42304.0 c96d752d0 Kk / wA): the configured port, and (a0i) "(or the
+  // next free port)" since an autoPort configuration may move (preview-01).
+  assert.deepEqual(serverAsks.map(({ port, portMayReassign }) => ({ port, portMayReassign })), [{ port: busyPort, portMayReassign: true }]);
   const ghost = await instance.call(sender, 'preview-server-start', { sessionId: 's1', name: 'ghost' });
   assert.deepEqual({ ok: ghost.ok, code: ghost.code }, { ok: false, code: 'not-found' });
   const missing = await instance.call(sender, 'preview-server-start', { sessionId: 's1', name: 'nope' });
@@ -369,7 +380,7 @@ test('the host window comes from the injected lookup (window registry); a closed
   const cwd = project(null);
   const fake = fakeElectron();
   const asked = [];
-  const instance = createPreviewService({ electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null), logger: { warn() {} },
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null), logger: { warn() {} },
     hostWindow: (sender) => { asked.push(sender); return fake.windows.get(sender) ?? null; } });
   t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
   const sender = fake.sender();
@@ -407,6 +418,9 @@ test('the agent starts a launch.json command only after the user approves that e
   answer = true;
   const started = await agent.start({ name: 'web' });
   assert.equal(started.server.status, 'running');
+  // The configured port is the card's "on port {port}" (c96d752d0 Kk / wA); this entry has no "autoPort" and a start
+  // command that pins no port, so it may move ("(or the next free port)", a0i).
+  assert.deepEqual(asked.map(({ port, portMayReassign }) => ({ port, portMayReassign })), [{ port, portMayReassign: true }, { port, portMayReassign: true }]);
   await agent.stop('web');
   await agent.start({ name: 'web' });
   assert.equal(asked.length, 2, 'approved once per configuration and session');
@@ -642,7 +656,7 @@ test('closed web tabs reopen LIFO in fresh views, skip blank/files, retain cap-b
 
 test('closed tab history enforces original 25-entry bound and rejects a changed session folder', async t=>{
   const cwd=project(),other=project(),fake=fakeElectron();let folder=cwd;
-  const instance=createPreviewService({electron:fake.electron,getSession:id=>({id,cwd:folder}),logger:{warn(){}}}),sender=fake.sender();
+  const instance=createPreviewService({ ...worldOptions(world), electron:fake.electron,getSession:id=>({id,cwd:folder}),logger:{warn(){}}}),sender=fake.sender();
   t.after(async()=>{await instance.dispose();for(const dir of [cwd,other])fs.rmSync(dir,{recursive:true,force:true});});
   const call=(action,extra={})=>instance.call(sender,action,{sessionId:'s1',...extra});
   for(let i=0;i<28;i++) {await call('preview-navigate',{url:`http://localhost:3000/${i}`});await call('preview-tab-close',{tabId:instance._previews.get('s1').tabId});}
@@ -656,7 +670,7 @@ test('closed tab history enforces original 25-entry bound and rejects a changed 
 
 test('closed-tab history evicts the oldest session after the original 50-session bound', async t=>{
   const cwd=project(),fake=fakeElectron(),sender=fake.sender();
-  const instance=createPreviewService({electron:fake.electron,getSession:id=>({id,cwd}),logger:{warn(){}}});
+  const instance=createPreviewService({ ...worldOptions(world), electron:fake.electron,getSession:id=>({id,cwd}),logger:{warn(){}}});
   t.after(async()=>{await instance.dispose();fs.rmSync(cwd,{recursive:true,force:true});});
   for(let i=0;i<51;i++){
     const sessionId=`history-${i}`;await instance.call(sender,'preview-navigate',{sessionId,url:`http://localhost:3000/${i}`});
@@ -746,7 +760,7 @@ test('storage changes rebuild Code views with the selected jar, keep Cowork shar
     return jars.get(name);
   };
   let mode = 'none';
-  const instance = createPreviewService({ electron: fake.electron, getSession: id => ({ id, cwd }),
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: id => ({ id, cwd }),
     getStorageMode: () => mode, setStorageMode: value => { mode = value; }, isCoworkSession: id => id === 'cowork', logger: { warn() {} } });
   t.after(async () => { await instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
   const sender = fake.sender();
@@ -792,7 +806,7 @@ test('Until quit startup clears tracked persistent Code jars and preserves the s
   let saved = [name, 'persist:preview', 'another-app'];
   fake.electron.session.fromPartition = partitionName => ({ ...fake.partition,
     async clearData() { calls.push(['data', partitionName]); }, async clearAuthCache() { calls.push(['auth', partitionName]); } });
-  const instance = createPreviewService({ electron: fake.electron, getSession: id => ({ id, cwd }),
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: id => ({ id, cwd }),
     getStorageMode: () => 'none', getStoredPartitions: () => saved, setStoredPartitions: value => { saved = value; } });
   t.after(async () => { await instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
   await instance.call(fake.sender(), 'preview-state', { sessionId: 's1' });
@@ -817,10 +831,11 @@ test('transcript links reuse source-normalized origin tabs, preserve other sites
 
 test('ca80fca8d xq: a port another session\'s dev server holds fails as port-held with that port', async (t) => {
   const port = await freePort();
-  const config = [{ name: 'web', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port }];
+  // "autoPort": false: the port can't move to the next free one (preview-01), so the other folder's server is named.
+  const config = [{ name: 'web', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port, autoPort: false }];
   const first = project(config), second = project(config);
   const fake = fakeElectron();
-  const instance = createPreviewService({ electron: fake.electron, getSession: (id) => ({ s1: { id, cwd: first }, s2: { id, cwd: second } })[id] ?? null, spawnEnv: async () => ({ ...process.env }), logger: { warn() {} } });
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => ({ s1: { id, cwd: first }, s2: { id, cwd: second } })[id] ?? null, spawnEnv: async () => ({ ...process.env }), logger: { warn() {} } });
   t.after(async () => { await instance.dispose(); for (const dir of [first, second]) fs.rmSync(dir, { recursive: true, force: true }); });
   const sender = fake.sender();
   assert.equal((await instance.call(sender, 'preview-server-start', { sessionId: 's1', name: 'web' })).ok, true);
@@ -835,7 +850,7 @@ test('cf580efe9 Pi: a session\'s dev-server page is kept as a frame at quit and 
   const port = await freePort();
   const cwd = project([{ name: 'web', runtimeExecutable: process.execPath, runtimeArgs: ['server.js'], port }]);
   const frameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-frames-'));
-  const make = () => { const fake = fakeElectron(); return { fake, instance: createPreviewService({ electron: fake.electron, getSession: (id) => (id === 's1' ? { id, cwd } : null), spawnEnv: async () => ({ ...process.env }), logger: { warn() {} }, frameDir }) }; };
+  const make = () => { const fake = fakeElectron(); return { fake, instance: createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => (id === 's1' ? { id, cwd } : null), spawnEnv: async () => ({ ...process.env }), logger: { warn() {} }, frameDir }) }; };
   t.after(() => { for (const dir of [cwd, frameDir]) fs.rmSync(dir, { recursive: true, force: true }); });
   // First run: the server's page is open when the app quits.
   const one = make();
@@ -845,7 +860,11 @@ test('cf580efe9 Pi: a session\'s dev-server page is kept as a frame at quit and 
   await one.instance.dispose();
   assert.ok(one.fake.cdp.some(([method, params]) => method === 'Page.captureScreenshot' && params.format === 'jpeg'));
   assert.equal(fs.readdirSync(frameDir).length, 2, 'the frame and its record');
-  // Second run: the snapshot names it, preview-last-frame reads it, and a page shown again discards it.
+  // Second run: the snapshot names it, preview-last-frame reads it, and a page shown again discards it. (A frame counts
+  // as from before a run when it was saved before that run started: a later millisecond, which stand-in servers reach
+  // within the same one.)
+  const nextMillisecond = () => new Promise((resolve) => setTimeout(resolve, 5));
+  await nextMillisecond();
   const two = make();
   const lastFrame = two.instance.snapshot('s1').lastFrame;
   assert.equal(lastFrame.configName, 'web');
@@ -856,6 +875,7 @@ test('cf580efe9 Pi: a session\'s dev-server page is kept as a frame at quit and 
   assert.equal(await two.instance.call(two.fake.sender(), 'preview-last-frame', { sessionId: 's1' }), null);
   await two.instance.dispose();
   // Third run: Show start page discards it.
+  await nextMillisecond();
   const three = make();
   assert.equal(three.instance.snapshot('s1').lastFrame?.configName, 'web', 'the page was still open at the second quit');
   const after = await three.instance.call(three.fake.sender(), 'preview-last-frame-discard', { sessionId: 's1' });
@@ -885,7 +905,7 @@ test('Allowed sites: a saved site needs no approval; remove and Clear all ask ag
   const cwd = project(null);
   let saved = ['https://docs.example'];
   const fake = fakeElectron();
-  const instance = createPreviewService({ electron: fake.electron, getSession: (id) => (id === 's1' ? { id, cwd } : null), logger: { warn() {} },
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => (id === 's1' ? { id, cwd } : null), logger: { warn() {} },
     getAllowedOrigins: () => saved, setAllowedOrigins: (list) => { saved = list; } });
   t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
   const asked = [];
@@ -926,7 +946,7 @@ test('Allowed sites: a saved site needs no approval; remove and Clear all ask ag
 test('the New session page owns a preview by its folder', async (t) => {
   const cwd = project(null);
   const fake = fakeElectron();
-  const instance = createPreviewService({ electron: fake.electron, getSession: (id) => (id === `home:${cwd}` ? { id, cwd } : null), logger: { warn() {} } });
+  const instance = createPreviewService({ ...worldOptions(world),  electron: fake.electron, getSession: (id) => (id === `home:${cwd}` ? { id, cwd } : null), logger: { warn() {} } });
   t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
   const sender = fake.sender();
   const owner = `home:${cwd}`;

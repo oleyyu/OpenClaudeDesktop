@@ -3,7 +3,7 @@ import { SourceEmptyState } from "./source-transcript-states.jsx";
 import "./source-pane-states.css";
 import { t } from "../electron/i18n/index.mjs";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
-import { fileTreeGuideStyle } from "./file-tree-row-model.mjs";
+import { fileTreeRowStyle, FILE_TREE_ERROR_ROW_CLASS } from "./file-tree-row-model.mjs";
 
 // Changes/Plan pane body states (2.2553.1). Class strings are the source strings;
 // every utility they name is in the loaded original /assets/v1/c6a992d55-C0zTICcS.css.
@@ -190,10 +190,15 @@ function SourceTreeRetryState({ onRetry, children }) {
 // [data-tree-primary] button, so Enter/Space/click do nothing; style ko(depth)
 // (c621b1e2d o) = paddingLeft 8 + depth * 8 over px-lg.
 // B33 (cccc2cf0a ky :5600-5617): the row also carries the Ec indent guides (style xc = padding + ce9ca5630 g).
+// R2-files FT-01 (2.42304.0 cccc2cf0a AS): style Ll(t) = ca7840910 V (padding-inline-start plus the guides), and
+// the muted text is text-muted-as-secondary. R3-files FT-14: the class is AS's own, generated (shared-6 vh
+// "min-h-control app-list-row-min", ca7840910 j, the kept-guide layer that paints on the row itself); the hand-written
+// .source-tree-error / .source-tree-guided rules are gone. data-row-index / data-parent-index (AS's rowIndex /
+// parentIndex props) are written by the tree's indexTreeRows once rendered, since the nested tree knows no flat index.
 export function SourceTreeErrorRow({ depth }) {
   return <div role="treeitem" aria-level={depth + 1} data-tree-row="" tabIndex={-1}
-    className="source-tree-error source-tree-guided flex items-center min-h-control px-lg text-body text-muted outline-none"
-    style={{ paddingLeft: 8 + depth * 8, ...fileTreeGuideStyle(depth) }}>
+    className={FILE_TREE_ERROR_ROW_CLASS}
+    style={fileTreeRowStyle(depth)}>
     <span className="truncate">{FILES_FOLDER_ERROR}</span>
   </div>;
 }

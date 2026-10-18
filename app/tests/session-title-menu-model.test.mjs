@@ -43,3 +43,29 @@ test('Rename session dialog submission follows Jd', () => {
   // shared-21 IV: onRenameStart runs through the xV = 100ms deferral after the menu closes.
   assert.equal(RENAME_START_DELAY_MS, 100);
 });
+
+// R2-topbar TT-02 (2.42304.0 cc43287c9 _W): the caret tooltip `Ge` words "More options for {label}" around `Ue`, the
+// trimmed title cut at gW = 80 graphemes to 79 + "…" (trailing space trimmed first); `He`, the aria-label, keeps the
+// full title.
+test('the caret tooltip cuts the title at 80 graphemes; the label keeps it whole', async (context) => {
+  context.after(() => setLocale(DEFAULT_LOCALE));
+  const { sessionMenuTriggerTooltip } = await import('../src/session-title-menu-model.mjs');
+  const title = 'x'.repeat(120);
+  const tooltip = sessionMenuTriggerTooltip(`  ${title}  `);
+  assert.ok(tooltip.endsWith('…'));
+  const cut = tooltip.slice('More options for '.length);
+  assert.equal([...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(cut)].length, 80, '79 graphemes + …');
+  assert.equal(cut, `${'x'.repeat(79)}…`);
+  assert.equal(sessionMenuTriggerLabel(title), `More options for ${title}`);
+  // 80 graphemes fit untouched; a cut that lands on a space trims it before the ellipsis.
+  assert.equal(sessionMenuTriggerTooltip('y'.repeat(80)), `More options for ${'y'.repeat(80)}`);
+  assert.equal(sessionMenuTriggerTooltip(`${'z'.repeat(78)} ${'w'.repeat(10)}`), `More options for ${'z'.repeat(78)}…`);
+  // Graphemes, not UTF-16 units: 81 flags are cut to 79 flags.
+  const flag = '🇯🇵';
+  assert.equal(sessionMenuTriggerTooltip(flag.repeat(81)), `More options for ${flag.repeat(79)}…`);
+  assert.equal(sessionMenuTriggerTooltip(flag.repeat(80)), `More options for ${flag.repeat(80)}`);
+  assert.equal(sessionMenuTriggerTooltip('   '), 'More options');
+  assert.equal(sessionMenuTriggerTooltip(undefined), 'More options');
+  setLocale('zh-CN');
+  assert.equal(sessionMenuTriggerTooltip('修'.repeat(90)), `“${'修'.repeat(79)}…”的更多选项`);
+});

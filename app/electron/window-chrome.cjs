@@ -10,13 +10,18 @@ function windowBackground(dark) {
 // Won/Gon/Kon: zoom levels to the same range in Chromium's 1.2^level steps.
 const ZOOM_FACTOR = Object.freeze({ MIN: 0.25, MAX: 5 });
 const clampZoomFactor = (factor) => Math.min(ZOOM_FACTOR.MAX, Math.max(ZOOM_FACTOR.MIN, Number.isFinite(factor) ? factor : 1));
-const ZOOM_LEVEL = Object.freeze({ MIN: Math.log(ZOOM_FACTOR.MIN) / Math.log(1.2), MAX: Math.log(ZOOM_FACTOR.MAX) / Math.log(1.2) });
-const clampZoomLevel = (level) => Math.min(ZOOM_LEVEL.MAX, Math.max(ZOOM_LEVEL.MIN, level));
-// lNr=.5 (Zoom In) and -.5 (Zoom Out) per ONr step; Actual Size is level 0 (SNr).
-const ZOOM_STEP = 0.5;
+// R4e-zoom: the level range, its clamp and the step are the original 2.42304.0 bindings (index.chunk-muI2IV6k.js
+// NHn=Math.log(jHn)/MHn, PHn=Math.log(5)/MHn, FHn, mPi=.5; electron/generated/r4e-zoom.cjs), the same values Zoom In /
+// Zoom Out's enabled checks (_Pi / vPi) compare against.
+const r4eZoom = require("./generated/r4e-zoom.cjs");
+const ZOOM_LEVEL = Object.freeze({ MIN: r4eZoom.ZOOM_LEVEL_MIN, MAX: r4eZoom.ZOOM_LEVEL_MAX });
+const clampZoomLevel = r4eZoom.clampZoomLevel;
+// mPi=.5 (Zoom In, MPi) and -.5 (Zoom Out, NPi) per FPi step; Actual Size is level 0 (APi).
+const ZOOM_STEP = r4eZoom.ZOOM_STEP;
 // index.chunk-CiiI592G.js iSi(e) (2.31226.0): n = EIn(e===0 ? t : Math.round((t+e)/zxi)*zxi+0), zxi=.5 — a step
 // lands back on the 0.5 grid (a level restored from a factor hint, or reached some other way, re-snaps; +0 turns
 // -0 into 0); a zero step (iSi(0) on focus) re-applies the current level, only clamped. Qxi: Actual Size is 0.
+// 2.42304.0 FPi keeps it: n=FHn(e===0?t:Math.round((t+e)/mPi)*mPi+0), then I$() refreshes the four zoom items.
 function zoomLevelAfter(level, request) {
   if (request?.reset === true) return 0;
   const delta = Number.isFinite(request?.delta) ? request.delta : 0;

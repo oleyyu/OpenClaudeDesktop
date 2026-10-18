@@ -141,15 +141,17 @@
   border-radius: var(--cds-radius);
   box-sizing: border-box;
 }
-/* yv: flex items-center gap-sm border-b py-md pl-[9px] pr-md last:border-b-0; a running row hovers alpha-2. */
+/* Server row (older yv; 2.37337.1 Ti; 2.42304.0 cf580efe9-b-DCvKJg Ri): flex items-center gap-sm border-b py-md ps-[9px] pe-md
+   last:border-b-0, with a text-start main button; a running row hovers alpha-2. */
 .spv-server {
   display: flex;
   align-items: center;
   gap: var(--cds-gap-sm, 8px);
   min-width: 0;
-  padding: var(--cds-pad-md) var(--cds-pad-md) var(--cds-pad-md) 9px;
+  padding-block: var(--cds-pad-md);
+  padding-inline: 9px var(--cds-pad-md);
   border-bottom: 1px solid var(--cds-border);
-  text-align: left;
+  text-align: start;
 }
 .spv-server:last-child { border-bottom: 0; }
 .spv-server:focus-visible { outline: 1px solid var(--cds-fill-accent); outline-offset: -1px; }

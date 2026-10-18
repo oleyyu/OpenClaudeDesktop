@@ -1,0 +1,296 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-btw-pane.mjs",
+  "modules": [
+    {
+      "target": "owner-window.mjs",
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "2eb075c1ad6fadc7939a3ff2a3ea5a0440ef7b27150da38637482c8ec3c1ae95",
+      "bindings": [
+        {
+          "name": "cp",
+          "sha256": "7ed2ce621141bd6ae41dbbde8e1d912b8f1bd7554aea85066ec9dba338386526"
+        },
+        {
+          "name": "lp",
+          "sha256": "f48d0483592d2423270d6aaa7bd759bc380b3d6aa78cc097ac0341abda5ac986"
+        },
+        {
+          "name": "up",
+          "sha256": "a8cd6293683e92a5b0eed0ca3414f797a1ffc52680e1970907b82687f6d7db0f"
+        },
+        {
+          "name": "dp",
+          "sha256": "b61a198fb69f33c6a07cf666c616cd313e78660b28d8bda1f30ceffddd02c452"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "dp": "ownerWindowOrGlobal"
+      }
+    },
+    {
+      "target": "use-event.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "d5755e2f22cded2812e150accb890e0d08de7b20a7f546a5c4867fbf9f30edbf",
+      "bindings": [
+        {
+          "name": "he",
+          "sha256": "733d59476074572673f653d592f1880519b938d5d756f0db61d5a5fefc4630f0"
+        },
+        {
+          "name": "_e",
+          "sha256": "c3c785b7af593d3c492dffc3c601c13137ba3ca016b8143bdd011713c29b857a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "p",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "_e": "useEvent"
+      }
+    },
+    {
+      "target": "focus-guard.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "3e0e72e4d0bac59921bbe9e2d2146a33b90750f8fd278db6c0e02574c3fe3025",
+      "bindings": [
+        {
+          "name": "an",
+          "sha256": "f1f971998b3dc2c18a2c7de81bc8ed38143675f7d0b8f5e759bf7377a2c9b08a"
+        },
+        {
+          "name": "on",
+          "sha256": "10ba8031dbe828d8aec07510f0d61f0e1e8c4355f7bcf912a0d5a8a60e5aeffe"
+        },
+        {
+          "name": "sn",
+          "sha256": "0f76c2a1e7b09d4fb57f6a0c2d3eeee6d946985668d4cccaad1cf0bddcd5e6cb"
+        },
+        {
+          "name": "cn",
+          "sha256": "ec41cece44dcac85d9667ba3fa4bac57f306be91ad27849178b426829257e300"
+        },
+        {
+          "name": "lc",
+          "sha256": "bfafb1276c4fdebce03eddd5f5b8698609056b97f525c95e9a622356b5bd2dcd"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "cn": "guardStrayEnter",
+        "lc": "elementOf"
+      }
+    },
+    {
+      "target": "modifier-keys.mjs",
+      "source": "cae42d46f-8Va5mKUX.js",
+      "sourceSha256": "43f45df8bec5d933a1394b296f95925db9dbe3acb9bb6977f64e360d5bee01cf",
+      "sha256": "849d38c00e1277d4636983a46dda1fd025d5742004199b8eaa85cd73486488b0",
+      "bindings": [
+        {
+          "name": "m",
+          "sha256": "0f22c23acba64158bc11f50be00545723431993a32a520b46a61c8f87b4314a4"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "m": "modifierKeys"
+      }
+    },
+    {
+      "target": "focus-lost.mjs",
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "3e1413afc0efd1ce91a16ddd13dc74f61c6f08d4a34739307d11c7acdb510132",
+      "bindings": [
+        {
+          "name": "Xw",
+          "sha256": "cc97bf40c028a21fa39ac26713dfb509768da908903a2bb4216846229a8be920"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Xw": "focusIsLost"
+      }
+    },
+    {
+      "target": "focus-hand-back.mjs",
+      "source": "ccf527892-DQjOjuwT.js",
+      "sourceSha256": "4c3861a976b00bba7a485f2f971a73bdf9cfa7bc594d6f5622a4209277bbd3c8",
+      "sha256": "f302d2a23424eb8176ddd50717dfa7f1e707e6a50ad4c215b2c349a3725a758a",
+      "bindings": [
+        {
+          "name": "o",
+          "sha256": "e30b3a738905dc9ed59016ba3a8a64ae6b257432c0ff770f6cd06200695ffe7d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "./owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DP8p7i1Z.js:Pf",
+          "kind": "generated",
+          "original": "dp"
+        },
+        {
+          "local": "n",
+          "from": "./use-event.mjs",
+          "name": "useEvent",
+          "via": "shared-0-ByI5P0CP.js:xx",
+          "kind": "generated",
+          "original": "_e"
+        },
+        {
+          "local": "r",
+          "from": "./focus-guard.mjs",
+          "name": "guardStrayEnter",
+          "via": "shared-frame-BfjMqbuN.js:fd",
+          "kind": "generated",
+          "original": "cn"
+        },
+        {
+          "local": "i",
+          "from": "./focus-guard.mjs",
+          "name": "elementOf",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "generated",
+          "original": "lc"
+        },
+        {
+          "local": "a",
+          "from": "./modifier-keys.mjs",
+          "name": "modifierKeys",
+          "via": "cae42d46f-8Va5mKUX.js:t",
+          "kind": "generated",
+          "original": "m"
+        }
+      ],
+      "exports": {
+        "o": "useFocusHandBack"
+      }
+    },
+    {
+      "target": "shown-session.mjs",
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "5d73dc124eb23e01a05cf55160df878a8466794231e7c027a9103458e04717a9",
+      "bindings": [
+        {
+          "name": "__",
+          "sha256": "4dd0d6b1b639f796bcafbee37f7cf6f8685a7bb2b3e62bfd48b88ae7e8b95327"
+        },
+        {
+          "name": "v_",
+          "sha256": "8b26c1235a2eeeced68715e1521328aa87bc245991d2e786b8c175c97440bda8"
+        },
+        {
+          "name": "x_",
+          "sha256": "e72fa1e4e5a22567b4206458c64b5dc1e64ca88eda51b1b92903fff88b9c837e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "y_",
+          "from": "../../btw-read-state.mjs",
+          "name": "unreadStore",
+          "via": "shared-11-BuQ3CK5I.js:y_",
+          "kind": "host",
+          "replacedSha256": "d3b232ddfc4739e0bb8de8f2a68a2a4aa309986c99026a8b3a2572f4cc7ba24c"
+        },
+        {
+          "local": "h_",
+          "from": "../../btw-read-state.mjs",
+          "name": "paneSessions",
+          "via": "shared-11-BuQ3CK5I.js:h_",
+          "kind": "host",
+          "replacedSha256": "3ddc3b0f2284a4c07e14153865b5421d0dd7d4c646e75102187453f307cb8293"
+        }
+      ],
+      "exports": {
+        "v_": "useShownSession",
+        "x_": "markUnreadUnlessShown"
+      }
+    },
+    {
+      "target": "detach-eligibility.mjs",
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "86757deaa6ea43c81868ec7c220b00d8b43b4669d90a263f6c9e84cbd8892e51",
+      "bindings": [
+        {
+          "name": "cf",
+          "sha256": "a4c53060eeb15bad02cef4bd719acd25f9c524e82ad016aa400d1c7106bcf039"
+        },
+        {
+          "name": "lf",
+          "sha256": "1f491a117fba549c10f75a8d2b962a70b5a7f5b05a6644dd2b982756c28ad3de"
+        },
+        {
+          "name": "df",
+          "sha256": "4bf57cf7513797f63f9ae746159137fdcfe4613a9ce6cfd19f1dc2efabed98c0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Iu",
+          "from": "../../btw-detach-host.mjs",
+          "name": "detachLineageParents",
+          "via": "shared-11-BuQ3CK5I.js:Iu",
+          "kind": "host",
+          "replacedSha256": "7b45e6a3496a03c82f453347e5d2f222137c3731ad1cd1efa04d435656ca16ee"
+        },
+        {
+          "local": "uf",
+          "from": "../../btw-detach-host.mjs",
+          "name": "detachFromParentAvailable",
+          "via": "shared-11-BuQ3CK5I.js:uf",
+          "kind": "host",
+          "replacedSha256": "d292c6b6e9bf83c3afc5b91f9ba5809c99f74ef14d03b00823d5cfd0dd4fa227"
+        }
+      ],
+      "exports": {
+        "df": "sideSessionDetachable"
+      }
+    }
+  ]
+}

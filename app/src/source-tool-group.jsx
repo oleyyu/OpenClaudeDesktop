@@ -10,14 +10,25 @@ import {SourceMorphText} from './source-morph-text.jsx';
 import { groupExpansionKey, toolGroupExpansion } from './tool-group-expansion.mjs';
 import { computerUseAction, computerUseLabel } from './computer-use-model.mjs';
 import { imageGenerationState, mediaItemRow } from './media-item-model.mjs';
+import { useTurnStatusRows } from './source-transcript-rows.jsx';
+import { SourceToolRun } from './source-transcript-tool-rows.jsx';
+import { useToolRunHost } from './source-session.jsx';
 
 // WM :16293–16325 / Npe :53663. A key remains for at least 650ms after
 // switching; repeated deltas don't restart the timer. Unmount cancels it.
-function useHeldKey(key) {
+// 2.42304.0 v2e `He = uM(Ve, 650, ye ? cv : void 0)`: with turnStatusRows the rest options cv = {restKey: "settled",
+// fallHoldMs: 650} apply: leaving "settled" for a running tool is immediate, and settling waits 650 ms from when the
+// group asked to settle as well as from when the shown key appeared.
+function useHeldKey(key, rest = false) {
   const [shown, setShown] = useState({ key, at: 0 });
+  const restSince = useRef(null);
+  if (!rest || key !== 'settled') restSince.current = null;
+  else if (restSince.current === null) restSince.current = performance.now();
   useEffect(() => {
     if (shown.key === key) return;
-    const remaining = Math.max(0, 650 - (performance.now() - shown.at));
+    if (rest && shown.key === 'settled') { setShown({ key, at: performance.now() }); return; }
+    const now = performance.now();
+    const remaining = Math.max(0, 650 - (now - shown.at), rest && key === 'settled' ? 650 - (now - (restSince.current ?? now)) : 0);
     const update = () => setShown({ key, at: performance.now() });
     if (!remaining) { update(); return; }
     const timer = setTimeout(update, remaining);
@@ -34,8 +45,11 @@ export function SourceToolGroup(props) {
   // labels and outgoing animation snapshots must not cross that boundary.
   return <ToolGroupBody key={identity} {...props} expansionKey={identity}/>;
 }
-function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptView, agentContext, expansionKey, ...pathProps }) {
+function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptView, agentContext, expansionKey, isStreaming = false, agentNested = false, ...pathProps }) {
   const id = useId(), tools = item.toolGroup;
+  const statusRows = useTurnStatusRows();
+  const host = useToolRunHost({ agentContext, sessionKey: pathProps.sessionKey, cwd: pathProps.cwd, onOpenFileRef: pathProps.onOpenFileRef,
+    onOpenChanges: pathProps.onOpenChanges, transcriptView, pendingApprovalItemIds, isStreaming, agentNested });
   const remembered=useSyncExternalStore(toolGroupExpansion.subscribe,()=>toolGroupExpansion.get(expansionKey),()=>toolGroupExpansion.get(expansionKey));
   const forcedOpen=transcriptView==='verbose',open=forcedOpen||(remembered??false);
   const [mountedKey,setMountedKey]=useState(open?expansionKey:null);
@@ -50,7 +64,7 @@ function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptVie
   const state = fileRunState(presented, pendingApprovalItemIds), counts = fileRunCounts(tools);
   const summary = fileGroupPresentation(presented);
   const running = presented.find(member => ['running', 'inProgress'].includes(member.status) || (member.type === 'imageGeneration' && imageGenerationState(member) === 'busy'));
-  const key = state === 'busy' && running ? running.id : 'settled', heldKey = useHeldKey(key);
+  const key = state === 'busy' && running ? running.id : 'settled', heldKey = useHeldKey(key, statusRows);
   const [mountedLive] = useState(state === 'busy');
   // Npe:53663–53730 freezes only the aggregate while a key is held. The
   // held tool itself is re-read from the current collection on every delta.
@@ -65,6 +79,12 @@ function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptVie
     : held.type==='collabAgentToolCall'&&agentContext ? {label:t('Running agent'),meta:agentView(agentContext.state,held).name}
     : held.type==='imageGeneration' ? {label:mediaItemRow(held).label} : null;
   const toggle = () => { if(!forcedOpen)toolGroupExpansion.set(expansionKey,!open); };
+  // turnStatusRows (GrowthBook __gb__2846116625, on): the group is the 2.42304.0 tool group n0 (c96d752d0 v2e) over the
+  // members' SDK tool calls (source-transcript-tool-rows.jsx): its own coalescing, summary, held running label, XAe and
+  // member rows. The host keeps the group's outer marker (data-tool-group, data-group-state).
+  if (statusRows)
+    return <SourceToolRun items={presented} host={host} groupKey={item.toolGroup[0]?.id || item.id}
+      rest={{ 'data-tool-group': item.id, 'data-group-state': state, 'data-transcript-item-id': item.id }} />;
   return <div className="source-message stg" data-tool-group={item.id} data-group-state={state} data-summary-state={live?'busy':isAwaiting?'blocked':'settled'}>
     <button type="button" className="stg-trigger" aria-expanded={open} aria-controls={id} aria-label={!live && shownSummary.segments.some(segment=>segment.isError) ? [shownSummary.label,(shownCounts.added||shownCounts.removed)?`+${shownCounts.added} -${shownCounts.removed}`:null,isAwaiting?t('Needs approval'):state==='unknown'?t('Status unavailable'):null].filter(Boolean).join(' ') : undefined} onClick={toggle}>
       <SourceMorphText morphKey={live?heldKey:'settled'} live={mountedLive} className="stg-label" slotClassName="stg-morph">

@@ -2,8 +2,13 @@
 // auto-close). Independent implementation of the behavior traced from the 2.2553.1 terminal pane (c6bf19e8f ShellTerminal,
 // cccc2cf0a pane + tab strip, cf718f694 code theme → xterm theme, c5d464fa3 palettes, shared-21 aR toggleTerminal).
 import { t } from "../electron/i18n/index.mjs";
+import { selectionBlocksTerminalLink } from "./generated/code-current/terminal-link-selection.mjs";
+import { terminalErrorMessages, terminalStartError, loadFailedError } from "./generated/code-current/terminal-errors.mjs";
+import { ownerWindow } from "./generated/code-current/owner-window.mjs";
+import { suppressKeyRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
 
 export const TERMINAL_PANE = "terminal";
+export const FOLDER_GONE = "The session folder no longer exists.";
 export const SCROLLBACK_LINES = 10000;
 export const MINIMUM_CONTRAST_RATIO = 3;
 export const MAX_CACHED_TERMINALS = 16;
@@ -38,6 +43,120 @@ export function hiddenTerminalTabs(entries, { scrollLeft = 0, clientWidth = 0, a
   return (Array.isArray(entries) ? entries : [])
     .filter((tab) => tab.id !== activeId && (tab.end <= scrollLeft + 1 || tab.end > right + 1))
     .map((tab) => tab.id);
+}
+
+// ---------------------------------------------------------------------------
+// Tab strip keys and confirmations (2.42304.0 cfe7c4b3b ge/Y, cccc2cf0a Vy). These run inside the official components'
+// bodies, so they are restated here for the local strip; each names the source lines it follows.
+
+/**
+ * cfe7c4b3b ge Le (terminal-11): `!U || (t.key !== "Delete" && t.key !== "Backspace") || t.ctrlKey || t.metaKey ||
+ * t.altKey || (t.preventDefault(), t.repeat)` returns early, else the tab closes. "close": prevent and close; "repeat":
+ * a held key, prevent only; null: not a close key (any Control/Meta/Alt chord is left alone, unprevented).
+ */
+/**
+ * cfe7c4b3b ge `U = e.closable ?? !w` (terminal-11/12): `w` is `solo` (`tabs.length === 1`). A lone terminal tab has
+ * no `closable` property (cccc2cf0a Vy `M`), so `U` is false when only one tab is open unless `closable: true` is set.
+ */
+export function isTerminalTabClosable(tab, solo = false) {
+  return tab?.closable ?? !solo;
+}
+/**
+ * cfe7c4b3b Y `nt = tt === 1, ot = s.some(e => e.closable ?? !nt)` (terminal-12): whether the strip renders the
+ * screen-reader close hint (`closeTabDeleteHint`).
+ */
+export function anyTerminalTabClosable(tabs) {
+  const list = Array.isArray(tabs) ? tabs : [];
+  const solo = list.length === 1;
+  return list.some((tab) => isTerminalTabClosable(tab, solo));
+}
+export function terminalTabDeleteKey(event, closable = true) {
+  if (!closable || !event || (event.key !== "Delete" && event.key !== "Backspace")) return null;
+  if (event.ctrlKey || event.metaKey || event.altKey) return null;
+  return event.repeat ? "repeat" : "close";
+}
+/**
+ * cfe7c4b3b Y gt (terminal-12): the tabs the move hint describes, those shown in the strip with a shown neighbour.
+ * `hiddenIds` are the tabs the official strip moves to its overflow menu; the local strip scrolls instead and keeps
+ * every tab in it (Control+Shift+←/→ moves a scrolled-out tab too), so the pane passes none.
+ */
+export function movableTerminalTabs(tabs, hiddenIds = []) {
+  const list = Array.isArray(tabs) ? tabs : [];
+  const shown = (tab) => tab !== undefined && !hiddenIds.includes(tab.id);
+  return new Set(list.filter((tab, index) => shown(tab) && (shown(list[index - 1]) || shown(list[index + 1]))).map((tab) => tab.id));
+}
+const commandRunning = (tab) => tab?.busy === true && tab.status === "running";
+/**
+ * cccc2cf0a Vy W/ne (terminal-13): a close confirmation reads its tab from the live list (`M.find(e => e.id === By(W))`,
+ * so a rename or renumbering shows), and is dropped once its tab is gone or the command it would stop is no longer
+ * running (`o.includes(e.tabId)`; for "close-others", some other tab still running). Returns the confirmation with the
+ * tab's current `name`, or null.
+ */
+export function liveTerminalConfirm(confirm, tabs) {
+  if (!confirm) return null;
+  const list = Array.isArray(tabs) ? tabs : [];
+  const tab = list.find((value) => value.id === confirm.id);
+  if (!tab) return null;
+  if (confirm.kind === "close") return commandRunning(tab) ? { ...confirm, name: tabLabel(tab, list.length) } : null;
+  return list.some((value) => value.id !== confirm.id && commandRunning(value)) ? { ...confirm, name: tabLabel(tab, list.length) } : null;
+}
+/**
+ * Close a tab in the strip: ignored when the tab is not closable (a lone tab in the strip, cfe7c4b3b ge `U`); asks for
+ * confirmation while a command runs in it (cccc2cf0a Vy `H`), else closes immediately.
+ */
+export function closeTerminalTab(id, { tabs, owner, sessionId, homeWorkspace, terminals, setConfirm }) {
+  const list = Array.isArray(tabs) ? tabs : [];
+  const tab = list.find((value) => value.id === id);
+  if (!tab || !isTerminalTabClosable(tab, list.length === 1)) return null;
+  if (commandRunning(tab)) {
+    setConfirm?.({ kind: "close", id });
+    return "confirm";
+  }
+  void terminals.close(owner, sessionId, homeWorkspace, id);
+  return "closed";
+}
+/**
+ * cfe7c4b3b ge Le + Y (terminal-11, terminal-12): keyboard handling on a focused tab in the terminal strip.
+ */
+export function handleTerminalTabKeyDown(event, id, {
+  tabs,
+  owner,
+  terminals,
+  close,
+  select,
+  focusTab,
+  getWindow = ownerWindow,
+  onSuppressKeyRepeat = suppressKeyRepeat,
+}) {
+  const list = Array.isArray(tabs) ? tabs : [];
+  const index = list.findIndex((tab) => tab.id === id);
+  if (index < 0) return null;
+  if (event.shiftKey && (event.ctrlKey || event.metaKey) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+    event.preventDefault();
+    terminals.move(owner, id, event.key === "ArrowLeft" ? -1 : 1);
+    focusTab?.(id);
+    return "move";
+  }
+  const closable = isTerminalTabClosable(list[index], list.length === 1);
+  const deleteKey = terminalTabDeleteKey(event, closable);
+  if (deleteKey) {
+    event.preventDefault();
+    if (deleteKey === "repeat") return "repeat";
+    const view = getWindow?.(event.currentTarget);
+    if (view) onSuppressKeyRepeat?.(event.key, view);
+    close(id);
+    return "close";
+  }
+  let next = null;
+  if (event.key === "ArrowRight") next = (index + 1) % list.length;
+  else if (event.key === "ArrowLeft") next = (index - 1 + list.length) % list.length;
+  else if (event.key === "Home") next = 0;
+  else if (event.key === "End") next = list.length - 1;
+  if (next === null) return null;
+  event.preventDefault();
+  select(list[next].id);
+  focusTab?.(list[next].id);
+  return "navigate";
 }
 
 // ---------------------------------------------------------------------------
@@ -292,4 +411,127 @@ export function unseenData(event, written) {
 export function terminalError(error, fallback) {
   const message = String(error?.message ?? error ?? "").replace(/^Error invoking remote method '[^']+': (?:Error: )?/, "").trim();
   return message ? t(message) : fallback;
+}
+/**
+ * c6bf19e8f Sn activate: only a primary click opens a link, and not one that ends a selection (xn, terminal-01).
+ */
+export function terminalLinkBlocked(term, event) {
+  return !event || event.button !== 0 || selectionBlocksTerminalLink(term, event);
+}
+/**
+ * Wire WebLinksAddon and the file-path link provider on `term`, gating both activations through `terminalLinkBlocked`.
+ */
+export function installTerminalLinks(term, { WebLinksAddon, id, getHandlers, checkedMs = 3000 }) {
+  const linkBlocked = (event) => terminalLinkBlocked(term, event);
+  term.loadAddon(new WebLinksAddon((event, uri) => {
+    if (linkBlocked(event)) return;
+    event.preventDefault?.();
+    getHandlers()?.web?.(uri, event);
+  }));
+  const checked = new Map();
+  term.registerLinkProvider({
+    provideLinks(lineNumber, callback) {
+      const line = term.buffer.active.getLine(lineNumber - 1);
+      if (!line) { callback(undefined); return; }
+      let text = "";
+      const columns = [];
+      for (let x = 0; x < term.cols; x++) {
+        const cell = line.getCell(x);
+        if (!cell) break;
+        const chars = cell.getChars();
+        if (!chars && cell.getWidth() === 0) continue;
+        for (const char of chars || " ") { columns.push(x); text += char; }
+      }
+      const candidates = findLinks(text).filter((link) => link.kind === "file");
+      if (!candidates.length) { callback(undefined); return; }
+      const now = Date.now();
+      const unknown = [...new Set(candidates.map((link) => link.path))].filter((path) => !(now - (checked.get(path)?.at ?? -Infinity) < checkedMs));
+      Promise.resolve(unknown.length ? getHandlers()?.paths?.(unknown, id) : []).then((results) => {
+        const at = Date.now();
+        unknown.forEach((path, index) => checked.set(path, { value: results?.[index] ?? null, at }));
+        if (checked.size > 500) checked.clear();
+        const found = new Map(candidates.map((link) => [link.path, checked.get(link.path)?.value ?? null]));
+        callback(candidates.filter((link) => found.get(link.path)).map((link) => ({
+          range: { start: { x: columns[link.start] + 1, y: lineNumber }, end: { x: columns[link.end - 1] + 1, y: lineNumber } },
+          text: link.text,
+          decorations: { underline: true, pointerCursor: false },
+          activate: (event) => {
+            if (linkBlocked(event)) return;
+            event.preventDefault?.();
+            getHandlers()?.file?.(found.get(link.path), link.line);
+          },
+        })));
+      }, () => callback(undefined));
+    },
+  });
+}
+/**
+ * c6bf19e8f pi: acquire the active tab's xterm view; on failure clear the host container and record {kind:"raw", text}
+ * for an Error with a message, else Jr loadFailedError ("Failed to load terminal").
+ */
+export function acquireTerminalView({ activeId, sessionId, homeWorkspace, terminals, createView, hostNode, viewError, setViewError }) {
+  let view;
+  try {
+    view = terminals.view(activeId, sessionId, homeWorkspace, createView);
+  } catch (failure) {
+    hostNode?.replaceChildren?.();
+    setViewError?.({
+      id: activeId,
+      error: failure instanceof Error && failure.message ? { kind: "raw", text: failure.message } : loadFailedError,
+    });
+    return null;
+  }
+  if (viewError?.id === activeId) setViewError?.(null);
+  return view;
+}
+/**
+ * c6bf19e8f Qr/Rr: restart the active tab's shell; on failure mark startFailed for the registry (Clear: "No terminal
+ * to clear") and surface Qr(error, ptyKey, sessionId) ({kind:"raw"} when the main process gave a message, else
+ * startFailed "Failed to start shell").
+ */
+export async function restartTerminalTab({ active, sessionId, homeWorkspace, terminals, startFailedTerminals, setError, setRestartError, onRestarted }) {
+  if (!active) return false;
+  const id = active.id;
+  try {
+    await terminals.restart(sessionId, homeWorkspace, id);
+    startFailedTerminals?.delete(id);
+    setError?.(null);
+    setRestartError?.(null);
+    onRestarted?.();
+    return true;
+  } catch (failure) {
+    startFailedTerminals?.add(id);
+    setRestartError?.({ id, error: terminalStartError(terminalError(failure, undefined), id, id) });
+    return false;
+  }
+}
+/**
+ * c6bf19e8f pi: the error (A) takes the place of the exited shell (N). A raw message shows as is; every kind but
+ * needsNewerApp offers Try again. A tab whose folder is gone says so without a button (local).
+ */
+export function terminalCoverState({ active, loadFailed = false, viewError = null, restartError = null, onRetryView, onRestart }) {
+  if (loadFailed) return null;
+  const id = active?.id ?? null;
+  const exited = active?.status === "exited";
+  const coverError = (viewError && viewError.id === id ? viewError.error : null)
+    ?? (exited && restartError?.id === id ? restartError.error : null);
+  if (coverError) {
+    return {
+      kind: coverError.kind,
+      text: coverError.kind === "raw" ? coverError.text : t(terminalErrorMessages[coverError.kind].defaultMessage),
+      action: coverError.kind !== "needsNewerApp" && !(coverError.kind === "raw" && coverError.text === t(FOLDER_GONE)) ? t("Try again") : null,
+      retry: viewError?.id === id ? onRetryView : onRestart,
+      exited,
+    };
+  }
+  if (exited) {
+    return {
+      kind: "exited",
+      text: active?.error === FOLDER_GONE ? t(FOLDER_GONE) : t("Shell exited"),
+      action: active?.error === FOLDER_GONE ? null : t("Restart shell"),
+      retry: onRestart,
+      exited,
+    };
+  }
+  return null;
 }

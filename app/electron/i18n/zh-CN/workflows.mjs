@@ -1,6 +1,8 @@
 // zh-CN: dynamic workflows (Settings › Code › Dynamic workflows, the Workflow tool, ultracode, /workflows).
 // Keys are the exact English source strings.
 export default {
+  'Compatibility differences ({count})': '兼容差异（{count}）',
+  'This run uses model, output or permission mappings. Its behavior may differ from Claude.': '本次运行使用了模型、输出或权限映射，行为可能与 Claude 不同。',
   // Settings › Code › Dynamic workflows
   'Set by {variable}.': '由 {variable} 设定。',
   'Turned off by your organization’s managed settings.': '已被组织的托管设置关闭。',

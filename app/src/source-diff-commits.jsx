@@ -107,7 +107,7 @@ function CommitRow({ commit, selected, onClick }) {
       </span>
     </button>
     {menu && <SourceMenu.Popup anchor={ref.current} trigger={ref.current} point={menu} side="bottom" align="start"
-      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
+      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard="always"
       label={commit.subject || DIFF_COMMITS_LABELS.noMessage} onClose={() => setMenu(null)}>
       <SourceMenu.Item onClick={copySha}>{DIFF_COMMITS_LABELS.copySha}</SourceMenu.Item>
     </SourceMenu.Popup>}

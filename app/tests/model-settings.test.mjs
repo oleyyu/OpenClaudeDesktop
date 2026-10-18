@@ -86,7 +86,9 @@ test('main.cjs wires the decorator before client.request and the desktop:call ca
   const rpc = main.slice(main.indexOf('async function requestRpc('), main.indexOf('ipcMain.handle("desktop:call"'));
   const at = text => { const index = rpc.indexOf(text); assert.ok(index > 0, text); return index; };
   assert.ok(at('modelSettings.decorate(p.method, params);') < at('nativeCollaborationMode(params,'));
-  assert.ok(at('nativeCollaborationMode(params,') < at('result = await client.request(p.method, params);'));
+  // The request now goes through `requester` (the client captured for this call) with the expected-connection guard;
+  // default timeout spelled out (codex.cjs request(method, params, timeout = 120000, connection)). Same ordering.
+  assert.ok(at('nativeCollaborationMode(params,') < at('result = await requester.request(p.method, params, 120000, expectedConnection ?? undefined);'));
   assert.match(main, /case "model-settings": return modelSettings\.run\(p\);/);
 });
 
@@ -107,7 +109,9 @@ test('Settings › Models server-renders per-model rows and the price table on D
   const page = (engine, list = models, extra = {}) => render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: list }, engine, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, ...extra }));
   // DeepSeek (providerSettings): unchanged.
   const html = page('deepseek');
-  assert.match(html, /<h3[^>]*>4\.1 Flash<\/h3>/);
+  // Per-model options sit on the page (not under Advanced), one collapsible entry per model.
+  assert.match(html, /<h3[^>]*>Models<\/h3>/);
+  assert.match(html, /data-model-options="deepseek-flash"[\s\S]*4\.1 Flash/);
   assert.match(html, /<input type="number"[^>]*aria-label="4.1 Flash max output tokens"[^>]*value="8192"/);
   assert.match(html, /aria-label="4.1 Flash temperature"[^>]*value="0.3"/);
   assert.match(html, /aria-label="4.1 Flash default reasoning effort"[^>]*data-value="max"/);
@@ -122,8 +126,10 @@ test('Settings › Models server-renders per-model rows and the price table on D
   assert.ok(page('deepseek', models, { onQuickSetup() {} }).includes('Quick setup…'));
   for (const gone of ['manages its own connection', 'aria-label="Codex provider"', 'data-models-layout']) assert.equal(html.includes(gone), false, gone);
   const plain = render(React.createElement(SourceModelsSettings, { config: {}, boot: { connected: true, models }, engine: 'deepseek', desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
-  assert.ok(plain.includes('Advanced'));
-  assert.equal(plain.includes('aria-label="4.1 Flash max output tokens"'), false, 'Advanced starts closed when nothing in it was changed');
+  assert.ok(plain.includes('Advanced') && plain.includes('Pricing and custom providers'));
+  assert.equal(plain.includes('Add model price'), false, 'Advanced (pricing, providers) starts closed when nothing in it was changed');
+  assert.ok(plain.includes('aria-label="4.1 Flash max output tokens"'), 'per-model options are visible outside Advanced');
+  assert.ok(plain.includes('aria-label="4.1 Flash display name"') && plain.includes('aria-label="4.1 Flash image input"'));
 
   // Codex (codexProvider): the endpoint group and the running core's models; no DeepSeek connection, prices,
   // providers, Quick setup, Advanced or customization-only fields.
@@ -165,7 +171,7 @@ test('Settings › Models server-renders per-model rows and the price table on D
     const html = page(core, gpt);
     assert.match(html, /<input type="number"[^>]*aria-label="GPT-6 Astra max output tokens"/, `${core}: max output tokens`);
     assert.match(html, /aria-label="GPT-5\.5 temperature"/, `${core}: temperature`);
-    assert.match(html, /data-setting-id="model-gpt-6-astra-maxTokens"[^>]*data-indent="true"/, `${core}: the param rows sit under their model`);
+    assert.match(html, /data-model-options="gpt-6-astra"(?:(?!data-model-options=).)*data-setting-id="model-gpt-6-astra-maxTokens"/s, `${core}: the param rows sit under their model`);
   }
   const noProxy = render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: gpt, core: { engine: 'zcode', capabilities: { customization: false } } }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
   assert.equal(noProxy.includes('max output tokens') || noProxy.includes('temperature'), false, 'reported customization:false wins');

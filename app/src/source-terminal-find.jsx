@@ -1,5 +1,7 @@
 import React,{forwardRef,useImperativeHandle,useLayoutEffect,useRef,useState} from 'react';
-import {Bh as TextInput} from './generated/chat/shared-frame-C_2npUJq.js';
+// SC-7: the field is the 2.42304.0 CDS TextInput (shared-frame tx, exported ho), as the official c6bf19e8f en renders
+// it (`ho as O`), by its view-tabs semantic name; no longer the 2.2553.1 Bh from generated/chat.
+import {CdsTextInput as TextInput} from './generated/view-tabs/shared-frame-BfjMqbuN.js';
 import {SourceSettingsButton} from './source-settings-button.jsx';
 import {SourceTooltip,SourceTooltipGroup} from './source-tooltip.jsx';
 import {runTerminalFind,terminalFindKey} from './terminal-find-model.mjs';

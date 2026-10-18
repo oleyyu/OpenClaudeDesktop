@@ -166,3 +166,13 @@ export async function loadThreadHistory(rpc, {
   }
   return { turns, mode: "paginated", turnPages: result.pages.length, itemPages, truncated: result.truncated };
 }
+
+// cov2-05 host adapter for the official transcriptUnavailable (cf74bc599 Xx →
+// Wv "Session not found on disk"). The core answers "not supported yet" both for
+// a thread whose rollout is gone and for one that has none because nothing was
+// sent yet, so only a thread the core has recorded a first message for (a
+// non-empty preview on any of the given Thread records) counts as missing; a
+// fresh session stays on "No messages yet".
+export function historyMissing(history, ...threads) {
+  return !!history?.unavailable && threads.some((thread) => typeof thread?.preview === "string" && thread.preview.trim() !== "");
+}

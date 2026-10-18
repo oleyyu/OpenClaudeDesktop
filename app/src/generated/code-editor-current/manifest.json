@@ -1,0 +1,309 @@
+{
+  "referenceVersion": "2.42304.0",
+  "modules": [
+    {
+      "name": "c148e7537-BbnhrJJt.js",
+      "sha256": "6059e67a0edde37f1d1820c2303c740b4e28fad23ec2d68df37e9c7e6a892af1",
+      "bytes": 393372,
+      "imports": [
+        "./vendor-prosemirror-SdeAXoBV.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-BGNh7-lB.js",
+      "sha256": "21fe2d0f627f99cbdc1c9241f933f036e0850fffdb7b9a623e1bab90d1214d57",
+      "bytes": 86854,
+      "imports": [
+        "./rolldown-runtime-C3OYiQ02.js",
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-M8xLOBG-.js",
+      "sha256": "254ba01051294f40fccc08862586fa93c946e5a9c133235d0429c8e0d2961e68",
+      "bytes": 2430,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-D2YeGGfC.js",
+      "sha256": "931a2e94af2476020ad59aa48474950e5bd41eaee2646aec8cfbab863466de6e",
+      "bytes": 26861,
+      "imports": [
+        "./rolldown-runtime-C3OYiQ02.js",
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-DFRinKVw.js",
+      "sha256": "9c5fd59b298975d9d5bf1ae477af4720ae82a2d39b3516d15043966c0aad71d9",
+      "bytes": 16255,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js",
+        "./c2a6d07ee-D2YeGGfC.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-BjPXVatv.js",
+      "sha256": "3963538a5e70394cae35a3a43df2a3e3b3a95b0911d1f3de1d3ec7b7256130c4",
+      "bytes": 23026,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js",
+        "./c2a6d07ee-D2YeGGfC.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-ClNwGWBp.js",
+      "sha256": "466f530722747195e3c49150b6c15dd6960c264e6bad12556bd9d0e38a19c046",
+      "bytes": 28405,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js",
+        "./c2a6d07ee-D2YeGGfC.js",
+        "./c2a6d07ee-BGNh7-lB.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-CJpXkxBY.js",
+      "sha256": "11c679b3e2e3820fe69068c09fefa6eb150dde50e7d2c75f498327b8490d6c64",
+      "bytes": 3385,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js",
+        "./c2a6d07ee-BGNh7-lB.js",
+        "./c2a6d07ee-ClNwGWBp.js",
+        "./c2a6d07ee-D2YeGGfC.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-dWGyVNPK.js",
+      "sha256": "898eaf5712948ec74279f6376a427fee7c5834ba745b2b5c50c0068d396b31ff",
+      "bytes": 14324,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-IHus__jG.js",
+      "sha256": "300f12f71d05cbe608514267b3110f095c0f683816001f5e0cf680f56200dff5",
+      "bytes": 43864,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-ClNwGWBp.js",
+        "./c2a6d07ee-IYrjpNjP.js",
+        "./c2a6d07ee-D2YeGGfC.js",
+        "./c2a6d07ee-BGNh7-lB.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-C4lP46Yz.js",
+      "sha256": "5f9fcbd78baa11ae448b5ace3c71b6e1469e180103f89e54e59f2b56994b8a9e",
+      "bytes": 44566,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-iaFCjCcB.js",
+      "sha256": "aaf4f44ba001b6024eae1fd08de99a7540c6da29734732dde85bb733a246872b",
+      "bytes": 70803,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-XzhmS6UZ.js",
+      "sha256": "6680bde0c299b7303254aa8701e37affc085100dfa97a7165cff24ac7eefc7ca",
+      "bytes": 30707,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-DoRyl_ih.js",
+      "sha256": "74adff573b966681d5be11db43f9e536bdd1337a0f2bc065104b00e372ace096",
+      "bytes": 40245,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-xmX-GbU0.js",
+      "sha256": "c4738ca18eadb7e8d25e27fa54fa301d54342738e65bc5cec4d417f50ac63406",
+      "bytes": 103913,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-BU0b90CP.js",
+      "sha256": "c0825b8cdd47bc1806c67e38410e3b7985be09c04de0f2b389ec8d39dd065b5d",
+      "bytes": 15832,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js"
+      ]
+    },
+    {
+      "name": "c2a6d07ee-DTnKYf6q.js",
+      "sha256": "4b603d8bebbe80fda1d2c2c22a46000aa01fe33790af419343cb6858b93e2ce2",
+      "bytes": 98234,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c2a6d07ee-IYrjpNjP.js",
+        "./c2a6d07ee-ClNwGWBp.js",
+        "./c2a6d07ee-D2YeGGfC.js",
+        "./c2a6d07ee-BGNh7-lB.js"
+      ]
+    },
+    {
+      "name": "c477e0dc6-2uiBUH57.js",
+      "sha256": "51b45802783f48d095c68aad38e4da806d834befaa861cd89d4fc2539f0ea0fa",
+      "bytes": 76855,
+      "imports": [
+        "./rolldown-runtime-C3OYiQ02.js"
+      ]
+    },
+    {
+      "name": "c1fe2e782-w4PHC-yL.js",
+      "sha256": "b1fc04a0e785be53cbf90aeeeff8523a3c80792e77435ee78715a5b34d0c32fd",
+      "bytes": 293,
+      "imports": [
+        "./c477e0dc6-2uiBUH57.js"
+      ]
+    },
+    {
+      "name": "c246d020e-DxsJoPuK.js",
+      "sha256": "1c045fe5aaa1b030a9b4a10898de30abd4b588a9df70b7473d1303aff43234ba",
+      "bytes": 1031,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js"
+      ]
+    },
+    {
+      "name": "cc1a994ce-BAS6XRsu.js",
+      "sha256": "a6c4b3e24f07e72200f9e5cc73f7ee28ba7ab740c6ab1545253d3e3e51f9fc3e",
+      "bytes": 1235,
+      "imports": [
+        "./c477e0dc6-2uiBUH57.js"
+      ]
+    },
+    {
+      "name": "cf3d96880-DPWXHIKn.js",
+      "sha256": "520ebdfc3219e33d29c1a7f20620be18887b4c951dce186badfb81463d686973",
+      "bytes": 2741,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js"
+      ]
+    },
+    {
+      "name": "ceb04560f-froebiID.js",
+      "sha256": "c4bc71c6796db6bbb242e203db6ea33f4fab3ba34d5f46e191dca219f4236a71",
+      "bytes": 1866,
+      "imports": []
+    },
+    {
+      "name": "c139416b4-DdiAL2lo.js",
+      "sha256": "e753b26065cb7a12e5e328aed1774cde7bd914436f212fc5444597fb3f4c7204",
+      "bytes": 2372,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js",
+        "./c477e0dc6-2uiBUH57.js"
+      ]
+    },
+    {
+      "name": "cad58275d-Dvkdr-q0.js",
+      "sha256": "a6c9ca6174da8bd0a1f753fc4262d03b6161b495d07a5dd0acc786038e0c3a77",
+      "bytes": 820,
+      "imports": []
+    },
+    {
+      "name": "vendor-prosemirror-SdeAXoBV.js",
+      "sha256": "983d02695740e55727baa5aacc6025c7085bc170b0a23e2d9e34c54069900c50",
+      "bytes": 214007,
+      "imports": []
+    },
+    {
+      "name": "rolldown-runtime-C3OYiQ02.js",
+      "sha256": "e2fd726c8ba0cb40c37760746e02d5241d0ee87ee8c088b4c5f3c6a3622ce68d",
+      "bytes": 1157,
+      "imports": []
+    },
+    {
+      "name": "c2a6d07ee-IYrjpNjP.js",
+      "sha256": "5435a1415512a6f680a49d092cccdf0923fe9f094a35a0d71038f1a2f8b55e9c",
+      "bytes": 26464,
+      "imports": [
+        "./c148e7537-BbnhrJJt.js"
+      ]
+    }
+  ],
+  "adapters": [
+    {
+      "name": "filename-language.mjs",
+      "sha256": "bcfe3918cb9e6e7afa8475d058be6274be9036626300358cbbee585273ec89b8",
+      "sources": [
+        {
+          "name": "c8a544a8c-CD0GHG_t.js",
+          "sha256": "053422cab32602cf1081717bcb0053f533e9833044a25f934c2e7d42821326e1"
+        }
+      ]
+    },
+    {
+      "name": "keyboard-repeat.mjs",
+      "sha256": "934bfd16ebd3be25ac56c83ea363639b8672a87d4d519dfdea1b24d59d55751c",
+      "sources": [
+        {
+          "name": "shared-19-CkPOiIKm.js",
+          "sha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af"
+        }
+      ]
+    },
+    {
+      "name": "newlines.mjs",
+      "sha256": "bfde1802380714f060a3609c0600c430d8d1dc0dc97247ab2f6d588f4c3cacff",
+      "sources": [
+        {
+          "name": "cc3bc2027-C49Ef-ei.js",
+          "sha256": "7fab50f1c78d19398eb608509695e61dfc8c53309440029c4b3cae3b5fc74b0e"
+        }
+      ]
+    },
+    {
+      "name": "theme.mjs",
+      "sha256": "201bcd7bbcd5b0683ac21014366f672d0540c3fdd2450cfd50da29ef16a72fe9",
+      "sources": [
+        {
+          "name": "cbd02b8f2-ERHMhSz7.js",
+          "sha256": "661b4fe1da27bccfff55335f27a1471ec1912ec066c4bc4bcd33c97a0bc9538f"
+        },
+        {
+          "name": "c5d464fa3-CyJQSWsU.js",
+          "sha256": "e6d12c6fd38f253c4151d0a1424cb2998cea22eb4a01c7dfc0d48b49e77ba7f9"
+        }
+      ]
+    },
+    {
+      "name": "wrapper.mjs",
+      "sha256": "ba0345158475bb5b2ed2860c6cbcfb4fa7e6ebf95dc23132953e94a2bbbb0bd4",
+      "sources": [
+        {
+          "name": "cbd02b8f2-ERHMhSz7.js",
+          "sha256": "661b4fe1da27bccfff55335f27a1471ec1912ec066c4bc4bcd33c97a0bc9538f"
+        }
+      ]
+    }
+  ]
+}

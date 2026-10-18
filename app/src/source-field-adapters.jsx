@@ -1,12 +1,19 @@
-import React, { createContext, useContext, useId, useMemo } from 'react';
-import { _y as Field, vy as Label, yy as Description, by as ErrorText, Bh as TextInput, $v as TextArea } from './generated/chat/shared-frame-C_2npUJq.js';
+import React, { createContext, forwardRef, useContext, useId, useMemo } from 'react';
+import { SourceSettingsButton } from './source-settings-button.jsx';
+import { SourceTooltip } from './source-tooltip.jsx';
 
 // Only the Base UI provider/native-control boundary lives here. The original
 // Field, Label, Description, Error and TextField own all markup and styling.
 const FieldContext = createContext(null);
 const joinIds = (...values) => [...new Set(values.filter(Boolean).flatMap(value => value.split(/\s+/)))].join(' ') || undefined;
 
-const fieldPartsRegistry = Object.fromEntries(Object.entries({ Field, Label, Description, ErrorText, TextInput, TextArea }).map(([key, value]) => [key, new Set([value])]));
+// Each field family registers its own parts from its module (SC-7): the generated 2.2553.1 chat shared-frame
+// (_y/vy/yy/by/Bh/$v), current-chat via source-routines.jsx, and the 2.42304.0 tx family in code-current
+// environment-field-controls. This module imports no family: it used to import the chat parts from the shared-frame
+// that imports it back, so whichever loaded first decided whether the registry held those parts or undefined.
+// view-tabs CdsTextInput (tx) is not a part here: its control is Base UI Field.Control (vendor-frame), which reads
+// Base UI's field context, not this one; the NativeField-wired 2.42304.0 tx is EnvironmentTextInput.
+const fieldPartsRegistry = Object.fromEntries(['Field', 'Label', 'Description', 'ErrorText', 'TextInput', 'TextArea'].map(key => [key, new Set()]));
 export function registerNativeFieldComponents(components) {
   for (const [key, component] of Object.entries(components)) fieldPartsRegistry[key]?.add(component);
 }
@@ -74,3 +81,11 @@ export function NativeFieldControl({ render, ref, ...fieldProps }) {
 }
 
 export const useNativeFieldMetadata = () => useContext(FieldContext) ?? {};
+
+// shared-frame $l (the CDS Button) where a generated field control renders one (the 2.42304.0 TextInput tx's clear X).
+// The CDS-only `tooltip` prop (false: no automatic icon-only tooltip; a node: that tooltip) is answered here instead of
+// reaching SourceSettingsButton's DOM button, which has no automatic tooltip of its own.
+export const NativeFieldButton = forwardRef(function NativeFieldButton({ tooltip, ...props }, ref) {
+  const button = <SourceSettingsButton ref={ref} {...props} />;
+  return tooltip === false || tooltip == null ? button : <SourceTooltip content={tooltip}>{button}</SourceTooltip>;
+});

@@ -822,7 +822,8 @@ try {
   await send("fixture:elicitation-tool", "elicitation");
   assert.equal(await card().getAttribute("data-approval-method"), "mcpServer/elicitation/request");
   assert.equal(await card().getAttribute("aria-label"), "Permission request: Allow DeepSeek to use write_note (probe)?");
-  assert.equal(await card().locator(".sac-code").innerText(), "text: fixture note");
+  // toolcards-01: the arguments sit in the read gate (generated ApprovalReadRows, Mj's q block), not the .sac-code pre.
+  assert.equal(await card().locator('[data-testid="approval-read-rows"] [data-approval-value]').innerText(), "text: fixture note");
   assert.deepEqual(await card().locator("[data-approval-action]").evaluateAll(nodes => nodes.map(node => node.dataset.approvalAction)),
     ["decline", "acceptAlways", "acceptForSession", "accept"]);
   assert.equal(await card().locator('[data-approval-action="acceptAlways"]').innerText(), "Always allow");

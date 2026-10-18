@@ -3,7 +3,7 @@
 // card stay with its own onKeyDown; from the session's empty composer or an unfocused page the first
 // visible card answers them. main.jsx provides the composer through CardComposerContext.
 import { createContext, useContext, useEffect, useRef } from "react";
-import { cardHotkey, cardHotkeyFocus, firstCardRoot } from "./card-hotkeys-model.mjs";
+import { cardHotkey, cardHotkeyFocus, firstCardRoot, sameApprovalPane } from "./card-hotkeys-model.mjs";
 
 /** { composerRef: a ref to the composer editor, draftRef: a ref whose current is true while it holds a draft } */
 export const CardComposerContext = createContext(null);
@@ -32,13 +32,14 @@ export function useCardHotkeys(root, enabled, onKey, visible) {
       const card = root.current;
       // A card in the split side that is not focused (source-split-view.jsx) leaves the keys to the focused side.
       if (!card?.isConnected || card.closest("[inert], [data-split-inactive]")) return;
+      if (!sameApprovalPane(document.activeElement, card)) return;
       const { onKey: handle, composer: context, visible: shown } = latest.current;
       const focus = cardHotkeyFocus(document.activeElement, { card, composer: context?.composerRef?.current ?? null,
         composerDraft: !!context?.draftRef?.current });
       const key = cardHotkey(event, focus);
       if (!key) return;
       // Several pending cards: only the first visible one answers (a hidden card never acts on a key).
-      if (firstCardRoot([...document.querySelectorAll(`[${ROOT_ATTRIBUTE}]`)].filter((node) => !node.closest("[data-split-inactive]")), shown ?? (() => true)) !== card) return;
+      if (firstCardRoot([...document.querySelectorAll(`[${ROOT_ATTRIBUTE}]`)].filter((node) => !node.closest("[data-split-inactive]") && sameApprovalPane(node, card)), shown ?? (() => true)) !== card) return;
       handle?.(key, event);
     };
     document.addEventListener("keydown", listener, true);

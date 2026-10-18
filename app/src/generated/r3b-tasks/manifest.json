@@ -1,0 +1,111 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r3b-tasks.mjs",
+  "modules": [
+    {
+      "target": "lazy-value.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "9799432573b9e8637e12a285e27bbb0d39519bdffc1dd8bb7a918dedb2cb4030",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Hi",
+          "sha256": "70954d35fa9ddf932eb0bd948f344f7b14454a6bb992bada54b460832f08d544"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Hi": "lazyValue"
+      }
+    },
+    {
+      "target": "invisible-character.mjs",
+      "source": "shared-182-eT1kXtya.js",
+      "sourceSha256": "3e43880437752c6cf6b5dacb804d3231103b5a751286085c1eb62febf30ff489",
+      "sha256": "96b6c026949a4993d448d542e0a292dc3a84614b4434e4927e124e41e6654a8f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tC",
+          "sha256": "481dfb55618d266cb4ca1f875c63cc8ba7f4f5b501d9b46fc64ba8a29c224226"
+        },
+        {
+          "name": "nC",
+          "sha256": "e698085e44fe5f847e6b977cdddb09d68bcd0918afae865b5cef49cb4e7ee397"
+        }
+      ],
+      "imports": [
+        {
+          "local": "I",
+          "from": "./lazy-value.mjs",
+          "name": "lazyValue",
+          "via": "shared-0-ByI5P0CP.js:Py (Hi)",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "nC": "isInvisibleCharacter"
+      }
+    },
+    {
+      "target": "command-prefix.mjs",
+      "source": "c8f38bf1f-D_EZalnr.js",
+      "sourceSha256": "1162507fd44eeb7e143310455c8f3ba70858e6a85ddb8f22e22e87af0a2cfff5",
+      "sha256": "0394f00c2394e1c46131449765a1a1de1e519f7a8101282dfad63230a07066ea",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "n",
+          "sha256": "85f772d94f304ef7d7d96f7b7fb16313e848ba1d82c3ee1a1640d3bb5a67e818"
+        },
+        {
+          "name": "r",
+          "sha256": "b2d9daabf6f4f57be5ec93ac5db3d843149c66b3dee02abae517a0d6a331fcb2"
+        },
+        {
+          "name": "i",
+          "sha256": "87ceb39750d6571d48ccf541e8f85491962b2f2db2e8b22808d8e43774f64f01"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "./invisible-character.mjs",
+          "name": "isInvisibleCharacter",
+          "via": "shared-182-eT1kXtya.js:Uf (nC)",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "./lazy-value.mjs",
+          "name": "lazyValue",
+          "via": "shared-0-ByI5P0CP.js:Py (Hi)",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "r": "stripLeadingInvisible",
+        "i": "startsWithCommand"
+      }
+    },
+    {
+      "target": "subtask-title.mjs",
+      "source": "cef1e6037-8DivyY4m.js",
+      "sourceSha256": "0c89671721e96ce49dd888cc11133e10b4333a052753409418dd3ca97f3fe159",
+      "sha256": "b4cac8af90a7cbba51a7af979cc7f34a99c4742a01492442123616b991e66459",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Sn",
+          "sha256": "bfd682162464cce2c89aaeea8634d881a8436cb8d156571de9321e3708a0cdd0"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Sn": "subtaskTitle"
+      }
+    }
+  ]
+}

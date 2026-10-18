@@ -24,11 +24,11 @@ import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSwitch } from './source-switch.jsx';
 import { SourceSettingsCheckbox } from './source-settings-checkbox.jsx';
 import { SettingsGroup, settingRow } from './source-settings-kit.jsx';
-import { effortName, filterModels, isTopTierEffort, MODEL_SEARCH_THRESHOLD } from './model-menu-model.mjs';
+import { effortName, filterModels, isHighestEffort, MODEL_SEARCH_THRESHOLD } from './model-menu-model.mjs';
 import { DEEPSEEK_KEYS_URL } from './account-settings-model.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
 import {
-  normalize, parseNumberInput, setModelParam, effectivePrices, setPrice, addPrice, removePrice, resetPrices, priceEdited,
+  normalize, parseNumberInput, setModelParam, modelParamsFor, effectivePrices, setPrice, addPrice, removePrice, resetPrices, priceEdited,
   PRICE_TIERS, PRICE_FIELDS, MAX_TOKENS_MIN, MAX_TOKENS_MAX, PROVIDER_PROTOCOLS, validateProvider,
   relayBaseURLError, OFFICIAL_BASE_URL, coreTakesModelParams, parseTokenCount, CONTEXT_WINDOW_MIN, CONTEXT_WINDOW_MAX,
 } from '../electron/prefs/model-settings.mjs';
@@ -36,6 +36,10 @@ import { CODEX_LOCAL_SERVERS, codexBaseURLError, codexLocalEndpoint, parseCodexM
 import { fastTierForModel, speedTiersForModel } from '../electron/preferences.mjs';
 import { coreCapabilities, coreName } from '../electron/core-registry.mjs';
 import { modelDisplayName, modelFamily } from '../electron/prefs/model-families.mjs';
+import { ModelNameField, ModelOptionsEntry, defaultModelName } from './source-settings-model-names.jsx';
+import { customModelName } from '../electron/prefs/model-names.mjs';
+import { modelAcceptsImages } from './composer-attachments-model.mjs';
+import { bootModelsCoreId } from './model-names-model.mjs';
 import './models-settings.css';
 
 const TIER_LABELS = { offPeak: t('Off-peak'), peak: t('Peak') };
@@ -43,6 +47,8 @@ const FIELD_LABELS = { cacheHit: t('Cache hit'), cacheMiss: t('Cache miss'), out
 const DEFAULT_PRICING_URL = 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing';
 // Above Settings (layer 500), like the other Settings page dialogs.
 const SETTINGS_LAYER = Object.freeze({ base: 520, z: 520 });
+// Settings › Models: up to this many listed models open their option rows at first.
+const MODEL_ENTRIES_OPEN = 4;
 const PROTOCOL_LABELS = { 'openai-completions': 'OpenAI Chat Completions', 'openai-responses': 'OpenAI Responses', 'anthropic-messages': 'Anthropic Messages' };
 
 // Which listed models accept images: one toggle chip per id. The cores attach images only for a model marked here.
@@ -528,6 +534,8 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   const modelSearch = allModels.filter(model => model.hidden !== true).length > MODEL_SEARCH_THRESHOLD;
   const models = modelSearch && modelQuery.trim() ? filterModels(allModels, modelQuery) : allModels;
   const connected = boot?.connected !== false;
+  // Per-model options are kept under the running core's id (prefs/model-names.mjs, prefs/model-settings.mjs).
+  const coreId = bootModelsCoreId(boot, config);
 
   useEffect(() => {
     if (!deepseek || typeof desktopCall !== 'function') { setOfficial(value => ({ ...value, loading: false, unsupported: true })); return; }
@@ -577,14 +585,16 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
 
   const notice = !deepseek && !codexProvider && <p className="ss-connection-notice msx-notice" role="status">{customProviders ? t('{core} manages its own sign-in and prices. Endpoints you add under Custom providers join its models.', { core: coreLabel }) : t('{core} manages its own connection and prices.', { core: coreLabel })}</p>;
 
-  // ---- Model defaults
+  // ---- Per-model options (source-settings-model-names.jsx): one collapsible entry per listed model, its everyday options
+  // visible on the page (never under Advanced). Values are kept per core: modelParamsFor / setModelParam with coreId.
+  const paramsOf = model => modelParamsFor(current, coreId, model.model);
   const paramField = (model, field, props) => {
     const rowId = `model-${model.model}-${field}`, tokens = field === 'contextWindow';
-    return <NumberField {...props} tokens={tokens} invalid={!!rowErrors[rowId]} value={current.params[model.model]?.[field]}
+    return <NumberField {...props} tokens={tokens} invalid={!!rowErrors[rowId]} value={paramsOf(model)[field]}
       onCommit={(text, revert) => {
         const parsed = tokens ? parseTokenCount(text) : parseNumberInput(text), value = parsed === null ? undefined : parsed;
         if (Number.isNaN(value)) { setRowErrors(errors => ({ ...errors, [rowId]: t('Enter a number.') })); revert(); return; }
-        void commit(rowId, settings => setModelParam(settings, model.model, field, value)).then(ok => { if (!ok) revert(); });
+        void commit(rowId, settings => setModelParam(settings, model.model, field, value, coreId)).then(ok => { if (!ok) revert(); });
       }}/>;
   };
   const contextHelp = t('How many tokens the model can read, such as 128K or 1M ({min}–{max}). The core compacts the conversation before it fills up. Empty uses the model’s default.', { min: CONTEXT_WINDOW_MIN.toLocaleString('en-US'), max: CONTEXT_WINDOW_MAX.toLocaleString('en-US') });
@@ -595,47 +605,60 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     const builtIn = model.defaultReasoningEffort ? effortName(model.defaultReasoningEffort) : '', effortId = `model-${model.model}-effort`;
     // The settings rows' standard 220px select: 'Model default (Medium)' fits without truncating.
     return <SourceSelect label={t('{name} default reasoning effort', { name })} align="end"
-      value={current.params[model.model]?.effort ?? ''}
+      value={paramsOf(model).effort ?? ''}
       items={[{ value: '', label: builtIn ? t('Model default ({effort})', { effort: builtIn }) : t('Model default') }, ...efforts.map(value => ({ value, label: effortName(value) }))]}
-      onChange={value => void commit(effortId, settings => setModelParam(settings, model.model, 'effort', value || undefined))}/>;
+      onChange={value => void commit(effortId, settings => setModelParam(settings, model.model, 'effort', value || undefined, coreId))}/>;
   };
-  const modelGroups = models.map(model => {
-    const name = model.displayName || model.model;
-    const efforts = effortsOf(model);
-    const effortId = `model-${model.model}-effort`;
-    const rows = [
-      settingRow(`model-${model.model}-maxTokens`, t('Max output tokens'), t('{min}–{max}. Empty uses the model’s default.', { min: MAX_TOKENS_MIN.toLocaleString('en-US'), max: MAX_TOKENS_MAX.toLocaleString('en-US') }),
-        paramField(model, 'maxTokens', { label: t('{name} max output tokens', { name }), min: MAX_TOKENS_MIN, max: MAX_TOKENS_MAX, step: 1 }), below(`model-${model.model}-maxTokens`)),
-      settingRow(`model-${model.model}-temperature`, t('Temperature'), t('0–2. Lower is more focused, higher more varied. Empty uses the model’s default.'),
-        paramField(model, 'temperature', { label: t('{name} temperature', { name }), min: 0, max: 2, step: 0.1 }), below(`model-${model.model}-temperature`)),
-      settingRow(`model-${model.model}-contextWindow`, t('Context window'), contextHelp,
-        paramField(model, 'contextWindow', { label: t('{name} context window', { name }) }), below(`model-${model.model}-contextWindow`)),
-      ...(efforts.length ? [settingRow(effortId, t('Default reasoning effort'), t('Applied when you switch to this model.'),
-        effortSelect(model, name, efforts), below(effortId))] : []),
+  // Max output tokens, Temperature and Context window reach the core only where it reads them (coreTakesModelParams;
+  // the DeepSeek bridge always): elsewhere the rows are left out and the list says so.
+  const takesParams = deepseek || modelParams;
+  const [nameErrors, setNameErrors] = useState({});
+  const optionRows = (model, name) => {
+    const efforts = effortsOf(model), imagesId = `model-${model.model}-images`, nameId = `model-${model.model}-name`;
+    const listedImages = modelAcceptsImages(model), imagesOff = paramsOf(model).images === false;
+    return [
+      settingRow(nameId, t('Display name'), t('Shown in the model menu, the model button and sessions. Empty uses the default name.'),
+        <ModelNameField model={model} names={config.modelNames} coreId={coreId} onSave={onSave} onError={message => setNameErrors(value => ({ ...value, [nameId]: message }))}/>,
+        nameErrors[nameId] ? { below: <span className="ss-row-error" title={nameErrors[nameId]}>{nameErrors[nameId]}</span> } : {}),
+      settingRow(imagesId, t('Image input'), listedImages
+        ? t('Attach and paste images for this model. Off keeps images out of the message box.')
+        : t('{core} lists this model as text only, so images can’t be sent to it.', { core: coreLabel }),
+        <SourceSwitch label={t('{name} image input', { name })} checked={listedImages && !imagesOff} disabled={!listedImages}
+          onChange={value => void commit(imagesId, settings => setModelParam(settings, model.model, 'images', value ? undefined : false, coreId))}/>, below(imagesId)),
+      ...(efforts.length ? [settingRow(`model-${model.model}-effort`, t('Default reasoning effort'), t('Applied when you switch to this model.'),
+        effortSelect(model, name, efforts), below(`model-${model.model}-effort`))] : []),
+      ...(takesParams ? [
+        settingRow(`model-${model.model}-contextWindow`, t('Context window'), contextHelp,
+          paramField(model, 'contextWindow', { label: t('{name} context window', { name }) }), below(`model-${model.model}-contextWindow`)),
+        settingRow(`model-${model.model}-maxTokens`, t('Max output tokens'), t('{min}–{max}. Empty uses the model’s default.', { min: MAX_TOKENS_MIN.toLocaleString('en-US'), max: MAX_TOKENS_MAX.toLocaleString('en-US') }),
+          paramField(model, 'maxTokens', { label: t('{name} max output tokens', { name }), min: MAX_TOKENS_MIN, max: MAX_TOKENS_MAX, step: 1 }), below(`model-${model.model}-maxTokens`)),
+        settingRow(`model-${model.model}-temperature`, t('Temperature'), t('0–2. Lower is more focused, higher more varied. Empty uses the model’s default.'),
+          paramField(model, 'temperature', { label: t('{name} temperature', { name }), min: 0, max: 2, step: 0.1 }), below(`model-${model.model}-temperature`)),
+      ] : []),
     ];
-    return <SettingsGroup key={model.model} title={name} rows={rows}/>;
-  });
-  // Any other core: one row per listed model (Default badge, description, efforts, Fast) with its default effort, and on
-  // a core that reads modelParams its Max output tokens and Temperature (main sends them, decorate()).
-  const paramRows = (model, name) => modelParams ? [
-    settingRow(`model-${model.model}-maxTokens`, t('Max output tokens'), t('{min}–{max}. Empty uses the model’s default.', { min: MAX_TOKENS_MIN.toLocaleString('en-US'), max: MAX_TOKENS_MAX.toLocaleString('en-US') }),
-      paramField(model, 'maxTokens', { label: t('{name} max output tokens', { name }), min: MAX_TOKENS_MIN, max: MAX_TOKENS_MAX, step: 1 }), { indent: true, ...below(`model-${model.model}-maxTokens`) }),
-    settingRow(`model-${model.model}-temperature`, t('Temperature'), t('0–2. Lower is more focused, higher more varied. Empty uses the model’s default.'),
-      paramField(model, 'temperature', { label: t('{name} temperature', { name }), min: 0, max: 2, step: 0.1 }), { indent: true, ...below(`model-${model.model}-temperature`) }),
-    settingRow(`model-${model.model}-contextWindow`, t('Context window'), contextHelp,
-      paramField(model, 'contextWindow', { label: t('{name} context window', { name }) }), { indent: true, ...below(`model-${model.model}-contextWindow`) }),
-  ] : [];
-  const modelRows = models.filter(model => model.hidden !== true).flatMap(model => {
-    const name = model.displayName || model.model, efforts = effortsOf(model), speeds = speedTiersForModel(model), fast = !!fastTierForModel(model) || speeds.length > 0;
+  };
+  // A short list opens every entry; a long catalog (OpenCode through OpenRouter) opens only the models already changed.
+  const listedModels = models.filter(model => model.hidden !== true), openAll = listedModels.length <= MODEL_ENTRIES_OPEN;
+  const modelEntries = listedModels.map(model => {
+    const defaultName = defaultModelName(model), name = customModelName(config.modelNames, coreId, model.model) || defaultName;
+    const efforts = effortsOf(model), speeds = speedTiersForModel(model), fast = !!fastTierForModel(model) || speeds.length > 0;
     const meta = (efforts.length > 0 || fast) && <span className="msx-model-meta">
       {efforts.length > 0 && <span><span className="msx-model-meta-label">{t('Reasoning efforts')}</span>{' '}
-        {efforts.map((value, index) => <React.Fragment key={value}>{index ? ' · ' : ''}<span data-top-tier={isTopTierEffort(value) || undefined}>{effortName(value)}</span></React.Fragment>)}</span>}
+        {efforts.map((value, index) => <React.Fragment key={value}>{index ? ' · ' : ''}<span data-top-tier={isHighestEffort(value, efforts) || undefined}>{effortName(value)}</span></React.Fragment>)}</span>}
       {fast && <span className="msx-badge">{speeds.length > 1 ? t('{speeds} available', { speeds: speeds.map(tier => tier.name).join(' · ') }) : t('Fast available')}</span>}
     </span>;
-    return [settingRow(`model-${model.model}`, <span className="msx-model-name">{name}{model.isDefault && <span className="msx-badge">{t('Default')}</span>}</span>,
-      (model.description || meta) && <span className="msx-model-desc">{model.description && <span>{model.description}</span>}{meta}</span>,
-      efforts.length ? effortSelect(model, name, efforts) : null, below(`model-${model.model}-effort`)), ...paramRows(model, name)];
+    const customized = openAll || Object.keys(paramsOf(model)).length > 0 || name !== defaultName;
+    return <ModelOptionsEntry key={model.model} model={model} name={name} defaultName={defaultName} customized={customized} rows={optionRows(model, name)}
+      badges={<>{model.isDefault && <span className="msx-badge">{t('Default')}</span>}{customModelName(config.modelNames, coreId, model.model) && <span className="msx-badge">{t('Renamed')}</span>}</>}
+      description={(model.description || meta) && <span className="msx-model-desc">{model.description && <span>{model.description}</span>}{meta}</span>}/>;
   });
+  const modelsEmpty = <p className="msx-empty">{modelQuery.trim() && modelSearch ? t('No matching models') : connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p>;
+  const modelsSearch = modelSearch && <input type="search" data-cds="TextInput" className="cds-input cds-reset msx-model-search" aria-label={t('Search models')} placeholder={t('Search models')}
+    value={modelQuery} spellCheck={false} autoComplete="off" onChange={event => setModelQuery(event.target.value)}/>;
+  const modelsGroup = <SettingsGroup title={deepseek ? t('Models') : t('{core} models', { core: coreLabel })}>
+    {modelEntries.length ? modelEntries : modelsEmpty}
+    {modelEntries.length > 0 && !takesParams && <p className="msx-note msx-models-note">{t('{core} keeps its own context window and output limits, so they aren’t set here.', { core: coreLabel })}</p>}
+  </SettingsGroup>;
 
   // ---- Pricing
   const officialPrices = official.prices || {};
@@ -733,29 +756,27 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   if (!deepseek) return <div className="msx-page" data-models-layout={codexProvider ? 'codex' : 'core'}>
     {notice}
     {codexProvider && <CodexConnectionGroup core={coreLabel} desktopCall={desktopCall} onReconnect={onReconnect}/>}
-    {modelSearch && <input type="search" data-cds="TextInput" className="cds-input cds-reset msx-model-search" aria-label={t('Search models')} placeholder={t('Search models')}
-      value={modelQuery} spellCheck={false} autoComplete="off" onChange={event => setModelQuery(event.target.value)}/>}
-    <SettingsGroup title={t('{core} models', { core: coreLabel })} rows={modelRows}>
-      {!modelRows.length && <p className="msx-empty">{modelQuery.trim() && modelSearch ? t('No matching models') : connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p>}
-    </SettingsGroup>
-    {modelRows.length > 0 && <p className="msx-note msx-models-note">{t('Pick the model new sessions use in Settings › Code › Model and permissions, or in the composer. A default effort set here applies whenever you switch to that model.')}</p>}
+    {modelsSearch}
+    {modelsGroup}
+    {modelEntries.length > 0 && <p className="msx-note msx-models-note">{t('Pick the model new sessions use in Settings › Code › Model and permissions, or in the composer. A default effort set here applies whenever you switch to that model.')}</p>}
     {codexProvider && <CodexResponseGroup core={coreLabel} desktopCall={desktopCall} connected={connected}/>}
     {codexProvider && <CodexSubagentsGroup core={coreLabel} desktopCall={desktopCall} connected={connected} models={allModels}/>}
     {!codexProvider && providerGroup}
     {!codexProvider && providerDialogNode}
   </div>;
 
-  // Advanced starts open when something in it was already changed.
-  const customized = Object.keys(saved.params).length > 0 || !!saved.prices;
+  // Advanced (pricing and custom providers) starts open when something in it was already changed.
+  const customized = !!saved.prices;
   return <div className="msx-page">
     {onQuickSetup && <SettingsGroup title={t('Quick setup')} rows={[settingRow('quick-setup', t('Connect another model'), t('Pick a vendor’s official API (DeepSeek, GLM, Kimi, Qwen, MiniMax, MiMo and more), test it and make it the default model.'),
       <SourceSettingsButton size="sm" onClick={onQuickSetup}>{t('Quick setup…')}</SourceSettingsButton>)]}/>}
     <ConnectionGroup deepseek={deepseek} desktopCall={desktopCall} onReconnect={onReconnect}/>
-    <SourceDisclosure className="msx-advanced" triggerClassName="msx-advanced-trigger" defaultOpen={customized}
-      label={<span className="msx-advanced-label"><span className="text-heading-semibold">{t('Advanced')}</span><span className="msx-advanced-hint">{t('Model defaults, pricing and custom providers')}</span></span>}>
-    <div className="msx-advanced-body">
+    {modelsSearch}
+    {modelsGroup}
     <p className="msx-note">{t('Defaults for every DeepSeek session; changes apply from the next request. top_p is not supported by the DeepSeek Harness adapter.')}</p>
-    {modelGroups.length ? modelGroups : <SettingsGroup title={t('Model defaults')}><p className="msx-empty">{connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p></SettingsGroup>}
+    <SourceDisclosure className="msx-advanced" triggerClassName="msx-advanced-trigger" defaultOpen={customized}
+      label={<span className="msx-advanced-label"><span className="text-heading-semibold">{t('Advanced')}</span><span className="msx-advanced-hint">{t('Pricing and custom providers')}</span></span>}>
+    <div className="msx-advanced-body">
     {pricingGroup}
     {providerGroup}
     </div>

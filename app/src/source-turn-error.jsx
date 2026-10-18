@@ -67,8 +67,15 @@ function ErrorIcon({ kind }) {
 // menu (an overloaded model). onSignIn / signInLabel: the core's own sign-in for an auth failure (Settings › Account);
 // signedInAgain: a sign-in succeeded after this failure, so the card settles into the official quiet 'Signed in again'
 // marker (cd5a31703 Hq/Uq). Exactly one action is primary, as the official card marks one (c3e34355f V).
+// onDismiss (card only): the session error notice's Dismiss (2.42304.0 cccc2cf0a nT → c3e34355f → cb1a6e506 A
+// `onDismiss: P`), a ghost sm X ending the header row; its mousedown is prevented (c81ea1931) so focus stays put.
+// onGoBack / onPrefill (card only, Cowork, R4i-cowork CW3): 2.42304.0 cb55fb7c6 N's onRewind (mk's onSessionRewind,
+// so): `Ce=!!p&&!F.isConfirmPrompt` shows "You can edit your message and send it again." (LqvlIfVjNO, `p.text-secondary`)
+// and a secondary sm "Go back" (orvpWhO3rI, icon ArrowReturn) before Try again; `Se`: `let e=await p();e&&(U(e,…),W?.())`
+// — onGoBack resolves to the composer text, onPrefill puts it there and focuses it. No host category is a confirm
+// prompt (imported_needs_resume_confirm, repository_review_needed, ssh_reattach_blocked, remote_helper_update_required).
 export function SourceTurnError({ error, turnId, variant = "card", onRetry, onCompact, onViewUsage, onNewSession, onContinue, onOpenSettings, onOpenLink, limitReset = null, autoContinue = null,
-  onRewind, onSwitchModel, onSignIn, signInLabel = "", signedInAgain = false, onEditConfig, model = "" }) {
+  onRewind, onSwitchModel, onSignIn, signInLabel = "", signedInAgain = false, onEditConfig, model = "", onDismiss, onGoBack, onPrefill }) {
   const base = describeTurnError(error, { canRewind: !!onRewind, signIn: !!onSignIn, model });
   const view = base.category === "rate_limit" ? usageLimitView(base, error, limitReset) : base;
   // A bridge's fixed English sentence (bridge-text-model.mjs) reads in the UI language.
@@ -98,6 +105,10 @@ export function SourceTurnError({ error, turnId, variant = "card", onRetry, onCo
   // c3e34355f on() Rewind: back to before this turn, beside Compact when the context is full.
   const rewind = view.rewindHelps && onRewind && !latched
     ? <SourceSettingsButton variant="secondary" size="sm" onClick={latch(onRewind)}>{t("Rewind")}</SourceSettingsButton> : null;
+  // cb55fb7c6 N Se / Q: Go back (no latch in the original).
+  const goBack = onGoBack
+    ? <SourceSettingsButton variant="secondary" size="sm" icon="ArrowReturn" iconSize="auto" data-cowork-action="go-back"
+        onClick={async () => { const text = await onGoBack(); if (text) onPrefill?.(text); }}>{t("Go back")}</SourceSettingsButton> : null;
   const retry = view.retryHelps && onRetry && !latched
     ? <SourceSettingsButton variant={kind("retry")} size="sm" onClick={latch(onRetry)}>{t("Try again")}</SourceSettingsButton> : null;
   // An overloaded model: pick another one (the composer's model menu), then Try again (switchAndRetry).
@@ -131,15 +142,20 @@ export function SourceTurnError({ error, turnId, variant = "card", onRetry, onCo
   // armed, the hint says when (autoContinue {armed, at, onChange}, scheduled by main.jsx).
   const auto = view.category === "rate_limit" && autoContinue && limitReset?.resetsAtMs && !latched
     ? <label className="ste-auto"><input type="checkbox" role="switch" checked={autoContinue.armed} onChange={(event) => autoContinue.onChange(event.target.checked)} />{t("Auto-continue when limits reset")}</label> : null;
-  const actions = compact || rewind || retry || switchModel || signInButton || usage || settings || platform || newSession || review || acknowledge || auto || links || editConfig || newBudgetSession
-    ? <>{auto}{rewind}{compact}{usage}{settings}{platform}{switchModel}{retry}{signInButton}{review}{newSession}{acknowledge}{links}{editConfig}{newBudgetSession}</> : null;
+  const actions = goBack || compact || rewind || retry || switchModel || signInButton || usage || settings || platform || newSession || review || acknowledge || auto || links || editConfig || newBudgetSession
+    ? <>{auto}{rewind}{compact}{usage}{settings}{platform}{switchModel}{goBack}{retry}{signInButton}{review}{newSession}{acknowledge}{links}{editConfig}{newBudgetSession}</> : null;
   return <div className="source-message ste-card" data-turn-error="card" data-turn-id={turnId} data-error-category={view.category}>
     <div className="ste-body">
-      <div className="ste-header"><ErrorIcon kind={view.icon}/><span className="ste-headline">{view.headline}</span></div>
+      <div className="ste-header"><ErrorIcon kind={view.icon}/><span className="ste-headline">{view.headline}</span>
+        {onDismiss && <span className="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0">
+          <SourceSettingsButton variant="ghost" iconOnly size="sm" icon="X" iconSize="auto" aria-label={t("Dismiss")}
+            onMouseDown={(event) => event.preventDefault()} onClick={onDismiss} className="text-muted hover:text-primary"/>
+        </span>}</div>
       {view.hint && <span className="ste-hint">{autoContinue?.armed && limitReset?.resetsAtMs ? t("Auto-resuming at {time}", { time: new Date(limitReset.resetsAtMs).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) }) : view.hint}</span>}
       {misaligned && reviewing && view.findings && <div className="ste-findings" role="region" aria-label={t("Findings")}>
         <span className="ste-details-text">{view.findings}</span>
       </div>}
+      {onGoBack && <p className="ste-hint ste-go-back-hint">{t("You can edit your message and send it again.")}</p>}
     </div>
     <TurnErrorDetails details={details} status={status} actions={actions}/>
   </div>;

@@ -1,0 +1,69 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-btw-archive.mjs",
+  "output": "btw-archive.mjs",
+  "sources": [
+    {
+      "file": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
+      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+      "bindings": [
+        "twa",
+        "nwa"
+      ]
+    },
+    {
+      "file": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-DzrvTkKz.js",
+      "sourceSha256": "bcdca97c36e31ea1219ac147be20007c8dfc267323bb641cf939f021b5b52036",
+      "bindings": [
+        "t"
+      ],
+      "namespaces": {
+        "e": {
+          "file": "index.chunk-muI2IV6k.js",
+          "members": [
+            "Oi"
+          ]
+        }
+      }
+    },
+    {
+      "file": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-CFJssAFf.js",
+      "sourceSha256": "abff2bf8cd6fa8d3d18964636ebaa6034e93997a9eea16a8802eaec0f759c9b7",
+      "bindings": [
+        "SD",
+        "wD"
+      ],
+      "namespaces": {
+        "pe": {
+          "file": "index.chunk-DzrvTkKz.js",
+          "members": [
+            "o"
+          ]
+        }
+      }
+    }
+  ],
+  "bindings": {
+    "twa": {
+      "source": "index.chunk-muI2IV6k.js",
+      "exportedAs": "prStateKind"
+    },
+    "nwa": {
+      "source": "index.chunk-muI2IV6k.js",
+      "exportedAs": "prStateSettled"
+    },
+    "t": {
+      "source": "index.chunk-DzrvTkKz.js"
+    },
+    "SD": {
+      "source": "index.chunk-CFJssAFf.js",
+      "exportedAs": "hasOpenOwnPullRequest"
+    },
+    "wD": {
+      "source": "index.chunk-CFJssAFf.js",
+      "exportedAs": "sharesParentCheckout"
+    }
+  },
+  "sha256": "11d149b02c137705f2c47ed4c46ab1e7357ebf062f4017cf1deb9738c60ecf2c"
+}

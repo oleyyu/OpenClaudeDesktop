@@ -1,10 +1,10 @@
-// Original command matching, including physical-key versus character rules.
-const Wo = () =>
+// Original command matching (2.42304.0), including physical-key versus character rules.
+const $o = () =>
     typeof navigator !== "undefined" && /Mac/.test(navigator.platform),
-  yc = () =>
+  io = () =>
     typeof navigator !== "undefined" && /Linux/.test(navigator.platform);
-const d6 = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-const f6 = [...d6, "0"].flatMap((e) => {
+const V7 = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+const H7 = [...V7, "0"].flatMap((e) => {
   let t = e === "0" ? "newPreset" : `selectPreset${e}`,
     n = `Digit${e}`;
   return [
@@ -25,14 +25,14 @@ const f6 = [...d6, "0"].flatMap((e) => {
     },
   ];
 });
-const p6 = d6.map((e) => ({
+const U7 = V7.map((e) => ({
   command: `selectBrowserTab${e}`,
   key: `cmd+${e}`,
   code: `Digit${e}`,
   when: "isClaudeApp",
   gate: "browserTabStrip",
 }));
-const m6 = [
+const W7 = [
   {
     command: "togglePreview",
     key: "cmd+shift+b",
@@ -135,8 +135,8 @@ const m6 = [
     when: "!isLinux",
   },
   { command: "prevDiffChange", key: "shift+f7", code: "F7" },
-  ...f6,
-  ...p6,
+  ...H7,
+  ...U7,
   {
     command: "toggleSideChat",
     key: "cmd+;",
@@ -190,7 +190,7 @@ const m6 = [
     mac: !1,
   },
 ];
-function h6(e) {
+function G7(e) {
   let t = e.split("+");
   return {
     cmd: t.includes("cmd"),
@@ -199,7 +199,7 @@ function h6(e) {
     alt: t.includes("alt"),
   };
 }
-function g6(e, t, n) {
+function K7(e, t, n) {
   let r = n && t.cmd,
     i = t.ctrl || (!n && t.cmd);
   return (
@@ -209,7 +209,7 @@ function g6(e, t, n) {
     e.altKey === t.alt
   );
 }
-function _6(e, t, n) {
+function q7(e, t, n) {
   return e === "isClaudeApp"
     ? t
     : e === "!isClaudeApp"
@@ -218,7 +218,7 @@ function _6(e, t, n) {
         ? t || !n
         : e !== "!isLinux" || !n;
 }
-function v6(e, t) {
+function J7(e, t) {
   return e === "externalPreviewAvailable"
     ? !!t.externalPreviewAvailable
     : e === "promptJump"
@@ -227,28 +227,28 @@ function v6(e, t) {
         ? !!t.sessionEnvironments
         : e !== "browserTabStrip" || !!t.browserTabStrip;
 }
-function y6(e, t) {
+function Y7(e, t) {
   if (typeof e.key != "string") return null;
-  let n = t.mac ?? Wo(),
-    r = t.linux ?? yc();
-  for (let i of m6)
+  let n = t.mac ?? $o(),
+    r = t.linux ?? io();
+  for (let i of W7)
     if (!(t.commands !== void 0 && !t.commands.includes(i.command))) {
       if (i.matchBy === "key") {
         if (e.key.toLowerCase() !== i.key.split("+").at(-1)) continue;
       } else if (i.matchBy === "char") {
-        if (!x6(e, i.key.split("+").at(-1), i.code)) continue;
-      } else if (!b6(e, i.code)) continue;
+        if (!Z7(e, i.key.split("+").at(-1), i.code)) continue;
+      } else if (!X7(e, i.code)) continue;
       if (
-        _6(i.when, t.isClaudeApp, r) &&
+        q7(i.when, t.isClaudeApp, r) &&
         (i.mac === void 0 || i.mac === n) &&
-        v6(i.gate, t) &&
-        g6(e, h6(i.key), n)
+        J7(i.gate, t) &&
+        K7(e, G7(i.key), n)
       )
         return i.command;
     }
   return null;
 }
-function b6(e, t) {
+function X7(e, t) {
   return [...e.key].length > 1 &&
     e.key !== "Dead" &&
     e.key !== "Unidentified" &&
@@ -256,22 +256,22 @@ function b6(e, t) {
     ? e.key === t
     : e.code === t;
 }
-function x6(e, t, n) {
-  return /^[ -~]$/.test(e.key) ? e.key.toLowerCase() === t : b6(e, n);
+function Z7(e, t, n) {
+  return /^[ -~]$/.test(e.key) ? e.key.toLowerCase() === t : X7(e, n);
 }
-function C6(e, t, n) {
-  return w6(e, t, n)[0];
+function $7(e, t, n) {
+  return e9(e, t, n)[0];
 }
-function w6(e, t, n) {
-  let r = n?.mac ?? Wo(),
-    i = n?.linux ?? yc(),
+function e9(e, t, n) {
+  let r = n?.mac ?? $o(),
+    i = n?.linux ?? io(),
     a = [];
-  for (let o of m6)
+  for (let o of W7)
     o.command === e &&
-      _6(o.when, t, i) &&
+      q7(o.when, t, i) &&
       (o.mac === void 0 || o.mac === r) &&
-      v6(o.gate, n ?? {}) &&
+      J7(o.gate, n ?? {}) &&
       a.push(o.key);
   return a;
 }
-export { y6 as matchSketchCommand, C6 as sketchShortcut };
+export { Y7 as matchSketchCommand, $7 as sketchShortcut };

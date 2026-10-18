@@ -517,7 +517,8 @@ export function qwenExtensionEnabledAt(overrides, dir) {
 // its deferred-tools reminder names no session server's tools, so without them it would never learn the Preview, the
 // Terminal pane or the Workflow tool exist (and run dev servers in its own shell). The other code_desktop tools stay
 // one tool_search away (their names share these tools' words).
-export const QWEN_VISIBLE_APP_TOOLS = Object.freeze(['preview_start', 'preview_list', 'screenshot', 'read_page', 'list_terminal_tabs', 'read_terminal', 'run_in_terminal', 'Workflow'])
+// update_plan / wrap_up: the official ccd_turn tools are alwaysLoad (never behind tool search), so they are declared up front too.
+export const QWEN_VISIBLE_APP_TOOLS = Object.freeze(['preview_start', 'preview_list', 'screenshot', 'read_page', 'list_terminal_tabs', 'read_terminal', 'run_in_terminal', 'Workflow', 'update_plan', 'wrap_up'])
 
 /**
  * OpenClaude Desktop's tools server instructions as Qwen's model gets them (adapter.appToolsInstructions: Qwen never shows

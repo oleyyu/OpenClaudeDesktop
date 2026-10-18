@@ -7,18 +7,26 @@ const abortError = () => Object.assign(new Error('Cowork SDK request cancelled.'
 // Contract: index.chunk-CC1Xit3_.js ProcessTransport / Query / R9.
 // Only explicit options cross this boundary; no shell, host environment or
 // credential discovery. The VM process transport owns the command and mounts.
-export function sdkArguments({ model, effort, resume, sessionId, permissionMode = 'default' } = {}) {
+// R4i-cowork CW2: a rewind fork (2.42304.0 CB6cNSrW `X.resume=K.cliSessionId,X.resumeSessionAt=lt,X.forkSession=!0`)
+// adds the SDK ProcessTransport's `--fork-session` and `--resume-session-at=${…}` in its order; CLI 2.1.280 allows
+// --session-id with --resume only beside --fork-session ("--session-id can only be used with --continue or --resume if
+// --fork-session is also specified") and needs --resume for --resume-session-at.
+export function sdkArguments({ model, effort, resume, sessionId, resumeSessionAt, forkSession = false, permissionMode = 'default' } = {}) {
   if (!['default', 'acceptEdits', 'plan'].includes(permissionMode)) throw new Error('Unsupported Cowork permission mode.');
-  if (resume && sessionId) throw new Error('Specify either a resumed or a new Cowork session.');
+  if (typeof forkSession !== 'boolean') throw new Error('Invalid Cowork SDK forkSession.');
+  if (resume && sessionId && !forkSession) throw new Error('Specify either a resumed or a new Cowork session.');
+  if ((forkSession || resumeSessionAt !== undefined) && !resume) throw new Error('A Cowork fork needs the session it resumes.');
   const args = ['--output-format', 'stream-json', '--verbose', '--input-format', 'stream-json',
     '--permission-prompt-tool', 'stdio', '--include-partial-messages', '--permission-mode', permissionMode,
     '--setting-sources='];
-  for (const [key, value] of Object.entries({ model, effort, resume, sessionId })) {
+  for (const [key, value] of Object.entries({ model, effort, resume, sessionId, resumeSessionAt })) {
     if (value !== undefined && (typeof value !== 'string' || !value || value.includes('\0'))) throw new Error(`Invalid Cowork SDK ${key}.`);
   }
   if (model) args.push('--model', model);
   if (effort) args.push('--effort', effort);
   if (resume) args.push(`--resume=${resume}`);
+  if (forkSession) args.push('--fork-session');
+  if (resumeSessionAt) args.push(`--resume-session-at=${resumeSessionAt}`);
   if (sessionId) args.push(`--session-id=${sessionId}`);
   return args;
 }

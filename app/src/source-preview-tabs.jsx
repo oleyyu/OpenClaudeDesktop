@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './icons';
 import { SourceTooltip } from './source-tooltip.jsx';
 import { SourceMenu, menuTriggerProps } from './source-menu.jsx';
@@ -7,6 +7,7 @@ import { SourceSpinner } from './source-pane-states.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { useTabDragReorder } from './use-tab-drag-reorder.mjs';
 import { tabOverflowLayout, stableIds } from './file-tab-overflow-model.mjs';
+import { PREVIEW_TAB_CAP_TEXT, previewTabCapReached } from './preview-model.mjs';
 import { t } from '../electron/i18n/index.mjs';
 
 // Current cf580efe9 ki / c224804cc U / cfe7c4b3b shared view-tab strip.
@@ -38,7 +39,7 @@ function PreviewTab({ tab, selected, onSelect, onClose, onCloseOthers, onExterna
     </SourceTooltip>
     {closable && !compact && <button type="button" tabIndex={-1} aria-label={t('Close tab')} className="source-file-tab-close"
       onMouseDown={event => event.preventDefault()} onClick={() => onClose(tab.id)}><Icon name="X" size={12} /></button>}
-    {menu && <SourceMenu.Popup anchor={root.current} point={menu} layer="contextmenu" label={t('Tab actions')}
+    {menu && <SourceMenu.Popup anchor={root.current} point={menu} layer="contextmenu" label={t('Tab actions')} contextMenuGuard="always"
       onClose={() => setMenu(null)} finalFocus={() => root.current?.querySelector('[role="tab"]')}>
       <SourceMenu.Item disabled={!/^https?:/i.test(tab.url || '')} onClick={() => onExternal(tab.id)}>{t('Open in default browser')}</SourceMenu.Item>
       <SourceMenu.Separator />
@@ -75,6 +76,24 @@ export function SourcePreviewTabs({ tabs = [], activeId, onSelect, onCreate, onC
     node.addEventListener('scroll', measure, { passive: true });
     return () => { observer.disconnect(); node.removeEventListener('scroll', measure); };
   }, [tabs, activeId]);
+  // preview-13 (2.42304.0 cfe7c4b3b-CP-IQXj8 Y: createDisabled x, the slot vt, _t): at the cap, focus that was on + (or
+  // fell to the body) goes to the open tab; once a tab closes, focus left on the reason's wrapper returns to +.
+  const capped = previewTabCapReached(tabs.length), capId = useId();
+  const createSlot = useRef(null), wasCapped = useRef(capped);
+  useLayoutEffect(() => {
+    const was = wasCapped.current;
+    wasCapped.current = capped;
+    if (was && !capped) {
+      const slot = createSlot.current;
+      if (slot?.contains(slot.ownerDocument.activeElement)) slot.querySelector('button')?.focus({ preventScroll: true });
+      return;
+    }
+    const node = list.current;
+    if (!node || was || !capped) return;
+    const doc = node.ownerDocument, active = doc.activeElement;
+    if (active !== doc.body && !createSlot.current?.contains(active)) return;
+    node.querySelector(`[data-vtb-id="${CSS.escape(activeId)}"] [role="tab"]`)?.focus({ preventScroll: true });
+  }, [capped, activeId]);
   const key = (event, id) => {
     if (event.nativeEvent.isComposing) return;
     const index = shown.findIndex(tab => tab.id === id);
@@ -94,7 +113,17 @@ export function SourcePreviewTabs({ tabs = [], activeId, onSelect, onCreate, onC
     </div>
     {strip.overflowing && <span className="source-file-tabs-overflow" data-vtb-overflow=""><SourceTooltip content={t('More tabs')}><SourceSettingsButton ref={overflow} variant="ghost" size="sm" icon="CaretDown" iconSize="auto" iconOnly aria-label={t('More tabs')}
       {...menuTriggerProps({ open: !!menu, onOpen: setMenu })} onClick={() => setMenu(value => value ? null : 'click')} /></SourceTooltip></span>}
-    <SourceTooltip content={t(tabs.length > 8 ? 'Tab limit reached. Close a tab to open a new one.' : 'New tab')} shortcut={tabs.length > 8 ? undefined : 'cmd+t'} side="bottom" hoverable={false}><SourceSettingsButton variant="ghost" size="sm" icon="Add" iconSize="auto" iconOnly aria-label={t('New tab')} disabled={tabs.length > 8} onClick={onCreate} /></SourceTooltip>
+    {/* cfe7c4b3b Y: the cap's sr-only description for +, then the slot: DisabledReason (Qp: the reason's tooltip on a
+        focusable wrapper, since a disabled button gets no hover or focus) around the New tab tooltip (Zp). */}
+    {capped && <span id={capId} className="sr-only">{t(PREVIEW_TAB_CAP_TEXT)}</span>}
+    <span ref={createSlot} className="inline-flex shrink-0" data-preview-new-tab="">
+      {/* R4e-preview: Qp is SourceTooltip's disabledReason, kept mounted (keepReasonWrapper) so + stays the same button. */}
+      <SourceTooltip disabledReason={capped ? t(PREVIEW_TAB_CAP_TEXT) : null} keepReasonWrapper side="bottom" hoverable={false}>
+        <SourceTooltip content={capped ? null : t('New tab')} shortcut="cmd+t" side="bottom" hoverable={false}>
+          <SourceSettingsButton variant="ghost" size="sm" icon="Add" iconSize="auto" iconOnly aria-label={t('New tab')} aria-describedby={capped ? capId : undefined} disabled={capped} onClick={onCreate} />
+        </SourceTooltip>
+      </SourceTooltip>
+    </span>
     {menu && strip.overflowing && <SourcePreviewTabOverflow anchor={overflow.current} initialHighlight={menu === 'first' || menu === 'last' ? menu : undefined}
       tabs={tabs.filter(tab => strip.hiddenIds.includes(tab.id)).map(tab => ({ id: tab.id, label: label(tab), detail: tab.url || undefined, closable: !tab.placeholder, icon: tab.url ? <PageIcon key={tab.faviconUrl} tab={tab} /> : undefined }))}
       onActivate={onSelect} onCloseTab={onClose} onClose={() => setMenu(null)} />}

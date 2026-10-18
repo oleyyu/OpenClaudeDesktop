@@ -2,10 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Icon } from './icons';
 import { gD as TaskGlyph, uD as StatusLabel, Ry as StatusDot } from './generated/current-chat/shared-18-DaJGQi6_.js';
 import { t, getLocale } from '../electron/i18n/index.mjs';
+import { useStartIntl } from './source-code-start-adapters.jsx';
 
 export const CoworkHomeContext = createContext(null);
 const useHome = () => useContext(CoworkHomeContext);
-export const useHomeIntl = () => ({ locale: getLocale(), formatMessage: ({ defaultMessage }, values) => t(defaultMessage, values) });
+export const useHomeIntl = useStartIntl;
 export const useHomePins = () => true;
 export const useHomeSessions = () => useHome().rows;
 export const useHomeReadState = () => useHome().readState;

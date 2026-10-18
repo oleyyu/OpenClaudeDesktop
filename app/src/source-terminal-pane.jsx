@@ -1,7 +1,14 @@
-import {installTerminalCommands} from "./generated/code-editor/terminal-commands.mjs";
-import {attachVisibleTerminalOutput} from "./generated/code-editor/terminal-output.mjs";
-import {terminalOwnsContextMenu} from "./generated/code-editor/terminal-mouse.mjs";
-import {installTerminalColorPolicy} from "./generated/code-editor/terminal-colors.mjs";
+import {installTerminalCommands} from "./generated/code-current/terminal-commands.mjs";
+import {terminalAttachmentText} from "./generated/code-current/terminal-selection.mjs";
+import {attachVisibleTerminalOutput} from "./generated/code-current/terminal-output.mjs";
+import {terminalOwnsContextMenu} from "./generated/code-current/terminal-mouse.mjs";
+import {installTerminalColorPolicy} from "./generated/code-current/terminal-colors.mjs";
+import {selectionBlocksTerminalLink} from "./generated/code-current/terminal-link-selection.mjs";
+import {TerminalIdleCursor} from "./generated/code-current/terminal-idle-cursor.mjs";
+import {terminalErrorMessages, terminalStartError, loadFailedError} from "./generated/code-current/terminal-errors.mjs";
+import {TerminalClearItem, mountedTerminalViews} from "./generated/code-current/terminal-clear-item.mjs";
+import {ownerWindow} from "./generated/code-current/owner-window.mjs";
+import {suppressKeyRepeat} from "./generated/code-editor-current/keyboard-repeat.mjs";
 import {routeTerminalKey,installTerminalCopyEvent} from "./terminal-event-routing.mjs";
 import {handleTerminalNavigation} from "./terminal-navigation.mjs";
 import {terminalViewSettings, terminalViewMenu, terminalViewOptions} from './terminal-view-settings.mjs';
@@ -21,23 +28,27 @@ import { SourceEmptyState } from "./source-transcript-states.jsx";
 import { SourcePreviewTabOverflow } from "./source-preview-tab-overflow.jsx";
 import { menuTriggerProps } from "./source-menu.jsx";
 import { useSourceToasts } from "./source-toast.jsx";
-import { acceptsFileContextDrag } from "./file-context-drag.mjs";
-import { draggedFilePaths } from "./generated/code-editor/file-context-drag.mjs";
+// R3-files FT-18 owns the drag (src/file-context-drag.mjs); it re-exports draggedFilePaths from the one module instance
+// every drop target shares, so the pane reads it there instead of from generated/code-editor directly.
+import { acceptsFileContextDrag, draggedFilePaths } from "./file-context-drag.mjs";
 import { terminalTitles } from "./terminal-titles.mjs";
 import {
-  DROP_ERRORS, KEY_SEQUENCES, MINIMUM_CONTRAST_RATIO, findLinks, hiddenTerminalTabs, relativeToFolder, renameDraft, safeWebUrl, shouldAutoClose, tabLabel,
-  terminalDropText, terminalError, terminalFont, terminalFontSize, terminalKeyAction, terminalTheme,
+  DROP_ERRORS, FOLDER_GONE, KEY_SEQUENCES, MINIMUM_CONTRAST_RATIO, acquireTerminalView, anyTerminalTabClosable, closeTerminalTab, findLinks,
+  handleTerminalTabKeyDown, hiddenTerminalTabs, installTerminalLinks, isTerminalTabClosable, liveTerminalConfirm, movableTerminalTabs,
+  relativeToFolder, renameDraft, restartTerminalTab, safeWebUrl, shouldAutoClose, tabLabel, terminalCoverState, terminalDropText,
+  terminalError, terminalFont, terminalFontSize, terminalKeyAction, terminalTabDeleteKey, terminalTheme,
 } from "./terminal-pane-model.mjs";
 import { ownerKeyOf, terminalStore } from "./terminal-store.mjs";
+import { startFailedTerminals, terminalPanes } from "./terminal-registry-host.mjs";
 import { useTabDragReorder } from "./use-tab-drag-reorder.mjs";
 import { MAX_TERMINALS_PER_OWNER } from "../electron/terminal-model.mjs";
-// terminal-service.cjs sweep: a tab whose start folder is gone keeps its scrollback and says so.
-const FOLDER_GONE = "The session folder no longer exists.";
 import { t, tn } from "../electron/i18n/index.mjs";
 import "./source-terminal-pane.css";
 
 // Terminal pane (independent implementation of the 2.2553.1 terminal pane: cccc2cf0a pane + Xd tab strip, c6bf19e8f
-// ShellTerminal). A tile like Changes/Files/Plan: the tab strip sits in the 32px pane header ([tabs][+][More] then the
+// ShellTerminal). The original 2.42304.0 pieces it renders or calls come from generated/code-current (R3-terminal):
+// output/geometry/mouse/colors/link-selection/errors (c6bf19e8f), titles/idle cursor/registry (cf718f694) and the tab
+// menu's Clear terminal (cccc2cf0a Zy). A tile like Changes/Files/Plan: the tab strip sits in the 32px pane header ([tabs][+][More] then the
 // drag handle and the pane controls), the body is one xterm per tab. The shells run in the main process
 // (electron/terminal-service.cjs) and keep running while another session shows; this pane only attaches to them.
 //
@@ -122,7 +133,11 @@ export function SourceTerminalPane({
   const [error, setError] = useState(null);
   // cccc2cf0a Rg/Bg: the terminal module (or the preload bridge) is missing; only a reload can bring it back.
   const [loadFailed, setLoadFailed] = useState(!terminals.available);
-  const [confirm, setConfirm] = useState(null); // { kind: "close"|"close-others", id, count }
+  // { kind: "close"|"close-others", id, count }: the tab's name is read live (cccc2cf0a Vy ne), see liveTerminalConfirm.
+  const [confirm, setConfirm] = useState(null);
+  // c6bf19e8f pi A for a view that failed to come up ({id, error: {kind:"raw",text}|loadFailed}); Try again retries it.
+  const [viewError, setViewError] = useState(null);
+  const [viewAttempt, setViewAttempt] = useState(0);
   const [renaming, setRenaming] = useState(null); // id
   const [findOpen, setFindOpen] = useState(false);
   const [bell, setBell] = useState(null);
@@ -171,10 +186,13 @@ export function SourceTerminalPane({
     if (hadTabs.current === owner && state?.loaded) { hadTabs.current = null; onClosePane?.(); }
   }, [tabs.length, state?.loaded, owner]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
+    const openIds = new Set(tabs.map((tab) => tab.id));
+    for (const id of [...startFailedTerminals]) if (!openIds.has(id)) startFailedTerminals.delete(id);
     for (const tab of tabs) {
       // c6bf19e8f shell_pty_close → Ce(ptyKey): an exited shell drops its running command / title (a command cut off
       // by the exit never sends its D mark). The view's tracker stays installed for a restart.
       if (tab.status === "exited") titles.forget(tab.id);
+      else if (tab.status === "running") startFailedTerminals.delete(tab.id);
       if (shouldAutoClose(tab, terminals.lastEnter(tab.id))) void terminals.close(owner, sessionId, homeWorkspace, tab.id);
     }
   }, [version]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -219,7 +237,7 @@ export function SourceTerminalPane({
     // Keyboard, selection action and body menu share the terminal's label and context identity.
     attach: (text) => {
       if (!onAttachSelection || typeof text !== "string" || !text.trim()) return false;
-      onAttachSelection(terminalSelectionText(text).trim(),{label:tabLabel(active,tabs.length),terminalTabId:sessionId?active?.id:undefined});
+      onAttachSelection(terminalAttachmentText(terminalSelectionText(text)),{label:tabLabel(active,tabs.length),terminalTabId:sessionId?active?.id:undefined});
       viewRef.current?.term.clearSelection(); setSelectionAnchor(null);
       setAttached(Date.now());
       return true;
@@ -232,6 +250,8 @@ export function SourceTerminalPane({
     const bound = { handlers };
     const element = document.createElement("div");
     element.className = "stp-xterm";
+    // c6bf19e8f Gr: the xterm host carries data-ccd-terminal (shared-7 qM); the idle cursor hides once one is in place.
+    element.setAttribute("data-ccd-terminal", "");
     const { Terminal, FitAddon, SearchAddon, Unicode11Addon, WebLinksAddon } = modules;
     const term = new Terminal({
       ...optionsRef.current, minimumContrastRatio: MINIMUM_CONTRAST_RATIO, allowProposedApi: true,
@@ -245,42 +265,8 @@ export function SourceTerminalPane({
     term.loadAddon(fit);
     term.loadAddon(search);
     try { term.loadAddon(new Unicode11Addon()); term.unicode.activeVersion = "11"; } catch {}
-    term.loadAddon(new WebLinksAddon((event, uri) => { event?.preventDefault?.(); bound.handlers.current.web(uri, event); }));
-    // Found paths by text, briefly: they resolve from the shell's current folder, which a `cd` changes.
-    const checked = new Map();
-    const CHECKED_MS = 3000;
-    term.registerLinkProvider({
-      provideLinks(lineNumber, callback) {
-        const line = term.buffer.active.getLine(lineNumber - 1);
-        if (!line) { callback(undefined); return; }
-        // Text with a string index → cell column map (wide characters take two cells).
-        let text = "";
-        const columns = [];
-        for (let x = 0; x < term.cols; x++) {
-          const cell = line.getCell(x);
-          if (!cell) break;
-          const chars = cell.getChars();
-          if (!chars && cell.getWidth() === 0) continue;
-          for (const char of chars || " ") { columns.push(x); text += char; }
-        }
-        const candidates = findLinks(text).filter((link) => link.kind === "file");
-        if (!candidates.length) { callback(undefined); return; }
-        const now = Date.now();
-        const unknown = [...new Set(candidates.map((link) => link.path))].filter((path) => !(now - (checked.get(path)?.at ?? -Infinity) < CHECKED_MS));
-        Promise.resolve(unknown.length ? bound.handlers.current.paths(unknown, id) : []).then((results) => {
-          const at = Date.now();
-          unknown.forEach((path, index) => checked.set(path, { value: results?.[index] ?? null, at }));
-          if (checked.size > 500) checked.clear();
-          const found = new Map(candidates.map((link) => [link.path, checked.get(link.path)?.value ?? null]));
-          callback(candidates.filter((link) => found.get(link.path)).map((link) => ({
-            range: { start: { x: columns[link.start] + 1, y: lineNumber }, end: { x: columns[link.end - 1] + 1, y: lineNumber } },
-            text: link.text,
-            decorations: { underline: true, pointerCursor: false },
-            activate: (event) => { event?.preventDefault?.(); bound.handlers.current.file(found.get(link.path), link.line); },
-          })));
-        }, () => callback(undefined));
-      },
-    });
+    // c6bf19e8f Sn activate: only a primary click opens a link, and not one that ends a selection (xn, terminal-01).
+    installTerminalLinks(term, { WebLinksAddon, id, getHandlers: () => bound.handlers.current });
     term.onData((data) => terminals.input(id, data));
     term.onBell(() => bound.handlers.current.bell?.(id));
     term.attachCustomKeyEventHandler((event) => {
@@ -338,6 +324,22 @@ export function SourceTerminalPane({
 
   // Show the active tab's view in the body (created on first use, kept across session switches by the store).
   const activeId = active?.id ?? null;
+  // cccc2cf0a My y + Jy/Yy: the tabs this pane has shown (since its owner last changed) count as mounted terminal
+  // views, which Clear terminal tells apart from tabs never shown here ("Switch to this terminal first.").
+  const [shown, setShown] = useState(() => ({ owner, ids: new Set(activeId ? [activeId] : []) }));
+  if (shown.owner !== owner) setShown({ owner, ids: new Set(activeId ? [activeId] : []) });
+  else if (activeId && !shown.ids.has(activeId)) setShown({ owner, ids: new Set(shown.ids).add(activeId) });
+  const mountedKey = shown.owner === owner ? tabs.filter((tab) => shown.ids.has(tab.id)).map((tab) => tab.id).join(" ") : "";
+  useEffect(() => {
+    const ids = mountedKey ? mountedKey.split(" ") : [];
+    for (const id of ids) mountedTerminalViews.set(id, (mountedTerminalViews.get(id) ?? 0) + 1);
+    return () => {
+      for (const id of ids) {
+        const count = (mountedTerminalViews.get(id) ?? 1) - 1;
+        if (count > 0) mountedTerminalViews.set(id, count); else mountedTerminalViews.delete(id);
+      }
+    };
+  }, [mountedKey]);
   const [modulesReady, setModulesReady] = useState(null);
   useEffect(() => {
     let alive = true;
@@ -358,7 +360,11 @@ export function SourceTerminalPane({
   }, [terminals, sessionId, homeWorkspace]);
   useLayoutEffect(() => {
     if (!modulesReady || !activeId || !host.current) return undefined;
-    const view = terminals.view(activeId, sessionId, homeWorkspace, factory(modulesReady));
+    // c6bf19e8f pi: a view that can't be created covers the terminal with its error ({kind:"raw"} with the message,
+    // else loadFailed "Failed to load terminal") and Try again.
+    const view = acquireTerminalView({ activeId, sessionId, homeWorkspace, terminals, createView: factory(modulesReady),
+      hostNode: host.current, viewError, setViewError });
+    if (!view) return undefined;
     viewRef.current = view;
     const stopSelection=observeTerminalSelection(view.term,host.current.parentElement,{onChange:setSelectionAnchor,suppressed:()=>handlers.current.selectionSuppressed()});
     view.bind?.(handlers);
@@ -374,7 +380,7 @@ export function SourceTerminalPane({
       // No longer shown here: this window's size stops limiting the PTY (another window may show it wider).
       void terminals.detach?.(sessionId, homeWorkspace, view.id);
     };
-  }, [modulesReady, activeId, owner]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [modulesReady, activeId, owner, viewAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     terminals.updateViewOptions(terminalViewOptions(viewSettings,reducedMotion));
     const view = viewRef.current;
@@ -433,10 +439,7 @@ export function SourceTerminalPane({
     if (focus) requestAnimationFrame(focusTerminal);
   };
   const close = (id) => {
-    const tab = tabs.find((value) => value.id === id);
-    if (!tab) return;
-    if (tab.busy === true && tab.status === "running") setConfirm({ kind: "close", id, name: tabLabel(tab, tabs.length) });
-    else void terminals.close(owner, sessionId, homeWorkspace, id);
+    closeTerminalTab(id, { tabs, owner, sessionId, homeWorkspace, terminals, setConfirm });
   };
   const closeOthers = (id) => {
     const others = tabs.filter((tab) => tab.id !== id);
@@ -444,8 +447,11 @@ export function SourceTerminalPane({
     if (busy) setConfirm({ kind: "close-others", id, count: busy });
     else for (const tab of others) void terminals.close(owner, sessionId, homeWorkspace, tab.id);
   };
+  // cccc2cf0a Vy: a pending confirmation whose tab closed, or whose command finished, goes away.
+  const confirmStale = confirm !== null && liveTerminalConfirm(confirm, tabs) === null;
+  useEffect(() => { if (confirmStale) setConfirm(null); }, [confirmStale]);
   const confirmed = () => {
-    const pending = confirm;
+    const pending = liveTerminalConfirm(confirm, tabs);
     setConfirm(null);
     if (!pending) return;
     if (pending.kind === "close") void terminals.close(owner, sessionId, homeWorkspace, pending.id);
@@ -458,12 +464,18 @@ export function SourceTerminalPane({
     void handlers.current.clear(id);
     if (viewRef.current?.id === id) { viewRef.current.clear(); focusTerminal(); }
   };
-  const restart = async () => {
-    if (!active) return;
-    // Focus after the overlay is gone (the xterm host is hidden until the running state renders).
-    try { await terminals.restart(sessionId, homeWorkspace, active.id); setError(null); setRestartError(null); requestAnimationFrame(focusTerminal); }
-    catch (failure) { setRestartError({ id: active.id, message: terminalError(failure, t("Failed to open terminal tab")) }); }
-  };
+  // The registry's clear (cf718f694 le, from the tab menu's Clear terminal) reaches the pane that shows the terminal.
+  const registryPane = useRef(null);
+  registryPane.current = { owns: (id) => tabs.some((tab) => tab.id === id), clear };
+  useEffect(() => {
+    const entry = { owns: (id) => registryPane.current.owns(id), clear: (id) => registryPane.current.clear(id) };
+    terminalPanes.add(entry);
+    return () => { terminalPanes.delete(entry); };
+  }, []);
+  const restart = () => restartTerminalTab({
+    active, sessionId, homeWorkspace, terminals, startFailedTerminals, setError, setRestartError,
+    onRestarted: () => requestAnimationFrame(focusTerminal),
+  });
   const newTab = async () => { const info = await create(); if (info) requestAnimationFrame(focusTerminal); };
 
   // Drop files or folders on the terminal (cccc2cf0a lg on cc63499d2 Zm): files from Finder give their paths through
@@ -538,17 +550,19 @@ export function SourceTerminalPane({
     },
   };
 
-  // c6bf19e8f: "Shell exited." covers the terminal and its Restart shell takes focus when nothing else has it.
+  // c6bf19e8f pi: an error (A) or the exited shell (N) covers the terminal; its Try again / Restart shell takes focus
+  // when nothing else has it.
   const restartButton = useRef(null);
   const exitedNow = active?.status === "exited";
-  const [restartError, setRestartError] = useState(null); // {id, message}: the last Restart shell of that tab failed
-  const failedRestart = exitedNow && restartError?.id === active?.id ? restartError.message : null;
+  const [restartError, setRestartError] = useState(null); // {id, error}: the last Restart shell of that tab failed
+  const coverError = (viewError && viewError.id === active?.id ? viewError.error : null)
+    ?? (exitedNow && restartError?.id === active?.id ? restartError.error : null);
   useEffect(() => {
     const button = restartButton.current;
-    if (!exitedNow || !button) return;
+    if ((!exitedNow && !coverError) || !button) return;
     const doc = button.ownerDocument, focused = doc.activeElement;
     if (!focused || focused === doc.body || pane.current?.querySelector(".stp-body")?.contains(focused)) button.focus({ preventScroll: true });
-  }, [exitedNow, activeId]);
+  }, [exitedNow, coverError, activeId]);
 
   const findRef = useRef(null);
   handlers.current.key = (action) => {
@@ -568,28 +582,27 @@ export function SourceTerminalPane({
   const tabDrag = useTabDragReorder({ stripRef: tabList, itemSelector: "[data-terminal-id]", idOf: (node) => node.dataset.terminalId,
     onReorder: (id, toIndex, fromIndex) => terminals.move(owner, id, toIndex - fromIndex) });
   const shownTabs = tabDrag.order(tabs, (tab) => tab.id);
+  const focusTab = (id) => requestAnimationFrame(() => tabList.current?.querySelector(`[data-terminal-id="${id}"] [role="tab"]`)?.focus());
   const onTabKey = (event, id) => {
-    const index = tabs.findIndex((tab) => tab.id === id);
-    if (event.shiftKey && (event.ctrlKey || event.metaKey) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-      event.preventDefault();
-      terminals.move(owner, id, event.key === "ArrowLeft" ? -1 : 1);
-      requestAnimationFrame(() => tabList.current?.querySelector(`[data-terminal-id="${id}"] [role="tab"]`)?.focus());
-      return;
-    }
-    if (event.key === "Delete" || event.key === "Backspace") { event.preventDefault(); close(id); return; }
-    let next = null;
-    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
-    else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = tabs.length - 1;
-    if (next === null) return;
-    event.preventDefault();
-    select(tabs[next].id);
-    requestAnimationFrame(() => tabList.current?.querySelector(`[data-terminal-id="${tabs[next].id}"] [role="tab"]`)?.focus());
+    handleTerminalTabKeyDown(event, id, { tabs, owner, terminals, close, select, focusTab });
   };
 
   const exited = active?.status === "exited";
   const limited = active?.limited === true || (!active && backend === "script");
+  // c6bf19e8f pi: the error (A) takes the place of the exited shell (N). A raw message shows as is; every kind but
+  // needsNewerApp offers Try again. A tab whose folder is gone says so without a button (local).
+  const cover = terminalCoverState({
+    active, loadFailed, viewError, restartError,
+    onRetryView: () => { setViewError(null); setViewAttempt((count) => count + 1); },
+    onRestart: () => void restart(),
+  });
+  // cfe7c4b3b Y nt/ot/gt (terminal-11/12): a lone tab cannot close unless closable: true; the close hint exists while
+  // some tab can close (`ot`), the move hint while some tab can move (`gt`).
+  const solo = tabs.length === 1;
+  const anyClosable = anyTerminalTabClosable(tabs);
+  const movable = movableTerminalTabs(tabs);
+  // cccc2cf0a Vy W/ne (terminal-13): the confirmation names the tab as it is now, and goes once nothing it would stop runs.
+  const pendingConfirm = liveTerminalConfirm(confirm, tabs);
   return (
     <aside ref={pane} className="source-file-panel detail-panel stp-pane" aria-label={t("Terminal")} data-terminal-owner={owner || undefined}>
       <header className="source-pane-header" data-pane-header="terminal">
@@ -598,7 +611,7 @@ export function SourceTerminalPane({
             <SourceTooltipGroup delay={700}>
               {shownTabs.map((tab, index) => (
                 <TerminalTab key={tab.id} tab={tab} onPointerDown={(event) => tabDrag.onPointerDown(tab.id, event)} label={tabLabel(tab, tabs.length)} running={titles.value(titleState, tab)} selected={tab.id === activeId} posinset={index + 1}
-                  setsize={tabs.length} hintId={hintId} moveHintId={moveHintId} bell={bell?.id === tab.id && !reducedMotion}
+                  setsize={tabs.length} closable={isTerminalTabClosable(tab, solo)} hintId={hintId} moveHintId={movable.has(tab.id) ? moveHintId : undefined} bell={bell?.id === tab.id && !reducedMotion}
                   renaming={renaming === tab.id} onRenameDone={async (title) => {
                     setRenaming(null);
                     // Zg/r_ rename: trimmed; an empty name clears the tab's own name (it is numbered again).
@@ -607,12 +620,13 @@ export function SourceTerminalPane({
                     requestAnimationFrame(() => tabList.current?.querySelector(`[data-terminal-id="${tab.id}"] [role="tab"]`)?.focus());
                   }}
                   onSelect={() => select(tab.id, { focus: true })} onClose={() => close(tab.id)} onKeyDown={(event) => onTabKey(event, tab.id)}
-                  onRename={() => setRenaming(tab.id)} canClear={() => terminals.hasView(tab.id)} onClear={() => clear(tab.id)} onCloseOthers={tabs.length > 1 ? () => closeOthers(tab.id) : null} />
+                  onRename={() => setRenaming(tab.id)} onCloseOthers={tabs.length > 1 ? () => closeOthers(tab.id) : null} />
               ))}
             </SourceTooltipGroup>
           </div>
-          <span id={hintId} className="source-sr-only">{t("Press Delete or Backspace to close the terminal")}</span>
-          <span id={moveHintId} className="source-sr-only">{t("Press Control+Shift+Left Arrow or Right Arrow to move the terminal")}</span>
+          {/* cfe7c4b3b Y: the close hint exists while some tab can close (`ot`), the move hint while some tab can move (`gt`). */}
+          {anyClosable && <span id={hintId} className="source-sr-only">{t("Press Delete or Backspace to close the terminal")}</span>}
+          {movable.size > 0 && <span id={moveHintId} className="source-sr-only">{t("Press Control+Shift+Left Arrow or Right Arrow to move the terminal")}</span>}
           {/* At the per-session cap the button says why instead of failing (aria-disabled keeps its tooltip). */}
           <SourceTooltip content={tabs.length >= MAX_TERMINALS_PER_OWNER ? t("Up to {count} terminals per session", { count: MAX_TERMINALS_PER_OWNER }) : t("New terminal")} side="bottom" hoverable={false}>
             <button type="button" className="source-icon-button stp-new" aria-label={t("New terminal")} disabled={!owner || !terminals.available}
@@ -627,21 +641,21 @@ export function SourceTerminalPane({
         {headerCenter}
         {React.isValidElement(controls) ? React.cloneElement(controls, {menuSections:terminalViewMenu(viewSettings,viewSettingsStore.set)}) : controls}
       </header>
-      <div className="stp-body" style={{ backgroundColor: theme.background }} data-exited={exited || undefined} {...dropHandlers}
+      <div className="stp-body group/terminal" style={{ backgroundColor: theme.background }} data-exited={exited || undefined} {...dropHandlers}
         onKeyDown={(event) => { if (event.key === "Escape" && !event.nativeEvent.isComposing && findOpen) { event.preventDefault(); setFindOpen(false); focusTerminal(); } }}>
         {limited && !exited && <p className="stp-note" role="note">{t("Limited terminal: the terminal module couldn’t load, so the window size can’t change while a program runs.")}</p>}
         {/* The session folder was deleted or renamed: the running command goes on; the tab says why a new shell can't start. */}
         {active?.error === FOLDER_GONE && !exited && <p className="stp-note" role="note">{t(FOLDER_GONE)}</p>}
-        <div ref={host} className="stp-host" hidden={exited || loadFailed || undefined}
+        <div ref={host} className="stp-host" hidden={exited || loadFailed || !!coverError || undefined}
           onContextMenu={(event) => {
             const term = viewRef.current?.term;
             if (!term) return;
             event.preventDefault();
-            if(terminalOwnsContextMenu(term,event.nativeEvent,/Mac/.test(navigator.platform)))return;
+            if (terminalOwnsContextMenu(term, event.nativeEvent)) return;
             setBodyMenu({ x: event.clientX, y: event.clientY, selection: term.getSelection() || "" });
           }} />
         {bodyMenu && (
-          <SourceMenu.Popup anchor={host.current} trigger={null} point={bodyMenu} dataCds="ContextMenu" layer="contextmenu" label={t("Terminal")}
+          <SourceMenu.Popup anchor={host.current} trigger={null} point={bodyMenu} dataCds="ContextMenu" layer="contextmenu" label={t("Terminal")} contextMenuGuard="always"
             onClose={() => { setBodyMenu(null); focusTerminal(); }}>
             {/* 2.31226.0 cccc2cf0a s_: selection actions, clipboard, Select all, Clear terminal. */}
             {onAttachSelection && bodyMenu.selection.trim() && <>
@@ -665,21 +679,21 @@ export function SourceTerminalPane({
         <span className="source-sr-only" role="status" aria-live="polite">{attached ? t("Terminal output attached to chat") : ""}</span>
         {findOpen && <SourceTerminalFind ref={findRef} selectionSuppressed={searchSelecting} view={viewRef} onClose={() => { setFindOpen(false); focusTerminal(); }} />}
         {dropOver && !dropDisabled && <TerminalDropRing />}
-        {/* c6bf19e8f (4040-4097): the exited shell covers the surface (bg-surface-1 + EmptyState); Restart shell is
-            described by the title and takes focus. A tab whose folder is gone says so without the button (local). */}
-        {/* A restart that failed (c6bf19e8f A: "Failed to start shell" + Try again) takes the place of "Shell exited.". */}
-        {exited && !loadFailed && (
-          <div className="stp-overlay" data-terminal-exited=""
+        {/* c6bf19e8f pi (absolute inset-0 bg-surface-1 + EmptyState): the error or "Shell exited" covers the surface; Try
+            again / Restart shell is described by the title and takes focus. A tab whose folder is gone says so without
+            the button (local). */}
+        {cover && (
+          <div className="stp-overlay" data-terminal-exited={cover.exited ? "" : undefined}
             onMouseDown={(event) => { if (!event.defaultPrevented && !event.target.closest?.("button")) { event.preventDefault(); restartButton.current?.focus(); } }}>
-            <SourceEmptyState title={<span id={`${hintId}-exited`}>{failedRestart ?? (active?.error === FOLDER_GONE ? t(FOLDER_GONE) : t("Shell exited."))}</span>}
-              actions={active?.error !== FOLDER_GONE && failedRestart !== t(FOLDER_GONE) && <SourceSettingsButton ref={restartButton} size="sm" variant="secondary" aria-describedby={`${hintId}-exited`}
-                data-initial-focus="" onClick={() => void restart()}>{failedRestart ? t("Try again") : t("Restart shell")}</SourceSettingsButton>} />
+            <SourceEmptyState title={<span id={`${hintId}-exited`}>{cover.text}</span>}
+              actions={cover.action && <SourceSettingsButton ref={restartButton} size="sm" variant="secondary" aria-describedby={`${hintId}-exited`}
+                data-initial-focus="" onClick={cover.retry}>{cover.action}</SourceSettingsButton>} />
           </div>
         )}
-        {/* cccc2cf0a Rg/Bg: the terminal chunk (or the bridge) failed to load; Reload is the only way back. */}
+        {/* cccc2cf0a Ay (ShellTerminalChunk's fallback): the terminal module (or the bridge) failed to load; Reload. */}
         {loadFailed && (
           <div className="stp-overlay">
-            <SourceEmptyState role="alert" icon="Warning" title={t("Couldn’t load the terminal. Reload the page to try again.")}
+            <SourceEmptyState role="alert" icon="Warning" title={t("Couldn’t load the terminal")} body={t("Reload the page to try again.")}
               actions={<SourceSettingsButton size="sm" variant="secondary" onClick={() => window.location.reload()}>{t("Reload")}</SourceSettingsButton>} />
           </div>
         )}
@@ -689,35 +703,44 @@ export function SourceTerminalPane({
             {terminals.available && owner && !tabs.length && <SourceSettingsButton size="sm" variant="secondary" onClick={() => void newTab()}>{t("New terminal")}</SourceSettingsButton>}
           </div>
         )}
-        {!tabs.length && !error && !loadFailed && <span className="stp-placeholder" data-testid="terminal-pane-placeholder" aria-hidden="true" />}
+        {/* c6bf19e8f pi → cf718f694 B (terminal-09): the dimmed idle cursor until a terminal's xterm is in place (hidden by
+            group-has-[[data-ccd-terminal]]), blinking with Blink cursor. */}
+        {!cover && !loadFailed && !(error && !tabs.length) && (
+          <TerminalIdleCursor color={theme.cursor ?? theme.foreground} fontFamily={options.fontFamily} fontSize={options.fontSize}
+            className="absolute group-has-[[data-ccd-terminal]]/terminal:hidden" style={{ top: "var(--cds-pad-md)", left: "var(--cds-pad-md)" }}
+            data-testid="terminal-idle-cursor" />
+        )}
       </div>
-      {confirm && (
+      {pendingConfirm && (
         <SourceConfirmationDialog
-          title={confirm.kind === "close" ? t("Close terminal?") : t("Close other terminals?")}
-          body={confirm.kind === "close" ? t("A command is still running in {name}. Closing the terminal stops it.", { name: confirm.name })
-            : tn(confirm.count, "A command is still running in one of the other terminals. Closing them stops it.",
+          title={pendingConfirm.kind === "close" ? t("Close terminal?") : t("Close other terminals?")}
+          body={pendingConfirm.kind === "close" ? t("A command is still running in {name}. Closing the terminal stops it.", { name: pendingConfirm.name })
+            : tn(pendingConfirm.count, "A command is still running in one of the other terminals. Closing them stops it.",
               "Commands are still running in {count} of the other terminals. Closing them stops those commands.")}
-          confirmLabel={confirm.kind === "close" ? t("Close terminal") : t("Close other terminals")}
+          confirmLabel={pendingConfirm.kind === "close" ? t("Close terminal") : t("Close other terminals")}
           confirmVariant="danger" onConfirm={confirmed} onCancel={() => setConfirm(null)} />
       )}
     </aside>
   );
 }
 
-function TerminalTab({ tab, label, running: title, selected, posinset, setsize, hintId, moveHintId, bell, renaming, onRenameDone, onSelect, onClose, onKeyDown, onRename, canClear, onClear, onCloseOthers, onPointerDown }) {
+export function TerminalTab({ tab, label, running: title, selected, posinset, setsize, closable = true, hintId, moveHintId, bell, renaming, onRenameDone, onSelect, onClose, onKeyDown, onRename, onCloseOthers, onPointerDown }) {
   const root = useRef(null), field = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [draft, setDraft] = useState("");
   // Zg editValue: the tab's own name, empty for a numbered tab (Enter on an empty field clears the name).
   useLayoutEffect(() => { if (renaming) { setDraft(renameDraft(tab)); requestAnimationFrame(() => { field.current?.focus(); field.current?.select(); }); } }, [renaming]); // eslint-disable-line react-hooks/exhaustive-deps
   const running = tab.busy === true && tab.status === "running";
-  const status = tab.status === "exited" ? t("Shell exited.") : running ? t("Terminal (command running)") : null;
+  const status = tab.status === "exited" ? t("Shell exited") : running ? t("Terminal (command running)") : null;
+  // cfe7c4b3b ge: U = e.closable ?? !w, Re = U && !J ($e = !l && U).
+  const canClose = closable && !renaming;
   return (
     <div ref={root} role="presentation" className="source-file-tab stp-tab" data-terminal-id={tab.id} data-selected={selected || undefined}
       data-popup-open={menuOpen || undefined} data-busy={running || undefined} data-exited={tab.status === "exited" || undefined} data-bell={bell || undefined}
-      onMouseDown={(event) => { if (event.button === 1 || event.button === 2) event.preventDefault(); }}
+      onMouseDown={(event) => { if ((event.button === 1 && canClose) || event.button === 2) event.preventDefault(); }}
+      onMouseUp={(event) => { if (event.button === 1 && canClose) event.preventDefault(); }}
       onPointerDown={renaming ? undefined : onPointerDown}
-      onAuxClick={(event) => { if (event.button === 1) { event.preventDefault(); onClose(); } }}
+      onAuxClick={(event) => { if (event.button === 1 && canClose) { event.preventDefault(); onClose(); } }}
       onDoubleClick={(event) => { event.stopPropagation(); onRename(); }}
       onContextMenu={(event) => { event.preventDefault(); setMenuOpen(true); }}>
       <span aria-hidden="true" className="source-file-tab-bg" />
@@ -734,7 +757,7 @@ function TerminalTab({ tab, label, running: title, selected, posinset, setsize, 
       ) : (
         <SourceTooltip content={label} detail={title ?? tab.cwd} side="bottom" align="start" delay={700} hoverable={false}>
           <div role="tab" aria-selected={selected} aria-posinset={posinset} aria-setsize={setsize} tabIndex={selected ? 0 : -1}
-            aria-describedby={`${hintId} ${moveHintId}`} onClick={onSelect}
+            aria-describedby={[closable && hintId, moveHintId].filter(Boolean).join(" ") || undefined} onClick={onSelect}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(); return; }
               if (event.key === "F2") { event.preventDefault(); onRename(); return; }
@@ -746,17 +769,18 @@ function TerminalTab({ tab, label, running: title, selected, posinset, setsize, 
           </div>
         </SourceTooltip>
       )}
-      {!renaming && <button type="button" tabIndex={-1} aria-hidden="true" aria-label={t("Close terminal")} className="source-file-tab-close"
+      {canClose && <button type="button" tabIndex={-1} aria-hidden="true" aria-label={t("Close terminal")} className="source-file-tab-close"
         onMouseDown={(event) => event.preventDefault()} onClick={(event) => { event.stopPropagation(); onClose(); }}>
         <Icon name="X" size={12} />
       </button>}
       {menuOpen && (
-        <SourceMenu.Popup anchor={root.current} trigger={null} side="bottom" align="start" dataCds="ContextMenu" layer="contextmenu"
+        <SourceMenu.Popup anchor={root.current} trigger={null} side="bottom" align="start" dataCds="ContextMenu" layer="contextmenu" contextMenuGuard="always"
           onClose={() => setMenuOpen(false)}>
           <SourceMenu.Item onClick={onRename}>{t("Rename terminal")}</SourceMenu.Item>
-          <SourceMenu.Item onClick={onClear} disabled={!canClear()} disabledReason={canClear() ? undefined : t("Switch to this terminal first")}>{t("Clear terminal")}</SourceMenu.Item>
-          <SourceMenu.Separator />
-          <SourceMenu.Item onClick={onClose}>{t("Close terminal")}</SourceMenu.Item>
+          {/* cccc2cf0a Vy renderTabMenuItems → Zy (terminal-07): disabled with why when there is nothing to clear here. */}
+          <TerminalClearItem ptyKey={tab.id} />
+          {(closable || onCloseOthers) && <SourceMenu.Separator />}
+          {closable && <SourceMenu.Item onClick={onClose}>{t("Close terminal")}</SourceMenu.Item>}
           {onCloseOthers && <SourceMenu.Item onClick={onCloseOthers}>{t("Close other terminals")}</SourceMenu.Item>}
         </SourceMenu.Popup>
       )}
@@ -764,8 +788,9 @@ function TerminalTab({ tab, label, running: title, selected, posinset, setsize, 
   );
 }
 
-// cfe7c4b3b ae: the tabs scrolled out of the strip, one row each (label, the running command as a caption, a close X;
-// ArrowRight/Delete/Backspace or a middle click closes, with the busy confirmation of close()).
+// cfe7c4b3b se: the tabs scrolled out of the strip, one original ce row each (label, the running command as a caption, a
+// close X; ArrowRight/Delete/Backspace without Control/Meta/Alt, or a middle click, closes with the busy confirmation of
+// close(); a held key closes one tab — R3-terminal FT-15, terminal-10).
 function MoreTerminals({ tabs, activeId, list, titleState, titles, onSelect, onClose }) {
   const trigger = useRef(null);
   const [open, setOpen] = useState(null);
@@ -792,7 +817,7 @@ function MoreTerminals({ tabs, activeId, list, titleState, titles, onSelect, onC
       {open && (
         <SourcePreviewTabOverflow anchor={trigger.current} tabs={rows} className="spv-overflow-menu stp-overflow-menu"
           initialHighlight={open === "first" || open === "last" ? open : undefined}
-          labels={{ moreTabs: t("More terminals"), closeTab: t("Close terminal"), closeTabHint: t("press right arrow to close"), closeTabDeleteHint: t("Press Delete or Backspace to close the terminal") }}
+          labels={{ moreTabs: t("More terminals"), closeTab: t("Close terminal"), closeTabHint: t("press right arrow to close"), closeTabHintRtl: t("press left arrow to close"), closeTabDeleteHint: t("Press Delete or Backspace to close the terminal") }}
           onActivate={(id) => { setOpen(null); onSelect(id); }} onCloseTab={onClose} onClose={() => setOpen(null)} />
       )}
     </span>

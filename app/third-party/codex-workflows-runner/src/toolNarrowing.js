@@ -201,7 +201,7 @@ export async function narrowThreadParams(client, threadParams, opts = {}) {
   const next = kind === "codex" ? { ...threadParams, config: { ...(threadParams?.config ?? {}), ...CODEX_WORKFLOW_AGENT_CONFIG } } : { ...threadParams };
   const notes = [];
   if (plan.readOnly.length) {
-    if (next.sandbox !== "read-only") notes.push(`read-only (${plan.readOnly.join(", ")} excluded)`);
+    notes.push(`read-only (${plan.readOnly.join(", ")} excluded); compatibility: the core keeps its sandboxed shell for reads instead of removing Claude's individual tools`);
     next.sandbox = "read-only";
   }
   const config = {};

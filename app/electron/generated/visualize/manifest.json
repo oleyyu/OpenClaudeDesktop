@@ -1,0 +1,395 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-visualize.mjs",
+  "output": "electron/generated/visualize/imagine-server.cjs",
+  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-BaLvO2wi.js",
+  "sourceSha256": "a0420d5047175bd4e8b86e7b12b1f6ce7be8c862899f2c61180f398cc677b2e0",
+  "bindings": [
+    {
+      "name": "n",
+      "kind": "var",
+      "as": "CDS_VANILLA_TOKENS_GUIDE",
+      "scope": "module",
+      "sha256": "227e4db0d04092ce577d5f07b1f63319e304923784f87709c214b7ed89a0011d",
+      "length": 24372,
+      "features": [
+        "# CDS tokens \\u2014 vanilla",
+        "`--text-primary`"
+      ]
+    },
+    {
+      "name": "r",
+      "kind": "function",
+      "as": "widthForPlatform",
+      "scope": "module",
+      "sha256": "2cda1f7d17eef689e69bc161e6f5f769209eff3319dbdfa21b13cdb5ba7438ba",
+      "length": 42,
+      "features": [
+        "function r(e){return e===\"mobile\"?380:680}"
+      ]
+    },
+    {
+      "name": "i",
+      "kind": "var",
+      "as": "READ_ME_PREAMBLE",
+      "scope": "module",
+      "sha256": "fe0c55826e68746c5a501d8786439be7cc3614aa34233082c4f30b298e12f79f",
+      "length": 11129,
+      "features": [
+        "# Imagine \\u2014 Visual Creation Suite",
+        "Call read_me again with the modules parameter"
+      ]
+    },
+    {
+      "name": "a",
+      "kind": "function",
+      "as": "uiComponentsGuide",
+      "scope": "module",
+      "sha256": "2e15ebc084da5764130164de370043a18decd9a198d65f3b4c2326f09ec999b6",
+      "length": 8197,
+      "features": [
+        "return`## UI components\\n\\n### Layout width\\nThe widget container is ${e}px wide."
+      ]
+    },
+    {
+      "name": "o",
+      "kind": "var",
+      "as": "ELICITATION_GUIDE",
+      "scope": "module",
+      "sha256": "eb9c6bbb2e407eaea3617c29ebb484ab96d335a452c990d746b17d849607d1d2",
+      "length": 14621,
+      "features": [
+        "o=`## Elicitation \\u2014 collecting skill arguments"
+      ]
+    },
+    {
+      "name": "s",
+      "kind": "var",
+      "as": "COLOR_PALETTE_GUIDE",
+      "scope": "module",
+      "sha256": "4a9c1201dac5556244d85dc6fbda76d5ed361b03ed0c03f936ec25d2ae6be807",
+      "length": 3759,
+      "features": [
+        "s=`## Color palette\\n\\n9 color ramps"
+      ]
+    },
+    {
+      "name": "c",
+      "kind": "function",
+      "as": "svgSetupGuide",
+      "scope": "module",
+      "sha256": "f0eecb865fb2195339b21aca53ebe5e5b4b70fcba24ea518ba2d654525fd5c57",
+      "length": 11461,
+      "features": [
+        "let t=e-40,n=Math.round(e*.7)",
+        "return`## SVG setup"
+      ]
+    },
+    {
+      "name": "l",
+      "kind": "function",
+      "as": "diagramTypesGuide",
+      "scope": "module",
+      "sha256": "52d3a9644a58ce1b65fd180ae781a73ea997e9e36114199004ae86ac379e5716",
+      "length": 40619,
+      "features": [
+        "return`## Diagram types"
+      ]
+    },
+    {
+      "name": "u",
+      "kind": "var",
+      "as": "CHARTS_GUIDE",
+      "scope": "module",
+      "sha256": "3f72324e94f075f4bee62e5a198ea5e9ce1cf65b42b1df195804a65625af26f9",
+      "length": 6319,
+      "features": [
+        "## Charts (Chart.js)"
+      ]
+    },
+    {
+      "name": "d",
+      "kind": "var",
+      "as": "DATA_VIZ_GUIDE",
+      "scope": "module",
+      "sha256": "df879dbb1a64d2f3de71b9d0f9e548e638321a3bd15f3420c65decc818cabf0e",
+      "length": 5301,
+      "features": [
+        "d=`## Data visualization \\u2014 the design layer"
+      ]
+    },
+    {
+      "name": "f",
+      "kind": "var",
+      "as": "ART_GUIDE",
+      "scope": "module",
+      "sha256": "b0cfc71f6514afca44856bea092ab63a7add2b1a0d2910614ac98e17379ef54d",
+      "length": 799,
+      "features": [
+        "f='## Art and illustration"
+      ]
+    },
+    {
+      "name": "p",
+      "kind": "var",
+      "as": "READ_ME_CLOSING",
+      "scope": "module",
+      "sha256": "c3876152b20dd2eb57edda4954a95295d9b2bf9e348039eaeb6e6ea6042592e2",
+      "length": 160,
+      "features": [
+        "p=\"Do not overthink. Try to keep thinking below 500 tokens."
+      ]
+    },
+    {
+      "name": "m",
+      "kind": "function",
+      "as": "widgetHtml",
+      "scope": "module",
+      "sha256": "0b132f1d6210959de8f5c6f8c03611ebc71e7d3c52a24c2eb6e02ac214f00835",
+      "length": 327668,
+      "features": [
+        "function m(){return`<!DOCTYPE html>",
+        "<title>Visualize Widget</title>",
+        "/libs/imagine/streaming-helpers-1/streaming-helpers.mjs",
+        "applyKeepMenuClear",
+        "_keepMenuClear",
+        "ui/notifications/size-changed"
+      ],
+      "counts": {
+        "data-keep-menu-clear": 16,
+        "menu-room": 12,
+        "frame-held": 8
+      }
+    },
+    {
+      "name": "h",
+      "kind": "var",
+      "as": "READ_ME_MODULES",
+      "scope": "module",
+      "sha256": "3a9964a19a64aaed24c238acd3215d239d75e62ecc7bb2628bdf2c0074fd455c",
+      "length": 75,
+      "features": [
+        "h=[\"diagram\",\"mockup\",\"interactive\",\"data_viz\",\"art\",\"chart\",\"elicitation\"]"
+      ]
+    },
+    {
+      "name": "g",
+      "kind": "var",
+      "as": "READ_ME_PLATFORMS",
+      "scope": "module",
+      "sha256": "40806b32f84a863f595da6b0a66aadf2a37a82421fec685b4b227897189143b0",
+      "length": 32,
+      "features": [
+        "g=[\"mobile\",\"desktop\",\"unknown\"]"
+      ]
+    },
+    {
+      "name": "_",
+      "kind": "function",
+      "as": "readMeModuleTable",
+      "scope": "module",
+      "sha256": "925ab89977aaedba6ca7b107ac82ddca4d37f025272b47d807e92b06fa346580",
+      "length": 159,
+      "features": [
+        "let t=c(e),r=l(e),i=a(e);return{diagram:[s,t,r],mockup:[i,s,n],interactive:[i,s,n],data_viz:[i,s,u,d],art:[t,f],chart:[i,s,u,d],elicitation:[o]}"
+      ]
+    },
+    {
+      "name": "v",
+      "kind": "var",
+      "as": "WIDGET_RESOURCE_URI",
+      "scope": "module",
+      "sha256": "11e5402aece9610c8e51b460c7af20cd1637a52bcdc191bf74dc51abbade14db",
+      "length": 33,
+      "features": [
+        "v=\"ui://imagine/show-widget.html\""
+      ]
+    },
+    {
+      "name": "y",
+      "kind": "var",
+      "as": "MAX_RESULT_SIZE_CHARS",
+      "scope": "module",
+      "sha256": "03f0b56218b832a540dc65e1aed973427b23db0fb71be3b22426ddeb79d9516a",
+      "length": 5,
+      "features": [
+        "y=2e5"
+      ]
+    },
+    {
+      "name": "b",
+      "kind": "var",
+      "as": "IMAGINE_TOOLS",
+      "scope": "module",
+      "sha256": "732dbcf27b075196fe052c353ec5e73ce1d674f01a58e653472326851a25d30e",
+      "length": 3929,
+      "features": [
+        "{name:\"show_widget\",",
+        "required:[\"loading_messages\",\"title\",\"widget_code\"]},annotations:{readOnlyHint:!0},_meta:{ui:{resourceUri:v}}}",
+        "{name:\"read_me\",",
+        "enum:[...h]",
+        "enum:[...g]",
+        "_meta:{\"claude.ai/hidden_in_chat\":!0,\"anthropic/maxResultSizeChars\":y}"
+      ]
+    },
+    {
+      "name": "x",
+      "kind": "var",
+      "as": "IMAGINE_RESOURCES",
+      "scope": "module",
+      "sha256": "3fd52e8f5855b3f17a14f4cd38333b5cb9de4dd37278fdc6f3e8569d047a7737",
+      "length": 167,
+      "features": [
+        "x=[{uri:v,name:\"visualize widget\",",
+        "mimeType:\"text/html;profile=mcp-app\"}]"
+      ]
+    },
+    {
+      "name": "S",
+      "kind": "function",
+      "as": "handleImagineToolCall",
+      "scope": "module",
+      "sha256": "2e563fe12a31ae7f7b5b74c44d0d113b6874c3fbace433ccc715e873fb1ca4f4",
+      "length": 502,
+      "features": [
+        "if(e===\"show_widget\")return{content:[{type:\"text\",text:\"Content rendered and shown to the user.",
+        "let e=t.modules??[],a=t.platform??\"unknown\",o=_(n??r(a)),s=new Set,c=[i];",
+        "return c.push(p),{content:[{type:\"text\",text:c.join(`\\n\\n`)}]}",
+        "text:`Unknown tool: ${e}`}],isError:!0}"
+      ]
+    },
+    {
+      "name": "C",
+      "kind": "function",
+      "as": "readImagineResource",
+      "scope": "module",
+      "sha256": "6d265b83fa5187c15851c9af83e91258c78990a36ecd5cda5716d3c9302607aa",
+      "length": 469,
+      "features": [
+        "if(e===v)return{contents:[{uri:v,mimeType:\"text/html;profile=mcp-app\",text:m(),_meta:{ui:{permissions:{clipboardWrite:{}},csp:{",
+        "connectDomains:[\"https://esm.sh\",\"https://cdnjs.cloudflare.com\",\"https://cdn.jsdelivr.net\",\"https://unpkg.com\"]",
+        "resourceDomains:[\"https://esm.sh\",\"https://cdnjs.cloudflare.com\",\"https://cdn.jsdelivr.net\",\"https://unpkg.com\",\"https://fonts.googleapis.com\",\"https://fonts.gstatic.com\"]",
+        "throw Error(`Unknown resource: ${e}`)"
+      ]
+    },
+    {
+      "name": "w",
+      "kind": "function",
+      "as": "listImagineResources",
+      "scope": "module",
+      "sha256": "278f31a38d4acbd7886395f229d9b8c87065cabb1b6bc05b28f9f5958420a3eb",
+      "length": 22,
+      "features": [
+        "function w(){return x}"
+      ]
+    },
+    {
+      "name": "T",
+      "kind": "var",
+      "as": "ResourceUnavailable",
+      "scope": "module",
+      "sha256": "592c0f04dbb5271a1c91c3553d9cfc03ecc9141c38d8593e9572ea60fed62b30",
+      "length": 153,
+      "features": [
+        "e.BlockedByPolicy=\"blocked_by_policy\",e.NeedsSignIn=\"needs_sign_in\",e.NotConnected=\"not_connected\",e.ReadFailed=\"read_failed\""
+      ]
+    },
+    {
+      "name": "E",
+      "kind": "var",
+      "as": "IMAGINE_SERVER_NAME",
+      "scope": "module",
+      "sha256": "a7edfee58f3b22fb619c396fa243391aeb2fb5fd5b1af982bdc0cf975766d29c",
+      "length": 13,
+      "features": [
+        "E=\"visualize\""
+      ]
+    },
+    {
+      "name": "D",
+      "kind": "var",
+      "as": "POLICY_REFUSAL_TEXT",
+      "scope": "module",
+      "sha256": "2f15a3b0a36c24d9f4142d2dbcbde1d7b8b3cf60d0a54e735caa103cc19c74ed",
+      "length": 112,
+      "features": [
+        "D=\"Inline visualizations are disabled by your organization's policy. Retries will fail; answer in text instead.\""
+      ]
+    },
+    {
+      "name": "O",
+      "kind": "var",
+      "as": "refusalLogged",
+      "scope": "bindImagineServer",
+      "sha256": "6ff2815833930649346203a4a64555c3a77fcd579bd6bfb8ed0b6e9392478494",
+      "length": 4,
+      "features": [
+        "O=!1"
+      ]
+    },
+    {
+      "name": "k",
+      "kind": "function",
+      "as": "refuseWhenWithheld",
+      "scope": "bindImagineServer",
+      "sha256": "faec581f1eff5a102a2121557b4021c6d53613190f91effecee03e22bfd53c83",
+      "length": 139,
+      "features": [
+        "return t.n()?(O||(O=!0,e.p5.info(`[imagine] ${n} refused \\u2014 withheld by the org's Inline visualizations answer`)),!0):!1"
+      ]
+    },
+    {
+      "name": "A",
+      "kind": "function",
+      "as": "getImagineServerDef",
+      "scope": "bindImagineServer",
+      "sha256": "aab76948bd00ce7b6d1228c67892060fb2432a85a257ea0e343a534ea8234a62",
+      "length": 466,
+      "features": [
+        "return{serverName:E,tools:b.map((e=>({name:e.name,description:e.description,inputSchema:e.inputSchema,_meta:e._meta,alwaysLoad:!0,maxResultSizeChars:e._meta?.[\"anthropic/maxResultSizeChars\"]})))",
+        "handleToolCall:async(e,t)=>k(e)?{content:[{type:\"text\",text:D}],isError:!0}:S(e,t)",
+        "handleReadResource:e=>k(\"widget resource read\")?{contents:[],unavailable:T.BlockedByPolicy}:C(e)",
+        "handleListResources:()=>k(\"widget resource list\")?[]:w()",
+        "isEnabled:()=>t.t()}"
+      ]
+    }
+  ],
+  "deadCalls": [
+    "c(680);",
+    "l(680);"
+  ],
+  "dropped": [
+    "Sentry release preamble",
+    "Sentry debug-id preamble",
+    "side-effect require",
+    "imports e, t",
+    "export"
+  ],
+  "hostParams": {
+    "e": [
+      "p5"
+    ],
+    "t": [
+      "n",
+      "t"
+    ]
+  },
+  "allowedGlobals": [
+    "Math",
+    "Set",
+    "Error",
+    "module"
+  ],
+  "callers": {
+    "index.chunk-B5tintml.js": [
+      "try{let{getImagineServerDef:e}=await Promise.resolve().then((()=>require(\"./index.chunk-BaLvO2wi.js\")));c.push(e())}catch{}"
+    ],
+    "index.chunk-D89SZXs4.js": [
+      "var t=\"inline_visualizations\",n=\"3444158716\",r=\"2742800629\"",
+      "function l(t){return e.LZ(n)&&!c(t)}",
+      "Object.defineProperty(exports,\"n\",{enumerable:!0,get:function(){return c}}),Object.defineProperty(exports,\"t\",{enumerable:!0,get:function(){return l}})"
+    ]
+  },
+  "sha256": "301cb03807546ee7bd45ba77db895c8a6e2871e87d447f9c3a68b91447f6b842"
+}

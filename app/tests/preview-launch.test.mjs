@@ -16,7 +16,7 @@ test('a configuration becomes a command, a port and a url', () => {
   assert.equal(parsed.exists, true);
   assert.equal(parsed.error, null);
   assert.equal(parsed.autoVerify, true);
-  assert.deepEqual(parsed.configs, [{ name: 'web', command: 'npm', args: ['run', 'dev'], cwd: root, env: {}, port: 5173, autoPort: false, url: null, attach: false }]);
+  assert.deepEqual(parsed.configs, [{ name: 'web', command: 'npm', args: ['run', 'dev'], cwd: root, env: {}, port: 5173, autoPort: undefined, url: null, attach: false }]);
   assert.equal(configUrl(parsed.configs[0]), 'http://localhost:5173');
   assert.equal(configUrl(parsed.configs[0], 6000), 'http://localhost:6000');
 });
@@ -34,11 +34,31 @@ test('program, args, cwd, env, ${workspaceFolder}, autoPort and the port fallbac
   assert.equal(portFromArgs(['dev']), null);
 });
 
+test('preview-04: "autoPort" is the JSON boolean and "port" a number (or its digits), with 2.42304.0\'s messages', () => {
+  const config = (entry) => normalizeConfiguration({ name: 'web', runtimeExecutable: 'npm', runtimeArgs: ['run', 'dev'], ...entry }, root);
+  assert.equal(config({ port: '3000' }).config.port, 3000, 'digits in a string are the port');
+  assert.equal(config({ port: ' 4100 ' }).config.port, 4100);
+  assert.equal(config({ port: 0 }).config.port, 3000, 'an empty or zero port counts as absent');
+  assert.equal(config({ port: '' }).config.port, 3000);
+  assert.equal(config({ port: 70000 }).problem, 'configuration 1: "port" must be a JSON number from 1 to 65535, not 70000');
+  assert.equal(config({ port: '30x0' }).problem, 'configuration 1: "port" must be a JSON number from 1 to 65535, not "30x0"');
+  assert.equal(config({ port: 3000.5 }).problem, 'configuration 1: "port" must be a JSON number from 1 to 65535, not 3000.5');
+  assert.equal(config({ port: '123456' }).problem, 'configuration 1: "port" must be a JSON number from 1 to 65535, not "123456"');
+  assert.equal(config({ autoPort: 'true' }).problem, 'configuration 1: "autoPort" must be the JSON boolean true or false (unquoted), not "true"');
+  assert.equal(config({ autoPort: 1 }).problem, 'configuration 1: "autoPort" must be the JSON boolean true or false (unquoted), not 1');
+  assert.deepEqual([true, false, undefined].map((autoPort) => config({ autoPort }).config.autoPort), [true, false, undefined], 'three states (preview-01)');
+  // A localhost url and a string port of the same number agree.
+  assert.equal(normalizeConfiguration({ url: 'http://localhost:4000', port: '4000', runtimeExecutable: 'x' }, root).config.port, 4000);
+  const parsed = parseLaunchConfig(JSON.stringify({ configurations: [{ name: 'ok', runtimeExecutable: 'npm', port: '5173' }, { name: 'bad', runtimeExecutable: 'npm', autoPort: 'yes' }] }), root);
+  assert.deepEqual(parsed.configs.map((entry) => [entry.name, entry.port]), [['ok', 5173]]);
+  assert.deepEqual(parsed.problems, ['configuration 2: "autoPort" must be the JSON boolean true or false (unquoted), not "yes"']);
+});
+
 test('a url entry attaches to a running server; localhost urls are bare origins on the entry port', () => {
   const attach = normalizeConfiguration({ name: 'docs', url: 'http://localhost:4000' }, root).config;
   assert.deepEqual({ attach: attach.attach, command: attach.command, port: attach.port, url: attach.url }, { attach: true, command: null, port: 4000, url: 'http://localhost:4000' });
   assert.match(normalizeConfiguration({ url: 'http://localhost:4000/docs' }, root).problem, /bare origin/);
-  assert.match(normalizeConfiguration({ url: 'http://localhost:4000', port: 4001, runtimeExecutable: 'x' }, root).problem, /doesn't match/);
+  assert.equal(normalizeConfiguration({ url: 'http://localhost:4000', port: 4001, runtimeExecutable: 'x' }, root).problem, 'configuration 1: "url" is "http://localhost:4000/" but this entry\'s server runs on port 4001. A localhost "url" must point at the entry\'s own server');
   assert.match(normalizeConfiguration({ url: 'ftp://example.com' }, root).problem, /http or https/);
   assert.match(normalizeConfiguration({ url: 'https://user:pw@example.com' }, root).problem, /credentials/);
   assert.equal(normalizeConfiguration({ url: 'https://staging.example.com/app' }, root).config.url, 'https://staging.example.com/app');
@@ -55,7 +75,7 @@ test('malformed entries are reported, the rest still load; names are unique igno
   assert.ok(parsed.problems.some((problem) => /malformed "runtimeArgs"/.test(problem)));
   assert.ok(parsed.problems.some((problem) => /repeats the name/.test(problem)));
   assert.ok(parsed.problems.some((problem) => /outside the project/.test(problem)));
-  assert.ok(parsed.problems.some((problem) => /malformed "port"/.test(problem)));
+  assert.ok(parsed.problems.includes('configuration 6: "port" must be a JSON number from 1 to 65535, not 70000'));
   assert.equal(parseLaunchConfig(null, root).exists, false);
   assert.match(parseLaunchConfig('{ nope', root).error, /failed to parse/);
   assert.match(parseLaunchConfig('{"configurations": []}', root).error, /no configurations/);

@@ -69,6 +69,7 @@ test("approval, plan and question cards register the document hotkeys; a pending
   assert.match(plan, /useCardHotkeys\(root, shortcutEnabled && !revising,/);
   assert.match(plan, /if \(key === "escape"\) \{ setRevising\(true\); return; \}/);
   assert.match(question, /useCardHotkeys\(root, isActive && !menuOpen && view\?\.phase === "pending"/);
-  assert.match(main, /<CardComposerContext\.Provider value=\{cardComposer\}>/);
+  // R4g-btw BT4 (X7-16): each card the shared approval slot renders keeps the composer context.
+  assert.match(main, /<CardComposerContext\.Provider key=\{a\.bridgeApproval\.instanceId\} value=\{cardComposer\}>/);
   assert.match(main, /\|\| \(current && shownApprovals\.length > 0 && !!boot\?\.connected && !loading\)\)\}/);
 });

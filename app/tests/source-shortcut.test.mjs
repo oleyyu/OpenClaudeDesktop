@@ -40,6 +40,8 @@ test('glyph tables: mac modifiers sort ctrl/alt/shift/cmd; non-mac maps cmd to C
   assert.deepEqual(S.shortcutCaps('shift+cmd+k', false).map(cap => cap.label), ['Ctrl', 'Shift', 'K']);
   assert.deepEqual(S.shortcutCaps('esc', true), [{ label: 'Esc' }]);
   assert.deepEqual(S.shortcutCaps('escape', false), [{ label: 'Esc' }]);
+  assert.deepEqual(S.shortcutCaps('cmd+plus', true), [{ label: '⌘', spoken: 'Command' }, { label: '+' }]);
+  assert.deepEqual(S.shortcutCaps('cmd+plus', false), [{ label: 'Ctrl' }, { label: '+' }]);
   assert.deepEqual(S.shortcutSequence(' g  then  ') , ['g', 'then']);
   assert.deepEqual(S.shortcutSequence('cmd + k g'), ['cmd+k', 'g']);
   const html = render(S.SourceShortcut, { keys: 'cmd+k g', mac: true });

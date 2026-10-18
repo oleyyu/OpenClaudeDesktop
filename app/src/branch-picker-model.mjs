@@ -1,4 +1,5 @@
 import { t, tn } from "../electron/i18n/index.mjs";
+import { startBranchMissing } from "./generated/r4e-envbranch/start-branch-missing.mjs";
 
 // Composer branch picker, step 1 (2.2553.1 cc43287c9-BMbiZYzF.js:22009-22035
 // hT props, :12050-12071 branch order; cd2687f9f-CY3xvb9b.js N combobox).
@@ -76,6 +77,56 @@ export function checkedOutBranch(info) {
 export function branchCheckoutTarget(info) {
   if (!info?.isRepo || typeof info.branch !== "string" || !info.branch) return null;
   return info.branch !== checkedOutBranch(info) ? info.branch : null;
+}
+
+// R4e-envbranch home-15: Te (2.42304.0 cc43287c9 JZ; G calls it after the trust check for a branch other than the
+// checked-out one with worktree off, which is also where a named environment's saved branch lands: me →
+// onSelectBranch → G). The conflict check comes first (checkBranchSwitchConflict; a failed check counts as
+// conflicting, r = !0); only a conflicting or dirty tree asks qZ whether the branch is missing (generated
+// r4e-envbranch/start-branch-missing.mjs: not origin/… or a sha, a non-empty fresh local-branch list without it, and
+// isBranchOnOrigin === false). Te then clears the pick and warns when missing, opens the dirty-tree dialog when only
+// conflicting, else records the pick.
+//   conflict(cwd, target) → the host's branch-switch-check answer ({ dirty, branch, … }); branches() → the folder's
+//   local branches, fresh (yC refetch, getLocalBranches).
+// Returns { check, conflict, missing }: `check` the answer or null, `conflict` its dirty bit (true without one).
+export async function startBranchCheck({ cwd, target, conflict, branches, missing = startBranchMissing }) {
+  let check = null;
+  try { check = await conflict(cwd, target); } catch {}
+  const conflicting = check ? check.dirty === true : true;
+  const absent = conflicting ? await missing(cwd, target, branches) : false;
+  return { check, conflict: conflicting, missing: absent === true };
+}
+
+// R4e-envbranch home-15 review: the start held while Te runs (2.42304.0 cc43287c9: JZ returns branchCheckPending:
+// ve!==void 0; the draft's gh = pd==="draft" && (startIntent.kind==="local" && (… || Y.branchCheckPending) || …) is the
+// composer's holdSubmit, keyed by holdTargetKey xh = QK(bh) whose bh includes pickedSourceBranch: Y.sourceBranch, where
+// sourceBranch be = ve ?? j is the pending target. c227f4d5e OP: a submit while held is queued (pt.current = {opts,
+// targetKey}); a targetKey change drops it (gt); once the hold lifts the parent calls releaseQueuedSubmit (Ni → Mi(opts))).
+// So a check that records the target releases the start; one that clears it (missing) or leaves it on the old pick
+// (the dirty-tree dialog, pe(t)) changes the key and drops it, and the draft keeps its text.
+//   heldStartKey: the host's part of xh — the session (a draft only), folder, worktree and the start branch (the pending
+//   target while a check runs, else the draft's branch).
+export function heldStartKey({ session = null, folder = "", worktree = false, branch } = {}) {
+  return JSON.stringify([session ?? null, folder || "", worktree === true, typeof branch === "string" && branch ? branch : null]);
+}
+//   heldStartStep: 'none' (nothing held), 'drop' (the key changed — or, host only, the dirty-tree dialog is open: a
+//   named environment's saved branch stays shown in the host draft while GR asks, where official be falls back to j),
+//   'wait' (the check is still running), else 'release'.
+export function heldStartStep({ held, pending = false, key, dialog = false } = {}) {
+  if (!held) return "none";
+  if (held.key !== key) return "drop";
+  if (pending) return "wait";
+  return dialog ? "drop" : "release";
+}
+
+// Te's warning (cc0051c10 FA.branchMissing 94ae6MV2dl, addWarning with uniqueKey `branch-missing:${t}`): `fallback` is
+// the folder's checked-out branch (de.current, the head the cleared draft falls back to), `savedBranch` the selected
+// named environment's settings.branch (saved: some environment with the selected id has settings.branch === t).
+export function branchMissingValues({ branch, fallback, savedBranch }) {
+  return {
+    values: { branch, known: fallback ? "yes" : "no", fallback, saved: typeof savedBranch === "string" && savedBranch === branch ? "yes" : "no" },
+    uniqueKey: `branch-missing:${branch}`,
+  };
 }
 
 // UR (:15860-15912) and GR (:15920-16060) copy.

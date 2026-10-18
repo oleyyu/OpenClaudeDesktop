@@ -2,7 +2,8 @@ import { AddServerDialog } from "./source-settings-harness.jsx";
 import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { bindCustomizeScroll } from './customize-scroll.mjs';
 import { BUILTIN_PLUGINS, builtinPluginRow, filterBuiltinPlugins } from './builtin-plugins.mjs';
-import { pluginDetailTabs, pluginDetailView } from './plugin-detail-model.mjs';
+import { pluginDetailTabList, pluginDetailTabs, pluginDetailView, pluginOverview } from './plugin-detail-model.mjs';
+import { PluginOverview } from './source-r4e-plugin-overview.jsx';
 import { Icon } from "./icons";
 import { SourceSkillFile } from './source-skill-file.jsx';
 import { SourceSwitch as Switch } from './source-switch.jsx';
@@ -423,7 +424,8 @@ function SkillFiles({ state }) {
 
 // Skill drill body = c9a7e510b D in the drill's isModal branch: "flex flex-col
 // h-full px-6 pb-6 gap-3"; header "flex justify-between min-h-14 items-center
-// py-3 -mr-6 pr-md" with the h2 "min-w-0 font-large-bold text-primary
+// py-3 -me-6 pe-md" (2.42304.0 c9a7e510b-C4qmEmSP D: the logical form of
+// 2.37337.1's "-mr-6 pr-md", same F ? "pe-[22px]" : "pe-md" branch) with the h2 "min-w-0 font-large-bold text-primary
 // truncate" and cfaabd194 wt headerActions; then the ccb4abbdf facts row, the
 // c6f9b6c10 Description block, and the files in "flex-1 min-h-0 flex flex-col
 // gap-3 mt-2".
@@ -471,7 +473,7 @@ function SkillDetail({ skill, author, file, toggling, toggleError, onToggle, onB
         <BackButton onClick={onBack}>{backLabel}</BackButton>
       </div>
       <div className="cz-drill-scroll scroll-fade-y scroll-fade-size-6"><div className="cz-skill-detail flex flex-col h-full px-6 pb-6 gap-3">
-        <div className="cz-skill-head flex justify-between min-h-14 items-center py-3 -mr-6 pr-md">
+        <div className="cz-skill-head flex justify-between min-h-14 items-center py-3 -me-6 pe-md">
           <div className="flex flex-1 flex-col min-w-0"><div className="flex min-w-0 items-center gap-xs">
             <h2 className="min-w-0 font-large-bold text-primary truncate">{skill.name}</h2>
           </div></div>
@@ -1136,7 +1138,7 @@ const SETTINGS_CONFIRM_LAYER = Object.freeze({ base: 520, z: 560 });
 
 // Connector drill body, c08e79e85 En by connectorDetailState (customize-model).
 // Connected: "px-6 pb-6" with the N header row (min-h-14 py-3, the drill's
-// "-mr-6 pr-md"), the 24/16 tile and h2 font-large-bold name, a secondary
+// "-me-6 pe-md", 2.42304.0 c08e79e85-CQPpfqXC _n's `we`), the 24/16 tile and h2 font-large-bold name, a secondary
 // Reconnect plus the Sn ⋮ menu, then the description, the LocalConfig block
 // and the tool names (or "This connector has no tools available.").
 // Connecting: the 56/40 tile over a role=status spinner and "Checking
@@ -1264,7 +1266,7 @@ function ConnectorDetail({ row, busy, menuItems, onAction, definition, settings 
   );
   return (
     <div className="px-6 pb-6" data-connector-view="connected">
-      <div className="flex items-center justify-between min-h-14 py-3 -mr-6 pr-md">
+      <div className="flex items-center justify-between min-h-14 py-3 -me-6 pe-md">
         <div className="flex items-center gap-3 min-w-0">
           <ConnectorTile size={24} />
           <div className="flex items-center gap-2 min-w-0"><h2 className="font-large-bold text-primary [overflow-wrap:anywhere]">{row.title}</h2></div>
@@ -1632,7 +1634,8 @@ export function OfficialPlugins({ rows, store, manage = false, onOpen, copy = DE
   </section>;
 }
 
-// Classic plugin detail: customize-plugins-current Dt/Kt -> c36b3644c ye/_e.
+// Classic plugin detail: customize-plugins-current Dt/Kt -> c36b3644c ye/_e; its tab list and Overview tab follow
+// 2.42304.0 c24c8737b pc Kt / c12456454 ni (R4e-plugin, source-r4e-plugin-overview.jsx).
 // Exported for window-free rendering tests of the actual production surface.
 // `mcp` = {rows, loading} of the Customize connectors catalog (connector rows'
 // titles and status); `onConnector(name)` opens a connector's drill.
@@ -1641,7 +1644,9 @@ export function PluginDetail({ plugin, detail, error, skills, view, onView, onBa
   const id = useId();
   const scroll = useRef(null);
   const mcpRows = mcp?.rows;
-  const tabs = useMemo(() => pluginDetailTabs(detail, plugin.id, skills, { descriptions: copy.pluginTabDescriptions, mcpRows: mcpRows || [] }), [detail, plugin.id, skills, copy, mcpRows]);
+  // R4e-plugin (2.42304.0 c24c8737b pc Kt): Overview first, then the content tabs; no Tool permissions servers here.
+  const tabs = useMemo(() => detail ? pluginDetailTabList(pluginDetailTabs(detail, plugin.id, skills, { descriptions: copy.pluginTabDescriptions, mcpRows: mcpRows || [] })) : [], [detail, plugin.id, skills, copy, mcpRows]);
+  const overview = useMemo(() => pluginOverview(detail, plugin, { mcpRows: mcpRows || [] }), [detail, plugin, mcpRows]);
   const { tab, searchable, items } = pluginDetailView(tabs, view?.tab, view?.query);
   useLayoutEffect(() => scrollMemory ? bindCustomizeScroll(scroll.current, scrollMemory, `detail:${plugin.id}`) : undefined, [scrollMemory, plugin.id]);
   useEffect(() => {
@@ -1676,8 +1681,7 @@ export function PluginDetail({ plugin, detail, error, skills, view, onView, onBa
           {/* c26e90ba3 qt `!local && Last updated`: no backend timestamp, so the muted "—". */}
           {plugin.source !== "local" && <div><span>{t("Last updated")}</span><div><span className="text-muted">—</span></div></div>}
         </div>
-        {/* The row's description is the bundle's localized meta when it ships one (catalog.js), else the same package text plugin/read has. */}
-        {(plugin.description || detail?.description) && <div className="cz-plugin-description"><span>{t("Description")}</span><p>{plugin.description || detail?.description}</p></div>}
+        {/* R4e-plugin: the Description is the Overview tab's (c12456454 ni → cae01a6fc W), see pluginOverview. */}
         {error ? <p className="cz-error cz-plugin-message" role="alert">{error}</p> :
           <div className="cz-plugin-contents">
             <div className="cz-plugin-controls">
@@ -1687,23 +1691,23 @@ export function PluginDetail({ plugin, detail, error, skills, view, onView, onBa
                 const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : event.key === 'ArrowRight' ? (at + 1) % tabs.length : event.key === 'ArrowLeft' ? (at - 1 + tabs.length) % tabs.length : null;
                 if (next !== null && tabs.length) { event.preventDefault(); event.currentTarget.querySelectorAll('[role="tab"]')[next]?.focus(); }
               }}>
-                {tabs.length ? tabs.map(entry => <button type="button" role="tab" key={entry.id} id={`${id}-${entry.id}`} aria-controls={`${id}-panel`} aria-selected={entry.id === tab.id} tabIndex={entry.id === tab.id ? 0 : -1}
-                  onFocus={() => { if (entry.id !== tab.id) changeTab(entry.id); }} onClick={() => { if (entry.id !== tab.id) changeTab(entry.id); }}>{t(entry.label)}</button>) : <button type="button" role="tab" disabled aria-selected="true">{t("Skills")}</button>}
+                {/* Kt always holds Overview once plugin/read answers, so there is no empty tab strip. */}
+                {tabs.map(entry => <button type="button" role="tab" key={entry.id} id={`${id}-${entry.id}`} aria-controls={`${id}-panel`} aria-selected={entry.id === tab.id} tabIndex={entry.id === tab.id ? 0 : -1}
+                  onFocus={() => { if (entry.id !== tab.id) changeTab(entry.id); }} onClick={() => { if (entry.id !== tab.id) changeTab(entry.id); }}>{t(entry.label)}</button>)}
               </div></div>
               {searchable && <PageSearch key={tab.id} label={t(`Search ${tab.id}`)} value={view?.query || ''} onChange={query => onView({ tab: tab.id, query })} />}
             </div>
             {tab ? <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab.id}`}>
-              <p className="cz-plugin-tab-description">{tab.description}</p>
-              {tab.id === 'connectors' ? <PluginConnectors tab={tab} items={items} loading={!!mcp?.loading} onSelect={onConnector} onToggle={onServerToggle} busy={serverBusy} /> : items.length ? <ul className="cz-plugin-items" {...{ [`data-plugin-${tab.id}`]: '' }}>
+              {tab.id !== 'overview' && <p className="cz-plugin-tab-description">{tab.description}</p>}
+              {/* pc: `qt === "overview" && a(pa, { …, onOpenConnectors: Kt.some(e => e.id === "connectors") ? Dn : void 0 })`. */}
+              {tab.id === 'overview' ? <PluginOverview overview={overview} onOpenConnectors={tabs.some(entry => entry.id === 'connectors') ? () => changeTab('connectors') : undefined} /> :
+              tab.id === 'connectors' ? <PluginConnectors tab={tab} items={items} loading={!!mcp?.loading} onSelect={onConnector} onToggle={onServerToggle} busy={serverBusy} /> : items.length ? <ul className="cz-plugin-items" {...{ [`data-plugin-${tab.id}`]: '' }}>
                 {items.map(item => <li key={item.key}>{item.path ? <button type="button" className="cz-plugin-item" onClick={() => onSkill(item.path)}><span>{item.label}</span>{item.description.trim().length > 1 && <small title={item.description}>{item.description}</small>}{item.disabled && <Badge>{t("Disabled")}</Badge>}</button> :
                   <div className="cz-plugin-item"><span>{item.label}</span>{item.description.trim().length > 1 && <small title={item.description}>{item.description}</small>}{item.disabled && <Badge>{t("Disabled")}</Badge>}
                     {/* cd0c65b43 f: a monitor's command under when it runs. */}
                     {item.command && <code className="block overflow-hidden whitespace-pre-wrap [overflow-wrap:anywhere] rounded bg-surface-1 px-1.5 py-0.5 font-mono text-caption" data-plugin-monitor-command="">{item.command}</code>}</div>}</li>)}
               </ul> : <p className="cz-plugin-no-match">{t(`No ${tab.id} match your search`)}</p>}
-            </div> : <div className="flex flex-col items-center gap-2 px-6 py-10 text-center" data-plugin-empty="">
-              {/* c36b3644c _e D: "This plugin doesn’t have any skills or agents." */}
-              <span className="font-base text-secondary">{t("This plugin doesn’t have any skills or agents.")}</span>
-            </div>}
+            </div> : null}
           </div>}
       </section>}
     </div>

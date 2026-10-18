@@ -25,6 +25,15 @@ export function worktreeProbe(status) {
   return { status: "clean", changes: [], count: 0, worktree: status };
 }
 
+/**
+ * 2.42304.0 shared-19 EY S: a press of the dirty confirm counts only 500 ms after the later of the queue advancing to it
+ * (`guardSince`, EY d.current) and the confirm opening (`openedAt`, set by vY only for a confirm that follows another
+ * dialog: `...(afterDialog && { openedAt: Date.now() })`). Neither known (0 / undefined): the press counts.
+ */
+export function worktreeConfirmReady({ now = Date.now(), guardSince = 0, openedAt = 0 } = {}) {
+  return now - Math.max(guardSince ?? 0, openedAt ?? 0) >= WORKTREE_DIRTY_GUARD_MS;
+}
+
 /** DK: the first ten lines and how many more there are. */
 export function worktreeChangeList(changes = []) {
   const list = Array.isArray(changes) ? changes : [];

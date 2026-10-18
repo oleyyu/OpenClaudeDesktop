@@ -1,5 +1,6 @@
 // /btw side chat (original ca2ef848d Jw/Uw/Hw/Ww, "claudified_btw_side_chat"):
-// Current Code geometry comes from cccc2cf0a AT/NT and cd97b284f e/t.
+// Current Code geometry comes from cccc2cf0a AT/NT and cd97b284f e/t; the resize
+// handles (cccc2cf0a-B0D--VZp sk/ck) are 2.42304.0's.
 // A movable/resizable panel asks quick questions about
 // the current session without interrupting or adding to it. The DeepSeek
 // bridge answers through codeDesktop/sideQuestion (one auxiliary model call
@@ -25,6 +26,7 @@ import { SourceSideChatUserContent } from './source-side-chat-user-content.jsx';
 import { askSideQuestion, clearSideChat, stopSideQuestion } from './side-chat-controls.mjs';
 export { askSideQuestion, sideQuestionUnsupported } from './side-chat-controls.mjs';
 import { sideChatStore } from './side-chat-store.mjs';
+import { sideChatEscape } from './side-chat-keyboard.mjs';
 import { t } from '../electron/i18n/index.mjs';
 import { sideChatResizeCursor, sideChatResizeHandles } from './side-chat-geometry.mjs';
 import { useSideChatGeometry } from './use-side-chat-geometry.jsx';
@@ -153,17 +155,14 @@ export function SourceSideChat({ threadId, open, onClose, rpc, assistantName = '
     onPopOut?.(rect ? { x: Math.round(view.screenX + rect.left * ratio), y: Math.round(view.screenY + rect.top * ratio), width: Math.round(rect.width * ratio), height: Math.round(rect.height * ratio) } : null);
   };
   return <aside ref={root} tabIndex={-1} className="ssc-root cds-root" data-density="compact" data-windowed={windowed || undefined} style={windowed ? undefined : geometry.rect ?? undefined} {...(windowed ? {} : geometry.pointerProps)} onClick={event => event.stopPropagation()} aria-label={t('Side chat')} data-open={open || undefined} inert={!open || undefined} aria-hidden={!open || undefined}
-    onKeyDownCapture={event => {
-      if (event.key !== 'Escape' || event.nativeEvent.isComposing || event.keyCode === 229 || event.defaultPrevented
-        || event.currentTarget.querySelector('[aria-haspopup="dialog"][aria-expanded="true"], [data-mention-open], [data-menu-open]')) return;
-      event.preventDefault(); event.stopPropagation(); event.nativeEvent.stopImmediatePropagation?.();
-      if (thinking) { void stopSideQuestion({ rpc, threadId }); return; }
-      onClose();
-    }}>
-    {!windowed && sideChatResizeHandles.map(({ edges }) => {
+    onKeyDownCapture={event => sideChatEscape(event, { state: sideChatStore.get(threadId), onStop: () => void stopSideQuestion({ rpc, threadId }), onClose })}>
+    {!windowed && sideChatResizeHandles.map(({ edges, className }) => {
+      // cccc2cf0a-B0D--VZp (2.42304.0) ck.map: each handle is "draggable-none absolute z-[1]" plus its ck
+      // geometry class, styled {touchAction:"none",cursor:sk(edges)}. The host keeps its own pointer
+      // drag (geometry.begin) for the original kn.div pan handlers; ssc-resize/data-edge are host hooks only.
       const edge = ['n', 's', 'w', 'e'].filter(key => edges[key]).join('');
-      return <div key={edge} aria-hidden="true" className="ssc-resize" data-edge={edge}
-        style={{ cursor: sideChatResizeCursor(edges) }} onPointerDown={event => geometry.begin(event, edges)}/>;
+      return <div key={edge} aria-hidden="true" className={`ssc-resize draggable-none absolute z-[1] ${className}`} data-edge={edge}
+        style={{ touchAction: 'none', cursor: sideChatResizeCursor(edges) }} onPointerDown={event => geometry.begin(event, edges)}/>;
     })}
     <div className="ssc-content">
     <header className="ssc-header" onPointerDown={windowed ? undefined : event => geometry.begin(event)}>

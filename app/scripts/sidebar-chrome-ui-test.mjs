@@ -220,15 +220,19 @@ try{
  report.checks.push('Row More buttons have tabindex -1 and data-row-action (Tab/Shift+Tab move row to row); ArrowUp/Down on a group toggle do nothing; ArrowRight from a row reaches its More button (clamped) and ArrowLeft returns (clamped); ArrowDown on the closed More trigger opens Session options instead of moving rows (source Menu.Trigger openOnArrowKeyDown + stopPropagation), Escape restores it; ArrowDown/Up move between rows, Up wraps and Home goes to the first row');
  // mm / Fp (c360a9e1c-GPs-MV9u.js:7387-7420, 6760-6810): Zt "Rename" and the cwd; the folder tooltip is closed while its menu is open.
  step('titlebar-tooltips');await row(ids[0]).click();await expectOpen(ids[0],'Chrome session A','open A for titlebar tooltips');await settle();
- const titleButton=page.locator('.st-toolbar .st-title'),folderPill=page.locator('.st-toolbar .st-folder');
+ // R4i-gui GU1 (R4f-rail SR-7/SR-8): rail mode has no titlebar folder pill (source-titlebar.jsx:471/:475); the folder chip is the rail
+ // Environment card's (rail-view.mjs gD → repo-name-chip.mjs pLe: CdsTooltip {content 'Working folder', detail: the path, open: !menuOpen && undefined}).
+ const railTipSelector='[data-cds="Tooltip"] [role="tooltip"]',railTips=()=>page.evaluate(sel=>[...document.querySelectorAll(sel)].map(node=>node.textContent),railTipSelector);
+ const titleButton=page.locator('.st-toolbar .st-title'),folderPill=page.getByRole('complementary',{name:'Session details',exact:true}).locator('section[data-rail-section]').filter({has:page.locator('h3',{hasText:/^Environment/})}).getByRole('button',{name:path.basename(workspace),exact:true});
+ assert.equal(await page.locator('.st-toolbar .st-folder').count(),0,'rail mode: no titlebar folder pill');
  await titleButton.hover();await page.locator(tipSelector).filter({hasText:'Rename'}).waitFor();const renameTips=await liveTips();const titleBox=await titleButton.boundingBox();
  report.metrics.renameTooltip={tips:renameTips,title:titleBox};assert.equal(renameTips.length,1);assert.equal(renameTips[0].text,'Rename');assert.equal(renameTips[0].side,'bottom','Nu default top flips below at the window top');assert.ok(renameTips[0].top>=titleBox.y+titleBox.height);await shot('titlebar-rename-tooltip');
- await settle();await folderPill.hover();await page.locator(tipSelector).filter({hasText:workspace}).waitFor();const folderTips=await liveTips();report.metrics.folderTooltip=folderTips;assert.equal(folderTips.length,1);assert.equal(folderTips[0].text,workspace);
- // Fidelity F03: the pill opens the CDS menu (Fp → Gt.Popup) whose Group is labelled 'Working directory' (Ep, c360a9e1c :6555-6588).
- const folderGroupLabel=page.locator('[role="menu"] .smenu-group-label',{hasText:'Working directory'});
+ await settle();await folderPill.hover();await page.locator(railTipSelector).filter({hasText:'Working folder'}).filter({hasText:workspace}).waitFor();const folderTips=await railTips();report.metrics.folderTooltip=folderTips;assert.equal(folderTips.length,1);assert.equal(folderTips[0],'Working folder'+workspace);
+ // R4i-gui GU1: the chip opens CdsDropdown.Popup over railRepoMenuItems (source-session-rail.jsx:379), no 'Working directory' group label.
+ const folderGroupLabel=page.getByRole('menu').filter({has:page.getByRole('menuitem',{name:'Copy path',exact:true})});
  await settle();await folderPill.click();await folderGroupLabel.waitFor();await page.mouse.move(700,700);await folderPill.hover({force:true});await page.waitForTimeout(1000);
- assert.deepEqual(await liveTips(),[],'no folder tooltip while the folder menu is open');await page.keyboard.press('Escape');await folderGroupLabel.waitFor({state:'detached'});
- report.checks.push('Titlebar: hovering the title shows the CDS "Rename" tooltip (flipped below), the folder pill shows the cwd, and with the folder menu open the pill shows no tooltip');
+ assert.deepEqual(await railTips(),[],'no folder tooltip while the folder menu is open');await page.keyboard.press('Escape');await folderGroupLabel.waitFor({state:'detached'});
+ report.checks.push('Titlebar: hovering the title shows the CDS "Rename" tooltip (flipped below); rail mode has no folder pill, the rail Environment card folder chip shows "Working folder" with the cwd, and with its menu open the chip shows no tooltip');
  const titled=await page.evaluate(()=>[...document.querySelectorAll('.app-sidebar [title], .st-lead [title]')].map(node=>node.outerHTML.slice(0,120)));report.metrics.titled=titled;assert.deepEqual(titled,[]);
  report.checks.push('No element in .app-sidebar or .st-lead carries a native title');
  step('nav-travel');await row(ids[0]).click();await expectOpen(ids[0],'Chrome session A','open A');await row(ids[1]).click();await expectOpen(ids[1],'Chrome session B','open B');

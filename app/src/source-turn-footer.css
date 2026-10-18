@@ -35,23 +35,33 @@
   align-items: center; justify-content: center; box-sizing: border-box;
   width: var(--cds-h-control, 24px); height: var(--cds-h-control, 24px);
   margin: 0; padding: 0; border: 0; border-radius: var(--cds-radius, 6px);
-  background: transparent; color: var(--cds-text-muted); outline: none;
+  background: transparent; outline: none;
   font-family: var(--cds-font-sans); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px);
   cursor: var(--cds-cursor-interactive, default); user-select: none;
   transition: box-shadow var(--cds-dur-fast, 60ms);
 }
-.stf-copy:hover { color: var(--cds-text-primary); }
+/* Text colour comes from the official classes only, all in c6a992d55's @layer utilities: the toolbar carries shared-2
+   lX's "[&_button]:text-muted [&_button:hover:not([aria-pressed=true])]:text-primary" and Pin / Good / Bad their Il
+   ghost aria-pressed:text-accent, so a pressed button (0,2,0) beats the toolbar muted (0,1,1), hover included. An
+   unlayered colour here would beat every layer whatever its specificity (R1 had .stf-copy muted, which hid the
+   pressed accent). style.css's `button { color: inherit }` reset sits in @layer base (D26, R3-style), below those
+   utilities, so the button needs no colour release of its own. Disabled (a rating in flight) is Il's
+   "[&:disabled:not([aria-busy])]:opacity-disabled disabled:pointer-events-none" on the button: the colour stays. */
 .stf-copy:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .stf-button-backdrop {
   position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
   transition: transform var(--cds-dur-slow) var(--cds-btn-spring); transform-origin: center;
 }
+/* No background here: an unpressed paint is transparent by default, and a pressed one takes the official
+   group-aria-pressed/btn:bg-accent (shared-frame gc) without competing with a local rule of equal specificity. */
 .stf-button-backdrop > [data-cds-part="paint"] {
-  position: absolute; inset: 0; border-radius: inherit; background: transparent;
+  position: absolute; inset: 0; border-radius: inherit;
   transition: background-color var(--cds-dur-fast, 60ms);
 }
-.stf-copy:hover .stf-button-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
-.stf-copy:active .stf-button-backdrop { transform: scale(.975); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
+/* Hl ghost "group-hover/btn:bg-fill-ghost-hover"; on a pressed button gc's group-hover/btn:group-aria-pressed/btn:bg-accent
+   wins in the source, so the local hover fill leaves pressed buttons alone. */
+.stf-copy:hover:not([aria-pressed="true"]) .stf-button-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
+.stf-copy:active .stf-button-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
 .stf-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (pointer: coarse), (hover: none) {
   .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal] {
@@ -70,4 +80,3 @@ html[data-reduce-motion="true"] .stf-copy, html[data-reduce-motion="true"] .stf-
 html[data-reduce-motion="true"] .stf-copy:active .stf-button-backdrop { transform: none; }
 html[data-reduce-motion="true"] .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal],
 html[data-local-motion="reduce"] .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal] { transition-property: none; scale: none; }
-.stf-feedback[aria-pressed="true"]{color:var(--cds-text-primary)}

@@ -44,10 +44,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .stp-tab[data-bell] > .source-file-tab-bg { animation: none; }
-  .stp-placeholder { animation: none; }
 }
 html[data-reduce-motion="true"] .stp-tab[data-bell] > .source-file-tab-bg { animation: none; }
-html[data-reduce-motion="true"] .stp-placeholder { animation: none; }
 .stp-rename {
   flex: 1;
   min-width: 0;
@@ -162,21 +160,9 @@ html[data-reduce-motion="true"] .stp-placeholder { animation: none; }
   font-size: var(--cds-font-size-footnote);
   line-height: var(--cds-leading-footnote);
 }
-/* Loading: a dimmed block cursor (data-testid terminal-pane-placeholder, 1ch × 1lh at 50%). */
-.stp-placeholder {
-  position: absolute;
-  top: var(--cds-pad-md);
-  left: var(--cds-pad-md);
-  width: 1ch;
-  height: 1lh;
-  opacity: 0.5;
-  background: var(--cds-text-primary);
-  font: 12px/1 var(--cds-font-code, ui-monospace), monospace;
-  animation: stp-blink 1s steps(1) infinite;
-}
-@keyframes stp-blink {
-  50% { opacity: 0; }
-}
+/* The idle cursor is cf718f694 B (generated/code-current/terminal-idle-cursor.mjs): its pointer-events-none block
+   h-[1lh] w-[1ch] opacity-50 / motion-safe:animate-blink and the pane's group-has-[[data-ccd-terminal]]/terminal:hidden
+   come from the loaded c6a992d55 utilities, so no local rule styles it. */
 /* Narrow panes: the strip keeps the selected tab and the + button. */
 @container (max-width: 320px) {
   .stp-tab:not([data-selected]) {

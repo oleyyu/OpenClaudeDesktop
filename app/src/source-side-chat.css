@@ -7,18 +7,8 @@
 .ssc-content { display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;border-radius:inherit; }
 /* shared-6 om: dark panel outline, excluded in forced-colour mode. */
 @media (forced-colors:none) { [data-mode="dark"] .ssc-content { outline:1px solid var(--cds-alpha-2); } }
-.ssc-resize { position:absolute;z-index:1;touch-action:none;-webkit-app-region:no-drag; }
-.ssc-resize[data-edge="n"],.ssc-resize[data-edge="s"] { left:8px;right:8px;height:6px; }
-.ssc-resize[data-edge="n"] { top:-3px; }
-.ssc-resize[data-edge="s"] { bottom:-3px; }
-.ssc-resize[data-edge="w"],.ssc-resize[data-edge="e"] { top:8px;bottom:8px;width:6px; }
-.ssc-resize[data-edge="w"] { left:-3px; }
-.ssc-resize[data-edge="e"] { right:-3px; }
-.ssc-resize[data-edge="nw"],.ssc-resize[data-edge="ne"],.ssc-resize[data-edge="sw"],.ssc-resize[data-edge="se"] { width:8px;height:8px; }
-.ssc-resize[data-edge="nw"] { top:-3px;left:-3px; }
-.ssc-resize[data-edge="ne"] { top:-3px;right:-3px; }
-.ssc-resize[data-edge="sw"] { bottom:-3px;left:-3px; }
-.ssc-resize[data-edge="se"] { bottom:-3px;right:-3px; }
+/* Resize handles carry the original utilities (draggable-none absolute z-[1] + ck geometry such as
+   "-top-[3px] inset-x-[8px] h-[6px]"), all in the loaded 2.42304.0 stylesheet; no host positioning. */
 .ssc-header { touch-action:none;user-select:none;-webkit-app-region:no-drag; }
 
 /* c4db265df Q: 2rem header, 4px gutters; shared-6 ym/Sm title and controls. */

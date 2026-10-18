@@ -77,8 +77,10 @@ test("source wiring: paste/drop route folders, Add folder adds instead of switch
   const composer = readFileSync(new URL("../src/source-composer.jsx", import.meta.url), "utf8");
   const paste = composer.slice(composer.indexOf("const paste = (event) =>"), composer.indexOf("const drop = (event) =>", composer.indexOf("const paste = (event) =>")));
   assert.doesNotMatch(paste, /imagesOnly: true/, "the paste lane no longer refuses path-backed files");
-  assert.match(paste, /splitClipboardFolders\(event\.clipboardData\?\.items/);
-  assert.match(paste, /onAddFolders\(folders/);
+  // R4g-composer CP4 (composer-12): the split is the original shared-52 mb and the lanes are aK's (the folders lane is
+  // onAddFolders), shared by paste and drop.
+  assert.match(paste, /intake\(splitTransferItems\(event\.clipboardData\?\.items/);
+  assert.match(composer, /folders: onAddFolders \? \(folders\) => onAddFolders\(folders, \{ source \}\) : undefined,/);
   const main = readFileSync(new URL("../src/main.jsx", import.meta.url), "utf8");
   assert.match(main, /<SourceMenu\.Item icon="Folder" onClick=\{addFolderFromMenu\}>\{t\("Add folder"\)\}/);
   assert.doesNotMatch(main, /<SourceMenu\.Item icon="Folder" onClick=\{folder\}>\{t\("Add folder"\)\}/);

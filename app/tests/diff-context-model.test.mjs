@@ -33,6 +33,10 @@ test('partial and malformed data cannot acquire expansion or unknown tail from a
  assert.equal(contextRegions(model('--- a/a\n+++ b/a\n@@ -1,2 +1 @@\n-a\n+b\n'),true),null);
  assert.deepEqual(diffPayload('raw patch'),{patch:'raw patch',completeContext:false});
  assert.deepEqual(diffPayload(null),{patch:'',completeContext:false});
+ // diffgit-08: the main process's patches_withheld travels only as a boolean.
+ assert.deepEqual(diffPayload({patch:'p',completeContext:true,patches_withheld:true}),{patch:'p',completeContext:true,patchesWithheld:true});
+ assert.deepEqual(diffPayload({patch:'p',patches_withheld:false}),{patch:'p',completeContext:false,patchesWithheld:false});
+ assert.deepEqual(diffPayload({patch:'p',patches_withheld:'true'}),{patch:'p',completeContext:false});
 });
 test('new/deleted files show every real changed line with no false unchanged gap',()=>{
  for(const value of ['--- /dev/null\n+++ b/a\n@@ -0,0 +1,2 @@\n+a\n+b\n','--- a/a\n+++ /dev/null\n@@ -1,2 +0,0 @@\n-a\n-b\n']){

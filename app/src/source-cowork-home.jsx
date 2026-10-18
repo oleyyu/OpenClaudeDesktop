@@ -12,7 +12,7 @@ const localIdeas = ideaCatalog.pool.filter(idea => localIdeaIds.has(idea.id));
 
 export function SourceCoworkHome({ call, sessions, metadata, state, ready, onOpen, onOpenRoutine, onClearActive, onError, onPrompt, onPreviewPrompt, onFocusInput }) {
   const data = useMemo(() => coworkHomeState(sessions, metadata, state), [sessions, metadata, state]);
-  const { tasks, error: scheduleError } = useLocalRoutines(call);
+  const { tasks, error: scheduleError } = useLocalRoutines(call, 'cowork');
   const scheduledTasks = useMemo(() => (tasks ?? []).map(sourceRoutine), [tasks]);
   const [clearing, setClearing] = useState(null);
   const actions = useRef(null);

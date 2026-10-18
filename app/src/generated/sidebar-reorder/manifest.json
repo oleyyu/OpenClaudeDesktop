@@ -1,0 +1,537 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-sidebar-reorder.mjs",
+  "adapterModule": "src/source-sidebar-reorder-adapters.jsx",
+  "modules": [
+    {
+      "target": "dnd-kit.mjs",
+      "source": "c09f6b4e5-DErbwtLQ.js",
+      "sourceSha256": "a9212e50576e009cab8b992efecf651d749a3a40e8c5578d02311c105894bc89",
+      "sha256": "07a0cd5bbef2ed1f322607d03c752a469be2eaea5d9f9aaa60f8b79ca6e4fed8",
+      "referenceVersion": "2.42304.0",
+      "kind": "copy",
+      "bodySha256": "fae154431cab1f0c1459f2d5e3fe6ca3041be4f98e71ce7ee4b63add56617004",
+      "bodyBytes": 47497,
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "cloneElement",
+          "via": "vendor-frame-DfPJ1QmD.js:$a",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react-dom",
+          "name": "createPortal",
+          "via": "vendor-frame-DfPJ1QmD.js:Sa",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react-dom",
+          "name": "unstable_batchedUpdates",
+          "via": "vendor-frame-DfPJ1QmD.js:Ta",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-DfPJ1QmD.js:ro",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "default",
+          "via": "vendor-frame-DfPJ1QmD.js:so",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "useReducer",
+          "via": "vendor-frame-DfPJ1QmD.js:xo",
+          "kind": "react"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "_": "de",
+        "a": "Yn",
+        "b": "ae",
+        "c": "En",
+        "d": "ct",
+        "f": "pt",
+        "g": "z",
+        "h": "dn",
+        "i": "$n",
+        "l": "rt",
+        "m": "J",
+        "n": "Dn",
+        "o": "Ln",
+        "p": "_e",
+        "r": "Nn",
+        "s": "on",
+        "t": "Vn",
+        "u": "dt",
+        "v": "fe",
+        "x": "N",
+        "y": "P"
+      }
+    },
+    {
+      "target": "layer-base.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "286f3bdb6110a6ac349a34f1dee53adfef53de5707d64d2760539b92eadb383b",
+      "referenceVersion": "2.42304.0",
+      "kind": "slice",
+      "bindings": [
+        {
+          "name": "Bd",
+          "sha256": "a32a59c74a35ab2af87d8383660050cf44929488d6699c3a96de59c3df662f49"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Bd": "cdsLayerBase"
+      }
+    },
+    {
+      "target": "reorder-support.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "54b6ba7b82df9d3c574fc8200bfdf9155559debb70e277b6ac659c483973e8cb",
+      "referenceVersion": "2.42304.0",
+      "kind": "slice",
+      "bindings": [
+        {
+          "name": "JQ",
+          "sha256": "383dd8b1ad1781d4e5b6cbff28da6649f67aadb8aa57bedf4ee892a0fff90787"
+        },
+        {
+          "name": "u$",
+          "sha256": "4fc4b3331c4ad2d6690e7dcd8c93c9369943f3b9b8764f8397723c16d73fdd6f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Mf",
+          "from": "./layer-base.mjs",
+          "name": "cdsLayerBase",
+          "via": "shared-frame-BfjMqbuN.js:Bc",
+          "kind": "generated",
+          "original": "shared-frame-BfjMqbuN.js:Bd"
+        }
+      ],
+      "exports": {
+        "u$": "suppressClickAfterDrag",
+        "JQ": "dragOverlayZIndex"
+      }
+    },
+    {
+      "target": "drag-gesture.mjs",
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "7dadfbd60307b1b81fedc030d292aedb157636bb84fcec3bed4d526542c74ada",
+      "referenceVersion": "2.42304.0",
+      "kind": "slice",
+      "bindings": [
+        {
+          "name": "Rs",
+          "sha256": "e5e39543cfd5892b5cc2eb6750770e71642c9ac529e36ed1039b90a4dc8f87fb"
+        },
+        {
+          "name": "zs",
+          "sha256": "23d35f1c4960220a5fe7e4ac77b65a6f9d37ba418a2fcf6c1f5e0acc68630207"
+        },
+        {
+          "name": "Bs",
+          "sha256": "d864d378655dcea66e2c4399e9735b5cb45adb645ca41b24210669ac4a9a5fac"
+        },
+        {
+          "name": "Vs",
+          "sha256": "0e74f41ba1e899ac7343cc9c657505e93dde2e46fbacfdc89d3da5328602f8b7"
+        },
+        {
+          "name": "Hs",
+          "sha256": "b4c93e66cb0ce056084f0e8c5e6b775808d8d86579c1f184e5d528267c7098b4"
+        },
+        {
+          "name": "Us",
+          "sha256": "1274a717956dfa7eab3c9cdd6222499dbd5dc0f8fc2b826e430e055067877c5a"
+        },
+        {
+          "name": "Ws",
+          "sha256": "0a2a1272a5d0822b251602024cbc6ab676bde566b2a451e1822d00140676f068"
+        },
+        {
+          "name": "Ks",
+          "sha256": "d465f6db8a0d49940c3d46a9332324c26cf4e0994dc8dfae6cc46e5c484babab"
+        },
+        {
+          "name": "qs",
+          "sha256": "cf78161688d143231f31208a6174c8c7cadc0a58da8f041ccfcdd90dce00133b"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ve",
+          "from": "../../source-sidebar-reorder-adapters.jsx",
+          "name": "dragTelemetry",
+          "via": "shared-25-DP8p7i1Z.js:id",
+          "kind": "adapter",
+          "original": "shared-25-DP8p7i1Z.js:Tv"
+        },
+        {
+          "local": "se",
+          "from": "../code-current/owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DP8p7i1Z.js:Pf",
+          "kind": "external",
+          "original": "shared-25-DP8p7i1Z.js:dp"
+        }
+      ],
+      "exports": {
+        "qs": "beginDragGesture"
+      }
+    },
+    {
+      "target": "project-reorder-bindings.mjs",
+      "source": "c1afd40ea-iYz9kai5.js",
+      "sourceSha256": "f0f75e3ed69e9b4fd127a1f5e6f0f06f9529857b73e6dd93d9eaa1ea63b6062f",
+      "sha256": "26c7fa1c5d79bddb23b3351ae14ff5a0e5a29f2f8a9f17aa9d6e2243ec9914e1",
+      "referenceVersion": "2.42304.0",
+      "kind": "copy",
+      "bodySha256": "cb609b574ef6f59a99e10e9908f45e514207fa9281ec79ba64ae2ac8a4b2f400",
+      "bodyBytes": 2270,
+      "imports": [
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-DfPJ1QmD.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "./reorder-support.mjs",
+          "name": "suppressClickAfterDrag",
+          "via": "shared-19-CkPOiIKm.js:Gi",
+          "kind": "generated",
+          "original": "shared-19-CkPOiIKm.js:u$"
+        },
+        {
+          "local": "l",
+          "from": "./reorder-support.mjs",
+          "name": "dragOverlayZIndex",
+          "via": "shared-19-CkPOiIKm.js:Ki",
+          "kind": "generated",
+          "original": "shared-19-CkPOiIKm.js:JQ"
+        },
+        {
+          "local": "u",
+          "from": "./drag-gesture.mjs",
+          "name": "beginDragGesture",
+          "via": "shared-11-BuQ3CK5I.js:Xa",
+          "kind": "generated",
+          "original": "shared-11-BuQ3CK5I.js:qs"
+        },
+        {
+          "local": "d",
+          "from": "./dnd-kit.mjs",
+          "name": "_",
+          "via": "c09f6b4e5-DErbwtLQ.js:_",
+          "kind": "generated"
+        },
+        {
+          "local": "f",
+          "from": "./dnd-kit.mjs",
+          "name": "a",
+          "via": "c09f6b4e5-DErbwtLQ.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "./dnd-kit.mjs",
+          "name": "c",
+          "via": "c09f6b4e5-DErbwtLQ.js:c",
+          "kind": "generated"
+        },
+        {
+          "local": "m",
+          "from": "./dnd-kit.mjs",
+          "name": "d",
+          "via": "c09f6b4e5-DErbwtLQ.js:d",
+          "kind": "generated"
+        },
+        {
+          "local": "h",
+          "from": "./dnd-kit.mjs",
+          "name": "h",
+          "via": "c09f6b4e5-DErbwtLQ.js:h",
+          "kind": "generated"
+        },
+        {
+          "local": "g",
+          "from": "./dnd-kit.mjs",
+          "name": "o",
+          "via": "c09f6b4e5-DErbwtLQ.js:o",
+          "kind": "generated"
+        },
+        {
+          "local": "_",
+          "from": "./dnd-kit.mjs",
+          "name": "p",
+          "via": "c09f6b4e5-DErbwtLQ.js:p",
+          "kind": "generated"
+        },
+        {
+          "local": "v",
+          "from": "./dnd-kit.mjs",
+          "name": "s",
+          "via": "c09f6b4e5-DErbwtLQ.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "y",
+          "from": "./dnd-kit.mjs",
+          "name": "t",
+          "via": "c09f6b4e5-DErbwtLQ.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "b",
+          "from": "./dnd-kit.mjs",
+          "name": "v",
+          "via": "c09f6b4e5-DErbwtLQ.js:v",
+          "kind": "generated"
+        },
+        {
+          "local": "x",
+          "from": "./dnd-kit.mjs",
+          "name": "y",
+          "via": "c09f6b4e5-DErbwtLQ.js:y",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "ProjectReorderBindings": "E"
+      }
+    },
+    {
+      "target": "section-reorder.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "7400ce03a32f2b3fc4ba8ca31fd6e5313d87b6d3d688f0c15086e4d90be22a88",
+      "referenceVersion": "2.42304.0",
+      "kind": "slice",
+      "bindings": [
+        {
+          "name": "b$",
+          "sha256": "310817b01382894b4b3c6b5e983f0a38cea60d684417b7a9b67ae577760a2b61"
+        },
+        {
+          "name": "S$",
+          "sha256": "0fdd6067eafb7450d9a4e9a213ceedfec39044594847166f4337c492afa9f6bf"
+        }
+      ],
+      "rewrites": [
+        {
+          "binding": "b$",
+          "original": "f(() => import(\"./c1afd40ea-iYz9kai5.js\"), __vite__mapDeps([0, 1]))",
+          "replacement": "f(() => import(\"./project-reorder-bindings.mjs\"))"
+        }
+      ],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Ti",
+          "from": "../../source-sidebar-reorder-adapters.jsx",
+          "name": "useLazyChunkStatus",
+          "via": "shared-156-Bikz018e.js:Ir",
+          "kind": "adapter",
+          "original": "shared-156-Bikz018e.js:dB"
+        },
+        {
+          "local": "_$",
+          "from": "../sidebar-sections/section-sortable.mjs",
+          "name": "SectionDragBridge",
+          "via": "shared-19-CkPOiIKm.js:_$",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:_$"
+        },
+        {
+          "local": "v$",
+          "from": "../sidebar-sections/section-sortable.mjs",
+          "name": "SectionDragBridgeContext",
+          "via": "shared-19-CkPOiIKm.js:v$",
+          "kind": "external",
+          "original": "shared-19-CkPOiIKm.js:v$"
+        },
+        {
+          "local": "f",
+          "from": "../../source-sidebar-reorder-adapters.jsx",
+          "name": "preloadChunk",
+          "via": "preload-helper-D0dM6GpB.js:t",
+          "kind": "adapter",
+          "original": "preload-helper-D0dM6GpB.js:s"
+        },
+        {
+          "local": "K",
+          "from": "../../source-sidebar-reorder-adapters.jsx",
+          "name": "defineLazyChunk",
+          "via": "shared-104-Cqo2-vQh.js:fh",
+          "kind": "adapter",
+          "original": "shared-104-Cqo2-vQh.js:Fo"
+        },
+        {
+          "local": "Uu",
+          "from": "../../source-sidebar-reorder-adapters.jsx",
+          "name": "noFallback",
+          "via": "shared-104-Cqo2-vQh.js:ph",
+          "kind": "adapter",
+          "original": "shared-104-Cqo2-vQh.js:ko"
+        }
+      ],
+      "exports": {
+        "S$": "SectionReorder",
+        "b$": "projectReorderChunk"
+      }
+    }
+  ]
+}

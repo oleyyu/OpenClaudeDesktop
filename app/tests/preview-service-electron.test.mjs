@@ -27,7 +27,7 @@ test('preview tools drive a dev server page in the real preview service', { skip
       assert.ok(results.tools.includes(name), `${name} is listed`);
     assert.match(results.listBefore, /- web: stopped/);
     assert.equal(results.start.isError, false, results.start.text);
-    assert.match(results.start.text, /started successfully on port \d+/);
+    assert.match(results.start.text, /Server started on port \d+\./); // R4e-preview: 2.42304.0 preview_start wording
     assert.equal(results.state.title, 'Fixture app');
     assert.equal(results.state.servers[0].status, 'running');
     assert.match(results.readPage, /textbox "Name" value="" \[ref_1\]/);
@@ -60,7 +60,7 @@ test('preview tools drive a dev server page in the real preview service', { skip
     assert.match(results.dialogTitle, /Page: no/);
     assert.match(results.dialogConsole, /Page dialog suppressed \(confirm\): "Delete it\?" — native JavaScript dialogs are disabled in this browser; confirm\(\) returned false to the page\./);
     // A dev server that ignores SIGTERM is gone once dispose (the app's quit) resolves.
-    assert.match(results.stubbornStart, /started successfully/);
+    assert.match(results.stubbornStart, /Server started on port \d+\./);
     assert.equal(results.stubbornAfterQuit, 'closed');
     assert.ok(results.disposeMs < 2900, `dispose took ${results.disposeMs} ms`);
   } finally {

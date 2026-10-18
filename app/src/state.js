@@ -3,6 +3,7 @@ import { observeAgentEvent } from "./agent-model.mjs";
 import { beginTurnStats, updateTurnUsage } from './transcript-runtime-stats.mjs';
 import { emptyApprovalTransport, reduceApprovalTransport } from "./approval-state.js";
 import { normalizeTurnError } from "./turn-error-model.mjs";
+import { planMarkFromUpdate } from "./turn-box-plan-model.mjs";
 export const emptyState = {
   ...emptyApprovalTransport,
   items: {},
@@ -395,6 +396,13 @@ export function reduce(state, action) {
     const missing = Object.entries(action.usage || {}).filter(([id, usage]) => usage && typeof usage === "object" && !state.usage?.[id]);
     return missing.length ? { ...state, usage: { ...state.usage, ...Object.fromEntries(missing) } } : state;
   }
+  // R4f-error fix: 2.42304.0 c06cf64bb clearError(id) (cc43287c9 n_: b_ calls it before lz, N_ before it announces) — the thread-wide
+  // error and its errorKilledTurn, as the bucket's error; a turn's own TurnError (turnErrors) stays, as the original's
+  // in-transcript error row does.
+  if (action.type === "clear-error") {
+    if (!state.errors?.[action.id] && !state.errorKilledTurn?.[action.id]) return state;
+    return { ...state, errors: { ...state.errors, [action.id]: null }, errorKilledTurn: { ...state.errorKilledTurn, [action.id]: false } };
+  }
   if(action.type==='backgroundReadStarted'){
     if(action.connectionId!==state.approvalConnectionId)return state;
     const processes=Object.fromEntries((state.items[action.id]||[]).filter(item=>item.type==='commandExecution'&&item.processId).map(item=>[item.id,item.processId]));
@@ -591,6 +599,7 @@ export function reduce(state, action) {
       // When a live failure arrived (turnErrorAt), so a later sign-in can settle an auth card ('Signed in again').
       ...(p.turn.error && p.turn.id ? { turnErrorAt: { ...state.turnErrorAt, [id]: { ...state.turnErrorAt?.[id], [p.turn.id]: Date.now() } } } : {}),
       errors: newerTurn ? state.errors : { ...state.errors, [id]: p.turn.error && !p.turn.id ? normalizeTurnError(p.turn.error) : null },
+      errorKilledTurn: newerTurn ? state.errorKilledTurn : { ...state.errorKilledTurn, [id]: !!(p.turn.error && !p.turn.id) }, // R4f-error E5: an id-less failed turn/completed ended a running turn (retry-turn-model)
     };
   }
   // ErrorNotification {error, willRetry, threadId, turnId}. willRetry:true is
@@ -615,10 +624,11 @@ export function reduce(state, action) {
       turnErrorAt: { ...state.turnErrorAt, [id]: { ...state.turnErrorAt?.[id], [p.turnId]: Date.now() } },
       turnErrors: { ...state.turnErrors, [id]: { ...state.turnErrors?.[id], [p.turnId]: error } } };
     // A thread-wide failure keeps its TurnError shape for the transcript-tail card.
-    return { ...state, retrying: { ...state.retrying, [id]: null }, errors: { ...state.errors, [id]: error } };
+    return { ...state, retrying: { ...state.retrying, [id]: null }, errors: { ...state.errors, [id]: error },
+      errorKilledTurn: { ...state.errorKilledTurn, [id]: !!state.active[id] || (!!state.errors?.[id] && state.errorKilledTurn?.[id] === true) } }; // R4f-error E5: c06cf64bb errorKilledTurn (pendingTurn!==null||errorKilledTurn)
   }
   if (e.method === "turn/plan/updated")
-    return { ...state, plans: { ...state.plans, [id]: p.plan } };
+    return { ...state, plans: { ...state.plans, [id]: p.plan }, planMarks: { ...state.planMarks, [id]: planMarkFromUpdate(p.turnId, items) } }; // R4i-transcript TR1: the turn box plan mark (c1ebb1aa4 Rt places the plan write)
   if (e.method === "turn/diff/updated")
     return { ...state, diffs: { ...state.diffs, [id]: p.diff } };
   if (e.method === "thread/tokenUsage/updated") {

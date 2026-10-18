@@ -32,6 +32,11 @@ const TOP_TIER_EFFORTS = new Set(["ultra", "ultracode"]);
 export const effortId = (level) => typeof level === "string" ? level : level?.id || level?.reasoningEffort;
 export const isTopTierEffort = (id) => TOP_TIER_EFFORTS.has(id);
 export const hasTopTierEffort = (levels) => Array.isArray(levels) && isTopTierEffort(effortId(levels.at(-1)));
+// The purple accent (user decision 2026-10-18): a model's highest level reads purple whatever its id (ultra, ultracode,
+// max, xhigh or high), not only the named ultra tier. isTopTierEffort keeps the ultracode semantics (main.jsx).
+export const isHighestEffort = (id, levels) => !!id && id !== "off" && (isTopTierEffort(id)
+  || (Array.isArray(levels) && levels.length > 1 && effortId(levels.at(-1)) === id));
+export const hasHighestEffort = (levels) => Array.isArray(levels) && levels.length > 1 && isHighestEffort(effortId(levels.at(-1)), levels);
 
 // Ultracode (Claude Code 2.1.280: xhigh effort + standing dynamic-workflow orchestration, this session only). With
 // Dynamic workflows on, the purple top tier IS ultracode: a model's own top tier (Codex's 'ultra') keeps its id and

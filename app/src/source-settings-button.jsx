@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from './icons';
+import { buttonKeyPress, buttonPointerPress } from './button-press.mjs';
 import './source-settings-button.css';
 
 // Native buttons used by the desktop settings pages. Other CDS Button
@@ -7,7 +8,7 @@ import './source-settings-button.css';
 export const SourceSettingsButton = React.forwardRef(function SourceSettingsButton({
   variant = 'secondary', size, icon, iconSize = 20, iconOnly = false,
   iconPosition = 'start', className = '', children, type = 'button',
-  busy=false, flush=false, style, onClick, onKeyDown, onKeyUp, onMouseDown, ...props
+  busy=false, flush=false, style, onClick, onKeyDown, onKeyUp, onMouseDown, onPointerDownCapture, ...props
 }, ref) {
   // shared-frame ks :2833-2836/:2880-2882: flush (true = "start") applies only to
   // a non-joined ghost; Cs start/end/both = ms-/me-/mx-outset against
@@ -32,9 +33,10 @@ export const SourceSettingsButton = React.forwardRef(function SourceSettingsButt
     aria-busy={busy||undefined} aria-disabled={busy||props['aria-disabled']||undefined}
     data-size={size && size !== 'base' ? size : undefined} data-cds-icon-only={iconOnly ? '' : undefined}
     className={`source-settings-button ${className}`}
+    onPointerDownCapture={event => { buttonPointerPress(event); onPointerDownCapture?.(event); }}
     onKeyDown={event => {
       if(busy&&(event.key==='Enter'||event.key===' ')){event.preventDefault();event.stopPropagation();return;}
-      if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+      buttonKeyPress(event);
       onKeyDown?.(event);
     }}
     onKeyUp={event=>{if(busy&&(event.key==='Enter'||event.key===' ')){event.preventDefault();event.stopPropagation();return;}onKeyUp?.(event);}}

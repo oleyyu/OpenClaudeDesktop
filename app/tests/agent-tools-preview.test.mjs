@@ -74,7 +74,7 @@ test('the real tools directory is listed over stdio; the Settings switch hides t
   const listed = (await server.request('tools/list', {})).result.tools.map((tool) => tool.name);
   for (const name of PREVIEW_TOOLS) assert.ok(listed.includes(name), name);
   const text = async (name, args = {}) => { const result = (await server.request('tools/call', { name, arguments: args })).result; return { ...result, text: result.content.filter((part) => part.type === 'text').map((part) => part.text).join('\n') }; };
-  assert.match((await text('preview_start', { name: 'web' })).text, /started successfully on port 5173.*The preview shows http:\/\/localhost:5173\//s);
+  assert.match((await text('preview_start', { name: 'web' })).text, /Server started on port 5173\..*The preview shows http:\/\/localhost:5173\//s);
   assert.deepEqual(calls.at(-1), ['start', 'thread-1', { name: 'web', url: undefined }]);
   assert.match((await text('preview_list')).text, /- web: running · port 5173/);
   assert.equal((await text('preview_logs', { level: 'error' })).text, 'web (running):\nnpm ERR! boom');

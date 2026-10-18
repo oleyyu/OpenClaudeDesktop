@@ -167,8 +167,10 @@ try{
  const draft=readme.getByPlaceholder('Tell Claude what to change',{exact:true});await draft.waitFor();
  assert.equal(await draft.evaluate(n=>n===document.activeElement),true,'the new card takes focus');
  await draft.fill('Rename this heading');await readme.getByRole('button',{name:'Save comment',exact:true}).click();
- const snippetPill=page.locator('form.sc-composer .sca-pill[data-kind="snippet"]');await poll(async()=>await snippetPill.count()===1,'Save attaches one composer snippet');
- assert.match(await snippetPill.locator('.sca-body').getAttribute('aria-label'),/^README\.md:L\d+$/,'snippet label (the quiet pill\'s name) names the file and line');
+ // R4i-gui GU1 (R4g-composer CP4): a snippet is c0fbbe82d Hi > vr, the MessageAttachmentsQuote tile (data-cds-attachment root),
+ // named by its label: its remove control reads "Remove {label}" (chat-composer-attachments.mjs dp).
+ const snippetPill=page.locator('.sc-composer [data-cds-attachment][data-cds="MessageAttachmentsQuote"]');await poll(async()=>await snippetPill.count()===1,'Save attaches one composer snippet');
+ assert.match(await snippetPill.locator('[data-cds-attachment-remove]').getAttribute('aria-label'),/^Remove README\.md:L\d+$/,'the snippet tile is named by the file and line');
  await readme.locator('.sfv-comment-body').filter({hasText:'Rename this heading'}).waitFor();
  await readme.getByRole('button',{name:'Delete comment',exact:true}).click();
  await poll(async()=>await snippetPill.count()===0,'Delete detaches the snippet');assert.equal(await readme.locator('[data-file-comment-card]').count(),0);
@@ -226,7 +228,7 @@ try{
  await restoreClipboard();
  report.checks.push('Right-clicking the header opens [data-cds=ContextMenu] Attach as context, Copy, separator, Open file (then Open in when editors are installed, and Show in Finder); Copy opens its submenu on the right (-4px) with Absolute path, Relative path, Filename; Relative path writes "src/app.js" to the in-memory clipboard with the toast "Copied to clipboard."');
  await appHeader().click({button:'right',position:{x:120,y:16}});await contextMenu().waitFor();await contextMenu().getByRole('menuitem',{name:'Attach as context',exact:true}).click();await contextMenu().waitFor({state:'detached'});
- const pill=page.locator('.sca-pill[data-kind="file"]').filter({has:page.getByRole('button',{name:'app.js',exact:true})});await pill.waitFor();await shot('changes-attach-context');
+ const pill=page.locator('[data-cds-attachment][data-cds="MessageAttachmentsFile"]').filter({has:page.getByRole('button',{name:'app.js',exact:true})});await pill.waitFor();await shot('changes-attach-context');
  await pill.hover();await page.getByRole('button',{name:'Remove app.js',exact:true}).click();await pill.waitFor({state:'detached'});await neutral();
  report.checks.push('Attach as context stages src/app.js as a composer file attachment (the path-referenced mention lane); removing it clears the pill');
  step('refresh');await frames();await page.evaluate(()=>{window.__changesFocus=0;window.addEventListener('focus',()=>window.__changesFocus++);});const before=await gitCalls();await fs.writeFile(path.join(workspace,'notes.txt'),'notes\nthird file\n');

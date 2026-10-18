@@ -1,3 +1,5 @@
+import { attachTabFocusRelease } from './generated/code-current/tab-focus-release.mjs';
+import { keyScrollIntentMs } from './generated/code-current/tab-focus-key-scroll.mjs';
 import { useLayoutEffect, useRef, useState } from "react";
 import { centerScrollOffset } from "./transcript-find-model.mjs";
 import { easeScrollStep, keyScrollDelta, nextScrollTarget, scrollPaddingBottom } from "./pane-keys-model.mjs";
@@ -32,6 +34,11 @@ export function createTranscriptCache(capacity = 50) {
       entry.snapshot = snapshot;
       return true;
     },
+    // R4f-error: 2.42304.0 cd14a8022 T (the session load error's Try again, `$A` in cc43287c9 fV) clears the session's
+    // anchors from this LRU. A visit still open on the key can no longer save into it (its generation is gone).
+    forget(key) {
+      return entries.delete(key);
+    },
     get size() {
       return entries.size;
     },
@@ -39,6 +46,13 @@ export function createTranscriptCache(capacity = 50) {
 }
 
 const cache = createTranscriptCache();
+
+// R4f-error: forget one transcript's saved reading position (src/source-session-load-error-adapters.jsx
+// forgetScrollAnchors), so the transcript that remounts after Try again starts fresh instead of restoring the anchor it
+// crashed on.
+export function forgetTranscriptScroll(key) {
+  return cache.forget(key);
+}
 
 export function isUpwardWheel(event) {
   return (
@@ -52,6 +66,8 @@ export function isUpNavigationKey(event) {
   return navigationDirection(event) === "up";
 }
 
+// The key classifier (2.42304.0 c7f8992b4-BX_ywd4_.js C, exported n): Shift+Tab classifies as "up", as in the source.
+// What a consumer does with that is decided by transcriptKeyIntent below.
 export function navigationDirection(event) {
   if (event.ctrlKey || event.altKey || event.metaKey) return "none";
   if (event.key === "Tab") return event.shiftKey ? "up" : "none";
@@ -62,11 +78,20 @@ export function navigationDirection(event) {
   return "none";
 }
 
+// Intents: "release" (let go of the tail now), "up" and "intent" (record the reader's upward intent: an upward scroll
+// within keyScrollIntentMs is the reader's and lets go of the tail), "down" (end a glide; the next scroll is the
+// reader's) and "none".
 export function transcriptKeyIntent(event, context) {
+  // c7f8992b4 T: a classified "up" only records the intent (`n === "up" && (I.current = performance.now())`); the
+  // upward scroll that follows within `re` = 1e3 ms lets go of the tail (`ae = u - I.current < re` → Y(!1)). So no up
+  // key releases at keydown (R3-topbar TT-05). Shift+Tab ("intent") is read before the target checks, as in C; whether
+  // it moved focus above the viewport is decided by the mounted attachTabFocusRelease (c9f414608 i), and the browser's
+  // own focus scroll upward is then the reader's. c4a9ee384 keeps Tab out of its up-key handling too
+  // (`e.key !== "Tab" && nn(e, l) === "up"`).
+  if (event.key === "Tab") return navigationDirection(event) === "up" ? "intent" : "none";
   // Source Tve row activation runs separately from the scroll-key classifier:
   // Space on a historical button releases following before its click expands
   // content. Space on the viewport itself remains downward navigation.
-  if (event.key === "Tab") return navigationDirection(event);
   if ((!context.inViewport && !context.bodyTarget) || context.editable)
     return "none";
   if (
@@ -245,6 +270,10 @@ export function useTranscriptScroll({ sessionKey, ready }) {
     let keyLast = null;
     let keyFrame = 0;
     let keyIntent = false;
+    // c7f8992b4 T I.current: when an up key (or Shift+Tab) was last pressed; for keyScrollIntentMs (re = 1e3) an upward
+    // scroll is the reader's even while the layout changes. Cleared when the tail is pinned again (Y(!0)).
+    let upKeyAt = -Infinity;
+    const upKeyIntent = () => performance.now() - upKeyAt < keyScrollIntentMs;
 
     const live = () => !disposed && controller.current?.identity === identity;
     function publish() {
@@ -402,7 +431,7 @@ export function useTranscriptScroll({ sessionKey, ready }) {
         top,
         maximum,
         layoutChanged,
-        explicitIntent: userScrollPending || dragActive || keyIntent,
+        explicitIntent: userScrollPending || dragActive || keyIntent || upKeyIntent(),
         programmatic: own,
         gliding: gliding(),
       });
@@ -416,8 +445,10 @@ export function useTranscriptScroll({ sessionKey, ready }) {
         else if (
           delta > 0 &&
           viewport.scrollHeight - viewport.clientHeight - top <= 1
-        )
+        ) {
           following = true;
+          upKeyAt = -Infinity;
+        }
       }
       lastTop = top;
       keyIntent = false;
@@ -476,9 +507,14 @@ export function useTranscriptScroll({ sessionKey, ready }) {
         keepsPin: !!event.target.closest?.(KEEP_PIN),
       });
       if (intent === "release") release();
-      else if (intent === "up") {
-        release();
-        userScrollPending = true;
+      // R3-topbar TT-05 (c7f8992b4 T `n === "up" && (I.current = performance.now())`): an up key and Shift+Tab only
+      // record the intent; the upward scroll that follows within keyScrollIntentMs lets go of the tail (onScroll), and
+      // a key that scrolls nothing keeps following. Shift+Tab's release is attachTabFocusRelease's. A wheel, key or
+      // touch intent ends a jump's glide.
+      else if (intent === "up" || intent === "intent") {
+        upKeyAt = performance.now();
+        endGlide();
+        ownTarget = null;
       } else if (intent === "down") {
         endGlide();
         userScrollPending = true;
@@ -546,6 +582,7 @@ export function useTranscriptScroll({ sessionKey, ready }) {
         )
           return false;
         following = true;
+        upKeyAt = -Infinity;
         pendingRestore = false;
         hidden = false;
         endGlide();
@@ -613,6 +650,7 @@ export function useTranscriptScroll({ sessionKey, ready }) {
       },
     };
     controller.current = local;
+    const detachTabFocusRelease = attachTabFocusRelease(viewport, { isPinned: () => following, setPinned: value => { if (!value) release(); } });
     const resize = new ResizeObserver(schedule);
     resize.observe(viewport);
     resize.observe(content);
@@ -653,6 +691,7 @@ export function useTranscriptScroll({ sessionKey, ready }) {
       cancelAnimationFrame(frame);
       resize.disconnect();
       observers.forEach((observer) => observer.disconnect());
+      detachTabFocusRelease();
       viewport.removeEventListener("scroll", onScroll);
       viewport.removeEventListener("wheel", onWheel, true);
       viewport.ownerDocument.removeEventListener("keydown", onKey, true);

@@ -1,6 +1,6 @@
 /* The original Wt/x trees keep their own classes. Restore only properties
    affected by the app's unlayered generic button/textarea resets. */
-@font-face { font-family:PreviewSketchIcons;src:url('./generated/code-editor/c0f671921-CWPPK3vl.woff2') format('woff2-variations');font-weight:400 700;font-display:block; }
+/* R4i-small SM3: sketch glyphs use the official Anthropicons-Variable face (public shared-frame-CegduNQ2.css). */
 .spv-sketch-layer { position:absolute;inset:0;pointer-events:none; }
 .spv-pane[data-page-tools] .spv-viewport { overflow:visible; }
 /* Current source _e utilities are absent from the older imported utility sheet. */

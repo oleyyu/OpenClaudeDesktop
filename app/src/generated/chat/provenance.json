@@ -1,28 +1,5 @@
 [
   {
-    "source": "shared-14-BOJVa-jT.js",
-    "outputSha256": "596c71c16204840ce2076f0bf9e208227991b86fd5a698f62bfe3245087ba69b",
-    "assetUrls": "Root paths made relative for Electron file loading",
-    "sha256": "c00a064a30a80a51e99de1d0caa6b29a165fe67fa6d4cd4a30bea88d81a8e526",
-    "declarations": [
-      "tv",
-      "ev",
-      "Hx",
-      "Rx",
-      "nv",
-      "rv",
-      "iv"
-    ],
-    "literals": [
-      {
-        "name": "ideaPreviewClass",
-        "start": 362973,
-        "end": 363024
-      }
-    ],
-    "boundaries": []
-  },
-  {
     "source": "shared-11-CDihEvbJ.js",
     "outputSha256": "913e969831afa9aaeba71c5892a6ab40d678efd7712c918627fdcb81be72853f",
     "assetUrls": "Root paths made relative for Electron file loading",
@@ -613,7 +590,7 @@
   },
   {
     "source": "shared-frame-C_2npUJq.js",
-    "outputSha256": "474bc560a54a152eac4cec2a6fdbd788af4c3348ec3561e210b6ae7666b827f8",
+    "outputSha256": "bc4537231748bec35113df83aaf24ae269fe504f90f7cc94c2ab69ef61317f47",
     "assetUrls": "Root paths made relative for Electron file loading",
     "sha256": "62b3ec6ee7eecb2169209982904cfe5d86649e3a135e29d14429108e9ad11959",
     "declarations": [
@@ -757,6 +734,20 @@
       "Fa"
     ],
     "literals": [],
+    "registrations": [
+      {
+        "call": "registerNativeFieldComponents",
+        "from": "../../source-field-adapters.jsx",
+        "parts": {
+          "Field": "_y",
+          "Label": "vy",
+          "Description": "yy",
+          "ErrorText": "by",
+          "TextInput": "Bh",
+          "TextArea": "$v"
+        }
+      }
+    ],
     "boundaries": [
       [
         "ge",
@@ -2697,7 +2688,7 @@
   },
   {
     "source": "caaf77b85-DdXwb3ur.js",
-    "outputSha256": "14aed5d6af592eca6638348b584011dd7cb4c5937c64509dd1883aafa3452fa5",
+    "outputSha256": "639b3773bdaaeacba655a8b55c01f7c888c706b8f34738a95a31cc2bf86618e5",
     "assetUrls": "Root paths made relative for Electron file loading",
     "sha256": "0541d69caaf18679131f3401a7242fd2bdc341f3f65d75f54bbbaa8e9dcf82b0",
     "declarations": [
@@ -2822,6 +2813,13 @@
         [
           "../../source-routine-form-adapters.jsx",
           "FormSelect"
+        ]
+      ],
+      [
+        "w",
+        [
+          "../view-tabs/shared-frame-BfjMqbuN.js",
+          "CdsTextInput"
         ]
       ],
       [
@@ -3016,6 +3014,27 @@
         ]
       ]
     ]
+  },
+  {
+    "source": "shared-14-BOJVa-jT.js",
+    "outputSha256": "7d33df4611c8079cec79f86008640d8c5f3960fdeee2dafe9d89dc70b211dfd5",
+    "assetUrls": "Root paths made relative for Electron file loading",
+    "sha256": "c00a064a30a80a51e99de1d0caa6b29a165fe67fa6d4cd4a30bea88d81a8e526",
+    "declarations": [
+      "Hx",
+      "Rx",
+      "nv",
+      "rv",
+      "iv"
+    ],
+    "literals": [
+      {
+        "name": "ideaPreviewClass",
+        "start": 362973,
+        "end": 363024
+      }
+    ],
+    "boundaries": []
   },
   {
     "source": "shared-2-C6aD8DvJ.js",
@@ -7491,7 +7510,7 @@
   },
   {
     "source": "cf35aed38-CgXOe11O.js",
-    "outputSha256": "8bc3a7123a82f668ff394f11ea846cf6775603126bb42fa31bde8d3d611001b2",
+    "outputSha256": "c63a211c5bed6271bcc02b6698f7c6ef577d4fd6aa962cd819a08877112ea384",
     "assetUrls": "Root paths made relative for Electron file loading",
     "sha256": "cd18f839da292db54a10f659d947f4bcb80dbfe6ffe8fbcc2eb97597d1be102a",
     "declarations": [
@@ -7651,6 +7670,13 @@
         [
           "../../source-chat-adapters.jsx",
           "classNames"
+        ]
+      ],
+      [
+        "b",
+        [
+          "../view-tabs/shared-frame-BfjMqbuN.js",
+          "CdsTextInput"
         ]
       ],
       [

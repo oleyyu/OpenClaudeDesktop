@@ -1,4 +1,4 @@
-// Current source glyph map, paired with its own original variable font.
+// Current source glyph map (2.42304.0), paired with its own Anthropicons-Variable font.
 export default {
   Activity: 57344,
   Add: 57345,
@@ -370,4 +370,5 @@ export default {
   SpeakerSlash: 57737,
   CirclesAdd: 57738,
   Collection: 57739,
+  ListCard: 57740,
 };

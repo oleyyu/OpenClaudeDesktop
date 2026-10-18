@@ -20,7 +20,7 @@ import { formModelName as d } from "../../source-routine-form-adapters.jsx";
 import { Hx as O } from "./shared-14-BOJVa-jT.js";
 import { Fragment as a } from "react";
 import { FormSelect as S } from "../../source-routine-form-adapters.jsx";
-import { Bh as w } from "./shared-frame-C_2npUJq.js";
+import { CdsTextInput as w } from "../view-tabs/shared-frame-BfjMqbuN.js";
 import { useId as t } from "react";
 import { useState as i } from "react";
 import { useRef as n } from "react";

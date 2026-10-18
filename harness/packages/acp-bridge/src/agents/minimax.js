@@ -1201,6 +1201,17 @@ export default {
     try { thread.minimaxUsageId = minimaxState(ctx, { op: 'status', db, sessions: threadSessions(thread), afterUsageId: 0 })?.usage?.lastId ?? 0 } catch (error) { ctx.log?.(`minimax usage: ${String(error?.message ?? error).slice(0, 300)}`) }
   },
 
+  /** Each live read queries the state database in a node process of its own: less often than the default. */
+  liveUsageMs: 5000,
+  /** A running turn's tokens so far: mcode's per-call records since the last turn (settleUsage's query, nothing moved). */
+  async liveTurnUsage(ctx, thread) {
+    const db = threadDb(ctx, thread)
+    if (!db || !fs.existsSync(db)) return null
+    const usage = (await minimaxStateAsync(ctx, { op: 'status', db, sessions: threadSessions(thread), afterUsageId: thread.minimaxUsageId ?? 0 }))?.usage
+    if (!usage?.calls) return null
+    return { usage: { inputTokens: usage.inputTokens + usage.cacheReadTokens + usage.cacheWriteTokens, cachedInputTokens: usage.cacheReadTokens, outputTokens: usage.outputTokens, reasoningOutputTokens: usage.reasoningTokens } }
+  },
+
   /**
    * A turn's tokens and spend: mcode's own per-call records (local_runtime_token_usage: input, output, reasoning, cache
    * reads and writes, cost_usd; what its /usage adds up) since the last turn, for the thread's session and its delegates.

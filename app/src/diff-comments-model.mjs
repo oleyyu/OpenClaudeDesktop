@@ -89,6 +89,9 @@ export function diffCommentsStore(scope) {
   }
   return stores.get(scope);
 }
+/** The comments of one file of a Changes comment scope (useDiffComments' store; R3-files FT-07 also reads it for the
+ * per-file whitespace pause, c44d00c7f Ca). */
+export const diffFileCommentsStore = (scope, path) => diffCommentsStore(`${scope}\0${path}`);
 
 /** The side/line a rendered diff row comments on: removed rows (and the split view's left column) on the old file,
  * everything else on the new file. column is "unified", "before" or "after". */

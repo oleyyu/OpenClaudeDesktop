@@ -1,0 +1,5420 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-proposal-group.mjs",
+  "adapterModule": "src/source-proposal-group-adapters.jsx",
+  "publicNames": {
+    "resolveStartPermissionMode": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "zG",
+      "export": "In"
+    },
+    "startModeNeedsConsent": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "AI",
+      "export": "ro"
+    },
+    "visibleProposalQueue": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "YW",
+      "export": "tr"
+    },
+    "spawningTaskIds": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "JW",
+      "export": "Gn"
+    },
+    "markProposalSpawning": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "tG",
+      "export": "Jn"
+    },
+    "clearProposalSpawning": {
+      "file": "c227f4d5e-Ba-r--Rl.js",
+      "local": "nG",
+      "export": "Zn"
+    },
+    "PROPOSAL_SESSION_SERVER": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "e",
+      "export": "t"
+    },
+    "SPAWN_TASK_TOOL": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "r",
+      "export": "l"
+    },
+    "DISMISS_TASK_TOOL": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "i",
+      "export": "r"
+    },
+    "START_SESSION_TOOL": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "s",
+      "export": "u"
+    },
+    "TASK_ID_PATTERN": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "h",
+      "export": "s"
+    },
+    "taskIdFromResult": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "C",
+      "export": "m"
+    },
+    "lastTaskIdFromResult": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "d",
+      "export": "p"
+    },
+    "taskIdLine": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "x",
+      "export": "g"
+    },
+    "quotedTaskTitle": {
+      "file": "c8479260c-DaoJ9_2S.js",
+      "local": "b",
+      "export": "h"
+    },
+    "TurnProposalGroup": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "R$"
+    },
+    "UnplacedProposalGroup": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "z$",
+      "export": "rt"
+    },
+    "ProposalSpawnerContext": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "qQ",
+      "export": "mt"
+    },
+    "useProposalSpawner": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "h1e"
+    },
+    "inlineSpawnerGate": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "g1e",
+      "export": "ht"
+    },
+    "SentHereNotice": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "q1e",
+      "export": "it"
+    },
+    "proposalKey": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "t$",
+      "export": "ct"
+    },
+    "isOfferProposal": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "n$"
+    },
+    "keepSessionMode": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "p$"
+    },
+    "crossRepoCwdOf": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "f$",
+      "export": "st"
+    },
+    "proposalHereText": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "w1e"
+    },
+    "proposalStartLabels": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "P1e"
+    },
+    "proposingTools": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "PPe"
+    },
+    "isProposingTool": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "hL"
+    },
+    "isPlacedProposal": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "gL"
+    },
+    "proposalTaskId": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "pL"
+    },
+    "proposalToolFailed": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "mL"
+    },
+    "proposalOutcomeStore": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "EQ"
+    },
+    "recordProposalOutcome": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "MQ",
+      "export": "gt"
+    },
+    "clearProposalOutcome": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "NQ"
+    },
+    "isSpawnTaskTool": {
+      "file": "cb27dab29-_H2_XKli.js",
+      "local": "W",
+      "export": "S"
+    },
+    "isOwnStartSessionProposal": {
+      "file": "cb27dab29-_H2_XKli.js",
+      "local": "K",
+      "export": "T"
+    },
+    "isCloudStartSessionHandOff": {
+      "file": "cb27dab29-_H2_XKli.js",
+      "local": "Je",
+      "export": "l"
+    }
+  },
+  "modules": [
+    {
+      "source": "c02b04696-cOrTvyA6.js",
+      "sourceSha256": "fda92ecedae988aa5fef9e9846abf52ff29b10bd3cd0fe2413ae4aaaaeccdfa1",
+      "sha256": "4f8bdeb865568d08aeb09ba6f16acc62fffec39e501d2a75b2e456e7c85c6279",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "n",
+          "sha256": "fc61e94083d2f32d34d6e8707848008604a6a88fcd64163b830b560c98bdf775"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "n": "t"
+      },
+      "publicNames": {},
+      "contexts": [
+        "n"
+      ]
+    },
+    {
+      "source": "c0fbbe82d-BOWKSems.js",
+      "sourceSha256": "e8d7597d0f086ac57ce77d40d7fc71112619757de69cd3ae6f9bbd9acabe87da",
+      "sha256": "32fc0439f7305c89f55fb69ef5653c412a5dc7f03e0d49f5d1c43d14012889d4",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "hn",
+          "sha256": "e4a83dd0adc2e112991fdceaad014629e4c67bf5cf55e47620759e5693c374eb"
+        }
+      ],
+      "imports": [
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "hn": "L"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c1014d784-CjhgsLFi.js",
+      "sourceSha256": "30c321cf5a76cd1404a3fb9c338791e9085b168d6c47637dbb26033a363431ce",
+      "sha256": "d088055fff5164b37f9e7309e8e5f03deb8adc2c0439905575ce68f8f69ca48b",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "o",
+          "sha256": "38cebec7034018cda85ec919de59cb7f1fb9d9521858da4af9cccb5ed50b9b3d"
+        },
+        {
+          "name": "s",
+          "sha256": "5623770881ee27e00a9a7142925c8fe74885fcee4195918bc1a51210ff01c245"
+        },
+        {
+          "name": "c",
+          "sha256": "3fe94501c3981a54971a944052fe887e8de406d39706a378a1f5db891a9c6644"
+        },
+        {
+          "name": "l",
+          "sha256": "9546dce099340e7d55ab655d42708edfad2098675f714d896e660b74c00624c6"
+        },
+        {
+          "name": "d",
+          "sha256": "3383f7fdd9b020bcce2cb8f9ec3fd11e39334ee9fbbdef741f1db9cf769465a7"
+        },
+        {
+          "name": "p",
+          "sha256": "477d215f6f297493f5528d173754d40d876c73294781aa821eb68fdb99f9ddbf"
+        },
+        {
+          "name": "_",
+          "sha256": "f3c5f393fa47a37c0c40f4cc095e7979733f539d1bb339deb66ceb186770d24e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useAccount",
+          "via": "shared-25-DP8p7i1Z.js:ur",
+          "kind": "adapter",
+          "original": "cV"
+        },
+        {
+          "local": "i",
+          "from": "./shared-8-B5lJ8U5C.js",
+          "name": "Ro",
+          "via": "shared-8-B5lJ8U5C.js:Ro",
+          "kind": "generated",
+          "original": "rw"
+        },
+        {
+          "local": "n",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "_": "t",
+        "p": "o",
+        "d": "a",
+        "l": "c"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c19e90103-muBq-gyt.js",
+      "sourceSha256": "243eb96d38a16bf17459844dcc0864ce8ba537219efbd4b304900fe7485a3479",
+      "sha256": "fdbed46de0fbbf561ac07033e7c1f48b2df438ef95b02936895db7d44dfda25c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Zg",
+          "sha256": "d95cbfd3d7e6a4e85f1d07964ef23c0d347ecf6bc71406948fb8c0d4abb7b8f4"
+        }
+      ],
+      "imports": [
+        {
+          "local": "g",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "Zg": "Q"
+      },
+      "publicNames": {},
+      "contexts": [
+        "Zg"
+      ]
+    },
+    {
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "f6fb1128f285b5cc070307412eb26d44a0198bdac215de4e08bd1202f92f8104",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "AI",
+          "sha256": "09aac5fde5e4c19edf2e4a3a34890a8019ad520bd6c6312ee80f802420b404bc"
+        },
+        {
+          "name": "jL",
+          "sha256": "2d9c2064a6ebec4ea044924329d0d7c4bf2111c36cf18e1a411be47f309583f4"
+        },
+        {
+          "name": "ML",
+          "sha256": "e37f61a80871550253e9ed0910ca3bad6e94a21ca6883287b7ee0e3dcc7c1406"
+        },
+        {
+          "name": "FL",
+          "sha256": "749760ce213199c0ef296e212ed1f4c74a4fc3859941f3b4b04912e040de09e2"
+        },
+        {
+          "name": "IL",
+          "sha256": "9c5ba6b5c24425da3920c62646a14b9a875467b3f103b8122081360aa874703f"
+        },
+        {
+          "name": "RL",
+          "sha256": "83f73e5bc94f11931f4b716ceae328b5d3bb964eb25a19c5c370dbcb742cb12e"
+        },
+        {
+          "name": "$L",
+          "sha256": "b417b7b307954e2b81b11d63b50b3831da6f8fd29c498377132ca704572ac9ae"
+        },
+        {
+          "name": "eR",
+          "sha256": "f6fc9f7545d114e3806ad143da7ad498f7cf58c99ab24ce9f7514786a58494d7"
+        },
+        {
+          "name": "nR",
+          "sha256": "fa2eadf07dcc309eb93805d8f544a50a9bb9d5949afd69299901aacaebfcc43b"
+        },
+        {
+          "name": "aR",
+          "sha256": "5d11a98a0c5447c4a8715e730d7cc591b085c2b1fd77bafba6e35408071dfc18"
+        },
+        {
+          "name": "oR",
+          "sha256": "23fbd8ae2935dc374283b5acf73b50f106ef8c1dc4d8c7a1bd32c7ed17fe860f"
+        },
+        {
+          "name": "sR",
+          "sha256": "fa64fa3eda68997ca10b2eb292c7b35662548ed353b595a6d43dba2825cf033d"
+        },
+        {
+          "name": "cR",
+          "sha256": "39c7b169d3452c1dec1dc55b7f0395c0bd3f828eb6c70cd354920c6771ae0bd4"
+        },
+        {
+          "name": "hR",
+          "sha256": "d452c3ee844431377d9c0ee05429c5c4dad9955f39afab7b5e64ff78942acd11"
+        },
+        {
+          "name": "bR",
+          "sha256": "c24ac378cdc618ade6241af27890daa82d0298b0a2460984a5564d8e61ef6b7b"
+        },
+        {
+          "name": "xR",
+          "sha256": "035389c8ef708670085595f666b44d8335c88708c82b62464681ebb419ea9f59"
+        },
+        {
+          "name": "SR",
+          "sha256": "dddac984f44dcb289f51d2aacefd5e40893f80728b7638375b804673a74121b1"
+        },
+        {
+          "name": "CR",
+          "sha256": "8a67db6a950daddbf9d541843157496593a163f3c17bab2601ffe9326d0868a4"
+        },
+        {
+          "name": "wR",
+          "sha256": "988acd4eae4be08eaaaa8de8bee42d9880bed7eda703e1abb0bddba8c1edf012"
+        },
+        {
+          "name": "TR",
+          "sha256": "183a91a165bb9960eba15687fa3fe94cce493892b1d90e2dd540345709b3a67b"
+        },
+        {
+          "name": "DR",
+          "sha256": "f5295d52a656630524274427b1b6f2de45f0f01e1a5640c02e824dd7351407a7"
+        },
+        {
+          "name": "kR",
+          "sha256": "26a724b16070435e83ac753127886191d9eb8b877cdabc8d0860714ad42b5a58"
+        },
+        {
+          "name": "UW",
+          "sha256": "37deb4c154f7fadda243ba6ce18d04599d4b5e942c5933fc88d977489ccf3963"
+        },
+        {
+          "name": "WW",
+          "sha256": "fc0654ad391ab87aee53492f80fe8d49a73be516d6bf244e9f20204f6e2ca1a7"
+        },
+        {
+          "name": "GW",
+          "sha256": "7bc1f9e0a697ed7a54c2221e4d8a0b31c37808414cbea35d179f6854238c1238"
+        },
+        {
+          "name": "KW",
+          "sha256": "9415d5a829e415b1d0455b76a035caed35a7170a2c2ba8a49bca8c6d9770d6ff"
+        },
+        {
+          "name": "qW",
+          "sha256": "9bd41def99fccdc3c5f06a896a1c260aca48fa5aef60cc7231687b4411d89cbf"
+        },
+        {
+          "name": "JW",
+          "sha256": "3211f152426850201d8d3bcc2d629ff4a1160e61780d876b6731caaecff1eebe"
+        },
+        {
+          "name": "YW",
+          "sha256": "5d10cced9dc5edcd5fcafdb82aefbeef67611e540d397503e4af9b02b0771150"
+        },
+        {
+          "name": "tG",
+          "sha256": "ebb64eb59db58f93dbdf931cdc2a4ed6023fe9e64055ba760dbeb9b2855f2b8e"
+        },
+        {
+          "name": "nG",
+          "sha256": "b399dfb5e98f7cc571da446f75d6f85519e97982097340568a4913bdc431d9ca"
+        },
+        {
+          "name": "cG",
+          "sha256": "299aa3adac9add757f7919824cc363232fa7e8fa8dac31258f741f587282dbfb"
+        },
+        {
+          "name": "uG",
+          "sha256": "ffd9ab672120a74a9313baafdb022d3e3533a36a4a5674919ad06e8861043b30"
+        },
+        {
+          "name": "dG",
+          "sha256": "18a059551d97285a94e7d2cca8d00760491094362a90f952eb9ca7333241d4a7"
+        },
+        {
+          "name": "fG",
+          "sha256": "5827f2b487277efe7282e8998ec7b9c145b7690c071eab12e707284ce05bb4fc"
+        },
+        {
+          "name": "pG",
+          "sha256": "8af634baab454b4e79a6f52c7f260e63314459382d8fc30fd431a7e3137bc662"
+        },
+        {
+          "name": "mG",
+          "sha256": "4067496561d127eb171a510dce5b1592912952fbe4c5ae3b78798c91c528e6b6"
+        },
+        {
+          "name": "hG",
+          "sha256": "6bcc812ca540f6a622324174692fce2f4297caf1b26353d8d2e945c575c8ea5f"
+        },
+        {
+          "name": "gG",
+          "sha256": "c5f877614805b6e801a9fefa60ec0f4070a0644b21ab5bdd6f2a9d01f8e4ce89"
+        },
+        {
+          "name": "_G",
+          "sha256": "9fe389e1dc17a57474da95c7dff55537af866e82f76e8fad465c6324570caad9"
+        },
+        {
+          "name": "vG",
+          "sha256": "336bae1e1df1a559e46ff1fc7a0abc596aac3bab347304680d883eac31c4c4e5"
+        },
+        {
+          "name": "yG",
+          "sha256": "f93f03593b927e49b50e68a5fdd2c442a0a5877294749a32244ecc995d7a7c49"
+        },
+        {
+          "name": "bG",
+          "sha256": "d064ae823472b89caf800ff8df3bf511adc5cd0bf1d0ea47acd67a85d7ad778d"
+        },
+        {
+          "name": "xG",
+          "sha256": "5a8185e02067e6fd244c7ff507decc80eb093cbab4a49f4782ea16924d5aa56b"
+        },
+        {
+          "name": "SG",
+          "sha256": "b53b6e507df0acb3d6ffc3ace1b0c328c83d30dec0b926c7ace7b4d1924c73c6"
+        },
+        {
+          "name": "CG",
+          "sha256": "4b934c34bc408173bef24b42f37e08df283294adf4992311b8bec97cc36819ea"
+        },
+        {
+          "name": "wG",
+          "sha256": "9b132215707b22d59db9822e4555b108b53ef09b4d922e44890ceadf6417a2ba"
+        },
+        {
+          "name": "TG",
+          "sha256": "67e2bf236ea63b6ac73ebf060c732f6f4ae3114c7670b0102413764b608d093a"
+        },
+        {
+          "name": "EG",
+          "sha256": "a602671a3465029d801d0b1d31c0ce9e197e6199a080d8aed4ea1467a28a02f3"
+        },
+        {
+          "name": "DG",
+          "sha256": "68dfd647565cca0064ee0c9486a691633eee56b857327587c80aabdd87242e77"
+        },
+        {
+          "name": "OG",
+          "sha256": "14017a11d600728dd83b9e04318f6f6f690e16c1de3677e77f581dd152f67a5a"
+        },
+        {
+          "name": "kG",
+          "sha256": "7a60ffff3860e7126f4b7a4d04cbf1f976f9b8adefa8cfab496258eb261f8135"
+        },
+        {
+          "name": "AG",
+          "sha256": "d7bba7b86e946e0aa954faa6041ec4dd738f6d7116ae09f9f59353fa8ebcfc56"
+        },
+        {
+          "name": "jG",
+          "sha256": "0fe70359d48e5f2b95f78fd03de176bf6be9315324e97de5f5f676319fe09c1d"
+        },
+        {
+          "name": "MG",
+          "sha256": "7daf38f2c7897e73529ebfc04b24bfe7033cea6921feba87899b9d1ef25e1bfd"
+        },
+        {
+          "name": "NG",
+          "sha256": "10911203dbdd3a4cec46db33c6099ff7baad30ae5f2749a84aed9af259842804"
+        },
+        {
+          "name": "PG",
+          "sha256": "af14acb227c6e73620f265701991d9ac9256c26f17329d305fa2b6683ae03642"
+        },
+        {
+          "name": "FG",
+          "sha256": "4ef21f139c4aa3d18191e89b13952064b864ba4872c471687fe4218a3e64e79e"
+        },
+        {
+          "name": "IG",
+          "sha256": "331c1105f0c6bf02761d7dbd266fe6b2dc8ba70f4eb0a2c66481173d820444ea"
+        },
+        {
+          "name": "LG",
+          "sha256": "a2e1ffc4e0cae163d3f52c189e453c3bf0ede3d2b48eb04f8af499fac3a807eb"
+        },
+        {
+          "name": "RG",
+          "sha256": "49a5594ccb5c35152eeaeccfaa09080c1d226e10a939e161fb47a37003d19c95"
+        },
+        {
+          "name": "zG",
+          "sha256": "e6ec65afa9479d88cc5ce07b801a613ed6dfcb9e24fee8a109db99684ce046b8"
+        },
+        {
+          "name": "BG",
+          "sha256": "f93690240d12b3093717b802dc0ed7be8b7f634813351e27e9a0a11d196f04dc"
+        },
+        {
+          "name": "VG",
+          "sha256": "04c15304ac1d1712f1960a38c3c5d2540a8fba56888121f05818fb7c8e485465"
+        },
+        {
+          "name": "HG",
+          "sha256": "2b889d10dfc04ba52e40db8cdc2e91ed660bcf410a6b00b1ec9a268b595f40f9"
+        },
+        {
+          "name": "UG",
+          "sha256": "903b3b24b4be72c41be86e881bb9f18fd57e6051812ef34431b44719b9396712"
+        },
+        {
+          "name": "WG",
+          "sha256": "70e4e0a4d24c59ae5ea149c3be6e013604f39bbffe52012752aa3dc9c204f8c3"
+        },
+        {
+          "name": "KG",
+          "sha256": "d2a84e91ef1507ac38bc7ebdf2d1ebceb9e68f0a2e2fc8081ab3f63e06606b61"
+        },
+        {
+          "name": "qG",
+          "sha256": "2237ae113d0b3545d84eae26d6f96dc61013c782fbb36002cc89a0900f793a64"
+        },
+        {
+          "name": "JG",
+          "sha256": "f71856f1ac3fde447914cc4fc7bba7abe6eeca6dade8de2f3f536005d6592c1a"
+        },
+        {
+          "name": "YG",
+          "sha256": "488a13bd7b7d626e6f9630bc6823513915f35eddc9458876f7db2356d0f96935"
+        },
+        {
+          "name": "XG",
+          "sha256": "9ae4016851e6bef73edd018100cbe30b8c0989d956762b334a71fb315eadaa17"
+        },
+        {
+          "name": "ZG",
+          "sha256": "5a4277fb4d1f0934ebe9eabc55da5f4bffa4293032b453279560503d489698fd"
+        },
+        {
+          "name": "QG",
+          "sha256": "3b7207dd2f9dced8a4b070efc33bab2daea341f57f701b720704a2273c6c72f2"
+        },
+        {
+          "name": "$G",
+          "sha256": "c05db9528371287bdd4920a8cfc50d0f05dab87adc4c6680b36e043232763f6c"
+        },
+        {
+          "name": "eK",
+          "sha256": "af93b6ee44081887795846c78571ad1a84323fc1647d0057f341911c791983d8"
+        },
+        {
+          "name": "tK",
+          "sha256": "fad821ed5e36207523b2e623010b0142f6f23d599eb83a21b4bd58549589d8ea"
+        },
+        {
+          "name": "RK",
+          "sha256": "e7a1e1614e8a21111222d8d856a46710dea248cd92fe0af2dde4c358f2b3c61c"
+        },
+        {
+          "name": "zK",
+          "sha256": "9dde2ee9271dd9862abc04540c43a7dec4c6ce1840a2e2cff34cb6df9db74309"
+        },
+        {
+          "name": "BK",
+          "sha256": "bd639270209b0c4a692ce2aad972836fafd55475761bf8213e948d4cf0eb5e05"
+        },
+        {
+          "name": "VK",
+          "sha256": "0b18d1b94dab8c3cab2007552710370093c52f900d7b7bba886b56d65a0ab9ad"
+        },
+        {
+          "name": "HK",
+          "sha256": "6f0563e84d56ef18343eb30b796ddbadafe7320003d92aa30a83364dbc079515"
+        },
+        {
+          "name": "UK",
+          "sha256": "33bde1522e12e0b1b098e1a3cc0c649d75b1db6854fc00bc66c7d6b0be831b2b"
+        },
+        {
+          "name": "WK",
+          "sha256": "eb3c7c99ddf529b99e34ebcb7e73a51997267278aa45898cef666db26ed2eaf9"
+        },
+        {
+          "name": "GK",
+          "sha256": "a98d6149b6f6550d9c091e3aa717087acad3dc5e751dde40db776dabbd2ca4ae"
+        },
+        {
+          "name": "KK",
+          "sha256": "dbc7488e063932ee61d390176fdadc6d005fad012e1c7077b04fcdcf34109679"
+        },
+        {
+          "name": "qK",
+          "sha256": "c2cec0aca2ae2e2cc63859a1cce59b3aeba6f91ec9bb141c8363635b378b86a3"
+        },
+        {
+          "name": "JK",
+          "sha256": "d2b71f6454bce249dc6997f9f9296352e4b8595c2c656fb9b95f6ae305d2279b"
+        },
+        {
+          "name": "YK",
+          "sha256": "6c06400fb606b2a0c001a3d0316e9a0d7de2657b24aa44a81c32cc5c512dfd25"
+        },
+        {
+          "name": "XK",
+          "sha256": "2a2a4afd075aa05b3bfbd44b869c33c5ec5ff2b34dd25e75d13b4208e1bc64f5"
+        },
+        {
+          "name": "ZK",
+          "sha256": "5881203f5822b70341a09171db9b23dab0f5cfd4368d4d9e147e72f837c52750"
+        },
+        {
+          "name": "QK",
+          "sha256": "cb8241c392b6c0cea21d49fe37189de0b7ab76f8e514cf581170906dec7e88fb"
+        },
+        {
+          "name": "$K",
+          "sha256": "bd105e1a664c430fe2bf17dd483eb465134f005327f97bc3513afb5c5014e793"
+        },
+        {
+          "name": "eq",
+          "sha256": "828319e50b9f9f6921e13d2a587aac9696cbbabdb8d0035c2d906b5315bdc98a"
+        },
+        {
+          "name": "tq",
+          "sha256": "b6fafa02c228c54a9eff6108f0f780120e4d335bc4e93110162f72305434d9cb"
+        },
+        {
+          "name": "nq",
+          "sha256": "557aaea53ff15fbb3723011a83910486bfae6a14c014c37a3fed40ca940af410"
+        },
+        {
+          "name": "rq",
+          "sha256": "59528ddee99b2e5b11ff79d14b268daae666c400c9ecdee9cefb1d03ebbbeab2"
+        },
+        {
+          "name": "iq",
+          "sha256": "8434f9573d65bc2c9c7e23c656fa62d9c718a12d0b22c5fd929d46c285943dc8"
+        },
+        {
+          "name": "aq",
+          "sha256": "26b72acc3a82b636c2d2e777db17f9106be1f3d7bba70287b7c971a7c0ab3a9f"
+        },
+        {
+          "name": "oq",
+          "sha256": "caa1558d532f5368a17cb8c315ccd85c43372e2c413c1ec6db6bda78de7fc053"
+        },
+        {
+          "name": "sq",
+          "sha256": "b629208d9935b08b3aa70bad423cfc80a93f4fa5488a15cb113bfd19fa891f70"
+        },
+        {
+          "name": "cq",
+          "sha256": "c5fee973874636c88363403964867589cdd8716577165cff480e84978abae67a"
+        },
+        {
+          "name": "lq",
+          "sha256": "f4c104948f75e49bf14941e702daf372e2ede316d5fed312749d32b92d00af60"
+        },
+        {
+          "name": "uq",
+          "sha256": "6b912519ef5d45789a94cc31883519943ba1a33a780eebefba8d544583363479"
+        },
+        {
+          "name": "dq",
+          "sha256": "69d5b38553b47108f5600a2bd1f43873ec3d8f8f52c5bf24b395f5bc3f83891e"
+        },
+        {
+          "name": "fq",
+          "sha256": "6969b51d4976a975160648e3cd95d2b08a77bbaf80d85b813d4ab6b050038e3c"
+        },
+        {
+          "name": "pq",
+          "sha256": "be5bf43324fe9b1352497a34d33b8da9415bac5b4a181adedc1f19ef71714d3f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "sl",
+          "from": "./vendor-all-0-CTKbbUUg.js",
+          "name": "I",
+          "via": "vendor-all-0-CTKbbUUg.js:I",
+          "kind": "generated",
+          "original": "ee"
+        },
+        {
+          "local": "hi",
+          "from": "./shared-52-DGviI8xb.js",
+          "name": "Pp",
+          "via": "shared-52-DGviI8xb.js:Pp",
+          "kind": "generated",
+          "original": "Qf"
+        },
+        {
+          "local": "M",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "H",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "tl",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "xe",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "isDesktopClient",
+          "via": "shared-25-DP8p7i1Z.js:Rm",
+          "kind": "adapter",
+          "original": "ml"
+        },
+        {
+          "local": "Nt",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useModelCatalog",
+          "via": "shared-1-CAAiD7E3.js:Yr",
+          "kind": "adapter",
+          "original": "FP"
+        },
+        {
+          "local": "Ha",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "supportedEffortOptions",
+          "via": "shared-6-Cby4X-ms.js:xa",
+          "kind": "adapter",
+          "original": "mj"
+        },
+        {
+          "local": "za",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useAutoModeAvailability",
+          "via": "shared-6-Cby4X-ms.js:pa",
+          "kind": "adapter",
+          "original": "$j"
+        },
+        {
+          "local": "we",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useGrowthBookFlag",
+          "via": "shared-25-DP8p7i1Z.js:Th",
+          "kind": "adapter",
+          "original": "Zs"
+        },
+        {
+          "local": "ci",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useDesktopConfig",
+          "via": "shared-52-DGviI8xb.js:Fi",
+          "kind": "adapter",
+          "original": "RP"
+        },
+        {
+          "local": "Ru",
+          "from": "./shared-8-B5lJ8U5C.js",
+          "name": "Wt",
+          "via": "shared-8-B5lJ8U5C.js:Wt",
+          "kind": "generated",
+          "original": "qL"
+        },
+        {
+          "local": "ft",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Yh",
+          "via": "shared-0-ByI5P0CP.js:Yh",
+          "kind": "generated",
+          "original": "Wy"
+        },
+        {
+          "local": "ai",
+          "from": "./shared-52-DGviI8xb.js",
+          "name": "Cd",
+          "via": "shared-52-DGviI8xb.js:Cd",
+          "kind": "generated",
+          "original": "r_"
+        },
+        {
+          "local": "Lo",
+          "from": "./shared-frame-BfjMqbuN.js",
+          "name": "ud",
+          "via": "shared-frame-BfjMqbuN.js:ud",
+          "kind": "generated",
+          "original": "fn"
+        },
+        {
+          "local": "xo",
+          "from": "./shared-frame-BfjMqbuN.js",
+          "name": "cd",
+          "via": "shared-frame-BfjMqbuN.js:cd",
+          "kind": "generated",
+          "original": "gn"
+        },
+        {
+          "local": "ca",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "Xf",
+          "via": "shared-104-Cqo2-vQh.js:Xf",
+          "kind": "generated",
+          "original": "Bd"
+        },
+        {
+          "local": "Bu",
+          "from": "./shared-8-B5lJ8U5C.js",
+          "name": "Zt",
+          "via": "shared-8-B5lJ8U5C.js:Zt",
+          "kind": "generated",
+          "original": "kL"
+        },
+        {
+          "local": "ko",
+          "from": "./shared-frame-BfjMqbuN.js",
+          "name": "ld",
+          "via": "shared-frame-BfjMqbuN.js:ld",
+          "kind": "generated",
+          "original": "pn"
+        },
+        {
+          "local": "Mo",
+          "from": "./shared-frame-BfjMqbuN.js",
+          "name": "od",
+          "via": "shared-frame-BfjMqbuN.js:od",
+          "kind": "generated",
+          "original": "mn"
+        },
+        {
+          "local": "B",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "Xp",
+          "from": "./c1014d784-CjhgsLFi.js",
+          "name": "t",
+          "via": "c1014d784-CjhgsLFi.js:t",
+          "kind": "generated",
+          "original": "_"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "Yp",
+          "from": "./c1014d784-CjhgsLFi.js",
+          "name": "o",
+          "via": "c1014d784-CjhgsLFi.js:o",
+          "kind": "generated",
+          "original": "p"
+        },
+        {
+          "local": "qp",
+          "from": "./c1014d784-CjhgsLFi.js",
+          "name": "a",
+          "via": "c1014d784-CjhgsLFi.js:a",
+          "kind": "generated",
+          "original": "d"
+        },
+        {
+          "local": "Jp",
+          "from": "./c1014d784-CjhgsLFi.js",
+          "name": "c",
+          "via": "c1014d784-CjhgsLFi.js:c",
+          "kind": "generated",
+          "original": "l"
+        },
+        {
+          "local": "ku",
+          "from": "./shared-8-B5lJ8U5C.js",
+          "name": "Lo",
+          "via": "shared-8-B5lJ8U5C.js:Lo",
+          "kind": "generated",
+          "original": "iw"
+        },
+        {
+          "local": "D",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Po",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDropdown",
+          "via": "shared-frame-BfjMqbuN.js:qa",
+          "kind": "view-tabs",
+          "original": "EC"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ja",
+          "kind": "react"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Au",
+          "from": "./shared-8-B5lJ8U5C.js",
+          "name": "Lt",
+          "via": "shared-8-B5lJ8U5C.js:Lt",
+          "kind": "generated",
+          "original": "HL"
+        },
+        {
+          "local": "k",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "view-tabs",
+          "original": "Td"
+        },
+        {
+          "local": "ro",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "Wn",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "toggleStarredEnvironment",
+          "via": "shared-19-CkPOiIKm.js:al",
+          "kind": "adapter",
+          "original": "cV"
+        },
+        {
+          "local": "Vn",
+          "from": "./shared-19-CkPOiIKm.js",
+          "name": "Qc",
+          "via": "shared-19-CkPOiIKm.js:Qc",
+          "kind": "generated",
+          "original": "nV"
+        },
+        {
+          "local": "qn",
+          "from": "./shared-19-CkPOiIKm.js",
+          "name": "rl",
+          "via": "shared-19-CkPOiIKm.js:rl",
+          "kind": "generated",
+          "original": "rV"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useId",
+          "via": "vendor-frame-DfPJ1QmD.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "ho",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsInfoTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Xi",
+          "kind": "view-tabs",
+          "original": "oE"
+        },
+        {
+          "local": "Ni",
+          "from": "../view-tabs/shared-4-CJsHhp5n.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-CJsHhp5n.js:co",
+          "kind": "view-tabs",
+          "original": "jf"
+        },
+        {
+          "local": "xu",
+          "from": "./shared-20-B7UqYfsi.js",
+          "name": "vo",
+          "via": "shared-20-B7UqYfsi.js:vo",
+          "kind": "generated",
+          "original": "jm"
+        },
+        {
+          "local": "ee",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-DfPJ1QmD.js:ro",
+          "kind": "react"
+        },
+        {
+          "local": "So",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "gu",
+          "from": "./shared-20-B7UqYfsi.js",
+          "name": "_o",
+          "via": "shared-20-B7UqYfsi.js:_o",
+          "kind": "generated",
+          "original": "Fm"
+        },
+        {
+          "local": "Bo",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "X"
+        },
+        {
+          "local": "Om",
+          "from": "./c25d7186f-CHE_J2eY.js",
+          "name": "t",
+          "via": "c25d7186f-CHE_J2eY.js:t",
+          "kind": "generated",
+          "original": "i"
+        },
+        {
+          "local": "$a",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsOverflowTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Dc",
+          "kind": "view-tabs",
+          "original": "gm"
+        },
+        {
+          "local": "to",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDisabledReason",
+          "via": "shared-frame-BfjMqbuN.js:Ec",
+          "kind": "view-tabs",
+          "original": "Qp"
+        },
+        {
+          "local": "Og",
+          "from": "./c0fbbe82d-BOWKSems.js",
+          "name": "L",
+          "via": "c0fbbe82d-BOWKSems.js:L",
+          "kind": "generated",
+          "original": "hn"
+        },
+        {
+          "local": "no",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsSwitch",
+          "via": "shared-frame-BfjMqbuN.js:Fi",
+          "kind": "view-tabs",
+          "original": "dD"
+        },
+        {
+          "local": "ny",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "effortMessages",
+          "via": "c74045701--mqv8P-_.js:n",
+          "kind": "adapter",
+          "original": "o"
+        },
+        {
+          "local": "LK",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "ProposalModelSelector",
+          "via": "c227f4d5e-Ba-r--Rl.js#LK",
+          "kind": "adapter",
+          "original": "LK"
+        },
+        {
+          "local": "id",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "ModelSelectorParts",
+          "via": "shared-7-B8UIMGDr.js:Bi",
+          "kind": "adapter",
+          "original": "Tx"
+        },
+        {
+          "local": "Gu",
+          "from": "./shared-8-B5lJ8U5C.js",
+          "name": "en",
+          "via": "shared-8-B5lJ8U5C.js:en",
+          "kind": "generated",
+          "original": "OL"
+        },
+        {
+          "local": "Lu",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionsStore",
+          "via": "shared-8-B5lJ8U5C.js:Wd",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "Ju",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "updateSession",
+          "via": "shared-8-B5lJ8U5C.js:hd",
+          "kind": "adapter",
+          "original": "xm"
+        }
+      ],
+      "exports": {
+        "cG": "er",
+        "ZG": "zn",
+        "kG": "Mn",
+        "EG": "kn",
+        "AG": "Ln",
+        "wG": "An",
+        "NG": "Fn",
+        "UG": "Pn",
+        "WG": "Nn",
+        "IG": "Dn",
+        "XG": "Bn",
+        "iq": "sn",
+        "sq": "un",
+        "PG": "On",
+        "uG": "Vn",
+        "xG": "Hn",
+        "lq": "ln",
+        "cq": "dn",
+        "SG": "jn",
+        "pq": "on",
+        "oq": "cn"
+      },
+      "publicNames": {
+        "zG": "resolveStartPermissionMode",
+        "AI": "startModeNeedsConsent",
+        "YW": "visibleProposalQueue",
+        "JW": "spawningTaskIds",
+        "tG": "markProposalSpawning",
+        "nG": "clearProposalSpawning"
+      },
+      "contexts": []
+    },
+    {
+      "source": "c25d7186f-CHE_J2eY.js",
+      "sourceSha256": "c9b3c57bc6d37f46187cfc489bcb56cb4afdda36404303f2acac5877f52e8a10",
+      "sha256": "cb4350514f6f3b65265608600b2d768e949eb94d2c9c0499222552e8fe6e55c7",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "acc157c52da841219ef1e42a4dd742c441cffc1c5b33f0c6b317bd205a58c8a4"
+        },
+        {
+          "name": "i",
+          "sha256": "4c7135c82999e4bfbcd5d3204788b2bb43c76cc83d9d660faedcd4e7e48ac63b"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "i": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c261da744-C3mLYxc0.js",
+      "sourceSha256": "be966482bb02284d0b406426f103ba549ba69e6f45425f115f5f3b392200be20",
+      "sha256": "6bc328817b5768482d31a37e61c31d3ee1580822d2ed0861284a6f6887148815",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "F",
+          "sha256": "aa00ae379123a7381ba5cbbd6a62e7d255e4d0a8d51bbc126c603f5868fb595d"
+        },
+        {
+          "name": "I",
+          "sha256": "0697a0fb5649a1ced4c57c5a5658f255f29b6fe3b0851ccca88c850af70fc724"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "I": "a"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c30607cef-BIoa7ymu.js",
+      "sourceSha256": "da7612c51da5d5d0b94c91f0a117e72d55093182c92c0e2d6ede0dd61e5327be",
+      "sha256": "9bdee6b90a54492b95282a6c46d11d077bdacef733a70425682bc6a4ee0f4d21",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "i",
+          "sha256": "4e61cebf742df0d80aaaefe1a9737dd31e074ac2b550ef1f5d67b0eb31638a45"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "r",
+          "from": "./shared-10-THQui8pC.js",
+          "name": "Yt",
+          "via": "shared-10-THQui8pC.js:Yt",
+          "kind": "generated",
+          "original": "ax"
+        }
+      ],
+      "exports": {
+        "i": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c425fb3cf-CEgSkv8l.js",
+      "sourceSha256": "abbb85b1ce1c1bfc0e880398dcad9ed0b521fd5db8d3dcbbd2cddb5fb049470c",
+      "sha256": "18083307a6fa939cedf775905186f84a786fde519405b340a2232983af8ebb7f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "M",
+          "sha256": "9abc43ac56245de33dcd49c7a8acff3a4884a3bc4c0d00be81572ce00749462e"
+        },
+        {
+          "name": "B",
+          "sha256": "72df73bde4f808a6f42e68f1d8c4455a65cb21f0a9123f9b9cda23eb59919c3a"
+        },
+        {
+          "name": "q",
+          "sha256": "46c375ab0e2e4da74b24b2f2683294019744a121ef5a57a7644ee28667695478"
+        },
+        {
+          "name": "J",
+          "sha256": "85f654366893d991781ed766deca152abdccdea9d98b70d308e8db7dfd877c26"
+        },
+        {
+          "name": "Y",
+          "sha256": "c1bd913ddf6337c0642f2f47becbd599b8a8f2e9122a06ed94440ef882aa8f9d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "./c25d7186f-CHE_J2eY.js",
+          "name": "t",
+          "via": "c25d7186f-CHE_J2eY.js:t",
+          "kind": "generated",
+          "original": "i"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        }
+      ],
+      "exports": {
+        "B": "m",
+        "q": "D",
+        "Y": "E",
+        "M": "M"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c5b9e310e-Dljk8moA.js",
+      "sourceSha256": "fad4ad7669f5c3ef4953b0fd0609ae7bf60286e527ba438643450fdf6771b26c",
+      "sha256": "cde5a2e90a811c863cfa4aa873d2211eb4cbe94ef91f07953beabd68e339f9bd",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "i",
+          "sha256": "10f4ef9b9cd3d20d4c2a5db91a59e3f05421c4e4f25718a1026a0f270317939b"
+        },
+        {
+          "name": "a",
+          "sha256": "367be84e09ad6953a7c0595be0a96dcae6b036c0c12243458392fded936d8248"
+        },
+        {
+          "name": "o",
+          "sha256": "b5306cbf4b2bafea387978238a2034d6ba1ce9937221c69a55f54bcf156a3ece"
+        },
+        {
+          "name": "s",
+          "sha256": "214bdd279bb8636aabd6187ccd90471a28a81db64c1c382c118fe91737cbd65b"
+        },
+        {
+          "name": "c",
+          "sha256": "5dbaa027a0631d3cfc7b594e3fadce98cefa9fc66f0781dcab2f75342adc1288"
+        },
+        {
+          "name": "l",
+          "sha256": "b9b3a919a3131bbd5feef86a71d4bd5204adb947be6d743c92cc3f5d895fcffc"
+        },
+        {
+          "name": "u",
+          "sha256": "4f3f01841a7d59e1738f3a381f744261ddfc4e84801f8d91efc5aee6aab24ef5"
+        },
+        {
+          "name": "d",
+          "sha256": "61a1a6e3e2a75c8e47991c7459061922bcd9ed90631d9d4eae31e9a300a94678"
+        },
+        {
+          "name": "p",
+          "sha256": "b53955a4f441faf9a2a076e212399c8d1bc1b664a904fcd50342682d84526fd3"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "./ca0294fab-CYDhVWyX.js",
+          "name": "n",
+          "via": "ca0294fab-CYDhVWyX.js:n",
+          "kind": "generated",
+          "original": "B"
+        },
+        {
+          "local": "n",
+          "from": "./ca0294fab-CYDhVWyX.js",
+          "name": "t",
+          "via": "ca0294fab-CYDhVWyX.js:t",
+          "kind": "generated",
+          "original": "z"
+        },
+        {
+          "local": "r",
+          "from": "./c8f38bf1f-D_EZalnr.js",
+          "name": "t",
+          "via": "c8f38bf1f-D_EZalnr.js:t",
+          "kind": "generated",
+          "original": "i"
+        }
+      ],
+      "exports": {
+        "p": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c5ef5b59f-KVN_22_J.js",
+      "sourceSha256": "de681410522dd75832ea7d6b331ba4e88d0df5cb1367a1cde3cac7e66a20dd8e",
+      "sha256": "9e51221616a7894bd8c4763c9f5d7306ef2f60156293563834c67ba9b9239a96",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "i",
+          "sha256": "352c8e8f8218ded77ba136fe467241d0625cd39c62ea6cacaa3250a480c1fef3"
+        },
+        {
+          "name": "a",
+          "sha256": "3630edf18076681b867646cadda12ab7952e1141295dcef9ebc436df8f0069bc"
+        },
+        {
+          "name": "o",
+          "sha256": "8dc552f19465823ddd4ead8c2d3707b39628220f6625365533d1fc5b61684495"
+        },
+        {
+          "name": "s",
+          "sha256": "2bfb32e9665c125a47d00b0670f99df30660422e1f3ab99653c0c8a706ee3f17"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useGrowthBookFlag",
+          "via": "shared-25-DP8p7i1Z.js:Th",
+          "kind": "adapter",
+          "original": "Zs"
+        },
+        {
+          "local": "r",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "Fp",
+          "via": "shared-104-Cqo2-vQh.js:Fp",
+          "kind": "generated",
+          "original": "nu"
+        }
+      ],
+      "exports": {
+        "a": "n",
+        "s": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c63c52947-BXzWWrtE.js",
+      "sourceSha256": "e4618435a04d6cbb615807733d01ec328b0e38334b5dd81afbe10c5bb288df16",
+      "sha256": "c7d531b54bda4bf890b983426dae65e65e141f6afe5344b94398f3a67c026c90",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ge",
+          "sha256": "c5058222dd9d52b67acbc46f7a200de407842707b022c65476d66ba9516d5149"
+        }
+      ],
+      "imports": [
+        {
+          "local": "re",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "Ge": "S"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c81ea1931-ChuE7vym.js",
+      "sourceSha256": "ad82887242c4d2027078f12971d6f74b22be0af5264fee71d76f9cb33eef7076",
+      "sha256": "08812994ca23b8e41a04e4700ca28b5c866fa5cdbaed09ff8ad98ae4e944c5fa",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "6b87fe405a4514f73daa223d0fff7b0f2b4bb3c2ccb9a6670857bf11aec98062"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c8479260c-DaoJ9_2S.js",
+      "sourceSha256": "92e8162532156d762c90a349313c86767c60ee70c7850889b8390a8ed2bed20d",
+      "sha256": "68081e21c23dacf3088589a80b8e7a650ff522a0123b4c4bd167411ac0b2ad52",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "7b1e1a4dd034892db83539f22b61967756fc37af9468c0d70e6a76d851d4461f"
+        },
+        {
+          "name": "t",
+          "sha256": "6a1a93648e8b87c1213eaab6611f7b0e23e6d389fbedef2dfef240d65a97b978"
+        },
+        {
+          "name": "n",
+          "sha256": "973390c0156ad6b2b2346bc9d1dedd97d5f428e8ff2ac09847bffc8ac20e42bd"
+        },
+        {
+          "name": "r",
+          "sha256": "896a7d7a638348c3f1da461f742c35ad37cacd295665ba1ecd6fdac7e95b8226"
+        },
+        {
+          "name": "i",
+          "sha256": "c2f8bd4bd4073b392c4319148a9ae4f23d4779e65d78cc7fca9274bf3e49d945"
+        },
+        {
+          "name": "a",
+          "sha256": "2fa3e9e865786a574bd79ddc0f066531313fe5f92e00cc35d270e32fcde57505"
+        },
+        {
+          "name": "s",
+          "sha256": "75eb98825ebd93f45a306004bc24881968a546cc08d93b3e6e83557a9f9a8412"
+        },
+        {
+          "name": "l",
+          "sha256": "f7bb156f4608b7a71ee12d7c1c14f01412750fe74c36b8712fb4a58a3dd3b82d"
+        },
+        {
+          "name": "u",
+          "sha256": "36de00ce1478cfcc8f85b863184aad49d58719ab0fef49ade0f89e1925cd99f9"
+        },
+        {
+          "name": "d",
+          "sha256": "2c3e2de5eda1041e832bc4ff8708e79111d76a921fa5cee77ef4d34767eedc9d"
+        },
+        {
+          "name": "f",
+          "sha256": "3dfc244d1b33f73048173d080e2f8f21b2beab9b320640159d6a769b954e6e38"
+        },
+        {
+          "name": "p",
+          "sha256": "1e6ae2db222215ed3122f9ff8cf641f5bbcfea01eca07e74cd846a0440a3bee6"
+        },
+        {
+          "name": "m",
+          "sha256": "2c9ee394b396f2bfd81f227c3b1b45f1c20dd7ea4b6868a32b8689485bc88bc3"
+        },
+        {
+          "name": "h",
+          "sha256": "346efc0aaa30c9afada6870290ffa9368c1a54ef18b2264344afc7e764cd0cbc"
+        },
+        {
+          "name": "g",
+          "sha256": "cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29"
+        },
+        {
+          "name": "_",
+          "sha256": "a57ec37cd1bfa53def3fa82b8095ebca014245715bcd1f594277ee665b0ea255"
+        },
+        {
+          "name": "v",
+          "sha256": "4c94485e0c21ae6c41ce1dfe7b6bfaceea5ab68e40a2476f50208e526f506080"
+        },
+        {
+          "name": "y",
+          "sha256": "4ff73f5f8f8d8855656eeab89d07b4f8a3dec00893a768c93b30e64138f25e00"
+        },
+        {
+          "name": "b",
+          "sha256": "b4f9006256bd290d9a24d0ae566feacd00968ace1918ece8875b2b460da962c1"
+        },
+        {
+          "name": "x",
+          "sha256": "5514b0375dc05811d9b8590b40bd253502300e3e1df87016eaed69bd53969a1f"
+        },
+        {
+          "name": "S",
+          "sha256": "8badc875e8ab0345d7766e9cbd8c9b02bfc30a14c08ad66f9fe6ef5388fafcca"
+        },
+        {
+          "name": "C",
+          "sha256": "d53bdb2aa32aaeceb09c8831605c1b6f571fda8a975a4fc49ba58b6e7c10627b"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "r": "l",
+        "C": "m",
+        "s": "u",
+        "m": "f",
+        "d": "p",
+        "p": "d"
+      },
+      "publicNames": {
+        "e": "PROPOSAL_SESSION_SERVER",
+        "r": "SPAWN_TASK_TOOL",
+        "i": "DISMISS_TASK_TOOL",
+        "s": "START_SESSION_TOOL",
+        "h": "TASK_ID_PATTERN",
+        "C": "taskIdFromResult",
+        "d": "lastTaskIdFromResult",
+        "x": "taskIdLine",
+        "b": "quotedTaskTitle"
+      },
+      "contexts": []
+    },
+    {
+      "source": "c8f38bf1f-D_EZalnr.js",
+      "sourceSha256": "1162507fd44eeb7e143310455c8f3ba70858e6a85ddb8f22e22e87af0a2cfff5",
+      "sha256": "005f207f2b99d56673137fd14c46c3bdb9c1aef399e178cbef6121b1cdbe60e6",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "n",
+          "sha256": "85f772d94f304ef7d7d96f7b7fb16313e848ba1d82c3ee1a1640d3bb5a67e818"
+        },
+        {
+          "name": "r",
+          "sha256": "b2d9daabf6f4f57be5ec93ac5db3d843149c66b3dee02abae517a0d6a331fcb2"
+        },
+        {
+          "name": "i",
+          "sha256": "87ceb39750d6571d48ccf541e8f85491962b2f2db2e8b22808d8e43774f64f01"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        },
+        {
+          "local": "t",
+          "from": "./shared-182-eT1kXtya.js",
+          "name": "Uf",
+          "via": "shared-182-eT1kXtya.js:Uf",
+          "kind": "generated",
+          "original": "nC"
+        }
+      ],
+      "exports": {
+        "i": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "079e96632ed9e45892c5986e3a4181e5c13d93e0df680c233f0de500af194ed7",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "pL",
+          "sha256": "a953e798658d0dd0c9893833786b7789f98c729c6badc897c0fb1a2f832a56e3"
+        },
+        {
+          "name": "mL",
+          "sha256": "ff6a72cf6f0523685ef6ce72948ae6b115da7a88bad4b170f147594f099c0726"
+        },
+        {
+          "name": "DPe",
+          "sha256": "e0e91c16296b2afb38dcc8a61510837257fb013f2df1da98c0d130bc34b4f846"
+        },
+        {
+          "name": "hL",
+          "sha256": "c569e0e1795eaa23ef6c6fe577111168daf1fe9d27762ed0843a947455ea92ef"
+        },
+        {
+          "name": "gL",
+          "sha256": "be7300814bb18fd41e540c6444480b005c6ff5041fd0f9b4d68a8aac39db59d6"
+        },
+        {
+          "name": "SL",
+          "sha256": "01ed701d446ecc4adcb7027b08f17f40ab75e63b20195051a4ef57832475d83f"
+        },
+        {
+          "name": "NPe",
+          "sha256": "97fca5b200190743464830dbaa13a3e7eea5ebbcff2d21bce837593dba4adc0f"
+        },
+        {
+          "name": "PPe",
+          "sha256": "240682e3f176f7100334bb733962bc31bc0fffc5012c3555e85440fc0c741a18"
+        },
+        {
+          "name": "WZ",
+          "sha256": "24b72add7a4df6f36a98693d73cf287c6861b4ebff016eaa2a3b843f1ce804bf"
+        },
+        {
+          "name": "GZ",
+          "sha256": "5590866b95f9857a0306f06cb0d339b78fbc8d9f683ec0b985f53a0e4373111d"
+        },
+        {
+          "name": "KZ",
+          "sha256": "d7a90751237fa221aa89c0d60e754e83a1c807643fa5d20c6e89c4cbd1cd79e3"
+        },
+        {
+          "name": "uQ",
+          "sha256": "dbee9603bf1116e5800ab0ab4311a8eb4637ac7648f65a35201b3ac592c8eac4"
+        },
+        {
+          "name": "dQ",
+          "sha256": "547897149e21c427c4d2ce74a498fb694cdebe41c1e8cc4cdcabc3bf83f02f56"
+        },
+        {
+          "name": "fQ",
+          "sha256": "5035b0972e9ae5882e61528e2de3f125d9b3ca47654884971faa76008ce5ab7b"
+        },
+        {
+          "name": "pQ",
+          "sha256": "27920c880df4b6d1dd7a0debdd484abd52678b78881157e6641954dacdfa59cf"
+        },
+        {
+          "name": "j$e",
+          "sha256": "214aefca10af6540fbf67e3a9d7b7346c0b9f128eef279ef950271a1931cf648"
+        },
+        {
+          "name": "_Q",
+          "sha256": "642dcd778061a2f42ad9368a06ee273ac9323e9b481f8140efe9100eeda98507"
+        },
+        {
+          "name": "vQ",
+          "sha256": "57c22772624a77ff04ce379c56b60d95b80cb5dfe4bc7167c307494ecf57c1d2"
+        },
+        {
+          "name": "bQ",
+          "sha256": "3cf202fd7671a6998f4c9bbabd243ffae4e17169559fd0b42b5a09f58cd2d38a"
+        },
+        {
+          "name": "CQ",
+          "sha256": "c4dc40ccd0ad2b270f32f02a12164c2fc276b5c9c770f1af5f409efaca7855b8"
+        },
+        {
+          "name": "z$e",
+          "sha256": "b110aa81a3dc8c48edfb6396bf0066f11dcba4540f1d3ff1465a33427614ac44"
+        },
+        {
+          "name": "B$e",
+          "sha256": "8ba2ffd2145d42febcae38459e0c398fa033762e69db77647425c10fd2a60dfb"
+        },
+        {
+          "name": "wQ",
+          "sha256": "cb08ab5214c4ed2a171deb6e2636233dcbbeb67bda2363a463ca44ef50425b5d"
+        },
+        {
+          "name": "TQ",
+          "sha256": "71c979fbcb72e5bfd0e8391d96718c9ffa2d8404d71bb56ccff21d69ceb1b5a1"
+        },
+        {
+          "name": "EQ",
+          "sha256": "4f8676c7ffa9c9b8a4187810ebda24947414db667ae8e92ffe4ee89c14afba26"
+        },
+        {
+          "name": "DQ",
+          "sha256": "fa7c65ae7f32ac7b36e888e27404e319a06f58651951379c69d0b6dc74b1cd18"
+        },
+        {
+          "name": "OQ",
+          "sha256": "07a7ba1e792c4fdc64c0e39adba1ea0a5edd6558d4a8bdea08beb417d22178fa"
+        },
+        {
+          "name": "kQ",
+          "sha256": "eb84874bc9d6854e432f2fd66d3245c6044c3de4f34f2e66ef30983cbcc012cb"
+        },
+        {
+          "name": "AQ",
+          "sha256": "9d4457fff902c8cf2da2e8ef42376c6d683aa69d51de3aebab26bcc17087db2f"
+        },
+        {
+          "name": "jQ",
+          "sha256": "ab5c32bdb8efcbec79fe3e498bab41365b96f405a8b8fc798de7b74ca59d3a27"
+        },
+        {
+          "name": "MQ",
+          "sha256": "ff2e4729a6370e7649182786ae34c7987f18bee2ec7ca0a185de38ffc1a38ab6"
+        },
+        {
+          "name": "NQ",
+          "sha256": "da738ffa420bc5a9291a0af38f62c5c4cd41aca509dab06fe4acc250f8a68f40"
+        },
+        {
+          "name": "PQ",
+          "sha256": "81571f8f3def7b9779314b8af7f94e0a6e05f453c22b4b2219a9d5c53595e13c"
+        },
+        {
+          "name": "FQ",
+          "sha256": "8bb8358bf03ae08e1bb2d36162bcfbc9f05f5dd1d282ab519d0cba9b0a8fd5d8"
+        },
+        {
+          "name": "U$e",
+          "sha256": "4eb35b7bdcf6c0573b643e3f0faf4b64442e41bb8dac403e72f88eb45969d636"
+        },
+        {
+          "name": "W$e",
+          "sha256": "0940d206eaff1d913a7f9e3e2315c366ee267868c5d730d928b461a65a7bb5ce"
+        },
+        {
+          "name": "G$e",
+          "sha256": "49d633af799d419ec608719ca6f707fce167c4c8a8a2e90f03a5894edab1ff66"
+        },
+        {
+          "name": "K$e",
+          "sha256": "6d27fd5e795e1f10b6286945180ee4f08b34eae72cef530b6f5ed6ad3cdf084f"
+        },
+        {
+          "name": "q$e",
+          "sha256": "d4255ebbd2ea09876fc5239fcbfd7b7418b5b79698483049bc19ff35e171b2f5"
+        },
+        {
+          "name": "J$e",
+          "sha256": "7c186910e3186697e098249774f5b10fab9b5046b9e963e28d408c23be47a4d2"
+        },
+        {
+          "name": "Y$e",
+          "sha256": "2d1c26771c4bfa2687742db828a25a555660bcb32577de1a48570f4fdc11b5cd"
+        },
+        {
+          "name": "X$e",
+          "sha256": "1b1d6062100aa3eaf769df823e8ff38d39d120480b0054d05442e3817319940c"
+        },
+        {
+          "name": "Z$e",
+          "sha256": "2b54de84ab4dc16655d7303873ac85b8922d57bb03e4ce974009c17a8b131aa5"
+        },
+        {
+          "name": "Q$e",
+          "sha256": "97d0bf8d1ea34675f6ec269129603d44a9cf8f505b20a7a052ce596b47204006"
+        },
+        {
+          "name": "$$e",
+          "sha256": "8b2d1d3c8cc2e2e5cb36ce770f252671a62a1833d6d9251633e46f8405d17432"
+        },
+        {
+          "name": "r1e",
+          "sha256": "b3067d670fcabe49067002f53b88002bee8274c2aa32f9d3baa82ca2831e1526"
+        },
+        {
+          "name": "i1e",
+          "sha256": "3c698f3b71a98533bd0aadcfcc444f8a0ece6103362e8e4b9148244e9e0e5e85"
+        },
+        {
+          "name": "o1e",
+          "sha256": "203593a56d419530f32571152edcfc84388477568445b2f394246058ddcefe9b"
+        },
+        {
+          "name": "LQ",
+          "sha256": "ca245d3ccc5eb61d8601e857d5d128954b74321505049042d7933c29af6f3717"
+        },
+        {
+          "name": "s1e",
+          "sha256": "b295257ca02c579aa06eec84647ad3b1f25d7de8d848849fbdde55c801f76fdd"
+        },
+        {
+          "name": "RQ",
+          "sha256": "6715178b0d545e65542ae79465e5fda7b045da6b38ff4d13bb2baf3c284a5fe9"
+        },
+        {
+          "name": "zQ",
+          "sha256": "85fd259edb99b20bd60b1b2c741d55339b631292170af845b6d1e9f5d94ffddf"
+        },
+        {
+          "name": "BQ",
+          "sha256": "868cea7d75c4eeb1fb60664a2dc40cf5a0848988d7326ec30a5dc8854ab188c3"
+        },
+        {
+          "name": "VQ",
+          "sha256": "68a7c4a08e6514e35aaf4015a076716ddc2c7580afec0c58ebbb72534d6bd73b"
+        },
+        {
+          "name": "HQ",
+          "sha256": "c190c0da3c8b76817c5d18f3ca80eec8ab2a6cc7e1b2aee798388df2c72d8885"
+        },
+        {
+          "name": "p1e",
+          "sha256": "f900b2a77a1c1274c1551b7c86b8678f7d3f3d01285f04d467e6a4f71c83a021"
+        },
+        {
+          "name": "qQ",
+          "sha256": "c96bba71ebee41f49839eb71f08704247d3a00bc9c41532d42e04508e164a841"
+        },
+        {
+          "name": "h1e",
+          "sha256": "7e1ba5421457ead6ba9ec45328b888fe7cd1c04b6142ec85a5aa3c77f950b2ed"
+        },
+        {
+          "name": "g1e",
+          "sha256": "ec91f2749535e1e70e06437ff4843a7c83afd586c60c5385815a8bbce0a3e4b4"
+        },
+        {
+          "name": "_1e",
+          "sha256": "6b5b575995bd0b8b2917e233fe16fd9462efbaf1732cbb7c3cf2298218627fea"
+        },
+        {
+          "name": "JQ",
+          "sha256": "1602deb898c1179fbb9137c96ae150b224090a704721db84fd0d8286d2e7c1f8"
+        },
+        {
+          "name": "YQ",
+          "sha256": "721d5d766b162449200aa5713eb45ce2a5cdc7992cd1cb1772d4e5a14200184c"
+        },
+        {
+          "name": "b1e",
+          "sha256": "571f983728afa2e1cf5953206d61a1bc199e466847d7e1e94e9cf8228becc1ca"
+        },
+        {
+          "name": "x1e",
+          "sha256": "5cdb0911d90f2e380bd9f562b7d98ec94d20edda50184c5ff81a1f7577ef8e2a"
+        },
+        {
+          "name": "S1e",
+          "sha256": "cf70c8adbf1b8bafbe2fe59d008b384f41f0d990127f7a19ebf9d0a0be5bfb02"
+        },
+        {
+          "name": "C1e",
+          "sha256": "ac38e163fd57c5ca1d4efd3bb0397357579ded07656a8d8f4b784db7f538a5f7"
+        },
+        {
+          "name": "XQ",
+          "sha256": "76a9cd95ac0914a45c34d9ef7b79f7175b562f7c0f0e1ee8575b0d3637794899"
+        },
+        {
+          "name": "w1e",
+          "sha256": "e2a77cab4cd8e49a05ef99a5128689b5f969a6324d3dc3700fe9e3ac9bf6484a"
+        },
+        {
+          "name": "t$",
+          "sha256": "38aa2528ef4d1981213df0cbb61429bea350a0993c9d15c5f16ad9e87a833b28"
+        },
+        {
+          "name": "n$",
+          "sha256": "06691818419ad65957dca42639615d413ec333baa4a247a97b151051ed898773"
+        },
+        {
+          "name": "f$",
+          "sha256": "33a00c0fb53ac23736874c74cf5874836cb39b98e5bb043ee6134d0bd94f5327"
+        },
+        {
+          "name": "j1e",
+          "sha256": "6eebd9631bddeae669489c80db4252f6d57642ea18c73ce5bc1d038e2a331bbd"
+        },
+        {
+          "name": "p$",
+          "sha256": "5174f712401193574a8cd7b6a80a9bacd2cb6969104173780820fe69735f2cd1"
+        },
+        {
+          "name": "P1e",
+          "sha256": "bd5daaaa2e35fa4056a101b368b25f83aa35a7415981f82826bf68cff7a13b78"
+        },
+        {
+          "name": "I1e",
+          "sha256": "7104a0b53177520ccfb089db0865682cfa4260df00fa0ce425473f9abdf6f17c"
+        },
+        {
+          "name": "m$",
+          "sha256": "c578fcf4742006fd821b72e395b59854b92a850068cbe5bace508b0b1f93636d"
+        },
+        {
+          "name": "h$",
+          "sha256": "8a6095623503d898ef40001200c9081d167cbfa14f5509a2f3387d7a9579e580"
+        },
+        {
+          "name": "g$",
+          "sha256": "07a08dabb4b06703c92ad291d68367c84ae3a62793b24dff13073cc81889c3f9"
+        },
+        {
+          "name": "_$",
+          "sha256": "b5ee118c1b465e4224c31b6f092bd69f696412f9df9bf8d378bafec75db22831"
+        },
+        {
+          "name": "L1e",
+          "sha256": "1ba1cac986166f7560153b963cd8b1fb31c3c99d0d24fd5f7df79daac864f892"
+        },
+        {
+          "name": "R1e",
+          "sha256": "249beee4ebc36a51793092b7cb00a030f8105ce3603686b23c4f0dc02f586fa1"
+        },
+        {
+          "name": "v$",
+          "sha256": "24162e8939fb21053f5966f06503ef205c3c4dee9213f747c496f58f0299894d"
+        },
+        {
+          "name": "y$",
+          "sha256": "f489e4515ebccf16a49df3677916ea4f960ece2018d2b9ea2a23536a8221fc47"
+        },
+        {
+          "name": "b$",
+          "sha256": "4e64b9bc49dd6617245868ffc87d6127246014fe71225d5366d9070549915bd7"
+        },
+        {
+          "name": "z1e",
+          "sha256": "4e7e11016e00573b3a852fd72eadfc7ee8c23f6dacd9b3eea359c25294bdefa2"
+        },
+        {
+          "name": "B1e",
+          "sha256": "a211c8a4b738f1ae0ec947367ba925a9fbe030ed282b6aa5870a17cdc279034a"
+        },
+        {
+          "name": "V1e",
+          "sha256": "b8ac414e828cabad21ca1263ceffc45458208abe173c37913c58d8c8a12857a8"
+        },
+        {
+          "name": "H1e",
+          "sha256": "dbd1119f655d7e6ae7bfcbf13961b748f0d3aecc2252758cc833765e0b41a418"
+        },
+        {
+          "name": "x$",
+          "sha256": "6a927ae12e27b4dc292df12f370c173dadec7600322777dec067697c0ba76837"
+        },
+        {
+          "name": "U1e",
+          "sha256": "e5d25e132965ae255a20ac3deac903e2c8e5362ab48dbe766c561e8ae6049f11"
+        },
+        {
+          "name": "W1e",
+          "sha256": "ee952a75799513a1815ec5af230ac74620fbc33a85a2043403bfb6fb8d6355da"
+        },
+        {
+          "name": "S$",
+          "sha256": "5673ed09e01b2b5bde3326741494635a90da61926ea1c0c94fe0bc5300e68d0c"
+        },
+        {
+          "name": "C$",
+          "sha256": "86ef57c1b87094362115f144b41730cd57e1b2e44cec8390a99a0c89bf6e2dab"
+        },
+        {
+          "name": "w$",
+          "sha256": "8188f47e814071e509e4c3778dae18e859c269330207fb979afff1b8f50311a5"
+        },
+        {
+          "name": "T$",
+          "sha256": "d6f59d06fa9e58558645e0e2afa2efe508bec174da970baa1c5425697cc30a77"
+        },
+        {
+          "name": "K1e",
+          "sha256": "04c7ed6feb0922fc0a0f7df3efdf923b38047b1e0fb5cd4ab32a85e4dc3d3d05"
+        },
+        {
+          "name": "E$",
+          "sha256": "0d46d0631ec93c8060d77120f8bd97fb7a76a1ca244df410f6a97a92339a9e6f"
+        },
+        {
+          "name": "q1e",
+          "sha256": "706f16548e2a7a316dd5fb41a2535704d672adec13a5d145818ac32a73cf74fd"
+        },
+        {
+          "name": "D$",
+          "sha256": "69e93bfcd89b4be7a13e908eb2d4e8a3ba0714737f7e9ad2b6d22dbee5ff496a"
+        },
+        {
+          "name": "O$",
+          "sha256": "90a50df1948c88952ca1696d2f505dca1bbe99bad5ccab2988b2cc2494faa2b1"
+        },
+        {
+          "name": "J1e",
+          "sha256": "7c25e564d2291f3f90fcfe0fbd01ce6385fe75d7cd0295357763a0e31e932edd"
+        },
+        {
+          "name": "k$",
+          "sha256": "4654f2df07cfe9c23f8a87bcdcfb93bf81d169b4a39c87c583020d39c6ab8cdb"
+        },
+        {
+          "name": "Y1e",
+          "sha256": "7111311850489bf747b27a0f2c8ce0a5d23987024865011746b6b6049de33de7"
+        },
+        {
+          "name": "X1e",
+          "sha256": "14e9dce30904de90ed98987c1418c7fb13f73a56e797c949ad7f29a6ad69d20b"
+        },
+        {
+          "name": "A$",
+          "sha256": "7ad35b8a20c91552bd51ae3db27d882e2946fc2dcbc8d725975f514ff3ad1a01"
+        },
+        {
+          "name": "j$",
+          "sha256": "74ba62739acdd7cd826126d3af9bb7581b5d8532e65580f1df2d05bdccacf88f"
+        },
+        {
+          "name": "M$",
+          "sha256": "24066bdb2b9eb00e448fb42c027981cd6ba37f14430b273d582a75354c023672"
+        },
+        {
+          "name": "Z1e",
+          "sha256": "81c2b3b2725ce506186818e14aecc50b2db4f2d08d524473fe18a91e1d645ba5"
+        },
+        {
+          "name": "Q1e",
+          "sha256": "c9ef881ada9ee5ea0b45fbfe4279a50bfa544d552094032a24b3b38ea947b301"
+        },
+        {
+          "name": "N$",
+          "sha256": "464d8f01d86526944f0b9acb7eca10fdb1a7d0be992bee1265a8e2c44bdfdf0d"
+        },
+        {
+          "name": "$1e",
+          "sha256": "dfd2117bfea6007f9578268a22542518cac0fca157557d738c19aa1e6a5e8d0a"
+        },
+        {
+          "name": "e0e",
+          "sha256": "49f9f3e01f8b02215988aa7b796ad546f57060c928c400482cc67ff4de3d56e6"
+        },
+        {
+          "name": "P$",
+          "sha256": "c3843f1715601ddf4ca782b576ef289cb840cc82e503a9853976d7a31019ba2c"
+        },
+        {
+          "name": "t0e",
+          "sha256": "2d0330ec417cbbdad8014073aa301624715be6ae5e90c343058da485154c5d45"
+        },
+        {
+          "name": "n0e",
+          "sha256": "16cbb6d1d67d5b8066515fc8f62758e6d62777c752caf6e1ce4dfc224e2d40cd"
+        },
+        {
+          "name": "r0e",
+          "sha256": "7e84c15ea72a5f45f0ebc6f0424bcf7fa8bcf1ae8b29407a1579c61053f1e777"
+        },
+        {
+          "name": "i0e",
+          "sha256": "4ddf7c8bd1806641699f5f04177277c69408108d53d9d32a6d274424e248b99e"
+        },
+        {
+          "name": "a0e",
+          "sha256": "0e52432cc7fc077f8b7bc36fc45a2c5f4119a27c9e6dc70e61577e1ab4fb9b9d"
+        },
+        {
+          "name": "o0e",
+          "sha256": "aba8946c07ff686b36ffffdefcf4982a8c7c3b608e220abc2e49a381cb02e753"
+        },
+        {
+          "name": "s0e",
+          "sha256": "478d3a3c5b1eabe2a3ffbf5f32160e0928f5e66060066cf7e82cd0fa44bab4dc"
+        },
+        {
+          "name": "F$",
+          "sha256": "d7429911e9704aa9f41d2b302b8fefbcd883b02b440dc8459733949eed17cd2c"
+        },
+        {
+          "name": "I$",
+          "sha256": "15c3191b916333946bd457b8fac21f81646ac4ed6c1385628405f7d07e363d87"
+        },
+        {
+          "name": "c0e",
+          "sha256": "5ce2e8d67817eabbd1eeae31fa8730bb95beb037ff253f0d9b8ec5ffece2bdca"
+        },
+        {
+          "name": "l0e",
+          "sha256": "e87e206741d7e222c590d3003addfe48cf483774df0bc75fb232771611b29b7b"
+        },
+        {
+          "name": "L$",
+          "sha256": "c16c4f9442f3802e5985d8fe13db9b1a1e388333e00475bde72125237890e391"
+        },
+        {
+          "name": "R$",
+          "sha256": "ba221b5b30f14a0b1b7eb29b9bf85ab821239b41a590042d42ccaa3042c0498f"
+        },
+        {
+          "name": "z$",
+          "sha256": "8bc64010e1e44458e3eca4992ce62d0be1271c730c43f2374db32ce4b65f1d92"
+        },
+        {
+          "name": "u0e",
+          "sha256": "3830fce9f478cb0ee6c76993f2ddfaf937d8d11981203bc574c20bf99ff0bef7"
+        },
+        {
+          "name": "B$",
+          "sha256": "2a771f7b3c92985ba998a595429bd880266b764e0865da90200ede7d25be2073"
+        }
+      ],
+      "imports": [
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "hl",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionsStore",
+          "via": "shared-8-B5lJ8U5C.js:Wd",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "Ma",
+          "from": "./shared-52-DGviI8xb.js",
+          "name": "Pp",
+          "via": "shared-52-DGviI8xb.js:Pp",
+          "kind": "generated",
+          "original": "Qf"
+        },
+        {
+          "local": "Y",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "Nt",
+          "via": "shared-25-DP8p7i1Z.js:Nt",
+          "kind": "generated",
+          "original": "zU"
+        },
+        {
+          "local": "w_",
+          "from": "./cb27dab29-_H2_XKli.js",
+          "name": "S",
+          "via": "cb27dab29-_H2_XKli.js:S",
+          "kind": "generated",
+          "original": "W"
+        },
+        {
+          "local": "Nh",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "m",
+          "via": "c8479260c-DaoJ9_2S.js:m",
+          "kind": "generated",
+          "original": "C"
+        },
+        {
+          "local": "T_",
+          "from": "./cb27dab29-_H2_XKli.js",
+          "name": "T",
+          "via": "cb27dab29-_H2_XKli.js:T",
+          "kind": "generated",
+          "original": "K"
+        },
+        {
+          "local": "R_",
+          "from": "./cb27dab29-_H2_XKli.js",
+          "name": "l",
+          "via": "cb27dab29-_H2_XKli.js:l",
+          "kind": "generated",
+          "original": "Je"
+        },
+        {
+          "local": "Ph",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "p",
+          "via": "c8479260c-DaoJ9_2S.js:p",
+          "kind": "generated",
+          "original": "d"
+        },
+        {
+          "local": "Pf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "er",
+          "via": "c227f4d5e-Ba-r--Rl.js:er",
+          "kind": "generated",
+          "original": "cG"
+        },
+        {
+          "local": "pt",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "ab",
+          "via": "shared-0-ByI5P0CP.js:ab",
+          "kind": "generated",
+          "original": "pi"
+        },
+        {
+          "local": "pc",
+          "from": "./vendor-all-0-CTKbbUUg.js",
+          "name": "I",
+          "via": "vendor-all-0-CTKbbUUg.js:I",
+          "kind": "generated",
+          "original": "ee"
+        },
+        {
+          "local": "dc",
+          "from": "./vendor-all-0-CTKbbUUg.js",
+          "name": "D",
+          "via": "vendor-all-0-CTKbbUUg.js:D",
+          "kind": "generated",
+          "original": "me"
+        },
+        {
+          "local": "fc",
+          "from": "./vendor-all-0-CTKbbUUg.js",
+          "name": "E",
+          "via": "vendor-all-0-CTKbbUUg.js:E",
+          "kind": "generated",
+          "original": "fe"
+        },
+        {
+          "local": "za",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "sentHereStorage",
+          "via": "shared-52-DGviI8xb.js:up",
+          "kind": "adapter",
+          "original": "$p"
+        },
+        {
+          "local": "xi",
+          "from": "./shared-78-D6VXYXaQ.js",
+          "name": "jl",
+          "via": "shared-78-D6VXYXaQ.js:jl",
+          "kind": "generated",
+          "original": "xL"
+        },
+        {
+          "local": "Ah",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "d",
+          "via": "c8479260c-DaoJ9_2S.js:d",
+          "kind": "generated",
+          "original": "p"
+        },
+        {
+          "local": "ey",
+          "from": "./c261da744-C3mLYxc0.js",
+          "name": "a",
+          "via": "c261da744-C3mLYxc0.js:a",
+          "kind": "generated",
+          "original": "I"
+        },
+        {
+          "local": "DS",
+          "from": "./c5b9e310e-Dljk8moA.js",
+          "name": "t",
+          "via": "c5b9e310e-Dljk8moA.js:t",
+          "kind": "generated",
+          "original": "p"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "lc",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        },
+        {
+          "local": "Yo",
+          "from": "./shared-2-Cb74JByF.js",
+          "name": "sd",
+          "via": "shared-2-Cb74JByF.js:sd",
+          "kind": "generated",
+          "original": "FT"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Uz",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "ProposalToolFallback",
+          "via": "c96d752d0-BOCqU7c2.js#Uz",
+          "kind": "adapter",
+          "original": "Uz"
+        },
+        {
+          "local": "Pa",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useErrors",
+          "via": "shared-52-DGviI8xb.js:Ya",
+          "kind": "adapter",
+          "original": "Sj"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "Gee",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useProposalPicks",
+          "via": "shared-78-D6VXYXaQ.js:fs",
+          "kind": "adapter",
+          "original": "uH"
+        },
+        {
+          "local": "Fi",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useProposalWorktreePick",
+          "via": "shared-78-D6VXYXaQ.js:ps",
+          "kind": "adapter",
+          "original": "dH"
+        },
+        {
+          "local": "Vee",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useOfferCloudStart",
+          "via": "shared-78-D6VXYXaQ.js:ds",
+          "kind": "adapter",
+          "original": "fH"
+        },
+        {
+          "local": "_de",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "zn",
+          "via": "c227f4d5e-Ba-r--Rl.js:zn",
+          "kind": "generated",
+          "original": "ZG"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "Cle",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Mn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Mn",
+          "kind": "generated",
+          "original": "kG"
+        },
+        {
+          "local": "Vf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "kn",
+          "via": "c227f4d5e-Ba-r--Rl.js:kn",
+          "kind": "generated",
+          "original": "EG"
+        },
+        {
+          "local": "qm",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "logProposalStart",
+          "via": "c68c4283d-CPuRD0vx.js:Dd",
+          "kind": "adapter",
+          "original": "kd"
+        },
+        {
+          "local": "Fh",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "u",
+          "via": "c8479260c-DaoJ9_2S.js:u",
+          "kind": "generated",
+          "original": "s"
+        },
+        {
+          "local": "mo",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "Tf",
+          "via": "shared-104-Cqo2-vQh.js:Tf",
+          "kind": "generated",
+          "original": "Ff"
+        },
+        {
+          "local": "ble",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Ln",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ln",
+          "kind": "generated",
+          "original": "AG"
+        },
+        {
+          "local": "$ce",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "An",
+          "via": "c227f4d5e-Ba-r--Rl.js:An",
+          "kind": "generated",
+          "original": "wG"
+        },
+        {
+          "local": "R",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "Xl",
+          "from": "./shared-10-THQui8pC.js",
+          "name": "Qt",
+          "via": "shared-10-THQui8pC.js:Qt",
+          "kind": "generated",
+          "original": "Bb"
+        },
+        {
+          "local": "Yg",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSideSessionOpener",
+          "via": "c856385e2-DVsjb2QL.js:rt",
+          "kind": "adapter",
+          "original": "Qt"
+        },
+        {
+          "local": "h_",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useOpenSession",
+          "via": "c26fb8b6b-DfPeiuGP.js:o",
+          "kind": "adapter",
+          "original": "xn"
+        },
+        {
+          "local": "Br",
+          "from": "./shared-19-CkPOiIKm.js",
+          "name": "xt",
+          "via": "shared-19-CkPOiIKm.js:xt",
+          "kind": "generated",
+          "original": "L5"
+        },
+        {
+          "local": "rx",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionChip",
+          "via": "cbb72cde9-Rl7dDg4Y.js:A",
+          "kind": "adapter",
+          "original": "Rn"
+        },
+        {
+          "local": "gr",
+          "from": "./shared-156-Bikz018e.js",
+          "name": "tn",
+          "via": "shared-156-Bikz018e.js:tn",
+          "kind": "generated",
+          "original": "SU"
+        },
+        {
+          "local": "Qie",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionPrState",
+          "via": "shared-18-D4XxL6Tg.js:rs",
+          "kind": "adapter",
+          "original": "eO"
+        },
+        {
+          "local": "Mie",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "As",
+          "via": "shared-18-D4XxL6Tg.js:As",
+          "kind": "generated",
+          "original": "QT"
+        },
+        {
+          "local": "Bb",
+          "from": "./ce2d07062-DyoM1ZV4.js",
+          "name": "o",
+          "via": "ce2d07062-DyoM1ZV4.js:o",
+          "kind": "generated",
+          "original": "s"
+        },
+        {
+          "local": "rd",
+          "from": "./shared-11-BuQ3CK5I.js",
+          "name": "t",
+          "via": "shared-11-BuQ3CK5I.js:t",
+          "kind": "generated",
+          "original": "Wx"
+        },
+        {
+          "local": "Ko",
+          "from": "./shared-2-Cb74JByF.js",
+          "name": "cd",
+          "via": "shared-2-Cb74JByF.js:cd",
+          "kind": "generated",
+          "original": "IT"
+        },
+        {
+          "local": "Ao",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "w",
+          "via": "shared-104-Cqo2-vQh.js:w",
+          "kind": "generated",
+          "original": "tz"
+        },
+        {
+          "local": "Za",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "C",
+          "via": "shared-104-Cqo2-vQh.js:C",
+          "kind": "generated",
+          "original": "ez"
+        },
+        {
+          "local": "Noe",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "errorCopy",
+          "via": "shared-14-u0TSV9dR.js:M",
+          "kind": "adapter",
+          "original": "Ft"
+        },
+        {
+          "local": "cie",
+          "from": "./shared-3-DnHYUZdJ.js",
+          "name": "tn",
+          "via": "shared-3-DnHYUZdJ.js:tn",
+          "kind": "generated",
+          "original": "uX"
+        },
+        {
+          "local": "sie",
+          "from": "./shared-3-DnHYUZdJ.js",
+          "name": "sn",
+          "via": "shared-3-DnHYUZdJ.js:sn",
+          "kind": "generated",
+          "original": "tX"
+        },
+        {
+          "local": "ab",
+          "from": "./c425fb3cf-CEgSkv8l.js",
+          "name": "m",
+          "via": "c425fb3cf-CEgSkv8l.js:m",
+          "kind": "generated",
+          "original": "B"
+        },
+        {
+          "local": "Bee",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionHref",
+          "via": "shared-78-D6VXYXaQ.js:dr",
+          "kind": "adapter",
+          "original": "CJ"
+        },
+        {
+          "local": "ye",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "routePreloadProps",
+          "via": "shared-25-DP8p7i1Z.js:_f",
+          "kind": "adapter",
+          "original": "sm"
+        },
+        {
+          "local": "Lr",
+          "from": "./shared-19-CkPOiIKm.js",
+          "name": "gt",
+          "via": "shared-19-CkPOiIKm.js:gt",
+          "kind": "generated",
+          "original": "A5"
+        },
+        {
+          "local": "Ube",
+          "from": "./cce2a382f-BE7lq0In.js",
+          "name": "f",
+          "via": "cce2a382f-BE7lq0In.js:f",
+          "kind": "generated",
+          "original": "H"
+        },
+        {
+          "local": "Lbe",
+          "from": "./c5ef5b59f-KVN_22_J.js",
+          "name": "n",
+          "via": "c5ef5b59f-KVN_22_J.js:n",
+          "kind": "generated",
+          "original": "a"
+        },
+        {
+          "local": "wae",
+          "from": "./shared-20-B7UqYfsi.js",
+          "name": "Wt",
+          "via": "shared-20-B7UqYfsi.js:Wt",
+          "kind": "generated",
+          "original": "RE"
+        },
+        {
+          "local": "Hbe",
+          "from": "./cce2a382f-BE7lq0In.js",
+          "name": "d",
+          "via": "cce2a382f-BE7lq0In.js:d",
+          "kind": "generated",
+          "original": "B"
+        },
+        {
+          "local": "By",
+          "from": "./c425fb3cf-CEgSkv8l.js",
+          "name": "D",
+          "via": "c425fb3cf-CEgSkv8l.js:D",
+          "kind": "generated",
+          "original": "q"
+        },
+        {
+          "local": "ks",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsShimmer",
+          "via": "shared-frame-BfjMqbuN.js:oi",
+          "kind": "view-tabs",
+          "original": "Aj"
+        },
+        {
+          "local": "Cae",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "SessionPrChip",
+          "via": "shared-20-B7UqYfsi.js:Pt",
+          "kind": "adapter",
+          "original": "LE"
+        },
+        {
+          "local": "yae",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "SessionEnvChip",
+          "via": "shared-20-B7UqYfsi.js:Ht",
+          "kind": "adapter",
+          "original": "tD"
+        },
+        {
+          "local": "Vy",
+          "from": "./c425fb3cf-CEgSkv8l.js",
+          "name": "E",
+          "via": "c425fb3cf-CEgSkv8l.js:E",
+          "kind": "generated",
+          "original": "Y"
+        },
+        {
+          "local": "Aa",
+          "from": "./shared-52-DGviI8xb.js",
+          "name": "Hm",
+          "via": "shared-52-DGviI8xb.js:Hm",
+          "kind": "generated",
+          "original": "iu"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Ss",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "i_",
+          "from": "./c81ea1931-ChuE7vym.js",
+          "name": "t",
+          "via": "c81ea1931-ChuE7vym.js:t",
+          "kind": "generated",
+          "original": "e"
+        },
+        {
+          "local": "Ts",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:kc",
+          "kind": "view-tabs",
+          "original": "Sm"
+        },
+        {
+          "local": "cf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Fn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Fn",
+          "kind": "generated",
+          "original": "NG"
+        },
+        {
+          "local": "kle",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Pn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Pn",
+          "kind": "generated",
+          "original": "UG"
+        },
+        {
+          "local": "yf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Nn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Nn",
+          "kind": "generated",
+          "original": "WG"
+        },
+        {
+          "local": "nle",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Dn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Dn",
+          "kind": "generated",
+          "original": "IG"
+        },
+        {
+          "local": "ele",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Bn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Bn",
+          "kind": "generated",
+          "original": "XG"
+        },
+        {
+          "local": "ade",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "sn",
+          "via": "c227f4d5e-Ba-r--Rl.js:sn",
+          "kind": "generated",
+          "original": "iq"
+        },
+        {
+          "local": "dde",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "un",
+          "via": "c227f4d5e-Ba-r--Rl.js:un",
+          "kind": "generated",
+          "original": "sq"
+        },
+        {
+          "local": "bf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "On",
+          "via": "c227f4d5e-Ba-r--Rl.js:On",
+          "kind": "generated",
+          "original": "PG"
+        },
+        {
+          "local": "Cf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Vn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Vn",
+          "kind": "generated",
+          "original": "uG"
+        },
+        {
+          "local": "Ae",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "appPreferences",
+          "via": "shared-25-DP8p7i1Z.js:mg",
+          "kind": "adapter",
+          "original": "na"
+        },
+        {
+          "local": "$t",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useExposureOnce",
+          "via": "shared-1-CAAiD7E3.js:rc",
+          "kind": "adapter",
+          "original": "Tw"
+        },
+        {
+          "local": "Pme",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "logProposalImpression",
+          "via": "c68c4283d-CPuRD0vx.js:Ed",
+          "kind": "adapter",
+          "original": "Od"
+        },
+        {
+          "local": "Qm",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "logProposalDismiss",
+          "via": "c68c4283d-CPuRD0vx.js:Td",
+          "kind": "adapter",
+          "original": "Ad"
+        },
+        {
+          "local": "uf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "Hn",
+          "via": "c227f4d5e-Ba-r--Rl.js:Hn",
+          "kind": "generated",
+          "original": "xG"
+        },
+        {
+          "local": "Lue",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "ln",
+          "via": "c227f4d5e-Ba-r--Rl.js:ln",
+          "kind": "generated",
+          "original": "lq"
+        },
+        {
+          "local": "Boe",
+          "from": "./shared-11-BuQ3CK5I.js",
+          "name": "Gr",
+          "via": "shared-11-BuQ3CK5I.js:Gr",
+          "kind": "generated",
+          "original": "af"
+        },
+        {
+          "local": "yue",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "dn",
+          "via": "c227f4d5e-Ba-r--Rl.js:dn",
+          "kind": "generated",
+          "original": "cq"
+        },
+        {
+          "local": "zf",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "jn",
+          "via": "c227f4d5e-Ba-r--Rl.js:jn",
+          "kind": "generated",
+          "original": "SG"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useId",
+          "via": "vendor-frame-DfPJ1QmD.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ja",
+          "kind": "react"
+        },
+        {
+          "local": "Es",
+          "from": "./shared-frame-BfjMqbuN.js",
+          "name": "ld",
+          "via": "shared-frame-BfjMqbuN.js:ld",
+          "kind": "generated",
+          "original": "pn"
+        },
+        {
+          "local": "Bs",
+          "from": "./shared-frame-BfjMqbuN.js",
+          "name": "vl",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "generated",
+          "original": "lc"
+        },
+        {
+          "local": "te",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "Ff",
+          "via": "shared-25-DP8p7i1Z.js:Ff",
+          "kind": "generated",
+          "original": "up"
+        },
+        {
+          "local": "dee",
+          "from": "./shared-19-CkPOiIKm.js",
+          "name": "ya",
+          "via": "shared-19-CkPOiIKm.js:ya",
+          "kind": "generated",
+          "original": "pZ"
+        },
+        {
+          "local": "Cp",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useOfferChords",
+          "via": "ccbc7e432-DL0JgV8Z.js:t",
+          "kind": "adapter",
+          "original": "O"
+        },
+        {
+          "local": "yCe",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "isOwnComposer",
+          "via": "ccae33cda-DCEu0VuC.js:y",
+          "kind": "adapter",
+          "original": "Dt"
+        },
+        {
+          "local": "hs",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsPopover",
+          "via": "shared-frame-BfjMqbuN.js:Zi",
+          "kind": "view-tabs",
+          "original": "nE"
+        },
+        {
+          "local": "Tn",
+          "from": "./shared-156-Bikz018e.js",
+          "name": "Vn",
+          "via": "shared-156-Bikz018e.js:Vn",
+          "kind": "generated",
+          "original": "cV"
+        },
+        {
+          "local": "ce",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "Pf",
+          "via": "shared-25-DP8p7i1Z.js:Pf",
+          "kind": "generated",
+          "original": "dp"
+        },
+        {
+          "local": "Kc",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "xn",
+          "via": "shared-18-D4XxL6Tg.js:xn",
+          "kind": "generated",
+          "original": "GR"
+        },
+        {
+          "local": "Gue",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "on",
+          "via": "c227f4d5e-Ba-r--Rl.js:on",
+          "kind": "generated",
+          "original": "pq"
+        },
+        {
+          "local": "gue",
+          "from": "./c227f4d5e-Ba-r--Rl.js",
+          "name": "cn",
+          "via": "c227f4d5e-Ba-r--Rl.js:cn",
+          "kind": "generated",
+          "original": "oq"
+        },
+        {
+          "local": "Or",
+          "from": "./shared-156-Bikz018e.js",
+          "name": "zn",
+          "via": "shared-156-Bikz018e.js:zn",
+          "kind": "generated",
+          "original": "xV"
+        },
+        {
+          "local": "Nm",
+          "from": "./c25d7186f-CHE_J2eY.js",
+          "name": "t",
+          "via": "c25d7186f-CHE_J2eY.js:t",
+          "kind": "generated",
+          "original": "i"
+        },
+        {
+          "local": "Xx",
+          "from": "./c02b04696-cOrTvyA6.js",
+          "name": "t",
+          "via": "c02b04696-cOrTvyA6.js:t",
+          "kind": "generated",
+          "original": "n"
+        },
+        {
+          "local": "vg",
+          "from": "./c19e90103-muBq-gyt.js",
+          "name": "Q",
+          "via": "c19e90103-muBq-gyt.js:Q",
+          "kind": "generated",
+          "original": "Zg"
+        },
+        {
+          "local": "Pg",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "TaskPromptMarkdown",
+          "via": "c19e90103-muBq-gyt.js:t",
+          "kind": "adapter",
+          "original": "Ix"
+        },
+        {
+          "local": "Wy",
+          "from": "./c425fb3cf-CEgSkv8l.js",
+          "name": "M",
+          "via": "c425fb3cf-CEgSkv8l.js:M",
+          "kind": "generated",
+          "original": "M"
+        },
+        {
+          "local": "me",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useAppRouter",
+          "via": "shared-25-DP8p7i1Z.js:Wf",
+          "kind": "adapter",
+          "original": "Jf"
+        },
+        {
+          "local": "ys",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useLayerInOtherWindow",
+          "via": "shared-frame-BfjMqbuN.js:bu",
+          "kind": "adapter",
+          "original": "Xa"
+        },
+        {
+          "local": "on",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "settingsPageStore",
+          "via": "shared-156-Bikz018e.js:Ch",
+          "kind": "adapter",
+          "original": "Qf"
+        },
+        {
+          "local": "Ps",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDropdown",
+          "via": "shared-frame-BfjMqbuN.js:qa",
+          "kind": "view-tabs",
+          "original": "EC"
+        },
+        {
+          "local": "om",
+          "from": "./c30607cef-BIoa7ymu.js",
+          "name": "t",
+          "via": "c30607cef-BIoa7ymu.js:t",
+          "kind": "generated",
+          "original": "i"
+        },
+        {
+          "local": "ts",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "$e",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "desktopBridge",
+          "via": "shared-0-ByI5P0CP.js:Om",
+          "kind": "adapter",
+          "original": "Ix"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "useEffectEvent",
+          "via": "vendor-frame-DfPJ1QmD.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "Tie",
+          "from": "./shared-28-DcgD7xXH.js",
+          "name": "xr",
+          "via": "shared-28-DcgD7xXH.js:xr",
+          "kind": "generated",
+          "original": "NO"
+        },
+        {
+          "local": "iae",
+          "from": "./shared-182-eT1kXtya.js",
+          "name": "Rf",
+          "via": "shared-182-eT1kXtya.js:Rf",
+          "kind": "generated",
+          "original": "rw"
+        },
+        {
+          "local": "Ni",
+          "from": "./shared-78-D6VXYXaQ.js",
+          "name": "p_",
+          "via": "shared-78-D6VXYXaQ.js:p_",
+          "kind": "generated",
+          "original": "Yw"
+        },
+        {
+          "local": "Oe",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "kt",
+          "via": "shared-25-DP8p7i1Z.js:kt",
+          "kind": "generated",
+          "original": "KU"
+        }
+      ],
+      "exports": {},
+      "publicNames": {
+        "R$": "TurnProposalGroup",
+        "z$": "UnplacedProposalGroup",
+        "qQ": "ProposalSpawnerContext",
+        "h1e": "useProposalSpawner",
+        "g1e": "inlineSpawnerGate",
+        "q1e": "SentHereNotice",
+        "t$": "proposalKey",
+        "n$": "isOfferProposal",
+        "p$": "keepSessionMode",
+        "f$": "crossRepoCwdOf",
+        "w1e": "proposalHereText",
+        "P1e": "proposalStartLabels",
+        "PPe": "proposingTools",
+        "hL": "isProposingTool",
+        "gL": "isPlacedProposal",
+        "pL": "proposalTaskId",
+        "mL": "proposalToolFailed",
+        "EQ": "proposalOutcomeStore",
+        "MQ": "recordProposalOutcome",
+        "NQ": "clearProposalOutcome"
+      },
+      "contexts": [
+        "qQ",
+        "YQ"
+      ]
+    },
+    {
+      "source": "ca0294fab-CYDhVWyX.js",
+      "sourceSha256": "08af67928e6f9fd28b4a04c7a564bfbe569ead36034db86fd12ca929e7903e1c",
+      "sha256": "d969ddf546d03bb9fa40d1a5008da8d01279a181085708dc1cd60efd3b92a5e9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "8d64f33fcc6270c5ccc99905e5031573ef907c21e42a0e8c06febfe382d345d4"
+        },
+        {
+          "name": "n",
+          "sha256": "f113187ab536d192db45bdc3a2918ecb831ec02930b785196b8ce2c289312c4a"
+        },
+        {
+          "name": "r",
+          "sha256": "8edb78d9c989da82156f5d4912798a02253715d060ff0ed9d433b256e171434f"
+        },
+        {
+          "name": "a",
+          "sha256": "73c329690a4c29afe4a239cd80047d20aa333465dfca46a548ce8ca6f59e99b1"
+        },
+        {
+          "name": "o",
+          "sha256": "5f5a47bec688d9c7c14391e6c0b07966ed32aa1d869f3404b99c2e64def23347"
+        },
+        {
+          "name": "s",
+          "sha256": "5deba8dc07e684529dc8275791324a5b12a958730e9b747350f5e0439dea1fb0"
+        },
+        {
+          "name": "c",
+          "sha256": "8c5d881264911568fa28fa3831e52dead478ab21c7d86a3f19878cbd046c8674"
+        },
+        {
+          "name": "l",
+          "sha256": "58accb1558f2e050d37a5ddfe80130ed4219424b12026c37d76d99c33068d16b"
+        },
+        {
+          "name": "u",
+          "sha256": "8fe16ab2407063c6c802d2beeaa1d861e91e0c89c2e566f86da2eb929524bcc4"
+        },
+        {
+          "name": "d",
+          "sha256": "9741e7ac8f023ed3b7260aeb48859362f5fc8e486dfe5aa1008fe2c9d8675768"
+        },
+        {
+          "name": "f",
+          "sha256": "096e2d21abd1e10f69d0820802b851306e9f474adf593df3561cb7bbf16f7326"
+        },
+        {
+          "name": "p",
+          "sha256": "ae8edeaa877ac2fb6a6f7cf78489c1035438b580dff36abdb38a52181293373a"
+        },
+        {
+          "name": "m",
+          "sha256": "67d97e5f3965bd80ec7f2d3d7b20140ec86fb4a2fa5660efa998660123e538bf"
+        },
+        {
+          "name": "h",
+          "sha256": "1c1cf1dd3e67aafc1aeb5546bb2a58dc10c51d335f5667f84ac64ec12630eca6"
+        },
+        {
+          "name": "g",
+          "sha256": "2c2ee62b8b58a4034a22172dd78f99b1421b9af18ac908e3c2b3439b0afed399"
+        },
+        {
+          "name": "_",
+          "sha256": "d1e65f1b36eedfb27e6edbb5ad271aa80b25923a2e369b5d083a68785cfa3d62"
+        },
+        {
+          "name": "v",
+          "sha256": "dc0b8dd3c65cbbc61b8343ded9ecfe4cc30d74a126b7ba4cbc3dd792fbe6efca"
+        },
+        {
+          "name": "y",
+          "sha256": "4cf7d64f32d58461f5e953c925b08dc43288937c2c58ccc36baef4fce017b76e"
+        },
+        {
+          "name": "b",
+          "sha256": "c9f92da94af47436aca394ccd8507348e6e95a423b05b6f8a31169ce2ee31d19"
+        },
+        {
+          "name": "x",
+          "sha256": "ad26357e57664bba0e4cd6e922f283cbd0519f2d7f02085181739379d5b29577"
+        },
+        {
+          "name": "S",
+          "sha256": "c8241639bae76c3c1aa5a5d3a84db060d4af48a81a1e47cd52bb53bbd06300c9"
+        },
+        {
+          "name": "C",
+          "sha256": "f879a873829e7c9dad0c7bc7c1a2fce1d005ccc3299fbd681c57b8a912ed545c"
+        },
+        {
+          "name": "w",
+          "sha256": "546a4b7ea7c08187b8fd5ef112fdcd61e8fd15e63a9f4f14bde6e4be77690bbe"
+        },
+        {
+          "name": "T",
+          "sha256": "e632b7095b0bf32c260fa4c539e9fd7b852d0de454e9be26f24d0d6f91d069d3"
+        },
+        {
+          "name": "E",
+          "sha256": "76a4fc247facf80ff9e67f9a51b1052560950ad2c72ea60fa21d443418402965"
+        },
+        {
+          "name": "D",
+          "sha256": "3f39d5c348e5b79d06e842c114e6cc571583bbf44e4b0ebfda1a01ec05745d43"
+        },
+        {
+          "name": "O",
+          "sha256": "0ffdb7a3280bd9278519288f49d9a2137b5f3996ed27541b79c20ff701eec249"
+        },
+        {
+          "name": "k",
+          "sha256": "ae678a4c97589aa00b3daba3822cce741834bb84d7ee2297e97aab36ca4801d9"
+        },
+        {
+          "name": "A",
+          "sha256": "163611278a12652723e5f065f9803d60c606332f82f213512bca39cf3e4578dc"
+        },
+        {
+          "name": "j",
+          "sha256": "a8b06d3395de083037322e8595a786f497078dc66769ee8b3b7cc5c758696942"
+        },
+        {
+          "name": "M",
+          "sha256": "8ee2c49908198ce080f84632091154e50569e2cb3bbe71ac049faf9b360dd2fe"
+        },
+        {
+          "name": "N",
+          "sha256": "ab3f468bcc1d7c710279aa427378706d19502a1af9785dbc97f2b171651d16a2"
+        },
+        {
+          "name": "P",
+          "sha256": "4425c2815f519d6ea8773e00345483aa6e8bbfc5cb8d9bb543f7471fc3f69380"
+        },
+        {
+          "name": "F",
+          "sha256": "4f5137e9377d6dd9766e5a9b752da8caa8776a301f8586f9e28e0c8367ecdab2"
+        },
+        {
+          "name": "I",
+          "sha256": "1cb641ad67431cb9fdc1bee4f8a256f56c74b0c23f6566645a59b2c689e5bc7e"
+        },
+        {
+          "name": "L",
+          "sha256": "ca8a4e82e501c305efd17dcbd888e40599ebfb649b741214230f5bc7a7fead18"
+        },
+        {
+          "name": "R",
+          "sha256": "40120cb554f3b6cabb0ce8d4bcb7369168d02e022d41e2264abe5393060aa988"
+        },
+        {
+          "name": "z",
+          "sha256": "9402d95f4fe7b9a938d50a167cd8a3223a47105fe733320351d654314df0100f"
+        },
+        {
+          "name": "B",
+          "sha256": "913c59554cd692b3be36db91a597632fa01f47841126e2a7fa534dc1a5439833"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "B": "n",
+        "z": "t"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "cb27dab29-_H2_XKli.js",
+      "sourceSha256": "416e40cbbb4eeb7e1e34062471733c5561cf01e40d32043a4cb3ef2d31b80f6a",
+      "sha256": "f7132cbe73c1897cca37b2a0c1e5c2d643c8d73471dcabed031be9610da90911",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ge",
+          "sha256": "58fdf55ab3e2816709c4083d198639c7725184359985ebdcb31a6464667cca2c"
+        },
+        {
+          "name": "W",
+          "sha256": "272d49a243d31d4678b4b78685011c58c4f273a6bf88839c441a5b3be0fc05a7"
+        },
+        {
+          "name": "K",
+          "sha256": "49911b8b8e136e9f860e8cac0a9a0b78a4dcf20cd1e295f67e2909818ab1e22e"
+        },
+        {
+          "name": "Je",
+          "sha256": "c4631d059134dae5a261697ae968350f1261c533d319f7cb15dcfff9d1eef32d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "u",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "l",
+          "via": "c8479260c-DaoJ9_2S.js:l",
+          "kind": "generated",
+          "original": "r"
+        },
+        {
+          "local": "d",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "u",
+          "via": "c8479260c-DaoJ9_2S.js:u",
+          "kind": "generated",
+          "original": "s"
+        },
+        {
+          "local": "c",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "f",
+          "via": "c8479260c-DaoJ9_2S.js:f",
+          "kind": "generated",
+          "original": "m"
+        },
+        {
+          "local": "ie",
+          "from": "./c8479260c-DaoJ9_2S.js",
+          "name": "p",
+          "via": "c8479260c-DaoJ9_2S.js:p",
+          "kind": "generated",
+          "original": "d"
+        }
+      ],
+      "exports": {
+        "W": "S",
+        "K": "T",
+        "Je": "l"
+      },
+      "publicNames": {
+        "W": "isSpawnTaskTool",
+        "K": "isOwnStartSessionProposal",
+        "Je": "isCloudStartSessionHandOff"
+      },
+      "contexts": []
+    },
+    {
+      "source": "cce2a382f-BE7lq0In.js",
+      "sourceSha256": "5e0367accac1089369fd0c985b497e79998da9e3a936ee019cc0779405f479bf",
+      "sha256": "49c764e0fc8cb9434b8e38568d618e3cfed7bd8e97e6c20cb5f52175380e85fd",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "z",
+          "sha256": "66daf55f6ab2b76f83d684a68415756285297653a739af6a2ff53d1e53b046f7"
+        },
+        {
+          "name": "B",
+          "sha256": "8fc85438a50fdd42df67559d6625018d7f7ccbed23f53c085366dfb1aad4ab46"
+        },
+        {
+          "name": "V",
+          "sha256": "b88cd262f7c40c0aa0bdee8bb62dcdc29a5b1316a4c9bf005dc3520cd2a0ac8c"
+        },
+        {
+          "name": "H",
+          "sha256": "12cb4e4d469cab39303544a424310c0cf06b57bb805999854493cd667955e062"
+        },
+        {
+          "name": "U",
+          "sha256": "5f787aea1aa71ee46c69f8e6b278fa957c67559dbe3f5f4bee4451262eb0aca0"
+        },
+        {
+          "name": "W",
+          "sha256": "3144094178c2eab8439f7467febe5c0778f3c0120652bbc38b99c8496aef0cd4"
+        }
+      ],
+      "imports": [
+        {
+          "local": "T",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Yo",
+          "via": "shared-18-D4XxL6Tg.js:Yo",
+          "kind": "generated",
+          "original": "DD"
+        },
+        {
+          "local": "y",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Bo",
+          "via": "shared-18-D4XxL6Tg.js:Bo",
+          "kind": "generated",
+          "original": "GD"
+        },
+        {
+          "local": "l",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "Fp",
+          "via": "shared-104-Cqo2-vQh.js:Fp",
+          "kind": "generated",
+          "original": "nu"
+        },
+        {
+          "local": "u",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "Lp",
+          "via": "shared-104-Cqo2-vQh.js:Lp",
+          "kind": "generated",
+          "original": "ru"
+        },
+        {
+          "local": "j",
+          "from": "./c63c52947-BXzWWrtE.js",
+          "name": "S",
+          "via": "c63c52947-BXzWWrtE.js:S",
+          "kind": "generated",
+          "original": "Ge"
+        },
+        {
+          "local": "E",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "os",
+          "via": "shared-18-D4XxL6Tg.js:os",
+          "kind": "generated",
+          "original": "wD"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "N",
+          "from": "./c5ef5b59f-KVN_22_J.js",
+          "name": "t",
+          "via": "c5ef5b59f-KVN_22_J.js:t",
+          "kind": "generated",
+          "original": "s"
+        },
+        {
+          "local": "C",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Of",
+          "via": "shared-18-D4XxL6Tg.js:Of",
+          "kind": "generated",
+          "original": "K_"
+        },
+        {
+          "local": "S",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Jo",
+          "via": "shared-18-D4XxL6Tg.js:Jo",
+          "kind": "generated",
+          "original": "LD"
+        },
+        {
+          "local": "b",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Gs",
+          "via": "shared-18-D4XxL6Tg.js:Gs",
+          "kind": "generated",
+          "original": "PT"
+        },
+        {
+          "local": "p",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "w",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Us",
+          "via": "shared-18-D4XxL6Tg.js:Us",
+          "kind": "generated",
+          "original": "jT"
+        },
+        {
+          "local": "x",
+          "from": "./shared-18-D4XxL6Tg.js",
+          "name": "Hs",
+          "via": "shared-18-D4XxL6Tg.js:Hs",
+          "kind": "generated",
+          "original": "MT"
+        }
+      ],
+      "exports": {
+        "H": "f",
+        "B": "d"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "ce2d07062-DyoM1ZV4.js",
+      "sourceSha256": "b13d6a5d2ba8bd6a02e8ad6c6306c5ecad13eae2309df4a64e2d404639cd0f82",
+      "sha256": "8c289ddc4bd66c556e860129e5fe5edce4dd516220d15282c6447673b667fffe",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "s",
+          "sha256": "c3cbf91066eea47f5d9e5f709ea95a3d8e5e970b20b9a749faebac94bff4bb51"
+        },
+        {
+          "name": "c",
+          "sha256": "c95b6e2d57429324fcbc08f8137e7e36595201bb4bdeb2576013c6a191cb9c2b"
+        },
+        {
+          "name": "l",
+          "sha256": "bd830086cc9889ae3adcefd431aa432c9a0bc68ec2b0cb0671ec59595d607c1d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Xl",
+          "via": "shared-0-ByI5P0CP.js:Xl",
+          "kind": "generated",
+          "original": "uF"
+        }
+      ],
+      "exports": {
+        "s": "o"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "d750e051e1d340b42a9e29ee12c740e90c4c273c938e83b6b38e7194696e9bad",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "pi",
+          "sha256": "223e8374eb279a3d46577488c30ea9b1ed12e1e6963031031b4966100dd17d12"
+        },
+        {
+          "name": "Hi",
+          "sha256": "70954d35fa9ddf932eb0bd948f344f7b14454a6bb992bada54b460832f08d544"
+        },
+        {
+          "name": "Wy",
+          "sha256": "2386bca139808c95f09193758ec97fafea0a9eb710b4b4b4f4b60b6ada6aefeb"
+        },
+        {
+          "name": "JP",
+          "sha256": "b811fc6104896906a17d4ba3dd3f886525f668b42c5af7b2f96439d91ed5365d"
+        },
+        {
+          "name": "YP",
+          "sha256": "7b1dac9d5179796c48d0bb61715ed5eae500672fd21275102c1b4e7c32354276"
+        },
+        {
+          "name": "XP",
+          "sha256": "268284941a3d3caca707071bc1a464788ada43f5feb99d6bf9f4f8ca5a67c3a8"
+        },
+        {
+          "name": "uF",
+          "sha256": "a64ed2ff47c0808b041b0c838ac3ffcd62ecf4f70553b3f41f81dbfb06af37c7"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "pi": "ab",
+        "Hi": "Py",
+        "uF": "Xl",
+        "XP": "Zl",
+        "JP": "$l",
+        "Wy": "Yh"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-10-THQui8pC.js",
+      "sourceSha256": "867ee9b6b48666cb8e1b941819ae5e73f68b89a2da71ff594ff32f1a3b883efc",
+      "sha256": "645af0ccebd0e369500001f216df139b4e5c80a2b9069240e57617b7d7f17d25",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "zb",
+          "sha256": "4283ac428807494769f5fed5ecc8829ee781e55a65c91d6754580241e5d27aa9"
+        },
+        {
+          "name": "Bb",
+          "sha256": "9aafdedcb75a707cc42b081c2cdba38c573b1d6ab23969cf2e19c82f219c5ea0"
+        },
+        {
+          "name": "Yb",
+          "sha256": "4baec2248c4ee2b9246909e19c4433ffb5ea206464a4a5e381cbe9db9ceb1606"
+        },
+        {
+          "name": "Zb",
+          "sha256": "f29ac532e317cf64e9bb7fff247c8679e076cd288668512c21ee43345e847663"
+        },
+        {
+          "name": "ax",
+          "sha256": "34ad4d3eeb819201bff06889785ac6ac4b9c8f5788edcebad1c9e45826cf8761"
+        },
+        {
+          "name": "ox",
+          "sha256": "af27e84d8606a81a9d4b473df8c83b83dc08e066c4cafd7d07558291fe34aa69"
+        },
+        {
+          "name": "ux",
+          "sha256": "369d4367a3b78a613834148db8a7890c2261044e8a53dccbdf10044c49665175"
+        }
+      ],
+      "imports": [
+        {
+          "local": "L",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "au",
+          "via": "shared-25-DP8p7i1Z.js:au",
+          "kind": "generated",
+          "original": "_y"
+        },
+        {
+          "local": "zt",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useLayerOwnerWindow",
+          "via": "shared-frame-BfjMqbuN.js:mu",
+          "kind": "adapter",
+          "original": "Ya"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "Bb": "Qt",
+        "ax": "Yt"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-104-Cqo2-vQh.js",
+      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "sha256": "62cb9457d993c47cc3467200d0dfd561570f659c5c536401e2bae599bc5aef41",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Zo",
+          "sha256": "d03aea373acd87f56b682768f9e3701b82888dffee89fe038567cad744d3a5df"
+        },
+        {
+          "name": "Qo",
+          "sha256": "9a7b42ca2c8dbed19a1916a1f4b948737f96281ec636405a9b4ba8d7087e45fc"
+        },
+        {
+          "name": "$o",
+          "sha256": "bc91b3f9d1dec144dad4ba9a83fbed90c52f4de22d2b342c8b8c93d623e8488c"
+        },
+        {
+          "name": "es",
+          "sha256": "dec34bc812db73289fcbbf74a2157982f8cd30dfe40abab79edfd019b8d8b9a9"
+        },
+        {
+          "name": "ts",
+          "sha256": "84599441b59b156358d48d9e49c31424e602a39bd169167f1c8b9778abf4a8ba"
+        },
+        {
+          "name": "ns",
+          "sha256": "d93f4ba0bb0be3db108e0a678f59ccb1eb9eb09d59b3c4442847e5e98faffc3a"
+        },
+        {
+          "name": "rs",
+          "sha256": "f12866bde5fe087fd5f3abc99d6d970d79459cb03c11f024a39fb7c830279ce1"
+        },
+        {
+          "name": "is",
+          "sha256": "bf7db89deedeea8e404b93993ba15fec8e4ccdb3fa9c8823edf619a28c53b2a1"
+        },
+        {
+          "name": "as",
+          "sha256": "68e9021fbe2df52bf17777cacdd35102d9443f5e74ab51600be7e9a27196b99e"
+        },
+        {
+          "name": "os",
+          "sha256": "267fe8c1b620a2c4faccceed631a3ccdfc97750e54b975c651b35d7e80420f6f"
+        },
+        {
+          "name": "ss",
+          "sha256": "c734cb667768ecc51eda188ca32afb491a64d96829fed17a60cb95769298c1be"
+        },
+        {
+          "name": "cs",
+          "sha256": "403584c506f703afdcc2b66f717f8c53a51d925397d269f9e958635ed672e936"
+        },
+        {
+          "name": "ls",
+          "sha256": "4ab90cefbbbc8c5b8976a6eb8129e40dc13c3e32e6830bf114828b007a1bfe2c"
+        },
+        {
+          "name": "us",
+          "sha256": "958a5155271e647ac35468d1ed8c8d1cf6aa373d7022ae798a5bcd36c608c1ab"
+        },
+        {
+          "name": "ds",
+          "sha256": "d023b16f0f520c031b182e06947c3b68c5b9ce8471bba5ea3853f0ea70aea431"
+        },
+        {
+          "name": "fs",
+          "sha256": "0b2e1b2a71b697d837f7e4827dd2a77cae6ccdcc4613399e0b16b597b9a49cf2"
+        },
+        {
+          "name": "ps",
+          "sha256": "cb8e577e34571d428749da2ddc9f009ea8072e394bddb3f6ac002d5557a69869"
+        },
+        {
+          "name": "ms",
+          "sha256": "2c29bc1ae4ddf64ef88134e58de0d4e194b72abc6052b4ca832dfea1d1112623"
+        },
+        {
+          "name": "hs",
+          "sha256": "428f76dbad0816b1595cb8f3775ab991e0a813be5c3378cfbc98d1dc83ba61ef"
+        },
+        {
+          "name": "gs",
+          "sha256": "78b69a3c85d6ece70c37deb0e8c51eaab16dadb65c17fe313886cfd998adf36e"
+        },
+        {
+          "name": "_s",
+          "sha256": "3bc9dc4749fd5e9a0e3c854abbfb74db85c17bbb8806b918a5d7605c8b14754c"
+        },
+        {
+          "name": "vs",
+          "sha256": "f77c9bcbbfc9229fd40faa0e45350b92476d384a0f0eb78bc699c7d72ab36e57"
+        },
+        {
+          "name": "ys",
+          "sha256": "fdf68ded514011f0a1dc65d790580529b8ae68e5c62b99107ae352d9462c4ec1"
+        },
+        {
+          "name": "bs",
+          "sha256": "48810503d5e046464f3317f60c0b1223c9170841f4e01473ecc9ff417ef87b40"
+        },
+        {
+          "name": "xs",
+          "sha256": "98edf11d6b85a0ccaf62fde51d8f6ed322fc2639babf6281949aa37c94d90c06"
+        },
+        {
+          "name": "Ss",
+          "sha256": "2766026eee4a26e8d1e9c18656243b419dbe67ad6e256317ec24ff1deea9e47b"
+        },
+        {
+          "name": "Cs",
+          "sha256": "6847ac90bbaa2a22d67dd36d31ec2b1615ffaa3cfe20e22d438d3876215b1b66"
+        },
+        {
+          "name": "ws",
+          "sha256": "b6da600c43a6899c4e6505febb2377658c951494c2eb36e82f4977e0a065f24e"
+        },
+        {
+          "name": "Ts",
+          "sha256": "398733f57ad8167844f061f7fabc854df70469d3acdcbff949176bf90e8a3de1"
+        },
+        {
+          "name": "Es",
+          "sha256": "42ac51fdd3f30dbb92ccc6aa0b7a9689c7ac4464a3152ea4b95827ee8d18801e"
+        },
+        {
+          "name": "Ds",
+          "sha256": "a24ed84abd10463e0c938d19b0e339e5c65014b26c90cebe7ea5e387b27fa9f8"
+        },
+        {
+          "name": "Os",
+          "sha256": "eb47f2318dc0b3a2c7d34c66811ad2028b0da008849fb779318deb49f71dee0c"
+        },
+        {
+          "name": "ks",
+          "sha256": "659a259f5548625c9b559f80835557d9708b436a26328876f4692f8f68938ba8"
+        },
+        {
+          "name": "As",
+          "sha256": "54308f22b341773dca5a330efa972171dbc56465db7f74599edf5e61ad6d44ad"
+        },
+        {
+          "name": "js",
+          "sha256": "67da903007ae08b0c967286cbe9261c97a019c3ab99b361b13ac58ceb7c8afe9"
+        },
+        {
+          "name": "Ms",
+          "sha256": "9710dd8217ee1ecf9cbf32a8a5b42d8b4bc4e42dc07d0ef4915d6431e74f7b81"
+        },
+        {
+          "name": "Ns",
+          "sha256": "4187878b87b41996fa9890ac2993a245464845eac5eab0f6eda52ef7188e50a6"
+        },
+        {
+          "name": "Ps",
+          "sha256": "af6009550d3945c07394b02c11bc62cbb6c515288dde3bc678174c9970703533"
+        },
+        {
+          "name": "Fs",
+          "sha256": "6432f9b9a6731e8300a20a18a1eff5aebd70a3ed2411a8e9fdbc6bfc065d86ff"
+        },
+        {
+          "name": "Is",
+          "sha256": "e7bca1ea1f07122992c2e9d27d859bedec81843041d9971cac45f52c99c071fd"
+        },
+        {
+          "name": "Ls",
+          "sha256": "f82476b523b691b823d6913e6d880bcb8cadbd366be91159ca527c76a0e5a684"
+        },
+        {
+          "name": "Rs",
+          "sha256": "99e23f9ed9941db45d2e57b29cff0f45946d4e3d090ef346b3d15aab6ee508b8"
+        },
+        {
+          "name": "zs",
+          "sha256": "942fd319ea2c43a00e1e215b21b01b2ff7cecc924998e06f03fbe4d912e3ede6"
+        },
+        {
+          "name": "Bs",
+          "sha256": "298c33913980a1db43190be01b0651788e3709100cf08cd9471fb23d41b72307"
+        },
+        {
+          "name": "Vs",
+          "sha256": "660f72af023e4001a9e4fdb7dee66a0f3ed498fcb01276aa4766369d92799b1e"
+        },
+        {
+          "name": "Hs",
+          "sha256": "dd5a56068f2be46dd006ab3888b7fa42d6f9f23a4ee02335a15257c2c0b45933"
+        },
+        {
+          "name": "Us",
+          "sha256": "cf92c22f2ec63c824ce677f886eaaa0bf599846f55ebdec16d3fddee55846f37"
+        },
+        {
+          "name": "qs",
+          "sha256": "f19081c1637124d9dbb200dd11dc3bf4661a958106e16e1d71320bd45af648f1"
+        },
+        {
+          "name": "Ys",
+          "sha256": "288b28f81dbf515086309550318055125a2642b73fa50a4ec9e64072dcaf4d4d"
+        },
+        {
+          "name": "Xs",
+          "sha256": "e30b8fd02fe45af804d466d20f6daa9c912f0e6b769c2242ab869e62e0fbf790"
+        },
+        {
+          "name": "ql",
+          "sha256": "abda58a6af93aff3e7970a2013899f7e905105c92fe688f052dc40bd20964d8f"
+        },
+        {
+          "name": "Xl",
+          "sha256": "8e6e5f03760569955eb02ee5195395fd4b1a45b7e5b5f95f62171ff91471a468"
+        },
+        {
+          "name": "Ql",
+          "sha256": "aa9d227c5f3b61c6f3330c3a849e82999e20fab594c33b4df87f4b06a7400d2a"
+        },
+        {
+          "name": "nu",
+          "sha256": "7502f6f78e10a1606dd3eab069ac6b552bcfeab1a0d0720f5474cfdfc9397a49"
+        },
+        {
+          "name": "ru",
+          "sha256": "1883c17f5b54f99db7d70aebcc9b89c79204162ca03d2ce14b413eda4125dc42"
+        },
+        {
+          "name": "Ld",
+          "sha256": "a25a1fd0ce4f51f4aa568bbb1002e7a0330ce1eaf4b99e13276c09447c496403"
+        },
+        {
+          "name": "Rd",
+          "sha256": "26c63628843fda5749a148b10c6e20368d4d0ccace5e1726c14eee62d6d7f428"
+        },
+        {
+          "name": "zd",
+          "sha256": "63c6d357e336cd6c6c59ae564565b43ad4ecce33eef1a46db4b1d4ca0991e4fa"
+        },
+        {
+          "name": "Bd",
+          "sha256": "c63d52ee2b3fcf56a56aba47aa39b5569798cecb378ddb28e098f4a2a856ef81"
+        },
+        {
+          "name": "Ff",
+          "sha256": "87097f1b9171257d479077556f490e0625acde703fcfcd47354aef6d2f06911e"
+        },
+        {
+          "name": "ez",
+          "sha256": "b0df3f02fa4a7ef3967661011be895075164180d0aa017a6b4e14906379e5124"
+        },
+        {
+          "name": "tz",
+          "sha256": "9f515cea5b9036cc5d03a48435ba3be99c5e5495a1b1266725ff3bf000fa52df"
+        }
+      ],
+      "imports": [
+        {
+          "local": "bt",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        },
+        {
+          "local": "tt",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "$l",
+          "via": "shared-0-ByI5P0CP.js:$l",
+          "kind": "generated",
+          "original": "JP"
+        },
+        {
+          "local": "Yn",
+          "from": "./shared-78-D6VXYXaQ.js",
+          "name": "kb",
+          "via": "shared-78-D6VXYXaQ.js:kb",
+          "kind": "generated",
+          "original": "Pv"
+        },
+        {
+          "local": "xr",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useDesktopConfig",
+          "via": "shared-52-DGviI8xb.js:Fi",
+          "kind": "adapter",
+          "original": "RP"
+        }
+      ],
+      "exports": {
+        "Ff": "Tf",
+        "Xs": "Xm",
+        "tz": "w",
+        "ez": "C",
+        "nu": "Fp",
+        "ru": "Lp",
+        "Bd": "Xf"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "c0d50932bdbc61be3864de11c785b9e230615f4c03226e9e5c466e22738c528f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "rf",
+          "sha256": "8febebd11e626fbe77080b3391abb62ee73f7ce9935805d1cdfd5afb88726c0b"
+        },
+        {
+          "name": "af",
+          "sha256": "94912a1e95c18acfd9a49c051eabcafb31d249e27eb84bb7d20d3f276cc505f2"
+        },
+        {
+          "name": "Wx",
+          "sha256": "3d1077818ef674a536c30127ae996984798fefb78780c40bcae29ecc9ef968af"
+        }
+      ],
+      "imports": [
+        {
+          "local": "oe",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "Ot",
+          "via": "shared-25-DP8p7i1Z.js:Ot",
+          "kind": "generated",
+          "original": "QU"
+        },
+        {
+          "local": "Dr",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "Xm",
+          "via": "shared-104-Cqo2-vQh.js:Xm",
+          "kind": "generated",
+          "original": "Xs"
+        },
+        {
+          "local": "Ii",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "Wx": "t",
+        "af": "Gr"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-14-u0TSV9dR.js",
+      "sourceSha256": "858ff555069e13a56742107b7c64accf5723d41aba9652da47afa0ce2cb6d93e",
+      "sha256": "cb38e762250fa18c6a012f79207fb1017fdd99d0a57700f6e6951ff45ffefffb",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Xe",
+          "sha256": "91c6530a5893042ea6a93e177f6651ae8838ea67058ff16fe5fb57643cb48e72"
+        }
+      ],
+      "imports": [
+        {
+          "local": "M",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "Xe": "G"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-156-Bikz018e.js",
+      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
+      "sha256": "09552b5d96eae340929a242b0160b028751f30ef5bc58725c33c62f51f9d5e6f",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "cV",
+          "sha256": "2c6a7c38fcaabd16b6040a548ec31a71dd7f7c00b8e5d9d876be6974c2969bc4"
+        },
+        {
+          "name": "xV",
+          "sha256": "5a7dce4d9714d8c7f33f6fdfd1e9b8a5adc590d51d9dec3c1cb337691048a3a7"
+        },
+        {
+          "name": "dU",
+          "sha256": "e57f58d2bbf75e21d3b5bb96a0dc385e45e02a1d2f85ebff303af8c70475bd36"
+        },
+        {
+          "name": "bU",
+          "sha256": "e58500449aab0dffdd5820f7be175551210ee3c564a75cf3397fb3a066790c44"
+        },
+        {
+          "name": "xU",
+          "sha256": "bd78e2111b895423eee6b60866f43523491953d7540db4b6f82b12a53a1c2d50"
+        },
+        {
+          "name": "SU",
+          "sha256": "d8ecdf205694247b91b763449dc5cd7207ce7af2a667f3a14ae3adc88bbb6c26"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Pn",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        }
+      ],
+      "exports": {
+        "SU": "tn",
+        "cV": "Vn",
+        "xV": "zn"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-18-D4XxL6Tg.js",
+      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "sha256": "100b87eaa6d129ad35f937b14c7f0ab913f33306a7665c37c7f042248f553c72",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "W_",
+          "sha256": "41a4f8ca78ab2170dca90093d3e9c3dfba508439549c488d0dd539d02c16127f"
+        },
+        {
+          "name": "G_",
+          "sha256": "ee91bab4755e053eb27c6abc3f4805a8d8f0cb1a9fb9f15a3ac3ea007f3f6069"
+        },
+        {
+          "name": "K_",
+          "sha256": "2e1c35b5c117ec5467d85101e4851df604b9fe31d08195c529082a015bac7642"
+        },
+        {
+          "name": "CT",
+          "sha256": "aa0e38313e62d67cebba3784abf44de9adfdf697b0ea473092abd1046e3bbe72"
+        },
+        {
+          "name": "TT",
+          "sha256": "d67f1e33a3f0396ea2392c50edd5a87402a50f4fc641e1c2ae1f41170945b310"
+        },
+        {
+          "name": "jT",
+          "sha256": "392a880ba6eea312fc481235c83499a10ad28a2c9aae617475172556e46d48ae"
+        },
+        {
+          "name": "MT",
+          "sha256": "02bd667da2f7f74e2cb0abbf87fa3439454de6857b592ac0bcb48ed5680ca520"
+        },
+        {
+          "name": "PT",
+          "sha256": "35a6b0df02503068e6167f6690ff9137135c4a55a133e4e55758fa54a1ae3f3a"
+        },
+        {
+          "name": "IT",
+          "sha256": "3ce14193294467300e1f2755f50bcae192b870c117c32d51a043ad19b4e2c04e"
+        },
+        {
+          "name": "LT",
+          "sha256": "f4f05ef15acdd446fda350ca11c9283730d06f0bd94349db6160b8899f040af2"
+        },
+        {
+          "name": "zT",
+          "sha256": "455bc8edd813d189fa2a267481e23f45e02943f1b4c4ee9ee12c9d46dd21998d"
+        },
+        {
+          "name": "BT",
+          "sha256": "67879e5eda7740e8d5f3580e62eca8fb35cdbd5ae2ef781c9e8035dd1570efbc"
+        },
+        {
+          "name": "QT",
+          "sha256": "051c0a88e2d6a3e304993136189fe4574d253333af06eb669e6139ce1acffe7d"
+        },
+        {
+          "name": "CD",
+          "sha256": "7531d24eb64032851bfab2ec2ec0f0a33ec534d9408afb584afb01c34c7892b5"
+        },
+        {
+          "name": "wD",
+          "sha256": "d1e5b39ad7b8577c4d79bcc79eba9de456fc9353bda842ab4e75421bb97d6057"
+        },
+        {
+          "name": "DD",
+          "sha256": "5ec22acefa009350fdd24f452cbc018397a123d75ba14b82334e9384a174d75b"
+        },
+        {
+          "name": "LD",
+          "sha256": "7c53157f4142493d07707ddff150aace9697ee7c7dd598ee04f460bf949fcfbd"
+        },
+        {
+          "name": "GD",
+          "sha256": "fe0952e3e7ecb539dd73c56b6f06879bd4b1be5608d0fe5cffe600e5780771ce"
+        },
+        {
+          "name": "GR",
+          "sha256": "95449fe713f56a8fe89232a2e747e2e616d26b4525f242f263cca6cb49a5ca39"
+        }
+      ],
+      "imports": [
+        {
+          "local": "X",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        },
+        {
+          "local": "Jc",
+          "from": "./shared-104-Cqo2-vQh.js",
+          "name": "C",
+          "via": "shared-104-Cqo2-vQh.js:C",
+          "kind": "generated",
+          "original": "ez"
+        },
+        {
+          "local": "kh",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "errorCopy",
+          "via": "shared-14-u0TSV9dR.js:M",
+          "kind": "adapter",
+          "original": "Ft"
+        },
+        {
+          "local": "Oh",
+          "from": "./shared-14-u0TSV9dR.js",
+          "name": "G",
+          "via": "shared-14-u0TSV9dR.js:G",
+          "kind": "generated",
+          "original": "Xe"
+        },
+        {
+          "local": "ip",
+          "from": "./shared-3-DnHYUZdJ.js",
+          "name": "sn",
+          "via": "shared-3-DnHYUZdJ.js:sn",
+          "kind": "generated",
+          "original": "tX"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "ce",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "Ff",
+          "via": "shared-25-DP8p7i1Z.js:Ff",
+          "kind": "generated",
+          "original": "up"
+        }
+      ],
+      "exports": {
+        "QT": "As",
+        "DD": "Yo",
+        "GD": "Bo",
+        "wD": "os",
+        "K_": "Of",
+        "LD": "Jo",
+        "PT": "Gs",
+        "jT": "Us",
+        "MT": "Hs",
+        "GR": "xn"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-182-eT1kXtya.js",
+      "sourceSha256": "3e43880437752c6cf6b5dacb804d3231103b5a751286085c1eb62febf30ff489",
+      "sha256": "8ab1e1e8dc30272602a5d9bb053633a6213f18cc0b0a97406797d6ccb4fc77ef",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tC",
+          "sha256": "481dfb55618d266cb4ca1f875c63cc8ba7f4f5b501d9b46fc64ba8a29c224226"
+        },
+        {
+          "name": "nC",
+          "sha256": "e698085e44fe5f847e6b977cdddb09d68bcd0918afae865b5cef49cb4e7ee397"
+        },
+        {
+          "name": "IC",
+          "sha256": "a42957e3d67a8d4ef51fa655d96bab47592e57f47a93f3c84b6a98ad260edd9a"
+        },
+        {
+          "name": "RC",
+          "sha256": "3c0cfafa8580977b5c2a474a78ac245f50c144e2b9fd4c0d0db3151045dafc1c"
+        },
+        {
+          "name": "zC",
+          "sha256": "a88839f0fc5390b652dcc63dc9c5a84036e423f30452961ab19ecfaf63d358e4"
+        },
+        {
+          "name": "BC",
+          "sha256": "d4351822959c94cc8bf13e5180e5e15b9b4ef2391b20aebd5973b3d164a1740b"
+        },
+        {
+          "name": "VC",
+          "sha256": "3ecd889a91e7b26d12225a20d650269695604f29d9be279708445e166cd5ac94"
+        },
+        {
+          "name": "HC",
+          "sha256": "278b5f9e24f81b38f317109048b2258e3b9825aee93e84c5625a8914add867df"
+        },
+        {
+          "name": "UC",
+          "sha256": "939cec81bcbdbffe1bc138ecc29edbc9970f91683d42d01e7dcf1675cfb38483"
+        },
+        {
+          "name": "WC",
+          "sha256": "215cd873c71e835f608b226b55072d9d8e999aaf97575f746180585d52101806"
+        },
+        {
+          "name": "GC",
+          "sha256": "49e8cdeaddcadf9d8a53cd0d0940571dfd26d0b635f970c259f5bdf28854ca6a"
+        },
+        {
+          "name": "KC",
+          "sha256": "31b8371b3c3125b29bd89402b653ead98c40442705e5f4df5697524351a9a325"
+        },
+        {
+          "name": "qC",
+          "sha256": "02a65e2cf48f0503b04a471e58977e70424bb1dd01a37cfdbd565268b437893a"
+        },
+        {
+          "name": "JC",
+          "sha256": "8b7982fb98f0f948309f999a96c7fceb609976d9555c1d68c87d7da4395ac64c"
+        },
+        {
+          "name": "tw",
+          "sha256": "e07cf3aa101dead1d5db77748508e5fd55c1b7728d34af98065a854759c2824a"
+        },
+        {
+          "name": "nw",
+          "sha256": "850913e0cbc4f650089aaa94c13292bcca52aa05e70251a3c989c0f660566e16"
+        },
+        {
+          "name": "rw",
+          "sha256": "d27737ce00b852b4d450d7147b3d72faaaeedd293e668a0dd72be8f77a1248d2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "I",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        }
+      ],
+      "exports": {
+        "nC": "Uf",
+        "rw": "Rf"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "29d5769defb6a93130ad440b26cf1af2c6106036f7a69788f0a6852e790bb6bb",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "nV",
+          "sha256": "91dcabc759dc8ccabbb6ad61ae439aac32e16e5bfa0bbb411f02c2297de59aa8"
+        },
+        {
+          "name": "rV",
+          "sha256": "97d41de078314d54c96543a41090d1dcbb059f3c7ad3635c84be1808a347a49b"
+        },
+        {
+          "name": "dZ",
+          "sha256": "8b83cf85116dd4dcea9cc1a71f1c85f756a14bbc6df33f39c8960706dc4e7f6b"
+        },
+        {
+          "name": "pZ",
+          "sha256": "85f44e797474bd37bdc3cf33f3d3e9c2d2a3f00a0db096281ddc04fe6701b24e"
+        },
+        {
+          "name": "A5",
+          "sha256": "c3925195978a0eda5a0a97c7eb10798c805a0689cc40c66956bcf0ae02a23d39"
+        },
+        {
+          "name": "j5",
+          "sha256": "342b1d3fab83dbdd5cf7f7c1619952af9bc3af3f50754516aa6a6828accc5888"
+        },
+        {
+          "name": "F5",
+          "sha256": "dfe9b940119c735559e6755183f077e136c20c0ed122cf1e926a8c0354cfac4b"
+        },
+        {
+          "name": "L5",
+          "sha256": "90ca4f9fa58b8c0fa01d6ef018bb93b22ef282a80ec720b37329d4afac521aa8"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ky",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionsStore",
+          "via": "shared-8-B5lJ8U5C.js:Wd",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "kx",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "useSessionsNeedingInput",
+          "via": "shared-11-BuQ3CK5I.js:Un",
+          "kind": "adapter",
+          "original": "Vm"
+        },
+        {
+          "local": "lg",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "L5": "xt",
+        "A5": "gt",
+        "pZ": "ya",
+        "nV": "Qc",
+        "rV": "rl"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-2-Cb74JByF.js",
+      "sourceSha256": "eba35a1da5c881718b063b0602d7d7fb0fd547c62e3079b2110fa9f7e39a4cff",
+      "sha256": "c969870ffe4b23c8b4a9b3beda51740d01dafe85015f95da4f3fde0d68bddec3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "FT",
+          "sha256": "d135957a90b3c0d0b3fc3c9a58af4a53042828d1d67c8794f78c357723727040"
+        },
+        {
+          "name": "IT",
+          "sha256": "07973f27f0583b4612539da409621ed1cab77ecccb1b257aeebeba61a6c011a9"
+        },
+        {
+          "name": "RT",
+          "sha256": "65d127902d19b6c778dcad0f5c75bb5c8e752f03928ede37db5b9de013c6a35f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "FT": "sd",
+        "IT": "cd"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "62a3a2e9ee9345bcb3e75e5f4e7bed29b6ca40b55db6a7a52741af9cecd1fef9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "jm",
+          "sha256": "2066a42be21f31c401a5fb55d1346b8e460d95c59fef2a24097e35a7f23bfd4d"
+        },
+        {
+          "name": "Fm",
+          "sha256": "a52374c7b4eb90dbf3644d0e297747b154e8bc2e83966ee541a0040c8ac4b336"
+        },
+        {
+          "name": "OE",
+          "sha256": "926f78a09b876ae68ee2be712f03070b896e5d4bb41f50798048329e693703fe"
+        },
+        {
+          "name": "AE",
+          "sha256": "a5e657396870b2dd4fd2780886bff136e37b8e3854a5fb4afea90afb37a33cca"
+        },
+        {
+          "name": "ME",
+          "sha256": "ab00c013b2cafa9ca526c270729f0a0b832b860a8b1d5ee622bb17b7441cd077"
+        },
+        {
+          "name": "RE",
+          "sha256": "5887d5834e09613dede530a3686983e5478b5717343d3eda03ecf4678727a539"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Ac",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "RE": "Wt",
+        "jm": "vo",
+        "Fm": "_o"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "9b8e571e98bf22539b4a14aa704351224f2438c37092834c949d1767aa2f0846",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "cp",
+          "sha256": "8239f5a507546dc92f1d6ed1a736b3fb8157bc25f998c20dd53d9a6becdebb10"
+        },
+        {
+          "name": "lp",
+          "sha256": "bd3b3652441ecfa1cb809eade26efc1c897a609cde6e6db0b370f785bc262b93"
+        },
+        {
+          "name": "up",
+          "sha256": "e2535cc0c3961998373007bc950e291f054a34981bf2615b1393b5cb0b029b7b"
+        },
+        {
+          "name": "dp",
+          "sha256": "08b582f9312025ad6662b3bbfd0392e91b49817378acd1b9926989a7b9446a04"
+        },
+        {
+          "name": "hy",
+          "sha256": "197f50e0a4ad5fc958d281dff58adf0edbaf7bdd655d43ee71e972dc8b711165"
+        },
+        {
+          "name": "gy",
+          "sha256": "2b84e6c1c56a55a3d61806aa178b7116c3890fa4d5569e88b08fd5574d08de54"
+        },
+        {
+          "name": "_y",
+          "sha256": "c8430cd3246a4a542f8133196377a3cf560bfe2663625a30bed6f072dc83d646"
+        },
+        {
+          "name": "OU",
+          "sha256": "c94952e737ac5f997a5515c6948ccf575db353d88c9a451cf4d9e533f7a9126d"
+        },
+        {
+          "name": "kU",
+          "sha256": "95cb802f41c5f631e66f057f2e319614777f7102d91f26a82b9e1cae5d6942c7"
+        },
+        {
+          "name": "jU",
+          "sha256": "9f1a9cd1caf4082ed0b44fe4b50e08a05b25a5fe04a12d2c9ce89b47bf65242b"
+        },
+        {
+          "name": "MU",
+          "sha256": "e897584e375878e05283d92143c2b852d0978b7555bb6d48c821a2df972816ad"
+        },
+        {
+          "name": "IU",
+          "sha256": "9bbe5a1e163c9054530f41e5422ecd954f7047ae08ed5db190d06217e578fa25"
+        },
+        {
+          "name": "RU",
+          "sha256": "8f41c43f97770b83f3e9f424fd2f84a9d7a34773c465a369ef8d00c93e5deb0c"
+        },
+        {
+          "name": "zU",
+          "sha256": "185d55452875c167947f772be7da1d2b15cc1234f0bd46ad694a00f3e1b455a8"
+        },
+        {
+          "name": "UU",
+          "sha256": "9a9ec36b330bdfa6dc31e9ec53ea1cd8262fd6f8e6e7136a2eb46fc5cddf47fc"
+        },
+        {
+          "name": "GU",
+          "sha256": "27c08dc7185c809024e2d151f988a3e47c2388937685740b92102a9d91cbf197"
+        },
+        {
+          "name": "KU",
+          "sha256": "4cda1a72d773e69c7a59f1eea444b3eb728a39bc788c13e0a07c8010d7c302cc"
+        },
+        {
+          "name": "qU",
+          "sha256": "272687a8a56900c7c09969b699b981df4ef3af33f7cc5c18d6a0dcaca4986073"
+        },
+        {
+          "name": "XU",
+          "sha256": "86615137a18770e05ca757159c2d83b6f6d04555c080515feabbf51e4e68be29"
+        },
+        {
+          "name": "QU",
+          "sha256": "f6db3e44a954c60b2ede6ca4255766e2f346b34a40a1da0ce411967f24576000"
+        }
+      ],
+      "imports": [
+        {
+          "local": "f",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "Le",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        },
+        {
+          "local": "yt",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Zl",
+          "via": "shared-0-ByI5P0CP.js:Zl",
+          "kind": "generated",
+          "original": "XP"
+        }
+      ],
+      "exports": {
+        "zU": "Nt",
+        "_y": "au",
+        "QU": "Ot",
+        "up": "Ff",
+        "dp": "Pf",
+        "jU": "Vt",
+        "KU": "kt"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-28-DcgD7xXH.js",
+      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "sha256": "3f5be2a05aad329d0ee702ecb29e210b10fc756bd8dcb06bf178ae809d77c76a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "jO",
+          "sha256": "fecbf682acc520e7eaf5f16581b0fdf4e24b675024aa0c4215ddfe60ea4113c1"
+        },
+        {
+          "name": "MO",
+          "sha256": "e7bc8257d640d181f2f06fa19d7361496921e8e541e3020e862ba30a56877193"
+        },
+        {
+          "name": "NO",
+          "sha256": "f7d19a34fde601da852caeb96a0a90dd5c67f95165cd274675bfddd8601ecc11"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "NO": "xr"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-3-DnHYUZdJ.js",
+      "sourceSha256": "50970f7a24446daa0264bdff8fea02521746fe38d8a93589def7feb8808fdeec",
+      "sha256": "ef81bcdfe54d3fb528dc1d91fc7d3a124d0f3a99760572e5d8bd87f8fa48dc3c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tX",
+          "sha256": "15b449b118028710d7b619370f6d2d6044e28e3738d73f7ffc5b82e5905ce679"
+        },
+        {
+          "name": "oX",
+          "sha256": "7eb6e4b2b9d7e6916f71bcae28f8ef86bcc72371abfb23ef39ee050af3afe0a3"
+        },
+        {
+          "name": "sX",
+          "sha256": "752cc85a723fa5a1273e3784f59daaddde72abe225faefce34adf6f2e938cc46"
+        },
+        {
+          "name": "cX",
+          "sha256": "c25e2db6186f055ae0068524698230ddffe8ce762f3c1667b7189a8ba9b48cfb"
+        },
+        {
+          "name": "lX",
+          "sha256": "c3eaeec5ddcd466eecddef3c25a88d05a3af47c3a17ec8cf2ee681fc5491a1fe"
+        },
+        {
+          "name": "uX",
+          "sha256": "d2a05b281151521b1778d5b2a4e3848e0ebd978ade21ee4668b09f144f9ed2fb"
+        }
+      ],
+      "imports": [
+        {
+          "local": "dd",
+          "from": "./vendor-intl-Db7hDWRO.js",
+          "name": "f",
+          "via": "vendor-intl-Db7hDWRO.js:f",
+          "kind": "generated",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "uX": "tn",
+        "tX": "sn"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "96c5417ce51009d9c4ca60fa9125eed80e490bd108011acfa84e691fef072f8d",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "iu",
+          "sha256": "b16f0e62ed74d05473751c6047b27d2b48348d100d8a48ea96dacb842a6e5ea1"
+        },
+        {
+          "name": "Uf",
+          "sha256": "5cc4b8ff2721aa6dbc64f69c5c449cf9680da20553bc68fbc7370267c7b55fca"
+        },
+        {
+          "name": "Wf",
+          "sha256": "ba406c79c9ac539ad8739ad1ff5edc2bfda59481bca0cf094edd6ccf0128bcd3"
+        },
+        {
+          "name": "Gf",
+          "sha256": "3eb4d13a2f1d25a1fe6e141c09fb038b893c1def299a5fd45d0c5993bbe08de8"
+        },
+        {
+          "name": "Kf",
+          "sha256": "7d528e645e1b67f7e54710e55d3e06e7487c55e49c4611483fb9e9c16c6f8074"
+        },
+        {
+          "name": "qf",
+          "sha256": "ab00b80c87efc2506dc8036e358f95bece4fdc2f6f34e2f20d6310d0682ddee7"
+        },
+        {
+          "name": "Jf",
+          "sha256": "3d4b26219e67cdeb28dec45470b891e5e755f6afa27fc072a7782298a1d61342"
+        },
+        {
+          "name": "Yf",
+          "sha256": "2dfc9efa34cdee1df89626aaf6b0886bd54650c25eef795217c99182f9687986"
+        },
+        {
+          "name": "Xf",
+          "sha256": "364a126de41679b3be05e7528c0796ceef32f1e2946efb5a569c281dfca5df73"
+        },
+        {
+          "name": "Zf",
+          "sha256": "49492cb6ee81dd6dc2ce1dfcfde84e870263d43fc61eedac362d5c44b67b49b1"
+        },
+        {
+          "name": "Qf",
+          "sha256": "7a8d33ac7563bd7be3e3839be89f5fcbb856d74a326b180ea0078357c3f349cb"
+        },
+        {
+          "name": "r_",
+          "sha256": "379ed811b3e914f220d285e328d357f1ff2a2a103f89acd10495d9a152c0d1d2"
+        },
+        {
+          "name": "Pj",
+          "sha256": "7d4fe80d9e3b1e41ae17dfee19c8dbf3e8b4d920d066b07b868e2b856abcb7a6"
+        },
+        {
+          "name": "Uj",
+          "sha256": "09f3afa345fff3537851f7816ba807915fd8eb9ccfdabd5290ea4947c9096264"
+        },
+        {
+          "name": "Gj",
+          "sha256": "daa04dbaa41747a51bcfffe434f0eb3876c2e4861d1e76e1fb2ae3fb315f4ac2"
+        },
+        {
+          "name": "Kj",
+          "sha256": "26cf49dda06c1a4dcdf9fe6dfae119393c0fdc23b8ad6d841a9621917e90647f"
+        },
+        {
+          "name": "qj",
+          "sha256": "3b7dfda4d2926b830382dcfaa8172ac1ffd08740f11bce6bbbff08de31aa4897"
+        },
+        {
+          "name": "Jj",
+          "sha256": "05fba2d7939a91b85b93824e39c69d14f76b3b721504d0616a84d4ce9e18bbe1"
+        },
+        {
+          "name": "Yj",
+          "sha256": "2c677f670065cb9e794c49b8d504d602c727c7c90c63a19c064a299703cacb48"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "F",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        }
+      ],
+      "exports": {
+        "Qf": "Pp",
+        "iu": "Hm",
+        "r_": "Cd",
+        "Uj": "Ma",
+        "Pj": "ja"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-78-D6VXYXaQ.js",
+      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "sha256": "f7e933ae4d8829d9161a73f3708dbe1f14dc060718bd663b02dd5f7b3fc40973",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Nv",
+          "sha256": "815a90c1c429036839679e6ebc9de46c8c500f4b43ac2bc5863b96726576e31a"
+        },
+        {
+          "name": "Pv",
+          "sha256": "dabc4cc4cdd906dd16c5920e1ccbbff4a459925558662ddaa7176a3c18d4e389"
+        },
+        {
+          "name": "ww",
+          "sha256": "b06ab10db40b9c3156b97af5217b7c67bd07dea3b366c4470a47638b5e16d732"
+        },
+        {
+          "name": "Tw",
+          "sha256": "6a0a8d47be32abfa6123fc5e76c3a15c8813b87a2229e86296f5bb02540b6cbe"
+        },
+        {
+          "name": "Dw",
+          "sha256": "5b789c4a42556ffc4c1cd1a33152d6d48e086bee204fd97e0f21473ca70980f6"
+        },
+        {
+          "name": "Ow",
+          "sha256": "88256bd614ed655a086972c682ef4b093a1f2fb5501dc7ea6c6cf9ddffdbc733"
+        },
+        {
+          "name": "kw",
+          "sha256": "2bc05870910a92ec03b5fb6d9ad3ff7e4a1411a8e306c62645d32c3f04553acf"
+        },
+        {
+          "name": "Mw",
+          "sha256": "933484d0c144bd5822742ce2b5d173d0e3209def591507ffe180f1a626752a58"
+        },
+        {
+          "name": "Uw",
+          "sha256": "080f24e80e97189263e52f51bc49dfb41fe9c5960796f6de1482df8c4a3b9e42"
+        },
+        {
+          "name": "Gw",
+          "sha256": "c19e76c5207df0dff8e69b54c7c75508ad8b84b1fc613b54093ce34480ee2ca9"
+        },
+        {
+          "name": "qw",
+          "sha256": "1e8373c6743abcddbf106a5e692e9c44007add397f9c286034e81cf7b10fbc0d"
+        },
+        {
+          "name": "Yw",
+          "sha256": "f1648b9b305dd03d0dba8f63258214d6021cd30b485b2161b738527c9b9c1acb"
+        },
+        {
+          "name": "Qw",
+          "sha256": "ff2bab2fa5ee76f9321ec82d85610b6b98011056f394c8532112d2a0b0953dd0"
+        },
+        {
+          "name": "$w",
+          "sha256": "cc24b28ab1d7642cf96a2d129eddef2b563288f580c49894fa6fbb777e63a6ed"
+        },
+        {
+          "name": "xL",
+          "sha256": "5d5ef30a0e416d556a40919bceb6b2862c280c15a9f18c572e1e4c9fdda72ff4"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Rr",
+          "from": "./shared-52-DGviI8xb.js",
+          "name": "Ma",
+          "via": "shared-52-DGviI8xb.js:Ma",
+          "kind": "generated",
+          "original": "Uj"
+        },
+        {
+          "local": "dn",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Py",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated",
+          "original": "Hi"
+        },
+        {
+          "local": "Oi",
+          "from": "./shared-52-DGviI8xb.js",
+          "name": "ja",
+          "via": "shared-52-DGviI8xb.js:ja",
+          "kind": "generated",
+          "original": "Pj"
+        },
+        {
+          "local": "Cn",
+          "from": "./shared-0-ByI5P0CP.js",
+          "name": "Zl",
+          "via": "shared-0-ByI5P0CP.js:Zl",
+          "kind": "generated",
+          "original": "XP"
+        },
+        {
+          "local": "Ce",
+          "from": "./shared-25-DP8p7i1Z.js",
+          "name": "Vt",
+          "via": "shared-25-DP8p7i1Z.js:Vt",
+          "kind": "generated",
+          "original": "jU"
+        }
+      ],
+      "exports": {
+        "xL": "jl",
+        "Pv": "kb",
+        "Yw": "p_"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-8-B5lJ8U5C.js",
+      "sourceSha256": "09a1c33cf2e31d076f8e1908ab42933e1e6d702120136cd67418793a7657d086",
+      "sha256": "fe958f989346374818faff57af8ab0665ff86075f21e4ff59ccc42bddff13aab",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "rw",
+          "sha256": "ed65a88c24392986ad646f9b9e75b0cdca83fa17355436fd7840317fa85e3032"
+        },
+        {
+          "name": "iw",
+          "sha256": "54eeeccd0fb00bb8d485fea0a6aa08e20e16975b06c264adbca6c928be0e250a"
+        },
+        {
+          "name": "wL",
+          "sha256": "ba063ad0dd3900943a1350112de06f58274756d64f410a99783ed986d429a439"
+        },
+        {
+          "name": "TL",
+          "sha256": "18637c286d7846df23c78c98f45d9d436a41bd82a432615053435f19b94755d1"
+        },
+        {
+          "name": "EL",
+          "sha256": "32ddb2fea1e1b10f83d4414dd6277bae6cf9145087329697701360ab913ccb3d"
+        },
+        {
+          "name": "OL",
+          "sha256": "5657fee5772a50c97087d29895faa3efa7355a590065b1c16679b295b134299d"
+        },
+        {
+          "name": "kL",
+          "sha256": "6da5b86f0985bae7d915175478a89a6a6f380ceb9cc9d97cd24f341e166f0368"
+        },
+        {
+          "name": "HL",
+          "sha256": "2a9f53c7b59693c296b6b093ab0b412152f1a6c383623eeeb7988e7bc5dccb7e"
+        },
+        {
+          "name": "qL",
+          "sha256": "baebd7bd26332a34ed1c1fccaeaa4be8c71320e3f8b33c0e7ea8e77789d1808c"
+        }
+      ],
+      "imports": [
+        {
+          "local": "C",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "hl",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        },
+        {
+          "local": "Do",
+          "from": "../../source-proposal-group-adapters.jsx",
+          "name": "getDesktopConfig",
+          "via": "shared-52-DGviI8xb.js:Mi",
+          "kind": "adapter",
+          "original": "zP"
+        }
+      ],
+      "exports": {
+        "qL": "Wt",
+        "kL": "Zt",
+        "rw": "Ro",
+        "iw": "Lo",
+        "HL": "Lt",
+        "OL": "en"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "4ef3da3561c3e260822ac5e7f927f193a52fc6716a9135188bbc8fd4e2a79fe1",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ln",
+          "sha256": "e545c2c24e6463d7c4fe3829940627b226c0b9be7a8c7dbe964768da48f1ab9d"
+        },
+        {
+          "name": "un",
+          "sha256": "787cbf2dd24b025663fbaa9b5d6b9f3af9c89d41c8c74b15061c8c21746975e3"
+        },
+        {
+          "name": "dn",
+          "sha256": "6daeb700f328cd23f6f8dbc6646bdb175c1bf6e2cc61f166138916713a7055b2"
+        },
+        {
+          "name": "fn",
+          "sha256": "8ba9a77dfa5f2d918d3a6aeeb8702bdcb1004a68760d9683078ed76e9fa6606d"
+        },
+        {
+          "name": "pn",
+          "sha256": "2d81271d0e8ab23e876cdc7cfeda5268cef9ebc536d07b98b644515079b21cce"
+        },
+        {
+          "name": "mn",
+          "sha256": "00aefd5361a74a3585b00cb6d645f4ea75001aef28482ca871a78f298b93ed1d"
+        },
+        {
+          "name": "hn",
+          "sha256": "cb3b8bb2801f90c1844c2aee2f682e4895fe9cabe97256dd832b2d75321ea4b5"
+        },
+        {
+          "name": "gn",
+          "sha256": "2661f8bb450a076165e9992d28d994c583e090d2db17d9c1d978bd6ee15eeb43"
+        },
+        {
+          "name": "lc",
+          "sha256": "b1e1d78d1ee6d2f41bd7548d71941afd94b446a28ca0a5a7a98ba857c3fe0023"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "fn": "ud",
+        "gn": "cd",
+        "pn": "ld",
+        "mn": "od",
+        "lc": "vl"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "vendor-all-0-CTKbbUUg.js",
+      "sourceSha256": "691e5601fc021fbcb4e8e06a217d9030952ea2ba88dc65e8bcb39803143ef2d4",
+      "sha256": "a80cc4863fbe65d9e62536d1a129c68e8c1ded6f688722328b9706c92ae7e9c3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "5af90f11a7f367288317ed262d652aa1e49aa18b9fd68ee9a44342901ee221db"
+        },
+        {
+          "name": "v",
+          "sha256": "9cba6a6ac210c6144c39a3ff0decc9389dbad37e6ce98b57e12b58fea5a84a7a"
+        },
+        {
+          "name": "y",
+          "sha256": "cfbb8f2016f700cfb95f1edde356525503bec2137e52416acc29b5fcace645d2"
+        },
+        {
+          "name": "b",
+          "sha256": "5cfe55a000f357bc84544e680325bf77ec10a51bebe43333bc5ce13457faf998"
+        },
+        {
+          "name": "x",
+          "sha256": "3611303704733b0480ce6cdae95cc5a3fefd9a22f42b6f0b887066e2ac443f85"
+        },
+        {
+          "name": "ee",
+          "sha256": "f6c79c9574847fb078f7489ac30d350840224f66e426d12d55c3b0d94961fe4b"
+        },
+        {
+          "name": "fe",
+          "sha256": "cb5ea807af3388af73c4368fb27f9c97ce8979f31dfdb1601035191167fdd9ae"
+        },
+        {
+          "name": "pe",
+          "sha256": "9c712c392969b1f84e795cfcc71b820ae283bb602c85c64a3f26be0312c87aa6"
+        },
+        {
+          "name": "me",
+          "sha256": "7e79afb2f14c4d7dae0e749386f8749c568f280ab0572a6cc1cb0ccf441b0152"
+        }
+      ],
+      "imports": [
+        {
+          "local": "c",
+          "from": "react",
+          "name": "default",
+          "via": "vendor-frame-DfPJ1QmD.js:so",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "ee": "I",
+        "me": "D",
+        "fe": "E"
+      },
+      "publicNames": {},
+      "contexts": []
+    },
+    {
+      "source": "vendor-intl-Db7hDWRO.js",
+      "sourceSha256": "f26cedebafa9295e3e1f8443b074e29877472083867d8e5bb7a8d522d3ae6762",
+      "sha256": "4e1c672baac05be425180f4fe5863adefa627a427de9da786a0b49e3e17c249e",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "e8bcfdd6704487bca47d7ebe2c3a799667e4da8daef469e53da344bbb77d91e2"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tn": "f"
+      },
+      "publicNames": {},
+      "contexts": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "binding": "Lb",
+      "role": "Session pane proposal provider: host context, spawner context (qQ), SentHereNotice (q1e), Ib",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "7eec9d7c4188306bd37b7a7746d7c3e5f7c563465ac52e7d74988250d5dbfb29",
+      "features": [
+        "u(Sc.Provider, {",
+        "o(mc.Provider, {",
+        "u(nc, { task: c?.lastSentHere }),",
+        "captureGuardedSnapToBottom: t.captureGuardedSnapToBottom,",
+        "onSpawner: s,"
+      ],
+      "imports": {
+        "mc": "c96d752d0-BOCqU7c2.js:mt (qQ)",
+        "nc": "c96d752d0-BOCqU7c2.js:it (q1e)"
+      }
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "binding": "Ib",
+      "role": "Spawner host: F1e with inlineCards on; the inline gate g1e, the unplaced group z$ and the presets flag it reads",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "b88b8701cb1fe328e7c5f95d412696f38d7b8e0f3fdc8f03522a41aaccdfeb0c",
+      "features": [
+        "inlineCards: !0,",
+        "n(s);",
+        "c.confirming === null"
+      ],
+      "imports": {
+        "dc": "c96d752d0-BOCqU7c2.js:lt (F1e)",
+        "Zs": "c96d752d0-BOCqU7c2.js:ht (g1e)",
+        "Dc": "c96d752d0-BOCqU7c2.js:rt (z$)",
+        "to": "shared-11-BuQ3CK5I.js:do (Qo)"
+      }
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "role": "Feed rows: turnSuggestions at the turn end, unplacedSuggestions at the tail, proposing calls hidden, R$ / z$ mounted; F1e",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "raw": true,
+      "features": [
+        "let i=PPe(n.items);le??=i.firstProposingCallId,ce.push(...i.tools),le!==void 0&&ce.length>0&&tf(e,r,!1,I)&&((ce.length!==1||t.sentHereSuggestionIds?.includes(pL(ce[0])??\"\")!==!0)&&s.push({kind:\"turnSuggestions\",id:`turnSuggestions:${le}`,tools:ce})",
+        "k!==void 0&&k.length>0&&s.push({kind:\"unplacedSuggestions\",id:`unplacedSuggestions:${k[0].id}`,tasks:k})",
+        "case\"tools\":return!(a.turnSuggestions===!0&&CL(e,a.hideThinkingItems!==!0))",
+        "t.hostDrawsTurnSuggestions===!0&&gL(e)",
+        "children:b(R$,{sessionRef:n,tools:e.tools})",
+        "children:b(z$,{sessionRef:n,tasks:e.tasks})",
+        "function F1e({sessionRef:e,hasSuggestions:t,captureGuardedSnapToBottom:n,inlineCards:i=!1}){"
+      ]
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "role": "Session pane: lr = g1e(presets, session); floating card lb only when !lr; z$ (Dc) for unplaced tasks",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "raw": true,
+      "features": [
+        "cr=to(),lr=Zs(cr,t)",
+        "Or&&t&&dr&&!lr&&u(lb,{sessionRef:t,scrollRef:r,captureGuardedSnapToBottom:x},`chip-${e}`)",
+        "t&&Ci.length>0?u(Dc,{sessionRef:t,tasks:Ci}):null"
+      ]
+    }
+  ]
+}

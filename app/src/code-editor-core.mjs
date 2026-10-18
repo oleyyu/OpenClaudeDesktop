@@ -1,11 +1,14 @@
-// Names traced through cbd02b8f2-Bbrhywu4.js; no original desktop/account hooks.
+// Names traced through 2.42304.0 cbd02b8f2-ERHMhSz7.js; one shared core instance.
+// 2.42304.0 renamed every core export (bindings unchanged); see analysis/.../files-terminal-data/maps/map-core.json.
 export {
-  Pt as EditorView, dn as EditorState, ln as Compartment, un as EditorSelection,
-  hn as StateEffect, gn as StateField, Nt as Decoration, It as ViewPlugin,
-  Zt as keymap, Qt as lineNumbers, Bt as drawSelection,
-  g as selectAll, y as undoDepth, h as redoDepth, xn as findClusterBreak,
-  o as defaultKeymap, s as history, l as historyKeymap, v as undo, m as redo,
-  Yt as highlightWhitespace, rn as scrollPastEnd,
-  tt as foldedRanges, vt as unfoldEffect, K as foldCode, _t as unfoldCode,
-  ht as syntaxTree, nt as forceParsing, rt as indentWidth, lt as indentUnit,
-} from './generated/code-editor/c148e7537-Ks6hIVju.js';
+  It as EditorView, mn as EditorState, fn as Compartment, pn as EditorSelection,
+  vn as StateEffect, yn as StateField, Ft as Decoration, zt as ViewPlugin,
+  $t as keymap, en as lineNumbers, Ut as drawSelection,
+  _ as selectAll, x as undoDepth, g as redoDepth, wn as findClusterBreak,
+  s as defaultKeymap, c as history, u as historyKeymap, b as undo, h as redo,
+  an as scrollPastEnd, xn as Transaction,
+  rt as foldedRanges, bt as unfoldEffect, J as foldCode, yt as unfoldCode,
+  _t as syntaxTree, it as forceParsing, at as indentWidth, dt as indentUnit,
+  Y as foldEffect, H as codeFoldingState, nt as foldable, ot as getIndentation,
+} from './generated/code-editor-current/c148e7537-BbnhrJJt.js';
+export {highlightWhitespace} from './generated/code-editor-current/wrapper.mjs';

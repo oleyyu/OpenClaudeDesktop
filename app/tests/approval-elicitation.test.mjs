@@ -43,6 +43,9 @@ test("an MCP tool-call approval is a tool card: Deny, Allow for this session (pe
   // Codex's fallback wording is the heading already; it is not repeated as a message.
   assert.equal(model.message, null);
   assert.deepEqual(model.detail, { kind: "arguments", text: "Text: hi", value: [{ name: "text", value: "hi", display_name: "Text" }] });
+  // 2.42304.0 c96d752d0 Kk mcp__: what Claude sent carries the loose read gate (no desktop terminal connector here).
+  assert.deepEqual(model.rowsReadGate, { hint: "Scroll through what Claude sent to allow it.", loose: true });
+  assert.deepEqual(model.elicitation.rowsReadGate, model.rowsReadGate);
   assert.deepEqual(model.deny, { key: "decline", label: "Deny", primary: false });
   // persist ['session','always']: Codex's 'Always allow' is Claude's persistent button, before the session one.
   assert.deepEqual(model.allows.map(allow => allow.key), ["acceptAlways", "acceptForSession", "accept"]);
@@ -82,6 +85,12 @@ test("tool approval copy: the request's own tool and arguments, a correlated ite
   // tool_params without display rows fall back to pretty JSON.
   const raw = approvalCardModel(toolApproval({ tool_params_display: undefined }));
   assert.equal(raw.detail.text, JSON.stringify({ text: "hi" }, null, 2));
+  assert.equal(raw.rowsReadGate.loose, true);
+  // The item's arguments are gated the same way; a call with nothing sent has no rows and no gate.
+  assert.equal(fromItem.rowsReadGate.loose, true);
+  const empty = approvalCardModel(toolApproval({ tool_params: {}, tool_params_display: [] }));
+  assert.equal(empty.detail, null);
+  assert.equal(empty.rowsReadGate, undefined);
 });
 
 test("a message-only server request asks for approval; url, form and unknown modes keep a way out", () => {
@@ -90,6 +99,7 @@ test("a message-only server request asks for approval; url, form and unknown mod
   assert.equal(confirm.title, "probe is asking for your approval");
   assert.equal(confirm.message, "Proceed?");
   assert.deepEqual(confirm.allows.map(allow => [allow.key, allow.label]), [["accept", "Allow"]]);
+  assert.equal(confirm.rowsReadGate, undefined, "a server's own confirm sends no tool arguments");
 
   const link = approvalCardModel(url());
   assert.equal(link.elicitation.mode, "url");

@@ -16,6 +16,13 @@ export function createToolGroupExpansion(limit = 1000) {
       notify();
     },
     clear() { if (values.size) { values.clear(); notify(); } },
+    // c96d752d0 d9 (eS + axe, cc6e9624e l / u): a row's Try again forgets the session's expansion intentions.
+    forgetSession(session) {
+      const prefix = JSON.stringify([session]).slice(0, -1) + ',';
+      let changed = false;
+      for (const key of [...values.keys()]) if (key.startsWith(prefix)) { values.delete(key); changed = true; }
+      if (changed) notify();
+    },
   };
 }
 export const toolGroupExpansion = createToolGroupExpansion();

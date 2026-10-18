@@ -1,43 +1,27 @@
-// Running command / shell title per terminal tab (2.31226.0 cf718f694 ge/ue/de, read by cccc2cf0a Zg). The tracking
-// itself is the original code (generated/code-editor/terminal-titles.mjs); this module only gives it a store and the
-// pane a way to read it. Keyed by terminal id (the reference's ptyKey): a tab's view installs it when it is created.
-import { createTerminalTitles } from "./generated/code-editor/terminal-titles.mjs";
-
-// The small part of zustand's store the original code uses: getState / setState(updater) / subscribe.
-function createStore(init) {
-  let state;
-  const listeners = new Set();
-  const api = {
-    getState: () => state,
-    setState(partial) {
-      const next = typeof partial === "function" ? partial(state) : partial;
-      if (Object.is(next, state)) return;
-      const previous = state;
-      state = Object.assign({}, state, next);
-      for (const listener of [...listeners]) { try { listener(state, previous); } catch {} }
-    },
-    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
-  };
-  state = init(api.setState, api.getState, api);
-  return api;
-}
+// Running command / shell title per terminal tab (2.42304.0 cf718f694 be/me/J/ge/G, read by cccc2cf0a Vy). The
+// tracking itself is the original code (generated/code-current/terminal-titles.mjs, with the shared-78 title sanitizer
+// in terminal-title-text.mjs); this module only gives the pane a way to read it. Keyed by terminal id (the reference's
+// ptyKey): a tab's view installs it when it is created. The store (cf718f694 G) is one per window, as in the source.
+import {
+  installTerminalTitles, terminalTitleValue, forgetTerminalTitle, terminalTitlesEnabled, terminalTitleStore,
+} from "./generated/code-current/terminal-titles.mjs";
+import { terminalDescription } from "./generated/code-current/terminal-description.mjs";
 
 export function createTerminalTitleTracker() {
-  const titles = createTerminalTitles({ create: createStore });
   return {
-    /** Start tracking an xterm's OSC 0/2 title and OSC 133 C/D command marks for terminal `id`. */
-    install: (term, id) => titles.install(term, id),
-    /** The terminal closed (or its view was dropped): no title, no pending timer. */
-    forget: (id) => titles.forget(id),
-    subscribe: (listener) => titles.store.subscribe(listener),
-    snapshot: () => titles.store.getState(),
-    /** The running command, else the shell's reported title (Vl), for a tab without its own name. */
+    /** Start tracking an xterm's OSC 0/2 title and OSC 133 C/D command marks for terminal `id` (be). */
+    install: (term, id) => installTerminalTitles(term, id),
+    /** The terminal closed (or its view was dropped): no title, no pending timer (J). */
+    forget: (id) => forgetTerminalTitle(id),
+    subscribe: (listener) => terminalTitleStore.subscribe(listener),
+    snapshot: () => terminalTitleStore.getState(),
+    /** The running command, else the shell's reported title (me), for a tab without its own name (Vy: name === void 0). */
     value(state, tab) {
-      if (!tab?.id || (typeof tab.title === "string" && tab.title) || !titles.enabled()) return undefined;
-      return titles.value(state ?? titles.store.getState(), tab.id);
+      if (!tab?.id || (typeof tab.title === "string" && tab.title) || !terminalTitlesEnabled()) return undefined;
+      return terminalTitleValue(state ?? terminalTitleStore.getState(), tab.id);
     },
-    /** Zg's tab description: the last path segment of a path-like title, else the text itself (de). */
-    description: (value) => (value ? titles.description(value) : undefined),
+    /** Vy's tab description: the last path segment of a path-like title, else the text itself (he). */
+    description: (value) => (value ? terminalDescription(value) : undefined),
   };
 }
 

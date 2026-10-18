@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  R4g-mcp MA-3 (research-ext/X1 §7 G1): the host-written MCP App sandbox proxy page, served by mcp-app-sandbox.cjs at
+  oc-mcp-sandbox://<hash>/mcp_apps in place of the remote https://sandbox.claudemcpcontent.com/mcp_apps (shared-23).
+  Contract (c131c9a32 AppBridge, shared-78 jk/Bk): say ui/notifications/sandbox-proxy-ready to the parent; on the
+  parent's ui/notifications/sandbox-resource-ready {html, sandbox?, csp?, permissions?} draw the inner frame
+  (sandbox and allow as shared-78 jk builds them), then relay JSON-RPC and anthropic:* messages between the parent and
+  the inner frame only. The two placeholders are filled by the scheme handler.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>MCP App sandbox</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+      iframe { display: block; width: 100%; height: 100%; border: none; background-color: transparent; }
+    </style>
+  </head>
+  <body>
+    <script>
+      (() => {
+        "use strict";
+        const CONFIG = /*__OC_MCP_SANDBOX_CONFIG__*/null;
+        /*__OC_MCP_SANDBOX_HELPERS__*/
+        const PROXY_READY = "ui/notifications/sandbox-proxy-ready";
+        const RESOURCE_READY = "ui/notifications/sandbox-resource-ready";
+        if (!CONFIG || window.parent === window) return;
+        const parentWindow = window.parent;
+        const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+        // The parent's origin when it has a real one (dev server); a file:// app window has an opaque origin, so "*".
+        const parentTarget = () => {
+          try {
+            const origin = location.ancestorOrigins && location.ancestorOrigins[0];
+            if (origin && origin !== "null" && !/^file:/i.test(origin)) return origin;
+          } catch {}
+          return "*";
+        };
+        const toParent = (message) => parentWindow.postMessage(message, parentTarget());
+        // Only MCP Apps JSON-RPC and the raw anthropic:* messages of shared-78 Bk (and their -result replies) travel.
+        const relayable = (data) => isObject(data) && ((data.jsonrpc === "2.0" && (typeof data.method === "string" || "id" in data)) || (typeof data.type === "string" && data.type.startsWith("anthropic:")));
+        const isProxyMethod = (data) => isObject(data) && typeof data.method === "string" && data.method.startsWith("ui/notifications/sandbox-");
+
+        let inner = null;
+        let innerOrigin = location.origin;
+        let settled = false;
+
+        // A csp list of the message, checked against the list the URL carried: every source must be one of them.
+        const checked = (list, allowed) => {
+          if (list === undefined || list === null) return [];
+          if (!Array.isArray(list) || list.length > 64) return null;
+          const out = [];
+          for (const item of list) {
+            if (typeof item !== "string") return null;
+            const source = item.trim().toLowerCase().replace(/\/+$/, "");
+            if (!allowed.includes(source)) return null;
+            if (!out.includes(source)) out.push(source);
+          }
+          return out;
+        };
+        const refuse = (reason) => {
+          settled = true;
+          console.error("[oc-mcp-sandbox] refused the MCP App resource: " + reason);
+        };
+        // The CSP <meta> goes first (after a leading doctype, so the page keeps its rendering mode).
+        const withCsp = (html, csp) => {
+          const meta = '<meta http-equiv="Content-Security-Policy" content="' + csp.replace(/&/g, "&amp;").replace(/"/g, "&quot;") + '">';
+          const doctype = /^\uFEFF?\s*<!doctype[^>]*>/i.exec(html);
+          return doctype ? doctype[0] + meta + html.slice(doctype[0].length) : meta + html;
+        };
+
+        function onResourceReady(params) {
+          if (settled) return;
+          if (!isObject(params) || typeof params.html !== "string") return refuse("no html");
+          if (params.html.length > CONFIG.maxHtml) return refuse("html too large");
+          const csp = params.csp === undefined || params.csp === null ? {} : params.csp;
+          if (!isObject(csp)) return refuse("invalid csp");
+          const connect = checked(csp.connectDomains, CONFIG.connect);
+          const resource = checked(csp.resourceDomains, CONFIG.resource);
+          const frame = checked(csp.frameDomains, CONFIG.frame);
+          if (!connect || !resource || !frame) return refuse("csp does not match the sandbox URL");
+          // c131c9a32: `sandbox` may override the inner frame's flags; here it can only drop official flags.
+          let flags = CONFIG.sandbox;
+          if (params.sandbox !== undefined) {
+            if (typeof params.sandbox !== "string") return refuse("invalid sandbox");
+            const allowedFlags = CONFIG.sandbox.split(" ");
+            const tokens = params.sandbox.split(/\s+/).filter(Boolean);
+            if (tokens.some((token) => !allowedFlags.includes(token))) return refuse("sandbox widens the frame");
+            flags = allowedFlags.filter((token) => tokens.includes(token)).join(" ");
+          }
+          // shared-78 jk: "fullscreen *" plus Sk(permissions) features, each "<feature> *".
+          const permissions = isObject(params.permissions) ? params.permissions : {};
+          const features = Object.keys(permissions).filter((key) => Object.prototype.hasOwnProperty.call(CONFIG.permissions, key) && permissions[key] !== null && permissions[key] !== undefined).map((key) => CONFIG.permissions[key] + " *");
+          settled = true;
+          innerOrigin = flags.split(" ").includes("allow-same-origin") ? location.origin : "null";
+          inner = document.createElement("iframe");
+          inner.setAttribute("sandbox", flags);
+          inner.setAttribute("allow", ["fullscreen *"].concat(features).join("; "));
+          inner.setAttribute("title", "MCP App");
+          inner.srcdoc = withCsp(params.html, buildCsp({ connect, resource, frame }));
+          document.body.appendChild(inner);
+        }
+
+        window.addEventListener("message", (event) => {
+          const data = event.data;
+          if (event.source === parentWindow) {
+            if (isObject(data) && data.jsonrpc === "2.0" && data.method === RESOURCE_READY) return onResourceReady(data.params);
+            if (inner && inner.contentWindow && relayable(data) && !isProxyMethod(data)) inner.contentWindow.postMessage(data, innerOrigin === "null" ? "*" : innerOrigin);
+            return;
+          }
+          if (inner && event.source === inner.contentWindow && event.origin === innerOrigin) {
+            // The app cannot speak for the proxy (no sandbox-proxy-ready / sandbox-resource-ready from inside).
+            if (relayable(data) && !isProxyMethod(data)) toParent(data);
+          }
+          // Anything else (other frames, forged sources or origins) is dropped.
+        });
+
+        toParent({ jsonrpc: "2.0", method: PROXY_READY, params: {} });
+      })();
+    </script>
+  </body>
+</html>

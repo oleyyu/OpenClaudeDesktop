@@ -88,7 +88,9 @@ try {
   await page.locator('[data-cds="Calendar"]').waitFor();
 
   const calendar=page.locator('[data-cds="Calendar"]');
-  assert.equal(await calendar.evaluate(n=>n.closest('[data-chat-source-version]')?.dataset.chatSourceVersion),'2.31226.0');
+  // R4i-gui GU1 (R4g-routines RTC): the form is the generated 2.42304.0 c97b955f1 Ca (cowork-scheduled), no longer the
+  // 2.31226.0 current-chat bundle, so the calendar is no longer tagged data-chat-source-version 2.31226.0.
+  assert.notEqual(await calendar.evaluate(n=>n.closest('[data-chat-source-version]')?.dataset.chatSourceVersion??null),'2.31226.0');
   const selected=calendar.locator('[aria-selected="true"] [role="button"]');
   const before=await date.locator('input').inputValue();
   await selected.press('ArrowRight'); await page.keyboard.press('Enter');
@@ -122,7 +124,8 @@ try {
     await page.screenshot({path:path.join(evidence,`form-${width}x${height}-${theme}.png`)});
   }
   await dialog.getByRole('combobox',{name:'Permissions',exact:true}).click();
-  await page.getByRole('option',{name:/^Manual\b/}).click();
+  // RTC host difference 3: Default / Auto / Skip all approvals; Default saves the host's 'ask'.
+  await page.getByRole('option',{name:/^Default\b/}).click();
   await dialog.getByRole('button',{name:'Save',exact:true}).click();
   await dialog.waitFor({state:'hidden'});
   let task=(await read('preferences.json')).localRoutines.find(t=>t.name==='Monthly review');
@@ -132,11 +135,11 @@ try {
   await page.getByRole('link',{name:'Monthly review',exact:true}).click();
   await page.getByRole('button',{name:'Edit',exact:true}).click();
   dialog=page.getByRole('dialog',{name:'Edit scheduled task',exact:true});
-  assert.equal(await dialog.getByRole('combobox',{name:'Permissions',exact:true}).getAttribute('data-value'),'default');
+  assert.match(await dialog.getByRole('combobox',{name:'Permissions',exact:true}).innerText(),/^Default\b/);
   assert.equal(Number((await dialog.locator('[data-cds="DateInput"] input').inputValue()).split('-')[2]),expectedDay);
   await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
   await dialog.waitFor({state:'hidden'});
-  checks.push('Current source monthly date input supports calendar arrow selection, month navigation, Escape, focus restoration, segmented keyboard edits, persisted day/time/Manual permissions after restart');
+  checks.push('Current source monthly date input supports calendar arrow selection, month navigation, Escape, focus restoration, segmented keyboard edits, persisted day/time/Default (ask) permissions after restart');
   checks.push('Current dialog portal inherits scoped CSS: 1-column tall form, original 6-column short desktop breakpoint, no horizontal overflow at 700px, both themes; slug preview and rich link render correctly');
   assert.deepEqual(errors,[]); passed=true;
 } catch(error) {

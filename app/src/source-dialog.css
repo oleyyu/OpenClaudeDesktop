@@ -59,5 +59,6 @@
 /* Qf: mt-pad-lg flex flex-col-reverse gap-2 sm:flex-row sm:justify-end. */
 .sdlg-footer { display: flex; flex-shrink: 0; flex-direction: column-reverse; gap: 8px; margin-top: var(--cds-pad-lg); }
 @media (min-width: 640px) { .sdlg-footer { flex-direction: row; justify-content: flex-end; } }
+@media (min-width: 640px) { .sdlg-footer[data-align="between"] { justify-content: space-between; } }
 @media (prefers-reduced-motion: reduce) { .sdlg-popup, .sdlg-backdrop { transition: none; } }
 html[data-reduce-motion="true"] .sdlg-popup, html[data-reduce-motion="true"] .sdlg-backdrop { transition: none; }

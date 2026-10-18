@@ -1,15 +1,15 @@
-// Complete original drawing canvas and geometry/history/rendering helpers.
+// Complete original drawing canvas and geometry/history/rendering helpers (2.42304.0).
 import {
-  useState as e,
-  useImperativeHandle as t,
-  useEffect as n,
-  useLayoutEffect as r,
-  useRef as i,
-  useCallback as s,
-  useMemo as d,
+  useState as r,
+  useImperativeHandle as s,
+  useEffect as l,
+  useLayoutEffect as f,
+  useRef as a,
+  useCallback as d,
+  useMemo as c,
 } from "react";
-import { jsx as a, jsxs as c } from "react/jsx-runtime";
-const A = (() => {
+import { jsx as o, jsxs as i } from "react/jsx-runtime";
+const D = (() => {
   function e(e) {
     let t = 1 / 0;
     for (let n of e) {
@@ -20,8 +20,8 @@ const A = (() => {
   }
   return e;
 })();
-const fe = (() => {
-  function Ju(e) {
+const he = (() => {
+  function _d(e) {
     let t = -1 / 0;
     for (let n of e) {
       if (n !== n) return NaN;
@@ -29,9 +29,9 @@ const fe = (() => {
     }
     return t;
   }
-  return Ju;
+  return _d;
 })();
-const O = (() => {
+const ge = (() => {
   const e = {
     radius: {
       cssVar: "var(--cds-radius)",
@@ -206,6 +206,13 @@ const O = (() => {
           modes: { dark: "#db9300" },
           __name: "border-editor-comment",
           type: "color",
+          open: {
+            cssVar: "var(--cds-border-editor-comment-open)",
+            value: "#a66a00",
+            modes: { dark: "#fab219" },
+            __name: "border-editor-comment-open",
+            type: "color",
+          },
           target: {
             cssVar: "var(--cds-border-editor-comment-target)",
             value: "#a66a00",
@@ -4333,13 +4340,28 @@ const O = (() => {
   };
   return e;
 })();
+const e = (() => {
+  function e(e, t, n) {
+    try {
+      Object.defineProperty(e, Symbol.for("ant.o11y.errorText"), {
+        value: { text: t, kind: n },
+        enumerable: !1,
+        writable: !1,
+        configurable: !0,
+      });
+    } catch {}
+    return e;
+  }
+  return e;
+})();
 export function createPreviewSketchCanvas({
-  ownerWindow: te,
-  optionalOwnerWindow: ee,
-  useToken: pe,
-  reducedMotion: ae,
+  ownerWindow: h,
+  optionalOwnerWindow: m,
+  useToken: _e,
+  reducedMotion: ue,
+  useIntl: me,
 }) {
-  var j = {
+  var O = {
       name: "EditFilled",
       master16: [
         {
@@ -4354,7 +4376,7 @@ export function createPreviewSketchCanvas({
         },
       ],
     },
-    me = {
+    k = {
       name: "EyeSlash",
       master16: [
         { x1: 2.5, y1: 2.5, x2: 13.5, y2: 13.5 },
@@ -4372,14 +4394,14 @@ export function createPreviewSketchCanvas({
         },
       ],
     },
-    M = Math.PI / 4;
-  function he(e, t, n, r) {
+    A = Math.PI / 4;
+  function ve(e, t, n, r) {
     if (!r) return n;
     let i = n.x - t.x,
       a = n.y - t.y;
     if (e === "line" || e === "arrow") {
       let e = Math.hypot(i, a),
-        n = Math.round(Math.atan2(a, i) / M) * M;
+        n = Math.round(Math.atan2(a, i) / A) * A;
       return { x: t.x + e * Math.cos(n), y: t.y + e * Math.sin(n) };
     }
     if (e === "rect" || e === "ellipse") {
@@ -4391,13 +4413,13 @@ export function createPreviewSketchCanvas({
     }
     return n;
   }
-  function N(e) {
+  function j(e) {
     return [
       { x: e.x1, y: e.y1 },
       { x: e.x2, y: e.y2 },
     ];
   }
-  function ge(e, t, n) {
+  function M(e, t, n) {
     let r = t.x - e.x,
       i = t.y - e.y,
       a = r * r + i * i;
@@ -4406,41 +4428,41 @@ export function createPreviewSketchCanvas({
       s = n.y - e.y;
     return { u: (o * r + s * i) / a, v: (s * r - o * i) / a };
   }
-  function P(e) {
+  function N(e) {
     let t = e.x2 - e.x1,
       n = e.y2 - e.y1,
       { u: r, v: i } = e.bend ?? { u: 0.5, v: 0 };
     return { x: e.x1 + r * t - i * n, y: e.y1 + r * n + i * t };
   }
-  function F(e) {
-    let t = P(e);
+  function P(e) {
+    let t = N(e);
     return { x: 2 * t.x - (e.x1 + e.x2) / 2, y: 2 * t.y - (e.y1 + e.y2) / 2 };
   }
-  function _e(e) {
+  function ye(e) {
     let t = Math.hypot(e.x2 - e.x1, e.y2 - e.y1);
     if (!e.bend) return t;
-    let n = F(e),
+    let n = P(e),
       r =
         Math.hypot(n.x - e.x1, n.y - e.y1) + Math.hypot(e.x2 - n.x, e.y2 - n.y);
     return (2 * t + r) / 3;
   }
-  function ve(e, t) {
-    let [n, r] = N(e);
+  function be(e, t) {
+    let [n, r] = j(e);
     if (!e.bend) {
       let e = Math.hypot(r.x - n.x, r.y - n.y),
         i = e === 0 ? 0 : Math.max(0, 1 - t / e);
       return { t: i, x: n.x + (r.x - n.x) * i, y: n.y + (r.y - n.y) * i };
     }
-    let i = F(e),
+    let i = P(e),
       a = (e) => {
-        let a = R(n, i, r, e);
+        let a = F(n, i, r, e);
         return Math.hypot(r.x - a.x, r.y - a.y) >= t;
       },
       o = -1,
       s = 1;
-    for (let e = z - 1; e >= 0; e--)
-      if (a(e / z)) {
-        ((o = e / z), (s = (e + 1) / z));
+    for (let e = I - 1; e >= 0; e--)
+      if (a(e / I)) {
+        ((o = e / I), (s = (e + 1) / I));
         break;
       }
     if (o < 0) return { t: 0, ...n };
@@ -4448,14 +4470,14 @@ export function createPreviewSketchCanvas({
       let e = (o + s) / 2;
       a(e) ? (o = e) : (s = e);
     }
-    return { t: o, ...R(n, i, r, o) };
+    return { t: o, ...F(n, i, r, o) };
   }
-  function I(e, t) {
-    let n = F(e);
+  function xe(e, t) {
+    let n = P(e);
     return { x: e.x1 + (n.x - e.x1) * t, y: e.y1 + (n.y - e.y1) * t };
   }
-  function L(e, t) {
-    let n = ve(e, t),
+  function Se(e, t) {
+    let n = be(e, t),
       r = e.x2 - n.x,
       i = e.y2 - n.y;
     r === 0 && i === 0 && ((r = e.x2 - e.x1), (i = e.y2 - e.y1));
@@ -4465,33 +4487,33 @@ export function createPreviewSketchCanvas({
       direction: a === 0 ? { x: 1, y: 0 } : { x: r / a, y: i / a },
     };
   }
-  function R(e, t, n, r) {
+  function F(e, t, n, r) {
     let i = (1 - r) * (1 - r),
       a = 2 * (1 - r) * r,
       o = r * r;
     return { x: i * e.x + a * t.x + o * n.x, y: i * e.y + a * t.y + o * n.y };
   }
-  var z = 32;
-  function ye(e, t) {
-    let [n, r] = N(e);
-    if (!e.bend) return V(t, n, r);
-    let i = F(e),
+  var I = 32;
+  function L(e, t) {
+    let [n, r] = j(e);
+    if (!e.bend) return B(t, n, r);
+    let i = P(e),
       a = 1 / 0,
       o = n;
-    for (let e = 1; e <= z; e++) {
-      let s = R(n, i, r, e / z);
-      ((a = Math.min(a, V(t, o, s))), (o = s));
+    for (let e = 1; e <= I; e++) {
+      let s = F(n, i, r, e / I);
+      ((a = Math.min(a, B(t, o, s))), (o = s));
     }
     return a;
   }
-  function be(e) {
+  function Ce(e) {
     return e.kind !== "freehand";
   }
-  var xe = 64;
-  function B(e, t = !1) {
+  var R = 64;
+  function z(e, t = !1) {
     return Math.max(t ? 14 : 6, e / 2 + 3);
   }
-  function V(e, t, n) {
+  function B(e, t, n) {
     let r = n.x - t.x,
       i = n.y - t.y,
       a = r * r + i * i;
@@ -4499,7 +4521,7 @@ export function createPreviewSketchCanvas({
     let o = Math.max(0, Math.min(1, ((e.x - t.x) * r + (e.y - t.y) * i) / a));
     return Math.hypot(e.x - (t.x + o * r), e.y - (t.y + o * i));
   }
-  function H(e) {
+  function we(e) {
     return {
       x: Math.min(e.x1, e.x2),
       y: Math.min(e.y1, e.y2),
@@ -4507,7 +4529,7 @@ export function createPreviewSketchCanvas({
       height: Math.abs(e.y2 - e.y1),
     };
   }
-  function Se(e, t, n, r = !1) {
+  function Te(e, t, n, r = !1) {
     if (e.kind === "freehand") return !1;
     if (e.kind === "text") {
       let r = n(e);
@@ -4518,9 +4540,9 @@ export function createPreviewSketchCanvas({
         t.y <= r.y + r.height
       );
     }
-    let i = Math.max(B(e.width, r), e.kind === "arrow" ? e.width * 2 : 0);
-    if (e.kind === "line" || e.kind === "arrow") return ye(e, t) <= i;
-    let { x: a, y: o, width: s, height: c } = H(e);
+    let i = Math.max(z(e.width, r), e.kind === "arrow" ? e.width * 2 : 0);
+    if (e.kind === "line" || e.kind === "arrow") return L(e, t) <= i;
+    let { x: a, y: o, width: s, height: c } = we(e);
     if (e.kind === "redact")
       return (
         t.x >= a - i && t.x <= a + s + i && t.y >= o - i && t.y <= o + c + i
@@ -4532,7 +4554,7 @@ export function createPreviewSketchCanvas({
         { x: a + s, y: o + c },
         { x: a, y: o + c },
       ];
-      return e.some((n, r) => V(t, n, e[(r + 1) % 4]) <= i);
+      return e.some((n, r) => B(t, n, e[(r + 1) % 4]) <= i);
     }
     let l = s / 2,
       u = c / 2,
@@ -4540,34 +4562,34 @@ export function createPreviewSketchCanvas({
       f = o + u,
       p = 1 / 0,
       m = { x: d + l, y: f };
-    for (let e = 1; e <= xe; e++) {
-      let n = (e / xe) * Math.PI * 2,
+    for (let e = 1; e <= R; e++) {
+      let n = (e / R) * Math.PI * 2,
         r = { x: d + l * Math.cos(n), y: f + u * Math.sin(n) };
-      ((p = Math.min(p, V(t, m, r))), (m = r));
+      ((p = Math.min(p, B(t, m, r))), (m = r));
     }
     return p <= i;
   }
-  function Ce(e, t, n) {
+  function Ee(e, t, n) {
     return e.kind === "freehand"
       ? { ...e, points: e.points.map((e) => ({ x: e.x + t, y: e.y + n })) }
       : e.kind === "text"
         ? { ...e, x: e.x + t, y: e.y + n }
         : { ...e, x1: e.x1 + t, y1: e.y1 + n, x2: e.x2 + t, y2: e.y2 + n };
   }
-  function we(e, t, n, r, i) {
-    let a = W(e, i);
-    return { dx: U(t, -a.x, r.width - a.x), dy: U(n, -a.y, r.height - a.y) };
+  function De(e, t, n, r, i) {
+    let a = U(e, i);
+    return { dx: V(t, -a.x, r.width - a.x), dy: V(n, -a.y, r.height - a.y) };
   }
-  function U(e, t, n) {
+  function V(e, t, n) {
     return Math.min(Math.max(e, Math.min(t, 0)), Math.max(n, 0));
   }
-  function Te(e, t, n) {
-    return { x: Ee(e.x, t.width, n.width), y: Ee(e.y, t.height, n.height) };
+  function Oe(e, t, n) {
+    return { x: H(e.x, t.width, n.width), y: H(e.y, t.height, n.height) };
   }
-  function Ee(e, t, n) {
+  function H(e, t, n) {
     return e + t <= n ? e : Math.min(e, Math.max(n - t, 0));
   }
-  function W(e, t) {
+  function U(e, t) {
     if (e.kind === "text") {
       let n = t(e);
       return { x: n.x + n.width / 2, y: n.y + n.height / 2 };
@@ -4576,13 +4598,13 @@ export function createPreviewSketchCanvas({
         e.kind === "freehand"
           ? e.points
           : e.kind === "line" || e.kind === "arrow"
-            ? [...N(e), P(e)]
-            : N(e),
+            ? [...j(e), N(e)]
+            : j(e),
       r = n.map((e) => e.x),
       i = n.map((e) => e.y);
-    return { x: (A(r) + fe(r)) / 2, y: (A(i) + fe(i)) / 2 };
+    return { x: (D(r) + he(r)) / 2, y: (D(i) + he(i)) / 2 };
   }
-  function De(e, t, n) {
+  function ke(e, t, n) {
     if (e.kind === "freehand")
       return {
         ...e,
@@ -4592,16 +4614,16 @@ export function createPreviewSketchCanvas({
       return { ...e, x: e.x * t, y: e.y * n, size: e.size * n };
     let r = { ...e, x1: e.x1 * t, y1: e.y1 * n, x2: e.x2 * t, y2: e.y2 * n };
     if (e.bend) {
-      let i = P(e);
-      return G(r, ge(...N(r), { x: i.x * t, y: i.y * n }));
+      let i = N(e);
+      return W(r, M(...j(r), { x: i.x * t, y: i.y * n }));
     }
     return r;
   }
-  function G(e, t) {
+  function W(e, t) {
     let { bend: n, ...r } = e;
     return t ? { ...r, bend: t } : r;
   }
-  var K = {
+  var G = {
     nw: "nwse-resize",
     n: "ns-resize",
     ne: "nesw-resize",
@@ -4611,19 +4633,19 @@ export function createPreviewSketchCanvas({
     sw: "nesw-resize",
     w: "ew-resize",
   };
-  function Oe(e, t = 0, n) {
+  function Ae(e, t = 0, n) {
     if (e.kind === "text") {
       if (!n) return [];
       let { x: e, y: t, width: r, height: i } = n;
       return [
-        { id: "nw", x: e, y: t, cursor: K.nw },
-        { id: "ne", x: e + r, y: t, cursor: K.ne },
-        { id: "se", x: e + r, y: t + i, cursor: K.se },
-        { id: "sw", x: e, y: t + i, cursor: K.sw },
+        { id: "nw", x: e, y: t, cursor: G.nw },
+        { id: "ne", x: e + r, y: t, cursor: G.ne },
+        { id: "se", x: e + r, y: t + i, cursor: G.se },
+        { id: "sw", x: e, y: t + i, cursor: G.sw },
       ];
     }
     if (e.kind === "line" || e.kind === "arrow") {
-      let n = P(e),
+      let n = N(e),
         r = e.bend !== void 0 || Math.hypot(e.x2 - e.x1, e.y2 - e.y1) >= t;
       return [
         { id: "start", x: e.x1, y: e.y1, cursor: "crosshair" },
@@ -4632,12 +4654,12 @@ export function createPreviewSketchCanvas({
       ];
     }
     if (e.kind === "freehand") return [];
-    let { x: r, y: i, width: a, height: o } = H(e),
+    let { x: r, y: i, width: a, height: o } = we(e),
       s = r + a / 2,
       c = i + o / 2,
       l = r + a,
       u = i + o,
-      d = (e, t, n) => ({ id: e, x: t, y: n, cursor: K[e] }),
+      d = (e, t, n) => ({ id: e, x: t, y: n, cursor: G[e] }),
       f = a >= t,
       p = o >= t;
     return [
@@ -4651,38 +4673,38 @@ export function createPreviewSketchCanvas({
       ...(p ? [d("w", r, c)] : []),
     ];
   }
-  function ke(e, t, n, r = 0, i) {
+  function je(e, t, n, r = 0, i) {
     let a = null,
       o = n;
-    for (let s of Oe(e, r, i)) {
+    for (let s of Ae(e, r, i)) {
       let e = Math.hypot(t.x - s.x, t.y - s.y);
       if (s.id === "bend" && e <= n) return s;
       (e < o || (a === null && e <= o)) && ((a = s), (o = e));
     }
     return a;
   }
-  var Ae = 4;
-  function q(e, t, n, r) {
+  var Me = 4;
+  function Ne(e, t, n, r) {
     if (e.kind === "line" || e.kind === "arrow") {
       if (t === "bend") {
         let t = { x: (e.x1 + e.x2) / 2, y: (e.y1 + e.y2) / 2 };
-        return Math.hypot(n.x - t.x, n.y - t.y) <= Ae
+        return Math.hypot(n.x - t.x, n.y - t.y) <= Me
           ? e.bend
-            ? G(e, void 0)
+            ? W(e, void 0)
             : e
-          : G(e, ge(...N(e), n));
+          : W(e, M(...j(e), n));
       }
       if (t === "start") {
-        let t = he(e.kind, { x: e.x2, y: e.y2 }, n, r);
+        let t = ve(e.kind, { x: e.x2, y: e.y2 }, n, r);
         return { ...e, x1: t.x, y1: t.y };
       }
       if (t === "end") {
-        let t = he(e.kind, { x: e.x1, y: e.y1 }, n, r);
+        let t = ve(e.kind, { x: e.x1, y: e.y1 }, n, r);
         return { ...e, x2: t.x, y2: t.y };
       }
       return e;
     }
-    let { x: i, y: a, width: o, height: s } = H(e),
+    let { x: i, y: a, width: o, height: s } = we(e),
       c = i,
       l = a,
       u = i + o,
@@ -4704,14 +4726,14 @@ export function createPreviewSketchCanvas({
             x: t === "nw" || t === "sw" ? u : c,
             y: t === "nw" || t === "ne" ? d : l,
           },
-          a = he(e.kind, i, n, r);
+          a = ve(e.kind, i, n, r);
         return { ...e, x1: i.x, y1: i.y, x2: a.x, y2: a.y };
       }
       default:
         return e;
     }
   }
-  function je(e, t, n, r, i, a) {
+  function K(e, t, n, r, i, a) {
     if (r !== "nw" && r !== "ne" && r !== "se" && r !== "sw") return e;
     let o = t(e);
     if (o.height <= 0 || e.size <= 0) return e;
@@ -4727,15 +4749,15 @@ export function createPreviewSketchCanvas({
       g = Math.max(Math.min(a, e.size), e.size * h);
     if (Math.abs(g - e.size) < 1e-6) return e;
     let _ = { ...e, size: g },
-      { width: v, height: ee } = t(_);
-    return { ..._, x: l ? d + n : d - n - v, y: u ? f + n : f - n - ee };
+      { width: ee, height: v } = t(_);
+    return { ..._, x: l ? d + n : d - n - ee, y: u ? f + n : f - n - v };
   }
-  var Me = { past: [], present: [], future: [] };
-  function J(e, t) {
+  var Pe = { past: [], present: [], future: [] };
+  function q(e, t) {
     let n = [...e.past, e.present];
     return { past: n.length > 100 ? n.slice(-100) : n, present: t, future: [] };
   }
-  function Ne(e) {
+  function Fe(e) {
     let t = e.past.at(-1);
     return t === void 0
       ? e.present.length === 0
@@ -4751,13 +4773,13 @@ export function createPreviewSketchCanvas({
           future: [e.present, ...e.future],
         };
   }
-  function Pe(e) {
+  function Ie(e) {
     let [t, ...n] = e.future;
     return t === void 0
       ? e
       : { past: [...e.past, e.present], present: t, future: n };
   }
-  function Fe(e, t) {
+  function Le(e, t) {
     let n = new Map(),
       r = (e) => {
         let r = n.get(e);
@@ -4769,48 +4791,48 @@ export function createPreviewSketchCanvas({
       future: e.future.map((e) => e.map(r)),
     };
   }
-  function Ie(e) {
+  function Re(e) {
     return {
       count: e.present.length,
       canUndo: e.past.length > 0 || e.present.length > 0,
       canRedo: e.future.length > 0,
     };
   }
-  var Le = "#000000",
-    Y = 4,
-    Re = 96,
-    ze = { mosaic: 12, noise: 2 };
-  function Be(e, t) {
+  var ze = "#000000",
+    Be = 4,
+    J = 96,
+    Ve = { mosaic: 12, noise: 2 };
+  function He(e, t) {
     let [n, r] = e === "mosaic" ? [56, 200] : [16, 240],
       i = Math.round(n + t * (r - n))
         .toString(16)
         .padStart(2, "0");
     return `#${i}${i}${i}`;
   }
-  var Ve = new Map(),
-    He = new WeakMap();
-  function Ue(e) {
-    let t = Ve.get(e);
+  var Ue = new Map(),
+    We = new WeakMap();
+  function Ge(e) {
+    let t = Ue.get(e);
     if (t) return t;
     let n = document.createElement("canvas");
-    ((n.width = Re), (n.height = Re));
+    ((n.width = J), (n.height = J));
     let r = n.getContext("2d");
     if (!r) return null;
-    let i = ze[e];
-    for (let t = 0; t < Re; t += i)
-      for (let n = 0; n < Re; n += i)
-        ((r.fillStyle = Be(e, Math.random())), r.fillRect(n, t, i, i));
-    return (Ve.set(e, n), n);
+    let i = Ve[e];
+    for (let t = 0; t < J; t += i)
+      for (let n = 0; n < J; n += i)
+        ((r.fillStyle = He(e, Math.random())), r.fillRect(n, t, i, i));
+    return (Ue.set(e, n), n);
   }
-  function X(e, t) {
-    let n = He.get(e),
+  function Ke(e, t) {
+    let n = We.get(e),
       r = n?.[t];
     if (r) return r;
-    let i = Ue(t),
+    let i = Ge(t),
       a = i ? e.createPattern(i, "repeat") : null;
-    return (a && (n || ((n = {}), He.set(e, n)), (n[t] = a)), a);
+    return (a && (n || ((n = {}), We.set(e, n)), (n[t] = a)), a);
   }
-  function We(e, t) {
+  function qe(e, t) {
     let { a: n, b: r, c: i, d: a, e: o, f: s } = e.getTransform();
     if (!(n > 0 && a > 0) || r !== 0 || i !== 0) return t;
     let c = Math.floor(t.x * n + o),
@@ -4824,16 +4846,16 @@ export function createPreviewSketchCanvas({
       height: (d - l) / a,
     };
   }
-  function Ge(e, t, n = 1) {
-    let r = H(t),
+  function Y(e, t, n = 1) {
+    let r = we(t),
       { a: i } = e.getTransform(),
-      a = Y * (1 - Math.SQRT1_2) + 2 / (i > 0 ? i : 1),
+      a = Be * (1 - Math.SQRT1_2) + 2 / (i > 0 ? i : 1),
       {
         x: o,
         y: s,
         width: c,
         height: l,
-      } = We(e, {
+      } = qe(e, {
         x: r.x - a,
         y: r.y - a,
         width: r.width + 2 * a,
@@ -4843,11 +4865,11 @@ export function createPreviewSketchCanvas({
     (u &&
       (e.save(), e.beginPath(), e.rect(o, s, c * Math.max(0, n), l), e.clip()),
       e.beginPath(),
-      e.roundRect(o, s, c, l, Y),
-      (e.fillStyle = Le),
+      e.roundRect(o, s, c, l, Be),
+      (e.fillStyle = ze),
       e.fill());
     let d = t.redactStyle ?? "solid",
-      f = d === "solid" ? null : X(e, d);
+      f = d === "solid" ? null : Ke(e, d);
     if (f) {
       let t = e.imageSmoothingEnabled;
       ((e.imageSmoothingEnabled = !1),
@@ -4857,31 +4879,31 @@ export function createPreviewSketchCanvas({
     }
     u && e.restore();
   }
-  var Ke = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  function qe(e) {
+  var Je = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  function Ye(e) {
     return e.stopPropagation();
   }
-  function Je(e) {
+  function Xe(e) {
     return e.trimEnd();
   }
-  function Ye(e) {
+  function Ze(e) {
     if (!e) return !1;
-    let t = Je(e.value);
-    return e.editing ? t !== Je(e.editing.text) : !!t;
+    let t = Xe(e.value);
+    return e.editing ? t !== Xe(e.editing.text) : !!t;
   }
-  var Xe = 4,
-    Ze = Number.parseInt(O.dur.base.value, 10);
-  function Qe(e) {
-    return Ze > 0 ? 1 - (1 - Math.min(1, Math.max(0, e / Ze))) ** 3 : 1;
+  var Qe = 4,
+    $e = Number.parseInt(ge.dur.base.value, 10);
+  function et(e) {
+    return $e > 0 ? 1 - (1 - Math.min(1, Math.max(0, e / $e))) ** 3 : 1;
   }
-  function $e(e) {
+  function tt(e) {
     let t = e.x1 === e.x2,
       n = e.y1 === e.y2;
     if (e.kind !== "redact") return t && n;
-    let r = Math.hypot(e.x2 - e.x1, e.y2 - e.y1) < Xe;
+    let r = Math.hypot(e.x2 - e.x1, e.y2 - e.y1) < Qe;
     return t || n || r;
   }
-  function et(e) {
+  function nt(e) {
     return (
       e.moved &&
       (e.dx !== 0 || e.dy !== 0) &&
@@ -4890,14 +4912,14 @@ export function createPreviewSketchCanvas({
         e.handle !== null &&
         e.current.kind !== "text" &&
         e.current.kind !== "freehand" &&
-        $e(e.current)
+        tt(e.current)
       )
     );
   }
-  function tt(e) {
-    return e.kind === "freehand" || !$e(e);
+  function rt(e) {
+    return e.kind === "freehand" || !tt(e);
   }
-  function Z(e, t, n = 1) {
+  function X(e, t, n = 1) {
     if (
       ((e.lineCap = "round"),
       (e.lineJoin = "round"),
@@ -4922,7 +4944,7 @@ export function createPreviewSketchCanvas({
       if (
         ((e.lineWidth = t.width), e.beginPath(), e.moveTo(t.x1, t.y1), t.bend)
       ) {
-        let n = F(t);
+        let n = P(t);
         e.quadraticCurveTo(n.x, n.y, t.x2, t.y2);
       } else e.lineTo(t.x2, t.y2);
       e.stroke();
@@ -4938,20 +4960,20 @@ export function createPreviewSketchCanvas({
       return;
     }
     if (t.kind === "redact") {
-      Ge(e, t, n);
+      Y(e, t, n);
       return;
     }
     if (t.kind === "arrow") {
-      let n = _e(t),
+      let n = ye(t),
         r = Math.min(t.width * 4, n),
         {
           shaftEnd: i,
           direction: { x: a, y: o },
-        } = L(t, Math.min(r * 0.7, n));
+        } = Se(t, Math.min(r * 0.7, n));
       if (
         ((e.lineWidth = t.width), e.beginPath(), e.moveTo(t.x1, t.y1), t.bend)
       ) {
-        let n = I(t, i.t);
+        let n = xe(t, i.t);
         e.quadraticCurveTo(n.x, n.y, i.x, i.y);
       } else e.lineTo(i.x, i.y);
       (e.stroke(),
@@ -4973,31 +4995,31 @@ export function createPreviewSketchCanvas({
       return;
     }
     if (t.kind === "text") {
-      ((e.font = `${t.size}px ${Ke}`), (e.textBaseline = "top"));
+      ((e.font = `${t.size}px ${Je}`), (e.textBaseline = "top"));
       let n = t.text.split(`
 `);
       for (let r = 0; r < n.length; r++)
         e.fillText(n[r], t.x, t.y + r * t.size * 1.2);
     }
   }
-  var nt = 4,
-    rt = 8;
-  function it(e) {
+  var it = 4,
+    at = 8;
+  function ot(e) {
     return {
-      x: e.x - nt,
-      y: e.y - nt,
+      x: e.x - it,
+      y: e.y - it,
       width: e.width + 8,
       height: e.height + 8,
     };
   }
-  var at = 3,
-    ot = 10,
-    Q = 4;
-  function st(e) {
-    return e.pointerType === "touch" ? ot : Q;
+  var st = 3,
+    ct = 10,
+    lt = 4;
+  function ut(e) {
+    return e.pointerType === "touch" ? ct : lt;
   }
-  var ct = `url("data:image/svg+xml,${`<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 20 20'><path transform='translate(-1.5 1.5)' d='${j.master20.flatMap((e) => ("d" in e ? [e.d] : [])).join("")}' fill='%231f1e1d' stroke='%23fff' stroke-width='1.67' stroke-linejoin='round' paint-order='stroke'/></svg>`}") 1 23, crosshair`,
-    lt = me.master20
+  var dt = `url("data:image/svg+xml,${`<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 20 20'><path transform='translate(-1.5 1.5)' d='${O.master20.flatMap((e) => ("d" in e ? [e.d] : [])).join("")}' fill='%231f1e1d' stroke='%23fff' stroke-width='1.67' stroke-linejoin='round' paint-order='stroke'/></svg>`}") 1 23, crosshair`,
+    ft = k.master20
       .map((e) =>
         "d" in e
           ? `<path d='${e.d}'/>`
@@ -5006,18 +5028,18 @@ export function createPreviewSketchCanvas({
             : "",
       )
       .join(""),
-    ut = `url("data:image/svg+xml,${`<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='-2 -2 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'><g stroke='%23fff' stroke-width='3.5'>${lt}</g><g stroke='%231f1e1d' stroke-width='1.5'>${lt}</g></svg>`}") 12 12, crosshair`,
-    dt = 2,
-    ft = 3.5,
-    pt = 3,
-    mt = 1,
-    ht = 8,
-    gt = 16,
-    _t = 4.5,
-    vt = 48;
-  function yt(e, t, n, { accent: r, onAccent: i, bend: a }) {
+    pt = `url("data:image/svg+xml,${`<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='-2 -2 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'><g stroke='%23fff' stroke-width='3.5'>${ft}</g><g stroke='%231f1e1d' stroke-width='1.5'>${ft}</g></svg>`}") 12 12, crosshair`,
+    mt = 2,
+    ht = 3.5,
+    Z = 3,
+    gt = 1,
+    _t = 8,
+    vt = 16,
+    yt = 4.5,
+    bt = 48;
+  function xt(e, t, n, { accent: r, onAccent: i, bend: a }) {
     e.save();
-    let o = t.kind === "text" ? it(n(t)) : void 0;
+    let o = t.kind === "text" ? ot(n(t)) : void 0;
     (o &&
       ((e.strokeStyle = r),
       (e.lineWidth = 1.5),
@@ -5025,200 +5047,201 @@ export function createPreviewSketchCanvas({
       e.strokeRect(o.x, o.y, o.width, o.height),
       e.setLineDash([])),
       (e.strokeStyle = i),
-      (e.lineWidth = mt));
-    for (let n of Oe(t, vt, o)) {
+      (e.lineWidth = gt));
+    for (let n of Ae(t, bt, o)) {
       let t = n.id === "bend";
       ((e.fillStyle = t ? a : r),
         e.beginPath(),
-        e.arc(n.x, n.y, t ? pt : ft, 0, Math.PI * 2),
+        e.arc(n.x, n.y, t ? Z : ht, 0, Math.PI * 2),
         e.fill(),
         e.stroke());
     }
     e.restore();
   }
-  function bt({
-    className: o,
-    style: l,
+  function St({
+    className: t,
+    style: n,
     tool: u = "pen",
-    color: f,
-    strokeWidth: p,
-    redactStyle: m = "solid",
-    backdropCover: h = !1,
-    textSize: g = 16,
-    author: _ = "user",
-    readOnly: v,
+    color: p,
+    strokeWidth: g,
+    redactStyle: _ = "solid",
+    backdropCover: ee = !1,
+    textSize: v = 16,
+    author: y = "user",
+    readOnly: te,
     rescaleOnResize: ne = !1,
     onStrokeEnd: re,
-    onToolDone: ie,
-    onSelectionChange: y,
-    onHistoryChange: b,
-    onGestureActiveChange: x,
-    textTargets: S,
-    onTextTargetRedacted: oe,
-    ref: se,
+    onToolDone: b,
+    onSelectionChange: ie,
+    onHistoryChange: ae,
+    onGestureActiveChange: oe,
+    textTargets: x,
+    onTextTargetRedacted: se,
+    ref: S,
   }) {
-    let C = i(null),
-      w = i(null),
-      T = i(Me),
-      ce = i(b);
-    n(() => {
-      ce.current = b;
-    }, [b]);
-    let E = i(y);
-    n(() => {
-      E.current = y;
-    }, [y]);
-    let le = i(h);
-    n(() => {
-      le.current = h;
-    }, [h]);
-    let ue = i(ie);
-    n(() => {
-      ue.current = ie;
+    let ce = me(),
+      C = a(null),
+      w = a(null),
+      T = a(Pe),
+      le = a(ae);
+    l(() => {
+      le.current = ae;
+    }, [ae]);
+    let de = a(ie);
+    l(() => {
+      de.current = ie;
     }, [ie]);
-    let de = i(x);
-    n(() => {
-      de.current = x;
-    }, [x]);
-    let D = i(!1),
-      O = s((e) => {
-        D.current !== e && ((D.current = e), de.current?.(e));
+    let fe = a(ee);
+    l(() => {
+      fe.current = ee;
+    }, [ee]);
+    let pe = a(b);
+    l(() => {
+      pe.current = b;
+    }, [b]);
+    let ge = a(oe);
+    l(() => {
+      ge.current = oe;
+    }, [oe]);
+    let E = a(!1),
+      D = d((e) => {
+        E.current !== e && ((E.current = e), ge.current?.(e));
       }, []),
-      k = i(null),
-      A = i(null),
-      j = i(null),
-      me = i(null);
-    n(
+      O = a(null),
+      k = a(null),
+      A = a(null),
+      j = a(null);
+    l(
       () => () => {
-        me.current && ((me.current = null), E.current?.(null));
+        j.current && ((j.current = null), de.current?.(null));
       },
       [],
     );
-    let M = i(null),
-      N = i(!1);
-    n(() => {
-      let e = ee(C.current),
+    let M = a(null),
+      N = a(!1);
+    l(() => {
+      let e = m(C.current),
         t = () => {
-          ((M.current || k.current) && (N.current = !0), O(!1));
+          ((M.current || O.current) && (N.current = !0), D(!1));
         };
       return (
         e?.addEventListener("blur", t),
         () => {
-          (e?.removeEventListener("blur", t), O(!1));
+          (e?.removeEventListener("blur", t), D(!1));
         }
       );
-    }, [O]);
-    let ge = pe("fill-accent"),
-      P = pe("on-accent"),
-      F = pe("fill-success"),
-      _e = i({ accent: ge, onAccent: P, bend: F }),
-      [ve, I] = e("default"),
-      L = i({ w: 0, h: 0 }),
-      R = i([]),
-      z = i(0),
-      ye = i(null),
-      xe = i(() => void 0),
-      [B, V] = e(null),
-      U = i(null);
-    n(() => {
-      U.current = B;
-    }, [B]);
-    let Ee = s(() => {
-        let e = Ie(T.current);
-        ce.current?.(Ye(U.current) ? { ...e, canUndo: !0, canRedo: !1 } : e);
+    }, [D]);
+    let P = _e("fill-accent"),
+      ye = _e("on-accent"),
+      be = _e("fill-success"),
+      xe = a({ accent: P, onAccent: ye, bend: be }),
+      [Se, F] = r("default"),
+      I = a({ w: 0, h: 0 }),
+      L = a([]),
+      R = a(0),
+      z = a(null),
+      B = a(() => void 0),
+      [V, H] = r(null),
+      U = a(null);
+    l(() => {
+      U.current = V;
+    }, [V]);
+    let W = d(() => {
+        let e = Re(T.current);
+        le.current?.(Ze(U.current) ? { ...e, canUndo: !0, canRedo: !1 } : e);
       }, []),
-      W = s(
+      G = d(
         (e) => {
-          e !== T.current && ((T.current = e), Ee());
+          e !== T.current && ((T.current = e), W());
         },
-        [Ee],
+        [W],
       ),
-      G = Ye(B);
-    n(() => {
-      Ee();
-    }, [G, Ee]);
-    let K = i(null),
-      Ae = i(!1),
-      Le = B?.editing ?? null;
-    n(() => {
-      Le && Ae.current && ((Ae.current = !1), K.current?.select());
-    }, [Le]);
-    let Y = i(null),
-      Re = d(
+      Me = Ze(V);
+    l(() => {
+      W();
+    }, [Me, W]);
+    let ze = a(null),
+      Be = a(!1),
+      J = V?.editing ?? null;
+    l(() => {
+      J && Be.current && ((Be.current = !1), ze.current?.select());
+    }, [J]);
+    let Ve = a(null),
+      He = c(
         () => ({
           position: "relative",
           overflow: "clip",
           touchAction: "none",
           outline: "none",
-          ...l,
+          ...n,
         }),
-        [l],
+        [n],
       ),
-      [ze, Be] = e(null),
-      Ve = u === "redact" && !!S && ze === S,
-      He = d(
+      [Ue, We] = r(null),
+      Ge = u === "redact" && !!x && Ue === x,
+      Ke = c(
         () =>
           u === "select"
-            ? { cursor: ve }
+            ? { cursor: Se }
             : u === "pen"
-              ? { cursor: ct }
-              : Ve
-                ? { cursor: ut }
+              ? { cursor: dt }
+              : Ge
+                ? { cursor: pt }
                 : { cursor: u === "text" ? "text" : "crosshair" },
-        [u, ve, Ve],
+        [u, Se, Ge],
       ),
-      Ue = i(new WeakMap()),
-      X = s((e) => {
-        let t = Ue.current.get(e);
+      qe = a(new WeakMap()),
+      Y = d((e) => {
+        let t = qe.current.get(e);
         if (t) return t;
         let n = e.text.split(`
 `),
           r = w.current,
           i = 0;
         if (r) {
-          (r.save(), (r.font = `${e.size}px ${Ke}`));
+          (r.save(), (r.font = `${e.size}px ${Je}`));
           for (let e of n) i = Math.max(i, r.measureText(e).width);
           r.restore();
-        } else i = fe(n.map((e) => e.length)) * e.size * 0.6;
+        } else i = he(n.map((e) => e.length)) * e.size * 0.6;
         let a = { x: e.x, y: e.y, width: i, height: n.length * e.size * 1.2 };
-        return (Ue.current.set(e, a), a);
+        return (qe.current.set(e, a), a);
       }, []),
-      We = d(() => {
-        if (!B) return;
-        let e = B.editing?.size ?? g;
+      Qe = c(() => {
+        if (!V) return;
+        let e = V.editing?.size ?? v;
         return {
-          left: B.x,
-          top: B.y,
-          minWidth: `min(40px, calc(100% - ${B.x}px))`,
-          maxWidth: `calc(100% - ${B.x}px)`,
-          maxHeight: `max(1.2em, calc(100% - ${B.y}px))`,
+          left: V.x,
+          top: V.y,
+          minWidth: `min(40px, calc(100% - ${V.x}px))`,
+          maxWidth: `calc(100% - ${V.x}px)`,
+          maxHeight: `max(1.2em, calc(100% - ${V.y}px))`,
           whiteSpace: "pre",
-          color: B.editing?.color ?? f,
-          font: `${e}px/1.2 ${Ke}`,
+          color: V.editing?.color ?? p,
+          font: `${e}px/1.2 ${Je}`,
         };
-      }, [B, g, f]),
-      Ge = s(
+      }, [V, v, p]),
+      $e = d(
         (e, t) => {
-          let { width: n, height: r } = X({
+          let { width: n, height: r } = Y({
               kind: "text",
               x: 0,
               y: 0,
               text: e.value,
               size: t,
-              color: f,
-              author: _,
+              color: p,
+              author: y,
             }),
             i = { width: Math.ceil(n + t), height: r },
-            { w: a, h: o } = L.current,
-            s = a > 0 && o > 0 ? Te(e, i, { width: a, height: o }) : e;
+            { w: a, h: o } = I.current,
+            s = a > 0 && o > 0 ? Oe(e, i, { width: a, height: o }) : e;
           return { x: s.x, y: s.y, ...i };
         },
-        [X, f, _],
+        [Y, p, y],
       );
-    r(() => {
-      let e = K.current;
-      if (!e || !B) return;
-      let t = Ge(B, B.editing?.size ?? g);
+    f(() => {
+      let e = ze.current;
+      if (!e || !V) return;
+      let t = $e(V, V.editing?.size ?? v);
       Object.assign(e.style, {
         left: `${t.x}px`,
         top: `${t.y}px`,
@@ -5227,30 +5250,30 @@ export function createPreviewSketchCanvas({
         maxWidth: `calc(100% - ${t.x}px)`,
         maxHeight: `max(1.2em, calc(100% - ${t.y}px))`,
       });
-    }, [B, g, Ge]);
-    let Xe = s(
+    }, [V, v, $e]);
+    let ft = d(
         (e, t, n = !1) => {
           let r = T.current.present,
             i = U.current?.editing;
           for (let a = r.length - 1; a >= 0; a--) {
             let o = r[a];
-            if (!(o === i || (n && o.kind !== "text")) && Se(o, e, X, t))
+            if (!(o === i || (n && o.kind !== "text")) && Te(o, e, Y, t))
               return o;
           }
           return null;
         },
-        [X],
+        [Y],
       ),
-      Ze = s(
+      ht = d(
         (e, t) => {
-          let n = j.current;
+          let n = A.current;
           if (!n || n.kind === "freehand") return null;
           let r, i;
-          n.kind === "text" ? ((r = it(X(n))), (i = r)) : (i = H(n));
+          n.kind === "text" ? ((r = ot(Y(n))), (i = r)) : (i = we(n));
           let { width: a, height: o } = i,
             s;
           if (n.kind === "line" || n.kind === "arrow") {
-            let e = Oe(n, vt).find((e) => e.id === "bend");
+            let e = Ae(n, bt).find((e) => e.id === "bend");
             s = e
               ? Math.max(
                   Math.hypot(e.x - n.x1, e.y - n.y1),
@@ -5260,96 +5283,97 @@ export function createPreviewSketchCanvas({
           } else
             s = Math.min(
               Math.min(a, o) / 4,
-              a >= vt ? a / 6 : 1 / 0,
-              o >= vt ? o / 6 : 1 / 0,
+              a >= bt ? a / 6 : 1 / 0,
+              o >= bt ? o / 6 : 1 / 0,
             );
-          return ke(
+          return je(
             n,
             t,
-            Math.max(_t, Math.min(e.pointerType === "touch" ? gt : ht, s)),
-            vt,
+            Math.max(yt, Math.min(e.pointerType === "touch" ? vt : _t, s)),
+            bt,
             r,
           );
         },
-        [X],
+        [Y],
       ),
-      Q = s(() => {
+      Z = d(() => {
         let e = w.current;
         if (!e) return;
-        let { w: t, h: n } = L.current;
+        let { w: t, h: n } = I.current;
         e.clearRect(0, 0, t, n);
         let r = M.current,
           i = U.current?.editing,
-          a = ye.current;
+          a = z.current;
         for (let t of T.current.present)
           t !== i &&
-            Z(e, r?.item === t ? r.current : t, a?.item === t ? a.progress : 1);
-        for (let t of R.current) xt(e, t);
-        let o = k.current;
-        o && tt(o) && Z(e, o);
-        let s = j.current;
-        (s && yt(e, r?.item === s ? r.current : s, X, _e.current),
-          s !== me.current && ((me.current = s), E.current?.(s)));
-      }, [X]),
-      lt = s(
+            X(e, r?.item === t ? r.current : t, a?.item === t ? a.progress : 1);
+        for (let t of L.current) Ct(e, t);
+        let o = O.current;
+        o && rt(o) && X(e, o);
+        let s = A.current;
+        (s && xt(e, r?.item === s ? r.current : s, Y, xe.current),
+          s !== j.current && ((j.current = s), de.current?.(s)));
+      }, [Y]),
+      gt = d(
         (e) => {
-          let t = te(C.current);
-          if (ae()) return;
-          xe.current();
+          let t = h(C.current);
+          if (ue()) return;
+          B.current();
           let n = { item: e, progress: 0 };
-          ((ye.current = n), Q());
+          ((z.current = n), Z());
           let r = t.performance.now(),
             i = () => {
               let e = t.requestAnimationFrame(a);
-              xe.current = () => t.cancelAnimationFrame(e);
+              B.current = () => t.cancelAnimationFrame(e);
             },
             a = (e) => {
-              ye.current === n &&
-                ((n.progress = Qe(e - r)),
-                n.progress >= 1 ? (ye.current = null) : i(),
-                Q());
+              z.current === n &&
+                ((n.progress = et(e - r)),
+                n.progress >= 1 ? (z.current = null) : i(),
+                Z());
             };
           i();
         },
-        [Q],
+        [Z],
       );
-    (n(
+    (l(
       () => () => {
-        xe.current();
+        B.current();
       },
       [],
     ),
-      n(() => {
-        ((_e.current = { accent: ge, onAccent: P, bend: F }), j.current && Q());
-      }, [ge, P, F, Q]),
-      n(() => {
+      l(() => {
+        ((xe.current = { accent: P, onAccent: ye, bend: be }),
+          A.current && Z());
+      }, [P, ye, be, Z]),
+      l(() => {
         let e = C.current;
         if (!e) return;
         let t = () => {
           let t = { width: e.offsetWidth, height: e.offsetHeight };
           if (t.width === 0 || t.height === 0) return;
-          let n = L.current;
+          let n = I.current;
           if (ne && n && n.w > 0 && n.h > 0) {
             let e = t.width / n.w,
               r = t.height / n.h;
             if (e !== 1 || r !== 1) {
-              let t = j.current ? T.current.present.indexOf(j.current) : -1,
+              let t = A.current ? T.current.present.indexOf(A.current) : -1,
                 n = U.current?.editing,
                 i = n ? T.current.present.indexOf(n) : -1,
-                a = ye.current,
+                a = z.current,
                 o = a ? T.current.present.indexOf(a.item) : -1;
-              ((T.current = Fe(T.current, (t) => De(t, e, r))),
-                (j.current = t >= 0 ? T.current.present[t] : null));
+              ((T.current = Le(T.current, (t) => ke(t, e, r))),
+                (A.current = t >= 0 ? T.current.present[t] : null));
               let s = i >= 0 ? T.current.present[i] : null;
-              (M.current && ((M.current = null), O(!1)),
-                I("default"),
-                (k.current &&= De(k.current, e, r)),
-                (R.current = R.current.map((t) => ({
+              (M.current && ((M.current = null), D(!1)),
+                F("default"),
+                (O.current &&= ke(O.current, e, r)),
+                (L.current = L.current.map((t) => ({
                   ...t,
-                  item: De(t.item, e, r),
+                  item: ke(t.item, e, r),
                 }))),
                 a && o >= 0 && (a.item = T.current.present[o]),
-                V(
+                H(
                   (t) =>
                     t && {
                       ...t,
@@ -5371,90 +5395,90 @@ export function createPreviewSketchCanvas({
           let r = window.devicePixelRatio || 1;
           ((e.width = Math.round(t.width * r)),
             (e.height = Math.round(t.height * r)),
-            (L.current = { w: t.width, h: t.height }));
+            (I.current = { w: t.width, h: t.height }));
           let i = e.getContext("2d");
           i &&
             (i.setTransform(r, 0, 0, r, 0, 0),
             (w.current = i),
-            Q(),
+            Z(),
             U.current &&
               (n.w !== t.width || n.h !== t.height) &&
-              V((e) => e && { ...e }));
+              H((e) => e && { ...e }));
         };
         t();
         let n = new ResizeObserver(t);
         return (n.observe(e), () => n.disconnect());
-      }, [Q, ne, O]));
-    let ft = s(
+      }, [Z, ne, D]));
+    let St = d(
         (e) => {
-          (W(J(T.current, [...T.current.present, e])),
+          (G(q(T.current, [...T.current.present, e])),
             re?.(e, T.current.present));
         },
-        [re, W],
+        [re, G],
       ),
-      pt = s(() => {
+      Q = d(() => {
         let e = U.current;
-        ((U.current = null), V(null));
-        let t = e ? Je(e.value) : "";
+        ((U.current = null), H(null));
+        let t = e ? Xe(e.value) : "";
         if (e?.editing) {
           let n = e.editing,
             r = n;
           if (!T.current.present.includes(n)) r = null;
           else if (!t)
             ((r = null),
-              W(
-                J(
+              G(
+                q(
                   T.current,
                   T.current.present.filter((e) => e !== n),
                 ),
               ));
-          else if (t !== Je(n.text)) {
-            let { x: i, y: a } = Ge(e, n.size),
+          else if (t !== Xe(n.text)) {
+            let { x: i, y: a } = $e(e, n.size),
               o = { ...n, x: i, y: a, text: t };
             ((r = o),
-              W(
-                J(
+              G(
+                q(
                   T.current,
                   T.current.present.map((e) => (e === n ? o : e)),
                 ),
               ));
           }
-          return (Q(), r);
+          return (Z(), r);
         }
         if (!e || !t) return null;
-        let { x: n, y: r } = Ge(e, g),
+        let { x: n, y: r } = $e(e, v),
           i = {
             kind: "text",
             x: n,
             y: r,
             text: t,
-            size: g,
-            color: f,
-            author: _,
+            size: v,
+            color: p,
+            author: y,
           };
-        ft(i);
+        St(i);
         let a = w.current;
-        return (a && Z(a, i), i);
-      }, [f, _, g, Ge, ft, W, Q]),
-      mt = s(
+        return (a && X(a, i), i);
+      }, [p, y, v, $e, St, G, Z]),
+      wt = d(
         (e) => {
-          let t = ue.current;
-          t && (e && be(e) && ((j.current = e), Q()), t());
+          let t = pe.current;
+          t && (e && Ce(e) && ((A.current = e), Z()), t());
         },
-        [Q],
+        [Z],
       ),
-      bt = (e) => {
+      Tt = (e) => {
         let t = C.current.getBoundingClientRect();
         return { x: e.clientX - t.left, y: e.clientY - t.top };
       },
-      Ct = (e) => {
-        let { w: t, h: n } = L.current;
-        if (!S || S.boxes.length === 0 || t <= 0 || n <= 0) return null;
-        let r = Math.min(S.imageWidth / t, S.imageHeight / n);
+      Et = (e) => {
+        let { w: t, h: n } = I.current;
+        if (!x || x.boxes.length === 0 || t <= 0 || n <= 0) return null;
+        let r = Math.min(x.imageWidth / t, x.imageHeight / n);
         if (!(r > 0)) return null;
         let i = null,
           a = 1 / 0;
-        for (let t of S.boxes) {
+        for (let t of x.boxes) {
           let n = t.x / r,
             o = t.y / r,
             s = t.w / r,
@@ -5468,69 +5492,69 @@ export function createPreviewSketchCanvas({
         }
         return i;
       },
-      wt = (e) => {
-        ((M.current = null), (j.current = null), I("default"));
+      Dt = (e) => {
+        ((M.current = null), (A.current = null), F("default"));
         let t = { x: e.x, y: e.y, value: e.text, editing: e };
-        ((U.current = t), (Ae.current = !0), V(t), Q());
+        ((U.current = t), (Be.current = !0), H(t), Z());
       },
-      Tt = (e) => {
-        if (v || u !== "select" || U.current) return;
+      Ot = (e) => {
+        if (te || u !== "select" || U.current) return;
         let t = C.current.getBoundingClientRect(),
-          n = Xe({ x: e.clientX - t.left, y: e.clientY - t.top }, !1);
-        !n || n.kind !== "text" || (e.preventDefault(), wt(n));
+          n = ft({ x: e.clientX - t.left, y: e.clientY - t.top }, !1);
+        !n || n.kind !== "text" || (e.preventDefault(), Dt(n));
       },
-      Et = s(
+      kt = d(
         (e) => {
-          (et(e) &&
-            ((j.current = e.current),
-            W(
-              J(
+          (nt(e) &&
+            ((A.current = e.current),
+            G(
+              q(
                 T.current,
                 T.current.present.map((t) => (t === e.item ? e.current : t)),
               ),
             )),
-            Q());
+            Z());
         },
-        [Q, W],
+        [Z, G],
       ),
-      Dt = s(() => {
+      At = d(() => {
         N.current = !1;
         let e = M.current;
-        e && ((M.current = null), I("default"), Et(e));
-        let t = k.current;
-        ((k.current = null),
-          (A.current = null),
-          O(!1),
-          t && tt(t) ? ft(t) : Q());
-      }, [ft, Et, Q, O]),
-      Ot = (e, t) => {
+        e && ((M.current = null), F("default"), kt(e));
+        let t = O.current;
+        ((O.current = null),
+          (k.current = null),
+          D(!1),
+          t && rt(t) ? St(t) : Z());
+      }, [St, kt, Z, D]),
+      jt = (e, t) => {
         if (!N.current) return;
-        let n = M.current?.pointerId ?? A.current,
+        let n = M.current?.pointerId ?? k.current,
           r = n !== null && e.pointerId === n;
         (t === "move" ? r && e.buttons & 1 : t === "up" && r)
           ? (N.current = !1)
-          : Dt();
+          : At();
       },
-      kt = (e) => {
-        v ||
+      Mt = (e) => {
+        te ||
           e.button !== 0 ||
           (e.preventDefault(),
-          u !== "text" && Y.current?.focus({ preventScroll: !0 }));
+          u !== "text" && Ve.current?.focus({ preventScroll: !0 }));
       },
-      At = (e) => {
-        if (v || (Ot(e, "down"), e.button !== 0)) return;
-        let t = bt(e);
+      Nt = (e) => {
+        if (te || (jt(e, "down"), e.button !== 0)) return;
+        let t = Tt(e);
         if (u === "select") {
-          U.current && pt();
+          U.current && Q();
           let n = M.current;
           if (n) {
             if (e.pointerId !== n.pointerId) return;
             M.current = null;
           }
           e.currentTarget.setPointerCapture(e.pointerId);
-          let r = Ze(e, t),
-            i = r ? j.current : Xe(t, e.pointerType === "touch");
-          ((j.current = i),
+          let r = ht(e, t),
+            i = r ? A.current : ft(t, e.pointerType === "touch");
+          ((A.current = i),
             i &&
               ((M.current = {
                 pointerId: e.pointerId,
@@ -5544,107 +5568,107 @@ export function createPreviewSketchCanvas({
                 dx: 0,
                 dy: 0,
               }),
-              I(r ? r.cursor : "grabbing")),
-            Q());
+              F(r ? r.cursor : "grabbing")),
+            Z());
           return;
         }
         if (u === "text") {
           e.preventDefault();
-          let n = Xe(t, e.pointerType === "touch", !0);
+          let n = ft(t, e.pointerType === "touch", !0);
           if (n?.kind === "text") {
-            (pt(), wt(n));
+            (Q(), Dt(n));
             return;
           }
-          if (U.current && ue.current) {
-            let e = pt();
-            (Y.current?.focus({ preventScroll: !0 }), mt(e));
+          if (U.current && pe.current) {
+            let e = Q();
+            (Ve.current?.focus({ preventScroll: !0 }), wt(e));
             return;
           }
-          (pt(), V({ x: t.x, y: t.y, value: "", editing: null }));
+          (Q(), H({ x: t.x, y: t.y, value: "", editing: null }));
           return;
         }
-        if (!(k.current && e.pointerId !== A.current)) {
+        if (!(O.current && e.pointerId !== k.current)) {
           if (
             (e.currentTarget.setPointerCapture(e.pointerId),
-            (A.current = e.pointerId),
+            (k.current = e.pointerId),
             u === "pen")
           ) {
-            k.current = {
+            O.current = {
               kind: "freehand",
               points: [t],
-              color: f,
-              width: p,
-              author: _,
+              color: p,
+              width: g,
+              author: y,
             };
             let e = w.current;
-            e && Z(e, k.current);
+            e && X(e, O.current);
           } else
-            k.current = {
+            O.current = {
               kind: u,
               x1: t.x,
               y1: t.y,
               x2: t.x,
               y2: t.y,
-              color: f,
-              width: p,
-              author: _,
-              ...(u === "redact" && { redactStyle: m }),
+              color: p,
+              width: g,
+              author: y,
+              ...(u === "redact" && { redactStyle: _ }),
             };
         }
       },
-      jt = (e, t) => {
-        let n = he(e.kind, { x: e.x1, y: e.y1 }, bt(t), t.shiftKey);
+      Pt = (e, t) => {
+        let n = ve(e.kind, { x: e.x1, y: e.y1 }, Tt(t), t.shiftKey);
         ((e.x2 = n.x), (e.y2 = n.y));
       },
-      Mt = (e) => {
-        Ot(e, "move");
+      Ft = (e) => {
+        jt(e, "move");
         let t = M.current;
         if (t) {
           if (e.pointerId !== t.pointerId) return;
-          let n = bt(e),
+          let n = Tt(e),
             r = n.x - t.start.x,
             i = n.y - t.start.y,
-            a = t.coarse ? ot : at;
+            a = t.coarse ? ct : st;
           if (!t.moved && Math.hypot(r, i) < a) return;
-          ((t.moved = !0), O(!0), (t.dx = r), (t.dy = i));
+          ((t.moved = !0), D(!0), (t.dx = r), (t.dy = i));
           let o = { x: t.grip.x + r, y: t.grip.y + i };
           if (t.handle === null || t.item.kind === "freehand") {
-            let { w: e, h: n } = L.current,
-              a = we(t.item, r, i, { width: e, height: n }, X);
+            let { w: e, h: n } = I.current,
+              a = De(t.item, r, i, { width: e, height: n }, Y);
             ((t.dx = a.dx),
               (t.dy = a.dy),
-              (t.current = Ce(t.item, a.dx, a.dy)));
+              (t.current = Ee(t.item, a.dx, a.dy)));
           } else
             t.current =
               t.item.kind === "text"
-                ? je(t.item, X, nt, t.handle, o, rt)
-                : q(t.item, t.handle, o, e.shiftKey);
-          Q();
+                ? K(t.item, Y, it, t.handle, o, at)
+                : Ne(t.item, t.handle, o, e.shiftKey);
+          Z();
           return;
         }
         if (u === "select") {
-          let t = bt(e),
-            n = Ze(e, t);
-          I(
+          let t = Tt(e),
+            n = ht(e, t);
+          F(
             n
               ? n.cursor
-              : Xe(t, e.pointerType === "touch")
+              : ft(t, e.pointerType === "touch")
                 ? "grab"
                 : "default",
           );
           return;
         }
-        let n = k.current;
-        u === "redact" && !n && Be(S && Ct(bt(e)) ? S : null);
+        let n = O.current;
+        u === "redact" && !n && We(x && Et(Tt(e)) ? x : null);
         let r = w.current;
-        if (!(!n || !r || e.pointerId !== A.current)) {
+        if (!(!n || !r || e.pointerId !== k.current)) {
           if (n.kind === "freehand") {
-            let t = bt(e),
+            let t = Tt(e),
               i = n.points[n.points.length - 1];
             (n.points.push(t),
-              !D.current &&
-                Math.hypot(t.x - n.points[0].x, t.y - n.points[0].y) >= st(e) &&
-                O(!0),
+              !E.current &&
+                Math.hypot(t.x - n.points[0].x, t.y - n.points[0].y) >= ut(e) &&
+                D(!0),
               (r.lineCap = "round"),
               (r.strokeStyle = n.color),
               (r.lineWidth = n.width),
@@ -5653,89 +5677,94 @@ export function createPreviewSketchCanvas({
               r.lineTo(t.x, t.y),
               r.stroke());
           } else
-            (jt(n, e),
-              !D.current &&
-                Math.hypot(n.x2 - n.x1, n.y2 - n.y1) >= st(e) &&
-                O(!0),
-              Q());
+            (Pt(n, e),
+              !E.current &&
+                Math.hypot(n.x2 - n.x1, n.y2 - n.y1) >= ut(e) &&
+                D(!0),
+              Z());
         }
       },
-      Nt = (e) => {
-        Ot(e, "up");
+      It = (e) => {
+        jt(e, "up");
         let t = M.current;
         if (t) {
           e.pointerId === t.pointerId &&
-            ((M.current = null), O(!1), I("default"), Q());
+            ((M.current = null), D(!1), F("default"), Z());
           return;
         }
-        Pt(e);
+        Lt(e);
       },
-      Pt = (e) => {
-        Ot(e, "up");
+      Lt = (e) => {
+        jt(e, "up");
         let t = M.current;
         if (t) {
           if (e.pointerId !== t.pointerId) return;
-          ((M.current = null), O(!1), t.handle === null && I("grab"), Et(t));
+          ((M.current = null), D(!1), t.handle === null && F("grab"), kt(t));
           return;
         }
-        let n = k.current;
-        if (n && e.pointerId !== A.current) return;
+        let n = O.current;
+        if (n && e.pointerId !== k.current) return;
         let r =
-          D.current ||
+          E.current ||
           (!!n &&
             n.kind !== "freehand" &&
-            Math.hypot(n.x2 - n.x1, n.y2 - n.y1) >= st(e));
-        if ((O(!1), !n)) return;
-        ((k.current = null), (A.current = null));
+            Math.hypot(n.x2 - n.x1, n.y2 - n.y1) >= ut(e));
+        if ((D(!1), !n)) return;
+        ((O.current = null), (k.current = null));
         let i =
           n.kind === "redact" && !r && e.type === "pointerup"
-            ? Ct({ x: n.x1, y: n.y1 })
+            ? Et({ x: n.x1, y: n.y1 })
             : null;
         if (i && n.kind === "redact") {
-          Be(null);
+          We(null);
           let e = {
             ...n,
-            x1: i.x - dt,
-            y1: i.y - dt,
-            x2: i.x + i.width + dt,
-            y2: i.y + i.height + dt,
+            x1: i.x - mt,
+            y1: i.y - mt,
+            x2: i.x + i.width + mt,
+            y2: i.y + i.height + mt,
           };
-          (ft(e), Q(), lt(e), mt(e), oe?.());
+          (St(e), Z(), gt(e), wt(e), se?.());
           return;
         }
-        if (n.kind !== "freehand" && $e(n)) {
-          Q();
+        if (
+          (n.kind !== "freehand" &&
+            n.kind !== "redact" &&
+            Math.hypot(n.x2 - n.x1, n.y2 - n.y1) < lt) ||
+          (n.kind !== "freehand" && tt(n))
+        ) {
+          Z();
           return;
         }
-        (ft(n), n.kind !== "freehand" && mt(n));
+        (St(n), n.kind !== "freehand" && wt(n));
       },
-      Ft = i(pt);
-    n(() => {
-      Ft.current = pt;
-    }, [pt]);
-    let It = i(mt);
-    n(() => {
-      It.current = mt;
-    }, [mt]);
-    let Lt = i(Q);
-    n(() => {
-      Lt.current = Q;
+      Rt = a(Q);
+    l(() => {
+      Rt.current = Q;
     }, [Q]);
-    let Rt = i(Dt);
-    (n(() => {
-      Rt.current = Dt;
-    }, [Dt]),
-      n(() => {
-        (u !== "text" && Ft.current(),
+    let zt = a(wt);
+    l(() => {
+      zt.current = wt;
+    }, [wt]);
+    let Bt = a(Z);
+    l(() => {
+      Bt.current = Z;
+    }, [Z]);
+    let Vt = a(At);
+    (l(() => {
+      Vt.current = At;
+    }, [At]),
+      l(() => {
+        (u !== "text" && Rt.current(),
           u !== "select" &&
-            (j.current || M.current) &&
-            ((j.current = null), (M.current = null), O(!1), I("default"), Q()));
-      }, [u, Q, O]));
-    let zt = s((e) => {
+            (A.current || M.current) &&
+            ((A.current = null), (M.current = null), D(!1), F("default"), Z()));
+      }, [u, Z, D]));
+    let Ht = d((e) => {
         let t = e.target.value;
-        V((e) => e && { ...e, value: t });
+        H((e) => e && { ...e, value: t });
       }, []),
-      Bt = s((e) => {
+      Ut = d((e) => {
         if (
           (e.stopPropagation(),
           e.nativeEvent.stopImmediatePropagation(),
@@ -5747,52 +5776,52 @@ export function createPreviewSketchCanvas({
           (e.preventDefault(),
             (t = U.current?.editing ?? null),
             (U.current = null),
-            V(null),
-            t && Lt.current());
+            H(null),
+            t && Bt.current());
         else if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
-          (e.preventDefault(), (t = Ft.current()));
+          (e.preventDefault(), (t = Rt.current()));
         else return;
-        (Y.current?.focus({ preventScroll: !0 }), It.current(t));
+        (Ve.current?.focus({ preventScroll: !0 }), zt.current(t));
       }, []);
-    n(
+    l(
       () => () => {
-        z.current && cancelAnimationFrame(z.current);
+        R.current && cancelAnimationFrame(R.current);
       },
       [],
     );
-    let Vt = () =>
-      R.current.length === 0
+    let Wt = () =>
+      L.current.length === 0
         ? T.current.present
-        : [...T.current.present, ...R.current.map((e) => e.item)];
+        : [...T.current.present, ...L.current.map((e) => e.item)];
     return (
-      t(se, () => {
-        function e() {
-          z.current = 0;
-          let t = w.current,
-            n = R.current[0];
-          if (!t || !n) return;
+      s(S, () => {
+        function t() {
+          R.current = 0;
+          let e = w.current,
+            n = L.current[0];
+          if (!e || !n) return;
           if (n.item.kind === "freehand") {
-            let e = n.item.points,
+            let t = n.item.points,
               i = 14;
             for (
-              t.lineCap = "round",
-                t.strokeStyle = n.item.color,
-                t.lineWidth = n.item.width,
+              e.lineCap = "round",
+                e.strokeStyle = n.item.color,
+                e.lineWidth = n.item.width,
                 n.progress === 0 &&
-                  (Z(t, { ...n.item, points: [e[0]] }), (n.progress = 1));
-              n.progress < e.length && i > 0;
+                  (X(e, { ...n.item, points: [t[0]] }), (n.progress = 1));
+              n.progress < t.length && i > 0;
 
             ) {
-              let r = e[n.progress - 1],
-                a = e[n.progress];
-              (t.beginPath(),
-                t.moveTo(r.x, r.y),
-                t.lineTo(a.x, a.y),
-                t.stroke(),
+              let r = t[n.progress - 1],
+                a = t[n.progress];
+              (e.beginPath(),
+                e.moveTo(r.x, r.y),
+                e.lineTo(a.x, a.y),
+                e.stroke(),
                 (i -= Math.hypot(a.x - r.x, a.y - r.y) || 1),
                 n.progress++);
             }
-            n.progress >= e.length && r();
+            n.progress >= t.length && r();
           } else if (
             n.item.kind === "line" ||
             n.item.kind === "rect" ||
@@ -5803,250 +5832,245 @@ export function createPreviewSketchCanvas({
             let e = Math.hypot(n.item.x2 - n.item.x1, n.item.y2 - n.item.y1),
               t = e > 0 ? 14 / e : 1;
             ((n.progress = Math.min(1, n.progress + t)),
-              Q(),
+              Z(),
               n.progress >= 1 && r());
-          } else (r(), Q());
-          R.current.length > 0 && (z.current = requestAnimationFrame(e));
+          } else (r(), Z());
+          L.current.length > 0 && (R.current = requestAnimationFrame(t));
           function r() {
-            (W(J(T.current, [...T.current.present, n.item])),
-              R.current.shift());
+            (G(q(T.current, [...T.current.present, n.item])),
+              L.current.shift());
           }
         }
-        let t = () => {
+        let n = () => {
             if (!U.current) return;
-            let e = document.activeElement === K.current;
-            (Ft.current(), e && Y.current?.focus({ preventScroll: !0 }));
+            let e = document.activeElement === ze.current;
+            (Rt.current(), e && Ve.current?.focus({ preventScroll: !0 }));
           },
-          n = (e, t) => {
-            ((j.current = t),
-              W(
-                J(
+          r = (e, t) => {
+            ((A.current = t),
+              G(
+                q(
                   T.current,
                   T.current.present.map((n) => (n === e ? t : n)),
                 ),
               ),
-              Q());
-          },
-          r = () => {
-            let e = M.current,
-              t = k.current,
-              n =
-                e && et(e)
-                  ? Vt().map((t) => (t === e.item ? e.current : t))
-                  : Vt();
-            return t && tt(t) ? [...n, t] : n;
+              Z());
           },
           i = () => {
-            N.current && Rt.current();
+            let e = M.current,
+              t = O.current,
+              n =
+                e && nt(e)
+                  ? Wt().map((t) => (t === e.item ? e.current : t))
+                  : Wt();
+            return t && rt(t) ? [...n, t] : n;
+          },
+          a = () => {
+            N.current && Vt.current();
           };
         return {
-          getStrokes: r,
+          getStrokes: i,
           getSize: () => ({
-            width: Math.round(L.current.w),
-            height: Math.round(L.current.h),
+            width: Math.round(I.current.w),
+            height: Math.round(I.current.h),
           }),
           applyStrokes: (e) => {
-            for (let t of e) W(J(T.current, [...T.current.present, t]));
-            Q();
+            for (let t of e) G(q(T.current, [...T.current.present, t]));
+            Z();
           },
           undo: () => (
-            i(),
-            !k.current &&
+            a(),
+            !O.current &&
               !M.current &&
-              (t(), (j.current = null), W(Ne(T.current)), Q()),
+              (n(), (A.current = null), G(Fe(T.current)), Z()),
             T.current.present.length
           ),
           redo: () => (
-            i(),
-            !k.current &&
+            a(),
+            !O.current &&
               !M.current &&
-              (t(), (j.current = null), W(Pe(T.current)), Q()),
+              (n(), (A.current = null), G(Ie(T.current)), Z()),
             T.current.present.length
           ),
-          applyStrokesAnimated: (t) => {
-            for (let e of t) R.current.push({ item: e, progress: 0 });
-            z.current === 0 &&
-              R.current.length > 0 &&
-              (z.current = requestAnimationFrame(e));
+          applyStrokesAnimated: (e) => {
+            for (let t of e) L.current.push({ item: t, progress: 0 });
+            R.current === 0 &&
+              L.current.length > 0 &&
+              (R.current = requestAnimationFrame(t));
           },
           clear: () => {
-            (t(),
-              T.current.present.length > 0 && W(J(T.current, [])),
-              (k.current = null),
-              (j.current = null),
+            (n(),
+              T.current.present.length > 0 && G(q(T.current, [])),
+              (O.current = null),
+              (A.current = null),
               (M.current = null),
-              O(!1),
-              I("default"),
-              (R.current = []),
-              (z.current &&= (cancelAnimationFrame(z.current), 0)),
-              (ye.current = null),
-              xe.current(),
-              Q());
+              D(!1),
+              F("default"),
+              (L.current = []),
+              (R.current &&= (cancelAnimationFrame(R.current), 0)),
+              (z.current = null),
+              B.current(),
+              Z());
           },
           deleteSelection: () => {
-            i();
-            let e = j.current;
+            a();
+            let e = A.current;
             return !e || M.current
               ? !1
-              : ((j.current = null),
-                I("default"),
-                W(
-                  J(
+              : ((A.current = null),
+                F("default"),
+                G(
+                  q(
                     T.current,
                     T.current.present.filter((t) => t !== e),
                   ),
                 ),
-                Q(),
+                Z(),
                 !0);
           },
           recolorSelection: (e) => {
-            i();
-            let t = j.current;
+            a();
+            let t = A.current;
             return !t || M.current || t.color === e
               ? !1
-              : (n(t, { ...t, color: e }), !0);
+              : (r(t, { ...t, color: e }), !0);
           },
           restyleSelection: (e) => {
-            i();
-            let t = j.current;
+            a();
+            let t = A.current;
             return t?.kind !== "redact" ||
               M.current ||
               (t.redactStyle ?? "solid") === e
               ? !1
-              : (n(t, { ...t, redactStyle: e }), !0);
+              : (r(t, { ...t, redactStyle: e }), !0);
           },
           clearSelection: () =>
             M.current
-              ? ((M.current = null), O(!1), I("grab"), Q(), !0)
-              : j.current
-                ? ((j.current = null), I("default"), Q(), !0)
+              ? ((M.current = null), D(!1), F("grab"), Z(), !0)
+              : A.current
+                ? ((A.current = null), F("default"), Z(), !0)
                 : !1,
           toPNG: (e) => {
-            t();
-            let n = C.current,
-              i = w.current;
-            if (!n || !i) return "";
-            let { w: a, h: o } = L.current;
-            (i.clearRect(0, 0, a, o),
-              e && ((i.fillStyle = e), i.fillRect(0, 0, a, o)));
-            for (let e of r()) Z(i, e);
-            let s = n.toDataURL("image/png");
-            return (Q(), s);
+            n();
+            let t = C.current,
+              r = w.current;
+            if (!t || !r) return "";
+            let { w: a, h: o } = I.current;
+            (r.clearRect(0, 0, a, o),
+              e && ((r.fillStyle = e), r.fillRect(0, 0, a, o)));
+            for (let e of i()) X(r, e);
+            let s = t.toDataURL("image/png");
+            return (Z(), s);
           },
-          toComposite: async (e) => {
-            t();
-            let n = new Image();
-            ((n.src = e), await n.decode());
-            let i = document.createElement("canvas");
-            ((i.width = n.naturalWidth), (i.height = n.naturalHeight));
-            let a = i.getContext("2d"),
-              { w: o, h: s } = L.current;
-            if (!a || o <= 0 || s <= 0)
-              throw St(
+          toComposite: async (t) => {
+            n();
+            let r = new Image();
+            ((r.src = t), await r.decode());
+            let a = document.createElement("canvas");
+            ((a.width = r.naturalWidth), (a.height = r.naturalHeight));
+            let o = a.getContext("2d"),
+              { w: s, h: c } = I.current;
+            if (!o || s <= 0 || c <= 0)
+              throw e(
                 Error("SketchCanvas: cannot composite the marks"),
                 "SketchCanvas: cannot composite the marks",
                 "literal",
               );
-            a.drawImage(n, 0, 0);
-            let c = Math.min(n.naturalWidth / o, n.naturalHeight / s);
-            a.scale(c, c);
-            for (let e of r()) Z(a, e);
-            if (!le.current) return i.toDataURL("image/png");
-            let l = Math.min(i.width, Math.round(o * c)),
-              u = Math.min(i.height, Math.round(s * c));
-            if (l === i.width && u === i.height)
-              return i.toDataURL("image/png");
-            let d = document.createElement("canvas");
-            ((d.width = l), (d.height = u));
-            let f = d.getContext("2d");
-            if (!f)
-              throw St(
+            o.drawImage(r, 0, 0);
+            let l = Math.min(r.naturalWidth / s, r.naturalHeight / c);
+            o.scale(l, l);
+            for (let e of i()) X(o, e);
+            if (!fe.current) return a.toDataURL("image/png");
+            let u = Math.min(a.width, Math.round(s * l)),
+              d = Math.min(a.height, Math.round(c * l));
+            if (u === a.width && d === a.height)
+              return a.toDataURL("image/png");
+            let f = document.createElement("canvas");
+            ((f.width = u), (f.height = d));
+            let p = f.getContext("2d");
+            if (!p)
+              throw e(
                 Error("SketchCanvas: cannot crop the composite"),
                 "SketchCanvas: cannot crop the composite",
                 "literal",
               );
-            return (f.drawImage(i, 0, 0), d.toDataURL("image/png"));
+            return (p.drawImage(a, 0, 0), f.toDataURL("image/png"));
           },
         };
-      }, [Q, W, O]),
-      c("div", {
-        ref: Y,
+      }, [Z, G, D]),
+      i("div", {
+        ref: Ve,
         tabIndex: -1,
-        className: o,
-        style: Re,
+        className: t,
+        style: He,
         children: [
-          a("canvas", {
+          o("canvas", {
             ref: C,
             role: "application",
-            "aria-label": "Sketch canvas",
+            "aria-label": ce.formatMessage({
+              defaultMessage: "Sketch canvas",
+              id: "jvMtXRguc4",
+            }),
             className: "absolute inset-0 h-full w-full",
-            style: He,
-            onPointerDown: At,
-            onMouseDown: kt,
-            onPointerMove: Mt,
-            onPointerUp: Pt,
-            onDoubleClick: Tt,
-            onPointerCancel: Nt,
-            onLostPointerCapture: Nt,
+            style: Ke,
+            onPointerDown: Nt,
+            onMouseDown: Mt,
+            onPointerMove: Ft,
+            onPointerUp: Lt,
+            onDoubleClick: Ot,
+            onPointerCancel: It,
+            onLostPointerCapture: It,
           }),
-          B &&
-            a("textarea", {
-              ref: K,
+          V &&
+            o("textarea", {
+              ref: ze,
               autoFocus: !0,
-              value: B.value,
-              onChange: zt,
-              onBlur: pt,
-              onPointerDown: qe,
-              onKeyDown: Bt,
-              "aria-label": "Text label",
-              rows: B.value.split(`
+              value: V.value,
+              onChange: Ht,
+              onBlur: Q,
+              onPointerDown: Ye,
+              onKeyDown: Ut,
+              "aria-label": ce.formatMessage({
+                defaultMessage: "Text label",
+                id: "c29+YCh/oq",
+              }),
+              rows: V.value.split(`
 `).length,
               className:
                 "absolute resize-none overflow-hidden bg-transparent outline-none p-0 border-0",
-              style: We,
+              style: Qe,
             }),
         ],
       })
     );
   }
-  function xt(e, t) {
+  function Ct(e, t) {
     let { item: n, progress: r } = t;
     n.kind === "freehand"
-      ? Z(e, { ...n, points: n.points.slice(0, r) })
+      ? X(e, { ...n, points: n.points.slice(0, r) })
       : n.kind === "text"
-        ? Z(e, n)
-        : Z(e, {
+        ? X(e, n)
+        : X(e, {
             ...n,
             x2: n.x1 + (n.x2 - n.x1) * r,
             y2: n.y1 + (n.y2 - n.y1) * r,
           });
   }
-  function St(e, t, n) {
-    try {
-      Object.defineProperty(e, Symbol.for("ant.o11y.errorText"), {
-        value: { text: t, kind: n },
-        enumerable: !1,
-        writable: !1,
-        configurable: !0,
-      });
-    } catch {}
-    return e;
-  }
 
   return {
-    Canvas: bt,
-    drawStroke: Z,
-    constrainPoint: he,
-    resizeStroke: De,
-    hitTest: Se,
-    moveStroke: Ce,
-    resizeHandle: q,
-    resizeText: je,
-    emptyHistory: Me,
-    commitHistory: J,
-    undoHistory: Ne,
-    redoHistory: Pe,
-    mapHistory: Fe,
-    historyState: Ie,
+    Canvas: St,
+    drawStroke: X,
+    constrainPoint: ve,
+    resizeStroke: ke,
+    hitTest: Te,
+    moveStroke: Ee,
+    resizeHandle: Ne,
+    resizeText: K,
+    emptyHistory: Pe,
+    commitHistory: q,
+    undoHistory: Fe,
+    redoHistory: Ie,
+    mapHistory: Le,
+    historyState: Re,
   };
 }

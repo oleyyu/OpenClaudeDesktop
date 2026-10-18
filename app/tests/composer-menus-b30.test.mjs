@@ -34,18 +34,25 @@ test('permission badges: Default on the saved mode, Recommended on Auto while an
   assert.deepEqual(P.permissionBadges({ value: 'ask', defaultValue: 'ask', values: ['ask', 'plan'] }), { ask: 'default' }, 'no Recommended without Auto');
 });
 
-// O$/A$ + N$: Manual reads text-warning with the warning as description; W$ skeleton while loading.
-test('chin Mode label: truncating span, Manual warning tone and description, skeleton while the mode loads', () => {
+// 2.42304.0 (R3 composer-row-chin): tQ's ghost CdsButton holds the generated rQ — the truncating label (text-warning for
+// Manual) and the hidden description the button is aria-described by (bQ `labelTone/description: xt ? …`; tQ drops both
+// while disabled); _Q while the mode loads: the invisible label under an absolute skeleton box, the sr-only name.
+test('chin Mode label: rQ truncating span, Manual warning tone and hidden description, the _Q skeleton while the mode loads', () => {
   const auto = modeTrigger(render({ permission: 'auto' }));
-  assert.match(auto, /<span class="sc-permission-label"><span class="sc-permission-text">Auto<\/span><\/span>/);
-  assert.doesNotMatch(auto, /aria-description/);
+  assert.match(auto, /<span class="grid grid-cols-\[minmax\(0,1fr\)\]"><span class="overflow-x-clip text-ellipsis whitespace-nowrap">Auto<\/span><\/span>/);
+  assert.doesNotMatch(auto, /aria-describedby|aria-description| hidden=""/);
+  assert.match(auto, /data-cds="Button" data-cds-ghost=""/, 'the view-tabs CdsButton, ghost');
+  assert.match(auto, /class="[^"]* min-w-0 shrink sc-permission"/, 'tQ "min-w-0 shrink"');
   const manual = modeTrigger(render({ permission: 'ask' }));
-  assert.match(manual, /aria-description="DeepSeek asks before making changes\. Auto is recommended\."/);
-  assert.match(manual, /<span class="sc-permission-text" data-warning="">Manual<\/span>/);
-  assert.doesNotMatch(modeTrigger(render({ permission: 'ask', sending: true })), /data-warning|aria-description/, 'a disabled trigger drops the warning');
+  const id = /aria-describedby="([^"]+)"/.exec(manual)?.[1];
+  assert.ok(id, 'Manual is described by its warning');
+  assert.ok(manual.includes(`<span id="${id}" hidden="">DeepSeek asks before making changes. Auto is recommended.</span>`), manual);
+  assert.match(manual, /<span class="overflow-x-clip text-ellipsis whitespace-nowrap text-warning">Manual<\/span>/);
+  assert.doesNotMatch(modeTrigger(render({ permission: 'ask', sending: true })), /text-warning|aria-describedby| hidden=""/, 'a disabled trigger drops the warning');
   const loading = modeTrigger(render({ permission: null }));
   assert.match(loading, /aria-busy="true"/);
-  assert.match(loading, /sc-permission-invisible">Mode<\/span><span data-cds="Skeleton" class="smenu-skeleton sc-permission-skeleton" aria-hidden="true">/);
+  assert.match(loading, / disabled=""/);
+  assert.ok(loading.includes('<span class="relative block"><span class="sr-only">Permission mode</span><span aria-hidden="true" class="invisible">Mode</span><span aria-hidden="true" class="absolute inset-0 flex items-center"><span data-cds="Skeleton" class="smenu-skeleton sc-permission-skeleton w-full"></span></span></span>'), loading);
 });
 
 // c8e04f916 C: the marked stop, the label row under the track and '{name} ({badge})' value text.

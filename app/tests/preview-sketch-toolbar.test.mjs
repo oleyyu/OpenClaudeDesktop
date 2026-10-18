@@ -9,11 +9,12 @@ import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { createPreviewSketchToolbar } from '../src/generated/code-editor/preview-sketch-toolbar.mjs';
 
 const h = React.createElement;
-// Read the complete original toolbar range independently of the extractor.
-const original = fs.readFileSync(new URL('../../reference/current-2.31226.0/ion-dist/assets/v1/c467aa787-Dtc0Q8kR.js', import.meta.url), 'utf8');
+// Read the complete original toolbar range independently of the extractor. R4i-small SM3: 2.42304.0 c467aa787-B4L-l_bi,
+// where the range runs from the separator Q to Kt = memo(Gt) (2.31226.0 Ct..Gt in c467aa787-Dtc0Q8kR).
+const original = fs.readFileSync(new URL('../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c467aa787-B4L-l_bi.js', import.meta.url), 'utf8');
 const nodes = parsers.babel.parse(original, {}).program.body;
-const first = nodes.find(node => node.id?.name === 'Ct');
-const last = nodes.find(node => node.declarations?.some(declaration => declaration.id.name === 'Gt'));
+const first = nodes.find(node => node.id?.name === 'Q');
+const last = nodes.find(node => node.declarations?.some(declaration => declaration.id.name === 'Kt'));
 const originalBody = original.slice(first.start, last.end);
 
 function setup() {
@@ -43,14 +44,16 @@ function setup() {
     densityToken: () => '2rem',
     resolveLength: () => 32,
   };
-  const source = vm.runInNewContext(`(()=>{${originalBody};return Gt;})()`, {
-    e: React.useState, t: React.useImperativeHandle, n: React.useEffect, r: React.useLayoutEffect,
-    i: React.useRef, s: React.useCallback, d: React.useMemo, u: React.memo, o: React.Fragment,
-    a: jsx, c: jsxs, l: (...parts) => parts.filter(Boolean).join(' '), ue: value => value,
-    w: deps.Button, S: deps.Tooltip, se: deps.Icon, ce: deps.Panel, E: deps.Menu, ie: deps.renderMenuItems,
-    T: deps.ConfirmDialog, re: deps.Provider, de: deps.Message, D: deps.useIntl, te: deps.ownerWindow,
-    y: deps.asElement, x: deps.schedule, b: deps.prefersReducedMotion, oe: deps.ownerDocument,
-    le: deps.useRem, pe: deps.densityToken, C: deps.resolveLength,
+  // The chunk's own import aliases (vendor-frame Co/_o/mo/yo/So/uo/bo/oo/Ba/Va/Ha/za, vendor-intl f/l/p, shared-frame
+  // cl/Oc/Hl/lc/qa/Ya/qs/kc/vl/Eu/_d/xu/Yl/Kl, shared-25 Pf, c8748971a t), bound straight to the test doubles.
+  const source = vm.runInNewContext(`(()=>{${originalBody};return Kt;})()`, {
+    r: React.useState, s: React.useImperativeHandle, l: React.useEffect, f: React.useLayoutEffect,
+    a: React.useRef, d: React.useCallback, c: React.useMemo, u: React.memo, n: React.Fragment,
+    o: jsx, i: jsxs, p: (...parts) => parts.filter(Boolean).join(' '), fe: value => value,
+    S: deps.Button, ae: deps.Tooltip, b: deps.Icon, C: deps.Panel, w: deps.Menu, oe: deps.renderMenuItems,
+    T: deps.ConfirmDialog, ce: deps.Provider, pe: deps.Message, me: deps.useIntl, h: deps.ownerWindow,
+    le: deps.asElement, re: deps.schedule, se: deps.prefersReducedMotion, de: deps.ownerDocument,
+    x: deps.useRem, _e: deps.densityToken, ie: deps.resolveLength,
   });
   return { ...createPreviewSketchToolbar(deps), source, buttons, confirms };
 }
@@ -71,6 +74,7 @@ test('toolbar markup matches the original source for picking, drawing, resting a
     { tool: 'redact', redactEnabled: true, redactStyle: 'mosaic' },
     { tool: 'select', redactEnabled: true, redactionSelected: true, redactStyle: 'noise' },
     { resting: { onHide() {}, zoom: { canZoomIn: true, canZoomOut: false } } },
+    { resting: { onHide() {}, firstToolsOnly: true } },
     { concealed: true },
   ]) assert.equal(renderToStaticMarkup(h(Toolbar, { ...defaults, ...props })), renderToStaticMarkup(h(source, { ...defaults, ...props })));
 });
@@ -107,4 +111,28 @@ test('disabled/history/close and discard dialog props remain source-owned', () =
   assert.equal(dialog.title.props.defaultMessage, 'Discard your annotations?');
   assert.equal(dialog.cancelLabel.props.defaultMessage, 'Keep editing');
   dialog.onConfirm(); assert.equal(closed, 2);
+});
+
+// R4i-small SM3: 2.42304.0's toolbar moves zoom into the bar as a labelled group, adds resting.firstToolsOnly and marks
+// the drawing tools for the host's "[data-sketch-tools] button:not(:disabled)" focus target.
+test('2.42304.0 toolbar: Zoom group, firstToolsOnly and data-sketch-tools come from the current source', () => {
+  for (const feature of ['defaultMessage:"Zoom",id:"yMbKjuDH/n"', 'firstToolsOnly===!0', '"data-sketch-tools":!0'])
+    assert.equal(original.split(feature).length - 1, 1, feature);
+  const { Toolbar } = setup();
+  const zoom = renderToStaticMarkup(h(Toolbar, { ...defaults, resting: { onHide() {}, zoom: { canZoomIn: true, canZoomOut: false } } }));
+  assert.match(zoom, /<div role="group" aria-label="Zoom" class="flex items-center gap-xs">/);
+  assert.match(zoom, /data-sketch-tools="true"/);
+  const first = renderToStaticMarkup(h(Toolbar, { ...defaults, resting: { onHide() {}, firstToolsOnly: true } }));
+  assert.ok(first.includes('aria-label="Pen"'));
+  for (const label of ['Line', 'Arrow', 'Rectangle', 'Ellipse', 'Text']) assert.ok(!first.includes(`aria-label="${label}"`), label);
+  assert.ok(first.includes('data-layout="full"'));
+  const generated = fs.readFileSync(new URL('../src/generated/code-editor/preview-sketch-toolbar.mjs', import.meta.url), 'utf8');
+  assert.match(generated, /^\/\/ Original adaptive selection\/drawing toolbar \(2\.42304\.0\)/);
+  const manifest = JSON.parse(fs.readFileSync(new URL('../src/generated/code-editor/manifest.json', import.meta.url), 'utf8'));
+  for (const name of ['preview-sketch-toolbar.mjs', 'preview-sketch-state.mjs', 'preview-sketch-keys.mjs', 'preview-sketch-host.mjs', 'preview-sketch-icons.mjs', 'preview-sketch-canvas.mjs']) {
+    const entry = manifest.adapters.find(adapter => adapter.name === name);
+    assert.equal(entry.referenceVersion, '2.42304.0', name);
+    assert.ok(entry.sources.every(ref => ref.name.startsWith('../../../../installed-2.42304.0-20261017/')), name);
+  }
+  assert.equal(manifest.modules.some(module => module.name.startsWith('c0f671921-')), false, 'the 2.31226.0 icon font is no longer vendored');
 });

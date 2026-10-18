@@ -1,67 +1,67 @@
-// Original state, history commands and export generation gate. OCR is a host capability.
-import { useState as e, useRef as i, useCallback as s } from "react";
+// Original state, history commands and export generation gate (2.42304.0). OCR is a host capability.
+import { useState as r, useRef as a, useCallback as d } from "react";
 export function createPreviewSketchState({
-  usePlatform: f,
-  useRedaction: m,
-  skipTextDetection: p,
-  useTextTargets: qt,
-  asElement: y,
-  isTextInput: h,
-  matchCommand: g,
-  shortcut: _,
+  usePlatform: g,
+  useRedaction: ee,
+  skipTextDetection: _,
+  useTextTargets: Jt,
+  asElement: le,
+  isTextInput: v,
+  matchCommand: y,
+  shortcut: te,
 }) {
-  var Jt = ["#E03131", "#1971C2", "#2F9E44", "#1F1E1D", "#FFFFFF"];
-  var Yt = "#1F1E1D";
-  var Xt = "#FFFFFF";
-  var Zt = Jt[0];
-  var Qt = [
+  var Yt = ["#E03131", "#1971C2", "#2F9E44", "#1F1E1D", "#FFFFFF"];
+  var Xt = "#1F1E1D";
+  var Zt = "#FFFFFF";
+  var Qt = Yt[0];
+  var $t = [
     "sketchUndo",
     "sketchRedo",
     "sketchDeleteSelection",
     "sketchDeselect",
   ];
-  var $t = { count: 0, canUndo: !1, canRedo: !1 };
-  function en(t, n, r) {
-    let a = f(),
-      o = i(null),
-      [c, l] = e("pen"),
-      u = m(n),
-      d = !u && c === "redact" ? "pen" : c,
-      [v, ee] = e(() => Zt),
-      [te, ne] = e("solid"),
-      [re, ie] = e(null),
-      [b, x] = e($t),
-      [ae, S] = e(!1),
-      oe = i(0),
+  var en = { count: 0, canUndo: !1, canRedo: !1 };
+  function tn(e, t, n) {
+    let i = g(),
+      o = a(null),
+      [s, c] = r("pen"),
+      l = ee(t),
+      u = !l && s === "redact" ? "pen" : s,
+      [f, p] = r(() => Qt),
+      [m, h] = r("solid"),
+      [ne, re] = r(null),
+      [b, ie] = r(en),
+      [ae, oe] = r(!1),
+      x = a(0),
       {
         textTargets: se,
-        handleTextTargetRedacted: C,
-        textRedactionCount: w,
-        resetTextRedactionCount: T,
-      } = qt(p("__gb__2978899829") ? void 0 : r, d === "redact"),
-      ce = s(() => {
+        handleTextTargetRedacted: S,
+        textRedactionCount: ce,
+        resetTextRedactionCount: C,
+      } = Jt(_("__gb__2978899829") ? void 0 : n, u === "redact"),
+      w = d(() => {
         o.current?.undo();
       }, []),
-      E = s(() => {
+      T = d(() => {
         o.current?.redo();
       }, []),
-      le = s(
-        (e) => {
-          let n = y(e.target);
-          if (e.defaultPrevented || !n || h(n)) return;
-          let r = g(e, { isClaudeApp: a, commands: Qt }),
-            i = e.currentTarget,
+      ue = d(
+        (t) => {
+          let n = le(t.target);
+          if (t.defaultPrevented || !n || v(n)) return;
+          let r = y(t, { isClaudeApp: i, commands: $t }),
+            a = t.currentTarget,
             s = n.closest(
               '[role="dialog"], [role="alertdialog"], [role="menu"]',
             ),
-            c = !i.contains(n) || (s !== null && s !== i && i.contains(s));
+            c = !a.contains(n) || (s !== null && s !== a && a.contains(s));
           if (r === null) {
-            t &&
-              e.key === "Escape" &&
+            e &&
+              t.key === "Escape" &&
               !c &&
-              !e.nativeEvent.isComposing &&
-              e.keyCode !== 229 &&
-              (e.preventDefault(), e.stopPropagation());
+              !t.nativeEvent.isComposing &&
+              t.keyCode !== 229 &&
+              (t.preventDefault(), t.stopPropagation());
             return;
           }
           if (r === "sketchDeleteSelection" || r === "sketchDeselect") {
@@ -71,80 +71,80 @@ export function createPreviewSketchState({
                 ? o.current?.deleteSelection()
                 : o.current?.clearSelection()
             )
-              ? (e.preventDefault(),
-                e.stopPropagation(),
-                e.preventBaseUIHandler?.(),
-                e.nativeEvent.stopImmediatePropagation())
+              ? (t.preventDefault(),
+                t.stopPropagation(),
+                t.preventBaseUIHandler?.(),
+                t.nativeEvent.stopImmediatePropagation())
               : r === "sketchDeselect" &&
-                t &&
-                (e.preventDefault(), e.stopPropagation(), e.repeat || t());
+                e &&
+                (t.preventDefault(), t.stopPropagation(), t.repeat || e());
             return;
           }
-          (e.preventDefault(),
-            e.stopPropagation(),
+          (t.preventDefault(),
+            t.stopPropagation(),
             !c &&
               (r === "sketchUndo" && b.canUndo
                 ? o.current?.undo()
                 : r === "sketchRedo" && b.canRedo && o.current?.redo()));
         },
-        [a, b.canUndo, b.canRedo, t],
+        [i, b.canUndo, b.canRedo, e],
       ),
-      ue = s(() => {
+      de = d(() => {
         o.current?.clear();
       }, []),
-      de = s(() => {
-        l("select");
+      fe = d(() => {
+        c("select");
       }, []),
-      D = s((e) => {
-        ((Zt = e), ee(e), o.current?.recolorSelection(e));
+      pe = d((e) => {
+        ((Qt = e), p(e), o.current?.recolorSelection(e));
       }, []),
-      fe = s((e) => {
-        (ne(e), o.current?.restyleSelection(e));
+      me = d((e) => {
+        (h(e), o.current?.restyleSelection(e));
       }, []),
-      O = s((e) => {
-        (ie(e?.kind ?? null),
-          e?.kind === "redact" && ne(e.redactStyle ?? "solid"));
+      he = d((e) => {
+        (re(e?.kind ?? null),
+          e?.kind === "redact" && h(e.redactStyle ?? "solid"));
       }, []),
-      pe = s(async (e) => {
+      ge = d(async (e) => {
         let t = o.current;
         if (!t) return null;
-        let n = ++oe.current,
+        let n = ++x.current,
           r = await e(t);
-        return oe.current === n ? r : null;
+        return x.current === n ? r : null;
       }, []),
-      k = s(() => {
-        (oe.current++, T());
-      }, [T]);
+      _e = d(() => {
+        (x.current++, C());
+      }, [C]);
     return {
       canvasRef: o,
-      redactEnabled: u,
+      redactEnabled: l,
       textTargets: se,
-      handleTextTargetRedacted: C,
-      textRedactionCount: w,
-      tool: d,
-      setTool: l,
-      color: v,
-      redactStyle: te,
-      handleRedactStyleChange: fe,
-      redactionSelected: re === "redact" && d === "select",
-      handleSelectionChange: O,
+      handleTextTargetRedacted: S,
+      textRedactionCount: ce,
+      tool: u,
+      setTool: c,
+      color: f,
+      redactStyle: m,
+      handleRedactStyleChange: me,
+      redactionSelected: ne === "redact" && u === "select",
+      handleSelectionChange: he,
       hasStrokes: b.count > 0,
       canUndo: b.canUndo,
       canRedo: b.canRedo,
-      handleHistoryChange: x,
+      handleHistoryChange: ie,
       gestureActive: ae,
-      handleGestureActiveChange: S,
-      handleUndo: ce,
-      handleRedo: E,
-      handleKeyDown: le,
-      undoShortcut: _("sketchUndo", a),
-      redoShortcut: _("sketchRedo", a),
-      handleClear: ue,
-      handleToolDone: de,
-      handleColorChange: D,
-      exportSketch: pe,
-      cancel: k,
+      handleGestureActiveChange: oe,
+      handleUndo: w,
+      handleRedo: T,
+      handleKeyDown: ue,
+      undoShortcut: te("sketchUndo", i),
+      redoShortcut: te("sketchRedo", i),
+      handleClear: de,
+      handleToolDone: fe,
+      handleColorChange: pe,
+      exportSketch: ge,
+      cancel: _e,
     };
   }
-  return en;
+  return tn;
 }

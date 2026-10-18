@@ -10,7 +10,7 @@ import path from 'node:path';
 let server, P;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
-    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   P = await server.ssrLoadModule('/src/source-preview-pane.jsx');
 });
 after(() => server?.close());
@@ -194,10 +194,12 @@ test('cf580efe9 mr: the stopped card (name row, Restart, caption) and its namele
   const stopped = { ...base, hasPage: true, url: 'http://localhost:5173/', servers: [{ name: 'web', port: 5173, url: 'http://localhost:5173', status: 'stopped' }] };
   const html = render(stopped);
   assert.match(html, /data-preview-surface="stopped"/);
-  assert.match(html, /<div class="flex items-center gap-sm rounded bg-alpha-1 py-md pl-\[9px\] pr-md">/);
-  assert.match(html, /<span class="min-w-0 flex-1 truncate text-body text-secondary">web<\/span><span class="shrink-0 text-footnote text-muted">Stopped<\/span>/);
+  // 2.42304.0 cf580efe9-b-DCvKJg Mr: logical insets and text-muted-as-secondary (no prior-snapshot pl-/pr- utilities).
+  assert.match(html, /<div class="flex items-center gap-sm rounded bg-alpha-1 py-md ps-\[9px\] pe-md">/);
+  assert.doesNotMatch(html, /pl-\[9px\]|text-muted">Stopped/);
+  assert.match(html, /<span class="min-w-0 flex-1 truncate text-body text-secondary">web<\/span><span class="shrink-0 text-footnote text-muted-as-secondary">Stopped<\/span>/);
   assert.match(html, /data-variant="secondary" data-size="xxs"[^>]*aria-label="Restart web"|aria-label="Restart web"[^>]*data-variant="secondary"/);
-  assert.match(html, /<p class="m-0 text-center text-caption text-muted">The dev server stopped\. Restart it, or close the preview\.<\/p>/);
+  assert.match(html, /<p class="m-0 text-center text-caption text-muted-as-secondary">The dev server stopped\. Restart it, or close the preview\.<\/p>/);
   assert.doesNotMatch(html, /Show start page/);
   const nameless = renderToStaticMarkup(React.createElement(P.PreviewStoppedCard, { serverLabel: '', onClose() {} }));
   assert.match(nameless, />Preview server stopped</);

@@ -1,0 +1,44 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-permission-mode.mjs",
+  "output": "resolution.mjs",
+  "sources": [
+    {
+      "file": "../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c8eb45883-BKWHnsew.js",
+      "sourceSha256": "0d1e13413caebfd153c44b165e26568506322b5a0c5afa9b515fe37e5cd7321b",
+      "bindings": [
+        "d"
+      ]
+    },
+    {
+      "file": "../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "pins": 13
+    }
+  ],
+  "bindings": {
+    "d": {
+      "source": "c8eb45883-BKWHnsew.js",
+      "exportedAs": "resolvePermissionBaseMode"
+    }
+  },
+  "pins": {
+    "c227f4d5e-Ba-r--Rl.js": [
+      "import{a as _y,i as vy,n as yy,r as by,t as xy}from\"./c8eb45883-BKWHnsew.js\"",
+      "[be,xe]=Bc(\"cc-landing-draft-permission-mode\",null,{scope:\"account\"})",
+      "{globalPref:De,consultedStoredGlobalPref:Oe}=by({storedGlobalPref:ye,accountGlobalPref:be,autoDefaultAllowed:Te})",
+      "Me=b?.defaultPermissionMode,Ne=vy(!o&&!!g&&ir(g),S),Pe=U&&Ne?xy(Me?.value):void 0,Fe=_y(Me?.source,S),Ie=Fe?Pe:void 0,Le=Fe?void 0:Pe",
+      "[Ge,Ke]=Bc(\"epitaxy-folder-permission-mode\",BI,{scope:\"account\"})",
+      "qe=s?.originCwd?.replace(/\\/\\.claude\\/worktrees\\/[^/]+$/,\"\")",
+      "Ze=Xe?Ge[Xe]:void 0,Qe=Ze===\"plan\"?void 0:Ze",
+      "[q,tt]=zt(E,()=>null)",
+      "let n=e===null||e===II,r=n&&t!==null&&t!==\"plan\",i=r&&!(zI(Xe)&&AI(t,{autoIsDefault:Ee})&&!(t===\"auto\"&&$e));i&&!Ve||(i&&Xe!==null&&Ke(e=>({...e,[Xe]:t})),n&&RI(Xe)&&(i||!r)||tt(null),rt.current=Xe)",
+      "{baseMode:ft,baseModeSource:pt,hasExplicitChoice:ht,spawnModeIsProvisional:gt}=M(()=>yy({userChoice:q,userSettingsDefault:Ie,repoSettingsDefault:Le,folderChoice:Qe,globalPref:De,consultedStoredGlobalPref:Oe,storedPickLayersSettled:ct}),[q,Ie,Le,Qe,De,Oe,ct])",
+      "J=M(()=>o?q??(vt?\"bypassPermissions\":void 0)??_t??yt??l??De:et?\"auto\":at?Su(ft,he):ft,[o,q,vt,_t,yt,l,ft,De,he,at,et])",
+      "if(a===c)return sn&&on&&(a===\"auto\"||a===\"bypassPermissions\")&&Promise.resolve(on(sn,a)).catch(()=>void 0),!O&&nt.current===null&&RI(dn.current)&&tt(a),Promise.resolve(\"unchanged\")",
+      "_=!!h&&o!==\"approval_card\"&&a!==\"plan\"&&!(a===\"bypassPermissions\"&&zI(h));tt(a),_&&Ke(e=>({...e,[h]:a}))"
+    ]
+  },
+  "sha256": "76433f643e69b906313120a2f6b98c9e905260c84042021ffd046e4ef8da9153"
+}

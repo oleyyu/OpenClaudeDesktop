@@ -1,7 +1,10 @@
 import { t, tn } from "../electron/i18n/index.mjs";
 import { retryShortLabel } from "./turn-error-model.mjs";
-const presentation = (phase, label = "", visible = true, retry = null) => Object.freeze({
+// `kind` tells apart the running presentations that share a phase (working, sending, spawn, retry); the working line
+// (working-line-model.mjs) maps each to its own input of the official w8.
+const presentation = (phase, label = "", visible = true, retry = null, kind = phase) => Object.freeze({
   phase,
+  kind,
   label,
   visible,
   busy: phase === "running" || phase === "stopping",
@@ -18,6 +21,14 @@ const count = (value) => Number.isInteger(value) && value > 0;
 export function retryingLabel(attempt, maxRetries) {
   return count(attempt) && count(maxRetries) ? t("Retrying ({attempt}/{maxRetries})", { attempt, maxRetries }) : RETRYING_LABEL;
 }
+// c4a9ee384 Lp's API error types (the working line's apiRetry label, zp(type, intl, "short")) for the Codex error
+// identities retryShortLabel names; anything else is no type ("Request failed", zp's Rp).
+export function apiErrorType(info) {
+  if (info === "unauthorized") return "authentication_failed";
+  if (info === "rateLimitExceeded" || info === "usageLimitExceeded") return "rate_limit";
+  if (info === "serverOverloaded") return "overloaded";
+  return null;
+}
 // state.retrying[thread] ({codexErrorInfo, attempt, maxRetries}) -> the
 // `retrying` input of transcriptStatusPresentation.
 export function retryingStatus(entry, { now = Date.now(), locale } = {}) {
@@ -27,7 +38,7 @@ export function retryingStatus(entry, { now = Date.now(), locale } = {}) {
     ? t("Next try at {time}", { time: new Date(entry.nextAt).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" }) }) : null;
   const detail = entry.action?.title || entry.action?.message ? [entry.action.title, entry.action.message].filter(Boolean).join(" — ")
     : later && entry.message ? entry.message : null;
-  return { error: retryShortLabel(entry.codexErrorInfo ?? null), attempt: entry.attempt ?? null, maxRetries: entry.maxRetries ?? null,
+  return { error: retryShortLabel(entry.codexErrorInfo ?? null), errorType: apiErrorType(entry.codexErrorInfo ?? null), attempt: entry.attempt ?? null, maxRetries: entry.maxRetries ?? null,
     detail, later, link: typeof entry.action?.link === "string" && /^https?:\/\//i.test(entry.action.link) ? { url: entry.action.link, label: entry.action.label || t("Open") } : null };
 }
 
@@ -49,10 +60,10 @@ export function spawnPhaseLabel(phase) {
 }
 const LOADING = presentation("loading", "", false);
 const IDLE = presentation("idle");
-const RUNNING = presentation("running", t("Working…"));
+const RUNNING = presentation("running", t("Working…"), true, null, "working");
 const STOPPING = presentation("stopping", t("Stopping…"));
 // z5 (approval-current.js:58061-58093) 'Sending…': the message is on its way and the turn has not started yet.
-const SENDING = presentation("running", t("Sending…"));
+const SENDING = presentation("running", t("Sending…"), true, null, "sending");
 const APPROVAL = presentation("approval", t("Waiting for your approval"));
 const APPROVAL_REPLACES_ROW = presentation("approval", "", false);
 
@@ -72,7 +83,7 @@ export function transcriptStatusPresentation({
   spawnLabel = null,
 } = {}) {
   // B29 (cc43287c9 dy → e5 spawnLabel): while a new session's worktree is prepared from Home, the row names the step.
-  if (!sessionKey) return typeof spawnLabel === "string" && spawnLabel ? presentation("running", spawnLabel) : HOME;
+  if (!sessionKey) return typeof spawnLabel === "string" && spawnLabel ? presentation("running", spawnLabel, true, null, "spawn") : HOME;
   if (!ready) return LOADING;
   // Suppress stale work/approval flags after a lost connection. The actual
   // connection/error UI remains visible elsewhere; the idle mark says nothing.
@@ -87,7 +98,7 @@ export function transcriptStatusPresentation({
   if (typeof retry?.error === "string" && retry.error) {
     const label = retryingLabel(retry.attempt, retry.maxRetries);
     return presentation("running", [`${retry.error} · ${label}`, retry.later, retry.detail].filter(Boolean).join(" · "), true,
-      Object.freeze({ error: retry.error, label, later: retry.later ?? null, detail: retry.detail ?? null, link: retry.link ?? null }));
+      Object.freeze({ error: retry.error, label, later: retry.later ?? null, detail: retry.detail ?? null, link: retry.link ?? null }), "retry");
   }
   return RUNNING;
 }

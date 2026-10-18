@@ -3,47 +3,32 @@ import { SourceSettingsButton } from './source-settings-button.jsx';
 import { Icon } from './icons';
 import { FileCommentCard } from './source-file-comments.jsx';
 import { fileCommentsStore, fileCommentAttachmentKey } from './file-comments-store.mjs';
-import { commentRangeHighlight, setCommentRange, rangeHighlightTheme, selectionActions, selectableLineNumbers, commentWidgets, setCommentSlots, hoveredEditorLine } from './generated/code-editor/selection.mjs';
+import { commentRangeHighlight, setCommentRange, rangeHighlightTheme, selectionActions, selectableLineNumbers, commentWidgets, setCommentSlots, hoveredEditorLine } from './generated/code-editor-current/wrapper.mjs';
 import { SourceMenu } from './source-menu.jsx';
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from './menu-model.mjs';
 import { useSourceToasts } from './source-toast.jsx';
 import { editorClipboardExtension, editorMenuItems, editorSelectedContext, editorCaret, goToEditorLocation, syncEditorSelection, runEditorCommand } from './file-editor-commands.mjs';
 import React, { useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { EditorState, EditorView, Compartment, Decoration, keymap, drawSelection, history, historyKeymap, highlightWhitespace, scrollPastEnd } from './code-editor-core.mjs';
-import { loadEditorLanguage, cachedEditorLanguage } from './generated/code-editor/languages.mjs';
-import { rememberEditorView, restoreEditorView, restoredHistory, restoredFolds, baseLanguageBehavior, detectedIndentation, resetIndentation, editorKeymap, codeFolding, bracketIndentation, bracketJump, autoCloseBrackets, tabIndentation, columnSelection, indentGuides } from './generated/code-editor/editing.mjs';
+import { EditorState, EditorView, Compartment, Decoration, keymap, drawSelection, history, historyKeymap, highlightWhitespace, scrollPastEnd, Transaction } from './code-editor-core.mjs';
+import { loadEditorLanguage, cachedEditorLanguage } from './generated/code-editor-current/wrapper.mjs';
+import { rememberEditorView, restoreEditorView, restoredHistory, restoredFolds, baseLanguageBehavior, detectedIndentation, resetIndentation, editorKeymap, codeFolding, bracketIndentation, bracketJump, autoCloseBrackets, tabIndentation, columnSelection, indentGuides, externalEditorChange, externalEditorUpdate, updateEditorTransactions } from './generated/code-editor-current/wrapper.mjs';
 import { unfoldEditorRange } from './file-editor-folds.mjs';
 import { useSettledHighlight } from './use-settled-highlight.mjs';
 import { tokenLines, fileHighlightLanguage, fileViewerTooSlow } from './file-preview-model.mjs';
 import { tokenCSS } from './highlight-model.mjs';
-import { whitespaceTheme } from './file-view-settings.mjs';
+import { editorTheme, findMatchTheme } from './generated/code-editor-current/theme.mjs';
+import { useCodeThemes } from './code-theme-store.mjs';
+import themeColors from './generated/code-theme-colors.json';
 import { t } from '../electron/i18n/index.mjs';
 
-// Layout from 2.31226.0 cbd02b8f2 Ii; all editing/history/selection machinery
-// is the byte-identical original core. Syntax colours use the existing worker.
-const theme = EditorView.theme({
-  '&': { height: '100%', background: 'transparent', color: 'inherit' },
-  '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { fontFamily: 'inherit', lineHeight: 'inherit', overflow: 'auto' },
-  '.cm-content': { padding: '8px 0' },
-  '.cm-line': { padding: '0 12px 0 4px' },
-  '.cm-gutters': { background: 'transparent', color: 'var(--cds-text-muted)', border: '0' },
-  '.cm-lineNumbers .cm-gutterElement': { padding: '0 8px 0 18px', minWidth: '2.5rem' },
-  '.cm-activeLineGutter': { background: 'transparent' },
-  '.cm-foldPlaceholder': { background: 'transparent', border: 'none', color: 'var(--cds-text-muted)', padding: '0 4px' },
-  '.cm-activeLine': { background: 'color-mix(in srgb, currentColor 3%, transparent)' },
-  '.cm-selectionMatch': { background: 'color-mix(in srgb, currentColor 12%, transparent)' },
-  '&.cm-focused .cm-matchingBracket': { background: 'color-mix(in srgb, currentColor 10%, transparent)', outline: '1px solid color-mix(in srgb, currentColor 30%, transparent)', outlineOffset: '-1px' },
-  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': { background: 'var(--sfv-selection, #b5c9e680)' },
-  '.cm-cursor': { borderLeftColor: 'currentColor' },
-});
+// The current source theme uses the user's code-theme palette, including active indent guides.
 const viewOptions = (settings, hintId) => [
   settings.wordWrap ? EditorView.lineWrapping : [], EditorState.tabSize.of(settings.tabSize),
   settings.showWhitespace ? highlightWhitespace() : [], settings.scrollPastEnd ? scrollPastEnd() : [],
   settings.indentGuides ? indentGuides() : [],
   tabIndentation(settings.tabIndents, hintId),
 ];
-export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce, find, apiRef, onGoToLine, onAttachFile, onAttachSelection, onDownload, onSaveComment, onDeleteComment }) {
+export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce, find, apiRef, onGoToLine, onAttachFile, onAttachSelection, onDownload, downloading = false, onSaveComment, onDeleteComment }) {
   const [menu, setMenu] = useState(null), [chip,setChip] = useState(null), [cards,setCards] = useState([]), [hover,setHover] = useState(null);
   const selectionController=useRef(null);
   const comments=useMemo(()=>fileCommentsStore(editor.key),[editor.key]);
@@ -57,7 +42,18 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
   actions.current = { onGoToLine, onAttachFile, onAttachSelection, onDownload, onSaveComment, onDeleteComment };
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
   const host = useRef(null), view = useRef(null);
-  const options = useRef(new Compartment()), marks = useRef(new Compartment()), search = useRef(new Compartment()), grammar = useRef(new Compartment());
+  const themes = useCodeThemes();
+  const [mode,setMode] = useState(() => typeof document !== 'undefined' && document.documentElement.dataset.mode === 'dark' ? 'dark' : 'light');
+  const theme = useMemo(() => editorTheme(themeColors[themes[mode]].editor), [themes,mode]);
+  const paint = useRef(new Compartment());
+  useLayoutEffect(() => {
+    const root=host.current.ownerDocument.documentElement;
+    const sync=()=>setMode(root.dataset.mode === 'dark' ? 'dark' : 'light');
+    sync();
+    const observer=new MutationObserver(sync); observer.observe(root,{attributes:true,attributeFilter:['data-mode']});
+    return ()=>observer.disconnect();
+  }, []);
+  const options = useRef(new Compartment()), marks = useRef(new Compartment()), search = useRef(new Compartment()), grammar = useRef(new Compartment()), undoHistory = useRef(new Compartment()), lineBreaks = useRef(new Compartment());
   const language = fileHighlightLanguage(editor.path);
   const normalized = state.text.replace(/\r\n/g, '\n');
   const tokens = useSettledHighlight({ text: normalized, language: fileViewerTooSlow(normalized, language) ? 'text' : language, isFrontier: false, languageSettled: true, scopeKey: editor.key }, host);
@@ -73,16 +69,17 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     });
     selectionController.current=selections;
     const restored = restoreEditorView(editor.key, state.text);
-    const cm = new EditorView({ scrollTo: restored?.scroll, parent: host.current, state: EditorState.create({ doc: state.text, selection: restored?.selection, extensions: [
-      theme, restoredHistory(restored), history(), restoredFolds(true, restored?.folds), selectableLineNumbers(), drawSelection(), editorClipboardExtension,
-      selections.extension, commentRangeHighlight, rangeHighlightTheme(),
+    const cm = new EditorView({ dispatchTransactions: updateEditorTransactions, scrollTo: restored?.scroll, parent: host.current, state: EditorState.create({ doc: state.text, selection: restored?.selection, extensions: [
+      paint.current.of(theme), undoHistory.current.of([restoredHistory(restored), history()]), restoredFolds(true, restored?.folds), selectableLineNumbers(), drawSelection(), editorClipboardExtension,
+      selections.extension, commentRangeHighlight, rangeHighlightTheme(), findMatchTheme,
       commentWidgets((event,value)=>setCards(current=>event==='mount'?[...current,value]:current.filter(item=>item!==value))),
-      baseLanguageBehavior, detectedIndentation(true), bracketIndentation(true), bracketJump(true), autoCloseBrackets(true), columnSelection(true),
+      baseLanguageBehavior, detectedIndentation(true, editor.path), bracketIndentation(true), bracketJump(true), autoCloseBrackets(true), columnSelection(true),
       codeFolding(true, { formatMessage: ({ defaultMessage }) => t(defaultMessage) }),
       grammar.current.of(cachedEditorLanguage(editor.path) ?? []),
       EditorView.clipboardInputFilter.of((text, state) => text.replace(/\r\n|\r|\n/g, state.lineBreak)),
       EditorState.allowMultipleSelections.of(true),
-      state.text.includes('\r\n') ? EditorState.lineSeparator.of('\r\n') : [],
+      EditorState.phrases.of({ 'Selection deleted': t('Selection deleted') }),
+      lineBreaks.current.of(EditorState.lineSeparator.of(state.text.includes('\r\n') ? '\r\n' : '\n')),
       EditorView.contentAttributes.of({ 'aria-label': t('File editor'), spellcheck: 'false' }),
       keymap.of([{ key: 'Ctrl-g', run: () => actions.current.onGoToLine?.() === true },
         { key: 'Mod-s', run: () => { void editor.save(); return true; } }, ...editorKeymap, ...historyKeymap]),
@@ -96,9 +93,6 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       if (view.current === cm && language) cm.dispatch({ effects: grammar.current.reconfigure(language) });
     });
     if (apiRef) apiRef.current = { caret: () => editorCaret(cm.state), focus: () => cm.focus(), go: (line, column) => goToEditorLocation(cm, line, column) };
-    const paint = whitespaceTheme(getComputedStyle(cm.dom).color);
-    host.current.style.setProperty('--sfv-space-paint', paint.space);
-    host.current.style.setProperty('--sfv-tab-paint', paint.tab);
     const document = host.current.ownerDocument;
     const hidden = () => { if (document.visibilityState === 'hidden') void editor.flushAutoSave(); };
     const flush = () => { void editor.flushAutoSave(); };
@@ -106,12 +100,19 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     document.defaultView.addEventListener('pagehide', flush);
     return () => { flush(); document.removeEventListener('visibilitychange', hidden); document.defaultView.removeEventListener('pagehide', flush); rememberEditorView(editor.key, cm, {}); view.current = null; if (apiRef) apiRef.current = null; cm.destroy(); selectionController.current=null; tooltipParent.remove(); comments.release(); };
   }, [editor]); // Initial text and options are subsequently updated without losing selection/history.
+  useLayoutEffect(() => { view.current?.dispatch({effects:paint.current.reconfigure(theme)}); }, [theme]);
   useLayoutEffect(()=>{view.current?.dispatch({effects:setCommentSlots.of(commentEnabled?commentState.entries.map(entry=>({id:entry.id,line:entry.end})):[])});},[commentState.entries,commentEnabled]);
   useLayoutEffect(()=>{if(chip)view.current?.requestMeasure();},[chip]);
   useLayoutEffect(()=>{const entry=commentEnabled?commentState.entries.find(entry=>entry.id===commentState.active):null;view.current?.dispatch({effects:setCommentRange.of(entry&&entry.end>entry.start?{from:entry.start,to:Math.min(entry.end,entry.start+199)}:null)});},[commentState.active,commentState.entries,commentEnabled]);
   useLayoutEffect(() => {
     const cm = view.current;
-    if (cm && cm.state.sliceDoc() !== state.text) cm.dispatch({ changes: { from: 0, to: cm.state.doc.length, insert: state.text }, annotations: resetIndentation.of(true) });
+    if (cm && cm.state.sliceDoc() !== state.text) {
+      const lineBreak = state.text.includes('\r\n') ? '\r\n' : '\n';
+      if (cm.state.lineBreak !== lineBreak) cm.dispatch({ effects: lineBreaks.current.reconfigure(EditorState.lineSeparator.of(lineBreak)) });
+      cm.dispatch({ changes: externalEditorChange(cm, state.text), annotations: [externalEditorUpdate.of(true), resetIndentation.of(true), Transaction.addToHistory.of(false)] });
+      cm.dispatch({ effects: undoHistory.current.reconfigure([]) });
+      cm.dispatch({ effects: undoHistory.current.reconfigure(history()) });
+    }
   }, [state.text]);
   useLayoutEffect(() => { view.current?.dispatch({ effects: options.current.reconfigure(viewOptions(settings, hintId)) }); }, [settings]);
   useLayoutEffect(() => {
@@ -137,14 +138,14 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     for (const [i, match] of (find?.matches ?? []).slice(0, 2000).entries()) {
       if (match.line > cm.state.doc.lines) continue;
       const row = cm.state.doc.line(match.line), from = row.from + match.start, to = Math.min(row.to, row.from + match.end);
-      if (to > from) ranges.push(Decoration.mark({ class: i === find.index ? 'sfv-editor-find-current' : 'sfv-editor-find' }).range(from, to));
+      if (to > from) ranges.push(Decoration.mark({ class: i === find.index ? 'cm-epitaxyFindMatch cm-epitaxyFindMatch-active' : 'cm-epitaxyFindMatch' }).range(from, to));
     }
     if (active && find.index >= 2000 && active.line <= cm.state.doc.lines) {
       const row = cm.state.doc.line(active.line), from = row.from + active.start, to = Math.min(row.to, row.from + active.end);
-      if (to > from) ranges.push(Decoration.mark({ class: 'sfv-editor-find-current' }).range(from, to));
+      if (to > from) ranges.push(Decoration.mark({ class: 'cm-epitaxyFindMatch cm-epitaxyFindMatch-active' }).range(from, to));
     }
     const jump = !find && Number.isInteger(line) && line > 0 ? Math.min(line, cm.state.doc.lines) : null;
-    if (jump) for (let n = jump; n <= Math.min(endLine || jump, cm.state.doc.lines); n++) ranges.push(Decoration.line({ class: 'sfv-editor-jump' }).range(cm.state.doc.line(n).from));
+    if (jump) for (let n = jump; n <= Math.min(endLine || jump, cm.state.doc.lines); n++) ranges.push(Decoration.line({ class: 'cm-epitaxyJumpRange' }).range(cm.state.doc.line(n).from));
     const effects = [search.current.reconfigure(EditorView.decorations.of(Decoration.set(ranges, true)))];
     const target = active ? cm.state.doc.line(Math.min(active.line, cm.state.doc.lines)).from + active.start : jump ? cm.state.doc.line(jump).from : null;
     if (target !== null) effects.push(...unfoldEditorRange(cm.state, target), EditorView.scrollIntoView(Math.min(target, cm.state.doc.length), { y: 'center' }));
@@ -168,7 +169,7 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       onMouseLeave={()=>setHover(null)} onScrollCapture={()=>setHover(null)} onKeyDownCapture={hintKey} onKeyUpCapture={hintKey}
       onPointerDownCapture={() => { pointerUsed.current = true; setShowTabHint(false); }}
       onBlur={event => { setShowTabHint(false); if (!event.currentTarget.contains(event.relatedTarget)) pointerUsed.current = false; }}>
-    <div ref={host} className="sfv-editor" data-file-viewer="" data-word-wrap={settings.wordWrap} data-show-whitespace={settings.showWhitespace || undefined} data-scroll-past-end={settings.scrollPastEnd || undefined}
+    <div ref={host} dir="ltr" className="sfv-editor" data-file-viewer="" data-word-wrap={settings.wordWrap} data-show-whitespace={settings.showWhitespace || undefined} data-scroll-past-end={settings.scrollPastEnd || undefined}
       onContextMenu={openMenu} onKeyDown={event => { if (event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey) openMenu(event); }} />
     {settings.tabIndents && <span id={hintId} className={showTabHint ? "sfv-editor-tab-hint" : "sr-only"}>{t(typeof navigator !== 'undefined' && /Mac/.test(navigator.platform)
       ? 'Tab inserts indentation. To move the focus with Tab, press Shift+Option+M first.'
@@ -184,7 +185,7 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       onSave={(entry,options)=>onSaveComment({...entry,key:fileCommentAttachmentKey(editor.key,entry.id)},options)}
       onDelete={entry=>onDeleteComment?.({...entry,key:fileCommentAttachmentKey(editor.key,entry.id)})}/>,card.dom,card.seq):null;})}
     {menu && <SourceMenu.Popup anchor={menu.view.contentDOM} point={menu.point} trigger={null} side="bottom" align="start"
-      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
+      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard
       label={t('File actions')} onClose={() => setMenu(null)} finalFocus={() => view.current?.contentDOM}>
       {(onAttachFile || menu.selection && onAttachSelection || commentEnabled) && <>
         {menu.selection && onAttachSelection ? <SourceMenu.Item shortcut="cmd+shift+l" onClick={() => selectionController.current?.attach(menu.view,"context_menu")}>{t('Attach selection as context')}</SourceMenu.Item>
@@ -197,7 +198,7 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       {onGoToLine && <><SourceMenu.Separator /><SourceMenu.Item shortcut="ctrl+g" onClick={onGoToLine}>{t('Go to line')}</SourceMenu.Item></>}
       <SourceMenu.Separator />
       <SourceMenu.Item onClick={() => { void navigator.clipboard.writeText(menu.view.state.sliceDoc()).catch(() => toasts?.add(t('Couldn’t copy to clipboard.'), { variant: 'danger' })); }}>{t('Copy file contents')}</SourceMenu.Item>
-      {onDownload && <SourceMenu.Item onClick={() => onDownload(menu.view.state.sliceDoc())}>{t('Download file')}</SourceMenu.Item>}
+      {onDownload && <SourceMenu.Item disabled={downloading} disabledReason={t('Downloading…')} onClick={() => onDownload(menu.view.state.sliceDoc())}>{t('Download file')}</SourceMenu.Item>}
     </SourceMenu.Popup>}
   </>;
 }

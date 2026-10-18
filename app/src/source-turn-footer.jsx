@@ -1,3 +1,4 @@
+import { buttonPressHandlers } from './button-press.mjs';
 // Source adapter for the ordinary Code turn-tail MessageActions toolbar.
 // Eligibility/turn aggregation and the body-to-footer gap belong to the caller.
 import React, { useId, useLayoutEffect, useRef, useState } from 'react';
@@ -41,23 +42,40 @@ function useTurnCopyFeedback(identity, text, button) {
   return { state, copy: () => controller.current?.copy() };
 }
 
-// rating {value: 'positive'|'negative'|null, onRate(value)}: Good / Bad response (scroll-messages-current.js:43173
-// PositiveFeedbackAction / NegativeFeedbackAction, pressed = the current rating; pressing it again clears it).
-function FeedbackButton({ kind, pressed, onRate, busy, setBusy }) {
+// The pressed look of a ghost Button whose pressedVariant "selected" falls back to the default path
+// (shared-frame-BfjMqbuN.js $l, exported cl: ue = le && ghost && !href && _r(fizzy, "color"); the fizzy "color" part
+// is off by default, so the button keeps Il ghost "group/btn … aria-pressed:text-accent" and its paint takes gc).
+// Used by Pin as chapter (c96d752d0 S6e: Uo.Action {icon: f ? "PinFilled" : "Pin", pressed: f, pressedVariant:
+// "selected"}) and Good / Bad response (shared-2 TX.PositiveFeedbackAction hX / NegativeFeedbackAction gX, both
+// pressedVariant "selected"). Every class is in the loaded c6a992d55 CSS.
+const PRESSED_BUTTON = 'group/btn aria-pressed:text-accent';
+const PRESSED_PAINT = 'group-aria-pressed/btn:bg-accent group-hover/btn:group-aria-pressed/btn:bg-accent';
+// shared-2 lX (MessageActions, 2.42304.0): the toolbar's button colours, "[&_button]:text-muted" and
+// "[&_button:hover:not([aria-pressed=true])]:text-primary". They and PRESSED_BUTTON share @layer utilities, where the
+// pressed text-accent (0,2,0) outranks the muted (0,1,1); the host's button reset sits in @layer base (D26), so no
+// local rule decides the colour.
+const MESSAGE_ACTIONS_COLOR = '[&_button]:text-muted [&_button:hover:not([aria-pressed=true])]:text-primary';
+// shared-frame-BfjMqbuN.js Il base: a disabled Button keeps its colour and dims with opacity, unless it is busy
+// (aria-busy); it takes no pointer events. S6e (c96d752d0) only passes pressed and onClick to PositiveFeedbackAction /
+// NegativeFeedbackAction and never disables them; repeated clicks invoke onRate directly.
+const DISABLED_BUTTON = '[&:disabled:not([aria-busy])]:opacity-disabled disabled:pointer-events-none';
+
+// rating {value: 'positive'|'negative'|null, onRate(value)}: Good / Bad response (c96d752d0-BOCqU7c2.js S6e + shared-2
+// hX/gX, PositiveFeedbackAction / NegativeFeedbackAction, pressed = the current rating; pressing it again clears it).
+function FeedbackButton({ kind, pressed, onRate }) {
   const label = kind === 'positive' ? t('Good response') : t('Bad response');
   const icon = kind === 'positive' ? (pressed ? 'ThumbsUpFilled' : 'ThumbsUp') : (pressed ? 'ThumbsDownFilled' : 'ThumbsDown');
   return <SourceTooltip content={label} automatic={true} hoverable={false}>
-    <button type="button" className="stf-copy stf-feedback" data-cds="Button" data-variant="ghost" data-cds-icon-only="" data-cds-ghost=""
-      data-feedback={kind} aria-label={label} aria-pressed={pressed} disabled={busy} tabIndex={-1}
-      onClick={async () => { setBusy(true); try { await onRate(kind); } finally { setBusy(false); } }}>
-      <span className="stf-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
+    <button type="button" className={`stf-copy stf-feedback ${PRESSED_BUTTON} ${DISABLED_BUTTON}`} data-cds="Button" data-variant="ghost" data-cds-icon-only="" data-cds-ghost=""
+      {...buttonPressHandlers} data-feedback={kind} aria-label={label} aria-pressed={pressed} tabIndex={-1}
+      onClick={() => onRate(kind)}>
+      <span className="stf-button-backdrop" aria-hidden="true"><span data-cds-part="paint" className={PRESSED_PAINT} /></span>
       <Icon name={icon} size={16} />
     </button>
   </SourceTooltip>;
 }
 
 function TurnFooter({ identity, turnId, text, completedAtMs, interacted, hovered, focused, rating = null, onFork = null, pin = null }) {
-  const [rateBusy, setRateBusy] = useState(false);
   const root = useRef(null), copyButton = useRef(null), focusRequested = useRef(false);
   const [latched, setLatched] = useState(false);
   const coarse = useCoarseInput(root);
@@ -80,7 +98,7 @@ function TurnFooter({ identity, turnId, text, completedAtMs, interacted, hovered
       <span className="stf-placeholder" aria-hidden="true" />
       <button type="button" className="stf-show-actions stf-sr-only" onFocusCapture={showActions}
         onClick={showActions}>{t("Show message actions")}</button>
-    </div> : <div className="stf-toolbar" data-cds="MessageActions" data-reveal="fade"
+    </div> : <div className={`stf-toolbar ${MESSAGE_ACTIONS_COLOR}`} data-cds="MessageActions" data-reveal="fade"
       role="toolbar" aria-label={t("Message actions")} tabIndex={-1}
       onKeyDown={event => {
         // Roving focus over Copy and, where offered, Fork from here, Pin as chapter and Good / Bad response.
@@ -99,9 +117,7 @@ function TurnFooter({ identity, turnId, text, completedAtMs, interacted, hovered
               const editable = Boolean(event.target.closest?.("input:not([type='hidden']):not([disabled]),[contenteditable]:not([contenteditable='false']),textarea:not([disabled])"));
               if (preventRepeatedSelection({ detail: event.detail, button: event.button, editable })) event.preventDefault();
             }}
-            onKeyDown={event => {
-              if ((event.key === 'Enter' || event.key === ' ') && event.repeat) event.preventDefault();
-            }} onClick={() => { void copy(); }}>
+            {...buttonPressHandlers} onClick={() => { void copy(); }}>
             <span className="stf-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
             <Icon name={copied ? 'Check' : 'Copy'} size={16} />
           </button>
@@ -111,26 +127,27 @@ function TurnFooter({ identity, turnId, text, completedAtMs, interacted, hovered
         {typeof onFork === 'function' && <SourceTooltip content={t("Fork from here")} detail={t("Starts a new session from this point. This one stays as it is.")} automatic={true} hoverable={false}>
           <button type="button" className="stf-copy stf-fork" data-cds="Button" data-variant="ghost" data-cds-icon-only="" data-cds-ghost=""
             data-message-action="fork" aria-label={t("Fork from here")} aria-description={t("Starts a new session from this point. This one stays as it is.")} tabIndex={-1}
-            onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && event.repeat) event.preventDefault(); }}
+            {...buttonPressHandlers}
             onClick={() => onFork()}>
             <span className="stf-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
             <Icon name="ArrowSplitRight" size={16} />
           </button>
         </SourceTooltip>}
-        {/* H6e (cd5a31703 :76980-77060): Pin as chapter / Unpin chapter (Pin / PinFilled, aria-pressed) after Fork,
-            before the ratings. pin {pinned, onToggle}: the turn's first assistant row in the session-chapters store. */}
+        {/* H6e (cd5a31703 :76980-77060; 2.42304.0 c96d752d0 S6e): Pin as chapter / Unpin chapter (Pin / PinFilled,
+            aria-pressed with the selected-fallback pressed look above) after Fork, before the ratings.
+            pin {pinned, onToggle}: the turn's first assistant row in the session-chapters store. */}
         {pin && typeof pin.onToggle === 'function' && <SourceTooltip content={pin.pinned ? t("Unpin chapter") : t("Pin as chapter")} automatic={true} hoverable={false}>
-          <button type="button" className="stf-copy stf-pin" data-cds="Button" data-variant="ghost" data-cds-icon-only="" data-cds-ghost=""
+          <button type="button" className={`stf-copy stf-pin ${PRESSED_BUTTON}`} data-cds="Button" data-variant="ghost" data-cds-icon-only="" data-cds-ghost=""
             data-message-action="pin" aria-label={pin.pinned ? t("Unpin chapter") : t("Pin as chapter")} aria-pressed={!!pin.pinned} tabIndex={-1}
-            onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && event.repeat) event.preventDefault(); }}
+            {...buttonPressHandlers}
             onClick={() => pin.onToggle()}>
-            <span className="stf-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
+            <span className="stf-button-backdrop" aria-hidden="true"><span data-cds-part="paint" className={PRESSED_PAINT} /></span>
             <Icon name={pin.pinned ? 'PinFilled' : 'Pin'} size={16} />
           </button>
         </SourceTooltip>}
         {rating && <>
-          <FeedbackButton kind="positive" pressed={rating.value === 'positive'} onRate={rating.onRate} busy={rateBusy} setBusy={setRateBusy} />
-          <FeedbackButton kind="negative" pressed={rating.value === 'negative'} onRate={rating.onRate} busy={rateBusy} setBusy={setRateBusy} />
+          <FeedbackButton kind="positive" pressed={rating.value === 'positive'} onRate={rating.onRate} />
+          <FeedbackButton kind="negative" pressed={rating.value === 'negative'} onRate={rating.onRate} />
         </>}
         <span id={statusId} className="stf-status stf-sr-only" role="status">{announcement}</span>
         {/* Z0 (scroll-messages-current.js:43193): the timestamp is the LAST

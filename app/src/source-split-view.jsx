@@ -18,6 +18,9 @@ import {
   dragAlt, dragColumns, dropBadgeBox, dropZone, hasBottom, insertLeftResult, isLeftTarget, maxColumnsFor, minWeight, paneDragHint, paneDrop,
   paneDropLabel, paneEntries, posKey, rowBounds, rowMovable, sessionDropBadge, sessionDropCell, splitShortcut,
 } from "./split-view-model.mjs";
+// shared-23 D2 / O2 (generated): which split hosts have a separator pointer drag running.
+import { markSplitPointerDrag } from "./generated/code-current/split-drag-registry.mjs";
+import { rowValueRange, splitDragRtl, splitKeyDelta } from "./split-resizer-keys.mjs";
 import "./source-split-view.css";
 
 export { SESSION_DRAG_TYPE };
@@ -35,7 +38,8 @@ const isMac = () => typeof navigator !== "undefined" && /Mac/i.test(navigator.pl
 // a pane window (main.cjs openPopout for Tasks, Terminal and Side chat loads ?window=pane&pane=…&popout=<session>).
 const windowQuery = typeof window !== "undefined" ? new URLSearchParams(window.location?.search ?? "") : new URLSearchParams();
 export const SESSION_POPOUT_WINDOW = windowQuery.get("window") === "session";
-export const APP_PANE_WINDOW_KINDS = Object.freeze(["tasks", "terminal", "side-chat"]);
+// R4i-transcript TR3 (layout-08): the /btw side pane ("session") pops out too (c03935b01 pa; src/popout-restore-btw.mjs).
+export const APP_PANE_WINDOW_KINDS = Object.freeze(["tasks", "terminal", "side-chat", "session"]);
 export const PANE_WINDOW = windowQuery.get("window") === "pane" && APP_PANE_WINDOW_KINDS.includes(windowQuery.get("pane")) && windowQuery.get("popout")
   ? Object.freeze({ pane: windowQuery.get("pane"), sessionId: windowQuery.get("popout"), cwd: windowQuery.get("cwd") || "" }) : null;
 export const splitStore = createSplitViewStore({
@@ -114,14 +118,18 @@ function onEscape(run, signal) {
   document.addEventListener("keydown", key, { capture: true, signal });
 }
 
-/** p$: the column boundary after `colIndex`; ⌥ while dragging resizes the column around it symmetrically. */
+/** p$ (2.42304.0 j2): the column boundary after `colIndex`; ⌥ while dragging resizes the column around it symmetrically.
+ * A drag registers with the host (markSplitPointerDrag, keyed by the wrapper) from its start to its end, reads the
+ * direction once (RTL mirrors the pointer and arrow deltas), and Home / End jump the boundary to either end. */
 function ColumnResizer({ colIndex, weights, hostRef, store, tracks }) {
-  const drag = useRef(null);
+  const drag = useRef(null), wrapper = useRef(null), rtl = useRef(false);
   const end = () => { drag.current?.abort.abort(); };
   useEffect(() => end, []);
   const start = () => {
     const host = hostRef.current;
     if (!host) return;
+    markSplitPointerDrag(host, wrapper, true);
+    rtl.current = splitDragRtl(host);
     end();
     const width = Math.max(1, host.getBoundingClientRect().width), base = weights.slice(), total = base.reduce((sum, value) => sum + value, 0);
     const state = { alt: false, baseWeights: base, baseDelta: 0, lastDelta: 0, live: base.slice() };
@@ -136,7 +144,10 @@ function ColumnResizer({ colIndex, weights, hostRef, store, tracks }) {
     if (!host || !current || current.cancelled) return;
     host.style.setProperty("--df-col-tracks", columnTracks(dragColumns(current.state, colIndex, delta, current.scale, current.min)));
   };
+  // j2 `x`: what the handle reports (pointer and arrow keys) is mirrored in RTL; Home / End below are not.
+  const handleResize = (delta) => resize(rtl.current ? -delta : delta);
   const finish = (moved) => {
+    markSplitPointerDrag(hostRef.current, wrapper, false);
     const current = drag.current;
     drag.current = null;
     current?.abort.abort();
@@ -144,22 +155,34 @@ function ColumnResizer({ colIndex, weights, hostRef, store, tracks }) {
     if (moved && current && !current.cancelled && live.some((value, at) => value !== current.base[at])) { store.setColWeights(live); return; }
     hostRef.current?.style.setProperty("--df-col-tracks", tracks);
   };
+  // j2 `w`: Home / End (no ⌘ ⌃ ⌥, no pointer drag on this host) move the boundary by the host's whole width.
+  const keyDown = (event) => {
+    const host = hostRef.current, sign = splitKeyDelta(event, host);
+    if (sign === 0) return;
+    event.preventDefault();
+    start();
+    resize(sign * host.getBoundingClientRect().width);
+    finish(true);
+  };
   const pair = weights[colIndex] + weights[colIndex + 1];
-  return <div className="dframe-pane-resize-col">
-    <SourceResizeHandle orientation="vertical" onResizeStart={start} onResize={resize} onResizeEnd={finish}
-      onDoubleClick={() => store.setColWeights(weights.map(() => 1))}
+  return <div ref={wrapper} className="dframe-pane-resize-col">
+    <SourceResizeHandle orientation="vertical" onResizeStart={start} onResize={handleResize} onResizeEnd={finish}
+      onDoubleClick={() => store.setColWeights(weights.map(() => 1))} onKeyDown={keyDown}
       aria-label={t("Resize pane columns")} aria-valuenow={Math.round((100 * weights[colIndex]) / pair)} />
   </div>;
 }
 
-/** h$: the row boundary of a column with a bottom pane (disabled while the host is too short to move it). */
+/** h$ (2.42304.0 N2): the row boundary of a column with a bottom pane (disabled while the host is too short to move it).
+ * A drag registers with the host from its start to its end; Home / End jump the movable boundary to either end. */
 function RowResizer({ hostRef, store, rowSplit, height }) {
-  const drag = useRef(null);
+  const drag = useRef(null), wrapper = useRef(null);
   useEffect(() => () => drag.current?.abort.abort(), []);
   const value = height === 0 ? rowSplit : clampRowSplit(rowSplit, height), movable = height === 0 || rowMovable(height, value);
+  const range = height === 0 ? undefined : rowValueRange(height, movable);
   const start = () => {
     const host = hostRef.current;
     if (!host) return;
+    markSplitPointerDrag(host, wrapper, true);
     drag.current?.abort.abort();
     const box = Math.max(1, host.getBoundingClientRect().height), from = hostVar(host, "--df-pane-row", SPLIT_ROW.DEFAULT);
     const abort = new AbortController();
@@ -173,20 +196,31 @@ function RowResizer({ hostRef, store, rowSplit, height }) {
     host.style.setProperty("--df-pane-row", String(current.live));
   };
   const finish = (moved) => {
+    markSplitPointerDrag(hostRef.current, wrapper, false);
     const current = drag.current;
     drag.current = null;
     current?.abort.abort();
     if (moved && current && !current.cancelled && current.live !== current.from) store.setRowSplit(current.live);
     else hostRef.current?.style.setProperty("--df-pane-row", String(value));
   };
-  return <div className="dframe-pane-resize-row" style={movable ? undefined : { pointerEvents: "none" }}>
+  // N2 `C`: Home / End (a movable row, no ⌘ ⌃ ⌥, no pointer drag on this host) move the boundary by the host's height.
+  const keyDown = (event) => {
+    const host = hostRef.current, sign = movable ? splitKeyDelta(event, host) : 0;
+    if (sign === 0) return;
+    event.preventDefault();
+    start();
+    resize(sign * host.getBoundingClientRect().height);
+    finish(true);
+  };
+  return <div ref={wrapper} className="dframe-pane-resize-row" style={movable ? undefined : { pointerEvents: "none" }}>
     <SourceResizeHandle orientation="horizontal" onResizeStart={start} onResize={resize} onResizeEnd={finish}
-      onDoubleClick={() => { hostRef.current?.style.setProperty("--df-pane-row", String(SPLIT_ROW.DEFAULT)); store.setRowSplit(SPLIT_ROW.DEFAULT); }}
-      aria-label={t("Resize pane rows")} aria-valuenow={Math.round(100 * value)} aria-disabled={!movable || undefined} />
+      onDoubleClick={() => { hostRef.current?.style.setProperty("--df-pane-row", String(SPLIT_ROW.DEFAULT)); store.setRowSplit(SPLIT_ROW.DEFAULT); }} onKeyDown={keyDown}
+      aria-label={t("Resize pane rows")} aria-valuenow={Math.round(100 * value)} aria-valuemin={range?.min} aria-valuemax={range?.max} aria-disabled={!movable || undefined} />
   </div>;
 }
 
-/** g$: where a column boundary meets a row boundary — one drag resizes both. */
+/** g$ (2.42304.0 P2): where a column boundary meets a row boundary — one drag resizes both. The drag registers with the
+ * host (keyed by its cancel ref) while it runs, and its column part is mirrored in RTL. */
 function CornerResizer({ colIndex, weights, hostRef, store, tracks }) {
   const cancel = useRef(null);
   useEffect(() => () => cancel.current?.(), []);
@@ -199,10 +233,11 @@ function CornerResizer({ colIndex, weights, hostRef, store, tracks }) {
     const width = Math.max(1, rect.width), height = Math.max(1, rect.height), base = weights.slice(), total = base.reduce((sum, value) => sum + value, 0);
     const min = minWeight(width, total), bounds = rowBounds(height), fromRow = hostVar(host, "--df-pane-row", SPLIT_ROW.DEFAULT);
     const x = event.clientX, y = event.clientY, state = { alt: event.altKey, baseWeights: base, baseDelta: 0, lastDelta: 0, live: base };
+    const mirror = splitDragRtl(host) ? -1 : 1;
     let row = fromRow, moved = false, movedX = false, movedY = false, cursor = false;
     const abort = new AbortController(), { signal } = abort;
     const move = (next) => {
-      const dx = next.clientX - x, dy = next.clientY - y;
+      const dx = (next.clientX - x) * mirror, dy = next.clientY - y;
       if (Math.abs(dx) > CORNER_AXIS_PX) movedX = true;
       if (Math.abs(dy) > CORNER_AXIS_PX) movedY = true;
       if (movedX || movedY) moved = true;
@@ -215,6 +250,7 @@ function CornerResizer({ colIndex, weights, hostRef, store, tracks }) {
     };
     const alt = (next) => dragAlt(state, next.altKey);
     const finish = (completed = false) => {
+      markSplitPointerDrag(host, cancel, false);
       abort.abort();
       handle.removeAttribute("data-dragging");
       document.body.style.cursor = "";
@@ -234,6 +270,7 @@ function CornerResizer({ colIndex, weights, hostRef, store, tracks }) {
     document.addEventListener("keyup", alt, { signal });
     onEscape(() => finish(false), signal);
     cancel.current = finish;
+    markSplitPointerDrag(host, cancel, true);
   };
   const reset = () => {
     hostRef.current?.style.setProperty("--df-pane-row", String(SPLIT_ROW.DEFAULT));
@@ -554,3 +591,5 @@ export function SourceSplitHost({ side = 0, children, store = splitStore }) {
 }
 
 export { LEFT_OF_PRIMARY };
+// The separators on their own, for the controlled-event tests (tests/split-resizer-keys.test.mjs).
+export { ColumnResizer as SplitColumnResizer, RowResizer as SplitRowResizer, CornerResizer as SplitCornerResizer };

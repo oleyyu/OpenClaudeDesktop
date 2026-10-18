@@ -31,7 +31,9 @@ function useToken(name) {
 }
 function SketchIcon({ customIcon, size = 'sm', ...props }) {
   const pixels = { xs: 12, sm: 16, md: 20 }[size] ?? size;
-  if (!customIcon) return <Icon {...props} glyphMap={sketchIcons} size={pixels} style={{ fontFamily: 'PreviewSketchIcons' }} />;
+  // R4i-small SM3: the 2.42304.0 glyph map draws with its own font, the official Anthropicons-Variable
+  // (c0f671921-cvFTkbeX.woff2, declared by shared-frame-CegduNQ2.css that index.html links).
+  if (!customIcon) return <Icon {...props} glyphMap={sketchIcons} size={pixels} style={{ fontFamily: 'Anthropicons-Variable' }} />;
   return <svg aria-hidden="true" data-cds="Icon" width={pixels} height={pixels} viewBox={`0 0 ${customIcon.viewBox} ${customIcon.viewBox}`} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
     {customIcon.paths.map((path, index) => <path key={index} {...path} />)}
   </svg>;
@@ -67,7 +69,9 @@ const { Toolbar, colors } = createPreviewSketchToolbar({
     const height = probe.getBoundingClientRect().height; probe.remove(); return height;
   },
 });
-const { Canvas } = createPreviewSketchCanvas({ ownerWindow, optionalOwnerWindow, useToken, reducedMotion });
+// preview-08: the generated canvas is the 2.42304.0 St (c467aa787-B4L-l_bi, R4g SM2), which formats its "Sketch canvas" /
+// "Text label" aria-labels with useIntl (ce = me()); the host's intl goes in like the toolbar's and the host's.
+const { Canvas } = createPreviewSketchCanvas({ ownerWindow, optionalOwnerWindow, useToken, reducedMotion, useIntl: useRoutineIntl });
 const noTextTargets = { textTargets: undefined, handleTextTargetRedacted() {}, textRedactionCount: () => 0, resetTextRedactionCount() {} };
 const useSketch = createPreviewSketchState({ usePlatform: () => true,
   // Original optional redaction/OCR rollout is not exposed without its detector.

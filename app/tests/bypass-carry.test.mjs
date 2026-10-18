@@ -79,7 +79,10 @@ test('main.cjs binds the carry only on the switch reconnect and drops it everywh
   assert.match(block('settings'), /if \(config\.allowBypassPermissions !== true\) switchToken = bypassCarry = null;/);
   // Bypass is never saved as a default and every request is still validated.
   assert.equal(/permission:\s*["']bypass["']/.test(main), false);
-  assert.match(block('rpc'), /validateBypassRequest\(params, \(\) => config/);
+  // The desktop:call "rpc" case is now `return requestRpc(p, e.sender)`; the validation lives in requestRpc.
+  assert.match(main, /case "rpc": return requestRpc\(p, e\.sender\);/);
+  const rpc = main.slice(main.indexOf('async function requestRpc('), main.indexOf('ipcMain.handle("desktop:call"'));
+  assert.match(rpc, /validateBypassRequest\(params, \(\) => config/);
 });
 
 // main.jsx wiring: the switch sends the confirmed scope (the Bypass scope key's cwd and session) on both calls, and the

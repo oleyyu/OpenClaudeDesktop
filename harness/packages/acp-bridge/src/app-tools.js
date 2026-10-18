@@ -26,6 +26,9 @@ export const APP_TOOL_NAMES = Object.freeze([
   'Monitor', 'MonitorStop', 'CronCreate', 'CronList', 'CronDelete', 'WebFetch', 'scroll', 'hover', 'find', 'preview_batch',
   'NotebookEdit', 'list_sessions', 'get_session', 'list_events', 'set_session_title', 'reveal_path', 'open_in_editor',
   'get_window_layout', 'open_session_in', 'close_split', 'set_sidebar_collapsed',
+  'show_widget', 'read_me',
+  // agent-tools/turn-plan.mjs: the task list and the next-step box (2.42304.0 ccd_turn update_plan / wrap_up, alwaysLoad).
+  'update_plan', 'wrap_up',
 ])
 
 /** {name, command, args, env, instructions} (env holds the socket and token; instructions text or null) or null. */

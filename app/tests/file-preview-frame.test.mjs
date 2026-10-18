@@ -94,6 +94,6 @@ test("main wires the scheme before ready, the handler, both IPC actions (popouts
   assert.match(main, /case "file:preview-frame":\s+return filePreviewFrames\.register\(\{ root: p\.cwd \|\| config\.cwd, relative: p\.relative, text: p\.text \}\);/);
   assert.match(main, /"file:preview-frame", "file:preview-frame-release"/);
   const html = await fs.readFile(new URL("../index.html", import.meta.url), "utf8");
-  assert.match(html, /frame-src 'self' oc-file-preview:;/);
+  assert.match(html, /frame-src 'self' oc-file-preview: oc-mcp-sandbox:;/);
   assert.match(html, /script-src 'self';/, "the app's own script policy is unchanged");
 });

@@ -46,10 +46,17 @@ for (let cursor=0; cursor<names.length; cursor++) {
  await fs.writeFile(path.join(output,name),bytes);
  manifest.modules.push({name,imports,sha256:sha(bytes),bytes:bytes.length});
 }
-async function adapter(name, text, sources) {
+async function adapter(name, text, sources, referenceVersion) {
+ // 2.37337.1 design-system compatibility: retain the extracted behavior while
+ // adopting the official logical-direction utilities removed from the old bundle.
+ // The manifest records that rename (the committed manifest carried this note
+ // before the generator emitted it; R1-style made the generator reproduce it).
+ let styleCompatibility;
+ if (name === 'preview-element-chip.mjs') text = text.replaceAll('"mr-xs"', '"me-xs"');
+ if (name === 'preview-element-chip.mjs') styleCompatibility = '2.37337.1 logical-direction utility rename; behavior and original source provenance retained';
  const formatted=await format(text,{parser:'babel'});
  await fs.writeFile(path.join(output,name),formatted);
- manifest.adapters.push({name,sha256:sha(formatted),sources});
+ manifest.adapters.push({name,sha256:sha(formatted),sources,...(styleCompatibility?{styleCompatibility}:{}),...(referenceVersion?{referenceVersion}:{})});
 }
 const provenance=[{name:wrapperName,sha256:sha(wrapperBytes)}];
 const filenameName='c26fb8b6b-EDdRebCk.js', filenameBytes=await fs.readFile(path.join(source,filenameName));
@@ -116,9 +123,12 @@ const suffixEnd=desktopEditorText.indexOf('if(c)',suffixStart);
 const localURIMatch=desktopEditorText.slice(suffixEnd).match(/else p=(`[^;]+`);return await Fe.shell.openExternal/);
 if(suffixStart<0||suffixEnd<0||!localURIMatch)throw Error('Original editor URI markers changed');
 await adapter('editor-location.cjs',`// Original desktop tm/im encoding and local URI/suffix expressions. Host supplies protocol/path/position.\n${editorURI.text}\nfunction editorLocationURI(a,u,i,o){${desktopEditorText.slice(suffixStart,suffixEnd)}return ${localURIMatch[1]};}\nmodule.exports={editorLocationURI};`,[editorURI.source]);
-const sideRect=await originalBindings('cd97b284f-cW3UmTvk.js',['e','t']);
-const sideHandles=await originalBindings('cccc2cf0a-DHtZKTKW.js',['pT','mT']);
-await adapter('side-chat-geometry.mjs',`// Original panel placement, viewport rebasing, resize handles and cursors.\n${sideRect.text}\n${sideHandles.text}\nexport {e as sideChatRect,pT as sideChatResizeCursor,mT as sideChatResizeHandles};`,[sideRect.source,sideHandles.source]);
+// Side-chat geometry follows 2.42304.0: n/s handles use inset-x-[8px] (was left-/right-[8px]) and the
+// rect takes an optional rtl flag (default false). Names are relative to `source`, as verify-code-editor resolves them.
+const sideChatVersion='2.42304.0', sideChatSource='../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/';
+const sideRect=await originalBindings(sideChatSource+'cd97b284f-Cpvb2TuL.js',['e','t']);
+const sideHandles=await originalBindings(sideChatSource+'cccc2cf0a-B0D--VZp.js',['sk','ck']);
+await adapter('side-chat-geometry.mjs',`// Original panel placement, viewport rebasing, resize handles and cursors (${sideChatVersion}).\n${sideRect.text}\n${sideHandles.text}\nexport {e as sideChatRect,sk as sideChatResizeCursor,ck as sideChatResizeHandles};`,[sideRect.source,sideHandles.source],sideChatVersion);
 // Side-chat context wire format and transcript selection lifecycle from the current snapshot.
 const contextWire=await originalBindings('c4d199b75-BZcAZW6m.js',['oe','S','C','w','A','Se','Ne','B']);
 const mentionEscape=await originalBindings('shared-175-mecppX10.js',['Nh','Ph','pg','mg','hg','gg','vg','xg']);
@@ -227,15 +237,10 @@ ${inspectorMethods}
 const inspectorBytes=await fs.readFile(path.join(output,'preview-element-inspector.mjs'));
 await fs.writeFile(path.join(root,'electron/generated/preview-element-inspector.mjs'),inspectorBytes);
 manifest.copies.push({name:'preview-element-inspector.mjs',target:'electron/generated/preview-element-inspector.mjs',sha256:sha(inspectorBytes)});
-const previewOverflow=await originalBindings('cfe7c4b3b-C2Lhkd1Y.js',['I','oe','F']);
-await adapter('preview-tab-overflow.mjs',`// Original shared tab overflow row, size tokens and typeahead-reset keys.
-import {useCallback as c} from 'react';
-import {jsx as s,jsxs as l} from 'react/jsx-runtime';
-export function createPreviewOverflowRow({Item,Icon:T,OverflowTooltip:C}) {
-const O={Item},d=(...values)=>values.filter(Boolean).join(' '),N=({children})=>children,x=()=>({});
-${previewOverflow.text}
-return {Row:I,sizes:oe,typeaheadResetKeys:F};
-}`,[previewOverflow.source]);
+// R3-terminal FT-15 (global-v01): the shared tab overflow row (2.31226.0 cfe7c4b3b I/oe/F, with a 'pl-[2px]' →
+// 'ps-[2px]' patch) is retired; the Preview and terminal strips render the 2.42304.0 ce from
+// extract-code-ui-current.mjs (generated/code-current/terminal-tab-overflow.mjs). Its old output is removed.
+await fs.rm(path.join(output,'preview-tab-overflow.mjs'),{force:true});
 const previewUnicode=await originalBindings('shared-25-B37c0AC9.js',['RU','zU','BU','LU']);
 const previewParser=await originalBindings('c224804cc-Cihs1Tbi.js',['G','K','le','q','ue','J','Y','de','X','Z','fe','Q','pe','me','he']);
 await adapter('preview-address-parser.mjs',`// Original current Preview address classifier and Unicode normalization.
@@ -349,71 +354,133 @@ const Of=WD;
 ${elementTranscript.text}
 return YM;
 }`,[elementTranscript.source,elementCardAction.source]);
-const sketchToolbar = await originalBindings('c467aa787-Dtc0Q8kR.js',
-  ['Ct','wt','Tt','Et','Dt','Ot','kt','At','jt','Mt','Nt','Pt','Ft','It','Lt','Rt','zt','Bt','Vt','Ht','Ut','Wt','Gt','Jt']);
-const sketchIconBytes=await fs.readFile(path.join(source,'shared-frame-DVFSKIcx.js'));
-const sketchIconBlock=sketchIconBytes.toString().match(/icons:\{(Activity:57344,[^}]+)\}/)?.[1];
+// R4i-small SM3 (preview-sketch adapters, after R4g SM2's canvas): the toolbar, state, keys, host and glyph map
+// follow 2.42304.0 as well. Each slice was aligned against its 2.31226.0 predecessor by a scope-normalized token diff:
+// the state slice, the keys slice and the host chunk differ only in minified names (plus the host's new b, the
+// "[data-sketch-tools] button:not(:disabled)" selector it exports); the toolbar adds the "Zoom" group (yMbKjuDH/n)
+// in the bar, resting.firstToolsOnly and data-sketch-tools. Every import a slice uses is pinned to its
+// "module:export" below, because minified names are reused across versions (D1). Names are relative to `source`.
+const sketchLatestVersion='2.42304.0',sketchLatestSource='../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/';
+async function sketchLatestChunk(name,pins,features=[]) {
+ const bytes=await fs.readFile(path.join(source,sketchLatestSource+name)),text=bytes.toString(),imports=new Map();
+ for(const node of parsers.babel.parse(text,{}).program.body)if(node.type==='ImportDeclaration')
+  for(const spec of node.specifiers)imports.set(spec.local.name,`${node.source.value.slice(2)}:${spec.imported?.name}`);
+ for(const [local,spec] of Object.entries(pins))if(imports.get(local)!==spec)throw Error(`${name} import ${local} is ${imports.get(local)}, expected ${spec}`);
+ for(const feature of features)if(text.split(feature).length-1!==1)throw Error(`${name} feature ${feature} changed`);
+ return {bytes,text,source:{name:sketchLatestSource+name,sha256:sha(bytes)}};
+}
+const sketchFrame='vendor-frame-DfPJ1QmD.js',sketchShared='shared-frame-BfjMqbuN.js';
+const sketchChunk=await sketchLatestChunk('c467aa787-B4L-l_bi.js',{
+ r:sketchFrame+':Co',s:sketchFrame+':_o',l:sketchFrame+':mo',f:sketchFrame+':yo',a:sketchFrame+':So',d:sketchFrame+':uo',
+ c:sketchFrame+':bo',u:sketchFrame+':oo',n:sketchFrame+':Ba',o:sketchFrame+':Va',i:sketchFrame+':Ha',p:sketchFrame+':za',
+ fe:'vendor-intl-Db7hDWRO.js:f',pe:'vendor-intl-Db7hDWRO.js:l',me:'vendor-intl-Db7hDWRO.js:p',
+ S:sketchShared+':cl',ae:sketchShared+':Oc',b:sketchShared+':Hl',C:sketchShared+':lc',w:sketchShared+':qa',oe:sketchShared+':Ya',
+ T:sketchShared+':qs',ce:sketchShared+':kc',le:sketchShared+':vl',re:sketchShared+':Eu',se:sketchShared+':_d',de:sketchShared+':xu',
+ x:sketchShared+':Yl',ie:sketchShared+':Kl',h:'shared-25-DP8p7i1Z.js:Pf',_e:'c8748971a-B4mdzZFm.js:t',
+ g:'shared-25-DP8p7i1Z.js:Rm',ee:'shared-1-CAAiD7E3.js:xl',_:'shared-25-DP8p7i1Z.js:Th',v:'shared-156-Bikz018e.js:xr',
+ y:'shared-19-CkPOiIKm.js:B',te:'shared-19-CkPOiIKm.js:R'},
+ ['defaultMessage:"Zoom",id:"yMbKjuDH/n"','firstToolsOnly===!0','"data-sketch-tools":!0','export{Kt as a,tn as i,Yt as n,Q as o,Zt as r,St as s,Xt as t};','Xt="#1F1E1D"']);
+const sketchToolbar = await originalBindings(sketchLatestSource+'c467aa787-B4L-l_bi.js',
+  ['Q','wt','Tt','Et','Dt','Ot','kt','At','jt','Mt','Nt','Pt','Ft','It','Lt','Rt','zt','Bt','Vt','Ht','Ut','Wt','Gt','Kt','Yt']);
+// The glyph map pairs with 2.42304.0's own c0f671921-cvFTkbeX.woff2, which the official shared-frame-CegduNQ2.css
+// (linked by index.html from public/assets/v1) declares as Anthropicons-Variable; the 2.31226.0 font is no longer vendored.
+const sketchIconChunk=await sketchLatestChunk(sketchShared,{});
+const sketchIconBlock=sketchIconChunk.text.match(/icons:\{(Activity:57344,[^}]+)\}/)?.[1];
 if(!sketchIconBlock)throw Error('Current sketch icon map changed');
 const sketchIcons=Object.fromEntries([...sketchIconBlock.matchAll(/([A-Za-z][A-Za-z0-9]*):(\d+)/g)].map(match=>[match[1],Number(match[2])]));
-await adapter('preview-sketch-icons.mjs',`// Current source glyph map, paired with its own original variable font.\nexport default ${JSON.stringify(sketchIcons)};`,[{name:'shared-frame-DVFSKIcx.js',sha256:sha(sketchIconBytes)}]);
-const sketchFontName='c0f671921-CWPPK3vl.woff2',sketchFontBytes=await fs.readFile(path.join(source,sketchFontName));
-await fs.writeFile(path.join(output,sketchFontName),sketchFontBytes);
-manifest.modules.push({name:sketchFontName,imports:[],sha256:sha(sketchFontBytes),bytes:sketchFontBytes.length});
-await adapter('preview-sketch-toolbar.mjs',`// Original adaptive selection/drawing toolbar. The host supplies CDS primitives,
+const sketchIconFont=await fs.readFile(path.join(source,sketchLatestSource+'shared-frame-CegduNQ2.css'),'utf8');
+if(sketchIconFont.split('font-family:Anthropicons-Variable;src:url(/assets/v1/c0f671921-cvFTkbeX.woff2)format("woff2-variations")').length-1!==1)throw Error('Current sketch icon font changed');
+await adapter('preview-sketch-icons.mjs',`// Current source glyph map (${sketchLatestVersion}), paired with its own Anthropicons-Variable font.\nexport default ${JSON.stringify(sketchIcons)};`,[sketchIconChunk.source],sketchLatestVersion);
+await fs.rm(path.join(output,'c0f671921-CWPPK3vl.woff2'),{force:true});
+await adapter('preview-sketch-toolbar.mjs',`// Original adaptive selection/drawing toolbar (${sketchLatestVersion}). The host supplies CDS primitives,
 // density and owner-window utilities; no tool, layout or discard logic is rewritten.
-import {useState as e,useImperativeHandle as t,useEffect as n,useLayoutEffect as r,useRef as i,useCallback as s,useMemo as d,memo as u,Fragment as o} from 'react';
-import {jsx as a,jsxs as c} from 'react/jsx-runtime';
+import {useState as r,useImperativeHandle as s,useEffect as l,useLayoutEffect as f,useRef as a,useCallback as d,useMemo as c,memo as u,Fragment as n} from 'react';
+import {jsx as o,jsxs as i} from 'react/jsx-runtime';
 export function createPreviewSketchToolbar({
-  Button:w,Tooltip:S,Icon:se,Panel:ce,Menu:E,renderMenuItems:ie,
-  ConfirmDialog:T,Provider:re,Message:de,useIntl:D,
-  ownerWindow:te,asElement:y,schedule:x,prefersReducedMotion:b,ownerDocument:oe,
-  useRem:le,densityToken:pe,resolveLength:C
+  Button:S,Tooltip:ae,Icon:b,Panel:C,Menu:w,renderMenuItems:oe,
+  ConfirmDialog:T,Provider:ce,Message:pe,useIntl:me,
+  ownerWindow:h,asElement:le,schedule:re,prefersReducedMotion:se,ownerDocument:de,
+  useRem:x,densityToken:_e,resolveLength:ie
 }) {
-const l=(...parts)=>parts.filter(Boolean).join(' '),ue=value=>value;
+const p=(...parts)=>parts.filter(Boolean).join(' '),fe=value=>value;
 ${sketchToolbar.text}
-return {Toolbar:Gt,colors:Jt};
-}`,[sketchToolbar.source]);
-const sketchBytes=await fs.readFile(path.join(source,'c467aa787-Dtc0Q8kR.js'));
+return {Toolbar:Kt,colors:Yt};
+}`,[sketchToolbar.source],sketchLatestVersion);
+// R4g SM2 (preview-08 / X7-13): the canvas follows 2.42304.0 c467aa787-B4L-l_bi.js St, whose "Sketch canvas" /
+// "Text label" aria-labels go through useIntl (ce = me()) and whose hit test skips sub-threshold shapes. Names are
+// relative to `source` (as side-chat geometry above) so verify-code-editor resolves them. Every free name of the
+// slice is pinned to its import below: minified names are reused across versions, so a rename must fail loudly.
+const sketchCanvasVersion='2.42304.0',sketchCanvasSource='../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/';
+const sketchCanvasName='c467aa787-B4L-l_bi.js';
+const sketchBytes=await fs.readFile(path.join(source,sketchCanvasSource+sketchCanvasName));
+const sketchImports=new Map();
+for(const node of parsers.babel.parse(sketchBytes.toString(),{}).program.body)if(node.type==='ImportDeclaration')
+ for(const spec of node.specifiers)sketchImports.set(spec.local.name,`${node.source.value.slice(2)}:${spec.imported?.name}`);
+const sketchCanvasImports={r:'vendor-frame-DfPJ1QmD.js:Co',s:'vendor-frame-DfPJ1QmD.js:_o',l:'vendor-frame-DfPJ1QmD.js:mo',
+ f:'vendor-frame-DfPJ1QmD.js:yo',a:'vendor-frame-DfPJ1QmD.js:So',d:'vendor-frame-DfPJ1QmD.js:uo',c:'vendor-frame-DfPJ1QmD.js:bo',
+ o:'vendor-frame-DfPJ1QmD.js:Va',i:'vendor-frame-DfPJ1QmD.js:Ha',e:'preload-helper-D0dM6GpB.js:n',D:'cf80fba0c-CT5qqVq9.js:t',
+ he:'shared-130-DnUXVlYq.js:yb',ge:'c25d7186f-CHE_J2eY.js:t',_e:'c8748971a-B4mdzZFm.js:t',h:'shared-25-DP8p7i1Z.js:Pf',
+ m:'shared-25-DP8p7i1Z.js:Ff',ue:'shared-frame-BfjMqbuN.js:wc',me:'vendor-intl-Db7hDWRO.js:p'};
+for(const [local,spec] of Object.entries(sketchCanvasImports))if(sketchImports.get(local)!==spec)throw Error(`Sketch canvas import ${local} is ${sketchImports.get(local)}, expected ${spec}`);
 const sketchText=await format(sketchBytes.toString(),{parser:'babel'});
-const sketchStart=sketchText.indexOf('var j ='),sketchEnd=sketchText.indexOf('function Ct(');
+const sketchStart=sketchText.indexOf('var O = {\n    name: "EditFilled"'),sketchEnd=sketchText.indexOf('function Q() {');
 if(sketchStart<0||sketchEnd<sketchStart)throw Error('Sketch canvas source markers changed');
-const sketchMin=await originalBindings('cf80fba0c-CT5qqVq9.js',['e']);
-const sketchMax=await originalBindings('shared-125-CbVXqztB.js',['Ju']);
-const sketchTokens=await originalBindings('c25d7186f-D8bdmkZe.js',['e']);
-await adapter('preview-sketch-canvas.mjs',`// Complete original drawing canvas and geometry/history/rendering helpers.
-import {useState as e,useImperativeHandle as t,useEffect as n,useLayoutEffect as r,useRef as i,useCallback as s,useMemo as d} from 'react';
-import {jsx as a,jsxs as c} from 'react/jsx-runtime';
-const A=(()=>{${sketchMin.text};return e;})();
-const fe=(()=>{${sketchMax.text};return Ju;})();
-const O=(()=>{${sketchTokens.text};return e;})();
-export function createPreviewSketchCanvas({ownerWindow:te,optionalOwnerWindow:ee,useToken:pe,reducedMotion:ae}) {
-${sketchText.slice(sketchStart,sketchEnd)}
-return {Canvas:bt,drawStroke:Z,constrainPoint:he,resizeStroke:De,hitTest:Se,moveStroke:Ce,resizeHandle:q,resizeText:je,emptyHistory:Me,commitHistory:J,undoHistory:Ne,redoHistory:Pe,mapHistory:Fe,historyState:Ie};
-}`,[sketchToolbar.source,sketchMin.source,sketchMax.source,sketchTokens.source]);
-const sketchState=await originalBindings('c467aa787-Dtc0Q8kR.js',['Jt','Yt','Xt','Zt','Qt','$t','en'],{preserveKind:true});
-const sketchKeys=await originalBindings('shared-19-DmuztgN-.js',['d6','f6','p6','m6','h6','g6','_6','v6','y6','b6','x6','C6','w6']);
-await adapter('preview-sketch-keys.mjs',`// Original command matching, including physical-key versus character rules.
-const Wo=()=>typeof navigator!=='undefined'&&/Mac/.test(navigator.platform),yc=()=>typeof navigator!=='undefined'&&/Linux/.test(navigator.platform);
+const sketchSlice=sketchText.slice(sketchStart,sketchEnd);
+for(const feature of ['id: "jvMtXRguc4"','id: "c29+YCh/oq"','ce = me()','function St('])
+ if(sketchSlice.split(feature).length-1!==1)throw Error(`Sketch canvas feature ${feature} changed`);
+const sketchMin=await originalBindings(sketchCanvasSource+'cf80fba0c-CT5qqVq9.js',['e']);
+const sketchMax=await originalBindings(sketchCanvasSource+'shared-130-DnUXVlYq.js',['_d']);
+const sketchTokens=await originalBindings(sketchCanvasSource+'c25d7186f-CHE_J2eY.js',['e']);
+const sketchErrorText=await originalBindings(sketchCanvasSource+'preload-helper-D0dM6GpB.js',['e']);
+if(!sketchErrorText.text.includes('Symbol.for("ant.o11y.errorText")'))throw Error('Sketch canvas error-text helper changed');
+await adapter('preview-sketch-canvas.mjs',`// Complete original drawing canvas and geometry/history/rendering helpers (${sketchCanvasVersion}).
+import {useState as r,useImperativeHandle as s,useEffect as l,useLayoutEffect as f,useRef as a,useCallback as d,useMemo as c} from 'react';
+import {jsx as o,jsxs as i} from 'react/jsx-runtime';
+const D=(()=>{${sketchMin.text};return e;})();
+const he=(()=>{${sketchMax.text};return _d;})();
+const ge=(()=>{${sketchTokens.text};return e;})();
+const e=(()=>{${sketchErrorText.text};return e;})();
+export function createPreviewSketchCanvas({ownerWindow:h,optionalOwnerWindow:m,useToken:_e,reducedMotion:ue,useIntl:me}) {
+${sketchSlice}
+return {Canvas:St,drawStroke:X,constrainPoint:ve,resizeStroke:ke,hitTest:Te,moveStroke:Ee,resizeHandle:Ne,resizeText:K,emptyHistory:Pe,commitHistory:q,undoHistory:Fe,redoHistory:Ie,mapHistory:Le,historyState:Re};
+}`,[{name:sketchCanvasSource+sketchCanvasName,sha256:sha(sketchBytes)},sketchMin.source,sketchMax.source,sketchTokens.source,sketchErrorText.source],sketchCanvasVersion);
+const sketchState=await originalBindings(sketchLatestSource+'c467aa787-B4L-l_bi.js',['Yt','Xt','Zt','Qt','$t','en','tn'],{preserveKind:true});
+// shared-19 W7..e9 are 2.31226.0 m6..w6 renamed (Y7 = B matchCommand, $7 = R shortcut); $o/io are the host platform tests.
+await sketchLatestChunk('shared-19-CkPOiIKm.js',{},['Y7 as B,','$7 as R,']);
+const sketchKeys=await originalBindings(sketchLatestSource+'shared-19-CkPOiIKm.js',['V7','H7','U7','W7','G7','K7','q7','J7','Y7','X7','Z7','$7','e9']);
+await adapter('preview-sketch-keys.mjs',`// Original command matching (${sketchLatestVersion}), including physical-key versus character rules.
+const $o=()=>typeof navigator!=='undefined'&&/Mac/.test(navigator.platform),io=()=>typeof navigator!=='undefined'&&/Linux/.test(navigator.platform);
 ${sketchKeys.text}
-export {y6 as matchSketchCommand,C6 as sketchShortcut};`,[sketchKeys.source]);
-await adapter('preview-sketch-state.mjs',`// Original state, history commands and export generation gate. OCR is a host capability.
-import {useState as e,useRef as i,useCallback as s} from 'react';
-export function createPreviewSketchState({usePlatform:f,useRedaction:m,skipTextDetection:p,useTextTargets:qt,asElement:y,isTextInput:h,matchCommand:g,shortcut:_}) {
+export {Y7 as matchSketchCommand,$7 as sketchShortcut};`,[sketchKeys.source],sketchLatestVersion);
+await adapter('preview-sketch-state.mjs',`// Original state, history commands and export generation gate (${sketchLatestVersion}). OCR is a host capability.
+import {useState as r,useRef as a,useCallback as d} from 'react';
+export function createPreviewSketchState({usePlatform:g,useRedaction:ee,skipTextDetection:_,useTextTargets:Jt,asElement:le,isTextInput:v,matchCommand:y,shortcut:te}) {
 ${sketchState.text}
-return en;
-}`,[sketchState.source]);
-const sketchHostBytes=await fs.readFile(path.join(source,'cda4f50bb-z5ULw2rQ.js'));
-const sketchHostText=sketchHostBytes.toString(),sketchHostNodes=parsers.babel.parse(sketchHostText,{}).program.body;
-const sketchSize=await originalBindings('cf0fecf2c-CeTWsDvV.js',['l']);
-await adapter('preview-sketch-host.mjs',`// Original Preview sketch host, mode switch, focus, export and toolbar composition.
-import {useState as e,useImperativeHandle as t,useEffect as n,useEffectEvent as r,useLayoutEffect as i,useRef as a,useCallback as s,useMemo as ee,memo as u} from 'react';
-import {jsx as o,jsxs as c} from 'react/jsx-runtime';
-export function createPreviewSketchHost({usePlatform:te,isTextInput:re,isApplication:ne,popupSelector:f,hasOtherEscapeOwner:ce,openPopupSelector:le,asElement:m,ownerWindow:ae,suppressContextMenu:p,releaseEscape:ie,DisabledReasonTooltip:h,Button:g,useIntl:se,useErrors:oe,Toolbar:ue,useSketch:de,colors:fe,Canvas:pe}) {
-const l=(...parts)=>parts.filter(Boolean).join(' '),d='data-escape-owner',me='#1F1E1D';
-const he=(()=>{${sketchSize.text};return l;})();
-${sketchHostNodes.filter(node=>node.type!=='ImportDeclaration'&&node.type!=='ExportNamedDeclaration').map(node=>sketchHostText.slice(node.start,node.end)).join('\n')}
+return tn;
+}`,[sketchState.source],sketchLatestVersion);
+const sketchHost=await sketchLatestChunk('cda4f50bb-DheueVFA.js',{
+ e:sketchFrame+':Co',t:sketchFrame+':Ha',n:sketchFrame+':So',r:sketchFrame+':Va',i:sketchFrame+':_o',ee:sketchFrame+':bo',
+ a:sketchFrame+':ho',o:sketchFrame+':mo',s:sketchFrame+':oo',c:sketchFrame+':uo',te:sketchFrame+':yo',l:sketchFrame+':za',
+ ne:'shared-25-DP8p7i1Z.js:Ff',re:'shared-25-DP8p7i1Z.js:Rm',u:'shared-156-Bikz018e.js:Vn',ie:'shared-156-Bikz018e.js:Zn',
+ d:'shared-156-Bikz018e.js:hr',ae:'shared-156-Bikz018e.js:xr',f:'shared-19-CkPOiIKm.js:Xa',oe:'shared-19-CkPOiIKm.js:ya',
+ se:'shared-52-DGviI8xb.js:qa',p:sketchShared+':Ec',m:sketchShared+':cl',h:sketchShared+':vl',ce:'vendor-intl-Db7hDWRO.js:p',
+ le:'cb50b3202-CF7R7xSF.js:n',ue:'cb50b3202-CF7R7xSF.js:t',de:'c467aa787-B4L-l_bi.js:a',fe:'c467aa787-B4L-l_bi.js:i',
+ pe:'c467aa787-B4L-l_bi.js:n',me:'c467aa787-B4L-l_bi.js:s',he:'c467aa787-B4L-l_bi.js:t',ge:'cf0fecf2c-2cWleVY5.js:o'},
+ ['b="[data-sketch-tools] button:not(:disabled)"']);
+// u is shared-156 Vn (cV="data-escape-owner"), he is c467aa787 t (Xt="#1F1E1D", pinned above), ge is cf0fecf2c o (u).
+if(!(await fs.readFile(path.join(source,sketchLatestSource+'shared-156-Bikz018e.js'),'utf8')).includes('cV="data-escape-owner"'))throw Error('Sketch escape-owner attribute changed');
+const sketchHostNodes=parsers.babel.parse(sketchHost.text,{}).program.body;
+const sketchSize=await originalBindings(sketchLatestSource+'cf0fecf2c-2cWleVY5.js',['u']);
+if(!sketchSize.text.startsWith('function u(e){return{width:e.pixelWidth/e.dpr,height:e.pixelHeight/e.dpr}'))throw Error('Sketch export size helper changed');
+await adapter('preview-sketch-host.mjs',`// Original Preview sketch host (${sketchLatestVersion}), mode switch, focus, export and toolbar composition.
+import {useState as e,useImperativeHandle as i,useEffect as o,useEffectEvent as a,useLayoutEffect as te,useRef as n,useCallback as c,useMemo as ee,memo as s} from 'react';
+import {jsx as r,jsxs as t} from 'react/jsx-runtime';
+export function createPreviewSketchHost({usePlatform:re,isTextInput:ae,isApplication:ie,popupSelector:d,hasOtherEscapeOwner:le,openPopupSelector:ue,asElement:h,ownerWindow:ne,suppressContextMenu:f,releaseEscape:oe,DisabledReasonTooltip:p,Button:m,useIntl:ce,useErrors:se,Toolbar:de,useSketch:fe,colors:pe,Canvas:me}) {
+const l=(...parts)=>parts.filter(Boolean).join(' '),u='data-escape-owner',he='#1F1E1D';
+const ge=(()=>{${sketchSize.text};return u;})();
+${sketchHostNodes.filter(node=>node.type!=='ImportDeclaration'&&node.type!=='ExportNamedDeclaration').map(node=>sketchHost.text.slice(node.start,node.end)).join('\n')}
 return C;
-}`,[{name:'cda4f50bb-z5ULw2rQ.js',sha256:sha(sketchHostBytes)},sketchSize.source]);
+}`,[sketchHost.source,sketchSize.source],sketchLatestVersion);
 const previewMenuItems=await originalBindings('cfca6870a-CL7PP3yV.js',['d','f','p','m','h']);
 await adapter('preview-menu-items.mjs',`// Original server-menu item rendering, tooltips, loading and trailing actions.
 import {useEffect as e,Fragment as n} from 'react';

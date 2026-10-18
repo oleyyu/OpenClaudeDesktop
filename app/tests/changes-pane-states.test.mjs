@@ -161,37 +161,42 @@ test('header: ghost ListBullet "Show files" (aria-pressed, ⇧⌘Y) before the s
 
 test('file list column: hidden by default with the "Show files" edge; shown with the Changed files tree and its resize handle', () => {
   const hidden = body(panel({ diff: twoFiles }));
-  assert.match(hidden, /<div class="sdiff-changes-layout">/);
+  // cccc2cf0a: the Changes view sits in the focusable div[data-diff-pane-body] (R3-files FT-07, for cae42d46f Ue).
+  assert.match(hidden, /<div class="sdiff-changes-layout outline-none" data-diff-pane-body="" tabindex="-1">/);
   assert.doesNotMatch(hidden, /role="tree"/);
   assert.match(hidden, /<div class="source-tree-edge sdiff-file-list-edge" role="separator" tabindex="0" aria-label="Show files" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="640" aria-valuenow="0">/);
   // The scroller keeps its class and holds the diff view.
   assert.match(hidden, /<div class="sdiff-changes-main"><div class="source-changes"><div data-layout="unified"/);
   const html = body(panel({ diff: twoFiles, diffTree: { diffShowTree: true, diffTreeWidth: 300, diffFileTree: true, diffGroupByKind: false }, onDiffTreeChange: () => {} }));
-  assert.match(html, /<div class="sdiff-file-list relative shrink-0 flex flex-col min-h-0 border-r" style="width:300px;min-width:min\(160px, 100% - 160px\);max-width:min\(640px, 100% - 160px\)">/);
-  assert.match(html, /<div role="tree" aria-label="Changed files" tabindex="0" class="sdiff-file-list-tree h-full overflow-y-auto px-xs py-1\.25 outline-none hide-focus-ring">/);
+  // R3-files FT-07: c44d00c7f's column edge is the logical border-e (the pane line marker too), the tree is wc's
+  // `${A} h-full overflow-y-auto ${N} outline-none hide-focus-ring` (ca7840910 A = group/file-tree).
+  assert.match(html, /<div class="sdiff-file-list relative shrink-0 flex flex-col min-h-0 border-e" data-pane-line="" style="width:300px;min-width:min\(160px, 100% - 160px\);max-width:min\(640px, 100% - 160px\)">/);
+  assert.match(html, /<div role="tree" aria-label="Changed files" tabindex="0" class="group\/file-tree \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:\[--file-tree-guides-to:to_left\] h-full overflow-y-auto px-xs py-1\.25 outline-none hide-focus-ring">/);
   assert.match(html, /role="separator" tabindex="0" aria-label="Resize file list" aria-orientation="vertical" aria-valuemin="160"/);
   assert.doesNotMatch(html, /aria-label="Show files" aria-orientation/);
   // Folder rows first (tree order), then root files; file rows carry the kind icon, name and footnote counts.
   const rows = [...html.matchAll(/<button[^>]*data-diff-tree-row=""[^>]*>(.*?)<\/button>/g)].map(match => match[0]);
   assert.equal(rows.length, 3);
   assert.match(rows[0], /role="treeitem" tabindex="-1" aria-level="1" aria-expanded="true"/);
-  assert.match(rows[0], /style="padding-left:8px"/);
-  assert.match(rows[0], /<span class="truncate">src<\/span>/);
-  assert.match(rows[1], /style="padding-left:16px"[^>]*aria-level="2"/);
-  assert.match(rows[1], /<span class="truncate min-w-0 flex-1">app\.js<\/span><span class="sdiff-tree-counts flex shrink-0 items-center gap-0\.5 text-footnote tabular-nums"><span class="text-git-added">\+1<\/span><span class="text-git-removed">−1<\/span><\/span>/);
-  assert.match(rows[1], /class="sdiff-tree-row flex items-center gap-1 h-control pr-md rounded text-body text-left w-full select-none focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus bg-alpha-0 text-primary hover:bg-fill-ghost-hover data-\[pressed\]:bg-fill-ghost-hover"/);
+  // ca7840910 V(depth): 8px + 10px a level, and below the root the guide layer (diffgit-03).
+  assert.match(rows[0], /style="padding-inline-start:8px"/);
+  assert.match(rows[0], /<span class="flex min-w-0"><span dir="ltr" class="relative flex min-w-0 overflow-hidden whitespace-nowrap"><span class="min-w-0 truncate">src<\/span><\/span><\/span>/);
+  assert.match(rows[1], /style="padding-inline-start:18px;--file-tree-guides:repeating-linear-gradient\(var\(--file-tree-guides-to, to right\), var\(--cds-border\) 0 1px, transparent 1px 10px\);--file-tree-guides-x:14px;background-position:14px 0;background-repeat:no-repeat;background-size:10px 100%"[^>]*aria-level="2"/);
+  assert.match(rows[1], /<span class="truncate min-w-0 flex-1">app\.js<\/span><span class="flex shrink-0 items-center gap-0\.5 text-footnote tabular-nums"><span class="text-git-added">\+1<\/span><span class="text-git-removed">−1<\/span><\/span>/);
+  assert.match(rows[1], /class="flex items-center gap-1 h-control app-list-row pe-md rounded text-body text-start w-full select-none focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus bg-\(image:--file-tree-kept-guides\) group-hover\/file-tree:bg-\(image:--file-tree-guides\) group-focus-within\/file-tree:bg-\(image:--file-tree-guides\) \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:bg-\[position:right_var\(--file-tree-guides-x\)_top_0\]! bg-alpha-0 text-primary hover:bg-fill-ghost-hover data-\[pressed\]:bg-fill-ghost-hover"/);
   assert.match(rows[2], /README\.md/);
   // The body follows the list order (Mn tree order: src/app.js before README.md).
   assert.ok(html.indexOf('data-file-path="src/app.js"') < html.indexOf('data-file-path="README.md"'));
   // Separate test, build, and generated files: a separated "Test files" section, closed by default.
   const kind = body(panel({ diff: twoFiles + filePatch('src/app.test.js', 3), diffTree: { diffShowTree: true, diffTreeWidth: 240, diffFileTree: true, diffGroupByKind: true }, onDiffTreeChange: () => {} }));
-  assert.match(kind, /<div role="none" class="mt-1 border-t pt-1"><button[^>]*data-diff-tree-section="test" role="treeitem" tabindex="-1" aria-level="1" aria-expanded="false"/);
-  assert.match(kind, /<span class="truncate min-w-0 flex-1 text-secondary">Test files<\/span><span class="shrink-0 text-footnote tabular-nums text-muted">1<\/span>/);
+  assert.match(kind, /<div role="none" class="mt-1 border-t pt-1" data-pane-line=""><button[^>]*data-diff-tree-section="test" role="treeitem" tabindex="-1" aria-level="1" aria-expanded="false"/);
+  assert.match(kind, /<span class="truncate min-w-0 flex-1 text-secondary">Test files<\/span><span class="shrink-0 text-footnote tabular-nums text-muted-as-secondary">1<\/span>/);
   assert.doesNotMatch(kind.slice(kind.indexOf('role="tree"'), kind.indexOf('sdiff-changes-main')), /app\.test\.js/);
   // Group files by folder off: flat rows show the folder prefix.
   const flat = body(panel({ diff: twoFiles, diffTree: { diffShowTree: true, diffTreeWidth: 240, diffFileTree: false, diffGroupByKind: false }, onDiffTreeChange: () => {} }));
   assert.doesNotMatch(flat, /aria-expanded="true"[^>]*data-diff-tree/);
-  assert.match(flat, /<span class="flex min-w-0 flex-1"><span dir="ltr" class="flex min-w-0 overflow-hidden whitespace-nowrap" aria-label="src\/app\.js">/);
+  // c784da984 p (c44d00c7f Ct): the name first, then its folder in footnote.
+  assert.match(flat, /<span class="flex min-w-0 flex-1"><span dir="ltr" class="flex min-w-0 items-baseline gap-1 overflow-hidden whitespace-nowrap"><span class="max-w-full shrink-0 truncate">app\.js<\/span><span class="flex min-w-0 text-footnote text-muted-as-secondary data-\[clipped\]:opacity-0"><span dir="ltr" class="relative flex min-w-0 overflow-hidden whitespace-nowrap"><span class="min-w-0 truncate">src<\/span><\/span><\/span><\/span><\/span>/);
 });
 
 test('large diff: 5001 changed lines start every file collapsed under the banner; 4999 stay expanded', () => {
@@ -199,7 +204,7 @@ test('large diff: 5001 changed lines start every file collapsed under the banner
   const expanded = toggles(html).map(tag => tag.match(/aria-expanded="(\w+)"/)?.[1]);
   assert.deepEqual(expanded, ['false', 'false']);
   assert.doesNotMatch(html, /class="sdiff-file-body"/);
-  assert.match(body(html), new RegExp(`<div class="sdiff-changes-main"><div class="sdiff-large-banner shrink-0 px-md py-1\\.25 text-body text-muted">${BANNER.replace(/\./g, '\\.')}</div><div class="source-changes">`));
+  assert.match(body(html), new RegExp(`<div class="sdiff-changes-main"><div class="sdiff-large-banner shrink-0 px-md py-1\\.25 text-body text-muted-as-secondary">${BANNER.replace(/\./g, '\\.')}</div><div class="source-changes">`));
   assert.match(html, /data-large-diff="true"/);
   const small = panel({ diff: filePatch('a.txt', 2500) + filePatch('b.txt', 2499) });
   assert.deepEqual(toggles(small).map(tag => tag.match(/aria-expanded="(\w+)"/)?.[1]), ['true', 'true']);

@@ -3,8 +3,11 @@ import { Icon } from "./icons";
 import { SourceMenu, useMenuPopup } from "./source-menu.jsx";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
 import {
-  DEFAULT_DIFF_SCOPE, DIFF_SCOPE_LABELS, UNCOMMITTED_DIFF_SCOPE, commitScopeGone, diffScopeParam, diffScopeSections, diffScopeTrigger, filterSearchItems, resolveDiffScope,
+  DEFAULT_DIFF_SCOPE, DIFF_SCOPE_LABELS, UNCOMMITTED_DIFF_SCOPE, commitScopeGone, diffScopeParam, diffScopePick, diffScopeSections, diffScopeTrigger, filterSearchItems,
+  resolveDiffScope, uncommittedScopeAvailable,
 } from "./diff-scope-model.mjs";
+import { rememberDiffScope, useStoredDiffScope } from "./generated/files-changes/diff-scope-memory.mjs";
+import { onSessionEvicted } from "./source-files-changes-adapters.jsx";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-diff-scope.css";
 
@@ -90,7 +93,7 @@ export function SourceDiffScope({ trigger, sections = [] }) {
         : <span className="sds-part">{trigger.label}</span>}
     </SourceSettingsButton>
     {open && <SourceMenu.Popup key={open.token} anchor={button.current} trigger={button.current} side="bottom" align="start"
-      label={t("Diff scope")} onClose={() => setOpen(null)} initialHighlight={open.entry}>
+      label={t("Diff scope")} onClose={() => setOpen(null)} initialHighlight={open.entry} contextMenuGuard>
       {filled.map((section, index) => <React.Fragment key={section.key ?? index}>
         {index > 0 && <SourceMenu.Separator />}
         <SourceMenu.Group>{section.items.map((item, itemIndex) => <ScopeItem key={item.value ?? itemIndex} item={item} />)}</SourceMenu.Group>
@@ -99,12 +102,17 @@ export function SourceDiffScope({ trigger, sections = [] }) {
   </>;
 }
 
+// c03935b01 `$e((e) => Rn(e, "branch"))` (2.42304.0): a session that goes away leaves the remembered set.
+onSessionEvicted((sessionId) => rememberDiffScope(sessionId, "branch"));
+
 const EMPTY_ENTRY = Object.freeze({});
 const COMMITS_FETCH_LIMIT = 101;
 const NO_BRANCHES = Object.freeze({ cwd: null, list: [], loaded: false, error: false });
 
 /** Per-session diff scope for the Changes pane (Od/zm state, held per session
- * here): {scope, base} where base is the "Compare against" override. Returns the
+ * here): {scope, base} where base is the "Compare against" override. With no pick in this window the scope is the
+ * remembered one (2.42304.0 c03935b01 Cc: `diffScopeByTile[tile] ?? Ln(session)`, i.e. "Uncommitted changes" for a
+ * session whose last scope-row pick was Uncommitted, persisted.epitaxy-diff-uncommitted-sessions, ≤ 50). Returns the
  * workspace-git-diff `scope` parameter, the override, and the trigger element
  * (null without a resolvable base, where the pane keeps its plain title). The
  * commit list loads while the pane is active; branches load when "Compare
@@ -119,9 +127,23 @@ export function useDiffScope({ call, cwd, sessionId, status, active = false, ref
   const defaultBase = isRepo ? status.scopeBase || null : null;
   const override = isRepo && defaultBase && entry.base ? entry.base : null;
   const base = override || defaultBase;
-  const scope = resolveDiffScope(entry.scope, { base, uncommittedAvailable: isRepo });
+  const stored = useStoredDiffScope(sessionId ?? undefined);
+  const picked = entry.scope ?? stored;
+  const uncommittedAvailable = uncommittedScopeAvailable(status);
+  const scope = resolveDiffScope(picked, { base, uncommittedAvailable });
   const param = isRepo ? diffScopeParam(scope) : undefined;
   const update = useCallback((patch) => setEntries((previous) => ({ ...previous, [sessionKey]: { ...previous[sessionKey], ...patch } })), [sessionKey]);
+  // mb S/C and Xb V: set the pane's scope; a changed All changes / Uncommitted pick is remembered for the session (Rn).
+  const uncommittedOffered = status?.workingTreeDirty === true || scope.kind === "uncommitted";
+  const pick = (next, via) => {
+    const outcome = diffScopePick({ picked, shown: scope, next, via, uncommittedAvailable, uncommittedOffered });
+    if (!outcome.set) return;
+    update({ scope: next });
+    if (outcome.remember && sessionId) rememberDiffScope(sessionId, outcome.remember);
+  };
+  const pickRef = useRef(pick);
+  pickRef.current = pick;
+  const pickScope = useCallback((next, via) => pickRef.current(next, via), []);
   const listKey = JSON.stringify([cwd, sessionId]);
   const fetchKey = JSON.stringify([cwd, sessionId, status?.headSha ?? null, override, defaultBase, refreshKey]);
   useEffect(() => {
@@ -156,20 +178,20 @@ export function useDiffScope({ call, cwd, sessionId, status, active = false, ref
   const current = status?.detached ? undefined : status?.branch || undefined;
   const trigger = isRepo ? diffScopeTrigger(scope, { base, commits: commitList }) : null;
   const sections = useMemo(() => !trigger ? [] : diffScopeSections({
-    scope, base, defaultBase, overridden: !!override, current, uncommittedAvailable: isRepo, commits: commitList, commitTotal, branches: branchState,
-    onSelectScope: (next) => update({ scope: next }),
+    scope, base, defaultBase, overridden: !!override, current, uncommittedAvailable, commits: commitList, commitTotal, branches: branchState,
+    onSelectScope: (next, meta) => pickScope(next, meta?.via),
     onSelectBase: (name) => update({ base: name || undefined }),
     // Im I(): opening the list drops an override that names the checked-out branch, then refetches.
     onBaseMenuOpen: () => { if (override && override === current) update({ base: undefined }); loadBranches(); },
-  }), [trigger?.ariaLabel, scope, base, defaultBase, override, current, isRepo, commitList, commitTotal, branchState, update, loadBranches]);
+  }), [trigger?.ariaLabel, scope, base, defaultBase, override, current, uncommittedAvailable, commitList, commitTotal, branchState, update, pickScope, loadBranches]);
   // B15 Commits section (cccc2cf0a Xb H/U/B): a commit row narrows to that commit, null is "All changes";
   // "Uncommitted changes" is offered while the working tree is dirty or that scope is picked.
-  const selectCommit = useCallback((sha) => update({ scope: sha ? { kind: "commit", sha } : DEFAULT_DIFF_SCOPE }), [update]);
-  const selectUncommitted = useCallback(() => update({ scope: UNCOMMITTED_DIFF_SCOPE }), [update]);
+  const selectCommit = useCallback((sha) => pickScope(sha ? { kind: "commit", sha } : DEFAULT_DIFF_SCOPE, "commit_list"), [pickScope]);
+  const selectUncommitted = useCallback(() => pickScope(UNCOMMITTED_DIFF_SCOPE, "commit_list"), [pickScope]);
   const commitsSection = useMemo(() => (!trigger || commitList.length === 0 ? null : {
     list: commitList, total: commitTotal, selectedSha: scope.kind === "commit" ? scope.sha : null, uncommittedSelected: scope.kind === "uncommitted",
-    onSelect: selectCommit, onSelectUncommitted: status?.workingTreeDirty === true || scope.kind === "uncommitted" ? selectUncommitted : undefined,
-  }), [!trigger, commitList, commitTotal, scope, selectCommit, selectUncommitted, status?.workingTreeDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+    onSelect: selectCommit, onSelectUncommitted: uncommittedOffered ? selectUncommitted : undefined,
+  }), [!trigger, commitList, commitTotal, scope, selectCommit, selectUncommitted, uncommittedOffered]); // eslint-disable-line react-hooks/exhaustive-deps
   return {
     param,
     base: override || undefined,

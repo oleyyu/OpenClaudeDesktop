@@ -1,3 +1,10 @@
+import { EpitaxyCsvPreview } from './generated/code-current/csv-view.mjs';
+import { SourceFileBreadcrumb } from './source-file-breadcrumb.jsx';
+export { SourceFileBreadcrumb } from './source-file-breadcrumb.jsx';
+import { readFileView, rememberFileView } from './generated/code-current/file-view-memory.mjs';
+import { suppressKeyRepeat } from './generated/code-editor-current/keyboard-repeat.mjs';
+import { imagePng } from './response-image-model.mjs';
+import { fileDownloadPlan } from './file-download-model.mjs';
 import { SourceFileGoToLine } from "./source-file-go-to-line.jsx";
 import { SourceFileEditor } from "./source-file-editor.jsx";
 import { getFileEditor } from "./file-edit-store.mjs";
@@ -5,19 +12,19 @@ import { DEFAULT_FILE_VIEW_SETTINGS, scrollPastEndPadding, whitespaceTheme } fro
 import React, { startTransition, useCallback, useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./icons";
 import { SourceTooltip } from "./source-tooltip";
-import { SourcePopover } from "./source-popover.jsx";
-import { fileKindIcon } from "./file-kind-icon.mjs";
-import { breadcrumbFolders, fileFindShortcut, searchInText, findStatus, firstMatchFrom, getSearchOptions, rememberSearchOptions, folderLabel, stepFindIndex } from "./file-find-model.mjs";
+import { fileFindShortcut, searchInText, findStatus, firstMatchFrom, getSearchOptions, rememberSearchOptions, stepFindIndex } from "./file-find-model.mjs";
 import { useSettledHighlight } from "./use-settled-highlight.mjs";
 import { SourceHighlightedLine } from "./source-diff-code.jsx";
 import { SourceEmptyState } from "./source-transcript-states.jsx";
 import { SourceLoadingPane, SourceSpinner } from "./source-pane-states.jsx";
-import { frontmatterLabel, MARKDOWN_FIRST_CHUNK_CHARS, MARKDOWN_PROGRESSIVE_CHARS, markdownChunkHeight, markdownFilePlan, releaseMarkdownFilePlan } from "./file-markdown-model.mjs";
+import { MARKDOWN_FIRST_CHUNK_CHARS, MARKDOWN_PROGRESSIVE_CHARS, markdownChunkHeight, markdownFilePlan, releaseMarkdownFilePlan } from "./file-markdown-model.mjs";
+import { Frontmatter } from "./generated/files-changes/file-frontmatter-view.mjs";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
-import { breadcrumbParts, csvTruncationCaption, externalLinkWarnings, fileHighlightLanguage, filePreviewKind, filePreviewUrl, fileViewerLines, fileViewerTooSlow, jumpRange, parseCsvPreview, previewFrameLink, previewLinkWritten, svgPreviewUrl } from "./file-preview-model.mjs";
+import { externalLinkWarnings, fileHighlightLanguage, filePreviewKind, filePreviewUrl, fileViewerLines, fileViewerTooSlow, jumpRange, previewFrameLink, previewLinkWritten, svgPreviewUrl } from "./file-preview-model.mjs";
 import { SourceDialog } from "./source-dialog.jsx";
-import { FILE_MEDIA_KINDS, FILE_CARD_LABELS, addFolderFailedMessage, createFileFailedMessage, fileCardPlan, fileMediaErrorCopy, fileTabReason, offeredFolderLabel, VIEW_AS_TEXT_LABEL } from "./file-unavailable-model.mjs";
-import { breadcrumbSegmentTargets, fileViewerMenu } from "./file-context-menu-model.mjs";
+import { FILE_MEDIA_KINDS, FILE_CARD_LABELS, addFolderFailedMessage, createFileFailedMessage, fileCardPlan, fileMediaErrorCopy, filePreviewEmpty, fileTabReason, offeredFolderLabel, VIEW_AS_TEXT_LABEL } from "./file-unavailable-model.mjs";
+import { CodeBlockLabelContext, CodeBlockOverflowContext } from "./code-block-layout-model.mjs";
+import { fileViewerMenu } from "./file-context-menu-model.mjs";
 import { SourceMenu } from "./source-menu.jsx";
 import { SourceFileMenuEntries } from "./source-file-menu-entries.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
@@ -51,163 +58,14 @@ export const FILE_VIEWER_LABELS = Object.freeze({
   viewSource: t("View source"),
   // EpitaxyCsvPreview (cd5fd9055-AkFKEmX0.js).
   tablePreview: t("Table preview"),
-  csvEmpty: t("This file is empty."),
-  csvError: t("Couldn’t parse this file as a table. Switch to Source to view the raw text."),
+  csvEmpty: t("This file is empty"),
+  csvError: t("Couldn’t parse this file as a table"),
   // su (2.31226.0 cd2efac6e readable :7141-7176): the preview frame that never drew.
   frameError: t("Couldn’t load the preview"),
   tryAgain: t("Try again"),
   fileActions: t("File actions"),
 });
 export const copyPathLabel = (path) => t("Copy path {path}", { path });
-
-// Yo (:4804-4872) with an onCopyPath and no lister: a button "text-body
-// text-secondary flex min-w-0 text-left rounded-[3px] -mx-0.75
-// hover:bg-fill-ghost-hover" labelled "Copy path {path}" around Ma (:1712-1790):
-// span[data-file-breadcrumb] (RTL scroller, so a long path keeps its end in
-// view, reset to the start when the file changes) > span[dir=ltr] with the
-// leading slash, each folder in text-muted followed by a muted "/", then the
-// file name in the default colour.
-export function SourceFileBreadcrumb({ displayPath, fullPath, onCopyPath, lister = null, segmentMenu = null }) {
-  const { lead, dirs, name } = breadcrumbParts(displayPath);
-  const ref = useRef(null);
-  useEffect(() => { if (ref.current) ref.current.scrollLeft = 0; }, [fullPath]);
-  // B32 tc/ko (cd2efac6e readable :2385-2420, :1354-1400): each segment's own context menu, the pane's file items for
-  // that folder or file (surface "file_breadcrumb"); the breadcrumb itself never shows the native menu (Js).
-  const targets = useMemo(() => breadcrumbSegmentTargets(displayPath), [displayPath]);
-  const [menu, setMenu] = useState(null);
-  const menuReturn = useRef(null);
-  const openMenu = (event, target) => {
-    if (!segmentMenu || !target) return;
-    event.preventDefault(); event.stopPropagation();
-    const node = event.currentTarget, rect = node.getBoundingClientRect();
-    menuReturn.current = node.ownerDocument.activeElement;
-    setMenu({ anchor: node, target, point: event.clientX === 0 && event.clientY === 0 ? { x: rect.left, y: rect.bottom } : { x: event.clientX, y: event.clientY } });
-  };
-  const menuEntries = menu && segmentMenu ? segmentMenu.entries(menu.target) : null;
-  const segmentProps = (target) => (segmentMenu && target ? { onContextMenu: (event) => openMenu(event, target), "data-popup-open": menu?.target === target || undefined } : {});
-  const blockNative = segmentMenu ? (event) => { if (event.currentTarget.contains(event.target)) event.preventDefault(); } : undefined;
-  const popup = menuEntries?.length > 0 && <SourceMenu.Popup anchor={menu.anchor} point={menu.point} trigger={null} side="bottom" align="start"
-    sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
-    label={FILE_VIEWER_LABELS.fileActions} onClose={() => setMenu(null)} finalFocus={() => (menuReturn.current?.isConnected ? menuReturn.current : null)}>
-    <SourceFileMenuEntries entries={menuEntries} onSelect={(item) => segmentMenu.select(item, menu.target)} />
-  </SourceMenu.Popup>;
-  // Yo with a lister (local sessions): a plain div whose folder segments and file name open "Files in {folder}".
-  if (lister) {
-    const folders = breadcrumbFolders(displayPath);
-    return <div className="sfv-path" data-breadcrumb-lister="" title={fullPath}>
-      <span ref={ref} data-file-breadcrumb="" className="sfv-breadcrumb" onContextMenu={blockNative}>
-        <span dir="ltr" className="sfv-breadcrumb-path">
-          {folders.lead && <span className="sfv-crumb-lead">{folders.lead}</span>}
-          {folders.dirs.map((segment, index) => <React.Fragment key={index}>
-            <SourceBreadcrumbSegment segment={segment} className="sfv-crumb-dir" current={displayPath} lister={lister} menuProps={segmentProps(targets.dirs[index])} />
-            <span aria-hidden="true" className="sfv-crumb-separator">/</span>
-          </React.Fragment>)}
-          <SourceBreadcrumbSegment segment={folders.name} className="sfv-crumb-name" title={fullPath} current={displayPath} lister={lister} menuProps={segmentProps(targets.name)} />
-        </span>
-      </span>
-      {popup}
-    </div>;
-  }
-  const crumbs = <span ref={ref} data-file-breadcrumb="" className="sfv-breadcrumb" onContextMenu={blockNative}>
-    <span dir="ltr" className="sfv-breadcrumb-path">
-      {lead && <span className="sfv-crumb-lead">{lead}</span>}
-      {dirs.map((dir, index) => <React.Fragment key={index}>
-        <span className="sfv-crumb sfv-crumb-dir" {...segmentProps(targets.dirs[index])}>{dir}</span><span className="sfv-crumb-separator">/</span>
-      </React.Fragment>)}
-      <span className="sfv-crumb sfv-crumb-name" {...segmentProps(targets.name)}>{name}</span>
-    </span>
-  </span>;
-  return onCopyPath
-    ? <><button type="button" className="sfv-path" aria-label={copyPathLabel(displayPath)} title={fullPath} onClick={onCopyPath}>{crumbs}</button>{popup}</>
-    : <><div className="sfv-path" title={fullPath}>{crumbs}</div>{popup}</>;
-}
-
-// Pa: ArrowDown opens a segment's folder, ArrowLeft / ArrowRight move between segments.
-function segmentKeys(event, open) {
-  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-  if (event.key === "ArrowDown") { event.preventDefault(); open(); return; }
-  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-  const segments = [...(event.currentTarget.closest("[data-file-breadcrumb]")?.querySelectorAll("[data-breadcrumb-segment]") ?? [])];
-  const at = segments.indexOf(event.currentTarget), next = segments[event.key === "ArrowRight" ? at + 1 : at - 1];
-  if (at >= 0 && next) { event.preventDefault(); next.focus(); }
-}
-
-// Ia / Y: a segment inside the workspace is a button (Na "rounded-[3px] px-0.75 hover:bg-fill-ghost-hover
-// data-[popup-open]:bg-fill-ghost-hover") opening the w-72 "Files in {folder}" popover; anything else is plain text.
-function SourceBreadcrumbSegment({ segment, className, title, current, lister, menuProps = {} }) {
-  const [open, setOpen] = useState(false);
-  const trigger = useRef(null);
-  if (segment.dir === null) return <span className={`sfv-crumb ${className}`} title={title} {...menuProps}>{segment.label}</span>;
-  const folder = folderLabel(segment.dir, lister.rootLabel ?? "");
-  return <>
-    <button ref={trigger} type="button" className={`sfv-crumb sfv-crumb-button ${className}`} title={title} data-breadcrumb-segment=""
-      {...menuProps} data-popup-open={open || menuProps["data-popup-open"] || undefined} aria-haspopup="dialog" aria-expanded={open}
-      onClick={() => setOpen((value) => !value)} onKeyDown={(event) => segmentKeys(event, () => setOpen(true))}>{segment.label}</button>
-    {open && <SourcePopover anchor={trigger.current} side="bottom" align="start" padding="sm" className="sfv-folder-popover"
-      label={t("Files in {folder}", { folder })} onClose={() => setOpen(false)}>
-      <SourceFolderList dir={segment.dir} current={current} lister={lister} onOpen={(path) => { setOpen(false); lister.onOpenFile(path); }} />
-    </SourcePopover>}
-  </>;
-}
-
-const FOLDER_ENTRY_LIMIT = 200; // Ca
-function useFolderEntries(lister, dir) {
-  const [state, setState] = useState({ entries: null, error: false });
-  useEffect(() => {
-    let live = true;
-    setState({ entries: null, error: false });
-    Promise.resolve().then(() => lister.list(dir)).then(
-      (entries) => { if (live) setState({ entries: Array.isArray(entries) ? entries.slice(0, FOLDER_ENTRY_LIMIT) : [], error: false }); },
-      () => { if (live) setState({ entries: null, error: true }); });
-    return () => { live = false; };
-  }, [lister, dir]);
-  return state;
-}
-
-// La: skeleton rows while loading, "Couldn’t list this folder" / "Empty folder" (Ra: h-control px-md
-// text-footnote text-muted), else the compact tree (Xt variant compact): folders expand in place, a file opens.
-function SourceFolderList({ dir, current, lister, onOpen, depth = 0 }) {
-  const { entries, error } = useFolderEntries(lister, dir);
-  const list = useRef(null);
-  useEffect(() => { if (depth === 0 && entries?.length) list.current?.querySelector("[data-folder-row]")?.focus({ preventScroll: true }); }, [entries, depth]);
-  if (!entries) return error
-    ? <p className="sfv-folder-note">{t("Couldn’t list this folder")}</p>
-    : <div className="sfv-folder-skeleton" aria-hidden="true">{Array.from({ length: depth ? 2 : 6 }, (_, index) => <span key={index} />)}</div>;
-  if (!entries.length) return <p className="sfv-folder-note">{t("Empty folder")}</p>;
-  return <ul ref={list} role={depth ? "group" : "tree"} aria-label={depth ? undefined : t("Files in {folder}", { folder: folderLabel(dir, lister.rootLabel ?? "") })} className="sfv-folder-list"
-    onKeyDown={depth ? undefined : (event) => {
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-      const rows = [...event.currentTarget.querySelectorAll("[data-folder-row]")];
-      const at = rows.indexOf(event.target.closest?.("[data-folder-row]"));
-      const next = rows[event.key === "ArrowDown" ? at + 1 : Math.max(0, at - 1)];
-      if (next) { event.preventDefault(); next.focus(); }
-    }}>
-    {entries.map((entry) => <SourceFolderRow key={entry.path} entry={entry} current={current} lister={lister} onOpen={onOpen} depth={depth} />)}
-  </ul>;
-}
-
-function SourceFolderRow({ entry, current, lister, onOpen, depth }) {
-  const [expanded, setExpanded] = useState(false);
-  const directory = !!entry.directory;
-  const selected = !directory && entry.path === current;
-  return <li role="treeitem" aria-expanded={directory ? expanded : undefined} aria-selected={selected || undefined}>
-    <button type="button" className="sfv-folder-row" data-folder-row="" data-selected={selected || undefined} tabIndex={-1}
-      style={{ paddingInlineStart: `calc(var(--cds-pad-sm, 8px) + ${depth * 12}px)` }}
-      onClick={() => (directory ? setExpanded((value) => !value) : onOpen(entry.path))}
-      onKeyDown={(event) => {
-        if (!directory) return;
-        if (event.key === "ArrowRight" && !expanded) { event.preventDefault(); setExpanded(true); }
-        else if (event.key === "ArrowLeft" && expanded) { event.preventDefault(); setExpanded(false); }
-      }}>
-      {directory
-        ? <Icon name="CaretRight" size={12} className={expanded ? "sfv-folder-caret sfv-open" : "sfv-folder-caret"} />
-        : <span className="sfv-folder-caret" aria-hidden="true" />}
-      <Icon name={directory ? (expanded ? "FolderOpen" : "Folder") : fileKindIcon(entry.name)} size={16} className="sfv-folder-icon" />
-      <span className="sfv-folder-name">{entry.name}</span>
-    </button>
-    {directory && expanded && <SourceFolderList dir={entry.path} current={current} lister={lister} onOpen={onOpen} depth={depth + 1} />}
-  </li>;
-}
 
 // 2.31226.0 io/ro: find bar with the original three option buttons; the "Find in file…" field, "{current} of {total}" or "No results" (aria-live,
 // text-footnote text-muted tabular-nums), then the ghost Previous match (ArrowUp) / Next match (ArrowDown) /
@@ -223,15 +81,16 @@ function SourceFileFindBar({ query, status, options, result, inputRef, onToggle,
   const has = status.total > 0;
   const total = status.capped || result.partial || result.hasLongLines ? `${status.total.toLocaleString()}+` : status.total.toLocaleString();
   const button = (label, icon, onClick, disabled, shortcut) => <SourceTooltip content={label} shortcut={shortcut} hoverable={false}>
-    <button type="button" className="source-icon-button sfv-find-button" aria-label={label} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={onClick}>
+    <button type="button" className="source-icon-button sfv-find-button" aria-label={label} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={onClick}
+      onKeyDown={icon === 'X' ? event => { if (event.key === 'Enter') suppressKeyRepeat('Enter', event.currentTarget.ownerDocument.defaultView); } : undefined}>
       <Icon name={icon} size={16} />
     </button>
   </SourceTooltip>;
   return <div role="search" className="sfv-find" data-file-find=""
-    onKeyDown={(event) => { if (event.key === "Escape" && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
+    onKeyDown={(event) => { if (event.key === "Escape" && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); suppressKeyRepeat('Escape', event.currentTarget.ownerDocument.defaultView); onClose(); } }}>
     <div className="sfv-find-field"><input ref={inputRef} className="sfv-find-input" aria-invalid={result.invalid || undefined} value={query} spellCheck={false} autoComplete="off" aria-label={t("Find in file")} placeholder={t("Find in file…")}
       onChange={(event) => onQuery(event.target.value)}
-      onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); if (event.shiftKey) onPrev(); else onNext(); } }} />
+      onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); if (event.shiftKey) onPrev(); else onNext(); } }} />
     <SourceFileSearchOptions options={options} onToggle={onToggle} /></div>
     <span aria-live="polite" className="sfv-find-status">{query.length === 0 ? "" : result.invalid ? t("Invalid regular expression") : has ? t("{current} of {total}", { current: status.current.toLocaleString(), total }) : result.partial ? t("Search paused. Select Next match to continue.") : result.hasLongLines ? t("Long lines not searched") : t("No results")}</span>
     {button(t("Previous match"), "ArrowUp", onPrev, !has, "cmd+shift+g")}
@@ -488,17 +347,6 @@ function useMarkdownFileBody(text) {
   return { body: shown, pending: false };
 }
 
-// ki (:939-965): the frontmatter fields as a two-column <dl> above the body,
-// labels through Oi ("allowed-tools" -> "Allowed tools").
-function SourceFrontmatter({ frontmatter }) {
-  if (!frontmatter || frontmatter.fields.length === 0) return null;
-  return <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-[28px] gap-y-md mb-[24px] pb-[20px] border-b border-alpha-2 sfv-frontmatter">
-    {frontmatter.fields.map(({ key, value }) => <React.Fragment key={key}>
-      <dt className="text-footnote text-muted">{frontmatterLabel(key)}</dt>
-      <dd className="text-body text-primary min-w-0 break-words">{value}</dd>
-    </React.Fragment>)}
-  </dl>;
-}
 
 // Ni (:1044-1078): one more chunk per idle period (requestIdleCallback with a
 // 100 ms timeout, else a 16 ms timer), inside a transition.
@@ -541,60 +389,46 @@ function SourceMarkdownChunks({ chunks, renderMarkdown }) {
 // Ai (:969-992): the plain fallback (ji :993-1012, the whole source in a
 // pre-wrap <pre> under the "too slow" note) when Ti says so; otherwise the
 // frontmatter grid, then the body in one prose column or as chunks.
-function SourceMarkdownDocument({ source, renderMarkdown }) {
+function SourceMarkdownDocument({ source, renderMarkdown, typography = "epitaxy" }) {
   const { frontmatter, body, plain, chunks } = useMemo(() => markdownFilePlan(source), [source]);
   if (plain) return <div data-markdown-plain="">
     <p role="note" className="mb-[16px] text-footnote text-muted">{FILE_VIEWER_LABELS.plainNotice}</p>
     <pre className="text-code text-primary whitespace-pre-wrap break-words select-text sfv-plain-source">{source}</pre>
   </div>;
-  return <>
-    <SourceFrontmatter frontmatter={frontmatter} />
+  const content = <>
+    {/* R3-files FT-18 (cov9-01): 2.42304.0 c3fde7009 Ei, variant "pane" (labels through Ti), generated. */}
+    <Frontmatter frontmatter={frontmatter} />
     {chunks.length > 1
       ? <SourceMarkdownChunks chunks={chunks} renderMarkdown={renderMarkdown} />
       : <div className="epitaxy-file-prose sfv-prose">{renderMarkdown(body, 0)}</div>}
   </>;
+  // R4g-files FV1 (toolcards-05): va's document typography (r === "document", the viewer outside the pane
+  // presentation) renders through ya, which gives its code fences Je "scroll" and Ye "beside-actions" (c3fde7009).
+  // Only those two contexts are migrated here; ya's rail, outline and change highlights stay with cov9-02.
+  return typography === "document"
+    ? <CodeBlockOverflowContext.Provider value="scroll"><CodeBlockLabelContext.Provider value="beside-actions">{content}</CodeBlockLabelContext.Provider></CodeBlockOverflowContext.Provider>
+    : content;
 }
 
 // q === "markdown" (:4614-4631): Zo while Ei is pending, else "mx-auto
 // max-w-[860px]" around Ai, whose prose is div.epitaxy-markdown
 // .epitaxy-file-prose. Locally the Markdown is the response renderer
 // (SourceMarkdown, handed in by the pane as renderMarkdown(text, chunk)).
-function SourceFileMarkdown({ text, renderMarkdown }) {
+function SourceFileMarkdown({ text, renderMarkdown, typography = "epitaxy" }) {
   const { body, pending } = useMarkdownFileBody(text);
   return <div data-file-viewer="" data-file-preview="markdown" className={PREVIEW_SCROLLER}>
     {pending
       ? <SourceLoadingPane label={FILE_VIEWER_LABELS.loading} />
-      : <div className="mx-auto max-w-[860px]"><SourceMarkdownDocument source={body} renderMarkdown={renderMarkdown} /></div>}
+      : <div className="mx-auto max-w-[860px]"><SourceMarkdownDocument source={body} renderMarkdown={renderMarkdown} typography={typography} /></div>}
   </div>;
 }
 
-// q === "csv" (:4633-4641) → EpitaxyCsvPreview (cd5fd9055-AkFKEmX0.js c): an
-// Un card when empty or unparsable; otherwise "epitaxy-markdown h-full" with
-// the truncation caption, a focusable "Table preview" region and the table
-// (a thead only when the first row reads as a header).
-function SourceFileCsv({ text, delimiter }) {
-  const id = useId();
-  const result = useMemo(() => parseCsvPreview(text, delimiter), [text, delimiter]);
-  if (result.kind !== "ok")
-    return <div data-file-viewer="" data-file-preview="csv" className={PREVIEW_SCROLLER}>
-      <SourceEmptyState title={<span className="select-text">{result.kind === "empty" ? FILE_VIEWER_LABELS.csvEmpty : FILE_VIEWER_LABELS.csvError}</span>} />
-    </div>;
-  const { rows, hasHeader, rowsTruncated, colsTruncated, cellsTruncated } = result.parsed;
-  const cut = rowsTruncated || colsTruncated || cellsTruncated, captionId = `${id}-cap`;
-  const head = hasHeader ? rows[0] : null, body = hasHeader ? rows.slice(1) : rows;
-  return <div data-file-viewer="" data-file-preview="csv" className={PREVIEW_SCROLLER}>
-    <div className="epitaxy-markdown source-markdown h-full sfv-csv">
-      {cut && <p id={captionId} className="text-footnote text-muted px-0.75">
-        {csvTruncationCaption({ rowCount: rows.length, columnCount: rows[0].length, rowsTruncated, colsTruncated, cellsTruncated })}
-      </p>}
-      <div tabIndex={0} role="region" aria-label={FILE_VIEWER_LABELS.tablePreview} aria-describedby={cut ? captionId : undefined}
-        className="overflow-auto focus-visible:outline-hidden focus-visible:shadow-focus sfv-csv-region">
-        <table>
-          {head && <thead><tr>{head.map((cell, index) => <th key={index} scope={cell === "" ? undefined : "col"} style={{ whiteSpace: "normal" }}>{cell}</th>)}</tr></thead>}
-          <tbody>{body.map((row, index) => <tr key={index}>{row.map((cell, at) => <td key={at}>{cell}</td>)}</tr>)}</tbody>
-        </table>
-      </div>
-    </div>
+// Current cd5fd9055: original pane/document component, including filtering,
+// stable sorting, numeric cells and both upstream/parser truncation notices.
+export function SourceFileCsv({ text, delimiter, presentation = "pane", truncatedUpstream = false }) {
+  return <div data-file-viewer="" data-file-preview="csv" className={presentation === 'document'
+    ? "flex-1 min-h-0 [contain:strict] select-text source-file-preview" : PREVIEW_SCROLLER}>
+    <EpitaxyCsvPreview contents={text} delimiter={delimiter} presentation={presentation} truncatedUpstream={truncatedUpstream} />
   </div>;
 }
 
@@ -604,7 +438,7 @@ function SourceFileCsv({ text, delimiter }) {
 // ("w-full max-w-[480px]") or <video> ("max-w-full max-h-full"), both
 // controls + preload metadata + aria-label base name. A failed load (Jr)
 // shows the Un card with "View as text anyway" (Uc).
-function SourceFileMedia({ kind, path, url, onViewAsText, onShowFile = null }) {
+function SourceFileMedia({ kind, path, url, onViewAsText, onShowFile = null, onImageReady }) {
   const [failed, setFailed] = useState(false);
   const name = String(path).split(/[\\/]/).pop() || String(path);
   if (failed) {
@@ -618,7 +452,7 @@ function SourceFileMedia({ kind, path, url, onViewAsText, onShowFile = null }) {
         </> : null} />
     </div>;
   }
-  const onError = () => setFailed(true);
+  const onError = () => { setFailed(true); onImageReady?.(null); };
   // B13 PDF: Chromium's built-in viewer in the native preview's "h-full w-full relative overflow-hidden" box
   // (c6e1d8764 K :402-428), from the file:// URL like the other media.
   if (kind === "pdf") return <div data-file-viewer="" data-file-media={kind} className="flex-1 min-h-0 [contain:strict] sfv-media">
@@ -629,7 +463,7 @@ function SourceFileMedia({ kind, path, url, onViewAsText, onShowFile = null }) {
   return <div data-file-viewer="" data-file-media={kind} className="flex-1 min-h-0 [contain:strict] sfv-media">
     <div className="h-full overflow-auto p-md flex items-center justify-center">
       {kind === "image"
-        ? <img src={url} alt={name} onError={onError} className="max-w-full max-h-full object-contain" />
+        ? <img src={url} alt={name} onLoad={event => onImageReady?.(event.currentTarget)} onError={onError} className="max-w-full max-h-full object-contain" />
         : kind === "audio"
           ? <audio src={url} controls preload="metadata" aria-label={name} onError={onError} className="w-full max-w-[480px]" />
           : <video src={url} controls preload="metadata" aria-label={name} onError={onError} className="max-w-full max-h-full" />}
@@ -738,7 +572,7 @@ function SourceExternalLinkDialog({ href, onClose, onConfirm }) {
 
 // The sandbox arm with Ge.Svg: the graphic drawn from the shown text, centred like the image body (nr), an
 // <img> so no script in the file runs; a file that does not parse as SVG shows the su card.
-function SourceFileSvg({ path, text, onViewSource }) {
+function SourceFileSvg({ path, text, onViewSource, onImageReady }) {
   const [failed, setFailed] = useState(false);
   const name = String(path).split(/[\\/]/).pop() || String(path);
   const url = useMemo(() => svgPreviewUrl(text), [text]);
@@ -746,7 +580,7 @@ function SourceFileSvg({ path, text, onViewSource }) {
   return <div data-file-viewer="" data-file-preview="svg" className="flex-1 min-h-0 [contain:strict] sfv-media">
     {failed ? <SourceFramePreviewError onViewSource={onViewSource} />
       : <div className="h-full overflow-auto p-md flex items-center justify-center">
-        <img src={url} alt={name} onError={() => setFailed(true)} className="max-w-full max-h-full object-contain" />
+        <img src={url} alt={name} onLoad={event => onImageReady?.(event.currentTarget)} onError={() => { setFailed(true); onImageReady?.(null); }} className="max-w-full max-h-full object-contain" />
       </div>}
   </div>;
 }
@@ -772,18 +606,20 @@ function SourceViewToggle({ showingSource, onToggle }) {
  * without it a Markdown file has no preview.
  */
 export function SourceSessionFileViewer({ file, scopeKey, sessionId, onSaveFile, ...props }) {
+  props = { presentation: "reading", defaultView: /\.html?$/i.test(file.path) ? "source" : undefined, memoryKey: sessionId ? `${sessionId}\u0000${file.path}` : null, ...props };
   const editor = useMemo(() => file.editHash ? getFileEditor({ key: scopeKey, path: file.path, sessionId,
     text: file.text, hash: file.editHash, save: onSaveFile }) : null, [scopeKey, file.editHash]);
   if (editor) editor.saveFile = onSaveFile;
-  return editor ? <EditableFileViewer {...props} file={file} scopeKey={scopeKey} editor={editor} />
-    : <SourceFileViewer {...props} file={file} scopeKey={scopeKey} />;
+  const viewKey = scopeKey ?? props.memoryKey ?? file.path;
+  return editor ? <EditableFileViewer key={viewKey} {...props} file={file} scopeKey={scopeKey} editor={editor} />
+    : <SourceFileViewer key={viewKey} {...props} file={file} scopeKey={scopeKey} />;
 }
 function EditableFileViewer({ editor, file, onEdit, ...props }) {
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
   useLayoutEffect(() => { if (editor.dirty) onEdit?.(); }, [editor, state, onEdit]);
   return <SourceFileViewer {...props} file={{ ...file, text: state.text }} editor={editor} editState={state} />;
 }
-export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, scrollNonce, scopeKey, onCopyPath, onViewAsText, renderMarkdown, findRequest = null, contentFind = null, lister = null, showHeader = true, viewMode, onViewModeChange, settings = DEFAULT_FILE_VIEW_SETTINGS, editor = null, editState = null, onAttachFile, onAttachSelection, onDownload, onSaveComment, onDeleteComment, fileMenu = null, previewFrame = null, cardActions = null }) {
+export function SourceFileViewer({ file, presentation = "pane", displayPath, fullPath, line, endLine, scrollNonce, scopeKey, onCopyPath, onViewAsText, renderMarkdown, findRequest = null, contentFind = null, lister = null, showHeader = true, viewMode, onViewModeChange, defaultView, memoryKey = null, settings = DEFAULT_FILE_VIEW_SETTINGS, editor = null, editState = null, onAttachFile, onAttachSelection, onDownload, downloading = false, canLoadDocument = false, onCopyImage, onSaveComment, onDeleteComment, fileMenu = null, previewFrame = null, cardActions = null }) {
   const dirty = !!editor?.dirty;
   const reason = fileTabReason(file);
   const media = FILE_MEDIA_KINDS.includes(reason) ? reason : null;
@@ -793,9 +629,10 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
   const kind = filePreviewKind(file.path);
   // Ql's hostedFrameAvailable: the HTML frame needs the pane's frame host (previewFrame.register).
   const previewable = !!kind && (kind.kind !== "markdown" || typeof renderMarkdown === "function") && (kind.kind !== "html" || typeof previewFrame?.register === "function");
-  const sourceFirst = line != null;
-  const [localShowSource, setShowSource] = useState(sourceFirst);
+  const sourceFirst = line != null || defaultView === "source";
+  const [localShowSource, setShowSource] = useState(() => sourceFirst || !!readFileView(memoryKey)?.source);
   const showSource = viewMode === undefined ? localShowSource : viewMode === 'source';
+  useEffect(() => { if (typeof file.text !== "string") return; rememberFileView(memoryKey, { source: showSource && !sourceFirst && !dirty, forcedText: !!file.forcedText }); }, [memoryKey, showSource, sourceFirst, dirty, file.forcedText, file.text]);
   const [request, setRequest] = useState({ previewable, line, scrollNonce });
   if (request.previewable !== previewable || request.line !== line || request.scrollNonce !== scrollNonce) {
     setRequest({ previewable, line, scrollNonce });
@@ -860,6 +697,11 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
   },[contentFind,searchable,file.text,onViewModeChange]);
   const findProps = useMemo(() => (find.open ? { matches, index } : null), [find.open, matches, index]);
   const preview = canToggle && !showSource ? kind : null;
+  const [loadedImage, setLoadedImage] = useState(null);
+  const imageSource = media === 'image' ? filePreviewUrl(fullPath || file.path) : preview?.kind === 'svg' ? svgPreviewUrl(file.text) : null;
+  const imageReady = loadedImage?.src === imageSource && loadedImage.element?.complete && loadedImage.element.naturalWidth > 0;
+  const onImageReady = element => setLoadedImage(element ? { src: imageSource, element } : null);
+  const downloadAvailable = typeof onDownload === 'function' && fileDownloadPlan(file, { documentLoader: canLoadDocument }).available;
   const viewSource = () => { setShowSource(true); onViewModeChange?.("source"); };
   // B13 im (cd2efac6e readable :5945-6030): the right-click menu of the bodies that are not the editor (which has
   // its own and stops the event): the pane's file items, then Copy file contents and Download file.
@@ -869,7 +711,7 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
   const [bodyMenu, setBodyMenu] = useState(null);
   const hasText = typeof file.text === "string" && reason !== "binary";
   const bodyMenuEntries = bodyMenu && fileMenu ? fileViewerMenu(fileMenu.entries(file.path, { surface: "file_viewer", unavailable: file.unavailable }),
-    { canCopyContents: hasText, canDownload: hasText && typeof onDownload === "function" }) : null;
+    { canCopyContents: hasText, canCopyImage: imageReady && typeof onCopyImage === 'function', canDownload: hasText && downloadAvailable, downloading }) : null;
   const openBodyMenu = (event) => {
     if (!fileMenu || event.defaultPrevented || !bodyRef.current) return;
     const keyboard = event.type === "keydown";
@@ -887,7 +729,7 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
   // as an absolute path outside the working directory reads as outside_root (no reveal, terminal or tree items).
   const segmentMenu = useMemo(() => (fileMenu ? {
     entries: (target) => fileMenu.entries(target.path, { surface: "file_breadcrumb", directory: target.directory,
-      unavailable: target.outside ? "outside_root" : target.directory ? undefined : file.unavailable }),
+      unavailable: target.outside ? "outside_root" : target.directory ? undefined : file.unavailable, gone: target.gone === true }), // R3-files FT-06: cfac349aa Jt's gone
     select: (item, target) => fileMenu.select(item, target.path),
   } : null), [fileMenu, file.unavailable]);
   const selectBodyItem = (item) => {
@@ -896,27 +738,34 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
     if (item.action === "copy-file-contents") void Promise.resolve().then(() => navigator.clipboard.writeText(file.text))
       .then(() => toasts?.add(t("Copied to clipboard."), { variant: "neutral" }), () => toasts?.add(t("Couldn’t copy to clipboard."), { variant: "danger" }));
     else if (item.action === "download-file") onDownload?.(file.text);
+    // R4i-files FI1 (files-12): 2.42304.0 c26fb8b6b Le — addSuccess "Image copied to clipboard." (wxBR7bytpr), addError
+    // "Couldn’t copy image." (mpiKUCMipZ). addSuccess is the neutral CDS toast here (source-routines-shared-adapters).
+    else if (item.action === 'copy-image') void Promise.resolve().then(() => onCopyImage(imagePng(loadedImage.element)))
+      .then(() => toasts?.add(t('Image copied to clipboard.'), { variant: 'neutral' }), () => toasts?.add(t('Couldn’t copy image.'), { variant: 'danger' }));
     else fileMenu?.select(item, file.path);
   };
   // B32: the card actions with dp's focus target (the viewer root).
-  const unavailableActions = cardActions ? { ...cardActions, focusViewer: () => root.current?.focus({ preventScroll: true }) } : null;
+  const unavailableActions = cardActions ? { ...cardActions, focusViewer: () => root.current?.focus({ preventScroll: true }),
+    onCreateFile: cardActions.onCreateFile ? async () => { const result = await cardActions.onCreateFile(); if (result?.status === 'saved') viewSource(); return result; } : undefined,
+  } : null;
   const body = media
-    ? <SourceFileMedia key={file.path} kind={media} path={file.path} url={filePreviewUrl(fullPath || file.path)} onViewAsText={onViewAsText} onShowFile={cardActions?.onShowFile ?? null} />
+    ? <SourceFileMedia key={file.path} kind={media} path={file.path} url={filePreviewUrl(fullPath || file.path)} onViewAsText={onViewAsText} onShowFile={cardActions?.onShowFile ?? null} onImageReady={onImageReady} />
     : reason && reason !== "empty"
       ? <SourceFileUnavailable key={file.path} reason={reason} path={file.path} creatable={file.creatable} onViewAsText={onViewAsText} cardActions={unavailableActions} />
-      : reason === "empty" && !editor
+      // R4g-files FV1 (files-03): cd2efac6e also shows the empty card for an untruncated whitespace-only preview.
+      : (reason === "empty" && (!editor || preview?.kind === "markdown")) || filePreviewEmpty(preview?.kind, file)
         ? <SourceFileUnavailable reason="empty" path={file.path} />
         : typeof file.text !== "string"
           ? <SourceLoadingPane label={FILE_VIEWER_LABELS.loading} />
           : preview?.kind === "html"
             ? <SourceFileHtmlFrame path={file.path} text={file.text} frame={previewFrame} onViewSource={viewSource} />
           : preview?.kind === "svg"
-            ? <SourceFileSvg path={file.path} text={file.text} onViewSource={viewSource} />
+            ? <SourceFileSvg path={file.path} text={file.text} onViewSource={viewSource} onImageReady={onImageReady} />
           : preview?.kind === "markdown"
-            ? <SourceFileMarkdown text={file.text} renderMarkdown={renderMarkdown} />
+            ? <SourceFileMarkdown text={file.text} renderMarkdown={renderMarkdown} typography={presentation === "pane" ? "epitaxy" : "document"} />
             : preview?.kind === "csv"
-              ? <SourceFileCsv text={file.text} delimiter={preview.delimiter} />
-              : editor ? <SourceFileEditor onSaveComment={onSaveComment} onDeleteComment={onDeleteComment} apiRef={editorApi} onGoToLine={openGoToLine} onAttachFile={onAttachFile} onAttachSelection={onAttachSelection} onDownload={onDownload} editor={editor} settings={settings} line={line} endLine={endLine} scrollNonce={scrollNonce} find={findProps} />
+              ? <SourceFileCsv text={file.text} delimiter={preview.delimiter} presentation={presentation === "pane" ? "pane" : "document"} truncatedUpstream={!!file.truncated} />
+              : editor ? <SourceFileEditor onSaveComment={onSaveComment} onDeleteComment={onDeleteComment} apiRef={editorApi} onGoToLine={openGoToLine} onAttachFile={onAttachFile} onAttachSelection={onAttachSelection} onDownload={downloadAvailable ? onDownload : null} downloading={downloading} editor={editor} settings={settings} line={line} endLine={endLine} scrollNonce={scrollNonce} find={findProps} />
               : <SourceFileCode path={file.path} text={file.text} line={line} endLine={endLine} scrollNonce={scrollNonce} scopeKey={scopeKey} find={findProps} settings={settings} />;
   return <div ref={root} tabIndex={-1} onMouseDown={(event) => {
     // Keep keyboard Find scoped to the file after clicking its read-only code.
@@ -924,7 +773,7 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
   }} className="source-file-view" data-file-path={file.path} data-pane-editor={dirty || undefined} data-file-state={reason ?? (typeof file.text === "string" ? "text" : "loading")}
     data-file-view={preview ? "preview" : canToggle ? "source" : undefined}
     onKeyDown={(event) => {
-      if (event.key === 'Escape' && find.open && !event.defaultPrevented && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); closeFind(); return; }
+      if (event.key === 'Escape' && find.open && !event.defaultPrevented && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); suppressKeyRepeat('Escape', event.currentTarget.ownerDocument.defaultView); closeFind(); return; }
       const action = searchable ? fileFindShortcut(event, { mac: typeof navigator === "undefined" || /Mac|iPhone|iPad/.test(navigator.platform || "") }) : null;
       if (!action || (action !== "open" && !find.open)) return;
       event.preventDefault(); event.stopPropagation();
@@ -955,7 +804,7 @@ export function SourceFileViewer({ file, displayPath, fullPath, line, endLine, s
       onNext={() => stepFind(1)} onPrev={() => stepFind(-1)} onClose={closeFind} />}
     <div ref={bodyRef} className="sfv-body" data-popup-open={bodyMenu ? "" : undefined} onContextMenu={fileMenu ? openBodyMenu : undefined} onKeyDown={fileMenu ? openBodyMenu : undefined}>{body}</div>
     {bodyMenuEntries?.length > 0 && <SourceMenu.Popup anchor={bodyRef.current} point={bodyMenu.point} trigger={null} side="bottom" align="start"
-      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
+      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard
       label={FILE_VIEWER_LABELS.fileActions} onClose={() => setBodyMenu(null)} finalFocus={() => (menuReturn.current?.isConnected ? menuReturn.current : root.current)}>
       <SourceFileMenuEntries entries={bodyMenuEntries} onSelect={selectBodyItem} />
     </SourceMenu.Popup>}

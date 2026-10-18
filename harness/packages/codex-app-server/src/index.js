@@ -96,6 +96,7 @@ import { createCustomRef, applyCustomization, installCustomization } from './cus
 import { installToolGate, isToolDenied, toolSelectionOf, toolsListResponse } from './tool-gate.js'
 import { normalizeInstructions as normalizeCustomInstructions } from './instructions.js'
 import { installSubagentSystemPrompt, previewCustom, systemPromptPreview } from './system-prompt.js'
+import { contextUsageCounts } from './context-usage.js'
 import { profileReadResponse } from './profile.js'
 import { runSideQuestion, sessionTranscript, sideQuestionPrompt } from './side-question.js'
 import { ALIASES as PRICE_ALIASES, DEEPSEEK_PRICES, PEAK_WINDOWS, PRICING_URL } from './pricing.js'
@@ -144,10 +145,14 @@ const DSH_VERSION = '0.2.0-rc.2'
 // reviewReadOnly 'noEdits': a review turn runs under the read-only preset with every escalation refused.
 // subAgentMessages: turn/start / turn/steer on a continuable sub-agent's id reach its inbox (OpenClaude Desktop's agent panel composer).
 // messageFeedback: codeDesktop/messageFeedback/list|put|delete (dsh-message-feedback, Good / Bad response on replies).
-const CAPABILITIES = { messageFeedback: true, subAgentMessages: true, unsupportedMethods: [], reviewReadOnly: 'noEdits', skillToggle: false, mcpConfigWrite: false, livePermissions: true, toolSelection: true, codeStats: true, modelWorkflows: true, structuredOutput: true, systemPromptPreview: true, coreCommands: true, sideQuestion: true, modelParams: true, sandboxNetwork: 'always', generatesTitles: true }
+const CAPABILITIES = { messageFeedback: true, subAgentMessages: true, unsupportedMethods: [], reviewReadOnly: 'noEdits', skillToggle: false, mcpConfigWrite: false, livePermissions: true, toolSelection: true, codeStats: true, modelWorkflows: true, structuredOutput: true, systemPromptPreview: true, contextUsage: true, coreCommands: true, sideQuestion: true, modelParams: true, sandboxNetwork: 'always', generatesTitles: true }
 
 // How long after start account/read waits for the credentials and account services.
 const ACCOUNT_SERVICE_WAIT_MS = 5000
+// OpenClaude Desktop's ccd_turn tools (app/electron/agent-tools/turn-plan.mjs) and 2.42304.0's refusal of a sub-agent's call
+// (index.chunk-B5tintml.js `ot`, verbatim).
+export const SUBAGENT_TURN_TOOLS = new Set(['mcp__code_desktop__update_plan', 'mcp__code_desktop__wrap_up'])
+export const SUBAGENT_TURN_TOOL_REFUSAL = "Not shown: you are a subagent, and the app shows only the main conversation's task list and wrap-up. Do not call update_plan or wrap_up again; carry on with your task and report your result as usual."
 // How long after start cold list rows wait for the projection registry and cache.
 const LIST_SERVICE_WAIT_MS = 5000
 
@@ -868,6 +873,19 @@ export function apply(ctx, config) {
     }
   })
 
+  // Harness's bash tool requires a UI `description`; some models (deepseek-flash) leave it out, and every command then
+  // fails schema validation ("missing required property \"description\"") until the model gives up. Before validation,
+  // a bash call with a command but no description gets the command's first line, shortened, as its description.
+  ctx.on('tools/prepare-input', (candidate) => {
+    if (candidate.name !== 'bash') return
+    const value = candidate.arguments
+    const args = typeof value === 'string' ? (() => { try { return JSON.parse(value) } catch { return null } })() : value
+    if (!args || typeof args !== 'object' || Array.isArray(args) || typeof args.command !== 'string' || !args.command.trim()) return
+    if (typeof args.description === 'string' && args.description.trim()) return
+    const line = args.command.trim().split('\n')[0]
+    candidate.replaceArguments({ ...args, description: line.length > 60 ? `${line.slice(0, 59)}…` : line })
+  })
+
   // Ask mode: every mutating tool call asks first; Accept edits lets a
   // workspace write/edit through (approval.js preExecuteDecision). A sub-agent's
   // call asks on its root thread's card, from here: its own approval policy is 'never'.
@@ -878,6 +896,9 @@ export function apply(ctx, config) {
     const owner = thread ?? rootThreadFor(exec.agent, threads, headerOf)
     if (owner && isToolDenied(exec.name, owner.tools?.current)) return Promise.resolve({ kind: 'deny', reason: 'This tool is turned off for this session in OpenClaude Desktop.' })
     if (!thread && exec.name === 'mcp__code_desktop__Workflow') return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
+    // The task list and the next-step box are the main conversation's (2.42304.0 index.chunk-CFJssAFf: a PreToolUse with
+    // agent_id on mcp__ccd_turn__update_plan / wrap_up is denied with index.chunk-B5tintml `ot`).
+    if (!thread && SUBAGENT_TURN_TOOLS.has(exec.name)) return Promise.resolve({ kind: 'deny', reason: SUBAGENT_TURN_TOOL_REFUSAL })
     if (!thread) {
       const root = rootThreadFor(exec.agent, threads, headerOf)
       if (!root || childDecision({ rootPolicy: root.permission.approvalPolicy, toolName: exec.name }) !== 'ask-client') return next()
@@ -1849,6 +1870,20 @@ export function apply(ctx, config) {
       case 'codeDesktop/pricing/read':
         // Settings → Models → Pricing: the official table the app's overrides start from.
         return { official: DEEPSEEK_PRICES, aliases: PRICE_ALIASES, pricingUrl: PRICING_URL, peakWindows: PEAK_WINDOWS }
+      case 'codeDesktop/contextUsage/read': {
+        // The session rail Context card's categories (context-usage.js): measured with the Harness's token meter on
+        // what a loaded thread sends; an unloaded thread (nothing in memory to measure) reports none.
+        const id = requireId(params?.threadId)
+        const thread = threads.get(id)
+        if (!thread || thread.closing) return { categories: {}, memoryFiles: [], mcpTools: [], agents: [], measure: null }
+        // The agent's current assembly names the system prompt's sections (mcp:<server>: MCP server instructions).
+        let sections = []
+        try {
+          const systemPrompt = ctx.get('systemPrompt')
+          if (systemPrompt) sections = (await systemPrompt.assemble(assembleContextFor(thread.agent)))?.sections ?? []
+        } catch (error) { logger.warn(`contextUsage sections ${id}: ${errorChain(error)}`) }
+        return contextUsageCounts({ session: thread.agent.session, meter: ctx.get('tokenMeter'), sections })
+      }
       case 'codeDesktop/systemPrompt/preview': {
         // Settings → Instructions: the exact system prompt for the app's values. A loaded thread
         // (threadId, else one open in the same cwd) assembles in its agent's scope; otherwise the

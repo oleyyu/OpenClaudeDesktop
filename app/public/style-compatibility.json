@@ -1,0 +1,518 @@
+{
+  "currentVersion": "2.42304.0",
+  "baselineVersion": "2.37337.1",
+  "baselineSource": "installed-2.37337.1-20261015/ion-dist/assets/v1/c6a992d55-CNGsCU46.css",
+  "baselineSha256": "e805f0daa316017c4299c79daedeb5a122d35e315b28f3a0a5f11a6e6889b12e",
+  "currentStylesheets": [
+    {
+      "file": "c3fde7009-BH42YUtA.css",
+      "sha256": "b480cbe40c6a9e76301911e5115b4e9f7a8bb96ab31701b61abe679241fb3b34"
+    },
+    {
+      "file": "ce598b86c-CctVJsaN.css",
+      "sha256": "174dfb1d52b5aeab3ac9af12fa24b1d1ec06427498654d9f36ead958030618a1"
+    },
+    {
+      "file": "c6a992d55-sXiDGMFQ.css",
+      "sha256": "c2274556b074a9fd6455d9cadf99fcd5696a6d33ee15ebd264886fd37ddc033b"
+    },
+    {
+      "file": "shared-styles-Bl9zqrv-.css",
+      "sha256": "193fe6e02ead582010748005459b9f1ba80bb637e339dabf77c147b714edca33"
+    },
+    {
+      "file": "shared-frame-CegduNQ2.css",
+      "sha256": "154b1334a8300f602d552a3dc040bb6f9e006a36531537491f25fe1ae35c2b80"
+    }
+  ],
+  "output": "assets/legacy-utilities.css",
+  "outputSha256": "1e87b63a1f05e99c5fa0fdb6c68325d3551da98d6b657dada1587a5535da5bfc",
+  "note": "Only absent utilities whose exact class token is still named by a src string literal, template fragment or CSS selector, plus their missing theme tokens. Hits list the owning file/binding, its generator and source version; reachable is informational (rules are never dropped for it). Remove as owning modules migrate.",
+  "scanner": {
+    "mode": "class-token",
+    "sources": "src/**/*.{js,jsx,mjs,css}",
+    "parser": "rolldown/parseAst (ESTree) for scripts; postcss rule selectors for stylesheets",
+    "tokens": "string Literal values and TemplateLiteral quasis (cooked), split on whitespace; CSS selector classes. Comments are not tokens.",
+    "exclusionRules": [
+      {
+        "reason": "design-token-metadata",
+        "object": "has keys __name + cssVar",
+        "excludedKeys": [
+          "__name",
+          "cssVar"
+        ]
+      },
+      {
+        "reason": "tailwind-merge-registry",
+        "object": "has keys classGroups + conflictingClassGroups",
+        "excludedKeys": [
+          "classGroups",
+          "conflictingClassGroups",
+          "conflictingClassGroupModifiers"
+        ]
+      }
+    ],
+    "exclusions": [
+      {
+        "file": "src/generated/chat/shared-frame-C_2npUJq.js",
+        "binding": "Pt",
+        "key": "classGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 28,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/chat/shared-frame-C_2npUJq.js",
+        "binding": "Pt",
+        "key": "conflictingClassGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 4,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/chat/vendor-frame-BmPfNbgY.js",
+        "binding": "Rt",
+        "key": "classGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 516,
+        "suppressed": [
+          "inline-table",
+          "isolation-auto"
+        ]
+      },
+      {
+        "file": "src/generated/chat/vendor-frame-BmPfNbgY.js",
+        "binding": "Rt",
+        "key": "conflictingClassGroupModifiers",
+        "reason": "tailwind-merge-registry",
+        "tokens": 2,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/chat/vendor-frame-BmPfNbgY.js",
+        "binding": "Rt",
+        "key": "conflictingClassGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 108,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/code-editor/preview-sketch-canvas.mjs",
+        "binding": "ge",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-claude-pending",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "border-editor-comment",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/code-editor/preview-sketch-canvas.mjs",
+        "binding": "ge",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/proposal-group/c25d7186f-CHE_J2eY.js",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-claude-pending",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "border-editor-comment",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/proposal-group/c25d7186f-CHE_J2eY.js",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/session-rail-kit/cds-tokens.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-claude-pending",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "border-editor-comment",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/session-rail-kit/cds-tokens.mjs",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/transcript-rows/rows-c25d7186f-CHE_J2eY.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-claude-pending",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "border-editor-comment",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/transcript-rows/rows-c25d7186f-CHE_J2eY.mjs",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/view-tabs/shared-frame-BfjMqbuN.js",
+        "binding": "Gt",
+        "key": "classGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 35,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/view-tabs/shared-frame-BfjMqbuN.js",
+        "binding": "Gt",
+        "key": "conflictingClassGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 30,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/view-tabs/vendor-frame-DfPJ1QmD.js",
+        "binding": "Lt",
+        "key": "classGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 516,
+        "suppressed": [
+          "inline-table",
+          "isolation-auto"
+        ]
+      },
+      {
+        "file": "src/generated/view-tabs/vendor-frame-DfPJ1QmD.js",
+        "binding": "Lt",
+        "key": "conflictingClassGroupModifiers",
+        "reason": "tailwind-merge-registry",
+        "tokens": 2,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/view-tabs/vendor-frame-DfPJ1QmD.js",
+        "binding": "Lt",
+        "key": "conflictingClassGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 108,
+        "suppressed": []
+      }
+    ],
+    "warnings": [],
+    "reachability": {
+      "entries": [
+        "index.html /src/main.jsx"
+      ],
+      "complete": true,
+      "note": "Per-hit reachable flag only; a rule held solely by unreachable modules is still retained."
+    }
+  },
+  "rules": [
+    {
+      "selector": ".-right-5",
+      "references": [
+        {
+          "className": "-right-5",
+          "hits": [
+            {
+              "file": "src/generated/chat/shared-24-C4QZCHDk.js",
+              "binding": "QD",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/current-chat/shared-23-CuGEZNcW.js",
+              "binding": "xI",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 82515,
+      "end": 82557,
+      "sha256": "0443d31d6f1d04b5d0d5d69ce8d884b7f8cf56dc4a9599019bbdd3db9b77970e",
+      "contexts": [],
+      "fragmentSha256": "0443d31d6f1d04b5d0d5d69ce8d884b7f8cf56dc4a9599019bbdd3db9b77970e"
+    },
+    {
+      "selector": ".left-2\\.5",
+      "references": [
+        {
+          "className": "left-2.5",
+          "hits": [
+            {
+              "file": "src/generated/chat/ce5658dc8-CJ_gZ6YY.js",
+              "binding": "wa",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/chat/ce5658dc8-CJ_gZ6YY.js",
+              "binding": "ya",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/current-chat/c4038fd41-DE0MYtnD.js",
+              "binding": "D",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/current-chat/c4038fd41-DE0MYtnD.js",
+              "binding": "M",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 89060,
+      "end": 89103,
+      "sha256": "a4cbabfef9b4c9d8273b0bfcd6e09db2cdc78dfb7c386c12f992fbd87d742950",
+      "contexts": [],
+      "fragmentSha256": "a4cbabfef9b4c9d8273b0bfcd6e09db2cdc78dfb7c386c12f992fbd87d742950"
+    },
+    {
+      "selector": ".mr-3",
+      "references": [
+        {
+          "className": "mr-3",
+          "hits": [
+            {
+              "file": "src/generated/chat/ce5658dc8-CJ_gZ6YY.js",
+              "binding": "Ra",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/current-chat/c4038fd41-DE0MYtnD.js",
+              "binding": "K",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 118641,
+      "end": 118685,
+      "sha256": "87f9ddb96c13126e5895b5834c53ae423055857ba809e3f3761be7dd33c4695c",
+      "contexts": [],
+      "fragmentSha256": "87f9ddb96c13126e5895b5834c53ae423055857ba809e3f3761be7dd33c4695c"
+    },
+    {
+      "selector": ".rounded-r-lg",
+      "references": [
+        {
+          "className": "rounded-r-lg",
+          "hits": [
+            {
+              "file": "src/generated/chat/shared-24-C4QZCHDk.js",
+              "binding": "QD",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/current-chat/shared-23-CuGEZNcW.js",
+              "binding": "xI",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 292363,
+      "end": 292462,
+      "sha256": "22de35912bc38d0afd7b8239bd2b0e4cad5fbcf7e19637cb2141060bdf5dac05",
+      "contexts": [],
+      "fragmentSha256": "22de35912bc38d0afd7b8239bd2b0e4cad5fbcf7e19637cb2141060bdf5dac05"
+    },
+    {
+      "selector": ".pr-0",
+      "references": [
+        {
+          "className": "pr-0",
+          "hits": [
+            {
+              "file": "src/generated/chat/shared-frame-C_2npUJq.js",
+              "binding": "Bh",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 418121,
+      "end": 418143,
+      "sha256": "3344132fd92a0b34cba4b3cddbbba55c56a04df412fd5256fdc2945160c3e254",
+      "contexts": [],
+      "fragmentSha256": "3344132fd92a0b34cba4b3cddbbba55c56a04df412fd5256fdc2945160c3e254"
+    },
+    {
+      "selector": ".pr-\\[calc\\(\\(var\\(--cds-h-control\\)-var\\(--cds-h-control-nested\\)\\)\\/2\\)\\]",
+      "references": [
+        {
+          "className": "pr-[calc((var(--cds-h-control)-var(--cds-h-control-nested))/2)]",
+          "hits": [
+            {
+              "file": "src/generated/current-chat/shared-frame-DVFSKIcx.js",
+              "binding": "vy",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 419212,
+      "end": 419365,
+      "sha256": "80c5724685ca4b7e639811f55a4ecac1f7b4683123ada15016c9d94788ffd4e4",
+      "contexts": [],
+      "fragmentSha256": "80c5724685ca4b7e639811f55a4ecac1f7b4683123ada15016c9d94788ffd4e4"
+    },
+    {
+      "selector": ".after\\:border-alpha-1:after",
+      "references": [
+        {
+          "className": "after:border-alpha-1",
+          "hits": [
+            {
+              "file": "src/generated/current-chat/shared-9-CAAkBVM3.js",
+              "binding": "xf",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 790165,
+      "end": 790252,
+      "sha256": "d64b8af54b17dd81f8634054216969ff70b5255b5fc1c04cc6c354abae85de52",
+      "contexts": [],
+      "fragmentSha256": "d64b8af54b17dd81f8634054216969ff70b5255b5fc1c04cc6c354abae85de52"
+    },
+    {
+      "selector": ".has-\\[\\[data-cds-end-slot\\]_\\[data-cds\\=Button\\]\\:not\\(\\[data-cds-ghost\\]\\)\\]\\:pr-\\[calc\\(\\(var\\(--cds-h-control\\)-var\\(--cds-h-control-nested\\)\\)\\/2\\)\\]:has(:is([data-cds-end-slot] [data-cds=Button]:not([data-cds-ghost])))",
+      "references": [
+        {
+          "className": "has-[[data-cds-end-slot]_[data-cds=Button]:not([data-cds-ghost])]:pr-[calc((var(--cds-h-control)-var(--cds-h-control-nested))/2)]",
+          "hits": [
+            {
+              "file": "src/generated/chat/shared-frame-C_2npUJq.js",
+              "binding": "zh",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/current-chat/shared-frame-DVFSKIcx.js",
+              "binding": "_y",
+              "generator": "scripts/extract-current-chat-ui.mjs",
+              "sourceVersion": "2.31226.0",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "start": 873309,
+      "end": 873611,
+      "sha256": "48e29129e176e0ec939982c4e27f87817f7d277e97c09fc0891c4be86aace528",
+      "contexts": [],
+      "fragmentSha256": "48e29129e176e0ec939982c4e27f87817f7d277e97c09fc0891c4be86aace528"
+    },
+    {
+      "selector": ".\\[\\&\\+li\\]\\:border-t-0+li",
+      "references": [
+        {
+          "className": "[&+li]:border-t-0",
+          "hits": [
+            {
+              "file": "src/generated/chat/ccd3f68fe-JzfLnZNI.js",
+              "binding": "ga",
+              "generator": "scripts/extract-chat-ui.mjs",
+              "sourceVersion": "2.2553.1",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "start": 1401977,
+      "end": 1402063,
+      "sha256": "719b0015e46d8bf60c1330abe3b95a9a02907e5ffce389c66c8be9b3c24ff15b",
+      "contexts": [],
+      "fragmentSha256": "719b0015e46d8bf60c1330abe3b95a9a02907e5ffce389c66c8be9b3c24ff15b"
+    }
+  ],
+  "tokens": []
+}

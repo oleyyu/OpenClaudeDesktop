@@ -358,7 +358,8 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     if (THREAD_METHODS.has(method)) {
       const codeDesktop = params.codeDesktop && typeof params.codeDesktop === "object" ? params.codeDesktop : {};
       const customization = codeDesktop.customization && typeof codeDesktop.customization === "object" ? codeDesktop.customization : {};
-      params.codeDesktop = { ...codeDesktop, customization: { ...customization, modelParams: prefs().modelParamsForCore(settings) } };
+      // Per-model values are kept per core ('<coreId>:<modelId>', prefs/model-settings.mjs modelParamsKey).
+      params.codeDesktop = { ...codeDesktop, customization: { ...customization, modelParams: prefs().modelParamsForCore(settings, coreForEngine(client.serverInfo?.engine).id) } };
     } else if (method === "account/usage/read") {
       const codeDesktop = params.codeDesktop && typeof params.codeDesktop === "object" ? params.codeDesktop : {};
       params.codeDesktop = { ...codeDesktop, prices: prefs().pricesForCore(settings) };

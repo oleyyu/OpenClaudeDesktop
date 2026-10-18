@@ -1,18 +1,33 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {designVersion,designSnapshot,designIconModule,designStylesheets} from "./current-design-assets.mjs";
+import {prepareStyleCompatibility} from "./prepare-style-compatibility.mjs";
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import './build-workflow-parser.mjs';
 import './build-workflow-schema.mjs';
 import './verify-chat-ui.mjs';
 import './prepare-current-chat-ui.mjs';
 import './verify-code-editor.mjs';
+import './verify-code-start.mjs';
+import './verify-code-ui-current.mjs';
+import './verify-view-tabs.mjs';
+import './verify-code-editor-current.mjs';
 import './verify-terminal-shell.mjs';
 import './verify-release-notes.mjs';
+// Generators added during the 2.42304.0 migration each ship a `verify-gen-<area>.mjs` that runs the generator's
+// `--check`; discovering them here keeps parallel migration lanes from editing this file. Each one runs in its own
+// process: every generator parses multi-megabyte minified chunks, and importing them all into this process kept those
+// ASTs alive until the heap ran out (about 2 GB after the first few, during the R4 gate).
+for (const name of (await fs.readdir(import.meta.dirname)).filter((n) => /^verify-gen-[a-z0-9-]+\.mjs$/.test(n)).sort()) {
+  const run = spawnSync(process.execPath, [path.join(import.meta.dirname, name)], { stdio: "inherit" });
+  if (run.status !== 0) throw new Error(`${name} failed (${run.signal ?? `exit ${run.status}`})`);
+}
 const root = path.resolve(import.meta.dirname, "..");
 const source = path.resolve(root, "../reference/current-2.2553.1/ion-dist/assets/v1");
 // B38: the design-system stylesheets, their fonts and the Anthropicons map (which must match the icon font) come from
-// the current installed frontend (2.31226.0); the other extractions below still read 2.2553.1.
-const designSource = path.resolve(root, "../reference/installed-2.31226.0-20261012/ion-dist/assets/v1");
+// the pinned latest frontend; the other extractions below still read 2.2553.1.
+const designSource = path.resolve(root, "../reference", designSnapshot, "ion-dist/assets/v1");
 const dest = path.join(root, "public/assets/v1");
 await fs.rm(dest, { recursive: true, force: true });
 await fs.mkdir(dest, { recursive: true });
@@ -25,9 +40,9 @@ async function copyAsset(name, target = path.join(dest, name), from = source) {
   provenance.push({ source: name, ...(from === source ? {} : { sourceDir: path.relative(root, from) }), output: path.relative(root, target), sourceSha256: digest(bytes), outputSha256: digest(bytes) });
 }
 // Extract the actual numeric font map, including non-contiguous future glyphs.
-const iconSourceName = "shared-frame-DVFSKIcx.js";
+const iconSourceName = designIconModule;
 const iconSource = await fs.readFile(path.join(designSource, iconSourceName), "utf8");
-// 2.31226.0 Ka={icons:{…},secondary:{…},next:…}: `icons` already lists the secondary set's glyphs too.
+// 2.37337.1 qa={icons:{…},secondary:{…},next:…}: `icons` already lists the secondary set's glyphs too.
 const iconBlock = iconSource.match(/icons:\{(Activity:57344,[^}]+)\},(?:secondary|next):/)?.[1];
 if (!iconBlock) throw new Error("Anthropicons map changed; trace the source before updating extraction.");
 const glyphs = Object.fromEntries([...iconBlock.matchAll(/([A-Za-z][A-Za-z0-9]*):(\d+)/g)].map((m) => [m[1], Number(m[2])]));
@@ -80,13 +95,13 @@ if(mcpPaths.length!==4 || !mcpBlock.includes('viewBox:"0 0 70 71"') || mcpPaths.
 const mcpIllustration=JSON.stringify({viewBox:'0 0 70 71',width:70,height:71,paths:mcpPaths},null,2)+'\n';
 await fs.writeFile(path.join(root,'src/generated/mcp-empty.json'),mcpIllustration);
 provenance.push({source:mcpSourceName,sourceSha256:digest(mcpSource),output:'src/generated/mcp-empty.json',outputSha256:digest(mcpIllustration),transform:'Four static SVG paths and theme colors extracted without executing source'});
-const files = [
-  "ce598b86c-CivZuY3L.css",
-  "c6a992d55-C0zTICcS.css",
-  "shared-styles-CTu5t_TM.css",
-  "shared-frame-Vh6rJ546.css",
-];
+const files = designStylesheets;
 await copyAsset("c25011d97-Dg-b7-mk.png");
+// working-line: the clay activity marker's sprite sheets (c8677db5f's /assets/v1/*.webp), from the generator's checked
+// copies (src/generated/working-line/manifest.json publicAssets), so a fresh public/assets/v1 still serves them.
+for (const { name } of JSON.parse(await fs.readFile(path.join(root, "src/generated/working-line/manifest.json"), "utf8")).publicAssets) {
+  await copyAsset(name, undefined, path.join(root, "src/generated/working-line/public-assets"));
+}
 for (const name of ['session-progress.svg', 'session-progress-dark.svg', 'session-artifacts.svg', 'session-artifacts-dark.svg']) {
   await copyAsset('../../images/illustrations/' + name, path.join(root, 'public/images/illustrations', name));
 }
@@ -110,7 +125,9 @@ await fs.writeFile(
   path.join(root, "public/ui-provenance.json"),
   JSON.stringify(
     {
-      source: "Local Claude Desktop 2.2553.1 installation; design-system CSS, fonts and icon map from 2.31226.0",
+      source: `Local Claude Desktop 2.2553.1 installation; design-system CSS, fonts and icon map from ${designVersion}`,
+      designVersion, designSnapshot,
+      compatibilityStylesheet: "style-compatibility.json",
       purpose: "Private local UI study; original assets retain their ownership",
       cssModification: "Only asset URL paths made relative",
       files: [...new Map(provenance.map((entry) => [entry.output, entry])).values()],
@@ -120,6 +137,7 @@ await fs.writeFile(
   ),
 );
 console.log(`Prepared ${new Set(copied).size} original style/font assets`);
+await prepareStyleCompatibility();
 // Package dependency notices alongside the emitted worker, even though the
 // application archive deliberately excludes development node_modules/build.
 const noticeSource = path.join(root, "build/highlight-notices");
@@ -154,7 +172,7 @@ for (const entry of CODE_THEMES) {
   const defaultToken = theme.tokenColors?.find((rule) => !rule.scope)?.settings?.foreground;
   const bg = hex(colors["editor.background"] ?? theme.bg), fg = hex(colors["editor.foreground"] ?? theme.fg ?? defaultToken);
   if (!bg || !fg) throw new Error(`Theme ${entry.value} lacks editor colors`);
-  themeColors[entry.value] = { mode: entry.mode, bg, fg, selection: hex(colors["editor.selectionBackground"]) ?? selectionDefaults[entry.mode] };
+  themeColors[entry.value] = { mode: entry.mode, bg, fg, selection: hex(colors["editor.selectionBackground"]) ?? selectionDefaults[entry.mode], editor: {type: entry.mode, colors: {...colors, 'editor.foreground': fg, 'editor.background': bg}, ...(theme.colorReplacements ? {colorReplacements:theme.colorReplacements} : {})} };
 }
 await fs.writeFile(path.join(root, "src/generated/code-theme-colors.json"), JSON.stringify(themeColors, null, 2) + "\n");
 await fs.cp(path.join(root,"build/editor-notices"),path.join(root,"public/third-party/editor"),{recursive:true});

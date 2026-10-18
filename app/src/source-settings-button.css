@@ -43,7 +43,7 @@
 .ssb-spinner>[data-cds=Spinner]>span:first-child { border:var(--ssb-stroke) solid color-mix(in srgb,currentColor 25%,transparent); }
 .ssb-spinner>[data-cds=Spinner]>span:last-child { background:conic-gradient(transparent 40%,currentColor);mask:radial-gradient(farthest-side,transparent calc(100% - var(--ssb-stroke)),#000 calc(100% - var(--ssb-stroke) + .5px));animation:ssb-spin 1s linear infinite; }
 @keyframes ssb-spin { to { transform:rotate(360deg); } }
-.source-settings-button:not(:disabled):active .ssb-squish { transform:scale(.975);transition:transform var(--cds-dur-fast) ease-out; }
+.source-settings-button:not(:disabled):active .ssb-squish { transform:scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975));transition:transform var(--cds-dur-fast) ease-out; }
 @media(prefers-reduced-motion:reduce) { .source-settings-button,.source-settings-button .ssb-squish,.source-settings-button .ssb-paint { transition:none; } }
 html[data-reduce-motion="true"] .source-settings-button, html[data-reduce-motion="true"] .source-settings-button .ssb-squish, html[data-reduce-motion="true"] .source-settings-button .ssb-paint { transition: none; }
 @media(prefers-reduced-motion:reduce) { .ssb-spinner>[data-cds=Spinner]>span:last-child { animation:none; } }

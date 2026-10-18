@@ -69,7 +69,10 @@ test('"Copy plan": a ghost icon-only Copy button leads the Plan trailing control
 
 test('wiring: planDocs gate the Plan row, /plan and the popout sync; the pane gate takes todos or a document', () => {
   const main = fs.readFileSync(path.resolve(import.meta.dirname, '../src/main.jsx'), 'utf8');
-  assert.match(main, /\.\.\.\(\(state\.plans\[current\]\?\.length \|\| state\.planDocs\?\.\[current\] \|\| openPanes\.has\("plan"\)\) \? \[\{kind: "plan", label: "Plan", icon: "Checklist"\}\] : \[\]\)/);
+  // R4h-topbar K1: the View options rows come from session-chord-model.mjs titlebarViewOptionsItems; the Plan row shows
+  // for a todo list or a plan document (hasPlan from main.jsx) or while the pane is open.
+  assert.match(main, /hasPlan: !!\(state\.plans\[current\]\?\.length \|\| state\.planDocs\?\.\[current\]\),/);
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../src/session-chord-model.mjs'), 'utf8'), /\.\.\.\(\(hasPlan \|\| open\.has\("plan"\)\) \? \[\{ kind: "plan", label: "Plan", icon: "Checklist" \}\] : \[\]\)/);
   assert.match(main, /hasPlan:!!\(state\.plans\[current\]\?\.length\|\|state\.planDocs\?\.\[current\]\)/);
   assert.match(main, /data: \{ plan: state\.plans\[entry\.sessionId\] \?\? null, document: state\.planDocs\?\.\[entry\.sessionId\] \?\? null,\s+commentsEnabled: planCommentsOpen\(entry\.sessionId\) \}/);
   // B22: the pane takes comments while a plan review is pending or the session is in Plan; the history state feeds Jh.

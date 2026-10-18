@@ -1,5 +1,15 @@
 # Workflow structured results
 
+## Desktop compatibility policy
+
+OpenClaude Desktop retains multi-core model mapping and schema fallbacks. A core without the dynamic `StructuredOutput` tool uses validated JSON (with `outputSchema` when available), and logs that difference. Model substitutions and read-only tool mappings also appear under **Compatibility differences** in the Tasks card. A read-only shell is not equivalent to removing Claude's individual tools. Unsupported command clamps still refuse to start an agent.
+
+Model-started desktop workflows now share a session output-token ledger with the main model and sibling runners. Each user turn captures its own baseline; completed siblings remain counted, and agents from an older turn that finish later contribute to the current turn. Nested workflows share the same meter. Reaching a target blocks further admissions, while already-running agents can finish above it. Without a target, `spent()` is still shared and `remaining()` stays infinite. This uses the core's reported usage and does not make different providers' tokenizers or reporting cadence identical. Standalone runner calls without a desktop pool retain their local meter.
+
+Agent resume identity uses the global call chain, prompt and explicitly authored, normalized `schema`, `model`, `effort`, `isolation`, `agentType`, `disallowedTools` and `bashCommandClamp`. Host defaults and display labels are excluded; forced-model mode discards per-call model overrides. Local journal keys are now `v5:`. Older agent entries remain on disk but are not reused, so their first resume reruns those calls; human/session extension history is unchanged. This aligns the observed Claude matching semantics without claiming binary or provider equivalence.
+
+## Structured output protocol
+
 The alternate runner uses a thread-local `StructuredOutput` dynamic tool for `agent(prompt, {schema})`. The tool description carries the author's complete object-rooted JSON Schema. Its protocol parameter schema is a permissive object because Codex strips unsupported keywords from tool metadata; the full author schema, preserved as text, remains authoritative. The Harness Ajv compiler validates the schema before startup and validates every tool input without coercing data or enforcing formats. Open objects can require properties absent from `properties`; closed contradictory objects fail before startup.
 
 Only a successful tool result supplies the script's value. JSON in ordinary response text does not count. Invalid tool inputs return an error to the same model conversation; the default limit is five failed calls. `MAX_STRUCTURED_OUTPUT_RETRIES` accepts a positive integer override. A turn that finishes without a result gets one reminder. A second finish without that result rejects the agent call while the completed child remains done in progress. A provider API failure instead returns null and marks the child failed.

@@ -35,7 +35,7 @@ export const planAcceptOptions = ({ bypass = false } = {}) => ["acceptEdits", "a
  * feedback field; :9783-9801 swaps in Back / Revise. With more than one accept option the
  * primary is a split button (:9853-9875 xee) whose 'More accept options' menu lists the
  * other options (Nk labels): `more`, one entry per mode. */
-export function planCardActions(target, revising = false, { bypass = false, labels = PLAN_ACCEPT_LABELS } = {}) {
+export function planCardActions(target, revising = false, { bypass = false, labels = PLAN_ACCEPT_LABELS, acceptModes } = {}) {
   if (revising) return {
     left: [{ key: "back", label: t("Back"), primary: false }],
     right: [{ key: "revise", label: t("Revise"), primary: true }],
@@ -50,7 +50,7 @@ export function planCardActions(target, revising = false, { bypass = false, labe
         keycap: "cmd+shift+enter", shortcut: "Meta+Shift+Enter Control+Shift+Enter" }] : []),
       { key: "primary", label: labels[mode], primary: true, keycap: "cmd+enter", shortcut: "Meta+Enter Control+Enter" },
     ],
-    more: planAcceptOptions({ bypass }).filter((option) => option !== mode).map((option) => ({ mode: option, label: labels[option] })),
+    more: planAcceptOptions({ bypass }).filter((option) => option !== mode && (!acceptModes || acceptModes.includes(option))).map((option) => ({ mode: option, label: labels[option] })),
   };
 }
 
@@ -92,7 +92,7 @@ export function SourcePlanApprovalCard(props) {
 }
 
 function PlanCard({ runtime, request, ticket, view, getVisibleThreadId, respond, onResolved = () => {}, onError = () => {},
-  isActive = true, menuOpen = false, planTarget, bypassAvailable = false, onOpenPlan }) {
+  isActive = true, menuOpen = false, planTarget, planAcceptModes, bypassAvailable = false, onOpenPlan }) {
   const root = useRef(null), field = useRef(null), headingId = useId();
   const [revising, setRevising] = useState(false), [feedback, setFeedback] = useState("");
   // Comments left on the plan in the Plan pane (inline-comments.mjs): Revise sends them before the typed feedback.
@@ -164,7 +164,7 @@ function PlanCard({ runtime, request, ticket, view, getVisibleThreadId, respond,
     }
   }
 
-  const { left, right, more } = planCardActions(target, revising, { bypass: bypassAvailable });
+  const { left, right, more } = planCardActions(target, revising, { bypass: bypassAvailable, acceptModes: planAcceptModes });
   const button = (action) => <ActionButton key={action.key} action={action} busy={busy} busyAction={view.busyAction}
     enabled={actionable} onAction={onAction}
     keycap={keycapShown ? action.keycap : undefined}

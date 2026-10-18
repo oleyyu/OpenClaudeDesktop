@@ -1837,6 +1837,19 @@ export default {
   },
 
   /**
+   * A running turn's tokens so far: the usage.record lines its calls appended since the turn began, read on from where
+   * the last look left off (its own cursor: settleUsage's moves only when the turn ends).
+   */
+  liveTurnUsage(ctx, thread, { since } = {}) {
+    if (!thread?.id || !thread.kimiUsageCursor) return null
+    if (thread.kimiLiveUsage?.since !== since) thread.kimiLiveUsage = { since, cursor: { ...thread.kimiUsageCursor }, usage: null }
+    const live = thread.kimiLiveUsage
+    const added = readUsageSince(wireFiles(ctx.env, thread.id), live.cursor)?.usage
+    if (added) live.usage = Object.fromEntries(['inputTokens', 'cachedInputTokens', 'outputTokens'].map((key) => [key, (live.usage?.[key] ?? 0) + (added[key] ?? 0)]))
+    return live.usage ? { usage: live.usage } : null
+  },
+
+  /**
    * A turn's tokens: the usage.record lines its LLM calls appended to the session's logs. Kimi persists them a
    * moment after the prompt returns: read once the main log records the turn's end (or after a short wait).
    */

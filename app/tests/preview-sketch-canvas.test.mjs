@@ -43,3 +43,29 @@ test('source keyboard table distinguishes physical selection shortcuts from char
   assert.equal(matchSketchCommand(event('s', 'KeyS'), options), null);
   assert.equal(sketchShortcut('toggleSelectionMode', true, options), 'cmd+shift+s');
 });
+
+// R4g SM2 (preview-08 / X7-13): the canvas is the 2.42304.0 c467aa787-B4L-l_bi.js St, whose two aria-labels are
+// formatMessage descriptors from the injected useIntl (ce = me()), not literals.
+test('2.42304.0 canvas formats its Sketch canvas / Text label aria-labels through the injected useIntl', async () => {
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const React = (await import('react')).default;
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const calls = [];
+  const intl = { formatMessage: message => { calls.push(message); return `zh:${message.defaultMessage}`; } };
+  const { Canvas } = createPreviewSketchCanvas({ ownerWindow: () => null, optionalOwnerWindow: () => null, useToken: () => '#000', reducedMotion: () => false, useIntl: () => intl });
+  const html = renderToStaticMarkup(React.createElement(Canvas, {}));
+  assert.match(html, /<canvas role="application" aria-label="zh:Sketch canvas"/);
+  assert.deepEqual(calls, [{ defaultMessage: 'Sketch canvas', id: 'jvMtXRguc4' }]);
+  const dir = path.resolve(import.meta.dirname, '../src/generated/code-editor');
+  const source = await fs.readFile(path.join(dir, 'preview-sketch-canvas.mjs'), 'utf8');
+  const count = s => source.split(s).length - 1;
+  assert.equal(count('ce.formatMessage({\n              defaultMessage: "Sketch canvas",\n              id: "jvMtXRguc4",'), 1);
+  assert.equal(count('ce.formatMessage({\n                defaultMessage: "Text label",\n                id: "c29+YCh/oq",'), 1);
+  assert.equal(count('"aria-label": "'), 0);
+  const manifest = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
+  const entry = manifest.adapters.find(item => item.name === 'preview-sketch-canvas.mjs');
+  assert.equal(entry.referenceVersion, '2.42304.0');
+  assert.equal(entry.sources[0].name, '../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c467aa787-B4L-l_bi.js');
+  assert.ok(entry.sources.every(item => item.name.startsWith('../../../../installed-2.42304.0-20261017/')));
+});

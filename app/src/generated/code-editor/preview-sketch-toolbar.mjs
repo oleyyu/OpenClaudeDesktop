@@ -1,41 +1,41 @@
-// Original adaptive selection/drawing toolbar. The host supplies CDS primitives,
+// Original adaptive selection/drawing toolbar (2.42304.0). The host supplies CDS primitives,
 // density and owner-window utilities; no tool, layout or discard logic is rewritten.
 import {
-  useState as e,
-  useImperativeHandle as t,
-  useEffect as n,
-  useLayoutEffect as r,
-  useRef as i,
-  useCallback as s,
-  useMemo as d,
+  useState as r,
+  useImperativeHandle as s,
+  useEffect as l,
+  useLayoutEffect as f,
+  useRef as a,
+  useCallback as d,
+  useMemo as c,
   memo as u,
-  Fragment as o,
+  Fragment as n,
 } from "react";
-import { jsx as a, jsxs as c } from "react/jsx-runtime";
+import { jsx as o, jsxs as i } from "react/jsx-runtime";
 export function createPreviewSketchToolbar({
-  Button: w,
-  Tooltip: S,
-  Icon: se,
-  Panel: ce,
-  Menu: E,
-  renderMenuItems: ie,
+  Button: S,
+  Tooltip: ae,
+  Icon: b,
+  Panel: C,
+  Menu: w,
+  renderMenuItems: oe,
   ConfirmDialog: T,
-  Provider: re,
-  Message: de,
-  useIntl: D,
-  ownerWindow: te,
-  asElement: y,
-  schedule: x,
-  prefersReducedMotion: b,
-  ownerDocument: oe,
-  useRem: le,
-  densityToken: pe,
-  resolveLength: C,
+  Provider: ce,
+  Message: pe,
+  useIntl: me,
+  ownerWindow: h,
+  asElement: le,
+  schedule: re,
+  prefersReducedMotion: se,
+  ownerDocument: de,
+  useRem: x,
+  densityToken: _e,
+  resolveLength: ie,
 }) {
-  const l = (...parts) => parts.filter(Boolean).join(" "),
-    ue = (value) => value;
-  function Ct() {
-    return a("span", {
+  const p = (...parts) => parts.filter(Boolean).join(" "),
+    fe = (value) => value;
+  function Q() {
+    return o("span", {
       role: "separator",
       "aria-orientation": "vertical",
       className: "h-4 w-px shrink-0 bg-border",
@@ -56,7 +56,7 @@ export function createPreviewSketchToolbar({
     viewBox: 16,
     paths: [{ d: "M3 8A5 5 0 1 0 13 8A5 5 0 1 0 3 8Z", strokeWidth: 1 }],
   };
-  const Et = ue({
+  const Et = fe({
     pen: { defaultMessage: "Pen", id: "3ODqMYj5Lf" },
     line: { defaultMessage: "Line", id: "QHhNtxVPGF" },
     arrow: { defaultMessage: "Arrow", id: "UTlLBbY88F" },
@@ -65,13 +65,13 @@ export function createPreviewSketchToolbar({
     text: { defaultMessage: "Text", id: "zOU/9VFxRH" },
     redact: { defaultMessage: "Redact", id: "D2lWtfIKHl" },
   });
-  const Dt = ue({
+  const Dt = fe({
     solid: { defaultMessage: "Solid", id: "3Cgy3o7W7g" },
     mosaic: { defaultMessage: "Mosaic", id: "tCY2r7xLc5" },
     noise: { defaultMessage: "Noise", id: "8+LZ+1OdoH" },
   });
   const Ot = Object.keys(Dt);
-  const kt = ue({
+  const kt = fe({
     "#E03131": { defaultMessage: "Red", id: "D+ZFS/jiQh" },
     "#1971C2": { defaultMessage: "Blue", id: "k2tJ9kFBBI" },
     "#2F9E44": { defaultMessage: "Green", id: "1W4okOthcu" },
@@ -92,22 +92,22 @@ export function createPreviewSketchToolbar({
   function Nt({ tool: e }) {
     let t = e === "select" ? { icon: "CursorFilled" } : At[e];
     return "icon" in t
-      ? a(se, { name: t.icon, size: "sm" })
-      : a(se, { customIcon: t.customIcon, size: "sm" });
+      ? o(b, { name: t.icon, size: "sm" })
+      : o(b, { customIcon: t.customIcon, size: "sm" });
   }
   function Pt({ tool: e, armed: t, disabled: n, onToolChange: r }) {
-    let i = D();
-    return a(w, {
+    let i = me();
+    return o(S, {
       variant: "ghost",
       iconOnly: !0,
-      icon: a(Nt, { tool: e }),
+      icon: o(Nt, { tool: e }),
       "aria-label": i.formatMessage(Et[e]),
       pressed: t,
       disabled: n,
       onClick: () => r(t ? "select" : e),
     });
   }
-  const Ft = a(se, { name: "Cursor", size: "sm" });
+  const Ft = o(b, { name: "Cursor", size: "sm" });
   function It(e) {
     if (e === "solid") return "#000000";
     let t = e === "mosaic" ? 3 : 7,
@@ -128,9 +128,9 @@ export function createPreviewSketchToolbar({
   const Lt = { solid: It("solid"), mosaic: It("mosaic"), noise: It("noise") };
   const Rt = new Set(["#1F1E1D", "#FFFFFF", Lt.solid]);
   function zt({ fill: e, active: t, square: n }) {
-    return a("span", {
+    return o("span", {
       "aria-hidden": !0,
-      className: l(
+      className: p(
         "block h-3.5 w-3.5 transition-shadow group-hover/swatch:shadow-[0_0_0_1px_var(--cds-text-secondary)]",
         n ? "rounded-[3px]" : "rounded-full",
         t
@@ -144,96 +144,102 @@ export function createPreviewSketchToolbar({
   }
   const Bt = 300;
   const Vt = 350;
-  function Ht(t, r) {
-    let [a, o] = e(!1),
-      [s, c] = e(!1),
-      [l, u] = e(!1),
-      d = t !== void 0,
-      f = d && (a || s);
-    (!d && (a || s) && (o(!1), c(!1)), !f && l && u(!1));
-    let p = i(null),
-      m = i(null);
-    n(
+  function Ht(e, t) {
+    let [n, i] = r(!1),
+      [o, s] = r(!1),
+      [c, u] = r(!1),
+      d = e !== void 0,
+      f = d && (n || o);
+    (!d && (n || o) && (i(!1), s(!1)), !f && c && u(!1));
+    let p = a(null),
+      m = a(null);
+    l(
       () => () => {
         (p.current?.cancel(), m.current?.cancel());
       },
       [d],
     );
-    let h = (e) => {
-        let n = r.current;
-        n?.hasAttribute("data-resting") &&
-          ((e === "hover" ? o : c)(!0),
-          !n.hasAttribute("data-revealed") &&
+    let h = (n) => {
+        let r = t.current;
+        r?.hasAttribute("data-resting") &&
+          ((n === "hover" ? i : s)(!0),
+          !r.hasAttribute("data-revealed") &&
             (m.current?.cancel(),
-            (m.current = x(n, () => u(!0), Vt)),
-            b(oe(n)) || t?.onRevealed?.(e)));
+            (m.current = re(r, () => u(!0), Vt)),
+            se(de(r)) || e?.onRevealed?.(n)));
       },
-      g = (e, t) => {
+      g = (e, n) => {
         e.pointerType !== "touch" &&
           (p.current?.cancel(),
-          (p.current = x(
-            r.current ?? void 0,
-            () => (t ? h("hover") : o(!1)),
+          (p.current = re(
+            t.current ?? void 0,
+            () => (n ? h("hover") : i(!1)),
             Bt,
           )));
       };
     return {
       revealed: f,
-      guardOver: l,
+      guardOver: c,
       barProps: d
         ? {
             onPointerEnter: (e) => g(e, !0),
             onPointerLeave: (e) => g(e, !1),
             onPointerDownCapture: () => p.current?.cancel(),
             onFocusCapture: (e) => {
-              !s && y(e.target)?.matches(":focus-visible") && h("focus");
+              !o && le(e.target)?.matches(":focus-visible") && h("focus");
             },
             onBlurCapture: (e) => {
-              e.currentTarget.contains(y(e.relatedTarget)) || c(!1);
+              e.currentTarget.contains(le(e.relatedTarget)) || s(!1);
             },
           }
         : void 0,
     };
   }
-  function Ut({ label: e, onHide: t, zoom: n }) {
-    let r = D();
-    return c(o, {
+  function Ut({ zoom: e }) {
+    let t = me();
+    return i(n, {
       children: [
-        a(Ct, {}),
-        n !== void 0 &&
-          c(o, {
-            children: [
-              c("div", {
-                className: "flex items-center",
-                children: [
-                  a(w, {
-                    variant: "ghost",
-                    iconOnly: !0,
-                    icon: "ZoomOut",
-                    "aria-label": r.formatMessage({
-                      defaultMessage: "Zoom out",
-                      id: "/UnJ3SDiCO",
-                    }),
-                    disabled: !n.canZoomOut,
-                    onClick: n.onZoomOut,
-                  }),
-                  a(w, {
-                    variant: "ghost",
-                    iconOnly: !0,
-                    icon: "ZoomIn",
-                    "aria-label": r.formatMessage({
-                      defaultMessage: "Zoom in",
-                      id: "xbi38cl5pP",
-                    }),
-                    disabled: !n.canZoomIn,
-                    onClick: n.onZoomIn,
-                  }),
-                ],
-              }),
-              a(Ct, {}),
-            ],
+        i("div", {
+          role: "group",
+          "aria-label": t.formatMessage({
+            defaultMessage: "Zoom",
+            id: "yMbKjuDH/n",
           }),
-        a(w, {
+          className: "flex items-center gap-xs",
+          children: [
+            o(S, {
+              variant: "ghost",
+              iconOnly: !0,
+              icon: "ZoomOut",
+              "aria-label": t.formatMessage({
+                defaultMessage: "Zoom out",
+                id: "/UnJ3SDiCO",
+              }),
+              disabled: !e.canZoomOut,
+              onClick: e.onZoomOut,
+            }),
+            o(S, {
+              variant: "ghost",
+              iconOnly: !0,
+              icon: "ZoomIn",
+              "aria-label": t.formatMessage({
+                defaultMessage: "Zoom in",
+                id: "xbi38cl5pP",
+              }),
+              disabled: !e.canZoomIn,
+              onClick: e.onZoomIn,
+            }),
+          ],
+        }),
+        o(Q, {}),
+      ],
+    });
+  }
+  function Wt({ label: e, onHide: t }) {
+    return i(n, {
+      children: [
+        o(Q, {}),
+        o(S, {
           variant: "ghost",
           iconOnly: !0,
           icon: "X",
@@ -243,365 +249,369 @@ export function createPreviewSketchToolbar({
       ],
     });
   }
-  function Wt({
-    tool: n,
-    onToolChange: u,
-    leadingTool: f,
-    toolsDisabled: p = !1,
+  function Gt({
+    tool: e,
+    onToolChange: t,
+    leadingTool: l,
+    toolsDisabled: u = !1,
     resting: m,
-    colors: h,
-    color: g,
-    onColorChange: _,
+    colors: g,
+    color: _,
+    onColorChange: ee,
     redactEnabled: v,
-    redactStyle: ee,
-    onRedactStyleChange: ne,
-    redactionSelected: b,
-    hasStrokes: x,
-    canUndo: ae,
-    canRedo: oe,
-    onUndo: se,
-    onRedo: ue,
+    redactStyle: y,
+    onRedactStyleChange: te,
+    redactionSelected: ne,
+    hasStrokes: re,
+    canUndo: b,
+    canRedo: se,
+    onUndo: ue,
+    onRedo: de,
     undoShortcut: fe,
-    redoShortcut: O,
-    onClear: k,
-    onClose: A,
-    positiveAction: j,
-    positiveActionIconOnly: me,
-    handleRef: M,
-    concealed: he = !1,
-    className: N,
-    defaultOpenMenu: ge,
+    redoShortcut: he,
+    onClear: ge,
+    onClose: E,
+    positiveAction: D,
+    positiveActionIconOnly: O,
+    handleRef: k,
+    concealed: A = !1,
+    className: ve,
+    defaultOpenMenu: j,
   }) {
-    let P = D(),
-      F = i(null),
-      _e = i(null),
-      ve = i(null),
-      I = i(null),
-      [L, R] = e("full"),
-      z = L !== "full",
-      ye = me !== void 0,
-      be = i(0),
-      xe = i(0),
-      [B, V] = e(!1),
-      H = s(() => {
-        if (x) {
-          V(!0);
+    let M = me(),
+      N = a(null),
+      P = a(null),
+      ye = a(null),
+      be = a(null),
+      [xe, Se] = r("full"),
+      F = m?.firstToolsOnly === !0,
+      I = F ? "full" : xe,
+      L = I !== "full",
+      Ce = O !== void 0,
+      R = a(0),
+      z = a(0),
+      [B, we] = r(!1),
+      Te = d(() => {
+        if (re) {
+          we(!0);
           return;
         }
-        A();
-      }, [x, A]),
-      Se = s(() => {
-        (V(!1), A());
-      }, [A]),
-      Ce = s(() => V(!1), []);
-    t(M, () => ({ requestClose: H }), [H]);
-    let we = i(null),
-      [U, Te] = e(!1),
-      Ee = s((e) => {
-        ((we.current = y(e.target)), Te(!0));
+        E();
+      }, [re, E]),
+      Ee = d(() => {
+        (we(!1), E());
+      }, [E]),
+      De = d(() => we(!1), []);
+    s(k, () => ({ requestClose: Te }), [Te]);
+    let V = a(null),
+      [Oe, H] = r(!1),
+      U = d((e) => {
+        ((V.current = le(e.target)), H(!0));
       }, []),
-      W = s((e) => {
-        e.currentTarget.contains(y(e.relatedTarget)) || Te(!1);
+      ke = d((e) => {
+        e.currentTarget.contains(le(e.relatedTarget)) || H(!1);
       }, []),
-      De = Ht(z ? void 0 : m, _e);
-    r(() => {
-      let e = we.current,
-        t = e?.isConnected === !1 && U;
+      W = Ht(L || F ? void 0 : m, P);
+    f(() => {
+      let e = V.current,
+        t = e?.isConnected === !1 && Oe;
       if (!e || !(t || e.matches(":disabled"))) return;
-      we.current = null;
+      V.current = null;
       let n = e.ownerDocument,
         r = n.activeElement;
       if (r === e || r === n.body || r === null) {
-        let n = t ? _e.current : e.parentElement;
-        (y(n?.closest("[tabindex]"))?.focus({ preventScroll: !0 }),
-          t && Te(!1));
+        let n = t ? P.current : e.parentElement;
+        (le(n?.closest("[tabindex]"))?.focus({ preventScroll: !0 }),
+          t && H(!1));
       }
-    }, [ae, oe, x, L, U]);
-    let G = s(() => {
-      let e = F.current,
-        t = _e.current,
-        n = ve.current;
+    }, [b, se, re, m?.zoom?.canZoomOut, m?.zoom?.canZoomIn, I, Oe]);
+    let G = d(() => {
+      let e = N.current,
+        t = P.current,
+        n = ye.current;
       if (!e || !t || !n) return;
       if (t.dataset.layout === "full") {
-        let e = I.current,
+        let e = be.current,
           t = e?.parentElement?.offsetWidth ?? 0;
-        be.current = n.offsetWidth + Math.max(0, (e?.scrollWidth ?? 0) - t);
-      } else t.dataset.layout === "compact" && (xe.current = n.offsetWidth);
+        R.current = n.offsetWidth + Math.max(0, (e?.scrollWidth ?? 0) - t);
+      } else t.dataset.layout === "compact" && (z.current = n.offsetWidth);
       let r = e.clientWidth;
-      be.current <= r
-        ? R("full")
-        : !ye || xe.current <= r
-          ? R("compact")
-          : R("minimal");
-    }, [ye]);
-    (r(() => {
-      let e = F.current,
-        t = ve.current;
+      R.current <= r
+        ? Se("full")
+        : !Ce || z.current <= r
+          ? Se("compact")
+          : Se("minimal");
+    }, [Ce]);
+    (f(() => {
+      let e = N.current,
+        t = ye.current;
       if (!e || !t) return;
-      let n = new (te(e).ResizeObserver)(G);
+      let n = new (h(e).ResizeObserver)(G);
       return (n.observe(e), n.observe(t), () => n.disconnect());
     }, [G]),
-      r(() => {
+      f(() => {
         G();
-      }, [L, G]));
-    let K = m !== void 0,
-      Oe = i(K);
-    r(() => {
-      Oe.current !== K &&
-        ((Oe.current = K), (be.current = 0), (xe.current = 0), G());
-    }, [K, G]);
-    let ke = v ? jt : Mt,
-      Ae = d(() => {
-        let e = ke.map((e) => ({
-          leading: a(Nt, { tool: e }),
-          label: P.formatMessage(Et[e]),
-          checked: e === n,
+      }, [I, G]));
+    let Ae = m !== void 0,
+      je = a(Ae);
+    f(() => {
+      je.current !== Ae &&
+        ((je.current = Ae), (R.current = 0), (z.current = 0), G());
+    }, [Ae, G]);
+    let Me = v ? jt : Mt,
+      Ne = c(() => {
+        let n = Me.map((n) => ({
+          leading: o(Nt, { tool: n }),
+          label: M.formatMessage(Et[n]),
+          checked: n === e,
           checkedRole: "checkbox",
-          disabled: p,
-          onSelect: () => u(e === n ? "select" : e),
+          disabled: u,
+          onSelect: () => t(n === e ? "select" : n),
         }));
-        return f
+        return l
           ? [
               {
                 leading: Ft,
-                label: f.label,
-                checked: f.pressed,
+                label: l.label,
+                checked: l.pressed,
                 checkedRole: "checkbox",
-                onSelect: f.onPress,
+                onSelect: l.onPress,
               },
-              ...e,
+              ...n,
             ]
-          : e;
-      }, [P, ke, n, u, f, p]),
-      q = v && (n === "redact" || b),
-      je = d(
+          : n;
+      }, [M, Me, e, t, l, u]),
+      K = v && (e === "redact" || ne),
+      Pe = c(
         () =>
-          q
+          K
             ? Ot.map((e) => ({
                 key: e,
-                label: P.formatMessage(Dt[e]),
+                label: M.formatMessage(Dt[e]),
                 fill: Lt[e],
-                active: e === ee,
-                onPick: () => ne(e),
+                active: e === y,
+                onPick: () => te(e),
               }))
-            : h.map((e) => ({
+            : g.map((e) => ({
                 key: e,
-                label: P.formatMessage(kt[e]),
+                label: M.formatMessage(kt[e]),
                 fill: e,
-                active: e === g,
-                onPick: () => _(e),
+                active: e === _,
+                onPick: () => ee(e),
               })),
-        [P, q, ee, ne, h, g, _],
+        [M, K, y, te, g, _, ee],
       ),
-      Me = d(
+      q = c(
         () =>
-          je.map((e) => ({
-            leading: a(zt, { fill: e.fill, square: q }),
+          Pe.map((e) => ({
+            leading: o(zt, { fill: e.fill, square: K }),
             label: e.label,
             checked: e.active,
             checkedRole: "radio",
             onSelect: e.onPick,
           })),
-        [je, q],
+        [Pe, K],
       ),
-      J = f?.pressed ?? !1,
-      Ne = d(() => (J ? Ft : a(Nt, { tool: n })), [n, J]),
-      Pe = d(
-        () => (q ? a(zt, { fill: Lt[ee], square: !0 }) : a(zt, { fill: g })),
-        [q, ee, g],
+      Fe = l?.pressed ?? !1,
+      Ie = c(() => (Fe ? Ft : o(Nt, { tool: e })), [e, Fe]),
+      Le = c(
+        () => (K ? o(zt, { fill: Lt[y], square: !0 }) : o(zt, { fill: _ })),
+        [K, y, _],
       ),
-      Fe = P.formatMessage({
+      Re = M.formatMessage({
         defaultMessage: "Annotation tool",
         id: "nUFJ0sE5c9",
       }),
-      Ie = P.formatMessage({ defaultMessage: "Ink color", id: "k+yLsrlkhB" }),
-      Le = P.formatMessage({
+      ze = M.formatMessage({ defaultMessage: "Ink color", id: "k+yLsrlkhB" }),
+      Be = M.formatMessage({
         defaultMessage: "Redaction style",
         id: "tBKdfPJtGX",
       }),
-      Y = q ? Le : Ie,
-      Re = le(),
-      ze = 4 + (C(pe("h-control"), Re) - 0.875 * Re) / 2,
-      Be = P.formatMessage({ defaultMessage: "Undo", id: "JkS37H8PlA" }),
-      Ve = P.formatMessage({
+      J = K ? Be : ze,
+      Ve = x(),
+      He = 4 + (ie(_e("h-control"), Ve) - 0.875 * Ve) / 2,
+      Ue = M.formatMessage({ defaultMessage: "Undo", id: "JkS37H8PlA" }),
+      We = M.formatMessage({
         defaultMessage: "Nothing to undo yet",
         id: "XFpgi7xuL0",
       }),
-      He = P.formatMessage({ defaultMessage: "Redo", id: "3XyF4dAMbz" }),
-      Ue = P.formatMessage({
+      Ge = M.formatMessage({ defaultMessage: "Redo", id: "3XyF4dAMbz" }),
+      Ke = M.formatMessage({
         defaultMessage: "Nothing to redo yet",
         id: "jZhy9dr1Lm",
       }),
-      X = P.formatMessage({ defaultMessage: "Clear all", id: "QW+Q5NHmeF" }),
-      We = P.formatMessage({
+      qe = M.formatMessage({ defaultMessage: "Clear all", id: "QW+Q5NHmeF" }),
+      Y = M.formatMessage({
         defaultMessage: "Hide annotation tools",
         id: "xZ87eA5X6R",
       }),
-      Ge = P.formatMessage({ defaultMessage: "Close", id: "rbrahOGMC3" }),
-      Ke = P.formatMessage({
+      Je = M.formatMessage({ defaultMessage: "Close", id: "rbrahOGMC3" }),
+      Ye = M.formatMessage({
         defaultMessage: "Nothing to clear yet",
         id: "ZRQqPcheUz",
       }),
-      qe = ke.map((e) =>
-        a(Pt, { tool: e, armed: e === n, disabled: p, onToolChange: u }, e),
+      Xe = Me.map((n) =>
+        o(Pt, { tool: n, armed: n === e, disabled: u, onToolChange: t }, n),
       ),
-      Je = qe.slice(0, 1),
-      Ye = qe.slice(1);
-    return c("div", {
-      ref: F,
-      className: l(
+      Ze = Xe.slice(0, 1),
+      Qe = F ? [] : Xe.slice(1);
+    return i("div", {
+      ref: N,
+      className: p(
         "pointer-events-none absolute inset-x-2.5 flex justify-center",
-        N,
+        ve,
       ),
       children: [
-        a(re, {
-          children: a(ce, {
-            ref: _e,
-            "data-layout": L,
+        o(ce, {
+          children: o(C, {
+            ref: P,
+            "data-layout": I,
             "data-resting": m ? "" : void 0,
-            "data-revealed": De.revealed ? "" : void 0,
-            "data-concealed": he || void 0,
-            inert: he && !U,
+            "data-revealed": W.revealed ? "" : void 0,
+            "data-concealed": A || void 0,
+            inert: A && !Oe,
             elevation: "panel",
-            onFocus: Ee,
-            onBlur: W,
-            ...De.barProps,
-            className: l(
+            onFocus: U,
+            onBlur: ke,
+            ...W.barProps,
+            className: p(
               "w-max max-w-full transition-opacity ease-snap motion-reduce:transition-none",
-              he
+              A
                 ? "pointer-events-none opacity-0 duration-fast"
                 : "pointer-events-auto duration-snap",
             ),
-            children: c("div", {
-              ref: ve,
+            children: i("div", {
+              ref: ye,
               className: "flex w-max items-center gap-xs px-sm py-xs",
               children: [
-                z
-                  ? c(o, {
+                m?.zoom !== void 0 && o(Ut, { zoom: m.zoom }),
+                L
+                  ? i(n, {
                       children: [
-                        c(E.Root, {
-                          open: ge === "tool" || void 0,
+                        i(w.Root, {
+                          open: j === "tool" || void 0,
                           children: [
-                            a(S, {
-                              content: Fe,
+                            o(ae, {
+                              content: Re,
                               hoverable: !1,
-                              children: a(E.TriggerButton, {
+                              children: o(w.TriggerButton, {
                                 variant: "ghost",
-                                "aria-label": Fe,
-                                children: Ne,
+                                "aria-label": Re,
+                                children: Ie,
                               }),
                             }),
-                            a(E.Popup, {
+                            o(w.Popup, {
                               side: "top",
                               align: "start",
-                              children: ie(Ae),
+                              children: oe(Ne),
                             }),
                           ],
                         }),
                         !m &&
-                          c(E.Root, {
-                            open: ge === "color" || void 0,
+                          i(w.Root, {
+                            open: j === "color" || void 0,
                             children: [
-                              a(S, {
-                                content: Y,
+                              o(ae, {
+                                content: J,
                                 hoverable: !1,
-                                children: a(E.TriggerButton, {
+                                children: o(w.TriggerButton, {
                                   variant: "ghost",
-                                  "aria-label": Y,
-                                  children: Pe,
+                                  "aria-label": J,
+                                  children: Le,
                                 }),
                               }),
-                              a(E.Popup, {
+                              o(w.Popup, {
                                 side: "top",
                                 align: "start",
-                                children: ie(Me),
+                                children: oe(q),
                               }),
                             ],
                           }),
                       ],
                     })
-                  : c(o, {
+                  : i(n, {
                       children: [
-                        c("div", {
+                        i("div", {
                           role: "group",
-                          "aria-label": Fe,
+                          "aria-label": Re,
+                          "data-sketch-tools": !0,
                           className: "flex items-center gap-xs",
                           children: [
-                            f &&
-                              a(S, {
-                                content: f.label,
-                                detail: f.detail,
-                                shortcut: f.shortcut,
+                            l &&
+                              o(ae, {
+                                content: l.label,
+                                detail: l.detail,
+                                shortcut: l.shortcut,
                                 hoverable: !1,
-                                children: a(w, {
+                                children: o(S, {
                                   variant: "ghost",
                                   iconOnly: !0,
                                   icon: Ft,
-                                  "aria-label": f.label,
-                                  shortcut: f.shortcut,
-                                  pressed: f.pressed,
-                                  onClick: f.onPress,
+                                  "aria-label": l.label,
+                                  shortcut: l.shortcut,
+                                  pressed: l.pressed,
+                                  onClick: l.onPress,
                                 }),
                               }),
-                            Je,
-                            a("div", {
+                            Ze,
+                            o("div", {
                               className: m
-                                ? l(
+                                ? p(
                                     "-ms-xs grid transition-[grid-template-columns] duration-base ease-out motion-reduce:transition-none touch:grid-cols-[minmax(0,1fr)]",
-                                    De.revealed
+                                    W.revealed
                                       ? "grid-cols-[minmax(0,1fr)]"
                                       : "grid-cols-[minmax(0,0fr)]",
                                   )
                                 : "contents",
-                              children: c("div", {
-                                ref: I,
+                              children: i("div", {
+                                ref: be,
                                 "data-more-tools": !0,
                                 className: m
-                                  ? l(
+                                  ? p(
                                       "flex min-w-0 items-center gap-xs touch:pointer-events-auto",
-                                      !(De.revealed && De.guardOver) &&
+                                      !(W.revealed && W.guardOver) &&
                                         "pointer-events-none overflow-x-clip",
                                     )
                                   : "contents",
                                 children: [
-                                  a("span", {
+                                  o("span", {
                                     "aria-hidden": !0,
                                     className: m ? "w-0" : "hidden",
                                   }),
-                                  Ye,
+                                  Qe,
                                 ],
                               }),
                             }),
                           ],
                         }),
                         !m &&
-                          c(o, {
+                          i(n, {
                             children: [
-                              a(Ct, {}),
-                              a("div", {
+                              o(Q, {}),
+                              o("div", {
                                 role: "group",
-                                "aria-label": Y,
+                                "aria-label": J,
                                 className: "flex items-center gap-xs px-xs",
-                                children: je.map((e) =>
-                                  a(
-                                    S,
+                                children: Pe.map((e) =>
+                                  o(
+                                    ae,
                                     {
                                       content: e.label,
                                       hoverable: !1,
-                                      sideOffset: ze,
-                                      children: a("button", {
+                                      sideOffset: He,
+                                      children: o("button", {
                                         type: "button",
                                         "aria-label": e.label,
                                         "aria-pressed": e.active,
                                         onClick: e.onPick,
-                                        className: l(
+                                        className: p(
                                           "group/swatch focus-visible:outline-hidden focus-visible:shadow-focus",
-                                          q ? "rounded-[3px]" : "rounded-full",
+                                          K ? "rounded-[3px]" : "rounded-full",
                                         ),
-                                        children: a(zt, {
+                                        children: o(zt, {
                                           fill: e.fill,
                                           active: e.active,
-                                          square: q,
+                                          square: K,
                                         }),
                                       }),
                                     },
@@ -614,81 +624,81 @@ export function createPreviewSketchToolbar({
                       ],
                     }),
                 m
-                  ? a(Ut, { label: We, onHide: m.onHide, zoom: m.zoom })
-                  : c(o, {
+                  ? o(Wt, { label: Y, onHide: m.onHide })
+                  : i(n, {
                       children: [
-                        a(Ct, {}),
-                        c("div", {
+                        o(Q, {}),
+                        i("div", {
                           className: "flex items-center",
                           children: [
-                            a(w, {
+                            o(S, {
                               variant: "ghost",
                               iconOnly: !0,
                               icon: "ArrowCounterClockwise",
-                              "aria-label": Be,
+                              "aria-label": Ue,
                               shortcut: fe,
-                              disabled: !ae,
-                              disabledReason: Ve,
-                              onClick: se,
+                              disabled: !b,
+                              disabledReason: We,
+                              onClick: ue,
                             }),
-                            a(w, {
+                            o(S, {
                               variant: "ghost",
                               iconOnly: !0,
                               icon: "ArrowClockwise",
-                              "aria-label": He,
-                              shortcut: O,
-                              disabled: !oe,
-                              disabledReason: Ue,
-                              onClick: ue,
+                              "aria-label": Ge,
+                              shortcut: he,
+                              disabled: !se,
+                              disabledReason: Ke,
+                              onClick: de,
                             }),
-                            a(w, {
+                            o(S, {
                               variant: "ghost",
                               iconOnly: !0,
                               icon: "Trash",
-                              "aria-label": X,
-                              disabled: !x,
-                              disabledReason: Ke,
-                              onClick: k,
+                              "aria-label": qe,
+                              disabled: !re,
+                              disabledReason: Ye,
+                              onClick: ge,
                             }),
                           ],
                         }),
-                        z
-                          ? a(w, {
+                        L
+                          ? o(S, {
                               variant: "ghost",
                               iconOnly: !0,
                               icon: "X",
-                              "aria-label": Ge,
-                              onClick: H,
+                              "aria-label": Je,
+                              onClick: Te,
                             })
-                          : a(w, {
+                          : o(S, {
                               variant: "ghost",
-                              onClick: H,
-                              children: Ge,
+                              onClick: Te,
+                              children: Je,
                             }),
-                        L === "minimal" ? me : j,
+                        I === "minimal" ? O : D,
                       ],
                     }),
               ],
             }),
           }),
         }),
-        a(T, {
+        o(T, {
           initialFocus: "cancel",
           open: B,
-          onOpenChange: Ce,
-          onConfirm: Se,
+          onOpenChange: De,
+          onConfirm: Ee,
           confirmVariant: "danger",
-          title: a(de, {
+          title: o(pe, {
             defaultMessage: "Discard your annotations?",
             id: "MfFrIX0mxC",
           }),
-          description: a(de, {
+          description: o(pe, {
             defaultMessage:
               "You have unsaved marks on this image. Discarding removes them.",
             id: "WrH605g8o7",
           }),
-          confirmLabel: a(de, { defaultMessage: "Discard", id: "nmpevlUATU" }),
-          cancelLabel: a(de, {
+          confirmLabel: o(pe, { defaultMessage: "Discard", id: "nmpevlUATU" }),
+          cancelLabel: o(pe, {
             defaultMessage: "Keep editing",
             id: "nZCHBxEAlK",
           }),
@@ -696,7 +706,7 @@ export function createPreviewSketchToolbar({
       ],
     });
   }
-  const Gt = u(Wt);
-  const Jt = ["#E03131", "#1971C2", "#2F9E44", "#1F1E1D", "#FFFFFF"];
-  return { Toolbar: Gt, colors: Jt };
+  const Kt = u(Gt);
+  const Yt = ["#E03131", "#1971C2", "#2F9E44", "#1F1E1D", "#FFFFFF"];
+  return { Toolbar: Kt, colors: Yt };
 }

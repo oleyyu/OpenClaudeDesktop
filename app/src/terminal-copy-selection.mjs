@@ -1,6 +1,6 @@
-// 2.31226.0 c6bf19e8f Mn/Nn/Pn/Ir and qe: only a left-button release
-// selection event may auto-copy; search and Select all never overwrite the clipboard.
-import {terminalSelectionText} from './generated/code-editor/terminal-output.mjs';
+// 2.42304.0 c6bf19e8f Wr and pi's mouse-up WeakRef (G/He): only a left-button release selection event may
+// auto-copy; search and Select all never overwrite the clipboard. Vn normalizes the copied text.
+import {terminalSelectionText} from './generated/code-current/terminal-output.mjs';
 export {terminalSelectionText};
 export function installTerminalCopyOnSelect(term,element,{enabled,writeText,mac=false}) {
  const document=element.ownerDocument;let cleanupGesture=null,release=null;

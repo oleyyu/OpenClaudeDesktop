@@ -1,7 +1,8 @@
 // How the transcript shows Claude Code's tools that OpenClaude Desktop serves (agent-tools/ask.mjs, notify.mjs, files.mjs,
 // findings.mjs, session.mjs): official row verbs, stands-alone rows kept out of tool groups, the AskUserQuestion
-// receipt, SendUserFile file cards, ReportFindings as a Review result (and the Changes pane's findings), chapter
-// headings and the Suggested task card.
+// receipt, SendUserFile file cards, ReportFindings as the findings card (and the Changes pane's findings), chapter
+// headings and suggested tasks (spawn_task), which the transcript's inline proposal group card takes over (its mount:
+// tests/proposal-group-mount.test.mjs; the floating Suggested task card is retired, R4f-proposal P5).
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
@@ -13,15 +14,15 @@ import { appToolLabel, appToolStandsAlone, chapterOf, transcriptChapters, sugges
 import { questionReceipt, questionOutcome, genericToolLabel, genericToolBody } from '../src/generic-tool-model.mjs';
 import { groupFileTools } from '../src/file-tool-model.mjs';
 import { reportedFindings, reportedFindingsReview, latestReviewFindings, parseBridgeReview } from '../src/review-findings-model.mjs';
+import { proposalCardToolIds } from '../src/proposal-group-model.mjs';
 import { requestQuestions, answerText } from '../electron/agent-tools/ask.mjs';
 
-let server, S, D, T;
+let server, S, D;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
-    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   S = await server.ssrLoadModule('/src/source-session.jsx');
   D = await server.ssrLoadModule('/src/source-deliverables.jsx');
-  T = await server.ssrLoadModule('/src/source-suggested-tasks.jsx');
 });
 after(() => server?.close());
 
@@ -79,7 +80,7 @@ test('a finished SendUserFile is file cards: structured content, or the call’s
   assert.match(html, /data-deliverable="shot\.png"/);
 });
 
-test('ReportFindings reads as a Review result and is the session’s latest review for the Changes pane', () => {
+test('ReportFindings is the findings card and the session’s latest review for the Changes pane', () => {
   const item = call('ReportFindings', { findings: [{ file: '/w/src/a.js', line: 12, summary: 'Off by one', failure_scenario: 'n = 0', outcome: 'no_change_needed' }, { file: 'b.js', summary: 'Leak', failure_scenario: 'many opens' }] }, { id: 'rf' });
   const found = reportedFindings(item, '/w');
   assert.deepEqual(found.map((entry) => [entry.file, entry.line, entry.summary, entry.detail, entry.outcome ?? null]), [['src/a.js', 12, 'Off by one', 'n = 0', 'no change needed'], ['b.js', 1, 'Leak', 'many opens', null]]);
@@ -88,8 +89,9 @@ test('ReportFindings reads as a Review result and is the session’s latest revi
   assert.equal(latestReviewFindings([call('ReportFindings', { findings: [] })], '/w'), null);
   assert.equal(reportedFindings(call('ReportFindings', { findings: [] }, { status: 'inProgress' })), null);
   const html = renderToStaticMarkup(React.createElement(S.SourceMessage, { item, sessionKey: 's1', cwd: '/w' }));
-  assert.match(html, /Review result/);
-  assert.match(html, /2 findings/);
+  assert.match(html, /data-cds="FindingsCard"/);
+  assert.match(html, />Code review<\/span>/);
+  assert.match(html, />1 needed no change</);
 });
 
 test('mark_chapter is a chapter heading; a failed one is a row', () => {
@@ -103,20 +105,15 @@ test('mark_chapter is a chapter heading; a failed one is a row', () => {
   assert.match(html, /^<h2 id="epitaxy-ch-ch1" class="source-message source-chapter" data-chapter="" data-chapter-source="claude" data-transcript-item-id="ch1">Test verification<\/h2>$/);
 });
 
-test('suggested tasks: newest first, withdrawn by dismiss_task or the user, shown as the Suggested task card', () => {
-  const spawned = (id, title, extra = {}) => call('spawn_task', { title, tldr: `Why ${title}`, prompt: `Do ${title}`, ...extra }, { id: `i-${id}`, text: `Suggested task shown to the user; it starts only if they click Start. task_id: ${id}` });
+test('suggested tasks: newest first, withdrawn by dismiss_task or the user; the inline proposal card takes over their rows', () => {
+  // The result text as the agent-tools spawn_task answers it (2.42304.0 asar `Noted (position N, task_id: …)`, R4f-proposal P4).
+  const spawned = (id, title, extra = {}) => call('spawn_task', { title, tldr: `Why ${title}`, prompt: `Do ${title}`, ...extra }, { id: `i-${id}`, text: `Noted (position 1, task_id: ${id}). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. Continue your current work.` });
   const items = [spawned('task_00000001', 'First'), spawned('task_00000002', 'Second', { cwd: '/other/project' }), spawned('task_00000003', 'Third'), call('dismiss_task', { task_id: 'task_00000003' })];
   assert.deepEqual(suggestedTasks(items).map((task) => task.title), ['Second', 'First']);
   assert.deepEqual(suggestedTasks(items, ['task_00000002']).map((task) => task.id), ['task_00000001']);
   assert.deepEqual(suggestedTasks([call('spawn_task', { title: 'x', tldr: 't', prompt: 'p' }, { status: 'inProgress' })]), []);
-  const html = renderToStaticMarkup(React.createElement(T.SourceSuggestedTasks, { items, sessionId: 's1', cwd: '/w' }));
-  assert.match(html, /data-suggested-task="task_00000002"/);
-  assert.match(html, />Suggested task</);
-  assert.match(html, /· in project/);
-  assert.match(html, />Second</);
-  assert.match(html, /title="Do Second"/);
-  assert.match(html, /aria-label="Dismiss suggestion"/);
-  assert.match(html, /1 of 2/);
-  assert.match(html, />Start</);
-  assert.equal(renderToStaticMarkup(React.createElement(T.SourceSuggestedTasks, { items: [], sessionId: 's1' })), '');
+  // c96d752d0 _K: every placed call (a task id in its result, a turn) leaves the tool rows for the group card; a call
+  // still running stays a row.
+  assert.deepEqual([...proposalCardToolIds(items)], ['i-task_00000001', 'i-task_00000002', 'i-task_00000003']);
+  assert.deepEqual([...proposalCardToolIds([call('spawn_task', { title: 'x', tldr: 't', prompt: 'p' }, { status: 'inProgress' })])], []);
 });

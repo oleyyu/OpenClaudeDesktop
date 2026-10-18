@@ -1,0 +1,1259 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r4e-findings.mjs",
+  "adapterModule": "src/source-review-findings-adapters.jsx",
+  "modules": [
+    {
+      "target": "owner-window.mjs",
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "abeb0cfa50a6641f02a123b2813e8ed004119d9fa92e8cebe1d8506d7781f328",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "cp",
+          "sha256": "8239f5a507546dc92f1d6ed1a736b3fb8157bc25f998c20dd53d9a6becdebb10"
+        },
+        {
+          "name": "lp",
+          "sha256": "bd3b3652441ecfa1cb809eade26efc1c897a609cde6e6db0b370f785bc262b93"
+        },
+        {
+          "name": "up",
+          "sha256": "e2535cc0c3961998373007bc950e291f054a34981bf2615b1393b5cb0b029b7b"
+        },
+        {
+          "name": "dp",
+          "sha256": "08b582f9312025ad6662b3bbfd0392e91b49817378acd1b9926989a7b9446a04"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "dp": "ownerWindow",
+        "up": "ownerWindowOrNull"
+      }
+    },
+    {
+      "target": "once.mjs",
+      "source": "shared-0-ByI5P0CP.js",
+      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "sha256": "0ecfc96cbe0bdf6bd1ca0339bf9712c6a925b9d849cff450d82d03359682bf94",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Hi",
+          "sha256": "70954d35fa9ddf932eb0bd948f344f7b14454a6bb992bada54b460832f08d544"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Hi": "once"
+      }
+    },
+    {
+      "target": "element-node.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "e92693f6e27f09e5b3f497ed36eacf4fc913b56db58339d4bf9b68c8290b37e5",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "lc",
+          "sha256": "b1e1d78d1ee6d2f41bd7548d71941afd94b446a28ca0a5a7a98ba857c3fe0023"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "lc": "elementNode"
+      }
+    },
+    {
+      "target": "focus-visible.mjs",
+      "source": "cae42d46f-8Va5mKUX.js",
+      "sourceSha256": "43f45df8bec5d933a1394b296f95925db9dbe3acb9bb6977f64e360d5bee01cf",
+      "sha256": "af63ebac2769a5926f5def1b5e2b279a4d6228e7ac5d8855586db308842558c7",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "i",
+          "sha256": "4cd7f0b9aefbb44243c586ce09d85c6cbff87965f49f7a2ca516bcf459397466"
+        },
+        {
+          "name": "a",
+          "sha256": "15ef041532a8e3d766a4e75544cd55595874012c4e43bfa41116b2bf1de05b9b"
+        },
+        {
+          "name": "m",
+          "sha256": "07e01f79fd8faa8f562c5b46b2bd3ea68dba7fc0ff70d125cef99b286249b485"
+        },
+        {
+          "name": "h",
+          "sha256": "0cf04303932b4af2329dd754cc84d4be25652a677356fc939ffefe5a6056c607"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "./element-node.mjs",
+          "name": "elementNode",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "a": "hasFocusVisible",
+        "h": "useKeyboardFocusWithin"
+      }
+    },
+    {
+      "target": "send-stopped.mjs",
+      "source": "shared-104-Cqo2-vQh.js",
+      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "sha256": "968524abe01020a278f92de0a5be7e6c638ba70f7e82c0b465df355f3f89dc23",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "$_",
+          "sha256": "82d089557b361194e845bd4619aed4f3adbd71eed85ff808fffa5a7c28a36d8d"
+        },
+        {
+          "name": "tv",
+          "sha256": "586b5ee8ea196097dda44f54d8178a9905554da979f43c587e24388b293b8ae3"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tv": "isSendStopped",
+        "$_": "SEND_STOPPED_ERROR"
+      }
+    },
+    {
+      "target": "define-message.mjs",
+      "source": "vendor-intl-Db7hDWRO.js",
+      "sourceSha256": "f26cedebafa9295e3e1f8443b074e29877472083867d8e5bb7a8d522d3ae6762",
+      "sha256": "f38e773c6cce2104cdec5133764eee3c42602df6f49cd4f1889ee53b6a4e3da8",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "nn",
+          "sha256": "f6701ebe822787754c70f5c955a5ec0fcf85b1b81540e41a6af8d8ca8b9c6927"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "nn": "defineMessage"
+      }
+    },
+    {
+      "target": "send-failed-message.mjs",
+      "source": "ccdfebff6-DVy1BLjU.js",
+      "sourceSha256": "79a494e5d7eedb081c023896d8264d610d1c6223a12d210ef048621bc8831a4d",
+      "sha256": "66be3c9d4a8c4fe4993b5a3ce5e9c2e24ed05b1a8a8bef535050f5e1761e3e00",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "c7efc422299da334908e8f1bce6dce90129f72ba73730ae7eb6218324ebf8ef0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "./define-message.mjs",
+          "name": "defineMessage",
+          "via": "vendor-intl-Db7hDWRO.js:d",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "t": "sendFailedMessage"
+      }
+    },
+    {
+      "target": "diff-pane-options.mjs",
+      "source": "cf53e1812-CivLPgES.js",
+      "sourceSha256": "779d07e3b298eb5e7f85c861a026e5f48036c0017a5c3c8ebcec60a9809c6a24",
+      "sha256": "0e330a197e9fce7d36d9d5e5d661ce548256a2e1e9d50825d2579b55f006e7b3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ce",
+          "sha256": "cb8762d00422761b36ba0361e4718fea626f8dd99b6ad02b1b3249d2c86e604a"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ce": "UNPROMPTED_DIFF_PANE"
+      }
+    },
+    {
+      "target": "session-type.mjs",
+      "source": "c68c4283d-CPuRD0vx.js",
+      "sourceSha256": "8ca8d5244c828c24831eceaeb650f239b19789aacd67aeb1e036ae37d46e9369",
+      "sha256": "04360cfce354e9f9613bd03c3443bc7f2079041ef95c93bf21e65feffcfd53ba",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "g",
+          "sha256": "3beb654a7817470100cc4c3e735ed5dec08a0c114a65d57f39a7f4f4fd3f7fd4"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "g": "telemetrySessionType"
+      }
+    },
+    {
+      "target": "file-basename.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "98ae104c4718740dcb497b69eeb94a6a40dc904c2f3cc9b5dcbce8424365119a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "n_",
+          "sha256": "3ba7116f8d6397dd542200bf06cbf06afc167d1861bc06b44253b2a2f0580cff"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "n_": "fileBasename"
+      }
+    },
+    {
+      "target": "muted-action-class.mjs",
+      "source": "c219730b0-B08P7Rqk.js",
+      "sourceSha256": "cb771181de3a34f4091c87a7f99f8e691daa004928433cdd5836440cf735cd0e",
+      "sha256": "e51b7f89f001f7cfca55adaa9c6cdb211e834f2e0bec9d4d1ccb0c9e9981e473",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "nn",
+          "sha256": "c3b6140da506b66f80b1b2a4b105bc5ec610291cb55c03fb232d17aab1384817"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "nn": "MUTED_ACTION_CLASS"
+      }
+    },
+    {
+      "target": "assistant-inset.mjs",
+      "source": "c8ba53634-Qe339QHm.js",
+      "sourceSha256": "1bda576c5199ab295b0d291319a3231a694a939e1e4616d76651692dfe39dc5f",
+      "sha256": "5517fced125104f2c27d2066614def1ef3ed4ed781ee5388022566decb08b0ff",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "bac4b77582716191fb13a1c93e1d06ca7169949e0cac6aa09bc85cde595b748e"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "t": "ASSISTANT_TEXT_INSET"
+      }
+    },
+    {
+      "target": "summary-card-parts.mjs",
+      "source": "c425fb3cf-CEgSkv8l.js",
+      "sourceSha256": "abbb85b1ce1c1bfc0e880398dcad9ed0b521fd5db8d3dcbbd2cddb5fb049470c",
+      "sha256": "f5ca8b2e8a7701e70565021757caa333b4545cac57f75024b0d5d7ad1941e7f6",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "V",
+          "sha256": "efd158d432e4878b28d0339069b1fc5558ded0adae9283beb744a61ed1ed9d7e"
+        },
+        {
+          "name": "H",
+          "sha256": "2eabe2e3a36cc188ad81ac241a811d44698b56bc173689bb7ad86e90c549f81d"
+        },
+        {
+          "name": "W",
+          "sha256": "09bd107736e71999c2ecb5fcaa8b199fa841ef49f41172e67540b032bd2188dc"
+        },
+        {
+          "name": "K",
+          "sha256": "4fe06444c6a3f07c3a63c2308b95220b9ee9acaadc68d6da1f965acf21147e85"
+        },
+        {
+          "name": "ie",
+          "sha256": "a3cb678546dbf854e754faf96392068f8b5cd5b6885cb8d0fd20f778dad20c31"
+        },
+        {
+          "name": "Q",
+          "sha256": "c52e1265c38f35bdb9f1476203743396e16f1da1d467ea0345bd7f8e64b9b3bb"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "m",
+          "from": "./assistant-inset.mjs",
+          "name": "ASSISTANT_TEXT_INSET",
+          "via": "c8ba53634-Qe339QHm.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-BfjMqbuN.js:Hl",
+          "kind": "view-tabs",
+          "original": "Jo"
+        }
+      ],
+      "exports": {
+        "H": "SUMMARY_CARD_HEADER",
+        "W": "SummaryCardDivider",
+        "ie": "SUMMARY_CARD_INSET",
+        "V": "SUMMARY_CARD_CLASS",
+        "K": "SUMMARY_CARD_ROW",
+        "Q": "DisclosureCaret"
+      }
+    },
+    {
+      "target": "path-split.mjs",
+      "source": "shared-28-DcgD7xXH.js",
+      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "sha256": "b5d0686be014be98bf7e82dd1a7da8fa07be5feacdfdfdb1e88459b06d73cca0",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "WO",
+          "sha256": "6a6a83f8f2f490b505d4fa4db756e2dde85f5149705f6aa488477d96f1339dac"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "WO": "splitPathTail"
+      }
+    },
+    {
+      "target": "head-cut.mjs",
+      "source": "ce574895a-h0uyeRAC.js",
+      "sourceSha256": "fc0ab3a7c0c4a80548b32b66af70478790fc9196ea3329c4d1f39796defd8dd6",
+      "sha256": "ecad3ef2011cc5ab2a0cb517a0d8f86ebe172bb9d1e812ecf5f54f527321b85a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "a",
+          "sha256": "0004a01a0afccee852f48e48ec2e9d3bf3dab51134ec6c805006475c993141d1"
+        },
+        {
+          "name": "o",
+          "sha256": "ca5a2890d9f9f825b8839b1eab9e4cdc79d2a87823e358e79766b82556c3f52c"
+        },
+        {
+          "name": "s",
+          "sha256": "df554cc711a90aa703093cdda1a3d02b4c1b27b35e03af17742f2f84d156357f"
+        },
+        {
+          "name": "c",
+          "sha256": "ea4cbc86cce855eca9ef6642d3fbf62d0275a4d481878aecdcc102a16ddcfa97"
+        },
+        {
+          "name": "l",
+          "sha256": "8fa93207754616b3d4bb20901fd56f45a8e1f0dd6bdc2ad33a654bcb1fbbeaaf"
+        },
+        {
+          "name": "u",
+          "sha256": "9d3e9d29f4900d8640d5f748b935b1616b5f3fe71beaedb937212c3cbe20e3d1"
+        },
+        {
+          "name": "d",
+          "sha256": "ef6d28ab6155902f08539ff82cd6bb08af41f20a4396cf13fed3e70e5adf49f4"
+        },
+        {
+          "name": "f",
+          "sha256": "8ccf56aa6117f6b196dbea781fcaef0624bb64cdef0969731129db1995064c7c"
+        },
+        {
+          "name": "p",
+          "sha256": "aba14d7537700a2d82c28dabd1fa04a452909651cfce7128c3863a0973c69954"
+        },
+        {
+          "name": "m",
+          "sha256": "3bf0b1d28a175c54f1434f16a9cb52331fa188666f61ee55b7fb012554252cd8"
+        },
+        {
+          "name": "h",
+          "sha256": "da5691059298728ad964c43fc467bc7257d0baa513f0978d30d9811c36eb4313"
+        },
+        {
+          "name": "g",
+          "sha256": "025a3ecc302fa625fe44f1732e1f6ad5f239a95456426813433aaf72268aab84"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "./owner-window.mjs",
+          "name": "ownerWindowOrNull",
+          "via": "shared-25-DP8p7i1Z.js:Ff",
+          "kind": "generated"
+        },
+        {
+          "local": "i",
+          "from": "./once.mjs",
+          "name": "once",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "react-dom",
+          "name": "flushSync",
+          "via": "vendor-frame-DfPJ1QmD.js:Ca",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "g": "useHeadCut"
+      }
+    },
+    {
+      "target": "truncated-path.mjs",
+      "source": "c784da984-B4E9BLV6.js",
+      "sourceSha256": "910fdf51407a366286abcd295a95bbc5c1a14d9dc65c136f07460b2784e85717",
+      "sha256": "145232b257d8d0dc51287070f181fafdfd474b327330028cfc7e8f64e42738b6",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "u",
+          "sha256": "452c83036075e23de265208738b29f13d7d6abd16775ab98aed75250ba731522"
+        },
+        {
+          "name": "d",
+          "sha256": "543e451f9f3eaaafe2eee32fe48a023a1945e6be8b78b70621b6b9caf492f2d2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "./path-split.mjs",
+          "name": "splitPathTail",
+          "via": "shared-28-DcgD7xXH.js:yr",
+          "kind": "generated"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "./head-cut.mjs",
+          "name": "useHeadCut",
+          "via": "ce574895a-h0uyeRAC.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "X"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "d": "TruncatedPath"
+      }
+    },
+    {
+      "target": "text-sanitize.mjs",
+      "source": "shared-182-eT1kXtya.js",
+      "sourceSha256": "3e43880437752c6cf6b5dacb804d3231103b5a751286085c1eb62febf30ff489",
+      "sha256": "700f93c2c1d0e28529e89720efab7bf7705ae07a034af65efac3b5eb769b6c87",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "tC",
+          "sha256": "481dfb55618d266cb4ca1f875c63cc8ba7f4f5b501d9b46fc64ba8a29c224226"
+        },
+        {
+          "name": "nC",
+          "sha256": "e698085e44fe5f847e6b977cdddb09d68bcd0918afae865b5cef49cb4e7ee397"
+        },
+        {
+          "name": "RC",
+          "sha256": "3c0cfafa8580977b5c2a474a78ac245f50c144e2b9fd4c0d0db3151045dafc1c"
+        },
+        {
+          "name": "zC",
+          "sha256": "a88839f0fc5390b652dcc63dc9c5a84036e423f30452961ab19ecfaf63d358e4"
+        },
+        {
+          "name": "BC",
+          "sha256": "d4351822959c94cc8bf13e5180e5e15b9b4ef2391b20aebd5973b3d164a1740b"
+        },
+        {
+          "name": "VC",
+          "sha256": "3ecd889a91e7b26d12225a20d650269695604f29d9be279708445e166cd5ac94"
+        },
+        {
+          "name": "HC",
+          "sha256": "278b5f9e24f81b38f317109048b2258e3b9825aee93e84c5625a8914add867df"
+        },
+        {
+          "name": "WC",
+          "sha256": "215cd873c71e835f608b226b55072d9d8e999aaf97575f746180585d52101806"
+        },
+        {
+          "name": "qC",
+          "sha256": "02a65e2cf48f0503b04a471e58977e70424bb1dd01a37cfdbd565268b437893a"
+        },
+        {
+          "name": "JC",
+          "sha256": "8b7982fb98f0f948309f999a96c7fceb609976d9555c1d68c87d7da4395ac64c"
+        },
+        {
+          "name": "ew",
+          "sha256": "df588dcb49025a8683f8dc60d2de286dd30ea44b5fe9027b53f97136a34bc837"
+        }
+      ],
+      "imports": [
+        {
+          "local": "I",
+          "from": "./once.mjs",
+          "name": "once",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "qC": "neutralizeMentions",
+        "ew": "restoreMentions"
+      }
+    },
+    {
+      "target": "fix-findings-text.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "5b3ae813497c7c94f884f992d7ee09678876af28e94719be6aad685922575491",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "qw",
+          "sha256": "b5dff3736aaf7779c014efb69fd2ac3417a38777717833d174a39d269a575a6e"
+        },
+        {
+          "name": "nEe",
+          "sha256": "74656361896dda23ffe8d73baf01ec6c6e8b50bcf1b2c2f162005e648d6e9e0d"
+        },
+        {
+          "name": "Jw",
+          "sha256": "3d2cbf44364eda7488f1abda96a3fe9fc9b2e2237f21bd03cf1e167fae5d1cee"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Yc",
+          "from": "./text-sanitize.mjs",
+          "name": "neutralizeMentions",
+          "via": "shared-182-eT1kXtya.js:If",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Jw": "fixFindingsText"
+      }
+    },
+    {
+      "target": "findings-input.mjs",
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "9c395ee6bbe0b0027cbaffccbe5dccb9b8d0a6ba744e70f5632eaf5160b493a0",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "kq",
+          "sha256": "f6da13718d7eedae656a1c94a934954f6839fb98be0e397db49db3e309ac4e79"
+        },
+        {
+          "name": "Aq",
+          "sha256": "6e151c70cc710354e12952c4f02b491c6ac0fbfa5bdf9857b9e1ffd403753291"
+        },
+        {
+          "name": "jq",
+          "sha256": "c5101b5988a631e5e731193db9352c27a34e6f2943852fde378b0fd8348539d9"
+        },
+        {
+          "name": "Mq",
+          "sha256": "c9695a6985d7d8ec5f1efc105c4987202328f01bb9ade8c49468034680020f60"
+        },
+        {
+          "name": "Nq",
+          "sha256": "451e5b3adc90fd4da6f083d00d7d9866826780628fb20702790846de5db3cf00"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Nq": "parseReportFindingsInput",
+        "Mq": "parseReportedFinding",
+        "jq": "findingCategoryLabel"
+      }
+    },
+    {
+      "target": "findings-card.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "898524f2595078fdaa5e11f4a5212768a3cc26ef2a08e96d7c91b032373661c0",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "V$",
+          "sha256": "5909c67d5b91244bf840f3793ca0fef418092978feac38e6cb698602058c801a"
+        },
+        {
+          "name": "H$",
+          "sha256": "d3b57569c3958833bad90f35f82eb9c9bf6123c37b24aac788869e14fea04cc6"
+        },
+        {
+          "name": "U$",
+          "sha256": "b3adef1553ea821d97c0f349871120baf05128c75bb619ac5bf7939d1f793aa2"
+        },
+        {
+          "name": "d0e",
+          "sha256": "4e85435266292ca307f61376bd9abe6a91cbe2cdf8746ad6163df145a8eeeb16"
+        },
+        {
+          "name": "W$",
+          "sha256": "9d25d493a09d30e8d776d19c2a72bf6bf1768d83ccd074b3f757097d4ac14ab8"
+        },
+        {
+          "name": "G$",
+          "sha256": "6b32bb0d72c75b6b870fe463cf6ab164061b0f22e43456ba5ebf6f0baadac233"
+        },
+        {
+          "name": "K$",
+          "sha256": "616851d5108dff57fe5fb6a493250725e8a9579cccece564636492117e6d26a5"
+        },
+        {
+          "name": "q$",
+          "sha256": "decc0d1402d6da6947b4690610a94b21859b0ece42be64fbe5980c2b3b92b548"
+        },
+        {
+          "name": "f0e",
+          "sha256": "0857ae1c51a374e420a0ebedbb60478addcc05c947cc6e23b2771cd0a60b9b00"
+        },
+        {
+          "name": "J$",
+          "sha256": "6ad88d17c09dd7565cac974b87fb0c2dacc1fbbe9de6f2b02b1b8dd7d91cc251"
+        },
+        {
+          "name": "p0e",
+          "sha256": "7d498ab033555fd0563ff57fee9c467187bc91676d5440ed4f9a39257e4347e6"
+        },
+        {
+          "name": "m0e",
+          "sha256": "bbb9c83e33721e0bdb3e270b5349a1f418ad6e1aaaa2533727f40b5cf100bbdd"
+        },
+        {
+          "name": "Y$",
+          "sha256": "a25b00565c19ee2e294638f85dac0c0456e6063a17768c17c77e47cd1b039f58"
+        },
+        {
+          "name": "h0e",
+          "sha256": "6790d4fd4e922aeb0622b45077c55094154e2e4722243a80414586416575873a"
+        },
+        {
+          "name": "X$",
+          "sha256": "f1f1bf0bff4bfc1cfb88ed27ecdd8cd31c117e9d56f123dd56496f7e141f5d23"
+        }
+      ],
+      "imports": [
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "Pa",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useErrors",
+          "via": "shared-52-DGviI8xb.js:Ya",
+          "kind": "adapter",
+          "original": "Sj"
+        },
+        {
+          "local": "qb",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useSendWithOutcome",
+          "via": "c6b8adeaf-C5Aww7gq.js:g",
+          "kind": "adapter",
+          "original": "ua"
+        },
+        {
+          "local": "qh",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "usePaneStoreState",
+          "via": "c03935b01-CyJKQj4N.js:ft",
+          "kind": "adapter",
+          "original": "gc"
+        },
+        {
+          "local": "Jh",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "usePaneStoreContext",
+          "via": "c03935b01-CyJKQj4N.js:mt",
+          "kind": "adapter",
+          "original": "_c"
+        },
+        {
+          "local": "Yh",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "usePaneStore",
+          "via": "c03935b01-CyJKQj4N.js:pt",
+          "kind": "adapter",
+          "original": "Q"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "Nle",
+          "from": "./findings-input.mjs",
+          "name": "parseReportFindingsInput",
+          "via": "c227f4d5e-Ba-r--Rl.js:Qt",
+          "kind": "generated"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "oh",
+          "from": "./session-type.mjs",
+          "name": "telemetrySessionType",
+          "via": "c68c4283d-CPuRD0vx.js:m",
+          "kind": "generated"
+        },
+        {
+          "local": "Jt",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useSurfaceHidden",
+          "via": "shared-1-CAAiD7E3.js:ic",
+          "kind": "adapter",
+          "original": "Sw"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "$me",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "logFindingsCardRendered",
+          "via": "c68c4283d-CPuRD0vx.js:St",
+          "kind": "adapter",
+          "original": "jl"
+        },
+        {
+          "local": "Axe",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useFindingStatuses",
+          "via": "cc8941b7b-CZT9QwXr.js:nt",
+          "kind": "adapter",
+          "original": "ct"
+        },
+        {
+          "local": "Th",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "logFindingExpanded",
+          "via": "c68c4283d-CPuRD0vx.js:xt",
+          "kind": "adapter",
+          "original": "Ml"
+        },
+        {
+          "local": "jxe",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useSeededFindingsToolIds",
+          "via": "cc8941b7b-CZT9QwXr.js:ot",
+          "kind": "adapter",
+          "original": "Qe"
+        },
+        {
+          "local": "kxe",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useUnanchoredFindingIds",
+          "via": "cc8941b7b-CZT9QwXr.js:ft",
+          "kind": "adapter",
+          "original": "st"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "sfe",
+          "from": "./focus-visible.mjs",
+          "name": "useKeyboardFocusWithin",
+          "via": "cae42d46f-8Va5mKUX.js:u",
+          "kind": "generated"
+        },
+        {
+          "local": "R",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "Txe",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useLatestSettledAtActivation",
+          "via": "cc8941b7b-CZT9QwXr.js:$",
+          "kind": "adapter",
+          "original": "$e"
+        },
+        {
+          "local": "Ym",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "logWalkthroughOpened",
+          "via": "c68c4283d-CPuRD0vx.js:Et",
+          "kind": "adapter",
+          "original": "Fl"
+        },
+        {
+          "local": "ES",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "reviewFindingsActions",
+          "via": "cc8941b7b-CZT9QwXr.js:A",
+          "kind": "adapter",
+          "original": "I"
+        },
+        {
+          "local": "Lh",
+          "from": "./diff-pane-options.mjs",
+          "name": "UNPROMPTED_DIFF_PANE",
+          "via": "cf53e1812-CivLPgES.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Vp",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useSessionDiffEntries",
+          "via": "c5da7eb42-B8cTG8SI.js:St",
+          "kind": "adapter",
+          "original": "Sj"
+        },
+        {
+          "local": "ce",
+          "from": "./owner-window.mjs",
+          "name": "ownerWindow",
+          "via": "shared-25-DP8p7i1Z.js:Pf",
+          "kind": "generated"
+        },
+        {
+          "local": "Mp",
+          "from": "./focus-visible.mjs",
+          "name": "hasFocusVisible",
+          "via": "cae42d46f-8Va5mKUX.js:o",
+          "kind": "generated"
+        },
+        {
+          "local": "Exe",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "reviewFindingsStore",
+          "via": "cc8941b7b-CZT9QwXr.js:V",
+          "kind": "adapter",
+          "original": "F"
+        },
+        {
+          "local": "Jw",
+          "from": "./fix-findings-text.mjs",
+          "name": "fixFindingsText",
+          "via": "c96d752d0-BOCqU7c2.js:Jw",
+          "kind": "generated"
+        },
+        {
+          "local": "Ame",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "logFixApplied",
+          "via": "c68c4283d-CPuRD0vx.js:Ct",
+          "kind": "adapter",
+          "original": "Il"
+        },
+        {
+          "local": "ro",
+          "from": "./send-stopped.mjs",
+          "name": "isSendStopped",
+          "via": "shared-104-Cqo2-vQh.js:Gu",
+          "kind": "generated"
+        },
+        {
+          "local": "vd",
+          "from": "./send-failed-message.mjs",
+          "name": "sendFailedMessage",
+          "via": "ccdfebff6-DVy1BLjU.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Ab",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "useSessionTurnRunning",
+          "via": "c06cf64bb-BE5q2vSr.js:on",
+          "kind": "adapter",
+          "original": "hv"
+        },
+        {
+          "local": "Ch",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "logRerunReview",
+          "via": "c68c4283d-CPuRD0vx.js:wt",
+          "kind": "adapter",
+          "original": "Rl"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "lb",
+          "from": "./summary-card-parts.mjs",
+          "name": "SUMMARY_CARD_INSET",
+          "via": "c425fb3cf-CEgSkv8l.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "fb",
+          "from": "./summary-card-parts.mjs",
+          "name": "SUMMARY_CARD_CLASS",
+          "via": "c425fb3cf-CEgSkv8l.js:x",
+          "kind": "generated"
+        },
+        {
+          "local": "uve",
+          "from": "./summary-card-parts.mjs",
+          "name": "SUMMARY_CARD_HEADER",
+          "via": "c425fb3cf-CEgSkv8l.js:S",
+          "kind": "generated"
+        },
+        {
+          "local": "Ss",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "$l"
+        },
+        {
+          "local": "Yb",
+          "from": "./muted-action-class.mjs",
+          "name": "MUTED_ACTION_CLASS",
+          "via": "c219730b0-B08P7Rqk.js:T",
+          "kind": "generated"
+        },
+        {
+          "local": "Ts",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:kc",
+          "kind": "view-tabs",
+          "original": "Sm"
+        },
+        {
+          "local": "rb",
+          "from": "./summary-card-parts.mjs",
+          "name": "SummaryCardDivider",
+          "via": "c425fb3cf-CEgSkv8l.js:k",
+          "kind": "generated"
+        },
+        {
+          "local": "Wg",
+          "from": "../../source-review-findings-adapters.jsx",
+          "name": "FilePathMenu",
+          "via": "c856385e2-DVsjb2QL.js:i",
+          "kind": "adapter",
+          "original": "On"
+        },
+        {
+          "local": "Ba",
+          "from": "./file-basename.mjs",
+          "name": "fileBasename",
+          "via": "shared-52-DGviI8xb.js:wd",
+          "kind": "generated"
+        },
+        {
+          "local": "z",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "view-tabs",
+          "original": "ge"
+        },
+        {
+          "local": "dve",
+          "from": "./summary-card-parts.mjs",
+          "name": "SUMMARY_CARD_ROW",
+          "via": "c425fb3cf-CEgSkv8l.js:T",
+          "kind": "generated"
+        },
+        {
+          "local": "ds",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsBadge",
+          "via": "shared-frame-BfjMqbuN.js:Vl",
+          "kind": "view-tabs",
+          "original": "cs"
+        },
+        {
+          "local": "$o",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsOverflowTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Dc",
+          "kind": "view-tabs",
+          "original": "gm"
+        },
+        {
+          "local": "cb",
+          "from": "./summary-card-parts.mjs",
+          "name": "DisclosureCaret",
+          "via": "c425fb3cf-CEgSkv8l.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "Qge",
+          "from": "./truncated-path.mjs",
+          "name": "TruncatedPath",
+          "via": "c784da984-B4E9BLV6.js:n",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "X$": "FindingsCard",
+        "h0e": "FindingRow",
+        "H$": "isFindingsCardTool",
+        "U$": "hasReportedOutcomes",
+        "d0e": "settledFindingsToolIds",
+        "G$": "useSettledFindingsToolIds",
+        "K$": "SettledFindingsToolsContext",
+        "q$": "findingLocation",
+        "p0e": "findingRowSummary",
+        "m0e": "findingScenario",
+        "f0e": "findingsByFile"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "m2e",
+      "role": "Solo tool row: an owned session's finished ReportFindings call is X$ with the row as fallback",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "554a5fa34ed060a16b0525bfe550a4c87cee4bc598226adcf187d380354f8caa",
+      "features": [
+        "if (a && H$(e.tools[0]))",
+        "return b(X$, { tool: e.tools[0], sessionRef: t, onPrefillComposer: n, fallback: c, });"
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "e0",
+      "role": "Grouped tool row: the same X$ mount inside a group run",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "65ace4502a1fa2b50526d5c9643a593e19226b6147f7185b89eadb385e5bf939",
+      "features": [
+        "o && H$(d)",
+        "? b(X$, { tool: d, sessionRef: i, onPrefillComposer: a, fallback: _, })"
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "A5",
+      "role": "A findings card is one of the tools whose body is its own card (no verbose row reserve)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "74b830c92d075ffd0982d2a81310fb072c72223305f1ec6a582ea130ea0e6033",
+      "features": [
+        "H$(e) ||"
+      ]
+    },
+    {
+      "source": "c96d752d0-BOCqU7c2.js",
+      "binding": "uat",
+      "role": "Classic feed: K$ carries G$(entries), the settled findings tools (host: SourceFindingsCard)",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "d7e5a6b1d7c8b788619b35174c8b7f17d798a2569848f87d1c411913b2c0db12",
+      "features": [
+        "N = G$(e.entries),",
+        "I = b(K$.Provider, { value: N,"
+      ]
+    },
+    {
+      "source": "c8a3f7430-DosKuJ6G.js",
+      "role": "Session options the renderer asks for: the findings card is always requested (not gated)",
+      "sourceSha256": "d3f4d71f53751d699bf569de1fe1b6fd22990401fa6f25d214d4d2043f1cd924",
+      "raw": true,
+      "features": [
+        "function _(){return{reportFindingsCard:!0,"
+      ]
+    },
+    {
+      "source": "cc43287c9-DAfOi8yP.js",
+      "role": "Session review watcher: outcomes, settle or reopen at turn end (host: settleReviewFixes)",
+      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "raw": true,
+      "features": [
+        "outcome:Ute(t.outcome)?t.outcome:\"skipped\"",
+        "n.findings.map((t,n)=>({id:`finding-${e}-${n}`,filePath:t.file,endLine:t.line??1,body:t.summary}))",
+        "return t!==void 0&&!!zF.getState().findingsBySession[e]?.some(e=>e.id.startsWith(`finding-${t}-`))",
+        "return!Array.isArray(t)||t.length===0?!1:!t.some(e=>typeof e==\"object\"&&!!e&&e.outcome!==void 0)",
+        "n!==null&&MF.applyReviewFindingOutcomes(e,i,{touchFixing:u&&t>=d,findings:n})",
+        "if(u&&h&&Nk(a)){if(Kte(a)||g){let t=Object.entries(zF.getState().findingStatusBySession[e]??{}).filter(([,e])=>e===\"fixing\").map(([e])=>e);t.length>0&&MF.reopenReviewFindings(e,t)}else MF.settleFixingReviewFindings(e)}",
+        "if(t.fixingWatermarkBySession[e]===void 0){let n=Object.entries(t.findingStatusBySession[e]??{}).filter(([,e])=>e===\"fixing\").map(([e])=>e);n.length>0&&MF.reopenReviewFindings(e,n)}",
+        "MF.setReviewFixingWatermark(e,r)"
+      ]
+    }
+  ]
+}

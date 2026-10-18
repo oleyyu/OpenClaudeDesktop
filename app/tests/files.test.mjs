@@ -23,7 +23,7 @@ test("preview classifies missing, outside, large, binary and empty files and kee
       path.join(p, "large"),
       Buffer.alloc(1024 * 1024 + 1, 65),
     );
-    assert.deepEqual(await readFile(p, "ok.txt"), { path: "ok.txt", text: "Hello" });
+    assert.deepEqual(await readFile(p, "ok.txt"), { path: "ok.txt", text: "Hello", size: 5 });
     assert((await listFiles(p)).some((f) => f.name === "ok.txt"));
     assert.deepEqual(await readFile(p, "missing.js"), { path: "missing.js", unavailable: "missing", creatable: true });
     assert.deepEqual(await readFile(p, "nested/missing.js"), { path: "nested/missing.js", unavailable: "missing", creatable: false }, "B32: no parent folder to create it in");
@@ -33,8 +33,8 @@ test("preview classifies missing, outside, large, binary and empty files and kee
     assert.deepEqual(await readFile(p, "link"), { path: "link", unavailable: "outside_root" }, "an escaping symlink is outside");
     assert.deepEqual(await readFile(p, "large"), { path: "large", unavailable: "too_large", size: 1024 * 1024 + 1 });
     assert.deepEqual(await readFile(p, "binary"), { path: "binary", unavailable: "binary" });
-    assert.deepEqual(await readFile(p, "binary", { force: true }), { path: "binary", text: "\u0000\u0001A" }, "View as text anyway");
-    assert.deepEqual(await readFile(p, "empty.txt"), { path: "empty.txt", text: "" });
+    assert.deepEqual(await readFile(p, "binary", { force: true }), { path: "binary", text: "\u0000\u0001A", size: 3 }, "View as text anyway");
+    assert.deepEqual(await readFile(p, "empty.txt"), { path: "empty.txt", text: "", size: 0 });
     assert.deepEqual(await readFile(p, "folder"), { path: "folder", unavailable: "read_error" });
     assert.deepEqual(await readFile(path.join(root, "gone"), "ok.txt"), { path: "ok.txt", unavailable: "read_error" }, "a missing root");
     // The traversal guard: nothing outside the workspace is returned, forced or not.
@@ -94,7 +94,7 @@ test("readFile classifies png/mp4/mp3 as media without a read; NUL text stays bi
     assert.deepEqual(await readFile(root, "clip.mp4"), { path: "clip.mp4", kind: "video", size: 4, unavailable: "video" });
     assert.deepEqual(await readFile(root, "song.MP3"), { path: "song.MP3", kind: "audio", size: 3, unavailable: "audio" });
     assert.deepEqual(await readFile(root, "nul.txt"), { path: "nul.txt", unavailable: "binary" });
-    assert.deepEqual(await readFile(root, "icon.svg"), { path: "icon.svg", text: "<svg/>" }, "svg is text (no allowSvg)");
+    assert.deepEqual(await readFile(root, "icon.svg"), { path: "icon.svg", text: "<svg/>", size: 6 }, "svg is text (no allowSvg)");
     assert.deepEqual(await readFile(root, "photo.png", { force: true }), { path: "photo.png", unavailable: "too_large", size: 2 * 1024 * 1024 }, "forced: the bytes are read");
     assert.deepEqual(await readFile(root, "missing.png"), { path: "missing.png", unavailable: "missing", creatable: true });
     // B13: a PDF is classified like media (Chromium's viewer shows it from its file:// URL), never read.
@@ -145,4 +145,72 @@ test("openBlockReason refuses launchers, executables and links to another type, 
     await fs.mkdir(path.join(root, "dir.txt"));
     assert.match(await openBlockReason(path.join(root, "dir.txt"), path.join(root, "dir.txt")), /Only files/);
   } finally { await fs.rm(root, { recursive: true, force: true }); }
+});
+
+// R3-files FT-05 (files-11 / files-v01): LocalSessions isSessionPathGone as main answers it (files.cjs; the original is
+// the desktop main process's ZB.isSessionPathGone / judgeSessionPathGone / qB in asar index.chunk-CFJssAFf.js).
+test("sessionPathGone: true only for a missing path inside the session's real folders, never through a link", async () => {
+  const { createSessionPathGone, judgeSessionPathGone, pathPresence } = require("../electron/files.cjs");
+  const base = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "code-desktop-gone-")));
+  const root = path.join(base, "project"), added = path.join(base, "added"), outside = path.join(base, "outside");
+  try {
+    for (const dir of [root, added, outside, path.join(root, "src")]) await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(root, "src/app.ts"), "x");
+    await fs.symlink(outside, path.join(root, "linked"));
+    await fs.symlink(root, path.join(base, "alias"));
+    const gone = createSessionPathGone();
+    const ask = (filePath, extra = {}) => gone({ sessionId: "s1", root, sessionFolders: [added], filePath, ...extra });
+    assert.equal(await ask(path.join(root, "src/app.ts")), false, "present");
+    assert.equal(await ask(path.join(root, "src/deleted.ts")), true, "a deleted file");
+    assert.equal(await ask("src/deleted.ts"), true, "relative to the session folder");
+    assert.equal(await ask(path.join(root, "removed/deep/file.ts")), true, "a deleted folder");
+    assert.equal(await ask(path.join(root, "src/app.ts/child")), false, "ENOTDIR is unreadable, not gone");
+    assert.equal(await ask(path.join(added, "missing.md")), true, "inside an added folder");
+    assert.equal(await ask(path.join(outside, "missing.md")), false, "outside every session folder");
+    assert.equal(await ask(path.join(root, "linked/missing.md")), false, "through a link (through_link)");
+    assert.equal(await ask(path.join(base, "alias/missing.md")), false, "another spelling of the root (outside)");
+    assert.equal(await gone({ sessionId: "s1", root: path.join(base, "alias"), filePath: "missing.md" }), false, "a session folder spelled through a link (link_spelled)");
+    assert.equal(await ask(path.join(root, "a\0b")), false, "NUL");
+    assert.equal(await ask(path.join(root, "x".repeat(5000))), false, "over 4096 characters");
+    assert.equal(await gone({ sessionId: "s1", root: "relative", filePath: "/x" }), false, "no absolute session folder");
+    assert.equal(await createSessionPathGone({ disabled: () => true })({ sessionId: "s1", root, filePath: path.join(root, "nope") }), false, "kill switch");
+    assert.equal(await judgeSessionPathGone({ root, filePath: path.join(root, "linked/x") }), "through_link");
+    assert.equal(await judgeSessionPathGone({ root: path.join(base, "alias"), filePath: "x" }), "link_spelled");
+    assert.equal(await judgeSessionPathGone({ root, filePath: path.join(base, "alias/x") }), "outside");
+    assert.equal(await judgeSessionPathGone({ root, filePath: path.join(outside, "x") }), "outside");
+    assert.equal(await judgeSessionPathGone({ root, filePath: "~/x", home: path.join(root, "src") }), "gone", "~ is the home folder");
+    assert.equal(await judgeSessionPathGone({ root: "/", filePath: "/dev/null" }), "refused", "device paths");
+    assert.equal(await pathPresence(path.join(root, "src/app.ts")), "present");
+  } finally { await fs.rm(base, { recursive: true, force: true }); }
+});
+
+test("sessionPathGone shares an ask in flight, answers false past 2 asks or the deadline", async () => {
+  const { createSessionPathGone } = require("../electron/files.cjs");
+  const calls = [];
+  let release;
+  const judge = (request) => { calls.push(request.filePath); return new Promise((resolve) => { release = resolve; }); };
+  const gone = createSessionPathGone({ judge, deadlineMs: 50 });
+  const first = gone({ sessionId: "s", root: "/r", filePath: "/r/a" }), again = gone({ sessionId: "s", root: "/r", filePath: "/r/a" });
+  assert.equal(first, again, "the same key shares one ask");
+  const second = gone({ sessionId: "s", root: "/r", filePath: "/r/b" });
+  assert.equal(await gone({ sessionId: "s", root: "/r", filePath: "/r/c" }), false, "busy: a third concurrent ask is not judged");
+  assert.deepEqual(calls, ["/r/a", "/r/b"]);
+  assert.equal(await first, false, "the 2 s deadline (50 ms here) answers false");
+  assert.equal(await second, false);
+  release("gone");
+  const quick = createSessionPathGone({ judge: async () => "gone" });
+  assert.equal(await quick({ sessionId: "s", root: "/r", filePath: "/r/a" }), true);
+  assert.equal(await createSessionPathGone({ judge: async () => null })({ sessionId: "s", root: "/r", filePath: "/r/a" }), false, "no session paths");
+  assert.equal(await createSessionPathGone({ judge: async () => { throw new Error("x"); } })({ sessionId: "s", root: "/r", filePath: "/r/a" }), false, "error");
+});
+
+test("main.cjs answers file:gone for the session's folders, also from a popout", async () => {
+  const main = await fs.readFile(path.join(import.meta.dirname, "../electron/main.cjs"), "utf8");
+  assert.match(main, /const \{ listFiles, readFile, scopedPath, openBlockReason, sessionPathGone \} = require\("\.\/files\.cjs"\);/);
+  assert.match(main, /POPOUT_ACTIONS = new Set\(\[[^\]]*"file:gone"/);
+  const branch = main.slice(main.indexOf('case "file:gone": {'), main.indexOf('case "file:reveal-session": {'));
+  assert.match(branch, /if \(typeof p\.sessionId !== "string"\) return false;/);
+  assert.match(branch, /try \{ root = fileSearchRoot\(p\.sessionId\); \} catch \{ return false; \}/);
+  assert.match(branch, /config\.sessionMetadata\?\.\[p\.sessionId\]\?\.additionalFolders/);
+  assert.match(branch, /return sessionPathGone\(\{ sessionId: p\.sessionId, root, sessionFolders: Array\.isArray\(added\) \? added : \[\], filePath: p\.path \}\);/);
 });

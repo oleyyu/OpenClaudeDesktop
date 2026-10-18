@@ -343,31 +343,85 @@ function chatFiles(env) {
 function readChat(file) {
   let text
   try { text = fs.readFileSync(file, 'utf8') } catch { return null }
-  const lines = text.split('\n').filter(Boolean)
-  let meta = null
-  const messages = []
-  let lastTokens = null
-  for (const line of lines) {
-    let record
-    try { record = JSON.parse(line) } catch { continue }
-    if (record.sessionId && record.projectHash) { meta = { ...meta, ...record }; continue }
-    if (record.$set) {
-      if (Array.isArray(record.$set.messages)) messages.splice(0, messages.length, ...record.$set.messages)
-      if (typeof record.$set.summary === 'string' && meta) meta.summary = record.$set.summary
-      if (record.$set.lastUpdated && meta) meta.lastUpdated = record.$set.lastUpdated
-      continue
-    }
-    if (record.$rewindTo) {
-      const index = messages.findIndex((message) => message.id === record.$rewindTo)
-      if (index >= 0) messages.splice(index)
-      continue
-    }
-    if (record.id && record.type) {
-      messages.push(record)
-      if (record.tokens) lastTokens = record.tokens
-    }
+  const chat = { meta: null, messages: [], lastTokens: null }
+  for (const line of text.split('\n')) if (line) applyChatLine(chat, line)
+  return chat.meta ? chat : null
+}
+
+/** One session-file line applied to a chat being read ({meta, messages, lastTokens}). */
+function applyChatLine(chat, line) {
+  let record
+  try { record = JSON.parse(line) } catch { return }
+  const { messages } = chat
+  if (record.sessionId && record.projectHash) { chat.meta = { ...chat.meta, ...record }; return }
+  if (record.$set) {
+    if (Array.isArray(record.$set.messages)) messages.splice(0, messages.length, ...record.$set.messages)
+    if (typeof record.$set.summary === 'string' && chat.meta) chat.meta.summary = record.$set.summary
+    if (record.$set.lastUpdated && chat.meta) chat.meta.lastUpdated = record.$set.lastUpdated
+    return
   }
-  return meta ? { meta, messages, lastTokens } : null
+  if (record.$rewindTo) {
+    const index = messages.findIndex((message) => message.id === record.$rewindTo)
+    if (index >= 0) messages.splice(index)
+    return
+  }
+  if (record.id && record.type) {
+    messages.push(record)
+    if (record.tokens) chat.lastTokens = record.tokens
+  }
+}
+
+/** Session files read while their turn runs: file → {size, rest (bytes after the last newline), chat, readAt}. */
+const chatTails = new Map()
+/** A tail no live read asked for in this long is dropped (its turn ended). */
+const CHAT_TAIL_IDLE_MS = 60_000
+
+/**
+ * readChat for a file that keeps growing: only the bytes added since the last call are parsed (a running workflow
+ * agent's session file reaches tens of MB). A file that shrank (rewritten) is read again from the start.
+ */
+function readChatTail(file) {
+  let size
+  try { size = fs.statSync(file).size } catch { chatTails.delete(file); return null }
+  let tail = chatTails.get(file)
+  if (!tail || size < tail.size) tail = { size: 0, rest: Buffer.alloc(0), chat: { meta: null, messages: [], lastTokens: null } }
+  if (size > tail.size) {
+    const added = Buffer.alloc(size - tail.size)
+    try {
+      const fd = fs.openSync(file, 'r')
+      try { fs.readSync(fd, added, 0, added.length, tail.size) } finally { fs.closeSync(fd) }
+    } catch { return null }
+    const bytes = Buffer.concat([tail.rest, added])
+    const end = bytes.lastIndexOf(0x0a)
+    if (end >= 0) for (const line of bytes.subarray(0, end).toString('utf8').split('\n')) if (line) applyChatLine(tail.chat, line)
+    tail.rest = end >= 0 ? Buffer.from(bytes.subarray(end + 1)) : bytes
+    tail.size = size
+  }
+  tail.readAt = Date.now()
+  chatTails.set(file, tail)
+  return tail.chat.meta ? tail.chat : null
+}
+
+/** How far before the bridge sent a prompt Gemini may stamp it (clocks of two processes). */
+const PROMPT_SKEW_MS = 5_000
+
+/**
+ * A running turn's tokens so far ({usage, contextUsed}, sessionTurnUsage's accounting), or null: the session file's
+ * model messages since a prompt Gemini recorded at or after since (before that, the file's last prompt is the previous
+ * turn's), and the context fill of the latest call. Gemini reports a turn's tokens only once it ends.
+ */
+export function liveSessionUsage(env, sessionId, since = 0) {
+  const now = Date.now()
+  for (const [file, tail] of chatTails) if (now - tail.readAt > CHAT_TAIL_IDLE_MS) chatTails.delete(file)
+  const short = String(sessionId).slice(0, 8)
+  const chats = chatFiles(env).filter((entry) => entry.short === short).map((entry) => ({ ...entry, chat: readChatTail(entry.file) }))
+    .filter((entry) => entry.chat?.meta?.sessionId === sessionId)
+    .sort((a, b) => (Date.parse(a.chat.meta.lastUpdated) || 0) - (Date.parse(b.chat.meta.lastUpdated) || 0))
+  const chat = bestChat(chats)?.chat
+  const turn = sessionTurnUsage(chat, { since })
+  if (!turn) return null
+  const tokens = chat.messages.findLast((message) => message?.type === 'gemini' && message.tokens)?.tokens
+  return { usage: turn.usage, contextUsed: tokens ? (tokens.input ?? 0) + (tokens.output ?? 0) : null }
 }
 
 const userText = (message) => (Array.isArray(message?.content) ? message.content.map((part) => part?.text ?? '').join('') : typeof message?.content === 'string' ? message.content : '')
@@ -398,13 +452,17 @@ export function geminiReplayText(text, role) {
 /**
  * The tokens of the conversation's last turn: the `tokens` of every model message after the last real user prompt
  * ({input, output, cached, thoughts, tool, total} per call). Codex accounting: input includes cached and the tool-use
- * prompt, output includes thoughts (also reported as reasoning). Null when the file recorded none.
+ * prompt, output includes thoughts (also reported as reasoning). Null when the file recorded none, or when its last
+ * prompt was recorded before since (the turn's start).
  */
-export function sessionTurnUsage(chat) {
+export function sessionTurnUsage(chat, { since = 0 } = {}) {
   const messages = chat?.messages ?? []
   let start = messages.length
   while (start > 0 && !realUser(messages[start - 1])) start--
   if (start === 0) return null
+  // A prompt Gemini recorded before the turn was sent is the previous turn's (this one failed before it was written).
+  const at = Date.parse(messages[start - 1]?.timestamp)
+  if (Number.isFinite(at) && at < since - PROMPT_SKEW_MS) return null
   const sum = { input: 0, output: 0, cached: 0, thoughts: 0, tool: 0, total: 0 }
   let found = false
   let model = null
@@ -1255,13 +1313,18 @@ export default {
    * tool-use prompt, cached, output and thoughts, as Gemini bills them), else the PromptResponse's _meta.quota, which
    * leaves out thoughts and cached input (acpSession.ts: promptTokenCount / candidatesTokenCount only).
    */
-  turnUsage(result, { ctx, thread } = {}) {
+  turnUsage(result, { ctx, thread, since } = {}) {
     const quota = result?._meta?.quota
-    const fromFile = ctx && thread?.id ? sessionTurnUsage(findChat(ctx.env, thread.id)?.chat) : null
+    const fromFile = ctx && thread?.id ? sessionTurnUsage(findChat(ctx.env, thread.id)?.chat, { since }) : null
     if (fromFile) return { usage: fromFile.usage, model: fromFile.model ?? quota?.model_usage?.[0]?.model ?? null }
     const tokens = quota?.token_count
     if (!tokens) return null
     return { usage: { inputTokens: tokens.input_tokens, outputTokens: tokens.output_tokens }, model: quota.model_usage?.[0]?.model ?? null }
+  },
+
+  /** A running turn's tokens so far and its context fill (liveSessionUsage), for a workflow card that counts as agents run. */
+  liveTurnUsage(ctx, thread, { since } = {}) {
+    return thread?.id ? liveSessionUsage(ctx.env, thread.id, since) : null
   },
 
   /** The context fill after a turn: the last model message's prompt + reply tokens in the session file. */

@@ -310,7 +310,7 @@ export function PaneSettingsMenu({ paneName, sections = [], unroll = true }) {
         </button>
       </SourceTooltip>
       {open && (
-        <SourceMenu.Popup key={open.token} anchor={trigger.current} side="bottom" align="end" label={label} onClose={() => setOpen(null)} initialHighlight={open.entry}>
+        <SourceMenu.Popup key={open.token} anchor={trigger.current} side="bottom" align="end" label={label} onClose={() => setOpen(null)} initialHighlight={open.entry} contextMenuGuard>
           {filled.map((section, index) => (
             <React.Fragment key={section.key ?? index}>
               {index > 0 && !section.noSeparator && <SourceMenu.Separator />}

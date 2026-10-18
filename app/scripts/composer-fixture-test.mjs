@@ -29,7 +29,7 @@ try {
       });
       throw error;
     });
-  await page.locator(".sc-pet svg").waitFor();
+  await page.locator("[data-clawd] svg").waitFor();
   await page.evaluate(() => document.fonts.ready);
   // home-model aggregateStats (code-home Iw over the original stats object):
   // sessions/messages/active days are ranged sums of dailyActivity, model tokens

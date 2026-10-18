@@ -1,7 +1,26 @@
-import test from "node:test";
+import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
-import { SINGLE_CHILD_EXPAND_LIMIT, singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, REVEAL_FLASH_MS,
-  onEnterReleased, fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux, FILE_TREE_NUX_ID, nuxAccountAged, NUX_ACCOUNT_MIN_AGE_MS } from "../src/file-tree-row-model.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { createServer } from "vite";
+
+// R2-files FT-01: file-tree-style is the 2.42304.0 ca7840910 geometry, which reads the fizzy-lake gate from the
+// view-tabs graph (shared-4 → vendor-frame → the .jsx React seam), so the model loads through Vite SSR.
+let server, SINGLE_CHILD_EXPAND_LIMIT, singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, REVEAL_FLASH_MS,
+  onEnterReleased, fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux, FILE_TREE_NUX_ID, nuxAccountAged,
+  NUX_ACCOUNT_MIN_AGE_MS, treeIndent, fileTreeRowStyle, Style, Density, Gate;
+before(async () => {
+  server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, ".."),
+    server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
+  ({ SINGLE_CHILD_EXPAND_LIMIT, singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, REVEAL_FLASH_MS,
+    onEnterReleased, fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux, FILE_TREE_NUX_ID, nuxAccountAged,
+    NUX_ACCOUNT_MIN_AGE_MS, treeIndent, fileTreeRowStyle } = await server.ssrLoadModule("/src/file-tree-row-model.mjs"));
+  Style = await server.ssrLoadModule("/src/generated/code-current/file-tree-style.mjs");
+  Density = await server.ssrLoadModule("/src/generated/code-current/file-tree-density.mjs");
+  Gate = await server.ssrLoadModule("/src/generated/view-tabs/shared-4-CJsHhp5n.js");
+});
+after(() => server?.close());
+const read = (file) => fs.readFileSync(path.resolve(import.meta.dirname, "..", file), "utf8");
 
 const dir = (path, extra = {}) => ({ name: path.split("/").at(-1), path, directory: true, symlink: false, ...extra });
 const file = (path) => ({ name: path.split("/").at(-1), path, directory: false, symlink: false });
@@ -37,13 +56,44 @@ test("Qo: only a non-link or an ok link opens", () => {
     assert.equal(treeEntryOpenable({ ...file("l"), link: { target: "x", state } }), false, state);
 });
 
-test("ce9ca5630 g: one 1px border guide per ancestor level from the root icon's centre", () => {
+test("ca7840910 B (was ce9ca5630 g): one 1px border guide per ancestor level from the root icon's centre", () => {
   assert.deepEqual(fileTreeGuideStyle(0), {});
   assert.deepEqual(fileTreeGuideStyle(3), {
-    "--file-tree-guides": "repeating-linear-gradient(to right, var(--cds-border) 0 1px, transparent 1px 8px)",
-    backgroundPosition: "14px 0", backgroundRepeat: "no-repeat", backgroundSize: "24px 100%",
+    "--file-tree-guides": "repeating-linear-gradient(var(--file-tree-guides-to, to right), var(--cds-border) 0 1px, transparent 1px 10px)",
+    "--file-tree-guides-x": "14px", backgroundPosition: "14px 0", backgroundRepeat: "no-repeat", backgroundSize: "30px 100%",
   });
   assert.equal(REVEAL_FLASH_MS, 1200);
+});
+
+test("2.42304.0 ca7840910: E reads the fizzy-lake panels part, off in this build; V = L + B; literal --cds-border", () => {
+  const V = "../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/";
+  const official = read(`${V}ca7840910-DSVFtTw1.js`);
+  assert.match(official, /var w=8,T=4;function E\(\)\{return p\("panels"\)\?"sm":"xs"\}/);
+  assert.match(official, /import\{co as p\}from"\.\/shared-4-CJsHhp5n\.js"/);
+  assert.match(official, /Wl as v/);
+  // shared-4 jf: kf("panels") needs the part listed in Ef, and Ef = Cf = [] in this build.
+  const gate = read(`${V}shared-4-CJsHhp5n.js`);
+  assert.match(gate, /Sf="data-cds-fizzy-lake",Cf=\[\];/);
+  assert.match(gate, /var Ef=Cf,Df;/);
+  assert.equal(Gate.isFizzyLakePartEnabled("panels"), false);
+  const manifest = JSON.parse(read("src/generated/view-tabs/manifest.json"));
+  assert.deepEqual(manifest.publicNames.isFizzyLakePartEnabled, { file: "shared-4-CJsHhp5n.js", local: "jf", export: "co" });
+  const generated = read("src/generated/code-current/file-tree-style.mjs");
+  assert.match(generated, /^\/\/ Original Claude Desktop 2\.42304\.0 bindings/);
+  assert.match(generated, /import \{ isFizzyLakePartEnabled as p \} from "\.\.\/view-tabs\/shared-4-CJsHhp5n\.js";/);
+  assert.match(generated, /return p\("panels"\) \? "sm" : "xs";/);
+  assert.doesNotMatch(generated, /cssVar|const n = \{/);
+  // v is shared-frame Wl (local Co), emitted whole rather than restated.
+  assert.match(read(`${V}shared-frame-BfjMqbuN.js`), /var Co=\{xs:\{px:12,master:"small",stroke:\{regular:\.8\}\},sm:\{px:16,/);
+  assert.equal(Density.iconDensities.xs.px, 12);
+  assert.equal(Density.iconDensities.sm.px, 16);
+  // xs geometry: 8px pad, 6 + 4 = 10px per level, guides from 8 + 6 = 14px.
+  assert.deepEqual(treeIndent(0), { paddingInlineStart: 8 });
+  assert.deepEqual(treeIndent(2), { paddingInlineStart: 28 });
+  assert.deepEqual(fileTreeRowStyle(0), { paddingInlineStart: 8 });
+  for (const depth of [1, 3]) assert.deepEqual(fileTreeRowStyle(depth), { ...treeIndent(depth), ...fileTreeGuideStyle(depth) });
+  assert.equal(Style.guideGradient(2),
+    "linear-gradient(var(--file-tree-guides-to, to right), transparent 20px, var(--cds-border) 20px 21px, transparent 21px)");
 });
 
 function fakeDocument() {

@@ -46,8 +46,7 @@
   min-width: 0;
   gap: var(--cds-gap-xs, 4px);
 }
-.st-toolbar .st-title,
-.st-title-measure {
+.st-toolbar .st-title {
   font-size: var(--cds-font-size-body, 13px);
   font-weight: 500;
   line-height: var(--cds-leading-body, 19px);
@@ -142,12 +141,11 @@
 .st-lead[data-folder-hidden] .st-folder {
   display: none;
 }
-.st-toolbar .st-folder:hover:not(:disabled),
+/* R3-topbar TT-02: only the ready chip is a button; while the session loads it is the static Bg-style span
+   (cursor-default, no hover), never a disabled button. */
+.st-toolbar button.st-folder:hover,
 .st-folder[aria-expanded="true"] {
   background: var(--cds-alpha-3);
-}
-.st-folder:disabled {
-  opacity: 0.65;
 }
 .st-toolbar .st-trailing {
   margin-left: auto;
@@ -158,17 +156,27 @@
   gap: 4px;
   -webkit-app-region: no-drag;
 }
-/* Cramped (see SourceTitlebar): Preview and Terminal stay reachable from ⋯ Session options and their shortcuts. */
-.st-toolbar .st-trailing[data-cramped] {
-  padding-left: 8px;
-}
-.st-toolbar .st-trailing[data-cramped] [data-pane-toggle] {
-  display: none;
-}
+/* R3-topbar TT-03: no data-cramped rules. The official fold measure (cd54a5401 un) folds the toggles one by one
+   into ⋮ View options (c73f45bc3 jh / Vh); the trailing keeps its 24px (zh ps-[24px]) at every width. */
 .st-toolbar .code-icon-button {
   width: var(--cds-h-control, 24px);
   height: var(--cds-h-control, 24px);
   border-radius: var(--cds-radius, 6px);
+}
+/* R4f-rail SR-6 topbar-09 (2.42304.0 shared-frame $l Button): the titlebar's pressed ghost toggles (cc43287c9 lW pane
+   toggles, `pressed: e.active, pressedVariant: "selected"`; DW Keep window on top, `pressed: t`) take Button's default
+   pressed look. "selected" only switches the paint to the ghost-selected fill (_c) and the text to primary (vc) when
+   fizzy-lake's "color" part is on (`ue = le && F === "ghost" && S === void 0 && _r(ce, "color")`), and that never
+   happens: shared-4's allow-list is empty (`Cf=[]`) and the only explicit parts (c80ec48f8) are ["bubbles"]. So every
+   pressed ghost Button paints gc (`group-aria-pressed/btn:bg-accent group-hover/btn:group-aria-pressed/btn:bg-accent`,
+   hovered or not) under Il's ghost `aria-pressed:text-accent`. ToolButton has no paint layer and keeps its class list
+   (titlebarControlClass), so the two utilities' declarations from the loaded c6a992d55 sheet, `background-color:
+   var(--cds-bg-accent)` and `color: var(--cds-text-accent)`, sit on the button itself, over the local alpha-1 wash
+   (style.css .panel-toggles .is-selected) and the local hover. The rail toggle (EH) is the official Button already. */
+.st-toolbar .code-icon-button.text-secondary[aria-pressed="true"],
+.st-toolbar .code-icon-button.text-secondary[aria-pressed="true"]:hover:not(:disabled) {
+  background-color: var(--cds-bg-accent);
+  color: var(--cds-text-accent);
 }
 .st-toolbar .st-whats-new {
   font-size: var(--cds-font-size-body, 13px);
@@ -195,23 +203,6 @@
   background: var(--cds-alpha-2);
   border-radius: 3px;
   animation: st-title-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-.st-measurements {
-  position: absolute;
-  width: max-content;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.st-title-measure,
-.st-folder-measure {
-  display: inline-block;
-}
-.st-folder-measure {
-  font-size: var(--cds-font-size-footnote, 12px);
-  padding-inline: 5px;
 }
 .st-visually-hidden {
   position: absolute;
@@ -399,3 +390,6 @@ html[data-reduce-motion="true"] .st-title-skeleton { animation: none; }
   border-radius: 2147483647px;
   background-color: var(--cds-fill-accent);
 }
+/* R2-topbar TT-02: the draft page's title is the 2.42304.0 h1[data-pane-title] (generated titlebar-draft-title.mjs),
+   styled only by its official utilities (draggable truncate ps-2.5 text-body font-medium font-control
+   text-muted-as-secondary); no local rule targets it, so nothing outside @layer utilities overrides them. */

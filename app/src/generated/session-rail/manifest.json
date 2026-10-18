@@ -1,0 +1,3195 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-session-rail.mjs",
+  "adapterModule": "src/source-session-rail-adapters.jsx",
+  "modules": [
+    {
+      "target": "dnd-kit.mjs",
+      "source": "c09f6b4e5-DErbwtLQ.js",
+      "sourceSha256": "a9212e50576e009cab8b992efecf651d749a3a40e8c5578d02311c105894bc89",
+      "sha256": "850ea6c16ff782bc84931107b274725ab354c645253b2eebc9ef624b19871244",
+      "referenceVersion": "2.42304.0",
+      "bindings": [],
+      "imports": [
+        {
+          "local": "fe",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "v",
+          "via": "c09f6b4e5-DErbwtLQ.js:fe",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:fe",
+          "reexport": true
+        },
+        {
+          "local": "de",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "_",
+          "via": "c09f6b4e5-DErbwtLQ.js:de",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:de",
+          "reexport": true
+        },
+        {
+          "local": "ct",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "d",
+          "via": "c09f6b4e5-DErbwtLQ.js:ct",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:ct",
+          "reexport": true
+        },
+        {
+          "local": "rt",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "l",
+          "via": "c09f6b4e5-DErbwtLQ.js:rt",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:rt",
+          "reexport": true
+        },
+        {
+          "local": "$n",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "i",
+          "via": "c09f6b4e5-DErbwtLQ.js:$n",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:$n",
+          "reexport": true
+        },
+        {
+          "local": "N",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "x",
+          "via": "c09f6b4e5-DErbwtLQ.js:N",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:N",
+          "reexport": true
+        },
+        {
+          "local": "Dn",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "n",
+          "via": "c09f6b4e5-DErbwtLQ.js:Dn",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:Dn",
+          "reexport": true
+        },
+        {
+          "local": "on",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "s",
+          "via": "c09f6b4e5-DErbwtLQ.js:on",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:on",
+          "reexport": true
+        },
+        {
+          "local": "_e",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "p",
+          "via": "c09f6b4e5-DErbwtLQ.js:_e",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:_e",
+          "reexport": true
+        },
+        {
+          "local": "Vn",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "t",
+          "via": "c09f6b4e5-DErbwtLQ.js:Vn",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:Vn",
+          "reexport": true
+        },
+        {
+          "local": "Ln",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "o",
+          "via": "c09f6b4e5-DErbwtLQ.js:Ln",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:Ln",
+          "reexport": true
+        },
+        {
+          "local": "Yn",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "a",
+          "via": "c09f6b4e5-DErbwtLQ.js:Yn",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:Yn",
+          "reexport": true
+        },
+        {
+          "local": "P",
+          "from": "../sidebar-reorder/dnd-kit.mjs",
+          "name": "y",
+          "via": "c09f6b4e5-DErbwtLQ.js:P",
+          "kind": "sidebar-reorder",
+          "original": "c09f6b4e5-DErbwtLQ.js:P",
+          "reexport": true
+        }
+      ],
+      "exports": {
+        "fe": "useSensors",
+        "de": "useSensor",
+        "ct": "PointerSensor",
+        "rt": "KeyboardSensor",
+        "$n": "sortableKeyboardCoordinates",
+        "N": "isKeyboardEvent",
+        "Dn": "arrayMove",
+        "on": "DndContext",
+        "_e": "closestCenter",
+        "Vn": "SortableContext",
+        "Ln": "verticalListSortingStrategy",
+        "Yn": "useSortable",
+        "P": "CSS"
+      }
+    },
+    {
+      "target": "region-reading-order.mjs",
+      "source": "c4db265df-CAC3hDZP.js",
+      "sourceSha256": "8abe580f97b1d92723f4af5bc26d0815b188d2e86ccf25d56149228ba10f10cf",
+      "sha256": "c2f63fd0b06fcd114f00be95a141f16776cb1cc56a811c93320f75ef4934743a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ft",
+          "sha256": "5c7b403ca8b9e63b72c112ab4ccbae5e10363000b5ec8ac1d9e1d1bf70561149"
+        }
+      ],
+      "imports": [
+        {
+          "local": "c",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "ft": "RegionReadingOrderContext"
+      },
+      "contexts": [
+        "ft"
+      ]
+    },
+    {
+      "target": "stable-array.mjs",
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "f4007f1704ed32ba7878dc2df0fd418d88645bbedd34f4acaf3d48c737a9e580",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "YU",
+          "sha256": "2f84188dd9b404b8d38691fa7597f047fff0bfe7996c10e7d008615333f7fcc1"
+        },
+        {
+          "name": "$U",
+          "sha256": "a7b55d66db34bb5e9c26b787f5458b14ba7eb619c52f7952b802d038917894ca"
+        }
+      ],
+      "imports": [
+        {
+          "local": "zU",
+          "from": "../turn-box/owner-window.mjs",
+          "name": "zU",
+          "via": "shared-25-DP8p7i1Z.js:zU",
+          "kind": "turn-box",
+          "original": "shared-25-DP8p7i1Z.js:zU",
+          "reexport": true
+        },
+        {
+          "local": "ZU",
+          "from": "../turn-box/owner-window.mjs",
+          "name": "ZU",
+          "via": "shared-25-DP8p7i1Z.js:ZU",
+          "kind": "turn-box",
+          "original": "shared-25-DP8p7i1Z.js:ZU",
+          "reexport": true
+        },
+        {
+          "local": "Le",
+          "from": "../code-current/lazy-init.mjs",
+          "name": "lazyInit",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "code-current",
+          "original": "shared-0-ByI5P0CP.js:Hi"
+        }
+      ],
+      "exports": {
+        "zU": "useStableArray",
+        "ZU": "stripInvisible",
+        "$U": "displayPath"
+      }
+    },
+    {
+      "target": "drag-click-guard.mjs",
+      "source": "shared-19-CkPOiIKm.js",
+      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "sha256": "7bdf9d87d031af19fb9137db2334919f0a4d9d64d648a5e2b0cf55dde126ef72",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "P7",
+          "sha256": "967ca67b1c5ce3c419206afb70f268ee7b96eee0a0b00ee3be252e74268d02ea"
+        },
+        {
+          "name": "F7",
+          "sha256": "fb2d74da9c35e6706e6213a3ef459529cfb196e2b66ce162c0bbefe03cfb800f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "u$",
+          "from": "../sidebar-reorder/reorder-support.mjs",
+          "name": "suppressClickAfterDrag",
+          "via": "shared-19-CkPOiIKm.js:u$",
+          "kind": "sidebar-reorder",
+          "original": "shared-19-CkPOiIKm.js:u$",
+          "reexport": true
+        }
+      ],
+      "exports": {
+        "u$": "swallowNextClick",
+        "P7": "homeRelativeParent"
+      }
+    },
+    {
+      "target": "menu-items.mjs",
+      "source": "shared-frame-BfjMqbuN.js",
+      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "sha256": "a2fc3265f20a8c12974c28cf86c62cbc347363fcb443e0557487db93233db7c2",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "rC",
+          "sha256": "d144c6f25c369c7821ebc0819c0f1b76d729f5c5d1a36c12feb4f7a8c0196095"
+        },
+        {
+          "name": "iC",
+          "sha256": "178303eec10a808d52f109954a75127c8ba0b628ec557e489deff61b8accb528"
+        }
+      ],
+      "imports": [
+        {
+          "local": "H",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "EC",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDropdown",
+          "via": "shared-frame-BfjMqbuN.js:EC",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:EC"
+        },
+        {
+          "local": "T",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ja",
+          "kind": "react"
+        }
+      ],
+      "members": {
+        "$S": "EC.Separator",
+        "QS": "EC.Submenu",
+        "ZS": "EC.SubmenuTrigger",
+        "qS": "EC.Popup",
+        "XS": "EC.Item"
+      },
+      "exports": {
+        "iC": "renderMenuItems"
+      }
+    },
+    {
+      "target": "pr-count-context.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "a359ccfaafb6f42d8a19f95b2f20b499d468604d9211a91df9f1cd9bfffebb57",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "qz",
+          "sha256": "78b2d430c935beb6cf652dde4bb1ebcd6b380deaf4f44f2ebff8b24a56ee8452"
+        }
+      ],
+      "imports": [
+        {
+          "local": "E",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "qz": "RailPrCountContext"
+      },
+      "contexts": [
+        "qz"
+      ]
+    },
+    {
+      "target": "repo-name-chip.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "4936b76dedfc74e4b886000f4f21eb59a742f860ecfcf50ee69f28b4d1d374b1",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "fLe",
+          "sha256": "dce11d5c780306bc62663e01627471aa25581c9b943b08f6bc42403cca49acdd"
+        },
+        {
+          "name": "pLe",
+          "sha256": "fd403dea84cad3567aed96127a05d9106acd80de94348c4de813eb1129e2eef8"
+        },
+        {
+          "name": "Yz",
+          "sha256": "de1d7bb8ff5bb933c5afb1005915b95b4cd454a8052ee23694ab167b9f4243cd"
+        }
+      ],
+      "imports": [
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "_s",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useLayerElement",
+          "via": "shared-frame-BfjMqbuN.js:_u",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:qa"
+        },
+        {
+          "local": "x",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "useDirection",
+          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "kind": "view-tabs",
+          "original": "vendor-frame-DfPJ1QmD.js:Td"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Us",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:X"
+        },
+        {
+          "local": "os",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Zp"
+        },
+        {
+          "local": "Ss",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:$l"
+        },
+        {
+          "local": "Ps",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsDropdown",
+          "via": "shared-frame-BfjMqbuN.js:qa",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:EC"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "Kc",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RAIL_POPUP_COLLISION_PADDING",
+          "via": "shared-18-D4XxL6Tg.js:xn",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:GR"
+        },
+        {
+          "local": "ms",
+          "from": "./menu-items.mjs",
+          "name": "renderMenuItems",
+          "via": "shared-frame-BfjMqbuN.js:Ya",
+          "kind": "generated",
+          "original": "shared-frame-BfjMqbuN.js:iC"
+        }
+      ],
+      "exports": {
+        "Yz": "RepoNameChip"
+      }
+    },
+    {
+      "target": "preview-placement.mjs",
+      "source": "c5304ebdb-BdWv-4Wb.js",
+      "sourceSha256": "0bb263fac7eb635d71dcc90fc4cff88a59b54cdb1e8b43a38f8e3cb9a8fbe189",
+      "sha256": "d9c3dd5285e1d200e231ac8a50f17b99c309b679c82c52cfe88c3fd5524ca953",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "E",
+          "sha256": "b694314e528f2492cfc555f6864ca14984d8c5e17496aefc94df493a60c42853"
+        },
+        {
+          "name": "D",
+          "sha256": "1fd3fd8ebee40596bc171c2efad2f226fa559fc1a8607f1b3b7fb57a28d202b7"
+        },
+        {
+          "name": "O",
+          "sha256": "c56c9b9e2edb285899dfa3979ba4f5aec91a4c8858e1fd7d548b885c46547ca8"
+        }
+      ],
+      "imports": [
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-DfPJ1QmD.js:eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "O": "PreviewPlacementProvider"
+      },
+      "contexts": [
+        "D"
+      ]
+    },
+    {
+      "target": "slack-logo.mjs",
+      "source": "ccc47c03f-CKf5zpck.js",
+      "sourceSha256": "831e49568ce8f296e4501a6f2f43740f0ac1e3e983e15ca51632afff52a4163b",
+      "sha256": "85ddec4d1980a03360aefa00d4d4c1b6b2aecf4560a0cffbfde6a3a867c65cc4",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "N",
+          "sha256": "cbf67ed2e4a73e84a23831582ee4570011b7529d7e3861ae990417807265e570"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "N": "SlackLogo"
+      }
+    },
+    {
+      "target": "plugin-connector.mjs",
+      "source": "shared-52-DGviI8xb.js",
+      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "sha256": "02473b4596b611e3677a6bccc17d37640dfc1d034dd7c80c9e4a65c694ba50a9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ha",
+          "sha256": "bf0aa9e8fb3e90b05a963528c3dc904e4d1bd6de39fe86b2dbfcc831b6152656"
+        },
+        {
+          "name": "Gs",
+          "sha256": "7856dabb6bfda104955ca7ecbb9d4ea3abb026db5576c87a8a42273bf5b399ae"
+        },
+        {
+          "name": "HV",
+          "sha256": "fc77097c4f9644001a37612ead887eb88434aabfd88abbd286b2ff92c438ec3d"
+        },
+        {
+          "name": "UV",
+          "sha256": "4f5e6c6c8e08e74da222b5acd77e8a702f219db50e7944cf29e7386f1888dc01"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ha": "parsePluginConnector",
+        "UV": "pluginDisplayName",
+        "Gs": "parseRepoSlug"
+      }
+    },
+    {
+      "target": "connector-icon-parts.mjs",
+      "source": "shared-7-B8UIMGDr.js",
+      "sourceSha256": "e5b37f61c326e1d291a559d936b7ace0dec38449778a3ccdc532182f4185a3e5",
+      "sha256": "3da3b01c79e51981975449ff8fb0c77141bbdd06837e9f0767f538ebe5ec4397",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "jT",
+          "sha256": "cfde43fc325451a3e6fb04a4a39b06aa03df2d0b67b0855153b5cfbad7f1cf79"
+        },
+        {
+          "name": "MT",
+          "sha256": "bb60b1fd2efe8f92d20be2c9c2ab0dcbe88f8c87924671c4fcc96f307b54377d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "x",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "I",
+          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
+          "name": "clsx",
+          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "kind": "view-tabs",
+          "original": "vendor-frame-DfPJ1QmD.js:ge"
+        }
+      ],
+      "exports": {
+        "MT": "ConnectorLetterIcon",
+        "jT": "ConnectorIconTile"
+      }
+    },
+    {
+      "target": "saved-output.mjs",
+      "source": "shared-130-DnUXVlYq.js",
+      "sourceSha256": "699331f0e4329cc5405e11fbb6eeba57b4715aefd2166a934e363d4acda2af8e",
+      "sha256": "7dfff0d7ba3f90e00b443fb55aded99c94703c71157eb0db6ecf6627c1316e86",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "NE",
+          "sha256": "0f3cb3d2346dcee1107497a19844272a041a69da76f20922402aa0b586b483cb"
+        },
+        {
+          "name": "FE",
+          "sha256": "0f55621a9ac5506f59c2b9ee15c69cb353f18b5ae93c19786eba5401f085dbd5"
+        },
+        {
+          "name": "Y",
+          "sha256": "13a718444ac3068d38932e5e051d2c1d5bdc89bff935b8e82da2e1454798170c"
+        },
+        {
+          "name": "nR",
+          "sha256": "2d0ff0ddf18da16b87eebe6184866bc61f487c150424f95c81956740d891747a"
+        },
+        {
+          "name": "rR",
+          "sha256": "0f3da49f3928f62f2239d2cffcff3942b12168321ac7814b7bffcee4a8401fac"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "rR": "savedConnectorOutput",
+        "FE": "humanizeIdentifier",
+        "NE": "stripPluginSuffix",
+        "Y": "forwardSlashes"
+      }
+    },
+    {
+      "target": "connector-name.mjs",
+      "source": "shared-78-D6VXYXaQ.js",
+      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "sha256": "15193cfd188c783ceaca68620e233bf0374d5b52d615a8f95d1f0c222f710d66",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "YD",
+          "sha256": "4e428983083c35fa20ccdc180b1317d5fb98527b92d83ec3e1720ef9f3a4ab15"
+        },
+        {
+          "name": "QD",
+          "sha256": "bbc9d7598455d93957b901567705d5df061cf3b10bbe50a92bf6aa72b15da25e"
+        },
+        {
+          "name": "RA",
+          "sha256": "14e1d5f417f6082af8393f8b078c19f0bc2acbb83c9572e3dfff67046ee8cd1f"
+        },
+        {
+          "name": "zA",
+          "sha256": "affee2c40265ad59c6c92719662d3f5a4d5fa8c98ae1faf9e3ef8d4d6e8af6d2"
+        },
+        {
+          "name": "BA",
+          "sha256": "790d2e9ef8f702ee2c0f1d69b95bde8ea130d8e8677bf0fdff3edbbaeac3d9db"
+        },
+        {
+          "name": "VA",
+          "sha256": "ab08c4d5c7bbe878119180db73736068ce25034dec4a98e35beb262d9ea09e1c"
+        },
+        {
+          "name": "Jj",
+          "sha256": "8195f7967b99a33190ef22466fb53fcda9b2b94f3f0117f8797cd700647118d4"
+        },
+        {
+          "name": "sN",
+          "sha256": "41b127e2dd66e1c30f061b3e271319126b504fa84de925b8d4b0d52a8941a535"
+        },
+        {
+          "name": "uN",
+          "sha256": "7af600acb01fcbd2f8c25957751198d9f8c8f95ba681a4a67c984f9af062481d"
+        },
+        {
+          "name": "fN",
+          "sha256": "24f126f40b6dddbfa7b0dd42efe6d583ccd509384d410309b126334f19749b63"
+        },
+        {
+          "name": "mN",
+          "sha256": "acd7f0dad4217820c4143c4879ab0c2626a373634d0453260fe2194235f04ab9"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "mN": "connectorDisplayName",
+        "YD": "isAgentsConnector",
+        "sN": "CLAUDE_IN_CHROME_NAME"
+      }
+    },
+    {
+      "target": "branch-name.mjs",
+      "source": "shared-11-BuQ3CK5I.js",
+      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "sha256": "82f4d4dd9b08dfa0b8c2195c299ad7064e59ece5e6f48cb387188ea058950df2",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ed",
+          "sha256": "714ab531250ecc34d5db383656b557129c732d215e2f6e2c209528a25e1873bb"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ed": "isDetachedBranch"
+      }
+    },
+    {
+      "target": "rail-timing.mjs",
+      "source": "c73f45bc3-CFrHin0p.js",
+      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "sha256": "cb1e4abd1d928a6a601f8e88535f3a4b052e3f8309409396bd20ab8819f4dc8c",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "gg",
+          "sha256": "dc00dbe96425e058bf312bf0f3a595a82ca031367ad5862c0b2f872a9afbdfc7"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "gg": "NAME_PENDING_GIVE_UP_MS"
+      }
+    },
+    {
+      "target": "rail-derive.mjs",
+      "source": "cf74bc599-D9NZWRyl.js",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "6c49d184ea96206fec89692f6fdddfe3c2016fbf7cf557b83fbc8676e10547f3",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "cE",
+          "sha256": "2eba12ff0a1b78c6119b3e6330cf0dd6ec43ca2cde4f86433371472528dafff2"
+        },
+        {
+          "name": "lE",
+          "sha256": "10e10ff6f7e033b0132c7f1299910eeef1aa9feb5f44aa75e46162e14e4a93c3"
+        },
+        {
+          "name": "uE",
+          "sha256": "723a5d7652ad98f04fc483ff633a9bddaf6a2ed6ad8d4f77f2b06725d2e311e3"
+        },
+        {
+          "name": "AE",
+          "sha256": "f944df1253de0ba714ba690a200adcb2a0003e079a573a5bc614b51a85399f3e"
+        },
+        {
+          "name": "jE",
+          "sha256": "804c949ad7c6c733c33d2c8c16c5b9f9ded1ed644d23440bfb02091feee77715"
+        },
+        {
+          "name": "ME",
+          "sha256": "5f39b1692a89c0a0c7015145275eadfafcc746716440fc1ed72041183c50bd02"
+        },
+        {
+          "name": "NE",
+          "sha256": "3f0c62f9bde056aa5898957e135bacd2d48aa983634bf41d5541e2f194010374"
+        },
+        {
+          "name": "PE",
+          "sha256": "5a5db15886d6e04cb50379b64d152c191c98c455ab15ae88a64592b91fe996e0"
+        },
+        {
+          "name": "FE",
+          "sha256": "75110d734cef68cad6e2ad5917395cd144d6cb50c00a8833bdb8d624d432d080"
+        },
+        {
+          "name": "IE",
+          "sha256": "09af99557287693856ec4f674ba6825c02dce824ed11874cb6f6606f544f212f"
+        },
+        {
+          "name": "LE",
+          "sha256": "2206d0ef5be633e927a9758171b222cbdd399988681f1a313f6c55a54d15ece4"
+        },
+        {
+          "name": "RE",
+          "sha256": "f1f4ef328274f206b0b373a2ddf997144906b6fdffa438edbdf0e478ecf9fba5"
+        },
+        {
+          "name": "zE",
+          "sha256": "93a6086c1a371e06d8c4e75255b0b74910c64b120c0906acf2ea2001b0f293df"
+        },
+        {
+          "name": "BE",
+          "sha256": "5b21130fc8bf649403a97bd2a9b68afbe3f8d83f004eec6ae597c35c62086217"
+        },
+        {
+          "name": "VE",
+          "sha256": "95652a55bb4683c99a5edfb0646f9ee4188c74501dd04a2a4632cd7fa9511847"
+        },
+        {
+          "name": "HE",
+          "sha256": "eb460d0dc888e357d6b2dcbc2f31f1940d52cb4509ff5bd21f2b8571a3087477"
+        },
+        {
+          "name": "UE",
+          "sha256": "8b42faf0baad4389c4e4f35d27bc0fd375235f7e7b464f3661b8a3ee91f0caa1"
+        },
+        {
+          "name": "WE",
+          "sha256": "ff729e34c2bfd72db46dfa9c47ca240b5acf206f530038db480ab1e781ce0b4e"
+        },
+        {
+          "name": "GE",
+          "sha256": "a563bd6f8188a00688c6197c8104f71d0396be2feb5ef6e6c6d8a119c6975be9"
+        },
+        {
+          "name": "KE",
+          "sha256": "3838b0c8cb5597777d7fa3b9dc49a67fa8ae9058da790141d6b31623f376e6fb"
+        },
+        {
+          "name": "qE",
+          "sha256": "df5ee57566e5211580ed496a95a8bfa2395fdf064ce3422e266a25aac36d1fa4"
+        },
+        {
+          "name": "JE",
+          "sha256": "878e788c69f747353d2f4d62057b57ff96c5f0b6f39818ee8273e1e8b1c9c7bc"
+        },
+        {
+          "name": "YE",
+          "sha256": "2caefc1db39f88bb29eb0f7c0da831ae4ad4ae85204a90b5ad87bb3fdda7987c"
+        },
+        {
+          "name": "XE",
+          "sha256": "107ee4b36c432f500792aedcae05df1252457df13732f69a66bf83b4e3977afe"
+        },
+        {
+          "name": "ZE",
+          "sha256": "ddf17024a4fa68c344bd5a64e2aeb4070a3f69f12f9c179077767faa4891494a"
+        },
+        {
+          "name": "QE",
+          "sha256": "7a7936ce0d26e0cc078aa384298b1a85988c369400ed1d5ce3e4561b5a90816f"
+        },
+        {
+          "name": "$E",
+          "sha256": "28ae573b1141e14392b93809ed3fefbad2a838afa2dcc69f8cf05f8089d1ee41"
+        },
+        {
+          "name": "eD",
+          "sha256": "85ce510b0425d6170f91b45d827f6ce15acf7ff8166d53fb19749c136f7772a8"
+        },
+        {
+          "name": "tD",
+          "sha256": "d2b7e695536fd39f9f1390a9969433091aa367b93f5b164860a8633edfa9426a"
+        },
+        {
+          "name": "nD",
+          "sha256": "e3dbaaa1b8d81849241152172760cbffdb0cf710fc3e5ab2ccdffc1b933831c6"
+        },
+        {
+          "name": "aD",
+          "sha256": "70e26f7398b6159c06b65932a5f3e4021ff6ba8b3595cd6463ed3d9d09529157"
+        },
+        {
+          "name": "sD",
+          "sha256": "455662304b21bbc6a67b2879cf9aab5f8450096904bb6075ba63789d8664170f"
+        },
+        {
+          "name": "vD",
+          "sha256": "93f297ae94e90fa20dce8ceb242e1a37c0e6e546cd6540aa76e4254156e5886a"
+        },
+        {
+          "name": "yD",
+          "sha256": "4fc350f586b4a9c18189071fd692c92600e205fc7e4c6e3fbc511f7b057faab7"
+        },
+        {
+          "name": "tO",
+          "sha256": "6847f595b9061a6ebbcf4f0630b88cad8d9da31ee202e1a51078331907675dc6"
+        },
+        {
+          "name": "rO",
+          "sha256": "3ef9f80c48181f9341cb55e696aace703d80cc8cd39e849c98b416eb3cb989be"
+        },
+        {
+          "name": "oO",
+          "sha256": "c3ec2bb579382fda93426e7dc2fb29515f6e822e85326e89743d6fca363e8ef2"
+        },
+        {
+          "name": "sO",
+          "sha256": "0fe9f277801f51b82a5fe75d038240b4d7df04dbfb2b04f83a7cf63ef3dce948"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ia",
+          "from": "../code-current/sidebar-details-model.mjs",
+          "name": "sidebarEnvironmentPlace",
+          "via": "shared-20-B7UqYfsi.js:Kn",
+          "kind": "code-current",
+          "original": "shared-20-B7UqYfsi.js:tT"
+        },
+        {
+          "local": "Ut",
+          "from": "./plugin-connector.mjs",
+          "name": "parsePluginConnector",
+          "via": "shared-52-DGviI8xb.js:$_",
+          "kind": "generated",
+          "original": "shared-52-DGviI8xb.js:Ha"
+        },
+        {
+          "local": "Zi",
+          "from": "./saved-output.mjs",
+          "name": "humanizeIdentifier",
+          "via": "shared-130-DnUXVlYq.js:xf",
+          "kind": "generated",
+          "original": "shared-130-DnUXVlYq.js:FE"
+        },
+        {
+          "local": "rn",
+          "from": "./plugin-connector.mjs",
+          "name": "pluginDisplayName",
+          "via": "shared-52-DGviI8xb.js:f",
+          "kind": "generated",
+          "original": "shared-52-DGviI8xb.js:UV"
+        },
+        {
+          "local": "Ji",
+          "from": "./saved-output.mjs",
+          "name": "stripPluginSuffix",
+          "via": "shared-130-DnUXVlYq.js:gf",
+          "kind": "generated",
+          "original": "shared-130-DnUXVlYq.js:NE"
+        },
+        {
+          "local": "xt",
+          "from": "./connector-name.mjs",
+          "name": "connectorDisplayName",
+          "via": "shared-78-D6VXYXaQ.js:Td",
+          "kind": "generated",
+          "original": "shared-78-D6VXYXaQ.js:mN"
+        },
+        {
+          "local": "no",
+          "from": "./branch-name.mjs",
+          "name": "isDetachedBranch",
+          "via": "shared-11-BuQ3CK5I.js:li",
+          "kind": "generated",
+          "original": "shared-11-BuQ3CK5I.js:Ed"
+        },
+        {
+          "local": "qt",
+          "from": "./plugin-connector.mjs",
+          "name": "parseRepoSlug",
+          "via": "shared-52-DGviI8xb.js:Ig",
+          "kind": "generated",
+          "original": "shared-52-DGviI8xb.js:Gs"
+        },
+        {
+          "local": "kn",
+          "from": "../session-rail-kit/lazy-preload.mjs",
+          "name": "pickFields",
+          "via": "shared-104-Cqo2-vQh.js:b",
+          "kind": "session-rail-kit",
+          "original": "shared-104-Cqo2-vQh.js:pz"
+        }
+      ],
+      "exports": {
+        "RE": "railFolder",
+        "LE": "repoSlugName",
+        "$E": "pathLeaf",
+        "ME": "railExtraFolders",
+        "IE": "folderTreeCwd",
+        "jE": "otherRepos",
+        "VE": "knownBranch",
+        "HE": "railBranch",
+        "XE": "railWorktree",
+        "YE": "CLAUDE_WORKTREE_PATH",
+        "ZE": "lazyWorktreePending",
+        "QE": "lazyWorktreeState",
+        "GE": "railEnvironment",
+        "KE": "environmentLabel",
+        "UE": "environmentKind",
+        "WE": "isCloudEnvironment",
+        "PE": "connectorRows",
+        "NE": "plainConnectorLabel",
+        "AE": "environmentConnection",
+        "tD": "isSideSessionNotesFolder",
+        "zE": "remoteControlState",
+        "nD": "railPlanSteps",
+        "qE": "hasEnvironmentCard",
+        "JE": "railHasContent",
+        "vD": "environmentSummary",
+        "yD": "doneStepCount",
+        "uE": "connectorLabel",
+        "lE": "humanizedSlug",
+        "BE": "RAIL_PENDING_GIVE_UP_MS",
+        "sO": "checkoutInfo",
+        "oO": "NO_CHECKOUT_INFO",
+        "aD": "RAIL_SLOT_CLASSES",
+        "sD": "NO_CHECKOUTS",
+        "rO": "RAIL_SESSION_META",
+        "tO": "COMPOSER_MENU_SECTIONS"
+      }
+    },
+    {
+      "target": "rail-hooks.mjs",
+      "source": "cf74bc599-D9NZWRyl.js",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "20769e95cfafe5f416a8697d55e63dad1810e577ea9f5ef3fcc9cb888d0d1c3e",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "nO",
+          "sha256": "71f961a547d6bd16ef606381881f111e85e6788fcc8969a092fa3cf8fb44daf2"
+        },
+        {
+          "name": "cO",
+          "sha256": "626c7fe1e55740a061c0532c01c3519645f7f0b5e7c200bac20ae6db02006a64"
+        },
+        {
+          "name": "lO",
+          "sha256": "2e745a774acde74c22759706bf004b5dc3d0c187806ae95b367ff2d692d38d63"
+        }
+      ],
+      "imports": [
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "kind": "react"
+        },
+        {
+          "local": "Ti",
+          "from": "../files-changes/file-browser-query.mjs",
+          "name": "useQuery",
+          "via": "vendor-query-Dqcf4jOo.js:s",
+          "kind": "files-changes",
+          "original": "vendor-query-Dqcf4jOo.js:tt"
+        },
+        {
+          "local": "$a",
+          "from": "../files-changes/git-info-query.mjs",
+          "name": "gitInfoQuery",
+          "via": "shared-11-BuQ3CK5I.js:Zr",
+          "kind": "files-changes",
+          "original": "shared-11-BuQ3CK5I.js:zd"
+        },
+        {
+          "local": "sO",
+          "from": "./rail-derive.mjs",
+          "name": "checkoutInfo",
+          "via": "cf74bc599-D9NZWRyl.js:sO",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:sO"
+        },
+        {
+          "local": "oo",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useLiveCheckoutBranch",
+          "via": "shared-11-BuQ3CK5I.js:si",
+          "kind": "adapter",
+          "original": "shared-11-BuQ3CK5I.js:Fd"
+        },
+        {
+          "local": "f",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "oO",
+          "from": "./rail-derive.mjs",
+          "name": "NO_CHECKOUT_INFO",
+          "via": "cf74bc599-D9NZWRyl.js:oO",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:oO"
+        },
+        {
+          "local": "Q",
+          "from": "../session-rail-kit/react-store.mjs",
+          "name": "useStore",
+          "via": "vendor-all-0-CTKbbUUg.js:L",
+          "kind": "session-rail-kit",
+          "original": "vendor-all-0-CTKbbUUg.js:b"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "ki",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RailFlatContext",
+          "via": "shared-18-D4XxL6Tg.js:Cd",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:py"
+        },
+        {
+          "local": "tO",
+          "from": "./rail-derive.mjs",
+          "name": "COMPOSER_MENU_SECTIONS",
+          "via": "cf74bc599-D9NZWRyl.js:tO",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:tO"
+        },
+        {
+          "local": "Pi",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "releaseFlatComposerMenu",
+          "via": "shared-18-D4XxL6Tg.js:Kd",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:Iy"
+        },
+        {
+          "local": "Tl",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "railSectionsStore",
+          "via": "c227f4d5e-Ba-r--Rl.js:N",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:VZ"
+        }
+      ],
+      "exports": {
+        "lO": "useRailPendingHold",
+        "cO": "useCheckoutInfo",
+        "nO": "useComposerMenuOpensRailSection"
+      }
+    },
+    {
+      "target": "rail-view.mjs",
+      "source": "cf74bc599-D9NZWRyl.js",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "393486d56b5e968b391b0b5e1993594a9520e67b6fd7a7433bb4cf4bfdfe9e1a",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "dE",
+          "sha256": "76026faf394181d98538f8b510bac0a4f391d193a3c98856f1b09c2d05ca2d52"
+        },
+        {
+          "name": "fE",
+          "sha256": "d85882523df601cdb3370ad25d481accf5a3cc549f85164463e2d50a5c20abcd"
+        },
+        {
+          "name": "pE",
+          "sha256": "720dc4033f9e5d12e06f601262c8d1a808320463b1acfe61c97514d14a69436f"
+        },
+        {
+          "name": "hE",
+          "sha256": "d1af1b53908ceff3c7bae3c843cb3761767f1bbe6c68f6a3064792649af382f0"
+        },
+        {
+          "name": "gE",
+          "sha256": "49d249c77b1c36dc257d6bf1fd17ccf16e90b1c3015c27c80be2b4deb8792244"
+        },
+        {
+          "name": "_E",
+          "sha256": "fa61d1c60e7f0f9287204120b1533b630d84c6799ef67a1aaf46f6be8efe4b34"
+        },
+        {
+          "name": "vE",
+          "sha256": "dc3628076a0c438a16a99bbaef68553f4c4abd313315b7fe27a3066488481277"
+        },
+        {
+          "name": "bE",
+          "sha256": "c9649188e1e294996348e4a73a05c31010cedb4e21f0869bddaf9a0e2dac5d9b"
+        },
+        {
+          "name": "xE",
+          "sha256": "e8e6f17d09f05a10dc0562e49e10c25219aeda325e34cb810e986324df3f5f46"
+        },
+        {
+          "name": "SE",
+          "sha256": "b458196908a3bef9f865c086ba0dc2dddf975fc18a0dd94217377fceaa392fd0"
+        },
+        {
+          "name": "CE",
+          "sha256": "a7d47a30f73376fba19bf71629b2fd682069ec992951f4d4894e14590b02207f"
+        },
+        {
+          "name": "wE",
+          "sha256": "4aa9f6f1a132d0ebad4e7d29f403833695e3dde172b613ec9e5d353aaa94fc80"
+        },
+        {
+          "name": "TE",
+          "sha256": "607ff3fddcdd125288d97e41c22c3a8af99449ec1835c46c3a7156f983bf400a"
+        },
+        {
+          "name": "EE",
+          "sha256": "d1ede71c2d1e71313d9d6b7aecfd9ae977832458cdba2d9a0a161af6a7f8a81c"
+        },
+        {
+          "name": "DE",
+          "sha256": "10219ba8afb6cadd03641c87ffe67a35c7635a80e7bccaf178fafe5c69bd968f"
+        },
+        {
+          "name": "rD",
+          "sha256": "41ddbe40cc02dd78518dbb88d3d0ba9a832602c1c6566ab429bc6a66b55570ce"
+        },
+        {
+          "name": "iD",
+          "sha256": "32830076bce4b0a2a39d9fda18f77836907a9d3622fb15650b6e8f75f2f0ae69"
+        },
+        {
+          "name": "oD",
+          "sha256": "26b833a20d63b1b03d1376451ebbf6d508e1344a96fa172e1bc1a48d3c174e28"
+        },
+        {
+          "name": "cD",
+          "sha256": "4e83d52360211d3661869014d76cc3501a7f2c1de1b700e741ba6b69cdb47158"
+        },
+        {
+          "name": "lD",
+          "sha256": "1bdc1109390a459f57c331df9f70961c4c5348744910e2efdcb3dd54defac4c7"
+        },
+        {
+          "name": "uD",
+          "sha256": "79a667694c194698286a9cd73eba10d4daa6539c9329d13e37973d5e2334307d"
+        },
+        {
+          "name": "mD",
+          "sha256": "34a4f9bf5625bc027652072d632ae6978abf3b7a3bd896145276287fb9c3a937"
+        },
+        {
+          "name": "hD",
+          "sha256": "4f0ca5a7f9ab8ca19ea44b27701d62a4d2304116ab5b5d5c8a21a2ef608bede2"
+        },
+        {
+          "name": "gD",
+          "sha256": "90ac888324d4af7786cd48e610b91c2b8061c2673d19686b5f12bba889e0e090"
+        },
+        {
+          "name": "_D",
+          "sha256": "124350dd4a6c424002ea1a578d02bda1f349634bac3e6541d01b638f7deaa913"
+        },
+        {
+          "name": "bD",
+          "sha256": "e808fb7b07dc6ac56fec0d165d580b36d00b425c5c8ffac10a87148a008dc47e"
+        },
+        {
+          "name": "xD",
+          "sha256": "58a742f850ba4db77415d957b4fc1088b7bf7b26b9da85c8d12e6522162d3b95"
+        },
+        {
+          "name": "SD",
+          "sha256": "4f3c9a7f8f778c51cd3f3182bcaad7bbb6c6022ee8c42983c21596fa59d9885b"
+        },
+        {
+          "name": "TD",
+          "sha256": "fee53f7edb2770579d14a6c18f5d25741d4eed9bca1d112ef381af475b8d4ec2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "Zu",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "DEFAULT_RAIL_SESSION_KEY",
+          "via": "c227f4d5e-Ba-r--Rl.js:w",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:AZ"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "rl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailSessionKeyContext",
+          "via": "c227f4d5e-Ba-r--Rl.js:C",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:jZ"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "jl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "useRailSessionKey",
+          "via": "c227f4d5e-Ba-r--Rl.js:P",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:MZ"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "ki",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RailFlatContext",
+          "via": "shared-18-D4XxL6Tg.js:Cd",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:py"
+        },
+        {
+          "local": "Rl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailWorktreeMark",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ra",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:dR"
+        },
+        {
+          "local": "Mr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-BfjMqbuN.js:kc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Sm"
+        },
+        {
+          "local": "Ml",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailMarkedRow",
+          "via": "c227f4d5e-Ba-r--Rl.js:Pa",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:uR"
+        },
+        {
+          "local": "Hl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRow",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ta",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:sR"
+        },
+        {
+          "local": "Lr",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "SkeletonGroup",
+          "via": "shared-frame-BfjMqbuN.js:tl",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:nd"
+        },
+        {
+          "local": "mr",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "Skeleton",
+          "via": "shared-frame-BfjMqbuN.js:$c",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:dd"
+        },
+        {
+          "local": "sl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailInteractiveRow",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ea",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:lR"
+        },
+        {
+          "local": "n_",
+          "from": "../session-rail-kit/branch-chip.mjs",
+          "name": "BranchChip",
+          "via": "c0a531389-TdrucM3-.js:n",
+          "kind": "session-rail-kit",
+          "original": "c0a531389-TdrucM3-.js:A"
+        },
+        {
+          "local": "bl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailNamedRow",
+          "via": "c227f4d5e-Ba-r--Rl.js:La",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:DR"
+        },
+        {
+          "local": "X",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "ED",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "RemoteControlRow",
+          "via": "cf74bc599-D9NZWRyl.js:ED",
+          "kind": "adapter",
+          "original": "cf74bc599-D9NZWRyl.js:ED"
+        },
+        {
+          "local": "f",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "sD",
+          "from": "./rail-derive.mjs",
+          "name": "NO_CHECKOUTS",
+          "via": "cf74bc599-D9NZWRyl.js:sD",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:sD"
+        },
+        {
+          "local": "N",
+          "from": "./stable-array.mjs",
+          "name": "useStableArray",
+          "via": "shared-25-DP8p7i1Z.js:Nt",
+          "kind": "generated",
+          "original": "shared-25-DP8p7i1Z.js:zU"
+        },
+        {
+          "local": "qu",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "useRailCardPresence",
+          "via": "c227f4d5e-Ba-r--Rl.js:ua",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:jR"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "zg",
+          "from": "./region-reading-order.mjs",
+          "name": "RegionReadingOrderContext",
+          "via": "c4db265df-CAC3hDZP.js:i",
+          "kind": "generated",
+          "original": "c4db265df-CAC3hDZP.js:ft"
+        },
+        {
+          "local": "JE",
+          "from": "./rail-derive.mjs",
+          "name": "railHasContent",
+          "via": "cf74bc599-D9NZWRyl.js:JE",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:JE"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "tl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "railAsideClickGuard",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ba",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:GL"
+        },
+        {
+          "local": "Vr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-BfjMqbuN.js:xd",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:X"
+        },
+        {
+          "local": "Mi",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RAIL_WIDTH_CLASS",
+          "via": "shared-18-D4XxL6Tg.js:Hd",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:dy"
+        },
+        {
+          "local": "cn",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "RegionEntry",
+          "via": "shared-4-CJsHhp5n.js:Z",
+          "kind": "adapter",
+          "original": "shared-4-CJsHhp5n.js:NE"
+        },
+        {
+          "local": "Ui",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RAIL_STACK_CLASS",
+          "via": "shared-18-D4XxL6Tg.js:zd",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:hy"
+        },
+        {
+          "local": "Pr",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useLayerOwnerWindow",
+          "via": "shared-frame-BfjMqbuN.js:mu",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:Ya"
+        },
+        {
+          "local": "Tl",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "railSectionsStore",
+          "via": "c227f4d5e-Ba-r--Rl.js:N",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:VZ"
+        },
+        {
+          "local": "Qc",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "railSectionOrder",
+          "via": "c227f4d5e-Ba-r--Rl.js:A",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:JZ"
+        },
+        {
+          "local": "Eu",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "railSectionExcluded",
+          "via": "c227f4d5e-Ba-r--Rl.js:k",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:DZ"
+        },
+        {
+          "local": "al",
+          "from": "../session-rail-kit/rail-sections-store.mjs",
+          "name": "railSectionHidden",
+          "via": "c227f4d5e-Ba-r--Rl.js:D",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:GZ"
+        },
+        {
+          "local": "F_",
+          "from": "./dnd-kit.mjs",
+          "name": "useSensors",
+          "via": "c09f6b4e5-DErbwtLQ.js:v",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:fe"
+        },
+        {
+          "local": "T_",
+          "from": "./dnd-kit.mjs",
+          "name": "useSensor",
+          "via": "c09f6b4e5-DErbwtLQ.js:_",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:de"
+        },
+        {
+          "local": "D_",
+          "from": "./dnd-kit.mjs",
+          "name": "PointerSensor",
+          "via": "c09f6b4e5-DErbwtLQ.js:d",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:ct"
+        },
+        {
+          "local": "k_",
+          "from": "./dnd-kit.mjs",
+          "name": "KeyboardSensor",
+          "via": "c09f6b4e5-DErbwtLQ.js:l",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:rt"
+        },
+        {
+          "local": "O_",
+          "from": "./dnd-kit.mjs",
+          "name": "sortableKeyboardCoordinates",
+          "via": "c09f6b4e5-DErbwtLQ.js:i",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:$n"
+        },
+        {
+          "local": "$h",
+          "from": "../session-rail-kit/rail-card.mjs",
+          "name": "railSectionTitle",
+          "via": "c73f45bc3-CFrHin0p.js:h",
+          "kind": "session-rail-kit",
+          "original": "c73f45bc3-CFrHin0p.js:Hv"
+        },
+        {
+          "local": "I_",
+          "from": "./dnd-kit.mjs",
+          "name": "isKeyboardEvent",
+          "via": "c09f6b4e5-DErbwtLQ.js:x",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:N"
+        },
+        {
+          "local": "at",
+          "from": "./drag-click-guard.mjs",
+          "name": "swallowNextClick",
+          "via": "shared-19-CkPOiIKm.js:Gi",
+          "kind": "generated",
+          "original": "shared-19-CkPOiIKm.js:u$"
+        },
+        {
+          "local": "A_",
+          "from": "./dnd-kit.mjs",
+          "name": "arrayMove",
+          "via": "c09f6b4e5-DErbwtLQ.js:n",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:Dn"
+        },
+        {
+          "local": "N_",
+          "from": "./dnd-kit.mjs",
+          "name": "DndContext",
+          "via": "c09f6b4e5-DErbwtLQ.js:s",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:on"
+        },
+        {
+          "local": "M_",
+          "from": "./dnd-kit.mjs",
+          "name": "closestCenter",
+          "via": "c09f6b4e5-DErbwtLQ.js:p",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:_e"
+        },
+        {
+          "local": "P_",
+          "from": "./dnd-kit.mjs",
+          "name": "SortableContext",
+          "via": "c09f6b4e5-DErbwtLQ.js:t",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:Vn"
+        },
+        {
+          "local": "j_",
+          "from": "./dnd-kit.mjs",
+          "name": "verticalListSortingStrategy",
+          "via": "c09f6b4e5-DErbwtLQ.js:o",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:Ln"
+        },
+        {
+          "local": "E_",
+          "from": "./dnd-kit.mjs",
+          "name": "useSortable",
+          "via": "c09f6b4e5-DErbwtLQ.js:a",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:Yn"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "O",
+          "from": "../code-current/owner-window.mjs",
+          "name": "ownerWindow",
+          "via": "shared-25-DP8p7i1Z.js:Ff",
+          "kind": "code-current",
+          "original": "shared-25-DP8p7i1Z.js:up"
+        },
+        {
+          "local": "Sr",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useLayerAwareZIndex",
+          "via": "shared-frame-BfjMqbuN.js:Uc",
+          "kind": "adapter",
+          "original": "shared-frame-BfjMqbuN.js:Jd"
+        },
+        {
+          "local": "L_",
+          "from": "./dnd-kit.mjs",
+          "name": "CSS",
+          "via": "c09f6b4e5-DErbwtLQ.js:y",
+          "kind": "generated",
+          "original": "c09f6b4e5-DErbwtLQ.js:P"
+        },
+        {
+          "local": "Ii",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RAIL_SLOT_DIVIDER_CLASS",
+          "via": "shared-18-D4XxL6Tg.js:Od",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:vy"
+        },
+        {
+          "local": "Zh",
+          "from": "../session-rail-kit/rail-card.mjs",
+          "name": "RailCardGripContext",
+          "via": "c73f45bc3-CFrHin0p.js:g",
+          "kind": "session-rail-kit",
+          "original": "c73f45bc3-CFrHin0p.js:zv"
+        },
+        {
+          "local": "aD",
+          "from": "./rail-derive.mjs",
+          "name": "RAIL_SLOT_CLASSES",
+          "via": "cf74bc599-D9NZWRyl.js:aD",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:aD"
+        },
+        {
+          "local": "qE",
+          "from": "./rail-derive.mjs",
+          "name": "hasEnvironmentCard",
+          "via": "cf74bc599-D9NZWRyl.js:qE",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:qE"
+        },
+        {
+          "local": "ag",
+          "from": "../session-rail-kit/rail-card.mjs",
+          "name": "RailCard",
+          "via": "c73f45bc3-CFrHin0p.js:m",
+          "kind": "session-rail-kit",
+          "original": "c73f45bc3-CFrHin0p.js:Xv"
+        },
+        {
+          "local": "vD",
+          "from": "./rail-derive.mjs",
+          "name": "environmentSummary",
+          "via": "cf74bc599-D9NZWRyl.js:vD",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:vD"
+        },
+        {
+          "local": "Lp",
+          "from": "./slack-logo.mjs",
+          "name": "SlackLogo",
+          "via": "ccc47c03f-CKf5zpck.js:n",
+          "kind": "generated",
+          "original": "ccc47c03f-CKf5zpck.js:N"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ba",
+          "kind": "react"
+        },
+        {
+          "local": "Cr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTextLink",
+          "via": "shared-frame-BfjMqbuN.js:Xc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Cd"
+        },
+        {
+          "local": "kr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsButton",
+          "via": "shared-frame-BfjMqbuN.js:cl",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:$l"
+        },
+        {
+          "local": "ut",
+          "from": "./drag-click-guard.mjs",
+          "name": "homeRelativeParent",
+          "via": "shared-19-CkPOiIKm.js:Y",
+          "kind": "generated",
+          "original": "shared-19-CkPOiIKm.js:P7"
+        },
+        {
+          "local": "Su",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRowButton",
+          "via": "c227f4d5e-Ba-r--Rl.js:ja",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:OR"
+        },
+        {
+          "local": "vu",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RAIL_ROW_BUTTON_CLASS",
+          "via": "c227f4d5e-Ba-r--Rl.js:ga",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:BL"
+        },
+        {
+          "local": "Sl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRowIcon",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ma",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:oR"
+        },
+        {
+          "local": "Qu",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailFolderRow",
+          "via": "c227f4d5e-Ba-r--Rl.js:wa",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:fR"
+        },
+        {
+          "local": "kl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRowSeparator",
+          "via": "c227f4d5e-Ba-r--Rl.js:Oa",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:tR"
+        },
+        {
+          "local": "xr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTooltip",
+          "via": "shared-frame-BfjMqbuN.js:Oc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Zp"
+        },
+        {
+          "local": "Mp",
+          "from": "../files-changes/path-segments.mjs",
+          "name": "PathSegments",
+          "via": "c784da984-B4E9BLV6.js:n",
+          "kind": "files-changes",
+          "original": "c784da984-B4E9BLV6.js:d"
+        },
+        {
+          "local": "Jo",
+          "from": "./repo-name-chip.mjs",
+          "name": "RepoNameChip",
+          "via": "c96d752d0-BOCqU7c2.js:Er",
+          "kind": "generated",
+          "original": "c96d752d0-BOCqU7c2.js:Yz"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-DfPJ1QmD.js:Ja",
+          "kind": "react"
+        },
+        {
+          "local": "CD",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "GoalCardBody",
+          "via": "cf74bc599-D9NZWRyl.js:CD",
+          "kind": "adapter",
+          "original": "cf74bc599-D9NZWRyl.js:CD"
+        },
+        {
+          "local": "Gl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "railSettingsRollup",
+          "via": "c227f4d5e-Ba-r--Rl.js:Va",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:yR"
+        },
+        {
+          "local": "_u",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailLimitedList",
+          "via": "c227f4d5e-Ba-r--Rl.js:fa",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:QL"
+        },
+        {
+          "local": "Yu",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RAIL_ICON_BOX_CLASS",
+          "via": "c227f4d5e-Ba-r--Rl.js:va",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:aR"
+        },
+        {
+          "local": "Ra",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "ConnectorIcon",
+          "via": "shared-7-B8UIMGDr.js:cr",
+          "kind": "adapter",
+          "original": "shared-7-B8UIMGDr.js:RT"
+        },
+        {
+          "local": "El",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRowText",
+          "via": "c227f4d5e-Ba-r--Rl.js:Na",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:iR"
+        },
+        {
+          "local": "yD",
+          "from": "./rail-derive.mjs",
+          "name": "doneStepCount",
+          "via": "cf74bc599-D9NZWRyl.js:yD",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:yD"
+        },
+        {
+          "local": "pD",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "ProgressCardBody",
+          "via": "cf74bc599-D9NZWRyl.js:pD",
+          "kind": "adapter",
+          "original": "cf74bc599-D9NZWRyl.js:pD"
+        },
+        {
+          "local": "Fp",
+          "from": "./preview-placement.mjs",
+          "name": "PreviewPlacementProvider",
+          "via": "c5304ebdb-BdWv-4Wb.js:a",
+          "kind": "generated",
+          "original": "c5304ebdb-BdWv-4Wb.js:O"
+        },
+        {
+          "local": "mE",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "ArtifactOutputRow",
+          "via": "cf74bc599-D9NZWRyl.js:mE",
+          "kind": "adapter",
+          "original": "cf74bc599-D9NZWRyl.js:mE"
+        },
+        {
+          "local": "D",
+          "from": "./stable-array.mjs",
+          "name": "displayPath",
+          "via": "shared-25-DP8p7i1Z.js:Et",
+          "kind": "generated",
+          "original": "shared-25-DP8p7i1Z.js:$U"
+        },
+        {
+          "local": "Xi",
+          "from": "../code-current/file-output-paths.mjs",
+          "name": "outputBasename",
+          "via": "shared-130-DnUXVlYq.js:oo",
+          "kind": "code-current",
+          "original": "shared-130-DnUXVlYq.js:SL"
+        },
+        {
+          "local": "qi",
+          "from": "./saved-output.mjs",
+          "name": "savedConnectorOutput",
+          "via": "shared-130-DnUXVlYq.js:Xa",
+          "kind": "generated",
+          "original": "shared-130-DnUXVlYq.js:rR"
+        },
+        {
+          "local": "uE",
+          "from": "./rail-derive.mjs",
+          "name": "connectorLabel",
+          "via": "cf74bc599-D9NZWRyl.js:uE",
+          "kind": "generated",
+          "original": "cf74bc599-D9NZWRyl.js:uE"
+        },
+        {
+          "local": "Ba",
+          "from": "../files-changes/file-kind-icon-name.mjs",
+          "name": "fileKindIconName",
+          "via": "shared-9-D7uuiUv7.js:Y",
+          "kind": "files-changes",
+          "original": "shared-9-D7uuiUv7.js:cg"
+        },
+        {
+          "local": "_f",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useFileIconSetEnabled",
+          "via": "c280f9bbb-Dw5U-PIG.js:n",
+          "kind": "adapter",
+          "original": "c280f9bbb-Dw5U-PIG.js:L"
+        },
+        {
+          "local": "ln",
+          "from": "../view-tabs/shared-4-CJsHhp5n.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-CJsHhp5n.js:co",
+          "kind": "view-tabs",
+          "original": "shared-4-CJsHhp5n.js:jf"
+        },
+        {
+          "local": "fa",
+          "from": "../session-rail-kit/rail-shown-store.mjs",
+          "name": "PANELS_ICON_SIZE",
+          "via": "shared-20-B7UqYfsi.js:_o",
+          "kind": "session-rail-kit",
+          "original": "shared-20-B7UqYfsi.js:Fm"
+        },
+        {
+          "local": "vf",
+          "from": "../files-changes/file-type-icon.mjs",
+          "name": "FileTypeIcon",
+          "via": "c280f9bbb-Dw5U-PIG.js:t",
+          "kind": "files-changes",
+          "original": "c280f9bbb-Dw5U-PIG.js:B"
+        },
+        {
+          "local": "Ap",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "SessionFileRef",
+          "via": "c856385e2-DVsjb2QL.js:p",
+          "kind": "adapter",
+          "original": "c856385e2-DVsjb2QL.js:In"
+        },
+        {
+          "local": "ou",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RAIL_ROW_CLASS",
+          "via": "c227f4d5e-Ba-r--Rl.js:_a",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:FL"
+        },
+        {
+          "local": "mg",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useScratchCopyOf",
+          "via": "c73f45bc3-CFrHin0p.js:y",
+          "kind": "adapter",
+          "original": "c73f45bc3-CFrHin0p.js:Sv"
+        },
+        {
+          "local": "yE",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useSessionOutputPaths",
+          "via": "cf74bc599-D9NZWRyl.js:yE",
+          "kind": "adapter",
+          "original": "cf74bc599-D9NZWRyl.js:yE"
+        },
+        {
+          "local": "sE",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useGoneOutputPaths",
+          "via": "cf74bc599-D9NZWRyl.js:sE",
+          "kind": "adapter",
+          "original": "cf74bc599-D9NZWRyl.js:sE"
+        },
+        {
+          "local": "Wo",
+          "from": "./pr-count-context.mjs",
+          "name": "RailPrCountContext",
+          "via": "c96d752d0-BOCqU7c2.js:Dr",
+          "kind": "generated",
+          "original": "c96d752d0-BOCqU7c2.js:qz"
+        },
+        {
+          "local": "i_",
+          "from": "../session-rail-kit/branch-chip.mjs",
+          "name": "BranchChipFaceContext",
+          "via": "c0a531389-TdrucM3-.js:t",
+          "kind": "session-rail-kit",
+          "original": "c0a531389-TdrucM3-.js:D"
+        },
+        {
+          "local": "r_",
+          "from": "../session-rail-kit/branch-chip.mjs",
+          "name": "ChangesRowLayoutContext",
+          "via": "c0a531389-TdrucM3-.js:r",
+          "kind": "session-rail-kit",
+          "original": "c0a531389-TdrucM3-.js:O"
+        }
+      ],
+      "exports": {
+        "iD": "SessionRail",
+        "rD": "SessionRailAside",
+        "DE": "RailCardStack",
+        "wE": "RailCardSlot",
+        "gD": "RailFolderRows",
+        "_D": "RailExtraFolderBranch",
+        "hD": "RailPathTail",
+        "xD": "RailEnvironmentStatus",
+        "bD": "environmentDetails",
+        "lD": "RailConnectorsCard",
+        "uD": "RailConnectorIcon",
+        "cD": "connectorStateAction",
+        "TD": "RailSkeleton",
+        "xE": "RailOutputsCard",
+        "bE": "RailSessionOutputs",
+        "_E": "RailOutputsList",
+        "gE": "RailOutputFileRow",
+        "hE": "RailOutputFileIcon"
+      }
+    },
+    {
+      "target": "environment-target.mjs",
+      "source": "cd0cf5b5e-BajR1nyG.js",
+      "sourceSha256": "7fd0d4ae4fbbadc79a74e6b4e13e4bf5d309d9db7948b49ac92e95f67d9c6e20",
+      "sha256": "fb9fc66e73452f6884042e430afe5963d01cdb32c6a812c9798839dc23cded80",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Ce",
+          "sha256": "4a1aeeb997acc1b1442e9eedbcbf0c476d9ddcc15f475315eee3103594abe441"
+        },
+        {
+          "name": "p",
+          "sha256": "8b53711f01996e3422d610c427d94db6bd7bfcb4fb3e5d0b1eb2d376de2c260f"
+        },
+        {
+          "name": "Fe",
+          "sha256": "068ee6b8edb51028f630242da0a16959431c6be420ba8e862926dd31fa560546"
+        }
+      ],
+      "imports": [
+        {
+          "local": "m",
+          "from": "../../../electron/generated/environment-presets.mjs",
+          "name": "sameEnvironmentTarget",
+          "via": "cd0cf5b5e-BajR1nyG.js:m",
+          "kind": "code-current",
+          "original": "cd0cf5b5e-BajR1nyG.js:m"
+        }
+      ],
+      "exports": {
+        "p": "sameStoredEnvironmentTarget",
+        "Fe": "environmentModelSettings"
+      }
+    },
+    {
+      "target": "environment-target-key.mjs",
+      "source": "shared-20-B7UqYfsi.js",
+      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "sha256": "777005133e72d741c59ebcb40030e2c12723ca0e57739ee026767d57e54340e8",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Wk",
+          "sha256": "004a694eb5cf9909e46c07309c0ceffa29cf064a98f050dea9bb372346e20807"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Wk": "environmentTargetKey"
+      }
+    },
+    {
+      "target": "ssh-host-key.mjs",
+      "source": "shared-28-DcgD7xXH.js",
+      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "sha256": "8266bb0a55c6ac5ec2ac20395d70d35f5be140f52fd1cd8aa6b46f9c469570b5",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "ah",
+          "sha256": "60da5749b4c0df1bebd4e26da90c8b196c7d9886aefe7a902c388293c9b53af1"
+        },
+        {
+          "name": "oh",
+          "sha256": "55f5cb581156a6de78709fc7cd621dd464f05fd72cce140439922fb4b2ceb571"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "oh": "sshHostKey"
+      }
+    },
+    {
+      "target": "recent-target-settings.mjs",
+      "source": "cead7e0c5-D6nt0a11.js",
+      "sourceSha256": "fe61ac0e0ba777573219e1dac823fcf8dceed2c75f27e79c41e23485017b5598",
+      "sha256": "f14d65b73b37d564ce82e12b741291897563fa57a08a6b44ad75a058859d7566",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "c",
+          "sha256": "f49f58c09c7787acbf6f6cabef3d342ecb4ae11b27e040d75f4a48657271afc7"
+        },
+        {
+          "name": "l",
+          "sha256": "dd73df402ac260704765f22e438058d7c8ff7cc6ec44744b3477ccc2b52d0e57"
+        },
+        {
+          "name": "f",
+          "sha256": "1509245f5a1a881775c00826a164b5e26f1328c45d481e0181792bbdc6d4e074"
+        },
+        {
+          "name": "p",
+          "sha256": "52097200e8396d38b69b639f8f1177dfbbc5fbb4d807a381cd98378c1237e946"
+        },
+        {
+          "name": "b",
+          "sha256": "55cd810f14052076b2636359fecca0e82351ee2e7d0837cedbb2aeb2e32e8909"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "./environment-target-key.mjs",
+          "name": "environmentTargetKey",
+          "via": "shared-20-B7UqYfsi.js:E",
+          "kind": "generated",
+          "original": "shared-20-B7UqYfsi.js:Wk"
+        },
+        {
+          "local": "r",
+          "from": "./ssh-host-key.mjs",
+          "name": "sshHostKey",
+          "via": "shared-28-DcgD7xXH.js:fo",
+          "kind": "generated",
+          "original": "shared-28-DcgD7xXH.js:oh"
+        },
+        {
+          "local": "s",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "canonicalModelId",
+          "via": "c4e18af0a-BPhGaxmd.js:a",
+          "kind": "adapter",
+          "original": "c4e18af0a-BPhGaxmd.js:c"
+        },
+        {
+          "local": "t",
+          "from": "../routines-shared/shared-0-ByI5P0CP.mjs",
+          "name": "yv",
+          "via": "shared-0-ByI5P0CP.js:Vg",
+          "kind": "routines-shared",
+          "original": "shared-0-ByI5P0CP.js:yv"
+        }
+      ],
+      "exports": {
+        "b": "recentTargetSettings"
+      }
+    },
+    {
+      "target": "save-environment.mjs",
+      "source": "cf74bc599-D9NZWRyl.js",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "d0987f6d94f3fc1be28765776ac90b35faf2cc24f8551c0fbb079120d55171e9",
+      "referenceVersion": "2.42304.0",
+      "bindings": [
+        {
+          "name": "Sy",
+          "sha256": "a8a71327f384ddd0fecc1ae92a7448d24487fc06894c72eaeb15912b046bc530"
+        },
+        {
+          "name": "Ey",
+          "sha256": "a2a94cb89bef26829719bc26177046f3eb80265a6424335c1ffedec0d31a927e"
+        },
+        {
+          "name": "Dy",
+          "sha256": "d70af2604adab163b348a2c43e23d724e79eacadb668d18ccdab48cc5f57364d"
+        },
+        {
+          "name": "Oy",
+          "sha256": "f8848ef552543fe3e77bc6dd395e715504291a9ca12de3c99bdd7bfb3236a319"
+        },
+        {
+          "name": "ky",
+          "sha256": "ab5297521126490bd29f38fd5216d44614ba7847368bc5c2e83727f00af9fe20"
+        },
+        {
+          "name": "Ay",
+          "sha256": "bfd68b13753973a27260265dae124b0424582548154203a227002688267e2c70"
+        },
+        {
+          "name": "My",
+          "sha256": "055d3852bca1c576bdda9b0de3451b69b0c6f37f64482bd04246bd1649d2e610"
+        },
+        {
+          "name": "Ny",
+          "sha256": "2ca2a26db6343f3d930d8731cb83697574e90fb2966d0ddb9169097cb6ceccff"
+        },
+        {
+          "name": "Py",
+          "sha256": "70e86845dc1c5519d3318d9ca77e19d13a1dc0a0b1cd0c52652c764cb0a87739"
+        },
+        {
+          "name": "Iy",
+          "sha256": "c45712c60fc47384c19606e41946f456d56b85fa4581a79b33f1c089a30e6b54"
+        },
+        {
+          "name": "Ly",
+          "sha256": "8fe3d40c4b85729f3b7c29723a80202ff042f081714af9254045bbb5750e3ba6"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Z",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-Db7hDWRO.js:p",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:q"
+        },
+        {
+          "local": "Dg",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useEnvironmentStore",
+          "via": "cd0cf5b5e-BajR1nyG.js:B",
+          "kind": "adapter",
+          "original": "cd0cf5b5e-BajR1nyG.js:z"
+        },
+        {
+          "local": "Og",
+          "from": "./environment-target.mjs",
+          "name": "sameStoredEnvironmentTarget",
+          "via": "cd0cf5b5e-BajR1nyG.js:D",
+          "kind": "generated",
+          "original": "cd0cf5b5e-BajR1nyG.js:p"
+        },
+        {
+          "local": "Aa",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "useLocalSessionsStore",
+          "via": "shared-8-B5lJ8U5C.js:Wd",
+          "kind": "adapter",
+          "original": "shared-8-B5lJ8U5C.js:Q"
+        },
+        {
+          "local": "Xt",
+          "from": "../mcp-app-card/shared-52.mjs",
+          "name": "Pp",
+          "via": "shared-52-DGviI8xb.js:Pp",
+          "kind": "mcp-app-card",
+          "original": "shared-52-DGviI8xb.js:Qf"
+        },
+        {
+          "local": "f",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "Pg",
+          "from": "./recent-target-settings.mjs",
+          "name": "recentTargetSettings",
+          "via": "cead7e0c5-D6nt0a11.js:r",
+          "kind": "generated",
+          "original": "cead7e0c5-D6nt0a11.js:b"
+        },
+        {
+          "local": "kg",
+          "from": "./environment-target.mjs",
+          "name": "environmentModelSettings",
+          "via": "cd0cf5b5e-BajR1nyG.js:L",
+          "kind": "generated",
+          "original": "cd0cf5b5e-BajR1nyG.js:Fe"
+        },
+        {
+          "local": "Q",
+          "from": "../session-rail-kit/react-store.mjs",
+          "name": "useStore",
+          "via": "vendor-all-0-CTKbbUUg.js:L",
+          "kind": "session-rail-kit",
+          "original": "vendor-all-0-CTKbbUUg.js:b"
+        },
+        {
+          "local": "on",
+          "from": "../../../electron/generated/environment-basename.mjs",
+          "name": "environmentBasename",
+          "via": "shared-52-DGviI8xb.js:wd",
+          "kind": "code-current",
+          "original": "shared-52-DGviI8xb.js:n_"
+        },
+        {
+          "local": "ge",
+          "from": "../code-current/lazy-init.mjs",
+          "name": "lazyInit",
+          "via": "shared-0-ByI5P0CP.js:Py",
+          "kind": "code-current",
+          "original": "shared-0-ByI5P0CP.js:Hi"
+        },
+        {
+          "local": "ot",
+          "from": "../code-current/environment-picker-keys.mjs",
+          "name": "thisComputerLabel",
+          "via": "shared-19-CkPOiIKm.js:K",
+          "kind": "code-current",
+          "original": "shared-19-CkPOiIKm.js:A7"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Cr",
+          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
+          "name": "CdsTextLink",
+          "via": "shared-frame-BfjMqbuN.js:Xc",
+          "kind": "view-tabs",
+          "original": "shared-frame-BfjMqbuN.js:Cd"
+        },
+        {
+          "local": "$e",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "recordSessionEnvironment",
+          "via": "shared-19-CkPOiIKm.js:$",
+          "kind": "adapter",
+          "original": "shared-19-CkPOiIKm.js:D7"
+        },
+        {
+          "local": "Bh",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "addRemoteEnvironment",
+          "via": "c73f45bc3-CFrHin0p.js:Un",
+          "kind": "adapter",
+          "original": "c73f45bc3-CFrHin0p.js:Kc"
+        },
+        {
+          "local": "Ag",
+          "from": "../../../electron/generated/environment-presets.mjs",
+          "name": "splitEnvironmentSettings",
+          "via": "cd0cf5b5e-BajR1nyG.js:N",
+          "kind": "code-current",
+          "original": "cd0cf5b5e-BajR1nyG.js:S"
+        },
+        {
+          "local": "X",
+          "from": "../../source-session-rail-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-Db7hDWRO.js:l",
+          "kind": "adapter",
+          "original": "vendor-intl-Db7hDWRO.js:Gt"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-DfPJ1QmD.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "ki",
+          "from": "../session-rail-kit/rail-layout.mjs",
+          "name": "RailFlatContext",
+          "via": "shared-18-D4XxL6Tg.js:Cd",
+          "kind": "session-rail-kit",
+          "original": "shared-18-D4XxL6Tg.js:py"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "Su",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRowButton",
+          "via": "c227f4d5e-Ba-r--Rl.js:ja",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:OR"
+        },
+        {
+          "local": "vu",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RAIL_ROW_BUTTON_CLASS",
+          "via": "c227f4d5e-Ba-r--Rl.js:ga",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:BL"
+        },
+        {
+          "local": "Sl",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RailRowIcon",
+          "via": "c227f4d5e-Ba-r--Rl.js:Ma",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:oR"
+        },
+        {
+          "local": "ou",
+          "from": "../session-rail-kit/rail-rows.mjs",
+          "name": "RAIL_ROW_CLASS",
+          "via": "c227f4d5e-Ba-r--Rl.js:_a",
+          "kind": "session-rail-kit",
+          "original": "c227f4d5e-Ba-r--Rl.js:FL"
+        }
+      ],
+      "exports": {
+        "Ay": "useSaveEnvironmentSetup",
+        "Iy": "RailSaveEnvironmentLink",
+        "Ly": "RailSaveEnvironmentRow",
+        "Py": "requestSaveEnvironment",
+        "My": "recordSaveEnvironmentOutcome",
+        "Ny": "saveEnvironmentCheckout",
+        "ky": "environmentFolderName",
+        "Sy": "SaveAsEnvironmentLabel"
+      }
+    }
+  ],
+  "publicNames": {
+    "useSensors": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "fe",
+      "target": "dnd-kit.mjs"
+    },
+    "useSensor": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "de",
+      "target": "dnd-kit.mjs"
+    },
+    "PointerSensor": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "ct",
+      "target": "dnd-kit.mjs"
+    },
+    "KeyboardSensor": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "rt",
+      "target": "dnd-kit.mjs"
+    },
+    "sortableKeyboardCoordinates": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "$n",
+      "target": "dnd-kit.mjs"
+    },
+    "isKeyboardEvent": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "N",
+      "target": "dnd-kit.mjs"
+    },
+    "arrayMove": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "Dn",
+      "target": "dnd-kit.mjs"
+    },
+    "DndContext": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "on",
+      "target": "dnd-kit.mjs"
+    },
+    "closestCenter": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "_e",
+      "target": "dnd-kit.mjs"
+    },
+    "SortableContext": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "Vn",
+      "target": "dnd-kit.mjs"
+    },
+    "verticalListSortingStrategy": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "Ln",
+      "target": "dnd-kit.mjs"
+    },
+    "useSortable": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "Yn",
+      "target": "dnd-kit.mjs"
+    },
+    "CSS": {
+      "file": "c09f6b4e5-DErbwtLQ.js",
+      "local": "P",
+      "target": "dnd-kit.mjs"
+    },
+    "RegionReadingOrderContext": {
+      "file": "c4db265df-CAC3hDZP.js",
+      "local": "ft",
+      "target": "region-reading-order.mjs"
+    },
+    "useStableArray": {
+      "file": "shared-25-DP8p7i1Z.js",
+      "local": "zU",
+      "target": "stable-array.mjs"
+    },
+    "stripInvisible": {
+      "file": "shared-25-DP8p7i1Z.js",
+      "local": "ZU",
+      "target": "stable-array.mjs"
+    },
+    "displayPath": {
+      "file": "shared-25-DP8p7i1Z.js",
+      "local": "$U",
+      "target": "stable-array.mjs"
+    },
+    "swallowNextClick": {
+      "file": "shared-19-CkPOiIKm.js",
+      "local": "u$",
+      "target": "drag-click-guard.mjs"
+    },
+    "homeRelativeParent": {
+      "file": "shared-19-CkPOiIKm.js",
+      "local": "P7",
+      "target": "drag-click-guard.mjs"
+    },
+    "renderMenuItems": {
+      "file": "shared-frame-BfjMqbuN.js",
+      "local": "iC",
+      "target": "menu-items.mjs"
+    },
+    "RailPrCountContext": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "qz",
+      "target": "pr-count-context.mjs"
+    },
+    "RepoNameChip": {
+      "file": "c96d752d0-BOCqU7c2.js",
+      "local": "Yz",
+      "target": "repo-name-chip.mjs"
+    },
+    "PreviewPlacementProvider": {
+      "file": "c5304ebdb-BdWv-4Wb.js",
+      "local": "O",
+      "target": "preview-placement.mjs"
+    },
+    "SlackLogo": {
+      "file": "ccc47c03f-CKf5zpck.js",
+      "local": "N",
+      "target": "slack-logo.mjs"
+    },
+    "parsePluginConnector": {
+      "file": "shared-52-DGviI8xb.js",
+      "local": "Ha",
+      "target": "plugin-connector.mjs"
+    },
+    "pluginDisplayName": {
+      "file": "shared-52-DGviI8xb.js",
+      "local": "UV",
+      "target": "plugin-connector.mjs"
+    },
+    "parseRepoSlug": {
+      "file": "shared-52-DGviI8xb.js",
+      "local": "Gs",
+      "target": "plugin-connector.mjs"
+    },
+    "ConnectorLetterIcon": {
+      "file": "shared-7-B8UIMGDr.js",
+      "local": "MT",
+      "target": "connector-icon-parts.mjs"
+    },
+    "ConnectorIconTile": {
+      "file": "shared-7-B8UIMGDr.js",
+      "local": "jT",
+      "target": "connector-icon-parts.mjs"
+    },
+    "savedConnectorOutput": {
+      "file": "shared-130-DnUXVlYq.js",
+      "local": "rR",
+      "target": "saved-output.mjs"
+    },
+    "humanizeIdentifier": {
+      "file": "shared-130-DnUXVlYq.js",
+      "local": "FE",
+      "target": "saved-output.mjs"
+    },
+    "stripPluginSuffix": {
+      "file": "shared-130-DnUXVlYq.js",
+      "local": "NE",
+      "target": "saved-output.mjs"
+    },
+    "forwardSlashes": {
+      "file": "shared-130-DnUXVlYq.js",
+      "local": "Y",
+      "target": "saved-output.mjs"
+    },
+    "connectorDisplayName": {
+      "file": "shared-78-D6VXYXaQ.js",
+      "local": "mN",
+      "target": "connector-name.mjs"
+    },
+    "isAgentsConnector": {
+      "file": "shared-78-D6VXYXaQ.js",
+      "local": "YD",
+      "target": "connector-name.mjs"
+    },
+    "CLAUDE_IN_CHROME_NAME": {
+      "file": "shared-78-D6VXYXaQ.js",
+      "local": "sN",
+      "target": "connector-name.mjs"
+    },
+    "isDetachedBranch": {
+      "file": "shared-11-BuQ3CK5I.js",
+      "local": "Ed",
+      "target": "branch-name.mjs"
+    },
+    "NAME_PENDING_GIVE_UP_MS": {
+      "file": "c73f45bc3-CFrHin0p.js",
+      "local": "gg",
+      "target": "rail-timing.mjs"
+    },
+    "railFolder": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "RE",
+      "target": "rail-derive.mjs"
+    },
+    "repoSlugName": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "LE",
+      "target": "rail-derive.mjs"
+    },
+    "pathLeaf": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "$E",
+      "target": "rail-derive.mjs"
+    },
+    "railExtraFolders": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "ME",
+      "target": "rail-derive.mjs"
+    },
+    "folderTreeCwd": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "IE",
+      "target": "rail-derive.mjs"
+    },
+    "otherRepos": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "jE",
+      "target": "rail-derive.mjs"
+    },
+    "knownBranch": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "VE",
+      "target": "rail-derive.mjs"
+    },
+    "railBranch": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "HE",
+      "target": "rail-derive.mjs"
+    },
+    "railWorktree": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "XE",
+      "target": "rail-derive.mjs"
+    },
+    "CLAUDE_WORKTREE_PATH": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "YE",
+      "target": "rail-derive.mjs"
+    },
+    "lazyWorktreePending": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "ZE",
+      "target": "rail-derive.mjs"
+    },
+    "lazyWorktreeState": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "QE",
+      "target": "rail-derive.mjs"
+    },
+    "railEnvironment": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "GE",
+      "target": "rail-derive.mjs"
+    },
+    "environmentLabel": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "KE",
+      "target": "rail-derive.mjs"
+    },
+    "environmentKind": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "UE",
+      "target": "rail-derive.mjs"
+    },
+    "isCloudEnvironment": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "WE",
+      "target": "rail-derive.mjs"
+    },
+    "connectorRows": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "PE",
+      "target": "rail-derive.mjs"
+    },
+    "plainConnectorLabel": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "NE",
+      "target": "rail-derive.mjs"
+    },
+    "environmentConnection": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "AE",
+      "target": "rail-derive.mjs"
+    },
+    "isSideSessionNotesFolder": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "tD",
+      "target": "rail-derive.mjs"
+    },
+    "remoteControlState": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "zE",
+      "target": "rail-derive.mjs"
+    },
+    "railPlanSteps": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "nD",
+      "target": "rail-derive.mjs"
+    },
+    "hasEnvironmentCard": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "qE",
+      "target": "rail-derive.mjs"
+    },
+    "railHasContent": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "JE",
+      "target": "rail-derive.mjs"
+    },
+    "environmentSummary": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "vD",
+      "target": "rail-derive.mjs"
+    },
+    "doneStepCount": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "yD",
+      "target": "rail-derive.mjs"
+    },
+    "connectorLabel": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "uE",
+      "target": "rail-derive.mjs"
+    },
+    "humanizedSlug": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "lE",
+      "target": "rail-derive.mjs"
+    },
+    "RAIL_PENDING_GIVE_UP_MS": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "BE",
+      "target": "rail-derive.mjs"
+    },
+    "checkoutInfo": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "sO",
+      "target": "rail-derive.mjs"
+    },
+    "NO_CHECKOUT_INFO": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "oO",
+      "target": "rail-derive.mjs"
+    },
+    "RAIL_SLOT_CLASSES": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "aD",
+      "target": "rail-derive.mjs"
+    },
+    "NO_CHECKOUTS": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "sD",
+      "target": "rail-derive.mjs"
+    },
+    "RAIL_SESSION_META": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "rO",
+      "target": "rail-derive.mjs"
+    },
+    "COMPOSER_MENU_SECTIONS": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "tO",
+      "target": "rail-derive.mjs"
+    },
+    "useRailPendingHold": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "lO",
+      "target": "rail-hooks.mjs"
+    },
+    "useCheckoutInfo": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "cO",
+      "target": "rail-hooks.mjs"
+    },
+    "useComposerMenuOpensRailSection": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "nO",
+      "target": "rail-hooks.mjs"
+    },
+    "SessionRail": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "iD",
+      "target": "rail-view.mjs"
+    },
+    "SessionRailAside": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "rD",
+      "target": "rail-view.mjs"
+    },
+    "RailCardStack": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "DE",
+      "target": "rail-view.mjs"
+    },
+    "RailCardSlot": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "wE",
+      "target": "rail-view.mjs"
+    },
+    "RailFolderRows": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "gD",
+      "target": "rail-view.mjs"
+    },
+    "RailExtraFolderBranch": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "_D",
+      "target": "rail-view.mjs"
+    },
+    "RailPathTail": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "hD",
+      "target": "rail-view.mjs"
+    },
+    "RailEnvironmentStatus": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "xD",
+      "target": "rail-view.mjs"
+    },
+    "environmentDetails": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "bD",
+      "target": "rail-view.mjs"
+    },
+    "RailConnectorsCard": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "lD",
+      "target": "rail-view.mjs"
+    },
+    "RailConnectorIcon": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "uD",
+      "target": "rail-view.mjs"
+    },
+    "connectorStateAction": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "cD",
+      "target": "rail-view.mjs"
+    },
+    "RailSkeleton": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "TD",
+      "target": "rail-view.mjs"
+    },
+    "RailOutputsCard": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "xE",
+      "target": "rail-view.mjs"
+    },
+    "RailSessionOutputs": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "bE",
+      "target": "rail-view.mjs"
+    },
+    "RailOutputsList": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "_E",
+      "target": "rail-view.mjs"
+    },
+    "RailOutputFileRow": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "gE",
+      "target": "rail-view.mjs"
+    },
+    "RailOutputFileIcon": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "hE",
+      "target": "rail-view.mjs"
+    },
+    "sameStoredEnvironmentTarget": {
+      "file": "cd0cf5b5e-BajR1nyG.js",
+      "local": "p",
+      "target": "environment-target.mjs"
+    },
+    "environmentModelSettings": {
+      "file": "cd0cf5b5e-BajR1nyG.js",
+      "local": "Fe",
+      "target": "environment-target.mjs"
+    },
+    "environmentTargetKey": {
+      "file": "shared-20-B7UqYfsi.js",
+      "local": "Wk",
+      "target": "environment-target-key.mjs"
+    },
+    "sshHostKey": {
+      "file": "shared-28-DcgD7xXH.js",
+      "local": "oh",
+      "target": "ssh-host-key.mjs"
+    },
+    "recentTargetSettings": {
+      "file": "cead7e0c5-D6nt0a11.js",
+      "local": "b",
+      "target": "recent-target-settings.mjs"
+    },
+    "useSaveEnvironmentSetup": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "Ay",
+      "target": "save-environment.mjs"
+    },
+    "RailSaveEnvironmentLink": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "Iy",
+      "target": "save-environment.mjs"
+    },
+    "RailSaveEnvironmentRow": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "Ly",
+      "target": "save-environment.mjs"
+    },
+    "requestSaveEnvironment": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "Py",
+      "target": "save-environment.mjs"
+    },
+    "recordSaveEnvironmentOutcome": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "My",
+      "target": "save-environment.mjs"
+    },
+    "saveEnvironmentCheckout": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "Ny",
+      "target": "save-environment.mjs"
+    },
+    "environmentFolderName": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "ky",
+      "target": "save-environment.mjs"
+    },
+    "SaveAsEnvironmentLabel": {
+      "file": "cf74bc599-D9NZWRyl.js",
+      "local": "Sy",
+      "target": "save-environment.mjs"
+    }
+  },
+  "callSites": [
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "binding": "fO",
+      "role": "Rail host data assembly (EpitaxySessionRailHost): host replacement in SR-7, calling the generated pieces as written",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "sha256": "75c96a88de73b4a41ce682db936688ca199f25109948c958e592bc6e7ce48084",
+      "features": [
+        "nO(t, e.id);",
+        "D = lO( !( E !== void 0 || T.isError || (T.isPending && T.fetchStatus !== \"fetching\") ), BE, ),",
+        "A = lO(!k && w, BE),",
+        "N = lO(j !== null && (!k || !M), BE);",
+        "ee = cO(I, k?.remote),",
+        "L = cO(x && k?.originCwd !== I ? k?.originCwd : void 0, k?.remote),",
+        "R = O !== void 0 && ZE({",
+        "V = R && !B && !z ? O?.lazyWorktreePath : void 0,",
+        "me = lO(!!U && !pe && ((ne && !te) || G), hg),",
+        "J = UE({",
+        "servers: PE({",
+        "labelOf: uE,",
+        "let e = GE({",
+        "labels: { local: je?.label ?? le, cloud: ue, bridge: de },",
+        "r = RE({",
+        "cachedRepoName: ee.repoName ?? L.repoName,",
+        "a = ME({",
+        "(e) => !i.has(e) && !tD(e),",
+        "repos: D ? [] : jE(E ?? [], P, r).map((e) => ({",
+        "o = x && k.workingDir !== k.originCwd,",
+        "s = VE({",
+        "branch: HE({",
+        "discovered: D ? void 0 : F?.currentBranch || F?.branch || null,",
+        "inCheckout: o || k.git !== void 0 || k.repoSlugs.length > 0,",
+        "worktree: XE({",
+        "worktreePending: QE({",
+        "goal: k.goal ?? null,",
+        "rt = lO(!C && w, BE),",
+        "at = zE({",
+        "lt = f(() => (ct ? [] : nD(st)), [ct, st]),",
+        "wt = u(iD, {",
+        "pullRequests: o ? void 0 : u( Sh, { sessionRef: e, layout: \"rail\", onRequestComposerFocus: i }, e.id, ),",
+        "outputsSession: e,",
+        "sessionKey: e.id,",
+        "repoMenuItems: Pe.folder?.path ? We : void 0,",
+        "contextSection: o ? void 0 : u(cg, { scopeStore: t, sessionRef: e }),",
+        "usageSection: o || c ? void 0 : u(Yh, { scopeStore: t, sessionRef: e }),",
+        "serversSection: u(QD, { sessionRef: e, readOnly: o }),",
+        "backgroundSection: u(BD, { sessionRef: e, readOnly: o }),",
+        "return u(ug, { snapshot: j, held: N, scopeStore: t, children: wt });"
+      ]
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "role": "fO reads the session MCP counts (c73f45bc3 Cd as _g) only for a local session with an opener, and passes them with that opener",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "raw": true,
+      "features": [
+        "p=Q(t,e=>e.openSessionMcpDialog)",
+        "g=_g(e.type===\"local\"&&p!==null?e.id:null)",
+        "p?{counts:g,onOpen:p}:void 0",
+        "servers:PE({names:e.counts.listedNames,states:e.counts.listedStates,iconTypes:e.counts.listedIconTypes,iconSrcs:e.counts.listedIconSrcs,labelOf:uE})"
+      ]
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "role": "fO builds the save setup with Ay and passes Ly (stacked) / Iy (flat, beside an unnamed environment row)",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "raw": true,
+      "features": [
+        "St=Ay({scopeStore:t,environmentsOn:ce,sessionId:e.id,isLocal:e.type===\"local\",meta:S.data,besideNamed:c&&!K})",
+        "saveEnvironment:St&&!o?u(Ly,{scopeStore:t,sessionId:e.id,setup:St}):void 0,environmentSave:St&&!o&&c&&!K?u(Iy,{scopeStore:t,sessionId:e.id,setup:St}):void 0"
+      ]
+    },
+    {
+      "source": "c73f45bc3-CFrHin0p.js",
+      "role": "Cd (the session MCP counts): needs-auth / failed servers to reconnect, unavailable ones apart, every listed server with its state",
+      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "raw": true,
+      "features": [
+        "u=s.filter(e=>(e.status===\"needs-auth\"||e.status===\"failed\")&&(!Vs(e)||c(e)&&!l(e)))",
+        "p=new Set(s.filter(e=>e.status===\"unavailable\"||e.status===\"failed\"&&Vs(e)&&!f.has(e)))",
+        "needReconnect:u.length,unavailable:p.size",
+        "listedStates:s.map(e=>f.has(e)?e.status:p.has(e)?\"unavailable\":\"\").join("
+      ]
+    },
+    {
+      "source": "c73f45bc3-CFrHin0p.js",
+      "role": "qc opens the environment dialog for the scope store's saveEnvironmentRequest and hands the created environment to onSaved",
+      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "raw": true,
+      "features": [
+        "initialTarget:r?.setup.target??null,initialKind:\"local\",focusName:!0",
+        "e.getState().saveEnvironmentRequest?.onSaved(r)"
+      ]
+    },
+    {
+      "source": "cc43287c9-DAfOi8yP.js",
+      "role": "The session view puts the MCP opener (session MCP dialog, else Settings › Connectors) on the scope store while it is available",
+      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "raw": true,
+      "features": [
+        "if(Em)return e.setState({openSessionMcpDialog:jm}),()=>e.setState({openSessionMcpDialog:null})",
+        "J?.warmSession?.(G.id)?.catch(()=>void 0)"
+      ]
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "role": "cf74bc599 exports the rail host as EpitaxySessionRailHost (pO = memo(fO)); the kit lazy slot (hH) picks it",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "raw": true,
+      "features": [
+        "pO as EpitaxySessionRailHost",
+        "pO=y(fO)"
+      ]
+    },
+    {
+      "source": "cf74bc599-D9NZWRyl.js",
+      "role": "The card stack imports dnd-kit from c09f6b4e5 (13 names)",
+      "sourceSha256": "ab258c253d8906bc7c8bfee896789e830d92e004d41446dade7979ab4cb3eb1d",
+      "raw": true,
+      "features": [
+        "import{_ as T_,a as E_,d as D_,i as O_,l as k_,n as A_,o as j_,p as M_,s as N_,t as P_,v as F_,x as I_,y as L_}from\"./c09f6b4e5-DErbwtLQ.js\""
+      ]
+    }
+  ]
+}

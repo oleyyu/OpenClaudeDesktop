@@ -15,6 +15,23 @@ export function composerPlaceholder({ sessionId = null, mode = "code", firstRun 
   return firstRun === true ? FIRST_RUN_PLACEHOLDER : DRAFT_PLACEHOLDER;
 }
 
+// 2.42304.0 c227f4d5e uM, while a turn runs (ze = !!V && !ge && Le && !A && !I && re === null: Stop offered, ⌘⏎ not
+// claimed, Enter sends, the editor enabled, sending not blocked, no history search): the placeholder names both lanes,
+// Be(spoken) "{sendKey} to send, {queueKey} to queue for later" (mZ6xnUz7iS), and a probe that overflows the editor
+// swaps in He "{queueKey} to queue" (FIL0bW8Kgx). The key labels are the original cM (generated composer-key-label.mjs,
+// over the CDS cap table): glyphs on a Mac, spoken names joined with "+" (aria-description) or elsewhere.
+import { shortcutLabel } from "./generated/code-composer/composer-key-label.mjs";
+export const RUNNING_PLACEHOLDER = "{sendKey} to send, {queueKey} to queue for later";
+export const RUNNING_PLACEHOLDER_COMPACT = "{queueKey} to queue";
+export function runningPlaceholder({ mac = true, spoken = false, compact = false } = {}) {
+  if (compact) return t(RUNNING_PLACEHOLDER_COMPACT, { queueKey: shortcutLabel("cmd+enter", mac) });
+  return t(RUNNING_PLACEHOLDER, { sendKey: shortcutLabel("enter", mac, spoken), queueKey: shortcutLabel("cmd+enter", mac, spoken) });
+}
+/** uM ze: whether the running-turn placeholder replaces the composer's own. */
+export function runningPlaceholderShown({ showStop = false, cmdEnterClaimed = false, plainEnterSends = true, disabled = false, submitBlocked = false, historySearch = null } = {}) {
+  return !!showStop && !cmdEnterClaimed && !!plainEnterSends && !disabled && !submitBlocked && historySearch === null;
+}
+
 /** getCodeStats totalSessions (the local stats object carries only the daily sessionCount, summed here). */
 function statsSessionTotal(stats) {
   if (Number.isFinite(stats?.totalSessions)) return stats.totalSessions;

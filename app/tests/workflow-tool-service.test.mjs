@@ -154,6 +154,8 @@ test('JSON fallback: a core without structured output runs schema agents through
     assert.ok(starts.every((frame) => !('outputSchema' in frame.params)));
     assert.ok(wire.filter((frame) => frame.method === 'thread/start').every((frame) => !frame.params.dynamicTools));
     assert.equal(run.status, 'completed');
+    assert.match(await fs.readFile(path.join(run.transcriptDir, 'events.jsonl'), 'utf8'), /Workflow compatibility.*prompted JSON with validation and retries.*Claude's StructuredOutput tool/);
+    assert.ok(run.compatibilityNotes.some(message => message.includes('prompted JSON with validation and retries')));
   } finally { await h.cleanup(); }
 });
 
@@ -165,6 +167,9 @@ test('outputSchema-only cores (DeepSeek Harness, OpenCode/MiMo: no dynamic tools
     const delivered = await h.done();
     assert.match(delivered.params.input[0].text, /<result>\{"n":4\}<\/result>/);
     const wire = (await fs.readFile(path.join(h.cwd, 'workflow-wire.jsonl'), 'utf8')).trim().split('\n').map((line) => JSON.parse(line));
+    const run = (await h.workflowService.list('thread-1'))[0];
+    assert.match(await fs.readFile(path.join(run.transcriptDir, 'events.jsonl'), 'utf8'), /Workflow compatibility.*outputSchema and validated response JSON.*Claude's StructuredOutput tool/);
+    assert.ok(run.compatibilityNotes.some(message => message.includes('outputSchema and validated response JSON')));
     const start = wire.find((frame) => frame.method === 'turn/start');
     assert.deepEqual(start.params.outputSchema, { type: 'object', properties: { n: { type: 'number' } }, required: ['n'], additionalProperties: false });
     // Claude's provenance relay: the user's own request ("hi") goes, indented, before the framed computed task.

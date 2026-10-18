@@ -1,0 +1,384 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-approval-landing.mjs",
+  "modules": [
+    {
+      "target": "owner-globals.mjs",
+      "source": "shared-25-DP8p7i1Z.js",
+      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "sha256": "e070044c8f9159092371b226c0b2e381305fdae7c14cef2ff8dd974cb5e25004",
+      "bindings": [
+        {
+          "name": "cp",
+          "sha256": "7ed2ce621141bd6ae41dbbde8e1d912b8f1bd7554aea85066ec9dba338386526"
+        },
+        {
+          "name": "lp",
+          "sha256": "f48d0483592d2423270d6aaa7bd759bc380b3d6aa78cc097ac0341abda5ac986"
+        },
+        {
+          "name": "up",
+          "sha256": "a8cd6293683e92a5b0eed0ca3414f797a1ffc52680e1970907b82687f6d7db0f"
+        },
+        {
+          "name": "mp",
+          "sha256": "9eaf5cb3c5b138f3bfcc50bb4a48f21478c7b86feaaa3e86935c1baadb1eabbb"
+        },
+        {
+          "name": "hy",
+          "sha256": "747803f8162988812836762f6b6c22d6ab089581691c8dcb98452c608ac27b1f"
+        },
+        {
+          "name": "gy",
+          "sha256": "cecc08c8893ce915b519bffaac918e4a8b231de65eb63a9dc6a00df1169c0d1d"
+        },
+        {
+          "name": "_y",
+          "sha256": "ff297184349e5931d0430c0a78afe7bb28af8af020060fde137d967fe986ad37"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "mp": "mutationObserverOf",
+        "_y": "eventInputDelay"
+      }
+    },
+    {
+      "target": "focus-name.mjs",
+      "source": "cd8405c1a-UVWp96hz.js",
+      "sourceSha256": "4bc333159d41338de1717e21020b39c0a676bad5bb5a62f6cad4ea920fd13ea4",
+      "sha256": "197b6a1c3ee1cfa7898fb3a2929db893d5686bb93394eec2702db966f10ecf94",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "c259816280dbd9810f385bc5e2cfbff13cc420faf7ec9347dece609cb001d210"
+        },
+        {
+          "name": "t",
+          "sha256": "5378ce5663d44226b40d1c5a8f7ccca74f8d57e2a6c1ee0efebaf34890edfa3e"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "t": "nameByText"
+      }
+    },
+    {
+      "target": "focus-ring.mjs",
+      "source": "c227f4d5e-Ba-r--Rl.js",
+      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "sha256": "68bf21dd3ce21bb59e944ff3eca1b0fa7c4bf44a3df2cabd061b23681e565e9a",
+      "bindings": [
+        {
+          "name": "Jw",
+          "sha256": "cc96c703386fe2aaeaefde6cc9234d8e339f95085d62d5b90d20b3b516b4aa31"
+        },
+        {
+          "name": "Yw",
+          "sha256": "305d370931599ff44ab5635433f60afc31a0af9dc2c7251329b31038e8819e3d"
+        },
+        {
+          "name": "Zw",
+          "sha256": "94a08e1c7c00aa7fbd429170329ad36834dfb447e841d5de39e64aa8eb17bb65"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ge",
+          "from": "./owner-globals.mjs",
+          "name": "mutationObserverOf",
+          "via": "shared-25-DP8p7i1Z.js:Mf",
+          "kind": "generated",
+          "original": "mp"
+        },
+        {
+          "local": "ey",
+          "from": "./focus-name.mjs",
+          "name": "nameByText",
+          "via": "cd8405c1a-UVWp96hz.js:t",
+          "kind": "generated",
+          "original": "t"
+        }
+      ],
+      "exports": {
+        "Zw": "focusWithRing",
+        "Jw": "ringClasses",
+        "Yw": "ringClassesPositioned"
+      }
+    },
+    {
+      "target": "window-attention.mjs",
+      "source": "shared-10-THQui8pC.js",
+      "sourceSha256": "867ee9b6b48666cb8e1b941819ae5e73f68b89a2da71ff594ff32f1a3b883efc",
+      "sha256": "848eab527585c8894faa9da9988cb9b51a68dd73386a54aa595c47983b26ffa1",
+      "bindings": [
+        {
+          "name": "zb",
+          "sha256": "5506618a4385b1f88011f707779fc32c8bd4242def4651b9dbb75838817d3785"
+        },
+        {
+          "name": "Wb",
+          "sha256": "89c3b4a7db9f48c243eaa1f98a32a57c7c68e69f027dce044e538f89e48b460d"
+        },
+        {
+          "name": "Kb",
+          "sha256": "62e221df1bd73221006605d6d40a5485db6214418268b13a0348db2a65cc1328"
+        },
+        {
+          "name": "Jb",
+          "sha256": "4cdba85d002fd0563a47a3d1524caf489a83648138fc98fcea5073375f1d3f76"
+        },
+        {
+          "name": "Yb",
+          "sha256": "094e503b4f1f8504b112a55423b5f936611c01c89295d2af91a886ed3ad12e36"
+        },
+        {
+          "name": "Xb",
+          "sha256": "9515c13ece93e51e572962b65d7bb15889db95c8155354f48a32005925e6744d"
+        },
+        {
+          "name": "X",
+          "sha256": "4c54ce34a1d4255c36ce5c2174802d36dec24dc25dc9b493f34d4d59f0f4d5f6"
+        },
+        {
+          "name": "Zb",
+          "sha256": "2f85cab7fc11afd78bfe5f271a56930a1e59b59f9680f51d18d9143ade741eb1"
+        },
+        {
+          "name": "Qb",
+          "sha256": "7bd2f2dfb460d262a557cfccfb4af3881f9eb59dca7e4106c252f6222e14e5a7"
+        },
+        {
+          "name": "$b",
+          "sha256": "136c3e49257ee6e98f268ee8dc73358eaff35b73b8daa5693d147db7dcb4216d"
+        },
+        {
+          "name": "ex",
+          "sha256": "4346b6dfc1e39ba7dd32593c84809af408ef7edf2bbdc7c4fa8b931bb6720e0f"
+        },
+        {
+          "name": "tx",
+          "sha256": "9bb15221941e3dc710374ad32b8c0ad6db9c2e2f94011a80b3ccdb46fe2ef4b5"
+        },
+        {
+          "name": "nx",
+          "sha256": "4fdcb0fcccf2a203963f9aadd28b2e5b589b372bc548d137538b7936759a4f5e"
+        },
+        {
+          "name": "rx",
+          "sha256": "ef74258b65b5847f1c1dc4a7d1398e1b6fe085f590442beda4d8ebd4db637ade"
+        },
+        {
+          "name": "sx",
+          "sha256": "53da752618dac7662f4314bbbb535583d58e86b7d972d7719ac864e9d9e0a057"
+        },
+        {
+          "name": "cx",
+          "sha256": "d63178244ce31a7e64a8f9540647b5383f1d87b29d323635cfca7cf814e3d72b"
+        },
+        {
+          "name": "lx",
+          "sha256": "eb02833d5b3ae89b7140ed31b9c8e5d497727afe0a8f607c19bf92143d2633a9"
+        },
+        {
+          "name": "ux",
+          "sha256": "9c49da19dce07ab380143926efcef3a26d4e53f9dbebb4c85110b4f8430b1f36"
+        }
+      ],
+      "imports": [
+        {
+          "local": "L",
+          "from": "./owner-globals.mjs",
+          "name": "eventInputDelay",
+          "via": "shared-25-DP8p7i1Z.js:au",
+          "kind": "generated",
+          "original": "_y"
+        },
+        {
+          "local": "Ut",
+          "from": "../btw-pane/focus-guard.mjs",
+          "name": "elementOf",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "linked",
+          "original": "lc"
+        }
+      ],
+      "exports": {
+        "rx": "watchWindowAttention",
+        "lx": "windowAttended"
+      }
+    },
+    {
+      "target": "card-landing.mjs",
+      "source": "c96d752d0-BOCqU7c2.js",
+      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sha256": "98aa3d396e834eec784cc07353a9935ae9882bc3023b115bc6fefaa8fc1d1c20",
+      "bindings": [
+        {
+          "name": "Hj",
+          "sha256": "ba1d4d8f163a15e45dc0b2641d9257605e61b966a1ea99abf3ef87ae70e03bf1"
+        },
+        {
+          "name": "Uj",
+          "sha256": "fda957c97b660fb04026dc80cf7a7977f6b64c4f5a2e6091675c730b012d4939"
+        },
+        {
+          "name": "Wj",
+          "sha256": "d66e9f2f86792ac744d1f0d9c41fa2bd9b1755d0494b35865ca2fe8827779688"
+        },
+        {
+          "name": "Gj",
+          "sha256": "fc5b8faa84f910acdc5c14774732e35ed6e4629addc886287b0bcc382f12fa1d"
+        },
+        {
+          "name": "Kj",
+          "sha256": "0d8a780f7106048c0d6d4cb32053e142ff4a7e7128417c0ffcef53193351b499"
+        },
+        {
+          "name": "qj",
+          "sha256": "5d1b66f1ad144e1d3024fe1f52eddb51c30de05e6051046c79cfcd2caef25329"
+        }
+      ],
+      "imports": [
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "kind": "react"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "R",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "kind": "react"
+        },
+        {
+          "local": "ce",
+          "from": "../btw-pane/owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DP8p7i1Z.js:Pf",
+          "kind": "linked",
+          "original": "dp"
+        },
+        {
+          "local": "Rre",
+          "from": "../btw-pane/focus-guard.mjs",
+          "name": "guardStrayEnter",
+          "via": "shared-frame-BfjMqbuN.js:fd",
+          "kind": "linked",
+          "original": "cn"
+        },
+        {
+          "local": "Bl",
+          "from": "./window-attention.mjs",
+          "name": "windowAttended",
+          "via": "shared-10-THQui8pC.js:Ht",
+          "kind": "generated",
+          "original": "lx"
+        },
+        {
+          "local": "Wl",
+          "from": "./window-attention.mjs",
+          "name": "watchWindowAttention",
+          "via": "shared-10-THQui8pC.js:Kt",
+          "kind": "generated",
+          "original": "rx"
+        },
+        {
+          "local": "sf",
+          "from": "../btw-pane/focus-lost.mjs",
+          "name": "focusIsLost",
+          "via": "c227f4d5e-Ba-r--Rl.js:Fc",
+          "kind": "linked",
+          "original": "Xw"
+        },
+        {
+          "local": "Sle",
+          "from": "./focus-ring.mjs",
+          "name": "ringClasses",
+          "via": "c227f4d5e-Ba-r--Rl.js:Mc",
+          "kind": "generated",
+          "original": "Jw"
+        },
+        {
+          "local": "wle",
+          "from": "./focus-ring.mjs",
+          "name": "ringClassesPositioned",
+          "via": "c227f4d5e-Ba-r--Rl.js:Nc",
+          "kind": "generated",
+          "original": "Yw"
+        },
+        {
+          "local": "Ole",
+          "from": "./focus-ring.mjs",
+          "name": "focusWithRing",
+          "via": "c227f4d5e-Ba-r--Rl.js:Pc",
+          "kind": "generated",
+          "original": "Zw"
+        },
+        {
+          "local": "Bs",
+          "from": "../btw-pane/focus-guard.mjs",
+          "name": "elementOf",
+          "via": "shared-frame-BfjMqbuN.js:vl",
+          "kind": "linked",
+          "original": "lc"
+        },
+        {
+          "local": "ofe",
+          "from": "../btw-pane/modifier-keys.mjs",
+          "name": "modifierKeys",
+          "via": "cae42d46f-8Va5mKUX.js:t",
+          "kind": "linked",
+          "original": "m"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-DfPJ1QmD.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "Np",
+          "from": "../btw-pane/focus-hand-back.mjs",
+          "name": "useFocusHandBack",
+          "via": "ccf527892-DQjOjuwT.js:t",
+          "kind": "linked",
+          "original": "o"
+        }
+      ],
+      "exports": {
+        "qj": "useApprovalCardLanding",
+        "Hj": "approvalCardRoot",
+        "Gj": "guardWindowAfterCard",
+        "Uj": "afterCardState",
+        "Kj": "ApprovalCardWatch"
+      }
+    }
+  ]
+}

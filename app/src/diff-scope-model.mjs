@@ -49,6 +49,25 @@ export function resolveDiffScope(scope, { base, uncommittedAvailable = true } = 
   return scope.kind === "uncommitted" ? UNCOMMITTED_DIFF_SCOPE : DEFAULT_DIFF_SCOPE;
 }
 
+/** 2.42304.0 cb61be3a2 Ze `He = V && Ve !== i.Clean`: "Uncommitted changes" is offered for a local repository unless
+ * its working tree is known to be clean (a status that has not said yet counts as dirty). */
+export function uncommittedScopeAvailable(status) {
+  return !!status?.isRepo && status.workingTreeDirty !== false;
+}
+
+/** 2.42304.0 cccc2cf0a mb S/C (scope menu) and Xb V (Commits section): what picking `next` does.
+ * - A pick equal to the pane's own choice (`picked`: the in-memory pick, else the remembered one) does nothing.
+ * - Otherwise it becomes the pane's choice; `changed` when it differs from the scope on screen (`shown`, resolved).
+ * - A changed pick of "All changes" / "Uncommitted changes" is remembered for the session (c03935b01 Rn, `remember`
+ *   = its kind): from the menu's scope rows (`via: "scope"`) while Uncommitted is available, from the Commits section
+ *   (`via: "commit_list"`) while its Uncommitted row is offered. Commit rows and "Compare against" never are. */
+export function diffScopePick({ picked, shown, next, via, uncommittedAvailable = true, uncommittedOffered = false }) {
+  if (picked && sameDiffScope(picked, next)) return { set: false, changed: false, remember: null };
+  const changed = !shown || !sameDiffScope(shown, next);
+  const allowed = via === "scope" ? uncommittedAvailable : via === "commit_list" ? uncommittedOffered : false;
+  return { set: true, changed, remember: changed && allowed && next.kind !== "commit" ? next.kind : null };
+}
+
 /** The workspace-git-diff `scope` argument for a resolved scope. */
 export function diffScopeParam(scope) {
   if (scope?.kind === "commit" && isCommitSha(scope.sha)) return `commit:${scope.sha}`;
@@ -133,9 +152,11 @@ export function carriedOverDiff(value, loaded, key) {
 }
 
 const noop = () => {};
+const SCOPE_ROW = Object.freeze({ via: "scope" });
 /** zm S + Im: [diff-scope] | [diff-base] | [diff-commits] menu sections.
  * - diff-scope: "All changes" (hint "vs {base}") and, when available,
- *   "Uncommitted changes", both radio rows.
+ *   "Uncommitted changes", both radio rows; they call onSelectScope(scope, {via: "scope"}) (2.42304.0 mb C, the
+ *   remembered pick), the other rows onSelectScope(scope) (mb S).
  * - diff-base: the "Compare against" submenu (hint = the current base) over the
  *   Fm branch list with a "default" hint, searchable, with the Im empty labels.
  *   Picking the current base again does nothing unless it is an override of the
@@ -153,9 +174,9 @@ export function diffScopeSections({
 } = {}) {
   const sections = [{ key: "diff-scope", items: [
     { value: "branch", label: DIFF_SCOPE_LABELS.allChanges, hint: t("vs {base}", { base }), checked: scope.kind === "branch", checkedRole: "radio",
-      onSelect: () => onSelectScope(DEFAULT_DIFF_SCOPE) },
+      onSelect: () => onSelectScope(DEFAULT_DIFF_SCOPE, SCOPE_ROW) },
     ...(uncommittedAvailable ? [{ value: "uncommitted", label: DIFF_SCOPE_LABELS.uncommitted, checked: scope.kind === "uncommitted",
-      checkedRole: "radio", onSelect: () => onSelectScope(UNCOMMITTED_DIFF_SCOPE) }] : []),
+      checkedRole: "radio", onSelect: () => onSelectScope(UNCOMMITTED_DIFF_SCOPE, SCOPE_ROW) }] : []),
   ] }];
   if (baseAvailable) {
     const list = branches?.list || [];

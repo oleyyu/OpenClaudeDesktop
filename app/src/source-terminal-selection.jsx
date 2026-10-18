@@ -2,8 +2,8 @@ import React,{useLayoutEffect,useRef} from 'react';
 import {SourceSettingsButton} from './source-settings-button.jsx';
 import {SourceTooltip} from './source-tooltip.jsx';
 import {t} from '../electron/i18n/index.mjs';
-import {terminalSelectionPillPosition} from './generated/code-editor/terminal-selection.mjs';
-// Original Xr: measure the action strip, preserve its side while a selection scrolls.
+import {terminalSelectionPillPosition} from './generated/code-current/terminal-geometry.mjs';
+// 2.42304.0 c6bf19e8f li: measure the action strip (ci), preserve its side while a selection scrolls.
 export function TerminalSelectionAction({anchor,onAttach}) {
  const root=useRef(null),side=useRef(null);
  useLayoutEffect(()=>{

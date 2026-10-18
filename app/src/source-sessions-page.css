@@ -1,0 +1,4 @@
+.source-sessions-page { flex: 1; min-height: 0; overflow: auto; }
+/* The original CDS utilities apply over the layered native-control reset (D26); only style.css's unlayered
+   input:focus { outline: none } is handed back to them. */
+.source-sessions-page :is(input,textarea):focus { outline: revert-layer; }

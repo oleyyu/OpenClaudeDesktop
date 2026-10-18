@@ -4,6 +4,14 @@ import { CoworkVmTransport } from './vm-transport.mjs';
 import { CoworkSdkChannel, sdkLaunch } from './sdk-channel.mjs';
 import { proxyCredentials, providerDomains } from './proxy-credentials.mjs';
 import { setTimeout as delay } from 'node:timers/promises';
+import { REWIND_FORK_REFUSED, isForkRefusal } from './rewind-chain.mjs';
+
+// R4i-cowork CW2: which CLI session a launch opens. A rewind fork resumes the old session at the fork point and names
+// the new one (CB6cNSrW `X.resume=K.cliSessionId,X.resumeSessionAt=lt,X.forkSession=!0`; --session-id is the host's).
+export function sdkSessionOptions({ sdkSessionId, resume = false, fork } = {}) {
+  if (fork) return { resume: fork.from, resumeSessionAt: fork.at, forkSession: true, sessionId: sdkSessionId };
+  return resume ? { resume: sdkSessionId } : { sessionId: sdkSessionId };
+}
 
 // The native VM dispatches onto the macOS main run loop. Loading this module
 // does not load the addon; boot remains lazy until the first Cowork turn.
@@ -78,13 +86,20 @@ async function dispatch(method, params) {
     }
     if (generations.get(params.sessionId) !== params.turnId) throw new Error('Cowork launch cancelled.');
     const child = transport.spawn({ ...mount, env,
-      ...sdkLaunch({ cwd: mount.cwd, model: params.provider.model, permissionMode: params.permissionMode, ...(params.resume ? { resume: params.sdkSessionId } : { sessionId: params.sdkSessionId }) }),
-      allowedDomains: providerDomains(env), isResume: params.resume, oneShot: false, mountSkeletonHome: true });
+      ...sdkLaunch({ cwd: mount.cwd, model: params.provider.model, permissionMode: params.permissionMode, ...sdkSessionOptions(params) }),
+      allowedDomains: providerDomains(env), isResume: !!params.resume || !!params.fork, oneShot: false, mountSkeletonHome: true });
     const channel = new CoworkSdkChannel({ process: child, handlers: { can_use_tool: (request, context) => approval(params.sessionId, params.turnId, request, context) } });
     channels.set(params.sessionId, channel);
     const active = () => channels.get(params.sessionId) === channel;
     channel.on('message', record => { if (active()) send({ event: 'message', sessionId: params.sessionId, turnId: params.turnId, record }); });
     channel.on('failure', error => { if (active()) send({ event: 'failure', sessionId: params.sessionId, turnId: params.turnId, error: error.message }); });
+    // CB6cNSrW takeRewindRefusal reads the CLI's refusal of the fork point from its output; only the fixed marker
+    // crosses to the session service, never the diagnostic text itself.
+    let diagnosticTail = '';
+    if (params.fork) channel.on('diagnostic', text => {
+      const seen = diagnosticTail + text; diagnosticTail = seen.slice(1 - REWIND_FORK_REFUSED.length);
+      if (active() && isForkRefusal(seen)) send({ event: 'failure', sessionId: params.sessionId, turnId: params.turnId, error: REWIND_FORK_REFUSED });
+    });
     channel.on('exit', result => { if (active()) { channels.delete(params.sessionId); send({ event: 'exit', sessionId: params.sessionId, turnId: params.turnId, code: result.code, signal: result.signal }); } });
     const initialized = await channel.initialize({ appendSystemPrompt: params.instructions });
     if (generations.get(params.sessionId) !== params.turnId) { channel.close(); throw new Error('Cowork launch cancelled.'); }

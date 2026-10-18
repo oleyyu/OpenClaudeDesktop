@@ -48,8 +48,8 @@ test('nav-hidden sections leave the nav and the narrow tabs but stay searchable;
  assert.equal(/navHidden:true/.test(text),false);
  assert.match(text,/const baseNavTabs = settingsNavSections\(tabs\);/);
  // Harness is listed only on a core with harnessProfile (or while its page is open).
- // Hooks only on a core with hooksList (or while its page is open).
- assert.match(text,/const navTabs=baseNavTabs\.filter\(section=>\(section\.id!=='harness'\|\|tab==='harness'\|\|coreSupports\(engine,'harnessProfile'\)\)&&\(section\.id!=='customize-hooks'\|\|tab==='customize-hooks'\|\|coreSupports\(engine,'hooksList'\)\)\);/);
+ // Hooks only on a core with hooksList (or while its page is open). Advanced › Core options only while it has rows.
+ assert.match(text,/const navTabs=baseNavTabs\.filter\(section=>\(section\.id!=='harness'\|\|tab==='harness'\|\|coreSupports\(engine,'harnessProfile'\)\)&&\(section\.id!=='customize-hooks'\|\|tab==='customize-hooks'\|\|coreSupports\(engine,'hooksList'\)\)&&\(section\.id!=='advanced'\|\|tab==='advanced'\|\|advancedListed\)\);/);
  assert.match(text,/\{navTabs\.map\(t=><button role="tab"/,'narrow tablist');
  assert.match(text,/<ul>\{navTabs\.filter\(t=>t\.group===group\)\.map\(/,'wide nav');
  assert.match(text,/settingsSearch\(searchTabs,/,'search receives the unfiltered sections');
@@ -82,7 +82,8 @@ test("the nav reads General / This computer › System; 'System' has its own hea
  const text=fs.readFileSync(path.resolve(import.meta.dirname,'../src/source-settings.jsx'),'utf8');
  assert.match(text,/\{id:'preferences',label:'General',icon:'Settings',group:'Settings',keywords:\['preferences',/);
  assert.match(text,/\{id:'general',label:'System',icon:'Computer',group:'This computer',keywords:\['desktop','general'\]\}/);
- assert.match(text,/const navGroups = \['Settings','This computer','Customize'\];/);
+ // The host's developer-facing pages sit in an Advanced group after the official ones (settings-advanced-model.mjs).
+ assert.match(text,/const navGroups = \['Settings','This computer','Customize','Advanced'\];/);
  assert.equal(text.includes("'Desktop app'"),false);
  const shell=[{id:'preferences',label:'General',keywords:['preferences']},{id:'general',label:'System',keywords:['desktop','general']},{id:'developer',label:'Developer',keywords:['desktop']}];
  assert.deepEqual(settingsSearch(shell,[],'preferences').map(hit=>hit.tab),['preferences']);

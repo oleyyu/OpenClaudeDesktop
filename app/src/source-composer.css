@@ -3,6 +3,11 @@
 /* z-index: the transcript's sticky bottom fade strip (z-index 1, opaque at its edge) ends where the card
    begins and would paint over the card's outset hairline ring once scrolled up. */
 .sc-zone.composer-zone { position: relative; z-index: 2; container-type: inline-size; gap: 6px; }
+/* R3-composer step 3 (composer-shell): the Code card is the 2.42304.0 CDS ChatComposer shell (shared-5 Af / jf,
+   source-composer-shell.jsx) with uM's root class (shared-6 d_ = Hc: the presets 1.75rem control and 0.875rem radius,
+   --cmp-font-size / --cmp-line-height from the prompt text size) and the shell's own card, editor box, actions, overlays
+   and chin utilities, all in the loaded @layer utilities sheet; the presets zone's hand-written sizes are gone. What is
+   left here for the card is host-only: the local editor's placeholder, the host + button and the drag-over ring. */
 .sc-context-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-xs, 6px); min-width: 0; padding: 0 96px var(--cds-pad-xs, 4px) 0; }
 .sc-button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 5px; height: 24px; min-width: 24px; padding: 0 6px; border: 0; border-radius: 6px; color: var(--cds-text-secondary); background: transparent; line-height: 1; white-space: nowrap; transition: color 100ms, background-color 100ms, box-shadow 100ms; }
 .sc-button:hover:not(:disabled) { color: var(--cds-text-primary); background: var(--cds-alpha-1); }
@@ -36,43 +41,30 @@
 .sc-worktree input:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .sc-worktree:has(input:disabled) { opacity: .4; }
 .sc-add-folder { width: auto; }
-.sc-composer.composer { min-height: 40px; border-radius: var(--cds-radius-composer, 12px); }
 .sc-composer .sc-surface { padding: 8px; border-radius: inherit; background: var(--cds-surface-3); cursor: text; box-shadow: 0 .25rem 1.25rem rgb(0 0 0 / 3.5%), 0 0 0 var(--cds-ring-hairline, .5px) hsl(60 2% 12% / .15); transition: box-shadow 200ms; }
 .sc-composer .sc-input-row { display: flex; align-items: flex-end; gap: 6px; min-height: 24px; }
 /* ca80fca8d yP editor maxHeight 'min(24rem, 40svh)': a short window caps a long draft at 40% of its height. */
-.sc-composer .sc-input { display: block; width: 100%; flex: 1; min-width: 0; min-height: 24px; max-height: min(calc(24rem * var(--cds-rem-scale, 1)), 40svh); margin: 0; padding: 2px 0 2px 4px; border: 0; outline: none; resize: none; background: transparent; color: var(--cds-text-primary); font-family: var(--cds-font-sans, anthropic-sans); font-size: 14px; line-height: 20px; }
-.sc-composer .sc-input::placeholder { color: var(--cds-text-muted); opacity: 1; }
-.sc-composer .sc-submit { width: 24px; height: 24px; min-height: 24px; align-self: flex-end; }
-.sc-submit-slot { display: inline-flex; flex-shrink: 0; align-self: flex-end; }
-/* c099c328d sm: `grid items-center justify-items-end` cell; each layer is im
-   `col-start-1 row-start-1 flex cursor-default items-center justify-end`. After a
-   swap the active layer gets am `motion-safe:animate-[cds-fade-in_0.12s_ease-out_0.08s_backwards]`;
-   the previous one om `pointer-events-none invisible opacity-0 [transition:visibility_0s_linear_80ms]
-   motion-safe:[transition:opacity_80ms_ease-out,visibility_0s_linear_80ms]` until its visibility transition ends. */
-.sc-composer .sc-submit-cell { display: grid; align-items: center; justify-items: end; align-self: flex-end; flex-shrink: 0; }
-.sc-composer .sc-submit-layer { grid-column: 1; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; cursor: default; }
-.sc-composer .sc-submit-layer[data-leaving] { pointer-events: none; visibility: hidden; opacity: 0; transition: visibility 0s linear 80ms; }
-@media (prefers-reduced-motion: no-preference) {
-  .sc-composer .sc-submit-layer[data-entering] { animation: cds-fade-in .12s ease-out .08s backwards; }
-  .sc-composer .sc-submit-layer[data-leaving] { transition: opacity 80ms ease-out, visibility 0s linear 80ms; }
-}
-/* motion-safe also excludes the in-app setting (:not(:where([data-reduce-motion=true] *)) in the
-   source variants): om keeps only its unconditional visibility transition, whose transitionend
-   unmounts the layer, and am has no entry animation. */
-html[data-reduce-motion="true"] .sc-composer .sc-submit-layer[data-entering] { animation: none; }
-html[data-reduce-motion="true"] .sc-composer .sc-submit-layer[data-leaving] { transition: visibility 0s linear 80ms; }
-/* design-system.css (2.2553.1) @keyframes cds-fade-in{0%{opacity:0}}. */
-@keyframes cds-fade-in { 0% { opacity: 0; } }
-/* c099c328d Nh/Ih: ArrowReturn/Stop size sm with text-secondary on the icon itself; Nh
-   group-disabled/btn:text-disabled. Fh `[&:disabled:not([aria-busy])]:opacity-100`: a
-   disabled, non-busy Send is not faded (the busy spinner keeps .sc-button:disabled .4).
-   jh (non-compact main composer) `before:absolute before:content-[''] before:left-0
-   before:-top-2.5 before:-right-2.5 before:-bottom-2.5`: 10px invisible hit extension. */
-.sc-composer .sc-submit { position: relative; }
-.sc-composer .sc-submit::before { content: ''; position: absolute; left: 0; top: -10px; right: -10px; bottom: -10px; }
-.sc-composer .sc-submit [data-cds="Icon"] { color: var(--cds-text-secondary); }
-.sc-composer .sc-submit:disabled [data-cds="Icon"] { color: var(--cds-text-disabled); }
-.sc-composer .sc-submit:disabled:not([aria-busy]) { opacity: 1; }
+.sc-composer .sc-input-row .sc-input { display: block; width: 100%; flex: 1; min-width: 0; min-height: 24px; max-height: min(calc(24rem * var(--cds-rem-scale, 1)), 40svh); margin: 0; padding: 2px 0 2px 4px; border: 0; outline: none; resize: none; background: transparent; color: var(--cds-text-primary); font-family: var(--cds-font-sans, anthropic-sans); font-size: 14px; line-height: 20px; }
+.sc-composer .sc-input-row .sc-input::placeholder { color: var(--cds-text-muted); opacity: 1; }
+/* The Send/Stop cell is the original 2.42304.0 c227f4d5e lM (generated composer-send-cell.mjs) with its own utility
+   classes (Ra, $j, eM, the Ij layers Nj/Pj/Fj and the view-tabs CdsButton), all in the loaded @layer utilities sheet,
+   reduced motion included (motion-safe there excludes [data-reduce-motion=true]). No local geometry and no release:
+   the host's native-button reset sits in @layer base (style.css, D26), below the CdsButton utilities. */
+/* composer-env-bar: the Home draft's environment bar is the original 2.42304.0 cc43287c9 l0 / u0 / c0 (generated
+   environment-bar.mjs) with its own utility classes (Vc/zc/Qc/xl, o0, the ghost CdsButton chips). Its host wrapper only
+   keeps the composer's chin scope for the chin shortcuts and the reused Mode / Model / Effort / usage triggers: no box of
+   its own, and none of the chin's text styles inherited into the bar. The chips need no release from the native-button
+   reset either (layered since D26, R3-style). */
+.sc-zone .sc-chin.sc-env-bar-scope { display: contents; font: inherit; color: inherit; }
+/* composer-shell: uM's suggestion ghost and placeholder fit probe are lc.Overlay children now (the shell's
+   ChatComposerOverlay: absolute inset-0 over the editor row with its row padding, start inset and trailing reserve), with
+   their own classes; nothing local styles them. R4g-composer CP2: the placeholder is cm's span (source-composer-shell.jsx),
+   the shell's editor carries no data-placeholder; R4i-graph GR3 dropped the two rules that placed its ::before inside
+   the shell's editor box (the box's float notch, ProseMirror::before, is the official sheet's alone now), and the
+   in-card .sc-add size rule (CP3 replaced that button with the official Oj trigger). */
+/* A Finder drop in progress over the card (the host keeps its own drop handling: the shell gets no onFileDrop, so its
+   own drop panel never shows): an accent ring over the card's shadow. */
+.sc-composer[data-drag-over] [data-cds="ChatComposer"] > .sc-card { box-shadow: 0 .25rem 1.25rem rgb(0 0 0 / 7.5%), 0 0 0 1px var(--cds-fill-accent); }
 .sc-composer .sc-surface:hover:not(:has(button:hover)) { box-shadow: 0 .25rem 1.25rem rgb(0 0 0 / 3.5%), 0 0 0 var(--cds-ring-hairline, .5px) hsl(60 2% 12% / .3); }
 .sc-composer .sc-surface:focus-within, .sc-composer .sc-surface:hover:focus-within:not(:has(button:hover)) { box-shadow: 0 .25rem 1.25rem rgb(0 0 0 / 7.5%), 0 0 0 var(--cds-ring-hairline, .5px) hsl(60 2% 12% / .3); }
 [data-mode="dark"] .sc-composer .sc-surface { box-shadow: 0 .25rem 1.25rem rgb(0 0 0 / 3.5%), inset 0 0 0 1px var(--cds-border); }
@@ -82,7 +74,7 @@ html[data-reduce-motion="true"] .sc-composer .sc-submit-layer[data-leaving] { tr
    drop in progress. The CDS Button busy state keeps the spinner in the
    ArrowReturn slot with an sr-only busy label. */
 .sc-composer[data-disabled] .sc-surface { cursor: default; }
-.sc-composer .sc-input:disabled { color: var(--cds-text-primary); opacity: 1; -webkit-text-fill-color: var(--cds-text-primary); cursor: default; }
+.sc-composer .sc-input-row .sc-input:disabled { color: var(--cds-text-primary); opacity: 1; -webkit-text-fill-color: var(--cds-text-primary); cursor: default; }
 .sc-composer[data-disabled] textarea.sc-input::placeholder { color: var(--cds-text-disabled, var(--cds-text-muted)); }
 .sc-composer[data-drag-over] .sc-surface { box-shadow: 0 .25rem 1.25rem rgb(0 0 0 / 7.5%), 0 0 0 1px var(--cds-fill-accent); }
 .sc-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -90,39 +82,32 @@ html[data-reduce-motion="true"] .sc-composer .sc-submit-layer[data-leaving] { tr
 .sc-warning-row { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); color: var(--cds-text-warning); }
 .sc-warning-text { flex: 1; min-width: 0; }
 .sc-warning-action { flex-shrink: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-decoration: underline; cursor: default; }
-/* The Home pet sprite (.sc-pet: 80px box at right:-16px) overlaps the row's right end; keep its text and
-   Retry clear of it, and above it so the sprite's paths never take the click. */
+/* The Home pet sprite (cc43287c9 O7, generated/code-start/pet.mjs: an 80px box at right-[-13px], in the z-index 2
+   slot) overlaps the row's right end; keep its text and Retry clear of it, and above it so the sprite's paths never
+   take the click. */
 .sc-warning-row[data-pet] { padding-right: 68px; }
 /* A neutral status (still connecting) rather than a warning. */
 .sc-warning-row[data-tone="info"] { color: var(--cds-text-muted); }
 .sc-warning-action { position: relative; z-index: 3; }
 .sc-warning-action:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 3px; }
-.sc-zone .sc-chin { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 0; min-height: 20px; padding: 0 10px 0 7px; font-size: 12px; font-weight: 400; line-height: 15px; color: var(--cds-text-secondary); }
-/* shared-11 cu leading slot 'flex items-center self-start' (no gap): Add (Us) and Mode (Ie span) touch. The
-   gap-xs in c360a9e1c:4894 belongs to the dictation bH cluster between them, which is empty:hidden here. */
-/* ca80fca8d G$/O$ (:28800-28907): the Mode trigger is 'inline-flex min-w-0' around a 'min-w-0 shrink' button whose
-   label truncates, so in a narrow split 'Bypass permissions' gives way beside the model pill instead of pushing it. */
-.sc-chin-leading { display: flex; align-items: center; flex-shrink: 1; min-width: 0; gap: 0; }
-.sc-chin-trailing { display: flex; align-items: center; min-width: 0; gap: 4px; margin-left: auto; padding-left: 8px; }
+/* composer-shell: the chin box is the shell's Chin part (shared-5 Kd: its leading 'flex items-center self-start' and
+   trailing 'ms-auto flex min-w-0 items-center gap-1 ps-2' slots, the xs data-size, text-footnote text-secondary, the
+   @max-[25rem] caption size), so the host's box, slot and narrow-container rules are gone. The host buttons it still
+   holds (the classic layout's Add, Chat mode's reminder) keep their xs size below. */
 .sc-chin .sc-button { height: 20px; min-width: 20px; padding: 0 6px; border-radius: 5px; font-size: 12px; font-weight: 400; line-height: 15px; }
 /* Purple top tier on the chip (a local extension of the shared-14 :6565 'text-pro font-medium' menu row; the
-   source chip is plain). Scoped under .sc-chin so it outranks .sc-chin .sc-button / .sc-button:disabled / :hover. */
-.sc-chin .sc-effort-trigger[data-top-tier], .sc-chin .sc-effort-trigger[data-top-tier]:hover:not(:disabled) { color: var(--cds-text-pro); font-weight: 500; }
+   source chip is plain). R3 composer-row-chin: keyed on the official effort trigger (c8e04f916 data-cds
+   ModelSelectorEffort, a ghost CdsButton); unlayered, so it outranks the trigger's own text / font-weight utilities. */
+.sc-chin [data-cds="ModelSelectorEffort"][data-top-tier] { color: var(--cds-text-pro); font-weight: 500; }
 .sc-chin .sc-icon-button { width: 20px; padding: 0; }
 .sc-chin .sc-icon-button [data-cds="Icon"] { font-size: 12px !important; }
-/* Current CDS Button size="base" adds no data-size reset: Add inherits the
-   chin's xs 20px control, while dockGlyph explicitly keeps its 16px icon. */
-.sc-chin .sc-add { width: 20px; height: 20px; }
-.sc-chin .sc-add [data-cds="Icon"] { font-size: 16px !important; }
-/* The model pill gives way first in a cramped chin (split view, a pane open) but keeps a few characters and the
-   ellipsis ("Tes…") rather than shrinking to a bare dot; Add and Effort never shrink, the Mode label truncates too. */
-.sc-chin .sc-model-trigger { min-width: 4em; flex-shrink: 1; }
-.sc-model-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sc-chin .sc-usage-trigger { color: var(--cds-text-muted); }
-/* shared-14 xT: 12×12 svg, Tailwind -rotate-90 is the `rotate` property (c6a992d55 .-rotate-90{rotate:-90deg});
-   value circle transition-[stroke-dashoffset] duration-300 with the default cubic-bezier(.4,0,.2,1). */
-.sc-context-ring { display: block; flex-shrink: 0; width: 12px; height: 12px; rotate: -90deg; }
-.sc-context-ring-value { transition: stroke-dashoffset 300ms cubic-bezier(.4, 0, .2, 1); }
+/* R4i-graph GR3: the classic chin's + is the official Oj trigger (c73f45bc3 tv, size "base" with the dock glyph), sized by
+   its own CdsButton / CdsIcon utilities; the host .sc-add sizes are gone. */
+/* R3 composer-row-chin: the chin's Model / Effort / usage triggers are the official ModelSelector pill, EffortControl
+   trigger and yZ ring button (source-composer-row-chin.jsx) with their own utility classes (min-w-0 max-w-full +
+   truncate, the Va grid's minmax(0,max-content) columns, the shared-8 KV svg); no local geometry. The chat composer's
+   own model button (source-chat-composer.jsx, not a ModelSelector) keeps the truncating label. */
+.sc-model-trigger:not([data-cds="ModelSelector"]) > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sc-spinner { width: 13px; height: 13px; border: 1.5px solid var(--cds-alpha-3); border-top-color: var(--cds-text-secondary); border-radius: 50%; animation: sc-spin .7s linear infinite; }
 @keyframes sc-spin { to { transform: rotate(360deg); } }
 /* CDS Spinner arc: animate-[spin_1s_linear_infinite] motion-reduce:animate-none (shared-frame-C_2npUJq.js:2341-2343). */
@@ -130,7 +115,6 @@ html[data-reduce-motion="true"] .sc-composer .sc-submit-layer[data-leaving] { tr
 html[data-reduce-motion="true"] .sc-spinner { animation: none; }
 
 .sc-pet-slot { position: relative; height: 0; margin-bottom: -6px; pointer-events: none; }
-.sc-pet { position: absolute; z-index: 2; right: -16px; bottom: -13px; width: 80px; height: 80px; padding: 0; border: 0; outline: none; background: transparent; pointer-events: auto; transform: scaleX(-1); cursor: default; }
 .sc-pet-animation { display: block; width: 100%; height: 100%; opacity: 0; }
 .sc-pet-animation[data-ready] { opacity: 1; transition: opacity 200ms; }
 .sc-pet-animation > svg { display: block; width: 100%; height: 100%; }
@@ -223,48 +207,28 @@ html[data-reduce-motion="true"] .sc-spinner { animation: none; }
 .sc-slider input::-webkit-slider-runnable-track { height: 24px; background: transparent; }
 .sc-slider input::-webkit-slider-thumb { appearance: none; width: 16px; height: 24px; background: transparent; border: 0; }
 .sc-slider:has(input:focus-visible) .sc-slider-handle { box-shadow: var(--cds-focus-shadow); }
-@container (max-width: 400px) { .sc-zone .sc-chin { font-size: 11px; padding-inline: 0; } .sc-chin-trailing { padding-left: 0; gap: 2px; } .sc-chin .sc-button { padding-inline: 4px; } .sc-chin .sc-icon-button { padding: 0; } }
-@media (prefers-reduced-motion: reduce) { .sc-pet-animation, .sc-slider-fill, .sc-slider-handle, .sc-button, .sc-composer .sc-surface, .sc-context-ring-value { transition: none; }
+@container (max-width: 400px) { .sc-chin .sc-button { padding-inline: 4px; } .sc-chin .sc-icon-button { padding: 0; } }
+@media (prefers-reduced-motion: reduce) { .sc-pet-animation, .sc-slider-fill, .sc-slider-handle, .sc-button, .sc-composer .sc-surface { transition: none; }
   .sc-effort-swap, .sc-effort-swap > .sc-effort-glow { animation: none !important; } .sc-effort-glow:not([data-r="0"]) { display: none; } .sc-effort-swap[data-leaving] { display: none; }
   .sc-effort-lit-ground, .sc-effort-lit-ground[data-on] { opacity: 0; transition: none !important; } }
-html[data-reduce-motion="true"] .sc-pet-animation, html[data-reduce-motion="true"] .sc-slider-fill, html[data-reduce-motion="true"] .sc-slider-handle, html[data-reduce-motion="true"] .sc-button, html[data-reduce-motion="true"] .sc-composer .sc-surface, html[data-reduce-motion="true"] .sc-context-ring-value { transition: none; }
+html[data-reduce-motion="true"] .sc-pet-animation, html[data-reduce-motion="true"] .sc-slider-fill, html[data-reduce-motion="true"] .sc-slider-handle, html[data-reduce-motion="true"] .sc-button, html[data-reduce-motion="true"] .sc-composer .sc-surface { transition: none; }
 html[data-reduce-motion="true"] .sc-effort-swap, html[data-reduce-motion="true"] .sc-effort-swap > .sc-effort-glow { animation: none !important; }
 html[data-reduce-motion="true"] .sc-effort-glow:not([data-r="0"]), html[data-reduce-motion="true"] .sc-effort-swap[data-leaving] { display: none; }
 html[data-reduce-motion="true"] .sc-effort-lit-ground, html[data-reduce-motion="true"] .sc-effort-lit-ground[data-on] { opacity: 0; transition: none !important; }
 
-.sc-chin .sc-permission { line-height: 17px; min-width: 0; flex-shrink: 1; }
-/* A$: 'grid grid-cols-[minmax(0,1fr)]' > 'overflow-x-clip text-ellipsis whitespace-nowrap' (+ text-warning for Manual). */
-.sc-permission-label { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
-.sc-permission-text { overflow-x: clip; text-overflow: ellipsis; white-space: nowrap; }
-.sc-chin .sc-permission .sc-permission-text[data-warning] { color: var(--cds-text-warning); }
-/* W$: the label stays in place invisibly (it keeps the trigger's width) under an absolute inset-0 skeleton bar. */
-.sc-permission-loading { position: relative; display: block; }
-.sc-permission-invisible { visibility: hidden; }
-.sc-permission-loading > .sc-permission-skeleton { position: absolute; inset: 0; display: flex; align-items: center; height: auto; margin-block: 2px; }
+/* R3 composer-row-chin: the Mode trigger is tQ's ghost CdsButton (min-w-0 shrink) with rQ's truncating label and _Q's
+   loading label (relative block > invisible label under absolute inset-0 flex items-center); the host skeleton bar that
+   stands in for the CDS Skeleton fills that box's height. */
+.sc-permission .sc-permission-skeleton { align-self: stretch; margin-block: 2px; }
 /* Chat mode: a read-only reminder in the chin, accent-tinted like a status pill, theme tokens only. */
 .sc-chin .sc-chat-mode { line-height: 17px; gap: 4px; color: var(--cds-text-accent, var(--cds-text-secondary)); }
 .sc-chin .sc-chat-mode:hover:not(:disabled) { background: var(--cds-fill-ghost-hover); }
-.sc-chin .sc-permission:hover:not(:disabled), .sc-chin .sc-permission[aria-expanded="true"] { background: var(--cds-fill-ghost-hover); color: var(--cds-text-secondary); }
-/* Button ghost variant: bg-fill-ghost-hover while [aria-haspopup][aria-expanded=true] (shared-frame :2743). */
-.sc-chin .sc-model-trigger[aria-expanded="true"] { background: var(--cds-fill-ghost-hover); }
 .sc-chin .sc-model-trigger .sc-spinner { width: 11px; height: 11px; }
 
-.sc-fast-label { color:var(--cds-text-muted); margin-left:4px; }
-/* Prompt-history strip = CDS ChatComposer Header (c099c328d Em :9012-9015 Nn.Header aria-hidden
-   whitespace-nowrap + wm :8580-8633; shared-11 uu :1430-1446 `flex min-h-[var(--cds-h-control-nested)]
-   min-w-0 items-center gap-xs text-footnote font-normal text-muted` + So("text") `pl-[4px]
-   comfortable:pl-[6px]` (no leading card action, :1703); header slot :1856-1878 grid-rows-[1fr]
-   overflow-hidden, enterClassName nl `motion-safe:animate-[cds-grid-rows-in_0.3s_cubic-bezier(0.25,0.1,0.35,1)]`,
-   inner min-h-0 min-w-0 pb-[var(--cmp-gap-y)] (compact 0.375rem, comfortable 0.5rem). The card here
-   is a block with padding, so the header's -mb/gap pair collapses to the inner bottom padding. */
-.sc-history-header-grid { display: grid; grid-template-rows: 1fr; overflow: hidden; }
-@media (prefers-reduced-motion: no-preference) { .sc-history-header-grid { animation: cds-grid-rows-in .3s cubic-bezier(.25,.1,.35,1); } }
-html[data-reduce-motion="true"] .sc-history-header-grid { animation: none; }
-.sc-history-header-clip { min-height: 0; min-width: 0; padding-bottom: .375rem; }
-[data-density="comfortable"] .sc-history-header-clip { padding-bottom: .5rem; }
-.sc-history-header { display: flex; align-items: center; gap: var(--cds-gap-xs, 6px); min-width: 0; min-height: var(--cds-h-control-nested, 18px); padding-left: 4px; white-space: nowrap;
-  font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); font-weight: 400; color: var(--cds-text-muted); cursor: default; }
-[data-density="comfortable"] .sc-history-header { padding-left: 6px; }
+/* Prompt-history strip: its row is the shell's Header part (shared-5 Jd: flex min-h-[var(--cds-h-control-nested)]
+   min-w-0 items-center gap-xs text-footnote font-normal, the stays-secondary tone and the start inset), entering and
+   leaving through the shell's Presence (grid-rows-[1fr] overflow-hidden, the cds-grid-rows enter, height-0 exit); uM
+   puts the history hint (Rk) in it, aria-hidden whitespace-nowrap. The hint's own pieces stay host-styled below. */
 .sc-history-count { font-variant-numeric: tabular-nums; }
 .sc-history-draft { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* cbd6db52c Kbd: kbd data-cds=Kbd `text-caption` + qa single-grapheme square keycap (source-shortcut.css). */
@@ -313,14 +277,8 @@ html[data-reduce-motion="true"] .sc-usage-plan-fill { transition: none; }
 
 /* Env pill menu (cc43287c9 :21036 Z.Popup '!min-w-[200px]'). */
 .smenu-popup.sc-env-menu { min-width: 200px; }
-/* The Local row's trailing settings button (ca80fca8d DJ → EJ icon Settings): 'pointer-events-none flex size-icon shrink-0
-   items-center justify-center rounded-sm text-muted opacity-0 hover:bg-alpha-2 hover:text-primary', shown and pressable on
-   the highlighted row ([[data-highlighted]_&]) and on a coarse pointer. */
-.sc-env-settings { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: var(--cds-icon); height: var(--cds-icon);
-  padding: 0; border: 0; border-radius: calc(var(--cds-radius) - 2px); background: transparent; color: var(--cds-text-muted); opacity: 0; pointer-events: none; cursor: default; }
-.sc-env-settings:hover { background: var(--cds-alpha-2); color: var(--cds-text-primary); }
-.smenu-item[data-highlighted] .sc-env-settings { opacity: 1; pointer-events: auto; }
-@media (pointer: coarse) { .sc-env-settings { opacity: 1; pointer-events: auto; } }
+/* Current ca80fca8d tX owns the action utilities (.source-env-menu-row buttons): no release, the host button reset is
+   layered (D26). */
 
 /* Branch picker (cd2687f9f N, side top): list, h-1 spacer, then the search field 'relative flex items-center gap-xs
    mx-1 px-md h-control shrink-0 rounded bg-alpha-1 has-[input:focus-visible]:shadow-focus mb-1'; popup
@@ -367,14 +325,8 @@ html[data-reduce-motion="true"] .sc-usage-plan-fill { transition: none; }
 .sc-effort-plan { display: flex; flex-direction: column; align-items: stretch; gap: var(--cds-gap-xs, 6px); padding-top: var(--cds-gap-sm, 8px); border-top: .5px solid var(--cds-border); }
 .sc-effort-plan-label { flex: none; white-space: nowrap; font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); color: var(--cds-text-secondary); }
 .sc-effort-plan-select { min-width: 0; max-width: none; }
-/* Bash mode (c099c328d Em): the card's vm 'inset-ring-1 inset-ring-pro' over its usual shadows (every state), and
-   the header's Badge {variant pro, size sm} 'bash' (shared-frame Eo pro: bg-tint-violet text-pro; Po base
-   inline-flex h-control-nested px-sm rounded-chip text-caption font-medium). */
-.sc-composer[data-bash-mode] .sc-surface, .sc-composer[data-bash-mode] .sc-surface:hover:not(:has(button:hover)) { box-shadow: inset 0 0 0 1px var(--cds-text-pro), 0 .25rem 1.25rem rgb(0 0 0 / 3.5%), 0 0 0 var(--cds-ring-hairline, .5px) hsl(60 2% 12% / .15); }
-.sc-composer[data-bash-mode] .sc-surface:focus-within, .sc-composer[data-bash-mode] .sc-surface:hover:focus-within:not(:has(button:hover)) { box-shadow: inset 0 0 0 1px var(--cds-text-pro), 0 .25rem 1.25rem rgb(0 0 0 / 7.5%), 0 0 0 var(--cds-ring-hairline, .5px) hsl(60 2% 12% / .3); }
-[data-mode="dark"] .sc-composer[data-bash-mode] .sc-surface, [data-mode="dark"] .sc-composer[data-bash-mode] .sc-surface:hover:not(:has(button:hover)), [data-mode="dark"] .sc-composer[data-bash-mode] .sc-surface:focus-within, [data-mode="dark"] .sc-composer[data-bash-mode] .sc-surface:hover:focus-within:not(:has(button:hover)) { box-shadow: inset 0 0 0 1px var(--cds-text-pro), 0 .25rem 1.25rem rgb(0 0 0 / 7.5%); }
-.sc-bash-badge { display: inline-flex; flex-shrink: 0; align-items: center; height: var(--cds-h-control-nested, 18px); padding: 0 var(--cds-pad-sm, 6px); border-radius: calc(var(--cds-h-control-nested, 18px) / 4);
-  background: var(--cds-bg-tint-violet); color: var(--cds-text-pro); font-size: var(--cds-font-size-caption, 11px); line-height: var(--cds-leading-caption, 15px); font-weight: var(--cds-font-weight-medium, 500); white-space: nowrap; }
+/* Bash mode: uM's card class tM 'inset-ring-1 inset-ring-pro' (cardClassName) and the view-tabs CdsBadge {pro, sm}
+   'bash' in lc.Actions' trailing slot — both the originals' own classes; no local rule. */
 /* wm search hint (:8571-8608): 'Search history:' (text-danger when nothing matches), the query in font-mono-ui
    text-primary with a pulsing '▎', then the ml-auto '↑ ↓ cycle · esc cancel' hints that fade in (opacity 300ms ease-out). */
 .sc-history-search-label[data-failed] { color: var(--cds-text-danger); }
@@ -386,10 +338,7 @@ html[data-reduce-motion="true"] .sc-history-search-caret { animation: none; }
 .sc-history-search-hints[data-shown] { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .sc-history-search-hints { transition: none; } }
 html[data-reduce-motion="true"] .sc-history-search-hints { transition: none; }
-/* Nn.Overlay prompt-suggestion ghost (:9031-9039 'truncate text-muted'), drawn over the empty editor's first line. */
 .sc-composer .sc-input-row { position: relative; }
-.sc-suggestion-ghost { position: absolute; top: 2px; left: 4px; right: 30px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none;
-  color: var(--cds-text-muted); font-size: 14px; line-height: 20px; }
 /* A send the composer refused (the shell-command mention guard): the composer's danger banner. */
 .sc-composer-notice { margin: 0; }
 /* Emoji suggestions option glyph (Gd: 'flex size-[14px] shrink-0 items-center justify-center leading-none', 14px). */

@@ -7,6 +7,8 @@ import { Icon } from "./icons";
 import { SourceTooltip } from "./source-tooltip";
 import { createClipboardFeedback } from "./clipboard-feedback.mjs";
 import { SourcePlanChecklist } from "./source-plan-checklist.jsx";
+import { suppressEscapeRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
+import { ownerWindow } from "./generated/files-changes/owner-window.mjs";
 import "./source-plan-pane.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -74,7 +76,42 @@ const rectsOf = (range) => {
   const rects = [...range.getClientRects()].filter((rect) => rect.width > 0 || rect.height > 0);
   return rects.length ? { first: rects[0], last: rects.at(-1) } : null;
 };
-function PlanCommentPopover({ range, selectedText, initialValue, isEditing, onSubmit, onChange, onDelete, onDismiss, boundaryRef }) {
+// R3b-tasks (tasks-12). The popover's document capture keydown (2.42304.0 c96d752d0 Cat `t`; 2.37337.1 cd5a31703 Wlt):
+// for a key inside the card, a composing key only keeps an Escape from leaking out, Tab cycles the textarea and the
+// enabled buttons, and Escape (preventDefault + stopPropagation) closes the popover. It runs in the capture phase on the
+// document, before React dispatches the key to the field, so the field's Escape branch below never sees a key typed in
+// the card — and, as in 2.42304.0, the auto-repeats of a held Escape are not swallowed after it closes.
+export function planPopoverDocumentKeyDown(event, { card, dismiss }) {
+  if (!card?.contains(event.target)) return;
+  if (event.isComposing || event.keyCode === 229) { if (event.key === "Escape") event.stopPropagation(); return; }
+  if (event.key === "Tab") {
+    const stops = [...card.querySelectorAll("textarea, button:not([disabled])")];
+    if (!stops.length) return;
+    event.preventDefault();
+    const at = stops.indexOf(event.target);
+    stops[event.shiftKey ? (at <= 0 ? stops.length - 1 : at - 1) : (at + 1) % stops.length].focus();
+    return;
+  }
+  if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); dismiss(); }
+}
+// The field's keydown (c82eca2bd Se `me`, the comment editor the popover renders with variant "floating"): Enter saves (a
+// held Enter saves once), Shift+Enter and Alt+Enter break the line. Escape: preventDefault, stopPropagation inside a
+// dialog, then, for an editable field, pZ(up(field)) — the owner window swallows the held Escape's auto-repeats until
+// keyup or another key — and cancel. Unreachable in the Plan popover while its document listener claims Escape first
+// (the same holds for Cat around Se in 2.42304.0); kept as the official field branch.
+export function planCommentFieldKeyDown(event, { save, cancel, readOnly = false }) {
+  if (event.nativeEvent?.isComposing || event.keyCode === 229) return;
+  if (event.key === "Enter" && !event.shiftKey && !event.altKey) {
+    event.preventDefault(); event.stopPropagation();
+    if (!event.repeat) save();
+  } else if (event.key === "Escape") {
+    event.preventDefault();
+    if (event.currentTarget.closest('[role="dialog"], [role="alertdialog"]')) event.stopPropagation();
+    if (!readOnly) { const view = ownerWindow(event.currentTarget); if (view) suppressEscapeRepeat(view); }
+    cancel();
+  }
+}
+export function PlanCommentPopover({ range, selectedText, initialValue, isEditing, onSubmit, onChange, onDelete, onDismiss, boundaryRef }) {
   const card = useRef(null), field = useRef(null), side = useRef(null);
   const [value, setValue] = useState(initialValue);
   const valueRef = useRef(value);
@@ -126,35 +163,14 @@ function PlanCommentPopover({ range, selectedText, initialValue, isEditing, onSu
       const current = valueRef.current;
       if (event.button === 0 && card.current && !card.current.contains(event.target) && (current.trim() === "" || current === initialValue)) onDismiss();
     };
-    const keys = (event) => {
-      const node = card.current;
-      if (!node?.contains(event.target)) return;
-      if (event.isComposing || event.keyCode === 229) { if (event.key === "Escape") event.stopPropagation(); return; }
-      if (event.key === "Tab") {
-        const stops = [...node.querySelectorAll("textarea, button:not([disabled])")];
-        if (!stops.length) return;
-        event.preventDefault();
-        const at = stops.indexOf(event.target);
-        stops[event.shiftKey ? (at <= 0 ? stops.length - 1 : at - 1) : (at + 1) % stops.length].focus();
-        return;
-      }
-      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onDismiss(); }
-    };
+    const keys = (event) => planPopoverDocumentKeyDown(event, { card: card.current, dismiss: onDismiss });
     doc.addEventListener("pointerdown", press, true);
     doc.addEventListener("keydown", keys, true);
     return () => { doc.removeEventListener("pointerdown", press, true); doc.removeEventListener("keydown", keys, true); };
   }, [doc, initialValue, onDismiss]);
   const change = (next) => { setValue(next); onChange?.(next); };
   const save = () => { const text = value.trim(); if (text) onSubmit(text); };
-  const keyDown = (event) => {
-    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-    if (event.key === "Enter" && !event.shiftKey && !event.altKey) {
-      event.preventDefault(); event.stopPropagation();
-      if (!event.repeat) save();
-    } else if (event.key === "Escape") {
-      event.preventDefault(); event.stopPropagation(); onDismiss();
-    }
-  };
+  const keyDown = (event) => planCommentFieldKeyDown(event, { save, cancel: onDismiss });
   // Ce: copying or cutting with nothing selected in the field copies the commented text.
   const copyQuote = (event) => {
     const input = event.currentTarget;

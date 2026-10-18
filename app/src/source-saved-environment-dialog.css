@@ -1,0 +1,15 @@
+/* Let shipped utilities own the en dialog body; only bridge the host primitives. */
+.saved-environment-dialog { max-height: revert-layer; }
+.saved-environment-dialog .sdlg-footer.mt-0 { margin-top: 0; }
+/* The original tx TextInputs and the he branch trigger (view-tabs CdsButton) need no release: the native-control reset
+   is layered (D26). SourceSettingsButton's own unlayered colour still yields to its text-* utilities here. */
+.saved-environment-dialog .source-settings-button.text-danger { color: revert-layer; }
+.saved-environment-dialog .source-settings-button.text-secondary { color: revert-layer; }
+.saved-environment-dialog .saved-environment-link {
+  all: revert-layer; font: inherit; color: inherit; background: none;
+  border: 0; padding: 0; text-decoration: underline; text-underline-offset: 2px;
+}
+.saved-environment-dialog .saved-environment-link:hover { color: var(--cds-text-primary); }
+/* he's SearchablePopup (shared-frame yC: w-max min-w-64 max-w-96) is the host SourceMenu.Popup, whose unlayered
+   min/max width would win over those utilities (its search field, the original tx, needs no release since D26). */
+.smenu-popup.saved-environment-branch-popup { min-width: revert-layer; max-width: revert-layer; }

@@ -279,10 +279,10 @@ try{
  await pane().locator('.stp-host').click();await page.keyboard.press('Control+c');await poll(async()=>await pane().locator('.stp-tab[data-busy]').count()===0,'Ctrl-C ends the command',15000);
  report.checks.push('A running command marks the tab, the hidden pane’s titlebar toggle shows “Terminal (command running)” with a dot, and closing asks first');
  step('exited');
- await type('sleep 3; exit 5');await pane().getByText('Shell exited.',{exact:true}).waitFor({timeout:15000});
- await pane().getByRole('button',{name:'Restart shell',exact:true}).click();await pane().getByText('Shell exited.',{exact:true}).waitFor({state:'detached'});
+ await type('sleep 3; exit 5');await pane().getByText('Shell exited',{exact:true}).waitFor({timeout:15000});
+ await pane().getByRole('button',{name:'Restart shell',exact:true}).click();await pane().getByText('Shell exited',{exact:true}).waitFor({state:'detached'});
  await poll(async()=>/fixture\$|\$ ?$/m.test(await screen()),'a new prompt after restart');
- report.checks.push('A shell that exits on its own shows Shell exited. with Restart shell, which starts a fresh shell');
+ report.checks.push('A shell that exits on its own shows Shell exited (2.42304.0 copy) with Restart shell, which starts a fresh shell');
  step('session-switch');
  await pane().locator('.stp-host').click();await type('echo keep-alive-A');await poll(async()=>/keep-alive-A/.test(await screen()),'marker in A');
  await open(B);if(!(await pane().count()))await page.keyboard.press('Control+Backquote');await pane().waitFor();

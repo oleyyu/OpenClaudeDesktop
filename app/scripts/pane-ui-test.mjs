@@ -254,7 +254,7 @@ async function focusedTab(name) {
 async function focusedTreeRow(name) {
   await page.waitForFunction((name) => {
     const node = document.activeElement;
-    return node?.tagName === "BUTTON" && !!node.closest("[data-tree-row]") && node.getAttribute("aria-label") === name;
+    return node?.tagName === "BUTTON" && !!node.closest("[data-tree-row]") && (node.dataset.filePath === name || node.getAttribute("aria-label") === name);
   }, name);
 }
 // pe close button (panes-tabs-current.js:190-202) is aria-hidden with the
@@ -278,7 +278,7 @@ try {
   await page.locator(".st-title").waitFor();
   await page.evaluate(() => document.fonts.ready);
   const closed = await geometry();
-  assert.equal(closed.bottom, "8px");
+  assert.equal(closed.bottom, "9px");
   await openFiles();
   metrics.initial = await geometry();
   near(
@@ -303,7 +303,7 @@ try {
   near(headers[0].y, headers[1].y);
   headers.forEach((header) => near(header.height, 32));
   checks.push(
-    "Initial Files pane uses 2:3 flex with 8px padding, 12px divider and aligned 32px headers; closed layout retains 8px bottom padding",
+    "Initial Files pane uses 2:3 flex with 8px padding, 12px divider and aligned 32px headers; closed layout keeps the 9px bottom inset (padding 8 + border 1)",
   );
 
   const panel = page.getByRole("complementary", { name: "Files panel" });
@@ -396,7 +396,7 @@ try {
   // Pg (panes-tile-current.js:5335-5350): an expanded empty (or loading)
   // subfolder adds no rows and no notice; only a failed read adds the Lg
   // (:5547-5570) "Couldn’t read this folder." treeitem, never the raw error.
-  const folderItem = (name) => tree.locator(`[role="treeitem"]:has(> button[aria-label="${name}"])`);
+  const folderItem = (name) => tree.locator(`[role="treeitem"]:has(> [data-tree-row-body] > [data-tree-primary][data-file-path="${name}"])`);
   const emptyFolderItem = folderItem("empty-folder");
   const emptyFolderGroup = () => emptyFolderItem.evaluate((node) => ({
     items: node.querySelectorAll('[role="group"] [role="treeitem"]').length,
@@ -407,7 +407,7 @@ try {
   // observed after the reply reached the renderer (no fixed-time wait).
   await holdRead("empty-folder", "readdir");
   await tree.getByRole("button", { name: "empty-folder", exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('[role="tree"][aria-label="Project files"] [role="treeitem"]:has(> button[aria-label="empty-folder"])')?.getAttribute("aria-expanded") === "true");
+  await page.waitForFunction(() => document.querySelector('[role="tree"][aria-label="Project files"] [role="treeitem"]:has(> [data-tree-row-body] > [data-tree-primary][data-file-path="empty-folder"])')?.getAttribute("aria-expanded") === "true");
   await waitForHeldRead();
   assert.deepEqual(await emptyFolderGroup(), { items: 0, text: "" }, "Loading subfolder has no child rows and no notice");
   await deliverHeldRead();
@@ -417,7 +417,7 @@ try {
   await tree
     .getByRole("button", { name: "removed-folder", exact: true })
     .click();
-  const errorRow = tree.locator(".source-tree-error");
+  const errorRow = tree.locator('[data-tree-row][role="treeitem"]:not(:has([data-tree-row-body]))');
   await errorRow.waitFor();
   const errorInfo = await errorRow.evaluate((node) => ({
     role: node.getAttribute("role"),

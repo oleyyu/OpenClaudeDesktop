@@ -24,6 +24,22 @@
   padding-top: 4px;
 }
 .source-sidebar-primary { flex-shrink: 0; margin-top: 4px; }
+.source-sidebar-header { flex-shrink: 0; }
+/* Original iI utilities keep layout/geometry. Restore the properties that
+   the host's unlayered button reset overrides; original CSS owns shadows. */
+.source-sidebar[data-code-list] .df-search-field {
+  padding-inline: var(--df-row-px);
+  background-color: var(--cds-fill-field);
+  color: var(--cds-text-muted);
+  font-size: var(--df-row-font);
+}
+.source-sidebar[data-code-list] .df-search-field:focus-visible { box-shadow: var(--source-focus-ring); }
+@media (hover: hover) {
+  .source-sidebar[data-code-list] .df-search-field:hover { background-color: var(--cds-fill-secondary-hover); }
+}
+@media (forced-colors: active) {
+  .source-sidebar[data-code-list] .df-search-field { border: 1px solid; }
+}
 /* Current desktop-layout:2267 gives web [data-row] a half-pixel rhythm.
    Our primary buttons do not carry that attribute; apply its spacing here. */
 .source-sidebar-nav-row { margin-bottom: .5px; }
@@ -58,13 +74,13 @@
 }
 .source-sidebar-nav-row:hover,
 .source-sidebar-nav-row:focus-visible,
-.source-session-row:hover,
-.source-session-row:has(:focus-visible),
-.source-session-row[data-menu-open] {
+.source-session-row:not(.source-current-session-host):hover,
+.source-session-row:not(.source-current-session-host):has(:focus-visible),
+.source-session-row:not(.source-current-session-host)[data-menu-open] {
   background: var(--df-hover, var(--cds-alpha-1));
 }
 .source-sidebar-nav-row[data-selected="focused"],
-.source-session-row[data-selected="focused"] {
+.source-session-row:not(.source-current-session-host)[data-selected="focused"] {
   background: var(--df-selected, var(--cds-alpha-1));
   color: var(--cds-text-primary);
 }
@@ -126,8 +142,8 @@
 /* sidebar-rows.js:7966-7970 header pr-[max(0px,calc(lane-8px))]: blocks above
    the scroller end at max(8px, lane) from the sidebar edge, like the rows.
    Each block keeps its own existing right inset and adds the lane excess. */
-.source-sidebar-primary {
-  padding-right: max(0px, calc(var(--df-nav-scrollbar-lane, 0px) - 8px));
+.source-sidebar-header {
+  padding-inline-end: max(0px, calc(var(--df-nav-scrollbar-lane, 0px) - 8px));
 }
 .source-session-group { min-width: 0; }
 .source-group-heading {
@@ -166,6 +182,9 @@
 .source-group-toggle:focus-visible .source-group-caret { opacity: 1; }
 .source-group-actions { display: flex; align-items: center; flex-shrink: 0; gap: 4px; }
 .source-group-actions > .code-icon-button { width: 24px; height: 24px; }
+.source-sidebar[data-code-list] .source-group-heading {
+  padding-inline-start: calc(var(--df-row-px) + var(--df-iconless-pad, calc((var(--df-leading-slot) - var(--df-icon-size)) / 2)));
+}
 .source-group-rows { display: flex; flex-direction: column; gap: 1px; }
 .source-session-row {
   position: relative;
@@ -173,6 +192,8 @@
   min-width: 0;
   border-radius: var(--df-radius-pill);
 }
+/* Original KT owns the Code row's one/two-line geometry and nested indent. */
+.source-session-row.source-current-session-host { height: auto; }
 .source-session-name {
   display: block;
   flex: 1;
@@ -195,6 +216,10 @@
   opacity: 0;
   pointer-events: none;
 }
+.source-sidebar[data-code-list] .source-session-more.code-icon-button {
+  right: auto;
+  inset-inline-end: var(--df-row-ctl-inset, calc((var(--df-row-h) - var(--df-row-ctl)) / 2));
+}
 .source-session-row:hover .source-session-more,
 .source-session-row:has(:focus-visible) .source-session-more,
 .source-session-row[data-menu-open] .source-session-more {
@@ -203,7 +228,7 @@
 }
 /* sidebar-groups.js:8756 CA: an archived row is text-muted opacity-50. An unread row has no title
    style of its own (sidebar-rows.js:7143-7180 kD, 7520-7540 ND); only its leading dot changes. */
-.source-session-row[data-archived] { color: var(--cds-text-muted); opacity: 0.5; }
+.source-session-row:not(.source-current-session-host)[data-archived] { color: var(--cds-text-muted); opacity: 0.5; }
 /* sidebar-rows.js:8060-8088 aO: flex min-h-3.5 min-w-3.5 shrink-0 items-center justify-center. */
 .source-status-glyph { display: flex; min-width: 14px; min-height: 14px; flex-shrink: 0; align-items: center; justify-content: center; }
 .source-session-dot {
@@ -381,7 +406,7 @@ html[data-reduce-motion="true"] .source-group-caret { transition: none; }
    carry --df-group-indent 18px; a foldable run (.df-family) indents its child
    rows by group-indent + 20px on the row box and draws the elbow/rail with
    pseudo-elements at row-px + group-indent + 10.875px. */
-.source-group-rows { --df-group-indent: 18px; --df-row-indent: var(--df-group-indent); }
+.source-sidebar:not([data-code-list]) .source-group-rows { --df-group-indent: 18px; --df-row-indent: var(--df-group-indent); }
 .source-nested {
   position: relative;
   display: flex;
@@ -445,33 +470,9 @@ html[data-reduce-motion="true"] .source-group-caret { transition: none; }
   --df-tree-ink: var(--cds-fill-accent);
   transition-delay: 0.1s;
 }
-/* oI stub (sidebar-groups.js:13796-13845): row-h, pill radius, group font,
-   secondary → primary on hover; not a [data-row-key] child, so no family
-   indent: padding-left is row-px + the session list's --df-iconless-pad
-   (shared-styles .df-session-list sets 10px; fallback (slot - icon) / 2). */
-.source-sidebar .df-session-list { --df-iconless-pad: 10px; }
-.df-family-stub {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  height: var(--df-row-h);
-  padding: 0 var(--df-row-px) 0 calc(var(--df-row-px) + var(--df-iconless-pad, calc((var(--df-leading-slot) - var(--df-icon-size)) / 2)));
-  border: 0;
-  border-radius: var(--df-radius-pill);
-  background: transparent;
-  font-size: var(--df-group-font);
-  line-height: 16px;
-  color: var(--cds-text-secondary);
-  text-align: left;
-}
-.df-family-stub:hover { color: var(--cds-text-primary); background: var(--df-hover, var(--cds-alpha-1)); }
-.df-family-stub:focus-visible { outline: none; box-shadow: var(--source-focus-ring); }
-.source-nested-stub-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.source-nested-stub-meta { display: flex; flex-shrink: 0; align-items: center; }
-.source-nested-stub-meta > [aria-hidden] { padding: 0 6px; color: var(--cds-text-muted); }
-/* Only the unread count is accent with a ready dot; the working count is plain text. */
-.source-nested-stub-meta > .is-accent { display: flex; align-items: center; gap: 6px; color: var(--cds-fill-accent); }
+/* YQ utilities and the original df-fade-truncate own the folded summary; g$'s own padding / font-size / colour
+   classes apply over the layered button reset (D26). */
+.source-sidebar:not([data-code-list]) .df-session-list { --df-iconless-pad: 10px; }
 /* The Older bucket overflow button (bulk results are toasts, F08):
    opacity 0 → 60% on label-row hover/focus-within → 100% on hover/expanded. */
 .source-group-actions > .source-older-menu.code-icon-button {
@@ -479,7 +480,10 @@ html[data-reduce-motion="true"] .source-group-caret { transition: none; }
   transition: opacity var(--df-dur-fast, 120ms) var(--df-ease-out, ease-out);
 }
 .source-group-heading:hover .source-older-menu.code-icon-button,
-.source-group-heading:focus-within .source-older-menu.code-icon-button { opacity: 0.6; }
+.source-group-heading:focus-within .source-older-menu.code-icon-button,
+/* R3-sections: the sections layout's headings are shared-18 uD label rows. */
+.source-sidebar [data-sidebar-group-label]:hover .source-older-menu.code-icon-button,
+.source-sidebar [data-sidebar-group-label]:focus-within .source-older-menu.code-icon-button { opacity: 0.6; }
 .source-group-actions > .source-older-menu.code-icon-button:hover,
 .source-group-actions > .source-older-menu.code-icon-button:focus-visible,
 .source-group-actions > .source-older-menu.code-icon-button[aria-expanded="true"] { opacity: 1; }
@@ -587,4 +591,13 @@ html[data-sidebar-row-dragging] * { cursor: grabbing !important; -webkit-user-se
   font-weight: 500;
   line-height: 16px;
   font-variant-numeric: tabular-nums;
+}
+/* 2.37337.1: the imported df-session-list rules own Code row geometry and
+   the single family guide. Retire the old per-child L-shaped guides. */
+.source-sidebar[data-code-list] .source-nested > .source-session-row::before,
+.source-sidebar[data-code-list] .source-nested > .source-session-row::after { content: none; }
+.source-sidebar[data-code-list] .source-nested.df-family { --df-row-indent: calc(var(--df-group-indent, 0px) + 20px); gap: 0; }
+.source-sidebar[data-code-list] .source-nested.df-family > .source-session-row { padding-inline: 0; }
+.source-sidebar[data-code-list] .source-nested.df-family :is(.source-session-open, .source-session-rename) {
+  padding-inline-start: calc(var(--df-row-px) + var(--df-row-indent, 0px));
 }

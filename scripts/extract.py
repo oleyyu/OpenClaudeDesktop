@@ -7,8 +7,10 @@ APP=Path('/Applications/Claude.app/Contents/Resources')
 archive=APP/'app.asar'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output',type=Path,help='Versioned snapshot directory (contains asar, ion-dist and manifest.json)')
+parser.add_argument('--skip-runtime', action='store_true', help='Snapshot source only; omit the unrelated VM disk image')
 args=parser.parse_args()
 snapshot=args.output.resolve() if args.output else None
+if snapshot and (snapshot/'manifest.json').exists(): raise FileExistsError(f'Snapshot already exists: {snapshot}')
 out=snapshot/'asar' if snapshot else ROOT/'reference/asar'
 out.mkdir(parents=True,exist_ok=True)
 records=[]
@@ -38,7 +40,7 @@ shutil.copytree(APP/'ion-dist',frontend,dirs_exist_ok=True)
 with (APP.parent/'Info.plist').open('rb') as f:version=plistlib.load(f)['CFBundleShortVersionString']
 frontend_records=[{'path':str(p.relative_to(frontend)),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(frontend.rglob('*')) if p.is_file()]
 runtime_records=[]
-if snapshot:
+if snapshot and not args.skip_runtime:
     for name in ['smol-bin.arm64.img']:
         source=APP/name
         if source.is_file():

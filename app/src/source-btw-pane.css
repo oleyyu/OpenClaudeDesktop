@@ -1,0 +1,6 @@
+/* zS body/composer spacing is owned by the original utility CSS. These rules
+   undo the host main-composer column constraints inside a nested pane. */
+.btw-pane { min-width: 0; min-height: 0; }
+.btw-pane .composer-zone[data-embedded] { max-width: none; margin: 0; padding: 0; }
+.btw-pane .source-transcript-frame { height: 100%; }
+.btw-pane .sqm-band { width: 100%; max-width: none; }

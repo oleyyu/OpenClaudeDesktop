@@ -13,14 +13,20 @@ function AddressButton({ tooltip, tooltipSide, shortcut, pressed, ...props }) {
 }
 const AddressField = createPreviewAddressField({ Button: AddressButton, Spinner: SourceSpinner, ownerDocument: () => typeof document === 'undefined' ? null : document });
 
-export function SourcePreviewAddress({ state, sessionId, focusRequest, pendingNewTabRef, onNavigate }) {
+export function SourcePreviewAddress({ state, sessionId, focusRequest, pendingNewTabRef, onNavigate, onReload, onOpenExternal, pendingValue }) {
   const url = state?.url ?? '';
   let value = url === 'about:blank' ? '' : displayPreviewURL(url);
   if (url.startsWith('file:')) {
     try { value = decodeURIComponent(new URL(url).pathname); } catch { /* keep the original URL */ }
   }
   return <AddressField className="spv-address min-w-0 flex-1" value={value} url={url}
-    labels={{ address: t('Page URL') }} placeholder={t('Type a URL')} onNavigate={onNavigate}
+    labels={{
+      address: t('Page URL'),
+      reload: t('Reload'),
+      openExternal: t('Open in default browser'),
+      loading: t('Loading page'),
+    }} placeholder={t('Type a URL')} onNavigate={onNavigate}
+    onReload={onReload} onOpenExternal={onOpenExternal} pendingValue={pendingValue}
     draftKey={`${sessionId}:${state?.activeTabId ?? 'seed'}`}
     liveDraftKeys={(state?.tabs ?? []).map(tab => `${sessionId}:${tab.id}`)}
     pendingNewTabRef={pendingNewTabRef} focusRequest={focusRequest} />;

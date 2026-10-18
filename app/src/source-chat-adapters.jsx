@@ -68,11 +68,15 @@ export function useScopedState(scope, initialize) {
   }
   return [state.value, setValue];
 }
-export function LocalizedMessage({ defaultMessage, values = {} }) {
-  const message = defaultMessage === '{count, plural, one {# earlier step} other {# earlier steps}}'
-    ? values.count === 1 ? '{count} earlier step' : '{count} earlier steps'
-    : defaultMessage;
-  return t(message, values);
+// The ICU formatter (StartMessage, R4h-intl I1) lives in source-code-start-adapters.jsx. Its generated/chat vendor-intl
+// imports source-home-adapters.jsx, which reaches generated/current-chat and comes back here through current-chat's
+// vendor-frame; a static import closes that cycle and leaves vendor-frame half-evaluated (forwardRef undefined) whenever
+// current-chat loads first. So source-code-start-adapters.jsx registers the formatter (main.jsx loads it through
+// SourceCodeStart before anything renders); until then a message falls back to t() with {name} values.
+let RegisteredMessage = null;
+export function registerLocalizedMessage(component) { RegisteredMessage = component; }
+export function LocalizedMessage({ values, ...message }) {
+  return RegisteredMessage ? <RegisteredMessage {...message} values={values} /> : t(message.defaultMessage, values);
 }
 
 // Host-only boundaries for the extracted layout. Service/account providers are not imported.

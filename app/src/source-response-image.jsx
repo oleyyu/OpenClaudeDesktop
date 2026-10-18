@@ -1,6 +1,7 @@
 import React,{createContext,useContext,useEffect,useRef,useState} from 'react';
 import {SourceMenu} from './source-menu.jsx';
 import {responseImageTarget,imagePng} from './response-image-model.mjs';
+import {contextMenuOrigin} from './transcript-context-menu-model.mjs';
 import {useSourceToasts} from './source-toast.jsx';
 import './source-response-image.css';
 import {t} from '../electron/i18n/index.mjs';
@@ -40,9 +41,12 @@ export function SourceResponseImage({src,alt='',cwd,call,fallback}) {
     } catch(error) {if(active.current){const text=kind==='copy'?t('Couldn’t copy image.'):t('Couldn’t save image.');console.warn(text,error);if(toasts)toasts.add(text,{variant:'danger'});else setNotice({error:true,text});}}
   };
   // TI w: the message menu with the image items first; its own menu when no message menu takes it.
-  const openMenu=point=>{
+  // byKeyboard (2.42304.0 c96d752d0 row onContextMenu `byKeyboard: e.button === -1`, TNe re-dispatching a keyboard
+  // menu as button -1): a menu opened from the keyboard highlights its first item — the message menu through
+  // openMessageMenu's 4th argument, the image's own menu through initialHighlight "first".
+  const openMenu=(point,byKeyboard=false)=>{
     const handle={src:image.dataUrl,fileName:image.name,copy:()=>{void run('copy');},save:()=>{void run('save');}};
-    if(!openMessageMenu?.(ref.current,point,handle))setMenu(point);
+    if(!openMessageMenu?.(ref.current,point,handle,byKeyboard))setMenu({point,byKeyboard});
   };
   if(target.kind==='empty')return null;
   if(failed || !['data','file'].includes(target.kind))return fallback;
@@ -51,12 +55,13 @@ export function SourceResponseImage({src,alt='',cwd,call,fallback}) {
       {image && <img ref={ref} src={image.dataUrl} alt={ready?alt:''} aria-hidden={!ready || undefined} tabIndex={-1}
         className="sri-image" hidden={!ready} onLoad={()=>setReady(true)} onError={()=>setFailed(true)}
         onDragStart={event=>event.preventDefault()}
-        onContextMenu={event=>{event.preventDefault();event.stopPropagation();openMenu({x:event.clientX,y:event.clientY});}}
-        onKeyDown={event=>{if(event.key==='ContextMenu'||event.key==='F10'&&event.shiftKey){event.preventDefault();event.stopPropagation();const rect=ref.current.getBoundingClientRect();openMenu({x:rect.left,y:rect.bottom});}}} />}
+        onContextMenu={event=>{event.preventDefault();event.stopPropagation();const origin=contextMenuOrigin(event);openMenu(origin.point,origin.byKeyboard);}}
+        onKeyDown={event=>{if(event.key==='ContextMenu'||event.key==='F10'&&event.shiftKey){event.preventDefault();event.stopPropagation();const rect=ref.current.getBoundingClientRect();openMenu({x:rect.left,y:rect.bottom},true);}}} />}
       {!ready && <span className="sri-placeholder" aria-hidden="true" />}
       {!ready && alt && <span className="source-sr-only">{alt}</span>}
     </span>
-    {menu && <SourceMenu.Popup anchor={ref.current} trigger={ref.current} point={menu} dataCds="ContextMenu" layer="contextmenu" label={t("Image actions")} onClose={()=>setMenu(null)}>
+    {menu && <SourceMenu.Popup anchor={ref.current} trigger={ref.current} point={menu.point} dataCds="ContextMenu" layer="contextmenu" label={t("Image actions")}
+      initialHighlight={menu.byKeyboard?'first':undefined} onClose={()=>setMenu(null)}>
       <SourceMenu.Item onClick={()=>{void run('copy');}}>{t('Copy image')}</SourceMenu.Item>
       <SourceMenu.Item onClick={()=>{void run('save');}}>{t('Save image')}</SourceMenu.Item>
     </SourceMenu.Popup>}

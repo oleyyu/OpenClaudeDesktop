@@ -7,6 +7,8 @@ import {
 
 // Files viewer Markdown plan (2.2553.1 cd2efac6e Ti/Ci/Lr/Ar/Ur, shared-16 Bx).
 
+// R3-files FT-18 (cov9-01): splitFrontmatter is the generated 2.42304.0 c3fde7009 ki over Li; a list value also carries
+// its `items` (read by the gated document variant Ei/wi; the pane shows key and value).
 test('Ur: a leading --- block becomes fields and the body; values are flattened to text', () => {
   const skill = [
     '---',
@@ -39,8 +41,8 @@ test('Ur: a leading --- block becomes fields and the body; values are flattened 
     { key: 'name', value: 'demo-skill' },
     { key: 'description', value: 'A "quoted" demo' },
     { key: 'summary', value: "it's fine" },
-    { key: 'allowed-tools', value: 'Read, Write, Bash(git:*)' },
-    { key: 'tags', value: 'one, two' },
+    { key: 'allowed-tools', value: 'Read, Write, Bash(git:*)', items: ['Read', 'Write', 'Bash(git:*)'] },
+    { key: 'tags', value: 'one, two', items: ['one', 'two'] },
     { key: 'notes', value: 'line one\nline two\n' },
     { key: 'folded', value: 'a b' },
     { key: 'empty', value: '' },

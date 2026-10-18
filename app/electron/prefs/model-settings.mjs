@@ -2,11 +2,17 @@
 // Pure: imported by the main process (settingsPatch, model-settings.cjs) and
 // the renderer (Settings → Models, withEffortDefaults for the model menus).
 //
-//   params   {[modelId]: {maxTokens?, temperature?, contextWindow?, effort?}}
-//            maxTokens / temperature / contextWindow travel to the DeepSeek bridge as
+//   params   {['<coreId>:<modelId>' | modelId]: {maxTokens?, temperature?, contextWindow?, effort?, images?}}
+//            Keys carry the core id (electron/cores/<id>.mjs) since Settings › Models › per-model options, so two
+//            cores' same-named models keep their own values; a bare modelId is an entry saved before that, read for
+//            every core until a core edits it (setModelParam with a coreId moves it under that core's key).
+//            maxTokens / temperature / contextWindow travel to the core as
 //            params.codeDesktop.customization.modelParams (model-params.js);
-//            contextWindow replaces the model's context capacity, which the core compacts by;
-//            effort only replaces the catalog's defaultReasoningEffort here.
+//            contextWindow replaces the model's context capacity, which the core compacts by (and reports back as
+//            the usage meter's modelContextWindow and auto-compact limit);
+//            effort only replaces the catalog's defaultReasoningEffort here;
+//            images: false turns image input off for the model in the composer (withModelOverrides), even where
+//            the catalog accepts images. Only false is stored: the catalog decides otherwise.
 //   prices   null (the official table) | {[modelId]: {displayName?, offPeak, peak}}
 //            CNY per 1M tokens; account/usage/read gets it as
 //            params.codeDesktop.prices (bridge pricing.js priceTable).
@@ -28,6 +34,8 @@ export const TEMPERATURE_MIN = 0;
 export const TEMPERATURE_MAX = 2;
 export const PRICE_MAX = 10000;
 export const MAX_ENTRIES = 50;
+// Per-model parameter entries (one per core and model since keys carry the core id).
+export const PARAMS_MAX_ENTRIES = 200;
 export const DISPLAY_NAME_MAX = 60;
 export const PRICE_TIERS = Object.freeze(['offPeak', 'peak']);
 export const PRICE_FIELDS = Object.freeze(['cacheHit', 'cacheMiss', 'output']);
@@ -70,6 +78,7 @@ export function modelParamError(field, value) {
     return null;
   }
   if (field === 'effort') return typeof value === 'string' && EFFORT.test(value) ? null : t('Choose a reasoning effort.');
+  if (field === 'images') return value === false ? null : t('Image input can only be turned off here.');
   return t('Unknown model parameter.');
 }
 
@@ -79,13 +88,13 @@ export function priceError(value) {
     : t('Prices must be numbers from 0 to {max} CNY per 1M tokens.', { max: PRICE_MAX.toLocaleString('en-US') });
 }
 
-const PARAM_FIELDS = ['maxTokens', 'temperature', 'contextWindow', 'effort'];
+const PARAM_FIELDS = ['maxTokens', 'temperature', 'contextWindow', 'effort', 'images'];
 function paramsEntry(value, strict) {
   if (!isRecord(value)) { if (strict) throw new Error(t('Invalid model parameters.')); return null; }
   const entry = {};
   for (const field of PARAM_FIELDS) {
     const raw = value[field];
-    if (raw === undefined || raw === null || raw === '') continue;
+    if (raw === undefined || raw === null || raw === '' || (field === 'images' && raw === true)) continue;
     const error = modelParamError(field, raw);
     if (error) { if (strict) throw new Error(error); continue; }
     entry[field] = field === 'temperature' ? round(raw, 2) : raw;
@@ -119,11 +128,11 @@ function priceEntry(value, strict) {
 
 function modelMap(value, entryOf, strict, label) {
   if (!isRecord(value)) { if (strict) throw new Error(label === 'prices' ? t('Invalid prices.') : t('Invalid model parameters.')); return {}; }
-  const keys = Object.keys(value);
-  if (strict && keys.length > MAX_ENTRIES) throw new Error(t('Use {max} models or fewer.', { max: MAX_ENTRIES }));
+  const keys = Object.keys(value), max = label === 'prices' ? MAX_ENTRIES : PARAMS_MAX_ENTRIES;
+  if (strict && keys.length > max) throw new Error(t('Use {max} models or fewer.', { max }));
   const out = {};
   for (const key of keys) {
-    if (Object.keys(out).length >= MAX_ENTRIES) break;
+    if (Object.keys(out).length >= max) break;
     if (!isModelId(key)) { if (strict) throw new Error(t('Model ids may use letters, digits and . _ : / ( ) @ + - only (128 characters at most).')); continue; }
     const entry = entryOf(value[key], strict);
     if (entry) out[key] = entry;
@@ -155,22 +164,65 @@ export const normalizeModelSettings = normalize;
  * defaultReasoningEffort becomes params[m.model].effort when that effort is
  * one of its supportedReasoningEfforts. Unchanged entries keep their identity.
  */
-export function withEffortDefaults(models, modelSettings) {
+export function withEffortDefaults(models, modelSettings, coreId = null) {
   const list = Array.isArray(models) ? models : [];
   const params = normalize(modelSettings).params;
   if (!Object.keys(params).length) return list;
   return list.map(model => {
-    const effort = model && Object.hasOwn(params, model.model) ? params[model.model].effort : undefined;
+    const effort = model ? paramsEntryFor(params, coreId, model.model)?.effort : undefined;
     if (!effort || effort === model.defaultReasoningEffort) return model;
     const supported = (model.supportedReasoningEfforts || []).some(item => (item?.reasoningEffort ?? item) === effort);
     return supported ? { ...model, defaultReasoningEffort: effort } : model;
   });
 }
 
-/** {[wireModelId]: {maxTokens?, temperature?, contextWindow?}} for the bridge, or null when nothing applies. */
-export function modelParamsForCore(modelSettings) {
-  const out = {};
-  for (const [id, entry] of Object.entries(normalize(modelSettings).params)) {
+// ---- Keys with the core id: '<coreId>:<modelId>', and a bare modelId saved before them.
+const CORE_ID = /^[a-z0-9][a-z0-9-]{0,31}$/;
+/** The params key of a core's model: '<coreId>:<modelId>', or the bare modelId without a (valid) core id. */
+export function modelParamsKey(coreId, modelId) {
+  return typeof coreId === 'string' && CORE_ID.test(coreId) ? `${coreId}:${modelId}` : modelId;
+}
+/** One model's params for a core: its own (prefixed) entry, else one saved before core ids, else undefined. */
+function paramsEntryFor(params, coreId, modelId) {
+  if (typeof modelId !== 'string') return undefined;
+  const key = modelParamsKey(coreId, modelId);
+  if (key !== modelId && Object.hasOwn(params, key)) return params[key];
+  return Object.hasOwn(params, modelId) ? params[modelId] : undefined;
+}
+/** The {maxTokens?, temperature?, contextWindow?, effort?, images?} a core's model has (an empty record when none). */
+export function modelParamsFor(modelSettings, coreId, modelId) {
+  return { ...(paramsEntryFor(normalize(modelSettings).params, coreId, modelId) ?? {}) };
+}
+/**
+ * Catalog models with the user's per-model options for a core: the default effort (withEffortDefaults) and image
+ * input turned off (images: false → inputModalities without 'image', which the composer's modelAcceptsImages reads).
+ * Unchanged entries keep their identity.
+ */
+export function withModelOverrides(models, modelSettings, coreId = null) {
+  const list = withEffortDefaults(models, modelSettings, coreId), params = normalize(modelSettings).params;
+  if (!Object.keys(params).length) return list;
+  let changed = list !== models;
+  const out = list.map(model => {
+    if (!model || paramsEntryFor(params, coreId, model.model)?.images !== false) return model;
+    const modalities = Array.isArray(model.inputModalities) ? model.inputModalities.filter(item => item !== 'image') : ['text'];
+    changed = true;
+    return { ...model, inputModalities: modalities.length ? modalities : ['text'], imagesOff: true };
+  });
+  return changed ? out : list;
+}
+
+/**
+ * {[wireModelId]: {maxTokens?, temperature?, contextWindow?}} for the core, or null when nothing applies. With a
+ * coreId, that core's own entries (keys '<coreId>:<modelId>') win over ones saved before core ids. Another core's
+ * prefixed keys can't be told from a model id with a colon (Ollama's 'qwen3:8b'), so they go along as bare ids, which
+ * match no model the running core lists.
+ */
+export function modelParamsForCore(modelSettings, coreId = null) {
+  const out = {}, params = normalize(modelSettings).params, prefix = typeof coreId === 'string' && CORE_ID.test(coreId) ? `${coreId}:` : null;
+  const own = prefix ? Object.keys(params).filter(key => key.startsWith(prefix)) : [];
+  const legacy = Object.keys(params).filter(key => !own.includes(key));
+  for (const [id, entry, mine] of [...legacy.map(key => [key, params[key], false]), ...own.map(key => [key.slice(prefix.length), params[key], true])]) {
+    if (mine) delete out[id];
     const core = {};
     if (entry.maxTokens !== undefined) core.maxTokens = entry.maxTokens;
     if (entry.temperature !== undefined) core.temperature = entry.temperature;
@@ -204,20 +256,27 @@ export function parseNumberInput(text) {
   return /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(value) ? Number(value) : NaN;
 }
 
-/** Set or clear (undefined) one parameter of one model; throws a user-facing Error when invalid. */
-export function setModelParam(settings, modelId, field, value) {
+/**
+ * Set or clear (undefined) one parameter of one model; throws a user-facing Error when invalid. With a coreId the value
+ * is saved under that core's key ('<coreId>:<modelId>'), and an entry saved for the bare modelId before core ids moves
+ * there with it. images takes false (off) or true / undefined (the catalog decides).
+ */
+export function setModelParam(settings, modelId, field, value, coreId = null) {
   if (!isModelId(modelId)) throw new Error(t('Invalid model.'));
+  if (field === 'images' && value === true) value = undefined;
   const error = modelParamError(field, value);
   if (error) throw new Error(error);
-  const current = normalize(settings);
-  const entry = { ...(current.params[modelId] || {}) };
+  const current = normalize(settings), key = modelParamsKey(coreId, modelId);
+  if (!isModelId(key)) throw new Error(t('Invalid model.'));
+  const entry = { ...(paramsEntryFor(current.params, coreId, modelId) || {}) };
   if (value === undefined || value === '') delete entry[field];
   else entry[field] = field === 'temperature' ? round(value, 2) : value;
   // The core keeps max output tokens of the window free for the reply: a window no larger leaves nothing to read.
   if (entry.maxTokens !== undefined && entry.contextWindow !== undefined && entry.maxTokens >= entry.contextWindow)
     throw new Error(t('Max output tokens must be smaller than the context window.'));
   const params = { ...current.params };
-  if (Object.keys(entry).length) params[modelId] = entry; else delete params[modelId];
+  if (key !== modelId) delete params[modelId];
+  if (Object.keys(entry).length) params[key] = entry; else delete params[key];
   return compact({ ...current, params });
 }
 

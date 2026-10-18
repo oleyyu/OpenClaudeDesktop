@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { LEGACY_RATIO_KEY, MAX_SESSION_ENTRIES, TILE_STORE_KEY, capSessions, createTileLayoutStore, emptyStoreState, migrateLegacyRatios, partialize, sanitizeSessionEntry, sanitizeStoreState } from "../src/tile-layout-store.mjs";
+import { LEGACY_RATIO_KEY, MAX_SESSION_ENTRIES, PERSISTED_VALUE_PREFIX, TILE_STORE_KEY, capSessions, createPersistedValues, createTileLayoutStore, emptyStoreState, migrateLegacyRatios, partialize, sanitizeSessionEntry, sanitizeStoreState } from "../src/tile-layout-store.mjs";
 import { fromSpec, layoutKey } from "../src/tile-layout-model.mjs";
 
 function memoryStorage(initial = {}) {
@@ -99,4 +99,41 @@ test('disabling preview tabs fixes all saved sessions without losing active path
  const state=store.getState();store.keepAllFileTabs();assert.equal(store.getState(),state,'idempotent');
  const restarted=createTileLayoutStore({storage});
  assert.ok(Object.values(restarted.getState().sessions).every(entry=>entry.fileTabs.every(tab=>!tab.preview)));
+});
+
+// FT-08: shared-28 Gf/qf/Xf over localStorage `persisted.<key>` (the c03935b01 uncommitted-sessions set lives here).
+test("persisted values: JSON under persisted.<key>, updaters read the stored value, stable snapshots, other windows notify", () => {
+  const storage = memoryStorage();
+  let deliver = null, detached = 0;
+  const values = createPersistedValues({ storage: () => storage, subscribeStorage: (listener) => { deliver = listener; return () => { detached += 1; }; } });
+  const fallback = {};
+  assert.equal(values.read("epitaxy-diff-uncommitted-sessions", fallback), fallback, "missing: the fallback itself");
+  let seen = 0;
+  const stop = values.subscribe("epitaxy-diff-uncommitted-sessions", () => { seen += 1; });
+  values.write("epitaxy-diff-uncommitted-sessions", { a: true }, fallback);
+  assert.equal(storage.map.get(`${PERSISTED_VALUE_PREFIX}epitaxy-diff-uncommitted-sessions`), JSON.stringify({ a: true }));
+  assert.equal(seen, 1);
+  const first = values.read("epitaxy-diff-uncommitted-sessions", fallback);
+  assert.equal(values.read("epitaxy-diff-uncommitted-sessions", fallback), first, "unchanged text: the same object (useSyncExternalStore snapshot)");
+  values.write("epitaxy-diff-uncommitted-sessions", (stored) => ({ ...stored, b: true }), fallback);
+  assert.deepEqual(values.read("epitaxy-diff-uncommitted-sessions", fallback), { a: true, b: true });
+  // Another window wrote: its storage event notifies subscribers of that key only.
+  storage.setItem(`${PERSISTED_VALUE_PREFIX}epitaxy-diff-uncommitted-sessions`, JSON.stringify({ c: true }));
+  deliver({ key: `${PERSISTED_VALUE_PREFIX}epitaxy-diff-uncommitted-sessions` });
+  deliver({ key: `${PERSISTED_VALUE_PREFIX}other` });
+  deliver({ key: TILE_STORE_KEY });
+  assert.equal(seen, 3);
+  assert.deepEqual(values.read("epitaxy-diff-uncommitted-sessions", fallback), { c: true });
+  storage.setItem(`${PERSISTED_VALUE_PREFIX}broken`, "{not json");
+  assert.equal(values.read("broken", 7), 7, "unreadable JSON: the fallback");
+  stop();
+  assert.equal(detached, 1, "the storage listener goes with the last subscriber");
+  // Storage that refuses writes (or none at all): the value stays in this window's memory.
+  const refusing = createPersistedValues({ storage: { getItem: () => null, setItem() { throw new Error("quota"); }, removeItem() {} } });
+  refusing.write("k", { x: true }, {});
+  assert.deepEqual(refusing.read("k", {}), { x: true });
+  const none = createPersistedValues({ storage: null });
+  assert.equal(none.read("k", 1), 1);
+  none.write("k", 2, 1);
+  assert.equal(none.read("k", 1), 2);
 });

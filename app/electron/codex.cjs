@@ -71,6 +71,21 @@ function currentLocalEnvironment() {
   try { env = localEnvironmentLaunch?.() ?? null; } catch { env = null; }
   return env && typeof env === "object" ? Object.fromEntries(Object.entries(env).filter(([, value]) => typeof value === "string")) : {};
 }
+// core kind → the PATH, proxy and shell variables its last session spawn got (from the login-shell read), for
+// workflowCoreEnv: a workflow run's core spawns from the runner, apart from the session client.
+const launchedBaseEnv = new Map();
+/**
+ * What a core spawn gets beyond process.env and its own launch, as connect() builds it: PATH, the login shell's proxy
+ * variables (with NODE_USE_ENV_PROXY), the core's shell variables (Gemini's Vertex settings…) and the user's local
+ * environment. A core no session started yet gets the PATH and the proxy variables of the app's own environment.
+ */
+function workflowCoreEnv(kind) {
+  const base = launchedBaseEnv.get(kind) ?? {
+    PATH: [path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH].filter(Boolean).join(":"),
+    ...proxyEnv(process.env, {}),
+  };
+  return { ...base, ...currentLocalEnvironment() };
+}
 function currentAgentTools(kind) {
   let launch = null;
   try { launch = agentToolsLaunch?.() ?? null; } catch { launch = null; }
@@ -266,12 +281,16 @@ class CodexClient extends EventEmitter {
         : readShell === loginShellProxy && names.length ? () => loginShellVariables(names) : null;
       const shellEnv = readVariables ? await Promise.resolve().then(readVariables).catch(() => ({})) : {};
       if (this.connection !== connection) throw coreError(this, "{core} stopped.");
-      const env = {
-        ...process.env,
+      const base = {
         PATH: [path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]
           .filter(Boolean).join(":"),
         ...proxyEnv(process.env, shellProxy),
         ...shellVariables(process.env, shellEnv, names.length ? names : Object.keys(shellEnv ?? {})),
+      };
+      if (!this.options.binary) launchedBaseEnv.set(core.kind, base);
+      const env = {
+        ...process.env,
+        ...base,
         ...(this.options.binary ? {} : currentLocalEnvironment()),
         ...tools.env,
         ...core.env,
@@ -563,4 +582,4 @@ function stopAllCodexClients() {
   });
   return shutdownPromise;
 }
-module.exports = { CodexClient, stopAllCodexClients, resolveCore, coreKind, clientCoreName, reportedServerInfo, coreError, setCoreChoice, setCodexLaunch, codexBinary, stderrReason, deepseekCoreScript, bridgeScript, nodeBinary, setAgentToolsLaunch, setBeforeSpawn, setLocalEnvironment, foreignCoreEnv };
+module.exports = { CodexClient, stopAllCodexClients, resolveCore, coreKind, clientCoreName, reportedServerInfo, coreError, setCoreChoice, setCodexLaunch, codexBinary, stderrReason, deepseekCoreScript, bridgeScript, nodeBinary, setAgentToolsLaunch, setBeforeSpawn, setLocalEnvironment, foreignCoreEnv, workflowCoreEnv };

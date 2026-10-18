@@ -20,23 +20,21 @@ function environment() {
     GIT_NO_REPLACE_OBJECTS: '1', GIT_LITERAL_PATHSPECS: '1', LC_ALL: 'C' };
 }
 
-function context(cwd, trace) {
+function context(cwd, trace, exec) {
   // log.showSignature=false (heavyWorkWorker git config `-c log.showSignature=false`): a repository-local
   // log.showSignature=true would otherwise make log/show run the gpg.program named by that repository.
-  return { cwd, deadline: Date.now() + TOTAL_TIMEOUT, output: 0, env: environment(), trace,
+  // exec: test seam only (fixture Git output, never a real process); main.cjs never passes it.
+  return { cwd, deadline: Date.now() + TOTAL_TIMEOUT, output: 0, env: environment(), trace, exec: typeof exec === 'function' ? exec : null,
     config: ['-c', 'core.fsmonitor=false', '-c', 'core.untrackedCache=false', '-c', 'core.hooksPath=/dev/null', '-c', 'log.showSignature=false'] };
 }
 
-async function git(ctx, args, { allowed = [0], input, paths = false, bytes = false } = {}) {
+async function git(ctx, args, { allowed = [0], input, paths = false, bytes = false, maxBuffer = MAX_OUTPUT } = {}) {
   const remaining = ctx.deadline - Date.now();
   if (remaining <= 0) throw failure('Git workspace query timed out.', 'GIT_TIMEOUT');
   // Test observation only: every spawned argv and the environment keys it ran with.
   ctx.trace?.({ args: [...args], envKeys: Object.keys(ctx.env) });
   return new Promise((resolve, reject) => {
-    const child = execFile('git', ['--no-pager', ...ctx.config, ...args], {
-      cwd: ctx.cwd, env: ctx.env, encoding: 'buffer', windowsHide: true,
-      timeout: Math.min(COMMAND_TIMEOUT, remaining), maxBuffer: MAX_OUTPUT,
-    }, (error, stdout, stderr) => {
+    const done = (error, stdout, stderr) => {
       ctx.output += stdout.length + stderr.length;
       if (ctx.output > MAX_OUTPUT * 2 || error?.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
         reject(failure('Git workspace output exceeds the supported limit.', 'GIT_OUTPUT_LIMIT')); return;
@@ -54,7 +52,21 @@ async function git(ctx, args, { allowed = [0], input, paths = false, bytes = fal
         const output = bytes ? stdout : paths ? new TextDecoder('utf-8', { fatal: true }).decode(stdout) : stdout.toString('utf8');
         resolve({ output, code: error?.code || 0, stderr: stderr.toString('utf8') });
       } catch { reject(failure('Git returned a path that cannot be represented as UTF-8.', 'GIT_PATH_ENCODING')); }
-    });
+    };
+    // R4i-files FI2: a fixture runner answers the argv as execFile would (Buffers, an error with code / killed, or the
+    // maxBuffer error once stdout passes maxBuffer), so the patch budget is tested without spawning Git.
+    if (ctx.exec) {
+      Promise.resolve().then(() => ctx.exec(args, { input, maxBuffer })).then((result) => {
+        const stdout = Buffer.from(result?.stdout ?? ''), stderr = Buffer.from(result?.stderr ?? '');
+        if (stdout.length > maxBuffer) { done(Object.assign(new Error('maxBuffer exceeded'), { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' }), stdout.subarray(0, maxBuffer), stderr); return; }
+        done(result?.code ? Object.assign(new Error(`git exited with ${result.code}`), { code: result.code }) : null, stdout, stderr);
+      }, (error) => done(error, Buffer.alloc(0), Buffer.alloc(0)));
+      return;
+    }
+    const child = execFile('git', ['--no-pager', ...ctx.config, ...args], {
+      cwd: ctx.cwd, env: ctx.env, encoding: 'buffer', windowsHide: true,
+      timeout: Math.min(COMMAND_TIMEOUT, remaining), maxBuffer,
+    }, done);
     child.stdin.on('error', () => {});
     child.stdin.end(input ?? '');
   });
@@ -65,13 +77,13 @@ function empty(cwd) {
     added: 0, removed: 0, files: 0, binaryFiles: 0, untrackedCount: 0, diffBase: null, scopeBase: null, fileDetails: [], comparison: null };
 }
 
-async function repository(cwd, trace) {
+async function repository(cwd, trace, exec) {
   if (typeof cwd !== 'string' || !cwd.trim()) throw new TypeError('A workspace directory is required.');
   const requested = path.resolve(cwd);
   let directory;
   try { directory = await fs.realpath(requested); if (!(await fs.stat(directory)).isDirectory()) return null; }
   catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return null; throw error; }
-  const ctx = context(directory, trace);
+  const ctx = context(directory, trace, exec);
   const top = await git(ctx, ['rev-parse', '--show-toplevel'], { allowed: [0, 128], paths: true });
   if (top.code === 128) {
     if (/not a git repository|must be run in a work tree/.test(top.stderr)) return null;
@@ -176,10 +188,10 @@ function quotePath(value) {
   }).join('') + '"';
 }
 
-async function additionDiff(ctx, file, numstat = false) {
+async function additionDiff(ctx, file, numstat = false, maxBuffer = MAX_OUTPUT) {
   const symlink = file.kind === 'symlink';
   const response = await git(ctx, ['diff', '--no-index', ...DIFF_FLAGS, ...(numstat ? ['--numstat', '-z'] : []), '--', '/dev/null', symlink ? '-' : file.path],
-    { allowed: [0, 1], paths: numstat, ...(symlink ? { input: file.content } : {}) });
+    { allowed: [0, 1], paths: numstat, maxBuffer, ...(symlink ? { input: file.content } : {}) });
   if (!symlink || numstat) return response.output;
   // The hunk is produced by Git from the actual link bytes. Replace only the
   // stdin filename/mode metadata, preserving the payload and newline markers.
@@ -262,8 +274,8 @@ async function mapLimited(items, callback) {
 }
 
 const OWN_WORKTREES = /^(?:.*\/)?\.code\/worktrees(?:\/|$)/;
-async function snapshot(cwd, trace) {
-  const ctx = await repository(cwd, trace);
+async function snapshot(cwd, trace, exec) {
+  const ctx = await repository(cwd, trace, exec);
   if (!ctx) return null;
   const response = await git(ctx, ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignore-submodules=none'], { paths: true });
   // OpenClaude Desktop's own worktrees inside the repository (.code/worktrees, main.cjs prepare-worktree) are never the main
@@ -393,7 +405,7 @@ async function workspaceGitStatus(cwd, { preferredBase, trace } = {}) {
   const files = [...byPath.values()];
   return { isRepo: true, cwd: ctx.cwd, repoName: path.basename(ctx.cwd),
     branch: branch || ctx.head?.slice(0, 7) || null, detached: !branch, headSha: ctx.head,
-    hasChanges: files.length > 0, workingTreeDirty: records.length > 0,
+    hasChanges: files.length > 0, workingTreeDirty: records.length > 0, workingTreeFiles: records.length,
     added: files.reduce((sum, file) => sum + file.added, 0), removed: files.reduce((sum, file) => sum + file.removed, 0),
     files: files.length, binaryFiles: files.filter((file) => file.binary).length,
     untrackedCount: records.filter((record) => record.untracked).length, diffBase: scope.diffBase,
@@ -405,19 +417,144 @@ async function workspaceGitStatus(cwd, { preferredBase, trace } = {}) {
 
 const COMMIT_SCOPE = /^commit:([0-9a-f]{7,64})$/i;
 
+// R4i-files FI2 (diffgit-08-lazy): the patch budget of 2.42304.0 heavyWorkWorker (the same code is index.chunk-BAdej_RQ):
+// `var bv=300,xv=1048576,Sv=5242880`. _y withholds every patch of a diff past 300 files (bv), past the caller's changed
+// lines (c5da7eb42 asks inlinePatchesMaxChangedLines 2e4) or past the 1 MiB prefill (xv, untracked bodies first, the
+// tracked patch gets the rest); vy answers {patches_withheld: !include}, and nothing when every patch was asked for.
+// Fy reads one file's patch later under the 5 MiB cap (Sv).
+const PATCH_BUDGET_FILES = 300;
+const PATCH_PREFILL_BYTES = 1048576;
+const FILE_PATCH_BYTES = 5242880;
+
+/** CxZMGoHL patchInclusion: includePatches !== false → every patch (true); else a finite inlinePatchesMaxChangedLines
+ * ≥ 0 → the budget {inlineMaxChangedLines}; else no patch at all (false). */
+function patchInclusion(options) {
+  if (options?.includePatches !== false) return true;
+  const limit = options.inlinePatchesMaxChangedLines;
+  return limit !== undefined && Number.isFinite(limit) && limit >= 0 ? { inlineMaxChangedLines: limit } : false;
+}
+
+/** _y on counts already read: tracked = the numstat records, untracked = the new files' addition counts (those not in
+ * the numstat). The byte step (maxBytes = xv - untracked bytes) runs in budgetedDiff, where the bodies exist. */
+function patchBudget(patches, tracked, untracked) {
+  if (typeof patches === 'boolean') return { include: patches };
+  if (tracked.length + untracked.length > PATCH_BUDGET_FILES) return { include: false };
+  let lines = 0;
+  for (const record of untracked) lines += record.added;
+  for (const record of tracked) lines += record.added + record.removed;
+  return { include: lines <= patches.inlineMaxChangedLines };
+}
+
+// `diff --raw -z`: ":<old mode> <new mode> <old sha> <new sha> <status>\0<path>\0[<new path>\0]" per file.
+function parseRaw(output) {
+  const parts = output.split('\0'), records = new Map();
+  for (let at = 0; at < parts.length; at++) {
+    const match = /^:(\d{6}) (\d{6}) \S+ \S+ ([A-Z])\d*$/.exec(parts[at]);
+    if (!match) continue;
+    const pair = match[3] === 'R' || match[3] === 'C';
+    const first = parts[++at], second = pair ? parts[++at] : undefined;
+    if (!first || (pair && !second)) throw failure('Incomplete Git raw diff path.', 'GIT_NUMSTAT_PARSE');
+    records.set(second ?? first, { oldMode: match[1], newMode: match[2], status: match[3], ...(pair ? { oldPath: first } : {}) });
+  }
+  return records;
+}
+
+/** The comparison's files in the official file shape (index.chunk-muI2IV6k rkt; Wv statuses added / removed / renamed /
+ * modified), tracked first, then the new files. */
+function comparisonFiles(tracked, raw, untracked) {
+  const files = tracked.map((record) => {
+    const entry = raw.get(record.path);
+    const status = entry?.status === 'A' ? 'added' : entry?.status === 'D' ? 'removed' : entry?.status === 'R' && record.oldPath ? 'renamed' : 'modified';
+    return { filename: record.path, status, additions: record.added, deletions: record.removed, changes: record.added + record.removed,
+      ...(status === 'renamed' ? { previous_filename: record.oldPath } : {}), mode: status === 'removed' ? entry?.oldMode : entry?.newMode,
+      oldMode: entry?.oldMode, binary: record.binary === true };
+  });
+  for (const record of untracked) files.push({ filename: record.path, status: 'added', additions: record.added, deletions: 0, changes: record.added, mode: record.mode, binary: record.binary === true });
+  return files;
+}
+
+/** A withheld file in the shown patch: its `diff --git` header (and new / deleted / rename lines) without hunks, as the
+ * official header-only patch (ey), so the file list still names every file; its rows load with workspaceGitFilePatch.
+ * R4i-files fix: the metadata Git itself would print stays in the block, so a withheld file reads as it does unwithheld:
+ * a mode change (old / new mode from --raw, tracked files whose two modes differ) and a binary file's
+ * "Binary files … differ" (numstat "-\t-"), which diff-model parses as binary rather than a header-only fallback. */
+function headerOnlyPatch(file) {
+  const before = file.previous_filename ?? file.filename;
+  const lines = [`diff --git ${quotePath('a/' + before)} ${quotePath('b/' + file.filename)}`];
+  const mode = /^\d{6}$/.test(file.mode ?? '') ? file.mode : '100644';
+  if (file.status === 'added') lines.push(`new file mode ${mode}`);
+  else if (file.status === 'removed') lines.push(`deleted file mode ${mode}`);
+  else {
+    const oldMode = /^\d{6}$/.test(file.oldMode ?? '') ? file.oldMode : undefined;
+    if (oldMode && /^\d{6}$/.test(file.mode ?? '') && oldMode !== file.mode) lines.push(`old mode ${oldMode}`, `new mode ${file.mode}`);
+    if (file.status === 'renamed') lines.push(`rename from ${quotePath(before)}`, `rename to ${quotePath(file.filename)}`);
+  }
+  if (file.binary === true) lines.push(`Binary files ${file.status === 'added' ? '/dev/null' : quotePath('a/' + before)} and ${file.status === 'removed' ? '/dev/null' : quotePath('b/' + file.filename)} differ`);
+  return lines.join('\n') + '\n';
+}
+const publicFile = ({ mode, oldMode, binary, ...file }) => file;
+
+/** gy + _y + vy for the working-tree scopes ('branch', 'uncommitted') under a budget. Withheld: every file as a
+ * header-only block, completeContext false, patches_withheld true. Included: the patch exactly as the unbudgeted
+ * query would return it (complete context when asked and within the existing limits), patches_withheld false. Either
+ * way `files` carries every file's counts, which the header-only blocks do not. An output past a bound withholds
+ * instead of failing the query (the 16 MiB GIT_OUTPUT_LIMIT of the unbudgeted query). */
+async function budgetedDiff(ctx, records, { completeContext, scope, base, preferredBase, patches }) {
+  const diffBase = scope === 'uncommitted' ? ctx.diffBase : (await scopeBase(ctx, await currentBranch(ctx), { preferredBase, base })).diffBase;
+  const range = ['diff', ...DIFF_FLAGS, '--find-renames', '--ignore-submodules=none'];
+  const tracked = ctx.head ? parseNumstat((await git(ctx, [...range, '--numstat', '-z', diffBase, '--'], { paths: true })).output) : [];
+  const raw = ctx.head && tracked.length ? parseRaw((await git(ctx, [...range, '--raw', '-z', diffBase, '--'], { paths: true })).output) : new Map();
+  const trackedPaths = new Set(tracked.map((record) => record.path));
+  const untracked = (await currentFiles(ctx, records)).filter((file) => !trackedPaths.has(file.path));
+  const kinds = new Map(untracked.map((file) => [file.path, file.kind === 'symlink' ? '120000' : '100644']));
+  const counts = (await additionCounts(ctx, untracked)).flat().map((record) => ({ ...record, mode: kinds.get(record.path) }));
+  const files = comparisonFiles(tracked, raw, counts);
+  const listed = files.map(publicFile);
+  const withheld = () => ({ patch: files.map(headerOnlyPatch).join(''), completeContext: false, patches_withheld: true, files: listed });
+  if (!patchBudget(patches, tracked, counts).include) return withheld();
+  const bounded = async (run) => {
+    try { return await run(); } catch (error) { if (error.code === 'GIT_OUTPUT_LIMIT') return null; throw error; }
+  };
+  const additions = await bounded(() => mapLimited(untracked, (file) => additionDiff(ctx, file, false, PATCH_PREFILL_BYTES)));
+  if (additions === null) return withheld();
+  const used = additions.reduce((sum, text) => sum + Buffer.byteLength(text), 0);
+  if (used > PATCH_PREFILL_BYTES) return withheld();
+  let patch = '';
+  if (tracked.length) {
+    if (PATCH_PREFILL_BYTES - used <= 0) return withheld();
+    const response = await bounded(() => git(ctx, [...range, diffBase, '--'], { maxBuffer: PATCH_PREFILL_BYTES - used }));
+    if (response === null) return withheld();
+    patch = response.output;
+  }
+  const inline = [patch, ...additions].join('');
+  const result = (text, complete) => ({ patch: text, completeContext: complete, patches_withheld: false, files: listed });
+  if (!completeContext) return result(inline, false);
+  // Complete context (every unchanged line, for the expandable gaps) within the existing raw-patch limits, else the
+  // inline patch that fitted the budget.
+  const whole = tracked.length ? await bounded(() => git(ctx, [...range, '--unified=2147483647', diffBase, '--'])) : { output: '' };
+  if (whole === null) return result(inline, false);
+  const text = [whole.output, ...additions].join('');
+  if (Buffer.byteLength(text) > MAX_OUTPUT || text.length > 4 * 1024 * 1024 || text.split('\n').length > 50000) return result(inline, false);
+  return result(text, true);
+}
+
 /** Changes patch for one diff scope (panes-tile-current.js zm; heavyWorkWorker
  * ya/fa): 'branch' (default) = merge-base(base, HEAD) → worktree plus untracked
  * files, 'uncommitted' = HEAD → worktree plus untracked files, 'commit:<sha>' =
  * heavyWorkWorker ka: `<sha>^..<sha>` (the first-parent patch, so a merge commit
  * is not a combined diff), the empty tree for a root commit. `base` is an
  * explicit "Compare against" branch; an invalid one falls back to the inferred base. */
-async function workspaceGitDiff(cwd, { completeContext = false, scope = 'branch', base, preferredBase } = {}) {
-  const state = await snapshot(cwd);
+async function workspaceGitDiff(cwd, { completeContext = false, scope = 'branch', base, preferredBase, includePatches, inlinePatchesMaxChangedLines, exec } = {}) {
+  const state = await snapshot(cwd, undefined, exec);
   if (!state) return completeContext ? { patch: '', completeContext: false } : '';
   const { ctx, records } = state;
-  const options = { scope, base, preferredBase };
+  const options = { scope, base, preferredBase, exec };
   const commit = typeof scope === 'string' ? COMMIT_SCOPE.exec(scope)?.[1] : undefined;
   if (typeof scope === 'string' && scope.startsWith('commit:') && !commit) throw failure('Invalid commit scope.', 'GIT_SCOPE_INVALID');
+  // R4i-files FI2: a caller that can load one file's patch later (fetchFilePatch) asks for the inline budget instead
+  // of every patch; a commit's own patch is always whole (c5da7eb42 sends the budget only for the working-tree diff).
+  const patches = patchInclusion({ includePatches, inlinePatchesMaxChangedLines });
+  if (!commit && patches !== true) return budgetedDiff(ctx, records, { completeContext, scope, base, preferredBase, patches });
   let tracked;
   try {
     if (commit) {
@@ -454,6 +591,41 @@ async function workspaceGitDiff(cwd, { completeContext = false, scope = 'branch'
     return { patch: await workspaceGitDiff(cwd, options), completeContext: false };
   }
   return { patch: diff, completeContext: true };
+}
+
+// R4i-files FI2 (diffgit-08-lazy): heavyWorkWorker Fy (getGitDiffFilePatch / gitDiffFilePatch): one withheld file's
+// patch against the shown scope's base, read when its row is expanded. Lv rejects an absolute or ".." path (null);
+// the patch is `diff … <base> -- [<previous path>] <path>` under the 5 MiB cap (over it: "", the row stays without
+// hunks); output that names another file is ""; no output: a tracked file has no text change (""), an untracked one
+// gets its addition patch; a failed read is null. A commit scope never withholds, so it has no per-file read here.
+function unsafeRelativePath(value) {
+  return typeof value !== 'string' || !value || value.includes('\0') || value.startsWith('/') || value.startsWith('\\')
+    || /^[a-zA-Z]:/.test(value) || value.split(/[/\\]/).some((part) => part === '..');
+}
+async function workspaceGitFilePatch(cwd, { filePath, previousPath, scope = 'branch', base, preferredBase, exec } = {}) {
+  const previous = previousPath === undefined || previousPath === null || previousPath === filePath ? undefined : previousPath;
+  if (unsafeRelativePath(filePath) || (previous !== undefined && unsafeRelativePath(previous))) return null;
+  if (scope !== 'branch' && scope !== 'uncommitted') return null;
+  const ctx = await repository(cwd, undefined, exec);
+  if (!ctx || OWN_WORKTREES.test(filePath)) return null;
+  const limited = (error) => (error.code === 'GIT_OUTPUT_LIMIT' ? '' : null);
+  if (ctx.head) {
+    const diffBase = scope === 'uncommitted' ? ctx.diffBase : (await scopeBase(ctx, await currentBranch(ctx), { preferredBase, base })).diffBase;
+    let output;
+    try {
+      output = (await git(ctx, ['diff', ...DIFF_FLAGS, '--find-renames', '--ignore-submodules=none', diffBase, '--', ...(previous ? [previous] : []), filePath],
+        { maxBuffer: FILE_PATCH_BYTES })).output;
+    } catch (error) { return limited(error); }
+    if (output.includes('\ndiff --git ')) return '';
+    if (output.trim()) return output;
+    let listed;
+    try { listed = await git(ctx, ['ls-files', '-z', '--', filePath], { paths: true }); } catch { return null; }
+    if (listed.output) return '';
+  }
+  let file;
+  try { file = await safeFile(ctx, filePath); } catch { return null; }
+  if (!file) return null;
+  try { return await additionDiff(ctx, { path: filePath, ...file }, false, FILE_PATCH_BYTES); } catch (error) { return limited(error); }
 }
 
 // B34 "View image" (heavyWorkWorker j_/M_/N_, k_ MIME map, A_ 10 MiB cap, Bg path guard): one side of a changed
@@ -544,7 +716,12 @@ async function workspaceGitBranches(cwd, { trace } = {}) {
   return listed.output.split('\n').map((line) => line.trim()).filter(validBranchName);
 }
 
-module.exports = { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage };
+module.exports = { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage, workspaceGitFilePatch };
+// R4i-files FI2: the budget pieces, for the fixture tests.
+module.exports.patchInclusion = patchInclusion;
+module.exports.patchBudget = patchBudget;
+module.exports.headerOnlyPatch = headerOnlyPatch;
+module.exports.PATCH_BUDGET = { files: PATCH_BUDGET_FILES, prefillBytes: PATCH_PREFILL_BYTES, filePatchBytes: FILE_PATCH_BYTES };
 
 // Fidelity F08: the sidebar's Folder grouping keys on repo identity (sidebar-session.js:20892-20903 IJ:
 // owner/name when the origin names an owner, the cwd for a repo without one, else no project). Only

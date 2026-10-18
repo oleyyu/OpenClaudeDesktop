@@ -1,14 +1,21 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { _ as Page } from './generated/current-chat/c193cfc9b-2wgBbI8O.js';
-import { Fi as RoutineCard, yi as RoutineStatus, Ii as RoutineDivider } from './generated/current-chat/cdbc75b4b-B7cRd8zz.js';
-import { GV as CurrentScheduledTaskMenu } from './generated/current-chat/shared-18-DaJGQi6_.js';
-import { routineGridClass, gc as RoutineTemplate, fc as routineTemplates, dc as templateCopy, routineTemplateGridClass, routineTemplateColumnsClass } from './generated/current-chat/ccd3f68fe-CZhDe3qc.js';
-import { _o as RoutineDetail } from './generated/current-chat/ccd3f68fe-CZhDe3qc.js';
-import { Id as scheduledCopy } from './generated/current-chat/shared-16-OoLrhcjl.js';
-import { dL as RoutinePictogram } from './generated/current-chat/shared-150-CLvmPbZG.js';
-import { n as stopwatch } from './generated/current-chat/ca0c38004-CEGIs7-p.js';
-import { ga as OriginalRoutineForm } from './generated/current-chat/c97b955f1-BIk31E_b.js';
-import { cE as Field, lE as Label, uE as Description, dE as ErrorText, yy as TextInput, KC as TextArea } from './generated/current-chat/shared-frame-DVFSKIcx.js';
+// tasks-09: 2.42304.0 ccd3f68fe (Scheduled page) renders Oi = cd75b47e6 t, the same page shell the Sessions page
+// uses (SessionsPageShell: band from shared-18 ey, the data-scrolls-under-page-header div) around the 2.42304.0
+// CdsPage (view-tabs c193cfc9b k). Its panels variant (hairline line, stuck-mark/level-mark, tabs-row pinning,
+// +16 scroll offset) is behind shared-frame vr("panels"), closed here (no CDS Root, no fizzy-lake parts); the
+// default fade hides as "invisible opacity-0" with transition-[opacity,visibility].
+import { SessionsPageShell as Page } from './source-sessions-primitives.jsx';
+// R4g-routines RTC (CW-1): the 2.42304.0 Scheduled page pieces. Cards, status line and divider are routines-shared's
+// (cdbc75b4b Ji / ji / Yi); detail, templates, form, pictogram and field parts are cowork-scheduled's (ccd3f68fe qo / el /
+// Xc / Yc, c97b955f1 Ca, shared-156 sB, shared-frame Field family); card, detail and form get the page's host from
+// source-routine-cowork-page-adapters.jsx.
+import { ScheduledTaskStatusLine as RoutineStatus, ScheduledTaskDivider as RoutineDivider } from './generated/routines-shared/index.mjs';
+import { ScheduledTaskMenu as CurrentScheduledTaskMenu, ScheduledTaskTemplateCard as RoutineTemplate, SCHEDULED_TASK_TEMPLATES as routineTemplates,
+  scheduledTaskTemplateMessages as templateCopy, routineGridClass, routineTemplateGridClass, routineTemplateColumnsClass, SCHEDULED_TASK_COPY as scheduledCopy,
+  Pictogram as RoutinePictogram, STOPWATCH_PICTOGRAM as stopwatch, CdsField as Field, CdsFieldLabel as Label, CdsFieldDescription as Description,
+  CdsFieldError as ErrorText, CdsTextArea as TextArea } from './generated/cowork-scheduled/index.mjs';
+import { CdsTextInput as TextInput } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { CoworkScheduledTaskCard as RoutineCard, CoworkScheduledTaskDetail as RoutineDetail, CoworkUpsertScheduledTaskModal as OriginalRoutineForm } from './source-routine-cowork-page-adapters.jsx';
 import { registerNativeFieldComponents } from './source-field-adapters.jsx';
 import { toFormPermission } from './source-routine-form-adapters.jsx';
 import { coworkHomeState } from './cowork-home-model.mjs';
@@ -24,7 +31,7 @@ const active = task => task.runs?.some(run => ['starting', 'running'].includes(r
 const date = value => value ? new Date(value).toLocaleString(getLocale()) : t('—');
 
 export function SourceRoutines({ call, onSession, selectedId, onSelect: setSelectedId, onBack, executionProfile, models = [], bypassEnabled = false, sessions = [], sessionMetadata = {}, state = {} }) {
-  const { tasks, error: loadError, reload } = useLocalRoutines(call);
+  const { tasks, error: loadError, reload } = useLocalRoutines(call, 'cowork');
   const [error, setError] = useState('');
   const [query, setQuery] = useState(''), [sort, setSort] = useState('nextRun');
   const [editing, setEditing] = useState(null), [deleting, setDeleting] = useState(null);
@@ -47,7 +54,11 @@ export function SourceRoutines({ call, onSession, selectedId, onSelect: setSelec
       lastActivityAt: run.finishedAt ?? run.startedAt,
       isRunning: ['starting', 'running'].includes(run.status),
       liveStatus: live?.liveStatus === 'awaiting' ? 'awaiting' : ['starting', 'running'].includes(run.status) ? 'running' : 'idle',
-      error: run.status === 'failed' || run.status === 'interrupted' ? run.error ?? run.status : undefined };
+      error: run.status === 'failed' || run.status === 'interrupted' ? run.error ?? run.status : undefined,
+      // R4i-routines RI2 (Y3-W5): ccd3f68fe qo shows a run's state through shared-18 $D (hasError: !!e.error, errorCategory:
+      // e.errorCategory → UD → wD/Ft): an interrupted run is the official process_interrupted error, "Session was
+      // interrupted", not the generic "Something went wrong" (2.42304.0 has no separate Interrupted label).
+      ...(run.status === 'interrupted' && { errorCategory: 'process_interrupted' }) };
   }) ?? [];
   const editingSource = useMemo(() => editing?.id ? { ...sourceRoutine(editing), userSelectedFolders: [editing.cwd], permissionMode: toFormPermission(editing.options.permission) } : undefined, [editing]);
   const initialValues = useMemo(() => ({ permissionMode: toFormPermission(executionProfile.permission), model: executionProfile.model,

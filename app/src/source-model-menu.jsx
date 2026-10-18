@@ -3,7 +3,7 @@ import { Icon } from "./icons";
 import { SourceSwitch as SettingSwitch } from "./source-switch.jsx";
 import { SourceMenu } from "./source-menu";
 import { SourceTooltip } from "./source-tooltip";
-import { filterModels, modelMenuSections, shapeModelCatalog } from "./model-menu-model.mjs";
+import { effortId, effortName, filterModels, isHighestEffort, modelMenuSections, shapeModelCatalog } from "./model-menu-model.mjs";
 import "./source-model-menu.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -42,6 +42,9 @@ export function SourceModelMenu({
   fastSaving = false, onFastModeChange, initialHighlight, scopeNote = null,
   // Several faster tiers (Fast, Ultrafast): one switch row each under "Fast mode", mutually exclusive.
   speedTiers = [], speed = "standard", onSpeedChange, defaultModel = null,
+  // effort {levels, value, onPick}: the environment bar folds the effort into the model trigger (x6 modelMenu "bar",
+  // showEffortSection), so its menu carries the shared-7 yx effort section.
+  effort = null,
 }) {
   const severalSpeeds = Array.isArray(speedTiers) && speedTiers.length > 1 && !!onSpeedChange;
   const shaped = useMemo(() => shapeModelCatalog({ models, selected, defaultModel }), [models, selected, defaultModel]);
@@ -81,6 +84,7 @@ export function SourceModelMenu({
     className="sm-model-menu" onClose={onClose} initialHighlight={initialHighlight}>
     <SourceMenu.Group>{primary.map((model) => row(model, true))}</SourceMenu.Group>
     {!primary.length && !overflow.length && <div className="sm-model-empty" role="status">{t("No models available")}</div>}
+    {effort && <EffortSection {...effort} />}
     {overflow.length > 0 && <>
       <SourceMenu.Separator />
       <SourceMenu.Submenu>
@@ -108,6 +112,39 @@ export function SourceModelMenu({
     </>}
     {scopeNote && <div className="sm-model-scope" data-model-scope="">{scopeNote}</div>}
   </SourceMenu.Popup>;
+}
+
+/** shared-7 yx (thinkingStyle unset, as c227f4d5e AK gives the chin placement): after the model group, a separator
+ * and an "Effort" submenu whose trigger hints the current level (P?.name; none for a warning badge) and whose popup
+ * lists the levels as fx rows — radio-checked items (data-effort-id) with the level description (not for a warning
+ * badge), the name with its badge (nx) and ultracode in "text-pro font-medium" — then dx, the selected warning
+ * level description as a text-warning header. The host has no catalog thinking.description header. */
+function EffortSection({ levels = [], value, onPick }) {
+  const options = (levels || []).map((level) => {
+    const id = effortId(level);
+    return { id, name: effortName(id, levels), description: typeof level === "object" ? level.description : undefined, badge: typeof level === "object" ? level.badge : undefined };
+  }).filter((option) => option.id);
+  if (!options.length) return null;
+  const selected = options.find((option) => option.id === value);
+  const warning = selected?.badge?.variant === "warning";
+  return <>
+    <SourceMenu.Separator />
+    <SourceMenu.Submenu>
+      <SourceMenu.SubmenuTrigger className="sm-model-item" label={t("Effort")} hint={warning ? undefined : selected?.name}>{t("Effort")}</SourceMenu.SubmenuTrigger>
+      <SourceMenu.Popup label={t("Effort")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu">
+        <SourceMenu.Group>{options.map((option) => {
+          const optionWarning = option.badge?.variant === "warning";
+          return <SourceMenu.Item key={option.id} className="sm-model-item" label={option.name} checked={option.id === value} checkedRole="radio"
+            data-effort-id={option.id} description={optionWarning || !hasText(option.description) ? undefined : option.description}
+            onClick={() => onPick?.(option.id)}>
+            <span className="sm-model-name"><span className={isHighestEffort(option.id, options) ? "sm-model-label text-pro font-medium" : "sm-model-label"}>{option.name}</span>
+              {typeof option.badge?.message === "string" && option.badge.message && <span className="sm-model-badge">{option.badge.message}</span>}</span>
+          </SourceMenu.Item>;
+        })}</SourceMenu.Group>
+        {warning && hasText(selected.description) && <SourceMenu.Header className="sm-model-header whitespace-normal font-normal text-warning">{selected.description}</SourceMenu.Header>}
+      </SourceMenu.Popup>
+    </SourceMenu.Submenu>
+  </>;
 }
 
 /** shared-8 Hk overflowSearch: a long catalog (OpenCode with OpenRouter: 400+ models) keeps its capped main list

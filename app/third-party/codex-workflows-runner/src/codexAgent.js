@@ -204,7 +204,8 @@ export function attachAgentMessageCollector(client, threadId, onProgress) {
       deltas.set(p.itemId, (deltas.get(p.itemId) ?? "") + p.delta);
       // best-effort partial output for live viewers — must never break the turn.
       if (onProgress) { try { onProgress([...deltas.values()].join("")); } catch {} }
-    } else if (n.method === "item/completed" && p.item?.type === "agentMessage") {
+    } else if (n.method === "item/completed" && p.item?.type === "agentMessage" && p.item.phase !== "commentary") {
+      // Local: a commentary message (a bridge's turn-end note such as "hit the step limit") is not the agent's reply.
       finalText = p.item.text ?? finalText;
     }
   };
@@ -375,7 +376,10 @@ async function runOneTurn(prompt, opts) {
   // Local: a core without the StructuredOutput dynamic tool gets the schema in the prompt (jsonAgent.js): opts.structuredOutput
   // false (no structured output at all: ZCode, the ACP agents), or 'outputSchema' (turn/start outputSchema only: the
   // DeepSeek Harness and the OpenCode/MiMo bridges, which also get the wire schema on each turn).
-  if(opts.schema&&(opts.structuredOutput===false||opts.structuredOutput==='outputSchema'))return runJsonAgent({client,threadParams,prompt,opts:{...opts,requestedModel:model},runTurn,check:checkSchemaResult,metrics:reportMetrics,...opts.structuredOutput==='outputSchema'?{outputSchema:wireSchema(opts.schema)}:{}});
+  if(opts.schema&&(opts.structuredOutput===false||opts.structuredOutput==='outputSchema')) {
+    log(`Workflow compatibility${opts.label ? ` [${opts.label}]` : ''}: this core returns structured results through ${opts.structuredOutput==='outputSchema'?'outputSchema and validated response JSON':'prompted JSON with validation and retries'}, rather than Claude's StructuredOutput tool.`);
+    return runJsonAgent({client,threadParams,prompt,opts:{...opts,requestedModel:model},runTurn,check:checkSchemaResult,metrics:reportMetrics,...opts.structuredOutput==='outputSchema'?{outputSchema:wireSchema(opts.schema)}:{}});
+  }
   if(opts.schema)return runStructuredAgent({client,threadParams,prompt,opts:{...opts,requestedModel:model},runTurn,metrics:reportMetrics});
   const startThreadRes = await client.startThread(threadParams);
   const threadId = startThreadRes?.thread?.id;
@@ -383,7 +387,12 @@ async function runOneTurn(prompt, opts) {
 
   const state = { activeTools: new Set(), toolCalls: 0 };
   let result;
-  {
+  // Per-agent attribution for the journal/viewer: wall time for this turn, the
+  // tokens this thread consumed (cumulative, by completion), and the model the
+  // turn actually ran on. Off the hot path — a side-channel callback, so the
+  // value returned to the script is unchanged. Local: also for a failed or
+  // stalled attempt (as jsonAgent/structuredAgent do), whose tokens were spent.
+  try {
     const turnParams = buildTurnParams({ threadId, prompt, model, effort: opts.effort });
     const { turn, text } = await runTurn(client, threadId, turnParams, opts, state);
     if (turn.status === "interrupted") throw new Error("Agent turn interrupted");
@@ -393,13 +402,9 @@ async function runOneTurn(prompt, opts) {
       throw err;
     }
     result=text;
+  } finally {
+    reportMetrics(threadId,state.toolCalls);
   }
-
-  // Per-agent attribution for the journal/viewer: wall time for this turn, the
-  // tokens this thread consumed (cumulative, by completion), and the model the
-  // turn actually ran on. Off the hot path — a side-channel callback, so the
-  // value returned to the script is unchanged.
-  reportMetrics(threadId,state.toolCalls);
   return result;
 }
 
@@ -425,7 +430,9 @@ async function runTurn(client, threadId, turnParams, opts, state) {
     if(n.method==='item/started' && tool&&!state.activeTools.has(p.item.id)){state.activeTools.add(p.item.id);state.toolCalls++;}
     if(n.method==='item/completed')state.activeTools.delete(p.item?.id);
     arm();
-    opts.onActivity?.({activeTools:state.activeTools.size,toolCalls:state.toolCalls,...tool?{lastToolName:p.item.tool??p.item.name??p.item.type}:{}});
+    // Local: a usage update carries the thread's tokens so far (the meter took it first), so the card counts while it runs.
+    const tokens=n.method==='thread/tokenUsage/updated'?tokensForThread(threadId)?.total:undefined;
+    opts.onActivity?.({activeTools:state.activeTools.size,toolCalls:state.toolCalls,...tool?{lastToolName:p.item.tool??p.item.name??p.item.type}:{},...Number.isFinite(tokens)?{tokens}:{}});
   };
   client.on('notification',activity);
   // A user/run abort interrupts the turn; its interrupted completion settles the wait.
@@ -485,7 +492,9 @@ const NONRETRYABLE_MSG = /(BadRequest|Unauthorized|ContextWindowExceeded|invalid
 function errorCode(e) {
   const ci = e?.codexErrorInfo;
   if (!ci) return null;
-  return typeof ci === "string" ? ci : Object.keys(ci)[0] ?? null;
+  const code = typeof ci === "string" ? ci : Object.keys(ci)[0] ?? null;
+  // Local: 'other' names nothing (OpenCode's default for any failure): the message decides, as with no code.
+  return code === "other" ? null : code;
 }
 
 export function isRetryable(e) {

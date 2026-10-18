@@ -12,9 +12,11 @@ import { SourceMenu } from "./source-menu.jsx";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import { addToPrompt, serializeLineComment } from "./inline-comments.mjs";
-import { SELECTION_CHIP, addCommentLabel, anchorDiffSpan, diffCommentAttachmentKey, diffCommentOutdated, diffCommentsStore, diffLineIndex,
+import { SELECTION_CHIP, addCommentLabel, anchorDiffSpan, diffCommentAttachmentKey, diffCommentOutdated, diffFileCommentsStore, diffLineIndex,
   diffSelectionSpan, diffSpanText, placeDiffComment, selectionChipPosition } from "./diff-comments-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
+import { suppressEscapeRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
+import { preventContextMenu } from "./generated/files-changes/diff-context-guard.mjs";
 
 const ROW = ".sdiff-row[data-comment-line]";
 const EMPTY = Object.freeze({ entries: [], active: null });
@@ -58,13 +60,25 @@ function scrollerTop(node) {
 }
 const editable = (node) => !!node?.closest?.("textarea, input, [contenteditable=''], [contenteditable='true']");
 
+/** yo's document keydown while the selection chip shows (c44d00c7f): Escape outside a text field and an open menu hides
+ * the chip. 2.42304.0 first swallows Escape's auto-repeat in the owner window (`ae(t)`, shared-19 pZ) until the key is
+ * released, so holding it does not go on to close what is behind the chip. */
+export function selectionChipEscape(doc, hide) {
+  return (event) => {
+    if (event.key !== "Escape" || event.isComposing || editable(doc.activeElement) || doc.querySelector("[data-cds='Menu'], [data-cds='ContextMenu']")) return;
+    event.preventDefault(); event.stopPropagation();
+    if (doc.defaultView) suppressEscapeRepeat(doc.defaultView);
+    hide();
+  };
+}
+
 /** The comment layer of one Changes file: store, cards, gutter add, line-number drag, selection chip, body menu. */
 export function useDiffComments({ file, scope, menu: menuHost = false, shownHunks, complete = false, path, fileActions, bodyRef }) {
   const enabled = !!scope && !!file.path && !file.fallbackReason;
   // yo menuEnabled (p = !epitaxy_body_context_menu_disabled) does not depend on comments: without a session the
   // Changes body still offers Attach as context and Copy.
   const menuEnabled = enabled || (!!menuHost && !file.fallbackReason);
-  const store = useMemo(() => (enabled ? diffCommentsStore(`${scope}\0${file.path}`) : null), [enabled, scope, file.path]);
+  const store = useMemo(() => (enabled ? diffFileCommentsStore(scope, file.path) : null), [enabled, scope, file.path]);
   const source = store ?? noStore;
   const state = useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
   useEffect(() => () => store?.release(), [store]);
@@ -226,10 +240,7 @@ export function useDiffComments({ file, scope, menu: menuHost = false, shownHunk
       const rows = selectedRows(body), span = rows ? diffSelectionSpan(rows) : null;
       if (!span || span.startLine !== chip.span.startLine || span.endLine !== chip.span.endLine || span.side !== chip.span.side) hide();
     };
-    const key = (event) => {
-      if (event.key !== "Escape" || event.isComposing || editable(doc.activeElement) || doc.querySelector("[data-cds='Menu'], [data-cds='ContextMenu']")) return;
-      event.preventDefault(); event.stopPropagation(); hide();
-    };
+    const key = selectionChipEscape(doc, hide);
     doc.addEventListener("selectionchange", changed);
     doc.addEventListener("keydown", key, { capture: true });
     doc.addEventListener("wheel", hide, { capture: true, passive: true });
@@ -280,6 +291,8 @@ export function useDiffComments({ file, scope, menu: menuHost = false, shownHunk
     </div>, bodyRef.current.ownerDocument.body)}
     {menu && <SourceMenu.Popup anchor={bodyRef.current} trigger={null} point={{ x: menu.x, y: menu.y }} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
+      // c44d00c7f En (c82eca2bd Be): a right-click on the Changes context menu never opens the native menu over it.
+      onContextMenu={preventContextMenu}
       label={t("{path} actions", { path })} onClose={() => setMenu(null)}>
       {onAttachFile && <SourceMenu.Item onClick={() => onAttachFile(file.path)}>{t("Attach as context")}</SourceMenu.Item>}
       {menu.comment && <SourceMenu.Item aria-label={addCommentLabel(menu.comment.lines)}

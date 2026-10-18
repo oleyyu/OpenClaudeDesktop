@@ -13,25 +13,34 @@ try{
  const page=await app.firstWindow();page.on('pageerror',e=>errors.push(e.message));
  await page.getByRole('button',{name:'Model',exact:true}).filter({hasText:'Test model'}).waitFor();await page.evaluate(()=>document.fonts.ready);
  await page.locator('.sc-pet-animation[data-ready] svg').waitFor();
- const metrics=await page.evaluate(()=>({iconFont:getComputedStyle(document.querySelector('.source-sidebar-nav-row [data-cds="Icon"]')).fontFamily,sidebar:document.querySelector('.app-sidebar').getBoundingClientRect().width,composer:document.querySelector('.composer').getBoundingClientRect().width,stats:document.querySelector('.code-stats').getBoundingClientRect().width,sidebarBackground:getComputedStyle(document.querySelector('.app-sidebar')).backgroundColor,composerPadding:getComputedStyle(document.querySelector('.sc-surface')).padding,sendIcon:document.querySelector('[data-testid="code-prompt-send"] [data-cds="Icon"]')?.textContent.codePointAt(0)}));
- assert.match(metrics.iconFont,/Anthropicons/);assert.equal(metrics.sidebar,288);assert.equal(metrics.composer,768);assert.equal(metrics.stats,480);assert.equal(metrics.composerPadding,'8px');assert.equal(metrics.sendIcon,57359);
+ const metrics=await page.evaluate(()=>({iconFont:getComputedStyle(document.querySelector('.source-sidebar-nav-row [data-cds="Icon"]')).fontFamily,sidebar:document.querySelector('.app-sidebar').getBoundingClientRect().width,composer:document.querySelector('.sc-composer').getBoundingClientRect().width,stats:document.querySelector('[data-testid="epitaxy-stats-card"]')?.getBoundingClientRect().width??null,sidebarBackground:getComputedStyle(document.querySelector('.app-sidebar')).backgroundColor,composerPadding:getComputedStyle(document.querySelector('.sc-composer .sc-card')).padding,sends:document.querySelectorAll('[data-testid="code-prompt-send"]').length}));
+ assert.match(metrics.iconFont,/Anthropicons/);assert.equal(metrics.sidebar,288);assert.equal(metrics.composer,768);// R4i-gui GU1: the Code composer is the presets card (source-composer.jsx .sc-composer around the shell's .sc-card; the
+ // retired code-ui.jsx Composer's .composer and the host .sc-surface are gone) and lM shows no Send without a draft
+ // (sendOnDraftOnly). The stats card is code-start's [data-testid="epitaxy-stats-card"]; its width and the card padding
+ // are recorded for a runtime re-baseline.
+ assert.equal(metrics.sends,0,'no Send on the empty presets card');
  checks.push('original font, glyph, Lottie load and measured home dimensions');
- // 0.2.113 product correction (not loosened): the 39px disabled dictation split was fabricated. Source hides dictation
- // when !dictationEnabled (c360a9e1c:4892-4907 bH empty:hidden, nf :5067-5095 → null; cc43287c9:36836), so the
- // chin leading slot (shared-11 cu, no gap) is exactly Add then Mode with Mode.left = Add.right.
- metrics.chin=await page.locator('.sc-chin').evaluate(node=>{
-  const add=node.querySelector('.sc-add'), mode=node.querySelector('.sc-permission');
-  return {height:node.getBoundingClientRect().height,addWidth:add.getBoundingClientRect().width,addHeight:add.getBoundingClientRect().height,addGlyph:getComputedStyle(add.querySelector('[data-cds="Icon"]')).fontSize,voice:node.querySelectorAll('.sc-dictation, [data-cds="SplitDropdownButton"], [aria-label^="Dictat"]').length,leading:[...node.querySelector('.sc-chin-leading').children].map(child=>child.getAttribute('aria-label')),addToMode:Math.round((mode.getBoundingClientRect().left-add.getBoundingClientRect().right)*100)/100};
+ // 0.2.113: no dictation control (hideDictation). R4i-gui GU1 (R4g-composer CP3, R4i-graph GR3): the presets card's + is
+ // ChatComposerActions' leading (CARD_ADD_TRIGGER: the md glyph in sendGlyphBoxClass), and the Home draft hangs no chin:
+ // its pickers sit in the environment bar (source-composer-environment-bar.jsx: .sc-chin.sc-env-bar-scope around the
+ // generated l0, the place chip [data-testid="environment-bar-trigger"], the folder chip [data-testid="environment-bar-folder"]
+ // and the mode slot holding .sc-permission). Sizes are recorded, not asserted (they need a runtime re-baseline).
+ metrics.chin=await page.evaluate(()=>{
+  const card=document.querySelector('.sc-composer'),bar=document.querySelector('.sc-chin.sc-env-bar-scope'),add=card.querySelector('[data-cds="ChatComposerActions"] button[aria-label="Add"]');
+  return {bar:!!bar,addWidth:add?.getBoundingClientRect().width??null,addHeight:add?.getBoundingClientRect().height??null,addGlyph:add?getComputedStyle(add.querySelector('[data-cds="Icon"]')).fontSize:null,
+   voice:document.querySelectorAll('.sc-chin [data-cds="SplitDropdownButton"], .sc-composer [data-cds="SplitDropdownButton"], [aria-label^="Dictat"]').length,
+   addInBar:!!bar?.querySelector('button[aria-label="Add"]'),mode:!!bar?.querySelector('.sc-permission'),place:!!bar?.querySelector('[data-testid="environment-bar-trigger"]'),folder:!!bar?.querySelector('[data-testid="environment-bar-folder"]'),
+   contextRow:document.querySelectorAll('.sc-context-row').length};
  });
- assert.deepEqual(metrics.chin,{height:20,addWidth:20,addHeight:20,addGlyph:'16px',voice:0,leading:['Add','Permission mode'],addToMode:0});
- metrics.context=await page.locator('.sc-context-row').evaluate(node=>({paddingBottom:getComputedStyle(node).paddingBottom,addFolderWidth:node.querySelector('.sc-add-folder').getBoundingClientRect().width,chipToCardGap:document.querySelector('.sc-surface').getBoundingClientRect().top-node.querySelector('.sc-context-chip').getBoundingClientRect().bottom}));
- assert.deepEqual(metrics.context,{paddingBottom:'4px',addFolderWidth:28,chipToCardGap:10});
+ assert.deepEqual({bar:metrics.chin.bar,voice:metrics.chin.voice,add:metrics.chin.addWidth!==null,addInBar:metrics.chin.addInBar,mode:metrics.chin.mode,place:metrics.chin.place,folder:metrics.chin.folder,contextRow:metrics.chin.contextRow},
+  {bar:true,voice:0,add:true,addInBar:false,mode:true,place:true,folder:true,contextRow:0});
  const editor=page.getByRole('textbox',{name:'Message DeepSeek'});
  await editor.fill(Array.from({length:30},(_,i)=>`Draft line ${i+1}`).join('\n'));
  // ca80fca8d yP editor maxHeight 'min(24rem, 40svh)' (B05): grows to 24rem, or 40% of the window height when that is less, before it scrolls.
  {const [height,cap]=await editor.evaluate(node=>[node.getBoundingClientRect().height,Math.min(384,innerHeight*0.4)]);assert.ok(Math.abs(height-cap)<1,`editor capped at ${cap}px, got ${height}px`);}
+ metrics.sendIcon=await page.locator('[data-testid="code-prompt-send"]').evaluate(node=>node.querySelector('[data-cds="Icon"]')?.textContent.codePointAt(0));assert.equal(metrics.sendIcon,57359,'ArrowReturn on Send once the draft has text');
  await editor.fill('');assert.equal(await editor.evaluate(node=>node.getBoundingClientRect().height),24);
- checks.push('source chin height 20px, Add 20px/16px glyph, no dictation control (hideDictation branch) so Mode directly follows Add, and one autosize owner clamps the editor to 24–384px (max-h-96)');
+ checks.push('presets Home: the + leads ChatComposerActions, no dictation control, the environment bar holds place / folder / Mode (no context row), and one autosize owner clamps the editor to 24–384px (max-h-96)');
  await page.getByRole('button',{name:'Model',exact:true}).click();
  const modelMenu=page.getByRole('menu',{name:'Models',exact:true}); await modelMenu.waitFor();
  assert.equal(await modelMenu.locator('[aria-checked="true"]').getAttribute('data-model-id'),'fixture');

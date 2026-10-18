@@ -6,6 +6,7 @@
 import { t, getAssistantName } from "../electron/i18n/index.mjs";
 import { allCores, coreAssistant, coreForEngine, coreName } from "../electron/core-registry.mjs";
 import { deepseekKeyDescription, usesCustomEndpoint } from "./account-settings-model.mjs";
+import { planLabel } from "./usage-model.mjs";
 
 // boot.core (or a serverInfo), or a core id / engine string (config.core before the first connect).
 const engineOf = (core) => (typeof core === "string" ? core : core?.engine);
@@ -58,6 +59,27 @@ export function accountIdentity(displayName, accountRead, core) {
   const { orgPrimary: label, orgSecondary: subtitle } = accountMenuLines(accountRead, core);
   const name = typeof displayName === "string" ? displayName.trim() : "";
   return name ? { identity: name, orgPrimary: label, orgSecondary: subtitle } : { identity: label, orgPrimary: subtitle, orgSecondary: null };
+}
+
+/**
+ * The sidebar footer account button (shared-19 E0), user ruling 2026-10-18: the CDS Avatar of the principal's name
+ * (C0 = pp{name: x0 full_name||display_name||email_address}: its initials, "OY"), the name's first word (VWt
+ * `display_name || name.split(/\s+/)[0]`, "Oley"), then `· plan`. The plan: "API" for an API-key account; the plan
+ * account/read reports (planLabel: Codex's ChatGPT Plus / Pro, a bridge's own sign-in name); a subscription sign-in
+ * without one, or no account at all, falls back to the core / provider label ("DeepSeek API", "Codex").
+ * @param {string | null | undefined} displayName - the preferred name (Settings › Profile)
+ * @param {object | null | undefined} accountRead - account/read (boot.account)
+ * @returns {{avatarName: string, name: string, plan: string}}
+ */
+export function accountFooter(displayName, accountRead, core) {
+  const { orgPrimary: provider } = accountMenuLines(accountRead, core);
+  const account = accountRead?.account;
+  const plan = account?.type === "apiKey" || (!account && accountRead?.deepseek?.apiKey?.configured === true) ? "API"
+    : planLabel(account?.planType) || provider;
+  const full = typeof displayName === "string" ? displayName.trim() : "";
+  const email = typeof account?.email === "string" ? account.email.trim() : "";
+  const name = full.split(/\s+/)[0] || email || provider;
+  return { avatarName: full || email || provider, name, plan: plan === name ? "" : plan };
 }
 
 /** The footer 'Connection settings' menu header (a retained local control) names the running core. */

@@ -14,6 +14,12 @@ import { stripInstructions } from './instructions.js'
 import { applyWorkflowToolResult, isWorkflowRunTool, workflowNoticeItems, workflowRunOf, workflowState, workflowSettingsNotice } from './workflows.js'
 
 const seconds = (ms) => (Number.isFinite(ms) ? Math.floor(ms / 1000) : null)
+const count = (value) => (Number.isFinite(value) ? value : 0)
+/** Two step-finish token records added up ({input, output, reasoning, cache: {read, write}}). */
+const addTokens = (a, b) => ({
+  input: count(a?.input) + count(b?.input), output: count(a?.output) + count(b?.output), reasoning: count(a?.reasoning) + count(b?.reasoning),
+  cache: { read: count(a?.cache?.read) + count(b?.cache?.read), write: count(a?.cache?.write) + count(b?.cache?.write) },
+})
 const DENIED = /doesn't want to proceed|was rejected|denied by|declined/i
 
 /** Codex user-input parts for a ZCode user message (the original parts when the bridge recorded them). */
@@ -95,7 +101,7 @@ function agentChildOf(state) {
  * @param {Array<{info: object, parts: object[]}>} messages
  * @param {{ threadId: string, cwd: string, running?: boolean, activeTurnId?: string|null, inputs?: Record<string, object[]>, callIdPrefix?: string }} context
  *   callIdPrefix: put before every tool call id (a sub-agent's calls carry `tool_subagent_<agentId>_` on the live stream)
- * @returns {{ turns: object[], plan: object[]|null, lastUsage: object|null, anchors: Record<string, string> }}
+ * @returns {{ turns: object[], plan: object[]|null, lastUsage: object|null, totalUsage: object|null, anchors: Record<string, string> }}
  *   anchors: per turn, the id of its first prompt message (what ZCode's `/rewind conversation <id>` cuts before)
  */
 export function turnsFromMessages(messages, context) {
@@ -105,6 +111,8 @@ export function turnsFromMessages(messages, context) {
   let current = null
   let plan = null
   let lastUsage = null
+  // Every step's tokens: the thread's running total once it is reopened (the live total starts at zero).
+  let totalUsage = null
   const callIdOf = (callId) => (context.callIdPrefix && callId && !String(callId).startsWith(context.callIdPrefix) ? `${context.callIdPrefix}${callId}` : callId)
   const openTurn = (id, startedMs, lazy = false) => {
     if (byId.has(id)) return byId.get(id)
@@ -188,6 +196,7 @@ export function turnsFromMessages(messages, context) {
         if (!turn.items.some((item) => item.id === `compaction-${part.partId ?? part.id}`)) turn.items.push({ type: 'contextCompaction', id: `compaction-${part.partId ?? part.id}` })
       } else if (part.type === 'step-finish' && part.tokens) {
         lastUsage = part.tokens
+        totalUsage = addTokens(totalUsage, part.tokens)
       }
     }
     if (info.error && !running) {
@@ -216,7 +225,7 @@ export function turnsFromMessages(messages, context) {
     delete turn._start
     delete turn._end
   }
-  return { turns, plan, lastUsage, anchors }
+  return { turns, plan, lastUsage, totalUsage, anchors }
 }
 
 /** The first thing the user typed (the thread preview). */

@@ -47,6 +47,7 @@ import { MCP_TOOL, isRecord } from './items.js'
 import { appToolsServer, sessionIdentityOf, zcodeAppToolsServer } from './app-tools.js'
 import { approvalRequest, codexPolicy, isPlanApproval, isReadOnlyMode, noApprovalAnswer, permissionAnswer, permissionOf, questionAnswer, questionRequest, sessionGrant, zcodeMode } from './permissions.js'
 import { ProviderConfigMirror, ProviderProxy } from './provider-proxy.js'
+import { contextUsageCounts } from './context-usage.js'
 import { InteractionRegistry } from './interactions.js'
 import { RateLimitWatch } from './rate-limit-watch.js'
 import * as accounts from './accounts.js'
@@ -753,9 +754,12 @@ export async function main() {
       if (preview) store.update(thread.id, { preview })
     }
     if (built.lastUsage && !thread.projector.last) {
-      const t = built.lastUsage
-      const input = (t.input ?? 0) + (t.cache?.read ?? 0) + (t.cache?.write ?? 0)
-      thread.projector.seedUsage({ last: { totalTokens: input + (t.output ?? 0), inputTokens: input, cachedInputTokens: t.cache?.read ?? 0, cacheWriteInputTokens: t.cache?.write ?? 0, outputTokens: t.output ?? 0, reasoningOutputTokens: t.reasoning ?? 0 }, contextWindow: thread.contextWindow })
+      const breakdown = (t) => {
+        const input = (t.input ?? 0) + (t.cache?.read ?? 0) + (t.cache?.write ?? 0)
+        return { totalTokens: input + (t.output ?? 0), inputTokens: input, cachedInputTokens: t.cache?.read ?? 0, cacheWriteInputTokens: t.cache?.write ?? 0, outputTokens: t.output ?? 0, reasoningOutputTokens: t.reasoning ?? 0 }
+      }
+      // The total too: a reopened thread's running total, not zero under a non-zero last request.
+      thread.projector.seedUsage({ last: breakdown(built.lastUsage), ...(built.totalUsage ? { total: breakdown(built.totalUsage) } : {}), contextWindow: thread.contextWindow })
     }
     if (built.plan) thread.projector.plan = built.plan
     await workflowHistory(thread, built.turns).catch((error) => log(`zcode-bridge: workflow history: ${error?.message ?? error}`))
@@ -2202,7 +2206,7 @@ export async function main() {
           userAgent: `code-desktop-zcode-bridge/${BRIDGE_VERSION} (zcode ${version}; ${process.platform})`, codexHome: paths.root,
           platformFamily: process.platform === 'win32' ? 'windows' : 'unix', platformOs: process.platform === 'darwin' ? 'macos' : process.platform,
           engine: ENGINE, engineVersion: version,
-          capabilities: { ...BASE_CAPABILITIES, customization: !!proxy, modelParams: !!proxy, systemPromptPreview: !!proxy, perTokenBilling: !codingPlan },
+          capabilities: { ...BASE_CAPABILITIES, customization: !!proxy, modelParams: !!proxy, systemPromptPreview: !!proxy, contextUsage: !!proxy, perTokenBilling: !codingPlan },
           configPath: paths.cliConfig,
         }
       }
@@ -2229,6 +2233,13 @@ export async function main() {
       case 'codeDesktop/systemPrompt/preview': {
         if (!proxy) throw new RpcError(METHOD_NOT_FOUND, 'This ZCode install has no provider catalog the bridge can route, so the prompt can’t be previewed.')
         return systemPromptPreview(params)
+      }
+      case 'codeDesktop/contextUsage/read': {
+        // The session rail Context card's categories (context-usage.js) from the last request the proxy saw for the thread.
+        if (!proxy) throw new RpcError(METHOD_NOT_FOUND, 'This ZCode install has no provider catalog the bridge can route, so its requests can’t be measured.')
+        const thread = typeof params?.threadId === 'string' ? threads.get(params.threadId) : null
+        const instructions = thread ? appToolsInstructions(thread) : ''
+        return contextUsageCounts(thread ? proxy.seen.get(thread.id) : null, instructions ? [{ name: appTools.name, text: instructions }] : [])
       }
       case 'codeDesktop/sideQuestion': return sideQuestion(params)
       case 'codeDesktop/sideQuestion/cancel': {

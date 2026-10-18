@@ -165,7 +165,7 @@ test('GitHub refs: a bare PR URL in transcript text is the forge chip; a descrip
   for (const url of ['https://github.com:8443/acme/widgets/pull/42', 'https://gitlab.com/acme/widgets/pull/42']) assert.doesNotMatch(inTranscript(url), /smd-forge-ref/, url);
   assert.doesNotMatch(render(`See ${pr} now.`), /smd-forge-ref/);
 });
-test('response table renders original cells safely and freezes layout only while its message is streaming', () => {
+test('response table renders original cells safely; a streaming table keeps the content layout (cov1-06)', () => {
   const text = '## Results\n\n| File | Value |\n| --- | --- |\n| `src/table.ts` | <script>alert(1)</script> |';
   const settled = render(text), streaming = render(text, { isStreaming: true });
   assert.match(settled, /class="source-table-scroll"/);
@@ -173,8 +173,12 @@ test('response table renders original cells safely and freezes layout only while
   assert.match(settled, /data-file-ref="src\/table.ts"/);
   assert.doesNotMatch(settled, /<script>/);
   assert.match(settled, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  // R3b-transcript cov1-06: the original freeze (c89efce1a jc, tests/r3b-transcript-current.test.mjs) measures and
+  // pins header min-widths in a layout effect instead of fixing the table layout, so neither render carries a layout
+  // style and the server render pins nothing.
   assert.doesNotMatch(settled, /table-layout:fixed/);
-  assert.match(streaming, /table-layout:fixed/);
+  assert.doesNotMatch(streaming, /table-layout:fixed|min-width/);
+  assert.match(streaming, /<table><thead><tr><th>/);
   // Server rendering cannot measure widths: never invent overflow/Expand.
   assert.doesNotMatch(settled, /aria-label="Expand table"/);
 });
@@ -305,9 +309,13 @@ test('actual plugin detail replaces the list with back header and tabs, without 
  // 0.2.107: CDS ghost back Button; its label is wrapped in .ssb-content, same adjacency otherwise.
  assert.match(html, /data-cz-detail="plugin"/); assert.match(html, /Plugins<\/span><\/button><\/div><div class="cz-drill-scroll/);
  // c36b3644c:560–577 uses the shared heading-semibold typography.
- assert.match(html, /<h2 class="text-heading-semibold">A &lt;script&gt;<\/h2>/); assert.match(html, /&lt;img src=x&gt;/);
+ assert.match(html, /<h2 class="text-heading-semibold">A &lt;script&gt;<\/h2>/);
+ // settings-14: the Description left the header for the Overview tab (c12456454 ni -> cae01a6fc W), still escaped text.
+ const overview = renderDetail({ view: { tab: 'overview', query: '' } });
+ assert.match(overview, /<p dir="auto" class="whitespace-pre-wrap break-words text-primary text-body">&lt;img src=x&gt;<\/p>/); assert.doesNotMatch(overview, /<img |<script>/);
  assert.match(html, /Marketplace \(/); assert.match(html, /Real Author/);
- assert.equal((html.match(/role="tab"/g) || []).length, 3);
+ // settings-14 (2.42304.0 c24c8737b pc Kt): Overview first, then the content tabs in their order.
+ assert.deepEqual([...html.matchAll(/role="tab"[^>]*>([^<]*)</g)].map(m => m[1]), ['Overview', 'Skills', 'Connectors', 'Hooks']);
  assert.match(html, /role="tabpanel"/); assert.match(html, /<button[^>]*class="cz-plugin-item"[^>]*><span>\/audit/);
  assert.doesNotMatch(html, /<table|<aside|<script>|<img |role="switch"|<time|Search skills|data-plugin-hooks/);
  // R04 c26e90ba3 qt: a non-local plugin's "Last updated" is the muted "—" (no backend date is invented).
@@ -321,50 +329,55 @@ test('actual plugin detail replaces the list with back header and tabs, without 
  assert.doesNotMatch(connectors, /data-plugin-skills|data-plugin-hooks|<small/);
  const error = renderDetail({ detail: null, error: 'Read failed' });
  assert.match(error, /role="alert">Read failed/); assert.doesNotMatch(error, /Loading plugin details|role="tablist"/);
- // F13: c36b3644c be shows the c9d36aa51 skeleton until plugin/read answers; an empty plugin uses _e D's copy.
+ // F13: c36b3644c be shows the c9d36aa51 skeleton until plugin/read answers; an empty plugin still has Kt's Overview (settings-14).
  const loading = renderDetail({ detail: null }); assert.match(loading, /data-testid="plugin-page-skeleton"/); assert.doesNotMatch(loading, /Loading plugin details/);
- const empty = renderDetail({ detail: {} }); assert.match(empty, /role="tab" disabled=""/); assert.doesNotMatch(empty, />Agents</);
- assert.match(empty, /This plugin doesn’t have any skills or agents\./);
+ const empty = renderDetail({ detail: {} }); assert.deepEqual([...empty.matchAll(/role="tab"[^>]*>([^<]*)</g)].map(m => m[1]), ['Overview']); assert.doesNotMatch(empty, />Agents<|role="tab" disabled=""/);
+ assert.match(empty, /data-plugin-overview=""/); assert.doesNotMatch(empty, /doesn’t have any skills or agents/);
 });
 
 
+// Working line (turnStatusRows ruling, 2.42304.0 c96d752d0 w8 gate-on branch): these two pins moved from the classic Y5
+// row (sts-* spans, visible activity labels) to the official Het / CDS TurnStatus DOM. The intent they pin is unchanged:
+// only the owned turn's time and usage are shown, and the tasks button's placement in each state.
 test('actual runtime status renders only owned tool activity and keeps time/usage absent when not established', () => {
  const props = { sessionKey:'a', turnId:'turn', ready:true, connected:true, running:true, items:[{id:'c',turnId:'turn',type:'commandExecution',status:'inProgress'}] };
  const renderStatus = extra => renderToStaticMarkup(React.createElement(SourceTranscriptStatus, {...props,...extra}));
  const html = renderStatus({turnStats:{turnId:'other',startedAt:1,outputTokens:999}});
- assert.match(html,/aria-label="Running tools…"/); assert.match(html,/source-shimmer sts-activity/);
- assert.doesNotMatch(html,/data-runtime-stat|999 tokens|Waiting for Claude/);
- const stopped = renderStatus({stopping:true});assert.match(stopped,/Stopping…/);assert.doesNotMatch(stopped,/Running tools|data-runtime-stat/);
+ // w8 shows no activity text in the stats state; the CDS status announces "Working…" and the row is busy.
+ assert.match(html,/data-testid="code-working-line" data-turn-working="true"/); assert.match(html,/data-cds="TurnStatus" data-state="busy"/);
+ assert.match(html,/<span class="sr-only" role="status" aria-live="polite">Working…<\/span>/);
+ assert.doesNotMatch(html,/999 tokens|Waiting for Claude|Running tools|tabular-nums">\d/);
+ const stopped = renderStatus({stopping:true});assert.match(stopped,/>Stopping<\/span>/);assert.doesNotMatch(stopped,/Running tools|tokens/);
  const idle = renderStatus({running:false});assert.match(idle,/data-transcript-status="idle"/);assert.doesNotMatch(idle,/role="status"|Running tools/);
  assert.equal(renderStatus({approvalVisible:true}), '');
- assert.doesNotMatch(renderStatus({connected:false}), /Running tools|data-runtime-stat/);
+ assert.doesNotMatch(renderStatus({connected:false}), /Running tools|tokens|data-turn-working="true"/);
 });
 
 test('Y5 running-tasks button sits after the stats, alone when idle, after Stopping, and stays reachable', () => {
  const props = { sessionKey:'a', turnId:'turn', ready:true, connected:true, running:true, items:[], turnStats:{turnId:'turn',startedAt:Date.now()/1000-30,outputTokens:287}, onToggleTasksPane(){} };
  const renderStatus = extra => renderToStaticMarkup(React.createElement(SourceTranscriptStatus, {...props,...extra}));
- const button = html => html.match(/<button[^>]*class="source-settings-button sts-tasks"[^>]*>.*?<\/button>/)?.[0];
+ // w8 K: CdsButton ghost / xs / flush both with "text-inherit hover:text-accent before:…", pressed while the pane is open.
+ const button = html => html.match(/<button[^>]*data-cds="Button"[^>]*>.*?<\/button>/)?.[0];
  const running = renderStatus({runningTaskCount:1});
  const runningButton = button(running);
  assert.ok(runningButton); assert.match(runningButton, /type="button"/); assert.match(runningButton, /aria-pressed="false"/);
- for (const attribute of ['data-variant="ghost"','data-size="xs"','data-flush="both"']) assert.ok(runningButton.includes(attribute));
- assert.match(runningButton, /<span class="sts-tasks-label">1 running task<\/span>/);
- // stats branch q(M) · status; SSR has no elapsed clock, so no stats precede it here
- // (the offscreen background-tasks suite checks the live "stats · q" separator).
- assert.match(running, /aria-label="Working…"><button[^>]*sts-tasks[^>]*>.*?<\/button><span class="sts-separator" aria-hidden="true">·<\/span><span class="source-shimmer sts-activity">Working…/);
- assert.match(running, /role="status"/); assert.doesNotMatch(running, /class="(source-transcript-status|sts-label)"[^>]*aria-hidden/);
+ for (const attribute of ['data-cds-ghost=""','data-size="xs"','text-inherit hover:text-accent']) assert.ok(runningButton.includes(attribute), attribute);
+ assert.match(runningButton, />1 running task<\/span><\/button>/);
+ // Stats state (SSR has no elapsed clock): the button is the only trailing item, in w8's epitaxy-status-control span.
+ assert.match(running, /<span class="epitaxy-status-control inline-flex min-w-0 items-center gap-xs"><span class="epitaxy-status-control inline-flex items-center"><button/);
+ assert.match(running, /role="status"/); assert.doesNotMatch(running, /class="source-transcript-status[^"]*"[^>]*aria-hidden/);
  assert.match(renderStatus({runningTaskCount:3, tasksPaneOpen:true}), /aria-pressed="true"[^>]*>.*3 running tasks/);
  const idle = renderStatus({running:false, runningTaskCount:2, tasksPaneOpen:true});
- assert.match(idle, /data-transcript-status="idle"/);
- assert.doesNotMatch(idle, /class="(source-transcript-status|sts-label)"[^>]*aria-hidden/, 'no aria-hidden container hides the idle button');
- assert.doesNotMatch(idle, /role="status"|sts-separator|sts-activity/);
- assert.match(idle, /<span class="sts-label" data-visible="true"><button[^>]*aria-pressed="true"[^>]*>.*2 running tasks/);
+ assert.match(idle, /data-transcript-status="idle"/); assert.match(idle, /data-cds="TurnStatus" data-state="done"/);
+ // Het without quiet: no aria-hidden / invisible container hides the idle button.
+ assert.match(idle, /<div data-testid="code-working-line" data-turn-working="false" class="flex min-h-control flex-col"><div data-closed="" data-cds="TurnStatus"/, 'no aria-hidden container hides the idle button');
+ assert.match(idle, /<button[^>]*aria-pressed="true"[^>]*>.*2 running tasks/);
  const stopping = renderStatus({stopping:true, runningTaskCount:1});
- assert.match(stopping, /Stopping…<\/span><span class="sts-separator" aria-hidden="true">·<\/span><button[^>]*sts-tasks/);
+ assert.match(stopping, />Stopping<\/span>.*<button[^>]*>.*1 running task/);
  // No toggle (no side panes), no tasks, retry and approval-replaced rows keep the prior DOM.
  assert.equal(button(renderStatus({runningTaskCount:1, onToggleTasksPane:null})), undefined);
  assert.equal(renderStatus({running:false, runningTaskCount:0}), renderStatus({running:false, onToggleTasksPane:null}));
- assert.match(renderStatus({running:false, runningTaskCount:0}), /class="source-transcript-status"[^>]*aria-hidden="true"/);
+ assert.match(renderStatus({running:false, runningTaskCount:0}), /data-turn-working="false" class="flex min-h-control flex-col"><\/div>/);
  assert.equal(button(renderStatus({retrying:'Overloaded', runningTaskCount:1})), undefined);
  assert.equal(renderStatus({approvalVisible:true, runningTaskCount:1}), '');
 });

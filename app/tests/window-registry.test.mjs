@@ -228,3 +228,57 @@ test('dispatch add-to-prompt (B02 D1): the window showing the session, else the 
   assert.deepEqual(registry.dispatch(event('gone', a.id)), [c], 'a closed owner falls back to the newest-focused');
   assert.equal(events(a).length, 1);
 });
+
+// R4g-btw BT3 (X7-14, btw-read-01): each window reports the /btw children its session tiles show; the automatic unread
+// check (main.cjs sidebar-state "metadata", windowsShowing with side) counts them, like shared-11 x_'s __.
+test('layoutSessions counts the reported /btw children; the report is sanitized, per window, and never persisted', () => {
+  const { sanitizeSideSessions, MAX_SIDE_SESSIONS } = registryModule;
+  assert.deepEqual(layoutSessions({ current: 'a', split: { panes: [{ sessionId: 'b', col: 1, row: 0 }] } }, ['c', 'a', 'c', 7, '', 'd']), ['a', 'b', 'c', 'd']);
+  assert.deepEqual(layoutSessions(null, ['c']), ['c']);
+  assert.deepEqual(layoutSessions({ current: 'a' }), ['a'], 'no report: the layout only');
+  assert.equal(sanitizeSideSessions(Array.from({ length: 40 }, (_, i) => `s${i}`)).length, MAX_SIDE_SESSIONS);
+  assert.deepEqual(sanitizeSideSessions('c'), []);
+  const dir = tmp(), file = path.join(dir, OPEN_WINDOWS_FILE), timers = fakeTimers();
+  const registry = createWindowRegistry({ file, timers });
+  const a = new FakeWindow(), b = new FakeWindow(), pane = new FakeWindow();
+  registry.register(a, { key: MAIN_WINDOW_KEY, layout: { current: 'parent' } });
+  registry.register(b, { key: 'w-b', layout: { current: 'other' } });
+  registry.register(pane, { key: 'w-pane', layout: { current: 'parent' }, kind: 'pane' });
+  assert.deepEqual(registry.setSideSessions(a, ['child', 'child', '\u0000bad']), ['child']);
+  assert.deepEqual(registry.setSideSessions(pane, ['pane-child']), ['pane-child']);
+  assert.deepEqual(registry.setSideSessions(new FakeWindow(), ['x']), [], 'an unknown window reports nothing');
+  assert.deepEqual(registry.windowsShowing('child'), [], 'routing and notifications keep the layout only');
+  assert.deepEqual(registry.windowsShowing('child', { side: true }), [a]);
+  assert.deepEqual(registry.windowsShowing('pane-child', { side: true }), [pane], 'a pane window counts for the children it shows');
+  assert.deepEqual(registry.windowsShowing('parent', { side: true }), [a], 'its own session still needs panes');
+  assert.deepEqual(registry.sideSessionsOf(b), []);
+  timers.run();
+  assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /child/, 'open-windows.json keeps layouts only');
+  // A reload (captureLaunch at did-start-loading) clears the old page's report until the new page reports.
+  registry.captureLaunch(a);
+  assert.deepEqual(registry.sideSessionsOf(a), []);
+  assert.deepEqual(registry.windowsShowing('child', { side: true }), []);
+  registry.setSideSessions(b, ['child']);
+  b.destroyed = true;
+  assert.deepEqual(registry.windowsShowing('child', { side: true }), [], 'a closed window shows nothing');
+});
+
+// shared-11 closeSidePanePopoutsForSession: the side-pane popouts of the session, and a session-tile popout whose view
+// shows it (main.cjs closes these when a session is archived or deleted).
+test('sidePanePopoutsForSession picks the pane popouts the official closeSidePanePopoutsForSession drops', () => {
+  const { sidePanePopoutsForSession } = registryModule;
+  const list = [{ sessionId: 's', pane: 'terminal' }, { sessionId: 's', pane: 'files' }, { sessionId: 't', pane: 'tasks' },
+    { sessionId: 't', pane: 'session', sessionView: { sessionId: 's' } }, { sessionId: 'u', pane: 'files', sessionView: { sessionId: 's' } }, null];
+  assert.deepEqual(sidePanePopoutsForSession(list, 's'), [list[0], list[1], list[3]]);
+  assert.deepEqual(sidePanePopoutsForSession(new Map([['k', list[2]]]).values(), 't'), [list[2]], 'reads main.cjs popouts.values()');
+  assert.deepEqual(sidePanePopoutsForSession(list, ''), []);
+  assert.deepEqual(sidePanePopoutsForSession(null, 's'), []);
+  const v1 = path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+  const count = (name, needle) => fs.readFileSync(path.join(v1, name), 'utf8').split(needle).length - 1;
+  assert.equal(count('shared-11-BuQ3CK5I.js', 'closeSidePanePopoutsForSession:t=>e(e=>{let n=new Map(e.popoutWindows);for(let[r,i]of e.popoutWindows)i.type==="epitaxy-side-pane"&&(i.sessionId===t||i.paneTileId==="session"&&i.sessionView?.sessionId===t)&&n.delete(r);'), 1);
+  assert.equal(count('c03935b01-CyJKQj4N.js', 'T.getState().evictSession(e),tt.getState().closeSidePanePopoutsForSession(e)'), 1);
+  assert.equal(count('c03935b01-CyJKQj4N.js', 'evictEpitaxySession:()=>lc'), 1);
+  assert.equal(count('c6b8adeaf-C5Aww7gq.js', 'async function bi(e){let t=await yi();t?t.evictEpitaxySession(e):Jt(e)}'), 1);
+  assert.equal(count('c6b8adeaf-C5Aww7gq.js', '(o[t.id]?.refCount??0)===0&&(d(t.id),bi(t.id))'), 1, 'archive: only once nothing holds it');
+  assert.equal(count('c6b8adeaf-C5Aww7gq.js', 'me(t.id),bi(t.id)})'), 1, 'delete: always');
+});

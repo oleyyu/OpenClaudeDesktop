@@ -1,6 +1,0 @@
-// Extracted from installed Claude Desktop 2.31226.0. Do not edit.
-
-function t(e){return e.length===0||e.length>1024?"length":/[\p{Cc}\p{Cf}\p{Cs}\u2028\u2029]/u.test(e)?"control_or_format_character":/["<>]/.test(e)?"quote_or_angle_bracket":e.endsWith("\\")?"trailing_backslash":e.toLowerCase().includes("system-reminder")?"reminder_tag_literal":null}
-function n(e){return typeof e=="string"&&e.trim().length>0&&!/^(?:[\\/]{2}|[\\/]\?\?[\\/])/.test(e.trim())&&t(e)===null}
-
-export { n, t };

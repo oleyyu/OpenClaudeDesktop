@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {attachVisibleTerminalOutput,terminalSelectionText} from '../src/generated/code-editor/terminal-output.mjs';
+// 2.42304.0 c6bf19e8f In..$n (generated/code-current, R3-terminal FT-03; identical to the 2.31226.0 kn..Kn).
+import {attachVisibleTerminalOutput,terminalSelectionText} from '../src/generated/code-current/terminal-output.mjs';
 
 function fixture({selection='',visible='viewport output\n\n',viewportY=20,cols=80,rows=10,wrapped=[]}={}) {
  const calls=[];

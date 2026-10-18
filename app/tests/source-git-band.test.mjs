@@ -7,18 +7,21 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
-import { gitRepoMenuItems, COMMIT_CLEAN_REASON, COMMIT_RESPONDING_REASON } from '../src/git-rail-model.mjs';
+import { gitRepoMenuItems, commitAction, COMMIT_CLEAN_REASON, COMMIT_RESPONDING_REASON } from '../src/git-rail-model.mjs';
 
-// Git band/rail hints are CDS tooltips, never native titles (git-status-card
-// 1270-1318 K, 1085-1119 Fe → shared-frame Pu 4869-4895; git-chips D/M; rail
-// Zi `Y{lazy}` = Fu OverflowTooltip; c0b46114c y Dismiss tooltip:false). The
+// Git band hints are CDS tooltips, never native titles (git-status-card
+// 1270-1318 K, 1085-1119 Fe → shared-frame Pu 4869-4895; git-chips D/M). The
 // repo menu groups follow cc70f2bdf Ko/qo 2270-2394. Node-only SSR, no window.
-let server, SourceGitStatus, SourceGitRail;
+//
+// R4f-rail SR-8: the rail is the 2.42304.0 flat session rail now (src/source-session-rail.jsx mounts it in the Code
+// session page). Its Changes card is the generated c96d752d0 OLe `data-rail-changes-row` row
+// (src/generated/session-rail-changes, host stand-in SessionRailChanges), so the rail tests below read that row. The
+// hand-written 2.3x stacked rail (src/source-git-rail.jsx/.css, git-status-card Ii/Zi, never mounted) is retired.
+let server, SourceGitStatus;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
-    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   ({ SourceGitStatus } = await server.ssrLoadModule('/src/source-git-status.jsx'));
-  ({ SourceGitRail } = await server.ssrLoadModule('/src/source-git-rail.jsx'));
 });
 after(async () => { await server?.close(); });
 
@@ -28,8 +31,40 @@ const noop = () => {};
 const band = (props) => renderToStaticMarkup(React.createElement(SourceGitStatus, {
   prMode: 'commit', onOpenFolder: noop, onCopyPath: noop, onCopyBranch: noop, onOpenChanges: noop,
   onAction: noop, actionLabel: 'Commit changes', ...props }));
-const rail = (props) => renderToStaticMarkup(React.createElement(SourceGitRail, { onOpenChanges: noop, onAction: noop, onDismiss: noop, ...props }));
+// The flat rail's Changes card (cf74bc599 rD `pullRequests`, the "row" layout from the kit ChangesRowLayoutContext, D10),
+// rendered only inside withRail: view-tabs' preload helper creates a link element while it evaluates and the keybinding
+// table reads the user agent (D21, as tests/session-rail-changes.test.mjs), and the band tests keep running without a
+// window. The verb is the host's commit verb (main.jsx sessionRailHost: sendCommitTurn + git-rail-model commitAction).
+let railModules;
+async function withRail(fn) {
+  const saved = { window: Object.getOwnPropertyDescriptor(globalThis, 'window'), document: Object.getOwnPropertyDescriptor(globalThis, 'document') };
+  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
+  globalThis.window = { localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } };
+  try {
+    railModules ??= { adapters: await server.ssrLoadModule('/src/source-session-rail-changes-adapters.jsx'),
+      chip: await server.ssrLoadModule('/src/generated/session-rail-kit/branch-chip.mjs') };
+    const { adapters, chip } = railModules;
+    const rail = ({ verb, ...props }) => renderToStaticMarkup(React.createElement(chip.ChangesRowLayoutContext.Provider, { value: 'row' },
+      React.createElement(adapters.SessionRailChanges, { diffOpenable: true, onOpenChanges: noop, onToggleChanges: noop,
+        verb: verb && { mode: 'commit', onClick: noop, disabled: verb.disabled, disabledReason: verb.disabledReason }, ...props })));
+    return await fn(rail);
+  } finally {
+    for (const name of ['window', 'document']) {
+      if (saved[name]) Object.defineProperty(globalThis, name, saved[name]);
+      else delete globalThis[name];
+    }
+  }
+}
 const noTitles = (html, label) => assert.doesNotMatch(html, /\stitle="/, `${label}: no native title attribute`);
+// shared-frame CdsDisabledReason (the rail verb's es): wrapper `aria-describedby=id` + hidden `[data-cds-disabled-reason]`.
+function railDescribedReason(html) {
+  const wrapper = html.match(/<span tabindex="0" aria-describedby="([^"]+)" data-cds-disabled-reason-wrapper="" class="([^"]*)"/);
+  assert.ok(wrapper, 'the disabled verb sits in the focusable disabled-reason wrapper');
+  const id = wrapper[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const reason = html.match(new RegExp(`<span id="${id}" hidden="" data-cds-disabled-reason="">([^<]*)</span>`));
+  assert.ok(reason, 'the described reason is a hidden span with the referenced id');
+  return { reason: reason[1], wrapperClass: wrapper[2] };
+}
 // Pu: wrapper span `aria-describedby=id` + hidden `[data-cds-disabled-reason]` span with that id.
 function describedReason(html) {
   const wrapper = html.match(/<span class="source-tooltip-disabled-trigger[^"]*" tabindex="0" aria-describedby="([^"]+)">/);
@@ -87,22 +122,30 @@ test('band: repo chip is disabled only without any menu row; a busy but enabled 
   assert.match(band({ status: dirty, onOpenFolder: undefined }), /class="sg-button sg-repo" data-repo-chip="unbounded" aria-label="repo" aria-haspopup="menu"/);
 });
 
-test('rail: no native titles (title, Dismiss, action); responding Commit is described and takes the Fe min-w-0 flex-1 wrapper', () => {
-  const idle = rail({ status: dirty });
+test('rail (2.42304.0 flat Changes row): no native titles; a responding Commit is described in the DLe min-w-0 shrink-0 wrapper; a clean branch leaves the nav empty', () => withRail((rail) => {
+  const idle = rail({ status: dirty, verb: commitAction(dirty) });
   noTitles(idle, 'rail idle');
-  assert.match(idle, /<span class="sgr-title" data-cds="OverflowTooltip">repo · feature\/a-rather-long-branch-name<\/span>/);
-  assert.match(idle, /<button type="button" class="sg-button sg-dismiss sgr-dismiss" aria-label="Dismiss">/);
-  assert.doesNotMatch(idle, /data-cds-disabled-reason/);
+  // OLe's row branch (no PR link, "row" layout): the counts button and the ⋮ name the branch; a single repo hides its name.
+  assert.match(idle, /<div data-rail-changes-row="" class="flex min-h-6\.5 w-full min-w-0 items-center gap-sm px-xs text-body">/);
+  assert.match(idle, /aria-label="Open changes, 3 added, 1 removed"/);
+  assert.match(idle, /aria-label="More options for feature\/a-rather-long-branch-name"/);
+  assert.doesNotMatch(idle, />repo<\/span>/);
+  assert.doesNotMatch(idle, /aria-describedby/, 'an enabled Commit has no described reason');
 
-  const running = rail({ status: dirty, responding: true });
+  const running = rail({ status: dirty, verb: commitAction(dirty, { responding: true }) });
   noTitles(running, 'rail running');
-  assert.equal(describedReason(running), COMMIT_RESPONDING_REASON);
-  assert.match(running, /<span class="source-tooltip-disabled-trigger sgr-action-wrap" tabindex="0"/);
+  const described = railDescribedReason(running);
+  assert.equal(described.reason, COMMIT_RESPONDING_REASON);
+  assert.match(described.wrapperClass, / min-w-0 shrink-0$/, 'c96d752d0 DLe es wrapperClassName');
+  assert.match(running, /<button type="button" disabled="" data-cds="Button" data-size="xs" class="[^"]* min-w-0 shrink-0">/);
+  // The band and the rail take the same commit reasons (git-rail-model commitAction).
+  assert.equal(railDescribedReason(rail({ status: { ...dirty, workingTreeDirty: false }, verb: commitAction({ ...dirty, workingTreeDirty: false }) })).reason, COMMIT_CLEAN_REASON);
 
-  const hidden = rail({ status: clean });
+  // eze/fze: no changes and no PR — the nav stays empty, so rD's `has-[nav:not(:empty)]:flex` keeps the card hidden.
+  const hidden = rail({ status: clean, verb: commitAction(clean) });
   noTitles(hidden, 'rail clean');
-  assert.equal(hidden, '<nav class="sgr-nav" aria-label="Repository and pull request controls" data-layout="rail"></nav>');
-});
+  assert.equal(hidden, '<nav aria-label="Repository and pull request controls" class="flex flex-col gap-1 empty:hidden"></nav>');
+}));
 
 test('band counts: OV sr-only unit list and an aria-hidden +/− pair (shared-21 16959-17004)', () => {
   const html = band({ status: dirty });
@@ -122,8 +165,13 @@ test('band: commit mode without onDismiss renders no .sg-dismiss and no .sg-dism
   // git-status-card.js:1116/:1301 `onMouseDown: Mn` on Commit and the counts: a pointer click keeps the composer's focus.
   assert.match(source, /className="sg-action"[^>]*\n?\s*onMouseDown=\{\(event\) => event\.preventDefault\(\)\} onClick=\{\(\) => onAction\(status\)\}/);
   assert.match(source, /className="sg-diff"\s*onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
-  const rail = await fs.readFile(path.resolve(import.meta.dirname, '../src/source-git-rail.jsx'), 'utf8');
-  assert.match(rail, /className="sg-action sgr-action"[^>]*\n?\s*onMouseDown=\{\(event\) => event\.preventDefault\(\)\} onClick=\{\(\) => onAction\(status\)\}/);
+  // The rail's Commit keeps the composer's focus the same way: c96d752d0 DLe wraps the verb in Qz, whose span has
+  // `onMouseDown: i_` (c81ea1931 e, generated session-rail-kit preventMouseDown).
+  const verb = await fs.readFile(path.resolve(import.meta.dirname, '../src/generated/session-rail-changes/changes-verb.mjs'), 'utf8');
+  assert.match(verb, /import \{ preventMouseDown as i_ \} from "\.\.\/session-rail-kit\/prevent-mouse-down\.mjs";/);
+  assert.match(verb, /role: "none",\s*className: "contents",\s*onMouseDown: i_,/);
+  const prevent = await fs.readFile(path.resolve(import.meta.dirname, '../src/generated/session-rail-kit/prevent-mouse-down.mjs'), 'utf8');
+  assert.match(prevent, /function e\(e\) \{\s*return e\.preventDefault\(\);\s*\}\s*export \{ e as preventMouseDown \};/);
 });
 
 test('band stale: the held snapshot is inert, aria-hidden, data-prbar-stale, without buttons, menus or tooltips', () => {
@@ -139,11 +187,23 @@ test('band stale: the held snapshot is inert, aria-hidden, data-prbar-stale, wit
   assert.match(css, /\.sg-row-stale \{ pointer-events: none; opacity: \.6; \}/);
 });
 
-test('rail: the Changes fact and collapsed signal use GitCounts; Commit is the secondary CDS Button', () => {
-  const html = rail({ status: dirty });
-  assert.match(html, /<span class="sr-only">3 additions, 1 deletion<\/span>/);
-  assert.match(html, /<button type="button" data-cds="Button" data-variant="secondary" class="source-settings-button sg-action sgr-action">/);
-  assert.doesNotMatch(html, /sg-spinner/);
+test('rail: the counts are the generated c60636ac6 Xe (sr-only unit list + aria-hidden +/−); Commit is the generated CDS Button; SourceGitRail is retired', async () => {
+  await withRail((rail) => {
+    const html = rail({ status: dirty, verb: commitAction(dirty) });
+    assert.match(html, /<span class="tabular-nums inline-flex shrink-0 gap-1 text-body"><span class="sr-only">3 additions, 1 deletion<\/span><span aria-hidden="true" class="contents"><span class="text-git-added">\+3<\/span><span class="text-git-removed">−1<\/span><\/span><\/span>/);
+    assert.match(html, /<button type="button" data-cds="Button" data-size="xs" class="[^"]* min-w-0 shrink-0">.*<span class="truncate">Commit changes<\/span><\/span><\/button>/);
+    assert.doesNotMatch(html, /\saria-busy="|sg-spinner/, 'a commit turn never makes the verb busy (rB: no busy label for commit)');
+    // The band's own counts are unchanged (shared-21 OV); the rail does not reuse the band's GitCounts.
+    assert.doesNotMatch(html, /data-git-counts|sgr-/);
+  });
+  // Retired: no host module renders or imports the 2.3x stacked rail any more.
+  const src = path.resolve(import.meta.dirname, '../src');
+  assert.equal(await fs.access(path.join(src, 'source-git-rail.jsx')).then(() => true, () => false), false, 'src/source-git-rail.jsx is removed');
+  assert.equal(await fs.access(path.join(src, 'source-git-rail.css')).then(() => true, () => false), false, 'src/source-git-rail.css is removed');
+  const hosts = (await fs.readdir(src, { recursive: true })).filter((name) => /\.(jsx?|mjs|css)$/.test(name) && !name.startsWith('generated'));
+  const holders = [];
+  for (const name of hosts) if (/SourceGitRail|source-git-rail|\bsgr-/.test(await fs.readFile(path.join(src, name), 'utf8'))) holders.push(name);
+  assert.deepEqual(holders, []);
 });
 
 test('B08 band: an existing PR leads with its state glyph and #number link (FB), CI is a static role=img, no Create PR', () => {

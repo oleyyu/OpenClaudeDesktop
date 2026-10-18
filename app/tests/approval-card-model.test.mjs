@@ -372,6 +372,180 @@ test("preview site and dev server cards say the approval lasts for the session, 
   assert.deepEqual(site.allows.map((allow) => [allow.key, allow.label]), [["accept", "Allow for this session"]]);
   const server = approvalCardModel(request({ kind: "preview-server", name: "site" }, { command: "npm run dev" }));
   assert.deepEqual(server.allows.map((allow) => [allow.key, allow.label]), [["accept", "Allow for this session"]]);
-  assert.match(server.title, /start the dev server “site”\?$/);
-  assert.match(approvalCardModel(request({ kind: "preview-server" }, { command: "npm run dev" })).title, /start a dev server\?$/);
+  // 2.42304.0 c96d752d0 Kk preview_start: action "start" (zTylMMruGq) + meta name, clampTitle.
+  assert.equal(server.title, "Allow DeepSeek to start site?");
+  assert.deepEqual([server.heading, server.clampTitle], [{ action: "start", meta: "site" }, true]);
+  const unnamed = approvalCardModel(request({ kind: "preview-server" }, { command: "npm run dev" }));
+  assert.equal(unnamed.title, "Allow DeepSeek to start a dev server?");
+  assert.deepEqual([unnamed.heading, unnamed.clampTitle], [{ action: "start a dev server", meta: null }, true]);
+});
+
+test("dev server card: the original wA description line names the folder and the launch.json port", () => {
+  const request = (agentTool, extra = {}) => ({ method: "item/commandExecution/requestApproval", params: { threadId: "t", turnId: "", itemId: "i", cwd: "/w", command: "npm run dev", codeDesktop: { agentTool }, ...extra } });
+  const description = model => model.context.filter(part => part.key === "description").map(part => part.text);
+  assert.deepEqual(description(approvalCardModel(request({ kind: "preview-server", name: "web", port: 5173, portMayReassign: false }))), ["Runs in /w on port 5173"]);
+  // The suffix only when the port may move to the next free one (preview-service never claims it before preview-01).
+  assert.deepEqual(description(approvalCardModel(request({ kind: "preview-server", name: "web", port: 5173, portMayReassign: true }))), ["Runs in /w on port 5173 (or the next free port)"]);
+  assert.deepEqual(description(approvalCardModel(request({ kind: "preview-server", name: "web" }))), ["Runs in /w"]);
+  assert.deepEqual(description(approvalCardModel(request({ kind: "preview-server", name: "web", port: 3000 }, { cwd: undefined }))), ["Runs on port 3000"]);
+  assert.deepEqual(description(approvalCardModel(request({ kind: "preview-server", name: "web", port: "3000" }, { cwd: undefined }))), [], "a non-number port is not a port");
+  // The old "In {folder}" line is gone; the env lines and the warning (local launch.json additions) stay after it.
+  const model = approvalCardModel(request({ kind: "preview-server", name: "web", port: 3000, env: ["PATH=/x"], envRisky: ["PATH"] }));
+  assert.deepEqual(model.context.map(part => part.key), ["description", "env", "env-warning"]);
+  assert.equal(model.context.some(part => /^In \//.test(part.text)), false);
+  assert.equal(model.detail.text, "npm run dev");
+});
+
+test("zh-CN: the dev server line and title read from the session dictionary", async (context) => {
+  const i18n = await import("../electron/i18n/index.mjs");
+  const previous = i18n.getLocale();
+  context.after(() => i18n.setLocale(previous));
+  i18n.setLocale("zh-CN");
+  const model = approvalCardModel({ method: "item/commandExecution/requestApproval", params: { threadId: "t", cwd: "/w", command: "npm run dev",
+    codeDesktop: { agentTool: { kind: "preview-server", name: "web", port: 3000 } } } });
+  assert.equal(model.heading.action, "启动");
+  assert.deepEqual(model.context.filter(part => part.key === "description").map(part => part.text), ["在 /w 中运行，端口 3000"]);
+  assert.equal(model.title, "允许 DeepSeek 启动 web？");
+});
+
+test("read gate: an MCP tool call's arguments carry the loose rowsReadGate; other tools and argument-less calls don't", () => {
+  const gate = { hint: "Scroll through what Claude sent to allow it.", loose: true };
+  const mcp = approvalCardModel(command({ command: "mcp__github__create_issue {}" }),
+    { type: "mcpToolCall", server: "github", tool: "create_issue", arguments: { title: "Bug" } });
+  assert.deepEqual(mcp.rowsReadGate, gate);
+  assert.equal(approvalCardModel(command({ command: "mcp__github__list {}" }), { type: "mcpToolCall", server: "github", tool: "list", arguments: {} }).rowsReadGate, undefined);
+  assert.equal(approvalCardModel(command({ command: "send_message {}" }), { type: "dynamicToolCall", tool: "send_message", arguments: { to: "a1" } }).rowsReadGate, undefined);
+  assert.equal(approvalCardModel(command({ command: "ls" }), { type: "commandExecution", description: "List", command: "ls" }).rowsReadGate, undefined);
+  assert.equal(approvalCardModel(command({ command: "ls" })).rowsReadGate, undefined);
+  // Computer use is an MCP server too, but its card has no arguments block.
+  assert.equal(approvalCardModel(command({}), { type: "mcpToolCall", server: "computer-use", tool: "type", arguments: { text: "hello" } }).rowsReadGate, undefined);
+});
+
+// R4g-btw BT4 (X7-16): the approval slot's 2.42304.0 originals (c96d752d0 Gj / Hj, c227f4d5e Zw, shared-10 rx / lx),
+// generated by scripts/extract-approval-landing.mjs, driven with controlled window events.
+const landing = () => import("../src/generated/approval-landing/card-landing.mjs");
+const { fakeWindow } = await import("./fixtures/approval-landing-dom.mjs");
+
+test("X7-16 Gj: on a landed card plain Enter and ⌘⇧⏎ are swallowed, a letter goes to the composer, digits and space stay", async () => {
+  const { guardWindowAfterCard, afterCardState } = await landing();
+  const { win, doc, element, dispatch } = fakeWindow();
+  guardWindowAfterCard(win); guardWindowAfterCard(win);
+  assert.deepEqual(win.listeners.filter(l => l.target === "window").map(l => [l.type, l.capture]),
+    [["keydown", true], ["pointerdown", true], ["focusout", true]], "installed once per window (Wj), all capture");
+  const scope = element("div"), card = element("section"), moved = [];
+  let chord = false;
+  const drawn = { get chordActsAnywhere() { return chord; }, toComposer: from => moved.push(from) };
+  const land = () => { card.focus(); afterCardState.set(win, { at: card, onCard: true, from: scope, drawn: () => drawn }); };
+  land();
+  const swallowed = init => { const e = dispatch("keydown", init); return e.prevented && e.stopped; };
+  assert.equal(swallowed({ key: "Enter" }), true, "the decision Enter does not act on the landed card");
+  assert.equal(swallowed({ key: "Shift" }), false, "a modifier is ignored (cae42d46f m)");
+  assert.equal(swallowed({ key: "Enter", metaKey: true }), false, "⌘⏎ is the card's own primary chord");
+  assert.equal(swallowed({ key: "Enter", metaKey: true, shiftKey: true }), true, "⌘⇧⏎ is held back");
+  chord = true;
+  assert.equal(swallowed({ key: "Enter", ctrlKey: true, shiftKey: true }), false, "unless the drawn card's chord acts anywhere (plan)");
+  for (const key of ["1", " ", "ArrowDown"]) dispatch("keydown", { key });
+  dispatch("keydown", { key: "k", metaKey: true });
+  assert.deepEqual(moved, [], "digits, space, named keys and shortcuts stay on the card");
+  dispatch("keydown", { key: "h" });
+  assert.deepEqual(moved, [scope], "a printable key hands focus to the composer with the slot's parent");
+  assert.ok(afterCardState.has(win), "the state stays until focus leaves the landing");
+  const other = element("button"); other.focus();
+  dispatch("keydown", { key: "Enter" });
+  assert.equal(afterCardState.has(win), false, "focus elsewhere than the landing clears it on the next key");
+});
+
+test("X7-16 Gj: after a hand-back the composer keeps Enter, ⌘⇧⏎ is still held, other keys / pointer / focusout clear", async () => {
+  const { guardWindowAfterCard, afterCardState } = await landing();
+  const { win, element, dispatch } = fakeWindow();
+  guardWindowAfterCard(win);
+  const scope = element("div"), composer = element("div"), drawn = () => ({ chordActsAnywhere: false });
+  const handBack = () => { composer.focus(); afterCardState.set(win, { at: composer, onCard: false, from: scope, drawn }); };
+  handBack();
+  assert.equal(dispatch("keydown", { key: "Enter" }).prevented, false, "plain Enter is the composer's (its own rP guard applies)");
+  assert.equal(dispatch("keydown", { key: "Enter", metaKey: true, shiftKey: true }).prevented, true);
+  dispatch("keydown", { key: "x", repeat: true });
+  assert.ok(afterCardState.has(win), "a repeat keeps it");
+  dispatch("keydown", { key: "x" });
+  assert.equal(afterCardState.has(win), false, "typing clears it");
+  handBack();
+  dispatch("pointerdown", {}, element("div"));
+  assert.ok(afterCardState.has(win), "a pointer outside the landing keeps it");
+  dispatch("pointerdown", {}, composer);
+  assert.equal(afterCardState.has(win), false, "a pointer on the landing clears it");
+  handBack();
+  composer.blur(); dispatch("focusout", {}, composer);
+  assert.equal(afterCardState.has(win), false, "leaving the landing clears it");
+  afterCardState.set(win, { at: null, onCard: false, from: scope, drawn });
+  dispatch("pointerdown", {}, element("div"));
+  assert.equal(afterCardState.has(win), false, "with no landing any pointer clears it");
+});
+
+test("X7-16 Hj / Zw: the next card's root takes focus with the transient focus-visible ring", async () => {
+  const { approvalCardRoot } = await landing();
+  const { focusWithRing, ringClasses, ringClassesPositioned } = await import("../src/generated/approval-landing/focus-ring.mjs");
+  const { doc, element } = fakeWindow();
+  const hidden = element("section", { attributes: { "data-approval-card-root": "" }, style: { display: "contents" } });
+  const root = element("section", { attributes: { "data-approval-card-root": "" } });
+  const slot = element("div", { style: { display: "contents" }, children: [hidden, root] });
+  assert.equal(approvalCardRoot(slot), root, "the first displayed [data-approval-card-root]");
+  const inner = element("section"), wrapper = element("div", { style: { display: "contents" }, children: [inner] });
+  assert.equal(approvalCardRoot(element("div", { style: { display: "contents" }, children: [wrapper] })), inner,
+    "else the first displayed element down the first children");
+  assert.equal(approvalCardRoot(element("div")), null);
+  assert.equal(ringClasses, "focus-visible:outline-hidden focus-visible:shadow-focus");
+  assert.match(ringClassesPositioned, /focus-visible:after:shadow-focus/);
+  const card = element("section", { style: { position: "relative" } });
+  focusWithRing(card, ringClassesPositioned);
+  assert.equal(doc.activeElement, card);
+  assert.deepEqual(card.focused, [{ focusVisible: true }]);
+  assert.ok(ringClassesPositioned.split(" ").every(c => card.classList.contains(c)));
+  assert.equal(card.getAttribute("tabindex"), "-1", "a temporary tabindex");
+  assert.equal(card.getAttribute("role"), "group");
+  card.blur();
+  assert.equal(card.classList.length, 0, "the ring goes on blur");
+  assert.equal(card.hasAttribute("tabindex") || card.hasAttribute("aria-labelledby") || card.hasAttribute("role"), false);
+  const own = element("section", { attributes: { tabindex: "0" } });
+  focusWithRing(own, ringClasses); own.blur();
+  assert.equal(own.getAttribute("tabindex"), "0", "an own tabindex is kept");
+  const dead = element("section"); dead.focusable = false;
+  focusWithRing(dead, ringClasses);
+  assert.equal(dead.classList.length, 0, "a card that does not take focus is left as it was");
+});
+
+test("X7-16 rx / lx: the window counts as attended until focus moves into an embedded frame", async () => {
+  const { watchWindowAttention, windowAttended } = await import("../src/generated/approval-landing/window-attention.mjs");
+  const { win, doc, element } = fakeWindow();
+  watchWindowAttention(win); const count = win.listeners.length; watchWindowAttention(win);
+  assert.equal(win.listeners.length, count, "installed once per window");
+  assert.equal(windowAttended(win), true);
+  const frame = element("iframe");
+  for (const l of win.listeners.filter(l => l.target === "document" && l.type === "focusin")) l.fn({ target: frame });
+  assert.equal(windowAttended(win), false, "focus inside a frame: qj does not land on the next card");
+  assert.ok(doc);
+});
+
+test("X7-16: the slot originals are generated from 2.42304.0 c96d752d0 / c227f4d5e / shared-10, gated as the original is", async () => {
+  const { extractApprovalLanding } = await import("../scripts/extract-approval-landing.mjs");
+  const manifest = await extractApprovalLanding({ check: true });
+  assert.equal(manifest.referenceVersion, "2.42304.0");
+  const card = manifest.modules.find(m => m.target === "card-landing.mjs");
+  assert.equal(card.source, "c96d752d0-BOCqU7c2.js");
+  assert.deepEqual(card.bindings.map(b => b.name), ["Hj", "Uj", "Wj", "Gj", "Kj", "qj"]);
+  assert.deepEqual(Object.fromEntries(card.imports.filter(i => i.kind !== "react").map(i => [i.local, `${i.from}:${i.name}`])), {
+    ce: "../btw-pane/owner-window.mjs:ownerWindowOrGlobal", Rre: "../btw-pane/focus-guard.mjs:guardStrayEnter",
+    Bs: "../btw-pane/focus-guard.mjs:elementOf", sf: "../btw-pane/focus-lost.mjs:focusIsLost",
+    ofe: "../btw-pane/modifier-keys.mjs:modifierKeys", Np: "../btw-pane/focus-hand-back.mjs:useFocusHandBack",
+    Wl: "./window-attention.mjs:watchWindowAttention", Bl: "./window-attention.mjs:windowAttended",
+    Ole: "./focus-ring.mjs:focusWithRing", Sle: "./focus-ring.mjs:ringClasses", wle: "./focus-ring.mjs:ringClassesPositioned" });
+  assert.deepEqual(manifest.modules.find(m => m.target === "focus-ring.mjs").exports, { Zw: "focusWithRing", Jw: "ringClasses", Yw: "ringClassesPositioned" });
+  // $j mounts qj only behind GrowthBook __gb__1616707004 and an onFocusHandBack; the host's answer is in source-approval-card.jsx.
+  const fs = await import("node:fs/promises");
+  const chunk = await fs.readFile(new URL("../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c96d752d0-BOCqU7c2.js", import.meta.url), "utf8");
+  const count = text => chunk.split(text).length - 1;
+  assert.equal(count('function Vj(){return fe("__gb__1616707004")}'), 1);
+  assert.equal(count("at=Vj()&&k!==void 0"), 1);
+  assert.equal(count("chordActsAnywhere:st===\"plan\"||st===\"computer_use_app_list\""), 1);
+  const host = await fs.readFile(new URL("../src/source-approval-card.jsx", import.meta.url), "utf8");
+  assert.match(host, /export const APPROVAL_LANDING_FLAG = "__gb__1616707004";\nexport const APPROVAL_LANDING_ON = true;/);
 });

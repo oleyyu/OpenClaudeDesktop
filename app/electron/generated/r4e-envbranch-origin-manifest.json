@@ -1,0 +1,143 @@
+{
+  "referenceVersion": "2.42304.0",
+  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "generator": "scripts/extract-r4e-envbranch.mjs",
+  "output": "r4e-envbranch-origin.cjs",
+  "service": {
+    "file": "index.chunk-CxZMGoHL.js",
+    "sourceSha256": "d1568d61adbef5ed542c24e9561fea2458d4f3286cc5f9be45546f4e2cd7e789",
+    "class": "j",
+    "exported": "t",
+    "methods": [
+      {
+        "name": "isBranchOnOrigin",
+        "sha256": "e426a86fd6500e70d25f9df20bd212514a3508990cd7fa01bb67e3e91733c594"
+      },
+      {
+        "name": "pushLeavesOriginRef",
+        "sha256": "44907d6151e433fabf18b03f71ff755795b5a917381c75ddee3fb5fdb6e76878"
+      }
+    ],
+    "namespaces": {
+      "a": {
+        "require": "./index.chunk-BhBOA_v0.js",
+        "members": [
+          "n"
+        ]
+      },
+      "n": {
+        "require": "./index.chunk-BQi7slPm.js",
+        "members": [
+          "r"
+        ]
+      },
+      "r": {
+        "require": "./index.chunk-BDxF0-vT.js",
+        "members": [
+          "v"
+        ]
+      },
+      "t": {
+        "require": "./index.chunk-muI2IV6k.js",
+        "members": [
+          "FO",
+          "IO"
+        ]
+      }
+    },
+    "thisMembers": [
+      "git",
+      "isKnownNonGitDir",
+      "pushLeavesOriginRef",
+      "requireTrustedCwd"
+    ]
+  },
+  "functions": [
+    {
+      "file": "index.chunk-BhBOA_v0.js",
+      "exported": "n",
+      "binding": "j",
+      "as": "isPlausibleBranchName",
+      "sourceSha256": "65233bad6a0b94c685876527cfadeae5cbecbf8e41153adef0119b0b5bacb7e9",
+      "bindings": [
+        {
+          "name": "j",
+          "sha256": "cd13deaa399dd8d7e9d118c75dbd688110bf96b0c17b532aaf4f3761a8c36883"
+        }
+      ]
+    },
+    {
+      "file": "index.chunk-BQi7slPm.js",
+      "exported": "r",
+      "binding": "r",
+      "as": "gitExitCode",
+      "sourceSha256": "94fd76f8aa087bd2fe6977ace767d3259f916775c9fe1499118a79c3c39cbcac",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "3ebf04cbaebae90c8f82230459aa69e8fde5cb4add740ea02254272647e64bdb"
+        }
+      ]
+    },
+    {
+      "file": "index.chunk-muI2IV6k.js",
+      "exported": "FO",
+      "binding": "zur",
+      "as": "parseFetchRefspecs",
+      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+      "bindings": [
+        {
+          "name": "zur",
+          "sha256": "f1804a6310ea6578fe14f4c82f9637b8cb5245da85187b0e2df6e877cc65dcfa"
+        },
+        {
+          "name": "Vur",
+          "sha256": "45cfd921755f2d24f85568a8d7a2edba6689c451d6592568bb37308c05373fd8"
+        },
+        {
+          "name": "Hur",
+          "sha256": "63524cbba5a4ef8d14e023d390e94a90489a112b560a2f2844cc66934745cc06"
+        }
+      ]
+    },
+    {
+      "file": "index.chunk-muI2IV6k.js",
+      "exported": "IO",
+      "binding": "Bur",
+      "as": "refspecsCoverBranch",
+      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+      "bindings": [
+        {
+          "name": "Bur",
+          "sha256": "d40b310585d965ab249ddc4a255c62b16e035c03e787d9da63d91857cde7d9c7"
+        }
+      ]
+    }
+  ],
+  "host": {
+    "file": "index.chunk-BDxF0-vT.js",
+    "exported": "v",
+    "binding": "an",
+    "sourceSha256": "5a78a0d199d6fb6d1f54ed0c4f4fad1766a7e2ad22f9bf96b75477c2cee414b2"
+  },
+  "callers": [
+    {
+      "file": "index.chunk-DLn6Mdsc.js",
+      "needle": "async isBranchOnOrigin(e,t){return l.gitStatus.isBranchOnOrigin(e,t)}",
+      "sourceSha256": "6a544137b9be53f9d3dd3d4505c711c97aa38ec970fe59fa553f9e2e61d789aa"
+    },
+    {
+      "file": "index.chunk-muI2IV6k.js",
+      "needle": "[\"isBranchOnOrigin\",[[\"cwd\",F],[\"branch\",F]],R(I)]",
+      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5"
+    }
+  ],
+  "exports": [
+    "createBranchOnOrigin",
+    "isPlausibleBranchName",
+    "gitExitCode",
+    "parseFetchRefspecs",
+    "refspecsCoverBranch"
+  ],
+  "sha256": "3fa576df7827ecb3510eb46d71e657042dbcdee155af3d7ca916c4b2bf86e9c9"
+}

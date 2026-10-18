@@ -131,8 +131,10 @@ test('composer CSS: overlay anchoring, dark field, reduced motion and the chip t
   assert.match(css, /html\[data-reduce-motion="true"\] \.sc-effort-lit-ground, html\[data-reduce-motion="true"\] \.sc-effort-lit-ground\[data-on\] \{ opacity: 0; transition: none !important; \}/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{[^@]*\.sc-effort-glow:not\(\[data-r="0"\]\) \{ display: none; \}/);
   assert.match(css, /\.sc-effort-swap\[data-accent\], \.sc-effort-plain\[data-accent\] \{ color: var\(--cds-text-pro\); font-weight: 500; \}/);
-  const chip = css.indexOf('.sc-chin .sc-effort-trigger[data-top-tier]'), base = css.indexOf('.sc-chin .sc-button {');
-  assert.ok(chip > base && base >= 0, 'the chip tint follows .sc-chin .sc-button so it wins the font-weight');
-  assert.match(css, /\.sc-chin \.sc-effort-trigger\[data-top-tier\], \.sc-chin \.sc-effort-trigger\[data-top-tier\]:hover:not\(:disabled\) \{ color: var\(--cds-text-pro\); font-weight: 500; \}/);
+  // R3 composer-row-chin: the chip is the official EffortControl trigger (a ghost CdsButton, data-cds ModelSelectorEffort);
+  // the unlayered tint outranks its layered text / font-weight utilities in every state.
+  assert.match(css, /\.sc-chin \[data-cds="ModelSelectorEffort"\]\[data-top-tier\] \{ color: var\(--cds-text-pro\); font-weight: 500; \}/);
+  assert.doesNotMatch(css, /\.sc-effort-trigger\[data-top-tier\]/, 'no hook-class tint left');
+  assert.doesNotMatch(css, /@layer[^{]*\{[^}]*ModelSelectorEffort/, 'the tint stays unlayered');
   assert.doesNotMatch(css, /sc-effort-change/);
 });

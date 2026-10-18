@@ -1,11 +1,15 @@
 import {fileSearchFocus} from "./file-search-focus.mjs";
 import {createFileTreeSelection,selectFileRange,selectAllFiles} from "./file-tree-selection.mjs";
 import {useBlankTreeSelection} from "./use-blank-tree-selection.jsx";
-import { fileMenuSelection } from "./file-context-menu-model.mjs";
+import { fileMenuSelection, fileCopyChoices } from "./file-context-menu-model.mjs";
+import { useFileGone, inMultiSelection, openWhenChecked } from "./file-gone-menu.mjs";
 import { SourceMenu } from "./source-menu.jsx";
 import { SourceFileMenuEntries } from "./source-file-menu-entries.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
-import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useImperativeHandle } from "react";
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useImperativeHandle } from "react";
+// R3-files FT-18 (files-26): Escape on a multi-selection of the results is c856385e2 nt, as on the tree (official Nx binds
+// it to the one tree element that also holds the search results).
+import { useMultiSelectionEscape } from "./generated/files-changes/file-selection-escape.mjs";
 import {SourceFileSearchOptions} from './source-file-viewer.jsx';
 import {contentResults,contentPreview} from './file-content-results.mjs';
 import {DEFAULT_SEARCH_OPTIONS} from './file-find-model.mjs';
@@ -57,10 +61,12 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
   const [query, setQuery] = useState("");
   const [focusRange,setFocusRange]=useState(null);
   const [menu,setMenu]=useState(null);
+  // R3-files FT-05: a right-click waits here for its row's "path gone" check before it becomes `menu`.
+  const [menuRequest,setMenuRequest]=useState(null);
 
   const [state, setState] = useState(emptySearchState);
   const [options,setOptions]=useState(DEFAULT_SEARCH_OPTIONS);
-  useEffect(()=>setMenu(null),[sessionId,cwd,query,options,enabled]);
+  useEffect(()=>{setMenu(null);setMenuRequest(null);},[sessionId,cwd,query,options,enabled]);
   const content=query.trim().startsWith('?');
   const grouped=useMemo(()=>content?contentResults(state.matches):null,[content,state.matches]);
   const shownMatches=grouped?.rows??state.matches;
@@ -73,6 +79,10 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
   const blankSelection=useBlankTreeSelection(()=>selectionStore.getState().clear());
   const ids = useId();
   const input = useRef(null), results = useRef(null), keptTree = useRef(null);
+  const [resultsElement, setResultsElement] = useState(null);
+  const resultsRef = useCallback((node) => { results.current = node; setResultsElement(node); }, []);
+  // Content results are not selectable (Nx clears the selection for "?" search), so only filename results bind it.
+  useMultiSelectionEscape(content ? null : resultsElement, selectionStore);
   const controller = useRef(null), focused = useRef({ index: 0, path: null });
   const focusInResults = useRef(false), callbacks = useRef(null), currentQuery = useRef(query);
   const enabledNow = useRef(enabled), lastRefresh = useRef(refreshKey);
@@ -196,17 +206,32 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
   function openResultMenu(event,entry,row=event.currentTarget) {
     if(!fileMenu)return;
     event.preventDefault();event.stopPropagation();controller.current?.cancelEnter();
+    // R3-files FT-05 (cccc2cf0a NS `ue`): a filename row of a multi-selection asks no gone check; content rows (FS) always do.
+    const multiSelected=!content&&inMultiSelection(selectionStore,entry.path,true);
     const rect=row.getBoundingClientRect(),keyboard=event.type==='keydown'||event.clientX===0&&event.clientY===0;
     const paths=content?[entry.path]:fileMenuSelection(shownMatches,selected,entry.path);
     if(!content){const state=selectionStore.getState();if(selected.has(entry.path))state.reorder(selectionNav.indexOfKey);else state.selectOnly(selectionEntries[selectionNav.indexOfKey(entry.path)]);}
-    setMenu({entry,paths,row,keyboard,returnFocus:row.ownerDocument.activeElement,point:keyboard?{x:rect.left,y:rect.bottom}:{x:event.clientX,y:event.clientY}});
+    setMenuRequest({entry,paths,row,keyboard,multiSelected,returnFocus:row.ownerDocument.activeElement,point:keyboard?{x:rect.left,y:rect.bottom}:{x:event.clientX,y:event.clientY}});
   }
+  // R3-files FT-05 (FS/NS `Kf(absPath, absPath)` + Yf): one gone hook for the requested (else the open) row. The request
+  // renders once so the hook is bound to its path, then asks; the menu opens when the answer arrives (c0cdf4a08 h), and
+  // a press, a key or a blur meanwhile cancels it.
+  const goneEntry=menuRequest?.entry??menu?.entry;
+  const goneAt=goneEntry&&cwd?fileCopyChoices(cwd,goneEntry.path).absolute??undefined:undefined;
+  const {gone,beforeOpen}=useFileGone(goneAt,goneAt);
+  const askedRequest=useRef(null);
+  useLayoutEffect(()=>{
+    if(!menuRequest||askedRequest.current===menuRequest)return;
+    askedRequest.current=menuRequest;
+    const request=menuRequest;
+    openWhenChecked(request.row,request.multiSelected?undefined:beforeOpen(),()=>{setMenuRequest(current=>current===request?null:current);setMenu(request);});
+  },[menuRequest,beforeOpen]);
   const multi=menu?.paths.length>1;
   // B33: folder rows (a filter ending in '/') get the folder menu, as tree rows do.
   const folderPaths=menu&&!content?menu.paths.filter(path=>shownMatches.some(match=>match.path===path&&match.directory)):[];
   const menuEntries=menu&&fileMenu?(multi?fileMenu.multiEntries(menu.paths,folderPaths.length?{directories:folderPaths}:undefined):[
     ...(menu.entry.line&&onAskAbout?[{kind:'item',action:'ask-about',label:t('Ask about this')}]:[]),
-    ...fileMenu.entries(menu.entry.path,{surface:'file_browser',line:menu.entry.line,...(menu.entry.directory?{directory:true}:{})}),
+    ...fileMenu.entries(menu.entry.path,{surface:'file_browser',line:menu.entry.line,gone,...(menu.entry.directory?{directory:true}:{})}),
   ]):null;
   function selectMenuItem(item){
     if(item.action==='ask-about')onAskAbout?.(t('In {path} at line {line}: `{snippet}` — explain what this does and where it’s used.',{path:menu.entry.path,line:menu.entry.line,snippet:menu.entry.preview.trim()}));
@@ -219,7 +244,6 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
     if(index>=0&&(event.key==='ContextMenu'||event.key==='F10'&&event.shiftKey)){
       openResultMenu(event,shownMatches[index],row);return;
     }
-    if(event.key==='Escape'&&!content&&isPlainSearchKey(event)&&selected.size>1){event.preventDefault();event.stopPropagation();selectionStore.getState().clear();return;}
     let destination = resultNavigation(event.key, index, shownMatches.length, isPlainSearchKey(event));
     if(content&&event.key==='ArrowLeft'&&shownMatches[index]?.line){destination=index-1;while(destination>0&&!shownMatches[destination].header)destination--;}
     if (destination !== null) {
@@ -255,7 +279,7 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
     if (!isPlainSearchKey(event)) return;
     if (event.key === "ArrowDown") {
       const row = hasQuery ? results.current?.querySelector("[data-tree-row]")
-        : keptTree.current?.querySelector("[data-tree-row], .source-tree-row");
+        : keptTree.current?.querySelector("[data-tree-row]");
       if (row) {
         event.preventDefault();
         controller.current?.cancelEnter();
@@ -295,10 +319,10 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
     <div ref={keptTree} id={treeId} className="sfs-kept-tree" hidden={hasQuery} inert={hasQuery ? true : undefined}
       onKeyDown={event => {
         if (event.key !== "ArrowUp" || !isPlainSearchKey(event)) return;
-        const rows = keptTree.current.querySelectorAll("[data-tree-row], .source-tree-row");
+        const rows = keptTree.current.querySelectorAll("[data-tree-row]");
         if (rows[0] === event.target || rows[0]?.contains(event.target)) { event.preventDefault(); input.current?.focus(); }
       }}>{typeof children === "function" ? children({ filtered: hasQuery, selectionStore }) : children}</div>
-    <div ref={results} id={resultId} className="sfs-results" role="tree" aria-label={t("Project files")}
+    <div ref={resultsRef} id={resultId} className="sfs-results" role="tree" aria-label={t("Project files")}
       aria-multiselectable={content?undefined:true} aria-busy={busy || undefined} hidden={!hasQuery} inert={!hasQuery ? true : undefined}
       data-stale={stale || undefined} tabIndex={0} onKeyDown={resultKey}
       {...blankSelection}
@@ -353,7 +377,7 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
       </p>}
     </div>
     {menuEntries&&<SourceMenu.Popup anchor={menu.row} trigger={menu.row} point={menu.point} side="bottom" align="start"
-      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
+      sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard
       label={t('File actions')} initialHighlight={menu.keyboard?"first":"popup"} onClose={()=>setMenu(null)} finalFocus={()=>menu.returnFocus?.isConnected&&menu.returnFocus!==menu.row.ownerDocument.body?menu.returnFocus:menu.row}>
       {multi?<SourceMenu.Group><SourceMenu.GroupLabel>{tn(menu.paths.length,'{count} item selected','{count} items selected')}</SourceMenu.GroupLabel>
         <SourceFileMenuEntries entries={menuEntries} onSelect={selectMenuItem}/></SourceMenu.Group>:<SourceFileMenuEntries entries={menuEntries} onSelect={selectMenuItem}/>}

@@ -145,9 +145,10 @@ test('View zoom items follow index.chunk-ChZ67Jhw.js dNr: Actual Size only while
   const zoom=items.filter(item=>/Zoom|Actual Size/.test(item.label||''));
   assert.deepEqual(zoom.map(item=>[item.label,item.accelerator,item.id,item.visible,item.acceleratorWorksWhenHidden,item.enabled]),[
    ['Actual Size','CmdOrCtrl+0','actual-size',undefined,undefined,zoomed],
-   ['Zoom In','CmdOrCtrl+Plus',undefined,undefined,undefined,undefined],
+   // 2.42304.0 yPi: the visible Zoom In / Zoom Out carry ids and _Pi() / vPi() (no level: enabled); see r4e-zoom-menu.test.mjs.
+   ['Zoom In','CmdOrCtrl+Plus','zoom-in',undefined,undefined,true],
    ['Zoom In (indie cooler version)','CmdOrCtrl+=',undefined,false,true,undefined],
-   ['Zoom Out','CmdOrCtrl+-',undefined,undefined,undefined,undefined],
+   ['Zoom Out','CmdOrCtrl+-','zoom-out',undefined,undefined,true],
    ['Zoom In (numpad)','CmdOrCtrl+numadd',undefined,false,true,undefined],
    ['Zoom Out (numpad)','CmdOrCtrl+numsub',undefined,false,true,undefined],
    ['Actual Size (numpad)','CmdOrCtrl+num0','actual-size-numpad',false,true,zoomed]]);

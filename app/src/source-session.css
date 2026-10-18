@@ -159,7 +159,9 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--cds-text-muted); pointer-events: none;
 }
-/* lp/sp file card: 7.5rem*scale square, footnote two-line name, uppercase badge. */
+/* lp/sp file card: 7.5rem*scale square (shared-2 Yf), uppercase badge. R2-topbar TT-07: the name is the 2.42304.0
+   Np (source-user-file-card.jsx) and carries only its official utilities (text-footnote font-normal text-primary,
+   line-clamp-N / max-h-[Nlh], [overflow-wrap:anywhere], the before:content-['…'] tail); no local rule targets it. */
 .source-user-attachment-file {
   position: relative;
   flex: none;
@@ -169,28 +171,18 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
   align-self: flex-end;
   outline: none;
 }
+/* jp content column: "flex min-h-0 min-w-0 flex-1 flex-col justify-between gap-xs" (the name at the top, the badge
+   at the bottom), inside the card's padding. */
 .source-user-attachment-file-body {
   position: relative;
   display: flex;
   flex: 1;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: var(--cds-gap-xs, 6px);
   padding: var(--cds-pad-lg, 12px);
-}
-.source-user-attachment-name {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  min-width: 0;
-  font-size: var(--cds-font-size-footnote, 12px);
-  line-height: var(--cds-leading-footnote, 16px);
-  font-weight: 400;
-  color: var(--cds-text-primary);
-  overflow-wrap: anywhere;
-  word-break: break-word;
 }
 .source-user-attachment-badge {
   align-self: flex-start;
@@ -810,92 +802,19 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
   font-size: 12px;
   color: var(--cds-text-secondary);
 }
-.source-tree-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0 6px 8px;
-  /* panes-tile-current.js:15450 tree scroller: [scrollbar-gutter:stable_both-edges] */
-  scrollbar-gutter: stable both-edges;
-}
-/* panes-tile-current.js:4302-4311 Fh/Lh + c621b1e2d indent: rows are h-control
-   (1.5rem = 24px compact) treeitems, the inner button is rounded 3px, indent is
-   paddingLeft 8 + 8 * level (inline). */
-.source-tree-item {
-  position: relative;
-  outline: none;
-}
-.source-tree-item:focus-visible > .source-tree-row {
+/* R3-files FT-14 (files-08 / files-v03): the tree (2.42304.0 cccc2cf0a Nx), its rows (NS) and the subfolder error row
+   (AS) carry the official classes (file-tree-row-model.mjs over generated/files-changes: ca7840910 A/j/N/I/F, shared-6
+   _h/vh, shared-frame Cx, cccc2cf0a dx/fx/px), all @layer utilities rules of the loaded CSS; the hand-written
+   .source-tree-content / -item / -row / -caret / -name / -guides / -guided / -error rules that restated them are gone.
+   One host rule is left: the nested tree's focusable treeitem wraps its row and its children's group, so the row
+   ([data-tree-row-body]) paints the focus that NS's focus-visible:shadow-focus paints on the official treeitem, which is
+   the row itself. */
+.source-tree-item:focus-visible > [data-tree-row-body] {
   box-shadow: var(--cds-focus-shadow);
 }
-.source-tree-item[aria-selected="true"] > .source-tree-row {
-  background: var(--cds-fill-ghost-selected, var(--cds-alpha-2));
-}
-.source-tree-row {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  align-items: center;
-  gap: 4px;
-  height: var(--cds-h-control, 24px);
-  padding-block: 0;
-  padding-right: 4px;
-  border-radius: 3px;
-  text-align: start;
-}
-/* panes-tile-current.js:5738-5760: Jt size xs "shrink-0 self-center
-   text-muted"; a toggling directory's CaretRight adds "transition-transform
-   duration-fast motion-reduce:transition-none" and rotate-90 when open; the
-   name is "truncate text-primary". */
-.source-tree-row [data-cds="Icon"] {
-  flex: none;
-  align-self: center;
-  color: var(--cds-text-muted);
-}
-.source-tree-row > .source-tree-caret {
-  transition: transform var(--cds-dur-fast) var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
-}
-.source-tree-item[aria-expanded="true"] > .source-tree-row > .source-tree-caret {
-  transform: rotate(90deg);
-}
-html[data-local-motion="reduce"] .source-tree-row > .source-tree-caret { transition: none; }
-@media (prefers-reduced-motion: reduce) {
-  .source-tree-row > .source-tree-caret { transition: none; }
-}
-.source-tree-row > .source-tree-name {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--cds-text-primary);
-}
-.source-tree-row:hover {
-  background: var(--cds-fill-ghost-hover, var(--cds-alpha-1));
-}
-.source-tree-item[aria-current] > .source-tree-row {
-  background: var(--cds-fill-ghost-selected, var(--cds-alpha-2));
-}
-/* B33 (cccc2cf0a My, ce9ca5630 c/l/g): rows below the root carry an absolutely placed guide layer (and the Lg
-   error row its own background) whose --file-tree-guides gradient paints while the tree (group/file-tree, the
-   scroller) is hovered or holds focus. */
-.source-tree-row { position: relative; }
-.source-tree-guides { position: absolute; inset: 0; pointer-events: none; }
-.source-tree-content:is(:hover, :focus-within) :is(.source-tree-guides, .source-tree-guided) {
-  background-image: var(--file-tree-guides);
-}
-/* My: a non-openable link row (aria-disabled) keeps its name muted. */
-.source-tree-row > .source-tree-name[data-inert] { color: var(--cds-text-muted); }
-/* My + yn(): the revealed row flashes data-[highlighted]:bg-fill-ghost-hover with transition-colors duration-300. */
-.source-tree-row[data-reveal-target] {
-  transition: background-color 300ms var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1));
-}
-.source-tree-item > .source-tree-row[data-highlighted] {
-  background: var(--cds-fill-ghost-hover, var(--cds-alpha-1));
-}
-/* Ig/Jg root tree states (panes-tile-current.js:5496-5512, :6101-6110) and the
-   Lg subfolder error row (:5547-5570), restated unlayered with the tokens the
-   source utilities resolve to (px-lg, py-2.5, text-body, text-muted,
-   min-h-control); Lg's inline ko(depth) padding-left wins over px-lg. */
+/* Ig/Jg root tree states (panes-tile-current.js:5496-5512, :6101-6110), restated unlayered with the tokens the
+   source utilities resolve to (px-lg, py-2.5, text-body, text-muted). (The subfolder error row is 2.42304.0 AS's own
+   classes since R3-files FT-14.) */
 .source-files-tree-state {
   display: flex;
   align-items: center;
@@ -904,21 +823,6 @@ html[data-local-motion="reduce"] .source-tree-row > .source-tree-caret { transit
   color: var(--cds-text-muted);
   font-size: var(--cds-font-size-body);
   line-height: var(--cds-leading-body);
-}
-.source-tree-error {
-  display: flex;
-  align-items: center;
-  min-height: var(--cds-h-control);
-  padding-inline: var(--cds-pad-lg);
-  color: var(--cds-text-muted);
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
-  outline: none;
-}
-.source-tree-error > span {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 /* The file viewer (.source-file-view) is styled in source-file-viewer.css. */
 /* panes-tile-current.js:6358 wrapper "flex min-h-0 min-w-0 flex-1 flex-col"

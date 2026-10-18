@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {terminalOwnsContextMenu} from '../src/generated/code-editor/terminal-mouse.mjs';
+import {terminalOwnsContextMenu as owns} from '../src/generated/code-current/terminal-mouse.mjs';
 import {routeTerminalKey,installTerminalCopyEvent} from '../src/terminal-event-routing.mjs';
+// 2.42304.0 c6bf19e8f Ur (R3-terminal FT-03) reads the platform itself: ae = shared-78 kw (Wa, the macOS user-agent
+// test, generated as surface-chord-platform.mjs). The cases below pin the platform through window.navigator.userAgent.
+const terminalOwnsContextMenu=(term,event,mac)=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'window');
+ Object.defineProperty(globalThis,'window',{value:{navigator:{userAgent:mac?'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Claude':'Mozilla/5.0 (X11; Linux x86_64) Claude'}},configurable:true,writable:true});
+ try{return owns(term,event);}finally{if(previous)Object.defineProperty(globalThis,'window',previous);else delete globalThis.window;}
+};
 const key=(props={})=>({type:'keydown',key:'c',code:'KeyC',preventDefault(){this.prevented=true;},...props});
 test('mouse tracking owns right-click only inside terminal; mac Ctrl-click follows the same rule',()=>{
  const target={},term={element:{contains:node=>node===target},modes:{mouseTrackingMode:'vt200'},options:{macOptionClickForcesSelection:false}};
@@ -37,4 +44,10 @@ test('native copy events use normalized output, leave empty selection alone and 
  const event=()=>{const e=new Event('copy');e.clipboardData={setData:(...args)=>copies.push(args)};return e;};
  const dispose=installTerminalCopyEvent(term,element);element.dispatchEvent(event());assert.deepEqual(copies,[['text/plain','chosen']]);
  text='';element.dispatchEvent(event());text='later';dispose();element.dispatchEvent(event());assert.equal(copies.length,1);
+});
+test('without a window (no user agent) Ur reads as not macOS',()=>{
+ const target={},term={element:{contains:()=>true},modes:{mouseTrackingMode:'vt200'},options:{}};
+ assert.equal(typeof globalThis.window,'undefined');
+ assert.equal(owns(term,{button:0,ctrlKey:true,target}),false);
+ assert.equal(owns(term,{button:2,target}),true);
 });

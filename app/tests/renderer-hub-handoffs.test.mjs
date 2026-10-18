@@ -20,7 +20,10 @@ const root = path.resolve(import.meta.dirname, "..");
 const mainSource = await fs.readFile(path.join(root, "src/main.jsx"), "utf8");
 let server, session, React, renderToStaticMarkup;
 before(async () => {
-  globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {} } };
+  // D21: source-session.jsx reaches the view-tabs graph (R2-topbar TT-07 attachment name), whose preload-helper calls
+  // document.createElement("link") when it is evaluated, so the stub has one.
+  // The transcript rows' code themes (generated c5d464fa3, over shared-4 kf) read html[data-cds-*] when evaluated.
+  globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null }, createElement: () => ({}) };
   const { createServer } = await import("vite"), react = (await import("@vitejs/plugin-react")).default;
   server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
   React = (await import("react")).default;
