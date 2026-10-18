@@ -22,6 +22,7 @@ import { t, tn, getLocale } from '../electron/i18n/index.mjs';
 import { useBtwFocusIntent, rememberBtwFocus } from './generated/code-current/btw-focus-intent.mjs';
 import { paneOwnsFocus } from './generated/code-current/pane-focus-owner.mjs';
 import { SourceTurnError } from './source-turn-error.jsx';
+import { SourceTranscriptStatus } from './source-transcript-status.jsx';
 import { SourceTranscriptRowBoundary } from './source-r3b-transcript.jsx';
 import { turnErrorPlacements } from './turn-error-model.mjs';
 import { btwSessionNotice, btwNoticeDismissals, sendFailureToasts } from './btw-session-notice-model.mjs';
@@ -239,6 +240,12 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
                   onEditConfig={variant === 'card' ? onEditConfig : undefined} model={meta?.model || ''}/></SourceTranscriptRowBoundary>}
               </React.Fragment>;
             })}
+            {/* F_ is the session transcript in the pane too, so the child's turn has the same working line (w8) as the
+                main transcript: elapsed, tokens and activity of the child's own turn; the approval card replaces it. */}
+            <SourceTranscriptStatus sessionKey={sessionId} ready={!reading} turnId={state.active[sessionId]}
+              turnStats={state.turnStats?.[sessionId]} items={state.items[sessionId]} itemPhases={state.itemPhases?.[sessionId]}
+              connected={connected} running={running} stopping={!!stopping[sessionId]} sending={!!pending[sessionId] && !running}
+              waiting={ownedApprovals.length > 0} approvalVisible={ownedApprovals.length > 0}/>
           </SourceTranscript>}
       </div>
       <div className="flex shrink-0 flex-col gap-xs px-sm pb-sm pt-xs" data-approval-hotkey-scope={`btw:${sessionId}`}>

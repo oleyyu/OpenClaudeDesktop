@@ -71,6 +71,8 @@
 //                       lists this folder's other sessions.
 //   harnessSettings     codeDesktop/settings/read|write: DeepSeek's shell, agent loop, sub-agent and web search fields
 //                       (Settings › Code › DeepSeek settings).
+//   btwChildSessions    /btw forks a side session (thread/fork, thread/name/set, thread/archive): 2.42304.0's side-chat
+//                       pane (btw-sessions.cjs); without it /btw opens the sideQuestion panel. Codex has it implied.
 //   sessionLogExport    codeDesktop/sessionLog/export writes the session log ZIP (sub-agents and attachments included):
 //                       /export's save dialog offers it beside the Markdown transcript.
 //   threadSearch        thread/search searches what was said in every session (Codex): sidebar search and Resume a

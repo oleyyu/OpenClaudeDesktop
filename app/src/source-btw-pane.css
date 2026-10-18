@@ -4,3 +4,10 @@
 .btw-pane .composer-zone[data-embedded] { max-width: none; margin: 0; padding: 0; }
 .btw-pane .source-transcript-frame { height: 100%; }
 .btw-pane .sqm-band { width: 100%; max-width: none; }
+/* 2.42304.0 ig: a chat panel whose tile slot is at most 560px wide narrows the transcript gutter to 16px
+   ([.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]). */
+.btw-pane { container-type: inline-size; container-name: btw-tile-slot; }
+@container btw-tile-slot (max-width: 560px) {
+  /* Above html[data-local-transcript-width] .source-transcript-content (0,2,1). */
+  .btw-pane.btw-pane .source-transcript-content { padding-inline: 16px; }
+}

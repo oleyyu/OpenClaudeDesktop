@@ -118,6 +118,48 @@ function sideToolsFixture(thread, turn) {
   };
   streams.set(thread.id,{pause:()=>clearTimeout(timer),cancel:()=>finish('interrupted')});timer=setTimeout(next,100);
 }
+// README screenshots (scripts/readme-screenshots.mjs): an optional seed "fixture-demo-turns.json" in the isolated
+// profile maps a user prompt to a scripted turn, so a demo session can show live states (running tools, the task list,
+// an approval card) with made-up but real-shaped protocol traffic. {turns: {<prompt>: {startedAgo, steps: [...]}}}
+// where each step waits `after` ms and then does one of:
+//   start: item            push the item and send item/started (startedAgo: seconds -> startedAtMs)
+//   complete: item         replace/push the item and send item/completed
+//   delta: {id, text}      item/agentMessage/delta;   output: {id, text}  item/commandExecution/outputDelta
+//   usage: {output, total, window}   thread/tokenUsage/updated for this turn
+//   request: {method, params}        a server request (approval / question); the answer is recorded, nothing else
+//   done: text             complete the turn with that reply
+// A turn without `done` keeps running until it is interrupted.
+function readDemoTurn(text) {
+  try { return JSON.parse(fs.readFileSync(path.join(process.env.CODE_DESKTOP_DATA, 'fixture-demo-turns.json'), 'utf8'))?.turns?.[text] ?? null; } catch { return null; }
+}
+function demoTurn(thread, turn, script) {
+  const steps = Array.isArray(script.steps) ? script.steps : [];
+  let index = 0, timer, stopped = false, outputTotal = 0;
+  const ids = { threadId: thread.id, turnId: turn.id };
+  const put = item => { const at = turn.items.findIndex(entry => entry.id === item.id); if (at >= 0) turn.items[at] = item; else turn.items.push(item); persist(); };
+  const run = step => {
+    if (step.start) { const item = structuredClone(step.start); put(item); notify('item/started', { ...ids, item, ...(Number.isFinite(step.startedAgo) ? { startedAtMs: Date.now() - step.startedAgo * 1000 } : {}) }); }
+    if (step.complete) { const item = structuredClone(step.complete); put(item); notify('item/completed', { ...ids, item }); }
+    if (step.delta) { const item = turn.items.find(entry => entry.id === step.delta.id); if (item) item.text = (item.text || '') + step.delta.text; notify('item/agentMessage/delta', { ...ids, itemId: step.delta.id, delta: step.delta.text }); }
+    if (step.output) { const item = turn.items.find(entry => entry.id === step.output.id); if (item) item.aggregatedOutput = (item.aggregatedOutput || '') + step.output.text; notify('item/commandExecution/outputDelta', { ...ids, itemId: step.output.id, delta: step.output.text }); }
+    if (step.usage) {
+      const last = Math.max(1, step.usage.output - outputTotal); outputTotal = step.usage.output;
+      notify('thread/tokenUsage/updated', { ...ids, tokenUsage: { total: { totalTokens: step.usage.total, inputTokens: step.usage.total - outputTotal, outputTokens: outputTotal, cachedInputTokens: 0, reasoningOutputTokens: 0 },
+        last: { totalTokens: step.usage.total, inputTokens: step.usage.total - outputTotal, outputTokens: last, cachedInputTokens: 0, reasoningOutputTokens: 0 }, modelContextWindow: step.usage.window || 128000 } });
+    }
+    if (step.request) { const id = `demo-request-${++db.next}`; pending.set(id, { thread, kind: 'command', onResponse: () => {} }); send({ id, method: step.request.method, params: { ...ids, ...step.request.params } }); }
+    if (typeof step.done === 'string') { stopped = true; streams.delete(thread.id); complete(thread, step.done, 'completed', { usage: false }); }
+  };
+  const next = () => {
+    if (stopped || index >= steps.length) return;
+    const step = steps[index++];
+    timer = setTimeout(() => { if (stopped) return; run(step); next(); }, Math.max(0, Number(step.after) || 0));
+  };
+  streams.set(thread.id, { pause: () => clearTimeout(timer), cancel: () => {
+    stopped = true; clearTimeout(timer); streams.delete(thread.id); turn.status = 'interrupted'; persist(); notify('turn/completed', { threadId: thread.id, turn });
+  } });
+  next();
+}
 function holdFixture(thread, turn, nonSteerable) {
   const item = { id: `reply-${turn.id}`, type: 'agentMessage', text: '' };
   turn.items.push(item); turn.nonSteerable = !!nonSteerable;
@@ -184,12 +226,12 @@ function streamFixture(thread, turn, needsApproval) {
   streams.set(thread.id, { pause: () => clearTimeout(timer), cancel: () => finish('interrupted') });
   timer = setTimeout(next, 100);
 }
-function complete(thread, text, status = 'completed') {
+function complete(thread, text, status = 'completed', { usage = true } = {}) {
   const turn = thread.turns.at(-1);
   const item = { id: `reply-${turn.id}`, type: 'agentMessage', text };
   turn.items.push(item); turn.status = status; thread.updatedAt = Math.floor(Date.now() / 1000); persist();
   notify('item/completed', { threadId: thread.id, turnId: turn.id, item });
-  notify('thread/tokenUsage/updated', { threadId: thread.id, tokenUsage: { total: { totalTokens: thread.turns.length * 300 }, last: { totalTokens: 100 }, modelContextWindow: 128000 } });
+  if (usage) notify('thread/tokenUsage/updated', { threadId: thread.id, tokenUsage: { total: { totalTokens: thread.turns.length * 300 }, last: { totalTokens: 100 }, modelContextWindow: 128000 } });
   notify('turn/completed', { threadId: thread.id, turn });
   drainQueue(thread);
 }
@@ -474,6 +516,13 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
     }
     // The DeepSeek bridge extension (harness index.js livePermissions), answered as the bridge does: applied to a
     // loaded thread only. Only a client told capabilities.livePermissions sends it.
+    // README screenshots: the bridge's codeDesktop/contextUsage/read (capabilities.contextUsage) answered from the
+    // isolated seed fixture-context-usage.json; without it the method is unknown, as on a core that never measures.
+    case 'codeDesktop/contextUsage/read': {
+      let seed=null;try{seed=JSON.parse(fs.readFileSync(path.join(process.env.CODE_DESKTOP_DATA,'fixture-context-usage.json'),'utf8'));}catch{}
+      if(!seed){send({id:m.id,error:{code:-32601,message:'No context usage fixture'}});return;}
+      result=seed;break;
+    }
     case 'codeDesktop/thread/permissions': logRequest(m.method, p); result = { applied: loaded.has(p.threadId) }; break;
     // The DeepSeek bridge's codeDesktop/tools/list (harness tool-gate.js toolsListResponse); fixture-core.json `tools`
     // replaces the default list. Only a client told capabilities.toolSelection asks.
@@ -748,6 +797,8 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
       // Background-tasks acceptance: a real Turn.startedAt (0.155.1 v2/Turn.ts:29) so the
       // status row's elapsed stat precedes the running-tasks button (Y5 :58615-58628).
       if(p.input[0]?.text?.startsWith('fixture:background-command'))turn.startedAt=Math.floor(Date.now()/1000);
+      const demo=(p.input||[]).map(part=>readDemoTurn(part?.text)).find(Boolean)||null;
+      if(demo&&Number.isFinite(demo.startedAgo))turn.startedAt=Math.floor(Date.now()/1000)-demo.startedAgo;
       thread.turns.push(turn);persist();
       // Optional seeded knob: delay only the turn/start response so the composer's
       // busy (sending) state is observable; the turn itself starts afterwards.
@@ -759,6 +810,7 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
       const text=p.input[0].text;
       if (startDelay > 0) { if (text==='disconnect') setTimeout(()=>process.exit(0),startDelay+100); else if (text.startsWith('fixture:complete')) setTimeout(()=>complete(thread,'Fixture response'),startDelay+20); return; }
       if(text==='disconnect'){setTimeout(()=>process.exit(0),100);return;}
+      if(demo){demoTurn(thread,turn,demo);return;}
       if(text==='fixture:side-close'){
         const close=()=>{streams.delete(thread.id);loaded.delete(thread.id);delete db.threads[thread.id];persist();notify('thread/closed',{threadId:thread.id});};
         const timer=setTimeout(close,250);streams.set(thread.id,{pause:()=>clearTimeout(timer),cancel:()=>{clearTimeout(timer);close();}});return;

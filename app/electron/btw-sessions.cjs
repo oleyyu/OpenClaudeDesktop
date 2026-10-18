@@ -51,10 +51,11 @@ function ownsBtwTurns(meta) {
   return from?.btw === true && from.sideSession === true && from.userFork === true && typeof from.sessionId === 'string' && !!meta.btw;
 }
 
-// The native adapter currently has the fork/archive contract on Codex only.
+// The fork/archive contract: Codex, or a core that reports capabilities.btwChildSessions (the DeepSeek Harness).
 // Do not infer it from a bridge having the legacy sideQuestion extension.
 function supportsBtwChildren(owner) {
-  return !!owner?.serverInfo && coreForEngine(owner.serverInfo.engine).id === 'codex';
+  const info = owner?.serverInfo;
+  return !!info && (coreForEngine(info.engine).id === 'codex' || info.capabilities?.btwChildSessions === true);
 }
 
 function parentRefusal(thread, meta, config) {

@@ -715,6 +715,7 @@ export default {
   "Side question": "旁问",
   "Ask a quick side question without adding to the session": "快速问个旁支问题，不写入当前会话",
   "Side chat": "侧聊",
+  "Reply in this session…": "在此会话中回复…",
   "Clear side chat": "清空侧聊",
   "Close side chat": "关闭侧聊",
   "Side chat tabs": "侧聊标签页",

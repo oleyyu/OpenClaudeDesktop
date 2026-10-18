@@ -145,7 +145,9 @@ const DSH_VERSION = '0.2.0-rc.2'
 // reviewReadOnly 'noEdits': a review turn runs under the read-only preset with every escalation refused.
 // subAgentMessages: turn/start / turn/steer on a continuable sub-agent's id reach its inbox (OpenClaude Desktop's agent panel composer).
 // messageFeedback: codeDesktop/messageFeedback/list|put|delete (dsh-message-feedback, Good / Bad response on replies).
-const CAPABILITIES = { messageFeedback: true, subAgentMessages: true, unsupportedMethods: [], reviewReadOnly: 'noEdits', skillToggle: false, mcpConfigWrite: false, livePermissions: true, toolSelection: true, codeStats: true, modelWorkflows: true, structuredOutput: true, systemPromptPreview: true, contextUsage: true, coreCommands: true, sideQuestion: true, modelParams: true, sandboxNetwork: 'always', generatesTitles: true }
+// btwChildSessions: /btw opens a side session (thread/fork of a running or idle thread, thread/name/set, thread/archive),
+// so the app shows 2.42304.0's side-chat pane instead of the sideQuestion panel.
+const CAPABILITIES = { btwChildSessions: true, messageFeedback: true, subAgentMessages: true, unsupportedMethods: [], reviewReadOnly: 'noEdits', skillToggle: false, mcpConfigWrite: false, livePermissions: true, toolSelection: true, codeStats: true, modelWorkflows: true, structuredOutput: true, systemPromptPreview: true, contextUsage: true, coreCommands: true, sideQuestion: true, modelParams: true, sandboxNetwork: 'always', generatesTitles: true }
 
 // How long after start account/read waits for the credentials and account services.
 const ACCOUNT_SERVICE_WAIT_MS = 5000

@@ -48,6 +48,27 @@
   </tr>
 </table>
 
+## 核心功能
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/workflow.png" alt="动态工作流"><br><b>动态工作流</b>：阶段与智能体，在后台任务里实时显示</td>
+    <td width="50%"><img src="docs/images/task-list.png" alt="任务清单"><br><b>任务清单</b>与加载行、运行中的工具</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/next-step.png" alt="下一步"><br>回合结束时的<b>下一步</b>框</td>
+    <td width="50%"><img src="docs/images/context.png" alt="上下文"><br>会话右栏的<b>上下文</b>分类明细</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/approval.png" alt="审批"><br>命令<b>审批</b>卡</td>
+    <td width="50%"><img src="docs/images/side-chat.png" alt="侧边对话"><br><b>/btw</b> 侧边对话</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/changes.png" alt="更改"><br><b>更改</b>面板：本会话的 diff</td>
+    <td width="50%"><img src="docs/images/model-effort-dark.png" alt="推理强度"><br>模型菜单的<b>推理强度</b>子菜单（暗色）</td>
+  </tr>
+</table>
+
 ## 安装
 
 需要 Apple 芯片的 Mac、[Node.js](https://nodejs.org) 22.19 或更新版本（`brew install node`），以及服务商的 API key（默认 [DeepSeek](https://platform.deepseek.com/api_keys)）。
