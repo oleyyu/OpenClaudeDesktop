@@ -8,6 +8,7 @@
     "prepare:ui": "node scripts/prepare-ui.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "npm run prepare:ui && vite build",
+    "build:native": "node native/computer-use/build.mjs",
     "start": "electron .",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "package": "npm run build && node scripts/prepare-cowork-resource.mjs && electron-packager . 'OpenClaude Desktop' --platform=darwin --arch=arm64 --app-bundle-id=local.code-desktop --icon=build/icon.icns --out=../releases --overwrite --prune=false --ignore='^/src/(?!(workflow-progress-model|bridge-text-model|deliverable-records|agent-tool-titles|thread-history-model|turn-error-model)\\.mjs$)' --ignore='^/(tests|scripts|public|build|vite.config.js|index.html|package-lock.json)' --ignore='^/node_modules/(?!node-pty(/|$))' --ignore='^/node_modules/node-pty/(?!(package\\.json|LICENSE|lib|prebuilds)(/|$))' --ignore='^/node_modules/node-pty/prebuilds/(?!darwin-arm64(/|$))' --ignore='^/node_modules/node-pty/lib/.*\\.(test\\.js|map)$' --extra-resource=build/cowork/smol-bin.arm64.img --asar.unpackDir=node_modules/node-pty/prebuilds && node scripts/bundle-harness.mjs && node scripts/sign-local.mjs"

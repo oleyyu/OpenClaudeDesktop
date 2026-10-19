@@ -391,6 +391,8 @@ const agentToolGroupEnabled = (group) => group === "workflow" ? (() => { try { r
 const mcpAppsHost = require("./mcp-apps-host.cjs").createMcpAppsHost({ client: () => client, session: agentToolSession,
   visualizeEnabled: () => agentToolGroupEnabled("visualize"), ownServerName: () => agentTools.SERVER_NAME, log: console,
   coreSupportsMcpApps: (info) => coreForEngine(info?.engine).id === "codex" || coreSupports(info, "mcpApps") });
+// Computer use (desktop:call computer-use:*): per-session grants gate window lists and captures (electron/computer-use/).
+const computerUse = require("./computer-use/service.cjs").createComputerUse();
 // Bypass permissions runs everything without asking, the app's own tools included: a terminal command, an outside site
 // or a launch.json dev server the agent starts in a Bypass session needs no sheet (Workflow decides on its own, as
 // Claude Code does). The session's Mode is the one its last turn ran with (workflow-tool-service.cjs sessionAccess).
@@ -2726,6 +2728,11 @@ app.whenReady().then(async () => {
     }
     // R4g-mcp MA-4: MCP App widgets' resource reads, App servers and sandbox origin (electron/mcp-apps-host.cjs).
     if (typeof action === "string" && action.startsWith("mcp-app:")) return mcpAppsHost.call(action, p);
+    // Computer use: a known session only; the answer is an envelope that keeps the reason code (service.cjs).
+    if (typeof action === "string" && action.startsWith("computer-use:")) {
+      if (action !== "computer-use:probe" && (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId))) throw new Error("Unknown session.");
+      return computerUse.call(action, p);
+    }
     // turn-plan: cccc2cf0a rT / iT → LocalSessions.setAvailableNextActions (what wrap_up may offer as app actions).
     if (action === "turn-plan:available-next-actions") {
       if (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId)) throw new Error("Unknown session.");
