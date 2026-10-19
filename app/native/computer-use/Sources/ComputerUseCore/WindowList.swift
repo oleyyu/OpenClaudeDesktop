@@ -139,7 +139,9 @@ public enum WindowList {
             return window
         }
         let regular = windows.filter { !$0.isAuxiliary }
-        guard let main = regular.first(where: { $0.isMain == true }) ?? regular.first(where: { $0.isOnScreen }) ?? regular.first else {
+        // Main on this Space, then any on screen, then any not known to be elsewhere, then whatever is left.
+        guard let main = regular.first(where: { $0.isMain == true }) ?? regular.first(where: { $0.isOnScreen })
+                ?? regular.first(where: { $0.isOffSpace != true && $0.isMinimized != true }) ?? regular.first else {
             throw CUError("no_window", "\(bundleId) has no window.")
         }
         return main

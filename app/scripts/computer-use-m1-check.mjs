@@ -16,6 +16,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { jpegSize, meanRGB } from './computer-use-check-helpers.mjs';
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, '..');
@@ -28,35 +29,6 @@ const FINDER = 'com.apple.finder';
 
 const unwrap = async (promise) => { const envelope = await promise; if (!envelope.ok) throw Object.assign(new Error(envelope.error.message), { code: envelope.error.code }); return envelope.result; };
 const save = async (name, dataUrl) => { const file = path.join(directory, name); await fs.writeFile(file, Buffer.from(dataUrl.split(',')[1], 'base64')); return file; };
-
-/** Width and height from a JPEG's SOF marker. */
-function jpegSize(bytes) {
-  for (let i = 2; i < bytes.length - 9;) {
-    if (bytes[i] !== 0xff) { i += 1; continue; }
-    const marker = bytes[i + 1], length = bytes.readUInt16BE(i + 2);
-    if ((marker >= 0xc0 && marker <= 0xc3) || (marker >= 0xc5 && marker <= 0xc7)) return { height: bytes.readUInt16BE(i + 5), width: bytes.readUInt16BE(i + 7) };
-    i += 2 + length;
-  }
-  throw new Error('no SOF marker');
-}
-
-/** Mean RGB of a rectangle of a JPEG (decoded with sips to BMP; no image library). */
-async function meanRGB(jpegFile, rect) {
-  const bmpFile = jpegFile.replace(/\.jpe?g$/, '.bmp');
-  execFileSync('sips', ['-s', 'format', 'bmp', jpegFile, '--out', bmpFile], { stdio: 'ignore' });
-  const b = await fs.readFile(bmpFile);
-  const offset = b.readUInt32LE(10), width = b.readInt32LE(18), rawHeight = b.readInt32LE(22), bpp = b.readUInt16LE(28);
-  const height = Math.abs(rawHeight), bytes = bpp / 8, stride = Math.ceil((width * bytes) / 4) * 4;
-  let r = 0, g = 0, bl = 0, n = 0;
-  for (let y = Math.max(0, rect.y); y < Math.min(height, rect.y + rect.h); y += 2) {
-    const row = rawHeight > 0 ? height - 1 - y : y;
-    for (let x = Math.max(0, rect.x); x < Math.min(width, rect.x + rect.w); x += 2) {
-      const p = offset + row * stride + x * bytes;
-      bl += b[p]; g += b[p + 1]; r += b[p + 2]; n += 1;
-    }
-  }
-  return n ? [r / n, g / n, bl / n] : null;
-}
 
 try {
   const cu = createComputerUse();
@@ -120,7 +92,7 @@ try {
     assert.ok(distance > 12, `Finder's window region differs between the two captures (distance ${distance.toFixed(1)})`);
     report.checks.push(`Screen: Finder window region mean RGB distance ${distance.toFixed(1)} between "Finder only" and "empty allowlist"; Finder in excludedBundleIds only when not granted`);
   } else {
-    report.checks.push('Screen: Finder in excludedBundleIds only when not granted (its window is on another display, pixel comparison skipped)');
+    report.checks.push('Screen: Finder in excludedBundleIds only when not granted (its window is not on this display's active Space, pixel comparison skipped)');
   }
 
   // 4. Empty allowlist: an image, not an error (fixed contract) — and it is the desktop: the wallpaper is kept.

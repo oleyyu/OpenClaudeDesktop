@@ -70,7 +70,7 @@ public enum Capture {
     }
 
     /// One window of a granted app (minimized, hidden or off-Space too). Only that window enters the pixels.
-    public static func window(bundleId: String, windowId: UInt32?, scale: Double) async throws -> [String: Any] {
+    public static func window(bundleId: String, windowId: UInt32?, scale: Double, listsElements: Bool = false) async throws -> [String: Any] {
         try ensureAccess()
         let window = try WindowList.resolve(bundleId: bundleId, windowId: windowId)
         let content = try await content()
@@ -87,13 +87,20 @@ public enum Capture {
         let frame = (Int((scWindow.frame.width * factor).rounded()), Int((scWindow.frame.height * factor).rounded()))
         let (w, h) = TokenBudget.scaled(TokenBudget.fit(width: frame.0, height: frame.1), scale)
         let dataUrl = try await shoot(filter, w, h, singleWindow: true)
-        return [
+        var result: [String: Any] = [
             "dataUrl": dataUrl, "width": w, "height": h,
             "frameWidth": frame.0, "frameHeight": frame.1, "scaleFactor": factor,
             "windowId": Int(window.windowId), "bundleId": bundleId, "pid": Int(window.pid),
             "bounds": rectJSON(scWindow.frame), "targetUsesChromium": chromium,
             "jpegQuality": TokenBudget.jpegQuality,
+            "isMinimized": window.isMinimized ?? NSNull(), "isHidden": window.isHidden, "isOffSpace": window.isOffSpace ?? NSNull(),
         ]
+        // AX summary in the same frame pixels as the image (docs/06: listsElements). Empty without Accessibility.
+        if listsElements {
+            result["elements"] = AXLadder.summary(pid: window.pid, windowId: window.windowId, bounds: scWindow.frame, scaleFactor: factor)
+            result["axTrusted"] = AXIsProcessTrusted()
+        }
+        return result
     }
 
     /// The process that draws the wallpaper (window "Wallpaper", below the desktop-icon level) on macOS 14+.

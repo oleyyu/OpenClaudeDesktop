@@ -1,0 +1,275 @@
+import Foundation
+import ApplicationServices
+import CoreGraphics
+
+/// The AX rung of the ladder (docs/04): summary of a window's actionable elements, hit-testing a point, climbing to
+/// the element that can actually be pressed, and pressing it. Nothing here produces input events: when AX cannot do
+/// the action the result is `unsupported` with a reason code, and the main process decides (fail-closed) what follows.
+///
+/// Result {outcome: ok | ineffective | unsupported | dryRun, reasonCode, role, subrole, title, pressedRole,
+///         descentPath, axOp, axError, foreignPid, elementFrame}
+public enum AXLadder {
+    /// Climb at most this many parents from the hit element to a pressable one ("四层上溯").
+    public static let climbLevels = 4
+    /// Summary bounds: what the walk visits and what it keeps.
+    static let maxVisited = 4000, maxElements = 500
+
+    /// Global AX messaging timeout for this process (a hung app must not hang the caller).
+    static let setUp: Void = { AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.25) }()
+
+    static let actionableRoles: Set<String> = [
+        "AXButton", "AXCheckBox", "AXRadioButton", "AXPopUpButton", "AXMenuButton", "AXComboBox", "AXTextField",
+        "AXTextArea", "AXLink", "AXSlider", "AXIncrementor", "AXDisclosureTriangle", "AXMenuItem", "AXColorWell",
+        "AXSearchField", "AXTab", "AXRow", "AXCell",
+    ]
+    /// Pressing these opens a menu: that would front the app or take the keyboard (live schema: refused).
+    static let menuPresentingRoles: Set<String> = ["AXPopUpButton", "AXMenuButton"]
+    /// The climb stops here: pressing a window or the app is never the intent.
+    static let climbStops: Set<String> = ["AXWindow", "AXSheet", "AXApplication", "AXDrawer"]
+
+    // MARK: attributes
+
+    static func value(_ element: AXUIElement, _ name: String) -> CFTypeRef? {
+        var ref: CFTypeRef?
+        return AXUIElementCopyAttributeValue(element, name as CFString, &ref) == .success ? ref : nil
+    }
+    static func string(_ element: AXUIElement, _ name: String) -> String? {
+        guard let text = value(element, name) as? String, !text.isEmpty else { return nil }
+        return text
+    }
+    static func element(_ element: AXUIElement, _ name: String) -> AXUIElement? {
+        guard let ref = value(element, name), CFGetTypeID(ref) == AXUIElementGetTypeID() else { return nil }
+        return (ref as! AXUIElement)
+    }
+    static func children(_ element: AXUIElement) -> [AXUIElement] {
+        (value(element, kAXChildrenAttribute) as? [AXUIElement]) ?? []
+    }
+    static func role(_ element: AXUIElement) -> String? { string(element, kAXRoleAttribute) }
+    static func actions(_ element: AXUIElement) -> [String] {
+        var names: CFArray?
+        guard AXUIElementCopyActionNames(element, &names) == .success else { return [] }
+        return (names as? [String]) ?? []
+    }
+    static func frame(_ element: AXUIElement) -> CGRect? {
+        guard let p = value(element, kAXPositionAttribute), let s = value(element, kAXSizeAttribute),
+              CFGetTypeID(p) == AXValueGetTypeID(), CFGetTypeID(s) == AXValueGetTypeID() else { return nil }
+        var point = CGPoint.zero, size = CGSize.zero
+        guard AXValueGetValue(p as! AXValue, .cgPoint, &point), AXValueGetValue(s as! AXValue, .cgSize, &size) else { return nil }
+        return CGRect(origin: point, size: size)
+    }
+    static func title(_ element: AXUIElement) -> String? {
+        let text = string(element, kAXTitleAttribute) ?? string(element, kAXDescriptionAttribute)
+            ?? (value(element, kAXValueAttribute) as? String).flatMap { $0.isEmpty ? nil : $0 }
+            ?? string(element, kAXHelpAttribute)
+        return text.map { String($0.prefix(80)) }
+    }
+    static func pid(_ element: AXUIElement) -> pid_t? {
+        var pid: pid_t = 0
+        return AXUIElementGetPid(element, &pid) == .success ? pid : nil
+    }
+    static func axErrorName(_ error: AXError) -> String {
+        switch error {
+        case .success: return "success"
+        case .failure: return "failure"
+        case .illegalArgument: return "illegalArgument"
+        case .invalidUIElement: return "invalidUIElement"
+        case .cannotComplete: return "cannotComplete"
+        case .attributeUnsupported: return "attributeUnsupported"
+        case .actionUnsupported: return "actionUnsupported"
+        case .notImplemented: return "notImplemented"
+        case .apiDisabled: return "apiDisabled"
+        case .noValue: return "noValue"
+        default: return "axError(\(error.rawValue))"
+        }
+    }
+
+    /// The app's AX window element for a CGWindowID (current Space only), or nil.
+    static func windowElement(pid: pid_t, windowId: UInt32) -> AXUIElement? {
+        _ = setUp
+        let app = AXUIElementCreateApplication(pid)
+        guard let windows = value(app, kAXWindowsAttribute) as? [AXUIElement] else { return nil }
+        return windows.first { w in var id: UInt32 = 0; return _AXUIElementGetWindow(w, &id) == .success && id == windowId }
+    }
+
+    // MARK: summary
+
+    /// Frame in the capture's full-resolution coordinates: (screen − window origin) × scaleFactor.
+    static func framePx(_ rect: CGRect, origin: CGPoint, scale: Double) -> [String: Any] {
+        ["x": ((rect.minX - origin.x) * scale).rounded(), "y": ((rect.minY - origin.y) * scale).rounded(),
+         "width": (rect.width * scale).rounded(), "height": (rect.height * scale).rounded()]
+    }
+
+    /// The window's actionable elements in document order (breadth-first), each with its [index]. The elements are
+    /// cached (SummaryCache) so element_index addresses exactly what the model was shown.
+    public static func summary(pid: pid_t, windowId: UInt32, bounds: CGRect, scaleFactor: Double) -> [[String: Any]] {
+        guard AXIsProcessTrusted(), let window = windowElement(pid: pid, windowId: windowId) else {
+            SummaryCache.store(windowId: windowId, pid: pid, elements: [])
+            return []
+        }
+        var out: [[String: Any]] = [], kept: [AXUIElement] = []
+        var queue = children(window)[...], visited = 0
+        while let node = queue.popFirst(), visited < maxVisited, kept.count < maxElements {
+            visited += 1
+            if let role = role(node), actionableRoles.contains(role) || string(node, kAXSubroleAttribute) == "AXSearchField",
+               let full = frame(node), case let rect = full.intersection(bounds), !rect.isNull, rect.width >= 1, rect.height >= 1,
+               bounds.contains(CGPoint(x: full.midX, y: full.midY)) || rect.width * rect.height >= 0.5 * full.width * full.height {
+                // The visible part: what the model sees, and where element_index aims.
+                var entry: [String: Any] = ["index": kept.count, "role": role, "frame": framePx(rect, origin: bounds.origin, scale: scaleFactor)]
+                if let subrole = string(node, kAXSubroleAttribute) { entry["subrole"] = subrole }
+                if let title = title(node) { entry["title"] = title }
+                if (value(node, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { entry["enabled"] = false }
+                if role == "AXCheckBox" || role == "AXRadioButton", let on = value(node, kAXValueAttribute) as? NSNumber {
+                    entry["checked"] = on.intValue != 0
+                }
+                out.append(entry)
+                kept.append(node)
+            }
+            queue.append(contentsOf: children(node))
+        }
+        SummaryCache.store(windowId: windowId, pid: pid, elements: kept)
+        return out
+    }
+
+    // MARK: click
+
+    public struct Request {
+        public var pid: pid_t
+        public var windowId: UInt32
+        public var bounds: CGRect
+        public var winLocalPt: CGPoint?
+        public var elementIndex: Int?
+        public var focused: Bool
+        public var count: Int
+        public var button: String
+        public var dryRun: Bool
+        public var expectRole: String?
+        public init(pid: pid_t, windowId: UInt32, bounds: CGRect, winLocalPt: CGPoint?, elementIndex: Int?, focused: Bool, count: Int, button: String, dryRun: Bool, expectRole: String? = nil) {
+            self.pid = pid; self.windowId = windowId; self.bounds = bounds; self.winLocalPt = winLocalPt; self.expectRole = expectRole
+            self.elementIndex = elementIndex; self.focused = focused; self.count = count; self.button = button; self.dryRun = dryRun
+        }
+    }
+
+    static func unsupported(_ reason: String, _ extra: [String: Any] = [:]) -> [String: Any] {
+        ["outcome": "unsupported", "reasonCode": reason].merging(extra) { a, _ in a }
+    }
+
+    /// Ancestors from `element` up (inclusive), at most `limit`.
+    static func ancestry(_ element: AXUIElement, limit: Int = 64) -> [AXUIElement] {
+        var chain: [AXUIElement] = [element], current = element
+        while chain.count < limit, let parent = self.element(current, kAXParentAttribute) {
+            chain.append(parent)
+            current = parent
+        }
+        return chain
+    }
+
+    /// AXPress for a click. Order of refusals: right button, window ownership, sheet, then the climb.
+    public static func click(_ request: Request) -> [String: Any] {
+        _ = setUp
+        guard AXIsProcessTrusted() else { return unsupported("ax_untrusted_cannot_verify") }
+        if request.button == "right" { return unsupported("context_menu_rclick_refused") }
+        guard let window = windowElement(pid: request.pid, windowId: request.windowId) else {
+            return unsupported("window_off_space")
+        }
+
+        // 1. The element the action is aimed at.
+        var hit: AXUIElement
+        var listed: AXUIElement?
+        if request.focused {
+            guard let focused = element(AXUIElementCreateApplication(request.pid), kAXFocusedUIElementAttribute) else {
+                return unsupported("no_focused_element")
+            }
+            hit = focused
+        } else {
+            let screenPt: CGPoint
+            if let index = request.elementIndex {
+                guard let cached = SummaryCache.element(windowId: request.windowId, pid: request.pid, index: index),
+                      case let rect = (frame(cached) ?? .null).intersection(request.bounds), !rect.isNull, !rect.isEmpty,
+                      request.expectRole == nil || role(cached) == request.expectRole else { return unsupported("listed_element_gone") }
+                listed = cached
+                screenPt = CGPoint(x: rect.midX, y: rect.midY)
+            } else if let local = request.winLocalPt {
+                screenPt = CGPoint(x: request.bounds.minX + local.x, y: request.bounds.minY + local.y)
+            } else {
+                return unsupported("no_target")
+            }
+            var found: AXUIElement?
+            let error = AXUIElementCopyElementAtPosition(AXUIElementCreateApplication(request.pid), Float(screenPt.x), Float(screenPt.y), &found)
+            guard error == .success, let found else { return unsupported("canvas", ["axError": axErrorName(error)]) }
+            hit = found
+        }
+
+        // 2. Ownership: the hit belongs to the granted process and to the target window (not another one on top).
+        guard let hitPid = pid(hit) else { return unsupported("ax_untrusted_cannot_verify") }
+        if hitPid != request.pid { return unsupported("foreign_pid", ["foreignPid": Int(hitPid)]) }
+        let chain = ancestry(hit)
+        let path = chain.compactMap(role)
+        guard let windowIndex = chain.firstIndex(where: { role($0) == "AXWindow" }), CFEqual(chain[windowIndex], window) else {
+            var extra: [String: Any] = ["descentPath": path]
+            if let other = chain.first(where: { role($0) == "AXWindow" }) {
+                var id: UInt32 = 0
+                if _AXUIElementGetWindow(other, &id) == .success { extra["hitWindowId"] = Int(id) }
+                if let name = string(other, kAXTitleAttribute) { extra["hitTitle"] = name }
+            }
+            return unsupported("anotherWindowIsOnTopAtThePressPoint", extra)
+        }
+        // A listed element must still be what is at its centre (the hit is it or inside it).
+        if let listed, !chain.contains(where: { CFEqual($0, listed) }) {
+            return unsupported("listed_element_covered", ["descentPath": path])
+        }
+        // A sheet on the window takes the clicks; outside it, nothing behind is clickable.
+        let sheets = children(window).filter { role($0) == "AXSheet" }
+        if !sheets.isEmpty, !chain.prefix(windowIndex).contains(where: { node in sheets.contains { CFEqual($0, node) } }) {
+            return unsupported("sheet_or_modal_on_target_window", ["descentPath": path])
+        }
+
+        // 3. Climb: the hit itself, then at most four parents, to the first element that answers AXPress.
+        let start = listed ?? hit
+        let climb = ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
+        let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
+                                       "title": title(hit) ?? NSNull(), "descentPath": path]
+        guard let target = climb.first(where: { actions($0).contains(kAXPressAction as String) }) else {
+            return unsupported("canvas", describe)
+        }
+        var result = describe
+        let targetRole = role(target) ?? ""
+        result["pressedRole"] = targetRole
+        result["pressedTitle"] = title(target) ?? NSNull()
+        // Window-local points; the main process converts to the capture's frame pixels.
+        if let rect = frame(target) { result["pressedLocalFrame"] = framePx(rect, origin: request.bounds.origin, scale: 1) }
+        if menuPresentingRoles.contains(targetRole) { return unsupported("popup_menu_click_refused", result) }
+        if (value(target, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
+        // A double or triple click is not a repeated press; it needs raw input (M3, fail-closed until then).
+        if request.count != 1 { return unsupported("multi_click_needs_raw_input", result) }
+        result["axOp"] = "AXPress"
+        if request.dryRun { result["outcome"] = "dryRun"; return result }
+
+        // 4. Press (some controls only implement AXConfirm).
+        let error = AXUIElementPerformAction(target, kAXPressAction as CFString)
+        if error == .success { result["outcome"] = "ok"; result["reasonCode"] = NSNull(); return result }
+        if actions(target).contains("AXConfirm"), AXUIElementPerformAction(target, "AXConfirm" as CFString) == .success {
+            result["outcome"] = "ok"; result["reasonCode"] = NSNull(); result["axOp"] = "AXConfirm"; return result
+        }
+        result["outcome"] = "ineffective"
+        result["reasonCode"] = "ax_press_failed"
+        result["axError"] = axErrorName(error)
+        return result
+    }
+}
+
+/// The elements behind the last summary of each window, so element_index means what the model saw. Guarded: N-API
+/// work runs on several libuv threads.
+public enum SummaryCache {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var byWindow: [UInt32: (pid: pid_t, elements: [AXUIElement])] = [:]
+
+    static func store(windowId: UInt32, pid: pid_t, elements: [AXUIElement]) {
+        lock.lock(); defer { lock.unlock() }
+        byWindow[windowId] = (pid, elements)
+    }
+    static func element(windowId: UInt32, pid: pid_t, index: Int) -> AXUIElement? {
+        lock.lock(); defer { lock.unlock() }
+        guard let entry = byWindow[windowId], entry.pid == pid, entry.elements.indices.contains(index) else { return nil }
+        return entry.elements[index]
+    }
+}
