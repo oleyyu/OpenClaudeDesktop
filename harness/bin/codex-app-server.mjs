@@ -10,6 +10,11 @@
  * (<DSH_HOME>/code-desktop/profile, seeded from ./profile: profile.mjs), so the
  * plugins a user installs are theirs, not this checkout's.
  */
+// First: fetch from the same undici as the global dispatcher (fetch-undici.js).
+import '../packages/codex-app-server/src/fetch-undici.js'
+// Diagnostic only, first so it wraps fetch before any client captures it: OPENCLAUDE_SSE_TRACE=<file> records the
+// event skeleton of each streamed Messages response (sse-trace.js).
+import '../packages/codex-app-server/src/sse-trace.js'
 import { existsSync } from 'node:fs'
 import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

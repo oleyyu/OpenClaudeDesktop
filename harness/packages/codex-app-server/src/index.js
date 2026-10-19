@@ -868,6 +868,19 @@ export function apply(ctx, config) {
     }
   })
 
+  // Harness's bash tool requires a UI `description`; some models (deepseek-flash) leave it out, and every command then
+  // fails schema validation ("missing required property \"description\"") until the model gives up. Before validation,
+  // a bash call with a command but no description gets the command's first line, shortened, as its description.
+  ctx.on('tools/prepare-input', (candidate) => {
+    if (candidate.name !== 'bash') return
+    const value = candidate.arguments
+    const args = typeof value === 'string' ? (() => { try { return JSON.parse(value) } catch { return null } })() : value
+    if (!args || typeof args !== 'object' || Array.isArray(args) || typeof args.command !== 'string' || !args.command.trim()) return
+    if (typeof args.description === 'string' && args.description.trim()) return
+    const line = args.command.trim().split('\n')[0]
+    candidate.replaceArguments({ ...args, description: line.length > 60 ? `${line.slice(0, 59)}…` : line })
+  })
+
   // Ask mode: every mutating tool call asks first; Accept edits lets a
   // workspace write/edit through (approval.js preExecuteDecision). A sub-agent's
   // call asks on its root thread's card, from here: its own approval policy is 'never'.
