@@ -4,6 +4,8 @@
 // "View only" / "Click only" / "All", "Deny", "Reason" and "Allow for this session" are already translated elsewhere.
 // Keys are the exact English source strings.
 export default {
+  "drag requires an app, window, grants, 2–22 converted points and pixelScale in (0, 16]": "拖拽需要目标应用、窗口、授权、2–22 个已换算坐标点，以及 (0, 16] 范围内的 pixelScale。",
+  "button must be left, right or middle": "button 必须为 left、right 或 middle。",
   "Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.": "按顺序在同一个已授权应用窗口中执行多个操作：click、type、drag、screenshot、zoom 分别使用对应 app_* 工具的参数，不含批次统一提供的 app 和 window_id。key 和 scroll 尚不可用，会以 requires_raw_path 停止批次。遇到第一个失败或无效的操作即停止。所有坐标和元素索引沿用本次调用前的 app_screenshot；批次中的截图仅用于观察，不改变坐标基准。\n\n需要通过 request_access 授权；使用坐标或元素索引前需要截图。返回各操作结果、完成数量与停止位置，随后附上截图或放大图片。",
 
   "This system app ignored the posted drag. Use app_menu or another Accessibility action for the same task.": "此系统应用未响应投递的拖拽。请通过 app_menu 或其他辅助功能操作完成同一任务。",
