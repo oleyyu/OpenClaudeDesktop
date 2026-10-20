@@ -50,7 +50,7 @@ test('node-pty is a pinned dependency with a darwin-arm64 N-API prebuild and an 
 
 test('the package script keeps exactly node-pty\'s runtime files and unpacks its prebuilds', async () => {
   // node-pty's prebuilds, and the computer-use module's build/ (agent-tools-packaging.test.mjs).
-  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build}' });
+  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build,helpers/cu-ax/build}' });
   assert.equal(opts.prune, false);
   const keep = async (relative) => filter(path.join(app, relative));
   for (const relative of ['electron/main.cjs', 'electron/terminal-service.cjs', 'electron/terminal-model.mjs', 'electron/agent-tools/terminal.mjs', 'dist',
