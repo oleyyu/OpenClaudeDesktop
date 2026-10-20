@@ -20,9 +20,17 @@ const cu = await import('../electron/agent-tools/computer-use.mjs');
 const { computerUseAction } = await import('../electron/computer-use/actions.mjs');
 const { sdkToolName } = await import('../src/transcript-sdk-tools.mjs');
 
-const OPEN = ['request_access', 'app_list_windows', 'app_screenshot', 'app_ax_find', 'app_click', 'app_type', 'app_release',
-  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch'];
-const CLOSED = ['app_scroll', 'app_drag', 'app_key'];
+// The 13 tools that do what they say; the 11 registered with a reason code (the official set of 24 names).
+const WORKING = ['request_access', 'app_list_windows', 'app_screenshot', 'app_ax_find', 'app_click', 'app_type', 'app_release',
+  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch', 'list_granted_applications'];
+const REASONED = { app_key: 'requires_raw_path', app_scroll: 'requires_raw_path', app_drag: 'requires_raw_path', app_bring_to_current_space: 'requires_raw_path',
+  request_full_control: 'not_supported_in_build', release_full_control: 'not_supported_in_build', read_clipboard: 'permission_denied', write_clipboard: 'permission_denied',
+  request_teach_access: 'not_supported_in_build', teach_step: 'not_supported_in_build', teach_batch: 'not_supported_in_build' };
+const OPEN = [...WORKING, 'app_key', 'app_scroll', 'app_drag', 'app_bring_to_current_space', 'request_full_control', 'release_full_control',
+  'read_clipboard', 'write_clipboard', 'request_teach_access', 'teach_step', 'teach_batch'];
+const OFFICIAL = ['request_access', 'app_list_windows', 'app_screenshot', 'app_zoom', 'app_ax_find', 'app_click', 'app_type', 'app_key', 'app_scroll', 'app_drag',
+  'app_menu', 'app_batch', 'app_release', 'app_focus', 'app_bring_to_current_space', 'list_apps', 'request_full_control', 'release_full_control', 'read_clipboard',
+  'write_clipboard', 'request_teach_access', 'teach_step', 'teach_batch', 'list_granted_applications'];
 const FINDER = 'com.apple.finder';
 
 /** A native module that answers like the real one for Finder's one window. */
@@ -111,9 +119,10 @@ test('discovery: the host finds exactly the open tools in the "computer-use" gro
   await host.ready();
   const names = host.listTools().map((tool) => tool.name);
   for (const name of OPEN) assert.ok(names.includes(name), `${name} is served`);
-  for (const name of CLOSED) assert.ok(!names.includes(name), `${name} is not served`);
   assert.equal(cu.group, 'computer-use');
   assert.deepEqual(cu.tools.map((tool) => tool.name), OPEN);
+  assert.equal(OFFICIAL.length, 24);
+  assert.deepEqual([...OPEN].sort(), [...OFFICIAL].sort(), 'all 24 official names, nothing else');
   const off = createAgentToolsHost({ tmpRoot: fs.mkdtempSync(path.join(os.tmpdir(), 'cu-agent-tools-')), logger: { warn() {}, log() {} },
     resolveSession: () => null, modules: [cu], isGroupEnabled: (group) => group !== 'computer-use' });
   await off.ready();
@@ -167,6 +176,22 @@ test('schemas: every inputSchema compiles under Ajv (strict) and checks real arg
   bad('app_batch', { app: FINDER, actions: [] });
   bad('app_batch', { app: FINDER, actions: [{ action: 'hover' }] });
   bad('app_batch', { app: FINDER, actions: [{ action: 'click', app: 'com.apple.Safari' }] });
+  ok('list_granted_applications', {});
+  ok('app_key', { app: FINDER, combo: 'cmd+s' });
+  bad('app_key', { app: FINDER });
+  ok('app_scroll', { app: FINDER, dy: -3, coordinate: [10, 10] });
+  bad('app_scroll', { app: FINDER });
+  ok('app_drag', { app: FINDER, path: [[0, 0], [10, 10]] });
+  bad('app_drag', { app: FINDER, path: [[0, 0]] });
+  ok('app_bring_to_current_space', { app: FINDER, window_id: 7 });
+  bad('app_bring_to_current_space', { app: FINDER });
+  ok('request_full_control', {});
+  ok('write_clipboard', { text: 'x' });
+  bad('write_clipboard', {});
+  ok('request_teach_access', { apps: ['Finder'], reason: 'Show how' });
+  ok('teach_step', { explanation: 'e', next_preview: 'n', actions: [{ action: 'click' }], anchor: [1, 2] });
+  ok('teach_batch', { steps: [{ explanation: 'e', next_preview: 'n', actions: [] }] });
+  bad('teach_batch', { steps: [] });
   assert.equal(listed.app_screenshot.inputSchema.properties.scale.default, 1);
   assert.equal(listed.app_screenshot.inputSchema.properties.scale.minimum, 0.1);
   assert.equal(listed.app_screenshot.inputSchema.properties.scale.maximum, 1);
@@ -176,7 +201,9 @@ test('schemas: every inputSchema compiles under Ajv (strict) and checks real arg
 test('annotations: screenshot, window list and find are read-only; the rest are not', () => {
   const hint = Object.fromEntries(cu.tools.map((tool) => [tool.name, tool.annotations?.readOnlyHint]));
   assert.deepEqual(hint, { request_access: false, app_list_windows: true, app_screenshot: true, app_ax_find: true, app_click: false, app_type: false, app_release: false,
-    app_focus: false, app_menu: false, app_zoom: true, list_apps: true, app_batch: false });
+    app_focus: false, app_menu: false, app_zoom: true, list_apps: true, app_batch: false, list_granted_applications: true,
+    app_key: false, app_scroll: false, app_drag: false, app_bring_to_current_space: false, request_full_control: false, release_full_control: false,
+    read_clipboard: true, write_clipboard: false, request_teach_access: false, teach_step: false, teach_batch: false });
   for (const tool of cu.tools) {
     assert.equal(typeof tool.title, 'string');
     assert.ok(tool.description.length > 200, `${tool.name} describes what it does, what it needs and what it returns`);
@@ -333,7 +360,8 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(computerUseAction(item('request_access', { apps: ['Finder'] })).kind, 'request_access');
   assert.equal(computerUseAction(item('app_release')).kind, 'release');
   assert.equal(computerUseAction(item('read_terminal')), null, 'other code_desktop tools are not computer use');
-  assert.equal(computerUseAction(item('app_scroll')), null, 'tools not served are not recognized on the app server');
+  assert.equal(computerUseAction(item('app_scroll', { app: FINDER, dy: 3 })).kind, 'scroll');
+  assert.equal(computerUseAction(item('app_frobnicate')), null, 'names the app does not serve are not recognized on the app server');
   assert.deepEqual(computerUseAction(item('app_menu', { app: FINDER, path: ['File'] })), { kind: 'menu', path: ['File'], scope: 'app', app: FINDER });
   assert.equal(computerUseAction(item('app_focus', { app: FINDER })).kind, 'focus');
   assert.equal(computerUseAction(item('app_zoom', { app: FINDER, region: [0, 0, 1, 1] })).kind, 'zoom');
@@ -341,6 +369,7 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(computerUseAction(item('list_apps')).kind, 'list_apps');
   assert.equal(sdkToolName(item('app_menu')), 'mcp__computer-use__app_menu');
   assert.equal(sdkToolName(item('list_apps')), 'mcp__computer-use__list_apps');
+  for (const name of OFFICIAL) assert.equal(sdkToolName(item(name)), `mcp__computer-use__${name}`, name);
   assert.equal(sdkToolName(item('app_screenshot')), 'mcp__computer-use__app_screenshot');
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
@@ -621,4 +650,45 @@ test('ax-helper.cjs: one JSON request per process, the envelope unwrapped, detai
   const missing = createAxHelper({ file: path.join(os.tmpdir(), 'no-such-cu-ax-helper') });
   await assert.rejects(() => missing.call('probe'), (error) => error.code === 'helper_unavailable');
   await assert.rejects(() => createAxHelper({ platform: 'linux', exec: async () => '' }).call('probe'), (error) => error.code === 'helper_unavailable');
+});
+
+test('the 11 names without the capability yet: a precise reasonCode, a next step, and nothing reaches the native side or the helper', async () => {
+  const { call, body, native, axHelper } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  const before = [native.calls.length, axHelper.calls.length];
+  const args = { app_key: { app: FINDER, combo: 'return' }, app_scroll: { app: FINDER, dy: 3 }, app_drag: { app: FINDER, coordinate: [1, 1], to_coordinate: [9, 9] },
+    app_bring_to_current_space: { app: FINDER, window_id: 7 }, write_clipboard: { text: 'x' }, request_teach_access: { apps: ['Finder'], reason: 'r' },
+    teach_step: { explanation: 'e', next_preview: 'n', actions: [] }, teach_batch: { steps: [{ explanation: 'e', next_preview: 'n', actions: [] }] } };
+  for (const [name, reasonCode] of Object.entries(REASONED)) {
+    const result = await call(name, args[name] ?? {});
+    assert.equal(result.isError, true, name);
+    const parsed = body(result);
+    assert.equal(parsed.ok, false, name);
+    assert.equal(parsed.reasonCode, reasonCode, name);
+    assert.equal(typeof parsed.next_step, 'string', name);
+    assert.notEqual(parsed.reasonCode, 'unsupported');
+    if (reasonCode === 'not_supported_in_build') assert.match(parsed.build, /one granted app's window at a time/, name);
+    if (reasonCode === 'permission_denied') assert.match(parsed.next_step, /request_access with clipboard(Read|Write): true/, name);
+    const tool = cu.tools.find((entry) => entry.name === name);
+    assert.match(tool.description, reasonCode === 'permission_denied' ? /permission_denied/ : /Not available in this build/, name);
+    assert.match(tool.description, new RegExp(reasonCode), name);
+  }
+  assert.deepEqual([native.calls.length, axHelper.calls.length], before);
+  // With the clipboard permissions granted, the clipboard is still outside this build (display-scope control).
+  await call('request_access', { apps: ['Finder'], reason: 'r', clipboardRead: true, clipboardWrite: true });
+  assert.equal(body(await call('read_clipboard', {})).reasonCode, 'not_supported_in_build');
+  assert.equal(body(await call('write_clipboard', { text: 'x' })).reasonCode, 'not_supported_in_build');
+  // app_batch goes through app_key for a key step.
+  await call('app_screenshot', { app: FINDER });
+  assert.match(body(await call('app_batch', { app: FINDER, actions: [{ action: 'key', combo: 'return' }] })).results[0].message, /A key press needs the raw input path/);
+});
+
+test('list_granted_applications: the session\'s apps, tiers, flags and the coordinate mode; nothing asked', async () => {
+  const { call, body, asked } = setup();
+  assert.deepEqual(body(await call('list_granted_applications', {})), { apps: [], flags: { clipboardRead: false, clipboardWrite: false, systemKeyCombos: false }, coordinateMode: 'app_window' });
+  await call('request_access', { apps: ['Finder'], reason: 'r', clipboardRead: true });
+  assert.deepEqual(body(await call('list_granted_applications', {})), { apps: [{ bundleId: FINDER, name: 'Finder', tier: 'full' }],
+    flags: { clipboardRead: true, clipboardWrite: false, systemKeyCombos: false }, coordinateMode: 'app_window' });
+  assert.equal(asked.length, 1, 'only request_access showed a card');
+  assert.deepEqual(body(await call('list_granted_applications', {}, 'thread-b')).apps, [], 'per session');
 });

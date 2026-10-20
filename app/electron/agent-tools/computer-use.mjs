@@ -2,8 +2,10 @@
 // (electron/computer-use/service.cjs; field names from docs/02-tools.live.json). Working without anything from M4:
 // request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only, single left click),
 // app_type (Accessibility first, then the reason policy's raw rung), app_release, app_focus and app_menu (Accessibility
-// through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps and app_batch (the tools above in order).
-// What still needs the raw input path answers with a reason code, not by being missing (docs/computer-use-handoff-20261020.md).
+// through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps, list_granted_applications and app_batch
+// (the tools above in order). The rest of the official names are registered and answer with a reason code instead of
+// being missing: requires_raw_path (app_key, app_scroll, app_drag, app_bring_to_current_space — M4), not_supported_in_build
+// (full control, teach mode), permission_denied → request_access (the clipboard) (docs/computer-use-handoff-20261020.md).
 // ctx.computerUse: { service (createComputerUse), resolveApps(names) → [{requested, bundleId, displayName, path,
 //   installed}], listApps({query, runningFirst, limit, cursor}) → {apps, total, nextCursor?} (apps.cjs),
 //   ask({reason, flags, apps, toolParams}) → "accept" | "decline" | "unavailable" }  (main.cjs)
@@ -445,6 +447,162 @@ export const tools = [
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     handler: (args = {}, ctx) => batch(args, ctx),
   },
+  {
+    name: "list_granted_applications",
+    title: "List granted apps",
+    description: "Show what this session may use right now: the apps granted with request_access (each with its bundle identifier and level — view only, click, or full), the extra permissions granted (clipboard read and write, system shortcuts), and how coordinates work in this build (pixels of an app window's last app_screenshot; there is no full-screen coordinate mode). Read-only; nothing is asked of the user.\n\nNeeds no grant. Returns apps (possibly empty), flags and coordinateMode.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const grants = service(ctx).service.grantsFor(ctx.sessionId);
+      return json({ apps: grants.list().map((app) => ({ bundleId: app.bundleId, ...(app.displayName ? { name: app.displayName } : {}), tier: app.tier })),
+        flags: grants.flags(), coordinateMode: "app_window" });
+    },
+  },
+  // ── Registered with a reason code until the capability exists (docs/computer-use-handoff-20261020.md, M4 list). Seeing
+  // the tool and its reason, the agent turns to the Accessibility tools or tells the user, instead of inventing a way.
+  {
+    name: "app_key",
+    title: "Press key in app window",
+    description: "Press a key or shortcut (\"return\", \"escape\", \"cmd+s\", \"shift+tab\") in a granted app's window without bringing it forward. Not available in this build: key presses to a background window need the raw input path, which isn't enabled yet, so every call returns reasonCode requires_raw_path. For a command, app_menu runs the same thing through Accessibility (Save is File ▸ Save); for text, use app_type; to close an open menu, app_menu with close.",
+    inputSchema: {
+      type: "object",
+      properties: { app: APP, window_id: WINDOW_ID, combo: { type: "string", minLength: 1, description: "The key or combo: \"return\", \"cmd+a\", \"shift+tab\"." }, coordinate: COORDINATE, action_summary: ACTION_SUMMARY },
+      required: ["app", "combo"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => rawPathRefusal("A key press"),
+  },
+  {
+    name: "app_scroll",
+    title: "Scroll app window",
+    description: "Scroll part of a granted app's window up or down without bringing it forward (dy: positive scrolls toward the bottom). Not available in this build: scrolling needs the raw input path, which isn't enabled yet, so every call returns reasonCode requires_raw_path. To reach something off screen, look for it with app_ax_find (the element list covers more than what is visible), use app_menu (View, Go), or tell the user.",
+    inputSchema: {
+      type: "object",
+      properties: { app: APP, window_id: WINDOW_ID, dy: { type: "number", description: "How far: positive toward the bottom, negative toward the top." }, coordinate: COORDINATE },
+      required: ["app", "dy"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => rawPathRefusal("Scrolling"),
+  },
+  {
+    name: "app_drag",
+    title: "Drag in app window",
+    description: "Drag from one point of a granted app's window to another (coordinate to to_coordinate, or along path), without bringing it forward. Not available in this build: a drag is mouse input on the raw input path, which isn't enabled yet, so every call returns reasonCode requires_raw_path. Use app_menu for commands such as Move To or Duplicate, or tell the user the drag needs them.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID, coordinate: COORDINATE,
+        to_coordinate: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2, description: "[x, y] where the drag ends, in the last app_screenshot's pixels." },
+        path: { type: "array", items: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 }, minItems: 2, maxItems: 20, description: "2–20 [x, y] points to drag through, instead of coordinate and to_coordinate." },
+        action_summary: ACTION_SUMMARY,
+      },
+      required: ["app"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => rawPathRefusal("A drag"),
+  },
+  {
+    name: "app_bring_to_current_space",
+    title: "Bring window to this Space",
+    description: "Move a granted app's window that is on another Space, minimized or hidden to where the user can see it, without the app taking focus. Not available in this build: it needs the raw input path's window handling, which isn't enabled yet, so every call returns reasonCode requires_raw_path. app_screenshot still captures such a window where it is; to act in it, ask the user to bring it here.",
+    inputSchema: { type: "object", properties: { app: APP, window_id: WINDOW_ID }, required: ["app", "window_id"], additionalProperties: false },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => rawPathRefusal("Bringing a window to this Space"),
+  },
+  {
+    name: "request_full_control",
+    title: "Request full control",
+    description: "Ask the user for control of the whole display — the screen-wide tools and the display lock — for the rest of the session. Not available in this build: it controls one granted app's window at a time, in the background, and has no display-scope tools, so every call returns reasonCode not_supported_in_build. Work app by app with request_access and the app_* tools.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => notInBuild("Full control of the display"),
+  },
+  {
+    name: "release_full_control",
+    title: "Release full control",
+    description: "Give back control of the whole display and drop the full-control approval. Not available in this build: there is no full control to release (see request_full_control), so every call returns reasonCode not_supported_in_build. To be done with an app's window, use app_release.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => notInBuild("Releasing full control"),
+  },
+  {
+    name: "read_clipboard",
+    title: "Read clipboard",
+    description: "Read the text on the Mac's clipboard. It needs the clipboard-read permission from request_access (clipboardRead: true); without it, it returns reasonCode permission_denied with the request_access call to make. Reading the clipboard is display-scope control, which this build doesn't have, so with the permission it returns not_supported_in_build. Ask the user to paste what you need into the chat instead.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => clipboardRefusal(ctx, "clipboardRead", "Reading the clipboard"),
+  },
+  {
+    name: "write_clipboard",
+    title: "Write clipboard",
+    description: "Put text on the Mac's clipboard. It needs the clipboard-write permission from request_access (clipboardWrite: true); without it, it returns reasonCode permission_denied with the request_access call to make. Writing the clipboard is display-scope control, which this build doesn't have, so with the permission it returns not_supported_in_build. To get text into an app, use app_type.",
+    inputSchema: { type: "object", properties: { text: { type: "string", description: "The text to put on the clipboard." } }, required: ["text"], additionalProperties: false },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => clipboardRefusal(ctx, "clipboardWrite", "Writing the clipboard"),
+  },
+  {
+    name: "request_teach_access",
+    title: "Request teach mode",
+    description: "Ask the user to start teach mode with the listed apps: a guided walkthrough where each step explains what to do and shows it on screen, and the user moves on or exits. Not available in this build: teach mode comes after the raw input path, so every call returns reasonCode not_supported_in_build. Explain the steps in the chat instead, or do them with the app_* tools after request_access.",
+    inputSchema: {
+      type: "object",
+      properties: { apps: { type: "array", items: { type: "string" }, minItems: 1, maxItems: MAX_APPS, description: "The apps the walkthrough uses, by name or bundle identifier." }, reason: { type: "string", description: "One sentence the user reads: what you will show them." } },
+      required: ["apps", "reason"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => notInBuild("Teach mode"),
+  },
+  {
+    name: "teach_step",
+    title: "Teach step",
+    description: "Show one teach-mode step: an explanation, what comes next, and the actions that demonstrate it, then wait for the user to continue or exit. It would need teach access from request_teach_access and return whether the user exited. Not available in this build (teach mode needs the raw input path), so every call returns reasonCode not_supported_in_build; explain the step in the chat instead.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        explanation: { type: "string", description: "What this step shows." },
+        next_preview: { type: "string", description: "One line on the step after it." },
+        actions: { type: "array", items: { type: "object" }, description: "The actions that demonstrate the step." },
+        anchor: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2, description: "[x, y] the explanation points at." },
+      },
+      required: ["explanation", "next_preview", "actions"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => notInBuild("Teach mode"),
+  },
+  {
+    name: "teach_batch",
+    title: "Teach steps",
+    description: "Show several teach-mode steps in a row, stopping when the user exits. It would need teach access from request_teach_access and return how many steps were completed and where it stopped. Not available in this build (teach mode needs the raw input path), so every call returns reasonCode not_supported_in_build; walk the user through the steps in the chat instead.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        steps: {
+          type: "array", minItems: 1,
+          items: {
+            type: "object",
+            properties: {
+              explanation: { type: "string" }, next_preview: { type: "string" }, actions: { type: "array", items: { type: "object" } },
+              anchor: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 },
+            },
+            required: ["explanation", "next_preview", "actions"],
+            additionalProperties: false,
+          },
+          description: "The steps, each as teach_step takes it.",
+        },
+      },
+      required: ["steps"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async () => notInBuild("Teach mode"),
+  },
 ];
 
 // app_batch: each action runs through the tool that does it alone, so a batch can't do anything the tools can't.
@@ -482,7 +640,21 @@ async function batch(args, ctx) {
     ...(stoppedAt !== null ? { stoppedAt, next_step: `actions[${stoppedAt}] didn't work (see its result); the ones after it didn't run. Fix it, take a new app_screenshot if the window changed, and continue from there.` } : {}) };
   return { content: [{ type: "text", text: json(summary) }, ...pictures], ...(stoppedAt !== null ? { isError: true } : {}) };
 }
-/** key / scroll / drag until their tools exist: what app_key, app_scroll and app_drag answer. */
-function rawPathRefusal(action) {
-  return notYet("requires_raw_path", `${action} needs the raw input path, which isn't enabled in this build yet.`, RAW_PATH_STEP);
+/** What app_key, app_scroll, app_drag and app_bring_to_current_space answer until M4's raw input path is enabled. */
+function rawPathRefusal(what) {
+  return notYet("requires_raw_path", `${what} needs the raw input path, which isn't enabled in this build yet.`, RAW_PATH_STEP);
+}
+// This branch's scope, for not_supported_in_build: what the build is, so the agent can say why.
+const BUILD_SCOPE = "This build controls one granted app's window at a time, in the background, through Accessibility; display-scope control (the whole screen, the display lock, the clipboard) and teach mode aren't part of it.";
+function notInBuild(what) {
+  return { content: [{ type: "text", text: json({ ok: false, outcome: "unsupported", reasonCode: "not_supported_in_build", message: `${what} isn't part of this build.`,
+    build: BUILD_SCOPE, next_step: "Work app by app with request_access and the app_* tools, or tell the user this needs a later build." }) }], isError: true };
+}
+/** read_clipboard / write_clipboard: the permission first (request_access), then the build's scope. */
+function clipboardRefusal(ctx, flag, what) {
+  if (!service(ctx).service.grantsFor(ctx.sessionId).flags()[flag]) {
+    return notYet("permission_denied", `${what} needs the ${flag} permission, which this session doesn't have.`,
+      `Call request_access with ${flag}: true (and the apps you need) and a one-line reason; the user decides on the card.`);
+  }
+  return notInBuild(what);
 }

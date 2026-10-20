@@ -40,7 +40,9 @@ export const SERVER_NAMES = /computer[-_ ]?use|^computer$|desktop[-_ ]?control/i
 const OWN_SERVER = "code_desktop";
 // Every tool name agent-tools/computer-use.mjs serves (transcript-sdk-tools.mjs maps them to mcp__computer-use__*).
 export const OWN_COMPUTER_USE_TOOLS = Object.freeze(["request_access", "app_list_windows", "app_screenshot", "app_ax_find", "app_click",
-  "app_type", "app_release", "app_focus", "app_menu", "app_zoom", "list_apps", "app_batch"]);
+  "app_type", "app_release", "app_focus", "app_menu", "app_zoom", "list_apps", "app_batch", "list_granted_applications",
+  "app_key", "app_scroll", "app_drag", "app_bring_to_current_space", "request_full_control", "release_full_control",
+  "read_clipboard", "write_clipboard", "request_teach_access", "teach_step", "teach_batch"]);
 const OWN_TOOLS = new Set(OWN_COMPUTER_USE_TOOLS);
 /** The computer-use tool an item of the app's own server calls (by server, or OpenCode's "code_desktop_" prefix), or null. */
 export function ownComputerUseTool(item) {
