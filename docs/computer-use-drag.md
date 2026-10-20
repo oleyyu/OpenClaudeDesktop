@@ -83,3 +83,5 @@ live 测试需要 macOS、已构建的原生模块、Accessibility 和录屏权�
 - VS Code：按用户决定保留 click 层级，测试确认 `tier_refused` 且不调用原生 drag。
 - 系统设置亮度：本机 macOS 27.2 的外层 AXSlider 不提供 AXValue（`noValue`），但提供可移动的 AXValueIndicator，测试按滑块头位置验证百分比。最终实测持续被 `user_actively_typing` 闸门阻挡；按用户决定停止重试，记录为受阻，**未完成系统亮度 30% → 70% 验收**。Cocoa NSSlider 的通过结果不替代这一项。
 - 锁屏中断：通过注入 `screen_locked` 验证按下后的中断与 mouseUp 清理；四道闸门和超时均有生产时序单测。未实际锁屏。
+
+最终回归（2026-10-21）：`npm test` 退出码 0，5730 项中 5703 通过、0 失败、27 跳过。默认跳过的桌面实测结果以上述单独运行记录为准。Computer Use 与 i18n 定向回归另有 127 通过、14 跳过；原生拖拽时序与真实事件字段的 7 项 XCTest 通过。
