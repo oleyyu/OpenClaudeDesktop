@@ -5,7 +5,8 @@
 //
 // M2: app_screenshot (image + AX summary in the same frame pixels) and app_click on the AX rung: AXPress on the
 // element under the point after climbing at most four parents; anything else is refused with a reason code, never
-// clicked blindly (executor.cjs + reason-policy.cjs, fail-closed).
+// clicked blindly (executor.cjs + reason-policy.cjs, fail-closed). A right click is AXShowMenu on the element or one of
+// its two parents (no_menu_action otherwise); it has no raw rung.
 //
 // M3: app_type on the AX rung (AXValue written and read back) with the raw rung behind the reason policy (Unicode
 // key events of ≤ 20 UTF-16 units, read back again), and app_key as keystrokes; both natively gated (secure input,
@@ -200,6 +201,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
     },
     /**
      * app_click on the AX rung. Refusals come back as {outcome: "unsupported", reasonCode, blocked: true}.
+     * button "right" is AXShowMenu (the context menu, read back as menuItems); only a single left click has a raw rung.
      * axOnly: no raw rung behind the reason policy (a fallback reason is refused), as the agent tool asks until M4.
      * One of coordinate / element_index / target is required: there is no implicit "the same point as last time" (in a
      * form that is a second submit).
@@ -243,13 +245,13 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const gate = actionGate(await native.call("probe"), "left_click");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
       // The raw rung (reason-policy FALLBACK only): a coordinate click at the same point, both forms from budget.cjs.
-      const raw = point && shot && axOnly !== true ? () => native.call("rawClick", {
+      const raw = point && shot && axOnly !== true && button === "left" && count === 1 ? () => native.call("rawClick", {
         bundleId, windowId: wid, count, button, winLocalPt: point, screenPt: windowLocalToScreen(point, shot.bounds),
         grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
       }) : null;
       try { pointer?.beforeClick?.(); } catch {}
       const result = await execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
-        context: { op: "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
+        context: { op: button === "right" ? "right_click" : "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
       if (result.outcome === "ok" && point && shot?.bounds) {
         try { pointer?.clicked?.({ sessionId, bundleId, windowId: wid, ...windowLocalToScreen(point, shot.bounds) }); } catch {}
       }

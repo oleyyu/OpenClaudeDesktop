@@ -1,6 +1,6 @@
 // Computer use for the app's sessions: the app-scoped tools that act on one granted app's window in the background
 // (electron/computer-use/service.cjs; field names from docs/02-tools.live.json). Working without anything from M4:
-// request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only, single left click),
+// request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only: a left click or a right click),
 // app_type (Accessibility first, then the reason policy's raw rung), app_release, app_focus and app_menu (Accessibility
 // through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps, list_granted_applications and app_batch
 // (the tools above in order). The rest of the official names are registered and answer with a reason code instead of
@@ -60,6 +60,8 @@ const REASON_STEPS = {
   app_is_frontmost: "The app is in front and the user is working in it, so its focus isn't moved. Address the element with element_index instead, or ask the user.",
   window_minimized: "The window is minimized. Ask the user to restore it, or pick another window from app_list_windows.",
   focus_refused: "The app didn't take the focus change. Take an app_screenshot to see its state, or address elements with element_index.",
+  no_menu_action: "This element has no context menu that Accessibility can open (nor do its two parents). Right-click the item itself (its element_index), use app_menu for the command, or tell the user.",
+  menu_not_shown: "The app didn't show a context menu. Take an app_screenshot to see its state; use app_menu for the command instead.",
 };
 /** A coded service error → a structured failure. */
 function serviceFailure(error, app) {
@@ -102,7 +104,7 @@ function imageResult(text, dataUrl) {
   if (!match) return null;
   return { content: [{ type: "text", text }, { type: "image", data: match[2], mimeType: match[1] }] };
 }
-const RAW_PATH_STEP = "Do it through Accessibility instead (app_click with count 1 and the left button on an element_index, or app_menu for a command), or tell the user this needs input this build can't send yet.";
+const RAW_PATH_STEP = "Do it through Accessibility instead (app_click with count 1 on an element_index, or app_menu for a command), or tell the user this needs input this build can't send yet.";
 /** A step's outcome ({outcome, path, reasonCode?, …}): an error result unless it took effect. */
 function outcomeResult(result, nextStep) {
   const ok = result?.outcome === "ok";
@@ -246,12 +248,12 @@ export const tools = [
   {
     name: "app_click",
     title: "Click in app window",
-    description: "Press a control in a granted app's window without bringing the app forward, through macOS Accessibility (the control's own press action). Give exactly one of element_index (an [N] from app_screenshot, the most reliable), coordinate (pixels of that screenshot) or target \"focused\"; a call without one is an error, never a repeat of the last click. This build does a single left click only: right click and double or triple click need the raw input path, which isn't enabled yet, so button \"right\" or count 2–3 come back with reasonCode requires_raw_path. Something Accessibility can't press is refused with a reason, not clicked blindly.\n\nNeeds the app granted with request_access (and allowed to click: browsers are view only), and an app_screenshot of the window for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example the point has no pressable control, the screen is locked, or secure input is on) and what to try next.",
+    description: "Press a control in a granted app's window without bringing the app forward, through macOS Accessibility (the control's own press action). Give exactly one of element_index (an [N] from app_screenshot, the most reliable), coordinate (pixels of that screenshot) or target \"focused\"; a call without one is an error, never a repeat of the last click. button \"right\" opens the element's context menu through the Accessibility action AXShowMenu (on the element or one of its two parents) and lists the menu's items as menuItems; an element without one comes back with reasonCode no_menu_action, and the open menu is closed with app_menu close. Double or triple click (count 2–3) isn't available yet and comes back with reasonCode requires_raw_path. Something Accessibility can't press is refused with a reason, not clicked blindly.\n\nNeeds the app granted with request_access (and allowed to click: browsers are view only), and an app_screenshot of the window for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example the point has no pressable control, the screen is locked, or secure input is on) and what to try next.",
     inputSchema: {
       type: "object",
       properties: {
         app: APP, window_id: WINDOW_ID, coordinate: COORDINATE, element_index: ELEMENT_INDEX, target: TARGET,
-        button: { type: "string", enum: ["left", "right"], description: "\"left\" (default). \"right\" needs the raw input path and currently returns requires_raw_path." },
+        button: { type: "string", enum: ["left", "right"], description: "\"left\" (default): the control's press action. \"right\": its context menu (Accessibility AXShowMenu); no_menu_action when it has none." },
         count: { type: "integer", enum: [1, 2, 3], description: "1 (default). 2 or 3 (double / triple click) need the raw input path and currently return requires_raw_path." },
         action_summary: ACTION_SUMMARY,
       },
@@ -260,15 +262,14 @@ export const tools = [
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     handler: async (args = {}, ctx) => {
-      // Right click and multi-clicks are synthetic mouse events: Accessibility has no press for them (M4's raw path).
-      if ((args.button !== undefined && args.button !== "left") || (args.count !== undefined && args.count !== 1)) {
-        return notYet("requires_raw_path", "This build supports a single left click only; right click and double or triple click need the raw input path, which isn't enabled yet.", RAW_PATH_STEP);
+      if (args.count !== undefined && args.count !== 1) {
+        return notYet("requires_raw_path", "This build supports a single click only; double or triple click need the raw input path, which isn't enabled yet.", RAW_PATH_STEP);
       }
       const refused = checkGrant(ctx, args.app) ?? checkAddressing(args, { required: true });
       if (refused) return refused;
       try {
         const result = await service(ctx).service.appClick(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), coordinate: args.coordinate,
-          element_index: args.element_index, target: args.target, axOnly: true });
+          element_index: args.element_index, target: args.target, ...(args.button !== undefined ? { button: args.button } : {}), axOnly: true });
         return outcomeResult(result, "Take a fresh app_screenshot and try an element_index for the control (or target \"focused\"); if Accessibility can't press it, tell the user this control can't be clicked yet.");
       } catch (error) { return serviceFailure(error, args.app); }
     },

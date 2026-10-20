@@ -11,6 +11,8 @@ import CoreGraphics
 public enum AXLadder {
     /// Climb at most this many parents from the hit element to a pressable one ("四层上溯").
     public static let climbLevels = 4
+    /// A right click climbs at most this many parents to an element that answers AXShowMenu.
+    public static let menuClimbLevels = 2
     /// Summary bounds: what the walk visits and what it keeps.
     static let maxVisited = 4000, maxElements = 500
 
@@ -167,11 +169,10 @@ public enum AXLadder {
         return chain
     }
 
-    /// AXPress for a click. Order of refusals: right button, window ownership, sheet, then the climb.
+    /// AXPress for a click, AXShowMenu for a right click. Order of refusals: window ownership, sheet, then the climb.
     public static func click(_ request: Request) -> [String: Any] {
         _ = setUp
         guard AXIsProcessTrusted() else { return unsupported("ax_untrusted_cannot_verify") }
-        if request.button == "right" { return unsupported("context_menu_rclick_refused") }
         guard let window = windowElement(pid: request.pid, windowId: request.windowId) else {
             return unsupported("window_off_space")
         }
@@ -229,9 +230,10 @@ public enum AXLadder {
 
         // 3. Climb: the hit itself, then at most four parents, to the first element that answers AXPress.
         let start = listed ?? hit
-        let climb = ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
         let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
                                        "title": title(hit) ?? NSNull(), "descentPath": path]
+        if request.button == "right" { return showMenu(from: start, pid: request.pid, dryRun: request.dryRun, describe: describe) }
+        let climb = ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
         guard let target = climb.first(where: { actions($0).contains(kAXPressAction as String) }) else {
             // A row or cell (a Finder list AXRow / AXCell) with nothing pressable on it or above is no_press_action,
             // which the main process may let fall to a coordinate click. Anything else — plain text, a container, a
@@ -267,6 +269,69 @@ public enum AXLadder {
         result["outcome"] = "ineffective"
         result["reasonCode"] = "ax_press_failed"
         result["axError"] = axErrorName(error)
+        return result
+    }
+}
+
+extension AXLadder {
+    /// How long a right click waits for the context menu to show up: polls × interval.
+    static let menuPolls = 8, menuPollMicros: useconds_t = 40_000
+
+    /// The app's on-screen pop-up menu windows (a context menu is one), by window number.
+    static func popUpMenuWindows(pid: pid_t) -> Set<Int> {
+        let level = Int(CGWindowLevelForKey(.popUpMenuWindow))
+        let list = (CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]]) ?? []
+        return Set(list.compactMap { info in
+            guard (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value == pid,
+                  (info[kCGWindowLayer as String] as? NSNumber)?.intValue == level else { return nil }
+            return (info[kCGWindowNumber as String] as? NSNumber)?.intValue
+        })
+    }
+
+    /// Right click: AXShowMenu on `start`, else on one of its first `menuClimbLevels` parents. Nothing answers it →
+    /// no_menu_action (never another way). The menu is read back: a new pop-up menu window of the app, or a new AXMenu
+    /// under the element, an ancestor up to its window, or the app (live, Finder 2026-10-20: AXShowMenu on a list row's
+    /// name field waits in the app's menu tracking — cannotComplete after the messaging timeout — and its AXMenu hangs
+    /// under the AXOutline three levels up). Item titles come back as menuItems when the AXMenu is readable.
+    /// No menu → ineffective menu_not_shown.
+    static func showMenu(from start: AXUIElement, pid: pid_t, dryRun: Bool, describe: [String: Any]) -> [String: Any] {
+        var result = describe
+        let climb = ancestry(start, limit: menuClimbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
+        guard let target = climb.first(where: { actions($0).contains(kAXShowMenuAction as String) }) else {
+            return unsupported("no_menu_action", result)
+        }
+        result["menuRole"] = role(target) ?? NSNull()
+        result["menuTitle"] = title(target) ?? NSNull()
+        result["axOp"] = "AXShowMenu"
+        if (value(target, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
+        if dryRun { result["outcome"] = "dryRun"; return result }
+
+        var owners = [AXUIElement]()
+        for node in ancestry(target) { owners.append(node); if role(node) == "AXWindow" { break } }
+        owners.append(AXUIElementCreateApplication(pid))
+        let menus = { owners.flatMap(children).filter { role($0) == "AXMenu" } }
+        let menusBefore = menus(), windowsBefore = popUpMenuWindows(pid: pid)
+        // An app that tracks the menu inside the action answers cannotComplete; the readback decides.
+        let error = AXUIElementPerformAction(target, kAXShowMenuAction as CFString)
+        if error != .success { result["axError"] = axErrorName(error) }
+        if error == .success || error == .cannotComplete {
+            for _ in 0..<menuPolls {
+                usleep(menuPollMicros)
+                let newMenu = { menus().first { m in !menusBefore.contains { CFEqual($0, m) } } }
+                var menu = newMenu()
+                guard menu != nil || !popUpMenuWindows(pid: pid).subtracting(windowsBefore).isEmpty else { continue }
+                // The window can show before the AXMenu is in the tree: one more look for the items.
+                if menu == nil { usleep(menuPollMicros); menu = newMenu() }
+                result["outcome"] = "ok"
+                result["reasonCode"] = NSNull()
+                if let menu {
+                    result["menuItems"] = children(menu).filter { role($0) == "AXMenuItem" }.compactMap { string($0, kAXTitleAttribute) }.prefix(40).map { $0 }
+                }
+                return result
+            }
+        }
+        result["outcome"] = "ineffective"
+        result["reasonCode"] = "menu_not_shown"
         return result
     }
 }

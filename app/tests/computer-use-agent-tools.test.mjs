@@ -374,12 +374,12 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
 
-test('app_click: right click and double / triple click answer requires_raw_path at the door, nothing reaches the native side', async () => {
+test('app_click: double / triple click answer requires_raw_path at the door, nothing reaches the native side', async () => {
   const { call, body, native } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
   const before = native.calls.length;
-  for (const args of [{ button: 'right' }, { count: 2 }, { count: 3 }, { button: 'right', count: 2 }]) {
+  for (const args of [{ count: 2 }, { count: 3 }, { button: 'right', count: 2 }]) {
     const result = await call('app_click', { app: FINDER, element_index: 0, ...args });
     assert.equal(result.isError, true, JSON.stringify(args));
     const parsed = body(result);
@@ -392,8 +392,46 @@ test('app_click: right click and double / triple click answer requires_raw_path 
   const click = cu.tools.find((tool) => tool.name === 'app_click');
   assert.deepEqual(click.inputSchema.properties.button.enum, ['left', 'right']);
   assert.match(click.inputSchema.properties.count.description, /requires_raw_path/);
+  assert.doesNotMatch(click.inputSchema.properties.button.description, /requires_raw_path/);
   assert.doesNotMatch(click.description, /never sends a synthetic mouse click/);
   assert.equal(body(await call('app_click', { app: FINDER, element_index: 0, button: 'left', count: 1 })).ok, true);
+});
+
+test('app_click: button "right" goes the normal path to the native AXShowMenu, never requires_raw_path', async () => {
+  const { call, body, native } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const result = await call('app_click', { app: FINDER, element_index: 0, button: 'right' });
+  const parsed = body(result);
+  assert.equal(parsed.ok, true);
+  assert.notEqual(parsed.reasonCode, 'requires_raw_path');
+  const clicks = native.calls.filter(([method]) => method === 'axClick').map(([, params]) => params);
+  assert.deepEqual([clicks.at(-1).button, clicks.at(-1).count, clicks.at(-1).elementIndex], ['right', 1, 0]);
+  const click = cu.tools.find((tool) => tool.name === 'app_click');
+  assert.match(click.description, /AXShowMenu/);
+  assert.match(click.description, /no_menu_action/);
+  for (const text of [click.description, click.inputSchema.properties.button.description, click.inputSchema.properties.count.description]) {
+    assert.doesNotMatch(text, /synthe|deliver|\bpost/i);
+  }
+});
+
+test('app_click: a right click on an element without AXShowMenu answers no_menu_action with a next step, never a silent ok', async () => {
+  const native = fakeNative();
+  const call0 = native.call.bind(native);
+  native.call = async (method, params) => {
+    if (method === 'axClick') { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'no_menu_action', role: 'AXRadioButton' }; }
+    if (method === 'rawClick') { native.calls.push([method, params]); return { outcome: 'ok' }; }
+    return call0(method, params);
+  };
+  const { call, body } = setup({ native });
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const result = await call('app_click', { app: FINDER, element_index: 0, button: 'right' });
+  assert.equal(result.isError, true);
+  const parsed = body(result);
+  assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode, parsed.blocked], [false, 'unsupported', 'no_menu_action', true]);
+  assert.match(parsed.next_step, /context menu/);
+  assert.ok(!native.calls.some(([method]) => method === 'rawClick'), 'no other path is tried');
 });
 
 test('app_click: no addressing is an error, never a replay of the previous click', async () => {
@@ -619,7 +657,7 @@ test('app_batch: stops at the first action that fails; the rest do not run', asy
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
   const clicks = () => native.calls.filter(([method]) => method === 'axClick').length;
-  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click', button: 'right', element_index: 0 }, 'requires_raw_path'],
+  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click', count: 2, element_index: 0 }, 'requires_raw_path'],
     [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3 }, 'requires_raw_path'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'requires_raw_path']]) {
     const start = clicks();
     const result = await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 0 }, stopper, { action: 'click', element_index: 2 }] });

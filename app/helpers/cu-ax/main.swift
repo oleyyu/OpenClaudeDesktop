@@ -10,7 +10,8 @@
 //   menu      {bundleId, path: [String]}       walk AXMenuBar by titles, AXPress the last one (a leaf runs its command;
 //                                              a menu title opens that menu and lists its items)
 //   menuList  {bundleId, path: [String]}       the items under path ([] = the menu bar titles); read-only
-//   menuClose {bundleId}                       AXCancel on every open menu of the app (what Escape does)
+//   menuClose {bundleId}                       AXCancel on every open menu of the app (what Escape does): the menu bar's
+//                                              and a context menu opened in a window (app_click button "right")
 //   apps      {folders: [String]}              running apps (regular, with pid) and the .app bundles in folders
 import AppKit
 import ApplicationServices
@@ -176,8 +177,20 @@ func menuClose(_ p: [String: Any]) throws -> [String: Any] {
             }
         }
     }
+    // A context menu (AXShowMenu) hangs under the element that opened it, or under the app: a bounded walk of the windows.
+    let app = AXUIElementCreateApplication(try runningApp(bundleId).processIdentifier)
+    var queue = children(app).filter { string($0, kAXRoleAttribute) != "AXMenuBar" }[...], visited = 0
+    while let node = queue.popFirst(), visited < contextMenuWalkLimit {
+        visited += 1
+        if string(node, kAXRoleAttribute) == "AXMenu" {
+            if actions(node).contains(kAXCancelAction), AXUIElementPerformAction(node, kAXCancelAction as CFString) == .success { closed += 1 }
+            continue
+        }
+        queue.append(contentsOf: children(node))
+    }
     return ["closed": closed]
 }
+let contextMenuWalkLimit = 4000
 
 // MARK: apps
 

@@ -56,6 +56,8 @@ const BLOCK = Object.freeze({
   no_focused_element: "local: target 'focused' but the app reports no focused element",
   no_target: "local: no coordinate, element_index or target",
   element_disabled: "local: the pressable element is disabled",
+  no_menu_action: "local: right click — neither the element nor its two parents answer AXShowMenu; there is no other way to open its menu",
+  menu_not_shown: "local: AXShowMenu was performed but no context menu appeared (ineffective)",
   // Raw-rung refusals (RawInput.swift / EventFactory.swift). Never AX results, but listed so a raw refusal that is
   // passed back through decide() reads as known, not unclassified.
   scgevent_unavailable: "local: no HID-state CGEventSource could be created; the whole raw path refuses",
