@@ -4,6 +4,8 @@
 //   2. fixture:app-tool request_access — the access card names Finder by bundle id with its icon; after "Allow for this
 //      session" the same session's next request_access answers without a card, and app_list_windows runs with the grant
 //      (the last call reaches the native module: read-only, Finder's window list)
+//   3. Settings › System › Computer use — Finder is listed under Allowed apps; Remove revokes it (the next app_list_windows
+//      is app_not_granted) and shows the empty state; the switch saves agentComputerUse: false
 // Run from app/ after `npm run build`: node scripts/computer-use-tools-ui-test.mjs
 import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import assert from 'node:assert/strict';import {execFileSync} from 'node:child_process';
 import {_electron as electron} from '../../tools/node_modules/playwright/index.mjs';
@@ -61,6 +63,34 @@ try{
  const calls=(await fs.readFile(path.join(profile,'fixture-requests.jsonl'),'utf8')).split('\n').filter(Boolean).map(line=>JSON.parse(line)).filter(entry=>entry.method==='mcp:tools/call');
  assert.deepEqual(calls.map(call=>[call.params.name,call.params.result?.isError===true]),[['request_access',false],['request_access',false],['app_list_windows',false]]);
  report.checks.push('The same session asks again without a card, and app_list_windows runs with the grant');
+
+ // 3. Settings › System › Computer use: the allowed app is listed; removing it revokes the grant; the switch drops the tools.
+ await page.keyboard.press('Meta+,');const settings=page.getByRole('dialog',{name:'Settings',exact:true});await settings.waitFor();
+ await settings.getByRole('navigation',{name:'Settings',exact:true}).getByRole('button',{name:'System',exact:true}).click();
+ const section=settings.locator('section.ss-group',{has:page.getByRole('heading',{name:/Computer use/})});
+ await section.waitFor({timeout:5000});
+ assert.match(await section.locator('h3').innerText(),/Computer use\s*Beta/);
+ const chip=section.locator('[data-computer-use-allowed] > div');
+ await chip.first().waitFor({timeout:5000});
+ assert.deepEqual(await chip.locator('span.text-primary').allInnerTexts(),['Finder']);
+ await section.scrollIntoViewIfNeeded();
+ await page.screenshot({path:path.join(directory,'settings-computer-use.png')});
+ await section.getByRole('button',{name:'Remove Finder from allowed apps',exact:true}).click();
+ await section.getByText(/No apps allowed right now/).waitFor({timeout:5000});
+ await page.screenshot({path:path.join(directory,'settings-computer-use-empty.png')});
+ report.checks.push('Settings › System › Computer use lists Finder as allowed; Remove revokes it and shows the empty state');
+ await settings.getByRole('button',{name:'Close',exact:true}).first().click().catch(()=>page.keyboard.press('Escape'));
+ await settings.waitFor({state:'detached',timeout:5000}).catch(()=>page.keyboard.press('Escape'));
+ await send('fixture:app-tool app_list_windows {"app":"com.apple.finder"}');
+ await page.waitForFunction(()=>(document.body.innerText.match(/app_not_granted/g)||[]).length>=1,null,{timeout:15000});
+ report.checks.push('After the revoke, app_list_windows answers app_not_granted');
+ await page.keyboard.press('Meta+,');await settings.waitFor();
+ await settings.getByRole('navigation',{name:'Settings',exact:true}).getByRole('button',{name:'System',exact:true}).click();
+ await section.getByRole('switch',{name:'Enable computer use'}).click();
+ await section.getByText(/Allowed apps/).waitFor({state:'detached',timeout:5000});
+ const prefs=JSON.parse(await fs.readFile(path.join(profile,'preferences.json'),'utf8'));
+ assert.equal(prefs.agentComputerUse,false);
+ report.checks.push('The Enable computer use switch saves agentComputerUse: false and hides the rows below it');
  assert.deepEqual(report.rendererErrors,[]);
  report.passed=true;
 }finally{

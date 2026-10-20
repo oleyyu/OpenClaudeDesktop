@@ -692,3 +692,21 @@ test('list_granted_applications: the session\'s apps, tiers, flags and the coord
   assert.equal(asked.length, 1, 'only request_access showed a card');
   assert.deepEqual(body(await call('list_granted_applications', {}, 'thread-b')).apps, [], 'per session');
 });
+
+test('settings: every session\'s grants by app, and revoking one app from one session or from all (its windows released)', async () => {
+  const { call, body, service } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' }, 'thread-a');
+  await call('request_access', { apps: ['Finder'], reason: 'r' }, 'thread-b');
+  service.grantsFor('thread-b').grant([{ bundleId: 'com.apple.TextEdit', displayName: 'TextEdit' }]);
+  await call('app_screenshot', { app: FINDER }, 'thread-a');
+  assert.deepEqual((await service.call('computer-use:all-grants', {})).result, { apps: [
+    { bundleId: FINDER, displayName: 'Finder', tier: 'full', sessionIds: ['thread-a', 'thread-b'] },
+    { bundleId: 'com.apple.TextEdit', displayName: 'TextEdit', tier: 'full', sessionIds: ['thread-b'] }] });
+  assert.deepEqual((await service.call('computer-use:revoke', { bundleId: FINDER, sessionId: 'thread-b' })).result, { bundleId: FINDER, revoked: ['thread-b'] });
+  assert.ok(service.grantsFor('thread-a').has(FINDER));
+  assert.deepEqual((await service.call('computer-use:revoke', { bundleId: FINDER })).result, { bundleId: FINDER, revoked: ['thread-a'] });
+  assert.equal(service.lastTarget('thread-a'), null, 'the window it was looking at is released');
+  const after = body(await call('app_screenshot', { app: FINDER }, 'thread-a'));
+  assert.equal(after.error.code, 'app_not_granted', 'the agent has to ask again');
+  assert.equal((await service.call('computer-use:revoke', {})).error.code, 'invalid_params');
+});

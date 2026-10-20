@@ -80,4 +80,14 @@ export default {
   "Failed to ask to use apps": "请求使用应用失败",
   "Used your computer": "使用了你的电脑",
   "Couldn’t use your computer": "无法使用你的电脑",
+  // Settings › System › Computer use (src/source-settings-computer-use.jsx).
+  "Enable computer use": "启用电脑使用",
+  "Not available in cloud Code sessions, which don’t run on this computer.": "云端 Code 会话不在这台电脑上运行，无法使用。",
+  "Let DeepSeek see and act in the apps you allow, working in the background.": "让 DeepSeek 在后台查看并操作你允许的应用。",
+  "Allowed apps": "已允许的应用",
+  "Apps a session allowed. Removing one takes it away from every session; DeepSeek has to ask again before it uses it.": "会话中已允许的应用。移除后所有会话都不能再用它，DeepSeek 要再次询问才能使用。",
+  "No apps allowed right now. DeepSeek asks before it uses an app, and what you allow lasts until the app quits.": "目前没有已允许的应用。DeepSeek 使用应用前会先询问你，允许的应用在本应用退出前有效。",
+  "Remove {app} from allowed apps": "从已允许的应用中移除 {app}",
+  "Teach mode": "教学模式",
+  "DeepSeek can guide you step by step through the apps you allow. Not available in this build yet.": "DeepSeek 可以在你允许的应用里一步步引导你。此版本暂不可用。",
 };

@@ -222,3 +222,6 @@ html[data-reduce-motion="true"] .ss-settings-dialog, html[data-reduce-motion="tr
 @media (min-width:768px) {
   .ss-settings-dialog:not([data-usage]) { max-width:max(1024px,min(1280px,calc(100vw - 6rem))); max-height:max(50rem,min(60rem,calc(100dvh - 6rem))); }
 }
+/* c71860c77 xx: a titled group's description sits under its title inside the mb-md header (System › Computer use). */
+.ss-group>h3:has(+ .ss-group-description) { margin-bottom:0; }
+.ss-group-description { margin:2px 0 var(--cds-gap-md,12px); }

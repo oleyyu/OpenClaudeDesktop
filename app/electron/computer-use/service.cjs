@@ -15,6 +15,9 @@
 // a separate helper process, because the native module doesn't expose them yet. app_zoom crops the last app_screenshot
 // with `image` (main.cjs: Electron's nativeImage); it never captures again.
 //
+// `pointer` (main.cjs: cursor.cjs) shows where a click landed: beforeClick() just before the native call — the pointer
+// window must never be under an Accessibility hit test — and clicked({x, y}) in global screen points after it took effect.
+//
 // IPC (main.cjs "desktop:call", actions "computer-use:*", sessionId required) answers
 // {ok: true, result} | {ok: false, error: {code, message}} so the reason code survives the IPC boundary.
 // There is deliberately no IPC action that adds a grant.
@@ -88,8 +91,9 @@ const secureFieldRefusal = (extra = {}) => ({ outcome: "unsupported", reasonCode
 /**
  * selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`).
  * axHelper: ax-helper.cjs (focus, menus). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
+ * pointer: {beforeClick(), clicked({sessionId, bundleId, windowId, x, y})} (cursor.cjs), optional.
  */
-function createComputerUse({ native = createNative(), axHelper = createAxHelper(), image = null, log = console, wait, decide, selfBundleIds = [] } = {}) {
+function createComputerUse({ native = createNative(), axHelper = createAxHelper(), image = null, pointer = null, log = console, wait, decide, selfBundleIds = [] } = {}) {
   const sessions = new Map();   // sessionId → grants
   const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId) }
   const stateFor = (sessionId) => {
@@ -243,8 +247,12 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         bundleId, windowId: wid, count, button, winLocalPt: point, screenPt: windowLocalToScreen(point, shot.bounds),
         grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
       }) : null;
+      try { pointer?.beforeClick?.(); } catch {}
       const result = await execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
         context: { op: "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
+      if (result.outcome === "ok" && point && shot?.bounds) {
+        try { pointer?.clicked?.({ sessionId, bundleId, windowId: wid, ...windowLocalToScreen(point, shot.bounds) }); } catch {}
+      }
       return { ...result, windowId: wid };
     },
     /**
@@ -395,6 +403,35 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         grantedBundleIds: grantsFor(sessionId).allowedBundleIds() }), wait ? { wait } : {});
       return result;
     },
+    /**
+     * Settings › Computer use: every session's granted apps, by app — {apps: [{bundleId, displayName, tier, sessionIds}]}.
+     * Grants live in memory per session, so this is what is granted right now, until the app quits.
+     */
+    allGrants() {
+      const byApp = new Map();
+      for (const [sessionId, grants] of sessions) {
+        for (const app of grants.list()) {
+          const entry = byApp.get(app.bundleId) ?? { bundleId: app.bundleId, displayName: app.displayName, tier: app.tier, sessionIds: [] };
+          entry.displayName ??= app.displayName;
+          entry.sessionIds.push(sessionId);
+          byApp.set(app.bundleId, entry);
+        }
+      }
+      return { apps: [...byApp.values()].sort((a, b) => (a.displayName ?? a.bundleId).localeCompare(b.displayName ?? b.bundleId)) };
+    },
+    /**
+     * Revoke an app (Settings): from one session, or from every session without sessionId. What the session held on
+     * its windows goes too (app_release), so nothing keeps pointing at it; the agent has to request_access again.
+     */
+    revoke({ bundleId, sessionId } = {}) {
+      if (!validBundleId(bundleId)) throw coded("invalid_params", "bundleId is required.");
+      const revoked = [];
+      for (const [id, grants] of sessions) {
+        if (sessionId !== undefined && id !== sessionId) continue;
+        if (grants.revoke(bundleId)) { service.release(id, { bundleId }); revoked.push(id); }
+      }
+      return { bundleId, revoked };
+    },
     /** desktop:call "computer-use:*" → envelope. */
     async call(action, p = {}) {
       try {
@@ -406,6 +443,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
           case "computer-use:capture-window": return { ok: true, result: await service.captureWindow(sessionId, p) };
           case "computer-use:capture-screen": return { ok: true, result: await service.captureScreen(sessionId, p) };
           case "computer-use:app-screenshot": return { ok: true, result: await service.appScreenshot(sessionId, p) };
+          case "computer-use:all-grants": return { ok: true, result: service.allGrants() };
+          case "computer-use:revoke": return { ok: true, result: service.revoke({ bundleId: p.bundleId, ...(typeof sessionId === "string" ? { sessionId } : {}) }) };
           default: throw coded("unknown_action", `Unknown action ${action}.`);
         }
       } catch (error) {

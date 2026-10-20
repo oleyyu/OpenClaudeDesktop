@@ -385,7 +385,8 @@ const agentToolApproval = createAgentToolApproval({ dialog, t: (source, values) 
 // Settings › Code › Preview: "Let DeepSeek use the preview" (unset reads as on).
 // Code › Dynamic workflows: the Workflow tool only while workflows are on and the running core uses OpenClaude Desktop's engine.
 // R4g-mcp MA-2: the built-in visualize tools (agent-tools/visualize.mjs, official GrowthBook 3444158716) are on by D35 (unset reads as on).
-const agentToolGroupEnabled = (group) => group === "workflow" ? (() => { try { return workflowSettings().enabled && currentWorkflowEngine() === "codeDesktop"; } catch { return false; } })() : group === "visualize" ? config?.agentVisualize !== false : group !== "preview" || config?.agentPreview !== false;
+// computer-use: Settings › System › Computer use (config.agentComputerUse; unset reads as on).
+const agentToolGroupEnabled = (group) => group === "computer-use" ? config?.agentComputerUse !== false : group === "workflow" ? (() => { try { return workflowSettings().enabled && currentWorkflowEngine() === "codeDesktop"; } catch { return false; } })() : group === "visualize" ? config?.agentVisualize !== false : group !== "preview" || config?.agentPreview !== false;
 // R4g-mcp MA-4: the MCP App bridge (desktop:call mcp-app:*): the built-in visualize server directly, the core's servers
 // through Codex's mcpServerStatus/list and mcpServer/resource/read (or a core reporting "mcpApps"); other cores: core_unsupported.
 const mcpAppsHost = require("./mcp-apps-host.cjs").createMcpAppsHost({ client: () => client, session: agentToolSession,
@@ -408,8 +409,11 @@ const computerUseImage = {
     dataUrl: `data:image/jpeg;base64,${nativeImage.createFromDataURL(dataUrl).crop(rect).resize({ width, height, quality: "best" }).toJPEG(75).toString("base64")}`,
   }),
 };
+// The pointer at the last click (cursor.cjs), created once the app is ready; hidden before each click's hit test.
+let computerUseCursor = null;
 const computerUse = require("./computer-use/service.cjs").createComputerUse({ selfBundleIds: computerUseSelfBundleIds,
-  axHelper: computerUseAxHelper, image: computerUseImage });
+  axHelper: computerUseAxHelper, image: computerUseImage,
+  pointer: { beforeClick: () => computerUseCursor?.hideNow(), clicked: (point) => { computerUseCursor?.pointAt(point); } } });
 // Which sessions are using the computer (in-use.cjs): the renderer's docked strip and the screen glow (glow.cjs, created
 // once the app is ready) both follow it. Asking for access is not using the computer.
 const { computerUseAction } = require("./computer-use/actions.mjs");
@@ -423,7 +427,7 @@ const computerUsePreview = require("./computer-use/preview.cjs").createPreview({
 // The original puts the glow on the holder's chosen display, else the main window's; here, the focused (else the
 // first visible) app window's display.
 function computerUseGlowDisplay() {
-  const windows = BrowserWindow.getAllWindows().filter((window) => !window.isDestroyed() && !computerUseGlow?.owns(window));
+  const windows = BrowserWindow.getAllWindows().filter((window) => !window.isDestroyed() && !computerUseGlow?.owns(window) && !computerUseCursor?.owns(window));
   const window = windows.find((candidate) => candidate.isFocused()) ?? windows.find((candidate) => candidate.isVisible());
   return window ? screen.getDisplayMatching(window.getBounds()).id : null;
 }
@@ -2091,6 +2095,7 @@ app.whenReady().then(async () => {
   i18n = await import("./i18n/index.mjs");
   computerUseGlow = require("./computer-use/glow.cjs").createGlow({ BrowserWindow, screen, app, fs: fs.promises, tmpdir: () => os.tmpdir(),
     reduceMotion: () => config?.motion === "reduce" });
+  computerUseCursor = require("./computer-use/cursor.cjs").createCursor({ BrowserWindow, app });
   const { validateBypassRequest, nativeCollaborationMode, backgroundTurnPermission } = await import("./permission-policy.mjs");
   const { applyCodexPermissions, effectiveProfile, customProfiles, codexWorkflowArgs } = await import("./codex-permissions.mjs");
   // Bypass across a user core switch (bypass-carry.mjs): a one-shot token from the select, bound by that switch's
@@ -2186,7 +2191,7 @@ app.whenReady().then(async () => {
   // background with the resolved appearance (main and pane windows alike).
   nativeTheme.on("updated", () => {
     for (const window of BrowserWindow.getAllWindows())
-      if (!window.isDestroyed() && !computerUseGlow?.owns(window)) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
+      if (!window.isDestroyed() && !computerUseGlow?.owns(window) && !computerUseCursor?.owns(window)) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
   });
   if (!fs.existsSync(config.cwd)) config.cwd = workspace;
   approvedWorkspaceRoots.add(config.cwd);
@@ -2816,7 +2821,9 @@ app.whenReady().then(async () => {
       return computerUsePreview.subscribe(p.sessionId, p.on === true);
     }
     if (typeof action === "string" && action.startsWith("computer-use:")) {
-      if (action !== "computer-use:probe" && (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId))) throw new Error("Unknown session.");
+      // Settings › Computer use reads and revokes across sessions: no session of its own (a revoke may still name one).
+      const global = action === "computer-use:probe" || action === "computer-use:all-grants" || (action === "computer-use:revoke" && p?.sessionId === undefined);
+      if (!global && (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId))) throw new Error("Unknown session.");
       return computerUse.call(action, p);
     }
     // turn-plan: cccc2cf0a rT / iT → LocalSessions.setAvailableNextActions (what wrap_up may offer as app actions).
@@ -3160,10 +3167,12 @@ app.whenReady().then(async () => {
         if (typeof p.agentPreview === "boolean") config.agentPreview = p.agentPreview;
         // R4g-mcp review fix: Settings › agent tools › Visuals (the visualize group, agentToolGroupEnabled; unset reads as on).
         if (typeof p.agentVisualize === "boolean") config.agentVisualize = p.agentVisualize;
+        // Settings › System › Computer use: the computer-use tools come and go with it (agentToolGroupEnabled).
+        if (typeof p.agentComputerUse === "boolean") config.agentComputerUse = p.agentComputerUse;
         // The Preview pane's "Open links in preview" (src/preview-links-model.mjs), for every window of the profile.
         if (typeof p.previewLinks === "boolean") config.previewLinks = p.previewLinks;
         if (typeof p.previewLinksChooserSeen === "boolean") config.previewLinksChooserSeen = p.previewLinksChooserSeen;
-        if (["dynamicWorkflows","workflowEngines","workflowSizeGuideline"].some((key) => key in p) || typeof p.agentPreview === "boolean" || typeof p.agentVisualize === "boolean") {
+        if (["dynamicWorkflows","workflowEngines","workflowSizeGuideline"].some((key) => key in p) || typeof p.agentComputerUse === "boolean" || typeof p.agentPreview === "boolean" || typeof p.agentVisualize === "boolean") {
           agentTools.notifyListChanged();
           // A bridge whose agent keeps the tool list it read when the session opened (ZCode, the ACP agents) reopens
           // its sessions with the new list: an idle one before its next turn, a busy one once its turn ends.
@@ -4197,7 +4206,7 @@ installShutdownHandler(app, {
   guard: (event) => {
     if (fileAutosaveQuitGate.handle(event)) return true;
     for (const window of BrowserWindow.getAllWindows()) {
-      if (!window.isDestroyed() && !computerUseGlow?.owns(window) && !confirmFileEdits(window)) { event.preventDefault(); return true; }
+      if (!window.isDestroyed() && !computerUseGlow?.owns(window) && !computerUseCursor?.owns(window) && !confirmFileEdits(window)) { event.preventDefault(); return true; }
     }
     return quitGuard.handle(event);
   },
@@ -4205,6 +4214,7 @@ installShutdownHandler(app, {
   stop: async () => {
     customCommands.dispose();
     computerUseGlow?.dispose();
+    computerUseCursor?.dispose();
     computerUsePreview.dispose();
     const terminalsStopped = terminalService.dispose();
     desktopSettings?.dispose();
