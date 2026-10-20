@@ -22,7 +22,8 @@ public struct Params {
     public func string(_ key: String) -> String? { raw[key] as? String }
 
     public func double(_ key: String) -> Double? {
-        guard let n = raw[key] as? NSNumber, !(raw[key] is Bool) else { return nil }
+        // JSON true/false are CFBoolean; `is Bool` would also match the numbers 0 and 1 (NSNumber bridging).
+        guard let n = raw[key] as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID() else { return nil }
         let value = n.doubleValue
         return value.isFinite ? value : nil
     }

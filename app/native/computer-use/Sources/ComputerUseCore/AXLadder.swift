@@ -24,6 +24,10 @@ public enum AXLadder {
     ]
     /// Pressing these opens a menu: that would front the app or take the keyboard (live schema: refused).
     static let menuPresentingRoles: Set<String> = ["AXPopUpButton", "AXMenuButton"]
+    /// Roles whose click is "select this row / cell" and may fall to a coordinate click when nothing answers AXPress
+    /// (no_press_action). Not every actionable role: a click on a text field without AXPress focuses it — or, on a
+    /// selected Finder row's name, starts a rename — which is the type path (no_focused_text), never a fallback click.
+    static let noPressFallbackRoles: Set<String> = ["AXRow", "AXCell"]
     /// The climb stops here: pressing a window or the app is never the intent.
     static let climbStops: Set<String> = ["AXWindow", "AXSheet", "AXApplication", "AXDrawer"]
 
@@ -229,7 +233,17 @@ public enum AXLadder {
         let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
                                        "title": title(hit) ?? NSNull(), "descentPath": path]
         guard let target = climb.first(where: { actions($0).contains(kAXPressAction as String) }) else {
-            return unsupported("canvas", describe)
+            // A row or cell (a Finder list AXRow / AXCell) with nothing pressable on it or above is no_press_action,
+            // which the main process may let fall to a coordinate click. Anything else — plain text, a container, a
+            // text field — stays `canvas`: never a blind click.
+            guard let startRole = role(start), noPressFallbackRoles.contains(startRole) else { return unsupported("canvas", describe) }
+            if (value(start, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", describe) }
+            if request.count != 1 { return unsupported("multi_click_needs_raw_input", describe) }
+            var result = describe
+            result["noPressRole"] = startRole
+            // A dry run says which reason the real call would give; the main process still blocks it (dry_run).
+            if request.dryRun { result["outcome"] = "dryRun"; result["reasonCode"] = "no_press_action"; return result }
+            return unsupported("no_press_action", result)
         }
         var result = describe
         let targetRole = role(target) ?? ""
@@ -254,6 +268,56 @@ public enum AXLadder {
         result["reasonCode"] = "ax_press_failed"
         result["axError"] = axErrorName(error)
         return result
+    }
+}
+
+extension AXLadder {
+    /// Before a raw event at `screenPt`: the element there must belong to `pid` and to window `windowId` (not another
+    /// window on top), and a sheet on the window must contain it — the same ownership checks click() makes, re-run at
+    /// delivery time because the raw rung is a second call.
+    static func pointOwnerRefusal(pid: pid_t, windowId: UInt32, screenPt: CGPoint) -> (reason: String, extra: [String: Any])? {
+        _ = setUp
+        guard AXIsProcessTrusted() else { return ("ax_untrusted_cannot_verify", [:]) }
+        guard let window = windowElement(pid: pid, windowId: windowId) else { return ("window_off_space", [:]) }
+        var found: AXUIElement?
+        // App-scoped, as click() hit-tests: the event goes to this pid only (CGEventPostToPid), so what matters is which
+        // of ITS elements and windows is at the point.
+        let error = AXUIElementCopyElementAtPosition(AXUIElementCreateApplication(pid), Float(screenPt.x), Float(screenPt.y), &found)
+        guard error == .success, let hit = found, let hitPid = self.pid(hit) else {
+            return ("ax_untrusted_cannot_verify", ["axError": axErrorName(error)])
+        }
+        if hitPid != pid { return ("foreign_pid", ["foreignPid": Int(hitPid)]) }
+        return ownershipRefusal(hit, window: window)
+    }
+
+    /// `element` must sit in `window` (not another window of the app) and inside a sheet when the window has one.
+    static func ownershipRefusal(_ element: AXUIElement, window: AXUIElement) -> (reason: String, extra: [String: Any])? {
+        let chain = ancestry(element)
+        guard let windowIndex = chain.firstIndex(where: { role($0) == "AXWindow" }), CFEqual(chain[windowIndex], window) else {
+            return ("anotherWindowIsOnTopAtThePressPoint", ["descentPath": chain.compactMap(role)])
+        }
+        let sheets = children(window).filter { role($0) == "AXSheet" }
+        if !sheets.isEmpty, !chain.prefix(windowIndex).contains(where: { node in sheets.contains { CFEqual($0, node) } }) {
+            return ("sheet_or_modal_on_target_window", ["descentPath": chain.compactMap(role)])
+        }
+        return nil
+    }
+}
+
+extension AXLadder {
+    /// The selectable element a click at `screenPt` means (the hit or one of four parents with an actionable role and
+    /// an AXSelected value, e.g. a Finder list AXRow), for reading the click back. Nil when there is none.
+    static func selectable(pid: pid_t, screenPt: CGPoint) -> AXUIElement? {
+        var found: AXUIElement?
+        guard AXUIElementCopyElementAtPosition(AXUIElementCreateApplication(pid), Float(screenPt.x), Float(screenPt.y), &found) == .success,
+              let hit = found else { return nil }
+        return ancestry(hit, limit: climbLevels + 1).first { node in
+            (role(node).map(noPressFallbackRoles.contains) ?? false) && selected(node) != nil
+        }
+    }
+
+    static func selected(_ element: AXUIElement) -> Bool? {
+        (value(element, kAXSelectedAttribute) as? NSNumber)?.boolValue
     }
 }
 

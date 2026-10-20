@@ -7,17 +7,35 @@
 // element under the point after climbing at most four parents; anything else is refused with a reason code, never
 // clicked blindly (executor.cjs + reason-policy.cjs, fail-closed).
 //
+// M3: app_type on the AX rung (AXValue written and read back) with the raw rung behind the reason policy (Unicode
+// key events of ≤ 20 UTF-16 units, read back again), and app_key as keystrokes; both natively gated (secure input,
+// user input, foreground app, screen lock). System combos (quit / switch / lock) are refused this round.
+//
 // IPC (main.cjs "desktop:call", actions "computer-use:*", sessionId required) answers
 // {ok: true, result} | {ok: false, error: {code, message}} so the reason code survives the IPC boundary.
 // There is deliberately no IPC action that adds a grant.
 const { createNative, coded } = require("./native.cjs");
 const { createGrants, validBundleId } = require("./grants.cjs");
-const { fit, scaled, frameToWindowLocal, inFrame } = require("./budget.cjs");
+const { fit, scaled, frameToWindowLocal, windowLocalToScreen, inFrame } = require("./budget.cjs");
 const { actionGate, checkTier } = require("./guards.cjs");
-const { execute } = require("./executor.cjs");
+const { execute, deliver } = require("./executor.cjs");
 
 // How many summary lines app_screenshot shows inline; app_ax_find searches the rest.
 const SUMMARY_LINES = 40;
+// app_type: at most this many UTF-16 units per call (≈ 3 ms per 20-unit event on the raw rung).
+const MAX_TYPE_UNITS = 10000;
+// System-level combos (quit, app switch, lock, force quit, Spotlight, Mission Control): not this round (M3 brief).
+const SYSTEM_COMBOS = new Set(["cmd+q", "cmd+tab", "cmd+shift+tab", "cmd+`", "cmd+ctrl+q", "cmd+option+escape", "cmd+space",
+  "ctrl+space", "ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right", "cmd+option+d", "cmd+h", "cmd+option+h", "cmd+shift+q"]);
+const MODIFIER_ORDER = ["cmd", "ctrl", "option", "shift", "fn"];
+const MODIFIER_ALIASES = { command: "cmd", meta: "cmd", control: "ctrl", alt: "option", esc: "escape" };
+
+/** "Command+Shift+Q" → "cmd+shift+q" with modifiers in a fixed order, for the system-combo check only. */
+function normalizeCombo(combo) {
+  const parts = combo.toLowerCase().split("+").map((p) => MODIFIER_ALIASES[p.trim()] ?? p.trim());
+  const key = parts.pop();
+  return [...MODIFIER_ORDER.filter((m) => parts.includes(m)), key].join("+");
+}
 
 function checkScale(scale) {
   if (scale === undefined) return undefined;
@@ -41,7 +59,7 @@ function summaryText(shot, limit = SUMMARY_LINES) {
 }
 
 /** selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`). */
-function createComputerUse({ native = createNative(), log = console, wait, selfBundleIds = [] } = {}) {
+function createComputerUse({ native = createNative(), log = console, wait, decide, selfBundleIds = [] } = {}) {
   const sessions = new Map();   // sessionId → grants
   const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId), points: Map("bundle:window" → winLocalPt) }
   const stateFor = (sessionId) => {
@@ -146,9 +164,74 @@ function createComputerUse({ native = createNative(), log = console, wait, selfB
       }
       const gate = actionGate(await native.call("probe"), "left_click");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
-      const result = await execute({ ax: () => native.call("axClick", params), focusedPointer: target === "focused", log, ...(wait ? { wait } : {}) });
+      // The raw rung (reason-policy FALLBACK only): a coordinate click at the same point, both forms from budget.cjs.
+      const raw = point && shot ? () => native.call("rawClick", {
+        bundleId, windowId: wid, count, button, winLocalPt: point, screenPt: windowLocalToScreen(point, shot.bounds),
+        grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
+      }) : null;
+      const result = await execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
+        context: { op: "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
       if (result.outcome === "ok" && point) state.points.set(key, point);
       return { ...result, windowId: wid };
+    },
+    /**
+     * app_type: AX rung (AXValue written and read back), then — only for a reason in the policy's FALLBACK — the raw rung.
+     * Addressing: element_index or coordinate (of the last app_screenshot) or target "focused" (the default).
+     * Partial delivery comes back ineffective with deliveredPrefixChars (UTF-16 units of `text` the field now holds).
+     */
+    async appType(sessionId, { bundleId, windowId, text, mode = "insert", coordinate, element_index: elementIndex, target } = {}) {
+      granted(sessionId, bundleId);
+      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "type");
+      if (typeof text !== "string" || !text) throw coded("invalid_params", "text must be a non-empty string.");
+      if (text.length > MAX_TYPE_UNITS) throw coded("invalid_params", `text is limited to ${MAX_TYPE_UNITS} UTF-16 units per call.`);
+      if (mode !== "insert" && mode !== "replace") throw coded("invalid_params", "mode must be \"insert\" or \"replace\".");
+      const given = [coordinate !== undefined, elementIndex !== undefined, target !== undefined].filter(Boolean).length;
+      if (given > 1) throw coded("invalid_params", "coordinate, element_index and target are mutually exclusive.");
+      if (target !== undefined && target !== "focused") throw coded("invalid_params", "target must be \"focused\".");
+      const state = stateFor(sessionId);
+      const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
+      if (wid === undefined) throw coded("screenshot_required", `Take an app_screenshot of ${bundleId} first.`);
+      const shot = state.shots.get(`${bundleId}:${wid}`);
+      const params = { bundleId, windowId: wid, text, mode };
+      if (elementIndex !== undefined || coordinate !== undefined) {
+        if (!shot) throw coded("screenshot_required", `Take an app_screenshot of ${bundleId} first: coordinates and element_index refer to it.`);
+        if (elementIndex !== undefined) {
+          if (!Number.isInteger(elementIndex) || elementIndex < 0 || elementIndex >= (shot.elements?.length ?? 0)) {
+            throw coded("invalid_params", `element_index must be one of the [N] of the last app_screenshot (0–${(shot.elements?.length ?? 0) - 1}).`);
+          }
+          params.elementIndex = elementIndex;
+          params.expectRole = shot.elements[elementIndex].role;
+        } else {
+          if (!Array.isArray(coordinate) || coordinate.length !== 2 || !inFrame(coordinate, shot)) {
+            throw coded("invalid_params", `coordinate must be [x, y] inside the screenshot's ${shot.frameWidth}×${shot.frameHeight} frame.`);
+          }
+          params.winLocalPt = frameToWindowLocal(coordinate, shot);
+        }
+      } else {
+        params.focused = true;
+      }
+      const gate = actionGate(await native.call("probe"), "type");
+      if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
+      const raw = (axResult) => native.call("rawType", { ...params, axReason: axResult?.reasonCode, grantedBundleIds: grantsFor(sessionId).allowedBundleIds() });
+      const result = await execute({ ax: () => native.call("axType", params), raw, log,
+        context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
+      return { ...result, windowId: wid };
+    },
+    /** app_key: one combo ("cmd+a", "return", "shift+tab"), `repeat` times, as keystrokes; there is no AX rung. */
+    async appKey(sessionId, { bundleId, windowId, combo, repeat = 1 } = {}) {
+      granted(sessionId, bundleId);
+      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "key");
+      if (typeof combo !== "string" || !combo.trim()) throw coded("invalid_params", "combo must be a non-empty string.");
+      if (!Number.isInteger(repeat) || repeat < 1 || repeat > 100) throw coded("invalid_params", "repeat must be an integer 1–100.");
+      if (SYSTEM_COMBOS.has(normalizeCombo(combo))) {
+        return { outcome: "unsupported", reasonCode: "system_key_combo_refused", path: "unavailable", blocked: true };
+      }
+      const wid = checkId(windowId, "windowId") ?? stateFor(sessionId).last.get(bundleId);
+      const gate = actionGate(await native.call("probe"), "key");
+      if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
+      const result = await deliver(() => native.call("rawKey", { bundleId, ...(wid !== undefined ? { windowId: wid } : {}), combo, repeat,
+        grantedBundleIds: grantsFor(sessionId).allowedBundleIds() }), wait ? { wait } : {});
+      return result;
     },
     /** desktop:call "computer-use:*" → envelope. */
     async call(action, p = {}) {
@@ -180,4 +263,4 @@ function checkBudget(shot, scale = 1) {
   return shot;
 }
 
-module.exports = { createComputerUse, checkBudget, summaryText };
+module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS };
