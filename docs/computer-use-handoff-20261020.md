@@ -9,11 +9,40 @@
 | `62cf487` | 24 个官方名字全部注册；没有能力的返回 `requires_raw_path` / `not_supported_in_build` / `permission_denied` |
 | `503f29a` | UI：设置 › System › Computer use（开关、已允许应用 + 移除、Teach mode 入口）、点击位置的假光标 |
 
+## 续（同日）：app_click 的右键与多击改走 Accessibility action
+
+实测结论：后台操作 Finder 点击、TextEdit 写入、AX 滚动都可行，走的是 Accessibility action；事件路径只在自建 fixture 上验证过、系统应用会忽略。所以能用 AX 表达的点击动作都不走事件路径。三个动作各一个提交：
+
+| 提交 | 动作 | 做法 | 都不行时 |
+|---|---|---|---|
+| `c8df69f` | 右键（`button:"right"`） | 命中元素执行 `AXShowMenu`；不实现就向父级上溯最多两层再试（遇 AXWindow / AXSheet 停） | `no_menu_action`（unsupported，block，不换别的路径） |
+| `e7b46fd` | 双击（`count:2`） | 命中元素是 AXStaticText / AXTextField / **AXTextArea** → 写 `AXSelectedTextRange` 选中点击处的词；否则对可按元素 `AXPress` 两次，间隔 80 ms | `no_press_action` |
+| `2b070e2` | 三击（`count:3`） | 同样写 `AXSelectedTextRange`，扩到行边界（含换行符，即文本视图三击的选区）；非文本元素不按 | `no_press_action` |
+
+- **右键的回读**：执行后最多等 8 × 40 ms，看到「该 pid 新出现的弹出菜单层窗口（CGWindowList，`kCGPopUpMenuWindowLevel`）」或「目标元素到其窗口的各级祖先、以及 app 下新出现的 AXMenu」任一即 ok；读得到 AXMenu 时带回 `menuItems`（最多 40 个标题）。都没有 → `ineffective` + `menu_not_shown`。真机：Finder 列表里文件名 AXTextField 自己就有 AXShowMenu，但动作在 Finder 的菜单追踪里同步等待，0.25 s 后返回 `cannotComplete`，菜单其实已经弹出，AXMenu 挂在三层之上的 AXOutline 下 —— 这就是回读要走到窗口的原因。
+- **关菜单**：`app_menu close` 原来只取消菜单栏的菜单；helper 的 `menuClose` 现在也遍历窗口（上限 4000 个节点）对弹出的上下文菜单 AXCancel。右键的描述里让模型用它收尾。
+- **选词 / 选行**：索引来自 `AXRangeForPosition`（点击点处的字符）；`target:"focused"` 没有点，用当前插入点（`AXSelectedTextRange.location`）。词边界用 Foundation 的 `.byWords`（ICU，中文也按词切）；点在词外时选该处那一个字符（文本视图双击空白也是选中空白）。写入后读回 `AXSelectedTextRange`，不一致即 `no_press_action`（附 `selectionNotReadBack` / `selectionNotSettable` / `noTextIndex` 说明是哪一步）。成功结果带 `selectedRange`、`selectedText`。
+- **与任务说明的两处出入**：① 选词角色加了 **AXTextArea**：TextEdit 文档正文是 AXTextArea，只认 AXStaticText / AXTextField 就过不了验收 2；② 词的位置取**点击点**而不是插入点，只有 focused 才用插入点：双击的语义是「点到哪个词选哪个」，用插入点会选中光标所在的另一个词。
+- **路径**：右键、双击、三击都只有 AX 梯级。service 只给「左键单击」配 raw 梯级（`button === "left" && count === 1`），policy 即使返回 fallback 也不会投到 rawClick（单测钉住）。`multi_click_needs_raw_input` 不再产生，留在 PENDING_RAW 只为旧结果不被当成未分类。
+- **工具层**：app_click 的 handler 不再在入口拦截 button / count，原样传给 service；描述只讲 Accessibility action（AXShowMenu / AXSelectedTextRange / 两次 press），没有事件路径的说法。`RAW_PATH_STEP` 改成「app_click with count 1 on an element_index」。app_drag 照旧 `requires_raw_path`。
+- **没动**：RawInput.swift、Dispatcher.swift、EventFactory.swift、harness/、`app/public/build-info.json`。Bridge.swift 只改了 rawClick 上的一行注释。
+
+### 本段验收记录
+
+1. **Finder 右键文件弹出上下文菜单**：真机通过。Finder 后台、列表视图，对 `beta.txt` 的 element_index 右键 → `ok`、`path: ax`、`axOp: AXShowMenu`，`menuItems` 含 Open / Get Info / Compress “beta.txt” 等；截图可见该行焦点环与菜单；`app_menu close` → `closed: 1`。
+2. **TextEdit 双击选词**：真机通过。点击点下的词被选中，`selectedRange` 与该词的 UTF-16 偏移、长度完全一致（截图：line14 的 beta 高亮）。
+3. **TextEdit 三击选行**：真机通过。整行加换行符被选中，偏移、长度一致（截图：line09 整行高亮）。
+4. **不支持 AXShowMenu 的控件**：真机通过。Finder 工具栏的视图切换 AXRadioButton（本身和两层父级都没有 AXShowMenu）→ `unsupported` + `no_menu_action` + `blocked`，`app_menu close` 为 0（没有菜单被打开）。单测另钉住工具层返回 `ok:false` + next_step，且不调 rawClick。
+5. **app_click `button:"right"` 走正常路径**：通过（单测）。native 收到 `button: "right", count: 1`，结果里没有 `requires_raw_path`。
+6. **count 2 / 3 走正常路径，drag 仍是 `requires_raw_path`**：通过（单测）。native 收到对应的 count；app_drag 与 batch 的 drag 步仍返回 `requires_raw_path`；policy 给 fallback 时右键 / 多击也不会走 raw。
+7. **npm test**：5713 条，5689 过 / 23 跳过（CU_LIVE 等实机测试）/ 1 失败 —— 失败的是既有的 `view-tabs-manifest`（见下文本轮验收第 6 条，HEAD 上同样失败），与本段无关。新增：`computer-use-ax-click` +2、`computer-use-agent-tools` +5（改写 2）、`computer-use-click-live`（4 条实机，`CU_LIVE=1 node --test --test-concurrency=1 tests/computer-use-click-live.test.mjs`，覆盖 1–4；TextEdit 已在运行时跳过，当前 Space 放不下 Finder 窗口时会把 Finder 拉到前台、测完切回原应用）。
+8. **未做实际打包验证**；helper 改了要重新 `npm run build:native`。
+
 ## 工具可用数：24 / 24 已注册，13 个返回真实结果
 
 | 状态 | 工具 |
 |---|---|
-| 真实结果（13） | request_access、app_list_windows、app_screenshot、app_ax_find、app_click（仅左键单击）、app_type、app_release、**app_focus、app_menu、app_zoom、list_apps、app_batch、list_granted_applications** |
+| 真实结果（13） | request_access、app_list_windows、app_screenshot、app_ax_find、app_click（左键单击、右键、双击、三击，全部是 Accessibility action）、app_type、app_release、**app_focus、app_menu、app_zoom、list_apps、app_batch、list_granted_applications** |
 | `requires_raw_path`（4） | app_key、app_scroll、app_drag、app_bring_to_current_space |
 | `not_supported_in_build`（5） | request_full_control、release_full_control、request_teach_access、teach_step、teach_batch（结果带 `build` 字段说明本分支的范围） |
 | `permission_denied` → request_access（2） | read_clipboard、write_clipboard：没有 clipboardRead / clipboardWrite 授权时返回它，next_step 指向 `request_access` 带对应 flag；**有授权后**返回 `not_supported_in_build`（官方把剪贴板算全屏控制，本分支没有） |
@@ -24,7 +53,7 @@
 
 ## 本轮的行为改动
 
-- **app_click**：`button:"right"` 或 `count:2/3` 在 handler 入口返回 `requires_raw_path`（参数保留在 schema，描述写明"当前构建只支持左键单击"），删了"never sends a synthetic mouse click"。三个寻址参数全空 → `invalid_params`；service 里"重放上一次点位"的分支与 `state.points` 一起删了。
+- **app_click**（已被上面「续」取代）：`button:"right"` 或 `count:2/3` 在 handler 入口返回 `requires_raw_path`（参数保留在 schema，描述写明"当前构建只支持左键单击"），删了"never sends a synthetic mouse click"。三个寻址参数全空 → `invalid_params`；service 里"重放上一次点位"的分支与 `state.points` 一起删了。
 - **app_type**：写入前读 role。element_index 读截图摘要的 role/subrole，coordinate 取摘要里包含该点的最小元素，是 `AXSecureTextField` 就直接 `no_text_target` + `secureTextField: true`，native 零调用（不全选）。`target:"focused"` 时 JS 看不到 role：native 的目标解析在全选之前就把密码框拒成 `secure_input_active`（TextInput.swift:95，没改），service 再探一次 probe，没开 secure input 就改写成 `no_text_target`；真的有 secure input（别的应用的密码框）仍是 `secure_input_active`。live 测试 `computer-use-type-live` 验收 2 跟着改了断言（CU_LIVE 才跑，本轮没跑）。
 - **app_focus**：AXMain + AXFocused，不 AXRaise、不激活；目标应用在前台时拒绝（`app_is_frontmost`，照官方），最小化窗口 `window_minimized`。成功后该窗口成为这个应用的默认窗口（和 app_screenshot 一样），所以随后的 `target:"focused"` 有窗口可指。官方 app_focus 还收 coordinate / element_index（聚焦某个元素），本轮按任务只做窗口。
 - **app_menu**：`path` / `list` / `close` 三选一。path 走 AXMenuBar 逐级按标题匹配（不分大小写、忽略尾部 … / ...），最后一项 AXPress：命令项执行；菜单标题打开菜单并返回子项。`list`（true / null / 标题 / 路径）只读。`close: true` 对打开的菜单 AXCancel（Escape 的等价物，任务验收要"Escape 关闭"，而 app_key 没开）。匹配失败 `menu_item_not_found` + `closestMatch`（编辑距离）+ `available`；disabled `menu_item_disabled`。列举在任何级别都行，按菜单要 full 级别。
@@ -57,9 +86,9 @@ native 模块没有暴露窗口焦点、菜单栏和应用枚举，而本轮不�
 
 | 项 | 依赖 | M4 后怎么补 |
 |---|---|---|
-| app_click 右键 / 双击 / 三击 | raw 鼠标事件投递（Finder 丢弃 CGEventPostToPid 鼠标事件） | 实验一通过后去掉 handler 入口的拦截，service 已有 rawClick 梯级；`multi_click_needs_raw_input` 进 FALLBACK |
+| ~~app_click 右键 / 双击 / 三击~~ | 已完成，不再依赖 M4：全部走 Accessibility action（见「续」） | — |
 | app_scroll | 同上；AX 只能设滚动条值 | service 加 `appScroll`（先 AX 设 AXValue，再认证事件），占位 handler 换成真实的 |
-| app_drag | 同上，需途经点采样 | `appDrag` + path 2–20 点 |
+| app_drag | **raw-only，仍待评估**：Accessibility 没有通用的拖拽表达（没有 drag action，AXPosition 只对窗口等少数元素可写），所以保留 `requires_raw_path`；需要 raw 鼠标事件 + 途经点采样 | 实验一通过后再评估：`appDrag` + path 2–20 点 |
 | app_key | 后台 key window 伪造（实验二），`service.appKey` 已有但未验收 | 实验二定下 options 后接 `service.appKey`；batch 的 key 步自动生效 |
 | app_bring_to_current_space | 跨 Space 移窗 / 取消最小化（私有 SkyLight 调用） | native 新方法，handler 照 app_focus 的模式 |
 | request/release_full_control、read/write_clipboard | 全屏控制（显示器锁、全屏截图坐标），本分支范围外 | 需要单独的全屏控制设计；剪贴板在那之后按授权 flag 放开 |
@@ -70,8 +99,13 @@ native 模块没有暴露窗口焦点、菜单栏和应用枚举，而本轮不�
 
 ## 已知限制
 
-- **Finder 这类系统应用忽略投递的鼠标事件。** 2026-10-19 实测：Finder 列表行没有 AXPress，`CGEventPostToPid` 的鼠标事件在各种字段组合下都被丢弃（AXSelected 读回不变），真实 HID 点击才生效。所以 `no_press_action` 留在 PLANNED，工具层又加了 `axOnly`；app_click 的右键 / 多击在 handler 入口就返回 `requires_raw_path`。
+- **Finder 这类系统应用忽略投递的鼠标事件。** 2026-10-19 实测：Finder 列表行没有 AXPress，`CGEventPostToPid` 的鼠标事件在各种字段组合下都被丢弃（AXSelected 读回不变），真实 HID 点击才生效。所以 `no_press_action` 留在 PLANNED，工具层又加了 `axOnly`。（右键 / 多击后来改走 Accessibility action，见「续」，不再受这条限制。）
 - **raw 路径目前只在 fixture 上验证过。** `no_focused_text` / `text_not_writable` 两个 fallback 只在 M3 文本 fixture（`tests/fixtures/cu-text-fixture`）上见过；真实应用里的 raw 键入还没有验收记录。
+- **右键弹出的是真实菜单。** AXShowMenu 打开的上下文菜单显示在屏幕上、盖在用户当前前台应用之上，直到被关掉（`app_menu close`，或用户点别处）；模型目前**没有工具选菜单项**（app_menu 只走菜单栏，截图只截目标窗口，菜单不在里面），能做的是读 `menuItems` 后关掉、改用 app_menu 执行同名命令。按菜单项是后续工作。
+- **Finder 里 AXShowMenu 会占用约 0.25 s**（动作在菜单追踪里同步等待到消息超时，返回 `cannotComplete`，由回读判定成功）。
+- **双击 Finder 文件不会打开它。** Finder 列表行的文件名是 AXTextField（不可设选区），行 / 单元格没有 AXPress → `no_press_action`。打开文件要用 app_menu（File ▸ Open）。
+- **三击选的是逻辑行**（到换行符为止，自动折行的长段落整段选中），与 TextEdit 自己的三击一致，不是视觉上的一行。
+- **摘要会漏掉很高的文本区。** `AXLadder.summary` 只收「中心在窗口内或可见面积 ≥ 一半」的元素；TextEdit 里一篇超过约两屏高的文档，其 AXTextArea 两条都不满足，不会出现在 [N] 列表里（live 测试因此只写 20 行）。没改，本轮范围外。
 - 授权在内存里，应用重启后要重新 request_access（真机上重启后同一会话会再弹一次卡）。
 - `app_list_windows` 会列出辅助窗口：Finder 真机返回主窗口 133 之外还有 4 个 1470×33 的菜单栏层窗口和一个 64×64 小面板，`is_main` / `is_minimized` / `is_off_space` 为 null。官方工具只列了主窗口。过滤要改 native，本轮没动。
 - 窗口标题可能陈旧：Finder 133 标题报 `Desktop — Local`，画面是 Downloads。
