@@ -8,6 +8,37 @@ final class DragTests: XCTestCase {
                             windowLocal: CGPoint(x: i * 10, y: 20))
     }
 
+    func testSamplingUsesFullResolutionDistanceAndPreservesCorners() {
+        let first = targets[0]
+        let corner = first.moved(screenPoint: CGPoint(x: 100, y: 350), windowLocal: CGPoint(x: 0, y: 170))
+        let end = first.moved(screenPoint: CGPoint(x: 250, y: 350), windowLocal: CGPoint(x: 150, y: 170))
+        let samples = Dispatcher.dragSamples(vertices: [first, first, corner, corner, end], pixelScale: 2)
+        XCTAssertEqual(samples.count, 61) // 300 screen points × 2 / 10 = 60 drag events
+        XCTAssertEqual(samples[30].screenPoint, corner.screenPoint)
+        XCTAssertEqual(samples.last?.screenPoint, end.screenPoint)
+        for point in samples {
+            XCTAssertEqual(point.screenPoint.x - point.windowLocal.x, 100, accuracy: 0.0001)
+            XCTAssertEqual(point.screenPoint.y - point.windowLocal.y, 180, accuracy: 0.0001)
+        }
+        XCTAssertEqual(Dispatcher.dragSamples(vertices: [first, targets[1]], pixelScale: 1).count, 13)
+        XCTAssertTrue(Dispatcher.dragSamples(vertices: [first, first], pixelScale: 2).isEmpty)
+        let far = first.moved(screenPoint: CGPoint(x: 10000, y: 200), windowLocal: CGPoint(x: 9900, y: 20))
+        XCTAssertEqual(Dispatcher.dragSamples(vertices: [first, far], pixelScale: 2).count, 61)
+    }
+
+    func testShortWaypointDetoursAreNotSkipped() {
+        let first = targets[0]
+        var vertices: [EventFactory.Target] = [first]
+        for i in 1...20 {
+            let x = CGFloat(i), y = CGFloat(i % 2)
+            vertices.append(first.moved(screenPoint: CGPoint(x: 100 + x, y: 200 + y),
+                                        windowLocal: CGPoint(x: x, y: 20 + y)))
+        }
+        let samples = Dispatcher.dragSamples(vertices: vertices, pixelScale: 1)
+        XCTAssertEqual(samples.count, 21)
+        XCTAssertEqual(samples.map(\.screenPoint), vertices.map(\.screenPoint))
+    }
+
     func testPreparePressReleaseSettleAndRouting() {
         var events: [CGEventType] = [], pauses: [useconds_t] = []
         let result = Dispatcher.dragSequence(targets: targets, buttonName: "left", refusal: { nil }, now: { 0 },
@@ -56,12 +87,17 @@ final class DragTests: XCTestCase {
 
     func testFactorySetsPidClickStateAndWindowFieldsForEveryDragEvent() throws {
         let source = try EventFactory.source().get()
+        typealias GetLocation = @convention(c) (CGEvent) -> CGPoint
+        let symbol = try XCTUnwrap(dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGEventGetWindowLocation"))
+        let local = unsafeBitCast(symbol, to: GetLocation.self)
         for kind: CGEventType in [.mouseMoved, .leftMouseDown, .leftMouseDragged, .leftMouseUp] {
             let event = try XCTUnwrap(EventFactory.mouse(source, kind, targets[0], button: .left))
             XCTAssertEqual(event.getIntegerValueField(.eventTargetUnixProcessID), 123)
             XCTAssertEqual(event.getIntegerValueField(.mouseEventClickState), 1)
             XCTAssertEqual(event.getIntegerValueField(CGEventField(rawValue: 91)!), 456)
             XCTAssertEqual(event.getIntegerValueField(CGEventField(rawValue: 92)!), 456)
+            XCTAssertEqual(event.location, targets[0].screenPoint)
+            XCTAssertEqual(local(event), targets[0].windowLocal)
         }
     }
 }

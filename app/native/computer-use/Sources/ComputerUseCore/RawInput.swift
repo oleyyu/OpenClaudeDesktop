@@ -54,16 +54,8 @@ public enum RawInput {
             }
             targets.append(target)
         }
-        // Initial straight-line delivery; waypoint resampling is added in the path-interpolation stage.
-        guard let start = targets.first, let end = targets.last else { return refused("invalid_params") }
-        let samples = [start] + (1...12).map { index in
-            let t = Double(index) / 12
-            return start.moved(
-                screenPoint: CGPoint(x: start.screenPoint.x + (end.screenPoint.x - start.screenPoint.x) * t,
-                                     y: start.screenPoint.y + (end.screenPoint.y - start.screenPoint.y) * t),
-                windowLocal: CGPoint(x: start.windowLocal.x + (end.windowLocal.x - start.windowLocal.x) * t,
-                                     y: start.windowLocal.y + (end.windowLocal.y - start.windowLocal.y) * t))
-        }
+        let samples = Dispatcher.dragSamples(vertices: targets, pixelScale: pixelScale)
+        guard !samples.isEmpty else { return refused("invalid_params") }
         return Dispatcher.drag(targets: samples, buttonName: button, refusal: gate).json
     }
 

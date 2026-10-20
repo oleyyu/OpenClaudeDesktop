@@ -55,6 +55,42 @@ enum Dispatcher {
         }
     }
 
+    /// About one drag event per 10 full-resolution pixels, clamped to 12–60 moves. Each non-empty segment gets
+    /// at least one move so sharp corners and short detours are never cut off by uniform whole-path sampling.
+    static func dragSamples(vertices: [EventFactory.Target], pixelScale: Double) -> [EventFactory.Target] {
+        guard let first = vertices.first, vertices.count >= 2, pixelScale.isFinite, pixelScale > 0 else { return [] }
+        let segments = zip(vertices, vertices.dropFirst()).compactMap { a, b -> (EventFactory.Target, EventFactory.Target, Double)? in
+            let length = hypot(b.screenPoint.x - a.screenPoint.x, b.screenPoint.y - a.screenPoint.y)
+            return length > 0 ? (a, b, length) : nil
+        }
+        let total = segments.reduce(0.0) { $0 + $1.2 }
+        guard total > 0, total.isFinite, segments.count <= 60 else { return [] }
+        let count = max(12, segments.count, Int(min(60, ceil(total * pixelScale / 10))))
+        let remaining = count - segments.count
+        let shares = segments.map { Double(remaining) * $0.2 / total }
+        var counts = shares.map { 1 + Int(floor($0)) }
+        // Largest remainders, with stable ordering for equal shares.
+        let order = shares.indices.sorted {
+            let a = shares[$0] - floor(shares[$0]), b = shares[$1] - floor(shares[$1])
+            return a == b ? $0 < $1 : a > b
+        }
+        for index in order.prefix(count - counts.reduce(0, +)) { counts[index] += 1 }
+        var result = [first]
+        for (segmentIndex, segment) in segments.enumerated() {
+            let (a, b, _) = segment
+            for i in 1...counts[segmentIndex] {
+                if i == counts[segmentIndex] { result.append(b); continue }
+                let t = Double(i) / Double(counts[segmentIndex])
+                result.append(a.moved(
+                    screenPoint: CGPoint(x: a.screenPoint.x + (b.screenPoint.x - a.screenPoint.x) * t,
+                                         y: a.screenPoint.y + (b.screenPoint.y - a.screenPoint.y) * t),
+                    windowLocal: CGPoint(x: a.windowLocal.x + (b.windowLocal.x - a.windowLocal.x) * t,
+                                         y: a.windowLocal.y + (b.windowLocal.y - a.windowLocal.y) * t)))
+            }
+        }
+        return result
+    }
+
     /// Sequencing only. The injectable clock/poster lets tests interrupt the real state machine without locking
     /// the user's desktop. No AX IPC is allowed while held; the session gate is checked before every event.
     static func dragSequence(targets: [EventFactory.Target], buttonName: String,
@@ -116,7 +152,10 @@ enum Dispatcher {
         var index = 0
         return dragSequence(targets: targets, buttonName: buttonName, refusal: refusal) { kind, target in
             if kind == kinds[2] { index += 1 }
-            events[kind.rawValue]![index].postToPid(target.pid)
+            let event = events[kind.rawValue]![index]
+            // Events were allocated before pressing, but AppKit must see actual delivery-time intervals.
+            event.timestamp = DispatchTime.now().uptimeNanoseconds
+            event.postToPid(target.pid)
         }
     }
 
