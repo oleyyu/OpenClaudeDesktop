@@ -13,6 +13,11 @@ public enum AXLadder {
     public static let climbLevels = 4
     /// A right click climbs at most this many parents to an element that answers AXShowMenu.
     public static let menuClimbLevels = 2
+    /// A double click on anything but text is two AXPress this far apart (Accessibility has no double click).
+    static let doublePressGapMicros: useconds_t = 80_000
+    /// A double click on these selects the word at the point through AXSelectedTextRange (what a double click means in
+    /// text). AXTextArea is here too: a TextEdit document is one.
+    static let textSelectRoles: Set<String> = ["AXStaticText", "AXTextField", "AXTextArea"]
     /// Summary bounds: what the walk visits and what it keeps.
     static let maxVisited = 4000, maxElements = 500
 
@@ -233,11 +238,18 @@ public enum AXLadder {
         let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
                                        "title": title(hit) ?? NSNull(), "descentPath": path]
         if request.button == "right" { return showMenu(from: start, pid: request.pid, dryRun: request.dryRun, describe: describe) }
+        if request.count == 2, let startRole = role(start), textSelectRoles.contains(startRole) {
+            let screenPt = request.focused ? nil : request.winLocalPt.map { CGPoint(x: request.bounds.minX + $0.x, y: request.bounds.minY + $0.y) }
+                ?? frame(start).map { r in CGPoint(x: r.intersection(request.bounds).midX, y: r.intersection(request.bounds).midY) }
+            return selectText(start, unit: .word, at: screenPt, dryRun: request.dryRun, describe: describe)
+        }
         let climb = ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
         guard let target = climb.first(where: { actions($0).contains(kAXPressAction as String) }) else {
             // A row or cell (a Finder list AXRow / AXCell) with nothing pressable on it or above is no_press_action,
             // which the main process may let fall to a coordinate click. Anything else — plain text, a container, a
             // text field — stays `canvas`: never a blind click.
+            // A double click with nothing to press: no_press_action, never two clicks somewhere else.
+            if request.count == 2 { return unsupported("no_press_action", describe) }
             guard let startRole = role(start), noPressFallbackRoles.contains(startRole) else { return unsupported("canvas", describe) }
             if (value(start, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", describe) }
             if request.count != 1 { return unsupported("multi_click_needs_raw_input", describe) }
@@ -255,20 +267,101 @@ public enum AXLadder {
         if let rect = frame(target) { result["pressedLocalFrame"] = framePx(rect, origin: request.bounds.origin, scale: 1) }
         if menuPresentingRoles.contains(targetRole) { return unsupported("popup_menu_click_refused", result) }
         if (value(target, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
-        // A double or triple click is not a repeated press; it needs raw input (M3, fail-closed until then).
-        if request.count != 1 { return unsupported("multi_click_needs_raw_input", result) }
+        if request.count > 2 { return unsupported("multi_click_needs_raw_input", result) }
         result["axOp"] = "AXPress"
+        if request.count == 2 { result["pressCount"] = 2 }
         if request.dryRun { result["outcome"] = "dryRun"; return result }
 
-        // 4. Press (some controls only implement AXConfirm).
-        let error = AXUIElementPerformAction(target, kAXPressAction as CFString)
-        if error == .success { result["outcome"] = "ok"; result["reasonCode"] = NSNull(); return result }
-        if actions(target).contains("AXConfirm"), AXUIElementPerformAction(target, "AXConfirm" as CFString) == .success {
-            result["outcome"] = "ok"; result["reasonCode"] = NSNull(); result["axOp"] = "AXConfirm"; return result
+        // 4. Press (some controls only implement AXConfirm); a double click presses twice, 80 ms apart.
+        for done in 0..<request.count {
+            if done > 0 { usleep(doublePressGapMicros) }
+            let (op, error) = press(target)
+            guard let op else {
+                result["outcome"] = "ineffective"
+                result["reasonCode"] = "ax_press_failed"
+                result["axError"] = axErrorName(error)
+                if request.count == 2 { result["pressCount"] = done }
+                return result
+            }
+            result["axOp"] = op
         }
-        result["outcome"] = "ineffective"
-        result["reasonCode"] = "ax_press_failed"
-        result["axError"] = axErrorName(error)
+        result["outcome"] = "ok"
+        result["reasonCode"] = NSNull()
+        return result
+    }
+
+    /// One AXPress, else AXConfirm: the action that took (nil when neither did) and AXPress's error.
+    static func press(_ target: AXUIElement) -> (op: String?, error: AXError) {
+        let error = AXUIElementPerformAction(target, kAXPressAction as CFString)
+        if error == .success { return ("AXPress", error) }
+        if actions(target).contains("AXConfirm"), AXUIElementPerformAction(target, "AXConfirm" as CFString) == .success { return ("AXConfirm", error) }
+        return (nil, error)
+    }
+}
+
+extension AXLadder {
+    public enum TextUnit: String { case word, line }
+
+    /// The UTF-16 index of the character at a screen point (AXRangeForPosition), or nil.
+    static func index(of element: AXUIElement, at point: CGPoint) -> Int? {
+        var point = point
+        guard let value = AXValueCreate(.cgPoint, &point) else { return nil }
+        var ref: CFTypeRef?
+        guard AXUIElementCopyParameterizedAttributeValue(element, kAXRangeForPositionParameterizedAttribute as CFString, value, &ref) == .success,
+              let ref, CFGetTypeID(ref) == AXValueGetTypeID() else { return nil }
+        var range = CFRange()
+        return AXValueGetValue(ref as! AXValue, .cfRange, &range) ? range.location : nil
+    }
+
+    /// The range of `unit` around UTF-16 index `index` of `text`: the word (ICU word boundaries, so CJK words too; off
+    /// a word, the character there, as a text view does) or the line with its line break (what a triple click selects).
+    public static func unitRange(_ unit: TextUnit, in text: String, at index: Int) -> NSRange? {
+        let ns = text as NSString
+        guard ns.length > 0 else { return nil }
+        let i = min(max(index, 0), ns.length - 1)
+        let line = ns.lineRange(for: NSRange(location: i, length: 0))
+        if unit == .line { return line }
+        var word: NSRange?
+        ns.enumerateSubstrings(in: line, options: [.byWords, .substringNotRequired]) { _, range, _, stop in
+            if NSLocationInRange(i, range) { word = range; stop.pointee = true }
+        }
+        return word ?? ns.rangeOfComposedCharacterSequence(at: i)
+    }
+
+    /// Double click on text: select the word at the point (no point: around the insertion point) by writing
+    /// AXSelectedTextRange, and read it back. Not settable, no text, or not read back → no_press_action.
+    static func selectText(_ element: AXUIElement, unit: TextUnit, at screenPt: CGPoint?, dryRun: Bool, describe: [String: Any]) -> [String: Any] {
+        var result = describe
+        result["axOp"] = "AXSelectedTextRange"
+        result["selectUnit"] = unit.rawValue
+        var settable: DarwinBoolean = false
+        guard AXUIElementIsAttributeSettable(element, kAXSelectedTextRangeAttribute as CFString, &settable) == .success, settable.boolValue,
+              let text = value(element, kAXValueAttribute) as? String, !text.isEmpty else {
+            return unsupported("no_press_action", result.merging(["selectionNotSettable": true]) { a, _ in a })
+        }
+        let caret = (value(element, kAXSelectedTextRangeAttribute)).flatMap { ref -> Int? in
+            guard CFGetTypeID(ref) == AXValueGetTypeID() else { return nil }
+            var range = CFRange()
+            return AXValueGetValue(ref as! AXValue, .cfRange, &range) ? range.location : nil
+        }
+        guard let index = screenPt.flatMap({ index(of: element, at: $0) }) ?? caret,
+              let wanted = unitRange(unit, in: text, at: index) else {
+            return unsupported("no_press_action", result.merging(["noTextIndex": true]) { a, _ in a })
+        }
+        result["selectedRange"] = ["location": wanted.location, "length": wanted.length]
+        if dryRun { result["outcome"] = "dryRun"; return result }
+        var range = CFRange(location: wanted.location, length: wanted.length)
+        guard let axRange = AXValueCreate(.cfRange, &range) else { return unsupported("no_press_action", result) }
+        let error = AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, axRange)
+        var readBack = CFRange()
+        guard error == .success, let ref = value(element, kAXSelectedTextRangeAttribute), CFGetTypeID(ref) == AXValueGetTypeID(),
+              AXValueGetValue(ref as! AXValue, .cfRange, &readBack), readBack.location == range.location, readBack.length == range.length else {
+            if error != .success { result["axError"] = axErrorName(error) }
+            return unsupported("no_press_action", result.merging(["selectionNotReadBack": true]) { a, _ in a })
+        }
+        result["outcome"] = "ok"
+        result["reasonCode"] = NSNull()
+        result["selectedText"] = String((text as NSString).substring(with: wanted).prefix(200))
         return result
     }
 }
