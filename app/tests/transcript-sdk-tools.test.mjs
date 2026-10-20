@@ -49,7 +49,10 @@ test('engine item types map to the official SDK tool names', () => {
     [{ type: 'dynamicToolCall', namespace: null, tool: 'EnterWorktree' }, 'EnterWorktree'],
     [{ type: 'dynamicToolCall', namespace: null, tool: 'some_core_tool' }, 'some_core_tool'],
     [{ type: 'dynamicToolCall', namespace: 'codex', tool: 'apply' }, 'apply'],
-    [{ type: 'computerUse', action: { type: 'click' } }, 'mcp__computer-use__click'],
+    // The official computer-use tool names (computer-use-model computerUseToolName), so the original rows read their verbs.
+    [{ type: 'computerUse', action: { type: 'click' } }, 'mcp__computer-use__left_click'],
+    [{ type: 'computerUse', action: { kind: 'drag', start_coordinate: [1, 2], coordinate: [3, 4] } }, 'mcp__computer-use__left_click_drag'],
+    [{ type: 'computerUse', action: { kind: 'screenshot' } }, 'mcp__computer-use__screenshot'],
     [{ type: 'imageGeneration' }, 'imageGeneration'],
   ];
   for (const [item, name] of cases) assert.equal(sdkToolName(item), name, JSON.stringify(item));

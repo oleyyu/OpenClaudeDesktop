@@ -392,7 +392,41 @@ const mcpAppsHost = require("./mcp-apps-host.cjs").createMcpAppsHost({ client: (
   visualizeEnabled: () => agentToolGroupEnabled("visualize"), ownServerName: () => agentTools.SERVER_NAME, log: console,
   coreSupportsMcpApps: (info) => coreForEngine(info?.engine).id === "codex" || coreSupports(info, "mcpApps") });
 // Computer use (desktop:call computer-use:*): per-session grants gate window lists and captures (electron/computer-use/).
-const computerUse = require("./computer-use/service.cjs").createComputerUse();
+// The app's own bundle id (its Info.plist) is never granted, so its windows stay out of every capture.
+const computerUseSelfBundleIds = (() => {
+  try {
+    const plist = fs.readFileSync(path.join(path.dirname(process.execPath), "..", "Info.plist"), "utf8");
+    const id = /<key>CFBundleIdentifier<\/key>\s*<string>([^<]+)<\/string>/.exec(plist)?.[1];
+    return id ? [id] : [];
+  } catch { return []; }
+})();
+const computerUse = require("./computer-use/service.cjs").createComputerUse({ selfBundleIds: computerUseSelfBundleIds });
+// Which sessions are using the computer (in-use.cjs): the renderer's docked strip and the screen glow (glow.cjs, created
+// once the app is ready) both follow it. Asking for access is not using the computer.
+const { computerUseAction } = require("./computer-use/actions.mjs");
+const computerUseInUse = require("./computer-use/in-use.cjs").createInUse({
+  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && action.kind !== "request_access"; },
+});
+let computerUseGlow = null;
+// The computer-use card's live frames (preview.cjs): the window a session last looked at, while a card subscribes.
+const computerUsePreview = require("./computer-use/preview.cjs").createPreview({ service: computerUse, inUse: computerUseInUse, emit: (event) => emit(event) });
+// The original puts the glow on the holder's chosen display, else the main window's; here, the focused (else the
+// first visible) app window's display.
+function computerUseGlowDisplay() {
+  const windows = BrowserWindow.getAllWindows().filter((window) => !window.isDestroyed() && !computerUseGlow?.owns(window));
+  const window = windows.find((candidate) => candidate.isFocused()) ?? windows.find((candidate) => candidate.isVisible());
+  return window ? screen.getDisplayMatching(window.getBounds()).id : null;
+}
+computerUseInUse.onChange((sessions) => {
+  emit({ kind: "computer-use-in-use", sessions });
+  if (!computerUseGlow) return;
+  if (!sessions.length) { computerUseGlow.hide(); return; }
+  // The glow comes up once for the first session; another session joining keeps it as it is.
+  if (computerUseGlow.isShown()) return;
+  computerUseGlow.moveTo(computerUseGlowDisplay());
+  const name = coreNameOf(config?.core);
+  computerUseGlow.show(i18n && name ? { label: i18n.t("{name} is using your computer", { name }) } : undefined);
+});
 // Bypass permissions runs everything without asking, the app's own tools included: a terminal command, an outside site
 // or a launch.json dev server the agent starts in a Bypass session needs no sheet (Workflow decides on its own, as
 // Claude Code does). The session's Mode is the one its last turn ran with (workflow-tool-service.cjs sessionAccess).
@@ -1188,6 +1222,7 @@ function sharedConfig() {
   return shared;
 }
 function emitConfig() {
+  computerUseGlow?.refreshMotion();
   const shared = sharedConfig();
   emit({ kind: "config-updated", config: shared });
   // Pane windows are not main windows (windowRegistry.dispatch skips them): they take the appearance the same way, so a
@@ -1274,6 +1309,7 @@ function receive(e) {
   btwSessions.observe(e);
   if (e.method === 'item/completed' && artifactIndex?.recordArtifactItem(config, e.params?.threadId, e.params?.item)) save();
   liveWork.observe(e);
+  computerUseInUse.observe(e);
   observeGoal(e);
   observeUsage(e);
   workflowToolService?.observe(e);
@@ -2010,6 +2046,8 @@ app.whenReady().then(async () => {
   const { recordCoreModel, validateCoreModels } = await import("./prefs/core-model.mjs");
   themePreference = preferences.themePreference;
   i18n = await import("./i18n/index.mjs");
+  computerUseGlow = require("./computer-use/glow.cjs").createGlow({ BrowserWindow, screen, app, fs: fs.promises, tmpdir: () => os.tmpdir(),
+    reduceMotion: () => config?.motion === "reduce" });
   const { validateBypassRequest, nativeCollaborationMode, backgroundTurnPermission } = await import("./permission-policy.mjs");
   const { applyCodexPermissions, effectiveProfile, customProfiles, codexWorkflowArgs } = await import("./codex-permissions.mjs");
   // Bypass across a user core switch (bypass-carry.mjs): a one-shot token from the select, bound by that switch's
@@ -2105,7 +2143,7 @@ app.whenReady().then(async () => {
   // background with the resolved appearance (main and pane windows alike).
   nativeTheme.on("updated", () => {
     for (const window of BrowserWindow.getAllWindows())
-      if (!window.isDestroyed()) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
+      if (!window.isDestroyed() && !computerUseGlow?.owns(window)) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
   });
   if (!fs.existsSync(config.cwd)) config.cwd = workspace;
   approvedWorkspaceRoots.add(config.cwd);
@@ -2729,6 +2767,11 @@ app.whenReady().then(async () => {
     // R4g-mcp MA-4: MCP App widgets' resource reads, App servers and sandbox origin (electron/mcp-apps-host.cjs).
     if (typeof action === "string" && action.startsWith("mcp-app:")) return mcpAppsHost.call(action, p);
     // Computer use: a known session only; the answer is an envelope that keeps the reason code (service.cjs).
+    if (action === "computer-use:in-use") return computerUseInUse.sessions();
+    if (action === "computer-use:preview") {
+      if (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId)) throw new Error("Unknown session.");
+      return computerUsePreview.subscribe(p.sessionId, p.on === true);
+    }
     if (typeof action === "string" && action.startsWith("computer-use:")) {
       if (action !== "computer-use:probe" && (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId))) throw new Error("Unknown session.");
       return computerUse.call(action, p);
@@ -4111,13 +4154,15 @@ installShutdownHandler(app, {
   guard: (event) => {
     if (fileAutosaveQuitGate.handle(event)) return true;
     for (const window of BrowserWindow.getAllWindows()) {
-      if (!window.isDestroyed() && !confirmFileEdits(window)) { event.preventDefault(); return true; }
+      if (!window.isDestroyed() && !computerUseGlow?.owns(window) && !confirmFileEdits(window)) { event.preventDefault(); return true; }
     }
     return quitGuard.handle(event);
   },
   onStart: () => { quitting = true; try { savePopoutsForRelaunch(); } catch (error) { console.warn("Pane windows:", error?.message ?? error); } },
   stop: async () => {
     customCommands.dispose();
+    computerUseGlow?.dispose();
+    computerUsePreview.dispose();
     const terminalsStopped = terminalService.dispose();
     desktopSettings?.dispose();
     menuBar?.dispose();

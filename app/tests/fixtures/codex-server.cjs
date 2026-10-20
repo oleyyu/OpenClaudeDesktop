@@ -999,6 +999,27 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
       // mcpToolCall item; '-form' a server form of primitive fields; '-url' url mode; '-unsupported'
       // an openai/form request that can only be declined. The response is logged to
       // fixture-responses.jsonl; accept completes with APPROVAL_ACCEPTED, decline/cancel APPROVAL_DENIED.
+      // 'fixture:computer-use-access': a computer-use request_access as an MCP tool-call approval (src/computer-use-model.mjs
+      // computerUseAccessRequest): the in-progress request_access call, then the elicitation whose
+      // _meta.computer_use_access carries what main resolves for the access card (apps with name, tier, icon; flags;
+      // reason). One app of each kind the card draws: with an icon, risky (Terminal), view only, already granted (left
+      // out), not installed. Answered like any elicitation (fixture-responses.jsonl).
+      if(text==='fixture:computer-use-access'){
+        const id=`approval-${db.next}`;pending.set(id,{thread,kind:'elicitation'});
+        const args={apps:['TextEdit','Terminal','Safari','Finder','Figma'],reason:'Draft the quarterly report in TextEdit and check the numbers in Terminal.',clipboardRead:true,systemKeyCombos:true};
+        const tool={id:`call-${id}`,type:'mcpToolCall',server:'computer-use',tool:'request_access',status:'inProgress',arguments:args};
+        turn.items.push(tool);persist();notify('item/started',{threadId:thread.id,turnId:turn.id,item:tool});
+        const icon='data:image/svg+xml;base64,'+Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="9" fill="#f2f2f2"/><rect x="9" y="7" width="22" height="26" rx="2" fill="#fff" stroke="#9a9a9a"/><path d="M13 14h14M13 19h14M13 24h9" stroke="#6b6b6b" stroke-width="2"/></svg>').toString('base64');
+        const params={threadId:thread.id,turnId:turn.id,serverName:'computer-use',mode:'form',message:'Allow the computer-use MCP server to run tool "request_access"?',requestedSchema:{type:'object',properties:{}},
+          _meta:{codex_approval_kind:'mcp_tool_call',persist:['session'],tool_params:args,
+            computer_use_access:{reason:args.reason,flags:{clipboardRead:true,clipboardWrite:false,systemKeyCombos:true},apps:[
+              {bundleId:'com.apple.TextEdit',displayName:'TextEdit',tier:'full',iconDataUrl:icon,installed:true},
+              {bundleId:'com.apple.Terminal',displayName:'Terminal',tier:'click',installed:true},
+              {bundleId:'com.apple.Safari',displayName:'Safari',tier:'read',installed:true},
+              {bundleId:'com.apple.finder',displayName:'Finder',tier:'full',installed:true,alreadyGranted:true},
+              {displayName:'Figma',installed:false}]}}};
+        send({id,method:'mcpServer/elicitation/request',params});return;
+      }
       if(text.startsWith('fixture:elicitation')){
         const id=`approval-${db.next}`;pending.set(id,{thread,kind:'elicitation'});
         const base={threadId:thread.id,turnId:turn.id,serverName:'probe'};

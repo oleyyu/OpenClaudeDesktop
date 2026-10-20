@@ -1,7 +1,10 @@
 // Computer use in the real app (src/computer-use-model.mjs, source-computer-use.jsx) against the fixture core:
 // `fixture:computer-use` streams a screenshot, an MCP click, an Anthropic-shape typing step, a drag and a held key
-// press. Checks the live banner (screenshot, action, Stop), the grouped rows and their labels, the click marker on
-// the screenshot, the image viewer, and the dark appearance.
+// press. Checks the docked strip (no action, no screenshot, Stop), the screenshot thumbnails and the image viewer, the tool group as the 2.42304.0
+// original draws it (turnStatusRows on: the original group n0, its summary and one TurnStatusStep per member), and the
+// dark appearance. The host's computerUse items read the official Code-tab verbs; the MCP / Anthropic computer tools are
+// the original rows, which give a computer-use server the generic MCP wording until the session registers it as the
+// built-in server (rows-c52b02f3f un / shared-156 wb).
 import fs from 'node:fs/promises';import path from 'node:path';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
 import {_electron as electron} from '../../tools/node_modules/playwright/index.mjs';
 import {fillComposer} from './composer-test-helpers.mjs';
@@ -24,38 +27,72 @@ try{
  await integrity();await launch();
  const input=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
  await fillComposer(page,input,'fixture:computer-use');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
- // 1. The live banner while the held key press runs.
+ // 1. The official docked strip (c5f921d63 W) while the session uses the computer (main's in-use signal, from the first
+ //    computer-use step to the end of the turn): first in the conversation column, above the
+ //    transcript; clay tint and border, the pulsing dot, "{core} is using your computer", a secondary xs Stop; no action.
  const banner=page.locator('[data-computer-use-banner]');await banner.waitFor();
- await poll(async()=>/Pressing\s*⌘S/.test(await banner.innerText()),'banner shows the current action');
- report.metrics.banner=await banner.evaluate(n=>({text:n.innerText,thumb:!!n.querySelector('.scu-shot img'),stop:!!n.querySelector('button.ssb, button')}));
- assert.match(report.metrics.banner.text,/is using your computer/);
- // The strip lines up with the composer column.
- report.metrics.bannerAlign=await page.evaluate(()=>{const b=document.querySelector('.scu-banner').getBoundingClientRect(),c=document.querySelector('.sc-composer').getBoundingClientRect();return {left:b.left-c.left,right:b.right-c.right};});
- assert.ok(Math.abs(report.metrics.bannerAlign.left)<1&&Math.abs(report.metrics.bannerAlign.right)<1,'banner aligned with the composer');assert.equal(report.metrics.banner.thumb,true,'the last screenshot stands in for the key press');
+ report.metrics.banner=await banner.evaluate(n=>{const r=n.getBoundingClientRect(),first=document.querySelector('[data-transcript-item-id]')?.getBoundingClientRect(),s=getComputedStyle(n),dot=getComputedStyle(n.querySelector('span'));
+  return {text:n.innerText.replace(/\s+/g,' ').trim(),bottom:r.bottom,firstItemTop:first?.top??null,borderBottom:s.borderBottomWidth,dot:[dot.width,dot.backgroundColor,dot.animationName],
+   stop:n.querySelector('[data-testid="cu-docked-stop"]')?.dataset.size??null,stopVariant:n.querySelector('[data-testid="cu-docked-stop"]')?.dataset.variant??null,thumb:!!n.querySelector('img')};});
+ assert.equal(report.metrics.banner.text,'Codex is using your computer Stop');
+ assert.ok(report.metrics.banner.firstItemTop===null||report.metrics.banner.bottom<=report.metrics.banner.firstItemTop+1,'the strip sits above the transcript');
+ assert.equal(report.metrics.banner.borderBottom,'1px');
+ assert.deepEqual(report.metrics.banner.dot,['8px','rgb(198, 97, 63)','pulse'],'the 8px clay dot pulses');
+ assert.deepEqual([report.metrics.banner.stop,report.metrics.banner.stopVariant],['xs','secondary']);
+ assert.equal(report.metrics.banner.thumb,false,'no screenshot in the strip');
  await page.screenshot({path:path.join(directory,'banner.png')});
- report.checks.push('While a computer-use step runs, a banner above the composer names the core, shows the latest screenshot and the action, with Stop');
+ report.checks.push('While the session uses the computer, the official docked strip sits above the transcript: clay tint, the pulsing 8px clay dot, “Codex is using your computer”, a secondary xs Stop, no action or screenshot');
+ // The screen glow (electron/computer-use/glow.cjs) on the same signal: the original page in a transparent, click-through,
+ // unfocusable panel on top of everything, over the display of the app's window.
+ const glow=()=>app.evaluate(({BrowserWindow,screen})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.webContents.getURL().endsWith('/cu-glow.html'));
+  if(!w)return null;const main=BrowserWindow.getAllWindows().find(x=>x!==w&&!x.isDestroyed()&&x.isVisible());
+  return {visible:w.isVisible(),onTop:w.isAlwaysOnTop(),focusable:w.isFocusable(),bounds:w.getBounds(),display:main?screen.getDisplayMatching(main.getBounds()).bounds:null};});
+ await poll(async()=>(await glow())?.visible===true,'the glow shows');
+ report.metrics.glow=await glow();
+ await new Promise(r=>setTimeout(r,900));
+ await fs.writeFile(path.join(directory,'glow.png'),Buffer.from(await app.evaluate(async({BrowserWindow})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.webContents.getURL().endsWith('/cu-glow.html'));return (await w.webContents.capturePage()).toPNG().toString('base64');}),'base64'));
+ assert.deepEqual([report.metrics.glow.onTop,report.metrics.glow.focusable],[true,false]);
+ assert.deepEqual(report.metrics.glow.bounds,report.metrics.glow.display,'the glow covers the app window’s display');
+ report.checks.push('The screen glow comes up with the strip: the original page in an always-on-top, unfocusable panel covering the app window’s display');
  await banner.waitFor({state:'detached',timeout:8000});
- report.checks.push('The banner goes away when the step finishes');
- // 2. The group and its rows.
+ await poll(async()=>(await glow())?.visible===false,'the glow hides',2000);
+ report.checks.push('The strip goes away when the turn ends, and the glow fades and hides with it');
+ // 2. The group: the original tool group over the five members.
  const group=page.locator('[data-tool-group]').last();await group.waitFor();
- await poll(async()=>/Used the computer \(5 steps\)/.test(await group.locator('.stg-trigger').innerText()),'group summary');
- await group.locator('.stg-trigger').click();
- const rows=group.locator('.scu-step');await poll(async()=>await rows.count()===5,'five rows');
- report.metrics.rows=await rows.evaluateAll(list=>list.map(n=>n.querySelector('.source-step-trigger').innerText.replace(/[\uE000-\uF8FF]/g,'').replace(/\s+/g,' ').trim()));
- assert.deepEqual(report.metrics.rows,['Took a screenshot','Clicked (420, 180)','Typed “quarterly report”','Dragged (120, 300) → (640, 420)','Pressed ⌘S']);
- report.checks.push('Five steps in three shapes group as “Used the computer (5 steps)” with per-step labels');
- // 3. Marker on the click and drag screenshots; the viewer opens.
- // In a group the screenshot is the row's body, like other tool images: open the click and drag rows.
- await rows.nth(1).locator('.source-step-trigger').click();await rows.nth(3).locator('.source-step-trigger').click();
- const click=rows.nth(1).locator('.scu-shot');await click.waitFor();
- await poll(async()=>await click.locator('.scu-ring').count()===1,'click ring');
- report.metrics.ring=await click.evaluate(n=>{const img=n.querySelector('img').getBoundingClientRect(),ring=n.querySelector('.scu-ring').getBoundingClientRect(),natural=n.querySelector('img');return {dx:(ring.left+ring.width/2-img.left)/img.width,dy:(ring.top+ring.height/2-img.top)/img.height,expectX:420/natural.naturalWidth,expectY:180/natural.naturalHeight};});
- assert.ok(Math.abs(report.metrics.ring.dx-report.metrics.ring.expectX)<0.01&&Math.abs(report.metrics.ring.dy-report.metrics.ring.expectY)<0.01,'ring sits on the clicked point');
- const drag=rows.nth(3).locator('.scu-shot');await poll(async()=>await drag.locator('.scu-ring').count()===2&&await drag.locator('svg line').count()===1,'drag marker');
- await rows.nth(1).scrollIntoViewIfNeeded();await page.screenshot({path:path.join(directory,'rows-light.png')});
- await click.click();const viewer=page.getByRole('dialog').filter({hasText:'Clicked'});await viewer.waitFor();await page.screenshot({path:path.join(directory,'viewer.png')});await page.keyboard.press('Escape');await viewer.waitFor({state:'detached'});
- report.checks.push('The click screenshot carries a ring at the clicked point (within 1%), the drag one a dashed line with both ends; the viewer opens with the action caption');
- await page.evaluate(()=>{document.documentElement.dataset.mode='dark';});await rows.nth(1).scrollIntoViewIfNeeded();await page.screenshot({path:path.join(directory,'rows-dark.png')});
+ await poll(async()=>/Used 5 tools/.test(await group.innerText()),'group summary');
+ await group.locator('button').first().click();
+ const steps=group.locator('[data-cds="TurnStatusStep"]');await poll(async()=>await steps.count()===5,'five rows');
+ report.metrics.rows=await steps.evaluateAll(list=>list.map(n=>n.innerText.replace(/[\uE000-\uF8FF]/g,'').replace(/\s+/g,' ').trim()));
+ assert.deepEqual(report.metrics.rows,['Captured screen','Used computer-use: left click','Used computer','Dragged','Pressed key ⌘S']);
+ report.checks.push('Five steps in three shapes form the original group “Used 5 tools”; the host steps read the official verbs (Captured screen, Dragged, Pressed key ⌘S), the MCP / Anthropic tools the original rows’ generic wording for an unregistered server');
+ // The host rows carry the action's icon before the verb (the chat renderer's computer-use icons).
+ report.metrics.icons=await steps.evaluateAll(list=>list.map(n=>n.querySelector('[data-icon]')?.dataset.icon??null));
+ assert.deepEqual(report.metrics.icons,['Camera',null,null,'Reorder','Keyboard']);
+ report.checks.push('The host computer-use rows show the action’s icon before the verb: Camera, Reorder, Keyboard');
+ // 3. The official screenshot thumbnail (cc1aae219 NH) in the step's media slot: 36×28, no marker; it opens the viewer.
+ const thumbs=group.locator('[data-testid="tool-image-thumbnail"]');await poll(async()=>await thumbs.count()===2,'two thumbnails');
+ report.metrics.thumbs=await thumbs.evaluateAll(list=>list.map(n=>{const r=n.getBoundingClientRect(),row=n.closest('[data-cds="TurnStatusStep"]');
+  return {row:row?.innerText.replace(/[\uE000-\uF8FF]/g,'').replace(/\s+/g,' ').trim()??null,size:[Math.round(r.width),Math.round(r.height)],media:!!n.closest('[data-cds-row-media]'),title:n.title,alt:n.querySelector('img')?.alt??null,dot:!!n.querySelector('div'),markers:!!row?.querySelector('svg.scu-marker,.scu-ring')};}));
+ assert.deepEqual(report.metrics.thumbs.map(t=>[t.row,t.size,t.media,t.title,t.alt,t.dot,t.markers]),[
+  ['Captured screen',[36,28],true,'Click to view full screenshot','Screenshot thumbnail',false,false],['Dragged',[36,28],true,'Click to view full screenshot','Screenshot thumbnail',false,false]]);
+ // A host row is a cell of the group: the thumbnail (28px) overflows the step's 1lh media slot without growing it.
+ report.metrics.cellHeights=await steps.evaluateAll(list=>list.map(n=>Math.round(n.closest('.py-sm')?.getBoundingClientRect().height??-1)));
+ assert.ok(Math.max(...report.metrics.cellHeights)-Math.min(...report.metrics.cellHeights)<=1,'every row of the group is one height');
+ await thumbs.first().click();const viewer=page.locator('[data-cds="ImagePreviewModal"]');await viewer.waitFor();
+ report.metrics.viewerCaption=await viewer.locator('.siv-caption').innerText();assert.equal(report.metrics.viewerCaption,'Captured screen');
+ await page.keyboard.press('Escape');await viewer.waitFor({state:'detached'});assert.equal(await steps.count(),5,'the thumbnail does not toggle the group');
+ report.checks.push('The steps with a screenshot carry the official 36×28 thumbnail in the step’s media slot, with no click dot or marker; pressing it opens the image viewer and Escape closes it');
+ // 4. The computer-use card in the session rail (c21f11e6d P_ over c5f921d63 N): the transcript's last screenshot, no
+ //    Live caption without a live preview; pressing the frame opens it.
+ const card=page.locator('[data-computer-use-card]');await card.waitFor();
+ report.metrics.card=await card.evaluate(n=>{const section=n.closest('section'),img=n.querySelector('img');
+  return {title:section?.querySelector('h3')?.innerText.replace(/[\uE000-\uF8FF]/g,'').trim()??null,frame:img?.src.slice(0,22)??null,frameClass:img?.className??null,caption:n.querySelector('p')?.innerText??null,live:n.dataset.live??null};});
+ assert.deepEqual(report.metrics.card,{title:'Computer use',frame:'data:image/png;base64,',frameClass:'w-full h-auto max-h-72 object-contain',caption:null,live:null});
+ await card.locator('button').first().click();await viewer.waitFor();await page.keyboard.press('Escape');await viewer.waitFor({state:'detached'});
+ await card.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(directory,'rail-card.png')});
+ report.checks.push('The session rail shows the computer-use card with the last screenshot (no Live caption without a live preview); its frame opens the image viewer');
+ await group.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(directory,'rows-light.png')});
+ await page.evaluate(()=>{document.documentElement.dataset.mode='dark';});await group.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(directory,'rows-dark.png')});
  assert.deepEqual(report.rendererErrors,[]);await integrity();report.testSourceHashes=testHashes;report.passed=true;
 }catch(error){report.error=error.stack;process.exitCode=1;if(page)await page.screenshot({path:path.join(directory,'failure.png')}).catch(()=>{});}
 finally{await app?.close();await fs.writeFile(path.join(directory,'report.json'),JSON.stringify(report,null,2)+'\n');await fs.writeFile(path.join(evidence,'computer-use-ui-report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));}

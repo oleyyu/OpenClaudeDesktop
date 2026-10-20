@@ -394,6 +394,8 @@ function SourceStep({
   meta,
   metaTitle,
   trailing,
+  media = null,
+  icon = null,
   caretSize = 12,
   classic = false,
   state = "done",
@@ -424,8 +426,8 @@ function SourceStep({
   const statusRows = useTurnStatusRows();
   if (statusRows) {
     const unknown = state === "unknown" ? <span className="shrink-0 text-muted">{STEP_OUTCOME_WORD.unknown}</span> : null;
-    return <StatusStep state={state} label={label} meta={meta} metaTitle={metaTitle || (typeof meta === "string" ? meta : undefined)}
-      trailing={unknown ? <>{trailing}{unknown}</> : trailing} actions={actions ?? undefined} actionsLabel={actions ? actionsLabel || t("Message actions") : undefined}
+    return <StatusStep state={state} label={label} icon={icon ?? undefined} meta={meta} metaTitle={metaTitle || (typeof meta === "string" ? meta : undefined)}
+      trailing={unknown ? <>{trailing}{unknown}</> : trailing} media={media ?? undefined} actions={actions ?? undefined} actionsLabel={actions ? actionsLabel || t("Message actions") : undefined}
       open={open} onOpenChange={next => { if (!forcedOpen && next !== open) toolRowExpansion.set(expansionKey, next); }}
       candidate={state === "busy" ? runningCandidate(item) : undefined} after={after}
       rest={{ "data-transcript-item-id": item.id, className: `source-message ${className}`.trim() }}>{children}</StatusStep>;
@@ -449,6 +451,7 @@ function SourceStep({
           if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); if (hasBody) toggle(); }
         }}
       >
+        {icon && <span className="inline-flex shrink-0 items-center me-2">{icon}</span>}
         <span
           className={`source-step-label ${state === "busy" ? "source-shimmer" : ""}`}
         >
@@ -460,6 +463,7 @@ function SourceStep({
           </span>
         )}
         {trailing}
+        {media}
         {STEP_OUTCOME_WORD[state] && !(classic && state === "failed") && (
           <span className="source-step-outcome">{STEP_OUTCOME_WORD[state]}</span>
         )}
@@ -889,7 +893,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
   }
   // Computer use (computer-use-model.mjs): the bridges' computerUse items and computer tools in any known shape.
   if (computerUseAction(item))
-    return <SourceComputerUseStep item={item} state={commandRowState(item, pendingApprovalItemIds.has(item.id))} Step={SourceStep} stepProps={stepDefaults} inToolGroup={inToolGroup} />;
+    return <SourceComputerUseStep item={item} state={commandRowState(item, pendingApprovalItemIds.has(item.id))} Step={SourceStep} stepProps={stepDefaults} />;
   // `present` (the DeepSeek core's deliverables): file cards instead of a tool row.
   // mark_chapter (OpenClaude Desktop's agent tools): the chapter heading, lifted out of the tool rows (cd5a31703 d2);
   // wX/CX (source-chapters.jsx): hidden or renamed from the Session chapters rail, renamed in place on double-click.

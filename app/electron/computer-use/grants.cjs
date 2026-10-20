@@ -5,7 +5,8 @@
 //   everything else    "full"
 //
 // Apps outside the grant list are not captured, clicked or typed into. Grants only come from the user's answer to
-// request_access (main process); nothing the renderer or the agent sends can add one.
+// request_access (main process); nothing the renderer or the agent sends can add one. The app itself is never granted
+// (`refuse`): its windows — the screen glow over every display among them — stay out of every capture.
 const BROWSERS = new Set([
   "com.apple.Safari", "com.apple.SafariTechnologyPreview",
   "com.google.Chrome", "com.google.Chrome.beta", "com.google.Chrome.dev", "com.google.Chrome.canary", "org.chromium.Chromium",
@@ -40,7 +41,9 @@ const allows = (tier, op) => Boolean(ALLOWED[tier]?.has(op));
 
 const validBundleId = (value) => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/.test(value);
 
-function createGrants() {
+/** @param {{refuse?: Iterable<string>}} [options]  refuse: bundle ids never granted (the app's own). */
+function createGrants({ refuse = [] } = {}) {
+  const refused = new Set(refuse);
   const apps = new Map();   // bundleId → { bundleId, tier, displayName }
   const flags = { clipboardRead: false, clipboardWrite: false, systemKeyCombos: false };
   return {
@@ -49,7 +52,7 @@ function createGrants() {
       const added = [];
       for (const entry of entries) {
         const bundleId = typeof entry === "string" ? entry : entry?.bundleId;
-        if (!validBundleId(bundleId)) continue;
+        if (!validBundleId(bundleId) || refused.has(bundleId)) continue;
         const record = { bundleId, tier: tierFor(bundleId), displayName: typeof entry?.displayName === "string" ? entry.displayName : undefined };
         apps.set(bundleId, record);
         added.push(record);

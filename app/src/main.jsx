@@ -143,7 +143,6 @@ import { SourceToolsMenu } from "./source-tools-menu.jsx";
 import { SourceOnboarding } from "./source-onboarding.jsx";
 import { nuxAccountAged } from "./file-tree-row-model.mjs";
 import { SourceComputerUseBanner } from "./source-computer-use.jsx";
-import { activeComputerUse } from "./computer-use-model.mjs";
 import { defaultProfile, normalizeProfiles, normalizeSelection, toggleInSelection } from "../electron/prefs/tool-profiles.mjs";
 import { SourcePermissionMenu, PERMISSION_OPTIONS, bypassOffer } from "./source-permission-menu";
 import { SourceTileLayout } from "./source-tile-layout";
@@ -482,6 +481,8 @@ function App({ side = 0, initialSession = null }) {
     approvalRuntime.current.reconcile(state.approvals);
   }, [state.approvals]);
   useEffect(() => () => approvalRuntime.current.dispose(), []);
+  // The sessions using the computer (main.cjs computer-use-in-use, electron/computer-use/in-use.cjs): the docked strip.
+  const [computerUseSessions, setComputerUseSessions] = useState([]);
   const [boot, setBoot] = useState(null),
     [sessions, setSessionsState] = useState([]),
     // True once init has read the session list (official Kk/$i: the home
@@ -2713,8 +2714,10 @@ function App({ side = 0, initialSession = null }) {
       // emitConfig): this side's list and appearance follow.
       if (e.kind === "session-list") applySessionList(e);
       if (e.kind === "config-updated" && e.config && typeof e.config === "object") applySharedConfig(e.config);
+      if (e.kind === "computer-use-in-use" && Array.isArray(e.sessions)) setComputerUseSessions(e.sessions);
     });
     init();
+    call("computer-use:in-use").then((list) => { if (Array.isArray(list)) setComputerUseSessions(list); }, () => {});
     // Stats load beside init, not after the whole connect: main.cjs needs only the
     // core's initialize (or last launch's kept result). The 'stats' push event
     // refreshes them after turns.
@@ -6461,7 +6464,7 @@ function App({ side = 0, initialSession = null }) {
   // status and the band's Commit, the transcript's output files, the Preview pane's servers, the Background tasks pane's
   // tasks and stops, and the Finder / clipboard / terminal actions of the band's folder menu.
   const sessionRailHost = {
-    call, desktop: api, cwd: workdir, items: state.items[current], transcriptRef, recordKey: `${session?.archived === true}`, mountKey: current ?? "draft",
+    call, desktop: api, cwd: workdir, items: state.items[current], transcriptRef, coreName: coreName(boot?.core), recordKey: `${session?.archived === true}`, mountKey: current ?? "draft",
     readOnly: !!session?.archived, isPanelActive: splitActive, onRequestComposerFocus: () => textarea.current?.focus(),
     environmentId: current ? sessionMetadata[current]?.environmentId : undefined, savedEnvironments: savedEnvironments.environments,
     // R4i-rail RL1: the Connectors card (the session's connector list from the Customize store, its opener Customize ›
@@ -6801,6 +6804,10 @@ function App({ side = 0, initialSession = null }) {
                 <SourceFindBar ref={findBarRef} shortcuts={splitActive} sessionKey={current ?? "draft"}
                   getScope={() => transcriptRef.current?.getContent?.()}
                   scroll={{ reveal: (rect) => transcriptRef.current?.reveal?.(rect) ?? false }} />
+                {/* Computer use: the official docked strip (c21f11e6d :19536 nh → c5f921d63 W), first in the conversation column,
+                    above the transcript, while this session is using the computer (the same signal as the screen glow). */}
+                {current && computerUseSessions.includes(current) && <SourceComputerUseBanner
+                  coreName={coreName(boot?.core)} onStop={() => void stop()} stopping={stopping} />}
                 {/* R4f-rail SR-7: jre's chat panel body (tz) around the transcript, with DH, the raised overlay (jH) and wH. */}
                 <SessionRailChatBody>
                 <SourceTranscript
@@ -7129,9 +7136,6 @@ function App({ side = 0, initialSession = null }) {
                     sendNow={(id) => canSendNow(queue, id, { turnId: state.active[current], connected: !!boot?.connected, archived: !!session?.archived, steeringId: queueSteering })}
                     onCancel={queueCancel} onEdit={queueEdit} onReorder={queueReorder} />
                 )}
-                {/* Computer use: while the agent controls the computer, the latest screenshot, the action and Stop. */}
-                {current && running && <SourceComputerUseBanner active={activeComputerUse(items, item => ["inProgress", "running"].includes(item?.status))}
-                  coreName={coreName(boot?.core)} onStop={() => void stop()} stopping={stopping} />}
                 {/* R4f-error E36: cc43287c9's sr-only status just before the composer (N_'s 'Limits reset — resuming session'). */}
                 <SourceAutoResumeStatus announcement={resumeAnnouncement?.threadId === current ? resumeAnnouncement : null} />
                 {/* R4g-turnbox TB-3: cc43287c9 Mte's probe and turn box (inline here until the tail slot exists). Mte's da

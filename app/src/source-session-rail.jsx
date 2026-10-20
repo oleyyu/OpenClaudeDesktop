@@ -41,6 +41,7 @@ import { SessionRailSectionsHostContext, railServerRows, railTaskRows, railLoopR
 import { SessionRailServers } from "./generated/session-rail-sections/servers-card.mjs";
 import { SessionRailBackgroundTasks } from "./generated/session-rail-sections/background-tasks-card.mjs";
 import { SessionRailChanges } from "./source-session-rail-changes-adapters.jsx";
+import { SessionRailComputerUse } from "./source-session-rail-computer-use.jsx";
 import { QueryClientProvider } from "./generated/files-changes/file-browser-query.mjs";
 import { fileBrowserQueryClient } from "./source-breadcrumb-adapters.jsx";
 import { SessionFileOpenerProvider } from "./generated/r3b-transcript/session-file-access.mjs";
@@ -612,7 +613,9 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     contextSection={o ? undefined : <SessionRailContext scopeStore={t} sessionRef={e} />}
     usageSection={undefined}
     serversSection={<SessionRailServers sessionRef={e} readOnly={o} />}
-    backgroundSection={<SessionRailBackgroundTasks sessionRef={e} readOnly={o} />}
+    // The computer-use card (source-session-rail-computer-use.jsx) after Background tasks, outside the section order.
+    backgroundSection={<><SessionRailBackgroundTasks sessionRef={e} readOnly={o} />
+      {e.type === "local" && <SessionRailComputerUse sessionId={e.id} items={host.items} desktop={host.desktop} coreName={host.coreName} />}</>}
     tailRef={Ct}
     className={s} />;
   // fO `u(ug, { snapshot: j, held: N, … })`: c73f45bc3 Ty shows a draft rail snapshot while it is held; never here.

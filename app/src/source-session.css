@@ -27,6 +27,9 @@
 .source-message:last-of-type {
   margin-bottom: 10px;
 }
+/* Host rows inside the original tool group (renderHostRow) are cells of the group, not transcript items: the
+   transcript's item spacing stays off them, as .stg-row and .sag-entries already do. */
+[data-tool-group] .source-message.source-message { margin: 0; }
 /* Outer user turn: source gap-sm (8px) between the bubble group and the
    persistent actions row. The legacy .user-message > div rule is neutralized
    for the structural children below. */

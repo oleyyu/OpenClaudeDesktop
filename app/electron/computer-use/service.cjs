@@ -40,7 +40,8 @@ function summaryText(shot, limit = SUMMARY_LINES) {
   return [head, ...lines, ...(elements.length > limit ? [`… ${elements.length - limit} more: use app_ax_find.`] : [])].join("\n");
 }
 
-function createComputerUse({ native = createNative(), log = console, wait } = {}) {
+/** selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`). */
+function createComputerUse({ native = createNative(), log = console, wait, selfBundleIds = [] } = {}) {
   const sessions = new Map();   // sessionId → grants
   const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId), points: Map("bundle:window" → winLocalPt) }
   const stateFor = (sessionId) => {
@@ -49,7 +50,7 @@ function createComputerUse({ native = createNative(), log = console, wait } = {}
   };
   const grantsFor = (sessionId) => {
     if (typeof sessionId !== "string" || !sessionId) throw coded("invalid_params", "sessionId is required.");
-    if (!sessions.has(sessionId)) sessions.set(sessionId, createGrants());
+    if (!sessions.has(sessionId)) sessions.set(sessionId, createGrants({ refuse: selfBundleIds }));
     return sessions.get(sessionId);
   };
   const granted = (sessionId, bundleId) => {
@@ -60,6 +61,13 @@ function createComputerUse({ native = createNative(), log = console, wait } = {}
   const service = {
     grantsFor,
     forgetSession: (sessionId) => { sessions.delete(sessionId); windows.delete(sessionId); },
+    /** The window the session last looked at (app_screenshot), with its app's granted name: the live preview's target. */
+    lastTarget(sessionId) {
+      const target = windows.get(sessionId)?.target;
+      if (!target || !sessions.get(sessionId)?.has(target.bundleId)) return null;
+      const name = sessions.get(sessionId).list().find((app) => app.bundleId === target.bundleId)?.displayName;
+      return { ...target, name: name || target.bundleId };
+    },
     probe: () => native.call("probe"),
     async listWindows(sessionId, { bundleId } = {}) {
       granted(sessionId, bundleId);
@@ -92,6 +100,7 @@ function createComputerUse({ native = createNative(), log = console, wait } = {}
       const key = `${bundleId}:${shot.windowId}`;
       state.shots.set(key, shot);
       state.last.set(bundleId, shot.windowId);
+      state.target = { bundleId, windowId: shot.windowId };
       state.points.delete(key);
       return { ...shot, summary: summaryText(shot) };
     },
