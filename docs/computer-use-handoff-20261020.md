@@ -24,8 +24,18 @@
 - **选词 / 选行**：索引来自 `AXRangeForPosition`（点击点处的字符）；`target:"focused"` 没有点，用当前插入点（`AXSelectedTextRange.location`）。词边界用 Foundation 的 `.byWords`（ICU，中文也按词切）；点在词外时选该处那一个字符（文本视图双击空白也是选中空白）。写入后读回 `AXSelectedTextRange`，不一致即 `no_press_action`（附 `selectionNotReadBack` / `selectionNotSettable` / `noTextIndex` 说明是哪一步）。成功结果带 `selectedRange`、`selectedText`。
 - **与任务说明的两处出入**：① 选词角色加了 **AXTextArea**：TextEdit 文档正文是 AXTextArea，只认 AXStaticText / AXTextField 就过不了验收 2；② 词的位置取**点击点**而不是插入点，只有 focused 才用插入点：双击的语义是「点到哪个词选哪个」，用插入点会选中光标所在的另一个词。
 - **路径**：右键、双击、三击都只有 AX 梯级。service 只给「左键单击」配 raw 梯级（`button === "left" && count === 1`），policy 即使返回 fallback 也不会投到 rawClick（单测钉住）。`multi_click_needs_raw_input` 不再产生，留在 PENDING_RAW 只为旧结果不被当成未分类。
-- **工具层**：app_click 的 handler 不再在入口拦截 button / count，原样传给 service；描述只讲 Accessibility action（AXShowMenu / AXSelectedTextRange / 两次 press），没有事件路径的说法。`RAW_PATH_STEP` 改成「app_click with count 1 on an element_index」。app_drag 照旧 `requires_raw_path`。
-- **没动**：RawInput.swift、Dispatcher.swift、EventFactory.swift、harness/、`app/public/build-info.json`。Bridge.swift 只改了 rawClick 上的一行注释。
+- **工具层**：app_click 的 handler 不再在入口拦截 button / count，原样传给 service；描述只讲 Accessibility action（AXShowMenu / AXSelectedTextRange / 两次 press），没有事件路径的说法。`RAW_PATH_STEP` 改成「app_click with count 1 on an element_index」。app_drag 不在这三个提交里，见下面「拖拽」。
+- **没动**（指上面三个提交）：RawInput.swift、Dispatcher.swift、EventFactory.swift、harness/、`app/public/build-info.json`。Bridge.swift 只改了 rawClick 上的一行注释。
+
+### 拖拽（同日另一组提交，HEAD 现状）
+
+任务原定「拖拽本轮不做，保留 `requires_raw_path`」。同日另一个会话提交了拖拽实现（`d973023`、`e6325ae`、`754b5dd`），用户 2026-10-20 决定**保留**。所以 HEAD 上 **app_drag 不再返回 `requires_raw_path`**，走的是事件路径，不是 Accessibility action（Accessibility 没有通用的拖拽表达）：
+
+- **工具**：`coordinate`、`to_coordinate` 必填，`path` 可选（2–20 个途经点），`button` 可以是 left / right / middle（默认 left）。所有点都用最近一次 app_screenshot 的全分辨率像素。要 full 级别授权（tier op `drag`）。app_batch 的 drag 步也走它。
+- **service**（`appDrag`）：把截图顶点换算成窗口坐标（复用 budget.cjs 的换算）；先过 probe 闸门，`user_actively_typing` 交给 native 退避；再 `deliver()` 调 native `drag`（与 rawClick 同一套 RETRY）。
+- **native**（RawInput.drag → Dispatcher.dragSamples / dragSequence）：一次只允许一个拖拽（`drag_in_progress`）；所有顶点先重新解析、校验。按约每 10 个全分辨率像素一个事件采样，夹在 12–60 次移动之间，途经点保留。序列是 mouseMoved → down → dragged… → up：前三步慢一些（20 ms），用来越过拖拽阈值，之后 10 ms。每一步都重查闸门，超过 3000 ms 判 `drag_timeout`；**无论哪种失败都会补发 mouseUp**（清理绕过所有闸门，锁屏也发）。结果带 `delivered`、`mouseUpSent`、`dragSteps`、`verified`。
+- **改动的文件**：Dispatcher.swift、RawInput.swift、Bridge.swift、Package.swift（测试 target），新增 `Tests/ComputerUseCoreTests/DragTests.swift`、`tests/computer-use-drag.test.mjs`、`tests/computer-use-drag-live.test.mjs`（TextEdit 拖选第 10–40 个字符，CU_LIVE）和 `tests/fixtures/cu-drag-probe.swift`。
+- **这份交接没有拖拽的真机记录。** 前面「已知限制」那条仍然成立：Finder 这类系统应用会丢弃投递的鼠标事件。所以 app_drag 在系统应用上可能 delivered 却没有效果，工具描述里给的出路是改用 app_menu 之类的 Accessibility 操作。写这份文档时，工作区里还有那个会话没提交的拖拽改动（新增 `system_app_ignores_posted_events` / `drag_ineffective` 等 next_step、DragReadback.swift 等），不在 HEAD，这里也没写进来。
 
 ### 本段验收记录
 
@@ -34,16 +44,16 @@
 3. **TextEdit 三击选行**：真机通过。整行加换行符被选中，偏移、长度一致（截图：line09 整行高亮）。
 4. **不支持 AXShowMenu 的控件**：真机通过。Finder 工具栏的视图切换 AXRadioButton（本身和两层父级都没有 AXShowMenu）→ `unsupported` + `no_menu_action` + `blocked`，`app_menu close` 为 0（没有菜单被打开）。单测另钉住工具层返回 `ok:false` + next_step，且不调 rawClick。
 5. **app_click `button:"right"` 走正常路径**：通过（单测）。native 收到 `button: "right", count: 1`，结果里没有 `requires_raw_path`。
-6. **count 2 / 3 走正常路径，drag 仍是 `requires_raw_path`**：通过（单测）。native 收到对应的 count；app_drag 与 batch 的 drag 步仍返回 `requires_raw_path`；policy 给 fallback 时右键 / 多击也不会走 raw。
+6. **count 2 / 3 走正常路径**：通过（单测）。native 收到对应的 count；policy 给 fallback 时右键 / 多击也不会走 raw。验收里「drag 仍返回 `requires_raw_path`」这半句**作废**：拖拽实现已经保留（见「拖拽」）。`e6325ae` 把这条断言改成了 app_drag 到达 native 的 drag 序列（fake native 返回 `drag_ineffective`、`mouseUpSent: true`）。
 7. **npm test**：5713 条，5689 过 / 23 跳过（CU_LIVE 等实机测试）/ 1 失败 —— 失败的是既有的 `view-tabs-manifest`（见下文本轮验收第 6 条，HEAD 上同样失败），与本段无关。新增：`computer-use-ax-click` +2、`computer-use-agent-tools` +5（改写 2）、`computer-use-click-live`（4 条实机，`CU_LIVE=1 node --test --test-concurrency=1 tests/computer-use-click-live.test.mjs`，覆盖 1–4；TextEdit 已在运行时跳过，当前 Space 放不下 Finder 窗口时会把 Finder 拉到前台、测完切回原应用）。
 8. **未做实际打包验证**；helper 改了要重新 `npm run build:native`。
 
-## 工具可用数：24 / 24 已注册，13 个返回真实结果
+## 工具可用数：24 / 24 已注册，14 个返回真实结果（app_drag 已从 `requires_raw_path` 移入，见「拖拽」）
 
 | 状态 | 工具 |
 |---|---|
-| 真实结果（13） | request_access、app_list_windows、app_screenshot、app_ax_find、app_click（左键单击、右键、双击、三击，全部是 Accessibility action）、app_type、app_release、**app_focus、app_menu、app_zoom、list_apps、app_batch、list_granted_applications** |
-| `requires_raw_path`（4） | app_key、app_scroll、app_drag、app_bring_to_current_space |
+| 真实结果（14） | request_access、app_list_windows、app_screenshot、app_ax_find、app_click（左键单击、右键、双击、三击，全部是 Accessibility action）、app_type、app_release、**app_focus、app_menu、app_zoom、list_apps、app_batch、list_granted_applications**、app_drag（事件路径） |
+| `requires_raw_path`（3） | app_key、app_scroll、app_bring_to_current_space |
 | `not_supported_in_build`（5） | request_full_control、release_full_control、request_teach_access、teach_step、teach_batch（结果带 `build` 字段说明本分支的范围） |
 | `permission_denied` → request_access（2） | read_clipboard、write_clipboard：没有 clipboardRead / clipboardWrite 授权时返回它，next_step 指向 `request_access` 带对应 flag；**有授权后**返回 `not_supported_in_build`（官方把剪贴板算全屏控制，本分支没有） |
 
@@ -59,7 +69,7 @@
 - **app_menu**：`path` / `list` / `close` 三选一。path 走 AXMenuBar 逐级按标题匹配（不分大小写、忽略尾部 … / ...），最后一项 AXPress：命令项执行；菜单标题打开菜单并返回子项。`list`（true / null / 标题 / 路径）只读。`close: true` 对打开的菜单 AXCancel（Escape 的等价物，任务验收要"Escape 关闭"，而 app_key 没开）。匹配失败 `menu_item_not_found` + `closestMatch`（编辑距离）+ `available`；disabled `menu_item_disabled`。列举在任何级别都行，按菜单要 full 级别。
 - **app_zoom**：从该窗口最近一次 app_screenshot 的图里裁剪（帧像素 → 图像像素），放大到区域的帧尺寸（受截图预算约束）；没截图 `screenshot_required`。不重新截图，所以细节上限就是那张截图（真正的高清 zoom 需要 native 支持全分辨率截取）。
 - **list_apps**：不需要授权；运行中的在前并带 pid；已安装的来自 apps.cjs 同一组目录；query 没匹配时回落到 apps.cjs 的 `resolve()`（Spotlight），即与 request_access 同一套名称解析；`cursor` 是偏移量字符串。每项带本会话的 `granted` / `tier`。
-- **app_batch**：每个 action 调现有 handler（click → app_click …，key/scroll/drag 走它们的占位工具），遇错即停（包括 ineffective；官方是 ineffective 不停，这里按任务"遇错即停"）。batch 中途的 screenshot 用 `keepReference`：只拿图、不列元素、不写状态、不碰 native 的 SummaryCache，所以 batch 内的坐标与 element_index 始终指向调用前那张截图。最多 20 步。
+- **app_batch**：每个 action 调现有 handler（click → app_click …，key/scroll/drag 走它们的占位工具；drag 现在走 app_drag 的实现），遇错即停（包括 ineffective；官方是 ineffective 不停，这里按任务"遇错即停"）。batch 中途的 screenshot 用 `keepReference`：只拿图、不列元素、不写状态、不碰 native 的 SummaryCache，所以 batch 内的坐标与 element_index 始终指向调用前那张截图。最多 20 步。
 
 ## Accessibility helper（native/ 之外）
 
@@ -88,7 +98,7 @@ native 模块没有暴露窗口焦点、菜单栏和应用枚举，而本轮不�
 |---|---|---|
 | ~~app_click 右键 / 双击 / 三击~~ | 已完成，不再依赖 M4：全部走 Accessibility action（见「续」） | — |
 | app_scroll | 同上；AX 只能设滚动条值 | service 加 `appScroll`（先 AX 设 AXValue，再认证事件），占位 handler 换成真实的 |
-| app_drag | **raw-only，仍待评估**：Accessibility 没有通用的拖拽表达（没有 drag action，AXPosition 只对窗口等少数元素可写），所以保留 `requires_raw_path`；需要 raw 鼠标事件 + 途经点采样 | 实验一通过后再评估：`appDrag` + path 2–20 点 |
+| app_drag 的真机验收 | 实现已在 HEAD（事件路径，见「拖拽」）；Accessibility 没有通用的拖拽表达，所以只能走事件路径，能否生效取决于目标应用接不接受投递的鼠标事件（系统应用会丢弃） | 补 TextEdit 拖选与 Finder 的真机记录；实验一（认证事件）通过后系统应用才有望可用 |
 | app_key | 后台 key window 伪造（实验二），`service.appKey` 已有但未验收 | 实验二定下 options 后接 `service.appKey`；batch 的 key 步自动生效 |
 | app_bring_to_current_space | 跨 Space 移窗 / 取消最小化（私有 SkyLight 调用） | native 新方法，handler 照 app_focus 的模式 |
 | request/release_full_control、read/write_clipboard | 全屏控制（显示器锁、全屏截图坐标），本分支范围外 | 需要单独的全屏控制设计；剪贴板在那之后按授权 flag 放开 |
@@ -145,7 +155,7 @@ native 模块没有暴露窗口焦点、菜单栏和应用枚举，而本轮不�
 
 - 通过：连续 10 次，每次 AXSelected 读回 false → true；每次前后 `lsappinfo front` 不变；真实光标位置不变；没有窗口被抬起。
 - 失败：任何一次前台变了，或读回不变。前台变了直接判死（违反后台控制的前提），读回不变可以换字段组合再试，但每组都要记录。
-- 通过就开 `app_scroll` / `app_drag` 的实现，并把 `no_press_action` 从 PLANNED 移到 FALLBACK。
+- 通过就开 `app_scroll` 的实现（app_drag 已有事件路径的实现，届时换成认证事件投递），并把 `no_press_action` 从 PLANNED 移到 FALLBACK。
 
 **实验二：key window 伪造的 options 值。** docs/05 §一的 `SLPSSetFrontProcessWithOptions(&psn, windowId, options)`，`options` 社区取值 `0x200`（不抬升）/ `0x100`（仅前窗），代码里是 `// VERIFY`。目标是 TextEdit 一个文档窗口在后台，另一应用在前台：伪造 → 送 Unicode 键盘事件 → AXValue 读回 → end 时把前台还回去。
 
