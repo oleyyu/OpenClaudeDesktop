@@ -78,7 +78,8 @@ live 测试需要 macOS、已构建的原生模块、Accessibility 和录屏权�
 本机实测记录：
 
 - TextEdit：选区 `{location:10,length:30}`，API 最终回读一致，mouseUp 已发送。
-- Cocoa：同样选中 30 字符；应用事件记录确认目标窗口收到 down/drag/up。
+- Cocoa：同样选中 30 字符；应用事件记录确认目标窗口收到 down/drag/up。独立 NSSlider 的数值 AXValue 从 0.3 拖到 0.7，回读与目标一致。
 - Finder：临时 `alpha.txt` 实际进入 `destination/`；源 AX 元素消失，返回 `ok, verified:false`，文件系统独立确认成功。模拟“状态不变”测试覆盖系统限制 reason code。
 - VS Code：按用户决定保留 click 层级，测试确认 `tier_refused` 且不调用原生 drag。
-- 本机 macOS 27.2 的系统亮度外层 AXSlider 不提供 AXValue（`noValue`），但提供可移动的 AXValueIndicator。系统测试按滑块头位置验证百分比；Cocoa NSSlider 测试另行验证数值 AXValue 从约 0.3 到约 0.7。
+- 系统设置亮度：本机 macOS 27.2 的外层 AXSlider 不提供 AXValue（`noValue`），但提供可移动的 AXValueIndicator，测试按滑块头位置验证百分比。最终实测持续被 `user_actively_typing` 闸门阻挡；按用户决定停止重试，记录为受阻，**未完成系统亮度 30% → 70% 验收**。Cocoa NSSlider 的通过结果不替代这一项。
+- 锁屏中断：通过注入 `screen_locked` 验证按下后的中断与 mouseUp 清理；四道闸门和超时均有生产时序单测。未实际锁屏。
