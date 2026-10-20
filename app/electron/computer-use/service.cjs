@@ -89,6 +89,24 @@ function elementAt(shot, [x, y]) {
 const secureFieldRefusal = (extra = {}) => ({ outcome: "unsupported", reasonCode: "no_text_target", secureTextField: true,
   path: "unavailable", blocked: true, ...extra });
 
+/** All drag vertices use the same full-resolution screenshot reference, including optional waypoints. */
+function dragCoordinates(shot, coordinate, toCoordinate, path) {
+  if (path !== undefined && (!Array.isArray(path) || path.length < 2 || path.length > 20)) {
+    throw coded("invalid_params", "path must contain 2–20 [x, y] waypoints.");
+  }
+  const vertices = [coordinate, ...(path ?? []), toCoordinate];
+  if (vertices.some((p) => !Array.isArray(p) || p.length !== 2 || !inFrame(p, shot))) {
+    throw coded("invalid_params", "coordinate, to_coordinate and every path point must be inside the screenshot's full-resolution frame.");
+  }
+  return {
+    points: vertices.map((p) => {
+      const winLocalPt = frameToWindowLocal(p, shot);
+      return { winLocalPt, screenPt: windowLocalToScreen(winLocalPt, shot.bounds) };
+    }),
+    pixelScale: shot.scaleFactor > 0 ? shot.scaleFactor : shot.frameWidth / shot.bounds.width,
+  };
+}
+
 /**
  * selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`).
  * axHelper: ax-helper.cjs (focus, menus). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
@@ -466,4 +484,4 @@ function checkBudget(shot, scale = 1) {
   return shot;
 }
 
-module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS, MAX_MENU_DEPTH };
+module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS, MAX_MENU_DEPTH, dragCoordinates };
