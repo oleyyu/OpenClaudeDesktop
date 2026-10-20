@@ -59,8 +59,8 @@ test('engine item types map to the official SDK tool names', () => {
   assert.equal(sdkToolName({ type: 'agentMessage' }), null);
   assert.equal(sdkToolName({ type: 'reasoning' }), null);
   assert.equal(sdkToolName(null), null);
-  // Every table value is an official name (bare CLI tool or mcp__server__tool).
-  for (const name of [...Object.values(DYNAMIC_TOOLS), ...Object.values(APP_TOOLS)]) assert.match(name, /^(?:[A-Z][A-Za-z]+|mcp__[a-z_]+__[a-z_]+)$/, name);
+  // Every table value is an official name (bare CLI tool or mcp__server__tool; the computer-use server has a hyphen).
+  for (const name of [...Object.values(DYNAMIC_TOOLS), ...Object.values(APP_TOOLS)]) assert.match(name, /^(?:[A-Z][A-Za-z]+|mcp__[a-z_-]+__[a-z_]+)$/, name);
 });
 
 test('inputs carry what the rows read (file_path, command, pattern, url, query, skill)', () => {

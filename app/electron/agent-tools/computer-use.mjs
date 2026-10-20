@@ -1,0 +1,280 @@
+// Computer use for the app's sessions: the app-scoped tools that act on one granted app's window in the background
+// (electron/computer-use/service.cjs; field names from docs/02-tools.live.json). This round opens the seven that need
+// nothing from M4: request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only),
+// app_type (Accessibility first, then the reason policy's raw rung) and app_release. app_scroll, app_drag, app_key,
+// app_menu and app_batch stay closed (docs/computer-use-handoff-20261020.md).
+// ctx.computerUse: { service (createComputerUse), resolveApps(names) → [{requested, bundleId, displayName, path,
+//   installed}], ask({reason, flags, apps, toolParams}) → "accept" | "decline" | "unavailable" }  (main.cjs)
+//
+// request_access asks with the access card (src/computer-use-approval-card.jsx) and records the answer in the session's
+// grants; every other tool checks the grants first and answers a missing grant, like any refusal, with a structured
+// error ({ok: false, error: {code, message, next_step}}, isError) instead of throwing, so the agent knows what to do next.
+import grantsModule from "../computer-use/grants.cjs";
+
+const { tierFor, validBundleId } = grantsModule;
+export const group = "computer-use";
+
+const FLAGS = ["clipboardRead", "clipboardWrite", "systemKeyCombos"];
+const MAX_APPS = 32;
+
+function service(ctx) {
+  const cu = ctx?.computerUse;
+  if (!cu?.service) throw new Error("Computer use isn’t available here.");
+  return cu;
+}
+const json = (value) => JSON.stringify(value, null, 2);
+/** A refusal the agent reads: what went wrong and what to do next. Never thrown. */
+function failure(code, message, nextStep) {
+  return { content: [{ type: "text", text: json({ ok: false, error: { code, message, ...(nextStep ? { next_step: nextStep } : {}) } }) }], isError: true };
+}
+const requestAccessStep = (app) => `Call request_access with apps: [${JSON.stringify(app)}] and a one-line reason, wait for the user's answer, then retry this call.`;
+// What to do after each coded error from the service (native.cjs / service.cjs codes).
+const NEXT_STEPS = {
+  app_not_granted: null, // requestAccessStep(app)
+  screenshot_required: "Call app_screenshot for this app first; coordinate and element_index refer to that screenshot.",
+  invalid_params: "Fix the arguments as the message says and call again.",
+  window_not_found: "Call app_list_windows to see this app's windows, then pass one of their window_id values.",
+  no_window: "The app has no window to use. Ask the user to open one, then call app_list_windows.",
+  app_not_running: "The app isn't running. Ask the user to open it, then call app_list_windows.",
+  listed_element_gone: "The window changed since the screenshot. Call app_screenshot again and use the new [N].",
+  window_moved: "The window moved since the screenshot. Call app_screenshot again and use its coordinates.",
+  screen_capture_denied: "Screen Recording permission is off for this app. Ask the user to turn it on in System Settings › Privacy & Security; don't retry until they do.",
+  ax_untrusted_cannot_verify: "Accessibility permission is off for this app. Ask the user to turn it on in System Settings › Privacy & Security; don't retry until they do.",
+  native_unavailable: "Computer use can't run on this computer right now. Tell the user; don't retry.",
+  tier_refused: "This app is granted with fewer abilities (view only or click only). Use another way, or tell the user.",
+};
+/** A coded service error → a structured failure. */
+function serviceFailure(error, app) {
+  const code = typeof error?.code === "string" ? error.code : "internal";
+  const next = code === "app_not_granted" ? requestAccessStep(app) : NEXT_STEPS[code] ?? null;
+  return failure(code, String(error?.message || error), next);
+}
+
+/** The grant check every tool but request_access and app_release starts with: null when the app may be used. */
+function checkGrant(ctx, app) {
+  if (typeof app !== "string" || !validBundleId(app)) {
+    return failure("invalid_params", "app must be a bundle identifier, such as com.apple.finder.",
+      "Use the bundleId request_access returned for the app (call request_access with the app's name if you don't have it).");
+  }
+  if (!service(ctx).service.grantsFor(ctx.sessionId).has(app)) {
+    return failure("app_not_granted", `${app} isn't one of this session's granted apps.`, requestAccessStep(app));
+  }
+  return null;
+}
+/** coordinate / element_index / target: at most one. */
+function checkAddressing(args) {
+  const given = ["coordinate", "element_index", "target"].filter((key) => args[key] !== undefined);
+  if (given.length > 1) {
+    return failure("invalid_params", `Give only one of coordinate, element_index and target (got ${given.join(" and ")}).`,
+      "Pick one way to address the target: element_index from app_screenshot's summary is the most reliable.");
+  }
+  return null;
+}
+/** A step's outcome ({outcome, path, reasonCode?, …}): an error result unless it took effect. */
+function outcomeResult(result, nextStep) {
+  const ok = result?.outcome === "ok";
+  return { content: [{ type: "text", text: json({ ok, ...result, ...(ok || !nextStep ? {} : { next_step: nextStep }) }) }], ...(ok ? {} : { isError: true }) };
+}
+const windowId = (args) => (args.window_id === undefined ? undefined : args.window_id);
+
+// The shared properties (docs/02-tools.live.json "shared"), described in our own words.
+const APP = { type: "string", description: "The app's bundle identifier, e.g. com.apple.finder. It must be granted to this session (request_access)." };
+const WINDOW_ID = { type: "integer", minimum: 1, description: "Which window of the app (a window_id from app_list_windows). Leave it out for the window you last took an app_screenshot of, else the app's main window." };
+const COORDINATE = { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2,
+  description: "[x, y] in pixels of the last app_screenshot of this window (full-resolution frame, top-left is 0,0). Needs that screenshot. Don't combine with element_index or target." };
+const ELEMENT_INDEX = { type: "integer", minimum: 0, description: "An [N] from the last app_screenshot's element summary (or app_ax_find); aims at that element's center. Don't combine with coordinate or target." };
+const TARGET = { type: "string", enum: ["focused"], description: "\"focused\": the element that has keyboard focus in the window, with no hit-testing. Don't combine with coordinate or element_index." };
+const ACTION_SUMMARY = { type: "string", description: "A few words on what this does, for the user's transcript. No reasons, no secrets." };
+
+export const tools = [
+  {
+    name: "request_access",
+    title: "Request computer access",
+    description: "Ask the user to let this session see and operate the listed Mac apps. The user gets one card for the whole request and answers it all at once; nothing is granted until they allow it, and an app they allowed earlier in this session isn't asked about again. Apps can be named as the user would (\"Finder\", \"TextEdit\") or by bundle identifier. Each granted app gets a level by its kind: browsers can only be looked at, terminals and code editors can be looked at and clicked, other apps can be fully operated. Call this before any other computer-use tool, and again when you need another app.\n\nReturns granted (each with its bundleId, which the other tools take as `app`, and its level) and denied (each with why: the user declined, the app isn't installed, or it can't be granted). If the card can't be shown, returns an error saying so.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        apps: { type: "array", items: { type: "string" }, minItems: 1, maxItems: MAX_APPS, description: "The apps to ask for, by name or bundle identifier." },
+        reason: { type: "string", description: "One sentence the user reads on the card: what you will do with these apps." },
+        clipboardRead: { type: "boolean", description: "Also ask to read the clipboard." },
+        clipboardWrite: { type: "boolean", description: "Also ask to write to the clipboard." },
+        systemKeyCombos: { type: "boolean", description: "Also ask to use system shortcuts such as ⌘Q or ⌘Tab." },
+      },
+      required: ["apps", "reason"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const cu = service(ctx);
+      const names = Array.isArray(args.apps) ? [...new Set(args.apps.filter((app) => typeof app === "string" && app.trim()).map((app) => app.trim()))] : [];
+      if (!names.length) return failure("invalid_params", "apps must list at least one app name or bundle identifier.", "Call again with the apps you need, e.g. apps: [\"Finder\"].");
+      if (names.length > MAX_APPS) return failure("invalid_params", `Ask for at most ${MAX_APPS} apps at a time.`, "Ask only for the apps this task needs.");
+      const reason = typeof args.reason === "string" ? args.reason.trim() : "";
+      if (!reason) return failure("invalid_params", "reason is required: the user reads it on the card.", "Call again with a one-sentence reason.");
+      const flags = Object.fromEntries(FLAGS.map((key) => [key, args[key] === true]));
+      const grants = cu.service.grantsFor(ctx.sessionId);
+      const resolved = await cu.resolveApps(names);
+      const apps = resolved.map((entry) => ({ ...entry, tier: entry.bundleId ? tierFor(entry.bundleId) : null,
+        alreadyGranted: !!entry.bundleId && grants.has(entry.bundleId) }));
+      const asking = apps.filter((entry) => entry.installed && !entry.alreadyGranted);
+      const flagsHeld = grants.flags();
+      const flagsAsking = FLAGS.filter((key) => flags[key] && !flagsHeld[key]);
+      let answer = "accept";
+      // Everything already granted (or nothing installed to ask about): no card.
+      if (asking.length || flagsAsking.length) {
+        answer = await cu.ask({ reason, flags, apps: apps.map(({ requested, ...entry }) => entry), toolParams: args });
+        if (answer === "unavailable") {
+          return failure("approval_unavailable", "The access card can't be shown in this session right now, so nothing was granted.",
+            "Tell the user you need access to these apps and ask them to try again in the app's session window.");
+        }
+        if (answer === "accept") grants.grant(asking.map((entry) => ({ bundleId: entry.bundleId, displayName: entry.displayName })), flags);
+      }
+      const granted = [], denied = [];
+      for (const entry of apps) {
+        const item = { app: entry.requested, ...(entry.bundleId ? { bundleId: entry.bundleId } : {}) };
+        if (!entry.installed) denied.push({ ...item, reason: "not_installed" });
+        else if (grants.has(entry.bundleId)) granted.push({ ...item, name: entry.displayName, tier: grants.tierOf(entry.bundleId) });
+        else denied.push({ ...item, reason: answer === "accept" ? "not_grantable" : "user_denied" });
+      }
+      return json({
+        granted, denied, flags: grants.flags(),
+        // What a screenshot shows: only granted apps' windows are ever captured (service.cjs captureWindow / captureScreen).
+        screenshotFiltering: "granted_apps_only",
+        ...(answer !== "accept" ? { next_step: "The user declined. Don't ask again for the same apps unless they tell you to; continue without them or ask how they want to proceed." } : {}),
+      });
+    },
+  },
+  {
+    name: "app_list_windows",
+    title: "List app windows",
+    description: "List the windows of one granted app: each window's window_id, title, frame on screen, and whether it is the main window, minimized, hidden, on another Space, or an auxiliary panel or dialog. Read-only; nothing in the app changes. Use it to pick a window_id for app_screenshot.\n\nNeeds the app granted with request_access. When it isn't, or the app isn't running, returns an error with what to do next.",
+    inputSchema: { type: "object", properties: { app: APP }, required: ["app"], additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app);
+      if (refused) return refused;
+      try { return json(await service(ctx).service.listWindows(ctx.sessionId, { bundleId: args.app })); }
+      catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_screenshot",
+    title: "Capture app window",
+    description: "Take a picture of one window of a granted app, even when it is behind other windows, minimized or on another Space, and list its interactive elements, each as \"[N] role \"title\" (x, y, w×h)\" in the picture's pixels. That [N] is what element_index means in app_click and app_type, and the picture's pixels are what coordinate means. Read-only. Only the granted app's window is ever captured.\n\nNeeds the app granted with request_access. scale (0.1–1, default 1) shrinks only the returned picture; coordinates stay in full-size pixels. Returns the picture and the element list; if the window can't be captured, an error saying why (and without Accessibility permission the element list says it is missing).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID,
+        scale: { type: "number", minimum: 0.1, maximum: 1, default: 1, description: "0.1–1 (default 1): the size of the returned picture. Coordinates are unaffected." },
+      },
+      required: ["app"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app);
+      if (refused) return refused;
+      const scale = args.scale === undefined ? 1 : args.scale;
+      if (typeof scale !== "number" || !(scale >= 0.1 && scale <= 1)) return failure("invalid_params", "scale must be a number from 0.1 to 1.", "Leave scale out, or pass a value from 0.1 to 1.");
+      try {
+        const shot = await service(ctx).service.appScreenshot(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), scale });
+        const match = /^data:(image\/[a-z]+);base64,(.*)$/s.exec(String(shot.dataUrl ?? ""));
+        if (!match) return failure("capture_failed", "The capture came back without a picture.", "Call app_screenshot again; if it keeps failing, tell the user.");
+        return { content: [{ type: "text", text: shot.summary }, { type: "image", data: match[2], mimeType: match[1] }] };
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_ax_find",
+    title: "Find in app window",
+    description: "Search the element list of your last app_screenshot of a window, by role (\"button\" or \"AXButton\") and/or by text in the title, and get the matching [N] indexes to use as element_index. Read-only: it searches what that screenshot saw and doesn't look at the app again, so take a fresh app_screenshot after the window changes.\n\nNeeds the app granted with request_access and an app_screenshot of the window. Returns the matches (possibly none); without a screenshot, an error saying to take one.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID,
+        role: { type: "string", description: "The role to match, with or without the AX prefix, any case: \"button\", \"AXTextField\"." },
+        title_contains: { type: "string", description: "Text the element's title contains (any case)." },
+      },
+      required: ["app"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app);
+      if (refused) return refused;
+      try {
+        const found = service(ctx).service.axFind(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), role: args.role, titleContains: args.title_contains });
+        const head = `${found.matches.length} of ${found.total} elements in window ${found.windowId} match.`;
+        return [head, ...found.lines].join("\n");
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_click",
+    title: "Click in app window",
+    description: "Press a control in a granted app's window without bringing the app forward, through macOS Accessibility (the control's own press action). Address it one way only: element_index (an [N] from app_screenshot, the most reliable), coordinate (pixels of that screenshot), or target \"focused\"; leave all three out to press the same point as your last click in that window. This build never sends a synthetic mouse click: something Accessibility can't press is refused, not clicked blindly.\n\nNeeds the app granted with request_access (and allowed to click: browsers are view only), and an app_screenshot of the window for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example the point has no pressable control, the screen is locked, or secure input is on) and what to try next.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID, coordinate: COORDINATE, element_index: ELEMENT_INDEX, target: TARGET,
+        button: { type: "string", enum: ["left", "right"], description: "\"left\" (default) or \"right\"." },
+        count: { type: "integer", enum: [1, 2, 3], description: "1 (default), 2 for a double click, 3 for a triple click." },
+        action_summary: ACTION_SUMMARY,
+      },
+      required: ["app"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app) ?? checkAddressing(args);
+      if (refused) return refused;
+      try {
+        const result = await service(ctx).service.appClick(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), coordinate: args.coordinate,
+          element_index: args.element_index, target: args.target, ...(args.button !== undefined ? { button: args.button } : {}),
+          ...(args.count !== undefined ? { count: args.count } : {}), axOnly: true });
+        return outcomeResult(result, "Take a fresh app_screenshot and try an element_index for the control (or target \"focused\"); if Accessibility can't press it, tell the user this control can't be clicked yet.");
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_type",
+    title: "Type in app window",
+    description: "Enter text into a text field of a granted app's window without bringing the app forward. It writes the field's value through macOS Accessibility and reads it back; when a field doesn't take that, it may fall back to typing the text as key events, and checks the result again. Address the field one way only: element_index or coordinate (from app_screenshot), or target \"focused\" (the default when none is given). mode \"insert\" (default) puts the text at the cursor, replacing any selection; \"replace\" selects the field's whole content first and replaces it.\n\nNeeds the app granted with full access via request_access (browsers, terminals and code editors can't be typed into), and an app_screenshot for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example not a text field, secure input on, the user is typing) and, if only part got in, how much (deliveredPrefixChars).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID,
+        text: { type: "string", minLength: 1, description: "The text to enter." },
+        mode: { type: "string", enum: ["insert", "replace"], description: "\"insert\" (default) at the cursor / over the selection; \"replace\" the field's whole content." },
+        coordinate: COORDINATE, element_index: ELEMENT_INDEX, target: TARGET, action_summary: ACTION_SUMMARY,
+      },
+      required: ["app", "text"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app) ?? checkAddressing(args);
+      if (refused) return refused;
+      try {
+        const result = await service(ctx).service.appType(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), text: args.text,
+          ...(args.mode !== undefined ? { mode: args.mode } : {}), coordinate: args.coordinate, element_index: args.element_index, target: args.target });
+        return outcomeResult(result, "Take a fresh app_screenshot, check the field, and address it with element_index; for a partial delivery, type only the rest.");
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_release",
+    title: "Release app",
+    description: "Say you are done with an app's window: this session forgets its last screenshot and click point there, and the live preview stops following it. Give app (and optionally window_id) for one app or window, or nothing for every app. The apps stay granted for this session, so you can come back with a new app_screenshot without asking again.\n\nNeeds no grant. Returns which windows were released (an empty list when there was nothing to release); window_id without app is an error.",
+    inputSchema: {
+      type: "object",
+      properties: { app: { type: "string", description: "The app's bundle identifier. Leave it out to release every app." }, window_id: WINDOW_ID },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      try { return json(service(ctx).service.release(ctx.sessionId, { bundleId: args.app, windowId: windowId(args) })); }
+      catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+];

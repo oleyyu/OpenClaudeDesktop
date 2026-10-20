@@ -48,10 +48,13 @@ function checkId(value, name) {
   return value;
 }
 
-/** "[N] AXButton "Back" (x, y, w×h)" lines in frame pixels, the first `limit` of them. */
+/** One "[N] AXButton "Back" (x, y, w×h)" line in frame pixels. */
+const elementLine = (e) => `[${e.index}] ${e.role}${e.subrole ? `/${e.subrole}` : ""}${e.title ? ` ${JSON.stringify(e.title)}` : ""} (${e.frame.x}, ${e.frame.y}, ${e.frame.width}×${e.frame.height})${e.checked === true ? " checked" : ""}${e.enabled === false ? " disabled" : ""}`;
+
+/** The summary lines of a shot, the first `limit` of them. */
 function summaryText(shot, limit = SUMMARY_LINES) {
   const elements = Array.isArray(shot.elements) ? shot.elements : [];
-  const lines = elements.slice(0, limit).map((e) => `[${e.index}] ${e.role}${e.subrole ? `/${e.subrole}` : ""}${e.title ? ` ${JSON.stringify(e.title)}` : ""} (${e.frame.x}, ${e.frame.y}, ${e.frame.width}×${e.frame.height})${e.checked === true ? " checked" : ""}${e.enabled === false ? " disabled" : ""}`);
+  const lines = elements.slice(0, limit).map(elementLine);
   const head = `Window ${shot.windowId} of ${shot.bundleId}: ${shot.frameWidth}×${shot.frameHeight} frame px${shot.width !== shot.frameWidth ? ` (image ${shot.width}×${shot.height})` : ""}.`;
   if (shot.axTrusted === false) return `${head}\nNo element summary: Accessibility is not granted.`;
   if (!elements.length) return `${head}\nNo actionable elements reported.`;
@@ -122,8 +125,47 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       state.points.delete(key);
       return { ...shot, summary: summaryText(shot) };
     },
-    /** app_click on the AX rung. Refusals come back as {outcome: "unsupported", reasonCode, blocked: true}. */
-    async appClick(sessionId, { bundleId, windowId, coordinate, element_index: elementIndex, target, count = 1, button = "left", dryRun = false } = {}) {
+    /**
+     * app_ax_find: the elements of the last app_screenshot of one window whose role (with or without "AX", any case)
+     * and title (a case-insensitive substring) match. Nothing is read from the app again: [N] stays the screenshot's.
+     */
+    axFind(sessionId, { bundleId, windowId, role, titleContains } = {}) {
+      granted(sessionId, bundleId);
+      if (role !== undefined && typeof role !== "string") throw coded("invalid_params", "role must be a string.");
+      if (titleContains !== undefined && typeof titleContains !== "string") throw coded("invalid_params", "title_contains must be a string.");
+      const state = stateFor(sessionId);
+      const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
+      const shot = wid === undefined ? undefined : state.shots.get(`${bundleId}:${wid}`);
+      if (!shot) throw coded("screenshot_required", `Take an app_screenshot of ${bundleId}${windowId ? ` window ${windowId}` : ""} first: app_ax_find searches its element summary.`);
+      const wanted = role?.trim().toLowerCase().replace(/^ax/, "") || null, needle = titleContains?.trim().toLowerCase() || null;
+      const roleOf = (value) => (typeof value === "string" ? value.toLowerCase().replace(/^ax/, "") : "");
+      const elements = Array.isArray(shot.elements) ? shot.elements : [];
+      const matches = elements.filter((e) => (!wanted || roleOf(e.role) === wanted || roleOf(e.subrole) === wanted)
+        && (!needle || (typeof e.title === "string" && e.title.toLowerCase().includes(needle))));
+      return { windowId: shot.windowId, total: elements.length, matches, lines: matches.map(elementLine) };
+    },
+    /**
+     * app_release: forget what this session holds on an app's window (its last screenshot, the last action point, the
+     * live preview's target), or on every window with no bundleId. The grants stay: releasing is not revoking.
+     */
+    release(sessionId, { bundleId, windowId } = {}) {
+      if (bundleId !== undefined && !validBundleId(bundleId)) throw coded("invalid_params", "bundleId must be a bundle identifier.");
+      if (windowId !== undefined && bundleId === undefined) throw coded("invalid_params", "window_id requires app.");
+      const wid = checkId(windowId, "windowId");
+      const state = windows.get(sessionId);
+      if (!state) return { released: [] };
+      const matches = (key) => bundleId === undefined || (wid === undefined ? key.startsWith(`${bundleId}:`) : key === `${bundleId}:${wid}`);
+      const released = [...new Set([...state.shots.keys(), ...state.points.keys()])].filter(matches);
+      for (const key of released) { state.shots.delete(key); state.points.delete(key); }
+      for (const [app, last] of [...state.last]) if (matches(`${app}:${last}`)) state.last.delete(app);
+      if (state.target && matches(`${state.target.bundleId}:${state.target.windowId}`)) delete state.target;
+      return { released };
+    },
+    /**
+     * app_click on the AX rung. Refusals come back as {outcome: "unsupported", reasonCode, blocked: true}.
+     * axOnly: no raw rung behind the reason policy (a fallback reason is refused), as the agent tool asks until M4.
+     */
+    async appClick(sessionId, { bundleId, windowId, coordinate, element_index: elementIndex, target, count = 1, button = "left", dryRun = false, axOnly = false } = {}) {
       granted(sessionId, bundleId);
       checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), button === "right" ? "right_click" : "left_click");
       if (button !== "left" && button !== "right") throw coded("invalid_params", "button must be \"left\" or \"right\".");
@@ -165,7 +207,7 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       const gate = actionGate(await native.call("probe"), "left_click");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
       // The raw rung (reason-policy FALLBACK only): a coordinate click at the same point, both forms from budget.cjs.
-      const raw = point && shot ? () => native.call("rawClick", {
+      const raw = point && shot && axOnly !== true ? () => native.call("rawClick", {
         bundleId, windowId: wid, count, button, winLocalPt: point, screenPt: windowLocalToScreen(point, shot.bounds),
         grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
       }) : null;

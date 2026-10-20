@@ -920,6 +920,26 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
         } });
         return;
       }
+      if(text==='fixture:computer-use-app') {
+        // OpenClaude Desktop's own computer-use tools (electron/agent-tools/computer-use.mjs) as a core reports them: the
+        // code_desktop server's app_list_windows (JSON text) and app_screenshot (the element summary, then the picture).
+        let png=null;try{png=fs.readFileSync(path.join(process.env.CODE_DESKTOP_DATA,'fixture-computer.png')).toString('base64');}catch{}
+        const windows={windows:[{window_id:133,title:'Downloads',is_main:true,is_minimized:false,is_hidden:false,is_off_space:false,bounds:{x:124,y:192,width:920,height:436},is_auxiliary:false}]};
+        const steps=[
+          {id:`cua-${db.next}-1`,type:'mcpToolCall',server:'code_desktop',tool:'app_list_windows',arguments:{app:'com.apple.finder'},status:'inProgress',
+            result:{content:[{type:'text',text:JSON.stringify(windows,null,2)}]}},
+          {id:`cua-${db.next}-2`,type:'mcpToolCall',server:'code_desktop',tool:'app_screenshot',arguments:{app:'com.apple.finder',window_id:133},status:'inProgress',
+            result:{content:[{type:'text',text:'Window 133 of com.apple.finder: 1840×872 frame px (image 1568×743).\n[0] AXButton "Back" (20, 104, 56×48)'},
+              ...(png?[{type:'image',mimeType:'image/png',data:png}]:[])]}},
+        ];
+        let at=0;
+        steps.forEach((step,index)=>{
+          setTimeout(()=>{turn.items.push(step);persist();notify('item/started',{threadId:thread.id,turnId:turn.id,item:step});},at+=80);
+          setTimeout(()=>{step.status='completed';persist();notify('item/completed',{threadId:thread.id,turnId:turn.id,item:step});
+            if(index===steps.length-1)complete(thread,'COMPUTER_USE_APP_FIXTURE_DONE');},at+=80);
+        });
+        return;
+      }
       if(text==='fixture:computer-use') {
         // Computer use in the three shapes the app reads (src/computer-use-model.mjs): OpenClaude Desktop's computerUse item,
         // a computer-use MCP server's tool, the Anthropic computer tool. fixture-computer.png (profile) is the screenshot.
@@ -965,6 +985,34 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
           call.status = result?.isError ? 'failed' : 'completed'; call.result = result; persist();
           notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call });
           complete(thread, result?.content?.[0]?.text?.split('\n')[0] || 'WORKFLOW_TOOL_EMPTY');
+        })();
+        return;
+      }
+      // 'fixture:app-tool <name> <json>': the model calls any of OpenClaude Desktop's tools by name, through the app's
+      // agent-tools MCP server as fixture:workflow-tool does (computer use's request_access raises the access card this
+      // way); the reply is the tool's text, or APP_TOOL_ERROR: and its text when the call failed.
+      if(text.startsWith('fixture:app-tool ')) {
+        const rest=text.slice('fixture:app-tool '.length).trim(), space=rest.indexOf(' ');
+        const name=space<0?rest:rest.slice(0,space), args=JSON.parse(space<0?'{}':rest.slice(space+1));
+        const call = { id:`mcp-${db.next}`, type:'mcpToolCall', server:'code_desktop', tool:name, status:'inProgress', arguments:args };
+        turn.items.push(call); persist();
+        notify('item/started', { threadId: thread.id, turnId: turn.id, item: call });
+        const server = JSON.parse(process.env.CODE_DESKTOP_AGENT_TOOLS_SERVER || 'null');
+        if (!server) { call.status='failed'; notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call }); complete(thread, 'NO_AGENT_TOOLS'); return; }
+        const { spawn } = require('node:child_process');
+        const child = spawn(server.command, server.args, { env: { ...process.env, ...server.env }, stdio: ['pipe', 'pipe', 'ignore'] });
+        const waiting = new Map(); let buffer = '', seq = 0;
+        child.stdout.on('data', chunk => { buffer += chunk; let n; while ((n = buffer.indexOf('\n')) >= 0) { const line = buffer.slice(0, n); buffer = buffer.slice(n + 1); try { const message = JSON.parse(line); waiting.get(message.id)?.(message); } catch {} } });
+        const rpc = (method, params) => new Promise(resolve => { const id = ++seq; waiting.set(id, resolve); child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+        (async () => {
+          await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'fixture', version: '1' } });
+          const result = (await rpc('tools/call', { name, arguments: args, _meta: { threadId: thread.id } })).result;
+          logRequest('mcp:tools/call', { name, result });
+          child.kill();
+          call.status = result?.isError ? 'failed' : 'completed'; call.result = result; persist();
+          notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call });
+          const reply = result?.content?.find(part => part?.type === 'text')?.text ?? 'APP_TOOL_EMPTY';
+          complete(thread, result?.isError ? `APP_TOOL_ERROR: ${reply}` : reply);
         })();
         return;
       }

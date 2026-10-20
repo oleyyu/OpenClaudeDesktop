@@ -83,6 +83,9 @@ export const APP_TOOLS = Object.freeze({
   AskUserQuestion: "AskUserQuestion", PushNotification: "PushNotification", SendUserFile: "SendUserFile",
   ReportFindings: "ReportFindings", Monitor: "Monitor", MonitorStop: "TaskStop", CronCreate: "CronCreate", CronList: "CronList",
   CronDelete: "CronDelete", WebFetch: "WebFetch", NotebookEdit: "NotebookEdit", Workflow: "Workflow", WorkflowStop: "TaskStop",
+  // agent-tools/computer-use.mjs: the official computer-use server's names, so the original rows read its verbs.
+  ...Object.fromEntries(["request_access", "app_list_windows", "app_screenshot", "app_ax_find", "app_click", "app_type", "app_release"]
+    .map((tool) => [tool, `mcp__computer-use__${tool}`])),
 });
 const COLLAB_TOOLS = Object.freeze({ spawnAgent: "Task", sendInput: "SendMessage", sendMessage: "SendMessage", wait: "TaskOutput", closeAgent: "TaskStop", resumeAgent: "Task" });
 

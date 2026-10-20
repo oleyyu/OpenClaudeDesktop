@@ -27,7 +27,8 @@ function FrameBox({ onOpen, openLabel, chrome, buttonRef, children }) {
     : <div className={chrome}>{children}</div>;
 }
 
-const isStep = (item) => { const action = computerUseAction(item); return !!action && action.kind !== "request_access"; };
+// Asking for access and handing the apps back (app_release) are not steps, as in-use.cjs counts them.
+const isStep = (item) => { const action = computerUseAction(item); return !!action && action.kind !== "request_access" && action.kind !== "release"; };
 
 /** Whether main counts the session as using the computer (in-use.cjs), kept current by its events. */
 function useInUse(sessionId, desktop) {

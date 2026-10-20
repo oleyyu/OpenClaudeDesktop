@@ -2,7 +2,7 @@
 // electron/computer-use/actions.mjs (shared with the main process); this module adds the official verbs, the tool names
 // the original rows read, the screenshot and the request_access card's model.
 import { toolOutputImages } from "./generic-tool-model.mjs";
-import { APP_KINDS, SERVER_NAMES, computerUseAction } from "../electron/computer-use/actions.mjs";
+import { APP_KINDS, SERVER_NAMES, computerUseAction, ownComputerUseTool } from "../electron/computer-use/actions.mjs";
 import { t } from "../electron/i18n/index.mjs";
 
 const record = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -62,6 +62,7 @@ const VERBS = {
   find: () => [t("Finding in window"), t("Found in window"), t("Failed to find in window")],
   menu: () => [t("Using menu bar"), t("Used menu bar"), t("Failed to use menu bar")],
   focus: () => [t("Moving keyboard focus"), t("Moved keyboard focus"), t("Failed to move keyboard focus")],
+  release: () => [t("Releasing apps"), t("Released apps"), t("Failed to release apps")],
   request_access: () => [t("Asking to use apps on your computer"), t("Asked to use apps on your computer"), t("Failed to ask to use apps")],
 };
 const CLICKS = new Set(["click", "double_click", "triple_click", "right_click", "middle_click"]);
@@ -143,7 +144,8 @@ function accessApp(entry, index) {
     installed: typeof entry.installed === "boolean" ? entry.installed : null, alreadyGranted: entry.alreadyGranted === true };
 }
 
-const isAccessCall = (item) => item?.type === "mcpToolCall" && SERVER_NAMES.test(str(item.server)) && str(item.tool).replace(/^computer_/, "") === "request_access";
+const isAccessCall = (item) => item?.type === "mcpToolCall" && (SERVER_NAMES.test(str(item.server)) && str(item.tool).replace(/^computer_/, "") === "request_access"
+  || ownComputerUseTool(item) === "request_access");
 
 /**
  * The access request an MCP tool-call approval stands for, or null.

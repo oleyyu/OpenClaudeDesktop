@@ -405,7 +405,8 @@ const computerUse = require("./computer-use/service.cjs").createComputerUse({ se
 // once the app is ready) both follow it. Asking for access is not using the computer.
 const { computerUseAction } = require("./computer-use/actions.mjs");
 const computerUseInUse = require("./computer-use/in-use.cjs").createInUse({
-  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && action.kind !== "request_access"; },
+  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && action.kind !== "request_access" && action.kind !== "release"; },
+  isRelease: (item) => computerUseAction(item)?.kind === "release",
 });
 let computerUseGlow = null;
 // The computer-use card's live frames (preview.cjs): the window a session last looked at, while a card subscribes.
@@ -735,6 +736,38 @@ function runAgentLayoutCommand(sessionId, command) {
   });
 }
 agentTools.provide("layout", (session) => ({ run: (command) => runAgentLayoutCommand(session.id, command) }));
+// Computer use (agent-tools/computer-use.mjs): the session's grants and windows live in `computerUse` above;
+// request_access names apps as people do (computer-use/apps.cjs finds their bundles) and asks with the access card.
+const { createAppResolver, appIconDataUrl } = require("./computer-use/apps.cjs");
+const computerUseApps = createAppResolver();
+agentTools.provide("computerUse", (session, ctx) => ({
+  service: computerUse,
+  resolveApps: (names) => computerUseApps.resolveAll(names),
+  ask: (access) => computerUseAccessCard(session, access, ctx),
+}));
+/**
+ * The request_access card (computer-use-approval-card.jsx): an MCP tool-call elicitation whose _meta.computer_use_access
+ * carries the resolved apps (name, tier, icon, installed, already granted), the flags and the reason, as the
+ * codex-server fixture's 'fixture:computer-use-access' does. "accept" | "decline", or "unavailable" with no connection.
+ */
+async function computerUseAccessCard(session, access, ctx) {
+  const owner = client;
+  if (!owner || typeof owner.localApproval !== "function" || typeof session?.id !== "string" || !config?.threadIds?.includes(session.id)) return "unavailable";
+  const apps = await Promise.all(access.apps.map(async (entry) => {
+    const iconDataUrl = await appIconDataUrl(entry.path, nativeImage);
+    return { ...(entry.bundleId ? { bundleId: entry.bundleId } : {}), displayName: entry.displayName, ...(entry.tier ? { tier: entry.tier } : {}),
+      installed: entry.installed === true, alreadyGranted: entry.alreadyGranted === true, ...(iconDataUrl ? { iconDataUrl } : {}) };
+  }));
+  const params = {
+    threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", serverName: agentTools.SERVER_NAME, mode: "form",
+    message: `Allow the ${agentTools.SERVER_NAME} MCP server to run tool "request_access"?`, requestedSchema: { type: "object", properties: {} },
+    _meta: { codex_approval_kind: "mcp_tool_call", persist: ["session"], tool_params: access.toolParams,
+      computer_use_access: { reason: access.reason, flags: access.flags, apps } },
+  };
+  const result = await owner.localApproval("mcpServer/elicitation/request", params, { signal: ctx?.signal, outlivesTurn: agentToolCallOutlivesTurn(ctx?.call, owner) });
+  if (result === undefined) return "unavailable";
+  return !ctx?.signal?.aborted && result?.action === "accept" ? "accept" : "decline";
+}
 const AGENT_SESSION_KEY = `mcp_servers.${agentTools.SERVER_NAME}.env.CODE_DESKTOP_AGENT_SESSION`;
 const AGENT_TOKEN_KEY = `mcp_servers.${agentTools.SERVER_NAME}.env.CODE_DESKTOP_AGENT_TOOLS_TOKEN`;
 // thread/start and thread/fork carry a start identity (bound to the new thread below), thread/resume the thread
