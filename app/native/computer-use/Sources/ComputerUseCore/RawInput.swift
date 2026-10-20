@@ -24,6 +24,49 @@ enum DispatchCode: String {
 /// session gates (SessionState.rawInputRefusal), re-resolves the window and re-checks who owns the point, then hands
 /// one Target to Dispatcher. Result {outcome: ok | ineffective | unsupported, reasonCode, delivered, verified, readback}.
 public enum RawInput {
+    private static let dragLock = NSLock()
+
+    public struct DragPoint {
+        public let local: CGPoint
+        public let screen: CGPoint
+        public init(local: CGPoint, screen: CGPoint) { self.local = local; self.screen = screen }
+    }
+
+    /// A drag owns its press until cleanup completes. Re-resolve and validate all vertices before preparing.
+    public static func drag(bundleId: String, windowId: UInt32, points: [DragPoint], pixelScale: Double,
+                            button: String, focused: Bool, grantedBundleIds: Set<String>) throws -> [String: Any] {
+        guard dragLock.try() else { return refused("drag_in_progress") }
+        defer { dragLock.unlock() }
+        if case .failure(let error) = EventFactory.source() { return refused(error.code) }
+        let gate = { SessionState.rawInputRefusal(focused: focused, grantedBundleIds: grantedBundleIds) }
+        if let reason = gate() { return refused(reason) }
+        let window = try WindowList.resolve(bundleId: bundleId, windowId: windowId)
+        if let reason = windowRefusal(window) { return refused(reason) }
+        var targets: [EventFactory.Target] = []
+        for point in points {
+            let target: EventFactory.Target
+            switch EventFactory.target(window: window, winLocalPt: point.local, screenPt: point.screen) {
+            case .success(let t): target = t
+            case .failure(let error): return refused(error.code)
+            }
+            if let owner = AXLadder.pointOwnerRefusal(pid: target.pid, windowId: windowId, screenPt: target.screenPoint) {
+                return refused(owner.reason, owner.extra)
+            }
+            targets.append(target)
+        }
+        // Initial straight-line delivery; waypoint resampling is added in the path-interpolation stage.
+        guard let start = targets.first, let end = targets.last else { return refused("invalid_params") }
+        let samples = [start] + (1...12).map { index in
+            let t = Double(index) / 12
+            return start.moved(
+                screenPoint: CGPoint(x: start.screenPoint.x + (end.screenPoint.x - start.screenPoint.x) * t,
+                                     y: start.screenPoint.y + (end.screenPoint.y - start.screenPoint.y) * t),
+                windowLocal: CGPoint(x: start.windowLocal.x + (end.windowLocal.x - start.windowLocal.x) * t,
+                                     y: start.windowLocal.y + (end.windowLocal.y - start.windowLocal.y) * t))
+        }
+        return Dispatcher.drag(targets: samples, buttonName: button, refusal: gate).json
+    }
+
     static func refused(_ reason: String, _ extra: [String: Any] = [:]) -> [String: Any] {
         ["outcome": "unsupported", "reasonCode": reason, "delivered": false].merging(extra) { a, _ in a }
     }

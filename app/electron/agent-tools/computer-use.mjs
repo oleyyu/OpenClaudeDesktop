@@ -4,7 +4,7 @@
 // app_type (Accessibility first, then the reason policy's raw rung), app_release, app_focus and app_menu (Accessibility
 // through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps, list_granted_applications and app_batch
 // (the tools above in order). The rest of the official names are registered and answer with a reason code instead of
-// being missing: requires_raw_path (app_key, app_scroll, app_drag, app_bring_to_current_space — M4), not_supported_in_build
+// being missing: requires_raw_path (app_key, app_scroll, app_bring_to_current_space — M4), not_supported_in_build
 // (full control, teach mode), permission_denied → request_access (the clipboard) (docs/computer-use-handoff-20261020.md).
 // ctx.computerUse: { service (createComputerUse), resolveApps(names) → [{requested, bundleId, displayName, path,
 //   installed}], listApps({query, runningFirst, limit, cursor}) → {apps, total, nextCursor?} (apps.cjs),
@@ -13,6 +13,7 @@
 // request_access asks with the access card (src/computer-use-approval-card.jsx) and records the answer in the session's
 // grants; every other tool checks the grants first and answers a missing grant, like any refusal, with a structured
 // error ({ok: false, error: {code, message, next_step}}, isError) instead of throwing, so the agent knows what to do next.
+import { t } from "../i18n/index.mjs";
 import grantsModule from "../computer-use/grants.cjs";
 
 const { tierFor, validBundleId } = grantsModule;
@@ -416,7 +417,7 @@ export const tools = [
   {
     name: "app_batch",
     title: "Run app actions",
-    description: "Run several actions on one granted app's window in order, in one call: click, type, screenshot and zoom work as app_click, app_type, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key, scroll and drag need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.",
+    description: "Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.",
     inputSchema: {
       type: "object",
       properties: {
@@ -488,21 +489,31 @@ export const tools = [
   },
   {
     name: "app_drag",
-    title: "Drag in app window",
-    description: "Drag from one point of a granted app's window to another (coordinate to to_coordinate, or along path), without bringing it forward. Not available in this build: a drag is mouse input on the raw input path, which isn't enabled yet, so every call returns reasonCode requires_raw_path. Use app_menu for commands such as Move To or Duplicate, or tell the user the drag needs them.",
+    title: t("Drag in app window"),
+    description: t("Drag inside one granted app window from coordinate to to_coordinate, optionally through 2–20 path waypoints. Requires full access via request_access and a prior app_screenshot; all points use that screenshot's full-resolution pixels. button defaults to left. Uses targeted mouse events with continuous safety checks and a 3000 ms limit. Returns before/after readback when available; verified:false means delivery could not be checked. Failures include drag_ineffective, drag_timeout, screen_locked, secure_input_active, user_actively_typing and system_app_ignores_posted_events. For the last reason, use an Accessibility alternative such as app_menu."),
     inputSchema: {
       type: "object",
       properties: {
         app: APP, window_id: WINDOW_ID, coordinate: COORDINATE,
-        to_coordinate: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2, description: "[x, y] where the drag ends, in the last app_screenshot's pixels." },
-        path: { type: "array", items: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 }, minItems: 2, maxItems: 20, description: "2–20 [x, y] points to drag through, instead of coordinate and to_coordinate." },
+        to_coordinate: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2, description: t("Drag endpoint in full-resolution screenshot pixels.") },
+        path: { type: "array", items: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 }, minItems: 2, maxItems: 20, description: t("Optional 2–20 waypoints between coordinate and to_coordinate.") },
+        button: { type: "string", enum: ["left", "right", "middle"], default: "left" },
         action_summary: ACTION_SUMMARY,
       },
-      required: ["app"],
+      required: ["app", "coordinate", "to_coordinate"],
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-    handler: async () => rawPathRefusal("A drag"),
+    handler: async (args = {}, ctx) => {
+      try {
+        const denied = checkGrant(ctx, args.app);
+        if (denied) return denied;
+        return outcomeResult(await service(ctx).service.appDrag(ctx.sessionId, {
+          bundleId: args.app, windowId: windowId(args), coordinate: args.coordinate,
+          to_coordinate: args.to_coordinate, path: args.path, button: args.button,
+        }), t("Take a fresh app_screenshot to inspect the result before retrying, or use app_menu for an equivalent command."));
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
   },
   {
     name: "app_bring_to_current_space",

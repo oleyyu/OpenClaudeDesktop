@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "computer_use", type: .dynamic, targets: ["ComputerUseNAPI", "ComputerUseBridge"]),
     ],
     targets: [
+        .testTarget(name: "ComputerUseCoreTests", dependencies: ["ComputerUseCore"]),
         .target(
             name: "ComputerUseCore",
             path: "Sources/ComputerUseCore",

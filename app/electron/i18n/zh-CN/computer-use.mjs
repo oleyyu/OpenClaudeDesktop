@@ -4,6 +4,12 @@
 // "View only" / "Click only" / "All", "Deny", "Reason" and "Allow for this session" are already translated elsewhere.
 // Keys are the exact English source strings.
 export default {
+  "Drag in app window": "在应用窗口中拖拽",
+  "Drag inside one granted app window from coordinate to to_coordinate, optionally through 2–20 path waypoints. Requires full access via request_access and a prior app_screenshot; all points use that screenshot's full-resolution pixels. button defaults to left. Uses targeted mouse events with continuous safety checks and a 3000 ms limit. Returns before/after readback when available; verified:false means delivery could not be checked. Failures include drag_ineffective, drag_timeout, screen_locked, secure_input_active, user_actively_typing and system_app_ignores_posted_events. For the last reason, use an Accessibility alternative such as app_menu.": "在已授权应用的同一窗口内，从 coordinate 拖到 to_coordinate，可选经过 path 的 2–20 个途经点。需要先通过 request_access 获得完整权限，再调用 app_screenshot；所有坐标均为该截图的全分辨率像素。button 默认为 left。定向投递鼠标事件，全程检查安全状态，最长 3000 毫秒。可回读时返回 before/after；verified:false 表示无法验证投递效果。失败原因包括 drag_ineffective、drag_timeout、screen_locked、secure_input_active、user_actively_typing 和 system_app_ignores_posted_events。最后一种情况请改用 app_menu 等辅助功能替代操作。",
+  "Drag endpoint in full-resolution screenshot pixels.": "拖拽终点，使用截图全分辨率像素坐标。",
+  "Optional 2–20 waypoints between coordinate and to_coordinate.": "coordinate 和 to_coordinate 之间可选的 2–20 个途经点。",
+  "Take a fresh app_screenshot to inspect the result before retrying, or use app_menu for an equivalent command.": "重试前先调用 app_screenshot 检查结果，或通过 app_menu 执行等效命令。",
+
   "Can run commands on your computer": "可以在你的电脑上运行命令",
   "Can open, change, or delete any file, and run apps and scripts": "可以打开、更改或删除任何文件，并运行应用和脚本",
   "Can change system settings": "可以更改系统设置",

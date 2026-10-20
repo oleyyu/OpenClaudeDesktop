@@ -20,13 +20,13 @@ const cu = await import('../electron/agent-tools/computer-use.mjs');
 const { computerUseAction } = await import('../electron/computer-use/actions.mjs');
 const { sdkToolName } = await import('../src/transcript-sdk-tools.mjs');
 
-// The 13 tools that do what they say; the 11 registered with a reason code (the official set of 24 names).
+// The 14 tools that do what they say; the 10 registered with a reason code (the official set of 24 names).
 const WORKING = ['request_access', 'app_list_windows', 'app_screenshot', 'app_ax_find', 'app_click', 'app_type', 'app_release',
-  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch', 'list_granted_applications'];
-const REASONED = { app_key: 'requires_raw_path', app_scroll: 'requires_raw_path', app_drag: 'requires_raw_path', app_bring_to_current_space: 'requires_raw_path',
+  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch', 'list_granted_applications', 'app_drag'];
+const REASONED = { app_key: 'requires_raw_path', app_scroll: 'requires_raw_path', app_bring_to_current_space: 'requires_raw_path',
   request_full_control: 'not_supported_in_build', release_full_control: 'not_supported_in_build', read_clipboard: 'permission_denied', write_clipboard: 'permission_denied',
   request_teach_access: 'not_supported_in_build', teach_step: 'not_supported_in_build', teach_batch: 'not_supported_in_build' };
-const OPEN = [...WORKING, 'app_key', 'app_scroll', 'app_drag', 'app_bring_to_current_space', 'request_full_control', 'release_full_control',
+const OPEN = [...WORKING.filter((name) => name !== 'app_drag'), 'app_key', 'app_scroll', 'app_drag', 'app_bring_to_current_space', 'request_full_control', 'release_full_control',
   'read_clipboard', 'write_clipboard', 'request_teach_access', 'teach_step', 'teach_batch'];
 const OFFICIAL = ['request_access', 'app_list_windows', 'app_screenshot', 'app_zoom', 'app_ax_find', 'app_click', 'app_type', 'app_key', 'app_scroll', 'app_drag',
   'app_menu', 'app_batch', 'app_release', 'app_focus', 'app_bring_to_current_space', 'list_apps', 'request_full_control', 'release_full_control', 'read_clipboard',
@@ -52,6 +52,7 @@ function fakeNative({ calls = [] } = {}) {
           bundleId: params.bundleId, bounds: { x: 0, y: 0, width: 800, height: 500 }, jpegQuality: 0.75, elements };
       }
       if (method === 'axClick') return { outcome: 'ok', path: 'ax' };
+      if (method === 'drag') return { outcome: 'ineffective', reasonCode: 'drag_ineffective', delivered: true, mouseUpSent: true };
       if (method === 'axType') return { outcome: 'ok', path: 'ax' };
       throw Object.assign(new Error(`unexpected ${method}`), { code: 'unknown_method' });
     },
@@ -181,7 +182,8 @@ test('schemas: every inputSchema compiles under Ajv (strict) and checks real arg
   bad('app_key', { app: FINDER });
   ok('app_scroll', { app: FINDER, dy: -3, coordinate: [10, 10] });
   bad('app_scroll', { app: FINDER });
-  ok('app_drag', { app: FINDER, path: [[0, 0], [10, 10]] });
+  ok('app_drag', { app: FINDER, coordinate: [0, 0], to_coordinate: [20, 20], path: [[0, 0], [10, 10]], button: 'left' });
+  bad('app_drag', { app: FINDER, path: [[0, 0], [10, 10]] });
   bad('app_drag', { app: FINDER, path: [[0, 0]] });
   ok('app_bring_to_current_space', { app: FINDER, window_id: 7 });
   bad('app_bring_to_current_space', { app: FINDER });
@@ -374,7 +376,7 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
 
-test('app_click: right, double and triple click go the normal path; app_drag still answers requires_raw_path', async () => {
+test('app_click: right, double and triple click go the normal path; app_drag reaches the native sequence', async () => {
   const { call, body, native } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
@@ -385,7 +387,9 @@ test('app_click: right, double and triple click go the normal path; app_drag sti
     assert.deepEqual([sent.button, sent.count], [args.button ?? 'left', args.count ?? 1], JSON.stringify(args));
   }
   const drag = body(await call('app_drag', { app: FINDER, coordinate: [1, 1], to_coordinate: [5, 5] }));
-  assert.equal(drag.reasonCode, 'requires_raw_path');
+  assert.equal(drag.reasonCode, 'drag_ineffective');
+  assert.equal(drag.mouseUpSent, true);
+  assert.equal(native.calls.filter(([method]) => method === 'drag').length, 1);
   // The parameters stay in the schema; their descriptions say what Accessibility does, and nothing about raw input.
   const click = cu.tools.find((tool) => tool.name === 'app_click');
   assert.deepEqual(click.inputSchema.properties.button.enum, ['left', 'right']);
@@ -687,7 +691,7 @@ test('app_batch: stops at the first action that fails; the rest do not run', asy
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
   const clicks = () => native.calls.filter(([method]) => method === 'axClick').length;
-  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3 }, 'requires_raw_path'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'requires_raw_path']]) {
+  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3 }, 'requires_raw_path'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'drag_ineffective']]) {
     const start = clicks();
     const result = await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 0 }, stopper, { action: 'click', element_index: 2 }] });
     assert.equal(result.isError, true);
@@ -719,7 +723,7 @@ test('ax-helper.cjs: one JSON request per process, the envelope unwrapped, detai
   await assert.rejects(() => createAxHelper({ platform: 'linux', exec: async () => '' }).call('probe'), (error) => error.code === 'helper_unavailable');
 });
 
-test('the 11 names without the capability yet: a precise reasonCode, a next step, and nothing reaches the native side or the helper', async () => {
+test('the 10 names without the capability yet: a precise reasonCode, a next step, and nothing reaches the native side or the helper', async () => {
   const { call, body, native, axHelper } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   const before = [native.calls.length, axHelper.calls.length];

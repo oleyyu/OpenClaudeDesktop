@@ -69,6 +69,8 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
         return try axClick(params)
     case "rawClick":
         return try rawClick(params)
+    case "drag":
+        return try drag(params)
     case "axType":
         return try TextInput.axType(try typeRequest(params))
     case "rawType":
@@ -141,6 +143,26 @@ func point(_ params: Params, _ key: String) throws -> CGPoint {
         throw CUError.invalidParams("\(key) must be {x, y}")
     }
     return CGPoint(x: x, y: y)
+}
+
+func drag(_ params: Params) throws -> [String: Any] {
+    guard let bundleId = params.string("bundleId"), !bundleId.isEmpty,
+          let windowId = params.uint32("windowId"),
+          let granted = params.strings("grantedBundleIds"), granted.contains(bundleId),
+          let vertices = params.raw["points"] as? [[String: Any]], (2...22).contains(vertices.count),
+          let pixelScale = params.double("pixelScale"), pixelScale > 0, pixelScale <= 16 else {
+        throw CUError.invalidParams("drag requires an app, window, grants, 2–22 converted points and pixelScale in (0, 16]")
+    }
+    let button = params.raw["button"] == nil ? "left" : params.string("button")
+    guard let button, ["left", "right", "middle"].contains(button) else {
+        throw CUError.invalidParams("button must be left, right or middle")
+    }
+    let points = try vertices.map { vertex -> RawInput.DragPoint in
+        let p = Params(vertex)
+        return .init(local: try point(p, "winLocalPt"), screen: try point(p, "screenPt"))
+    }
+    return try RawInput.drag(bundleId: bundleId, windowId: windowId, points: points, pixelScale: pixelScale,
+                            button: button, focused: params.raw["focused"] as? Bool ?? false, grantedBundleIds: Set(granted))
 }
 
 /// One coordinate click on the raw rung. Gates and ownership are re-checked inside RawInput.click.

@@ -42,27 +42,82 @@ enum Dispatcher {
         return .ok
     }
 
-    static func drag(from: EventFactory.Target, to: EventFactory.Target, steps: Int = 12) -> DispatchCode {
-        guard case .success(let source) = EventFactory.source(),
-              let down = EventFactory.mouse(source, .leftMouseDown, from, button: .left),
-              let up = EventFactory.mouse(source, .leftMouseUp, to, button: .left) else {
-            return .scgeventUnavailable
+    /// Mutable so the deferred release is reflected in the returned result on every exit path.
+    final class DragResult {
+        var reason: String?
+        var pressed = false
+        var released = false
+        var moved = 0
+        var json: [String: Any] {
+            ["outcome": reason == nil ? "ok" : (pressed ? "ineffective" : "unsupported"),
+             "reasonCode": reason as Any? ?? NSNull(), "delivered": pressed, "verified": false,
+             "mouseUpSent": released, "dragSteps": moved, "eventKind": "drag"]
         }
-        down.postToPid(from.pid)
-        let steps = max(steps, 1)
-        for i in 1...steps {
-            let t = Double(i) / Double(steps)
-            let p = CGPoint(x: from.screenPoint.x + (to.screenPoint.x - from.screenPoint.x) * t,
-                            y: from.screenPoint.y + (to.screenPoint.y - from.screenPoint.y) * t)
-            let local = CGPoint(x: from.windowLocal.x + (to.windowLocal.x - from.windowLocal.x) * t,
-                                y: from.windowLocal.y + (to.windowLocal.y - from.windowLocal.y) * t)
-            if let moved = EventFactory.mouse(source, .leftMouseDragged, from.moved(screenPoint: p, windowLocal: local), button: .left) {
-                moved.postToPid(from.pid)
+    }
+
+    /// Sequencing only. The injectable clock/poster lets tests interrupt the real state machine without locking
+    /// the user's desktop. No AX IPC is allowed while held; the session gate is checked before every event.
+    static func dragSequence(targets: [EventFactory.Target], buttonName: String,
+                             refusal: () -> String?, now: () -> Double = { ProcessInfo.processInfo.systemUptime },
+                             pause: (useconds_t) -> Void = { usleep($0) },
+                             post: (CGEventType, EventFactory.Target) -> Void) -> DragResult {
+        let result = DragResult()
+        guard let start = targets.first, targets.count >= 2 else { result.reason = "invalid_params"; return result }
+        let down: CGEventType = buttonName == "right" ? .rightMouseDown : buttonName == "middle" ? .otherMouseDown : .leftMouseDown
+        let dragged: CGEventType = buttonName == "right" ? .rightMouseDragged : buttonName == "middle" ? .otherMouseDragged : .leftMouseDragged
+        let up: CGEventType = buttonName == "right" ? .rightMouseUp : buttonName == "middle" ? .otherMouseUp : .leftMouseUp
+        let began = now()
+        var current = start
+        func abort() -> Bool {
+            result.reason = refusal() ?? (now() - began >= 3 ? "drag_timeout" : nil)
+            return result.reason != nil
+        }
+        defer {
+            if result.pressed {
+                // Cleanup bypasses all gates: even a locked session must receive the matching mouseUp.
+                post(up, current)
+                result.released = true
+                if result.reason == nil && !abort() { post(.mouseMoved, current) }
             }
-            usleep(8_000)
         }
-        up.postToPid(from.pid)
-        return .ok
+        if abort() { return result }
+        post(.mouseMoved, start)                         // prepare
+        pause(16_000)
+        if abort() { return result }
+        post(down, start)                               // press
+        result.pressed = true
+        for (index, target) in targets.dropFirst().enumerated() {
+            pause(index < 3 ? 20_000 : 10_000)           // cross the drag threshold slowly
+            if abort() { return result }
+            current = target
+            post(dragged, current)                      // move
+            result.moved += 1
+        }
+        _ = abort()
+        return result                                  // release + settle in defer
+    }
+
+    static func drag(targets: [EventFactory.Target], buttonName: String, refusal: () -> String?) -> DragResult {
+        let failure = DragResult()
+        guard case .success(let source) = EventFactory.source() else {
+            failure.reason = "scgevent_unavailable"; return failure
+        }
+        let button: CGMouseButton = buttonName == "right" ? .right : buttonName == "middle" ? .center : .left
+        let kinds: [CGEventType] = buttonName == "right" ? [.mouseMoved, .rightMouseDown, .rightMouseDragged, .rightMouseUp]
+            : buttonName == "middle" ? [.mouseMoved, .otherMouseDown, .otherMouseDragged, .otherMouseUp]
+            : [.mouseMoved, .leftMouseDown, .leftMouseDragged, .leftMouseUp]
+        // Allocate every event, especially releases, BEFORE pressing. Cleanup cannot fail due to allocation.
+        var events: [UInt32: [CGEvent]] = [:]
+        for kind in kinds {
+            let built = targets.compactMap { EventFactory.mouse(source, kind, $0, button: button, clickState: 1) }
+            guard built.count == targets.count else { failure.reason = "scgevent_unavailable"; return failure }
+            events[kind.rawValue] = built
+        }
+        var index = 0
+        return dragSequence(targets: targets, buttonName: buttonName, refusal: refusal) { kind, target in
+            if kind == kinds[2] { index += 1 }
+            events[kind.rawValue]![index].postToPid(target.pid)
+        }
     }
 
     static func scroll(target: EventFactory.Target, dy: Int32, dx: Int32 = 0) -> DispatchCode {

@@ -50,7 +50,8 @@ async function deliver(raw, { wait = sleep } = {}) {
   for (;;) {
     delivered = await raw();
     const backoff = Object.hasOwn(policy.RETRY, delivered?.reasonCode ?? "") ? policy.RETRY[delivered.reasonCode] : null;
-    if (delivered?.outcome === "ok" || !backoff || tries >= backoff.attempts) break;
+    // Never replay a partly delivered gesture after a mid-drag gate fires.
+    if (delivered?.outcome === "ok" || delivered?.delivered === true || !backoff || tries >= backoff.attempts) break;
     tries += 1;
     await wait(backoff.delayMs);
   }

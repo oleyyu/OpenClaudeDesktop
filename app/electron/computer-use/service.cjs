@@ -131,6 +131,28 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
 
   const service = {
     grantsFor,
+    /** Native owns the entire held-button interval, including continuous guards and unconditional release. */
+    async appDrag(sessionId, { bundleId, windowId, coordinate, to_coordinate: toCoordinate, path, button = "left" } = {}) {
+      granted(sessionId, bundleId);
+      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "drag");
+      if (!["left", "right", "middle"].includes(button)) throw coded("invalid_params", "button must be left, right or middle.");
+      const state = stateFor(sessionId);
+      const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
+      const shot = state.shots.get(`${bundleId}:${wid}`);
+      if (!shot) throw coded("screenshot_required", `Take an app_screenshot of ${bundleId} before dragging.`);
+      const coordinates = dragCoordinates(shot, coordinate, toCoordinate, path);
+      // The drag-specific main-process check follows the native secure → typing → focused → lock order.
+      const probe = await native.call("probe");
+      const gate = actionGate(probe, "drag");
+      if (gate && gate !== "user_actively_typing") {
+        return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true, delivered: false };
+      }
+      try { pointer?.beforeClick?.(); } catch {}
+      const result = await deliver(() => native.call("drag", {
+        bundleId, windowId: wid, ...coordinates, button, grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
+      }), wait ? { wait } : {});
+      return { ...result, windowId: wid };
+    },
     forgetSession: (sessionId) => { sessions.delete(sessionId); windows.delete(sessionId); },
     /** The window the session last looked at (app_screenshot), with its app's granted name: the live preview's target. */
     lastTarget(sessionId) {

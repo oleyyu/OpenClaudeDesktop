@@ -10,6 +10,13 @@ const { allows } = require("./grants.cjs");
 function actionGate(probe, op) {
   if (op === "see") return null;
   if (!probe || typeof probe !== "object") return "ax_untrusted_cannot_verify";
+  if (op === "drag") {
+    if (probe.secureInput === true) return "secure_input_active";
+    if (probe.secondsSinceUserInput < 0.2) return "user_actively_typing";
+    // app_drag uses explicit coordinates. Focused mode, if used natively, is checked by rawInputRefusal.
+    if (probe.screenLocked === true) return "screen_locked";
+    return null;
+  }
   if (probe.screenLocked === true) return "screen_locked";
   if (probe.secureInput === true) return "secure_input_active";
   return null;

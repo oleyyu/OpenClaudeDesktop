@@ -31,3 +31,71 @@ test('drag refuses missing endpoints, malformed or out-of-frame vertices before 
     assert.throws(() => dragCoordinates(shot, [20, 40], [40, 60], path), { code: 'invalid_params' });
   }
 });
+
+const { createComputerUse } = require('../electron/computer-use/service.cjs');
+const { fit } = require('../electron/computer-use/budget.cjs');
+const { actionGate } = require('../electron/computer-use/guards.cjs');
+function setup({ bundleId = 'com.apple.TextEdit', result, probe = {} } = {}) {
+  const calls = [], waits = [];
+  const cu = createComputerUse({ wait: async (ms) => waits.push(ms), native: { async call(method, params) {
+    calls.push({ method, params });
+    if (method === 'probe') return { secureInput: false, screenLocked: false, secondsSinceUserInput: 5, ...probe };
+    if (method === 'captureWindow') {
+      const [width, height] = fit(shot.frameWidth, shot.frameHeight);
+      return { ...shot, width, height, windowId: 42, bundleId, jpegQuality: 0.75 };
+    }
+    if (method === 'drag') return typeof result === 'function' ? result() : result ?? { outcome: 'ok', delivered: true, mouseUpSent: true, verified: false };
+    throw new Error(method);
+  } } });
+  cu.grantsFor('s').grant([bundleId]);
+  return { cu, calls, waits, params: { bundleId, coordinate: [20, 40], to_coordinate: [800, 400] },
+    drags: () => calls.filter((c) => c.method === 'drag') };
+}
+
+test('drag requires grants and screenshot; VS Code remains click-only per user decision', async () => {
+  const f = setup();
+  await assert.rejects(f.cu.appDrag('other', f.params), { code: 'app_not_granted' });
+  await assert.rejects(f.cu.appDrag('s', f.params), { code: 'screenshot_required' });
+  const vscode = setup({ bundleId: 'com.microsoft.VSCode' });
+  await assert.rejects(vscode.cu.appDrag('s', vscode.params), { code: 'tier_refused' });
+  assert.equal(vscode.drags().length, 0);
+});
+
+test('drag sends both coordinate forms, button and grants to native', async () => {
+  const f = setup();
+  await f.cu.appScreenshot('s', f.params);
+  const result = await f.cu.appDrag('s', { ...f.params, button: 'middle' });
+  assert.equal(result.path, 'cgevent');
+  assert.equal(result.verified, false);
+  assert.deepEqual(f.drags()[0].params, { bundleId: f.params.bundleId, windowId: 42,
+    ...dragCoordinates(shot, f.params.coordinate, f.params.to_coordinate), button: 'middle', grantedBundleIds: [f.params.bundleId] });
+});
+
+test('drag checks secure input before typing and lock; lock before delivery blocks', async () => {
+  assert.equal(actionGate({ secureInput: true, secondsSinceUserInput: 0, screenLocked: true }, 'drag'), 'secure_input_active');
+  assert.equal(actionGate({ secondsSinceUserInput: 0, screenLocked: true }, 'drag'), 'user_actively_typing');
+  const f = setup({ probe: { screenLocked: true } });
+  await f.cu.appScreenshot('s', f.params);
+  assert.equal((await f.cu.appDrag('s', f.params)).reasonCode, 'screen_locked');
+  assert.equal(f.drags().length, 0);
+});
+
+test('mid-drag user activity releases without replaying a partially delivered drag', async () => {
+  const f = setup({ result: { outcome: 'ineffective', reasonCode: 'user_actively_typing', delivered: true, mouseUpSent: true } });
+  await f.cu.appScreenshot('s', f.params);
+  const result = await f.cu.appDrag('s', f.params);
+  assert.equal(result.reasonCode, 'user_actively_typing');
+  assert.equal(result.mouseUpSent, true);
+  assert.equal(f.drags().length, 1);
+  assert.deepEqual(f.waits, []);
+});
+
+test('typing before a drag retries only while nothing has been pressed', async () => {
+  let count = 0;
+  const f = setup({ result: () => ++count < 3
+    ? { outcome: 'unsupported', reasonCode: 'user_actively_typing', delivered: false }
+    : { outcome: 'ok', delivered: true, mouseUpSent: true } });
+  await f.cu.appScreenshot('s', f.params);
+  assert.equal((await f.cu.appDrag('s', f.params)).outcome, 'ok');
+  assert.deepEqual(f.waits, [200, 200]);
+});
