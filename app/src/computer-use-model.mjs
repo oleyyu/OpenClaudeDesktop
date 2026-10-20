@@ -14,7 +14,7 @@ const OFFICIAL_TOOLS = {
   click: "left_click", double_click: "double_click", triple_click: "triple_click", right_click: "right_click", middle_click: "middle_click",
   type: "type", key: "key", hold_key: "hold_key", scroll: "scroll", move: "mouse_move", drag: "left_click_drag", screenshot: "screenshot",
   zoom: "zoom", wait: "wait", open_app: "open_application", cursor: "cursor_position", mouse_down: "left_mouse_down", mouse_up: "left_mouse_up",
-  request_access: "request_access",
+  request_access: "request_access", list_apps: "list_apps",
 };
 const OFFICIAL_APP_TOOLS = { ...Object.fromEntries(Object.entries(APP_KINDS).map(([tool, kind]) => [kind, tool])) };
 /** The official computer-use tool name for an action ("left_click", "app_click", …), or null. */

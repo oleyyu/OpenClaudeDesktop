@@ -3,6 +3,10 @@
 // application folders first, then Spotlight (mdfind) by display name; a bundle id through Spotlight. The bundle id
 // comes from the bundle's own Info.plist (plutil). Not found is `installed: false`, which the access card shows as
 // "(not installed)" and request_access reports as denied.
+//
+// list_apps lists what is installed in the same folders and what is running (ax-helper.cjs "apps": NSWorkspace and the
+// bundles' Info.plist), running apps first with their pid; a query that matches nothing listed falls back to resolve()
+// above (Spotlight), so an app list_apps can't find is one request_access can't find either.
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -15,16 +19,18 @@ const ICON_PX = 64;
 const BUNDLE_ID = /^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/;
 // What may go inside a Spotlight query's quotes: no quote, backslash, wildcard or line break.
 const QUERYABLE = /^[^"'\\*?\r\n\0]{1,120}$/;
+const LIST_LIMIT = 25, LIST_MAX = 200;
 
 const run = (file, args) => new Promise((resolve) => {
   execFile(file, args, { timeout: 5000, maxBuffer: 1 << 20 }, (error, stdout) => resolve(error ? "" : String(stdout)));
 });
 
 /**
- * @param {{exec?: (file: string, args: string[]) => Promise<string>, readdir?: (dir: string) => string[], home?: string}} [options]
- *   exec / readdir: tests only.
+ * @param {{exec?: (file: string, args: string[]) => Promise<string>, readdir?: (dir: string) => string[], home?: string,
+ *          enumerate?: (folders: string[]) => Promise<{running: object[], installed: object[]}>}} [options]
+ *   exec / readdir: tests only. enumerate: list_apps' source (main.cjs: ax-helper.cjs "apps").
  */
-function createAppResolver({ exec = run, readdir = (dir) => fs.readdirSync(dir), home = os.homedir() } = {}) {
+function createAppResolver({ exec = run, readdir = (dir) => fs.readdirSync(dir), home = os.homedir(), enumerate = null } = {}) {
   const folders = [...FOLDERS, path.join(home, "Applications")];
   const bundleIdOf = async (appPath) =>
     (await exec("/usr/bin/plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", path.join(appPath, "Contents", "Info.plist")])).trim() || null;
@@ -59,7 +65,34 @@ function createAppResolver({ exec = run, readdir = (dir) => fs.readdirSync(dir),
     if (!bundleId) return missing;
     return { requested, bundleId, displayName: path.basename(appPath, ".app"), path: appPath, installed: true };
   }
-  return { resolve, resolveAll: (names) => Promise.all(names.map(resolve)) };
+  /**
+   * list_apps: {query?, runningFirst = true, limit = 25, cursor?} → {apps: [{name, bundleId, running, pid?, path}], total, nextCursor?}.
+   * cursor is the offset of the next page, as a string.
+   */
+  async function list({ query, runningFirst = true, limit = LIST_LIMIT, cursor } = {}) {
+    if (typeof enumerate !== "function") throw Object.assign(new Error("Listing apps isn't available here."), { code: "helper_unavailable" });
+    const { running = [], installed = [] } = await enumerate(folders);
+    const byId = new Map();
+    for (const app of running) byId.set(app.bundleId, { name: app.name, bundleId: app.bundleId, running: true, pid: app.pid, path: app.path ?? null });
+    // Several copies of one bundle: the first folder wins, as in resolve().
+    for (const app of installed) if (!byId.has(app.bundleId)) byId.set(app.bundleId, { name: app.name, bundleId: app.bundleId, running: false, path: app.path });
+    let apps = [...byId.values()];
+    const needle = typeof query === "string" ? query.trim().toLowerCase() : "";
+    if (needle) {
+      apps = apps.filter((app) => app.name.toLowerCase().includes(needle) || app.bundleId.toLowerCase().includes(needle));
+      if (!apps.length) {
+        const found = await resolve(query.trim());
+        if (found.installed) apps = [{ name: found.displayName, bundleId: found.bundleId, running: false, path: found.path }];
+      }
+    }
+    apps.sort((a, b) => (runningFirst ? Number(b.running) - Number(a.running) : 0) || a.name.localeCompare(b.name));
+    const start = cursor === undefined ? 0 : Number.parseInt(cursor, 10);
+    if (!Number.isInteger(start) || start < 0 || String(start) !== String(cursor ?? 0)) throw Object.assign(new Error("cursor must be a nextCursor from list_apps."), { code: "invalid_params" });
+    const size = Math.min(Math.max(1, Math.trunc(limit)), LIST_MAX);
+    const page = apps.slice(start, start + size);
+    return { apps: page, total: apps.length, ...(start + size < apps.length ? { nextCursor: String(start + size) } : {}) };
+  }
+  return { resolve, resolveAll: (names) => Promise.all(names.map(resolve)), list, folders };
 }
 
 /**
@@ -78,4 +111,4 @@ async function appIconDataUrl(appPath, nativeImage) {
   } catch { return undefined; }
 }
 
-module.exports = { createAppResolver, appIconDataUrl };
+module.exports = { createAppResolver, appIconDataUrl, FOLDERS, LIST_LIMIT, LIST_MAX };

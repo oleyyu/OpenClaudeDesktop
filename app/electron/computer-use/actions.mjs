@@ -26,19 +26,22 @@ const KINDS = {
   open_app: "open_app", open_application: "open_app", launch_app: "open_app",
   cursor_position: "cursor", get_cursor_position: "cursor",
   hold_key: "hold_key", left_mouse_down: "mouse_down", mouse_down: "mouse_down", left_mouse_up: "mouse_up", mouse_up: "mouse_up",
-  request_access: "request_access",
+  request_access: "request_access", list_apps: "list_apps",
 };
 // The app-scope tools (docs/02 app_*): the same action on one granted app's window, marked scope "app".
 export const APP_KINDS = {
   app_click: "click", app_type: "type", app_key: "key", app_scroll: "scroll", app_drag: "drag", app_zoom: "zoom",
   app_screenshot: "window_screenshot", app_ax_find: "find", app_list_windows: "list_windows", app_menu: "menu", app_focus: "focus",
-  app_release: "release",
+  app_release: "release", app_batch: "batch",
 };
 const TOOL_NAMES = /^(computer|computer_use|computer-use|computer_20\d{6})$/i;
 export const SERVER_NAMES = /computer[-_ ]?use|^computer$|desktop[-_ ]?control/i;
 // The app's own server (agent-tools-host.cjs SERVER_NAME) carries other tools too: only these names are computer use.
 const OWN_SERVER = "code_desktop";
-const OWN_TOOLS = new Set(["request_access", "app_list_windows", "app_screenshot", "app_ax_find", "app_click", "app_type", "app_release"]);
+// Every tool name agent-tools/computer-use.mjs serves (transcript-sdk-tools.mjs maps them to mcp__computer-use__*).
+export const OWN_COMPUTER_USE_TOOLS = Object.freeze(["request_access", "app_list_windows", "app_screenshot", "app_ax_find", "app_click",
+  "app_type", "app_release", "app_focus", "app_menu", "app_zoom", "list_apps", "app_batch"]);
+const OWN_TOOLS = new Set(OWN_COMPUTER_USE_TOOLS);
 /** The computer-use tool an item of the app's own server calls (by server, or OpenCode's "code_desktop_" prefix), or null. */
 export function ownComputerUseTool(item) {
   const tool = str(item?.tool) || str(item?.name), server = str(item?.server) || str(item?.namespace);

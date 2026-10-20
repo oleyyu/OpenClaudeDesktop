@@ -48,7 +48,7 @@ test('the package script keeps the agent tools server, its host and the tool mod
   for (const file of TOOL_FILES) assert.equal(await filter(path.join(app, 'electron', file)), true, `electron/${file} is packaged`);
   // Only native code is unpacked (dlopen cannot read inside an archive): node-pty's prebuilds and the computer-use
   // module's build/. The server is plain JavaScript read through Electron's asar support.
-  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build}' });
+  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build,helpers/cu-ax/build}' });
 });
 
 test('computer use: the built module ships unpacked; its Swift sources and SwiftPM .build do not ship', async () => {
@@ -66,6 +66,17 @@ test('computer use: the built module ships unpacked; its Swift sources and Swift
   const { minimatch } = require(require.resolve('minimatch', { paths: [path.join(app, 'node_modules/@electron/asar')] }));
   for (const dir of ['native/computer-use/build', 'node_modules/node-pty/prebuilds']) assert.equal(minimatch(dir, opts.asar.unpackDir), true, dir);
   assert.equal(minimatch('native/computer-use/Sources', opts.asar.unpackDir), false);
+});
+
+test('computer use: the Accessibility helper ships its built binary unpacked, not its Swift source; build:native builds it', async () => {
+  const helper = (relative) => filter(path.join(app, 'helpers/cu-ax', relative));
+  assert.equal(await helper('build'), true);
+  assert.equal(await helper('build/cu-ax-helper'), true);
+  for (const relative of ['main.swift', 'build.mjs', '.gitignore']) assert.equal(await helper(relative), false, `helpers/cu-ax/${relative} is not packaged`);
+  const { minimatch } = require(require.resolve('minimatch', { paths: [path.join(app, 'node_modules/@electron/asar')] }));
+  assert.equal(minimatch('helpers/cu-ax/build', opts.asar.unpackDir), true);
+  assert.match(pkg.scripts['build:native'], /node helpers\/cu-ax\/build\.mjs/);
+  assert.match(fs.readFileSync(path.join(app, 'scripts/sign-local.mjs'), 'utf8'), /'cu-ax-helper'/);
 });
 
 test('from inside app.asar, Electron as Node runs the host with the real tool modules and the stdio server a core starts', { timeout: 60000 }, async () => {

@@ -11,6 +11,10 @@
 // key events of ≤ 20 UTF-16 units, read back again), and app_key as keystrokes; both natively gated (secure input,
 // user input, foreground app, screen lock). System combos (quit / switch / lock) are refused this round.
 //
+// Accessibility without input (agent tools app_focus / app_menu): window focus and the menu bar through ax-helper.cjs,
+// a separate helper process, because the native module doesn't expose them yet. app_zoom crops the last app_screenshot
+// with `image` (main.cjs: Electron's nativeImage); it never captures again.
+//
 // IPC (main.cjs "desktop:call", actions "computer-use:*", sessionId required) answers
 // {ok: true, result} | {ok: false, error: {code, message}} so the reason code survives the IPC boundary.
 // There is deliberately no IPC action that adds a grant.
@@ -19,6 +23,7 @@ const { createGrants, validBundleId } = require("./grants.cjs");
 const { fit, scaled, frameToWindowLocal, windowLocalToScreen, inFrame } = require("./budget.cjs");
 const { actionGate, checkTier } = require("./guards.cjs");
 const { execute, deliver } = require("./executor.cjs");
+const { createAxHelper } = require("./ax-helper.cjs");
 
 // How many summary lines app_screenshot shows inline; app_ax_find searches the rest.
 const SUMMARY_LINES = 40;
@@ -29,6 +34,8 @@ const SYSTEM_COMBOS = new Set(["cmd+q", "cmd+tab", "cmd+shift+tab", "cmd+`", "cm
   "ctrl+space", "ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right", "cmd+option+d", "cmd+h", "cmd+option+h", "cmd+shift+q"]);
 const MODIFIER_ORDER = ["cmd", "ctrl", "option", "shift", "fn"];
 const MODIFIER_ALIASES = { command: "cmd", meta: "cmd", control: "ctrl", alt: "option", esc: "escape" };
+// app_menu: how deep a path may go (menu bar ▸ menu ▸ submenus).
+const MAX_MENU_DEPTH = 8;
 
 /** "Command+Shift+Q" → "cmd+shift+q" with modifiers in a fixed order, for the system-combo check only. */
 function normalizeCombo(combo) {
@@ -78,8 +85,11 @@ function elementAt(shot, [x, y]) {
 const secureFieldRefusal = (extra = {}) => ({ outcome: "unsupported", reasonCode: "no_text_target", secureTextField: true,
   path: "unavailable", blocked: true, ...extra });
 
-/** selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`). */
-function createComputerUse({ native = createNative(), log = console, wait, decide, selfBundleIds = [] } = {}) {
+/**
+ * selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`).
+ * axHelper: ax-helper.cjs (focus, menus). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
+ */
+function createComputerUse({ native = createNative(), axHelper = createAxHelper(), image = null, log = console, wait, decide, selfBundleIds = [] } = {}) {
   const sessions = new Map();   // sessionId → grants
   const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId) }
   const stateFor = (sessionId) => {
@@ -129,11 +139,19 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       }
       return checkBudget(shot, params.scale);
     },
-    /** app_screenshot: one window, image + AX summary; it becomes the coordinate reference for that window. */
-    async appScreenshot(sessionId, { bundleId, windowId, scale } = {}) {
+    /**
+     * app_screenshot: one window, image + AX summary; it becomes the coordinate reference for that window.
+     * keepReference (app_batch's mid-batch screenshot): a picture only — no summary, nothing stored, and the native
+     * element cache untouched — so the batch's coordinates and element_index keep meaning the screenshot before it.
+     */
+    async appScreenshot(sessionId, { bundleId, windowId, scale, keepReference = false } = {}) {
       granted(sessionId, bundleId);
       const state = stateFor(sessionId);
       const target = checkId(windowId, "windowId") ?? state.last.get(bundleId);
+      if (keepReference === true) {
+        const shot = await service.captureWindow(sessionId, { bundleId, windowId: target, scale });
+        return { ...shot, summary: `Window ${shot.windowId} of ${bundleId}, mid-batch: a picture only. Coordinates and element_index in this batch still refer to the app_screenshot taken before it.` };
+      }
       const shot = await service.captureWindow(sessionId, { bundleId, windowId: target, scale, listsElements: true });
       const key = `${bundleId}:${shot.windowId}`;
       state.shots.set(key, shot);
@@ -284,6 +302,83 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
         context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
       return { ...result, windowId: wid };
     },
+    /**
+     * app_focus: make a window the app's main and focused window (AXMain + AXFocused), so target "focused" means
+     * something in it. No AXRaise, no activation. Refused while the app is frontmost: the user is working in it.
+     * The focused window becomes the app's default window, as an app_screenshot does.
+     */
+    async appFocus(sessionId, { bundleId, windowId } = {}) {
+      granted(sessionId, bundleId);
+      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "left_click");
+      const state = stateFor(sessionId);
+      const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
+      const gate = actionGate(await native.call("probe"), "left_click");
+      if (gate) return { outcome: "unsupported", reasonCode: gate, focused: false, blocked: true };
+      const result = await axHelper.call("focus", { bundleId, ...(wid !== undefined ? { windowId: wid } : {}) });
+      if (result?.outcome === "ok" && Number.isInteger(result.window_id)) state.last.set(bundleId, result.window_id);
+      return result;
+    },
+    /**
+     * app_menu: one of
+     *   path  [title, …]   walk the menu bar by titles (any case, trailing … ignored) and press the last item: a command
+     *                      runs; a menu title opens that menu and lists its items
+     *   list  true | null | title | [title, …]   the items under that path (the menu bar titles for true / null); read-only
+     *   close true         cancel any open menu of the app (what Escape does)
+     * Accessibility only (AXPress / AXCancel): no mouse event, the app is not brought forward.
+     */
+    async appMenu(sessionId, { bundleId, path, list, close } = {}) {
+      granted(sessionId, bundleId);
+      const modes = [path !== undefined, list !== undefined, close !== undefined].filter(Boolean).length;
+      if (modes !== 1) throw coded("invalid_params", "Give exactly one of path, list or close.");
+      const titles = (value, name) => {
+        if (!Array.isArray(value) || value.length > MAX_MENU_DEPTH || !value.every((t) => typeof t === "string" && t.trim())) {
+          throw coded("invalid_params", `${name} must be an array of at most ${MAX_MENU_DEPTH} menu titles.`);
+        }
+        return value.map((t) => t.trim());
+      };
+      if (list !== undefined) {
+        checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "see");
+        const under = list === true || list === null ? [] : typeof list === "string" ? titles([list], "list") : titles(list, "list");
+        return axHelper.call("menuList", { bundleId, path: under });
+      }
+      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "menu");
+      if (close !== undefined && close !== true) throw coded("invalid_params", "close must be true.");
+      const steps = close ? null : titles(path, "path");
+      if (steps && !steps.length) throw coded("invalid_params", "path must name at least the menu bar title, e.g. [\"File\", \"New Folder\"].");
+      const gate = actionGate(await native.call("probe"), "menu");
+      if (gate) return { outcome: "unsupported", reasonCode: gate, blocked: true };
+      if (close) return { outcome: "ok", ...(await axHelper.call("menuClose", { bundleId })) };
+      return axHelper.call("menu", { bundleId, path: steps });
+    },
+    /**
+     * app_zoom: region [x0, y0, x1, y1] of the last app_screenshot of a window (frame pixels), cropped from that
+     * screenshot and enlarged up to the region's frame size (the screenshot's budget). Nothing is captured again, so the
+     * detail is what that screenshot holds; coordinates keep referring to the screenshot.
+     */
+    async appZoom(sessionId, { bundleId, windowId, region, scale } = {}) {
+      granted(sessionId, bundleId);
+      const state = stateFor(sessionId);
+      const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
+      const shot = wid === undefined ? undefined : state.shots.get(`${bundleId}:${wid}`);
+      if (!shot) throw coded("screenshot_required", `Take an app_screenshot of ${bundleId}${windowId ? ` window ${windowId}` : ""} first: app_zoom enlarges part of it.`);
+      if (!Array.isArray(region) || region.length !== 4 || !region.every((v) => typeof v === "number" && Number.isFinite(v))) {
+        throw coded("invalid_params", "region must be [x0, y0, x1, y1] in the screenshot's frame pixels.");
+      }
+      const [x0, y0, x1, y1] = region;
+      if (!(x0 >= 0 && y0 >= 0 && x1 > x0 && y1 > y0 && x1 <= shot.frameWidth && y1 <= shot.frameHeight)) {
+        throw coded("invalid_params", `region must satisfy 0 ≤ x0 < x1 ≤ ${shot.frameWidth} and 0 ≤ y0 < y1 ≤ ${shot.frameHeight} (the screenshot's frame).`);
+      }
+      const factor = checkScale(scale) ?? 1;
+      if (!image?.crop) throw coded("zoom_unavailable", "Zooming isn't available in this build.");
+      const kx = shot.width / shot.frameWidth, ky = shot.height / shot.frameHeight;
+      const rect = { x: Math.floor(x0 * kx), y: Math.floor(y0 * ky) };
+      rect.width = Math.max(1, Math.min(shot.width - rect.x, Math.round((x1 - x0) * kx)));
+      rect.height = Math.max(1, Math.min(shot.height - rect.y, Math.round((y1 - y0) * ky)));
+      const [width, height] = scaled(fit(x1 - x0, y1 - y0), factor);
+      const out = await image.crop({ dataUrl: shot.dataUrl, rect, width, height });
+      return { dataUrl: out.dataUrl, width, height, region: [x0, y0, x1, y1], windowId: shot.windowId, bundleId,
+        sourcePixels: { width: rect.width, height: rect.height } };
+    },
     /** app_key: one combo ("cmd+a", "return", "shift+tab"), `repeat` times, as keystrokes; there is no AX rung. */
     async appKey(sessionId, { bundleId, windowId, combo, repeat = 1 } = {}) {
       granted(sessionId, bundleId);
@@ -330,4 +425,4 @@ function checkBudget(shot, scale = 1) {
   return shot;
 }
 
-module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS };
+module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS, MAX_MENU_DEPTH };

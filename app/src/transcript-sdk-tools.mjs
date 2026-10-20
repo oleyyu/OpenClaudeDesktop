@@ -16,6 +16,7 @@
 //   hostItem                  the engine item (not read by the originals; the host adapters render its body)
 import { changeKind, changePath, fileAction } from "./file-tool-model.mjs";
 import { computerUseAction, computerUseToolName } from "./computer-use-model.mjs";
+import { OWN_COMPUTER_USE_TOOLS } from "../electron/computer-use/actions.mjs";
 import { mcpCallOf, mcpServerSegmentOf, VISUALIZE_SERVER_NAME, VISUALIZE_TOOLS } from "./mcp-app-model.mjs";
 
 const str = (value) => (typeof value === "string" ? value : "");
@@ -84,8 +85,7 @@ export const APP_TOOLS = Object.freeze({
   ReportFindings: "ReportFindings", Monitor: "Monitor", MonitorStop: "TaskStop", CronCreate: "CronCreate", CronList: "CronList",
   CronDelete: "CronDelete", WebFetch: "WebFetch", NotebookEdit: "NotebookEdit", Workflow: "Workflow", WorkflowStop: "TaskStop",
   // agent-tools/computer-use.mjs: the official computer-use server's names, so the original rows read its verbs.
-  ...Object.fromEntries(["request_access", "app_list_windows", "app_screenshot", "app_ax_find", "app_click", "app_type", "app_release"]
-    .map((tool) => [tool, `mcp__computer-use__${tool}`])),
+  ...Object.fromEntries(OWN_COMPUTER_USE_TOOLS.map((tool) => [tool, `mcp__computer-use__${tool}`])),
 });
 const COLLAB_TOOLS = Object.freeze({ spawnAgent: "Task", sendInput: "SendMessage", sendMessage: "SendMessage", wait: "TaskOutput", closeAgent: "TaskStop", resumeAgent: "Task" });
 

@@ -400,12 +400,21 @@ const computerUseSelfBundleIds = (() => {
     return id ? [id] : [];
   } catch { return []; }
 })();
-const computerUse = require("./computer-use/service.cjs").createComputerUse({ selfBundleIds: computerUseSelfBundleIds });
+// app_focus / app_menu / list_apps go through the Accessibility helper (ax-helper.cjs); app_zoom crops the last
+// screenshot with nativeImage, as JPEG at the screenshots' quality (budget.cjs).
+const computerUseAxHelper = require("./computer-use/ax-helper.cjs").createAxHelper();
+const computerUseImage = {
+  crop: async ({ dataUrl, rect, width, height }) => ({
+    dataUrl: `data:image/jpeg;base64,${nativeImage.createFromDataURL(dataUrl).crop(rect).resize({ width, height, quality: "best" }).toJPEG(75).toString("base64")}`,
+  }),
+};
+const computerUse = require("./computer-use/service.cjs").createComputerUse({ selfBundleIds: computerUseSelfBundleIds,
+  axHelper: computerUseAxHelper, image: computerUseImage });
 // Which sessions are using the computer (in-use.cjs): the renderer's docked strip and the screen glow (glow.cjs, created
 // once the app is ready) both follow it. Asking for access is not using the computer.
 const { computerUseAction } = require("./computer-use/actions.mjs");
 const computerUseInUse = require("./computer-use/in-use.cjs").createInUse({
-  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && action.kind !== "request_access" && action.kind !== "release"; },
+  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && !["request_access", "release", "list_apps"].includes(action.kind); },
   isRelease: (item) => computerUseAction(item)?.kind === "release",
 });
 let computerUseGlow = null;
@@ -739,10 +748,11 @@ agentTools.provide("layout", (session) => ({ run: (command) => runAgentLayoutCom
 // Computer use (agent-tools/computer-use.mjs): the session's grants and windows live in `computerUse` above;
 // request_access names apps as people do (computer-use/apps.cjs finds their bundles) and asks with the access card.
 const { createAppResolver, appIconDataUrl } = require("./computer-use/apps.cjs");
-const computerUseApps = createAppResolver();
+const computerUseApps = createAppResolver({ enumerate: (folders) => computerUseAxHelper.call("apps", { folders }) });
 agentTools.provide("computerUse", (session, ctx) => ({
   service: computerUse,
   resolveApps: (names) => computerUseApps.resolveAll(names),
+  listApps: (options) => computerUseApps.list(options),
   ask: (access) => computerUseAccessCard(session, access, ctx),
 }));
 /**

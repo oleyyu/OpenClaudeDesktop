@@ -1,10 +1,12 @@
 // Computer use for the app's sessions: the app-scoped tools that act on one granted app's window in the background
-// (electron/computer-use/service.cjs; field names from docs/02-tools.live.json). This round opens the seven that need
-// nothing from M4: request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only),
-// app_type (Accessibility first, then the reason policy's raw rung) and app_release. app_scroll, app_drag, app_key,
-// app_menu and app_batch stay closed (docs/computer-use-handoff-20261020.md).
+// (electron/computer-use/service.cjs; field names from docs/02-tools.live.json). Working without anything from M4:
+// request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only, single left click),
+// app_type (Accessibility first, then the reason policy's raw rung), app_release, app_focus and app_menu (Accessibility
+// through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps and app_batch (the tools above in order).
+// What still needs the raw input path answers with a reason code, not by being missing (docs/computer-use-handoff-20261020.md).
 // ctx.computerUse: { service (createComputerUse), resolveApps(names) → [{requested, bundleId, displayName, path,
-//   installed}], ask({reason, flags, apps, toolParams}) → "accept" | "decline" | "unavailable" }  (main.cjs)
+//   installed}], listApps({query, runningFirst, limit, cursor}) → {apps, total, nextCursor?} (apps.cjs),
+//   ask({reason, flags, apps, toolParams}) → "accept" | "decline" | "unavailable" }  (main.cjs)
 //
 // request_access asks with the access card (src/computer-use-approval-card.jsx) and records the answer in the session's
 // grants; every other tool checks the grants first and answers a missing grant, like any refusal, with a structured
@@ -16,6 +18,7 @@ export const group = "computer-use";
 
 const FLAGS = ["clipboardRead", "clipboardWrite", "systemKeyCombos"];
 const MAX_APPS = 32;
+const MAX_BATCH = 20;
 
 function service(ctx) {
   const cu = ctx?.computerUse;
@@ -24,8 +27,8 @@ function service(ctx) {
 }
 const json = (value) => JSON.stringify(value, null, 2);
 /** A refusal the agent reads: what went wrong and what to do next. Never thrown. */
-function failure(code, message, nextStep) {
-  return { content: [{ type: "text", text: json({ ok: false, error: { code, message, ...(nextStep ? { next_step: nextStep } : {}) } }) }], isError: true };
+function failure(code, message, nextStep, details) {
+  return { content: [{ type: "text", text: json({ ok: false, error: { code, message, ...(details ? details : {}), ...(nextStep ? { next_step: nextStep } : {}) } }) }], isError: true };
 }
 const requestAccessStep = (app) => `Call request_access with apps: [${JSON.stringify(app)}] and a one-line reason, wait for the user's answer, then retry this call.`;
 // What to do after each coded error from the service (native.cjs / service.cjs codes).
@@ -42,12 +45,25 @@ const NEXT_STEPS = {
   ax_untrusted_cannot_verify: "Accessibility permission is off for this app. Ask the user to turn it on in System Settings › Privacy & Security; don't retry until they do.",
   native_unavailable: "Computer use can't run on this computer right now. Tell the user; don't retry.",
   tier_refused: "This app is granted with fewer abilities (view only or click only). Use another way, or tell the user.",
+  menu_item_not_found: "Check the titles: use closestMatch if it is what you meant, or call app_menu with list to see what is there.",
+  no_menu_bar: "This app has no menu bar to use; work in its window instead.",
+  helper_unavailable: "Computer use's Accessibility helper isn't available in this build. Tell the user; don't retry.",
+  helper_failed: "The app didn't answer through Accessibility. Try once more; if it fails again, tell the user.",
+  helper_timeout: "The app didn't answer through Accessibility in time (it may be busy). Try once more; if it fails again, tell the user.",
+  zoom_unavailable: "Zooming isn't available here; use app_screenshot (scale 1) instead.",
+};
+// What to do after an outcome's reasonCode, where the general next step doesn't fit.
+const REASON_STEPS = {
+  menu_item_disabled: "The item is disabled right now (the app's state doesn't allow it, e.g. nothing is selected). Change that first, or tell the user.",
+  app_is_frontmost: "The app is in front and the user is working in it, so its focus isn't moved. Address the element with element_index instead, or ask the user.",
+  window_minimized: "The window is minimized. Ask the user to restore it, or pick another window from app_list_windows.",
+  focus_refused: "The app didn't take the focus change. Take an app_screenshot to see its state, or address elements with element_index.",
 };
 /** A coded service error → a structured failure. */
 function serviceFailure(error, app) {
   const code = typeof error?.code === "string" ? error.code : "internal";
   const next = code === "app_not_granted" ? requestAccessStep(app) : NEXT_STEPS[code] ?? null;
-  return failure(code, String(error?.message || error), next);
+  return failure(code, String(error?.message || error), next, error?.details && typeof error.details === "object" ? error.details : undefined);
 }
 
 /** The grant check every tool but request_access and app_release starts with: null when the app may be used. */
@@ -78,22 +94,43 @@ function checkAddressing(args, { required = false } = {}) {
 function notYet(reasonCode, message, nextStep) {
   return { content: [{ type: "text", text: json({ ok: false, outcome: "unsupported", reasonCode, message, next_step: nextStep }) }], isError: true };
 }
+/** A picture and its caption, as app_screenshot and app_zoom answer. */
+function imageResult(text, dataUrl) {
+  const match = /^data:(image\/[a-z]+);base64,(.*)$/s.exec(String(dataUrl ?? ""));
+  if (!match) return null;
+  return { content: [{ type: "text", text }, { type: "image", data: match[2], mimeType: match[1] }] };
+}
 const RAW_PATH_STEP = "Do it through Accessibility instead (app_click with count 1 and the left button on an element_index, or app_menu for a command), or tell the user this needs input this build can't send yet.";
 /** A step's outcome ({outcome, path, reasonCode?, …}): an error result unless it took effect. */
 function outcomeResult(result, nextStep) {
   const ok = result?.outcome === "ok";
+  nextStep = REASON_STEPS[result?.reasonCode] ?? nextStep;
   return { content: [{ type: "text", text: json({ ok, ...result, ...(ok || !nextStep ? {} : { next_step: nextStep }) }) }], ...(ok ? {} : { isError: true }) };
 }
 const windowId = (args) => (args.window_id === undefined ? undefined : args.window_id);
 
 // The shared properties (docs/02-tools.live.json "shared"), described in our own words.
 const APP = { type: "string", description: "The app's bundle identifier, e.g. com.apple.finder. It must be granted to this session (request_access)." };
-const WINDOW_ID = { type: "integer", minimum: 1, description: "Which window of the app (a window_id from app_list_windows). Leave it out for the window you last took an app_screenshot of, else the app's main window." };
+const WINDOW_ID = { type: "integer", minimum: 1, description: "Which window of the app (a window_id from app_list_windows). Leave it out for the window you last took an app_screenshot of (or focused with app_focus), else the app's main window." };
+const SCALE = { type: "number", minimum: 0.1, maximum: 1, default: 1, description: "0.1–1 (default 1): the size of the returned picture. Coordinates are unaffected." };
 const COORDINATE = { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2,
   description: "[x, y] in pixels of the last app_screenshot of this window (full-resolution frame, top-left is 0,0). Needs that screenshot. Don't combine with element_index or target." };
 const ELEMENT_INDEX = { type: "integer", minimum: 0, description: "An [N] from the last app_screenshot's element summary (or app_ax_find); aims at that element's center. Don't combine with coordinate or target." };
 const TARGET = { type: "string", enum: ["focused"], description: "\"focused\": the element that has keyboard focus in the window, with no hit-testing. Don't combine with coordinate or element_index." };
 const ACTION_SUMMARY = { type: "string", description: "A few words on what this does, for the user's transcript. No reasons, no secrets." };
+
+/** app_screenshot, and app_batch's "screenshot" step (keepReference: the batch's coordinates stay on the earlier one). */
+async function screenshot(args, ctx, { keepReference = false } = {}) {
+  const refused = checkGrant(ctx, args.app);
+  if (refused) return refused;
+  const scale = args.scale === undefined ? 1 : args.scale;
+  if (typeof scale !== "number" || !(scale >= 0.1 && scale <= 1)) return failure("invalid_params", "scale must be a number from 0.1 to 1.", "Leave scale out, or pass a value from 0.1 to 1.");
+  try {
+    const shot = await service(ctx).service.appScreenshot(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), scale, ...(keepReference ? { keepReference: true } : {}) });
+    return imageResult(shot.summary, shot.dataUrl)
+      ?? failure("capture_failed", "The capture came back without a picture.", "Call app_screenshot again; if it keeps failing, tell the user.");
+  } catch (error) { return serviceFailure(error, args.app); }
+}
 
 export const tools = [
   {
@@ -172,26 +209,12 @@ export const tools = [
     description: "Take a picture of one window of a granted app, even when it is behind other windows, minimized or on another Space, and list its interactive elements, each as \"[N] role \"title\" (x, y, w×h)\" in the picture's pixels. That [N] is what element_index means in app_click and app_type, and the picture's pixels are what coordinate means. Read-only. Only the granted app's window is ever captured.\n\nNeeds the app granted with request_access. scale (0.1–1, default 1) shrinks only the returned picture; coordinates stay in full-size pixels. Returns the picture and the element list; if the window can't be captured, an error saying why (and without Accessibility permission the element list says it is missing).",
     inputSchema: {
       type: "object",
-      properties: {
-        app: APP, window_id: WINDOW_ID,
-        scale: { type: "number", minimum: 0.1, maximum: 1, default: 1, description: "0.1–1 (default 1): the size of the returned picture. Coordinates are unaffected." },
-      },
+      properties: { app: APP, window_id: WINDOW_ID, scale: SCALE },
       required: ["app"],
       additionalProperties: false,
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
-    handler: async (args = {}, ctx) => {
-      const refused = checkGrant(ctx, args.app);
-      if (refused) return refused;
-      const scale = args.scale === undefined ? 1 : args.scale;
-      if (typeof scale !== "number" || !(scale >= 0.1 && scale <= 1)) return failure("invalid_params", "scale must be a number from 0.1 to 1.", "Leave scale out, or pass a value from 0.1 to 1.");
-      try {
-        const shot = await service(ctx).service.appScreenshot(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), scale });
-        const match = /^data:(image\/[a-z]+);base64,(.*)$/s.exec(String(shot.dataUrl ?? ""));
-        if (!match) return failure("capture_failed", "The capture came back without a picture.", "Call app_screenshot again; if it keeps failing, tell the user.");
-        return { content: [{ type: "text", text: shot.summary }, { type: "image", data: match[2], mimeType: match[1] }] };
-      } catch (error) { return serviceFailure(error, args.app); }
-    },
+    handler: (args = {}, ctx) => screenshot(args, ctx),
   },
   {
     name: "app_ax_find",
@@ -291,4 +314,175 @@ export const tools = [
       catch (error) { return serviceFailure(error, args.app); }
     },
   },
+  {
+    name: "app_focus",
+    title: "Focus app window",
+    description: "Give keyboard focus to one window of a granted app without raising it or bringing the app forward: the window becomes the app's main and focused window through macOS Accessibility, so that target \"focused\" in app_type and app_click means the element that window's focus is on. No click is sent. It is refused while the app is the frontmost app (the user is working in it) and for a minimized window. The window becomes this app's default window for later calls, as after an app_screenshot.\n\nNeeds the app granted with request_access (view-only apps such as browsers can't be focused). Returns outcome \"ok\" with focused (whether the app now reports this window as its focused window), main and window_id; otherwise ok: false with a reasonCode and what to do instead.",
+    inputSchema: { type: "object", properties: { app: APP, window_id: WINDOW_ID }, required: ["app"], additionalProperties: false },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app);
+      if (refused) return refused;
+      try {
+        const result = await service(ctx).service.appFocus(ctx.sessionId, { bundleId: args.app, windowId: windowId(args) });
+        return outcomeResult(result, "Take an app_screenshot to see the window's state, then try again or address elements with element_index.");
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_menu",
+    title: "Use app menu",
+    description: "Use a granted app's menu bar through macOS Accessibility: no mouse event is sent and the app stays where it is, so prefer this over clicking for anything the menus offer — in Finder and similar apps it is the reliable way to run a command. Give exactly one of: path, the titles from the menu bar down to an item, e.g. [\"File\", \"New Folder\"] (any case; a trailing \"…\" can be left out) — a command item runs, a menu title opens that menu and returns its items; list, to read items without pressing anything (true for the menu bar's titles, or a title / path for the items under it); or close: true, to close a menu of this app that is open (as Escape would).\n\nNeeds the app granted with request_access; running a command needs full access, listing works at any level. Returns the resolved path and, for an opened menu or a list, the items (title, enabled, submenu, shortcut, checked). A title that doesn't match returns menu_item_not_found with closestMatch and the titles that are there; a disabled item returns menu_item_disabled.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP,
+        path: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 8, description: "Menu titles from the menu bar down: [\"File\", \"New Folder\"]. Presses the last one." },
+        list: { anyOf: [{ type: "boolean" }, { type: "string" }, { type: "array", items: { type: "string" }, maxItems: 8 }, { type: "null" }],
+          description: "Read-only: true (or null) for the menu bar's titles; a title or a path of titles for the items under it." },
+        close: { type: "boolean", const: true, description: "true: close the app's open menu (Escape)." },
+        action_summary: ACTION_SUMMARY,
+      },
+      required: ["app"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app);
+      if (refused) return refused;
+      const given = ["path", "list", "close"].filter((key) => Object.hasOwn(args, key) && (key !== "close" || args.close !== undefined));
+      if (given.length !== 1) {
+        return failure("invalid_params", `Give exactly one of path, list and close${given.length ? ` (got ${given.join(" and ")})` : ""}.`,
+          "Use list: true to see the menu bar, then path with the titles down to the item.");
+      }
+      try {
+        const result = await service(ctx).service.appMenu(ctx.sessionId, { bundleId: args.app, path: args.path, list: args.list, close: args.close });
+        if (given[0] === "list") return json({ ok: true, ...result });
+        return outcomeResult(result, "Call app_menu with list to check the titles and whether the item is enabled.");
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "app_zoom",
+    title: "Zoom into app window",
+    description: "Enlarge part of your last app_screenshot of a window to read small text or icons. region is [x0, y0, x1, y1] in that screenshot's pixels (the same pixels coordinate uses). The picture is cut from that screenshot, not captured again, so it can't show more detail than the screenshot held and doesn't show changes since; take a new app_screenshot first if the window may have changed. Read-only, no element list; coordinates in other tools keep referring to the screenshot, not to the zoomed picture.\n\nNeeds the app granted with request_access and an app_screenshot of the window; without one it returns an error saying to take one. scale (0.1–1, default 1) shrinks the returned picture.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID,
+        region: { type: "array", items: { type: "number" }, minItems: 4, maxItems: 4, description: "[x0, y0, x1, y1] in the last app_screenshot's pixels, x0 < x1 and y0 < y1." },
+        scale: SCALE,
+      },
+      required: ["app", "region"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const refused = checkGrant(ctx, args.app);
+      if (refused) return refused;
+      try {
+        const zoom = await service(ctx).service.appZoom(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), region: args.region, scale: args.scale });
+        const caption = `Zoom of window ${zoom.windowId} of ${zoom.bundleId}, region [${zoom.region.join(", ")}] of the last app_screenshot → ${zoom.width}×${zoom.height} (from ${zoom.sourcePixels.width}×${zoom.sourcePixels.height} screenshot pixels). Coordinates still refer to the app_screenshot.`;
+        return imageResult(caption, zoom.dataUrl) ?? failure("zoom_failed", "The zoom came back without a picture.", "Use app_screenshot instead.");
+      } catch (error) { return serviceFailure(error, args.app); }
+    },
+  },
+  {
+    name: "list_apps",
+    title: "List apps",
+    description: "List the Mac's apps: the ones running (first by default, each with its pid) and the ones installed in the usual application folders, each with its name and bundle identifier, and whether this session has it granted. Use it to find the exact name or bundle identifier to pass to request_access. query narrows the list by name or bundle identifier (any case); a query that matches nothing listed is also looked up with Spotlight. Read-only and needs no grant.\n\nReturns apps, total and, when there are more, nextCursor to pass as cursor for the next page (limit 1–200, default 25).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Part of the app's name or bundle identifier, any case." },
+        running_first: { type: "boolean", default: true, description: "Running apps first (default true); false sorts all by name." },
+        limit: { type: "integer", minimum: 1, maximum: 200, default: 25, description: "How many per page (default 25)." },
+        cursor: { type: "string", description: "nextCursor from the previous page." },
+      },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+    handler: async (args = {}, ctx) => {
+      const cu = service(ctx);
+      if (typeof cu.listApps !== "function") return failure("helper_unavailable", "Listing apps isn't available here.", NEXT_STEPS.helper_unavailable);
+      try {
+        const page = await cu.listApps({ query: args.query, runningFirst: args.running_first !== false, limit: args.limit ?? 25, cursor: args.cursor });
+        const grants = cu.service.grantsFor(ctx.sessionId);
+        return json({ ...page, apps: page.apps.map((app) => ({ ...app, granted: grants.has(app.bundleId), ...(grants.has(app.bundleId) ? { tier: grants.tierOf(app.bundleId) } : {}) })) });
+      } catch (error) { return serviceFailure(error); }
+    },
+  },
+  {
+    name: "app_batch",
+    title: "Run app actions",
+    description: "Run several actions on one granted app's window in order, in one call: click, type, screenshot and zoom work as app_click, app_type, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key, scroll and drag need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        app: APP, window_id: WINDOW_ID,
+        actions: {
+          type: "array", minItems: 1, maxItems: MAX_BATCH,
+          items: {
+            type: "object",
+            properties: {
+              action: { type: "string", enum: ["click", "type", "key", "scroll", "screenshot", "zoom", "drag"] },
+              coordinate: COORDINATE, element_index: ELEMENT_INDEX, target: TARGET,
+              button: { type: "string", enum: ["left", "right"] }, count: { type: "integer", enum: [1, 2, 3] },
+              text: { type: "string" }, mode: { type: "string", enum: ["insert", "replace"] },
+              combo: { type: "string" }, dy: { type: "number" },
+              path: { type: "array", items: { type: "array", items: { type: "number" } } }, to_coordinate: { type: "array", items: { type: "number" } },
+              region: { type: "array", items: { type: "number" } }, scale: SCALE, action_summary: ACTION_SUMMARY,
+            },
+            required: ["action"],
+            additionalProperties: false,
+          },
+          description: "The actions, in order: {action: \"click\", element_index: 3}, {action: \"type\", text: \"…\", target: \"focused\"}, {action: \"screenshot\"}, …",
+        },
+      },
+      required: ["app", "actions"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    handler: (args = {}, ctx) => batch(args, ctx),
+  },
 ];
+
+// app_batch: each action runs through the tool that does it alone, so a batch can't do anything the tools can't.
+const BATCH_TOOLS = { click: "app_click", type: "app_type", key: "app_key", scroll: "app_scroll", drag: "app_drag", zoom: "app_zoom" };
+/** A tool result's parts: its JSON body (or text) and its pictures. */
+function partsOf(result) {
+  const content = typeof result === "string" ? [{ type: "text", text: result }] : Array.isArray(result?.content) ? result.content : [];
+  const text = content.filter((part) => part.type === "text").map((part) => part.text).join("\n");
+  let body;
+  try { body = JSON.parse(text); } catch { body = { text }; }
+  return { body: body && typeof body === "object" && !Array.isArray(body) ? body : { text }, images: content.filter((part) => part.type === "image") };
+}
+async function batch(args, ctx) {
+  const refused = checkGrant(ctx, args.app);
+  if (refused) return refused;
+  const steps = Array.isArray(args.actions) ? args.actions : [];
+  if (!steps.length || steps.length > MAX_BATCH) return failure("invalid_params", `actions must list 1–${MAX_BATCH} actions.`, "Split longer work into several app_batch calls.");
+  const results = [], pictures = [];
+  let stoppedAt = null;
+  for (const [index, step] of steps.entries()) {
+    const { action, ...fields } = step && typeof step === "object" ? step : {};
+    const input = { ...fields, app: args.app, ...(args.window_id !== undefined ? { window_id: args.window_id } : {}) };
+    let result;
+    if (action === "screenshot") result = await screenshot(input, ctx, { keepReference: true });
+    else if (Object.hasOwn(BATCH_TOOLS, action)) {
+      const tool = tools.find((entry) => entry.name === BATCH_TOOLS[action]);
+      result = tool ? await tool.handler(input, ctx) : rawPathRefusal(action);
+    } else result = failure("invalid_params", `actions[${index}].action must be one of click, type, key, scroll, screenshot, zoom, drag.`, "Fix the action and run the batch again from this step.");
+    const { body, images } = partsOf(result);
+    results.push({ index, action: action ?? null, ...(images.length && !result?.isError ? { ok: true, text: body.text } : body) });
+    for (const image of images) pictures.push({ type: "text", text: `actions[${index}] (${action}):` }, image);
+    if (result?.isError) { stoppedAt = index; break; }
+  }
+  const summary = { ok: stoppedAt === null, completed: stoppedAt ?? steps.length, total: steps.length, results,
+    ...(stoppedAt !== null ? { stoppedAt, next_step: `actions[${stoppedAt}] didn't work (see its result); the ones after it didn't run. Fix it, take a new app_screenshot if the window changed, and continue from there.` } : {}) };
+  return { content: [{ type: "text", text: json(summary) }, ...pictures], ...(stoppedAt !== null ? { isError: true } : {}) };
+}
+/** key / scroll / drag until their tools exist: what app_key, app_scroll and app_drag answer. */
+function rawPathRefusal(action) {
+  return notYet("requires_raw_path", `${action} needs the raw input path, which isn't enabled in this build yet.`, RAW_PATH_STEP);
+}

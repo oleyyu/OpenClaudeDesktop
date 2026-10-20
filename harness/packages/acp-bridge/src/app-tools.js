@@ -31,6 +31,7 @@ export const APP_TOOL_NAMES = Object.freeze([
   'update_plan', 'wrap_up',
   // agent-tools/computer-use.mjs: computer use on one granted app's window (request_access raises the access card).
   'request_access', 'app_list_windows', 'app_screenshot', 'app_ax_find', 'app_click', 'app_type', 'app_release',
+  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch',
 ])
 
 /** {name, command, args, env, instructions} (env holds the socket and token; instructions text or null) or null. */
