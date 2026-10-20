@@ -16,7 +16,7 @@ public enum AXLadder {
     /// A double click on anything but text is two AXPress this far apart (Accessibility has no double click).
     static let doublePressGapMicros: useconds_t = 80_000
     /// A double click on these selects the word at the point through AXSelectedTextRange (what a double click means in
-    /// text). AXTextArea is here too: a TextEdit document is one.
+    /// text), a triple click the line. AXTextArea is here too: a TextEdit document is one.
     static let textSelectRoles: Set<String> = ["AXStaticText", "AXTextField", "AXTextArea"]
     /// Summary bounds: what the walk visits and what it keeps.
     static let maxVisited = 4000, maxElements = 500
@@ -238,11 +238,13 @@ public enum AXLadder {
         let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
                                        "title": title(hit) ?? NSNull(), "descentPath": path]
         if request.button == "right" { return showMenu(from: start, pid: request.pid, dryRun: request.dryRun, describe: describe) }
-        if request.count == 2, let startRole = role(start), textSelectRoles.contains(startRole) {
+        if request.count >= 2, let startRole = role(start), textSelectRoles.contains(startRole) {
             let screenPt = request.focused ? nil : request.winLocalPt.map { CGPoint(x: request.bounds.minX + $0.x, y: request.bounds.minY + $0.y) }
                 ?? frame(start).map { r in CGPoint(x: r.intersection(request.bounds).midX, y: r.intersection(request.bounds).midY) }
-            return selectText(start, unit: .word, at: screenPt, dryRun: request.dryRun, describe: describe)
+            return selectText(start, unit: request.count == 3 ? .line : .word, at: screenPt, dryRun: request.dryRun, describe: describe)
         }
+        // A triple click means "the line": nothing to select outside text, and pressing three times is not it.
+        if request.count == 3 { return unsupported("no_press_action", describe) }
         let climb = ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
         guard let target = climb.first(where: { actions($0).contains(kAXPressAction as String) }) else {
             // A row or cell (a Finder list AXRow / AXCell) with nothing pressable on it or above is no_press_action,
@@ -252,7 +254,6 @@ public enum AXLadder {
             if request.count == 2 { return unsupported("no_press_action", describe) }
             guard let startRole = role(start), noPressFallbackRoles.contains(startRole) else { return unsupported("canvas", describe) }
             if (value(start, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", describe) }
-            if request.count != 1 { return unsupported("multi_click_needs_raw_input", describe) }
             var result = describe
             result["noPressRole"] = startRole
             // A dry run says which reason the real call would give; the main process still blocks it (dry_run).
@@ -267,7 +268,6 @@ public enum AXLadder {
         if let rect = frame(target) { result["pressedLocalFrame"] = framePx(rect, origin: request.bounds.origin, scale: 1) }
         if menuPresentingRoles.contains(targetRole) { return unsupported("popup_menu_click_refused", result) }
         if (value(target, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
-        if request.count > 2 { return unsupported("multi_click_needs_raw_input", result) }
         result["axOp"] = "AXPress"
         if request.count == 2 { result["pressCount"] = 2 }
         if request.dryRun { result["outcome"] = "dryRun"; return result }
@@ -328,8 +328,8 @@ extension AXLadder {
         return word ?? ns.rangeOfComposedCharacterSequence(at: i)
     }
 
-    /// Double click on text: select the word at the point (no point: around the insertion point) by writing
-    /// AXSelectedTextRange, and read it back. Not settable, no text, or not read back → no_press_action.
+    /// Double / triple click on text: select the word / line at the point (no point: around the insertion point) by
+    /// writing AXSelectedTextRange, and read it back. Not settable, no text, or not read back → no_press_action.
     static func selectText(_ element: AXUIElement, unit: TextUnit, at screenPt: CGPoint?, dryRun: Bool, describe: [String: Any]) -> [String: Any] {
         var result = describe
         result["axOp"] = "AXSelectedTextRange"

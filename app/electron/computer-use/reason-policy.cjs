@@ -78,7 +78,7 @@ const RETRY = Object.freeze({ user_actively_typing: { attempts: 3, delayMs: 200 
 // Reasons the native side may report that the main process does not act on yet; they still block (they are listed so
 // the warning below is only for reasons nobody has looked at).
 const PENDING_RAW = Object.freeze({
-  multi_click_needs_raw_input: "local: double/triple click is not a repeated AXPress; needs dispatchRaw (M3)",
+  multi_click_needs_raw_input: "local: no longer reported — double / triple click are AX (AXSelectedTextRange, AXPress ×2) or no_press_action",
   ax_press_failed: "local: AXPress and AXConfirm both returned an error (ineffective)",
 });
 

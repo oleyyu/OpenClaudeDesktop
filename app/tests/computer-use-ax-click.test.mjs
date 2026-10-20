@@ -170,23 +170,23 @@ test('a right click goes to the native AXShowMenu with button "right"; it has no
   assert.equal(native.calls.filter((c) => c.method === 'rawClick').length, 0);
 });
 
-test('a double click reaches the native side as count 2 and never takes the raw rung, whatever the policy says', async () => {
+test('a double / triple click reaches the native side as count 2 / 3 and never takes the raw rung, whatever the policy says', async () => {
   const { native } = setUp();
   const raw = [];
   native.call = ((call0) => async (method, params) => (method === 'rawClick' ? (raw.push(params), { outcome: 'ok' }) : call0(method, params)))(native.call.bind(native));
   const handlers = { ok: { outcome: 'ok', reasonCode: null, axOp: 'AXSelectedTextRange', selectedText: 'beta' }, none: { outcome: 'unsupported', reasonCode: 'no_press_action' } };
-  for (const [name, answer] of Object.entries(handlers)) {
+  for (const count of [2, 3]) for (const [name, answer] of Object.entries(handlers)) {
     const n = fakeNative({ click: () => answer });
     const rawCalls = [];
     n.call = ((call0) => async (method, params) => (method === 'rawClick' ? (rawCalls.push(params), { outcome: 'ok' }) : call0(method, params)))(n.call.bind(n));
     const cu = createComputerUse({ native: n, log: quiet(), wait: async () => {}, decide: (r) => (r.outcome === 'ok' ? { action: 'done' } : { action: 'fallback', reason: r.reasonCode }) });
     cu.grantsFor('s1').grant(['com.apple.finder']);
     await cu.appScreenshot('s1', { bundleId: 'com.apple.finder' });
-    const result = await cu.appClick('s1', { bundleId: 'com.apple.finder', coordinate: [228, 64], count: 2 });
-    assert.equal(n.calls.find((c) => c.method === 'axClick').params.count, 2, name);
+    const result = await cu.appClick('s1', { bundleId: 'com.apple.finder', coordinate: [228, 64], count });
+    assert.equal(n.calls.find((c) => c.method === 'axClick').params.count, count, name);
     assert.equal(result.outcome, name === 'ok' ? 'ok' : 'unsupported', name);
     if (name === 'none') assert.deepEqual([result.reasonCode, result.blocked], ['no_press_action', true]);
-    assert.deepEqual(rawCalls, [], 'no raw click for a double click');
+    assert.deepEqual(rawCalls, [], 'no raw click for a double or triple click');
   }
   assert.deepEqual(raw, []);
 });

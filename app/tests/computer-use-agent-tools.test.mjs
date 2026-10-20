@@ -374,27 +374,26 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
 
-test('app_click: a triple click answers requires_raw_path at the door, nothing reaches the native side', async () => {
+test('app_click: right, double and triple click go the normal path; app_drag still answers requires_raw_path', async () => {
   const { call, body, native } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
-  const before = native.calls.length;
-  for (const args of [{ count: 3 }, { button: 'right', count: 3 }]) {
-    const result = await call('app_click', { app: FINDER, element_index: 0, ...args });
-    assert.equal(result.isError, true, JSON.stringify(args));
-    const parsed = body(result);
-    assert.equal(parsed.ok, false);
-    assert.equal(parsed.reasonCode, 'requires_raw_path', JSON.stringify(args));
-    assert.match(parsed.next_step, /Accessibility/);
+  for (const args of [{ button: 'right' }, { count: 2 }, { count: 3 }, { button: 'left', count: 1 }]) {
+    const parsed = body(await call('app_click', { app: FINDER, element_index: 1, ...args }));
+    assert.equal(parsed.ok, true, JSON.stringify(args));
+    const sent = native.calls.filter(([method]) => method === 'axClick').at(-1)[1];
+    assert.deepEqual([sent.button, sent.count], [args.button ?? 'left', args.count ?? 1], JSON.stringify(args));
   }
-  assert.equal(native.calls.length, before, 'no probe, no axClick');
-  // The parameters stay in the schema; their description says what they return.
+  const drag = body(await call('app_drag', { app: FINDER, coordinate: [1, 1], to_coordinate: [5, 5] }));
+  assert.equal(drag.reasonCode, 'requires_raw_path');
+  // The parameters stay in the schema; their descriptions say what Accessibility does, and nothing about raw input.
   const click = cu.tools.find((tool) => tool.name === 'app_click');
   assert.deepEqual(click.inputSchema.properties.button.enum, ['left', 'right']);
-  assert.match(click.inputSchema.properties.count.description, /3 \(triple click\) currently returns requires_raw_path/);
-  assert.doesNotMatch(click.inputSchema.properties.button.description, /requires_raw_path/);
-  assert.doesNotMatch(click.description, /never sends a synthetic mouse click/);
-  assert.equal(body(await call('app_click', { app: FINDER, element_index: 0, button: 'left', count: 1 })).ok, true);
+  assert.deepEqual(click.inputSchema.properties.count.enum, [1, 2, 3]);
+  for (const text of [click.description, click.inputSchema.properties.button.description, click.inputSchema.properties.count.description]) {
+    assert.doesNotMatch(text, /requires_raw_path|raw input/);
+  }
+  assert.match(click.inputSchema.properties.count.description, /3: triple click — selects the line/);
 });
 
 test('app_click: button "right" goes the normal path to the native AXShowMenu, never requires_raw_path', async () => {
@@ -688,8 +687,7 @@ test('app_batch: stops at the first action that fails; the rest do not run', asy
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
   const clicks = () => native.calls.filter(([method]) => method === 'axClick').length;
-  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click', count: 3, element_index: 0 }, 'requires_raw_path'],
-    [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3 }, 'requires_raw_path'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'requires_raw_path']]) {
+  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3 }, 'requires_raw_path'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'requires_raw_path']]) {
     const start = clicks();
     const result = await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 0 }, stopper, { action: 'click', element_index: 2 }] });
     assert.equal(result.isError, true);

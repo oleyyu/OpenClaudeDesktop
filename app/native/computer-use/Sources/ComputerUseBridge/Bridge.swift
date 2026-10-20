@@ -150,7 +150,7 @@ func rawClick(_ params: Params) throws -> [String: Any] {
     guard let granted = params.strings("grantedBundleIds"), granted.contains(bundleId) else {
         throw CUError.invalidParams("grantedBundleIds must list the target app")
     }
-    // no_press_action is only ever a single left click (AXLadder gives multi_click_needs_raw_input otherwise).
+    // The raw rung is only ever a single left click (service.cjs gives a right, double or triple click none).
     guard params.raw["count"] == nil || params.double("count") == 1 else { throw CUError.invalidParams("the raw click is a single click") }
     let count = 1
     let button = params.string("button") ?? "left"

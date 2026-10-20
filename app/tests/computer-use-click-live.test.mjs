@@ -7,11 +7,11 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { liveSkip, native } from './computer-use-live-helpers.mjs';
 
-// app_click's right and double click on this Mac (CU_LIVE=1 only; skipped otherwise), through the real native module and the
+// app_click's right, double and triple click on this Mac (CU_LIVE=1 only; skipped otherwise), through the real native module and the
 // Accessibility helper: Finder opens a temp folder in list view in the background, a file's context menu is opened by
 // AXShowMenu and closed again with app_menu close; a toolbar control without AXShowMenu answers no_menu_action.
 // TextEdit (only when it is not already running: your documents are not touched) opens a temp file; a double click
-// selects the word under the point through AXSelectedTextRange.
+// selects the word under the point and a triple click the line, through AXSelectedTextRange.
 // Needs Accessibility + Screen Recording for the process running it. When the folder's window opens on another Space
 // (the current one is a full-screen app's), Finder is brought forward for the test and the app that was in front gets it back afterwards.
 //   CU_LIVE=1 node --test --test-concurrency=1 tests/computer-use-click-live.test.mjs
@@ -149,6 +149,22 @@ test('acceptance 2 — TextEdit: a double click selects the word under the point
     const n = Number(result.selectedText.slice(4));
     const offset = LINES.slice(0, n).reduce((sum, line) => sum + line.length + 1, 0);
     assert.deepEqual(result.selectedRange, { location: offset, length: 6 });
+  } finally {
+    doc.close();
+  }
+});
+
+test('acceptance 3 — TextEdit: a triple click selects the whole line under the point, line break included', { skip: skip || textEditBusy }, async () => {
+  const doc = await textEditDocument();
+  try {
+    const result = await doc.click(3);
+    assert.equal(result.outcome, 'ok', JSON.stringify(result));
+    assert.equal(result.axOp, 'AXSelectedTextRange');
+    assert.equal(result.selectUnit, 'line');
+    assert.match(result.selectedText, /^line\d\d alpha beta gamma\n$/);
+    const n = Number(result.selectedText.slice(4, 6));
+    const offset = LINES.slice(0, n).reduce((sum, line) => sum + line.length + 1, 0);
+    assert.deepEqual(result.selectedRange, { location: offset, length: LINES[n].length + 1 });
   } finally {
     doc.close();
   }
