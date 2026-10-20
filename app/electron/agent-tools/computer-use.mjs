@@ -654,7 +654,7 @@ async function batch(args, ctx) {
     ...(stoppedAt !== null ? { stoppedAt, next_step: `actions[${stoppedAt}] didn't work (see its result); the ones after it didn't run. Fix it, take a new app_screenshot if the window changed, and continue from there.` } : {}) };
   return { content: [{ type: "text", text: json(summary) }, ...pictures], ...(stoppedAt !== null ? { isError: true } : {}) };
 }
-/** What app_key, app_scroll, app_drag and app_bring_to_current_space answer until M4's raw input path is enabled. */
+/** What app_key, app_scroll and app_bring_to_current_space answer until their raw input path is enabled. */
 function rawPathRefusal(what) {
   return notYet("requires_raw_path", `${what} needs the raw input path, which isn't enabled in this build yet.`, RAW_PATH_STEP);
 }
