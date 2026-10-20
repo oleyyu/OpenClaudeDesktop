@@ -101,7 +101,9 @@ test('acceptance 1b — raw rung: 2000 units into a control that ignores AX writ
   } finally { await fixture.quit(); }
 });
 
-test('acceptance 2 — a focused password field: secure_input_active, nothing written anywhere', { skip }, async () => {
+// The password field itself is no_text_target (read from the summary before anything is written); the other targets
+// meet the secure-input gate.
+test('acceptance 2 — a focused password field: no_text_target on it, secure_input_active elsewhere, nothing written anywhere', { skip }, async () => {
   const fixture = await launchFixture(build, { focus: 'password' });
   try {
     await sleep(300);
@@ -109,7 +111,8 @@ test('acceptance 2 — a focused password field: secure_input_active, nothing wr
     const { cu, elements } = await session(fixture);
     for (const target of [{ element_index: elements.password?.index ?? elements.field.index }, { element_index: elements.field.index }, {}]) {
       const result = await cu.appType('live', { bundleId: FIXTURE, text: 'hunter2', ...target });
-      assert.equal(result.reasonCode, 'secure_input_active', JSON.stringify(target));
+      const onPassword = elements.password && target.element_index === elements.password.index;
+      assert.equal(result.reasonCode, onPassword ? 'no_text_target' : 'secure_input_active', JSON.stringify(target));
       assert.equal(result.blocked, true);
     }
     const state = await fixture.dump();

@@ -275,3 +275,73 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(sdkToolName(item('app_screenshot')), 'mcp__computer-use__app_screenshot');
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
+
+test('app_click: right click and double / triple click answer requires_raw_path at the door, nothing reaches the native side', async () => {
+  const { call, body, native } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const before = native.calls.length;
+  for (const args of [{ button: 'right' }, { count: 2 }, { count: 3 }, { button: 'right', count: 2 }]) {
+    const result = await call('app_click', { app: FINDER, element_index: 0, ...args });
+    assert.equal(result.isError, true, JSON.stringify(args));
+    const parsed = body(result);
+    assert.equal(parsed.ok, false);
+    assert.equal(parsed.reasonCode, 'requires_raw_path', JSON.stringify(args));
+    assert.match(parsed.next_step, /Accessibility/);
+  }
+  assert.equal(native.calls.length, before, 'no probe, no axClick');
+  // The parameters stay in the schema; their description says what they return.
+  const click = cu.tools.find((tool) => tool.name === 'app_click');
+  assert.deepEqual(click.inputSchema.properties.button.enum, ['left', 'right']);
+  assert.match(click.inputSchema.properties.count.description, /requires_raw_path/);
+  assert.doesNotMatch(click.description, /never sends a synthetic mouse click/);
+  assert.equal(body(await call('app_click', { app: FINDER, element_index: 0, button: 'left', count: 1 })).ok, true);
+});
+
+test('app_click: no addressing is an error, never a replay of the previous click', async () => {
+  const { call, body, native } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  assert.equal(body(await call('app_click', { app: FINDER, coordinate: [20, 20] })).ok, true);
+  const clicks = () => native.calls.filter(([method]) => method === 'axClick').length;
+  const empty = await call('app_click', { app: FINDER });
+  assert.equal(empty.isError, true);
+  assert.equal(body(empty).error.code, 'invalid_params');
+  assert.match(body(empty).error.message, /one of coordinate, element_index or target/);
+  assert.equal(clicks(), 1, 'the earlier click is not pressed again');
+});
+
+test('app_type: a password field is no_text_target before anything is written or selected', async () => {
+  const secure = { index: 3, role: 'AXTextField', subrole: 'AXSecureTextField', title: 'Password', frame: { x: 400, y: 100, width: 200, height: 22 } };
+  const native = fakeNative();
+  const call0 = native.call.bind(native);
+  let secureNow = false;
+  native.call = async (method, params) => {
+    if (method === 'captureWindow') { const shot = await call0(method, params); return { ...shot, elements: [...shot.elements, secure] }; }
+    if (method === 'probe') { native.calls.push([method, params]); return { screenLocked: false, secureInput: secureNow }; }
+    // The native target resolution refuses a secure field this way, before it selects anything.
+    if (method === 'axType' && params.focused) { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'secure_input_active' }; }
+    return call0(method, params);
+  };
+  const { call, body } = setup({ native });
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const typed = () => native.calls.filter(([method]) => method === 'axType').length;
+  for (const target of [{ element_index: 3 }, { coordinate: [450, 110] }]) {
+    const result = await call('app_type', { app: FINDER, text: 'hunter2', mode: 'replace', ...target });
+    assert.equal(result.isError, true);
+    const parsed = body(result);
+    assert.equal(parsed.reasonCode, 'no_text_target', JSON.stringify(target));
+    assert.equal(parsed.secureTextField, true);
+    assert.match(parsed.next_step, /password/);
+  }
+  assert.equal(typed(), 0, 'nothing reached axType: no select-all, no write');
+  // target "focused": only the native side knows the role; its secure-field refusal is remapped when no secure input is on.
+  assert.equal(body(await call('app_type', { app: FINDER, text: 'hunter2', target: 'focused' })).reasonCode, 'no_text_target');
+  // Real secure input (another app's password field) stays what it is.
+  secureNow = true;
+  assert.equal(body(await call('app_type', { app: FINDER, text: 'hunter2', target: 'focused' })).reasonCode, 'secure_input_active');
+  secureNow = false;
+  // An ordinary field next to it is typed into as before.
+  assert.equal(body(await call('app_type', { app: FINDER, text: 'notes', element_index: 1 })).ok, true);
+});

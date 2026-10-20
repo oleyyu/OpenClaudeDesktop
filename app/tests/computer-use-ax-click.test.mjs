@@ -113,9 +113,9 @@ test('app_click converts frame pixels to window-local points and presses through
   assert.equal(result.outcome, 'ok');
   assert.equal(result.path, 'ax');
   assert.deepEqual(clicks().at(-1).params, { bundleId: 'com.apple.finder', windowId: 16678, count: 1, button: 'left', dryRun: false, winLocalPt: { x: 114, y: 32 } });
-  // No coordinate next time: the last action point on this window.
-  await cu.appClick('s1', { bundleId: 'com.apple.finder' });
-  assert.deepEqual(clicks().at(-1).params.winLocalPt, { x: 114, y: 32 });
+  // No addressing is an error, never a replay of the last point (a second submit in a form).
+  await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.finder' }), (e) => e.code === 'invalid_params');
+  assert.equal(clicks().length, 1);
   // element_index: the native side gets the index and the role it must still have.
   await cu.appClick('s1', { bundleId: 'com.apple.finder', element_index: 1 });
   assert.deepEqual(clicks().at(-1).params, { bundleId: 'com.apple.finder', windowId: 16678, count: 1, button: 'left', dryRun: false, elementIndex: 1, expectRole: 'AXRadioButton' });

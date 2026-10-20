@@ -61,12 +61,29 @@ function summaryText(shot, limit = SUMMARY_LINES) {
   return [head, ...lines, ...(elements.length > limit ? [`… ${elements.length - limit} more: use app_ax_find.`] : [])].join("\n");
 }
 
+const SECURE_FIELD = "AXSecureTextField";
+const isSecure = (e) => e?.role === SECURE_FIELD || e?.subrole === SECURE_FIELD;
+/** The summary element a coordinate lands on: the smallest listed frame containing it, or null. */
+function elementAt(shot, [x, y]) {
+  const elements = Array.isArray(shot?.elements) ? shot.elements : [];
+  let best = null;
+  for (const e of elements) {
+    const f = e.frame;
+    if (!f || x < f.x || y < f.y || x >= f.x + f.width || y >= f.y + f.height) continue;
+    if (!best || f.width * f.height < best.frame.width * best.frame.height) best = e;
+  }
+  return best;
+}
+/** A password field is not a text target: refused before anything is written or selected. */
+const secureFieldRefusal = (extra = {}) => ({ outcome: "unsupported", reasonCode: "no_text_target", secureTextField: true,
+  path: "unavailable", blocked: true, ...extra });
+
 /** selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`). */
 function createComputerUse({ native = createNative(), log = console, wait, decide, selfBundleIds = [] } = {}) {
   const sessions = new Map();   // sessionId → grants
-  const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId), points: Map("bundle:window" → winLocalPt) }
+  const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId) }
   const stateFor = (sessionId) => {
-    if (!windows.has(sessionId)) windows.set(sessionId, { shots: new Map(), last: new Map(), points: new Map() });
+    if (!windows.has(sessionId)) windows.set(sessionId, { shots: new Map(), last: new Map() });
     return windows.get(sessionId);
   };
   const grantsFor = (sessionId) => {
@@ -122,7 +139,6 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       state.shots.set(key, shot);
       state.last.set(bundleId, shot.windowId);
       state.target = { bundleId, windowId: shot.windowId };
-      state.points.delete(key);
       return { ...shot, summary: summaryText(shot) };
     },
     /**
@@ -145,8 +161,7 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       return { windowId: shot.windowId, total: elements.length, matches, lines: matches.map(elementLine) };
     },
     /**
-     * app_release: forget what this session holds on an app's window (its last screenshot, the last action point, the
-     * live preview's target), or on every window with no bundleId. The grants stay: releasing is not revoking.
+     * app_release: forget what this session holds on an app's window (its last screenshot, the live preview's target), or on every window with no bundleId. The grants stay: releasing is not revoking.
      */
     release(sessionId, { bundleId, windowId } = {}) {
       if (bundleId !== undefined && !validBundleId(bundleId)) throw coded("invalid_params", "bundleId must be a bundle identifier.");
@@ -155,8 +170,8 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       const state = windows.get(sessionId);
       if (!state) return { released: [] };
       const matches = (key) => bundleId === undefined || (wid === undefined ? key.startsWith(`${bundleId}:`) : key === `${bundleId}:${wid}`);
-      const released = [...new Set([...state.shots.keys(), ...state.points.keys()])].filter(matches);
-      for (const key of released) { state.shots.delete(key); state.points.delete(key); }
+      const released = [...state.shots.keys()].filter(matches);
+      for (const key of released) state.shots.delete(key);
       for (const [app, last] of [...state.last]) if (matches(`${app}:${last}`)) state.last.delete(app);
       if (state.target && matches(`${state.target.bundleId}:${state.target.windowId}`)) delete state.target;
       return { released };
@@ -164,6 +179,8 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
     /**
      * app_click on the AX rung. Refusals come back as {outcome: "unsupported", reasonCode, blocked: true}.
      * axOnly: no raw rung behind the reason policy (a fallback reason is refused), as the agent tool asks until M4.
+     * One of coordinate / element_index / target is required: there is no implicit "the same point as last time" (in a
+     * form that is a second submit).
      */
     async appClick(sessionId, { bundleId, windowId, coordinate, element_index: elementIndex, target, count = 1, button = "left", dryRun = false, axOnly = false } = {}) {
       granted(sessionId, bundleId);
@@ -172,10 +189,11 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       if (![1, 2, 3].includes(count)) throw coded("invalid_params", "count must be 1, 2 or 3.");
       const given = [coordinate !== undefined, elementIndex !== undefined, target !== undefined].filter(Boolean).length;
       if (given > 1) throw coded("invalid_params", "coordinate, element_index and target are mutually exclusive.");
+      if (given === 0) throw coded("invalid_params", "Give one of coordinate, element_index or target.");
       if (target !== undefined && target !== "focused") throw coded("invalid_params", "target must be \"focused\".");
       const state = stateFor(sessionId);
       const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
-      const key = `${bundleId}:${wid}`, shot = state.shots.get(key);
+      const shot = state.shots.get(`${bundleId}:${wid}`);
       const params = { bundleId, windowId: wid, count, button, dryRun: dryRun === true };
       let point = null;
       if (target === "focused") {
@@ -192,15 +210,11 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
           params.expectRole = shot.elements[elementIndex].role;
           const f = shot.elements[elementIndex].frame;
           point = frameToWindowLocal([f.x + f.width / 2, f.y + f.height / 2], shot);
-        } else if (coordinate !== undefined) {
+        } else {
           if (!Array.isArray(coordinate) || coordinate.length !== 2 || !inFrame(coordinate, shot)) {
             throw coded("invalid_params", `coordinate must be [x, y] inside the screenshot's ${shot.frameWidth}×${shot.frameHeight} frame.`);
           }
           point = frameToWindowLocal(coordinate, shot);
-          params.winLocalPt = point;
-        } else {
-          point = state.points.get(key);
-          if (!point) throw coded("invalid_params", "Give coordinate, element_index or target: there is no previous action point on this window.");
           params.winLocalPt = point;
         }
       }
@@ -213,13 +227,17 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       }) : null;
       const result = await execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
         context: { op: "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
-      if (result.outcome === "ok" && point) state.points.set(key, point);
       return { ...result, windowId: wid };
     },
     /**
      * app_type: AX rung (AXValue written and read back), then — only for a reason in the policy's FALLBACK — the raw rung.
      * Addressing: element_index or coordinate (of the last app_screenshot) or target "focused" (the default).
      * Partial delivery comes back ineffective with deliveredPrefixChars (UTF-16 units of `text` the field now holds).
+     *
+     * A password field (AXSecureTextField) is no_text_target, read before anything is written or selected: from the
+     * screenshot's summary for element_index / coordinate, and for "focused" from the native refusal — the native target
+     * resolution refuses a secure field as secure_input_active before it selects anything, which read like the session
+     * gate misfiring; it is remapped when a fresh probe shows no secure input is actually on.
      */
     async appType(sessionId, { bundleId, windowId, text, mode = "insert", coordinate, element_index: elementIndex, target } = {}) {
       granted(sessionId, bundleId);
@@ -241,12 +259,14 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
           if (!Number.isInteger(elementIndex) || elementIndex < 0 || elementIndex >= (shot.elements?.length ?? 0)) {
             throw coded("invalid_params", `element_index must be one of the [N] of the last app_screenshot (0–${(shot.elements?.length ?? 0) - 1}).`);
           }
+          if (isSecure(shot.elements[elementIndex])) return secureFieldRefusal({ windowId: wid });
           params.elementIndex = elementIndex;
           params.expectRole = shot.elements[elementIndex].role;
         } else {
           if (!Array.isArray(coordinate) || coordinate.length !== 2 || !inFrame(coordinate, shot)) {
             throw coded("invalid_params", `coordinate must be [x, y] inside the screenshot's ${shot.frameWidth}×${shot.frameHeight} frame.`);
           }
+          if (isSecure(elementAt(shot, coordinate))) return secureFieldRefusal({ windowId: wid });
           params.winLocalPt = frameToWindowLocal(coordinate, shot);
         }
       } else {
@@ -255,7 +275,12 @@ function createComputerUse({ native = createNative(), log = console, wait, decid
       const gate = actionGate(await native.call("probe"), "type");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
       const raw = (axResult) => native.call("rawType", { ...params, axReason: axResult?.reasonCode, grantedBundleIds: grantsFor(sessionId).allowedBundleIds() });
-      const result = await execute({ ax: () => native.call("axType", params), raw, log,
+      const ax = async () => {
+        const result = await native.call("axType", params);
+        if (result?.reasonCode !== "secure_input_active" || (await native.call("probe"))?.secureInput === true) return result;
+        return { ...result, reasonCode: "no_text_target", secureTextField: true };
+      };
+      const result = await execute({ ax, raw, log,
         context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
       return { ...result, windowId: wid };
     },

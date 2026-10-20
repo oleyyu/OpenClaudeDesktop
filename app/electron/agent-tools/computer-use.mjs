@@ -61,15 +61,24 @@ function checkGrant(ctx, app) {
   }
   return null;
 }
-/** coordinate / element_index / target: at most one. */
-function checkAddressing(args) {
+/** coordinate / element_index / target: at most one; `required` (app_click): exactly one. */
+function checkAddressing(args, { required = false } = {}) {
   const given = ["coordinate", "element_index", "target"].filter((key) => args[key] !== undefined);
   if (given.length > 1) {
     return failure("invalid_params", `Give only one of coordinate, element_index and target (got ${given.join(" and ")}).`,
       "Pick one way to address the target: element_index from app_screenshot's summary is the most reliable.");
   }
+  if (required && !given.length) {
+    return failure("invalid_params", "Say what to click: give one of coordinate, element_index or target.",
+      "Take an app_screenshot and pass the control's element_index (or target \"focused\"); a call never repeats the previous click by itself.");
+  }
   return null;
 }
+/** A capability this build doesn't have yet: a reason code the agent can act on, not a missing tool. */
+function notYet(reasonCode, message, nextStep) {
+  return { content: [{ type: "text", text: json({ ok: false, outcome: "unsupported", reasonCode, message, next_step: nextStep }) }], isError: true };
+}
+const RAW_PATH_STEP = "Do it through Accessibility instead (app_click with count 1 and the left button on an element_index, or app_menu for a command), or tell the user this needs input this build can't send yet.";
 /** A step's outcome ({outcome, path, reasonCode?, …}): an error result unless it took effect. */
 function outcomeResult(result, nextStep) {
   const ok = result?.outcome === "ok";
@@ -212,13 +221,13 @@ export const tools = [
   {
     name: "app_click",
     title: "Click in app window",
-    description: "Press a control in a granted app's window without bringing the app forward, through macOS Accessibility (the control's own press action). Address it one way only: element_index (an [N] from app_screenshot, the most reliable), coordinate (pixels of that screenshot), or target \"focused\"; leave all three out to press the same point as your last click in that window. This build never sends a synthetic mouse click: something Accessibility can't press is refused, not clicked blindly.\n\nNeeds the app granted with request_access (and allowed to click: browsers are view only), and an app_screenshot of the window for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example the point has no pressable control, the screen is locked, or secure input is on) and what to try next.",
+    description: "Press a control in a granted app's window without bringing the app forward, through macOS Accessibility (the control's own press action). Give exactly one of element_index (an [N] from app_screenshot, the most reliable), coordinate (pixels of that screenshot) or target \"focused\"; a call without one is an error, never a repeat of the last click. This build does a single left click only: right click and double or triple click need the raw input path, which isn't enabled yet, so button \"right\" or count 2–3 come back with reasonCode requires_raw_path. Something Accessibility can't press is refused with a reason, not clicked blindly.\n\nNeeds the app granted with request_access (and allowed to click: browsers are view only), and an app_screenshot of the window for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example the point has no pressable control, the screen is locked, or secure input is on) and what to try next.",
     inputSchema: {
       type: "object",
       properties: {
         app: APP, window_id: WINDOW_ID, coordinate: COORDINATE, element_index: ELEMENT_INDEX, target: TARGET,
-        button: { type: "string", enum: ["left", "right"], description: "\"left\" (default) or \"right\"." },
-        count: { type: "integer", enum: [1, 2, 3], description: "1 (default), 2 for a double click, 3 for a triple click." },
+        button: { type: "string", enum: ["left", "right"], description: "\"left\" (default). \"right\" needs the raw input path and currently returns requires_raw_path." },
+        count: { type: "integer", enum: [1, 2, 3], description: "1 (default). 2 or 3 (double / triple click) need the raw input path and currently return requires_raw_path." },
         action_summary: ACTION_SUMMARY,
       },
       required: ["app"],
@@ -226,12 +235,15 @@ export const tools = [
     },
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     handler: async (args = {}, ctx) => {
-      const refused = checkGrant(ctx, args.app) ?? checkAddressing(args);
+      // Right click and multi-clicks are synthetic mouse events: Accessibility has no press for them (M4's raw path).
+      if ((args.button !== undefined && args.button !== "left") || (args.count !== undefined && args.count !== 1)) {
+        return notYet("requires_raw_path", "This build supports a single left click only; right click and double or triple click need the raw input path, which isn't enabled yet.", RAW_PATH_STEP);
+      }
+      const refused = checkGrant(ctx, args.app) ?? checkAddressing(args, { required: true });
       if (refused) return refused;
       try {
         const result = await service(ctx).service.appClick(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), coordinate: args.coordinate,
-          element_index: args.element_index, target: args.target, ...(args.button !== undefined ? { button: args.button } : {}),
-          ...(args.count !== undefined ? { count: args.count } : {}), axOnly: true });
+          element_index: args.element_index, target: args.target, axOnly: true });
         return outcomeResult(result, "Take a fresh app_screenshot and try an element_index for the control (or target \"focused\"); if Accessibility can't press it, tell the user this control can't be clicked yet.");
       } catch (error) { return serviceFailure(error, args.app); }
     },
@@ -239,7 +251,7 @@ export const tools = [
   {
     name: "app_type",
     title: "Type in app window",
-    description: "Enter text into a text field of a granted app's window without bringing the app forward. It writes the field's value through macOS Accessibility and reads it back; when a field doesn't take that, it may fall back to typing the text as key events, and checks the result again. Address the field one way only: element_index or coordinate (from app_screenshot), or target \"focused\" (the default when none is given). mode \"insert\" (default) puts the text at the cursor, replacing any selection; \"replace\" selects the field's whole content first and replaces it.\n\nNeeds the app granted with full access via request_access (browsers, terminals and code editors can't be typed into), and an app_screenshot for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example not a text field, secure input on, the user is typing) and, if only part got in, how much (deliveredPrefixChars).",
+    description: "Enter text into a text field of a granted app's window without bringing the app forward. It writes the field's value through macOS Accessibility and reads it back; when a field doesn't take that, it may fall back to typing the text as key events, and checks the result again. Address the field one way only: element_index or coordinate (from app_screenshot), or target \"focused\" (the default when none is given). mode \"insert\" (default) puts the text at the cursor, replacing any selection; \"replace\" selects the field's whole content first and replaces it.\n\nNeeds the app granted with full access via request_access (browsers, terminals and code editors can't be typed into), and an app_screenshot for element_index or coordinate. Returns ok with how it was done; otherwise ok: false with a reasonCode (for example no_text_target for something that isn't a text field — a password field counts as one and is never typed into or selected —, secure input on, the user is typing) and, if only part got in, how much (deliveredPrefixChars).",
     inputSchema: {
       type: "object",
       properties: {
@@ -258,7 +270,9 @@ export const tools = [
       try {
         const result = await service(ctx).service.appType(ctx.sessionId, { bundleId: args.app, windowId: windowId(args), text: args.text,
           ...(args.mode !== undefined ? { mode: args.mode } : {}), coordinate: args.coordinate, element_index: args.element_index, target: args.target });
-        return outcomeResult(result, "Take a fresh app_screenshot, check the field, and address it with element_index; for a partial delivery, type only the rest.");
+        return outcomeResult(result, result?.secureTextField
+          ? "That is a password field: passwords are never typed. Ask the user to enter it themselves."
+          : "Take a fresh app_screenshot, check the field, and address it with element_index; for a partial delivery, type only the rest.");
       } catch (error) { return serviceFailure(error, args.app); }
     },
   },
