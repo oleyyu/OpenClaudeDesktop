@@ -56,7 +56,14 @@ public enum RawInput {
         }
         let samples = Dispatcher.dragSamples(vertices: targets, pixelScale: pixelScale)
         guard !samples.isEmpty else { return refused("invalid_params") }
-        return Dispatcher.drag(targets: samples, buttonName: button, refusal: gate).json
+        let readback = DragReadback.capture(pid: window.pid, point: samples[0].screenPoint)
+        // Preflight AX calls may take time; Dispatcher rechecks all gates just before the first event.
+        let dispatch = Dispatcher.drag(targets: samples, buttonName: button, refusal: gate)
+        var result = dispatch.json
+        result["before"] = readback?.before ?? [:]
+        result["after"] = dispatch.pressed ? (readback?.after() ?? [:]) : (readback?.before ?? [:])
+        result["readbackRole"] = readback.flatMap { AXLadder.role($0.element) } as Any? ?? NSNull()
+        return result
     }
 
     static func refused(_ reason: String, _ extra: [String: Any] = [:]) -> [String: Any] {

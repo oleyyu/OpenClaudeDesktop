@@ -43,9 +43,19 @@ final class Delegate: NSObject, NSApplicationDelegate {
     let field = NSTextField(frame: NSRect(x: 20, y: 120, width: 480, height: 24))
     let label = NSTextField(labelWithString: "label text")
     let password = NSSecureTextField(frame: NSRect(x: 20, y: 40, width: 480, height: 24))
+    let slider = NSSlider(value: 0.3, minValue: 0, maxValue: 1, target: nil, action: nil)
     var signal: DispatchSourceSignal?
+    var mouseMonitor: Any?
+    var mouseEvents: [[String: Any]] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if ProcessInfo.processInfo.environment["CU_FIXTURE_LOG_POINTER"] == "1" {
+            mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDown, .leftMouseDragged, .leftMouseUp]) { [weak self] event in
+                self?.mouseEvents.append(["type": event.type.rawValue, "x": event.locationInWindow.x,
+                                          "y": event.locationInWindow.y, "window": event.windowNumber])
+                return event
+            }
+        }
         window.title = "CU Text Fixture"
         let content = window.contentView!
         content.addSubview(scrolled(notes, NSRect(x: 20, y: 300, width: 480, height: 100), "notes"))
@@ -57,6 +67,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
         content.addSubview(label)
         password.setAccessibilityLabel("password")
         content.addSubview(password)
+        slider.frame = NSRect(x: 20, y: 8, width: 480, height: 20)
+        slider.setAccessibilityLabel("drag-slider")
+        content.addSubview(slider)
         window.makeKeyAndOrderFront(nil)
         // CU_FIXTURE_FOCUS=password|locked|notes picks the first responder (default: field).
         let focus: [String: NSResponder] = ["password": password, "locked": locked, "notes": notes]
@@ -76,7 +89,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
         let focus = responder === notes ? "notes" : responder === locked ? "locked"
             : (responder as? NSText)?.delegate === field ? "field" : (responder as? NSText)?.delegate === password ? "password" : "other"
         let state: [String: Any] = ["notes": notes.string, "locked": locked.string, "field": field.stringValue,
-                                    "label": label.stringValue, "password": password.stringValue, "focus": focus]
+                                    "label": label.stringValue, "password": password.stringValue, "focus": focus,
+                                    "notesSelection": ["location": notes.selectedRange().location, "length": notes.selectedRange().length],
+                                    "mouseEvents": mouseEvents, "sliderValue": slider.doubleValue]
         let data = try! JSONSerialization.data(withJSONObject: state)
         try! data.write(to: URL(fileURLWithPath: path + ".tmp"))
         rename(path + ".tmp", path)

@@ -1,5 +1,6 @@
 import XCTest
 import CoreGraphics
+import AppKit
 @testable import ComputerUseCore
 
 final class DragTests: XCTestCase {
@@ -85,6 +86,25 @@ final class DragTests: XCTestCase {
         XCTAssertTrue(events.isEmpty)
     }
 
+    func testGateAfterPrepareAndAlternateButtons() {
+        var events: [CGEventType] = []
+        let refused = Dispatcher.dragSequence(targets: targets, buttonName: "left",
+            refusal: { events.isEmpty ? nil : "screen_locked" }, pause: { _ in }) { kind, _ in events.append(kind) }
+        XCTAssertEqual(events, [.mouseMoved])
+        XCTAssertFalse(refused.pressed)
+        let buttons: [(String, CGEventType, CGEventType, CGEventType)] = [
+            ("right", .rightMouseDown, .rightMouseDragged, .rightMouseUp),
+            ("middle", .otherMouseDown, .otherMouseDragged, .otherMouseUp),
+        ]
+        for (name, down, dragged, up) in buttons {
+            events = []
+            let result = Dispatcher.dragSequence(targets: targets, buttonName: name, refusal: { nil },
+                pause: { _ in }) { kind, _ in events.append(kind) }
+            XCTAssertTrue(result.released)
+            XCTAssertEqual(events, [.mouseMoved, down] + Array(repeating: dragged, count: 12) + [up, .mouseMoved])
+        }
+    }
+
     func testFactorySetsPidClickStateAndWindowFieldsForEveryDragEvent() throws {
         let source = try EventFactory.source().get()
         typealias GetLocation = @convention(c) (CGEvent) -> CGPoint
@@ -96,6 +116,7 @@ final class DragTests: XCTestCase {
             XCTAssertEqual(event.getIntegerValueField(.mouseEventClickState), 1)
             XCTAssertEqual(event.getIntegerValueField(CGEventField(rawValue: 91)!), 456)
             XCTAssertEqual(event.getIntegerValueField(CGEventField(rawValue: 92)!), 456)
+            XCTAssertEqual(NSEvent(cgEvent: event)?.windowNumber, 456)
             XCTAssertEqual(event.location, targets[0].screenPoint)
             XCTAssertEqual(local(event), targets[0].windowLocal)
         }

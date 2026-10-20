@@ -99,3 +99,57 @@ test('typing before a drag retries only while nothing has been pressed', async (
   assert.equal((await f.cu.appDrag('s', f.params)).outcome, 'ok');
   assert.deepEqual(f.waits, [200, 200]);
 });
+
+const { dragReadback } = require('../electron/computer-use/service.cjs');
+const { decide } = require('../electron/computer-use/reason-policy.cjs');
+const sent = { outcome: 'ok', reasonCode: null, delivered: true, mouseUpSent: true };
+
+test('readback contract: text range 10–40, slider 30–70, and an app tab position changing verify delivery', () => {
+  const examples = [
+    [{ AXValue: '0123456789'.repeat(8), AXSelectedTextRange: { location: 0, length: 0 } },
+      { AXValue: '0123456789'.repeat(8), AXSelectedTextRange: { location: 10, length: 30 } }],
+    [{ AXValue: 0.3 }, { AXValue: 0.7 }],
+    [{ AXPosition: { x: 100, y: 40 } }, { AXPosition: { x: 300, y: 40 } }],
+  ];
+  for (const [before, after] of examples) {
+    const result = dragReadback({ ...sent, before, after }, 'dev.example.app');
+    assert.equal(result.outcome, 'ok');
+    assert.equal(result.verified, true);
+    assert.deepEqual(result.before, before);
+    assert.deepEqual(result.after, after);
+  }
+});
+
+test('readback: unchanged values are ineffective with before/after; object key order is irrelevant', async () => {
+  const before = { AXSelectedTextRange: { location: 10, length: 0 }, AXPosition: { x: 10, y: 20 } };
+  const after = { AXPosition: { y: 20, x: 10 }, AXSelectedTextRange: { length: 0, location: 10 } };
+  const f = setup({ result: { ...sent, before, after } });
+  await f.cu.appScreenshot('s', f.params);
+  const result = await f.cu.appDrag('s', f.params);
+  assert.equal(result.outcome, 'ineffective');
+  assert.equal(result.reasonCode, 'drag_ineffective');
+  assert.equal(result.verified, true);
+  assert.deepEqual([result.before, result.after], [before, after]);
+});
+
+test('Finder unchanged readback maps to the system limitation and permits AX alternatives only for drag', async () => {
+  const state = { AXPosition: { x: 100, y: 200 } };
+  const f = setup({ bundleId: 'com.apple.finder', result: { ...sent, before: state, after: state } });
+  await f.cu.appScreenshot('s', f.params);
+  const result = await f.cu.appDrag('s', f.params);
+  assert.equal(result.reasonCode, 'system_app_ignores_posted_events');
+  assert.equal(result.mouseUpSent, true);
+  assert.equal(decide(result, { op: 'drag' }).action, 'fallback');
+  assert.equal(decide(result, { op: 'left_click' }).action, 'block');
+  assert.equal(dragReadback({ ...sent, before: state, after: state }, 'com.apple.TextEdit').reasonCode, 'drag_ineffective');
+});
+
+test('unreadable or vanished attributes do not turn delivery into verified success or a system-app diagnosis', () => {
+  for (const [before, after] of [[{}, {}], [{ AXValue: 30 }, {}], [{ AXValue: 30, AXPosition: { x: 1, y: 2 } }, { AXPosition: { x: 1, y: 2 } }]]) {
+    const result = dragReadback({ ...sent, before, after }, 'com.apple.finder');
+    assert.equal(result.outcome, 'ok');
+    assert.equal(result.verified, false);
+  }
+  const abort = { ...sent, outcome: 'ineffective', reasonCode: 'screen_locked', before: { AXValue: 30 }, after: { AXValue: 70 } };
+  assert.deepEqual(dragReadback(abort, 'com.apple.finder'), abort, 'partial change cannot erase a safety abort');
+});

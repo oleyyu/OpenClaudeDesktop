@@ -28,6 +28,7 @@ const { fit, scaled, frameToWindowLocal, windowLocalToScreen, inFrame } = requir
 const { actionGate, checkTier } = require("./guards.cjs");
 const { execute, deliver } = require("./executor.cjs");
 const { createAxHelper } = require("./ax-helper.cjs");
+const { isDeepStrictEqual } = require("node:util");
 
 // How many summary lines app_screenshot shows inline; app_ax_find searches the rest.
 const SUMMARY_LINES = 40;
@@ -107,6 +108,23 @@ function dragCoordinates(shot, coordinate, toCoordinate, path) {
   };
 }
 
+const POSTED_EVENT_SYSTEM_APPS = new Set(["com.apple.finder", "com.apple.dock", "com.apple.systemuiserver"]);
+/** Native supplies snapshots of the SAME retained element. Delivery alone cannot verify acceptance. */
+function dragReadback(result, bundleId) {
+  if (result?.outcome !== "ok" || result.delivered !== true) return result;
+  const before = result.before ?? {}, after = result.after ?? {};
+  const keys = ["AXValue", "AXSelectedTextRange", "AXPosition"].filter((key) => Object.hasOwn(before, key));
+  const common = keys.filter((key) => Object.hasOwn(after, key));
+  if (common.some((key) => !isDeepStrictEqual(before[key], after[key]))) {
+    return { ...result, verified: true, readback: "changed" };
+  }
+  if (!keys.length || common.length !== keys.length) {
+    return { ...result, verified: false, readback: "unavailable" };
+  }
+  return { ...result, outcome: "ineffective", verified: true, blocked: true, readback: "unchanged",
+    reasonCode: POSTED_EVENT_SYSTEM_APPS.has(bundleId) ? "system_app_ignores_posted_events" : "drag_ineffective" };
+}
+
 /**
  * selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`).
  * axHelper: ax-helper.cjs (focus, menus). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
@@ -139,7 +157,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const state = stateFor(sessionId);
       const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
       const shot = state.shots.get(`${bundleId}:${wid}`);
-      if (!shot) throw coded("screenshot_required", `Take an app_screenshot of ${bundleId} before dragging.`);
+      if (!shot) throw coded("screenshot_required", "Take an app_screenshot of this app before dragging.");
       const coordinates = dragCoordinates(shot, coordinate, toCoordinate, path);
       // The drag-specific main-process check follows the native secure → typing → focused → lock order.
       const probe = await native.call("probe");
@@ -151,7 +169,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const result = await deliver(() => native.call("drag", {
         bundleId, windowId: wid, ...coordinates, button, grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
       }), wait ? { wait } : {});
-      return { ...result, windowId: wid };
+      return { ...dragReadback(result, bundleId), windowId: wid };
     },
     forgetSession: (sessionId) => { sessions.delete(sessionId); windows.delete(sessionId); },
     /** The window the session last looked at (app_screenshot), with its app's granted name: the live preview's target. */
@@ -506,4 +524,4 @@ function checkBudget(shot, scale = 1) {
   return shot;
 }
 
-module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS, MAX_MENU_DEPTH, dragCoordinates };
+module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, SYSTEM_COMBOS, MAX_TYPE_UNITS, MAX_MENU_DEPTH, dragCoordinates, dragReadback };

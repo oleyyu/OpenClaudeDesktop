@@ -1,6 +1,7 @@
 // AX_REASON_LADDER_POLICY (docs/04 §判定树 5): what an AX `unsupported` / `ineffective` result may lead to.
 //
-//   "fallback"  the action may fall through to raw input (dispatchRaw, CGEvent to the target pid)
+//   "fallback"  text actions may fall through to raw input; system_app_ignores_posted_events on drag permits an
+//               equivalent AX action chosen by the caller (the reverse direction, never a global-input retry)
 //   "block"     known reason that must never fall through (falling through would hit the wrong thing)
 //   "retry"     back off and retry (user_actively_typing: 3 times, 200 ms apart, then refuse)
 //   anything not in the table → block, and log that the reason needs a policy entry (fail-closed)
@@ -11,6 +12,14 @@
 // no_focused_text, text_not_writable. Every other reason — ax_error included (a hung app or an unstable AX bridge:
 // raw events would land somewhere else) — stays blocked.
 const FALLBACK = Object.freeze({
+  system_app_ignores_posted_events: {
+    ops: ["drag"],
+    app: "Finder, Dock, SystemUIServer",
+    scene: "A fully released pid-targeted drag with readable, unchanged AX state",
+    trigger: "drag readback: AXValue / AXSelectedTextRange / AXPosition unchanged",
+    falls_to: "Caller may use an equivalent Accessibility action (e.g. app_menu); never replay as global HID input",
+    live: "Finder posted mouse-event limitation documented in PLANNED_M3.no_press_action; drag must still read back before using this reason",
+  },
   no_focused_text: {
     ops: ["type"],
     app: "M3 text fixture (dev.openclaude.cu-text-fixture, tests/fixtures/cu-text-fixture): an NSTextView subclass that ignores AX value writes; any app with such a text control",
@@ -63,6 +72,9 @@ const BLOCK = Object.freeze({
   scgevent_unavailable: "local: no HID-state CGEventSource could be created; the whole raw path refuses",
   window_moved: "local: the window moved since the screenshot; the model's coordinate no longer means what it saw",
   raw_click_ineffective: "local: the raw click was delivered but the row's AXSelected did not change (the app did not accept it)",
+  drag_ineffective: "local: a fully released drag left readable AX state unchanged",
+  drag_timeout: "local: the 3000 ms drag deadline elapsed; a held button was released",
+  drag_in_progress: "local: another native drag owns the held-button interval",
   // app_type / app_key (TextInput.swift). A text result that is not ok is final: the readback already says why.
   no_text_target: "local: no text element at the target or within four parents (non-text targets are refused)",
   text_unchanged: "local: the AX write left the value as it was",

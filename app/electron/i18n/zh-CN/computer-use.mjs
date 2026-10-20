@@ -4,6 +4,17 @@
 // "View only" / "Click only" / "All", "Deny", "Reason" and "Allow for this session" are already translated elsewhere.
 // Keys are the exact English source strings.
 export default {
+  "Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.": "按顺序在同一个已授权应用窗口中执行多个操作：click、type、drag、screenshot、zoom 分别使用对应 app_* 工具的参数，不含批次统一提供的 app 和 window_id。key 和 scroll 尚不可用，会以 requires_raw_path 停止批次。遇到第一个失败或无效的操作即停止。所有坐标和元素索引沿用本次调用前的 app_screenshot；批次中的截图仅用于观察，不改变坐标基准。\n\n需要通过 request_access 授权；使用坐标或元素索引前需要截图。返回各操作结果、完成数量与停止位置，随后附上截图或放大图片。",
+
+  "This system app ignored the posted drag. Use app_menu or another Accessibility action for the same task.": "此系统应用未响应投递的拖拽。请通过 app_menu 或其他辅助功能操作完成同一任务。",
+  "The drag was released but the readable state did not change. Inspect a fresh app_screenshot before trying an alternative.": "拖拽已松开，但可回读的状态没有变化。请先获取新的 app_screenshot，再尝试其他操作。",
+  "The drag exceeded 3000 ms and the mouse button was released. Inspect the app before retrying.": "拖拽超过 3000 毫秒，鼠标按键已松开。请检查应用状态后再重试。",
+  "Another drag is still running. Wait for it to finish before starting another.": "另一个拖拽仍在进行，请等待完成后再开始。",
+  "Take an app_screenshot of this app before dragging.": "拖拽前请先对该应用调用 app_screenshot。",
+  "path must contain 2–20 [x, y] waypoints.": "path 必须包含 2–20 个 [x, y] 途经点。",
+  "coordinate, to_coordinate and every path point must be inside the screenshot's full-resolution frame.": "coordinate、to_coordinate 及每个 path 点都必须位于截图的全分辨率范围内。",
+  "button must be left, right or middle.": "button 必须为 left、right 或 middle。",
+
   "Drag in app window": "在应用窗口中拖拽",
   "Drag inside one granted app window from coordinate to to_coordinate, optionally through 2–20 path waypoints. Requires full access via request_access and a prior app_screenshot; all points use that screenshot's full-resolution pixels. button defaults to left. Uses targeted mouse events with continuous safety checks and a 3000 ms limit. Returns before/after readback when available; verified:false means delivery could not be checked. Failures include drag_ineffective, drag_timeout, screen_locked, secure_input_active, user_actively_typing and system_app_ignores_posted_events. For the last reason, use an Accessibility alternative such as app_menu.": "在已授权应用的同一窗口内，从 coordinate 拖到 to_coordinate，可选经过 path 的 2–20 个途经点。需要先通过 request_access 获得完整权限，再调用 app_screenshot；所有坐标均为该截图的全分辨率像素。button 默认为 left。定向投递鼠标事件，全程检查安全状态，最长 3000 毫秒。可回读时返回 before/after；verified:false 表示无法验证投递效果。失败原因包括 drag_ineffective、drag_timeout、screen_locked、secure_input_active、user_actively_typing 和 system_app_ignores_posted_events。最后一种情况请改用 app_menu 等辅助功能替代操作。",
   "Drag endpoint in full-resolution screenshot pixels.": "拖拽终点，使用截图全分辨率像素坐标。",

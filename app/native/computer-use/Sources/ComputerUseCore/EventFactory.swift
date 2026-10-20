@@ -52,6 +52,8 @@ public enum EventFactory {
     /// kCGMouseEventWindowUnderMousePointer / …ThatCanHandleThisEvent.
     static let windowUnderPointerField = CGEventField(rawValue: 91)!
     static let windowThatCanHandleField = CGEventField(rawValue: 92)!
+    /// NSEvent.windowNumber, distinct from the hit-test hints 91/92. Without it AppKit receives window 0.
+    static let windowNumberField = CGEventField(rawValue: 51)!
 
     static func route(_ event: CGEvent, pid: pid_t) {
         event.setIntegerValueField(.eventTargetUnixProcessID, value: Int64(pid))
@@ -60,6 +62,7 @@ public enum EventFactory {
 
     static func route(_ event: CGEvent, _ target: Target) {
         route(event, pid: target.pid)
+        event.setIntegerValueField(windowNumberField, value: Int64(target.windowId))
         event.setIntegerValueField(windowUnderPointerField, value: Int64(target.windowId))
         event.setIntegerValueField(windowThatCanHandleField, value: Int64(target.windowId))
         SkyLight.attachWindowLocation(event, target.windowLocal)

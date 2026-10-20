@@ -42,8 +42,8 @@ const shoot = (cu) => cu.appScreenshot('s1', { bundleId: APP });
 const refusedBy = (reasonCode, extra = {}) => () => ({ outcome: 'unsupported', reasonCode, ...extra });
 
 test('policy: exactly the two text reasons are open, for app_type only, each with app, scene, trigger and a live sighting', () => {
-  assert.deepEqual(Object.keys(FALLBACK).sort(), ['no_focused_text', 'text_not_writable']);
-  for (const [reason, entry] of Object.entries(FALLBACK)) {
+  assert.deepEqual(Object.keys(FALLBACK).filter((reason) => FALLBACK[reason].ops.includes('type')).sort(), ['no_focused_text', 'text_not_writable']);
+  for (const [reason, entry] of Object.entries(FALLBACK).filter(([, entry]) => entry.ops.includes('type'))) {
     assert.deepEqual(entry.ops, ['type'], reason);
     for (const key of ['app', 'scene', 'trigger', 'falls_to']) assert.equal(typeof entry[key], 'string', `${reason}.${key}`);
     assert.match(entry.live, /^SEEN 2026-10-19/, reason);

@@ -57,6 +57,10 @@ const NEXT_STEPS = {
 };
 // What to do after an outcome's reasonCode, where the general next step doesn't fit.
 const REASON_STEPS = {
+  system_app_ignores_posted_events: "This system app ignored the posted drag. Use app_menu or another Accessibility action for the same task.",
+  drag_ineffective: "The drag was released but the readable state did not change. Inspect a fresh app_screenshot before trying an alternative.",
+  drag_timeout: "The drag exceeded 3000 ms and the mouse button was released. Inspect the app before retrying.",
+  drag_in_progress: "Another drag is still running. Wait for it to finish before starting another.",
   menu_item_disabled: "The item is disabled right now (the app's state doesn't allow it, e.g. nothing is selected). Change that first, or tell the user.",
   app_is_frontmost: "The app is in front and the user is working in it, so its focus isn't moved. Address the element with element_index instead, or ask the user.",
   window_minimized: "The window is minimized. Ask the user to restore it, or pick another window from app_list_windows.",
@@ -69,7 +73,7 @@ const REASON_STEPS = {
 function serviceFailure(error, app) {
   const code = typeof error?.code === "string" ? error.code : "internal";
   const next = code === "app_not_granted" ? requestAccessStep(app) : NEXT_STEPS[code] ?? null;
-  return failure(code, String(error?.message || error), next, error?.details && typeof error.details === "object" ? error.details : undefined);
+  return failure(code, t(String(error?.message || error)), next, error?.details && typeof error.details === "object" ? error.details : undefined);
 }
 
 /** The grant check every tool but request_access and app_release starts with: null when the app may be used. */
@@ -110,7 +114,7 @@ const RAW_PATH_STEP = "Do it through Accessibility instead (app_click with count
 /** A step's outcome ({outcome, path, reasonCode?, …}): an error result unless it took effect. */
 function outcomeResult(result, nextStep) {
   const ok = result?.outcome === "ok";
-  nextStep = REASON_STEPS[result?.reasonCode] ?? nextStep;
+  nextStep = t(REASON_STEPS[result?.reasonCode] ?? nextStep);
   return { content: [{ type: "text", text: json({ ok, ...result, ...(ok || !nextStep ? {} : { next_step: nextStep }) }) }], ...(ok ? {} : { isError: true }) };
 }
 const windowId = (args) => (args.window_id === undefined ? undefined : args.window_id);
@@ -417,7 +421,7 @@ export const tools = [
   {
     name: "app_batch",
     title: "Run app actions",
-    description: "Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.",
+    description: t("Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow."),
     inputSchema: {
       type: "object",
       properties: {

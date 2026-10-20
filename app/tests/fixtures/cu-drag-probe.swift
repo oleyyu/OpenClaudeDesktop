@@ -22,14 +22,15 @@ guard let window = windows.first(where: { (value($0, kAXTitleAttribute) as? Stri
 var result: [String: Any] = [:]
 var points: [[String: Double]] = []
 for index in [10, 40] {
-    var range = CFRange(location: index, length: 0)
+    // Zero-length ranges can report stale caret geometry; use the leading edge of the actual character bounds.
+    var range = CFRange(location: index, length: 1)
     let parameter = AXValueCreate(.cfRange, &range)!
     var out: CFTypeRef?
     if AXUIElementCopyParameterizedAttributeValue(area, kAXBoundsForRangeParameterizedAttribute as CFString, parameter, &out) == .success,
        let out, CFGetTypeID(out) == AXValueGetTypeID() {
         var rect = CGRect.zero
         if AXValueGetValue(out as! AXValue, .cgRect, &rect) {
-            points.append(["x": rect.midX, "y": rect.midY])
+            points.append(["x": rect.minX + 0.5, "y": rect.midY])
         }
     }
 }

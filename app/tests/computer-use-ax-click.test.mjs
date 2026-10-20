@@ -42,8 +42,8 @@ function setUp(options) {
 
 test('reason policy: every non-ok AX result outside the whitelist blocks; unknown reasons warn (fail-closed)', () => {
   // M3 opened the two text reasons, for app_type only (computer-use-type.test.mjs); no click reason is open.
-  assert.deepEqual(Object.keys(FALLBACK), ['no_focused_text', 'text_not_writable']);
-  assert.ok(Object.values(FALLBACK).every((entry) => entry.ops.length === 1 && entry.ops[0] === 'type'));
+  assert.deepEqual(Object.keys(FALLBACK).filter((reason) => reason !== 'system_app_ignores_posted_events'), ['no_focused_text', 'text_not_writable']);
+  assert.ok(Object.values(FALLBACK).every((entry) => !entry.ops.includes('left_click')));
   const log = quiet();
   assert.deepEqual(decide({ outcome: 'ok' }, { log }), { action: 'done', reason: null });
   for (const reason of Object.keys(BLOCK)) assert.equal(decide({ outcome: 'unsupported', reasonCode: reason }, { log }).action, 'block', reason);

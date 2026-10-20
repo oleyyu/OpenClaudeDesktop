@@ -14,6 +14,8 @@ import ComputerUseCore
 ///   captureScreen {displayId?, allowedBundleIds, scale?}
 ///   rawClick      {bundleId, windowId, winLocalPt {x,y}, screenPt {x,y}, count?, button?, focused?, grantedBundleIds}
 ///                 the raw rung, only after the main process's reason policy allowed the fallback (RawInput.swift)
+///   drag          {bundleId, windowId, points: [{winLocalPt, screenPt}], pixelScale, button?, focused?, grantedBundleIds}
+///                 owns prepare/press/move/release/settle and returns before/after AX readback
 ///   axType        {bundleId, windowId, text, mode?, winLocalPt? | elementIndex? (+expectRole) | focused?}
 ///   rawType       axType's params + {grantedBundleIds, axReason}: the raw text rung, after a policy fallback
 ///   rawKey        {bundleId, windowId?, combo, repeat?, grantedBundleIds}   (TextInput.swift)
@@ -147,7 +149,7 @@ func point(_ params: Params, _ key: String) throws -> CGPoint {
 
 func drag(_ params: Params) throws -> [String: Any] {
     guard let bundleId = params.string("bundleId"), !bundleId.isEmpty,
-          let windowId = params.uint32("windowId"),
+          let windowId = params.uint32("windowId"), windowId > 0,
           let granted = params.strings("grantedBundleIds"), granted.contains(bundleId),
           let vertices = params.raw["points"] as? [[String: Any]], (2...22).contains(vertices.count),
           let pixelScale = params.double("pixelScale"), pixelScale > 0, pixelScale <= 16 else {
