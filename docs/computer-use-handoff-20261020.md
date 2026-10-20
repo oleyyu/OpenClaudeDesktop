@@ -49,7 +49,7 @@ native 模块没有暴露窗口焦点、菜单栏和应用枚举，而本轮不�
 ## UI
 
 - **设置 › This computer › System › Computer use**（`src/source-settings-computer-use.jsx`）：位置、标题 + neutral Beta 徽标、段落说明、"Enable computer use" 开关照官方 2.42304.0（c71860c77 `ii`）。开关存 `config.agentComputerUse`，关掉后 `agentToolGroupEnabled("computer-use")` 为假、工具列表重新下发；**未设置读作开**（与 Visuals 一致；官方 `chicagoEnabled` 默认关、打开时还有一个确认对话框，本轮没做）。分组渲染加了 `badge` / `description` 两个可选字段。
-- **已允许的应用**：官方设置里**没有**这一项（官方授权只在会话内，设置里只有 Denied apps）。按任务要求做了，标记和样式完全复用官方 Denied apps 块（`Xr`）：`flex flex-wrap gap-1.5` 芯片、ghost xxs X 按钮、`text-footnote text-secondary` 空态。移除 = 从所有会话撤销该应用并释放其窗口状态（service `revoke` / IPC `computer-use:revoke`、`computer-use:all-grants`）。这是本地扩展，若要严格对齐官方应改成 Denied apps。
+- **已允许的应用**：官方设置里**没有**这一项（官方授权只在会话内，设置里只有 Denied apps）。按任务要求做了，标记和样式完全复用官方 Denied apps 块（`Xr`）：`flex flex-wrap gap-1.5` 芯片、ghost xxs X 按钮、`text-footnote text-secondary` 空态。移除 = 从所有会话撤销该应用并释放其窗口状态（service `revoke` / IPC `computer-use:revoke`、`computer-use:all-grants`）。这是本地扩展。官方的 Denied apps（黑名单：列入的应用的访问请求自动拒绝）**不做**——用户 2026-10-20 决定不要黑名单。
 - **Teach mode**：只有一行入口与"此版本暂不可用"的空态。官方没有这个设置入口，teach 只有 request_teach_access 的授权卡；这一行同样是本地扩展。
 - **假光标**（`electron/computer-use/cursor.cjs`）：透明、鼠标穿透、screen-saver 层级的 40×40 panel BrowserWindow，箭头 + 一圈 clay 色脉冲，移到点击的全局屏幕坐标，2 秒后 0.3 秒淡出。**是 Web 近似，不是一致**：官方是原生 `ComputerUseSwift.PhantomCursor`（NSPanel），只在 click 时 pulse、在锁释放时隐藏而不是定时淡出，尺寸 / 时长常量编译在 Swift 里读不到。每次点击前先 `hideNow()`，保证 AX 命中测试不会打到光标窗口；app 自身从不被授权，截图也不会包含它。
 
