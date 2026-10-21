@@ -2,9 +2,10 @@
 // Holds the native messaging port to com.openclaude.chrome_bridge (app/electron/browser/native-host.cjs) and answers
 // the app's execute_tool requests. Messages are { method, params, tool_use_id } (see app/electron/browser/protocol.cjs).
 // An open native port keeps this worker alive; when it drops, the worker reconnects with backoff.
-// Tools: navigate, read_page, find, form_input, computer, javascript_tool, browser_batch (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
+// Tools: navigate, read_page, find, form_input, computer, javascript_tool, browser_batch, tabs_create, tabs_context
+// (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
 import { ToolError } from "./errors.js";
-import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction } from "./tabs.js";
+import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction, tabsCreate, tabsContext } from "./tabs.js";
 import { withRefs, record, checkRef } from "./refs.js";
 import { runReadOnly } from "./script.js";
 
@@ -52,6 +53,12 @@ const tools = {
 
   // navigate(url, tabId?) → { tabId, url, title, status }
   navigate: (args) => navigate(args),
+
+  // tabs_create(url?, active?) → { tabId, url, title, status, active }
+  tabs_create: (args) => tabsCreate(args),
+
+  // tabs_context() → { currentTabId, windows: [{ windowId, tabs: [{tabId, url, title, active, current, openedByBridge, status}] }] }
+  tabs_context: () => tabsContext(),
 
   // read_page(tabId?, filter?, depth?, ref_id?, max_chars?) → { tabId, title, url, tree, refCount, truncated }
   async read_page(args) {

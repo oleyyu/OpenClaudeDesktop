@@ -19,7 +19,7 @@ OpenClaude Desktop 主进程 (app/electron/browser/bridge-client.cjs)
 | 文件 | 作用 |
 |---|---|
 | `service-worker.js` | 连 native host、收发消息、分派工具 |
-| `tabs.js` | 选 tab（无 tabId 时用桥的当前 tab，否则用户最后聚焦窗口的激活 tab）、navigate、按需注入 content script |
+| `tabs.js` | 选 tab（无 tabId 时用桥的当前 tab，否则用户最后聚焦窗口的激活 tab）、navigate、tabs_create / tabs_context、按需注入 content script |
 | `refs.js` | ref 的副本：发给了哪个 tab、哪一轮 read_page；判 `stale_ref` / `ref_wrong_tab` |
 | `content.js` | 注入到页面（隔离 world）：可访问性树、分配 ref、find、form_input、computer |
 | `script.js` | javascript_tool：经 `chrome.debugger` 只读求值 |
@@ -39,6 +39,13 @@ javascript_tool 还要 `debugger` 权限：每次调用期间 Chrome 顶部会�
 | `computer` | `action`，`ref?`，`coordinate?`，`text?`，`modifiers?`，`scroll_direction?`，`scroll_amount?`，`tabId?` | 动作摘要；点击/按键引起整页导航时带 `navigated` |
 | `javascript_tool` | `code`，`tabId?`，`timeout_ms?`（默认 10000） | `{tabId, type, value}`；DOM 节点返回其描述 |
 | `browser_batch` | `actions: [{name, input}]`（最多 50 步） | `{steps: [{name, ok, result \| error}], completed, failed?}` |
+| `tabs_create` | `url?`（不给则 `about:blank`），`active?`（默认 false） | `{tabId, url, title, status, active}`；新 tab 成为当前 tab |
+| `tabs_context` | — | `{currentTabId, windows: [{windowId, tabs: [{tabId, url, title, active, current, openedByBridge, status}]}]}` |
+
+tab 上下文：「当前 tab」是桥自己的概念，不是用户在看的 tab。`navigate`（不带 tabId）和 `tabs_create` 打开的新 tab 在后台，
+并成为当前 tab；任何带 `tabId` 的调用都会把那个 tab 设为当前 tab，这就是切换 tab 的方式。用户的激活 tab 不会被改动，
+除非 `tabs_create` 传 `active: true`。`tabs_context` 只读 tab 元数据（标题、URL），不往任何页面注入脚本；
+列出的是最后聚焦的窗口，当前 tab 在别的窗口时连那个窗口一起列出。标题和 URL 同样是不可信数据。
 
 `form_input`：文本框写值后派发 `input` 与 `change`；checkbox/radio 用 `true`/`false`（通过一次 click 切换，页面自己的
 click 处理器也会跑）；select 按 option 的 value 或文字匹配；contenteditable 替换内容。file 输入不支持。
@@ -118,6 +125,8 @@ cd app && npm run check:chrome-bridge -- p1
   再验 checkbox、select、type、key、按 ref 与按坐标点击、双击、右键、hover、scroll、元素消失后的 `stale_ref`、点击导航。
 - P3：带严格 CSP 的本地页，javascript_tool 的读能用、15 种写 / 网络 / cookie / storage / 异步调用被拒，页面与服务器都没有变化；
   `browser_batch` navigate → read_page → computer → javascript_tool 只产生一次 App→host 调用（数 host 日志），遇错即停。
+- P4：`tabs_create` 开两个后台 tab（用户的激活 tab 不变），新 tab 成为当前 tab；两个方向的 ref 都不串（`ref_wrong_tab`）；
+  按 tabId 切回原 tab 后它的 ref 仍有效，另一个 tab 的 ref 也没被动到；不带 url 开 `about:blank`，`active: true` 开到前台。
 
 没有 Chrome for Testing 时先 `npx playwright install chromium`，或用 `CHROME_PATH` 指向一个 Chromium（品牌版 Google Chrome
 已不接受 `--load-extension`）。不需要浏览器的协议与路由单测：`node --test tests/chrome-bridge.test.mjs`。
@@ -128,5 +137,5 @@ cd app && npm run check:chrome-bridge -- p1
 - [x] P1 navigate / read_page / find
 - [x] P2 form_input / computer（ref 寻址）
 - [x] P3 javascript_tool / browser_batch
-- [ ] P4 tabs_create / tabs_context
+- [x] P4 tabs_create / tabs_context
 - [ ] P5 注册进 agent-tools（group `browser`，默认 deferred）

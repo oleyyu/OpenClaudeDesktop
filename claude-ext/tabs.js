@@ -2,16 +2,27 @@
 // A tool without tabId acts on the bridge's current tab (the last one navigate / read_page / find used), else on the
 // active tab of the last focused window — the page the user has open. Nothing runs in a tab no tool named:
 // content.js is injected on demand (no manifest content_scripts), so the extension never walks pages in the background.
+// tabs_create opens a tab of the bridge's own; tabs_context lists the window's tabs (tab metadata only: nothing is
+// injected to list them). A tool given a tabId makes that tab the current one, which is how the agent switches tabs;
+// the tab the user is looking at stays as it is.
 import { ToolError } from "./errors.js";
 import { invalidateTab, forgetTab } from "./refs.js";
 
 const LOAD_TIMEOUT_MS = 20_000;
 let currentTabId = null;
+const openedTabs = new Set(); // tabs the bridge opened (navigate without tabId, tabs_create)
 let loaded = null;
 
 function load() {
-  loaded ??= chrome.storage.session.get("currentTabId").then(({ currentTabId: saved }) => { if (Number.isInteger(saved) && currentTabId === null) currentTabId = saved; }).catch(() => {});
+  loaded ??= chrome.storage.session.get(["currentTabId", "openedTabs"]).then(({ currentTabId: saved, openedTabs: opened }) => {
+    if (Number.isInteger(saved) && currentTabId === null) currentTabId = saved;
+    if (Array.isArray(opened)) for (const id of opened) openedTabs.add(id);
+  }).catch(() => {});
   return loaded;
+}
+function markOpened(tabId) {
+  openedTabs.add(tabId);
+  chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {});
 }
 export function setCurrentTab(tabId) {
   currentTabId = tabId;
@@ -28,6 +39,7 @@ chrome.tabs.onUpdated.addListener((tabId, change) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   forgetTab(tabId);
   loadStarted.delete(tabId);
+  if (openedTabs.delete(tabId)) chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {});
   if (tabId === currentTabId) setCurrentTab(null);
 });
 
@@ -98,6 +110,7 @@ export async function navigate({ url, tabId } = {}) {
       tab = await chrome.tabs.update(tab.id, { url: target });
     } else {
       tab = await chrome.tabs.create({ url: target, active: false });
+      markOpened(tab.id);
     }
   }
   const status = await waitForLoad(tab.id);
@@ -117,6 +130,39 @@ export async function settleAfterAction(tabId, urlBefore, startedAt) {
   if (status === "closed") return { closed: true };
   const after = await chrome.tabs.get(tabId);
   return { url: after.url ?? "", title: after.title ?? "", status, note: "The page changed: call read_page for fresh refs." };
+}
+
+/** tabs_create(url?, active?): a new tab in the last focused window, in the background unless active; it becomes the
+ * bridge's current tab. Without url it is about:blank (Chrome's own New Tab page can't be read). */
+export async function tabsCreate({ url, active = false } = {}) {
+  if (typeof active !== "boolean") throw new ToolError("bad_request", "active is true or false.");
+  const target = url === undefined || url === null || url === "" ? "about:blank" : normalizeUrl(url);
+  await load();
+  const tab = await chrome.tabs.create({ url: target, active });
+  markOpened(tab.id);
+  const status = await waitForLoad(tab.id);
+  if (status === "closed") throw new ToolError("no_such_tab", `Tab ${tab.id} was closed while loading.`);
+  setCurrentTab(tab.id);
+  return { ...tabSummary(await chrome.tabs.get(tab.id)), status, active };
+}
+
+/** tabs_context(): the tabs of the last focused window (and of the current tab's window, if that is another one). */
+export async function tabsContext() {
+  await load();
+  let current = null;
+  if (currentTabId !== null) { try { current = await chrome.tabs.get(currentTabId); } catch { setCurrentTab(null); } }
+  const windowIds = [];
+  try { windowIds.push((await chrome.windows.getLastFocused({ windowTypes: ["normal"] })).id); } catch {}
+  if (current && !windowIds.includes(current.windowId)) windowIds.push(current.windowId);
+  const windows = [];
+  for (const windowId of windowIds) {
+    const tabs = await chrome.tabs.query({ windowId });
+    windows.push({
+      windowId,
+      tabs: tabs.map((tab) => ({ ...tabSummary(tab), active: tab.active, current: tab.id === currentTabId, openedByBridge: openedTabs.has(tab.id), status: tab.status ?? "complete" })),
+    });
+  }
+  return { currentTabId: current ? current.id : null, windows };
 }
 
 const RESTRICTED = /cannot access|cannot be scripted|chrome:\/\/|extensions gallery|missing host permission|error page/i;

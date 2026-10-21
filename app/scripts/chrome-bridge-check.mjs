@@ -1,6 +1,6 @@
 // Chrome bridge acceptance, phase by phase:
 //   npm run check:chrome-bridge            every phase
-//   npm run check:chrome-bridge -- p3      one phase (p0, p1, p2, p3)
+//   npm run check:chrome-bridge -- p4      one phase (p0 … p4)
 // Runs in Electron's main process (no window, Dock icon hidden) with the same bridge-client.cjs the app uses. It starts
 // a headless Chrome for Testing (Playwright's, or CHROME_PATH) on a throwaway profile with claude-ext/ loaded, registers
 // the native host in that profile only (<profile>/NativeMessagingHosts, launcher run by this Electron as node), and
@@ -20,6 +20,9 @@
 //    DOM writes, network (also spelled indirectly), cookies, storage, timers, await are refused and the page and the
 //    server show nothing happened; a runaway script is stopped · browser_batch navigate → read_page → computer → read
 //    is one app→host call, and a batch stops at its first failing step.
+// P4 tabs_create / tabs_context: two bridge tabs open in the background (the user's tab stays active), the new one
+//    becomes current · refs don't cross tabs either way · switching back by tabId keeps the original tab's refs
+//    and leaves the other tab's untouched · about:blank without a url, active: true brings a tab to the front.
 import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -409,6 +412,63 @@ const phases = {
     assert.equal(stopped.failed.step, 2);
     assert.equal(stopped.failed.code, "stale_ref");
     assert.equal(await failsWith(tool("browser_batch", { actions: [{ name: "browser_batch", input: {} }] })), "bad_request");
+  },
+
+  async p4({ client, base }) {
+    const tool = (name, args = {}) => client.executeTool(name, args, { timeoutMs: 30_000 });
+    const refIn = (tree, pattern) => { const match = new RegExp(`${pattern}[^\\n]*?\\[(ref_\\d+)\\]`).exec(tree); assert.ok(match, `a ref for ${pattern}`); return match[1]; };
+    const listed = (context) => context.windows.flatMap((win) => win.tabs);
+    const before = await tool("tabs_context");
+    const usersTab = listed(before).find((tab) => tab.active);
+    say(`tabs_context → ${listed(before).length} tab(s), active ${usersTab?.tabId} "${usersTab?.url}"`);
+    assert.ok(usersTab, "the window has an active tab");
+
+    // The original tab: the classic example page, with the link's ref.
+    const a = await tool("tabs_create", { url: `${base}/example` });
+    const refA = refIn((await tool("read_page", {})).tree, 'link "More information\\.\\.\\."');
+    // A new tab: the sign-in form, which becomes the current one (calls without tabId go to it).
+    const b = await tool("tabs_create", { url: `${base}/login` });
+    assert.notEqual(b.tabId, a.tabId);
+    assert.equal(b.status, "complete");
+    assert.equal(b.active, false, "opened in the background");
+    const pageB = await tool("read_page", { filter: "interactive" });
+    assert.equal(pageB.tabId, b.tabId, "read_page without tabId reads the new tab");
+    assert.equal(pageB.title, "Sign in");
+    const refB = refIn(pageB.tree, 'textbox "Username"');
+    let context = await tool("tabs_context");
+    const row = (id) => listed(context).find((tab) => tab.tabId === id);
+    say(`after tabs_create ×2 → current ${context.currentTabId}; ${listed(context).map((tab) => `${tab.tabId}${tab.active ? "*" : ""}${tab.current ? " (current)" : ""}${tab.openedByBridge ? " [bridge]" : ""} ${tab.title}`).join(" · ")}`);
+    assert.equal(context.currentTabId, b.tabId);
+    assert.equal(row(b.tabId).current, true);
+    assert.equal(row(a.tabId).current, false);
+    assert.equal(row(a.tabId).openedByBridge && row(b.tabId).openedByBridge, true);
+    assert.equal(row(usersTab.tabId).active, true, "the user's tab is still the active one");
+    assert.equal(row(usersTab.tabId).openedByBridge, false);
+
+    // Refs don't cross: B's ref on A, and A's ref on B, are refused.
+    assert.equal(await failsWith(tool("read_page", { ref_id: refA })), "ref_wrong_tab", "A's ref while B is current");
+    assert.equal(await failsWith(tool("form_input", { tabId: a.tabId, ref: refB, value: "alice" })), "ref_wrong_tab", "B's ref on A");
+
+    // Back to the original tab: naming it makes it current, and its refs from before still hold.
+    const backOnA = await tool("find", { tabId: a.tabId, query: "More information" });
+    assert.equal(backOnA.matches[0].ref, refA, "A's ref survived the read on B");
+    context = await tool("tabs_context");
+    assert.equal(context.currentTabId, a.tabId);
+    const sub = await tool("read_page", { ref_id: refA });
+    assert.equal(sub.tabId, a.tabId);
+    assert.match(sub.tree, /^- link "More information\.\.\." \[ref_\d+\]/);
+    assert.equal(await failsWith(tool("form_input", { ref: refB, value: "alice" })), "ref_wrong_tab", "B's ref while A is current");
+    // …and B's refs were not touched by reading A.
+    assert.equal((await tool("form_input", { tabId: b.tabId, ref: refB, value: "alice" })).value, "alice");
+    say(`switched back to tab ${a.tabId}: ${refA} still valid there, ${refB} only on tab ${b.tabId}`);
+
+    // tabs_create without a url, and in front when asked.
+    const blank = await tool("tabs_create", {});
+    assert.equal(blank.url, "about:blank");
+    const front = await tool("tabs_create", { url: `${base}/example`, active: true });
+    context = await tool("tabs_context");
+    assert.equal(row(front.tabId).active, true);
+    assert.equal(await failsWith(tool("tabs_create", { url: "chrome://settings" })), "bad_url");
   },
 };
 
