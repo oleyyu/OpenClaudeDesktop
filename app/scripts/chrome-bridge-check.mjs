@@ -1,6 +1,6 @@
 // Chrome bridge acceptance, phase by phase:
 //   npm run check:chrome-bridge            every phase
-//   npm run check:chrome-bridge -- p2      one phase (p0, p1, p2)
+//   npm run check:chrome-bridge -- p3      one phase (p0, p1, p2, p3)
 // Runs in Electron's main process (no window, Dock icon hidden) with the same bridge-client.cjs the app uses. It starts
 // a headless Chrome for Testing (Playwright's, or CHROME_PATH) on a throwaway profile with claude-ext/ loaded, registers
 // the native host in that profile only (<profile>/NativeMessagingHosts, launcher run by this Electron as node), and
@@ -16,6 +16,10 @@
 // P2 form_input / computer by ref on a local sign-in form: username and password filled (not submitted), the page
 //    saw each value with one input and one change event · checkbox, select · type and key (Backspace, Tab) · clicks by
 //    ref and by coordinate, double, right, hover, scroll · a removed element's ref and a navigating click.
+// P3 javascript_tool on a page with a strict CSP: reads (title, the page's globals, DOM queries, statements) work;
+//    DOM writes, network (also spelled indirectly), cookies, storage, timers, await are refused and the page and the
+//    server show nothing happened; a runaway script is stopped · browser_batch navigate → read_page → computer → read
+//    is one app→host call, and a batch stops at its first failing step.
 import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -129,9 +133,27 @@ const LOGIN = `<!doctype html><html><head><title>Sign in</title><meta charset="u
 </script>
 </body></html>`;
 
+// A page with state of its own, a cookie, and a strict CSP (no eval, no inline script). /beacon counts requests.
+const SCRIPTED = `<!doctype html><html><head><title>Scripted</title><meta charset="utf-8"><script src="/app.js"></script></head><body>
+<h1 id="heading">Inventory</h1><ul><li><a href="/a">Apples</a></li><li><a href="/b">Pears</a></li></ul>
+<button id="counter">Counter</button><p id="clicks">clicks=0</p></body></html>`;
+const SCRIPTED_JS = `window.appState = { user: "alice", items: [1, 2, 3] };
+addEventListener("DOMContentLoaded", () => {
+  let clicks = 0;
+  document.getElementById("counter").addEventListener("click", () => { document.getElementById("clicks").textContent = "clicks=" + ++clicks; });
+});`;
+const beacons = { count: 0 };
+
 function serveFixtures() {
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, "http://127.0.0.1");
+    if (url.pathname === "/beacon") { beacons.count++; response.writeHead(204); response.end(); return; }
+    if (url.pathname === "/app.js") { response.writeHead(200, { "content-type": "text/javascript" }); response.end(SCRIPTED_JS); return; }
+    if (url.pathname === "/scripted") {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8", "set-cookie": "session=topsecret; Path=/", "content-security-policy": "default-src 'self'; script-src 'self'" });
+      response.end(SCRIPTED);
+      return;
+    }
     const body = url.pathname === "/example" ? EXAMPLE : url.pathname === "/form" ? FORM(Number(url.searchParams.get("remove")) || 0)
       : url.pathname === "/login" ? LOGIN : url.pathname === "/next" ? "<!doctype html><title>Next</title><h1>Next page</h1>" : null;
     response.writeHead(body ? 200 : 404, { "content-type": "text/html; charset=utf-8" });
@@ -319,6 +341,74 @@ const phases = {
     assert.equal(away.navigated.sameDocument, undefined, "a new page, not a same-document change");
     assert.equal(await failsWith(tool("form_input", { tabId, ref: ref.user, value: "bob" })), "stale_ref");
     assert.equal(await failsWith(tool("computer", { tabId, action: "left_click" })), "bad_request");
+  },
+
+  async p3({ client, base, sockets }) {
+    const tool = (name, args = {}) => client.executeTool(name, args, { timeoutMs: 30_000 });
+    const js = (tabId, code, extra = {}) => tool("javascript_tool", { tabId, code, ...extra });
+    const { tabId } = await tool("navigate", { url: `${base}/scripted` });
+
+    // Reads, in the page's own context (its globals), on a page whose CSP forbids eval and inline script.
+    assert.deepEqual(await js(tabId, "document.title"), { tabId, type: "string", value: "Scripted" });
+    assert.deepEqual((await js(tabId, "appState.items")).value, [1, 2, 3], "the page's own globals are visible");
+    assert.deepEqual((await js(tabId, "[...document.querySelectorAll('a')].map((a) => a.textContent)")).value, ["Apples", "Pears"]);
+    assert.equal((await js(tabId, "const n = document.links.length;\nn * 2")).value, 4, "statements: the last expression's value");
+    assert.equal((await js(tabId, "let n = 1; n")).value, 1, "declarations stay local to the call");
+    assert.equal((await js(tabId, "document.links[0]")).type, "node");
+    // Chrome doesn't mark every read as side-effect free (getElementById isn't): the refusal says what to use.
+    await assert.rejects(js(tabId, "document.getElementById('clicks')"), (error) => error.code === "not_read_only" && /querySelector/.test(error.message));
+    say("reads: title, page globals, DOM queries, statements → ok (CSP page)");
+
+    // Writes, network and cookies are refused, and nothing happened.
+    const refused = {
+      "document.body.innerHTML = 'gone'": "not_read_only", "document.querySelector('h1').remove()": "not_read_only", "document.title = 'x'": "not_read_only",
+      "appState.user = 'mallory'": "not_read_only", "window['fet' + 'ch']('/beacon')": "not_read_only", "fetch('/beacon')": "not_read_only",
+      "new Image().src = '/beacon'": "not_read_only", "document.getElementById('counter').click()": "not_read_only", "setTimeout(() => {}, 0)": "not_read_only",
+      "document.cookie": "not_read_only", "localStorage.getItem('k')": "not_read_only", "window['local' + 'Storage'].getItem('k')": "not_read_only",
+      "await Promise.resolve(1)": "not_supported", "throw new Error('boom')": "js_error", "syntax error here(": "js_error",
+    };
+    for (const [code, code_] of Object.entries(refused)) assert.equal(await failsWith(js(tabId, code)), code_, code);
+    assert.equal((await js(tabId, "document['coo' + 'kie']")).value, "", "cookies read as empty however they are spelled");
+    assert.equal(beacons.count, 0, "no request reached the server");
+    assert.equal((await js(tabId, "document.querySelector('h1').textContent + ' ' + appState.user + ' ' + document.querySelector('#clicks').textContent")).value, "Inventory alice clicks=0", "the page is unchanged");
+    assert.equal(await failsWith(js(tabId, "while (true) {}", { timeout_ms: 500 })), "timeout");
+    assert.equal((await js(tabId, "document.title")).value, "Scripted", "the page still answers after a stopped script");
+    say(`refused: ${Object.keys(refused).length} writes / network / cookie / storage / async calls; beacons=${beacons.count}; obfuscated cookie read → ""`);
+
+    // browser_batch: navigate → read_page → computer (→ a read) in one round trip with the app.
+    const box = (await js(tabId, "const r = document.querySelector('#counter').getBoundingClientRect();\n[Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]")).value;
+    const logFile = path.join(sockets, "host.log");
+    const calls = () => fs.readFileSync(logFile, "utf8").split("\n").filter((line) => line.includes("electron→host execute_tool"));
+    const before = calls().length;
+    const batch = await tool("browser_batch", { actions: [
+      { name: "navigate", input: { url: `${base}/scripted`, tabId } },
+      { name: "read_page", input: { filter: "interactive" } },
+      { name: "computer", input: { action: "left_click", coordinate: box } },
+      { name: "javascript_tool", input: { code: "document.querySelector('#clicks').textContent" } },
+    ] });
+    await wait(100);
+    const during = calls().slice(before);
+    say(`browser_batch → ${batch.steps.map((step) => `${step.name}:${step.ok ? "ok" : step.error.code}`).join(" → ")}; app→host calls: ${during.length} (${during.map((line) => line.split("execute_tool ")[1].split(" ")[0]).join(", ")})`);
+    assert.equal(batch.completed, 4);
+    assert.equal(batch.failed, undefined);
+    assert.match(batch.steps[1].result.tree, /button "Counter" \[ref_\d+\]/);
+    assert.equal(batch.steps[2].result.name, "Counter");
+    assert.equal(batch.steps[3].result.value, "clicks=1", "the click in the batch reached the page");
+    assert.equal(during.length, 1, "one round trip for the whole batch");
+    assert.match(during[0], /execute_tool browser_batch/);
+
+    // It stops at the first failure; later steps don't run. (Its read_page voids the ref the step after it uses.)
+    const stopped = await tool("browser_batch", { actions: [
+      { name: "read_page", input: { tabId } },
+      { name: "form_input", input: { tabId, ref: /button "Counter" \[(ref_\d+)\]/.exec(batch.steps[1].result.tree)[1], value: "x" } },
+      { name: "javascript_tool", input: { tabId, code: "document.title" } },
+    ] });
+    say(`browser_batch with a stale ref → completed ${stopped.completed}, failed ${JSON.stringify(stopped.failed)}`);
+    assert.equal(stopped.completed, 1);
+    assert.equal(stopped.steps.length, 2);
+    assert.equal(stopped.failed.step, 2);
+    assert.equal(stopped.failed.code, "stale_ref");
+    assert.equal(await failsWith(tool("browser_batch", { actions: [{ name: "browser_batch", input: {} }] })), "bad_request");
   },
 };
 

@@ -21,10 +21,12 @@ OpenClaude Desktop 主进程 (app/electron/browser/bridge-client.cjs)
 | `service-worker.js` | 连 native host、收发消息、分派工具 |
 | `tabs.js` | 选 tab（无 tabId 时用桥的当前 tab，否则用户最后聚焦窗口的激活 tab）、navigate、按需注入 content script |
 | `refs.js` | ref 的副本：发给了哪个 tab、哪一轮 read_page；判 `stale_ref` / `ref_wrong_tab` |
-| `content.js` | 注入到页面（隔离 world）：可访问性树、分配 ref、find |
+| `content.js` | 注入到页面（隔离 world）：可访问性树、分配 ref、find、form_input、computer |
+| `script.js` | javascript_tool：经 `chrome.debugger` 只读求值 |
 
 content script **不在 manifest 里声明**，只在某个工具点名某个 tab 时用 `chrome.scripting` 注入那个 tab，
 扩展不会在后台遍历页面。为此扩展要 `<all_urls>` 的 host 权限，加载时 Chrome 会提示「读取和更改所有网站上的数据」。
+javascript_tool 还要 `debugger` 权限：每次调用期间 Chrome 顶部会出现「已开始调试此浏览器」提示条，调用结束即断开。
 
 ## 工具（P1 起）
 
@@ -35,6 +37,8 @@ content script **不在 manifest 里声明**，只在某个工具点名某个 ta
 | `find` | `query`，`tabId?`，`limit?`（默认 20） | `{tabId, matches: [{ref, role, name, interactive, text}], total}` |
 | `form_input` | `ref`，`value`，`tabId?` | `{tabId, ref, role, name, value \| checked, events}`；密码回显成 `•` |
 | `computer` | `action`，`ref?`，`coordinate?`，`text?`，`modifiers?`，`scroll_direction?`，`scroll_amount?`，`tabId?` | 动作摘要；点击/按键引起整页导航时带 `navigated` |
+| `javascript_tool` | `code`，`tabId?`，`timeout_ms?`（默认 10000） | `{tabId, type, value}`；DOM 节点返回其描述 |
+| `browser_batch` | `actions: [{name, input}]`（最多 50 步） | `{steps: [{name, ok, result \| error}], completed, failed?}` |
 
 `form_input`：文本框写值后派发 `input` 与 `change`；checkbox/radio 用 `true`/`false`（通过一次 click 切换，页面自己的
 click 处理器也会跑）；select 按 option 的 value 或文字匹配；contenteditable 替换内容。file 输入不支持。
@@ -47,6 +51,17 @@ click 处理器也会跑）；select 按 option 的 value 或文字匹配；cont
 事件都是 content script 派发的 DOM 事件，`isTrusted` 为 false。DOM 事件本身不会触发的默认行为（聚焦、键入、Enter 提交 /
 换行、Tab 移焦点、Backspace/Delete 删字、全选、方向键移光标）由扩展代做，结果的 `emulated` 列出做了什么。
 CSS `:hover` 不会因合成事件生效；只认 `isTrusted` 的站点需要以后换成 CDP（`chrome.debugger`）派发。
+
+`javascript_tool` 在页面自己的 JS 上下文（能看到页面全局变量）求值：表达式返回其值，多条语句返回最后一个表达式的值，
+声明只在本次调用内有效。只读由浏览器强制：走 CDP `Runtime.evaluate` 的 `throwOnSideEffect`，改 DOM、改全局、
+网络请求（含拼接写法）、storage、定时器、`click()`、`pushState` 都会被 V8/Blink 拒绝（`not_read_only`）；
+读 cookie 在 V8 看来没有副作用，所以求值期间用 `Emulation.setDocumentCookieDisabled` 关掉文档 cookie，
+任何写法读到的都是空串（期间页面自己的脚本也读不到 cookie）；常见写法（`document.cookie`、`fetch(`、`localStorage` 等）
+在发出前就以更清楚的提示拒绝。`await` / `.then` 需要排微任务，只读模式下做不到，直接拒绝（`not_supported`）。
+走 debugger 也意味着页面的 CSP 挡不住求值。已知误判：Chrome 没把 `getElementById` 等方法标成无副作用，
+拒绝消息里会提示改用 `querySelector`。
+
+`browser_batch` 在扩展里依次执行各步，整批只与 App 往返一次；某步失败即停，后面的步骤不执行。不能嵌套 batch。
 
 ref 规则：
 - 只给可交互元素分配 ref：`button`、`a[href]`、`input`（hidden 除外）、`select`、`textarea`、`[role=button]`、
@@ -101,6 +116,8 @@ cd app && npm run check:chrome-bridge -- p1
   shell 里有 `HTTPS_PROXY` 时会传给 Chrome（headless 无法回应代理的认证弹窗）。
 - P2：本地登录表单页，`form_input` 填用户名和密码（不提交），页面自己上报每个字段的值与 input / change 次数，
   再验 checkbox、select、type、key、按 ref 与按坐标点击、双击、右键、hover、scroll、元素消失后的 `stale_ref`、点击导航。
+- P3：带严格 CSP 的本地页，javascript_tool 的读能用、15 种写 / 网络 / cookie / storage / 异步调用被拒，页面与服务器都没有变化；
+  `browser_batch` navigate → read_page → computer → javascript_tool 只产生一次 App→host 调用（数 host 日志），遇错即停。
 
 没有 Chrome for Testing 时先 `npx playwright install chromium`，或用 `CHROME_PATH` 指向一个 Chromium（品牌版 Google Chrome
 已不接受 `--load-extension`）。不需要浏览器的协议与路由单测：`node --test tests/chrome-bridge.test.mjs`。
@@ -110,6 +127,6 @@ cd app && npm run check:chrome-bridge -- p1
 - [x] P0 通道：扩展 ⇄ host ⇄ Electron，`ping` → `pong`
 - [x] P1 navigate / read_page / find
 - [x] P2 form_input / computer（ref 寻址）
-- [ ] P3 javascript_tool / browser_batch
+- [x] P3 javascript_tool / browser_batch
 - [ ] P4 tabs_create / tabs_context
 - [ ] P5 注册进 agent-tools（group `browser`，默认 deferred）

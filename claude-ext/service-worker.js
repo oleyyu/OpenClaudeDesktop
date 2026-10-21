@@ -2,10 +2,11 @@
 // Holds the native messaging port to com.openclaude.chrome_bridge (app/electron/browser/native-host.cjs) and answers
 // the app's execute_tool requests. Messages are { method, params, tool_use_id } (see app/electron/browser/protocol.cjs).
 // An open native port keeps this worker alive; when it drops, the worker reconnects with backoff.
-// Tools: navigate, read_page, find, form_input, computer (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
+// Tools: navigate, read_page, find, form_input, computer, javascript_tool, browser_batch (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
 import { ToolError } from "./errors.js";
 import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction } from "./tabs.js";
 import { withRefs, record, checkRef } from "./refs.js";
+import { runReadOnly } from "./script.js";
 
 const HOST_NAME = "com.openclaude.chrome_bridge";
 const RETRY_MIN_MS = 1000;
@@ -40,6 +41,7 @@ async function inPageTool(tab, op, args) {
   return { tabId: tab.id, ...out.result };
 }
 
+const MAX_BATCH = 50;
 const COMPUTER_ACTIONS = new Set(["left_click", "right_click", "double_click", "type", "key", "scroll", "hover"]);
 
 // Tools the app can run here, by name: async (args) → result (JSON). A thrown error with .code becomes {error: {code}}.
@@ -98,6 +100,38 @@ const tools = {
       if (navigated) result.navigated = navigated;
     }
     return result;
+  },
+
+  // javascript_tool(code, tabId?) → { tabId, type, value }: read-only, in the page's own context (script.js).
+  async javascript_tool(args) {
+    const tab = await resolveTab(args.tabId);
+    const timeoutMs = intArg(args.timeout_ms, "timeout_ms", { min: 100, max: 60_000, fallback: 10_000 });
+    const result = await runReadOnly(tab, args.code, { timeoutMs });
+    setCurrentTab(tab.id);
+    return { tabId: tab.id, ...result };
+  },
+
+  // browser_batch(actions: [{name, input}]) runs the steps here, one after another, in a single round trip with the app.
+  // It stops at the first failure. → { steps: [{name, ok, result | error}], completed, failed? }
+  async browser_batch(args) {
+    const actions = args.actions;
+    if (!Array.isArray(actions) || !actions.length) throw new ToolError("bad_request", "actions is a list of {name, input} steps.");
+    if (actions.length > MAX_BATCH) throw new ToolError("bad_request", `At most ${MAX_BATCH} steps in one batch.`);
+    actions.forEach((step, index) => {
+      if (!step || typeof step.name !== "string") throw new ToolError("bad_request", `Step ${index + 1} needs a name.`);
+      if (step.name === "browser_batch" || step.name === "ping" || !Object.hasOwn(tools, step.name)) throw new ToolError("bad_request", `Step ${index + 1}: ${step.name} can't be run in a batch.`);
+    });
+    const steps = [];
+    for (const [index, step] of actions.entries()) {
+      try {
+        steps.push({ name: step.name, ok: true, result: await tools[step.name](step.input ?? {}) });
+      } catch (error) {
+        const failure = { code: error?.code ?? "tool_error", message: error?.message ?? String(error) };
+        steps.push({ name: step.name, ok: false, error: failure });
+        return { steps, completed: index, failed: { step: index + 1, ...failure } };
+      }
+    }
+    return { steps, completed: steps.length };
   },
 };
 
