@@ -18,8 +18,10 @@
 // Run from app/: CU_LIVE=1 node scripts/computer-use-window-highlight-live.mjs
 import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import assert from 'node:assert/strict';import {createRequire} from 'node:module';
 import {_electron as electron} from '../../tools/node_modules/playwright/index.mjs';
-import {buildFixture,launchFixture,FIXTURE} from '../tests/computer-use-live-helpers.mjs';
-if(process.env.CU_LIVE!=='1'){console.log(JSON.stringify({skipped:'set CU_LIVE=1 to run the live window highlight test'}));process.exit(0);}
+import {buildFixture,launchFixture,FIXTURE,presenceSkip} from '../tests/computer-use-live-helpers.mjs';
+// The presence gate (tests/computer-use-live-helpers.mjs): CU_LIVE=1, an unlocked screen and nobody at this Mac for 120 s
+// (CU_LIVE_FORCE=1 runs it anyway); otherwise skipped with the reason.
+{const skipped=await presenceSkip();if(skipped){console.log(JSON.stringify({skipped}));process.exit(0);}}
 const require=createRequire(import.meta.url);
 const root=path.resolve(import.meta.dirname,'..');
 const native=require('../electron/computer-use/native.cjs').createNative();

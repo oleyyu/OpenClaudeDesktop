@@ -105,6 +105,24 @@ test('clicks (official mi()): the cursor moves first, then the frontmost gate an
   await assert.rejects(service.displayPointer('a', { kind: 'left_click', coordinate: [100, 100], text: 'cmd+a' }), (e) => e.code === 'bad_args');
 });
 
+test('the hit test: a point on the Dock (or Spotlight, Control Center, SystemUIServer) is the desktop shell, Finder\'s grant (official He())', async () => {
+  for (const bundleId of ['com.apple.dock', 'com.apple.Spotlight', 'com.apple.controlcenter', 'com.apple.systemuiserver']) {
+    const dock = () => ({ windowId: 90, pid: 77, bundleId, layer: 20, ownerName: 'Dock' });
+    // Finder granted: the click goes through.
+    const ok = svc({ under: dock });
+    await ok.service.displayScreenshot('a', {});
+    assert.equal((await ok.service.displayPointer('a', { kind: 'left_click', coordinate: [100, 100] })).outcome, 'ok', bundleId);
+    assert.equal(posted(ok.native, 'hidClick').length, 1, bundleId);
+    // Without Finder: the desktop shell's refusal, which names the Finder grant.
+    const no = svc({ under: dock, front: TERMINAL, grants: [{ bundleId: TERMINAL, displayName: 'Terminal' }] });
+    await no.service.displayScreenshot('a', {});
+    const refused = await no.service.displayPointer('a', { kind: 'left_click', coordinate: [100, 100] });
+    assert.deepEqual([refused.reasonCode, refused.hitBundleId], ['app_not_granted', FINDER], bundleId);
+    assert.match(refused.message, /request_access with "Finder"/);
+    assert.equal(posted(no.native, 'hidClick').length, 0, bundleId);
+  }
+});
+
 test('tiers: a click-level app takes a plain left click and scroll, not a right / modifier click or a drop; the cursor moved but nothing was pressed', async () => {
   const terminal = () => ({ windowId: 60, pid: 11, bundleId: TERMINAL, layer: 0, ownerName: 'Terminal' });
   const { service, native } = svc({ front: TERMINAL, under: terminal, grants: [{ bundleId: TERMINAL, displayName: 'Terminal' }, { bundleId: FINDER, displayName: 'Finder' }] });

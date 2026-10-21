@@ -202,9 +202,8 @@ test('fixture: hover, context menu and its item, canvas drag, double / triple / 
 // in front is never granted. Runs only unlocked and with nobody at the computer (idle ≥ 120 s): it moves the real cursor
 // a few points and puts it back.
 test('mouse_move over an app that isn\'t granted passes (mouse_position); a click there is refused; the cursor goes back', { skip: skip ?? (locked ? 'the screen is locked' : false), timeout: 60000 }, async (t) => {
+  // Nobody at the Mac: checked by liveSkip's presence gate before any test here runs.
   const n = native();
-  const probe = await n.call('probe');
-  if (!(probe.secondsSinceUserInput >= 120)) { t.skip(`someone is using the computer (idle ${probe.secondsSinceUserInput} s)`); return; }
   const cu = service([{ bundleId: FIXTURE, displayName: 'CUPointerFixture' }]);
   const front = await n.call('frontmostApp');
   assert.notEqual(front?.bundleId, FIXTURE);

@@ -62,8 +62,12 @@ const BLOCK = Object.freeze({
   sheet_or_modal_on_target_window: "docs/04", sheet_dimmed_areas: "docs/04", anotherWindowIsOnTopAtThePressPoint: "docs/04",
   foreign_overlay_above_granted: "docs/04", listed_element_covered: "docs/04", key_not_mapped: "docs/04",
   ax_untrusted_cannot_verify: "docs/04", off_space_containment_unverifiable: "docs/04", foreign_pid: "docs/04",
-  popup_menu: "official 2.42304.0: a pop-up / pull-down menu control would open its menu in the background (fronts the app or takes the keyboard)",
-  context_menu_rclick_refused: "docs/05", screen_locked: "docs/05",
+  popup_menu: "official 2.42304.0: a pop-up / pull-down menu control would open its menu in the background (fronts the app or takes the keyboard) — a click on it, or a drag that starts on it (app_drag, feature_unavailable)",
+  context_menu: "official 2.42304.0 fr(): app_click button \"right\" is checked like a click and then refused (feature_unavailable) — a context menu would bring the app to the front; nothing reaches the app (native axClick refuses it too)",
+  system_drag_session: "official 2.42304.0: app_drag starting on a link or a picture, which the app would pick up and drag as an item — a system drag session takes the keyboard from the user's app (feature_unavailable); native AXLadder.dragStartReason",
+  path_ends_at_submenu: "official 2.42304.0 Nn(): app_menu path ends at a menu-bar title or a submenu (bad_args): nothing pressed or opened, its items come back to extend the path",
+  desktop_shell: "official 2.42304.0: the Dock and the rest of the desktop shell (SystemUIServer, Spotlight, Control Center) are not app_* targets — pressing a Dock item activates an app; display-scope with Finder's grant reaches them (errorKind app_not_granted)",
+  screen_locked: "docs/05",
   would_front_during_secure_input: "docs/05", recent_hid_keydown_would_misdirect: "docs/05",
   ax_error: "M3 decision: a hung app or an unstable AX bridge — raw events would land somewhere else; never a fallback",
   // Local codes (not in the spec's tables), each a refusal by construction:
@@ -76,8 +80,6 @@ const BLOCK = Object.freeze({
   no_focused_element: "local: target 'focused' but the app reports no focused element",
   no_target: "local: no coordinate, element_index or target",
   element_disabled: "local: the pressable element is disabled",
-  no_menu_action: "local: right click — neither the element nor its two parents answer AXShowMenu; there is no other way to open its menu",
-  menu_not_shown: "local: AXShowMenu was performed but no context menu appeared (ineffective)",
   // app_menu (native MenuBar.swift). Not an AX rung (a menu command has no raw fallback); listed so the codes read as known.
   menu_item_disabled: "official: the menu item reads as disabled (AXEnabled false); it was not pressed",
   menu_press_failed: "official: the menu item was found but could not be pressed — it offers no AXPress / AXPick, or the action returned an AX error (axError); nothing ran",

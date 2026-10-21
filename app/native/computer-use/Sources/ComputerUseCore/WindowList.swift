@@ -52,9 +52,9 @@ public enum WindowList {
     /// (24), status items (25), the Dock (20), pop-up menus (101) and overlays are not windows to act on.
     public static let appWindowLayers = 0...8
 
-    /// Pure: is a CGWindowList entry one of the app's own windows? A windowless shell (the Dock) keeps its strips.
-    public static func isAppWindow(layer: Int, windowlessShell: Bool) -> Bool {
-        windowlessShell || appWindowLayers.contains(layer)
+    /// Pure: is a CGWindowList entry one of the app's own windows?
+    public static func isAppWindow(layer: Int) -> Bool {
+        appWindowLayers.contains(layer)
     }
 
     /// Every window of the app's processes, front to back (CGWindowList order).
@@ -75,7 +75,7 @@ public enum WindowList {
             let alpha = (entry[kCGWindowAlpha as String] as? NSNumber)?.doubleValue ?? 1
             guard bounds.width >= 1, bounds.height >= 1, alpha > 0 else { continue }
             let layer = (entry[kCGWindowLayer as String] as? NSNumber)?.intValue ?? 0
-            guard isAppWindow(layer: layer, windowlessShell: AXLadder.windowlessShells.contains(bundleId)) else { continue }
+            guard isAppWindow(layer: layer) else { continue }
             out.append(WindowInfo(
                 windowId: number, pid: owner, bundleId: bundleId,
                 title: entry[kCGWindowName as String] as? String ?? "",
@@ -172,10 +172,7 @@ public enum WindowList {
             }
             return window
         }
-        // A windowless shell (the Dock) has no regular window: its on-screen strip is the window it means.
-        let regular = AXLadder.windowlessShells.contains(bundleId)
-            ? windows.filter { $0.isOnScreen }.map { var w = $0; w.isAuxiliary = false; return w }
-            : windows.filter { !$0.isAuxiliary }
+        let regular = windows.filter { !$0.isAuxiliary }
         // Main on this Space, then any on screen, then any not known to be elsewhere, then whatever is left.
         guard let main = regular.first(where: { $0.isMain == true }) ?? regular.first(where: { $0.isOnScreen })
                 ?? regular.first(where: { $0.isOffSpace != true && $0.isMinimized != true }) ?? regular.first else {

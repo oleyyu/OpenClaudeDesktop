@@ -10,10 +10,10 @@ import { app, liveSkip, native } from './computer-use-live-helpers.mjs';
 // app_click on system apps, the official 2.42304.0 way (CU_LIVE=1 only; skipped otherwise): Finder list rows are
 // selected through AXSelected (read back) and a folder row is opened through AXOpen on a double click — no mouse event
 // is sent — while Finder stays in the background, the real cursor does not move and the front app does not change.
-// A Dock item (CU_LIVE_DOCK=1 as well, since it brings Finder forward for a moment) is pressed once through AXPress:
-// Finder's own Dock icon, whose press only switches to Finder; the app that was in front gets it back afterwards.
+// The Dock is not an app_* target (official: only display-scope with Finder's grant reaches it): every app_* call on it
+// is refused (desktop_shell) and nothing changes on screen.
 // Only a temp folder of empty files is touched; its window is closed and the folder removed at the end.
-//   CU_LIVE=1 [CU_LIVE_DOCK=1] node --test --test-concurrency=1 tests/computer-use-system-click-live.test.mjs
+//   CU_LIVE=1 node --test --test-concurrency=1 tests/computer-use-system-click-live.test.mjs
 const require = createRequire(import.meta.url);
 const { createComputerUse } = require('../electron/computer-use/service.cjs');
 const FINDER = 'com.apple.finder', DOCK = 'com.apple.dock';
@@ -143,32 +143,15 @@ test('Finder list view: a double click on a folder row opens it through AXOpen w
   }
 });
 
-test('Dock: one AXPress on Finder\'s Dock item (the front app is given back afterwards)', { skip: skip || (process.env.CU_LIVE_DOCK !== '1' && 'set CU_LIVE_DOCK=1 (switches to Finder for a moment)') }, async () => {
-  const cu = session(DOCK);
+test('Dock: not an app_* target — listing, capturing and clicking it are refused (desktop_shell); the front app and the cursor stay', { skip }, async () => {
+  const cu = session(FINDER);
+  cu.grantsFor('live').grant([DOCK]);
   const start = facts();
-  let pressed = null;
-  try {
-    const strip = (await cu.listWindows('live', { bundleId: DOCK })).windows.find((w) => w.bounds.width > 0);
-    assert.ok(strip, 'the Dock has an on-screen window');
-    const shot = await cu.appScreenshot('live', { bundleId: DOCK, windowId: strip.window_id });
-    const item = shot.elements.find((e) => e.role === 'AXDockItem' && e.title === 'Finder');
-    assert.ok(item, `Finder's Dock item is listed (${shot.elements.filter((e) => e.role === 'AXDockItem').length} Dock items)`);
-    await waitIdle();
-    pressed = await cu.appClick('live', { bundleId: DOCK, windowId: strip.window_id, element_index: item.index, axOnly: true });
-    await sleep(500);
-    const after = facts();
-    console.log(JSON.stringify({ dock: { outcome: pressed.outcome, axOp: pressed.axOp, pressedRole: pressed.pressedRole, frontBefore: start.front, frontAfter: after.front, cursorStill: sameCursor(start, after) } }));
-    assert.equal(pressed.outcome, 'ok', JSON.stringify(pressed));
-    assert.equal(pressed.axOp, 'AXPress');
-    assert.equal(pressed.pressedRole, 'AXDockItem');
-    assert.equal(after.front, FINDER, 'pressing Finder\'s Dock item switched to Finder');
-    assert.ok(sameCursor(start, after), 'the real cursor did not move');
-  } finally {
-    // Give the front back to the app that had it (never quit anything).
-    if (start.front && start.front !== FINDER) {
-      try { execFileSync('open', ['-b', start.front]); } catch {}
-      await sleep(500);
-      console.log(JSON.stringify({ dockRestored: facts().front === start.front }));
-    }
+  for (const run of [() => cu.listWindows('live', { bundleId: DOCK }), () => cu.appScreenshot('live', { bundleId: DOCK }),
+    () => cu.appClick('live', { bundleId: DOCK, coordinate: [10, 10], axOnly: true })]) {
+    await assert.rejects(run, (error) => error.code === 'desktop_shell');
   }
+  const after = facts();
+  assert.equal(after.front, start.front, 'the app in front did not change');
+  assert.ok(sameCursor(start, after), 'the real cursor did not move');
 });

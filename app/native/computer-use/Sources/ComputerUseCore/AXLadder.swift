@@ -11,8 +11,6 @@ import CoreGraphics
 public enum AXLadder {
     /// Climb at most this many parents from the hit element to a pressable one ("四层上溯").
     public static let climbLevels = 4
-    /// A right click climbs at most this many parents to an element that answers AXShowMenu.
-    public static let menuClimbLevels = 2
     /// A double click on anything but text is two AXPress this far apart (Accessibility has no double click).
     static let doublePressGapMicros: useconds_t = 80_000
     /// A double click on these selects the word at the point through AXSelectedTextRange (what a double click means in
@@ -27,7 +25,7 @@ public enum AXLadder {
     static let actionableRoles: Set<String> = [
         "AXButton", "AXCheckBox", "AXRadioButton", "AXPopUpButton", "AXMenuButton", "AXComboBox", "AXTextField",
         "AXTextArea", "AXLink", "AXSlider", "AXIncrementor", "AXDisclosureTriangle", "AXMenuItem", "AXColorWell",
-        "AXSearchField", "AXTab", "AXRow", "AXCell", "AXOutlineRow", "AXDockItem",
+        "AXSearchField", "AXTab", "AXRow", "AXCell", "AXOutlineRow",
     ]
     /// Pressing these opens a menu: that would front the app or take the keyboard (live schema: refused).
     static let menuPresentingRoles: Set<String> = ["AXPopUpButton", "AXMenuButton"]
@@ -41,9 +39,6 @@ public enum AXLadder {
     /// Official text role set: a text field inside a row means the row ("set AXSelected=true (row of the text)") — a
     /// Finder name field, which a real click on a selected row would start renaming.
     static let textFieldRoles: Set<String> = ["AXTextField", "AXTextArea", "AXSearchField"]
-    /// Apps whose on-screen window has no AXWindow in their tree: the Dock (AXApplication ▸ AXList ▸ AXDockItem). The
-    /// app element stands in for the window, limited to the window's bounds.
-    static let windowlessShells: Set<String> = ["com.apple.dock"]
     /// How long a selection is read back: polls × interval.
     static let selectPolls = 10, selectPollMicros: useconds_t = 50_000
     /// The climb stops here: pressing a window or the app is never the intent.
@@ -113,13 +108,6 @@ public enum AXLadder {
         return windows.first { w in var id: UInt32 = 0; return _AXUIElementGetWindow(w, &id) == .success && id == windowId }
     }
 
-    /// The element a window's actions resolve in: its AXWindow, or for a windowless shell (the Dock) the app element.
-    static func root(pid: pid_t, windowId: UInt32) -> (element: AXUIElement, windowless: Bool)? {
-        if let window = windowElement(pid: pid, windowId: windowId) { return (window, false) }
-        guard let bundleId = WindowList.bundleId(pid: pid), windowlessShells.contains(bundleId) else { return nil }
-        return (AXUIElementCreateApplication(pid), true)
-    }
-
     // MARK: summary
 
     /// Frame in the capture's full-resolution coordinates: (screen − window origin) × scaleFactor.
@@ -131,12 +119,11 @@ public enum AXLadder {
     /// The window's actionable elements in document order (breadth-first), each with its [index]. The elements are
     /// cached (SummaryCache) so element_index addresses exactly what the model was shown.
     public static func summary(pid: pid_t, windowId: UInt32, bounds: CGRect, scaleFactor: Double) -> [[String: Any]] {
-        guard AXIsProcessTrusted(), let window = root(pid: pid, windowId: windowId)?.element else {
+        guard AXIsProcessTrusted(), let window = windowElement(pid: pid, windowId: windowId) else {
             SummaryCache.store(windowId: windowId, pid: pid, elements: [])
             return []
         }
         var out: [[String: Any]] = [], kept: [AXUIElement] = []
-        // A windowless shell's tree is the app's: only what lies inside this window's bounds is kept (below).
         var queue = children(window)[...], visited = 0
         while let node = queue.popFirst(), visited < maxVisited, kept.count < maxElements {
             visited += 1
@@ -170,12 +157,11 @@ public enum AXLadder {
         public var elementIndex: Int?
         public var focused: Bool
         public var count: Int
-        public var button: String
         public var dryRun: Bool
         public var expectRole: String?
-        public init(pid: pid_t, windowId: UInt32, bounds: CGRect, winLocalPt: CGPoint?, elementIndex: Int?, focused: Bool, count: Int, button: String, dryRun: Bool, expectRole: String? = nil) {
+        public init(pid: pid_t, windowId: UInt32, bounds: CGRect, winLocalPt: CGPoint?, elementIndex: Int?, focused: Bool, count: Int, dryRun: Bool, expectRole: String? = nil) {
             self.pid = pid; self.windowId = windowId; self.bounds = bounds; self.winLocalPt = winLocalPt; self.expectRole = expectRole
-            self.elementIndex = elementIndex; self.focused = focused; self.count = count; self.button = button; self.dryRun = dryRun
+            self.elementIndex = elementIndex; self.focused = focused; self.count = count; self.dryRun = dryRun
         }
     }
 
@@ -193,12 +179,13 @@ public enum AXLadder {
         return chain
     }
 
-    /// A left click: row selection / AXOpen, text selection, AXPress or an ascended selection (step 3); AXShowMenu for a
-    /// right click. Order of refusals: window ownership, sheet, then the step.
+    /// A left click: row selection / AXOpen, text selection, AXPress or an ascended selection (step 3). There is no
+    /// right click here: a context menu would bring the app to the front (official: refused before the native call).
+    /// Order of refusals: window ownership, sheet, then the step.
     public static func click(_ request: Request) -> [String: Any] {
         _ = setUp
         guard AXIsProcessTrusted() else { return unsupported("ax_untrusted_cannot_verify") }
-        guard let (window, windowless) = root(pid: request.pid, windowId: request.windowId) else {
+        guard let window = windowElement(pid: request.pid, windowId: request.windowId) else {
             return unsupported("window_off_space")
         }
 
@@ -234,9 +221,7 @@ public enum AXLadder {
         if hitPid != request.pid { return unsupported("foreign_pid", ["foreignPid": Int(hitPid)]) }
         let chain = ancestry(hit)
         let path = chain.compactMap(role)
-        // A windowless shell (the Dock): the hit hangs straight under the app, never in one of its AXWindows.
-        let windowIndex = windowless ? (chain.firstIndex(where: { role($0) == "AXWindow" }) == nil ? chain.count - 1 : nil)
-            : chain.firstIndex(where: { role($0) == "AXWindow" }).flatMap { CFEqual(chain[$0], window) ? $0 : nil }
+        let windowIndex = chain.firstIndex(where: { role($0) == "AXWindow" }).flatMap { CFEqual(chain[$0], window) ? $0 : nil }
         guard let windowIndex else {
             var extra: [String: Any] = ["descentPath": path]
             if let other = chain.first(where: { role($0) == "AXWindow" }) {
@@ -263,7 +248,6 @@ public enum AXLadder {
         let start = listed ?? hit
         let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
                                        "title": title(hit) ?? NSNull(), "descentPath": path]
-        if request.button == "right" { return showMenu(from: start, pid: request.pid, dryRun: request.dryRun, describe: describe) }
         let startRole = role(start) ?? ""
         let webPage = inWebArea(start)
         let row = webPage ? nil : rowAncestor(start)
@@ -407,69 +391,6 @@ extension AXLadder {
 }
 
 extension AXLadder {
-    /// How long a right click waits for the context menu to show up: polls × interval.
-    static let menuPolls = 8, menuPollMicros: useconds_t = 40_000
-
-    /// The app's on-screen pop-up menu windows (a context menu is one), by window number.
-    static func popUpMenuWindows(pid: pid_t) -> Set<Int> {
-        let level = Int(CGWindowLevelForKey(.popUpMenuWindow))
-        let list = (CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]]) ?? []
-        return Set(list.compactMap { info in
-            guard (info[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value == pid,
-                  (info[kCGWindowLayer as String] as? NSNumber)?.intValue == level else { return nil }
-            return (info[kCGWindowNumber as String] as? NSNumber)?.intValue
-        })
-    }
-
-    /// Right click: AXShowMenu on `start`, else on one of its first `menuClimbLevels` parents. Nothing answers it →
-    /// no_menu_action (never another way). The menu is read back: a new pop-up menu window of the app, or a new AXMenu
-    /// under the element, an ancestor up to its window, or the app (live, Finder 2026-10-20: AXShowMenu on a list row's
-    /// name field waits in the app's menu tracking — cannotComplete after the messaging timeout — and its AXMenu hangs
-    /// under the AXOutline three levels up). Item titles come back as menuItems when the AXMenu is readable.
-    /// No menu → ineffective menu_not_shown.
-    static func showMenu(from start: AXUIElement, pid: pid_t, dryRun: Bool, describe: [String: Any]) -> [String: Any] {
-        var result = describe
-        let climb = ancestry(start, limit: menuClimbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
-        guard let target = climb.first(where: { actions($0).contains(kAXShowMenuAction as String) }) else {
-            return unsupported("no_menu_action", result)
-        }
-        result["menuRole"] = role(target) ?? NSNull()
-        result["menuTitle"] = title(target) ?? NSNull()
-        result["axOp"] = "AXShowMenu"
-        if (value(target, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
-        if dryRun { result["outcome"] = "dryRun"; return result }
-
-        var owners = [AXUIElement]()
-        for node in ancestry(target) { owners.append(node); if role(node) == "AXWindow" { break } }
-        owners.append(AXUIElementCreateApplication(pid))
-        let menus = { owners.flatMap(children).filter { role($0) == "AXMenu" } }
-        let menusBefore = menus(), windowsBefore = popUpMenuWindows(pid: pid)
-        // An app that tracks the menu inside the action answers cannotComplete; the readback decides.
-        let error = AXUIElementPerformAction(target, kAXShowMenuAction as CFString)
-        if error != .success { result["axError"] = axErrorName(error) }
-        if error == .success || error == .cannotComplete {
-            for _ in 0..<menuPolls {
-                usleep(menuPollMicros)
-                let newMenu = { menus().first { m in !menusBefore.contains { CFEqual($0, m) } } }
-                var menu = newMenu()
-                guard menu != nil || !popUpMenuWindows(pid: pid).subtracting(windowsBefore).isEmpty else { continue }
-                // The window can show before the AXMenu is in the tree: one more look for the items.
-                if menu == nil { usleep(menuPollMicros); menu = newMenu() }
-                result["outcome"] = "ok"
-                result["reasonCode"] = NSNull()
-                if let menu {
-                    result["menuItems"] = children(menu).filter { role($0) == "AXMenuItem" }.compactMap { string($0, kAXTitleAttribute) }.prefix(40).map { $0 }
-                }
-                return result
-            }
-        }
-        result["outcome"] = "ineffective"
-        result["reasonCode"] = "menu_not_shown"
-        return result
-    }
-}
-
-extension AXLadder {
     /// Before a raw event at `screenPt`: the element there must belong to `pid` and to window `windowId` (not another
     /// window on top), and a sheet on the window must contain it — the same ownership checks click() makes, re-run at
     /// delivery time because the raw rung is a second call.
@@ -486,6 +407,32 @@ extension AXLadder {
         }
         if hitPid != pid { return ("foreign_pid", ["foreignPid": Int(hitPid)]) }
         return ownershipRefusal(hit, window: window)
+    }
+
+    /// Official app_drag refusals for where a drag starts (2.42304.0: `system_drag_session`, `popup_menu`), as pure data
+    /// over the roles from the hit up (the hit first, then at most `climbLevels` parents, stopping at a window): a link
+    /// (the hit or a parent) or a picture (the hit) would be picked up and dragged as an item — a system drag session,
+    /// which in the background takes the keyboard from the app the user is in; a press on a pop-up / pull-down menu
+    /// opens its menu, which does the same. Nil when the drag may start there.
+    public static func dragStartReason(roles: [String]) -> String? {
+        let climb = roles.prefix(climbLevels + 1).prefix { !climbStops.contains($0) }
+        if climb.first == "AXImage" { return "system_drag_session" }
+        for role in climb {
+            if role == "AXLink" { return "system_drag_session" }
+            if menuPresentingRoles.contains(role) { return "popup_menu" }
+        }
+        return nil
+    }
+
+    /// The refusal for a drag that would start at `screenPt` in `pid` (hit-tested in that app, as a click is), or nil.
+    static func dragStartRefusal(pid: pid_t, screenPt: CGPoint) -> (reason: String, extra: [String: Any])? {
+        _ = setUp
+        var found: AXUIElement?
+        guard AXUIElementCopyElementAtPosition(AXUIElementCreateApplication(pid), Float(screenPt.x), Float(screenPt.y), &found) == .success,
+              let hit = found else { return nil }
+        let roles = ancestry(hit, limit: climbLevels + 1).map { role($0) ?? "" }
+        guard let reason = dragStartReason(roles: roles) else { return nil }
+        return (reason, ["role": roles.first ?? NSNull(), "title": title(hit) ?? NSNull(), "descentPath": roles])
     }
 
     /// `element` must sit in `window` (not another window of the app) and inside a sheet when the window has one.

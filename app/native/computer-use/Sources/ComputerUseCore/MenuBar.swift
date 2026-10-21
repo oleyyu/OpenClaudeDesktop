@@ -9,10 +9,12 @@ import Foundation
 //   AXQuery.trusted                      → {axTrusted}
 //   AppFocus.focus  {bundleId, windowId?}   AXMain + AXFocused on the window; never AXRaise, never activates the app;
 //                                           refused while the app is frontmost (app_is_frontmost)
-//   MenuBar.press   {bundleId, path}        walk AXMenuBar by titles, AXPress the last one (a leaf runs its command; a
-//                                           menu title opens that menu and lists its items)
+//   MenuBar.press   {bundleId, path}        walk AXMenuBar by titles and AXPress the leaf (its command runs). A path
+//                                           that ends at a menu or submenu title presses nothing and opens nothing: it
+//                                           answers path_ends_at_submenu with that menu's items, read from the AXMenu
+//                                           child (official). No menu ever opens: an open menu tracks the mouse and
+//                                           takes the keyboard from the app the user is working in.
 //   MenuBar.list    {bundleId, path}        the items under path ([] = the menu bar titles); read-only
-//   MenuBar.close   {bundleId}              AXCancel on every open menu of the app (what Escape does)
 //   AppList.apps    {folders}               running apps (regular, with pid) and the .app bundles in folders
 
 /// AX messaging with a budget: every message waits at most the time left (and at most the system's 6 s default), and
@@ -181,16 +183,24 @@ public enum MenuBar {
         return (current, resolved)
     }
 
-    /// app_menu path: press the last item. A command item that is found but cannot be pressed — no AXPress / AXPick, or
-    /// the action errors — is the official menu_press_failed (unsupported, with the AX error).
+    /// app_menu path: press the leaf. A path that ends at a menu-bar title or a submenu is the official
+    /// path_ends_at_submenu: nothing is pressed or opened, and the items under it come back (read from its AXMenu child,
+    /// which Accessibility gives without opening the menu) so the path can be extended. A command item that is found but
+    /// cannot be pressed — no AXPress / AXPick, or the action errors — is the official menu_press_failed (unsupported,
+    /// with the AX error).
     public static func press(bundleId: String, path: [String]) throws -> [String: Any] {
         let ax = AXQuery()
         let (item, resolved) = try walk(ax, bundleId, path)
+        let submenu = items(ax, item)
+        if endsAtSubmenu(role: ax.string(item, kAXRoleAttribute), childItems: submenu.count) {
+            let listed = submenu.compactMap { describe(ax, $0) }
+            try ax.checkTime()
+            return ["outcome": "unsupported", "reasonCode": "path_ends_at_submenu", "path": resolved, "items": listed]
+        }
         if ax.bool(item, kAXEnabledAttribute) == false {
             try ax.checkTime()
             return ["outcome": "unsupported", "reasonCode": "menu_item_disabled", "path": resolved]
         }
-        let opensMenu = ax.string(item, kAXRoleAttribute) == "AXMenuBarItem" || !items(ax, item).isEmpty
         let names = ax.actions(item)
         try ax.checkTime()
         let action = names.contains(kAXPressAction) ? kAXPressAction : names.contains("AXPick") ? "AXPick" : nil
@@ -201,12 +211,12 @@ public enum MenuBar {
         guard error == .success else {
             return ["outcome": "unsupported", "reasonCode": "menu_press_failed", "axError": error.rawValue, "path": resolved]
         }
-        var out: [String: Any] = ["outcome": "ok", "path": resolved, "opened": opensMenu]
-        if opensMenu {
-            out["items"] = items(ax, item).compactMap { describe(ax, $0) }
-            out["open"] = ax.bool(item, kAXSelectedAttribute) == true
-        }
-        return out
+        return ["outcome": "ok", "path": resolved]
+    }
+
+    /// Pure: a path that ends here names a menu, not a command (a menu-bar title, or an item with a submenu).
+    public static func endsAtSubmenu(role: String?, childItems: Int) -> Bool {
+        role == "AXMenuBarItem" || childItems > 0
     }
 
     public static func list(bundleId: String, path: [String]) throws -> [String: Any] {
@@ -215,34 +225,6 @@ public enum MenuBar {
         let listed = items(ax, element).compactMap { describe(ax, $0) }
         try ax.checkTime()
         return ["path": resolved, "items": listed]
-    }
-
-    static let contextMenuWalkLimit = 4000
-
-    public static func close(bundleId: String) throws -> [String: Any] {
-        let ax = AXQuery()
-        let (bar, _) = try walk(ax, bundleId, [])
-        var closed = 0
-        for top in ax.children(bar) {
-            for menu in ax.children(top) where ax.string(menu, kAXRoleAttribute) == "AXMenu" && ax.actions(menu).contains(kAXCancelAction) {
-                if ax.bool(top, kAXSelectedAttribute) == true || ax.bool(menu, "AXVisible") == true {
-                    if ax.perform(menu, kAXCancelAction) == .success { closed += 1 }
-                }
-            }
-        }
-        // A context menu (AXShowMenu) hangs under the element that opened it, or under the app: a bounded walk of the windows.
-        let app = AXUIElementCreateApplication(try AXQuery.runningApp(bundleId).processIdentifier)
-        var queue = ax.children(app).filter { ax.string($0, kAXRoleAttribute) != "AXMenuBar" }[...], visited = 0
-        while let node = queue.popFirst(), visited < contextMenuWalkLimit, !ax.expired {
-            visited += 1
-            if ax.string(node, kAXRoleAttribute) == "AXMenu" {
-                if ax.actions(node).contains(kAXCancelAction), ax.perform(node, kAXCancelAction) == .success { closed += 1 }
-                continue
-            }
-            queue.append(contentsOf: ax.children(node))
-        }
-        try ax.checkTime()
-        return ["closed": closed]
     }
 }
 

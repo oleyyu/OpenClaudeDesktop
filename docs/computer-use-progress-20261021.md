@@ -730,3 +730,90 @@
 - **实机记录**：19:24 probe：前台 `com.apple.loginwindow`、`CGSSessionScreenIsLocked = true`、HIDIdleTime 405 s——**锁屏，受阻**，未运行任何实机用例，未投递事件、未截屏、未改前台 / 光标 / Space。
 - **未完成项**：见交接文档第十一节（实机补跑清单、`resolvePrepareCapture`、SavePanel AX 实机核对、watch-record context / events 模式、app_menu 其余原生拒绝、`npm run package` 未跑、第二轮未提交）。
 - **取舍**：代码地图不整篇重写（它是开工前调研快照，大量行号与计划仍有历史价值），只在原处标"现状"并加顶部说明；§16.1 原"需要用户决定"改写为已按官方语义落地的做法（同一服务器 + `sharesName` 按会话挑）。20261020 交接是历史文档，不改。
+
+## 后台不抢输入（第三轮，HEAD `5fa72be` 之后，未提交）——代码与单测完成；实机未跑（用户在用电脑）
+
+用户硬性要求："后台使用 App 不能抢用户键盘鼠标"。后台 app_* 动作时用户还在同一台电脑上工作：不移动真实光标、不发全局 HID 事件、
+不激活应用或抢焦点、不弹出会进入菜单追踪的菜单、不切 Space。六处照官方 2.42304.0 改。
+
+1. **app_click 右键**：原来执行 AXShowMenu，弹出真实上下文菜单（进入菜单追踪、截走输入）。现在照官方 `fr()`（`BEf0UhNC` L3684）：
+   先按普通点击校验目标（授权、click 层级——官方 `Y(…,"click")`，所以 Terminal 这类 click 层应用不再报 tier_refused、锁屏、参数、截图），
+   再固定拒绝 `context_menu` / `feature_unavailable`，`message` 是官方原句（"Opening a context (right-click) menu would bring the app to
+   the front, so it was NOT done. Use app_menu … call app_release and use the display-scope tools."）。原生 `axClick` 收到 `button:"right"`
+   也直接回 `context_menu`（不读任何元素）。删了原生 `AXLadder.showMenu` / `popUpMenuWindows` / `menuClimbLevels` / `menuPolls` 与
+   `Request.button`；reason-policy 删 `no_menu_action` / `menu_not_shown` / `context_menu_rclick_refused`，登记 `context_menu`。
+   app_menu `close`（只为关上下文菜单而设）随之删除：工具 schema、`ax-helper.cjs` 的 `menuClose` 路由、原生 `MenuBar.close` 与 Bridge
+   `menu {mode:"close"}` 全删；还传 `close` 的调用得到 invalid_params（"app_menu has no close…"）。
+2. **Dock**：官方 app_* 到不了 Dock / 桌面（spec §1.2.1）。`service.cjs` `granted()` 对桌面外壳进程（`com.apple.dock`、
+   `com.apple.systemuiserver`、`com.apple.Spotlight`、`com.apple.controlcenter`，即 spec 里原生用于命中测试归属的那张名单）一律抛
+   `desktop_shell`；工具层 `checkGrant` 在授权检查之前就拒绝（授权与否都一样），`errorKind: app_not_granted`，message / next_step 指向
+   "request_access 申请 Finder → app_release → display-scope（screenshot、left_click）"或 open_application。为了这条指引真的走得通，
+   display-scope 命中测试 `hitTest()` 把这些进程的窗口算作桌面外壳（Finder 的授权，官方 `He()`/"that single grant covers all of them"）。
+   删了专为 Dock 加的路径：`AXLadder.windowlessShells` / `root()` 的无窗口分支、`actionableRoles` 里的 `AXDockItem`、
+   `WindowList.isAppWindow(windowlessShell:)` 与 `resolve()` 的 Dock 分支（Dock 的 layer 20 条带不再算 app 窗口）。
+3. **app_menu**：原来 path 停在菜单标题上会 AXPress 标题（打开菜单、进入追踪）。现在原生 `MenuBar.press` 任何情况都不打开菜单：
+   末端是命令项 → 对叶子 AXPress（Cocoa 关闭状态下 AXPress 菜单项即执行，官方同样做法）；末端是菜单栏标题或带子菜单的项
+   （`MenuBar.endsAtSubmenu`）→ 不按、只读返回子项，`path_ends_at_submenu`（官方 `Nn()`：bad_args，"Menu path X ends at a submenu,
+   not a pressable item. Nothing was pressed. Extend `path` with one of its entries: …"，标题照官方 `X()` 用 JSON 数组）。子项来自
+   `AXMenuBarItem ▸ AXMenu ▸ children` 的只读属性，与 list 模式同一读法（list 模式第二轮已实机只读对拍过，读它不需要打开菜单）。
+4. **焦点被抢守卫**（新文件 `app/electron/computer-use/focus-guard.cjs`，官方 `armFocusStealGuard`）：读了官方 `muI2IV6k` 执行器里的
+   守卫 `xFr()` 与 `dispatch()`：动作前记前台 pid（目标已在前台、或前台是本应用 → 不守卫；同一目标上一次被抢还没放回时沿用上次记下的应用）；
+   动作后在 **500 ms 与 3 s**（`_Fr = 3e3`）各查一次，目标在前台就 `activatePid(原前台)`；用户在动作开始后自己按过左键（官方
+   `left_to_the_user`）不放回；同一应用还有动作在跑时这次检查让给它（官方 `RG`），新的布防取代旧的（官方 `IG` 计数）。原生加了
+   `activatePid {pid}`（`NSRunningApplication.activate(options: [])`，不带 all windows）与 `frontmostApp` 的
+   `secondsSinceUserMouseDown`（HID 系统状态的左键按下；本应用的 privateState / postToPid 事件不算）。`WindowShow` 原来的就地 `putBack`
+   删掉，统一由守卫放回（官方也是执行器层 `xFr` 放回）。`service.cjs` `withFocusGuard` 包住所有真正到达应用的调用：
+   click / type / key / scroll / drag / menu（press）/ focus / bring_to_current_space（显示与移 Space 两条）。结果文案照官方
+   `shown_and_now_in_front` 的措辞：动作返回时目标已在前台就附 `cameToFront:true, tellUser:true, focusNote`（"X came to the FRONT with this
+   action … The app the user was in is normally put back within 3 seconds; some of their typing may have gone to this one meanwhile. Tell the
+   user, and do not take it for their consent to work in front of them."）；bring_to_current_space 仍用原有 SHOWN 文案。
+5. **app_drag 起点拒绝**：官方 `ir()`（`BEf0UhNC` L3424–3436）的 `system_drag_session`（起点是链接或图片）与 drag 的 `popup_menu`
+   （起点是弹出菜单）。官方判定在 `app-cu-helper`（Rust，参考包里没有这个二进制，`fFr` 只把它的码映射过来），能确认的只有官方文案
+   "starts on a link or a picture" / "starts on a pop-up menu"。本 build 在原生 `RawInput.drag` 按下前对起点做应用内命中测试
+   （`AXLadder.dragStartRefusal` / 纯函数 `dragStartReason`）：命中元素是 `AXImage`，或命中及其上溯 4 层内（到窗口为止）有 `AXLink`
+   → `system_drag_session`；上溯链里有 `AXPopUpButton` / `AXMenuButton` → `popup_menu`。`service.cjs` 照官方原句给 message、
+   `errorKind: feature_unavailable`。reason-policy 登记 `system_drag_session`，`popup_menu` 说明补上拖拽。
+6. **实机测试闸门**：`tests/computer-use-live-helpers.mjs` 新增 `presenceSkip()`（并入 `liveSkip()`）：要 `CU_LIVE=1`；然后除非
+   `CU_LIVE_FORCE=1`，屏幕锁定（原生 probe，没构建时读 `ioreg -n Root -d1` 的 `CGSSessionScreenIsLocked`）或 HIDIdleTime < 120 s
+   （`ioreg -c IOHIDSystem`）一律跳过并写明原因；读不到也跳过。13 个 `*-live.test.mjs` 都经 `liveSkip()`，删了 hide / save-panel /
+   watch-record / display-pointer 里各自的空闲检查；8 个脚本（`computer-use-{ax-tools,m1,m2,m3,m4-click}-check.mjs`、
+   `computer-use-{cursor,teach,window-highlight}-live.mjs`）在 import 之后第一句就过 `presenceSkip()`（check 脚本因此也要 `CU_LIVE=1`）。
+   顺手修了 `computer-use-m1-check.mjs` 第 95 行既有的语法错误（单引号字符串里的 `display's`），否则闸门也到不了。
+
+- **改了哪些文件**：`app/electron/computer-use/{service,reason-policy,ax-helper}.cjs`、新增 `focus-guard.cjs`；
+  `app/electron/agent-tools/computer-use.mjs`（app_click / app_menu / app_drag 描述与 schema，app_type / app_key / app_scroll / app_focus
+  描述补守卫一句，`REASON_STEPS` / `NEXT_STEPS`，Dock 拒绝，`outcomeResult` 的 message 过 `t()`，key / scroll 结果带守卫字段）；
+  `app/electron/i18n/zh-CN/computer-use.mjs`（右键拒绝、Dock 拒绝、各新 next_step、app_drag 描述）；原生 `Bridge.swift`、`AXLadder.swift`、
+  `MenuBar.swift`、`RawInput.swift`、`WindowList.swift`、`WindowShow.swift`、`DisplayInput.swift` 与 `ClickLadderTests` / `MenuBarTests` /
+  `SpaceMoveTests`；测试 `computer-use-{agent-tools,ax-click,cursor,display-pointer,drag}.test.mjs`，新增
+  `computer-use-focus-guard.test.mjs`、`computer-use-live-gate.test.mjs`；live 用例 `click-live`（右键改为断言拒绝、`["File"]` 不打开）、
+  `system-click-live`（Dock 改为断言 `desktop_shell`，`CU_LIVE_DOCK` 不再需要）及上面闸门相关文件；8 个脚本；代码地图 4 行；本日志与交接。
+- **测试命令与结果**（`app/` 下）：
+  - `cd native/computer-use && swift test` → **61 / 61**（新增 `testDragStartReason`、`testAPathEndingAtAMenuPressesNothing`；Dock 相关断言改为反向）。
+  - `npm run build:native` → 通过；`app/public/build-info.json` 未被改写（git 无改动）。
+  - `node --test tests/computer-use-*.test.mjs tests/settings-computer-use.test.mjs tests/app-tool-names-sync.test.mjs tests/i18n.test.mjs tests/agent-tools-packaging.test.mjs`（不带 CU_LIVE）→ **361 项：326 通过、0 失败、35 跳过**（跳过的全是 CU_LIVE 实机用例，都停在新闸门）。
+    新增：`computer-use-focus-guard.test.mjs` 9 项（时限、放回、晚到、不布防三种、用户自己点、连续动作 / 让位、service 八种动作、拒绝路径不布防、工具结果带 focusNote）、
+    `computer-use-live-gate.test.mjs` 4 项（闸门逻辑、ioreg 解析、所有 live 用例 / 脚本都走闸门且闸门是第一句）；agent-tools / ax-click / drag / display-pointer 里的右键、Dock、app_menu、拖拽起点、zh-CN 用例。
+  - 全量 `npm test`（不带 CU_LIVE，1269 s）→ **5950 项：5902 通过、0 失败、48 跳过**（CU_LIVE 实机与既有的条件跳过）。全量运行期间我又改了 app_menu 的 message 格式与对应测试，之后单独重跑了上面的 CU 子集（361 项全过）。
+- **取舍**：
+  - 守卫照官方不在"前台是本应用"时布防（官方 `f === process.pid → f = undefined`）。用户若正在本应用的输入框里打字、目标应用被拉到前台，
+    本 build 与官方一样不放回；只靠结果里的 focusNote 让模型告诉用户。
+  - 守卫检查用官方时限（500 ms / 3 s），不在动作返回时立即激活：立即激活会和目标应用自己的激活抢（官方也没有这么做）。
+  - "用户自己点进去"只看动作开始后 HID 层有没有左键按下；官方还比对按下时光标下的窗口归属与激活时刻（`factsWhenAppLastBecameActive`、
+    `windowOwnerPidsAtCursor`），原生没有这两个导出，没做。键盘 ⌘Tab 切到目标应用的情况官方与本 build 都会放回。
+  - 拖拽起点判定是按官方文案复原的角色规则（`AXImage` 只看命中本身，`AXLink` 看上溯）。Finder 图标视图的项目若暴露为 `AXImage`，
+    从图标起拖会被 `system_drag_session` 拒绝——拖文件本来就是系统拖拽会话，与用户要求一致；列表视图行（`AXRow` / `AXTextField`）不受影响。
+  - Dock 拒绝名单与 display-scope 命中归属共用一张表（`DESKTOP_SHELL_PROCESSES`）；Control Center / SystemUIServer 的菜单栏层窗口仍先按
+    菜单栏规则处理（跟前台应用），只有其他层的窗口才归 Finder。
+  - 右键拒绝前不另调原生 windowOwner 核对窗口归属（官方 `Y()` 会核对）；本 build 的 window_id 已由该会话的截图状态约束，坐标 / element_index 也按那张截图校验。
+- **实机**：未运行任何 CU_LIVE 用例或 live 脚本（用户正在用电脑）。只做了原生只读冒烟：`menu {mode:"close"}` → invalid_params、
+  `axClick {button:"right"}` → `context_menu`、`axClick {button:"middle"}` → invalid_params、`frontmostApp` 带 `secondsSinceUserMouseDown`、
+  `activatePid {pid:-3}` → invalid_params（没有用真实 pid 调 activatePid，不改前台）；以及不带 `CU_LIVE` 跑 8 个脚本，全部在闸门处
+  `{"skipped":"live test: set CU_LIVE=1 …"}` 退出。
+- **未完成 / 不确定**：
+  - `NSRunningApplication.activate(options: [])` 在 macOS 14+ 的"协作激活"规则下，由非前台进程（本应用在后台时）调用是否一定生效，没有实机验证；
+    守卫的日志里记了原生返回的 `activated` 与 `frontmostPid`，补跑时看这一行。
+  - `system_drag_session` 的确切判定在官方 `app-cu-helper` 里，参考包没有该二进制，角色规则是推断；`popup_menu` 起点同理。
+  - app_menu 叶子在菜单关闭状态下 AXPress 的效果，以及 `AXMenuBarItem ▸ AXMenu` 对"运行时才填充"的菜单（Open Recent 等）读到的是当前缓存，
+    均待实机；补跑命令：`CU_LIVE=1 ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-ax-tools-check.mjs`、
+    `CU_LIVE=1 node --test --test-concurrency=1 tests/computer-use-click-live.test.mjs tests/computer-use-system-click-live.test.mjs`。

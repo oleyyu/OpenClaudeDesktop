@@ -20,10 +20,8 @@ const { createFullControl } = require('../electron/computer-use/full-control.cjs
 
 const ALLOWED = 'dev.openclaude.cu-hide-allowed', OTHER = 'dev.openclaude.cu-hide-other';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const probe = (await liveSkip()) ? null : await native().call('probe');
-const skip = (await liveSkip())
-  ?? (probe.screenLocked ? 'the screen is locked' : null)
-  ?? (!(probe.secondsSinceUserInput >= 120) ? `someone is using this Mac (last input ${Number(probe.secondsSinceUserInput).toFixed(1)} s ago, needs ≥ 120 s)` : null);
+// liveSkip's presence gate: skipped while the screen is locked or someone used this Mac in the last 120 s.
+const skip = await liveSkip();
 
 function build(bundleId, name, dir) {
   const bundle = path.join(dir, `${name}.app`), macos = path.join(bundle, 'Contents/MacOS');

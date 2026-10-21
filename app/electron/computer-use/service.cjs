@@ -6,10 +6,16 @@
 // M2: app_screenshot (image + AX summary in the same frame pixels) and app_click on the AX rung, in the official
 // 2.42304.0 ladder's order: a row (AXRow / AXCell / AXColumn / AXOutlineRow, a Finder list row) is selected through
 // AXSelected and opened through AXOpen on a double click; text takes a double / triple click as a word / line; else
-// AXPress on the element under the point after climbing at most four parents (a Dock item); else the nearest
+// AXPress on the element under the point after climbing at most four parents; else the nearest
 // selectable ancestor; anything else is refused with a reason code, never clicked blindly (executor.cjs +
-// reason-policy.cjs, fail-closed). A right click is AXShowMenu on the element or one of
-// its two parents (no_menu_action otherwise); it has no raw rung.
+// reason-policy.cjs, fail-closed). A right click is checked like any click and then refused (official: a context menu
+// would bring the app to the front; reasonCode context_menu): nothing is sent to the app.
+//
+// Background, never the user's input (official): app_* never move the real cursor, post to the global HID stream,
+// activate an app or open a menu that tracks the mouse. The Dock and the desktop are not app_* targets (official: only
+// display-scope with Finder's grant reaches them; desktop_shell). Every app_* action that reaches the app is wrapped in
+// the focus-steal guard (focus-guard.cjs, official armFocusStealGuard): a target that comes to the front is put behind
+// the user's app again, and the result says so (focusNote).
 //
 // M3: app_type on the AX rung (AXValue written and read back) with the raw rung behind the reason policy (Unicode
 // key events of ≤ 20 UTF-16 units, read back again), natively gated (secure input, user input, foreground app, lock).
@@ -27,8 +33,9 @@
 // bar's AXValue of the scroll area at the address by dy × 5 % (clamped) and reads it back. No raw rung, no event.
 //
 // Accessibility without input (agent tools app_focus / app_menu): window focus and the menu bar through ax-helper.cjs,
-// which routes them to the native module (focusWindow, menu {mode}). app_zoom crops the last app_screenshot with
-// `image` (main.cjs: Electron's nativeImage); it never captures again.
+// which routes them to the native module (focusWindow, menu {mode}). app_menu never opens a menu: a path presses its
+// leaf item; a path that ends at a menu answers path_ends_at_submenu with that menu's items, read without opening it.
+// app_zoom crops the last app_screenshot with `image` (main.cjs: Electron's nativeImage); it never captures again.
 //
 // `pointer` (main.cjs: cursor.cjs) is the phantom cursor (official §2.6.1): a window this session holds (app_screenshot,
 // not app_release'd) shows it at the window's centre when the lock is taken (moved), then at the screen point of every
@@ -73,6 +80,7 @@ const { isDeepStrictEqual } = require("node:util");
 const { normalizeCombo, isSystemCombo, clipboardFlags, mainKeyCount, parseCombo, displayChord, chordProblem } = require("./keys.cjs");
 const { createClipboard, CLIPBOARD_SUB_GATES, PASTE_CHORD } = require("./clipboard.cjs");
 const { createSavePanelGuard, policy: { navigationOnly } } = require("./save-panel.cjs");
+const { createFocusGuard, frontNote } = require("./focus-guard.cjs");
 
 // How many summary lines app_screenshot shows inline; app_ax_find searches the rest.
 const SUMMARY_LINES = 40;
@@ -142,7 +150,7 @@ function dragCoordinates(shot, coordinate, toCoordinate, path) {
 
 /**
  * Native supplies snapshots of the SAME retained element. Delivery alone cannot verify acceptance. An unchanged readback
- * is drag_ineffective for every app, Finder and the Dock included: the official build has no system-app reason and no
+ * is drag_ineffective for every app, Finder included: the official build has no system-app reason and no
  * Accessibility equivalent for a drag, and a Finder file drag is seen working live (docs/computer-use-drag.md).
  */
 function dragReadback(result) {
@@ -168,8 +176,9 @@ function dragReadback(result) {
  *   released({windowId})} with point {sessionId, bundleId, windowId, x, y} in global screen points (cursor.cjs), optional.
  * clickThrough: click-through.cjs createClickThrough() — the app's own windows let a screen-wide pointer delivery
  *   through (official executor NG) and input bursts (official beginInputBurst), optional.
+ * focusGuard: focus-guard.cjs createFocusGuard() (tests pass one with their own clock); by default one on `native`.
  */
-function createComputerUse({ native = createNative(), axHelper = createAxHelper({ native }), image = null, pointer = null, highlight = null, log = console, wait, decide, selfBundleIds = [], fullControl = createFullControl(), overlayWindowIds = () => [], onDisplaySelected = () => {}, withOwnEscape = (run) => run(), clipboard = null, subGates = {}, clickThrough = null, savePanel = null } = {}) {
+function createComputerUse({ native = createNative(), axHelper = createAxHelper({ native }), image = null, pointer = null, highlight = null, log = console, wait, decide, selfBundleIds = [], fullControl = createFullControl(), overlayWindowIds = () => [], onDisplaySelected = () => {}, withOwnEscape = (run) => run(), clipboard = null, subGates = {}, clickThrough = null, savePanel = null, focusGuard = null } = {}) {
   const pause = wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   // Official executor NG: a click / press / release / drag / scroll runs with the app's windows near it letting it through.
   const throughOwnWindows = (points, run) => (typeof clickThrough?.around === "function" ? clickThrough.around(points.filter(Boolean), run) : run());
@@ -253,7 +262,23 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
   };
   const granted = (sessionId, bundleId) => {
     if (!validBundleId(bundleId)) throw coded("invalid_params", "bundleId is required.");
+    // Official: the Dock is not an app_* target (pressing it activates apps); display-scope + Finder's grant reach it.
+    if (DESKTOP_SHELL_PROCESSES.has(bundleId)) throw coded("desktop_shell", DESKTOP_SHELL_REFUSAL);
     if (!grantsFor(sessionId).has(bundleId)) throw coded("app_not_granted", `${bundleId} is not in this session’s granted applications. Call request_access first.`);
+  };
+  // ── The focus-steal guard (official armFocusStealGuard; focus-guard.cjs) ──
+  const guard = focusGuard ?? createFocusGuard({ native, log });
+  /**
+   * An app_* action that reaches the app, inside the guard: who is in front is read before it, the checks are armed
+   * after it, and a target already in front by then is said in the result (cameToFront, tellUser, focusNote).
+   */
+  const withFocusGuard = async (sessionId, bundleId, run) => {
+    const token = await guard.before(bundleId);
+    let result, front = { cameToFront: false };
+    try { result = await run(); }
+    finally { front = await guard.after(token).catch(() => ({ cameToFront: false })); }
+    if (!front.cameToFront || !result || typeof result !== "object") return result;
+    return { ...result, cameToFront: true, tellUser: true, focusNote: frontNote(appName(sessionId, bundleId)) };
   };
 
   /**
@@ -313,6 +338,18 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
     return { done: false, reasonCode: pressed?.reasonCode ?? "paste_failed" };
   };
 
+  /**
+   * The right click's answer (official fr() after Y()): a locked screen is said as such, otherwise the fixed refusal.
+   * Nothing is sent to the app.
+   */
+  const contextMenuRefusal = async (windowId) => {
+    const base = { outcome: "unsupported", path: "unavailable", blocked: true, delivered: false, windowId };
+    if ((await native.call("probe").catch(() => null))?.screenLocked === true) {
+      return { ...base, reasonCode: "screen_locked", errorKind: "state_conflict", message: SCREEN_LOCKED_ACTION };
+    }
+    return { ...base, reasonCode: "context_menu", errorKind: "feature_unavailable", message: CONTEXT_MENU_REFUSAL };
+  };
+
   const service = {
     grantsFor,
     appLockBundles,
@@ -347,9 +384,16 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const saveRefused = await appSaveGate({ bundleId, windowId: wid, shot, framePt: coordinate, action: { kind: "drag" } });
       if (saveRefused) return saveRefused;
       await pointerAside(wid);
-      const result = await asInput(() => deliver(() => native.call("drag", {
+      const result = await withFocusGuard(sessionId, bundleId, () => asInput(() => deliver(() => native.call("drag", {
         bundleId, windowId: wid, ...coordinates, button, grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
-      }), wait ? { wait } : {}));
+      }), wait ? { wait } : {})));
+      // Official: where a drag may not start (a link / picture, a pop-up menu) is said in the official words.
+      const start = DRAG_START_REFUSALS[result?.reasonCode];
+      if (result?.outcome === "unsupported" && start) {
+        rememberPoint(state, `${bundleId}:${wid}`, toCoordinate, result);
+        pointerLanded(sessionId, bundleId, wid, shot, toCoordinate, result);
+        return { ...result, errorKind: "feature_unavailable", message: start(appName(sessionId, bundleId)), blocked: true, windowId: wid };
+      }
       const readback = dragReadback(result);
       rememberPoint(state, `${bundleId}:${wid}`, toCoordinate, readback);
       pointerLanded(sessionId, bundleId, wid, shot, toCoordinate, readback);
@@ -458,14 +502,16 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
     },
     /**
      * app_click on the AX rung. Refusals come back as {outcome: "unsupported", reasonCode, blocked: true}.
-     * button "right" is AXShowMenu (the context menu, read back as menuItems); only a single left click has a raw rung.
-     * axOnly: no raw rung behind the reason policy (a fallback reason is refused), as the agent tool asks until M4.
+     * button "right" (official fr()): the target is checked as for any click (grant at the click tier, the arguments,
+     * the screenshot, the screen lock, the window), then refused — context_menu, feature_unavailable, the official
+     * message: a context menu would bring the app to the front. Nothing reaches the app. Only a single left click has a
+     * raw rung. axOnly: no raw rung behind the reason policy (a fallback reason is refused), as the agent tool asks.
      * One of coordinate / element_index / target is required: there is no implicit "the same point as last time" (in a
      * form that is a second submit).
      */
     async appClick(sessionId, { bundleId, windowId, coordinate, element_index: elementIndex, target, count = 1, button = "left", dryRun = false, axOnly = false } = {}) {
       granted(sessionId, bundleId);
-      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), button === "right" ? "right_click" : "left_click");
+      checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "left_click");
       if (button !== "left" && button !== "right") throw coded("invalid_params", "button must be \"left\" or \"right\".");
       if (![1, 2, 3].includes(count)) throw coded("invalid_params", "count must be 1, 2 or 3.");
       const given = [coordinate !== undefined, elementIndex !== undefined, target !== undefined].filter(Boolean).length;
@@ -499,6 +545,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
           params.winLocalPt = point;
         }
       }
+      if (button === "right") return contextMenuRefusal(wid);
       const gate = actionGate(await native.call("probe"), "left_click");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
       const savePoint = target === "focused" ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
@@ -510,8 +557,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
       }) : null;
       if (target !== "focused") await pointerAside(wid);
-      const result = await asInput(() => execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
-        context: { op: button === "right" ? "right_click" : "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) }));
+      const result = await withFocusGuard(sessionId, bundleId, () => asInput(() => execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
+        context: { op: "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) })));
       const framePt = target === "focused" ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
       rememberPoint(state, `${bundleId}:${wid}`, framePt, result);
       pointerLanded(sessionId, bundleId, wid, shot, framePt, result, { click: true, hid: target !== "focused" });
@@ -572,8 +619,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         return { ...result, reasonCode: "no_text_target", secureTextField: true };
       };
       if (!params.focused) await pointerAside(wid);
-      const result = await asInput(() => execute({ ax, raw, log,
-        context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) }));
+      const result = await withFocusGuard(sessionId, bundleId, () => asInput(() => execute({ ax, raw, log,
+        context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) })));
       const framePt = params.focused ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
       rememberPoint(state, `${bundleId}:${result.windowId ?? wid}`, framePt, result);
       pointerLanded(sessionId, bundleId, wid, shot, framePt, result, { hid: !params.focused });
@@ -593,22 +640,23 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       if (gate) return { outcome: "unsupported", reasonCode: gate, focused: false, blocked: true };
       const saveRefused = await appSaveGate({ bundleId, windowId: wid, action: { kind: "focus" } });
       if (saveRefused) return { ...saveRefused, focused: false };
-      const result = await axHelper.call("focus", { bundleId, ...(wid !== undefined ? { windowId: wid } : {}) });
+      const result = await withFocusGuard(sessionId, bundleId, () => axHelper.call("focus", { bundleId, ...(wid !== undefined ? { windowId: wid } : {}) }));
       if (result?.outcome === "ok" && Number.isInteger(result.window_id)) state.last.set(bundleId, result.window_id);
       return result;
     },
     /**
-     * app_menu: one of
-     *   path  [title, …]   walk the menu bar by titles (any case, trailing … ignored) and press the last item: a command
-     *                      runs; a menu title opens that menu and lists its items
+     * app_menu (official Nn()): one of
+     *   path  [title, …]   walk the menu bar by titles (any case, trailing … ignored) and press the leaf item (its
+     *                      command runs). A path that ends at a menu-bar title or a submenu presses nothing and opens
+     *                      nothing: path_ends_at_submenu (bad_args) with that menu's items, read without opening it
      *   list  true | null | title | [title, …]   the items under that path (the menu bar titles for true / null); read-only
-     *   close true         cancel any open menu of the app (what Escape does)
-     * Accessibility only (AXPress / AXCancel): no mouse event, the app is not brought forward.
+     * Accessibility only (AXPress on the leaf): no mouse event, no menu opened (an open menu tracks the mouse and takes
+     * the keyboard), the app is not brought forward.
      */
-    async appMenu(sessionId, { bundleId, path, list, close } = {}) {
+    async appMenu(sessionId, { bundleId, path, list } = {}) {
       granted(sessionId, bundleId);
-      const modes = [path !== undefined, list !== undefined, close !== undefined].filter(Boolean).length;
-      if (modes !== 1) throw coded("invalid_params", "Give exactly one of path, list or close.");
+      const modes = [path !== undefined, list !== undefined].filter(Boolean).length;
+      if (modes !== 1) throw coded("invalid_params", "Give exactly one of path or list.");
       const titles = (value, name) => {
         if (!Array.isArray(value) || value.length > MAX_MENU_DEPTH || !value.every((t) => typeof t === "string" && t.trim())) {
           throw coded("invalid_params", `${name} must be an array of at most ${MAX_MENU_DEPTH} menu titles.`);
@@ -621,12 +669,10 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         return axHelper.call("menuList", { bundleId, path: under });
       }
       checkTier(bundleId, grantsFor(sessionId).tierOf(bundleId), "menu");
-      if (close !== undefined && close !== true) throw coded("invalid_params", "close must be true.");
-      const steps = close ? null : titles(path, "path");
-      if (steps && !steps.length) throw coded("invalid_params", "path must name at least the menu bar title, e.g. [\"File\", \"New Folder\"].");
+      const steps = titles(path, "path");
+      if (!steps.length) throw coded("invalid_params", "path must name the menu bar title and the item, e.g. [\"File\", \"New Folder\"].");
       const gate = actionGate(await native.call("probe"), "menu");
       if (gate) return { outcome: "unsupported", reasonCode: gate, blocked: true };
-      if (close) return { outcome: "ok", ...(await axHelper.call("menuClose", { bundleId })) };
       // Official Ut {kind: "menu"}: the window the command acts on — the one this session works in, then the app's main.
       let menuWindow = windows.get(sessionId)?.last.get(bundleId);
       if (menuWindow === undefined && saveGuard.available) {
@@ -635,7 +681,13 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       }
       const saveRefused = await appSaveGate({ bundleId, windowId: menuWindow, action: { kind: "menu", window: "locked" } });
       if (saveRefused) return saveRefused;
-      return asInput(() => axHelper.call("menu", { bundleId, path: steps }));
+      const result = await withFocusGuard(sessionId, bundleId, () => asInput(() => axHelper.call("menu", { bundleId, path: steps })));
+      if (result?.reasonCode !== "path_ends_at_submenu") return result;
+      // Official Nn(): "Menu path X(u) ends at a submenu, not a pressable item. Nothing was pressed." (bad_args); the titles
+      // as JSON arrays, as official X() has them (they are the app's data, not instructions).
+      const entries = (Array.isArray(result.items) ? result.items : []).map((item) => item?.title).filter((title) => typeof title === "string");
+      return { ...result, errorKind: "bad_args", blocked: true,
+        message: `Menu path ${JSON.stringify(steps)} ends at a submenu, not a pressable item. Nothing was pressed. Extend \`path\` with one of its entries: ${JSON.stringify(entries)}.` };
     },
     /**
      * app_zoom: region [x0, y0, x1, y1] of the last app_screenshot of a window (frame pixels), cropped from that
@@ -732,7 +784,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const saveRefused = await appSaveGate({ bundleId, windowId: wid, shot, framePt: params.focused ? null : framePt, action: { kind: "key", combo: normalized } });
       if (saveRefused) return { ...saveRefused, combo: normalized, aimed };
       if (!params.focused) await pointerAside(wid);
-      const result = await asInput(() => execute({
+      const result = await withFocusGuard(sessionId, bundleId, () => asInput(() => execute({
         ax: () => native.call("axKey", params),
         // A raw refusal before the native side looked at the target still names the element the AX rung saw.
         raw: async (axResult) => {
@@ -741,7 +793,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
           return { ...(sent?.role === undefined ? seen : {}), ...(axResult?.axWriteIgnored ? { axWriteIgnored: true } : {}), ...sent };
         },
         log, context: { op: "key", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}),
-      }));
+      })));
       rememberPoint(state, `${bundleId}:${result.windowId ?? wid}`, framePt, result);
       pointerLanded(sessionId, bundleId, wid, shot, framePt, result, { hid: !params.focused });
       return { ...result, combo: normalized, aimed, ...(result.windowId === undefined && wid !== undefined ? { windowId: wid } : {}) };
@@ -799,8 +851,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         aimed = `(${Math.round(framePt[0])}, ${Math.round(framePt[1])})`;
       }
       if (!params.focused) await pointerAside(wid);
-      const result = await execute({ ax: () => native.call("axScroll", params), log,
-        context: { op: "scroll", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
+      const result = await withFocusGuard(sessionId, bundleId, () => execute({ ax: () => native.call("axScroll", params), log,
+        context: { op: "scroll", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) }));
       // Official ir(): the point is kept unless the action was refused or its Accessibility call errored.
       if (!(result.outcome === "ineffective" && result.axError && result.axError !== "success")) {
         rememberPoint(state, `${bundleId}:${result.windowId ?? wid}`, framePt, result);
@@ -813,7 +865,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
     /**
      * app_bring_to_current_space (official §1.6.3, BEf0UhNC In()): a minimized window / hidden app comes back behind
      * the window the user is working in (native showWindowBehindTheFrontWindow), a window on another Space is moved
-     * to the current one after a dry run (native bringWindowToActiveSpace). The app is never activated. Messages are
+     * to the current one after a dry run (native bringWindowToActiveSpace). The app is never activated; should it come
+     * to the front anyway, the focus-steal guard puts the user's app back (shown_and_now_in_front says so). Messages are
      * the official ones; refusals are {outcome: "unsupported", reasonCode, errorKind, message}.
      */
     async appBringToCurrentSpace(sessionId, { bundleId, windowId } = {}) {
@@ -839,7 +892,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const kind = parked(window);
       if (kind !== undefined) {
         if (await locked()) return refuse("screen_locked", "state_conflict", LOCKED_BEFORE_MOVE);
-        const shown = await native.call("showWindowBehindTheFrontWindow", { bundleId, windowId });
+        // Official: a window shown from the Dock may bring its app to the front; the guard puts the user's app back.
+        const shown = await withFocusGuard(sessionId, bundleId, () => native.call("showWindowBehindTheFrontWindow", { bundleId, windowId }));
         if (shown?.screenLocked === true) return refuse("screen_locked", "state_conflict", LOCKED_BEFORE_MOVE);
         const code = Object.hasOwn(SHOWN, shown?.code) ? shown.code : "unavailable";
         const back = SHOWN[code].cameBack ? await find() : undefined;
@@ -873,7 +927,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       if (!owner || owner.bundleId !== bundleId) {
         return refuse("window_changed", "state_conflict", "That window changed before the move ran (it was closed, moved, or reused for different content), so nothing was moved. Take a fresh app_list_windows and try again if it's still needed.");
       }
-      const moved = await native.call("bringWindowToActiveSpace", { bundleId, windowId });
+      const moved = await withFocusGuard(sessionId, bundleId, () => native.call("bringWindowToActiveSpace", { bundleId, windowId }));
       if (moved?.screenLocked === true) return refuse("screen_locked", "state_conflict", LOCKED_BEFORE_MOVE);
       if (moved?.alreadyHere === true) {
         return done("already_here", `Window ${windowId} was already on the current Space by the time the move ran — take a fresh app_screenshot and act on it directly.`);
@@ -1084,6 +1138,9 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         const owner = typeof found.ownerName === "string" && found.ownerName ? found.ownerName : "an unknown process";
         return { outcome: "unsupported", reasonCode: "unattributed_window", errorKind: "app_not_granted", ownerName: found.ownerName ?? null,
           message: `The window at this point belongs to "${owner}", a process with no app bundle, so no grant can cover it and actions on it are refused. Act on a window that belongs to an app, or ask the user to close or move this one.` };
+      } else if (found && DESKTOP_SHELL_PROCESSES.has(found.bundleId)) {
+        // The Dock, Spotlight …: the desktop shell, Finder's grant (official: "that single grant covers all of them").
+        target = { bundleId: DESKTOP_SHELL, name: "Finder" };
       } else {
         target = found ? { bundleId: found.bundleId, name: found.ownerName || found.bundleId } : { bundleId: DESKTOP_SHELL, name: "Finder" };
       }
@@ -1707,6 +1764,20 @@ const elementCenter = (e) => [e.frame.x + e.frame.width / 2, e.frame.y + e.frame
 const MENU_BAR_LAYERS = new Set([24, 25]);
 // The desktop shell (the desktop, the Dock, Spotlight) is Finder's grant (official Ie / He()).
 const DESKTOP_SHELL = "com.apple.finder";
+// The processes that draw the desktop shell (official computer_use.node: the Dock, SystemUIServer, Spotlight, Control
+// Center — the hit test's window owners). A point on their windows is the desktop shell's, i.e. Finder's grant; and
+// they are never app_* targets: pressing a Dock item activates an app (official: app_* can't reach them at all).
+const DESKTOP_SHELL_PROCESSES = new Set(["com.apple.dock", "com.apple.systemuiserver", "com.apple.Spotlight", "com.apple.controlcenter"]);
+const DESKTOP_SHELL_REFUSAL = "The Dock (and the rest of the desktop shell: the desktop, Spotlight, the menu bar extras) can't be used with the app_* tools: pressing a Dock item opens or switches apps and brings one to the front, which takes the keyboard from the app the user is working in. To use it, call request_access with \"Finder\" (that one grant covers the desktop, the Dock and Spotlight), then app_release and use the display-scope tools (screenshot, left_click), which take over the screen — or ask the user. To open an app, use open_application.";
+// app_click button "right" (official fr(), BEf0UhNC L3684): checked like a click, then refused with these words.
+const CONTEXT_MENU_REFUSAL = "Opening a context (right-click) menu would bring the app to the front, so it was NOT done. Use app_menu to run the equivalent menu bar command, or click the target directly. To use the context menu itself, call app_release and use the display-scope tools.";
+// Official Y(): the screen is locked (actions refused, screenshots still work).
+const SCREEN_LOCKED_ACTION = "The screen is locked. app_screenshot continues to work in background mode, but actions (click, type, key, scroll, drag) need the screen unlocked — macOS blocks window-level Accessibility while locked. Screenshot to observe; act once the user returns.";
+// app_drag: where a drag may not start (official ir(), BEf0UhNC L3424–3436), by native reasonCode → message for the app.
+const DRAG_START_REFUSALS = Object.freeze({
+  system_drag_session: (app) => `The drag starts on a link or a picture, which ${app} would pick up and drag as an item. In the background that takes keyboard focus from the app the user is working in, so the drag was NOT sent. Look for another way first: start the drag just beside the link or picture, or reach the same result with a click, a menu command or the keyboard (app_click, app_menu, app_key). Only if the task cannot be done without dragging this item, call app_release and use full-screen control for that one step.`,
+  popup_menu: () => "The drag starts on a pop-up menu (a dropdown). A press on it opens its menu, and in the background that menu takes the keyboard from the app the user is working in, so the drag was NOT sent. A drag cannot start on a pop-up menu: start it beside the control. To choose one of its options there is no dependable way in the background that leaves the user's keyboard alone: call app_release and use full-screen control for that one step, or ask the user.",
+});
 
 // The screen-wide pointer tools (displayPointer).
 const POINTER_KINDS = new Set(["mouse_move", "left_click", "right_click", "middle_click", "double_click", "triple_click", "left_mouse_down", "left_mouse_up", "left_click_drag", "scroll"]);
@@ -1791,4 +1862,5 @@ function checkBudget(shot, scale = 1) {
   return shot;
 }
 
-module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, MAX_TYPE_UNITS, MAX_MENU_DEPTH, dragCoordinates, dragReadback, displayLabels };
+module.exports = { createComputerUse, checkBudget, summaryText, normalizeCombo, MAX_TYPE_UNITS, MAX_MENU_DEPTH, dragCoordinates, dragReadback, displayLabels,
+  DESKTOP_SHELL_PROCESSES, DESKTOP_SHELL_REFUSAL, CONTEXT_MENU_REFUSAL };

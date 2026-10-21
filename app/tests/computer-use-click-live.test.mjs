@@ -8,8 +8,9 @@ import { createRequire } from 'node:module';
 import { liveSkip, native } from './computer-use-live-helpers.mjs';
 
 // app_click's right, double and triple click on this Mac (CU_LIVE=1 only; skipped otherwise), through the real native module and the
-// Accessibility helper: Finder opens a temp folder in list view in the background, a file's context menu is opened by
-// AXShowMenu and closed again with app_menu close; a toolbar control without AXShowMenu answers no_menu_action.
+// Accessibility helper: Finder opens a temp folder in list view in the background; a right click on a file is refused
+// (context_menu, official: a context menu would bring Finder to the front) and nothing opens, Finder stays behind;
+// app_menu path ["File"] presses nothing either (path_ends_at_submenu, File's items listed).
 // TextEdit (only when it is not already running: your documents are not touched) opens a temp file; a double click
 // selects the word under the point and a triple click the line, through AXSelectedTextRange.
 // Needs Accessibility + Screen Recording for the process running it. When the folder's window opens on another Space
@@ -64,39 +65,21 @@ async function finderFolder() {
   };
 }
 
-test('acceptance 1 — Finder: a right click on a file opens its context menu (AXShowMenu), app_menu close closes it', { skip }, async () => {
+test('acceptance 1 — Finder: a right click on a file is refused (context_menu), no menu opens and Finder stays in the background; app_menu ["File"] opens nothing', { skip }, async () => {
   const folder = await finderFolder();
   const { cu } = session(FINDER);
+  const front = frontmostApp();
   try {
     await cu.appScreenshot('live', { bundleId: FINDER, windowId: folder.windowId });
     const file = cu.axFind('live', { bundleId: FINDER, windowId: folder.windowId, titleContains: 'beta.txt' }).matches[0];
     assert.ok(file, 'beta.txt is in the element summary');
     const result = await cu.appClick('live', { bundleId: FINDER, windowId: folder.windowId, element_index: file.index, button: 'right', axOnly: true });
-    assert.equal(result.outcome, 'ok', JSON.stringify(result));
-    assert.equal(result.path, 'ax');
-    assert.equal(result.axOp, 'AXShowMenu');
-    assert.ok(result.menuItems.length > 3, JSON.stringify(result.menuItems));
-    assert.ok(result.menuItems.some((title) => title.includes('beta.txt')), 'the menu is the file’s (e.g. Compress “beta.txt”)');
-    const closed = await cu.appMenu('live', { bundleId: FINDER, close: true });
-    assert.ok(closed.closed >= 1, JSON.stringify(closed));
-  } finally {
-    await cu.appMenu('live', { bundleId: FINDER, close: true }).catch(() => {});
-    folder.close();
-  }
-});
-
-test('acceptance 4 — Finder: a control without AXShowMenu (nor on its two parents) answers no_menu_action, nothing opens', { skip }, async () => {
-  const folder = await finderFolder();
-  const { cu } = session(FINDER);
-  try {
-    await cu.appScreenshot('live', { bundleId: FINDER, windowId: folder.windowId });
-    const radio = cu.axFind('live', { bundleId: FINDER, windowId: folder.windowId, role: 'radiobutton' }).matches[0];
-    assert.ok(radio, 'the toolbar view switcher is in the element summary');
-    const result = await cu.appClick('live', { bundleId: FINDER, windowId: folder.windowId, element_index: radio.index, button: 'right', axOnly: true });
-    assert.equal(result.outcome, 'unsupported', JSON.stringify(result));
-    assert.equal(result.reasonCode, 'no_menu_action');
-    assert.equal(result.blocked, true);
-    assert.equal((await cu.appMenu('live', { bundleId: FINDER, close: true })).closed, 0, 'no menu was left open');
+    assert.deepEqual([result.outcome, result.reasonCode, result.errorKind, result.delivered], ['unsupported', 'context_menu', 'feature_unavailable', false], JSON.stringify(result));
+    const menu = await cu.appMenu('live', { bundleId: FINDER, path: ['File'] });
+    assert.deepEqual([menu.outcome, menu.reasonCode], ['unsupported', 'path_ends_at_submenu'], JSON.stringify(menu));
+    assert.ok(menu.items.length > 3, JSON.stringify(menu.items));
+    await sleep(600);
+    assert.equal(frontmostApp(), front, 'the app in front did not change');
   } finally {
     folder.close();
   }

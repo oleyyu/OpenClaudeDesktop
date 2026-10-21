@@ -40,7 +40,7 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | 渲染：rail 卡 | `src/source-session-rail-computer-use.jsx` | 107 | 活动面板卡（实时帧 / 最后截图） |
 | 渲染：设置 | `src/source-settings-computer-use.jsx` | 70 | 开关、Allowed apps 芯片、Teach mode 入口 |
 | 原生（参考） | `native/computer-use/Sources/{ComputerUseBridge,ComputerUseCore,ComputerUseNAPI}` | — | Swift + N-API；本文只列 JS 调到的方法 |
-| AX 调用（原 helper） | `native/computer-use/Sources/ComputerUseCore/MenuBar.swift` | — | probe / focus / menu / menuList / menuClose / apps（第二轮从 `helpers/cu-ax` 并入） |
+| AX 调用（原 helper） | `native/computer-use/Sources/ComputerUseCore/MenuBar.swift` | — | probe / focus / menu / menuList / apps（第二轮从 `helpers/cu-ax` 并入；menuClose 已删：app_menu 不再打开菜单） |
 | harness | `harness/packages/acp-bridge/src/app-tools.js` | — | `APP_TOOL_NAMES`（开工时含 24 个 CU 名字，现状 44 个；screenshot / scroll / type 与 preview 同名，只列一次） |
 
 ---
@@ -83,11 +83,11 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | app_list_windows | 203–215 | `listWindows` | — | 真实 |
 | app_screenshot | 216–228 | `appScreenshot` | see | 真实 |
 | app_ax_find | 229–253 | `axFind`（纯 JS，搜上次截图的 elements） | — | 真实 |
-| app_click | 254–279 | `appClick(..., axOnly:true)` | left_click / right_click | 真实（全 AX：AXPress、AXShowMenu、AXSelectedTextRange） |
+| app_click | 254–279 | `appClick(..., axOnly:true)` | left_click | 真实（全 AX：AXPress、AXSelected、AXOpen、AXSelectedTextRange）；右键校验后固定拒绝 `context_menu`（AXShowMenu 已删） |
 | app_type | 280–307 | `appType` | type | 真实（AX → FALLBACK 两条 → rawType） |
 | app_release | 308–322 | `release`（不查授权） | — | 真实 |
 | app_focus | 323–337 | `appFocus` → axHelper `focus` | left_click | 真实 |
-| app_menu | 338–370 | `appMenu` → axHelper `menu / menuList / menuClose` | menu（list 用 see） | 真实 |
+| app_menu | 338–370 | `appMenu` → axHelper `menu / menuList` | menu（list 用 see） | 真实（只按叶子；末端是菜单 → `path_ends_at_submenu` 只读返回子项） |
 | app_zoom | 371–395 | `appZoom`（裁上次截图，`image.crop`） | — | 真实（非高清） |
 | list_apps | 396–420 | `cu.listApps` → apps.cjs → axHelper `apps` | — | 真实，不需要授权 |
 | app_batch | 421–453 | `batch()`；动作枚举 click/type/key/scroll/screenshot/zoom/drag | — | 真实；**现状**：key / scroll 步走真实的 app_key / app_scroll |
@@ -143,7 +143,7 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | `appClick` | 267 | `probe` → `axClick` / `rawClick` | `axOnly` 时 raw 梯级为 null；`pointer.beforeClick/clicked`（l.310/314）。**现状**：假光标钩子覆盖所有落地的 app_* 动作（`beforeClick` / `clicked` / `moved` / `restore` / `released`），不再只在 appClick 成功时出现 |
 | `appType` | 328 | `probe` → `axType` → `rawType` | |
 | `appFocus` | 378 | `probe` → helper `focus` | |
-| `appMenu` | 397 | `probe` → helper `menu / menuList / menuClose` | |
+| `appMenu` | 397 | `probe` → helper `menu / menuList` | |
 | `appZoom` | 426 | `image.crop` | 只裁已有截图 |
 | `appKey` | 451 | `probe` → `deliver(rawKey)` | 开工时未接线；**现状**：app_key / app_batch 的 key 步调用它，照官方 AX 档 + 后台键集合重写，`systemKeyCombos` flag 授了才放行系统组合键 |
 | `allGrants` / `revoke` | 470 / 486 | — | 设置页用 |

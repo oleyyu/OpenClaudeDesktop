@@ -31,10 +31,20 @@ final class MenuBarTests: XCTestCase {
     func testAnAppThatIsNotRunningIsRefusedBeforeAnyAccessibilityMessage() throws {
         try XCTSkipUnless(AXIsProcessTrusted(), "app_not_running is checked after the Accessibility check")
         for call in [{ try MenuBar.list(bundleId: "com.example.cu-not-running", path: []) },
-                     { try MenuBar.close(bundleId: "com.example.cu-not-running") },
+                     { try MenuBar.press(bundleId: "com.example.cu-not-running", path: ["File", "New"]) },
                      { try AppFocus.focus(bundleId: "com.example.cu-not-running", windowId: nil) }] {
             XCTAssertThrowsError(try call()) { XCTAssertEqual(($0 as? CUError)?.code, "app_not_running") }
         }
+    }
+
+    func testAPathEndingAtAMenuPressesNothing() {
+        // A menu-bar title or an item with a submenu: path_ends_at_submenu (official), never opened.
+        XCTAssertTrue(MenuBar.endsAtSubmenu(role: "AXMenuBarItem", childItems: 0))
+        XCTAssertTrue(MenuBar.endsAtSubmenu(role: "AXMenuBarItem", childItems: 12))
+        XCTAssertTrue(MenuBar.endsAtSubmenu(role: "AXMenuItem", childItems: 3))
+        // A command item: pressed.
+        XCTAssertFalse(MenuBar.endsAtSubmenu(role: "AXMenuItem", childItems: 0))
+        XCTAssertFalse(MenuBar.endsAtSubmenu(role: nil, childItems: 0))
     }
 
     func testCUErrorCarriesDetails() {

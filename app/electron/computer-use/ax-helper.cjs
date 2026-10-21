@@ -5,9 +5,8 @@
 //
 //   probe                              → native axProbe      {axTrusted}
 //   focus     {bundleId, windowId?}    → native focusWindow
-//   menu      {bundleId, path}         → native menu {mode: "press"}
+//   menu      {bundleId, path}         → native menu {mode: "press"}: the leaf is pressed, no menu is ever opened
 //   menuList  {bundleId, path}         → native menu {mode: "list"}
-//   menuClose {bundleId}               → native menu {mode: "close"}
 //   apps      {folders}                → native listApps
 //
 // Errors are native.cjs's coded errors (details kept); a missing module is native_unavailable, an app that stops
@@ -19,7 +18,6 @@ const ROUTES = Object.freeze({
   focus: ({ bundleId, windowId }) => ["focusWindow", { bundleId, ...(windowId !== undefined ? { windowId } : {}) }],
   menu: ({ bundleId, path }) => ["menu", { bundleId, mode: "press", path }],
   menuList: ({ bundleId, path = [] }) => ["menu", { bundleId, mode: "list", path }],
-  menuClose: ({ bundleId }) => ["menu", { bundleId, mode: "close" }],
   apps: ({ folders = [] }) => ["listApps", { folders }],
 });
 

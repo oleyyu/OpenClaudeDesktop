@@ -321,7 +321,8 @@ test("service + cursor + one native: the hide lands before the AX hit test, the 
   await cu.appScreenshot("s", { bundleId: "com.apple.finder" });
   await cu.appClick("s", { bundleId: "com.apple.finder", coordinate: [200, 100] });
   await cursor.state();
-  const seen = native.calls.map(([method, params]) => (method.includes("PhantomCursor") ? [method, params] : method)).filter((entry) => entry !== "probe" && entry !== "captureWindow" && entry !== "savePanelProbe");
+  const seen = native.calls.map(([method, params]) => (method.includes("PhantomCursor") ? [method, params] : method)).filter((entry) => entry !== "probe" && entry !== "captureWindow" && entry !== "savePanelProbe"
+    && entry !== "frontmostApp");   // the focus-steal guard's read (focus-guard.cjs), not part of the cursor's order
   assert.deepEqual(seen, [
     ["setPhantomCursor", { screenX: -1100, screenY: 350, windowId: 7, pulse: false }],   // the lock: the window's centre (a display left of the primary)
     ["hidePhantomCursor", { windowId: 7 }],

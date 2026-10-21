@@ -1,6 +1,6 @@
 // Computer use M1 acceptance on this Mac, against the real native module (native/computer-use/build/computer_use.node)
 // and real Finder windows. Run under Electron as Node so the module loads in Electron's own Node-API host:
-//   ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-m1-check.mjs
+//   CU_LIVE=1 ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-m1-check.mjs
 // Needs Screen Recording for the process that runs it (and Accessibility for is_main / is_minimized).
 //
 // Checks
@@ -11,12 +11,18 @@
 //      desktop, not Finder (compared with a capture that allows only Finder)
 //   4. screen capture with an empty allowlist returns an image (the fixed contract), no error
 // Evidence (report.json, the JPEGs) goes to analysis/batch-20260920/computer-use-m1-<time>/.
+// Skipped (the reason printed) unless CU_LIVE=1, and while the screen is locked or someone used this Mac in the last
+// 120 s (tests/computer-use-live-helpers.mjs presenceSkip; CU_LIVE_FORCE=1 runs it anyway).
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { jpegSize, meanRGB } from './computer-use-check-helpers.mjs';
+import { presenceSkip } from '../tests/computer-use-live-helpers.mjs';
+
+const skipped = await presenceSkip();
+if (skipped) { console.log(JSON.stringify({ skipped })); process.exit(0); }
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, '..');
@@ -92,7 +98,7 @@ try {
     assert.ok(distance > 12, `Finder's window region differs between the two captures (distance ${distance.toFixed(1)})`);
     report.checks.push(`Screen: Finder window region mean RGB distance ${distance.toFixed(1)} between "Finder only" and "empty allowlist"; Finder in excludedBundleIds only when not granted`);
   } else {
-    report.checks.push('Screen: Finder in excludedBundleIds only when not granted (its window is not on this display's active Space, pixel comparison skipped)');
+    report.checks.push("Screen: Finder in excludedBundleIds only when not granted (its window is not on this display's active Space, pixel comparison skipped)");
   }
 
   // 4. Empty allowlist: an image, not an error (fixed contract) — and it is the desktop: the wallpaper is kept.

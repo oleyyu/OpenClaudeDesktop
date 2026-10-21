@@ -113,13 +113,13 @@ function fakeHelper({ calls = [], frontmost = false } = {}) {
       if (method === 'menu') {
         params = { ...params, path: params.path.map((title) => title.replace(/(…|\.\.\.)$/, '')) }; // the helper ignores a trailing ellipsis
         if (params.path[0].toLowerCase() !== 'file') fail('menu_item_not_found', 'No such title.', { closestMatch: 'File', available: ['Finder', 'File'], level: 0, resolved: [], wanted: params.path[0] });
-        if (params.path.length === 1) return { outcome: 'ok', path: ['File'], opened: true, open: true, items: file };
+        // Native MenuBar.press: a path ending at a menu presses nothing and opens nothing (official path_ends_at_submenu).
+        if (params.path.length === 1) return { outcome: 'unsupported', reasonCode: 'path_ends_at_submenu', path: ['File'], items: file };
         if (params.path[1]?.toLowerCase() === 'new folder') return { outcome: 'unsupported', reasonCode: 'menu_item_disabled', path: ['File', 'New Folder'] };
         if (params.path[1]?.toLowerCase() === 'locked item') return { outcome: 'unsupported', reasonCode: 'menu_press_failed', axError: -25206, path: ['File', 'Locked Item'] };
-        if (params.path[1]?.toLowerCase() === 'new finder window') return { outcome: 'ok', path: ['File', 'New Finder Window'], opened: false };
+        if (params.path[1]?.toLowerCase() === 'new finder window') return { outcome: 'ok', path: ['File', 'New Finder Window'] };
         fail('menu_item_not_found', 'No such item.', { closestMatch: 'New Finder Window', available: file.map((item) => item.title), level: 1, resolved: ['File'], wanted: params.path[1] });
       }
-      if (method === 'menuClose') return { closed: 1 };
       throw Object.assign(new Error(`unexpected ${method}`), { code: 'unknown_method' });
     },
   };
@@ -205,9 +205,8 @@ test('schemas: every inputSchema compiles under Ajv (strict) and checks real arg
   ok('app_menu', { app: FINDER, list: null });
   ok('app_menu', { app: FINDER, list: 'File' });
   ok('app_menu', { app: FINDER, list: ['File', 'Open With'] });
-  ok('app_menu', { app: FINDER, close: true });
+  bad('app_menu', { app: FINDER, close: true });
   bad('app_menu', { app: FINDER, path: [] });
-  bad('app_menu', { app: FINDER, close: false });
   ok('app_zoom', { app: FINDER, region: [0, 0, 100, 50], scale: 0.5 });
   bad('app_zoom', { app: FINDER, region: [0, 0, 100] });
   bad('app_zoom', { app: FINDER });
@@ -485,11 +484,11 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
 
-test('app_click: right, double and triple click go the normal path; app_drag reaches the native sequence', async () => {
+test('app_click: double and triple click go the normal path; app_drag reaches the native sequence', async () => {
   const { call, body, native } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
-  for (const args of [{ button: 'right' }, { count: 2 }, { count: 3 }, { button: 'left', count: 1 }]) {
+  for (const args of [{ count: 2 }, { count: 3 }, { button: 'left', count: 1 }]) {
     const parsed = body(await call('app_click', { app: FINDER, element_index: 1, ...args }));
     assert.equal(parsed.ok, true, JSON.stringify(args));
     const sent = native.calls.filter(([method]) => method === 'axClick').at(-1)[1];
@@ -509,22 +508,82 @@ test('app_click: right, double and triple click go the normal path; app_drag rea
   assert.match(click.inputSchema.properties.count.description, /3: triple click — selects the line/);
 });
 
-test('app_click: button "right" goes the normal path to the native AXShowMenu, never requires_raw_path', async () => {
+test('app_click: button "right" is checked like a click, then refused (context_menu, official words); nothing reaches the app', async () => {
   const { call, body, native } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
+  const before = native.calls.length;
   const result = await call('app_click', { app: FINDER, element_index: 0, button: 'right' });
+  assert.equal(result.isError, true);
   const parsed = body(result);
-  assert.equal(parsed.ok, true);
-  assert.notEqual(parsed.reasonCode, 'requires_raw_path');
-  const clicks = native.calls.filter(([method]) => method === 'axClick').map(([, params]) => params);
-  assert.deepEqual([clicks.at(-1).button, clicks.at(-1).count, clicks.at(-1).elementIndex], ['right', 1, 0]);
+  assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode, parsed.errorKind, parsed.blocked], [false, 'unsupported', 'context_menu', 'feature_unavailable', true]);
+  assert.equal(parsed.message, 'Opening a context (right-click) menu would bring the app to the front, so it was NOT done. Use app_menu to run the equivalent menu bar command, or click the target directly. To use the context menu itself, call app_release and use the display-scope tools.');
+  assert.match(parsed.next_step, /app_menu/);
+  assert.match(parsed.next_step, /right_click/);
+  const sent = native.calls.slice(before).map(([method]) => method);
+  assert.ok(!sent.some((method) => ['axClick', 'rawClick', 'drag', 'hidClick'].includes(method)), `nothing delivered: ${sent}`);
+  // The target is checked first: a bad element_index or no screenshot is the usual error, not the refusal.
+  assert.equal(body(await call('app_click', { app: FINDER, element_index: 99, button: 'right' })).reasonCode, 'invalid_params');
+  const fresh = setup();
+  await fresh.call('request_access', { apps: ['Finder'], reason: 'r' });
+  assert.equal(fresh.body(await fresh.call('app_click', { app: FINDER, coordinate: [1, 1], button: 'right' })).reasonCode, 'screenshot_required');
+  // A locked screen is said as such (official Y()).
+  const locked = fakeNative();
+  const call0 = locked.call.bind(locked);
+  locked.call = async (method, params) => (method === 'probe' ? { screenLocked: true, secureInput: false } : call0(method, params));
+  const l = setup({ native: locked });
+  await l.call('request_access', { apps: ['Finder'], reason: 'r' });
+  await l.call('app_screenshot', { app: FINDER });
+  const lockedBody = l.body(await l.call('app_click', { app: FINDER, element_index: 0, button: 'right' }));
+  assert.deepEqual([lockedBody.reasonCode, lockedBody.errorKind], ['screen_locked', 'state_conflict']);
   const click = cu.tools.find((tool) => tool.name === 'app_click');
-  assert.match(click.description, /AXShowMenu/);
-  assert.match(click.description, /no_menu_action/);
+  assert.match(click.description, /context_menu/);
+  assert.doesNotMatch(click.description, /AXShowMenu|no_menu_action|Dock item/);
+  assert.match(click.inputSchema.properties.button.description, /always refused/);
   for (const text of [click.description, click.inputSchema.properties.button.description, click.inputSchema.properties.count.description]) {
     assert.doesNotMatch(text, /synthe|deliver|\bpost/i);
   }
+});
+
+test('zh-CN: the right click\'s refusal, the Dock refusal and their next steps are translated', async () => {
+  const { setLocale } = await import('../electron/i18n/index.mjs');
+  setLocale('zh-CN');
+  try {
+    const { call, body } = setup();
+    await call('request_access', { apps: ['Finder'], reason: 'r' });
+    await call('app_screenshot', { app: FINDER });
+    const right = body(await call('app_click', { app: FINDER, element_index: 0, button: 'right' }));
+    assert.equal(right.reasonCode, 'context_menu');
+    assert.match(right.message, /^打开上下文（右键）菜单会把应用带到前台/);
+    assert.match(right.next_step, /^改用 app_menu/);
+    const dock = body(await call('app_click', { app: 'com.apple.dock', coordinate: [1, 1] }));
+    assert.match(dock.message, /^程序坞/);
+    assert.match(dock.next_step, /^不要对程序坞使用 app_\* 工具/);
+    const submenu = body(await call('app_menu', { app: FINDER, path: ['File'] }));
+    assert.match(submenu.next_step, /^把列出的某一项接到 path 末尾/);
+  } finally { setLocale('en-US'); }
+});
+
+test('the Dock is not an app_* target (official): every app_* tool answers desktop_shell, granted or not, and points at Finder + display-scope', async () => {
+  const { call, body, native, service } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  service.grantsFor('thread-a').grant([{ bundleId: 'com.apple.dock', displayName: 'Dock' }]);
+  const before = native.calls.length;
+  for (const [name, args] of [['app_list_windows', {}], ['app_screenshot', {}], ['app_click', { coordinate: [10, 10] }], ['app_menu', { list: true }],
+    ['app_key', { combo: 'return' }], ['app_scroll', { dy: 1 }], ['app_drag', { coordinate: [1, 1], to_coordinate: [2, 2] }], ['app_focus', {}],
+    ['app_batch', { actions: [{ action: 'screenshot' }] }]]) {
+    for (const app of ['com.apple.dock', 'com.apple.Spotlight']) {
+      const result = await call(name, { app, ...args });
+      assert.equal(result.isError, true, `${name} ${app}`);
+      const parsed = body(result);
+      assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode, parsed.errorKind], [false, 'unsupported', 'desktop_shell', 'app_not_granted'], `${name} ${app}`);
+      assert.match(parsed.message, /request_access with "Finder"/);
+      assert.match(parsed.next_step, /display-scope/);
+    }
+  }
+  assert.equal(native.calls.length, before, 'nothing reached the native module');
+  // The service refuses the same way (a caller that skips the tool layer).
+  await assert.rejects(() => service.appClick('thread-a', { bundleId: 'com.apple.dock', coordinate: [1, 1] }), (error) => error.code === 'desktop_shell');
 });
 
 test('app_click: count 2 goes the normal path to the native double click (AXSelectedTextRange or two AXPress)', async () => {
@@ -556,25 +615,6 @@ test('app_click: a double click with nothing to press or select answers canvas (
   assert.deepEqual([parsed.ok, parsed.reasonCode, parsed.blocked], [false, 'canvas', true]);
   assert.match(parsed.next_step, /Accessibility/);
   assert.ok(!native.calls.some(([method]) => method === 'rawClick'));
-});
-
-test('app_click: a right click on an element without AXShowMenu answers no_menu_action with a next step, never a silent ok', async () => {
-  const native = fakeNative();
-  const call0 = native.call.bind(native);
-  native.call = async (method, params) => {
-    if (method === 'axClick') { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'no_menu_action', role: 'AXRadioButton' }; }
-    if (method === 'rawClick') { native.calls.push([method, params]); return { outcome: 'ok' }; }
-    return call0(method, params);
-  };
-  const { call, body } = setup({ native });
-  await call('request_access', { apps: ['Finder'], reason: 'r' });
-  await call('app_screenshot', { app: FINDER });
-  const result = await call('app_click', { app: FINDER, element_index: 0, button: 'right' });
-  assert.equal(result.isError, true);
-  const parsed = body(result);
-  assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode, parsed.blocked], [false, 'unsupported', 'no_menu_action', true]);
-  assert.match(parsed.next_step, /context menu/);
-  assert.ok(!native.calls.some(([method]) => method === 'rawClick'), 'no other path is tried');
 });
 
 test('app_click: no addressing is an error, never a replay of the previous click', async () => {
@@ -687,7 +727,7 @@ test('save_panel_restricted on an app_* tool: the save-panel next step, not the 
   assert.ok(native.calls.slice(before).every(([method]) => !['axClick', 'axType', 'axKey', 'rawClick', 'rawKey', 'menu', 'focus', 'drag'].includes(method)), 'nothing reached the app');
 });
 
-test('app_menu: list the bar and a menu, open a menu, run a command, disabled and unknown items, close', async () => {
+test('app_menu: list the bar and a menu, a path ending at a menu opens nothing, run a command, disabled and unknown items', async () => {
   const { call, body, axHelper } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   const bar = body(await call('app_menu', { app: FINDER, list: true }));
@@ -695,13 +735,18 @@ test('app_menu: list the bar and a menu, open a menu, run a command, disabled an
   assert.deepEqual(axHelper.calls.at(-1), ['menuList', { bundleId: FINDER, path: [] }]);
   assert.equal(body(await call('app_menu', { app: FINDER, list: 'file' })).items.length, 2);
   assert.deepEqual(axHelper.calls.at(-1), ['menuList', { bundleId: FINDER, path: ['file'] }]);
-  const opened = body(await call('app_menu', { app: FINDER, path: ['File'] }));
-  assert.equal(opened.ok, true);
-  assert.equal(opened.opened, true);
-  assert.deepEqual(opened.items.map((item) => [item.title, item.enabled]), [['New Finder Window', true], ['New Folder', false]]);
-  assert.equal(body(await call('app_menu', { app: FINDER, close: true })).closed, 1);
+  // Official Nn(): a path that stops at a menu title presses nothing (bad_args) and lists the entries to extend it with.
+  const atMenu = await call('app_menu', { app: FINDER, path: ['File'] });
+  assert.equal(atMenu.isError, true);
+  const submenu = body(atMenu);
+  assert.deepEqual([submenu.ok, submenu.reasonCode, submenu.errorKind, submenu.opened], [false, 'path_ends_at_submenu', 'bad_args', undefined]);
+  assert.equal(submenu.message, 'Menu path ["File"] ends at a submenu, not a pressable item. Nothing was pressed. Extend `path` with one of its entries: ["New Finder Window","New Folder"].');
+  assert.deepEqual(submenu.items.map((item) => [item.title, item.enabled]), [['New Finder Window', true], ['New Folder', false]]);
+  assert.match(submenu.next_step, /Add one of the listed items/);
+  assert.equal(body(await call('app_menu', { app: FINDER, close: true })).reasonCode, 'invalid_params', 'close is gone');
+  assert.ok(!axHelper.calls.some(([method]) => method === 'menuClose'));
   const ran = body(await call('app_menu', { app: FINDER, path: ['File', 'New Finder Window…'] }));
-  assert.deepEqual([ran.ok, ran.opened], [true, false]);
+  assert.deepEqual([ran.ok, ran.opened], [true, undefined]);
   const disabled = await call('app_menu', { app: FINDER, path: ['File', 'New Folder'] });
   assert.equal(disabled.isError, true);
   assert.equal(body(disabled).reasonCode, 'menu_item_disabled');
@@ -719,6 +764,10 @@ test('app_menu: list the bar and a menu, open a menu, run a command, disabled an
   for (const args of [{}, { path: ['File'], list: true }, { list: true, close: true }]) {
     assert.equal(body(await call('app_menu', { app: FINDER, ...args })).reasonCode, 'invalid_params', JSON.stringify(args));
   }
+  const menu = cu.tools.find((tool) => tool.name === 'app_menu');
+  assert.deepEqual(Object.keys(menu.inputSchema.properties).sort(), ['action_summary', 'app', 'list', 'path']);
+  assert.match(menu.description, /no menu is opened/);
+  assert.match(menu.description, /path_ends_at_submenu/);
 });
 
 test('app_menu: a view-only app can list menus but not press them', async () => {
@@ -861,7 +910,6 @@ test('ax-helper.cjs: the old helper calls go to the native module (focusWindow, 
   await helper.call('focus', { bundleId: FINDER, windowId: 9 });
   await helper.call('menu', { bundleId: FINDER, path: ['File', 'New Folder'] });
   await helper.call('menuList', { bundleId: FINDER, path: [] });
-  await helper.call('menuClose', { bundleId: FINDER });
   await helper.call('apps', { folders: ['/Applications'] });
   assert.deepEqual(runs, [
     ['axProbe', {}],
@@ -869,11 +917,12 @@ test('ax-helper.cjs: the old helper calls go to the native module (focusWindow, 
     ['focusWindow', { bundleId: FINDER, windowId: 9 }],
     ['menu', { bundleId: FINDER, mode: 'press', path: ['File', 'New Folder'] }],
     ['menu', { bundleId: FINDER, mode: 'list', path: [] }],
-    ['menu', { bundleId: FINDER, mode: 'close' }],
     ['listApps', { folders: ['/Applications'] }],
   ]);
   await assert.rejects(() => helper.call('menu', { bundleId: FINDER, path: ['Fiel'] }), (error) => error.code === 'menu_item_not_found' && error.details.closestMatch === 'File');
   await assert.rejects(() => helper.call('bad'), (error) => error.code === 'unknown_method');
+  // No menu is ever closed because none is ever opened: the close route is gone.
+  await assert.rejects(() => helper.call('menuClose', { bundleId: FINDER }), (error) => error.code === 'unknown_method');
   // No module: the native loader's own code, like every other computer-use call.
   const { createNative } = require('../electron/computer-use/native.cjs');
   await assert.rejects(() => createAxHelper({ native: createNative({ platform: 'linux' }) }).call('probe'), (error) => error.code === 'native_unavailable');
@@ -1198,7 +1247,8 @@ test('app_click on a Finder row: the official AX row step comes back as ok with 
   const click = cu.tools.find((tool) => tool.name === 'app_click');
   assert.match(click.description, /AXSelected/);
   assert.match(click.description, /AXOpen/);
-  assert.match(click.description, /com\.apple\.dock/);
+  assert.doesNotMatch(click.description, /com\.apple\.dock|Dock item/);
+  assert.match(click.description, /desktop_shell/);
 });
 
 test('app_click: select_refused / popup_menu / canvas are official refusals with a next step', async () => {

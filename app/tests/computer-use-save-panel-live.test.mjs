@@ -20,10 +20,8 @@ const { createFullControl } = require('../electron/computer-use/full-control.cjs
 
 const TEXTEDIT = 'com.apple.TextEdit';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const probe = (await liveSkip()) ? null : await native().call('probe');
-const skip = (await liveSkip())
-  ?? (probe.screenLocked ? 'the screen is locked' : null)
-  ?? (!(probe.secondsSinceUserInput >= 120) ? `someone is using this Mac (last input ${Number(probe.secondsSinceUserInput).toFixed(1)} s ago, needs ≥ 120 s)` : null);
+// liveSkip's presence gate: skipped while the screen is locked or someone used this Mac in the last 120 s.
+const skip = await liveSkip();
 
 test('TextEdit Export as PDF… sheet: probed as a save panel; a protected name is refused untyped; escape cancels it', { skip: skip ?? false, timeout: 120000 }, async () => {
   const n = native();

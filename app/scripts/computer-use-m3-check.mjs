@@ -2,7 +2,7 @@
 // since 2026-10-19 (Finder drops CGEventPostToPid mouse events; see PLANNED_M3.no_press_action.live): this check opens
 // the reason for itself and is the acceptance for the M4 authenticated mouse-event path. Until then it fails at
 // "AXSelected read back" with raw_click_ineffective — which is the readback doing its job. Run under Electron as Node, with Finder's front window on the current Space in LIST view:
-//   ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-m3-check.mjs
+//   CU_LIVE=1 ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-m3-check.mjs
 // Needs Accessibility and Screen Recording for the process that runs it. Do not type or move the mouse while it runs:
 // the raw rung refuses during user input (user_actively_typing) and only backs off 3 × 200 ms.
 //
@@ -14,12 +14,18 @@
 //   4. a click on plain text in a row still comes back canvas and blocked (the fallback did not widen to blind clicks)
 // The only side effect is the Finder selection moving to that row. Evidence goes to
 // analysis/batch-20260920/computer-use-m3-<time>/.
+// Skipped (the reason printed) unless CU_LIVE=1, and while the screen is locked or someone used this Mac in the last
+// 120 s (tests/computer-use-live-helpers.mjs presenceSkip; CU_LIVE_FORCE=1 runs it anyway).
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { meanAbsDiff, saveDataUrl } from './computer-use-check-helpers.mjs';
+import { presenceSkip } from '../tests/computer-use-live-helpers.mjs';
+
+const skipped = await presenceSkip();
+if (skipped) { console.log(JSON.stringify({ skipped })); process.exit(0); }
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, '..');

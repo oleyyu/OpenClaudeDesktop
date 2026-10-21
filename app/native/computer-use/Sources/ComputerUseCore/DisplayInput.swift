@@ -64,8 +64,10 @@ public enum Displays {
 public enum PointOwner {
     /// The frontmost app through Accessibility (NSWorkspace's cache does not refresh off the main run loop).
     public static func frontmost() -> [String: Any] {
-        guard let pid = WindowShow.frontmostPid() else { return ["pid": NSNull(), "bundleId": NSNull()] }
-        return ["pid": Int(pid), "bundleId": WindowList.bundleId(pid: pid) ?? NSNull()]
+        // The user's own left press (HID system state: our private-state posts and pid-targeted events don't count).
+        let mouseDown = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: .leftMouseDown)
+        guard let pid = WindowShow.frontmostPid() else { return ["pid": NSNull(), "bundleId": NSNull(), "secondsSinceUserMouseDown": mouseDown] }
+        return ["pid": Int(pid), "bundleId": WindowList.bundleId(pid: pid) ?? NSNull(), "secondsSinceUserMouseDown": mouseDown]
     }
 
     /// The topmost on-screen window at a global point, front to back, skipping fully transparent windows and the ones

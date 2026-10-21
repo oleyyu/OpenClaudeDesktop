@@ -7,8 +7,9 @@ final class ClickLadderTests: XCTestCase {
     func testRowRolesAreTheOfficialSet() {
         XCTAssertEqual(AXLadder.rowRoles, ["AXRow", "AXCell", "AXColumn", "AXOutlineRow"])
         XCTAssertEqual(AXLadder.textFieldRoles, ["AXTextField", "AXTextArea", "AXSearchField"])
-        XCTAssertTrue(AXLadder.windowlessShells.contains("com.apple.dock"))
-        XCTAssertTrue(AXLadder.actionableRoles.isSuperset(of: ["AXRow", "AXCell", "AXOutlineRow", "AXDockItem"]))
+        XCTAssertTrue(AXLadder.actionableRoles.isSuperset(of: ["AXRow", "AXCell", "AXOutlineRow"]))
+        // The Dock is not an app_* target (official: only display-scope with Finder's grant reaches it).
+        XCTAssertFalse(AXLadder.actionableRoles.contains("AXDockItem"))
     }
 
     func testLeftClickStep() {
@@ -30,8 +31,8 @@ final class ClickLadderTests: XCTestCase {
         XCTAssertEqual(AXLadder.leftClickStep(role: "AXTextField", count: 1, inWebPage: false, hasPress: false, hasRowAncestor: false), .press)
         // Static text in a row climbs (press, then the ascended selection), never a word selection.
         XCTAssertEqual(AXLadder.leftClickStep(role: "AXStaticText", count: 2, inWebPage: false, hasPress: false, hasRowAncestor: true), .press)
-        // A Dock item or a button: the press climb.
-        XCTAssertEqual(AXLadder.leftClickStep(role: "AXDockItem", count: 1, inWebPage: false, hasPress: true, hasRowAncestor: false), .press)
+        // A button: the press climb.
+        XCTAssertEqual(AXLadder.leftClickStep(role: "AXButton", count: 1, inWebPage: false, hasPress: true, hasRowAncestor: false), .press)
         XCTAssertEqual(AXLadder.leftClickStep(role: "AXButton", count: 2, inWebPage: false, hasPress: true, hasRowAncestor: false), .press)
     }
 
@@ -41,5 +42,25 @@ final class ClickLadderTests: XCTestCase {
         XCTAssertEqual(AXLadder.selectOperation(count: 3, actions: ["AXOpen"]), .open)
         // Nothing to open: a double click only selects (official), and the result says so (openUnavailable).
         XCTAssertEqual(AXLadder.selectOperation(count: 2, actions: ["AXShowMenu"]), .select)
+    }
+
+    func testDragStartReason() {
+        // A link (the hit, or a parent within four levels) or a picture (the hit): a system drag session.
+        XCTAssertEqual(AXLadder.dragStartReason(roles: ["AXLink", "AXGroup", "AXWebArea"]), "system_drag_session")
+        XCTAssertEqual(AXLadder.dragStartReason(roles: ["AXStaticText", "AXLink", "AXGroup"]), "system_drag_session")
+        XCTAssertEqual(AXLadder.dragStartReason(roles: ["AXImage", "AXGroup", "AXWebArea"]), "system_drag_session")
+        // A pop-up / pull-down menu control: its menu would open.
+        XCTAssertEqual(AXLadder.dragStartReason(roles: ["AXPopUpButton", "AXGroup", "AXWindow"]), "popup_menu")
+        XCTAssertEqual(AXLadder.dragStartReason(roles: ["AXStaticText", "AXMenuButton", "AXToolbar"]), "popup_menu")
+        // Text, a slider, a row: the drag may start.
+        XCTAssertNil(AXLadder.dragStartReason(roles: ["AXTextArea", "AXScrollArea", "AXWindow"]))
+        XCTAssertNil(AXLadder.dragStartReason(roles: ["AXSlider", "AXGroup", "AXWindow"]))
+        XCTAssertNil(AXLadder.dragStartReason(roles: ["AXTextField", "AXCell", "AXRow", "AXOutline"]))
+        // A picture that is not the hit (an image beside the text) does not count; the climb stops at the window.
+        XCTAssertNil(AXLadder.dragStartReason(roles: ["AXStaticText", "AXImage", "AXGroup"]))
+        XCTAssertNil(AXLadder.dragStartReason(roles: ["AXGroup", "AXWindow", "AXLink"]))
+        // At most four parents above the hit.
+        XCTAssertNil(AXLadder.dragStartReason(roles: ["AXStaticText", "AXGroup", "AXGroup", "AXGroup", "AXGroup", "AXLink"]))
+        XCTAssertNil(AXLadder.dragStartReason(roles: []))
     }
 }

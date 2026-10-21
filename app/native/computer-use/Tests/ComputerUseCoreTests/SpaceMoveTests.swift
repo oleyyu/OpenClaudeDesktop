@@ -53,13 +53,13 @@ final class SpaceMoveTests: XCTestCase {
     }
 
     func testOnlyAppWindowLayersAreListed() {
-        XCTAssertTrue(WindowList.isAppWindow(layer: 0, windowlessShell: false))
-        XCTAssertTrue(WindowList.isAppWindow(layer: 3, windowlessShell: false))   // floating panel
-        XCTAssertTrue(WindowList.isAppWindow(layer: 8, windowlessShell: false))   // modal panel
-        XCTAssertFalse(WindowList.isAppWindow(layer: 24, windowlessShell: false)) // menu bar
-        XCTAssertFalse(WindowList.isAppWindow(layer: 25, windowlessShell: false)) // status item
-        XCTAssertFalse(WindowList.isAppWindow(layer: 101, windowlessShell: false)) // pop-up menu
-        XCTAssertFalse(WindowList.isAppWindow(layer: -20, windowlessShell: false))
-        XCTAssertTrue(WindowList.isAppWindow(layer: 20, windowlessShell: true))   // the Dock's strip
+        XCTAssertTrue(WindowList.isAppWindow(layer: 0))
+        XCTAssertTrue(WindowList.isAppWindow(layer: 3))   // floating panel
+        XCTAssertTrue(WindowList.isAppWindow(layer: 8))   // modal panel
+        XCTAssertFalse(WindowList.isAppWindow(layer: 24)) // menu bar
+        XCTAssertFalse(WindowList.isAppWindow(layer: 25)) // status item
+        XCTAssertFalse(WindowList.isAppWindow(layer: 101)) // pop-up menu
+        XCTAssertFalse(WindowList.isAppWindow(layer: -20))
+        XCTAssertFalse(WindowList.isAppWindow(layer: 20))  // the Dock's strip: not an app_* window (official)
     }
 }

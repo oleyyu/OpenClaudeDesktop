@@ -154,3 +154,24 @@ test('unreadable or vanished attributes do not turn delivery into verified succe
   const abort = { ...sent, outcome: 'ineffective', reasonCode: 'screen_locked', before: { AXValue: 30 }, after: { AXValue: 70 } };
   assert.deepEqual(dragReadback(abort, 'com.apple.finder'), abort, 'partial change cannot erase a safety abort');
 });
+
+test('official start refusals: a link / picture (system_drag_session) or a pop-up menu (popup_menu) — nothing pressed, the official words', async () => {
+  for (const [reasonCode, words] of [
+    ['system_drag_session', /^The drag starts on a link or a picture, which TextEdit would pick up and drag as an item\. In the background that takes keyboard focus from the app the user is working in, so the drag was NOT sent\./],
+    ['popup_menu', /^The drag starts on a pop-up menu \(a dropdown\)\. A press on it opens its menu/],
+  ]) {
+    const f = setup({ result: { outcome: 'unsupported', reasonCode, delivered: false, role: 'AXLink' } });
+    f.cu.grantsFor('s').grant([{ bundleId: 'com.apple.TextEdit', displayName: 'TextEdit' }]);
+    await f.cu.appScreenshot('s', { bundleId: f.params.bundleId });
+    const result = await f.cu.appDrag('s', f.params);
+    assert.deepEqual([result.outcome, result.reasonCode, result.errorKind, result.blocked, result.delivered], ['unsupported', reasonCode, 'feature_unavailable', true, false], reasonCode);
+    assert.match(result.message, words);
+    assert.equal(f.drags().length, 1, 'refused by the native start check, before any press (no retry)');
+  }
+  // The policy knows both and blocks them.
+  const { decide, BLOCK } = require('../electron/computer-use/reason-policy.cjs');
+  for (const reason of ['system_drag_session', 'popup_menu']) {
+    assert.ok(Object.hasOwn(BLOCK, reason), reason);
+    assert.equal(decide({ outcome: 'unsupported', reasonCode: reason }, { log: { warn: () => assert.fail('classified') }, op: 'drag' }).action, 'block');
+  }
+});

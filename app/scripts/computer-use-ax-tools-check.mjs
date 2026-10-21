@@ -1,11 +1,13 @@
 // app_menu and app_focus live, through the real tool layer (agent-tools/computer-use.mjs), service, native module and
 // Accessibility calls in it (MenuBar.swift, `npm run build:native`). Run under Electron as Node, with another app in front:
-//   ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-ax-tools-check.mjs
-// Needs Accessibility and Screen Recording for the process that runs it.
+//   CU_LIVE=1 ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-ax-tools-check.mjs
+// Needs Accessibility and Screen Recording for the process that runs it. Skipped (the reason printed) unless CU_LIVE=1,
+// and while the screen is locked or someone used this Mac in the last 120 s (tests/computer-use-live-helpers.mjs
+// presenceSkip; CU_LIVE_FORCE=1 runs it anyway).
 //
 // Checks
-//   1. Finder, in the background: app_menu list → the menu bar titles; path ["File"] opens File and lists its items;
-//      close (Escape) closes it, and a second close finds nothing open; the frontmost app never changes
+//   1. Finder, in the background: app_menu list → the menu bar titles; path ["File"] presses nothing and opens nothing
+//      (path_ends_at_submenu, File's items listed); the frontmost app never changes
 //   2. TextEdit (only when it isn't already running: your documents are not touched), two documents opened in the
 //      background: target "focused" on the window without focus is refused; after app_focus on it, app_type with
 //      target "focused" is verified there (AXValue read back); TextEdit is never brought forward; it is quit at the end
@@ -16,7 +18,10 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { presenceSkip } from '../tests/computer-use-live-helpers.mjs';
 
+const skipped = await presenceSkip();
+if (skipped) { console.log(JSON.stringify({ skipped })); process.exit(0); }
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, '..');
 const { createAgentToolsHost } = require('../electron/agent-tools-host.cjs');
@@ -55,14 +60,11 @@ try {
   // 1. Finder menus.
   const bar = await call('app_menu', { app: FINDER, list: true });
   check('app_menu list: the menu bar titles', bar.ok && bar.items.some((i) => i.title === 'File'), { titles: bar.items?.map((i) => i.title) });
-  const opened = await call('app_menu', { app: FINDER, path: ['file'] });
-  check('app_menu path ["file"]: File opens and lists its items', opened.ok && opened.opened && opened.open && opened.items.length > 3,
-    { open: opened.open, items: opened.items?.slice(0, 6).map((i) => `${i.title}${i.enabled ? '' : ' (disabled)'}`) });
+  const atMenu = await call('app_menu', { app: FINDER, path: ['file'] });
+  check('app_menu path ["file"]: path_ends_at_submenu, nothing pressed, File\'s items listed', atMenu.ok === false && atMenu.reasonCode === 'path_ends_at_submenu' && atMenu.items?.length > 3,
+    { reasonCode: atMenu.reasonCode, items: atMenu.items?.slice(0, 6).map((i) => `${i.title}${i.enabled ? '' : ' (disabled)'}`) });
   await settle();
   check('the frontmost app did not change', front() === before, { front: front() });
-  const closed = await call('app_menu', { app: FINDER, close: true });
-  const again = await call('app_menu', { app: FINDER, close: true });
-  check('app_menu close (Escape): the open menu closes; nothing is left open', closed.ok && closed.closed >= 1 && again.closed === 0, { closed: closed.closed, again: again.closed });
   const missing = await call('app_menu', { app: FINDER, path: ['Fiel'] });
   check('a misspelt title: menu_item_not_found with closestMatch', missing.error?.code === 'menu_item_not_found' && missing.error.closestMatch === 'File', { error: missing.error });
 

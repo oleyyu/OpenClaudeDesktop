@@ -54,6 +54,10 @@ public enum RawInput {
             }
             targets.append(target)
         }
+        // Official: a drag that starts on a link / picture (system_drag_session) or a pop-up menu (popup_menu) is not sent.
+        if let start = targets.first, let refusal = AXLadder.dragStartRefusal(pid: start.pid, screenPt: start.screenPoint) {
+            return refused(refusal.reason, refusal.extra)
+        }
         let samples = Dispatcher.dragSamples(vertices: targets, pixelScale: pixelScale)
         guard !samples.isEmpty else { return refused("invalid_params") }
         let readback = DragReadback.capture(pid: window.pid, point: samples[0].screenPoint)

@@ -10,7 +10,8 @@ import CoreGraphics
 ///   shown_behind_the_front_window   back, below the user's window
 ///   shown_above_the_front_window    back, but the user's window could not be put back on top of it
 ///   shown_with_no_front_window      back; the frontmost app had no window on screen to keep on top
-///   shown_and_now_in_front          back, and the app came to the front with it (the user's app is asked back)
+///   shown_and_now_in_front          back, and the app came to the front with it (the main process's focus-steal guard
+///                                   puts the user's app back, official armFocusStealGuard)
 ///   still_parked                    did not come back in time
 ///   user_is_in_the_app              the target app is frontmost: the window would take the keyboard from the user
 ///   front_window_cannot_be_raised   the user's window could not be put back on top (no AXRaise, or the keyboard is in
@@ -67,7 +68,7 @@ public enum WindowShow {
 
     /// The frontmost app, read fresh: Accessibility's focused application, else NSWorkspace (whose cached answer is only
     /// refreshed by a main run loop, which the N-API worker thread and a plain node process don't run).
-    static func frontmostPid() -> pid_t? {
+    public static func frontmostPid() -> pid_t? {
         if let app = AXLadder.element(AXUIElementCreateSystemWide(), kAXFocusedApplicationAttribute), let pid = AXLadder.pid(app) { return pid }
         return NSWorkspace.shared.frontmostApplication?.processIdentifier
     }
@@ -114,7 +115,7 @@ public enum WindowShow {
         guard back else { return "still_parked" }
         // The user's window back on top.
         guard let front else {
-            return frontmostPid() == pid ? putBack(previous, "shown_and_now_in_front") : "shown_with_no_front_window"
+            return frontmostPid() == pid ? "shown_and_now_in_front" : "shown_with_no_front_window"
         }
         var above = true
         for attempt in 0..<orderPolls {
@@ -122,14 +123,14 @@ public enum WindowShow {
             if attempt % 3 == 0, let raise = front.element { _ = AXUIElementPerformAction(raise, kAXRaiseAction as CFString) }
             usleep(orderPollMicros)
         }
-        if frontmostPid() == pid { return putBack(previous, "shown_and_now_in_front") }
+        if frontmostPid() == pid { return "shown_and_now_in_front" }
         return above ? "shown_above_the_front_window" : "shown_behind_the_front_window"
     }
 
-    /// The app came to the front with its window: ask the app the user was in to come back (official: "normally put
-    /// back within 3 seconds"). The answer stays shown_and_now_in_front either way: the user has to be told.
-    static func putBack(_ previous: NSRunningApplication?, _ code: String) -> String {
-        if let previous, !previous.isTerminated { _ = previous.activate(options: []) }
-        return code
+    /// The focus-steal guard's restore (official activatePid): the app the user was in comes back to the front, its
+    /// key window only (no all-windows option, so no other window of it is raised). True when the system took the request.
+    public static func activate(pid: pid_t) -> Bool {
+        guard let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated else { return false }
+        return app.activate(options: [])
     }
 }

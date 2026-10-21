@@ -1,6 +1,6 @@
 // Computer use M2 acceptance on this Mac: app_screenshot's AX summary and app_click on the AX rung, against the real
 // native module and a real Finder window ON THE CURRENT SPACE (kAXWindows lists only those). Run under Electron as Node:
-//   ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-m2-check.mjs
+//   CU_LIVE=1 ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-m2-check.mjs
 // Needs Accessibility and Screen Recording for the process that runs it.
 //
 // Checks
@@ -12,11 +12,17 @@
 //   4. (when a second Finder window on this Space has its toolbar covered by the front one) a click on that covered
 //      toolbar is refused as anotherWindowIsOnTopAtThePressPoint, naming the window on top, and nothing changes
 // Evidence (report.json, the JPEGs) goes to analysis/batch-20260920/computer-use-m2-<time>/.
+// Skipped (the reason printed) unless CU_LIVE=1, and while the screen is locked or someone used this Mac in the last
+// 120 s (tests/computer-use-live-helpers.mjs presenceSkip; CU_LIVE_FORCE=1 runs it anyway).
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { meanAbsDiff, saveDataUrl } from './computer-use-check-helpers.mjs';
+import { presenceSkip } from '../tests/computer-use-live-helpers.mjs';
+
+const skipped = await presenceSkip();
+if (skipped) { console.log(JSON.stringify({ skipped })); process.exit(0); }
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, '..');

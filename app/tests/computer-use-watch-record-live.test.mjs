@@ -16,20 +16,9 @@ const require = createRequire(import.meta.url);
 const trajectory = require('../electron/computer-use/watch-record-trajectory.cjs');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Seconds since the last keyboard or mouse input from anyone (IOHIDSystem HIDIdleTime). */
-function idleSeconds() {
-  const out = execFileSync('/usr/sbin/ioreg', ['-c', 'IOHIDSystem'], { encoding: 'utf8' });
-  const match = /"HIDIdleTime" = (\d+)/.exec(out);
-  return match ? Number(match[1]) / 1e9 : 0;
-}
+// liveSkip's presence gate: skipped while the screen is locked or someone used this Mac in the last 120 s.
 const skip = await liveSkip();
-const blocked = skip ? null : await (async () => {
-  const probe = await native().call('probe');
-  if (probe.screenLocked) return 'blocked: the screen is locked';
-  const idle = idleSeconds();
-  if (idle < 120) return `blocked: someone is using this Mac (idle ${idle.toFixed(1)} s < 120 s)`;
-  return null;
-})();
+const blocked = null;
 
 test('a five-second demonstration on the fixture: the tap hears the typing and the click, frames come without this process\'s windows, the trajectory names them', { skip: skip ?? blocked ?? false, timeout: 120000 }, async () => {
   const n = native();

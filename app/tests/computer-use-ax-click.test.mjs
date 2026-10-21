@@ -129,7 +129,8 @@ test('app_click refuses before any native click: not granted, wrong tier, no scr
   const code = (c) => (error) => error.code === c;
   await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.TextEdit', coordinate: [1, 1] }), code('app_not_granted'));
   await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.Safari', coordinate: [1, 1] }), (e) => e.code === 'tier_refused' && /tier "read"/.test(e.message));
-  await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.Terminal', coordinate: [1, 1], button: 'right' }), (e) => e.code === 'tier_refused' && /tier "click"/.test(e.message));
+  // Official fr(): a right click needs the click tier like any click (then it is refused, see below), not tier "full".
+  await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.Terminal', coordinate: [1, 1], button: 'right' }), code('screenshot_required'));
   await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.Terminal', coordinate: [1, 1] }), code('screenshot_required'));
   await assert.rejects(() => cu.appClick('s1', { bundleId: 'com.apple.finder', coordinate: [1, 1] }), code('screenshot_required'));
   await cu.appScreenshot('s1', { bundleId: 'com.apple.finder' });
@@ -140,35 +141,27 @@ test('app_click refuses before any native click: not granted, wrong tier, no scr
   assert.deepEqual(clicks(), []);
 });
 
-test('a right click goes to the native AXShowMenu with button "right"; it has no raw rung, whatever the policy says', async () => {
-  const { cu, clicks, native } = setUp({ click: (p) => (p.button === 'right'
-    ? { outcome: 'ok', reasonCode: null, axOp: 'AXShowMenu', menuRole: 'AXTextField', menuItems: ['Open', 'Get Info'] }
-    : { outcome: 'ok', reasonCode: null, axOp: 'AXPress' }) });
+test('a right click is checked like a click and refused (context_menu); no native click, whatever the policy says', async () => {
+  const { cu, clicks, native } = setUp();
   await cu.appScreenshot('s1', { bundleId: 'com.apple.finder' });
-  const result = await cu.appClick('s1', { bundleId: 'com.apple.finder', element_index: 0, button: 'right' });
-  assert.deepEqual([result.outcome, result.path, result.axOp, result.menuItems], ['ok', 'ax', 'AXShowMenu', ['Open', 'Get Info']]);
-  assert.deepEqual(clicks().at(-1).params, { bundleId: 'com.apple.finder', windowId: 16678, count: 1, button: 'right', dryRun: false, elementIndex: 0, expectRole: 'AXButton' });
-  // Even a policy that would fall through: the right click stops at its AX reason.
-  for (const reasonCode of ['no_menu_action', 'menu_not_shown']) {
-    const s = setUp({ click: () => ({ outcome: reasonCode === 'menu_not_shown' ? 'ineffective' : 'unsupported', reasonCode }) });
-    s.native.calls.length = 0;
-    const raw = [];
-    s.native.call = ((call0) => async (method, params) => (method === 'rawClick' ? (raw.push(params), { outcome: 'ok' }) : call0(method, params)))(s.native.call.bind(s.native));
-    const cu2 = createComputerUse({ native: s.native, log: quiet(), wait: async () => {}, decide: () => ({ action: 'fallback', reason: reasonCode }) });
-    cu2.grantsFor('s1').grant(['com.apple.finder']);
-    await cu2.appScreenshot('s1', { bundleId: 'com.apple.finder' });
-    const refused = await cu2.appClick('s1', { bundleId: 'com.apple.finder', coordinate: [228, 64], button: 'right' });
-    assert.equal(refused.blocked, true, reasonCode);
-    assert.equal(refused.reasonCode, reasonCode);
-    assert.deepEqual(raw, [], 'no raw click for a right click');
+  for (const address of [{ element_index: 0 }, { coordinate: [228, 64] }, { target: 'focused' }]) {
+    const result = await cu.appClick('s1', { bundleId: 'com.apple.finder', ...address, button: 'right' });
+    assert.deepEqual([result.outcome, result.reasonCode, result.errorKind, result.blocked, result.delivered, result.windowId],
+      ['unsupported', 'context_menu', 'feature_unavailable', true, false, 16678], JSON.stringify(address));
+    assert.match(result.message, /^Opening a context \(right-click\) menu would bring the app to the front, so it was NOT done\./);
   }
-  // The policy knows both reasons (no "unclassified" warning) and blocks them.
-  for (const reasonCode of ['no_menu_action', 'menu_not_shown']) {
-    const log = quiet();
-    assert.equal(decide({ outcome: 'unsupported', reasonCode }, { log, op: 'right_click' }).action, 'block');
-    assert.deepEqual(log.warnings, []);
-  }
-  assert.equal(native.calls.filter((c) => c.method === 'rawClick').length, 0);
+  assert.deepEqual(clicks(), [], 'axClick never called');
+  // Even a policy that would fall through: nothing is tried.
+  const permissive = createComputerUse({ native, log: quiet(), wait: async () => {}, decide: () => ({ action: 'fallback', reason: 'context_menu' }) });
+  permissive.grantsFor('s1').grant(['com.apple.finder']);
+  await permissive.appScreenshot('s1', { bundleId: 'com.apple.finder' });
+  assert.equal((await permissive.appClick('s1', { bundleId: 'com.apple.finder', coordinate: [228, 64], button: 'right' })).reasonCode, 'context_menu');
+  assert.equal(native.calls.filter((c) => c.method === 'rawClick' || c.method === 'axClick').length, 0);
+  // The policy knows the reason (no "unclassified" warning) and blocks it; the old AXShowMenu reasons are gone.
+  const log = quiet();
+  assert.equal(decide({ outcome: 'unsupported', reasonCode: 'context_menu' }, { log, op: 'left_click' }).action, 'block');
+  assert.deepEqual(log.warnings, []);
+  for (const gone of ['no_menu_action', 'menu_not_shown', 'context_menu_rclick_refused']) assert.ok(!Object.hasOwn(BLOCK, gone), gone);
 });
 
 test('a double / triple click reaches the native side as count 2 / 3 and never takes the raw rung, whatever the policy says', async () => {

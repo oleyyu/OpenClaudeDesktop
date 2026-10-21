@@ -7,17 +7,23 @@
 // native rawClick with the delivery under test, the same facts after. The window is closed and the folder removed at the
 // end; nothing else is touched. Needs Accessibility + Screen Recording for the process that runs it.
 //
-//   node scripts/computer-use-m4-click-check.mjs                      # delivery "pid" (the default)
-//   CU_M4_DELIVERY=<name> node scripts/computer-use-m4-click-check.mjs
+//   CU_LIVE=1 node scripts/computer-use-m4-click-check.mjs                   # delivery "pid" (the default)
+//   CU_LIVE=1 CU_M4_DELIVERY=<name> node scripts/computer-use-m4-click-check.mjs
 //   CU_M4_ATTEMPTS=10 (default) · CU_M4_KEEP=1 keeps the evidence folder's screenshots
 //
 // Pass: every attempt reads back AXSelected false → true, the frontmost app, the cursor (±0.5 pt) and the window's
 // z-order index are unchanged. Anything else is reported attempt by attempt; nothing is retried into a pass.
+// Skipped (the reason printed) unless CU_LIVE=1, and while the screen is locked or someone used this Mac in the last
+// 120 s (tests/computer-use-live-helpers.mjs presenceSkip; CU_LIVE_FORCE=1 runs it anyway).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { presenceSkip } from '../tests/computer-use-live-helpers.mjs';
+
+const skipped = await presenceSkip();
+if (skipped) { console.log(JSON.stringify({ skipped })); process.exit(0); }
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, '..');

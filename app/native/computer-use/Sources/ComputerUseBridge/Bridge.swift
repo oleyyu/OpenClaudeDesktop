@@ -11,10 +11,14 @@ import ComputerUseCore
 ///   probe                                    → session gates + capabilities
 ///   listWindows   {bundleId}                 → {windows: [WindowInfo]}
 ///   captureWindow {bundleId, windowId?, scale?, listsElements?}   (+ elements: AX summary in frame px)
-///   axClick       {bundleId, windowId, winLocalPt? {x,y} | elementIndex? | focused?, count?, button?, dryRun?}
+///   axClick       {bundleId, windowId, winLocalPt? {x,y} | elementIndex? | focused?, count?, button? ("left"; "right" is
+///                 the official context_menu refusal), dryRun?}
 ///   captureScreen {displayId?, allowedBundleIds, scale?, region? {x,y,width,height} display-local points}
 ///   listDisplays  → {displays: [{displayId, bounds, pixelWidth, pixelHeight, scaleFactor, isMain, name}]}
-///   frontmostApp  → {pid, bundleId}
+///   frontmostApp  → {pid, bundleId, secondsSinceUserMouseDown}: the last is the user's own HID left press (the
+///                 focus-steal guard: the user clicked into an app themselves)
+///   activatePid   {pid} → {activated, frontmostPid}: NSRunningApplication.activate without all windows (the focus-steal
+///                 guard puts the user's app back in front)
 ///   pointOwner    {point {x,y}, ignoreWindowIds?} → {owner: {windowId, pid, bundleId, layer, ownerName} | null}
 ///   cursorPosition → {x, y} (global points)
 ///   hidMove / hidClick / hidScroll  display-scope input on the global HID stream (DisplayInput.swift): the real
@@ -68,9 +72,10 @@ import ComputerUseCore
 ///   axProbe       → {axTrusted}
 ///   focusWindow   {bundleId, windowId?} → app_focus: AXMain + AXFocused on the window, read back (MenuBar.swift
 ///                 AppFocus); {outcome: "unsupported", reasonCode: "app_is_frontmost"} while the app is in front
-///   menu          {bundleId, mode: "press" | "list" | "close", path?: [String]} (official menu(bundleId, {mode, path})):
-///                 press walks the menu bar by titles and presses the last; list reads the items under path; close
-///                 cancels the app's open menus. menu_item_not_found carries details {closestMatch, available, …}
+///   menu          {bundleId, mode: "press" | "list", path?: [String]} (official menu(bundleId, {mode, path})):
+///                 press walks the menu bar by titles and presses the leaf (a path ending at a menu answers
+///                 path_ends_at_submenu with its items; no menu is ever opened); list reads the items under path.
+///                 menu_item_not_found carries details {closestMatch, available, …}
 ///   listApps      {folders: [String]} → {running, installed}: list_apps' source
 ///                 These four were the separate helpers/cu-ax process; an app that stops answering ends the call with
 ///                 helper_timeout after 8 s (AXQuery).
@@ -199,6 +204,11 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
         return ["displays": Displays.list().map(\.json)]
     case "frontmostApp":
         return PointOwner.frontmost()
+    case "activatePid":
+        guard let pid = params.double("pid").flatMap({ $0 > 0 && $0 == $0.rounded() ? pid_t(exactly: $0) : nil }) else {
+            throw CUError.invalidParams("pid must be a positive integer")
+        }
+        return ["activated": WindowShow.activate(pid: pid), "frontmostPid": WindowShow.frontmostPid().map { Int($0) as Any } ?? NSNull()]
     case "pointOwner":
         let point = try globalPoint(params)
         let ignore = Set((params.raw["ignoreWindowIds"] as? [NSNumber] ?? []).map(\.uint32Value))
@@ -361,8 +371,7 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
             guard !path.isEmpty else { throw CUError.invalidParams("bundleId and a non-empty path are required") }
             return try MenuBar.press(bundleId: bundleId, path: path)
         case "list": return try MenuBar.list(bundleId: bundleId, path: path)
-        case "close": return try MenuBar.close(bundleId: bundleId)
-        default: throw CUError.invalidParams("menu: expected (bundleId, {mode: press | list | close, path})")
+        default: throw CUError.invalidParams("menu: expected (bundleId, {mode: press | list, path})")
         }
     case "listApps":
         if params.raw["folders"] != nil, params.strings("folders") == nil { throw CUError.invalidParams("folders must be an array of paths") }
@@ -391,8 +400,12 @@ func axClick(_ params: Params) throws -> [String: Any] {
     }
     let count = Int(params.double("count") ?? 1)
     guard (1...3).contains(count) else { throw CUError.invalidParams("count must be 1, 2 or 3") }
-    let button = params.string("button") ?? "left"
-    guard ["left", "right"].contains(button) else { throw CUError.invalidParams("button must be left or right") }
+    // Official: no context menu in the background (it would bring the app to the front); refused before anything is read.
+    switch params.string("button") ?? "left" {
+    case "left": break
+    case "right": return ["outcome": "unsupported", "reasonCode": "context_menu"]
+    default: throw CUError.invalidParams("button must be left")
+    }
 
     if SessionState.screenLocked { return ["outcome": "unsupported", "reasonCode": "screen_locked"] }
     if SessionState.secureInputPid != 0 { return ["outcome": "unsupported", "reasonCode": "secure_input_active"] }
@@ -404,7 +417,7 @@ func axClick(_ params: Params) throws -> [String: Any] {
         throw CUError.invalidParams("the point is outside the window")
     }
     return AXLadder.click(.init(pid: window.pid, windowId: window.windowId, bounds: window.bounds, winLocalPt: local,
-                                elementIndex: index, focused: focused, count: count, button: button,
+                                elementIndex: index, focused: focused, count: count,
                                 dryRun: params.raw["dryRun"] as? Bool ?? false, expectRole: params.string("expectRole")))
 }
 
