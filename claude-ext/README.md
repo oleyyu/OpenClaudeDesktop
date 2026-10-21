@@ -181,6 +181,5 @@ cd app && npm run check:chrome-bridge -- session
 - [x] P4 tabs_create / tabs_context
 - [x] P5 注册进 agent-tools（group `browser`，默认 deferred），站点授权，工具行；会话级验收脚本已就绪，
   还没用真模型跑通（缺 DEEPSEEK_API_KEY，见上）
-- [ ] `harness/packages/acp-bridge/src/app-tools.js` 的 `APP_TOOL_NAMES` 还没加这 9 个工具名（按约定不改 harness/）。
-  缺了不影响工具本身，只是 Gemini 的 Plan 模式规则和 Qwen 的预加载列表会漏掉它们；`tests/app-tool-names-sync.test.mjs`
-  里把它们列为待同步
+- [x] 9 个工具名已补进 `harness/packages/acp-bridge/src/app-tools.js` 的 `APP_TOOL_NAMES`（Gemini 的 Plan 模式规则、
+  Qwen 的工具列表都能看到它们），`tests/app-tool-names-sync.test.mjs` 恢复严格同步

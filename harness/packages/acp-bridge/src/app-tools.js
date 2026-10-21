@@ -39,6 +39,10 @@ export const APP_TOOL_NAMES = Object.freeze([
   'cursor_position', 'left_mouse_down', 'left_mouse_up',
   // type is listed with preview's above (one name, served per session).
   'key', 'hold_key', 'open_application', 'switch_display', 'wait', 'computer_batch',
+  // agent-tools/browser.mjs: the Claude in Chrome tools, on pages in the user's own Chrome (chrome_ prefixed: preview
+  // already has navigate / read_page / find on this server).
+  'chrome_tabs_context_mcp', 'chrome_tabs_create_mcp', 'chrome_navigate', 'chrome_read_page', 'chrome_find', 'chrome_form_input',
+  'chrome_computer', 'chrome_javascript_tool', 'chrome_browser_batch',
 ])
 
 /** {name, command, args, env, instructions} (env holds the socket and token; instructions text or null) or null. */
