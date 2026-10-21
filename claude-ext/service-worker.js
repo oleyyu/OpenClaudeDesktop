@@ -2,9 +2,9 @@
 // Holds the native messaging port to com.openclaude.chrome_bridge (app/electron/browser/native-host.cjs) and answers
 // the app's execute_tool requests. Messages are { method, params, tool_use_id } (see app/electron/browser/protocol.cjs).
 // An open native port keeps this worker alive; when it drops, the worker reconnects with backoff.
-// Tools: navigate, read_page, find (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
+// Tools: navigate, read_page, find, form_input, computer (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
 import { ToolError } from "./errors.js";
-import { navigate, resolveTab, inPage, setCurrentTab } from "./tabs.js";
+import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction } from "./tabs.js";
 import { withRefs, record, checkRef } from "./refs.js";
 
 const HOST_NAME = "com.openclaude.chrome_bridge";
@@ -31,6 +31,16 @@ async function withPageRefs(tab, op, args, { replace }) {
     return { tabId: tab.id, ...out.result };
   });
 }
+
+/** A content.js operation that hands out no refs; the ref it names must be from this tab's latest read_page/find. */
+async function inPageTool(tab, op, args) {
+  const out = await inPage(tab, op, args);
+  if (out.error) throw new ToolError(out.error.code ?? "page_error", out.error.message ?? "The page couldn't do that.");
+  setCurrentTab(tab.id);
+  return { tabId: tab.id, ...out.result };
+}
+
+const COMPUTER_ACTIONS = new Set(["left_click", "right_click", "double_click", "type", "key", "scroll", "hover"]);
 
 // Tools the app can run here, by name: async (args) → result (JSON). A thrown error with .code becomes {error: {code}}.
 const tools = {
@@ -59,6 +69,35 @@ const tools = {
     const tab = await resolveTab(args.tabId);
     const limit = intArg(args.limit, "limit", { min: 1, max: 100, fallback: 20 });
     return withPageRefs(tab, "find", { query: args.query, limit }, { replace: false });
+  },
+
+  // form_input(ref, value, tabId?) → { tabId, ref, role, name, value | checked, events }
+  async form_input(args) {
+    const tab = await resolveTab(args.tabId);
+    checkRef(tab.id, args.ref);
+    if (args.value === undefined || args.value === null) throw new ToolError("bad_request", "value is required.");
+    return inPageTool(tab, "form_input", { ref: args.ref, value: args.value });
+  },
+
+  // computer(action, ref?, coordinate?, text?, modifiers?, scroll_direction?, scroll_amount?, tabId?)
+  // A ref is used when given (coordinate is then ignored); a coordinate only when there's no ref.
+  async computer(args) {
+    if (!COMPUTER_ACTIONS.has(args.action)) throw new ToolError("bad_request", `action is one of ${[...COMPUTER_ACTIONS].join(", ")}.`);
+    const tab = await resolveTab(args.tabId);
+    const ref = args.ref ?? null;
+    if (ref !== null) checkRef(tab.id, ref);
+    const coordinate = ref === null ? args.coordinate ?? null : null;
+    if (coordinate !== null && !(Array.isArray(coordinate) && coordinate.length === 2 && coordinate.every(Number.isFinite))) throw new ToolError("bad_request", "coordinate is [x, y] in the page's viewport pixels.");
+    const amount = intArg(args.scroll_amount, "scroll_amount", { min: 1, max: 20, fallback: 3 });
+    const before = tab.url, startedAt = Date.now();
+    const result = await inPageTool(tab, "computer", { action: args.action, ref, coordinate, text: args.text, modifiers: args.modifiers, scroll_direction: args.scroll_direction, scroll_amount: amount });
+    if (ref !== null && args.coordinate !== undefined) result.note = "coordinate ignored: the ref was used.";
+    // A click or key may have started a navigation: wait for it, so the next read_page sees the new page.
+    if (args.action !== "scroll" && args.action !== "hover") {
+      const navigated = await settleAfterAction(tab.id, before, startedAt);
+      if (navigated) result.navigated = navigated;
+    }
+    return result;
   },
 };
 

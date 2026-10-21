@@ -1,6 +1,6 @@
 // Chrome bridge acceptance, phase by phase:
 //   npm run check:chrome-bridge            every phase
-//   npm run check:chrome-bridge -- p1      one phase (p0, p1)
+//   npm run check:chrome-bridge -- p2      one phase (p0, p1, p2)
 // Runs in Electron's main process (no window, Dock icon hidden) with the same bridge-client.cjs the app uses. It starts
 // a headless Chrome for Testing (Playwright's, or CHROME_PATH) on a throwaway profile with claude-ext/ loaded, registers
 // the native host in that profile only (<profile>/NativeMessagingHosts, launcher run by this Electron as node), and
@@ -13,6 +13,9 @@
 //    tree with the heading and a ref on the link only · find "More information" returns that link's ref · ref rules on
 //    a local form page: exactly the interactive elements get refs · a ref from an earlier read_page is stale_ref · a
 //    ref from another tab is ref_wrong_tab · a removed element's ref is stale_ref · a reload makes refs stale_ref.
+// P2 form_input / computer by ref on a local sign-in form: username and password filled (not submitted), the page
+//    saw each value with one input and one change event · checkbox, select · type and key (Backspace, Tab) · clicks by
+//    ref and by coordinate, double, right, hover, scroll · a removed element's ref and a navigating click.
 import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -86,10 +89,51 @@ const FORM = (removeAfterMs) => `<!doctype html><html><head><title>Ref rules</ti
 ${removeAfterMs ? `<script>setTimeout(() => document.getElementById("gone").remove(), ${removeAfterMs});</script>` : ""}
 </body></html>`;
 
+// A sign-in form that reports what reached it: each field's value and its input / change events, clicks, hover,
+// and whether the form was submitted (it must not be). One "log …" line per thing, read back with find.
+const LOGIN = `<!doctype html><html><head><title>Sign in</title><meta charset="utf-8"></head><body>
+<form id="signin" action="/submitted">
+  <label for="user">Username</label> <input id="user" name="user" autocomplete="username">
+  <label for="pass">Password</label> <input id="pass" type="password" name="pass">
+  <label><input type="checkbox" id="remember"> Remember me</label>
+  <select id="plan" aria-label="Plan"><option value="free">Free</option><option value="pro">Pro</option></select>
+  <textarea id="notes" aria-label="Notes"></textarea>
+  <button type="submit">Sign in</button>
+</form>
+<button type="button" id="counter">Counter</button>
+<span role="button" id="hover">Hover me</span>
+<button type="button" id="vanish">Vanish</button>
+<a href="/next">Next page</a>
+<div id="logs"></div>
+<div style="height:3000px"></div>
+<script>
+  const state = { submitted: "no", clicks: 0, dbl: 0, ctx: 0, hovered: "no" };
+  const fields = { user: {}, pass: {}, notes: {} };
+  for (const id of Object.keys(fields)) for (const type of ["input", "change"]) {
+    document.getElementById(id).addEventListener(type, (event) => { fields[id][type] = (fields[id][type] ?? 0) + 1; fields[id].trusted = event.isTrusted; render(); });
+  }
+  const counter = document.getElementById("counter");
+  counter.addEventListener("click", () => { state.clicks++; render(); });
+  counter.addEventListener("dblclick", () => { state.dbl++; render(); });
+  counter.addEventListener("contextmenu", (event) => { event.preventDefault(); state.ctx++; render(); });
+  document.getElementById("hover").addEventListener("mouseenter", () => { state.hovered = "yes"; render(); });
+  document.getElementById("vanish").addEventListener("click", (event) => event.target.remove());
+  document.getElementById("signin").addEventListener("submit", (event) => { event.preventDefault(); state.submitted = "yes"; render(); });
+  function render() {
+    const lines = Object.entries(fields).map(([id, seen]) => \`log \${id} value="\${document.getElementById(id).value}" input=\${seen.input ?? 0} change=\${seen.change ?? 0}\`);
+    lines.push(\`log clicks=\${state.clicks} dbl=\${state.dbl} ctx=\${state.ctx}\`, \`log hovered=\${state.hovered}\`, \`log submitted=\${state.submitted}\`);
+    document.getElementById("logs").innerHTML = lines.map((line) => "<p></p>").join("");
+    [...document.querySelectorAll("#logs p")].forEach((p, index) => { p.textContent = lines[index]; });
+  }
+  render();
+</script>
+</body></html>`;
+
 function serveFixtures() {
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, "http://127.0.0.1");
-    const body = url.pathname === "/example" ? EXAMPLE : url.pathname === "/form" ? FORM(Number(url.searchParams.get("remove")) || 0) : null;
+    const body = url.pathname === "/example" ? EXAMPLE : url.pathname === "/form" ? FORM(Number(url.searchParams.get("remove")) || 0)
+      : url.pathname === "/login" ? LOGIN : url.pathname === "/next" ? "<!doctype html><title>Next</title><h1>Next page</h1>" : null;
     response.writeHead(body ? 200 : 404, { "content-type": "text/html; charset=utf-8" });
     response.end(body ?? "not found");
   });
@@ -188,6 +232,93 @@ const phases = {
 
     assert.equal(await failsWith(tool("navigate", { url: "chrome://version" })), "bad_url");
     assert.equal(await failsWith(tool("read_page", { tabId: 999999 })), "no_such_tab");
+  },
+
+  async p2({ client, base }) {
+    const tool = (name, args = {}) => client.executeTool(name, args, { timeoutMs: 30_000 });
+    const refOf = (tree, pattern) => {
+      const line = tree.split("\n").find((text) => new RegExp(pattern).test(text));
+      const ref = line && /\[(ref_\d+)\]/.exec(line);
+      assert.ok(ref, `a ref for ${pattern}`);
+      return ref[1];
+    };
+    // The page's own report: { user: 'value="…" input=1 change=1', clicks: 'clicks=…', … }.
+    const logs = async (tabId) => {
+      const { matches } = await tool("find", { tabId, query: "log " });
+      return Object.fromEntries(matches.map(({ text }) => { const [, key, rest] = /^log (\w+)[ =](.*)$/.exec(text); return [key, rest]; }));
+    };
+
+    const { tabId } = await tool("navigate", { url: `${base}/login` });
+    const page = await tool("read_page", { tabId, filter: "interactive" });
+    say(`read_page interactive (tab ${tabId}):\n${page.tree.replace(/^/gm, "  ")}`);
+    const ref = Object.fromEntries(Object.entries({ user: 'textbox "Username"', pass: 'textbox "Password"', remember: 'checkbox "Remember me"', plan: 'combobox "Plan"', notes: 'textbox "Notes"',
+      signIn: 'button "Sign in"', counter: 'button "Counter"', hover: 'button "Hover me"', vanish: 'button "Vanish"', next: 'link "Next page"' }).map(([key, pattern]) => [key, refOf(page.tree, pattern)]));
+
+    // The acceptance: username and password filled, not submitted, the page saw the values and an input event each.
+    const user = await tool("form_input", { tabId, ref: ref.user, value: "alice" });
+    const pass = await tool("form_input", { tabId, ref: ref.pass, value: "s3cret-pw" });
+    say(`form_input Username → ${JSON.stringify(user)}`);
+    say(`form_input Password → ${JSON.stringify(pass)}`);
+    assert.equal(user.value, "alice");
+    assert.equal(pass.value, "•••••••••", "a password isn't echoed back");
+    let seen = await logs(tabId);
+    say(`page report: ${JSON.stringify(seen)}`);
+    assert.equal(seen.user, 'value="alice" input=1 change=1');
+    assert.equal(seen.pass, 'value="s3cret-pw" input=1 change=1');
+    assert.equal(seen.submitted, "no");
+    const filled = await tool("read_page", { tabId, filter: "interactive" });
+    assert.match(filled.tree, /textbox "Username" \[ref_\d+\] value="alice"/);
+    assert.match(filled.tree, /textbox "Password" \[ref_\d+\] type=password value=\(hidden\)/);
+    Object.assign(ref, Object.fromEntries(Object.entries({ user: 'textbox "Username"', pass: 'textbox "Password"', remember: 'checkbox "Remember me"', plan: 'combobox "Plan"', notes: 'textbox "Notes"',
+      signIn: 'button "Sign in"', counter: 'button "Counter"', hover: 'button "Hover me"', vanish: 'button "Vanish"', next: 'link "Next page"' }).map(([key, pattern]) => [key, refOf(filled.tree, pattern)])));
+
+    // Checkbox and select.
+    assert.equal((await tool("form_input", { tabId, ref: ref.remember, value: true })).checked, true);
+    assert.deepEqual((await tool("form_input", { tabId, ref: ref.plan, value: "Pro" })).value, ["Pro"]);
+    assert.equal(await failsWith(tool("form_input", { tabId, ref: ref.plan, value: "Gold" })), "bad_request");
+    assert.equal(await failsWith(tool("form_input", { tabId, ref: ref.counter, value: "x" })), "not_a_form_control");
+
+    // type and key into the notes field.
+    const typed = await tool("computer", { tabId, action: "type", ref: ref.notes, text: "hi there" });
+    assert.equal(typed.value, "hi there");
+    const keys = await tool("computer", { tabId, action: "key", text: "Backspace Backspace" });
+    say(`type "hi there", key "Backspace Backspace" → ${JSON.stringify(keys.emulated)}`);
+    seen = await logs(tabId);
+    assert.match(seen.notes, /^value="hi the" input=10 change=0$/, "eight typed characters and two deletions, each an input event");
+    const tab = await tool("computer", { tabId, action: "key", text: "Tab" });
+    assert.equal(tab.focused.name, "Sign in", "Tab moves the focus on");
+
+    // Clicks: by ref, then by the coordinate that click reported, then double and right clicks.
+    const clicked = await tool("computer", { tabId, action: "left_click", ref: ref.counter });
+    assert.ok(Number.isInteger(clicked.x) && Number.isInteger(clicked.y));
+    const byPoint = await tool("computer", { tabId, action: "left_click", coordinate: [clicked.x, clicked.y] });
+    assert.equal(byPoint.name, "Counter", "the coordinate hit the same button");
+    const both = await tool("computer", { tabId, action: "left_click", ref: ref.counter, coordinate: [0, 0] });
+    assert.equal(both.name, "Counter");
+    assert.match(both.note, /coordinate ignored/);
+    await tool("computer", { tabId, action: "double_click", ref: ref.counter });
+    await tool("computer", { tabId, action: "right_click", ref: ref.counter });
+    await tool("computer", { tabId, action: "hover", ref: ref.hover });
+    seen = await logs(tabId);
+    say(`clicks / hover → ${JSON.stringify({ clicks: seen.clicks, hovered: seen.hovered })}`);
+    assert.equal(seen.clicks, "5 dbl=1 ctx=1");
+    assert.equal(seen.hovered, "yes");
+    assert.equal(seen.submitted, "no", "nothing submitted the form");
+
+    const scrolled = await tool("computer", { tabId, action: "scroll", scroll_direction: "down", scroll_amount: 5 });
+    say(`scroll down 5 → ${JSON.stringify(scrolled)}`);
+    assert.ok(scrolled.scrollY > 0);
+
+    // A ref whose element went away, and a click that navigates.
+    const vanished = await tool("computer", { tabId, action: "left_click", ref: ref.vanish });
+    assert.equal(vanished.stillOnPage, false);
+    assert.equal(await failsWith(tool("computer", { tabId, action: "left_click", ref: ref.vanish })), "stale_ref");
+    const away = await tool("computer", { tabId, action: "left_click", ref: ref.next });
+    say(`left_click "Next page" → ${JSON.stringify(away.navigated)}`);
+    assert.equal(away.navigated?.url, `${base}/next`);
+    assert.equal(away.navigated.sameDocument, undefined, "a new page, not a same-document change");
+    assert.equal(await failsWith(tool("form_input", { tabId, ref: ref.user, value: "bob" })), "stale_ref");
+    assert.equal(await failsWith(tool("computer", { tabId, action: "left_click" })), "bad_request");
   },
 };
 

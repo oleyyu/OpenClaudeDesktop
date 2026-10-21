@@ -33,6 +33,20 @@ content script **不在 manifest 里声明**，只在某个工具点名某个 ta
 | `navigate` | `url`（或 `back` / `forward`），`tabId?` | `{tabId, url, title, status}`；不给 tabId 时新开后台 tab，不把用户的 tab 导走 |
 | `read_page` | `tabId?`，`filter?`（`all`/`interactive`），`depth?`（默认 15），`ref_id?`，`max_chars?`（默认 50000） | `{tabId, title, url, tree, refCount, truncated}`，`tree` 是 YAML 风格的可访问性树 |
 | `find` | `query`，`tabId?`，`limit?`（默认 20） | `{tabId, matches: [{ref, role, name, interactive, text}], total}` |
+| `form_input` | `ref`，`value`，`tabId?` | `{tabId, ref, role, name, value \| checked, events}`；密码回显成 `•` |
+| `computer` | `action`，`ref?`，`coordinate?`，`text?`，`modifiers?`，`scroll_direction?`，`scroll_amount?`，`tabId?` | 动作摘要；点击/按键引起整页导航时带 `navigated` |
+
+`form_input`：文本框写值后派发 `input` 与 `change`；checkbox/radio 用 `true`/`false`（通过一次 click 切换，页面自己的
+click 处理器也会跑）；select 按 option 的 value 或文字匹配；contenteditable 替换内容。file 输入不支持。
+
+`computer` 的 `action`：`left_click / right_click / double_click / hover`（有 ref 用 ref，先滚到可见再瞄中心；
+只有没 ref 时才用 `coordinate`，两者都给时忽略坐标并在结果里注明；中心点被别的元素盖住时结果带 `coveredBy`）、
+`type`（逐字 keydown → 插入 → keyup，每字一次 `input`）、`key`（空格分隔的组合，如 `"ctrl+a Backspace"`、`"Tab"`）、
+`scroll`（`scroll_direction` + `scroll_amount`，每格 100px；只给 ref 则滚到它可见）。
+
+事件都是 content script 派发的 DOM 事件，`isTrusted` 为 false。DOM 事件本身不会触发的默认行为（聚焦、键入、Enter 提交 /
+换行、Tab 移焦点、Backspace/Delete 删字、全选、方向键移光标）由扩展代做，结果的 `emulated` 列出做了什么。
+CSS `:hover` 不会因合成事件生效；只认 `isTrusted` 的站点需要以后换成 CDP（`chrome.debugger`）派发。
 
 ref 规则：
 - 只给可交互元素分配 ref：`button`、`a[href]`、`input`（hidden 除外）、`select`、`textarea`、`[role=button]`、
@@ -85,6 +99,8 @@ cd app && npm run check:chrome-bridge -- p1
 - P1：真站 `https://example.com` 只验 navigate 与标题（它 2025 年改版后已经没有标题 h1 和 "More information..." 链接了）；
   链接 ref 与 `find "More information"` 用脚本在 127.0.0.1 起的旧版 example.com 复刻页验，ref 生命周期在本地表单页验。
   shell 里有 `HTTPS_PROXY` 时会传给 Chrome（headless 无法回应代理的认证弹窗）。
+- P2：本地登录表单页，`form_input` 填用户名和密码（不提交），页面自己上报每个字段的值与 input / change 次数，
+  再验 checkbox、select、type、key、按 ref 与按坐标点击、双击、右键、hover、scroll、元素消失后的 `stale_ref`、点击导航。
 
 没有 Chrome for Testing 时先 `npx playwright install chromium`，或用 `CHROME_PATH` 指向一个 Chromium（品牌版 Google Chrome
 已不接受 `--load-extension`）。不需要浏览器的协议与路由单测：`node --test tests/chrome-bridge.test.mjs`。
@@ -93,7 +109,7 @@ cd app && npm run check:chrome-bridge -- p1
 
 - [x] P0 通道：扩展 ⇄ host ⇄ Electron，`ping` → `pong`
 - [x] P1 navigate / read_page / find
-- [ ] P2 form_input / computer（ref 寻址）
+- [x] P2 form_input / computer（ref 寻址）
 - [ ] P3 javascript_tool / browser_batch
 - [ ] P4 tabs_create / tabs_context
 - [ ] P5 注册进 agent-tools（group `browser`，默认 deferred）

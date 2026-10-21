@@ -8,6 +8,8 @@
 // page reloads; a ref whose element left the page is reported as stale_ref, never silently ignored.
 // Interactive: button, a[href], input (not hidden), select, textarea, [role=button], [contenteditable], [onclick].
 // Text nodes never get a ref.
+// form_input and computer act on an element by its ref (a coordinate only when there is no ref) and dispatch the DOM
+// events a user's input makes.
 (() => {
   if (globalThis.__openclaudeBridge) return;
 
@@ -250,7 +252,352 @@
     return { result: { query, matches, total, title: document.title, url: location.href }, refs: handedOut, nextRef };
   }
 
-  const ops = { read_page: readPage, find };
+  // ── P2: writing to the page ───────────────────────────────────────────────────────────────────────────────────────
+  // Events are dispatched from here as DOM events (isTrusted is false): pages see the same sequence a real mouse or
+  // keyboard makes, and the default actions DOM events don't trigger on their own (focus, typing, Enter, Tab,
+  // Backspace, select-all) are carried out as well and listed in the result's `emulated`.
+  const fail = (code, message) => ({ error: { code, message } });
+  const TEXT_INPUTS = new Set(["text", "search", "email", "url", "tel", "password", "number", "date", "datetime-local", "month", "week", "time", "color", "range", ""]);
+  const FOCUSABLE = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [tabindex], [contenteditable]:not([contenteditable="false"])';
+
+  function describe(el) {
+    if (!el) return null;
+    const role = roleOf(el);
+    return { role: role ?? el.tagName.toLowerCase(), name: nameOf(el, role) };
+  }
+  const inputType = (el) => (el.getAttribute("type") ?? "").toLowerCase();
+  const isTextField = (el) => (el.tagName === "INPUT" && TEXT_INPUTS.has(inputType(el))) || el.tagName === "TEXTAREA";
+  const isEditable = (el) => !!el && (isTextField(el) || el.isContentEditable);
+  const masked = (el, value) => (el.tagName === "INPUT" && inputType(el) === "password" ? "•".repeat(String(value).length) : value);
+
+  function deepElementFromPoint(x, y) {
+    let el = document.elementFromPoint(x, y);
+    while (el?.shadowRoot) {
+      const inner = el.shadowRoot.elementFromPoint(x, y);
+      if (!inner || inner === el) break;
+      el = inner;
+    }
+    return el;
+  }
+  const containsDeep = (outer, inner) => {
+    for (let node = inner; node; node = node.parentNode ?? node.host) if (node === outer) return true;
+    return false;
+  };
+
+  /** The element an action is aimed at: the ref's (preferred) or the one at `coordinate` (viewport CSS pixels). */
+  function aim({ ref, coordinate }) {
+    if (ref) {
+      const found = lookup(ref);
+      if (found.error) return found;
+      return { el: found.el, ref };
+    }
+    if (Array.isArray(coordinate) && coordinate.length === 2 && coordinate.every(Number.isFinite)) {
+      const [x, y] = coordinate;
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return fail("bad_request", `(${x}, ${y}) is outside the ${innerWidth}×${innerHeight} viewport.`);
+      const el = deepElementFromPoint(x, y);
+      if (!el) return fail("no_element", `Nothing is at (${x}, ${y}).`);
+      return { el, x, y };
+    }
+    return fail("bad_request", "Pass a ref (from read_page or find), or a coordinate [x, y] when there is no ref.");
+  }
+
+  /** Scrolls the element into view and picks the point to aim at: its centre, and what is really there. */
+  function pointOn(target) {
+    if (target.x !== undefined) return { x: target.x, y: target.y, covered: null };
+    const el = target.el;
+    el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return fail("not_visible", `${target.ref} has no size on the page (it may be hidden).`);
+    const x = Math.round(Math.min(Math.max(rect.left + rect.width / 2, 0), innerWidth - 1));
+    const y = Math.round(Math.min(Math.max(rect.top + rect.height / 2, 0), innerHeight - 1));
+    const hit = deepElementFromPoint(x, y);
+    return { x, y, covered: hit && !containsDeep(el, hit) ? describe(hit) : null };
+  }
+
+  function modifierFlags(spec) {
+    const flags = { ctrlKey: false, shiftKey: false, altKey: false, metaKey: false };
+    for (const part of String(spec ?? "").toLowerCase().split("+").map((text) => text.trim()).filter(Boolean)) {
+      if (part === "ctrl" || part === "control") flags.ctrlKey = true;
+      else if (part === "shift") flags.shiftKey = true;
+      else if (part === "alt" || part === "option") flags.altKey = true;
+      else if (["cmd", "meta", "command", "super", "win", "windows"].includes(part)) flags.metaKey = true;
+      else return null;
+    }
+    return flags;
+  }
+
+  function mouse(el, type, x, y, { button = 0, buttons = 0, detail = 0, mods = {} } = {}) {
+    const init = { bubbles: !["mouseenter", "mouseleave", "pointerenter", "pointerleave"].includes(type), cancelable: true, composed: true, view: window, clientX: x, clientY: y, screenX: x + screenX, screenY: y + screenY, button, buttons, detail, ...mods };
+    const event = type.startsWith("pointer") ? new PointerEvent(type, { ...init, pointerId: 1, pointerType: "mouse", isPrimary: true }) : new MouseEvent(type, init);
+    return el.dispatchEvent(event);
+  }
+  function hoverOn(el, x, y, mods) {
+    for (const type of ["pointerover", "pointerenter", "mouseover", "mouseenter", "pointermove", "mousemove"]) mouse(el, type, x, y, { mods });
+  }
+  function focusFor(el) {
+    const focusable = el.closest?.(FOCUSABLE);
+    if (focusable && typeof focusable.focus === "function") { focusable.focus({ preventScroll: true }); return true; }
+    if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+    return false;
+  }
+  function press(el, x, y, { button, detail, mods }) {
+    const buttons = button === 2 ? 2 : 1;
+    const down = mouse(el, "pointerdown", x, y, { button, buttons, detail, mods }) & mouse(el, "mousedown", x, y, { button, buttons, detail, mods });
+    if (down && button === 0) focusFor(el);
+    mouse(el, "pointerup", x, y, { button, detail, mods });
+    mouse(el, "mouseup", x, y, { button, detail, mods });
+  }
+
+  function click(el, x, y, { action, mods }) {
+    hoverOn(el, x, y, mods);
+    if (action === "right_click") {
+      press(el, x, y, { button: 2, detail: 1, mods });
+      mouse(el, "contextmenu", x, y, { button: 2, detail: 1, mods });
+      return;
+    }
+    press(el, x, y, { button: 0, detail: 1, mods });
+    // A dispatched click runs the element's activation behaviour: links follow, checkboxes toggle, buttons submit.
+    mouse(el, "click", x, y, { detail: 1, mods });
+    if (action === "double_click") {
+      if (!el.isConnected) return;
+      press(el, x, y, { button: 0, detail: 2, mods });
+      mouse(el, "click", x, y, { detail: 2, mods });
+      mouse(el, "dblclick", x, y, { detail: 2, mods });
+    }
+  }
+
+  const KEYS = {
+    enter: ["Enter", "Enter", 13], return: ["Enter", "Enter", 13], tab: ["Tab", "Tab", 9], escape: ["Escape", "Escape", 27], esc: ["Escape", "Escape", 27],
+    backspace: ["Backspace", "Backspace", 8], delete: ["Delete", "Delete", 46], space: [" ", "Space", 32], home: ["Home", "Home", 36], end: ["End", "End", 35],
+    pageup: ["PageUp", "PageUp", 33], pagedown: ["PageDown", "PageDown", 34], arrowup: ["ArrowUp", "ArrowUp", 38], arrowdown: ["ArrowDown", "ArrowDown", 40],
+    arrowleft: ["ArrowLeft", "ArrowLeft", 37], arrowright: ["ArrowRight", "ArrowRight", 39], up: ["ArrowUp", "ArrowUp", 38], down: ["ArrowDown", "ArrowDown", 40],
+    left: ["ArrowLeft", "ArrowLeft", 37], right: ["ArrowRight", "ArrowRight", 39],
+  };
+  for (let n = 1; n <= 12; n++) KEYS[`f${n}`] = [`F${n}`, `F${n}`, 111 + n];
+  function keyDef(name, shift) {
+    const known = KEYS[name.toLowerCase()];
+    if (known) return { key: known[0], code: known[1], keyCode: known[2] };
+    if ([...name].length !== 1) return null;
+    const char = shift ? name.toUpperCase() : name;
+    const upper = name.toUpperCase();
+    const code = /[a-z]/i.test(name) ? `Key${upper}` : /\d/.test(name) ? `Digit${name}` : "";
+    return { key: char, code, keyCode: upper.charCodeAt(0), char };
+  }
+  function keyEvent(el, type, def, mods) {
+    return el.dispatchEvent(new KeyboardEvent(type, { key: def.key, code: def.code, keyCode: def.keyCode, which: def.keyCode, charCode: type === "keypress" ? def.key.charCodeAt(0) : 0, bubbles: true, cancelable: true, composed: true, view: window, ...mods }));
+  }
+  const focused = () => {
+    let el = document.activeElement;
+    while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
+    return el && el !== document.documentElement ? el : document.body;
+  };
+
+  /** Inserts text at the caret of a focused editable element, the way typing does (beforeinput, input). */
+  function insertText(el, text) {
+    if (document.execCommand("insertText", false, text)) return;
+    if (isTextField(el)) {
+      if (!el.dispatchEvent(new InputEvent("beforeinput", { inputType: "insertText", data: text, bubbles: true, cancelable: true, composed: true }))) return;
+      const start = el.selectionStart ?? el.value.length, end = el.selectionEnd ?? el.value.length;
+      try { el.setRangeText(text, start, end, "end"); } catch { el.value += text; }
+      el.dispatchEvent(new InputEvent("input", { inputType: "insertText", data: text, bubbles: true, composed: true }));
+    }
+  }
+  function moveFocus(from, backwards) {
+    const list = [...document.querySelectorAll(FOCUSABLE)].filter((el) => el.tabIndex >= 0 && !el.disabled && !hidden(el));
+    if (!list.length) return null;
+    const index = list.indexOf(from);
+    const next = list[(index === -1 ? (backwards ? list.length - 1 : 0) : index + (backwards ? -1 : 1) + list.length) % list.length];
+    next.focus();
+    return next;
+  }
+  /** What the browser would do for a key a page didn't cancel. Returns a short label, or null. */
+  function keyDefault(el, def, mods) {
+    const command = mods.ctrlKey || mods.metaKey;
+    const name = def.key;
+    if (command && name.toLowerCase() === "a") {
+      if (isTextField(el)) el.select(); else document.execCommand("selectAll");
+      return "select all";
+    }
+    if (command || mods.altKey) return null;
+    if (name === "Tab") { const next = moveFocus(el, mods.shiftKey); return next ? `focus ${describe(next).role}` : null; }
+    if (name === "Backspace" || name === "Delete") { return isEditable(el) && document.execCommand(name === "Backspace" ? "delete" : "forwardDelete") ? name.toLowerCase() : null; }
+    if (name === "Enter") {
+      if (el.tagName === "TEXTAREA" || el.isContentEditable) { insertText(el, "\n"); return "new line"; }
+      if (el.tagName === "INPUT" && el.form) { el.form.requestSubmit(); return "submit form"; }
+      if (el.matches?.('a[href], button, [role="button"], summary')) { el.click(); return "activate"; }
+      return null;
+    }
+    if (name === " " && !isEditable(el) && el.matches?.('button, [role="button"], input[type="checkbox"], input[type="radio"], summary')) { el.click(); return "activate"; }
+    if (isTextField(el) && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(name)) {
+      try {
+        const length = el.value.length, at = el.selectionStart ?? length;
+        const to = name === "Home" ? 0 : name === "End" ? length : Math.min(Math.max(at + (name === "ArrowLeft" ? -1 : 1), 0), length);
+        el.setSelectionRange(to, to);
+        return "move caret";
+      } catch { return null; }
+    }
+    if (def.char && isEditable(el)) { insertText(el, def.char); return "insert"; }
+    return null;
+  }
+  function pressKeys(sequence) {
+    const combos = String(sequence ?? "").trim().split(/\s+/).filter(Boolean);
+    if (!combos.length) return fail("bad_request", 'text is the key or keys to press, e.g. "Enter", "ctrl+a", "Backspace Backspace".');
+    const plan = [];
+    for (const combo of combos) {
+      const parts = combo.split("+");
+      const keyName = parts.pop() || "+";
+      const mods = modifierFlags(parts.join("+"));
+      const def = mods && keyDef(keyName, mods.shiftKey);
+      if (!def) return fail("bad_request", `Unknown key ${JSON.stringify(combo)}.`);
+      plan.push({ combo, def, mods });
+    }
+    const emulated = [];
+    for (const { combo, def, mods } of plan) {
+      const el = focused();
+      const allowed = keyEvent(el, "keydown", def, mods);
+      if (allowed && def.char && !mods.ctrlKey && !mods.metaKey) keyEvent(el, "keypress", def, mods);
+      const done = allowed ? keyDefault(el, def, mods) : null;
+      if (done) emulated.push(`${combo}: ${done}`);
+      keyEvent(focused(), "keyup", def, mods);
+    }
+    return { result: { keys: combos, emulated, focused: describe(focused()) } };
+  }
+
+  function typeText({ ref, text }) {
+    if (typeof text !== "string" || !text) return fail("bad_request", "text is what to type.");
+    let el;
+    if (ref) {
+      const found = lookup(ref);
+      if (found.error) return found;
+      el = found.el;
+      if (!isEditable(el)) return fail("not_editable", `${ref} (${describe(el).role}) isn't a text field. Use form_input for selects, checkboxes and radios.`);
+      if (focused() !== el) {
+        el.focus({ preventScroll: true });
+        try { if (isTextField(el)) el.setSelectionRange(el.value.length, el.value.length); } catch {}
+      }
+    } else {
+      el = focused();
+      if (!isEditable(el)) return fail("not_editable", "Nothing editable has focus. Click a text field first, or pass its ref.");
+    }
+    if (el.disabled || el.readOnly) return fail("not_editable", "That field is disabled or read-only.");
+    for (const char of text) {
+      const def = char === "\n" ? { key: "Enter", code: "Enter", keyCode: 13 } : keyDef(char, false) ?? { key: char, code: "", keyCode: 0, char };
+      if (!keyEvent(el, "keydown", def, {})) { keyEvent(el, "keyup", def, {}); continue; }
+      keyEvent(el, "keypress", def, {});
+      if (char === "\n" && el.tagName === "INPUT") { if (el.form) el.form.requestSubmit(); }
+      else insertText(el, char);
+      keyEvent(el, "keyup", def, {});
+    }
+    const value = isTextField(el) ? el.value : clean(el.innerText, MAX_TEXT);
+    return { result: { ...describe(el), ref: ref ?? null, typed: [...text].length, value: masked(el, value) } };
+  }
+
+  function scrollable(el) {
+    for (let node = el; node && node !== document.body && node !== document.documentElement; node = node.parentElement ?? node.getRootNode()?.host) {
+      const style = getComputedStyle(node);
+      if ((/(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) || (/(auto|scroll|overlay)/.test(style.overflowX) && node.scrollWidth > node.clientWidth)) return node;
+    }
+    return document.scrollingElement ?? document.documentElement;
+  }
+  function scrollPage({ ref, coordinate, direction, amount = 3 }) {
+    const DELTA = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+    if (direction === undefined || direction === null) {
+      if (!ref) return fail("bad_request", "scroll needs scroll_direction (up, down, left, right), or a ref to scroll into view.");
+      const found = lookup(ref);
+      if (found.error) return found;
+      found.el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+      const rect = found.el.getBoundingClientRect();
+      return { result: { ...describe(found.el), ref, scrolledIntoView: true, x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) } };
+    }
+    if (!DELTA[direction]) return fail("bad_request", "scroll_direction is up, down, left or right.");
+    let origin = null, x = innerWidth / 2, y = innerHeight / 2;
+    if (ref || coordinate) {
+      const target = aim({ ref, coordinate });
+      if (target.error) return target;
+      origin = target.el;
+      if (target.x !== undefined) ({ x, y } = target);
+    }
+    const box = scrollable(origin ?? document.documentElement);
+    const [dx, dy] = DELTA[direction].map((unit) => unit * amount * 100);
+    const wheelTarget = origin ?? deepElementFromPoint(x, y) ?? document.documentElement;
+    const allowed = wheelTarget.dispatchEvent(new WheelEvent("wheel", { deltaX: dx, deltaY: dy, deltaMode: 0, clientX: x, clientY: y, bubbles: true, cancelable: true, composed: true, view: window }));
+    const page = box === document.scrollingElement || box === document.documentElement;
+    if (allowed) (page ? window : box).scrollBy({ left: dx, top: dy, behavior: "instant" });
+    return { result: { direction, amount, scrolled: page ? "page" : describe(box), scrollX: Math.round(page ? scrollX : box.scrollLeft), scrollY: Math.round(page ? scrollY : box.scrollTop), cancelledByPage: !allowed } };
+  }
+
+  /** computer(action, ref?, coordinate?, text?, modifiers?, scroll_direction?, scroll_amount?) */
+  function computer(args) {
+    const { action } = args;
+    if (action === "key") return pressKeys(args.text);
+    if (action === "type") return typeText(args);
+    if (action === "scroll") return scrollPage({ ref: args.ref, coordinate: args.coordinate, direction: args.scroll_direction, amount: args.scroll_amount ?? 3 });
+    if (!["left_click", "right_click", "double_click", "hover"].includes(action)) return fail("bad_request", `Unknown action ${action}.`);
+    const mods = modifierFlags(args.modifiers);
+    if (!mods) return fail("bad_request", `modifiers ${JSON.stringify(args.modifiers)} isn't something like "shift" or "ctrl+shift".`);
+    const target = aim(args);
+    if (target.error) return target;
+    const point = pointOn(target);
+    if (point.error) return point;
+    const { el } = target;
+    if (action === "hover") hoverOn(el, point.x, point.y, mods);
+    else click(el, point.x, point.y, { action, mods });
+    return { result: { action, ...describe(el), ref: target.ref ?? null, x: point.x, y: point.y, ...(point.covered ? { coveredBy: point.covered } : {}), focused: describe(focused()), stillOnPage: el.isConnected } };
+  }
+
+  /** form_input(ref, value): sets a control's value as the user would and fires input and change. */
+  function formInput({ ref, value }) {
+    const found = lookup(ref);
+    if (found.error) return found;
+    const el = found.el;
+    const tag = el.tagName, type = inputType(el);
+    if (el.disabled) return fail("not_editable", `${ref} is disabled.`);
+    const fire = () => {
+      el.dispatchEvent(new InputEvent("input", { inputType: "insertReplacementText", bubbles: true, composed: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    if (tag === "INPUT" && (type === "checkbox" || type === "radio")) {
+      const want = value === true || value === "true" || value === 1 || value === "on" || value === "checked";
+      if (type === "radio" && !want) return fail("bad_request", "A radio button can only be checked (value true); check another one to change the choice.");
+      const toggle = el.checked !== want;
+      if (toggle) el.click(); // the click fires input and change, and the page's own click handlers
+      if (el.checked !== want) return fail("page_refused", `The page kept ${ref} ${el.checked ? "checked" : "unchecked"}.`);
+      return { result: { ...describe(el), ref, checked: el.checked, events: toggle ? ["click", "input", "change"] : [] } };
+    }
+    if (tag === "INPUT" && type === "file") return fail("bad_request", "File inputs can't be filled with form_input.");
+    if (tag === "SELECT") {
+      const wanted = (Array.isArray(value) ? value : [value]).map((item) => String(item));
+      if (!el.multiple && wanted.length > 1) return fail("bad_request", `${ref} takes a single option.`);
+      const options = [...el.options];
+      const pick = (item) => options.find((option) => option.value === item) ?? options.find((option) => clean(option.textContent).toLowerCase() === item.trim().toLowerCase());
+      const chosen = wanted.map(pick);
+      const missing = wanted.filter((_, index) => !chosen[index]);
+      if (missing.length) return fail("bad_request", `${ref} has no option ${missing.map((item) => JSON.stringify(item)).join(", ")}. Options: ${options.slice(0, 30).map((option) => JSON.stringify(clean(option.textContent, 60))).join(", ")}.`);
+      for (const option of options) option.selected = chosen.includes(option);
+      fire();
+      return { result: { ...describe(el), ref, value: chosen.map((option) => clean(option.textContent, 60)), events: ["input", "change"] } };
+    }
+    if (typeof value !== "string" && typeof value !== "number") return fail("bad_request", "value must be text or a number for this field.");
+    const text = String(value);
+    if (isTextField(el)) {
+      if (el.readOnly) return fail("not_editable", `${ref} is read-only.`);
+      el.focus({ preventScroll: true });
+      el.value = text; // the element's own setter: a framework's tracker sees the change on the input event
+      fire();
+      if (type === "number" && text && el.value === "") return fail("bad_request", `${JSON.stringify(text)} isn't a number.`);
+      return { result: { ...describe(el), ref, value: masked(el, el.value), events: ["input", "change"] } };
+    }
+    if (el.isContentEditable) {
+      el.focus({ preventScroll: true });
+      document.execCommand("selectAll");
+      if (!document.execCommand("insertText", false, text)) { el.textContent = text; fire(); }
+      else el.dispatchEvent(new Event("change", { bubbles: true }));
+      return { result: { ...describe(el), ref, value: clean(el.innerText, MAX_TEXT), events: ["input", "change"] } };
+    }
+    return fail("not_a_form_control", `${ref} (${describe(el).role}) isn't a form field. Use computer left_click for buttons and links.`);
+  }
+
+  const ops = { read_page: readPage, find, form_input: formInput, computer };
   globalThis.__openclaudeBridge = {
     run(op, args) {
       const fn = ops[op];

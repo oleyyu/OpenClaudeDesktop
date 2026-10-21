@@ -19,9 +19,15 @@ export function setCurrentTab(tabId) {
 }
 
 // Any navigation of a tab (a tool's, the user's, a reload) voids its refs; a closed tab forgets them.
-chrome.tabs.onUpdated.addListener((tabId, change) => { if (change.status === "loading") invalidateTab(tabId); });
+const loadStarted = new Map(); // tabId → when its latest page load began
+chrome.tabs.onUpdated.addListener((tabId, change) => {
+  if (change.status !== "loading") return;
+  invalidateTab(tabId);
+  loadStarted.set(tabId, Date.now());
+});
 chrome.tabs.onRemoved.addListener((tabId) => {
   forgetTab(tabId);
+  loadStarted.delete(tabId);
   if (tabId === currentTabId) setCurrentTab(null);
 });
 
@@ -98,6 +104,19 @@ export async function navigate({ url, tabId } = {}) {
   if (status === "closed") throw new ToolError("no_such_tab", `Tab ${tab.id} was closed while loading.`);
   setCurrentTab(tab.id);
   return { ...tabSummary(await chrome.tabs.get(tab.id)), status };
+}
+
+/** After a click or key: if the tab started loading a page, wait for it and say where it went (its refs are void). */
+export async function settleAfterAction(tabId, urlBefore, startedAt) {
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  let tab;
+  try { tab = await chrome.tabs.get(tabId); } catch { return { closed: true }; }
+  const loaded = (loadStarted.get(tabId) ?? 0) >= startedAt;
+  if (!loaded) return tab.url === urlBefore ? null : { url: tab.url ?? "", title: tab.title ?? "", status: "complete", sameDocument: true };
+  const status = tab.status === "loading" ? await waitForLoad(tabId) : "complete";
+  if (status === "closed") return { closed: true };
+  const after = await chrome.tabs.get(tabId);
+  return { url: after.url ?? "", title: after.title ?? "", status, note: "The page changed: call read_page for fresh refs." };
 }
 
 const RESTRICTED = /cannot access|cannot be scripted|chrome:\/\/|extensions gallery|missing host permission|error page/i;
