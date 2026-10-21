@@ -231,6 +231,7 @@ function createAgentToolsHost({
     sessions: "tools that read the user's other sessions",
     host: "tools that open a file in the user's editor or show it in Finder",
     window: "get_window_layout, open_session_in, close_split, set_sidebar_collapsed: read the app's window layout and arrange where this session shows",
+    browser: "chrome_navigate, chrome_read_page, chrome_find, chrome_form_input, chrome_computer, chrome_javascript_tool, chrome_browser_batch, chrome_tabs_create_mcp, chrome_tabs_context_mcp: read and operate pages in the user's own Chrome (Claude in Chrome)",
   };
   // load_tools groups by server: identity (a session, or none for a server shared by a folder) and the server's folder.
   const loads = new Map(); // key → Set<group>

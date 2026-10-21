@@ -1,6 +1,7 @@
 // Chrome bridge acceptance, phase by phase:
 //   npm run check:chrome-bridge            every phase
-//   npm run check:chrome-bridge -- p4      one phase (p0 … p4)
+//   npm run check:chrome-bridge -- p5      one phase (p0 … p5)
+//   npm run check:chrome-bridge -- session a real Codex session chains the tools (spends a model turn; not in the default run)
 // Runs in Electron's main process (no window, Dock icon hidden) with the same bridge-client.cjs the app uses. It starts
 // a headless Chrome for Testing (Playwright's, or CHROME_PATH) on a throwaway profile with claude-ext/ loaded, registers
 // the native host in that profile only (<profile>/NativeMessagingHosts, launcher run by this Electron as node), and
@@ -23,6 +24,10 @@
 // P4 tabs_create / tabs_context: two bridge tabs open in the background (the user's tab stays active), the new one
 //    becomes current · refs don't cross tabs either way · switching back by tabId keeps the original tab's refs
 //    and leaves the other tab's untouched · about:blank without a url, active: true brings a tab to the front.
+// P5 the chrome_ tools as a core sees them: the real agent-tools host and stdio MCP server list them only after
+//    load_tools (deferred), then navigate → read_page → find → javascript_tool → form_input → computer → batch run
+//    against this Chrome; the site is asked once, a declined site is refused and never asked again; the transcript
+//    rows those calls get are printed.
 import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -30,13 +35,17 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
+import readline from "node:readline";
 import { app } from "electron";
+import { appToolLabel } from "../src/agent-tool-titles.mjs";
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, "..");
 const { installNativeHost } = require("../electron/browser/install.cjs");
 const { ChromeBridgeClient, listSockets } = require("../electron/browser/bridge-client.cjs");
 const { EXTENSION_ID, HOST_NAME } = require("../electron/browser/protocol.cjs");
+const { createAgentToolsHost } = require("../electron/agent-tools-host.cjs");
+const { createChromeBridgeService } = require("../electron/browser/chrome-bridge-service.cjs");
 const extensionDir = path.resolve(root, "..", "claude-ext");
 
 app.dock?.hide();
@@ -470,11 +479,169 @@ const phases = {
     assert.equal(row(front.tabId).active, true);
     assert.equal(await failsWith(tool("tabs_create", { url: "chrome://settings" })), "bad_url");
   },
+
+  // The tools as a session's core sees them: app/electron/agent-tools/browser.mjs served by the real agent-tools host
+  // and stdio MCP server, calling chrome-bridge-service.cjs (as main.cjs provides it) into this Chrome.
+  async p5({ base, socketFile }) {
+    const approvals = [];
+    const service = createChromeBridgeService({ connect: () => ChromeBridgeClient.connect({ file: socketFile }) });
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ocb-tools-"));
+    const host = createAgentToolsHost({ toolsDir: path.join(root, "electron", "agent-tools"), tmpRoot, command: process.execPath, runAsNode: true,
+      resolveSession: (id, meta) => ((id ?? meta?.threadId) === "thread-1" ? { id: "thread-1", cwd: root } : null),
+      deferredGroups: () => ["browser"], logger: { warn() {}, log() {} } });
+    // main.cjs's provide, with the user's answer on the approval card played by this list: the fixtures' host yes,
+    // example.com no.
+    host.provide("chromeBridge", (session, ctx) => ({
+      call: (name, args) => service.call(session.id, name, args, { signal: ctx?.signal ?? null, approve: async (site) => { approvals.push(site.host); return site.host !== "example.com"; } }),
+    }));
+    await host.start();
+    const child = spawn(process.execPath, [path.join(root, "electron", "agent-tools-server.mjs")], { env: { PATH: process.env.PATH, ELECTRON_RUN_AS_NODE: "1", ...host.launchEnv(), CODE_DESKTOP_AGENT_SESSION: "thread-1" }, stdio: ["pipe", "pipe", "ignore"] });
+    const pending = new Map();
+    let seq = 0;
+    readline.createInterface({ input: child.stdout }).on("line", (line) => { const message = JSON.parse(line); pending.get(message.id)?.(message); pending.delete(message.id); });
+    const request = (method, params) => new Promise((resolve) => { const id = ++seq; pending.set(id, resolve); child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n"); });
+    const rows = [];
+    const call = async (name, args = {}) => {
+      const result = (await request("tools/call", { name, arguments: args })).result;
+      const text = result.content.filter((part) => part.type === "text").map((part) => part.text).join("\n");
+      const row = appToolLabel({ type: "mcpToolCall", server: "code_desktop", tool: name, arguments: args }, result.isError ? "failed" : "completed");
+      if (row) rows.push(`${row.label}${row.meta ? ` · ${row.meta}` : ""}`);
+      return { text, isError: result.isError === true };
+    };
+    try {
+      await request("initialize", { protocolVersion: "2025-06-18" });
+      // Deferred: listed only after load_tools names the group.
+      let listed = (await request("tools/list", {})).result.tools;
+      assert.ok(!listed.some((tool) => tool.name.startsWith("chrome_")), "deferred: not listed at first");
+      const loader = listed.find((tool) => tool.name === "load_tools");
+      assert.match(loader.description, /- browser: chrome_navigate, .*Claude in Chrome/);
+      assert.match((await call("load_tools", { groups: ["browser"] })).text, /browser/);
+      listed = (await request("tools/list", {})).result.tools.map((tool) => tool.name);
+      const NAMES = ["chrome_tabs_context_mcp", "chrome_tabs_create_mcp", "chrome_navigate", "chrome_read_page", "chrome_find", "chrome_form_input", "chrome_computer", "chrome_javascript_tool", "chrome_browser_batch"];
+      for (const name of NAMES) assert.ok(listed.includes(name), `${name} listed after load_tools`);
+      say(`tools/list: deferred until load_tools, then ${NAMES.length} chrome_ tools`);
+      rows.length = 0;
+
+      // A session's chain: open the page, read it, find the link, and act on a form — the site asked about once.
+      const opened = await call("chrome_navigate", { url: `${base}/example` });
+      assert.equal(opened.isError, false, opened.text);
+      assert.match(opened.text, /“Example Domain”/);
+      const tabId = Number(/^Tab (\d+):/.exec(opened.text)[1]);
+      const page = await call("chrome_read_page", {});
+      assert.match(page.text, /^Tab \d+: “Example Domain”/);
+      assert.match(page.text, /- heading "Example Domain" \[level=1\]/);
+      const link = /link "More information\.\.\." \[(ref_\d+)\]/.exec(page.text)[1];
+      const found = await call("chrome_find", { query: "More information" });
+      assert.match(found.text, new RegExp(`\\[${link}\\]`));
+      const title = await call("chrome_javascript_tool", { code: "document.title" });
+      assert.equal(title.text, '"Example Domain"');
+      const login = await call("chrome_navigate", { url: `${base}/login`, tabId });
+      const form = await call("chrome_read_page", { filter: "interactive" });
+      const user = /textbox "Username" \[(ref_\d+)\]/.exec(form.text)[1];
+      const counter = /button "Counter" \[(ref_\d+)\]/.exec(form.text)[1];
+      assert.match((await call("chrome_form_input", { ref: user, value: "alice" })).text, /^Set textbox “Username” \[ref_\d+\] to "alice" \(input, change\)\.$/);
+      assert.match((await call("chrome_computer", { action: "left_click", ref: counter })).text, /^Clicked button “Counter”/);
+      const batch = await call("chrome_browser_batch", { actions: [{ name: "computer", input: { action: "left_click", ref: counter } }, { name: "find", input: { query: "log clicks" } }, { name: "tabs_context_mcp" }] });
+      assert.match(batch.text, /2\. find: .*clicks=2 dbl=0 ctx=0/s);
+      assert.match(batch.text, /3\. tabs_context: Current tab: \d+/);
+      assert.equal(approvals.filter((site) => site.startsWith("127.0.0.1")).length, 1, "the fixtures' site was asked once");
+      // A site the user declines: refused, and not asked again.
+      const refused = await call("chrome_navigate", { url: "https://example.com/" });
+      assert.equal(refused.isError, true);
+      assert.match(refused.text, /site_declined: The user didn't allow example\.com/);
+      assert.equal((await call("chrome_tabs_create_mcp", { url: "example.com" })).isError, true);
+      assert.deepEqual(approvals.map((site) => site.replace(/:\d+$/, ":port")), ["127.0.0.1:port", "example.com"], "declined once, never asked again");
+      const tabs = await call("chrome_tabs_context_mcp");
+      assert.match(tabs.text, new RegExp(`tabId ${tabId}: “Sign in” .*\\[current, opened by you\\]`));
+      say(`approvals asked: ${approvals.join(", ")}`);
+      say(`transcript rows:\n${rows.map((line) => `  ${line}`).join("\n")}`);
+      void login;
+    } finally {
+      child.kill();
+      host.stop();
+      service.close();
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  },
+
+  // A real session (opt-in: `-- session`, it spends one model turn): Codex with the code_desktop server as main.cjs
+  // launches it, asked in the user's words to open example.com and tell the title. The model has to find and chain
+  // the chrome_ tools by itself; the site card is answered Allow (recorded). Shell commands are declined, so the
+  // answer can't come from curl.
+  async session({ socketFile }) {
+    const codex = require("../electron/codex.cjs");
+    const { respondToApproval } = require("../electron/respond-approval.cjs");
+    const workspace = path.resolve(root, "..", "workspace");
+    fs.mkdirSync(workspace, { recursive: true });
+    const approvals = [];
+    const service = createChromeBridgeService({ connect: () => ChromeBridgeClient.connect({ file: socketFile }) });
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ocb-session-"));
+    const host = createAgentToolsHost({ toolsDir: path.join(root, "electron", "agent-tools"), tmpRoot, command: process.execPath, runAsNode: true,
+      resolveSession: (id, meta) => { const named = id ?? meta?.threadId; return typeof named === "string" && named ? { id: named, cwd: workspace } : null; },
+      isGroupEnabled: (group) => group === "browser", logger: { warn() {}, log() {} } });
+    host.provide("chromeBridge", (session, ctx) => ({
+      call: (name, args) => service.call(session.id, name, args, { signal: ctx?.signal ?? null, approve: async (site) => { approvals.push(site.host); return true; } }),
+    }));
+    await host.start();
+    codex.setAgentToolsLaunch(() => ({ env: host.launchEnv(), codexArgs: host.codexArgs() }));
+    const client = new codex.CodexClient({ cwd: workspace });
+    const items = [];
+    let finish;
+    const done = new Promise((resolve, reject) => { finish = { resolve, reject }; });
+    const timer = setTimeout(() => finish.reject(new Error("the turn took longer than 4 minutes")), 240_000);
+    client.on("event", (event) => {
+      if (event.kind === "request") {
+        const answer = event.method === "item/permissions/requestApproval" ? { allow: false } : { decision: "decline" };
+        const result = respondToApproval(client, { id: event.id, expected: event.bridgeApproval, ...answer });
+        if (!result.ok) finish.reject(new Error(`couldn't answer ${event.method}: ${result.error.message}`));
+        items.push({ type: "declined", method: event.method });
+      }
+      if (event.method === "item/completed" && event.params?.item) items.push(event.params.item);
+      if (event.method === "turn/completed") finish.resolve(event.params.turn);
+    });
+    try {
+      await client.start();
+      // The user's own Codex model (config.toml), unless CHROME_BRIDGE_MODEL names another.
+      const model = process.env.CHROME_BRIDGE_MODEL || undefined;
+      const identity = host.sessionIdentity();
+      const started = await client.request("thread/start", { cwd: workspace, ...(model ? { model } : {}), sandbox: "read-only", approvalPolicy: "on-request", approvalsReviewer: "user", config: host.sessionConfig(identity) });
+      host.bindThread(identity, started.thread.id);
+      const prompt = "打开 example.com，告诉我标题";
+      say(`model ${started.model ?? model ?? "(config default)"} · thread ${started.thread.id}\nuser: ${prompt}`);
+      await client.request("turn/start", { threadId: started.thread.id, input: [{ type: "text", text: prompt, text_elements: [] }], effort: "low" });
+      const turn = await done;
+      const calls = items.filter((item) => item.type === "mcpToolCall");
+      for (const item of items) {
+        if (item.type === "mcpToolCall") {
+          const row = appToolLabel(item, item.status === "failed" ? "failed" : "completed");
+          say(`  [${item.server}] ${item.tool} ${JSON.stringify(item.arguments)} → row “${row?.label ?? "?"}${row?.meta ? ` · ${row.meta}` : ""}” (${item.status})`);
+        } else if (item.type === "declined") say(`  declined ${item.method}`);
+        else if (item.type === "commandExecution") say(`  shell: ${item.command} (${item.status})`);
+        else if (item.type === "webSearch") say(`  web search: ${JSON.stringify(item.query ?? item.action ?? "")}`);
+      }
+      const answer = items.filter((item) => item.type === "agentMessage").map((item) => item.text).join("\n");
+      say(`assistant: ${answer}`);
+      say(`site approvals: ${approvals.join(", ") || "none"} · turn ${turn.status}${turn.error ? ` · ${JSON.stringify(turn.error).slice(0, 600)}` : ""}`);
+      assert.equal(turn.status, "completed");
+      assert.ok(calls.some((item) => item.server === "code_desktop" && item.tool === "chrome_navigate" && item.status === "completed"), "the model opened the page with chrome_navigate");
+      assert.ok(calls.some((item) => item.server === "code_desktop" && /^chrome_(read_page|find|javascript_tool|tabs_context_mcp)$/.test(item.tool) && item.status === "completed")
+        || calls.some((item) => item.tool === "chrome_navigate" && JSON.stringify(item.result ?? "").includes("Example Domain")), "and read the title back through the Chrome tools");
+      assert.match(answer, /Example Domain/);
+      assert.deepEqual(approvals, ["example.com"], "the site was asked once");
+    } finally {
+      clearTimeout(timer);
+      client.stop?.();
+      host.stop();
+      service.close();
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  },
 };
 
 // ── run ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-const requested = process.argv.slice(2).filter((arg) => /^p\d$/.test(arg));
-const selected = requested.length ? requested : Object.keys(phases);
+const requested = process.argv.slice(2).filter((arg) => /^(p\d|session)$/.test(arg));
+// Every phase but `session` (a real model turn), unless named.
+const selected = requested.length ? requested : Object.keys(phases).filter((name) => name !== "session");
 for (const name of selected) if (!phases[name]) { console.error(`No phase ${name}: ${Object.keys(phases).join(", ")}`); process.exit(2); }
 
 let chrome = null, client = null, server = null, exitCode = 1, chromeErr = "";
@@ -513,7 +680,7 @@ async function run() {
 
     for (const name of selected) {
       say(`\n── ${name.toUpperCase()} ──`);
-      await phases[name]({ client, sockets, base });
+      await phases[name]({ client, sockets, base, socketFile: socket.file });
       say(`${name.toUpperCase()} PASS`);
     }
     say(`\nPASS: ${selected.map((name) => name.toUpperCase()).join(", ")} over ${HOST_NAME}.`);

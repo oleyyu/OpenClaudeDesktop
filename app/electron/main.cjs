@@ -667,7 +667,7 @@ function computerUseSyncGlow(sessions = computerUseInUse.sessions()) {
 // Claude Code does). The session's Mode is the one its last turn ran with (workflow-tool-service.cjs sessionAccess).
 // A Monitor command, a scheduled prompt and a web page WebFetch reads ask the same way (agent-tools/monitor.mjs,
 // schedule.mjs, web.mjs).
-const BYPASS_KINDS = new Set(["terminal-command", "preview-site", "preview-server", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"]);
+const BYPASS_KINDS = new Set(["terminal-command", "preview-site", "chrome-site", "preview-server", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"]);
 async function agentToolAsk(session, request, options = {}) {
   if (BYPASS_KINDS.has(request?.kind) && typeof session?.id === "string") {
     let access = null;
@@ -686,12 +686,12 @@ const cardText = (value, max = 4000) => typeof value === "string" ? (value.lengt
 async function agentToolCard(session, request = {}, { signal, call } = {}) {
   const owner = client;
   if (!owner || typeof owner.localApproval !== "function" || typeof session?.id !== "string" || !config?.threadIds?.includes(session.id)) return undefined;
-  const kind = ["terminal-command", "preview-site", "preview-server", "workflow", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"].includes(request.kind) ? request.kind : "other";
+  const kind = ["terminal-command", "preview-site", "chrome-site", "preview-server", "workflow", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"].includes(request.kind) ? request.kind : "other";
   const { shellLine, launchEnvSummary } = require("./agent-tool-approval.cjs");
   const command = kind === "terminal-command" || kind === "monitor" ? cardText(String(request.command ?? "")) : kind === "preview-server" ? cardText(shellLine(request.command, request.args)) : undefined;
   const tool = { kind };
   if (kind === "terminal-command") Object.assign(tool, { title: cardText(request.title, 200), tabTitle: cardText(request.tabTitle ?? request.tab, 200), detail: cardText(request.detail) });
-  if (kind === "preview-site") Object.assign(tool, { host: cardText(request.host, 300), url: cardText(request.url, 2000) });
+  if (kind === "preview-site" || kind === "chrome-site") Object.assign(tool, { host: cardText(request.host, 300), url: cardText(request.url, 2000) });
   // The configuration's env is part of what is approved (preview-service fingerprints it): the card shows it, and names
   // the variables that change which program runs (PATH, NODE_OPTIONS, DYLD_*, …).
   // R3-toolcards TT-09: the launch.json port and whether it may be reassigned (c96d752d0 Kk preview_start: "Runs in {cwd} on port {port}").
@@ -748,7 +748,7 @@ function agentToolCallOutlivesTurn(call, owner = client) {
 function agentToolsDeferred(owner = client) {
   let defer = false;
   try { defer = coreCapabilities(owner?.serverInfo ?? null).deferAppTools === true; } catch { defer = false; }
-  return defer ? ["workflow", "monitor", "schedule", "findings", "notebook", "window"] : [];
+  return defer ? ["workflow", "monitor", "schedule", "findings", "notebook", "window", "browser"] : [];
 }
 /** Whether the running core gets an app tool: always, unless the tool stands in for one the core lists in nativeTools. */
 function agentToolServedToCore(tool, owner = client, session = null) {
@@ -972,6 +972,16 @@ function runAgentLayoutCommand(sessionId, command) {
 }
 agentTools.provide("layout", (session) => ({ run: (command) => runAgentLayoutCommand(session.id, command) }));
 // Computer use (agent-tools/computer-use.mjs): the session's grants and windows live in `computerUse` above;
+// The Claude in Chrome equivalent (agent-tools/browser.mjs): the OpenClaude Desktop Bridge extension in the user's
+// Chrome, reached through its native host (electron/browser/). One connection for every session; each session allows
+// sites one at a time on its approval card (the "chrome-site" kind; Bypass permissions allows them without asking).
+const chromeBridge = require("./browser/chrome-bridge-service.cjs").createChromeBridgeService();
+agentTools.provide("chromeBridge", (session, ctx) => ({
+  call: (name, args) => chromeBridge.call(session.id, name, args, {
+    signal: ctx?.signal ?? null,
+    approve: ({ host, url }) => agentToolAsk(session, { kind: "chrome-site", host, url }, { signal: ctx?.signal, call: ctx?.call }),
+  }),
+}));
 // request_access names apps as people do (computer-use/apps.cjs finds their bundles) and asks with the access card.
 const { createAppResolver, appIconDataUrl } = require("./computer-use/apps.cjs");
 const computerUseApps = createAppResolver({ enumerate: (folders) => computerUseAxHelper.call("apps", { folders }) });

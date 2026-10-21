@@ -1,4 +1,4 @@
-// Friendly transcript titles for OpenClaude Desktop's own agent tools (preview, terminal and Workflow: the "code_desktop" MCP
+// Friendly transcript titles for OpenClaude Desktop's own agent tools (preview, Chrome, terminal and Workflow: the "code_desktop" MCP
 // server every core runs, electron/agent-tools-host.cjs). Preview verbs are the 2.2553.1 ones (shared-5-CGK2eyBT.js hN map: "Starting
 // preview" / "Started preview" / "Couldn’t start preview", …). A core reports a call as an mcpToolCall with
 // server "code_desktop" (Codex, the DeepSeek core, ACP agents), or with the tool prefixed "code_desktop_" (OpenCode).
@@ -106,7 +106,70 @@ const TITLES = {
   preview_batch: (args) => ({ verbs: [t("Performing browser actions"), t("Performed browser actions"), t("Couldn’t perform browser actions")],
     meta: Array.isArray(args.actions) && args.actions.length ? tn(args.actions.length, "{count} step", "{count} steps") : null }),
   resize_window: (args) => ({ verbs: [t("Resizing preview"), t("Resized preview"), t("Couldn’t resize preview")], meta: str(args.preset) || (Number.isFinite(args.width) && Number.isFinite(args.height) ? `${args.width} × ${args.height}` : str(args.colorScheme) || null) }),
+  // The Chrome tools (agent-tools/browser.mjs, Claude in Chrome's): the 2.42304.0 verbs, which map each
+  // claude-in-chrome tool to the Browser one (shared-130 zI → WF: navigate "Opening a page", tabs_context "Checking
+  // tabs", javascript_tool "Running page script", …); computer by its action (EI), a batch by its steps (XI / AI).
+  chrome_navigate: (args) => ({ ...(CHROME_HISTORY[str(args.url)] ?? { verbs: [t("Opening a page"), t("Opened a page"), t("Couldn’t open the page")] }), meta: CHROME_HISTORY[str(args.url)] ? null : host(args.url) }),
+  chrome_read_page: (args) => ({ verbs: args.filter === "interactive" ? [t("Reading page (interactive)"), t("Read page (interactive)"), t("Couldn’t read page")] : [t("Reading page"), t("Read page"), t("Couldn’t read page")], meta: str(args.ref_id) || null }),
+  chrome_find: (args) => ({ verbs: [t("Finding on page"), t("Found on page"), t("Couldn’t search the page")], meta: clip(args.query, 60) }),
+  chrome_form_input: (args) => ({ verbs: [t("Filling in a field"), t("Filled in a field"), t("Couldn’t fill in a field")], meta: str(args.ref) || null }),
+  chrome_computer: (args) => ({ verbs: chromeActionVerbs(args), meta: chromeActionMeta(args) }),
+  chrome_javascript_tool: (args) => ({ verbs: [t("Running page script"), t("Ran page script"), t("Page script failed")], meta: firstLine(args.code)?.slice(0, 80) ?? null }),
+  chrome_tabs_context_mcp: () => ({ verbs: [t("Checking tabs"), t("Checked tabs"), t("Couldn’t check tabs")], meta: null }),
+  chrome_tabs_create_mcp: (args) => ({ verbs: [t("Opening tab"), t("Opened tab"), t("Couldn’t open tab")], meta: str(args.url) ? host(args.url) : null }),
+  chrome_browser_batch: (args) => ({ verbs: chromeBatchVerbs(args), meta: Array.isArray(args.actions) && args.actions.length ? tn(args.actions.length, "{count} step", "{count} steps") : null }),
 };
+
+// chrome_navigate's "back" / "forward" (2.42304.0 goBack / goForward).
+const CHROME_HISTORY = {
+  get back() { return { verbs: [t("Going back"), t("Went back"), t("Couldn’t go back")] }; },
+  get forward() { return { verbs: [t("Going forward"), t("Went forward"), t("Couldn’t go forward")] }; },
+};
+// computer's action verbs (2.42304.0 EI, with the matching failures).
+function chromeActionVerbs(args) {
+  const action = str(args?.action);
+  if (action === "left_click" || action === "right_click" || action === "double_click") return [t("Clicking"), t("Clicked"), t("Failed to click")];
+  if (action === "hover") return [t("Hovering"), t("Hovered"), t("Couldn’t hover")];
+  if (action === "type") return [t("Typing"), t("Typed"), t("Couldn’t type")];
+  if (action === "key") return [t("Pressing key"), t("Pressed key"), t("Couldn’t press key")];
+  if (action === "scroll") {
+    const way = { up: [t("Scrolling up"), t("Scrolled up")], down: [t("Scrolling down"), t("Scrolled down")], left: [t("Scrolling left"), t("Scrolled left")], right: [t("Scrolling right"), t("Scrolled right")] }[str(args.scroll_direction)];
+    return way ? [...way, t("Couldn’t scroll")] : [t("Scrolling to element"), t("Scrolled to element"), t("Couldn’t scroll to element")];
+  }
+  return [t("Interacting with page"), t("Interacted with page"), t("Failed to interact with page")];
+}
+// What a computer row names: the element's ref, else the point; the keys pressed; the text typed.
+function chromeActionMeta(args) {
+  const action = str(args?.action);
+  if (action === "key") return clip(args.text, 60);
+  if (action === "type") return clip(args.text, 60) ? `“${clip(args.text, 60)}”` : null;
+  if (str(args.ref)) return str(args.ref);
+  const point = Array.isArray(args.coordinate) && args.coordinate.length === 2 && args.coordinate.every(Number.isFinite) ? `(${Math.round(args.coordinate[0])}, ${Math.round(args.coordinate[1])})` : null;
+  return point;
+}
+// A batch row: its steps' verbs, each kind once, at most three and "+N" for the rest (2.42304.0 XI / AI, TI = 3).
+const CHROME_STEP_TITLES = { navigate: "chrome_navigate", read_page: "chrome_read_page", find: "chrome_find", form_input: "chrome_form_input", computer: "chrome_computer",
+  javascript_tool: "chrome_javascript_tool", tabs_context: "chrome_tabs_context_mcp", tabs_context_mcp: "chrome_tabs_context_mcp", tabs_create: "chrome_tabs_create_mcp", tabs_create_mcp: "chrome_tabs_create_mcp" };
+function chromeBatchVerbs(args) {
+  const steps = Array.isArray(args?.actions) ? args.actions : [];
+  const verbs = (done) => {
+    const labels = [];
+    let more = 0;
+    for (const step of steps) {
+      const name = CHROME_STEP_TITLES[str(step?.name).replace(/^chrome_/, "")];
+      const input = step?.input && typeof step.input === "object" ? step.input : {};
+      // Official step labels: navigate is "Opening" / "Opened" and find "Finding" / "Found" inside a batch (DI).
+      const label = name === "chrome_navigate" ? (done ? t("Opened") : t("Opening")) : name === "chrome_find" ? (done ? t("Found") : t("Finding"))
+        : name ? TITLES[name](input).verbs[done ? 1 : 0] : t("Browser action");
+      if (labels.includes(label)) continue;
+      if (labels.length < 3) labels.push(label); else more += 1;
+    }
+    if (!labels.length) return done ? t("Performed browser actions") : t("Performing browser actions");
+    const text = labels.map((label, index) => (index === 0 ? label : label.charAt(0).toLowerCase() + label.slice(1))).join(", ");
+    return more ? `${text} +${more}` : text;
+  };
+  return [verbs(false), verbs(true), t("Couldn’t perform browser actions")];
+}
 
 /** The app tool a transcript item calls ({tool, args}), or null for anything else. */
 export function appToolCall(item) {

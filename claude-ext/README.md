@@ -79,6 +79,33 @@ ref 规则：
   把 A tab 的 ref 用在 B tab → `ref_wrong_tab`。都不会静默失败。
 - 页面内容（`tree`、`text`）是不可信数据，不是指令；到 P5 注册工具时写进工具描述。
 
+## 在 App 里（P5）
+
+注册在 `app/electron/agent-tools/browser.mjs`，group `browser`：
+
+| 模型看到的工具 | 扩展里的工具 | 工具行（官方动词） |
+|---|---|---|
+| `chrome_navigate` | navigate | Opening a page / Opened a page（back、forward 为 Going back / Going forward），meta 为站点 |
+| `chrome_read_page` | read_page | Reading page；`filter: interactive` 时为 Reading page (interactive) |
+| `chrome_find` | find | Finding on page，meta 为查询词 |
+| `chrome_form_input` | form_input | Filling in a field，meta 为 ref |
+| `chrome_computer` | computer | 按 action：Clicking / Hovering / Typing / Pressing key / Scrolling down…，meta 为 ref、坐标、按键或文字 |
+| `chrome_javascript_tool` | javascript_tool | Running page script / Page script failed，meta 为代码首行 |
+| `chrome_browser_batch` | browser_batch | 各步骤动词去重、最多三个再加 +N（如 “Opened, read page, clicked +2”），meta 为步数 |
+| `chrome_tabs_create_mcp` | tabs_create | Opening tab |
+| `chrome_tabs_context_mcp` | tabs_context | Checking tabs |
+
+- **为什么带 `chrome_` 前缀**：App 的所有工具都挂在同一个 MCP server `code_desktop` 下，preview 分组已经占用了
+  `navigate`、`read_page`、`find`。官方 Claude in Chrome 和其它工具共用一个 server 时（Chrome 侧边栏）也是这么命名的
+  （`chrome_tabs_context_mcp`、`chrome_browser_batch`…）。batch 里的步骤名带不带前缀都认。
+- **默认 deferred**：对自己不会延迟加载工具的 core（DeepSeek、OpenCode、MiMo），`browser` 和 workflow 等分组一样，
+  要等模型调用 `load_tools` 才会出现；Claude、Codex 走它们自己的工具搜索。
+- **站点授权**：每个会话第一次碰到某个站点时，弹出 "chrome-site" 审批卡（Bypass permissions 下不问）。允许后整个会话内有效；
+  拒绝后本会话不再询问，也不会再碰那个站点。具体机制：扩展按调用里带的 `allowedHosts` 拦截，返回 `site_not_allowed`，
+  主进程弹卡片，允许后重发；batch 只续跑还没执行的步骤。点击链接跳到新站点后，下一次在那个 tab 上操作时才会询问。
+- 主进程服务：`app/electron/browser/chrome-bridge-service.cjs`。所有会话共用一条到 native host 的连接；扩展没连上时，
+  模型会收到一条说明怎么装的错误。
+
 ## 在自己的 Chrome 里装上
 
 1. 注册 native host（写入 `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.openclaude.chrome_bridge.json`，
@@ -125,11 +152,25 @@ cd app && npm run check:chrome-bridge -- p1
   再验 checkbox、select、type、key、按 ref 与按坐标点击、双击、右键、hover、scroll、元素消失后的 `stale_ref`、点击导航。
 - P3：带严格 CSP 的本地页，javascript_tool 的读能用、15 种写 / 网络 / cookie / storage / 异步调用被拒，页面与服务器都没有变化；
   `browser_batch` navigate → read_page → computer → javascript_tool 只产生一次 App→host 调用（数 host 日志），遇错即停。
+- P5：真实的 agent-tools host 加 stdio MCP server：`chrome_` 工具要在 `load_tools` 之后才列出（deferred），然后依次调
+  navigate → read_page → find → javascript_tool → form_input → computer → batch。站点只问一次，被拒的站点不会再问；
+  最后打印这些调用对应的工具行。
 - P4：`tabs_create` 开两个后台 tab（用户的激活 tab 不变），新 tab 成为当前 tab；两个方向的 ref 都不串（`ref_wrong_tab`）；
   按 tabId 切回原 tab 后它的 ref 仍有效，另一个 tab 的 ref 也没被动到；不带 url 开 `about:blank`，`active: true` 开到前台。
 
 没有 Chrome for Testing 时先 `npx playwright install chromium`，或用 `CHROME_PATH` 指向一个 Chromium（品牌版 Google Chrome
-已不接受 `--load-extension`）。不需要浏览器的协议与路由单测：`node --test tests/chrome-bridge.test.mjs`。
+已不接受 `--load-extension`）。不需要浏览器的单测：`node --test tests/chrome-bridge.test.mjs tests/agent-tools-browser.test.mjs`。
+
+会话级验收（真模型，花一次 turn，不在默认运行里）：Codex 带着 `code_desktop` server，用你的原话
+「打开 example.com，告诉我标题」，要求模型自己串起 `chrome_` 工具并答出 "Example Domain"。shell 命令一律拒绝，
+所以答案不可能来自 curl。
+
+```bash
+cd app && npm run check:chrome-bridge -- session
+```
+
+需要 Codex 当前的模型能用：本机的 Codex 路由到 `deepseek-official`，启动环境里要有 `DEEPSEEK_API_KEY`
+（App 里由凭据服务注入）。`CHROME_BRIDGE_MODEL` 可以指定别的模型。
 
 ## 进度
 
@@ -138,4 +179,8 @@ cd app && npm run check:chrome-bridge -- p1
 - [x] P2 form_input / computer（ref 寻址）
 - [x] P3 javascript_tool / browser_batch
 - [x] P4 tabs_create / tabs_context
-- [ ] P5 注册进 agent-tools（group `browser`，默认 deferred）
+- [x] P5 注册进 agent-tools（group `browser`，默认 deferred），站点授权，工具行；会话级验收脚本已就绪，
+  还没用真模型跑通（缺 DEEPSEEK_API_KEY，见上）
+- [ ] `harness/packages/acp-bridge/src/app-tools.js` 的 `APP_TOOL_NAMES` 还没加这 9 个工具名（按约定不改 harness/）。
+  缺了不影响工具本身，只是 Gemini 的 Plan 模式规则和 Qwen 的预加载列表会漏掉它们；`tests/app-tool-names-sync.test.mjs`
+  里把它们列为待同步

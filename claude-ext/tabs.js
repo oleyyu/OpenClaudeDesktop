@@ -7,6 +7,7 @@
 // the tab the user is looking at stays as it is.
 import { ToolError } from "./errors.js";
 import { invalidateTab, forgetTab } from "./refs.js";
+import { assertSite } from "./sites.js";
 
 const LOAD_TIMEOUT_MS = 20_000;
 let currentTabId = null;
@@ -95,15 +96,17 @@ function waitForLoad(tabId) {
 
 /** navigate(url, tabId?): url, or "back" / "forward". Without tabId a new background tab is opened (the user's own
  * tabs aren't navigated away unless the tool names one); it becomes the bridge's current tab. */
-export async function navigate({ url, tabId } = {}) {
+export async function navigate({ url, tabId } = {}, ctx = {}) {
   let tab;
   if (url === "back" || url === "forward") {
     tab = await resolveTab(tabId);
+    assertSite(tab.url, ctx);
     invalidateTab(tab.id);
     try { await (url === "back" ? chrome.tabs.goBack(tab.id) : chrome.tabs.goForward(tab.id)); }
     catch { throw new ToolError("bad_request", `Tab ${tab.id} has no page to go ${url} to.`); }
   } else {
     const target = normalizeUrl(url);
+    assertSite(target, ctx);
     if (tabId !== undefined && tabId !== null) {
       tab = await resolveTab(tabId);
       invalidateTab(tab.id);
@@ -134,9 +137,10 @@ export async function settleAfterAction(tabId, urlBefore, startedAt) {
 
 /** tabs_create(url?, active?): a new tab in the last focused window, in the background unless active; it becomes the
  * bridge's current tab. Without url it is about:blank (Chrome's own New Tab page can't be read). */
-export async function tabsCreate({ url, active = false } = {}) {
+export async function tabsCreate({ url, active = false } = {}, ctx = {}) {
   if (typeof active !== "boolean") throw new ToolError("bad_request", "active is true or false.");
   const target = url === undefined || url === null || url === "" ? "about:blank" : normalizeUrl(url);
+  assertSite(target, ctx);
   await load();
   const tab = await chrome.tabs.create({ url: target, active });
   markOpened(tab.id);

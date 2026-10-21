@@ -75,5 +75,5 @@ test('agent tools: the ccd_window set, acting on the calling session only', asyn
   const main = fs.readFileSync(path.resolve(import.meta.dirname, '../electron/main.cjs'), 'utf8');
   assert.match(main, /agentTools\.provide\("layout", \(session\) => \(\{ run: \(command\) => runAgentLayoutCommand\(session\.id, command\) \}\)\);/);
   assert.match(main, /await openSessionPopout\(\{ sessionId: target, from: pending\.window, inactive: true \}\);/);
-  assert.match(main, /return defer \? \["workflow", "monitor", "schedule", "findings", "notebook", "window"\] : \[\];/);
+  assert.match(main, /return defer \? \["workflow", "monitor", "schedule", "findings", "notebook", "window", "browser"\] : \[\];/);
 });

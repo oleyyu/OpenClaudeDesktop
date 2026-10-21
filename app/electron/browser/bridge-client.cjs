@@ -81,7 +81,10 @@ class ChromeBridgeClient extends EventEmitter {
       this.pending.delete(message.tool_use_id);
       clearTimeout(waiting.timer);
       const error = message.params?.error;
-      if (error) waiting.reject(new BridgeError(error.code ?? "tool_error", error.message ?? "The extension couldn't do that."));
+      if (error) {
+        const { code, message: text, ...data } = error;
+        waiting.reject(Object.assign(new BridgeError(code ?? "tool_error", text ?? "The extension couldn't do that."), Object.keys(data).length ? { data } : {}));
+      }
       else waiting.resolve(message.params?.result);
       return;
     }
@@ -102,7 +105,11 @@ class ChromeBridgeClient extends EventEmitter {
   }
 
   getStatus(options) { return this.request("get_status", {}, options); }
-  executeTool(name, args = {}, options) { return this.request("execute_tool", { name, args }, options); }
+  /** options.allowedHosts: the sites the call may act on (the extension's sites.js); omitted, it isn't limited. */
+  executeTool(name, args = {}, options = {}) {
+    const { allowedHosts, ...rest } = options;
+    return this.request("execute_tool", { name, args, ...(Array.isArray(allowedHosts) ? { allowedHosts } : {}) }, rest);
+  }
   close() { this.socket.end(); }
 }
 

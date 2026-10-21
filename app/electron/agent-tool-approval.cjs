@@ -2,6 +2,7 @@
 // window that shows the session (else the main window) and resolves true only for an explicit Allow. One question
 // at a time per window; a window that closes, or a quit, answers no. Copy goes through the app's i18n.
 //   request.kind "preview-site"     { host, url }                    an outside site in the preview
+//   request.kind "chrome-site"      { host, url }                    a site the Chrome tools act on (agent-tools/browser.mjs)
 //   request.kind "preview-server"   { name, command, args, cwd, env } a .claude/launch.json dev server the agent starts
 //   request.kind "terminal-command" { title?, detail?, command, cwd } a command typed into a terminal tab
 //   request.kind "workflow"         { name, description, phases, args?, always? } a dynamic workflow the model starts
@@ -73,6 +74,13 @@ function approvalCopy(request = {}, { t, assistant, session = null }) {
     return {
       message: t("Let {assistant} use {host} in the preview?", values),
       detail: withSession(t("{assistant} will be able to read this site and click and type on it in this session. Only allow sites you trust.", values), session, t),
+      allow: t("Allow"),
+    };
+  }
+  if (request.kind === "chrome-site") {
+    return {
+      message: t("Let {assistant} use {host} in Chrome?", values),
+      detail: withSession(t("{assistant} will be able to read this site and click and type on it in Chrome in this session. Only allow sites you trust.", values), session, t),
       allow: t("Allow"),
     };
   }

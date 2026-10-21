@@ -8,6 +8,7 @@ import { ToolError } from "./errors.js";
 import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction, tabsCreate, tabsContext } from "./tabs.js";
 import { withRefs, record, checkRef } from "./refs.js";
 import { runReadOnly } from "./script.js";
+import { assertSite } from "./sites.js";
 
 const HOST_NAME = "com.openclaude.chrome_bridge";
 const RETRY_MIN_MS = 1000;
@@ -45,24 +46,26 @@ async function inPageTool(tab, op, args) {
 const MAX_BATCH = 50;
 const COMPUTER_ACTIONS = new Set(["left_click", "right_click", "double_click", "type", "key", "scroll", "hover"]);
 
-// Tools the app can run here, by name: async (args) → result (JSON). A thrown error with .code becomes {error: {code}}.
+// Tools the app can run here, by name: async (args, ctx) → result (JSON); ctx.allowedHosts limits the sites they act on
+// (sites.js). A thrown error with .code becomes {error: {code, message, …data}}.
 const tools = {
   async ping() {
     return { pong: true, extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version, at: Date.now() };
   },
 
   // navigate(url, tabId?) → { tabId, url, title, status }
-  navigate: (args) => navigate(args),
+  navigate: (args, ctx) => navigate(args, ctx),
 
   // tabs_create(url?, active?) → { tabId, url, title, status, active }
-  tabs_create: (args) => tabsCreate(args),
+  tabs_create: (args, ctx) => tabsCreate(args, ctx),
 
   // tabs_context() → { currentTabId, windows: [{ windowId, tabs: [{tabId, url, title, active, current, openedByBridge, status}] }] }
   tabs_context: () => tabsContext(),
 
   // read_page(tabId?, filter?, depth?, ref_id?, max_chars?) → { tabId, title, url, tree, refCount, truncated }
-  async read_page(args) {
+  async read_page(args, ctx) {
     const tab = await resolveTab(args.tabId);
+    assertSite(tab.url, ctx);
     const filter = args.filter ?? "all";
     if (filter !== "all" && filter !== "interactive") throw new ToolError("bad_request", 'filter is "all" or "interactive".');
     const depth = intArg(args.depth, "depth", { min: 1, max: 100, fallback: 15 });
@@ -73,16 +76,18 @@ const tools = {
   },
 
   // find(query, tabId?) → { tabId, query, matches: [{ref, role, name, interactive, text}], total }
-  async find(args) {
+  async find(args, ctx) {
     if (typeof args.query !== "string" || !args.query.trim()) throw new ToolError("bad_request", "query is required.");
     const tab = await resolveTab(args.tabId);
+    assertSite(tab.url, ctx);
     const limit = intArg(args.limit, "limit", { min: 1, max: 100, fallback: 20 });
     return withPageRefs(tab, "find", { query: args.query, limit }, { replace: false });
   },
 
   // form_input(ref, value, tabId?) → { tabId, ref, role, name, value | checked, events }
-  async form_input(args) {
+  async form_input(args, ctx) {
     const tab = await resolveTab(args.tabId);
+    assertSite(tab.url, ctx);
     checkRef(tab.id, args.ref);
     if (args.value === undefined || args.value === null) throw new ToolError("bad_request", "value is required.");
     return inPageTool(tab, "form_input", { ref: args.ref, value: args.value });
@@ -90,9 +95,10 @@ const tools = {
 
   // computer(action, ref?, coordinate?, text?, modifiers?, scroll_direction?, scroll_amount?, tabId?)
   // A ref is used when given (coordinate is then ignored); a coordinate only when there's no ref.
-  async computer(args) {
+  async computer(args, ctx) {
     if (!COMPUTER_ACTIONS.has(args.action)) throw new ToolError("bad_request", `action is one of ${[...COMPUTER_ACTIONS].join(", ")}.`);
     const tab = await resolveTab(args.tabId);
+    assertSite(tab.url, ctx);
     const ref = args.ref ?? null;
     if (ref !== null) checkRef(tab.id, ref);
     const coordinate = ref === null ? args.coordinate ?? null : null;
@@ -110,8 +116,9 @@ const tools = {
   },
 
   // javascript_tool(code, tabId?) → { tabId, type, value }: read-only, in the page's own context (script.js).
-  async javascript_tool(args) {
+  async javascript_tool(args, ctx) {
     const tab = await resolveTab(args.tabId);
+    assertSite(tab.url, ctx);
     const timeoutMs = intArg(args.timeout_ms, "timeout_ms", { min: 100, max: 60_000, fallback: 10_000 });
     const result = await runReadOnly(tab, args.code, { timeoutMs });
     setCurrentTab(tab.id);
@@ -120,7 +127,7 @@ const tools = {
 
   // browser_batch(actions: [{name, input}]) runs the steps here, one after another, in a single round trip with the app.
   // It stops at the first failure. → { steps: [{name, ok, result | error}], completed, failed? }
-  async browser_batch(args) {
+  async browser_batch(args, ctx) {
     const actions = args.actions;
     if (!Array.isArray(actions) || !actions.length) throw new ToolError("bad_request", "actions is a list of {name, input} steps.");
     if (actions.length > MAX_BATCH) throw new ToolError("bad_request", `At most ${MAX_BATCH} steps in one batch.`);
@@ -131,9 +138,9 @@ const tools = {
     const steps = [];
     for (const [index, step] of actions.entries()) {
       try {
-        steps.push({ name: step.name, ok: true, result: await tools[step.name](step.input ?? {}) });
+        steps.push({ name: step.name, ok: true, result: await tools[step.name](step.input ?? {}, ctx) });
       } catch (error) {
-        const failure = { code: error?.code ?? "tool_error", message: error?.message ?? String(error) };
+        const failure = { code: error?.code ?? "tool_error", message: error?.message ?? String(error), ...(error?.data ?? {}) };
         steps.push({ name: step.name, ok: false, error: failure });
         return { steps, completed: index, failed: { step: index + 1, ...failure } };
       }
@@ -148,13 +155,13 @@ function send(message) {
 }
 
 async function executeTool(message) {
-  const { name, args } = message.params ?? {};
+  const { name, args, allowedHosts } = message.params ?? {};
   const tool = Object.hasOwn(tools, name) ? tools[name] : null;
   let params;
   if (!tool) params = { error: { code: "unknown_tool", message: `The extension has no tool named ${name}.` } };
   else {
-    try { params = { result: await tool(args ?? {}) }; }
-    catch (error) { params = { error: { code: error?.code ?? "tool_error", message: error?.message ?? String(error) } }; }
+    try { params = { result: await tool(args ?? {}, { allowedHosts }) }; }
+    catch (error) { params = { error: { code: error?.code ?? "tool_error", message: error?.message ?? String(error), ...(error?.data ?? {}) } }; }
   }
   send({ method: "tool_response", params, tool_use_id: message.tool_use_id });
 }

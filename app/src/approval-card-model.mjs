@@ -572,6 +572,11 @@ function agentToolCard(params) {
     return card({ action: t("use {host} in the preview", { host: host ?? "" }).trim(), meta: null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
       reason: t("{assistant} will be able to read this site and click and type on it in this session. Only allow sites you trust.", { assistant: who }), allows: forSession });
   }
+  if (tool.kind === "chrome-site") {
+    const host = nonempty(tool.host) ?? nonempty(tool.url);
+    return card({ action: t("use {host} in Chrome", { host: host ?? "" }).trim(), meta: null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
+      reason: t("{assistant} will be able to read this site and click and type on it in Chrome in this session. Only allow sites you trust.", { assistant: who }), allows: forSession });
+  }
   if (tool.kind === "preview-server") {
     // c96d752d0 Kk (2.42304.0) preview_start branch: `overrideDescription: wA(e, p("cwd"), port, f.portMayReassign === !0)`
     // (generated devServerDescription; "Runs in {cwd} on port {port}" …). The launch.json port comes from
