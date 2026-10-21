@@ -2,6 +2,10 @@
 // Holds the native messaging port to com.openclaude.chrome_bridge (app/electron/browser/native-host.cjs) and answers
 // the app's execute_tool requests. Messages are { method, params, tool_use_id } (see app/electron/browser/protocol.cjs).
 // An open native port keeps this worker alive; when it drops, the worker reconnects with backoff.
+// Tools: navigate, read_page, find (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
+import { ToolError } from "./errors.js";
+import { navigate, resolveTab, inPage, setCurrentTab } from "./tabs.js";
+import { withRefs, record, checkRef } from "./refs.js";
 
 const HOST_NAME = "com.openclaude.chrome_bridge";
 const RETRY_MIN_MS = 1000;
@@ -11,10 +15,50 @@ let port = null;
 let retryMs = RETRY_MIN_MS;
 let retryTimer = null;
 
+function intArg(value, name, { min, max, fallback }) {
+  if (value === undefined || value === null) return fallback;
+  if (!Number.isInteger(value) || value < min || value > max) throw new ToolError("bad_request", `${name} must be a whole number from ${min} to ${max}.`);
+  return value;
+}
+
+/** A content.js operation that hands out refs, under the ref counter's lock. replace: read_page voids the tab's old refs. */
+async function withPageRefs(tab, op, args, { replace }) {
+  return withRefs(async (startAt) => {
+    const out = await inPage(tab, op, { ...args, startAt });
+    if (out.error) throw new ToolError(out.error.code ?? "page_error", out.error.message ?? "The page couldn't do that.");
+    record(tab.id, out.refs, out.nextRef, { replace });
+    setCurrentTab(tab.id);
+    return { tabId: tab.id, ...out.result };
+  });
+}
+
 // Tools the app can run here, by name: async (args) → result (JSON). A thrown error with .code becomes {error: {code}}.
 const tools = {
   async ping() {
     return { pong: true, extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version, at: Date.now() };
+  },
+
+  // navigate(url, tabId?) → { tabId, url, title, status }
+  navigate: (args) => navigate(args),
+
+  // read_page(tabId?, filter?, depth?, ref_id?, max_chars?) → { tabId, title, url, tree, refCount, truncated }
+  async read_page(args) {
+    const tab = await resolveTab(args.tabId);
+    const filter = args.filter ?? "all";
+    if (filter !== "all" && filter !== "interactive") throw new ToolError("bad_request", 'filter is "all" or "interactive".');
+    const depth = intArg(args.depth, "depth", { min: 1, max: 100, fallback: 15 });
+    const maxChars = intArg(args.max_chars, "max_chars", { min: 1000, max: 500_000, fallback: 50_000 });
+    const refId = args.ref_id ?? null;
+    if (refId !== null) checkRef(tab.id, refId);
+    return withPageRefs(tab, "read_page", { filter, depth, maxChars, refId }, { replace: true });
+  },
+
+  // find(query, tabId?) → { tabId, query, matches: [{ref, role, name, interactive, text}], total }
+  async find(args) {
+    if (typeof args.query !== "string" || !args.query.trim()) throw new ToolError("bad_request", "query is required.");
+    const tab = await resolveTab(args.tabId);
+    const limit = intArg(args.limit, "limit", { min: 1, max: 100, fallback: 20 });
+    return withPageRefs(tab, "find", { query: args.query, limit }, { replace: false });
   },
 };
 

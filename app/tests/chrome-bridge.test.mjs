@@ -106,3 +106,46 @@ test('no host running is a clear not_connected error', async () => {
   try { await assert.rejects(ChromeBridgeClient.connect({ dir }), (error) => error.code === 'not_connected'); }
   finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+// claude-ext's ref bookkeeping and URL rules, with a stub of the chrome APIs they touch.
+async function extensionModules() {
+  const listeners = { updated: [], removed: [] };
+  globalThis.chrome ??= {
+    storage: { session: { get: async () => ({}), set: async () => {} } },
+    tabs: { onUpdated: { addListener: (fn) => listeners.updated.push(fn) }, onRemoved: { addListener: (fn) => listeners.removed.push(fn) } },
+  };
+  const refs = await import('../../claude-ext/refs.js');
+  const tabs = await import('../../claude-ext/tabs.js');
+  return { refs, tabs, listeners };
+}
+const codeOf = (fn) => { try { fn(); } catch (error) { return error.code; } return null; };
+
+test('refs: read_page voids older refs, other tabs are refused, navigation makes them stale', async () => {
+  const { refs, listeners } = await extensionModules();
+  const read = (tabId, names, next) => refs.withRefs(() => refs.record(tabId, Object.fromEntries(names.map((name) => [name, { role: 'button', name }])), next, { replace: true }));
+  await read(1, ['ref_1', 'ref_2'], 3);
+  assert.equal(refs.checkRef(1, 'ref_2').tabId, 1);
+  await refs.withRefs(() => refs.record(1, { ref_3: { role: 'link', name: 'x' } }, 4, { replace: false })); // find joins
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_1')), null);
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_3')), null);
+  await read(1, ['ref_4'], 5);
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_1')), 'stale_ref');
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_3')), 'stale_ref');
+  await read(2, ['ref_5'], 6);
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_5')), 'ref_wrong_tab');
+  assert.equal(codeOf(() => refs.checkRef(2, 'ref_4')), 'ref_wrong_tab');
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_99')), 'unknown_ref');
+  assert.equal(codeOf(() => refs.checkRef(1, 'button')), 'bad_request');
+  for (const fn of listeners.updated) fn(1, { status: 'loading' });
+  assert.equal(codeOf(() => refs.checkRef(1, 'ref_4')), 'stale_ref');
+  assert.equal(codeOf(() => refs.checkRef(2, 'ref_5')), null);
+});
+
+test('navigate takes http(s) URLs and bare hosts only', async () => {
+  const { tabs } = await extensionModules();
+  assert.equal(tabs.normalizeUrl('example.com'), 'https://example.com/');
+  assert.equal(tabs.normalizeUrl('localhost:3000/a'), 'https://localhost:3000/a');
+  assert.equal(tabs.normalizeUrl('http://127.0.0.1:8080/x?y=1'), 'http://127.0.0.1:8080/x?y=1');
+  for (const bad of ['chrome://version', 'javascript:alert(1)', 'file:///etc/passwd', 'data:text/html,hi']) assert.equal(codeOf(() => tabs.normalizeUrl(bad)), 'bad_url', bad);
+  assert.equal(codeOf(() => tabs.normalizeUrl('  ')), 'bad_request');
+});
