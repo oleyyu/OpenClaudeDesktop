@@ -6,14 +6,20 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 
 符号约定：**[app]** = 只为 app_* 写死的地方；**[抽]** = display-scope 复用前需要抽出来的点；**[占位]** = 返回非真实结果的位置。
 
+> **现状说明（第二轮最终回归时更新，2026-10-21）**：本文是开工前的调研快照，行号仍是 HEAD `a0186be` 的；其中"占位 / 未注册 /
+> Web 假光标"等描述已在下面逐处改成现状（标 **现状**）。总的结论：`OWN_COMPUTER_USE_TOOLS` 现在是 **44 个**（等于官方名单），
+> **0 个占位**，display-scope 一整套已注册并返回真实结果；`rawPathRefusal` / `notInBuild` / `BUILD_SCOPE` 已删，`failure()` 已改为统一拒绝形状；
+> 幻影光标默认走原生 `PhantomCursor.swift`（NSPanel），Web 面板只在原生不可用时回退。§15 / §16 是开工前的计划与风险，处理结果见
+> `docs/computer-use-handoff-20261021.md`（总表、第三～六节、第九节取舍）。
+
 ---
 
 ## 0. 文件总览
 
 | 层 | 文件 | 行数 | 职责 |
 |---|---|---|---|
-| 工具名单（单一来源） | `electron/computer-use/actions.mjs` | 116 | `OWN_COMPUTER_USE_TOOLS`（24 个名字）、`APP_KINDS`、`KINDS`、`computerUseAction()`（把各种形态的 transcript item 归一成一个 action）。主进程与渲染进程共用，纯函数 |
-| 工具注册 / schema | `electron/agent-tools/computer-use.mjs` | 674 | 24 个工具的 description / inputSchema / handler；拒绝封装、next_step 表；app_batch |
+| 工具名单（单一来源） | `electron/computer-use/actions.mjs` | 116 | `OWN_COMPUTER_USE_TOOLS`（开工时 24 个；**现状 44 个**，等于官方名单）、`APP_KINDS`、`KINDS`、`computerUseAction()`（把各种形态的 transcript item 归一成一个 action）。主进程与渲染进程共用，纯函数 |
+| 工具注册 / schema | `electron/agent-tools/computer-use.mjs` | 674（现状 1682） | 开工时 24 个工具，**现状 44 个**（含 display-scope 一整套、full control、剪贴板、teach）的 description / inputSchema / handler；统一拒绝封装、next_step 表；app_batch / computer_batch / teach_batch |
 | 服务（主进程） | `electron/computer-use/service.cjs` | 527 | 每会话 grants + 窗口状态；所有工具背后的方法；IPC `call()` |
 | 授权 / 分级 | `electron/computer-use/grants.cjs` | 74 | 每会话授权表、tier、flags |
 | 运行时闸门 | `electron/computer-use/guards.cjs` | 38 | `actionGate(probe, op)`、`checkTier()` |
@@ -21,12 +27,12 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | 双轨执行器 | `electron/computer-use/executor.cjs` | 61 | `execute()`（AX → policy → raw）、`deliver()`（raw 单次投递 + 退避） |
 | 截图预算 / 坐标链 | `electron/computer-use/budget.cjs` | 48 | `fit` / `scaled` / `frameToWindowLocal` / `windowLocalToScreen` / `inFrame` |
 | 原生模块加载 | `electron/computer-use/native.cjs` | 38 | `computer_use.node` 的 `call(method, json)` 包装；`coded()` |
-| AX helper 包装 | `electron/computer-use/ax-helper.cjs` | 43 | 子进程 `helpers/cu-ax/build/cu-ax-helper` |
+| AX helper 包装 | `electron/computer-use/ax-helper.cjs` | 40 | 路由到原生 `axProbe` / `focusWindow` / `menu {mode}` / `listApps`（第二轮起；原子进程 `helpers/cu-ax` 已删） |
 | 应用解析 / 图标 | `electron/computer-use/apps.cjs` | 114 | 名称→bundle（目录 + mdfind）、list_apps 分页、Quick Look 图标 |
 | in-use 信号 | `electron/computer-use/in-use.cjs` | 43 | 哪些会话"正在用电脑"（停靠条、光晕、预览的共同信号） |
 | 屏幕光晕 | `electron/computer-use/glow.cjs` + `glow-page.cjs` | 156 + 8 | 官方 `[cu-glow]` 的移植，整块显示器的 inset 光晕 + 徽标 |
 | 实时预览 | `electron/computer-use/preview.cjs` | 71 | 会话 rail 卡的 1 fps 帧（只有 `mode: "app"`） |
-| 假光标 | `electron/computer-use/cursor.cjs` | 101 | 40×40 透明 panel BrowserWindow，Web 近似官方 NSPanel |
+| 假光标 | `electron/computer-use/cursor.cjs` | 101（现状 211） | **现状**：默认调原生 `setPhantomCursor` / `hidePhantomCursor`（`PhantomCursor.swift`，每窗口一个 NSPanel，照官方 §2.6）；只在原生缺失或 `main_thread_unavailable`（`ELECTRON_RUN_AS_NODE`）时回退到原来的 40×40 Web 面板 |
 | i18n | `electron/i18n/zh-CN/computer-use.mjs` | 112 | 工具 / 卡片 / 设置文案的中文 |
 | 渲染：模型 | `src/computer-use-model.mjs` | 192 | 动词、图标、官方工具名映射、授权卡模型 |
 | 渲染：步骤行 + 停靠条 | `src/source-computer-use.jsx` | 68 | `SourceComputerUseStep`、`SourceComputerUseBanner` |
@@ -34,8 +40,8 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | 渲染：rail 卡 | `src/source-session-rail-computer-use.jsx` | 107 | 活动面板卡（实时帧 / 最后截图） |
 | 渲染：设置 | `src/source-settings-computer-use.jsx` | 70 | 开关、Allowed apps 芯片、Teach mode 入口 |
 | 原生（参考） | `native/computer-use/Sources/{ComputerUseBridge,ComputerUseCore,ComputerUseNAPI}` | — | Swift + N-API；本文只列 JS 调到的方法 |
-| AX helper（参考） | `helpers/cu-ax/main.swift`、`build.mjs` | — | probe / focus / menu / menuList / menuClose / apps |
-| harness | `harness/packages/acp-bridge/src/app-tools.js` | — | `APP_TOOL_NAMES`（含 24 个 CU 名字） |
+| AX 调用（原 helper） | `native/computer-use/Sources/ComputerUseCore/MenuBar.swift` | — | probe / focus / menu / menuList / menuClose / apps（第二轮从 `helpers/cu-ax` 并入） |
+| harness | `harness/packages/acp-bridge/src/app-tools.js` | — | `APP_TOOL_NAMES`（开工时含 24 个 CU 名字，现状 44 个；screenshot / scroll / type 与 preview 同名，只列一次） |
 
 ---
 
@@ -51,7 +57,7 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 |---|---|---|---|
 | `FLAGS` | 22 | `clipboardRead / clipboardWrite / systemKeyCombos` | request_access 的三个 flag |
 | `MAX_APPS` / `MAX_BATCH` | 23–24 | 32 / 20 | |
-| `failure(code, message, nextStep, details)` | 33 | 返回 `{ok:false, error:{code, message, next_step}}` + isError | **与统一形状不一致**（见 §16.6） |
+| `failure(code, message, nextStep, details)` | 33 | 开工时返回 `{ok:false, error:{code, message, next_step}}` + isError | **现状**：已改为统一形状 `{ok:false, outcome, reasonCode, errorKind?, message, next_step}` + isError（§16.6 已解决） |
 | `NEXT_STEPS` | 38–57 | service / native 错误码 → next_step | 多条措辞写死 "app_screenshot" **[app]** |
 | `REASON_STEPS` | 59–71 | outcome.reasonCode → next_step | drag / menu / focus / click 专用 |
 | `serviceFailure(error, app)` | 73 | 抛出的 coded error → failure() | |
@@ -65,11 +71,11 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | 共享 schema `APP` / `WINDOW_ID` / `SCALE` / `COORDINATE` / `ELEMENT_INDEX` / `TARGET` / `ACTION_SUMMARY` | 123–130 | 描述里写死 "last app_screenshot of this window" | `COORDINATE` 语义是**窗口帧像素** **[app][抽]**；display-scope 要另一个 "最近一次 screenshot 的显示器帧像素" 的 COORDINATE |
 | `screenshot(args, ctx, {keepReference})` | 133 | app_screenshot 与 batch 内 screenshot | **[app]** |
 | `batch(args, ctx)` + `BATCH_TOOLS` + `partsOf()` | 622–656 | app_batch：逐个调用同名工具的 handler，遇错即停 | `partsOf` 和"逐个调 handler + 遇错即停 + 图片附后"的骨架可复用给 `computer_batch` / `teach_batch` **[抽]** |
-| `rawPathRefusal(what)` | 658 | requires_raw_path | **[占位]** |
-| `BUILD_SCOPE` / `notInBuild(what)` | 662–666 | not_supported_in_build，带 `build` 字段 | **[占位]**；文案写死"本构建没有 display-scope" |
-| `clipboardRefusal(ctx, flag, what)` | 668 | 先查 flag（permission_denied），有 flag 再 not_supported_in_build | **[占位]** |
+| ~~`rawPathRefusal(what)`~~ | 658 | requires_raw_path | **现状：已删**（app_key / app_scroll / app_bring_to_current_space 都有真实实现） |
+| ~~`BUILD_SCOPE` / `notInBuild(what)`~~ | 662–666 | not_supported_in_build | **现状：已删**（display-scope、full control、teach 都已实现） |
+| `clipboardRefusal(result)` | 668 | 开工时：先查 flag，有 flag 再 not_supported_in_build | **现状**：只把剪贴板工具真实的拒绝结果（缺 flag、未接管、state_conflict 等）包成统一形状，不再有 not_supported_in_build |
 
-### 1.2 24 个工具逐个
+### 1.2 24 个工具逐个（开工时；现状列已更新，另 20 个 display-scope 工具见表后）
 
 | 工具 | 行 | handler → service | tier op | 现状 |
 |---|---|---|---|---|
@@ -84,21 +90,23 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | app_menu | 338–370 | `appMenu` → axHelper `menu / menuList / menuClose` | menu（list 用 see） | 真实 |
 | app_zoom | 371–395 | `appZoom`（裁上次截图，`image.crop`） | — | 真实（非高清） |
 | list_apps | 396–420 | `cu.listApps` → apps.cjs → axHelper `apps` | — | 真实，不需要授权 |
-| app_batch | 421–453 | `batch()`；动作枚举 click/type/key/scroll/screenshot/zoom/drag | — | 真实；**key / scroll 步落到占位**（§17） |
-| list_granted_applications | 454–465 | `grants.list()` / `flags()` | — | 真实；`coordinateMode: "app_window"` **写死**（l.463）**[app][抽]** |
-| app_key | 468–480 | `rawPathRefusal("A key press")` | — | **[占位]**（`service.appKey` 已存在但未接，见 §2） |
-| app_scroll | 481–493 | `rawPathRefusal("Scrolling")` | — | **[占位]**（service 无对应方法） |
-| app_drag | 494–521 | `appDrag` | drag | 真实（事件路径）；系统应用上 `system_app_ignores_posted_events`（§2.3） |
-| app_bring_to_current_space | 522–529 | `rawPathRefusal(...)` | — | **[占位]** |
-| request_full_control | 530–537 | `notInBuild(...)` | — | **[占位]** |
-| release_full_control | 538–545 | `notInBuild(...)` | — | **[占位]** |
-| read_clipboard | 546–553 | `clipboardRefusal(ctx, "clipboardRead")` | — | **[占位]** |
-| write_clipboard | 554–561 | `clipboardRefusal(ctx, "clipboardWrite")` | — | **[占位]** |
-| request_teach_access | 562–574 | `notInBuild("Teach mode")` | — | **[占位]** |
-| teach_step | 575–592 | `notInBuild("Teach mode")` | — | **[占位]**；schema 已有 explanation / next_preview / actions / anchor |
-| teach_batch | 593–619 | `notInBuild("Teach mode")` | — | **[占位]**；schema steps[] |
+| app_batch | 421–453 | `batch()`；动作枚举 click/type/key/scroll/screenshot/zoom/drag | — | 真实；**现状**：key / scroll 步走真实的 app_key / app_scroll |
+| list_granted_applications | 454–465 | `grants.list()` / `flags()` | — | 真实；**现状**：另带 `preferredMode` / `fullControlApproved`，全屏批准后 `coordinateMode` 为 `display` |
+| app_key | 468–480 | **现状** `cu.appKey` → `keyResult` | key | **现状：真实**（AX 档 return / escape / backspace / cmd+a；其余官方后台键经 pid 投递，unverified） |
+| app_scroll | 481–493 | **现状** `cu.appScroll` → `scrollResult` | scroll | **现状：真实**（纯 AX：竖直滚动条 AXValue，读回） |
+| app_drag | 494–521 | `appDrag` | drag | 真实（事件路径）；**现状**：系统应用读回不变一律 `drag_ineffective`（`system_app_ignores_posted_events` 已删） |
+| app_bring_to_current_space | 522–529 | **现状** `appBringToCurrentSpace` → `bringResult` | — | **现状：受限**（最小化 / 隐藏拉回真实；跨进程移 Space 被 WindowServer 忽略 → `op_unavailable`） |
+| request_full_control | 530–537 | **现状** `service.requestFullControl`（必要时 `askTakeover` 接管卡） | — | **现状：真实**（只记批准，锁在下一次 display-scope 动作时拿） |
+| release_full_control | 538–545 | **现状** `service.releaseFullControl` | — | **现状：真实** |
+| read_clipboard | 546–553 | **现状** `clipboardTool("read")` | — | **现状：真实**（要 flag + 全屏接管） |
+| write_clipboard | 554–561 | **现状** `clipboardTool("write")` | — | **现状：真实**（click 层应用在前时拒绝） |
+| request_teach_access | 562–574 | **现状** `requestTeachAccess`（teach 卡） | — | **现状：真实** |
+| teach_step | 575–592 | **现状** `teachStepTool`（`teach.cjs` 提示层） | — | **现状：真实** |
+| teach_batch | 593–619 | **现状** `teachBatchTool` | — | **现状：真实** |
 
 文案：`app_batch`、`app_drag` 的 description 走 `t()`，其它直接英文；工具描述是自写的（未照抄官方）。
+
+**现状：另 20 个 display-scope 工具已注册并返回真实结果**：`screenshot` `zoom` `left_click` `double_click` `triple_click` `right_click` `middle_click` `scroll` `left_click_drag` `mouse_move` `cursor_position` `left_mouse_down` `left_mouse_up` `type` `key` `hold_key` `open_application` `switch_display` `wait` `computer_batch`（全局 HID 事件、官方闸门顺序：接管 → 前台层级 → 命中测试 → 投递）。其中 `screenshot` / `scroll` / `type` 与 preview 同名，host 用 `sharesName` + `prefersSharedTool` 按会话挑一个（交接第一节总表）。
 
 ---
 
@@ -132,18 +140,19 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | `appScreenshot` | 210 | `captureWindow(listsElements)` | 写 `state.shots / last / target`；`keepReference` 给 batch |
 | `axFind` | 229 | — | |
 | `release` | 247 | — | 只清窗口状态，不撤授权 |
-| `appClick` | 267 | `probe` → `axClick` / `rawClick` | `axOnly` 时 raw 梯级为 null；`pointer.beforeClick/clicked`（l.310/314）——**假光标只在 appClick 成功时出现** |
+| `appClick` | 267 | `probe` → `axClick` / `rawClick` | `axOnly` 时 raw 梯级为 null；`pointer.beforeClick/clicked`（l.310/314）。**现状**：假光标钩子覆盖所有落地的 app_* 动作（`beforeClick` / `clicked` / `moved` / `restore` / `released`），不再只在 appClick 成功时出现 |
 | `appType` | 328 | `probe` → `axType` → `rawType` | |
 | `appFocus` | 378 | `probe` → helper `focus` | |
 | `appMenu` | 397 | `probe` → helper `menu / menuList / menuClose` | |
 | `appZoom` | 426 | `image.crop` | 只裁已有截图 |
-| `appKey` | 451 | `probe` → `deliver(rawKey)` | **已实现但没有工具调用它**（app_key 是占位）。`SYSTEM_COMBOS` 拒绝；`repeat` 1–100 |
+| `appKey` | 451 | `probe` → `deliver(rawKey)` | 开工时未接线；**现状**：app_key / app_batch 的 key 步调用它，照官方 AX 档 + 后台键集合重写，`systemKeyCombos` flag 授了才放行系统组合键 |
 | `allGrants` / `revoke` | 470 / 486 | — | 设置页用 |
 | `call(action, p)` | 496 | — | IPC：`computer-use:probe / grants / list-windows / capture-window / capture-screen / app-screenshot / all-grants / revoke`；**故意没有加授权的 IPC** |
 
 ### 2.3 系统应用（Finder / Dock / SystemUIServer）
 
 - `POSTED_EVENT_SYSTEM_APPS`（l.111）只在 `dragReadback()`（l.113–126）里用：投递成功但 AXValue / AXSelectedTextRange / AXPosition 读回不变 → `ineffective` + `system_app_ignores_posted_events`（否则 `drag_ineffective`）。**它只改 reasonCode，不改投递方式**——这就是用户说的"只是翻译成正确的 reason"。
+- **现状**：`POSTED_EVENT_SYSTEM_APPS` / `system_app_ignores_posted_events` 已删，系统应用拖拽读回不变一律 `drag_ineffective`；点击照官方梯子走 AX（行 `AXSelected=true` / 双击 `AXOpen`，Dock AXPress），`no_press_action` 不再产生；认证事件方向被安全机制拦截、未做（交接第二节）。以下是开工时的描述。
 - 左键单击在 app_click 走 `axOnly:true`，raw 梯级根本不会被调用；`no_press_action` 在 `PLANNED_M3`（关闭）。
 - 真正让它生效的地方在 native 投递（`Dispatcher.swift` 的 `postToPid`，l.30/31/41/158/167/182）：M4 计划的认证事件（`SLEventSetAuthenticationMessage` + `SLPostEventRecordTo`）要替换的就是这些调用点。JS 侧届时只需：① `no_press_action` 从 PLANNED_M3 移到 FALLBACK（附 app/scene/trigger/live），② app_click 去掉 `axOnly`（或按 bundle 放开），③ `dragReadback` 的 system-app 分支保留为诊断。
 
@@ -194,7 +203,7 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | `in-use.cjs` | 会话从本轮第一个 CU 步骤起"在用"，到 `turn/completed` 或 `app_release` 完成为止；连接断开清空。判定函数由 `main.cjs:420–423` 注入：`computerUseAction(item)` 非空且 kind ∉ {request_access, release, list_apps} | 官方跟随**全屏控制锁**的持有者；这里没有锁（注释 l.3–5）。display-scope 落地后，in-use 应改为"持锁 = 在用"（至少 request_full_control 批准 → 在用，release_full_control → 释放），`isRelease` 要认 `release_full_control` **[抽]** |
 | `glow.cjs` + `glow-page.cjs` | 官方页面逐字移植；透明、鼠标穿透、screen-saver 层 panel 覆盖**一整块显示器**；`show / hide / moveTo / refreshMotion`；跟随显示器移除 / 尺寸变化 | 显示器由 `main.cjs:429 computerUseGlowDisplay()` 选：**本应用聚焦窗口所在的显示器**，不是目标窗口、也不是锁定显示器。display-scope 应 `moveTo(锁定的 displayId)`，`switch_display` 时再 `moveTo` **[抽]**。**没有任何"目标窗口高亮"**：光晕是整屏 rim，rail 卡是预览帧——用户说的"overlay 高亮是预览高亮，不是目标窗口高亮"指的就是这里缺一个按窗口 frame 定位的高亮层（官方对应物需在 spec 里确认） |
 | `preview.cjs` | 订阅中且会话在用 → 每 1000 ms `captureWindow(lastTarget, scale 0.5)` → `{kind:"computer-use-preview", mode:"app", targetLabel, frame}` | **[app]** `mode: "app"` 写死（l.42）、只截窗口。渲染端（rail 卡 l.80）**已经支持 `mode === "display"`**（文案 "Full control · {target}"），所以 display 模式只需在这里按会话模式改用 `captureScreen(displayId)` **[抽]** |
-| `cursor.cjs` | 40×40 panel，箭头 + clay 脉冲环，`pointAt({x,y})` 全局点，2 s 后 0.3 s 淡出；`hideNow()` 在每次点击前调用（防 AX 命中测试打到它） | Web 近似（handoff 已记）：官方 `ComputerUseSwift.PhantomCursor`（NSPanel）只在 click 时 pulse、锁释放时隐藏而非定时淡出。只有 `appClick` 成功时调用 `pointer.clicked`（service l.313–315）；drag / type / menu 都不动它。多显示器：`setBounds` 用全局点，跨显示器能定位，但没处理全屏应用 Space（`visibleOnFullScreen: true` 已设，未实测）、缩放比不同的显示器之间移动。display-scope 会移动**真实**光标（HID），假光标在那一套里是否还显示需对照官方 **[抽]** |
+| `cursor.cjs` | 40×40 panel，箭头 + clay 脉冲环，`pointAt({x,y})` 全局点，2 s 后 0.3 s 淡出；`hideNow()` 在每次点击前调用（防 AX 命中测试打到它） | **现状**：已改为原生 `PhantomCursor.swift`（官方 §2.6.2：每窗口一个 56×56 NSPanel、`order(.above, relativeTo: windowId)`、只在 app_click pulse、放锁隐藏），Web 面板只作原生不可用时的回退；display-scope 照官方不用幻影光标（动真光标），面板编号进命中测试忽略列表。以下为开工时：Web 近似：官方 `ComputerUseSwift.PhantomCursor`（NSPanel）只在 click 时 pulse、锁释放时隐藏而非定时淡出。只有 `appClick` 成功时调用 `pointer.clicked`（service l.313–315）；drag / type / menu 都不动它。多显示器：`setBounds` 用全局点，跨显示器能定位，但没处理全屏应用 Space（`visibleOnFullScreen: true` 已设，未实测）、缩放比不同的显示器之间移动。display-scope 会移动**真实**光标（HID），假光标在那一套里是否还显示需对照官方 **[抽]** |
 
 ---
 
@@ -288,7 +297,7 @@ request/release_full_control）、剪贴板、teach 三件套、假光标 / over
 | `computer-use-model.test.mjs` | 6 | 各形态归一、官方动词、app_* 映射、截图来源、组摘要、图标 |
 | `computer-use-access.test.mjs` | 7 | 授权卡行 / 风险 / 标题变体 / 识别 / 卡模型 / zh-CN / ⌘↵ |
 | `settings-computer-use.test.mjs` | 3 | 设置段、Allowed apps 芯片、Teach mode 空态 |
-| `agent-tools-packaging.test.mjs`、`terminal-packaging.test.mjs` | — | `asar.unpackDir` 字面量含 `native/computer-use/build,helpers/cu-ax/build`；构建产物 unpack、源码不进包 |
+| `agent-tools-packaging.test.mjs`、`terminal-packaging.test.mjs` | — | `asar.unpackDir` 字面量含 `native/computer-use/build`（第二轮起不再有 `helpers/cu-ax/build`）；构建产物 unpack、源码不进包 |
 | `approval-card-model.test.mjs`、`transcript-sdk-tools.test.mjs` | — | 间接覆盖 CU 卡与工具名映射 |
 | Swift：`native/computer-use/Tests/ComputerUseCoreTests/`（含 `DragTests.swift`） | — | `swift test --filter` |
 
@@ -314,10 +323,10 @@ display-scope 的 live 测试目前**没有任何 fixture 或脚本**：需要�
 
 ## 13. 打包（native / helper 相关）
 
-- `package.json` scripts：`build:native` = `node native/computer-use/build.mjs && node helpers/cu-ax/build.mjs`；`package` 先 `build` + `build:native`，electron-packager 参数含 `--ignore='^/native/computer-use/(?!build(/|$))'`、`--ignore='^/helpers/cu-ax/(?!build(/|$))'`、`--asar.unpackDir='{node_modules/node-pty/prebuilds,native/computer-use/build,helpers/cu-ax/build}'`。
+- `package.json` scripts（第二轮起 `build:native` 只剩 `node native/computer-use/build.mjs`，`package` 去掉了 cu-ax 的 `--ignore` 与 unpackDir 项；以下为第一轮原文）：`build:native` = `node native/computer-use/build.mjs && node helpers/cu-ax/build.mjs`；`package` 先 `build` + `build:native`，electron-packager 参数含 `--ignore='^/native/computer-use/(?!build(/|$))'`、`--ignore='^/helpers/cu-ax/(?!build(/|$))'`、`--asar.unpackDir='{node_modules/node-pty/prebuilds,native/computer-use/build,helpers/cu-ax/build}'`。
 - `native/computer-use/build.mjs`：`swift build -c release` → 复制 `libcomputer_use.dylib` 为 `build/computer_use.node`。
-- `helpers/cu-ax/build.mjs`：`swiftc -O -target arm64-apple-macos14 main.swift -o build/cu-ax-helper`。
-- `scripts/sign-local.mjs`：逐个签 `computer_use.node`、（若有）`app-cu-helper`、`cu-ax-helper`（`codesign --deep` 只把它们当资源）。
+- ~~`helpers/cu-ax/build.mjs`~~：第二轮已删（并入 `computer_use.node`）。
+- `scripts/sign-local.mjs`：逐个签 `computer_use.node`、（若有）`app-cu-helper`（第二轮起不再签 `cu-ax-helper`；`codesign --deep` 只把它们当资源）。
 - 加载路径改写：`native.cjs` / `ax-helper.cjs` 把 `app.asar` → `app.asar.unpacked`。
 - 测试：`agent-tools-packaging.test.mjs`、`terminal-packaging.test.mjs` 对 unpackDir 做**字面比对**——若 M4 新增 helper / 删 cu-ax，或 teach overlay 增加静态资源，两处都要改。
 
@@ -362,7 +371,7 @@ display-scope 的 live 测试目前**没有任何 fixture 或脚本**：需要�
 
 ## 16. 风险与冲突（实施前必须决定）
 
-1. **工具名冲突（最关键）**：`electron/agent-tools/preview.mjs` 在同一个 `code_desktop` 服务器上已注册 `screenshot`（l.130）、`type`（l.185）、`scroll`（l.304）。host 按文件名字母序加载、同名先到先得：若把 display-scope 的 `screenshot` / `type` / `scroll` 加进 `computer-use.mjs`，**computer-use.mjs 先加载，会把 preview 的三个工具挤掉**（只 warn）。同时 `actions.mjs ownComputerUseTool()` 只按名字判断，加入 `OWN_COMPUTER_USE_TOOLS` 后 preview 的调用也会被当成 CU 步骤（触发 in-use、光晕、停靠条）。官方是两个独立 MCP 服务器（`computer-use` 与 `Claude_Preview`），所以没有这个问题。可选方向：(a) host 支持第二个服务器名（例如 `computer-use`），transcript 映射已经是 `mcp__computer-use__*`；(b) display-scope 用别名（与"官方名一致"的目标冲突）；(c) preview 关闭时才注册（不可行）。**需要用户决定**。
+1. **工具名冲突（最关键）**：`electron/agent-tools/preview.mjs` 在同一个 `code_desktop` 服务器上已注册 `screenshot`（l.130）、`type`（l.185）、`scroll`（l.304）。host 按文件名字母序加载、同名先到先得：若把 display-scope 的 `screenshot` / `type` / `scroll` 加进 `computer-use.mjs`，**computer-use.mjs 先加载，会把 preview 的三个工具挤掉**（只 warn）。同时 `actions.mjs ownComputerUseTool()` 只按名字判断，加入 `OWN_COMPUTER_USE_TOOLS` 后 preview 的调用也会被当成 CU 步骤（触发 in-use、光晕、停靠条）。官方是两个独立 MCP 服务器（`computer-use` 与 `Claude_Preview`），所以没有这个问题。可选方向：(a) host 支持第二个服务器名（例如 `computer-use`），transcript 映射已经是 `mcp__computer-use__*`；(b) display-scope 用别名（与"官方名一致"的目标冲突）；(c) preview 关闭时才注册（不可行）。**现状（已定，照官方语义、不改名）**：保留同一个 `code_desktop` 服务器，`agent-tools-host.cjs` 的 `sharesName` + `prefersSharedTool` 按会话挑（会话有已授权应用 → computer use 版，否则 preview 版），调用按该连接最后一次 tools/list 派发；见交接第一节与第八节 2。
 2. **`systemKeyCombos` flag 无效**：授权卡会问它、grants 会记它，但 `service.appKey` 的 `SYSTEM_COMBOS` 一律拒，与 flag 无关。接 app_key 时要定：flag 授了是否放行。
 3. **app_key 的 service 已有**：`appKey`（l.451）走 `rawKey`（`CGEventPostToPid` 键盘事件）；handoff 记"键盘 postToPid 被接受"，但后台 key window 需要实验二（`SLPSSetFrontProcessWithOptions` options 值，`// VERIFY`）。所以 app_key 接线本身是 JS 小改（handler 调 `appKey` + `outcomeResult`），风险在 native 实验。
 4. **app_scroll 在 service 无方法、native 无方法**；handoff 计划"先 AX 设 AXValue，再认证事件"。
@@ -374,6 +383,12 @@ display-scope 的 live 测试目前**没有任何 fixture 或脚本**：需要�
 ---
 
 ## 17. 非真实结果工具：各自在哪里返回占位
+
+> **现状：0 个占位。** 下表 10 个（加第 11 条 app_drag 系统应用）都已改为真实实现或照官方的受限结果，
+> 位置见 §1.2 现状列：app_key / app_scroll / request_full_control / release_full_control / read_clipboard / write_clipboard /
+> request_teach_access / teach_step / teach_batch 真实；app_bring_to_current_space 受限（跨进程移 Space → `op_unavailable`）；
+> app_drag 系统应用 → `drag_ineffective`。`app_batch` 的 key / scroll 步走真实实现；Finder 行点击走官方 AX 梯子；
+> 设置页 Teach mode 行反映真实权限状态；display-scope 一整套**已注册**（§1.2 表后）。以下为开工时的原文，仅作历史记录。
 
 用户说的"11 个"是 handoff 早期口径（当时 app_drag 也是 `requires_raw_path`）。HEAD 上 app_drag 已走事件路径，**纯占位是 10 个**（测试 `computer-use-agent-tools.test.mjs:26–28 REASONED` 与 l.726 的用例名 "the 10 names" 一致）；第 11 个可算作 app_drag 在系统应用上的"已投递但无效"。
 
