@@ -15,5 +15,7 @@ test('APP_TOOL_NAMES lists every tool of app/electron/agent-tools', async () => 
     const module = await import(pathToFileURL(path.join(dir, file)).href)
     for (const tool of module.tools ?? []) names.push(tool.name)
   }
-  assert.deepEqual([...names].sort(), [...APP_TOOL_NAMES].sort())
+  // A name two groups declare (computer use's screenshot / scroll / type share preview's names; the app's host serves one
+  // of them per session) is still one tool name on the server, so it is listed once.
+  assert.deepEqual([...new Set(names)].sort(), [...APP_TOOL_NAMES].sort())
 })

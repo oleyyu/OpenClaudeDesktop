@@ -16,7 +16,7 @@
 //   hostItem                  the engine item (not read by the originals; the host adapters render its body)
 import { changeKind, changePath, fileAction } from "./file-tool-model.mjs";
 import { computerUseAction, computerUseToolName } from "./computer-use-model.mjs";
-import { OWN_COMPUTER_USE_TOOLS } from "../electron/computer-use/actions.mjs";
+import { OWN_COMPUTER_USE_TOOLS, SHARED_TOOL_NAMES, ownComputerUseTool } from "../electron/computer-use/actions.mjs";
 import { mcpCallOf, mcpServerSegmentOf, VISUALIZE_SERVER_NAME, VISUALIZE_TOOLS } from "./mcp-app-model.mjs";
 
 const str = (value) => (typeof value === "string" ? value : "");
@@ -85,7 +85,8 @@ export const APP_TOOLS = Object.freeze({
   ReportFindings: "ReportFindings", Monitor: "Monitor", MonitorStop: "TaskStop", CronCreate: "CronCreate", CronList: "CronList",
   CronDelete: "CronDelete", WebFetch: "WebFetch", NotebookEdit: "NotebookEdit", Workflow: "Workflow", WorkflowStop: "TaskStop",
   // agent-tools/computer-use.mjs: the official computer-use server's names, so the original rows read its verbs.
-  ...Object.fromEntries(OWN_COMPUTER_USE_TOOLS.map((tool) => [tool, `mcp__computer-use__${tool}`])),
+  // (screenshot and scroll are preview's too: sdkToolName asks ownComputerUseTool which one an item is.)
+  ...Object.fromEntries(OWN_COMPUTER_USE_TOOLS.filter((tool) => !SHARED_TOOL_NAMES.includes(tool)).map((tool) => [tool, `mcp__computer-use__${tool}`])),
 });
 const COLLAB_TOOLS = Object.freeze({ spawnAgent: "Task", sendInput: "SendMessage", sendMessage: "SendMessage", wait: "TaskOutput", closeAgent: "TaskStop", resumeAgent: "Task" });
 
@@ -120,6 +121,7 @@ export function sdkToolName(item) {
       const app = appTool(item);
       if (app !== null) {
         if (VISUALIZE_TOOLS.includes(app)) return `mcp__${VISUALIZE_SERVER_NAME}__${app}`;
+        if (SHARED_TOOL_NAMES.includes(app) && ownComputerUseTool(item) === app) return `mcp__computer-use__${app}`;
         return APP_TOOLS[app] ?? `mcp__${APP_SERVER}__${app}`;
       }
       const call = mcpCallOf(item);

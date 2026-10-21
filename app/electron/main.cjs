@@ -4,7 +4,7 @@ const {
   ipcMain,
   dialog,
   shell,
-  Menu, powerSaveBlocker, powerMonitor, Notification, clipboard, nativeImage, Tray, nativeTheme, screen,
+  Menu, powerSaveBlocker, powerMonitor, Notification, clipboard, nativeImage, Tray, nativeTheme, screen, globalShortcut,
 } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -409,38 +409,215 @@ const computerUseImage = {
     dataUrl: `data:image/jpeg;base64,${nativeImage.createFromDataURL(dataUrl).crop(rect).resize({ width, height, quality: "best" }).toJPEG(75).toString("base64")}`,
   }),
 };
-// The pointer at the last click (cursor.cjs), created once the app is ready; hidden before each click's hit test.
+// The phantom cursor (cursor.cjs: native NSPanels, the web pointer as fallback), created once the app is ready; a
+// window's cursor is hidden before each hit-tested action on it.
 let computerUseCursor = null;
-const computerUse = require("./computer-use/service.cjs").createComputerUse({ selfBundleIds: computerUseSelfBundleIds,
-  axHelper: computerUseAxHelper, image: computerUseImage,
-  pointer: { beforeClick: () => computerUseCursor?.hideNow(), clicked: (point) => { computerUseCursor?.pointAt(point); } } });
+// Teach mode (computer-use/teach.cjs): the tooltip overlay and the session side, created once the app is ready.
+let computerUseTeachOverlay = null, computerUseTeach = null;
+/** The app's own click-through overlays (the glow, the pointer, the teach tooltips): out of the hit test and the window-wide handling. */
+const computerUseOwnOverlay = (window) => !!(computerUseGlow?.owns(window) || computerUseCursor?.owns(window) || computerUseTeachOverlay?.owns(window));
+// Full control (full-control.cjs): the display lock, per-session approval and the preferred mode. The lock's holder
+// drives the screen glow, the docked strip, a system notification and the global Esc stop (official §2.5.2). The
+// preferred mode persists in config.computerUsePreferredMode.
+let computerUseInUse = null;
+const { createFullControl: createComputerUseFullControl, emergencyStop } = require("./computer-use/full-control.cjs");
+const computerUseFullControl = createComputerUseFullControl({
+  onLockChange: (holder) => { try { onComputerUseLockChange(holder); } catch (error) { console.error("[cu-lock]", error); } },
+});
+/**
+ * screenshot, scroll and type are both preview.mjs's and computer-use.mjs's (one code_desktop server, official two
+ * servers): a session gets computer use's screen-wide ones as soon as it has granted apps — officially every granted
+ * session has the display tools, and the first one it uses raises the "Take over the screen?" card (§1.4.2) — and
+ * preview's otherwise. What a core is served at a call follows what its own last tools/list showed it
+ * (agent-tools-host.cjs), never this state alone: a core still holding preview's schema keeps preview's tool.
+ */
+function computerUseServesDisplayTools(sessionId) {
+  return typeof sessionId === "string" && !!sessionId && computerUse.hasGrants(sessionId);
+}
+// (config is read in app.whenReady; the saved preferred mode is restored there, computerUseFullControl.restore.)
+// computer_use.node (native.cjs): the service's and the phantom cursor's (one loaded module).
+const computerUseNative = require("./computer-use/native.cjs").createNative();
+const computerUse = require("./computer-use/service.cjs").createComputerUse({ native: computerUseNative, selfBundleIds: computerUseSelfBundleIds,
+  axHelper: computerUseAxHelper, image: computerUseImage, fullControl: computerUseFullControl,
+  // read_clipboard / write_clipboard and type's paste use Electron's clipboard, text only (official rPr).
+  clipboard: { readText: () => clipboard.readText(), writeText: (text) => clipboard.writeText(text) },
+  // The display hit test skips the app's own click-through overlays (the glow, the pointer — the native phantom
+  // cursor panels too — and the teach tooltips), by CGWindowID.
+  overlayWindowIds: () => BrowserWindow.getAllWindows()
+    .filter((window) => !window.isDestroyed() && computerUseOwnOverlay(window))
+    .map((window) => Number(/^window:(\d+):/.exec(window.getMediaSourceId())?.[1])).filter((id) => Number.isInteger(id) && id > 0)
+    .concat(computerUseCursor?.windowNumbers() ?? []),
+  // The phantom cursor (official §2.6.1; service.cjs `pointer`): shown at the centre of a newly held window and at
+  // each app_* action's point (pulse only for a click), hidden before each hit-tested action and when the lock goes.
+  pointer: {
+    beforeClick: (target) => computerUseCursor?.beforeClick(target),
+    clicked: (point) => { computerUseCursor?.pointAt({ ...point, pulse: true }); },
+    moved: (point) => { computerUseCursor?.pointAt({ ...point, pulse: false }); },
+    restore: (target) => { computerUseCursor?.restore(target); },
+    released: (target) => { computerUseCursor?.release(target); },
+  },
+  // No target-window highlight: official 2.42304.0 has none (spec §2.6.3) — in background control the phantom cursor
+  // is the only mark on the window. the window-highlight module stays unwired (final review, 2026-10-21).
+  // Official §2.5.2: the glow sits on the lock holder's selected display and follows switch_display / a screenshot of
+  // another display.
+  onDisplaySelected: (sessionId, displayId) => {
+    if (computerUseLockHolder === sessionId && computerUseGlow?.isShown()) computerUseGlow.moveTo(displayId);
+    // Official cuSelectedDisplayChanged: the teach overlay follows the session's display too.
+    computerUseTeach?.displayChanged(sessionId, displayId);
+  },
+  // A lone Escape the screen-wide key / hold_key presses must reach the app in front, not the Esc emergency stop
+  // (official oPr → HNr): the global shortcut is let go for that one press only — at most 500 ms, for a hold until the
+  // key is down (releaseAfterMs) — and taken back right after (computerUseTakeOwnEscape). Never for a whole hold, a
+  // repeat or a back-off: the user's Esc keeps working there.
+  withOwnEscape: async (run, { releaseAfterMs } = {}) => {
+    const release = await computerUseTakeOwnEscape();
+    const early = Number.isFinite(releaseAfterMs) ? setTimeout(release, Math.max(0, releaseAfterMs)) : null;
+    try { return await run(); } finally { clearTimeout(early); release(); }
+  } });
 // Which sessions are using the computer (in-use.cjs): the renderer's docked strip and the screen glow (glow.cjs, created
 // once the app is ready) both follow it. Asking for access is not using the computer.
-const { computerUseAction } = require("./computer-use/actions.mjs");
-const computerUseInUse = require("./computer-use/in-use.cjs").createInUse({
-  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && !["request_access", "release", "list_apps"].includes(action.kind); },
+const { computerUseAction, isNonTeachAction } = require("./computer-use/actions.mjs");
+computerUseInUse = require("./computer-use/in-use.cjs").createInUse({
+  isComputerUse: (item) => { const action = computerUseAction(item); return !!action && !["request_access", "request_teach", "release", "list_apps"].includes(action.kind); },
   isRelease: (item) => computerUseAction(item)?.kind === "release",
 });
+// The display lock's holder changed: hold the glow / strip up for it (in-use), notify once, and keep a global Esc: the
+// user's emergency stop, which stops the holder and every session holding app locks (official GNr / onCuEmergencyStop).
+let computerUseLockHolder = null;
+function onComputerUseLockChange(holder) {
+  computerUseLockHolder = holder;
+  // A button left down by left_mouse_down is let go with the lock (turn end, release_full_control, Esc).
+  if (!holder) computerUse.releaseHeldMouse().catch(() => {});
+  computerUseInUse?.setHolder(holder);
+  // The screen glow is the holder's (it may have been using the computer already, so in-use need not change).
+  computerUseSyncGlow();
+  emit({ kind: "computer-use-lock", holder: holder ?? null });
+  try {
+    // The global Esc follows the lock (official XNr), unless a model Escape is being sent right now.
+    computerUseSyncEscStop();
+    if (holder) {
+      const name = coreNameOf(config?.core);
+      if (typeof Notification === "function" && Notification.isSupported && Notification.isSupported()) {
+        new Notification({ title: name || "Claude", body: i18n ? i18n.t("{name} is using your computer. You can press Stop anytime.", { name: name || "Claude" }) : "Using your computer." }).show();
+      }
+    } else {
+      if (typeof Notification === "function" && Notification.isSupported && Notification.isSupported()) {
+        const name = coreNameOf(config?.core);
+        new Notification({ title: name || "Claude", body: i18n ? i18n.t("{name} is done using your computer.", { name: name || "Claude" }) : "Done using your computer." }).show();
+      }
+    }
+  } catch (error) { console.error("[cu-lock] notify", error); }
+}
+let computerUseEscRegistered = false;
+// The model's own Escapes being sent (official OG / RNr / zNr / INr, muI2IV6k@4013190): while one is, the global Esc is
+// let go; the next one waits for it, and for 100 ms after the last one while the shortcut is back.
+let computerUseOwnEscapes = 0, computerUseOwnEscapeSettled = -Infinity, computerUseOwnEscapeIdle = null, computerUseEscWasRegistered = false;
+/** Official XNr: the global Esc is registered while a session holds the display lock and no model Escape is being sent. */
+function computerUseSyncEscStop() {
+  if (computerUseLockHolder && computerUseOwnEscapes === 0) computerUseRegisterEscStop(); else computerUseUnregisterEscStop();
+}
+/**
+ * Official HNr: before the model's lone Escape is sent, let go of the global Esc for it. Returns release(), which takes
+ * it back (also by itself after 500 ms, official BNr). If it can't be taken back while the lock is still held, the user
+ * would have no Esc: the sessions are stopped instead (official WNr).
+ */
+async function computerUseTakeOwnEscape() {
+  for (;;) {
+    if (computerUseOwnEscapes > 0) { await computerUseOwnEscapeIdle.promise; continue; }
+    const left = Math.min(100, computerUseOwnEscapeSettled + 100 - Date.now());
+    if (!computerUseEscRegistered || left <= 0) break;
+    await new Promise((resolve) => setTimeout(resolve, left));
+  }
+  computerUseEscWasRegistered ||= computerUseEscRegistered;
+  if (computerUseOwnEscapes === 0) {
+    let resolve;
+    computerUseOwnEscapeIdle = { promise: new Promise((done) => { resolve = done; }) };
+    computerUseOwnEscapeIdle.resolve = resolve;
+  }
+  computerUseOwnEscapes += 1;
+  computerUseSyncEscStop();
+  let open = true, timer = null;
+  const release = () => {
+    if (!open) return;
+    open = false;
+    clearTimeout(timer);
+    computerUseOwnEscapes -= 1;
+    if (computerUseOwnEscapes === 0) { computerUseOwnEscapeSettled = Date.now(); computerUseOwnEscapeIdle?.resolve(); }
+    computerUseSyncEscStop();
+    if (computerUseOwnEscapes > 0) return;
+    const lost = computerUseEscWasRegistered && !!computerUseLockHolder && !computerUseEscRegistered;
+    computerUseEscWasRegistered = false;
+    if (lost) { console.warn("[cu-esc] could not take Escape back after the model's press"); computerUseEmergencyStop(); }
+  };
+  timer = setTimeout(release, 500);
+  return release;
+}
+function computerUseRegisterEscStop() {
+  if (computerUseEscRegistered || !globalShortcut) return;
+  try { computerUseEscRegistered = globalShortcut.register("Escape", () => { computerUseEmergencyStop(); }); } catch { computerUseEscRegistered = false; }
+}
+// The running turn of each thread (turn/started → turn/completed), so Esc can interrupt it as the strip's Stop does.
+const computerUseActiveTurns = new Map();
+function computerUseObserveTurns(e) {
+  const p = e?.params || {};
+  if (e?.kind === "connection" && !e.connected) { computerUseActiveTurns.clear(); return; }
+  if (e?.method === "turn/started" && typeof p.threadId === "string" && typeof p.turn?.id === "string") computerUseActiveTurns.set(p.threadId, p.turn.id);
+  if (e?.method === "turn/completed" && typeof p.threadId === "string" && computerUseActiveTurns.get(p.threadId) === p.turn?.id) computerUseActiveTurns.delete(p.threadId);
+}
+// Stop one session (Esc): interrupt its running turn (turn/interrupt, as the strip's Stop), close the tool calls it
+// left waiting, and drop its app locks; emergencyStop then releases the display lock (the approval stays, as a turn
+// ending keeps it). The renderer hears computer-use-emergency-stop (official dispatchOnCuEmergencyStop).
+function computerUseStopSession(threadId) {
+  const turnId = computerUseActiveTurns.get(threadId);
+  if (turnId) {
+    try {
+      const sent = coworkSessions?.owns?.(threadId) ? coworkSessions.request("turn/interrupt", { threadId, turnId })
+        : client?.connection ? client.request("turn/interrupt", { threadId, turnId }, 120000, client.connection) : null;
+      Promise.resolve(sent).catch((error) => console.warn("[cu-esc] interrupt", error?.message ?? error));
+    } catch (error) { console.warn("[cu-esc] interrupt", error?.message ?? error); }
+  }
+  try { agentTools.cancelThread(threadId); } catch {}
+  try { computerUse.release(threadId); } catch {}
+  // Official leavingRunning: a stopped session leaves teach mode (the waiting step ends as exit, the main window returns).
+  try { computerUseTeach?.end(threadId, "stopped"); } catch {}
+}
+function computerUseEmergencyStop() {
+  const stopped = emergencyStop({ fullControl: computerUseFullControl, appHolders: () => computerUse.appLockSessions(), stopSession: computerUseStopSession });
+  if (stopped.length) emit({ kind: "computer-use-emergency-stop", sessions: stopped });
+  return stopped;
+}
+function computerUseUnregisterEscStop() {
+  if (!computerUseEscRegistered || !globalShortcut) return;
+  try { globalShortcut.unregister("Escape"); } catch {}
+  computerUseEscRegistered = false;
+}
 let computerUseGlow = null;
 // The computer-use card's live frames (preview.cjs): the window a session last looked at, while a card subscribes.
 const computerUsePreview = require("./computer-use/preview.cjs").createPreview({ service: computerUse, inUse: computerUseInUse, emit: (event) => emit(event) });
 // The original puts the glow on the holder's chosen display, else the main window's; here, the focused (else the
 // first visible) app window's display.
 function computerUseGlowDisplay() {
-  const windows = BrowserWindow.getAllWindows().filter((window) => !window.isDestroyed() && !computerUseGlow?.owns(window) && !computerUseCursor?.owns(window));
+  const selected = computerUseLockHolder ? computerUse.selectedDisplay(computerUseLockHolder) : null;
+  if (Number.isInteger(selected) && screen.getAllDisplays().some((display) => display.id === selected)) return selected;
+  const windows = BrowserWindow.getAllWindows().filter((window) => !window.isDestroyed() && !computerUseOwnOverlay(window));
   const window = windows.find((candidate) => candidate.isFocused()) ?? windows.find((candidate) => candidate.isVisible());
   return window ? screen.getDisplayMatching(window.getBounds()).id : null;
 }
 computerUseInUse.onChange((sessions) => {
   emit({ kind: "computer-use-in-use", sessions });
+  computerUseSyncGlow(sessions);
+});
+// The screen glow is full-screen control's (official gIr: it follows the display lock's holder): up while the holder
+// is using the computer, down otherwise. Background app_* work shows only the phantom cursor (official §2.6).
+function computerUseSyncGlow(sessions = computerUseInUse.sessions()) {
   if (!computerUseGlow) return;
-  if (!sessions.length) { computerUseGlow.hide(); return; }
-  // The glow comes up once for the first session; another session joining keeps it as it is.
+  if (!computerUseLockHolder || !sessions.includes(computerUseLockHolder)) { computerUseGlow.hide(); return; }
+  // The glow comes up once; it stays as it is while the lock is held.
   if (computerUseGlow.isShown()) return;
   computerUseGlow.moveTo(computerUseGlowDisplay());
   const name = coreNameOf(config?.core);
   computerUseGlow.show(i18n && name ? { label: i18n.t("{name} is using your computer", { name }) } : undefined);
-});
+}
 // Bypass permissions runs everything without asking, the app's own tools included: a terminal command, an outside site
 // or a launch.json dev server the agent starts in a Bypass session needs no sheet (Workflow decides on its own, as
 // Claude Code does). The session's Mode is the one its last turn ran with (workflow-tool-service.cjs sessionAccess).
@@ -580,6 +757,7 @@ const agentTools = createAgentToolsHost({
   // (capabilities.deferAppTools): the long, rarely used groups wait behind code_desktop load_tools there (about 18k
   // characters less per request, and per sub-agent and workflow agent step).
   deferredGroups: () => agentToolsDeferred(),
+  prefersSharedTool: (tool, server) => tool.group === "computer-use" && computerUseServesDisplayTools(server?.session ?? null),
   requestApproval: (session, request, options) => agentToolAsk(session, request, options),
   // Codex's /review delegate keeps the session's MCP servers (codex-rs core/src/tasks/review.rs clones the config with
   // approvals off and a read-only sandbox, which OpenClaude Desktop's own tools aren't under): while a session is reviewing,
@@ -758,7 +936,63 @@ agentTools.provide("computerUse", (session, ctx) => ({
   resolveApps: (names) => computerUseApps.resolveAll(names),
   listApps: (options) => computerUseApps.list(options),
   ask: (access) => computerUseAccessCard(session, access, ctx),
+  askTakeover: (opts) => computerUseTakeoverCard(session, opts, ctx),
+  askTeach: (request) => computerUseTeachCard(session, request, ctx),
+  // Teach mode for this session (teach.cjs createTeachMode), as agent-tools/computer-use.mjs uses it.
+  teach: computerUseTeach && {
+    isActive: () => computerUseTeach.isActive(session.id),
+    activate: () => computerUseTeach.activate(session.id),
+    showStep: (payload) => computerUseTeach.showStep(session.id, payload),
+    working: () => computerUseTeach.working(session.id),
+    beforeAction: () => computerUseTeach.beforeAction(session.id),
+    afterAction: () => computerUseTeach.afterAction(session.id),
+    cancelStep: () => computerUseTeach.cancelStep(session.id),
+  },
+  // Grants changed (request_access, a revoke): the screen-wide screenshot / scroll / type may now be this session's
+  // (computerUseServesDisplayTools), so the cores list again.
+  toolsChanged: () => { try { agentTools.notifyListChanged(); } catch {} },
 }));
+/**
+ * The takeover card (computer-use-approval-card.jsx; official c96d752d0 JEe with takeoverFrom / wa): switch from
+ * background to full-screen control. An MCP tool-call elicitation whose _meta.computer_use_takeover carries the reason
+ * variant; "accept" | "decline" | "unavailable". No capability or app rows — only the "Take over the screen?" title,
+ * "Deny" (esc) and "Allow for this session" (⌘↵), as the Code page's card (c96d752d0) draws it.
+ */
+async function computerUseTakeoverCard(session, { becausePreferredBackground = false, appName = null } = {}, ctx) {
+  const owner = client;
+  if (!owner || typeof owner.localApproval !== "function" || typeof session?.id !== "string" || !config?.threadIds?.includes(session.id)) return "unavailable";
+  const params = {
+    threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", serverName: agentTools.SERVER_NAME, mode: "form",
+    message: `Allow the ${agentTools.SERVER_NAME} MCP server to take full-screen control?`, requestedSchema: { type: "object", properties: {} },
+    _meta: { codex_approval_kind: "mcp_tool_call", persist: ["session"],
+      computer_use_takeover: { becausePreferredBackground: becausePreferredBackground === true, appName: appName || null } },
+  };
+  const result = await owner.localApproval("mcpServer/elicitation/request", params, { signal: ctx?.signal, outlivesTurn: agentToolCallOutlivesTurn(ctx?.call, owner) });
+  if (result === undefined) return "unavailable";
+  return !ctx?.signal?.aborted && result?.action === "accept" ? "accept" : "decline";
+}
+/**
+ * The teach card (computer-use-approval-card.jsx ComputerUseTeachCard; official ca31fdde5 Wa for
+ * computer:request_teach_access): an MCP tool-call elicitation whose _meta.computer_use_teach carries the reason and the
+ * resolved apps (name, tier, icon, installed, already granted). "accept" (Start guide) | "decline" | "unavailable".
+ */
+async function computerUseTeachCard(session, request, ctx) {
+  const owner = client;
+  if (!owner || typeof owner.localApproval !== "function" || typeof session?.id !== "string" || !config?.threadIds?.includes(session.id)) return "unavailable";
+  const apps = await Promise.all((request?.apps ?? []).map(async (entry) => {
+    const iconDataUrl = await appIconDataUrl(entry.path, nativeImage);
+    return { ...(entry.bundleId ? { bundleId: entry.bundleId } : {}), displayName: entry.displayName, ...(entry.tier ? { tier: entry.tier } : {}),
+      installed: entry.installed === true, alreadyGranted: entry.alreadyGranted === true, ...(iconDataUrl ? { iconDataUrl } : {}) };
+  }));
+  const params = {
+    threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", serverName: agentTools.SERVER_NAME, mode: "form",
+    message: `Allow the ${agentTools.SERVER_NAME} MCP server to run tool "request_teach_access"?`, requestedSchema: { type: "object", properties: {} },
+    _meta: { codex_approval_kind: "mcp_tool_call", persist: ["session"], computer_use_teach: { reason: request?.reason ?? "", apps } },
+  };
+  const result = await owner.localApproval("mcpServer/elicitation/request", params, { signal: ctx?.signal, outlivesTurn: agentToolCallOutlivesTurn(ctx?.call, owner) });
+  if (result === undefined) return "unavailable";
+  return !ctx?.signal?.aborted && result?.action === "accept" ? "accept" : "decline";
+}
 /**
  * The request_access card (computer-use-approval-card.jsx): an MCP tool-call elicitation whose _meta.computer_use_access
  * carries the resolved apps (name, tier, icon, installed, already granted), the flags and the reason, as the
@@ -1357,6 +1591,25 @@ function receive(e) {
   if (e.method === 'item/completed' && artifactIndex?.recordArtifactItem(config, e.params?.threadId, e.params?.item)) save();
   liveWork.observe(e);
   computerUseInUse.observe(e);
+  computerUseObserveTurns(e);
+  // A turn ending (however it ended) hands the display back and lets go of the session's app windows, but keeps the
+  // approval (official finishTurnCleanup → pw.release: the full-screen lock and every app lock); a dropped connection
+  // drops both.
+  // Official teachNonTeachAction: in teach mode, a tool call that isn't teach or a passive look (screenshot, wait, …)
+  // fades the tooltip and brings the main window back.
+  if (e.method === "item/started" && computerUseTeach && typeof e.params?.threadId === "string" && computerUseTeach.activeSession() === e.params.threadId
+    && isNonTeachAction(e.params.item)) computerUseTeach.nonTeachAction(e.params.threadId);
+  if (e.method === "turn/completed" && typeof e.params?.threadId === "string") {
+    // Official finishTurnCleanup: teach mode ends with the turn (before the lock is released).
+    computerUseTeach?.end(e.params.threadId, "idle");
+    computerUseFullControl.releaseTurn(e.params.threadId);
+    // The app locks too (official pw.release): the windows' phantom cursors go, and the next turn starts clean — its
+    // display-scope tools and clipboard aren't refused for windows a finished turn looked at.
+    try { computerUse.release(e.params.threadId); } catch {}
+    // Official onResult: what the clipboard guard put aside (a terminal / IDE was in front) goes back on the clipboard.
+    void computerUse.restoreClipboardStash(e.params.threadId).catch(() => {});
+  }
+  if (e.kind === "connection" && !e.connected) computerUseFullControl.releaseAll();
   observeGoal(e);
   observeUsage(e);
   workflowToolService?.observe(e);
@@ -2095,7 +2348,23 @@ app.whenReady().then(async () => {
   i18n = await import("./i18n/index.mjs");
   computerUseGlow = require("./computer-use/glow.cjs").createGlow({ BrowserWindow, screen, app, fs: fs.promises, tmpdir: () => os.tmpdir(),
     reduceMotion: () => config?.motion === "reduce" });
-  computerUseCursor = require("./computer-use/cursor.cjs").createCursor({ BrowserWindow, app });
+  computerUseCursor = require("./computer-use/cursor.cjs").createCursor({ BrowserWindow, app, native: computerUseNative });
+  {
+    const { createTeachOverlay, createTeachMode } = require("./computer-use/teach.cjs");
+    computerUseTeachOverlay = createTeachOverlay({ BrowserWindow, screen, ipcMain, app, fs: fs.promises, tmpdir: () => os.tmpdir(),
+      onNext: () => computerUseTeach?.next(), onExit: () => computerUseTeach?.exit() });
+    // The window a step hides: the full window showing the teach session, else the one focused last (official: the main window).
+    const teachMainWindow = () => {
+      const id = computerUseTeach?.activeSession();
+      const showing = id ? windowRegistry.windowsShowing(id).filter((window) => !windowRegistry.isSessionPopout(window)) : [];
+      return showing[0] ?? windowRegistry.lastFocusedFull() ?? (win && !win.isDestroyed() ? win : null);
+    };
+    computerUseTeach = createTeachMode({ overlay: computerUseTeachOverlay, mainWindow: teachMainWindow,
+      displayFor: (sessionId) => computerUse.selectedDisplay(sessionId),
+      displayOf: (window) => screen.getDisplayMatching(window.getBounds()).id,
+      lockHolder: () => computerUseFullControl.holder(), stopSession: (id) => computerUseStopSession(id),
+      onChange: (sessionId, active) => emit({ kind: "computer-use-teach", sessionId, active }) });
+  }
   const { validateBypassRequest, nativeCollaborationMode, backgroundTurnPermission } = await import("./permission-policy.mjs");
   const { applyCodexPermissions, effectiveProfile, customProfiles, codexWorkflowArgs } = await import("./codex-permissions.mjs");
   // Bypass across a user core switch (bypass-carry.mjs): a one-shot token from the select, bound by that switch's
@@ -2158,6 +2427,8 @@ app.whenReady().then(async () => {
   };
   // Task complete offers only Off/Banners (c71860c77:2004-2029); an older saved 'badge' reads as Banners.
   if (config.completeNotifications === "badge") config.completeNotifications = "banner";
+  // Computer use's preferred mode (Settings › Computer use) is restored once preferences.json has been read.
+  computerUseFullControl.restore(config.computerUsePreferredMode);
   // R2-sections: config.sidebarSections (shared-52 kp/Bp). Only an existing record is kept in step here; the sections
   // layout seeds it from customGroups / customGroupId / "ccg::" order at the switch (electron/sidebar-sections-store.mjs).
   sidebarSectionsStore = await import("./sidebar-sections-store.mjs");
@@ -2191,7 +2462,7 @@ app.whenReady().then(async () => {
   // background with the resolved appearance (main and pane windows alike).
   nativeTheme.on("updated", () => {
     for (const window of BrowserWindow.getAllWindows())
-      if (!window.isDestroyed() && !computerUseGlow?.owns(window) && !computerUseCursor?.owns(window)) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
+      if (!window.isDestroyed() && !computerUseOwnOverlay(window)) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
   });
   if (!fs.existsSync(config.cwd)) config.cwd = workspace;
   approvedWorkspaceRoots.add(config.cwd);
@@ -2816,6 +3087,14 @@ app.whenReady().then(async () => {
     if (typeof action === "string" && action.startsWith("mcp-app:")) return mcpAppsHost.call(action, p);
     // Computer use: a known session only; the answer is an envelope that keeps the reason code (service.cjs).
     if (action === "computer-use:in-use") return computerUseInUse.sessions();
+    // Settings › Computer use: the preferred mode (background / full_control), persisted in config.
+    if (action === "computer-use:preferred-mode") return { ok: true, result: { mode: computerUseFullControl.preferredMode(), holder: computerUseLockHolder } };
+    if (action === "computer-use:set-preferred-mode") {
+      if (!computerUseFullControl.setPreferredMode(p?.mode)) return { ok: false, error: { code: "invalid_params", message: "mode must be background or full_control." } };
+      config.computerUsePreferredMode = computerUseFullControl.preferredMode();
+      save();
+      return { ok: true, result: { mode: computerUseFullControl.preferredMode() } };
+    }
     if (action === "computer-use:preview") {
       if (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId)) throw new Error("Unknown session.");
       return computerUsePreview.subscribe(p.sessionId, p.on === true);
@@ -4206,7 +4485,7 @@ installShutdownHandler(app, {
   guard: (event) => {
     if (fileAutosaveQuitGate.handle(event)) return true;
     for (const window of BrowserWindow.getAllWindows()) {
-      if (!window.isDestroyed() && !computerUseGlow?.owns(window) && !computerUseCursor?.owns(window) && !confirmFileEdits(window)) { event.preventDefault(); return true; }
+      if (!window.isDestroyed() && !computerUseOwnOverlay(window) && !confirmFileEdits(window)) { event.preventDefault(); return true; }
     }
     return quitGuard.handle(event);
   },
@@ -4215,6 +4494,7 @@ installShutdownHandler(app, {
     customCommands.dispose();
     computerUseGlow?.dispose();
     computerUseCursor?.dispose();
+    computerUseTeachOverlay?.dispose();
     computerUsePreview.dispose();
     const terminalsStopped = terminalService.dispose();
     desktopSettings?.dispose();

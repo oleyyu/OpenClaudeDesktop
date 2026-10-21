@@ -5,6 +5,12 @@
 > `computer-use-in-use`，`desktop:call computer-use:in-use`）；`grants.cjs` 拒绝本应用自己的 bundle id。§4.4（应用级减少动态：运行时注入页面
 > 自己的 reduced-motion 规则，页面本身仍逐字）与 §4.5（显示器移除或尺寸变化时跟随，原显示器没了就回主显示器）已于同日获批并实现。测试：`tests/computer-use-glow.test.mjs`、`scripts/computer-use-ui-test.mjs`。
 
+> **更新（2026-10-21，目标窗口高亮一步）**：全屏控制锁已有（`full-control.cjs`），光晕改回官方的触发方式——只跟显示锁持有者
+> （§3 A）：`main.cjs computerUseSyncGlow()` 在持有者"在用"时显示、否则隐藏；拿锁 / 放锁时也同步一次。后台 app_* 工作不再亮整屏光晕，
+> 改为**目标窗口高亮**（`electron/computer-use/window-highlight.cjs` + 原生 `WindowHighlight.swift`）：同一组 `#glow` 三层 inset
+> 阴影与 2s 脉动，画在当前操作窗口的 frame 上，面板按官方幻影光标的方式叠在目标窗口正上方（官方没有窗口高亮，见
+> official-spec §2.6.3；取舍记录在进度日志）。停靠条仍用 in-use（§3 B）。
+
 依据：`docs/computer-use-ui-css-source-20261020.md` §5，加上本轮在官方主进程 chunk
 `reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js` 里补读的显示/隐藏逻辑（字节偏移记为 `@N`）。
 下文为实现前的设计；§6 的第 1 问已定为 B。

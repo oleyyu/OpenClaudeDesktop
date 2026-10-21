@@ -29,7 +29,7 @@ import { holdModalInert } from './modal-inert.mjs';
 import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore } from './settings-model.mjs';
 import { settingsCore, accountCore, accountGroupTitle, engineCopy } from './settings-core-copy.mjs';
 import { workflowSettingsGroup } from './source-settings-workflows.jsx';
-import { computerUseSettingsGroup, useComputerUseGrants } from './source-settings-computer-use.jsx';
+import { computerUseSettingsGroup, useComputerUseGrants, useComputerUsePreferredMode, useComputerUseTeachStatus } from './source-settings-computer-use.jsx';
 import { ListBadge } from './source-customize-list.jsx';
 import { coreName, coreForEngine, coreCapabilities, coreSupports } from '../electron/core-registry.mjs';
 import { SettingsSearchResults } from './source-settings-search.jsx';
@@ -359,6 +359,8 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const [allowedSitesHost]=useState(()=>({call:(action,params)=>desktopCallRef.current(action,params)}));
   // System › Computer use: what sessions allowed right now, read while that page is open.
   const computerUseGrants=useComputerUseGrants(desktopCall,tab==='general');
+  const computerUsePreferredMode=useComputerUsePreferredMode(desktopCall,tab==='general');
+  const computerUseTeachStatus=useComputerUseTeachStatus(desktopCall,tab==='general');
   const linksInPreview=useSyncExternalStore(previewLinksStore.subscribe,previewLinksStore.getSnapshot,previewLinksStore.getSnapshot);
   const [previewStorage,setPreviewStorage]=useState(()=>previewStorageChoice(config.previewStorage,config.previewKeepCookies));
   useEffect(()=>{if(tab!=='code')return undefined;let live=true;
@@ -569,7 +571,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       row('storage',t('Storage'),t('See how much space OpenClaude Desktop uses on this computer.'),<SourceSettingsButton size="sm" onClick={()=>setStorage(true)}>{t('Manage')}</SourceSettingsButton>),
     ]},
     // After the desktop snapshot, as System's own rows (no extra skeleton rows while it loads).
-    ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId))})]:[]),
+    ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
     {tab:'developer',title:'Local MCP servers',rows:[
       row('mcp-config',t('Configuration'),local.mcp,<button disabled={!boot?.connected} onClick={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))}>{t('Edit config')}</button>),
       ...(desktop?.servers||[]).map(server=>row('mcp-'+server.name,server.name,(server.toolsError&&t(server.toolsError))||`${tn(Object.keys(server.tools||{}).length,'{count} tool','{count} tools')} · ${server.authStatus}`,<span>{t(mcpStatus(server))}</span>)),

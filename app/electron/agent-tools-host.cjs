@@ -9,6 +9,13 @@
 //   export const group = "preview"            (optional: the Settings switch that turns the module's tools off)
 //   export const native = "WebFetch"          (optional, or a tool's own `native`: the Claude tool it stands in for; a core
 //                                              whose capabilities list it in nativeTools has its own, so it isn't offered)
+//   sharesName: true on a tool                (optional: the tool may share its name with another group's tool on this one
+//                                              server — computer-use's screenshot / scroll / type and preview's. Each
+//                                              session is listed one of them: the other group's by default, this one when
+//                                              prefersSharedTool says so for that session (main.cjs). A call goes to the
+//                                              one the connection's last tools/list showed (calledEntry), or to the one
+//                                              whose schema its arguments fit. Any other repeated name is still dropped
+//                                              with a warning.)
 //   mainOnly: true on a tool                  (optional: for the main conversation only — Workflow, set_session_title,
 //                                              mark_chapter, CronCreate: a sub-agent's call is refused, as Claude Code
 //                                              withholds them from its sub-agents)
@@ -118,6 +125,9 @@ function validTool(tool) {
  *        this tool right now (a Codex review, which runs read-only and never asks), else null: the call fails with it
  *        and no approval card opens.
  * @param {(session: {id, cwd}, request: object) => Promise<boolean>} [options.requestApproval]
+ * @param {(tool: {name: string, group: string}, server: {session: string|null}) => boolean} [options.prefersSharedTool]
+ *        a sharesName tool: whether the session (thread id, or null when unknown) is served it instead of the other
+ *        group's tool of that name. Default: never (the other one is served).
  * @param {string} [options.serverScript]    the stdio server (default ./agent-tools-server.mjs)
  * @param {string} [options.command]         the program that runs it (default process.execPath, as Node)
  * @param {Array} [options.modules]          tool modules already loaded (tests)
@@ -131,6 +141,7 @@ function createAgentToolsHost({
   requestApproval = async () => false,
   refuseCall = () => null,
   deferredGroups = () => [],
+  prefersSharedTool = () => false,
   serverScript = path.join(__dirname, "agent-tools-server.mjs"),
   command = process.execPath,
   runAsNode = !!process.versions.electron,
@@ -146,6 +157,7 @@ function createAgentToolsHost({
   const pendingCalls = new Set(); // { controller, session, caller }: the calls still running (caller: the calling thread, or null)
   let dir = null, socketPath = null, server = null;
   let tools = new Map(); // name → { tool, group, native }
+  let shared = new Map(); // name → [{ tool, group, native }]: sharesName tools another group's tool of that name stands in front of
   let loading = null;
 
   async function load() {
@@ -160,15 +172,29 @@ function createAgentToolsHost({
       }
       return out;
     })();
+    const alternates = new Map();
     for (const entry of list) {
       const module = entry.module ?? entry;
       const group = typeof module.group === "string" && module.group ? module.group : (entry.file ? entry.file.replace(/\.mjs$/, "") : "tools");
       for (const tool of Array.isArray(module.tools) ? module.tools : []) {
         if (!validTool(tool)) { logger.warn?.(`agent tools: skipped an invalid tool in ${entry.file ?? group}`); continue; }
+        const record = { tool, group, native: nativeOf(tool, module) };
+        // A sharesName tool waits behind the other group's tool of its name (or takes the name when there is none).
+        if (tool.sharesName === true) {
+          if ((alternates.get(tool.name) ?? []).some((other) => other.group === group)) { logger.warn?.(`agent tools: duplicate tool ${tool.name} in ${entry.file ?? group}`); continue; }
+          alternates.set(tool.name, [...(alternates.get(tool.name) ?? []), record]);
+          continue;
+        }
         if (loaded.has(tool.name)) { logger.warn?.(`agent tools: duplicate tool ${tool.name} in ${entry.file ?? group}`); continue; }
-        loaded.set(tool.name, { tool, group, native: nativeOf(tool, module) });
+        loaded.set(tool.name, record);
       }
     }
+    for (const [name, records] of alternates) {
+      if (loaded.has(name)) continue;
+      loaded.set(name, records[0]);
+      if (records.length > 1) alternates.set(name, records.slice(1)); else alternates.delete(name);
+    }
+    shared = alternates;
     tools = loaded;
     return tools;
   }
@@ -176,6 +202,22 @@ function createAgentToolsHost({
 
   const servedToCore = ({ tool, group, native }, session = null) => {
     try { return isToolListed({ name: tool.name, native: native ?? null, group }, { session: typeof session === "string" && session ? session : null }) !== false; } catch { return true; }
+  };
+  // The thread a server identity names (a start token is followed to the thread it was bound to), or null.
+  const threadOf = (identity) => (typeof identity === "string" && identity ? (START_TOKEN.test(identity) ? startTokens.get(identity) ?? null : identity) : null);
+  /** The tool a session is served under an entry's name: a sharesName tool when prefersSharedTool picks it for that
+   * session (its group on) or when the entry's own group is off, else the entry itself. */
+  const servedEntry = (entry, identity = null) => {
+    const alternates = entry ? shared.get(entry.tool.name) : null;
+    if (!alternates?.length) return entry;
+    const session = threadOf(identity);
+    for (const alternate of alternates) {
+      let preferred = false;
+      try { preferred = prefersSharedTool({ name: alternate.tool.name, group: alternate.group }, { session }) === true; } catch { preferred = false; }
+      if (preferred && isGroupEnabled(alternate.group)) return alternate;
+    }
+    if (!isGroupEnabled(entry.group)) return alternates.find((alternate) => isGroupEnabled(alternate.group)) ?? entry;
+    return entry;
   };
   const deferred = () => { try { const list = deferredGroups(); return new Set(Array.isArray(list) ? list.filter((group) => typeof group === "string") : []); } catch { return new Set(); } };
   // What each deferrable group gives, for load_tools' description (the model decides from it what to load).
@@ -220,11 +262,38 @@ function createAgentToolsHost({
       annotations: { title: "Load more OpenClaude Desktop tools", readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     };
   }
-  /** tools/list. connection: the server connection asking (deferred groups apply to it); none = every tool. */
-  function listTools(connection = null) {
+  /**
+   * The tool a call reaches under its name. A shared name goes to the tool this connection's last tools/list showed the
+   * core (the schema the model is using), not to whatever the session's state picks now: a core that doesn't read the
+   * list again keeps the tool it knows. Without such a list, servedEntry decides. Either way, arguments that only the
+   * other tool of that name takes (preview's ref / selector, computer use's coordinate …) mean the core is using that
+   * one's schema, and it is that one that runs.
+   */
+  const calledEntry = (entry, identity, connection, args) => {
+    const alternates = entry ? shared.get(entry.tool.name) : null;
+    if (!alternates?.length) return servedEntry(entry, identity);
+    const candidates = [entry, ...alternates].filter((candidate) => isGroupEnabled(candidate.group));
+    const listedGroup = connection?.listedShared?.get(entry.tool.name);
+    let chosen = candidates.find((candidate) => candidate.group === listedGroup) ?? servedEntry(entry, identity);
+    const keys = args && typeof args === "object" ? Object.keys(args) : [];
+    const fits = (candidate) => {
+      const properties = candidate.tool.inputSchema?.properties;
+      return !properties || typeof properties !== "object" || keys.every((key) => Object.hasOwn(properties, key));
+    };
+    if (!fits(chosen)) chosen = candidates.find(fits) ?? chosen;
+    return chosen;
+  };
+  /**
+   * tools/list. connection: the server connection asking (deferred groups apply to it); none = every tool. record: this
+   * list is the core's answer (the socket's list request), so which tool of each shared name it showed is kept for the
+   * connection's calls (calledEntry); a list read for the app itself (sessionToolLists) doesn't change that.
+   */
+  function listTools(connection = null, { record = false } = {}) {
     const listed = typeof isGroupListed === "function" ? isGroupListed : isGroupEnabled;
     const defer = connection ? deferred() : new Set();
-    const out = [...tools.values()].filter((entry) => listed(entry.group) && servedToCore(entry, connection?.identity) && (!defer.has(entry.group) || connection.loaded?.has(entry.group))).map(({ tool }) => ({
+    const served = [...tools.values()].map((entry) => servedEntry(entry, connection?.identity)).filter((entry) => listed(entry.group) && servedToCore(entry, connection?.identity) && (!defer.has(entry.group) || connection.loaded?.has(entry.group)));
+    if (record && connection) connection.listedShared = new Map(served.filter(({ tool }) => shared.has(tool.name)).map(({ tool, group }) => [tool.name, group]));
+    const out = served.map(({ tool }) => ({
       name: tool.name,
       ...(typeof tool.title === "string" ? { title: tool.title } : {}),
       description: tool.description,
@@ -313,9 +382,9 @@ function createAgentToolsHost({
     return ctx;
   }
 
-  async function call(identity, { name, arguments: args = {}, meta = {} } = {}, signal, { scoped = false } = {}) {
+  async function call(identity, { name, arguments: args = {}, meta = {} } = {}, signal, { scoped = false, connection = null } = {}) {
     await ready();
-    const entry = tools.get(name);
+    const entry = calledEntry(tools.get(name), identity ?? (typeof meta?.threadId === "string" ? meta.threadId : null), connection, args);
     if (!entry || !isGroupEnabled(entry.group)) throw new Error(entry ? `${name} is turned off in OpenClaude Desktop’s settings.` : `Unknown tool: ${name}`);
     if (!servedToCore(entry, identity)) throw new Error(`${name} isn’t offered to this agent: use its own ${entry.native ?? name} tool.`);
     const session = sessionFor(identity, meta, { scoped });
@@ -428,11 +497,11 @@ function createAgentToolsHost({
           const forward = () => own.abort(controller.signal.reason);
           controller.signal.addEventListener("abort", forward, { once: true });
           callControllers.set(id, own);
-          work = call(identity, params, own.signal, { scoped }).finally(() => { controller.signal.removeEventListener("abort", forward); if (callControllers.get(id) === own) callControllers.delete(id); });
+          work = call(identity, params, own.signal, { scoped, connection: entry }).finally(() => { controller.signal.removeEventListener("abort", forward); if (callControllers.get(id) === own) callControllers.delete(id); });
         } else if (method === "list") {
           // load_tools results waiting for this list (registered before it was asked): released once it is answered.
           const waiting = [...entry.listWaiters];
-          work = ready().then(() => ({ tools: listTools(entry) }));
+          work = ready().then(() => ({ tools: listTools(entry, { record: true }) }));
           work.finally(() => { for (const wake of waiting) wake(); }).catch(() => {});
         } else work = Promise.reject(new Error("Unknown request."));
         work.then((result) => send({ id, result }), (error) => send({ id, error: { message: String(error?.message || error) } }));

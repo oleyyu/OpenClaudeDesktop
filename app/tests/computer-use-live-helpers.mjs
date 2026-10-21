@@ -51,10 +51,17 @@ export function buildFixture() {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Launches the fixture; resolves with {pid, windowId, dump(), quit()} once its window is listed. */
-export async function launchFixture({ bundle, dir }, { focus } = {}) {
+/** Launches the fixture; resolves with {pid, windowId, dump(), quit()} once its window is listed. background: no
+ * activation and a window on every Space, a full-screen one included (CU_FIXTURE_BACKGROUND / CU_FIXTURE_ALL_SPACES).
+ * notesLines: `notes` starts with that many numbered lines (CU_FIXTURE_NOTES_LINES). allSpaces: false keeps a background
+ * window on one Space. minimize / space: the window minimizes itself / moves itself to that Space (CU_FIXTURE_MINIMIZE /
+ * CU_FIXTURE_SPACE). */
+export async function launchFixture({ bundle, dir }, { focus, background = false, allSpaces = background, notesLines, minimize = false, space } = {}) {
   const dumpFile = path.join(dir, `dump-${Date.now()}.json`);
-  const env = { ...process.env, CU_FIXTURE_DUMP: dumpFile, ...(focus ? { CU_FIXTURE_FOCUS: focus } : {}) };
+  const env = { ...process.env, CU_FIXTURE_DUMP: dumpFile, ...(focus ? { CU_FIXTURE_FOCUS: focus } : {}),
+    ...(background ? { CU_FIXTURE_BACKGROUND: '1' } : {}), ...(allSpaces ? { CU_FIXTURE_ALL_SPACES: '1' } : {}),
+    ...(notesLines ? { CU_FIXTURE_NOTES_LINES: String(notesLines) } : {}), ...(minimize ? { CU_FIXTURE_MINIMIZE: '1' } : {}),
+    ...(space ? { CU_FIXTURE_SPACE: String(space) } : {}) };
   const n = native();
   // Another fixture instance may be running: this one's window is the one that was not there before.
   const ids = async () => { try { return (await n.call('listWindows', { bundleId: FIXTURE })).windows; } catch { return []; } };

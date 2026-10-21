@@ -65,6 +65,9 @@ public enum SessionState {
             "screenLocked": screenLocked,
             "secureInput": secureInputPid != 0,
             "secondsSinceUserInput": secondsSinceUserInput,
+            // Our own display-scope posts (DisplayInput.swift): a private-state source, so they never move the idle
+            // timer above; this is when we last posted, for telling the two apart in diagnostics.
+            "secondsSinceOwnInput": GlobalInput.secondsSinceOwnInput ?? NSNull(),
         ]
     }
 }

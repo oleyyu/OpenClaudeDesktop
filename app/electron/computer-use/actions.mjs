@@ -27,6 +27,8 @@ const KINDS = {
   cursor_position: "cursor", get_cursor_position: "cursor",
   hold_key: "hold_key", left_mouse_down: "mouse_down", mouse_down: "mouse_down", left_mouse_up: "mouse_up", mouse_up: "mouse_up",
   request_access: "request_access", list_apps: "list_apps",
+  read_clipboard: "read_clipboard", write_clipboard: "write_clipboard",
+  request_teach_access: "request_teach", teach_step: "teach_step", teach_batch: "teach_batch",
 };
 // The app-scope tools (docs/02 app_*): the same action on one granted app's window, marked scope "app".
 export const APP_KINDS = {
@@ -42,15 +44,30 @@ const OWN_SERVER = "code_desktop";
 export const OWN_COMPUTER_USE_TOOLS = Object.freeze(["request_access", "app_list_windows", "app_screenshot", "app_ax_find", "app_click",
   "app_type", "app_release", "app_focus", "app_menu", "app_zoom", "list_apps", "app_batch", "list_granted_applications",
   "app_key", "app_scroll", "app_drag", "app_bring_to_current_space", "request_full_control", "release_full_control",
-  "read_clipboard", "write_clipboard", "request_teach_access", "teach_step", "teach_batch"]);
+  "read_clipboard", "write_clipboard", "request_teach_access", "teach_step", "teach_batch",
+  // The screen-wide tools (official §1.1, display scope).
+  "screenshot", "zoom", "left_click", "double_click", "triple_click", "right_click", "middle_click", "scroll", "left_click_drag",
+  "mouse_move", "cursor_position", "left_mouse_down", "left_mouse_up",
+  "type", "key", "hold_key", "open_application", "switch_display", "wait", "computer_batch"]);
 const OWN_TOOLS = new Set(OWN_COMPUTER_USE_TOOLS);
+/**
+ * The names computer use shares with preview.mjs on the same server (agent-tools-host.cjs sharesName): an item is
+ * computer use's only when its arguments are computer use's own (preview's screenshot takes quality, its scroll
+ * direction / amount / x, y / ref). A screenshot with no arguments at all, and any type (both take just text), can't be
+ * told apart and count as preview's.
+ */
+export const SHARED_TOOL_NAMES = Object.freeze(["screenshot", "scroll", "type"]);
+// type takes only text, which preview's type takes too: an item can't be told apart, so it counts as preview's.
+const SHARED_ARGS = { screenshot: ["scale", "save_to_disk"], scroll: ["scroll_direction", "scroll_amount", "coordinate"], type: [] };
+const ownSharedCall = (name, input) => (SHARED_ARGS[name] ?? []).some((key) => record(input) && Object.hasOwn(input, key));
 /** The computer-use tool an item of the app's own server calls (by server, or OpenCode's "code_desktop_" prefix), or null. */
 export function ownComputerUseTool(item) {
   const tool = str(item?.tool) || str(item?.name), server = str(item?.server) || str(item?.namespace);
   const name = server === OWN_SERVER || server === `mcp__${OWN_SERVER}` ? tool
     : !server && tool.startsWith(`mcp__${OWN_SERVER}__`) ? tool.slice(OWN_SERVER.length + 7)
       : !server && tool.startsWith(`${OWN_SERVER}_`) ? tool.slice(OWN_SERVER.length + 1) : null;
-  return name !== null && OWN_TOOLS.has(name) ? name : null;
+  if (name === null || !OWN_TOOLS.has(name)) return null;
+  return SHARED_TOOL_NAMES.includes(name) && !ownSharedCall(name, item?.arguments) ? null : name;
 }
 
 function pointOf(input) {
@@ -114,3 +131,27 @@ export function computerUseAction(item) {
   return null;
 }
 
+
+// Teach mode (official CB6cNSrW nu(): teachNonTeachAction). The computer-use tools that only look or ask leave the
+// tooltip up; any other tool call — another computer-use action, or any tool at all that isn't computer use — means the
+// agent is doing something else, so the tooltip fades and the main window comes back.
+const TEACH_TOOLS = new Set(["teach_step", "teach_batch", "request_teach_access"]);
+const PASSIVE_TOOLS = new Set(["screenshot", "zoom", "cursor_position", "wait", "read_clipboard", "write_clipboard", "list_granted_applications",
+  "request_access", "switch_display"]);
+const TOOL_ITEMS = new Set(["mcpToolCall", "dynamicToolCall", "commandExecution", "fileChange", "webSearch", "imageView", "collabAgentToolCall", "computerUse"]);
+/** Whether a transcript item, started during teach mode, is something other than teach (or a passive look). */
+export function isNonTeachAction(item) {
+  if (!record(item) || !TOOL_ITEMS.has(item.type)) return false;
+  if (item.type !== "mcpToolCall" && item.type !== "dynamicToolCall") return true;
+  const tool = str(item.tool) || str(item.name), server = str(item.server) || str(item.namespace);
+  // The app's own server: preview's screenshot (no computer-use arguments) is a look too.
+  const own = ownComputerUseTool(item) ?? ((server === OWN_SERVER || server === `mcp__${OWN_SERVER}`) && tool === "screenshot" ? "screenshot" : null);
+  const name = own ?? (SERVER_NAMES.test(server) ? tool.replace(/^computer_/, "") : /^mcp__computer-use__/.test(tool) ? tool.slice("mcp__computer-use__".length) : null);
+  if (name === null) return true;
+  if (TEACH_TOOLS.has(name)) return false;
+  if (name === "computer_batch") {
+    const actions = record(item.arguments) && Array.isArray(item.arguments.actions) ? item.arguments.actions : null;
+    return actions ? actions.some((entry) => typeof entry?.action === "string" && !PASSIVE_TOOLS.has(entry.action)) : false;
+  }
+  return !PASSIVE_TOOLS.has(name);
+}

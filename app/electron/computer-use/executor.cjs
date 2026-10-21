@@ -40,14 +40,26 @@ async function execute({ ax, raw = null, focusedPointer = false, log = console, 
     path: "unavailable", blocked: true, ...(decision.unclassified ? { unclassified: true } : {}) };
 }
 
+/** What deliver answers when it was stopped before an attempt: nothing of this attempt was sent. */
+const STOPPED = Object.freeze({ outcome: "unsupported", reasonCode: "aborted", delivered: false });
+
 /**
  * One raw-rung call (also app_key, which has no AX rung). Its native gate refusing for user input
  * (user_actively_typing) backs off like the AX rung (RETRY: 3 × 200 ms), every other refusal is final.
+ * `stopped` (screen-wide input: the tool call aborted, or the session lost the display lock — the strip's Stop, the
+ * user's Esc, the turn ending) is asked before every attempt: once it says so, nothing more goes to native and the
+ * answer is aborted, so a Stop during the back-off is never followed by the retry's input.
  * @returns {Promise<object>} the native result with path "cgevent", and `blocked: true` unless it is ok
  */
-async function deliver(raw, { wait = sleep } = {}) {
+async function deliver(raw, { wait = sleep, stopped = null } = {}) {
   let delivered, tries = 0;
+  const halted = () => { try { return typeof stopped === "function" && stopped() === true; } catch { return true; } };
   for (;;) {
+    if (halted()) {
+      // A retry after a partial delivery never happens (below), so whatever came before was refused whole.
+      delivered = { ...STOPPED, ...(tries > 0 && delivered && typeof delivered === "object" ? pickCounts(delivered) : {}) };
+      break;
+    }
     delivered = await raw();
     const backoff = Object.hasOwn(policy.RETRY, delivered?.reasonCode ?? "") ? policy.RETRY[delivered.reasonCode] : null;
     // Never replay a partly delivered gesture after a mid-drag gate fires.
@@ -56,6 +68,13 @@ async function deliver(raw, { wait = sleep } = {}) {
     await wait(backoff.delayMs);
   }
   return { ...delivered, path: "cgevent", ...(delivered?.outcome === "ok" ? {} : { blocked: true }) };
+}
+
+/** The progress counts of a refused attempt (nothing was delivered by it), kept on the aborted answer. */
+function pickCounts(result) {
+  const out = {};
+  for (const key of ["typed", "total", "pressed", "times"]) if (result[key] !== undefined) out[key] = result[key];
+  return out;
 }
 
 module.exports = { execute, deliver, policyHitMessage };

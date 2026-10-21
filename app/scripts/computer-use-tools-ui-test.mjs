@@ -4,6 +4,7 @@
 //   2. fixture:app-tool request_access — the access card names Finder by bundle id with its icon; after "Allow for this
 //      session" the same session's next request_access answers without a card, and app_list_windows runs with the grant
 //      (the last call reaches the native module: read-only, Finder's window list)
+//   2c. fixture:app-tool request_teach_access — the teach card (official markup); Deny answers teach_declined
 //   3. Settings › System › Computer use — Finder is listed under Allowed apps; Remove revokes it (the next app_list_windows
 //      is app_not_granted) and shows the empty state; the switch saves agentComputerUse: false
 // Run from app/ after `npm run build`: node scripts/computer-use-tools-ui-test.mjs
@@ -19,7 +20,8 @@ execFileSync('/usr/bin/sips',['-s','format','png','/System/Library/CoreServices/
 const env={...process.env,CODE_DESKTOP_OFFSCREEN_LAUNCH:'1',CODE_DESKTOP_DATA:profile,CODEX_HOME:path.join(profile,'codex-home'),CODEX_BINARY:path.join(root,'tests/fixtures/codex-server.cjs')};
 delete env.ELECTRON_RUN_AS_NODE;delete env.CODE_DESKTOP_DEV_URL;
 const report={directory,checks:[],rendererErrors:[],passed:false};
-const app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});
+const launch=()=>electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});
+let app=await launch();
 try{
  const page=await app.firstWindow();page.on('pageerror',e=>report.rendererErrors.push(e.message));
  // CODE_DESKTOP_OFFSCREEN_LAUNCH keeps extra windows hidden but shows the first; this one stays rendered (no hidden-page
@@ -64,12 +66,72 @@ try{
  assert.deepEqual(calls.map(call=>[call.params.name,call.params.result?.isError===true]),[['request_access',false],['request_access',false],['app_list_windows',false]]);
  report.checks.push('The same session asks again without a card, and app_list_windows runs with the grant');
 
+ // 2b. request_full_control raises the take-over card (official c96d752d0 JEe takeoverFrom): no app or capability rows,
+ //     the "Take over the screen?" title, "Deny" and "Allow for this session". (The docked strip the lock
+ //     drives is covered in the in-use unit test — the fixture's turn ends at once, so the lock the official build
+ //     releases at turn end would only flash here.)
+ await send('fixture:app-tool request_full_control {}');
+ const takeoverAllow=page.getByRole('button',{name:/Allow for this session/});
+ await takeoverAllow.waitFor({timeout:15000});
+ await page.getByText(/Take over the screen\?/).waitFor({timeout:5000});
+ await page.getByRole('button',{name:/^Deny/}).last().waitFor({timeout:5000});
+ const takeoverCard=await page.evaluate(()=>{
+   const card=[...document.querySelectorAll('[data-approval-kind="elicitation"]')].find(el=>/Take over the screen/.test(el.innerText));
+   return {hasAppRows:!!card?.querySelector('[data-cua-app]'),hasCapabilityRows:!!card?.querySelector('[data-cua-capability]'),
+     deny:!!card&&/Deny/.test(card.innerText),stay:!!card&&/Stay in background/.test(card.innerText)};});
+ assert.deepEqual(takeoverCard,{hasAppRows:false,hasCapabilityRows:false,deny:true,stay:false},'the take-over card: no app/capability rows, Deny (not Stay in background)');
+ await page.screenshot({path:path.join(directory,'takeover-card.png')});
+ await page.waitForTimeout(700); // the allow arms 400 ms after the card appears
+ await takeoverAllow.click();await takeoverAllow.waitFor({state:'detached',timeout:5000});
+ await page.waitForFunction(()=>/"outcome": "ok"|"approved": true|already approved/i.test(document.body.innerText),null,{timeout:15000});
+ report.checks.push('request_full_control raises the take-over card (no app rows, Deny + Allow for this session) and Allow approves full-screen control');
+ await send('fixture:app-tool release_full_control {}');
+ await page.waitForFunction(()=>/Released full-screen control|nothing to release/.test(document.body.innerText),null,{timeout:15000});
+ report.checks.push('release_full_control hands the screen back');
+
+ // 2c. request_teach_access raises the teach card (official ca31fdde5 Ua): the GraduationCap header "Let … guide you step
+ //     by step?", the reason, what happens, Finder's row (Already allowed: granted above), Deny (⌘.) and Start guide (⌘↵).
+ //     Deny answers teach_declined; nothing is shown on the screen. (Start guide and the tooltips: computer-use-teach-live.mjs.)
+ await send('fixture:app-tool request_teach_access {"apps":["Finder"],"reason":"finding a file in Finder"}');
+ const startGuide=page.locator('[data-computer-use-teach] [data-approval-action="acceptForSession"]');
+ await startGuide.waitFor({timeout:15000});
+ const teachCard=await page.evaluate(()=>{const card=document.querySelector('[data-computer-use-teach]');if(!card)return null;
+   return {shell:card.className.split(' ').slice(0,7).join(' '),root:card.hasAttribute('data-approval-root'),
+     head:card.querySelector('.p-md > .mb-1.flex.items-start.gap-2 > span.font-semibold')?.textContent??null,
+     reason:card.querySelector('p.ms-7.mb-2')?.textContent??null,note:card.querySelector('p.ms-7.mb-3.text-footnote')?.textContent??null,
+     app:card.querySelector('.divide-y [data-cua-app]')?.dataset.cuaApp??null,badge:card.querySelector('.divide-y [data-cds=Badge]')?.textContent??null,
+     buttons:[...card.querySelectorAll('.ms-7.flex.gap-sm button .sac-button-label')].map(b=>b.textContent),capabilities:card.querySelectorAll('[data-cua-capability]').length};});
+ assert.deepEqual(teachCard,{shell:'source-message mb-4 overflow-hidden rounded-card border bg-surface-panel shadow-lg',root:true,
+   head:'Let DeepSeek guide you step by step?',reason:'finding a file in Finder',
+   note:'The DeepSeek window will hide. A tooltip appears next to each step with a Next button. Click Exit anytime to stop.',
+   app:'com.apple.finder',badge:'Already allowed',buttons:['Deny','Start guide'],capabilities:0});
+ await page.locator('[data-computer-use-teach]').scrollIntoViewIfNeeded();
+ await page.screenshot({path:path.join(directory,'teach-card.png')});
+ await page.locator('[data-computer-use-teach] [data-approval-action="decline"]').click();
+ await startGuide.waitFor({state:'detached',timeout:5000});
+ await page.waitForFunction(()=>/teach_declined/.test(document.body.innerText),null,{timeout:15000});
+ assert.equal(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().some(w=>!w.isDestroyed()&&/cu-teach-/.test(w.webContents.getURL()))),false,'no overlay was made');
+ report.checks.push('request_teach_access raises the teach card (official shell, GraduationCap header, reason, Finder already allowed, Deny / Start guide) and Deny answers teach_declined');
+
  // 3. Settings › System › Computer use: the allowed app is listed; removing it revokes the grant; the switch drops the tools.
  await page.keyboard.press('Meta+,');const settings=page.getByRole('dialog',{name:'Settings',exact:true});await settings.waitFor();
  await settings.getByRole('navigation',{name:'Settings',exact:true}).getByRole('button',{name:'System',exact:true}).click();
  const section=settings.locator('section.ss-group',{has:page.getByRole('heading',{name:/Computer use/})});
  await section.waitFor({timeout:5000});
  assert.match(await section.locator('h3').innerText(),/Computer use\s*Beta/);
+ await section.locator('[data-setting-id="computer-use-preferred-mode"] [data-cds="SegmentedControl"]').waitFor({timeout:5000});
+ assert.ok(await section.getByRole('radio',{name:'Background',exact:true}).count()>=1,'the preferred-mode Background segment');
+ assert.ok(await section.getByRole('radio',{name:'Full control',exact:true}).count()>=1,'the preferred-mode Full control segment');
+ report.checks.push('Settings shows the Background / Full control preferred-mode segmented control');
+ // The Teach mode row says whether teach mode can run here (computer-use:probe), never "not available in this build".
+ await page.waitForFunction(()=>{const t=[...document.querySelectorAll('section.ss-group')].find(s=>/Computer use/.test(s.querySelector('h3')?.textContent||''))?.innerText||'';return /Teach mode/.test(t)&&/(ask it to teach you|Accessibility and Screen Recording permission|can’t run on this computer)/.test(t);},null,{timeout:5000});
+ assert.doesNotMatch(await section.innerText(),/Not available in this build/);
+ report.checks.push('Settings › Computer use: the Teach mode row reflects whether teach mode can run here');
+ // Choosing Full control saves computerUsePreferredMode (checked again after a relaunch, at the end).
+ await section.getByRole('radio',{name:'Full control',exact:true}).first().click();
+ for(let i=0;i<50;i++){const saved=JSON.parse(await fs.readFile(path.join(profile,'preferences.json'),'utf8'));if(saved.computerUsePreferredMode==='full_control')break;await page.waitForTimeout(100);}
+ assert.equal(JSON.parse(await fs.readFile(path.join(profile,'preferences.json'),'utf8')).computerUsePreferredMode,'full_control');
+ report.checks.push('Choosing Full control saves computerUsePreferredMode: full_control');
  const chip=section.locator('[data-computer-use-allowed] > div');
  await chip.first().waitFor({timeout:5000});
  assert.deepEqual(await chip.locator('span.text-primary').allInnerTexts(),['Finder']);
@@ -91,6 +153,25 @@ try{
  const prefs=JSON.parse(await fs.readFile(path.join(profile,'preferences.json'),'utf8'));
  assert.equal(prefs.agentComputerUse,false);
  report.checks.push('The Enable computer use switch saves agentComputerUse: false and hides the rows below it');
+ assert.deepEqual(report.rendererErrors,[]);
+ // 4. A relaunch restores the saved preferred mode (main.cjs restores it once preferences.json is read): the segmented
+ //    control shows Full control selected. (Computer use is switched back on in the file so the rows show.)
+ await app.close();
+ await fs.writeFile(path.join(profile,'preferences.json'),JSON.stringify({...JSON.parse(await fs.readFile(path.join(profile,'preferences.json'),'utf8')),agentComputerUse:true}));
+ app=await launch();
+ const again=await app.firstWindow();again.on('pageerror',e=>report.rendererErrors.push(e.message));
+ await app.evaluate(({BrowserWindow})=>{for(const w of BrowserWindow.getAllWindows()){w.setOpacity(0);w.setIgnoreMouseEvents(true);}});
+ await again.waitForFunction(()=>{const c=document.querySelector('[data-cds=ChatComposer]');return c&&!c.hasAttribute('data-disabled');},null,{timeout:20000});
+ await again.keyboard.press('Meta+,');const settings2=again.getByRole('dialog',{name:'Settings',exact:true});await settings2.waitFor();
+ await settings2.getByRole('navigation',{name:'Settings',exact:true}).getByRole('button',{name:'System',exact:true}).click();
+ const section2=settings2.locator('section.ss-group',{has:again.getByRole('heading',{name:/Computer use/})});
+ await section2.locator('[data-setting-id="computer-use-preferred-mode"] [data-cds="SegmentedControl"]').waitFor({timeout:5000});
+ const fullRadio=section2.getByRole('radio',{name:'Full control',exact:true}).first();
+ await again.waitForFunction(()=>[...document.querySelectorAll('[data-setting-id="computer-use-preferred-mode"] [role=radio]')].some(r=>/Full control/.test(r.textContent||r.getAttribute('aria-label')||'')&&r.getAttribute('aria-checked')==='true'),null,{timeout:5000});
+ assert.equal(await fullRadio.getAttribute('aria-checked'),'true');
+ assert.equal(await section2.getByRole('radio',{name:'Background',exact:true}).first().getAttribute('aria-checked'),'false');
+ await again.screenshot({path:path.join(directory,'settings-preferred-mode-restored.png')});
+ report.checks.push('After a relaunch, Settings shows Full control selected (the saved preferred mode is restored)');
  assert.deepEqual(report.rendererErrors,[]);
  report.passed=true;
 }finally{

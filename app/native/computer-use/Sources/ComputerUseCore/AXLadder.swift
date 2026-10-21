@@ -27,14 +27,25 @@ public enum AXLadder {
     static let actionableRoles: Set<String> = [
         "AXButton", "AXCheckBox", "AXRadioButton", "AXPopUpButton", "AXMenuButton", "AXComboBox", "AXTextField",
         "AXTextArea", "AXLink", "AXSlider", "AXIncrementor", "AXDisclosureTriangle", "AXMenuItem", "AXColorWell",
-        "AXSearchField", "AXTab", "AXRow", "AXCell",
+        "AXSearchField", "AXTab", "AXRow", "AXCell", "AXOutlineRow", "AXDockItem",
     ]
     /// Pressing these opens a menu: that would front the app or take the keyboard (live schema: refused).
     static let menuPresentingRoles: Set<String> = ["AXPopUpButton", "AXMenuButton"]
-    /// Roles whose click is "select this row / cell" and may fall to a coordinate click when nothing answers AXPress
-    /// (no_press_action). Not every actionable role: a click on a text field without AXPress focuses it — or, on a
-    /// selected Finder row's name, starts a rename — which is the type path (no_focused_text), never a fallback click.
+    /// The raw rung's readback (RawInput.rawClick, behind a reason the policy keeps closed): the rows a coordinate
+    /// click would select.
     static let noPressFallbackRoles: Set<String> = ["AXRow", "AXCell"]
+    /// Official 2.42304.0 (computer_use.node, the click ladder's row role set): a click on one of these is
+    /// `set AXSelected=true`, a double click `AXOpen` when the element offers it (else it is selected too). AXPress
+    /// only for a row inside a web page. A Finder list row is one, with no AXPress.
+    static let rowRoles: Set<String> = ["AXRow", "AXCell", "AXColumn", "AXOutlineRow"]
+    /// Official text role set: a text field inside a row means the row ("set AXSelected=true (row of the text)") — a
+    /// Finder name field, which a real click on a selected row would start renaming.
+    static let textFieldRoles: Set<String> = ["AXTextField", "AXTextArea", "AXSearchField"]
+    /// Apps whose on-screen window has no AXWindow in their tree: the Dock (AXApplication ▸ AXList ▸ AXDockItem). The
+    /// app element stands in for the window, limited to the window's bounds.
+    static let windowlessShells: Set<String> = ["com.apple.dock"]
+    /// How long a selection is read back: polls × interval.
+    static let selectPolls = 10, selectPollMicros: useconds_t = 50_000
     /// The climb stops here: pressing a window or the app is never the intent.
     static let climbStops: Set<String> = ["AXWindow", "AXSheet", "AXApplication", "AXDrawer"]
 
@@ -102,6 +113,13 @@ public enum AXLadder {
         return windows.first { w in var id: UInt32 = 0; return _AXUIElementGetWindow(w, &id) == .success && id == windowId }
     }
 
+    /// The element a window's actions resolve in: its AXWindow, or for a windowless shell (the Dock) the app element.
+    static func root(pid: pid_t, windowId: UInt32) -> (element: AXUIElement, windowless: Bool)? {
+        if let window = windowElement(pid: pid, windowId: windowId) { return (window, false) }
+        guard let bundleId = WindowList.bundleId(pid: pid), windowlessShells.contains(bundleId) else { return nil }
+        return (AXUIElementCreateApplication(pid), true)
+    }
+
     // MARK: summary
 
     /// Frame in the capture's full-resolution coordinates: (screen − window origin) × scaleFactor.
@@ -113,11 +131,12 @@ public enum AXLadder {
     /// The window's actionable elements in document order (breadth-first), each with its [index]. The elements are
     /// cached (SummaryCache) so element_index addresses exactly what the model was shown.
     public static func summary(pid: pid_t, windowId: UInt32, bounds: CGRect, scaleFactor: Double) -> [[String: Any]] {
-        guard AXIsProcessTrusted(), let window = windowElement(pid: pid, windowId: windowId) else {
+        guard AXIsProcessTrusted(), let window = root(pid: pid, windowId: windowId)?.element else {
             SummaryCache.store(windowId: windowId, pid: pid, elements: [])
             return []
         }
         var out: [[String: Any]] = [], kept: [AXUIElement] = []
+        // A windowless shell's tree is the app's: only what lies inside this window's bounds is kept (below).
         var queue = children(window)[...], visited = 0
         while let node = queue.popFirst(), visited < maxVisited, kept.count < maxElements {
             visited += 1
@@ -174,11 +193,12 @@ public enum AXLadder {
         return chain
     }
 
-    /// AXPress for a click, AXShowMenu for a right click. Order of refusals: window ownership, sheet, then the climb.
+    /// A left click: row selection / AXOpen, text selection, AXPress or an ascended selection (step 3); AXShowMenu for a
+    /// right click. Order of refusals: window ownership, sheet, then the step.
     public static func click(_ request: Request) -> [String: Any] {
         _ = setUp
         guard AXIsProcessTrusted() else { return unsupported("ax_untrusted_cannot_verify") }
-        guard let window = windowElement(pid: request.pid, windowId: request.windowId) else {
+        guard let (window, windowless) = root(pid: request.pid, windowId: request.windowId) else {
             return unsupported("window_off_space")
         }
 
@@ -214,7 +234,10 @@ public enum AXLadder {
         if hitPid != request.pid { return unsupported("foreign_pid", ["foreignPid": Int(hitPid)]) }
         let chain = ancestry(hit)
         let path = chain.compactMap(role)
-        guard let windowIndex = chain.firstIndex(where: { role($0) == "AXWindow" }), CFEqual(chain[windowIndex], window) else {
+        // A windowless shell (the Dock): the hit hangs straight under the app, never in one of its AXWindows.
+        let windowIndex = windowless ? (chain.firstIndex(where: { role($0) == "AXWindow" }) == nil ? chain.count - 1 : nil)
+            : chain.firstIndex(where: { role($0) == "AXWindow" }).flatMap { CFEqual(chain[$0], window) ? $0 : nil }
+        guard let windowIndex else {
             var extra: [String: Any] = ["descentPath": path]
             if let other = chain.first(where: { role($0) == "AXWindow" }) {
                 var id: UInt32 = 0
@@ -233,32 +256,48 @@ public enum AXLadder {
             return unsupported("sheet_or_modal_on_target_window", ["descentPath": path])
         }
 
-        // 3. Climb: the hit itself, then at most four parents, to the first element that answers AXPress.
+        // 3. What the click means, in the official ladder's order (2.42304.0 computer_use.node, docs/computer-use-
+        // official-spec-20261021.md §1.2.1): a row is selected (opened on a double click); a text field in a row means
+        // that row; text takes a double / triple click as a word / line selection; otherwise the first element that
+        // answers AXPress within four parents; otherwise the nearest selectable ancestor (selected, or opened).
         let start = listed ?? hit
         let describe: [String: Any] = ["role": role(hit) ?? NSNull(), "subrole": string(hit, kAXSubroleAttribute) ?? NSNull(),
                                        "title": title(hit) ?? NSNull(), "descentPath": path]
         if request.button == "right" { return showMenu(from: start, pid: request.pid, dryRun: request.dryRun, describe: describe) }
-        if request.count >= 2, let startRole = role(start), textSelectRoles.contains(startRole) {
+        let startRole = role(start) ?? ""
+        let webPage = inWebArea(start)
+        let row = webPage ? nil : rowAncestor(start)
+        switch leftClickStep(role: startRole, count: request.count, inWebPage: webPage,
+                             hasPress: actions(start).contains(kAXPressAction as String), hasRowAncestor: row != nil) {
+        case .row:
+            // A cell that cannot itself do what the click means (be opened on a double click, or be selected) stands for
+            // its row (the official ascended selection).
+            if let row, request.count >= 2 && !actions(start).contains("AXOpen") && actions(row).contains("AXOpen")
+                || !settable(start, kAXSelectedAttribute) && settable(row, kAXSelectedAttribute) {
+                return selectOrOpen(row, count: request.count, suffix: " (ascended)", request: request, dryRun: request.dryRun, describe: describe)
+            }
+            return selectOrOpen(start, count: request.count, suffix: "", request: request, dryRun: request.dryRun, describe: describe)
+        case .rowOfText:
+            return selectOrOpen(row!, count: request.count, suffix: " (row of the text)", request: request, dryRun: request.dryRun, describe: describe)
+        case .text:
             let screenPt = request.focused ? nil : request.winLocalPt.map { CGPoint(x: request.bounds.minX + $0.x, y: request.bounds.minY + $0.y) }
                 ?? frame(start).map { r in CGPoint(x: r.intersection(request.bounds).midX, y: r.intersection(request.bounds).midY) }
             return selectText(start, unit: request.count == 3 ? .line : .word, at: screenPt, dryRun: request.dryRun, describe: describe)
+        case .press:
+            break
         }
-        // A triple click means "the line": nothing to select outside text, and pressing three times is not it.
-        if request.count == 3 { return unsupported("no_press_action", describe) }
-        let climb = ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
+        // A triple click means "the line": outside text there is no line, and pressing three times is not it — only a
+        // selectable ancestor can still take it (opened, as a double click).
+        let climb = request.count == 3 ? [] : ancestry(start, limit: climbLevels + 1).prefix { !(role($0).map(climbStops.contains) ?? false) }
         guard let target = climb.first(where: { actions($0).contains(kAXPressAction as String) }) else {
-            // A row or cell (a Finder list AXRow / AXCell) with nothing pressable on it or above is no_press_action,
-            // which the main process may let fall to a coordinate click. Anything else — plain text, a container, a
-            // text field — stays `canvas`: never a blind click.
-            // A double click with nothing to press: no_press_action, never two clicks somewhere else.
-            if request.count == 2 { return unsupported("no_press_action", describe) }
-            guard let startRole = role(start), noPressFallbackRoles.contains(startRole) else { return unsupported("canvas", describe) }
-            if (value(start, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", describe) }
-            var result = describe
-            result["noPressRole"] = startRole
-            // A dry run says which reason the real call would give; the main process still blocks it (dry_run).
-            if request.dryRun { result["outcome"] = "dryRun"; result["reasonCode"] = "no_press_action"; return result }
-            return unsupported("no_press_action", result)
+            // Nothing to press: the nearest selectable ancestor (a row, or anything whose AXSelected is settable, such
+            // as an icon-view item) is selected or opened — official "set AXSelected=true (ascended)". None: canvas,
+            // never a blind click.
+            if let selectable = webPage ? nil : selectableAncestor(start) {
+                let suffix = CFEqual(selectable, start) ? "" : " (ascended)"
+                return selectOrOpen(selectable, count: request.count, suffix: suffix, request: request, dryRun: request.dryRun, describe: describe)
+            }
+            return unsupported("canvas", describe)
         }
         var result = describe
         let targetRole = role(target) ?? ""
@@ -266,7 +305,7 @@ public enum AXLadder {
         result["pressedTitle"] = title(target) ?? NSNull()
         // Window-local points; the main process converts to the capture's frame pixels.
         if let rect = frame(target) { result["pressedLocalFrame"] = framePx(rect, origin: request.bounds.origin, scale: 1) }
-        if menuPresentingRoles.contains(targetRole) { return unsupported("popup_menu_click_refused", result) }
+        if menuPresentingRoles.contains(targetRole) { return unsupported("popup_menu", result) }
         if (value(target, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
         result["axOp"] = "AXPress"
         if request.count == 2 { result["pressCount"] = 2 }
@@ -329,7 +368,8 @@ extension AXLadder {
     }
 
     /// Double / triple click on text: select the word / line at the point (no point: around the insertion point) by
-    /// writing AXSelectedTextRange, and read it back. Not settable, no text, or not read back → no_press_action.
+    /// writing AXSelectedTextRange, and read it back. Official reasons: not settable → canvas, no character at the point →
+    /// no_range_for_position, not read back → caret_not_placed.
     static func selectText(_ element: AXUIElement, unit: TextUnit, at screenPt: CGPoint?, dryRun: Bool, describe: [String: Any]) -> [String: Any] {
         var result = describe
         result["axOp"] = "AXSelectedTextRange"
@@ -337,7 +377,7 @@ extension AXLadder {
         var settable: DarwinBoolean = false
         guard AXUIElementIsAttributeSettable(element, kAXSelectedTextRangeAttribute as CFString, &settable) == .success, settable.boolValue,
               let text = value(element, kAXValueAttribute) as? String, !text.isEmpty else {
-            return unsupported("no_press_action", result.merging(["selectionNotSettable": true]) { a, _ in a })
+            return unsupported("canvas", result.merging(["selectionNotSettable": true]) { a, _ in a })
         }
         let caret = (value(element, kAXSelectedTextRangeAttribute)).flatMap { ref -> Int? in
             guard CFGetTypeID(ref) == AXValueGetTypeID() else { return nil }
@@ -346,18 +386,18 @@ extension AXLadder {
         }
         guard let index = screenPt.flatMap({ index(of: element, at: $0) }) ?? caret,
               let wanted = unitRange(unit, in: text, at: index) else {
-            return unsupported("no_press_action", result.merging(["noTextIndex": true]) { a, _ in a })
+            return unsupported("no_range_for_position", result.merging(["noTextIndex": true]) { a, _ in a })
         }
         result["selectedRange"] = ["location": wanted.location, "length": wanted.length]
         if dryRun { result["outcome"] = "dryRun"; return result }
         var range = CFRange(location: wanted.location, length: wanted.length)
-        guard let axRange = AXValueCreate(.cfRange, &range) else { return unsupported("no_press_action", result) }
+        guard let axRange = AXValueCreate(.cfRange, &range) else { return unsupported("caret_not_placed", result) }
         let error = AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, axRange)
         var readBack = CFRange()
         guard error == .success, let ref = value(element, kAXSelectedTextRangeAttribute), CFGetTypeID(ref) == AXValueGetTypeID(),
               AXValueGetValue(ref as! AXValue, .cfRange, &readBack), readBack.location == range.location, readBack.length == range.length else {
             if error != .success { result["axError"] = axErrorName(error) }
-            return unsupported("no_press_action", result.merging(["selectionNotReadBack": true]) { a, _ in a })
+            return unsupported("caret_not_placed", result.merging(["selectionNotReadBack": true]) { a, _ in a })
         }
         result["outcome"] = "ok"
         result["reasonCode"] = NSNull()
@@ -493,5 +533,101 @@ public enum SummaryCache {
         lock.lock(); defer { lock.unlock() }
         guard let entry = byWindow[windowId], entry.pid == pid, entry.elements.indices.contains(index) else { return nil }
         return entry.elements[index]
+    }
+}
+
+extension AXLadder {
+    /// Whether an ancestor of `element` (inclusive) is an AXWebArea: rows of a web page are pressed, not selected.
+    static func inWebArea(_ element: AXUIElement) -> Bool {
+        ancestry(element, limit: 64).contains { role($0) == "AXWebArea" }
+    }
+
+    static func settable(_ element: AXUIElement, _ name: String) -> Bool {
+        var settable: DarwinBoolean = false
+        return AXUIElementIsAttributeSettable(element, name as CFString, &settable) == .success && settable.boolValue
+    }
+
+    /// The parents of `element` (not itself), up to the window and never across a web page's root.
+    static func parents(_ element: AXUIElement, limit: Int) -> [AXUIElement] {
+        Array(ancestry(element, limit: limit + 1).dropFirst()
+            .prefix { node in !(role(node).map { climbStops.contains($0) || $0 == "AXWebArea" } ?? false) })
+    }
+
+    /// The row a text field (or text) sits in: the first parent within four levels with a row role and an AXSelected
+    /// value (official "row of the text"). Nil when there is none.
+    static func rowAncestor(_ element: AXUIElement) -> AXUIElement? {
+        parents(element, limit: climbLevels).first { node in
+            (role(node).map(rowRoles.contains) ?? false) && selected(node) != nil
+        }
+    }
+
+    /// What a click with nothing to press selects: `element` or the nearest parent up to its window that has a row
+    /// role with an AXSelected value, or whose AXSelected is settable (an icon-view item). Official "(ascended)".
+    static func selectableAncestor(_ element: AXUIElement) -> AXUIElement? {
+        ([element] + parents(element, limit: 16)).first { node in
+            ((role(node).map(rowRoles.contains) ?? false) && selected(node) != nil) || settable(node, kAXSelectedAttribute)
+        }
+    }
+
+    /// The official row step: a double click on an element that offers AXOpen performs it; otherwise (a single click,
+    /// or nothing to open) `set AXSelected=true`, read back. Refused when AXSelected is not settable or the write
+    /// errors (select_refused); written but not read back → ineffective selection_not_confirmed. Nothing else is sent.
+    static func selectOrOpen(_ element: AXUIElement, count: Int, suffix: String, request: Request, dryRun: Bool, describe: [String: Any]) -> [String: Any] {
+        var result = describe
+        result["selectedRole"] = role(element) ?? NSNull()
+        result["selectedTitle"] = title(element) ?? NSNull()
+        if let rect = frame(element) { result["pressedLocalFrame"] = framePx(rect, origin: request.bounds.origin, scale: 1) }
+        if (value(element, kAXEnabledAttribute) as? NSNumber)?.boolValue == false { return unsupported("element_disabled", result) }
+        let op = selectOperation(count: count, actions: actions(element))
+        if op == .open {
+            result["axOp"] = "AXOpen" + suffix
+            if dryRun { result["outcome"] = "dryRun"; return result }
+            let error = AXUIElementPerformAction(element, "AXOpen" as CFString)
+            guard error == .success else {
+                result["outcome"] = "ineffective"
+                result["reasonCode"] = "ax_press_failed"
+                result["axError"] = axErrorName(error)
+                return result
+            }
+            result["outcome"] = "ok"
+            result["reasonCode"] = NSNull()
+            return result
+        }
+        // A double click on something that cannot be opened through Accessibility only selects it (official): say so.
+        if count >= 2 { result["openUnavailable"] = true }
+        result["axOp"] = "set AXSelected=true" + suffix
+        guard settable(element, kAXSelectedAttribute) else { return unsupported("select_refused", result) }
+        if dryRun { result["outcome"] = "dryRun"; return result }
+        let error = AXUIElementSetAttributeValue(element, kAXSelectedAttribute as CFString, kCFBooleanTrue)
+        guard error == .success else {
+            result["axError"] = axErrorName(error)
+            return unsupported("select_refused", result)
+        }
+        for _ in 0..<selectPolls where selected(element) != true { usleep(selectPollMicros) }
+        guard selected(element) == true else {
+            result["outcome"] = "ineffective"
+            result["reasonCode"] = "selection_not_confirmed"
+            return result
+        }
+        result["outcome"] = "ok"
+        result["reasonCode"] = NSNull()
+        result["selected"] = true
+        return result
+    }
+
+    public enum SelectOperation: String { case open, select }
+
+    /// Official: AXOpen for a double (or triple) click when the element offers it, else selection.
+    public static func selectOperation(count: Int, actions: [String]) -> SelectOperation {
+        count >= 2 && actions.contains("AXOpen") ? .open : .select
+    }
+
+    /// The decision before the press climb, as pure data (tests): which step a left click on `role` takes.
+    public enum LeftClickStep: String { case row, rowOfText, text, press }
+    public static func leftClickStep(role: String, count: Int, inWebPage: Bool, hasPress: Bool, hasRowAncestor: Bool) -> LeftClickStep {
+        if rowRoles.contains(role), !(inWebPage && hasPress) { return .row }
+        if textFieldRoles.contains(role), hasRowAncestor, !inWebPage { return .rowOfText }
+        if count >= 2, !(hasRowAncestor && !inWebPage), textSelectRoles.contains(role) { return .text }
+        return .press
     }
 }

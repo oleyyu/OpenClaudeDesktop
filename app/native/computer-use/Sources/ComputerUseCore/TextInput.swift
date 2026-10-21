@@ -3,14 +3,14 @@ import AppKit
 import ApplicationServices
 import CoreGraphics
 
-/// app_type and app_key (M3). Two rungs for text, decided between by the main process's reason policy:
+/// app_type (M3). Two rungs for text, decided between by the main process's reason policy:
 ///
 ///   axType   the AX rung: write AXValue (or AXSelectedText) and read AXValue back. A text element whose value AX
 ///            cannot write is `text_not_writable` when it holds the keyboard focus, `no_focused_text` when it does not.
 ///   rawType  the raw rung (policy FALLBACK only): focus the element through AX first when it lacked focus, select all
 ///            for replace, then Unicode key events of ≤ 20 UTF-16 units (a surrogate pair is never split), 2–4 ms apart,
 ///            counting what was sent, and read AXValue back: delivery is not acceptance.
-///   rawKey   one key combo to the app (there is no AX rung for keystrokes); key_not_mapped when it does not parse.
+///   (app_key lives in KeyInput.swift.)
 ///
 /// Readback outcomes: the expected text → ok, verified; unchanged → ineffective (text_unchanged); a prefix of the text
 /// arrived → ineffective (partial_delivery) with deliveredPrefixChars; unreadable → ok, verified false.
@@ -320,32 +320,5 @@ public enum TextInput {
         // 4. Read back.
         let after = exited ? nil : settle(element, until: expect?.full(units) ?? [])
         return verdict(after: after, expect: expect, text: units, sent: sent, exited: exited, extra: extra)
-    }
-
-    // MARK: keys
-
-    static let modifierNames: Set<String> = ["cmd", "command", "meta", "shift", "option", "alt", "ctrl", "control", "fn"]
-
-    /// "cmd+shift+a" → (["cmd", "shift"], "a"), or nil when any part is not a known modifier or key.
-    public static func parseCombo(_ combo: String) -> (modifiers: [String], key: String)? {
-        let parts = combo.lowercased().split(separator: "+", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
-        // "cmd++" means the plus key, which is not mapped: refuse it with the rest.
-        guard let key = parts.last, !key.isEmpty, parts.dropLast().allSatisfy(modifierNames.contains),
-              Dispatcher.keyCode(for: key) != nil else { return nil }
-        return (Array(parts.dropLast()), key)
-    }
-
-    public static func rawKey(bundleId: String, windowId: UInt32?, combo: String, repeat times: Int,
-                              grantedBundleIds: Set<String>) throws -> [String: Any] {
-        if case .failure(let error) = EventFactory.source() { return refused(error.code) }
-        guard let parsed = parseCombo(combo) else { return refused("key_not_mapped", ["combo": combo]) }
-        // Keys go to whatever holds the app's focus: the focused-mode gate applies.
-        if let gate = SessionState.rawInputRefusal(focused: true, grantedBundleIds: grantedBundleIds) { return refused(gate) }
-        let info = try WindowList.resolve(bundleId: bundleId, windowId: windowId)
-        if let state = RawInput.windowRefusal(info) { return refused(state) }
-        let code = Dispatcher.key(pid: info.pid, keyName: parsed.key, modifiers: parsed.modifiers, repeat: times)
-        if code != .ok { return refused(code.rawValue) }
-        return ["outcome": "ok", "reasonCode": NSNull(), "verified": false, "delivered": true,
-                "targetFrontmost": SessionState.isFrontmost(info.pid), "windowId": Int(info.windowId)]
     }
 }

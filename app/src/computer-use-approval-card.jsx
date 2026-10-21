@@ -5,6 +5,8 @@
 import React from "react";
 import { Icon } from "./icons";
 import { t } from "../electron/i18n/index.mjs";
+import { ListBadge } from "./source-customize-list.jsx";
+import { computerUseTeachRowLabels } from "./computer-use-model.mjs";
 import "./computer-use-approval-card.css";
 
 // One translatable sentence per title variant with the emphasized parts as placeholders, so each language keeps its
@@ -26,6 +28,23 @@ export function ComputerUseAccessTitle({ title, name }) {
   if (title.kind === "app") return <>{rich("Allow {name} to {use} {app}?", { name }, { use, app: <span className="sac-em"><span className="[unicode-bidi:isolate]">{title.app}</span></span> })}</>;
   if (title.kind === "apps") return <>{rich("Allow {name} to {use} {count} apps?", { name, count: title.count }, { use })}</>;
   return <>{rich("Allow {name} to {use} these capabilities?", { name }, { use })}</>;
+}
+
+/**
+ * The takeover card's title (official wa / JEe takeoverFrom): "Take over the screen? …". Three variants, by whether
+ * the preferred mode is Background and whether an app was named. The whole title is the heading color (no sac-em), as
+ * the official card renders it in a plain semibold paragraph.
+ * @param {{takeover: {becausePreferredBackground: boolean, appName: string | null}}} props
+ */
+export function ComputerUseTakeoverTitle({ takeover, name }) {
+  if (takeover.becausePreferredBackground) {
+    return <>{t("Take over the screen? You’ve set Background as your preferred mode, so {name} is checking before switching to full-screen control.", { name })}</>;
+  }
+  if (takeover.appName) {
+    return <>{rich("Take over the screen? {name} was working on {app} in the background and now needs full-screen control.",
+      { name }, { app: <span className="[unicode-bidi:isolate]">{takeover.appName}</span> })}</>;
+  }
+  return <>{t("Take over the screen? {name} was working in the background and now needs full-screen control.", { name })}</>;
 }
 
 /** TT: one requested capability (read-only text; the grant is all or nothing). */
@@ -63,5 +82,53 @@ export function ComputerUseAccessList({ rows }) {
   return <div role="list" aria-label={t("Requested access")} className="cua-list flex flex-col gap-0.75">
     {rows.flags.map((flag) => <CapabilityRow key={flag.key} icon={flag.icon} label={flag.label} />)}
     {rows.apps.map((app) => <AppRow key={app.key} app={app} />)}
+  </div>;
+}
+
+// ── The teach card (official ca31fdde5 Ua / Wa for computer:request_teach_access, its app row Hi / Ui and icon Wi).
+// docs/computer-use-official-spec-20261021.md §2.1.1: every class string is the original's (all in the loaded
+// c6a992d55 CSS). The card shell and the Deny / Start guide buttons are SourceApprovalCardView's teach branch.
+const TEACH_TIER_BADGE = { read: "accent", click: "accent", full: "neutral" };
+
+/** Hi: one app — its icon (Wi), its name, Already allowed or its tier, "(not installed)"; a risky app's warning line. */
+function TeachAppRow({ app }) {
+  const { tier, risk } = computerUseTeachRowLabels(app);
+  return <div className={`p-2.5 ${app.resolved ? "" : "opacity-50"}`} data-cua-app={app.bundleId ?? app.name} data-cua-risk={app.risk ?? undefined}>
+    <div className="flex items-center gap-sm">
+      {app.iconDataUrl
+        ? <div className="size-5 shrink-0 overflow-hidden rounded-[4px]"><img src={app.iconDataUrl} alt="" className="size-full scale-[1.15]" /></div>
+        : <div className="size-5 shrink-0 rounded-[4px] bg-alpha-2" />}
+      <span className="min-w-0 flex-1 truncate text-body text-secondary [unicode-bidi:isolate]">{app.name}</span>
+      {app.resolved
+        ? app.alreadyGranted
+          ? <ListBadge variant="neutral">{t("Already allowed")}</ListBadge>
+          : tier && <ListBadge variant={TEACH_TIER_BADGE[app.tier] ?? "neutral"}>{tier}</ListBadge>
+        : <span className="shrink-0 text-footnote text-muted-as-secondary">{t("(not installed)")}</span>}
+    </div>
+    {risk && <div className="ms-7 mt-1 flex items-start gap-1.5 text-footnote text-danger">
+      <Icon name="Warning" size={14} className="mt-0.5 shrink-0" />
+      <span>{risk}</span>
+    </div>}
+  </div>;
+}
+
+/**
+ * Ua's body (inside the card's "p-md"): the GraduationCap header "Let Claude guide you step by step?", the reason, what
+ * happens (the window hides, a tooltip per step, Exit), the apps, then the buttons (`actions`: Deny ⌘. and Start guide
+ * ⌘↵). The "other windows will be hidden" line is left out: this build doesn't hide other apps before acting.
+ * @param {{teach: {reason: string, apps: object[]}, name: string, actions: React.ReactNode}} props
+ */
+export function ComputerUseTeachCardBody({ teach, name, actions }) {
+  return <div className="p-md">
+    <div className="mb-1 flex items-start gap-2">
+      <Icon name="GraduationCap" size={20} className="shrink-0 text-secondary" />
+      <span className="font-semibold text-body text-secondary">{t("Let {name} guide you step by step?", { name })}</span>
+    </div>
+    <p className="ms-7 mb-2 text-body text-secondary">{teach.reason}</p>
+    <p className="ms-7 mb-3 text-footnote text-muted-as-secondary">{t("The {name} window will hide. A tooltip appears next to each step with a Next button. Click Exit anytime to stop.", { name })}</p>
+    {teach.apps.length > 0 && <div className="ms-7 mb-3 divide-y rounded border bg-surface-1">
+      {teach.apps.map((app) => <TeachAppRow key={app.key} app={app} />)}
+    </div>}
+    <div className="ms-7 flex gap-sm">{actions}</div>
   </div>;
 }

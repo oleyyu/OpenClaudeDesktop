@@ -21,7 +21,10 @@ const ELEMENTS = [
 ];
 const OK = { outcome: 'ok', reasonCode: null, verified: true, deliveredPrefixChars: 5, charsDelivered: 5, textLength: 5 };
 
-function setUp({ axType = () => OK, rawType = () => OK, rawKey = () => ({ outcome: 'ok', reasonCode: null, verified: false, delivered: true }), probe = {} } = {}) {
+function setUp({ axType = () => OK, rawType = () => OK, axKey = () => ({ outcome: 'unsupported', reasonCode: 'no_ax_key_action' }),
+  rawKey = () => ({ outcome: 'ok', reasonCode: null, verified: false, delivered: true }), probe = {},
+  axClick = () => ({ outcome: 'ok', reasonCode: null, verified: true }),
+  drag = () => ({ outcome: 'ok', reasonCode: null, delivered: true, before: {}, after: {} }) } = {}) {
   const calls = [], infos = [], warnings = [], waits = [];
   const handlers = {
     probe: () => ({ axTrusted: true, screenCapture: true, screenLocked: false, secureInput: false, eventSource: true, ...probe }),
@@ -30,7 +33,7 @@ function setUp({ axType = () => OK, rawType = () => OK, rawKey = () => ({ outcom
       return { dataUrl: 'data:image/jpeg;base64,AA==', width, height, frameWidth: 1840, frameHeight: 872, scaleFactor: 2, jpegQuality: 0.75,
         windowId: 4242, bundleId: p.bundleId, bounds: { x: 95, y: 163, width: 920, height: 436 }, elements: ELEMENTS, axTrusted: true };
     },
-    axType, rawType, rawKey,
+    axType, rawType, axKey, rawKey, axClick, drag,
   };
   const native = { async call(method, params = {}) { calls.push({ method, params: JSON.parse(JSON.stringify(params)) }); return handlers[method](params); } };
   const cu = createComputerUse({ native, log: { info: (m) => infos.push(m), warn: (m) => warnings.push(m) }, wait: async (ms) => waits.push(ms) });
@@ -168,28 +171,104 @@ test('app_type refuses before any native call: tier, text, mode, addressing, no 
   assert.equal(calls.length, before);
 });
 
-test('app_key: keystrokes with the raw rung\'s backoff; system combos and bad repeat refused before native', async () => {
-  const { cu, of, waits } = setUp();
+test('app_key: one normalized combo; AX rung, then the raw rung for no_ax_key_action; refusals before native', async () => {
+  const axKey = (p) => (p.combo === 'backspace' ? { outcome: 'ok', reasonCode: null, axOp: 'set AXSelectedText="" (delete)', role: 'AXTextArea', verified: true }
+    : { outcome: 'unsupported', reasonCode: 'no_ax_key_action', role: 'AXTextArea' });
+  const { cu, of, waits, infos } = setUp({ axKey });
   await shoot(cu);
-  const result = await cu.appKey('s1', { bundleId: APP, combo: 'cmd+shift+z', repeat: 2 });
-  assert.equal(result.outcome, 'ok');
-  assert.equal(result.path, 'cgevent');
-  assert.equal(result.verified, false);
-  assert.deepEqual(of('rawKey').map((c) => c.params), [{ bundleId: APP, windowId: 4242, combo: 'cmd+shift+z', repeat: 2, grantedBundleIds: [APP, 'com.apple.Terminal'] }]);
-  for (const combo of ['cmd+q', 'Command+Tab', 'shift+cmd+tab', 'cmd+alt+esc', 'ctrl+cmd+q', 'cmd+space']) {
-    assert.deepEqual(await cu.appKey('s1', { bundleId: APP, combo }), { outcome: 'unsupported', reasonCode: 'system_key_combo_refused', path: 'unavailable', blocked: true }, combo);
+  // AX: backspace on the text area at the coordinate, no keystroke.
+  const deleted = await cu.appKey('s1', { bundleId: APP, combo: 'Backspace', coordinate: [100, 200] });
+  assert.deepEqual([deleted.outcome, deleted.path, deleted.verified, deleted.combo, deleted.aimed], ['ok', 'ax', true, 'backspace', '(100, 200)']);
+  assert.deepEqual(of('axKey').map((c) => c.params), [{ bundleId: APP, windowId: 4242, combo: 'backspace', winLocalPt: { x: 50, y: 100 } }]);
+  assert.equal(of('rawKey').length, 0);
+  // Raw: shift+cmd+down has no AX action; the keystroke goes at the same (last) point, unverified, the policy hit logged.
+  const moved = await cu.appKey('s1', { bundleId: APP, combo: 'Command+Shift+Down' });
+  assert.deepEqual([moved.outcome, moved.path, moved.verified, moved.axReason, moved.combo], ['ok', 'cgevent', false, 'no_ax_key_action', 'shift+cmd+down']);
+  assert.deepEqual(of('rawKey').map((c) => c.params), [{ bundleId: APP, windowId: 4242, combo: 'shift+cmd+down', winLocalPt: { x: 50, y: 100 }, grantedBundleIds: [APP, 'com.apple.Terminal'] }]);
+  assert.ok(infos.some((m) => m.startsWith('[cu policy] fallback reasonCode="no_ax_key_action" → cgevent op=key')));
+  // element_index and target "focused" are passed through (the raw rung refuses element_index natively).
+  await cu.appKey('s1', { bundleId: APP, combo: 'escape', element_index: 1 });
+  assert.deepEqual(of('axKey').at(-1).params, { bundleId: APP, windowId: 4242, combo: 'escape', elementIndex: 1, expectRole: 'AXTextArea' });
+  await cu.appKey('s1', { bundleId: APP, combo: 'tab', target: 'focused' });
+  assert.equal(of('axKey').at(-1).params.focused, true);
+  // Refused before native: one key exactly, system combos without the flag, clipboard combos, bad targets.
+  const before = of('axKey').length + of('rawKey').length;
+  for (const [combo, reasonCode] of [['cmd+shift', 'bad_args'], ['a+b', 'bad_args'], ['', 'bad_args'], ['cmd++', 'bad_args'],
+    ['cmd+q', 'grant_flag_required'], ['Command+Tab', 'grant_flag_required'], ['shift+cmd+tab', 'grant_flag_required'], ['cmd+alt+esc', 'grant_flag_required'],
+    ['ctrl+cmd+q', 'grant_flag_required'], ['cmd+space', 'grant_flag_required'], ['ctrl+up', 'grant_flag_required'], ['cmd+é', 'grant_flag_required'],
+    ['cmd+c', 'state_conflict'], ['cmd+v', 'state_conflict'], ['ctrl+x', 'state_conflict'], ['shift+delete', 'state_conflict']]) {
+    const result = await cu.appKey('s1', { bundleId: APP, combo, coordinate: [100, 200] });
+    assert.deepEqual([result.outcome, result.reasonCode, result.blocked], ['unsupported', reasonCode, true], combo);
+    assert.equal(typeof result.message, 'string', combo);
   }
-  assert.equal(of('rawKey').length, 1);
-  assert.equal(normalizeCombo('alt+Command+Escape'), 'cmd+option+escape');
-  for (const args of [{ combo: '' }, { combo: 'a', repeat: 0 }, { combo: 'a', repeat: 101 }, { combo: 'a', repeat: 1.5 }]) {
-    await assert.rejects(() => cu.appKey('s1', { bundleId: APP, ...args }), (e) => e.code === 'invalid_params');
+  for (const args of [{ coordinate: [1, 1], element_index: 1 }, { target: 'pointer' }, { element_index: 9 }, { coordinate: [5000, 1] }]) {
+    assert.equal((await cu.appKey('s1', { bundleId: APP, combo: 'tab', ...args })).reasonCode, 'bad_args', JSON.stringify(args));
   }
+  assert.equal(of('axKey').length + of('rawKey').length, before);
+  // With the systemKeyCombos flag a system combo goes on (and the background key set then decides).
+  cu.grantsFor('s1').grant([], { systemKeyCombos: true });
+  await cu.appKey('s1', { bundleId: APP, combo: 'cmd+q', coordinate: [100, 200] });
+  assert.equal(of('rawKey').at(-1).params.combo, 'cmd+q');
   await assert.rejects(() => cu.appKey('s1', { bundleId: 'com.apple.Terminal', combo: 'return' }), (e) => e.code === 'tier_refused');
   assert.deepEqual(waits, []);
-  const unmapped = setUp({ rawKey: refusedBy('key_not_mapped', { combo: 'cmd+bogus' }) });
-  const refused = await unmapped.cu.appKey('s1', { bundleId: APP, combo: 'cmd+bogus' });
-  assert.equal(refused.reasonCode, 'key_not_mapped');
-  assert.equal(refused.blocked, true);
+  // The session gates: secure input (official state_conflict wording) and the lock, before native.
+  const secure = setUp({ axKey, probe: { secureInput: true } });
+  await shoot(secure.cu);
+  const blocked = await secure.cu.appKey('s1', { bundleId: APP, combo: 'tab', coordinate: [1, 1] });
+  assert.deepEqual([blocked.reasonCode, blocked.errorKind], ['secure_input_active', 'state_conflict']);
+  assert.match(blocked.message, /secure input active; keyboard actions are blocked/);
+  assert.equal(secure.of('axKey').length, 0);
+  // The raw rung's user_actively_typing backs off 3 × 200 ms like every raw call.
+  const typing = setUp({ axKey, rawKey: refusedBy('user_actively_typing', { delivered: false }) });
+  await shoot(typing.cu);
+  const busy = await typing.cu.appKey('s1', { bundleId: APP, combo: 'tab', coordinate: [1, 1] });
+  assert.equal(busy.reasonCode, 'user_actively_typing');
+  assert.deepEqual(typing.waits, [200, 200, 200]);
+  assert.equal(typing.of('rawKey').length, 4);
+  // The policy opens no_ax_key_action for app_key only.
+  assert.deepEqual(decide({ outcome: 'unsupported', reasonCode: 'no_ax_key_action' }, { op: 'key' }), { action: 'fallback', reason: 'no_ax_key_action' });
+  assert.equal(decide({ outcome: 'unsupported', reasonCode: 'no_ax_key_action' }, { op: 'type' }).action, 'block');
+  for (const reason of ['would_replace_content', 'key_cannot_be_aimed', 'menu_command_disabled', 'focus_in_sibling_window', 'bad_args', 'grant_flag_required', 'state_conflict']) {
+    assert.ok(Object.hasOwn(BLOCK, reason), reason);
+  }
+  assert.match(FALLBACK.no_ax_key_action.live, /^SEEN 2026-10-21/);
+  // normalizeCombo is the official one: modifiers ctrl, alt, shift, cmd; esc → escape; del → delete.
+  assert.equal(normalizeCombo('alt+Command+Escape'), 'alt+cmd+escape');
+  assert.equal(normalizeCombo('Shift+Option+Ctrl+Left'), 'ctrl+alt+shift+left');
+  assert.equal(normalizeCombo('esc'), 'escape');
+  assert.equal(normalizeCombo('del'), 'delete');
+});
+
+test('app_key without a target reuses the point of the last action in the window: click, type and drag all set it; "focused" forgets it', async () => {
+  const axKey = () => ({ outcome: 'ok', reasonCode: null, axOp: 'delete', role: 'AXTextField', verified: true });
+  const { cu, of } = setUp({ axKey });
+  await shoot(cu);
+  // click field A (element 0, centre [40, 30] → local {20, 15}), then type into field B by coordinate, then backspace.
+  assert.equal((await cu.appClick('s1', { bundleId: APP, element_index: 0 })).outcome, 'ok');
+  assert.equal((await cu.appType('s1', { bundleId: APP, text: 'hello', coordinate: [60, 310] })).outcome, 'ok');
+  assert.equal((await cu.appKey('s1', { bundleId: APP, combo: 'backspace' })).outcome, 'ok');
+  assert.deepEqual(of('axKey').at(-1).params.winLocalPt, { x: 30, y: 155 }, 'the key lands on B, where app_type typed, not on A');
+  // app_type by element_index: the element's centre.
+  await cu.appType('s1', { bundleId: APP, text: 'hello', element_index: 1 });
+  await cu.appKey('s1', { bundleId: APP, combo: 'return' });
+  assert.deepEqual(of('axKey').at(-1).params.winLocalPt, { x: 460, y: 225 });
+  // app_drag: its end point.
+  assert.notEqual((await cu.appDrag('s1', { bundleId: APP, coordinate: [100, 200], to_coordinate: [300, 400] })).outcome, 'unsupported');
+  await cu.appKey('s1', { bundleId: APP, combo: 'backspace' });
+  assert.deepEqual(of('axKey').at(-1).params.winLocalPt, { x: 150, y: 200 });
+  // target "focused": no known point any more, so a bare app_key is refused instead of reusing the drag's end.
+  await cu.appType('s1', { bundleId: APP, text: 'hello', target: 'focused' });
+  const count = of('axKey').length;
+  const bare = await cu.appKey('s1', { bundleId: APP, combo: 'backspace' });
+  assert.deepEqual([bare.outcome, bare.reasonCode], ['unsupported', 'bad_args']);
+  assert.equal(of('axKey').length, count);
+  // A refused action (unsupported: nothing was done) leaves the point alone.
+  const refused = setUp({ axKey, axType: refusedBy('ax_error') });
+  await shoot(refused.cu);
+  await refused.cu.appKey('s1', { bundleId: APP, combo: 'tab', coordinate: [60, 310] });
+  assert.equal((await refused.cu.appType('s1', { bundleId: APP, text: 'hello', coordinate: [100, 200] })).outcome, 'unsupported');
+  await refused.cu.appKey('s1', { bundleId: APP, combo: 'tab' });
+  assert.deepEqual(refused.of('axKey').at(-1).params.winLocalPt, { x: 30, y: 155 });
 });
 
 // Native: the built module (no event is posted by any of these).
@@ -213,15 +292,19 @@ test('native chunking: ≤ 20 UTF-16 units, a surrogate pair never split, the te
   assert.equal(String.fromCharCode(...call('textChunks', { text: long }).result.chunks.flat()), long);
 });
 
-test('native rawType / rawKey: no event source refuses first; key_not_mapped; params checked', { skip }, () => {
+test('native rawType / rawKey / axKey: no event source refuses first; key_not_mapped outside the background key set; params checked', { skip }, () => {
   const base = { bundleId: 'com.apple.finder', windowId: 1, text: 'a', focused: true, grantedBundleIds: ['com.apple.finder'] };
   assert.equal(call('rawType', base, { CU_TEST_FAIL_EVENT_SOURCE: '1' }).result.reasonCode, 'scgevent_unavailable');
-  assert.equal(call('rawKey', { bundleId: 'com.apple.finder', combo: 'a', grantedBundleIds: ['com.apple.finder'] }, { CU_TEST_FAIL_EVENT_SOURCE: '1' }).result.reasonCode, 'scgevent_unavailable');
-  for (const combo of ['cmd+bogus', 'hyper+a', 'cmd+', 'cmd++']) {
-    assert.deepEqual(call('rawKey', { bundleId: 'com.apple.finder', combo, grantedBundleIds: ['com.apple.finder'] }).result, { outcome: 'unsupported', reasonCode: 'key_not_mapped', combo }, combo);
+  assert.equal(call('rawKey', { bundleId: 'com.apple.finder', combo: 'tab', grantedBundleIds: ['com.apple.finder'] }, { CU_TEST_FAIL_EVENT_SOURCE: '1' }).result.reasonCode, 'scgevent_unavailable');
+  for (const combo of ['cmd+bogus', 'hyper+a', 'cmd+', 'cmd++', 'a', 'cmd+s', 'ctrl+tab', 'cmd+return', 'shift+escape', 'fn+left']) {
+    assert.deepEqual(call('rawKey', { bundleId: 'com.apple.finder', combo, grantedBundleIds: ['com.apple.finder'] }).result, { outcome: 'unsupported', reasonCode: 'key_not_mapped', combo, delivered: false }, combo);
   }
   for (const bad of [{ text: '' }, { mode: 'append' }, { focused: false }, { grantedBundleIds: ['x.y'] }, { winLocalPt: { x: 1, y: 1 } }]) {
     assert.equal(call('rawType', { ...base, ...bad }).error, 'invalid_params', JSON.stringify(bad));
   }
-  assert.equal(call('rawKey', { bundleId: 'com.apple.finder', combo: 'a', repeat: 0, grantedBundleIds: ['com.apple.finder'] }).error, 'invalid_params');
+  assert.equal(call('rawKey', { bundleId: 'com.apple.finder', combo: 'tab', repeat: 2, grantedBundleIds: ['com.apple.finder'] }).error, 'invalid_params', 'one key per call');
+  assert.equal(call('rawKey', { bundleId: 'com.apple.finder', combo: 'tab', grantedBundleIds: ['x.y'] }).error, 'invalid_params');
+  assert.equal(call('rawKey', { bundleId: 'com.apple.finder', combo: 'tab', focused: true, elementIndex: 1, grantedBundleIds: ['com.apple.finder'] }).error, 'invalid_params');
+  assert.equal(call('axKey', { bundleId: 'com.apple.finder', windowId: 1, combo: 'return' }).error, 'invalid_params', 'axKey needs an address');
+  assert.equal(call('axKey', { bundleId: 'com.apple.finder', windowId: 1, combo: '', focused: true }).error, 'invalid_params');
 });

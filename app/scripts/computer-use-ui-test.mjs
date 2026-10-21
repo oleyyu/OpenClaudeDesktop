@@ -42,21 +42,17 @@ try{
  assert.equal(report.metrics.banner.thumb,false,'no screenshot in the strip');
  await page.screenshot({path:path.join(directory,'banner.png')});
  report.checks.push('While the session uses the computer, the official docked strip sits above the transcript: clay tint, the pulsing 8px clay dot, “Codex is using your computer”, a secondary xs Stop, no action or screenshot');
- // The screen glow (electron/computer-use/glow.cjs) on the same signal: the original page in a transparent, click-through,
- // unfocusable panel on top of everything, over the display of the app's window.
- const glow=()=>app.evaluate(({BrowserWindow,screen})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.webContents.getURL().endsWith('/cu-glow.html'));
-  if(!w)return null;const main=BrowserWindow.getAllWindows().find(x=>x!==w&&!x.isDestroyed()&&x.isVisible());
-  return {visible:w.isVisible(),onTop:w.isAlwaysOnTop(),focusable:w.isFocusable(),bounds:w.getBounds(),display:main?screen.getDisplayMatching(main.getBounds()).bounds:null};});
- await poll(async()=>(await glow())?.visible===true,'the glow shows');
+ // The screen glow (electron/computer-use/glow.cjs) is full-screen control's (official: it follows the display lock's
+ // holder). These steps are background work with no lock, so it stays down while the strip is up (the target window
+ // highlight, window-highlight.cjs, needs a real window: computer-use-window-highlight-live.mjs).
+ const glow=()=>app.evaluate(({BrowserWindow})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.webContents.getURL().endsWith('/cu-glow.html'));
+  return w?{visible:w.isVisible()}:null;});
+ for(let i=0;i<10;i+=1){assert.notEqual((await glow())?.visible,true,'no screen glow without full-screen control');await new Promise(r=>setTimeout(r,60));}
  report.metrics.glow=await glow();
- await new Promise(r=>setTimeout(r,900));
- await fs.writeFile(path.join(directory,'glow.png'),Buffer.from(await app.evaluate(async({BrowserWindow})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.webContents.getURL().endsWith('/cu-glow.html'));return (await w.webContents.capturePage()).toPNG().toString('base64');}),'base64'));
- assert.deepEqual([report.metrics.glow.onTop,report.metrics.glow.focusable],[true,false]);
- assert.deepEqual(report.metrics.glow.bounds,report.metrics.glow.display,'the glow covers the app window’s display');
- report.checks.push('The screen glow comes up with the strip: the original page in an always-on-top, unfocusable panel covering the app window’s display');
+ report.checks.push('No screen glow for background steps: the glow is full-screen control’s (the display lock’s holder), the strip alone shows the session is using the computer');
  await banner.waitFor({state:'detached',timeout:8000});
- await poll(async()=>(await glow())?.visible===false,'the glow hides',2000);
- report.checks.push('The strip goes away when the turn ends, and the glow fades and hides with it');
+ assert.notEqual((await glow())?.visible,true);
+ report.checks.push('The strip goes away when the turn ends; the screen glow never came up');
  // 2. The group: the original tool group over the five members.
  const group=page.locator('[data-tool-group]').last();await group.waitFor();
  await poll(async()=>/Used 5 tools/.test(await group.innerText()),'group summary');

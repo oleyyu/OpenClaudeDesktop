@@ -46,7 +46,8 @@ const noPress = () => ({ outcome: 'unsupported', reasonCode: 'no_press_action', 
 
 test('policy: no_press_action is closed again (planned, with the live evidence) and blocks without a warning', () => {
   assert.equal(Object.hasOwn(FALLBACK, 'no_press_action'), false);
-  assert.match(PLANNED_M3.no_press_action.live, /^CLOSED 2026-10-19\..*CGEventPostToPid.*M4\.$/s);
+  assert.match(PLANNED_M3.no_press_action.live, /^CLOSED 2026-10-19\..*CGEventPostToPid.*SUPERSEDED 2026-10-21: the official 2\.42304\.0 ladder .*AXSelected/s);
+  assert.match(PLANNED_M3.no_press_action.trigger, /^none since 2026-10-21/);
   const log = { warn: (m) => assert.fail(`unexpected warning ${m}`) };
   assert.deepEqual(decide({ outcome: 'unsupported', reasonCode: 'no_press_action' }, { log, op: 'left_click' }), { action: 'block', reason: 'no_press_action' });
   assert.ok(Object.hasOwn(BLOCK, 'ax_error'));
@@ -140,13 +141,16 @@ test('a raw click the app did not accept (AXSelected unchanged) comes back ineff
   assert.equal(result.path, 'cgevent');
 });
 
-test('EventFactory.swift is the only native file that builds a CGEvent or a CGEventSource', () => {
+// Two native files build events, each the one builder for its scope: EventFactory.swift is the app-scoped raw rung
+// (pid-targeted, a hid-state source), DisplayInput.swift is the display-scope HID path (official §1.1: events posted to
+// the global HID tap from a PRIVATE-state source, so they move the real cursor and don't refresh the user's idle timer).
+test('only EventFactory.swift and DisplayInput.swift build a CGEvent or a CGEventSource (one per scope)', () => {
   const dir = path.join(path.resolve(import.meta.dirname, '..'), 'native/computer-use/Sources');
   const offenders = [];
   for (const sub of fs.readdirSync(dir)) {
     for (const file of fs.readdirSync(path.join(dir, sub)).filter((f) => f.endsWith('.swift'))) {
       const text = fs.readFileSync(path.join(dir, sub, file), 'utf8');
-      if (/\bCGEvent\(|\bCGEventSource\(/.test(text) && file !== 'EventFactory.swift') offenders.push(`${sub}/${file}`);
+      if (/\bCGEvent\(|\bCGEventSource\(/.test(text) && !['EventFactory.swift', 'DisplayInput.swift'].includes(file)) offenders.push(`${sub}/${file}`);
     }
   }
   assert.deepEqual(offenders, []);

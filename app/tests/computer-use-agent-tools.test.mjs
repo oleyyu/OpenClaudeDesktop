@@ -12,6 +12,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { createAgentToolsHost } = require('../electron/agent-tools-host.cjs');
 const { createComputerUse } = require('../electron/computer-use/service.cjs');
+const { createFullControl } = require('../electron/computer-use/full-control.cjs');
 const { createAppResolver, appIconDataUrl } = require('../electron/computer-use/apps.cjs');
 const { createAxHelper } = require('../electron/computer-use/ax-helper.cjs');
 const { fit, scaled } = require('../electron/computer-use/budget.cjs');
@@ -20,14 +21,29 @@ const cu = await import('../electron/agent-tools/computer-use.mjs');
 const { computerUseAction } = await import('../electron/computer-use/actions.mjs');
 const { sdkToolName } = await import('../src/transcript-sdk-tools.mjs');
 
-// The 14 tools that do what they say; the 10 registered with a reason code (the official set of 24 names).
+// The 17 tools that do what they say; the 7 registered with a reason code (the official set of 24 names).
 const WORKING = ['request_access', 'app_list_windows', 'app_screenshot', 'app_ax_find', 'app_click', 'app_type', 'app_release',
-  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch', 'list_granted_applications', 'app_drag'];
-const REASONED = { app_key: 'requires_raw_path', app_scroll: 'requires_raw_path', app_bring_to_current_space: 'requires_raw_path',
-  request_full_control: 'not_supported_in_build', release_full_control: 'not_supported_in_build', read_clipboard: 'permission_denied', write_clipboard: 'permission_denied',
-  request_teach_access: 'not_supported_in_build', teach_step: 'not_supported_in_build', teach_batch: 'not_supported_in_build' };
-const OPEN = [...WORKING.filter((name) => name !== 'app_drag'), 'app_key', 'app_scroll', 'app_drag', 'app_bring_to_current_space', 'request_full_control', 'release_full_control',
+  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch', 'list_granted_applications', 'app_drag', 'app_key', 'app_scroll',
+  'app_bring_to_current_space'];
+// read_clipboard / write_clipboard work since the clipboard step (tests/computer-use-clipboard.test.mjs), teach mode since
+// the teach step (tests/computer-use-teach.test.mjs): no official name answers not_supported_in_build any more.
+const REASONED = {};
+const OPEN = [...WORKING.filter((name) => !['app_drag', 'app_key', 'app_scroll', 'app_bring_to_current_space'].includes(name)), 'app_key', 'app_scroll', 'app_drag', 'app_bring_to_current_space', 'request_full_control', 'release_full_control',
+  'screenshot', 'zoom', 'left_click', 'double_click', 'triple_click', 'right_click', 'middle_click', 'scroll', 'left_click_drag', 'mouse_move',
+  'cursor_position', 'left_mouse_down', 'left_mouse_up',
+  'type', 'key', 'hold_key', 'open_application', 'switch_display', 'wait', 'computer_batch',
   'read_clipboard', 'write_clipboard', 'request_teach_access', 'teach_step', 'teach_batch'];
+// The screen-wide (display-scope) tools of official §1.1, all of them.
+const DISPLAY = ['screenshot', 'zoom', 'left_click', 'double_click', 'triple_click', 'right_click', 'middle_click', 'scroll', 'left_click_drag',
+  'mouse_move', 'cursor_position', 'left_mouse_down', 'left_mouse_up', 'type', 'key', 'hold_key', 'open_application', 'switch_display', 'wait',
+  'computer_batch'];
+// The official 2.42304.0 tool list in full (docs/computer-use-official-spec-20261021.md §1.0, Ne() + Pe() + Fe() on macOS
+// Desktop with appScoped.supportsRawInput and teachMode): 44 names.
+const OFFICIAL_ALL = ['request_access', 'screenshot', 'zoom', 'left_click', 'double_click', 'triple_click', 'right_click', 'middle_click', 'type', 'key',
+  'scroll', 'left_click_drag', 'mouse_move', 'open_application', 'switch_display', 'list_granted_applications', 'list_apps', 'read_clipboard',
+  'write_clipboard', 'wait', 'cursor_position', 'hold_key', 'left_mouse_down', 'left_mouse_up', 'computer_batch', 'request_teach_access', 'teach_step',
+  'teach_batch', 'release_full_control', 'request_full_control', 'app_list_windows', 'app_ax_find', 'app_screenshot', 'app_zoom', 'app_click', 'app_type',
+  'app_key', 'app_scroll', 'app_focus', 'app_drag', 'app_menu', 'app_batch', 'app_release', 'app_bring_to_current_space'];
 const OFFICIAL = ['request_access', 'app_list_windows', 'app_screenshot', 'app_zoom', 'app_ax_find', 'app_click', 'app_type', 'app_key', 'app_scroll', 'app_drag',
   'app_menu', 'app_batch', 'app_release', 'app_focus', 'app_bring_to_current_space', 'list_apps', 'request_full_control', 'release_full_control', 'read_clipboard',
   'write_clipboard', 'request_teach_access', 'teach_step', 'teach_batch', 'list_granted_applications'];
@@ -54,6 +70,23 @@ function fakeNative({ calls = [] } = {}) {
       if (method === 'axClick') return { outcome: 'ok', path: 'ax' };
       if (method === 'drag') return { outcome: 'ineffective', reasonCode: 'drag_ineffective', delivered: true, mouseUpSent: true };
       if (method === 'axType') return { outcome: 'ok', path: 'ax' };
+      if (method === 'axKey') {
+        if (params.combo === 'return') return { outcome: 'ok', reasonCode: null, axOp: 'AXConfirm', role: 'AXTextField', subrole: 'AXSearchField', title: 'Search', descentPath: ['AXWindow', 'AXToolbar', 'AXTextField'], verified: false };
+        return { outcome: 'unsupported', reasonCode: 'no_ax_key_action', role: 'AXButton', title: 'Back', descentPath: ['AXWindow', 'AXButton'] };
+      }
+      if (method === 'rawKey') {
+        if (params.combo === 'f') return { outcome: 'unsupported', reasonCode: 'key_not_mapped', delivered: false };
+        return { outcome: 'ok', reasonCode: null, delivered: true, verified: false, role: 'AXButton', title: 'Back', descentPath: ['AXWindow', 'AXButton'], windowId: 7, ...(params.combo === 'cmd+a' ? { cmdASentAsKeystroke: true } : {}) };
+      }
+      if (method === 'axScroll') {
+        const area = { role: 'AXScrollArea', title: null, descentPath: ['AXWindow', 'AXSplitGroup', 'AXScrollArea'], windowId: 7 };
+        if (params.winLocalPt && params.winLocalPt.x < 50) return { outcome: 'unsupported', reasonCode: 'canvas', role: 'AXButton', title: 'Back', descentPath: ['AXWindow', 'AXButton'], windowId: 7, noVerticalScrollBar: true };
+        if (params.dy >= 20) return { ...area, outcome: 'ineffective', reasonCode: 'scrollbar_unchanged', axOp: 'set scrollbar AXValue=1.00', before: 1, after: 1, atLimit: 'bottom', verified: true };
+        if (params.dy === 4) return { ...area, outcome: 'ineffective', reasonCode: 'scrollbar_unchanged', axOp: 'set scrollbar AXValue=0.40', axError: 'success', before: 0.2, after: 0.2, verified: true };
+        if (params.dy === -7) return { ...area, outcome: 'ineffective', reasonCode: 'ax_error', axOp: 'set scrollbar AXValue', axError: 'cannotComplete', before: 0.5, verified: false };
+        const after = Math.min(Math.max(0.2 + params.dy * 0.05, 0), 1);
+        return { ...area, outcome: 'ok', reasonCode: null, axOp: `set scrollbar AXValue=${after.toFixed(2)}`, before: 0.2, after, verified: true };
+      }
       throw Object.assign(new Error(`unexpected ${method}`), { code: 'unknown_method' });
     },
   };
@@ -100,18 +133,21 @@ const fakeApps = (calls = []) => async (options) => {
     { name: 'TextEdit', bundleId: 'com.apple.TextEdit', running: false, path: '/System/Applications/TextEdit.app' }], total: 2 };
 };
 
-function setup({ answer = 'accept', native = fakeNative(), decide, axHelper = fakeHelper(), image = fakeImage(), listApps = fakeApps() } = {}) {
-  const service = createComputerUse({ native, axHelper, image, log: { log() {}, warn() {} }, wait: async () => {}, ...(decide ? { decide } : {}) });
+function setup({ answer = 'accept', native = fakeNative(), decide, axHelper = fakeHelper(), image = fakeImage(), listApps = fakeApps(), fullControl } = {}) {
+  const service = createComputerUse({ native, axHelper, image, log: { log() {}, warn() {} }, wait: async () => {}, ...(decide ? { decide } : {}), ...(fullControl ? { fullControl } : {}) });
   const asked = [];
   const host = createAgentToolsHost({
     tmpRoot: fs.mkdtempSync(path.join(os.tmpdir(), 'cu-agent-tools-')), logger: { warn() {}, log() {} },
     modules: [cu], isGroupEnabled: () => true,
     resolveSession: (id, meta) => { const key = id ?? meta?.threadId; return key ? { id: key, cwd: '/work' } : null; },
   });
-  host.provide('computerUse', () => ({ service, resolveApps: (names) => resolver.resolveAll(names), listApps, ask: async (access) => { asked.push(access); return answer; } }));
+  const takeovers = [];
+  host.provide('computerUse', () => ({ service, resolveApps: (names) => resolver.resolveAll(names), listApps,
+    ask: async (access) => { asked.push(access); return answer; },
+    askTakeover: async (opts) => { takeovers.push(opts); return answer; } }));
   const call = async (name, args, session = 'thread-a') => host.call(session, { name, arguments: args });
   const body = (result) => JSON.parse(result.content[0].text);
-  return { host, service, native, axHelper, image, asked, call, body };
+  return { host, service, native, axHelper, image, asked, takeovers, call, body };
 }
 
 test('discovery: the host finds exactly the open tools in the "computer-use" group, from the tools folder', async () => {
@@ -123,7 +159,11 @@ test('discovery: the host finds exactly the open tools in the "computer-use" gro
   assert.equal(cu.group, 'computer-use');
   assert.deepEqual(cu.tools.map((tool) => tool.name), OPEN);
   assert.equal(OFFICIAL.length, 24);
-  assert.deepEqual([...OPEN].sort(), [...OFFICIAL].sort(), 'all 24 official names, nothing else');
+  assert.deepEqual([...OPEN].sort(), [...OFFICIAL, ...DISPLAY].sort(), 'the 24 app-scope names and 20 screen-wide ones, nothing else');
+  assert.equal(OFFICIAL_ALL.length, 44);
+  assert.deepEqual([...OPEN].sort(), [...OFFICIAL_ALL].sort(), 'exactly the official tool list');
+  const { OWN_COMPUTER_USE_TOOLS } = await import('../electron/computer-use/actions.mjs');
+  assert.deepEqual([...OWN_COMPUTER_USE_TOOLS].sort(), [...OFFICIAL_ALL].sort(), 'OWN_COMPUTER_USE_TOOLS is the official list');
   const off = createAgentToolsHost({ tmpRoot: fs.mkdtempSync(path.join(os.tmpdir(), 'cu-agent-tools-')), logger: { warn() {}, log() {} },
     resolveSession: () => null, modules: [cu], isGroupEnabled: (group) => group !== 'computer-use' });
   await off.ready();
@@ -188,10 +228,61 @@ test('schemas: every inputSchema compiles under Ajv (strict) and checks real arg
   ok('app_bring_to_current_space', { app: FINDER, window_id: 7 });
   bad('app_bring_to_current_space', { app: FINDER });
   ok('request_full_control', {});
+  ok('screenshot', {});
+  ok('screenshot', { scale: 0.5 });
+  bad('screenshot', { scale: 2 });
+  bad('screenshot', { quality: 80 });
+  ok('zoom', { region: [0, 0, 100, 50] });
+  bad('zoom', { region: [0, 0, 100] });
+  bad('zoom', { region: [0, 0, 1.5, 2] });
+  for (const name of ['left_click', 'double_click', 'triple_click', 'right_click', 'middle_click']) {
+    ok(name, { coordinate: [10, 20] });
+    ok(name, { coordinate: [10, 20], text: 'shift+cmd' });
+    bad(name, {});
+    bad(name, { coordinate: [10] });
+  }
+  ok('scroll', { coordinate: [1, 2], scroll_direction: 'down', scroll_amount: 3 });
+  bad('scroll', { coordinate: [1, 2], scroll_direction: 'sideways', scroll_amount: 3 });
+  bad('scroll', { coordinate: [1, 2], scroll_direction: 'down', scroll_amount: 101 });
+  bad('scroll', { direction: 'down' });
+  ok('left_click_drag', { coordinate: [5, 5] });
+  ok('left_click_drag', { coordinate: [5, 5], start_coordinate: [1, 1] });
+  bad('left_click_drag', { start_coordinate: [1, 1] });
+  ok('mouse_move', { coordinate: [3, 4] });
+  bad('mouse_move', {});
+  ok('cursor_position', {});
+  ok('left_mouse_down', {});
+  ok('left_mouse_up', {});
+  bad('left_mouse_down', { coordinate: [1, 1] });
   ok('write_clipboard', { text: 'x' });
   bad('write_clipboard', {});
+  ok('type', { text: 'hello\nworld' });
+  bad('type', {});
+  ok('key', { text: 'cmd+s' });
+  ok('key', { text: 'down', repeat: 100 });
+  bad('key', { text: 'down', repeat: 0 });
+  bad('key', { text: 'down', repeat: 101 });
+  bad('key', { text: 'down', repeat: 1.5 });
+  ok('hold_key', { text: 'shift', duration: 0.5 });
+  bad('hold_key', { text: 'shift' });
+  bad('hold_key', { text: 'shift', duration: 101 });
+  ok('open_application', { app: 'TextEdit' });
+  bad('open_application', {});
+  ok('switch_display', { display: 'auto' });
+  bad('switch_display', {});
+  ok('wait', { duration: 0 });
+  bad('wait', { duration: -1 });
+  bad('wait', { duration: 100.5 });
+  ok('computer_batch', { actions: [{ action: 'screenshot', scale: 0.5 }, { action: 'left_click', coordinate: [1, 2], text: 'cmd' }, { action: 'key', text: 'return', repeat: 2 },
+    { action: 'type', text: 'x' }, { action: 'hold_key', text: 'shift', duration: 1 }, { action: 'zoom', region: [0, 0, 10, 10] }, { action: 'wait', duration: 1 },
+    { action: 'scroll', coordinate: [1, 1], scroll_direction: 'down', scroll_amount: 3 }, { action: 'left_click_drag', start_coordinate: [1, 1], coordinate: [2, 2] }] });
+  bad('computer_batch', { actions: [] });
+  bad('computer_batch', { actions: [{ action: 'open_application', app: 'TextEdit' }] });
+  bad('computer_batch', { actions: [{ action: 'key', text: 'a', bogus: 1 }] });
   ok('request_teach_access', { apps: ['Finder'], reason: 'Show how' });
-  ok('teach_step', { explanation: 'e', next_preview: 'n', actions: [{ action: 'click' }], anchor: [1, 2] });
+  ok('teach_step', { explanation: 'e', next_preview: 'n', actions: [{ action: 'left_click', coordinate: [1, 2] }, { action: 'type', text: 'x' }], anchor: [1, 2] });
+  bad('teach_step', { explanation: 'e', next_preview: 'n', actions: [{ action: 'zoom', region: [0, 0, 1, 1] }] });
+  bad('teach_step', { explanation: 'e', next_preview: 'n' });
   ok('teach_batch', { steps: [{ explanation: 'e', next_preview: 'n', actions: [] }] });
   bad('teach_batch', { steps: [] });
   assert.equal(listed.app_screenshot.inputSchema.properties.scale.default, 1);
@@ -205,6 +296,9 @@ test('annotations: screenshot, window list and find are read-only; the rest are 
   assert.deepEqual(hint, { request_access: false, app_list_windows: true, app_screenshot: true, app_ax_find: true, app_click: false, app_type: false, app_release: false,
     app_focus: false, app_menu: false, app_zoom: true, list_apps: true, app_batch: false, list_granted_applications: true,
     app_key: false, app_scroll: false, app_drag: false, app_bring_to_current_space: false, request_full_control: false, release_full_control: false,
+    screenshot: true, zoom: true, left_click: false, double_click: false, triple_click: false, right_click: false, middle_click: false, scroll: false,
+    left_click_drag: false, mouse_move: false, cursor_position: true, left_mouse_down: false, left_mouse_up: false,
+    type: false, key: false, hold_key: false, open_application: false, switch_display: false, wait: true, computer_batch: false,
     read_clipboard: true, write_clipboard: false, request_teach_access: false, teach_step: false, teach_batch: false });
   for (const tool of cu.tools) {
     assert.equal(typeof tool.title, 'string');
@@ -218,14 +312,15 @@ test('no grant: app_click and the others answer app_not_granted with the next st
     ['app_list_windows', { app: FINDER }], ['app_screenshot', { app: FINDER }], ['app_ax_find', { app: FINDER }]]) {
     const result = await call(name, args);
     assert.equal(result.isError, true, name);
-    const { ok, error } = body(result);
+    const { ok, outcome, reasonCode, next_step: nextStep } = body(result);
     assert.equal(ok, false);
-    assert.equal(error.code, 'app_not_granted', name);
-    assert.match(error.next_step, /request_access/);
+    assert.equal(outcome, 'unsupported', name);
+    assert.equal(reasonCode, 'app_not_granted', name);
+    assert.match(nextStep, /request_access/);
   }
   assert.deepEqual(native.calls, []);
   const invalid = body(await call('app_click', { app: 'not a bundle id' }));
-  assert.equal(invalid.error.code, 'invalid_params');
+  assert.equal(invalid.reasonCode, 'invalid_params');
 });
 
 test('request_access: one card, granted / denied, and the same apps are not asked about again in the session', async () => {
@@ -256,10 +351,10 @@ test('request_access: Deny grants nothing; no card to show is an error, not a gr
   const none = setup({ answer: 'unavailable' });
   const failed = await none.call('request_access', { apps: ['Finder'], reason: 'r' });
   assert.equal(failed.isError, true);
-  assert.equal(none.body(failed).error.code, 'approval_unavailable');
+  assert.equal(none.body(failed).reasonCode, 'approval_unavailable');
   assert.ok(!none.service.grantsFor('thread-a').has(FINDER));
   const empty = await none.call('request_access', { apps: [' '], reason: 'r' });
-  assert.equal(none.body(empty).error.code, 'invalid_params');
+  assert.equal(none.body(empty).reasonCode, 'invalid_params');
 });
 
 test('granted: list windows, screenshot (image + summary, scale 1 by default), find, click on AX only, type, release', async () => {
@@ -273,7 +368,7 @@ test('granted: list windows, screenshot (image + summary, scale 1 by default), f
   assert.match(shot.content[0].text, /\[1\] AXTextField\/AXSearchField "Search"/);
   assert.deepEqual(shot.content[1], { type: 'image', data: 'QUJD', mimeType: 'image/jpeg' });
   assert.equal(native.calls.find(([method]) => method === 'captureWindow')[1].scale, 1);
-  assert.equal(body(await call('app_screenshot', { app: FINDER, scale: 3 })).error.code, 'invalid_params');
+  assert.equal(body(await call('app_screenshot', { app: FINDER, scale: 3 })).reasonCode, 'invalid_params');
   const found = await call('app_ax_find', { app: FINDER, role: 'button' });
   assert.match(found.content[0].text, /^2 of 3 elements in window 7 match\.\n\[0\] AXButton "Back"/);
   assert.match((await call('app_ax_find', { app: FINDER, role: 'searchfield' })).content[0].text, /^1 of 3/);
@@ -281,8 +376,8 @@ test('granted: list windows, screenshot (image + summary, scale 1 by default), f
   // Two addressing modes at once: refused in the handler, before anything reaches the native side.
   const before = native.calls.length;
   const both = await call('app_click', { app: FINDER, element_index: 0, coordinate: [5, 5] });
-  assert.equal(body(both).error.code, 'invalid_params');
-  assert.match(body(both).error.message, /only one of coordinate, element_index and target/);
+  assert.equal(body(both).reasonCode, 'invalid_params');
+  assert.match(body(both).message, /only one of coordinate, element_index and target/);
   assert.equal(native.calls.length, before);
   const clicked = await call('app_click', { app: FINDER, element_index: 0 });
   assert.deepEqual(body(clicked), { ok: true, outcome: 'ok', path: 'ax', windowId: 7 });
@@ -293,15 +388,15 @@ test('granted: list windows, screenshot (image + summary, scale 1 by default), f
   assert.deepEqual(body(await call('app_release', { app: FINDER })), { released: [`${FINDER}:7`] });
   assert.equal(service.lastTarget('thread-a'), null);
   assert.ok(service.grantsFor('thread-a').has(FINDER), 'release keeps the grant');
-  assert.equal(body(await call('app_click', { app: FINDER, element_index: 0 })).error.code, 'screenshot_required');
-  assert.equal(body(await call('app_release', { window_id: 7 })).error.code, 'invalid_params');
+  assert.equal(body(await call('app_click', { app: FINDER, element_index: 0 })).reasonCode, 'screenshot_required');
+  assert.equal(body(await call('app_release', { window_id: 7 })).reasonCode, 'invalid_params');
 });
 
 test('app_click stays on the AX rung: even a reason the policy would send to raw input is refused, never clicked raw', async () => {
   const native = fakeNative();
   const call0 = native.call.bind(native);
   native.call = async (method, params) => {
-    if (method === 'axClick') { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'no_press_action' }; }
+    if (method === 'axClick') { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'select_refused' }; }
     if (method === 'rawClick') { native.calls.push([method, params]); return { outcome: 'ok', path: 'cgevent' }; }
     return call0(method, params);
   };
@@ -314,7 +409,7 @@ test('app_click stays on the AX rung: even a reason the policy would send to raw
   assert.equal(result.isError, true);
   const parsed = body(result);
   assert.equal(parsed.ok, false);
-  assert.equal(parsed.reasonCode, 'no_press_action');
+  assert.equal(parsed.reasonCode, 'select_refused');
   assert.equal(parsed.blocked, true);
   assert.equal(typeof parsed.next_step, 'string');
   assert.ok(!native.calls.some(([method]) => method === 'rawClick'), 'the tool never reaches rawClick');
@@ -372,6 +467,19 @@ test('transcript: the code_desktop computer-use tools are computer-use steps und
   assert.equal(sdkToolName(item('app_menu')), 'mcp__computer-use__app_menu');
   assert.equal(sdkToolName(item('list_apps')), 'mcp__computer-use__list_apps');
   for (const name of OFFICIAL) assert.equal(sdkToolName(item(name)), `mcp__computer-use__${name}`, name);
+  for (const name of DISPLAY.filter((name) => !['screenshot', 'scroll', 'type'].includes(name))) assert.equal(sdkToolName(item(name)), `mcp__computer-use__${name}`, name);
+  // type is preview's too, and both take just text: it counts as preview's.
+  assert.equal(sdkToolName(item('type', { text: 'hi' })), 'mcp__code_desktop__type');
+  assert.equal(computerUseAction(item('key', { text: 'cmd+s' })).kind, 'key');
+  assert.equal(computerUseAction(item('open_application', { app: 'TextEdit' })).kind, 'open_app');
+  // screenshot / scroll are preview's too on this server: computer use's only with its own arguments.
+  assert.equal(sdkToolName(item('screenshot', { scale: 0.5 })), 'mcp__computer-use__screenshot');
+  assert.equal(sdkToolName(item('scroll', { coordinate: [1, 2], scroll_direction: 'down', scroll_amount: 2 })), 'mcp__computer-use__scroll');
+  assert.equal(sdkToolName(item('screenshot', { quality: 80 })), 'mcp__code_desktop__screenshot');
+  assert.equal(sdkToolName(item('scroll', { ref: 'ref_3' })), 'mcp__code_desktop__scroll');
+  assert.equal(computerUseAction(item('scroll', { direction: 'down', amount: 3 })), null, "preview's scroll is not a computer-use step");
+  assert.equal(computerUseAction(item('scroll', { coordinate: [1, 2], scroll_direction: 'down', scroll_amount: 2 })).kind, 'scroll');
+  assert.equal(computerUseAction(item('left_click', { coordinate: [1, 2] })).kind, 'click');
   assert.equal(sdkToolName(item('app_screenshot')), 'mcp__computer-use__app_screenshot');
   assert.equal(sdkToolName(item('request_access')), 'mcp__computer-use__request_access');
 });
@@ -432,11 +540,11 @@ test('app_click: count 2 goes the normal path to the native double click (AXSele
   assert.match(click.description, /80 ms/);
 });
 
-test('app_click: a double click with nothing to press or select answers no_press_action with a next step', async () => {
+test('app_click: a double click with nothing to press or select answers canvas (official) with a next step', async () => {
   const native = fakeNative();
   const call0 = native.call.bind(native);
   native.call = async (method, params) => {
-    if (method === 'axClick') { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'no_press_action', role: 'AXGroup' }; }
+    if (method === 'axClick') { native.calls.push([method, params]); return { outcome: 'unsupported', reasonCode: 'canvas', role: 'AXGroup' }; }
     if (method === 'rawClick') { native.calls.push([method, params]); return { outcome: 'ok' }; }
     return call0(method, params);
   };
@@ -444,7 +552,7 @@ test('app_click: a double click with nothing to press or select answers no_press
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
   const parsed = body(await call('app_click', { app: FINDER, coordinate: [20, 20], count: 2 }));
-  assert.deepEqual([parsed.ok, parsed.reasonCode, parsed.blocked], [false, 'no_press_action', true]);
+  assert.deepEqual([parsed.ok, parsed.reasonCode, parsed.blocked], [false, 'canvas', true]);
   assert.match(parsed.next_step, /Accessibility/);
   assert.ok(!native.calls.some(([method]) => method === 'rawClick'));
 });
@@ -476,8 +584,8 @@ test('app_click: no addressing is an error, never a replay of the previous click
   const clicks = () => native.calls.filter(([method]) => method === 'axClick').length;
   const empty = await call('app_click', { app: FINDER });
   assert.equal(empty.isError, true);
-  assert.equal(body(empty).error.code, 'invalid_params');
-  assert.match(body(empty).error.message, /one of coordinate, element_index or target/);
+  assert.equal(body(empty).reasonCode, 'invalid_params');
+  assert.match(body(empty).message, /one of coordinate, element_index or target/);
   assert.equal(clicks(), 1, 'the earlier click is not pressed again');
 });
 
@@ -520,7 +628,7 @@ test('app_focus: gives the window focus without a screenshot, after which target
   const { call, body, native, axHelper } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   // No screenshot and no focus: target "focused" has no window to mean.
-  assert.equal(body(await call('app_type', { app: FINDER, text: 'notes', target: 'focused' })).error.code, 'screenshot_required');
+  assert.equal(body(await call('app_type', { app: FINDER, text: 'notes', target: 'focused' })).reasonCode, 'screenshot_required');
   const focused = await call('app_focus', { app: FINDER });
   assert.equal(focused.isError, undefined);
   assert.deepEqual(body(focused), { ok: true, outcome: 'ok', focused: true, main: true, window_id: 7, activated: false });
@@ -536,7 +644,7 @@ test('app_focus: gives the window focus without a screenshot, after which target
 
 test('app_focus: refused while the app is frontmost, and while the screen is locked; never without a grant', async () => {
   const front = setup({ axHelper: fakeHelper({ frontmost: true }) });
-  assert.equal(front.body(await front.call('app_focus', { app: FINDER })).error.code, 'app_not_granted');
+  assert.equal(front.body(await front.call('app_focus', { app: FINDER })).reasonCode, 'app_not_granted');
   assert.equal(front.axHelper.calls.length, 0);
   await front.call('request_access', { apps: ['Finder'], reason: 'r' });
   const refused = front.body(await front.call('app_focus', { app: FINDER }));
@@ -572,12 +680,12 @@ test('app_menu: list the bar and a menu, open a menu, run a command, disabled an
   assert.equal(body(disabled).reasonCode, 'menu_item_disabled');
   assert.match(body(disabled).next_step, /disabled/);
   const missing = body(await call('app_menu', { app: FINDER, path: ['Fiel'] }));
-  assert.equal(missing.error.code, 'menu_item_not_found');
-  assert.equal(missing.error.closestMatch, 'File');
-  assert.deepEqual(missing.error.available, ['Finder', 'File']);
-  assert.match(missing.error.next_step, /closestMatch/);
+  assert.equal(missing.reasonCode, 'menu_item_not_found');
+  assert.equal(missing.closestMatch, 'File');
+  assert.deepEqual(missing.available, ['Finder', 'File']);
+  assert.match(missing.next_step, /closestMatch/);
   for (const args of [{}, { path: ['File'], list: true }, { list: true, close: true }]) {
-    assert.equal(body(await call('app_menu', { app: FINDER, ...args })).error.code, 'invalid_params', JSON.stringify(args));
+    assert.equal(body(await call('app_menu', { app: FINDER, ...args })).reasonCode, 'invalid_params', JSON.stringify(args));
   }
 });
 
@@ -592,7 +700,7 @@ test('app_menu: a view-only app can list menus but not press them', async () => 
 test('app_zoom: needs a screenshot, crops it in image pixels and enlarges to the region\'s frame size', async () => {
   const { call, body, image, native } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
-  assert.equal(body(await call('app_zoom', { app: FINDER, region: [0, 0, 100, 100] })).error.code, 'screenshot_required');
+  assert.equal(body(await call('app_zoom', { app: FINDER, region: [0, 0, 100, 100] })).reasonCode, 'screenshot_required');
   await call('app_screenshot', { app: FINDER });
   const captures = native.calls.filter(([method]) => method === 'captureWindow').length;
   const zoomed = await call('app_zoom', { app: FINDER, region: [400, 10, 520, 32] });
@@ -609,7 +717,7 @@ test('app_zoom: needs a screenshot, crops it in image pixels and enlarges to the
   assert.deepEqual([image.calls[1].width, image.calls[1].height], scaled(fit(1600, 1000), 0.5));
   assert.equal(native.calls.filter(([method]) => method === 'captureWindow').length, captures, 'nothing captured again');
   for (const region of [[10, 10, 5, 20], [0, 0, 1601, 10], [-1, 0, 10, 10]]) {
-    assert.equal(body(await call('app_zoom', { app: FINDER, region })).error.code, 'invalid_params', JSON.stringify(region));
+    assert.equal(body(await call('app_zoom', { app: FINDER, region })).reasonCode, 'invalid_params', JSON.stringify(region));
   }
 });
 
@@ -661,7 +769,7 @@ test('apps.cjs list: running first with pid, installed from the same folders, qu
 test('app_batch: runs the tools in order; a mid-batch screenshot is a picture only and the coordinates stay on the earlier one', async () => {
   const { call, body, native, service } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
-  assert.equal(body(await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 0 }] })).results[0].error.code, 'screenshot_required');
+  assert.equal(body(await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 0 }] })).results[0].reasonCode, 'screenshot_required');
   await call('app_screenshot', { app: FINDER });
   const before = service.axFind('thread-a', { bundleId: FINDER });
   const result = await call('app_batch', { app: FINDER, actions: [
@@ -691,18 +799,18 @@ test('app_batch: stops at the first action that fails; the rest do not run', asy
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   await call('app_screenshot', { app: FINDER });
   const clicks = () => native.calls.filter(([method]) => method === 'axClick').length;
-  for (const [stopper, code] of [[{ action: 'key', combo: 'return' }, 'requires_raw_path'], [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3 }, 'requires_raw_path'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'drag_ineffective']]) {
+  for (const [stopper, code] of [[{ action: 'key', combo: 'cmd+c' }, 'state_conflict'], [{ action: 'click' }, 'invalid_params'], [{ action: 'scroll', dy: 3, coordinate: [20, 20] }, 'canvas'], [{ action: 'drag', coordinate: [1, 1], to_coordinate: [5, 5] }, 'drag_ineffective']]) {
     const start = clicks();
     const result = await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 0 }, stopper, { action: 'click', element_index: 2 }] });
     assert.equal(result.isError, true);
     const parsed = body(result);
     assert.deepEqual([parsed.ok, parsed.completed, parsed.stoppedAt], [false, 1, 1], JSON.stringify(stopper));
     assert.equal(parsed.results.length, 2);
-    assert.equal(parsed.results[1].reasonCode ?? parsed.results[1].error?.code, code, JSON.stringify(stopper));
+    assert.equal(parsed.results[1].reasonCode, code, JSON.stringify(stopper));
     assert.match(parsed.next_step, /actions\[1\]/);
     assert.equal(clicks() - start, 1, 'the click after the stop never ran');
   }
-  assert.equal(body(await call('app_batch', { app: 'com.apple.TextEdit', actions: [{ action: 'click', element_index: 0 }] })).error.code, 'app_not_granted');
+  assert.equal(body(await call('app_batch', { app: 'com.apple.TextEdit', actions: [{ action: 'click', element_index: 0 }] })).reasonCode, 'app_not_granted');
 });
 
 test('ax-helper.cjs: one JSON request per process, the envelope unwrapped, details kept, a missing binary is helper_unavailable', async () => {
@@ -723,12 +831,12 @@ test('ax-helper.cjs: one JSON request per process, the envelope unwrapped, detai
   await assert.rejects(() => createAxHelper({ platform: 'linux', exec: async () => '' }).call('probe'), (error) => error.code === 'helper_unavailable');
 });
 
-test('the 10 names without the capability yet: a precise reasonCode, a next step, and nothing reaches the native side or the helper', async () => {
+test('the names without the capability yet: a precise reasonCode, a next step, and nothing reaches the native side or the helper', async () => {
   const { call, body, native, axHelper } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
   const before = [native.calls.length, axHelper.calls.length];
   const args = { app_key: { app: FINDER, combo: 'return' }, app_scroll: { app: FINDER, dy: 3 }, app_drag: { app: FINDER, coordinate: [1, 1], to_coordinate: [9, 9] },
-    app_bring_to_current_space: { app: FINDER, window_id: 7 }, write_clipboard: { text: 'x' }, request_teach_access: { apps: ['Finder'], reason: 'r' },
+    write_clipboard: { text: 'x' }, request_teach_access: { apps: ['Finder'], reason: 'r' },
     teach_step: { explanation: 'e', next_preview: 'n', actions: [] }, teach_batch: { steps: [{ explanation: 'e', next_preview: 'n', actions: [] }] } };
   for (const [name, reasonCode] of Object.entries(REASONED)) {
     const result = await call(name, args[name] ?? {});
@@ -745,23 +853,250 @@ test('the 10 names without the capability yet: a precise reasonCode, a next step
     assert.match(tool.description, new RegExp(reasonCode), name);
   }
   assert.deepEqual([native.calls.length, axHelper.calls.length], before);
-  // With the clipboard permissions granted, the clipboard is still outside this build (display-scope control).
-  await call('request_access', { apps: ['Finder'], reason: 'r', clipboardRead: true, clipboardWrite: true });
-  assert.equal(body(await call('read_clipboard', {})).reasonCode, 'not_supported_in_build');
-  assert.equal(body(await call('write_clipboard', { text: 'x' })).reasonCode, 'not_supported_in_build');
-  // app_batch goes through app_key for a key step.
+  // Without the flags the clipboard tools refuse first, in the official words, and touch nothing native.
+  for (const [name, flag, args] of [['read_clipboard', 'clipboardRead', {}], ['write_clipboard', 'clipboardWrite', { text: 'x' }]]) {
+    const refused = body(await call(name, args));
+    assert.deepEqual([refused.ok, refused.reasonCode], [false, 'grant_flag_required'], name);
+    assert.equal(refused.message, `Clipboard ${name.slice(0, name.indexOf('_')) === 'read' ? 'read' : 'write'} is not granted. Request \`${flag}\` via request_access.`);
+    assert.match(refused.next_step, new RegExp(`request_access with ${flag}: true`), name);
+  }
+  assert.deepEqual([native.calls.length, axHelper.calls.length], before);
+});
+
+test('app_key (official §1.6.1): combo checks before native, AX first, the raw rung for the rest, official wording, batch key steps', async () => {
+  const { call, body, native } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  const keyCalls = () => native.calls.filter(([method]) => method === 'axKey' || method === 'rawKey');
+  // Refused before anything native: not one key, a system combo without the flag, a clipboard combo.
+  for (const [combo, reasonCode, pattern] of [['cmd+shift', 'bad_args', /exactly one key.*separate app_key calls/], ['a+b', 'bad_args', /exactly one key/],
+    ['Command+Q', 'grant_flag_required', /"cmd\+q" is a system key combo.*systemKeyCombos/], ['ctrl+up', 'grant_flag_required', /system key combo/],
+    ['cmd+v', 'state_conflict', /"cmd\+v" would touch the system clipboard\. Use app_type for text entry\./], ['meta+x', 'state_conflict', /clipboard/]]) {
+    const result = await call('app_key', { app: FINDER, combo });
+    assert.equal(result.isError, true, combo);
+    const parsed = body(result);
+    assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode], [false, 'unsupported', reasonCode], combo);
+    assert.match(parsed.message, pattern, combo);
+    assert.equal(typeof parsed.next_step, 'string', combo);
+  }
+  assert.equal(keyCalls().length, 0);
+  // No point yet: the official bad_args (no default without a prior action or a screenshot).
+  assert.match(body(await call('app_key', { app: FINDER, combo: 'tab' })).message, /no prior action on this window to default to/);
   await call('app_screenshot', { app: FINDER });
-  assert.match(body(await call('app_batch', { app: FINDER, actions: [{ action: 'key', combo: 'return' }] })).results[0].message, /A key press needs the raw input path/);
+  assert.match(body(await call('app_key', { app: FINDER, combo: 'tab' })).message, /no prior action on this window to default to/);
+  // return at the search field: AXConfirm, worded as the official result line.
+  const confirmed = body(await call('app_key', { app: FINDER, combo: 'Return', coordinate: [900, 30] }));
+  assert.equal(confirmed.ok, true);
+  assert.equal(confirmed.path, 'ax');
+  assert.equal(confirmed.message, "ok (AXConfirm on AXTextField 'Search' via AXWindow>AXToolbar>AXTextField)");
+  assert.deepEqual(native.calls.filter(([m]) => m === 'axKey').at(-1)[1], { bundleId: FINDER, windowId: 7, combo: 'return', winLocalPt: { x: 450, y: 15 } });
+  assert.equal(native.calls.filter(([m]) => m === 'rawKey').length, 0, 'no keystroke after an AX action');
+  // tab without a coordinate: the point of the last action; no AX action → the raw rung, unverified.
+  const tabbed = body(await call('app_key', { app: FINDER, combo: 'shift+tab' }));
+  assert.equal(tabbed.ok, true);
+  assert.equal(tabbed.path, 'cgevent');
+  assert.match(tabbed.message, /^ok \(delivered via raw input on AXButton 'Back' via AXWindow>AXButton; there is no accessibility action for this key so this is unverified — confirm the effect with app_screenshot\)$/);
+  const raw = native.calls.filter(([m]) => m === 'rawKey').at(-1)[1];
+  assert.deepEqual(raw, { bundleId: FINDER, windowId: 7, combo: 'shift+tab', winLocalPt: { x: 450, y: 15 }, grantedBundleIds: [FINDER] });
+  // cmd+a as a keystroke carries the official caveat.
+  assert.match(body(await call('app_key', { app: FINDER, combo: 'cmd+a', coordinate: [20, 20] })).message, /this sent cmd\+a as a keystroke\. If the app ignored it/);
+  // A key the background set doesn't carry: key_not_mapped with the official list.
+  const unmapped = body(await call('app_key', { app: FINDER, combo: 'f', coordinate: [20, 20] }));
+  assert.equal(unmapped.reasonCode, 'key_not_mapped');
+  assert.match(unmapped.message, /^This element \(AXButton 'Back' at \(20, 20\) via AXWindow>AXButton\) cannot be sent that key while Finder is in the background — neither accessibility nor a background keystroke could deliver it\. Background keystrokes cover return, escape, backspace, tab/);
+  // app_batch: a key step runs app_key, and without a point it uses the click before it.
+  const batched = body(await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 2 }, { action: 'key', combo: 'down' }] }));
+  assert.equal(batched.ok, true, JSON.stringify(batched));
+  assert.match(batched.results[1].message, /^ok \(delivered via raw input/);
+  assert.deepEqual(native.calls.filter(([m]) => m === 'rawKey').at(-1)[1].winLocalPt, { x: 25, y: 10 }, 'the centre of element 2 (Forward)');
+  // [type at a coordinate, key return]: the key lands where the type step typed, not at the earlier click.
+  const typedThenReturn = body(await call('app_batch', { app: FINDER, actions: [{ action: 'click', element_index: 2 },
+    { action: 'type', text: 'notes', coordinate: [600, 620] }, { action: 'key', combo: 'return' }] }));
+  assert.equal(typedThenReturn.ok, true, JSON.stringify(typedThenReturn));
+  assert.deepEqual(keyCalls().at(-1)[1].winLocalPt, { x: 300, y: 310 }, 'the type step\'s point');
+});
+
+test('app_scroll (official §1.6.2): dx refused, AX scroll bar set and read back, official wording, ineffective does not stop a batch', async () => {
+  const { call, body, native } = setup();
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  const scrolls = () => native.calls.filter(([method]) => method === 'axScroll');
+  // A horizontal amount: the official feature_unavailable sentence, nothing native.
+  const sideways = await call('app_scroll', { app: FINDER, dy: 0, dx: 3 });
+  assert.equal(sideways.isError, true);
+  const side = body(sideways);
+  assert.deepEqual([side.ok, side.outcome, side.reasonCode, side.errorKind], [false, 'unsupported', 'horizontal_scroll', 'feature_unavailable']);
+  assert.equal(side.message, "app_scroll only supports vertical (dy). Horizontal scroll is not implemented for the background AX path — use display-scope `scroll`, or scroll vertically and rely on the app's auto-scroll.");
+  assert.equal(typeof side.next_step, 'string');
+  // No point and no screenshot: the official bad_args.
+  assert.match(body(await call('app_scroll', { app: FINDER, dy: 3 })).message, /no prior action on this window to default to/);
+  assert.equal(scrolls().length, 0);
+  await call('app_screenshot', { app: FINDER });
+  // dy 3 at a point in the list: one native axScroll with the window-local point; the official ok line.
+  const down = await call('app_scroll', { app: FINDER, dy: 3, coordinate: [600, 400] });
+  assert.equal(down.isError, undefined);
+  const ok = body(down);
+  assert.deepEqual([ok.ok, ok.outcome, ok.path, ok.verified, ok.before, ok.after, ok.dy], [true, 'ok', 'ax', true, 0.2, 0.35, 3]);
+  assert.equal(ok.message, 'ok (set scrollbar AXValue=0.35 on AXScrollArea via AXWindow>AXSplitGroup>AXScrollArea)');
+  assert.deepEqual(scrolls().at(-1)[1], { bundleId: FINDER, windowId: 7, dy: 3, winLocalPt: { x: 300, y: 200 } });
+  // Without a coordinate: the point of the last action in this window.
+  assert.equal(body(await call('app_scroll', { app: FINDER, dy: -2 })).ok, true);
+  assert.deepEqual(scrolls().at(-1)[1].winLocalPt, { x: 300, y: 200 });
+  // At the bottom already: ineffective, not an error (official), atLimit says why.
+  const end = await call('app_scroll', { app: FINDER, dy: 25 });
+  assert.equal(end.isError, undefined);
+  const atEnd = body(end);
+  assert.deepEqual([atEnd.ok, atEnd.outcome, atEnd.reasonCode, atEnd.atLimit], [false, 'ineffective', 'scrollbar_unchanged', 'bottom']);
+  assert.match(atEnd.message, /^ineffective: set scrollbar AXValue=1\.00 on AXScrollArea via .* already at the bottom/);
+  // Written but read back unchanged: the official ineffective sentence.
+  const still = await call('app_scroll', { app: FINDER, dy: 4 });
+  assert.equal(still.isError, undefined);
+  assert.equal(body(still).message, 'ineffective: set scrollbar AXValue=0.40 on AXScrollArea via AXWindow>AXSplitGroup>AXScrollArea returned success but the app has not visibly responded yet. Take a fresh app_screenshot to confirm before assuming it failed.');
+  // The write errored: an error with the AXError, and the point is not kept.
+  const failed = await call('app_scroll', { app: FINDER, dy: -7, coordinate: [700, 500] });
+  assert.equal(failed.isError, true);
+  assert.equal(body(failed).message, 'set scrollbar AXValue on AXScrollArea via AXWindow>AXSplitGroup>AXScrollArea failed (AXError: cannotComplete). Take a fresh app_screenshot — the element may have moved or been removed since the last capture.');
+  await call('app_scroll', { app: FINDER, dy: 1 });
+  assert.deepEqual(scrolls().at(-1)[1].winLocalPt, { x: 300, y: 200 }, 'the errored scroll did not move the remembered point');
+  // No vertical scroll bar up to the window: the official refusal line with this build's reason text.
+  const flat = await call('app_scroll', { app: FINDER, dy: 2, coordinate: [20, 20] });
+  assert.equal(flat.isError, true);
+  const canvas = body(flat);
+  assert.equal(canvas.reasonCode, 'canvas');
+  assert.match(canvas.message, /^This element \(AXButton 'Back' at \(20, 20\) via AXWindow>AXButton\) cannot be scrolled while Finder is in the background — nothing at that point/);
+  assert.equal(typeof canvas.next_step, 'string');
+  // app_batch: a scroll step runs app_scroll; ineffective (at the end) is reported and the batch goes on.
+  const clicksBefore = native.calls.filter(([method]) => method === 'axClick').length;
+  const batched = await call('app_batch', { app: FINDER, actions: [{ action: 'scroll', dy: 25, coordinate: [600, 400] }, { action: 'click', element_index: 1 }, { action: 'scroll', dy: 2 }] });
+  assert.equal(batched.isError, undefined, batched.content[0].text);
+  const parsed = body(batched);
+  assert.deepEqual([parsed.ok, parsed.completed], [true, 3], JSON.stringify(parsed));
+  assert.deepEqual(parsed.results.map((r) => r.outcome), ['ineffective', 'ok', 'ok']);
+  assert.equal(native.calls.filter(([method]) => method === 'axClick').length - clicksBefore, 1);
+  assert.deepEqual(scrolls().at(-1)[1].winLocalPt, { x: 230, y: 10.5 }, 'the scroll without a point uses the click before it (element 1)');
 });
 
 test('list_granted_applications: the session\'s apps, tiers, flags and the coordinate mode; nothing asked', async () => {
   const { call, body, asked } = setup();
-  assert.deepEqual(body(await call('list_granted_applications', {})), { apps: [], flags: { clipboardRead: false, clipboardWrite: false, systemKeyCombos: false }, coordinateMode: 'app_window' });
+  assert.deepEqual(body(await call('list_granted_applications', {})), { apps: [], flags: { clipboardRead: false, clipboardWrite: false, systemKeyCombos: false },
+    preferredMode: 'background', fullControlApproved: false, coordinateMode: 'app_window' });
   await call('request_access', { apps: ['Finder'], reason: 'r', clipboardRead: true });
   assert.deepEqual(body(await call('list_granted_applications', {})), { apps: [{ bundleId: FINDER, name: 'Finder', tier: 'full' }],
-    flags: { clipboardRead: true, clipboardWrite: false, systemKeyCombos: false }, coordinateMode: 'app_window' });
+    flags: { clipboardRead: true, clipboardWrite: false, systemKeyCombos: false }, preferredMode: 'background', fullControlApproved: false, coordinateMode: 'app_window' });
   assert.equal(asked.length, 1, 'only request_access showed a card');
   assert.deepEqual(body(await call('list_granted_applications', {}, 'thread-b')).apps, [], 'per session');
+});
+
+test('request_full_control / release_full_control (official §1.4): the take-over card, the approval only (the lock comes with the next screen-wide action), and release', async () => {
+  const holders = [];
+  const fullControl = createFullControl({ onLockChange: (h) => holders.push(h) });
+  const { call, body, takeovers, service } = setup({ fullControl });
+  // Background preferred: the card is shown; accept → approved (official Ln(): approveTakeover only), coordinateMode flips;
+  // nothing holds the screen yet — no glow / strip / Esc until a screen-wide action takes the lock.
+  let result = body(await call('request_full_control', {}));
+  assert.equal(takeovers.length, 1);
+  assert.deepEqual(takeovers[0], { becausePreferredBackground: true });
+  assert.deepEqual([result.ok, result.approved, result.lockHeld], [true, true, undefined]);
+  assert.equal(fullControl.isApproved('thread-a'), true);
+  assert.equal(fullControl.holder(), null, 'approval does not take the lock');
+  assert.deepEqual(holders, []);
+  // The next screen-wide action takes it (service.acquireDisplayLock, as every display-scope tool does first).
+  assert.equal(service.acquireDisplayLock('thread-a'), null);
+  assert.equal(fullControl.holder(), 'thread-a');
+  assert.deepEqual(holders, ['thread-a']);
+  assert.equal(body(await call('list_granted_applications', {})).coordinateMode, 'display');
+  // A second call: already approved, no second card.
+  result = body(await call('request_full_control', {}));
+  assert.deepEqual([result.ok, result.alreadyApproved, takeovers.length], [true, true, 1]);
+  // Release: the lock drops (holder null) and the approval is revoked (coordinateMode back to app_window).
+  result = body(await call('release_full_control', {}));
+  assert.deepEqual([result.ok, result.wasHolding], [true, true]);
+  assert.equal(fullControl.holder(), null);
+  assert.equal(fullControl.isApproved('thread-a'), false);
+  assert.equal(holders.at(-1), null);
+  assert.equal(body(await call('list_granted_applications', {})).coordinateMode, 'app_window');
+});
+
+test('request_full_control across two sessions: the display lock held elsewhere is cu_lock_held (no card, no approval); app_* refuse too, app_release still works', async () => {
+  const fullControl = createFullControl();
+  const { call, body, takeovers, service } = setup({ fullControl });
+  await call('request_access', { apps: ['Finder'], reason: 'r' }, 'thread-a');
+  // b takes the screen first (approved, then its first screen-wide action takes the lock).
+  assert.equal(body(await call('request_full_control', {}, 'thread-b')).ok, true);
+  assert.equal(fullControl.holder(), null);
+  service.grantsFor('thread-b').grant([{ bundleId: FINDER, displayName: 'Finder' }]);
+  assert.equal(service.acquireDisplayLock('thread-b'), null);
+  assert.equal(fullControl.holder(), 'thread-b');
+  // a asks: refused before any card, nothing recorded, b keeps the lock.
+  const refused = await call('request_full_control', {}, 'thread-a');
+  assert.equal(refused.isError, true);
+  const parsed = body(refused);
+  assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode], [false, 'unsupported', 'cu_lock_held']);
+  assert.match(parsed.message, /Another Claude session is using the computer/);
+  assert.ok(parsed.next_step);
+  assert.equal(takeovers.length, 1, 'only b saw a card');
+  assert.equal(fullControl.isApproved('thread-a'), false);
+  assert.equal(fullControl.holder(), 'thread-b');
+  // a's app_* tools are refused with cu_lock_held while b holds the screen (official §1.4.3) …
+  const shot = await call('app_screenshot', { app: FINDER }, 'thread-a');
+  assert.equal(shot.isError, true);
+  assert.equal(body(shot).reasonCode, 'cu_lock_held');
+  // … except app_release.
+  assert.equal((await call('app_release', {}, 'thread-a')).isError, undefined);
+  // An already-approved session whose lock was taken by another meanwhile: still cu_lock_held, not ok.
+  service.fullControl.approve('thread-a');
+  const again = body(await call('request_full_control', {}, 'thread-a'));
+  assert.deepEqual([again.ok, again.reasonCode], [false, 'cu_lock_held']);
+  // b releases: a's tools work again and a can take the screen without a card (already approved).
+  await call('release_full_control', {}, 'thread-b');
+  assert.equal((await call('app_screenshot', { app: FINDER }, 'thread-a')).isError, undefined);
+  await call('app_release', {}, 'thread-a');
+  const ok = body(await call('request_full_control', {}, 'thread-a'));
+  assert.deepEqual([ok.ok, ok.alreadyApproved, takeovers.length], [true, true, 1]);
+  assert.equal(fullControl.holder(), null);
+  assert.equal(service.acquireDisplayLock('thread-a'), null);
+  assert.equal(fullControl.holder(), 'thread-a');
+});
+
+test('request_full_control while this session holds app locks: approved, but the screen is not taken until app_release', async () => {
+  const fullControl = createFullControl();
+  const { call, body, service } = setup({ fullControl });
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const result = body(await call('request_full_control', {}));
+  assert.deepEqual([result.ok, result.appLockHeld], [true, [FINDER]]);
+  assert.match(result.message, /app_release first/);
+  assert.equal(fullControl.isApproved('thread-a'), true);
+  assert.equal(fullControl.holder(), null);
+  assert.equal(service.acquireDisplayLock('thread-a')?.reasonCode, 'state_conflict', 'the screen-wide tools wait for app_release');
+  await call('app_release', {});
+  const again = body(await call('request_full_control', {}));
+  assert.deepEqual([again.ok, again.alreadyApproved, again.appLockHeld], [true, true, undefined]);
+  assert.match(again.message, /now go ahead/);
+  assert.equal(service.acquireDisplayLock('thread-a'), null);
+  assert.equal(fullControl.holder(), 'thread-a');
+});
+
+test('request_full_control declined (Deny), no card to show (takeover_unavailable, the one refusal shape) and preferred full_control (no card)', async () => {
+  const declined = setup({ answer: 'decline' });
+  const result = await declined.call('request_full_control', {});
+  assert.equal(result.isError, true);
+  const parsed = declined.body(result);
+  assert.deepEqual([parsed.ok, parsed.outcome, parsed.reasonCode], [false, 'unsupported', 'takeover_declined']);
+  assert.equal(declined.service.fullControl.isApproved('thread-a'), false);
+
+  const fullControl = createFullControl();
+  fullControl.setPreferredMode('full_control');
+  const pref = setup({ fullControl });
+  const ok = pref.body(await pref.call('request_full_control', {}));
+  assert.deepEqual([ok.ok, ok.mode, pref.takeovers.length], [true, 'full_control', 0], 'no card when the preference is full_control');
+  assert.equal(fullControl.holder(), null, 'the lock waits for a screen-wide action');
+
+  const none = setup({ answer: 'unavailable' });
+  const unavailable = await none.call('request_full_control', {});
+  assert.equal(unavailable.isError, true);
+  const refused = none.body(unavailable);
+  assert.deepEqual([refused.ok, refused.outcome, refused.reasonCode, refused.error], [false, 'unsupported', 'takeover_unavailable', undefined]);
+  assert.match(refused.next_step, /app_\* tools/);
+  assert.equal(none.service.fullControl.isApproved('thread-a'), false);
 });
 
 test('settings: every session\'s grants by app, and revoking one app from one session or from all (its windows released)', async () => {
@@ -778,6 +1113,195 @@ test('settings: every session\'s grants by app, and revoking one app from one se
   assert.deepEqual((await service.call('computer-use:revoke', { bundleId: FINDER })).result, { bundleId: FINDER, revoked: ['thread-a'] });
   assert.equal(service.lastTarget('thread-a'), null, 'the window it was looking at is released');
   const after = body(await call('app_screenshot', { app: FINDER }, 'thread-a'));
-  assert.equal(after.error.code, 'app_not_granted', 'the agent has to ask again');
+  assert.equal(after.reasonCode, 'app_not_granted', 'the agent has to ask again');
   assert.equal((await service.call('computer-use:revoke', {})).error.code, 'invalid_params');
+});
+
+test('app_click on a Finder row: the official AX row step comes back as ok with its axOp; a double click that could only select says how to open', async () => {
+  const native = fakeNative();
+  const call0 = native.call.bind(native);
+  const answers = {
+    1: { outcome: 'ok', reasonCode: null, axOp: 'set AXSelected=true (row of the text)', role: 'AXTextField', selectedRole: 'AXRow', selected: true },
+    2: { outcome: 'ok', reasonCode: null, axOp: 'set AXSelected=true (row of the text)', role: 'AXTextField', selectedRole: 'AXRow', selected: true, openUnavailable: true },
+    3: { outcome: 'ok', reasonCode: null, axOp: 'AXOpen', role: 'AXRow', selectedRole: 'AXRow' },
+  };
+  let next = 1;
+  native.call = async (method, params) => {
+    if (method === 'axClick') { native.calls.push([method, params]); return answers[next]; }
+    if (method === 'rawClick') throw new Error('never raw');
+    return call0(method, params);
+  };
+  const { call, body } = setup({ native });
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const single = body(await call('app_click', { app: FINDER, coordinate: [300, 200] }));
+  assert.deepEqual([single.ok, single.axOp, single.selected, single.note], [true, 'set AXSelected=true (row of the text)', true, undefined]);
+  next = 2;
+  const double = body(await call('app_click', { app: FINDER, coordinate: [300, 200], count: 2 }));
+  assert.equal(double.ok, true);
+  assert.match(double.note, /only selected.*app_menu/);
+  next = 3;
+  const opened = body(await call('app_click', { app: FINDER, coordinate: [300, 200], count: 2 }));
+  assert.deepEqual([opened.ok, opened.axOp, opened.note], [true, 'AXOpen', undefined]);
+  assert.deepEqual(native.calls.filter(([m]) => m === 'axClick').map(([, p]) => p.count), [1, 2, 2]);
+  const click = cu.tools.find((tool) => tool.name === 'app_click');
+  assert.match(click.description, /AXSelected/);
+  assert.match(click.description, /AXOpen/);
+  assert.match(click.description, /com\.apple\.dock/);
+});
+
+test('app_click: select_refused / popup_menu / canvas are official refusals with a next step', async () => {
+  for (const reasonCode of ['select_refused', 'popup_menu', 'canvas', 'selection_not_confirmed']) {
+    const native = fakeNative();
+    const call0 = native.call.bind(native);
+    native.call = async (method, params) => (method === 'axClick'
+      ? { outcome: reasonCode === 'selection_not_confirmed' ? 'ineffective' : 'unsupported', reasonCode, role: 'AXRow' }
+      : call0(method, params));
+    const { call, body } = setup({ native });
+    await call('request_access', { apps: ['Finder'], reason: 'r' });
+    await call('app_screenshot', { app: FINDER });
+    const result = await call('app_click', { app: FINDER, coordinate: [300, 200] });
+    assert.equal(result.isError, true, reasonCode);
+    const parsed = body(result);
+    assert.deepEqual([parsed.ok, parsed.reasonCode, parsed.blocked], [false, reasonCode, true]);
+    assert.equal(typeof parsed.next_step, 'string');
+  }
+});
+
+/** A native module for app_bring_to_current_space: listWindows answers from `lists` in turn (the last one repeats). */
+function bringNative({ lists, shown = 'shown_behind_the_front_window', dry = { moved: false, alreadyHere: false }, move = { moved: true, alreadyHere: false },
+  owner = { pid: 501, bundleId: FINDER }, locked = false } = {}) {
+  const base = fakeNative();
+  const queue = [...lists];
+  const calls = base.calls;
+  return {
+    calls,
+    async call(method, params = {}) {
+      if (method === 'probe') { calls.push([method, params]); return { screenLocked: typeof locked === 'function' ? locked() : locked, secureInput: false }; }
+      if (method === 'listWindows') { calls.push([method, params]); return { windows: queue.length > 1 ? queue.shift() : queue[0] }; }
+      if (method === 'showWindowBehindTheFrontWindow') { calls.push([method, params]); return { code: shown }; }
+      if (method === 'bringWindowToActiveSpace') { calls.push([method, params]); return params.dryRun ? dry : move; }
+      if (method === 'windowOwner') { calls.push([method, params]); return { owner }; }
+      return base.call(method, params);
+    },
+  };
+}
+const win = (extra = {}) => ({ window_id: 7, title: 'Recents', is_main: true, is_minimized: false, is_hidden: false, is_off_space: false,
+  bounds: { x: 0, y: 0, width: 800, height: 500 }, is_auxiliary: false, ...extra });
+
+test('app_bring_to_current_space (official §1.6.3): lock, arguments, ownership, show behind the front window, the Space move, official wording', async () => {
+  const run = async (options, args = { app: FINDER, window_id: 7 }) => {
+    const native = bringNative(options);
+    const { call, body } = setup({ native });
+    await call('request_access', { apps: ['Finder'], reason: 'r' });
+    const result = await call('app_bring_to_current_space', args);
+    return { result, parsed: body(result), methods: native.calls.map(([method]) => method), native };
+  };
+  const acting = (methods) => methods.filter((m) => m === 'showWindowBehindTheFrontWindow' || m === 'bringWindowToActiveSpace');
+
+  // Locked: state_conflict in the official words, nothing shown or moved.
+  let r = await run({ lists: [[win({ is_minimized: true })]], locked: true });
+  assert.equal(r.result.isError, true);
+  assert.deepEqual([r.parsed.ok, r.parsed.outcome, r.parsed.reasonCode, r.parsed.errorKind], [false, 'unsupported', 'screen_locked', 'state_conflict']);
+  assert.match(r.parsed.message, /^The screen is locked\. app_screenshot continues to work in background mode, but moving a window between Spaces needs the screen unlocked\./);
+  assert.equal(typeof r.parsed.next_step, 'string');
+  assert.deepEqual(acting(r.methods), []);
+
+  // A window of another app (or gone): app_not_granted in the official words.
+  r = await run({ lists: [[win()]] }, { app: FINDER, window_id: 99 });
+  assert.deepEqual([r.parsed.reasonCode, r.parsed.errorKind], ['window_not_in_app', 'app_not_granted']);
+  assert.equal(r.parsed.message, "Window 99 doesn't belong to Finder (or no longer exists). Take a fresh app_list_windows and pass one of that app's window ids.");
+  assert.deepEqual(acting(r.methods), []);
+
+  // Minimized: shown behind the user's window, read back, never moved between Spaces.
+  r = await run({ lists: [[win({ is_minimized: true })], [win()]] });
+  assert.equal(r.result.isError, undefined);
+  assert.deepEqual([r.parsed.ok, r.parsed.how, r.parsed.windowId], [true, 'shown_behind_the_front_window', 7]);
+  assert.equal(r.parsed.message, 'Window 7 of Finder is back on screen, behind the window the user is working in (the app did not take focus). Take a fresh app_screenshot next: the one you have may be out of date.');
+  assert.deepEqual(r.native.calls.find(([m]) => m === 'showWindowBehindTheFrontWindow')[1], { bundleId: FINDER, windowId: 7 });
+  assert.deepEqual(acting(r.methods), ['showWindowBehindTheFrontWindow']);
+
+  // Hidden, and the app came to the front with it: ok, but the user has to be told.
+  r = await run({ lists: [[win({ is_hidden: true })], [win()]], shown: 'shown_and_now_in_front' });
+  assert.deepEqual([r.parsed.ok, r.parsed.how, r.parsed.tellUser], [true, 'shown_and_now_in_front', true]);
+  assert.match(r.parsed.message, /is back on screen, and the app came to the FRONT with it: .*Tell the user, and do not take it for their consent/);
+
+  // Back, but on another Space: call again.
+  r = await run({ lists: [[win({ is_minimized: true })], [win({ is_off_space: true })]] });
+  assert.equal(r.parsed.ok, true);
+  assert.equal(r.parsed.message, 'Window 7 of Finder is no longer put away, but it is on another Space. Call app_bring_to_current_space again to bring it here.');
+
+  // Refused by the native side before anything changed, and "came back" but still parked on read back.
+  for (const [shown, lists, reasonCode, pattern] of [
+    ['user_is_in_the_app', [[win({ is_minimized: true })]], 'user_is_in_the_app', /^Window 7 of Finder was not brought back \(the window is minimized\)\. The user is working in another window of this app right now/],
+    ['front_window_cannot_be_raised', [[win({ is_hidden: true })]], 'front_window_cannot_be_raised', /^Window 7 of Finder was not brought back \(the app is hidden\)\. The window would come back on top/],
+    ['unavailable', [[win({ is_minimized: true })]], 'unavailable', /Bringing a minimized or hidden window back isn't available in this build/],
+    ['shown_behind_the_front_window', [[win({ is_minimized: true })], [win({ is_minimized: true })]], 'still_parked', /was not brought back \(the window is minimized\)\. The window did not come back within the expected time\./],
+  ]) {
+    r = await run({ lists, shown });
+    assert.equal(r.result.isError, true, shown);
+    assert.deepEqual([r.parsed.reasonCode, r.parsed.errorKind], [reasonCode, 'state_conflict'], shown);
+    assert.match(r.parsed.message, pattern, shown);
+    assert.equal(typeof r.parsed.next_step, 'string', shown);
+  }
+
+  // On this Space already: the dry run says so, nothing is moved.
+  r = await run({ lists: [[win()]], dry: { moved: false, alreadyHere: true } });
+  assert.deepEqual([r.parsed.ok, r.parsed.how], [true, 'already_here']);
+  assert.equal(r.parsed.message, 'Window 7 is already on the current Space — no move needed. Take a fresh app_screenshot and act on it directly.');
+  assert.deepEqual(r.native.calls.filter(([m]) => m === 'bringWindowToActiveSpace').map(([, p]) => p), [{ bundleId: FINDER, windowId: 7, dryRun: true }]);
+
+  // The dry run's codes, in the official words.
+  for (const [code, reasonCode, errorKind, pattern] of [
+    ['fullscreen_space', 'fullscreen_space', 'state_conflict', /^The user's current Space is a full-screen app, and a window can't be moved into a full-screen Space\./],
+    ['space_unclassifiable', 'space_unclassifiable', 'state_conflict', /^Couldn't determine which Space that window is on right now/],
+    ['owner_mismatch', 'owner_mismatch', 'app_not_granted', /^That window no longer belongs to Finder\./],
+    ['op_unavailable', 'op_unavailable', 'feature_unavailable', /^Moving windows between Spaces isn't available on this macOS version\./],
+  ]) {
+    r = await run({ lists: [[win({ is_off_space: true })]], dry: { moved: false, alreadyHere: false, code } });
+    assert.deepEqual([r.parsed.ok, r.parsed.reasonCode, r.parsed.errorKind], [false, reasonCode, errorKind], code);
+    assert.match(r.parsed.message, pattern, code);
+    assert.equal(r.native.calls.filter(([m, p]) => m === 'bringWindowToActiveSpace' && !p.dryRun).length, 0, `${code}: no move`);
+  }
+
+  // The window changed owner between the dry run and the move: nothing moved.
+  r = await run({ lists: [[win({ is_off_space: true })]], owner: { pid: 9, bundleId: 'com.other.app' } });
+  assert.deepEqual([r.parsed.reasonCode, r.parsed.errorKind], ['window_changed', 'state_conflict']);
+  assert.equal(r.native.calls.filter(([m, p]) => m === 'bringWindowToActiveSpace' && !p.dryRun).length, 0);
+
+  // The screen locked between the dry run and the move.
+  let probes = 0;
+  r = await run({ lists: [[win({ is_off_space: true })]], locked: () => (probes += 1) > 1 });
+  assert.equal(r.parsed.reasonCode, 'screen_locked');
+  assert.match(r.parsed.message, /^The screen locked before the move ran, so the window was not moved\./);
+
+  // WindowServer ignored the move (another process's window, macOS 27.2): op_unavailable, feature_unavailable.
+  r = await run({ lists: [[win({ is_off_space: true })]], move: { moved: false, alreadyHere: false, code: 'op_unavailable', windowServerIgnored: true } });
+  assert.deepEqual([r.parsed.reasonCode, r.parsed.errorKind], ['op_unavailable', 'feature_unavailable']);
+
+  // Moved and read back on this Space: the official success line.
+  r = await run({ lists: [[win({ is_off_space: true })], [win()]] });
+  assert.deepEqual([r.parsed.ok, r.parsed.how], [true, 'moved']);
+  assert.equal(r.parsed.message, 'Window 7 of Finder is now on the current Space (the app did not take focus). Take a fresh app_screenshot next — the window is here and actionable.');
+  assert.deepEqual(r.native.calls.filter(([m]) => m === 'bringWindowToActiveSpace').map(([, p]) => p),
+    [{ bundleId: FINDER, windowId: 7, dryRun: true }, { bundleId: FINDER, windowId: 7 }]);
+  assert.deepEqual(r.native.calls.find(([m]) => m === 'windowOwner')[1], { windowId: 7 });
+
+  // Said moved, but it doesn't read back here (or nothing moved): state_conflict, may still be settling.
+  for (const move of [{ moved: true, alreadyHere: false }, { moved: false, alreadyHere: false }]) {
+    r = await run({ lists: [[win({ is_off_space: true })]], move });
+    assert.deepEqual([r.parsed.reasonCode, r.parsed.errorKind], ['move_not_confirmed', 'state_conflict']);
+    assert.match(r.parsed.message, /^The window did not appear on the current Space within the expected time\./);
+  }
+
+  // window_id that isn't an integer: bad_args before any window is looked at (service, past the schema).
+  const native = bringNative({ lists: [[win()]] });
+  const { service: svc, call } = setup({ native });
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  const bad = await svc.appBringToCurrentSpace('thread-a', { bundleId: FINDER, windowId: 7.5 });
+  assert.deepEqual([bad.reasonCode, bad.errorKind, bad.message], ['bad_args', 'bad_args', 'window_id (an integer from app_list_windows) is required.']);
+  assert.equal(native.calls.filter(([m]) => m === 'listWindows').length, 0);
+  // Without a grant it is app_not_granted (official tier "read": no tier beyond the grant is checked).
+  const ungranted = setup({ native: bringNative({ lists: [[win()]] }) });
+  assert.equal(ungranted.body(await ungranted.call('app_bring_to_current_space', { app: FINDER, window_id: 7 })).reasonCode, 'app_not_granted');
 });

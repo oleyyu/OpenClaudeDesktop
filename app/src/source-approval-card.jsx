@@ -14,8 +14,8 @@ import { useCardHotkeys } from "./use-card-hotkeys.js";
 import { approvalIdentity, isPlanReviewRequest, visibleApprovals } from "./approval-draft-model.mjs";
 import { useApprovalCardLanding } from "./generated/approval-landing/card-landing.mjs";
 import { assistantName } from "./persona-store.mjs";
-import { ComputerUseAccessList, ComputerUseAccessTitle } from "./computer-use-approval-card.jsx";
-import { computerUseAccessRequest } from "./computer-use-model.mjs";
+import { ComputerUseAccessList, ComputerUseAccessTitle, ComputerUseTakeoverTitle, ComputerUseTeachCardBody } from "./computer-use-approval-card.jsx";
+import { computerUseAccessRequest, computerUseTakeoverRequest, computerUseTeachRequest } from "./computer-use-model.mjs";
 import "./source-approval-card.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -393,6 +393,7 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
   // The plain title stays the aria-label.
   // A computer-use request_access: its own title variants (computer-use-approval-card.jsx, official ZEe).
   const title = model.access ? <ComputerUseAccessTitle title={model.access.title} name={assistantName()} />
+    : model.takeover ? <ComputerUseTakeoverTitle takeover={model.takeover} name={assistantName()} />
     : model.heading
     ? <>{t("Allow {name} to", { name: assistantName() })} <span className="sac-em">{model.heading.action}</span>{model.heading.meta
       ? <> <span className="sac-em">{model.heading.meta}</span></> : null}{t("?")}</>
@@ -428,6 +429,29 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
             : action.key === shiftedAllow ? "Meta+Shift+Enter Control+Shift+Enter" : undefined : undefined} />)}
       </div>
     </footer> : null;
+  // request_teach_access: the official teach card (ca31fdde5 Ua) — its own shell "mb-4 overflow-hidden rounded-card border
+  // bg-surface-panel shadow-lg" and body (computer-use-approval-card.jsx), Deny (⌘.) then Start guide (⌘↵, armed like
+  // every allow). The keys, the landing and the answer stay this card's.
+  if (model.teach) {
+    const teachActions = <>
+      <ActionButton action={model.deny} busy={busy} busyAction={busyAction} enabled={actionable} onAction={submit}
+        keycap={actionable && !menuOpen ? "cmd+." : undefined} shortcut={shortcutEnabled ? "Meta+Period Control+Period Escape" : undefined} />
+      <span className="contents" onClickCapture={event => { if (!clickArmed()) { event.preventDefault(); event.stopPropagation(); } }}>
+        {model.allows.map(action => <ActionButton key={action.key} action={action} busy={busy} busyAction={busyAction} enabled={actionable} onAction={submit}
+          keycap={action.primary ? primaryKeycap : undefined} shortcut={shortcutEnabled && action.primary ? primaryShortcut : undefined} />)}
+      </span>
+    </>;
+    return <section ref={root} className={`source-message mb-4 overflow-hidden rounded-card border bg-surface-panel shadow-lg ${CARD_FOCUS_OUTLINE} ${className}`.trim()}
+      data-approval-root="" data-approval-presentation="card" data-approval-card-root="" data-computer-use-teach=""
+      data-approval-instance={request?.bridgeApproval?.instanceId} data-approval-method={request?.method} data-approval-kind={model.kind}
+      role="group" aria-label={t("Permission request: {title}", { title: model.title })} aria-busy={busy || undefined}
+      tabIndex={0} onKeyDown={keyDown} onClick={event => event.stopPropagation()}>
+      <ComputerUseTeachCardBody teach={model.teach} name={assistantName()} actions={teachActions} />
+      {error && <p role="alert" className="sac-error">{error}</p>}
+      {busy && <BusyAnnouncement />}
+      {model.supported && <ApprovalAnnouncement identity={identity} text={approvalAnnouncement(model)} />}
+    </section>;
+  }
   return <section ref={root} className={`source-message sac-card ${CARD_FOCUS_OUTLINE} ${className}`.trim()} data-approval-presentation="card"
     data-approval-card-root=""
     data-approval-instance={request?.bridgeApproval?.instanceId} data-approval-method={request?.method}
@@ -526,6 +550,10 @@ export function approvalLandingVariant(request) {
   if (isPlanReviewRequest(request)) return "plan";
   // c96d752d0 $j `st = "computer_use_app_list"` for the access card: ⌘↵ acts from anywhere, as for a plan.
   if (computerUseAccessRequest(request.params, null)) return "computer_use_app_list";
+  // The take-over card is the same elicitation shape (one "Allow for this session", ⌘↵ anywhere).
+  if (computerUseTakeoverRequest(request.params)) return "computer_use_app_list";
+  // The teach card too (official Ua: mt's ⌘↵ / ⌘. without focus in the card).
+  if (computerUseTeachRequest(request.params)) return "computer_use_app_list";
   return request.method === "item/tool/requestUserInput" ? "ask_user_question" : "tool";
 }
 // The local approval protocol carries no CLI defaultToNo / askFlagsUnknown, so every local card takes focus.

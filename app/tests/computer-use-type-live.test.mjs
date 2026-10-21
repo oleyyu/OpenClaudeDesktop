@@ -54,7 +54,8 @@ test('acceptance 1a — TextEdit: 2000 units with emoji and Chinese, AX rung, sa
     assert.equal(typed.outcome, 'ok', JSON.stringify(typed));
     assert.equal(typed.verified, true);
     assert.equal(typed.deliveredPrefixChars, 2000);
-    const saved = await cu.appKey('te', { bundleId: 'com.apple.TextEdit', combo: 'cmd+s' });
+    // ⌘ shortcuts are app_menu's (official app_key sends only the background key set).
+    const saved = await cu.appMenu('te', { bundleId: 'com.apple.TextEdit', path: ['File', 'Save'] });
     assert.equal(saved.outcome, 'ok', JSON.stringify(saved));
     for (let i = 0; i < 40 && fs.statSync(file).size === 0; i += 1) await sleep(100);
     assert.equal(fs.readFileSync(file).equals(Buffer.from(text, 'utf8')), true, 'the saved file is the text, byte for byte');
@@ -94,8 +95,12 @@ test('acceptance 1b — raw rung: 2000 units into a control that ignores AX writ
       assert.equal(focused.focusedBy, 'AXFocused');
       assert.deepEqual([(await fresh.dump()).locked, (await fresh.dump()).focus], ['focus first', 'locked']);
     } finally { await fresh.quit(); }
-    // app_key: three backspaces.
-    assert.equal((await cu.appKey('live', { bundleId: FIXTURE, combo: 'backspace', repeat: 2 })).outcome, 'ok');
+    // app_key: two backspaces, one call each (official: one key per call); the locked view ignores the AX delete, so
+    // each falls to a keystroke at the focus.
+    for (let i = 0; i < 2; i += 1) {
+      const back = await cu.appKey('live', { bundleId: FIXTURE, combo: 'backspace', target: 'focused' });
+      assert.deepEqual([back.outcome, back.path], ['ok', 'cgevent'], JSON.stringify(back));
+    }
     await sleep(200);
     assert.equal((await fixture.dump()).locked, '替换');
   } finally { await fixture.quit(); }

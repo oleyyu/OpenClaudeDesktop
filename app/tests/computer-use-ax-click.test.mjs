@@ -41,8 +41,9 @@ function setUp(options) {
 }
 
 test('reason policy: every non-ok AX result outside the whitelist blocks; unknown reasons warn (fail-closed)', () => {
-  // M3 opened the two text reasons, for app_type only (computer-use-type.test.mjs); no click reason is open.
-  assert.deepEqual(Object.keys(FALLBACK).filter((reason) => reason !== 'system_app_ignores_posted_events'), ['no_focused_text', 'text_not_writable']);
+  // M3 opened the two text reasons, for app_type only, and app_key no_ax_key_action, for op "key" only
+  // (computer-use-type.test.mjs); no click reason is open.
+  assert.deepEqual(Object.keys(FALLBACK), ['no_focused_text', 'text_not_writable', 'no_ax_key_action']);
   assert.ok(Object.values(FALLBACK).every((entry) => !entry.ops.includes('left_click')));
   const log = quiet();
   assert.deepEqual(decide({ outcome: 'ok' }, { log }), { action: 'done', reason: null });
@@ -174,7 +175,7 @@ test('a double / triple click reaches the native side as count 2 / 3 and never t
   const { native } = setUp();
   const raw = [];
   native.call = ((call0) => async (method, params) => (method === 'rawClick' ? (raw.push(params), { outcome: 'ok' }) : call0(method, params)))(native.call.bind(native));
-  const handlers = { ok: { outcome: 'ok', reasonCode: null, axOp: 'AXSelectedTextRange', selectedText: 'beta' }, none: { outcome: 'unsupported', reasonCode: 'no_press_action' } };
+  const handlers = { ok: { outcome: 'ok', reasonCode: null, axOp: 'AXSelectedTextRange', selectedText: 'beta' }, none: { outcome: 'unsupported', reasonCode: 'canvas' } };
   for (const count of [2, 3]) for (const [name, answer] of Object.entries(handlers)) {
     const n = fakeNative({ click: () => answer });
     const rawCalls = [];
@@ -185,7 +186,7 @@ test('a double / triple click reaches the native side as count 2 / 3 and never t
     const result = await cu.appClick('s1', { bundleId: 'com.apple.finder', coordinate: [228, 64], count });
     assert.equal(n.calls.find((c) => c.method === 'axClick').params.count, count, name);
     assert.equal(result.outcome, name === 'ok' ? 'ok' : 'unsupported', name);
-    if (name === 'none') assert.deepEqual([result.reasonCode, result.blocked], ['no_press_action', true]);
+    if (name === 'none') assert.deepEqual([result.reasonCode, result.blocked], ['canvas', true]);
     assert.deepEqual(rawCalls, [], 'no raw click for a double or triple click');
   }
   assert.deepEqual(raw, []);

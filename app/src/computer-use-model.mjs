@@ -14,7 +14,8 @@ const OFFICIAL_TOOLS = {
   click: "left_click", double_click: "double_click", triple_click: "triple_click", right_click: "right_click", middle_click: "middle_click",
   type: "type", key: "key", hold_key: "hold_key", scroll: "scroll", move: "mouse_move", drag: "left_click_drag", screenshot: "screenshot",
   zoom: "zoom", wait: "wait", open_app: "open_application", cursor: "cursor_position", mouse_down: "left_mouse_down", mouse_up: "left_mouse_up",
-  request_access: "request_access", list_apps: "list_apps",
+  request_access: "request_access", list_apps: "list_apps", read_clipboard: "read_clipboard", write_clipboard: "write_clipboard",
+  request_teach: "request_teach_access", teach_step: "teach_step", teach_batch: "teach_batch",
 };
 const OFFICIAL_APP_TOOLS = { ...Object.fromEntries(Object.entries(APP_KINDS).map(([tool, kind]) => [kind, tool])) };
 /** The official computer-use tool name for an action ("left_click", "app_click", …), or null. */
@@ -64,6 +65,12 @@ const VERBS = {
   focus: () => [t("Moving keyboard focus"), t("Moved keyboard focus"), t("Failed to move keyboard focus")],
   release: () => [t("Releasing apps"), t("Released apps"), t("Failed to release apps")],
   request_access: () => [t("Asking to use apps on your computer"), t("Asked to use apps on your computer"), t("Failed to ask to use apps")],
+  read_clipboard: () => [t("Reading clipboard"), t("Read clipboard"), t("Failed to read clipboard")],
+  write_clipboard: () => [t("Copying to clipboard"), t("Copied to clipboard"), t("Failed to copy to clipboard")],
+  // Teach mode (shared-130 mcp__computer-use__ running / done; c52b02f3f the failed one per running verb).
+  request_teach: () => [t("Asking to guide you step by step"), t("Asked to guide you step by step"), t("Step-by-step guidance not approved")],
+  teach_step: () => [t("Showing a step"), t("Showed a step"), t("Failed to show a step")],
+  teach_batch: () => [t("Showing steps"), t("Showed steps"), t("Failed to show steps")],
 };
 const CLICKS = new Set(["click", "double_click", "triple_click", "right_click", "middle_click"]);
 
@@ -72,10 +79,11 @@ const CLICKS = new Set(["click", "double_click", "triple_click", "right_click", 
 const ICON_KEYS = {
   screenshot: "camera", window_screenshot: "camera", type: "keyboard", key: "keyboard", hold_key: "keyboard", focus: "keyboard",
   drag: "drag", zoom: "zoom", wait: "timer", menu: "menu", find: "search", list_windows: "eye",
+  read_clipboard: "clipboard", write_clipboard: "clipboard",
 };
 const ICON_NAMES = { camera: "Camera", keyboard: "Keyboard", timer: "Timer", eye: "Eye", search: "Search", click: "Cursor",
   "scroll-up": "ArrowUp", "scroll-down": "ArrowDown", "scroll-left": "ArrowLeft", "scroll-right": "ArrowRight", drag: "Reorder",
-  zoom: "SearchCircle", computer: "Computer", menu: "Menu" };
+  zoom: "SearchCircle", computer: "Computer", menu: "Menu", clipboard: "Clipboard" };
 /** The row icon for an action: {name, dir} (zW: the side arrows keep dir="ltr"). */
 export function computerUseIcon(action) {
   const key = !action ? "computer"
@@ -163,6 +171,42 @@ export function computerUseAccessRequest(params, item) {
   const reason = str(source.reason).trim() || str(args.reason).trim() || null;
   return { apps, reason,
     flags: { clipboardRead: flagsIn.clipboardRead === true, clipboardWrite: flagsIn.clipboardWrite === true, systemKeyCombos: flagsIn.systemKeyCombos === true } };
+}
+
+/**
+ * A takeover request an MCP tool-call approval stands for (official c96d752d0 JEe with takeoverFrom / wa), or null.
+ * Switch from background to full-screen control: no app or capability rows, only the "Take over the screen?" title.
+ * @returns {{becausePreferredBackground: boolean, appName: string | null, reason: string | null} | null}
+ */
+export function computerUseTakeoverRequest(params) {
+  const meta = record(params?._meta) ? params._meta : {};
+  if (meta.codex_approval_kind !== "mcp_tool_call") return null;
+  const takeover = record(meta.computer_use_takeover) ? meta.computer_use_takeover : null;
+  if (!takeover) return null;
+  return { becausePreferredBackground: takeover.becausePreferredBackground === true,
+    appName: str(takeover.appName).trim() || null, reason: str(takeover.reason).trim() || null };
+}
+
+/**
+ * A request_teach_access call the MCP tool-call approval stands for (official ca31fdde5 Wa, for
+ * computer:request_teach_access), or null: the reason and the apps as main resolved them (_meta.computer_use_teach).
+ * Each app keeps its official row data: resolved (bundle id, name, icon) or not installed, its tier, already allowed.
+ * @returns {{reason: string, apps: {key: string, name: string, bundleId: string | null, iconDataUrl: string | null,
+ *   resolved: boolean, alreadyGranted: boolean, tier: "read" | "click" | "full" | null, risk: string | null}[]} | null}
+ */
+export function computerUseTeachRequest(params) {
+  const meta = record(params?._meta) ? params._meta : {};
+  if (meta.codex_approval_kind !== "mcp_tool_call") return null;
+  const teach = record(meta.computer_use_teach) ? meta.computer_use_teach : null;
+  if (!teach) return null;
+  const apps = (Array.isArray(teach.apps) ? teach.apps : []).slice(0, 64).map(accessApp).filter(Boolean)
+    .map((app) => ({ key: app.key, name: app.name, bundleId: app.bundleId, iconDataUrl: app.iconDataUrl, resolved: app.installed !== false && !!app.bundleId,
+      alreadyGranted: app.alreadyGranted, tier: app.tier, risk: app.bundleId ? computerUseAppRisk(app.bundleId) : null }));
+  return { reason: str(teach.reason).trim(), apps };
+}
+/** The teach card's app row labels (official Ri / Li): the tier badge's text and the risk line, or null. */
+export function computerUseTeachRowLabels(app) {
+  return { tier: app.tier ? TIER_LABELS[app.tier]() : null, risk: app.risk ? RISK_LABELS[app.risk]() : null };
 }
 
 /** The card's rows: flags first (official order), then the apps not granted yet, risky ones first. */

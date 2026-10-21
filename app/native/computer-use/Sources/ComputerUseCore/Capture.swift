@@ -55,8 +55,9 @@ public enum Capture {
         catch { throw CUError("capture_failed", error.localizedDescription) }
     }
 
-    static func shoot(_ filter: SCContentFilter, _ width: Int, _ height: Int, singleWindow: Bool) async throws -> String {
+    static func shoot(_ filter: SCContentFilter, _ width: Int, _ height: Int, singleWindow: Bool, sourceRect: CGRect? = nil) async throws -> String {
         let config = SCStreamConfiguration()
+        if let sourceRect { config.sourceRect = sourceRect }
         config.width = width
         config.height = height
         config.showsCursor = false
@@ -113,7 +114,9 @@ public enum Capture {
     /// apps plus WindowManager, and excepts every WindowManager window above the desktop-icon level (Stage Manager
     /// strips and the like): what is not listed — the menu bar, the Dock, desktop icons, any other app — is absent.
     /// An empty allowlist is not an error: the image is the desktop alone.
-    public static func screen(displayId: UInt32?, allowedBundleIds: [String], scale: Double) async throws -> [String: Any] {
+    /// region: a rectangle of the display in display-local points (zoom); only it is captured (SCStreamConfiguration
+    /// sourceRect), at the display's pixel density, sized to the same token budget. nil is the whole display.
+    public static func screen(displayId: UInt32?, allowedBundleIds: [String], scale: Double, region: CGRect? = nil) async throws -> [String: Any] {
         try ensureAccess()
         let content = try await content()
         let display: SCDisplay
@@ -145,10 +148,22 @@ public enum Capture {
         let filter = SCContentFilter(display: display, including: included, exceptingWindows: excepted)
         let excluded = content.applications.filter { !allowed.contains($0.bundleIdentifier) }
         let factor = Double(filter.pointPixelScale)
-        let frame = (Int((Double(display.width) * factor).rounded()), Int((Double(display.height) * factor).rounded()))
+        var region = region
+        if let given = region {
+            let bounds = CGRect(x: 0, y: 0, width: Double(display.width), height: Double(display.height))
+            // A region scaled from image pixels (budget.cjs) can overshoot an edge by a rounding ulp: accept that, then
+            // keep the part on the display.
+            guard given.width > 0, given.height > 0, bounds.insetBy(dx: -0.001, dy: -0.001).contains(given) else {
+                throw CUError.invalidParams("region must lie inside the display's \(display.width)×\(display.height) points")
+            }
+            region = given.intersection(bounds)
+        }
+        let size = region?.size ?? CGSize(width: Double(display.width), height: Double(display.height))
+        let frame = (Int((size.width * factor).rounded()), Int((size.height * factor).rounded()))
         let (w, h) = TokenBudget.scaled(TokenBudget.fit(width: frame.0, height: frame.1), scale)
-        let dataUrl = try await shoot(filter, w, h, singleWindow: false)
+        let dataUrl = try await shoot(filter, w, h, singleWindow: false, sourceRect: region)
         return [
+            "region": region.map { rectJSON($0) } ?? NSNull(),
             "dataUrl": dataUrl, "width": w, "height": h,
             "frameWidth": frame.0, "frameHeight": frame.1, "scaleFactor": factor,
             "displayId": Int(display.displayID), "displayWidth": display.width, "displayHeight": display.height,

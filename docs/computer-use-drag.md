@@ -56,7 +56,7 @@ service 对每个点复用 `budget.cjs` 的 `frameToWindowLocal` 与 `windowLoca
 ## 系统应用的判定
 
 - 第三方 Cocoa/Electron 应用拖拽生效，可证明事件实现可用。
-- Finder、Dock、SystemUIServer 的完整拖拽若可读状态不变，映射为 `system_app_ignores_posted_events`；reason policy 对 **drag** 标记 `fallback`，允许上层改用等效 AX 操作（如 app_menu）。不自动改用全局事件，也不重复整个拖拽。
+- （2026-10-21 起）Finder、Dock、SystemUIServer 的完整拖拽若可读状态不变，与其他应用一样映射为 `drag_ineffective`：官方 2.42304.0 没有按 bundle id 区分系统应用的拖拽原因码，也没有拖拽的 AX 等价（官方规格 §1.2.2）。原先的 `system_app_ignores_posted_events` 已删除。不自动改用全局事件，也不重复整个拖拽。
 - Finder 不保证总是无效。本轮补齐窗口身份后，真实临时文件已经拖入子目录：必须如实返回成功，不能根据 bundle ID 硬编码失败。源元素消失时 `verified:false`，测试另用文件系统确认移动。
 - 如果所有应用都无效，先检查 pid、目标进程字段、事件窗口号（包括 AppKit windowNumber，而非只有 91/92）、局部坐标及时间戳。不要把路由缺项误记为系统限制。
 - 系统应用确实拒收的场景是平台限制，不应当作通用拖拽实现的 bug；应保留 before/after 和 reason code 供后续判断。
@@ -79,7 +79,7 @@ live 测试需要 macOS、已构建的原生模块、Accessibility 和录屏权�
 
 - TextEdit：选区 `{location:10,length:30}`，API 最终回读一致，mouseUp 已发送。
 - Cocoa：同样选中 30 字符；应用事件记录确认目标窗口收到 down/drag/up。独立 NSSlider 的数值 AXValue 从 0.3 拖到 0.7，回读与目标一致。
-- Finder：临时 `alpha.txt` 实际进入 `destination/`；源 AX 元素消失，返回 `ok, verified:false`，文件系统独立确认成功。模拟“状态不变”测试覆盖系统限制 reason code。
+- Finder：临时 `alpha.txt` 实际进入 `destination/`；源 AX 元素消失，返回 `ok, verified:false`，文件系统独立确认成功。模拟“状态不变”测试覆盖 `drag_ineffective`（2026-10-21 前为系统限制 reason code）。
 - VS Code：按用户决定保留 click 层级，测试确认 `tier_refused` 且不调用原生 drag。
 - 系统设置亮度：本机 macOS 27.2 的外层 AXSlider 不提供 AXValue（`noValue`），但提供可移动的 AXValueIndicator，测试按滑块头位置验证百分比。最终实测持续被 `user_actively_typing` 闸门阻挡；按用户决定停止重试，记录为受阻，**未完成系统亮度 30% → 70% 验收**。Cocoa NSSlider 的通过结果不替代这一项。
 - 锁屏中断：通过注入 `screen_locked` 验证按下后的中断与 mouseUp 清理；四道闸门和超时均有生产时序单测。未实际锁屏。

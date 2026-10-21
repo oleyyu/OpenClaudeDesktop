@@ -991,6 +991,38 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
       // 'fixture:app-tool <name> <json>': the model calls any of OpenClaude Desktop's tools by name, through the app's
       // agent-tools MCP server as fixture:workflow-tool does (computer use's request_access raises the access card this
       // way); the reply is the tool's text, or APP_TOOL_ERROR: and its text when the call failed.
+      // 'fixture:app-tools [[name, args], …]': several of the app's tools called in order in ONE turn, over one connection
+      // (computer use's teach mode lasts one turn: request_teach_access, screenshot, teach_batch). Each call is its own
+      // mcpToolCall item; the reply is the last call's text (APP_TOOL_ERROR: … for a failed one, and the rest are skipped).
+      if(text.startsWith('fixture:app-tools ')) {
+        const list=JSON.parse(text.slice('fixture:app-tools '.length).trim());
+        const server = JSON.parse(process.env.CODE_DESKTOP_AGENT_TOOLS_SERVER || 'null');
+        if (!server) { complete(thread, 'NO_AGENT_TOOLS'); return; }
+        const { spawn } = require('node:child_process');
+        const child = spawn(server.command, server.args, { env: { ...process.env, ...server.env }, stdio: ['pipe', 'pipe', 'ignore'] });
+        const waiting = new Map(); let buffer = '', seq = 0;
+        child.stdout.on('data', chunk => { buffer += chunk; let n; while ((n = buffer.indexOf('\n')) >= 0) { const line = buffer.slice(0, n); buffer = buffer.slice(n + 1); try { const message = JSON.parse(line); waiting.get(message.id)?.(message); } catch {} } });
+        const rpc = (method, params) => new Promise(resolve => { const id = ++seq; waiting.set(id, resolve); child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+        (async () => {
+          await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'fixture', version: '1' } });
+          let reply = 'APP_TOOL_EMPTY';
+          for (const [index, [name, args]] of list.entries()) {
+            const call = { id:`mcp-${db.next}-${index}`, type:'mcpToolCall', server:'code_desktop', tool:name, status:'inProgress', arguments:args||{} };
+            turn.items.push(call); persist();
+            notify('item/started', { threadId: thread.id, turnId: turn.id, item: call });
+            const result = (await rpc('tools/call', { name, arguments: args||{}, _meta: { threadId: thread.id } })).result;
+            logRequest('mcp:tools/call', { name, result });
+            call.status = result?.isError ? 'failed' : 'completed'; call.result = result; persist();
+            notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call });
+            const textPart = result?.content?.find(part => part?.type === 'text')?.text ?? 'APP_TOOL_EMPTY';
+            reply = result?.isError ? `APP_TOOL_ERROR: ${textPart}` : textPart;
+            if (result?.isError) break;
+          }
+          child.kill();
+          complete(thread, reply);
+        })();
+        return;
+      }
       if(text.startsWith('fixture:app-tool ')) {
         const rest=text.slice('fixture:app-tool '.length).trim(), space=rest.indexOf(' ');
         const name=space<0?rest:rest.slice(0,space), args=JSON.parse(space<0?'{}':rest.slice(space+1));

@@ -132,16 +132,16 @@ test('readback: unchanged values are ineffective with before/after; object key o
   assert.deepEqual([result.before, result.after], [before, after]);
 });
 
-test('Finder unchanged readback maps to the system limitation and permits AX alternatives only for drag', async () => {
+test('Finder unchanged readback is drag_ineffective like any app (official: no system-app reason) and blocks', async () => {
   const state = { AXPosition: { x: 100, y: 200 } };
   const f = setup({ bundleId: 'com.apple.finder', result: { ...sent, before: state, after: state } });
   await f.cu.appScreenshot('s', f.params);
   const result = await f.cu.appDrag('s', f.params);
-  assert.equal(result.reasonCode, 'system_app_ignores_posted_events');
+  assert.equal(result.reasonCode, 'drag_ineffective');
   assert.equal(result.mouseUpSent, true);
-  assert.equal(decide(result, { op: 'drag' }).action, 'fallback');
+  assert.equal(decide(result, { op: 'drag' }).action, 'block');
   assert.equal(decide(result, { op: 'left_click' }).action, 'block');
-  assert.equal(dragReadback({ ...sent, before: state, after: state }, 'com.apple.TextEdit').reasonCode, 'drag_ineffective');
+  assert.equal(dragReadback({ ...sent, before: state, after: state }).reasonCode, 'drag_ineffective');
 });
 
 test('unreadable or vanished attributes do not turn delivery into verified success or a system-app diagnosis', () => {

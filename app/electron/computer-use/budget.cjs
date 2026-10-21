@@ -45,4 +45,48 @@ const windowLocalToScreen = (point, bounds) => ({ x: bounds.x + point.x, y: boun
 /** Whether a frame point lies inside the capture's frame. */
 const inFrame = ([x, y], shot) => Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x < shot.frameWidth && y < shot.frameHeight;
 
-module.exports = { BUDGET, HIGH_BUDGET, JPEG_QUALITY, tokens, fits, fit, scaled, frameToWindowLocal, windowLocalToScreen, inFrame };
+/**
+ * The display-scope coordinate frame (official §1.1 "pixels" mode, BEf0UhNC R()): the pixels of the last full-screen
+ * screenshot's image at scale 1 — fit(frame) — never the physical pixels, and never the scaled image when scale < 1
+ * (the official frameWidth). A screenshot at scale 0.5 still answers in this frame.
+ */
+const displayCoordFrame = (shot) => { const [width, height] = fit(shot.frameWidth, shot.frameHeight); return { width, height }; };
+
+/**
+ * An image point of the last display screenshot → a global screen point (points, top-left origin), official R():
+ * X = round(x · displayWidth / frameW) + originX, clamped to the display. null when the point is outside the frame.
+ */
+function imageToDisplayPoint([x, y], shot) {
+  const frame = displayCoordFrame(shot), b = shot.displayBounds;
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x > frame.width || y > frame.height || !b) return null;
+  const clamp = (v, lo, size) => Math.min(lo + size - 1, Math.max(lo, v));
+  return { x: clamp(Math.round((x * b.width) / frame.width) + b.x, b.x, b.width), y: clamp(Math.round((y * b.height) / frame.height) + b.y, b.y, b.height) };
+}
+
+/** A global point → that screenshot's image pixels, or null when the point is on another display (cursor_position). */
+function displayPointToImage({ x, y }, shot) {
+  const frame = displayCoordFrame(shot), b = shot.displayBounds;
+  if (!b || x < b.x || y < b.y || x >= b.x + b.width || y >= b.y + b.height) return null;
+  return { x: Math.round(((x - b.x) * frame.width) / b.width), y: Math.round(((y - b.y) * frame.height) / b.height) };
+}
+
+/**
+ * zoom's region [x0, y0, x1, y1] in the screenshot's image pixels → a display-local rect in points (captureScreen region).
+ * The scale rarely divides evenly (1512×982 points in a 1372×891 frame), so a region at the right or bottom edge can
+ * come out a rounding ulp past the display; the edges are clamped to the display, and the size taken from the clamped
+ * edges, so a region inside the frame always lies inside the display.
+ */
+function imageRegionToDisplayRect([x0, y0, x1, y1], shot) {
+  const frame = displayCoordFrame(shot), b = shot.displayBounds;
+  const sx = b.width / frame.width, sy = b.height / frame.height;
+  const clamp = (v, size) => Math.min(size, Math.max(0, v));
+  const left = clamp(x0 * sx, b.width), top = clamp(y0 * sy, b.height);
+  const right = clamp(x1 * sx, b.width), bottom = clamp(y1 * sy, b.height);
+  let width = right - left, height = bottom - top;
+  // left + width can still exceed the edge by an ulp after the subtraction: take it off the size.
+  if (left + width > b.width) width = b.width - left;
+  if (top + height > b.height) height = b.height - top;
+  return { x: left, y: top, width, height };
+}
+
+module.exports = { BUDGET, HIGH_BUDGET, JPEG_QUALITY, tokens, fits, fit, scaled, frameToWindowLocal, windowLocalToScreen, inFrame, displayCoordFrame, imageToDisplayPoint, displayPointToImage, imageRegionToDisplayRect };

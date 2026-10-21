@@ -175,7 +175,7 @@ test('live Finder file drag either moves the test file or reports the system lim
     t.diagnostic(JSON.stringify({ result, moved }));
     assert.equal(result.mouseUpSent, true);
     if (moved) assert.equal(result.outcome, 'ok');
-    else assert.equal(result.reasonCode, 'system_app_ignores_posted_events');
+    else assert.equal(result.reasonCode, 'drag_ineffective');
   } finally {
     try {
       execFileSync('osascript', ['-e', `tell application "Finder" to if exists Finder window "${name}" then close Finder window "${name}"`]);

@@ -10,7 +10,9 @@
 // page gets at run time (the page itself stays the original); and a display that goes away or changes size moves the
 // glow (back to the primary display when its own is gone).
 //
-// The original follows the full control lock's holder; here main.cjs drives it from in-use.cjs (§3 B). The window is
+// The original follows the full control lock's holder, and so does this one (main.cjs computerUseSyncGlow: up while the
+// display lock's holder is using the computer — design doc §3 A, since the lock exists); background app_* work shows
+// only the phantom cursor (official §2.6; the window highlight is not wired). The window is
 // the app's own: owns(window) keeps it out of the app's window-wide handling (theme backgrounds, the quit guard), as the
 // original's uPr does, and screen captures leave it out because they include only granted apps (Capture.swift).
 const nodePath = require("node:path");

@@ -6,9 +6,8 @@
 export default {
   "drag requires an app, window, grants, 2–22 converted points and pixelScale in (0, 16]": "拖拽需要目标应用、窗口、授权、2–22 个已换算坐标点，以及 (0, 16] 范围内的 pixelScale。",
   "button must be left, right or middle": "button 必须为 left、right 或 middle。",
-  "Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll need the raw input path, which isn't enabled yet, and stop the batch with requires_raw_path. It stops at the first action that fails or doesn't take effect; the actions after it don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.": "按顺序在同一个已授权应用窗口中执行多个操作：click、type、drag、screenshot、zoom 分别使用对应 app_* 工具的参数，不含批次统一提供的 app 和 window_id。按键（`key`）和滚动（`scroll`）尚不可用，会以 requires_raw_path 停止批次。遇到第一个失败或无效的操作即停止。所有坐标和元素索引沿用本次调用前的 app_screenshot；批次中的截图仅用于观察，不改变坐标基准。\n\n需要通过 request_access 授权；使用坐标或元素索引前需要截图。返回各操作结果、完成数量与停止位置，随后附上截图或放大图片。",
+  "Run several actions on one granted app's window in order, in one call: click, type, drag, screenshot and zoom work as app_click, app_type, app_drag, app_screenshot and app_zoom do (same fields, without app and window_id, which the batch gives); key and scroll work as app_key and app_scroll do (a key or scroll without coordinate, element_index or target uses the point of the action before it). It stops at the first action that fails or doesn't take effect, except a scroll that couldn't move (already at the end), which is reported and the batch goes on; the actions after a stop don't run. Coordinates and element_index in every action refer to the app_screenshot taken before this call — a screenshot inside the batch is only a picture for you to check progress and doesn't change that.\n\nNeeds the app granted with request_access and, for coordinates or element_index, an app_screenshot before the call. Returns each action's result in order, how many completed, and where it stopped if it did; pictures from screenshot and zoom actions follow.": "按顺序在同一个已授权应用窗口中执行多个操作：click、type、drag、screenshot、zoom 分别使用对应 app_* 工具的参数，不含批次统一提供的 app 和 window_id。按键（`key`）与滚动（`scroll`）分别与 app_key、app_scroll 相同（不带 coordinate、element_index 或 target 时沿用上一个操作的落点）。遇到第一个失败或无效的操作即停止；但滚动已到顶或到底而没能移动时只记录结果，批次继续。停止之后的操作不会执行。所有坐标和元素索引沿用本次调用前的 app_screenshot；批次中的截图仅用于观察，不改变坐标基准。\n\n需要通过 request_access 授权；使用坐标或元素索引前需要截图。返回各操作结果、完成数量与停止位置，随后附上截图或放大图片。",
 
-  "This system app ignored the posted drag. Use app_menu or another Accessibility action for the same task.": "此系统应用未响应投递的拖拽。请通过 app_menu 或其他辅助功能操作完成同一任务。",
   "The drag was released but the readable state did not change. Inspect a fresh app_screenshot before trying an alternative.": "拖拽已松开，但可回读的状态没有变化。请先获取新的 app_screenshot，再尝试其他操作。",
   "The drag exceeded 3000 ms and the mouse button was released. Inspect the app before retrying.": "拖拽超过 3000 毫秒，鼠标按键已松开。请检查应用状态后再重试。",
   "Another drag is still running. Wait for it to finish before starting another.": "另一个拖拽仍在进行，请等待完成后再开始。",
@@ -17,8 +16,10 @@ export default {
   "coordinate, to_coordinate and every path point must be inside the screenshot's full-resolution frame.": "coordinate、to_coordinate 及每个 path 点都必须位于截图的全分辨率范围内。",
   "button must be left, right or middle.": "button 必须为 left、right 或 middle。",
 
+  "The row has no Accessibility open action, so it was only selected. To open it, use app_menu (for example File ▸ Open).": "这一行没有可用的辅助功能“打开”操作，所以只选中了它。要打开，请用 app_menu（例如 文件 ▸ 打开）。",
+
   "Drag in app window": "在应用窗口中拖拽",
-  "Drag inside one granted app window from coordinate to to_coordinate, optionally through 2–20 path waypoints. Requires full access via request_access and a prior app_screenshot; all points use that screenshot's full-resolution pixels. button defaults to left. Uses targeted mouse events with continuous safety checks and a 3000 ms limit. Returns before/after readback when available; verified:false means delivery could not be checked. Failures include drag_ineffective, drag_timeout, screen_locked, secure_input_active, user_actively_typing and system_app_ignores_posted_events. For the last reason, use an Accessibility alternative such as app_menu.": "在已授权应用的同一窗口内，从 coordinate 拖到 to_coordinate，可选经过 path 的 2–20 个途经点。需要先通过 request_access 获得完整权限，再调用 app_screenshot；所有坐标均为该截图的全分辨率像素。button 默认为 left。定向投递鼠标事件，全程检查安全状态，最长 3000 毫秒。可回读时返回 before/after；verified:false 表示无法验证投递效果。失败原因包括 drag_ineffective、drag_timeout、screen_locked、secure_input_active、user_actively_typing 和 system_app_ignores_posted_events。最后一种情况请改用 app_menu 等辅助功能替代操作。",
+  "Drag inside one granted app window from coordinate to to_coordinate, optionally through 2–20 path waypoints. Requires full access via request_access and a prior app_screenshot; all points use that screenshot's full-resolution pixels. button defaults to left. Uses targeted mouse events with continuous safety checks and a 3000 ms limit. Returns before/after readback when available; verified:false means delivery could not be checked. Failures include drag_ineffective (the same for every app, Finder and the Dock included: look at a fresh app_screenshot, then try app_menu or another Accessibility action), drag_timeout, screen_locked, secure_input_active and user_actively_typing.": "在已授权应用的同一窗口内，从 coordinate 拖到 to_coordinate，可选经过 path 的 2–20 个途经点。需要先通过 request_access 获得完整权限，再调用 app_screenshot；所有坐标均为该截图的全分辨率像素。button 默认为 left。定向投递鼠标事件，全程检查安全状态，最长 3000 毫秒。可回读时返回 before/after；verified:false 表示无法验证投递效果。失败原因包括 drag_ineffective（对所有应用相同，Finder 与 Dock 也一样：先看新的 app_screenshot，再改用 app_menu 等辅助功能操作）、drag_timeout、screen_locked、secure_input_active 和 user_actively_typing。",
   "Drag endpoint in full-resolution screenshot pixels.": "拖拽终点，使用截图全分辨率像素坐标。",
   "Optional 2–20 waypoints between coordinate and to_coordinate.": "coordinate 和 to_coordinate 之间可选的 2–20 个途经点。",
   "Take a fresh app_screenshot to inspect the result before retrying, or use app_menu for an equivalent command.": "重试前先调用 app_screenshot 检查结果，或通过 app_menu 执行等效命令。",
@@ -97,6 +98,12 @@ export default {
   "Asking to use apps on your computer": "正在请求使用你电脑上的应用",
   "Asked to use apps on your computer": "已请求使用你电脑上的应用",
   "Failed to ask to use apps": "请求使用应用失败",
+  "Reading clipboard": "正在读取剪贴板",
+  "Read clipboard": "已读取剪贴板",
+  "Failed to read clipboard": "读取剪贴板失败",
+  "Copying to clipboard": "正在复制到剪贴板",
+  "Copied to clipboard": "已复制到剪贴板",
+  "Failed to copy to clipboard": "复制到剪贴板失败",
   "Used your computer": "使用了你的电脑",
   "Couldn’t use your computer": "无法使用你的电脑",
   // Settings › System › Computer use (src/source-settings-computer-use.jsx).
@@ -108,5 +115,35 @@ export default {
   "No apps allowed right now. DeepSeek asks before it uses an app, and what you allow lasts until the app quits.": "目前没有已允许的应用。DeepSeek 使用应用前会先询问你，允许的应用在本应用退出前有效。",
   "Remove {app} from allowed apps": "从已允许的应用中移除 {app}",
   "Teach mode": "教学模式",
-  "DeepSeek can guide you step by step through the apps you allow. Not available in this build yet.": "DeepSeek 可以在你允许的应用里一步步引导你。此版本暂不可用。",
+  "DeepSeek can guide you step by step through the apps you allow: ask it to teach you or show you how. A card asks before the walkthrough starts, and you can exit anytime.": "DeepSeek 可以在你允许的应用里一步步引导你：让它教你或演示怎么做即可。开始引导前会先弹出卡片询问，过程中随时可以退出。",
+  "DeepSeek can guide you step by step through the apps you allow once this app has Accessibility and Screen Recording permission (System Settings › Privacy & Security).": "本应用获得“辅助功能”和“屏幕录制”权限后（系统设置 › 隐私与安全性），DeepSeek 就可以在你允许的应用里一步步引导你。",
+  "Teach mode can’t run on this computer: computer use’s native part isn’t available.": "教学模式无法在这台电脑上运行：电脑使用的原生组件不可用。",
+  // Preferred mode (src/source-settings-computer-use.jsx; official c71860c77).
+  "How Claude uses the apps you allow": "Claude 如何使用你允许的应用",
+  "Background": "后台",
+  "Full control": "完整控制",
+  "Background: Claude works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: Claude takes control of your screen, mouse, and keyboard by default whenever Claude uses an app you allow, without asking again.": "后台：Claude 在你允许的应用内工作，你可以同时继续使用电脑；需要接管整个屏幕时会先征得你同意。完整控制：Claude 使用你允许的应用时，默认直接接管你的屏幕、鼠标和键盘，不再逐次询问。",
+  // The take-over card (src/computer-use-approval-card.jsx; official c96d752d0 JEe takeoverFrom / wa).
+  "Take over the screen? You’ve set Background as your preferred mode, so {name} is checking before switching to full-screen control.": "接管屏幕？你已把首选模式设为后台，所以 {name} 在切换到全屏控制前先征求你的同意。",
+  "Take over the screen? {name} was working on {app} in the background and now needs full-screen control.": "接管屏幕？{name} 刚在后台操作 {app}，现在需要全屏控制。",
+  "Take over the screen? {name} was working in the background and now needs full-screen control.": "接管屏幕？{name} 刚在后台工作，现在需要全屏控制。",
+  // The docked strip + notification while full control is held (src/source-computer-use.jsx; main.cjs).
+  "{name} is using your computer. You can press Stop anytime.": "{name} 正在使用你的电脑。你随时可以按停止。",
+  "{name} is done using your computer.": "{name} 已用完你的电脑。",
+  // The teach card (src/computer-use-approval-card.jsx ComputerUseTeachCardBody; official ca31fdde5 Ua). The overlay's
+  // own Next / Exit / Working… stay the original's English (electron/computer-use/teach-page.cjs), so the card names them so.
+  "Let {name} guide you step by step?": "要让 {name} 一步步引导你吗？",
+  "The {name} window will hide. A tooltip appears next to each step with a Next button. Click Exit anytime to stop.": "{name} 窗口会隐藏。每一步旁边会出现带 Next 按钮的提示框，随时点 Exit 即可停止。",
+  "Start guide": "开始引导",
+  "Already allowed": "已允许",
+  // Teach steps in the transcript (shared-130 running / done, c52b02f3f failed).
+  "Asking to guide you step by step": "正在请求一步步引导你",
+  "Asked to guide you step by step": "已请求一步步引导你",
+  "Step-by-step guidance not approved": "未同意分步引导",
+  "Showing a step": "正在显示一步",
+  "Showed a step": "已显示一步",
+  "Failed to show a step": "显示这一步失败",
+  "Showing steps": "正在显示步骤",
+  "Showed steps": "已显示步骤",
+  "Failed to show steps": "显示步骤失败",
 };
