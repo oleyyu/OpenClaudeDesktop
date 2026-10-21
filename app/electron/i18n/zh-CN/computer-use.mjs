@@ -118,6 +118,13 @@ export default {
   "DeepSeek can guide you step by step through the apps you allow: ask it to teach you or show you how. A card asks before the walkthrough starts, and you can exit anytime.": "DeepSeek 可以在你允许的应用里一步步引导你：让它教你或演示怎么做即可。开始引导前会先弹出卡片询问，过程中随时可以退出。",
   "DeepSeek can guide you step by step through the apps you allow once this app has Accessibility and Screen Recording permission (System Settings › Privacy & Security).": "本应用获得“辅助功能”和“屏幕录制”权限后（系统设置 › 隐私与安全性），DeepSeek 就可以在你允许的应用里一步步引导你。",
   "Teach mode can’t run on this computer: computer use’s native part isn’t available.": "教学模式无法在这台电脑上运行：电脑使用的原生组件不可用。",
+  // Unhide apps (src/source-settings-computer-use.jsx; official c71860c77 chicagoAutoUnhide).
+  "Unhide apps when Claude finishes": "Claude 完成后取消隐藏应用",
+  "When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.": "Claude 完整控制你的屏幕时，任务中被隐藏的应用会在 Claude 停止后恢复显示。",
+  // The access / teach cards' footnote (src/computer-use-approval-card.jsx; official c96d752d0 / ca31fdde5).
+  "{name} will work in these apps in the background while you keep using your Mac.": "{name} 会在后台使用这些应用，你可以继续使用你的 Mac。",
+  "Your other windows will be hidden, then restored when {name} is done.": "你的其他窗口会被隐藏，{name} 完成后恢复。",
+  "Your other windows will be hidden while {name} works.": "{name} 工作期间，你的其他窗口会被隐藏。",
   // Preferred mode (src/source-settings-computer-use.jsx; official c71860c77).
   "How Claude uses the apps you allow": "Claude 如何使用你允许的应用",
   "Background": "后台",
@@ -146,4 +153,25 @@ export default {
   "Showing steps": "正在显示步骤",
   "Showed steps": "已显示步骤",
   "Failed to show steps": "显示步骤失败",
+
+  // Watch-record, "Record a skill" (src/source-watch-record.jsx; official gz / HL / nj). The chooser and pill windows are
+  // the original's hard-coded English pages and stay English, as in the official build.
+  "Record a skill": "录制技能",
+  "Record your screen": "录制屏幕",
+  "Grant macOS permissions": "授予 macOS 权限",
+  "To record your screen and actions, grant the macOS permissions below.": "要录制你的屏幕和操作，请授予下面的 macOS 权限。",
+  "Close without granting permission": "不授予权限并关闭",
+  "Continue to recording": "继续录制",
+  "Turn on computer use in Settings, then try recording again.": "请先在设置中打开电脑操控，然后再试一次录制。",
+  "Recording isn’t available in a remote desktop session.": "远程桌面会话中无法录制。",
+  "Your recording couldn’t be sent. Try recording again.": "你的录制没能发送，请重新录制。",
+  "Accessibility": "辅助功能",
+  "Screen recording": "屏幕录制",
+  "Required for mouse and keyboard tracking and control.": "用于跟踪和控制鼠标与键盘。",
+  "Required for screen visibility. macOS may ask you to restart OpenClaude Desktop.": "用于查看屏幕。macOS 可能会要求你重新启动 OpenClaude Desktop。",
+  "Granted": "已授予",
+  "Not yet granted": "尚未授予",
+  "Request": "请求",
+  "Recorded demonstration · {seconds}s": "录制的演示 · {seconds} 秒",
+  "Full text sent to DeepSeek": "发送给 DeepSeek 的全文",
 };

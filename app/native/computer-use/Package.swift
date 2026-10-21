@@ -28,6 +28,11 @@ let package = Package(
                 .linkedFramework("QuartzCore"),
                 .linkedFramework("ImageIO"),
                 .linkedFramework("UniformTypeIdentifiers"),
+                // Watch-record narration (WatchRecordVoiceover.swift): on-device speech recognition and the microphone.
+                .linkedFramework("Speech"),
+                .linkedFramework("AVFoundation"),
+                .linkedFramework("CoreAudio"),
+                .linkedFramework("AudioToolbox"),
             ]
         ),
         .target(

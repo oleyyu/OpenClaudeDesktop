@@ -1,43 +1,40 @@
-// Runs helpers/cu-ax/build/cu-ax-helper (main.swift there): the Accessibility calls the native module doesn't expose
-// yet — window focus, the menu bar, the app list. One process per call: the request as JSON on stdin, the answer as one
-// JSON line, {ok, result} or {ok: false, error: {code, message, details?}}. A child of the app, so macOS counts its
-// Accessibility use against the app's own permission. In the packaged app the binary is unpacked beside app.asar.
-// A missing binary is not fatal: every call rejects with code "helper_unavailable".
-const fs = require("node:fs");
-const path = require("node:path");
-const { execFile } = require("node:child_process");
-const { coded } = require("./native.cjs");
+// The Accessibility calls without synthetic input behind app_focus, app_menu and list_apps, in the native module
+// (computer_use.node, MenuBar.swift; official: menu(bundleId, {mode, path}) is a native export, spec §1.6.4). They ran
+// in a separate helper process (helpers/cu-ax) until 2026-10-21; this keeps that helper's call names and results so the
+// service and list_apps did not change:
+//
+//   probe                              → native axProbe      {axTrusted}
+//   focus     {bundleId, windowId?}    → native focusWindow
+//   menu      {bundleId, path}         → native menu {mode: "press"}
+//   menuList  {bundleId, path}         → native menu {mode: "list"}
+//   menuClose {bundleId}               → native menu {mode: "close"}
+//   apps      {folders}                → native listApps
+//
+// Errors are native.cjs's coded errors (details kept); a missing module is native_unavailable, an app that stops
+// answering is helper_timeout (the native 8 s budget).
+const { createNative, coded } = require("./native.cjs");
 
-const HELPER = path.join(__dirname, "..", "..", "helpers", "cu-ax", "build", "cu-ax-helper");
-const TIMEOUT_MS = 8000;
+const ROUTES = Object.freeze({
+  probe: () => ["axProbe", {}],
+  focus: ({ bundleId, windowId }) => ["focusWindow", { bundleId, ...(windowId !== undefined ? { windowId } : {}) }],
+  menu: ({ bundleId, path }) => ["menu", { bundleId, mode: "press", path }],
+  menuList: ({ bundleId, path = [] }) => ["menu", { bundleId, mode: "list", path }],
+  menuClose: ({ bundleId }) => ["menu", { bundleId, mode: "close" }],
+  apps: ({ folders = [] }) => ["listApps", { folders }],
+});
 
-function run(file, input) {
-  return new Promise((resolve, reject) => {
-    const child = execFile(file, [], { timeout: TIMEOUT_MS, maxBuffer: 8 << 20 }, (error, stdout) => {
-      if (error && !stdout) return reject(coded(error.killed ? "helper_timeout" : "helper_failed", error.message));
-      resolve(String(stdout));
-    });
-    child.stdin.end(input);
-  });
-}
-
-/** @param {{file?: string, exec?: (file: string, input: string) => Promise<string>, platform?: string}} [options]  exec: tests only. */
-function createAxHelper({ file = HELPER.replace(/app\.asar(?=[\\/])/, "app.asar.unpacked"), exec = run, platform = process.platform } = {}) {
-  const available = () => platform === "darwin" && (exec !== run || fs.existsSync(file));
+/** @param {{native?: {call(method: string, params?: object): Promise<any>, available?: () => boolean}}} [options]
+ *  native: main.cjs passes its one loaded module (native.cjs createNative()); tests pass a fake. */
+function createAxHelper({ native = createNative() } = {}) {
   return {
-    file,
-    available,
+    available: () => (typeof native.available === "function" ? native.available() : true),
     async call(method, params = {}) {
-      if (!available()) throw coded("helper_unavailable", platform !== "darwin" ? "Computer use is macOS only." : `${file} is not built (npm run build:native).`);
-      const line = (await exec(file, JSON.stringify({ method, params }))).trim().split("\n").pop();
-      let envelope;
-      try { envelope = JSON.parse(line); } catch { throw coded("helper_failed", "The Accessibility helper answered with something that isn't JSON."); }
-      if (envelope?.ok === true) return envelope.result;
-      const error = coded(envelope?.error?.code || "internal", envelope?.error?.message);
-      if (envelope?.error?.details) error.details = envelope.error.details;
-      throw error;
+      const route = Object.hasOwn(ROUTES, method) ? ROUTES[method] : null;
+      if (!route) throw coded("unknown_method", `Unknown method ${method}.`);
+      const [nativeMethod, nativeParams] = route(params ?? {});
+      return native.call(nativeMethod, nativeParams);
     },
   };
 }
 
-module.exports = { createAxHelper, HELPER };
+module.exports = { createAxHelper, ROUTES };

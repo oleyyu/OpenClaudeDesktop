@@ -7,6 +7,8 @@
 //   2c. fixture:app-tool request_teach_access — the teach card (official markup); Deny answers teach_declined
 //   3. Settings › System › Computer use — Finder is listed under Allowed apps; Remove revokes it (the next app_list_windows
 //      is app_not_granted) and shows the empty state; the switch saves agentComputerUse: false
+//   4. a relaunch restores the saved preferred mode (Full control)
+//   5. full control's side panel (side-panel.cjs) docks this transparent window in the top-right corner and puts it back
 // Run from app/ after `npm run build`: node scripts/computer-use-tools-ui-test.mjs
 import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import assert from 'node:assert/strict';import {execFileSync} from 'node:child_process';
 import {_electron as electron} from '../../tools/node_modules/playwright/index.mjs';
@@ -49,6 +51,9 @@ try{
  await send(ask);await allow.waitFor({timeout:15000});
  const card=await page.evaluate(()=>{const row=document.querySelector('[data-cua-app]');return {app:row?.dataset.cuaApp??null,icon:!!row?.querySelector('img[src^="data:image/png"]'),risk:row?.dataset.cuaRisk??null};});
  assert.deepEqual(card,{app:'com.apple.finder',icon:true,risk:'filesystem'});
+ // Official c96d752d0 JEe: the preferred mode is Background and full control isn't approved → the Background line above the rows.
+ const note=await page.evaluate(()=>{const p=document.querySelector('[data-cua-note]');return p?{kind:p.dataset.cuaNote,className:p.className,text:p.textContent}:null;});
+ assert.deepEqual(note,{kind:'background',className:'text-footnote text-muted-as-secondary',text:'DeepSeek will work in these apps in the background while you keep using your Mac.'});
  await page.screenshot({path:path.join(directory,'access-card.png')});
  await page.waitForTimeout(700); // allow clicks arm 400 ms after the card appears (source-approval-card.jsx useAllowArming)
  await allow.click();await allow.waitFor({state:'detached',timeout:5000});
@@ -105,6 +110,10 @@ try{
    head:'Let DeepSeek guide you step by step?',reason:'finding a file in Finder',
    note:'The DeepSeek window will hide. A tooltip appears next to each step with a Next button. Click Exit anytime to stop.',
    app:'com.apple.finder',badge:'Already allowed',buttons:['Deny','Start guide'],capabilities:0});
+ // The hiding line (official willHide): only when the next full-screen action would hide some app on this display.
+ const teachHide=await page.evaluate(()=>{const p=document.querySelector('[data-computer-use-teach] [data-cua-note="hide"]');return p?{className:p.className,text:p.textContent}:null;});
+ if(teachHide)assert.deepEqual(teachHide,{className:'ms-7 mb-3 text-body text-secondary',text:'Your other windows will be hidden, then restored when DeepSeek is done.'});
+ report.teachHideLine=teachHide;
  await page.locator('[data-computer-use-teach]').scrollIntoViewIfNeeded();
  await page.screenshot({path:path.join(directory,'teach-card.png')});
  await page.locator('[data-computer-use-teach] [data-approval-action="decline"]').click();
@@ -172,6 +181,62 @@ try{
  assert.equal(await section2.getByRole('radio',{name:'Background',exact:true}).first().getAttribute('aria-checked'),'false');
  await again.screenshot({path:path.join(directory,'settings-preferred-mode-restored.png')});
  report.checks.push('After a relaunch, Settings shows Full control selected (the saved preferred mode is restored)');
+ assert.deepEqual(report.rendererErrors,[]);
+ await again.keyboard.press('Escape');await settings2.waitFor({state:'detached',timeout:5000}).catch(()=>again.keyboard.press('Escape'));
+
+ // 5. Full control's side panel (electron/computer-use/side-panel.cjs, official [cu-side-panel]) on this real, transparent
+ //    window: the dock state alone folds the frame to the narrow layout; a lock docks the window in the top-right corner
+ //    of its display's work area (min(520, w-20) × min(720, h-20), 20 px in), floating on every Space; the release puts
+ //    back the bounds, the minimum size and the maximized state. The module runs as main.cjs wires it (the dock state
+ //    goes to the window as "computer-use-dock-state"), except that focus is not taken on release (focus: no-op), so the
+ //    user's front app keeps the keyboard while this runs. The fixture's turns end at once, so a real lock would only
+ //    flash the dock; main.cjs's wiring is covered in tests/computer-use-side-panel.test.mjs.
+ const collapsed=()=>again.evaluate(()=>document.querySelector('.dframe-root')?.classList.contains('sidebar-collapsed')??null);
+ const wide=await app.evaluate(({BrowserWindow,screen})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.isVisible());const a=screen.getDisplayMatching(w.getBounds()).workArea;
+  w.setBounds({x:a.x+40,y:a.y+30,width:Math.min(1200,a.width-80),height:Math.min(800,a.height-60)});return w.getBounds();});
+ await again.waitForFunction(()=>!document.querySelector('.dframe-root')?.classList.contains('sidebar-collapsed'),null,{timeout:5000});
+ const setup=await app.evaluate(({BrowserWindow,screen},mainPath)=>{
+  const load=process.mainModule?process.mainModule.require.bind(process.mainModule):process.getBuiltinModule('module').createRequire(mainPath);
+  const {createSidePanel,dockedBounds}=load('./computer-use/side-panel.cjs');
+  const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.isVisible());
+  const send=(win,docked,holder)=>win.webContents.send('desktop:event',{kind:'computer-use-dock-state',docked,holder});
+  globalThis.__cuSidePanelTest={w,send,panel:createSidePanel({screen,dispatch:send,focus:()=>{}})};
+  return {expected:dockedBounds(w,screen),before:w.getBounds(),min:w.getMinimumSize(),onTop:w.isAlwaysOnTop(),allSpaces:w.isVisibleOnAllWorkspaces()};},path.join(root,'electron/main.cjs'));
+ assert.deepEqual(setup.before,wide);assert.equal(setup.onTop,false);
+ // The event alone (no resize): the frame folds to the narrow layout, and unfolds when it says undocked.
+ await app.evaluate(()=>{const t=globalThis.__cuSidePanelTest;t.send(t.w,true,'ui-test');});
+ await again.waitForFunction(()=>document.querySelector('.dframe-root')?.classList.contains('sidebar-collapsed'),null,{timeout:5000});
+ await app.evaluate(()=>{const t=globalThis.__cuSidePanelTest;t.send(t.w,false,null);});
+ await again.waitForFunction(()=>!document.querySelector('.dframe-root')?.classList.contains('sidebar-collapsed'),null,{timeout:5000});
+ report.checks.push('The dock state alone folds the frame to the narrow layout (sidebar collapsed) and undocking unfolds it');
+ const settle=async()=>{let last=null;for(let i=0;i<60;i++){const b=await app.evaluate(()=>globalThis.__cuSidePanelTest.w.getBounds());if(last&&JSON.stringify(b)===JSON.stringify(last))return b;last=b;await again.waitForTimeout(60);}return last;};
+ await app.evaluate(()=>globalThis.__cuSidePanelTest.panel.lockChanged('ui-test-holder',{window:globalThis.__cuSidePanelTest.w}));
+ const dockedAt=await settle();
+ const docked=await app.evaluate(()=>{const {w,panel}=globalThis.__cuSidePanelTest;return {onTop:w.isAlwaysOnTop(),allSpaces:w.isVisibleOnAllWorkspaces(),min:w.getMinimumSize(),panel:panel.window()===w};});
+ assert.deepEqual(dockedAt,setup.expected,'docked in the top-right corner of the work area');
+ assert.ok(setup.expected.width<=520&&setup.expected.height<=720);assert.equal(docked.onTop,true);assert.equal(docked.allSpaces,true);assert.equal(docked.panel,true);
+ assert.deepEqual(docked.min,[Math.min(setup.min[0],setup.expected.width),Math.min(setup.min[1],setup.expected.height)]);
+ assert.equal(await collapsed(),true);
+ await again.screenshot({path:path.join(directory,'side-panel-docked.png')});
+ report.checks.push(`A lock docks the window at ${JSON.stringify(dockedAt)} (top-right of the work area), always on top and on every Space, minimum size ${JSON.stringify(docked.min)}; the frame is narrow`);
+ await app.evaluate(()=>globalThis.__cuSidePanelTest.panel.lockChanged(null,{window:globalThis.__cuSidePanelTest.w}));
+ const restoredAt=await settle();
+ const restored=await app.evaluate(()=>{const {w,panel}=globalThis.__cuSidePanelTest;return {onTop:w.isAlwaysOnTop(),allSpaces:w.isVisibleOnAllWorkspaces(),min:w.getMinimumSize(),panel:panel.window()};});
+ assert.deepEqual(restoredAt,setup.before);assert.deepEqual(restored,{onTop:false,allSpaces:setup.allSpaces,min:setup.min,panel:null});
+ await again.waitForFunction(()=>!document.querySelector('.dframe-root')?.classList.contains('sidebar-collapsed'),null,{timeout:5000});
+ report.checks.push('The release restores the bounds, the minimum size, not floating, not on every Space; the frame unfolds');
+ // A maximized window is un-maximized to dock and maximized again after.
+ await app.evaluate(()=>globalThis.__cuSidePanelTest.w.maximize());
+ await again.waitForTimeout(600);
+ const maxBounds=await settle();
+ await app.evaluate(()=>globalThis.__cuSidePanelTest.panel.lockChanged('ui-test-holder',{window:globalThis.__cuSidePanelTest.w}));
+ await settle();
+ assert.equal(await app.evaluate(()=>globalThis.__cuSidePanelTest.w.isMaximized()),false);
+ await app.evaluate(()=>globalThis.__cuSidePanelTest.panel.lockChanged(null,{window:globalThis.__cuSidePanelTest.w}));
+ await again.waitForTimeout(600);await settle();
+ assert.equal(await app.evaluate(()=>globalThis.__cuSidePanelTest.w.isMaximized()),true);
+ report.checks.push(`A maximized window (${JSON.stringify(maxBounds)}) is un-maximized to dock and maximized again after the release`);
+ await app.evaluate(()=>{const t=globalThis.__cuSidePanelTest;t.w.unmaximize();delete globalThis.__cuSidePanelTest;});
  assert.deepEqual(report.rendererErrors,[]);
  report.passed=true;
 }finally{

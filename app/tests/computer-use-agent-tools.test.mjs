@@ -115,6 +115,7 @@ function fakeHelper({ calls = [], frontmost = false } = {}) {
         if (params.path[0].toLowerCase() !== 'file') fail('menu_item_not_found', 'No such title.', { closestMatch: 'File', available: ['Finder', 'File'], level: 0, resolved: [], wanted: params.path[0] });
         if (params.path.length === 1) return { outcome: 'ok', path: ['File'], opened: true, open: true, items: file };
         if (params.path[1]?.toLowerCase() === 'new folder') return { outcome: 'unsupported', reasonCode: 'menu_item_disabled', path: ['File', 'New Folder'] };
+        if (params.path[1]?.toLowerCase() === 'locked item') return { outcome: 'unsupported', reasonCode: 'menu_press_failed', axError: -25206, path: ['File', 'Locked Item'] };
         if (params.path[1]?.toLowerCase() === 'new finder window') return { outcome: 'ok', path: ['File', 'New Finder Window'], opened: false };
         fail('menu_item_not_found', 'No such item.', { closestMatch: 'New Finder Window', available: file.map((item) => item.title), level: 1, resolved: ['File'], wanted: params.path[1] });
       }
@@ -133,8 +134,8 @@ const fakeApps = (calls = []) => async (options) => {
     { name: 'TextEdit', bundleId: 'com.apple.TextEdit', running: false, path: '/System/Applications/TextEdit.app' }], total: 2 };
 };
 
-function setup({ answer = 'accept', native = fakeNative(), decide, axHelper = fakeHelper(), image = fakeImage(), listApps = fakeApps(), fullControl } = {}) {
-  const service = createComputerUse({ native, axHelper, image, log: { log() {}, warn() {} }, wait: async () => {}, ...(decide ? { decide } : {}), ...(fullControl ? { fullControl } : {}) });
+function setup({ answer = 'accept', native = fakeNative(), decide, axHelper = fakeHelper(), image = fakeImage(), listApps = fakeApps(), fullControl, savePanel } = {}) {
+  const service = createComputerUse({ native, axHelper, image, log: { log() {}, warn() {} }, wait: async () => {}, ...(decide ? { decide } : {}), ...(fullControl ? { fullControl } : {}), ...(savePanel ? { savePanel } : {}) });
   const asked = [];
   const host = createAgentToolsHost({
     tmpRoot: fs.mkdtempSync(path.join(os.tmpdir(), 'cu-agent-tools-')), logger: { warn() {}, log() {} },
@@ -660,6 +661,32 @@ test('app_focus: refused while the app is frontmost, and while the screen is loc
   assert.equal(locked.axHelper.calls.length, 0);
 });
 
+test('save_panel_restricted on an app_* tool: the save-panel next step, not the tool\'s general one', async () => {
+  const SAVE_STEP = "Do what the message allows (a save sheet's Cancel always works), or ask the user to do it; don't try to reach the file another way.";
+  const refusal = { outcome: 'unsupported', reasonCode: 'save_panel_restricted', errorKind: 'save_panel_restricted', message: 'Typing ".zshrc" into a save sheet is not allowed.' };
+  const judged = [];
+  const savePanel = { available: true, app: async (request) => { judged.push(request.action.kind); return refusal; } };
+  const { call, body, native } = setup({ savePanel });
+  await call('request_access', { apps: ['Finder'], reason: 'r' });
+  await call('app_screenshot', { app: FINDER });
+  const before = native.calls.length;
+  const answers = {
+    app_type: await call('app_type', { app: FINDER, text: '.zshrc', element_index: 1 }),
+    app_click: await call('app_click', { app: FINDER, element_index: 0 }),
+    app_key: await call('app_key', { app: FINDER, combo: 'return', element_index: 1 }),
+    app_menu: await call('app_menu', { app: FINDER, path: ['File', 'New Finder Window'], window_id: 7 }),
+    app_focus: await call('app_focus', { app: FINDER, window_id: 7 }),
+  };
+  for (const [name, result] of Object.entries(answers)) {
+    const answer = body(result);
+    assert.equal(result.isError, true, name);
+    assert.deepEqual([answer.ok, answer.reasonCode], [false, 'save_panel_restricted'], name);
+    assert.equal(answer.next_step, SAVE_STEP, `${name} answers the save-panel next step`);
+  }
+  assert.deepEqual(judged, ['type', 'click', 'key', 'menu', 'focus']);
+  assert.ok(native.calls.slice(before).every(([method]) => !['axClick', 'axType', 'axKey', 'rawClick', 'rawKey', 'menu', 'focus', 'drag'].includes(method)), 'nothing reached the app');
+});
+
 test('app_menu: list the bar and a menu, open a menu, run a command, disabled and unknown items, close', async () => {
   const { call, body, axHelper } = setup();
   await call('request_access', { apps: ['Finder'], reason: 'r' });
@@ -679,6 +706,11 @@ test('app_menu: list the bar and a menu, open a menu, run a command, disabled an
   assert.equal(disabled.isError, true);
   assert.equal(body(disabled).reasonCode, 'menu_item_disabled');
   assert.match(body(disabled).next_step, /disabled/);
+  // Found but not pressable (no AXPress / AXPick, or the press errored): the official menu_press_failed, never no_press_action.
+  const unpressable = await call('app_menu', { app: FINDER, path: ['File', 'Locked Item'] });
+  assert.equal(unpressable.isError, true);
+  assert.deepEqual([body(unpressable).ok, body(unpressable).reasonCode, body(unpressable).axError], [false, 'menu_press_failed', -25206]);
+  assert.match(body(unpressable).next_step, /refused the press/);
   const missing = body(await call('app_menu', { app: FINDER, path: ['Fiel'] }));
   assert.equal(missing.reasonCode, 'menu_item_not_found');
   assert.equal(missing.closestMatch, 'File');
@@ -813,22 +845,41 @@ test('app_batch: stops at the first action that fails; the rest do not run', asy
   assert.equal(body(await call('app_batch', { app: 'com.apple.TextEdit', actions: [{ action: 'click', element_index: 0 }] })).reasonCode, 'app_not_granted');
 });
 
-test('ax-helper.cjs: one JSON request per process, the envelope unwrapped, details kept, a missing binary is helper_unavailable', async () => {
+test('ax-helper.cjs: the old helper calls go to the native module (focusWindow, menu {mode}, listApps), results and details unchanged', async () => {
   const runs = [];
-  const helper = createAxHelper({ file: '/x/cu-ax-helper', platform: 'darwin', exec: async (file, input) => {
-    runs.push([file, JSON.parse(input)]);
-    const { method } = JSON.parse(input);
-    if (method === 'probe') return '{"ok":true,"result":{"axTrusted":true}}\n';
-    if (method === 'bad') return 'not json';
-    return JSON.stringify({ ok: false, error: { code: 'menu_item_not_found', message: 'nope', details: { closestMatch: 'File' } } });
-  } });
+  const native = { async call(method, params) {
+    runs.push([method, params]);
+    if (method === 'axProbe') return { axTrusted: true };
+    if (method === 'menu' && params.mode === 'press' && params.path[0] === 'Fiel') {
+      throw Object.assign(new Error('nope'), { code: 'menu_item_not_found', details: { closestMatch: 'File' } });
+    }
+    return { method, ...params };
+  } };
+  const helper = createAxHelper({ native });
   assert.deepEqual(await helper.call('probe'), { axTrusted: true });
-  assert.deepEqual(runs[0], ['/x/cu-ax-helper', { method: 'probe', params: {} }]);
-  await assert.rejects(() => helper.call('menu', { path: ['Fiel'] }), (error) => error.code === 'menu_item_not_found' && error.details.closestMatch === 'File');
-  await assert.rejects(() => helper.call('bad'), (error) => error.code === 'helper_failed');
-  const missing = createAxHelper({ file: path.join(os.tmpdir(), 'no-such-cu-ax-helper') });
-  await assert.rejects(() => missing.call('probe'), (error) => error.code === 'helper_unavailable');
-  await assert.rejects(() => createAxHelper({ platform: 'linux', exec: async () => '' }).call('probe'), (error) => error.code === 'helper_unavailable');
+  await helper.call('focus', { bundleId: FINDER });
+  await helper.call('focus', { bundleId: FINDER, windowId: 9 });
+  await helper.call('menu', { bundleId: FINDER, path: ['File', 'New Folder'] });
+  await helper.call('menuList', { bundleId: FINDER, path: [] });
+  await helper.call('menuClose', { bundleId: FINDER });
+  await helper.call('apps', { folders: ['/Applications'] });
+  assert.deepEqual(runs, [
+    ['axProbe', {}],
+    ['focusWindow', { bundleId: FINDER }],
+    ['focusWindow', { bundleId: FINDER, windowId: 9 }],
+    ['menu', { bundleId: FINDER, mode: 'press', path: ['File', 'New Folder'] }],
+    ['menu', { bundleId: FINDER, mode: 'list', path: [] }],
+    ['menu', { bundleId: FINDER, mode: 'close' }],
+    ['listApps', { folders: ['/Applications'] }],
+  ]);
+  await assert.rejects(() => helper.call('menu', { bundleId: FINDER, path: ['Fiel'] }), (error) => error.code === 'menu_item_not_found' && error.details.closestMatch === 'File');
+  await assert.rejects(() => helper.call('bad'), (error) => error.code === 'unknown_method');
+  // No module: the native loader's own code, like every other computer-use call.
+  const { createNative } = require('../electron/computer-use/native.cjs');
+  await assert.rejects(() => createAxHelper({ native: createNative({ platform: 'linux' }) }).call('probe'), (error) => error.code === 'native_unavailable');
+  // native.cjs keeps an error envelope's details on the thrown error.
+  const loaded = createNative({ platform: 'darwin', load: () => ({ call: async () => JSON.stringify({ ok: false, error: { code: 'menu_item_not_found', message: 'm', details: { available: ['File'] } } }) }) });
+  await assert.rejects(() => loaded.call('menu', {}), (error) => error.code === 'menu_item_not_found' && error.details.available[0] === 'File');
 });
 
 test('the names without the capability yet: a precise reasonCode, a next step, and nothing reaches the native side or the helper', async () => {

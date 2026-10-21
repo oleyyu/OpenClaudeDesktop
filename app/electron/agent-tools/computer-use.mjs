@@ -2,7 +2,7 @@
 // (electron/computer-use/service.cjs; field names from docs/02-tools.live.json). Working without anything from M4:
 // request_access, app_list_windows, app_screenshot, app_ax_find, app_click (Accessibility only: left, right, double and triple click),
 // app_type (Accessibility first, then the reason policy's raw rung), app_release, app_focus and app_menu (Accessibility
-// through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps, list_granted_applications and app_batch
+// in the native module, through ax-helper.cjs), app_zoom (a crop of the last screenshot), list_apps, list_granted_applications and app_batch
 // (the tools above in order), app_key (official §1.6.1: Accessibility for return / escape / backspace / cmd+a, else one
 // keystroke to the window's keyboard focus), app_scroll (official §1.6.2: the vertical scroll bar's AXValue through
 // Accessibility, dy only), app_bring_to_current_space (official §1.6.3: a minimized / hidden window back behind the
@@ -27,6 +27,7 @@ import { t } from "../i18n/index.mjs";
 import grantsModule from "../computer-use/grants.cjs";
 import fullControlModule from "../computer-use/full-control.cjs";
 import serviceModule from "../computer-use/service.cjs";
+import clickThroughModule from "../computer-use/click-through.cjs";
 
 const { tierFor, validBundleId } = grantsModule;
 const { CU_LOCK_HELD_MESSAGE } = fullControlModule;
@@ -52,8 +53,12 @@ function failure(code, message, nextStep, details) {
   return { content: [{ type: "text", text: json({ ok: false, outcome: "unsupported", reasonCode: code, message, ...extra, ...(nextStep ? { next_step: nextStep } : {}) }) }], isError: true };
 }
 const requestAccessStep = (app) => `Call request_access with apps: [${JSON.stringify(app)}] and a one-line reason, wait for the user's answer, then retry this call.`;
+// save_panel_restricted: the same step whichever way the refusal arrives (a coded error, an app_* outcome, an app_key
+// result, a screen-wide refusal).
+const SAVE_PANEL_STEP = "Do what the message allows (a save sheet's Cancel always works), or ask the user to do it; don't try to reach the file another way.";
 // What to do after each coded error from the service (native.cjs / service.cjs codes).
 const NEXT_STEPS = {
+  save_panel_restricted: SAVE_PANEL_STEP,
   app_not_granted: null, // requestAccessStep(app)
   screenshot_required: "Call app_screenshot for this app first; coordinate and element_index refer to that screenshot.",
   invalid_params: "Fix the arguments as the message says and call again.",
@@ -69,16 +74,17 @@ const NEXT_STEPS = {
   menu_item_not_found: "Check the titles: use closestMatch if it is what you meant, or call app_menu with list to see what is there.",
   no_menu_bar: "This app has no menu bar to use; work in its window instead.",
   helper_unavailable: "Computer use's Accessibility helper isn't available in this build. Tell the user; don't retry.",
-  helper_failed: "The app didn't answer through Accessibility. Try once more; if it fails again, tell the user.",
   helper_timeout: "The app didn't answer through Accessibility in time (it may be busy). Try once more; if it fails again, tell the user.",
   zoom_unavailable: "Zooming isn't available here; use app_screenshot (scale 1) instead.",
 };
 // What to do after an outcome's reasonCode, where the general next step doesn't fit.
 const REASON_STEPS = {
+  save_panel_restricted: SAVE_PANEL_STEP,
   drag_ineffective: "The drag was released but the readable state did not change. Inspect a fresh app_screenshot before trying an alternative.",
   drag_timeout: "The drag exceeded 3000 ms and the mouse button was released. Inspect the app before retrying.",
   drag_in_progress: "Another drag is still running. Wait for it to finish before starting another.",
   menu_item_disabled: "The item is disabled right now (the app's state doesn't allow it, e.g. nothing is selected). Change that first, or tell the user.",
+  menu_press_failed: "The item was found, but the app refused the press (it is probably disabled for now, e.g. no document is open or nothing is selected). Check the app's state with app_screenshot before trying again.",
   app_is_frontmost: "The app is in front and the user is working in it, so its focus isn't moved. Address the element with element_index instead, or ask the user.",
   window_minimized: "The window is minimized. Ask the user to restore it, or pick another window from app_list_windows.",
   focus_refused: "The app didn't take the focus change. Take an app_screenshot to see its state, or address elements with element_index.",
@@ -188,6 +194,7 @@ const DISPLAY_MESSAGES = {
   delivery_focus_check_failed: "Another app came to the front while the keys were being sent, so the rest was not sent.",
 };
 const DISPLAY_STEPS = {
+  save_panel_restricted: SAVE_PANEL_STEP,
   allowlist_empty: "Call request_access with the apps you need, wait for the user's answer, then retry.",
   takeover_required: "Call request_full_control and wait for the user's answer, then retry.",
   takeover_unavailable: "Call request_full_control (the user approves it on a card), then retry; or keep working with the app_* tools.",
@@ -283,6 +290,16 @@ function displayNote(displays, displayId, previousId) {
   if (previousId !== displayId) return `This screenshot was taken on monitor "${label(displayId)}", which is not the one your previous screenshot was taken on ("${label(previousId)}").${rest}`;
   return null;
 }
+/**
+ * hideBeforeAction inside computer_batch and a teach step (official Zi() / ti(): the options forced to
+ * {hideBeforeAction: false} for each action): the apps were hidden once before the first action instead.
+ */
+const hideOption = (ctx) => (ctx?.cuHideDone === true ? { hide: false } : {});
+/** The batch / step's actions run with hiding done: one prepareForAction before them (official Zi() / ti()). */
+async function hideOnce(ctx) {
+  try { await service(ctx).service.prepareForAction?.(ctx.sessionId); } catch {}
+  return Object.assign(Object.create(Object.getPrototypeOf(ctx ?? {})), ctx, { cuHideDone: true });
+}
 /** screenshot, and computer_batch's "screenshot" step (keepReference: it becomes the reference when the batch ends). */
 async function displayScreenshotTool(args, ctx, { keepReference = false } = {}) {
   const refused = await displayTakeover(ctx);
@@ -290,10 +307,11 @@ async function displayScreenshotTool(args, ctx, { keepReference = false } = {}) 
   try {
     const scale = scaleArg(args.scale);
     const svc = service(ctx).service;
-    const shot = await svc.displayScreenshot(ctx.sessionId, { scale, ...(keepReference ? { keepReference: true } : {}) });
+    const shot = await svc.displayScreenshot(ctx.sessionId, { scale, ...(keepReference ? { keepReference: true } : {}), ...hideOption(ctx) });
     if (shot?.outcome === "unsupported") return displayRefusal(shot);
     const displays = (await svc.listDisplays().catch(() => null))?.displays ?? [];
-    const result = displayImage(shot, [displayNote(displays, shot.displayId, shot.previousDisplayId), scaleNote(scale, shot.coordFrame)]);
+    // Official ui(): the monitor note, the apps hidden before it (oi()), the scale note, then the picture.
+    const result = displayImage(shot, [displayNote(displays, shot.displayId, shot.previousDisplayId), shot.hiddenNote ?? null, scaleNote(scale, shot.coordFrame)]);
     return keepReference && !result.isError ? { ...result, reference: shot.reference } : result;
   } catch (error) { return displayError(error); }
 }
@@ -318,7 +336,7 @@ async function displayPointerTool(kind, args, ctx) {
   const refused = await displayTakeover(ctx);
   if (refused) return refused;
   try {
-    const result = await service(ctx).service.displayPointer(ctx.sessionId, { kind, ...args, signal: ctx.signal });
+    const result = await service(ctx).service.displayPointer(ctx.sessionId, { kind, ...args, signal: ctx.signal, ...hideOption(ctx) });
     if (result?.outcome === "ok") return DISPLAY_DONE[kind];
     return displayRefusal(result);
   } catch (error) { return displayError(error); }
@@ -328,7 +346,7 @@ async function displayKeyboardTool(kind, args, ctx) {
   const refused = await displayTakeover(ctx);
   if (refused) return refused;
   try {
-    const result = await service(ctx).service.displayKeyboard(ctx.sessionId, { kind, text: args.text, repeat: args.repeat, duration: args.duration, signal: ctx.signal });
+    const result = await service(ctx).service.displayKeyboard(ctx.sessionId, { kind, text: args.text, repeat: args.repeat, duration: args.duration, signal: ctx.signal, ...hideOption(ctx) });
     if (result?.outcome === "ok") return result.text;
     return displayRefusal(result);
   } catch (error) { return displayError(error); }
@@ -432,6 +450,14 @@ async function computerBatch(args, ctx) {
   // Only waits: nothing on the screen is touched, so no takeover (official Ar()).
   const refused = actions.every((step) => step.action === "wait") ? allowlistRefusal(ctx) : await displayTakeover(ctx);
   if (refused) return refused;
+  // Official Zi(): the apps outside the allowlist are hidden once, before the first action (not for a batch of waits).
+  const inner = actions.every((step) => step.action === "wait") ? ctx : await hideOnce(ctx);
+  // Official Gi(): the pointer actions in a row are one input burst (click-through.cjs).
+  return withBurst(svc, (burst) => runBatch(actions, burst, svc, inner));
+}
+/** Official Gi() around a batch / teach step body: beforeAction(action) opens or closes the input burst. */
+const withBurst = (svc, body) => clickThroughModule.withInputBurst(() => (typeof svc.beginInputBurst === "function" ? svc.beginInputBurst() : () => {}), body);
+async function runBatch(actions, burst, svc, ctx) {
   const total = actions.length, done = [];
   let reference = null;
   const releaseHeld = async () => { try { await svc.releaseHeldMouse(); } catch {} };
@@ -440,6 +466,7 @@ async function computerBatch(args, ctx) {
       await releaseHeld();
       return displayRefusal({ reasonCode: "aborted", errorKind: "aborted", message: `Batch aborted after ${done.length} of ${total} actions (user interrupt).` });
     }
+    burst.beforeAction(step.action);
     if (index > 0) await sleep(batchPause(step.action, actions[index - 1].action));
     let result;
     try { result = await runBatchAction(step.action, step, ctx); } catch (error) {
@@ -506,6 +533,18 @@ function teachRefusal(reasonCode, message, extra = {}) {
     next_step: t(TEACH_STEPS[reasonCode] ?? "Take a fresh screenshot and try another way, or tell the user.") }) }], isError: true };
 }
 const teachOf = (ctx) => service(ctx).teach ?? null;
+/**
+ * What the card says about hiding (official Wr() previewHideSet → willHide, getAutoUnhideEnabled): the apps the next
+ * full-screen action would hide with these apps allowed too, and whether they come back at the end.
+ */
+async function hideFacts(cu, ctx, apps) {
+  let willHide = [];
+  try { willHide = await cu.service.previewHideSet?.(ctx.sessionId, apps.map((entry) => entry.bundleId).filter(Boolean)) ?? []; } catch { willHide = []; }
+  if (!willHide.length) return {};
+  let autoUnhideEnabled = true;
+  try { autoUnhideEnabled = cu.autoUnhideEnabled?.() !== false; } catch {}
+  return { willHide, autoUnhideEnabled };
+}
 
 async function requestTeachAccess(args, ctx) {
   const cu = service(ctx), svc = cu.service, teach = teachOf(ctx);
@@ -535,7 +574,7 @@ async function requestTeachAccess(args, ctx) {
   if (!apps.length) return json({ granted: [], denied: [], teachModeActive: false, ...base });
   const asking = apps.filter((entry) => !entry.alreadyGranted);
   let answer = "unavailable";
-  try { answer = await cu.askTeach({ reason, apps: apps.map(({ requested, ...entry }) => entry) }); } catch { answer = "unavailable"; }
+  try { answer = await cu.askTeach({ reason, apps: apps.map(({ requested, ...entry }) => entry), ...(await hideFacts(cu, ctx, apps)) }); } catch { answer = "unavailable"; }
   if (answer === "unavailable") return teachRefusal("approval_unavailable", "The walkthrough card can't be shown in this session right now, so teach mode didn't start.");
   if (answer !== "accept") return teachRefusal("teach_declined", "The user declined the guided walkthrough (teach mode), so it didn't start.");
   grants.grant(asking.map((entry) => ({ bundleId: entry.bundleId, displayName: entry.displayName })), {});
@@ -600,9 +639,17 @@ async function runTeachStep(step, ctx) {
   } finally { ctx.signal?.removeEventListener?.("abort", onAbort); }
   if (answer?.action !== "next") { await releaseHeld(); return { kind: "exit" }; }
   teach.working();
+  if (!step.actions.length) return { kind: "ok", results: [] };
+  // Official ti(): the apps outside the allowlist are hidden once before the step's actions.
+  const inner = await hideOnce(ctx);
+  // Official ri() / ii(): each step's actions run inside Gi(), so its pointer actions in a row are one input burst.
+  return withBurst(svc, (burst) => runTeachActions(step, burst, teach, inner, releaseHeld));
+}
+async function runTeachActions(step, burst, teach, ctx, releaseHeld) {
   const results = [];
   for (const [index, item] of step.actions.entries()) {
     if (ctx.signal?.aborted) { await releaseHeld(); return { kind: "exit" }; }
+    burst.beforeAction(item.action);
     if (index > 0) await sleep(batchPause(item.action, step.actions[index - 1].action));
     teach.beforeAction();
     let result;
@@ -716,7 +763,9 @@ export const tools = [
       if (asking.length || flagsAsking.length) {
         // Only the flags not granted yet go on the card (official requestedFlags, L4076–4078).
         const asked = Object.fromEntries(FLAGS.map((key) => [key, flagsAsking.includes(key)]));
-        answer = await cu.ask({ reason, flags: asked, apps: apps.map(({ requested, ...entry }) => entry), toolParams: args });
+        answer = await cu.ask({ reason, flags: asked, apps: apps.map(({ requested, ...entry }) => entry), toolParams: args, ...(await hideFacts(cu, ctx, apps)),
+          // Official: the card's Background line unless full-screen control is approved already.
+          preferredModeDefault: cu.service.fullControl.isApproved(ctx.sessionId) ? undefined : cu.service.fullControl.preferredMode() });
         if (answer === "unavailable") {
           return failure("approval_unavailable", "The access card can't be shown in this session right now, so nothing was granted.",
             "Tell the user you need access to these apps and ask them to try again in the app's session window.");
@@ -886,7 +935,7 @@ export const tools = [
   {
     name: "app_menu",
     title: "Use app menu",
-    description: "Use a granted app's menu bar through macOS Accessibility: no mouse event is sent and the app stays where it is, so prefer this over clicking for anything the menus offer — in Finder and similar apps it is the reliable way to run a command. Give exactly one of: path, the titles from the menu bar down to an item, e.g. [\"File\", \"New Folder\"] (any case; a trailing \"…\" can be left out) — a command item runs, a menu title opens that menu and returns its items; list, to read items without pressing anything (true for the menu bar's titles, or a title / path for the items under it); or close: true, to close a menu of this app that is open (as Escape would).\n\nNeeds the app granted with request_access; running a command needs full access, listing works at any level. Returns the resolved path and, for an opened menu or a list, the items (title, enabled, submenu, shortcut, checked). A title that doesn't match returns menu_item_not_found with closestMatch and the titles that are there; a disabled item returns menu_item_disabled.",
+    description: "Use a granted app's menu bar through macOS Accessibility: no mouse event is sent and the app stays where it is, so prefer this over clicking for anything the menus offer — in Finder and similar apps it is the reliable way to run a command. Give exactly one of: path, the titles from the menu bar down to an item, e.g. [\"File\", \"New Folder\"] (any case; a trailing \"…\" can be left out) — a command item runs, a menu title opens that menu and returns its items; list, to read items without pressing anything (true for the menu bar's titles, or a title / path for the items under it); or close: true, to close a menu of this app that is open (as Escape would).\n\nNeeds the app granted with request_access; running a command needs full access, listing works at any level. Returns the resolved path and, for an opened menu or a list, the items (title, enabled, submenu, shortcut, checked). A title that doesn't match returns menu_item_not_found with closestMatch and the titles that are there; a disabled item returns menu_item_disabled; an item the app won't let Accessibility press returns menu_press_failed.",
     inputSchema: {
       type: "object",
       properties: {
@@ -1531,6 +1580,7 @@ const KEY_REASONS = {
   ax_untrusted_cannot_verify: "Accessibility permission is off, so the target cannot be checked and nothing was sent",
 };
 const KEY_STEPS = {
+  save_panel_restricted: SAVE_PANEL_STEP,
   key_not_mapped: "Type text with app_type and run ⌘ commands with app_menu; app_key sends only the keys the message lists.",
   key_cannot_be_aimed: "app_click the element by its element_index, check a fresh app_screenshot, then send the key without element_index.",
   would_replace_content: "Collapse the selection first (app_click a point in the field), or replace the whole text with app_type mode \"replace\".",

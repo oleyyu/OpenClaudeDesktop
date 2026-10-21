@@ -83,7 +83,7 @@ test('budget display coordinates (official R()): image px of the scale-1 screens
  * A fake native that answers the display-scope methods; `front` is the frontmost app, `under` the pointOwner answer
  * (default: a normal window of the frontmost app), `calls` records what was posted.
  */
-function fakeNative({ front = FINDER, under, calls = [] } = {}) {
+function fakeNative({ front = FINDER, frontPid = null, under, calls = [] } = {}) {
   const screen = { dataUrl: 'data:image/jpeg;base64,AAAA', width: 1372, height: 892, frameWidth: 2940, frameHeight: 1912,
     scaleFactor: 2, displayId: 1, displayWidth: 1470, displayHeight: 956, displayBounds: DISPLAY.bounds, excludedBundleIds: [], desktopWindowIds: [], jpegQuality: 0.75 };
   return {
@@ -93,7 +93,7 @@ function fakeNative({ front = FINDER, under, calls = [] } = {}) {
       switch (method) {
         case 'probe': return { screenLocked: false, secureInput: false, secondsSinceUserInput: 999, axTrusted: true, screenCapture: true };
         case 'listDisplays': return { displays: [DISPLAY] };
-        case 'frontmostApp': return front === null ? { pid: null, bundleId: null } : { pid: 10, bundleId: front };
+        case 'frontmostApp': return front === null ? { pid: frontPid, bundleId: null } : { pid: 10, bundleId: front };
         case 'cursorPosition': return { x: 1, y: 1 };
         case 'pointOwner': return { owner: under !== undefined ? under : front === null ? null : { windowId: 50, pid: 10, bundleId: front, layer: 0, ownerName: front } };
         case 'captureWindow': {
@@ -108,6 +108,7 @@ function fakeNative({ front = FINDER, under, calls = [] } = {}) {
         case 'hidMouseDown': return { outcome: 'ok', delivered: true, held: true };
         case 'hidMouseUp': return { outcome: 'ok', delivered: true, wasHeld: true };
         case 'hidDrag': return { outcome: 'ok', delivered: true, from: params.from ?? { x: 1, y: 1 }, to: params.to };
+        case "savePanelProbe": throw Object.assign(new Error("Unknown method savePanelProbe."), { code: "unknown_method" });
         default: throw new Error(`unexpected ${method}`);
       }
     },
@@ -168,12 +169,23 @@ test('frontmostTierGate: the frontmost app decides — ungranted / read tier / c
   const ng = await ungranted.service.displayPointer('a', { kind: 'left_click', coordinate: [10, 10] });
   assert.deepEqual([ng.outcome, ng.reasonCode], ['unsupported', 'app_not_granted']);
 
-  // No bundle id in front: unattributed_window.
-  const none = svc({ front: null });
+  // A process with no bundle id in front: unattributed_window (the pointer, except a plain move, and the keyboard).
+  const none = svc({ front: null, frontPid: 77 });
   none.service.requestFullControl('a', { approved: true });
   await none.service.displayScreenshot('a', {});
   const un = await none.service.displayPointer('a', { kind: 'left_click', coordinate: [10, 10] });
   assert.deepEqual([un.outcome, un.reasonCode], ['unsupported', 'unattributed_window']);
+  assert.equal((await none.service.displayPointer('a', { kind: 'mouse_move', coordinate: [10, 10] })).outcome, 'ok', 'a plain move passes (official mouse_position)');
+
+  // No app in front at all (official V(): `if (!o) return st(null)`): the pointer goes on to the hit test, which judges
+  // the window under the point (here the desktop, covered by the Finder grant); keys are still refused.
+  const nothing = svc({ front: null });
+  nothing.service.requestFullControl('a', { approved: true });
+  await nothing.service.displayScreenshot('a', {});
+  assert.equal((await nothing.service.displayPointer('a', { kind: 'left_click', coordinate: [10, 10] })).outcome, 'ok');
+  assert.equal(nothing.native.calls.some(([m]) => m === 'pointOwner'), true, 'the hit test decided');
+  const keys = await nothing.service.frontmostTierGate('a', 'key');
+  assert.equal(keys.reasonCode, 'unattributed_window');
 });
 
 test('switchDisplay (official Si()): "auto" (any case) clears the pin; one monitor or no name is bad_args', async () => {

@@ -8,10 +8,10 @@
     "prepare:ui": "node scripts/prepare-ui.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "npm run prepare:ui && vite build",
-    "build:native": "node native/computer-use/build.mjs && node helpers/cu-ax/build.mjs",
+    "build:native": "node native/computer-use/build.mjs",
     "start": "electron .",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
-    "package": "npm run build && npm run build:native && node scripts/prepare-cowork-resource.mjs && electron-packager . 'OpenClaude Desktop' --platform=darwin --arch=arm64 --app-bundle-id=local.code-desktop --icon=build/icon.icns --out=../releases --overwrite --prune=false --ignore='^/src/(?!(workflow-progress-model|bridge-text-model|deliverable-records|agent-tool-titles|thread-history-model|turn-error-model)\\.mjs$)' --ignore='^/(tests|scripts|public|build|vite.config.js|index.html|package-lock.json)' --ignore='^/node_modules/(?!node-pty(/|$))' --ignore='^/node_modules/node-pty/(?!(package\\.json|LICENSE|lib|prebuilds)(/|$))' --ignore='^/node_modules/node-pty/prebuilds/(?!darwin-arm64(/|$))' --ignore='^/node_modules/node-pty/lib/.*\\.(test\\.js|map)$' --extra-resource=build/cowork/smol-bin.arm64.img --ignore='^/native/computer-use/(?!build(/|$))' --ignore='^/helpers/cu-ax/(?!build(/|$))' --asar.unpackDir='{node_modules/node-pty/prebuilds,native/computer-use/build,helpers/cu-ax/build}' && node scripts/bundle-harness.mjs && node scripts/sign-local.mjs"
+    "package": "npm run build && npm run build:native && node scripts/prepare-cowork-resource.mjs && electron-packager . 'OpenClaude Desktop' --platform=darwin --arch=arm64 --app-bundle-id=local.code-desktop --icon=build/icon.icns --extend-info=scripts/extend-info.plist --out=../releases --overwrite --prune=false --ignore='^/src/(?!(workflow-progress-model|bridge-text-model|deliverable-records|agent-tool-titles|thread-history-model|turn-error-model)\\.mjs$)' --ignore='^/(tests|scripts|public|build|vite.config.js|index.html|package-lock.json)' --ignore='^/node_modules/(?!node-pty(/|$))' --ignore='^/node_modules/node-pty/(?!(package\\.json|LICENSE|lib|prebuilds)(/|$))' --ignore='^/node_modules/node-pty/prebuilds/(?!darwin-arm64(/|$))' --ignore='^/node_modules/node-pty/lib/.*\\.(test\\.js|map)$' --extra-resource=build/cowork/smol-bin.arm64.img --ignore='^/native/computer-use/(?!build(/|$))' --asar.unpackDir='{node_modules/node-pty/prebuilds,native/computer-use/build}' && node scripts/bundle-harness.mjs && node scripts/sign-local.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "2.1.10",

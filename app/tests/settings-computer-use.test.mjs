@@ -24,7 +24,7 @@ test('the official section: Computer use, a Beta badge, the cloud note, the swit
   const on = group();
   assert.deepEqual([on.tab, on.title, on.badge], ['general', 'Computer use', 'Beta']);
   assert.equal(on.description, 'Not available in cloud Code sessions, which don’t run on this computer.');
-  assert.deepEqual(on.rows.map((r) => r.id), ['agentComputerUse', 'computer-use-preferred-mode', 'computer-use-allowed-apps', 'computer-use-teach']);
+  assert.deepEqual(on.rows.map((r) => r.id), ['agentComputerUse', 'computerUseAutoUnhide', 'computer-use-preferred-mode', 'computer-use-allowed-apps', 'computer-use-teach']);
   assert.equal(on.rows[0].label, 'Enable computer use');
   assert.match(render(on.rows[0].control), /data-cds="Switch"[^>]*|aria-checked="true"/);
   const off = group({ agentComputerUse: false });
@@ -33,7 +33,7 @@ test('the official section: Computer use, a Beta badge, the cloud note, the swit
 });
 
 test('preferred mode (official c71860c77 ii): one row, the official sentence as its description, the segmented control in its control slot', () => {
-  const preferred = group().rows[1];
+  const preferred = group().rows.find((r) => r.id === 'computer-use-preferred-mode');
   assert.equal(preferred.label, 'How Claude uses the apps you allow');
   assert.equal(preferred.description, 'Background: Claude works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: Claude takes control of your screen, mouse, and keyboard by default whenever Claude uses an app you allow, without asking again.');
   assert.equal(preferred.below, undefined, 'nothing below the row');
@@ -56,17 +56,31 @@ test('Allowed apps: the Denied apps chips with a ghost xxs X per app, and the em
   assert.match(html, /<button[^>]*aria-label="Remove Finder from allowed apps"[^>]*data-variant="ghost"[^>]*data-flush="end"[^>]*data-size="xxs"[^>]*data-cds-icon-only=""/);
   const empty = render(React.createElement(mod.ComputerUseAllowedApps, { apps: [], onRemove() {} }));
   assert.equal(empty, '<p class="text-footnote text-secondary">No apps allowed right now. DeepSeek asks before it uses an app, and what you allow lasts until the app quits.</p>');
-  const below = render(group({}, { grants: null }).rows[2].below);
+  const below = render(group({}, { grants: null }).rows.find((r) => r.id === 'computer-use-allowed-apps').below);
   assert.match(below, /No apps allowed right now/, 'still loading reads as none');
 });
 
 test('Teach mode: no control (the official Settings has no teach entry); the text says whether it can run here', () => {
-  const teach = group().rows[3];
+  const teach = group().rows.find((r) => r.id === 'computer-use-teach');
   assert.equal(teach.label, 'Teach mode');
   assert.equal(teach.control, null);
   assert.doesNotMatch(teach.description, /Not available in this build/);
   assert.match(teach.description, /guide you step by step.*ask it to teach you or show you how/, 'still reading: available');
-  assert.match(group({}, { teachStatus: 'available' }).rows[3].description, /A card asks before the walkthrough starts/);
-  assert.match(group({}, { teachStatus: 'permissions' }).rows[3].description, /Accessibility and Screen Recording permission/);
-  assert.match(group({}, { teachStatus: 'unavailable' }).rows[3].description, /can’t run on this computer/);
+  assert.match(group({}, { teachStatus: 'available' }).rows.at(-1).description, /A card asks before the walkthrough starts/);
+  assert.match(group({}, { teachStatus: 'permissions' }).rows.at(-1).description, /Accessibility and Screen Recording permission/);
+  assert.match(group({}, { teachStatus: 'unavailable' }).rows.at(-1).description, /can’t run on this computer/);
+});
+
+test('Unhide apps when Claude finishes (official chicagoAutoUnhide, c71860c77 ii): before the preferred mode, the official label and sentence, a switch on unless turned off', () => {
+  const rows = group().rows;
+  const unhide = rows[1];
+  assert.equal(unhide.id, 'computerUseAutoUnhide');
+  assert.equal(unhide.label, 'Unhide apps when Claude finishes');
+  assert.equal(unhide.description, 'When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.');
+  assert.match(render(unhide.control), /aria-checked="true"/, 'unset reads as on');
+  assert.match(render(group({ computerUseAutoUnhide: false }).rows[1].control), /aria-checked="false"/);
+  const saved = [];
+  const control = group({}, { save: (key, value) => saved.push([key, value]) }).rows[1].control;
+  control.props.onChange(false);
+  assert.deepEqual(saved, [['computerUseAutoUnhide', false]]);
 });

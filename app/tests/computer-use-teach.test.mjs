@@ -354,6 +354,20 @@ test('teach_step: not in teach mode → teach_mode_not_active; a bad step → ba
   assert.equal(user.seen, 2);
 });
 
+test('teach steps (official ri() / ii() → Gi()): each step\'s pointer actions in a row are one input burst, closed when the step ends', async () => {
+  const { call, service } = teachSetup();
+  const events = [];
+  service.beginInputBurst = () => { events.push('begin'); return () => events.push('end'); };
+  await call('request_teach_access', { apps: ['TextEdit'], reason: 'r' });
+  await call('screenshot', {});
+  await call('teach_step', { explanation: 'e', next_preview: '', actions: [{ action: 'mouse_move', coordinate: [1, 1] }, { action: 'left_click', coordinate: [2, 2] }, { action: 'cursor_position' }] });
+  assert.deepEqual(events, ['begin', 'end']);
+  events.length = 0;
+  await call('teach_batch', { steps: [{ explanation: 'a', next_preview: '', actions: [{ action: 'left_click', coordinate: [1, 1] }] },
+    { explanation: 'b', next_preview: '', actions: [{ action: 'left_click', coordinate: [1, 1] }] }] });
+  assert.deepEqual(events, ['begin', 'end', 'begin', 'end'], 'one burst per step (official ii(): Gi() per step)');
+});
+
 test('teach_batch: two steps — each waits for Next, then its actions; one screenshot at the end; Exit and a failing action stop it', async () => {
   const { call, user, native } = teachSetup();
   await call('request_teach_access', { apps: ['TextEdit'], reason: 'r' });

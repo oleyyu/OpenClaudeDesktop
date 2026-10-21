@@ -31,7 +31,7 @@ function fakeNative({ probe = {}, click = () => ({ outcome: 'ok', reasonCode: nu
     },
     axClick: click,
   };
-  return { calls, async call(method, params = {}) { calls.push({ method, params: JSON.parse(JSON.stringify(params)) }); return handlers[method](params); } };
+  return { calls, async call(method, params = {}) { calls.push({ method, params: JSON.parse(JSON.stringify(params)) }); if (!handlers[method] && method === 'savePanelProbe') throw Object.assign(new Error('Unknown method savePanelProbe.'), { code: 'unknown_method' }); return handlers[method](params); } };
 }
 function setUp(options) {
   const native = fakeNative(options), log = quiet();

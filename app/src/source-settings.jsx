@@ -605,7 +605,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const customizePage=activeTab?.customize&&customize ? <SourceCustomize key={JSON.stringify([tab,customize.cwd,customize.threadId])} section={tab} store={customize.store} threadId={customize.threadId} cwd={customize.cwd} call={customize.call}
     core={boot?.core} onEditConfig={boot?.connected?()=>desktopCall('desktop-edit-config'):undefined}
     onUseSkill={customize.onUseSkill} onOpenExternal={customize.onOpenExternal} onRevealPath={customize.onRevealPath} focus={focus} mcpDefinitions={desktop?.mcpDefinitions} mcpServers={desktop?.servers}
-    onRestartCore={customize.onRestartCore} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
+    onRestartCore={customize.onRestartCore} watchRecord={customize.watchRecord ?? null} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
     onNavigate={(section,target)=>{setFocus(target||null);setTab(section);setQuery('');}} /> : null;
   const closeSearch=()=>{setSearchOpen(false);setQuery('');setSearchIndex(0);};
   // cc011544b _t: the field (icon + input, no clear button; Escape clears) focuses its input when clicked.

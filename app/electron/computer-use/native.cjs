@@ -1,5 +1,6 @@
 // Loads native/computer-use/build/computer_use.node (built by native/computer-use/build.mjs) and wraps its single
-// export, `call(method, paramsJson) → Promise<string>`, whose JSON is {ok, result} or {ok: false, error: {code, message}}.
+// export, `call(method, paramsJson) → Promise<string>`, whose JSON is {ok, result} or {ok: false, error: {code, message,
+// details?}} (details, e.g. menu_item_not_found's closestMatch, is kept on the thrown error).
 // In the packaged app the module is unpacked beside app.asar (dlopen cannot read inside an archive).
 // A missing or unloadable module is not fatal: every call rejects with code "native_unavailable".
 const path = require("node:path");
@@ -30,7 +31,9 @@ function createNative({ file = MODULE.replace(/app\.asar(?=[\\/])/, "app.asar.un
       if (!native) throw coded("native_unavailable", loadError);
       const envelope = JSON.parse(await native.call(method, JSON.stringify(params)));
       if (envelope?.ok === true) return envelope.result;
-      throw coded(envelope?.error?.code || "internal", envelope?.error?.message);
+      const error = coded(envelope?.error?.code || "internal", envelope?.error?.message);
+      if (envelope?.error?.details && typeof envelope.error.details === "object") error.details = envelope.error.details;
+      throw error;
     },
   };
 }

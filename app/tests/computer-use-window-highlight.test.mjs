@@ -29,6 +29,7 @@ function fakeNative({ fail = null } = {}) {
       }
       if (method === "hideWindowHighlight") return { hidden: params.windowId ? [params.windowId] : [...numbers.keys()] };
       if (method === "windowHighlightState") return { highlights: [] };
+      if (method === "savePanelProbe") throw Object.assign(new Error("Unknown method savePanelProbe."), { code: "unknown_method" });
       throw new Error(method);
     },
   };
@@ -172,6 +173,7 @@ function serviceSetUp({ answer = () => ({ outcome: "ok" }) } = {}) {
         bounds: { x: 300, y: 200, width: 800, height: 500 }, jpegQuality: 0.75, elements: [] };
     }
     if (["axClick", "axType", "axKey", "axScroll"].includes(method)) return answer(method);
+    if (method === "savePanelProbe") throw Object.assign(new Error("Unknown method savePanelProbe."), { code: "unknown_method" });
     throw new Error(method);
   } };
   const highlight = {

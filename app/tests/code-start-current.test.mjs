@@ -402,10 +402,11 @@ test('main.jsx: the start card gets the split flag and B4, which sends a plain p
   assert.match(main, /void sendMessage\(prompt, \[\], \[\], \{ priority: "stay", beside: \{ onStart: onSent \} \}\);\s*return "asked";/);
   const send = main.slice(main.indexOf('async function sendMessage('), main.indexOf('function discardFailedStart('));
   for (const guard of [
-    'const sentIssue = !current && !beside && draftIssue',
-    'const shellCommand = mode === "code" && !beside ?',
+    // watch-record added `!demonstration` beside `!beside` (a recorded demonstration is its own turn input).
+    'const sentIssue = !current && !beside && !demonstration && draftIssue',
+    'const shellCommand = mode === "code" && !beside && !demonstration ?',
     'const keywordRequested = !beside &&',
-    'const startedGroup = current || beside ? null',
+    'const startedGroup = current || beside || demonstration ? null',
     'if (!beside) { setDraft(""); setAttachments([]); setMentions([]); }',
     'if (!beside) setDraftTools(undefined);',
     'if (!beside) forgetDraft(browserStorage(), homeDraftKey, { text });',

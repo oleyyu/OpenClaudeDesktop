@@ -5,11 +5,11 @@ import {execFileSync} from 'node:child_process';
 const app=path.resolve(import.meta.dirname,'../../releases/OpenClaude Desktop-darwin-arm64/OpenClaude Desktop.app');
 // Ad-hoc signing for this local Mac build, not a notarized distribution signature.
 // The native files live unpacked beside app.asar — node-pty's pty.node and spawn-helper, computer use's
-// computer_use.node and (when one is built) its app-cu-helper, and the Accessibility helper cu-ax-helper; codesign --deep only seals them as resources, so they
+// computer_use.node and (when one is built) its app-cu-helper; codesign --deep only seals them as resources, so they
 // are signed first, then the bundle seals their signed bytes.
 const unpacked=path.join(app,'Contents/Resources/app.asar.unpacked');
 const native=[];
-const walk=(dir)=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(entry.isFile()&&(entry.name.endsWith('.node')||entry.name==='spawn-helper'||entry.name==='app-cu-helper'||entry.name==='cu-ax-helper'))native.push(file);}};
+const walk=(dir)=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(entry.isFile()&&(entry.name.endsWith('.node')||entry.name==='spawn-helper'||entry.name==='app-cu-helper'))native.push(file);}};
 if(fs.existsSync(unpacked))walk(unpacked);
 for(const file of native)execFileSync('codesign',['--force','--sign','-',file],{stdio:'inherit'});
 // The Swift VM uses the macOS main run loop, as in the installed Claude app.

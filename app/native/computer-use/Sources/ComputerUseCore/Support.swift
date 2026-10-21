@@ -2,12 +2,15 @@ import Foundation
 import CoreGraphics
 
 /// A refusal or failure with a reason code the main process passes through unchanged (docs/04 reason codes).
-public struct CUError: Error, CustomStringConvertible {
+/// `details` (JSON-serializable) travels with it in the error envelope, e.g. menu_item_not_found's closestMatch.
+public struct CUError: Error, CustomStringConvertible, @unchecked Sendable {
     public let code: String
     public let message: String
-    public init(_ code: String, _ message: String = "") {
+    public var details: [String: Any]?
+    public init(_ code: String, _ message: String = "", details: [String: Any]? = nil) {
         self.code = code
         self.message = message.isEmpty ? code : message
+        self.details = details
     }
     public var description: String { "\(code): \(message)" }
 

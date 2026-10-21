@@ -4,7 +4,7 @@
 // comes from the bundle's own Info.plist (plutil). Not found is `installed: false`, which the access card shows as
 // "(not installed)" and request_access reports as denied.
 //
-// list_apps lists what is installed in the same folders and what is running (ax-helper.cjs "apps": NSWorkspace and the
+// list_apps lists what is installed in the same folders and what is running (ax-helper.cjs "apps" → native listApps: NSWorkspace and the
 // bundles' Info.plist), running apps first with their pid; a query that matches nothing listed falls back to resolve()
 // above (Spotlight), so an app list_apps can't find is one request_access can't find either.
 const fs = require("node:fs");
@@ -28,7 +28,7 @@ const run = (file, args) => new Promise((resolve) => {
 /**
  * @param {{exec?: (file: string, args: string[]) => Promise<string>, readdir?: (dir: string) => string[], home?: string,
  *          enumerate?: (folders: string[]) => Promise<{running: object[], installed: object[]}>}} [options]
- *   exec / readdir: tests only. enumerate: list_apps' source (main.cjs: ax-helper.cjs "apps").
+ *   exec / readdir: tests only. enumerate: list_apps' source (main.cjs: ax-helper.cjs "apps", native listApps).
  */
 function createAppResolver({ exec = run, readdir = (dir) => fs.readdirSync(dir), home = os.homedir(), enumerate = null } = {}) {
   const folders = [...FOLDERS, path.join(home, "Applications")];

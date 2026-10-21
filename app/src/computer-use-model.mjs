@@ -169,7 +169,7 @@ export function computerUseAccessRequest(params, item) {
   const flagsIn = record(source.flags) ? source.flags : record(source.requestedFlags) ? source.requestedFlags : source;
   const apps = (Array.isArray(source.apps) ? source.apps : []).slice(0, 64).map(accessApp).filter(Boolean);
   const reason = str(source.reason).trim() || str(args.reason).trim() || null;
-  return { apps, reason,
+  return { apps, reason, note: computerUseHideNote(resolved ?? {}),
     flags: { clipboardRead: flagsIn.clipboardRead === true, clipboardWrite: flagsIn.clipboardWrite === true, systemKeyCombos: flagsIn.systemKeyCombos === true } };
 }
 
@@ -202,7 +202,20 @@ export function computerUseTeachRequest(params) {
   const apps = (Array.isArray(teach.apps) ? teach.apps : []).slice(0, 64).map(accessApp).filter(Boolean)
     .map((app) => ({ key: app.key, name: app.name, bundleId: app.bundleId, iconDataUrl: app.iconDataUrl, resolved: app.installed !== false && !!app.bundleId,
       alreadyGranted: app.alreadyGranted, tier: app.tier, risk: app.bundleId ? computerUseAppRisk(app.bundleId) : null }));
-  return { reason: str(teach.reason).trim(), apps };
+  const hide = computerUseHideNote(teach);
+  return { reason: str(teach.reason).trim(), apps, hide: hide?.kind === "hide" ? hide : null };
+}
+/**
+ * The cards' footnote (official c96d752d0 / ca31fdde5): preferredModeDefault "background" → the Background line;
+ * else apps the next full-screen action would hide (willHide) → the hiding line, "then restored" when autoUnhideEnabled.
+ * null when neither.
+ * @returns {{kind: "background"} | {kind: "hide", autoUnhide: boolean} | null}
+ */
+export function computerUseHideNote(meta) {
+  if (!record(meta)) return null;
+  if (meta.preferredModeDefault === "background") return { kind: "background" };
+  if (Array.isArray(meta.willHide) && meta.willHide.length > 0) return { kind: "hide", autoUnhide: meta.autoUnhideEnabled !== false };
+  return null;
 }
 /** The teach card's app row labels (official Ri / Li): the tier badge's text and the risk line, or null. */
 export function computerUseTeachRowLabels(app) {

@@ -45,6 +45,7 @@ function setup({ bundleId = 'com.apple.TextEdit', result, probe = {} } = {}) {
       return { ...shot, width, height, windowId: 42, bundleId, jpegQuality: 0.75 };
     }
     if (method === 'drag') return typeof result === 'function' ? result() : result ?? { outcome: 'ok', delivered: true, mouseUpSent: true, verified: false };
+    if (method === 'savePanelProbe') throw Object.assign(new Error('Unknown method savePanelProbe.'), { code: 'unknown_method' });
     throw new Error(method);
   } } });
   cu.grantsFor('s').grant([bundleId]);

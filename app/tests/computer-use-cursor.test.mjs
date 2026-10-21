@@ -114,6 +114,7 @@ function fakeNative({ fail = null, extra = {} } = {}) {
       }
       if (method === "phantomCursorState") return { cursors: [...panels.values()] };
       if (extra[method]) return extra[method](params);
+      if (method === "savePanelProbe") throw Object.assign(new Error("Unknown method savePanelProbe."), { code: "unknown_method" });
       throw new Error(`unexpected ${method}`);
     },
   };
@@ -210,6 +211,7 @@ function serviceSetUp({ answer = () => ({ outcome: "ok" }) } = {}) {
         bounds: { x: 300, y: 200, width: 800, height: 500 }, jpegQuality: 0.75, elements };
     }
     if (["axClick", "axType", "axKey", "axScroll", "drag"].includes(method)) { events.push([method]); return answer(method); }
+    if (method === "savePanelProbe") throw Object.assign(new Error("Unknown method savePanelProbe."), { code: "unknown_method" });
     throw new Error(method);
   } };
   const pointer = {
@@ -319,7 +321,7 @@ test("service + cursor + one native: the hide lands before the AX hit test, the 
   await cu.appScreenshot("s", { bundleId: "com.apple.finder" });
   await cu.appClick("s", { bundleId: "com.apple.finder", coordinate: [200, 100] });
   await cursor.state();
-  const seen = native.calls.map(([method, params]) => (method.includes("PhantomCursor") ? [method, params] : method)).filter((entry) => entry !== "probe" && entry !== "captureWindow");
+  const seen = native.calls.map(([method, params]) => (method.includes("PhantomCursor") ? [method, params] : method)).filter((entry) => entry !== "probe" && entry !== "captureWindow" && entry !== "savePanelProbe");
   assert.deepEqual(seen, [
     ["setPhantomCursor", { screenX: -1100, screenY: 350, windowId: 7, pulse: false }],   // the lock: the window's centre (a display left of the primary)
     ["hidePhantomCursor", { windowId: 7 }],

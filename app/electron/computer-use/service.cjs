@@ -27,8 +27,8 @@
 // bar's AXValue of the scroll area at the address by dy × 5 % (clamped) and reads it back. No raw rung, no event.
 //
 // Accessibility without input (agent tools app_focus / app_menu): window focus and the menu bar through ax-helper.cjs,
-// a separate helper process, because the native module doesn't expose them yet. app_zoom crops the last app_screenshot
-// with `image` (main.cjs: Electron's nativeImage); it never captures again.
+// which routes them to the native module (focusWindow, menu {mode}). app_zoom crops the last app_screenshot with
+// `image` (main.cjs: Electron's nativeImage); it never captures again.
 //
 // `pointer` (main.cjs: cursor.cjs) is the phantom cursor (official §2.6.1): a window this session holds (app_screenshot,
 // not app_release'd) shows it at the window's centre when the lock is taken (moved), then at the screen point of every
@@ -48,6 +48,16 @@
 // runs in the display-scope gates; the screen-wide type pastes text with a new line when clipboardWrite is granted.
 // `clipboard` (main.cjs: Electron's clipboard) is {readText(), writeText(text)}; without one the clipboard tools refuse.
 //
+// hideBeforeAction (official sub-gate, on by default; spec §1.4.5): before a full-screen screenshot or action, the apps
+// outside the session's allowlist with a window on the selected display are hidden (native prepareDisplay: not quit,
+// no window minimized; this app and the system's UI never), once per computer_batch / teach step. What was hidden is
+// said in the next screenshot's notes and comes back when the turn ends or the session is stopped (main.cjs
+// restoreHiddenApps, Settings › "Unhide apps when Claude finishes"); release_full_control does not unhide (official Bn()).
+//
+// savePanelProbe (save-panel.cjs): every key, typed text, click, drag and held press — screen-wide and app_* — is
+// judged against what the window shows (a save sheet, a document under a protected path, a rename popover, Move To);
+// refusals are save_panel_restricted.
+//
 // IPC (main.cjs "desktop:call", actions "computer-use:*", sessionId required) answers
 // {ok: true, result} | {ok: false, error: {code, message}} so the reason code survives the IPC boundary.
 // There is deliberately no IPC action that adds a grant.
@@ -62,6 +72,7 @@ const { createAxHelper } = require("./ax-helper.cjs");
 const { isDeepStrictEqual } = require("node:util");
 const { normalizeCombo, isSystemCombo, clipboardFlags, mainKeyCount, parseCombo, displayChord, chordProblem } = require("./keys.cjs");
 const { createClipboard, CLIPBOARD_SUB_GATES, PASTE_CHORD } = require("./clipboard.cjs");
+const { createSavePanelGuard, policy: { navigationOnly } } = require("./save-panel.cjs");
 
 // How many summary lines app_screenshot shows inline; app_ax_find searches the rest.
 const SUMMARY_LINES = 40;
@@ -152,15 +163,38 @@ function dragReadback(result) {
 /**
  * highlight: {target({sessionId, bundleId, windowId}), released({sessionId, windowId})}, optional (see the header).
  * selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`).
- * axHelper: ax-helper.cjs (focus, menus). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
+ * axHelper: ax-helper.cjs (focus, menus; native by default). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
  * pointer: {beforeClick({windowId} | {scope: "display"}), clicked(point), moved(point), restore({windowId}),
  *   released({windowId})} with point {sessionId, bundleId, windowId, x, y} in global screen points (cursor.cjs), optional.
+ * clickThrough: click-through.cjs createClickThrough() — the app's own windows let a screen-wide pointer delivery
+ *   through (official executor NG) and input bursts (official beginInputBurst), optional.
  */
-function createComputerUse({ native = createNative(), axHelper = createAxHelper(), image = null, pointer = null, highlight = null, log = console, wait, decide, selfBundleIds = [], fullControl = createFullControl(), overlayWindowIds = () => [], onDisplaySelected = () => {}, withOwnEscape = (run) => run(), clipboard = null, subGates = {} } = {}) {
+function createComputerUse({ native = createNative(), axHelper = createAxHelper({ native }), image = null, pointer = null, highlight = null, log = console, wait, decide, selfBundleIds = [], fullControl = createFullControl(), overlayWindowIds = () => [], onDisplaySelected = () => {}, withOwnEscape = (run) => run(), clipboard = null, subGates = {}, clickThrough = null, savePanel = null } = {}) {
   const pause = wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  // Official executor NG: a click / press / release / drag / scroll runs with the app's windows near it letting it through.
+  const throughOwnWindows = (points, run) => (typeof clickThrough?.around === "function" ? clickThrough.around(points.filter(Boolean), run) : run());
   let keyOperations = 0;   // the screen-wide keyboard's operation ids (native GlobalKeys opId)
-  // Official vlr sub-gates (only the clipboard's are used here): clipboardPasteMultiline, clipboardGuard.
-  const gates = { ...CLIPBOARD_SUB_GATES, ...(subGates && typeof subGates === "object" ? subGates : {}) };
+  // Official vlr sub-gates (the ones used here): clipboardPasteMultiline, clipboardGuard, hideBeforeAction.
+  const gates = { ...CLIPBOARD_SUB_GATES, hideBeforeAction: true, ...(subGates && typeof subGates === "object" ? subGates : {}) };
+  // The save-panel guard (save-panel.cjs); off on another platform or without native savePanelProbe.
+  const saveGuard = savePanel ?? createSavePanelGuard({ native, log, ...(wait ? { wait } : {}) });
+  /** Official q(): an input delivery, its end marked for the save sheet's settle time. */
+  const asInput = async (run) => { try { return await run(); } finally { saveGuard.inputDone?.(); } };
+  /** Official Bt / zt: a gate run again after a save-panel settle / parents refusal. */
+  const guarded = (run, options) => (typeof saveGuard.retrying === "function" ? saveGuard.retrying(run, options) : run());
+  /**
+   * The app_* tools' save-panel gate (official Ut): the window the action aims at, the action's screen point. null to go
+   * on, else the refusal {outcome, reasonCode: save_panel_restricted, errorKind, message, blocked: true}.
+   */
+  const appSaveGate = async ({ bundleId, windowId, shot, framePt, action }) => {
+    if (!saveGuard.available || windowId === undefined) return null;
+    const point = Array.isArray(framePt) && shot?.bounds ? windowLocalToScreen(frameToWindowLocal(framePt, shot), shot.bounds) : undefined;
+    const refused = await saveGuard.app({ windowId, bundleId, point, action });
+    return refused ? { ...refused, path: "unavailable", blocked: true, delivered: false, windowId } : null;
+  };
+  // hideBeforeAction: per session, the apps hidden this turn (unhidden when it ends) and those the next screenshot names.
+  const hiddenApps = new Map();   // sessionId → {turn: Map(bundleId → name), pending: Map(bundleId → name)}
+  let hideAvailable = true;
   const clip = createClipboard({ clipboard, log, wait: pause });
   const sessions = new Map();   // sessionId → grants
   const windows = new Map();    // sessionId → { shots: Map("bundle:window" → shot), last: Map(bundle → windowId), display?: shot, selectedDisplay?, pinnedDisplay? }
@@ -310,10 +344,12 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       if (gate && gate !== "user_actively_typing") {
         return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true, delivered: false };
       }
+      const saveRefused = await appSaveGate({ bundleId, windowId: wid, shot, framePt: coordinate, action: { kind: "drag" } });
+      if (saveRefused) return saveRefused;
       await pointerAside(wid);
-      const result = await deliver(() => native.call("drag", {
+      const result = await asInput(() => deliver(() => native.call("drag", {
         bundleId, windowId: wid, ...coordinates, button, grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
-      }), wait ? { wait } : {});
+      }), wait ? { wait } : {}));
       const readback = dragReadback(result);
       rememberPoint(state, `${bundleId}:${wid}`, toCoordinate, readback);
       pointerLanded(sessionId, bundleId, wid, shot, toCoordinate, readback);
@@ -465,14 +501,17 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       }
       const gate = actionGate(await native.call("probe"), "left_click");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
+      const savePoint = target === "focused" ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
+      const saveRefused = await appSaveGate({ bundleId, windowId: wid, shot, framePt: savePoint, action: { kind: "click", button, count } });
+      if (saveRefused) return saveRefused;
       // The raw rung (reason-policy FALLBACK only): a coordinate click at the same point, both forms from budget.cjs.
       const raw = point && shot && axOnly !== true && button === "left" && count === 1 ? () => native.call("rawClick", {
         bundleId, windowId: wid, count, button, winLocalPt: point, screenPt: windowLocalToScreen(point, shot.bounds),
         grantedBundleIds: grantsFor(sessionId).allowedBundleIds(),
       }) : null;
       if (target !== "focused") await pointerAside(wid);
-      const result = await execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
-        context: { op: button === "right" ? "right_click" : "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
+      const result = await asInput(() => execute({ ax: () => native.call("axClick", params), raw, focusedPointer: target === "focused", log,
+        context: { op: button === "right" ? "right_click" : "left_click", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) }));
       const framePt = target === "focused" ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
       rememberPoint(state, `${bundleId}:${wid}`, framePt, result);
       pointerLanded(sessionId, bundleId, wid, shot, framePt, result, { click: true, hid: target !== "focused" });
@@ -523,6 +562,9 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       }
       const gate = actionGate(await native.call("probe"), "type");
       if (gate) return { outcome: "unsupported", reasonCode: gate, path: "unavailable", blocked: true };
+      const typePoint = params.focused ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
+      const saveRefused = await appSaveGate({ bundleId, windowId: wid, shot, framePt: typePoint, action: { kind: "type", text } });
+      if (saveRefused) return saveRefused;
       const raw = (axResult) => native.call("rawType", { ...params, axReason: axResult?.reasonCode, grantedBundleIds: grantsFor(sessionId).allowedBundleIds() });
       const ax = async () => {
         const result = await native.call("axType", params);
@@ -530,8 +572,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         return { ...result, reasonCode: "no_text_target", secureTextField: true };
       };
       if (!params.focused) await pointerAside(wid);
-      const result = await execute({ ax, raw, log,
-        context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) });
+      const result = await asInput(() => execute({ ax, raw, log,
+        context: { op: "type", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}) }));
       const framePt = params.focused ? null : elementIndex !== undefined ? elementCenter(shot.elements[elementIndex]) : coordinate;
       rememberPoint(state, `${bundleId}:${result.windowId ?? wid}`, framePt, result);
       pointerLanded(sessionId, bundleId, wid, shot, framePt, result, { hid: !params.focused });
@@ -549,6 +591,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const wid = checkId(windowId, "windowId") ?? state.last.get(bundleId);
       const gate = actionGate(await native.call("probe"), "left_click");
       if (gate) return { outcome: "unsupported", reasonCode: gate, focused: false, blocked: true };
+      const saveRefused = await appSaveGate({ bundleId, windowId: wid, action: { kind: "focus" } });
+      if (saveRefused) return { ...saveRefused, focused: false };
       const result = await axHelper.call("focus", { bundleId, ...(wid !== undefined ? { windowId: wid } : {}) });
       if (result?.outcome === "ok" && Number.isInteger(result.window_id)) state.last.set(bundleId, result.window_id);
       return result;
@@ -583,7 +627,15 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const gate = actionGate(await native.call("probe"), "menu");
       if (gate) return { outcome: "unsupported", reasonCode: gate, blocked: true };
       if (close) return { outcome: "ok", ...(await axHelper.call("menuClose", { bundleId })) };
-      return axHelper.call("menu", { bundleId, path: steps });
+      // Official Ut {kind: "menu"}: the window the command acts on — the one this session works in, then the app's main.
+      let menuWindow = windows.get(sessionId)?.last.get(bundleId);
+      if (menuWindow === undefined && saveGuard.available) {
+        const listed = (await native.call("listWindows", { bundleId }).catch(() => null))?.windows ?? [];
+        menuWindow = (listed.find((w) => w && w.is_auxiliary !== true) ?? listed[0])?.window_id;
+      }
+      const saveRefused = await appSaveGate({ bundleId, windowId: menuWindow, action: { kind: "menu", window: "locked" } });
+      if (saveRefused) return saveRefused;
+      return asInput(() => axHelper.call("menu", { bundleId, path: steps }));
     },
     /**
      * app_zoom: region [x0, y0, x1, y1] of the last app_screenshot of a window (frame pixels), cropped from that
@@ -677,8 +729,10 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         return refuse(gate, "state_conflict", "A password field has secure input active; keyboard actions are blocked. Ask the user to dismiss it, or try again shortly.", { aimed });
       }
       if (gate) return refuse(gate, "feature_unavailable", null, { aimed });
+      const saveRefused = await appSaveGate({ bundleId, windowId: wid, shot, framePt: params.focused ? null : framePt, action: { kind: "key", combo: normalized } });
+      if (saveRefused) return { ...saveRefused, combo: normalized, aimed };
       if (!params.focused) await pointerAside(wid);
-      const result = await execute({
+      const result = await asInput(() => execute({
         ax: () => native.call("axKey", params),
         // A raw refusal before the native side looked at the target still names the element the AX rung saw.
         raw: async (axResult) => {
@@ -687,7 +741,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
           return { ...(sent?.role === undefined ? seen : {}), ...(axResult?.axWriteIgnored ? { axWriteIgnored: true } : {}), ...sent };
         },
         log, context: { op: "key", bundleId, windowId: wid }, ...(wait ? { wait } : {}), ...(decide ? { decide } : {}),
-      });
+      }));
       rememberPoint(state, `${bundleId}:${result.windowId ?? wid}`, framePt, result);
       pointerLanded(sessionId, bundleId, wid, shot, framePt, result, { hid: !params.focused });
       return { ...result, combo: normalized, aimed, ...(result.windowId === undefined && wid !== undefined ? { windowId: wid } : {}) };
@@ -834,6 +888,92 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
     },
     // ── Full control (official §1.4): request / release, and the display-scope common layer ────────────────────────
     /**
+     * hideBeforeAction (official prepareForAction(allowedApps, selectedDisplayId), V() / ui() / Gi() / ti()): the apps
+     * outside this session's allowlist with a window on the selected display are hidden (this app and the system's UI
+     * never). What was hidden is remembered for the turn's end (restoreHiddenApps) and for the next screenshot's note.
+     * Off with the hideBeforeAction sub-gate, or when the native module can't do it. Returns the bundle ids hidden now.
+     */
+    async prepareForAction(sessionId) {
+      if (gates.hideBeforeAction === false || !hideAvailable) return [];
+      let answer;
+      try {
+        answer = await native.call("prepareDisplay", { allowedBundleIds: grantsFor(sessionId).allowedBundleIds(), hostBundleIds: selfBundleIds,
+          ...(Number.isInteger(service.selectedDisplay(sessionId)) ? { displayId: service.selectedDisplay(sessionId) } : {}) });
+      } catch (error) {
+        if (error?.code === "unknown_method" || error?.code === "native_unavailable" || typeof error?.code !== "string") hideAvailable = false;
+        else log.warn?.("[computer-use] prepareForAction failed, continuing to action", error?.message ?? error);
+        return [];
+      }
+      const hidden = (Array.isArray(answer?.hidden) ? answer.hidden : []).filter((app) => validBundleId(app?.bundleId));
+      if (hidden.length) {
+        const record = hiddenApps.get(sessionId) ?? { turn: new Map(), pending: new Map() };
+        for (const app of hidden) {
+          const name = typeof app.name === "string" ? app.name : null;
+          record.turn.set(app.bundleId, name);
+          record.pending.set(app.bundleId, name);
+        }
+        hiddenApps.set(sessionId, record);
+      }
+      return hidden.map((app) => app.bundleId);
+    },
+    /**
+     * The screenshot's note on hidden apps (official oi() over ai()): the apps hidden since the last screenshot, said
+     * once (the pending list is drained). null when none were.
+     */
+    hiddenNote(sessionId) {
+      const record = hiddenApps.get(sessionId);
+      if (!record?.pending.size) return null;
+      const entries = [...record.pending];
+      record.pending.clear();
+      const named = [], unnamed = [];
+      for (const [bundleId, name] of entries) {
+        const clean = cleanName(name);
+        if (clean) named.push(clean); else unnamed.push(cleanName(bundleId.split(".").pop()) ?? "(name withheld)");
+      }
+      const notes = [];
+      if (named.length) {
+        const one = named.length === 1;
+        notes.push(`${named.map((n) => `"${n}"`).join(", ")} ${one ? "was" : "were"} open and got hidden before this screenshot (not in the session allowlist). If a previous action was meant to open ${one ? "it" : "one of them"}, that's why you don't see it — call request_access to add ${one ? "it" : "them"}.`);
+      }
+      if (unnamed.length) {
+        const one = unnamed.length === 1;
+        notes.push(`${unnamed.map((n) => `"${n}"`).join(", ")} ${one ? "was" : "were"} ${named.length ? "also " : ""}hidden. ${one ? "This process owns" : "These processes own"} the visible ${one ? "window" : "windows"} but ${one ? "isn't" : "aren't"} in the installed-apps list — likely a worker process spawned by a launcher you already granted. Pass the exact ${one ? "basename" : "basenames"} above to request_access.`);
+      }
+      return notes.join(" ");
+    },
+    /**
+     * The turn ended or the session was stopped (official onResult / releaseTurnScopedState / leavingRunning): the apps
+     * hidden during it come back when autoUnhide is on (Settings › "Unhide apps when Claude finishes", official
+     * chicagoAutoUnhide), and the record is cleared either way. Returns the bundle ids asked to come back.
+     */
+    async restoreHiddenApps(sessionId, { autoUnhide = true } = {}) {
+      const record = hiddenApps.get(sessionId);
+      hiddenApps.delete(sessionId);
+      if (!record?.turn.size || autoUnhide === false) return [];
+      const bundleIds = [...record.turn.keys()];
+      try { await native.call("unhideApps", { bundleIds }); } catch (error) { log.warn?.("[computer-use] auto-unhide at turn end failed", error?.message ?? error); }
+      return bundleIds;
+    },
+    /** Every session with apps hidden this turn (a dropped connection restores them all). */
+    sessionsWithHiddenApps: () => [...hiddenApps.keys()],
+    /**
+     * The access card's willHide (official previewHideSet over the granted + requested apps): what the next full-screen
+     * action would hide, nothing hidden. [] when the sub-gate is off or the native module can't tell.
+     */
+    async previewHideSet(sessionId, bundleIds = []) {
+      if (gates.hideBeforeAction === false || !hideAvailable) return [];
+      try {
+        const exempt = [...new Set([...grantsFor(sessionId).allowedBundleIds(), ...bundleIds.filter(validBundleId), ...selfBundleIds])];
+        const answer = await native.call("previewHideSet", { exemptBundleIds: exempt,
+          ...(Number.isInteger(service.selectedDisplay(sessionId)) ? { displayId: service.selectedDisplay(sessionId) } : {}) });
+        return (Array.isArray(answer?.apps) ? answer.apps : []).filter((app) => validBundleId(app?.bundleId))
+          .map((app) => ({ bundleId: app.bundleId, displayName: cleanName(app.name) ?? app.bundleId }));
+      } catch (error) {
+        log.warn?.(`[computer-use] previewHideSet failed: ${String(error?.message ?? error)}`);
+        return [];
+      }
+    },
+    /**
      * request_full_control: record the session's approval for full-screen control (official Ln()). It does not block
      * on a card here — main.cjs shows the takeover card and calls this only on consent (or when the preference is
      * full_control). The lock itself is taken when the session next uses a display-scope tool (acquireDisplayLock).
@@ -882,6 +1022,12 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const bundleId = typeof front?.bundleId === "string" ? front.bundleId : null;
       // Official V(): the clipboard guard runs before the tier is judged (a click-tier app in front: put aside and emptied).
       await clipboardGuard(sessionId, grantedTier(sessionId, bundleId) === "click");
+      // Official at(): "mouse_position" (a move with no button held) passes whatever is in front — an app that isn't
+      // granted, one granted at any tier, the desktop shell, this app, or nothing at all. It presses nothing.
+      if (op === "mouse_position") return null;
+      // Official V() `if (!o) return st(null)`: no app in front at all lets the pointer on to the hit test (U()), which
+      // judges the window under the point. Keyboard input would have nowhere approved to go, so it is still refused.
+      if (!bundleId && !Number.isInteger(front?.pid) && op !== "type" && op !== "key") return null;
       if (!bundleId) {
         return { outcome: "unsupported", reasonCode: "unattributed_window", errorKind: "state_conflict",
           message: "The app in front has no bundle identifier, so its abilities can't be checked. Bring a known app to the front." };
@@ -913,15 +1059,26 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
      * app's own window → hit_test_self_intercept; nothing there or the desktop → Finder's grant; not granted →
      * app_not_granted; a tier that doesn't allow op → tier_insufficient. null when the action may go ahead.
      */
-    async hitTest(sessionId, point, op) {
+    async hitTest(sessionId, point, op, save) {
       let ignoreWindowIds = [];
       try { ignoreWindowIds = (overlayWindowIds() ?? []).filter((id) => Number.isInteger(id) && id > 0); } catch {}
       const found = (await native.call("pointOwner", { point, ignoreWindowIds }))?.owner ?? null;
       const grants = grantsFor(sessionId);
+      // Official Vt() in U(): the window under the point against the save-panel guard (a save sheet, a protected
+      // document, a rename popover), before the grant checks; a click that may confirm a save checks the sheet's folder
+      // last (h() = Et()).
+      let confirm = async () => null;
+      const menuBar = !!found && MENU_BAR_LAYERS.has(found.layer);
+      // (A window with no bundle id is refused below first, as official U() does before Vt().)
+      if (save && saveGuard.available && !(found && !menuBar && typeof found.bundleId !== "string")) {
+        const hit = await saveGuard.pointer({ bundleId: found?.bundleId ?? DESKTOP_SHELL, point, menuBar, ...save });
+        if (hit.refusal) return hit.refusal;
+        confirm = hit.confirm;
+      }
       let target;
       if (found && MENU_BAR_LAYERS.has(found.layer)) {
         const front = await native.call("frontmostApp");
-        if (typeof front?.bundleId === "string" && grants.has(front.bundleId)) return null;
+        if (typeof front?.bundleId === "string" && grants.has(front.bundleId)) return confirm();
         target = { bundleId: DESKTOP_SHELL, name: "Finder" };
       } else if (found && typeof found.bundleId !== "string") {
         const owner = typeof found.ownerName === "string" && found.ownerName ? found.ownerName : "an unknown process";
@@ -951,7 +1108,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
             ? `That point is on "${target.name}", granted at tier "click": right / middle clicks and clicks with modifier keys need tier "full" (a context menu can paste). A plain left click is allowed there.`
             : `That point is on "${target.name}", granted at tier "${tier}", which doesn't allow this.${tier === "read" ? " Use the browser tools for web pages." : ""}` };
       }
-      return null;
+      return confirm();
     },
     /** The displays (official switch_display / §1.4.6): native CGGetActiveDisplayList, main display first. */
     async listDisplays() { return native.call("listDisplays"); },
@@ -983,9 +1140,11 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
      * coordinate reference of the screen-wide pointer tools: pixels of its image at scale 1 (coordFrame), whatever the
      * scale it was returned at. Takes over (approval + lock) like any display action.
      */
-    async displayScreenshot(sessionId, { displayId, scale, keepReference = false } = {}) {
+    async displayScreenshot(sessionId, { displayId, scale, keepReference = false, hide = true } = {}) {
       const lock = service.acquireDisplayLock(sessionId);
       if (lock) return lock;
+      // Official ui(): the apps outside the allowlist are hidden before the capture (not inside a batch / teach step).
+      if (hide) await service.prepareForAction(sessionId);
       const state = stateFor(sessionId);
       const chosen = checkId(displayId, "displayId") ?? state.pinnedDisplay ?? state.selectedDisplay;
       const shot = await service.captureScreen(sessionId, { displayId: chosen, scale: checkScale(scale) });
@@ -994,10 +1153,12 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const previousDisplayId = state.lastShotDisplay ?? null;
       state.lastShotDisplay = shot.displayId;
       const reference = { ...shot, dataUrl: undefined, coordFrame };
+      const hiddenNote = service.hiddenNote(sessionId);
+      const notes = hiddenNote ? { hiddenNote } : {};
       // computer_batch (official Zi()): a screenshot inside the batch becomes the reference only once the batch ends.
-      if (keepReference) return { ...shot, coordFrame, previousDisplayId, reference };
+      if (keepReference) return { ...shot, coordFrame, previousDisplayId, reference, ...notes };
       service.setDisplayReference(sessionId, reference);
-      return { ...shot, coordFrame, previousDisplayId };
+      return { ...shot, coordFrame, previousDisplayId, ...notes };
     },
     /**
      * A teach step's anchor (official ei(): R() on the selected display and the last screenshot): [x, y] in the last
@@ -1089,23 +1250,42 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
      * right_click, middle_click, double_click, triple_click, left_mouse_down, left_mouse_up, left_click_drag, scroll.
      * Coordinates are the last screenshot's image pixels (official R(); without a screenshot, x / scaleFactor on the
      * selected display). Gates, in the official order: approval + display lock; the frontmost app's grant and tier
-     * (V(), by the gate kind: a plain move any tier, a left click / scroll / drag start / press "mouse", right / middle
-     * / modifier clicks, a drag's end and anything while the button is held "mouse_full"); the hit test on the window
-     * under the point (U()); natively at posting time secure input, the user's own input (backed off 3 × 200 ms) and the
-     * lock. Returns the native outcome with `kind`, or a refusal {outcome, reasonCode, errorKind, message}.
+     * (V(), by the gate kind — official yi() / mi() / _i() / vi() / Ri() / zi():
+     *     mouse_move, nothing held      frontmost "mouse_position" (passes whatever is in front), no hit test
+     *     mouse_move, button held       frontmost "mouse",  hit test "mouse_full"
+     *     plain left / double / triple  frontmost "mouse",  hit test "mouse"
+     *     right / middle / modifiers    frontmost "mouse_full", hit test "mouse_full"
+     *     scroll                        frontmost "mouse",  hit test "mouse" ("mouse_full" while held)
+     *     left_click_drag               frontmost "mouse",  hit test start "mouse", end "mouse_full"
+     *     left_mouse_down               frontmost "mouse",  hit test at the cursor "mouse"
+     *     left_mouse_up                 frontmost "mouse",  hit test at the cursor "mouse" ("mouse_full" after a move);
+     *                                   the button is let go even when refused);
+     * the hit test on the window under the point (U()); natively at posting time secure input, the user's own input
+     * (backed off 3 × 200 ms) and the lock. Each press / release / click / drag / scroll runs with the app's own windows
+     * letting it through (throughOwnWindows, official executor NG). Returns the native outcome with `kind`, or a refusal
+     * {outcome, reasonCode, errorKind, message}.
      */
-    async displayPointer(sessionId, { kind, coordinate, start_coordinate: startCoordinate, text, scroll_direction: direction, scroll_amount: amount, animate = true, signal } = {}) {
+    async displayPointer(sessionId, { kind, coordinate, start_coordinate: startCoordinate, text, scroll_direction: direction, scroll_amount: amount, animate = true, signal, hide = true } = {}) {
       if (!POINTER_KINDS.has(kind)) throw coded("bad_args", `Unknown pointer action ${kind}.`);
       const lock = service.acquireDisplayLock(sessionId);
       if (lock) return lock;
+      // Official V(): hideBeforeAction first (not inside a batch / teach step: done once before it).
+      if (hide) await service.prepareForAction(sessionId);
       const state = stateFor(sessionId);
       const mouse = (state.mouse ??= { held: false, moved: false });
       const displays = (await native.call("listDisplays"))?.displays ?? [];
       const at = (c, name = "coordinate") => displayPointFor(state, c, displays, name);
       // Every posting re-checks the call's signal and the display lock first (a Stop during a back-off sends nothing).
-      const post = (method, params = {}) => deliver(() => native.call(method, params), { ...(wait ? { wait } : {}), stopped: displayStopped(sessionId, signal) });
-      const gates = async (op, point) => (await service.frontmostTierGate(sessionId, op)) ?? (point ? await service.hitTest(sessionId, point, op) : null);
-      const releaseHeld = async () => { if (mouse.held) { await native.call("hidMouseUp"); mouse.held = false; mouse.moved = false; } };
+      const post = (method, params = {}) => asInput(() => deliver(() => native.call(method, params), { ...(wait ? { wait } : {}), stopped: displayStopped(sessionId, signal) }));
+      // Gate kinds (official at()): "mouse_position" ↔ mouse_position, "left_click" ↔ mouse, "modifier_click" ↔ mouse_full.
+      // save: the save-panel guard's view of the action (official U()'s last argument); chord: modifiers held (St()).
+      // A save-panel settle / parents refusal runs the gates again (official zt / Bt).
+      const what = kind === "left_mouse_up" ? "Mouse release" : "Click";
+      const frontGate = async (op, chord) => (await service.frontmostTierGate(sessionId, op))
+        ?? (chord !== undefined && saveGuard.available ? await saveGuard.keyboard(op === "modifier_click" ? "mouse_full" : "mouse", { chord, signal, what }) : null);
+      const gates = (op, point, save, chord) => guarded(async () => (await frontGate(op, chord)) ?? (point ? await service.hitTest(sessionId, point, op, save) : null), { signal, what });
+      const hitGate = (point, op, save) => guarded(() => service.hitTest(sessionId, point, op, save), { signal, what });
+      const releaseHeld = async () => { if (mouse.held) { await throughOwnWindows([], () => native.call("hidMouseUp")); mouse.held = false; mouse.moved = false; } };
       // Official: display-scope moves the real pointer and never uses the phantom cursor; the web fallback hides.
       const hidePointer = async () => { try { await pointer?.beforeClick?.({ scope: "display" }); } catch {} };
       if (CLICK_BUTTONS[kind]) {
@@ -1121,19 +1301,23 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         const [button, count] = CLICK_BUTTONS[kind];
         const op = button === "left" && !mods.length ? "left_click" : "modifier_click";
         const front = mods.length ? (await native.call("frontmostApp"))?.bundleId ?? null : null;
-        const refused = await gates(op, to);
+        const refused = await gates(op, to, { kind: "click", button, count, ...(mods.length ? { chord: text } : {}) }, mods.length ? text : undefined);
         if (refused) return refused;
         if (mods.length && ((await native.call("frontmostApp"))?.bundleId ?? null) !== front) {
           return refusal("delivery_focus_check_failed", "delivery_focus_check_failed", "The app in front changed while the modifier click was being checked, so nothing was clicked. Take a fresh screenshot and retry.");
         }
         await hidePointer();
-        return { ...(await post("hidClick", { point: to, button, count, modifiers: mods, animate: false })), kind, point: to };
+        return { ...(await throughOwnWindows([to], () => post("hidClick", { point: to, button, count, modifiers: mods, animate: false }))), kind, point: to };
       }
       switch (kind) {
         case "mouse_move": {
           const to = at(coordinate);
-          // Official yi(): a plain move passes at any tier (mouse_position); with the button held it is a drag.
-          const refused = mouse.held ? await gates("modifier_click", to) : await gates("see", null);
+          // Official yi(): with nothing held the frontmost gate is "mouse_position" — it passes whatever app is in front
+          // (not granted, any tier, the desktop shell, this app) — and there is no hit test: a move presses nothing.
+          // With the button held it is part of a drag: the frontmost app at "mouse", the point under it at "mouse_full".
+          const refused = mouse.held
+            ? (await service.frontmostTierGate(sessionId, "left_click")) ?? (await hitGate(to, "modifier_click", { kind: "drag" }))
+            : await service.frontmostTierGate(sessionId, "mouse_position");
           if (refused) return refused;
           const result = await post("hidMove", { point: to, animate });
           if (result.outcome === "ok" && mouse.held) mouse.moved = true;
@@ -1142,22 +1326,26 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         case "left_mouse_down": {
           if (mouse.held) return refusal("state_conflict", "state_conflict", "The left mouse button is already held down. Call left_mouse_up first.");
           const point = await native.call("cursorPosition");
-          const refused = await gates("left_click", point);
+          // Official Ri(): the frontmost app, then the held-press check (kt), then the point as a drag start.
+          const refused = (await service.frontmostTierGate(sessionId, "left_click")) ?? (await saveGuard.heldPress?.() ?? null)
+            ?? (await hitGate(point, "left_click", { kind: "drag" }));
           if (refused) return refused;
           await hidePointer();
-          const result = await post("hidMouseDown");
+          const result = await throughOwnWindows([point], () => post("hidMouseDown"));
           if (result.outcome === "ok") { mouse.held = true; mouse.moved = false; }
           return { ...result, kind, point };
         }
         case "left_mouse_up": {
           const point = await native.call("cursorPosition");
-          // Official zi(): after a move it is checked as the end of a drag, else as a click; never held → nothing to do.
-          if (mouse.held) {
-            const refused = await gates(mouse.moved ? "modifier_click" : "left_click", point);
-            if (refused) return refused;
-          }
-          const result = await native.call("hidMouseUp");
-          mouse.held = false; mouse.moved = false;
+          // Official zi(): the frontmost app at "mouse", then the point under the cursor — after a move while held as the
+          // end of a drag ("mouse_full"), else as a click. The button is let go even when a gate refuses (it is never
+          // left down), and the refusal is the answer. Nothing held: the same checks, and the release changes nothing.
+          const up = async () => { const r = await asInput(() => throughOwnWindows([point], () => native.call("hidMouseUp"))); mouse.held = false; mouse.moved = false; return r; };
+          const moved = mouse.moved;
+          const refused = await guarded(async () => (await service.frontmostTierGate(sessionId, "left_click"))
+            ?? (await service.hitTest(sessionId, point, moved ? "modifier_click" : "left_click", moved ? { kind: "drag" } : { kind: "click", button: "left" })), { signal, what });
+          if (refused) { await up(); return refused; }
+          const result = await up();
           return { ...result, outcome: "ok", kind, point };
         }
         case "left_click_drag": {
@@ -1165,21 +1353,25 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
           const from = startCoordinate === undefined || startCoordinate === null ? await native.call("cursorPosition") : at(startCoordinate, "start_coordinate");
           await releaseHeld();
           // Official vi(): the start is checked as a press, the end as mouse_full (dropping onto something).
-          const refused = (await gates("left_click", from)) ?? (await service.hitTest(sessionId, to, "modifier_click"));
+          const refused = (await gates("left_click", from, { kind: "drag" })) ?? (await hitGate(to, "modifier_click", { kind: "drag" }));
           if (refused) return refused;
           await hidePointer();
-          return { ...(await post("hidDrag", { ...(startCoordinate === undefined || startCoordinate === null ? {} : { from }), to })), kind, from, to };
+          return { ...(await throughOwnWindows([from, to], () => post("hidDrag", { ...(startCoordinate === undefined || startCoordinate === null ? {} : { from }), to }))), kind, from, to };
         }
         case "scroll": {
           const to = at(coordinate);
           if (!SCROLL_DIRECTIONS.includes(direction)) throw coded("bad_args", "scroll_direction must be up, down, left or right.");
           if (!Number.isInteger(amount) || amount < 0 || amount > 100) throw coded("bad_args", "scroll_amount must be an integer from 0 to 100.");
-          // Official _i(): the "mouse" gate; with the button held a scroll is part of a drag (mouse_full).
-          const refused = await gates(mouse.held ? "modifier_click" : "left_click", to);
+          // Official _i(): the frontmost app at "mouse"; the point under it at "mouse", or with the button held as part of
+          // a drag at "mouse_full" (and the drag then counts as moved, so the release is checked as a drop).
+          const refused = (await service.frontmostTierGate(sessionId, "left_click"))
+            ?? (await hitGate(to, mouse.held ? "modifier_click" : "left_click", mouse.held ? { kind: "drag" } : undefined));
           if (refused) return refused;
           const dx = direction === "left" ? -amount : direction === "right" ? amount : 0;
           const dy = direction === "up" ? -amount : direction === "down" ? amount : 0;
-          return { ...(await post("hidScroll", { point: to, dx, dy, animate })), kind, point: to };
+          const result = await throughOwnWindows([to], () => post("hidScroll", { point: to, dx, dy, animate }));
+          if (result.outcome === "ok" && mouse.held) mouse.moved = true;
+          return { ...result, kind, point: to };
         }
         default: throw coded("bad_args", `Unknown pointer action ${kind}.`);
       }
@@ -1188,6 +1380,14 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
      * The display lock went away (turn end, release_full_control, Esc): a button left down by left_mouse_down is let go,
      * and a hold_key / type still running is stopped (its keys are released natively).
      */
+    /**
+     * Official executor.beginInputBurst (Gi(), computer_batch / teach steps): the pointer actions that follow, until the
+     * returned end is called, keep the app's windows letting the mouse through between them (click-through.cjs).
+     * Gates, back-off and the cursor are not affected. A no-op end when there is no click-through.
+     */
+    beginInputBurst() {
+      try { return clickThrough?.beginInputBurst?.() ?? (() => {}); } catch (error) { log.warn?.("[computer-use] beginInputBurst failed", error); return () => {}; }
+    },
     async releaseHeldMouse() {
       let released = false;
       for (const state of windows.values()) {
@@ -1207,7 +1407,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
      * `signal` (the tool call's) stops a running repeat / hold / type; a hold always lets its keys go.
      * Returns {outcome: "ok", text} with the official success text, or a refusal {outcome, reasonCode, errorKind, message}.
      */
-    async displayKeyboard(sessionId, { kind, text, repeat, duration, signal } = {}) {
+    async displayKeyboard(sessionId, { kind, text, repeat, duration, signal, hide = true } = {}) {
       if (!KEYBOARD_KINDS.has(kind)) throw coded("bad_args", `Unknown keyboard action ${kind}.`);
       if (typeof text !== "string" || (kind !== "type" && !text.trim())) {
         throw coded("bad_args", kind === "type" ? "text must be the text to type." : "text is required: the key or chord, e.g. \"return\" or \"cmd+shift+a\".");
@@ -1230,15 +1430,22 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       }
       const lock = service.acquireDisplayLock(sessionId);
       if (lock) return lock;
+      // Official V(): hideBeforeAction before the frontmost app is read (not inside a batch / teach step).
+      if (hide) await service.prepareForAction(sessionId);
       const front = await native.call("frontmostApp");
       const gated = await service.frontmostTierGate(sessionId, kind === "type" ? "type" : "key", { front });
       if (gated) return gated;
+      // Official St() in V(): the frontmost window against the save-panel guard (Bt retries a settle / parents refusal).
+      const saveCheck = () => (saveGuard.available ? saveGuard.keyboard("keyboard", kind === "type"
+        ? { typedText: text, signal, what: "Typing" } : { chord: text, held: kind === "hold_key", signal, what: kind === "hold_key" ? "Key hold" : "Key press" }) : null);
+      const saveRefused = await saveCheck();
+      if (saveRefused) return saveRefused;
       // Official hi(): text with a new line is pasted when clipboardWrite is granted (sub-gate clipboardPasteMultiline,
       // on by default). No length threshold. Not while secure input is on (a password field has the keyboard): the
       // text never goes through the clipboard then. A paste that never reached the app falls back to typing.
       let pasteFallback = null;
       if (kind === "type" && service.pastesText(sessionId, text)) {
-        const pasted = await pasteText(sessionId, text, front, signal);
+        const pasted = await asInput(() => pasteText(sessionId, text, front, signal));
         if (pasted.done) return { ...pasted.result, kind };
         pasteFallback = pasted.reasonCode;
         log.info?.(`[computer-use] type: the clipboard paste didn't reach the app (${pasted.reasonCode}); typing grapheme by grapheme`);
@@ -1268,14 +1475,20 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
       const loneEscape = kind !== "type" && params.modifiers.length === 0 && params.keys.length === 1 && params.keys[0] === "escape";
       const attempt = (call) => (loneEscape ? withOwnEscape(call, kind === "hold_key" ? { releaseAfterMs: 50 } : {}) : call());
       // Checked again once the Escape guard is set up (it may wait for an earlier press's guard to settle).
-      const send = (p) => deliver(() => attempt(() => (stopped() ? { outcome: "unsupported", reasonCode: "aborted", delivered: false } : native.call(method, p))),
-        { ...(wait ? { wait } : {}), stopped });
+      const send = (p) => asInput(() => deliver(() => attempt(() => (stopped() ? { outcome: "unsupported", reasonCode: "aborted", delivered: false } : native.call(method, p))),
+        { ...(wait ? { wait } : {}), stopped }));
+      // Official gi(): with the save-panel guard, a repeated key that isn't plain navigation is checked before every press.
+      const regate = kind === "key" && times > 1 && saveGuard.available && !navigationOnly(text);
       let result;
       try {
-        if (loneEscape && kind === "key" && times > 1) {
+        if ((loneEscape || regate) && kind === "key" && times > 1) {
           let pressed = 0;
           for (let i = 0; i < times; i++) {
             if (i > 0) await pause(8);
+            if (i > 0 && regate) {
+              const again = await saveCheck();
+              if (again) { result = { ...again, pressed, times, delivered: pressed > 0 }; break; }
+            }
             result = await send({ ...params, repeat: 1 });
             if (result?.outcome !== "ok") { result = { ...result, pressed: pressed + (result?.pressed ?? 0), times, delivered: pressed > 0 || result?.delivered === true }; break; }
             pressed += 1;
@@ -1500,6 +1713,12 @@ const POINTER_KINDS = new Set(["mouse_move", "left_click", "right_click", "middl
 const CLICK_BUTTONS = Object.freeze({ left_click: ["left", 1], double_click: ["left", 2], triple_click: ["left", 3], right_click: ["right", 1], middle_click: ["middle", 1] });
 const SCROLL_DIRECTIONS = ["up", "down", "left", "right"];
 const refusal = (reasonCode, errorKind, message, extra = {}) => ({ outcome: "unsupported", reasonCode, errorKind, message, ...extra });
+/** An app name fit for a note to the model (official F()): control and format characters out, at most 100 characters. */
+function cleanName(name) {
+  if (typeof name !== "string") return null;
+  const clean = name.replace(/[\p{Cc}\p{Cf}\u2028\u2029]/gu, "").trim().slice(0, 100);
+  return clean || null;
+}
 
 // The screen-wide keyboard (displayKeyboard).
 const KEYBOARD_KINDS = new Set(["key", "hold_key", "type"]);

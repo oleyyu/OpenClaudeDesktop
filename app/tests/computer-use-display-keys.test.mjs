@@ -101,7 +101,7 @@ test('key: the frontmost gate first, then the chord to native with the approved 
   const one = await service.displayKeyboard('a', { kind: 'key', text: 'Command+S' });
   assert.deepEqual([one.outcome, one.text], ['ok', 'Key pressed.']);
   assert.deepEqual(posted(native, 'hidKey').at(-1), { modifiers: ['cmd'], keys: ['s'], repeat: 1, frontPid: 42, opId: 1 });
-  const order = native.calls.slice(-2).map(([m]) => m);
+  const order = native.calls.map(([m]) => m).filter((m) => m !== 'savePanelProbe' && m !== 'prepareDisplay').slice(-2);
   assert.deepEqual(order, ['frontmostApp', 'hidKey']);
   assert.equal((await service.displayKeyboard('a', { kind: 'key', text: 'down', repeat: 3 })).text, 'Key pressed 3 times.');
   assert.equal(posted(native, 'hidKey').at(-1).repeat, 3);
@@ -351,6 +351,34 @@ test('computer_batch (official Zi()): one takeover, the actions in order with th
   await call('left_click', { coordinate: [686, 446] });
   assert.deepEqual(posted(native, 'hidClick').at(-1).point, { x: 735, y: 478 });
   assert.equal(service.selectedDisplay('a'), 1);
+});
+
+test('computer_batch (official Gi() / beginInputBurst): the pointer actions in a row share one input burst; a non-pointer action closes it; the end closes the last', async () => {
+  const { call, native, service } = tools();
+  const events = [];
+  const count = (method) => posted(native, method).length;
+  service.beginInputBurst = () => { events.push(['begin', count('hidMove'), count('hidClick')]); return () => events.push(['end', count('hidScroll'), count('hidKey')]); };
+  const result = await call('computer_batch', { actions: [{ action: 'mouse_move', coordinate: [10, 10] }, { action: 'left_click', coordinate: [20, 20] },
+    { action: 'scroll', coordinate: [20, 20], scroll_direction: 'down', scroll_amount: 1 }, { action: 'key', text: 'return' },
+    { action: 'left_click', coordinate: [30, 30] }, { action: 'wait', duration: 0 }, { action: 'double_click', coordinate: [30, 30] }] });
+  assert.equal(result.isError, undefined);
+  assert.deepEqual(events, [
+    ['begin', 0, 0],   // before the move: one burst for move, click, scroll
+    ['end', 1, 0],     // closed before the key
+    ['begin', 2, 1],   // the click after the key opens a new one (a click moves first: hidMove 2)
+    ['end', 1, 1],     // the wait closes it
+    ['begin', 3, 2],   // the double click opens one…
+    ['end', 1, 1],     // …closed when the batch ends
+  ]);
+  // A batch with no pointer action opens none.
+  events.length = 0;
+  await call('computer_batch', { actions: [{ action: 'key', text: 'return' }, { action: 'wait', duration: 0 }] });
+  assert.deepEqual(events, []);
+  // A batch that stops on an error still closes its burst.
+  events.length = 0;
+  const failed = await call('computer_batch', { actions: [{ action: 'left_click', coordinate: [10, 10] }, { action: 'key', text: 'cmd+q' }] });
+  assert.equal(failed.isError, true);
+  assert.deepEqual(events.map(([what]) => what), ['begin', 'end']);
 });
 
 test('computer_batch: the first failure stops it, a held button is let go, pictures are omitted, and the stop is one refusal; bad actions are bad_args', async () => {

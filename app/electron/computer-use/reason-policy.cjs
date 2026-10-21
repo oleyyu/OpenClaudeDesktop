@@ -78,6 +78,10 @@ const BLOCK = Object.freeze({
   element_disabled: "local: the pressable element is disabled",
   no_menu_action: "local: right click — neither the element nor its two parents answer AXShowMenu; there is no other way to open its menu",
   menu_not_shown: "local: AXShowMenu was performed but no context menu appeared (ineffective)",
+  // app_menu (native MenuBar.swift). Not an AX rung (a menu command has no raw fallback); listed so the codes read as known.
+  menu_item_disabled: "official: the menu item reads as disabled (AXEnabled false); it was not pressed",
+  menu_press_failed: "official: the menu item was found but could not be pressed — it offers no AXPress / AXPick, or the action returned an AX error (axError); nothing ran",
+  app_is_frontmost: "local app_focus: the app is in front and the user works in it; its focus is not moved",
   // Raw-rung refusals (RawInput.swift / EventFactory.swift). Never AX results, but listed so a raw refusal that is
   // passed back through decide() reads as known, not unclassified.
   scgevent_unavailable: "local: no HID-state CGEventSource could be created; the whole raw path refuses",
@@ -132,6 +136,9 @@ const BLOCK = Object.freeze({
   clipboard_unavailable: "local feature_unavailable: no clipboard to read or write in this process (read_clipboard / write_clipboard)",
   clipboard_write_failed: "local: type's paste could not write the clipboard; nothing was pressed (falls back to typing)",
   clipboard_round_trip_failed: "official \"Clipboard write did not round-trip.\": the text read back differs; nothing was pressed (falls back to typing)",
+  // The save-panel guard (official savePanelProbe; save-panel.cjs): a key, text, click, drag or held press refused because
+  // of what the window shows — a save sheet's target, a document under a protected path, a rename popover, Move To.
+  save_panel_restricted: "official save_panel_restricted: the input could save, rename or move a file to a protected place (or type into a window editing a protected file), or what it would do there can't be checked",
     aborted: "official user interrupt: the call was cancelled (Esc, Stop) during a screen-wide hold / type / repeat / wait / batch; held keys and buttons were released",
 });
 

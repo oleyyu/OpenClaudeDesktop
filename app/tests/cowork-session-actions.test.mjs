@@ -372,22 +372,62 @@ test('host: an empty rewind retries the last turn (Me); Go back puts the vz text
   assert.deepEqual(back.calls.send, []);
 });
 
-test('main.jsx sendMessage resend path: text-only input, no shell / keyword / steer, composer not emptied, {started, pending}', () => {
+// sendMessage(draft, attachments, mentions, {priority, beside, resend, demonstration}): the body up to the next function.
+function sendMessageBody() {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
-  const start = main.indexOf('  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false } = {}) {');
+  const start = main.indexOf('  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false, demonstration = null } = {}) {');
   assert.ok(start > 0);
-  const body = main.slice(start, main.indexOf('\n  function discardFailedStart(', start));
+  return { main, body: main.slice(start, main.indexOf('\n  async function deliverDemonstration(', start)) };
+}
+
+test('main.jsx sendMessage resend path: text-only input, no shell / keyword / steer, composer not emptied, {started, pending}', () => {
+  const { body } = sendMessageBody();
   for (const needle of [
-    'const shellCommand = mode === "code" && !beside ? (resend ? null : shellModeCommand(draft, boot?.core, shellOptions)) : null;',
-    'if (mode === "code" && !beside && !resend && shellModeActive(draft, boot?.core, shellOptions)) {',
-    'if (running) { if (!resend) await sendWhileRunning(priority); return; }',
-    'const keywordRequested = !beside && !resend && keywordMatches.length > 0 && !keywordIgnored && !shellCommand;',
-    'const turnInput = () => resend ? [{ type: "text", text, text_elements: [] }] : composerInput(text, turnCwd, { issueContext });',
+    'const shellCommand = mode === "code" && !beside && !demonstration ? (resend ? null : shellModeCommand(draft, boot?.core, shellOptions)) : null;',
+    'if (mode === "code" && !beside && !resend && !demonstration && shellModeActive(draft, boot?.core, shellOptions)) {',
+    'if (running && !demonstration) { if (!resend) await sendWhileRunning(priority); return; }',
+    'const keywordRequested = !beside && !resend && !demonstration && keywordMatches.length > 0 && !keywordIgnored && !shellCommand;',
+    'const turnInput = () => demonstration ? demonstration.input : resend ? [{ type: "text", text, text_elements: [] }] : composerInput(text, turnCwd, { issueContext });',
     'input: turnInput(), mentions: mentionList, turnCwd };',
-    'if (resend) return;\n      setDraft((value) => (value === text ? "" : value));',
+    'if (resend || demonstration) return;\n      setDraft((value) => (value === text ? "" : value));',
     'input: pendingEntry?.input ?? turnInput(),',
-    '} else if (!resend) clearComposerDraft(sendSequence, text, entries, origin, id);',
+    '} else if (!resend && !demonstration) clearComposerDraft(sendSequence, text, entries, origin, id);',
     'return { started: turnStarted, pending: !!pendingEntry && !turnStarted };',
   ]) assert.equal(occurrences(body, needle), 1, needle);
   assert.equal(occurrences(body, 'composerInput('), 1, 'composerInput (the composer state) only off the resend path');
+  // The beside (B4) path is unchanged by the demonstration option.
+  for (const needle of [
+    'const restoreStay = () => {\n      if (beside) return;',
+    'if (!beside) { setDraft(""); setAttachments([]); setMentions([]); }',
+    'if (beside && launched) beside.onStart?.(id);',
+  ]) assert.equal(occurrences(body, needle), 1, needle);
+});
+
+// watch-record delivery (official shared-6 jz / Mz): a recorded demonstration is its own turn input. A session running a
+// turn gets it queued; otherwise it starts a turn in this session or, with newSession, a new session titled
+// demonstration.title. The composer is never read or emptied, and a failed start leaves the composer as it is now.
+test('main.jsx sendMessage demonstration path: queued while running, new session titled from the recording, composer untouched', () => {
+  const { main, body } = sendMessageBody();
+  for (const needle of [
+    'const sentIssue = !current && !beside && !demonstration && draftIssue ? draftIssue : null;',
+    'if (!Array.isArray(demonstration.input) || demonstration.input.length === 0) return;',
+    'if (!demonstration.newSession && running) {',
+    'await rpc("thread/queue/add", { threadId: current, input: demonstration.input, clientUserMessageId: crypto.randomUUID() });',
+    'return { started: false, pending: false, queued: true };',
+    '} else if (!(draft.trim() || attachments.length || sentIssue) || attachments.some((entry) => entry.status !== "ready")) return;',
+    'if (misalignedTurn && !running && !demonstration?.newSession) {',
+    'if (sending || !boot?.connected || (!demonstration?.newSession && (loading || session?.archived))) return;',
+    'let id = demonstration?.newSession ? null : current;',
+    'const startedGroup = current || beside || demonstration ? null : newSessionGroup.current;',
+    'const name = demonstration ? demonstration.title : firstMessageName(',
+    '...(demonstration ? { content: demonstration.input } : {})',
+    'const kept = demonstration ? liveComposer.current : { text, attachments: entries, mentions: mentionList };',
+  ]) assert.equal(occurrences(body, needle), 1, needle);
+  // The queue path returns before any composer, pending-bubble or session state is touched.
+  const queued = body.slice(body.indexOf('if (!demonstration.newSession && running) {'), body.indexOf('return { started: false, pending: false, queued: true };'));
+  assert.doesNotMatch(queued, /setDraft|setAttachments|setMentions|setSending|thread\/start|turn\/start/);
+  // Composer-emptying calls in the send are all behind a resend / demonstration / beside guard.
+  assert.equal(occurrences(body, 'clearComposerDraft('), 1);
+  // The delivery hands the held recording over as a demonstration, never as draft text.
+  assert.equal(occurrences(main, 'sendMessage("", [], [], { demonstration: { input: taken.input, title: demonstrationTitle(demonstrationDuration(taken.message)), newSession: target === null } });'), 1);
 });

@@ -14,7 +14,7 @@ import { useCardHotkeys } from "./use-card-hotkeys.js";
 import { approvalIdentity, isPlanReviewRequest, visibleApprovals } from "./approval-draft-model.mjs";
 import { useApprovalCardLanding } from "./generated/approval-landing/card-landing.mjs";
 import { assistantName } from "./persona-store.mjs";
-import { ComputerUseAccessList, ComputerUseAccessTitle, ComputerUseTakeoverTitle, ComputerUseTeachCardBody } from "./computer-use-approval-card.jsx";
+import { ComputerUseAccessList, ComputerUseAccessNote, ComputerUseAccessTitle, ComputerUseTakeoverTitle, ComputerUseTeachCardBody } from "./computer-use-approval-card.jsx";
 import { computerUseAccessRequest, computerUseTakeoverRequest, computerUseTeachRequest } from "./computer-use-model.mjs";
 import "./source-approval-card.css";
 import { t } from "../electron/i18n/index.mjs";
@@ -472,6 +472,8 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
           {model.reason && <div ref={reason} className="sac-reason scroll-fade-y scroll-fade-size-[8px]"
             {...scrollRegionProps(t("Reason"), reasonOverflow)}>{model.reason}</div>}
           {/* request_access: the capabilities and apps asked for (official JEe: under the header, above the actions). */}
+          {/* Official JEe: Background mode's line, or that other windows will be hidden, above the rows. */}
+          {model.access && <ComputerUseAccessNote note={model.access.note ?? null} name={assistantName()} />}
           {model.access && <ComputerUseAccessList rows={model.access.rows} />}
           {/* An MCP elicitation's own message (server text, shown as written). */}
           {model.message && <p className="sac-message">{model.message}</p>}

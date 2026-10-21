@@ -47,6 +47,20 @@ export function ComputerUseTakeoverTitle({ takeover, name }) {
   return <>{t("Take over the screen? {name} was working in the background and now needs full-screen control.", { name })}</>;
 }
 
+/**
+ * The footnote between the reason and the rows (official c96d752d0 JEe): Background mode's line, or that the other
+ * windows will be hidden ("then restored" when Settings' Unhide apps when Claude finishes is on).
+ * @param {{note: {kind: "background"} | {kind: "hide", autoUnhide: boolean} | null, name: string}} props
+ */
+export function ComputerUseAccessNote({ note, name }) {
+  if (!note) return null;
+  return <p className="text-footnote text-muted-as-secondary" data-cua-note={note.kind}>
+    {note.kind === "background" ? t("{name} will work in these apps in the background while you keep using your Mac.", { name })
+      : note.autoUnhide ? t("Your other windows will be hidden, then restored when {name} is done.", { name })
+        : t("Your other windows will be hidden while {name} works.", { name })}
+  </p>;
+}
+
 /** TT: one requested capability (read-only text; the grant is all or nothing). */
 function CapabilityRow({ icon, label }) {
   return <div role="listitem" className="cua-row flex items-center gap-sm rounded-[5px] px-md py-md bg-alpha-1" data-cua-capability="">
@@ -114,8 +128,8 @@ function TeachAppRow({ app }) {
 
 /**
  * Ua's body (inside the card's "p-md"): the GraduationCap header "Let Claude guide you step by step?", the reason, what
- * happens (the window hides, a tooltip per step, Exit), the apps, then the buttons (`actions`: Deny ⌘. and Start guide
- * ⌘↵). The "other windows will be hidden" line is left out: this build doesn't hide other apps before acting.
+ * happens (the window hides, a tooltip per step, Exit), the apps, the hiding line when the steps will hide other apps
+ * (official willHide: "Your other windows will be hidden …"), then the buttons (`actions`: Deny ⌘. and Start guide ⌘↵).
  * @param {{teach: {reason: string, apps: object[]}, name: string, actions: React.ReactNode}} props
  */
 export function ComputerUseTeachCardBody({ teach, name, actions }) {
@@ -129,6 +143,10 @@ export function ComputerUseTeachCardBody({ teach, name, actions }) {
     {teach.apps.length > 0 && <div className="ms-7 mb-3 divide-y rounded border bg-surface-1">
       {teach.apps.map((app) => <TeachAppRow key={app.key} app={app} />)}
     </div>}
+    {teach.hide && <p className="ms-7 mb-3 text-body text-secondary" data-cua-note="hide">
+      {teach.hide.autoUnhide ? t("Your other windows will be hidden, then restored when {name} is done.", { name })
+        : t("Your other windows will be hidden while {name} works.", { name })}
+    </p>}
     <div className="ms-7 flex gap-sm">{actions}</div>
   </div>;
 }

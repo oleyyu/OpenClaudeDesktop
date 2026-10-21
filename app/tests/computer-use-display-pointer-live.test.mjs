@@ -90,8 +90,9 @@ test('locked screen: every pointer action is refused before anything is posted; 
     { kind: 'left_click_drag', start_coordinate: at, coordinate: [at[0] + 50, at[1]] }, { kind: 'left_mouse_down' }]) {
     const result = await cu.displayPointer('live', input);
     assert.equal(result.outcome, 'unsupported', input.kind);
-    // The native gates (secure input: the lock screen's password field; the lock), or for a plain move the frontmost
-    // gate first (loginwindow is in front, never granted).
+    // The native gates (secure input: the lock screen's password field; the lock), or the frontmost gate first
+    // (loginwindow is in front, never granted). A plain move passes the frontmost gate (official mouse_position) and is
+    // refused by the native gates.
     assert.ok(['secure_input_active', 'screen_locked', 'app_not_granted'].includes(result.reasonCode), `${input.kind}: ${result.reasonCode}`);
     assert.notEqual(result.delivered, true, `${input.kind}: nothing delivered`);
   }
@@ -191,6 +192,38 @@ test('fixture: hover, context menu and its item, canvas drag, double / triple / 
       try { execFileSync('open', ['-b', front.bundleId]); } catch {}
       await sleep(800);
     }
+  }
+  const after = await n.call('cursorPosition');
+  assert.ok(Math.abs(after.x - cursorBefore.x) < 1 && Math.abs(after.y - cursorBefore.y) < 1, 'the cursor is back');
+});
+
+// Official yi() → V("mouse_position"): a plain move passes whatever app is in front, granted or not; anything that
+// presses is still refused there. Only the fixture's bundle id is granted (the fixture is not even started), so the app
+// in front is never granted. Runs only unlocked and with nobody at the computer (idle ≥ 120 s): it moves the real cursor
+// a few points and puts it back.
+test('mouse_move over an app that isn\'t granted passes (mouse_position); a click there is refused; the cursor goes back', { skip: skip ?? (locked ? 'the screen is locked' : false), timeout: 60000 }, async (t) => {
+  const n = native();
+  const probe = await n.call('probe');
+  if (!(probe.secondsSinceUserInput >= 120)) { t.skip(`someone is using the computer (idle ${probe.secondsSinceUserInput} s)`); return; }
+  const cu = service([{ bundleId: FIXTURE, displayName: 'CUPointerFixture' }]);
+  const front = await n.call('frontmostApp');
+  assert.notEqual(front?.bundleId, FIXTURE);
+  const cursorBefore = await n.call('cursorPosition');
+  try {
+    const shot = await cu.displayScreenshot('live', {});
+    const here = displayPointToImage(cursorBefore, shot);
+    const to = [Math.max(0, here.x - 20), Math.max(0, here.y - 20)];
+    const moved = await cu.displayPointer('live', { kind: 'mouse_move', coordinate: to, animate: false });
+    assert.equal(moved.outcome, 'ok', JSON.stringify(moved));
+    const now = await n.call('cursorPosition');
+    assert.ok(Math.abs(now.x - cursorBefore.x) > 1 || Math.abs(now.y - cursorBefore.y) > 1, 'the real cursor moved');
+    const clicked = await cu.displayPointer('live', { kind: 'left_click', coordinate: to });
+    assert.equal(clicked.outcome, 'unsupported');
+    assert.equal(clicked.reasonCode, 'app_not_granted');
+    assert.notEqual(clicked.delivered, true);
+    assert.equal((await n.call('frontmostApp'))?.bundleId, front?.bundleId, 'the app in front did not change');
+  } finally {
+    await n.call('hidMove', { point: cursorBefore, animate: false }).catch(() => {});
   }
   const after = await n.call('cursorPosition');
   assert.ok(Math.abs(after.x - cursorBefore.x) < 1 && Math.abs(after.y - cursorBefore.y) < 1, 'the cursor is back');

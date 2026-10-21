@@ -35,7 +35,7 @@ function setUp({ click, raw = () => ({ outcome: 'ok', reasonCode: null, delivere
     axClick: click,
     rawClick: raw,
   };
-  const native = { async call(method, params = {}) { calls.push({ method, params: JSON.parse(JSON.stringify(params)) }); return handlers[method](params); } };
+  const native = { async call(method, params = {}) { calls.push({ method, params: JSON.parse(JSON.stringify(params)) }); if (!handlers[method] && method === 'savePanelProbe') throw Object.assign(new Error('Unknown method savePanelProbe.'), { code: 'unknown_method' }); return handlers[method](params); } };
   const log = { info: (m) => infos.push(m), warn: (m) => warnings.push(m) };
   const cu = createComputerUse({ native, log, wait: async (ms) => waits.push(ms), ...(policy ? { decide: policy } : {}) });
   cu.grantsFor('s1').grant(['com.apple.finder']);

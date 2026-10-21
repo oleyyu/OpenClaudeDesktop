@@ -1,5 +1,5 @@
 // app_menu and app_focus live, through the real tool layer (agent-tools/computer-use.mjs), service, native module and
-// Accessibility helper (helpers/cu-ax, `npm run build:native`). Run under Electron as Node, with another app in front:
+// Accessibility calls in it (MenuBar.swift, `npm run build:native`). Run under Electron as Node, with another app in front:
 //   ELECTRON_RUN_AS_NODE=1 node_modules/electron/dist/Electron.app/Contents/MacOS/Electron scripts/computer-use-ax-tools-check.mjs
 // Needs Accessibility and Screen Recording for the process that runs it.
 //

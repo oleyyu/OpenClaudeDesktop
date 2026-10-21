@@ -12,9 +12,9 @@ import { t } from "../electron/i18n/index.mjs";
 
 let sequence = 0;
 /** A send the user just made: the composer text and attachments, before the core has the turn. */
-export function pendingSend({ threadId = null, text = "", attachments = [], now = Date.now(), id = null } = {}) {
+export function pendingSend({ threadId = null, text = "", attachments = [], content = null, now = Date.now(), id = null } = {}) {
   return { id: id ?? `local-send:${now}:${++sequence}`, threadId, text: typeof text === "string" ? text : "",
-    attachments: Array.isArray(attachments) ? attachments : [], status: "sending", sentAt: now, knownItemIds: null };
+    attachments: Array.isArray(attachments) ? attachments : [], ...(Array.isArray(content) ? { content } : {}), status: "sending", sentAt: now, knownItemIds: null };
 }
 /** The same send after turn/start was refused. */
 export function failedSend(entry, error = null) {
@@ -57,7 +57,8 @@ export function notDeliveredLabel(sentAt, locale = undefined) {
  * handlers {onRetry, onDiscard} are the failed send's buttons. */
 export function pendingUserRow(entry, { onRetry = null, onDiscard = null } = {}) {
   if (!entry) return null;
-  const content = [...(entry.text ? [{ type: "text", text: entry.text, text_elements: [] }] : []),
+  // A send made of ready turn input (a recorded demonstration, `content`) shows that input as it is.
+  const content = Array.isArray(entry.content) ? entry.content : [...(entry.text ? [{ type: "text", text: entry.text, text_elements: [] }] : []),
     ...entry.attachments.filter((part) => part && (part.path || part.url || part.imageUrl)).map((part) => (part.kind === "image" || part.imageUrl
       ? { type: "localImage", path: part.path, ...(part.previewUrl ? { imageUrl: part.previewUrl } : {}) } : { type: "mention", name: part.name, path: part.path }))];
   return { id: entry.id, type: "userMessage", content, localDelivery: { status: entry.status, sentAt: entry.sentAt,

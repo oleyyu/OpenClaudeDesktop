@@ -5,6 +5,7 @@ const {
   dialog,
   shell,
   Menu, powerSaveBlocker, powerMonitor, Notification, clipboard, nativeImage, Tray, nativeTheme, screen, globalShortcut,
+  systemPreferences,
 } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -401,9 +402,11 @@ const computerUseSelfBundleIds = (() => {
     return id ? [id] : [];
   } catch { return []; }
 })();
-// app_focus / app_menu / list_apps go through the Accessibility helper (ax-helper.cjs); app_zoom crops the last
-// screenshot with nativeImage, as JPEG at the screenshots' quality (budget.cjs).
-const computerUseAxHelper = require("./computer-use/ax-helper.cjs").createAxHelper();
+// computer_use.node (native.cjs): the service's, the phantom cursor's and app_focus / app_menu / list_apps' (one loaded
+// module; ax-helper.cjs routes those three to its focusWindow / menu / listApps). app_zoom crops the last screenshot with
+// nativeImage, as JPEG at the screenshots' quality (budget.cjs).
+const computerUseNative = require("./computer-use/native.cjs").createNative();
+const computerUseAxHelper = require("./computer-use/ax-helper.cjs").createAxHelper({ native: computerUseNative });
 const computerUseImage = {
   crop: async ({ dataUrl, rect, width, height }) => ({
     dataUrl: `data:image/jpeg;base64,${nativeImage.createFromDataURL(dataUrl).crop(rect).resize({ width, height, quality: "best" }).toJPEG(75).toString("base64")}`,
@@ -414,8 +417,27 @@ const computerUseImage = {
 let computerUseCursor = null;
 // Teach mode (computer-use/teach.cjs): the tooltip overlay and the session side, created once the app is ready.
 let computerUseTeachOverlay = null, computerUseTeach = null;
+// Watch-record, "Record a skill" (computer-use/watch-record.cjs): its chooser and recording pill, created once the app is ready.
+let computerUseWatchRecord = null, watchRecordNative = null;
+// The two macOS permissions a recording needs (official OZi; the permissions dialog's rows, shared-6 nj): Accessibility
+// for the input listener and Screen Recording for the frames.
+async function watchRecordPermissions() {
+  try { const probe = await watchRecordNative.call("probe"); return { screenRecording: probe?.screenCapture === true, accessibility: probe?.axTrusted === true }; }
+  catch { return { screenRecording: false, accessibility: false }; }
+}
+// nj's Request: the system's prompt, then System Settings › Privacy & Security at that pane when it is still not granted.
+const WATCH_RECORD_SETTINGS = { accessibility: "Privacy_Accessibility", screenRecording: "Privacy_ScreenCapture" };
+async function requestWatchRecordPermission(kind) {
+  if (!Object.hasOwn(WATCH_RECORD_SETTINGS, kind)) throw new Error("Unknown permission.");
+  let granted = false;
+  try { granted = (await watchRecordNative.call(kind === "accessibility" ? "requestAccessibility" : "requestScreenCapture"))?.granted === true; } catch {}
+  if (!granted) await shell.openExternal(`x-apple.systempreferences:com.apple.preference.security?${WATCH_RECORD_SETTINGS[kind]}`).catch(() => {});
+  return watchRecordPermissions();
+}
 /** The app's own click-through overlays (the glow, the pointer, the teach tooltips): out of the hit test and the window-wide handling. */
-const computerUseOwnOverlay = (window) => !!(computerUseGlow?.owns(window) || computerUseCursor?.owns(window) || computerUseTeachOverlay?.owns(window));
+const computerUseClickThroughOverlay = (window) => !!(computerUseGlow?.owns(window) || computerUseCursor?.owns(window) || computerUseTeachOverlay?.owns(window));
+// Watch-record's chooser and pill join them for the window-wide handling (their own backgrounds, no quit guard).
+const computerUseOwnOverlay = (window) => computerUseClickThroughOverlay(window) || !!computerUseWatchRecord?.owns(window);
 // Full control (full-control.cjs): the display lock, per-session approval and the preferred mode. The lock's holder
 // drives the screen glow, the docked strip, a system notification and the global Esc stop (official §2.5.2). The
 // preferred mode persists in config.computerUsePreferredMode.
@@ -435,16 +457,26 @@ function computerUseServesDisplayTools(sessionId) {
   return typeof sessionId === "string" && !!sessionId && computerUse.hasGrants(sessionId);
 }
 // (config is read in app.whenReady; the saved preferred mode is restored there, computerUseFullControl.restore.)
-// computer_use.node (native.cjs): the service's and the phantom cursor's (one loaded module).
-const computerUseNative = require("./computer-use/native.cjs").createNative();
+// Official executor NG / beginInputBurst (click-through.cjs): while a screen-wide click, press, release, drag or scroll
+// is delivered, the app's windows near it let the mouse through; computer_batch / teach steps keep them so between the
+// pointer actions of a burst. The glow and the web pointer are click-through for good (left alone); the teach overlay
+// hands itself back its own way (click-through with forwarding, plus a hover re-check: official uPr's restorer).
+const computerUseClickThrough = require("./computer-use/click-through.cjs").createClickThrough({
+  windows: () => BrowserWindow.getAllWindows(),
+  getCursor: () => screen.getCursorScreenPoint(),
+  alwaysThrough: (window) => !!(computerUseGlow?.owns(window) || computerUseCursor?.owns(window)),
+  restorer: (window) => (computerUseTeachOverlay?.owns(window) ? () => computerUseTeachOverlay?.afterAction() : undefined),
+});
 const computerUse = require("./computer-use/service.cjs").createComputerUse({ native: computerUseNative, selfBundleIds: computerUseSelfBundleIds,
-  axHelper: computerUseAxHelper, image: computerUseImage, fullControl: computerUseFullControl,
+  axHelper: computerUseAxHelper, image: computerUseImage, fullControl: computerUseFullControl, clickThrough: computerUseClickThrough,
   // read_clipboard / write_clipboard and type's paste use Electron's clipboard, text only (official rPr).
   clipboard: { readText: () => clipboard.readText(), writeText: (text) => clipboard.writeText(text) },
   // The display hit test skips the app's own click-through overlays (the glow, the pointer — the native phantom
-  // cursor panels too — and the teach tooltips), by CGWindowID.
+  // cursor panels too — and the teach tooltips), by CGWindowID; and the main window while full control docks it as the
+  // side panel (side-panel.cjs): screenshots leave it out (the app is never granted), so the model aims at what is
+  // under it, and a click there goes through it (click-through.cjs: the app's windows near the point let it through).
   overlayWindowIds: () => BrowserWindow.getAllWindows()
-    .filter((window) => !window.isDestroyed() && computerUseOwnOverlay(window))
+    .filter((window) => !window.isDestroyed() && (computerUseOwnOverlay(window) || window === computerUseSidePanel?.window()))
     .map((window) => Number(/^window:(\d+):/.exec(window.getMediaSourceId())?.[1])).filter((id) => Number.isInteger(id) && id > 0)
     .concat(computerUseCursor?.windowNumbers() ?? []),
   // The phantom cursor (official §2.6.1; service.cjs `pointer`): shown at the centre of a newly held window and at
@@ -491,6 +523,8 @@ function onComputerUseLockChange(holder) {
   computerUseInUse?.setHolder(holder);
   // The screen glow is the holder's (it may have been using the computer already, so in-use need not change).
   computerUseSyncGlow();
+  // Official [cu-side-panel]: the main window docks in the top-right corner while the lock is held, and goes back after.
+  void computerUseSidePanel?.lockChanged(holder, { window: computerUseDockWindow(holder) });
   emit({ kind: "computer-use-lock", holder: holder ?? null });
   try {
     // The global Esc follows the lock (official XNr), unless a model Escape is being sent right now.
@@ -578,6 +612,8 @@ function computerUseStopSession(threadId) {
   }
   try { agentTools.cancelThread(threadId); } catch {}
   try { computerUse.release(threadId); } catch {}
+  // Official leavingRunning: the apps hidden before its actions come back (Settings › Unhide apps when Claude finishes).
+  void computerUse.restoreHiddenApps?.(threadId, { autoUnhide: config?.computerUseAutoUnhide !== false }).catch(() => {});
   // Official leavingRunning: a stopped session leaves teach mode (the waiting step ends as exit, the main window returns).
   try { computerUseTeach?.end(threadId, "stopped"); } catch {}
 }
@@ -592,6 +628,14 @@ function computerUseUnregisterEscStop() {
   computerUseEscRegistered = false;
 }
 let computerUseGlow = null;
+// Full control's side panel (side-panel.cjs, official NFa…RFa), created once the app is ready. The official app docks its
+// one main window; here the full window showing the holder, else the full window focused last, else the first window.
+let computerUseSidePanel = null;
+function computerUseDockWindow(holder) {
+  const full = windowRegistry.fullWindows();
+  const showing = holder ? windowRegistry.windowsShowing(holder).find((window) => full.includes(window)) : null;
+  return showing ?? windowRegistry.lastFocusedFull() ?? (win && !win.isDestroyed() ? win : null);
+}
 // The computer-use card's live frames (preview.cjs): the window a session last looked at, while a card subscribes.
 const computerUsePreview = require("./computer-use/preview.cjs").createPreview({ service: computerUse, inUse: computerUseInUse, emit: (event) => emit(event) });
 // The original puts the glow on the holder's chosen display, else the main window's; here, the focused (else the
@@ -938,6 +982,8 @@ agentTools.provide("computerUse", (session, ctx) => ({
   ask: (access) => computerUseAccessCard(session, access, ctx),
   askTakeover: (opts) => computerUseTakeoverCard(session, opts, ctx),
   askTeach: (request) => computerUseTeachCard(session, request, ctx),
+  // Settings › Computer use › "Unhide apps when Claude finishes" (official chicagoAutoUnhide, on unless turned off).
+  autoUnhideEnabled: () => config?.computerUseAutoUnhide !== false,
   // Teach mode for this session (teach.cjs createTeachMode), as agent-tools/computer-use.mjs uses it.
   teach: computerUseTeach && {
     isActive: () => computerUseTeach.isActive(session.id),
@@ -976,6 +1022,12 @@ async function computerUseTakeoverCard(session, { becausePreferredBackground = f
  * computer:request_teach_access): an MCP tool-call elicitation whose _meta.computer_use_teach carries the reason and the
  * resolved apps (name, tier, icon, installed, already granted). "accept" (Start guide) | "decline" | "unavailable".
  */
+/** The cards' hiding line (official willHide / autoUnhideEnabled): the apps the next full-screen action would hide. */
+function computerUseHideMeta(request) {
+  const willHide = Array.isArray(request?.willHide) ? request.willHide.filter((app) => typeof app?.bundleId === "string").slice(0, 64)
+    .map((app) => ({ bundleId: app.bundleId, displayName: typeof app.displayName === "string" ? app.displayName : app.bundleId })) : [];
+  return willHide.length ? { willHide, autoUnhideEnabled: request.autoUnhideEnabled !== false } : {};
+}
 async function computerUseTeachCard(session, request, ctx) {
   const owner = client;
   if (!owner || typeof owner.localApproval !== "function" || typeof session?.id !== "string" || !config?.threadIds?.includes(session.id)) return "unavailable";
@@ -987,7 +1039,7 @@ async function computerUseTeachCard(session, request, ctx) {
   const params = {
     threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", serverName: agentTools.SERVER_NAME, mode: "form",
     message: `Allow the ${agentTools.SERVER_NAME} MCP server to run tool "request_teach_access"?`, requestedSchema: { type: "object", properties: {} },
-    _meta: { codex_approval_kind: "mcp_tool_call", persist: ["session"], computer_use_teach: { reason: request?.reason ?? "", apps } },
+    _meta: { codex_approval_kind: "mcp_tool_call", persist: ["session"], computer_use_teach: { reason: request?.reason ?? "", apps, ...computerUseHideMeta(request) } },
   };
   const result = await owner.localApproval("mcpServer/elicitation/request", params, { signal: ctx?.signal, outlivesTurn: agentToolCallOutlivesTurn(ctx?.call, owner) });
   if (result === undefined) return "unavailable";
@@ -1010,7 +1062,8 @@ async function computerUseAccessCard(session, access, ctx) {
     threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", serverName: agentTools.SERVER_NAME, mode: "form",
     message: `Allow the ${agentTools.SERVER_NAME} MCP server to run tool "request_access"?`, requestedSchema: { type: "object", properties: {} },
     _meta: { codex_approval_kind: "mcp_tool_call", persist: ["session"], tool_params: access.toolParams,
-      computer_use_access: { reason: access.reason, flags: access.flags, apps } },
+      computer_use_access: { reason: access.reason, flags: access.flags, apps, ...computerUseHideMeta(access),
+        ...(access.preferredModeDefault === "background" || access.preferredModeDefault === "full_control" ? { preferredModeDefault: access.preferredModeDefault } : {}) } },
   };
   const result = await owner.localApproval("mcpServer/elicitation/request", params, { signal: ctx?.signal, outlivesTurn: agentToolCallOutlivesTurn(ctx?.call, owner) });
   if (result === undefined) return "unavailable";
@@ -1608,8 +1661,15 @@ function receive(e) {
     try { computerUse.release(e.params.threadId); } catch {}
     // Official onResult: what the clipboard guard put aside (a terminal / IDE was in front) goes back on the clipboard.
     void computerUse.restoreClipboardStash(e.params.threadId).catch(() => {});
+    // Official onResult (chicagoAutoUnhide): the apps hidden before this turn's full-screen actions come back.
+    void computerUse.restoreHiddenApps?.(e.params.threadId, { autoUnhide: config?.computerUseAutoUnhide !== false }).catch(() => {});
   }
-  if (e.kind === "connection" && !e.connected) computerUseFullControl.releaseAll();
+  if (e.kind === "connection" && !e.connected) {
+    computerUseFullControl.releaseAll();
+    for (const threadId of computerUse.sessionsWithHiddenApps?.() ?? []) {
+      void computerUse.restoreHiddenApps(threadId, { autoUnhide: config?.computerUseAutoUnhide !== false }).catch(() => {});
+    }
+  }
   observeGoal(e);
   observeUsage(e);
   workflowToolService?.observe(e);
@@ -2349,6 +2409,11 @@ app.whenReady().then(async () => {
   computerUseGlow = require("./computer-use/glow.cjs").createGlow({ BrowserWindow, screen, app, fs: fs.promises, tmpdir: () => os.tmpdir(),
     reduceMotion: () => config?.motion === "reduce" });
   computerUseCursor = require("./computer-use/cursor.cjs").createCursor({ BrowserWindow, app, native: computerUseNative });
+  // Official tR → dispatchCuDockStateChanged(docked, holder): to the docked window only, whose renderer lays itself out
+  // as a narrow window while docked (main.jsx, source-split-view.jsx). A teach step's hidden window stays hidden (xFa).
+  computerUseSidePanel = require("./computer-use/side-panel.cjs").createSidePanel({ screen, app,
+    dispatch: (window, docked, holder) => windowRegistry.send(window, { kind: "computer-use-dock-state", docked, holder }),
+    hiddenByTeach: (window) => !!computerUseTeach?.hidMain?.(window) });
   {
     const { createTeachOverlay, createTeachMode } = require("./computer-use/teach.cjs");
     computerUseTeachOverlay = createTeachOverlay({ BrowserWindow, screen, ipcMain, app, fs: fs.promises, tmpdir: () => os.tmpdir(),
@@ -2365,6 +2430,24 @@ app.whenReady().then(async () => {
       lockHolder: () => computerUseFullControl.holder(), stopSession: (id) => computerUseStopSession(id),
       onChange: (sessionId, active) => emit({ kind: "computer-use-teach", sessionId, active }) });
   }
+  // Watch-record ("Record a skill", official §2.4): the chooser, the pill, the recorder (computer_use.node WatchRecorder,
+  // listen-only) and on-device narration. Recording images go to the same staging folder as pasted images.
+  // The UI test (scripts/computer-use-watch-record-ui-test.mjs) swaps in a recorder that captures nothing: no input tap,
+  // no screen, synthetic frames and events (tests/fixtures/watch-record-native-fixture.cjs, not in the packaged app).
+  watchRecordNative = computerUseNative;
+  if (process.env.CODE_DESKTOP_WATCH_RECORD_FIXTURE === "1") {
+    try { watchRecordNative = require(path.join(__dirname, "../tests/fixtures/watch-record-native-fixture.cjs")).wrap(computerUseNative, { nativeImage }); }
+    catch (error) { console.warn("[watch-record] fixture recorder unavailable", error); }
+  }
+  computerUseWatchRecord = require("./computer-use/watch-record.cjs").createWatchRecord({ native: watchRecordNative, BrowserWindow, screen, ipcMain, app,
+    systemPreferences, openExternal: (url) => shell.openExternal(url).catch(() => {}), fs: fs.promises, tmpdir: () => os.tmpdir(), nativeImage,
+    glow: computerUseGlow, lockHolder: () => computerUseLockHolder ?? undefined, computerUseEnabled: () => agentToolGroupEnabled("computer-use"),
+    permissions: watchRecordPermissions,
+    ignoredWindow: computerUseClickThroughOverlay, stageImage: stageAttachment,
+    notify: (contents, payload) => {
+      const window = contents && !contents.isDestroyed?.() ? windowRegistry.windowForSender(contents) : null;
+      if (window) windowRegistry.send(window, { kind: "watch-record-complete", ...payload });
+    } });
   const { validateBypassRequest, nativeCollaborationMode, backgroundTurnPermission } = await import("./permission-policy.mjs");
   const { applyCodexPermissions, effectiveProfile, customProfiles, codexWorkflowArgs } = await import("./codex-permissions.mjs");
   // Bypass across a user core switch (bypass-carry.mjs): a one-shot token from the select, bound by that switch's
@@ -3099,6 +3182,19 @@ app.whenReady().then(async () => {
       if (typeof p?.sessionId !== "string" || !agentToolSession(p.sessionId)) throw new Error("Unknown session.");
       return computerUsePreview.subscribe(p.sessionId, p.on === true);
     }
+    // Watch-record (official LocalAgentModeSessions startWatchRecording / takeHeldWatchRecording / dismissWatchRecordPill):
+    // the window that starts a recording is the one it is hidden from and handed back to.
+    if (action === "watch-record:start") {
+      if (!computerUseWatchRecord) return "cancelled";
+      // A session this app knows (the original checks the id's form only, SRa); its folder doesn't matter here.
+      if (p?.sessionId != null && (typeof p.sessionId !== "string" || !(config?.threadIds ?? []).includes(p.sessionId))) throw new Error("Unknown session.");
+      return computerUseWatchRecord.start(p?.sessionId ?? undefined, p?.resumeRecord === true,
+        { purpose: p?.purpose === "context" ? "context" : "skill", webContents: e.sender, window: windowRegistry.windowForSender(e.sender) ?? null });
+    }
+    if (action === "watch-record:permissions") return watchRecordPermissions();
+    if (action === "watch-record:request-permission") return requestWatchRecordPermission(p?.kind);
+    if (action === "watch-record:take") return computerUseWatchRecord ? computerUseWatchRecord.take(e.sender.id) : null;
+    if (action === "watch-record:dismiss-pill") { if (Number.isInteger(p?.holdEpoch)) computerUseWatchRecord?.dismissPill(p.holdEpoch); return null; }
     if (typeof action === "string" && action.startsWith("computer-use:")) {
       // Settings › Computer use reads and revokes across sessions: no session of its own (a revoke may still name one).
       const global = action === "computer-use:probe" || action === "computer-use:all-grants" || (action === "computer-use:revoke" && p?.sessionId === undefined);
@@ -3448,6 +3544,8 @@ app.whenReady().then(async () => {
         if (typeof p.agentVisualize === "boolean") config.agentVisualize = p.agentVisualize;
         // Settings › System › Computer use: the computer-use tools come and go with it (agentToolGroupEnabled).
         if (typeof p.agentComputerUse === "boolean") config.agentComputerUse = p.agentComputerUse;
+        // Settings › Computer use › Unhide apps when Claude finishes (official chicagoAutoUnhide; unset reads as on).
+        if (typeof p.computerUseAutoUnhide === "boolean") config.computerUseAutoUnhide = p.computerUseAutoUnhide;
         // The Preview pane's "Open links in preview" (src/preview-links-model.mjs), for every window of the profile.
         if (typeof p.previewLinks === "boolean") config.previewLinks = p.previewLinks;
         if (typeof p.previewLinksChooserSeen === "boolean") config.previewLinksChooserSeen = p.previewLinksChooserSeen;
@@ -4495,6 +4593,7 @@ installShutdownHandler(app, {
     computerUseGlow?.dispose();
     computerUseCursor?.dispose();
     computerUseTeachOverlay?.dispose();
+    computerUseWatchRecord?.dispose();
     computerUsePreview.dispose();
     const terminalsStopped = terminalService.dispose();
     desktopSettings?.dispose();

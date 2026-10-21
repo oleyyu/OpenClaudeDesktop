@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import ApplicationServices
 import ComputerUseCore
 
 /// The C entry the N-API glue calls on a libuv worker thread: `cu_call(method, paramsJson)` returns a strdup'd JSON
@@ -47,13 +48,41 @@ import ComputerUseCore
 ///   hideWindowHighlight {windowId?} → {hidden: [windowId]}: fade out that window's highlight, or every highlight
 ///   windowHighlightState → {highlights: [panel state], primaryHeight, screens}: read-only (tests, live checks)
 ///   windowHighlightSnapshot {windowId} → {width, height, png}: the rim rendered off screen at 1× (live checks)
+///   prepareDisplay {allowedBundleIds, hostBundleIds?, displayId?} → {hidden: [{bundleId, name}], activated}: hide the
+///                 apps outside the allowlist with a window on the display (official hideBeforeAction, AppHide.swift)
+///   previewHideSet {exemptBundleIds, displayId?} → {apps: [{bundleId, name}]}: what prepareDisplay would hide
+///   unhideApps    {bundleIds} → {unhidden: [bundleId]}: hidden apps with these bundle ids come back
+///   savePanelProbe {windowId? | bundleId?, point? {x,y}, mainWindow?} → the probe object | null (SavePanel.swift):
+///                 what the window shows that the save-panel guard judges input against; read only
+///   watchRecordStart / watchRecordStop / watchRecordDrain → {events, nowT, dropped} / watchRecordClear / watchRecordNowT
+///                 watch-record's listen-only input recorder (WatchRecorder.swift); watchRecordFrame {displayId?} → one
+///                 frame of that display without this app's windows {base64, width, height, displayId, displayWidth,
+///                 displayHeight, frontmost {bundleId, appName}}
+///   voiceoverAvailability / voiceoverDevices / voiceoverStart {uid?, perTurn?} / voiceoverStop / voiceoverDrain →
+///                 {narrations [{t, text}], micStates [{on, level, error?}]} / voiceoverPreviewStart {uid?} /
+///                 voiceoverPreviewStop: on-device narration (WatchRecordVoiceover.swift)
+///   requestScreenCapture / requestAccessibility → {granted}: the Screen Recording / Accessibility prompt
+///                 (watch-record's permissions dialog)
+///   saveSheetFolderAndParents {pid} → {names} | {menuWasOpen: true} | null: the save sheet's folder path, read from
+///                 its folder pop-up's menu (opened and cancelled)
+///   axProbe       → {axTrusted}
+///   focusWindow   {bundleId, windowId?} → app_focus: AXMain + AXFocused on the window, read back (MenuBar.swift
+///                 AppFocus); {outcome: "unsupported", reasonCode: "app_is_frontmost"} while the app is in front
+///   menu          {bundleId, mode: "press" | "list" | "close", path?: [String]} (official menu(bundleId, {mode, path})):
+///                 press walks the menu bar by titles and presses the last; list reads the items under path; close
+///                 cancels the app's open menus. menu_item_not_found carries details {closestMatch, available, …}
+///   listApps      {folders: [String]} → {running, installed}: list_apps' source
+///                 These four were the separate helpers/cu-ax process; an app that stops answering ends the call with
+///                 helper_timeout after 8 s (AXQuery).
 @_cdecl("cu_call")
 public func cuCall(_ method: UnsafePointer<CChar>, _ params: UnsafePointer<CChar>) -> UnsafeMutablePointer<CChar> {
     let envelope: [String: Any]
     do {
         envelope = ["ok": true, "result": try dispatch(String(cString: method), try decode(String(cString: params)))]
     } catch let error as CUError {
-        envelope = ["ok": false, "error": ["code": error.code, "message": error.message]]
+        var body: [String: Any] = ["code": error.code, "message": error.message]
+        if let details = error.details { body["details"] = details }
+        envelope = ["ok": false, "error": body]
     } catch {
         envelope = ["ok": false, "error": ["code": "internal", "message": "\(error)"]]
     }
@@ -254,10 +283,90 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
     case "windowHighlightSnapshot":
         guard let windowId = params.uint32("windowId"), windowId != 0 else { throw CUError.invalidParams("windowHighlightSnapshot: expected (windowId)") }
         return try MainThread.run { try WindowHighlights.shared.snapshot(windowId: windowId) }
+    case "prepareDisplay":
+        guard let allowed = params.strings("allowedBundleIds") else { throw CUError.invalidParams("prepareDisplay: expected (allowedBundleIds: string[], hostBundleIds?: string[], displayId?)") }
+        return AppHide.prepare(allowed: allowed, host: params.strings("hostBundleIds") ?? [], displayId: params.uint32("displayId"))
+    case "previewHideSet":
+        guard let exempt = params.strings("exemptBundleIds") else { throw CUError.invalidParams("previewHideSet: expected exemptBundleIds: string[]") }
+        return AppHide.preview(exempt: exempt, displayId: params.uint32("displayId"))
+    case "unhideApps":
+        guard let bundleIds = params.strings("bundleIds") else { throw CUError.invalidParams("unhide: expected bundleIds: string[]") }
+        return AppHide.unhide(bundleIds: bundleIds)
+    case "savePanelProbe":
+        if params.raw["windowId"] != nil, params.uint32("windowId") == nil { throw CUError.invalidParams("windowId must be a CGWindowID") }
+        let at = params.raw["point"] != nil ? try globalPoint(params) : nil
+        return ["probe": SavePanel.probe(windowId: params.uint32("windowId"), bundleId: params.string("bundleId"), point: at,
+                                         mainWindow: params.raw["mainWindow"] as? Bool ?? false).map { $0 as Any } ?? NSNull()]
+    case "saveSheetFolderAndParents":
+        guard let pid = params.double("pid"), pid > 0, pid == pid.rounded() else { throw CUError.invalidParams("pid is required") }
+        return ["answer": SavePanel.folderAndParents(pid: pid_t(pid)).map { $0 as Any } ?? NSNull()]
     case "hidScroll":
         guard let dx = params.double("dx"), let dy = params.double("dy"), abs(dx) <= 100, abs(dy) <= 100,
               dx == dx.rounded(), dy == dy.rounded() else { throw CUError.invalidParams("dx and dy must be integers in [-100, 100]") }
         return try GlobalInput.scroll(at: try globalPoint(params), dx: Int32(dx), dy: Int32(dy), animate: params.raw["animate"] as? Bool ?? true)
+    // Watch-record (WatchRecorder.swift, WatchRecordVoiceover.swift): the listen-only input recorder, its frames and
+    // the on-device narration. Events and narration wait in buffers the main process drains.
+    case "watchRecordStart":
+        return try WatchRecorder.shared.start()
+    case "watchRecordStop":
+        return WatchRecorder.shared.stop()
+    case "watchRecordDrain":
+        return WatchRecorder.shared.drain()
+    case "watchRecordClear":
+        WatchRecorder.shared.clear()
+        return ["cleared": true]
+    case "watchRecordNowT":
+        return ["t": WatchRecorder.shared.nowT()]
+    case "watchRecordFrame":
+        if params.raw["displayId"] != nil, params.uint32("displayId") == nil { throw CUError.invalidParams("displayId must be a display id") }
+        let displayId = params.uint32("displayId")
+        return try blockingAwait { try await WatchRecorder.frame(displayId: displayId) }
+    case "voiceoverAvailability":
+        return WatchRecordVoiceover.availability()
+    case "voiceoverDevices":
+        return ["devices": WatchRecordVoiceover.listInputDevices()]
+    case "voiceoverStart":
+        try WatchRecordVoiceover.shared.start(uid: params.string("uid"), perTurn: params.raw["perTurn"] as? Bool ?? false)
+        return ["started": true]
+    case "voiceoverStop":
+        WatchRecordVoiceover.shared.stop()
+        return ["stopped": true]
+    case "voiceoverDrain":
+        return WatchRecordVoiceover.shared.drain()
+    case "voiceoverPreviewStart":
+        try WatchRecordVoiceover.shared.startPreview(uid: params.string("uid"))
+        return ["started": true]
+    case "voiceoverPreviewStop":
+        WatchRecordVoiceover.shared.stopPreview()
+        return ["stopped": true]
+    // Watch-record's permissions dialog (official rj "Request" for Screen recording): the system's own prompt the first
+    // time, then only the answer (granted or not) — System Settings is opened by the main process when it is not.
+    case "requestScreenCapture":
+        return ["granted": CGPreflightScreenCaptureAccess() || CGRequestScreenCaptureAccess()]
+    case "requestAccessibility":
+        let prompt = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        return ["granted": AXIsProcessTrustedWithOptions([prompt: true] as CFDictionary)]
+    case "axProbe":
+        return ["axTrusted": AXIsProcessTrusted()]
+    case "focusWindow":
+        guard let bundleId = params.string("bundleId"), !bundleId.isEmpty else { throw CUError.invalidParams("bundleId is required") }
+        if params.raw["windowId"] != nil, params.uint32("windowId") == nil { throw CUError.invalidParams("windowId must be a CGWindowID") }
+        return try AppFocus.focus(bundleId: bundleId, windowId: params.uint32("windowId"))
+    case "menu":
+        guard let bundleId = params.string("bundleId"), !bundleId.isEmpty else { throw CUError.invalidParams("bundleId is required") }
+        if params.raw["path"] != nil, params.strings("path") == nil { throw CUError.invalidParams("path must be an array of menu titles") }
+        let path = params.strings("path") ?? []
+        switch params.string("mode") {
+        case "press":
+            guard !path.isEmpty else { throw CUError.invalidParams("bundleId and a non-empty path are required") }
+            return try MenuBar.press(bundleId: bundleId, path: path)
+        case "list": return try MenuBar.list(bundleId: bundleId, path: path)
+        case "close": return try MenuBar.close(bundleId: bundleId)
+        default: throw CUError.invalidParams("menu: expected (bundleId, {mode: press | list | close, path})")
+        }
+    case "listApps":
+        if params.raw["folders"] != nil, params.strings("folders") == nil { throw CUError.invalidParams("folders must be an array of paths") }
+        return AppList.apps(folders: params.strings("folders") ?? [])
     default:
         throw CUError("unknown_method", "Unknown method \(method).")
     }

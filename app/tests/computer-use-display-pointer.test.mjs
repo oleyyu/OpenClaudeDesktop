@@ -59,12 +59,12 @@ function fakeNative({ front = FINDER, under = () => ({ windowId: 50, pid: 10, bu
   };
 }
 
-function svc({ grants = [{ bundleId: FINDER, displayName: 'Finder' }], approve = true, onWait = null, ...options } = {}) {
+function svc({ grants = [{ bundleId: FINDER, displayName: 'Finder' }], approve = true, onWait = null, clickThrough = null, ...options } = {}) {
   const fullControl = createFullControl();
   const native = fakeNative(options);
   const waits = [];
   const pointer = { hidden: 0, beforeClick() { this.hidden += 1; }, clicked() { throw new Error('the phantom cursor is not used full-screen'); } };
-  const service = createComputerUse({ native, axHelper: { call: async () => ({}) }, log: { log() {}, warn() {} }, wait: async (ms) => { waits.push(ms); await onWait?.(ms, fullControl); }, fullControl, pointer });
+  const service = createComputerUse({ native, axHelper: { call: async () => ({}) }, log: { log() {}, warn() {} }, wait: async (ms) => { waits.push(ms); await onWait?.(ms, fullControl); }, fullControl, pointer, clickThrough });
   service.grantsFor('a').grant(grants);
   if (approve) service.requestFullControl('a', { approved: true });
   return { service, native, fullControl, waits, pointer };
@@ -167,6 +167,104 @@ test('left_mouse_down / mouse_move / left_mouse_up: held state, a second press i
   assert.equal(await service.releaseHeldMouse(), true);
   assert.equal(native.state.held, false);
   assert.equal(await service.releaseHeldMouse(), false);
+});
+
+test('mouse_move with nothing held (official yi() → V("mouse_position")): passes whatever is in front — not granted, read tier, the desktop shell, this app — with no hit test', async () => {
+  const SAFARI = 'com.apple.Safari';
+  const cases = [
+    ['an app that isn\'t granted', { front: 'com.example.other' }],
+    ['a read-tier app', { front: SAFARI, grants: [{ bundleId: SAFARI, displayName: 'Safari' }] }],
+    ['a click-tier app', { front: TERMINAL, grants: [{ bundleId: TERMINAL, displayName: 'Terminal' }] }],
+    ['the desktop shell without a Finder grant', { front: FINDER, grants: [{ bundleId: TERMINAL, displayName: 'Terminal' }] }],
+    ['no app in front', { front: () => null }],
+  ];
+  for (const [name, options] of cases) {
+    const { service, native } = svc({ ...options, under: () => { throw new Error('no hit test for a plain move'); } });
+    await service.displayScreenshot('a', {});
+    const moved = await service.displayPointer('a', { kind: 'mouse_move', coordinate: [100, 100] });
+    assert.equal(moved.outcome, 'ok', name);
+    assert.equal(posted(native, 'hidMove').length, 1, name);
+    // …while anything that presses is refused there (a plain left click: the frontmost gate at "mouse").
+    if (name !== 'no app in front' && name !== 'a click-tier app') {
+      const click = await service.displayPointer('a', { kind: 'left_click', coordinate: [100, 100] });
+      assert.equal(click.outcome, 'unsupported', name);
+      assert.equal(posted(native, 'hidClick').length, 0, name);
+    }
+  }
+  // This app in front: the pointer passes the frontmost gate (official V(): the host lets the mouse through).
+  const self = 'com.example.self';
+  const { service, native } = (() => {
+    const fullControl = createFullControl();
+    const n = fakeNative({ front: self, under: () => { throw new Error('no hit test'); } });
+    const s = createComputerUse({ native: n, axHelper: { call: async () => ({}) }, log: { log() {}, warn() {} }, wait: async () => {}, fullControl, selfBundleIds: [self] });
+    s.grantsFor('a').grant([{ bundleId: FINDER, displayName: 'Finder' }]);
+    s.requestFullControl('a', { approved: true });
+    return { service: s, native: n };
+  })();
+  await service.displayScreenshot('a', {});
+  assert.equal((await service.displayPointer('a', { kind: 'mouse_move', coordinate: [10, 10] })).outcome, 'ok');
+  assert.equal(posted(native, 'hidMove').length, 1);
+});
+
+test('held button (official yi() / _i() / zi()): the frontmost app is checked at "mouse", the point at "mouse_full"; a refused release still lets go', async () => {
+  const terminalWindow = { windowId: 60, pid: 11, bundleId: TERMINAL, layer: 0, ownerName: 'Terminal' };
+  const finderWindow = { windowId: 50, pid: 10, bundleId: FINDER, layer: 0, ownerName: 'Finder' };
+  let under = finderWindow;
+  const { service, native } = svc({ front: TERMINAL, under: () => under, grants: [{ bundleId: TERMINAL, displayName: 'Terminal' }, { bundleId: FINDER, displayName: 'Finder' }] });
+  await service.displayScreenshot('a', {});
+  // Press on the click-tier app in front, drag over a full-tier window: the frontmost gate is "mouse" (click tier passes).
+  assert.equal((await service.displayPointer('a', { kind: 'left_mouse_down' })).outcome, 'ok');
+  assert.equal((await service.displayPointer('a', { kind: 'mouse_move', coordinate: [200, 200] })).outcome, 'ok');
+  // Moving onto the click-tier window while held: the point is checked at "mouse_full".
+  under = terminalWindow;
+  const onto = await service.displayPointer('a', { kind: 'mouse_move', coordinate: [210, 210] });
+  assert.deepEqual([onto.reasonCode, onto.tier], ['tier_insufficient', 'click']);
+  // The release over it is a drop ("mouse_full"): refused, and the button is let go anyway.
+  const up = await service.displayPointer('a', { kind: 'left_mouse_up' });
+  assert.equal(up.reasonCode, 'tier_insufficient');
+  assert.equal(native.state.held, false, 'never left down');
+  // A plain press and release on the click-tier window (no move between) are "mouse": allowed.
+  assert.equal((await service.displayPointer('a', { kind: 'left_mouse_down' })).outcome, 'ok');
+  assert.equal((await service.displayPointer('a', { kind: 'left_mouse_up' })).outcome, 'ok');
+});
+
+test('scroll while held counts as moving the drag: the release after it is checked as a drop', async () => {
+  const terminalWindow = { windowId: 60, pid: 11, bundleId: TERMINAL, layer: 0, ownerName: 'Terminal' };
+  const finderWindow = { windowId: 50, pid: 10, bundleId: FINDER, layer: 0, ownerName: 'Finder' };
+  let under = terminalWindow;
+  const { service, native } = svc({ front: FINDER, under: () => under, grants: [{ bundleId: TERMINAL, displayName: 'Terminal' }, { bundleId: FINDER, displayName: 'Finder' }] });
+  await service.displayScreenshot('a', {});
+  // Without a move, a release on the click-tier window is a click ("mouse"): fine.
+  assert.equal((await service.displayPointer('a', { kind: 'left_mouse_down' })).outcome, 'ok');
+  assert.equal((await service.displayPointer('a', { kind: 'left_mouse_up' })).outcome, 'ok');
+  // Press on Finder, scroll there while held (allowed: "mouse_full" on a full-tier window), release over Terminal: a drop.
+  under = finderWindow;
+  assert.equal((await service.displayPointer('a', { kind: 'left_mouse_down' })).outcome, 'ok');
+  assert.equal((await service.displayPointer('a', { kind: 'scroll', coordinate: [10, 10], scroll_direction: 'down', scroll_amount: 1 })).outcome, 'ok');
+  under = terminalWindow;
+  const up = await service.displayPointer('a', { kind: 'left_mouse_up' });
+  assert.equal(up.reasonCode, 'tier_insufficient');
+  assert.equal(native.state.held, false);
+});
+
+test('each press / release / click / drag / scroll runs through the app\'s own windows (official executor NG), a move does not', async () => {
+  const seen = [];
+  const clickThrough = { async around(points, run) { seen.push(points.map((p) => [p.x, p.y])); return run(); }, beginInputBurst: () => () => {} };
+  const { service } = svc({ clickThrough });
+  await service.displayScreenshot('a', {});
+  await service.displayPointer('a', { kind: 'mouse_move', coordinate: [100, 100] });
+  assert.equal(seen.length, 0, 'a move is not wrapped (official moveMouse has no NG)');
+  await service.displayPointer('a', { kind: 'left_click', coordinate: [100, 100] });
+  await service.displayPointer('a', { kind: 'scroll', coordinate: [100, 100], scroll_direction: 'up', scroll_amount: 1 });
+  await service.displayPointer('a', { kind: 'left_mouse_down' });
+  await service.displayPointer('a', { kind: 'left_mouse_up' });
+  await service.displayPointer('a', { kind: 'left_click_drag', start_coordinate: [0, 0], coordinate: [100, 100] });
+  assert.equal(seen.length, 5);
+  assert.deepEqual(seen.at(-1).length, 2, 'a drag passes its start and end');
+  const end = service.beginInputBurst();
+  assert.equal(typeof end, 'function');
+  // Without a click-through the burst is a no-op.
+  assert.equal(typeof svc().service.beginInputBurst(), 'function');
 });
 
 test('left_click_drag: from start_coordinate or the cursor; start and end hit-tested; the native drag gets global points', async () => {

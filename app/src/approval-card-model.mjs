@@ -421,7 +421,7 @@ export function approvalCardModel(request, item) {
     // The access card's reason is the request's own (3-line Reason clamp, as every card's reason).
     if (elicitation.mode === "computerUseAccess")
       return { kind: "elicitation", supported: true, title, reason: elicitation.access.reason, message: null, context: [], detail: null,
-        deny, allows, elicitation, access: { rows: elicitation.rows, title: elicitation.accessTitle } };
+        deny, allows, elicitation, access: { rows: elicitation.rows, title: elicitation.accessTitle, note: elicitation.access.note ?? null } };
     if (elicitation.mode === "computerUseTeach")
       return { kind: "elicitation", supported: true, title, reason: elicitation.reason ?? null, message: null, context: [], detail: null,
         deny, allows, elicitation, teach: elicitation.teach };

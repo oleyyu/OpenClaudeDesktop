@@ -3,6 +3,9 @@
 // "Enable computer use" switch (config.agentComputerUse here; the official preference is chicagoEnabled). With it off,
 // the computer-use tools leave every session's tool list (main.cjs agentToolGroupEnabled "computer-use").
 //
+// "Unhide apps when Claude finishes" (official chicagoAutoUnhide, Ess7TkMY61 / T7z5SKWO2K): the apps hidden before
+// full-screen actions come back when the turn ends (config.computerUseAutoUnhide; unset reads as on).
+//
 // Two local rows the official section doesn't have (user's call, 2026-10-20):
 //   Allowed apps  what sessions allowed right now ("Allow for this session" lasts until the app quits), each removable.
 //                 Drawn exactly as the official Denied apps block (`Xr`): chips in flex flex-wrap gap-1.5, each with its
@@ -120,6 +123,10 @@ export function computerUseSettingsGroup({ row, shownValue, config, save, grants
       row('agentComputerUse', t('Enable computer use'), t('Let DeepSeek see and act in the apps you allow, working in the background.'),
         <SettingSwitch label={t('Enable computer use')} checked={enabled} onChange={(value) => save('agentComputerUse', value)}/>),
       ...(enabled ? [
+        row('computerUseAutoUnhide', t('Unhide apps when Claude finishes'),
+          t('When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.'),
+          <SettingSwitch label={t('Unhide apps when Claude finishes')} checked={shownValue('computerUseAutoUnhide', config.computerUseAutoUnhide) !== false}
+            onChange={(value) => save('computerUseAutoUnhide', value)}/>),
         row('computer-use-preferred-mode', t('How Claude uses the apps you allow'),
           // Official c71860c77 `ii` (hlErDsqOX5): the whole sentence, both modes.
           t('Background: Claude works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: Claude takes control of your screen, mouse, and keyboard by default whenever Claude uses an app you allow, without asking again.'),

@@ -214,6 +214,8 @@ function createTeachMode({ overlay, mainWindow = () => null, displayFor = () => 
     isActive: (sessionId) => active.has(sessionId),
     activeSession: () => teachSession ?? null,
     hasPendingStep: (sessionId) => pendingStep?.sessionId === sessionId,
+    /** xFa: a step hid this window (the side panel's dock leaves it hidden, official IFa). */
+    hidMain: (window) => !!hiddenWindow && hiddenWindow === window,
     /** onTeachModeActivated → teachModeChanged{active:true}: the overlay goes to the session's display, else the main window's. */
     activate(sessionId) {
       if (typeof sessionId !== "string" || !sessionId) return;
