@@ -463,6 +463,10 @@ test('a page the agent drives never leaves for an outside site the user hasn’t
   assert.deepEqual(asked.map((request) => [request.kind, request.host]), [['preview-site', 'evil.example']]);
   assert.equal(contents.getURL(), 'http://localhost:3000/', 'declined: the page stays');
   assert.equal(navigate('will-redirect', 'https://evil.example/again'), true, 'a declined site stays blocked');
+  const redirectFrame = (url) => { let prevented = false; contents.emit('will-redirect', { isMainFrame: false, preventDefault: () => { prevented = true; } }, url); return prevented; };
+  assert.equal(redirectFrame('https://other.example/embed'), false, 'a subframe’s redirect is not held as the tab’s navigation');
+  assert.equal(redirectFrame('ftp://other.example/'), true, 'one to an address the preview never opens is still refused, for that frame only');
+  assert.equal(instance._previews.get('s1').error ?? null, null, 'nor does it set a page error');
   contents.openHandler({ url: 'https://evil.example/popup' });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(asked.length, 1, 'and is not asked about again');
@@ -514,6 +518,22 @@ test('a .claude/launch.json written while the pane is open reaches it without re
   const seen = () => sender.sent.some((event) => event.kind === 'preview' && event.state.launch.configs.some((config) => config.name === 'web'));
   for (let i = 0; i < 60 && !seen(); i++) await new Promise((resolve) => setTimeout(resolve, 50));
   assert.ok(seen(), 'the pane got the new configuration');
+});
+
+test('preview-auto-verify never writes through a launch.json that links outside the project', async (t) => {
+  const cwd = project(null), outside = project(null);
+  const { fake, instance } = service(cwd);
+  t.after(() => { instance.dispose(); for (const dir of [cwd, outside]) fs.rmSync(dir, { recursive: true, force: true }); });
+  const sender = fake.sender();
+  const target = path.join(outside, 'zshrc');
+  fs.writeFileSync(target, 'foo() { echo hi; }\n');
+  fs.symlinkSync(target, path.join(cwd, '.claude/launch.json'));
+  await assert.rejects(instance.call(sender, 'preview-auto-verify', { sessionId: 's1', enabled: true }), /links outside the project/);
+  assert.equal(fs.readFileSync(target, 'utf8'), 'foo() { echo hi; }\n');
+  fs.unlinkSync(path.join(cwd, '.claude/launch.json'));
+  fs.writeFileSync(path.join(cwd, '.claude/launch.json'), '{ "configurations": [] }');
+  await instance.call(sender, 'preview-auto-verify', { sessionId: 's1', enabled: true });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, '.claude/launch.json'), 'utf8')).autoVerify, true);
 });
 
 test('start page detection: preview-detect lists package.json scripts; preview-use-server creates, appends, refuses (addServerFromCandidate)', async (t) => {

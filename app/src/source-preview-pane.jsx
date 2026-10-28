@@ -877,7 +877,7 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
           onShowAnnotationTools={() => setShowTools(true)} showAnnotationToolsDisabled={!state?.hasPage || !onAttachScreenshot}
           onOpenFile={() => call("preview-open-file").then(result => { if (result && !result.canceled && result.ok === false) report(new Error(result.description || t("The page didn’t load."))); }, report)}
           viewportItems={viewportRows(state?.viewport).map(row => ({ value: row.value, label: row.label, checked: row.checked, checkedRole: 'radio', hint: row.hint,
-            description: row.setByAgent ? t('Set by {assistant}', { assistant: t('DeepSeek') }) : undefined,
+            description: row.setByAgent ? t('Set by {assistant}', { assistant: assistantName() }) : undefined,
             onSelect: () => { if (!row.keep) call('preview-emulate', { preset: row.value }).catch(report); } }))}
           viewportHint={state?.viewport?.preset !== 'responsive' ? viewportLabel(state?.viewport) : undefined} viewportDisabled={!state?.hasPage}
           colorScheme={state?.viewport?.colorScheme ?? 'system'} onColorScheme={colorScheme => call('preview-emulate', { colorScheme }).catch(report)}

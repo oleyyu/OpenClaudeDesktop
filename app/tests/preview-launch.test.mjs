@@ -9,6 +9,7 @@ const root = '/work/app';
 test('JSONC: comments and trailing commas are accepted, strings are left alone', () => {
   assert.deepEqual(parseJsonc('{\n // a comment\n "a": "http://x//y", /* block */ "b": [1, 2,],\n}'), { a: 'http://x//y', b: [1, 2] });
   assert.deepEqual(parseJsonc('{"s": "a \\" // not a comment"}'), { s: 'a " // not a comment' });
+  assert.deepEqual(parseJsonc('{"a": ["-e", "console.log(1, ]2)"], "u": "x, }", /* c */ "b": [1, /* c */ ],}'), { a: ['-e', 'console.log(1, ]2)'], u: 'x, }', b: [1] });
 });
 
 test('a configuration becomes a command, a port and a url', () => {
@@ -169,7 +170,7 @@ test('addServerConfiguration: appended in place to an existing launch.json, name
   assert.equal(parsed.autoVerify, false);
   assert.deepEqual(parsed.configurations[1], entry);
   assert.deepEqual(withServerConfiguration(added.text, { ...entry, name: 'DEV' }), { status: 'name-exists' });
-  for (const source of ['{}', '{ "version": "0.0.1" }', '{\n  "configurations": []\n}', '{\n  "configurations": [{ "name": "x" },]\n}']) {
+  for (const source of ['{}', '{ "version": "0.0.1" }', '{\n  "configurations": []\n}', '{\n  "configurations": [{ "name": "x" },]\n}', '{\n  "version": "0.0.1" // keep\n}', '{\n  "version": "0.0.1", // keep\n  /* only a note */\n}', '{ // just a comment\n}']) {
     const next = withServerConfiguration(source, entry);
     assert.equal(next.status, 'ok', source);
     assert.equal(parseJsonc(next.text).configurations.at(-1).name, 'dev', source);
