@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 
@@ -152,6 +153,31 @@ test('refs: read_page voids older refs, other tabs are refused, navigation makes
   for (const fn of listeners.updated) fn(1, { status: 'loading' });
   assert.equal(codeOf(() => refs.checkRef(1, 'ref_4')), 'stale_ref');
   assert.equal(codeOf(() => refs.checkRef(2, 'ref_5')), null);
+});
+
+// content.js against a page of one button: just enough DOM for find.
+function contentScript() {
+  const node = (tagName, props = {}) => ({ nodeType: 1, tagName, childNodes: [], hidden: false, attributes: {}, getAttribute(name) { return this.attributes[name] ?? null; }, hasAttribute(name) { return name in this.attributes; }, checkVisibility: () => true, querySelectorAll: () => [], ...props });
+  const body = node('BODY');
+  const button = node('BUTTON', { parentElement: body, innerText: 'Save', textContent: 'Save' });
+  button.childNodes.push({ nodeType: 3, textContent: 'Save' });
+  body.childNodes.push(button);
+  const sandbox = { document: { body, title: 'T' }, location: { href: 'https://a.test/#top' }, Node: { ELEMENT_NODE: 1, TEXT_NODE: 3, DOCUMENT_FRAGMENT_NODE: 11 }, WeakRef, getComputedStyle: () => ({}) };
+  sandbox.globalThis = sandbox;
+  vm.runInNewContext(fs.readFileSync(new URL('../../claude-ext/content.js', import.meta.url), 'utf8'), sandbox);
+  return sandbox.__openclaudeBridge;
+}
+
+test('refs: find hands a kept ref out again, so it stays valid after a same-document navigation', async () => {
+  const { refs } = await extensionModules();
+  const page = contentScript();
+  const find = (startAt) => refs.withRefs(() => { const out = page.run('find', { query: 'save', startAt }); refs.record(9, out.refs, out.nextRef, { replace: false }); return Array.from(out.result.matches, (match) => match.ref); });
+  const [ref] = await find(100);
+  assert.equal(codeOf(() => refs.checkRef(9, ref)), null);
+  refs.invalidateTab(9); // navigate to #section (tabs.js): the page, and content.js with it, stays
+  assert.equal(codeOf(() => refs.checkRef(9, ref)), 'stale_ref');
+  assert.deepEqual(await find(200), [ref], 'the element keeps its ref');
+  assert.equal(codeOf(() => refs.checkRef(9, ref)), null);
 });
 
 test('navigate takes http(s) URLs and bare hosts only', async () => {
