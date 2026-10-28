@@ -303,7 +303,6 @@ function createTerminalService(options = {}) {
     record.exitCode = null;
     record.signal = null;
     record.busy = false;
-    record.outputFrom = record.total; // shellReady waits for this shell's own output, not a restarted one's
     startProcess(record, size);
     ensureTimers();
     return true;
@@ -359,6 +358,8 @@ function createTerminalService(options = {}) {
   async function restart(record) {
     stop(record);
     record.generation += 1;
+    // Set before the proxy wait (the old shell's output is ignored from here): shellReady waits for the new shell's own.
+    record.outputFrom = record.total;
     record.chunks = [];
     record.kept = 0;
     record.pending = "";
