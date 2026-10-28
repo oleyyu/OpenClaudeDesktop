@@ -323,6 +323,12 @@ test('request_teach_access: declined → teach_declined; not installed → no ca
   const busy = teachSetup({ holder: 'other' });
   const held = await busy.call('request_teach_access', { apps: ['TextEdit'], reason: 'r' });
   assert.deepEqual([held.isError, body(held).reasonCode, busy.mode.isActive('a')], [true, 'cu_lock_held', false]);
+  // Still holding app windows: the tour's display-scope actions would all refuse, so no card and no teach mode.
+  const holding = teachSetup();
+  holding.service.appLockBundles = () => [TEXTEDIT];
+  const conflict = await holding.call('request_teach_access', { apps: ['TextEdit'], reason: 'r' });
+  assert.deepEqual([conflict.isError, body(conflict).reasonCode, body(conflict).appLockHeld, holding.cards.length, holding.mode.isActive('a'), holding.fullControl.holder()],
+    [true, 'state_conflict', [TEXTEDIT], 0, false, null]);
   const bad = teachSetup();
   assert.equal(body(await bad.call('request_teach_access', { apps: ['TextEdit'], reason: ' ' })).reasonCode, 'bad_args');
   assert.equal(body(await bad.call('request_teach_access', { apps: 'TextEdit', reason: 'r' })).reasonCode, 'bad_args');

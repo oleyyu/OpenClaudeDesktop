@@ -533,8 +533,10 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
             throw coded("invalid_params", `element_index must be one of the [N] of the last app_screenshot (0–${(shot.elements?.length ?? 0) - 1}).`);
           }
           params.elementIndex = elementIndex;
-          // The native cache is per window, not per session: it checks the element is still the one listed here.
+          // The native cache is per window, not per session: summaryId refuses an index from a summary another
+          // screenshot has since replaced, and expectRole checks the element is still the one listed here.
           params.expectRole = shot.elements[elementIndex].role;
+          if (Number.isInteger(shot.summaryId)) params.summaryId = shot.summaryId;
           const f = shot.elements[elementIndex].frame;
           point = frameToWindowLocal([f.x + f.width / 2, f.y + f.height / 2], shot);
         } else {
@@ -597,6 +599,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
           if (isSecure(shot.elements[elementIndex])) return secureFieldRefusal({ windowId: wid });
           params.elementIndex = elementIndex;
           params.expectRole = shot.elements[elementIndex].role;
+          if (Number.isInteger(shot.summaryId)) params.summaryId = shot.summaryId;
         } else {
           if (!Array.isArray(coordinate) || coordinate.length !== 2 || !inFrame(coordinate, shot)) {
             throw coded("invalid_params", `coordinate must be [x, y] inside the screenshot's ${shot.frameWidth}×${shot.frameHeight} frame.`);
@@ -761,6 +764,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         if (!element) return refuse("bad_args", "bad_args", `element_index ${elementIndex} is out of range (AX summary has ${shot.elements?.length ?? 0} elements).`);
         params.elementIndex = elementIndex;
         params.expectRole = element.role;
+        if (Number.isInteger(shot.summaryId)) params.summaryId = shot.summaryId;
         framePt = elementCenter(element);
         aimed = `element_index ${elementIndex}`;
       } else {
@@ -835,6 +839,7 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
         if (!element) return refuse("bad_args", "bad_args", `element_index ${elementIndex} is out of range (AX summary has ${shot.elements?.length ?? 0} elements).`);
         params.elementIndex = elementIndex;
         params.expectRole = element.role;
+        if (Number.isInteger(shot.summaryId)) params.summaryId = shot.summaryId;
         framePt = elementCenter(element);
         aimed = `element_index ${elementIndex}`;
       } else {

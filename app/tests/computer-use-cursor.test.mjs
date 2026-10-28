@@ -109,8 +109,9 @@ function fakeNative({ fail = null, extra = {} } = {}) {
       }
       if (method === "hidePhantomCursor") {
         const ids = params.windowId === undefined ? [...panels.keys()] : [params.windowId];
-        for (const id of ids) if (panels.has(id)) panels.get(id).visible = false;
-        return { hidden: ids.filter((id) => panels.has(id)) };
+        const hidden = ids.filter((id) => panels.has(id));
+        for (const id of hidden) { panels.get(id).visible = false; if (params.release) panels.delete(id); }
+        return { hidden };
       }
       if (method === "phantomCursorState") return { cursors: [...panels.values()] };
       if (extra[method]) return extra[method](params);
@@ -150,12 +151,27 @@ test("native: one panel per window via setPhantomCursor, pulse as asked, hidden 
   native.calls.length = 0;
   await cursor.restore({ windowId: 8 });
   assert.deepEqual(native.calls, [["setPhantomCursor", { screenX: -1200, screenY: -80, windowId: 8, pulse: false }]]);
+  // release: the lock went, so the native panel is closed and forgotten, not just ordered out.
   await cursor.release({ windowId: 8 });
-  assert.deepEqual(native.calls.at(-1), ["hidePhantomCursor", { windowId: 8 }]);
+  assert.deepEqual(native.calls.at(-1), ["hidePhantomCursor", { windowId: 8, release: true }]);
   native.calls.length = 0;
   await cursor.restore({ windowId: 8 });
   assert.deepEqual(native.calls, []);
-  assert.deepEqual((await cursor.state()).cursors.map((c) => c.windowId).sort(), [7, 8]);
+  assert.deepEqual((await cursor.state()).cursors.map((c) => c.windowId).sort(), [7]);
+  cursor.dispose();
+  assert.deepEqual((await cursor.state()).cursors, []);
+});
+
+test("native: a panel ordered out behind an off-screen window stays out of the display hit test (the restack may show it)", async () => {
+  const native = fakeNative();
+  const { cursor } = setUp({ native });
+  const call = native.call;
+  // The held window is minimized / on another Space: the panel is ordered out, but its windowNumber is valid.
+  native.call = async (method, params) => { const answer = await call(method, params); return method === "setPhantomCursor" ? { ...answer, visible: false } : answer; };
+  await cursor.pointAt({ x: 400, y: 300, windowId: 7, pulse: false });
+  assert.deepEqual(cursor.windowNumbers(), [101]);
+  await cursor.release({ windowId: 7 });
+  assert.deepEqual(cursor.windowNumbers(), []);
 });
 
 test("native: calls stay in order — a hide issued before a show lands before it", async () => {
@@ -332,5 +348,5 @@ test("service + cursor + one native: the hide lands before the AX hit test, the 
   ]);
   cu.release("s", {});
   await cursor.state();
-  assert.equal(native.panels.get(7).visible, false, "gone with the lock");
+  assert.equal(native.panels.has(7), false, "gone with the lock");
 });

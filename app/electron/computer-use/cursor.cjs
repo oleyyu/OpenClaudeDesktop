@@ -50,7 +50,9 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
   const web = createWebCursor({ BrowserWindow, app, platform, log, setTimer, clearTimer });
   let mode = native && platform === "darwin" && (typeof native.available !== "function" || native.available()) ? "native" : "web";
   const tips = new Map();          // windowId (0: none) → {x, y}: where its cursor is, while it is wanted
-  const shown = new Map();         // windowId → the panel's CGWindowID (windowNumber), while ordered in
+  // windowId → the panel's CGWindowID (windowNumber), while wanted: also while ordered out behind an off-screen window,
+  // since the native restack orders it back in (Space switch, un-minimize) without a call that could tell us.
+  const shown = new Map();
   let chain = Promise.resolve();   // native calls in order: a hide must land before the hit test that follows it
   const key = (windowId) => (Number.isInteger(windowId) && windowId > 0 ? windowId : 0);
   const fellBack = (error) => {
@@ -76,7 +78,7 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
     return run;
   };
   const record = (windowId, state) => {
-    if (state?.visible && Number.isInteger(state.windowNumber)) shown.set(windowId, state.windowNumber);
+    if (Number.isInteger(state?.windowNumber) && state.windowNumber > 0) shown.set(windowId, state.windowNumber);
     else shown.delete(windowId);
     return state;
   };
@@ -95,12 +97,16 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
     }, () => web.pointAt({ x, y, pulse }));
   }
 
-  /** Gone at once: that window's cursor, or every one (no windowId). Resolves once it is off screen. */
-  function hideNow(windowId) {
+  /**
+   * Gone at once: that window's cursor, or every one (no windowId). Resolves once it is off screen. release: the native
+   * panel is closed and forgotten too (the lock went), not kept for the next action.
+   */
+  function hideNow(windowId, { release = false } = {}) {
     const ids = windowId === undefined || windowId === null ? null : [key(windowId)];
+    const extra = release ? { release: true } : {};
     return queue(async () => {
-      if (!ids) { await native.call("hidePhantomCursor", {}); shown.clear(); return; }
-      for (const id of ids) { await native.call("hidePhantomCursor", { windowId: id }); shown.delete(id); }
+      if (!ids) { await native.call("hidePhantomCursor", { ...extra }); shown.clear(); return; }
+      for (const id of ids) { await native.call("hidePhantomCursor", { windowId: id, ...extra }); shown.delete(id); }
     }, () => web.hideNow());
   }
 
@@ -119,18 +125,18 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
     /** The window's lock went: hide it and forget where it was. */
     release({ windowId } = {}) {
       tips.delete(key(windowId));
-      return hideNow(key(windowId));
+      return hideNow(key(windowId), { release: true });
     },
     mode: () => mode,
     isShown: () => (mode === "native" ? shown.size > 0 : web.isShown()),
-    /** The native panels' CGWindowIDs that are on screen (the display hit test skips them). */
+    /** The native panels' CGWindowIDs that are wanted, on screen or about to be (the display hit test skips them). */
     windowNumbers: () => [...shown.values()],
     owns: (candidate) => web.owns(candidate),
     /** Native state, for the live check: {cursors: [...]}; null without the native cursor. */
     state: () => (mode === "native" ? queue(() => native.call("phantomCursorState"), () => null) : Promise.resolve(null)),
     dispose() {
       tips.clear();
-      if (mode === "native") queue(() => native.call("hidePhantomCursor", {}), () => undefined).catch(() => undefined);
+      if (mode === "native") queue(() => native.call("hidePhantomCursor", { release: true }), () => undefined).catch(() => undefined);
       shown.clear();
       web.dispose();
     },

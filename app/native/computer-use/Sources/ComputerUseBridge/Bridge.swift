@@ -10,8 +10,8 @@ import ComputerUseCore
 /// Methods (camelCase, docs/03 naming):
 ///   probe                                    → session gates + capabilities
 ///   listWindows   {bundleId}                 → {windows: [WindowInfo]}
-///   captureWindow {bundleId, windowId?, scale?, listsElements?}   (+ elements: AX summary in frame px)
-///   axClick       {bundleId, windowId, winLocalPt? {x,y} | elementIndex? | focused?, count?, button? ("left"; "right" is
+///   captureWindow {bundleId, windowId?, scale?, listsElements?}   (+ elements: AX summary in frame px, summaryId)
+///   axClick       {bundleId, windowId, winLocalPt? {x,y} | elementIndex? (+expectRole, summaryId) | focused?, count?, button? ("left"; "right" is
 ///                 the official context_menu refusal), dryRun?}
 ///   captureScreen {displayId?, allowedBundleIds, scale?, region? {x,y,width,height} display-local points}
 ///   listDisplays  → {displays: [{displayId, bounds, pixelWidth, pixelHeight, scaleFactor, isMain, name}]}
@@ -30,9 +30,9 @@ import ComputerUseCore
 ///                 the raw rung, only after the main process's reason policy allowed the fallback (RawInput.swift)
 ///   drag          {bundleId, windowId, points: [{winLocalPt, screenPt}], pixelScale, button?, focused?, grantedBundleIds}
 ///                 owns prepare/press/move/release/settle and returns before/after AX readback
-///   axType        {bundleId, windowId, text, mode?, winLocalPt? | elementIndex? (+expectRole) | focused?}
+///   axType        {bundleId, windowId, text, mode?, winLocalPt? | elementIndex? (+expectRole, summaryId) | focused?}
 ///   rawType       axType's params + {grantedBundleIds, axReason}: the raw text rung, after a policy fallback
-///   axKey         {bundleId, windowId?, combo, winLocalPt? | elementIndex? (+expectRole) | focused?}: app_key's AX rung
+///   axKey         {bundleId, windowId?, combo, winLocalPt? | elementIndex? (+expectRole, summaryId) | focused?}: app_key's AX rung
 ///   rawKey        {bundleId, windowId?, combo, winLocalPt? | elementIndex? | focused?, grantedBundleIds}: one keystroke
 ///                 to the app's keyboard focus, after a policy fallback (KeyInput.swift)
 ///   textChunks    {text} → {chunks: [[UTF-16 unit]]}: the raw rung's chunking (tests)
@@ -44,7 +44,8 @@ import ComputerUseCore
 ///   setPhantomCursor  {screenX, screenY, windowId?, pulse?} → that window's cursor panel state (PhantomCursor.swift):
 ///                 the tip on a global point, stacked above the window; pulse only for a click. main_thread_unavailable
 ///                 in a process without a Cocoa main run loop (ELECTRON_RUN_AS_NODE)
-///   hidePhantomCursor {windowId?} → {hidden: [windowId]}: orderOut that window's cursor, or every cursor
+///   hidePhantomCursor {windowId?, release?} → {hidden: [windowId]}: orderOut that window's cursor, or every cursor;
+///                 release: closed and forgotten as well (the lock went)
 ///   phantomCursorState → {cursors: [panel state], primaryHeight, screens}: read-only (tests, live checks)
 ///   showWindowHighlight {windowId, reduceMotion?} → that window's highlight state (WindowHighlight.swift): the glow
 ///                 page's clay rim on the window's frame, stacked directly above it, following it; main_thread_unavailable
@@ -268,10 +269,10 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
         return try MainThread.run { PhantomCursors.shared.set(x: x, y: y, windowId: windowId, pulse: pulse) }
     case "hidePhantomCursor":
         if params.raw["windowId"] != nil, params.raw["windowId"] is NSNull == false, params.uint32("windowId") == nil {
-            throw CUError.invalidParams("hidePhantomCursor: expected (windowId?)")
+            throw CUError.invalidParams("hidePhantomCursor: expected (windowId?, release?)")
         }
-        let windowId = params.uint32("windowId")
-        return try MainThread.run { PhantomCursors.shared.hide(windowId: windowId) }
+        let windowId = params.uint32("windowId"), release = params.raw["release"] as? Bool ?? false
+        return try MainThread.run { PhantomCursors.shared.hide(windowId: windowId, release: release) }
     case "phantomCursorState":
         return try MainThread.run { PhantomCursors.shared.state() }
     case "showWindowHighlight":
@@ -418,7 +419,8 @@ func axClick(_ params: Params) throws -> [String: Any] {
     }
     return AXLadder.click(.init(pid: window.pid, windowId: window.windowId, bounds: window.bounds, winLocalPt: local,
                                 elementIndex: index, focused: focused, count: count,
-                                dryRun: params.raw["dryRun"] as? Bool ?? false, expectRole: params.string("expectRole")))
+                                dryRun: params.raw["dryRun"] as? Bool ?? false, expectRole: params.string("expectRole"),
+                                summaryId: summaryId(params)))
 }
 
 func point(_ params: Params, _ key: String) throws -> CGPoint {
@@ -479,7 +481,7 @@ func typeRequest(_ params: Params, raw: Bool = false) throws -> TextInput.Reques
     guard [local != nil, index != nil, focused].filter({ $0 }).count == 1 else {
         throw CUError.invalidParams("exactly one of winLocalPt, elementIndex, focused")
     }
-    let address: TextInput.Address = focused ? .focused : index.map { .index($0, expectRole: params.string("expectRole")) } ?? .point(local!)
+    let address: TextInput.Address = focused ? .focused : index.map { .index($0, expectRole: params.string("expectRole"), summaryId: summaryId(params)) } ?? .point(local!)
     var granted: Set<String> = []
     if raw {
         guard let list = params.strings("grantedBundleIds"), list.contains(bundleId) else {
@@ -521,8 +523,13 @@ func keyAddress(_ params: Params) throws -> TextInput.Address? {
     let given = [local != nil, index != nil, focused].filter { $0 }.count
     guard given <= 1 else { throw CUError.invalidParams("at most one of winLocalPt, elementIndex, focused") }
     if focused { return .focused }
-    if let index { return .index(index, expectRole: params.string("expectRole")) }
+    if let index { return .index(index, expectRole: params.string("expectRole"), summaryId: summaryId(params)) }
     return local.map { .point($0) }
+}
+
+/// The app_screenshot summary an elementIndex comes from (captureWindow's summaryId), when given.
+func summaryId(_ params: Params) -> Int? {
+    params.double("summaryId").flatMap { $0 == $0.rounded() ? Int(exactly: $0) : nil }
 }
 
 /// A global point {x, y} (top-left origin, points) under params.point.

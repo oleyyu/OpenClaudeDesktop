@@ -117,11 +117,11 @@ public enum AXLadder {
     }
 
     /// The window's actionable elements in document order (breadth-first), each with its [index]. The elements are
-    /// cached (SummaryCache) so element_index addresses exactly what the model was shown.
-    public static func summary(pid: pid_t, windowId: UInt32, bounds: CGRect, scaleFactor: Double) -> [[String: Any]] {
+    /// cached (SummaryCache) so element_index addresses exactly what the model was shown; `id` names this summary, so
+    /// an index from an older one (another session's screenshot replaced it) is refused rather than resolved anew.
+    public static func summary(pid: pid_t, windowId: UInt32, bounds: CGRect, scaleFactor: Double) -> (elements: [[String: Any]], id: Int) {
         guard AXIsProcessTrusted(), let window = windowElement(pid: pid, windowId: windowId) else {
-            SummaryCache.store(windowId: windowId, pid: pid, elements: [])
-            return []
+            return ([], SummaryCache.store(windowId: windowId, pid: pid, elements: []))
         }
         var out: [[String: Any]] = [], kept: [AXUIElement] = []
         var queue = children(window)[...], visited = 0
@@ -143,8 +143,7 @@ public enum AXLadder {
             }
             queue.append(contentsOf: children(node))
         }
-        SummaryCache.store(windowId: windowId, pid: pid, elements: kept)
-        return out
+        return (out, SummaryCache.store(windowId: windowId, pid: pid, elements: kept))
     }
 
     // MARK: click
@@ -159,8 +158,9 @@ public enum AXLadder {
         public var count: Int
         public var dryRun: Bool
         public var expectRole: String?
-        public init(pid: pid_t, windowId: UInt32, bounds: CGRect, winLocalPt: CGPoint?, elementIndex: Int?, focused: Bool, count: Int, dryRun: Bool, expectRole: String? = nil) {
-            self.pid = pid; self.windowId = windowId; self.bounds = bounds; self.winLocalPt = winLocalPt; self.expectRole = expectRole
+        public var summaryId: Int?
+        public init(pid: pid_t, windowId: UInt32, bounds: CGRect, winLocalPt: CGPoint?, elementIndex: Int?, focused: Bool, count: Int, dryRun: Bool, expectRole: String? = nil, summaryId: Int? = nil) {
+            self.pid = pid; self.windowId = windowId; self.bounds = bounds; self.winLocalPt = winLocalPt; self.expectRole = expectRole; self.summaryId = summaryId
             self.elementIndex = elementIndex; self.focused = focused; self.count = count; self.dryRun = dryRun
         }
     }
@@ -200,7 +200,7 @@ public enum AXLadder {
         } else {
             let screenPt: CGPoint
             if let index = request.elementIndex {
-                guard let cached = SummaryCache.element(windowId: request.windowId, pid: request.pid, index: index),
+                guard let cached = SummaryCache.element(windowId: request.windowId, pid: request.pid, index: index, summaryId: request.summaryId),
                       case let rect = (frame(cached) ?? .null).intersection(request.bounds), !rect.isNull, !rect.isEmpty,
                       request.expectRole == nil || role(cached) == request.expectRole else { return unsupported("listed_element_gone") }
                 listed = cached
@@ -466,19 +466,26 @@ extension AXLadder {
     }
 }
 
-/// The elements behind the last summary of each window, so element_index means what the model saw. Guarded: N-API
-/// work runs on several libuv threads.
+/// The elements behind the last summary of each window, so element_index means what the model saw. One list per
+/// window, shared by every session: each summary gets a new id, and a lookup naming an older id finds nothing.
+/// Guarded: N-API work runs on several libuv threads.
 public enum SummaryCache {
     private static let lock = NSLock()
-    nonisolated(unsafe) private static var byWindow: [UInt32: (pid: pid_t, elements: [AXUIElement])] = [:]
+    nonisolated(unsafe) private static var byWindow: [UInt32: (pid: pid_t, id: Int, elements: [AXUIElement])] = [:]
+    nonisolated(unsafe) private static var lastId = 0
 
-    static func store(windowId: UInt32, pid: pid_t, elements: [AXUIElement]) {
+    /// Stores the list and returns its summary id.
+    @discardableResult
+    static func store(windowId: UInt32, pid: pid_t, elements: [AXUIElement]) -> Int {
         lock.lock(); defer { lock.unlock() }
-        byWindow[windowId] = (pid, elements)
+        lastId += 1
+        byWindow[windowId] = (pid, lastId, elements)
+        return lastId
     }
-    static func element(windowId: UInt32, pid: pid_t, index: Int) -> AXUIElement? {
+    static func element(windowId: UInt32, pid: pid_t, index: Int, summaryId: Int? = nil) -> AXUIElement? {
         lock.lock(); defer { lock.unlock() }
-        guard let entry = byWindow[windowId], entry.pid == pid, entry.elements.indices.contains(index) else { return nil }
+        guard let entry = byWindow[windowId], entry.pid == pid, summaryId == nil || entry.id == summaryId,
+              entry.elements.indices.contains(index) else { return nil }
         return entry.elements[index]
     }
 }

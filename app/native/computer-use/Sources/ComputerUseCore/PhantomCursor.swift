@@ -250,6 +250,12 @@ final class PhantomCursorPanel {
         panel.orderOut(nil)
     }
 
+    /// Hidden for good: the panel's window goes (its lock went), not just ordered out.
+    func close() {
+        hide()
+        panel.close()
+    }
+
     var json: [String: Any] {
         let primary = Double(NSScreen.screens.first?.frame.height ?? 0)
         let visibleTip = PhantomCursorGeometry.tip(of: panel.frame, primaryHeight: primary)
@@ -293,10 +299,18 @@ public final class PhantomCursors {
         return out
     }
 
-    /// hidePhantomCursor(windowId): that window's cursor goes (orderOut); no window id: all of them.
-    public func hide(windowId: UInt32?) -> [String: Any] {
+    /// hidePhantomCursor(windowId, release?): that window's cursor goes (orderOut); no window id: all of them.
+    /// release: the panel is closed and forgotten too (the lock went), so panels don't pile up over the process's life.
+    public func hide(windowId: UInt32?, release: Bool = false) -> [String: Any] {
         let targets = windowId.map { id in panels[id].map { [$0] } ?? [] } ?? Array(panels.values)
-        for cursor in targets { cursor.hide() }
+        for cursor in targets {
+            if release {
+                cursor.close()
+                panels[cursor.windowId] = nil
+            } else {
+                cursor.hide()
+            }
+        }
         watch()
         return ["hidden": targets.map { Int($0.windowId) }]
     }

@@ -540,6 +540,7 @@ const TEACH_STEPS = {
   approval_unavailable: "Tell the user the walkthrough needs the app's session window to ask them, and to try again there.",
   bad_args: "Fix the step as the message says and call again; no tooltip was shown.",
   cu_lock_held: "Ask the user to try again once the other session is done with the computer.",
+  state_conflict: "Call app_release first, then call request_teach_access again.",
 };
 /** A teach refusal in the one shape every tool refuses with: {ok:false, outcome, reasonCode, message, next_step} + isError. */
 function teachRefusal(reasonCode, message, extra = {}) {
@@ -569,6 +570,11 @@ async function requestTeachAccess(args, ctx) {
   if (!Array.isArray(args.apps) || !args.apps.every((app) => typeof app === "string")) return teachRefusal("bad_args", "\"apps\" must be an array of strings.");
   const names = [...new Set(args.apps.map((app) => app.trim()).filter(Boolean))];
   if (names.length > MAX_APPS) return teachRefusal("bad_args", `Ask for at most ${MAX_APPS} apps at a time.`);
+  // The tour's actions are display-scope (acquireDisplayLock refuses them while app locks are held): refuse before the card.
+  const held = svc.appLockBundles?.(ctx.sessionId) ?? [];
+  if (held.length) {
+    return teachRefusal("state_conflict", `This session is still controlling ${held.join(", ")} in the background, so a walkthrough can't start. Call app_release first.`, { appLockHeld: held });
+  }
   const grants = svc.grantsFor(ctx.sessionId);
   const resolved = names.length ? await cu.resolveApps(names) : [];
   if (resolved.some((entry) => entry.bundleId && svc.isSelfApp?.(entry.bundleId))) {
