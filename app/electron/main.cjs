@@ -2284,7 +2284,8 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
     if (!quitting) forgetWindowState(stateFile);
     if (win === window) {
       win = null;
-      const next = windowRegistry.lastFocused();
+      // A pane window never takes over: it has no focus handler to hand win back when the user returns to a full one.
+      const next = windowRegistry.lastFocusedFull() ?? windowRegistry.lastFocused();
       if (next) return void adoptMainWindow(next);
     }
     // File › New Window follows the open session popouts (adoptMainWindow above rebuilds the menu itself).
