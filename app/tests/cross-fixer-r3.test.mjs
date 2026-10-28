@@ -103,6 +103,32 @@ test('a workflow started by a scheduled prompt relays no earlier typed message; 
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('a Monitor notice queued during the user\'s turn leaves that turn\'s request and budget; its own turn is automated', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-notice-'), started = [], turns = [];
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  const workflowService = { start: async (params) => { started.push(params); return { id: params.runId, transcriptDir: path.join(root, 'runs', params.runId) }; } };
+  const service = createWorkflowToolService({ workflowService, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: async (threadId, params) => { turns.push(params); } });
+  const script = 'export const meta={name:"Audit",description:"one agent"};\nreturn await agent("x")';
+  try {
+    await service.turnStart({ threadId: 't1', input: [{ type: 'text', text: 'use a workflow to audit +500k' }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'a' } } });
+    await service.notice('t1', { prompt: 'Monitor: build finished' });
+    assert.equal(turns.length, 0, 'waits for the user\'s turn');
+    await service.launch({ script }, { sessionId: 't1', cwd: root });
+    assert.equal(started[0].userRequest, 'use a workflow to audit +500k');
+    assert.equal(started[0].budgetTotal, 500000);
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'a' } } });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(turns.length, 1, 'delivered once idle');
+    await service.launch({ script }, { sessionId: 't1', cwd: root });
+    assert.equal(started[1].userRequest, undefined, 'the delivered notice\'s turn is automated');
+    assert.equal(started[1].budgetTotal, undefined);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('a shared budget that failed to set up is set up again by the next launch', async () => {
   const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
   const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');

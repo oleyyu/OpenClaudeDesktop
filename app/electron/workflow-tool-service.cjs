@@ -73,6 +73,9 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
   // Sessions whose latest turn was started by a scheduled prompt or a Monitor event, not by the user: a workflow it starts
   // is automated, so no earlier typed message is relayed as the request that triggered it (Claude: kind 'automated').
   const automated = new Set();
+  // Sessions with such a message still waiting: automated once it is delivered as a turn (flush), not while the user's
+  // own turn is running.
+  const noticed = new Set();
   const delivering = new Set();
   // The plain prompts this service delivered as turns (a fired scheduled prompt), per session: the userMessage item such
   // a turn shows is not the user's own message (observe).
@@ -385,11 +388,14 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     for (const text of texts) { delivered.delete(text); delivered.add(text); }
     while (delivered.size > 20) delivered.delete(delivered.values().next().value);
     deliveredTexts.set(threadId, delivered);
+    const wasAutomated = automated.has(threadId), fromNotice = noticed.delete(threadId);
+    if (fromNotice) automated.add(threadId);
     try {
       // The session's last turn options (already decorated for its core), with the notification as the input.
       await startTurn(threadId, { ...structuredClone(entry.params), threadId, input: texts.map((text) => ({ type: "text", text, text_elements: [] })) });
     } catch (error) {
       pending.set(threadId, [...texts, ...(pending.get(threadId) ?? [])]);
+      if (fromNotice) { noticed.add(threadId); if (!wasAutomated) automated.delete(threadId); }
       console.warn("Workflow notification not delivered yet:", error?.message ?? error);
     } finally { delivering.delete(threadId); }
   }
@@ -407,7 +413,7 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     const list = pending.get(threadId) ?? [];
     list.push(text);
     pending.set(threadId, list);
-    automated.add(threadId);
+    noticed.add(threadId);
     await flush(threadId);
     return true;
   }
