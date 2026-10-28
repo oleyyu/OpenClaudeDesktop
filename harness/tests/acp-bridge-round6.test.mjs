@@ -488,6 +488,18 @@ test('Custom command: !{...} output keeps a character its shell wrote in two pie
   } finally { await b.close() }
 })
 
+test('Shutdown: a turn the stop ends has its last meta in index.json once shutdown resolves', async () => {
+  const b = bridge()
+  await b.call('initialize', {})
+  const { thread } = await b.call('thread/start', { cwd: b.home })
+  await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 5000', text_elements: [] }] })
+  await sleep(1200)
+  const stopping = Date.now()
+  await b.close()
+  const index = JSON.parse(fs.readFileSync(path.join(b.home, 'state', 'index.json'), 'utf8'))
+  assert.ok(index.threads[thread.id].updatedAt >= stopping, 'the stopped turn’s updatedAt')
+})
+
 test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
   const b = bridge({ adapter: adapterById('qwen') })
   try {

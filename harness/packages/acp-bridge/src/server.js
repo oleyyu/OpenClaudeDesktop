@@ -4392,7 +4392,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       threads.clear()
       store.flush()
       return Promise.allSettled([...live.map((thread) => closeThread(thread, 'OpenClaude Desktop core stopped.')), utility?.then((host) => host.stop())])
-    }).then(() => undefined)
+    }).then(() => {
+      // Closing ends the threads' turns, whose meta (updatedAt, usage) is only scheduled: the entry exits right after this.
+      store.flush()
+    })
     return shuttingDown
   }
 
