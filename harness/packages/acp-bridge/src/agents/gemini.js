@@ -964,11 +964,23 @@ const BLOCKED_BY_SETTINGS = 'Your Gemini CLI settings block this connector (mcp.
 const BLOCKED_UNTRUSTED = 'Gemini CLI loads this folder’s settings only after you trust the folder.'
 const BLOCKED_UNTRUSTED_FOLDER = 'Gemini CLI starts no connectors in a folder you haven’t trusted.'
 
-/** The user message a rewind drops: the dropped turn's prompt, found from the end (Gemini may fold the first prompt into its context message), else by position. */
+/**
+ * The user message a rewind drops: the prompt at the dropped turn's position (Gemini may fold the first prompt into its
+ * context message, so a prompt is any user message with text left after that block). When its text is not the dropped
+ * turn's, the prompt holding that text nearest the position (a repeated prompt must not pick a later turn).
+ */
 function rewindTarget(chat, keepTurns, turnText) {
-  const users = chat.messages.filter((message) => message?.type === 'user' && userText(message).trim())
-  const byText = turnText ? [...users].reverse().find((message) => userText(message).includes(turnText)) : null
-  return byText ?? chat.messages.filter(realUser)[keepTurns] ?? null
+  const prompts = chat.messages.filter((message) => message?.type === 'user' && (geminiReplayText(userText(message), 'user') ?? '').trim())
+  const wanted = turnText ? String(turnText).trim() : ''
+  const holds = (message) => userText(message).includes(wanted)
+  const atPosition = prompts[keepTurns] ?? null
+  if (!wanted || (atPosition && holds(atPosition))) return atPosition
+  let best = null
+  prompts.forEach((message, index) => {
+    if (!holds(message)) return
+    if (!best || Math.abs(index - keepTurns) < Math.abs(best.index - keepTurns)) best = { message, index }
+  })
+  return best?.message ?? atPosition
 }
 
 export default {
