@@ -284,6 +284,9 @@ function createTerminalService(options = {}) {
       // files export the proxy anyway.
       proxy = await Promise.race([Promise.resolve().then(shellProxy).catch(() => ({})),
         new Promise((resolve) => setTimeout(() => resolve({}), SHELL_PROXY_WAIT_MS).unref?.())]) || {};
+      // Closed (or the app quit) meanwhile: no shell for a tab nothing would ever find to hang up.
+      if (disposed) throw new Error("The app is quitting.");
+      if (records.get(record.id) !== record) throw new Error("The terminal was closed.");
     }
     let strip = [];
     try { strip = typeof options.stripEnv === "function" ? options.stripEnv() || [] : []; } catch { strip = []; }
