@@ -97,12 +97,16 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
     }, () => web.pointAt({ x, y, pulse }));
   }
 
-  /** Gone at once: that window's cursor, or every one (no windowId). Resolves once it is off screen. */
-  function hideNow(windowId) {
+  /**
+   * Gone at once: that window's cursor, or every one (no windowId). Resolves once it is off screen. release: the native
+   * panel is closed and forgotten too (the lock went), not kept for the next action.
+   */
+  function hideNow(windowId, { release = false } = {}) {
     const ids = windowId === undefined || windowId === null ? null : [key(windowId)];
+    const extra = release ? { release: true } : {};
     return queue(async () => {
-      if (!ids) { await native.call("hidePhantomCursor", {}); shown.clear(); return; }
-      for (const id of ids) { await native.call("hidePhantomCursor", { windowId: id }); shown.delete(id); }
+      if (!ids) { await native.call("hidePhantomCursor", { ...extra }); shown.clear(); return; }
+      for (const id of ids) { await native.call("hidePhantomCursor", { windowId: id, ...extra }); shown.delete(id); }
     }, () => web.hideNow());
   }
 
@@ -121,7 +125,7 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
     /** The window's lock went: hide it and forget where it was. */
     release({ windowId } = {}) {
       tips.delete(key(windowId));
-      return hideNow(key(windowId));
+      return hideNow(key(windowId), { release: true });
     },
     mode: () => mode,
     isShown: () => (mode === "native" ? shown.size > 0 : web.isShown()),
@@ -132,7 +136,7 @@ function createCursor({ BrowserWindow, app, native = null, platform = process.pl
     state: () => (mode === "native" ? queue(() => native.call("phantomCursorState"), () => null) : Promise.resolve(null)),
     dispose() {
       tips.clear();
-      if (mode === "native") queue(() => native.call("hidePhantomCursor", {}), () => undefined).catch(() => undefined);
+      if (mode === "native") queue(() => native.call("hidePhantomCursor", { release: true }), () => undefined).catch(() => undefined);
       shown.clear();
       web.dispose();
     },

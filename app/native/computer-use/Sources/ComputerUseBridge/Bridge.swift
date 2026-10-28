@@ -44,7 +44,8 @@ import ComputerUseCore
 ///   setPhantomCursor  {screenX, screenY, windowId?, pulse?} → that window's cursor panel state (PhantomCursor.swift):
 ///                 the tip on a global point, stacked above the window; pulse only for a click. main_thread_unavailable
 ///                 in a process without a Cocoa main run loop (ELECTRON_RUN_AS_NODE)
-///   hidePhantomCursor {windowId?} → {hidden: [windowId]}: orderOut that window's cursor, or every cursor
+///   hidePhantomCursor {windowId?, release?} → {hidden: [windowId]}: orderOut that window's cursor, or every cursor;
+///                 release: closed and forgotten as well (the lock went)
 ///   phantomCursorState → {cursors: [panel state], primaryHeight, screens}: read-only (tests, live checks)
 ///   showWindowHighlight {windowId, reduceMotion?} → that window's highlight state (WindowHighlight.swift): the glow
 ///                 page's clay rim on the window's frame, stacked directly above it, following it; main_thread_unavailable
@@ -268,10 +269,10 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
         return try MainThread.run { PhantomCursors.shared.set(x: x, y: y, windowId: windowId, pulse: pulse) }
     case "hidePhantomCursor":
         if params.raw["windowId"] != nil, params.raw["windowId"] is NSNull == false, params.uint32("windowId") == nil {
-            throw CUError.invalidParams("hidePhantomCursor: expected (windowId?)")
+            throw CUError.invalidParams("hidePhantomCursor: expected (windowId?, release?)")
         }
-        let windowId = params.uint32("windowId")
-        return try MainThread.run { PhantomCursors.shared.hide(windowId: windowId) }
+        let windowId = params.uint32("windowId"), release = params.raw["release"] as? Bool ?? false
+        return try MainThread.run { PhantomCursors.shared.hide(windowId: windowId, release: release) }
     case "phantomCursorState":
         return try MainThread.run { PhantomCursors.shared.state() }
     case "showWindowHighlight":
