@@ -21,7 +21,9 @@ function load() {
   }).catch(() => {});
   return loaded;
 }
-function markOpened(tabId) {
+// The saved list is read back first: after a worker restart the Set starts empty, and writing it alone would drop it.
+async function markOpened(tabId) {
+  await load();
   openedTabs.add(tabId);
   chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {});
 }
@@ -40,7 +42,7 @@ chrome.tabs.onUpdated.addListener((tabId, change) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   forgetTab(tabId);
   loadStarted.delete(tabId);
-  if (openedTabs.delete(tabId)) chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {});
+  load().then(() => { if (openedTabs.delete(tabId)) chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {}); });
   if (tabId === currentTabId) setCurrentTab(null);
 });
 
@@ -120,7 +122,7 @@ export async function navigate({ url, tabId } = {}, ctx = {}) {
       tab = await chrome.tabs.update(tab.id, { url: target });
     } else {
       tab = await chrome.tabs.create({ url: target, active: false });
-      markOpened(tab.id);
+      await markOpened(tab.id);
     }
   }
   const status = await waitForLoad(tab.id);
@@ -159,9 +161,8 @@ export async function tabsCreate({ url, active = false } = {}, ctx = {}) {
   if (typeof active !== "boolean") throw new ToolError("bad_request", "active is true or false.");
   const target = url === undefined || url === null || url === "" ? "about:blank" : normalizeUrl(url);
   assertSite(target, ctx);
-  await load();
   const tab = await chrome.tabs.create({ url: target, active });
-  markOpened(tab.id);
+  await markOpened(tab.id);
   const status = await waitForLoad(tab.id);
   if (status === "closed") throw new ToolError("no_such_tab", `Tab ${tab.id} was closed while loading.`);
   setCurrentTab(tab.id);

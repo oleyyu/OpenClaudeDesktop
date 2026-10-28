@@ -210,6 +210,23 @@ test('navigate back checks the site it lands on, and leaves it again when that i
   assert.deepEqual([landed.url, landed.status], ['https://bank.example/', 'complete']);
 });
 
+test('after a worker restart, opening a tab keeps the saved list of tabs the bridge opened', async () => {
+  await extensionModules();
+  const saved = { openedTabs: [11, 12], currentTabId: 12 };
+  const session = globalThis.chrome.storage.session;
+  globalThis.chrome.storage.session = { get: async () => ({ ...saved }), set: async (values) => { Object.assign(saved, values); } };
+  const create = globalThis.chrome.tabs.create, get = globalThis.chrome.tabs.get;
+  globalThis.chrome.tabs.create = async ({ url }) => ({ id: 50, url });
+  globalThis.chrome.tabs.get = async (id) => ({ id, url: 'https://c.example/', title: 'C', status: 'complete' });
+  globalThis.chrome.tabs.onUpdated.removeListener ??= () => {};
+  globalThis.chrome.tabs.onRemoved.removeListener ??= () => {};
+  try {
+    const fresh = await import('../../claude-ext/tabs.js?restarted'); // a new worker: tabs.js's state starts empty
+    await fresh.navigate({ url: 'https://c.example/' });
+    assert.deepEqual([...saved.openedTabs].sort((a, b) => a - b), [11, 12, 50]);
+  } finally { Object.assign(globalThis.chrome.tabs, { create, get }); globalThis.chrome.storage.session = session; }
+});
+
 test('navigate takes http(s) URLs and bare hosts only', async () => {
   const { tabs } = await extensionModules();
   assert.equal(tabs.normalizeUrl('example.com'), 'https://example.com/');
