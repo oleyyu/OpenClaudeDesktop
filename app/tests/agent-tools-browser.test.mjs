@@ -122,6 +122,21 @@ test('a site card that ends without an answer isn’t a refusal: the site is ask
   assert.equal(asked, 3);
 });
 
+test('parallel calls that reach the same new site share one card', async () => {
+  const extension = fakeExtension();
+  const service = createChromeBridgeService({ connect: extension.connect });
+  const answers = [];
+  const approve = () => new Promise((resolve) => answers.push(resolve));
+  const first = service.call('s1', 'navigate', { url: 'https://x.test/' }, { approve });
+  const second = service.call('s1', 'tabs_create', { url: 'https://x.test/b' }, { approve });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(answers.length, 1, 'one card for x.test');
+  answers[0](true);
+  assert.deepEqual(await first, { ok: true, url: 'https://x.test/' });
+  assert.deepEqual(await second, { ok: true, url: 'https://x.test/b' });
+  assert.deepEqual(service.allowedSites('s1'), ['x.test']);
+});
+
 test('a batch that reaches a new site asks, then runs only the steps that hadn’t run', async () => {
   const extension = fakeExtension();
   const service = createChromeBridgeService({ connect: extension.connect });

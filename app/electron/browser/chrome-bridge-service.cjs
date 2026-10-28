@@ -38,7 +38,7 @@ const declined = (host) => new ChromeToolError("site_declined", `The user didn't
 function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.connect(options), log = () => {} } = {}) {
   let client = null;
   let connecting = null;
-  const sessions = new Map(); // session id → { allowed: Set<host>, declined: Set<host> }
+  const sessions = new Map(); // session id → { allowed: Set<host>, declined: Set<host>, asking: Map<host, Promise> }
 
   function ensureClient() {
     if (client && !client.closed) return Promise.resolve(client);
@@ -56,7 +56,7 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
   function sitesOf(sessionId) {
     const key = String(sessionId ?? "");
     let entry = sessions.get(key);
-    if (!entry) { entry = { allowed: new Set(), declined: new Set() }; sessions.set(key, entry); }
+    if (!entry) { entry = { allowed: new Set(), declined: new Set(), asking: new Map() }; sessions.set(key, entry); }
     return entry;
   }
 
@@ -66,17 +66,28 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
     const sites = sitesOf(sessionId);
     let asks = 0;
     const allow = async ({ host, url }) => {
-      if (sites.allowed.has(host)) return true;
-      if (sites.declined.has(host)) return false;
-      if (++asks > MAX_ASKS_PER_CALL) throw new ChromeToolError("too_many_sites", "This call needed too many new sites; call again for the rest.");
-      // approve → true (allowed), false (declined); anything else (the card ended unanswered, approve threw) isn't a
-      // refusal, so the site isn't kept declined.
-      let ok = null;
-      try { ok = typeof approve === "function" ? await approve({ host, url }) : false; } catch { ok = null; }
-      if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
-      if (ok !== true && ok !== false) throw unanswered(host);
-      if (ok) { sites.allowed.add(host); sites.declined.delete(host); } else sites.declined.add(host);
-      return ok;
+      for (;;) {
+        if (sites.allowed.has(host)) return true;
+        if (sites.declined.has(host)) return false;
+        // Another call is already asking about this host (parallel calls): wait for that card instead of opening another.
+        const pending = sites.asking.get(host);
+        if (pending) {
+          await pending;
+          if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
+          continue;
+        }
+        if (++asks > MAX_ASKS_PER_CALL) throw new ChromeToolError("too_many_sites", "This call needed too many new sites; call again for the rest.");
+        // approve → true (allowed), false (declined); anything else (the card ended unanswered, approve threw) isn't a
+        // refusal, so the site isn't kept declined.
+        const asked = (async () => { try { return typeof approve === "function" ? await approve({ host, url }) : false; } catch { return null; } })();
+        sites.asking.set(host, asked);
+        let ok;
+        try { ok = await asked; } finally { sites.asking.delete(host); }
+        if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
+        if (ok !== true && ok !== false) throw unanswered(host);
+        if (ok) { sites.allowed.add(host); sites.declined.delete(host); } else sites.declined.add(host);
+        return ok;
+      }
     };
     const send = async (input) => {
       if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
