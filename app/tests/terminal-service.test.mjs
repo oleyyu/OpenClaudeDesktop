@@ -434,3 +434,20 @@ test('two restarts of one terminal while its shell waits on the proxy leave one 
     assert.equal((await second).status, 'running');
   } finally { await terminals.dispose(); }
 });
+
+test('after a restart, ready waits for the new shell’s startup output', { timeout: 20000 }, async () => {
+  const folder = tempFolder();
+  fs.writeFileSync(path.join(folder, '.profile'), 'sleep 0.6; echo BANNER-NEW\n');
+  const terminals = service(folder);
+  const sender = fakeSender();
+  try {
+    const info = await terminals.call('create', { sessionId: 's1' }, sender);
+    const first = await terminals.call('ready', { sessionId: 's1', id: info.id }, sender);
+    assert.match(output(sender, info.id), /BANNER-NEW/);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+    const again = await terminals.call('ready', { sessionId: 's1', id: info.id }, sender);
+    assert.ok(again.at > first.at, 'the new shell’s banner and prompt come before the offset');
+    assert.equal((output(sender, info.id).match(/BANNER-NEW/g) || []).length, 2);
+  } finally { await terminals.dispose(); }
+});

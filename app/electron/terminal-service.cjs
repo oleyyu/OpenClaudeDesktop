@@ -303,6 +303,7 @@ function createTerminalService(options = {}) {
     record.exitCode = null;
     record.signal = null;
     record.busy = false;
+    record.outputFrom = record.total; // shellReady waits for this shell's own output, not a restarted one's
     startProcess(record, size);
     ensureTimers();
     return true;
@@ -652,7 +653,7 @@ function createTerminalService(options = {}) {
   async function shellReady(record) {
     const startedAt = Date.now();
     while (Date.now() - startedAt < READY_MAX_MS && record.status === "running") {
-      if (record.total > 0 && Date.now() - record.lastOutputAt >= READY_QUIET_MS) break;
+      if (record.total > (record.outputFrom ?? 0) && Date.now() - record.lastOutputAt >= READY_QUIET_MS) break;
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     if (record.status !== "running" || records.get(record.id) !== record) throw new Error("The terminal wasn’t ready, so the command wasn’t run");
