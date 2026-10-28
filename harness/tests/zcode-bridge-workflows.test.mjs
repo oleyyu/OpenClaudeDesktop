@@ -580,6 +580,14 @@ test('a finished run\'s notification turn: one notice per run in OpenClaude Desk
     { status: 'completed', summary: 'Dynamic workflow "smoke-wf" completed', taskId: 'dwfrun-5886' },
     { status: 'stopped', summary: 'Dynamic workflow "other" was stopped', taskId: 'dwfrun-7777' },
   ])
+  // A batch takes the reason from each summary, without ZCode's status word.
+  const failedBlock = (summary) => ZCODE_NOTIFICATION.replace('completed</status>', 'failed</status>').replace('completed.</summary>', `${summary}</summary>`)
+  const failedBatch = workflowNotices(`${failedBlock('errored: the script failed.')}\n\n${failedBlock('failed.').replaceAll('5886', '7777')}\n\n${failedBlock('failed because its in-process state was lost.').replaceAll('5886', '8888')}`)
+  assert.deepEqual((await Promise.all(failedBatch.map(appNotice))).map((notice) => notice.summary), [
+    'Dynamic workflow "smoke-wf" failed: the script failed',
+    'Dynamic workflow "smoke-wf" failed',
+    'Dynamic workflow "smoke-wf" failed because its in-process state was lost',
+  ])
   // Not a workflow's end: a background command's result, a stall notice.
   assert.deepEqual(workflowNotices('<task-notification>\n<task-id>bash_1</task-id>\n<status>completed</status>\n<summary>Background command &quot;npm test&quot; completed (exit code 0)</summary>\n</task-notification>', { backgroundSource: 'bash', title: 'npm test', workId: 'bash_1' }), [])
   // A stall and an agent's question are notices of their own kinds (their own rows in the app).
