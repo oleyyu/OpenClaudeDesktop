@@ -64,7 +64,7 @@ function RequirementsCard({ desktopCall, onContinue, onBack }) {
       {error && <p className="sob-error sob-center" role="alert">{error}</p>}
       <div className="sob-actions sob-agent-actions">
         <SourceSettingsButton variant="primary" size="lg" className="sob-wide" busy={busy} disabled={!node?.ok} onClick={proceed}>{t("Continue")}</SourceSettingsButton>
-        <button type="button" className="sob-text-button" disabled={busy} onClick={() => { setError(""); void refresh(); }}>{t("Check again")}</button>
+        <button type="button" className="sob-text-button" onClick={() => { setError(""); void refresh(); }}>{t("Check again")}</button>
         <SourceSettingsButton variant="ghost" disabled={busy} onClick={onBack}>{t("Back")}</SourceSettingsButton>
       </div>
     </div>
