@@ -1699,7 +1699,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     // The pages' last frames are taken first (bounded; the pages stay open until then), the servers stop meanwhile.
     const framesSaved = frameDir ? Promise.race([saveFrames().catch(() => {}), sleep(FRAME_TIMEOUT_MS + 400)]) : null;
     const running = [...servers.values()].filter((server) => server.child?.pid);
-    for (const server of servers.values()) stopProcess(server);
+    // A start still picking its port or waiting on its environment sees it was stopped and never spawns.
+    for (const server of servers.values()) { server.status = "stopped"; stopProcess(server); }
     servers.clear();
     const pagesClosed = framesSaved ? framesSaved.then(() => closePages()) : (closePages(), Promise.resolve());
     if (!running.length) return pagesClosed;

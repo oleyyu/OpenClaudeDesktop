@@ -179,3 +179,21 @@ test('preview-12: the preview partition gives sites the standard agent and Claud
   assert.deepEqual(await send('https://claude.ai/'), { requestHeaders: { 'User-Agent': claude } });
   assert.deepEqual(await send('http://localhost:3000/'), {});
 });
+
+test('quitting while a start is still waiting on its environment never spawns the server afterwards', async (t) => {
+  const cwd = project([npm('dev', 3000)], { dev: 'next dev' });
+  const world = processWorld(), fake = fakeElectron();
+  let releaseEnv;
+  const envHeld = new Promise((resolve) => { releaseEnv = resolve; });
+  let envAsked;
+  const envWanted = new Promise((resolve) => { envAsked = resolve; });
+  const instance = createPreviewService({ ...worldOptions(world), electron: fake.electron, getSession: (id) => (id === 's1' ? { id, cwd } : null), spawnEnv: () => { envAsked(); return envHeld; }, logger: { warn() {}, info() {} } });
+  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+  const run = instance.call(fake.sender(), 'preview-server-start', { sessionId: 's1', name: 'dev' });
+  await envWanted;
+  await instance.dispose({ graceMs: 50 });
+  releaseEnv({ PATH: '/usr/bin:/bin' });
+  const result = await run;
+  assert.equal(result.ok, false);
+  assert.equal(world.children.length, 0, 'nothing is spawned after the app quit');
+});
