@@ -3572,7 +3572,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     const defs = adapter.coreSettings.defs
     if (!defs.some((def) => def.options === 'models')) return defs
     let ids = []
-    try { ids = [...new Set(((await modelList())?.data ?? []).map((entry) => String(entry.id ?? entry.model ?? '').replace(/\(.*\)$/, '').trim()).filter(Boolean))] } catch (error) { log(`core settings models: ${error?.message ?? error}`) }
+    try { ids = [...new Set(((await modelList()) ?? []).map((entry) => String(entry.id ?? entry.model ?? '').replace(/\(.*\)$/, '').trim()).filter(Boolean))] } catch (error) { log(`core settings models: ${error?.message ?? error}`) }
     // A model already chosen stays listed even when the running list doesn't offer it (another auth type, a removed provider).
     const stored = readCoreSettings()
     return defs.map((def) => {

@@ -439,3 +439,19 @@ test('Qwen Try again: codeDesktop/turn/continue resumes through qwen/control/ses
     } finally { await b.close() }
   }
 })
+
+test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
+  const b = bridge({ adapter: adapterById('qwen') })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    await b.turn(thread.id, 'hello')
+    const ids = (await b.call('model/list', {})).data.map((model) => String(model.id).replace(/\(.*\)$/, '').trim())
+    assert.ok(ids.length)
+    const { settings } = await b.call('codeDesktop/coreSettings/read', {})
+    const fast = settings.find((entry) => entry.key === 'fastModel')
+    assert.deepEqual(fast.options, [...new Set(ids)])
+    const written = await b.call('codeDesktop/coreSettings/write', { key: 'fastModel', value: ids[0] })
+    assert.equal(written.settings.find((entry) => entry.key === 'fastModel').value, ids[0])
+  } finally { await b.close() }
+})
