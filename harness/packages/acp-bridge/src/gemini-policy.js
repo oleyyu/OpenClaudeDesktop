@@ -141,9 +141,12 @@ export function commandParts(command) {
 /**
  * The winning decision of these rules for a call ('ask_user' | 'allow' | 'deny'), with its rule, or null when none matches.
  * mode: Gemini's approval mode the call is judged in ('default', 'autoEdit', 'yolo', 'plan').
+ * servers: the configured MCP server names, so a name with an underscore ('my_server') is told apart from its tool.
  */
-export function policyDecision(rules, { name, args = null, mode = 'default' }) {
-  const server = typeof name === 'string' && name.startsWith(MCP_PREFIX) ? /^mcp_([^_]+)_/.exec(name)?.[1] : undefined
+export function policyDecision(rules, { name, args = null, mode = 'default', servers = [] }) {
+  const server = typeof name === 'string' && name.startsWith(MCP_PREFIX)
+    ? servers.filter((candidate) => name.startsWith(`${MCP_PREFIX}${candidate}_`)).sort((a, b) => b.length - a.length)[0] ?? /^mcp_([^_]+)_/.exec(name)?.[1]
+    : undefined
   const commands = SHELL_TOOLS.has(name) ? commandParts(args?.command) : []
   for (const rule of rules) if (ruleMatches(rule, { name, server, args, mode, commands })) return { decision: rule.decision, rule }
   return null

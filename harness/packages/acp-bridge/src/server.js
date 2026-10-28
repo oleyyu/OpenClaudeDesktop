@@ -2046,6 +2046,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const child = spawn(wrapped.command, wrapped.args, { env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, stdio: ['ignore', 'pipe', 'pipe'] })
       let stdout = ''
       let stderr = ''
+      // Decoded as one stream each, so a character split across two reads stays whole.
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
       child.stdout.on('data', (chunk) => { stdout += chunk })
       child.stderr.on('data', (chunk) => { stderr = (stderr + chunk).slice(-8000) })
       const timer = setInterval(() => { if (state.cancelled && child.exitCode === null) child.kill('SIGTERM') }, 250)
@@ -2323,7 +2326,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       let output = ''
       let child
       try { child = spawn(wrapped.command, wrapped.args, { cwd: thread.cwd, env: agentEnv, stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { resolve({ output: String(error?.message ?? error), exitCode: 127 }); return }
-      const take = (chunk) => { if (output.length < 256 * 1024) output += String(chunk) }
+      const take = (chunk) => { if (output.length < 256 * 1024) output += chunk }
+      // Decoded as one stream each, so a character split across two reads stays whole.
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
       child.stdout.on('data', take)
       child.stderr.on('data', take)
       const timer = setTimeout(() => child.kill('SIGTERM'), 120000)
@@ -3583,7 +3589,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     const defs = adapter.coreSettings.defs
     if (!defs.some((def) => def.options === 'models')) return defs
     let ids = []
-    try { ids = [...new Set(((await modelList())?.data ?? []).map((entry) => String(entry.id ?? entry.model ?? '').replace(/\(.*\)$/, '').trim()).filter(Boolean))] } catch (error) { log(`core settings models: ${error?.message ?? error}`) }
+    try { ids = [...new Set(((await modelList()) ?? []).map((entry) => String(entry.id ?? entry.model ?? '').replace(/\(.*\)$/, '').trim()).filter(Boolean))] } catch (error) { log(`core settings models: ${error?.message ?? error}`) }
     // A model already chosen stays listed even when the running list doesn't offer it (another auth type, a removed provider).
     const stored = readCoreSettings()
     return defs.map((def) => {
@@ -4020,7 +4026,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const host = await ensureHost(thread)
         let accepted = false
         try { accepted = await adapter.continueCheck(ctx, host, thread.id) } catch (error) { log(`continue check: ${error?.message ?? error}`) }
-        if (!accepted) return { accepted: false }
+        // A turn that started while the check was out (a message sent meanwhile, another Try again) keeps the thread.
+        if (!accepted || thread.running) return { accepted: false }
         const turnId = `turn-${randomUUID()}`
         void runTurn(thread, { input: [], turnId, continuation: true })
         return { accepted: true, turn: { id: turnId, items: [], itemsView: 'notLoaded', status: 'inProgress', error: null, startedAt: null, completedAt: null, durationMs: null } }
@@ -4064,7 +4071,11 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         // `/compact [<instruction>]`, adapter.compactInstructions); one line, so the command stays a command.
         const instructions = adapter.compactInstructions && typeof params.codeDesktop?.instructions === 'string' ? params.codeDesktop.instructions.replace(/\s+/g, ' ').trim().slice(0, 4000) : ''
         const prompt = instructions ? `${adapter.compactCommand} ${instructions}` : adapter.compactCommand
-        setImmediate(() => void runTurn(thread, { input: [], compaction: true, prompt }))
+        setImmediate(() => {
+          // A turn/start handled before this fired has the thread: a second turn over it would never finish the first.
+          if (thread.running) return log(`compact ${thread.id}: a turn started first; not compacting`)
+          void runTurn(thread, { input: [], compaction: true, prompt })
+        })
         return {}
       }
       case 'review/start': {
@@ -4195,7 +4206,22 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         if (index < 0 || !thread.queue.length) throw new RpcError(INVALID_REQUEST, thread.queue.length ? 'That queued message already started.' : 'The queue is empty.')
         const [entry] = thread.queue.splice(index, 1)
         if (thread.running && adapter.steer) {
-          await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
+          try {
+            await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
+          } catch (error) {
+            // Not taken: the message waits in its place again (and starts now if the turn ended while the steer was out).
+            thread.queue.splice(Math.min(index, thread.queue.length), 0, entry)
+            notify('thread/queue/changed', { threadId: thread.id })
+            setImmediate(() => drainQueue(thread))
+            throw error
+          }
+          // Shown in the turn it joined, as turn/steer shows it.
+          const active = thread.projector.activeTurn
+          if (active) {
+            const notes = []
+            thread.projector.pushItem(notes, active, { type: 'userMessage', id: thread.projector.nextId('user'), clientId: entry.clientUserMessageId ?? null, content: entry.input }, Date.now())
+            emit(notes)
+          }
         } else thread.queue.unshift(entry)
         notify('thread/queue/changed', { threadId: thread.id })
         setImmediate(() => drainQueue(thread))
@@ -4392,7 +4418,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       threads.clear()
       store.flush()
       return Promise.allSettled([...live.map((thread) => closeThread(thread, 'OpenClaude Desktop core stopped.')), utility?.then((host) => host.stop())])
-    }).then(() => Promise.allSettled([...hosts].map((host) => host.stop()))).then(() => undefined)
+    }).then(() => Promise.allSettled([...hosts].map((host) => host.stop()))).then(() => {
+      // Closing ends the threads' turns, whose meta (updatedAt, usage) is only scheduled: the entry exits right after this.
+      store.flush()
+    })
     return shuttingDown
   }
 

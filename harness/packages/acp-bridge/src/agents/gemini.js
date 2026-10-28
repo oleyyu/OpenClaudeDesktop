@@ -1622,7 +1622,7 @@ export default {
     const rules = loadGeminiPolicies({ home: baseOf(ctx.env), cwd, trusted: cwd ? trustedFolder(ctx.env, settings, cwd) : false })
     if (!rules.length) return null
     const geminiMode = mode === 'bypass' ? 'yolo' : mode === 'acceptEdits' ? 'autoEdit' : mode === 'plan' ? 'plan' : 'default'
-    const verdict = policyDecision(rules, { name, args: call?.rawInput && typeof call.rawInput === 'object' ? call.rawInput : null, mode: geminiMode })
+    const verdict = policyDecision(rules, { name, args: call?.rawInput && typeof call.rawInput === 'object' ? call.rawInput : null, mode: geminiMode, servers: ctx.mcpServerNames?.() ?? [] })
     if (verdict?.decision !== 'ask_user') return null
     const scope = verdict.rule.tier === 5 ? 'Your organization’s Gemini CLI policy' : verdict.rule.tier === 3 ? 'This project’s Gemini CLI policy' : 'Your Gemini CLI policy'
     return { reason: `${scope} asks before this runs.` }
