@@ -434,14 +434,14 @@ function createInstructionsService({ getConfig, getClient, shell, knownCwd, home
       }
       case "open-file": {
         const target = projectFileTarget(prefs(), cwd, { home, fs: fsys });
-        if (!readProjectFile(target, fsys).exists) throw new Error("The instructions file doesn’t exist yet.");
+        if (!readProjectFile(target, fsys).exists) throw new Error(i18n.t("The instructions file doesn’t exist yet."));
         const error = await shell.openPath(target);
         if (error) throw new Error(error);
         return true;
       }
       case "reveal-file": {
         const target = projectFileTarget(prefs(), cwd, { home, fs: fsys });
-        if (!readProjectFile(target, fsys).exists) throw new Error("The instructions file doesn’t exist yet.");
+        if (!readProjectFile(target, fsys).exists) throw new Error(i18n.t("The instructions file doesn’t exist yet."));
         shell.showItemInFolder(target);
         return true;
       }
@@ -458,13 +458,13 @@ function createInstructionsService({ getConfig, getClient, shell, knownCwd, home
         const engine = runningEngine(getClient());
         const files = coreInstructionFiles(cwd, { home, fs: fsys, engine });
         const target = files.find((file) => file.path === p.path);
-        if (!target) throw new Error("Unknown instructions file.");
+        if (!target) throw new Error(i18n.t("Unknown instructions file."));
         if (p.op === "core-file-create") {
-          if (target.scope !== "global") throw new Error("Only the global instructions file can be created here.");
+          if (target.scope !== "global") throw new Error(i18n.t("Only the global instructions file can be created here."));
           fsys.mkdirSync(path.dirname(target.path), { recursive: true });
           const name = coreForEngine(getClient()?.serverInfo?.engine).assistant || coreForEngine(getClient()?.serverInfo?.engine).name;
           try { fsys.writeFileSync(target.path, `# Instructions for every ${name} session\n\n`, { flag: "wx" }); } catch (error) { if (error?.code !== "EEXIST") throw error; }
-        } else if (!target.exists) throw new Error("The instructions file doesn’t exist yet.");
+        } else if (!target.exists) throw new Error(i18n.t("The instructions file doesn’t exist yet."));
         if (p.op === "core-file-reveal") { shell.showItemInFolder(target.path); return true; }
         const error = await shell.openPath(target.path);
         if (error) throw new Error(error);

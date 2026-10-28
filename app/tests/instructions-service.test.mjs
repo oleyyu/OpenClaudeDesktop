@@ -146,6 +146,12 @@ test('service ops: preview, create-file (never overwrites), open/reveal, cwd val
   assert.equal(before.engine, 'codex');
   assert.deepEqual(before.file, { path: target, exists: false, bytes: 0 });
   await assert.rejects(svc.run({ op: 'open-file', cwd: repo }), /doesn’t exist yet/);
+  const i18n = require('../electron/i18n/index.mjs');
+  i18n.setLocale('zh-CN');
+  try {
+    await assert.rejects(svc.run({ op: 'reveal-file', cwd: repo }), { message: '指令文件尚不存在。' });
+    await assert.rejects(svc.run({ op: 'core-file-open', cwd: repo, path: '/nowhere' }), { message: '未知的指令文件。' });
+  } finally { i18n.setLocale('en'); }
   const created = await svc.run({ op: 'create-file', cwd: repo });
   assert.equal(created.file.exists, true);
   assert.equal(created.text, '# Custom instructions\nG', 'the template comment adds nothing');
