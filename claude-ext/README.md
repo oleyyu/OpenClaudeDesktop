@@ -103,6 +103,8 @@ ref 规则：
 - **站点授权**：每个会话第一次碰到某个站点时，弹出 "chrome-site" 审批卡（Bypass permissions 下不问）。允许后整个会话内有效；
   拒绝后本会话不再询问，也不会再碰那个站点。具体机制：扩展按调用里带的 `allowedHosts` 拦截，返回 `site_not_allowed`，
   主进程弹卡片，允许后重发；batch 只续跑还没执行的步骤。点击链接跳到新站点后，下一次在那个 tab 上操作时才会询问。
+  没有自己网址的页面（别的网站打开并写入的 about:blank、data: 等）没法授权，直接返回 `site_unknown`；blob: 页面按它所属的站点算，
+  只有扩展自己开的空白 tab 不受限。
 - 主进程服务：`app/electron/browser/chrome-bridge-service.cjs`。所有会话共用一条到 native host 的连接；扩展没连上时，
   模型会收到一条说明怎么装的错误。
 

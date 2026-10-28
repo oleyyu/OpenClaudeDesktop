@@ -21,7 +21,9 @@ function load() {
   }).catch(() => {});
   return loaded;
 }
-function markOpened(tabId) {
+// The saved list is read back first: after a worker restart the Set starts empty, and writing it alone would drop it.
+async function markOpened(tabId) {
+  await load();
   openedTabs.add(tabId);
   chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {});
 }
@@ -40,7 +42,7 @@ chrome.tabs.onUpdated.addListener((tabId, change) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   forgetTab(tabId);
   loadStarted.delete(tabId);
-  if (openedTabs.delete(tabId)) chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {});
+  load().then(() => { if (openedTabs.delete(tabId)) chrome.storage.session.set({ openedTabs: [...openedTabs] }).catch(() => {}); });
   if (tabId === currentTabId) setCurrentTab(null);
 });
 
@@ -60,12 +62,19 @@ export async function resolveTab(tabId) {
   throw new ToolError("no_tab", "There's no tab to act on. Call navigate with a url first.");
 }
 
+/** Throws unless the call may read or act on the page the tab shows (sites.js): about:blank only in a tab the bridge
+ * opened (one a site opened can hold that site's data). */
+export async function assertTabSite(tab, ctx) {
+  await load();
+  assertSite(tab.url || tab.pendingUrl || "", ctx, { blankOk: openedTabs.has(tab.id) });
+}
+
 /** http(s) URLs, or a bare host ("example.com" → https://example.com/). */
 export function normalizeUrl(input) {
   const raw = typeof input === "string" ? input.trim() : "";
   if (!raw) throw new ToolError("bad_request", "url is required.");
   if (raw === "about:blank") return raw;
-  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) && !/^[^/:]+:\d+(\/|$)/.test(raw) ? raw : `https://${raw}`;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) && !/^[^/:]+:\d+([/?#]|$)/.test(raw) ? raw : `https://${raw}`;
   let url;
   try { url = new URL(withScheme); } catch { throw new ToolError("bad_url", `${raw} isn't a URL.`); }
   if (url.protocol !== "http:" && url.protocol !== "https:") throw new ToolError("bad_url", `Only http and https pages can be opened (${url.protocol} isn't).`);
@@ -100,7 +109,7 @@ export async function navigate({ url, tabId } = {}, ctx = {}) {
   let tab;
   if (url === "back" || url === "forward") {
     tab = await resolveTab(tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     invalidateTab(tab.id);
     try { await (url === "back" ? chrome.tabs.goBack(tab.id) : chrome.tabs.goForward(tab.id)); }
     catch { throw new ToolError("bad_request", `Tab ${tab.id} has no page to go ${url} to.`); }
@@ -113,13 +122,24 @@ export async function navigate({ url, tabId } = {}, ctx = {}) {
       tab = await chrome.tabs.update(tab.id, { url: target });
     } else {
       tab = await chrome.tabs.create({ url: target, active: false });
-      markOpened(tab.id);
+      await markOpened(tab.id);
     }
   }
   const status = await waitForLoad(tab.id);
   if (status === "closed") throw new ToolError("no_such_tab", `Tab ${tab.id} was closed while loading.`);
+  const landed = await chrome.tabs.get(tab.id);
+  if (url === "back" || url === "forward") {
+    // Where history goes isn't known before it loads: a site the call may not use is left again, and nothing of it is
+    // returned (site_not_allowed asks the user; allowed, the call goes there again).
+    try { await assertTabSite(landed, ctx); }
+    catch (error) {
+      invalidateTab(tab.id);
+      try { await (url === "back" ? chrome.tabs.goForward(tab.id) : chrome.tabs.goBack(tab.id)); await waitForLoad(tab.id); } catch {}
+      throw error;
+    }
+  }
   setCurrentTab(tab.id);
-  return { ...tabSummary(await chrome.tabs.get(tab.id)), status };
+  return { ...tabSummary(landed), status };
 }
 
 /** After a click or key: if the tab started loading a page, wait for it and say where it went (its refs are void). */
@@ -141,9 +161,8 @@ export async function tabsCreate({ url, active = false } = {}, ctx = {}) {
   if (typeof active !== "boolean") throw new ToolError("bad_request", "active is true or false.");
   const target = url === undefined || url === null || url === "" ? "about:blank" : normalizeUrl(url);
   assertSite(target, ctx);
-  await load();
   const tab = await chrome.tabs.create({ url: target, active });
-  markOpened(tab.id);
+  await markOpened(tab.id);
   const status = await waitForLoad(tab.id);
   if (status === "closed") throw new ToolError("no_such_tab", `Tab ${tab.id} was closed while loading.`);
   setCurrentTab(tab.id);

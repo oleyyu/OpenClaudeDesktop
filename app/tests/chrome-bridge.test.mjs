@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 
@@ -86,7 +87,20 @@ test('the host routes execute_tool to the extension and the answer back to the a
     host.stdin.write(encode({ method: 'notification', params: { type: 'tab_changed', tabId: 7 }, tool_use_id: null }));
     await until(() => heardByB.some((params) => params.type === 'tab_changed'));
 
-    await assert.rejects(a.executeTool('slow', {}, { timeoutMs: 100 }), (error) => error.code === 'timeout');
+    await assert.rejects(a.executeTool('slow', {}, { timeoutMs: 100, toolUseId: 'toolu_slow' }), (error) => error.code === 'timeout');
+    await until(() => toExtension.find((message) => message.method === 'cancel_tool' && message.tool_use_id === 'toolu_slow'));
+
+    // Stop: the call is given up at once and the extension is told to stop it; b can't cancel a's call.
+    const stopper = new AbortController();
+    const stopped = a.executeTool('browser_batch', { actions: [] }, { toolUseId: 'toolu_3', signal: stopper.signal });
+    await until(() => toExtension.find((message) => message.tool_use_id === 'toolu_3'));
+    b.socket.write(encode({ method: 'cancel_tool', params: {}, tool_use_id: 'toolu_3' }));
+    stopper.abort();
+    await assert.rejects(stopped, (error) => error.code === 'stopped');
+    await until(() => toExtension.some((message) => message.method === 'cancel_tool'));
+    await wait(100);
+    assert.deepEqual(toExtension.filter((message) => message.method === 'cancel_tool' && message.tool_use_id !== 'toolu_slow'), [{ method: 'cancel_tool', params: {}, tool_use_id: 'toolu_3' }]);
+    assert.equal(a.pending.size, 0);
 
     const exited = new Promise((resolve) => host.once('exit', resolve));
     host.stdin.end();
@@ -141,10 +155,84 @@ test('refs: read_page voids older refs, other tabs are refused, navigation makes
   assert.equal(codeOf(() => refs.checkRef(2, 'ref_5')), null);
 });
 
+// content.js against a page of one button: just enough DOM for find.
+function contentScript() {
+  const node = (tagName, props = {}) => ({ nodeType: 1, tagName, childNodes: [], hidden: false, attributes: {}, getAttribute(name) { return this.attributes[name] ?? null; }, hasAttribute(name) { return name in this.attributes; }, checkVisibility: () => true, querySelectorAll: () => [], ...props });
+  const body = node('BODY');
+  const button = node('BUTTON', { parentElement: body, innerText: 'Save', textContent: 'Save' });
+  button.childNodes.push({ nodeType: 3, textContent: 'Save' });
+  body.childNodes.push(button);
+  const sandbox = { document: { body, title: 'T' }, location: { href: 'https://a.test/#top' }, Node: { ELEMENT_NODE: 1, TEXT_NODE: 3, DOCUMENT_FRAGMENT_NODE: 11 }, WeakRef, getComputedStyle: () => ({}) };
+  sandbox.globalThis = sandbox;
+  vm.runInNewContext(fs.readFileSync(new URL('../../claude-ext/content.js', import.meta.url), 'utf8'), sandbox);
+  return sandbox.__openclaudeBridge;
+}
+
+test('refs: find hands a kept ref out again, so it stays valid after a same-document navigation', async () => {
+  const { refs } = await extensionModules();
+  const page = contentScript();
+  const find = (startAt) => refs.withRefs(() => { const out = page.run('find', { query: 'save', startAt }); refs.record(9, out.refs, out.nextRef, { replace: false }); return Array.from(out.result.matches, (match) => match.ref); });
+  const [ref] = await find(100);
+  assert.equal(codeOf(() => refs.checkRef(9, ref)), null);
+  refs.invalidateTab(9); // navigate to #section (tabs.js): the page, and content.js with it, stays
+  assert.equal(codeOf(() => refs.checkRef(9, ref)), 'stale_ref');
+  assert.deepEqual(await find(200), [ref], 'the element keeps its ref');
+  assert.equal(codeOf(() => refs.checkRef(9, ref)), null);
+});
+
+test('sites: a page without a host of its own is refused unless it is the bridge’s blank tab', async () => {
+  const { tabs } = await extensionModules();
+  const ctx = { allowedHosts: ['other.example'] };
+  const failure = async (tab) => { try { await tabs.assertTabSite(tab, ctx); } catch (error) { return [error.code, error.data?.host ?? null]; } return null; };
+  assert.deepEqual(await failure({ id: 31, url: 'blob:https://bank.example/1234-uuid' }), ['site_not_allowed', 'bank.example']);
+  assert.deepEqual(await failure({ id: 32, url: 'about:blank' }), ['site_unknown', null]);
+  assert.deepEqual(await failure({ id: 33, url: 'https://other.example/a' }), null);
+  const sites = await import('../../claude-ext/sites.js');
+  assert.equal(codeOf(() => sites.assertSite('about:blank', ctx)), null, 'opening a blank tab is fine');
+  assert.equal(codeOf(() => sites.assertSite('about:blank', ctx, { blankOk: false })), 'site_unknown');
+});
+
+test('navigate back checks the site it lands on, and leaves it again when that isn’t allowed', async () => {
+  const { tabs } = await extensionModules();
+  const history = ['https://bank.example/', 'https://a.example/'];
+  let at = 1;
+  const tab = () => ({ id: 41, url: history[at], title: `page ${at}`, status: 'complete' });
+  Object.assign(globalThis.chrome.tabs, {
+    get: async (id) => { if (id !== 41) throw new Error('no tab'); return tab(); },
+    goBack: async () => { if (at === 0) throw new Error('no history'); at -= 1; },
+    goForward: async () => { if (at === history.length - 1) throw new Error('no history'); at += 1; },
+  });
+  globalThis.chrome.tabs.onUpdated.removeListener ??= () => {};
+  globalThis.chrome.tabs.onRemoved.removeListener ??= () => {};
+  await assert.rejects(tabs.navigate({ url: 'back', tabId: 41 }, { allowedHosts: ['a.example'] }), (error) => error.code === 'site_not_allowed' && error.data.host === 'bank.example');
+  assert.equal(history[at], 'https://a.example/', 'the tab went forward again');
+  const landed = await tabs.navigate({ url: 'back', tabId: 41 }, { allowedHosts: ['a.example', 'bank.example'] });
+  assert.deepEqual([landed.url, landed.status], ['https://bank.example/', 'complete']);
+});
+
+test('after a worker restart, opening a tab keeps the saved list of tabs the bridge opened', async () => {
+  await extensionModules();
+  const saved = { openedTabs: [11, 12], currentTabId: 12 };
+  const session = globalThis.chrome.storage.session;
+  globalThis.chrome.storage.session = { get: async () => ({ ...saved }), set: async (values) => { Object.assign(saved, values); } };
+  const create = globalThis.chrome.tabs.create, get = globalThis.chrome.tabs.get;
+  globalThis.chrome.tabs.create = async ({ url }) => ({ id: 50, url });
+  globalThis.chrome.tabs.get = async (id) => ({ id, url: 'https://c.example/', title: 'C', status: 'complete' });
+  globalThis.chrome.tabs.onUpdated.removeListener ??= () => {};
+  globalThis.chrome.tabs.onRemoved.removeListener ??= () => {};
+  try {
+    const fresh = await import('../../claude-ext/tabs.js?restarted'); // a new worker: tabs.js's state starts empty
+    await fresh.navigate({ url: 'https://c.example/' });
+    assert.deepEqual([...saved.openedTabs].sort((a, b) => a - b), [11, 12, 50]);
+  } finally { Object.assign(globalThis.chrome.tabs, { create, get }); globalThis.chrome.storage.session = session; }
+});
+
 test('navigate takes http(s) URLs and bare hosts only', async () => {
   const { tabs } = await extensionModules();
   assert.equal(tabs.normalizeUrl('example.com'), 'https://example.com/');
   assert.equal(tabs.normalizeUrl('localhost:3000/a'), 'https://localhost:3000/a');
+  assert.equal(tabs.normalizeUrl('localhost:3000?q=1'), 'https://localhost:3000/?q=1');
+  assert.equal(tabs.normalizeUrl('example.com:8080#top'), 'https://example.com:8080/#top');
   assert.equal(tabs.normalizeUrl('http://127.0.0.1:8080/x?y=1'), 'http://127.0.0.1:8080/x?y=1');
   for (const bad of ['chrome://version', 'javascript:alert(1)', 'file:///etc/passwd', 'data:text/html,hi']) assert.equal(codeOf(() => tabs.normalizeUrl(bad)), 'bad_url', bad);
   assert.equal(codeOf(() => tabs.normalizeUrl('  ')), 'bad_request');
