@@ -96,9 +96,9 @@ export function fileMediaKind(path = '') {
   if (/\.pdf$/i.test(value)) return 'pdf';
   return null;
 }
-// The composer's file:// preview URL (main.jsx filePreviewUrl), the same
-// encoding for the Files viewer's <img>/<video>/<audio>.
-export const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`);
+// The file:// URL of a local path: the composer's previews, the transcript's image tiles and the Files viewer's
+// <img>/<video>/<audio>. encodeURI leaves '#' and '?' alone, which would cut the path into a fragment or query.
+export const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`).replace(/[#?]/g, encodeURIComponent);
 // The drawn SVG: the shown text as an image (the app CSP allows data: images),
 // so the graphic follows the text the viewer holds and its scripts never run.
 export const svgPreviewUrl = (text) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(String(text ?? ''))}`;

@@ -126,6 +126,7 @@ import { humanPrompts } from "./prompt-history-model.mjs";
 import { composerPlaceholder, composerFirstRun } from "./composer-placeholder.mjs";
 import { SourceQueuedMessages } from "./source-queued-messages";
 import { stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, isMaxImagesNotice, MAX_IMAGES_TIMEOUT, makeSnippet, addSnippet, removeSnippetByKey, snippetText, coreTakesFileMentions, modelAcceptsImages, skillChipInput, IMAGE_PROCESS_ERROR, basename as attachmentBasename, shownThread, shownUserItem, shownUserItems, shownTurns, shownQueueList, firstMessageName } from "./composer-attachments-model.mjs";
+import { filePreviewUrl } from "./file-preview-model.mjs";
 import { draftKey as sessionDraftKey, saveDraft, takeDraft, clearDraft, mapDraftAttachments, HOME_DRAFT_KEY, browserStorage, persistDraft, readPersistedDraft, forgetDraft } from "./composer-draft-store.mjs";
 import { makeSelectedElementAttachment, addSelectedElementAttachment, selectedElementInputs } from './preview-element-attachments.mjs';
 import { IMAGE_FALLBACK_NOTE, imageRefusedNotice } from './composer-attachments-model.mjs';
@@ -2304,7 +2305,6 @@ function App({ side = 0, initialSession = null }) {
     if (imageFallback && entry.context.screenshot) toasts?.add(IMAGE_FALLBACK_NOTE, { variant: 'neutral' });
     requestAnimationFrame(() => { if (currentRef.current === event.sessionId) textarea.current?.focus(); });
   }
-  const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`);
   // Paste (image lane, official q/ue) and Finder drop: files with a real path
   // are referenced in place; clipboard images are persisted by the main
   // process so localImage can carry an actual path. Notices use the official

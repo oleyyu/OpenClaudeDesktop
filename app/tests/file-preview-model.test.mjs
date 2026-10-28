@@ -93,6 +93,7 @@ test('preview kinds, media kinds and the file:// preview URL', async () => {
   for (const [file, kind] of [['photo.PNG', 'image'], ['a.jpeg', 'image'], ['b.avif', 'image'], ['c.svg', null], ['clip.mp4', 'video'], ['clip.MOV', 'video'],
     ['song.mp3', 'audio'], ['x.oga', 'audio'], ['x.mkv', null], ['notes.txt', null]]) assert.equal(fileMediaKind(file), kind, file);
   assert.equal(filePreviewUrl('/w/a b/photo.png'), 'file:///w/a%20b/photo.png');
+  assert.equal(new URL(filePreviewUrl('/w/shot #1?.png')).pathname, '/w/shot%20%231%3F.png', "'#' and '?' stay in the path");
 });
 
 // B13 (2.31226.0 cd2efac6e Ql :6783-6799): .htm/.html and .svg take the sandbox arm; a PDF is shown like media.
