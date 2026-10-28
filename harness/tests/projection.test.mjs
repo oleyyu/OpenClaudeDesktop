@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { ThreadProjector, LiveStreamMapper, isActivity, toolItem, completeToolItem, assistantItemId, projectHistory, settledMessage, settledStatus, codexErrorInfoOf, failureError, resumeReplayNotes } from '../packages/codex-app-server/src/projection.js'
 import { unifiedDiff } from '../packages/codex-app-server/src/diff.js'
+import { REWIND_SOURCE } from '../packages/codex-app-server/src/rewind.js'
 
 let seq = 0
 const ev = (type, data) => ({ type, data, seq: ++seq, time: 1_000_000 + seq })
@@ -597,6 +598,37 @@ test('llm/retry carries the failure identity and the retry count', () => {
   assert.deepEqual(always.retry, { attempt: 7, maxRetries: null })
   assert.equal(always.error.message, 'RATE_LIMIT')
   assert.equal(always.error.codexErrorInfo, 'rateLimitExceeded')
+})
+
+test('a rewind drops the plan, preview and background jobs of the turns it removes', () => {
+  const rewind = (beforeTurnId) => ev('user/message', { id: `r-${beforeTurnId}`, content: [{ type: 'text', text: 'rewound' }], source: { kind: REWIND_SOURCE, beforeTurnId } })
+  const log = [
+    ev('turn/start', { turn: 1 }),
+    ev('user/message', { id: 'u1', content: [{ type: 'text', text: 'first prompt' }], source: { kind: 'user' } }),
+    ev('tool/call', { turn: 1, step: 1, callId: 'k1', name: 'todo_write', arguments: JSON.stringify({ todos: [{ content: 'kept', status: 'pending' }] }) }),
+    ev('turn/end', { turn: 1, reason: { kind: 'completed' } }),
+    ev('turn/start', { turn: 2 }),
+    ev('user/message', { id: 'u2', content: [{ type: 'text', text: 'second prompt' }], source: { kind: 'user' } }),
+    ev('tool/call', { turn: 2, step: 1, callId: 'k2', name: 'todo_write', arguments: JSON.stringify({ todos: [{ content: 'dropped', status: 'pending' }] }) }),
+    ev('tool/call', { turn: 2, step: 1, callId: 'b2', name: 'bash', arguments: JSON.stringify({ command: 'npm run dev', run_in_background: true }) }),
+    ev('tool/result', { turn: 2, step: 1, message: { toolCallId: 'b2', content: [{ type: 'text', text: 'started background job bash-1' }], isError: false } }),
+    ev('turn/end', { turn: 2, reason: { kind: 'completed' } }),
+  ]
+  const p = projectHistory(log, { threadId: 'tr' })
+  assert.deepEqual(p.trackedJobIds(), ['bash-1'])
+  p.apply(rewind('turn-u2'))
+  assert.deepEqual(p.turns.map((turn) => turn.id), ['turn-u1'])
+  assert.deepEqual(p.plan, [{ step: 'kept', status: 'pending' }])
+  assert.equal(p.preview, 'first prompt')
+  assert.deepEqual(p.trackedJobIds(), [])
+  assert.deepEqual(p.settleJob([], 'bash-1', { status: 'completed', detail: 'exit code: 0' }), [])
+  p.apply(rewind('turn-u1'))
+  assert.equal(p.plan, null)
+  assert.deepEqual(resumeReplayNotes({ threadId: 'tr', projector: p, tokenUsage: () => assert.fail('no usage') }), [])
+  // The next first prompt names the thread.
+  p.apply(ev('turn/start', { turn: 3 }))
+  p.apply(ev('user/message', { id: 'u3', content: [{ type: 'text', text: 'new prompt' }], source: { kind: 'user' } }))
+  assert.equal(p.preview, 'new prompt')
 })
 
 test('a replayed todo log restores the plan and resume replays usage then plan', () => {
