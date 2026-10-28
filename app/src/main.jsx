@@ -2186,7 +2186,7 @@ function App({ side = 0, initialSession = null }) {
     // Boot opens Home: its stored draft comes back unless something already filled the composer.
     if (side === 0 && !currentRef.current && !liveComposer.current.text && liveComposer.current.attachments.length === 0) {
       const stored = restorePersistedDraft(homeDraftKey);
-      if (stored) { liveComposer.current = stored; setDraft(stored.text); setMentions(stored.mentions); }
+      if (stored) { liveComposer.current = stored; setDraft(stored.text); setAttachments(stored.attachments); setMentions(stored.mentions); }
     }
     // A secondary split side closing (unmount) keeps its draft like a reload does.
     return () => { flush(); window.removeEventListener("pagehide", flush); window.removeEventListener("beforeunload", flush); };
