@@ -463,6 +463,10 @@ test('a page the agent drives never leaves for an outside site the user hasn’t
   assert.deepEqual(asked.map((request) => [request.kind, request.host]), [['preview-site', 'evil.example']]);
   assert.equal(contents.getURL(), 'http://localhost:3000/', 'declined: the page stays');
   assert.equal(navigate('will-redirect', 'https://evil.example/again'), true, 'a declined site stays blocked');
+  const redirectFrame = (url) => { let prevented = false; contents.emit('will-redirect', { isMainFrame: false, preventDefault: () => { prevented = true; } }, url); return prevented; };
+  assert.equal(redirectFrame('https://other.example/embed'), false, 'a subframe’s redirect is not held as the tab’s navigation');
+  assert.equal(redirectFrame('ftp://other.example/'), false);
+  assert.equal(instance._previews.get('s1').error ?? null, null, 'nor does it set a page error');
   contents.openHandler({ url: 'https://evil.example/popup' });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(asked.length, 1, 'and is not asked about again');

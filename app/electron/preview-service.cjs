@@ -486,7 +486,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (holdOutside(entry, allowed.url)) event.preventDefault();
     };
     contents.on("will-navigate", guard);
-    contents.on("will-redirect", guard);
+    // A subframe's redirect is not the tab's navigation (will-redirect fires for every frame).
+    contents.on("will-redirect", (event, url) => { if (event.isMainFrame !== false) guard(event, url); });
     contents.on("will-frame-navigate", (event) => { if (!event.isMainFrame) { const allowed = launch.navigationAllowed(event.url, entry.cwd); if (!allowed.ok && !/^(data|blob|about):/.test(event.url)) event.preventDefault(); } });
     // A page popup becomes a new preview tab, retaining its originator’s approval boundary.
     contents.setWindowOpenHandler(({ url }) => {
