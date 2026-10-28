@@ -42,7 +42,7 @@ export function workflowEvent(run,event,at){
 export const workflowAgentState=(agent,now)=>agent.state==='progress'?(agent.progressSupported!==false&&!(agent.activeTools>0)&&Number.isFinite(agent.lastProgressAt)&&now-agent.lastProgressAt>90000?'stalled':'running'):agent.state==='done'?'done':agent.state==='error'?'error':agent.state==='skipped'?'skipped':'pending';
 // c62da1b56 ge/he: agents without a phase gather in one last group, 'Agents' (or 'Other agents' beside real phases);
 // a settled run's phase whose agents never started reads 'Not run' (status notRun), not 'Pending' -- also once settling
-// has ended its queued agents as skipped.
+// has ended its queued agents as skipped (a running agent the user skipped did start: its phase is still done).
 export const WORKFLOW_AGENTS_GROUP=Number.MAX_SAFE_INTEGER;
 export function workflowPhases(run,now){
  const groups=new Map();
@@ -54,7 +54,7 @@ export function workflowPhases(run,now){
  }
  const settled=run.status&&run.status!=='running',others=groups.get(WORKFLOW_AGENTS_GROUP);
  if(others)others.title=groups.size>1?t('Other agents'):t('Agents');
- return [...groups.values()].sort((a,b)=>a.index-b.index).map(p=>({...p,done:p.agents.filter(a=>a.state==='done').length,status:p.agents.some(a=>a.state==='error')?'error':p.agents.some(a=>a.state==='progress')?(settled?'done':'running'):!p.agents.length||p.agents.every(a=>a.displayState==='pending')?(settled?'notRun':'pending'):settled&&p.agents.every(a=>a.state==='skipped')?'notRun':p.agents.every(a=>a.state==='done'||a.state==='skipped')||settled?'done':'running',tokens:p.agents.reduce((sum,a)=>sum+(a.tokens||0),0)}));
+ return [...groups.values()].sort((a,b)=>a.index-b.index).map(p=>({...p,done:p.agents.filter(a=>a.state==='done').length,status:p.agents.some(a=>a.state==='error')?'error':p.agents.some(a=>a.state==='progress')?(settled?'done':'running'):!p.agents.length||p.agents.every(a=>a.displayState==='pending')?(settled?'notRun':'pending'):settled&&p.agents.every(a=>a.state==='skipped'&&!a.startedAt)?'notRun':p.agents.every(a=>a.state==='done'||a.state==='skipped')||settled?'done':'running',tokens:p.agents.reduce((sum,a)=>sum+(a.tokens||0),0)}));
 }
 export function workflowSummary(summary,description){
  if(!summary||summary===description)return '';

@@ -121,4 +121,11 @@ test('a settled run ends its still-queued members as skipped, whatever the termi
   run = workflowEvent(run, { type: 'admission', id: 'q', seq: 2, label: 'Q', phase: 'Fix', state: 'queued', queuedAt: 2, lastProgressAt: 2 }, 2);
   run = workflowEvent(run, { type: 'settled', status: 'stopped', error: 'Stopped' }, 3);
   assert.deepEqual(workflowPhases(run, 4).map(p => [p.title, p.status]), [['Scan', 'done'], ['Fix', 'notRun']]);
+  // A phase whose running agents the user skipped did run: it reads 'Done' after settling, as it did while running.
+  run = { id: 'w', status: 'running', startedAt: 0, workflowProgress: [] };
+  run = workflowEvent(run, { type: 'start', id: 'u', label: 'U' }, 1);
+  run = workflowEvent(run, { type: 'end', id: 'u', error: 'skipped by user' }, 2);
+  assert.equal(workflowPhases(run, 3)[0].status, 'done');
+  run = workflowEvent(run, { type: 'settled', status: 'completed' }, 3);
+  assert.equal(workflowPhases(run, 4)[0].status, 'done');
 });
