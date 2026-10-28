@@ -206,11 +206,32 @@ test("sessionPathGone shares an ask in flight, answers false past 2 asks or the 
 
 test("main.cjs answers file:gone for the session's folders, also from a popout", async () => {
   const main = await fs.readFile(path.join(import.meta.dirname, "../electron/main.cjs"), "utf8");
-  assert.match(main, /const \{ listFiles, readFile, scopedPath, openBlockReason, sessionPathGone \} = require\("\.\/files\.cjs"\);/);
+  assert.match(main, /const \{ listFiles, readFile, scopedPath, openBlockReason, revealFolderTarget, sessionPathGone \} = require\("\.\/files\.cjs"\);/);
   assert.match(main, /POPOUT_ACTIONS = new Set\(\[[^\]]*"file:gone"/);
   const branch = main.slice(main.indexOf('case "file:gone": {'), main.indexOf('case "file:reveal-session": {'));
   assert.match(branch, /if \(typeof p\.sessionId !== "string"\) return false;/);
   assert.match(branch, /try \{ root = fileSearchRoot\(p\.sessionId\); \} catch \{ return false; \}/);
   assert.match(branch, /config\.sessionMetadata\?\.\[p\.sessionId\]\?\.additionalFolders/);
   assert.match(branch, /return sessionPathGone\(\{ sessionId: p\.sessionId, root, sessionFolders: Array\.isArray\(added\) \? added : \[\], filePath: p\.path \}\);/);
+});
+
+test("revealFolderTarget takes only an existing absolute folder and flags one macOS would launch", async () => {
+  const { revealFolderTarget } = require("../electron/files.cjs");
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "code-desktop-test-"));
+  try {
+    await fs.mkdir(path.join(root, "project"));
+    await fs.mkdir(path.join(root, "Tool.app"));
+    await fs.mkdir(path.join(root, "chart.js"));
+    await fs.mkdir(path.join(root, "example.com"));
+    await fs.writeFile(path.join(root, "run.command"), "#!/bin/sh\n", { mode: 0o755 });
+    assert.deepEqual(await revealFolderTarget(path.join(root, "project")), { folder: path.join(root, "project"), launches: false });
+    assert.deepEqual(await revealFolderTarget(path.join(root, "Tool.app")), { folder: path.join(root, "Tool.app"), launches: true });
+    for (const name of ["chart.js", "example.com"]) assert.deepEqual(await revealFolderTarget(path.join(root, name)), { folder: path.join(root, name), launches: false }, name);
+    await assert.rejects(revealFolderTarget(path.join(root, "run.command")), /no longer exists/);
+    await assert.rejects(revealFolderTarget(path.join(root, "gone")), /no longer exists/);
+    await assert.rejects(revealFolderTarget("relative/dir"), /Unknown workspace directory/);
+    await assert.rejects(revealFolderTarget(undefined), /Unknown workspace directory/);
+    const main = await fs.readFile(path.join(import.meta.dirname, "../electron/main.cjs"), "utf8");
+    assert.match(main, /case "reveal-folder": \{[\s\S]*?revealFolderTarget\(p\.cwd \|\| config\.cwd\);\n\s+if \(launches\) \{ shell\.showItemInFolder\(folder\); return true; \}\n\s+const error = await shell\.openPath\(folder\);\n\s+if \(error\) throw new Error\(error\);/);
+  } finally { await fs.rm(root, { recursive: true, force: true }); }
 });

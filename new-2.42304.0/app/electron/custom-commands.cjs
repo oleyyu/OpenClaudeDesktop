@@ -12,6 +12,7 @@ const MAX_BYTES = 64 * 1024;
 const MAX_FILES = 200;
 const MAX_PROJECT_WATCHERS = 8;
 const DEBOUNCE_MS = 150;
+const SETTLE_MS = 750;
 
 function commandName(value, label = "name") {
   if (typeof value !== "string" || !NAME.test(value))
@@ -25,6 +26,17 @@ function settings(config) {
 }
 async function exists(target) {
   try { await fs.promises.access(target); return true; } catch { return false; }
+}
+function inode(dir) {
+  try { return fs.statSync(dir).ino; } catch { return null; }
+}
+// What a re-list would see (names, sizes, times), to tell whether anything changed while a watcher started.
+function snapshot(dir) {
+  try {
+    return fs.readdirSync(dir).filter((entry) => entry.toLowerCase().endsWith(".md")).sort().slice(0, MAX_FILES).map((entry) => {
+      try { const stat = fs.statSync(path.join(dir, entry)); return `${entry}:${stat.size}:${stat.mtimeMs}`; } catch { return entry; }
+    }).join("\n");
+  } catch { return null; }
 }
 async function readCommands(dir) {
   let entries;
@@ -69,21 +81,31 @@ function createCustomCommands({ app, shell, dialog, getConfig, emit = () => {}, 
     const entry = { dir, scope, cwd, watcher: null, watched: null, timer: null };
     watchers.delete(key); watchers.set(key, entry);
     const chain = [[dir, null], [path.dirname(dir), path.basename(dir)], [path.dirname(path.dirname(dir)), path.basename(path.dirname(dir))]];
+    const changed = () => emit({ kind: "custom-commands-changed", scope, cwd: cwd ?? null });
+    const fire = () => {
+      if (disposed || watchers.get(key) !== entry) return;
+      // Still watching the folder itself: keep that watcher (a reopened one misses changes while it starts).
+      if (entry.watched === dir && entry.ino != null && inode(dir) === entry.ino) { changed(); return; }
+      // The folder appeared or went: re-arm on the right path before telling the renderer. A change made while
+      // the new watcher starts is never reported (macOS FSEvents), so look at the folder again once it is live.
+      const before = snapshot(dir);
+      entry.watched = null; closeEntry(entry); watchers.delete(key);
+      arm(key, scope, cwd, dir);
+      changed();
+      const fresh = watchers.get(key);
+      if (fresh?.watcher) fresh.timer = setTimeout(() => { if (snapshot(dir) !== before) fresh.fire(); }, SETTLE_MS);
+    };
+    entry.fire = fire;
     for (const [target, child] of chain) {
       try {
         entry.watcher = watch(target, { persistent: false }, (_event, filename) => {
           if (child && filename && String(filename) !== child) return;
           clearTimeout(entry.timer);
-          entry.timer = setTimeout(() => {
-            if (disposed || watchers.get(key) !== entry) return;
-            // The folder may have appeared or gone: re-arm on the right path before telling the renderer.
-            entry.watched = null; closeEntry(entry); watchers.delete(key);
-            arm(key, scope, cwd, dir);
-            emit({ kind: "custom-commands-changed", scope, cwd: cwd ?? null });
-          }, DEBOUNCE_MS);
+          entry.timer = setTimeout(fire, DEBOUNCE_MS);
         });
         entry.watcher.on?.("error", () => closeEntry(entry));
         entry.watched = child ? target : dir;
+        entry.ino = child ? null : inode(dir);
         break;
       } catch {}
     }

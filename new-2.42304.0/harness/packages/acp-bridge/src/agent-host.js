@@ -38,10 +38,17 @@ export class AgentHost extends EventEmitter {
     this.exited = false
     this.exit = new Promise((resolve) => { this.resolveExit = resolve })
     this.ready = null
+    this.stopped = false
   }
 
   start() {
     if (this.ready) return this.ready
+    // Stopped before it started (its bridge shut down while it was being prepared): it never spawns.
+    if (this.stopped) {
+      this.ready = Promise.reject(new Error(`${this.label} was stopped before it started.`))
+      this.ready.catch(() => {})
+      return this.ready
+    }
     this.ready = (async () => {
       const { command, args, env, cwd } = this.options
       // Its own process group: a stop reaches what the agent started (Gemini's relaunched child, MCP servers).
@@ -163,6 +170,7 @@ export class AgentHost extends EventEmitter {
    * loses nothing.
    */
   async stop(graceMs = 3000) {
+    this.stopped = true
     if (!this.child || this.exited) return
     const signal = (name) => { try { process.kill(-this.child.pid, name) } catch { try { this.child.kill(name) } catch {} } }
     signal(this.options.stopSignal ?? 'SIGTERM')

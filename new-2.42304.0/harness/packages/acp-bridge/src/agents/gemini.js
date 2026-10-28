@@ -964,11 +964,23 @@ const BLOCKED_BY_SETTINGS = 'Your Gemini CLI settings block this connector (mcp.
 const BLOCKED_UNTRUSTED = 'Gemini CLI loads this folder’s settings only after you trust the folder.'
 const BLOCKED_UNTRUSTED_FOLDER = 'Gemini CLI starts no connectors in a folder you haven’t trusted.'
 
-/** The user message a rewind drops: the dropped turn's prompt, found from the end (Gemini may fold the first prompt into its context message), else by position. */
+/**
+ * The user message a rewind drops: the prompt at the dropped turn's position (Gemini may fold the first prompt into its
+ * context message, so a prompt is any user message with text left after that block). When its text is not the dropped
+ * turn's, the prompt holding that text nearest the position (a repeated prompt must not pick a later turn).
+ */
 function rewindTarget(chat, keepTurns, turnText) {
-  const users = chat.messages.filter((message) => message?.type === 'user' && userText(message).trim())
-  const byText = turnText ? [...users].reverse().find((message) => userText(message).includes(turnText)) : null
-  return byText ?? chat.messages.filter(realUser)[keepTurns] ?? null
+  const prompts = chat.messages.filter((message) => message?.type === 'user' && (geminiReplayText(userText(message), 'user') ?? '').trim())
+  const wanted = turnText ? String(turnText).trim() : ''
+  const holds = (message) => userText(message).includes(wanted)
+  const atPosition = prompts[keepTurns] ?? null
+  if (!wanted || (atPosition && holds(atPosition))) return atPosition
+  let best = null
+  prompts.forEach((message, index) => {
+    if (!holds(message)) return
+    if (!best || Math.abs(index - keepTurns) < Math.abs(best.index - keepTurns)) best = { message, index }
+  })
+  return best?.message ?? atPosition
 }
 
 export default {
@@ -1622,7 +1634,7 @@ export default {
     const rules = loadGeminiPolicies({ home: baseOf(ctx.env), cwd, trusted: cwd ? trustedFolder(ctx.env, settings, cwd) : false })
     if (!rules.length) return null
     const geminiMode = mode === 'bypass' ? 'yolo' : mode === 'acceptEdits' ? 'autoEdit' : mode === 'plan' ? 'plan' : 'default'
-    const verdict = policyDecision(rules, { name, args: call?.rawInput && typeof call.rawInput === 'object' ? call.rawInput : null, mode: geminiMode })
+    const verdict = policyDecision(rules, { name, args: call?.rawInput && typeof call.rawInput === 'object' ? call.rawInput : null, mode: geminiMode, servers: ctx.mcpServerNames?.() ?? [] })
     if (verdict?.decision !== 'ask_user') return null
     const scope = verdict.rule.tier === 5 ? 'Your organization’s Gemini CLI policy' : verdict.rule.tier === 3 ? 'This project’s Gemini CLI policy' : 'Your Gemini CLI policy'
     return { reason: `${scope} asks before this runs.` }
@@ -1668,23 +1680,33 @@ export default {
     const { AgentHost } = await import('../agent-host.js')
     const line = ctx.commandLine(['--acp'])
     const host = new AgentHost({ ...line, env: { ...ctx.env, GEMINI_CLI_NO_RELAUNCH: 'true', ...NO_OWN_SANDBOX, PATH: `${dir}:${ctx.env.PATH ?? ''}`, BROWSER: path.join(dir, 'open') }, cwd: dir, clientCapabilities: {}, log: ctx.log, label: 'gemini-login', stopSignal: 'SIGKILL' })
-    await host.start()
+    // A host that never answered initialize (exited, or timed out still running) is stopped and its folder removed.
+    try { await host.start() } catch (error) {
+      await host.stop().catch(() => {})
+      fs.rmSync(dir, { recursive: true, force: true })
+      throw error
+    }
     let finished = false
+    let started = false
+    let failure = null
+    // A failure before the sign-in URL is returned (its loginId not yet with the client) is reported by throwing, not onDone.
     const finish = (success, error) => {
       if (finished) return
       finished = true
+      if (!success) failure = error
       void host.stop().finally(() => fs.rmSync(dir, { recursive: true, force: true }))
-      onDone(success, error)
+      if (started || success) onDone(success, error)
     }
     host.call('authenticate', { methodId: 'oauth-personal' }, 0).then(() => finish(true), (error) => finish(false, error?.message ?? String(error)))
     for (let wait = 0; wait < 300; wait++) {
       const url = fs.existsSync(capture) ? fs.readFileSync(capture, 'utf8').trim().split('\n').find((entry) => /^https:\/\//.test(entry)) : null
-      if (url) return { url, cancel: () => finish(false, 'Sign-in cancelled.') }
+      if (url && !failure) { started = true; return { url, cancel: () => finish(false, 'Sign-in cancelled.') } }
       if (finished || host.exited) break
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
+    const reason = failure
     finish(false, 'Gemini did not open a sign-in page.')
-    throw new Error(`Gemini CLI did not start the Google sign-in.${host.stderrTail(400)}`)
+    throw new Error(`Gemini CLI did not start the Google sign-in.${reason ? ` ${reason}` : ''}${host.stderrTail(400)}`)
   },
   /** Gemini's own /auth logout (authCommand.ts): the cached credentials and the auth selection both go. */
   logout(ctx) {

@@ -62,9 +62,32 @@ export function withTopLevel(text, key, block) {
   return out.endsWith('\n') || !out ? out : `${out}\n`
 }
 
+/** Where a value's text splits (a ' #' comment, or `stop` such as a flow list's ','), quoted scalars skipped. */
+function scanValue(raw, stop = null) {
+  const cuts = []
+  let quote = null
+  for (let index = 0; index < raw.length; index++) {
+    const char = raw[index]
+    if (quote === '"') { if (char === '\\') index++; else if (char === '"') quote = null; continue }
+    if (quote === "'") { if (char === "'" && raw[index + 1] === "'") index++; else if (char === "'") quote = null; continue }
+    // A quote opens a quoted scalar only at the start of a value (`it's` stays plain).
+    if ((char === '"' || char === "'") && /^[\s,[]?$/.test(raw[index - 1] ?? '')) { quote = char; continue }
+    if (char === '#' && /^\s?$/.test(raw[index - 1] ?? '')) return { cuts, end: index }
+    if (char === stop) cuts.push(index)
+  }
+  return { cuts, end: raw.length }
+}
+
+const uncomment = (raw) => raw.slice(0, scanValue(raw).end)
+
+const YAML_ESCAPES = { 0: '\0', a: '\x07', b: '\b', t: '\t', '\t': '\t', n: '\n', v: '\v', f: '\f', r: '\r', e: '\x1b', ' ': ' ', '"': '"', '/': '/', '\\': '\\', N: '\x85', _: '\xa0', L: '\u2028', P: '\u2029' }
+
 function scalar(raw) {
-  const value = raw.replace(/\s+#.*$/, '').trim()
-  if (/^(["']).*\1$/.test(value)) return value.slice(1, -1)
+  const value = uncomment(raw).trim()
+  if (/^"(?:[^"\\]|\\.)*"$/.test(value)) {
+    return value.slice(1, -1).replace(/\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|.)/g, (all, code) => (code.length > 1 ? String.fromCodePoint(parseInt(code.slice(1), 16)) : YAML_ESCAPES[code] ?? all))
+  }
+  if (/^'(?:[^']|'')*'$/.test(value)) return value.slice(1, -1).replace(/''/g, "'")
   if (value === 'true') return true
   if (value === 'false') return false
   if (value === 'null' || value === '~' || value === '') return null
@@ -73,9 +96,12 @@ function scalar(raw) {
 }
 
 function flowList(raw) {
-  const inner = raw.trim().replace(/^\[/, '').replace(/\]\s*(#.*)?$/, '').trim()
+  const inner = uncomment(raw).trim().replace(/^\[/, '').replace(/\]$/, '').trim()
   if (!inner) return []
-  return inner.split(',').map((part) => scalar(part)).filter((value) => value !== null)
+  const parts = []
+  let from = 0
+  for (const cut of [...scanValue(inner, ',').cuts, inner.length]) { parts.push(inner.slice(from, cut)); from = cut + 1 }
+  return parts.map((part) => scalar(part)).filter((value) => value !== null)
 }
 
 /**
@@ -95,7 +121,7 @@ export function parseYamlBlock(lines, start = 0, end = lines.length, indent = nu
     const match = /^\s*(["']?)([^"':#][^:#]*?)\1\s*:(.*)$/.exec(line)
     if (!match) throw new Error(`Not a mapping entry: ${line.trim()}`)
     const key = match[2].trim()
-    const rest = match[3].replace(/\s+#.*$/, '').trim()
+    const rest = uncomment(match[3]).trim()
     index++
     if (rest.startsWith('[')) { out[key] = flowList(rest); continue }
     if (rest.startsWith('{') || rest.startsWith('|') || rest.startsWith('>') || rest.startsWith('&') || rest.startsWith('*')) throw new Error(`Unsupported value for ${key}`)
@@ -124,7 +150,8 @@ export function parseYamlBlock(lines, start = 0, end = lines.length, indent = nu
   return out
 }
 
-const yamlString = (value) => (typeof value === 'string' && /^[A-Za-z0-9_.\/-]+$/.test(value) && !['true', 'false', 'null', 'yes', 'no'].includes(value) ? value : JSON.stringify(value))
+// Plain only when YAML reads it back as the same string: no keyword, nothing number-like ("2.0", "1e3", "0x1F").
+const yamlString = (value) => (typeof value === 'string' && /^[A-Za-z0-9_.\/-]+$/.test(value) && !/^(true|false|null|yes|no|on|off|y|n)$/i.test(value) && !/^[-+]?\.?\d/.test(value) && !/^[-+]?\.(inf|nan)$/i.test(value) ? value : JSON.stringify(value))
 
 /** A parsed block written back (maps, scalars, lists of scalars in flow style). */
 export function writeYamlBlock(value, indent = 0) {

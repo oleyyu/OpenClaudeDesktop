@@ -40,7 +40,7 @@ export function htmlToMarkdown(html, base = null) {
   const body = /<body[^>]*>([\s\S]*)<\/body>/i.exec(text);
   if (body) text = body[1];
   text = text.replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|noscript|template|svg|canvas|iframe|head|nav|footer|form|button|select)\b[\s\S]*?<\/\1\s*>/gi, "");
+    .replace(/<(script|style|noscript|template|svg|canvas|iframe|head|nav|footer|button|select)\b[\s\S]*?<\/\1\s*>/gi, "");
   const absolute = (href) => { if (!base) return href; try { return new URL(href, base).href; } catch { return href; } };
   // <pre> keeps its text as a fenced block (placeholders, so the rest of the clean-up leaves it alone).
   const blocks = [];
@@ -69,7 +69,7 @@ export function htmlToMarkdown(html, base = null) {
     .replace(/<tr\b[^>]*>/gi, "\n| ").replace(/<\/tr>/gi, " |")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<hr\b[^>]*>/gi, "\n\n---\n\n")
-    .replace(/<\/?(p|div|section|article|main|header|aside|table|thead|tbody|figure|figcaption|dl|dt|dd)\b[^>]*>/gi, "\n\n")
+    .replace(/<\/?(p|div|section|article|main|header|aside|table|thead|tbody|figure|figcaption|dl|dt|dd|form)\b[^>]*>/gi, "\n\n")
     .replace(/<[^>]+>/g, "");
   text = decode(text)
     .replace(/[ \t\f\v ]+/g, " ")
@@ -120,14 +120,21 @@ async function readBody(response, signal) {
   if (!reader) { const buffer = Buffer.from(await response.arrayBuffer()); return { buffer: buffer.subarray(0, MAX_BYTES), truncated: buffer.length > MAX_BYTES }; }
   const chunks = [];
   let size = 0, truncated = false;
-  for (;;) {
-    if (signal?.aborted) { try { await reader.cancel(); } catch { /* gone */ } throw new Error("The fetch was stopped."); }
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_BYTES) { chunks.push(Buffer.from(value).subarray(0, value.byteLength - (size - MAX_BYTES))); truncated = true; try { await reader.cancel(); } catch { /* gone */ } break; }
-    chunks.push(Buffer.from(value));
-  }
+  // A body that stalls mid-stream: cancelling the reader ends the read it waits on (the fetch's own abort is gone
+  // once the headers arrived), so the timeout and a stopped turn still end the call.
+  const stop = () => { reader.cancel().catch(() => { /* gone */ }); };
+  signal?.addEventListener?.("abort", stop, { once: true });
+  try {
+    for (;;) {
+      if (signal?.aborted) { try { await reader.cancel(); } catch { /* gone */ } throw new Error("The fetch was stopped."); }
+      const { done, value } = await reader.read();
+      if (signal?.aborted) throw new Error("The fetch was stopped.");
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BYTES) { chunks.push(Buffer.from(value).subarray(0, value.byteLength - (size - MAX_BYTES))); truncated = true; try { await reader.cancel(); } catch { /* gone */ } break; }
+      chunks.push(Buffer.from(value));
+    }
+  } finally { signal?.removeEventListener?.("abort", stop); }
   return { buffer: Buffer.concat(chunks), truncated };
 }
 

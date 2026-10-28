@@ -122,7 +122,7 @@ export function readKimiConfig(file) {
   let hook = null
   const lines = text.split('\n')
   for (let index = 0; index < lines.length; index++) {
-    let line = lines[index].replace(/\s+#.*$/, '').trim()
+    let line = tomlUncomment(lines[index]).trim()
     if (!line || line.startsWith('#')) continue
     const array = /^\[\[([^\]]+)\]\]$/.exec(line)
     if (array) {
@@ -150,9 +150,9 @@ export function readKimiConfig(file) {
     const key = pair[1].replace(/"/g, '')
     let raw = pair[2]
     // A multi-line array: read on to its closing bracket.
-    while (raw.startsWith('[') && !balanced(raw) && index + 1 < lines.length) raw += ` ${lines[++index].replace(/\s+#.*$/, '').trim()}`
+    while (raw.startsWith('[') && !balanced(raw) && index + 1 < lines.length) raw += ` ${tomlUncomment(lines[++index]).trim()}`
     let value = raw
-    try { value = JSON.parse(raw.replace(/'/g, '"').replace(/,\s*\]/g, ']')) } catch {}
+    try { value = JSON.parse(tomlJson(raw)) } catch {}
     if (hook) hook[key] = value
     else if (!table && key === 'default_model') out.defaultModel = value
     else if (!table && key === 'extra_skill_dirs') out.extraSkillDirs = Array.isArray(value) ? value.filter((entry) => typeof entry === 'string' && entry) : []
@@ -169,8 +169,52 @@ export function readKimiConfig(file) {
 
 function balanced(text) {
   let depth = 0
-  for (const ch of text) { if (ch === '[') depth++; else if (ch === ']') depth-- }
+  tomlScan(text, (ch) => { if (ch === '[') depth++; else if (ch === ']') depth-- })
   return depth <= 0
+}
+
+const TOML_ESCAPES = { b: '\b', t: '\t', n: '\n', f: '\f', r: '\r', e: '\x1b', '"': '"', '\\': '\\' }
+
+/**
+ * A TOML line read outside its strings: `code(ch)` for each character there, `string(text)` for each basic or literal
+ * string's value (escapes decoded). Returns where its comment starts (its length without one), or -1 at a multi-line
+ * string (not read).
+ */
+function tomlScan(text, code, string = () => {}) {
+  for (let index = 0; index < text.length; index++) {
+    const ch = text[index]
+    if (ch === '#') return index
+    if (ch !== '"' && ch !== "'") { code(ch); continue }
+    if (text.startsWith(ch.repeat(3), index)) return -1
+    let value = ''
+    let end = index + 1
+    for (; end < text.length && text[end] !== ch; end++) {
+      if (ch === '"' && text[end] === '\\') {
+        const hex = /^(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8}))/.exec(text.slice(end + 1))
+        if (hex) { value += String.fromCodePoint(parseInt(hex[1] ?? hex[2], 16)); end += hex[0].length; continue }
+        value += TOML_ESCAPES[text[end + 1]] ?? text[end + 1] ?? ''
+        end++
+        continue
+      }
+      value += text[end]
+    }
+    string(value)
+    index = end
+  }
+  return text.length
+}
+
+/** A TOML line without its comment (a '#' outside strings). */
+function tomlUncomment(line) {
+  const end = tomlScan(line, () => {})
+  return end < 0 ? line.replace(/\s+#.*$/, '') : line.slice(0, end)
+}
+
+/** A TOML value as JSON text (basic and literal strings re-quoted, trailing commas in arrays dropped). */
+function tomlJson(raw) {
+  let out = ''
+  const end = tomlScan(raw, (ch) => { if (ch === ']') out = out.replace(/,\s*$/, ''); out += ch }, (value) => { out += JSON.stringify(value) })
+  return end < 0 ? raw : out
 }
 
 /**
@@ -1398,6 +1442,8 @@ async function withKimiServer(ctx, { launch = null, cwd = null, ensureDirs = [] 
       child.stdout.on('data', scan)
       child.stderr.on('data', scan)
       child.on('exit', (code) => { clearTimeout(timer); reject(new Error(`Kimi Code's local server stopped (${code}).${text ? ` ${text.trim().slice(-300)}` : ''}`)) })
+      // A program that cannot start (ENOENT, EACCES, a missing cwd) reports only 'error', never 'exit'.
+      child.on('error', (error) => { clearTimeout(timer); reject(new Error(`Kimi Code's local server could not start: ${error.message}`)) })
     })
     const call = async (method, route, body) => {
       const response = await fetch(`${base}${route}`, { method, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(60000) })
@@ -1407,7 +1453,8 @@ async function withKimiServer(ctx, { launch = null, cwd = null, ensureDirs = [] 
     }
     return await fn(call)
   } finally {
-    if (child && child.exitCode === null && child.signalCode === null) {
+    // No pid: the process never started, so no 'exit' will come.
+    if (child && child.pid !== undefined && child.exitCode === null && child.signalCode === null) {
       const exited = new Promise((resolve) => child.once('exit', resolve))
       child.kill('SIGTERM')
       const hard = setTimeout(() => { try { child.kill('SIGKILL') } catch {} }, 5000)
@@ -2151,6 +2198,7 @@ export default {
         if (!answered) { answered = true; reject(new Error(`kimi login stopped: ${text.trim().slice(-400)}`)); return }
         onDone(code === 0, code === 0 ? null : 'Sign-in did not complete.')
       })
+      child.on('error', (error) => { if (!answered) { answered = true; reject(new Error(`kimi login could not start: ${error.message}`)) } })
       setTimeout(() => { if (!answered) { answered = true; child.kill('SIGTERM'); reject(new Error('kimi login did not show a device code.')) } }, 30000).unref?.()
     })
   },

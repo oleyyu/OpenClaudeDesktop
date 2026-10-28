@@ -126,6 +126,7 @@ import { humanPrompts } from "./prompt-history-model.mjs";
 import { composerPlaceholder, composerFirstRun } from "./composer-placeholder.mjs";
 import { SourceQueuedMessages } from "./source-queued-messages";
 import { stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, isMaxImagesNotice, MAX_IMAGES_TIMEOUT, makeSnippet, addSnippet, removeSnippetByKey, snippetText, coreTakesFileMentions, modelAcceptsImages, skillChipInput, IMAGE_PROCESS_ERROR, basename as attachmentBasename, shownThread, shownUserItem, shownUserItems, shownTurns, shownQueueList, firstMessageName } from "./composer-attachments-model.mjs";
+import { filePreviewUrl } from "./file-preview-model.mjs";
 import { draftKey as sessionDraftKey, saveDraft, takeDraft, clearDraft, mapDraftAttachments, HOME_DRAFT_KEY, browserStorage, persistDraft, readPersistedDraft, forgetDraft } from "./composer-draft-store.mjs";
 import { makeSelectedElementAttachment, addSelectedElementAttachment, selectedElementInputs } from './preview-element-attachments.mjs';
 import { IMAGE_FALLBACK_NOTE, imageRefusedNotice } from './composer-attachments-model.mjs';
@@ -143,7 +144,6 @@ import { SourceToolsMenu } from "./source-tools-menu.jsx";
 import { SourceOnboarding } from "./source-onboarding.jsx";
 import { nuxAccountAged } from "./file-tree-row-model.mjs";
 import { SourceComputerUseBanner } from "./source-computer-use.jsx";
-import { activeComputerUse } from "./computer-use-model.mjs";
 import { defaultProfile, normalizeProfiles, normalizeSelection, toggleInSelection } from "../electron/prefs/tool-profiles.mjs";
 import { SourcePermissionMenu, PERMISSION_OPTIONS, bypassOffer } from "./source-permission-menu";
 import { SourceTileLayout } from "./source-tile-layout";
@@ -328,6 +328,9 @@ import { settledQuestionIds } from "./async-questions-model.mjs";
 import { goalCommandRequest, goalCommandResult, goalNeedsReplaceConfirmation, nativeGoalCommand, nativeInitCommand, INIT_PROMPT } from "./goal-model.mjs";
 import { paneKeyAction, paneKeyContext } from "./pane-keys-model.mjs";
 import { useFocusRegionNavigation } from "./use-focus-regions.js";
+import { WATCH_RECORD_COPY, useWatchRecord } from "./source-watch-record.jsx";
+import { demonstrationDuration, demonstrationTitle } from "./watch-record-model.mjs";
+import { isMacPlatform } from "./pane-keys-model.mjs";
 const api = window.desktop;
 // index.html ships data-mode="system" (the loaded CSS resolves it through
 // prefers-color-scheme, which nativeTheme.themeSource drives). Before the first
@@ -482,6 +485,8 @@ function App({ side = 0, initialSession = null }) {
     approvalRuntime.current.reconcile(state.approvals);
   }, [state.approvals]);
   useEffect(() => () => approvalRuntime.current.dispose(), []);
+  // The sessions using the computer (main.cjs computer-use-in-use, electron/computer-use/in-use.cjs): the docked strip.
+  const [computerUseSessions, setComputerUseSessions] = useState([]);
   const [boot, setBoot] = useState(null),
     [sessions, setSessionsState] = useState([]),
     // True once init has read the session list (official Kk/$i: the home
@@ -707,7 +712,12 @@ function App({ side = 0, initialSession = null }) {
   // changes. While it matches the frame is collapsed (shared-2 Dg) to the 'Show sidebar' trigger and the
   // peek card, without writing preferences.sidebarCollapsed; widening restores the stored state.
   const narrowQuery = narrowViewportQuery(effectiveSidebarWidth(sidebarWidth, sidebarFloor));
-  const [narrowViewport, setNarrowViewport] = useState(() => typeof window.matchMedia === "function" && window.matchMedia(narrowQuery).matches);
+  const [narrowMedia, setNarrowViewport] = useState(() => typeof window.matchMedia === "function" && window.matchMedia(narrowQuery).matches);
+  // Full control docks this window as the side panel (main.cjs computer-use-dock-state; official onCuDockStateChanged →
+  // shared-52 setIsCuDocked): while docked the frame is laid out as a narrow viewport (shared-52 Bm: isCuDocked ||
+  // isNarrowViewport), at once, before the window has finished shrinking.
+  const [cuDocked, setCuDocked] = useState(false);
+  const narrowViewport = narrowMedia || cuDocked;
   const narrowRef = useRef(narrowViewport);
   narrowRef.current = narrowViewport;
   useLayoutEffect(() => {
@@ -868,6 +878,12 @@ function App({ side = 0, initialSession = null }) {
   // cc70f2bdf Ko h / git-chips M I: `Ke(u, text).then(e => e === "written" && addSuccess(message))`;
   // a rejected write raises no success toast and keeps the app error path.
   const toasts = useSourceToasts();
+  // Watch-record, "Record a skill" (source-watch-record.jsx, official shared-6 Sz): the Add menu's and Customize ›
+  // Skills' entry, the macOS permissions dialog, and the delivery of a finished recording (deliverDemonstration).
+  const watchRecordNotice = useCallback((message) => { if (toasts) toasts.add(message, { variant: "warning" }); else setError(message); }, [toasts]);
+  const watchRecordSession = useCallback(() => currentRef.current ?? undefined, []);
+  const watchRecordComplete = useRef(null);
+  const watchRecord = useWatchRecord({ call: api ? call : null, sessionId: watchRecordSession, notify: watchRecordNotice, available: !!api && isMacPlatform() && !PANE_WINDOW });
   // F08: the latest reduced state for the mount-time event listener (sub-agent ownership of a completed
   // turn), and the custom group a "New session" from its header menu files the next started session into.
   const latestState = useRef(state);
@@ -2171,7 +2187,7 @@ function App({ side = 0, initialSession = null }) {
     // Boot opens Home: its stored draft comes back unless something already filled the composer.
     if (side === 0 && !currentRef.current && !liveComposer.current.text && liveComposer.current.attachments.length === 0) {
       const stored = restorePersistedDraft(homeDraftKey);
-      if (stored) { liveComposer.current = stored; setDraft(stored.text); setMentions(stored.mentions); }
+      if (stored) { liveComposer.current = stored; setDraft(stored.text); setAttachments(stored.attachments); setMentions(stored.mentions); }
     }
     // A secondary split side closing (unmount) keeps its draft like a reload does.
     return () => { flush(); window.removeEventListener("pagehide", flush); window.removeEventListener("beforeunload", flush); };
@@ -2289,7 +2305,6 @@ function App({ side = 0, initialSession = null }) {
     if (imageFallback && entry.context.screenshot) toasts?.add(IMAGE_FALLBACK_NOTE, { variant: 'neutral' });
     requestAnimationFrame(() => { if (currentRef.current === event.sessionId) textarea.current?.focus(); });
   }
-  const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`);
   // Paste (image lane, official q/ue) and Finder drop: files with a real path
   // are referenced in place; clipboard images are persisted by the main
   // process so localImage can carry an actual path. Notices use the official
@@ -2713,8 +2728,13 @@ function App({ side = 0, initialSession = null }) {
       // emitConfig): this side's list and appearance follow.
       if (e.kind === "session-list") applySessionList(e);
       if (e.kind === "config-updated" && e.config && typeof e.config === "object") applySharedConfig(e.config);
+      if (e.kind === "computer-use-in-use" && Array.isArray(e.sessions)) setComputerUseSessions(e.sessions);
+      if (e.kind === "computer-use-dock-state") setCuDocked(e.docked === true);
+      // Watch-record (main.cjs notify): a recording this view started is done (or discarded).
+      if (e.kind === "watch-record-complete") watchRecordComplete.current?.(e);
     });
     init();
+    call("computer-use:in-use").then((list) => { if (Array.isArray(list)) setComputerUseSessions(list); }, () => {});
     // Stats load beside init, not after the whole connect: main.cjs needs only the
     // core's initialize (or last launch's kept result). The 'stats' push event
     // refreshes them after turns.
@@ -3905,34 +3925,46 @@ function App({ side = 0, initialSession = null }) {
   // R4i-cowork review fix: `resend` is a Cowork restart / edit (mk Qe(…, {isResend:!0}) sends Pr(prefill) only): the text
   // alone, no shell mode, keyword or steer, and the composer neither read nor emptied. Resolves to {started, pending}
   // (undefined on an early return) for coworkSessionHost.
-  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false } = {}) {
+  // `demonstration` ({input, title, newSession}) is a recorded demonstration (watch-record, official shared-6 jz / Mz): its
+  // turn input as it is, into this session or, with newSession, a session of its own titled `title`; the composer is
+  // neither read nor emptied, and a session running a turn gets it queued.
+  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false, demonstration = null } = {}) {
     // The draft's GitHub issue goes with its first message, and can be sent alone (cc43287c9 hasAttachments).
-    const sentIssue = !current && !beside && draftIssue ? draftIssue : null;
-    if (!(draft.trim() || attachments.length || sentIssue) || attachments.some((entry) => entry.status !== "ready")) return;
+    const sentIssue = !current && !beside && !demonstration && draftIssue ? draftIssue : null;
+    if (demonstration) {
+      if (!Array.isArray(demonstration.input) || demonstration.input.length === 0) return;
+      if (!demonstration.newSession && running) {
+        if (!current || !boot?.connected || session?.archived) return;
+        await ensureResumed(current);
+        await rpc("thread/queue/add", { threadId: current, input: demonstration.input, clientUserMessageId: crypto.randomUUID() });
+        loadQueue(current);
+        return { started: false, pending: false, queued: true };
+      }
+    } else if (!(draft.trim() || attachments.length || sentIssue) || attachments.some((entry) => entry.status !== "ready")) return;
     // Codex stopped this chat as a precaution (misalignment): like its own client, ordinary input stays off until a
     // new session or the card's explicit acknowledgment. The draft is kept.
-    if (misalignedTurn && !running) { setError(t("This chat was stopped as a precaution. Start a new session to continue.")); return; }
+    if (misalignedTurn && !running && !demonstration?.newSession) { setError(t("This chat was stopped as a precaution. Start a new session to continue.")); return; }
     // '!command': the user's own shell command, not a prompt. A core with shell mode (Codex) runs it (thread/shellCommand);
     // on any other core it runs in a terminal tab and its output goes to the model (runTerminalShell).
-    const shellCommand = mode === "code" && !beside ? (resend ? null : shellModeCommand(draft, boot?.core, shellOptions)) : null;
-    if (mode === "code" && !beside && !resend && shellModeActive(draft, boot?.core, shellOptions)) {
+    const shellCommand = mode === "code" && !beside && !demonstration ? (resend ? null : shellModeCommand(draft, boot?.core, shellOptions)) : null;
+    if (mode === "code" && !beside && !resend && !demonstration && shellModeActive(draft, boot?.core, shellOptions)) {
       if (!shellCommand) return;
       if (running) { setError(t("Wait for {core} to finish before running a shell command.", { core: coreName(boot?.core) })); return; }
       if (attachments.length) { setError(t("A shell command can’t include attachments. Remove them, or remove the ! to send a message.")); return; }
       if (mentions.length) { setError(t("@-mentions can’t be used in a shell command. Remove them, or remove the ! to send a message.")); return; }
       if (shellModeKind(boot?.core, shellOptions) === "terminal") { await runTerminalShell(shellCommand); return; }
     }
-    if (running) { if (!resend) await sendWhileRunning(priority); return; }
-    if (loading || sending || !boot?.connected || session?.archived) return;
+    if (running && !demonstration) { if (!resend) await sendWhileRunning(priority); return; }
+    if (sending || !boot?.connected || (!demonstration?.newSession && (loading || session?.archived))) return;
     // A human-typed "ultracode" (not ignored with alt+w) opts this turn into a dynamic workflow (Claude's keyword trigger).
-    const keywordRequested = !beside && !resend && keywordMatches.length > 0 && !keywordIgnored && !shellCommand;
+    const keywordRequested = !beside && !resend && !demonstration && keywordMatches.length > 0 && !keywordIgnored && !shellCommand;
     if (keywordRequested) setKeywordIgnored(false);
     // 'Send and stay here' (cc43287c9 :35140-35200 stayOnDraft): ⌘⏎ on Home starts the session detached — no setCurrent,
     // no history entry — inserts its row and leaves an empty, focused Home composer. A second launch waits for the
     // first spawn (qc background spawn count, Jr).
     const stay = priority === "stay" && !current;
     if (stay && backgroundSpawnsRef.current > 0) return;
-    if (current) {
+    if (current && !demonstration?.newSession) {
       const transcript = transcriptRef.current;
       const identity = transcript?.getIdentity();
       transcript?.jumpToLatest({
@@ -3945,12 +3977,12 @@ function App({ side = 0, initialSession = null }) {
     setError("");
     const text = draft;
     const entries = attachments, mentionList = mentions;
-    const turnInput = () => resend ? [{ type: "text", text, text_elements: [] }] : composerInput(text, turnCwd, { issueContext });
+    const turnInput = () => demonstration ? demonstration.input : resend ? [{ type: "text", text, text_elements: [] }] : composerInput(text, turnCwd, { issueContext });
     // dH: the issue's <github_issue> block (its body when it was read), after the message text.
     const issueContext = githubIssueContext(sentIssue);
-    let id = current;
+    let id = demonstration?.newSession ? null : current;
     // F08 Mz: a session started after a custom group's "New session" is filed into that group.
-    const startedGroup = current || beside ? null : newSessionGroup.current;
+    const startedGroup = current || beside || demonstration ? null : newSessionGroup.current;
     let turnCwd = workdir || cwd;
     // Et: a background launch empties the Home composer at dispatch; a failed one puts the draft back (no(T, D)) while
     // Home still shows an empty composer.
@@ -3974,12 +4006,12 @@ function App({ side = 0, initialSession = null }) {
     let pendingEntry = null;
     const showPending = (threadId) => {
       if (stay || shellCommand || !threadId) return;
-      pendingEntry = { ...withKnownItems(pendingSend({ threadId, text: withIssueContext(text, issueContext), attachments: entries }), latestState.current.items?.[threadId] || []),
+      pendingEntry = { ...withKnownItems(pendingSend({ threadId, text: withIssueContext(text, issueContext), attachments: entries, ...(demonstration ? { content: demonstration.input } : {}) }), latestState.current.items?.[threadId] || []),
         input: turnInput(), mentions: mentionList, turnCwd };
       const shown = pendingEntry;
       // A refused send stays above the new one until its own Retry or Discard.
       setPendingSends((all) => ({ ...all, [threadId]: [...(all[threadId] || []).filter((entry) => entry.status === "failed"), shown] }));
-      if (resend) return;
+      if (resend || demonstration) return;
       setDraft((value) => (value === text ? "" : value));
       setAttachments((value) => value.filter((entry) => !entries.includes(entry)));
       setMentions([]);
@@ -4059,7 +4091,7 @@ function App({ side = 0, initialSession = null }) {
         bypassMode.adoptSession(id);
         // :35161-35168 vi(a, t.split('\n')[0].slice(0, 80)): a background launch is titled from its first line.
         // A message that is only attachments is named after its files (a core refuses an empty name).
-        const name = firstMessageName(text, entries, stay ? { max: 80, firstLine: true } : { max: 64 });
+        const name = demonstration ? demonstration.title : firstMessageName(text, entries, stay ? { max: 80, firstLine: true } : { max: 64 });
         setSessionMetadata(value => ({ ...value, [id]: { ...value[id], surface: mode, ...(projectDraftId ? { projectId: projectDraftId } : {}) } }));
         setSessions((s) => [{ ...r.thread, name }, ...s.filter((t) => t.id !== r.thread.id)]);
         if (!stay && sendSequence === loadSeq.current) {
@@ -4105,7 +4137,7 @@ function App({ side = 0, initialSession = null }) {
         launched = true;
         entries.forEach(revokePreview);
         if (!beside) forgetDraft(browserStorage(), homeDraftKey, { text });
-      } else if (!resend) clearComposerDraft(sendSequence, text, entries, origin, id);
+      } else if (!resend && !demonstration) clearComposerDraft(sendSequence, text, entries, origin, id);
     } catch (e) {
       if (stay) { if (!launched) restoreStay(); }
       else setTurnRequested(value => value === id ? null : value);
@@ -4113,7 +4145,9 @@ function App({ side = 0, initialSession = null }) {
       if (createdHere && !turnStarted && id) {
         // A session this send created goes away with its message back in the composer: no bubble is kept.
         if (refused) updatePendingSend(id, refused.id, () => null);
-        discardFailedStart(id, { text, entries, mentions: mentionList, historyPushed, stay });
+        // A recorded demonstration never took the composer: what it shows now stays there.
+        const kept = demonstration ? liveComposer.current : { text, attachments: entries, mentions: mentionList };
+        discardFailedStart(id, { text: kept.text, entries: kept.attachments, mentions: kept.mentions, historyPushed, stay });
         setError(e.message);
       } else if (refused && !turnStarted) {
         // :39779-39823: the refused send stays in the transcript as 'Not delivered' with Retry / Discard (no banner).
@@ -4131,6 +4165,25 @@ function App({ side = 0, initialSession = null }) {
     if (beside && launched) beside.onStart?.(id);
     return { started: turnStarted, pending: !!pendingEntry && !turnStarted };
   }
+  // Watch-record's delivery (official shared-6 jz for an open session, Mz for a new one): the held recording is taken
+  // once, sent as the user's message — into the session it was recorded in (queued while that session runs a turn), or
+  // a new session titled "Recorded demonstration (N.Ns)" — and the pill, held on "Processing" until now, goes. A
+  // discarded or too-short recording sends nothing (the original says nothing either for a skill recording).
+  async function deliverDemonstration(payload) {
+    if (!watchRecord.claimCompletion() || payload.discarded || payload.purpose === "context") return;
+    const failed = () => watchRecordNotice(t(WATCH_RECORD_COPY.deliveryFailed));
+    try {
+      const taken = await call("watch-record:take");
+      if (!taken) return;
+      const target = typeof payload.sessionId === "string" ? payload.sessionId : null;
+      if (!Array.isArray(taken.input) || taken.input.length === 0 || (target !== null && target !== currentRef.current)) { failed(); return; }
+      if (target === null && settings) setSettings(false);
+      const sent = await sendMessage("", [], [], { demonstration: { input: taken.input, title: demonstrationTitle(demonstrationDuration(taken.message)), newSession: target === null } });
+      if (!sent) failed();
+    } catch { failed(); }
+    finally { if (Number.isInteger(payload.holdEpoch) && payload.holdEpoch >= 0) call("watch-record:dismiss-pill", { holdEpoch: payload.holdEpoch }).catch(() => {}); }
+  }
+  watchRecordComplete.current = (payload) => { void deliverDemonstration(payload); };
   // send()'s rollback for a session it created whose first turn/start failed: the row leaves the sidebar, the window
   // goes back to Home with the message still in the composer (so it can be fixed and resent), and the empty thread is
   // deleted from the core (archived where a core can't delete). Never touches a session that has a turn.
@@ -5190,7 +5243,8 @@ function App({ side = 0, initialSession = null }) {
     return order[(order.indexOf(activeTier?.key ?? STANDARD_SPEED) + 1) % order.length];
   };
   // First-run setup opens by itself once: on the DeepSeek core with no key at all (no DeepSeek key and no custom
-  // provider key), unless it was finished or put off before (config.onboarded).
+  // provider key), or when the core didn't start at all (a new Mac without Node.js: its Requirements step installs
+  // what is missing), unless it was finished or put off before (config.onboarded).
   const onboardingOffered = useRef(false);
   // shared-5 Sy: NUX coachmarks wait out onboarding and the profile's first day (its config.activity.startedAt stands
   // in for the account's created_at), measured from when this window mounted.
@@ -5219,7 +5273,14 @@ function App({ side = 0, initialSession = null }) {
     setSettings("preferences#account");
   }
   useEffect(() => {
-    if (side !== 0 || onboardingOffered.current || !boot?.connected || !boot.config || boot.config.onboarded === true) return;
+    if (side !== 0 || onboardingOffered.current || !boot?.config || boot.config.onboarded === true) return;
+    if (!boot.connected) {
+      // Only a start that failed (boot.error), not a reconnect in flight.
+      if (!boot.error) return;
+      onboardingOffered.current = true;
+      setOnboarding("welcome");
+      return;
+    }
     // A core other than DeepSeek Harness chosen during setup (the window reloaded onto it): its Sign in step, or done.
     if (boot.config.core && boot.config.core !== "deepseek" && signInOptions(signInCore?.login)) {
       onboardingOffered.current = true;
@@ -5230,7 +5291,7 @@ function App({ side = 0, initialSession = null }) {
     if (!boot.account?.deepseek || boot.account.account) return;
     onboardingOffered.current = true;
     setOnboarding("welcome");
-  }, [boot?.connected, boot?.config, boot?.account, signInCore?.id]);
+  }, [boot?.connected, boot?.error, boot?.config, boot?.account, signInCore?.id]);
   // The Sign in step ends when the core reports an account.
   useEffect(() => {
     if (onboarding !== "signin" || !signedIn) return;
@@ -5277,6 +5338,13 @@ function App({ side = 0, initialSession = null }) {
     if (reload && (b?.connected || !requireConnected)) setTimeout(() => location.reload(), 150);
     else coreSwitchReload.current = false;
     return { next, b, reload: coreSwitchReload.current };
+  }
+  // Setup › Requirements → Continue: a core that couldn't start (no Node.js until now) starts again, so Choose your
+  // agent and Connect a model have a connection to work with.
+  async function onboardingRequirementsMet() {
+    if (boot?.connected) return;
+    const b = await reconnect();
+    if (!b?.connected) throw new Error(b?.error || t("The core didn’t start. Check Settings › Cores."));
   }
   function skipOnboarding() {
     setOnboarding(null);
@@ -5506,8 +5574,10 @@ function App({ side = 0, initialSession = null }) {
   const reconnectRef = useRef(null);
   reconnectRef.current = reconnect;
   const customize = useMemo(() => ({ store: customizeStore, threadId: current, cwd: workdir || cwd, call: customizeCall,
-    onUseSkill: applySkill, onOpenExternal: customizeOpenExternal, onRevealPath: customizeReveal, onRestartCore: () => reconnectRef.current?.() }),
-    [current, workdir, cwd, customizeCall, applySkill, customizeOpenExternal, customizeReveal]);
+    onUseSkill: applySkill, onOpenExternal: customizeOpenExternal, onRevealPath: customizeReveal, onRestartCore: () => reconnectRef.current?.(),
+    // Customize › Skills › Add › "Record your screen" (shared-6 wz, customize_skills_add): a new session, as the original's cowork_new.
+    watchRecord: watchRecord.available ? { isStarting: watchRecord.isStarting, start: () => watchRecord.tryStart("customize_skills_add", { newSession: true }) } : null }),
+    [current, workdir, cwd, customizeCall, applySkill, customizeOpenExternal, customizeReveal, watchRecord.available, watchRecord.isStarting, watchRecord.tryStart]);
   // shared-21 IO (sidebar-rows.js:8597-8613): the tV header identity + org line and the pw footer
   // `identity · orgPrimary` (account-label-model.mjs); no invented user without a preferred name.
   // boot.core outlives a disconnect (a crash, a reconnect in progress); before the first connect, the chosen core.
@@ -5588,10 +5658,16 @@ function App({ side = 0, initialSession = null }) {
   useEffect(() => () => clearTimeout(peekTimer.current), []);
   // shared-2 setIsNarrowViewport resets the peek (wg) on entering the narrow viewport; leaving it docks
   // or collapses from the stored preference with the card closed.
+  // shared-52 setIsCuDocked(true) resets it the same way (Lm), also when the window was narrow already; undocking doesn't.
   useEffect(() => {
     clearTimeout(peekTimer.current); peekTimer.current = null;
     setPeek((previous) => previous.hovering || previous.peeked ? { ...previous, hovering: false, peeked: false } : previous);
   }, [narrowViewport]);
+  useEffect(() => {
+    if (!cuDocked) return;
+    clearTimeout(peekTimer.current); peekTimer.current = null;
+    setPeek((previous) => previous.hovering || previous.peeked ? { ...previous, hovering: false, peeked: false } : previous);
+  }, [cuDocked]);
   // shared-2 toggleCollapsed: while narrow (Dg) it opens or closes the peek card instead of the stored
   // preference. Used by ⌘B, View > Show/Hide Sidebar and the 'Show sidebar' trigger (Nb onClick Tb(r)).
   const toggleNarrowPeek = () => { if (peekState.current.hovering) closePeek(); else openPeek(); };
@@ -5719,6 +5795,10 @@ function App({ side = 0, initialSession = null }) {
             {/* zN (ca80fca8d :12490-12540) with onAddFolder = cc43287c9 $m: adds a folder to the session or draft
                 (addFolderFromMenu), never switches the working folder; no row without a working folder. */}
             {!!workdir && <SourceMenu.Item icon="Folder" onClick={addFolderFromMenu}>{t("Add folder")}</SourceMenu.Item>}
+            {/* c752b32f8 zo (Uo's `teach` slot, after Add folder): "Record a skill", icon Recording, disabled while a start
+                is in flight; the recording goes to this session, or to a new one from Home (source-watch-record.jsx). */}
+            {watchRecord.available && <SourceMenu.Item icon="Recording" data-testid="add-record-skill" disabled={watchRecord.isStarting}
+              onClick={() => watchRecord.tryStart("plus_menu")}>{t(WATCH_RECORD_COPY.menuLabel)}</SourceMenu.Item>}
             {/* zN :12540-12590: in the draft, 'Import GitHub issue' (GitHub glyph) opens the picker, or sits disabled with
                 gH's reason; the user's gh answers (github-issues.cjs). Linear needs a connector the cores don't have. */}
             {!current && issueStatus?.folder === issueFolder && (issueStatus.available || issueStatus.unavailableReason) && (
@@ -6461,7 +6541,7 @@ function App({ side = 0, initialSession = null }) {
   // status and the band's Commit, the transcript's output files, the Preview pane's servers, the Background tasks pane's
   // tasks and stops, and the Finder / clipboard / terminal actions of the band's folder menu.
   const sessionRailHost = {
-    call, desktop: api, cwd: workdir, items: state.items[current], transcriptRef, recordKey: `${session?.archived === true}`, mountKey: current ?? "draft",
+    call, desktop: api, cwd: workdir, items: state.items[current], transcriptRef, coreName: coreName(boot?.core), recordKey: `${session?.archived === true}`, mountKey: current ?? "draft",
     readOnly: !!session?.archived, isPanelActive: splitActive, onRequestComposerFocus: () => textarea.current?.focus(),
     environmentId: current ? sessionMetadata[current]?.environmentId : undefined, savedEnvironments: savedEnvironments.environments,
     // R4i-rail RL1: the Connectors card (the session's connector list from the Customize store, its opener Customize ›
@@ -6801,6 +6881,10 @@ function App({ side = 0, initialSession = null }) {
                 <SourceFindBar ref={findBarRef} shortcuts={splitActive} sessionKey={current ?? "draft"}
                   getScope={() => transcriptRef.current?.getContent?.()}
                   scroll={{ reveal: (rect) => transcriptRef.current?.reveal?.(rect) ?? false }} />
+                {/* Computer use: the official docked strip (c21f11e6d :19536 nh → c5f921d63 W), first in the conversation column,
+                    above the transcript, while this session is using the computer (the same signal as the screen glow). */}
+                {current && computerUseSessions.includes(current) && <SourceComputerUseBanner
+                  coreName={coreName(boot?.core)} onStop={() => void stop()} stopping={stopping} />}
                 {/* R4f-rail SR-7: jre's chat panel body (tz) around the transcript, with DH, the raised overlay (jH) and wH. */}
                 <SessionRailChatBody>
                 <SourceTranscript
@@ -7129,9 +7213,6 @@ function App({ side = 0, initialSession = null }) {
                     sendNow={(id) => canSendNow(queue, id, { turnId: state.active[current], connected: !!boot?.connected, archived: !!session?.archived, steeringId: queueSteering })}
                     onCancel={queueCancel} onEdit={queueEdit} onReorder={queueReorder} />
                 )}
-                {/* Computer use: while the agent controls the computer, the latest screenshot, the action and Stop. */}
-                {current && running && <SourceComputerUseBanner active={activeComputerUse(items, item => ["inProgress", "running"].includes(item?.status))}
-                  coreName={coreName(boot?.core)} onStop={() => void stop()} stopping={stopping} />}
                 {/* R4f-error E36: cc43287c9's sr-only status just before the composer (N_'s 'Limits reset — resuming session'). */}
                 <SourceAutoResumeStatus announcement={resumeAnnouncement?.threadId === current ? resumeAnnouncement : null} />
                 {/* R4g-turnbox TB-3: cc43287c9 Mte's probe and turn box (inline here until the tail slot exists). Mte's da
@@ -7208,6 +7289,7 @@ function App({ side = 0, initialSession = null }) {
       </main>
       </SourceSplitHost>
       {/* cc43287c9 J$: the draft folder's issues through the user's gh; a pick becomes the draft's issue pill. */}
+      {watchRecord.host}
       {issuePicker && issueFolder && <SourceGithubIssuePicker open onClose={() => { setIssuePicker(false); requestAnimationFrame(() => textarea.current?.focus()); }} onSelect={pickIssue}
         load={(query) => call("github-issues", { operation: "list", cwd: issueFolder, query })} />}
       {shownBypass.value && <SourceBypassDialog key={`bypass-${shownBypass.key}`} open={shownBypass.open} onExited={shownBypass.onExited} cwd={workdir || cwd} guide={bypassGuide(coreForEngine(boot?.core?.engine))} onConfirm={bypassMode.confirm} onClose={bypassMode.cancel}/> }
@@ -7308,7 +7390,7 @@ function App({ side = 0, initialSession = null }) {
         onPopOut={api && boot?.connected && !SESSION_POPOUT ? popOutSideChat : null}
         onClose={closeSideChat} />}
       {workflowLaunch&&<WorkflowLaunch initial={workflowLaunch} onClose={()=>setWorkflowLaunch(null)} onPick={()=>call('workflow-pick')} onStart={async options=>{const run=await call('workflow-start',{...options,threadId:workflowLaunch.threadId,model:workflowLaunch.model,effort:workflowLaunch.effort,cwd:workflowLaunch.cwd,permission:workflowLaunch.permission,mode:workflowLaunch.mode,after:workflowLaunch.after});setWorkflowRuns(old=>mergeWorkflow(old,run));if(currentRef.current===run.threadId)openWorkflow(run.id);}}/>}
-      {onboarding && <SourceOnboarding key={onboarding} startAt={onboarding} desktopCall={call} onDone={finishOnboarding} onSkip={skipOnboarding} onCoreChosen={chooseOnboardingCore}
+      {onboarding && <SourceOnboarding key={onboarding} startAt={onboarding} desktopCall={call} onDone={finishOnboarding} onSkip={skipOnboarding} onCoreChosen={chooseOnboardingCore} onRequirementsMet={onboardingRequirementsMet}
         signIn={signInCore?.login ? { core: signInCore, auth: boot?.auth, account: boot?.account?.account ?? null, connected: !!boot?.connected,
           onLogin: (type, extra) => call("login", { type, ...extra }), onAccountAction: p => call("account-auth", p), onOpenExternal: url => call("external", { url }).catch(() => {}),
           // Codex through a relay: setup ends and Settings › Models opens at the Codex endpoint (codexProvider), with

@@ -537,7 +537,7 @@ function SkillDetail({ skill, author, file, toggling, toggleError, onToggle, onB
   );
 }
 
-function SkillsPage({ store, cwd, call, onUseSkill, onRevealPath, onNavigate, focus, copy }) {
+function SkillsPage({ store, cwd, call, onUseSkill, onRevealPath, onNavigate, focus, copy, watchRecord = null }) {
   const scrollMemory = useRef(new Map());
   const snapshot = useStore(store);
   const ownsCatalog = snapshot.skills.cwd === cwd;
@@ -615,6 +615,9 @@ function SkillsPage({ store, cwd, call, onUseSkill, onRevealPath, onNavigate, fo
   const addItems = [
     ...(ownRoot && call ? [{ label: t("Create a skill"), icon: "Edit", onClick: () => setCreating(true) }] : []),
     ...(copy.skillInstall ? [{ label: t("Add skill from URL"), icon: "Globe", disabled: adding, onClick: () => setAdding(true) }] : []),
+    // c5e558aae _n: after the ways to make a skill, watch-record's "Record your screen" (shared-6 wz, icon Recording,
+    // disabled while a start is in flight) — the user shows the workflow once and it comes back as a skill draft.
+    ...(watchRecord ? [{ label: t("Record your screen"), icon: "Recording", disabled: watchRecord.isStarting, onClick: () => watchRecord.start() }] : []),
     ...(ownRoot && call ? [{ label: t("Open skills folder"), icon: "FolderOpen", onClick: () => void openSkillsFolder() }] : []),
   ];
   const addMenu = addItems.length ? <MenuButton label={t("Add skill")} items={addItems}>{t("Add")}</MenuButton> : null;
@@ -2283,9 +2286,9 @@ function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPa
 // pages keep the Codex copy and every control.
 // `mcpDefinitions` is desktop-settings-read's (command/url/args/env names) for
 // the connector drill's LocalConfig.
-export function SourceCustomize({ section, store, threadId, cwd, call, core, onUseSkill, onOpenExternal, onRevealPath, onEditConfig, onNavigate, focus, mcpDefinitions, mcpServers, onRestartCore, onHarnessCall }) {
+export function SourceCustomize({ section, store, threadId, cwd, call, core, onUseSkill, onOpenExternal, onRevealPath, onEditConfig, onNavigate, focus, mcpDefinitions, mcpServers, onRestartCore, onHarnessCall, watchRecord = null }) {
   const copy = useMemo(() => customizeCore(core), [core]);
-  if (section === "customize-skills") return <SkillsPage store={store} cwd={cwd} call={call} onUseSkill={onUseSkill} onRevealPath={onRevealPath} onNavigate={onNavigate} focus={focus} copy={copy} />;
+  if (section === "customize-skills") return <SkillsPage store={store} cwd={cwd} call={call} onUseSkill={onUseSkill} onRevealPath={onRevealPath} onNavigate={onNavigate} focus={focus} copy={copy} watchRecord={watchRecord} />;
   if (section === "customize-connectors") return <ConnectorsPage store={store} threadId={threadId} cwd={cwd} onOpenExternal={onOpenExternal} call={call} onNavigate={onNavigate} focus={focus} copy={copy} onEditConfig={onEditConfig} mcpDefinitions={mcpDefinitions} mcpServers={mcpServers} onHarnessCall={onHarnessCall} onRestartCore={onRestartCore} />;
   if (section === "customize-plugins") return <PluginsPage store={store} threadId={threadId} cwd={cwd} call={call} focus={focus} onUseSkill={onUseSkill} onRevealPath={onRevealPath} onNavigate={onNavigate} copy={copy} onRestartCore={onRestartCore} onOpenExternal={onOpenExternal} />;
   return null;

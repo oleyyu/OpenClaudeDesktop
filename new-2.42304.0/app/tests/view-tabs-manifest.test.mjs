@@ -212,7 +212,7 @@ test('the routines graphs import view-tabs by semantic name, or by local only fo
     assert.match(fs.readFileSync(path.join(app, 'scripts', generator), 'utf8'), /is held by view-tabs without a semantic name; name it in extract-view-tabs\.mjs \(D46\)/, generator);
 });
 
-test('host code imports view-tab modules only through semantic public names', () => {
+test('host code uses semantic view-tab names; generated consumers may use declared D46 pending imports', () => {
   const sources = [];
   const walk = dir => { for (const entry of fs.readdirSync(dir, {withFileTypes:true})) {
     const file = path.join(dir, entry.name);
@@ -222,14 +222,36 @@ test('host code imports view-tab modules only through semantic public names', ()
   walk(path.join(app, 'src')); sources.push(path.join(app, 'scripts/extract-code-ui-current.mjs'));
   const publicByFile = new Map();
   for (const [name, {file}] of Object.entries(manifest.publicNames)) publicByFile.set(file, [...(publicByFile.get(file) ?? []), name]);
+  // extract-view-tabs deliberately withholds these names until every listed generator has migrated. The routines
+  // generators already record that contract as view-tabs-held. Permit only the exact generated file/import pair
+  // declared in BOTH manifests, never all minified imports or all generated code.
+  const pending = new Set(Object.values(manifest.pendingNames).map(({file, local}) => `${file}#${local}`));
+  const heldByConsumer = new Map();
+  for (const dir of ['routines-shared', 'code-routines', 'cowork-scheduled']) {
+    const base = path.join(app, 'src/generated', dir);
+    const generated = JSON.parse(fs.readFileSync(path.join(base, 'manifest.json'), 'utf8'));
+    for (const module of generated.modules) {
+      const allowed = new Set();
+      for (const spec of module.imports ?? []) {
+        if (spec.kind !== 'view-tabs-held') continue;
+        assert.ok(spec.from.startsWith('../view-tabs/'), `${dir}: ${spec.from}`);
+        const key = `${path.basename(spec.from)}#${spec.name}`;
+        assert.ok(pending.has(key), `${dir}: undeclared pending import ${key}`);
+        allowed.add(key);
+      }
+      heldByConsumer.set(path.join(base, module.target ?? module.source), allowed);
+    }
+  }
   let checked = 0;
   for (const file of sources) {
     const text = fs.readFileSync(file, 'utf8');
     for (const [, names, target] of text.matchAll(/(?:import|export)\s*\{([^}]*)\}\s*from\s*['"][^'"]*view-tabs\/([^'"/]+\.js)['"]/g)) {
-      assert.ok(publicByFile.has(target), `${path.relative(app, file)} -> ${target}`);
+      assert.ok(publicByFile.has(target) || [...(heldByConsumer.get(file) ?? [])].some((key) => key.startsWith(`${target}#`)),
+        `${path.relative(app, file)} -> ${target}`);
       for (const spec of names.split(',').map(s => s.trim()).filter(Boolean)) {
         const imported = spec.split(/\s+as\s+/)[0];
-        assert.ok(publicByFile.get(target).includes(imported), `${path.relative(app, file)} imports ${imported} from ${target}`);
+        assert.ok(publicByFile.get(target)?.includes(imported) || heldByConsumer.get(file)?.has(`${target}#${imported}`),
+          `${path.relative(app, file)} imports ${imported} from ${target}`);
         checked++;
       }
     }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged into the packaged app's Info.plist (package script, electron-packager extend-info). Watch-record's optional
+     narration (native/computer-use WatchRecordVoiceover.swift) transcribes the microphone on this Mac with
+     SFSpeechRecognizer; macOS ends a process that asks for speech recognition without this description. -->
+<plist version="1.0">
+<dict>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>OpenClaude Desktop uses the microphone when you narrate a screen recording.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>OpenClaude Desktop turns your narration into text on this Mac when you record a skill.</string>
+</dict>
+</plist>

@@ -58,9 +58,12 @@ export function commandSummary(parsed) {
   return line.length > 100 ? `${line.slice(0, 99)}…` : line;
 }
 
+// Plain only when YAML reads the text back as that same string: 'null', '~', '0x10', '1e3' or 'true' would come back
+// as null, a number or a boolean (and so lose the description), so those are quoted too.
+const readsBackAs = text => { try { const document = parseDocument(`v: ${text}`, { prettyErrors: false }); return !document.errors.length && document.toJS()?.v === text; } catch { return false; } };
 const yamlValue = value => {
   const text = scalar(value);
-  return /[:#]|^[\s'"\[\]{}>|*&!%@`,?-]|\s$/.test(text) ? JSON.stringify(text) : text;
+  return /[:#]|^[\s'"\[\]{}>|*&!%@`,?-]|\s$/.test(text) || !readsBackAs(text) ? JSON.stringify(text) : text;
 };
 export function serializeCommandFile({ description = '', argumentHint = '', body = '' } = {}) {
   const lines = [];

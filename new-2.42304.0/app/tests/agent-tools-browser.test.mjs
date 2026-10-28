@@ -76,8 +76,8 @@ function fakeExtension({ pages = {} } = {}) {
   const client = {
     closed: false,
     on() {},
-    async executeTool(name, args, { allowedHosts }) {
-      sent.push({ name, args, allowedHosts });
+    async executeTool(name, args, { allowedHosts, timeoutMs }) {
+      sent.push({ name, args, allowedHosts, timeoutMs });
       const blocked = (url) => { const host = new URL(url).host; if (!allowedHosts.includes('*') && !allowedHosts.includes(host)) throw Object.assign(new BridgeError('site_not_allowed', `not allowed: ${host}`), { data: { host, url } }); };
       if (name === 'browser_batch') {
         const steps = [];
@@ -112,6 +112,35 @@ test('a new site is asked once per session; allowed, the call goes again; declin
   assert.equal(asked.length, 3, 'another session asks for itself');
 });
 
+test('a site card that ends without an answer isn’t a refusal: the site is asked about again', async () => {
+  const extension = fakeExtension({ pages: { current: 'https://ex.com/' } });
+  const service = createChromeBridgeService({ connect: extension.connect });
+  let asked = 0;
+  await assert.rejects(service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; return null; } }), (error) => error.code === 'site_unanswered' && error.data.host === 'ex.com');
+  await assert.rejects(service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; throw new Error('card gone'); } }), (error) => error.code === 'site_unanswered');
+  assert.deepEqual(await service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; return true; } }), { ok: true, url: 'https://ex.com/' });
+  assert.equal(asked, 3);
+  // In a batch, the steps that ran before it are still reported.
+  const result = await service.call('s1', 'browser_batch', { actions: [{ name: 'tabs_context' }, { name: 'navigate', input: { url: 'https://b.test/' } }] }, { approve: async () => null });
+  assert.deepEqual(result.steps.map((step) => [step.name, step.ok]), [['tabs_context', true], ['navigate', false]]);
+  assert.deepEqual({ completed: result.completed, step: result.failed.step, code: result.failed.code }, { completed: 1, step: 2, code: 'site_unanswered' });
+});
+
+test('parallel calls that reach the same new site share one card', async () => {
+  const extension = fakeExtension();
+  const service = createChromeBridgeService({ connect: extension.connect });
+  const answers = [];
+  const approve = () => new Promise((resolve) => answers.push(resolve));
+  const first = service.call('s1', 'navigate', { url: 'https://x.test/' }, { approve });
+  const second = service.call('s1', 'tabs_create', { url: 'https://x.test/b' }, { approve });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(answers.length, 1, 'one card for x.test');
+  answers[0](true);
+  assert.deepEqual(await first, { ok: true, url: 'https://x.test/' });
+  assert.deepEqual(await second, { ok: true, url: 'https://x.test/b' });
+  assert.deepEqual(service.allowedSites('s1'), ['x.test']);
+});
+
 test('a batch that reaches a new site asks, then runs only the steps that hadn’t run', async () => {
   const extension = fakeExtension();
   const service = createChromeBridgeService({ connect: extension.connect });
@@ -120,6 +149,20 @@ test('a batch that reaches a new site asks, then runs only the steps that hadn�
   assert.deepEqual(result.steps.map((step) => [step.name, step.ok]), [['tabs_context', true], ['navigate', true], ['navigate', false]]);
   assert.equal(result.completed, 2);
   assert.deepEqual({ step: result.failed.step, code: result.failed.code, host: result.failed.host }, { step: 3, code: 'site_declined', host: 'b.test' });
+});
+
+test('the app waits at least as long as the extension may take for a call', async () => {
+  const extension = fakeExtension({ pages: { current: 'https://a.test/' } });
+  const service = createChromeBridgeService({ connect: extension.connect });
+  await service.call('s1', 'tabs_context', {}, { approve: async () => true });
+  await service.call('s1', 'javascript_tool', { code: '1', timeout_ms: 60000 });
+  await service.call('s1', 'browser_batch', { actions: Array.from({ length: 10 }, () => ({ name: 'tabs_context' })) });
+  await service.call('s1', 'browser_batch', { actions: Array.from({ length: 4 }, () => ({ name: 'javascript_tool', input: { code: '1', timeout_ms: 60000 } })) });
+  const [plain, script, tenSteps, fourScripts] = extension.sent.slice(-4).map((call) => call.timeoutMs);
+  assert.equal(plain, 60000);
+  assert.ok(script > 60000 + 20000, `javascript_tool with timeout_ms 60000 waits ${script} ms`);
+  assert.ok(tenSteps > 10 * 20000, `ten steps that may each wait for a page load: ${tenSteps} ms`);
+  assert.ok(fourScripts > 4 * 60000, `four 60 s scripts: ${fourScripts} ms`);
 });
 
 test('no extension connected: one clear error for the model', async () => {

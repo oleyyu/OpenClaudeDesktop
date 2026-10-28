@@ -12,7 +12,7 @@ import { SourceMenu, menuTriggerProps } from "./source-menu";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import {
   buildSidebarGroups, buildNestedRuns, bulkTargets, CLASSIC_GROUP_OPTIONS, CLASSIC_SORT_OPTIONS,
-  CLASSIC_STATUS_OPTIONS, clearSidebarFilters, folderName, hasSidebarFilters, lineageKind, movePinned,
+  CLASSIC_STATUS_OPTIONS, clearSidebarFilters, folderName, hasSidebarFilters, lineageKind, movePinned, withPinnedOrder,
   nestedStubCounts, nestedRowNeedsInput, splitNestedRun, normalizeSidebarPreferences, sessionArchived, sessionName, sessionState, showAllSessionsPreferences, sidebarEmptyHasNonDefaultFilter, sidebarEmptyVariant, truncateRuns,
   showFewerRows, stickyListFailure, toggleCollapsedGroup, expandCollapsedGroup,
   OTHER_PROJECT_KEY, customOrderKey, isCustomOrderKey, moveSection, sectionOrderKeys, sortSectionsAlphabetically, withSectionOrder,
@@ -553,6 +553,11 @@ function coreHistory(engine) {
   const reported = engine && typeof engine === "object" ? engine.capabilities?.historyLocation : null;
   const location = locationText(reported) ?? locationText(descriptor.historyLocation);
   return { name, place: location ? `${name} (${location})` : name };
+}
+
+/** A bulk Delete never deletes the open session (runBulk skips it), so its confirm is built from the rest only. */
+export function bulkDeleteTargets(targets, currentId) {
+  return (targets || []).filter((session) => session?.id !== currentId);
 }
 
 /** sidebar-session.js:13885-13924 delete confirm copy; a core that deletes its own history names it too. */
@@ -1326,7 +1331,7 @@ export function SourceSidebar({
       void (async () => {
         try {
           if (outcome.type === "pin") await onSessionAction("pin", session);
-          await onSessionAction("pinned-order", session, { ids: order });
+          await onSessionAction("pinned-order", session, { ids: withPinnedOrder(pinnedOrder, order) });
         } catch (reason) { notifyError(reason); }
       })();
     },
@@ -1891,7 +1896,7 @@ export function SourceSidebar({
       onClose={() => setMenu(null)}>
       {menu.kind === "filter" && <SourceSidebarFilterMenu showMetadataOption={false} preferences={preferences} onChange={updatePreferences} onClose={() => setMenu(null)} knownFolders={folders} customGroups={customGroups} />}
       {menu.kind === "session" && <SourceSidebarSessionMenu session={menu.session} metadata={sessionMetadata[menu.session.id]} customGroups={customGroups}
-        state={state} onAction={runAction} onClose={() => setMenu(null)} onRename={() => setRenaming(menu.session.id)}
+        state={state} onAction={(action, target, payload) => runAction(action, target, action === "pinned-order" ? { ...payload, ids: withPinnedOrder(pinnedOrder, payload.ids) } : payload)} onClose={() => setMenu(null)} onRename={() => setRenaming(menu.session.id)}
         unarchiving={!!unarchiving?.has?.(menu.session.id)}
         onCreateGroup={onCreateGroup ? (targets) => setGroupDialog({ kind: "create", sessions: targets }) : undefined} sectionCopy={sectionsModel ? sectionMessages : null}
         onDelete={(target) => requestDelete([target])} onFork={(target) => runAction("fork", target)} forkUnavailable={forkUnavailable}
@@ -1906,7 +1911,7 @@ export function SourceSidebar({
             return { pin: pin ? { ...pin, sessions: pinTargets(selectedSessions, sessionMetadata, true) } : null,
               unpin: unpin ? { ...unpin, sessions: pinTargets(selectedSessions, sessionMetadata, false) } : null };
           })(),
-          onBulk: (action, targets, payload) => action === "delete" ? requestDelete(targets) : runBulk(action, targets, payload) } : undefined} />}
+          onBulk: (action, targets, payload) => action === "delete" ? bulkDeleteTargets(targets, current).length && requestDelete(bulkDeleteTargets(targets, current)) : runBulk(action, targets, payload) } : undefined} />}
       {menu.kind === "group" && (() => {
         const group = menu.group, custom = groupMenuKind(group) === "custom";
         const archivable = bulkTargets(group.sessions, { metadata: sessionMetadata, currentId: current, state, action: "archive" });

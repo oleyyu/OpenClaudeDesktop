@@ -20,9 +20,10 @@ import { useIsomorphicLayoutEffect } from './generated/sidebar-resize/layout-eff
 // (`Y.getState()`, `Y.subscribe((state, previous) => …)`). The host keeps one module-level store of the same shape for
 // the fields DF and its helpers read, fed from SourceSidebar's props by useSidebarResizeHost, and answers the actions
 // with the host callbacks (main.jsx saveWidth / setSidebarCollapsed, which persist to settings).
-// Host differences: `collapsed` is the host's effective collapsed state (preference || narrow viewport || no sidebar),
-// which shared-52 rh folds the same way (collapsed || isCuDocked || isNarrowViewport || isRouteDrilldown); there is no
-// computer-use dock, route drilldown, composed-artifact sidebar or experiment frame here, so those stay false.
+// Host differences: `collapsed` is the host's effective collapsed state (preference || narrow viewport, the computer-use
+// side-panel dock included (main.jsx cuDocked) || no sidebar), which shared-52 rh folds the same way (collapsed ||
+// isCuDocked || isNarrowViewport || isRouteDrilldown); there is no route drilldown, composed-artifact sidebar or
+// experiment frame here, so those, and the separate isCuDocked / isNarrowViewport flags, stay false.
 const host = { handle: null, resizingRoot: null, commit: null, collapse: null, setCollapsed: null };
 const listeners = new Set();
 let state;

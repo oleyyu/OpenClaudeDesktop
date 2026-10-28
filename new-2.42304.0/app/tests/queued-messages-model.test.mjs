@@ -59,6 +59,17 @@ test("reorder moves an entry to the target slot with rollback ids", () => {
   assert.equal(optimisticReorder(queue, "q1", "q1").queue, queue);
 });
 
+test("a failed reorder undoes only the move: entries that arrived or left meanwhile are kept as they are", () => {
+  // Like optimisticRemove's rollback: the queue the RPC failure meets may already hold a new message (q3) or have sent
+  // one (q1 left the queue for the running turn); undoing the move must not drop q3 or bring q1 back.
+  const queue = queueFromList(list, "t");
+  const { queue: moved, rollback } = optimisticReorder(queue, "q2", "q1");
+  const arrived = { ...moved, entries: [...moved.entries, { id: "q3", input: [], preview: "…" }] };
+  assert.deepEqual(rollback(arrived).entries.map((entry) => entry.id), ["q1", "q2", "q3"]);
+  const sent = { ...moved, entries: moved.entries.filter((entry) => entry.id !== "q1") };
+  assert.deepEqual(rollback(sent).entries.map((entry) => entry.id), ["q2"]);
+});
+
 test("edit in composer restores the text and re-stageable file parts", () => {
   const queue = queueFromList(list, "t");
   assert.deepEqual(editableDraft(queue.entries[1]), { text: "second", attachments: [{ type: "localImage", path: "/tmp/a.png" }] });

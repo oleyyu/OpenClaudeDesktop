@@ -178,3 +178,12 @@ test("humanPrompts keeps non-empty userMessage text oldest to newest", () => {
   assert.deepEqual(humanPrompts(items), ["one", "two\nlines"]);
   assert.deepEqual(humanPrompts(undefined), []);
 });
+
+test("the screen-reader history status is in the UI language, like the visible header", async () => {
+  const { setLocale } = await import("../electron/i18n/index.mjs");
+  setLocale("zh-CN");
+  try {
+    assert.equal(promptHistoryStatus({ index: 1, total: 2, hasDraft: true }), "历史记录 1/2 ↓ 恢复草稿");
+    assert.equal(promptHistoryStatus({ index: 2, total: 2, hasDraft: false }), "历史记录 2/2");
+  } finally { setLocale("en-US"); }
+});

@@ -31,3 +31,14 @@ test('a SIGKILLed bridge takes its agent server down with it', { skip: process.p
     try { process.kill(pid, 'SIGKILL') } catch {}
   }
 })
+
+test('a missing agent binary fails the start at once instead of after the health timeout', async () => {
+  const { AgentServer } = await import(serverModule)
+  const exits = []
+  const server = new AgentServer({ flavor: { id: 'x', name: 'X', envPrefix: 'X' }, binary: '/nonexistent/code-desktop-agent', onExit: (info) => exits.push(info) })
+  const started = Date.now()
+  await assert.rejects(server.start(), /X did not start: .*ENOENT/)
+  assert.ok(Date.now() - started < 5000, 'no 60 s wait')
+  assert.equal(server.child, null)
+  assert.deepEqual(exits, [{ code: 'ENOENT', signal: null }])
+})

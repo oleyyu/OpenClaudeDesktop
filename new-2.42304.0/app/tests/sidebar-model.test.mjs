@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildSidebarGroups, CLASSIC_GROUP_OPTIONS, CLASSIC_SORT_OPTIONS,
   normalizeSidebarPreferences, clearSidebarFilters, hasSidebarFilters,
-  localDayBoundaries, sessionState, timestampMs, buildNestedRuns, bulkTargets, movePinned, orderPinned,
+  localDayBoundaries, sessionState, timestampMs, buildNestedRuns, bulkTargets, movePinned, orderPinned, withPinnedOrder,
   sessionParentId, lineageKind, nestedStubCounts, truncateRuns, sidebarEmptyVariant,
   showAllSessionsPreferences, sidebarEmptyHasNonDefaultFilter,
   toggleCollapsedGroup, expandCollapsedGroup, stickyListFailure, showFewerRows,
@@ -135,6 +135,27 @@ test("nested runs: real lineage only, restricted to the bucket, chains flattened
   const flat = [thread("a"), thread("b")];
   assert.deepEqual(buildNestedRuns(flat).runs, [{ parentId: null, rows: flat }]);
   assert.deepEqual(buildNestedRuns([]).runs, []);
+});
+
+test("nested runs: a fork chain nests the same way whatever order the rows are sorted in", () => {
+  // a <- b <- c <- d: only b's parent is a top-level row, so only b nests; c and d (parents with parents) stay
+  // top-level. Before, the result followed the sort: oldest-first left d nested under c, newest-first did not.
+  const chain = [thread("a"), thread("b", { forkedFromId: "a" }), thread("c", { forkedFromId: "b" }), thread("d", { forkedFromId: "c" })];
+  for (const order of [chain, [...chain].reverse(), [chain[2], chain[0], chain[3], chain[1]]]) {
+    const { parentOf } = buildNestedRuns(order);
+    assert.deepEqual([...parentOf].sort(), [["b", "a"]], order.map((s) => s.id).join(","));
+  }
+});
+
+test("pinned Move up/down keeps the place of pinned sessions the list hides (archived under Active)", () => {
+  // Stored [p3, p1, p2]; p3 is archived, so the Active list shows p1, p2. Moving p2 up must not drop p3 to the end.
+  const shown = orderPinned([thread("p1"), thread("p2")], ["p3", "p1", "p2"]).map((s) => s.id);
+  assert.deepEqual(withPinnedOrder(["p3", "p1", "p2"], movePinned(shown, "p2", "up")), ["p3", "p2", "p1"]);
+  // Pinned rows with no stored rank sort after the ranked ones, so they slot in after them.
+  assert.deepEqual(withPinnedOrder(["p3", "p1"], ["n", "p1"]), ["p3", "n", "p1"]);
+  assert.deepEqual(withPinnedOrder([], ["b", "a"]), ["b", "a"]);
+  const all = orderPinned([thread("p1"), thread("p2"), thread("p3")], withPinnedOrder(["p3", "p1", "p2"], ["p2", "p1"])).map((s) => s.id);
+  assert.deepEqual(all, ["p3", "p2", "p1"], "with All shown, p3 is still first");
 });
 
 test("bulk targets skip pinned, open, running and (for archive) archived sessions", () => {

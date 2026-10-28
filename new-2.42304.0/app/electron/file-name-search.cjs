@@ -125,7 +125,9 @@ function createFileNameSearch(options = {}) {
     // promise still settles with its own identifier; it cannot replace the new.
     const previous = latest.get(request.scope);
     if (previous) fail(previous, 'SUPERSEDED', 'A newer filename query replaced this request.');
-    if (active.size >= limits.maxConcurrent && pending.length >= limits.maxPending) return Promise.resolve({
+    // A superseded worker stays active until its process exits; its slot belongs to the request replacing it.
+    const running = active.size - (previous && active.has(previous) ? 1 : 0);
+    if (running >= limits.maxConcurrent && pending.length >= limits.maxPending) return Promise.resolve({
       ...envelope(request), generation: ++generation, elapsedMs: 0,
       error: { code: 'BUSY', message: 'Filename search capacity is occupied; retry the current query.' },
     });
@@ -158,9 +160,20 @@ function createFileNameSearch(options = {}) {
     await Promise.all(done);
   }
 
+  // One window's searches (scopes `${senderId}:…`), when that window goes away; the other windows' keep running.
+  async function cancelScopes(prefix) {
+    const jobs = [...active, ...pending].filter(job => typeof prefix === 'string' && prefix && job.request.scope.startsWith(prefix));
+    const done = jobs.map(job => new Promise(resolve => {
+      const original = job.resolve;
+      job.resolve = value => { original(value); resolve(); };
+    }));
+    for (const job of jobs) fail(job, 'CANCELLED', 'Filename search was cancelled.');
+    await Promise.all(done);
+  }
+
   async function close() { closed = true; await cancelAll(); }
 
-  return { search, cancel, cancelAll, dispose: close, close, limits: { ...limits } };
+  return { search, cancel, cancelAll, cancelScopes, dispose: close, close, limits: { ...limits } };
 }
 
 module.exports = { createFileNameSearch, DEFAULT_LIMITS };

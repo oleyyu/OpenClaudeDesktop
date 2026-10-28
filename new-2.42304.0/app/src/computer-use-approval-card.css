@@ -1,0 +1,6 @@
+/* The request_access access card's list (computer-use-approval-card.jsx). The rows use the official utility classes as
+   2.42304.0 writes them (docs/computer-use-ui-css-source-20261020.md §1.5–1.6); this file holds only how the list sits in
+   the local approval card. The official card puts its list one gap-[12px] below the header block; here it is a child of
+   .sac-content, so it carries that spacing itself. */
+.sac-content > .cua-list { margin-top: 4px; }
+.cua-row > img { object-fit: contain; }

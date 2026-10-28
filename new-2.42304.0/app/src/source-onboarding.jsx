@@ -1,3 +1,76 @@
+// Setup › Requirements (setup-requirements.cjs): what this Mac needs before a core can start. Node.js runs every
+// core, so Continue waits for it; Git backs worktrees and Git status and is recommended. A missing one gets its
+// installer (the official Node.js package, Apple's Command Line Tools), and the list checks again every 2 s while
+// an installer is out, so the row turns ready once the user finishes it.
+function RequirementsCard({ desktopCall, onContinue, onBack }) {
+  const [state, setState] = useState(null), [error, setError] = useState(""), [busy, setBusy] = useState(false);
+  const [asked, setAsked] = useState({ node: false, git: false });
+  const call = useCallback((op) => Promise.resolve(desktopCall("setup", { op })), [desktopCall]);
+  const fail = useCallback((failure) => setError(cleanErrorReason(failure?.message || String(failure))), []);
+  const refresh = useCallback(() => call("check").then(setState, fail), [call, fail]);
+  useEffect(() => { void refresh(); }, [refresh]);
+  const nodePhase = state?.nodeInstall?.phase ?? null;
+  const pending = !!state && ((asked.node && !state.node.ok && nodePhase !== "failed") || (asked.git && !state.git.ok));
+  useEffect(() => {
+    if (!pending) return undefined;
+    const timer = setInterval(() => { void refresh(); }, nodePhase === "download" ? 400 : 2000);
+    return () => clearInterval(timer);
+  }, [pending, nodePhase, refresh]);
+  const install = (which) => {
+    setError("");
+    setAsked((value) => ({ ...value, [which]: true }));
+    call(which === "node" ? "install-node" : "install-git").then(setState, fail);
+  };
+  const proceed = async () => {
+    if (busy) return;
+    setBusy(true); setError("");
+    try { await onContinue(); } catch (failure) { fail(failure); setBusy(false); }
+  };
+  const node = state?.node, git = state?.git, download = state?.nodeInstall;
+  const nodeStatus = !node ? t("Checking…") : node.ok ? t("Node.js {version}", { version: node.version.replace(/^v/, "") })
+    : nodePhase === "download" ? (download.total ? t("Downloading… {done} of {total}", { done: megabytes(download.received || 0), total: megabytes(download.total) }) : t("Downloading…"))
+    : nodePhase === "verify" ? t("Checking the download…")
+    : nodePhase === "installer" ? t("Finish the installer, then come back")
+    : node.version ? t("{version} is too old", { version: node.version }) : t("Not installed");
+  const gitStatus = !git ? t("Checking…") : git.ok ? t("Installed") : asked.git ? t("Finish Apple’s installer, then come back") : t("Not installed");
+  const nodeBusy = nodePhase === "download" || nodePhase === "verify";
+  const rows = [
+    { id: "node", icon: "CodeBlock", name: "Node.js", detail: t("Runs the agent. Version {minimum} or newer.", { minimum: node?.minimum ?? "22.19" }), ok: !!node?.ok, status: nodeStatus,
+      action: node && !node.ok && !nodeBusy ? (nodePhase === "installer" ? t("Open again") : nodePhase === "failed" ? t("Try again") : t("Download and install")) : null },
+    { id: "git", icon: "GitBranch", name: "Git", detail: t("Used for worktrees, branches and change tracking. Installed with Apple’s Command Line Tools."), ok: !!git?.ok, status: gitStatus, optional: true,
+      action: git && !git.ok ? (asked.git ? t("Open again") : t("Install")) : null },
+  ];
+  return (
+    <div className="sob-agents sob-requirements">
+      <p className="sob-subtitle">{t("OpenClaude Desktop needs a few tools on this Mac. Anything missing can be installed from here.")}</p>
+      <div className="sob-agent-list" role="list" aria-label={t("Requirements")}>
+        {rows.map((row) => (
+          <div key={row.id} role="listitem" className="sob-agent sob-requirement" data-requirement={row.id} data-ready={row.ok || undefined}>
+            <span className="sob-requirement-icon" aria-hidden="true"><Icon name={row.icon} size={20} /></span>
+            <span className="sob-agent-copy">
+              <span className="sob-agent-head"><span className="sob-agent-name">{row.name}</span>
+                {row.optional && <span className="sob-badge">{t("Recommended")}</span>}</span>
+              <span className="sob-agent-tagline">{row.detail}</span>
+            </span>
+            <span className="sob-agent-side">
+              <span className="sob-agent-status" data-requirement-status={row.id}>{row.status}</span>
+              {row.ok ? <span className="sob-requirement-ready" aria-label={t("Ready")}><Icon name="CheckCircleFilled" size={18} /></span>
+                : row.action && <SourceSettingsButton size="sm" variant={row.id === "node" ? "primary" : "secondary"} onClick={() => install(row.id)}>{row.action}</SourceSettingsButton>}
+            </span>
+          </div>
+        ))}
+      </div>
+      {nodePhase === "failed" && download?.error && <p className="sob-error sob-center" role="alert">{t("Node.js couldn’t be downloaded: {reason}", { reason: download.error })}</p>}
+      {error && <p className="sob-error sob-center" role="alert">{error}</p>}
+      <div className="sob-actions sob-agent-actions">
+        <SourceSettingsButton variant="primary" size="lg" className="sob-wide" busy={busy} disabled={!node?.ok} onClick={proceed}>{t("Continue")}</SourceSettingsButton>
+        <button type="button" className="sob-text-button" onClick={() => { setError(""); void refresh(); }}>{t("Check again")}</button>
+        <SourceSettingsButton variant="ghost" disabled={busy} onClick={onBack}>{t("Back")}</SourceSettingsButton>
+      </div>
+    </div>
+  );
+}
+
 // First-run setup, laid out like the original desktop sign-in (ion-dist c632c9594 Ad welcome / jd sign-in,
 // c19c934c8 Rt shell, c029a409d vr card; work/onboarding-reference/NOTES.md): a welcome screen, then a card
 // that connects a model. Quick setup fills an official endpoint (prefs/provider-presets.mjs); everything stays
@@ -329,14 +402,15 @@ function SignInCard({ signIn, onSkip, onBack }) {
 
 /**
  * @param {{ desktopCall: Function, onDone: (choice: {model: string, route: string}) => Promise<void>, onSkip: () => void,
- *   onCoreChosen: (id: string) => Promise<void>, onOpenExternal: (url: string) => void, startAt?: 'welcome' | 'agent' | 'connect' | 'signin', signIn?: object }} props
+ *   onCoreChosen: (id: string) => Promise<void>, onOpenExternal: (url: string) => void, onRequirementsMet?: () => Promise<void>, startAt?: 'welcome' | 'setup' | 'agent' | 'connect' | 'signin', signIn?: object }} props
  */
-export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, onOpenExternal, signIn = null, startAt = "welcome" }) {
+export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, onOpenExternal, onRequirementsMet = async () => {}, signIn = null, startAt = "welcome" }) {
   const [step, setStep] = useState(startAt);
   const start = useRef(null), shell = useRef(null), heading = useRef(null), layer = useRef(null);
   // Escape does what the step's own Back / Skip does: one step back, or out when this is where the takeover began
   // (Settings › Models › Quick setup… opens at 'connect'). The first-run welcome has no way back, so Escape stays put.
-  const back = step === "agent" ? (startAt === "agent" ? onSkip : () => setStep("welcome"))
+  const back = step === "setup" ? (startAt === "setup" ? onSkip : () => setStep("welcome"))
+    : step === "agent" ? (startAt === "agent" ? onSkip : () => setStep("setup"))
     : step === "connect" ? (startAt === "connect" ? onSkip : () => setStep("agent"))
     : step === "signin" ? () => setStep("agent") : null;
   const live = useRef({ back, step });
@@ -405,15 +479,19 @@ export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, on
         <h1 className="sob-title">OpenClaude <em>Desktop</em></h1>
         <p className="sob-tagline">{t("The open-source Claude Desktop.")}</p>
         <div className="sob-bottom">
-          <SourceSettingsButton ref={start} variant="primary" size="lg" className="sob-wide" onClick={() => setStep("agent")}>{t("Get started")}</SourceSettingsButton>
+          <SourceSettingsButton ref={start} variant="primary" size="lg" className="sob-wide" onClick={() => setStep("setup")}>{t("Get started")}</SourceSettingsButton>
           <button type="button" className="sob-text-button" onClick={onSkip}>{t("Set up later")}</button>
         </div>
       </> : step === "signin" && signIn ? <>
         <h1 ref={heading} tabIndex={-1} className="sob-heading">{t("Sign in to {name}", { name: signIn.core?.name ?? "" })}</h1>
         <SignInCard signIn={signIn} onSkip={onSkip} onBack={() => setStep("agent")} />
+      </> : step === "setup" ? <>
+        <h1 ref={heading} tabIndex={-1} className="sob-heading">{t("Check your Mac")}</h1>
+        <RequirementsCard desktopCall={desktopCall} onContinue={async () => { await onRequirementsMet(); setStep("agent"); }}
+          onBack={() => (startAt === "setup" ? onSkip() : setStep("welcome"))} />
       </> : step === "agent" ? <>
         <h1 ref={heading} tabIndex={-1} className="sob-heading">{t("Choose your agent")}</h1>
-        <AgentCard desktopCall={desktopCall} onChooseDeepSeek={() => setStep("connect")} onBack={() => (startAt === "agent" ? onSkip() : setStep("welcome"))}
+        <AgentCard desktopCall={desktopCall} onChooseDeepSeek={() => setStep("connect")} onBack={() => (startAt === "agent" ? onSkip() : setStep("setup"))}
           initial={signIn?.core?.id ?? null}
           // Back from Sign in: choosing the same core again returns to its sign-in instead of restarting it.
           onCoreChosen={(id) => (signIn?.core?.id && id === signIn.core.id ? setStep("signin") : onCoreChosen(id))} />

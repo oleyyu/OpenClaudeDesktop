@@ -687,7 +687,9 @@ export function savedSplit(split, { known = () => true, primary = null } = {}) {
   if (!next.length) return null;
   const colWeights = Array.isArray(weights) && weights.length === columnCount(next) && weights.every((value) => Number.isFinite(value) && value > 0) ? weights.map((value) => Math.max(0.01, value)) : null;
   const rowSplit = Number.isFinite(split.rowSplit) ? Math.min(SPLIT_ROW.MAX, Math.max(SPLIT_ROW.MIN, split.rowSplit)) : SPLIT_ROW.DEFAULT;
-  const active = Number.isInteger(split.active) && split.active >= 0 && split.active <= next.length ? split.active : 0;
+  // `active` indexes the saved panes, some of which may have been dropped: follow the focused session.
+  const focusedId = Number.isInteger(split.active) && split.active > 0 ? sessionId(panes[split.active - 1]?.sessionId) : null;
+  const active = focusedId === null ? 0 : Math.max(0, next.findIndex((entry) => entry.id === focusedId) + 1);
   return { entries: next, colWeights, rowSplit, active };
 }
 /** Relaunch: reopen the panes a window had (main.cjs init → windowLayout.split), unless it already has panes. */

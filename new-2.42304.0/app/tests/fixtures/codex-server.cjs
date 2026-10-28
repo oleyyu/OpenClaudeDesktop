@@ -920,6 +920,26 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
         } });
         return;
       }
+      if(text==='fixture:computer-use-app') {
+        // OpenClaude Desktop's own computer-use tools (electron/agent-tools/computer-use.mjs) as a core reports them: the
+        // code_desktop server's app_list_windows (JSON text) and app_screenshot (the element summary, then the picture).
+        let png=null;try{png=fs.readFileSync(path.join(process.env.CODE_DESKTOP_DATA,'fixture-computer.png')).toString('base64');}catch{}
+        const windows={windows:[{window_id:133,title:'Downloads',is_main:true,is_minimized:false,is_hidden:false,is_off_space:false,bounds:{x:124,y:192,width:920,height:436},is_auxiliary:false}]};
+        const steps=[
+          {id:`cua-${db.next}-1`,type:'mcpToolCall',server:'code_desktop',tool:'app_list_windows',arguments:{app:'com.apple.finder'},status:'inProgress',
+            result:{content:[{type:'text',text:JSON.stringify(windows,null,2)}]}},
+          {id:`cua-${db.next}-2`,type:'mcpToolCall',server:'code_desktop',tool:'app_screenshot',arguments:{app:'com.apple.finder',window_id:133},status:'inProgress',
+            result:{content:[{type:'text',text:'Window 133 of com.apple.finder: 1840×872 frame px (image 1568×743).\n[0] AXButton "Back" (20, 104, 56×48)'},
+              ...(png?[{type:'image',mimeType:'image/png',data:png}]:[])]}},
+        ];
+        let at=0;
+        steps.forEach((step,index)=>{
+          setTimeout(()=>{turn.items.push(step);persist();notify('item/started',{threadId:thread.id,turnId:turn.id,item:step});},at+=80);
+          setTimeout(()=>{step.status='completed';persist();notify('item/completed',{threadId:thread.id,turnId:turn.id,item:step});
+            if(index===steps.length-1)complete(thread,'COMPUTER_USE_APP_FIXTURE_DONE');},at+=80);
+        });
+        return;
+      }
       if(text==='fixture:computer-use') {
         // Computer use in the three shapes the app reads (src/computer-use-model.mjs): OpenClaude Desktop's computerUse item,
         // a computer-use MCP server's tool, the Anthropic computer tool. fixture-computer.png (profile) is the screenshot.
@@ -968,6 +988,66 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
         })();
         return;
       }
+      // 'fixture:app-tool <name> <json>': the model calls any of OpenClaude Desktop's tools by name, through the app's
+      // agent-tools MCP server as fixture:workflow-tool does (computer use's request_access raises the access card this
+      // way); the reply is the tool's text, or APP_TOOL_ERROR: and its text when the call failed.
+      // 'fixture:app-tools [[name, args], …]': several of the app's tools called in order in ONE turn, over one connection
+      // (computer use's teach mode lasts one turn: request_teach_access, screenshot, teach_batch). Each call is its own
+      // mcpToolCall item; the reply is the last call's text (APP_TOOL_ERROR: … for a failed one, and the rest are skipped).
+      if(text.startsWith('fixture:app-tools ')) {
+        const list=JSON.parse(text.slice('fixture:app-tools '.length).trim());
+        const server = JSON.parse(process.env.CODE_DESKTOP_AGENT_TOOLS_SERVER || 'null');
+        if (!server) { complete(thread, 'NO_AGENT_TOOLS'); return; }
+        const { spawn } = require('node:child_process');
+        const child = spawn(server.command, server.args, { env: { ...process.env, ...server.env }, stdio: ['pipe', 'pipe', 'ignore'] });
+        const waiting = new Map(); let buffer = '', seq = 0;
+        child.stdout.on('data', chunk => { buffer += chunk; let n; while ((n = buffer.indexOf('\n')) >= 0) { const line = buffer.slice(0, n); buffer = buffer.slice(n + 1); try { const message = JSON.parse(line); waiting.get(message.id)?.(message); } catch {} } });
+        const rpc = (method, params) => new Promise(resolve => { const id = ++seq; waiting.set(id, resolve); child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+        (async () => {
+          await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'fixture', version: '1' } });
+          let reply = 'APP_TOOL_EMPTY';
+          for (const [index, [name, args]] of list.entries()) {
+            const call = { id:`mcp-${db.next}-${index}`, type:'mcpToolCall', server:'code_desktop', tool:name, status:'inProgress', arguments:args||{} };
+            turn.items.push(call); persist();
+            notify('item/started', { threadId: thread.id, turnId: turn.id, item: call });
+            const result = (await rpc('tools/call', { name, arguments: args||{}, _meta: { threadId: thread.id } })).result;
+            logRequest('mcp:tools/call', { name, result });
+            call.status = result?.isError ? 'failed' : 'completed'; call.result = result; persist();
+            notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call });
+            const textPart = result?.content?.find(part => part?.type === 'text')?.text ?? 'APP_TOOL_EMPTY';
+            reply = result?.isError ? `APP_TOOL_ERROR: ${textPart}` : textPart;
+            if (result?.isError) break;
+          }
+          child.kill();
+          complete(thread, reply);
+        })();
+        return;
+      }
+      if(text.startsWith('fixture:app-tool ')) {
+        const rest=text.slice('fixture:app-tool '.length).trim(), space=rest.indexOf(' ');
+        const name=space<0?rest:rest.slice(0,space), args=JSON.parse(space<0?'{}':rest.slice(space+1));
+        const call = { id:`mcp-${db.next}`, type:'mcpToolCall', server:'code_desktop', tool:name, status:'inProgress', arguments:args };
+        turn.items.push(call); persist();
+        notify('item/started', { threadId: thread.id, turnId: turn.id, item: call });
+        const server = JSON.parse(process.env.CODE_DESKTOP_AGENT_TOOLS_SERVER || 'null');
+        if (!server) { call.status='failed'; notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call }); complete(thread, 'NO_AGENT_TOOLS'); return; }
+        const { spawn } = require('node:child_process');
+        const child = spawn(server.command, server.args, { env: { ...process.env, ...server.env }, stdio: ['pipe', 'pipe', 'ignore'] });
+        const waiting = new Map(); let buffer = '', seq = 0;
+        child.stdout.on('data', chunk => { buffer += chunk; let n; while ((n = buffer.indexOf('\n')) >= 0) { const line = buffer.slice(0, n); buffer = buffer.slice(n + 1); try { const message = JSON.parse(line); waiting.get(message.id)?.(message); } catch {} } });
+        const rpc = (method, params) => new Promise(resolve => { const id = ++seq; waiting.set(id, resolve); child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+        (async () => {
+          await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'fixture', version: '1' } });
+          const result = (await rpc('tools/call', { name, arguments: args, _meta: { threadId: thread.id } })).result;
+          logRequest('mcp:tools/call', { name, result });
+          child.kill();
+          call.status = result?.isError ? 'failed' : 'completed'; call.result = result; persist();
+          notify('item/completed', { threadId: thread.id, turnId: turn.id, item: call });
+          const reply = result?.content?.find(part => part?.type === 'text')?.text ?? 'APP_TOOL_EMPTY';
+          complete(thread, result?.isError ? `APP_TOOL_ERROR: ${reply}` : reply);
+        })();
+        return;
+      }
       if(text==='fixture:mcp-progress') {
         // McpToolCallProgressNotification {threadId, turnId, itemId, message}.
         const call = { id:`mcp-${db.next}`, type:'mcpToolCall', server:'fixture-server', tool:'probe', status:'inProgress' };
@@ -999,6 +1079,27 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
       // mcpToolCall item; '-form' a server form of primitive fields; '-url' url mode; '-unsupported'
       // an openai/form request that can only be declined. The response is logged to
       // fixture-responses.jsonl; accept completes with APPROVAL_ACCEPTED, decline/cancel APPROVAL_DENIED.
+      // 'fixture:computer-use-access': a computer-use request_access as an MCP tool-call approval (src/computer-use-model.mjs
+      // computerUseAccessRequest): the in-progress request_access call, then the elicitation whose
+      // _meta.computer_use_access carries what main resolves for the access card (apps with name, tier, icon; flags;
+      // reason). One app of each kind the card draws: with an icon, risky (Terminal), view only, already granted (left
+      // out), not installed. Answered like any elicitation (fixture-responses.jsonl).
+      if(text==='fixture:computer-use-access'){
+        const id=`approval-${db.next}`;pending.set(id,{thread,kind:'elicitation'});
+        const args={apps:['TextEdit','Terminal','Safari','Finder','Figma'],reason:'Draft the quarterly report in TextEdit and check the numbers in Terminal.',clipboardRead:true,systemKeyCombos:true};
+        const tool={id:`call-${id}`,type:'mcpToolCall',server:'computer-use',tool:'request_access',status:'inProgress',arguments:args};
+        turn.items.push(tool);persist();notify('item/started',{threadId:thread.id,turnId:turn.id,item:tool});
+        const icon='data:image/svg+xml;base64,'+Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="9" fill="#f2f2f2"/><rect x="9" y="7" width="22" height="26" rx="2" fill="#fff" stroke="#9a9a9a"/><path d="M13 14h14M13 19h14M13 24h9" stroke="#6b6b6b" stroke-width="2"/></svg>').toString('base64');
+        const params={threadId:thread.id,turnId:turn.id,serverName:'computer-use',mode:'form',message:'Allow the computer-use MCP server to run tool "request_access"?',requestedSchema:{type:'object',properties:{}},
+          _meta:{codex_approval_kind:'mcp_tool_call',persist:['session'],tool_params:args,
+            computer_use_access:{reason:args.reason,flags:{clipboardRead:true,clipboardWrite:false,systemKeyCombos:true},apps:[
+              {bundleId:'com.apple.TextEdit',displayName:'TextEdit',tier:'full',iconDataUrl:icon,installed:true},
+              {bundleId:'com.apple.Terminal',displayName:'Terminal',tier:'click',installed:true},
+              {bundleId:'com.apple.Safari',displayName:'Safari',tier:'read',installed:true},
+              {bundleId:'com.apple.finder',displayName:'Finder',tier:'full',installed:true,alreadyGranted:true},
+              {displayName:'Figma',installed:false}]}}};
+        send({id,method:'mcpServer/elicitation/request',params});return;
+      }
       if(text.startsWith('fixture:elicitation')){
         const id=`approval-${db.next}`;pending.set(id,{thread,kind:'elicitation'});
         const base={threadId:thread.id,turnId:turn.id,serverName:'probe'};

@@ -54,16 +54,21 @@ export function TranscriptTail({ children }) {
 
 /**
  * A host tool row as the desktop's turnStatusRows row: a TurnStatus.Step, or while the tool runs ZAe (the busy row
- * that takes the turn's mark when it holds the turn's tail). `rest` carries data attributes onto the step root.
+ * that takes the turn's mark when it holds the turn's tail). `rest` carries data attributes onto the step root; `media`
+ * is the step's own media slot (data-cds-row-media, last in the row); `icon` goes before the verb once the step settles.
  */
-export function StatusStep({ state = "done", label, meta, metaTitle, trailing, actions, actionsLabel, open, onOpenChange, candidate, after, children, rest }) {
+export function StatusStep({ state = "done", label, icon, meta, metaTitle, trailing, media, actions, actionsLabel, open, onOpenChange, candidate, after, children, rest }) {
   const cds = stepState(state);
   // With content after the row (RN), or while ZAe may swap the step for its busy row, the row's attributes go on a
   // wrapper root, not on the step.
   const running = cds === "busy" && !!candidate;
   const stepRest = after == null && !running ? rest : undefined;
-  const step = <TurnStatus.Step {...stepRest} state={cds} label={label} meta={meta || undefined} metaTitle={metaTitle || undefined}
-    trailing={trailing} actions={actions} actionsLabel={actionsLabel} open={children == null ? undefined : open}
+  // An icon before the verb (computer-use rows) once the step has settled: a running step keeps the step's own busy
+  // label (its shimmer reads a string).
+  const shown = icon && cds !== "busy" && cds !== "blocked" && cds !== "pending"
+    ? <><span className="inline-flex shrink-0 items-center me-2 align-top h-[1lh]">{icon}</span>{label}</> : label;
+  const step = <TurnStatus.Step {...stepRest} state={cds} label={shown} meta={meta || undefined} metaTitle={metaTitle || undefined}
+    trailing={trailing} media={media} actions={actions} actionsLabel={actionsLabel} open={children == null ? undefined : open}
     onOpenChange={children == null ? undefined : onOpenChange}>{children ?? undefined}</TurnStatus.Step>;
   const row = running
     ? <RunningToolRow candidate={candidate} step={step} runningLabel={[label, meta].filter(Boolean).join(" ")} trailing={trailing}

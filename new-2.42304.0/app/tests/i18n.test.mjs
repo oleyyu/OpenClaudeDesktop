@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { t, tn, setLocale, getLocale, dictionary, LOCALES, LOCALE_CODES, localePreference, DEFAULT_LOCALE } from '../electron/i18n/index.mjs';
 import { settingsPatch } from '../electron/preferences.mjs';
 
@@ -64,4 +64,19 @@ test('zh-CN dictionaries: string values, same placeholders as the English key, n
   }
   assert.deepEqual(problems, []);
   assert.ok(Object.keys(dictionary('zh-CN')).length > 0);
+});
+
+test('main-process dialog buttons are translated: no literal buttonLabel, and every t() label has a zh-CN entry', async () => {
+  const dir = new URL('../electron/', import.meta.url);
+  const zh = dictionary('zh-CN');
+  const problems = [];
+  for (const file of readdirSync(dir).filter(name => /\.(cjs|mjs)$/.test(name))) {
+    const source = readFileSync(new URL(file, dir), 'utf8');
+    for (const match of source.matchAll(/buttonLabel:\s*(?:(?:i18n\.)?t\(\s*)?(["'])((?:\\.|(?!\1).)*)\1/g)) {
+      const wrapped = /buttonLabel:\s*(?:i18n\.)?t\(/.test(match[0]);
+      if (!wrapped) problems.push(`${file}: literal buttonLabel ${match[2]}`);
+      else if (!Object.hasOwn(zh, match[2])) problems.push(`${file}: no zh-CN entry for ${match[2]}`);
+    }
+  }
+  assert.deepEqual(problems, []);
 });

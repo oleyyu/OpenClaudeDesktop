@@ -15,7 +15,8 @@
 //   startedAt                 ms
 //   hostItem                  the engine item (not read by the originals; the host adapters render its body)
 import { changeKind, changePath, fileAction } from "./file-tool-model.mjs";
-import { computerUseAction } from "./computer-use-model.mjs";
+import { computerUseAction, computerUseToolName } from "./computer-use-model.mjs";
+import { OWN_COMPUTER_USE_TOOLS, SHARED_TOOL_NAMES, ownComputerUseTool } from "../electron/computer-use/actions.mjs";
 import { mcpCallOf, mcpServerSegmentOf, VISUALIZE_SERVER_NAME, VISUALIZE_TOOLS } from "./mcp-app-model.mjs";
 
 const str = (value) => (typeof value === "string" ? value : "");
@@ -44,7 +45,7 @@ export const APP_SERVER = "code_desktop";
  *                                its visualize tools as mcp__visualize__show_widget / read_me
  *   collabAgentToolCall          spawnAgent → Task, sendInput → SendMessage, wait → TaskOutput, closeAgent → TaskStop
  *   imageView                    Read (the CLI reads images with Read)
- *   computerUse                  mcp__computer-use__<action>
+ *   computerUse                  mcp__computer-use__<official tool name> (computer-use-model computerUseToolName)
  *   imageGeneration / sleep      no SDK counterpart: their host names (the original rows' generic fallback)
  * dynamicToolCall (namespace null): the core's own tool name, normalised by DYNAMIC_TOOLS; an app tool by APP_TOOLS;
  * anything else keeps its name.
@@ -83,6 +84,9 @@ export const APP_TOOLS = Object.freeze({
   AskUserQuestion: "AskUserQuestion", PushNotification: "PushNotification", SendUserFile: "SendUserFile",
   ReportFindings: "ReportFindings", Monitor: "Monitor", MonitorStop: "TaskStop", CronCreate: "CronCreate", CronList: "CronList",
   CronDelete: "CronDelete", WebFetch: "WebFetch", NotebookEdit: "NotebookEdit", Workflow: "Workflow", WorkflowStop: "TaskStop",
+  // agent-tools/computer-use.mjs: the official computer-use server's names, so the original rows read its verbs.
+  // (screenshot and scroll are preview's too: sdkToolName asks ownComputerUseTool which one an item is.)
+  ...Object.fromEntries(OWN_COMPUTER_USE_TOOLS.filter((tool) => !SHARED_TOOL_NAMES.includes(tool)).map((tool) => [tool, `mcp__computer-use__${tool}`])),
 });
 const COLLAB_TOOLS = Object.freeze({ spawnAgent: "Task", sendInput: "SendMessage", sendMessage: "SendMessage", wait: "TaskOutput", closeAgent: "TaskStop", resumeAgent: "Task" });
 
@@ -109,12 +113,15 @@ export function sdkToolName(item) {
     case "webSearch": return item.action?.type === "openPage" || item.action?.type === "findInPage" ? "WebFetch" : "WebSearch";
     case "imageView": return "Read";
     case "collabAgentToolCall": return COLLAB_TOOLS[str(item.tool)] ?? "Task";
-    case "computerUse": return `mcp__computer-use__${str(computerUseAction(item)?.kind) || "computer"}`;
+    // The official tool name of the action (left_click, left_click_drag, mouse_move, …), so the original rows and the
+    // group summary read the original computer-use verbs.
+    case "computerUse": return `mcp__computer-use__${computerUseToolName(computerUseAction(item)) ?? (str(computerUseAction(item)?.kind) || "computer")}`;
     case "imageGeneration": case "sleep": return item.type;
     case "mcpToolCall": case "dynamicToolCall": {
       const app = appTool(item);
       if (app !== null) {
         if (VISUALIZE_TOOLS.includes(app)) return `mcp__${VISUALIZE_SERVER_NAME}__${app}`;
+        if (SHARED_TOOL_NAMES.includes(app) && ownComputerUseTool(item) === app) return `mcp__computer-use__${app}`;
         return APP_TOOLS[app] ?? `mcp__${APP_SERVER}__${app}`;
       }
       const call = mcpCallOf(item);

@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const { randomUUID } = require("node:crypto");
 const { ApprovalLedger } = require("./approval-transport.cjs");
 const { proxyEnv, loginShellProxy, loginShellVariables, shellVariables } = require("./proxy-env.cjs");
+const { createNodeResolver } = require("./setup-requirements.cjs");
 
 // This registry contains only processes spawned by this module. A reconnect
 // replaces the client object, so keeping just the latest client loses children
@@ -30,8 +31,11 @@ function deepseekCoreScript() {
     path.join(os.homedir(), "claude-ui-lab/harness/bin/codex-app-server.mjs"),
   ]);
 }
+// The Node DeepSeek Harness and the bridges run on (setup-requirements.cjs): the first one new enough, so an old
+// Homebrew node doesn't shadow a newer nvm one. First-run setup installs one when there is none.
+const nodeResolver = createNodeResolver();
 function nodeBinary() {
-  return firstExisting([process.env.CODE_DESKTOP_NODE, "/opt/homebrew/bin/node", "/usr/local/bin/node", path.join(os.homedir(), ".local/bin/node")]) || "node";
+  return nodeResolver.resolve()?.path || "node";
 }
 // Settings › Cores (core-manager.cjs): the chosen core and each agent program found (this app's download, or
 // the user's own install). The environment (CODE_DESKTOP_CORE, CODEX_BINARY) still wins.
@@ -582,4 +586,4 @@ function stopAllCodexClients() {
   });
   return shutdownPromise;
 }
-module.exports = { CodexClient, stopAllCodexClients, resolveCore, coreKind, clientCoreName, reportedServerInfo, coreError, setCoreChoice, setCodexLaunch, codexBinary, stderrReason, deepseekCoreScript, bridgeScript, nodeBinary, setAgentToolsLaunch, setBeforeSpawn, setLocalEnvironment, foreignCoreEnv, workflowCoreEnv };
+module.exports = { CodexClient, stopAllCodexClients, resolveCore, coreKind, clientCoreName, reportedServerInfo, coreError, setCoreChoice, setCodexLaunch, codexBinary, stderrReason, deepseekCoreScript, bridgeScript, nodeBinary, nodeResolver, setAgentToolsLaunch, setBeforeSpawn, setLocalEnvironment, foreignCoreEnv, workflowCoreEnv };

@@ -91,7 +91,9 @@ test('a send whose first turn/start fails discards the session it created and re
   const main = read('main.jsx');
   assert.match(main, /createdHere = true;/);
   assert.match(main, /turnStarted = true;/);
-  assert.match(main, /if \(createdHere && !turnStarted && id\) \{[^}]*?\n\s*discardFailedStart\(id,/);
+  // The message that goes back is the composer's (text, entries, mentions); a recorded demonstration never took the
+  // composer, so what it shows now is kept as it is.
+  assert.match(main, /if \(createdHere && !turnStarted && id\) \{[^}]*?\n\s*const kept = demonstration \? liveComposer\.current : \{ text, attachments: entries, mentions: mentionList \};\n\s*discardFailedStart\(id, \{ text: kept\.text, entries: kept\.attachments, mentions: kept\.mentions, historyPushed, stay \}\);/);
   const body = main.slice(main.indexOf('function discardFailedStart('), main.indexOf('async function performOperation('));
   assert.match(body, /setSessions\(\(list\) => list\.filter\(\(thread\) => thread\.id !== id\)\)/);
   assert.match(body, /void openSession\(null\);/);

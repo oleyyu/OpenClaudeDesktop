@@ -12,7 +12,7 @@ const basename = value => String(value || '').split(/[\\/]/).filter(Boolean).pop
 // relative path.
 export function localImageSource(path) {
   if (typeof path !== 'string' || !path.startsWith('/') || /[\0\n\r]/.test(path)) return null;
-  return encodeURI(`file://${path}`);
+  return encodeURI(`file://${path}`).replace(/[#?]/g, encodeURIComponent);
 }
 // ImageGenerationItem.result is the base64 PNG; savedPath (when Codex saved it) is preferred.
 export function generatedImageSource(item) {

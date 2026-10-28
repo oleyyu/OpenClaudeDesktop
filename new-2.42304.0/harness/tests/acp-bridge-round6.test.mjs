@@ -59,6 +59,7 @@ function bridge({ adapter = adapterById('kimi'), env = {}, home = tmp(), onReque
   return { home, kimiHome, call, turn, notes, requests, waitFor, agentLog, close: () => server.shutdown() }
 }
 
+const inputTextOf = (content) => (content ?? []).map((block) => block.text ?? '').join('')
 const promptTexts = (b) => b.agentLog().filter((entry) => entry.method === 'session/prompt').map((entry) => entry.params.prompt.map((block) => block.text ?? '').join(''))
 
 // ------------------------------------------------------------ Kimi: turns it starts on its own
@@ -438,4 +439,128 @@ test('Qwen Try again: codeDesktop/turn/continue resumes through qwen/control/ses
       assert.ok(b.agentLog().some((entry) => entry.method === 'qwen/control/session/continue'))
     } finally { await b.close() }
   }
+})
+
+test('Qwen Try again: a message sent while the continue check is out keeps the thread; its turn completes', async () => {
+  const b = bridge({ adapter: adapterById('qwen'), env: { FAKE_ACP_CONTINUE: 'accept' } })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    await b.turn(thread.id, 'hello')
+    const [result, started] = await Promise.all([
+      b.call('codeDesktop/turn/continue', { threadId: thread.id }),
+      b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 300', text_elements: [] }] }),
+    ])
+    assert.equal(result.accepted, false)
+    const done = await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === started.turn.id)
+    assert.equal(done.turn.status, 'completed')
+    assert.equal(b.agentLog().filter((entry) => entry.method === 'session/prompt').length, 2)
+  } finally { await b.close() }
+})
+
+test('Compact: a turn/start handled before the compaction begins keeps the thread; its turn completes', async () => {
+  const b = bridge()
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    await b.turn(thread.id, 'hello')
+    const [, started] = await Promise.all([
+      b.call('thread/compact/start', { threadId: thread.id }),
+      b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 300', text_elements: [] }] }),
+    ])
+    const done = await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === started.turn.id)
+    assert.equal(done.turn.status, 'completed')
+    await sleep(200)
+    const read = await b.call('thread/read', { threadId: thread.id, includeTurns: true })
+    assert.ok(read.thread.turns.every((turn) => turn.status !== 'inProgress'))
+  } finally { await b.close() }
+})
+
+test('Custom command: !{...} output keeps a character its shell wrote in two pieces', async () => {
+  const home = tmp()
+  fs.mkdirSync(path.join(home, '.gemini', 'commands'), { recursive: true })
+  fs.writeFileSync(path.join(home, '.gemini', 'commands', 'split.toml'), String.raw`prompt = "Got !{printf '\\344'; sleep 0.2; printf '\\270\\255'}"` + '\n')
+  const b = bridge({ adapter: adapterById('gemini'), home, env: { GEMINI_CLI_TRUST_WORKSPACE: 'true' } })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: home, approvalPolicy: 'never', sandbox: 'danger-full-access' })
+    await b.turn(thread.id, '/split')
+    assert.ok(promptTexts(b).some((text) => text.includes('Got 中')), JSON.stringify(promptTexts(b)))
+  } finally { await b.close() }
+})
+
+test('Shutdown: a turn the stop ends has its last meta in index.json once shutdown resolves', async () => {
+  const b = bridge()
+  await b.call('initialize', {})
+  const { thread } = await b.call('thread/start', { cwd: b.home })
+  await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 5000', text_elements: [] }] })
+  await sleep(1200)
+  const stopping = Date.now()
+  await b.close()
+  const index = JSON.parse(fs.readFileSync(path.join(b.home, 'state', 'index.json'), 'utf8'))
+  assert.ok(index.threads[thread.id].updatedAt >= stopping, 'the stopped turn’s updatedAt')
+})
+
+test('MiniMax queue: a queued message started now steers into the turn and shows there; a refused steer keeps it queued', async () => {
+  for (const decision of ['accept', 'reject']) {
+    // A stand-in for mcode's SQLite module, so thread/start installs nothing.
+    const native = tmp()
+    fs.mkdirSync(path.join(native, 'node_modules', 'better-sqlite3'), { recursive: true })
+    fs.writeFileSync(path.join(native, 'package.json'), '{}')
+    fs.writeFileSync(path.join(native, 'node_modules', 'better-sqlite3', 'index.js'), 'module.exports = {}\n')
+    const b = bridge({ adapter: adapterById('minimax'), env: { FAKE_ACP_STEER: decision, MAVIS_SQLITE3_MODULE_PATH: native } })
+    try {
+      await b.call('initialize', {})
+      const { thread } = await b.call('thread/start', { cwd: b.home })
+      const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 1500', text_elements: [] }] })
+      await b.waitFor((method, params) => method === 'turn/started' && params.turn.id === turn.id)
+      await sleep(300)
+      const { queuedSubmission } = await b.call('thread/queue/add', { threadId: thread.id, input: [{ type: 'text', text: 'also this', text_elements: [] }] })
+      const started = b.call('thread/queue/start', { threadId: thread.id, queuedSubmissionId: queuedSubmission.id })
+      if (decision === 'reject') {
+        await assert.rejects(started, /steer refused/)
+        assert.deepEqual((await b.call('thread/queue/list', { threadId: thread.id })).data.map((entry) => entry.id), [queuedSubmission.id])
+      } else {
+        await started
+        assert.deepEqual((await b.call('thread/queue/list', { threadId: thread.id })).data, [])
+        const read = await b.call('thread/read', { threadId: thread.id, includeTurns: true })
+        assert.ok(read.thread.turns.at(-1).items.some((item) => item.type === 'userMessage' && inputTextOf(item.content) === 'also this'))
+      }
+    } finally { await b.close() }
+  }
+})
+
+test('MiniMax queue: a steer refused after its turn ended starts the queued message as the next turn', async () => {
+  const native = tmp()
+  fs.mkdirSync(path.join(native, 'node_modules', 'better-sqlite3'), { recursive: true })
+  fs.writeFileSync(path.join(native, 'package.json'), '{}')
+  fs.writeFileSync(path.join(native, 'node_modules', 'better-sqlite3', 'index.js'), 'module.exports = {}\n')
+  const b = bridge({ adapter: adapterById('minimax'), env: { FAKE_ACP_STEER: 'reject', FAKE_ACP_STEER_DELAY: '800', MAVIS_SQLITE3_MODULE_PATH: native } })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 400', text_elements: [] }] })
+    await b.waitFor((method, params) => method === 'turn/started' && params.turn.id === turn.id)
+    const { queuedSubmission } = await b.call('thread/queue/add', { threadId: thread.id, input: [{ type: 'text', text: 'also this', text_elements: [] }] })
+    await assert.rejects(b.call('thread/queue/start', { threadId: thread.id, queuedSubmissionId: queuedSubmission.id }), /steer refused/)
+    await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id !== turn.id)
+    assert.deepEqual((await b.call('thread/queue/list', { threadId: thread.id })).data, [])
+    assert.ok(promptTexts(b).includes('also this'), JSON.stringify(promptTexts(b)))
+  } finally { await b.close() }
+})
+
+test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
+  const b = bridge({ adapter: adapterById('qwen') })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    await b.turn(thread.id, 'hello')
+    const ids = (await b.call('model/list', {})).data.map((model) => String(model.id).replace(/\(.*\)$/, '').trim())
+    assert.ok(ids.length)
+    const { settings } = await b.call('codeDesktop/coreSettings/read', {})
+    const fast = settings.find((entry) => entry.key === 'fastModel')
+    assert.deepEqual(fast.options, [...new Set(ids)])
+    const written = await b.call('codeDesktop/coreSettings/write', { key: 'fastModel', value: ids[0] })
+    assert.equal(written.settings.find((entry) => entry.key === 'fastModel').value, ids[0])
+  } finally { await b.close() }
 })

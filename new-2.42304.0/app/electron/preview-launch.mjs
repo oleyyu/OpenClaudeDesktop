@@ -39,9 +39,11 @@ export function parseJsonc(text) {
     if (char === '"') { inString = true; quote = char; out += char; continue; }
     if (char === "/" && next === "/") { while (i < text.length && text[i] !== "\n") i++; out += "\n"; continue; }
     if (char === "/" && next === "*") { i += 2; while (i < text.length && !(text[i] === "*" && text[i + 1] === "/")) i++; i++; continue; }
+    // A trailing comma (outside strings) goes when only whitespace stands before the closing bracket.
+    if (char === "}" || char === "]") { let at = out.length - 1; while (at >= 0 && /\s/.test(out[at])) at--; if (out[at] === ",") out = out.slice(0, at) + out.slice(at + 1); }
     out += char;
   }
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, "$1"));
+  return JSON.parse(out);
 }
 
 export function isLocalHost(hostname) {
@@ -434,9 +436,16 @@ export function withServerConfiguration(text, entry) {
   // No "configurations" yet: added as the object's last key.
   const end = source.lastIndexOf("}");
   if (root < 0 || end < root) return { status: "error" };
-  const body = source.slice(root + 1, end);
-  const bare = !body.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, "").trim();
-  const trimmed = source.slice(0, end).replace(/\s*$/, "");
-  const needsComma = !bare && !trimmed.endsWith(",") && !trimmed.endsWith("{");
-  return { status: "ok", text: `${trimmed}${needsComma ? "," : ""}\n  "configurations": [\n${block("    ", "  ")}\n  ]\n${source.slice(end)}` };
+  // The object's last value (comments skipped) takes the comma, so it never lands inside a trailing // comment.
+  let last = root;
+  for (let index = root + 1; index < end;) {
+    const char = source[index];
+    if (char === "/" && (source[index + 1] === "/" || source[index + 1] === "*")) { index = skipToken(source, index); continue; }
+    if (char === '"') { index = skipToken(source, index); last = index - 1; continue; }
+    if (!/\s/.test(char)) last = index;
+    index++;
+  }
+  const comma = last === root || source[last] === "," ? "" : ",";
+  const trimmed = `${source.slice(0, last + 1)}${comma}${source.slice(last + 1, end)}`.replace(/\s*$/, "");
+  return { status: "ok", text: `${trimmed}\n  "configurations": [\n${block("    ", "  ")}\n  ]\n${source.slice(end)}` };
 }

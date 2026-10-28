@@ -123,6 +123,20 @@ test('a monitor runs its command in the session folder and tells the session eac
   assert.ok(!delivered.some((entry) => entry.text.includes('"long"')), 'a monitor the agent stopped reports nothing more');
 });
 
+test('stopping a monitor whose shell already exited still ends what it left running in the background', async (t) => {
+  const delivered = [];
+  const service = createMonitorService({ deliver: (_id, text) => delivered.push(text), env: () => ENV, shell: '/bin/sh' });
+  let pid = null;
+  t.after(() => { service.dispose(); if (pid) { try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } });
+  const { taskId } = service.start({ sessionId: 's1', cwd: tmp(), command: "sh -c 'echo PID $$; while :; do echo tick; sleep 0.2; done' &", description: 'background loop', timeoutMs: 60000 });
+  pid = Number(await waitFor(() => /PID (\d+)/.exec(service.list('s1')[0]?.output || '')?.[1]));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  assert.equal(service.list('s1')[0].status, 'running', 'the loop still holds stdout');
+  service.stop('s1', taskId, { by: 'user' });
+  await waitFor(() => { try { process.kill(pid, 0); return false; } catch { return true; } });
+  pid = null;
+});
+
 test('a flooding monitor is rate-limited, then stopped; at most 8 run per session', async (t) => {
   let clock = 0;
   const delivered = [], children = [], due = [];
@@ -359,6 +373,23 @@ test('WebFetch asks per site (once or for the session), checks every redirect, a
   await assert.rejects(fetchTool.handler({ url: 'https://example.com/a', prompt: ' ' }, ctx), /prompt is required/);
 });
 
+test('WebFetch: a stopped turn ends a fetch whose body stalls after the headers', async () => {
+  webTool.resetWebApprovals();
+  const [fetchTool] = webTool.tools;
+  const turn = new AbortController();
+  // The headers and one chunk arrive, then the connection hangs (and the fetch's own abort no longer reaches it).
+  const body = new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode('<p>partial')); } });
+  const ctx = { sessionId: 'web-stall', signal: turn.signal, web: { fetch: async () => new Response(body, { status: 200, headers: { 'content-type': 'text/html' } }) }, requestApproval: async () => true };
+  const call = fetchTool.handler({ url: 'https://example.com/stream', prompt: 'p' }, ctx);
+  setTimeout(() => turn.abort(), 50);
+  const outcome = await Promise.race([call.then(() => 'resolved', (error) => error.message), new Promise((resolve) => setTimeout(() => resolve('still pending'), 1000))]);
+  assert.equal(outcome, 'The fetch was stopped.');
+});
+
+test('WebFetch keeps a page whose body is wrapped in a form', () => {
+  assert.equal(webTool.htmlToMarkdown('<html><head><title>Docs</title></head><body><form id="form1"><h1>Install guide</h1><p>Run setup.exe then reboot.</p><button>Go</button></form></body></html>'), '# Docs\n\n# Install guide\n\nRun setup.exe then reboot.');
+});
+
 // ---------------------------------------------------------------- Which cores get them
 
 test('only cores without their own get Monitor, the cron tools and WebFetch; the server lists and calls them', async (t) => {
@@ -539,6 +570,7 @@ test('preview scroll / hover / find answer from the page; preview_batch runs ste
   const scripts = require('../electron/preview-page-scripts.cjs');
   for (const source of [scripts.scrollScript({ ref: 'ref_1' }), scripts.scrollScript({ x: 1, y: 2, direction: 'left', amount: 50 }), scripts.domHoverScript({ selector: 'a' }), scripts.findScript({ query: '"quoted"' })]) assert.doesNotThrow(() => new Function(source));
   assert.match(scripts.scrollScript({ direction: 'left', amount: 50 }), /ticks = 20/, 'at most 20 ticks');
+  assert.match(scripts.inspectScript({ selector: 'a' }), /replace\(\/\\s\+\/g, " "\)/, 'preview_inspect collapses whitespace, not the letter s');
 });
 
 // ---------------------------------------------------------------- NotebookEdit

@@ -20,7 +20,10 @@ async function excludeWorktreeRoot(run, repoCwd, base) {
     common = String((await GIT(run, repoCwd, ["rev-parse", "--git-common-dir"])).stdout).trim();
   } catch { return null; }
   if (!top || !common) return null;
-  const root = fs.realpathSync(top), folder = path.resolve(base);
+  // git reports the real top level; the folder may come through a link (/tmp, a linked project folder).
+  let folder = path.resolve(base);
+  try { folder = fs.realpathSync(folder); } catch {}
+  const root = fs.realpathSync(top);
   const relative = path.relative(root, folder);
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return null;
   const pattern = `/${relative.split(path.sep).join("/")}/`;

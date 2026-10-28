@@ -24,7 +24,8 @@ export function workflowEvent(run,event,at){
   // A skipped agent (the runner's and the engines' 'skipped by user') is not a failure.
   if(agent&&event.type==='end'){agent.state=event.status==='skipped'||event.error==='skipped by user'?'skipped':event.status&&event.status!=='completed'?'error':'done';agent.error=agent.state==='skipped'?undefined:event.error||(agent.state==='error'?`Agent ${event.status}`:undefined);if(event.model)agent.model=event.model;if(Number.isFinite(event.tokens))agent.tokens=event.tokens;if(Number.isFinite(event.ms))agent.durationMs=event.ms;}
  }
- if(event.type==='settled'){next.status=event.status;next.completedAt=event.recovered?undefined:at;next.durationMs=event.recovered?undefined:Math.max(0,at-run.startedAt);next.summary=event.error;next.result=event.result;for(const p of progress)if(p.type==='workflow_agent'&&p.state==='progress'){p.state='error';p.error=event.status==='stopped'?'Stopped before completion':'Workflow ended before completion';}}
+ // A member still queued never gets an end event from the engine: settling ends it as skipped (not run), as the harness does.
+ if(event.type==='settled'){next.status=event.status;next.completedAt=event.recovered?undefined:at;next.durationMs=event.recovered?undefined:Math.max(0,at-run.startedAt);next.summary=event.error;next.result=event.result;for(const p of progress)if(p.type==='workflow_agent'&&p.state==='progress'){p.state='error';p.error=event.status==='stopped'?'Stopped before completion':'Workflow ended before completion';}else if(p.type==='workflow_agent'&&p.state==='start'){p.state='skipped';delete p.error;}}
  if(event.type==='plan-agent')next.plannedAgents=(next.plannedAgents||0)+1;
  // A failed parallel/pipeline slot or nested workflow (the runner's slot-failure): the <task-notification>'s <failures>.
  if(event.type==='slot-failure'&&typeof event.message==='string'&&event.message)next.slotFailures=[...(run.slotFailures||[]),event.message].slice(-100);
@@ -40,11 +41,12 @@ export function workflowEvent(run,event,at){
 }
 export const workflowAgentState=(agent,now)=>agent.state==='progress'?(agent.progressSupported!==false&&!(agent.activeTools>0)&&Number.isFinite(agent.lastProgressAt)&&now-agent.lastProgressAt>90000?'stalled':'running'):agent.state==='done'?'done':agent.state==='error'?'error':agent.state==='skipped'?'skipped':'pending';
 // c62da1b56 ge/he: agents without a phase gather in one last group, 'Agents' (or 'Other agents' beside real phases);
-// a settled run's phase whose agents never started reads 'Not run' (status notRun), not 'Pending'.
+// a settled run's phase whose agents never started reads 'Not run' (status notRun), not 'Pending' -- also once settling
+// has ended its queued agents as skipped (a running agent the user skipped did start: its phase is still done).
 export const WORKFLOW_AGENTS_GROUP=Number.MAX_SAFE_INTEGER;
 export function workflowPhases(run,now){
  const groups=new Map();
- const group=(index,title)=>{let p=groups.get(index);if(!p){p={index,title:title??`Phase ${index+1}`,agents:[]};groups.set(index,p);}else if(title&&p.title.startsWith('Phase '))p.title=title;return p;};
+ const generated=new Set(),group=(index,title)=>{let p=groups.get(index);if(!p){p={index,title:title??t('Phase {number}',{number:index+1}),agents:[]};groups.set(index,p);if(title==null)generated.add(p);}else if(title&&generated.delete(p))p.title=title;return p;};
  for(const p of run.workflowProgress||[]){
   if(p.type==='workflow_phase'){group(p.index,p.title);continue;}
   if(p.type!=='workflow_agent')continue;
@@ -52,7 +54,7 @@ export function workflowPhases(run,now){
  }
  const settled=run.status&&run.status!=='running',others=groups.get(WORKFLOW_AGENTS_GROUP);
  if(others)others.title=groups.size>1?t('Other agents'):t('Agents');
- return [...groups.values()].sort((a,b)=>a.index-b.index).map(p=>({...p,done:p.agents.filter(a=>a.state==='done').length,status:p.agents.some(a=>a.state==='error')?'error':p.agents.some(a=>a.state==='progress')?(settled?'done':'running'):!p.agents.length||p.agents.every(a=>a.displayState==='pending')?(settled?'notRun':'pending'):p.agents.every(a=>a.state==='done'||a.state==='skipped')||settled?'done':'running',tokens:p.agents.reduce((sum,a)=>sum+(a.tokens||0),0)}));
+ return [...groups.values()].sort((a,b)=>a.index-b.index).map(p=>({...p,done:p.agents.filter(a=>a.state==='done').length,status:p.agents.some(a=>a.state==='error')?'error':p.agents.some(a=>a.state==='progress')?(settled?'done':'running'):!p.agents.length||p.agents.every(a=>a.displayState==='pending')?(settled?'notRun':'pending'):settled&&p.agents.every(a=>a.state==='skipped'&&!a.startedAt)?'notRun':p.agents.every(a=>a.state==='done'||a.state==='skipped')||settled?'done':'running',tokens:p.agents.reduce((sum,a)=>sum+(a.tokens||0),0)}));
 }
 export function workflowSummary(summary,description){
  if(!summary||summary===description)return '';
@@ -63,7 +65,8 @@ export function workflowSummary(summary,description){
  const shown=localizeBridgeText(text);
  return shown!==text?shown:text[0].toUpperCase()+text.slice(1);
 }
-export function mergeWorkflow(runs,run){const existing=runs.find(r=>r.id===run.id);if(existing&&existing.sequence>=run.sequence)return runs;return [...runs.filter(r=>r.id!==run.id),run].sort((a,b)=>a.startedAt-b.startedAt);}
+// A resume keeps the run id and starts its sequence over: a later attempt (startedAt) wins, an earlier one never returns.
+export function mergeWorkflow(runs,run){const existing=runs.find(r=>r.id===run.id);if(existing&&(existing.startedAt>run.startedAt||existing.startedAt===run.startedAt&&existing.sequence>=run.sequence))return runs;return [...runs.filter(r=>r.id!==run.id),run].sort((a,b)=>a.startedAt-b.startedAt);}
 // Compressed grids use Claude's four buckets plus skipped; stalled is included in running when compressed.
 export function workflowCells(agents,capacity){
  if(agents.length<=capacity)return agents;

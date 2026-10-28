@@ -279,11 +279,17 @@ function createTerminalService(options = {}) {
     try { stat = fs.statSync(record.cwd); } catch {}
     if (!stat?.isDirectory()) throw new Error("The session folder no longer exists.");
     let proxy = {};
+    const generation = record.generation;
     if (typeof shellProxy === "function") {
       // Cached after the first read (shared with the cores); never hold a new tab for long, the shell's own startup
       // files export the proxy anyway.
       proxy = await Promise.race([Promise.resolve().then(shellProxy).catch(() => ({})),
         new Promise((resolve) => setTimeout(() => resolve({}), SHELL_PROXY_WAIT_MS).unref?.())]) || {};
+      // Closed (or the app quit) meanwhile: no shell for a tab nothing would ever find to hang up.
+      if (disposed) throw new Error("The app is quitting.");
+      if (records.get(record.id) !== record) throw new Error("The terminal was closed.");
+      // A second restart came in meanwhile: that one starts the shell (false), or two would share the tab.
+      if (record.generation !== generation) return false;
     }
     let strip = [];
     try { strip = typeof options.stripEnv === "function" ? options.stripEnv() || [] : []; } catch { strip = []; }
@@ -299,6 +305,7 @@ function createTerminalService(options = {}) {
     record.busy = false;
     startProcess(record, size);
     ensureTimers();
+    return true;
   }
   function stop(record, signal = "SIGHUP") {
     const proc = record.proc;
@@ -351,6 +358,8 @@ function createTerminalService(options = {}) {
   async function restart(record) {
     stop(record);
     record.generation += 1;
+    // Set before the proxy wait (the old shell's output is ignored from here): shellReady waits for the new shell's own.
+    record.outputFrom = record.total;
     record.chunks = [];
     record.kept = 0;
     record.pending = "";
@@ -360,7 +369,7 @@ function createTerminalService(options = {}) {
     // pane's typed-exit auto-close does not apply to it).
     if (typeof record.runCommand === "string") record.userRestarted = true;
     record.error = null;
-    await start(record, record.size);
+    if (!(await start(record, record.size))) return info(record);
     publish(record);
     return info(record);
   }
@@ -645,7 +654,7 @@ function createTerminalService(options = {}) {
   async function shellReady(record) {
     const startedAt = Date.now();
     while (Date.now() - startedAt < READY_MAX_MS && record.status === "running") {
-      if (record.total > 0 && Date.now() - record.lastOutputAt >= READY_QUIET_MS) break;
+      if (record.total > (record.outputFrom ?? 0) && Date.now() - record.lastOutputAt >= READY_QUIET_MS) break;
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     if (record.status !== "running" || records.get(record.id) !== record) throw new Error("The terminal wasn’t ready, so the command wasn’t run");

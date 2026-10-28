@@ -344,3 +344,19 @@ test('Settings › Harness page: Codex notice, unsupported notice, groups, Requi
     assert.match(html, /aria-label="Show plugins in @deepseek-ai\/dsh-base"/);
   } finally { await server.close(); }
 });
+
+test('main: concurrent overlay edits all land (a page click racing a managed-row write loses nothing)', async () => {
+  const f = fixture();
+  await f.harness.run({ op: 'read' });
+  await Promise.all([
+    f.harness.run({ op: 'set-enabled', id: 'tool-web', enabled: false }),
+    f.harness.run({ op: 'skill-dirs', dirs: ['/a/skills'] }),
+    f.harness.run({ op: 'hooks-add', format: 'codex', configPath: '/h/hooks.json' }),
+    f.harness.setManagedRow('llm-deepseek', { config: { models: [{ id: 'm', name: 'm' }] } }),
+  ]);
+  const state = JSON.parse(fs.readFileSync(path.join(f.dir, 'overlay.json'), 'utf8'));
+  assert.deepEqual(state.rows['tool-web'], { disabled: true });
+  assert.deepEqual(state.rows['skill-filesystem'], { config: { customSkillDirs: ['/a/skills'] } });
+  assert.ok(state.rows['llm-deepseek']);
+  assert.equal(state.inserts.length, 1);
+});

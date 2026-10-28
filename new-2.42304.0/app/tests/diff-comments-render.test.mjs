@@ -75,7 +75,7 @@ test('saved, draft and outdated comments render as cards under their row', () =>
   assert.ok(removedRow < removedCard && removedCard < addedRow);
   assert.match(html, /data-comment-key="additions:2"[\s\S]*?Lines 1–2<span class="sfv-comment-badge"[^>]*>Outdated</);
   assert.doesNotMatch(html.slice(removedCard, addedRow), /Outdated/);
-  assert.match(html, /data-comment-key="additions:3"[\s\S]*?<textarea aria-label="Comment on line 3" placeholder="Tell Claude what to change"/);
+  assert.match(html, /data-comment-key="additions:3"[\s\S]*?<textarea aria-label="Comment on line 3" placeholder="Tell DeepSeek what to change"/);
   assert.match(html, /aria-label="Edit comment"/);
 });
 

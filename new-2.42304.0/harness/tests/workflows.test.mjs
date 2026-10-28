@@ -293,3 +293,62 @@ test('the "Run a dynamic workflow?" card names the script: name, description, ph
   assert.equal(workflowApprovalCommand({ script: 'export const meta={name:`scan`,description:`Look around`};return 1' }), 'Workflow: scan\nLook around')
   assert.equal(workflowApprovalCommand({ name: 'review-changes' }), 'Workflow: review-changes')
 })
+
+// dsh-workflow-ptc ends only started members when a run settles: a member still queued for a concurrency slot gets
+// no agent-end and no failed admission, so the settled card must not keep showing it as queued.
+for (const stopReason of ['cancelled', 'error']) test(`members still queued when the run ends (${stopReason}) settle as skipped, live and in replay`, () => {
+  const history = [], p = new ThreadProjector({ threadId: 'queued-stop' })
+  const apply = event => { history.push(event); return p.apply(event) }
+  startWorkflow({ apply }, 'w1', { script: 'export const meta={name:"queue",description:"Queue"};return 1' })
+  for (const [type, data] of [
+    ['tool-workflow/run-start', { runId: 'wf_queued-stop', attemptId: 'a1', name: 'queue' }],
+    ['tool-workflow/agent-admission', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 1, label: 'running', state: 'queued', queuedAt: 1, lastProgressAt: 1 }],
+    ['tool-workflow/agent-admission', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 2, label: 'waiting', state: 'queued', queuedAt: 2, lastProgressAt: 2 }],
+    ['tool-workflow/agent-start', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 1, label: 'running', childId: 'c1' }],
+    ['tool-workflow/agent-end', { runId: 'wf_queued-stop', attemptId: 'a1', seq: 1, outcome: 'cancelled' }],
+    ['tool-workflow/run-end', { runId: 'wf_queued-stop', attemptId: 'a1', stopReason }],
+  ]) apply(ev(type, data))
+  const run = runOf(p)
+  assert.equal(run.status, stopReason === 'cancelled' ? 'stopped' : 'failed')
+  assert.deepEqual(agents(run).map(agent => [agent.label, agent.state]), [['running', 'skipped'], ['waiting', 'skipped']])
+  const replay = new ThreadProjector({ threadId: 'queued-stop' })
+  for (const event of history) replay.apply(event)
+  assert.deepEqual(agents(runOf(replay)).map(agent => agent.state), ['skipped', 'skipped'])
+})
+
+test('a resumed run’s new attempt retires the Resume of the card it continues, live and in replay', () => {
+  const history = [], p = new ThreadProjector({ threadId: 'resumed' })
+  const apply = event => { history.push(event); return p.apply(event) }
+  startWorkflow({ apply }, 'w1', { script: 'export const meta={name:"audit",description:"Audit"};return 1' })
+  apply(ev('tool-workflow/run-start', { runId: 'wf_resume-me', attemptId: 'attempt-1', name: 'audit', scriptPath: '/saved/audit.js' }))
+  apply(ev('tool-workflow/run-end', { runId: 'wf_resume-me', attemptId: 'attempt-1', stopReason: 'cancelled', error: 'workflow run cancelled' }))
+  assert.equal(runOf(p).resumable, true)
+  apply(ev('tool/call', { turn: 1, step: 2, callId: 'w2', name: 'Workflow', arguments: JSON.stringify({ scriptPath: '/saved/audit.js', resumeFromRunId: 'wf_resume-me' }) }))
+  const notes = apply(ev('tool-workflow/run-start', { runId: 'wf_resume-me', attemptId: 'attempt-2', name: 'audit', scriptPath: '/saved/audit.js' }))
+  assert.equal(runOf(p, 'w2').id, 'attempt-2')
+  assert.equal(runOf(p).resumable, false)
+  assert.ok(notes.some(note => note.params.item?.id === 'w1' && note.params.item.workflowRun.resumable === false), 'the earlier card is re-announced without Resume')
+  const replay = new ThreadProjector({ threadId: 'resumed' })
+  for (const event of history) replay.apply(event)
+  assert.equal(runOf(replay).resumable, false)
+})
+
+// Claude Code inputs always launch in the background, so the call's run is "background" before anything starts. A call
+// stopped before its tool result (the turn interrupted on its "Run a dynamic workflow?" card) never started a run.
+test('a background-input call stopped before any run started settles as stopped, live and in replay', () => {
+  const history = [], p = new ThreadProjector({ threadId: 'never-started' })
+  const apply = event => { history.push(event); return p.apply(event) }
+  startWorkflow({ apply }, 'w1', { script: 'export const meta={name:"intr",description:"Interrupted"};return 1' })
+  assert.equal(runOf(p).background, true)
+  apply(ev('turn/end', { turn: 1, reason: { kind: 'aborted', reason: { kind: 'user' } } }))
+  assert.equal(runOf(p).status, 'stopped')
+  const replay = new ThreadProjector({ threadId: 'never-started' })
+  for (const event of history) replay.apply(event)
+  assert.equal(runOf(replay).status, 'stopped')
+  // A launched background run (the engine named it) keeps running past its call.
+  const launched = new ThreadProjector({ threadId: 'launched' })
+  startWorkflow(launched, 'w1', { script: 'export const meta={name:"bg",description:"Background"};return 1' })
+  launched.apply(ev('tool-workflow/run-start', { runId: 'wf_launched', attemptId: 'a1', name: 'bg' }))
+  launched.apply(ev('turn/end', { turn: 1, reason: { kind: 'aborted', reason: { kind: 'user' } } }))
+  assert.equal(runOf(launched).status, 'running')
+})

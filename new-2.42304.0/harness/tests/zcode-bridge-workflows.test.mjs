@@ -238,7 +238,7 @@ function bridge(extraEnv = {}, options = {}) {
   const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cdt-zc-wf-')))
   return bridgeAt(home, extraEnv, options)
 }
-function bridgeAt(home, extraEnv = {}, { decision = 'accept' } = {}) {
+function bridgeAt(home, extraEnv = {}, { decision = 'accept', beforeAnswer = null } = {}) {
   const logFile = path.join(home, 'zcode.log')
   const child = spawn(process.execPath, [BIN, 'app-server', '--stdio'], {
     cwd: home,
@@ -249,7 +249,7 @@ function bridgeAt(home, extraEnv = {}, { decision = 'accept' } = {}) {
   child.stderr.on('data', (chunk) => stderr.push(String(chunk)))
   const notes = []
   const requests = []
-  const client = new LineTransport(child.stdout, child.stdin, { onRequest: async (method, params) => { requests.push({ method, params }); return { decision } }, onNotification: (method, params) => notes.push({ method, params }), log: () => {} })
+  const client = new LineTransport(child.stdout, child.stdin, { onRequest: async (method, params) => { requests.push({ method, params }); await beforeAnswer?.(method, params); return { decision } }, onNotification: (method, params) => notes.push({ method, params }), log: () => {} })
   client.start()
   const log = () => (fs.existsSync(logFile) ? fs.readFileSync(logFile, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)) : [])
   return {
@@ -364,6 +364,43 @@ test('bridge: Dynamic workflows off keeps the run tools from the session; a stra
   } finally { await b.close() }
 })
 
+test('bridge: a run that ended with ZCode can be resumed once ZCode is back (its summary says it can)', { timeout: 60000 }, async () => {
+  const b = bridge({ FAKE_ZCODE_EXIT_AFTER_POLLS: '2' })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    const end = Date.now() + 10000
+    while (!b.notes.some((note) => note.method === 'thread/status/changed' && note.params.status?.type === 'notLoaded') && Date.now() < end) await sleep(50)
+    const response = await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    const run = workflowItem(response.thread.turns).workflowRun
+    assert.deepEqual([run.status, run.resumable], ['failed', true])
+    assert.deepEqual(await b.call('codeDesktop/workflow/resume', { threadId: 'sess_wf_1', runId: 'dwfrun-a' }), { status: 'resuming' })
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
+})
+
+test('bridge: deleting a session with a live run stops polling that run', { timeout: 60000 }, async () => {
+  const b = bridge()
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    const polls = () => b.log().filter((entry) => entry.method === 'v4/conversation/workflowRunEvents').length
+    const end = Date.now() + 10000
+    while (polls() < 2 && Date.now() < end) await sleep(50)
+    assert.ok(polls() >= 2, 'the live run is polled')
+    await b.call('thread/delete', { threadId: 'sess_wf_1' })
+    await sleep(300)
+    const after = polls()
+    await sleep(3500)
+    assert.equal(polls(), after, 'no poll after the delete')
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
+})
+
 test('bridge: a read-only mode (Plan) never runs a workflow: refused with a reason, no card', { timeout: 60000 }, async () => {
   const b = bridge(ASK_SCRIPT)
   try {
@@ -373,6 +410,23 @@ test('bridge: a read-only mode (Plan) never runs a workflow: refused with a reas
     assert.equal(answer.decision, 'deny')
     assert.match(answer.reason ?? '', /read-only mode/)
     assert.equal(b.requests.some((request) => /requestApproval/.test(request.method)), false, 'no card that would let the agents escape Plan')
+  } finally { await b.close() }
+})
+
+test('bridge: a run card allowed after the session switched to Plan starts nothing', { timeout: 60000 }, async () => {
+  let b = null
+  b = bridge(ASK_SCRIPT, { beforeAnswer: async (method, params) => {
+    if (/requestApproval/.test(method)) assert.deepEqual(await b.call('codeDesktop/thread/permissions', { threadId: params.threadId, ...modeParams('plan') }), { applied: true })
+  } })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/start', { cwd: b.home, ...modeParams('auto') })
+    const answer = await answerOf(b)
+    assert.equal(answer.decision, 'deny')
+    assert.match(answer.reason ?? '', /read-only mode \(plan\)/)
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
   } finally { await b.close() }
 })
 
@@ -526,6 +580,14 @@ test('a finished run\'s notification turn: one notice per run in OpenClaude Desk
     { status: 'completed', summary: 'Dynamic workflow "smoke-wf" completed', taskId: 'dwfrun-5886' },
     { status: 'stopped', summary: 'Dynamic workflow "other" was stopped', taskId: 'dwfrun-7777' },
   ])
+  // A batch takes the reason from each summary, without ZCode's status word.
+  const failedBlock = (summary) => ZCODE_NOTIFICATION.replace('completed</status>', 'failed</status>').replace('completed.</summary>', `${summary}</summary>`)
+  const failedBatch = workflowNotices(`${failedBlock('errored: the script failed.')}\n\n${failedBlock('failed.').replaceAll('5886', '7777')}\n\n${failedBlock('failed because its in-process state was lost.').replaceAll('5886', '8888')}`)
+  assert.deepEqual((await Promise.all(failedBatch.map(appNotice))).map((notice) => notice.summary), [
+    'Dynamic workflow "smoke-wf" failed: the script failed',
+    'Dynamic workflow "smoke-wf" failed',
+    'Dynamic workflow "smoke-wf" failed because its in-process state was lost',
+  ])
   // Not a workflow's end: a background command's result, a stall notice.
   assert.deepEqual(workflowNotices('<task-notification>\n<task-id>bash_1</task-id>\n<status>completed</status>\n<summary>Background command &quot;npm test&quot; completed (exit code 0)</summary>\n</task-notification>', { backgroundSource: 'bash', title: 'npm test', workId: 'bash_1' }), [])
   // A stall and an agent's question are notices of their own kinds (their own rows in the app).
@@ -650,6 +712,22 @@ test('bridge: Configure changes a running run\'s agent limit in place, or follow
     const run = workflowItem(response.thread.turns).workflowRun
     assert.deepEqual([run.runId, run.status, run.subagentModel, run.maxConcurrency], ['dwfrun-b', 'running', 'zai/glm-4.7', 2])
   } finally { await again.close() }
+})
+
+test('bridge: a poll of the old run still in flight when Configure replaces it leaves the revised run running', { timeout: 60000 }, async () => {
+  const b = bridge({ FAKE_ZCODE_EVENTS_DELAY_MS: '800' })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    await sleep(100)
+    assert.deepEqual(await b.call('codeDesktop/workflow/settings', { threadId: 'sess_wf_1', runId: 'dwfrun-a', subagentModel: 'zai/glm-4.7' }), { status: 'accepted', runId: 'dwfrun-b', replaced: true })
+    await sleep(2500)
+    const run = b.notes.findLast((note) => note.params?.item?.id === 'toolu_wf')?.params.item.workflowRun
+    assert.deepEqual([run.runId, run.status, run.supersededBy], ['dwfrun-b', 'running', undefined])
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
 })
 
 test('a settings turn reads as a notice, live and on replay', () => {

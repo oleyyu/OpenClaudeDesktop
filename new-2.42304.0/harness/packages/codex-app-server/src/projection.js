@@ -31,7 +31,7 @@ import { readFileSync, statSync } from 'node:fs'
 import { basename, isAbsolute, resolve } from 'node:path'
 import { unifiedDiff } from './diff.js'
 import { promptText, toCodexInputs } from './input.js'
-import { isWorkflowTool, isWorkflowRecord, workflowInterrupted, workflowPhase, workflowRecord, workflowRunOf, workflowToolResult } from './workflows.js'
+import { isWorkflowTool, isWorkflowRecord, workflowInterrupted, workflowJobLost, workflowPhase, workflowRecord, workflowRunOf, workflowToolResult } from './workflows.js'
 import { STRUCTURED_OUTPUT_TOOL } from './structured.js'
 import { AssistantUsageFold, assistantSegmentBlocks } from './assistant-response.js'
 import { SHELL_TOOLS, backgroundJobOf, jobReadOutput, jobStatusOf, killJobOf, noticeJobOf, settledAgentJobItem, settledJobItem, subagentJobOf } from './jobs.js'
@@ -585,6 +585,8 @@ export class ThreadProjector {
     this.heldActivities = []
     this.tools = new Map()
     this.preview = ''
+    // The turn whose prompt set the preview: a rewind that drops it clears the preview.
+    this.previewTurn = null
     this.title = null
     this.plan = null
     this.lastUsage = null
@@ -1035,6 +1037,23 @@ export class ThreadProjector {
     return notes
   }
 
+  /** Background model workflow runs still shown running, with the job that runs each. */
+  runningWorkflowJobs() {
+    const running = new Map()
+    for (const entry of this.workflowItems.values()) {
+      const run = entry.turn.items.find((candidate) => candidate.id === entry.itemId)?.workflowRun
+      if (run?.status === 'running' && run.background && typeof run.jobId === 'string') running.set(run.id, run.jobId)
+    }
+    return [...running].map(([runId, jobId]) => ({ runId, jobId }))
+  }
+
+  /** A background run whose job no longer exists settles as stopped. @returns {any[]} the item notifications */
+  settleWorkflowJob(runId, time = Date.now()) {
+    const notes = []
+    this.applyWorkflow(notes, { runId }, (run) => workflowJobLost(run, time))
+    return notes
+  }
+
   /** Whether a model workflow run (by engine run id) belongs to this log. */
   hasWorkflowRun(runId) {
     return this.workflowItems.has(runId)
@@ -1208,15 +1227,17 @@ export class ThreadProjector {
   applyWorkflow(notes, data, reduce, starting = false) {
     const key = data?.attemptId ?? data?.runId
     let entry = typeof key === 'string' ? this.workflowItems.get(key) : undefined
-    if (starting && entry) {
-      const index = entry.turn.items.findIndex(item => item.id === entry.itemId)
-      const prior = entry.turn.items[index]?.workflowRun
+    // A new attempt has its own key: the card it continues is the latest one of the same engine run id.
+    const previous = starting ? entry ?? (typeof data?.runId === 'string' ? this.workflowItems.get(data.runId) : undefined) : undefined
+    if (previous) {
+      const index = previous.turn.items.findIndex(item => item.id === previous.itemId)
+      const prior = previous.turn.items[index]?.workflowRun
       if (prior?.attemptId !== data.attemptId) {
         // A new attempt of the same run (Workflow resumeFromRunId): the earlier card has been resumed.
         if (prior?.resumable === true) {
-          const item = { ...entry.turn.items[index], workflowRun: { ...prior, resumable: false, sequence: (prior.sequence ?? 0) + 1 } }
-          entry.turn.items[index] = item
-          if (entry.turn.id) notes.push({ method: item.status === 'inProgress' ? 'item/started' : 'item/completed', params: { item, threadId: this.threadId, turnId: entry.turn.id } })
+          const item = { ...previous.turn.items[index], workflowRun: { ...prior, resumable: false, sequence: (prior.sequence ?? 0) + 1 } }
+          previous.turn.items[index] = item
+          if (previous.turn.id) notes.push({ method: item.status === 'inProgress' ? 'item/started' : 'item/completed', params: { item, threadId: this.threadId, turnId: previous.turn.id } })
         }
         entry = undefined
       }
@@ -1259,7 +1280,10 @@ export class ThreadProjector {
     // Bracket forms and images come back as their Codex parts; the preview is typed text only.
     const content = toCodexInputs(message.content, { imagePath: this.imagePath })
     const text = promptText(message.content)
-    if (!this.preview && text) this.preview = text.slice(0, 200)
+    if (!this.preview && text) {
+      this.preview = text.slice(0, 200)
+      this.previewTurn = turn
+    }
     const clientId = this.clientIds.get(message.id) ?? null
     this.clientIds.delete(message.id)
     this.pushItem(notes, turn, { type: 'userMessage', id: message.id, clientId, content }, time)
@@ -1286,9 +1310,17 @@ export class ThreadProjector {
     if (at < 0) return
     const dropped = this.turns.splice(at)
     const ids = new Set(dropped.map((turn) => turn.id))
-    for (const [dsh, turn] of this.byDshTurn) if (dropped.includes(turn) || ids.has(turn.id)) this.byDshTurn.delete(dsh)
+    const gone = (turn) => dropped.includes(turn) || ids.has(turn.id)
+    for (const [dsh, turn] of this.byDshTurn) if (gone(turn)) this.byDshTurn.delete(dsh)
     if (this.current && ids.has(this.current.id)) this.current = null
     if (this.lastUsageTurnId && ids.has(this.lastUsageTurnId)) this.lastUsageTurnId = this.turns.at(-1)?.id ?? null
+    // The task list and preview of the dropped turns go with them. Their background jobs stay tracked: the
+    // processes run on, and thread/backgroundTerminals/* still lists and stops them.
+    if (dropped.some((turn) => turn.plan)) this.plan = this.turns.findLast((turn) => turn.plan)?.plan ?? null
+    if (this.previewTurn && gone(this.previewTurn)) {
+      this.preview = ''
+      this.previewTurn = null
+    }
   }
 
   /**
@@ -1352,6 +1384,7 @@ export class ThreadProjector {
       status: todo.status === 'in_progress' ? 'inProgress' : todo.status === 'completed' ? 'completed' : 'pending',
     }))
     this.plan = plan
+    turn.plan = plan
     notes.push({ method: 'turn/plan/updated', params: { threadId: this.threadId, turnId: turn.id, explanation: null, plan } })
   }
 }

@@ -528,3 +528,28 @@ test('B34 workspaceGitImage: before at the scope base, after in the working tree
   await assert.rejects(workspaceGitImage(cwd, { filePath: 'logo.png', side: 'sideways' }), TypeError);
   assert.equal(await workspaceGitImage(await directory(t, false), { filePath: 'logo.png', side: 'after' }), null, 'not a repository');
 });
+
+test('main.cjs workspace-info: the branch picker lists branch names as git switch takes them, even beside a same-named tag', async (t) => {
+  const main = await fs.readFile(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const format = /case "workspace-info"[\s\S]*?"branch", "(--format=[^"]+)"/.exec(main)?.[1];
+  assert.ok(format, 'workspace-info lists branches with an explicit format');
+  const { cwd } = await remoteRepo(t);
+  await git(cwd, ['branch', 'feature']);
+  await git(cwd, ['tag', 'feature']);
+  const listed = (await git(cwd, ['branch', format])).stdout.trim().split('\n').sort();
+  assert.deepEqual(listed, ['feature', 'main']);
+});
+
+test('branches named like a tag keep their own names (Compare against, current branch)', async (t) => {
+  const { cwd } = await remoteRepo(t);
+  await git(cwd, ['branch', 'feature']);
+  await git(cwd, ['tag', 'feature']);
+  await git(cwd, ['checkout', '-q', '-b', 'work']);
+  await git(cwd, ['tag', 'work']);
+  await commitFile(cwd, 'work.txt', 'work\n');
+  assert.deepEqual((await workspaceGitBranches(cwd)).sort(), ['feature', 'main', 'work']);
+  const listed = await workspaceGitCommits(cwd, { base: 'feature' });
+  assert.equal(listed.base, 'feature');
+  assert.deepEqual(listed.commits.map((entry) => entry.subject), ['Fixture baseline'], 'compared against the branch, not HEAD');
+  assert.equal((await workspaceGitStatus(cwd)).branch, 'work');
+});

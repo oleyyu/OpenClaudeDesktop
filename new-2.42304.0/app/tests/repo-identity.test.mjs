@@ -20,6 +20,8 @@ test('parseRemoteUrl: scp-like, scheme URLs, subgroups and local paths', () => {
   assert.deepEqual(parseRemoteUrl('file:///srv/git/origin.git'), { host: null, owner: null, name: 'origin' });
   assert.equal(parseRemoteUrl(''), null);
   assert.equal(parseRemoteUrl('https://host/'), null);
+  // A malformed %-escape in a file: origin is read raw, never thrown (the repo would read as no repository).
+  assert.deepEqual(parseRemoteUrl('file:///tmp/a%zz.git'), { host: null, owner: null, name: 'a%zz' });
 });
 
 test('repoIdentity: worktrees share owner/name, a repo without a remote has no owner, a plain folder is not a repo', async () => {

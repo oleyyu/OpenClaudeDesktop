@@ -29,6 +29,8 @@ import { holdModalInert } from './modal-inert.mjs';
 import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore } from './settings-model.mjs';
 import { settingsCore, accountCore, accountGroupTitle, engineCopy } from './settings-core-copy.mjs';
 import { workflowSettingsGroup } from './source-settings-workflows.jsx';
+import { computerUseSettingsGroup, useComputerUseGrants, useComputerUsePreferredMode, useComputerUseTeachStatus } from './source-settings-computer-use.jsx';
+import { ListBadge } from './source-customize-list.jsx';
 import { coreName, coreForEngine, coreCapabilities, coreSupports } from '../electron/core-registry.mjs';
 import { SettingsSearchResults } from './source-settings-search.jsx';
 import { bindSettingsAnchor } from './settings-anchor.mjs';
@@ -355,6 +357,10 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const [allowedSites,setAllowedSites]=useState(false);
   const desktopCallRef=useRef(desktopCall);desktopCallRef.current=desktopCall;
   const [allowedSitesHost]=useState(()=>({call:(action,params)=>desktopCallRef.current(action,params)}));
+  // System › Computer use: what sessions allowed right now, read while that page is open.
+  const computerUseGrants=useComputerUseGrants(desktopCall,tab==='general');
+  const computerUsePreferredMode=useComputerUsePreferredMode(desktopCall,tab==='general');
+  const computerUseTeachStatus=useComputerUseTeachStatus(desktopCall,tab==='general');
   const linksInPreview=useSyncExternalStore(previewLinksStore.subscribe,previewLinksStore.getSnapshot,previewLinksStore.getSnapshot);
   const [previewStorage,setPreviewStorage]=useState(()=>previewStorageChoice(config.previewStorage,config.previewKeepCookies));
   useEffect(()=>{if(tab!=='code')return undefined;let live=true;
@@ -490,14 +496,16 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       const {label,description,scale=1,suffix=''}=harnessSettingCopy(setting),id=`dsh-${setting.ns}-${setting.key}`;
       const shown=value=>value===null||value===undefined?'':setting.type==='integer'?String(Math.round(value/scale*100)/100):String(value);
       const control=<span className="ss-dsh-setting">
+        {/* Reset sits before the field, so an overridden row's field doesn't move left of the others. */}
+        {setting.overridden&&<SourceSettingsButton size="sm" variant="ghost" disabled={busy} onClick={()=>writeHarnessSetting(setting,null)}>{t('Reset')}</SourceSettingsButton>}
         <input data-cds="TextInput" className="cds-input cds-reset" aria-label={label} defaultValue={setting.overridden?shown(setting.value):''} placeholder={setting.default!==null&&setting.default!==undefined?t('Default: {value}',{value:`${shown(setting.default)}${suffix}`}):t('Default')}
           inputMode={setting.type==='integer'?'decimal':'url'} disabled={busy||harnessSettings.writable===false} key={`${id}:${setting.value}:${setting.overridden}`}
           onBlur={event=>{const text=event.target.value.trim();if(!text){if(setting.overridden)writeHarnessSetting(setting,null);return;}
             const value=setting.type==='integer'?Math.round(Number(text)*scale):text;if(setting.type==='integer'&&!Number.isFinite(value)){event.target.value=setting.overridden?shown(setting.value):'';return;}
             if(setting.overridden&&value===setting.value)return;writeHarnessSetting(setting,value);}}
           onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur();}}/>
-        {suffix&&<span className="ss-dsh-unit">{suffix.trim()}</span>}
-        {setting.overridden&&<SourceSettingsButton size="sm" variant="ghost" disabled={busy} onClick={()=>writeHarnessSetting(setting,null)}>{t('Reset')}</SourceSettingsButton>}
+        {/* The unit slot is there even without a unit, so every field in the group ends on the same edge. */}
+        <span className="ss-dsh-unit" aria-hidden={suffix?undefined:true}>{suffix.trim()}</span>
       </span>;
       return row(id,label,description,control);
     })}]:[]),
@@ -564,6 +572,8 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       booleanRow('menuBarEnabled',t('Menu bar'),t('Show OpenClaude Desktop in the menu bar.')),
       row('storage',t('Storage'),t('See how much space OpenClaude Desktop uses on this computer.'),<SourceSettingsButton size="sm" onClick={()=>setStorage(true)}>{t('Manage')}</SourceSettingsButton>),
     ]},
+    // After the desktop snapshot, as System's own rows (no extra skeleton rows while it loads).
+    ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
     {tab:'developer',title:'Local MCP servers',rows:[
       row('mcp-config',t('Configuration'),local.mcp,<button disabled={!boot?.connected} onClick={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))}>{t('Edit config')}</button>),
       ...(desktop?.servers||[]).map(server=>row('mcp-'+server.name,server.name,(server.toolsError&&t(server.toolsError))||`${tn(Object.keys(server.tools||{}).length,'{count} tool','{count} tools')} · ${server.authStatus}`,<span>{t(mcpStatus(server))}</span>)),
@@ -597,7 +607,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const customizePage=activeTab?.customize&&customize ? <SourceCustomize key={JSON.stringify([tab,customize.cwd,customize.threadId])} section={tab} store={customize.store} threadId={customize.threadId} cwd={customize.cwd} call={customize.call}
     core={boot?.core} onEditConfig={boot?.connected?()=>desktopCall('desktop-edit-config'):undefined}
     onUseSkill={customize.onUseSkill} onOpenExternal={customize.onOpenExternal} onRevealPath={customize.onRevealPath} focus={focus} mcpDefinitions={desktop?.mcpDefinitions} mcpServers={desktop?.servers}
-    onRestartCore={customize.onRestartCore} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
+    onRestartCore={customize.onRestartCore} watchRecord={customize.watchRecord ?? null} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
     onNavigate={(section,target)=>{setFocus(target||null);setTab(section);setQuery('');}} /> : null;
   const closeSearch=()=>{setSearchOpen(false);setQuery('');setSearchIndex(0);};
   // cc011544b _t: the field (icon + input, no clear button; Escape clears) focuses its input when clicked.
@@ -635,7 +645,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     }}>{navTabs.map(t=><button role="tab" aria-selected={tab===t.id} tabIndex={rovingTab===t.id?0:-1} key={t.id} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}>{navLabel[t.id]}</button>)}</div></header>:<nav className="ss-nav" aria-label={t('Settings')}>{searchField}<div className="ss-nav-scroll scroll-fade-y scroll-fade-size-6">{navGroups.map(group=><div key={group}><p>{settingsHeading(group)}</p><ul>{navTabs.filter(t=>t.group===group).map(t=><li key={t.id}><button aria-current={tab===t.id?'page':undefined} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}><Icon name={t.icon} size={20}/><span>{navLabel[t.id]}</span></button></li>)}</ul></div>)}</div></nav>}
     <div className="ss-pane" data-customize={!!activeTab?.customize||activeTab?.shell==='customize'}>
     {!usagePage&&!narrow&&<div className="ss-page-header">{closeButton}</div>}
-    <div className="ss-content" key={tab} data-page={tab}>{error&&<p className="ss-error" role="alert">{error}</p>}{['code','developer','advanced'].includes(tab)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}{tab==='advanced'&&!shown.length&&<p className="ss-connection-notice" role="status">{advancedEmptyNotice(boot?.core&&typeof boot.core==='object'?coreName(boot.core):windowCore()?.name??(typeof engine==='string'?coreName(engine):null))}</p>}{tab==='developer'&&<DeveloperServers desktop={desktop} connected={boot?.connected} pending={!!pending} error={rowErrors['mcp-config']} onRemove={customize?.call&&mcpWritable ? removeServer : undefined} onEditConfig={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))} onDocs={()=>action('mcp-config',()=>desktopCall('external',{url:'https://modelcontextprotocol.io/quickstart'}))}/>} {customizePage}{activeTab?.page&&<activeTab.page {...pageProps}/>}{tab==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>} {shown.map(group=><section className="ss-group" key={group.tab+group.title}><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{settingsHeading(group.title)}</h3><div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>)}
+    <div className="ss-content" key={tab} data-page={tab}>{error&&<p className="ss-error" role="alert">{error}</p>}{['code','developer','advanced'].includes(tab)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}{tab==='advanced'&&!shown.length&&<p className="ss-connection-notice" role="status">{advancedEmptyNotice(boot?.core&&typeof boot.core==='object'?coreName(boot.core):windowCore()?.name??(typeof engine==='string'?coreName(engine):null))}</p>}{tab==='developer'&&<DeveloperServers desktop={desktop} connected={boot?.connected} pending={!!pending} error={rowErrors['mcp-config']} onRemove={customize?.call&&mcpWritable ? removeServer : undefined} onEditConfig={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))} onDocs={()=>action('mcp-config',()=>desktopCall('external',{url:'https://modelcontextprotocol.io/quickstart'}))}/>} {customizePage}{activeTab?.page&&<activeTab.page {...pageProps}/>}{tab==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>} {shown.map(group=><section className="ss-group" key={group.tab+group.title}><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{group.badge?<span className="flex items-center gap-2">{settingsHeading(group.title)}<ListBadge variant="neutral">{group.badge}</ListBadge></span>:settingsHeading(group.title)}</h3>{group.description&&<p className="text-footnote text-secondary ss-group-description">{group.description}</p>}<div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>)}
       {claudeImport&&<ClaudeImportDialog open desktopCall={desktopCall} cwds={[customize?.cwd].filter(Boolean)} onClose={()=>setClaudeImport(false)}
         onDone={()=>{void customize?.store?.loadSkills?.({cwd:customize?.cwd,force:true});void customize?.store?.loadMcp?.({cwd:customize?.cwd,threadId:customize?.threadId??null,force:true});setDesktopRevision(n=>n+1);}}/>}</div></div>
   </section>{storage&&<StorageDialog call={desktopCall} settingsRoot={root} onClose={()=>setStorage(false)}/>}

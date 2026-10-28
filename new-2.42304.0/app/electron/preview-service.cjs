@@ -486,8 +486,11 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (holdOutside(entry, allowed.url)) event.preventDefault();
     };
     contents.on("will-navigate", guard);
-    contents.on("will-redirect", guard);
-    contents.on("will-frame-navigate", (event) => { if (!event.isMainFrame) { const allowed = launch.navigationAllowed(event.url, entry.cwd); if (!allowed.ok && !/^(data|blob|about):/.test(event.url)) event.preventDefault(); } });
+    // A subframe only has its own load refused, never the tab held or errored.
+    const frameGuard = (event, url) => { const allowed = launch.navigationAllowed(url, entry.cwd); if (!allowed.ok && !/^(data|blob|about):/.test(url)) event.preventDefault(); };
+    // will-redirect fires for every frame, and will-frame-navigate doesn't see redirects: a subframe's goes to frameGuard.
+    contents.on("will-redirect", (event, url) => { if (event.isMainFrame !== false) guard(event, url); else frameGuard(event, url); });
+    contents.on("will-frame-navigate", (event) => { if (!event.isMainFrame) frameGuard(event, event.url); });
     // A page popup becomes a new preview tab, retaining its originator’s approval boundary.
     contents.setWindowOpenHandler(({ url }) => {
       const allowed = launch.navigationAllowed(url, entry.cwd);
@@ -1698,7 +1701,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     // The pages' last frames are taken first (bounded; the pages stay open until then), the servers stop meanwhile.
     const framesSaved = frameDir ? Promise.race([saveFrames().catch(() => {}), sleep(FRAME_TIMEOUT_MS + 400)]) : null;
     const running = [...servers.values()].filter((server) => server.child?.pid);
-    for (const server of servers.values()) stopProcess(server);
+    // A start still picking its port or waiting on its environment sees it was stopped and never spawns.
+    for (const server of servers.values()) { server.status = "stopped"; stopProcess(server); }
     servers.clear();
     const pagesClosed = framesSaved ? framesSaved.then(() => closePages()) : (closePages(), Promise.resolve());
     if (!running.length) return pagesClosed;
@@ -1855,6 +1859,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
         const file = path.join(entry.cwd, launch.LAUNCH_FILE);
         let text;
         try { text = fs.readFileSync(file, "utf8"); } catch { throw new Error("No .claude/launch.json in this folder yet."); }
+        // A launch.json that resolves outside the project (a link) is never written through.
+        if (!launch.insideFolderReal(entry.cwd, file)) throw new Error("This folder’s .claude/launch.json links outside the project, so it isn’t changed.");
         fs.writeFileSync(file, launch.withAutoVerify(text, p.enabled));
         launchCache.delete(entry.cwd);
         notifyFolder(entry.cwd);

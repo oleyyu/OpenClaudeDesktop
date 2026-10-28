@@ -44,7 +44,7 @@ test("an MCP tool-call approval is a tool card: Deny, Allow for this session (pe
   assert.equal(model.message, null);
   assert.deepEqual(model.detail, { kind: "arguments", text: "Text: hi", value: [{ name: "text", value: "hi", display_name: "Text" }] });
   // 2.42304.0 c96d752d0 Kk mcp__: what Claude sent carries the loose read gate (no desktop terminal connector here).
-  assert.deepEqual(model.rowsReadGate, { hint: "Scroll through what Claude sent to allow it.", loose: true });
+  assert.deepEqual(model.rowsReadGate, { hint: "Scroll through what DeepSeek sent to allow it.", loose: true });
   assert.deepEqual(model.elicitation.rowsReadGate, model.rowsReadGate);
   assert.deepEqual(model.deny, { key: "decline", label: "Deny", primary: false });
   // persist ['session','always']: Codex's 'Always allow' is Claude's persistent button, before the session one.

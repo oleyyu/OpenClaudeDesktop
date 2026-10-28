@@ -1,3 +1,7 @@
+/* Every right-hand control on this page (key, number, name fields, selects) shares one width so the column lines up. */
+.msx-page { --msx-control-w:240px; }
+.msx-page .ss-control .sselect { width:var(--msx-control-w);max-width:100%; }
+@media (max-width: 560px) { .msx-page { --msx-control-w:160px; } }
 /* Settings › Models (C5, source-settings-models.jsx). Fields follow the Code font field
    (shared-frame plain TextInput); every color is a CDS token, so light and dark both follow the theme. */
 .msx-page { display:flex;flex-direction:column; }
@@ -11,9 +15,9 @@
 .msx-page input[data-cds=TextInput][data-invalid] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
 .msx-page input[data-cds=TextInput]:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
 .msx-page input[data-cds=TextInput]:disabled { opacity:.5;cursor:not-allowed; }
-.msx-number { width:160px;max-width:100%;font-variant-numeric:tabular-nums; }
+.msx-number { width:var(--msx-control-w);max-width:100%;font-variant-numeric:tabular-nums; }
 .msx-number::-webkit-inner-spin-button,.msx-number::-webkit-outer-spin-button { -webkit-appearance:none;margin:0; }
-.msx-text { width:200px;max-width:100%; }
+.msx-text { width:var(--msx-control-w);max-width:100%; }
 
 .msx-actions { display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:var(--cds-gap-sm,8px); }
 
@@ -35,7 +39,6 @@
 .msx-add-error { flex-basis:100%; }
 
 @media (max-width: 560px) {
-  .msx-number { width:120px; }
   .msx-price-table thead th:first-child,.msx-price-table tbody th { width:64px; }
 }
 
@@ -60,7 +63,7 @@
 .msx-form .sselect { align-self:flex-start;min-width:220px; }
 
 /* API connection (top of the page) and the Advanced disclosure below it. */
-.msx-wide { width:280px;max-width:100%; }
+.msx-wide { width:var(--msx-control-w);max-width:100%; }
 .msx-link { padding:0;border:0;background:none;color:var(--cds-text-accent);font:inherit;text-decoration:underline;text-underline-offset:2px; }
 .msx-link:hover { color:var(--cds-text-primary); }
 .msx-link:focus-visible { outline:none;border-radius:2px;box-shadow:var(--cds-focus-shadow); }
@@ -86,11 +89,12 @@
 .msx-page textarea.msx-relay-models[aria-invalid=true] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
 .msx-model-name { display:inline-flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px); }
 .msx-model-name .msx-badge { font-weight:400; }
-.msx-model-desc { display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere; }
+.msx-model-desc { display:contents; }
+/* The entry's secondary line: id, efforts and Fast side by side, muted, wrapping on a narrow window. */
+.msx-model-sub { display:flex;flex-wrap:wrap;align-items:baseline;gap:2px var(--cds-gap-md,12px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px); }
 .msx-model-meta { display:flex;flex-wrap:wrap;align-items:center;gap:4px var(--cds-gap-sm,8px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote); }
 .msx-model-meta-label { color:var(--cds-text-secondary,var(--cds-text-muted)); }
 .msx-model-meta [data-top-tier] { color:var(--cds-text-pro);font-weight:500; }
-.msx-models-note { margin-top:calc(-1 * var(--cds-gap-md,12px)); }
 .msx-image-models { display:flex;flex-direction:column;gap:6px;min-width:0; }
 .msx-image-models-label { color:var(--cds-text-primary);font-size:var(--cds-font-size-footnote,12px);font-weight:500; }
 .msx-image-chips { display:flex;flex-wrap:wrap;gap:6px; }
@@ -122,8 +126,8 @@ html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
 .msx-model-entry { border-bottom:0.5px solid var(--cds-alpha-2); }
 .msx-model-entry:last-of-type { border-bottom:0; }
 .msx-model-trigger { width:100%;align-items:flex-start;gap:var(--cds-gap-sm,8px);padding:var(--cds-pad-md,12px) 0;text-align:start;color:var(--cds-text-primary); }
-.msx-model-trigger > svg { margin-top:2px;flex-shrink:0; }
-.msx-model-head { display:flex;flex-direction:column;gap:4px;min-width:0;flex:1; }
+.msx-model-trigger > svg { margin-top:3px;flex-shrink:0; }
+.msx-model-head { display:flex;flex-direction:column;gap:2px;min-width:0;flex:1; }
 .msx-model-ids { display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:var(--cds-gap-sm,8px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px); }
 .msx-model-rows { padding:0 0 var(--cds-pad-sm,6px) 24px; }
 .msx-name-control { display:inline-flex; align-items:center; gap:6px; }

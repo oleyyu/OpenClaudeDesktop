@@ -163,6 +163,17 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
   const ledger = new UsageLedger(ownDir, runnerRole ? { outbox: usageInbox } : { inbox: usageInbox })
   let version = program.version || ''
   let closed = false
+  // Every agent process this bridge made and has not seen exit. A request still preparing one when the bridge shuts
+  // down (MiniMax's first-run npm install, a slow spawn) gets a host that is already stopped, so it never spawns, and a
+  // shutdown stops the ones no thread holds yet: no agent outlives its bridge.
+  const hosts = new Set()
+  function newHost(options) {
+    const host = new AgentHost(options)
+    hosts.add(host)
+    void host.exit.then(() => hosts.delete(host))
+    if (closed) void host.stop()
+    return host
+  }
   // Turns whose usage is still being read after they ended (finishTurn's refreshContext): a shutdown waits for them.
   const usageSettles = new Set()
   let clientReady = false
@@ -236,7 +247,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const launch = adapter.launch(ctx, { threadDir: dir, utility: true })
         // Unsandboxed (it lists and deletes the agent's own sessions), but never past the files no agent process may write.
         const line = wrapLaunch(commandLine(program, launch.args), { profile: 'none', writable: [], agentPaths: [], profileFile: path.join(dir, 'utility.sb'), ...sandboxExtras() })
-        const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-utility` })
+        const host = newHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-utility` })
         host.on('exit', () => { if (utility && utility === current) utility = null })
         const current = utility
         await host.start()
@@ -627,7 +638,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     if (launch.agentHome && !thread.agentHome) { thread.agentHome = launch.agentHome; thread.remember() }
     const line = commandLine(program, launch.args)
     const wrapped = wrapLaunch(line, { profile: config.sandbox, writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'agent.sb'), ...sandboxExtras() })
-    const host = new AgentHost({ stopSignal: adapter?.stopSignal,
+    const host = newHost({ stopSignal: adapter?.stopSignal,
       command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: thread.cwd,
       clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(thread), log, label: `${adapter.id}:${thread.id.slice(0, 8)}`,
     })
@@ -1701,6 +1712,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     // its card shows the call, but no row joins the parent turn (the run's agents are in its workflow card).
     const fromWorkflow = toolCall?._meta?.workflowApproval === true || /^workflow:/.test(String(toolCall?.toolCallId ?? ''))
     const detached = fromWorkflow && !projector.calls.has(call.toolCallId)
+    // The user stopped the turn: a tool the agent still asks to run (its request crossed session/cancel) never runs,
+    // whatever the mode would have allowed (ACP: permission requests after a cancel are answered cancelled).
+    if (thread.prompt?.cancelled && !fromWorkflow) return { outcome: { outcome: 'cancelled' } }
     // A request outside any turn (the agent working on its own: MiniMax's background-task follow-up) opens an agent turn
     // that closes once the agent goes quiet, or that the agent's log adopts (agentTurnLog): never a turn left open.
     if (!detached && !child && !thread.prompt && !thread.agentTurn && !thread.projector.activeTurn && startAgentTurn(thread, { idleClose: true })) {
@@ -2032,6 +2046,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const child = spawn(wrapped.command, wrapped.args, { env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, stdio: ['ignore', 'pipe', 'pipe'] })
       let stdout = ''
       let stderr = ''
+      // Decoded as one stream each, so a character split across two reads stays whole.
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
       child.stdout.on('data', (chunk) => { stdout += chunk })
       child.stderr.on('data', (chunk) => { stderr = (stderr + chunk).slice(-8000) })
       const timer = setInterval(() => { if (state.cancelled && child.exitCode === null) child.kill('SIGTERM') }, 250)
@@ -2120,6 +2137,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       if (adapter.turnEvents && localReply === null) retries = setInterval(() => publishTurnEvents(thread, state), 500)
       // An agent still winding down a stopped turn refuses a new prompt for a moment (MiniMax, Kimi): retry.
       for (let attempt = 0; localReply === null; attempt++) {
+        // Stopped while the agent was still starting (or between retries): the prompt never goes out.
+        if (state.cancelled) break
         try {
           result = await host.call('session/prompt', { sessionId: thread.id, prompt: blocks, ...(continuation && adapter.continueMeta ? { _meta: { ...adapter.continueMeta } } : {}) }, 0)
           break
@@ -2307,7 +2326,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       let output = ''
       let child
       try { child = spawn(wrapped.command, wrapped.args, { cwd: thread.cwd, env: agentEnv, stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { resolve({ output: String(error?.message ?? error), exitCode: 127 }); return }
-      const take = (chunk) => { if (output.length < 256 * 1024) output += String(chunk) }
+      const take = (chunk) => { if (output.length < 256 * 1024) output += chunk }
+      // Decoded as one stream each, so a character split across two reads stays whole.
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
       child.stdout.on('data', take)
       child.stderr.on('data', take)
       const timer = setTimeout(() => child.kill('SIGTERM'), 120000)
@@ -2624,7 +2646,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     draft.appToolsInLaunch = launch.appToolsInLaunch === true
     const line = commandLine(program, launch.args)
     const wrapped = wrapLaunch(line, { profile: config.sandbox, writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'agent.sb'), ...sandboxExtras() })
-    const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: draft.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(draft), log, label: `${adapter.id}:new` })
+    const host = newHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: draft.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(draft), log, label: `${adapter.id}:new` })
     settleOnExit(host, launch)
     draft.hostKey = keyOf(config)
     draft.sandboxed = wrapped.sandboxed
@@ -2679,7 +2701,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     thread.appToolsInLaunch = launch.appToolsInLaunch === true
     const line = commandLine(program, launch.args)
     const wrapped = wrapLaunch(line, { profile: config.sandbox, writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'agent.sb'), ...sandboxExtras() })
-    const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(thread), log, label: `${adapter.id}:${thread.id.slice(0, 8)}` })
+    const host = newHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, clientCapabilities: adapter.clientCapabilities, handlers: hostHandlers(thread), log, label: `${adapter.id}:${thread.id.slice(0, 8)}` })
     settleOnExit(host, launch)
     const projector = new ThreadProjector({ threadId: thread.id, cwd: thread.cwd, classify: (call) => adapter.classify?.(call, ctx) ?? null, commandResult: adapter.commandResult })
     let last = Date.now()
@@ -3017,7 +3039,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
           const launch = adapter.launch(ctx, { threadDir: dir, ephemeral: true, sandbox: 'read-only' })
           // Read-only, as a side question runs: a throwaway home may write only itself (never the user's dotfiles).
           const line = wrapLaunch(commandLine(program, launch.args), { profile: 'read-only', writable: [], agentPaths: [...adapter.agentPaths(agentEnv), stateDir, dir], profileFile: path.join(stateDir, 'discover.sb'), ...sandboxExtras() })
-          ephemeral = host = new AgentHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-discover` })
+          ephemeral = host = newHost({ stopSignal: adapter?.stopSignal, command: line.command, args: line.args, env: { ...agentEnv, ...launch.env }, cwd: dir, clientCapabilities: {}, log, label: `${adapter.id}-discover` })
           await host.start()
         } else host = await utilityHost()
         const cwd = ephemeral ? path.join(stateDir, 'discover') : path.join(stateDir, 'utility')
@@ -3350,7 +3372,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const config = { ...launchConfig({ ...draft, custom: customization }), threadDir: dir, sandbox: 'none', appToolsEntry: null }
       const launch = adapter.launch(ctx, config)
       const line = commandLine(program, launch.args)
-      const host = new AgentHost({ stopSignal: adapter?.stopSignal, ...line, env: { ...agentEnv, ...launch.env, ...adapter.previewEnv(file) }, cwd, clientCapabilities: adapter.clientCapabilities, log, label: `${adapter.id}-preview` })
+      const host = newHost({ stopSignal: adapter?.stopSignal, ...line, env: { ...agentEnv, ...launch.env, ...adapter.previewEnv(file) }, cwd, clientCapabilities: adapter.clientCapabilities, log, label: `${adapter.id}-preview` })
       try {
         await host.start()
         const created = await host.call('session/new', { cwd, mcpServers: [] }, 60000)
@@ -3411,7 +3433,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const line = commandLine(program, launch.args)
       const wrapped = wrapLaunch(line, { profile: 'read-only', writable: [], agentPaths: [...adapter.agentPaths(agentEnv), stateDir, dir], profileFile: path.join(dir, 'agent.sb'), ...sandboxExtras() })
       let text = ''
-      const host = new AgentHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env, ...(launch.sideEnv ?? {}) }, cwd: dir, clientCapabilities: {}, handlers: { permission: async (request) => selected(optionFor(request.options, 'reject_once', 'reject_always')) }, log, label: `${adapter.id}-btw` })
+      const host = newHost({ stopSignal: adapter?.stopSignal, command: wrapped.command, args: wrapped.args, env: { ...agentEnv, ...launch.env, ...(launch.sideEnv ?? {}) }, cwd: dir, clientCapabilities: {}, handlers: { permission: async (request) => selected(optionFor(request.options, 'reject_once', 'reject_always')) }, log, label: `${adapter.id}-btw` })
       controller.host = host
       let sessionId = null
       try {
@@ -3567,7 +3589,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     const defs = adapter.coreSettings.defs
     if (!defs.some((def) => def.options === 'models')) return defs
     let ids = []
-    try { ids = [...new Set(((await modelList())?.data ?? []).map((entry) => String(entry.id ?? entry.model ?? '').replace(/\(.*\)$/, '').trim()).filter(Boolean))] } catch (error) { log(`core settings models: ${error?.message ?? error}`) }
+    try { ids = [...new Set(((await modelList()) ?? []).map((entry) => String(entry.id ?? entry.model ?? '').replace(/\(.*\)$/, '').trim()).filter(Boolean))] } catch (error) { log(`core settings models: ${error?.message ?? error}`) }
     // A model already chosen stays listed even when the running list doesn't offer it (another auth type, a removed provider).
     const stored = readCoreSettings()
     return defs.map((def) => {
@@ -4004,7 +4026,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const host = await ensureHost(thread)
         let accepted = false
         try { accepted = await adapter.continueCheck(ctx, host, thread.id) } catch (error) { log(`continue check: ${error?.message ?? error}`) }
-        if (!accepted) return { accepted: false }
+        // A turn that started while the check was out (a message sent meanwhile, another Try again) keeps the thread.
+        if (!accepted || thread.running) return { accepted: false }
         const turnId = `turn-${randomUUID()}`
         void runTurn(thread, { input: [], turnId, continuation: true })
         return { accepted: true, turn: { id: turnId, items: [], itemsView: 'notLoaded', status: 'inProgress', error: null, startedAt: null, completedAt: null, durationMs: null } }
@@ -4048,7 +4071,11 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         // `/compact [<instruction>]`, adapter.compactInstructions); one line, so the command stays a command.
         const instructions = adapter.compactInstructions && typeof params.codeDesktop?.instructions === 'string' ? params.codeDesktop.instructions.replace(/\s+/g, ' ').trim().slice(0, 4000) : ''
         const prompt = instructions ? `${adapter.compactCommand} ${instructions}` : adapter.compactCommand
-        setImmediate(() => void runTurn(thread, { input: [], compaction: true, prompt }))
+        setImmediate(() => {
+          // A turn/start handled before this fired has the thread: a second turn over it would never finish the first.
+          if (thread.running) return log(`compact ${thread.id}: a turn started first; not compacting`)
+          void runTurn(thread, { input: [], compaction: true, prompt })
+        })
         return {}
       }
       case 'review/start': {
@@ -4179,7 +4206,22 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         if (index < 0 || !thread.queue.length) throw new RpcError(INVALID_REQUEST, thread.queue.length ? 'That queued message already started.' : 'The queue is empty.')
         const [entry] = thread.queue.splice(index, 1)
         if (thread.running && adapter.steer) {
-          await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
+          try {
+            await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
+          } catch (error) {
+            // Not taken: the message waits in its place again (and starts now if the turn ended while the steer was out).
+            thread.queue.splice(Math.min(index, thread.queue.length), 0, entry)
+            notify('thread/queue/changed', { threadId: thread.id })
+            setImmediate(() => drainQueue(thread))
+            throw error
+          }
+          // Shown in the turn it joined, as turn/steer shows it.
+          const active = thread.projector.activeTurn
+          if (active) {
+            const notes = []
+            thread.projector.pushItem(notes, active, { type: 'userMessage', id: thread.projector.nextId('user'), clientId: entry.clientUserMessageId ?? null, content: entry.input }, Date.now())
+            emit(notes)
+          }
         } else thread.queue.unshift(entry)
         notify('thread/queue/changed', { threadId: thread.id })
         setImmediate(() => drainQueue(thread))
@@ -4376,7 +4418,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       threads.clear()
       store.flush()
       return Promise.allSettled([...live.map((thread) => closeThread(thread, 'OpenClaude Desktop core stopped.')), utility?.then((host) => host.stop())])
-    }).then(() => undefined)
+    }).then(() => Promise.allSettled([...hosts].map((host) => host.stop()))).then(() => {
+      // Closing ends the threads' turns, whose meta (updatedAt, usage) is only scheduled: the entry exits right after this.
+      store.flush()
+    })
     return shuttingDown
   }
 

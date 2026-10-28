@@ -329,13 +329,14 @@ export class Bridge {
     if (this.server) return this.server.ready()
     if (!this.binary) throw new RpcError(-32000, `${this.flavor.name} is not installed. Download it in Settings › Cores or install \`${this.flavor.binary}\`.`)
     const env = this.config.write()
-    this.server = new AgentServer({
+    const server = this.server = new AgentServer({
       flavor: this.flavor, binary: this.binary, runner: this.runner, nodeBinary: this.nodeBinary, log: this.log,
       // The bridge's own environment (HOME, XDG_*, …) over the process's: a bridge given a separate home keeps its agent there.
       env: { ...(this.env === process.env ? {} : this.env), ...env, ...this.serverEnv() },
       onExit: (info) => this.serverExited(info),
     })
-    await this.server.start()
+    // A failed first start is dropped: ready() on it would start the server again without ever subscribing its events.
+    try { await server.start() } catch (error) { if (this.server === server) this.server = null; throw error }
     this.stopEvents = this.server.events((event) => this.onEvent(event), { onOpen: () => this.resync() })
     // The app's own bridge: sessions of workflow agents whose runner was stopped before it could delete them.
     if (!this.config.runnerDir && !this.sweptWorkflowSessions) {
@@ -960,7 +961,7 @@ export class Bridge {
     const config = await this.mergedConfig(directory).catch(() => ({}))
     const own = isRecord(config?.agent) ? config.agent : {}
     const fallback = await this.primaryAgent(directory)
-    const dirs = this.agentDirs(directory)
+    const dirs = this.agentFileDirs(directory)
     // An agent defined by a markdown file of its own (the project's or the global agents folder): where it lives, so
     // Customize can show it in Finder and remove it.
     const fileOf = (name) => {
@@ -991,7 +992,7 @@ export class Bridge {
   }
 
   /** The agents folders a folder's agent reads: the project's (.opencode/agents, .opencode/agent) and the global ones. */
-  agentDirs(directory) {
+  agentFileDirs(directory) {
     const project = path.join(directory, this.flavor.id === 'mimo' ? '.mimocode' : '.opencode')
     const global = this.pluginGlobalDirs()[0]
     return { project: [path.join(project, 'agents'), path.join(project, 'agent')], global: [path.join(global, 'agents'), path.join(global, 'agent')] }
@@ -1016,7 +1017,7 @@ export class Bridge {
     const prompt = typeof params.prompt === 'string' ? params.prompt.trim() : ''
     if (!prompt || prompt.length > 100000) throw new RpcError(INVALID_PARAMS, 'Write the agent’s instructions.')
     const deny = (Array.isArray(params.deny) ? params.deny : []).filter((key) => AGENT_PERMISSIONS.includes(key))
-    const dir = this.agentDirs(directory)[params.scope === 'user' ? 'global' : 'project'][0]
+    const dir = this.agentFileDirs(directory)[params.scope === 'user' ? 'global' : 'project'][0]
     const file = path.join(dir, `${name}.md`)
     const lines = ['---', `description: ${JSON.stringify(description)}`, `mode: ${mode}`, ...(model ? [`model: ${JSON.stringify(model)}`] : []),
       ...(deny.length ? ['permission:', ...deny.map((key) => `  ${key}: deny`)] : []), '---', '', prompt, '']
@@ -1032,7 +1033,7 @@ export class Bridge {
     const directory = this.directoryFor(params)
     const name = typeof params.name === 'string' ? params.name.trim() : ''
     if (!AGENT_NAME.test(name)) throw new RpcError(INVALID_PARAMS, 'Unknown agent.')
-    const dirs = this.agentDirs(directory)
+    const dirs = this.agentFileDirs(directory)
     for (const [global, list] of [[false, dirs.project], [true, dirs.global]]) {
       for (const dir of list) {
         const file = path.join(dir, `${name}.md`)
@@ -1344,7 +1345,13 @@ export class Bridge {
       case 'thread/delete': {
         const id = this.requireId(params.threadId)
         const live = this.threads.get(id)
-        if (live) { await live.interrupt().catch(() => {}); live.close('Session deleted.'); this.threads.delete(id) }
+        if (live) {
+          await live.interrupt().catch(() => {})
+          live.close('Session deleted.')
+          this.threads.delete(id)
+          // Its sub-agent threads go with it (as unload drops them): left behind they would still count as busy and be listed.
+          for (const [childId, child] of this.children) if (child.root === live) { this.children.delete(childId); child.close('Session deleted.') }
+        }
         const directory = this.store.get(id).cwd
         try { await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory }) } catch (error) { if (error?.status !== 404) this.log(`delete ${id}: ${error?.message}`) }
         this.store.update(id, { deleted: true, inputs: undefined, steers: undefined, queue: undefined })
@@ -3142,7 +3149,12 @@ export class LiveThread {
     const long = kind === 'command' || kind === 'review' || route.endsWith('/message')
     const posting = this.bridge.api('POST', route, { directory: this.cwd, body, timeout: long ? 12 * 3600000 : 60000 })
     posting.catch((error) => this.failExpectation(kind, error, expectation))
-    const timer = setTimeout(() => expectation.reject?.(new RpcError(-32000, `${this.flavor.name} did not accept the message.`)), USER_MESSAGE_TIMEOUT_MS)
+    // Taken off the queue too: left at its head, it would claim the next turn's user message.
+    const timer = setTimeout(() => {
+      const index = this.expect.indexOf(expectation)
+      if (index >= 0) this.expect.splice(index, 1)
+      expectation.reject?.(new RpcError(-32000, `${this.flavor.name} did not accept the message.`))
+    }, USER_MESSAGE_TIMEOUT_MS)
     try {
       const info = await created
       if (input) this.store.rememberInput(this.id, info.id, input)
@@ -3166,7 +3178,13 @@ export class LiveThread {
   }
 
   async startTurn(params) {
-    if (this.busy || this.activeTurn) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    if (this.busy || this.activeTurn || this.startingTurn) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    // Claimed until its user message arrives (onMessage sets activeTurn): another start meanwhile would post a prompt too.
+    this.startingTurn = true
+    try { return await this.beginTurn(params) } finally { this.startingTurn = false }
+  }
+
+  async beginTurn(params) {
     await this.applyParams(params)
     // Picks up edits of the user's own permission config since the last turn (PATCHed only when the rules changed).
     await this.applyRules().catch((error) => this.bridge.log(`rules ${this.id}: ${error?.message}`))
@@ -3306,7 +3324,7 @@ export class LiveThread {
     const entry = { id: randomUUID(), input: params.input, clientUserMessageId: typeof params.clientUserMessageId === 'string' ? params.clientUserMessageId : null }
     this.queue.push(entry)
     this.queueChanged()
-    if (!this.busy && !this.activeTurn) setImmediate(() => this.startNext())
+    if (!this.busy && !this.activeTurn && !this.startingTurn) setImmediate(() => this.startNext())
     return { queuedSubmission: this.queueEntry(entry) }
   }
 
@@ -3342,13 +3360,20 @@ export class LiveThread {
     if (!entry) throw new RpcError(-32600, this.queue.length ? 'That queued message already started.' : 'The queue is empty.')
     this.queue.splice(index, 1)
     this.queueChanged()
-    if (this.activeTurn) await this.steer({ input: entry.input, expectedTurnId: this.activeTurn.id, clientUserMessageId: entry.clientUserMessageId })
-    else await this.startTurn({ input: entry.input })
+    try {
+      if (this.activeTurn) await this.steer({ input: entry.input, expectedTurnId: this.activeTurn.id, clientUserMessageId: entry.clientUserMessageId })
+      else await this.startTurn({ input: entry.input })
+    } catch (error) {
+      // Back in its place, as startNext does: a refused or failed start must not lose the message.
+      this.queue.splice(Math.min(index, this.queue.length), 0, entry)
+      this.queueChanged()
+      throw error
+    }
     return {}
   }
 
   startNext() {
-    if (this.closed || this.busy || this.activeTurn || !this.queue.length || this.pausedQueue) return
+    if (this.closed || this.busy || this.activeTurn || this.startingTurn || !this.queue.length || this.pausedQueue) return
     const entry = this.queue.shift()
     this.queueChanged()
     void this.startTurn({ input: entry.input }).catch((error) => {

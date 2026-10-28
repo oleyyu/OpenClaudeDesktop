@@ -75,3 +75,31 @@ test('OpenClaude Desktop approvals retain ordinary denial and cancellation outco
   controller.abort()
   await assert.rejects(result, /cancelled/)
 })
+
+test('Code Desktop Seatbelt profile lets a confined command write its own stdout/stderr devices, nothing else', { skip: process.platform !== 'darwin' }, async () => {
+  const { spawnSync } = await import('node:child_process')
+  const root = await mkdtemp(new URL('../../work/.cd-seatbelt-', import.meta.url).pathname)
+  try {
+    const workspace = join(root, 'workspace'), outside = join(root, 'outside')
+    await mkdir(workspace); await mkdir(outside)
+    const sandbox = Object.create(CodeDesktopSandbox.prototype)
+    sandbox.selectRunner = () => ({ runner: 'seatbelt', enforcement: 'full' })
+    sandbox.seatbeltExec = () => '/usr/bin/sandbox-exec'
+    const run = async (mode, script) => {
+      const { argv } = await sandbox.confine(['/bin/bash', '-c', script], { mode, workspaceRoot: workspace })
+      return spawnSync(argv[0], argv.slice(1), { cwd: workspace, encoding: 'utf8' })
+    }
+    for (const mode of ['read-only', 'workspace-write']) {
+      // `> /dev/stderr` and process substitution open the process's own stdio: no sandbox denial, no escalation card.
+      const stdio = await run(mode, 'echo to-stderr > /dev/stderr && echo to-stdout > /dev/stdout && echo to-fd > /dev/fd/1')
+      assert.equal(stdio.status, 0, `${mode}: ${stdio.stderr}`)
+      assert.equal(stdio.stdout, 'to-stdout\nto-fd\n')
+      assert.equal(stdio.stderr, 'to-stderr\n')
+      const escape = await run(mode, `echo x > ${JSON.stringify(join(outside, 'x.txt'))}`)
+      assert.notEqual(escape.status, 0)
+      assert.match(escape.stderr, /operation not permitted/i)
+    }
+    assert.equal((await run('workspace-write', 'echo ok > inside.txt')).status, 0)
+    assert.equal((await run('read-only', 'echo no > denied.txt')).status, 1)
+  } finally { await rm(root, { recursive: true, force: true }) }
+})

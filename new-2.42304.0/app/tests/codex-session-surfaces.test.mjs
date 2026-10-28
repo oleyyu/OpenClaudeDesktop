@@ -21,6 +21,7 @@ test('image generation, image view, sleep and hook-context rows', () => {
   assert.deepEqual([failed.state, failed.label, failed.image, failed.error], ['failed', 'Couldn’t generate image', null, 'You’ve reached your image generation limit.']);
   const view = mediaItemRow({ type: 'imageView', id: 'v', path: '/w/shot.png' });
   assert.deepEqual([view.label, view.meta, view.image], ['Viewed image', 'shot.png', 'file:///w/shot.png']);
+  assert.equal(localImageSource('/w/bug #1?.png'), 'file:///w/bug%20%231%3F.png');
   assert.equal(localImageSource('relative.png'), null);
   assert.equal(localImageSource('https://x.test/a.png'), null);
   assert.equal(mediaItemRow({ type: 'sleep', id: 's', durationMs: 4600 }).label, 'Waited 5s');

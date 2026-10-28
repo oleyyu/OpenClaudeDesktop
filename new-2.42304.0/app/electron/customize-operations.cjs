@@ -35,6 +35,8 @@ const MCP_TOOL_MODES = new Set(["auto", "prompt", "writes", "approve"]);
 const plainObject = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : null);
 // A config keyPath segment, quoted so a dot or quote in a name stays part of it (Codex parse_key_path).
 const keySegment = (value) => `"${String(value).replace(/[\\"]/g, (ch) => "\\" + ch)}"`;
+// mcp_servers.<name> for add/remove: a plain name as is (the bridges read that form), any other quoted.
+const serverKeyPath = (name) => `mcp_servers.${/^[A-Za-z0-9_-]+$/.test(name) ? name : keySegment(name)}`;
 const MCP_LIST_TIMEOUT = 15000;
 const MCP_WRITE_TIMEOUT = 30000;
 
@@ -320,10 +322,12 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
         // An upsert on an existing mcp_servers.<name> would silently replace
         // the CLI's command/args/env/url. Refuse instead; removal stays the
         // explicit, confirmation-gated path.
+        // Code Desktop's own tools server is left out of the listing, so it is never in knownServerNames.
+        if (name === APP_TOOLS_SERVER) throw refusal("{name} is reserved for Code Desktop’s own tools. Choose another name.", { name });
         if (knownServerNames.has(name)) throw refusal("A connector named {name} is already in {file}. Remove it first or choose another name.", { name, file: configFileOf(owner) });
         // oauth (a pre-registered OAuth client) only where the core takes it (capabilities.mcpOAuthClient: OpenCode).
         const value = mcpServerValue(p, { oauth: owner.serverInfo?.capabilities?.mcpOAuthClient === true });
-        await owner.request("config/batchWrite", { edits: [{ keyPath: `mcp_servers.${name}`, value, mergeStrategy: "upsert" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
+        await owner.request("config/batchWrite", { edits: [{ keyPath: serverKeyPath(name), value, mergeStrategy: "upsert" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
         await owner.request("config/mcpServer/reload", {}, MCP_WRITE_TIMEOUT);
         return { name, value };
       }
@@ -333,7 +337,7 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
         const name = serverName(p.name);
         const owner = await client();
         assertMcpWritable(owner);
-        await owner.request("config/batchWrite", { edits: [{ keyPath: `mcp_servers.${name}`, value: null, mergeStrategy: "replace" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
+        await owner.request("config/batchWrite", { edits: [{ keyPath: serverKeyPath(name), value: null, mergeStrategy: "replace" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
         await owner.request("config/mcpServer/reload", {}, MCP_WRITE_TIMEOUT);
         knownServerNames.delete(name);
         return { name };

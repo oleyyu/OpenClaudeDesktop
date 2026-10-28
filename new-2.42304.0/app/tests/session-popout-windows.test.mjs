@@ -103,6 +103,9 @@ test('relaunch: session popouts are saved beside the pane popouts with their own
   assert.match(main, /for \(const \{ window, sessionId \} of windowRegistry\.sessionPopouts\(\)\) \{\n\s+if \(!sessionId \|\| !liveContents\(window\)\) continue;/, 'a draft popout is not restored');
   // R4i-transcript TR3: a /btw popout (pane "session" with a view, open-btw-popouts.json) is a pane window, not a session popout.
   assert.match(main, /if \(item\.pane === popoutRestore\.SESSION_PANE && !item\.view\) \{\n\s+await openSessionPopout\(\{ sessionId: item\.sessionId, restore:/);
+  // Closing the sidebar window hands win to another full window first, never to a newer pane window.
+  assert.equal(main.split('const next = windowRegistry.lastFocusedFull() ?? windowRegistry.lastFocused();').length - 1, 2);
+  assert.doesNotMatch(main, /const next = windowRegistry\.lastFocused\(\);/);
 });
 
 test('a window without split view keeps only its primary pane (c2189a16b popout_has_no_panes)', () => {

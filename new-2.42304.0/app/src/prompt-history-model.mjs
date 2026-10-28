@@ -1,3 +1,4 @@
+import { t } from "../electron/i18n/index.mjs";
 // Composer prompt-history recall (2.2553.1 shared-13-Bl2X1oob.js :14448-14600
 // Vj, caretAfterRecall "end" from c099c328d :10686-10697 Zi call). Pure: the
 // editor state is plain text (command chips serialize as "/id" like
@@ -90,7 +91,9 @@ export function promptHistoryStep(previous = INITIAL_PROMPT_HISTORY, input = {})
 // Screen-reader copy of the live status (c099c328d Em :8940-8965).
 export function promptHistoryStatus(nav) {
   if (!nav) return "";
-  return `History ${nav.index}/${nav.total}${nav.hasDraft ? " ↓ to restore your draft" : ""}`;
+  // The same strings as the visible strip (source-composer.jsx), so a screen reader hears the UI language too.
+  const count = t("History {index}/{total}", { index: nav.index, total: nav.total });
+  return nav.hasDraft ? `${count} ↓ ${t("to restore your draft")}` : count;
 }
 
 // Ctrl+R reverse history search (c099c328d-CbkcmYSW.js:4516-4715 _d, header wm :8571-8608). Pure: the caller applies

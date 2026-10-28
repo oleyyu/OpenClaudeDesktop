@@ -46,7 +46,10 @@ export function createWorkflowExecutions(ctx, notify) {
       latest.set(run.id, key);
       return { runId: run.id, attemptId: run.attemptId, scriptPath: run.scriptPath, meta: run.meta };
     },
-    has(thread, id) { return runs.get(latest.get(id))?.thread === thread; },
+    // No thread (one not loaded here) holds no run, as an untracked id's missing entry would otherwise match.
+    has(thread, id) { return Boolean(thread) && runs.get(latest.get(id))?.thread === thread; },
+    // A held run (started, not yet released) needs its thread's live agent and its holder lookup by that thread.
+    holds(thread) { for (const entry of runs.values()) if (entry.thread === thread) return true; return false; },
     member(thread, id, seq, action, attemptId) { return owned(thread, id, attemptId).run.controlMember?.(seq, action) === true; },
     stop(thread, id, attemptId) { owned(thread, id, attemptId).run.cancel('Stopped from Lab'); return { status: 'stopping' }; },
     result(thread, id, attemptId) { return owned(thread, id, attemptId).result; },

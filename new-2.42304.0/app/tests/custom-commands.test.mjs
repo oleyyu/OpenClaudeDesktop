@@ -6,7 +6,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 const { createCustomCommands } = createRequire(import.meta.url)('../electron/custom-commands.cjs');
 
-function fixture({ config = {} } = {}) {
+function fixture({ config = {}, watch } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ccmd-'));
   const userData = path.join(root, 'userData'), project = path.join(root, 'project');
   fs.mkdirSync(userData); fs.mkdirSync(project);
@@ -19,6 +19,7 @@ function fixture({ config = {} } = {}) {
     getConfig: () => state.config,
     emit: event => events.push(event),
     knownCwd: cwd => { if (cwd !== project) throw new Error('Unknown workspace directory.'); return cwd; },
+    ...(watch ? { watch } : {}),
   });
   return { root, userData, project, events, trashed, opened, service, state, cleanup: () => { service.dispose(); fs.rmSync(root, { recursive: true, force: true }); } };
 }
@@ -97,4 +98,54 @@ test('watchers emit custom-commands-changed for new folders and edits', async t 
   assert.ok(f.events.some(e => e.scope === 'global' && e.cwd === null));
   f.service.dispose();
   assert.equal(f.service.watcherCount(), 0);
+});
+
+// A scripted fs.watch: events reach only the watchers the test fires, so a change made while a freshly opened
+// watcher is still starting (macOS FSEvents drops those) is modelled by simply not firing it.
+function scriptedWatch() {
+  const opened = [];
+  const watch = (target, _options, listener) => {
+    if (!fs.existsSync(target)) throw Object.assign(new Error(`ENOENT: ${target}`), { code: 'ENOENT' });
+    const watcher = { target, listener, closed: false, close() { this.closed = true; }, on() {} };
+    opened.push(watcher);
+    return watcher;
+  };
+  const fire = (target, filename) => { for (const w of opened) if (!w.closed && w.target === target) w.listener('rename', filename); };
+  return { watch, opened, fire };
+}
+const until = async (check, ms = 2000) => { for (let i = 0; i < ms / 25 && !check(); i++) await wait(25); return check(); };
+
+test('a command written while the watcher re-arms on a new folder is still reported', async t => {
+  const w = scriptedWatch();
+  const f = fixture({ watch: w.watch }); t.after(f.cleanup);
+  await f.service.run({ op: 'list', cwd: f.project });
+  const dir = path.join(f.project, '.code-desktop', 'commands');
+  fs.mkdirSync(dir, { recursive: true });
+  w.fire(f.project, '.code-desktop');
+  assert.ok(await until(() => f.events.some(e => e.scope === 'project')));
+  assert.ok(w.opened.some(x => x.target === dir && !x.closed), 'the folder itself is watched now');
+  f.events.length = 0;
+  // Written right after the folder appeared: the new watcher is not live yet and never reports it.
+  fs.writeFileSync(path.join(dir, 'new.md'), 'x');
+  assert.ok(await until(() => f.events.some(e => e.scope === 'project')), 'the write is picked up once the new watcher settles');
+  // Nothing changed after the global folder appeared: exactly one event, no spurious follow-up.
+  f.events.length = 0;
+  fs.mkdirSync(path.join(f.userData, 'commands'));
+  w.fire(f.userData, 'commands');
+  assert.ok(await until(() => f.events.some(e => e.scope === 'global')));
+  await wait(1500);
+  assert.equal(f.events.filter(e => e.scope === 'global').length, 1);
+});
+
+test('an edit keeps the live folder watcher instead of reopening it', async t => {
+  const w = scriptedWatch();
+  const f = fixture({ watch: w.watch }); t.after(f.cleanup);
+  const dir = path.join(f.userData, 'commands');
+  fs.mkdirSync(dir);
+  await f.service.run({ op: 'list' });
+  w.fire(dir, 'a.md');
+  assert.ok(await until(() => f.events.length === 1));
+  w.fire(dir, 'b.md');
+  assert.ok(await until(() => f.events.length === 2), 'a second edit reaches the same watcher');
+  assert.equal(w.opened.filter(x => x.target === dir).length, 1);
 });

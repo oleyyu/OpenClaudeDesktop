@@ -84,7 +84,7 @@ import { configReadResponse, fiberPhase, latestThreadIn, mcpClientEntries, mcpSe
 import { goalMutate, goalViewOf, setGoal, threadGoal } from './goals.js'
 import { coreSettingsRead, coreSettingsWrite } from './core-settings.js'
 import { exportSessionLog, sessionLogExportReady } from './session-log-export.js'
-import { SessionGrants, acceptsEdit, applyPermissions as applyThreadPermissions, applyPreset as applyThreadPreset, approvalAnswer, approvalDecision, childApproval, childDecision, livePermissions, preExecuteDecision, rootThreadFor, syncPlanMode } from './approval.js'
+import { SessionGrants, acceptsEdit, applyPermissions as applyThreadPermissions, applyPreset as applyThreadPreset, approvalAnswer, approvalDecision, childApproval, childDecision, livePermissions, preExecuteDecision, rootThreadFor, syncPlanMode, updatePermission } from './approval.js'
 import { sourceFilter, threadLineage } from './subagents.js'
 import { afterPlanPermission, approvedAfterPlan, codexQuestions, harnessAnswer, isPlanApproval, questionFailure, questionItemId } from './questions.js'
 import { DEEPSEEK_KEY_REF, accountReadResponse, providerAccountResponse } from './account.js'
@@ -286,7 +286,8 @@ export function apply(ctx, config) {
       this.queue = new ThreadQueue({ agent: this.agent, threadId: this.id, notify, inputMessage: (input) => inputMessage(input, this), imagePath })
       // {controller, startedTurn} while a thread/compact/start runs.
       this.compaction = null
-      // {turnId, previous} while a review/start turn runs: its read-only permission, and the one it replaced.
+      // {turnId, messageId, dshTurn, previous} while a review/start turn runs: its prompt, the Harness turn that claimed
+      // it, and the permission the read-only review replaced.
       this.review = null
     }
 
@@ -334,7 +335,9 @@ export function apply(ctx, config) {
         // An ask the approval service settled without a card (policy, abort) leaves its id.
         this.askedCalls.clear()
         const ended = this.projector.byDshTurn.get(event.data.turn)
-        if (this.review && (ended?.id === this.review.turnId || ended?.review)) void endReview(this)
+        // The turn that claimed the review prompt ends the review even when the prompt never reached the log (stopped or
+        // blocked at its start): nothing else would leave the read-only review mode.
+        if (this.review && (ended?.id === this.review.turnId || ended?.review || event.data.turn === this.review.dshTurn)) void endReview(this)
       }
       // A child this thread just made: its label names it in thread/list.
       if (event.type === 'subagent/catalog') rememberLabel(event.data?.childId, this.projector.childLabel(event.data?.childId))
@@ -727,8 +730,15 @@ export function apply(ctx, config) {
    * outcome of settled ones; a job the registry no longer has died with its process.
    */
   function syncJobs(holder, { quiet = false } = {}) {
-    if ((!holder?.projector?.jobs?.size && !holder?.projector?.agentJobs?.size) || !ctx.get('jobs')) return
+    const workflowJobs = holder?.projector?.runningWorkflowJobs?.() ?? []
+    if ((!holder?.projector?.jobs?.size && !holder?.projector?.agentJobs?.size && !workflowJobs.length) || !ctx.get('jobs')) return
     const views = ownedJobs(holder.id)
+    // A background model workflow is a job too: one the registry no longer has ended with the process that ran it.
+    for (const { runId, jobId } of workflowJobs) {
+      if (views.some((job) => job.id === jobId)) continue
+      const notes = holder.projector.settleWorkflowJob(runId)
+      if (!quiet) emitNotes(notes)
+    }
     // Background commands and background delegations (whose rows run on as their job) alike.
     for (const jobId of holder.projector.trackedJobIds()) {
       const view = views.find((job) => job.id === jobId)
@@ -796,7 +806,13 @@ export function apply(ctx, config) {
   // Queue edits, follow-ups and claims all surface as inbox events.
   ctx.on('agent/inbox/inserted', ({ agent }) => byAgent(agent)?.queue.changed())
   ctx.on('agent/inbox/discarded', ({ agent }) => byAgent(agent)?.queue.changed())
-  ctx.on('agent/inbox/claimed', ({ agent, message }) => byAgent(agent)?.queue.claimed(message))
+  ctx.on('agent/inbox/claimed', ({ agent, message, turn }) => {
+    const thread = byAgent(agent)
+    if (!thread) return
+    thread.queue.claimed(message)
+    // The Harness turn that owns the review prompt (startReview): its end is the review's end.
+    if (thread.review && message?.id === thread.review.messageId) thread.review.dshTurn = turn
+  })
   ctx.on('agent/error', ({ agent, turn, error }) => {
     const thread = byAgent(agent)
     if (!thread) return
@@ -897,7 +913,8 @@ export function apply(ctx, config) {
     // sub-agent's call is refused here on its root thread's selection.
     const owner = thread ?? rootThreadFor(exec.agent, threads, headerOf)
     if (owner && isToolDenied(exec.name, owner.tools?.current)) return Promise.resolve({ kind: 'deny', reason: 'This tool is turned off for this session in OpenClaude Desktop.' })
-    if (!thread && exec.name === 'mcp__code_desktop__Workflow') return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
+    // Native spellings too (Workflow, its RunWorkflow alias): a delegated sub-agent keeps the tool in its schema.
+    if (!thread && (exec.name === 'mcp__code_desktop__Workflow' || isWorkflowTool(exec.name))) return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
     // The task list and the next-step box are the main conversation's (2.42304.0 index.chunk-CFJssAFf: a PreToolUse with
     // agent_id on mcp__ccd_turn__update_plan / wrap_up is denied with index.chunk-B5tintml `ot`).
     if (!thread && SUBAGENT_TURN_TOOLS.has(exec.name)) return Promise.resolve({ kind: 'deny', reason: SUBAGENT_TURN_TOOL_REFUSAL })
@@ -1185,7 +1202,14 @@ export function apply(ctx, config) {
       }
     }
     thread.hydrate(events)
-    await applyPermissions(thread, params)
+    try {
+      await applyPermissions(thread, params)
+    } catch (error) {
+      // The client never learns this thread's id: nothing else would ever unload it.
+      if (threads.get(thread.id) === thread) threads.delete(thread.id)
+      await thread.close('Session failed to start.')
+      throw error
+    }
     try { await ctx.sessions.flush(thread.agent.session) } catch {}
     // The thread's first step (a turn/start right after this answer) sees OpenClaude Desktop's tools and instructions.
     await thread.appToolsReady
@@ -1305,7 +1329,7 @@ export function apply(ctx, config) {
     const previous = thread.permission.mode === 'review' ? thread.beforeReview ?? null : { ...thread.permission, extraRoots: [...thread.permission.extraRoots] }
     // on-request: the read-only sandbox is the guard, so no Ask-mode card stops the review's git commands.
     Object.assign(thread.permission, { approvalPolicy: 'on-request', sandbox: 'read-only', mode: 'review', extraRoots: [] })
-    const review = { turnId: `turn-${message.id}`, previous }
+    const review = { turnId: `turn-${message.id}`, messageId: message.id, dshTurn: undefined, previous }
     thread.review = review
     try {
       syncPlanMode(thread, permissionServices().planMode, permissionServices().warn)
@@ -1386,6 +1410,18 @@ export function apply(ctx, config) {
     const before = thread.permission.mode !== 'review' && thread.appMode === true ? { ...thread.permission, extraRoots: [...(thread.permission.extraRoots ?? [])] } : null
     thread.gateWorkflows(params)
     thread.gateTools(params)
+    if (thread.review) {
+      // A review turn stays read-only (review.js), as for codeDesktop/thread/permissions: a mode that a thread/resume or
+      // turn/start names meanwhile is the one the review's end restores, never applied to the running review.
+      const base = thread.review.previous ?? thread.permission
+      const next = { ...base, extraRoots: [...(base.extraRoots ?? [])] }
+      await updatePermission(next, params, thread.cwd)
+      if (next.mode !== 'review') {
+        thread.review.previous = next
+        if (typeof params?.codeDesktop?.permissionMode === 'string') thread.appMode = true
+      }
+      return
+    }
     await applyThreadPermissions(thread, params, permissionServices())
     if (thread.permission.mode !== 'review') {
       thread.beforeReview = null
@@ -2078,6 +2114,8 @@ export function apply(ctx, config) {
           threads.delete(id)
           await live.close('Session deleted.')
         }
+        // One still unloading in the background (thread/unsubscribe) is flushing into the files deleted below.
+        await unloading.get(id)
         store.update(id, { deleted: true })
         // Also delete the Harness history (<sessions root>/<project>/<id>/), once closed.
         await deleteSessionFiles(id)
@@ -2391,6 +2429,8 @@ export function apply(ctx, config) {
     let descendants = []
     try { descendants = descendantIds(ctx.agents.list?.() ?? [], thread.id) } catch {}
     for (const id of descendants) if (ctx.agents.get?.(id)?.status === 'running') runningChildren = true
+    // A manual workflow run (codeDesktop/workflow/startScript) is the parent of its agents until released.
+    if (workflowExecutions.holds(thread)) runningChildren = true
     let queued = 0
     try { queued = thread.agent.inbox?.nextTurn?.length ?? 0 } catch {}
     return mustStayLoaded({
@@ -2526,11 +2566,14 @@ export function apply(ctx, config) {
   function quiesce() {
     if (quiescing) return quiescing
     closed = true
+    // transport.close() re-enters through onClose: it must find this promise, the one that waits for the threads.
+    let settle
+    quiescing = new Promise((resolve) => { settle = resolve })
     transport.close()
     const live = [...threads.values()]
     threads.clear()
     children.clear()
-    quiescing = Promise.allSettled([workflowExecutions.dispose(), ...live.map((thread) => thread.close('OpenClaude Desktop core stopped.')), ...unloading.values()]).then(() => undefined)
+    settle(Promise.allSettled([workflowExecutions.dispose(), ...live.map((thread) => thread.close('OpenClaude Desktop core stopped.')), ...unloading.values()]).then(() => undefined))
     return quiescing
   }
 

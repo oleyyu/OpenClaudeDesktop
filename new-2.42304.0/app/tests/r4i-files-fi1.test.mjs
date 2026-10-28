@@ -22,7 +22,7 @@ test('files-13: the failure toast follows c56477982 V (title, cause description,
   assert.deepEqual(downloadFailureToast('report.pdf', 'missing'), { message: 'Couldn’t download ⁨report.pdf⁩',
     options: { variant: 'danger', description: 'This file is no longer available.', key: 'epitaxy-download-failed:pane:⁨report.pdf⁩' } });
   assert.equal(downloadFailureToast('a.pdf', 'outside').options.description,
-    'This file is outside this session’s folders. You can ask Claude to copy it into one of them, then download the copy.');
+    'This file is outside this session’s folders. You can ask DeepSeek to copy it into one of them, then download the copy.');
   assert.equal(downloadFailureToast('a.pdf', 'read_error').options.description, 'Couldn’t read this file.');
   assert.equal(downloadFailureToast('a.pdf', 'too_large').options.description, 'This file is too large to download.');
   assert.equal(downloadFailureToast('a.pdf').options.description, 'Right-click the file’s tab, choose Reload file, then try again.', 'n?.cause ?? "undecodable"');

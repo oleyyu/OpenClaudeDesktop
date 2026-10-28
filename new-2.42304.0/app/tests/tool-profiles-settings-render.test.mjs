@@ -48,3 +48,12 @@ test('zh-CN covers the new Profiles copy with the same placeholders', () => {
     assert.deepEqual(zhCN[key].match(/\{\w+\}/g) || [], key.match(/\{\w+\}/g) || [], key);
   }
 });
+
+// A profile saved under another core (or with a model this core no longer lists) keeps its model: the editor's Model
+// select shows it instead of a blank trigger, as the Codex subagent model select does.
+test('profile editor: a saved model the running core does not list is still an item of the Model select', () => {
+  const models = [{ model: 'gpt-5', displayName: 'GPT-5' }];
+  assert.deepEqual(P.profileModelItems(models, 'deepseek-chat').map(item => item.value), ['', 'gpt-5', 'deepseek-chat']);
+  assert.deepEqual(P.profileModelItems(models, 'gpt-5').map(item => item.value), ['', 'gpt-5']);
+  assert.deepEqual(P.profileModelItems(models, '').map(item => item.value), ['', 'gpt-5']);
+});

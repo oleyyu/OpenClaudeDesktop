@@ -168,7 +168,7 @@ test('Next steps: a lone blocked session is a row with the warning status; tasks
 test('Next steps: a family without a spare seat is one rest row that opens a popover list', () => {
   const html = render({ tasks: tasks(3), setupRows: [{ card: { id: 'worktree-apart', folder: '/r', taken: false }, onPress: noop }] },
     [waiting('a', 'Alpha'), waiting('b', 'Beta', 'permission')]);
-  assert.match(html, /data-testid="start-card-blocked-sessions"[^>]*aria-haspopup="dialog" aria-expanded="false"[^>]*>.*Claude is blocked in 2 sessions/);
+  assert.match(html, /data-testid="start-card-blocked-sessions"[^>]*aria-haspopup="dialog" aria-expanded="false"[^>]*>.*DeepSeek is blocked in 2 sessions/);
   assert.match(html, />3 suggested tasks</);
   assert.match(html, /data-testid="start-card-worktree-apart"/);
   assert.doesNotMatch(html, /Alpha|Beta/);
@@ -402,10 +402,11 @@ test('main.jsx: the start card gets the split flag and B4, which sends a plain p
   assert.match(main, /void sendMessage\(prompt, \[\], \[\], \{ priority: "stay", beside: \{ onStart: onSent \} \}\);\s*return "asked";/);
   const send = main.slice(main.indexOf('async function sendMessage('), main.indexOf('function discardFailedStart('));
   for (const guard of [
-    'const sentIssue = !current && !beside && draftIssue',
-    'const shellCommand = mode === "code" && !beside ?',
+    // watch-record added `!demonstration` beside `!beside` (a recorded demonstration is its own turn input).
+    'const sentIssue = !current && !beside && !demonstration && draftIssue',
+    'const shellCommand = mode === "code" && !beside && !demonstration ?',
     'const keywordRequested = !beside &&',
-    'const startedGroup = current || beside ? null',
+    'const startedGroup = current || beside || demonstration ? null',
     'if (!beside) { setDraft(""); setAttachments([]); setMentions([]); }',
     'if (!beside) setDraftTools(undefined);',
     'if (!beside) forgetDraft(browserStorage(), homeDraftKey, { text });',

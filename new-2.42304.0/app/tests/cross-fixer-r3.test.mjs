@@ -103,6 +103,109 @@ test('a workflow started by a scheduled prompt relays no earlier typed message; 
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('a Monitor notice queued during the user\'s turn leaves that turn\'s request and budget; its own turn is automated', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-notice-'), started = [], turns = [];
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  const workflowService = { start: async (params) => { started.push(params); return { id: params.runId, transcriptDir: path.join(root, 'runs', params.runId) }; } };
+  const service = createWorkflowToolService({ workflowService, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: async (threadId, params) => { turns.push(params); } });
+  const script = 'export const meta={name:"Audit",description:"one agent"};\nreturn await agent("x")';
+  try {
+    await service.turnStart({ threadId: 't1', input: [{ type: 'text', text: 'use a workflow to audit +500k' }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'a' } } });
+    await service.notice('t1', { prompt: 'Monitor: build finished' });
+    assert.equal(turns.length, 0, 'waits for the user\'s turn');
+    await service.launch({ script }, { sessionId: 't1', cwd: root });
+    assert.equal(started[0].userRequest, 'use a workflow to audit +500k');
+    assert.equal(started[0].budgetTotal, 500000);
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'a' } } });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(turns.length, 1, 'delivered once idle');
+    await service.launch({ script }, { sessionId: 't1', cwd: root });
+    assert.equal(started[1].userRequest, undefined, 'the delivered notice\'s turn is automated');
+    assert.equal(started[1].budgetTotal, undefined);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a delivered notice\'s turn is running before turn/started arrives: a second notice waits for it', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-flush-'), turns = [];
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  let refuse = false;
+  const service = createWorkflowToolService({ workflowService: {}, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: async (threadId, params) => { if (refuse) throw new Error('refused'); turns.push(params.input.map((part) => part.text)); } });
+  try {
+    await service.turnStart({ threadId: 't1', input: [{ type: 'text', text: 'hi' }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'a' } } });
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'a' } } });
+    await service.notice('t1', { prompt: 'A' });
+    assert.deepEqual(turns, [['A']]);
+    assert.equal(service.idle('t1'), false, 'turn/start answered, turn/started not seen yet');
+    await service.notice('t1', { prompt: 'B' });
+    assert.deepEqual(turns, [['A']], 'B waits for A\'s turn');
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'b' } } });
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'b' } } });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.deepEqual(turns, [['A'], ['B']]);
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'c' } } });
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'c' } } });
+    // A refused delivery leaves the session idle, its notice still waiting.
+    refuse = true;
+    await service.notice('t1', { prompt: 'C' });
+    assert.equal(service.idle('t1'), true);
+    assert.deepEqual(service.pendingFor('t1'), ['C']);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a refused notice delivery leaves a user turn started meanwhile running', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-refuse-');
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  let refuse;
+  const service = createWorkflowToolService({ workflowService: {}, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: () => new Promise((_, reject) => { refuse = reject; }) });
+  const user = (text) => service.turnStart({ threadId: 't1', input: [{ type: 'text', text }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+  try {
+    await user('hi');
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'a' } } });
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'a' } } });
+    const delivery = service.notice('t1', { prompt: 'A' });
+    await new Promise((resolve) => setImmediate(resolve));
+    await user('next');
+    refuse(new Error('refused'));
+    await delivery;
+    assert.equal(service.idle('t1'), false, 'the user\'s turn is still starting');
+    assert.deepEqual(service.pendingFor('t1'), ['A']);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a shared budget that failed to set up is set up again by the next launch', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-pool-'), started = [];
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  const workflowService = { start: async (params) => { started.push(params); return { id: params.runId, transcriptDir: path.join(root, 'runs', params.runId) }; } };
+  const service = createWorkflowToolService({ workflowService, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: async () => {} });
+  const script = 'export const meta={name:"Audit",description:"one agent"};\nreturn await agent("x")';
+  const budgets = path.join(root, 'sessions', 't1', 'workflows', 'budgets');
+  try {
+    await service.turnStart({ threadId: 't1', input: [{ type: 'text', text: 'audit it +300k' }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+    // The budgets folder can't be made (a file in its place, like a full disk): this launch fails…
+    fs.mkdirSync(path.dirname(budgets), { recursive: true });
+    fs.writeFileSync(budgets, '');
+    await assert.rejects(service.launch({ script }, { sessionId: 't1', cwd: root }));
+    // …and once it can, the next one runs with the budget.
+    fs.rmSync(budgets);
+    await service.launch({ script }, { sessionId: 't1', cwd: root });
+    assert.equal(started.at(-1).budgetTotal, 300000);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('pausing a run holds an agent already queued for a slot until Resume', { timeout: 60000 }, async () => {
   const dir = tmp('cd-wf-pause-'), cwd = path.join(dir, 'ws'), home = path.join(dir, 'home');
   fs.mkdirSync(cwd, { recursive: true }); fs.mkdirSync(home, { recursive: true }); fs.mkdirSync(path.join(dir, 'run'));

@@ -29,6 +29,16 @@ export const APP_TOOL_NAMES = Object.freeze([
   'show_widget', 'read_me',
   // agent-tools/turn-plan.mjs: the task list and the next-step box (2.42304.0 ccd_turn update_plan / wrap_up, alwaysLoad).
   'update_plan', 'wrap_up',
+  // agent-tools/computer-use.mjs: computer use on one granted app's window (request_access raises the access card).
+  'request_access', 'app_list_windows', 'app_screenshot', 'app_ax_find', 'app_click', 'app_type', 'app_release',
+  'app_focus', 'app_menu', 'app_zoom', 'list_apps', 'app_batch', 'list_granted_applications',
+  'app_key', 'app_scroll', 'app_drag', 'app_bring_to_current_space', 'request_full_control', 'release_full_control',
+  'read_clipboard', 'write_clipboard', 'request_teach_access', 'teach_step', 'teach_batch',
+  // The screen-wide ones (screenshot and scroll are listed with preview's above: one name, served per session).
+  'zoom', 'left_click', 'double_click', 'triple_click', 'right_click', 'middle_click', 'left_click_drag', 'mouse_move',
+  'cursor_position', 'left_mouse_down', 'left_mouse_up',
+  // type is listed with preview's above (one name, served per session).
+  'key', 'hold_key', 'open_application', 'switch_display', 'wait', 'computer_batch',
   // agent-tools/browser.mjs: the Claude in Chrome tools, on pages in the user's own Chrome (chrome_ prefixed: preview
   // already has navigate / read_page / find on this server).
   'chrome_tabs_context_mcp', 'chrome_tabs_create_mcp', 'chrome_navigate', 'chrome_read_page', 'chrome_find', 'chrome_form_input',

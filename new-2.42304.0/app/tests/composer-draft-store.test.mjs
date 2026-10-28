@@ -153,3 +153,10 @@ test("snippet-only drafts retain text, label and file/line origin across storage
     { kind: "snippet", text: "alpha\nbeta", label: "notes.txt:L1-L2", sourceFile: "notes.txt:L1-L2" },
   ] });
 });
+
+test("boot restores the Home draft's snippets into the composer, like a switch does", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const main = await readFile(new URL("../src/main.jsx", import.meta.url), "utf8");
+  const boot = main.slice(main.indexOf("const stored = restorePersistedDraft(homeDraftKey);"));
+  assert.match(boot, /^const stored = restorePersistedDraft\(homeDraftKey\);\n\s*if \(stored\) \{ liveComposer\.current = stored; setDraft\(stored\.text\); setAttachments\(stored\.attachments\); setMentions\(stored\.mentions\); \}/);
+});

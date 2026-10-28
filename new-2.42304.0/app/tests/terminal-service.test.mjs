@@ -380,3 +380,74 @@ test('code-block run: probe reports live/busy shells, ready returns the output o
     await assert.rejects(terminals.call('ready', { sessionId: 's1', id: 'term-nope00' }, sender), /Unknown terminal/);
   } finally { await terminals.dispose(); }
 });
+
+// While a new shell waits on the login shell's proxy, its tab can be closed or the app can quit: no shell starts then.
+function countingPty() {
+  const spawned = [];
+  const module = { spawn: () => {
+    const pty = { pid: 999999, killed: false, process: 'sh', write() {}, resize() {}, onData() {}, onExit() {}, kill() { pty.killed = true; } };
+    spawned.push(pty);
+    return pty;
+  } };
+  return { spawned, loadPty: () => ({ module }) };
+}
+test('a tab closed, or a service disposed, while its shell waits on the proxy starts no shell', { timeout: 10000 }, async () => {
+  const folder = tempFolder();
+  const fake = countingPty();
+  let waiting = false;
+  const terminals = service(folder, { loadPty: fake.loadPty, shellProxy: () => (waiting ? new Promise(() => {}) : {}) });
+  const sender = fakeSender();
+  const info = await terminals.call('create', { sessionId: 's1' }, sender);
+  assert.equal(fake.spawned.length, 1);
+  waiting = true;
+  const restarting = terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(await terminals.call('close', { sessionId: 's1', id: info.id }, sender), true);
+  await assert.rejects(restarting, /closed/);
+  assert.equal(fake.spawned.length, 1, 'no shell for the closed tab');
+  const removedAt = sender.events.findIndex((event) => event.kind === 'removed' && event.id === info.id);
+  assert.ok(!sender.events.slice(removedAt).some((event) => event.kind === 'state' && event.info?.id === info.id), 'no state after removed');
+  const creating = terminals.call('create', { sessionId: 's1' }, sender);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  await terminals.dispose();
+  await assert.rejects(creating, /quitting/);
+  assert.equal(fake.spawned.length, 1, 'no shell after quit');
+  assert.equal(terminals.size, 0);
+});
+
+test('two restarts of one terminal while its shell waits on the proxy leave one shell', { timeout: 10000 }, async () => {
+  const folder = tempFolder();
+  const fake = countingPty();
+  let waiting = false;
+  const terminals = service(folder, { loadPty: fake.loadPty, shellProxy: () => (waiting ? new Promise(() => {}) : {}) });
+  const sender = fakeSender();
+  try {
+    const info = await terminals.call('create', { sessionId: 's1' }, sender);
+    waiting = true;
+    const first = terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const second = terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+    await Promise.all([first, second]);
+    const live = fake.spawned.filter((pty) => !pty.killed);
+    assert.equal(fake.spawned.length, 2, 'the first shell and one restarted shell');
+    assert.equal(live.length, 1);
+    assert.equal((await second).status, 'running');
+  } finally { await terminals.dispose(); }
+});
+
+test('after a restart, ready waits for the new shell’s startup output', { timeout: 20000 }, async () => {
+  const folder = tempFolder();
+  fs.writeFileSync(path.join(folder, '.profile'), 'sleep 0.6; echo BANNER-NEW\n');
+  const terminals = service(folder);
+  const sender = fakeSender();
+  try {
+    const info = await terminals.call('create', { sessionId: 's1' }, sender);
+    const first = await terminals.call('ready', { sessionId: 's1', id: info.id }, sender);
+    assert.match(output(sender, info.id), /BANNER-NEW/);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+    const again = await terminals.call('ready', { sessionId: 's1', id: info.id }, sender);
+    assert.ok(again.at > first.at, 'the new shell’s banner and prompt come before the offset');
+    assert.equal((output(sender, info.id).match(/BANNER-NEW/g) || []).length, 2);
+  } finally { await terminals.dispose(); }
+});

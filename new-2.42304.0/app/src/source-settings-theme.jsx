@@ -127,8 +127,15 @@ export function SourceThemeSettings({ config = {}, desktopCall, onSave, onOpenSe
   const densityRow = settingRow('themeDensity', t('Density'), t('Comfortable gives controls more room.'),
     <SourceSegments label={t('Density')} value={theme.density} options={[{ value: 'compact', label: t('Compact') }, { value: 'comfortable', label: t('Comfortable') }]}
       onChange={value => saveTheme('themeDensity', { density: value })}/>);
+  // The saved scale keeps 0.25 steps (RADIUS_SCALE, e.g. from a theme file): one between the named options is listed
+  // as its percentage, so the select never shows blank.
+  const radiusItems = RADIUS_OPTIONS.map(option => ({ ...option, label: t(option.label) }));
+  if (!radiusItems.some(item => item.value === theme.radiusScale)) {
+    const at = radiusItems.findIndex(item => item.value > theme.radiusScale);
+    radiusItems.splice(at < 0 ? radiusItems.length : at, 0, { value: theme.radiusScale, label: `${Math.round(theme.radiusScale * 100)}%` });
+  }
   const radiusRow = settingRow('themeRadius', t('Corner radius'), t('Roundness of buttons, menus, cards and the composer.'),
-    <SourceSelect label={t('Corner radius')} align="end" className="sselect-width-160" value={theme.radiusScale} items={RADIUS_OPTIONS.map(option => ({ ...option, label: t(option.label) }))}
+    <SourceSelect label={t('Corner radius')} align="end" className="sselect-width-160" value={theme.radiusScale} items={radiusItems}
       onChange={value => saveTheme('themeRadius', { radiusScale: Number(value) })}/>);
   const codeLinkRow = settingRow('themeCodeAppearance', t('Code theme and code font'), t('Set on the Code page, under Code appearance.'),
     openButton(t('Open Code settings'), 'code', 'codeTheme'));

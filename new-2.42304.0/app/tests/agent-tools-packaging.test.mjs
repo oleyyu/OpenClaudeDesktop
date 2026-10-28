@@ -46,8 +46,36 @@ const TOOL_FILES = ['agent-tools-server.mjs', 'agent-tools-host.cjs', 'agent-too
 
 test('the package script keeps the agent tools server, its host and the tool modules (inside app.asar, not unpacked)', async () => {
   for (const file of TOOL_FILES) assert.equal(await filter(path.join(app, 'electron', file)), true, `electron/${file} is packaged`);
-  // Only node-pty's prebuilds are unpacked: the server is plain JavaScript read through Electron's asar support.
-  assert.deepEqual(opts.asar, { unpackDir: 'node_modules/node-pty/prebuilds' });
+  // Only native code is unpacked (dlopen cannot read inside an archive): node-pty's prebuilds and the computer-use
+  // module's build/. The server is plain JavaScript read through Electron's asar support.
+  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build}' });
+});
+
+test('computer use: the built module ships unpacked; its Swift sources and SwiftPM .build do not ship', async () => {
+  const native = (relative) => filter(path.join(app, 'native/computer-use', relative));
+  assert.equal(await native('build'), true);
+  assert.equal(await native('build/computer_use.node'), true);
+  assert.equal(await native('build/app-cu-helper'), true);
+  for (const relative of ['Package.swift', 'build.mjs', 'Sources', 'Sources/ComputerUseCore/Dispatcher.swift', '.build', '.build/release/libcomputer_use.dylib', 'buildx', '.gitignore']) {
+    assert.equal(await native(relative), false, `native/computer-use/${relative} is not packaged`);
+  }
+  // The package step builds the module before electron-packager runs.
+  const steps = pkg.scripts.package.split('&&').map((part) => part.trim());
+  assert.ok(steps.indexOf('npm run build:native') >= 0 && steps.indexOf('npm run build:native') < steps.findIndex((part) => part.startsWith('electron-packager')));
+  // Unpacked by the same pattern electron-packager passes to asar.
+  const { minimatch } = require(require.resolve('minimatch', { paths: [path.join(app, 'node_modules/@electron/asar')] }));
+  for (const dir of ['native/computer-use/build', 'node_modules/node-pty/prebuilds']) assert.equal(minimatch(dir, opts.asar.unpackDir), true, dir);
+  assert.equal(minimatch('native/computer-use/Sources', opts.asar.unpackDir), false);
+});
+
+test('computer use: the Accessibility calls live in computer_use.node — no separate helper is built, packaged or signed', async () => {
+  // helpers/cu-ax (one process per call) was folded into the native module (MenuBar.swift); nothing may still ship or sign it.
+  assert.equal(fs.existsSync(path.join(app, 'helpers/cu-ax')), false);
+  const { minimatch } = require(require.resolve('minimatch', { paths: [path.join(app, 'node_modules/@electron/asar')] }));
+  assert.equal(minimatch('helpers/cu-ax/build', opts.asar.unpackDir), false);
+  assert.doesNotMatch(pkg.scripts['build:native'], /cu-ax/);
+  assert.doesNotMatch(pkg.scripts.package, /cu-ax/);
+  assert.doesNotMatch(fs.readFileSync(path.join(app, 'scripts/sign-local.mjs'), 'utf8'), /cu-ax-helper/);
 });
 
 test('from inside app.asar, Electron as Node runs the host with the real tool modules and the stdio server a core starts', { timeout: 60000 }, async () => {

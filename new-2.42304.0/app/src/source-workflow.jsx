@@ -95,7 +95,7 @@ export function WorkflowCard({run,onStop,onMember,onPause,onResume,onSave,onArti
     </div>
     <div className="swf-meta"><span className="swf-kind">{t('Workflow')}</span>{active&&busy&&<span>{t('Stopping…')}</span>}{!active&&<span data-status={run.status}>{label[run.status]}</span>}{active&&Number.isFinite(run.startedAt)&&<span>{duration(now-run.startedAt)}</span>}{run.paused&&active&&<span data-paused="">{t('Paused')}</span>}{active&&onStop&&run.stopScope==='turn'&&<span>{t('Stop interrupts the whole turn')}</span>}{largeWorkflow(run,warningLimits)&&<LargeWarning/>}</div>
     {active&&run.stall&&Number.isFinite(run.stall.sinceMs)&&<div className="swf-meta swf-stall" data-stall=""><Icon name="Timer" size={12}/><span>{t('Waiting for the model provider · {duration}',{duration:duration(run.stall.sinceMs+(Number.isFinite(run.stall.at)?Math.max(0,now-run.stall.at):0))})}</span></div>}
-    {(total>0||run.usage)&&<div className="swf-meta">{total>0&&<span><span className="swf-value">{total}</span> {total===1?t('agent'):t('agents')}</span>}{run.usage&&<span><span className="swf-value">{workflowTokens(run.usage.totalTokens)}</span> tokens</span>}</div>}
+    {(total>0||run.usage)&&<div className="swf-meta">{total>0&&<span><span className="swf-value">{total}</span> {total===1?t('agent'):t('agents')}</span>}{run.usage&&<span><span className="swf-value">{workflowTokens(run.usage.totalTokens)}</span> {t('tokens')}</span>}</div>}
    </div>
    {run.name&&run.description!==run.name&&<p className="swf-description">{run.description}</p>}
    {run.plan&&<p className="swf-description">{t('Plan · {count} agents estimated. Dynamic fan-outs may add more.',{count:run.plannedAgents||0})}</p>}

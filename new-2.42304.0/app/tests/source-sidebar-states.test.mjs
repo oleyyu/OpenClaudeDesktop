@@ -9,11 +9,11 @@ import { readFileSync } from 'node:fs';
 
 // Node-only SSR of the real SourceSidebar (no browser, Electron or Codex):
 // sidebar-groups.js zP New row selection, OO empty variants and AO skeleton.
-let server, SourceSidebar, SourceSidebarEmpty, SourceSidebarSessionMenu, deleteConfirmCopy, olderConfirmCopy, splitStore;
+let server, SourceSidebar, SourceSidebarEmpty, SourceSidebarSessionMenu, deleteConfirmCopy, olderConfirmCopy, splitStore, bulkDeleteTargets;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  ({ SourceSidebar, SourceSidebarEmpty, SourceSidebarSessionMenu, deleteConfirmCopy, olderConfirmCopy } = await server.ssrLoadModule('/src/source-sidebar.jsx'));
+  ({ SourceSidebar, SourceSidebarEmpty, SourceSidebarSessionMenu, deleteConfirmCopy, olderConfirmCopy, bulkDeleteTargets } = await server.ssrLoadModule('/src/source-sidebar.jsx'));
   ({ splitStore } = await server.ssrLoadModule('/src/source-split-view.jsx'));
 });
 after(async () => { await server?.close(); });
@@ -556,4 +556,15 @@ test('drag targets: an empty Pinned stub, custom sections as group drop zones, s
   assert.match(pinned, /data-group-key="pinned" data-pinned-list=""/);
   assert.match(pinned, /data-group-rows="" data-pinned-rows=""/);
   assert.doesNotMatch(render({ sessions: [thread('s1')] }), /source-pinned-drop/, 'no drop targets without session actions');
+});
+
+// Multi-select "Delete 2" with the open session among them: the bulk delete always skips the open session, so the
+// confirm must not promise to delete it ("These 2 sessions…" while only one was deleted).
+test('multi-select delete: the confirm names only the sessions that will really be deleted (never the open one)', () => {
+  const open = thread('open', { name: 'Open task' }), other = thread('other', { name: 'Other task' }), third = thread('third');
+  const targets = bulkDeleteTargets([open, other], 'open');
+  assert.deepEqual(targets.map((session) => session.id), ['other']);
+  assert.equal(deleteConfirmCopy(targets).body, '“Other task” will be permanently deleted. This can’t be undone.');
+  assert.equal(deleteConfirmCopy(bulkDeleteTargets([open, other, third], 'open')).body, 'These 2 sessions will be permanently deleted. This can’t be undone.');
+  assert.deepEqual(bulkDeleteTargets([other, third], null).map((session) => session.id), ['other', 'third']);
 });

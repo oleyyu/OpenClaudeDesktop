@@ -106,7 +106,7 @@ test('Settings › Models server-renders per-model rows and the price table on D
   t.after(() => i18n.setLocale('en-US'));
   const models = [{ model: 'deepseek-flash', displayName: '4.1 Flash', defaultReasoningEffort: 'high', supportedReasoningEfforts: [{ reasoningEffort: 'off' }, { reasoningEffort: 'high' }, { reasoningEffort: 'max' }] }];
   const config = { modelSettings: { params: { 'deepseek-flash': { maxTokens: 8192, temperature: 0.3, effort: 'max' } }, prices: { 'my-model': { displayName: 'Mine', offPeak: tier(0, 1, 2), peak: tier(0, 2, 4) } } } };
-  const page = (engine, list = models, extra = {}) => render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: list }, engine, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, ...extra }));
+  const page = (engine, list = models, extra = {}) => render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: list }, engine, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, allOpen: true, ...extra }));
   // DeepSeek (providerSettings): unchanged.
   const html = page('deepseek');
   // Per-model options sit on the page (not under Advanced), one collapsible entry per model.
@@ -128,8 +128,10 @@ test('Settings › Models server-renders per-model rows and the price table on D
   const plain = render(React.createElement(SourceModelsSettings, { config: {}, boot: { connected: true, models }, engine: 'deepseek', desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
   assert.ok(plain.includes('Advanced') && plain.includes('Pricing and custom providers'));
   assert.equal(plain.includes('Add model price'), false, 'Advanced (pricing, providers) starts closed when nothing in it was changed');
-  assert.ok(plain.includes('aria-label="4.1 Flash max output tokens"'), 'per-model options are visible outside Advanced');
-  assert.ok(plain.includes('aria-label="4.1 Flash display name"') && plain.includes('aria-label="4.1 Flash image input"'));
+  // An unchanged model is one closed line on the page (outside Advanced); a changed one opens with its options.
+  assert.match(plain, /data-model-options="deepseek-flash"[\s\S]*aria-expanded="false"/);
+  assert.equal(plain.includes('aria-label="4.1 Flash max output tokens"'), false, 'an unchanged model starts closed');
+  assert.ok(html.includes('aria-label="4.1 Flash display name"') && html.includes('aria-label="4.1 Flash image input"'));
 
   // Codex (codexProvider): the endpoint group and the running core's models; no DeepSeek connection, prices,
   // providers, Quick setup, Advanced or customization-only fields.
@@ -510,4 +512,64 @@ test('relay mode: web search reads its own key variable, set only from the offic
   assert.equal(rows.has('web-search-deepseek'), false);
   assert.equal(env.has('CODE_DESKTOP_DEEPSEEK_SEARCH_KEY'), false);
   assert.equal(env.get('DEEPSEEK_API_KEY'), 'sk-official');
+});
+
+test('a key that can’t be stored saves nothing: no relay connection or provider without its key', async (t) => {
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-nostore-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const safeStorage = { isEncryptionAvailable: () => false, encryptString: () => { throw new Error('unavailable'); }, decryptString: () => { throw new Error('unavailable'); } };
+  const env = new Map(), rows = new Map();
+  const profile = { setManagedRow: async (id, row) => { rows.set(id, row); }, removeManagedRow: async id => { rows.delete(id); }, setCoreEnv: (key, value) => { if (value == null) env.delete(key); else env.set(key, value); } };
+  const forwarder = { async start() { return 'http://127.0.0.1:4321/anthropic'; }, async stop() {} };
+  const settings = createModelSettings({ getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir, relayProxy: forwarder });
+  await assert.rejects(settings.run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://relay.test/anthropic' }, relayKey: 'sk-relay' }), /Secure storage/);
+  assert.equal((await settings.run({ op: 'connection-read' })).mode, 'official', 'relay mode is not saved without its key');
+  await assert.rejects(settings.run({ op: 'provider-save', provider: { route: 'gw', baseURL: 'https://gw.example.com/v1', models: ['m1'] }, apiKey: 'sk-secret' }), /Secure storage/);
+  assert.deepEqual((await settings.run({ op: 'providers-read' })).providers, [], 'the provider is not saved without its key');
+});
+
+test('relay mode never sends the launch environment’s DeepSeek key to the relay', async (t) => {
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-relay-inherit-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const saved = { key: process.env.DEEPSEEK_API_KEY, url: process.env.DEEPSEEK_BASE_URL };
+  process.env.DEEPSEEK_API_KEY = 'sk-official-from-shell'; delete process.env.DEEPSEEK_BASE_URL;
+  t.after(() => { if (saved.key !== undefined) process.env.DEEPSEEK_API_KEY = saved.key; else delete process.env.DEEPSEEK_API_KEY; if (saved.url !== undefined) process.env.DEEPSEEK_BASE_URL = saved.url; });
+  let readable = true;
+  const safeStorage = { isEncryptionAvailable: () => true, encryptString: text => Buffer.from(`enc:${Buffer.from(text).toString('base64')}`),
+    decryptString: buffer => { if (!readable) throw new Error('Keychain access denied'); return Buffer.from(String(buffer).slice(4), 'base64').toString(); } };
+  const env = new Map();
+  const profile = { setManagedRow: async () => {}, removeManagedRow: async () => {}, setCoreEnv: (key, value) => { if (value == null) env.delete(key); else env.set(key, value); } };
+  const forwarder = { async start() { return 'http://127.0.0.1:4321/anthropic'; }, async stop() {} };
+  const options = { getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir, relayProxy: forwarder };
+  await createModelSettings(options).run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://relay.test/anthropic' }, relayKey: 'sk-relay' });
+  // Next launch: the saved keys can't be read (Keychain denied), the connection still says relay.
+  env.clear(); readable = false;
+  const next = createModelSettings({ ...options, app: { whenReady: async () => {} } });
+  await next.ready();
+  assert.equal(env.get('DEEPSEEK_BASE_URL'), 'http://127.0.0.1:4321/anthropic');
+  assert.notEqual(env.get('DEEPSEEK_API_KEY'), 'sk-official-from-shell', 'the official key must not go to the relay');
+});
+
+test('relay forwarder: stop returns at once while a reply is still streaming (switching to the official API never waits for a turn)', async (t) => {
+  const http = await import('node:http');
+  const { createRelayProxy } = require('../electron/relay-proxy.cjs');
+  let finish;
+  const relay = http.createServer((req, res) => { res.writeHead(200, { 'content-type': 'text/event-stream' }); res.write('data: one\n\n'); finish = () => res.end('data: two\n\n'); });
+  await new Promise(resolve => relay.listen(0, '127.0.0.1', resolve));
+  const proxy = createRelayProxy();
+  t.after(() => { relay.closeAllConnections(); relay.close(); });
+  const base = await proxy.start(`http://127.0.0.1:${relay.address().port}/anthropic`);
+  const response = await fetch(`${base}/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  const reader = response.body.getReader();
+  assert.equal(new TextDecoder().decode((await reader.read()).value), 'data: one\n\n');
+  const outcome = await Promise.race([proxy.stop().then(() => 'stopped'), new Promise(resolve => setTimeout(() => resolve('waiting'), 1000))]);
+  assert.equal(outcome, 'stopped');
+  assert.equal(proxy.running, false);
+  // The turn already under way still gets the rest of its reply.
+  finish();
+  let rest = '';
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) rest += new TextDecoder().decode(chunk.value);
+  assert.equal(rest, 'data: two\n\n');
 });

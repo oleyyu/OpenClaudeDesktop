@@ -168,7 +168,7 @@ export default {
   "Runs in {cwd}": "在 {cwd} 中运行",
   "Runs on port {port} (or the next free port)": "在端口 {port} 上运行（或下一个空闲端口）",
   "Runs on port {port}": "在端口 {port} 上运行",
-  "Scroll through what Claude sent to allow it.": "请滚动看完 Claude 发送的内容后再允许。",
+  "Scroll through what Claude sent to allow it.": "请滚动看完 DeepSeek 发送的内容后再允许。",
   "What Claude sent": "Claude 发送的内容",
   // R3-toolcards end.
   "continue": "继续",

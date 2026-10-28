@@ -89,9 +89,11 @@ test('the real tools directory is listed over stdio; the Settings switch hides t
   assert.equal((await text('resize_window', {})).isError, true);
   previewOn = false;
   host.notifyListChanged();
-  const after = (await server.request('tools/list', {})).result.tools.map((tool) => tool.name);
-  assert.ok(!after.includes('screenshot'), 'turned off: not listed');
-  const refused = await text('screenshot');
+  const after = (await server.request('tools/list', {})).result.tools;
+  // (screenshot / scroll are computer use's too: with preview off, its screen-wide ones keep the names — sharesName.)
+  assert.ok(!after.some((tool) => tool.name === 'screenshot' && /page in the preview/.test(tool.description)), 'turned off: not listed');
+  assert.ok(!after.some((tool) => tool.name === 'click'), 'turned off: not listed');
+  const refused = await text('click', { ref: 'ref_1' });
   assert.equal(refused.isError, true);
   assert.match(refused.text, /turned off/);
   await server.close();

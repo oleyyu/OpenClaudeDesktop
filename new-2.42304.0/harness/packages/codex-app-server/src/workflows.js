@@ -220,9 +220,18 @@ export function workflowToolResult(run, { isError, text: output }, time) {
   return settle(clone(run), stopped ? 'stopped' : 'failed', time, message)
 }
 
-/** The tool call ended without a result (turn interrupted, session restarted). */
+/**
+ * The tool call ended without a result (turn interrupted, session restarted). A background run goes on past its call
+ * only once the engine started it (run-start named it): a call stopped before that (on its approval card) ran nothing.
+ */
 export function workflowInterrupted(run, time) {
-  if (run.status !== 'running' || run.background) return run
+  if (run.status !== 'running' || (run.background && run.runId !== null)) return run
+  return settle(clone(run), 'stopped', time, 'Stopped')
+}
+
+/** A background run whose job the registry no longer has: it ended with the core process that ran it. */
+export function workflowJobLost(run, time) {
+  if (run.status !== 'running' || !run.background) return run
   return settle(clone(run), 'stopped', time, 'Stopped')
 }
 
@@ -235,7 +244,10 @@ function settle(run, status, time, summary) {
   // completed agent calls return their cached results): the card's Resume (codeDesktop/workflow/resume, index.js).
   if (status !== 'completed' && run.source === 'model' && /^wf_[a-z0-9-]{6,}$/u.test(run.runId ?? '') && text(run.scriptPath)) run.resumable = true
   for (const entry of run.workflowProgress) {
-    if (entry.type !== 'workflow_agent' || entry.state !== 'progress') continue
+    if (entry.type !== 'workflow_agent') continue
+    // A member still queued for a slot never started: the engine ends only started members, so it is skipped here.
+    if (entry.state === 'start') { entry.state = 'skipped'; continue }
+    if (entry.state !== 'progress') continue
     entry.state = 'error'
     entry.error = status === 'stopped' ? 'Stopped before completion' : 'Workflow ended before completion'
   }

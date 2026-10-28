@@ -409,7 +409,7 @@ test("zh-CN: the dev server line and title read from the session dictionary", as
 });
 
 test("read gate: an MCP tool call's arguments carry the loose rowsReadGate; other tools and argument-less calls don't", () => {
-  const gate = { hint: "Scroll through what Claude sent to allow it.", loose: true };
+  const gate = { hint: "Scroll through what DeepSeek sent to allow it.", loose: true };
   const mcp = approvalCardModel(command({ command: "mcp__github__create_issue {}" }),
     { type: "mcpToolCall", server: "github", tool: "create_issue", arguments: { title: "Bug" } });
   assert.deepEqual(mcp.rowsReadGate, gate);
