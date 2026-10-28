@@ -457,6 +457,24 @@ test('Qwen Try again: a message sent while the continue check is out keeps the t
   } finally { await b.close() }
 })
 
+test('Compact: a turn/start handled before the compaction begins keeps the thread; its turn completes', async () => {
+  const b = bridge()
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    await b.turn(thread.id, 'hello')
+    const [, started] = await Promise.all([
+      b.call('thread/compact/start', { threadId: thread.id }),
+      b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 300', text_elements: [] }] }),
+    ])
+    const done = await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === started.turn.id)
+    assert.equal(done.turn.status, 'completed')
+    await sleep(200)
+    const read = await b.call('thread/read', { threadId: thread.id, includeTurns: true })
+    assert.ok(read.thread.turns.every((turn) => turn.status !== 'inProgress'))
+  } finally { await b.close() }
+})
+
 test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
   const b = bridge({ adapter: adapterById('qwen') })
   try {

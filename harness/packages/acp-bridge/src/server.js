@@ -4054,7 +4054,11 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         // `/compact [<instruction>]`, adapter.compactInstructions); one line, so the command stays a command.
         const instructions = adapter.compactInstructions && typeof params.codeDesktop?.instructions === 'string' ? params.codeDesktop.instructions.replace(/\s+/g, ' ').trim().slice(0, 4000) : ''
         const prompt = instructions ? `${adapter.compactCommand} ${instructions}` : adapter.compactCommand
-        setImmediate(() => void runTurn(thread, { input: [], compaction: true, prompt }))
+        setImmediate(() => {
+          // A turn/start handled before this fired has the thread: a second turn over it would never finish the first.
+          if (thread.running) return log(`compact ${thread.id}: a turn started first; not compacting`)
+          void runTurn(thread, { input: [], compaction: true, prompt })
+        })
         return {}
       }
       case 'review/start': {
