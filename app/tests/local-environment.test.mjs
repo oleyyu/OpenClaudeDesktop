@@ -80,11 +80,12 @@ test('c66c54bc9 t: serialization quotes what needs it and round-trips through th
 });
 
 test('c66c54bc9 t: a value with a single quote survives repeated saves (backslashes, \\n, backticks)', () => {
-  const values = { A: 'say "hi" it\'s', B: "path\\new'x", C: "it's `cmd`" };
+  const values = { A: 'say "hi" it\'s', B: "path\\new'x", C: "it's `cmd`", D: '`cmd`' };
   let current = values;
   for (let pass = 0; pass < 3; pass++) current = parseEnvironmentText(serializeEnvironment(current));
   assert.deepEqual(current, values);
   assert.equal(serializeEnvironment({ C: values.C }), 'C="it\'s `cmd`"');
+  assert.equal(serializeEnvironment({ D: values.D }), "D='`cmd`'");
 });
 
 test('normalizeEnvironment: lenient for a stored file, strict for a save', () => {

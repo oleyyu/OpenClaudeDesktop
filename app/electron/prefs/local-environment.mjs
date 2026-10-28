@@ -103,14 +103,15 @@ export function parseEnvironmentText(text) {
   return String(text ?? '').trim() ? { ...parseDotenv(text) } : {};
 }
 
-// c66c54bc9 t: a value with a newline, $, #, quotes or edge spaces is quoted: '…' unless it holds a single quote,
-// then `…`, then "…" when that reads back unchanged (no double quote, no \n or \r the parser would expand). The
-// parser unescapes nothing, so only a value holding all three quotes falls back to "…" with its double quotes escaped.
+// c66c54bc9 t: a value with a newline, $, #, a quote or backtick, or edge spaces is quoted: '…' unless it holds a
+// single quote, then `…`, then "…" when that reads back unchanged (no double quote, no \n or \r the parser would
+// expand). The parser unescapes nothing, so a value holding ' and ` and also " or a \n / \r sequence can't round-trip:
+// it falls back to "…" with its double quotes escaped.
 export function serializeEnvironment(values) {
   return Object.entries(values ?? {}).map(([key, value]) => {
     const text = String(value);
     const quoted = text.includes('\n') || text.includes('\r') || text.includes('$') || text.includes('#') || text.includes('"')
-      || text.includes("'") || text.startsWith(' ') || text.endsWith(' ');
+      || text.includes("'") || text.includes('`') || text.startsWith(' ') || text.endsWith(' ');
     if (!quoted) return `${key}=${text}`;
     if (!text.includes("'")) return `${key}='${text}'`;
     if (!text.includes('`')) return `${key}=\`${text}\``;
