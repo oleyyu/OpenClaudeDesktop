@@ -72,7 +72,7 @@ export function normalizeUrl(input) {
   const raw = typeof input === "string" ? input.trim() : "";
   if (!raw) throw new ToolError("bad_request", "url is required.");
   if (raw === "about:blank") return raw;
-  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) && !/^[^/:]+:\d+(\/|$)/.test(raw) ? raw : `https://${raw}`;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) && !/^[^/:]+:\d+([/?#]|$)/.test(raw) ? raw : `https://${raw}`;
   let url;
   try { url = new URL(withScheme); } catch { throw new ToolError("bad_url", `${raw} isn't a URL.`); }
   if (url.protocol !== "http:" && url.protocol !== "https:") throw new ToolError("bad_url", `Only http and https pages can be opened (${url.protocol} isn't).`);

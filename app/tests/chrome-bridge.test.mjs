@@ -214,6 +214,8 @@ test('navigate takes http(s) URLs and bare hosts only', async () => {
   const { tabs } = await extensionModules();
   assert.equal(tabs.normalizeUrl('example.com'), 'https://example.com/');
   assert.equal(tabs.normalizeUrl('localhost:3000/a'), 'https://localhost:3000/a');
+  assert.equal(tabs.normalizeUrl('localhost:3000?q=1'), 'https://localhost:3000/?q=1');
+  assert.equal(tabs.normalizeUrl('example.com:8080#top'), 'https://example.com:8080/#top');
   assert.equal(tabs.normalizeUrl('http://127.0.0.1:8080/x?y=1'), 'http://127.0.0.1:8080/x?y=1');
   for (const bad of ['chrome://version', 'javascript:alert(1)', 'file:///etc/passwd', 'data:text/html,hi']) assert.equal(codeOf(() => tabs.normalizeUrl(bad)), 'bad_url', bad);
   assert.equal(codeOf(() => tabs.normalizeUrl('  ')), 'bad_request');
