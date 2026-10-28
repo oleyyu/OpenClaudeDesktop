@@ -160,6 +160,29 @@ test('a delivered notice\'s turn is running before turn/started arrives: a secon
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('a refused notice delivery leaves a user turn started meanwhile running', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-refuse-');
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  let refuse;
+  const service = createWorkflowToolService({ workflowService: {}, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: () => new Promise((_, reject) => { refuse = reject; }) });
+  const user = (text) => service.turnStart({ threadId: 't1', input: [{ type: 'text', text }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+  try {
+    await user('hi');
+    service.observe({ method: 'turn/started', params: { threadId: 't1', turn: { id: 'a' } } });
+    service.observe({ method: 'turn/completed', params: { threadId: 't1', turn: { id: 'a' } } });
+    const delivery = service.notice('t1', { prompt: 'A' });
+    await new Promise((resolve) => setImmediate(resolve));
+    await user('next');
+    refuse(new Error('refused'));
+    await delivery;
+    assert.equal(service.idle('t1'), false, 'the user\'s turn is still starting');
+    assert.deepEqual(service.pendingFor('t1'), ['A']);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('a shared budget that failed to set up is set up again by the next launch', async () => {
   const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
   const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');

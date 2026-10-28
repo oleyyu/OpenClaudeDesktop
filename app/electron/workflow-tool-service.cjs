@@ -399,7 +399,8 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     } catch (error) {
       pending.set(threadId, [...texts, ...(pending.get(threadId) ?? [])]);
       if (fromNotice) { noticed.add(threadId); if (!wasAutomated) automated.delete(threadId); }
-      turnFailed(threadId);
+      // Idle again, unless the user's own turn/start came in meanwhile (turnStart replaced the entry).
+      if (turns.get(threadId)?.params === entry.params) turnFailed(threadId);
       console.warn("Workflow notification not delivered yet:", error?.message ?? error);
     } finally { delivering.delete(threadId); }
   }
