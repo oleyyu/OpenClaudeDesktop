@@ -48,7 +48,6 @@ const DEFAULT_PRICING_URL = 'https://api-docs.deepseek.com/zh-cn/quick_start/pri
 // Above Settings (layer 500), like the other Settings page dialogs.
 const SETTINGS_LAYER = Object.freeze({ base: 520, z: 520 });
 // Settings › Models: up to this many listed models open their option rows at first.
-const MODEL_ENTRIES_OPEN = 4;
 const PROTOCOL_LABELS = { 'openai-completions': 'OpenAI Chat Completions', 'openai-responses': 'OpenAI Responses', 'anthropic-messages': 'Anthropic Messages' };
 
 // Which listed models accept images: one toggle chip per id. The cores attach images only for a model marked here.
@@ -283,7 +282,8 @@ function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
   ];
   return <form className="msx-connection" onSubmit={submit} noValidate>
     <SettingsGroup title={t('API connection')} rows={rows}>
-      <div className="msx-connection-footer">
+      {/* Save shows once there is something to save (or a status, a Remove key, a Restart core), not as a lone disabled row. */}
+      {(dirty || busy || error || pending || (view && !view.available) || (!relay && view?.officialKey)) && <div className="msx-connection-footer">
         <span className="msx-connection-status" role="status">
           {error ? <span className="ss-row-error">{error}</span>
             : pending ? t('Saved. Restart the core to apply.')
@@ -294,7 +294,7 @@ function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
         {pending && onReconnect && !dirty ? <SourceSettingsButton size="sm" variant="primary"
           onClick={() => { setPending(false); void Promise.resolve(onReconnect()).catch(() => {}); }}>{t('Restart core')}</SourceSettingsButton>
           : <SourceSettingsButton type="submit" size="sm" variant="primary" disabled={!canSave} busy={busy === 'save'}>{t('Save')}</SourceSettingsButton>}
-      </div>
+      </div>}
     </SettingsGroup>
   </form>;
 }
@@ -510,7 +510,8 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
   </form>;
 }
 
-export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, onSave, onReconnect, onQuickSetup }) {
+// allOpen: every model entry starts open (server renders that check each model's options); the app leaves it off.
+export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, onSave, onReconnect, onQuickSetup, allOpen = false }) {
   const core = boot?.core ?? engine, caps = coreCapabilities(core), coreLabel = coreName(core);
   // providerSettings (the DeepSeek bridge): the API connection, providers and prices; codexProvider: the Codex endpoint.
   const deepseek = caps.providerSettings === true, codexProvider = caps.codexProvider === true;
@@ -637,8 +638,9 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
       ] : []),
     ];
   };
-  // A short list opens every entry; a long catalog (OpenCode through OpenRouter) opens only the models already changed.
-  const listedModels = models.filter(model => model.hidden !== true), openAll = listedModels.length <= MODEL_ENTRIES_OPEN;
+  // Every entry starts closed (one line per model) except the models already changed, so a short list doesn't
+  // unfold a screen of identical fields per model.
+  const listedModels = models.filter(model => model.hidden !== true);
   const modelEntries = listedModels.map(model => {
     const defaultName = defaultModelName(model), name = customModelName(config.modelNames, coreId, model.model) || defaultName;
     const efforts = effortsOf(model), speeds = speedTiersForModel(model), fast = !!fastTierForModel(model) || speeds.length > 0;
@@ -647,7 +649,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
         {efforts.map((value, index) => <React.Fragment key={value}>{index ? ' · ' : ''}<span data-top-tier={isHighestEffort(value, efforts) || undefined}>{effortName(value)}</span></React.Fragment>)}</span>}
       {fast && <span className="msx-badge">{speeds.length > 1 ? t('{speeds} available', { speeds: speeds.map(tier => tier.name).join(' · ') }) : t('Fast available')}</span>}
     </span>;
-    const customized = openAll || Object.keys(paramsOf(model)).length > 0 || name !== defaultName;
+    const customized = allOpen || Object.keys(paramsOf(model)).length > 0 || name !== defaultName;
     return <ModelOptionsEntry key={model.model} model={model} name={name} defaultName={defaultName} customized={customized} rows={optionRows(model, name)}
       badges={<>{model.isDefault && <span className="msx-badge">{t('Default')}</span>}{customModelName(config.modelNames, coreId, model.model) && <span className="msx-badge">{t('Renamed')}</span>}</>}
       description={(model.description || meta) && <span className="msx-model-desc">{model.description && <span>{model.description}</span>}{meta}</span>}/>;
@@ -655,9 +657,13 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   const modelsEmpty = <p className="msx-empty">{modelQuery.trim() && modelSearch ? t('No matching models') : connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p>;
   const modelsSearch = modelSearch && <input type="search" data-cds="TextInput" className="cds-input cds-reset msx-model-search" aria-label={t('Search models')} placeholder={t('Search models')}
     value={modelQuery} spellCheck={false} autoComplete="off" onChange={event => setModelQuery(event.target.value)}/>;
-  const modelsGroup = <SettingsGroup title={deepseek ? t('Models') : t('{core} models', { core: coreLabel })}>
+  // The list's notes sit under its title rather than after the last entry, where they read as part of that model.
+  const modelsNote = !modelEntries.length ? null : deepseek
+    ? t('Defaults for every DeepSeek session; changes apply from the next request. top_p is not supported by the DeepSeek Harness adapter.')
+    : <>{t('Pick the model new sessions use in Settings › Code › Model and permissions, or in the composer. A default effort set here applies whenever you switch to that model.')}
+      {!takesParams && <> {t('{core} keeps its own context window and output limits, so they aren’t set here.', { core: coreLabel })}</>}</>;
+  const modelsGroup = <SettingsGroup title={deepseek ? t('Models') : t('{core} models', { core: coreLabel })} description={modelsNote}>
     {modelEntries.length ? modelEntries : modelsEmpty}
-    {modelEntries.length > 0 && !takesParams && <p className="msx-note msx-models-note">{t('{core} keeps its own context window and output limits, so they aren’t set here.', { core: coreLabel })}</p>}
   </SettingsGroup>;
 
   // ---- Pricing
@@ -758,7 +764,6 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     {codexProvider && <CodexConnectionGroup core={coreLabel} desktopCall={desktopCall} onReconnect={onReconnect}/>}
     {modelsSearch}
     {modelsGroup}
-    {modelEntries.length > 0 && <p className="msx-note msx-models-note">{t('Pick the model new sessions use in Settings › Code › Model and permissions, or in the composer. A default effort set here applies whenever you switch to that model.')}</p>}
     {codexProvider && <CodexResponseGroup core={coreLabel} desktopCall={desktopCall} connected={connected}/>}
     {codexProvider && <CodexSubagentsGroup core={coreLabel} desktopCall={desktopCall} connected={connected} models={allModels}/>}
     {!codexProvider && providerGroup}
@@ -773,7 +778,6 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     <ConnectionGroup deepseek={deepseek} desktopCall={desktopCall} onReconnect={onReconnect}/>
     {modelsSearch}
     {modelsGroup}
-    <p className="msx-note">{t('Defaults for every DeepSeek session; changes apply from the next request. top_p is not supported by the DeepSeek Harness adapter.')}</p>
     <SourceDisclosure className="msx-advanced" triggerClassName="msx-advanced-trigger" defaultOpen={customized}
       label={<span className="msx-advanced-label"><span className="text-heading-semibold">{t('Advanced')}</span><span className="msx-advanced-hint">{t('Pricing and custom providers')}</span></span>}>
     <div className="msx-advanced-body">

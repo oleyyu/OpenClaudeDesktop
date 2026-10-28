@@ -12,8 +12,8 @@ export function SettingRow({row,error}) {
  </div>;
 }
 
-export function SettingsGroup({title,rows=[],rowErrors={},children}) {
-  return <section className="ss-group"><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{title}</h3><div className="settings-group-dividers">{rows.map(r=><SettingRow key={r.id} row={r} error={rowErrors[r.id]}/>)}{children}</div></section>;
+export function SettingsGroup({title,description=null,rows=[],rowErrors={},children}) {
+  return <section className="ss-group"><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{title}</h3>{description&&<p className="text-footnote text-secondary ss-group-description">{description}</p>}<div className="settings-group-dividers">{rows.map(r=><SettingRow key={r.id} row={r} error={rowErrors[r.id]}/>)}{children}</div></section>;
 }
 
 export const settingRow=(id,label,description,control,extra={})=>({id,label,description,control,...extra});

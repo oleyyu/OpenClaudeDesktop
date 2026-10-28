@@ -58,9 +58,12 @@ export function ModelNameField({ model, names, coreId, onSave, onError }) {
 export function ModelOptionsEntry({ model, name, defaultName, badges = null, description = null, rows = [], rowErrors = {}, customized = false }) {
   const label = <span className="msx-model-head">
     <span className="msx-model-name text-body settings-row-title">{name}{badges}</span>
-    {(name !== defaultName || defaultName !== model.model) && <span className="msx-model-ids">
-      {name !== defaultName && <span>{defaultName}</span>}{defaultName !== model.model && <code className="msx-name-id">{model.model}</code>}</span>}
-    {description}
+    {/* One secondary line: the default name and id, then the description (efforts, Fast), wrapping as needed. */}
+    {(name !== defaultName || defaultName !== model.model || description) && <span className="msx-model-sub">
+      {(name !== defaultName || defaultName !== model.model) && <span className="msx-model-ids">
+        {name !== defaultName && <span>{defaultName}</span>}{defaultName !== model.model && <code className="msx-name-id">{model.model}</code>}</span>}
+      {description}
+    </span>}
   </span>;
   return <div className="msx-model-entry" data-setting-id={`model-${model.model}`} data-model-options={model.model}>
     <SourceDisclosure className="msx-model-disclosure" triggerClassName="msx-model-trigger" defaultOpen={customized} label={label}

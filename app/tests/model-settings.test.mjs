@@ -106,7 +106,7 @@ test('Settings › Models server-renders per-model rows and the price table on D
   t.after(() => i18n.setLocale('en-US'));
   const models = [{ model: 'deepseek-flash', displayName: '4.1 Flash', defaultReasoningEffort: 'high', supportedReasoningEfforts: [{ reasoningEffort: 'off' }, { reasoningEffort: 'high' }, { reasoningEffort: 'max' }] }];
   const config = { modelSettings: { params: { 'deepseek-flash': { maxTokens: 8192, temperature: 0.3, effort: 'max' } }, prices: { 'my-model': { displayName: 'Mine', offPeak: tier(0, 1, 2), peak: tier(0, 2, 4) } } } };
-  const page = (engine, list = models, extra = {}) => render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: list }, engine, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, ...extra }));
+  const page = (engine, list = models, extra = {}) => render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: list }, engine, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, allOpen: true, ...extra }));
   // DeepSeek (providerSettings): unchanged.
   const html = page('deepseek');
   // Per-model options sit on the page (not under Advanced), one collapsible entry per model.
@@ -128,8 +128,10 @@ test('Settings › Models server-renders per-model rows and the price table on D
   const plain = render(React.createElement(SourceModelsSettings, { config: {}, boot: { connected: true, models }, engine: 'deepseek', desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
   assert.ok(plain.includes('Advanced') && plain.includes('Pricing and custom providers'));
   assert.equal(plain.includes('Add model price'), false, 'Advanced (pricing, providers) starts closed when nothing in it was changed');
-  assert.ok(plain.includes('aria-label="4.1 Flash max output tokens"'), 'per-model options are visible outside Advanced');
-  assert.ok(plain.includes('aria-label="4.1 Flash display name"') && plain.includes('aria-label="4.1 Flash image input"'));
+  // An unchanged model is one closed line on the page (outside Advanced); a changed one opens with its options.
+  assert.match(plain, /data-model-options="deepseek-flash"[\s\S]*aria-expanded="false"/);
+  assert.equal(plain.includes('aria-label="4.1 Flash max output tokens"'), false, 'an unchanged model starts closed');
+  assert.ok(html.includes('aria-label="4.1 Flash display name"') && html.includes('aria-label="4.1 Flash image input"'));
 
   // Codex (codexProvider): the endpoint group and the running core's models; no DeepSeek connection, prices,
   // providers, Quick setup, Advanced or customization-only fields.

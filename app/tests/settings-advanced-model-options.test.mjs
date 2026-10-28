@@ -188,7 +188,8 @@ test('Settings › Models: each model’s everyday options sit on the page under
     { model: 'glm-5.3', displayName: 'GLM 5.3', isDefault: true, inputModalities: ['text', 'image'], defaultReasoningEffort: 'high', supportedReasoningEfforts: [{ reasoningEffort: 'low' }, { reasoningEffort: 'high' }] },
     { model: 'text-only', displayName: 'Text Only', inputModalities: ['text'] },
   ];
-  const config = { modelNames: { 'kimi:glm-5.3': 'My GLM', 'opencode:text-only': 'Elsewhere' }, modelSettings: { params: { 'kimi:glm-5.3': { images: false, contextWindow: 131072 } } } };
+  const config = { modelNames: { 'kimi:glm-5.3': 'My GLM', 'opencode:text-only': 'Elsewhere' }, modelSettings: { params: { 'kimi:glm-5.3': { images: false, contextWindow: 131072 }, 'kimi:text-only': { maxTokens: 4096 } } } };
+  // Both entries carry a change for this core, so both start open (an unchanged model is one closed line).
   const page = (core, extra = {}) => render(React.createElement(Models, { config, boot: { connected: true, models: list, core }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, ...extra }));
   const kimi = page({ engine: 'kimi', capabilities: { customization: true } });
   assert.match(kimi, /<h3[^>]*>Kimi Code models<\/h3>/);
@@ -205,7 +206,7 @@ test('Settings › Models: each model’s everyday options sit on the page under
   const codex = page({ engine: 'codex', capabilities: {} });
   assert.equal(codex.includes('context window"'), false);
   assert.ok(codex.includes('Codex keeps its own context window and output limits, so they aren’t set here.'));
-  assert.match(codex, /aria-label="GLM 5\.3 display name"[^>]*value=""/, 'Codex has no names saved');
+  assert.equal(codex.includes('My GLM'), false, 'Codex has no names saved');
   // DeepSeek: the options are outside Advanced (which keeps pricing and custom providers).
   const deepseek = page({ engine: 'deepseek-harness', capabilities: {} });
   assert.ok(deepseek.indexOf('data-model-options="glm-5.3"') < deepseek.indexOf('Pricing and custom providers'));
