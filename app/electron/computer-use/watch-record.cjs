@@ -114,16 +114,20 @@ function createWatchRecord({ native, BrowserWindow, screen, ipcMain = null, app 
   let delivering = false;         // rza
   let pillHeld = false, pillEpoch = 0, pillHoldTimer = null; // YRa Y5 XRa
   let resume = null;              // Q5
-  let pollTimer = null, polling = false, chooserMic = null;
+  let pollTimer = null, polling = null, chooserMic = null; // polling: the drain in flight
   let nowT = 0;                   // the recorder's clock, as of the last drain
 
   // ---- polling: input events, narration and mic state come from the native buffers ----
   // The microphone's buffer is read while recording, while the chooser previews it, and while Done waits for the last
   // narration or the microphone going off.
   const voiceLive = () => recording || !!chooserMic || narrationWaiter !== null || voiceoverStopping !== null;
+  // One drain at a time; a call made meanwhile (Done's last drain) waits for it, then drains what came after it.
   const pollOnce = async () => {
-    if (polling) return;
-    polling = true;
+    while (polling) await polling;
+    polling = drainOnce().finally(() => { polling = null; });
+    return polling;
+  };
+  const drainOnce = async () => {
     try {
       if (recording) {
         const drained = await recorder.drain();
@@ -136,7 +140,6 @@ function createWatchRecord({ native, BrowserWindow, screen, ipcMain = null, app 
         for (const state of voice?.micStates ?? []) onMicState(state);
       }
     } catch (error) { log.warn?.("[watch-record] drain failed", error); }
-    finally { polling = false; }
   };
   const ensurePolling = () => {
     if (pollTimer) return;

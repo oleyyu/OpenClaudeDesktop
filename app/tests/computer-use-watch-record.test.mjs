@@ -400,6 +400,35 @@ test('Done builds the demonstration, holds it for the window that asked, and han
   assert.ok(model.demonstrationRows(parsed, model.demonstrationLead(parsed)).some((row) => row.kind === 'action' && row.action.verb === 'Clicked'));
 });
 
+test('Done drains the input once more even when a timer poll is mid-drain as it stops the recorder', async () => {
+  // A tick's drain is in flight while the recorder stops; the last click is buffered after that drain's snapshot.
+  const queued = [{ kind: 'leftMouseDown', t: 10, x: 20, y: 30, modifiers: 0 }, { kind: 'leftMouseUp', t: 40, x: 20, y: 30, modifiers: 0 }];
+  const late = [{ kind: 'leftMouseDown', t: 500, x: 70, y: 80, modifiers: 0 }, { kind: 'leftMouseUp', t: 520, x: 70, y: 80, modifiers: 0 }];
+  let stopping = false, hung = null, gate = null;
+  const h = harness({ nativeOverrides: {
+    watchRecordStop: async () => { stopping = true; await new Promise((resolve) => { hung = resolve; }); return {}; },
+    watchRecordDrain: async () => {
+      if (stopping && !gate) {
+        gate = new Promise((resolve) => setTimeout(resolve, 30));
+        queued.push(...late);
+        hung();
+        await gate;
+        return { events: [], nowT: 600 };
+      }
+      const out = queued.splice(0);
+      return { events: out, nowT: 600 };
+    },
+  } });
+  const started = h.start({ sessionId: 's1' });
+  await h.answerChooser();
+  assert.equal(await started, watchRecord.RESULT.Started);
+  await settle(80);
+  await h.pillCall('done');
+  const taken = await h.recorder.take(h.requester.id);
+  assert.match(taken.message, /clicked at \(20, 30\)/);
+  assert.match(taken.message, /clicked at \(70, 80\)/, 'the click buffered during the tick\'s drain is kept');
+});
+
 test('a recording shorter than two frames is dropped', async () => {
   const h = harness();
   const started = h.start();
