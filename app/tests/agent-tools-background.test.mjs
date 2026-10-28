@@ -372,6 +372,10 @@ test('WebFetch: a stopped turn ends a fetch whose body stalls after the headers'
   assert.equal(outcome, 'The fetch was stopped.');
 });
 
+test('WebFetch keeps a page whose body is wrapped in a form', () => {
+  assert.equal(webTool.htmlToMarkdown('<html><head><title>Docs</title></head><body><form id="form1"><h1>Install guide</h1><p>Run setup.exe then reboot.</p><button>Go</button></form></body></html>'), '# Docs\n\n# Install guide\n\nRun setup.exe then reboot.');
+});
+
 // ---------------------------------------------------------------- Which cores get them
 
 test('only cores without their own get Monitor, the cron tools and WebFetch; the server lists and calls them', async (t) => {

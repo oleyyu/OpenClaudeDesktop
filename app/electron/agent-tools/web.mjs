@@ -40,7 +40,7 @@ export function htmlToMarkdown(html, base = null) {
   const body = /<body[^>]*>([\s\S]*)<\/body>/i.exec(text);
   if (body) text = body[1];
   text = text.replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|noscript|template|svg|canvas|iframe|head|nav|footer|form|button|select)\b[\s\S]*?<\/\1\s*>/gi, "");
+    .replace(/<(script|style|noscript|template|svg|canvas|iframe|head|nav|footer|button|select)\b[\s\S]*?<\/\1\s*>/gi, "");
   const absolute = (href) => { if (!base) return href; try { return new URL(href, base).href; } catch { return href; } };
   // <pre> keeps its text as a fenced block (placeholders, so the rest of the clean-up leaves it alone).
   const blocks = [];
@@ -69,7 +69,7 @@ export function htmlToMarkdown(html, base = null) {
     .replace(/<tr\b[^>]*>/gi, "\n| ").replace(/<\/tr>/gi, " |")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<hr\b[^>]*>/gi, "\n\n---\n\n")
-    .replace(/<\/?(p|div|section|article|main|header|aside|table|thead|tbody|figure|figcaption|dl|dt|dd)\b[^>]*>/gi, "\n\n")
+    .replace(/<\/?(p|div|section|article|main|header|aside|table|thead|tbody|figure|figcaption|dl|dt|dd|form)\b[^>]*>/gi, "\n\n")
     .replace(/<[^>]+>/g, "");
   text = decode(text)
     .replace(/[ \t\f\v ]+/g, " ")
