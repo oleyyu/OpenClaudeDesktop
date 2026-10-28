@@ -81,6 +81,28 @@ test('Gemini project hooks Gemini has not trusted yet are named before the agent
   assert.equal(gemini.folderNotice(ctx, project), null)
 })
 
+test('Gemini sign-in whose CLI cannot start fails once and leaves no login folder', async () => {
+  const home = tmp(), stateDir = tmp()
+  const ctx = { env: { HOME: home, PATH: process.env.PATH }, stateDir, log: () => {}, commandLine: (args) => ({ command: path.join(home, 'gone', 'gemini'), args }) }
+  await assert.rejects(gemini.startLogin(ctx, { onDone: () => assert.fail('a failed start reports by throwing only') }))
+  assert.deepEqual(fs.readdirSync(stateDir), [])
+})
+
+test('Gemini sign-in whose authenticate fails before a sign-in page fails by throwing only', async () => {
+  const home = tmp(), stateDir = tmp()
+  const agent = path.join(home, 'agent.mjs')
+  write(agent, `import readline from 'node:readline'
+readline.createInterface({ input: process.stdin }).on('line', (line) => {
+  const { id, method } = JSON.parse(line)
+  const reply = method === 'initialize' ? { result: { protocolVersion: 1 } } : { error: { code: -32000, message: 'auth broke' } }
+  process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, ...reply }) + '\\n')
+})`)
+  const ctx = { env: { HOME: home, PATH: process.env.PATH }, stateDir, log: () => {}, commandLine: () => ({ command: process.execPath, args: [agent] }) }
+  await assert.rejects(gemini.startLogin(ctx, { onDone: () => assert.fail('a failed start reports by throwing only') }), /auth broke/)
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  assert.deepEqual(fs.readdirSync(stateDir), [])
+})
+
 test('MiniMax core settings: config.yaml blocks read and one key written, the rest of the file kept', async () => {
   const { MINIMAX_CORE_SETTINGS, readMinimaxSettings, writeMinimaxSetting } = await import('../packages/acp-bridge/src/agents/minimax.js')
   const home = tmp(), file = path.join(home, '.minimax', 'config.yaml')
@@ -100,6 +122,17 @@ test('MiniMax core settings: config.yaml blocks read and one key written, the re
   write(file, 'memory: {enabled: true}\n')
   assert.throws(() => writeMinimaxSetting(file, 'memory.enabled', false), /can’t edit/)
   assert.ok(MINIMAX_CORE_SETTINGS.some((def) => def.key === 'review.mode' && def.type === 'select'))
+})
+
+test('MiniMax core settings: quoted values in the block read back unchanged after a write', async () => {
+  const { readMinimaxSettings, writeMinimaxSetting } = await import('../packages/acp-bridge/src/agents/minimax.js')
+  const home = tmp(), file = path.join(home, '.minimax', 'config.yaml')
+  write(file, 'memory:\n  enabled: true\n  note: "say \\"hi\\" #1" # why\n  version: "2.0"\n  dir: "C:\\\\x"\n  quip: \'it\'\'s # fine\'\n  tags: ["a, b", \'c\']\n')
+  const before = { enabled: true, note: 'say "hi" #1', version: '2.0', dir: 'C:\\x', quip: "it's # fine", tags: ['a, b', 'c'] }
+  assert.deepEqual(readMinimaxSettings(file).memory, before)
+  writeMinimaxSetting(file, 'memory.proactive', true)
+  writeMinimaxSetting(file, 'memory.proactive', false)
+  assert.deepEqual(readMinimaxSettings(file).memory, { ...before, proactive: false })
 })
 
 test('MiniMax skills follow config.yaml skills.external: disabled sources dropped, priority order, walkUp', async () => {

@@ -29,3 +29,29 @@ test('Gemini rewind with code: edits after the dropped prompt go back newest fir
   assert.equal(fs.readFileSync(c, 'utf8'), 'edited later by the user')
   fs.rmSync(base, { recursive: true, force: true })
 })
+
+test('Gemini rewind drops the turn at its position when a later prompt repeats its text', () => {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'gem-rewind-'))
+  const work = path.join(base, 'work'); fs.mkdirSync(work)
+  const env = { HOME: base, GEMINI_CLI_HOME: base }
+  const chats = path.join(base, '.gemini', 'tmp', 'proj', 'chats'); fs.mkdirSync(chats, { recursive: true })
+  const sessionId = 'abcdef12-0000-0000-0000-000000000000'
+  const a = path.join(work, 'a.txt'); fs.writeFileSync(a, 'v1')
+  const edit = (file, originalContent, newContent) => ({ resultDisplay: { diffStat: { model_added_lines: 1 }, fileDiff: '', filePath: file, fileName: path.basename(file), originalContent, newContent, isNewFile: false } })
+  const lines = [
+    { sessionId, projectHash: 'h', startTime: '2026-10-01T00:00:00Z', lastUpdated: '2026-10-01T00:00:00Z' },
+    { id: 'u0', type: 'user', content: [{ text: '<session_context>tree</session_context>\nstart' }] },
+    { id: 'g0', type: 'gemini', content: 'ok', toolCalls: [] },
+    { id: 'u1', type: 'user', content: [{ text: 'continue' }] },
+    { id: 'g1', type: 'gemini', content: 'ok', toolCalls: [edit(a, 'v0', 'v1')] },
+    { id: 'u2', type: 'user', content: [{ text: 'continue' }] },
+    { id: 'g2', type: 'gemini', content: 'ok', toolCalls: [] },
+  ]
+  const file = path.join(chats, `session-2026-10-01T00-00-${sessionId.slice(0, 8)}.jsonl`)
+  fs.writeFileSync(file, lines.map((line) => JSON.stringify(line)).join('\n') + '\n')
+  assert.deepEqual(gemini.revertFiles({ env }, sessionId, 1, 'continue'), { restored: ['a.txt'], skipped: [] })
+  assert.equal(fs.readFileSync(a, 'utf8'), 'v0')
+  assert.equal(gemini.revertSession({ env }, sessionId, 1, null, 'continue'), true)
+  assert.match(fs.readFileSync(file, 'utf8'), /"\$rewindTo":"u1"/)
+  fs.rmSync(base, { recursive: true, force: true })
+})
