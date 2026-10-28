@@ -1687,22 +1687,26 @@ export default {
       throw error
     }
     let finished = false
-    // quiet: the attempt fails by throwing, before its loginId reached the client, so onDone reports nothing.
-    const finish = (success, error, quiet = false) => {
+    let started = false
+    let failure = null
+    // A failure before the sign-in URL is returned (its loginId not yet with the client) is reported by throwing, not onDone.
+    const finish = (success, error) => {
       if (finished) return
       finished = true
+      if (!success) failure = error
       void host.stop().finally(() => fs.rmSync(dir, { recursive: true, force: true }))
-      if (!quiet) onDone(success, error)
+      if (started || success) onDone(success, error)
     }
     host.call('authenticate', { methodId: 'oauth-personal' }, 0).then(() => finish(true), (error) => finish(false, error?.message ?? String(error)))
     for (let wait = 0; wait < 300; wait++) {
       const url = fs.existsSync(capture) ? fs.readFileSync(capture, 'utf8').trim().split('\n').find((entry) => /^https:\/\//.test(entry)) : null
-      if (url) return { url, cancel: () => finish(false, 'Sign-in cancelled.') }
+      if (url && !failure) { started = true; return { url, cancel: () => finish(false, 'Sign-in cancelled.') } }
       if (finished || host.exited) break
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
-    finish(false, 'Gemini did not open a sign-in page.', true)
-    throw new Error(`Gemini CLI did not start the Google sign-in.${host.stderrTail(400)}`)
+    const reason = failure
+    finish(false, 'Gemini did not open a sign-in page.')
+    throw new Error(`Gemini CLI did not start the Google sign-in.${reason ? ` ${reason}` : ''}${host.stderrTail(400)}`)
   },
   /** Gemini's own /auth logout (authCommand.ts): the cached credentials and the auth selection both go. */
   logout(ctx) {

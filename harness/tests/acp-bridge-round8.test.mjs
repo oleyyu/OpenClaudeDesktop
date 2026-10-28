@@ -88,6 +88,21 @@ test('Gemini sign-in whose CLI cannot start fails once and leaves no login folde
   assert.deepEqual(fs.readdirSync(stateDir), [])
 })
 
+test('Gemini sign-in whose authenticate fails before a sign-in page fails by throwing only', async () => {
+  const home = tmp(), stateDir = tmp()
+  const agent = path.join(home, 'agent.mjs')
+  write(agent, `import readline from 'node:readline'
+readline.createInterface({ input: process.stdin }).on('line', (line) => {
+  const { id, method } = JSON.parse(line)
+  const reply = method === 'initialize' ? { result: { protocolVersion: 1 } } : { error: { code: -32000, message: 'auth broke' } }
+  process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, ...reply }) + '\\n')
+})`)
+  const ctx = { env: { HOME: home, PATH: process.env.PATH }, stateDir, log: () => {}, commandLine: () => ({ command: process.execPath, args: [agent] }) }
+  await assert.rejects(gemini.startLogin(ctx, { onDone: () => assert.fail('a failed start reports by throwing only') }), /auth broke/)
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  assert.deepEqual(fs.readdirSync(stateDir), [])
+})
+
 test('MiniMax core settings: config.yaml blocks read and one key written, the rest of the file kept', async () => {
   const { MINIMAX_CORE_SETTINGS, readMinimaxSettings, writeMinimaxSetting } = await import('../packages/acp-bridge/src/agents/minimax.js')
   const home = tmp(), file = path.join(home, '.minimax', 'config.yaml')
