@@ -10,6 +10,17 @@ const { ChromeBridgeClient } = require("./bridge-client.cjs");
 
 const CALL_TIMEOUT_MS = 60_000;
 const BATCH_TIMEOUT_MS = 180_000;
+// How long the app waits for a call: never less than the extension may take for it, or a call still running would be
+// reported as timed out. A step may wait for a page load (claude-ext/tabs.js, 20 s) plus a script's own timeout_ms
+// (javascript_tool, up to 60 s); STEP_MARGIN_MS covers the load, the debugger and the round trip.
+const STEP_MARGIN_MS = 30_000;
+const scriptMs = (input) => Number.isInteger(input?.timeout_ms) ? Math.min(Math.max(input.timeout_ms, 0), 60_000) : 10_000;
+function timeoutFor(name, args) {
+  if (name === "javascript_tool") return Math.max(CALL_TIMEOUT_MS, scriptMs(args) + STEP_MARGIN_MS);
+  if (name !== "browser_batch") return CALL_TIMEOUT_MS;
+  const steps = Array.isArray(args?.actions) ? args.actions : [];
+  return Math.max(BATCH_TIMEOUT_MS, steps.reduce((sum, step) => sum + STEP_MARGIN_MS + (step?.name === "javascript_tool" ? scriptMs(step.input) : 0), 0));
+}
 const MAX_ASKS_PER_CALL = 5;
 const NOT_CONNECTED = "Chrome isn't connected to OpenClaude Desktop. The user needs Chrome open with the OpenClaude Desktop Bridge extension loaded (claude-ext/) and its native host registered (node app/electron/browser/install.cjs); claude-ext/README.md explains both. Tell the user; don't retry until they say it's set up.";
 
@@ -66,7 +77,7 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
       if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
       const bridge = await ensureClient();
       // signal: Stop gives up on the call and tells the extension to stop it (a batch runs no further steps).
-      return bridge.executeTool(name, input, { allowedHosts: [...sites.allowed], timeoutMs: name === "browser_batch" ? BATCH_TIMEOUT_MS : CALL_TIMEOUT_MS, signal });
+      return bridge.executeTool(name, input, { allowedHosts: [...sites.allowed], timeoutMs: timeoutFor(name, input), signal });
     };
 
     if (name !== "browser_batch") {

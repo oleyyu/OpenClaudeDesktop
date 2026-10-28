@@ -76,8 +76,8 @@ function fakeExtension({ pages = {} } = {}) {
   const client = {
     closed: false,
     on() {},
-    async executeTool(name, args, { allowedHosts }) {
-      sent.push({ name, args, allowedHosts });
+    async executeTool(name, args, { allowedHosts, timeoutMs }) {
+      sent.push({ name, args, allowedHosts, timeoutMs });
       const blocked = (url) => { const host = new URL(url).host; if (!allowedHosts.includes('*') && !allowedHosts.includes(host)) throw Object.assign(new BridgeError('site_not_allowed', `not allowed: ${host}`), { data: { host, url } }); };
       if (name === 'browser_batch') {
         const steps = [];
@@ -120,6 +120,20 @@ test('a batch that reaches a new site asks, then runs only the steps that hadnâ€
   assert.deepEqual(result.steps.map((step) => [step.name, step.ok]), [['tabs_context', true], ['navigate', true], ['navigate', false]]);
   assert.equal(result.completed, 2);
   assert.deepEqual({ step: result.failed.step, code: result.failed.code, host: result.failed.host }, { step: 3, code: 'site_declined', host: 'b.test' });
+});
+
+test('the app waits at least as long as the extension may take for a call', async () => {
+  const extension = fakeExtension({ pages: { current: 'https://a.test/' } });
+  const service = createChromeBridgeService({ connect: extension.connect });
+  await service.call('s1', 'tabs_context', {}, { approve: async () => true });
+  await service.call('s1', 'javascript_tool', { code: '1', timeout_ms: 60000 });
+  await service.call('s1', 'browser_batch', { actions: Array.from({ length: 10 }, () => ({ name: 'tabs_context' })) });
+  await service.call('s1', 'browser_batch', { actions: Array.from({ length: 4 }, () => ({ name: 'javascript_tool', input: { code: '1', timeout_ms: 60000 } })) });
+  const [plain, script, tenSteps, fourScripts] = extension.sent.slice(-4).map((call) => call.timeoutMs);
+  assert.equal(plain, 60000);
+  assert.ok(script > 60000 + 20000, `javascript_tool with timeout_ms 60000 waits ${script} ms`);
+  assert.ok(tenSteps > 10 * 20000, `ten steps that may each wait for a page load: ${tenSteps} ms`);
+  assert.ok(fourScripts > 4 * 60000, `four 60 s scripts: ${fourScripts} ms`);
 });
 
 test('no extension connected: one clear error for the model', async () => {

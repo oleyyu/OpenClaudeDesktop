@@ -96,11 +96,8 @@ class ChromeBridgeClient extends EventEmitter {
     if (this.closed) return Promise.reject(new BridgeError("disconnected", "The Chrome extension disconnected."));
     if (signal?.aborted) return Promise.reject(new BridgeError("stopped", "The turn was stopped."));
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(toolUseId);
-        signal?.removeEventListener?.("abort", stop);
-        reject(new BridgeError("timeout", `The Chrome extension didn't answer within ${Math.round(timeoutMs / 1000)} s.`));
-      }, timeoutMs);
+      // Timed out: the extension is told to stop too, so nothing more runs after the model hears the call failed.
+      const timer = setTimeout(() => this.cancel(toolUseId)?.reject(new BridgeError("timeout", `The Chrome extension didn't answer within ${Math.round(timeoutMs / 1000)} s. It was told to stop; steps it had begun may have run.`)), timeoutMs);
       const stop = () => this.cancel(toolUseId)?.reject(new BridgeError("stopped", "The turn was stopped."));
       const settled = (fn) => (value) => { signal?.removeEventListener?.("abort", stop); fn(value); };
       this.pending.set(toolUseId, { resolve: settled(resolve), reject: settled(reject), timer });

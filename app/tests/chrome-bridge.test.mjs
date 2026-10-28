@@ -86,7 +86,8 @@ test('the host routes execute_tool to the extension and the answer back to the a
     host.stdin.write(encode({ method: 'notification', params: { type: 'tab_changed', tabId: 7 }, tool_use_id: null }));
     await until(() => heardByB.some((params) => params.type === 'tab_changed'));
 
-    await assert.rejects(a.executeTool('slow', {}, { timeoutMs: 100 }), (error) => error.code === 'timeout');
+    await assert.rejects(a.executeTool('slow', {}, { timeoutMs: 100, toolUseId: 'toolu_slow' }), (error) => error.code === 'timeout');
+    await until(() => toExtension.find((message) => message.method === 'cancel_tool' && message.tool_use_id === 'toolu_slow'));
 
     // Stop: the call is given up at once and the extension is told to stop it; b can't cancel a's call.
     const stopper = new AbortController();
@@ -97,7 +98,7 @@ test('the host routes execute_tool to the extension and the answer back to the a
     await assert.rejects(stopped, (error) => error.code === 'stopped');
     await until(() => toExtension.some((message) => message.method === 'cancel_tool'));
     await wait(100);
-    assert.deepEqual(toExtension.filter((message) => message.method === 'cancel_tool'), [{ method: 'cancel_tool', params: {}, tool_use_id: 'toolu_3' }]);
+    assert.deepEqual(toExtension.filter((message) => message.method === 'cancel_tool' && message.tool_use_id !== 'toolu_slow'), [{ method: 'cancel_tool', params: {}, tool_use_id: 'toolu_3' }]);
     assert.equal(a.pending.size, 0);
 
     const exited = new Promise((resolve) => host.once('exit', resolve));
