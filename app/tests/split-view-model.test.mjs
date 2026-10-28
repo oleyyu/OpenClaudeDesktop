@@ -194,12 +194,16 @@ test('layout persistence: session panes as cells (new-session panes dropped), we
   state = split.setRowSplit(split.setColWeights(state, [2, 1, 1]), 0.7);
   assert.deepEqual(splitLayout(state), { current: 'a', split: { panes: [{ sessionId: 'b', col: 1, row: 0 }, { sessionId: 'c', col: 0, row: 1 }], colWeights: null, rowSplit: 0.7, active: 2 } });
   assert.deepEqual(splitLayout(withPrimary('a')), { current: 'a', split: null });
-  const restored = restoreSplit(withPrimary('a', 3), { panes: [{ sessionId: 'b', col: 1, row: 0 }, { sessionId: 'gone', col: 2, row: 0 }, { sessionId: 'c', col: 1, row: 1 }], colWeights: [1, 3], rowSplit: 0.3, active: 2 },
+  const restored = restoreSplit(withPrimary('a', 3), { panes: [{ sessionId: 'b', col: 1, row: 0 }, { sessionId: 'gone', col: 2, row: 0 }, { sessionId: 'c', col: 1, row: 1 }], colWeights: [1, 3], rowSplit: 0.3, active: 3 },
     { known: (id) => id !== 'gone' }).state;
   assert.deepEqual(cells(restored), ['b@1:0', 'c@1:1']);
   assert.deepEqual(restored.colWeights, [1, 3]);
   assert.equal(restored.rowSplit, 0.3);
-  assert.equal(restored.active, 2);
+  assert.equal(restored.active, 2, 'the focused session keeps the focus after a pane before it is dropped');
+  const shifted = { panes: [{ sessionId: 'p', col: 1, row: 0 }, { sessionId: 'q', col: 2, row: 0 }, { sessionId: 'r', col: 3, row: 0 }], active: 2 };
+  const kept = restoreSplit(withPrimary('a', 4), shifted, { known: (id) => id !== 'p' }).state;
+  assert.equal(kept.sides[kept.active].current, 'q');
+  assert.equal(savedSplit(shifted, { known: (id) => id !== 'q' }).active, 0, 'a dropped focused pane hands the focus to the primary');
   const old = restoreSplit(withPrimary('a'), { sessionId: 'b', ratio: 0.6, active: 1 }).state;
   assert.deepEqual(cells(old), ['b@1:0']);
   assert.deepEqual(old.colWeights, [0.6, 0.4]);

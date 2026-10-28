@@ -32,6 +32,7 @@ import {questionOutcome,questionReceipt,toolOutputImages} from './generic-tool-m
 import {SourceQuestionReceipt,notePendingQuestion} from './source-question-receipt.jsx';
 import {SourceToolImages} from './source-tool-images.jsx';
 import { isMediaItem, mediaItemRow } from './media-item-model.mjs';
+import { filePreviewUrl } from './file-preview-model.mjs';
 import {computerUseAction} from './computer-use-model.mjs';
 import {SourceComputerUseStep} from './source-computer-use.jsx';
 import { SourceMarkdownSelection } from './source-markdown-selection.jsx';
@@ -533,7 +534,7 @@ function Diff({ value = "", scopeKey, ...props }) {
 const IMAGE_URL = /^(?:https?:|data:image\/)/i;
 function attachmentSource(part) {
   if (typeof part.path === "string" && part.path.startsWith("/"))
-    return encodeURI(`file://${part.path}`);
+    return filePreviewUrl(part.path);
   const url = part.imageUrl || part.url || part.image_url;
   return typeof url === "string" && IMAGE_URL.test(url) ? url : null;
 }
