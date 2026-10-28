@@ -650,8 +650,11 @@ export function workflowNotices(input, originMeta = null) {
     const status = NOTICE_STATUS[terminal?.status] ?? NOTICE_STATUS[tagOf(block, 'status')]
     if (!status) continue
     const name = tagOf(block, 'description') ?? named?.[1] ?? (single ? text(meta.title) : null) ?? 'Dynamic workflow'
-    const error = text(terminal?.error) ?? (summary.replace(/^Workflow "[\s\S]*?" /, '').replace(/\.$/, '').trim() || 'Unknown error')
-    const said = status === 'completed' ? `Dynamic workflow "${name}" completed` : status === 'failed' ? `Dynamic workflow "${name}" failed: ${error}` : `Dynamic workflow "${name}" was stopped`
+    // ZCode's sentence after the name: 'errored: <why>', 'failed: <why>', 'failed' or 'failed because <why>'.
+    const rest = summary.replace(/^Workflow "[\s\S]*?" /, '').replace(/\.$/, '').trim()
+    const error = text(terminal?.error) ?? /^(?:errored|failed):\s*([\s\S]+)$/.exec(rest)?.[1]
+    const failed = error ? `failed: ${error}` : /^failed\b/.test(rest) ? rest : `failed: ${rest || 'Unknown error'}`
+    const said = status === 'completed' ? `Dynamic workflow "${name}" completed` : status === 'failed' ? `Dynamic workflow "${name}" ${failed}` : `Dynamic workflow "${name}" was stopped`
     const taskId = tagOf(block, 'task-id') ?? (single ? text(meta.workId) : null)
     const durationMs = Number(terminal?.durationMs)
     let notice = '<task-notification>'

@@ -331,6 +331,8 @@ export async function main() {
     for (const thread of threads.values()) {
       thread.loaded = false
       thread.subscribed = false
+      // Re-read on the next use: ZCode reconciles the runs that ended with it (whether each can resume).
+      thread.history = null
       // A live workflow run was a task of that process: it ended with it.
       thread.projector.workflowsInterrupted()
       clearInterval(thread.workflowTimer)
@@ -816,7 +818,13 @@ export async function main() {
     const runs = new Map()
     for (const entry of found) {
       const watched = thread.projector.workflowEntry(entry.item.id)
-      if (watched) { entry.item.workflowRun = watched.state.run; continue }
+      if (watched) {
+        // A run settled here (ZCode stopped while it ran) takes ZCode's verdict on whether it can resume.
+        const summary = watched.state.run.status !== 'running' ? byRun.get(watched.state.run.runId) : null
+        if (summary) thread.projector.workflowSettle(entry.item.id, summary)
+        entry.item.workflowRun = watched.state.run
+        continue
+      }
       entry.state = workflowState(entry.item.workflowRun)
       bindWorkflowRun(entry.state, byCall.get(entry.item.id)?.runId)
       const runId = entry.state.run.runId
@@ -867,20 +875,26 @@ export async function main() {
   async function pollWorkflows(thread) {
     if (thread.workflowPolling) return
     const live = thread.projector.liveWorkflows()
-    if (!live.length || !agent || agent.closed) {
+    // A deleted (or replaced) thread polls no more.
+    if (!live.length || !agent || agent.closed || threads.get(thread.id) !== thread) {
       clearInterval(thread.workflowTimer)
       thread.workflowTimer = null
       return
     }
     thread.workflowPolling = true
     try {
+      // Configure can replace a card's run while its journal is read: what was read is the old run's, not the card's.
+      const same = (entry) => thread.projector.workflowEntry(entry.callId)?.state.run.runId === entry.runId
       for (const entry of live) {
-        thread.projector.workflowEvents(entry.callId, await workflowEventsOf(thread.id, entry.runId, entry.cursor))
+        // One run's journal failing to read holds back none of the others.
+        const events = await workflowEventsOf(thread.id, entry.runId, entry.cursor).catch((error) => { log(`zcode-bridge: workflow ${entry.runId} progress: ${error?.message ?? error}`); return null })
+        if (!events || !same(entry)) continue
+        thread.projector.workflowEvents(entry.callId, events)
         // The run's task ended and its journal has not settled it: its summary (else the task's status) does.
         const current = thread.projector.workflowEntry(entry.callId)
         if (current?.state.taskEnded && current.state.run.status === 'running') {
           const summary = (await workflowSummaries(thread.id).catch(() => [])).find((candidate) => candidate.runId === entry.runId)
-          thread.projector.workflowSettle(entry.callId, summary ?? null)
+          if (same(entry)) thread.projector.workflowSettle(entry.callId, summary ?? null)
         }
       }
     } catch (error) {
@@ -1489,7 +1503,8 @@ export async function main() {
     if (thread.dynamicWorkflows !== true) return { ...permissionAnswer(params, 'decline').response, reason: 'Dynamic workflows are off for this session. Nothing was started.' }
     // A read-only mode (Plan, Chat, review) never runs one: ZCode runs a workflow's agents unconfined once the run is
     // allowed, so one click would let them change the project while the mode still says read-only.
-    if (isReadOnlyMode(thread.permission.mode)) return { ...permissionAnswer(params, 'decline').response, reason: `This session is in a read-only mode (${thread.permission.mode}), and a workflow's agents can change files and run commands. Nothing was started. Ask the user to switch to another mode to run a workflow.` }
+    const readOnlyRefusal = () => ({ ...permissionAnswer(params, 'decline').response, reason: `This session is in a read-only mode (${thread.permission.mode}), and a workflow's agents can change files and run commands. Nothing was started. Ask the user to switch to another mode to run a workflow.` })
+    if (isReadOnlyMode(thread.permission.mode)) return readOnlyRefusal()
     if (thread.permission.mode === 'bypass') return permissionAnswer(params, 'accept').response
     // The client never answers approvals (approvalPolicy "never", e.g. the workflow runner): refuse now, with a reason.
     if (thread.permission.approvals === false) return noApprovalAnswer(params)
@@ -1510,6 +1525,8 @@ export async function main() {
       decision = 'decline'
     }
     const accepted = decision === 'accept' || decision === 'acceptForSession'
+    // Allowed after the session switched to a read-only mode while the card was open: refused, as if asked now.
+    if (accepted && isReadOnlyMode(thread.permission.mode)) return readOnlyRefusal()
     // Answered after a mode change (a card left open across a switch): no grant, it would belong to the old mode.
     const answer = permissionAnswer(params, accepted ? decision : decision === 'cancel' ? 'cancel' : 'decline', { grantable: !!grantKey && samePermission(thread.permission, askedIn) && !isReadOnlyMode(thread.permission.mode) })
     if (answer.grant) thread.grants.add(grantKey)
@@ -2496,6 +2513,8 @@ export async function main() {
           if (thread.projector.turn) await request('session/stop', { sessionId: threadId }).catch(() => {})
           await v4Command(threadId, 'deleteSession').catch(() => request('session/close', { sessionId: threadId }).catch(() => {}))
           threads.delete(threadId)
+          clearInterval(thread.workflowTimer)
+          thread.workflowTimer = null
         }
         await deleteSessionRows(paths.sessionDb, threadId).catch((error) => log(`zcode-bridge: delete history: ${error.message}`))
         store.markDeleted(threadId)
