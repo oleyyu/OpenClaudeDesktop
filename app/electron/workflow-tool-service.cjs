@@ -109,7 +109,7 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     ledger.poolPromise ??= load('../third-party/codex-workflows-runner/src/shared-budget.js').then(({ createSharedBudget }) => {
       ledger.pool = createSharedBudget(path.join(dataRoot, threadId, 'workflows', 'budgets'), ledger.main);
       return ledger.pool;
-    });
+    }).catch((error) => { ledger.poolPromise = null; throw error; }); // a failed setup is tried again by the next launch
     const pool = await ledger.poolPromise;
     return { ...pool.descriptor, baseline: state.baseline ?? 0 };
   }

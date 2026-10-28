@@ -103,6 +103,29 @@ test('a workflow started by a scheduled prompt relays no earlier typed message; 
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('a shared budget that failed to set up is set up again by the next launch', async () => {
+  const { createWorkflowToolService } = require('../electron/workflow-tool-service.cjs');
+  const { resolveWorkflowSettings } = await import('../electron/prefs/workflow-settings.mjs');
+  const root = tmp('cd-wf-pool-'), started = [];
+  const config = { threadIds: ['t1'], cwd: root, model: 'm' };
+  const workflowService = { start: async (params) => { started.push(params); return { id: params.runId, transcriptDir: path.join(root, 'runs', params.runId) }; } };
+  const service = createWorkflowToolService({ workflowService, getConfig: () => config, settings: () => resolveWorkflowSettings({ config }), dataRoot: path.join(root, 'sessions'), home: root,
+    updateConfig() {}, requestApproval: async () => ({ approved: true }), startTurn: async () => {} });
+  const script = 'export const meta={name:"Audit",description:"one agent"};\nreturn await agent("x")';
+  const budgets = path.join(root, 'sessions', 't1', 'workflows', 'budgets');
+  try {
+    await service.turnStart({ threadId: 't1', input: [{ type: 'text', text: 'audit it +300k' }], model: 'm', cwd: root, sandboxPolicy: { type: 'workspaceWrite' } }, { permission: 'auto', mode: 'code' });
+    // The budgets folder can't be made (a file in its place, like a full disk): this launch fails…
+    fs.mkdirSync(path.dirname(budgets), { recursive: true });
+    fs.writeFileSync(budgets, '');
+    await assert.rejects(service.launch({ script }, { sessionId: 't1', cwd: root }));
+    // …and once it can, the next one runs with the budget.
+    fs.rmSync(budgets);
+    await service.launch({ script }, { sessionId: 't1', cwd: root });
+    assert.equal(started.at(-1).budgetTotal, 300000);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('pausing a run holds an agent already queued for a slot until Resume', { timeout: 60000 }, async () => {
   const dir = tmp('cd-wf-pause-'), cwd = path.join(dir, 'ws'), home = path.join(dir, 'home');
   fs.mkdirSync(cwd, { recursive: true }); fs.mkdirSync(home, { recursive: true }); fs.mkdirSync(path.join(dir, 'run'));
