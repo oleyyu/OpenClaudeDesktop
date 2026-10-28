@@ -217,6 +217,19 @@ modes = ["default", "yolo"]
   assert.equal(policyDecision(loaded, { name: 'run_shell_command', args: { command: 'git pushx' } }), null)
   assert.equal(policyDecision(loaded, { name: 'mcp_github_merge_pull_request', args: {}, mode: 'yolo' })?.decision, 'ask_user')
   assert.equal(policyDecision(loaded, { name: 'mcp_github_merge_pull_request', args: {}, mode: 'autoEdit' }), null, 'a rule limited to other modes')
+  const underscored = parsePolicyToml(`[[rule]]
+toolName = "mcp_my_server_*"
+decision = "ask_user"
+priority = 10
+
+[[rule]]
+mcpName = "code_desktop"
+toolName = "Delete"
+decision = "ask_user"
+priority = 10
+`)
+  assert.equal(policyDecision(underscored, { name: 'mcp_my_server_delete_repo', servers: ['my_server'] })?.decision, 'ask_user', 'a server name with an underscore')
+  assert.equal(policyDecision(underscored, { name: 'mcp_code_desktop_Delete', servers: ['code', 'code_desktop'] })?.decision, 'ask_user', 'the longest configured server name')
   assert.equal(stableArgs({ b: 1, a: 'x' }), '{\u0000"a":"x"\u0000,\u0000"b":1\u0000}')
   assert.deepEqual(commandParts('a; b | c'), ['a; b | c', 'a', 'b', 'c'])
   assert.equal(geminiToolName({ toolCallId: 'run_shell_command-1791-3' }), 'run_shell_command')
