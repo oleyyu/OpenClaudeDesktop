@@ -81,6 +81,13 @@ test('Gemini project hooks Gemini has not trusted yet are named before the agent
   assert.equal(gemini.folderNotice(ctx, project), null)
 })
 
+test('Gemini sign-in whose CLI cannot start fails once and leaves no login folder', async () => {
+  const home = tmp(), stateDir = tmp()
+  const ctx = { env: { HOME: home, PATH: process.env.PATH }, stateDir, log: () => {}, commandLine: (args) => ({ command: path.join(home, 'gone', 'gemini'), args }) }
+  await assert.rejects(gemini.startLogin(ctx, { onDone: () => assert.fail('a failed start reports by throwing only') }))
+  assert.deepEqual(fs.readdirSync(stateDir), [])
+})
+
 test('MiniMax core settings: config.yaml blocks read and one key written, the rest of the file kept', async () => {
   const { MINIMAX_CORE_SETTINGS, readMinimaxSettings, writeMinimaxSetting } = await import('../packages/acp-bridge/src/agents/minimax.js')
   const home = tmp(), file = path.join(home, '.minimax', 'config.yaml')

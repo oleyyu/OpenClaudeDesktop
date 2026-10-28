@@ -1680,13 +1680,19 @@ export default {
     const { AgentHost } = await import('../agent-host.js')
     const line = ctx.commandLine(['--acp'])
     const host = new AgentHost({ ...line, env: { ...ctx.env, GEMINI_CLI_NO_RELAUNCH: 'true', ...NO_OWN_SANDBOX, PATH: `${dir}:${ctx.env.PATH ?? ''}`, BROWSER: path.join(dir, 'open') }, cwd: dir, clientCapabilities: {}, log: ctx.log, label: 'gemini-login', stopSignal: 'SIGKILL' })
-    await host.start()
+    // A host that never answered initialize (exited, or timed out still running) is stopped and its folder removed.
+    try { await host.start() } catch (error) {
+      await host.stop().catch(() => {})
+      fs.rmSync(dir, { recursive: true, force: true })
+      throw error
+    }
     let finished = false
-    const finish = (success, error) => {
+    // quiet: the attempt fails by throwing, before its loginId reached the client, so onDone reports nothing.
+    const finish = (success, error, quiet = false) => {
       if (finished) return
       finished = true
       void host.stop().finally(() => fs.rmSync(dir, { recursive: true, force: true }))
-      onDone(success, error)
+      if (!quiet) onDone(success, error)
     }
     host.call('authenticate', { methodId: 'oauth-personal' }, 0).then(() => finish(true), (error) => finish(false, error?.message ?? String(error)))
     for (let wait = 0; wait < 300; wait++) {
@@ -1695,7 +1701,7 @@ export default {
       if (finished || host.exited) break
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
-    finish(false, 'Gemini did not open a sign-in page.')
+    finish(false, 'Gemini did not open a sign-in page.', true)
     throw new Error(`Gemini CLI did not start the Google sign-in.${host.stderrTail(400)}`)
   },
   /** Gemini's own /auth logout (authCommand.ts): the cached credentials and the auth selection both go. */
