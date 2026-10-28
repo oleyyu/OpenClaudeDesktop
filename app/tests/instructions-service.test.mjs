@@ -89,6 +89,11 @@ test('decorateCoreParams: a custom prompt replaces Codex\'s, other cores get no 
   assert.deepEqual([start.baseInstructions, start.developerInstructions, start.personality], ['Global', 'Project', 'none']);
   assert.deepEqual(start.config, { model: 'x', ...CUSTOM_PROMPT_CODEX_CONFIG });
   assert.equal(start.codeDesktop, undefined);
+  // The real Codex initialize result: no engine field.
+  const real = {};
+  decorateCoreParams('thread/start', real, { engine: { userAgent: 'codex_cli_rs/0.155.1', codexHome: '/x', platformFamily: 'unix', platformOs: 'macos' }, cwd: '/w', read });
+  assert.deepEqual([real.baseInstructions, real.developerInstructions, real.personality], ['Global', 'Project', 'none']);
+  assert.deepEqual(real.config, CUSTOM_PROMPT_CODEX_CONFIG);
   const resume = {};
   decorateCoreParams('thread/resume', resume, { engine: 'codex', cwd: '/w', read: () => ({ text: 'Global', systemPrompt: 'Global', instructions: null }) });
   assert.deepEqual([resume.baseInstructions, resume.developerInstructions], ['Global', null], 'no default line, no project text');
@@ -141,6 +146,12 @@ test('service ops: preview, create-file (never overwrites), open/reveal, cwd val
   assert.equal(before.engine, 'codex');
   assert.deepEqual(before.file, { path: target, exists: false, bytes: 0 });
   await assert.rejects(svc.run({ op: 'open-file', cwd: repo }), /doesn’t exist yet/);
+  const i18n = require('../electron/i18n/index.mjs');
+  i18n.setLocale('zh-CN');
+  try {
+    await assert.rejects(svc.run({ op: 'reveal-file', cwd: repo }), { message: '指令文件尚不存在。' });
+    await assert.rejects(svc.run({ op: 'core-file-open', cwd: repo, path: '/nowhere' }), { message: '未知的指令文件。' });
+  } finally { i18n.setLocale('en'); }
   const created = await svc.run({ op: 'create-file', cwd: repo });
   assert.equal(created.file.exists, true);
   assert.equal(created.text, '# Custom instructions\nG', 'the template comment adds nothing');
