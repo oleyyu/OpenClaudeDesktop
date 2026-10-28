@@ -2549,11 +2549,14 @@ export function apply(ctx, config) {
   function quiesce() {
     if (quiescing) return quiescing
     closed = true
+    // transport.close() re-enters through onClose: it must find this promise, the one that waits for the threads.
+    let settle
+    quiescing = new Promise((resolve) => { settle = resolve })
     transport.close()
     const live = [...threads.values()]
     threads.clear()
     children.clear()
-    quiescing = Promise.allSettled([workflowExecutions.dispose(), ...live.map((thread) => thread.close('OpenClaude Desktop core stopped.')), ...unloading.values()]).then(() => undefined)
+    settle(Promise.allSettled([workflowExecutions.dispose(), ...live.map((thread) => thread.close('OpenClaude Desktop core stopped.')), ...unloading.values()]).then(() => undefined))
     return quiescing
   }
 
