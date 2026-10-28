@@ -5243,7 +5243,8 @@ function App({ side = 0, initialSession = null }) {
     return order[(order.indexOf(activeTier?.key ?? STANDARD_SPEED) + 1) % order.length];
   };
   // First-run setup opens by itself once: on the DeepSeek core with no key at all (no DeepSeek key and no custom
-  // provider key), unless it was finished or put off before (config.onboarded).
+  // provider key), or when the core didn't start at all (a new Mac without Node.js: its Requirements step installs
+  // what is missing), unless it was finished or put off before (config.onboarded).
   const onboardingOffered = useRef(false);
   // shared-5 Sy: NUX coachmarks wait out onboarding and the profile's first day (its config.activity.startedAt stands
   // in for the account's created_at), measured from when this window mounted.
@@ -5272,7 +5273,14 @@ function App({ side = 0, initialSession = null }) {
     setSettings("preferences#account");
   }
   useEffect(() => {
-    if (side !== 0 || onboardingOffered.current || !boot?.connected || !boot.config || boot.config.onboarded === true) return;
+    if (side !== 0 || onboardingOffered.current || !boot?.config || boot.config.onboarded === true) return;
+    if (!boot.connected) {
+      // Only a start that failed (boot.error), not a reconnect in flight.
+      if (!boot.error) return;
+      onboardingOffered.current = true;
+      setOnboarding("welcome");
+      return;
+    }
     // A core other than DeepSeek Harness chosen during setup (the window reloaded onto it): its Sign in step, or done.
     if (boot.config.core && boot.config.core !== "deepseek" && signInOptions(signInCore?.login)) {
       onboardingOffered.current = true;
@@ -5283,7 +5291,7 @@ function App({ side = 0, initialSession = null }) {
     if (!boot.account?.deepseek || boot.account.account) return;
     onboardingOffered.current = true;
     setOnboarding("welcome");
-  }, [boot?.connected, boot?.config, boot?.account, signInCore?.id]);
+  }, [boot?.connected, boot?.error, boot?.config, boot?.account, signInCore?.id]);
   // The Sign in step ends when the core reports an account.
   useEffect(() => {
     if (onboarding !== "signin" || !signedIn) return;
@@ -5330,6 +5338,13 @@ function App({ side = 0, initialSession = null }) {
     if (reload && (b?.connected || !requireConnected)) setTimeout(() => location.reload(), 150);
     else coreSwitchReload.current = false;
     return { next, b, reload: coreSwitchReload.current };
+  }
+  // Setup › Requirements → Continue: a core that couldn't start (no Node.js until now) starts again, so Choose your
+  // agent and Connect a model have a connection to work with.
+  async function onboardingRequirementsMet() {
+    if (boot?.connected) return;
+    const b = await reconnect();
+    if (!b?.connected) throw new Error(b?.error || t("The core didn’t start. Check Settings › Cores."));
   }
   function skipOnboarding() {
     setOnboarding(null);
@@ -7375,7 +7390,7 @@ function App({ side = 0, initialSession = null }) {
         onPopOut={api && boot?.connected && !SESSION_POPOUT ? popOutSideChat : null}
         onClose={closeSideChat} />}
       {workflowLaunch&&<WorkflowLaunch initial={workflowLaunch} onClose={()=>setWorkflowLaunch(null)} onPick={()=>call('workflow-pick')} onStart={async options=>{const run=await call('workflow-start',{...options,threadId:workflowLaunch.threadId,model:workflowLaunch.model,effort:workflowLaunch.effort,cwd:workflowLaunch.cwd,permission:workflowLaunch.permission,mode:workflowLaunch.mode,after:workflowLaunch.after});setWorkflowRuns(old=>mergeWorkflow(old,run));if(currentRef.current===run.threadId)openWorkflow(run.id);}}/>}
-      {onboarding && <SourceOnboarding key={onboarding} startAt={onboarding} desktopCall={call} onDone={finishOnboarding} onSkip={skipOnboarding} onCoreChosen={chooseOnboardingCore}
+      {onboarding && <SourceOnboarding key={onboarding} startAt={onboarding} desktopCall={call} onDone={finishOnboarding} onSkip={skipOnboarding} onCoreChosen={chooseOnboardingCore} onRequirementsMet={onboardingRequirementsMet}
         signIn={signInCore?.login ? { core: signInCore, auth: boot?.auth, account: boot?.account?.account ?? null, connected: !!boot?.connected,
           onLogin: (type, extra) => call("login", { type, ...extra }), onAccountAction: p => call("account-auth", p), onOpenExternal: url => call("external", { url }).catch(() => {}),
           // Codex through a relay: setup ends and Settings › Models opens at the Codex endpoint (codexProvider), with

@@ -14,7 +14,8 @@ const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 const run = promisify(execFile);
 const worktrees = require("./worktrees.cjs");
-const { CodexClient, stopAllCodexClients, resolveCore, setCoreChoice, setCodexLaunch, codexBinary, deepseekCoreScript, bridgeScript, nodeBinary, coreError } = require("./codex.cjs");
+const { CodexClient, stopAllCodexClients, resolveCore, setCoreChoice, setCodexLaunch, codexBinary, deepseekCoreScript, bridgeScript, nodeBinary, nodeResolver, coreError } = require("./codex.cjs");
+const { createSetupRequirements } = require("./setup-requirements.cjs");
 const { createCoreManager } = require("./core-manager.cjs");
 const { createExtensionPacks } = require("./extension-packs.cjs");
 const { coreName: coreNameOf, coreForEngine, coreById, coreSupports, coreCapabilities, worktreeBranchPrefix } = require("./core-registry.mjs");
@@ -1178,6 +1179,8 @@ const localEnvironment = require("./local-environment.cjs").createLocalEnvironme
   managedKeys: () => { let tools = {}; try { tools = agentTools.launchEnv() ?? {}; } catch { tools = {}; } return [...coreSecretEnvKeys(), ...Object.keys(tools)]; } });
 require("./codex.cjs").setLocalEnvironment(() => localEnvironment.launchEnv());
 // Settings › Cores: which agent core runs, and the official releases this app downloads (core-manager.cjs).
+// First-run setup › Requirements: Node.js for the cores and Git, with their installers (setup-requirements.cjs).
+const setupRequirements = createSetupRequirements({ resolveNode: () => nodeResolver.resolve(), downloadsDir: () => path.join(app.getPath("userData"), "downloads"), openPath: (file) => shell.openPath(file) });
 const coreManager = createCoreManager({ dataDir: () => app.getPath("userData"), getConfig: () => config, save: () => save(), emit, setCoreChoice, deepseekScript: deepseekCoreScript, bridgeScript, nodeBinary });
 // Extension Packs (extension-packs.cjs): imported agent cores, registered with core-registry.mjs. A change re-points
 // codex.cjs (coreManager.apply) and tells the renderer, which registers the same descriptors.
@@ -4061,6 +4064,8 @@ app.whenReady().then(async () => {
         }
         throw new Error("Unsupported operation.");
       }
+      case "setup":
+        return setupRequirements.run(p);
       case "cores": {
         if (["select", "uninstall"].includes(p.op)) switchToken = bypassCarry = null;
         const result = await coreManager.run(p);
