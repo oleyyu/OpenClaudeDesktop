@@ -3172,7 +3172,13 @@ export class LiveThread {
   }
 
   async startTurn(params) {
-    if (this.busy || this.activeTurn) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    if (this.busy || this.activeTurn || this.startingTurn) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    // Claimed until its user message arrives (onMessage sets activeTurn): another start meanwhile would post a prompt too.
+    this.startingTurn = true
+    try { return await this.beginTurn(params) } finally { this.startingTurn = false }
+  }
+
+  async beginTurn(params) {
     await this.applyParams(params)
     // Picks up edits of the user's own permission config since the last turn (PATCHed only when the rules changed).
     await this.applyRules().catch((error) => this.bridge.log(`rules ${this.id}: ${error?.message}`))
@@ -3312,7 +3318,7 @@ export class LiveThread {
     const entry = { id: randomUUID(), input: params.input, clientUserMessageId: typeof params.clientUserMessageId === 'string' ? params.clientUserMessageId : null }
     this.queue.push(entry)
     this.queueChanged()
-    if (!this.busy && !this.activeTurn) setImmediate(() => this.startNext())
+    if (!this.busy && !this.activeTurn && !this.startingTurn) setImmediate(() => this.startNext())
     return { queuedSubmission: this.queueEntry(entry) }
   }
 
@@ -3354,7 +3360,7 @@ export class LiveThread {
   }
 
   startNext() {
-    if (this.closed || this.busy || this.activeTurn || !this.queue.length || this.pausedQueue) return
+    if (this.closed || this.busy || this.activeTurn || this.startingTurn || !this.queue.length || this.pausedQueue) return
     const entry = this.queue.shift()
     this.queueChanged()
     void this.startTurn({ input: entry.input }).catch((error) => {

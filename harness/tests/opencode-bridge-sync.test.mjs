@@ -304,3 +304,25 @@ test('a prompt OpenCode never accepted leaves the queue, so the next turn gets i
   assert.equal((await second).id, 'msg_2')
   assert.equal(thread.activeTurn.id, 'msg_2')
 })
+
+test('a turn/start while a queued turn is still starting is refused, and only one prompt is posted', async () => {
+  const { bridge } = bridgeFor()
+  const thread = new LiveThread(bridge, { info: { id: 'ses_r', directory: '/w' } })
+  let release
+  const gate = new Promise((resolve) => { release = resolve })
+  thread.applyParams = async () => {}
+  thread.applyRules = () => gate
+  thread.parts = async (input) => ({ parts: [{ type: 'text', text: input[0].text }], command: null })
+  bridge.primaryAgent = async () => 'build'
+  thread.resolveAgentModel = async () => {}
+  const posts = []
+  thread.post = async (kind, input) => { posts.push(input[0].text); throw new Error('stop') }
+  thread.queue.push({ id: 'q1', input: [{ type: 'text', text: 'queued' }] })
+  thread.startNext()
+  const typed = thread.startTurn({ input: [{ type: 'text', text: 'typed' }] })
+  release()
+  await assert.rejects(typed, /already running/)
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  assert.deepEqual(posts, ['queued'])
+  assert.equal(thread.startingTurn, false)
+})
