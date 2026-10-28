@@ -96,8 +96,11 @@ export class AgentServer {
     child.stdout.on('data', keep)
     child.stderr.on('data', keep)
     const sentinel = this.watchParent(child)
-    const exited = new Promise((resolve) => child.once('exit', (code, signal) => { try { sentinel?.kill('SIGKILL') } catch {} resolve({ code, signal }) }))
-    child.once('error', (error) => keep(`spawn error: ${error.message}`))
+    const exited = new Promise((resolve) => {
+      child.once('exit', (code, signal) => { try { sentinel?.kill('SIGKILL') } catch {} resolve({ code, signal }) })
+      // A binary that can't be spawned (missing, not executable) emits 'error' and never 'exit'.
+      child.once('error', (error) => { keep(`spawn error: ${error.message}`); if (child.pid === undefined) resolve({ code: error.code ?? -1, signal: null }) })
+    })
     exited.then((info) => {
       if (this.child === child) { this.child = null; this.url = null }
       if (!this.stopped) this.onExit(info)
