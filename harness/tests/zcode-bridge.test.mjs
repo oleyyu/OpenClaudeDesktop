@@ -422,6 +422,22 @@ test('the proxy forwards requests, rewrites only customized main-agent ones, and
   await new Promise((resolve) => upstream.close(resolve))
 })
 
+test('the proxy answers 502 for a target it cannot reach or parse, and survives a client dropping its upload', async () => {
+  const http = await import('node:http')
+  const proxy = new ProviderProxy({ customizationFor: () => null })
+  const origin = await proxy.start()
+  const bad = await fetch(`${origin}/u/http://`)
+  assert.equal(bad.status, 502)
+  assert.match((await bad.json()).error.message, /Couldn’t reach http:\/\//)
+  await new Promise((resolve) => {
+    const req = http.request(`${origin}/u/https://api.example.invalid/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json', 'content-length': '1000' } })
+    req.on('error', () => {})
+    req.write('{"partial":', () => { req.destroy(); setTimeout(resolve, 100) })
+  })
+  assert.equal((await fetch(`${origin}/elsewhere`)).status, 404, 'the proxy is still serving')
+  await proxy.stop()
+})
+
 // ------------------------------------------------------------------ accounts
 
 test('credential store round trip and Coding Plan accounts', () => {

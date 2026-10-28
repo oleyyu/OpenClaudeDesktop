@@ -178,7 +178,14 @@ export class ProviderProxy {
   }
 
   async start() {
-    this.server = http.createServer((req, res) => { void this.forward(req, res) })
+    this.server = http.createServer((req, res) => {
+      // A client dropping its upload mid-body rejects forward(); answer, never leave it unhandled.
+      this.forward(req, res).catch((error) => {
+        this.options.log?.(`zcode-bridge: proxy request failed: ${error?.message || error}`)
+        if (!res.headersSent) res.writeHead(502)
+        res.end()
+      })
+    })
     await new Promise((resolve, reject) => {
       this.server.once('error', reject)
       this.server.listen(0, '127.0.0.1', resolve)
@@ -226,7 +233,7 @@ export class ProviderProxy {
         method: req.method, headers, body: ['GET', 'HEAD'].includes(req.method ?? 'GET') ? undefined : payload, signal: controller.signal, redirect: 'manual',
       })
     } catch (error) {
-      if (!res.headersSent) { res.writeHead(502, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: { type: 'proxy_error', message: `Couldn’t reach ${new URL(target).host}: ${error?.cause?.message || error?.message || error}` } })) }
+      if (!res.headersSent) { res.writeHead(502, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: { type: 'proxy_error', message: `Couldn’t reach ${URL.canParse(target) ? new URL(target).host : target}: ${error?.cause?.message || error?.message || error}` } })) }
       return
     }
     const out = {}
