@@ -1,5 +1,5 @@
 // OpenCode / MiMo bridge: archive sync, plugin failures, command variants, MiMo exec scripts and working windows.
-import test from 'node:test'
+import test, { mock } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -238,4 +238,114 @@ test('MiMo working window: limit.input, compaction.max_context (wildcards, K/M/%
   const opencode = bridgeFor('opencode', async (method, route) => (route === '/config' ? { compaction: { max_context: '200K' } } : {}))
   opencode.bridge.catalog = new ModelCatalog(async () => providers)
   assert.equal((await opencode.bridge.handle('model/list', {})).data[0].contextWindow, 1000000)
+})
+
+// ------------------------------------------------------------------ bridge lifecycle
+
+test('agentDirs answers the agent\'s allowed outside folders and references as a list; the agents folders are agentFileDirs', async () => {
+  const { bridge } = bridgeFor('opencode', async (method, route) => {
+    if (route === '/agent') return [{ name: 'build', permission: [{ permission: 'external_directory', action: 'allow', pattern: '/team/docs/*' }] }]
+    if (route === '/api/reference') return [{ name: 'lib', path: '/refs/lib' }]
+    return {}
+  })
+  const dirs = await bridge.agentDirs('/w', 'build')
+  assert.deepEqual(dirs, ['/team/docs', '/refs/lib'])
+  assert.deepEqual(bridge.agentFileDirs('/w').project, ['/w/.opencode/agents', '/w/.opencode/agent'])
+})
+
+test('a server whose first start fails is started anew, with its event stream, on the next call', { skip: process.platform === 'win32' && 'POSIX only' }, async () => {
+  const dir = tmp()
+  const marker = path.join(dir, 'launched')
+  const streams = path.join(dir, 'streams')
+  // A fake `serve`: exits with a config error on its first launch, serves health and the event stream after that.
+  const binary = path.join(dir, 'fake-serve.mjs')
+  fs.writeFileSync(binary, `
+    import fs from 'node:fs'
+    import http from 'node:http'
+    if (!fs.existsSync(${JSON.stringify(marker)})) { fs.writeFileSync(${JSON.stringify(marker)}, '1'); console.error('config error'); process.exit(1) }
+    const port = Number(process.argv[process.argv.indexOf('--port') + 1])
+    http.createServer((req, res) => {
+      if (req.url.startsWith('/global/health')) { res.setHeader('content-type', 'application/json'); res.end('{"version":"1.0.0"}'); return }
+      if (req.url.startsWith('/global/event')) { fs.appendFileSync(${JSON.stringify(streams)}, 'x'); res.setHeader('content-type', 'text/event-stream'); res.write(': hi\\n\\n'); return }
+      res.statusCode = 404; res.end()
+    }).listen(port, '127.0.0.1')
+  `)
+  const home = tmp()
+  const bridge = new Bridge({ flavor: FLAVORS.opencode, binary, runner: 'node', stateDir: path.join(home, 'state'), env: { HOME: home, XDG_DATA_HOME: path.join(home, 'data') }, input: new PassThrough(), output: new PassThrough() })
+  bridge.notify = () => {}
+  bridge.resync = () => {}
+  bridge.sweptWorkflowSessions = true
+  try {
+    await assert.rejects(bridge.ensureServer(), /config error/)
+    await bridge.ensureServer()
+    assert.ok(bridge.stopEvents, 'the new server\'s events are subscribed')
+    const end = Date.now() + 5000
+    while (!fs.existsSync(streams) && Date.now() < end) await new Promise((resolve) => setTimeout(resolve, 50))
+    assert.ok(fs.existsSync(streams), 'the bridge connected to /global/event')
+  } finally {
+    bridge.stopEvents?.()
+    await bridge.server?.stop()
+  }
+})
+
+test('a prompt OpenCode never accepted leaves the queue, so the next turn gets its own user message', async () => {
+  const { bridge } = bridgeFor('opencode', async () => null)
+  const thread = new LiveThread(bridge, { info: { id: 'ses_q', directory: '/w' } })
+  mock.timers.enable({ apis: ['setTimeout'] })
+  let first
+  try {
+    first = thread.post('turn', null, thread.promptRoute(), {})
+    mock.timers.tick(20000)
+  } finally { mock.timers.reset() }
+  await assert.rejects(first, /did not accept the message/)
+  assert.equal(thread.expect.length, 0)
+  const second = thread.post('turn', null, thread.promptRoute(), {})
+  thread.onMessage({ id: 'msg_2', role: 'user', sessionID: 'ses_q', time: { created: 1 } })
+  assert.equal((await second).id, 'msg_2')
+  assert.equal(thread.activeTurn.id, 'msg_2')
+})
+
+test('a turn/start while a queued turn is still starting is refused, and only one prompt is posted', async () => {
+  const { bridge } = bridgeFor()
+  const thread = new LiveThread(bridge, { info: { id: 'ses_r', directory: '/w' } })
+  let release
+  const gate = new Promise((resolve) => { release = resolve })
+  thread.applyParams = async () => {}
+  thread.applyRules = () => gate
+  thread.parts = async (input) => ({ parts: [{ type: 'text', text: input[0].text }], command: null })
+  bridge.primaryAgent = async () => 'build'
+  thread.resolveAgentModel = async () => {}
+  const posts = []
+  thread.post = async (kind, input) => { posts.push(input[0].text); throw new Error('stop') }
+  thread.queue.push({ id: 'q1', input: [{ type: 'text', text: 'queued' }] })
+  thread.startNext()
+  const typed = thread.startTurn({ input: [{ type: 'text', text: 'typed' }] })
+  release()
+  await assert.rejects(typed, /already running/)
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  assert.deepEqual(posts, ['queued'])
+  assert.equal(thread.startingTurn, false)
+})
+
+test('thread/delete drops the deleted session\'s sub-agent threads with it', async () => {
+  const { bridge } = bridgeFor('opencode', async () => null)
+  const root = new LiveThread(bridge, { info: { id: 'ses_root', directory: '/w' } })
+  root.interrupt = async () => {}
+  bridge.threads.set('ses_root', root)
+  const child = new LiveThread(bridge, { info: { id: 'ses_child', directory: '/w', parentID: 'ses_root' }, root })
+  child.busy = true
+  bridge.children.set('ses_child', child)
+  await bridge.handle('thread/delete', { threadId: 'ses_root' })
+  assert.deepEqual([...bridge.children.keys()], [])
+  assert.equal(child.closed, true)
+  assert.equal(await bridge.reloadConfig(), true, 'a deleted session\'s busy child no longer defers a reload')
+})
+
+test('thread/queue/start puts the message back in its place when the steer is refused', async () => {
+  const { bridge } = bridgeFor()
+  const thread = new LiveThread(bridge, { info: { id: 'ses_qs', directory: '/w' } })
+  thread.queue.push({ id: 'q1', input: [{ type: 'text', text: 'one' }] }, { id: 'q2', input: [{ type: 'text', text: 'two' }] })
+  thread.activeTurn = { id: 'msg_c', startedMs: 1, kind: 'compaction' }
+  await assert.rejects(thread.queueStart('q2'), /No active turn to steer/)
+  assert.deepEqual(thread.queue.map((entry) => entry.id), ['q1', 'q2'])
 })
