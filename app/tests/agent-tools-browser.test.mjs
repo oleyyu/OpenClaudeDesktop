@@ -120,6 +120,10 @@ test('a site card that ends without an answer isn’t a refusal: the site is ask
   await assert.rejects(service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; throw new Error('card gone'); } }), (error) => error.code === 'site_unanswered');
   assert.deepEqual(await service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; return true; } }), { ok: true, url: 'https://ex.com/' });
   assert.equal(asked, 3);
+  // In a batch, the steps that ran before it are still reported.
+  const result = await service.call('s1', 'browser_batch', { actions: [{ name: 'tabs_context' }, { name: 'navigate', input: { url: 'https://b.test/' } }] }, { approve: async () => null });
+  assert.deepEqual(result.steps.map((step) => [step.name, step.ok]), [['tabs_context', true], ['navigate', false]]);
+  assert.deepEqual({ completed: result.completed, step: result.failed.step, code: result.failed.code }, { completed: 1, step: 2, code: 'site_unanswered' });
 });
 
 test('parallel calls that reach the same new site share one card', async () => {

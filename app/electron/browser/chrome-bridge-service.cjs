@@ -118,8 +118,10 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
       if (failed?.code === "site_not_allowed" && failed.host) {
         steps.push(...ran.slice(0, -1));
         offset += result.completed;
-        if (await allow({ host: failed.host, url: failed.url ?? "" })) continue;
-        const refusal = declined(failed.host);
+        // A card that ended unanswered stops the batch like a refusal does, so the steps that already ran are still reported.
+        let refusal;
+        try { if (await allow({ host: failed.host, url: failed.url ?? "" })) continue; refusal = declined(failed.host); }
+        catch (error) { if (error?.code !== "site_unanswered") throw error; refusal = error; }
         steps.push({ name: actions[offset]?.name ?? "", ok: false, error: { code: refusal.code, message: refusal.message, host: failed.host } });
         return { steps, completed: offset, failed: { step: offset + 1, code: refusal.code, message: refusal.message, host: failed.host } };
       }
