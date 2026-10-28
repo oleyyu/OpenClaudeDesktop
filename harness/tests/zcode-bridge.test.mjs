@@ -593,6 +593,11 @@ test('listMcpTools lists a stdio server’s tools', async () => {
   assert.deepEqual(tools.map((tool) => tool.name), ['echo'])
 })
 
+test('listMcpTools: a server that closes its stdin after initialize fails the listing, not the bridge', async () => {
+  const script = `exec 0<&-; echo '{"jsonrpc":"2.0","id":1,"result":{}}'; sleep 1`
+  await assert.rejects(catalog.listMcpTools({ command: '/bin/sh', args: ['-c', script] }, { timeoutMs: 1500 }), /in time/)
+})
+
 // ------------------------------------------------------------------ live stream
 
 function projector() {

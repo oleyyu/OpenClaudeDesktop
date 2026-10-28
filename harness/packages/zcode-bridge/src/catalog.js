@@ -405,6 +405,8 @@ export async function listMcpTools(server, { cwd, timeoutMs = 8000 } = {}) {
     const timer = setTimeout(() => { child.kill(); reject(new Error('The MCP server did not list its tools in time.')) }, timeoutMs)
     let buffer = ''
     child.on('error', (error) => { clearTimeout(timer); reject(error) })
+    // A server that closes its stdin early fails our writes with EPIPE; the timer reports it.
+    child.stdin.on('error', () => {})
     child.stdout.on('data', (chunk) => {
       buffer += chunk
       let index
