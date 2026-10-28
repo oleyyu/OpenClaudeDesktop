@@ -2106,6 +2106,8 @@ export function apply(ctx, config) {
           threads.delete(id)
           await live.close('Session deleted.')
         }
+        // One still unloading in the background (thread/unsubscribe) is flushing into the files deleted below.
+        await unloading.get(id)
         store.update(id, { deleted: true })
         // Also delete the Harness history (<sessions root>/<project>/<id>/), once closed.
         await deleteSessionFiles(id)
