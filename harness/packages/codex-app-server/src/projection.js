@@ -585,6 +585,8 @@ export class ThreadProjector {
     this.heldActivities = []
     this.tools = new Map()
     this.preview = ''
+    // The turn whose prompt set the preview: a rewind that drops it clears the preview.
+    this.previewTurn = null
     this.title = null
     this.plan = null
     this.lastUsage = null
@@ -1278,7 +1280,10 @@ export class ThreadProjector {
     // Bracket forms and images come back as their Codex parts; the preview is typed text only.
     const content = toCodexInputs(message.content, { imagePath: this.imagePath })
     const text = promptText(message.content)
-    if (!this.preview && text) this.preview = text.slice(0, 200)
+    if (!this.preview && text) {
+      this.preview = text.slice(0, 200)
+      this.previewTurn = turn
+    }
     const clientId = this.clientIds.get(message.id) ?? null
     this.clientIds.delete(message.id)
     this.pushItem(notes, turn, { type: 'userMessage', id: message.id, clientId, content }, time)
@@ -1305,9 +1310,17 @@ export class ThreadProjector {
     if (at < 0) return
     const dropped = this.turns.splice(at)
     const ids = new Set(dropped.map((turn) => turn.id))
-    for (const [dsh, turn] of this.byDshTurn) if (dropped.includes(turn) || ids.has(turn.id)) this.byDshTurn.delete(dsh)
+    const gone = (turn) => dropped.includes(turn) || ids.has(turn.id)
+    for (const [dsh, turn] of this.byDshTurn) if (gone(turn)) this.byDshTurn.delete(dsh)
     if (this.current && ids.has(this.current.id)) this.current = null
     if (this.lastUsageTurnId && ids.has(this.lastUsageTurnId)) this.lastUsageTurnId = this.turns.at(-1)?.id ?? null
+    // The task list and preview of the dropped turns go with them. Their background jobs stay tracked: the
+    // processes run on, and thread/backgroundTerminals/* still lists and stops them.
+    if (dropped.some((turn) => turn.plan)) this.plan = this.turns.findLast((turn) => turn.plan)?.plan ?? null
+    if (this.previewTurn && gone(this.previewTurn)) {
+      this.preview = ''
+      this.previewTurn = null
+    }
   }
 
   /**
@@ -1371,6 +1384,7 @@ export class ThreadProjector {
       status: todo.status === 'in_progress' ? 'inProgress' : todo.status === 'completed' ? 'completed' : 'pending',
     }))
     this.plan = plan
+    turn.plan = plan
     notes.push({ method: 'turn/plan/updated', params: { threadId: this.threadId, turnId: turn.id, explanation: null, plan } })
   }
 }

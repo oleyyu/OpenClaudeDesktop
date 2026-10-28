@@ -1202,7 +1202,14 @@ export function apply(ctx, config) {
       }
     }
     thread.hydrate(events)
-    await applyPermissions(thread, params)
+    try {
+      await applyPermissions(thread, params)
+    } catch (error) {
+      // The client never learns this thread's id: nothing else would ever unload it.
+      if (threads.get(thread.id) === thread) threads.delete(thread.id)
+      await thread.close('Session failed to start.')
+      throw error
+    }
     try { await ctx.sessions.flush(thread.agent.session) } catch {}
     // The thread's first step (a turn/start right after this answer) sees OpenClaude Desktop's tools and instructions.
     await thread.appToolsReady
@@ -2107,6 +2114,8 @@ export function apply(ctx, config) {
           threads.delete(id)
           await live.close('Session deleted.')
         }
+        // One still unloading in the background (thread/unsubscribe) is flushing into the files deleted below.
+        await unloading.get(id)
         store.update(id, { deleted: true })
         // Also delete the Harness history (<sessions root>/<project>/<id>/), once closed.
         await deleteSessionFiles(id)
@@ -2557,11 +2566,14 @@ export function apply(ctx, config) {
   function quiesce() {
     if (quiescing) return quiescing
     closed = true
+    // transport.close() re-enters through onClose: it must find this promise, the one that waits for the threads.
+    let settle
+    quiescing = new Promise((resolve) => { settle = resolve })
     transport.close()
     const live = [...threads.values()]
     threads.clear()
     children.clear()
-    quiescing = Promise.allSettled([workflowExecutions.dispose(), ...live.map((thread) => thread.close('OpenClaude Desktop core stopped.')), ...unloading.values()]).then(() => undefined)
+    settle(Promise.allSettled([workflowExecutions.dispose(), ...live.map((thread) => thread.close('OpenClaude Desktop core stopped.')), ...unloading.values()]).then(() => undefined))
     return quiescing
   }
 
