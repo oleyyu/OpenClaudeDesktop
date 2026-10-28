@@ -239,3 +239,16 @@ test('MiMo working window: limit.input, compaction.max_context (wildcards, K/M/%
   opencode.bridge.catalog = new ModelCatalog(async () => providers)
   assert.equal((await opencode.bridge.handle('model/list', {})).data[0].contextWindow, 1000000)
 })
+
+// ------------------------------------------------------------------ bridge lifecycle
+
+test('agentDirs answers the agent\'s allowed outside folders and references as a list; the agents folders are agentFileDirs', async () => {
+  const { bridge } = bridgeFor('opencode', async (method, route) => {
+    if (route === '/agent') return [{ name: 'build', permission: [{ permission: 'external_directory', action: 'allow', pattern: '/team/docs/*' }] }]
+    if (route === '/api/reference') return [{ name: 'lib', path: '/refs/lib' }]
+    return {}
+  })
+  const dirs = await bridge.agentDirs('/w', 'build')
+  assert.deepEqual(dirs, ['/team/docs', '/refs/lib'])
+  assert.deepEqual(bridge.agentFileDirs('/w').project, ['/w/.opencode/agents', '/w/.opencode/agent'])
+})

@@ -960,7 +960,7 @@ export class Bridge {
     const config = await this.mergedConfig(directory).catch(() => ({}))
     const own = isRecord(config?.agent) ? config.agent : {}
     const fallback = await this.primaryAgent(directory)
-    const dirs = this.agentDirs(directory)
+    const dirs = this.agentFileDirs(directory)
     // An agent defined by a markdown file of its own (the project's or the global agents folder): where it lives, so
     // Customize can show it in Finder and remove it.
     const fileOf = (name) => {
@@ -991,7 +991,7 @@ export class Bridge {
   }
 
   /** The agents folders a folder's agent reads: the project's (.opencode/agents, .opencode/agent) and the global ones. */
-  agentDirs(directory) {
+  agentFileDirs(directory) {
     const project = path.join(directory, this.flavor.id === 'mimo' ? '.mimocode' : '.opencode')
     const global = this.pluginGlobalDirs()[0]
     return { project: [path.join(project, 'agents'), path.join(project, 'agent')], global: [path.join(global, 'agents'), path.join(global, 'agent')] }
@@ -1016,7 +1016,7 @@ export class Bridge {
     const prompt = typeof params.prompt === 'string' ? params.prompt.trim() : ''
     if (!prompt || prompt.length > 100000) throw new RpcError(INVALID_PARAMS, 'Write the agent’s instructions.')
     const deny = (Array.isArray(params.deny) ? params.deny : []).filter((key) => AGENT_PERMISSIONS.includes(key))
-    const dir = this.agentDirs(directory)[params.scope === 'user' ? 'global' : 'project'][0]
+    const dir = this.agentFileDirs(directory)[params.scope === 'user' ? 'global' : 'project'][0]
     const file = path.join(dir, `${name}.md`)
     const lines = ['---', `description: ${JSON.stringify(description)}`, `mode: ${mode}`, ...(model ? [`model: ${JSON.stringify(model)}`] : []),
       ...(deny.length ? ['permission:', ...deny.map((key) => `  ${key}: deny`)] : []), '---', '', prompt, '']
@@ -1032,7 +1032,7 @@ export class Bridge {
     const directory = this.directoryFor(params)
     const name = typeof params.name === 'string' ? params.name.trim() : ''
     if (!AGENT_NAME.test(name)) throw new RpcError(INVALID_PARAMS, 'Unknown agent.')
-    const dirs = this.agentDirs(directory)
+    const dirs = this.agentFileDirs(directory)
     for (const [global, list] of [[false, dirs.project], [true, dirs.global]]) {
       for (const dir of list) {
         const file = path.join(dir, `${name}.md`)
