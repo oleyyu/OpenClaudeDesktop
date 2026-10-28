@@ -91,9 +91,9 @@ public enum KeyInput {
         case .focused:
             guard let focus = AXLadder.element(app, kAXFocusedUIElementAttribute) else { return .failure(CUError("no_focused_element")) }
             found = focus
-        case .index(let index, let expectRole):
+        case .index(let index, let expectRole, let summaryId):
             guard let windowId = windowNumber(window),
-                  let cached = SummaryCache.element(windowId: windowId, pid: pid, index: index),
+                  let cached = SummaryCache.element(windowId: windowId, pid: pid, index: index, summaryId: summaryId),
                   expectRole == nil || AXLadder.role(cached) == expectRole else { return .failure(CUError("listed_element_gone")) }
             found = cached
         case .point(let local):

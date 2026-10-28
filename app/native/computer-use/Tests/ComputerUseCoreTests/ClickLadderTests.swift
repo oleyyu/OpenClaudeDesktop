@@ -12,6 +12,18 @@ final class ClickLadderTests: XCTestCase {
         XCTAssertFalse(AXLadder.actionableRoles.contains("AXDockItem"))
     }
 
+    func testSummaryCacheRefusesAnIndexFromAReplacedSummary() {
+        // One list per window: another session's screenshot replaces it, and the older summary's ids find nothing.
+        let element = AXUIElementCreateApplication(getpid())
+        let first = SummaryCache.store(windowId: 990_001, pid: 7, elements: [element])
+        XCTAssertNotNil(SummaryCache.element(windowId: 990_001, pid: 7, index: 0, summaryId: first))
+        let second = SummaryCache.store(windowId: 990_001, pid: 7, elements: [element, element])
+        XCTAssertNotEqual(first, second)
+        XCTAssertNil(SummaryCache.element(windowId: 990_001, pid: 7, index: 0, summaryId: first))
+        XCTAssertNotNil(SummaryCache.element(windowId: 990_001, pid: 7, index: 1, summaryId: second))
+        XCTAssertNotNil(SummaryCache.element(windowId: 990_001, pid: 7, index: 1))
+    }
+
     func testLeftClickStep() {
         // A native row (a Finder list row: no AXPress) is selected or opened, at any count.
         for count in 1...3 {

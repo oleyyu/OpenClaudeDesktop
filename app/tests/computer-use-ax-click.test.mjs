@@ -21,13 +21,14 @@ const ELEMENTS = [
 
 function fakeNative({ probe = {}, click = () => ({ outcome: 'ok', reasonCode: null, axOp: 'AXPress', pressedRole: 'AXButton' }) } = {}) {
   const calls = [];
+  let summaries = 0;
   const handlers = {
     probe: () => ({ axTrusted: true, screenCapture: true, screenLocked: false, secureInput: false, ...probe }),
     captureWindow: (p) => {
       const [width, height] = fit(1840, 872);
       return { dataUrl: 'data:image/jpeg;base64,AA==', width, height, frameWidth: 1840, frameHeight: 872, scaleFactor: 2, jpegQuality: 0.75,
         windowId: p.windowId ?? 16678, bundleId: p.bundleId, bounds: { x: 95, y: 163, width: 920, height: 436 },
-        ...(p.listsElements ? { elements: ELEMENTS, axTrusted: true } : {}) };
+        ...(p.listsElements ? { elements: ELEMENTS, axTrusted: true, summaryId: ++summaries } : {}) };
     },
     axClick: click,
   };
@@ -119,9 +120,21 @@ test('app_click converts frame pixels to window-local points and presses through
   assert.equal(clicks().length, 1);
   // element_index: the native side gets the index and the role it must still have.
   await cu.appClick('s1', { bundleId: 'com.apple.finder', element_index: 1 });
-  assert.deepEqual(clicks().at(-1).params, { bundleId: 'com.apple.finder', windowId: 16678, count: 1, button: 'left', dryRun: false, elementIndex: 1, expectRole: 'AXRadioButton' });
+  assert.deepEqual(clicks().at(-1).params, { bundleId: 'com.apple.finder', windowId: 16678, count: 1, button: 'left', dryRun: false, elementIndex: 1, expectRole: 'AXRadioButton', summaryId: 1 });
   await cu.appClick('s1', { bundleId: 'com.apple.finder', target: 'focused' });
   assert.equal(clicks().at(-1).params.focused, true);
+});
+
+test('element_index names the summary it came from: another session screenshotting the same window does not repoint it', async () => {
+  const { cu, clicks } = setUp();
+  cu.grantsFor('s2').grant(['com.apple.finder']);
+  await cu.appScreenshot('s1', { bundleId: 'com.apple.finder' });
+  await cu.appScreenshot('s2', { bundleId: 'com.apple.finder' });
+  // The native cache now holds s2's list (summary 2); s1's index carries summary 1, so the native side refuses it.
+  await cu.appClick('s1', { bundleId: 'com.apple.finder', element_index: 0 });
+  assert.equal(clicks().at(-1).params.summaryId, 1);
+  await cu.appClick('s2', { bundleId: 'com.apple.finder', element_index: 0 });
+  assert.equal(clicks().at(-1).params.summaryId, 2);
 });
 
 test('app_click refuses before any native click: not granted, wrong tier, no screenshot, bad addressing', async () => {

@@ -23,7 +23,7 @@ public enum TextInput {
     public enum Address {
         case focused
         case point(CGPoint)
-        case index(Int, expectRole: String?)
+        case index(Int, expectRole: String?, summaryId: Int? = nil)
     }
 
     public struct Request {
@@ -75,8 +75,8 @@ public enum TextInput {
                 return .failure(CUError("no_text_target", "The app reports no focused element."))
             }
             start = focus
-        case .index(let index, let expectRole):
-            guard let cached = SummaryCache.element(windowId: info.windowId, pid: info.pid, index: index),
+        case .index(let index, let expectRole, let summaryId):
+            guard let cached = SummaryCache.element(windowId: info.windowId, pid: info.pid, index: index, summaryId: summaryId),
                   expectRole == nil || AXLadder.role(cached) == expectRole else { return .failure(CUError("listed_element_gone")) }
             start = cached
         case .point(let local):

@@ -98,7 +98,9 @@ public enum Capture {
         ]
         // AX summary in the same frame pixels as the image (docs/06: listsElements). Empty without Accessibility.
         if listsElements {
-            result["elements"] = AXLadder.summary(pid: window.pid, windowId: window.windowId, bounds: scWindow.frame, scaleFactor: factor)
+            let summary = AXLadder.summary(pid: window.pid, windowId: window.windowId, bounds: scWindow.frame, scaleFactor: factor)
+            result["elements"] = summary.elements
+            result["summaryId"] = summary.id
             result["axTrusted"] = AXIsProcessTrusted()
         }
         return result
