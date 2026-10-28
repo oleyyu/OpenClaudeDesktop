@@ -867,7 +867,8 @@ export async function main() {
   async function pollWorkflows(thread) {
     if (thread.workflowPolling) return
     const live = thread.projector.liveWorkflows()
-    if (!live.length || !agent || agent.closed) {
+    // A deleted (or replaced) thread polls no more.
+    if (!live.length || !agent || agent.closed || threads.get(thread.id) !== thread) {
       clearInterval(thread.workflowTimer)
       thread.workflowTimer = null
       return
@@ -2496,6 +2497,8 @@ export async function main() {
           if (thread.projector.turn) await request('session/stop', { sessionId: threadId }).catch(() => {})
           await v4Command(threadId, 'deleteSession').catch(() => request('session/close', { sessionId: threadId }).catch(() => {}))
           threads.delete(threadId)
+          clearInterval(thread.workflowTimer)
+          thread.workflowTimer = null
         }
         await deleteSessionRows(paths.sessionDb, threadId).catch((error) => log(`zcode-bridge: delete history: ${error.message}`))
         store.markDeleted(threadId)

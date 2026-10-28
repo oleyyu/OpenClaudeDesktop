@@ -364,6 +364,26 @@ test('bridge: Dynamic workflows off keeps the run tools from the session; a stra
   } finally { await b.close() }
 })
 
+test('bridge: deleting a session with a live run stops polling that run', { timeout: 60000 }, async () => {
+  const b = bridge()
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    const polls = () => b.log().filter((entry) => entry.method === 'v4/conversation/workflowRunEvents').length
+    const end = Date.now() + 10000
+    while (polls() < 2 && Date.now() < end) await sleep(50)
+    assert.ok(polls() >= 2, 'the live run is polled')
+    await b.call('thread/delete', { threadId: 'sess_wf_1' })
+    await sleep(300)
+    const after = polls()
+    await sleep(3500)
+    assert.equal(polls(), after, 'no poll after the delete')
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
+})
+
 test('bridge: a read-only mode (Plan) never runs a workflow: refused with a reason, no card', { timeout: 60000 }, async () => {
   const b = bridge(ASK_SCRIPT)
   try {
