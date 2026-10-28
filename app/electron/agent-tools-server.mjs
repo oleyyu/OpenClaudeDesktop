@@ -85,7 +85,12 @@ async function ask(method, params, timeout = CALL_TIMEOUT_MS, onId = null) {
   const id = ++seq;
   onId?.(id);
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => { state.pending.delete(id); reject(new Error("The tool took too long.")); }, timeout);
+    // Timed out: the main process cancels it too, so the tool (and an approval card it waits on) stops with the error.
+    const timer = setTimeout(() => {
+      state.pending.delete(id);
+      if (!state.closed) { try { state.socket.write(JSON.stringify({ type: "cancel", id }) + "\n"); } catch { /* closed */ } }
+      reject(new Error("The tool took too long."));
+    }, timeout);
     state.pending.set(id, { resolve, reject, timer });
     try { state.socket.write(JSON.stringify({ id, method, params }) + "\n"); }
     catch (error) { clearTimeout(timer); state.pending.delete(id); reject(error); }
