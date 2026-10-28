@@ -329,13 +329,14 @@ export class Bridge {
     if (this.server) return this.server.ready()
     if (!this.binary) throw new RpcError(-32000, `${this.flavor.name} is not installed. Download it in Settings › Cores or install \`${this.flavor.binary}\`.`)
     const env = this.config.write()
-    this.server = new AgentServer({
+    const server = this.server = new AgentServer({
       flavor: this.flavor, binary: this.binary, runner: this.runner, nodeBinary: this.nodeBinary, log: this.log,
       // The bridge's own environment (HOME, XDG_*, …) over the process's: a bridge given a separate home keeps its agent there.
       env: { ...(this.env === process.env ? {} : this.env), ...env, ...this.serverEnv() },
       onExit: (info) => this.serverExited(info),
     })
-    await this.server.start()
+    // A failed first start is dropped: ready() on it would start the server again without ever subscribing its events.
+    try { await server.start() } catch (error) { if (this.server === server) this.server = null; throw error }
     this.stopEvents = this.server.events((event) => this.onEvent(event), { onOpen: () => this.resync() })
     // The app's own bridge: sessions of workflow agents whose runner was stopped before it could delete them.
     if (!this.config.runnerDir && !this.sweptWorkflowSessions) {

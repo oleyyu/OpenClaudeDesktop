@@ -252,3 +252,38 @@ test('agentDirs answers the agent\'s allowed outside folders and references as a
   assert.deepEqual(dirs, ['/team/docs', '/refs/lib'])
   assert.deepEqual(bridge.agentFileDirs('/w').project, ['/w/.opencode/agents', '/w/.opencode/agent'])
 })
+
+test('a server whose first start fails is started anew, with its event stream, on the next call', { skip: process.platform === 'win32' && 'POSIX only' }, async () => {
+  const dir = tmp()
+  const marker = path.join(dir, 'launched')
+  const streams = path.join(dir, 'streams')
+  // A fake `serve`: exits with a config error on its first launch, serves health and the event stream after that.
+  const binary = path.join(dir, 'fake-serve.mjs')
+  fs.writeFileSync(binary, `
+    import fs from 'node:fs'
+    import http from 'node:http'
+    if (!fs.existsSync(${JSON.stringify(marker)})) { fs.writeFileSync(${JSON.stringify(marker)}, '1'); console.error('config error'); process.exit(1) }
+    const port = Number(process.argv[process.argv.indexOf('--port') + 1])
+    http.createServer((req, res) => {
+      if (req.url.startsWith('/global/health')) { res.setHeader('content-type', 'application/json'); res.end('{"version":"1.0.0"}'); return }
+      if (req.url.startsWith('/global/event')) { fs.appendFileSync(${JSON.stringify(streams)}, 'x'); res.setHeader('content-type', 'text/event-stream'); res.write(': hi\\n\\n'); return }
+      res.statusCode = 404; res.end()
+    }).listen(port, '127.0.0.1')
+  `)
+  const home = tmp()
+  const bridge = new Bridge({ flavor: FLAVORS.opencode, binary, runner: 'node', stateDir: path.join(home, 'state'), env: { HOME: home, XDG_DATA_HOME: path.join(home, 'data') }, input: new PassThrough(), output: new PassThrough() })
+  bridge.notify = () => {}
+  bridge.resync = () => {}
+  bridge.sweptWorkflowSessions = true
+  try {
+    await assert.rejects(bridge.ensureServer(), /config error/)
+    await bridge.ensureServer()
+    assert.ok(bridge.stopEvents, 'the new server\'s events are subscribed')
+    const end = Date.now() + 5000
+    while (!fs.existsSync(streams) && Date.now() < end) await new Promise((resolve) => setTimeout(resolve, 50))
+    assert.ok(fs.existsSync(streams), 'the bridge connected to /global/event')
+  } finally {
+    bridge.stopEvents?.()
+    await bridge.server?.stop()
+  }
+})
