@@ -221,9 +221,12 @@ test("revealFolderTarget takes only an existing absolute folder and flags one ma
   try {
     await fs.mkdir(path.join(root, "project"));
     await fs.mkdir(path.join(root, "Tool.app"));
+    await fs.mkdir(path.join(root, "chart.js"));
+    await fs.mkdir(path.join(root, "example.com"));
     await fs.writeFile(path.join(root, "run.command"), "#!/bin/sh\n", { mode: 0o755 });
     assert.deepEqual(await revealFolderTarget(path.join(root, "project")), { folder: path.join(root, "project"), launches: false });
     assert.deepEqual(await revealFolderTarget(path.join(root, "Tool.app")), { folder: path.join(root, "Tool.app"), launches: true });
+    for (const name of ["chart.js", "example.com"]) assert.deepEqual(await revealFolderTarget(path.join(root, name)), { folder: path.join(root, name), launches: false }, name);
     await assert.rejects(revealFolderTarget(path.join(root, "run.command")), /no longer exists/);
     await assert.rejects(revealFolderTarget(path.join(root, "gone")), /no longer exists/);
     await assert.rejects(revealFolderTarget("relative/dir"), /Unknown workspace directory/);
