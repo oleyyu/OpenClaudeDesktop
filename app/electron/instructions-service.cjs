@@ -132,7 +132,7 @@ function composeFor(prefs, cwd, { home, fs: fsys = fs } = {}) {
 }
 
 /**
- * Mutates params for the core request. engine is serverInfo.engine;
+ * Mutates params for the core request. engine is the serverInfo (or its engine);
  * read(cwd) returns the composition for cwd.
  */
 function decorateCoreParams(method, params, { engine, cwd, read }) {
@@ -148,7 +148,8 @@ function decorateCoreParams(method, params, { engine, cwd, read }) {
   const { text, systemPrompt = null, instructions = null } = read(cwd);
   if (systemPrompt) {
     // The user's prompt is the whole prompt: no default line, no built-in prose.
-    if ((engine?.engine ?? engine) === "codex") {
+    // A serverInfo from Codex carries no engine field (coreForEngine reads that as Codex).
+    if (engine && typeof engine === "object" ? coreForEngine(engine.engine).id === "codex" : engine === "codex") {
       params.baseInstructions = systemPrompt;
       params.developerInstructions = instructions || null;
       params.personality = "none";

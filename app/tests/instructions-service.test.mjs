@@ -89,6 +89,11 @@ test('decorateCoreParams: a custom prompt replaces Codex\'s, other cores get no 
   assert.deepEqual([start.baseInstructions, start.developerInstructions, start.personality], ['Global', 'Project', 'none']);
   assert.deepEqual(start.config, { model: 'x', ...CUSTOM_PROMPT_CODEX_CONFIG });
   assert.equal(start.codeDesktop, undefined);
+  // The real Codex initialize result: no engine field.
+  const real = {};
+  decorateCoreParams('thread/start', real, { engine: { userAgent: 'codex_cli_rs/0.155.1', codexHome: '/x', platformFamily: 'unix', platformOs: 'macos' }, cwd: '/w', read });
+  assert.deepEqual([real.baseInstructions, real.developerInstructions, real.personality], ['Global', 'Project', 'none']);
+  assert.deepEqual(real.config, CUSTOM_PROMPT_CODEX_CONFIG);
   const resume = {};
   decorateCoreParams('thread/resume', resume, { engine: 'codex', cwd: '/w', read: () => ({ text: 'Global', systemPrompt: 'Global', instructions: null }) });
   assert.deepEqual([resume.baseInstructions, resume.developerInstructions], ['Global', null], 'no default line, no project text');
