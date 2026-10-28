@@ -170,7 +170,7 @@ test('addServerConfiguration: appended in place to an existing launch.json, name
   assert.equal(parsed.autoVerify, false);
   assert.deepEqual(parsed.configurations[1], entry);
   assert.deepEqual(withServerConfiguration(added.text, { ...entry, name: 'DEV' }), { status: 'name-exists' });
-  for (const source of ['{}', '{ "version": "0.0.1" }', '{\n  "configurations": []\n}', '{\n  "configurations": [{ "name": "x" },]\n}']) {
+  for (const source of ['{}', '{ "version": "0.0.1" }', '{\n  "configurations": []\n}', '{\n  "configurations": [{ "name": "x" },]\n}', '{\n  "version": "0.0.1" // keep\n}', '{\n  "version": "0.0.1", // keep\n  /* only a note */\n}', '{ // just a comment\n}']) {
     const next = withServerConfiguration(source, entry);
     assert.equal(next.status, 'ok', source);
     assert.equal(parseJsonc(next.text).configurations.at(-1).name, 'dev', source);
