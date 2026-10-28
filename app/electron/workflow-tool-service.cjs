@@ -390,12 +390,16 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     deliveredTexts.set(threadId, delivered);
     const wasAutomated = automated.has(threadId), fromNotice = noticed.delete(threadId);
     if (fromNotice) automated.add(threadId);
+    // active from now, like turnStart: the core answers turn/start before it sends turn/started, and nothing may start
+    // beside this turn in between.
+    turns.set(threadId, { ...entry, active: true });
     try {
       // The session's last turn options (already decorated for its core), with the notification as the input.
       await startTurn(threadId, { ...structuredClone(entry.params), threadId, input: texts.map((text) => ({ type: "text", text, text_elements: [] })) });
     } catch (error) {
       pending.set(threadId, [...texts, ...(pending.get(threadId) ?? [])]);
       if (fromNotice) { noticed.add(threadId); if (!wasAutomated) automated.delete(threadId); }
+      turnFailed(threadId);
       console.warn("Workflow notification not delivered yet:", error?.message ?? error);
     } finally { delivering.delete(threadId); }
   }
