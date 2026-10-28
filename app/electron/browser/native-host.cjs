@@ -3,7 +3,8 @@
 // extension calls connectNative, with the extension's origin as its argument, and talks to it over stdin/stdout.
 // It listens on <socketDir>/<pid>.sock for OpenClaude Desktop's main process and routes between the two:
 //   Electron execute_tool ─▶ extension, the extension's tool_response ─▶ the Electron client that sent that tool_use_id,
-//   get_status ─▶ answered here, notification / permission_request ─▶ every Electron client.
+//   cancel_tool ─▶ extension (only from the client that sent that tool_use_id), get_status ─▶ answered here,
+//   notification / permission_request ─▶ every Electron client.
 // stdout carries frames only: everything else goes to <socketDir>/host.log (and stderr, which Chrome keeps).
 // It exits when Chrome closes stdin (the extension's port went away), removing its socket.
 "use strict";
@@ -93,6 +94,12 @@ function fromClient(client, message) {
     if (typeof message.params?.name !== "string") return answer(client, id, { error: { code: "bad_request", message: "execute_tool needs params.name" } });
     pending.set(id, client);
     try { toExtension(message); } catch (error) { pending.delete(id); answer(client, id, { error: { code: "too_large", message: error.message } }); }
+    return;
+  }
+  if (message.method === "cancel_tool") { // the app gave up on its execute_tool: the extension stops it, its answer is dropped
+    if (pending.get(id) !== client) return;
+    pending.delete(id);
+    try { toExtension(message); } catch (error) { log(`could not pass on a cancel_tool: ${error.message}`); }
     return;
   }
   if (message.method === "tool_response") { // the app answering the extension's permission_request

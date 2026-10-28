@@ -65,7 +65,8 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
     const send = async (input) => {
       if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
       const bridge = await ensureClient();
-      return bridge.executeTool(name, input, { allowedHosts: [...sites.allowed], timeoutMs: name === "browser_batch" ? BATCH_TIMEOUT_MS : CALL_TIMEOUT_MS });
+      // signal: Stop gives up on the call and tells the extension to stop it (a batch runs no further steps).
+      return bridge.executeTool(name, input, { allowedHosts: [...sites.allowed], timeoutMs: name === "browser_batch" ? BATCH_TIMEOUT_MS : CALL_TIMEOUT_MS, signal });
     };
 
     if (name !== "browser_batch") {

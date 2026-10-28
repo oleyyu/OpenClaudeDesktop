@@ -88,6 +88,18 @@ test('the host routes execute_tool to the extension and the answer back to the a
 
     await assert.rejects(a.executeTool('slow', {}, { timeoutMs: 100 }), (error) => error.code === 'timeout');
 
+    // Stop: the call is given up at once and the extension is told to stop it; b can't cancel a's call.
+    const stopper = new AbortController();
+    const stopped = a.executeTool('browser_batch', { actions: [] }, { toolUseId: 'toolu_3', signal: stopper.signal });
+    await until(() => toExtension.find((message) => message.tool_use_id === 'toolu_3'));
+    b.socket.write(encode({ method: 'cancel_tool', params: {}, tool_use_id: 'toolu_3' }));
+    stopper.abort();
+    await assert.rejects(stopped, (error) => error.code === 'stopped');
+    await until(() => toExtension.some((message) => message.method === 'cancel_tool'));
+    await wait(100);
+    assert.deepEqual(toExtension.filter((message) => message.method === 'cancel_tool'), [{ method: 'cancel_tool', params: {}, tool_use_id: 'toolu_3' }]);
+    assert.equal(a.pending.size, 0);
+
     const exited = new Promise((resolve) => host.once('exit', resolve));
     host.stdin.end();
     assert.equal(await exited, 0);
