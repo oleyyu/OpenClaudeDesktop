@@ -3143,7 +3143,12 @@ export class LiveThread {
     const long = kind === 'command' || kind === 'review' || route.endsWith('/message')
     const posting = this.bridge.api('POST', route, { directory: this.cwd, body, timeout: long ? 12 * 3600000 : 60000 })
     posting.catch((error) => this.failExpectation(kind, error, expectation))
-    const timer = setTimeout(() => expectation.reject?.(new RpcError(-32000, `${this.flavor.name} did not accept the message.`)), USER_MESSAGE_TIMEOUT_MS)
+    // Taken off the queue too: left at its head, it would claim the next turn's user message.
+    const timer = setTimeout(() => {
+      const index = this.expect.indexOf(expectation)
+      if (index >= 0) this.expect.splice(index, 1)
+      expectation.reject?.(new RpcError(-32000, `${this.flavor.name} did not accept the message.`))
+    }, USER_MESSAGE_TIMEOUT_MS)
     try {
       const info = await created
       if (input) this.store.rememberInput(this.id, info.id, input)

@@ -1,5 +1,5 @@
 // OpenCode / MiMo bridge: archive sync, plugin failures, command variants, MiMo exec scripts and working windows.
-import test from 'node:test'
+import test, { mock } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -286,4 +286,21 @@ test('a server whose first start fails is started anew, with its event stream, o
     bridge.stopEvents?.()
     await bridge.server?.stop()
   }
+})
+
+test('a prompt OpenCode never accepted leaves the queue, so the next turn gets its own user message', async () => {
+  const { bridge } = bridgeFor('opencode', async () => null)
+  const thread = new LiveThread(bridge, { info: { id: 'ses_q', directory: '/w' } })
+  mock.timers.enable({ apis: ['setTimeout'] })
+  let first
+  try {
+    first = thread.post('turn', null, thread.promptRoute(), {})
+    mock.timers.tick(20000)
+  } finally { mock.timers.reset() }
+  await assert.rejects(first, /did not accept the message/)
+  assert.equal(thread.expect.length, 0)
+  const second = thread.post('turn', null, thread.promptRoute(), {})
+  thread.onMessage({ id: 'msg_2', role: 'user', sessionID: 'ses_q', time: { created: 1 } })
+  assert.equal((await second).id, 'msg_2')
+  assert.equal(thread.activeTurn.id, 'msg_2')
 })
