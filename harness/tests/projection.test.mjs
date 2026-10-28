@@ -600,7 +600,7 @@ test('llm/retry carries the failure identity and the retry count', () => {
   assert.equal(always.error.codexErrorInfo, 'rateLimitExceeded')
 })
 
-test('a rewind drops the plan, preview and background jobs of the turns it removes', () => {
+test('a rewind drops the plan and preview of the turns it removes but keeps their running jobs', () => {
   const rewind = (beforeTurnId) => ev('user/message', { id: `r-${beforeTurnId}`, content: [{ type: 'text', text: 'rewound' }], source: { kind: REWIND_SOURCE, beforeTurnId } })
   const log = [
     ev('turn/start', { turn: 1 }),
@@ -620,8 +620,8 @@ test('a rewind drops the plan, preview and background jobs of the turns it remov
   assert.deepEqual(p.turns.map((turn) => turn.id), ['turn-u1'])
   assert.deepEqual(p.plan, [{ step: 'kept', status: 'pending' }])
   assert.equal(p.preview, 'first prompt')
-  assert.deepEqual(p.trackedJobIds(), [])
-  assert.deepEqual(p.settleJob([], 'bash-1', { status: 'completed', detail: 'exit code: 0' }), [])
+  // The process runs on: the background terminals list still offers to stop it.
+  assert.deepEqual(p.runningJobs().map(({ jobId }) => jobId), ['bash-1'])
   p.apply(rewind('turn-u1'))
   assert.equal(p.plan, null)
   assert.deepEqual(resumeReplayNotes({ threadId: 'tr', projector: p, tokenUsage: () => assert.fail('no usage') }), [])

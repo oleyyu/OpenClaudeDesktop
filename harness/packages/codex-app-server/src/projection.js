@@ -1297,13 +1297,13 @@ export class ThreadProjector {
     for (const [dsh, turn] of this.byDshTurn) if (gone(turn)) this.byDshTurn.delete(dsh)
     if (this.current && ids.has(this.current.id)) this.current = null
     if (this.lastUsageTurnId && ids.has(this.lastUsageTurnId)) this.lastUsageTurnId = this.turns.at(-1)?.id ?? null
-    // The task list, preview and background jobs of the dropped turns go with them.
+    // The task list and preview of the dropped turns go with them. Their background jobs stay tracked: the
+    // processes run on, and thread/backgroundTerminals/* still lists and stops them.
     if (dropped.some((turn) => turn.plan)) this.plan = this.turns.findLast((turn) => turn.plan)?.plan ?? null
     if (this.previewTurn && gone(this.previewTurn)) {
       this.preview = ''
       this.previewTurn = null
     }
-    for (const jobs of [this.jobs, this.agentJobs]) for (const [jobId, entry] of jobs) if (gone(entry.turn)) jobs.delete(jobId)
   }
 
   /**
