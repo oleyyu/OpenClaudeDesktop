@@ -192,6 +192,24 @@ test('sites: a page without a host of its own is refused unless it is the bridge
   assert.equal(codeOf(() => sites.assertSite('about:blank', ctx, { blankOk: false })), 'site_unknown');
 });
 
+test('navigate back checks the site it lands on, and leaves it again when that isn’t allowed', async () => {
+  const { tabs } = await extensionModules();
+  const history = ['https://bank.example/', 'https://a.example/'];
+  let at = 1;
+  const tab = () => ({ id: 41, url: history[at], title: `page ${at}`, status: 'complete' });
+  Object.assign(globalThis.chrome.tabs, {
+    get: async (id) => { if (id !== 41) throw new Error('no tab'); return tab(); },
+    goBack: async () => { if (at === 0) throw new Error('no history'); at -= 1; },
+    goForward: async () => { if (at === history.length - 1) throw new Error('no history'); at += 1; },
+  });
+  globalThis.chrome.tabs.onUpdated.removeListener ??= () => {};
+  globalThis.chrome.tabs.onRemoved.removeListener ??= () => {};
+  await assert.rejects(tabs.navigate({ url: 'back', tabId: 41 }, { allowedHosts: ['a.example'] }), (error) => error.code === 'site_not_allowed' && error.data.host === 'bank.example');
+  assert.equal(history[at], 'https://a.example/', 'the tab went forward again');
+  const landed = await tabs.navigate({ url: 'back', tabId: 41 }, { allowedHosts: ['a.example', 'bank.example'] });
+  assert.deepEqual([landed.url, landed.status], ['https://bank.example/', 'complete']);
+});
+
 test('navigate takes http(s) URLs and bare hosts only', async () => {
   const { tabs } = await extensionModules();
   assert.equal(tabs.normalizeUrl('example.com'), 'https://example.com/');

@@ -125,8 +125,19 @@ export async function navigate({ url, tabId } = {}, ctx = {}) {
   }
   const status = await waitForLoad(tab.id);
   if (status === "closed") throw new ToolError("no_such_tab", `Tab ${tab.id} was closed while loading.`);
+  const landed = await chrome.tabs.get(tab.id);
+  if (url === "back" || url === "forward") {
+    // Where history goes isn't known before it loads: a site the call may not use is left again, and nothing of it is
+    // returned (site_not_allowed asks the user; allowed, the call goes there again).
+    try { await assertTabSite(landed, ctx); }
+    catch (error) {
+      invalidateTab(tab.id);
+      try { await (url === "back" ? chrome.tabs.goForward(tab.id) : chrome.tabs.goBack(tab.id)); await waitForLoad(tab.id); } catch {}
+      throw error;
+    }
+  }
   setCurrentTab(tab.id);
-  return { ...tabSummary(await chrome.tabs.get(tab.id)), status };
+  return { ...tabSummary(landed), status };
 }
 
 /** After a click or key: if the tab started loading a page, wait for it and say where it went (its refs are void). */
