@@ -1442,6 +1442,8 @@ async function withKimiServer(ctx, { launch = null, cwd = null, ensureDirs = [] 
       child.stdout.on('data', scan)
       child.stderr.on('data', scan)
       child.on('exit', (code) => { clearTimeout(timer); reject(new Error(`Kimi Code's local server stopped (${code}).${text ? ` ${text.trim().slice(-300)}` : ''}`)) })
+      // A program that cannot start (ENOENT, EACCES, a missing cwd) reports only 'error', never 'exit'.
+      child.on('error', (error) => { clearTimeout(timer); reject(new Error(`Kimi Code's local server could not start: ${error.message}`)) })
     })
     const call = async (method, route, body) => {
       const response = await fetch(`${base}${route}`, { method, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(60000) })
@@ -1451,7 +1453,8 @@ async function withKimiServer(ctx, { launch = null, cwd = null, ensureDirs = [] 
     }
     return await fn(call)
   } finally {
-    if (child && child.exitCode === null && child.signalCode === null) {
+    // No pid: the process never started, so no 'exit' will come.
+    if (child && child.pid !== undefined && child.exitCode === null && child.signalCode === null) {
       const exited = new Promise((resolve) => child.once('exit', resolve))
       child.kill('SIGTERM')
       const hard = setTimeout(() => { try { child.kill('SIGKILL') } catch {} }, 5000)
@@ -2195,6 +2198,7 @@ export default {
         if (!answered) { answered = true; reject(new Error(`kimi login stopped: ${text.trim().slice(-400)}`)); return }
         onDone(code === 0, code === 0 ? null : 'Sign-in did not complete.')
       })
+      child.on('error', (error) => { if (!answered) { answered = true; reject(new Error(`kimi login could not start: ${error.message}`)) } })
       setTimeout(() => { if (!answered) { answered = true; child.kill('SIGTERM'); reject(new Error('kimi login did not show a device code.')) } }, 30000).unref?.()
     })
   },

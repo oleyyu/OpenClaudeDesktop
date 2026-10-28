@@ -1359,6 +1359,8 @@ export default {
         if (!answered) { answered = true; reject(new Error(`mcode login stopped: ${text.trim().slice(-400)}`)); return }
         onDone(code === 0, code === 0 ? null : 'Sign-in did not complete.')
       })
+      // A program that cannot start (ENOENT, EACCES) reports only 'error', never 'exit'.
+      child.on('error', (error) => { if (!answered) { answered = true; reject(new Error(`mcode login could not start: ${error.message}`)) } })
       setTimeout(() => { if (!answered) { answered = true; child.kill('SIGTERM'); reject(new Error('mcode login did not show a device code.')) } }, 30000).unref?.()
     })
   },

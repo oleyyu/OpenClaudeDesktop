@@ -135,6 +135,17 @@ test('Kimi ask rules whose TOML strings hold the other quote character, or a #, 
   assert.ok(kimiMustAsk({ tool: 'Bash', args: { command: 'echo "#1" done' }, env }))
 })
 
+test('A Kimi or MiniMax program that cannot start rejects the call instead of crashing the bridge', async () => {
+  const home = tmp(), stateDir = tmp()
+  fs.mkdirSync(path.join(home, '.kimi-code'))
+  const missing = path.join(home, 'gone', 'agent')
+  const ctx = { env: { HOME: home, KIMI_CODE_HOME: path.join(home, '.kimi-code') }, stateDir, commandLine: (args) => ({ command: missing, args }) }
+  await assert.rejects(adapterById('kimi').revertSession(ctx, 's1', 0, null, null, { dropped: 1, cwd: home }), /could not start: .*ENOENT/)
+  assert.deepEqual(fs.readdirSync(stateDir), [], 'the server overlay is removed')
+  await assert.rejects(adapterById('kimi').startLogin(ctx, { onDone: () => assert.fail('no sign-in ran') }), /kimi login could not start: .*ENOENT/)
+  await assert.rejects(adapterById('minimax').startLogin(ctx, { onDone: () => assert.fail('no sign-in ran') }), /mcode login could not start: .*ENOENT/)
+})
+
 test('Kimi in Auto: a dangerous command and a user ask rule reach the user; a routine command does not', async () => {
   const home = tmp()
   fs.mkdirSync(path.join(home, '.kimi-code'), { recursive: true })
