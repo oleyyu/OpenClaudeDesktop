@@ -886,8 +886,9 @@ export async function main() {
       // Configure can replace a card's run while its journal is read: what was read is the old run's, not the card's.
       const same = (entry) => thread.projector.workflowEntry(entry.callId)?.state.run.runId === entry.runId
       for (const entry of live) {
-        const events = await workflowEventsOf(thread.id, entry.runId, entry.cursor)
-        if (!same(entry)) continue
+        // One run's journal failing to read holds back none of the others.
+        const events = await workflowEventsOf(thread.id, entry.runId, entry.cursor).catch((error) => { log(`zcode-bridge: workflow ${entry.runId} progress: ${error?.message ?? error}`); return null })
+        if (!events || !same(entry)) continue
         thread.projector.workflowEvents(entry.callId, events)
         // The run's task ended and its journal has not settled it: its summary (else the task's status) does.
         const current = thread.projector.workflowEntry(entry.callId)
