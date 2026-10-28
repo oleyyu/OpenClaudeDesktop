@@ -1194,7 +1194,14 @@ export function apply(ctx, config) {
       }
     }
     thread.hydrate(events)
-    await applyPermissions(thread, params)
+    try {
+      await applyPermissions(thread, params)
+    } catch (error) {
+      // The client never learns this thread's id: nothing else would ever unload it.
+      if (threads.get(thread.id) === thread) threads.delete(thread.id)
+      await thread.close('Session failed to start.')
+      throw error
+    }
     try { await ctx.sessions.flush(thread.agent.session) } catch {}
     // The thread's first step (a turn/start right after this answer) sees OpenClaude Desktop's tools and instructions.
     await thread.appToolsReady
