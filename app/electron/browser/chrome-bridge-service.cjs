@@ -27,6 +27,7 @@ const NOT_CONNECTED = "Chrome isn't connected to OpenClaude Desktop. The user ne
 class ChromeToolError extends Error {
   constructor(code, message, data) { super(message); this.code = code; if (data) this.data = data; }
 }
+const unanswered = (host) => new ChromeToolError("site_unanswered", `The request to use ${host} in Chrome ended without an answer, so nothing was done there. Ask again only if the task still needs it.`, { host });
 const declined = (host) => new ChromeToolError("site_declined", `The user didn't allow ${host} in Chrome for this session, so nothing was done there. Don't try that site again unless the user asks.`, { host });
 
 /**
@@ -59,7 +60,8 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
     return entry;
   }
 
-  /** Runs one extension tool for a session. approve({host, url}) → true when the user allows the site. */
+  /** Runs one extension tool for a session. approve({host, url}) → true when the user allows the site, false when they
+   * decline it, null when the card ended without an answer. */
   async function call(sessionId, name, args = {}, { approve = null, signal = null } = {}) {
     const sites = sitesOf(sessionId);
     let asks = 0;
@@ -67,9 +69,12 @@ function createChromeBridgeService({ connect = (options) => ChromeBridgeClient.c
       if (sites.allowed.has(host)) return true;
       if (sites.declined.has(host)) return false;
       if (++asks > MAX_ASKS_PER_CALL) throw new ChromeToolError("too_many_sites", "This call needed too many new sites; call again for the rest.");
-      let ok = false;
-      try { ok = typeof approve === "function" && (await approve({ host, url })) === true; } catch { ok = false; }
+      // approve → true (allowed), false (declined); anything else (the card ended unanswered, approve threw) isn't a
+      // refusal, so the site isn't kept declined.
+      let ok = null;
+      try { ok = typeof approve === "function" ? await approve({ host, url }) : false; } catch { ok = null; }
       if (signal?.aborted) throw new ChromeToolError("stopped", "The turn was stopped.");
+      if (ok !== true && ok !== false) throw unanswered(host);
       if (ok) { sites.allowed.add(host); sites.declined.delete(host); } else sites.declined.add(host);
       return ok;
     };

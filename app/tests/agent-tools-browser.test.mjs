@@ -112,6 +112,16 @@ test('a new site is asked once per session; allowed, the call goes again; declin
   assert.equal(asked.length, 3, 'another session asks for itself');
 });
 
+test('a site card that ends without an answer isn’t a refusal: the site is asked about again', async () => {
+  const extension = fakeExtension({ pages: { current: 'https://ex.com/' } });
+  const service = createChromeBridgeService({ connect: extension.connect });
+  let asked = 0;
+  await assert.rejects(service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; return null; } }), (error) => error.code === 'site_unanswered' && error.data.host === 'ex.com');
+  await assert.rejects(service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; throw new Error('card gone'); } }), (error) => error.code === 'site_unanswered');
+  assert.deepEqual(await service.call('s1', 'read_page', {}, { approve: async () => { asked += 1; return true; } }), { ok: true, url: 'https://ex.com/' });
+  assert.equal(asked, 3);
+});
+
 test('a batch that reaches a new site asks, then runs only the steps that hadn’t run', async () => {
   const extension = fakeExtension();
   const service = createChromeBridgeService({ connect: extension.connect });

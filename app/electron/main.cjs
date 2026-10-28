@@ -720,6 +720,9 @@ async function agentToolCard(session, request = {}, { signal, call } = {}) {
   };
   const result = await owner.localApproval("item/commandExecution/requestApproval", params, { signal, outlivesTurn: agentToolCallOutlivesTurn(call, owner) });
   if (result === undefined) return undefined;
+  // A Chrome site card that ended without an answer (the core disconnected, the turn ended) isn't a refusal: null, so
+  // chrome-bridge-service.cjs doesn't keep the site declined for the session.
+  if (result === null && kind === "chrome-site") return null;
   const decision = result?.decision;
   const approved = !signal?.aborted && (decision === "accept" || decision === "acceptForSession");
   if (kind === "workflow") return { approved, always: approved && decision === "acceptForSession" && tool.always };
