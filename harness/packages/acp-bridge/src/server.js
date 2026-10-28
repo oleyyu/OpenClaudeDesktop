@@ -4195,7 +4195,21 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         if (index < 0 || !thread.queue.length) throw new RpcError(INVALID_REQUEST, thread.queue.length ? 'That queued message already started.' : 'The queue is empty.')
         const [entry] = thread.queue.splice(index, 1)
         if (thread.running && adapter.steer) {
-          await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
+          try {
+            await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
+          } catch (error) {
+            // Not taken: the message waits in its place again.
+            thread.queue.splice(Math.min(index, thread.queue.length), 0, entry)
+            notify('thread/queue/changed', { threadId: thread.id })
+            throw error
+          }
+          // Shown in the turn it joined, as turn/steer shows it.
+          const active = thread.projector.activeTurn
+          if (active) {
+            const notes = []
+            thread.projector.pushItem(notes, active, { type: 'userMessage', id: thread.projector.nextId('user'), clientId: entry.clientUserMessageId ?? null, content: entry.input }, Date.now())
+            emit(notes)
+          }
         } else thread.queue.unshift(entry)
         notify('thread/queue/changed', { threadId: thread.id })
         setImmediate(() => drainQueue(thread))

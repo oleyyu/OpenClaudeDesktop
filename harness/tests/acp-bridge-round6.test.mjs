@@ -59,6 +59,7 @@ function bridge({ adapter = adapterById('kimi'), env = {}, home = tmp(), onReque
   return { home, kimiHome, call, turn, notes, requests, waitFor, agentLog, close: () => server.shutdown() }
 }
 
+const inputTextOf = (content) => (content ?? []).map((block) => block.text ?? '').join('')
 const promptTexts = (b) => b.agentLog().filter((entry) => entry.method === 'session/prompt').map((entry) => entry.params.prompt.map((block) => block.text ?? '').join(''))
 
 // ------------------------------------------------------------ Kimi: turns it starts on its own
@@ -498,6 +499,35 @@ test('Shutdown: a turn the stop ends has its last meta in index.json once shutdo
   await b.close()
   const index = JSON.parse(fs.readFileSync(path.join(b.home, 'state', 'index.json'), 'utf8'))
   assert.ok(index.threads[thread.id].updatedAt >= stopping, 'the stopped turn’s updatedAt')
+})
+
+test('MiniMax queue: a queued message started now steers into the turn and shows there; a refused steer keeps it queued', async () => {
+  for (const decision of ['accept', 'reject']) {
+    // A stand-in for mcode's SQLite module, so thread/start installs nothing.
+    const native = tmp()
+    fs.mkdirSync(path.join(native, 'node_modules', 'better-sqlite3'), { recursive: true })
+    fs.writeFileSync(path.join(native, 'package.json'), '{}')
+    fs.writeFileSync(path.join(native, 'node_modules', 'better-sqlite3', 'index.js'), 'module.exports = {}\n')
+    const b = bridge({ adapter: adapterById('minimax'), env: { FAKE_ACP_STEER: decision, MAVIS_SQLITE3_MODULE_PATH: native } })
+    try {
+      await b.call('initialize', {})
+      const { thread } = await b.call('thread/start', { cwd: b.home })
+      const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 1500', text_elements: [] }] })
+      await b.waitFor((method, params) => method === 'turn/started' && params.turn.id === turn.id)
+      await sleep(300)
+      const { queuedSubmission } = await b.call('thread/queue/add', { threadId: thread.id, input: [{ type: 'text', text: 'also this', text_elements: [] }] })
+      const started = b.call('thread/queue/start', { threadId: thread.id, queuedSubmissionId: queuedSubmission.id })
+      if (decision === 'reject') {
+        await assert.rejects(started, /steer refused/)
+        assert.deepEqual((await b.call('thread/queue/list', { threadId: thread.id })).data.map((entry) => entry.id), [queuedSubmission.id])
+      } else {
+        await started
+        assert.deepEqual((await b.call('thread/queue/list', { threadId: thread.id })).data, [])
+        const read = await b.call('thread/read', { threadId: thread.id, includeTurns: true })
+        assert.ok(read.thread.turns.at(-1).items.some((item) => item.type === 'userMessage' && inputTextOf(item.content) === 'also this'))
+      }
+    } finally { await b.close() }
+  }
 })
 
 test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
