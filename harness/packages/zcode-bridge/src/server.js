@@ -883,13 +883,17 @@ export async function main() {
     }
     thread.workflowPolling = true
     try {
+      // Configure can replace a card's run while its journal is read: what was read is the old run's, not the card's.
+      const same = (entry) => thread.projector.workflowEntry(entry.callId)?.state.run.runId === entry.runId
       for (const entry of live) {
-        thread.projector.workflowEvents(entry.callId, await workflowEventsOf(thread.id, entry.runId, entry.cursor))
+        const events = await workflowEventsOf(thread.id, entry.runId, entry.cursor)
+        if (!same(entry)) continue
+        thread.projector.workflowEvents(entry.callId, events)
         // The run's task ended and its journal has not settled it: its summary (else the task's status) does.
         const current = thread.projector.workflowEntry(entry.callId)
         if (current?.state.taskEnded && current.state.run.status === 'running') {
           const summary = (await workflowSummaries(thread.id).catch(() => [])).find((candidate) => candidate.runId === entry.runId)
-          thread.projector.workflowSettle(entry.callId, summary ?? null)
+          if (same(entry)) thread.projector.workflowSettle(entry.callId, summary ?? null)
         }
       }
     } catch (error) {

@@ -689,6 +689,22 @@ test('bridge: Configure changes a running run\'s agent limit in place, or follow
   } finally { await again.close() }
 })
 
+test('bridge: a poll of the old run still in flight when Configure replaces it leaves the revised run running', { timeout: 60000 }, async () => {
+  const b = bridge({ FAKE_ZCODE_EVENTS_DELAY_MS: '800' })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    await sleep(100)
+    assert.deepEqual(await b.call('codeDesktop/workflow/settings', { threadId: 'sess_wf_1', runId: 'dwfrun-a', subagentModel: 'zai/glm-4.7' }), { status: 'accepted', runId: 'dwfrun-b', replaced: true })
+    await sleep(2500)
+    const run = b.notes.findLast((note) => note.params?.item?.id === 'toolu_wf')?.params.item.workflowRun
+    assert.deepEqual([run.runId, run.status, run.supersededBy], ['dwfrun-b', 'running', undefined])
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
+})
+
 test('a settings turn reads as a notice, live and on replay', () => {
   const text = 'Changed the settings of workflow run dwfrun-a ("todo-audit") from the GUI: subagents now run on zai/glm-4.7. The same script continues as run dwfrun-b, which supersedes run dwfrun-a and imports everything run dwfrun-a finished as cache. Progress and results arrive as background notifications; do not amend, resume or restart it.'
   const [item] = workflowNoticeItems('msg_s', text)

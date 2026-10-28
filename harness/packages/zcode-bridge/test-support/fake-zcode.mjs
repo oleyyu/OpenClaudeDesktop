@@ -179,6 +179,9 @@ readline.createInterface({ input: process.stdin, crlfDelay: Infinity }).on('line
   }
   if (typeof message?.method !== 'string' || message.id === undefined) return
   log(message.method, message.params ?? {})
+  // FAKE_ZCODE_EVENTS_DELAY_MS: a run's journal is read (and answered) that much later, as a slow ZCode would.
+  const delay = message.method === 'v4/conversation/workflowRunEvents' ? Number(process.env.FAKE_ZCODE_EVENTS_DELAY_MS) || 0 : 0
+  if (delay) { setTimeout(() => reply(message.id, answer(message.method, message.params ?? {})), delay); return }
   reply(message.id, answer(message.method, message.params ?? {}))
   // A prompt starts a turn that ends at once (turn/start resolves with its id).
   if (message.method === 'session/send') {
