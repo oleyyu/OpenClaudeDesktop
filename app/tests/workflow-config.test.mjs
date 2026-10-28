@@ -227,6 +227,10 @@ test('saved workflows: ~/.claude/workflows, then project folders up to the git r
     assert.deepEqual(tool.projectWorkflowDirs(sub, home), [path.join(sub, '.claude/workflows'), path.join(repo, 'pkg/.claude/workflows'), path.join(repo, '.claude/workflows')]);
     const { workflows, warnings } = tool.savedWorkflows({ cwd: sub, home });
     assert.deepEqual(workflows.map((entry) => [entry.name, entry.description, entry.source]), [['only-user', 'user', 'user'], ['shared', 'from pkg', 'project']]);
+    assert.deepEqual(workflows.map((entry) => entry.filePath), [path.join(home, '.claude/workflows/only-user.js'), path.join(repo, 'pkg/.claude/workflows/b.js')]);
+    // main.cjs 'saved-workflows' hands that file on as path (Settings' Show in Finder) and lets saved-workflow-reveal show it.
+    const main = await fs.readFile(path.join(import.meta.dirname, '../electron/main.cjs'), 'utf8');
+    assert.match(main, /knownSavedWorkflowPaths\.add\(entry\.filePath\);[\s\S]*?\.\.\.\(typeof entry\.filePath === "string" \? \{ path: entry\.filePath \} : \{\}\)/);
     assert.equal(warnings.length, 2);
     assert.ok(warnings.some((line) => /bad\.js has invalid meta/.test(line)) && warnings.some((line) => /big\.js exceeds 524288 bytes \u2014 skipping/.test(line)));
     assert.equal(tool.findSavedWorkflow({ cwd: sub, home, name: 'shared' }).workflow.description, 'from pkg');

@@ -70,7 +70,7 @@ async function pauseActiveGoals() {
     new Promise((resolve) => setTimeout(resolve, 3500).unref?.()),
   ]);
 }
-const { listFiles, readFile, scopedPath, openBlockReason, sessionPathGone } = require("./files.cjs"); // R3-files FT-05: sessionPathGone
+const { listFiles, readFile, scopedPath, openBlockReason, revealFolderTarget, sessionPathGone } = require("./files.cjs"); // R3-files FT-05: sessionPathGone
 const sessionFileAccess = require("./session-file-access.cjs");
 // B13: the Files viewer's rendered HTML preview frame (file-preview-frame.cjs); the scheme is privileged before ready.
 const { SCHEME: FILE_PREVIEW_SCHEME, createFilePreviewFrames } = require("./file-preview-frame.cjs");
@@ -2287,7 +2287,8 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
     if (!quitting) forgetWindowState(stateFile);
     if (win === window) {
       win = null;
-      const next = windowRegistry.lastFocused();
+      // A pane window never takes over: it has no focus handler to hand win back when the user returns to a full one.
+      const next = windowRegistry.lastFocusedFull() ?? windowRegistry.lastFocused();
       if (next) return void adoptMainWindow(next);
     }
     // File › New Window follows the open session popouts (adoptMainWindow above rebuilds the menu itself).
@@ -3938,11 +3939,12 @@ app.whenReady().then(async () => {
         const { savedWorkflows } = await import(require("node:url").pathToFileURL(path.join(__dirname, "workflow-tool-model.mjs")).href);
         knownSavedWorkflowPaths.clear();
         return savedWorkflows({ cwd: root, home: os.homedir(), folders: coreWorkflowFolders() }).workflows.slice(0, 200).map((entry) => {
-          if (typeof entry.path === "string" && path.isAbsolute(entry.path)) knownSavedWorkflowPaths.add(entry.path);
+          // workflow-tool-model names the script's file filePath.
+          if (typeof entry.filePath === "string" && path.isAbsolute(entry.filePath)) knownSavedWorkflowPaths.add(entry.filePath);
           return {
             name: entry.name, description: entry.description ?? "", whenToUse: entry.whenToUse ?? "", source: entry.source,
             phases: (Array.isArray(entry.phases) ? entry.phases : []).filter((phase) => phase && typeof phase.title === "string").slice(0, 30).map((phase) => phase.title),
-            disableModelInvocation: entry.disableModelInvocation === true, ...(typeof entry.path === "string" ? { path: entry.path } : {}),
+            disableModelInvocation: entry.disableModelInvocation === true, ...(typeof entry.filePath === "string" ? { path: entry.filePath } : {}),
           };
         });
       }
@@ -4109,9 +4111,14 @@ app.whenReady().then(async () => {
       // Code › Local › "Edit local environment": get / save the variables (applied when the core next starts).
       case "local-environment": return localEnvironment.run(p);
       case "saved-environments": return savedEnvironments.run(p);
-      case "reveal-folder":
-        await shell.openPath(p.cwd || config.cwd);
+      case "reveal-folder": {
+        // Never a file or a package openPath would launch; openPath reports a failure as its result, not a rejection.
+        const { folder, launches } = await revealFolderTarget(p.cwd || config.cwd);
+        if (launches) { shell.showItemInFolder(folder); return true; }
+        const error = await shell.openPath(folder);
+        if (error) throw new Error(error);
         return true;
+      }
       case "reveal-tool-file": {
         // c856385e2:1181–1315 Finder action. Resolve symlinks and scope to
         // server-known session cwd; the renderer cannot authorize a root.
