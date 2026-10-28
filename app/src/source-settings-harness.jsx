@@ -152,7 +152,7 @@ export function SourceHarnessSettings({ config, boot, engine, busy, desktopCall,
   for (const bundle of view.bundles) {
     const open = expanded[bundle.name] === true;
     pluginRows.push(settingRow(`harness-bundle-${bundle.name}`, bundle.name, `${tn(bundle.entries.length, '{count} plugin', '{count} plugins')} · ${t('{count} can be turned off', { count: bundle.switchable })}${bundle.version ? ` · ${bundle.version}` : ''}`,
-      <SourceSettingsButton variant="ghost" size="sm" aria-expanded={open} aria-label={open ? t('Hide plugins in {name}', { name: bundle.name }) : t('Show plugins in {name}', { name: bundle.name })} onClick={() => setExpanded(current => ({ ...current, [bundle.name]: !open }))}>{open ? t('Hide plugins') : t('Show plugins')}</SourceSettingsButton>));
+      <SourceSettingsButton size="sm" aria-expanded={open} aria-label={open ? t('Hide plugins in {name}', { name: bundle.name }) : t('Show plugins in {name}', { name: bundle.name })} onClick={() => setExpanded(current => ({ ...current, [bundle.name]: !open }))}>{open ? t('Hide plugins') : t('Show plugins')}</SourceSettingsButton>));
     if (open) for (const entry of bundle.entries) pluginRows.push(settingRow(`harness-row-${entry.id}`, entry.id, `${entry.module}${failedNote(entry)}`, toggle(entry, entry.id), { indent: 1 }));
   }
 

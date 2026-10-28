@@ -496,14 +496,16 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       const {label,description,scale=1,suffix=''}=harnessSettingCopy(setting),id=`dsh-${setting.ns}-${setting.key}`;
       const shown=value=>value===null||value===undefined?'':setting.type==='integer'?String(Math.round(value/scale*100)/100):String(value);
       const control=<span className="ss-dsh-setting">
+        {/* Reset sits before the field, so an overridden row's field doesn't move left of the others. */}
+        {setting.overridden&&<SourceSettingsButton size="sm" variant="ghost" disabled={busy} onClick={()=>writeHarnessSetting(setting,null)}>{t('Reset')}</SourceSettingsButton>}
         <input data-cds="TextInput" className="cds-input cds-reset" aria-label={label} defaultValue={setting.overridden?shown(setting.value):''} placeholder={setting.default!==null&&setting.default!==undefined?t('Default: {value}',{value:`${shown(setting.default)}${suffix}`}):t('Default')}
           inputMode={setting.type==='integer'?'decimal':'url'} disabled={busy||harnessSettings.writable===false} key={`${id}:${setting.value}:${setting.overridden}`}
           onBlur={event=>{const text=event.target.value.trim();if(!text){if(setting.overridden)writeHarnessSetting(setting,null);return;}
             const value=setting.type==='integer'?Math.round(Number(text)*scale):text;if(setting.type==='integer'&&!Number.isFinite(value)){event.target.value=setting.overridden?shown(setting.value):'';return;}
             if(setting.overridden&&value===setting.value)return;writeHarnessSetting(setting,value);}}
           onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur();}}/>
-        {suffix&&<span className="ss-dsh-unit">{suffix.trim()}</span>}
-        {setting.overridden&&<SourceSettingsButton size="sm" variant="ghost" disabled={busy} onClick={()=>writeHarnessSetting(setting,null)}>{t('Reset')}</SourceSettingsButton>}
+        {/* The unit slot is there even without a unit, so every field in the group ends on the same edge. */}
+        <span className="ss-dsh-unit" aria-hidden={suffix?undefined:true}>{suffix.trim()}</span>
       </span>;
       return row(id,label,description,control);
     })}]:[]),
