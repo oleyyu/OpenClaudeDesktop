@@ -475,6 +475,19 @@ test('Compact: a turn/start handled before the compaction begins keeps the threa
   } finally { await b.close() }
 })
 
+test('Custom command: !{...} output keeps a character its shell wrote in two pieces', async () => {
+  const home = tmp()
+  fs.mkdirSync(path.join(home, '.gemini', 'commands'), { recursive: true })
+  fs.writeFileSync(path.join(home, '.gemini', 'commands', 'split.toml'), String.raw`prompt = "Got !{printf '\\344'; sleep 0.2; printf '\\270\\255'}"` + '\n')
+  const b = bridge({ adapter: adapterById('gemini'), home, env: { GEMINI_CLI_TRUST_WORKSPACE: 'true' } })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: home, approvalPolicy: 'never', sandbox: 'danger-full-access' })
+    await b.turn(thread.id, '/split')
+    assert.ok(promptTexts(b).some((text) => text.includes('Got 中')), JSON.stringify(promptTexts(b)))
+  } finally { await b.close() }
+})
+
 test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
   const b = bridge({ adapter: adapterById('qwen') })
   try {

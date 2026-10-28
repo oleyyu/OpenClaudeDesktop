@@ -2035,6 +2035,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const child = spawn(wrapped.command, wrapped.args, { env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, stdio: ['ignore', 'pipe', 'pipe'] })
       let stdout = ''
       let stderr = ''
+      // Decoded as one stream each, so a character split across two reads stays whole.
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
       child.stdout.on('data', (chunk) => { stdout += chunk })
       child.stderr.on('data', (chunk) => { stderr = (stderr + chunk).slice(-8000) })
       const timer = setInterval(() => { if (state.cancelled && child.exitCode === null) child.kill('SIGTERM') }, 250)
@@ -2312,7 +2315,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       let output = ''
       let child
       try { child = spawn(wrapped.command, wrapped.args, { cwd: thread.cwd, env: agentEnv, stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { resolve({ output: String(error?.message ?? error), exitCode: 127 }); return }
-      const take = (chunk) => { if (output.length < 256 * 1024) output += String(chunk) }
+      const take = (chunk) => { if (output.length < 256 * 1024) output += chunk }
+      // Decoded as one stream each, so a character split across two reads stays whole.
+      child.stdout.setEncoding('utf8')
+      child.stderr.setEncoding('utf8')
       child.stdout.on('data', take)
       child.stderr.on('data', take)
       const timer = setTimeout(() => child.kill('SIGTERM'), 120000)
