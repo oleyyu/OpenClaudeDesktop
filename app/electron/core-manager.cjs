@@ -347,13 +347,21 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
       catch (error) { throw signal.aborted ? cancelled() : fail("Couldn’t download {url}: {error}", { url: asset.url, error: error?.message || error }); }
       if (!response.ok || !response.body) throw fail("{url} answered {status}.", { url: asset.url, status: response.status });
       const hash = crypto.createHash("sha256"), out = fs.createWriteStream(archive);
+      // A disk error (ENOSPC, EIO) destroys the stream and never drains: it fails the download instead of the main process.
+      let writeError = null;
+      out.on("error", (error) => { writeError = error; });
       let received = 0, last = 0;
       try {
         for await (const chunk of response.body) {
           const buffer = Buffer.from(chunk);
           hash.update(buffer); received += buffer.length;
           if (received > asset.size) throw fail("The download is larger than the {size} bytes the release names.", { size: asset.size });
-          if (!out.write(buffer)) await new Promise((resolve) => out.once("drain", resolve));
+          if (writeError) throw writeError;
+          if (!out.write(buffer)) await new Promise((resolve, reject) => {
+            const drained = () => { out.off("close", closed); resolve(); };
+            const closed = () => { out.off("drain", drained); reject(writeError ?? new Error("closed")); };
+            out.once("drain", drained); out.once("close", closed);
+          });
           if (received - last > 512 * 1024) { last = received; progress("download", { received, total: asset.size }); }
         }
       } catch (error) {
@@ -361,6 +369,7 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
       } finally {
         await new Promise((resolve) => out.end(resolve));
       }
+      if (writeError) throw fail("The download stopped: {error}", { error: writeError.message || writeError });
       checkCancel();
       progress("verify", { received, total: asset.size });
       if (received !== asset.size) throw fail("The download is {received} bytes, expected {size}.", { received, size: asset.size });

@@ -7,6 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { Writable } from "node:stream";
 import { createRequire } from "node:module";
 import { offeredCores, coreById, coreForEngine, coreName, releaseAsset, registerCores } from "../electron/core-registry.mjs";
 const require = createRequire(import.meta.url);
@@ -103,6 +104,27 @@ test("a download that doesn't match the release checksum is not installed", asyn
   assert.equal(events.at(-1).phase, "failed");
   assert.deepEqual(fs.readdirSync(path.join(data, "cores/codex")), [], "nothing kept");
   assert.equal((await manager.list()).cores[1].installed, false);
+});
+
+test("a disk error while saving the download fails the install and frees the core for another try", async (context) => {
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), "cd-release-"));
+  const release = fakeRelease(work);
+  const chunks = [release.bytes.subarray(0, 64), release.bytes.subarray(64)];
+  const { manager, data, events } = setup({ release: {
+    manifest: { sha256: release.sha256, size: release.size },
+    response: () => new Response(new ReadableStream({ pull(controller) { const chunk = chunks.shift(); if (chunk) controller.enqueue(chunk); else controller.close(); } })),
+  } });
+  // The archive's stream fails every write the way a full disk does, and never drains.
+  const createWriteStream = fs.createWriteStream;
+  context.after(() => { fs.createWriteStream = createWriteStream; });
+  fs.createWriteStream = () => new Writable({ highWaterMark: 1, write(chunk, encoding, callback) { setImmediate(() => callback(Object.assign(new Error("ENOSPC: no space left on device"), { code: "ENOSPC" }))); } });
+  await assert.rejects(manager.install("codex"), /The download stopped: ENOSPC/);
+  assert.equal(events.at(-1).phase, "failed");
+  assert.deepEqual(fs.readdirSync(path.join(data, "cores/codex")), [], "nothing kept");
+  fs.createWriteStream = createWriteStream;
+  chunks.push(release.bytes);
+  await manager.install("codex");
+  assert.equal((await manager.list()).cores.find((core) => core.id === "codex").version, "0.155.1");
 });
 
 test("choosing a core that isn't installed is refused", async () => {
