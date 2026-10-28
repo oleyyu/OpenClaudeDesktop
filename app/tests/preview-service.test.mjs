@@ -520,6 +520,22 @@ test('a .claude/launch.json written while the pane is open reaches it without re
   assert.ok(seen(), 'the pane got the new configuration');
 });
 
+test('preview-auto-verify never writes through a launch.json that links outside the project', async (t) => {
+  const cwd = project(null), outside = project(null);
+  const { fake, instance } = service(cwd);
+  t.after(() => { instance.dispose(); for (const dir of [cwd, outside]) fs.rmSync(dir, { recursive: true, force: true }); });
+  const sender = fake.sender();
+  const target = path.join(outside, 'zshrc');
+  fs.writeFileSync(target, 'foo() { echo hi; }\n');
+  fs.symlinkSync(target, path.join(cwd, '.claude/launch.json'));
+  await assert.rejects(instance.call(sender, 'preview-auto-verify', { sessionId: 's1', enabled: true }), /links outside the project/);
+  assert.equal(fs.readFileSync(target, 'utf8'), 'foo() { echo hi; }\n');
+  fs.unlinkSync(path.join(cwd, '.claude/launch.json'));
+  fs.writeFileSync(path.join(cwd, '.claude/launch.json'), '{ "configurations": [] }');
+  await instance.call(sender, 'preview-auto-verify', { sessionId: 's1', enabled: true });
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, '.claude/launch.json'), 'utf8')).autoVerify, true);
+});
+
 test('start page detection: preview-detect lists package.json scripts; preview-use-server creates, appends, refuses (addServerFromCandidate)', async (t) => {
   const cwd = project();
   const { fake, instance } = service(cwd);

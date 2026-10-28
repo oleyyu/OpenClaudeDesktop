@@ -1856,6 +1856,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
         const file = path.join(entry.cwd, launch.LAUNCH_FILE);
         let text;
         try { text = fs.readFileSync(file, "utf8"); } catch { throw new Error("No .claude/launch.json in this folder yet."); }
+        // A launch.json that resolves outside the project (a link) is never written through.
+        if (!launch.insideFolderReal(entry.cwd, file)) throw new Error("This folder’s .claude/launch.json links outside the project, so it isn’t changed.");
         fs.writeFileSync(file, launch.withAutoVerify(text, p.enabled));
         launchCache.delete(entry.cwd);
         notifyFolder(entry.cwd);
