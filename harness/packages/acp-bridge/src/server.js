@@ -4198,9 +4198,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
           try {
             await adapter.steer(ctx, thread.host, thread.id, inputText(entry.input))
           } catch (error) {
-            // Not taken: the message waits in its place again.
+            // Not taken: the message waits in its place again (and starts now if the turn ended while the steer was out).
             thread.queue.splice(Math.min(index, thread.queue.length), 0, entry)
             notify('thread/queue/changed', { threadId: thread.id })
+            setImmediate(() => drainQueue(thread))
             throw error
           }
           // Shown in the turn it joined, as turn/steer shows it.

@@ -528,8 +528,9 @@ const transport = new LineTransport(process.stdin, process.stdout, {
       // Qwen's recovery pre-check (Session.ts continueLastTurn): accepted when FAKE_ACP_CONTINUE says so.
       case 'qwen/control/session/continue':
         return { accepted: process.env.FAKE_ACP_CONTINUE === 'accept', interruption: process.env.FAKE_ACP_CONTINUE === 'accept' ? 'interrupted_turn' : 'none' }
-      // MiniMax's steer during a turn: refused when FAKE_ACP_STEER says so.
+      // MiniMax's steer during a turn: refused when FAKE_ACP_STEER says so, answered after FAKE_ACP_STEER_DELAY ms.
       case 'mcode/session/steer':
+        if (process.env.FAKE_ACP_STEER_DELAY) await sleep(Number(process.env.FAKE_ACP_STEER_DELAY))
         if (process.env.FAKE_ACP_STEER === 'reject') throw new RpcError(-32603, 'steer refused')
         return {}
       case 'qwen/control/session/cd':

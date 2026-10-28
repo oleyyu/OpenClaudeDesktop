@@ -530,6 +530,25 @@ test('MiniMax queue: a queued message started now steers into the turn and shows
   }
 })
 
+test('MiniMax queue: a steer refused after its turn ended starts the queued message as the next turn', async () => {
+  const native = tmp()
+  fs.mkdirSync(path.join(native, 'node_modules', 'better-sqlite3'), { recursive: true })
+  fs.writeFileSync(path.join(native, 'package.json'), '{}')
+  fs.writeFileSync(path.join(native, 'node_modules', 'better-sqlite3', 'index.js'), 'module.exports = {}\n')
+  const b = bridge({ adapter: adapterById('minimax'), env: { FAKE_ACP_STEER: 'reject', FAKE_ACP_STEER_DELAY: '800', MAVIS_SQLITE3_MODULE_PATH: native } })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    const { turn } = await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 400', text_elements: [] }] })
+    await b.waitFor((method, params) => method === 'turn/started' && params.turn.id === turn.id)
+    const { queuedSubmission } = await b.call('thread/queue/add', { threadId: thread.id, input: [{ type: 'text', text: 'also this', text_elements: [] }] })
+    await assert.rejects(b.call('thread/queue/start', { threadId: thread.id, queuedSubmissionId: queuedSubmission.id }), /steer refused/)
+    await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id !== turn.id)
+    assert.deepEqual((await b.call('thread/queue/list', { threadId: thread.id })).data, [])
+    assert.ok(promptTexts(b).includes('also this'), JSON.stringify(promptTexts(b)))
+  } finally { await b.close() }
+})
+
 test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
   const b = bridge({ adapter: adapterById('qwen') })
   try {
