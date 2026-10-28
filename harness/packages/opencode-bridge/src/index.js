@@ -1345,7 +1345,13 @@ export class Bridge {
       case 'thread/delete': {
         const id = this.requireId(params.threadId)
         const live = this.threads.get(id)
-        if (live) { await live.interrupt().catch(() => {}); live.close('Session deleted.'); this.threads.delete(id) }
+        if (live) {
+          await live.interrupt().catch(() => {})
+          live.close('Session deleted.')
+          this.threads.delete(id)
+          // Its sub-agent threads go with it (as unload drops them): left behind they would still count as busy and be listed.
+          for (const [childId, child] of this.children) if (child.root === live) { this.children.delete(childId); child.close('Session deleted.') }
+        }
         const directory = this.store.get(id).cwd
         try { await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory }) } catch (error) { if (error?.status !== 404) this.log(`delete ${id}: ${error?.message}`) }
         this.store.update(id, { deleted: true, inputs: undefined, steers: undefined, queue: undefined })

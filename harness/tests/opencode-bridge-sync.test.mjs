@@ -326,3 +326,17 @@ test('a turn/start while a queued turn is still starting is refused, and only on
   assert.deepEqual(posts, ['queued'])
   assert.equal(thread.startingTurn, false)
 })
+
+test('thread/delete drops the deleted session\'s sub-agent threads with it', async () => {
+  const { bridge } = bridgeFor('opencode', async () => null)
+  const root = new LiveThread(bridge, { info: { id: 'ses_root', directory: '/w' } })
+  root.interrupt = async () => {}
+  bridge.threads.set('ses_root', root)
+  const child = new LiveThread(bridge, { info: { id: 'ses_child', directory: '/w', parentID: 'ses_root' }, root })
+  child.busy = true
+  bridge.children.set('ses_child', child)
+  await bridge.handle('thread/delete', { threadId: 'ses_root' })
+  assert.deepEqual([...bridge.children.keys()], [])
+  assert.equal(child.closed, true)
+  assert.equal(await bridge.reloadConfig(), true, 'a deleted session\'s busy child no longer defers a reload')
+})
