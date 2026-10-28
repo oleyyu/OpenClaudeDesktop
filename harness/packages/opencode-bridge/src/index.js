@@ -3360,8 +3360,15 @@ export class LiveThread {
     if (!entry) throw new RpcError(-32600, this.queue.length ? 'That queued message already started.' : 'The queue is empty.')
     this.queue.splice(index, 1)
     this.queueChanged()
-    if (this.activeTurn) await this.steer({ input: entry.input, expectedTurnId: this.activeTurn.id, clientUserMessageId: entry.clientUserMessageId })
-    else await this.startTurn({ input: entry.input })
+    try {
+      if (this.activeTurn) await this.steer({ input: entry.input, expectedTurnId: this.activeTurn.id, clientUserMessageId: entry.clientUserMessageId })
+      else await this.startTurn({ input: entry.input })
+    } catch (error) {
+      // Back in its place, as startNext does: a refused or failed start must not lose the message.
+      this.queue.splice(Math.min(index, this.queue.length), 0, entry)
+      this.queueChanged()
+      throw error
+    }
     return {}
   }
 

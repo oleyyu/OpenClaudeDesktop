@@ -340,3 +340,12 @@ test('thread/delete drops the deleted session\'s sub-agent threads with it', asy
   assert.equal(child.closed, true)
   assert.equal(await bridge.reloadConfig(), true, 'a deleted session\'s busy child no longer defers a reload')
 })
+
+test('thread/queue/start puts the message back in its place when the steer is refused', async () => {
+  const { bridge } = bridgeFor()
+  const thread = new LiveThread(bridge, { info: { id: 'ses_qs', directory: '/w' } })
+  thread.queue.push({ id: 'q1', input: [{ type: 'text', text: 'one' }] }, { id: 'q2', input: [{ type: 'text', text: 'two' }] })
+  thread.activeTurn = { id: 'msg_c', startedMs: 1, kind: 'compaction' }
+  await assert.rejects(thread.queueStart('q2'), /No active turn to steer/)
+  assert.deepEqual(thread.queue.map((entry) => entry.id), ['q1', 'q2'])
+})
