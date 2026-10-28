@@ -4009,7 +4009,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const host = await ensureHost(thread)
         let accepted = false
         try { accepted = await adapter.continueCheck(ctx, host, thread.id) } catch (error) { log(`continue check: ${error?.message ?? error}`) }
-        if (!accepted) return { accepted: false }
+        // A turn that started while the check was out (a message sent meanwhile, another Try again) keeps the thread.
+        if (!accepted || thread.running) return { accepted: false }
         const turnId = `turn-${randomUUID()}`
         void runTurn(thread, { input: [], turnId, continuation: true })
         return { accepted: true, turn: { id: turnId, items: [], itemsView: 'notLoaded', status: 'inProgress', error: null, startedAt: null, completedAt: null, durationMs: null } }

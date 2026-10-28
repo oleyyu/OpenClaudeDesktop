@@ -440,6 +440,23 @@ test('Qwen Try again: codeDesktop/turn/continue resumes through qwen/control/ses
   }
 })
 
+test('Qwen Try again: a message sent while the continue check is out keeps the thread; its turn completes', async () => {
+  const b = bridge({ adapter: adapterById('qwen'), env: { FAKE_ACP_CONTINUE: 'accept' } })
+  try {
+    await b.call('initialize', {})
+    const { thread } = await b.call('thread/start', { cwd: b.home })
+    await b.turn(thread.id, 'hello')
+    const [result, started] = await Promise.all([
+      b.call('codeDesktop/turn/continue', { threadId: thread.id }),
+      b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'slow 300', text_elements: [] }] }),
+    ])
+    assert.equal(result.accepted, false)
+    const done = await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === started.turn.id)
+    assert.equal(done.turn.status, 'completed')
+    assert.equal(b.agentLog().filter((entry) => entry.method === 'session/prompt').length, 2)
+  } finally { await b.close() }
+})
+
 test('Qwen settings: a model setting offers the agent’s models and takes one of them', async () => {
   const b = bridge({ adapter: adapterById('qwen') })
   try {
