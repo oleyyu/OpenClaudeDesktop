@@ -28,6 +28,9 @@ test('manual holders route events and release by attempt when a run ID is reused
   assert.deepEqual(notices.map(item => item.event), [{ type: 'phase', title: 'current', index: 3, kind: 'child' }])
   await executions.release(thread, first.runId, first.attemptId)
   assert.equal(executions.has(thread, second.runId), true)
+  // A thread not loaded here holds no run, and neither does an untracked id.
+  assert.equal(executions.has(undefined, 'wf_unknown'), false)
+  assert.equal(executions.has(undefined, second.runId), false)
   assert.equal(executions.member(thread, second.runId, 1, 'retry', second.attemptId), true)
   assert.throws(() => executions.member(thread, second.runId, 1, 'retry', first.attemptId), /Unknown/)
   runs[1].resolve({ value: 2, stopReason: 'completed' })
