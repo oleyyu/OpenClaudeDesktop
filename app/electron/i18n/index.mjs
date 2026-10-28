@@ -10,6 +10,7 @@
 // Module-level t() calls are therefore safe. The main process calls setLocale
 // after reading preferences and rebuilds its menus.
 import zhCN from './zh-CN/index.mjs';
+import { CLAUDE_ACTOR } from './claude-actor.mjs';
 
 export const DEFAULT_LOCALE = 'en-US';
 // name: in English (the secondary line); localName: in the language itself.
@@ -70,7 +71,7 @@ const named = (text) => (assistant === 'DeepSeek' || typeof text !== 'string' ||
 export function t(source, values) {
   if (typeof source !== 'string') return source;
   const table = DICTIONARIES[current];
-  const text = table && Object.hasOwn(table, source) ? table[source] : source;
+  const text = table && Object.hasOwn(table, source) ? table[source] : Object.hasOwn(CLAUDE_ACTOR, source) ? CLAUDE_ACTOR[source] : source;
   return interpolate(named(text), values);
 }
 

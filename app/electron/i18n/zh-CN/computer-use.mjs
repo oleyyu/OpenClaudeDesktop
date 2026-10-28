@@ -129,17 +129,17 @@ export default {
   "DeepSeek can guide you step by step through the apps you allow once this app has Accessibility and Screen Recording permission (System Settings › Privacy & Security).": "本应用获得“辅助功能”和“屏幕录制”权限后（系统设置 › 隐私与安全性），DeepSeek 就可以在你允许的应用里一步步引导你。",
   "Teach mode can’t run on this computer: computer use’s native part isn’t available.": "教学模式无法在这台电脑上运行：电脑使用的原生组件不可用。",
   // Unhide apps (src/source-settings-computer-use.jsx; official c71860c77 chicagoAutoUnhide).
-  "Unhide apps when Claude finishes": "Claude 完成后取消隐藏应用",
-  "When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.": "Claude 完整控制你的屏幕时，任务中被隐藏的应用会在 Claude 停止后恢复显示。",
+  "Unhide apps when Claude finishes": "DeepSeek 完成后取消隐藏应用",
+  "When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.": "DeepSeek 完整控制你的屏幕时，任务中被隐藏的应用会在 DeepSeek 停止后恢复显示。",
   // The access / teach cards' footnote (src/computer-use-approval-card.jsx; official c96d752d0 / ca31fdde5).
   "{name} will work in these apps in the background while you keep using your Mac.": "{name} 会在后台使用这些应用，你可以继续使用你的 Mac。",
   "Your other windows will be hidden, then restored when {name} is done.": "你的其他窗口会被隐藏，{name} 完成后恢复。",
   "Your other windows will be hidden while {name} works.": "{name} 工作期间，你的其他窗口会被隐藏。",
   // Preferred mode (src/source-settings-computer-use.jsx; official c71860c77).
-  "How Claude uses the apps you allow": "Claude 如何使用你允许的应用",
+  "How Claude uses the apps you allow": "DeepSeek 如何使用你允许的应用",
   "Background": "后台",
   "Full control": "完整控制",
-  "Background: Claude works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: Claude takes control of your screen, mouse, and keyboard by default whenever Claude uses an app you allow, without asking again.": "后台：Claude 在你允许的应用内工作，你可以同时继续使用电脑；需要接管整个屏幕时会先征得你同意。完整控制：Claude 使用你允许的应用时，默认直接接管你的屏幕、鼠标和键盘，不再逐次询问。",
+  "Background: Claude works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: Claude takes control of your screen, mouse, and keyboard by default whenever Claude uses an app you allow, without asking again.": "后台：DeepSeek 在你允许的应用内工作，你可以同时继续使用电脑；需要接管整个屏幕时会先征得你同意。完整控制：DeepSeek 使用你允许的应用时，默认直接接管你的屏幕、鼠标和键盘，不再逐次询问。",
   // The take-over card (src/computer-use-approval-card.jsx; official c96d752d0 JEe takeoverFrom / wa).
   "Take over the screen? You’ve set Background as your preferred mode, so {name} is checking before switching to full-screen control.": "接管屏幕？你已把首选模式设为后台，所以 {name} 在切换到全屏控制前先征求你的同意。",
   "Take over the screen? {name} was working on {app} in the background and now needs full-screen control.": "接管屏幕？{name} 刚在后台操作 {app}，现在需要全屏控制。",

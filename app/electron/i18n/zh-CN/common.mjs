@@ -41,7 +41,7 @@ export default {
   'Calendar': '日历',
   'Clear selection': '清除选择',
   'High usage': '用量较高',
-  'Claude thinks longer with Max effort and uses your limits faster than High.': '使用“最高”强度时 Claude 会思考更久，用量消耗也比“高”更快。',
+  'Claude thinks longer with Max effort and uses your limits faster than High.': '使用“最高”强度时 DeepSeek 会思考更久，用量消耗也比“高”更快。',
   'Loading options': '正在加载选项',
   'Loading more options': '正在加载更多选项',
   'Model: {name}': '模型：{name}',

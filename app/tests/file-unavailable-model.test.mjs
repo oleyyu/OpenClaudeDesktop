@@ -41,7 +41,7 @@ import { FILE_CARD_LABELS, addFolderFailedMessage, canCreateFileNamed, createFil
 test('B32 labels and messages are the original strings', () => {
   assert.deepEqual({ ...FILE_CARD_LABELS }, { tryAgain: 'Try again', tryingAgain: 'Trying again…', createFile: 'Create file', creatingFile: 'Creating file…',
     addFolder: 'Add folder', addingFolder: 'Adding folder…', showInFinder: 'Show in Finder', revealFailed: 'Couldn’t show this file in its folder.' });
-  assert.equal(createFileFailedMessage('a.md'), 'Couldn’t create a.md. You can select Create file again or ask Claude to create it.');
+  assert.equal(createFileFailedMessage('a.md'), 'Couldn’t create a.md. You can select Create file again or ask DeepSeek to create it.');
   assert.equal(addFolderFailedMessage('~/x'), 'Couldn’t add ~/x to this session.');
 });
 
@@ -51,7 +51,7 @@ test('B32 missing card: Try again always, Create file when writable, nameable an
   assert.equal(fileCardPlan('missing', { path: 'a.md', writable: true }).create, false, 'Qo unknown');
   assert.equal(fileCardPlan('missing', { path: 'a.zip', writable: true, creatable: true }).create, false, 'Gt: archive');
   const cant = fileCardPlan('missing', { path: 'a.md', writable: true, creatable: false, canAskClaude: true });
-  assert.deepEqual([cant.create, cant.body, cant.showsPath], [false, 'It can’t be created from here. Ask Claude to create it.', true]);
+  assert.deepEqual([cant.create, cant.body, cant.showsPath], [false, 'It can’t be created from here. Ask DeepSeek to create it.', true]);
   assert.equal(fileCardPlan('missing', { path: 'a.md', writable: true, creatable: false }).body, 'It may have been deleted or moved.', 'wp needs Ld');
   for (const reason of ['outside_root', 'too_large', 'read_error', 'binary']) assert.equal(fileCardPlan(reason).retry, false, reason);
 });

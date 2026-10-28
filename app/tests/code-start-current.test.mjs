@@ -168,7 +168,7 @@ test('Next steps: a lone blocked session is a row with the warning status; tasks
 test('Next steps: a family without a spare seat is one rest row that opens a popover list', () => {
   const html = render({ tasks: tasks(3), setupRows: [{ card: { id: 'worktree-apart', folder: '/r', taken: false }, onPress: noop }] },
     [waiting('a', 'Alpha'), waiting('b', 'Beta', 'permission')]);
-  assert.match(html, /data-testid="start-card-blocked-sessions"[^>]*aria-haspopup="dialog" aria-expanded="false"[^>]*>.*Claude is blocked in 2 sessions/);
+  assert.match(html, /data-testid="start-card-blocked-sessions"[^>]*aria-haspopup="dialog" aria-expanded="false"[^>]*>.*DeepSeek is blocked in 2 sessions/);
   assert.match(html, />3 suggested tasks</);
   assert.match(html, /data-testid="start-card-worktree-apart"/);
   assert.doesNotMatch(html, /Alpha|Beta/);

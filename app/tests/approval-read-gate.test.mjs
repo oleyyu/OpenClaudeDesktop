@@ -18,7 +18,7 @@ import { createReadGateStore, nextReadGateReplay, readGateAllowIntent, readGateK
 import { ApprovalReadRows } from '../src/generated/code-current/approval-read-gate.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const HINT = 'Scroll through what Claude sent to allow it.';
+const HINT = 'Scroll through what DeepSeek sent to allow it.';
 const gate = { hint: HINT, loose: true };
 const METHOD = 'mcpServer/elicitation/request';
 const toolApproval = (meta = {}) => ({ id: 9, method: METHOD, bridgeApproval: { connectionId: 'c', instanceId: 'i-1' },
@@ -166,7 +166,7 @@ test('SSR, held (the card scroller cannot show the rows whole): every allow is d
   assert.match(html, /<div class="flex flex-col gap-1 rounded bg-alpha-1 px-lg py-md"><span aria-hidden="true" class="text-footnote text-muted-as-secondary">What Claude sent<\/span><div role="group"/);
   // No aria-live replay while held; the hint line shows (not invisible).
   assert.equal(html.includes('aria-live'), false);
-  assert.match(html, /<p aria-hidden="true" data-testid="approval-read-hint" class="epitaxy-approval-read-hint text-footnote text-muted-as-secondary text-end text-balance">Scroll through what Claude sent to allow it\.<\/p><footer/);
+  assert.match(html, /<p aria-hidden="true" data-testid="approval-read-hint" class="epitaxy-approval-read-hint text-footnote text-muted-as-secondary text-end text-balance">Scroll through what DeepSeek sent to allow it\.<\/p><footer/);
   const allows = allowButtons(html);
   assert.equal(allows.length, 3);
   for (const button of allows) {
@@ -176,7 +176,7 @@ test('SSR, held (the card scroller cannot show the rows whole): every allow is d
   // Rj Vt stays (disabled) beside Allow once while held — not hidden.
   assert.match(html, /data-approval-action="acceptAlways"/);
   assert.equal(html.split('class="source-tooltip-disabled-trigger"').length - 1, 3);
-  assert.equal(html.split('data-cds-disabled-reason="">Scroll through what Claude sent to allow it.</span>').length - 1, 3);
+  assert.equal(html.split('data-cds-disabled-reason="">Scroll through what DeepSeek sent to allow it.</span>').length - 1, 3);
   assert.doesNotMatch(html.match(/<button[^>]*data-approval-action="decline"[^>]*>/)[0], / disabled=""/);
 });
 

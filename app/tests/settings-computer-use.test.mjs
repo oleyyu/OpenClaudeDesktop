@@ -34,11 +34,11 @@ test('the official section: Computer use, a Beta badge, the cloud note, the swit
 
 test('preferred mode (official c71860c77 ii): one row, the official sentence as its description, the segmented control in its control slot', () => {
   const preferred = group().rows.find((r) => r.id === 'computer-use-preferred-mode');
-  assert.equal(preferred.label, 'How Claude uses the apps you allow');
-  assert.equal(preferred.description, 'Background: Claude works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: Claude takes control of your screen, mouse, and keyboard by default whenever Claude uses an app you allow, without asking again.');
+  assert.equal(preferred.label, 'How DeepSeek uses the apps you allow');
+  assert.equal(preferred.description, 'Background: DeepSeek works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: DeepSeek takes control of your screen, mouse, and keyboard by default whenever DeepSeek uses an app you allow, without asking again.');
   assert.equal(preferred.below, undefined, 'nothing below the row');
   const bg = render(preferred.control);
-  assert.match(bg, /^<div[^>]*data-cds="SegmentedControl"[^>]*aria-label="How Claude uses the apps you allow"/);
+  assert.match(bg, /^<div[^>]*data-cds="SegmentedControl"[^>]*aria-label="How DeepSeek uses the apps you allow"/);
   assert.match(bg, /aria-label="Background"[^>]*aria-checked="true"/);
   assert.match(bg, /aria-label="Full control"/);
   assert.doesNotMatch(bg, /<p/, 'no per-mode paragraph');
@@ -75,8 +75,8 @@ test('Unhide apps when Claude finishes (official chicagoAutoUnhide, c71860c77 ii
   const rows = group().rows;
   const unhide = rows[1];
   assert.equal(unhide.id, 'computerUseAutoUnhide');
-  assert.equal(unhide.label, 'Unhide apps when Claude finishes');
-  assert.equal(unhide.description, 'When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.');
+  assert.equal(unhide.label, 'Unhide apps when DeepSeek finishes');
+  assert.equal(unhide.description, 'When DeepSeek has full control of your screen, apps hidden during a task are restored when DeepSeek stops.');
   assert.match(render(unhide.control), /aria-checked="true"/, 'unset reads as on');
   assert.match(render(group({ computerUseAutoUnhide: false }).rows[1].control), /aria-checked="false"/);
   const saved = [];

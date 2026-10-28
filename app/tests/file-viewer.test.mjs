@@ -357,7 +357,7 @@ test('B32: the missing card offers Try again, and Create file only when the pare
   assert.match(text(creatable), /Try againCreate file/);
   const notHere = panel({ view: filesView({ path: 'src/missing.js', unavailable: 'missing', creatable: false }) });
   assert.deepEqual(buttons(notHere), ['retry']);
-  assert.match(text(notHere), /Couldn’t find this fileIt can’t be created from here\. Ask Claude to create it\.src\/missing\.js/);
+  assert.match(text(notHere), /Couldn’t find this fileIt can’t be created from here\. Ask DeepSeek to create it\.src\/missing\.js/);
   const image = panel({ view: filesView({ path: 'logo.png', unavailable: 'missing', creatable: true }) });
   assert.deepEqual(buttons(image), ['retry'], 'Gt: an image is never created empty');
 });

@@ -48,7 +48,7 @@ export default {
   'Start worktree from': '工作树起点',
   'Switch this folder to': '将此文件夹切换到',
   'Worktree for {label}': '{label} 的工作树',
-  'Claude makes its changes in a separate copy of this repository, so your folder stays as it is.': 'Claude 会在此仓库的独立副本中进行更改，你的文件夹保持原样。',
+  'Claude makes its changes in a separate copy of this repository, so your folder stays as it is.': 'DeepSeek 会在此仓库的独立副本中进行更改，你的文件夹保持原样。',
   'Remove {item}': '移除 {item}',
   // end R2-home
   // R3-home: 2.42304.0 environment picker (cc43287c9 h2 Starred/Local groups, More Z0, chord status) and the Folders
@@ -89,8 +89,8 @@ export default {
   'Asked a question': '提出了问题',
   'Needs permission': '需要权限',
   'Hit an error': '遇到错误',
-  'Claude is blocked in {count, plural, one {# session} other {# sessions}}': 'Claude 在 {count, plural, one {# 个会话} other {# 个会话}}中受阻',
-  'Claude is blocked in {count, plural, one {# more session} other {# more sessions}}': 'Claude 在另外 {count, plural, one {# 个会话} other {# 个会话}}中受阻',
+  'Claude is blocked in {count, plural, one {# session} other {# sessions}}': 'DeepSeek 在 {count, plural, one {# 个会话} other {# 个会话}}中受阻',
+  'Claude is blocked in {count, plural, one {# more session} other {# more sessions}}': 'DeepSeek 在另外 {count, plural, one {# 个会话} other {# 个会话}}中受阻',
   'Dismiss {count, plural, one {# blocked session} other {# blocked sessions}}': '忽略 {count, plural, one {# 个受阻会话} other {# 个受阻会话}}',
   '{count, plural, one {# suggested task} other {# suggested tasks}}': '{count, plural, one {# 个建议的任务} other {# 个建议的任务}}',
   '{count, plural, one {# more suggested task} other {# more suggested tasks}}': '{count, plural, one {另外 # 个建议的任务} other {另外 # 个建议的任务}}',
@@ -401,7 +401,7 @@ export default {
 
   // Composer, git band and session status
   'Commit': '提交',
-  'Claude is working — wait for the turn to finish': 'Claude 正在工作，请等待本轮完成',
+  'Claude is working — wait for the turn to finish': 'DeepSeek 正在工作，请等待本轮完成',
   'No changes to commit': '没有可提交的更改',
   'Message couldn’t be sent. Try again.': '消息未能发送，请重试。',
   'Connection to DeepSeek lost.': '与 DeepSeek 的连接已断开。',
