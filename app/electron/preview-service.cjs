@@ -486,9 +486,11 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (holdOutside(entry, allowed.url)) event.preventDefault();
     };
     contents.on("will-navigate", guard);
-    // A subframe's redirect is not the tab's navigation (will-redirect fires for every frame).
-    contents.on("will-redirect", (event, url) => { if (event.isMainFrame !== false) guard(event, url); });
-    contents.on("will-frame-navigate", (event) => { if (!event.isMainFrame) { const allowed = launch.navigationAllowed(event.url, entry.cwd); if (!allowed.ok && !/^(data|blob|about):/.test(event.url)) event.preventDefault(); } });
+    // A subframe only has its own load refused, never the tab held or errored.
+    const frameGuard = (event, url) => { const allowed = launch.navigationAllowed(url, entry.cwd); if (!allowed.ok && !/^(data|blob|about):/.test(url)) event.preventDefault(); };
+    // will-redirect fires for every frame, and will-frame-navigate doesn't see redirects: a subframe's goes to frameGuard.
+    contents.on("will-redirect", (event, url) => { if (event.isMainFrame !== false) guard(event, url); else frameGuard(event, url); });
+    contents.on("will-frame-navigate", (event) => { if (!event.isMainFrame) frameGuard(event, event.url); });
     // A page popup becomes a new preview tab, retaining its originator’s approval boundary.
     contents.setWindowOpenHandler(({ url }) => {
       const allowed = launch.navigationAllowed(url, entry.cwd);
