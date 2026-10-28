@@ -3936,11 +3936,12 @@ app.whenReady().then(async () => {
         const { savedWorkflows } = await import(require("node:url").pathToFileURL(path.join(__dirname, "workflow-tool-model.mjs")).href);
         knownSavedWorkflowPaths.clear();
         return savedWorkflows({ cwd: root, home: os.homedir(), folders: coreWorkflowFolders() }).workflows.slice(0, 200).map((entry) => {
-          if (typeof entry.path === "string" && path.isAbsolute(entry.path)) knownSavedWorkflowPaths.add(entry.path);
+          // workflow-tool-model names the script's file filePath.
+          if (typeof entry.filePath === "string" && path.isAbsolute(entry.filePath)) knownSavedWorkflowPaths.add(entry.filePath);
           return {
             name: entry.name, description: entry.description ?? "", whenToUse: entry.whenToUse ?? "", source: entry.source,
             phases: (Array.isArray(entry.phases) ? entry.phases : []).filter((phase) => phase && typeof phase.title === "string").slice(0, 30).map((phase) => phase.title),
-            disableModelInvocation: entry.disableModelInvocation === true, ...(typeof entry.path === "string" ? { path: entry.path } : {}),
+            disableModelInvocation: entry.disableModelInvocation === true, ...(typeof entry.filePath === "string" ? { path: entry.filePath } : {}),
           };
         });
       }
