@@ -102,6 +102,17 @@ test('MiniMax core settings: config.yaml blocks read and one key written, the re
   assert.ok(MINIMAX_CORE_SETTINGS.some((def) => def.key === 'review.mode' && def.type === 'select'))
 })
 
+test('MiniMax core settings: quoted values in the block read back unchanged after a write', async () => {
+  const { readMinimaxSettings, writeMinimaxSetting } = await import('../packages/acp-bridge/src/agents/minimax.js')
+  const home = tmp(), file = path.join(home, '.minimax', 'config.yaml')
+  write(file, 'memory:\n  enabled: true\n  note: "say \\"hi\\" #1" # why\n  version: "2.0"\n  dir: "C:\\\\x"\n  quip: \'it\'\'s # fine\'\n  tags: ["a, b", \'c\']\n')
+  const before = { enabled: true, note: 'say "hi" #1', version: '2.0', dir: 'C:\\x', quip: "it's # fine", tags: ['a, b', 'c'] }
+  assert.deepEqual(readMinimaxSettings(file).memory, before)
+  writeMinimaxSetting(file, 'memory.proactive', true)
+  writeMinimaxSetting(file, 'memory.proactive', false)
+  assert.deepEqual(readMinimaxSettings(file).memory, { ...before, proactive: false })
+})
+
 test('MiniMax skills follow config.yaml skills.external: disabled sources dropped, priority order, walkUp', async () => {
   const { minimaxSkillRoots } = await import('../packages/acp-bridge/src/agents/minimax.js')
   const home = tmp(), project = tmp()
