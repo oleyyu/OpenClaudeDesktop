@@ -60,6 +60,13 @@ export async function resolveTab(tabId) {
   throw new ToolError("no_tab", "There's no tab to act on. Call navigate with a url first.");
 }
 
+/** Throws unless the call may read or act on the page the tab shows (sites.js): about:blank only in a tab the bridge
+ * opened (one a site opened can hold that site's data). */
+export async function assertTabSite(tab, ctx) {
+  await load();
+  assertSite(tab.url || tab.pendingUrl || "", ctx, { blankOk: openedTabs.has(tab.id) });
+}
+
 /** http(s) URLs, or a bare host ("example.com" → https://example.com/). */
 export function normalizeUrl(input) {
   const raw = typeof input === "string" ? input.trim() : "";
@@ -100,7 +107,7 @@ export async function navigate({ url, tabId } = {}, ctx = {}) {
   let tab;
   if (url === "back" || url === "forward") {
     tab = await resolveTab(tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     invalidateTab(tab.id);
     try { await (url === "back" ? chrome.tabs.goBack(tab.id) : chrome.tabs.goForward(tab.id)); }
     catch { throw new ToolError("bad_request", `Tab ${tab.id} has no page to go ${url} to.`); }

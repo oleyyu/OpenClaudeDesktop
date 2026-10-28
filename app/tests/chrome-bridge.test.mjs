@@ -180,6 +180,18 @@ test('refs: find hands a kept ref out again, so it stays valid after a same-docu
   assert.equal(codeOf(() => refs.checkRef(9, ref)), null);
 });
 
+test('sites: a page without a host of its own is refused unless it is the bridge’s blank tab', async () => {
+  const { tabs } = await extensionModules();
+  const ctx = { allowedHosts: ['other.example'] };
+  const failure = async (tab) => { try { await tabs.assertTabSite(tab, ctx); } catch (error) { return [error.code, error.data?.host ?? null]; } return null; };
+  assert.deepEqual(await failure({ id: 31, url: 'blob:https://bank.example/1234-uuid' }), ['site_not_allowed', 'bank.example']);
+  assert.deepEqual(await failure({ id: 32, url: 'about:blank' }), ['site_unknown', null]);
+  assert.deepEqual(await failure({ id: 33, url: 'https://other.example/a' }), null);
+  const sites = await import('../../claude-ext/sites.js');
+  assert.equal(codeOf(() => sites.assertSite('about:blank', ctx)), null, 'opening a blank tab is fine');
+  assert.equal(codeOf(() => sites.assertSite('about:blank', ctx, { blankOk: false })), 'site_unknown');
+});
+
 test('navigate takes http(s) URLs and bare hosts only', async () => {
   const { tabs } = await extensionModules();
   assert.equal(tabs.normalizeUrl('example.com'), 'https://example.com/');
