@@ -158,6 +158,18 @@ test("native: one panel per window via setPhantomCursor, pulse as asked, hidden 
   assert.deepEqual((await cursor.state()).cursors.map((c) => c.windowId).sort(), [7, 8]);
 });
 
+test("native: a panel ordered out behind an off-screen window stays out of the display hit test (the restack may show it)", async () => {
+  const native = fakeNative();
+  const { cursor } = setUp({ native });
+  const call = native.call;
+  // The held window is minimized / on another Space: the panel is ordered out, but its windowNumber is valid.
+  native.call = async (method, params) => { const answer = await call(method, params); return method === "setPhantomCursor" ? { ...answer, visible: false } : answer; };
+  await cursor.pointAt({ x: 400, y: 300, windowId: 7, pulse: false });
+  assert.deepEqual(cursor.windowNumbers(), [101]);
+  await cursor.release({ windowId: 7 });
+  assert.deepEqual(cursor.windowNumbers(), []);
+});
+
 test("native: calls stay in order — a hide issued before a show lands before it", async () => {
   const order = [];
   let release;
