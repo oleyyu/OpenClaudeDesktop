@@ -122,6 +122,19 @@ test('Kimi own asks: user ask rules, the dangerous-command guard, sensitive file
   assert.equal(globRegExp('a{b,c}*').test('acx'), true)
 })
 
+test('Kimi ask rules whose TOML strings hold the other quote character, or a #, still match', () => {
+  const home = tmp()
+  fs.mkdirSync(path.join(home, '.kimi-code'))
+  fs.writeFileSync(path.join(home, '.kimi-code', 'config.toml'), ['[[permission.rules]]', 'decision = "ask" # mine', `pattern = "Bash(git commit -m 'wip'*)"`, '', '[[permission.ask]]', `pattern = 'Bash(grep "TODO" *)'`, '', '[[permission.ask]]', 'pattern = "Bash(echo \\"#1\\"*)" # quoted', ''].join('\n'))
+  const env = { HOME: home, KIMI_CODE_HOME: path.join(home, '.kimi-code') }
+  const config = readKimiConfig(path.join(home, '.kimi-code', 'config.toml'))
+  assert.deepEqual(config.permission.rules.map((rule) => rule.pattern), [`Bash(git commit -m 'wip'*)`, 'Bash(grep "TODO" *)', 'Bash(echo "#1"*)'])
+  assert.equal(config.permission.rules[0].decision, 'ask')
+  assert.ok(kimiMustAsk({ tool: 'Bash', args: { command: `git commit -m 'wip' now` }, env }))
+  assert.ok(kimiMustAsk({ tool: 'Bash', args: { command: 'grep "TODO" a.js' }, env }))
+  assert.ok(kimiMustAsk({ tool: 'Bash', args: { command: 'echo "#1" done' }, env }))
+})
+
 test('Kimi in Auto: a dangerous command and a user ask rule reach the user; a routine command does not', async () => {
   const home = tmp()
   fs.mkdirSync(path.join(home, '.kimi-code'), { recursive: true })
