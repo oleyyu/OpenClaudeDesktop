@@ -170,9 +170,13 @@ function createMonitorService({ deliver, emit = () => {}, env = () => process.en
 
   function kill(record) {
     const child = record.child;
-    if (!child || child.exitCode !== null && child.exitCode !== undefined) return;
-    try { if (process.platform !== "win32" && child.pid) process.kill(-child.pid, "SIGTERM"); else child.kill("SIGTERM"); } catch { try { child.kill("SIGTERM"); } catch { /* gone */ } }
-    const hard = setTimeout(() => { try { if (process.platform !== "win32" && child.pid) process.kill(-child.pid, "SIGKILL"); else child.kill("SIGKILL"); } catch { /* gone */ } }, 3000);
+    if (!child) return;
+    // The shell can exit while what it put in the background still runs (and holds stdout, so no 'close' yet): the
+    // group is signalled either way; only the shell itself is skipped once it is gone.
+    const group = process.platform !== "win32" && child.pid;
+    if (!group && child.exitCode !== null && child.exitCode !== undefined) return;
+    try { if (group) process.kill(-child.pid, "SIGTERM"); else child.kill("SIGTERM"); } catch { try { child.kill("SIGTERM"); } catch { /* gone */ } }
+    const hard = setTimeout(() => { try { if (group) process.kill(-child.pid, "SIGKILL"); else child.kill("SIGKILL"); } catch { /* gone */ } }, 3000);
     hard.unref?.();
   }
   /** Ends a running monitor for a cause (agent, user, timeout, flood, session, quit); its exit tells the model nothing more. */

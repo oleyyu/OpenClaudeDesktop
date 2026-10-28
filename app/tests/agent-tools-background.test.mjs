@@ -123,6 +123,20 @@ test('a monitor runs its command in the session folder and tells the session eac
   assert.ok(!delivered.some((entry) => entry.text.includes('"long"')), 'a monitor the agent stopped reports nothing more');
 });
 
+test('stopping a monitor whose shell already exited still ends what it left running in the background', async (t) => {
+  const delivered = [];
+  const service = createMonitorService({ deliver: (_id, text) => delivered.push(text), env: () => ENV, shell: '/bin/sh' });
+  let pid = null;
+  t.after(() => { service.dispose(); if (pid) { try { process.kill(pid, 'SIGKILL'); } catch { /* gone */ } } });
+  const { taskId } = service.start({ sessionId: 's1', cwd: tmp(), command: "sh -c 'echo PID $$; while :; do echo tick; sleep 0.2; done' &", description: 'background loop', timeoutMs: 60000 });
+  pid = Number(await waitFor(() => /PID (\d+)/.exec(service.list('s1')[0]?.output || '')?.[1]));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  assert.equal(service.list('s1')[0].status, 'running', 'the loop still holds stdout');
+  service.stop('s1', taskId, { by: 'user' });
+  await waitFor(() => { try { process.kill(pid, 0); return false; } catch { return true; } });
+  pid = null;
+});
+
 test('a flooding monitor is rate-limited, then stopped; at most 8 run per session', async (t) => {
   let clock = 0;
   const delivered = [], children = [], due = [];
