@@ -539,6 +539,7 @@ test('preview scroll / hover / find answer from the page; preview_batch runs ste
   const scripts = require('../electron/preview-page-scripts.cjs');
   for (const source of [scripts.scrollScript({ ref: 'ref_1' }), scripts.scrollScript({ x: 1, y: 2, direction: 'left', amount: 50 }), scripts.domHoverScript({ selector: 'a' }), scripts.findScript({ query: '"quoted"' })]) assert.doesNotThrow(() => new Function(source));
   assert.match(scripts.scrollScript({ direction: 'left', amount: 50 }), /ticks = 20/, 'at most 20 ticks');
+  assert.match(scripts.inspectScript({ selector: 'a' }), /replace\(\/\\s\+\/g, " "\)/, 'preview_inspect collapses whitespace, not the letter s');
 });
 
 // ---------------------------------------------------------------- NotebookEdit

@@ -254,7 +254,7 @@ function inspectScript({ ref = null, selector = null, properties = [] } = {}) {
   const attributes = {};
   for (const name of ["id", "class", "role", "aria-label", "href", "type", "name", "disabled"]) if (el.hasAttribute(name)) attributes[name] = String(el.getAttribute(name)).slice(0, 300);
   return { tag: el.tagName.toLowerCase(), attributes, box: { x: Math.round(rect.left), y: Math.round(rect.top), width: Math.round(rect.width), height: Math.round(rect.height) }, styles,
-    text: (el.innerText || "").replace(/\s+/g, " ").trim().slice(0, 200) };
+    text: (el.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 200) };
 })()`;
 }
 
