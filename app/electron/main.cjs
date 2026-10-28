@@ -70,7 +70,7 @@ async function pauseActiveGoals() {
     new Promise((resolve) => setTimeout(resolve, 3500).unref?.()),
   ]);
 }
-const { listFiles, readFile, scopedPath, openBlockReason, sessionPathGone } = require("./files.cjs"); // R3-files FT-05: sessionPathGone
+const { listFiles, readFile, scopedPath, openBlockReason, revealFolderTarget, sessionPathGone } = require("./files.cjs"); // R3-files FT-05: sessionPathGone
 const sessionFileAccess = require("./session-file-access.cjs");
 // B13: the Files viewer's rendered HTML preview frame (file-preview-frame.cjs); the scheme is privileged before ready.
 const { SCHEME: FILE_PREVIEW_SCHEME, createFilePreviewFrames } = require("./file-preview-frame.cjs");
@@ -4108,9 +4108,14 @@ app.whenReady().then(async () => {
       // Code › Local › "Edit local environment": get / save the variables (applied when the core next starts).
       case "local-environment": return localEnvironment.run(p);
       case "saved-environments": return savedEnvironments.run(p);
-      case "reveal-folder":
-        await shell.openPath(p.cwd || config.cwd);
+      case "reveal-folder": {
+        // Never a file or a package openPath would launch; openPath reports a failure as its result, not a rejection.
+        const { folder, launches } = await revealFolderTarget(p.cwd || config.cwd);
+        if (launches) { shell.showItemInFolder(folder); return true; }
+        const error = await shell.openPath(folder);
+        if (error) throw new Error(error);
         return true;
+      }
       case "reveal-tool-file": {
         // c856385e2:1181–1315 Finder action. Resolve symlinks and scope to
         // server-known session cwd; the renderer cannot authorize a root.

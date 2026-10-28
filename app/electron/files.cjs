@@ -167,6 +167,16 @@ async function openBlockReason(requested, resolved) {
   if ((stat.mode & 0o111) && !DOCUMENT_TYPES.has(path.extname(resolved).toLowerCase())) return "OpenClaude Desktop doesn’t open apps, scripts or installers from a session. Use Show in Finder instead.";
   return null;
 }
+// main.cjs reveal-folder (a project's or session's folder in Finder): only an absolute, existing directory. A folder macOS
+// would launch instead of open (an .app, .workflow or other package) is to be revealed in its parent (launches: true).
+async function revealFolderTarget(folder) {
+  if (typeof folder !== "string" || !path.isAbsolute(folder) || folder.includes("\0")) throw new Error("Unknown workspace directory.");
+  let stat;
+  try { stat = await fs.stat(folder); } catch { throw new Error("The folder no longer exists."); }
+  if (!stat.isDirectory()) throw new Error("The folder no longer exists.");
+  const type = fileType(folder);
+  return { folder, launches: BLOCKED_TYPES.has(type) || BLOCKED_OPEN_TYPES.has(type) };
+}
 // R3-files FT-05 (files-11 / files-v01): LocalSessions isSessionPathGone, which the Files pane's right-click menus ask
 // (through the renderer gone hook, 2.42304.0 c856385e2 V) before they open, so a deleted path offers no "Open in",
 // "Show in Finder" or "Open in terminal". The original lives in the desktop main process (asar
@@ -227,4 +237,4 @@ function createSessionPathGone({ deadlineMs = PATH_GONE_DEADLINE_MS, maxAsks = M
   };
 }
 const sessionPathGone = createSessionPathGone();
-module.exports = { scopedPath, listFiles, readFile, openBlockReason, sessionPathGone, createSessionPathGone, judgeSessionPathGone, pathPresence };
+module.exports = { scopedPath, listFiles, readFile, openBlockReason, revealFolderTarget, sessionPathGone, createSessionPathGone, judgeSessionPathGone, pathPresence };
