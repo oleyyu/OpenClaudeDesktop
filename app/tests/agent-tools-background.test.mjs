@@ -359,6 +359,19 @@ test('WebFetch asks per site (once or for the session), checks every redirect, a
   await assert.rejects(fetchTool.handler({ url: 'https://example.com/a', prompt: ' ' }, ctx), /prompt is required/);
 });
 
+test('WebFetch: a stopped turn ends a fetch whose body stalls after the headers', async () => {
+  webTool.resetWebApprovals();
+  const [fetchTool] = webTool.tools;
+  const turn = new AbortController();
+  // The headers and one chunk arrive, then the connection hangs (and the fetch's own abort no longer reaches it).
+  const body = new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode('<p>partial')); } });
+  const ctx = { sessionId: 'web-stall', signal: turn.signal, web: { fetch: async () => new Response(body, { status: 200, headers: { 'content-type': 'text/html' } }) }, requestApproval: async () => true };
+  const call = fetchTool.handler({ url: 'https://example.com/stream', prompt: 'p' }, ctx);
+  setTimeout(() => turn.abort(), 50);
+  const outcome = await Promise.race([call.then(() => 'resolved', (error) => error.message), new Promise((resolve) => setTimeout(() => resolve('still pending'), 1000))]);
+  assert.equal(outcome, 'The fetch was stopped.');
+});
+
 // ---------------------------------------------------------------- Which cores get them
 
 test('only cores without their own get Monitor, the cron tools and WebFetch; the server lists and calls them', async (t) => {
