@@ -39,9 +39,11 @@ export function parseJsonc(text) {
     if (char === '"') { inString = true; quote = char; out += char; continue; }
     if (char === "/" && next === "/") { while (i < text.length && text[i] !== "\n") i++; out += "\n"; continue; }
     if (char === "/" && next === "*") { i += 2; while (i < text.length && !(text[i] === "*" && text[i + 1] === "/")) i++; i++; continue; }
+    // A trailing comma (outside strings) goes when only whitespace stands before the closing bracket.
+    if (char === "}" || char === "]") { let at = out.length - 1; while (at >= 0 && /\s/.test(out[at])) at--; if (out[at] === ",") out = out.slice(0, at) + out.slice(at + 1); }
     out += char;
   }
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, "$1"));
+  return JSON.parse(out);
 }
 
 export function isLocalHost(hostname) {

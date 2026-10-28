@@ -9,6 +9,7 @@ const root = '/work/app';
 test('JSONC: comments and trailing commas are accepted, strings are left alone', () => {
   assert.deepEqual(parseJsonc('{\n // a comment\n "a": "http://x//y", /* block */ "b": [1, 2,],\n}'), { a: 'http://x//y', b: [1, 2] });
   assert.deepEqual(parseJsonc('{"s": "a \\" // not a comment"}'), { s: 'a " // not a comment' });
+  assert.deepEqual(parseJsonc('{"a": ["-e", "console.log(1, ]2)"], "u": "x, }", /* c */ "b": [1, /* c */ ],}'), { a: ['-e', 'console.log(1, ]2)'], u: 'x, }', b: [1] });
 });
 
 test('a configuration becomes a command, a port and a url', () => {
