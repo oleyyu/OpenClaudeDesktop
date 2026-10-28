@@ -238,7 +238,7 @@ function bridge(extraEnv = {}, options = {}) {
   const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cdt-zc-wf-')))
   return bridgeAt(home, extraEnv, options)
 }
-function bridgeAt(home, extraEnv = {}, { decision = 'accept' } = {}) {
+function bridgeAt(home, extraEnv = {}, { decision = 'accept', beforeAnswer = null } = {}) {
   const logFile = path.join(home, 'zcode.log')
   const child = spawn(process.execPath, [BIN, 'app-server', '--stdio'], {
     cwd: home,
@@ -249,7 +249,7 @@ function bridgeAt(home, extraEnv = {}, { decision = 'accept' } = {}) {
   child.stderr.on('data', (chunk) => stderr.push(String(chunk)))
   const notes = []
   const requests = []
-  const client = new LineTransport(child.stdout, child.stdin, { onRequest: async (method, params) => { requests.push({ method, params }); return { decision } }, onNotification: (method, params) => notes.push({ method, params }), log: () => {} })
+  const client = new LineTransport(child.stdout, child.stdin, { onRequest: async (method, params) => { requests.push({ method, params }); await beforeAnswer?.(method, params); return { decision } }, onNotification: (method, params) => notes.push({ method, params }), log: () => {} })
   client.start()
   const log = () => (fs.existsSync(logFile) ? fs.readFileSync(logFile, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)) : [])
   return {
@@ -410,6 +410,23 @@ test('bridge: a read-only mode (Plan) never runs a workflow: refused with a reas
     assert.equal(answer.decision, 'deny')
     assert.match(answer.reason ?? '', /read-only mode/)
     assert.equal(b.requests.some((request) => /requestApproval/.test(request.method)), false, 'no card that would let the agents escape Plan')
+  } finally { await b.close() }
+})
+
+test('bridge: a run card allowed after the session switched to Plan starts nothing', { timeout: 60000 }, async () => {
+  let b = null
+  b = bridge(ASK_SCRIPT, { beforeAnswer: async (method, params) => {
+    if (/requestApproval/.test(method)) assert.deepEqual(await b.call('codeDesktop/thread/permissions', { threadId: params.threadId, ...modeParams('plan') }), { applied: true })
+  } })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/start', { cwd: b.home, ...modeParams('auto') })
+    const answer = await answerOf(b)
+    assert.equal(answer.decision, 'deny')
+    assert.match(answer.reason ?? '', /read-only mode \(plan\)/)
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
   } finally { await b.close() }
 })
 

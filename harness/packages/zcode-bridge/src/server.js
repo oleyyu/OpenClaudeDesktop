@@ -1502,7 +1502,8 @@ export async function main() {
     if (thread.dynamicWorkflows !== true) return { ...permissionAnswer(params, 'decline').response, reason: 'Dynamic workflows are off for this session. Nothing was started.' }
     // A read-only mode (Plan, Chat, review) never runs one: ZCode runs a workflow's agents unconfined once the run is
     // allowed, so one click would let them change the project while the mode still says read-only.
-    if (isReadOnlyMode(thread.permission.mode)) return { ...permissionAnswer(params, 'decline').response, reason: `This session is in a read-only mode (${thread.permission.mode}), and a workflow's agents can change files and run commands. Nothing was started. Ask the user to switch to another mode to run a workflow.` }
+    const readOnlyRefusal = () => ({ ...permissionAnswer(params, 'decline').response, reason: `This session is in a read-only mode (${thread.permission.mode}), and a workflow's agents can change files and run commands. Nothing was started. Ask the user to switch to another mode to run a workflow.` })
+    if (isReadOnlyMode(thread.permission.mode)) return readOnlyRefusal()
     if (thread.permission.mode === 'bypass') return permissionAnswer(params, 'accept').response
     // The client never answers approvals (approvalPolicy "never", e.g. the workflow runner): refuse now, with a reason.
     if (thread.permission.approvals === false) return noApprovalAnswer(params)
@@ -1523,6 +1524,8 @@ export async function main() {
       decision = 'decline'
     }
     const accepted = decision === 'accept' || decision === 'acceptForSession'
+    // Allowed after the session switched to a read-only mode while the card was open: refused, as if asked now.
+    if (accepted && isReadOnlyMode(thread.permission.mode)) return readOnlyRefusal()
     // Answered after a mode change (a card left open across a switch): no grant, it would belong to the old mode.
     const answer = permissionAnswer(params, accepted ? decision : decision === 'cancel' ? 'cancel' : 'decline', { grantable: !!grantKey && samePermission(thread.permission, askedIn) && !isReadOnlyMode(thread.permission.mode) })
     if (answer.grant) thread.grants.add(grantKey)
