@@ -104,14 +104,18 @@ export function parseEnvironmentText(text) {
 }
 
 // c66c54bc9 t: a value with a newline, $, #, quotes or edge spaces is quoted: '…' unless it holds a single quote,
-// then "…" with its double quotes escaped.
+// then `…`, then "…" when that reads back unchanged (no double quote, no \n or \r the parser would expand). The
+// parser unescapes nothing, so only a value holding all three quotes falls back to "…" with its double quotes escaped.
 export function serializeEnvironment(values) {
   return Object.entries(values ?? {}).map(([key, value]) => {
     const text = String(value);
     const quoted = text.includes('\n') || text.includes('\r') || text.includes('$') || text.includes('#') || text.includes('"')
       || text.includes("'") || text.startsWith(' ') || text.endsWith(' ');
     if (!quoted) return `${key}=${text}`;
-    return text.includes("'") ? `${key}="${text.replace(/"/g, '\\"')}"` : `${key}='${text}'`;
+    if (!text.includes("'")) return `${key}='${text}'`;
+    if (!text.includes('`')) return `${key}=\`${text}\``;
+    if (!text.includes('"') && !/\\[nr]/.test(text)) return `${key}="${text}"`;
+    return `${key}="${text.replace(/"/g, '\\"')}"`;
   }).join('\n');
 }
 
