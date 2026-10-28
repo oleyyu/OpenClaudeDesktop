@@ -364,6 +364,23 @@ test('bridge: Dynamic workflows off keeps the run tools from the session; a stra
   } finally { await b.close() }
 })
 
+test('bridge: a run that ended with ZCode can be resumed once ZCode is back (its summary says it can)', { timeout: 60000 }, async () => {
+  const b = bridge({ FAKE_ZCODE_EXIT_AFTER_POLLS: '2' })
+  try {
+    await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    const end = Date.now() + 10000
+    while (!b.notes.some((note) => note.method === 'thread/status/changed' && note.params.status?.type === 'notLoaded') && Date.now() < end) await sleep(50)
+    const response = await b.call('thread/resume', { threadId: 'sess_wf_1', codeDesktop: { dynamicWorkflows: true } })
+    const run = workflowItem(response.thread.turns).workflowRun
+    assert.deepEqual([run.status, run.resumable], ['failed', true])
+    assert.deepEqual(await b.call('codeDesktop/workflow/resume', { threadId: 'sess_wf_1', runId: 'dwfrun-a' }), { status: 'resuming' })
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
+})
+
 test('bridge: deleting a session with a live run stops polling that run', { timeout: 60000 }, async () => {
   const b = bridge()
   try {

@@ -331,6 +331,8 @@ export async function main() {
     for (const thread of threads.values()) {
       thread.loaded = false
       thread.subscribed = false
+      // Re-read on the next use: ZCode reconciles the runs that ended with it (whether each can resume).
+      thread.history = null
       // A live workflow run was a task of that process: it ended with it.
       thread.projector.workflowsInterrupted()
       clearInterval(thread.workflowTimer)
@@ -816,7 +818,13 @@ export async function main() {
     const runs = new Map()
     for (const entry of found) {
       const watched = thread.projector.workflowEntry(entry.item.id)
-      if (watched) { entry.item.workflowRun = watched.state.run; continue }
+      if (watched) {
+        // A run settled here (ZCode stopped while it ran) takes ZCode's verdict on whether it can resume.
+        const summary = watched.state.run.status !== 'running' ? byRun.get(watched.state.run.runId) : null
+        if (summary) thread.projector.workflowSettle(entry.item.id, summary)
+        entry.item.workflowRun = watched.state.run
+        continue
+      }
       entry.state = workflowState(entry.item.workflowRun)
       bindWorkflowRun(entry.state, byCall.get(entry.item.id)?.runId)
       const runId = entry.state.run.runId

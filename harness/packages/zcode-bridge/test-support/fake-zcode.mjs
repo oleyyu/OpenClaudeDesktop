@@ -9,6 +9,7 @@ if (process.argv.includes('--version')) {
   process.exit(0)
 }
 let counter = 0
+let polls = 0
 const log = (method, params) => { if (process.env.FAKE_ZCODE_LOG) fs.appendFileSync(process.env.FAKE_ZCODE_LOG, `${JSON.stringify({ method, params })}\n`) }
 const now = Date.now()
 const session = (sessionId, workspace) => ({ sessionId, title: 'fake', createdAt: now, updatedAt: now, ...(workspace ? { workspace } : {}) })
@@ -75,11 +76,19 @@ function answer(method, params) {
     case 'session/list': return { sessions: [] }
     case 'v4/conversation/workflowRuns': {
       const run = isWorkflowSession(params.sessionId) ? workflow() : null
-      return { runs: run ? [{ runId: 'dwfrun-a', toolCallId: 'toolu_wf', label: 'todo-audit', updatedAt: 5000, status: run.status, ...(run.status === 'stopped' ? { stopReason: run.b ? 'superseded' : 'user' } : {}), resumable: run.status === 'stopped' && !run.b },
+      // An interrupted run (its process exited, FAKE_ZCODE_EXIT_AFTER_POLLS) reconciles as failed and resumable.
+      const status = run?.status === 'interrupted' ? 'failed' : run?.status
+      return { runs: run ? [{ runId: 'dwfrun-a', toolCallId: 'toolu_wf', label: 'todo-audit', updatedAt: 5000, status, ...(run.status === 'stopped' ? { stopReason: run.b ? 'superseded' : 'user' } : {}), resumable: (run.status === 'stopped' && !run.b) || run.status === 'interrupted' },
         ...(run.b ? [{ runId: 'dwfrun-b', toolCallId: 'settings-2', label: 'todo-audit', updatedAt: 6000, status: 'running' }] : [])] : [] }
     }
     case 'v4/conversation/workflowRunEvents': {
       const own = isWorkflowSession(params.sessionId) ? workflow() : null
+      // FAKE_ZCODE_EXIT_AFTER_POLLS=n: ZCode exits after n polls of a running dwfrun-a, which is left interrupted.
+      if (own?.status === 'running' && params.runId === 'dwfrun-a' && ++polls === Number(process.env.FAKE_ZCODE_EXIT_AFTER_POLLS)) {
+        own.status = 'interrupted'
+        fs.writeFileSync(workflowFile, JSON.stringify(own))
+        setTimeout(() => process.exit(0), 20)
+      }
       const run = own && params.runId === 'dwfrun-a' ? own : own && params.runId === 'dwfrun-b' && own.b ? { events: own.b } : null
       const events = (run?.events ?? []).filter((event) => event.sequence > (params.afterSequence ?? 0))
       const page = events.slice(0, params.limit ?? 500)
@@ -143,7 +152,7 @@ function answer(method, params) {
       if (params.type !== 'resumeWorkflowRun') return {}
       const run = isWorkflowSession(params.sessionId) && params.payload?.workId === 'dwfrun-a' ? workflow() : null
       if (!run) return { status: 'rejected', message: 'fault.command.workflowRunResumeRejected.not_found' }
-      if (run.status !== 'stopped') return { status: 'rejected', message: `fault.command.workflowRunResumeRejected.${run.status === 'running' ? 'already_running' : 'not_resumable'}` }
+      if (run.status !== 'stopped' && run.status !== 'interrupted') return { status: 'rejected', message: `fault.command.workflowRunResumeRejected.${run.status === 'running' ? 'already_running' : 'not_resumable'}` }
       const next = run.events.length + 1
       run.events.push({ sequence: next, type: 'run-started', payload: { runId: 'dwfrun-a', resumedFrom: 'dwfrun-a' } }, { sequence: next + 1, type: 'node-queued', payload: { instance: { siteId: 'ask#2', ordinal: 1 }, kind: 'ask', actor: { siteId: 'actor#2', ordinal: 0 }, phaseName: 'Fix', instructionsHead: 'Fix each TODO' } }, { sequence: next + 2, type: 'node-executing', payload: { instance: { siteId: 'ask#2', ordinal: 1 } } })
       run.status = 'running'
