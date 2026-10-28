@@ -414,3 +414,23 @@ test('a tab closed, or a service disposed, while its shell waits on the proxy st
   assert.equal(fake.spawned.length, 1, 'no shell after quit');
   assert.equal(terminals.size, 0);
 });
+
+test('two restarts of one terminal while its shell waits on the proxy leave one shell', { timeout: 10000 }, async () => {
+  const folder = tempFolder();
+  const fake = countingPty();
+  let waiting = false;
+  const terminals = service(folder, { loadPty: fake.loadPty, shellProxy: () => (waiting ? new Promise(() => {}) : {}) });
+  const sender = fakeSender();
+  try {
+    const info = await terminals.call('create', { sessionId: 's1' }, sender);
+    waiting = true;
+    const first = terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const second = terminals.call('restart', { sessionId: 's1', id: info.id }, sender);
+    await Promise.all([first, second]);
+    const live = fake.spawned.filter((pty) => !pty.killed);
+    assert.equal(fake.spawned.length, 2, 'the first shell and one restarted shell');
+    assert.equal(live.length, 1);
+    assert.equal((await second).status, 'running');
+  } finally { await terminals.dispose(); }
+});
