@@ -6,6 +6,8 @@ import { liveTurnItems } from "./transcript-runtime-stats.mjs";
 import { isHiddenTranscriptItem } from "./transcript-item-visibility.mjs";
 
 const TOOL_TYPES = new Set(["commandExecution", "fileChange", "mcpToolCall", "dynamicToolCall", "collabAgentToolCall", "webSearch", "computerUse", "imageGeneration"]);
+// The model's own output in a turn: a later one means the model sampled again, after every earlier call returned to it.
+const MODEL_OUTPUT_TYPES = new Set(["reasoning", "agentMessage", "plan"]);
 
 /**
  * The SDK tool an engine item stands for ({name, input}), as the desktop's rows read a tool: the mark's activity kind
@@ -17,31 +19,74 @@ export { sdkToolOf };
 /**
  * cb6930dae ho's transcript live scope for the host: {sessionId, turnLive, liveRunningToolIds} (so), the running
  * turn's start in ms (the desktop's c06cf64bb Cy) and the last tool's activity input ({name, input}: `ne` while the
- * turn responds; its kind is computed by the original c77e464d3 X).
+ * turn responds; its kind is computed by the original c77e464d3 X). `endsInUnansweredUserRow` is mo's flag: the caller
+ * (TranscriptRowsScope, as ho) then keeps only the running ids it already held (lo).
  */
 export function transcriptLiveScope({ sessionKey = null, turnId = null, items = [], itemPhases = {}, responding = false, turnStats = null, awaiting = false } = {}) {
-  const live = turnId && responding ? liveTurnItems(turnId, items || [], itemPhases || {}) : [];
-  const running = live.filter(item => TOOL_TYPES.has(item.type));
-  // cb6930dae mo: over the turn's items in order, a thinking block forgets the tools before it; the last running tool
-  // wins over the last tool (`lastTool: c ?? s`), so a thought after a tool leaves the mark its own (think) activity.
-  let last = null, runningTool = null;
-  if (turnId && responding) for (const item of items || []) {
+  const list = items || [];
+  const live = turnId && responding ? liveTurnItems(turnId, list, itemPhases || {}) : [];
+  // cb6930dae mo (2.42304.0 cb6930dae-BD0W5ZM9.js; 3.6556.2 cb6930dae-Dw_4c1QI.js Vo):
+  //   for(let i=e.length-1;i>=0;i--){…if(a.author!=="user"){r=!0;continue}if(!(a.synthetic===!0||…)){if(r){t=i;break}n=!0}}
+  // the running tools are collected only from the last real user row that assistant output follows — not from the
+  // whole turn. A Codex steer (or an async question's answer) is a userMessage under the same turn id: a command
+  // still running before it is not live (its row stays busy in place, without the turn's mark). Every host
+  // userMessage is a human row (prompt-history-model.mjs humanPrompts); every other item is assistant output.
+  let start = 0, endsInUnansweredUserRow = false, answered = false;
+  if (turnId && responding) for (let at = list.length - 1; at >= 0; at--) {
+    const item = list[at];
+    if (!item) continue;
+    if (item.type !== "userMessage") { answered = true; continue; }
+    if (answered) { start = at; break; }
+    endsInUnansweredUserRow = true;
+  }
+  // mo: `for(let n=t;n<e.length;n++)…{if(t.kind==="thinking"){s=void 0,c=void 0;continue}if(t.kind==="tools")for(let e
+  // of t.tools){if(s=e,e.status!=="running")continue;c=e,i.push(e.id)…}}` — over the window's items in order, a thinking
+  // block forgets the tools before it; the last running tool wins over the last tool (`lastTool: n ? void 0 : c ?? s`),
+  // so a thought after a tool leaves the mark its own (think) activity.
+  //
+  // `e.status!=="running"`: on the desktop a tool runs until its tool_result reaches the model. A shell the model moved
+  // on from already has its result (run_in_background, or backgrounded while it ran): a completed tool call whose
+  // process the task list follows (2.42304.0 c62da1b56, a local_bash task keyed by the result's backgroundTaskId:
+  // `Ve(e,t){return R(e)?z(e.backgroundTaskId)!==void 0:…}`), so mo never counts it. A Codex unified-exec command
+  // hands its session back the same way (exec_command / write_stdin return after yield_time_ms, the process still
+  // running) but its item stays inProgress until the process exits; the host's Background tasks list follows it
+  // (background-tasks-model.mjs: a commandExecution with a processId). The host's evidence that a running tool's
+  // result reached the model is the model's own output after it in the turn — a thought, an answer or a plan (the
+  // model samples again only once every call of its previous response has returned). Such a tool is not running
+  // for mo: it is not live and does not win the last tool.
+  const running = [];
+  let last = null;
+  if (turnId && responding) for (let at = start; at < list.length; at++) {
+    const item = list[at];
     if (item?.turnId !== turnId) continue;
-    if (item.type === "reasoning") { last = runningTool = null; continue; }
+    if (MODEL_OUTPUT_TYPES.has(item.type)) running.length = 0;
+    if (item.type === "reasoning") { last = null; continue; }
     if (!TOOL_TYPES.has(item.type)) continue;
     last = item;
-    if (running.includes(item)) runningTool = item;
+    if (live.includes(item)) running.push(item);
   }
-  const lastTool = runningTool ?? last ? sdkToolOf(runningTool ?? last) : null;
+  const tool = endsInUnansweredUserRow ? null : running.at(-1) ?? last;
   const owned = turnStats && turnStats.turnId === turnId ? turnStats : null;
   return {
     sessionId: sessionKey,
     turnLive: !!responding,
     liveRunningToolIds: new Set(running.map(item => item.id)),
+    endsInUnansweredUserRow,
     turnStartedAt: responding && Number.isFinite(owned?.startedAt) ? owned.startedAt * 1000 : null,
     awaiting: !!awaiting,
-    lastTool,
+    lastTool: tool ? sdkToolOf(tool) : null,
   };
+}
+
+/**
+ * cb6930dae lo: `if(e===""||t==="")return"";let n=new Set(t.split(`\n`));return e.split(`\n`).filter(e=>n.has(e)).join(`\n`)`
+ * — the running ids (newline-joined, as mo's idsKey) that are also in the ids held for the session. ho reads it while
+ * the transcript ends in an unanswered user row.
+ */
+export function intersectLiveIds(ids, held) {
+  if (ids === "" || held === "") return "";
+  const keep = new Set(held.split("\n"));
+  return ids.split("\n").filter(id => keep.has(id)).join("\n");
 }
 
 /** XAe / ZAe's `candidate` for a running member (v2e `F`): the tool that would hold the turn's mark. */

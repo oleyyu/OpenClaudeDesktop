@@ -110,11 +110,11 @@ test('the transcript tail puts the mark outlet in the working line\'s grid cell;
 test('model: SDK tool names for the mark\'s activity, the live scope, the running candidate', () => {
   assert.deepEqual(Model.sdkToolOf({ type: 'commandExecution', command: 'ls' }), { name: 'Bash', input: { command: 'ls' } });
   assert.equal(Model.sdkToolOf({ type: 'agentMessage' }), null);
-  const items = [{ id: 'a', turnId: 't', type: 'commandExecution', status: 'inProgress' }, { id: 'b', turnId: 't', type: 'agentMessage' }];
+  const items = [{ id: 'b', turnId: 't', type: 'agentMessage' }, { id: 'a', turnId: 't', type: 'commandExecution', status: 'inProgress' }];
   const scope = Model.transcriptLiveScope({ sessionKey: 's', turnId: 't', items, responding: true, turnStats: { turnId: 't', startedAt: 10 }, awaiting: true });
   assert.deepEqual([...scope.liveRunningToolIds], ['a']);
   assert.equal(scope.turnStartedAt, 10000); assert.equal(scope.awaiting, true); assert.equal(scope.lastTool.name, 'Bash');
-  assert.deepEqual(Model.runningCandidate(items[0]), { key: 'a', name: 'Bash', input: { command: '' }, wireRunning: true, toolIds: ['a'], runningIds: ['a'] });
+  assert.deepEqual(Model.runningCandidate(items[1]), { key: 'a', name: 'Bash', input: { command: '' }, wireRunning: true, toolIds: ['a'], runningIds: ['a'] });
   assert.equal(Model.stepState('unknown'), 'done');
 });
 
@@ -128,6 +128,57 @@ test('model: the live scope\'s last tool follows mo: a thought forgets earlier t
   assert.equal(last([tool('a', 'ls'), tool('b', 'pwd')])?.input.command, 'pwd');
   assert.equal(last([tool('x', 'ls'), { id: 'o', turnId: 'other', type: 'reasoning' }])?.input.command, 'ls', 'only the turn\'s own items');
   assert.equal(Model.transcriptLiveScope({ sessionKey: 's', turnId: 't', items: [tool('a', 'ls')], responding: false }).lastTool, null);
+});
+
+// cb6930dae mo's window (2.42304.0 cb6930dae-BD0W5ZM9.js; 3.6556.2 Vo): the running ids come from the last user row that
+// assistant output follows, not from the whole turn — a Codex steer is a userMessage under the same turn id.
+test('model: the live scope starts at the last answered user row (mo); unanswered: previous window, no last tool', () => {
+  const cmd = (id, status = 'completed') => ({ id, turnId: 't', type: 'commandExecution', command: id, status });
+  const user = id => ({ id, turnId: 't', type: 'userMessage', content: [{ type: 'text', text: id }] });
+  const say = id => ({ id, turnId: 't', type: 'agentMessage', text: id });
+  const edit = { id: 'f1', turnId: 't', type: 'fileChange', status: 'completed', changes: [] };
+  const scope = items => Model.transcriptLiveScope({ sessionKey: 's', turnId: 't', items, responding: true });
+  const answered = scope([user('u0'), cmd('c1', 'inProgress'), user('u1'), say('m1'), edit]);
+  assert.deepEqual([...answered.liveRunningToolIds], [], 'a command running before the answered steer row is not live');
+  assert.equal(answered.endsInUnansweredUserRow, false);
+  assert.equal(answered.lastTool.name, 'Edit');
+  const unanswered = scope([user('u0'), say('m0'), cmd('c1', 'inProgress'), user('u2')]);
+  assert.equal(unanswered.endsInUnansweredUserRow, true);
+  assert.equal(unanswered.lastTool, null, '`lastTool: n ? void 0 : c ?? s`');
+  assert.deepEqual([...unanswered.liveRunningToolIds], ['c1'], 'from the previous answered user row');
+  assert.deepEqual([...scope([user('u0'), say('m0'), cmd('c1', 'inProgress'), cmd('c2', 'inProgress')]).liveRunningToolIds], ['c1', 'c2']);
+  assert.equal(Model.intersectLiveIds('c1\nc2', 'c2\nc3'), 'c2');
+  assert.equal(Model.intersectLiveIds('c1', ''), '');
+  const rows = fs.readFileSync(path.join(app, 'src/source-transcript-rows.jsx'), 'utf8');
+  assert.match(rows, /scope\.endsInUnansweredUserRow \? intersectLiveIds\(current, heldIds\) : current/, 'ho: E = ends ? lo(C, w) : C');
+});
+
+// mo's `e.status!=="running"`: a tool whose result already reached the model is not running for the desktop (a
+// backgrounded Bash is a completed call; the task list follows its process). A Codex unified-exec command the model moved
+// on from stays inProgress until its process exits; the model's own output after it (a thought, an answer, a plan) is
+// the host's evidence that its session was handed back.
+test('model: a running tool the model moved on from (its output after the tool) is not live and does not win the last tool', () => {
+  const cmd = (id, status = 'completed') => ({ id, turnId: 't', type: 'commandExecution', command: id, status, processId: '1' });
+  const user = id => ({ id, turnId: 't', type: 'userMessage', content: [{ type: 'text', text: id }] });
+  const say = id => ({ id, turnId: 't', type: 'agentMessage', text: id });
+  const think = id => ({ id, turnId: 't', type: 'reasoning', summary: [], content: [] });
+  const edit = { id: 'f1', turnId: 't', type: 'fileChange', status: 'completed', changes: [{ path: '/w/a.mjs', kind: { type: 'update' }, diff: '' }] };
+  const scope = items => Model.transcriptLiveScope({ sessionKey: 's', turnId: 't', items, responding: true });
+  // No user row after the command (no steer): the yielded command, then the next response's thought, answer and edit.
+  const moved = scope([user('u0'), cmd('c0'), cmd('c1', 'inProgress'), think('r1'), say('m1'), edit]);
+  assert.deepEqual([...moved.liveRunningToolIds], [], 'the yielded command is not live');
+  assert.equal(moved.lastTool.name, 'Edit', 'the last tool, not the yielded command');
+  assert.deepEqual([...scope([user('u0'), cmd('c1', 'inProgress'), say('m1')]).liveRunningToolIds], []);
+  assert.deepEqual([...scope([user('u0'), cmd('c1', 'inProgress'), { id: 'p', turnId: 't', type: 'plan', text: 'p' }]).liveRunningToolIds], []);
+  // Without the model's output after it the command may still be its response's call: live (calls of one code-mode
+  // cell or of one response, run back to back or in parallel, share one tool row).
+  const same = scope([user('u0'), think('r0'), cmd('c1', 'inProgress'), cmd('c2', 'inProgress'), edit]);
+  assert.deepEqual([...same.liveRunningToolIds], ['c1', 'c2']);
+  assert.equal(same.lastTool.input.command, 'c2', 'the last running tool wins');
+  // A tool started after the model's output is live again.
+  assert.deepEqual([...scope([user('u0'), cmd('c1', 'inProgress'), say('m1'), cmd('c2', 'inProgress')]).liveRunningToolIds], ['c2']);
+  // Another turn's output does not hand the turn's tools back.
+  assert.deepEqual([...scope([user('u0'), cmd('c1', 'inProgress'), { id: 'x', turnId: 'other', type: 'agentMessage', text: 'x' }]).liveRunningToolIds], ['c1']);
 });
 
 // The tool rows themselves (user ruling: the transcript follows the desktop): c96d752d0 n0 (v2e) / e0 / Uz (JIe) / HZ over
