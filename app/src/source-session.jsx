@@ -89,7 +89,7 @@ import { stableIds, tabOverflowLayout } from "./file-tab-overflow-model.mjs";
 import { SourceSessionFileViewer, FILE_VIEWER_LABELS } from "./source-file-viewer.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import { menuTriggerProps } from "./source-menu.jsx";
-import { SourceTaskEvent } from "./source-task-event.jsx";
+import { SourceTaskEvent, SourceTaskEventRow } from "./source-task-event.jsx";
 import { workflowTaskEvent } from "./task-event-model.mjs";
 import { useSourcePointerResize } from "./use-pointer-resize.js";
 import { SourcePaneControls, SourceFilesSearchButton } from "./source-pane-controls";
@@ -603,7 +603,8 @@ export function scheduledLabel(firedAt, now = Date.now()) {
 
 // A finished dynamic workflow's notification to the model (Claude Code's <task-notification>), shown as Claude's
 // task-event row (source-task-event.jsx): 'Background workflow completed · {name} · took {elapsed}', which focuses
-// the run in the Background tasks pane.
+// the run in the Background tasks pane. Each notice is its own transcript row (SourceTaskEventRow), so it keeps the
+// row gap from the row above it.
 function SourceWorkflowNotice({ item, onOpen = null }) {
   const notice = item.workflowNotification;
   // A workflow agent's blocking question (the main agent answers it) and a run waiting on its model provider: rows of
@@ -611,23 +612,23 @@ function SourceWorkflowNotice({ item, onOpen = null }) {
   if (notice?.kind === "escalation") {
     const label = notice.agent && notice.workflow ? t("{agent} in {workflow} has a question", { agent: notice.agent, workflow: notice.workflow })
       : notice.agent ? t("{agent} has a question", { agent: notice.agent }) : notice.workflow ? t("An agent in {workflow} has a question", { workflow: notice.workflow }) : t("A workflow agent has a question");
-    return <details className="source-task-event source-workflow-question" data-transcript-item-id={item.id} data-task-event-status="question">
+    return <SourceTaskEventRow><details className="source-task-event source-workflow-question" data-transcript-item-id={item.id} data-task-event-status="question">
       <summary className="stev-line"><span className="stev-label">{label}</span></summary>
       {notice.question && <p className="stev-question">{notice.question}</p>}
       {notice.context && <p className="stev-context">{notice.context}</p>}
-    </details>;
+    </details></SourceTaskEventRow>;
   }
   if (notice?.kind === "settings") {
-    return <div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="settings">
+    return <SourceTaskEventRow><div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="settings">
       <span className="stev-line"><span className="stev-label">{t("Changed the workflow’s settings")}</span>{notice.workflow && <span className="stev-description"><bdi>{`· ${notice.workflow}`}</bdi></span>}</span>
-    </div>;
+    </div></SourceTaskEventRow>;
   }
   if (notice?.kind === "stall") {
     const waited = Number.isFinite(notice.stalledMs) ? formatDuration(Math.round(notice.stalledMs / 1000)) : null;
     const label = notice.workflow ? t("{workflow} is waiting for the model provider", { workflow: notice.workflow }) : t("A workflow is waiting for the model provider");
-    return <div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="stalled">
+    return <SourceTaskEventRow><div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="stalled">
       <span className="stev-line"><span className="stev-label">{label}</span>{waited && <span className="stev-elapsed">{`· ${t("no reply for {duration}", { duration: waited })}`}</span>}</span>
-    </div>;
+    </div></SourceTaskEventRow>;
   }
   const event = workflowTaskEvent(notice);
   // A Monitor event (no status): the model reads it; the transcript shows no row, as Claude's.

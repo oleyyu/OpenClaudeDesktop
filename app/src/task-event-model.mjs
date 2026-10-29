@@ -88,19 +88,25 @@ export function mergedTaskEvents(entries) {
  * rows), grouped by the turn they land at the end of: the latest turn that had started when the task finished, else
  * the turn that started the task. A command counts only when the core reported it as a background terminal
  * (`backgroundItemIds`, thread background snapshots) or named its task kind; ordinary commands that merely had a
- * process id stay plain command rows. Events in one turn are consecutive, so they read as one merged line. Pure.
+ * process id stay plain command rows. Events in one turn are consecutive, so they read as one merged line.
+ * A task the transcript's own tool call started (the command row, the spawnAgent row) that completed adds no event:
+ * c06cf64bb's task_started drops it (`n=v(e.tool_use_id)?"dropped":…;if(n==="dropped"){u.add(e.task_id);…}`, v = a
+ * tool id the transcript has shown) and its completed task_notification is skipped (`let n=u.has(e.task_id);
+ * if(n&&t==="completed")continue;`); the tool row itself carries the finish. Failed / stopped ones still read as an
+ * event (`Oe(s,n?void 0:e.tool_use_id)`). Pure.
  * @returns {Map<string, Array<{taskKey, taskType, status, description, durationMs}>>}
  */
 export function backgroundTaskEventsByTurn(tasks, { items = [], turnTimes = {}, backgroundItemIds = new Set(), activeTurnId = null } = {}) {
   const out = new Map();
-  const turnIds = new Set(), itemTurn = new Map();
-  for (const item of items || []) { if (item?.turnId) { turnIds.add(item.turnId); if (item.id) itemTurn.set(item.id, item.turnId); } }
+  const turnIds = new Set(), itemTurn = new Map(), shown = new Set();
+  for (const item of items || []) { if (item?.id) shown.add(item.id); if (item?.turnId) { turnIds.add(item.turnId); if (item.id) itemTurn.set(item.id, item.turnId); } }
   const starts = [...turnIds].map((id) => [id, Number(turnTimes?.[id]?.startedAt)]).filter(([, at]) => Number.isFinite(at) && at > 0)
     .map(([id, at]) => [id, at * 1e3]).sort((a, b) => a[1] - b[1]);
   const events = [];
   for (const task of tasks || []) {
     if (!["completed", "failed", "stopped"].includes(task?.status)) continue;
     if (task.kind === "bash" ? !(backgroundItemIds.has(task.itemId) || task.taskType) : task.kind !== "agent") continue;
+    if (task.status === "completed" && shown.has(task.kind === "bash" ? task.itemId : task.sourceItem?.id)) continue;
     const completedAt = Number(task.completedAt);
     if (!Number.isFinite(completedAt)) continue;
     const source = task.kind === "bash" ? itemTurn.get(task.itemId) : task.sourceItem?.turnId ?? itemTurn.get(task.sourceItem?.id);
