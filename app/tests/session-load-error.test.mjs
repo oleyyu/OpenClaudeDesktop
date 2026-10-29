@@ -11,9 +11,9 @@ import react from '@vitejs/plugin-react';
 import { extractSessionLoadError } from '../scripts/extract-session-load-error.mjs';
 import { createTranscriptCache } from '../src/use-transcript-scroll.js';
 
-// R4f-error E1 (transcript-session-error-boundary WI-1, transcript-10): the 2.42304.0 session load error fallback (cc43287c9
-// fV / dV, shared-19 T9) and its chunk heal gate chain (shared-20 g_ / Xg / Yg = "__gb__982582273", j_; shared-52 fd / Ad /
-// _d; shared-26 zu; shared-104 Ho / Ro; c7f0c0d23 o), generated into src/generated/session-load-error. Source/AST, SSR and
+// R4f-error E1 (transcript-session-error-boundary WI-1, transcript-10), migrated to 3.6556.2 (w2-tr-r3b): the session load
+// error fallback (cc43287c9 aV / iV, shared-46 wR) and its chunk heal gate chain (shared-15 Pa / la / ca = "__gb__982582273",
+// Qa; shared-52 pf / jf / vf; shared-26 Rd; shared-104 dc / sc; c7f0c0d23 o), generated into src/generated/session-load-error. Source/AST, SSR and
 // a small fake DOM driven through React's own props: no browser, no Electron, no network, no reload.
 const app = path.resolve(import.meta.dirname, '..');
 const directory = path.join(app, 'src/generated/session-load-error');
@@ -128,49 +128,53 @@ const reactProps = element => element[Object.keys(element).find(key => key.start
 const press = element => ({ preventDefault() {}, stopPropagation() {}, isDefaultPrevented: () => false, currentTarget: element, target: element, button: 0, detail: 1, nativeEvent: {} });
 const chunkError = () => Object.assign(Error('Failed to fetch dynamically imported module: https://a.example/assets/v1/c1.js'), { name: 'ChunkLoadError' });
 
-test('generator: the check passes, every module and call site is pinned to the installed 2.42304.0 chunks', async () => {
+test('generator: the check passes, every module and call site is pinned to the 3.6556.2 chunks', async () => {
   await extractSessionLoadError({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   for (const entry of [...manifest.modules, ...manifest.callSites])
     assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, entry.source))), entry.source);
   assert.deepEqual(manifest.modules.map(m => [m.target, m.source]), [
-    ['error-page.mjs', 'shared-19-CkPOiIKm.js'], ['chunk-reload-state.mjs', 'shared-52-DGviI8xb.js'], ['chunk-heal-probe.mjs', 'shared-26-CgdP_nTj.js'],
-    ['chunk-heal-gate.mjs', 'shared-20-B7UqYfsi.js'], ['pane-retry-claim.mjs', 'shared-20-B7UqYfsi.js'], ['reload-blockers.mjs', 'shared-104-Cqo2-vQh.js'],
-    ['unload-veto.mjs', 'c7f0c0d23-BDc3qEXV.js'], ['session-load-error.mjs', 'cc43287c9-DAfOi8yP.js']]);
-  // fV's bindings are fV and dV only: everything else it reads is imported.
+    ['error-page.mjs', 'shared-46-BIbZBGFq.js'], ['chunk-reload-state.mjs', 'shared-52-uHFNjl7C.js'], ['chunk-heal-probe.mjs', 'shared-26-CGuBxVt9.js'],
+    ['chunk-heal-gate.mjs', 'shared-15-BvlV43cI.js'], ['pane-retry-claim.mjs', 'shared-15-BvlV43cI.js'], ['reload-blockers.mjs', 'shared-104-CTONUSaz.js'],
+    ['unload-veto.mjs', 'c7f0c0d23-BeKocnIJ.js'], ['session-load-error.mjs', 'cc43287c9-Me-M2ucD.js']]);
+  // aV's bindings are aV and iV only: everything else it reads is imported (React Compiler helpers from view-tabs, E3).
   const session = manifest.modules.find(m => m.target === 'session-load-error.mjs');
-  assert.deepEqual(session.bindings.map(b => b.name).sort(), ['dV', 'fV']);
-  assert.deepEqual(Object.fromEntries(session.imports.map(i => [i.local, `${i.kind}:${i.name}`])), {
-    Q: 'adapter:useIntl', _: 'react:useRef', D: 'react:useEffect', A: 'react:useCallback', $A: 'adapter:forgetScrollAnchors', jP: 'adapter:forgetRowExpansion',
-    $a: 'generated:CHUNK_HEAL_PROBE_MS', Xo: 'generated:CHUNK_RELOAD_SPACING_MS', qo: 'generated:markPageUnloading', Jh: 'generated:chunkHealTarget',
-    xc: 'generated:reloadBlocker', YP: 'generated:unloadHeld', uo: 'generated:isChunkReloadPending', vh: 'generated:claimPaneRetry',
-    lo: 'adapter:reportChunkCacheHeal', v: 'react:jsx', gi: 'generated:ErrorPage' });
-  // Every host dependency is a named adapter of this lane, React, view-tabs (CdsButton) or a sibling module: nothing else.
+  assert.deepEqual(session.bindings.map(b => b.name).sort(), ['aV', 'iV']);
+  const compiler = { J9: 'reactMemoCache', J8: 'memoSentinel', J1: 'memoChanged1', K1: 'memoStore1', J2: 'memoChanged2', K2: 'memoStore2', J3: 'memoChanged3', K3: 'memoStore3' };
+  assert.deepEqual(Object.fromEntries(session.imports.filter(i => i.kind !== 'view-tabs').map(i => [i.local, `${i.kind}:${i.name}`])), {
+    qd: 'adapter:useIntl', f: 'react:useRef', E: 'react:useEffect', lM: 'adapter:forgetScrollAnchors', xne: 'adapter:forgetRowExpansion',
+    Es: 'generated:CHUNK_HEAL_PROBE_MS', Qi: 'generated:CHUNK_RELOAD_SPACING_MS', Ki: 'generated:markPageUnloading', hh: 'generated:chunkHealTarget',
+    vc: 'generated:reloadBlocker', zy: 'generated:unloadHeld', Wr: 'generated:isChunkReloadPending', yh: 'generated:claimPaneRetry',
+    Ss: 'adapter:reportChunkCacheHeal', p: 'react:jsx', Ha: 'generated:ErrorPage' });
+  for (const i of session.imports.filter(i => i.kind === 'view-tabs')) assert.equal(compiler[i.local], i.name, i.local);
+  // Every host dependency is a named adapter of this lane, React, view-tabs (CdsButton and the compiler helpers) or a
+  // sibling module: nothing else.
   const all = manifest.modules.flatMap(m => m.imports);
   assert.deepEqual([...new Set(all.map(i => i.kind))].sort(), ['adapter', 'generated', 'react', 'view-tabs']);
-  assert.deepEqual(all.filter(i => i.kind === 'view-tabs').map(i => i.name), ['CdsButton']);
+  assert.deepEqual([...new Set(all.filter(i => i.kind === 'view-tabs').map(i => i.name))].filter(n => !Object.values(compiler).includes(n)), ['CdsButton']);
   assert.deepEqual(all.filter(i => i.kind === 'adapter').map(i => `${i.via}=${i.name}`).sort(), [
-    'cc6e9624e-Dw5fc5HL.js:a=forgetRowExpansion', 'cd14a8022-DDLlDKpQ.js:l=forgetScrollAnchors', 'shared-0-ByI5P0CP.js:gy=growthBookValue',
-    'shared-20-B7UqYfsi.js:__=resolveChunkHealTarget', 'shared-25-DP8p7i1Z.js:Wf=useRouter', 'shared-26-CgdP_nTj.js:yp=reportChunkCacheHeal',
-    'vendor-intl-Db7hDWRO.js:l=FormattedMessage', 'vendor-intl-Db7hDWRO.js:p=useIntl']);
+    'cc6e9624e-CoHywWvV.js:a=forgetRowExpansion', 'cd14a8022-Bt1HiRdE.js:l=forgetScrollAnchors', 'shared-0-DDOOdL6P.js:yb=growthBookValue',
+    'shared-15-BvlV43cI.js:Fa=resolveChunkHealTarget', 'shared-25-DOWZRSlq.js:yp=useRouter', 'shared-26-CGuBxVt9.js:Bm=reportChunkCacheHeal',
+    'vendor-intl-DYfox5Co.js:l=FormattedMessage', 'vendor-intl-DYfox5Co.js:p=useIntl']);
   for (const i of all.filter(i => i.kind === 'adapter')) assert.equal(typeof Adapters[i.name], 'function', i.name);
   // The boundaries that mount fV (WI-3 follows them): main pane, secondary pane, pop-out; each fallback is cc43287c9 C.
   const sites = manifest.callSites.filter(s => !s.raw);
-  assert.deepEqual(sites.map(s => `${s.source}:${s.binding}`), ['c11959232-Dx4NfIyJ.js:Nm', 'c11959232-Dx4NfIyJ.js:Pm', 'c5638815a-D1NXo6h5.js:lt']);
-  for (const site of sites) assert.ok(Object.values(site.imports).some(v => v === 'cc43287c9-DAfOi8yP.js:C (fV)'), site.binding);
-  for (const site of sites) assert.ok(Object.values(site.imports).some(v => v === 'shared-26-CgdP_nTj.js:Vp (kl)'), site.binding);
+  assert.deepEqual(sites.map(s => `${s.source}:${s.binding}`), ['c11959232-TLc_9Vpx.js:P_', 'c11959232-TLc_9Vpx.js:F_', 'c5638815a-C5PjpJjD.js:dt']);
+  for (const site of sites) assert.ok(Object.values(site.imports).some(v => v === 'cc43287c9-Me-M2ucD.js:M (aV)'), site.binding);
+  for (const site of sites) assert.ok(Object.values(site.imports).some(v => v === 'shared-26-CGuBxVt9.js:fh ($l)'), site.binding);
   // The distinctive strings, once each in the minified originals.
   const pins = [
-    ['cc43287c9-DAfOi8yP.js', 'Something went wrong loading this session'], ['cc43287c9-DAfOi8yP.js', 'id:"z0PjNhLbSp"'],
-    ['cc43287c9-DAfOi8yP.js', 'lo(e,"pane_retry",$a,void 0,t)'], ['cc43287c9-DAfOi8yP.js', 'window.location.reload'],
-    ['cc43287c9-DAfOi8yP.js', 'function dV(){return xc()===null&&!YP()}'],
-    ['shared-20-B7UqYfsi.js', 'function g_(e){return Xg(Yg)?__(e):void 0}'], ['shared-20-B7UqYfsi.js', '"__gb__982582273"'],
-    ['shared-19-CkPOiIKm.js', 'min-h-screen flex flex-col items-center justify-center px-4'],
+    ['cc43287c9-Me-M2ucD.js', 'Something went wrong loading this session'], ['cc43287c9-Me-M2ucD.js', 'id:"z0PjNhLbSp"'],
+    ['cc43287c9-Me-M2ucD.js', 'Ss(t,"pane_retry",Es,void 0,e)'], ['cc43287c9-Me-M2ucD.js', 'function iV(){return vc()===null&&!zy()}'],
+    ['shared-15-BvlV43cI.js', 'function Pa(e){return la(ca)?Fa(e):void 0}'], ['shared-15-BvlV43cI.js', '"__gb__982582273"'],
+    ['shared-46-BIbZBGFq.js', 'min-h-screen flex flex-col items-center justify-center px-4'],
   ];
   for (const [file, needle] of pins) assert.equal(occurrences(raw(file), needle), 1, `${file}: ${needle}`);
-  // The gate's flag lives in shared-20 only, and the main process never mentions it or the pane_retry heal.
+  // The gate's flag lives in shared-15 only (3.6556.2 moved it out of shared-20), and the main process never mentions it
+  // or the pane_retry heal.
   const assets = fs.readdirSync(reference).filter(name => name.endsWith('.js'));
-  assert.deepEqual(assets.filter(name => raw(name).includes('__gb__982582273')), ['shared-20-B7UqYfsi.js']);
+  assert.deepEqual(assets.filter(name => raw(name).includes('__gb__982582273')), ['shared-15-BvlV43cI.js']);
   const build = path.resolve(reference, '../../../asar/.vite/build');
   const mainText = fs.readdirSync(build).filter(name => name.endsWith('.js')).map(name => fs.readFileSync(path.join(build, name), 'utf8')).join('\n');
   assert.equal(occurrences(mainText, '982582273') + occurrences(mainText, 'pane_retry'), 0);
@@ -194,7 +198,7 @@ test('transcript-10 / D33: the chunk heal gate is GrowthBook "__gb__982582273", 
   assert.equal(typeof ReloadState.markPageUnloading, 'function');
 });
 
-test('dV (canReloadPane): the original reload check reads the blocker registry and the beforeunload holders', () => {
+test('iV (canReloadPane): the original reload check reads the blocker registry and the beforeunload holders', () => {
   // Nothing on this host registers a blocker or a holder, so a reload would not be blocked; fV never asks while the gate
   // above is closed (`t !== void 0 && dV()` short-circuits).
   assert.equal(Blockers.reloadBlocker(), null);
@@ -211,7 +215,7 @@ test('dV (canReloadPane): the original reload check reads the blocker registry a
   Blockers.registerReloadBlocker('test-elective', () => false, { electiveOnly: true });
 });
 
-test('j_ (claimPaneRetry): the original once-per-chunk sessionStorage claim (unreachable here, kept as shipped)', () => {
+test('Qa (claimPaneRetry): the original once-per-chunk sessionStorage claim (unreachable here, kept as shipped)', () => {
   const saved = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
   const storage = storageSpy();
   Object.defineProperty(globalThis, 'sessionStorage', { value: storage, configurable: true, writable: true });
@@ -226,16 +230,17 @@ test('j_ (claimPaneRetry): the original once-per-chunk sessionStorage claim (unr
   }
 });
 
-test('fV renders the original error page: the message, Try again, no Back to landing page', () => {
+test('aV renders the original error page: the message, Try again, no Back to landing page', () => {
   const html = renderToStaticMarkup(h(Session.SessionLoadError, { error: Error('boom'), reset() {}, sessionId: 's1' }));
   assert.match(html, /^<div class="min-h-screen flex flex-col items-center justify-center px-4"><div class="text-center max-w-md">/);
   assert.match(html, new RegExp(`<div class="text-danger mb-6 text-lg font-medium">${MESSAGE.replace('.', '\\.')}</div>`));
   assert.equal(occurrences(html, '<button'), 1);
   assert.match(html, />Try again<\/button>|>Try again</);
   assert.doesNotMatch(html, /Back to landing page|mb-6 text-sm text-secondary/);
-  // T9 by itself: a hint line, and Back to landing page only without onRetry.
-  const page = renderToStaticMarkup(h(Page.ErrorPage, { message: 'm', hint: 'why', onBack() {} }));
-  assert.match(page, /<div class="mb-6 text-sm text-secondary">why<\/div>/);
+  // wR by itself (TR-T11: 3.6556.2 takes only { message, error, onRetry }; the hint line and onBack are gone): Back to
+  // landing page only without onRetry, and a hint prop renders nothing.
+  const page = renderToStaticMarkup(h(Page.ErrorPage, { message: 'm', hint: 'why' }));
+  assert.doesNotMatch(page, /why|mb-6 text-sm text-secondary/);
   assert.match(page, /Back to landing page/);
   assert.doesNotMatch(page, /Try again/);
   // "Try again" is the local catalog's (common.mjs).

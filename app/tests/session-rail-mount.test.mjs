@@ -27,7 +27,7 @@ const count = (text, needle) => text.split(needle).length - 1;
 const pin = (text, needles, expected = 1) => { for (const needle of needles) assert.equal(count(text, needle), expected, needle); };
 const h = React.createElement;
 
-let server, Rail, Order, Mention, Shown, Layout, Breadcrumb;
+let server, Rail, Order, Mention, Shown, Layout, Breadcrumb, ViewTabs;
 const ROOTS = new Set();
 let savedWindow, savedDocument;
 before(async () => {
@@ -44,6 +44,7 @@ before(async () => {
   Shown = await server.ssrLoadModule('/src/generated/session-rail-kit/rail-shown-store.mjs');
   Layout = await server.ssrLoadModule('/src/generated/session-rail-kit/rail-layout.mjs');
   Breadcrumb = await server.ssrLoadModule('/src/source-breadcrumb-adapters.jsx');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
   globalThis.window = savedWindow; globalThis.document = savedDocument;
 });
 // The rail's git-info queries live in the app's QueryClient (gcTime 10 min): clear it, and unmount what a failed test left.
@@ -373,6 +374,14 @@ test('fO stand-in: Environment (This computer · Local session), folder chip, br
     // the environment row's hint is the kind (Local session); no Worktree mark for a session in its own folder
     assert.ok(aside.querySelector('[data-rail-section="environment"]') || text.includes('Environment'));
     assert.equal(text.includes('Worktree'), false);
+    // V3-w6-rail-host: 3.6556.2 TN passes Mj `localIcon: tt ? void 0 : ua("local")` (shared-20 cA: "Laptop"), so the
+    // unnamed local environment row draws the Laptop glyph, not Zj's "Computer" fallback.
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const glyph = (name) => /<span[^>]*data-cds="Icon"[^>]*>([^<]*)<\/span>/.exec(renderToStaticMarkup(h(ViewTabs.CdsIcon, { name })))?.[1];
+    const environmentIcon = aside.querySelector('[data-rail-card="environment"] span.text-secondary > [data-cds="Icon"]');
+    assert.ok(environmentIcon, 'the environment row icon');
+    assert.ok(glyph('Laptop') && glyph('Laptop') !== glyph('Computer'));
+    assert.equal(environmentIcon.textContent, glyph('Laptop'));
     // Changes: OLe's flat row with the counts; the counts open the Changes pane, the verb commits.
     const row = aside.querySelector('[data-rail-changes-row]');
     assert.ok(row, 'the Changes row');
@@ -590,10 +599,13 @@ test('main.jsx: the rail is wired into the chat tile (state, toggle, body row, p
     assert.ok(main.slice(main.indexOf('const sessionRailHost = {'), main.indexOf('const sessionRailHost = {') + 3600).includes(field), field);
   // Mte (R4i-rail RL2): the band yields to the rail's Changes card in rail mode, read from the scope store
   assert.equal(count(main, 'const railHidesBand = useSessionRailHidesBand(sessionRail);'), 1);
-  assert.equal(count(main, "beforeComposer={mode === 'code' && current && !railHidesBand && (bandStatus ?"), 1);
+  // W13 G11 (assertion behind main.jsx): w13-close-chat-composer put the Chat image-limit band (shared-7 Cv) first in the
+  // same beforeComposer slot; the Code band's guard is unchanged.
+  assert.equal(count(main, "beforeComposer={mode === 'chat' ? <ChatImageLimitNotice"), 1);
+  assert.equal(count(main, ": mode === 'code' && current && !railHidesBand && (bandStatus ?"), 1);
   assert.equal(count(main, 'sessionRailHidesBand'), 0);
   // c5638815a lt: the session popout's own shown store, around the split root
   assert.equal(count(main, '<SessionRailShownScope popout={SESSION_POPOUT}><SourceSplitRoot renderSide={(side, secondary) => <App side={side} initialSession={secondary?.sessionId ?? null} />} /></SessionRailShownScope>'), 1);
-  // the pane root and body keep their literal classes (landing-texture-host.test.mjs reads them)
+  // the pane root and body keep their literal classes
   assert.equal(count(main, '<div className="source-chat-tile-content" data-surface={mode}'), 1);
 });

@@ -1,4 +1,4 @@
-// R4e-preview (main process): preview-15 the 2.42304.0 C4i check — a point from the agent's screenshot is refused once
+// R4e-preview (main process): preview-15 the 3.6556.2 e6i check (2.42304.0 C4i) — a point from the agent's screenshot is refused once
 // the tab's zoom or size changed (the pane resized, another viewport preset, another device scale factor), until the
 // next screenshot — and preview-03's log line on an identity mismatch (a2.start N.warn). Stand-in Electron and process
 // world (tests/fixtures/preview-r3b-world.mjs): no real port, process, window or page.
@@ -16,7 +16,7 @@ import { extractR4ePreview } from '../scripts/extract-r4e-preview.mjs';
 const require = createRequire(import.meta.url);
 const { createPreviewService } = require('../electron/preview-service.cjs');
 const app = path.resolve(import.meta.dirname, '..');
-const main = fs.readFileSync(path.resolve(app, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js'), 'utf8');
+const main = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 
 function project(configurations, scripts) {
@@ -55,14 +55,14 @@ const refused = (action) => new RegExp(`^${action}: the page's zoom or size has 
 const stale = (action) => new RegExp(`^${action}: this tab's page, zoom or size has changed; take a new screenshot \\(screenshot\\) before using \`x\`/\`y\`\\.$`);
 const needs = (pattern) => (error) => pattern.test(error.message) && error.code === 'needs_screenshot';
 
-test('preview-15 source: C4i / _4i / g4i and the generated module (extract-r4e-preview.mjs --check)', async () => {
+test('preview-15 source: e6i / J3i / q3i (2.42304.0 C4i / _4i / g4i) and the generated module (extract-r4e-preview.mjs --check)', async () => {
   for (const text of [
-    'function g4i(e){return Math.max(1,20/e)}',
-    'async function _4i(e,t,n){if(!n.visible)return!1;let r=await Cvi(e,t),i=g4i(n.visible.scale);return Math.abs(r.scale-n.visible.scale)>n.visible.scale*.005||Math.abs(r.width-n.visible.width)>i||Math.abs(r.height-n.visible.height)>i}',
-    'if(a&&await _4i(e,t,a))return m2(e,t,!0),{error:`${n}: the page\'s zoom or size has changed; take a new screenshot (computer{action:"screenshot"}) before using \\`coordinate\\`.`,errorClass:"needs_screenshot"}',
-    '{error:f2.get(r)===!0?`${n}: this tab\'s page, zoom or size has changed; take a new screenshot (computer{action:"screenshot"}) before using \\`coordinate\\`.`',
-    'let s=await h4i(e,t,a);c4i(e,t,i,s,o);',
-    'if(n.coordinate){let r=await C4i(e,t,o);if("error"in r)return r;',
+    'function q3i(e){return Math.max(1,20/e)}',
+    'async function J3i(e,t,n){if(!n.visible)return!1;let r=await O1(e,t),i=q3i(n.visible.scale);return Math.abs(r.scale-n.visible.scale)>n.visible.scale*.005||Math.abs(r.width-n.visible.width)>i||Math.abs(r.height-n.visible.height)>i}',
+    'if(a&&await J3i(e,t,a))return U3(e,t,!0),{error:`${n}: the page\'s zoom or size has changed; take a new screenshot (computer{action:"screenshot"}) before using \\`coordinate\\`.`,errorClass:"needs_screenshot"}',
+    '{error:V3.get(r)===!0?`${n}: this tab\'s page, zoom or size has changed; take a new screenshot (computer{action:"screenshot"}) before using \\`coordinate\\`.`',
+    'let s=await K3i(e,t,a);R3i(e,t,i,s,o);',
+    'if(n.coordinate){let r=await e6i(e,t,o);if("error"in r)return r;',
   ]) assert.equal(count(main, text), 1, text);
   await extractR4ePreview({ check: true });
   const policy = createPreviewCoordinateCheck({ Cvi: async () => ({ scale: 1, width: 800, height: 600 }) });

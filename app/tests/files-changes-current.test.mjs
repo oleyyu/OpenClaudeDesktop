@@ -10,6 +10,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractFilesChanges } from '../scripts/extract-files-changes.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import * as official3 from '../scripts/official-3.6556.2.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const values = new Map();
@@ -24,10 +26,11 @@ after(async () => {
   if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage); else delete globalThis.localStorage;
 });
 
-test('generator: the committed modules match the 2.42304.0 sources (check mode) and name their originals', async () => {
+test('generator: the committed modules match the 3.6556.2 sources (check mode) and name their originals', async () => {
   await extractFilesChanges({ check: true });
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/files-changes/manifest.json'), 'utf8'));
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, official3.referenceVersion);
+  assert.equal(manifest.referenceSnapshot, official3.referenceSnapshot);
   const byTarget = Object.fromEntries(manifest.modules.map((entry) => [entry.target, entry]));
   // R3-files adds the Files pane / Changes tree originals (tests/files-current-source.test.mjs covers them).
   assert.deepEqual(Object.keys(byTarget).filter((target) => ['diff-context-guard.mjs', 'diff-scope-memory.mjs', 'editable-target.mjs', 'menu-context-guard.mjs',
@@ -36,15 +39,32 @@ test('generator: the committed modules match the 2.42304.0 sources (check mode) 
   // R3-files FT-16 adds the breadcrumb folder popover, its compact tree and their runtime (breadcrumb-current.test.mjs);
   // FT-14 / FT-18 the tree rows, the worktree start folder, the multi-selection Escape and the frontmatter view
   // (file-tree-current.test.mjs); FT-07 the Changes tree tooltip and path forms (changes-tree-current.test.mjs).
-  assert.equal(Object.keys(byTarget).length, 63);
-  assert.equal(byTarget['diff-scope-memory.mjs'].source, 'c03935b01-CyJKQj4N.js');
-  assert.equal(byTarget['worktree-checking.mjs'].source, 'shared-19-CkPOiIKm.js');
-  assert.deepEqual(byTarget['shimmer-text.mjs'].imports.find((entry) => entry.local === 'X'),
-    { local: 'X', from: '../../source-files-changes-adapters.jsx', name: 'cdsClassNames', via: 'shared-frame-BfjMqbuN.js:X', kind: 'adapter' });
-  const official = (name) => fs.readFileSync(path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
-  assert.match(official('ca5db7aaf-DNznjmvJ.js'), /function F\(e\)\{u\(e\.target\)\|\|e\.preventDefault\(\)\}/);
-  assert.match(official('c82eca2bd-1Y6mm3wZ.js'), /function Be\(e\)\{e\.preventDefault\(\)\}/);
-  assert.match(official('c03935b01-CyJKQj4N.js'), /\$e\(e=>Rn\(e,`branch`\)\)|\$e\(e=>Rn\(e,"branch"\)\)/);
+  // 3.6556.2 (w2-files) adds folder-list-key (c0fbbe82d ri) and tree-context-menu-keys (shared-18 sk/ok); E42 splits the
+  // pure frontmatter label (c3fde7009 Ki) out of the compiled view as file-frontmatter-label. W12 diff-scope-tree adds the
+  // Changes tree memory (c44d00c7f Ta/Aa/Na), the pane body (shared-1 iC), c91a5e4a6 _ and the scope label (cccc2cf0a QS/iC);
+  // W12 diff-cont the Compare against branch label (c5da7eb42 Zf, cccc2cf0a kc).
+  assert.equal(Object.keys(byTarget).length, 71);
+  assert.deepEqual(['diff-tree-memory.mjs', 'diff-pane-body.mjs', 'node-hidden.mjs', 'diff-scope-label.mjs', 'diff-scope-base-label.mjs'].map((target) => byTarget[target]?.source),
+    ['c44d00c7f-Cr1FDL2F.js', 'shared-1-BJhqMmkf.js', 'c91a5e4a6-xMjQN7Gn.js', 'cccc2cf0a-DhZC33Gc.js', 'c5da7eb42-XijZdwf1.js']);
+  assert.equal(byTarget['menu-context-guard.mjs'].source, 'ca5db7aaf-qq5selW3.js');
+  assert.deepEqual(byTarget['menu-context-guard.mjs'].exports, { P: 'suppressNativeContextMenu' });
+  assert.equal(byTarget['diff-context-guard.mjs'].source, 'shared-1-BJhqMmkf.js');
+  assert.deepEqual(byTarget['diff-context-guard.mjs'].exports, { iK: 'preventContextMenu' });
+  assert.equal(byTarget['diff-scope-memory.mjs'].source, 'c03935b01-yhcY34vt.js');
+  assert.equal(byTarget['worktree-checking.mjs'].source, 'shared-46-BIbZBGFq.js');
+  assert.deepEqual(byTarget['worktree-checking.mjs'].exports, { GD: 'WorktreeChecking' });
+  // The ShimmerText line is the view-tabs CdsShimmer itself (D1): re-exported, no second copy, no bindings of its own.
+  assert.equal(byTarget['shimmer-text.mjs'].reexport, 'view-tabs');
+  assert.deepEqual(byTarget['shimmer-text.mjs'].bindings, []);
+  assert.deepEqual(byTarget['shimmer-text.mjs'].imports,
+    [{ local: 'zF', from: '../view-tabs/shared-frame-6jtSkIit.js', name: 'CdsShimmer', via: 'shared-frame-6jtSkIit.js:zF', kind: 'view-tabs' }]);
+  assert.deepEqual(byTarget['worktree-checking.mjs'].imports.find((entry) => entry.local === 'V'),
+    { local: 'V', from: '../view-tabs/shared-frame-6jtSkIit.js', name: 'CdsShimmer', via: 'shared-frame-6jtSkIit.js:_i', kind: 'view-tabs' });
+  const official = (name) => fs.readFileSync(path.join(official3.ionSource, name), 'utf8');
+  assert.match(official('ca5db7aaf-qq5selW3.js'), /function P\(e\)\{y\(e\.target\)\|\|e\.preventDefault\(\)\}/);
+  assert.match(official('shared-1-BJhqMmkf.js'), /function iK\(e\)\{e\.preventDefault\(\)\}/);
+  assert.match(official('c03935b01-yhcY34vt.js'), /var Un=\{kind:"branch"\},Wn=\{kind:"uncommitted"\}/);
+  assert.match(official('c03935b01-yhcY34vt.js'), /\w+\(e=>Zn\(e,"branch"\)\)/);
 });
 
 // An element stand-in for the guards: nodeType/tagName/closest/isContentEditable as the official checks read them.
@@ -78,7 +98,7 @@ function renderOnce(component, props) {
     useSyncExternalStore: (subscribe, getSnapshot, getServerSnapshot) => (getServerSnapshot ?? getSnapshot)(),
   };
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-  internal.H = hooks;
+  internal.H = withMemoCache(hooks);
   try { return component(props); } finally { internal.H = old; }
 }
 function find(tree, predicate) {
@@ -208,7 +228,7 @@ test('FT-08: c03935b01 Rn keeps at most 50 sessions (least recent out), "branch"
   assert.equal(memory.sameDiffScope({ kind: 'commit', sha: 'a' }, { kind: 'commit', sha: 'a' }), true);
 });
 
-test('FT-11 diffgit-10: "Checking for uncommitted changes…" is shared-19 jY over the CDS ShimmerText', async () => {
+test('FT-11 diffgit-10: "Checking for uncommitted changes…" is shared-46 GD (2.42304.0 shared-19 jY) over the CDS ShimmerText', async () => {
   const dialog = await server.ssrLoadModule('/src/source-worktree-dispose-dialog.jsx');
   const generated = await server.ssrLoadModule('/src/generated/files-changes/worktree-checking.mjs');
   assert.equal(dialog.WorktreeChecking, generated.WorktreeChecking);
@@ -216,14 +236,17 @@ test('FT-11 diffgit-10: "Checking for uncommitted changes…" is shared-19 jY ov
   assert.equal(reserve, '<p class="text-footnote text-muted-as-secondary mt-md invisible"><span data-cds="ShimmerText" data-shimmering="false">Checking for uncommitted changes…</span></p>');
   const reveal = renderToStaticMarkup(React.createElement(dialog.WorktreeChecking, { hold: 'reveal' }));
   assert.match(reveal, /^<p class="text-footnote text-muted-as-secondary mt-md animate-placeholder-reveal" aria-busy="true"><span data-cds="ShimmerText" data-shimmering="true" class="[^"]*bg-clip-text[^"]*">Checking for uncommitted changes…<\/span><\/p>$/);
-  assert.match(reveal, /\[background-image:linear-gradient\(120deg,var\(--cds-text-muted\)_37\.5%/, 'variant muted');
+  // 3.6556.2 CdsShimmer (view-tabs, panes W9): the muted variant sets the ink variable, the gradient reads it.
+  assert.match(reveal, /\[--cds-shimmer-text-ink:var\(--cds-text-muted\)\]/, 'variant muted');
+  assert.match(reveal, /var\(--cds-shimmer-text-ink\)_37\.5%/);
   assert.match(reveal, /animate-\[cds-shimmer-text-shine_3s_linear_infinite\]/);
   const after = renderToStaticMarkup(React.createElement(dialog.WorktreeChecking, { hold: 'reveal', afterHeader: true }));
   assert.doesNotMatch(after, /mt-md/, 'afterHeader (the nested-sessions confirm) drops the top margin');
   // The classes come from the official stylesheet (utilities layer) and no local rule overrides them.
-  const css = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const css = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   for (const name of ['.text-muted-as-secondary{', '.bg-clip-text{', '@keyframes cds-shimmer-text-shine', '[data-cds-shimmer-clone]'])
     assert.ok(css.includes(name), name);
-  const local = fs.readdirSync(path.join(ROOT, 'src')).filter((name) => name.endsWith('.css')).map((name) => fs.readFileSync(path.join(ROOT, 'src', name), 'utf8')).join('\n');
+  const local = fs.readdirSync(path.join(ROOT, 'src')).filter((name) => name.endsWith('.css')).map((name) => fs.readFileSync(path.join(ROOT, 'src', name), 'utf8'))
+    .join('\n').replace(/\/\*[\s\S]*?\*\//g, ''); // rules only: a comment may name the class (source-turn-error.css)
   assert.doesNotMatch(local, /\.text-muted-as-secondary\b|\.text-footnote\s*[,{]|\[data-cds=["']?ShimmerText/);
 });

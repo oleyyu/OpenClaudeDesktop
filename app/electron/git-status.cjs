@@ -410,8 +410,11 @@ async function workspaceGitStatus(cwd, { preferredBase, trace } = {}) {
     files: files.length, binaryFiles: files.filter((file) => file.binary).length,
     untrackedCount: records.filter((record) => record.untracked).length, diffBase: scope.diffBase,
     baseKind: !ctx.head ? 'empty-tree' : scope.diffBase === ctx.head ? 'HEAD' : 'merge-base',
-    // The base the Changes scope names ('main → working tree'); null leaves only the HEAD diff.
-    scopeBase: scope.baseRef ? scope.base : null, fileDetails: files,
+    // The base the Changes scope names ('main → working tree'); null leaves only the HEAD diff. A detached HEAD with no
+    // resolvable base names itself, as the 3.6556.2 session repo does (c5da7eb42 `baseBranch: t.defaultBranch ??
+    // i?.sourceBranch ?? t.branch` on its `detachedHead: !0` entry): the value is this status's `branch` (the short HEAD
+    // sha), which the Changes scope shows as "HEAD" (Zf / kc); the diff stays the HEAD diff.
+    scopeBase: scope.baseRef ? scope.base : !branch && ctx.head ? ctx.head.slice(0, 7) : null, fileDetails: files,
     comparison: await comparison(ctx, branch, preferredBase, scope) };
 }
 

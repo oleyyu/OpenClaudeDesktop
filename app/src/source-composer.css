@@ -339,8 +339,6 @@ html[data-reduce-motion="true"] .sc-history-search-caret { animation: none; }
 @media (prefers-reduced-motion: reduce) { .sc-history-search-hints { transition: none; } }
 html[data-reduce-motion="true"] .sc-history-search-hints { transition: none; }
 .sc-composer .sc-input-row { position: relative; }
-/* A send the composer refused (the shell-command mention guard): the composer's danger banner. */
-.sc-composer-notice { margin: 0; }
 /* Emoji suggestions option glyph (Gd: 'flex size-[14px] shrink-0 items-center justify-center leading-none', 14px). */
 .sed-char { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 14px; height: 14px; font-size: 14px; line-height: 1; }
 /* Dynamic workflows: the "ultracode" keyword's notice and ultracode's status line (muted, the keyword in the purple

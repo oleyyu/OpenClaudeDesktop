@@ -44,6 +44,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { createRelayProxy } = require("./relay-proxy.cjs");
+// The model listing, the Test button and the relay listing follow the system proxy (system-fetch.cjs).
+const { systemFetch } = require("./system-fetch.cjs");
 const METHOD_NOT_FOUND = -32601;
 const { coreSupports, coreCapabilities, coreForEngine } = require("./core-registry.mjs");
 const i18n = require("./i18n/index.mjs");
@@ -304,7 +306,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     if (op === "models") {
       const target = presets.modelsURL({ api, baseURL });
       let response;
-      try { response = await fetch(target, { headers, signal: AbortSignal.timeout(timeoutMs) }); }
+      try { response = await systemFetch(target, { headers, signal: AbortSignal.timeout(timeoutMs) }); }
       catch (error) { throw new Error(`Couldn’t reach ${target}: ${error?.message || error}`); }
       if (!response.ok) { const detail = await answer(response); throw new Error(`${target} answered ${response.status}.${detail ? ` ${detail}` : ""}`); }
       const body = await response.json().catch(() => null);
@@ -318,7 +320,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     const request = presets.testRequest({ api, baseURL, model });
     let response;
     const started = Date.now();
-    try { response = await fetch(request.url, { method: "POST", headers, body: JSON.stringify(request.body), signal: AbortSignal.timeout(30000) }); }
+    try { response = await systemFetch(request.url, { method: "POST", headers, body: JSON.stringify(request.body), signal: AbortSignal.timeout(30000) }); }
     catch (error) { throw new Error(`Couldn’t reach ${request.url}: ${error?.message || error}`); }
     if (!response.ok) {
       const detail = await answer(response);
@@ -405,7 +407,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       if (!key) throw new Error("Enter the relay’s API key.");
       const root = new URL(base).pathname.endsWith("/v1") ? base : `${base}/v1`;
       let response;
-      try { response = await fetch(`${root}/models`, { headers: { authorization: `Bearer ${key}`, "x-api-key": key, "anthropic-version": "2023-06-01" }, signal: AbortSignal.timeout(20000) }); }
+      try { response = await systemFetch(`${root}/models`, { headers: { authorization: `Bearer ${key}`, "x-api-key": key, "anthropic-version": "2023-06-01" }, signal: AbortSignal.timeout(20000) }); }
       catch (error) { throw new Error(`Couldn’t reach ${root}/models: ${error?.message || error}`); }
       if (!response.ok) throw new Error(`The relay answered ${response.status} for ${root}/models.`);
       const body = await response.json().catch(() => null);

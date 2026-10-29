@@ -1,6 +1,7 @@
 // R4e-zoom (menus-14 / layout-16): View › Zoom In / Zoom Out carry ids "zoom-in" / "zoom-out" and are disabled at the
-// zoom limits, refreshed together with the two Actual Size items after every reset and step — the original 2.42304.0
-// main-process bindings (asar index.chunk-muI2IV6k.js yPi, _Pi, vPi, PPi via I$), extracted to
+// zoom limits, refreshed together with the two Actual Size items after every reset and step — the original 3.6556.2
+// main-process bindings (asar index.chunk-jPKPzV-P.js cTi, oTi, sTi, wTi via x0; 2.42304.0 muI2IV6k yPi, _Pi, vPi, PPi via I$),
+// extracted to
 // electron/generated/r4e-zoom.cjs by scripts/extract-r4e-zoom.mjs. Controlled menu objects and zoom events only: no
 // Electron, no window, no process.
 import test from 'node:test';
@@ -16,65 +17,66 @@ const app = path.resolve(import.meta.dirname, '..');
 const { appMenuTemplate, refreshZoomMenu } = appMenu;
 const { ZOOM_LEVEL, ZOOM_STEP } = chrome;
 const { menuZoomLevel, settleWindowZoom, applyWindowZoom } = mainGlue;
-const official = readFileSync(path.resolve(app, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js'), 'utf8');
+const official = readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const manifest = JSON.parse(readFileSync(path.join(app, 'electron/generated/r4e-zoom-manifest.json'), 'utf8'));
 const generated = readFileSync(path.join(app, 'electron/generated/r4e-zoom.cjs'), 'utf8');
 
-test('2.42304.0 feature strings: yPi ids, _Pi/vPi limits and the PPi four-item table each occur once', () => {
+test('3.6556.2 feature strings: cTi ids, oTi/sTi limits and the wTi four-item table each occur once', () => {
   for (const [needle, count] of [
-    ['jHn=.25,MHn=Math.log(1.2),NHn=Math.log(jHn)/MHn,PHn=Math.log(5)/MHn;', 1],
-    ['function FHn(e){return Math.min(PHn,Math.max(NHn,e))}', 1],
-    ['mPi=.5,', 1],
-    ['gPi=()=>V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0', 1],
-    ['_Pi=(e=gPi())=>e===void 0||e<PHn', 1],
-    ['vPi=(e=gPi())=>e===void 0||e>NHn', 1],
-    ['{id:"zoom-in",label:X().formatMessage({defaultMessage:"Zoom In",id:"Z9g5m/V9Nq"}),accelerator:"CmdOrCtrl+Plus",enabled:_Pi(),click:MPi}', 1],
-    ['{id:"zoom-out",label:X().formatMessage({defaultMessage:"Zoom Out",id:"XZ36+EBE5/"}),accelerator:"CmdOrCtrl+-",enabled:vPi(),click:NPi}', 1],
-    ['n=[["actual-size",e!==0],["actual-size-numpad",e!==0],["zoom-in",_Pi(e)],["zoom-out",vPi(e)]];for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}', 1],
-    ['function I$(){PPi()}', 1],
-    ['V.webContents.setZoomLevel(0),jPi(0),I$(),F$()', 1],
-    ['n=FHn(e===0?t:Math.round((t+e)/mPi)*mPi+0);V.webContents.setZoomLevel(n),jPi(n),I$(),F$()', 1],
+    ['T4n=.25,E4n=Math.log(1.2),D4n=Math.log(T4n)/E4n,O4n=Math.log(5)/E4n;', 1],
+    ['function k4n(e){return Math.min(O4n,Math.max(D4n,e))}', 1],
+    ['rTi=.5,', 1],
+    ['aTi=()=>V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0', 1],
+    ['oTi=(e=aTi())=>e===void 0||e<O4n', 1],
+    ['sTi=(e=aTi())=>e===void 0||e>D4n', 1],
+    ['{id:"zoom-in",label:X().formatMessage({defaultMessage:"Zoom In",id:"Z9g5m/V9Nq"}),accelerator:"CmdOrCtrl+Plus",enabled:oTi(),click:STi}', 1],
+    ['{id:"zoom-out",label:X().formatMessage({defaultMessage:"Zoom Out",id:"XZ36+EBE5/"}),accelerator:"CmdOrCtrl+-",enabled:sTi(),click:CTi}', 1],
+    ['n=[["actual-size",e!==0],["actual-size-numpad",e!==0],["zoom-in",oTi(e)],["zoom-out",sTi(e)]];for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}', 1],
+    ['function x0(){wTi()}', 1],
+    ['V.webContents.setZoomLevel(0),xTi(0),x0(),b0()', 1],
+    ['n=k4n(e===0?t:Math.round((t+e)/rTi)*rTi+0);V.webContents.setZoomLevel(n),xTi(n),x0(),b0()', 1],
     // The hidden twins keep neither an id nor enabled.
-    ['{label:X().formatMessage({defaultMessage:"Zoom In (indie cooler version)",id:"fEeEFfSz4K"}),accelerator:"CmdOrCtrl+=",visible:!1,acceleratorWorksWhenHidden:!0,click:MPi}', 1],
-    ['{label:"Zoom In (numpad)",accelerator:"CmdOrCtrl+numadd",visible:!1,acceleratorWorksWhenHidden:!0,click:MPi}', 1],
-    ['{label:"Zoom Out (numpad)",accelerator:"CmdOrCtrl+numsub",visible:!1,acceleratorWorksWhenHidden:!0,click:NPi}', 1],
+    ['{label:X().formatMessage({defaultMessage:"Zoom In (indie cooler version)",id:"fEeEFfSz4K"}),accelerator:"CmdOrCtrl+=",visible:!1,acceleratorWorksWhenHidden:!0,click:STi}', 1],
+    ['{label:"Zoom In (numpad)",accelerator:"CmdOrCtrl+numadd",visible:!1,acceleratorWorksWhenHidden:!0,click:STi}', 1],
+    ['{label:"Zoom Out (numpad)",accelerator:"CmdOrCtrl+numsub",visible:!1,acceleratorWorksWhenHidden:!0,click:CTi}', 1],
   ]) assert.equal(occurrences(official, needle), count, needle);
 });
 
-test('generated r4e-zoom.cjs is the original text, pinned to 2.42304.0, and the host clamp/step are those bindings', () => {
-  assert.equal(manifest.referenceVersion, '2.42304.0');
-  assert.equal(manifest.source, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js');
-  assert.deepEqual(manifest.bindings.map(b => [b.name, b.scope]), [['jHn', 'module'], ['MHn', 'module'], ['NHn', 'module'], ['PHn', 'module'], ['FHn', 'module'], ['mPi', 'module'],
-    ['gPi', 'bindZoomMenu'], ['_Pi', 'bindZoomMenu'], ['vPi', 'bindZoomMenu'], ['PPi', 'bindZoomMenu']]);
+test('generated r4e-zoom.cjs is the original text, pinned to 3.6556.2, and the host clamp/step are those bindings', () => {
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.equal(manifest.source, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js');
+  assert.deepEqual(manifest.bindings.map(b => [b.name, b.scope]), [['T4n', 'module'], ['E4n', 'module'], ['D4n', 'module'], ['O4n', 'module'], ['k4n', 'module'], ['rTi', 'module'],
+    ['aTi', 'bindZoomMenu'], ['oTi', 'bindZoomMenu'], ['sTi', 'bindZoomMenu'], ['wTi', 'bindZoomMenu']]);
   assert.deepEqual(manifest.hostParams, { V: ['webContents'], a: ['Menu'] });
-  for (const needle of ['var _Pi = (e = gPi()) => e === void 0 || e < PHn;', 'var vPi = (e = gPi()) => e === void 0 || e > NHn;', 'function bindZoomMenu(V, a) {'])
+  for (const needle of ['var oTi = (e = aTi()) => e === void 0 || e < O4n;', 'var sTi = (e = aTi()) => e === void 0 || e > D4n;', 'function bindZoomMenu(V, a) {'])
     assert.equal(occurrences(generated, needle), 1, needle);
-  assert.equal(zoom.jHn, 0.25);
-  assert.equal(zoom.MHn, Math.log(1.2));
-  assert.equal(zoom.NHn, Math.log(0.25) / Math.log(1.2));
-  assert.equal(zoom.PHn, Math.log(5) / Math.log(1.2));
-  assert.equal(zoom.mPi, 0.5);
-  assert.equal(zoom.FHn(100), zoom.PHn);
-  assert.equal(zoom.FHn(-100), zoom.NHn);
-  assert.equal(zoom.FHn(1.5), 1.5);
+  assert.equal(zoom.T4n, 0.25);
+  assert.equal(zoom.E4n, Math.log(1.2));
+  assert.equal(zoom.ZOOM_LEVEL_MIN, Math.log(0.25) / Math.log(1.2));
+  assert.equal(zoom.ZOOM_LEVEL_MAX, Math.log(5) / Math.log(1.2));
+  assert.equal(zoom.ZOOM_STEP, 0.5);
+  assert.equal(zoom.clampZoomLevel(100), zoom.ZOOM_LEVEL_MAX);
+  assert.equal(zoom.clampZoomLevel(-100), zoom.ZOOM_LEVEL_MIN);
+  assert.equal(zoom.clampZoomLevel(1.5), 1.5);
   // window-chrome.cjs takes the level range, clamp and step from the generated bindings.
-  assert.deepEqual([ZOOM_LEVEL.MIN, ZOOM_LEVEL.MAX, ZOOM_STEP, chrome.clampZoomLevel], [zoom.NHn, zoom.PHn, zoom.mPi, zoom.FHn]);
+  assert.deepEqual([ZOOM_LEVEL.MIN, ZOOM_LEVEL.MAX, ZOOM_STEP, chrome.clampZoomLevel], [zoom.D4n, zoom.O4n, zoom.rTi, zoom.k4n]);
 });
 
-test('_Pi / vPi: Zoom In below PHn (×5), Zoom Out above NHn (×.25), both enabled without a level', () => {
+test('oTi / sTi: Zoom In below O4n (×5), Zoom Out above D4n (×.25), both enabled without a level', () => {
   const { canZoomIn, canZoomOut } = zoom.bindZoomMenu();
-  for (const [level, zoomIn, zoomOut] of [[0, true, true], [8.5, true, true], [zoom.PHn, false, true], [-7.5, true, true], [zoom.NHn, true, false], [undefined, true, true]]) {
+  for (const [level, zoomIn, zoomOut] of [[0, true, true], [8.5, true, true], [zoom.ZOOM_LEVEL_MAX, false, true], [-7.5, true, true], [zoom.ZOOM_LEVEL_MIN, true, false], [undefined, true, true]]) {
     assert.equal(canZoomIn(level), zoomIn, `zoom in at ${level}`);
     assert.equal(canZoomOut(level), zoomOut, `zoom out at ${level}`);
   }
-  // Bound to a view, no argument reads the view's level (gPi); a destroyed view reads as none.
-  let level = zoom.PHn, destroyed = false;
+  // Bound to a view, no argument reads the view's level (aTi); a destroyed view reads as none.
+  let level = zoom.ZOOM_LEVEL_MAX, destroyed = false;
   const view = { webContents: { getZoomLevel: () => level, isDestroyed: () => destroyed } };
   const bound = zoom.bindZoomMenu(view);
-  assert.equal(bound.zoomLevel(), zoom.PHn);
+  assert.equal(bound.zoomLevel(), zoom.ZOOM_LEVEL_MAX);
   assert.deepEqual([bound.canZoomIn(), bound.canZoomOut()], [false, true]);
-  level = zoom.NHn;
+  level = zoom.ZOOM_LEVEL_MIN;
   assert.deepEqual([bound.canZoomIn(), bound.canZoomOut()], [true, false]);
   destroyed = true;
   assert.equal(bound.zoomLevel(), undefined);
@@ -84,9 +86,9 @@ test('_Pi / vPi: Zoom In below PHn (×5), Zoom Out above NHn (×.25), both enabl
 const viewItems = template => template.find(item => item.label === 'View').submenu;
 const zoomRows = items => items.filter(item => /Zoom|Actual Size/.test(item.label || '')).map(item => [item.label, item.id, item.enabled]);
 
-test('yPi template: zoom-in / zoom-out ids and enabled from the level the menu is built at', () => {
+test('cTi template: zoom-in / zoom-out ids and enabled from the level the menu is built at', () => {
   for (const [zoomLevel, zoomed, zoomIn, zoomOut] of [[undefined, false, true, true], [0, false, true, true], [2, true, true, true],
-    [zoom.PHn, true, false, true], [zoom.NHn, true, true, false], [Number.NaN, false, true, true]]) {
+    [zoom.ZOOM_LEVEL_MAX, true, false, true], [zoom.ZOOM_LEVEL_MIN, true, true, false], [Number.NaN, false, true, true]]) {
     assert.deepEqual(zoomRows(viewItems(appMenuTemplate({ sidebarOpen: true, zoomed, zoomLevel, emit: () => {} }))), [
       ['Actual Size', 'actual-size', zoomed],
       ['Zoom In', 'zoom-in', zoomIn],
@@ -120,7 +122,7 @@ function harness() {
   return { click, state, level: () => level, items, win, Menu, menu, byId };
 }
 
-test('PPi after each step and reset: Zoom In greys out at ×5, Zoom Out at ×.25, Actual Size while zoomed', () => {
+test('wTi after each step and reset: Zoom In greys out at ×5, Zoom Out at ×.25, Actual Size while zoomed', () => {
   const h = harness();
   assert.deepEqual(h.state(), { 'actual-size': false, 'actual-size-numpad': false, 'zoom-in': true, 'zoom-out': true });
   h.click('Zoom In');
@@ -130,11 +132,11 @@ test('PPi after each step and reset: Zoom In greys out at ×5, Zoom Out at ×.25
   assert.equal(h.level(), 8.5);
   assert.equal(h.state()['zoom-in'], true, 'one step below the limit');
   h.click('Zoom In');
-  assert.equal(h.level(), zoom.PHn, 'the step past 9 clamps to PHn');
+  assert.equal(h.level(), zoom.ZOOM_LEVEL_MAX, 'the step past 9 clamps to O4n');
   assert.deepEqual(h.state(), { 'actual-size': true, 'actual-size-numpad': true, 'zoom-in': false, 'zoom-out': true });
   // The hidden ⌘= twin still fires (no id, no enabled) and stays clamped.
   h.click('Zoom In (indie cooler version)');
-  assert.equal(h.level(), zoom.PHn);
+  assert.equal(h.level(), zoom.ZOOM_LEVEL_MAX);
   assert.equal(h.state()['zoom-in'], false);
   h.click('Zoom Out');
   assert.equal(h.level(), 8.5);
@@ -146,19 +148,19 @@ test('PPi after each step and reset: Zoom In greys out at ×5, Zoom Out at ×.25
   assert.equal(h.level(), -7.5);
   assert.equal(h.state()['zoom-out'], true);
   h.click('Zoom Out (numpad)');
-  assert.equal(h.level(), zoom.NHn, 'the step past -8 clamps to NHn');
+  assert.equal(h.level(), zoom.ZOOM_LEVEL_MIN, 'the step past -8 clamps to D4n');
   assert.deepEqual(h.state(), { 'actual-size': true, 'actual-size-numpad': true, 'zoom-in': true, 'zoom-out': false });
   h.click('Actual Size (numpad)');
   assert.deepEqual(h.state(), { 'actual-size': false, 'actual-size-numpad': false, 'zoom-in': true, 'zoom-out': true });
-  // PPi touches only its four ids.
+  // wTi touches only its four ids.
   for (const label of ['Zoom In (indie cooler version)', 'Zoom In (numpad)', 'Zoom Out (numpad)']) assert.equal(h.items.find(item => item.label === label).enabled, undefined, label);
 });
 
-test('PPi guards: no live view or no application menu leaves the items alone', () => {
+test('wTi guards: no live view or no application menu leaves the items alone', () => {
   const h = harness();
   h.byId.get('zoom-in').enabled = 'untouched';
   refreshZoomMenu(undefined, h.Menu);
-  refreshZoomMenu({ webContents: { isDestroyed: () => true, getZoomLevel: () => zoom.PHn } }, h.Menu);
+  refreshZoomMenu({ webContents: { isDestroyed: () => true, getZoomLevel: () => zoom.ZOOM_LEVEL_MAX } }, h.Menu);
   assert.equal(h.byId.get('zoom-in').enabled, 'untouched');
   assert.doesNotThrow(() => refreshZoomMenu(h.win, { getApplicationMenu: () => null }));
   // An item missing from the menu is skipped (n&&(n.enabled=r)).
@@ -230,14 +232,14 @@ test('menuZoomLevel / applyWindowZoom / settleWindowZoom: reads the live main le
   assert.equal(emitted.at(-1)?.kind, 'zoom-factor');
   assert.deepEqual(h.state(), { 'actual-size': true, 'actual-size-numpad': true, 'zoom-in': true, 'zoom-out': true });
 
-  // Focus re-apply ({delta:0}) clamps an out-of-range level without stepping and refreshes the menu at PHn.
+  // Focus re-apply ({delta:0}) clamps an out-of-range level without stepping and refreshes the menu at O4n.
   trace.length = 0;
   win.webContents.setZoomLevel(40);
   trace.length = 0;
   runZoom({ delta: 0 });
-  assert.equal(win.webContents.getZoomLevel(), zoom.PHn);
-  assert.equal(secondMain.webContents.getZoomLevel(), zoom.PHn);
-  assert.equal(popout.webContents.getZoomLevel(), zoom.PHn);
+  assert.equal(win.webContents.getZoomLevel(), zoom.ZOOM_LEVEL_MAX);
+  assert.equal(secondMain.webContents.getZoomLevel(), zoom.ZOOM_LEVEL_MAX);
+  assert.equal(popout.webContents.getZoomLevel(), zoom.ZOOM_LEVEL_MAX);
   assert.deepEqual(h.state(), { 'actual-size': true, 'actual-size-numpad': true, 'zoom-in': false, 'zoom-out': true });
 
   // A destroyed main window is a no-op.

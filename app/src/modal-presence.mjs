@@ -18,12 +18,3 @@ export function waitForModalExit(element, complete) {
   timer = view.setTimeout(finish, transitionMilliseconds(view.getComputedStyle(element)));
   return cancel;
 }
-
-export function settingsTabIndex(index, count, key, rtl = false) {
-  if (!count) return null;
-  if (key === 'Home') return 0;
-  if (key === 'End') return count - 1;
-  if (key !== 'ArrowLeft' && key !== 'ArrowRight') return null;
-  const direction = (key === 'ArrowRight' ? 1 : -1) * (rtl ? -1 : 1);
-  return (index + direction + count) % count;
-}

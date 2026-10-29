@@ -1,26 +1,23 @@
 import React from "react";
+// E41: source-chat-adapters (chat / composer graph) imports this file, so CdsPictogram comes from its concrete view-tabs
+// file by semantic name instead of the facade (index.js evaluates every view-tabs module).
+import { CdsPictogram } from "./generated/view-tabs/shared-156-BLTosN8U.js";
 import * as DEFS from "./pictogram-defs.mjs";
 import { e as HandBlocks } from "./generated/chat/cbcaf521a-CrWJ5SHy.js";
 
-// CDS Pictogram (2.2553.1 shared-6 ZR, re-exported as St and wrapped by
-// shared-7 tV/nV). ZR draws a 500×500 viewBox SVG at GR {sm:64, md:96}: the
-// highlight paths take fill-pictogram-highlight-default (KR.default, light/dark
-// token in the loaded design system) and the line paths fill currentColor.
-// Without an alt it is aria-hidden (YR). The source lazy-loads each def and
-// fades it in; the three Customize defs are bundled here (pictogram-defs.mjs),
-// so the SVG is present on first paint. Same inline-SVG approach as the
-// sidebar empty pictogram (source-sidebar.jsx SourceSidebarEmpty).
+// The official CDS Pictogram (3.6556.2 shared-156 KG, exported as Hr), published by view-tabs as CdsPictogram since
+// w11-pictogram-d1 (D1: cowork-scheduled and code-routines import that one copy too). KG draws the asset in a 500×500
+// viewBox at BG {sm:64, md:96} (or a number), merges `style` over HG {flexShrink:0}, fills the highlight paths with
+// VG[highlightFill] (default / heather / cactus; "peach" reads as default) and the line paths with currentColor,
+// clips them to `asset.clip` when the asset has one, and is aria-hidden unless it has an `alt` (WG: role="img" +
+// aria-label). Every other prop reaches the svg.
+// The host addition is the lookup by `name`: the source lazy-loads each def (shared-1 xR over the def loaders); the
+// Customize defs are bundled here (pictogram-defs.mjs) and HandBlocks comes from its own official chunk, so the SVG
+// is present on first paint. An explicit `asset` wins over `name`.
 export const PICTOGRAM_SIZES = Object.freeze({ sm: 64, md: 96 });
 
-export function SourcePictogram({ name, size = "md", className }) {
-  const def = name === "HandBlocks" ? HandBlocks : DEFS[name];
+export function SourcePictogram({ name, asset, ...props }) {
+  const def = asset ?? (name === "HandBlocks" ? HandBlocks : DEFS[name]);
   if (!def) return null;
-  const px = typeof size === "number" ? size : PICTOGRAM_SIZES[size];
-  return (
-    <svg data-cds="Pictogram" data-pictogram={name} width={px} height={px} viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ flexShrink: 0 }} className={className} aria-hidden="true">
-      {def.highlight.map((d, index) => <path key={`h${index}`} d={d} className="fill-pictogram-highlight-default" />)}
-      {def.line.map((d, index) => <path key={`l${index}`} d={d} fill="currentColor" />)}
-    </svg>
-  );
+  return <CdsPictogram asset={def} {...props} />;
 }

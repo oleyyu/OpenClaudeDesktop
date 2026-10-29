@@ -1,5 +1,10 @@
-import React, { useCallback, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Icon } from "./icons";
+import React, { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+// Hand-written host file: view-tabs through the facade (R6; this graph is not imported by chat/composer/menu, E41).
+import { CdsCollapsible, CdsIcon, isMacUserAgent } from "./generated/view-tabs/index.js";
+// shared-18 ok / sk (c44d00c7f `$e` / `Z`): the keyboard context menu (⇧F10 / ContextMenu on macOS, ^Enter on a commit
+// row) and the menu-item Enter-repeat guard.
+import { openContextMenuFromKey, preventMenuItemEnterRepeat } from "./generated/files-changes/tree-context-menu-keys.mjs";
+import { fileTreeIconSize, treeIndent } from "./generated/code-current/file-tree-style.mjs";
 import { SourceMenu } from "./source-menu.jsx";
 import { SourceTooltip, SourceTooltipGroup, textOverflows } from "./source-tooltip.jsx";
 import { useSourceToasts } from "./source-toast.jsx";
@@ -8,12 +13,15 @@ import { relativeClock } from "./relative-time-model.mjs";
 import { narrowRelativeTime } from "./home-model.mjs";
 import { getLocale } from "../electron/i18n/index.mjs";
 import {
-  COMMITS_HEADER_ROW, COMMITS_TOOLBAR_CLASS, COMMIT_ROW_ACTIVE, COMMIT_ROW_CLASS, COMMIT_ROW_IDLE, COMMIT_ROW_SELECTOR,
-  DIFF_COMMITS_LABELS, SCOPE_ROW_CLASS, commitMeta, commitRowTarget, commitsSectionRows, isDragSelectClick, olderCommitsLabel,
+  COMMITS_HEADER_ROW, COMMITS_PANEL_CLASS, COMMITS_TOOLBAR_CLASS, COMMIT_META_CLASS, COMMIT_ROW_ACTIVE, COMMIT_ROW_CLASS, COMMIT_ROW_IDLE,
+  COMMIT_ROW_SELECTOR, DIFF_COMMITS_LABELS, OLDER_COMMITS_CLASS, SCOPE_ROW_CLASS, commitMeta, commitRowTarget, commitsAltIgnored, commitsSectionRows,
+  enterPick, isDragSelectClick, olderCommitsLabel, preventNativeMenu,
 } from "./diff-commits-model.mjs";
 
-// The Changed files column's "Commits" section, 2.31226.0 c44d00c7f Wr/Gr/Kr/qr/Zr
-// (readable :808-1057, helpers Fr/Lr/Rr/zr/Ur :689-807); see diff-commits-model.mjs.
+// The Changed files column's "Commits" section. 3.6556.2 c44d00c7f-Cr1FDL2F (readable 3.6556.2 :680-1180):
+// Ni commit row (2.31226.0 Wr), Pi "Copy commit SHA" (Gr), Fi "All changes" / "Uncommitted changes" (Kr), Ii the
+// vertical toolbar (qr), Bi the collapsible header (Zr); helpers wi/Ei (Fr/Lr), Di (Rr), Oi (zr), Mi (Ur), ki/Ai (Br/Vr).
+// See diff-commits-model.mjs.
 
 // Vr: a non-empty selection that intersects the row.
 function selectionInside(node) {
@@ -79,8 +87,10 @@ function CommitRow({ commit, selected, onClick }) {
       () => toasts?.add(DIFF_COMMITS_LABELS.copyFailed, { variant: "danger" }));
   }, [commit.sha, toasts]);
   const openMenu = (point) => setMenu(point);
+  // Ni: no key handler of its own; the toolbar's Oi opens this menu from the keyboard (shared-18 ok dispatches a
+  // contextmenu at the row's bottom-left content edge, which lands in onContextMenu below).
   return <>
-    <button ref={ref} type="button" data-commit-row="commit" data-commit-sha={commit.sha} tabIndex={-1} aria-pressed={selected}
+    <button ref={ref} type="button" data-commit-row="commit" tabIndex={-1} aria-pressed={selected}
       data-pressed={menu ? "" : undefined} onMouseDown={click.onMouseDown} onClick={click.onClick}
       onContextMenu={(event) => {
         // qt nativeMenuWhen Vr: selected row text keeps the native (Copy) menu.
@@ -88,18 +98,11 @@ function CommitRow({ commit, selected, onClick }) {
         event.preventDefault(); event.stopPropagation();
         openMenu({ x: event.clientX, y: event.clientY });
       }}
-      onKeyDown={(event) => {
-        // ce9ca5630 t (Et): the ContextMenu key or ⇧F10 opens the row menu at its bottom-left content edge.
-        if (!(event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey))) return;
-        event.preventDefault(); event.stopPropagation();
-        const rect = event.currentTarget.getBoundingClientRect();
-        const view = event.currentTarget.ownerDocument.defaultView;
-        const padding = parseFloat(view?.getComputedStyle(event.currentTarget).paddingLeft) || 0;
-        openMenu({ x: rect.left + padding, y: rect.bottom });
-      }}
       className={`sdiff-commit-row ${COMMIT_ROW_CLASS} ${selected ? COMMIT_ROW_ACTIVE : COMMIT_ROW_IDLE}`}>
       <CommitSubject subject={commit.subject || DIFF_COMMITS_LABELS.noMessage} />
-      <span className="flex w-full items-center gap-1 text-footnote text-muted">
+      {/* Ni: the shortSha takes dir="ltr" only under an RTL direction (Base UI useDirection; the host has no
+          DirectionProvider, so it is always "ltr" and the attribute is omitted, as in the official build here). */}
+      <span className={COMMIT_META_CLASS}>
         <span className="text-code">{meta.shortSha}</span>
         <span aria-hidden="true">·</span>
         <span className="truncate">{meta.author}</span>
@@ -121,18 +124,23 @@ function ScopeRow({ selected, onClick, children }) {
     className={`sdiff-commit-scope ${SCOPE_ROW_CLASS} select-none ${selected ? COMMIT_ROW_ACTIVE : COMMIT_ROW_IDLE}`}>{children}</button>;
 }
 
-// zr: roving focus over the rows; ⌘/Ctrl+A is swallowed so it does not select the whole page.
-function commitsKeyDown(event) {
+// Oi (3.6556.2): roving focus over the rows. An Alt chord is ignored except Alt+Tab on macOS; the keyboard context menu
+// (shared-18 ok) goes to a focused commit row only; ⌘/Ctrl+A is swallowed so it does not select the whole page; a plain
+// Enter picks the focused row and, on its keyup, hands focus to the diff (Ci, onEnterPick).
+function commitsKeyDown(event, onEnterPick) {
   const toolbar = event.currentTarget;
-  if (!toolbar.contains(event.target) || event.altKey) return;
+  if (!toolbar.contains(event.target) || commitsAltIgnored(event, isMacUserAgent())) return;
+  const rows = [...toolbar.querySelectorAll(COMMIT_ROW_SELECTOR)];
+  const focused = toolbar.ownerDocument.activeElement;
+  const index = rows.findIndex((row) => row === focused || row.contains(focused));
+  const current = rows[index];
+  if (openContextMenuFromKey(event, current?.dataset.commitRow === "commit" ? current : null)) return;
   if (event.metaKey || event.ctrlKey) {
     if (!event.shiftKey && (event.key === "a" || event.key === "A")) event.preventDefault();
     return;
   }
-  const rows = [...toolbar.querySelectorAll(COMMIT_ROW_SELECTOR)];
-  const focused = toolbar.ownerDocument.activeElement;
-  const index = rows.findIndex((row) => row === focused || row.contains(focused));
   if (event.key === "Tab") { if (event.shiftKey && index >= 0) toolbar.focus({ preventScroll: true }); return; }
+  if (event.key === "Enter") { enterPick(event, current ?? null, onEnterPick); return; }
   const target = commitRowTarget(event.key, { index, count: rows.length, pressedIndex: rows.findIndex((row) => row.getAttribute("aria-pressed") === "true") });
   if (target === null) return;
   const row = rows[target];
@@ -155,17 +163,12 @@ function commitsFocus(event) {
   row?.scrollIntoView?.({ block: "nearest" });
 }
 
-// Br: a right-click on the toolbar outside any row has no menu.
-function suppressEmptyMenu(event) {
-  if (!event.target.closest?.(COMMIT_ROW_SELECTOR)) event.preventDefault();
-}
-
 // qr: role=toolbar (vertical) "Commits".
-function CommitsList({ commits, total, selectedSha, uncommittedSelected, onSelect, onSelectUncommitted, underHeader }) {
+function CommitsList({ commits, total, selectedSha, uncommittedSelected, onSelect, onSelectUncommitted, onEnterPick, underHeader }) {
   const { rows, hidden } = commitsSectionRows(commits, selectedSha, total);
   const allSelected = selectedSha === null && !uncommittedSelected;
   return <div role="toolbar" aria-orientation="vertical" aria-label={DIFF_COMMITS_LABELS.commits} tabIndex={0}
-    onKeyDown={commitsKeyDown} onFocus={commitsFocus} onContextMenu={suppressEmptyMenu}
+    onKeyDown={(event) => commitsKeyDown(event, onEnterPick)} onKeyDownCapture={preventMenuItemEnterRepeat} onFocus={commitsFocus} onContextMenu={preventNativeMenu}
     className={`sdiff-commits-list ${COMMITS_TOOLBAR_CLASS} ${underHeader ? "pt-0.5" : "pt-md"}`}>
     <ScopeRow selected={allSelected} onClick={() => onSelect(null)}>{DIFF_COMMITS_LABELS.allChanges}</ScopeRow>
     {onSelectUncommitted && <ScopeRow selected={uncommittedSelected} onClick={onSelectUncommitted}>{DIFF_COMMITS_LABELS.uncommitted}</ScopeRow>}
@@ -173,39 +176,42 @@ function CommitsList({ commits, total, selectedSha, uncommittedSelected, onSelec
     <SourceTooltipGroup delay={700}>
       {rows.map((commit) => <CommitRow key={commit.sha} commit={commit} selected={selectedSha === commit.sha} onClick={() => onSelect(commit.sha)} />)}
     </SourceTooltipGroup>
-    {hidden > 0 && <span className="px-xs py-[6px] text-footnote text-muted select-none">{olderCommitsLabel(hidden)}</span>}
+    {hidden > 0 && <span className={`${OLDER_COMMITS_CLASS} select-none`}>{olderCommitsLabel(hidden)}</span>}
   </div>;
 }
 
-/** Zr: the collapsible "Commits {n}" section. Props: commits [{sha, shortSha, subject, authorName,
+/** Bi (2.31226.0 Zr): the collapsible "Commits {n}" section. Props: commits [{sha, shortSha, subject, authorName,
  * date}], total (base..HEAD count), selectedSha (a commit scope) or null, uncommittedSelected,
- * onSelect(sha | null), onSelectUncommitted (only while uncommitted changes exist), collapsed,
- * onCollapsedChange(collapsed). */
-export function SourceDiffCommits({ commits, total, selectedSha = null, uncommittedSelected = false, onSelect, onSelectUncommitted, collapsed = false, onCollapsedChange }) {
+ * onSelect(sha | null), onSelectUncommitted (only while uncommitted changes exist), onEnterPick (Jd ee), collapsed,
+ * onCollapsedChange(collapsed).
+ * 3.6556.2: CdsCollapsible Root (open = !collapsed, "flex min-h-0 flex-col") > the header (shrink-0 px-xs py-1.25, ki on
+ * its context menu) > "rounded hover:bg-fill-ghost-hover" > Trigger (hideCaret, ht(0), `${xt} text-secondary-control`)
+ * with CdsIcon CaretRight (size Q(), rotate collapsed ? 0 : 90, no rotate-90 class), the name and the count; the Panel
+ * (Ri) holds the list. Host difference: the count is `total` (the host reads 101 commits and rev-list --count; the
+ * official list is the whole base..HEAD, so its commits.length is the same number). */
+export function SourceDiffCommits({ commits, total, selectedSha = null, uncommittedSelected = false, onSelect, onSelectUncommitted, onEnterPick, collapsed = false, onCollapsedChange }) {
   const trigger = useRef(null);
-  const panelId = useId();
   const list = <CommitsList commits={commits} total={total} selectedSha={selectedSha} uncommittedSelected={uncommittedSelected}
-    onSelect={onSelect} onSelectUncommitted={onSelectUncommitted} underHeader={!!onCollapsedChange} />;
+    onSelect={onSelect} onSelectUncommitted={onSelectUncommitted} onEnterPick={onEnterPick} underHeader={!!onCollapsedChange} />;
   if (!onCollapsedChange) return <div className="min-h-0 overflow-y-auto px-xs">{list}</div>;
   const count = Number.isSafeInteger(total) && total >= commits.length ? total : commits.length;
-  return <div className="sdiff-commits flex min-h-0 flex-col" data-collapsed={collapsed || undefined}>
-    <div className="shrink-0 px-xs py-1.25" onContextMenu={(event) => event.preventDefault()}>
+  return <CdsCollapsible.Root open={!collapsed} className="flex min-h-0 flex-col"
+    onOpenChange={(open) => {
+      // Bi u: collapsing keeps focus on the trigger (the focused row is about to unmount).
+      if (!open) trigger.current?.focus({ preventScroll: true });
+      onCollapsedChange(!open);
+    }}>
+    <div className="shrink-0 px-xs py-1.25" onContextMenu={preventNativeMenu}>
       <div className="rounded hover:bg-fill-ghost-hover">
-        <button ref={trigger} type="button" aria-expanded={!collapsed} aria-controls={panelId} style={{ paddingLeft: 8 }}
-          className={`sdiff-commits-trigger ${COMMITS_HEADER_ROW} text-secondary`}
-          onClick={() => {
-            // Zr a: collapsing keeps focus on the trigger (the focused row is about to unmount).
-            if (!collapsed) trigger.current?.focus({ preventScroll: true });
-            onCollapsedChange(!collapsed);
-          }}>
-          <Icon name="CaretRight" size={12} className={`sdiff-tree-caret shrink-0 text-muted transition-transform duration-fast motion-reduce:transition-none${collapsed ? "" : " rotate-90"}`} />
+        <CdsCollapsible.Trigger ref={trigger} hideCaret style={treeIndent(0)} className={COMMITS_HEADER_ROW}>
+          <CdsIcon name="CaretRight" size={fileTreeIconSize()} rotate={collapsed ? 0 : 90} className="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none" />
           <span className="min-w-0 flex-1 truncate">{DIFF_COMMITS_LABELS.commits}</span>
           <span className="shrink-0 text-footnote tabular-nums text-muted">{count}</span>
-        </button>
+        </CdsCollapsible.Trigger>
       </div>
     </div>
-    {!collapsed && <div id={panelId} className="min-h-0 overflow-y-auto h-auto">
+    <CdsCollapsible.Panel className={COMMITS_PANEL_CLASS}>
       <div className="px-xs">{list}</div>
-    </div>}
-  </div>;
+    </CdsCollapsible.Panel>
+  </CdsCollapsible.Root>;
 }

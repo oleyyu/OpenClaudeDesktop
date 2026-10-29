@@ -168,7 +168,7 @@ async function waitCount(method, count) {
 const usageTrigger = () => page.locator(".sc-chin .sc-usage-trigger");
 // R4i-gui GU1: the ring is the generated shared-8 KV (usage-ring.mjs UsageRing): circle[data-ring-track] then
 // circle[data-ring-arc]; an open session's presets row chin sizes it 14px on the alpha-4 track (source-composer.jsx
-// ringSize CONTEXT_RING_ROW_SIZE, context-usage-model.mjs:39-41), so r = (14 - 2) / 2 = 6.
+// ringSize CONTEXT_RING_ROW_SIZE, context-usage-model.mjs:38), so r = (14 - 2) / 2 = 6.
 const RING = { size: 14, r: 6, track: "--cds-alpha-4" };
 async function usageRing() {
   await page.waitForFunction(() => document.querySelector(".sc-usage-trigger circle[data-ring-arc]")?.getAnimations().every(animation => animation.playState === "finished"));

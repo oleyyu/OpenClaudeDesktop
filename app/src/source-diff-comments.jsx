@@ -6,10 +6,11 @@
 // (FileCommentCard); a saved comment goes out with the next message as a keyed composer snippet, exactly as Files
 // comments do (main.jsx onSaveComment), or through the add-to-prompt relay in a popped-out pane window.
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
 import { FileCommentCard } from "./source-file-comments.jsx";
 import { SourceMenu } from "./source-menu.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// The selection chip (W12 diff-main): ceb49ada3 Tt over the view-tabs layer provider / layer-aware z-index.
+import { CdsLayerProvider, useCdsLayerAwareZIndex } from "./generated/view-tabs/index.js";
+import { SelectionActionBar } from "./generated/code-current/terminal-action-bar.mjs";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import { addToPrompt, serializeLineComment } from "./inline-comments.mjs";
 import { SELECTION_CHIP, addCommentLabel, anchorDiffSpan, diffCommentAttachmentKey, diffCommentOutdated, diffFileCommentsStore, diffLineIndex,
@@ -17,6 +18,7 @@ import { SELECTION_CHIP, addCommentLabel, anchorDiffSpan, diffCommentAttachmentK
 import { t } from "../electron/i18n/index.mjs";
 import { suppressEscapeRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
 import { preventContextMenu } from "./generated/files-changes/diff-context-guard.mjs";
+import { NO_PR_COMMENT_STOPS, prCommentComposing, prCommentMatch, prCommentShortcutsEnabled, prCommentStepIndex } from "./diff-pr-comment-nav-model.mjs";
 
 const ROW = ".sdiff-row[data-comment-line]";
 const EMPTY = Object.freeze({ entries: [], active: null });
@@ -70,6 +72,40 @@ export function selectionChipEscape(doc, hide) {
     if (doc.defaultView) suppressEscapeRepeat(doc.defaultView);
     hide();
   };
+}
+
+/** panes:C2-7, c44d00c7f Jd (3.6556.2) `Fn({command:"nextPrComment",...Qn(1)})` / prevPrComment Qn(-1): ⌥F9 / ⇧⌥F9
+ * (not on Linux) on the Changes pane's [data-pane-root] or dialog (else the diff root) step to the next / previous open
+ * PR review comment, wrapping (cc8941b7b rt). `prComments` is the session's {all, open} ids in file order (cc8941b7b $e);
+ * `onStep(id)` brings that comment's card into view (Jd It → js, control "card"). Enabled as Qn: the keyboard gate, files
+ * listed, and at least one open comment — OpenClaude has no PR review comments, so the binding is mounted but off. */
+export function usePrCommentShortcuts({ rootRef, files = 0, prComments = NO_PR_COMMENT_STOPS, onStep, linux }) {
+  const enabled = prCommentShortcutsEnabled({ files, open: prComments.open.length });
+  const latest = useRef({ prComments, onStep });
+  latest.current = { prComments, onStep };
+  const lastStop = useRef(null);
+  useEffect(() => {
+    const view = rootRef.current;
+    if (!enabled || !view) return undefined;
+    const target = view.closest('[data-pane-root], [role="dialog"]') ?? view;
+    const onKeyDown = (event) => {
+      // ca6e98a55: n (match, not while the window is hidden), then r `e.preventDefault(), e.repeat || v(e)`; Qn onMatch
+      // holds back an IME composition after the preventDefault.
+      const delta = prCommentMatch(event, { hidden: !!target.ownerDocument?.hidden, ...(linux === undefined ? {} : { linux }) });
+      if (!delta) return;
+      event.preventDefault();
+      if (event.repeat || prCommentComposing(event)) return;
+      const { prComments: stops, onStep: step } = latest.current;
+      if (stops.open.length === 0) return;
+      const id = stops.open[prCommentStepIndex(stops, lastStop.current, delta, true)];
+      if (id === undefined) return;
+      lastStop.current = id;
+      step?.(id);
+    };
+    target.addEventListener("keydown", onKeyDown);
+    return () => target.removeEventListener("keydown", onKeyDown);
+  }, [enabled, rootRef, linux]);
+  return enabled;
 }
 
 /** The comment layer of one Changes file: store, cards, gutter add, line-number drag, selection chip, body menu. */
@@ -201,6 +237,7 @@ export function useDiffComments({ file, scope, menu: menuHost = false, shownHunk
 
   // yo: the selection chip.
   const [chip, setChip] = useState(null);
+  const chipZIndex = useCdsLayerAwareZIndex(4);
   const chipTimer = useRef(null), chipTimerStop = useRef(null);
   // O: the pending multi-click chip and its wheel/scroll cancel listeners go together.
   const clearTimer = () => {
@@ -214,8 +251,9 @@ export function useDiffComments({ file, scope, menu: menuHost = false, shownHunk
     const rows = selectedRows(body);
     const span = rows ? diffSelectionSpan(rows) : null;
     if (!span) { setChip(null); return; }
-    const rect = body.getBoundingClientRect();
-    setChip({ ...selectionChipPosition({ clientX, clientY, left: rect.left, width: rect.width, scrollerTop: scrollerTop(body) }), span,
+    // Bl: positioned in the file wrapper (the .sdiff-file section, `relative`), where the chip renders.
+    const rect = (body.closest(".sdiff-file") ?? body).getBoundingClientRect();
+    setChip({ ...selectionChipPosition({ clientX, clientY, left: rect.left, top: rect.top, width: rect.width, scrollerTop: scrollerTop(body) }), span,
       lines: anchorDiffSpan(file.hunks, span.startLine, span.endLine, span.side, { partial: !complete }) });
   }, [bodyRef, file.hunks, complete]);
   const onMouseUp = (event) => {
@@ -285,10 +323,16 @@ export function useDiffComments({ file, scope, menu: menuHost = false, shownHunk
     else void globalThis.navigator?.clipboard?.writeText(text)?.catch(() => {});
   };
   const overlays = <>
-    {chip && bodyRef.current && createPortal(<div className="source-selection-toolbar cds-root sdiff-selection-chip" role="toolbar" aria-label={t("Selection actions")} data-pane-editor=""
-      style={{ transform: `translate(${Math.round(chip.x)}px, ${Math.round(chip.y)}px) ${chip.flipBelow ? `translate(-50%, ${SELECTION_CHIP.gap}px)` : `translate(-50%, calc(-100% - ${SELECTION_CHIP.gap}px))`}` }}>
-      <SourceSettingsButton variant="ghost" aria-label={addCommentLabel(chip.lines)} onMouseDown={(event) => event.preventDefault()} onClick={() => commentSelection(chip.span)}>{t("Add comment")}</SourceSettingsButton>
-    </div>, bodyRef.current.ownerDocument.body)}
+    {/* c44d00c7f Bl `_e`: `div.absolute.isolate[data-pane-editor]` in the file wrapper at the pointer (zIndex R(4), the
+        layer-aware view-tabs useCdsLayerAwareZIndex) around shared-frame ou (view-tabs CdsLayerProvider) and ceb49ada3 Tt,
+        the selection action bar the terminal also renders (generated code-current/terminal-action-bar.mjs), with one
+        action: Add comment (aria-label Nn = cf56e4ee1 t, the line range). */}
+    {chip && <div className="absolute isolate" data-pane-editor=""
+      style={{ left: chip.x, top: chip.y, transform: chip.flipBelow ? `translate(-50%, ${SELECTION_CHIP.gap}px)` : `translate(-50%, calc(-100% - ${SELECTION_CHIP.gap}px))`, zIndex: chipZIndex }}>
+      <CdsLayerProvider>
+        <SelectionActionBar actions={[{ key: "add-comment", label: t("Add comment"), ariaLabel: addCommentLabel(chip.lines), onSelect: () => commentSelection(chip.span) }]} />
+      </CdsLayerProvider>
+    </div>}
     {menu && <SourceMenu.Popup anchor={bodyRef.current} trigger={null} point={{ x: menu.x, y: menu.y }} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu"
       // c44d00c7f En (c82eca2bd Be): a right-click on the Changes context menu never opens the native menu over it.

@@ -208,8 +208,7 @@ test('transcript-04 local: the same rows (h-control height, 5px radius) and the 
   assert.match(css, /\.sch-toc-tick \{ height: 8px; display: flex; align-items: center; \}/);
   assert.match(css, /\.sch-toc-line \{ display: block; height: 2px;[^}]*border-radius: 9999px;/);
   // The marker has no local rule either, so omitting it changes nothing.
-  for (const file of [...fs.readdirSync(path.join(app, 'src')).filter((name) => name.endsWith('.css')).map((name) => `src/${name}`),
-    'public/assets/current-chat/layout.css'])
+  for (const file of fs.readdirSync(path.join(app, 'src')).filter((name) => name.endsWith('.css')).map((name) => `src/${name}`))
     assert.equal(count(local(file), 'app-list-row'), 0, file);
 });
 
@@ -329,7 +328,7 @@ test('topbar-09 local: no selected variant (as default), and the pressed toggle 
   assert.match(rule[1], /background-color: var\(--cds-bg-accent\);/);
   assert.match(rule[1], /color: var\(--cds-text-accent\);/);
   // The same values as the loaded official utilities that gc and Il name.
-  const sheet = local('public/assets/v1/c6a992d55-sXiDGMFQ.css');
+  const sheet = local('public/assets/v1/c6a992d55-Che1orl5.css');
   pin(sheet, ['.group-aria-pressed\\/btn\\:bg-accent:is(:where(.group\\/btn)[aria-pressed=true] :where(.group-aria-pressed\\/btn\\:bg-accent)){background-color:var(--cds-bg-accent)}',
     '.aria-pressed\\:text-accent[aria-pressed=true]{color:var(--cds-text-accent)}']);
   // The popout Keep window on top (DW: ghost, pressed: t, no pressedVariant) takes the same default pressed look.

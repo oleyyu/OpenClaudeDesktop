@@ -20,7 +20,8 @@ test('side panel header renders the drag handle after the tabs/title and before 
   const body = header('source-session.jsx', '<header className="source-pane-header" data-pane-header={tab}>');
   const handle = body.indexOf('{headerCenter}');
   assert.equal(body.split('{headerCenter}').length, 2, 'rendered once');
-  assert.ok(handle > body.indexOf('className="source-file-tabs"'), 'after the tab strip');
+  // W12c files-tabbar: the strip is the ViewTabBar (<SourceFileTabs>, cccc2cf0a ND `ey`).
+  assert.ok(body.indexOf('<SourceFileTabs ') > 0 && handle > body.indexOf('<SourceFileTabs '), 'after the tab strip');
   assert.ok(handle > body.indexOf('<span className="source-pane-title"'), 'after the title');
   assert.ok(body.indexOf('<span className="source-pane-title"') > 0, 'the title is span.source-pane-title');
   assert.ok(handle < body.indexOf('paneControls'), 'before trailing controls');

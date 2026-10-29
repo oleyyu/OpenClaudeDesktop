@@ -13,16 +13,6 @@
   color: var(--cds-fill-accent);
 }
 .sm-model-digit { color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); }
-.sm-model-badge {
-  flex-shrink: 0;
-  max-width: 100%;
-  border-radius: 4px;
-  padding-inline: 4px;
-  background: var(--cds-alpha-1);
-  color: var(--cds-text-secondary);
-  font-size: 10px;
-  line-height: 16px;
-}
 .sm-model-empty { padding: 4px 8px; color: var(--cds-text-muted); }
 /* The search field of a long catalog: a borderless row on top, the popup's own surface. */
 .sm-model-search { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; padding: 4px 8px; border-bottom: 1px solid var(--cds-border); color: var(--cds-text-muted); }

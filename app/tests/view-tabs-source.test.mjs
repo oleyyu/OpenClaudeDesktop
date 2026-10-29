@@ -5,17 +5,18 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import {withMemoCache} from './support/react-memo-cache.mjs';
 let server,Tabs,Frame,Host;
 before(async()=>{
-  server=await createServer({configFile:false,root:path.resolve(import.meta.dirname,'..'),plugins:[react()],server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error'});
-  Tabs=await server.ssrLoadModule('/src/generated/view-tabs/cfe7c4b3b-CP-IQXj8.js');
-  Frame=await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-DfPJ1QmD.js');
+  server=await createServer({configFile:false,root:path.resolve(import.meta.dirname,'..'),plugins:[react()],server:{middlewareMode:true,hmr:false,ws:false,watch:null},appType:'custom',logLevel:'error'});
+  Tabs=await server.ssrLoadModule('/src/generated/view-tabs/cfe7c4b3b-BF79K6ux.js');
+  Frame=await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-CnSY1sxv.js');
   Host=await server.ssrLoadModule('/src/source-view-tabs.jsx');
 });
 after(()=>server?.close());
 const noop=()=>{};
 test('the original lazy popup module retains its public export instead of only a minified local name',async()=>{
-  const module=await server.ssrLoadModule('/src/generated/view-tabs/c86ccec3d-zuivwocA.js');
+  const module=await server.ssrLoadModule('/src/generated/view-tabs/c86ccec3d-CIt4iOS0.js');
   assert.equal(typeof module.SheetPopupHost,'function');
 });
 function fixture(component,props,{direction='ltr'}={}) {
@@ -32,6 +33,8 @@ function fixture(component,props,{direction='ltr'}={}) {
     useEffect(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps)){const old=cells[i];cells[i]={deps};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}},
     useLayoutEffect(fn,deps){dispatcher.useEffect(fn,deps);},
   };
+  // 3.6556.2 is React Compiler output (cds:C9): components start with useMemoCache (R5 helper, cache kept per slot).
+  withMemoCache(dispatcher);
   const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internal.H;internal.H=dispatcher;try{tree=component(props);return tree;}finally{internal.H=previous;}};
   render();return {render,get tree(){return tree;},flush(){for(const effect of effects.splice(0))effect();return render();},close(){for(const cell of cells)cell?.cleanup?.();}};
 }
@@ -59,7 +62,7 @@ test('source tab Delete closes once and consumes the held key until release; loc
 
 test('original overflow row closes with the directional arrow, Backspace or Delete; repeated and modified keys do not close again',()=>{
   for(const direction of ['ltr','rtl']){
-    const closed=[],f=fixture(Tabs.ViewTabOverflowItem,{tab:{id:'hidden',label:'Hidden',closable:true},rtl:direction==='rtl',onActivate:noop,onClose:id=>closed.push(id),sizes:Tabs.viewTabSizes});
+    const closed=[],f=fixture(Tabs.ViewTabOverflowItem,{tab:{id:'hidden',label:'Hidden',closable:true},arrowCloses:true,rtl:direction==='rtl',onActivate:noop,onClose:id=>closed.push(id),sizes:Tabs.viewTabSizes});
     const closeKey=direction==='rtl'?'ArrowLeft':'ArrowRight',other=direction==='rtl'?'ArrowRight':'ArrowLeft';
     f.tree.props.onKeyDown(event(other));f.tree.props.onKeyDown(event(closeKey,{ctrlKey:true}));assert.equal(closed.length,0);
     const e=event(closeKey);f.tree.props.onKeyDown(e);assert.deepEqual(closed,['hidden']);assert.equal(e.stopped,true);
@@ -99,7 +102,7 @@ test('RTL overflow uses logical starts and a negative scroll offset for the sele
   assert.deepEqual(m.measure().hiddenIds,['a']);assert.equal(m.list.scrollLeft,-104);m.f.close();
 });
 
-// 2.42304.0 additions to the original bar, exercised through its own functions.
+// 2.42304.0 additions to the original bar (still in 3.6556.2), exercised through its own functions.
 const pair=[{id:'a',label:'A',closable:true},{id:'b',label:'B',closable:true}];
 test('original create control becomes the CDS split dropdown only when a create menu accompanies onCreate',()=>{
   const bar=props=>renderToStaticMarkup(React.createElement(Host.SourceViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,'aria-label':'Tabs',...props}));
@@ -114,24 +117,68 @@ test('fizzy-lake panels stay off for the host: tabs keep the default size table 
   assert.match(html,/basis-\[192px\]/);assert.doesNotMatch(html,/--vtb-room|basis-\[212px\]/);
   assert.equal(Tabs.viewTabSizes.basis,'basis-[192px]');assert.equal(Tabs.viewTabSizes.roomVar,undefined);
 });
-// R4g SM2 (global-10 / X7-21): 2.42304.0 compiles fizzy-lake off. shared-23's spa:fizzy-lake writer GJ=[WJ(VJ)] has an
-// empty switch table (VJ={}), both CdsRoot mounts read shared-4 Of (`Of as uo` -> `uo as T_`), and Of filters the
-// data-cds-fizzy-lake attribute through Ef=Cf=[], so kf/jf (and shared-frame vr through CdsRoot) are always false.
+// cds:C12 (3.6556.2): the overflow row closes with the directional arrow only when arrowCloses is set; the bar passes
+// overflowArrowCloses, which defaults to true, so the host's bar keeps the arrow close.
+test('overflow row arrow close is opt-in on the row and on by default through the bar',()=>{
+  const closed=[],f=fixture(Tabs.ViewTabOverflowItem,{tab:{id:'hidden',label:'Hidden',closable:true},rtl:false,onActivate:noop,onClose:id=>closed.push(id),sizes:Tabs.viewTabSizes});
+  f.tree.props.onKeyDown(event('ArrowRight'));assert.deepEqual(closed,[]);f.tree.props.onKeyDown(event('Delete'));assert.deepEqual(closed,['hidden']);f.close();
+  const bar=Tabs.ViewTabBar.toString();assert.match(bar,/overflowArrowCloses:/);
+});
+// cds:C10 (3.6556.2): createBusy marks the create control busy (aria-busy + spinner) and its wrapper drops out of the
+// window drag region (draggable-none); with a create menu (split button) a role="status" sr-only span announces
+// "Opening new tab…".
+test('createBusy announces the busy create control and keeps it out of the drag region',()=>{
+  const bar=props=>renderToStaticMarkup(React.createElement(Tabs.ViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,onCreate:noop,'aria-label':'Tabs',...props}));
+  const menu={label:'More new tab options',items:[{label:'Terminal',onClick:noop}]};
+  const busy=bar({createBusy:true}),idle=bar({}),busySplit=bar({createBusy:true,createMenu:menu}),idleSplit=bar({createMenu:menu});
+  assert.match(busy,/<span class="inline-flex shrink-0 draggable-none" role="presentation">/);
+  assert.match(busy,/aria-busy="true"[^>]*aria-label="New tab"/);assert.match(busy,/data-cds="Spinner"/);
+  assert.match(idle,/<span class="inline-flex shrink-0" role="presentation">/);
+  assert.doesNotMatch(idle,/aria-busy="true"|data-cds="Spinner"|Opening new tab…/);
+  assert.match(busySplit,/<span role="status" class="sr-only">Opening new tab…<\/span>/);
+  assert.match(idleSplit,/<span role="status" class="sr-only"><\/span>/);
+  // The tab list itself already carried draggable-none in 2.42304.0 (E37: not a 3.6556.2 change).
+  assert.match(idle,/overflow-x-hidden p-\[4px\] draggable-none/);
+});
+// w2-cds-followup (cds:C10, E20): the host bar passes createBusy through and supplies the translated newTabBusy label;
+// a caller's own labels win. Official 3.6556.2 cccc2cf0a passes onCreate/createBusy only on the side-chat strip, gated
+// by c73f45bc3 Op (startBtwChild); the host strip passes no onCreate (E16/E31), so nothing shows there today.
+test('host bar forwards createBusy with the translated busy status and keeps caller labels',async()=>{
+  const i18n=await server.ssrLoadModule('/electron/i18n/index.mjs');
+  const menu={label:'More new tab options',items:[{label:'Terminal',onClick:noop}]};
+  const bar=props=>renderToStaticMarkup(React.createElement(Host.SourceViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,onCreate:noop,createMenu:menu,'aria-label':'Tabs',...props}));
+  const before=i18n.getLocale();
+  try {
+    i18n.setLocale('en-US');assert.match(bar({createBusy:true}),/<span role="status" class="sr-only">Opening new tab…<\/span>/);
+    i18n.setLocale('zh-CN');
+    const zh=bar({createBusy:true});
+    assert.match(zh,/<span role="status" class="sr-only">正在打开新标签页…<\/span>/);assert.match(zh,/<span class="inline-flex shrink-0 draggable-none" role="presentation">/);
+    assert.match(bar({createBusy:false}),/<span role="status" class="sr-only"><\/span>/);
+    assert.match(bar({createBusy:true,labels:{newTabBusy:'Starting…'}}),/<span role="status" class="sr-only">Starting…<\/span>/);
+  } finally {i18n.setLocale(before);}
+  const source=(await import('node:fs')).readFileSync(path.resolve(import.meta.dirname,'../src/source-view-tabs.jsx'),'utf8');
+  assert.match(source,/from '\.\/generated\/view-tabs\/index\.js';/,'R6: the host reads view-tabs through the facade');
+  assert.doesNotMatch(source,/generated\/view-tabs\/(?!index\.js)/);
+});
+// R4g SM2 (global-10 / X7-21), 3.6556.2: shared-23's spa:fizzy-lake writer PD=[ND(AD)] still has an empty switch table
+// (AD={}); the part gate (shared-4 lp -> shared-52 th) filters <html data-cds-fizzy-lake> through Qm=[] (cds:C25), so
+// every part is always false. The host never sets the attribute or the storage keys (E12).
 test('global-10: the official build compiles fizzy-lake off and the host never turns a part on',async()=>{
   const fs=await import('node:fs/promises');
   const count=(text,s)=>text.split(s).length-1;
-  const ref=path.resolve(import.meta.dirname,'../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
-  const s23=await fs.readFile(path.join(ref,'shared-23-Bu_lvvVo.js'),'utf8'),s4=await fs.readFile(path.join(ref,'shared-4-CJsHhp5n.js'),'utf8');
-  assert.equal(count(s23,'var VJ={},HJ={panels:Jg}'),1);assert.equal(count(s23,'GJ=[WJ(VJ)]'),1);
-  assert.equal(count(s23,'fizzyLake:T_()'),2);assert.equal(count(s23,'uo as T_'),1);assert.equal(count(s4,'Of as uo'),1);
-  assert.equal(count(s4,'Cf=[]'),1);assert.equal(count(s4,'var Ef=Cf'),1);
-  const gate=await server.ssrLoadModule('/src/generated/view-tabs/shared-4-CJsHhp5n.js');
-  assert.deepEqual(gate.Cf,[]);assert.equal(gate.Ef,gate.Cf);assert.deepEqual(gate.wf('panels color bubbles',gate.Ef),[]);
-  for(const part of ['panels','color','bubbles'])assert.equal(gate.isFizzyLakePartEnabled(part),false,part);
+  const ref=path.resolve(import.meta.dirname,'../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const s23=await fs.readFile(path.join(ref,'shared-23-BZ6ZY5fu.js'),'utf8'),s52=await fs.readFile(path.join(ref,'shared-52-uHFNjl7C.js'),'utf8');
+  assert.equal(count(s23,'AD={},jD={panels:'),1);assert.equal(count(s23,'var PD=[ND(AD)]'),1);
+  assert.equal(count(s52,'Qm=[]'),1);assert.equal(count(s52,'Ym="data-cds-fizzy-lake"'),1);
+  const gate=await server.ssrLoadModule('/src/generated/view-tabs/shared-52-uHFNjl7C.js');
+  assert.deepEqual(gate.Qm,[]);assert.equal(gate.Ym,'data-cds-fizzy-lake');assert.deepEqual(gate.Xm('panels color bubbles',gate.Qm),[]);
+  const parts=await server.ssrLoadModule('/src/generated/view-tabs/shared-4-DUB1Oi0O.js');
+  for(const part of ['panels','color','bubbles'])assert.equal(parts.isFizzyLakePartEnabled(part),false,part);
   const app=path.resolve(import.meta.dirname,'..'),hits=[];
   for(const dir of ['src','electron'])for(const name of await fs.readdir(path.join(app,dir),{recursive:true})){
     if(name.split(path.sep).includes('generated')||!/\.(jsx?|mjs|cjs|css|html)$/.test(name))continue;
-    const text=await fs.readFile(path.join(app,dir,name),'utf8');
+    // Code only: comments that explain why fizzy-lake stays off (e.g. the adapters' isFizzyLakePart notes) write nothing.
+    const text=(await fs.readFile(path.join(app,dir,name),'utf8')).replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|\s)\/\/.*$/gm,'$1');
     for(const s of ['data-cds-fizzy-lake','spa:fizzy-lake','fizzyLake'])if(text.includes(s))hits.push(`${dir}/${name}: ${s}`);
   }
   const index=await fs.readFile(path.join(app,'index.html'),'utf8');if(index.includes('fizzy-lake'))hits.push('index.html');

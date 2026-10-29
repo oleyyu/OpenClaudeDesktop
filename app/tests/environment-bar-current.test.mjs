@@ -11,6 +11,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const h = React.createElement;
@@ -100,8 +101,9 @@ test('mode and trailing: the composer’s Mode trigger in the empty:hidden mode 
   assert.ok(trailing.includes(`<span class="flex min-w-0 items-center gap-1 "><span class="${Tokens.environmentTriggerGivesWayClass}">Fixture</span><span class="shrink-0 whitespace-pre text-pro font-medium" data-top-tier=""> High</span></span>`), 'b6: the name, then the effort tail (High is the fixture model\'s highest level: purple, user decision 2026-10-18)');
   assert.ok(slot(home({ effort: 'low' }), 'environment-bar-trailing').includes('<span class="shrink-0 whitespace-pre text-muted-control"> Low</span>'), 'a lower level keeps x6\'s text-muted-control');
   assert.doesNotMatch(trailing, /sc-effort-trigger|ModelSelectorEffort/);
-  // c73f45bc3 Y_ (the bar ring): hZ ringSize 14 → yZ's Fa slot and the 14px KV on the alpha-4 track.
-  assert.match(trailing, /<span class="flex shrink-0 ms-px"><button type="button" data-cds="Button" data-cds-icon-only=""[^>]*sc-usage-trigger"[^>]*>[\s\S]*?<svg width="14" height="14" viewBox="0 0 14 14" class="-rotate-90" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke-width="2" stroke="var\(--cds-alpha-4\)" data-ring-track="">/);
+  // The bar ring (3.6556.2 c227f4d5e B3, inComposerRow): the po `flex shrink-0 ms-px` slot and the 14px ring on the alpha-3
+  // track (`m=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"`, `y(_f,{pct:s,trackStroke:m,stroke:c,size:14})`).
+  assert.match(trailing, /<span class="flex shrink-0 ms-px"><button type="button" data-cds="Button" data-cds-icon-only=""[^>]*sc-usage-trigger"[^>]*>[\s\S]*?<svg width="14" height="14" viewBox="0 0 14 14" class="-rotate-90" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke-width="2" stroke="var\(--cds-alpha-3\)" data-ring-track="">/);
   const groups = [...trailing.matchAll(/<div class="flex empty:hidden rounded [^"]*">/g)];
   assert.equal(groups.length, 2);
   for (const name of ['sc-model-trigger', 'sc-usage-trigger']) assert.match(trailing, new RegExp(name));
@@ -114,7 +116,8 @@ test('mode and trailing: the composer’s Mode trigger in the empty:hidden mode 
   // No effort: no tail word.
   assert.doesNotMatch(slot(home({ effort: '' }), 'environment-bar-trailing'), /text-muted-control/);
   // An empty mode slot collapses by its own empty:hidden (chat mode has no permission control; the bar is Code only).
-  assert.equal(Env.EnvironmentChipGroup({ children: null }).props.className, `flex empty:hidden ${Env.environmentChipClass}`);
+  // 3.6556.2 i8 is React Compiler output (it reads its memo cache), so it is rendered, not called.
+  assert.equal(renderToStaticMarkup(h(Env.EnvironmentChipGroup, { children: null })), `<div class="flex empty:hidden ${Env.environmentChipClass}"></div>`);
 });
 
 // A minimal hook dispatcher: one component's hooks across re-renders, with explicit context values.
@@ -130,7 +133,7 @@ function hookFixture(hook, contexts = new Map()) {
   const render = (...args) => {
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
     for (let pass = 0; pass < 5; pass++) {
-      dirty = false; cursor = 0; internal.H = hooks;
+      dirty = false; cursor = 0; internal.H = withMemoCache(hooks);
       try { result = hook(...args); } finally { internal.H = old; }
       if (!dirty) break;
     }
@@ -261,7 +264,9 @@ test('the chips open the host menus through onMenu with the trigger as anchor; A
 // TT-04 / D26: the bar's DOM is the official utility classes; every one is compiled in the loaded sheet, the host's
 // unlayered native-button reset is released for the chips, and no local rule styles l0's DOM.
 test("l0 / u0 / c0 classes are all in the official sheet; the host scope has no box; the chips' button reset is released", async () => {
-  const sheet = await fs.readFile(path.join(app, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  // w2-composer-gen: the bar is 3.6556.2 output now, so only the official sheets count (no compatibility layer).
+  const sheet = (await Promise.all(['c6a992d55-Che1orl5.css', 'shared-styles-D_GJawPO.css', 'shared-frame-CegduNQ2.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
+    .map(f => fs.readFile(path.join(app, 'public/assets/v1', f), 'utf8')))).join('\n');
   const html = renderToStaticMarkup(h(Bar.SourceComposerEnvironmentBar, { workdir: '/tmp/p', additionalFolders: [], onMenu: noop,
     mode: h('span', null, 'Auto'), model: h('span', null, 'Fixture'), effort: h('span', null, 'High'), ring: h('span', null, 'ring') }));
   const tokens = new Set([...html.matchAll(/class="([^"]*)"/g)].flatMap(m => m[1].split(/\s+/))

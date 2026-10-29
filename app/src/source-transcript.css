@@ -16,7 +16,7 @@
   /* Match the source typography scope so inherited turn-gap uses the actual
      14px transcript body, not the application chrome body fallback (13px). */
   --chat-body: 14px;
-  --chat-leading: 1.42857;
+  --chat-leading: 1.4286; /* 3.6556.2 (TR-T7): .epitaxy-transcript-typography --chat-leading 1.42857 -> 1.4286 */
   --chat-turn-gap: calc(var(--chat-body) * var(--chat-leading) * .75);
   --chat-item-gap: calc(var(--chat-body) * var(--chat-leading) * .5);
   position: relative;

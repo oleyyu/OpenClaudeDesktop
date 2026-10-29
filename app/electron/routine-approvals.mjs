@@ -16,6 +16,12 @@
 //     widened; anything else (file changes, MCP tool calls, network or permission requests, the app's own agent-tool
 //     cards, sampling, terminal input) still shows its card.
 // Renderer code can only remove a rule (local-routines 'remove-approval'); adding one is this module's, in main.
+//
+// w13-coworkfn-approvals (3.6556.2 index.chunk-Dl8NPgw7.js persistAlwaysAllowDecision: `r.scheduledTaskId&&…&&
+// t._s.addApprovedPermissions(r.scheduledTaskId,e.suggestions,{askedToolName:e.toolName})` for "always" and "scheduled"
+// alike): a Cowork task's run keeps its rules the same way ("Allow for all scheduled runs", which approval-policy.mjs
+// answers acceptForSession). A Cowork run's session names no scheduledTaskId: its task is the one whose running run it is
+// (local-routines taskOfSession).
 import nodePath from 'node:path';
 
 export const COMMAND_APPROVAL = 'item/commandExecution/requestApproval';
@@ -32,14 +38,44 @@ const escalationOf = (reason) => (typeof reason === 'string' ? /^Needs ([A-Za-z]
 /** The official key of a rule (muI2IV6k l4): what the page lists and removes by. */
 export const ruleKey = (rule) => `${rule.toolName}\0${rule.ruleContent ?? ''}`;
 
-/** Two host rules approve the same thing: tool, exact command, relative folder and escalation. */
+/** Two host rules approve the same thing: tool, exact command, relative folder and escalation (and the same kind). */
 export function sameRule(a, b) {
   return !!a && !!b && a.toolName === b.toolName && (a.ruleContent ?? null) === (b.ruleContent ?? null)
-    && (a.cwd ?? '') === (b.cwd ?? '') && (a.escalation ?? null) === (b.escalation ?? null);
+    && (a.cwd ?? '') === (b.cwd ?? '') && (a.escalation ?? null) === (b.escalation ?? null) && (a.source ?? null) === (b.source ?? null);
+}
+
+// w13-close-main-process (plan-w13-closeout G6 「VM 引擎计划任务规则的 suggestions 格式」): a Cowork VM run asks with the
+// CLI's own permission suggestions, so its task keeps those rules as the official does (Dl8 persistAlwaysAllowDecision
+// → muI2IV6k addApprovedPermissions(scheduledTaskId, suggestions): the allow addRules rules, {toolName, ruleContent?}),
+// marked `source: 'suggestion'` beside the host's command rules; a later run's ask whose every suggested allow rule is
+// kept is allowed without a card (shouldAutoApprovePermission). The page lists and removes both by the official key.
+export const SUGGESTION_RULE = 'suggestion';
+const TOOL_NAME = /^[A-Za-z0-9_.:*-][A-Za-z0-9_.:*() -]{0,199}$/;
+function suggestionRule(rule) {
+  if (!plain(rule) || typeof rule.toolName !== 'string' || !TOOL_NAME.test(rule.toolName) || rule.toolName.includes('\0')) return null;
+  if (rule.ruleContent != null && (typeof rule.ruleContent !== 'string' || !rule.ruleContent || rule.ruleContent.length > RULE_CONTENT_LIMIT || rule.ruleContent.includes('\0'))) return null;
+  return { toolName: rule.toolName, ...(rule.ruleContent != null && { ruleContent: rule.ruleContent }), source: SUGGESTION_RULE };
+}
+/** The allow rules a CLI permission_suggestions list adds (type addRules, behavior allow), as stored rules. */
+export function suggestionRules(suggestions) {
+  const out = [];
+  for (const suggestion of Array.isArray(suggestions) ? suggestions : []) {
+    if (suggestion?.type !== 'addRules' || suggestion.behavior !== 'allow' || !Array.isArray(suggestion.rules)) continue;
+    for (const rule of suggestion.rules) { const stored = suggestionRule(rule); if (stored && !out.some((value) => sameRule(value, stored))) out.push(stored); }
+  }
+  return out;
+}
+/** Whether a task's kept rules cover every allow rule an ask suggests (none suggested: never). */
+export function suggestionsCovered(task, suggestions) {
+  const wanted = suggestionRules(suggestions);
+  if (!wanted.length) return false;
+  const kept = (Array.isArray(task?.approvedPermissions) ? task.approvedPermissions : []).map(storedRule).filter(Boolean);
+  return wanted.every((rule) => kept.some((value) => sameRule(value, rule)));
 }
 
 /** A stored rule as the scheduler keeps it, or null when it is not one this module makes. */
 export function storedRule(rule) {
+  if (plain(rule) && rule.source === SUGGESTION_RULE) return suggestionRule(rule);
   if (!plain(rule) || rule.toolName !== COMMAND_TOOL || typeof rule.ruleContent !== 'string' || !rule.ruleContent.trim()
     || rule.ruleContent.length > RULE_CONTENT_LIMIT || rule.ruleContent.includes('\0')) return null;
   if (typeof rule.cwd !== 'string' || rule.cwd.startsWith('/') || rule.cwd.split('/').includes('..') || rule.cwd.includes('\0')) return null;
@@ -73,11 +109,11 @@ export function routineApprovalRule(request, root, { path = nodePath } = {}) {
   return { toolName: COMMAND_TOOL, ruleContent: command, cwd: relative.split(path.sep).join('/'), ...(escalation && { escalation }) };
 }
 
-/** The Code task and its running run that a session is, or null (a continued or finished run, a fork, any other session). */
+/** The Code or Cowork task and its running run that a session is, or null (a continued or finished run, a fork, any other session). */
 export function routineRunFor(rows, threadId, scheduledTaskId) {
   if (typeof threadId !== 'string' || typeof scheduledTaskId !== 'string' || !Array.isArray(rows)) return null;
   const task = rows.find((row) => row?.id === scheduledTaskId);
-  if (!task || task.kind !== 'code') return null;
+  if (!task || (task.kind !== 'code' && task.kind !== 'cowork' && task.kind !== undefined)) return null;
   const run = (task.runs ?? []).find((value) => value?.threadId === threadId && running(value));
   return run ? { task, run } : null;
 }
@@ -103,7 +139,12 @@ export function createRoutineApprovals({ routines, metadata, root, path = nodePa
     const threadId = request?.params?.threadId;
     if (typeof threadId !== 'string') return null;
     let found;
-    try { found = routineRunFor(routines.list('code'), threadId, metadata(threadId)?.scheduledTaskId); } catch { return null; }
+    try {
+      // A Code run's session records its task; a Cowork run's is the task whose run it is.
+      let taskId = metadata(threadId)?.scheduledTaskId;
+      if (taskId === undefined && typeof routines.taskOfSession === 'function') { const task = routines.taskOfSession(threadId); if (task && task.kind !== 'code') taskId = task.id; }
+      found = routineRunFor(routines.list(), threadId, taskId);
+    } catch { return null; }
     if (!found) return null;
     // Once the run's turn is known, only that turn's requests are the run's.
     if (found.run.turnId && request.params.turnId !== found.run.turnId) return null;

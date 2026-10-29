@@ -20,7 +20,7 @@ test('shortcuts dialog: rewind is decided per session, like Rewind to here and E
   const start = main.indexOf('<KeyboardShortcutsDialog key={`action-');
   assert.ok(start > 0);
   const dialog = main.slice(start, main.indexOf('/>}', start));
-  assert.equal(occurrences(dialog, 'rewind={codeRewindServed(current, boot?.core?.capabilities)}'), 1);
+  assert.equal(occurrences(dialog, 'rewind={codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)}'), 1);
   assert.equal(occurrences(dialog, 'thread/revert'), 0, 'no core-only capability check left in the dialog');
   // The same rule the transcript uses: a Cowork session never lists Esc Esc; a Code session follows thread/revert.
   for (const capabilities of [undefined, { unsupportedMethods: [] }]) {

@@ -36,9 +36,14 @@
    "min-w-[208px]" (sidebar-rows.js:16362). Declared before .smenu-sheet, which keeps full width. */
 .smenu-popup.account-menu { width: 17rem; }
 .smenu-popup.account-learn-more { min-width: 208px; }
+/* 3.6556.2 shared-frame-6jtSkIit QC (plain body) and $C (the list under a header) both begin "relative min-h-0
+   overflow-y-auto overflow-x-hidden scroll-fade-y …": the body is the containing block of its absolutely placed rows'
+   parts and never scrolls sideways. */
 .smenu-body {
+  position: relative;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   border-radius: inherit;
   border-bottom: var(--cds-ring-inner, 0px) solid transparent;
   padding: 4px;
@@ -221,11 +226,4 @@ html[data-reduce-motion="true"] .smenu-popup.smenu-sheet::after { transition: no
 [data-reduce-motion="true"] .smenu-sheet-backdrop, [data-reduce-motion="true"] .smenu-popup.smenu-sheet,
 html[data-local-motion="reduce"] .smenu-sheet-backdrop, html[data-local-motion="reduce"] .smenu-popup.smenu-sheet { transition: none; }
 
-/* Skill hover card (c17e03edc t/i): fixed, right-start + 8px, dark translucent. */
-.smenu-hovercard { position: fixed; z-index: var(--cds-portal-z, 1000); pointer-events: none; padding: 4px 8px; border-radius: 6px;
-  box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000001a; background: #000c; color: #fff;
-  font-family: var(--cds-font-sans, anthropic-sans), sans-serif; font-size: 12px; line-height: 1.25; font-weight: 400;
-  overflow-wrap: break-word; text-wrap: pretty; backdrop-filter: blur(4px); }
-.smenu-hovercard-text { display: -webkit-box; -webkit-line-clamp: 10; -webkit-box-orient: vertical; overflow: hidden; }
-.smenu-hovercard-source { margin-top: 4px; color: #ffffff99; }
-.smenu-hovercard-source[data-first] { margin-top: 0; }
+/* The skill description (3.6556.2 c17e03edc-fLVjIlvB d) is the view-tabs CDS Tooltip; it carries its own classes. */

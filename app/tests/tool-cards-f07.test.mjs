@@ -134,26 +134,29 @@ test('a multiSelect question draws checkbox marks with nothing preselected; a to
   const runtime = createApprovalDraftRuntime();
   runtime.reconcile([request]);
   const card = () => render(SourceQuestionCard, { runtime, request, respond: async () => ({}), getVisibleThreadId: () => 'T' });
+  // W12, c9ed5627b ut / dt Zn: a multiSelect row (and Other) trails a CdsCheckboxIndicator in `span[data-size=sm].flex.shrink-0`
+  // and carries aria-pressed; a single-select row trails the digit keycap and has no aria-pressed.
+  const CHECKBOX = '<span data-size="sm" class="flex shrink-0">';
   const initial = card();
-  assert.equal(count(initial, 'class="sq-checkbox-mark"'), 4, 'three options + Other');
-  assert.equal(count(initial, 'sq-radio-mark'), 0);
+  assert.equal(count(initial, CHECKBOX), 4, 'three options + Other');
+  assert.equal(count(initial, '<span class="pointer-events-none flex pointer-coarse:hidden">'), 0);
   assert.equal(count(initial, 'aria-pressed="false"'), 4);
-  assert.equal(count(initial, 'data-checked'), 0);
+  assert.equal(count(initial, 'aria-pressed="true"'), 0);
   const ticket = runtime.ticketFor(request);
   runtime.selectOption(ticket, 'kinds', 'UI');
   runtime.selectOption(ticket, 'kinds', 'Live');
   const toggled = card();
-  assert.deepEqual([...toggled.matchAll(/class="sq-option" aria-pressed="(true|false)"/g)].map(match => match[1]), ['false', 'true', 'true']);
-  assert.equal(count(toggled, 'class="sq-checkbox-mark" aria-hidden="true" data-checked=""'), 2);
-  // A single-select question keeps its radio marks and the options[0] preselection.
+  assert.deepEqual([...toggled.matchAll(/<button type="button" aria-pressed="(true|false)" class="flex items-center gap-sm rounded-\[5px\]/g)].map(match => match[1]), ['false', 'true', 'true']);
+  // A single-select question keeps the options[0] preselection and draws keycaps, not checkboxes.
   const single = structuredClone(request);
   single.bridgeApproval.instanceId = 'f07-single';
   delete single.params.questions[0].multiSelect;
   const other = createApprovalDraftRuntime();
   other.reconcile([single]);
   const radios = render(SourceQuestionCard, { runtime: other, request: single, respond: async () => ({}), getVisibleThreadId: () => 'T' });
-  assert.equal(count(radios, 'sq-checkbox-mark'), 0);
-  assert.match(radios, /class="sq-option" aria-pressed="true"/);
+  assert.equal(count(radios, CHECKBOX), 0);
+  assert.equal(count(radios, '<span class="pointer-events-none flex pointer-coarse:hidden">'), 4);
+  assert.match(radios, /var\(--cds-fill-secondary-ring\)\]"><div class="flex flex-col gap-0\.5 min-w-0 flex-1 select-text"><div [^>]*>Unit</);
 });
 
 test('the Mode list follows nE/aE: Auto, Manual, Accept edits, Plan, Bypass permissions; the trigger shows the full label', () => {
@@ -210,7 +213,7 @@ test('R07 plan review renders the plan card: heading, Open plan, Reject / Revise
     params: { threadId: 'T', turnId: 'turn', questions: [{ id: 'plan-review', question: '', options: [] }] } };
   const runtime = createApprovalDraftRuntime();
   runtime.reconcile([request]);
-  assert.match(render(SourceApproval, { runtime, request }), /class="source-message source-question-card sq-card"[^>]*data-approval-invalid=""/);
+  assert.match(render(SourceApproval, { runtime, request }), /class="source-message source-question-card epitaxy-approval-card [^"]*"[^>]*data-approval-invalid=""/);
 });
 
 test('R07 question card: choosing Other with an empty field enables Submit (uk)', () => {
@@ -220,6 +223,9 @@ test('R07 question card: choosing Other with an empty field enables Submit (uk)'
   runtime.reconcile([request]);
   runtime.selectOther(runtime.ticketFor(request), 'q');
   const html = render(SourceQuestionCard, { runtime, request, respond: async () => ({}), getVisibleThreadId: () => 'T' });
-  assert.match(html, /class="sq-custom-select" aria-label="Other" aria-pressed="true"/);
-  assert.doesNotMatch(html.match(/<button[^>]*class="sq-submit"[^>]*>/)[0], /disabled/);
+  // dt qn: Other chosen wears st; the Other button has no aria-pressed on a single-select question (`J ? Y : void 0`).
+  assert.match(html, /<div class="flex flex-col gap-\[12px\] rounded-\[5px\] px-md py-md bg-\[light-dark[^"]*"><button type="button" class="flex items-center gap-sm text-body/);
+  const footer = html.slice(html.lastIndexOf('<div class="flex items-center justify-end gap-[8px]">'));
+  const primary = footer.split('<button').at(-1);
+  assert.doesNotMatch(primary.slice(0, primary.indexOf('>')), /\sdisabled=""/);
 });

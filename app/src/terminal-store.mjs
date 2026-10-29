@@ -8,6 +8,17 @@
 // MAX_CACHED_TERMINALS of them (least recently shown first out; they re-attach from the main process's kept output).
 import { MAX_CACHED_TERMINALS, unseenData } from "./terminal-pane-model.mjs";
 import { createInlineOutput, feedInlineOutput, inlineOutputText, pickRunTab, promptAfterInput, INLINE_SILENCE_MS, INLINE_START_MS } from "./code-block-run-model.mjs";
+import { terminalErrorText, terminalStartError } from "./generated/code-current/terminal-errors.mjs";
+
+// The text a code block shows when its terminal could not start (c6bf19e8f Ei: `let r = di(e?.error, k, c);
+// (R.getState().setInlineError(k, li(r)), t || P(r))`): "Failed to spawn shell" reads "Couldn’t start the shell", any
+// other message shows as is, none at all is startFailed. Like the pane (terminal-pane-model.mjs restartTerminalTab) the
+// host passes the tab for both di keys, so a missing session is not mistaken for needsNewerApp (local tabs).
+const SHELL_EXITED = "Shell exited";
+function inlineStartErrorText(error, ptyKey) {
+  const message = String(error?.message ?? error ?? "").replace(/^Error invoking remote method '[^']+': (?:Error: )?/, "").trim();
+  return terminalErrorText(terminalStartError(message || undefined, ptyKey, ptyKey));
+}
 
 export function ownerKeyOf(sessionId, homeWorkspace) {
   return sessionId ? sessionId : homeWorkspace ? `home:${homeWorkspace}` : null;
@@ -109,10 +120,17 @@ export function createTerminalStore({ bridge = globalThis.desktop?.terminal ?? n
     setInline({ settled: true, endedBy: inline.endedBy ?? endedBy, prev: null, queue: null, ...extra });
   }
   // A plain run with no command marks settles once its output has been quiet for a moment (ca41b3815 gt "silence").
+  // The same timer (ca41b3815 j / Y → xt) ends a run whose shell went away after it printed: xt settles "shell-exit"
+  // when shellExited is set (setInlineError below).
   function armSilence() {
     clearTimeout(silenceTimer);
     const generation = inline?.generation;
-    silenceTimer = setTimeout(() => { if (inline?.generation === generation && !inline.settled && inline.quietSettles) settleInline("silence"); }, INLINE_SILENCE_MS);
+    silenceTimer = setTimeout(() => {
+      silenceTimer = null;
+      if (inline?.generation !== generation || inline.settled) return;
+      if (inline.shellExited) settleInline("shell-exit", { exitCode: inline.reader?.exitCode ?? inline.exitCode ?? null });
+      else if (inline.quietSettles) settleInline("silence");
+    }, INLINE_SILENCE_MS);
   }
   function inlineChunk(data) {
     const run = inline;
@@ -127,14 +145,29 @@ export function createTerminalStore({ bridge = globalThis.desktop?.terminal ?? n
     if (Number.isFinite(event.end) && event.end <= inline.at) return;
     inlineChunk(event.data.slice(Math.max(0, inline.at - start)));
     if (inline.reader.finished) { settleInline("idle", { exitCode: inline.reader.exitCode }); return; }
-    if (inline.reader.started) { clearTimeout(silenceTimer); inline.quietSettles = false; }
+    if (inline.reader.started) { clearTimeout(silenceTimer); silenceTimer = null; inline.quietSettles = false; }
     else if (inline.quietSettles) armSilence();
     emitInline();
   }
+  // The run's tab ended. `info` is its exited state, or null when the tab was closed ("removed"). A typed run that had
+  // printed nothing ends as ca41b3815 Ct does: a shell that exited is c6bf19e8f jr's shell_pty_close
+  // `R.getState().setInlineError(t.sessionId, t.reason ? `Shell disconnected: ${t.reason}` : "Shell exited")` (a local
+  // PTY gives no disconnect reason), a closed tab is Er's `R.getState().noteShellClosed(e)` = `Ct(e, null)` (no error);
+  // both `error: t, settled: !0, prev: null, endedBy: dispatched ? "shell-exit" : "cancel"`, after Kt forgets the prompt.
+  // A typed run that already printed keeps its output and ends "shell-exit" after the settle delay, as Ct does
+  // (`shellExited: !0`, `j === void 0 && Y(n.generation, H)`); Kt runs first either way. The dedicated bash-turn tab
+  // (host-only) ends "exit" at once.
   function inlineShellEnded(info) {
     const exitCode = Number.isInteger(info?.exitCode) ? info.exitCode : inline.reader?.exitCode ?? null;
-    if (inline.mode === "dedicated" || inline.hasVisibleOutput) settleInline(inline.mode === "dedicated" ? "exit" : "shell-exit", { exitCode });
-    else settleInline("shell-exit", { errorKind: "shell-exited" });
+    if (inline.mode === "dedicated") { settleInline("exit", { exitCode }); return; }
+    if (inline.ptyKey) prompts.delete(inline.ptyKey);
+    if (inline.dispatched && inline.hasVisibleOutput) {
+      inline = { ...inline, shellExited: true, exitCode };
+      if (silenceTimer === null) armSilence();
+      emitInline();
+      return;
+    }
+    settleInline(inline.dispatched ? "shell-exit" : "cancel", { error: info ? SHELL_EXITED : null });
   }
   function startInline({ id, owner, command, mode }) {
     if (inline && !inline.settled) settleInline("superseded");
@@ -143,7 +176,7 @@ export function createTerminalStore({ bridge = globalThis.desktop?.terminal ?? n
     const previous = inline?.id === id && inline.output ? { output: inline.output, altScreen: inline.altScreen } : null;
     inline = { id, generation: ++inlineGeneration, owner, command, mode, ptyKey: null, at: null, queue: [], reader: createInlineOutput(mode),
       output: "", hasVisibleOutput: false, altScreen: false, dispatched: false, settled: false, endedBy: null, exitCode: null,
-      errorKind: null, error: null, quietSettles: false, prev: previous };
+      errorKind: null, error: null, shellExited: false, quietSettles: false, prev: previous };
     emitInline();
     return inline.generation;
   }
@@ -352,7 +385,7 @@ export function createTerminalStore({ bridge = globalThis.desktop?.terminal ?? n
         if (info.shellIntegration) startTimer = setTimeout(() => { if (current(generation) && !inline.reader.started) { inline.quietSettles = true; armSilence(); } }, INLINE_START_MS);
         return { ptyKey: info.id, fresh: !target };
       } catch (error) {
-        if (current(generation)) settleInline("error", { errorKind: "failed", error: error?.message || String(error) });
+        if (current(generation)) settleInline("error", { errorKind: "failed", error: inlineStartErrorText(error, inline.ptyKey) });
         throw error;
       }
     },
@@ -368,7 +401,7 @@ export function createTerminalStore({ bridge = globalThis.desktop?.terminal ?? n
         if (current(generation)) { inline = { ...inline, ptyKey: info.id }; dispatched(generation, info.id, 0, { quietSettles: false }); }
         return info;
       } catch (error) {
-        if (current(generation)) settleInline("error", { errorKind: "failed", error: error?.message || String(error) });
+        if (current(generation)) settleInline("error", { errorKind: "failed", error: inlineStartErrorText(error, inline.ptyKey) });
         throw error;
       }
     },
@@ -376,10 +409,29 @@ export function createTerminalStore({ bridge = globalThis.desktop?.terminal ?? n
     recordRun(id) {
       if (!inline || inline.id !== id) return;
       records.delete(id);
-      records.set(id, { output: inline.output, error: inline.errorKind === "shell-exited" ? "shell-exited" : inline.error, exitCode: inline.exitCode });
+      records.set(id, { output: inline.output, error: inline.error, exitCode: inline.exitCode });
       while (records.size > 200) records.delete(records.keys().next().value);
       inline = { ...inline }; // a new snapshot, so blocks read the record
       emitInline();
+    },
+    /**
+     * The terminal `ptyKey` failed (its pane's shell start, c6bf19e8f Ei `R.getState().setInlineError(k, li(r))`):
+     * ca41b3815 `setInlineError: (e, t) => { (Kt(e), Ct(e, t)); }`. Kt forgets the tab's prompt state; Ct only touches
+     * the unsettled run typed into that tab: one that already printed keeps its output and ends "shell-exit" after
+     * the settle delay (`shellExited: !0`, `j === void 0 && Y(n.generation, H)`); any other settles now with
+     * `error: t, settled: !0, prev: null, endedBy: dispatched ? "shell-exit" : "cancel"`. The code block card shows
+     * that error (c19e90103 `t.inlineRun?.id === e ? t.inlineRun.error : null`). Returns the run after the change,
+     * or null when there was none to change. (Ct waits for the pending capture dispose, G.then; the host has none.)
+     */
+    setInlineError(ptyKey, text) {
+      prompts.delete(ptyKey);
+      if (!inline || inline.ptyKey !== ptyKey || inline.settled) return null;
+      if (inline.dispatched && inline.hasVisibleOutput) {
+        inline = { ...inline, shellExited: true };
+        if (silenceTimer === null) armSilence();
+        emitInline();
+      } else settleInline(inline.dispatched ? "shell-exit" : "cancel", { error: text });
+      return inline;
     },
     /** Cancel: ^C to the command once typed, and the run ends (ca41b3815 cancelInlineRun; c11959232 cancel). */
     cancelInlineRun() {

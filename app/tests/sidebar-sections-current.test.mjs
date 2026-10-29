@@ -1,8 +1,10 @@
-// Work item sidebar-sections-extract (research/sidebar-sections.md WI-1): the 2.42304.0 Code sidebar sections model,
+// Work item sidebar-sections-extract (research/sidebar-sections.md WI-1): the Code sidebar sections model,
 // copy, label row, section view menu, header menu, disabled reasons and new-section dialog, extracted verbatim by
 // scripts/extract-sidebar-sections.mjs into src/generated/sidebar-sections (and the pure model into
 // electron/generated). Nothing here opens a window: the generator contract, every binding against an independent parse
 // of the original chunk, the pure model and store actions, SSR markup, and handlers taken from a controlled render.
+// w3-sidebar-sections-gen (3.6556.2; research/sidebar.md §3.2 rename table): the tree is read from the 3.6556.2
+// snapshot, its expectations are the 3.6556.2 originals (official copy, pure model and markup changes noted inline).
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -16,10 +18,13 @@ import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import { extractSidebarSections } from '../scripts/extract-sidebar-sections.mjs';
 import * as Model from '../electron/generated/sidebar-sections-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import { viewTabsManifestFor } from '../scripts/view-tabs-compat.mjs';
+import * as official from '../scripts/official-3.6556.2.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/sidebar-sections');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = official.ionSource;
 const sha = text => createHash('sha256').update(text).digest('hex');
 const read = file => fs.readFile(file, 'utf8');
 
@@ -41,8 +46,9 @@ before(async () => {
   M.statusDot = await server.ssrLoadModule('/src/generated/sidebar-sections/status-dot.mjs');
   M.badgeAdapters = await server.ssrLoadModule('/src/source-sidebar-section-badge-adapters.jsx');
   M.statusGlyph = await server.ssrLoadModule('/src/generated/code-current/sidebar-status-glyph.mjs');
-  M.viewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
-  M.viewTabsVendor = await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-DfPJ1QmD.js');
+  M.viewTabs = await server.ssrLoadModule(`/src/generated/view-tabs/${official.sharedFrame}`);
+  M.viewTabsVendor = await server.ssrLoadModule(`/src/generated/view-tabs/${official.vendorFrame}`);
+  M.filterView = await server.ssrLoadModule('/src/generated/code-current/sidebar-filter-view.mjs');
   M.groupView = await server.ssrLoadModule('/src/generated/code-current/sidebar-group-view.mjs');
   M.filterControls = await server.ssrLoadModule('/src/generated/code-current/sidebar-filter-controls.mjs');
 });
@@ -86,9 +92,17 @@ function strip(node) {
 const objectProperty = (object, name) => object.properties.filter(p => p.key?.type === 'Identifier' && p.key.name === name);
 
 // ---------------------------------------------------------------- generator contract
-test('generator --check passes; manifest pins 2.42304.0 sources, output files and every binding', async () => {
+test('generator --check passes; manifest pins 3.6556.2 sources, output files and every binding', async () => {
   const manifest = await extractSidebarSections({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, official.referenceSnapshot);
+  // E34 is over (w10-cleanup-sidebar-legacy): sidebar-reorder reads this manifest as 3.6556.2, so there is no
+  // legacy['2.42304.0'] view, no frozen JSON, and the compat helper serves 3.6556.2 only.
+  assert.equal(Object.hasOwn(manifest, 'legacy'), false);
+  assert.equal(await fs.access(path.join(app, 'scripts/sidebar-sections-legacy-2.42304.0.json')).then(() => true, () => false), false);
+  const { sidebarSectionsManifestFor } = await import('../scripts/sidebar-sections-compat.mjs');
+  assert.equal((await sidebarSectionsManifestFor('3.6556.2')).referenceVersion, '3.6556.2');
+  await assert.rejects(sidebarSectionsManifestFor('2.42304.0'), /sidebar-sections is 3\.6556\.2, expected 2\.42304\.0/);
   assert.equal(manifest.generator, 'scripts/extract-sidebar-sections.mjs');
   const onDisk = JSON.parse(await read(path.join(generated, 'manifest.json')));
   assert.deepEqual(onDisk, manifest);
@@ -96,27 +110,32 @@ test('generator --check passes; manifest pins 2.42304.0 sources, output files an
   assert.deepEqual(files, manifest.modules.map(m => m.target).filter(t => !t.startsWith('../')).sort());
   for (const module of manifest.modules) {
     const source = await original(module.source);
-    assert.equal(module.referenceVersion, '2.42304.0', module.target);
+    assert.equal(module.referenceVersion, '3.6556.2', module.target);
     assert.equal(module.sourceSha256, sha(source.bytes), `${module.target} source sha`);
     assert.equal(module.sha256, sha(await read(path.resolve(generated, module.target))), `${module.target} output sha`);
-    assert.ok(module.bindings.length + (module.sourceSelections?.length ?? 0) > 0, module.target);
+    // A module with no binding of its own re-exports one original binding held elsewhere (view-tabs / app-switch).
+    assert.ok(module.bindings.length + (module.sourceSelections?.length ?? 0) + module.imports.length > 0, module.target);
     for (const binding of module.bindings) {
       const node = topLevel(source.ast, binding.name);
       assert.ok(node, `${module.source}:${binding.name} is a top-level declaration`);
       assert.equal(binding.sha256, sha(source.code.slice(node.start, node.end)), `${module.target}:${binding.name} sha`);
     }
   }
-  // The work item's bindings are all extracted (shared-19 nZ / sZ / uZ are code-current's sidebar-group-view, see below).
+  // The work item's bindings are all extracted (shared-46 YO / hk / vk are code-current's sidebar-group-view, see below).
+  // 3.6556.2 names (research/sidebar.md §3.2): shared-19's sections pieces moved to shared-46.
   const all = new Map();
   for (const m of manifest.modules) if (!m.target.startsWith('../')) for (const b of m.bindings) all.set(`${m.source}:${b.name}`, m.target);
   const wanted = {
-    'shared-52-DGviI8xb.js': 'U W np rp ip ap op sp cp lp up dp fp pp mp hp gp _p vp yp bp xp Sp Cp wp Tp Ep Dp Op kp Ap jp Mp Np Pp Fp Ip Lp Rp zp Bp lm um dm fm pm mm hm gm _m wm Tm Em Dm Om km Mm',
-    'shared-18-D4XxL6Tg.js': 'vE yE bE xE SE CE lD uD dD fD',
-    'shared-22-HztmyUTM.js': 'eO tO aO rO nO KO GO',
-    'shared-19-CkPOiIKm.js': 'ZX QX $X eZ tZ rZ iZ aZ m$ h$ p$',
-    'shared-20-B7UqYfsi.js': 'yx bx xx dx Sx Cx wx',
+    'shared-52-uHFNjl7C.js': 'im K am om sm cm lm um dm fm pm mm hm gm _m vm ym bm xm Sm Cm wm Tm Em Dm Om km Am jm Mm Nm Pm Fm Im Lm Rm Bm Vm Hm Um Wm Gm Km ug dg fg pg mg hg gg _g vg Tg Eg Dg Og kg Ag Ng',
+    'shared-18-D3y8YMFN.js': 'lk uk dk fk pk aA oA cA lA',
+    'shared-22-Bwn3sJTG.js': 'Gk Kk tA Qk Xk KA GA',
+    'shared-46-BIbZBGFq.js': 'OO kO AO jO NO dk fk pk aM oM iM',
+    'shared-20-mUr7IqZY.js': 'Px zx Vx Tx Hx Ux Wx',
   };
   for (const [file, names] of Object.entries(wanted)) for (const name of names.split(' ')) assert.ok(all.has(`${file}:${name}`), `${file}:${name} extracted`);
+  // shared-18 ck (the group copy, old vE) is code-current's sidebar-group-copy.mjs, re-exported here (one copy).
+  const groupCopy = manifest.modules.find(m => m.target === 'group-copy.mjs').imports.find(i => i.original === 'shared-18-D3y8YMFN.js:ck');
+  assert.deepEqual([groupCopy.kind, groupCopy.from, groupCopy.name], ['external', '../code-current/sidebar-group-copy.mjs', 'sidebarGroupMessages']);
 });
 
 test('each generated declaration is the original AST, and nothing else is declared', async () => {
@@ -160,7 +179,9 @@ test('each generated declaration is the original AST, and nothing else is declar
 
 test('dependencies resolve only to React, this tree, the adapter, or the same original binding elsewhere (view-tabs by public name)', async () => {
   const manifest = JSON.parse(await read(path.join(generated, 'manifest.json')));
-  const viewTabs = JSON.parse(await read(path.join(app, 'src/generated/view-tabs/manifest.json')));
+  // 3.6556.2 (w3-sidebar-sections-gen): this tree's view-tabs imports are the 3.6556.2 graph's own files and names (the
+  // React Compiler helpers too, E3); no legacy shim is imported.
+  const viewTabs = await viewTabsManifestFor('3.6556.2'), current = viewTabs;
   const adapterText = await read(path.join(app, 'src/source-sidebar-sections-adapters.jsx'));
   for (const module of manifest.modules) for (const entry of module.imports) {
     const label = `${module.target}:${entry.local}`;
@@ -189,7 +210,7 @@ test('dependencies resolve only to React, this tree, the adapter, or the same or
     }
   }
   // No minified view-tabs name anywhere in this tree or its adapter.
-  const publicNames = new Set(Object.keys(viewTabs.publicNames));
+  const publicNames = new Set([...Object.keys(viewTabs.publicNames), ...Object.keys(current.publicNames)]);
   for (const file of [...(await fs.readdir(generated)).filter(n => n.endsWith('.mjs')).map(n => path.join(generated, n)), path.join(app, 'src/source-sidebar-sections-adapters.jsx')]) {
     const text = await read(file);
     for (const m of text.matchAll(/import\s*\{([^}]*)\}\s*from\s*["']([^"']*view-tabs\/[^"']+)["']/g))
@@ -197,33 +218,37 @@ test('dependencies resolve only to React, this tree, the adapter, or the same or
   }
   assert.doesNotMatch(adapterText, /createContext\((?:null|void 0|!1)?\)\s*;?\s*\/\/\s*copy/);
   // The contexts this tree reads from elsewhere are the very instances code-current / view-tabs hold.
-  const label = manifest.modules.find(m => m.target === 'group-organize.mjs').imports.find(i => i.local === 'nZ');
+  const label = manifest.modules.find(m => m.target === 'group-organize.mjs').imports.find(i => i.original === 'shared-46-BIbZBGFq.js:YO');
   assert.deepEqual([label.from, label.name], ['../code-current/sidebar-group-view.mjs', 'SidebarListContext']);
-  // R3-sections (WI-4): Collapse all / Expand all (uZ) and sidebarHasCollapsedGroups (sZ) are code-current's one copy.
-  const viewItems = manifest.modules.find(m => m.target === 'group-menu.mjs').imports.find(i => i.original === 'shared-19-CkPOiIKm.js:uZ');
+  // R3-sections (WI-4): Collapse all / Expand all (shared-46 vk, old uZ) and sidebarHasCollapsedGroups (hk, old sZ) are
+  // code-current's one copy.
+  const viewItems = manifest.modules.find(m => m.target === 'group-menu.mjs').imports.find(i => i.original === 'shared-46-BIbZBGFq.js:vk');
   assert.deepEqual([viewItems.kind, viewItems.from, viewItems.name], ['external', '../code-current/sidebar-group-view.mjs', 'SidebarGroupViewItems']);
-  const folded = manifest.modules.find(m => m.target === 'blank-area-menu.mjs').imports.find(i => i.original === 'shared-19-CkPOiIKm.js:sZ');
+  const folded = manifest.modules.find(m => m.target === 'blank-area-menu.mjs').imports.find(i => i.original === 'shared-46-BIbZBGFq.js:hk');
   assert.deepEqual([folded.kind, folded.from, folded.name], ['external', '../code-current/sidebar-group-view.mjs', 'sidebarHasCollapsedGroups']);
-  // R3-sections step 3 (WI-5): View all's context (KH) and the rest of the session-list filter controls are one copy, this
-  // tree's: code-current's sidebar-filter-controls.mjs only re-exports it (no binding of its own).
+  // R3-sections step 3 (WI-5): View all's context (_J, old KH) and the rest of the session-list filter controls are one
+  // copy, this tree's: code-current's sidebar-filter-controls.mjs only re-exports it (no binding of its own). 3.6556.2
+  // names: hU nY, aU NJ, CB OG, sU UJ, cU WJ, lU KJ, uU qJ, dU JJ; SB-26: gU (useSidebarRegroupFocus) is deleted.
   const controls = manifest.modules.find(m => m.target === 'section-filter-controls.mjs');
-  assert.ok(['KH', 'hU', 'gU', 'aU', 'CB', 'sU', 'cU', 'lU', 'uU', 'dU'].every(name => controls.bindings.some(b => b.name === name)), 'filter controls');
+  assert.ok(['_J', 'nY', 'NJ', 'OG', 'UJ', 'WJ', 'KJ', 'qJ', 'JJ'].every(name => controls.bindings.some(b => b.name === name)), 'filter controls');
+  assert.ok(!Object.values(controls.exports).includes('useSidebarRegroupFocus'), 'SB-26: gU is gone');
   assert.ok(!controls.imports.some(i => i.from.includes('code-current/sidebar-filter-controls')), 'no import back from code-current');
   const codeCurrent = JSON.parse(await read(path.join(app, 'src/generated/code-current/manifest.json'))).modules.find(m => m.target === 'sidebar-filter-controls.mjs');
-  assert.deepEqual([codeCurrent.referenceVersion, path.basename(codeCurrent.source), codeCurrent.bindings], ['2.42304.0', 'shared-21-IP-SVetq.js', []]);
+  assert.deepEqual([codeCurrent.referenceVersion, path.basename(codeCurrent.source), codeCurrent.bindings], ['3.6556.2', 'shared-21-R7LldJ05.js', []]);
   assert.match(await read(path.join(app, 'src/generated/code-current/sidebar-filter-controls.mjs')), /\} from "\.\.\/sidebar-sections\/section-filter-controls\.mjs";/);
-  // R3-sections step 3 (D24): the CDS parts are view-tabs' (one Base UI instance with CdsMenuCreateHandle); only the
-  // context menu name resolves to view-tabs CdsContextMenu since R4g-sidebar SB3 (asserted above); move-to-menu's dropdown
-  // is still the host adapter (the host row menu is SourceMenu).
+  // R3-sections step 3 (D24): the CDS parts are view-tabs' (one Base UI instance with CdsMenuCreateHandle); since 3.6556.2
+  // the header / blank-area context menu is view-tabs CdsContextMenu directly (shared-frame kA); move-to-menu's dropdown
+  // is still the host adapter (the host row menu is SourceMenu). The menu handle moved with shared-16 xl to lazy-menu.mjs.
   const cds = new Map();
   for (const module of manifest.modules) for (const entry of module.imports) if (entry.original) cds.set(`${module.target}:${entry.original}`, [entry.kind, entry.name]);
   for (const [key, expected] of [
-    ['section-view-menu.mjs:shared-frame-BfjMqbuN.js:Zp', ['external', 'CdsTooltip']], ['section-view-menu.mjs:shared-frame-BfjMqbuN.js:EC', ['external', 'CdsDropdown']],
-    ['section-filter-controls.mjs:shared-frame-BfjMqbuN.js:EC', ['external', 'CdsDropdown']], ['section-filter-controls.mjs:shared-frame-BfjMqbuN.js:Zp', ['external', 'CdsTooltip']],
-    ['section-filter-controls.mjs:vendor-frame-DfPJ1QmD.js:ge', ['external', 'clsx']], ['menu-triggers.mjs:vendor-frame-DfPJ1QmD.js:bm', ['external', 'CdsMenuCreateHandle']],
-    ['group-dialog.mjs:shared-frame-BfjMqbuN.js:k_', ['external', 'CdsDialog']], ['group-dialog.mjs:shared-frame-BfjMqbuN.js:tx', ['external', 'CdsTextInput']],
-    ['group-dialog.mjs:shared-frame-BfjMqbuN.js:Za', ['external', 'CdsRoot']], ['group-menu.mjs:shared-frame-BfjMqbuN.js:Za', ['external', 'CdsRoot']],
-    ['group-menu.mjs:shared-frame-BfjMqbuN.js:iD', ['adapter', 'SidebarContextMenu']], ['move-to-menu.mjs:shared-frame-BfjMqbuN.js:EC', ['adapter', 'SidebarSectionsMenu']],
+    ['section-view-menu.mjs:shared-frame-6jtSkIit.js:Xm', ['external', 'CdsTooltip']], ['section-view-menu.mjs:shared-frame-6jtSkIit.js:GT', ['external', 'CdsDropdown']],
+    ['section-filter-controls.mjs:shared-frame-6jtSkIit.js:GT', ['external', 'CdsDropdown']], ['section-filter-controls.mjs:shared-frame-6jtSkIit.js:Xm', ['external', 'CdsTooltip']],
+    ['section-filter-controls.mjs:vendor-frame-CnSY1sxv.js:ve', ['external', 'clsx']], ['lazy-menu.mjs:vendor-frame-CnSY1sxv.js:Sm', ['external', 'CdsMenuCreateHandle']],
+    ['group-dialog.mjs:shared-frame-6jtSkIit.js:nb', ['external', 'CdsDialog']], ['group-dialog.mjs:shared-frame-6jtSkIit.js:uC', ['external', 'CdsTextInput']],
+    ['group-dialog.mjs:shared-frame-6jtSkIit.js:lo', ['external', 'CdsRoot']], ['group-menu.mjs:shared-frame-6jtSkIit.js:lo', ['external', 'CdsRoot']],
+    ['group-menu.mjs:shared-frame-6jtSkIit.js:kA', ['external', 'CdsContextMenu']], ['blank-area-menu.mjs:shared-frame-6jtSkIit.js:kA', ['external', 'CdsContextMenu']],
+    ['move-to-menu.mjs:shared-frame-6jtSkIit.js:GT', ['adapter', 'SidebarSectionsMenu']],
   ]) assert.deepEqual(cds.get(key), expected, key);
   for (const gone of ['SidebarSectionsTooltip', 'createSidebarMenuHandle', 'SidebarSectionsDialog', 'SidebarSectionsInput', 'SidebarCdsScope']) {
     assert.equal(M.adapters[gone], undefined, `adapter ${gone} is gone`);
@@ -247,7 +272,7 @@ test('the main process copy is the same pure model, self-contained', async () =>
 const section = (id, kind, extra = {}) => ({ ...Model.createSection(kind === 'manual' ? 'sessions' : kind, 0), id, kind, ...(kind === 'manual' ? { name: id, members: [] } : {}), ...extra });
 const list = () => Model.dedupeSections([Model.defaultSection('pinned'), Model.defaultSection('routines'), section('A', 'manual'), section('B', 'manual'), Model.defaultSection('sessions')]);
 
-test('Sp normalizes stored sections: unknown kinds dropped, v 2, members unique across sections, Sessions last', () => {
+test('Em (old Sp) normalizes stored sections: unknown kinds dropped, v 2, members unique across sections, Sessions last', () => {
   const out = Model.normalizeSections([
     { id: 'sessions', kind: 'sessions', order: 0, groupBy: 'status', sortBy: 'alpha', ascending: true, show: { metadata: true, emptyGroups: true } },
     { id: 'x', kind: 'bogus' }, 'junk',
@@ -258,9 +283,11 @@ test('Sp normalizes stored sections: unknown kinds dropped, v 2, members unique 
   ]);
   assert.deepEqual(out.map(s => [s.id, s.order, s.v]), [['g1', 0, 2], ['g2', 1, 2], ['pinned', 2, 2], ['sessions', 3, 2]]);
   assert.deepEqual(out.map(s => s.members), [['code:1', 'code:2'], ['code:3'], undefined, undefined]);
-  // metadata is only taken from a v>=2 record (Np migrates older ones); emptyGroups always.
+  // metadata is only taken from a v>=2 record (Rm migrates older ones); emptyGroups always. 3.6556.2 (SB-10): every view
+  // carries show.sideChats (dm: `show: { metadata: !1, emptyGroups: !1, sideChats: !1 }`).
   assert.equal(out[0].show.metadata, true);
-  assert.deepEqual(out[3].show, { metadata: false, emptyGroups: true });
+  assert.deepEqual(out[3].show, { metadata: false, emptyGroups: true, sideChats: false });
+  assert.deepEqual(Model.sectionViewDefaults.show, { metadata: false, emptyGroups: false, sideChats: false });
   assert.deepEqual([out[3].groupBy, out[3].sortBy, out[3].ascending], ['status', 'alpha', true]);
   assert.equal(Model.normalizeSections('nope'), null);
   assert.equal(Model.normalizeSections([]).at(-1).kind, 'sessions');
@@ -268,23 +295,30 @@ test('Sp normalizes stored sections: unknown kinds dropped, v 2, members unique 
   assert.equal(Model.sectionSchemaVersion, 2);
 });
 
-test('kp merges custom groups into manual sections before Sessions; the first migration maps the legacy group-by', () => {
+test('Nm (old kp) merges custom groups into manual sections before Sessions; the first migration maps the legacy group-by', () => {
   const groups = { groups: [{ id: 'cg-a', name: 'Alpha' }, { id: 'cg-b', name: 'Beta' }], assignments: { 'code:1': 'cg-a', 'code:2': 'cg-b', 'code:3': 'cg-a' }, order: { 'cg-a': ['code:3', 'code:1'] } };
   const first = Model.reconcileSections(undefined, { groups, codeGroupBy: 'custom', codeSortBy: 'alpha', manualOrder: ['cg-b', 'cg-a'] });
   assert.deepEqual(first.map(s => s.id), ['pinned', 'routines', 'cg-b', 'cg-a', 'sessions']);
   assert.deepEqual(first.map(s => s.order), [0, 1, 2, 3, 4]);
   assert.deepEqual(first.find(s => s.id === 'cg-a').members, ['code:3', 'code:1']);
   assert.deepEqual([first.at(-1).groupBy, first.at(-1).sortBy], ['none', 'alpha']);
-  const legacy = { custom: 'none', none: 'none', project: 'environment', coder: 'environment', state: 'status', date: 'date', other: 'date' };
+  // 3.6556.2 (SB-03): the section group-bys are ym = ["none", "folder", "savedEnvironment", "status", "date"]; _m maps
+  // the legacy Code group-by to them (project → folder, coder → savedEnvironment), vm back, and wm normalizes a stored
+  // view's group-by (the 2.42304.0 "environment" is the folder grouping).
+  const legacy = { custom: 'none', none: 'none', project: 'folder', coder: 'savedEnvironment', state: 'status', date: 'date', other: 'date' };
   for (const [from, to] of Object.entries(legacy)) assert.equal(Model.sessionsGroupByFromLegacy(from), to, from);
   assert.equal(Model.sessionsGroupByFromLegacy(undefined), undefined);
+  assert.deepEqual(Model.sectionGroupBys, ['none', 'folder', 'savedEnvironment', 'status', 'date']);
+  assert.deepEqual(['none', 'folder', 'savedEnvironment', 'status', 'date'].map(Model.legacyGroupByFromSessions), ['none', 'project', 'environment', 'state', 'date']);
+  assert.deepEqual(['environment', 'folder', 'savedEnvironment', 'date', 'none', 'project', 'bogus'].map(Model.normalizeSectionGroupBy),
+    ['folder', 'folder', 'savedEnvironment', 'date', 'none', undefined, undefined]);
   // Later passes keep the list: renames sync, removed groups drop, new groups go before Sessions, no group-by mapping.
   const next = Model.reconcileSections(first, { groups: { ...groups, groups: [{ id: 'cg-a', name: 'Alfa' }, { id: 'cg-c', name: 'Gamma' }] }, codeGroupBy: 'project' });
   assert.deepEqual(next.map(s => [s.id, s.name]), [['pinned', ''], ['routines', ''], ['cg-a', 'Alfa'], ['cg-c', 'Gamma'], ['sessions', '']]);
   assert.equal(next.at(-1).groupBy, 'none');
 });
 
-test('zp moves a section, never Sessions, clamped before it; Lp resets ascending across alpha; Rp copies the Sessions view', () => {
+test('Gm (old zp) moves a section, never Sessions, clamped before it; Um resets ascending across alpha; Wm copies the Sessions view', () => {
   const sections = list();
   assert.equal(Model.moveSection(sections, 'sessions', 0), sections);
   assert.equal(Model.moveSection(sections, 'missing', 0), sections);
@@ -300,9 +334,12 @@ test('zp moves a section, never Sessions, clamped before it; Lp resets ascending
   assert.equal(Model.setSectionView(sections, 'A', { sortBy: 'recency' }), sections, 'an unchanged view keeps the list');
   assert.equal(Model.setSectionView(sections, 'A', { groupBy: null, show: { metadata: true } }).find(s => s.id === 'A').show.metadata, true);
 
-  let view = Model.setSectionView(sections, 'sessions', { groupBy: 'environment', sortBy: 'alpha', ascending: true, show: { metadata: true } });
+  // Wm copies everything but a folder / saved-environment grouping (`r === "folder" || r === "savedEnvironment"`).
+  let view = Model.setSectionView(sections, 'sessions', { groupBy: 'folder', sortBy: 'alpha', ascending: true, show: { metadata: true } });
   const inherited = Model.inheritSessionsView(view, 'A').find(s => s.id === 'A');
   assert.deepEqual([inherited.groupBy, inherited.sortBy, inherited.ascending, inherited.show.metadata], [undefined, 'alpha', true, true]);
+  view = Model.setSectionView(view, 'sessions', { groupBy: 'savedEnvironment' });
+  assert.equal(Model.inheritSessionsView(view, 'A').find(s => s.id === 'A').groupBy, undefined);
   view = Model.setSectionView(view, 'sessions', { groupBy: 'date' });
   assert.equal(Model.inheritSessionsView(view, 'A').find(s => s.id === 'A').groupBy, 'date');
   const error = (() => { try { Model.inheritSessionsView(sections.filter(s => s.kind !== 'sessions'), 'A'); } catch (e) { return e; } })();
@@ -310,7 +347,7 @@ test('zp moves a section, never Sessions, clamped before it; Lp resets ascending
   assert.deepEqual(error[Symbol.for('ant.o11y.errorText')], { text: 'The section list has no Sessions section', kind: 'literal' });
 });
 
-test('Bp seeds legacy preferences; Pp recognizes the defaults; custom group keys', () => {
+test('Km (old Bp) seeds legacy preferences; Bm recognizes the defaults; custom group keys', () => {
   const seeded = Model.seedSectionPrefs(list(), { ascending: true, emptyGroups: true, sessionsCollapsed: true, routinesCollapsed: false, pinnedCollapsed: true,
     isManualCollapsed: id => id === 'B', manualOrder: ['B', 'A'] });
   assert.deepEqual(seeded.map(s => s.id), ['pinned', 'routines', 'B', 'A', 'sessions']);
@@ -366,7 +403,7 @@ test('the original store actions run on the host store: add / rename / move / vi
   store.getState().setOverflowMenuOpen(false);
 });
 
-test('KO shows manual sections that have members or are kept while empty; tZ / ZX disabled reasons; cp', () => {
+test('KA (old KO) shows manual sections that have members or are kept while empty; NO / OO disabled reasons; wf', () => {
   const { visibleCustomGroups } = M['section-visibility'];
   const base = { kind: 'code', groups: [{ id: 'a' }, { id: 'b' }, { id: 'c' }], assignments: { 'code:1': 'a', 'code:9': 'b' }, keptWhileEmpty: ['c', 'gone'],
     sessions: [{ ref: { kind: 'code', id: '1' }, source: { kind: 'code', data: {} } }, { ref: { kind: 'code', id: '5' }, source: { kind: 'code', data: {} } }],
@@ -384,7 +421,8 @@ test('KO shows manual sections that have members or are kept while empty; tZ / Z
   assert.deepEqual(groupDisabledReasons('hand-made', false), { newSession: $X['place-unknown'] });
   assert.deepEqual(groupDisabledReasons('preset', false, 'hosts-loading'), { newSession: undefined, rename: QX.environmentRename, deleteGroup: QX.environmentDelete, reorder: QX.fixedAtEnd });
   assert.deepEqual(groupDisabledReasons('worked-out', false, 'no-folder'), { newSession: $X['no-folder'], rename: QX.workedOutRename, deleteGroup: QX.workedOutDelete, reorder: QX.fixedAtEnd });
-  assert.equal(QX.tooFewToSelect.defaultMessage, 'Select all needs at least two visible sessions in this group.');
+  // 3.6556.2 shared-46 kO rewrote the Select all reason.
+  assert.equal(QX.tooFewToSelect.defaultMessage, 'You need at least 2 sessions here that can be selected.');
 
   const { showsCustomGroups } = M['group-mode'];
   assert.equal(showsCustomGroups('code', 'date', false, true), true, 'environments on: Code always shows custom groups (sections)');
@@ -399,7 +437,7 @@ const html = element => renderToStaticMarkup(element);
 // The CDS ContextMenu the header / reorder / blank-area rows live in (open, so its Base UI items render; the popup portals).
 const inContextMenu = element => h(M.viewTabs.CdsContextMenu.Root, { open: true }, element);
 
-test('SSR: the group / section label row is the original uD/fD markup (toggle, name, mark, caret, badge, kind, rowless)', async () => {
+test('SSR: the group / section label row is the original oA/lA (old uD/fD) markup (toggle, name, mark, caret, badge, kind, rowless)', async () => {
   const { SidebarGroupLabel, sidebarGroupLabelMinHeight, sidebarGroupToggleHitClass } = M['group-label'];
   const hit = (await server.ssrLoadModule('/src/generated/code-current/sidebar-row-primitive.mjs')).sidebarHitRowClass;
   assert.equal(sidebarGroupToggleHitClass, `${hit} hit-row-main`);
@@ -407,10 +445,13 @@ test('SSR: the group / section label row is the original uD/fD markup (toggle, n
   const open = html(h(SidebarGroupLabel, { onToggle() {}, collapsed: false, kind: 'group', rowless: true, badge: h('i', { id: 'badge' }), nameMark: h('i', { id: 'mark' }),
     leading: h('i', { id: 'leading' }), trailing: h('i', { id: 'trailing' }) }, 'Alpha'));
   assert.ok(open.startsWith(`<div data-sidebar-group-label="" data-kind="group" data-rowless="" class="${rowClass}"><i id="leading"></i><button type="button" data-group-toggle="" aria-expanded="true" class="`), open);
-  assert.match(open, /<span data-group-name="" class="min-w-0 truncate">Alpha<\/span><span data-group-mark="" class="flex shrink-0 text-muted"><i id="mark"><\/i><\/span>/);
+  // 3.6556.2 lA: the name mark is text-muted-as-secondary.
+  assert.match(open, /<span data-group-name="" class="min-w-0 truncate">Alpha<\/span><span data-group-mark="" class="flex shrink-0 text-muted-as-secondary"><i id="mark"><\/i><\/span>/);
   const caret = open.match(/<span data-cds="Icon"[^>]*data-group-caret=""[^>]*>/)?.[0];
   assert.ok(caret, 'the caret is the view-tabs CdsIcon');
-  assert.ok(caret.includes('class="shrink-0 transition-transform duration-fast motion-reduce:transition-none group-data-[hover-within]/section:opacity-100 group-focus-visible/label:opacity-100 opacity-0 rotate-90"'), caret);
+  // 3.6556.2: the open caret turns through the CdsIcon rotate prop (data-cds-rotate, --cds-icon-rotate), not rotate-90.
+  assert.ok(caret.includes('class="shrink-0 transition-transform duration-fast motion-reduce:transition-none group-data-[hover-within]/section:opacity-100 group-focus-visible/label:opacity-100 opacity-0"'), caret);
+  assert.match(caret, /data-cds-rotate=""[^>]*style="[^"]*--cds-icon-rotate:90deg/);
   assert.ok(caret.includes('font-size:calc(0.75rem * var(--cds-rem-scale, 1))'), 'xs caret');
   assert.match(open, /<span data-group-badge="" class="-my-1 ms-auto flex size-6 shrink-0 items-center justify-center"><i id="badge"><\/i><\/span><\/button><i id="trailing"><\/i><\/div>$/);
   assert.ok(open.includes(`class="hide-focus-ring focus-visible:outline-hidden focus-visible:shadow-[inset_0_0_0_1px_var(--cds-fill-accent),0_0_6px_0_color-mix(in_srgb,var(--cds-fill-accent)_20%,transparent)] ${hit} hit-row-main group/label -my-1 -ms-1 flex min-w-0 flex-1 items-center rounded-[var(--df-radius-pill)] py-1 ps-1 text-start hover:text-secondary gap-1"`));
@@ -426,13 +467,14 @@ test('SSR: the group / section label row is the original uD/fD markup (toggle, n
   assert.match(renamable, />Alpha<\/span>/);
 });
 
-test('SSR: section copy is the default (presets on), and the copy table switches like SE', () => {
+test('SSR: section copy is the default (presets on), and the copy table switches like fk (old SE)', () => {
   const Copy = M['group-copy'];
   let copy;
   html(h(function Probe() { copy = Copy.useGroupCopy(); return null; }));
   assert.equal(copy, Copy.sectionMessages);
   assert.deepEqual([copy.newEllipsis, copy.moveTo, copy.moveCountTo, copy.removeFrom, copy.removeFromSeveral, copy.create, copy.nameLabel, copy.rename, copy.delete, copy.deleteTitle]
-    .map(m => m.defaultMessage), ['New section', 'Move to', 'Move {count} to', 'Remove from {groupName}', 'Remove from groups', 'Create section', 'Section name', 'Rename section', 'Delete section', 'Delete section?']);
+    // 3.6556.2 shared-18 uk: the Move to items name the section (Move to section / Move {count} to section / Remove from sections).
+    .map(m => m.defaultMessage), ['New section', 'Move to section', 'Move {count} to section', 'Remove from {groupName}', 'Remove from sections', 'Create section', 'Section name', 'Rename section', 'Delete section', 'Delete section?']);
   assert.equal(copy.dragRemove, copy.removeFrom);
   assert.equal(copy.waiting, Copy.groupMessages.waiting);
   assert.equal(Copy.groupCopyFor(false), Copy.groupMessages);
@@ -480,17 +522,19 @@ test('SSR: Move to items, section view reset items and reorder items use the ori
   assert.match(items, /role="menuitemradio"[^>]*aria-checked="true"[^>]*>[\s\S]*Alpha/);
   assert.match(items, /Remove from Alpha/);
   assert.match(items, /data-testid="new-custom-group"[\s\S]*New section/);
-  assert.equal(html(h(RemoveFromGroupLabel, { customGroups: [], currentGroupId: 'x' })), 'Remove from groups');
+  assert.equal(html(h(RemoveFromGroupLabel, { customGroups: [], currentGroupId: 'x' })), 'Remove from sections');
 
   // sU / cU are CDS Dropdown items since R3-sections step 3 (a Base UI item renders only inside its menu): see the
   // controlled "section view reset items" test below.
 
   // R4g-sidebar SB3 (X7-06): the reorder rows are code-current's SidebarMenuItem over the CDS Dropdown parts (shared-16
-  // K), Base UI items of the context menu yx / g$ open (view-tabs CdsContextMenu), so they render inside its Root.
+  // jl), Base UI items of the context menu Px / sM open (view-tabs CdsContextMenu), so they render inside its Root.
+  // 3.6556.2 shared-46 oM (old h$): Move up / Move down / Sort A to Z; "Reset order" is gone (resetsToRecent too).
   const { SectionReorderActions, SectionReorderItems } = M['group-reorder'];
-  const actions = html(inContextMenu(h(SectionReorderActions, { onMoveUp() {}, onMoveDown() {}, onReset() {}, resetsToRecent: true })));
-  assert.match(actions, /role="menuitem"[\s\S]*Move up[\s\S]*Move down[\s\S]*Reset order/);
-  assert.match(html(inContextMenu(h(SectionReorderActions, { onReset() {}, resetsToRecent: false }))), /Sort A to Z/);
+  const actions = html(inContextMenu(h(SectionReorderActions, { onMoveUp() {}, onMoveDown() {}, onReset() {} })));
+  assert.match(actions, /role="menuitem"[\s\S]*Move up[\s\S]*Move down[\s\S]*Sort A to Z/);
+  assert.doesNotMatch(actions, /Reset order/);
+  assert.equal(html(inContextMenu(h(SectionReorderActions, {}))), '');
   const fixed = html(inContextMenu(h(SectionReorderItems, { fixedReason: 'This group stays at the end of the list.' })));
   assert.match(fixed, /data-disabled="" role="menuitem" aria-disabled="true"[\s\S]*Move up[\s\S]*data-cds-disabled-reason="">This group stays at the end of the list\.</);
   assert.equal(html(inContextMenu(h(SectionReorderItems, {}))), '');
@@ -525,7 +569,7 @@ function fixture(component, props = {}, contexts = new Map()) {
   };
   hooks.useLayoutEffect = hooks.useEffect;
   hooks.useInsertionEffect = hooks.useEffect;
-  const render = (next = props) => { props = next; cursor = 0; const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H; internal.H = hooks; try { return (tree = component(props)); } finally { internal.H = old; } };
+  const render = (next = props) => { props = next; cursor = 0; const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H; internal.H = withMemoCache(hooks); try { return (tree = component(props)); } finally { internal.H = old; } };
   render();
   return { get tree() { return tree; }, render, flush() { while (effects.length) effects.shift()(); }, close() { cells.forEach(c => c?.cleanup?.()); } };
 }
@@ -535,7 +579,7 @@ const freshSection = name => {
   return () => store().getState().codeSidebarByScope.local.sections.find(s => s.id === created.id);
 };
 
-test('section view reset items (sU / cU): New section…, Reset with its reason, View all disabled / loading / enabled (2.42304.0)', () => {
+test('section view reset items (UJ / WJ, old sU / cU): New section…, Reset with its reason, View all disabled / loading / enabled', () => {
   const controls = M['section-filter-controls'];
   const X = M.viewTabs.CdsDropdown;
   const reset = fixture(controls.SidebarViewResetItems, { atDefaults: true, onReset() {} }).tree;
@@ -593,6 +637,71 @@ test('section view menu (tO): Group by / Sort / Metadata / Reset write the secti
   f = menu();
   assert.equal(byType(f.tree, controls.SidebarViewResetItems)[0].props.atDefaults, true);
   store().getState().deleteSection(current().id);
+});
+
+// ---------------------------------------------------------------- E38: code-current sidebar-filter-view.mjs (3.6556.2 PJ)
+test('E38: the session-list Group and sort content is 3.6556.2 PJ\'s sessionList block, over this tree\'s v3 controls, and the host menu passes PJ\'s locals', async () => {
+  const cc = JSON.parse(await read(path.join(app, 'src/generated/code-current/manifest.json'))).modules.find(m => m.target === 'sidebar-filter-view.mjs');
+  assert.deepEqual([cc.referenceVersion, path.basename(cc.source), cc.bindings], ['3.6556.2', 'shared-21-R7LldJ05.js', ['PJ']]);
+  assert.deepEqual(cc.sourceSelections.map(s => [s.binding, s.ifTest, s.result, s.cache]), [['PJ', 'n === "sessionList"', 'fn', '$ = J9(482)']]);
+  // The block, as shipped: it is the only `if (n === "sessionList")` of PJ and ends in `fn = … h(g, {children: [t, n, v, b]})`.
+  const { code, ast } = await original('shared-21-R7LldJ05.js');
+  const owner = topLevel(ast, 'PJ');
+  const blocks = [];
+  const walk = node => { if (!node || typeof node !== 'object') return; if (node.type === 'IfStatement' && code.slice(node.test.start, node.test.end) === 'n === "sessionList"') blocks.push(node.consequent);
+    for (const v of Object.values(node)) if (v && typeof v === 'object') Array.isArray(v) ? v.forEach(walk) : walk(v); };
+  walk(owner);
+  assert.equal(blocks.length, 1);
+  assert.equal(cc.sourceSelections[0].fragmentSha256, sha(code.slice(blocks[0].start, blocks[0].end)));
+  assert.equal(cc.sha256, sha(await read(path.join(app, 'src/generated/code-current/sidebar-filter-view.mjs'))));
+
+  const controls = M['section-filter-controls'], X = M.viewTabs.CdsDropdown, View = M.filterView.CurrentSidebarFilterContent;
+  let intl;
+  html(h(function Probe() { intl = M.adapters.useIntl(); return null; }));
+  const routines = M.adapters.useSidebarRoutinesToggle();
+  const base = { intl, direction: 'ltr', groupOptions: [['date', 'Date'], ['none', 'None']], groupBy: 'date', onGroupBy() {},
+    sortOptions: [['recency', 'Last activity'], ['alpha', 'Name']], sortBy: 'recency', onSortBy() {}, ascending: false, onAscending() {},
+    metadata: true, onMetadata() {}, routinesToggle: routines, emptyGroups: false, onEmptyGroups() {}, resetAvailable: false, onReset() {} };
+  const tree = fixture(View, base).tree;
+  assert.equal(tree.type, React.Fragment);
+  const [group, sort, show, reset] = tree.props.children;
+  assert.deepEqual([group.type, sort.type, show.type, reset.type], [controls.SidebarOptionMenu, controls.SidebarSortMenu, X.Submenu, controls.SidebarViewResetItems]);
+  // qJ: keepOpen, no separator of its own (2.42304.0 oU passed neither).
+  assert.deepEqual([group.props.keepOpen, group.props.separatorBefore, group.props.label, group.props.value, group.props.options, group.props.onChange],
+    [true, 'none', 'Group by', 'date', base.groupOptions, base.onGroupBy]);
+  assert.deepEqual([sort.props.options, sort.props.value, sort.props.onChange, sort.props.ascending, sort.props.onAscendingChange],
+    [base.sortOptions, 'recency', base.onSortBy, false, base.onAscending]);
+  assert.deepEqual([reset.props.atDefaults, reset.props.onReset], [true, base.onReset]);
+  const [trigger, popup] = show.props.children;
+  assert.deepEqual([trigger.type, trigger.props.children], [X.SubmenuTrigger, 'Show']);
+  assert.deepEqual([popup.type, popup.props.side, popup.props.align], [X.Popup, 'right', 'start']);
+  // Show: Metadata, one Separator (Empty groups is available), the Routines toggle (HJ, host: not offered), Side chats
+  // only when offered (E16: not here), Empty groups.
+  const [metadata, separator, routinesItem, sideChats, emptyGroups] = popup.props.children;
+  assert.deepEqual([metadata.type, metadata.props.checked, metadata.props.keepOpen, metadata.props.onClick, metadata.props.children.props.defaultMessage], [X.Item, true, true, base.onMetadata, 'Metadata']);
+  assert.equal(separator.type, X.Separator);
+  assert.deepEqual([routinesItem.type, routinesItem.props], [M.adapters.SidebarShowToggleItem, { ...routines }]);
+  assert.equal(html(routinesItem), '', 'the Routines toggle is not offered in this host');
+  assert.equal(sideChats, false);
+  assert.deepEqual([emptyGroups.type, emptyGroups.props.checked, emptyGroups.props.keepOpen, emptyGroups.props.onClick, emptyGroups.props.children], [X.Item, false, true, base.onEmptyGroups, 'Empty groups']);
+  // Offered Side chats reads ae.sideChatRowsShown; with nothing offered or available the Separator goes too.
+  const onSideChats = () => {};
+  const offered = fixture(View, { ...base, sideChatsOffered: true, sideChatRows: { sideChatRowsShown: true }, onSideChats }).tree.props.children[2].props.children[1].props.children[3];
+  assert.deepEqual([offered.type, offered.props.checked, offered.props.keepOpen, offered.props.onClick, offered.props.children], [X.Item, true, true, onSideChats, 'Side chats']);
+  const bare = fixture(View, { ...base, emptyGroupsAvailable: false, resetAvailable: true }).tree.props.children;
+  assert.deepEqual(bare[2].props.children[1].props.children.map(n => n && n.type), [X.Item, false, M.adapters.SidebarShowToggleItem, false, false]);
+  assert.equal(bare[3].props.atDefaults, false);
+
+  // The host menu (source-sidebar-filter-current.jsx SessionListFilterMenu) passes only PJ's parameters, Routines as
+  // the adapter's toggle state, and none of oU's removed props.
+  const parameters = new Set([...cc.sourceSelections[0].parameters.matchAll(/([A-Za-z]+):/g)].map(m => m[1]));
+  const hostText = await read(path.join(app, 'src/source-sidebar-filter-current.jsx'));
+  const used = hostText.slice(hostText.indexOf('<CurrentSidebarFilterContent'), hostText.indexOf('/>', hostText.indexOf('<CurrentSidebarFilterContent')));
+  const passed = [...used.matchAll(/\s([A-Za-z]+)(?==|\s|$)/g)].map(m => m[1]).filter(n => n !== 'CurrentSidebarFilterContent');
+  assert.ok(passed.length >= 15, passed.join(' '));
+  for (const name of passed) assert.ok(parameters.has(name), `host prop ${name} is a PJ parameter`);
+  assert.match(used, /routinesToggle=\{routinesToggle\}/);
+  assert.doesNotMatch(hostText, /routinesAvailable=|routinesCopy=|onRoutines=/);
 });
 
 test('new-section dialog (dx/bx): section copy, no switch note, Create section enabled by a name, submit adds a section', () => {
@@ -717,7 +826,7 @@ test('header menu (yx): ordered groups, section copy, Rename enters the inline e
   } finally { savedWindow === undefined ? delete globalThis.window : (globalThis.window = savedWindow); }
 });
 
-test('Select all (aZ) needs two visible rows in the bucket, expands first, then selects through the host', async () => {
+test('Select all (pk, old aZ) needs two visible rows in the bucket, expands first, then selects through the host', async () => {
   const { SidebarGroupSelectAll } = M['group-organize'];
   const ListContext = M.groupView.SidebarListContext;
   const contexts = new Map([[ListContext, { getList: () => null }]]);
@@ -737,49 +846,64 @@ test('Select all (aZ) needs two visible rows in the bucket, expands first, then 
     const lone = fixture(SidebarGroupSelectAll, { bucketKey: 'custom-x' }, contexts).tree.props;
     assert.equal(fixture(SidebarGroupSelectAll, { bucketKey: 'custom-x', onExpand() {} }, contexts).tree.props.disabled, false, 'registered folded rows count');
     assert.equal(lone.disabled, true);
-    assert.equal(lone.disabledReason.props.defaultMessage, 'Select all needs at least two visible sessions in this group.');
+    assert.equal(lone.disabledReason.props.defaultMessage, 'You need at least 2 sessions here that can be selected.');
     assert.equal(fixture(SidebarGroupSelectAll, { bucketKey: 'custom-x' }).tree, null, 'outside a sidebar list it is absent');
   } finally { disconnect(); M.adapters.setSidebarRowRegistry({ buckets: new Map(), rows: new Map(), visible: [] }); }
 });
 
 // ---------------------------------------------------------------- R4g-sidebar SB1 (research-ext/X7-partial-gaps.md X7-04)
-test('X7-04 generator: the folded section badge is shared-21 HG / VG / BG / zG / LG / IG over shared-18 FD / ND / BD, reading the host rows\' status instances', async () => {
+test('X7-04 generator: the folded section badge is shared-21 NQ / MQ / jQ / AQ (old HG / VG / BG / zG) over shared-18 IA / VA / HA and shared-26 Pj / Fj, reading the host rows\' status instances', async () => {
   const manifest = JSON.parse(await read(path.join(generated, 'manifest.json')));
   const badge = manifest.modules.find(m => m.target === 'section-badge.mjs');
   const dot = manifest.modules.find(m => m.target === 'status-dot.mjs');
-  assert.deepEqual([badge.source, badge.bindings.map(b => b.name).sort()], ['shared-21-IP-SVetq.js', ['BG', 'HG', 'IG', 'LG', 'VG', 'zG']]);
-  assert.deepEqual([dot.source, dot.bindings.map(b => b.name).sort()], ['shared-18-D4XxL6Tg.js', ['BD', 'FD', 'ND', 'PD', 'zD']]);
-  const imports = module => Object.fromEntries(module.imports.map(i => [i.local, [i.kind, i.from, i.name]]));
+  const status = manifest.modules.find(m => m.target === 'section-status.mjs');
+  // 3.6556.2 (research/sidebar.md §3.2): IG (the order list) is gone, LG became shared-26 Lj, the priority is Nj's.
+  assert.deepEqual([badge.source, badge.bindings.map(b => b.name).sort()], ['shared-21-R7LldJ05.js', ['AQ', 'MQ', 'NQ', 'jQ']]);
+  // w10-ccres-nested-parts: qv / HA are code-current nested-session-parts' one copy (imported, HA re-exported, R4).
+  assert.deepEqual([dot.source, dot.bindings.map(b => b.name).sort()], ['shared-18-D3y8YMFN.js', ['BA', 'BC', 'FA', 'GC', 'IA', 'JO', 'PA', 'UC', 'VA']]);
+  assert.deepEqual([status.source, status.bindings.map(b => b.name).sort()], ['shared-26-CGuBxVt9.js', ['Fj', 'Pj']]);
+  const imports = module => Object.fromEntries(module.imports.filter(i => !i.from.startsWith('../view-tabs/') || !/^(memo|reactMemoCache)/.test(i.name)).map(i => [i.local, [i.kind, i.from, i.name]]));
   const badgeAdapter = '../../source-sidebar-section-badge-adapters.jsx';
   assert.deepEqual(imports(badge), {
-    _: ['react', 'react/jsx-runtime', 'jsx'], Q: ['adapter', '../../source-sidebar-sections-adapters.jsx', 'useIntl'],
-    Rb: ['adapter', badgeAdapter, 'useRespondingSessionIds'], th: ['adapter', badgeAdapter, 'sidebarErrorTitle'],
-    Wp: ['generated', './group-copy.mjs', 'useGroupCopy'], cm: ['generated', './status-dot.mjs', 'SidebarStatusDot'], Om: ['generated', './status-dot.mjs', 'sidebarErrorInk'],
-    Jp: ['external', '../code-current/nested-session-parts.mjs', 'NestedErrorIcon'],
-    Xp: ['external', '../code-current/sidebar-status-glyph.mjs', 'sidebarErrorColors'], xm: ['external', '../code-current/sidebar-status-glyph.mjs', 'sidebarStatusMessages'],
+    u: ['react', 'react/jsx-runtime', 'jsx'], Sf: ['adapter', '../../source-sidebar-sections-adapters.jsx', 'useIntl'],
+    Vx: ['adapter', badgeAdapter, 'useRespondingSessionIds'], nm: ['adapter', badgeAdapter, 'sidebarErrorTitle'],
+    up: ['generated', './group-copy.mjs', 'useGroupCopy'], Qp: ['generated', './status-dot.mjs', 'SidebarStatusDot'], Sm: ['generated', './status-dot.mjs', 'sidebarErrorInk'],
+    Wp: ['external', '../code-current/nested-session-parts.mjs', 'NestedErrorIcon'], um: ['generated', './status-dot.mjs', 'useSidebarStatusLook'],
+    Dl: ['generated', './section-status.mjs', 'sectionStatusPriority'], Il: ['generated', './section-status.mjs', 'sectionStatusBlocks'],
+    xl: ['external', '../code-current/nested-session-needs-input.mjs', 'nestedSessionNeedsInput'],
+    zl: ['external', '../code-current/sidebar-session-priority.mjs', 'resolveSessionStatePriority'],
+    Xp: ['external', '../code-current/sidebar-status-glyph.mjs', 'sidebarErrorColors'], bp: ['external', '../code-current/sidebar-status-glyph.mjs', 'sidebarStatusMessages'],
   });
   assert.deepEqual(imports(dot), {
-    b: ['react', 'react/jsx-runtime', 'jsx'], w: ['react', 'react', 'useContext'], Ox: ['adapter', badgeAdapter, 'useStatusDotLook'],
-    uE: ['external', '../code-current/sidebar-status-glyph.mjs', 'SidebarStatusLayout'],
-    K_: ['external', '../code-current/nested-session-parts.mjs', 'NestedStatusDot'], G_: ['external', '../code-current/nested-session-parts.mjs', 'synchronizeStatusAnimation'],
-    xx: ['external', '../app-switch/app-switch-frame.mjs', 'ClayStatusDot'], Ax: ['external', '../app-switch/app-switch-frame.mjs', 'hubAttention'],
-    xf: ['external', '../view-tabs/shared-frame-BfjMqbuN.js', 'CdsPulse'],
+    m: ['react', 'react/jsx-runtime', 'jsx'], D: ['react', 'react', 'useContext'], M: ['react', 'react', 'createContext'],
+    VC: ['adapter', badgeAdapter, 'useStatusDotLook'],
+    KO: ['external', '../code-current/sidebar-status-glyph.mjs', 'SidebarStatusLayout'],
+    WC: ['external', '../app-switch/app-switch-frame.mjs', 'needsYouColor'], KC: ['external', '../app-switch/app-switch-frame.mjs', 'hubAttention'],
+    Kv: ['external', '../app-switch/app-switch-frame.mjs', 'syncInfiniteAnimations'], NC: ['external', '../app-switch/app-switch-frame.mjs', 'ClayStatusDot'],
+    B: ['external', `../view-tabs/${official.sharedFrame}`, 'CdsPulse'],
+    qv: ['external', '../code-current/nested-session-parts.mjs', 'NestedStatusDot'], HA: ['external', '../code-current/nested-session-parts.mjs', 'NestedErrorIcon'],
+    aa: ['external', '../view-tabs/shared-52-uHFNjl7C.js', 'isFizzyLakePartOptedIn'],
   });
-  // The list-view context the dot reads is the very one the host rows provide (one instance).
-  assert.match(await read(path.join(generated, 'status-dot.mjs')), /import \{ SidebarStatusLayout as uE \} from "\.\.\/code-current\/sidebar-status-glyph\.mjs";/);
-  // The call site the host follows: bC's badge (and qk's for Pinned) over shared-21 HG, exported `kn`, imported `$v`.
+  // The priorities are code-current's one table (shared-26 Nj), the list-view context the dot reads the host rows' one.
+  assert.deepEqual(Object.fromEntries(status.imports.map(i => [i.local, [i.kind, i.from, i.name]])), {
+    Lj: ['external', '../code-current/nested-session-needs-input.mjs', 'nestedSessionNeedsInput'],
+    Nj: ['external', '../code-current/sidebar-session-priority.mjs', 'sessionStatePriorities'],
+  });
+  // The call sites the host follows: shared-22's section label badge (and the Pinned / recents one) over shared-21 NQ,
+  // exported `Wn`, imported `sv`; 3.6556.2 adds the day-or-status sub-heading (W) to onlyBlocked.
   const count = (file, text) => fs.readFile(path.join(reference, file), 'utf8').then(code => code.split(text).length - 1);
-  assert.equal(await count('shared-22-HztmyUTM.js', 'badge:(W?Ee.length>0:Ee.some(Xv))?p($v,{sessions:Ee,onlyBlocked:!W}):void 0'), 1);
-  assert.equal(await count('shared-22-HztmyUTM.js', 'Ee=B===null||!z?yC:Ce?r.filter(e=>!xe(e)):r'), 1);
-  assert.equal(await count('shared-22-HztmyUTM.js', 'badge:de&&F&&O.length>0?p($v,{sessions:O}):void 0'), 1);
-  assert.equal(await count('shared-22-HztmyUTM.js', 'kn as $v'), 1);
-  assert.equal(await count('shared-21-IP-SVetq.js', 'HG as kn'), 1);
-  assert.equal(await count('shared-21-IP-SVetq.js', 'mn as Rb'), 1);
+  assert.equal(await count('shared-22-Bwn3sJTG.js', 'badge:(X||W?Ke.length>0:Ke.some(uo))?o(sv,{sessions:Ke,onlyBlocked:!X&&!W}):void 0'), 1);
+  assert.equal(await count('shared-22-Bwn3sJTG.js', 'badge:me.length>0?o(sv,{sessions:me}):void 0'), 1);
+  assert.equal(await count('shared-22-Bwn3sJTG.js', 'Wn as sv'), 1);
+  assert.equal(await count('shared-21-R7LldJ05.js', 'NQ as Wn'), 1);
+  assert.equal(await count('shared-18-D3y8YMFN.js', 'HA as Wo'), 1);
 });
 
-test('X7-04 SSR: HG shows the first status of IG (awaiting, error, ready, running), onlyBlocked only "awaiting"; VG labels it and draws the host rows\' dot', () => {
-  const { SectionStatusBadge, sectionStatusKind, rowStatusKind, rowAwaitingYou, sectionStatusOrder } = M.badge;
-  assert.deepEqual(sectionStatusOrder, ['awaiting', 'error', 'ready', 'running']);
+test('X7-04 SSR: NQ shows the first status by Nj priority (awaiting, error, ready, running), onlyBlocked only "awaiting"; MQ labels it and draws the host rows\' dot', async () => {
+  const { SectionStatusBadge, sectionStatusKind, rowStatusKind, rowAwaitingYou } = M.badge;
+  const { sectionStatusPriority, sectionStatusBlocks } = await server.ssrLoadModule('/src/generated/sidebar-sections/section-status.mjs');
+  assert.deepEqual(['awaiting', 'error', 'ready', 'running'].map(sectionStatusPriority), [0, 1, 2, 3]);
+  assert.deepEqual(['awaiting', 'error', 'ready', 'running'].map(sectionStatusBlocks), [true, true, false, false]);
   const row = (id, fields = {}) => ({ ref: { kind: 'code', id }, source: { kind: 'code', data: { isArchived: false } }, hasError: false, liveStatus: 'idle',
     pendingPermissions: 0, isUnread: false, ...fields });
   const none = new Set();
@@ -801,9 +925,12 @@ test('X7-04 SSR: HG shows the first status of IG (awaiting, error, ready, runnin
   assert.equal(render([row('a', { hasError: true })], { responding: new Set(['a']) }), glyph('Running', pulse('var(--cds-text-muted)', ' df-tab-dot-running')));
   // Outside it: ND, the plain status dot in the host's look (kx(false, false): no clay, amber "needs you").
   assert.equal(render([row('a', { liveStatus: 'running' })], { listView: null }), glyph('Running', '<span class="status-dot" data-kind="running"></span>'));
-  // The error mark: the host rows' error icon (VD) in BD's ink of MT.warning, labelled with the generic title.
+  // The error mark: SB-27, the host rows' error icon (old VD, now shared-18 HA: CdsIcon "Warning") in VA's ink of the
+  // warning colour, labelled with the generic title.
   const error = render([row('a', { hasError: true })]);
-  assert.ok(error.startsWith('<span role="img" aria-label="Something went wrong" class="flex items-center justify-center"><span aria-hidden="true" data-cds="Icon" class="text-danger"'), error);
+  assert.ok(error.startsWith('<span role="img" aria-label="Something went wrong" class="flex items-center justify-center"><span data-cds="Icon" '), error);
+  // (the icon's Anthropicons glyph is the span's private-use text)
+  assert.match(error, /<span data-cds="Icon" [^>]*class="text-danger" aria-hidden="true">[\uE000-\uF8FF]<\/span><\/span>$/);
   // onlyBlocked (bC with W false): only "awaiting", nothing else.
   assert.equal(render([row('a', { isUnread: true })], { onlyBlocked: true }), '');
   assert.equal(render([row('a', { isUnread: true }), row('b', { pendingPermissions: 1 })], { onlyBlocked: true }), glyph('A session in this group is waiting on you', pulse('var(--cds-fill-warning)')));
@@ -824,6 +951,7 @@ test('zh-CN: the section copy, reasons and menu items read the R2-sections dicti
       return null;
     }));
     assert.deepEqual(out, ['新建分区', '“A”将被移除。其中的 2 个会话会回到你的其他会话中。', '“A”将被移除。其中没有内容。', '此分组固定在列表末尾。', '从“B”移除']);
-    assert.match(html(inContextMenu(h(M['group-reorder'].SectionReorderActions, { onReset() {}, resetsToRecent: true }))), /重置顺序/);
+    // 3.6556.2: the reorder menu's last item is Sort A to Z (Reset order is gone).
+    assert.match(html(inContextMenu(h(M['group-reorder'].SectionReorderActions, { onReset() {} }))), /按 A 到 Z 排序/);
   } finally { i18n.setLocale(previous); }
 });

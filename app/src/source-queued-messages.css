@@ -6,7 +6,7 @@
    text-primary; preview truncate text-body text-muted; ghost base (24px)
    Edit/X. Expanded list role=list max-h min(40vh,22rem) p-xs divide-y; rows
    p-1.25 gap-1.25 rounded line-clamp-2; Reorder handle h-5 w-5; Clear all
-   text-footnote text-danger in px-lg py-sm. */
+   is view-tabs CdsTextLink (text-footnote text-danger, cursor-default opacity-disabled when off) in px-lg py-sm. */
 .sqm-band { width: calc(100% - 64px); max-width: 768px; align-self: center; flex-shrink: 0; transition-property: opacity, translate, background-color, color; transition-duration: var(--cds-dur-snap, .12s); transition-timing-function: var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1)); font-family: var(--cds-font-sans, anthropic-sans), sans-serif; font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); color: var(--cds-text-primary); }
 @starting-style { .sqm-band { opacity: 0; translate: 0 6px; } }
 @media (prefers-reduced-motion: reduce) { .sqm-band { transition: none; } }
@@ -43,9 +43,6 @@ html[data-local-motion="reduce"] .sqm-band { transition: none; }
 .sqm-handle:active, .sqm-handle--grabbing { cursor: grabbing; color: var(--cds-text-primary); }
 .sqm-handle:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .sqm-footer { display: flex; justify-content: flex-end; padding: var(--cds-pad-sm, 6px) var(--cds-pad-lg, 12px); }
-.sqm-clear { padding: 0; margin: 0; border: 0; background: transparent; font: inherit; font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); color: var(--cds-text-danger); cursor: default; }
-.sqm-clear:hover { text-decoration: underline; }
-.sqm-clear:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 3px; }
 .sqm-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* Split-view tip (2.2553.1 epitaxy-split-suggestion): one line, its action and a dismiss X in the band's row. */
 .sqm-tip-text { color: var(--cds-text-secondary); }

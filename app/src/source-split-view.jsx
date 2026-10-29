@@ -16,7 +16,7 @@ import { createSplitViewStore } from "./split-view-store.mjs";
 import {
   LEFT_OF_PRIMARY, SESSION_DRAG_TYPE, SPLIT_COMMANDS, SPLIT_CONSTRAINED_QUERY, SPLIT_ROW, clampRowSplit, columnCount, columnTracks, columnWeights,
   dragAlt, dragColumns, dropBadgeBox, dropZone, hasBottom, insertLeftResult, isLeftTarget, maxColumnsFor, minWeight, paneDragHint, paneDrop,
-  paneDropLabel, paneEntries, posKey, rowBounds, rowMovable, sessionDropBadge, sessionDropCell, splitShortcut,
+  paneDropLabel, paneEntries, posKey, resizeColumns, rowBounds, rowMovable, sessionDropBadge, sessionDropCell, splitShortcut,
 } from "./split-view-model.mjs";
 // shared-23 D2 / O2 (generated): which split hosts have a separator pointer drag running.
 import { markSplitPointerDrag } from "./generated/code-current/split-drag-registry.mjs";
@@ -123,11 +123,67 @@ function onEscape(run, signal) {
   document.addEventListener("keydown", key, { capture: true, signal });
 }
 
-/** p$ (2.42304.0 j2): the column boundary after `colIndex`; ⌥ while dragging resizes the column around it symmetrically.
- * A drag registers with the host (markSplitPointerDrag, keyed by the wrapper) from its start to its end, reads the
- * direction once (RTL mirrors the pointer and arrow deltas), and Home / End jump the boundary to either end. */
+/** 3.6556.2 shared-23 xO (zO `[b, x] = xO(v)`, the row separator's `[x, S] = xO(b)`): the separator's key and the
+ * cancel that changes it. Escape ends a drag by remounting the handle (`n(SO)`, SO = e => e + 1), which drops the
+ * handle's own drag state; when focus was inside the wrapper at that moment
+ * (`r.current = t?.contains(t.ownerDocument.activeElement) ?? !1`), the effect after the remount (deps `[t, e]`) puts
+ * it back on the new `[role="separator"]`. */
+export function useHandleRemount(wrapperRef) {
+  const [key, setKey] = useState(0), refocus = useRef(false);
+  const cancel = useCallback(() => {
+    const wrapper = wrapperRef.current;
+    refocus.current = wrapper?.contains(wrapper.ownerDocument.activeElement) ?? false;
+    setKey((value) => value + 1);
+  }, [wrapperRef]);
+  const restore = useCallback(() => {
+    if (refocus.current) { refocus.current = false; wrapperRef.current?.querySelector('[role="separator"]')?.focus(); }
+  }, [wrapperRef]);
+  useEffect(restore, [key, wrapperRef]);
+  return [key, cancel];
+}
+
+/** 3.6556.2 shared-23 kO: the column separator's aria-valuemin / aria-valuemax (percent of the column pair taken by
+ * column `col`, at the two ends the 320px minimum allows for a host `width` wide) and whether the boundary can move at
+ * all (`canMove`, which zO reports as aria-disabled). Bounds that meet on a movable boundary widen by one, as the row
+ * separator's do (TO). Nothing is known before the host is measured (`width` 0). */
+export function columnValueRange(weights, col, width) {
+  if (width === 0) return undefined;
+  const total = weights.reduce((sum, value) => sum + value, 0), min = minWeight(width, total), pair = weights[col] + weights[col + 1];
+  const low = resizeColumns(weights, col, -total, min)[col], high = resizeColumns(weights, col, total, min)[col], canMove = low < high;
+  const from = Math.round((100 * low) / pair), to = Math.round((100 * high) / pair);
+  return { ...(canMove && from === to ? { min: from - 1, max: to + 1 } : { min: from, max: to }), canMove };
+}
+/** zO `M = AO(r, n, t)`: the host's width, observed (a ResizeObserver of the host's window), but only kept when it
+ * changes the separator's range; the range for that width. */
+function useColumnValueRange(hostRef, weights, col) {
+  const [width, setWidth] = useState(0), measured = useRef(0);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return undefined;
+    const measure = () => {
+      const next = host.getBoundingClientRect().width, before = columnValueRange(weights, col, measured.current), after = columnValueRange(weights, col, next);
+      if (before?.min !== after?.min || before?.max !== after?.max) { measured.current = next; setWidth(next); }
+    };
+    measure();
+    const Observer = host.ownerDocument?.defaultView?.ResizeObserver;
+    if (!Observer) return undefined;
+    const observer = new Observer(measure);
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [hostRef, weights, col]);
+  return columnValueRange(weights, col, width);
+}
+
+/** p$ (2.42304.0 j2, 3.6556.2 zO): the column boundary after `colIndex`; ⌥ while dragging resizes the column around it
+ * symmetrically. A drag registers with the host (markSplitPointerDrag, keyed by the wrapper) from its start to its end,
+ * reads the direction once (RTL mirrors the pointer and arrow deltas), and Home / End jump the boundary to either end.
+ * zO's wrapper starts with an aria-hidden `.dframe-pane-resize-col-no-drag` child: the loaded shared-styles clip the
+ * 12px hit area to its trailing 62.5% (`clip-path: inset(0 0 0 37.5%)`) and give only that child
+ * `-webkit-app-region: no-drag` (the whole area while the separator has keyboard focus). */
 function ColumnResizer({ colIndex, weights, hostRef, store, tracks }) {
   const drag = useRef(null), wrapper = useRef(null), rtl = useRef(false);
+  const [handleKey, remount] = useHandleRemount(wrapper);
+  const range = useColumnValueRange(hostRef, weights, colIndex);
   const end = () => { drag.current?.abort.abort(); };
   useEffect(() => end, []);
   const start = () => {
@@ -142,7 +198,8 @@ function ColumnResizer({ colIndex, weights, hostRef, store, tracks }) {
     const alt = (event) => dragAlt(state, event.altKey);
     for (const type of ["mousemove", "keydown", "keyup"]) document.addEventListener(type, alt, { signal });
     drag.current = { state, scale: total / width, min: minWeight(width, total), cancelled: false, abort, base };
-    onEscape(() => { if (drag.current) { drag.current.cancelled = true; host.style.setProperty("--df-col-tracks", tracks); } }, signal);
+    // zO's Escape (df): `g.current = !0, e.style.setProperty("--df-col-tracks", pO(n)), x()`.
+    onEscape(() => { if (drag.current) { drag.current.cancelled = true; host.style.setProperty("--df-col-tracks", tracks); remount(); } }, signal);
   };
   const resize = (delta) => {
     const host = hostRef.current, current = drag.current;
@@ -171,16 +228,19 @@ function ColumnResizer({ colIndex, weights, hostRef, store, tracks }) {
   };
   const pair = weights[colIndex] + weights[colIndex + 1];
   return <div ref={wrapper} className="dframe-pane-resize-col">
-    <SourceResizeHandle orientation="vertical" onResizeStart={start} onResize={handleResize} onResizeEnd={finish}
+    <div className="dframe-pane-resize-col-no-drag" aria-hidden={true} />
+    <SourceResizeHandle key={handleKey} orientation="vertical" onResizeStart={start} onResize={handleResize} onResizeEnd={finish}
       onDoubleClick={() => store.setColWeights(weights.map(() => 1))} onKeyDown={keyDown}
-      aria-label={t("Resize pane columns")} aria-valuenow={Math.round((100 * weights[colIndex]) / pair)} />
+      aria-label={t("Resize pane columns")} aria-valuenow={Math.round((100 * weights[colIndex]) / pair)}
+      aria-valuemin={range?.min} aria-valuemax={range?.max} aria-disabled={range?.canMove === false || undefined} />
   </div>;
 }
 
-/** h$ (2.42304.0 N2): the row boundary of a column with a bottom pane (disabled while the host is too short to move it).
+/** h$ (2.42304.0 N2, 3.6556.2 shared-23 VO): the row boundary of a column with a bottom pane (disabled while the host is too short to move it).
  * A drag registers with the host from its start to its end; Home / End jump the movable boundary to either end. */
 function RowResizer({ hostRef, store, rowSplit, height }) {
   const drag = useRef(null), wrapper = useRef(null);
+  const [handleKey, remount] = useHandleRemount(wrapper);
   useEffect(() => () => drag.current?.abort.abort(), []);
   const value = height === 0 ? rowSplit : clampRowSplit(rowSplit, height), movable = height === 0 || rowMovable(height, value);
   const range = height === 0 ? undefined : rowValueRange(height, movable);
@@ -192,7 +252,8 @@ function RowResizer({ hostRef, store, rowSplit, height }) {
     const box = Math.max(1, host.getBoundingClientRect().height), from = hostVar(host, "--df-pane-row", SPLIT_ROW.DEFAULT);
     const abort = new AbortController();
     drag.current = { height: box, bounds: rowBounds(box), from, live: from, cancelled: false, abort };
-    onEscape(() => { if (drag.current) { drag.current.cancelled = true; host.style.setProperty("--df-pane-row", String(from)); } }, abort.signal);
+    // The row separator's Escape (df): `v.current = !0, e.style.setProperty("--df-pane-row", String(f.current)), S()`.
+    onEscape(() => { if (drag.current) { drag.current.cancelled = true; host.style.setProperty("--df-pane-row", String(from)); remount(); } }, abort.signal);
   };
   const resize = (delta) => {
     const host = hostRef.current, current = drag.current;
@@ -218,7 +279,7 @@ function RowResizer({ hostRef, store, rowSplit, height }) {
     finish(true);
   };
   return <div ref={wrapper} className="dframe-pane-resize-row" style={movable ? undefined : { pointerEvents: "none" }}>
-    <SourceResizeHandle orientation="horizontal" onResizeStart={start} onResize={resize} onResizeEnd={finish}
+    <SourceResizeHandle key={handleKey} orientation="horizontal" onResizeStart={start} onResize={resize} onResizeEnd={finish}
       onDoubleClick={() => { hostRef.current?.style.setProperty("--df-pane-row", String(SPLIT_ROW.DEFAULT)); store.setRowSplit(SPLIT_ROW.DEFAULT); }} onKeyDown={keyDown}
       aria-label={t("Resize pane rows")} aria-valuenow={Math.round(100 * value)} aria-valuemin={range?.min} aria-valuemax={range?.max} aria-disabled={!movable || undefined} />
   </div>;

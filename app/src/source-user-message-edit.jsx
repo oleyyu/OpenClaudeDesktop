@@ -18,7 +18,7 @@
 // Host differences (CW4 report): no attachments to keep or remove (Cowork sends text only), no edit-box arrow navigation
 // (`Jl`: only the last message is editable), no HX focus handoff, no entrance animation, no telemetry.
 import React, { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from './generated/view-tabs/index.js';
 import { t } from '../electron/i18n/index.mjs';
 
 // ---------------------------------------------------------------- the edit store (Ou / fl requestEdit)
@@ -93,14 +93,16 @@ const MIRROR = `${FIELD_MAX} cds-text-entry-floored pointer-events-none invisibl
  * @param {() => void} props.onClose R(): close the editor
  * @param {boolean} [props.saveOnPlainEnter] shared-3 nW
  */
-export function SourceUserMessageEdit({ originalText = '', request = null, isStreaming = false, onSave, onClose, saveOnPlainEnter = true }) {
+// w13-close-chat-messages (chatfn-branches-03): isCoworkSession false is a Chat prompt's edit — HY drops the streaming
+// term and UY's note is "branch" ("Making changes creates a new branch in the conversation.", the edit makes a version).
+export function SourceUserMessageEdit({ originalText = '', request = null, isStreaming = false, onSave, onClose, saveOnPlainEnter = true, isCoworkSession = true }) {
   const [currentEdit, setCurrentEdit] = useState(() => request?.draft ?? originalText);
   const [editSubmitted, setEditSubmitted] = useState(false);
   const requestedModelOverride = request?.modelOverride;
   const field = useRef(null);
   const bodyId = useId();
-  const disabled = editSaveDisabled({ currentEdit, originalText, editSubmitted, requestedModelOverride, isCoworkSession: true, isStreaming });
-  const note = editNote(editNoteKind({ isCoworkSession: true }));
+  const disabled = editSaveDisabled({ currentEdit, originalText, editSubmitted, requestedModelOverride, isCoworkSession, isStreaming });
+  const note = editNote(editNoteKind({ isCoworkSession }));
   const finishEdit = () => {
     if (editSubmitted || currentEdit.length === 0 || currentEdit.trim().length === 0 && currentEdit !== originalText || typeof onSave !== 'function') return;
     onSave(currentEdit, { modelOverride: requestedModelOverride, isModelRetry: requestedModelOverride !== undefined, entryPoint: request?.entryPoint });

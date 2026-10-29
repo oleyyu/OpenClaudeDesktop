@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { waitForModalExit, settingsTabIndex } from '../src/modal-presence.mjs';
+import { waitForModalExit } from '../src/modal-presence.mjs';
 
 function fixture(duration = '0.2s') {
   let listener, timer, removed = 0, cleared = 0, delay;
@@ -38,14 +38,4 @@ test('occluded settings exits by computed duration, and reduced motion does not 
     assert.equal(completed, 0); assert.equal(f.stats().delay, milliseconds);
     f.expire(); assert.equal(completed, 1); f.event(); assert.equal(completed, 1);
   }
-});
-test('narrow Settings tabs wrap, support Home/End and respect RTL without capturing unrelated keys', () => {
-  assert.equal(settingsTabIndex(0, 6, 'ArrowLeft'), 5);
-  assert.equal(settingsTabIndex(5, 6, 'ArrowRight'), 0);
-  assert.equal(settingsTabIndex(0, 6, 'ArrowRight', true), 5);
-  assert.equal(settingsTabIndex(5, 6, 'ArrowLeft', true), 0);
-  assert.equal(settingsTabIndex(3, 6, 'Home'), 0);
-  assert.equal(settingsTabIndex(3, 6, 'End'), 5);
-  for (const key of ['ArrowDown', 'Tab', 'Escape', 'a']) assert.equal(settingsTabIndex(2, 6, key), null);
-  assert.equal(settingsTabIndex(0, 0, 'End'), null);
 });

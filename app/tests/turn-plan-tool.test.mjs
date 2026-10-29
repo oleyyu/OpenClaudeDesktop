@@ -1,4 +1,4 @@
-// turn-plan: agent-tools/turn-plan.mjs serves 2.42304.0's update_plan (ccd_turn Qt / Zt, generated into
+// turn-plan: agent-tools/turn-plan.mjs serves 3.6556.2's update_plan (ccd_turn Yt / Jt; 2.42304.0 Qt / Zt; generated into
 // electron/generated/turn-plan/ccd-turn.mjs) through the agent-tools host, in the "turn" group. In-process only: the host is
 // never started (no socket, no child process); tools/list and tools/call go through host.listTools() / host.call().
 import test from 'node:test';
@@ -10,7 +10,8 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const app = path.resolve(import.meta.dirname, '..');
-const main = path.resolve(app, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-B5tintml.js');
+// 3.6556.2 (w2-tr-turn): index.chunk-B5tintml -> index.chunk-DBIg6EBr (update_plan _t / vt, wrap_up jt / Nt).
+const main = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-DBIg6EBr.js');
 const { createAgentToolsHost } = require('../electron/agent-tools-host.cjs');
 const turnPlan = await import('../electron/agent-tools/turn-plan.mjs');
 const generated = await import('../electron/generated/turn-plan/ccd-turn.mjs');
@@ -31,8 +32,8 @@ const steps = (n, status = 'pending') => Array.from({ length: n }, (_, i) => ({ 
 // The official description and schema, read from the installed main-process chunk (not from the generated module).
 const officialDescription = () => {
   const code = fs.readFileSync(main, 'utf8');
-  const start = code.indexOf('var Tt=e=>`') + 'var Tt=e=>`'.length;
-  const end = code.indexOf('`,Et={type:"object"', start);
+  const start = code.indexOf('var _t=e=>`') + 'var _t=e=>`'.length;
+  const end = code.indexOf('`,vt={type:"object"', start);
   const template = code.slice(start, end);
   const sideSessions = '${e?\' A "new_task" turn opens with a start_session offer and reaches this call only if the user chose Do it here.\':""}';
   assert.equal(template.split(sideSessions).length - 1, 1);
@@ -46,8 +47,17 @@ test('the module is the official ccd_turn server: update_plan and wrap_up, descr
   const [tool, wrap] = turnPlan.tools;
   assert.equal(tool.codexBuiltin, 'update_plan');
   const code = fs.readFileSync(main, 'utf8');
-  const ft = code.slice(code.indexOf('Ft=`Fill the "next step" box') + 4, code.indexOf('`,It={type:"object"'));
-  assert.equal(wrap.description, ft.split('${Dt}').join('300').split('${Ot}').join('100').split('\\u2014').join('\u2014').split('\\n').join('\n'));
+  // jt(t): t = Dt() = h0("2833454025", !0) picks kt (the closing message follows the box) or At. w8-turn-plan-renderer:
+  // the host keeps the official default on (electron/turn-plan-adapters.mjs growthBookValue), since the renderer now
+  // reads the closing message (3.6556.2 turn tail closingMessageFollows), so the description reads kt.
+  const jt = code.slice(code.indexOf('jt=e=>`Fill the "next step" box') + 7, code.indexOf('`,Mt={type:"object"'));
+  const kt = code.slice(code.indexOf('kt="Your closing message is ordinary text') + 4, code.indexOf('"', code.indexOf('kt="Your closing message is ordinary text') + 4));
+  assert.equal(jt.split('${e?kt:At}').length - 1, 1);
+  assert.equal(wrap.description, jt.split('${e?kt:At}').join(kt).split('${yt}').join('300').split('${bt}').join('100').split('\\u2014').join('\u2014').split('\\n').join('\n'));
+  assert.ok(wrap.description.includes('Your closing message is ordinary text right after this call'), 'kt wording');
+  assert.ok(!wrap.description.includes('When the box shows your question, it ends your turn'), 'not the At wording');
+  assert.ok(wrap.description.includes('a go-ahead to fix, commit, push, post or send'), '3.6556.2 wording');
+  assert.ok(wrap.description.includes('ask or propose it, and call this.'), '3.6556.2 wording');
   assert.deepEqual(wrap.inputSchema, generated.turnServerDefinition(false).tools[1].inputSchema);
   assert.deepEqual(wrap.inputSchema.required, ['recap']);
   assert.deepEqual(Object.keys(wrap.inputSchema.properties), ['recap', 'ask', 'blocked', 'actions']);
@@ -141,7 +151,7 @@ test('tools/list: both tools are listed (never deferred) for every core; Codex g
   } finally { host.stop(); }
 });
 
-test('wrap_up: the original checks and answers (recap required, buttons, app actions the row offers, endTurn meta)', async () => {
+test('wrap_up: the original checks and answers (recap required, buttons, app actions the row offers, closing message follows)', async () => {
   turnPlan.resetTurnPlans();
   const host = makeHost({ modules: [turnPlan] });
   const wrap = (args) => host.call('thread-a', { name: 'wrap_up', arguments: args });
@@ -153,8 +163,10 @@ test('wrap_up: the original checks and answers (recap required, buttons, app act
   assert.equal(recapOnly._meta, undefined);
   const asked = await wrap({ recap: 'Fixed the bug. Nothing committed.', ask: 'Commit it?', actions: [{ label: 'Yes, commit', message: 'Commit the fix' }] });
   assert.ok(text(asked).startsWith('Shown in the next-step box.'));
-  assert.ok(text(asked).endsWith('The box ends your turn: write no text after this call, since the recap and question already say what the user needs.'));
-  assert.deepEqual(asked._meta, { 'claude/endTurn': true }, 'the result meta passes the host through');
+  // Dt() on (the official default): `ie=re&&!(i.closingFollowsQuestion??Dt())` is false, so the answer asks for the closing
+  // message and carries no claude/endTurn meta.
+  assert.ok(text(asked).endsWith('Your closing message is your answer to the user: write it now, in full, as the last thing you say this turn. The box asks your question, so do not ask it again.'), text(asked));
+  assert.equal(asked._meta, undefined, 'no endTurn meta while the closing message follows the box');
   // An app action the next-actions row does not offer is refused (getAvailableNextActions: what the renderer published).
   turnPlan.setAvailableNextActions('thread-a', ['archive']);
   const refused = await wrap({ recap: 'Done.', ask: 'Open a PR?', actions: [{ action: 'create_pr' }] });
@@ -168,9 +180,10 @@ test('wrap_up: the original checks and answers (recap required, buttons, app act
   assert.equal(turnPlan.setAvailableNextActions('thread-a', undefined), true);
   assert.equal(text(await host.call('thread-a', { name: 'update_plan', arguments: { advance: true } })), 'Plan updated: every step is done.');
   // Too many buttons, a clipped label, an "@": the original advice.
-  const advice = await wrap({ recap: 'Done.', ask: 'Next?', actions: [{ label: 'Run the whole thing again please', message: '@x' }, { label: 'B' }, { label: 'C' }] });
+  // 3.6556.2: "@" is no longer dropped; a reply starting with "/" or "!" (or an invisible character) is.
+  const advice = await wrap({ recap: 'Done.', ask: 'Next?', actions: [{ label: 'Run the whole thing again please', message: '/x' }, { label: 'B' }, { label: 'C' }] });
   assert.match(text(advice), /actions is 1\u20132 buttons; this call had 3/);
-  assert.match(text(advice), /The app drops a reply whose label or message contains "@"/);
+  assert.match(text(advice), /The app drops a reply whose label or message starts with "\/" or "!"/);
   // A sub-agent's wrap_up (Codex names its thread): the official refusal.
   const sub = await host.call('thread-a', { name: 'wrap_up', arguments: { recap: 'x' }, meta: { threadId: 'sub-thread' } });
   assert.equal(text(sub), generated.SUBAGENT_TURN_TOOL_REFUSAL);

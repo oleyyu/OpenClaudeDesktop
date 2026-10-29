@@ -1,19 +1,13 @@
-// Local services for the 2.42304.0 originals in generated/files-changes (scripts/extract-files-changes.mjs): this module
+// Local services for the 3.6556.2 originals in generated/files-changes (scripts/extract-files-changes.mjs): this module
 // answers the imports that generator maps to the host. Nothing here re-implements an official binding; each export is
-// the local stand-in for a runtime service the desktop app provides.
-import { useCallback, useContext, useSyncExternalStore, version } from "react";
-import { cdsClassNames, CdsButton, CdsIcon, CdsContextMenu, CdsDensityContext } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
-import { clsx, cva, DirectionContext } from "./generated/view-tabs/vendor-frame-DfPJ1QmD.js";
+// the local stand-in for a runtime service the desktop app provides. Since 3.6556.2 (w2-files) the generated modules
+// import view-tabs public names (CdsButton, CdsIcon, clsx, cva, useDirection, useCdsDensity, the E3 cache helpers, …)
+// from the view-tabs graph directly. w10-cleanup-final removed the view-tabs re-exports (cdsClassNames, clsx, CdsButton,
+// CdsIcon, CdsContextMenu, cva, useDirection, useCdsDensity), reactVersion and FilesSkeletonGroup / FilesSkeleton: no
+// module imported them from here any more.
+import { useCallback, useSyncExternalStore } from "react";
 import { createPersistedValues } from "./tile-layout-store.mjs";
 import { useStartIntl } from "./source-code-start-adapters.jsx";
-
-// vendor-frame Eo (`re = "19.2.4"`): the React version the bundle was built with. shared-frame Km/qm read it to pick
-// `inert: true` (React 19+) over `inert: ""`; locally that is the React this renderer runs.
-export const reactVersion = version;
-
-// shared-frame xd (X, tailwind-merge over clsx): the view-tabs graph's copy (D1 semantic name), so the generated
-// components merge classes with the same configured instance as every other CDS component.
-export { cdsClassNames };
 
 // vendor-intl l (react-intl FormattedMessage) and p (useIntl): the English defaultMessage is looked up in the local
 // catalog by t() (zh-CN) and formatted with ICU syntax ({name}, plurals) by react-intl's createIntl, as the start card's
@@ -25,7 +19,7 @@ export { useStartIntl as useIntl } from "./source-code-start-adapters.jsx";
 // vendor-intl f (react-intl defineMessages): the identity (`function tn(e){return e}`).
 export const defineMessages = (messages) => messages;
 
-// shared-28 gs/cs/_s/as (2.42304.0 Xf/Gf/qf/Wf) over the persisted values in tile-layout-store.mjs: localStorage
+// shared-28 Uc/Fc/Wc/Mc (3.6556.2 Bp/Fp/Lp/Pp; 2.42304.0 gs/cs/_s/as) over the persisted values in tile-layout-store.mjs: localStorage
 // `persisted.<key>`, the same key the official renderer writes, without the desktop preferences bucket. Storage is read
 // lazily, so a window (or a test) that sets localStorage up later still gets it; other windows' writes arrive through
 // the `storage` event.
@@ -69,7 +63,7 @@ export function notifySessionEvicted(sessionId) {
 
 // ---- R3-files (FT-03 / FT-05): the services the Files pane originals read. ----
 
-// shared-0 Om (`globalThis["claude.web"]?.LocalSessions`): the desktop's local-session bridge. The gone hook (c856385e2 V)
+// shared-0 dh (pC, `globalThis["claude.web"]?.LocalSessions`): the desktop's local-session bridge. The gone hook (c856385e2 q)
 // only reads isSessionPathGone, and skips the check when it is undefined (no desktop: SSR, tests, a plain browser), so
 // the method exists only while the preload's desktop bridge does. Main answers `file:gone` (electron/files.cjs
 // createSessionPathGone, the local stand-in for LocalSessions isSessionPathGone / judgeSessionPathGone).
@@ -97,7 +91,7 @@ export const LocalSessions = Object.freeze({
   },
 });
 
-// shared-0 my (Za: GrowthBook `isOn`) and gy (no: the evaluated value). OpenClaude has no GrowthBook; these are the
+// shared-0 _b (Ko: GrowthBook `isOn`; shared-25 Yh is the same) and yb (Zo: the evaluated value). OpenClaude has no GrowthBook; these are the
 // answers of a client that never loaded (Za returns false, no() undefined), so a kill switch such as "__gb__3212098161"
 // stays off and a rollout gate such as "__gb__3508862586" (`n(s) !== false`) keeps its default.
 export function growthBookOn() {
@@ -107,7 +101,7 @@ export function growthBookValue() {
   return undefined;
 }
 
-// c856385e2 B (session id -> {id, type}): the original tells a CLI session (shared-11 Ao prefix) and a local one
+// c7fa71d26 t (2.42304.0 c856385e2 B; session id -> {id, type}): the original tells a CLI session (shared-11 Ao prefix) and a local one
 // ("local_" id prefix) from a remote one. Every OpenClaude session runs in the local engine on this machine, and its ids
 // carry no such prefix, so each is local here.
 export function localSessionTarget(id) {
@@ -116,30 +110,17 @@ export function localSessionTarget(id) {
 
 // ---- R3-files (FT-16): the breadcrumb folder popover (cfac349aa Pt/Nt/Lt) and its compact tree (ca7840910 ie). ----
 
-// View-tabs semantic names (D1): vendor-frame za (clsx), shared-frame cl (CdsButton, the Try again button), Hl (CdsIcon,
-// the caret and file icons), Ii (CdsContextMenu, the tree rows' menu when a caller gives contextMenuItems).
-export { clsx, CdsButton, CdsIcon, CdsContextMenu };
-// R3-files FT-14: vendor-frame Ea (class-variance-authority), the view-tabs graph's `cva` (shared-frame Cx's `g`).
-export { cva };
-// vendor-frame Wn = Td (Base UI useDirection): `function Td(){return N(wd)?.direction??"ltr"}` over view-tabs
-// DirectionContext (wd). extract-files-changes.mjs adapterChecks pins the restated text.
-export function useDirection() {
-  return useContext(DirectionContext)?.direction ?? "ltr";
-}
-// shared-frame su = ja (`function ja(){return W(la)}`): the CDS density, the view-tabs CdsDensityContext (la).
-export function useCdsDensity() {
-  return useContext(CdsDensityContext);
-}
-// shared-frame Jl = lo (a template `calc(${e/16}rem * var(${io}, 1))`, io = "--cds-rem-scale"): a px length as rem-scaled CSS.
+// shared-frame fd = To (2.42304.0 Jl = lo; a template `calc(${e/16}rem * var(${io}, 1))`, io = "--cds-rem-scale"): a px length as rem-scaled CSS.
 export const cdsRem = (px) => `calc(${px / 16}rem * var(--cds-rem-scale, 1))`;
-// shared-frame du = Na (`Pa()??"light"`): the CDS mode from an enclosing CdsRoot's mode store (Pa: `W(da)??fa`). The host
+// shared-frame Ad = Wa (`Ga()??"light"`; 2.42304.0 du = Na): the CDS mode from an enclosing CdsRoot's mode store (Ga: `J(Sa)??Ca`). The host
 // renders no CdsRoot, so the original's answer here is fa's undefined snapshot, i.e. "light". (Only the colored
 // file-type icon set reads it, and that set is behind GrowthBook "__gb__2954460583", off locally.)
 export function useCdsMode() {
   return "light";
 }
-// shared-frame Oc (CdsTooltip): the Files pane's tooltip, SourceTooltip (content / multiline / side / align / open /
+// shared-frame Kl (CdsTooltip; 2.42304.0 Oc): the Files pane's tooltip, SourceTooltip (content / multiline / side / align / open /
 // className, function content resolved at open). The breadcrumb shell (code-current breadcrumb-file.mjs) uses it too.
 export { SourceTooltip as FilesTooltip } from "./source-tooltip.jsx";
-// shared-frame Zi (CDS Popover), tl (SkeletonGroup), $c (Skeleton with .Rows): see source-breadcrumb-adapters.jsx.
-export { FolderPopover as FilesPopover, FolderSkeletonGroup as FilesSkeletonGroup, FolderSkeleton as FilesSkeleton } from "./source-breadcrumb-adapters.jsx";
+// shared-frame ua (CDS Popover; 2.42304.0 Zi): see source-breadcrumb-adapters.jsx. The 3.6556.2 popover list renders the
+// view-tabs CdsSkeleton / CdsLoadingSkeleton itself.
+export { FolderPopover as FilesPopover } from "./source-breadcrumb-adapters.jsx";

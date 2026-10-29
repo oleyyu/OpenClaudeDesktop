@@ -238,7 +238,9 @@ export function markdownChunks(text, limit = MARKDOWN_CHUNK_CHARS) {
 // hand copy of the 2.2553.1 / 2.37337.1 reader that lived here is gone. Li also returns `items` for a list value (read
 // by the gated document variant); the pane variant shows key and value only.
 export { splitFrontmatter } from './generated/files-changes/file-frontmatter.mjs';
-export { frontmatterLabel } from './generated/files-changes/file-frontmatter-view.mjs';
+// E42: the label comes from the pure target (file-frontmatter-label.mjs, the same Ki the compiled view imports), so
+// this plain-node model never loads the view's shared-frame / vendor-frame graph.
+export { frontmatterLabel } from './generated/files-changes/file-frontmatter-label.mjs';
 import { splitFrontmatter } from './generated/files-changes/file-frontmatter.mjs';
 
 // --- The plan (Ti :898-907) --------------------------------------------------

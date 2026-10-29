@@ -98,3 +98,70 @@ test("effort slider badges: the default level is marked, value text names the ba
   assert.equal(effortWarning({ ...warned[1], tooltip: { content: "Own note" } }), "Own note");
   assert.equal(effortWarning(warned[0]), undefined);
 });
+
+// ---- 3.6556.2 (w2-menus-host, menus:C6): the Fast row's `unavailable` forms (shared-7-DBAgAi5H yw → _w), host default
+// available. Loaded through Vite (the row is JSX over view-tabs); nothing opens a window.
+test("menus:C6 — the Fast row keeps official _w's unavailable forms: accent xxs CTA badge, or greyed with its reason", async (t) => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const React = (await import("react")).default;
+  const { createServer } = await import("vite");
+  const react = (await import("@vitejs/plugin-react")).default;
+  const { withMemoCache } = await import("./support/react-memo-cache.mjs");
+  const root = path.resolve(import.meta.dirname, "..");
+  const official = fs.readFileSync(path.join(root, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-7-DBAgAi5H.js"), "utf8");
+  for (const feature of ["c=s?.cta,l=s?.greyed??!1", 'c?h(ge,{variant:"accent",size:"xxs",truncate:!0,children:c.copy})',
+    'c?void 0:{role:"menuitemcheckbox","aria-checked":a}', "h(q.Item,{keepOpen:p,onClick:f,disabled:l,", "greyed:m&&!g,cta:g?{copy:g.copy,onActivate:()=>a?.({cta:g,model:n,source:\"fast_mode\"})}",
+    "function nw(e){return e.disabled?e.selection_notice?.cta??void 0:void 0}"])
+    assert.ok(official.includes(feature), feature);
+  const server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
+  t.after(() => server.close());
+  const { SourceModelMenu, fastRowUnavailable } = await server.ssrLoadModule("/src/source-model-menu.jsx");
+  const { CdsBadge } = await server.ssrLoadModule("/src/generated/view-tabs/index.js");
+
+  // The derivation (yw): an available tier has none; a disabled tier that is off is greyed, or carries the CTA when there
+  // is an intent handler and a selection notice; the tier that is on is never greyed.
+  assert.equal(fastRowUnavailable({ key: "fast", name: "Fast" }), undefined);
+  const blocked = { key: "fast", name: "Fast", disabled: true, disabled_reason: { message: "Not on this plan" }, selection_notice: { cta: { copy: "Upgrade" } } };
+  assert.deepEqual(fastRowUnavailable(blocked), { reason: "Not on this plan", greyed: true, cta: undefined });
+  assert.deepEqual(fastRowUnavailable(blocked, { on: true }), { reason: "Not on this plan", greyed: false, cta: undefined });
+  const intents = [];
+  const withCta = fastRowUnavailable(blocked, { model: "m", onIntent: (intent) => intents.push(intent) });
+  assert.equal(withCta.greyed, false);
+  assert.equal(withCta.cta.copy, "Upgrade");
+  withCta.cta.onActivate();
+  assert.deepEqual(intents, [{ cta: { copy: "Upgrade" }, model: "m", source: "fast_mode" }]);
+
+  const fastRow = (props) => {
+    const hooks = { useContext: (c) => c._currentValue, useState: (i) => [typeof i === "function" ? i() : i, () => {}], useRef: (i) => ({ current: i }),
+      useMemo: (f) => f(), useCallback: (f) => f, useEffect() {}, useLayoutEffect() {}, useId: () => ":m:", useSyncExternalStore: (s, g, gs) => (gs ?? g)() };
+    const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
+    internal.H = withMemoCache(hooks);
+    const walk = (node, hit) => {
+      if (!node || typeof node !== "object") return null;
+      if (Array.isArray(node)) { for (const child of node) { const found = walk(child, hit); if (found) return found; } return null; }
+      if (hit(node)) return node;
+      return walk(node.props?.children, hit);
+    };
+    try {
+      const tree = SourceModelMenu({ anchor: null, models: [{ id: "m", displayName: "M" }], selected: "m", onSelect() {}, onClose() {}, onFastModeChange() {}, ...props });
+      // w10-shell-model-menu: the row is its own component (_w); render it once to reach the item.
+      const row = walk(tree, (node) => node.type?.name === "FastRow");
+      return walk(row.type(row.props), (node) => node.props?.["data-speed"]);
+    } finally { internal.H = old; }
+  };
+  const available = fastRow({ fastTier: { key: "fast", name: "Fast" } });
+  assert.equal(available.props.role, "menuitemcheckbox");
+  assert.equal(available.props.keepOpen, true);
+  assert.equal(available.props.disabled, false);
+  assert.equal(available.props["data-fast-unavailable"], undefined, "host default: available");
+  const greyed = fastRow({ fastTier: blocked });
+  // _w hands no disabledReason to q.Item: the reason is aw's mirror span (w10-model-menu-fast-row.test.mjs).
+  assert.deepEqual([greyed.props.disabled, greyed.props.disabledReason, greyed.props["data-fast-unavailable"], greyed.props["aria-describedby"]], [true, undefined, "greyed", ":m:"]);
+  const cta = fastRow({ fastTier: blocked, onFastIntent() {} });
+  assert.equal(cta.props.role, undefined, "a CTA row is a plain menu item");
+  assert.equal(cta.props.keepOpen, false);
+  assert.equal(cta.props.disabled, false);
+  assert.equal(cta.props.trailing.type, CdsBadge);
+  assert.deepEqual([cta.props.trailing.props.variant, cta.props.trailing.props.size, cta.props.trailing.props.truncate, cta.props.trailing.props.children], ["accent", "xxs", true, "Upgrade"]);
+});

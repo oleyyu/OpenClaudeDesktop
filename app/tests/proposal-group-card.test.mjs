@@ -5,9 +5,10 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
-// R4f-proposal P1 (tasks-proposal-group-card WI-1; tasks-03 / tasks-04 / tasks-11): the generated 2.42304.0 group card
-// (c96d752d0 R$ / z$ → B$ → c0e → s0e, the Options form c227f4d5e pq) over the host adapters
+// R4f-proposal P1 (tasks-proposal-group-card WI-1; tasks-03 / tasks-04 / tasks-11): the generated 3.6556.2 group card
+// (c96d752d0 mQ / hQ → gQ → AQe → kQe, the Options form c227f4d5e h1; 2.42304.0 R$ / z$ → B$ → c0e → s0e, pq) over the host adapters
 // (src/source-proposal-group-adapters.jsx) and the host spawner (src/proposal-spawner.mjs, P3) built from the generated
 // helpers. SSR for the markup; the card's own components called under a hook dispatcher (D21, as
 // tests/sessions-page-current.test.mjs) for the element props a click or a popover would reach: Start all's 400 ms
@@ -91,7 +92,7 @@ function fixture(component, props, contexts) {
   const render = () => {
     cursor = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return (tree = component(props)); } finally { internal.H = old; }
   };
   render();

@@ -7,10 +7,9 @@ import { SourceTooltip } from './source-tooltip.jsx';
 const FieldContext = createContext(null);
 const joinIds = (...values) => [...new Set(values.filter(Boolean).flatMap(value => value.split(/\s+/)))].join(' ') || undefined;
 
-// Each field family registers its own parts from its module (SC-7): the generated 2.2553.1 chat shared-frame
-// (_y/vy/yy/by/Bh/$v), current-chat via source-routines.jsx, and the 2.42304.0 tx family in code-current
-// environment-field-controls. This module imports no family: it used to import the chat parts from the shared-frame
-// that imports it back, so whichever loaded first decided whether the registry held those parts or undefined.
+// Each field family registers its own parts from its module (SC-7): current-chat via source-routines.jsx, and the
+// 2.42304.0 tx family in code-current environment-field-controls. This module imports no family: a family module
+// imports this one, so importing it back would let load order decide whether the registry held its parts.
 // view-tabs CdsTextInput (tx) is not a part here: its control is Base UI Field.Control (vendor-frame), which reads
 // Base UI's field context, not this one; the NativeField-wired 2.42304.0 tx is EnvironmentTextInput.
 const fieldPartsRegistry = Object.fromEntries(['Field', 'Label', 'Description', 'ErrorText', 'TextInput', 'TextArea'].map(key => [key, new Set()]));
@@ -51,18 +50,13 @@ export function NativeFieldLabel(props) {
   return <label htmlFor={field?.controlId} id={field?.labelId} {...props} />;
 }
 
-export function NativeFieldDescription(props) {
-  const field = useContext(FieldContext);
-  return <div id={field?.hintId} {...props} />;
-}
-
 export function NativeFieldError({ render, match, ...props }) {
   const field = useContext(FieldContext);
   if (!field?.invalid && match !== true) return null;
   return render({ id: field?.errorId, role: 'alert', ...props });
 }
 
-export function useNativeFieldControlProps(props = {}) {
+function useNativeFieldControlProps(props = {}) {
   const field = useContext(FieldContext);
   if (!field) return props;
   return {

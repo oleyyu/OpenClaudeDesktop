@@ -1,3 +1,4 @@
+// 3.6556.2 cc43287c9-Me-M2ucD.js keeps the copy (fHClqd2+bS / sIl97ARhWm): `or||fn!=="draft"?…:St??(Js?…:…)`.
 // cc43287c9-BMbiZYzF.js:28680-28699 (2.31226.0 cc43287c9-Bchz60VT :33797-33816) placeholder:
 // ur || yn !== 'draft' ? 'Type / for commands'
 // : (Et ?? (ho ? 'Describe something to build, change, or fix' : 'Describe a task or ask a question')),
@@ -15,11 +16,12 @@ export function composerPlaceholder({ sessionId = null, mode = "code", firstRun 
   return firstRun === true ? FIRST_RUN_PLACEHOLDER : DRAFT_PLACEHOLDER;
 }
 
-// 2.42304.0 c227f4d5e uM, while a turn runs (ze = !!V && !ge && Le && !A && !I && re === null: Stop offered, ⌘⏎ not
-// claimed, Enter sends, the editor enabled, sending not blocked, no history search): the placeholder names both lanes,
-// Be(spoken) "{sendKey} to send, {queueKey} to queue for later" (mZ6xnUz7iS), and a probe that overflows the editor
-// swaps in He "{queueKey} to queue" (FIL0bW8Kgx). The key labels are the original cM (generated composer-key-label.mjs,
-// over the CDS cap table): glyphs on a Mac, spoken names joined with "+" (aria-description) or elsewhere.
+// 3.6556.2 c227f4d5e qM (2.42304.0 uM), while a turn runs (Re = !!ee && !me && Ie && !A && !F && q === null, was ze:
+// Stop offered, ⌘⏎ not claimed, Enter sends, the editor enabled, sending not blocked, no history search): the
+// placeholder names both lanes, "{sendKey} to send, {queueKey} to queue for later" (mZ6xnUz7iS), and a probe that
+// overflows the editor swaps in "{queueKey} to queue" (FIL0bW8Kgx). The key labels are the original GM (was cM;
+// generated composer-key-label.mjs, over the CDS cap table): glyphs on a Mac, spoken names joined with "+"
+// (aria-description) or elsewhere. The copy and the condition are unchanged from 2.42304.0.
 import { shortcutLabel } from "./generated/code-composer/composer-key-label.mjs";
 export const RUNNING_PLACEHOLDER = "{sendKey} to send, {queueKey} to queue for later";
 export const RUNNING_PLACEHOLDER_COMPACT = "{queueKey} to queue";

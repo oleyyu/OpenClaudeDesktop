@@ -32,13 +32,10 @@ export function contextThreshold(pct) {
 export const contextRingStroke = (pct) => `var(--cds-fill-${contextThreshold(pct)})`;
 // _d icon Xr trackStroke: an.alpha[2].cssVar.
 export const CONTEXT_RING_TRACK = "var(--cds-alpha-2)";
-// 2.42304.0 (composer-row-chin): the row chin passes the usage popover a ring size (c227f4d5e bQ `ringSize: Le ? 14 :
-// void 0`), as the environment bar's ring does (c73f45bc3 Y_ `ringSize: 14`); a sized ring sits on the alpha-4 track
-// (yZ `trackStroke: c === void 0 ? "var(--cds-alpha-2)" : "var(--cds-alpha-4)"`) in Fa's `flex shrink-0 ms-px` slot.
+// 3.6556.2 c227f4d5e B3 draws the ring at 14 (`y(_f,{pct:s,trackStroke:m,stroke:c,size:14})`); its track
+// (`m=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"`) is source-composer-row-chin.jsx USAGE_RING_ROW_TRACK / USAGE_RING_TRACK.
 // The svg itself is the generated shared-8 KV (generated/code-composer/usage-ring.mjs).
 export const CONTEXT_RING_ROW_SIZE = 14;
-export const CONTEXT_RING_ROW_TRACK = "var(--cds-alpha-4)";
-export const contextRingTrack = (ringSize) => (ringSize === undefined ? CONTEXT_RING_TRACK : CONTEXT_RING_ROW_TRACK);
 
 // shared-14 xT: size yT 12, stroke bT 2, r=(size-stroke)/2, C=2πr,
 // dashoffset C·(1−clamp(pct,0,100)/100).

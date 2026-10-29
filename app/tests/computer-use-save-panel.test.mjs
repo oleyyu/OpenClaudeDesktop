@@ -1,4 +1,5 @@
-// savePanelProbe / save_panel_restricted (official 2.42304.0, save-panel.cjs): the ported policy (protected names,
+// savePanelProbe / save_panel_restricted (official 3.6556.2, the same as 2.42304.0 apart from the protected lists, which
+// tests/w11-cu-protected-names.test.mjs compares entry by entry; save-panel.cjs): the ported policy (protected names,
 // folders, a save sheet's target, typing into it), the protected index over a temporary home folder, the gates
 // (keys, typing, a click / drag at a point, a held press, the app_* tools) with a fake native probe, the 750 ms settle
 // and the folder-parents read before a save is confirmed, and the service / tool wiring. Nothing is posted.

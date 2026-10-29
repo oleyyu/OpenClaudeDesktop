@@ -26,17 +26,23 @@ export function SourceSideChatStatus({ status, interrupting, thinkingSince, prog
   const clock = working ? runtimeStatLabels(elapsed, null)[0] : null;
   const visible = !!interrupting || (working && (!!clock || !!label));
   const busy = working || interrupting;
-  return <div className="source-transcript-status ssc-status" data-side-status={interrupting ? 'stopping' : working ? 'running' : 'idle'} data-side-stage={progress?.stage}>
-    <span role="status" className="ssc-status-announcement">{announcement}</span>
-    <div className="sts-row" aria-hidden="true">
-      <SourceSpark className="sts-spark" size={18} state={busy ? 'thinking' : undefined}/>
-      <span className="sts-label" data-visible={visible}>
-        {forking && <span className="sts-activity">{label}</span>}
-        {forking && clock && <span className="sts-separator">·</span>}
-        {clock && <span className="sts-stat" data-runtime-stat="elapsed">{clock}</span>}
-        {!forking && clock && label && <span className="sts-separator">·</span>}
-        {!forking && visible && label && <span className="source-shimmer sts-activity">{label}</span>}
-      </span>
+  // cccc2cf0a _F: div > [span.sr-only role=status (the announcement), div[aria-hidden] > Go]. The host's Go is the classic
+  // source-transcript-status row; ssc-status and its data-side-* attributes are host hooks.
+  return <div className="ssc-status" data-side-status={interrupting ? 'stopping' : working ? 'running' : 'idle'} data-side-stage={progress?.stage}>
+    <span role="status" className="sr-only">{announcement}</span>
+    <div aria-hidden={true}>
+      <div className="source-transcript-status">
+        <div className="sts-row">
+          <SourceSpark className="sts-spark" size={18} state={busy ? 'thinking' : undefined}/>
+          <span className="sts-label" data-visible={visible}>
+            {forking && <span className="sts-activity">{label}</span>}
+            {forking && clock && <span className="sts-separator">·</span>}
+            {clock && <span className="sts-stat" data-runtime-stat="elapsed">{clock}</span>}
+            {!forking && clock && label && <span className="sts-separator">·</span>}
+            {!forking && visible && label && <span className="source-shimmer sts-activity">{label}</span>}
+          </span>
+        </div>
+      </div>
     </div>
   </div>;
 }

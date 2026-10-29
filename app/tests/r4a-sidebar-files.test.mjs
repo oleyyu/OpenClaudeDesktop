@@ -19,6 +19,7 @@ import { archiveChord, archiveBlockedByField, archiveNeighbour } from '../src/si
 import { sessionArchived, sessionState } from '../src/sidebar-model.js';
 import { searchInText, DEFAULT_SEARCH_OPTIONS } from '../src/file-find-model.mjs';
 import { normalizeSearchText } from '../src/generated/code-editor/search.mjs';
+import { surfaceNavRows } from '../src/surface-nav-model.mjs';
 
 const require = createRequire(import.meta.url);
 const app = path.resolve(import.meta.dirname, '..');
@@ -174,7 +175,9 @@ test('sidebar-14 Code nav row reads "Routines": the Scheduled rename and (Was Ro
   const head = 'const primaryRows = mode === \'code\'';
   assert.equal(count(sidebar, head), 1);
   const at = sidebar.indexOf(head) + 'const primaryRows = '.length;
-  const rowsOf = evaluate(`(mode) => ${sidebar.slice(at, sidebar.indexOf(';\n', at))}`, {}).value;
+  // w13-surfaces-nav: the non-code branch now calls the shared-21 bH/hH model (surface-nav-model.mjs) with rT
+  // (homeMode); inject it so the cut-out expression runs. homeMode 'cowork' = Cowork available, the merged home.
+  const rowsOf = evaluate(`(mode) => ${sidebar.slice(at, sidebar.indexOf(';\n', at))}`, { surfaceNavRows, homeMode: 'cowork' }).value;
   const label = (mode, key) => rowsOf(mode).find(row => row[2] === key)?.[0];
   assert.equal(label('code', 'routines'), 'Routines');
   assert.equal(label('cowork', 'routines'), 'Scheduled', 'the other mode keeps its own label');

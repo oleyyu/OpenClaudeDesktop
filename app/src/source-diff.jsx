@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import React, { useCallback, useEffect, useEffectEvent, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./icons";
 import { parseUnifiedDiff } from "./diff-model";
 import { previewHunks } from './file-preview-model.mjs';
@@ -8,33 +8,43 @@ import { splitDiffRows, observeDiffSplitFit } from './diff-view-model.mjs';
 import { diffSeparators } from './diff-separator-model.mjs';
 import { contextRegions, expandContext, visibleContext } from './diff-context-model.mjs';
 import { absoluteDiffPath, headerTooltip, pathParts, renamedFrom, renamedFromDisplay, rowLabels, splitPosixPath } from './diff-file-header-model.mjs';
-import { changedFileMenu } from './file-context-menu-model.mjs';
-import { fileKindIcon } from './file-kind-icon.mjs';
+import { FILE_MENU_LABELS, changedFileMenu } from './file-context-menu-model.mjs';
+import { canOpenFileInEditor } from './generated/files-changes/file-editor-path.mjs';
 import { SourceTooltip, SourceTooltipGroup } from './source-tooltip';
 import { SourceMenu } from './source-menu.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from './menu-model.mjs';
 import { hideWhitespaceChanges } from './diff-whitespace-model.mjs';
-import { subscribeDiffReveal, takeDiffReveal } from './diff-reveal.mjs';
-import { useSourcePointerResize } from './use-pointer-resize.js';
-import { DIFF_FILE_LIST_LABELS, DIFF_FILE_LIST_WIDTH, clampDiffFileListWidth, diffFileEntries, diffFileList, diffFileListCanFit, diffFileListLimit,
-  isLargeDiff, withComparisonFiles, withRawFiles, createPatchFetchQueue, kindSectionOpen, openKindSections, orderDiffSections, revealCollapsed, toggleCollapsed, treeRowTarget } from './diff-file-list-model.mjs';
+import { clearDiffTarget, diffTarget, diffTreeJumpTarget, scrollDiffTarget, subscribeDiffReveal, subscribeDiffTargets, takeDiffRevealRequest } from './diff-reveal.mjs';
+// c219730b0 Sn and c44d00c7f Ir / Lr / Rr (W12 diff-main): the Changed files column and its handles, generated with the
+// sidebar's shared-9 bm (one copy of the CDS ResizeHandle).
+import { useResizableDiffTree } from './generated/sidebar-resize/diff-tree-column.mjs';
+import { DiffTreeEdgeHandle, DiffTreeResizeHandle, DiffTreeResizeShield } from './generated/sidebar-resize/diff-tree-resize-handle.mjs';
+import { DIFF_FILE_LIST_LABELS, DIFF_FILE_LIST_WIDTH, clampDiffFileListWidth, diffFileEntries, diffFileList, diffFileListCanFit,
+  isLargeDiff, withComparisonFiles, withRawFiles, createPatchFetchQueue, orderDiffSections, toggleCollapsed, treeRowTarget } from './diff-file-list-model.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
 import { diffFileCommentsStore, rowCommentTarget } from './diff-comments-model.mjs';
-import { useDiffComments } from './source-diff-comments.jsx';
+import { useDiffComments, usePrCommentShortcuts } from './source-diff-comments.jsx';
 import { SourceDiffCommits } from './source-diff-commits.jsx';
+import { enterPick, preventNativeMenu } from './diff-commits-model.mjs';
+// shared-18 ok / sk (c44d00c7f `$e` / `Z`): the tree's keyboard context menu and its menu-item Enter-repeat guard.
+import { openContextMenuFromKey, preventMenuItemEnterRepeat } from './generated/files-changes/tree-context-menu-keys.mjs';
 import { sameFindingFile } from './review-findings-model.mjs';
 import { SourceReviewFindingCard } from './source-pane-review.jsx';
-import { SourceDialog } from './source-dialog.jsx';
 import { dataUrlByteSize, diffImageButtonShown, diffImageViewer, fetchDiffFileImages, formatImageBytes } from './diff-image-model.mjs';
 import { diffChangeCommand, diffChangeHeaderOffset, diffChangeTargets, pickDiffChange } from './diff-change-nav-model.mjs';
-// R3-files FT-07: the Changed files tree on its 2.42304.0 originals (c44d00c7f Rc / zc / Ec / Fc over ca7840910, the Jr
-// tooltip, kc expansion; c784da984 path forms) and the per-file whitespace pause (c44d00c7f Ca).
-import { CdsIcon } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+// R3-files FT-07: the Changed files tree on its 3.6556.2 originals (c44d00c7f-Cr1FDL2F cs / ls / Xo / as over c621b1e2d,
+// the Si tooltip, $o expansion; c784da984 path forms; 2.42304.0 Rc / zc / Ec / Fc, ca7840910, Jr, kc) and the per-file
+// whitespace pause (3.6556.2 Dc, 2.42304.0 Ca).
+import { CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex } from './generated/view-tabs/index.js';
 import { FileTypeIcon } from './generated/files-changes/file-type-icon.mjs';
 import { fileTreeCompactRow, fileTreeGroup, fileTreeKeptGuides, fileTreePadding, fileTreeRowCurrent, fileTreeRowIdle } from './generated/files-changes/file-tree-row-classes.mjs';
 import { fileTreeIconSize, fileTreeRowStyle, guideGradient, treeIndent } from './generated/code-current/file-tree-style.mjs';
 import { revealExpandedSubtree } from './generated/files-changes/diff-tree-expand.mjs';
+import { forgetTreeScroll, initialTreeCollapsed, initialTreeSectionOpen, readTreeScroll, readTreeSectionOpen, revealCollapsedFolders,
+  treeScrollKey, writeTreeCollapsed, writeTreeScroll, writeTreeSectionOpen } from './generated/files-changes/diff-tree-memory.mjs';
+import { diffPaneFocusRoot } from './generated/files-changes/diff-pane-body.mjs';
+import { isNodeHidden } from './generated/files-changes/node-hidden.mjs';
 import { DiffTreeRowTooltip } from './generated/files-changes/diff-tree-tooltip.mjs';
 import { PathSegments as TreePathSegments, NameThenFolder } from './generated/files-changes/path-segments.mjs';
 import { whitespaceHidingPaused } from './generated/files-changes/diff-whitespace-pause.mjs';
@@ -130,6 +140,11 @@ function metadata(file) {
   return labels;
 }
 
+// c44d00c7f Uc (3.6556.2): the gutter "+" is `button[type=button]` with style Hc = {...c64baa838 un, top:
+// "calc((var(--diffs-line-height, 1lh) - 1rem) / 2)", bottom: "auto"} and class `-left-0.5 ${Pn}` (cda9b4504 Pn), its
+// CdsIcon Add size sm bold. Host: @pierre/diffs shows it on the hovered line; here source-diff.css reveals it on row hover.
+const GUTTER_ADD_STYLE = Object.freeze({ position: 'absolute', top: 'calc((var(--diffs-line-height, 1lh) - 1rem) / 2)', bottom: 'auto', textAlign: 'center', whiteSpace: 'normal', touchAction: 'none' });
+const GUTTER_ADD_CLASS = '-left-0.5 flex size-4 items-center justify-center rounded bg-fill-accent text-on-accent hover:bg-fill-accent-hover';
 function DiffLine({ row, lines, wordRanges, side, onComment = null, rowTargets = false }) {
   if (!row) return <div className="sdiff-split-side sdiff-split-empty" aria-hidden="true"/>;
   const number = side === 'before' ? row.oldLine : row.newLine ?? row.oldLine;
@@ -140,8 +155,8 @@ function DiffLine({ row, lines, wordRanges, side, onComment = null, rowTargets =
   const target = onComment || rowTargets ? rowCommentTarget(row, side || 'unified') : null;
   return <div className={`sdiff-row ${row.type}${side ? ' sdiff-split-side' : ''}`} data-kind={row.type} data-side={side} data-old-line={row.oldLine ?? undefined} data-new-line={row.newLine ?? undefined} data-commentable={target && onComment ? '' : undefined}
     data-comment-side={target?.side} data-comment-line={target?.line} data-column={target ? side || 'unified' : undefined}>
-    {target && onComment && <button type="button" className="sdiff-gutter-add" aria-label={t("Add comment on this line")}
-      onClick={() => onComment(target)}><Icon name="Add" size={16} weight="strong"/></button>}
+    {target && onComment && <button type="button" style={GUTTER_ADD_STYLE} className={`sdiff-gutter-add ${GUTTER_ADD_CLASS}`} aria-label={t("Add comment on this line")}
+      onClick={() => onComment(target)}><CdsIcon name="Add" size="sm" bold /></button>}
     <div className="sdiff-line-number" aria-hidden="true">{number}</div>
     <div className="sdiff-code-cell"><span className="sdiff-marker" aria-hidden="true">{row.type === 'added' ? '+' : row.type === 'removed' ? '−' : ' '}</span>
       <code className="sdiff-line-content scb-code source-diff-code"><SourceHighlightedLine tokens={lines[row.side]?.[row.line] || [{ text: row.text }]} ranges={wordRanges?.[row.rowIndex]}/></code>
@@ -203,8 +218,8 @@ function ContextGap({ region, onExpand }) {
 
 // c219730b0 He: the 16px chevron path (rotated -90deg while collapsed).
 const CHEVRON = 'M3.47 5.47a.75.75 0 0 1 1.06 0L8 8.94l3.47-3.47a.75.75 0 1 1 1.06 1.06l-4 4a.75.75 0 0 1-1.06 0l-4-4a.75.75 0 0 1 0-1.06';
-// c219730b0 Ue: row label class.
-const ROW_LABEL_CLASS = 'min-w-0 shrink-[9999] truncate text-body text-muted';
+// c219730b0 Ue (3.6556.2 c44d00c7f Gi): row label class.
+const ROW_LABEL_CLASS = 'min-w-0 shrink-[9999] truncate text-body text-muted-as-secondary';
 
 // c784da984 c: directory prefix (truncating) then the last segment; title
 // defaults to the path and "" suppresses it; aria-label only with a prefix.
@@ -248,7 +263,7 @@ function DiffPathLabel({ path }) {
 // c219730b0 Ke: "Renamed from {path}" with the c784da984 c path whose title is
 // the full previous path (the only native title the source header carries).
 function RenamedFrom({ path, previous }) {
-  return <span className="sdiff-renamed flex min-w-0 shrink-[9999] items-baseline gap-1 overflow-hidden whitespace-nowrap text-body text-muted">
+  return <span className="sdiff-renamed flex min-w-0 shrink-[9999] items-baseline gap-1 overflow-hidden whitespace-nowrap text-body text-muted-as-secondary">
     <span className="min-w-0 truncate">{t('Renamed from')} </span>
     <span className="flex min-w-0 shrink-[9999]"><PathSegments path={renamedFromDisplay(path, previous)} title={previous} /></span>
   </span>;
@@ -270,14 +285,24 @@ function ChangedFileMenuEntries({ entries, onSelect }) {
 // Show in Finder, whose targets no longer exist (aa :3469 n.removed; yc renderFileMenuItems e.removed). directory (a
 // Changed files folder row, vc): no Open file; Attach takes the folder (a folder chip). Show in Finder only inside
 // actions.revealRoot, the folder the reveal IPC is scoped to.
-function changedFileEntries(actions, path, { removed = false, directory = false } = {}) {
+// isDirectory (cs `E=!r`, r = allRemoved, through _s and Ca to renderFileMenuItems): c856385e2 hn shows "Open in" for
+// `!!c && (s || ee(c))`, so a folder that still holds a file opens in an editor whatever its name looks like, while a
+// folder whose files were all removed is asked like a file (ee, canOpenFileInEditor; changedFileMenu's own check).
+export function changedFileEntries(actions, path, { removed = false, directory = false, isDirectory = false } = {}) {
   const absolute = absoluteDiffPath(actions?.root, path);
   const root = typeof actions?.revealRoot === 'string' ? actions.revealRoot.replace(/\/+$/, '') : '';
-  return changedFileMenu({ root: actions?.root, path,
+  const editors = !removed && actions?.onOpenInEditor && Array.isArray(actions.editors) ? actions.editors : [];
+  const entries = changedFileMenu({ root: actions?.root, path,
     canAttach: !removed && (directory ? !!actions?.onAttachFiles : !!actions?.onAttachFile),
     canOpenFile: !removed && !directory && !!actions?.onOpenFile,
-    editors: !removed && actions?.onOpenInEditor ? actions.editors : [],
+    editors,
     canShowInFinder: !removed && !!actions?.onRevealFile && !!absolute && !!root && (absolute === root || absolute.startsWith(`${root}/`)) });
+  if (!isDirectory || !editors.length || !absolute || canOpenFileInEditor(absolute)) return entries;
+  // kn order: "Open in" (after its separator) goes before the reveal item.
+  const openIn = { kind: 'submenu', label: FILE_MENU_LABELS.openIn,
+    items: editors.map((editor) => ({ kind: 'item', action: 'open-in-editor', label: editor.name, value: absolute, editor: editor.type })) };
+  const reveal = entries.findIndex((entry) => entry.action === 'show-in-finder');
+  return reveal >= 0 ? [...entries.slice(0, reveal), openIn, ...entries.slice(reveal)] : [...entries, { kind: 'separator' }, openIn];
 }
 function runChangedFileAction(actions, entry, { directory = false } = {}) {
   if (entry.action === 'attach') {
@@ -292,9 +317,8 @@ function runChangedFileAction(actions, entry, { directory = false } = {}) {
 
 /* Changes placement header: panes-diff-view-current.js:3700-3774 aa over
    c219730b0 We (content), Ze (Open file) and $e (context menu). The trigger
-   div carries group/diff-file; hover/focus-within reveal is local CSS
-   (source-diff.css) because pointer-coarse:opacity-100 is not in the loaded
-   utility copy. hasBody (:3279 meta !== null && hunks.length > 0): a file with
+   div carries group/diff-file; the Open file reveal is _a's own utilities
+   (group-hover / group-focus-within / pointer-coarse, all in the loaded sheets). hasBody (:3279 meta !== null && hunks.length > 0): a file with
    no text hunks (pure rename, empty new/deleted file, mode-only or binary change)
    gets the aa no-body button - aria-disabled, no aria-expanded, no onClick - and
    We's disabled chevron (opacity-40, collapsed rotation); it renders no body.
@@ -328,30 +352,34 @@ function ChangesFileHeader({ file, path, expanded, hasBody, bodyId, onToggle, ac
   // B34 c44d00c7f Ia/La (Es :5246, :5283): an image file without a text body gets 'View image' (only where the
   // comparison can read images, Aa), left of Open file; the toggle reserves its w-control slot (tn reserveImageAction).
   const imageAction = !!imageViewer && real && diffImageButtonShown(file.path, hasBody);
-  return <div ref={headerRef} className="sdiff-header group/diff-file relative" data-diff-file-header=""
+  // 3.6556.2 c44d00c7f (the c219730b0 header moved in: aa / la / _a / il): the trigger is also the diff-file container
+  // (`group/diff-file @container/diff-file relative`); the chevron and the file-type icon are text-muted-as-secondary, the
+  // chevron turns -90deg (+90deg under RTL) while collapsed, the counts are dir="ltr", and the overlays sit at end-0 / pe-md.
+  return <div ref={headerRef} className="sdiff-header group/diff-file @container/diff-file relative" data-diff-file-header=""
     onContextMenu={onCopy ? (event) => { event.preventDefault(); event.stopPropagation(); setMenu({ x: event.clientX, y: event.clientY }); } : undefined}>
     {/* aa :3717-3723: onClick/aria-expanded only with a body, else aria-disabled. */}
     <button ref={toggleRef} type="button" className="sdiff-file-toggle aria-disabled:cursor-default" aria-disabled={hasBody ? undefined : true}
       aria-expanded={hasBody ? expanded : undefined} aria-controls={hasBody ? bodyId : undefined} onClick={hasBody ? onToggle : undefined}>
-      <span aria-hidden="true" className={`sdiff-chevron flex items-center justify-center size-[16px] shrink-0 text-muted${hasBody ? '' : ' opacity-40'}`}>
+      <span aria-hidden="true" className={`sdiff-chevron flex items-center justify-center size-[16px] shrink-0 text-muted-as-secondary${hasBody ? '' : ' opacity-40'}`}>
         <svg width={16} height={16} viewBox="0 0 16 16"
-          className={`transition-transform duration-fast motion-reduce:transition-none${open ? '' : ' -rotate-90'}`}>
+          className={`transition-transform duration-fast motion-reduce:transition-none${open ? '' : ' -rotate-90 [&:where(:root[dir=rtl]_:dir(rtl))]:rotate-90'}`}>
           <path d={CHEVRON} fill="currentColor" />
         </svg>
       </span>
-      <Icon name={fileKindIcon(path.slice(path.lastIndexOf('/') + 1))} size={12} className="sdiff-file-kind shrink-0 text-muted" />
+      {/* aa: c280f9bbb wt (FileTypeIcon) for the file path, size xs. */}
+      <FileTypeIcon fileName={file.path || path} size="xs" className="shrink-0 text-muted-as-secondary" />
       <SourceTooltip content={headerTooltip(file, path)} delay={150} multiline side="bottom" hoverable={false}>
         <span className="sdiff-path flex min-w-0 text-body text-secondary"><DiffPathLabel path={path} /></span>
       </SourceTooltip>
       {previous !== undefined && <RenamedFrom path={path} previous={previous} />}
       {labels.map((label) => <span key={label.row} className={`sdiff-row-label ${ROW_LABEL_CLASS}`}>{label.row}</span>)}
-      {counts && <span className="sdiff-counts flex shrink-0 items-center gap-0.5 text-body tabular-nums">
+      {counts && <span dir="ltr" className="sdiff-counts flex shrink-0 items-center gap-0.5 text-body tabular-nums">
         <span className="text-git-added">{`+${file.added}`}</span><span className="text-git-removed">{`−${file.removed}`}</span>
       </span>}
       {onOpenFile && <span aria-hidden="true" data-size="xs" className="w-control shrink-0" />}
       {imageAction && <span aria-hidden="true" data-size="xs" className="w-control shrink-0" />}
     </button>
-    {imageAction && <span className="sdiff-view-image pointer-events-none absolute inset-y-0 right-0 flex items-center gap-xs pr-md">
+    {imageAction && <span className="sdiff-view-image pointer-events-none absolute inset-y-0 end-0 flex items-center gap-xs pe-md">
       <span className="pointer-events-auto flex">
         <SourceTooltip content={t("View image")} side="bottom" hoverable={false} disabledReason={imageViewer.stale ? t("Loading the new changes") : undefined}>
           <SourceSettingsButton size="xs" variant="ghost" icon="Image" iconSize="auto-sm" iconOnly aria-label={t("View image")}
@@ -360,7 +388,7 @@ function ChangesFileHeader({ file, path, expanded, hasBody, bodyId, onToggle, ac
       </span>
       {onOpenFile && <span aria-hidden="true" data-size="xs" className="w-control shrink-0" />}
     </span>}
-    {onOpenFile && <span className="sdiff-open-file absolute inset-y-0 right-0 flex items-center pr-md opacity-0 transition-opacity motion-reduce:transition-none group-hover/diff-file:opacity-100 group-focus-within/diff-file:opacity-100 pointer-coarse:opacity-100">
+    {onOpenFile && <span className="sdiff-open-file absolute inset-y-0 end-0 flex items-center pe-md opacity-0 transition-opacity motion-reduce:transition-none group-hover/diff-file:opacity-100 group-focus-within/diff-file:opacity-100 pointer-coarse:opacity-100">
       <SourceTooltip content={t("Open file")} side="bottom" hoverable={false}>
         <SourceSettingsButton size="xs" variant="ghost" icon="ArrowUpRight" iconSize="auto-sm" iconOnly aria-label={t("Open file")} onClick={() => onOpenFile(file.path)} />
       </SourceTooltip>
@@ -451,7 +479,7 @@ function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, pla
   const unplaced = fileFindings.filter((entry) => !shownLines.has(entry.endLine));
   const maximum = file.hunks.reduce((highest, hunk) => Math.max(highest,
     hunk.oldStart + hunk.oldCount - 1, hunk.newStart + hunk.newCount - 1), 1);
-  return <section className="sdiff-file" ref={fileRef} data-file-path={file.path || undefined} data-complete-context={regions ? '' : undefined}>
+  return <section className="sdiff-file relative" ref={fileRef} data-file-path={file.path || undefined} data-complete-context={regions ? '' : undefined}>
     {changes ? <ChangesFileHeader file={file} path={path} expanded={expanded} hasBody={hasBody} bodyId={bodyId} onToggle={() => setExpanded((value) => !value)} actions={fileActions} imageViewer={imageViewer} />
     : <div className="sdiff-header">
       <button type="button" className="sdiff-file-toggle" aria-expanded={expanded} aria-controls={bodyId}
@@ -588,18 +616,24 @@ function useTreeRowMenu(rowRef, actions, path, options) {
   return { open: !!menu, onContextMenu, popup };
 }
 
-// c44d00c7f Rc (+ Ic's dir branch): a folder row toggles its subtree; opening it scrolls the tree so the whole subtree
-// shows (kc, diffgit-04). Its name is c784da984 d (a "/"-joined chain cut at the head); its menu has no Open file.
+// c44d00c7f ss: a folder whose files (at any depth) are all removed.
+export function diffTreeAllRemoved(node) {
+  return (node?.children ?? []).every((child) => (child.kind === 'dir' ? diffTreeAllRemoved(child) : !!child.removed));
+}
+// c44d00c7f cs (3.6556.2; 2.42304.0 Rc + Ic's dir branch): a folder row toggles its subtree, its CaretRight turned by
+// the CdsIcon rotate prop (0 collapsed / 90 open, no rotate-90 class); opening it scrolls the tree so the whole subtree
+// shows (kc / $o, diffgit-04). Its name is c784da984 d (a "/"-joined chain cut at the head); its menu has no Open file.
 function DiffTreeFolder({ node, depth, collapsed, onToggle, actions, showDirectory: _flat, ...rest }) {
   const ref = useTreeRowFocusReturn(), nameRef = useRef(null);
   const isCollapsed = collapsed.has(node.path);
-  const menu = useTreeRowMenu(ref, actions, node.path, { directory: true });
+  // cs: `allRemoved` is os's ss(c) (every file under the folder removed); the menu's isDirectory is its negation.
+  const menu = useTreeRowMenu(ref, actions, node.path, { directory: true, isDirectory: !diffTreeAllRemoved(node) });
   return <>
     <DiffTreeRowTooltip name={node.name} nameRef={nameRef} suppressed={menu.open}>
       <button ref={ref} type="button" style={fileTreeRowStyle(depth)} data-diff-tree-row="" role="treeitem" tabIndex={-1} aria-level={depth + 1}
         aria-expanded={!isCollapsed} onClick={(event) => revealExpandedSubtree(event.currentTarget, isCollapsed, () => onToggle(node.path))}
         onContextMenu={menu.onContextMenu} className={`${fileTreeCompactRow} ${fileTreeKeptGuides} ${fileTreeRowIdle}`}>
-        <CdsIcon name="CaretRight" size={fileTreeIconSize()} className={`shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none ${isCollapsed ? "" : "rotate-90"}`} />
+        <CdsIcon name="CaretRight" size={fileTreeIconSize()} rotate={isCollapsed ? 0 : 90} className="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none" />
         <span ref={nameRef} className="flex min-w-0"><TreePathSegments path={node.name} title="" posix /></span>
       </button>
     </DiffTreeRowTooltip>
@@ -647,15 +681,23 @@ function DiffTreeNode({ node, ...props }) {
   return node.kind === 'dir' ? <DiffTreeFolder node={node} {...props} /> : <DiffTreeFile node={node} {...props} />;
 }
 
-// Ga (:4334-4411): roving focus over the visible rows.
-function diffTreeKeyDown(event) {
+// c44d00c7f rs (3.6556.2; 2.42304.0 Ga): roving focus over the visible rows. The keyboard context menu (shared-18 ok:
+// ⇧F10 / ContextMenu on macOS, ^Enter) opens the focused row's menu; a plain Enter on a file row picks it and, on its
+// keyup, hands focus to the diff (Ci, onEnterPick). Host: the arrow keys are not mirrored (c7037f09e dt) because the host
+// has no RTL direction.
+function diffTreeKeyDown(event, onEnterPick) {
   const tree = event.currentTarget;
-  if (!tree.contains(event.target) || (event.altKey && event.key !== 'Tab') || ((event.metaKey || event.ctrlKey) && event.key !== 'Enter')) return;
+  if (!tree.contains(event.target) || (event.altKey && event.key !== 'Tab')) return;
+  if ((event.metaKey || event.ctrlKey) && event.key !== 'Enter') {
+    if (!event.shiftKey && (event.key === 'a' || event.key === 'A')) event.preventDefault();
+    return;
+  }
   const rows = [...tree.querySelectorAll(TREE_ROW_SELECTOR)];
   if (rows.length === 0) return;
   const focused = tree.ownerDocument.activeElement;
   const index = rows.findIndex((row) => row === focused || row.contains(focused));
   const row = index >= 0 ? rows[index] : null;
+  if (openContextMenuFromKey(event, row)) return;
   const focusRow = (target) => {
     const next = rows[target];
     if (!next) return;
@@ -681,10 +723,12 @@ function diffTreeKeyDown(event) {
     for (let at = index - 1; at >= 0; at--) if (Number(rows[at].getAttribute('aria-level') ?? '1') < level) { focusRow(at); return; }
     return;
   }
-  if (event.key === 'Enter' && row && (event.metaKey || event.ctrlKey) && !event.shiftKey) {
-    event.preventDefault();
-    const view = tree.ownerDocument.defaultView ?? window;
-    row.dispatchEvent(new view.MouseEvent('click', { bubbles: true, cancelable: true, metaKey: event.metaKey, ctrlKey: event.ctrlKey }));
+  if (event.key === 'Enter') {
+    if (row && (event.metaKey || event.ctrlKey) && !event.shiftKey) {
+      event.preventDefault();
+      const view = tree.ownerDocument.defaultView ?? window;
+      row.dispatchEvent(new view.MouseEvent('click', { bubbles: true, cancelable: true, metaKey: event.metaKey, ctrlKey: event.ctrlKey }));
+    } else if (row && !row.hasAttribute('aria-expanded')) enterPick(event, row, onEnterPick);
   }
 }
 // Wa (:4320-4333): keyboard focus landing on the tree moves to the selected (else first) row.
@@ -699,67 +743,173 @@ function diffTreeFocus(event) {
   row?.scrollIntoView?.({ block: 'nearest' });
 }
 
-// Ra + Ba (:4096-4300): "Changed files" tree; folders (or the flat list) first,
-// then the separated Test / Build / Generated sections when grouping by kind.
-function DiffFileTree({ list, tree, activePath, onSelect, onOpenFile, actions = null }) {
-  const ref = useRef(null);
-  // Pa/La: collapsed folders per scope ("source" or a kind), all open by default.
-  const [collapsed, setCollapsed] = useState(() => ({}));
-  // Ia: kind sections open only while they hold the selected file until toggled.
-  const [sectionsOpen, setSectionsOpen] = useState(() => ({}));
+// 3.6556.2 shared-0 LS (ve): a stable callback that calls the latest `callback` (its ref follows in a layout effect).
+function useLatestTreeCallback(callback) {
+  const latest = useRef(callback);
+  useLayoutEffect(() => { latest.current = callback; }, [callback]);
+  const [stable] = useState(() => (...args) => latest.current(...args));
+  return stable;
+}
+// 3.6556.2 c44d00c7f Vo: how many times the active file has been jumped to — the session's scroll target (diff-reveal.mjs,
+// cc8941b7b scrollTargetBySession) when it is a plain jump to that file (not fuzzy, no anchor, this tile or none;
+// diffTreeJumpTarget), counted each time a new target object shows up (`a !== o && (s(a), a !== void 0 && l(c + 1))`).
+// Ho and Xo take it as `jumps`, so asking again for the already selected file re-opens what hides it.
+export function useDiffTreeJumps({ sessionId, tileId, activePath }) {
+  const target = useSyncExternalStore(subscribeDiffTargets,
+    () => diffTreeJumpTarget(sessionId === undefined ? undefined : diffTarget(sessionId), tileId, activePath), () => undefined);
+  const [seen, setSeen] = useState(target);
+  const [jumps, setJumps] = useState(0);
+  if (target !== seen) { setSeen(target); if (target !== undefined) setJumps(jumps + 1); }
+  return jumps;
+}
+// 3.6556.2 c44d00c7f Ho (with Uo / Go, generated diff-tree-memory.mjs): one tree scope's collapsed folders ("source" or
+// a kind section), restored from the module memory for this session + scope (ka/Oa), so a remounted tree comes back as
+// left. A new session (or tile) starts from that session's memory; a new active file (or jump) inside the scope opens
+// the folders that hide it. Every change is written back, and once more on unmount while anything is collapsed.
+// `jumps` (Vo) re-opens them too when the same active file is asked for again.
+export function useDiffTreeCollapsed({ sessionId, tileId, scope, activePath, holdsActive, jumps }) {
+  const [collapsed, setCollapsed] = useState(() => initialTreeCollapsed(sessionId, scope, tileId, activePath, holdsActive));
+  const [seen, setSeen] = useState(() => ({ sessionId, tileId, activePath, jumps }));
+  if (sessionId !== seen.sessionId || tileId !== seen.tileId) {
+    setSeen({ sessionId, tileId, activePath, jumps });
+    setCollapsed(initialTreeCollapsed(sessionId, scope, tileId, activePath, holdsActive));
+  } else if (activePath !== seen.activePath || jumps !== seen.jumps) {
+    setSeen({ sessionId, tileId, activePath, jumps });
+    if (holdsActive) { const next = revealCollapsedFolders(collapsed, activePath); if (next !== collapsed) setCollapsed(next); }
+  }
+  const save = useLatestTreeCallback((value) => writeTreeCollapsed(sessionId, scope, { collapsed: value, activePath }, tileId));
+  useEffect(() => { save(collapsed); return () => { if (collapsed.size > 0) save(collapsed); }; }, [collapsed, save, sessionId, tileId, scope]);
+  const toggle = useCallback((path) => setCollapsed((previous) => toggleCollapsed(previous, path)), []);
+  return [collapsed, toggle];
+}
+// 3.6556.2 c44d00c7f Ko (Fa / Ia / La / Ra, generated diff-tree-memory.mjs; `on` = c91a5e4a6 _): the tree's scroll top
+// per session + file list (+ tree/flat, +kinds), kept for at most 32 lists. On mount the remembered top is put back
+// (and forgotten); a tree that is not laid out yet waits on a ResizeObserver (shared-25 gf) until it is, and gives up
+// when the list changed meanwhile. On unmount the last top is remembered unless that restore is still waiting.
+function useDiffTreeScroll({ treeRef, sessionId, tileId, files, asTree, groupByKind }) {
+  const key = useMemo(() => (sessionId === undefined ? undefined
+    : treeScrollKey(sessionId, { filePaths: files.map((file) => file.filePath), asTree, groupByKind }, tileId)), [asTree, files, groupByKind, sessionId, tileId]);
+  const currentKey = useEffectEvent(() => key);
+  const [restore] = useState(() => (key === undefined ? undefined : { key, top: readTreeScroll(key) }));
+  const lastTop = useRef(0), waiting = useRef(false);
   useLayoutEffect(() => {
-    if (activePath === null) return;
-    setCollapsed((previous) => {
-      let changed = false;
-      const next = {};
-      for (const [scope, set] of Object.entries(previous)) { next[scope] = revealCollapsed(set, activePath); changed ||= next[scope] !== set; }
-      return changed ? next : previous;
+    const node = treeRef.current, top = restore?.top;
+    if (!node || restore === undefined || top === undefined) return undefined;
+    const apply = () => { waiting.current = false; node.scrollTop = top; lastTop.current = node.scrollTop; forgetTreeScroll(restore.key); };
+    if (!isNodeHidden(node)) { apply(); return undefined; }
+    waiting.current = true;
+    const Observer = node.ownerDocument.defaultView?.ResizeObserver ?? globalThis.ResizeObserver;
+    if (typeof Observer !== 'function') return undefined;
+    const observer = new Observer(() => {
+      if (!isNodeHidden(node)) { observer.disconnect(); if (currentKey() === restore.key) apply(); else waiting.current = false; }
     });
-    setSectionsOpen((previous) => openKindSections(previous, list.sections, activePath));
-  }, [activePath]); // eslint-disable-line react-hooks/exhaustive-deps
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [treeRef, restore]);
+  useLayoutEffect(() => () => {
+    const last = currentKey();
+    if (last !== undefined && !waiting.current) writeTreeScroll(last, lastTop.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return useCallback((event) => { lastTop.current = event.currentTarget.scrollTop; }, []);
+}
+// 3.6556.2 c44d00c7f Jo effect F: when the tree unmounts with focus inside it, focus goes (next task, only if it fell to
+// the body) to the Changes pane body it sat in (shared-1 iC, generated diff-pane-body.mjs), else to the pane root's
+// body, preferring its first `[role="group"][tabindex="0"]`; focusVisible follows the row that had focus.
+function useDiffTreeFocusHandBack(treeRef) {
+  useLayoutEffect(() => {
+    const node = treeRef.current, body = diffPaneFocusRoot(node);
+    if (!node || !body) return undefined;
+    const pane = node.closest('[data-pane-root]');
+    return () => {
+      const focused = node.ownerDocument.activeElement;
+      if (!focused || !node.contains(focused)) return;
+      const options = { preventScroll: true, focusVisible: focused.matches(':focus-visible') };
+      const doc = node.ownerDocument;
+      setTimeout(() => {
+        if (doc.activeElement !== doc.body) return;
+        const target = body.isConnected ? body : pane?.isConnected ? diffPaneFocusRoot(pane) : null;
+        (target?.querySelector('[role="group"][tabindex="0"]') ?? target)?.focus(options);
+      }, 0);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+// 3.6556.2 c44d00c7f Jo: "Changed files" tree; folders (or the flat list) first, then the separated Test / Build /
+// Generated sections (Xo) when grouping by kind. The source scope's folders follow the active file only while it is a
+// source file (D: `w === null || T.some(e => e.filePath === c)`).
+function DiffFileTree({ list, files = [], tree, groupByKind = false, sessionId, tileId, activePath, onSelect, onOpenFile, onEnterPick, actions = null }) {
+  const ref = useRef(null);
+  const holdsActive = !groupByKind || (files.some((file) => file.filePath === activePath) && !list.sections.some((section) => section.paths.includes(activePath)));
+  const jumps = useDiffTreeJumps({ sessionId, tileId, activePath });
+  const [collapsed, toggle] = useDiffTreeCollapsed({ sessionId, tileId, scope: 'source', activePath, holdsActive, jumps });
+  const onScroll = useDiffTreeScroll({ treeRef: ref, sessionId, tileId, files, asTree: tree, groupByKind });
+  // Jo N/P: the current row into view on a new active file or jump (`[c, O, y, x]`).
   useLayoutEffect(() => {
     if (activePath !== null) ref.current?.querySelector(`${TREE_ROW_SELECTOR}[aria-current]`)?.scrollIntoView?.({ block: 'nearest' });
-  }, [activePath, tree, list]);
-  const toggleIn = (scope) => (path) => setCollapsed((previous) => ({ ...previous, [scope]: toggleCollapsed(previous[scope] ?? EMPTY_SET, path) }));
-  const props = (scope) => ({ showDirectory: !tree, collapsed: collapsed[scope] ?? EMPTY_SET, onToggle: toggleIn(scope), activePath, onSelect, onOpenFile, actions });
-  // wc: `${A} h-full overflow-y-auto ${N} outline-none hide-focus-ring` (ca7840910 A = group/file-tree, whose hover or
-  // focus-within shows every row's guides), rows in a 700 ms tooltip group (shared-frame kc; host SourceTooltipGroup).
-  return <div ref={ref} role="tree" aria-label={DIFF_FILE_LIST_LABELS.changedFiles} tabIndex={0} onKeyDown={diffTreeKeyDown} onFocus={diffTreeFocus}
+  }, [activePath, jumps, tree, list]);
+  useDiffTreeFocusHandBack(ref);
+  const rowProps = { showDirectory: !tree, activePath, onSelect, onOpenFile, actions };
+  // Jo: `${Ct} h-full overflow-y-auto ${yt} outline-none hide-focus-ring` (c621b1e2d Ct = group/file-tree, whose hover or
+  // focus-within shows every row's guides), rows in a 700 ms tooltip group (shared-frame kc; host SourceTooltipGroup);
+  // onKeyDownCapture sk, onScroll Ko, onContextMenu ts (= ki, ZG; the host is the desktop app, shared-25 vh).
+  return <div ref={ref} role="tree" aria-label={DIFF_FILE_LIST_LABELS.changedFiles} tabIndex={0} onKeyDown={(event) => diffTreeKeyDown(event, onEnterPick)}
+    onKeyDownCapture={preventMenuItemEnterRepeat} onFocus={diffTreeFocus} onScroll={onScroll} onContextMenu={preventNativeMenu}
     className={`${fileTreeGroup} h-full overflow-y-auto ${fileTreePadding} outline-none hide-focus-ring`}>
     <SourceTooltipGroup delay={700}>
-      {list.nodes.map((node) => <DiffTreeNode key={`${node.kind}:${node.path}`} node={node} depth={0} {...props('source')} />)}
-      {list.sections.map((section) => {
-        const open = kindSectionOpen(sectionsOpen[section.kind], activePath !== null && section.paths.includes(activePath));
-        return <div key={section.kind} role="none" className={section.separated ? 'mt-1 border-t pt-1' : undefined} data-pane-line="">
-          <DiffTreeSection section={section} open={open} onToggle={() => setSectionsOpen((previous) => ({ ...previous, [section.kind]: !open }))} />
-          {open && <DiffTreeRows nodes={section.nodes} depth={0} {...props(section.kind)} />}
-        </div>;
-      })}
+      {list.nodes.map((node) => <DiffTreeNode key={`${node.kind}:${node.path}`} node={node} depth={0} collapsed={collapsed} onToggle={toggle} {...rowProps} />)}
+      {list.sections.map((section) => <DiffTreeKindSection key={section.kind} section={section} sessionId={sessionId} tileId={tileId} jumps={jumps} rowProps={rowProps} />)}
     </SourceTooltipGroup>
   </div>;
 }
-const EMPTY_SET = new Set();
-// c44d00c7f Ec header row: L(0) indent, `${P} ${F}`; opening the section scrolls its rows into view (kc, diffgit-04).
+// 3.6556.2 c44d00c7f Xo: a kind section, open (Wo, generated diff-tree-memory.mjs) as this session left it, else while it
+// holds the active file; a new active file inside it opens it again. The open state is written back (Ma) on change and on
+// unmount (unless it is closed and the memory already says closed); its folders are their own Ho scope (the kind). A jump
+// (the tree's Vo count) to a file inside it opens it again as well.
+function DiffTreeKindSection({ section, sessionId, tileId, jumps, rowProps }) {
+  const { activePath } = rowProps;
+  const holdsActive = activePath !== null && section.paths.includes(activePath);
+  const [open, setOpen] = useState(() => initialTreeSectionOpen(sessionId, section.kind, tileId, activePath, holdsActive));
+  const [seen, setSeen] = useState(() => ({ sessionId, tileId, activePath, jumps }));
+  if (sessionId !== seen.sessionId || tileId !== seen.tileId) {
+    setSeen({ sessionId, tileId, activePath, jumps });
+    setOpen(initialTreeSectionOpen(sessionId, section.kind, tileId, activePath, holdsActive));
+  } else if (activePath !== seen.activePath || jumps !== seen.jumps) {
+    setSeen({ sessionId, tileId, activePath, jumps });
+    if (holdsActive) setOpen(true);
+  }
+  const save = useLatestTreeCallback((value) => writeTreeSectionOpen(sessionId, section.kind, { open: value, activePath }, tileId));
+  useEffect(() => {
+    save(open);
+    return () => { if (open || readTreeSectionOpen(sessionId, section.kind, tileId)?.open !== true) save(open); };
+  }, [section.kind, open, save, sessionId, tileId]);
+  const [collapsed, toggle] = useDiffTreeCollapsed({ sessionId, tileId, scope: section.kind, activePath, holdsActive, jumps });
+  return <div role="none" className={section.separated ? 'mt-1 border-t pt-1' : undefined} data-pane-line="">
+    <DiffTreeSection section={section} open={open} onToggle={() => setOpen(!open)} />
+    {open && <DiffTreeRows nodes={section.nodes} depth={0} collapsed={collapsed} onToggle={toggle} {...rowProps} />}
+  </div>;
+}
+// c44d00c7f Xo (2.42304.0 Ec) header row: ht(0) indent, `${xt} ${St}`; 3.6556.2: CdsIcon CaretRight rotate={open ? 90 : 0}, the name
+// text-secondary, the count text-muted; opening the section scrolls its rows into view (kc, diffgit-04).
 function DiffTreeSection({ section, open, onToggle }) {
   const ref = useTreeRowFocusReturn();
   return <button ref={ref} type="button" style={treeIndent(0)} data-diff-tree-row="" data-diff-tree-section={section.kind} role="treeitem" tabIndex={-1}
     aria-level={1} aria-expanded={open} onClick={(event) => revealExpandedSubtree(event.currentTarget, !open, onToggle)} className={`${fileTreeCompactRow} ${fileTreeRowIdle}`}>
-    <CdsIcon name="CaretRight" size={fileTreeIconSize()} className={`shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none ${open ? "rotate-90" : ""}`} />
+    <CdsIcon name="CaretRight" size={fileTreeIconSize()} rotate={open ? 90 : 0} className="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none" />
     <span className="truncate min-w-0 flex-1 text-secondary">{section.label}</span>
-    <span className="shrink-0 text-footnote tabular-nums text-muted-as-secondary">{section.count}</span>
+    <span className="shrink-0 text-footnote tabular-nums text-muted">{section.count}</span>
   </button>;
 }
 
-/* The Changes body with the "Changed files" column (panes-diff-view-current.js
-   :5296-5330 Ot resize, :5530-5590 column/edge/shield/body; cf3dc7910 d).
-   Width (diffTreeWidth) and visibility (diffShowTree) belong to the caller
-   (tile-layout-store via FilePane). The column fits from 400px (So) of body
-   width; until measured it counts as fitting (diffCanFitTree ?? true) and the
-   result is reported upward (onCanFitTreeChange). Handles reuse the Files tree
-   divider/edge (source-session.css .source-tree-divider/.source-tree-edge) and
-   use-pointer-resize.js: dragging the column under MIN/2 hides it at the end,
-   dragging the edge past MIN/2 shows it, a click on the edge shows it, a
-   double-click resets the width; keys as the Files tree divider. */
+/* The Changes body with the "Changed files" column: 3.6556.2 c44d00c7f Jd — the row (`flex flex-1 min-h-0`, reversed
+   while the column is on the right) of the column (ci), the hidden column's edge (li), the drag shield (ui) and the main
+   column (bi). The column is c219730b0 Sn (useResizableDiffTree: the live width on the column node, a drag under MIN/2
+   hides it, the edge drag past MIN/2 shows it, a click on the divider hides it and on the edge shows it with the focus
+   handed across, Home/End, a double-click resets the width) and its handles are c44d00c7f Ir (divider: "Resize file
+   list", tooltip "Hide files" + the ⇧⌘Y shortcut + "Drag to resize"), Lr (edge: "Show files") and Rr (shield), all
+   generated in generated/sidebar-resize over the same shared-9 bm the sidebar renders. Width and visibility belong to
+   the caller (tile-layout-store via FilePane: fileList.width / shown and their setters; fileList.toggleShortcut is
+   cccc2cf0a's treeToggleShortcut). The column fits from 400px (So) of body width; until measured it counts as fitting
+   (Un === undefined) and the result is reported upward (onCanFitChange). */
 // c44d00c7f al: a carried-over comparison (another scope still loading) dims after 200ms.
 const STALE_CLASS = 'opacity-60 transition-opacity delay-200 duration-100';
 function ChangesFileLayout({ fileList, entries, activePath, onSelect, onOpenFile, actions = null, banner, stale = false, commits = null, children }) {
@@ -781,95 +931,43 @@ function ChangesFileLayout({ fileList, entries, activePath, onSelect, onOpenFile
   useEffect(() => { reportFit.current?.(canFit); }, [canFit]);
   const tree = fileList.tree !== false, groupByKind = !!fileList.groupByKind;
   const list = useMemo(() => diffFileList(entries, { tree, groupByKind }), [entries, tree, groupByKind]);
-  const { MIN, DEFAULT } = DIFF_FILE_LIST_WIDTH;
-  // Unmeasured: the stored width, capped by the column's CSS max-width only.
-  const limit = bodyWidth > 0 ? diffFileListLimit(bodyWidth) : DIFF_FILE_LIST_WIDTH.MAX;
   const width = clampDiffFileListWidth(fileList.width);
+  // Jd kr (narrowTreeOpen unset): `kn && Un !== !1`, the column while shown and fitting. Sn gets the stored kn.
   const shown = !!fileList.shown && canFit;
-  const [drag, setDrag] = useState(null);
-  const startWidth = useRef(0), handleFocus = useRef(null);
-  const visibleWidth = Math.min(drag?.width ?? width, limit);
-  const commitWidth = (value) => fileList.onWidthChange?.(Math.max(MIN, Math.min(limit, Math.round(value))));
-  const setShown = (value) => fileList.onShownChange?.(value);
-  const focusedHandle = () => layoutRef.current?.ownerDocument.activeElement?.closest?.('.sdiff-file-list-divider, .sdiff-file-list-edge');
-  const divider = useSourcePointerResize({
-    onStart: () => { startWidth.current = visibleWidth; },
-    onMove: (delta) => {
-      const value = startWidth.current + delta;
-      setDrag({ width: Math.max(MIN, Math.min(limit, value)), hidden: value < MIN / 2 });
-    },
-    onEnd: (delta) => {
-      const value = startWidth.current + delta;
-      setDrag(null);
-      if (value < MIN / 2) { if (focusedHandle()) handleFocus.current = 'edge'; setShown(false); }
-      else if (delta !== 0) commitWidth(value);
-    },
-    onCancel: () => setDrag(null),
-  });
-  const edge = useSourcePointerResize({
-    onStart: () => { startWidth.current = 0; },
-    onMove: (delta) => setDrag(delta >= MIN / 2 ? { width: Math.max(MIN, Math.min(limit, delta)), preview: true } : { preview: false }),
-    onEnd: (delta) => {
-      setDrag(null);
-      const click = Math.abs(delta) < 3;
-      if (!click && delta < MIN / 2) return;
-      if (!click) commitWidth(delta);
-      if (focusedHandle()) handleFocus.current = 'divider';
-      setShown(true);
-    },
-    onCancel: () => setDrag(null),
-  });
-  useLayoutEffect(() => {
-    const target = handleFocus.current;
-    if (!target) return;
-    handleFocus.current = null;
-    layoutRef.current?.querySelector(target === 'edge' ? '.sdiff-file-list-edge' : '.sdiff-file-list-divider')?.focus({ preventScroll: true });
-  }, [shown]);
-  function dividerKeyDown(event) {
-    if (event.metaKey || event.altKey || event.ctrlKey) return;
-    const step = event.shiftKey ? 120 : 24;
-    let value;
-    if (event.key === 'ArrowLeft') value = visibleWidth - step;
-    else if (event.key === 'ArrowRight') value = visibleWidth + step;
-    else if (event.key === 'Home') value = MIN;
-    else if (event.key === 'End') value = limit;
-    else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      if (!event.repeat) { handleFocus.current = 'edge'; setShown(false); }
-      return;
-    } else return;
-    event.preventDefault();
-    commitWidth(value);
-  }
-  const columnRendered = shown || !!drag?.preview;
-  const resizing = divider.dragging || edge.dragging;
+  const column = useResizableDiffTree({ width, onWidthChange: fileList.onWidthChange, defaultWidth: DIFF_FILE_LIST_WIDTH.DEFAULT,
+    onShownChange: fileList.onShownChange, shown: !!fileList.shown });
+  // Jd Hn = shared-frame cu(5) (view-tabs useCdsLayerAwareZIndex): the handles' tooltip layer.
+  const zIndex = useCdsLayerAwareZIndex(5);
+  const shortcut = fileList.toggleShortcut;
+  // Jd onEnterPick = cccc2cf0a `() => Xe(r)` (requestDiffFocus for the tile), consumed by WO on the tile body (this
+  // data-diff-pane-body): the first `[role="group"][tabindex="0"]` (HO) in it, else the body itself, takes focus with
+  // UO `{preventScroll:!0,focusVisible:!1}`. Host: the diff renders no such group, so the body takes it.
+  const enterPick = useCallback(() => {
+    const body = layoutRef.current;
+    if (body) (body.querySelector('[role="group"][tabindex="0"]') ?? body).focus({ preventScroll: true, focusVisible: false });
+  }, []);
   // cccc2cf0a (the Changes tile): the view sits in div[data-diff-pane-body][tabIndex=-1] (`… select-text outline-none`),
   // where focus falls back when what held it goes away (cae42d46f Ue, the review finding card's Dismiss).
-  return <div ref={layoutRef} className="sdiff-changes-layout outline-none" data-diff-pane-body="" tabIndex={-1} data-file-list-shown={shown || undefined} data-resizing={resizing || undefined}>
-    {columnRendered && <div className="sdiff-file-list relative shrink-0 flex flex-col min-h-0 border-e" data-pane-line=""
-      style={{ width: visibleWidth, minWidth: `min(${MIN}px, 100% - 160px)`, maxWidth: `min(${DIFF_FILE_LIST_WIDTH.MAX}px, 100% - 160px)`, display: drag?.hidden ? 'none' : undefined }}>
+  return <div ref={layoutRef} className={`sdiff-changes-layout outline-none${column.onRight ? ' flex-row-reverse' : ''}`} data-diff-pane-body="" tabIndex={-1} data-file-list-shown={shown || undefined}>
+    {shown && <div ref={column.columnRef} className={`sdiff-file-list relative shrink-0 flex flex-col min-h-0 ${column.onRight ? 'border-s' : 'border-e'}`} data-pane-line=""
+      style={column.columnStyle}>
       <div aria-busy={stale || undefined} className={`min-h-0 flex-1 overflow-y-auto${stale ? ` ${STALE_CLASS}` : ''}`}>
         {/* c44d00c7f ~7190 (Ht && Cc): the tree only while the comparison has files. */}
-        {entries.length > 0 && <DiffFileTree list={list} tree={tree} activePath={activePath} onSelect={onSelect} onOpenFile={onOpenFile} actions={actions} />}
+        {entries.length > 0 && <DiffFileTree list={list} files={entries} tree={tree} groupByKind={groupByKind} sessionId={fileList.sessionId ?? undefined} activePath={activePath} onSelect={onSelect} onOpenFile={onOpenFile} onEnterPick={enterPick} actions={actions} />}
       </div>
       {/* c44d00c7f ~7210 (Ge): the Commits section under the tree while the branch has commits ahead of its base. */}
       {commits?.list?.length > 0 && commits.onSelect && <div className="sdiff-commits-section flex shrink-0 flex-col border-t" data-pane-line="" style={{ maxHeight: '40%' }}>
         <SourceDiffCommits commits={commits.list} total={commits.total} selectedSha={commits.selectedSha ?? null} uncommittedSelected={!!commits.uncommittedSelected}
-          onSelect={commits.onSelect} onSelectUncommitted={commits.onSelectUncommitted} collapsed={!!commits.collapsed} onCollapsedChange={commits.onCollapsedChange} />
+          onSelect={commits.onSelect} onSelectUncommitted={commits.onSelectUncommitted} onEnterPick={enterPick} collapsed={!!commits.collapsed} onCollapsedChange={commits.onCollapsedChange} />
       </div>}
-      {shown && <div className="source-tree-divider sdiff-file-list-divider" role="separator" tabIndex={0} aria-label={DIFF_FILE_LIST_LABELS.resize}
-        aria-orientation="vertical" aria-valuemin={MIN} aria-valuemax={limit} aria-valuenow={Math.round(visibleWidth)}
-        onPointerDown={divider.onPointerDown} onDoubleClick={() => commitWidth(DEFAULT)} onKeyDown={dividerKeyDown}><span /></div>}
+      {/* Jd `be && Ir`: the divider while the width can be stored; actionLabel "Hide files" while Sn can hide (zn). */}
+      {fileList.onWidthChange && <DiffTreeResizeHandle handleProps={column.handleProps} label={DIFF_FILE_LIST_LABELS.resize}
+        actionLabel={column.hidesColumn ? DIFF_FILE_LIST_LABELS.hideFiles : undefined} shortcut={shortcut} resizing={column.resizing} zIndex={zIndex} />}
     </div>}
-    {canFit && !shown && <div className="source-tree-edge sdiff-file-list-edge" role="separator" tabIndex={0} aria-label={DIFF_FILE_LIST_LABELS.showFiles}
-      aria-orientation="vertical" aria-valuemin={0} aria-valuemax={DIFF_FILE_LIST_WIDTH.MAX} aria-valuenow={0} onPointerDown={edge.onPointerDown}
-      onKeyDown={(event) => {
-        if (!['Enter', ' ', 'ArrowRight'].includes(event.key) || event.metaKey || event.altKey || event.ctrlKey) return;
-        event.preventDefault();
-        if (event.repeat) return;
-        handleFocus.current = 'divider';
-        setShown(true);
-      }}><span /></div>}
+    {/* Jd li: `Bn && Un !== !1 && Lr` (the edge while the column is hidden and fits). */}
+    {column.edgeHandleProps && canFit && <DiffTreeEdgeHandle handleProps={column.edgeHandleProps} label={DIFF_FILE_LIST_LABELS.resize}
+      actionLabel={DIFF_FILE_LIST_LABELS.showFiles} shortcut={shortcut} resizing={column.resizing} zIndex={zIndex} />}
+    <DiffTreeResizeShield active={column.resizing} />
     <div className={`sdiff-changes-main${stale ? ` ${STALE_CLASS}` : ''}`} data-stale={stale || undefined} aria-busy={stale || undefined}>
       {banner}
       <div className="source-changes">{children}</div>
@@ -889,11 +987,9 @@ function useDiffFileImages(file, fetchImages) {
   }, [file, fetchImages]);
   return state && state.file === file && state.fetchImages === fetchImages ? state.images : undefined;
 }
-// shared-frame gc (Skeleton) as Fa's loading placeholder; the classes match source-customize.jsx SkeletonBar.
-const IMAGE_SKELETON = "relative max-w-full overflow-hidden rounded bg-[var(--cds-skeleton-base)] after:absolute after:inset-0 after:animate-[cds-shimmer_2s_linear_infinite] after:bg-[linear-gradient(90deg,transparent,var(--cds-skeleton-sheen),transparent)] motion-reduce:after:hidden";
-// Fa: label and, once loaded, "{width} × {height}" and the byte size; the image (object-contain in an h-80 well), a
+// c44d00c7f nl (3.6556.2; 2.42304.0 Fa): label and, once loaded, "{width} × {height}" and the byte size; the image (object-contain in an h-80 well), a
 // placeholder while loading, or "Image not available" for a missing side or an image that fails to decode.
-function DiffImageFigure({ label, alt, src }) {
+export function DiffImageFigure({ label, alt, src }) {
   const [loaded, setLoaded] = useState(null);
   const size = loaded !== null && loaded.src === src ? loaded.size : undefined;
   const missing = src === null || size === null;
@@ -901,32 +997,38 @@ function DiffImageFigure({ label, alt, src }) {
   return <figure className="sdiff-image-figure flex min-w-0 flex-col gap-sm">
     <figcaption className="flex items-baseline justify-between gap-md text-body">
       <span className="text-secondary">{label}</span>
-      {typeof src === "string" && size && <span className="flex min-w-0 gap-sm text-footnote tabular-nums text-muted">
+      {typeof src === "string" && size && <span className="flex min-w-0 gap-sm text-footnote tabular-nums text-muted-as-secondary">
         <span>{t("{width} × {height}", { width: size.width.toLocaleString(), height: size.height.toLocaleString() })}</span>
         {bytes !== null && <span>{formatImageBytes(bytes)}</span>}
       </span>}
     </figcaption>
     <div className="flex h-80 items-center justify-center overflow-hidden rounded bg-surface-1 p-sm shadow-card-ring">
-      {src === undefined && <div data-cds="Skeleton" role="status" className={`${IMAGE_SKELETON} size-full animate-placeholder-reveal`}><span className="sr-only">{t("Loading")}</span></div>}
-      {missing && <span className="text-body text-muted">{t("Image not available")}</span>}
+      {/* nl: shared-frame vu (view-tabs CdsSkeleton) while loading; the missing / undecodable label is text-muted-as-secondary. */}
+      {src === undefined && <CdsSkeleton className="size-full animate-placeholder-reveal" />}
+      {missing && <span className="text-body text-muted-as-secondary">{t("Image not available")}</span>}
       {typeof src === "string" && !missing && <img src={src} alt={alt} draggable={false} className="max-h-full max-w-full object-contain"
         onLoad={(event) => { const { naturalWidth: width, naturalHeight: height } = event.currentTarget; setLoaded({ src, size: { width, height } }); }}
         onError={() => setLoaded({ src, size: null })} />}
     </div>
   </figure>;
 }
-// ja's Dialog (size 2xl) with Pa: header = basename with the folder as the description and a Close button; a modified
-// file shows Before | After side by side from sm up, an added or deleted one a single figure.
+// c44d00c7f Zc / tl (3.6556.2): the shared-frame CDS Dialog (view-tabs CdsDialog) — Root {open, onOpenChange (closed:
+// keep the file, open false), onOpenChangeComplete (closed: drop it unless reopened meanwhile)}, Popup size "2xl", and
+// tl's Header (showClose, the basename with the folder as its description) over the `grid grid-cols-1 gap-md` figures:
+// Before | After side by side from sm up (`sm:grid-cols-2`) for a modified file, one figure for an added or deleted one.
 function DiffImageDialog({ file, fetchImages, open, onClose, onExited }) {
   const images = useDiffFileImages(file, fetchImages);
   const viewer = diffImageViewer(file);
-  return <SourceDialog open={open} onClose={onClose} onExited={onExited} size="2xl" className="sdiff-image-dialog"
-    title={viewer.title} description={viewer.description}>
-    <div aria-busy={images === undefined} className={`grid grid-cols-1 gap-md${viewer.columns > 1 ? " sm:grid-cols-2" : ""}`}>
-      {viewer.figures.map((figure) => <DiffImageFigure key={figure.side} label={figure.label} alt={figure.alt} src={images?.[figure.side]} />)}
-    </div>
-  </SourceDialog>;
+  return <CdsDialog.Root open={open} onOpenChange={(next) => { if (!next) onClose(); }} onOpenChangeComplete={(next) => { if (!next) onExited(); }}>
+    <CdsDialog.Popup size="2xl">
+      <CdsDialog.Header showClose description={viewer.description}>{viewer.title}</CdsDialog.Header>
+      <div aria-busy={images === undefined} className={`grid grid-cols-1 gap-md${viewer.columns > 1 ? " sm:grid-cols-2" : ""}`}>
+        {viewer.figures.map((figure) => <DiffImageFigure key={figure.side} label={figure.label} alt={figure.alt} src={images?.[figure.side]} />)}
+      </div>
+    </CdsDialog.Popup>
+  </CdsDialog.Root>;
 }
+export { DiffImageDialog as SourceDiffImageDialog };
 
 // B34 next / previous change (c44d00c7f Rt, ds/fs/ps, An): DOM reads over the rendered Changes rows.
 const DIFF_ROW_SELECTOR = ".sdiff-row[data-old-line], .sdiff-row[data-new-line]";
@@ -1006,7 +1108,8 @@ function diffChangeVisible(view, scroller, offset, target) {
  *   carries the c44d00c7f inline comment cards, the gutter "+", line-number drag, the selection chip and the body
  *   context menu (source-diff-comments.jsx); fileActions {onSaveComment, onDeleteComment, onCopy} route them.
  * - fileList {shown, width, tree, groupByKind, onShownChange, onWidthChange,
- *   onCanFitChange}: the body is laid out beside the "Changed files" column
+ *   onCanFitChange, toggleShortcut, sessionId}: the body is laid out beside the "Changed files" column
+ *   (sessionId keys the tree's remembered folders, sections and scroll top, c44d00c7f Ho/Xo/Ko)
  *   (ChangesFileLayout, which also owns the .source-changes scroller), files
  *   follow the column order (Mn tree/list path order, ka by kind), and selecting
  *   a row expands that file and scrolls it to the top (Zt).
@@ -1030,6 +1133,11 @@ export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unif
   // $e: Qe = patchesWithheld, Fe = fileActions.fetchFilePatch, He = false (see isLargeDiff).
   const lazyPatches = typeof fileActions?.fetchFilePatch === "function";
   const large = changes && isLargeDiff(entries, { withheld: patchesWithheld, lazyPatches, singleList: false });
+  // c44d00c7f Jd: a fold-all request applies when it collapses or the diff is not large (`(le.collapsed || !qt) && …`);
+  // an expand-all that arrives while the diff is large is consumed without effect (the Changes menu disables it then).
+  const ignoredFold = useRef(null);
+  if (changes && foldAll && !foldAll.collapsed && large && ignoredFold.current !== foldAll) ignoredFold.current = foldAll;
+  const foldRequest = foldAll && ignoredFold.current !== foldAll ? foldAll : null;
   const listed = !!fileList, tree = fileList?.tree !== false, groupByKind = !!fileList?.groupByKind;
   // R3-files FT-07 (diffgit-11): c44d00c7f hides a file's whitespace changes only while Ca says nothing is anchored on
   // its lines (`hideWhitespace: k && !Ca({annotations, prComments, findings, drafts})`, per file of the list).
@@ -1044,17 +1152,30 @@ export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unif
   useEffect(() => { if (changes) reportLarge.current?.(large); }, [changes, large]);
   const [activePath, setActivePath] = useState(null);
   const [reveal, setReveal] = useState(null);
-  const selectFile = useCallback((path) => {
+  // c44d00c7f Jd: a tree pick is `$r = e => wr.scrollToAnnotation(i, e, {tileId: a})`, and a request the pane resolves to
+  // one of its files is `wr.scrollToAnnotation(i, t[0].filePath, {tileId: ei.tileId, anchor: ei.anchor})`; the session's
+  // scroll target (diff-reveal.mjs, cc8941b7b scrollTargetBySession) is what the tree counts as a jump (Vo). The host
+  // selects the file directly and records the target beside it; the tile is the host's undefined Changes tile.
+  const targetSession = changes ? fileList?.sessionId ?? undefined : undefined;
+  const selectFile = useCallback((path, anchor) => {
     setActivePath(path);
     setReveal((previous) => ({ path, seq: (previous?.seq ?? 0) + 1 }));
-  }, []);
+    scrollDiffTarget(targetSession, path, anchor ? { anchor } : undefined);
+  }, [targetSession]);
   // A file row of the per-turn edits card (diff-reveal.mjs): that file's section, as a file-list selection.
   useEffect(() => {
     if (!changes) return undefined;
-    const take = () => { const path = takeDiffReveal(entries.map((entry) => entry.filePath)); if (path) selectFile(path); };
+    const take = () => { const request = takeDiffRevealRequest(entries.map((entry) => entry.filePath)); if (request) selectFile(request.path, request.anchor); };
     take();
     return subscribeDiffReveal(take);
   }, [changes, entries, selectFile]);
+  // c44d00c7f (the Qt effect): a plain target naming a listed file is taken by the diff (wr.clearScrollTarget(e)) once it
+  // has been shown; the host's reveal effect below has already put the section on screen.
+  const target = useSyncExternalStore(subscribeDiffTargets, () => diffTarget(targetSession), () => undefined);
+  useEffect(() => {
+    if (!target || target.fuzzy || target.tileId || !entries.some((entry) => entry.filePath === target.filePath)) return;
+    clearDiffTarget(targetSession);
+  }, [target, targetSession, entries]);
   // Zt: the selected file's section to the top of the scroller (block start).
   useEffect(() => {
     if (!reveal) return;
@@ -1129,15 +1250,18 @@ export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unif
     target.addEventListener("keydown", onKeyDown);
     return () => target.removeEventListener("keydown", onKeyDown);
   }, [changes, scopeKey, placeholderShown]);
+  // panes:C2-7 (c44d00c7f Jd Qn): ⌥F9 / ⇧⌥F9 next / previous PR review comment, beside the change keys above. The host has
+  // no PR review comments (NO_PR_COMMENTS), so the official enabled condition (kt.open.length > 0) keeps it off.
+  usePrCommentShortcuts({ rootRef: root, files: changes ? entries.length : 0 });
   const banner = changes && large && entries.length > 0
     ? <div className="sdiff-large-banner shrink-0 px-md py-1.25 text-body text-muted-as-secondary">{DIFF_FILE_LIST_LABELS.largeBanner}</div> : null;
   const view = <div ref={root} key={scopeKey} data-layout={actualLayout} data-word-wrap={wordWrap} data-word-highlight={wordDiff} data-hide-whitespace={hideWhitespace || undefined} data-large-diff={large || undefined} className="source-diff diff sdiff-view" data-source-component="FileDiff" data-placement={placement} aria-label={t("File changes")}>
     {!listed && banner}
     {sections.map((section) => section.type === "file" && section.lazyPatch && lazyPatches
-      ? <LazyFileDiff key={`lazy:${section.path}`} file={section} fetchFilePatch={fileActions.fetchFilePatch} queue={patchQueue} scopeKey={scopeKey} layout={actualLayout} completeContext={false} foldAll={foldAll} placement={placement} fileActions={fileActions} wordDiff={wordDiff}
+      ? <LazyFileDiff key={`lazy:${section.path}`} file={section} fetchFilePatch={fileActions.fetchFilePatch} queue={patchQueue} scopeKey={scopeKey} layout={actualLayout} completeContext={false} foldAll={foldRequest} placement={placement} fileActions={fileActions} wordDiff={wordDiff}
         defaultExpanded={!large} reveal={changes ? reveal : null} review={changes ? review : null} commentScope={changes ? commentScope : null} imageViewer={changes ? imageViewer : null} />
       : section.type === "file"
-      ? <FileDiff key={`${section.id}:${section.path}`} file={section} scopeKey={scopeKey} layout={actualLayout} completeContext={completeContext} foldAll={foldAll} placement={placement} fileActions={fileActions} wordDiff={wordDiff}
+      ? <FileDiff key={`${section.id}:${section.path}`} file={section} scopeKey={scopeKey} layout={actualLayout} completeContext={completeContext} foldAll={foldRequest} placement={placement} fileActions={fileActions} wordDiff={wordDiff}
         defaultExpanded={!large} reveal={changes ? reveal : null} review={changes ? review : null} commentScope={changes ? commentScope : null} imageViewer={changes ? imageViewer : null} />
       : <RawPatch key={section.id} value={section.raw} reason={section.reason} />)}
   </div>;

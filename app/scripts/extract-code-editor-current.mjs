@@ -5,13 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
+import { referenceVersion, referenceSnapshot, ionSource } from './official-3.6556.2.mjs';
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const source = path.resolve(root, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const source = ionSource;
 const output = path.join(root, 'src/generated/code-editor-current');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 export async function extractCurrentEditor({check = false} = {}) {
-  const manifest = {referenceVersion, modules:[], adapters:[]};
+  const manifest = {referenceVersion, referenceSnapshot, modules:[], adapters:[]};
   const catalog = await fs.readdir(source);
   async function read(prefix) {
     const names = catalog.filter(name => name.startsWith(prefix + '-') && name.endsWith('.js'));
@@ -51,45 +51,63 @@ export async function extractCurrentEditor({check = false} = {}) {
   const coreNode=wrapper.ast.program.body.find(n=>n.type==='ImportDeclaration'&&n.source.value.startsWith('./c148e7537-'));
   const coreImport=wrapper.text.slice(coreNode.start,coreNode.end);
   const coreName=coreNode.source.value.slice(2);
+  // 3.6556.2 is React Compiler output: the component closures (Zi save-shortcut hint, ka editor, Jo
+  // EpitaxyCodeMirror) use the shared-frame memo-cache helpers and stay outside these ranges.
   const parts=[
-    // 2.42304.0: the first range now also carries the Makefile set wi/Ti; the third range carries
-    // wa(fallback) with the two-space Ta and tab Ea fields selected by Da(enabled, path).
-    between(wrapper,'var Pt =','function Fi('),
-    between(wrapper,'function Ii(', 'function Zi('),
-    between(wrapper,'var ha =','var za ='),
-    between(wrapper,'var Xa =','function ho('),
-    bindings(wrapper,['_o','xo','So','Co','wo','To','Eo','Do','Oo','ko']),
+    // First range: indentation, brackets, keymap, copy/paste, folding, line numbers (En=Ot(!0) gutter
+    // tokens), indent guides, language loaders (Ar bracket-closing data Or) and the Makefile set Ri/zi.
+    between(wrapper,'var It =','function Zi('),
+    between(wrapper,'function Qi(', 'function pa('),
+    // Third range: Ba(fallback) with the two-space Va and tab Ha fields selected by
+    // Ua(enabled, path), which also picks tabs for .tsv files.
+    between(wrapper,'var ja =','var no ='),
+    // Fourth range now also carries vo/yo (selection chip clamped to [data-pane-root]).
+    between(wrapper,'var mo =','function Mo('),
+    bindings(wrapper,['Po','Ro','zo','Bo','Vo','Ho','Uo','Wo','Go','Ko']),
+    // uo (with its co/lo limits) sits between the third and fourth ranges: Jo calls it after each grammar
+    // reconfigure (`reconfigure(Zt) }), uo(`) to force-parse up to viewport.to + 5e3 when at most 1e5 is unparsed.
+    bindings(wrapper,['co','lo','uo']),
   ].join('\n');
+  for(const helper of ['J9(','J1(','K1(','I2(']) if(parts.includes(helper)) throw Error(`Editor ranges picked up compiler helper ${helper}`);
   // The filename table moved from c26fb8b6b to c8a544a8c; `e` stands in for its shared-52 basename import.
   const filename=await read('c8a544a8c');
   await adapter('filename-language.mjs',`const e=path=>path.replaceAll('\\\\','/').split('/').at(-1);\n${bindings(filename,['t','n','r','i','a','o'])}\nexport {o as filenameLanguage};`,[filename.ref]);
   const repeat=await read('shared-19'), newline=await read('cc3bc2027');
-  await adapter('keyboard-repeat.mjs',`${bindings(repeat,['dZ','pZ'])}\nexport {dZ as suppressKeyRepeat, pZ as suppressEscapeRepeat};`,[repeat.ref]);
-  await adapter('newlines.mjs',`${bindings(newline,['x'])}\nexport {x as normalizeEditorNewlines};`,[newline.ref]);
+  await adapter('keyboard-repeat.mjs',`${bindings(repeat,['Uj','Gj'])}\nexport {Uj as suppressKeyRepeat, Gj as suppressEscapeRepeat};`,[repeat.ref]);
+  await adapter('newlines.mjs',`${bindings(newline,['D'])}\nexport {D as normalizeEditorNewlines};`,[newline.ref]);
+  // 3.6556.2 moved the editor/gutter padding into cc3bc2027 tokens shared with the diff view (n, r(compact)).
+  await adapter('layout-tokens.mjs',`${bindings(newline,['n','r'])}\nexport {n as editorLayout, r as lineNumberLayout};`,[newline.ref]);
   await adapter('theme.mjs',`${coreImport}
-    // c5d464fa3 default palette values; 2.42304.0 inlines the pad token as var(--cds-pad-xs).
+    import {editorLayout as At, lineNumberLayout as Ot} from './layout-tokens.mjs';
+    // c5d464fa3 default palette values (unchanged in 3.6556.2); the fold placeholder pad stays var(--cds-pad-xs).
     const defaults={light:{'editor.selectionBackground':'#0073e640','editor.selectionHighlightBackground':'#0073e61a','editor.lineHighlightBackground':'#1a1a1a0a'},dark:{'editor.selectionBackground':'#0099ff4d','editor.selectionHighlightBackground':'#0099ff24','editor.lineHighlightBackground':'#ffffff0d'}};
-    const fe=(mode,key)=>defaults[mode][key]??'';
-    ${bindings(wrapper,['Zi','ra','ia','aa','Va'])}
-    export {aa as editorTheme,ra as editorThemePalette,Va as findMatchTheme};`,[wrapper.ref,(await read('c5d464fa3')).ref]);
+    const de=(mode,key)=>defaults[mode][key]??'';
+    ${bindings(wrapper,['pa','ya','ba','xa','io'])}
+    export {xa as editorTheme,ya as editorThemePalette,io as findMatchTheme};`,[wrapper.ref,newline.ref,(await read('c5d464fa3')).ref]);
   const code=`${coreImport}
-import {filenameLanguage as we} from './filename-language.mjs';
-import {suppressEscapeRepeat as x} from './keyboard-repeat.mjs';
-import {normalizeEditorNewlines as Dt} from './newlines.mjs';
-// Host stand-ins for the wrapper's desktop imports: ae (shared-28 basename), v/y (shared-25 owner window),
-// ee (shared-78 isMac), b (shared-0 feature gate, on), e (preload helper), _ (shared-25 scoped loader).
-const ae=path=>path.replaceAll('\\\\','/').split('/').at(-1);
-const v=node=>node.ownerDocument.defaultView, y=v;
-const ee=()=>typeof navigator!=='undefined'&&/Mac/.test(navigator.platform);
-const b=()=>true, e=load=>load(), _=(_options,load)=>load();
+import {filenameLanguage as Ce} from './filename-language.mjs';
+import {suppressEscapeRepeat as ce} from './keyboard-repeat.mjs';
+import {normalizeEditorNewlines as kt} from './newlines.mjs';
+import {editorLayout as At, lineNumberLayout as Ot} from './layout-tokens.mjs';
+// Host stand-ins for the wrapper's desktop imports: x (shared-28 lr basename), v/_ (shared-25 up/lp owner
+// window, lp falls back to window), b (shared-78 mE isMac), re (shared-0 yb feature gate, on),
+// e (preload helper), y (shared-0 px scoped loader).
+const x=path=>path.replaceAll('\\\\','/').split('/').at(-1);
+const v=node=>node.ownerDocument.defaultView, _=node=>v(node)??globalThis.window;
+const b=()=>typeof navigator!=='undefined'&&/Mac/.test(navigator.platform);
+const re=()=>true, e=load=>load(), y=(_options,load)=>load();
 ${parts}
-export {Rt as detectIndentation, Da as detectedIndentation, xa as resetIndentation, Yt as bracketIndentation, cn as bracketJump, en as editorKeymap, Ma as autoCloseBrackets, ja as tabIndentation, Aa as columnSelection, An as codeFolding, mr as indentGuides, ln as insertTabIndent, qt as bracketEnter, rn as jumpBracket};
-export {Ki as rememberEditorView, Ji as restoreEditorView, Yi as restoredHistory, In as restoredFolds};
-export {Mi as loadEditorLanguage, ji as cachedEditorLanguage, Ci as resolveEditorLanguage};
-export {Oo as commentRangeHighlight, Do as setCommentRange, ko as rangeHighlightTheme, no as selectionActions, Yn as selectableLineNumbers, po as commentWidgets, oo as setCommentSlots, mo as hoveredEditorLine, Ln as lineRangeSelection, Rn as lineSelectionAnchor, Ri as selectedEditorContext, zi as selectionTooltipAnchor, Bi as selectionTooltipCoords};
-export {_o as externalEditorChange, xo as externalEditorUpdate, Hi as minimalEditorChange, sr as activeIndentBlock, or as lineIndentLevels, ur as indentGradient, Zt as copyLines, ya as suppressCommandRepeat, va as updateEditorTransactions};
-export const baseLanguageBehavior=[nt(), Ee(), ga, O(), it(), C.of([{key:'Escape', run:ya(ht,e=>e.state.selection.main.empty)}])];
-export const highlightWhitespace=()=>La;
+export {Bt as detectIndentation, Ua as detectedIndentation, La as resetIndentation, Xt as bracketIndentation, ln as bracketJump, tn as editorKeymap, Ja as autoCloseBrackets, qa as tabIndentation, Ka as columnSelection, Rn as codeFolding, Sr as indentGuides, un as insertTabIndent, Jt as bracketEnter, an as jumpBracket};
+export {ca as rememberEditorView, ua as restoreEditorView, da as restoredHistory, Wn as restoredFolds};
+// qi: 3.6556.2 seeds the grammar compartment with closeBrackets data (Ar/Or) until the grammar loads.
+export {Ji as loadEditorLanguage, Gi as cachedEditorLanguage, Li as resolveEditorLanguage, qi as pendingEditorLanguage};
+// uo: official name kept local; settleEditorParse is the host-facing name for Jo's post-reconfigure parse.
+export {uo as settleEditorParse};
+export {Go as commentRangeHighlight, Wo as setCommentRange, Ko as rangeHighlightTheme, bo as selectionActions, rr as selectableLineNumbers, Ao as commentWidgets, wo as setCommentSlots, jo as hoveredEditorLine, Gn as lineRangeSelection, Kn as lineSelectionAnchor, ea as selectedEditorContext, ta as selectionTooltipAnchor, na as selectionTooltipCoords};
+export {Po as externalEditorChange, Ro as externalEditorUpdate, ia as minimalEditorChange, hr as activeIndentBlock, mr as lineIndentLevels, vr as indentGradient, Qt as copyLines, Fa as suppressCommandRepeat, Pa as updateEditorTransactions};
+// Ia (the editor's base extension list) members 4-8 and 11.
+export const baseLanguageBehavior=[$e(), Ee(), Ma, Fe(), nt(), N.of([{key:'Escape', run:Fa(H,e=>e.state.selection.main.empty)}])];
+export const highlightWhitespace=()=>$a;
 `;
   await adapter('wrapper.mjs',code,[wrapper.ref]);
   const imports = code => [...code.matchAll(/(?:from\s*|import\()"(\.\/[^\"]+\.js)"/g)].map(m=>m[1].slice(2));

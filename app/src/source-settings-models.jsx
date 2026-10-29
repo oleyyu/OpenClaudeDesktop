@@ -22,7 +22,8 @@ import { SourceDisclosure } from './source-disclosure.jsx';
 import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSwitch } from './source-switch.jsx';
-import { SourceSettingsCheckbox } from './source-settings-checkbox.jsx';
+// CDS Checkbox with its own label (3.6556.2 shared-frame xP `label`, as c71860c77's cleanup choices); facade import (R6).
+import { CdsCheckbox } from './generated/view-tabs/index.js';
 import { SettingsGroup, settingRow } from './source-settings-kit.jsx';
 import { effortName, filterModels, isHighestEffort, MODEL_SEARCH_THRESHOLD } from './model-menu-model.mjs';
 import { DEEPSEEK_KEYS_URL } from './account-settings-model.mjs';
@@ -145,7 +146,7 @@ function ProviderDialog({ initial, protocols, harness = true, coreLabel = '', on
           placeholder={editing && initial.hasKey ? t('Saved. Leave empty to keep it.') : 'sk-…'} onChange={set('apiKey')}/>
         <span className="msx-help">{t('Stored encrypted on this Mac and passed to the core as {env}; never written to settings files.', { env: initial?.keyEnv || t('an environment variable') })}</span>
       </label>
-      {editing && initial.hasKey && <label className="msx-check"><SourceSettingsCheckbox checked={clearKey} disabled={!!form.apiKey} onChange={setClearKey}/><span>{t('Remove the saved key')}</span></label>}
+      {editing && initial.hasKey && <CdsCheckbox className="msx-check" checked={clearKey} disabled={!!form.apiKey} onCheckedChange={checked => setClearKey(checked === true)} label={t('Remove the saved key')}/>}
       {error && <p className="msx-error" role="alert">{error}</p>}
       <SourceDialogFooter>
         <SourceSettingsButton disabled={saving} onClick={onCancel}>{t('Cancel')}</SourceSettingsButton>

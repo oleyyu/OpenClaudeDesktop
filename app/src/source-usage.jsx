@@ -1,6 +1,8 @@
 import React,{useEffect,useId,useRef,useState} from 'react';
 import {SourceSettingsButton} from './source-settings-button.jsx';
-import {localUsagePresentation,usageEmptyText,usagePresentation,usageResetLabel} from './usage-model.mjs';
+import {localUsagePresentation,usageEmptyText,usagePresentation,usageResetCountdown} from './usage-model.mjs';
+// W12b: the minute clock the desktop's usage meters read (shared-156 fK, exported Rr; session-rail-sections slices it).
+import {useMinuteNow} from './generated/session-rail-sections/minute-clock.mjs';
 import {SourceTimestamp} from './source-timestamp.jsx';
 import {formatDayKey,localDayKey} from './home-model.mjs';
 import {COST_FOOTNOTE,CUSTOM_COST_FOOTNOTE,USAGE_RANGE_DAYS,compactTokens,formatMoney,formatTokenCount,usageCostPresentation,usageSpendPresentation} from './usage-cost-model.mjs';
@@ -14,7 +16,12 @@ const usageErrorText = value => String(value).replace(/^Error invoking remote me
 
 function UsageRow({row}) {
  const title=useId(),description=useId();
- const reset=usageResetLabel(row.resetsAt,row.minutes,getLocale());
+ // 3.6556.2's usage meters caption the reset with lU over the minute clock (c51de9054 A `r ? x(n.claim.resets_at, c, l)
+ // : _(n.claim.resets_at, c, l)`, `_` = shared-156 lU, `l = y()` = fK; specCopy, fU, is the plan popover's copy; the
+ // desktop's own Usage page, c71860c77 J: `me(… resetsAtMs …, t, r)`, me = lU, r = N() = fK): 'Resets in {minutes} min'
+ // within the hour, 'Resets in {hours} hr {minutes} min' within the day, else cU.
+ const now=useMinuteNow();
+ const reset=usageResetCountdown(row.resetsAt,row.minutes,{now,locale:getLocale()});
  const detail=[row.description,reset].filter(Boolean).join(' · ');
  const value=t('{percent}% used',{percent:Math.round(row.used).toLocaleString(getLocale())});
  return <div className="su-row" data-variant={row.variant}>
@@ -124,13 +131,14 @@ export function UsageNotice({notice,canReset,onReset,onNudge}) {
 // 'Current balance' beneath, then the monthly credit limit as a meter row ('{used} of {limit} credits used').
 export function CreditsSection({entry}) {
  const {credit,spend}=entry,name=credit?.name??spend?.name??null;
+ const now=useMinuteNow(),spendReset=spend?usageResetCountdown(spend.resetsAt,null,{now,locale:getLocale()}):null;
  const title=name?t('{name} usage credits',{name}):t('Usage credits');
  const caption=credit?.state==='unlimited'?t('Your plan includes unlimited credits.'):credit?.state==='none'?t('No credits are available for this account.'):credit?t('Current balance'):null;
  return <section className="su-section su-credits" aria-label={title}>
   <div className="su-section-heading"><h3 className="text-heading-semibold">{title}</h3>{credit&&<strong data-state={credit.state}>{credit.balance}</strong>}</div>
   {caption&&<p>{caption}</p>}
   {spend&&(spend.percent===null
-   ?<p className="su-credit-limit">{t('Monthly credit limit')}: {spend.detail}{usageResetLabel(spend.resetsAt,undefined,getLocale())?` · ${usageResetLabel(spend.resetsAt,undefined,getLocale())}`:''}</p>
+   ?<p className="su-credit-limit">{t('Monthly credit limit')}: {spend.detail}{spendReset?` · ${spendReset}`:''}</p>
    :<div className="su-limits su-credit-limit"><UsageRow row={{key:spend.key,label:t('Monthly credit limit'),used:spend.percent,minutes:null,resetsAt:spend.resetsAt,variant:spend.variant,description:spend.detail}}/></div>)}
  </section>;
 }

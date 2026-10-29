@@ -13,9 +13,10 @@
 }
 .ste-body { display: flex; flex-direction: column; gap: var(--cds-gap-xs, 6px); contain: inline-size; }
 .ste-header { display: flex; align-items: center; gap: var(--cds-gap-xs, 6px); }
-/* cb1a6e506 A Dismiss: "text-muted hover:text-primary" are @layer utilities classes, which the settings button's
-   unlayered base colour (source-settings-button.css, color: --cds-text-primary) would outrank; restate those two. */
-.ste-dismiss .source-settings-button[data-cds=Button] { color: var(--cds-text-muted); }
+/* cb1a6e506 j Dismiss (3.6556.2): "text-muted-as-secondary hover:text-primary" are @layer utilities classes, which the
+   settings button's unlayered base colour (source-settings-button.css, color: --cds-text-primary) would outrank; restate
+   those two (.text-muted-as-secondary is color: var(--muted-as-secondary, var(--cds-text-muted))). */
+.ste-dismiss .source-settings-button[data-cds=Button] { color: var(--muted-as-secondary, var(--cds-text-muted)); }
 .ste-dismiss .source-settings-button[data-cds=Button]:hover { color: var(--cds-text-primary); }
 .ste-icon { flex-shrink: 0; }
 .ste-tone-danger { color: var(--cds-text-danger); }
@@ -43,6 +44,8 @@
 .ste-details > .source-disclosure-panel { order: -9999; flex-basis: 100%; contain: inline-size; }
 /* zp: "pb-md" > "flex flex-col gap-xs rounded-lg bg-alpha-1 px-md py-sm text-footnote text-secondary". */
 .ste-details-panel { padding-bottom: var(--cds-pad-md, 8px); }
+/* 3.6556.2 cb1a6e506 k: "flex flex-col gap-sm" around the (absent) guide line and the box. */
+.ste-details-stack { display: flex; flex-direction: column; gap: var(--cds-gap-sm, 8px); }
 .ste-details-box {
   display: flex; flex-direction: column; gap: var(--cds-gap-xs, 6px); border-radius: var(--radius-lg, .5rem);
   background: var(--cds-alpha-1); padding: var(--cds-pad-sm, 6px) var(--cds-pad-md, 8px);

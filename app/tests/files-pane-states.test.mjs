@@ -102,19 +102,21 @@ test('ListBullet: CDS tooltip with ⌘⇧Y, aria-keyshortcuts, no native title; 
   assert.match(main, /treeToggleRef=\{tileId === "files" \? fileTreeToggleRef : tileId === "changes" \? diffTreeToggleRef : null\}/);
 });
 
-test('tabs: data-vtb-id, the move hint, and the "More files" overflow markup', () => {
+// W12c files-tabbar: the strip is the official ViewTabBar (cccc2cf0a ND `ey`, source-file-tabs.jsx).
+test('tabs: the ViewTabBar "Open files" strip, data-vtb-id rows, the delete and move hints', () => {
   const tabs = ['a.txt', 'b.txt'].map((path) => ({ path, text: 'x' }));
   const markup = panel({ view: { fileTabs: tabs, activePath: 'a.txt', treeShown: false }, onViewChange: () => {} });
-  assert.match(markup, /<div class="source-file-tabbar" data-view-tab-bar=""><div class="source-file-tabs" role="tablist" aria-label="Open files">/);
-  assert.equal((markup.match(/class="source-file-tab" data-vtb-id="/g) || []).length, 2);
-  const tab = markup.match(/<div role="tab"[^>]*>/)[0];
+  assert.match(markup, /<div[^>]*data-view-tab-bar=""[^>]*><div[^>]*role="tablist" aria-label="Open files"/);
+  assert.equal((markup.match(/<div role="presentation" data-vtb-id="/g) || []).length, 2);
+  assert.match(markup, /data-vtb-id="a\.txt" data-selected="true" style="-webkit-touch-callout:none;min-width:104px"/);
+  const tab = markup.match(/<div[^>]*role="tab"[^>]*>/)[0];
   const ids = tab.match(/aria-describedby="([^"]+)"/)[1].split(' ');
   assert.equal(ids.length, 2);
-  assert.match(markup, new RegExp(`<span id="${ids[1]}" class="source-sr-only">Press Control\\+Shift\\+Left Arrow or Right Arrow to move the file</span>`));
-  assert.doesNotMatch(markup, /data-vtb-overflow/, 'nothing is hidden before the strip is measured');
+  assert.match(markup, new RegExp(`<span id="${ids[0]}" class="sr-only">Press Delete or Backspace to close the file</span>`));
+  assert.match(markup, new RegExp(`<span id="${ids[1]}" class="sr-only">Press Control\\+Shift\\+Left Arrow or Right Arrow to move the file</span>`));
+  assert.doesNotMatch(markup, /data-vtb-overflow|source-file-tab/, 'nothing is hidden before the strip is measured');
   const src = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.jsx'), 'utf8');
-  assert.match(src, /<span data-vtb-overflow="" className="source-file-tabs-overflow">/);
-  assert.match(src, /<SourceMenu\.Popup anchor=\{button\.current\} side="bottom" align="end" label=\{FILE_TAB_LABELS\.moreTabs\}/);
+  assert.match(src, /<SourceFileTabs tabs=\{fileTabs\} cwd=\{cwd\} activePath=\{activePath\}/);
   assert.match(src, /setFileTabs\(\(files\) => insertFileTab\(files, opened\)\)|return insertFileTab\(files, opened\);/);
 });
 
@@ -148,7 +150,7 @@ test('Lg subfolder error row: treeitem at depth+1, no activation button, muted c
   // color, height and guides are official @layer utilities rules.
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(css, /\.source-tree-(error|guided|guides)\b/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8'), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
 });
 
 test('empty preview: the three exact source title/body pairs in EmptyState yu with icon Folder', () => {

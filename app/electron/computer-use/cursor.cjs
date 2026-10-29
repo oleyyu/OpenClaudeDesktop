@@ -1,4 +1,4 @@
-// The phantom cursor (official 2.42304.0 §2.6): while a session controls a window in the background (an app lock: a
+// The phantom cursor (official 2.42304.0 §2.6; 3.6556.2 jPKPzV-P bNa [cu-app-indicator], the same): while a session controls a window in the background (an app lock: a
 // window it took an app_screenshot of and has not app_release'd), a clay arrow sits on that window at the point of the
 // last app_* action. Clicks go through Accessibility, so nothing moves the real pointer; this only shows the user where
 // it happened.

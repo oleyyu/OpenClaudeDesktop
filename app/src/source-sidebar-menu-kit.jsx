@@ -13,7 +13,7 @@
 // Host difference, to retire when the host menus move to the CDS Dropdown: then `K` maps to view-tabs CdsDropdown
 // directly (scripts/extract-code-ui-current.mjs, target sidebar-menu-groups.mjs) and this module goes away.
 import React, { createContext, useContext } from 'react';
-import { CdsDropdown } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { CdsDropdown } from './generated/view-tabs/index.js';
 import { SourceMenu } from './source-menu.jsx';
 
 const cdsRows = Object.freeze({ Item: CdsDropdown.Item, Separator: CdsDropdown.Separator, Group: CdsDropdown.Group });

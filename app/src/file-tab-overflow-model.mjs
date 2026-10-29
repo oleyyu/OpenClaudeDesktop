@@ -14,9 +14,11 @@
 //                  gap while it is shown (:559-564); 0 otherwise
 //   activeId       the selected tab (never hidden, never compact)
 //   compactSlack   the free width per compact tab at the end of the root (:589-601)
-export const MIN_TAB_WIDTH = 104; // Files pane minTabWidth (panes-tile-current.js:6786)
-export const COMPACT_TAB_WIDTH = 64; // Y (panes-tabs-current.js:493)
-export const TIGHT_ACTIVE_WIDTH = 50; // ge (:494): the active tab hides its icon below this
+// The three widths are unchanged in 3.6556.2 (w10-trans-tab-overflow; tests/file-tab-overflow-model.test.mjs reads them
+// from the shipped chunks): cccc2cf0a's ViewTabBar `minTabWidth:104`, cfe7c4b3b `var be=64,H=50`.
+export const MIN_TAB_WIDTH = 104; // Files pane minTabWidth (panes-tile-current.js:6786; 3.6556.2 cccc2cf0a)
+export const COMPACT_TAB_WIDTH = 64; // Y (panes-tabs-current.js:493; 3.6556.2 cfe7c4b3b be)
+export const TIGHT_ACTIVE_WIDTH = 50; // ge (:494; 3.6556.2 cfe7c4b3b H): the active tab hides its icon below this
 
 const same = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
 // Z (:500-502): keep the previous array when the ids are unchanged.

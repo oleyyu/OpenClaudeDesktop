@@ -1,6 +1,9 @@
 // R4g-turnbox TB-3 (transcript-turn-box, tasks-06a): the Code session turn box mount — the original 2.42304.0 pieces
 // that place generated/turn-box/turn-box.mjs CT (TurnBox, with hT NextActionsRow as its next-step row) under a Code
 // session, over the host's Codex thread state.
+// 3.6556.2 (w10-ccres-turnbox): the box is cccc2cf0a pj (TurnBox) and its next-step row cccc2cf0a cj (TurnNextActionsRow,
+// cf74bc599 EpitaxyTurnNextActionsRow, cc43287c9 ope), which reads the turn tail itself (xy) and renders ZA; the mount is
+// cc43287c9's `fs=Mo&&Za&&!Wt&&!er,ps=fs&&cs,ms=fs&&Hn!==null&&si` (the raw pins in scripts/extract-turn-box.mjs).
 //
 // Original placement, 2.42304.0 ion-dist/assets/v1:
 //   cc43287c9 Mte  `{slotEl:oo,placeable:so,probeRef:co}=O5(Zn,ao),lo=Na&&da&&!tn&&!on,uo=lo&&so,fo=lo&&tr!==null&&Yr`
@@ -26,17 +29,22 @@
 import "./turn-plan-bridge.mjs";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { NextActionsRow, TurnBox } from "./generated/turn-box/turn-box.mjs";
+import { TurnBox, TurnNextActionsRow } from "./generated/turn-box/turn-box.mjs";
 import { canHostTurnBox } from "./generated/turn-box/epitaxy-session.mjs";
 import { EMPTY_TURN_TAIL, turnTailEqual } from "./generated/turn-box/turn-tail.mjs";
-import { TurnBoxCatalog, TurnBoxHost, usePresetsGate } from "./source-turn-box-adapters.jsx";
-import { t } from "../electron/i18n/index.mjs";
+import { TurnBoxHost, usePresetsGate } from "./source-turn-box-adapters.jsx";
 import { latestPromptOf } from "./turn-box-plan-model.mjs";
-// turn-plan: the tail is c1ebb1aa4 Rt's update_plan branch over the session's ccd_turn calls (the per-session turnBox flag,
-// GrowthBook 2371478310, is on); wrapUp reaches hT through cb27dab29 Ee (Mte `wrapUp:BO(La,Ka)`).
+// turn-plan: the tail is c4ea84cb3 Br's update_plan branch over the session's ccd_turn calls (the per-session turnBox flag,
+// GrowthBook 2371478310, is on); cj hands it to ZA, the wrap-up through cb27dab29 De (`_m(r,n)`).
 import { codeTurnTail } from "./turn-plan-model.mjs";
-import { wrapUpShown } from "./generated/turn-plan/plan-update.mjs";
+// cj's sj reads the proposal card's stores: its ls is generated/proposal-group's c96d752d0 JX over the zX marks the host
+// spawner sets (proposal-spawner.mjs spawning.mark / clear; imported by the generated turn box itself, W12b), and the
+// sessions store is the one the card reads (shared-8 og, committed by its ProposalHostProvider), whose open-session row
+// carries the backgroundTaskSuggestions queue.
+import { useSessionsStore as proposalSessionsStore } from "./source-proposal-group-adapters.jsx";
 import { sessionPullRequest } from "./home-model.mjs";
+// W12c (#27): the background work and scheduled prompts of a session, as the Background tasks pane lists them.
+import { backgroundTasks, scheduledLoops } from "./background-tasks-model.mjs";
 import "./source-turn-box.css";
 
 // ---- the session scope store (cc43287c9 Zn: turnBoxSlotEl / turnCardShown / turnBoxRowExpected / turnQuestionWithheld)
@@ -108,9 +116,7 @@ export function placeTurnBox(element, slotEl, portal = createPortal) {
 }
 
 // ---- the composer handle hT reads (the desktop composer's ref): its own editor, bash mode, text and draft, focus.
-// Only a rule chip or a wrap-up reply would call the writers; neither reaches the host row (R4i TR1 TB-4: the rule labels
-// are gated messages the host catalog lacks, and wrap-up is off, D29), so they stay inert
-// unless the caller passes them.
+// A rule chip or a wrap-up reply calls the writers; each stays inert unless the caller passes it.
 export function useTurnBoxComposerHandle({ element, text, setText, submit, bashMode } = {}) {
   const ref = useRef(null);
   const latest = useRef(null);
@@ -146,6 +152,70 @@ export function useTurnBoxPlanMarks(state) {
 const compacting = (items) => (items ?? []).some((item) => item?.type === "contextCompaction" && item.status === "inProgress");
 const EMPTY_SET = new Set();
 const EMPTY_SESSIONS = Object.freeze([]);
+const EMPTY_METADATA = Object.freeze({});
+const EMPTY_LIST = Object.freeze([]);
+
+// ---- W12c (w12b-turnbox-ls #27): the ZI fields of the sessions store rows Sg's sL (generated session-status.mjs
+// archiveHeldBack) reads. The 3.6556.2 main process fills them per session (index.chunk-DNPOm2Zc formatSessionForEvent):
+//   isRunning `e.isRunning||a||n.un(e)`, turnRunning `e.isRunning||n.un(e)`   a turn runs (state.active)
+//   hasBackgroundActivity `n.mn(e)` (index.chunk-DBIg6EBr cj `(e.activeBackgroundTasks?.size??0)>0`)   a background task
+//                    runs (background-tasks-model.mjs: sub-agents, background terminals, workflows) or a monitor does
+//                    (the monitor-state feed; the host runs Monitor outside the core)
+//   isStarred `e.isStarred`               pinned (sessionMetadata, Codex's pinned section included: withCoreSections)
+//   manualKeepAwake `e.manualKeepAwake`   the session menu's Keep awake (sessionMetadata keepAwake)
+//   loops `this.collectSessionLoops(e)`   the session's cron jobs (activeCronJobs): the schedule-state feed
+//   pendingToolPermissions `i`            (permissionBrokerGetPendingRequestsForSession) the requests the session owns
+// starting, heldInput, lanyard, autoArchiveHold and the pending refusal / auto-mode / lanyard-consent / violin-bow prompts
+// have no host counterpart and stay unset, as the main process leaves them for a session without them.
+export function archiveHoldFields({ running = false, backgroundRunning = false, monitors = EMPTY_LIST, loops = EMPTY_LIST, meta = EMPTY_METADATA,
+  requests = EMPTY_LIST } = {}) {
+  return {
+    isRunning: !!running,
+    turnRunning: !!running,
+    hasBackgroundActivity: !!backgroundRunning || (monitors ?? []).some((monitor) => monitor?.status === "running"),
+    isStarred: !!meta?.pinned,
+    manualKeepAwake: meta?.keepAwake === true,
+    loops: scheduledLoops(loops),
+    pendingToolPermissions: [...(requests ?? [])],
+  };
+}
+// The sessions sL looks at for the open one: itself and its side sessions (shared-46 eL: `spawnedFrom.sideSession` children
+// that are not archived; the host rows have no lineage, so ef / af add none), down the family.
+export function archiveFamily(currentId, sessions = EMPTY_SESSIONS, metadata = EMPTY_METADATA) {
+  if (!currentId) return EMPTY_LIST;
+  const archived = new Set((sessions ?? []).filter((entry) => entry?.archived === true || entry?.isArchived === true).map((entry) => entry.id));
+  const ids = [currentId];
+  for (let index = 0; index < ids.length; index += 1)
+    for (const [id, meta] of Object.entries(metadata ?? {}))
+      if (meta?.spawnedFrom?.sideSession === true && meta.spawnedFrom.sessionId === ids[index] && !archived.has(id) && !ids.includes(id)) ids.push(id);
+  return ids;
+}
+// Each family member's loops and monitors (desktop:call schedule-state / monitor-state and their {kind:"schedules"} /
+// {kind:"monitors"} events, as the Background tasks pane reads them). A member is known once both lists arrived; a
+// failed read is an empty list (as that pane's feed).
+function useArchiveActivityFeeds(ids, desktop) {
+  const key = ids.join("\0");
+  const [feeds, setFeeds] = useState(() => ({ key: null, loops: {}, monitors: {} }));
+  useEffect(() => {
+    const list = key ? key.split("\0") : [];
+    setFeeds({ key, loops: {}, monitors: {} });
+    if (list.length === 0 || typeof desktop?.call !== "function") return undefined;
+    let live = true;
+    const put = (field, id, value) => { if (live) setFeeds((old) => (old.key === key ? { ...old, [field]: { ...old[field], [id]: Array.isArray(value) ? value : [] } } : old)); };
+    for (const id of list) {
+      Promise.resolve().then(() => desktop.call("schedule-state", { sessionId: id })).then((value) => put("loops", id, value), () => put("loops", id, []));
+      Promise.resolve().then(() => desktop.call("monitor-state", { sessionId: id })).then((value) => put("monitors", id, value), () => put("monitors", id, []));
+    }
+    const off = desktop.onEvent?.((event) => {
+      if (!list.includes(event?.sessionId)) return;
+      if (event.kind === "schedules" && Array.isArray(event.jobs)) put("loops", event.sessionId, event.jobs);
+      if (event.kind === "monitors" && Array.isArray(event.monitors)) put("monitors", event.sessionId, event.monitors);
+    });
+    return () => { live = false; if (typeof off === "function") off(); };
+  }, [key, desktop]);
+  const pending = useMemo(() => ({ key, loops: {}, monitors: {} }), [key]);
+  return feeds.key === key ? feeds : pending;
+}
 
 // The TurnBoxHost value (source-turn-box-adapters.jsx) over the host's thread state.
 //   state           the reducer state (plans, items, active, approvals, agentLifecycle)
@@ -153,11 +223,18 @@ const EMPTY_SESSIONS = Object.freeze([]);
 //   requestOwner    approval → owning session id (main.jsx approvalOwner); a request without a thread is the open one's
 //   currentId       the open session
 //   sessions        the session rows (for hT's session query: lastActivityAt / createdAt)
+//   metadata        sessionMetadata as the sidebar shows it (pinned, keepAwake, spawnedFrom: sL's ZI fields and family)
+//   tasks           the open session's background tasks (main.jsx `tasks`, as the Background tasks pane lists them)
+//   desktop         the bridge the family's schedule-state / monitor-state feeds are read from
 //   onOpenSession(id), onNewSession(), onArchiveSession(id), onOpenTasksPane()
 //   onSend(text) → Promise<boolean>   turn-plan: hT's "flint" send (a next-step reply's message, sent as the user's)
-export function useCodeTurnBoxHost({ state, planMarks, requestOwner, currentId, sessions = EMPTY_SESSIONS,
-  onOpenSession, onNewSession, onArchiveSession, onOpenTasksPane, onSend }) {
+export function useCodeTurnBoxHost({ state, planMarks, requestOwner, currentId, sessions = EMPTY_SESSIONS, metadata = EMPTY_METADATA,
+  tasks = EMPTY_LIST, desktop = globalThis.desktop, onOpenSession, onNewSession, onArchiveSession, onOpenTasksPane, onSend }) {
   const tails = useRef(new Map());
+  // W12c (#27): the family sL walks, their loops / monitors, and whether the open session's background work runs.
+  const family = useMemo(() => archiveFamily(currentId, sessions, metadata), [currentId, sessions, metadata]);
+  const feeds = useArchiveActivityFeeds(family, desktop);
+  const openWorkRunning = (tasks ?? []).some((task) => task?.status === "running");
   // The callbacks change identity every render in the caller; the value only follows the data and which ones exist.
   const calls = useRef(null);
   calls.current = { requestOwner, onOpenSession, onNewSession, onArchiveSession, onOpenTasksPane, onSend };
@@ -174,6 +251,19 @@ export function useCodeTurnBoxHost({ state, planMarks, requestOwner, currentId, 
     const waiting = (id) => (state?.approvals ?? []).some((request) => ownerOf(request) === id);
     const row = (id) => sessions.find((entry) => entry.id === id);
     const seconds = (value) => (Number.isFinite(value) ? (value < 1e12 ? value * 1000 : value) : null);
+    // W12c (#27): the store rows of the family carry their ZI fields (archiveHoldFields); other rows are the card's.
+    const members = new Set(family);
+    const holdFields = (id) => archiveHoldFields({ running: !!state?.active?.[id],
+      backgroundRunning: id === currentId ? openWorkRunning : backgroundTasks(state ?? {}, id).some((task) => task.status === "running"),
+      monitors: feeds.monitors[id], loops: feeds.loops[id], meta: metadata?.[id],
+      requests: (state?.approvals ?? []).filter((request) => ownerOf(request) === id) });
+    let withHold = null;
+    const familyRows = (rows) => {
+      if (withHold?.rows !== rows) withHold = { rows, value: !(rows ?? EMPTY_SESSIONS).some((entry) => members.has(entry?.sessionId)) ? rows
+        : rows.map((entry) => (members.has(entry?.sessionId) ? { ...entry, ...holdFields(entry.sessionId) } : entry)) };
+      return withHold.value;
+    };
+    const known = (id) => Object.hasOwn(feeds.loops, id) && Object.hasOwn(feeds.monitors, id);
     return {
       turnTail(sessionRef, latestPromptId) {
         const id = sessionRef?.id;
@@ -195,8 +285,12 @@ export function useCodeTurnBoxHost({ state, planMarks, requestOwner, currentId, 
       awaitsRequest: waiting,
       hasPendingRequest: waiting,
       requestInTurn: (id) => !!state?.active?.[id] && waiting(id),
-      // Codex sessions are never side sessions of another (D29): nothing has spawnedFrom.
-      sessions: EMPTY_SESSIONS,
+      // shared-8 og, the sessions store: the proposal card's rows (proposalSessions over the session list and metadata), read
+      // when a consumer renders. ub / lj look for a side session named after a todo (spawnedFrom.name); no host row has one
+      // (btw children carry no name, D29), so they find none. cj's sj reads the open session's backgroundTaskSuggestions.
+      // W12c (#27): with the ZI fields of the open session's family (Sg's sL reads them).
+      get sessions() { return familyRows(proposalSessionsStore.getState().sessions); },
+      archiveFactsKnown: (id) => id === currentId && family.length > 0 && family.every(known),
       attentionSessionIds: EMPTY_SET,
       sessionInfo: (sessionRef) => {
         const entry = row(sessionRef.id);
@@ -210,7 +304,7 @@ export function useCodeTurnBoxHost({ state, planMarks, requestOwner, currentId, 
       send: has.send ? async ({ ref, text }) => (ref?.id === currentId && typeof text === "string" && text ? (await calls.current.onSend?.(text)) === true : false) : undefined,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, planMarks, currentId, sessions, has.open, has.add, has.archive, has.tasks, has.send]);
+  }, [state, planMarks, currentId, sessions, metadata, family, feeds, openWorkRunning, has.open, has.add, has.archive, has.tasks, has.send]);
 }
 
 // The latest prompt id the transcript publishes (cf74bc599 `n.setState({latestPromptId:ai,…})`, ai = Kl(entries)).
@@ -235,9 +329,8 @@ export function codeTurnBoxRegionProps({ items, running, shownApprovals, isPlanR
     composerVisible: composerShown({ isReadOnly, isPlanApproval: planApproval }), isPlanApproval: planApproval, isReadOnly };
 }
 
-// The box and its next-step row for a placement (Mte's `uo&&tr?(()=>{…})():null`). Exported for SSR tests, which fix the
-// placement because refs never run there.
-export const TURN_BOX_ROW_LABEL = "secret:hlf4y0";
+// The box and its next-step row for a placement (cc43287c9 `ps&&Hn?(()=>{…})():null`). Exported for SSR tests, which fix
+// the placement because refs never run there.
 export function SourceTurnBoxMount({ host, scope, placement, sessionRef, isResponding, latestPromptId, composerVisible = true,
   isPlanApproval = false, isReadOnly = false, composerRef, hasComposerDraft, composerHasAttachments = false, onSessionRemoved,
   portal }) {
@@ -250,23 +343,20 @@ export function SourceTurnBoxMount({ host, scope, placement, sessionRef, isRespo
   useEffect(() => () => scope.setState({ turnBoxRowExpected: undefined }), [scope]);
   const onCardShownChange = useCallback((shown) => scope.setState({ turnCardShown: shown }), [scope]);
   const onQuestionWithheld = useCallback((value) => { if (scope.getState().turnQuestionWithheld !== value) scope.setState({ turnQuestionWithheld: value }); }, [scope]);
-  // turn-plan: the chip row's group label (cd4f82e77 ht = secret:hlf4y0, `k=w!==void 0||sm(O)`: without it z$ draws no
-  // row, so the wrap-up's reply buttons never show). The original string is server-delivered and in no installed catalog;
-  // the host names the row (an aria-label). The rule chips' own secret labels stay absent: their commands are not offered.
-  const rowLabel = t("Suggested next steps");
-  const catalog = useMemo(() => ({ [TURN_BOX_ROW_LABEL]: rowLabel }), [rowLabel]);
   if (!flags.mounted || !sessionRef) return null;
-  // $L(Na?tr:null, Ia): the same tail the box reads.
-  const tail = (canHost && host?.turnTail?.(sessionRef, latestPromptId)) || EMPTY_TURN_TAIL;
+  // cc43287c9 `turnHasPendingSuggestion:Vo`: the host scope never sets it, so false. cj reads the tail itself
+  // (`xy(t.sessionRef,t.latestPromptId)`) and hands ZA wrapUp `_m(r,n)`, wrapUpCallId, closingMessageFollows, turnSettled,
+  // workedWithoutWrapUp, agentRunning and proposalsPending (sj: the turn's proposed tasks still in the session's queue, not
+  // being started, not cloud, not accepted).
+  const pendingSuggestion = scope.getState().turnHasPendingSuggestion === true;
   const element = (
     <TurnBox key={`${sessionRef.id}:turn-box`} sessionRef={sessionRef} isResponding={isResponding} latestPromptId={latestPromptId}
       onCardShownChange={onCardShownChange}>
-      {flags.nextRow ? <TurnBoxCatalog.Provider key={`${sessionRef.id}:next-actions`} value={catalog}><NextActionsRow sessionRef={sessionRef} isSsh={false}
+      {flags.nextRow ? <TurnNextActionsRow key={`${sessionRef.id}:next-actions`} sessionRef={sessionRef} isSsh={false}
         composerRef={composerRef} eligible={composerVisible} hidden={false} overlayBusy={false} onSessionRemoved={onSessionRemoved}
-        openSessionMcpDialog={null} wrapUp={wrapUpShown(tail.wrapUp, scope.getState().turnHasPendingSuggestion === true)} wrapUpCallId={tail.wrapUpCallId} turnSettled={tail.turnSettled}
-        workedWithoutWrapUp={tail.workedWithoutWrapUp} latestPromptId={latestPromptId} agentRunning={tail.agentsRunning > 0}
-        proposalsPending={0} hasComposerDraft={hasComposerDraft} ownsShortcuts={false} composerHasAttachments={composerHasAttachments}
-        onQuestionWithheld={onQuestionWithheld} /></TurnBoxCatalog.Provider> : null}
+        openSessionMcpDialog={null} turnHasPendingSuggestion={pendingSuggestion} latestPromptId={latestPromptId}
+        hasComposerDraft={hasComposerDraft} ownsShortcuts={false} composerHasAttachments={composerHasAttachments}
+        onQuestionWithheld={onQuestionWithheld} /> : null}
     </TurnBox>
   );
   return placeTurnBox(element, placement.slotEl, portal);

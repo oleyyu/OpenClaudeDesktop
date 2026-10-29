@@ -51,8 +51,9 @@ test("LocalReleaseNotes are core-neutral: they announce the agent cores, name De
   const source = await readFile(new URL("../src/source-titlebar.jsx", import.meta.url), "utf8");
   const dialog = source.slice(source.indexOf("export function LocalReleaseNotes"));
   assert.doesNotMatch(dialog, /Codex/i);
-  // B is the shared Dialog: bleed, size md, 'What’s new'; no hand-rolled backdrop, Tab trap or Escape listener.
-  assert.match(dialog, /<SourceDialog open=\{open\} onExited=\{onExited\} onClose=\{onClose\} bleed size="md" title=\{t\("What’s new"\)\}/);
+  // B is the shared Dialog: size md, 'What’s new' in the standard Header (3.6556.2 cb63ed069 B `t(u.Header, { showClose:
+  // !0, … })`, no bleed bar); no hand-rolled backdrop, Tab trap or Escape listener.
+  assert.match(dialog, /<SourceDialog open=\{open\} onExited=\{onExited\} onClose=\{onClose\} size="md" title=\{t\("What’s new"\)\}/);
   assert.doesNotMatch(source, /modal-backdrop|st-release-backdrop|Close release notes|addEventListener\("keydown"/);
   // B29 (cb63ed069 N/z/B): every shipped version has its entry (scripts/verify-release-notes.mjs fails the build
   // otherwise), so an update re-arms the nudge for users who saw the previous notes.

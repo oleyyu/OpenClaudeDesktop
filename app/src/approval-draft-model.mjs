@@ -347,7 +347,9 @@ export const QUESTION_DISMISSED_ANSWER =
 /** Every question answered with the marker, or null when the request cannot take it:
  * the plan review (the source dismisses only AskUserQuestion), a question whose options
  * exclude free text (isOther:false, e.g. Codex), a secret field, or a malformed request. */
-export function dismissQuestionPayload(request) {
+// shared-5 VA (exported xr, c9ed5627b `le`): what dt's Dismiss button (Bt → V(le)) answers every question with.
+export const QUESTION_USER_DISMISSED_ANSWER = "[User dismissed \u2014 do not proceed, wait for next instruction]";
+export function dismissQuestionPayload(request, marker = QUESTION_DISMISSED_ANSWER) {
   if (request?.method !== QUESTION || !request.params || isPlanReviewRequest(request)) return null;
   const { questions, schemaError } = questionSchema(request);
   if (schemaError || !questions.length) return null;
@@ -355,7 +357,7 @@ export function dismissQuestionPayload(request) {
     return null;
   return {
     answers: Object.fromEntries(
-      questions.map((question) => [question.id, { answers: [QUESTION_DISMISSED_ANSWER] }]),
+      questions.map((question) => [question.id, { answers: [marker] }]),
     ),
   };
 }
@@ -372,6 +374,74 @@ export function isQuestionInputSubmit(event) {
     event.keyCode !== 229 &&
     event.nativeEvent?.keyCode !== 229
   );
+}
+
+// AskUserQuestion card keys (L26 / HS-11 / E23), 3.6556.2: the card dt (c9ed5627b-BSPWYeYQ) gives its root
+// `onKeyDown: yn`, which ends in `(e.key==="ArrowDown"||e.key==="ArrowUp"||/^[1-9]$/.test(e.key)&&Number(e.key)<=t+1)
+// &&!rt(e.nativeEvent,E)||At(e)`: a digit 1..N+1 or an arrow first goes through rt (generated as markCardPick), and At
+// is the question hook's handleKeyDown q (c8cf7b513-B-eZCy_c m). E is enableDigitShortcuts, `defaultToNo !== true` in
+// cc32965c2, so on for every local question (no defaultToNo). Option N+1 is Other; the official card always draws it,
+// the local card only when the question takes one (isOther, or a free-form question with no options), so `hasOther`
+// stands for "the card draws Other".
+const elementOfTarget = (node) => (node?.nodeType === 1 ? node : node?.parentElement ?? null);
+export function isQuestionPickKey(event, optionCount, hasOther = true) {
+  const key = event?.key;
+  return key === "ArrowDown" || key === "ArrowUp" ||
+    (/^[1-9]$/.test(key ?? "") && Number(key) <= optionCount + (hasOther ? 1 : 0));
+}
+// q's arrow step over the rows 0..n-1 and Other (-1): Down from none/Other is the first row, from the last row Other;
+// Up from none is Other, from Other the last row, from the first row Other; no rows → Other. Without an Other row
+// (local only) the step wraps between the first and last rows instead.
+export function questionArrowIndex(key, highlighted, optionCount, hasOther = true) {
+  const n = optionCount;
+  if (!hasOther) {
+    if (n === 0) return null;
+    if (key === "ArrowDown") return highlighted === null || highlighted < 0 || highlighted >= n - 1 ? 0 : highlighted + 1;
+    return highlighted === null || highlighted <= 0 ? n - 1 : highlighted - 1;
+  }
+  if (n === 0) return -1;
+  if (key === "ArrowDown") return highlighted === null || highlighted === -1 ? 0 : highlighted === n - 1 ? -1 : highlighted + 1;
+  return highlighted === null ? -1 : highlighted === -1 ? n - 1 : highlighted === 0 ? -1 : highlighted - 1;
+}
+/** q (handleKeyDown) as an intent: { type: "pick", index } (a digit, or ↵ on the highlighted multiSelect row: select
+ * on a single-select question, toggle on a multiSelect one; index -1 is Other), { type: "move", index } (an arrow: the
+ * highlight moves, a single-select question selects it too) or { type: "advance" } (↵ with an answer: Next / Submit);
+ * null leaves the key alone. The caller prevents and stops every intent, as q does.
+ * state: optionCount, hasOther, multiSelect, highlighted (row index, -1 Other, null none), selected (anything chosen:
+ * q's `b.size > 0`), inOther (the key is in the Other field: q's `e.target === M.current`). */
+export function questionCardKey(event, { optionCount, hasOther = true, multiSelect = false, highlighted = null,
+  selected = false, inOther = false } = {}) {
+  if (!event || elementOfTarget(event.target)?.matches?.("button, a")) return null;
+  const n = optionCount, digit = parseInt(event.key, 10);
+  if (!inOther && digit >= 1 && digit <= n) return { type: "pick", index: digit - 1 };
+  if (!inOther && hasOther && digit === n + 1) return { type: "pick", index: -1 };
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    const index = questionArrowIndex(event.key, highlighted, n, hasOther);
+    return index === null ? null : { type: "move", index };
+  }
+  if (event.key !== "Enter" || event.shiftKey || event.nativeEvent?.isComposing || event.isComposing) return null;
+  const chord = !!(event.metaKey || event.ctrlKey);
+  if (multiSelect) {
+    if (chord && selected) return { type: "advance" };
+    return !inOther && !chord && highlighted !== null ? { type: "pick", index: highlighted } : null;
+  }
+  // A free-form question (no options, local only) keeps a plain ↵ in its answer field as a new line.
+  if (inOther && n === 0 && !chord) return null;
+  return selected ? { type: "advance" } : null;
+}
+/** shared-156 nq (rq's overlay test, exported as lr): what counts as a dialog the key came from. */
+export const QUESTION_DIALOG_SELECTOR = '[role="dialog"], [role="alertdialog"], [data-radix-dialog-content], dialog[open]';
+/** yn, the card root's onKeyDown, before q: a key from inside a dialog that does not hold the card is not the card's
+ * (shared-156 rq / lr: `e.closest(nq)` with nq = QUESTION_DIALOG_SELECTOR, `!(t && n.contains(t))`; its eq second
+ * pass walks open shadow roots' active elements, which the host's light-DOM cards never have); a digit 1..N+1 or an arrow is first offered to markPick (rt, the landed-card
+ * pick mark: false holds the key back); then q. The fullscreen-transition guard (shared-2 C7 / w7 and ve) has no host
+ * counterpart (the host keeps no fullscreen state) and is left out. */
+export function questionCardKeyDown(event, state, markPick, root = null) {
+  const dialog = elementOfTarget(event?.target)?.closest?.(QUESTION_DIALOG_SELECTOR);
+  if (dialog && !(root && dialog.contains(root))) return null;
+  if (isQuestionPickKey(event, state.optionCount, state.hasOther ?? true) && !markPick(event.nativeEvent ?? event, true))
+    return null;
+  return questionCardKey(event, state);
 }
 
 /** Entries exist only while a request is pending; no disk/localStorage writes.

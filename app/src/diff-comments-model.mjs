@@ -190,11 +190,13 @@ export function addCommentLabel({ start, end }) {
   return start === end ? t("Add comment on line {line}", { line: start }) : t("Add comment on lines {start}–{end}", { start, end });
 }
 
-// yo: the chip sits at the pointer, kept 72px inside the diff's edges, above the pointer unless that is within
-// 48px of the scroller top (then 8px below it); it shows 250ms after a double/triple click.
+// 3.6556.2 c44d00c7f Bl re (Pl 250 / Fl 72 / Il 8 / Ll 48): the chip sits at the pointer in the file wrapper's own
+// coordinates (`x = min(max(clientX - left, Fl), max(width - Fl, Fl))`, `y = clientY - top`), kept 72px inside its
+// edges, above the pointer unless that is within 48px of the scroller top (zl; then 8px below it); it shows 250ms
+// after a double/triple click.
 export const SELECTION_CHIP = Object.freeze({ edge: 72, gap: 8, flipWithin: 48, multiClickDelay: 250 });
-export function selectionChipPosition({ clientX, clientY, left, width, scrollerTop = 0 }) {
+export function selectionChipPosition({ clientX, clientY, left, top = 0, width, scrollerTop = 0 }) {
   const { edge, flipWithin } = SELECTION_CHIP;
-  const x = left + Math.min(Math.max(clientX - left, edge), Math.max(width - edge, edge));
-  return { x, y: clientY, flipBelow: clientY - scrollerTop < flipWithin };
+  const x = Math.min(Math.max(clientX - left, edge), Math.max(width - edge, edge));
+  return { x, y: clientY - top, flipBelow: clientY - scrollerTop < flipWithin };
 }

@@ -10,19 +10,22 @@ import { cycleButtonForRowKey, cycleExpandsGroupAttribute, cycleNeighbourButton,
 import { sessionCycleStep } from '../src/generated/code-current/session-cycle-step.mjs';
 import { claimComposerArrowKeys } from '../src/generated/code-current/session-cycle-claims.mjs';
 
-// R3-sidebar2 cov7-02: the session cycle runs 2.42304.0 shared-16 qp's pieces (generated/code-current/session-cycle-*).
+// R3-sidebar2 cov7-02: the session cycle runs the official shared-16 cycler's pieces (generated/code-current/
+// session-cycle-*), all 3.6556.2 Pg's (w2-sidebar-current-b); the step fragment is Pg's step arrow `m`
+// (w10-ccres-cycle-step: selectBinding's initType tells it from Pg's second `m`, the capture keydown).
 const app = path.resolve(import.meta.dirname, '..');
 const latest = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const generated = path.join(app, 'src/generated/code-current');
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const TARGETS = {
-  'session-cycle-composer.mjs': ['shared-1-CAAiD7E3.js', ['tg', 'lg', 'fg']],
-  'session-cycle-focus.mjs': ['shared-156-Bikz018e.js', ['BB', 'HB', 'WB', 'ff', 'pf']],
-  'session-cycle-claims.mjs': ['shared-9-D7uuiUv7.js', ['Dm', 'Om', 'km']],
-  'session-cycle-terminal.mjs': ['shared-7-B8UIMGDr.js', ['XM']],
-  'session-cycle-chords.mjs': ['shared-16-B0xHzPjj.js', ['Wp', 'Gp', 'Kp', 'Jp', 'Mf', 'jf', 'Yp', 'am']],
-  'session-cycle-rows.mjs': ['shared-16-B0xHzPjj.js', ['Xp', 'Zp', 'Qp', '$p', 'em', 'tm', 'nm', 'rm', 'im']],
-  'session-cycle-step.mjs': ['shared-16-B0xHzPjj.js', ['qp']],
+  'session-cycle-composer.mjs': ['3.6556.2', 'shared-1-BJhqMmkf.js', ['y_', 'D_', 'A_']],
+  'session-cycle-focus.mjs': ['3.6556.2', 'shared-156-BLTosN8U.js', ['PK', 'IK', 'RK', 'pm', 'mm']],
+  'session-cycle-claims.mjs': ['3.6556.2', 'shared-9-CM21XrJw.js', ['zy', 'By', 'Vy']],
+  'session-cycle-terminal.mjs': ['3.6556.2', 'shared-7-DBAgAi5H.js', ['zB']],
+  'session-cycle-chords.mjs': ['3.6556.2', 'shared-16-ByfgAyLr.js', ['jg', 'Mg', 'Ng', 'Fg', 'oh', 'ah', 'Ig', 'yh', 'bh', 'xh', 'Sh', 'Ch', 'wh', 'Th', 'Kg']],
+  'session-cycle-rows.mjs': ['3.6556.2', 'shared-16-ByfgAyLr.js', ['Lg', 'Rg', 'zg', 'Bg', 'Vg', 'Hg', 'Ug', 'Wg', 'Gg']],
+  'session-cycle-step.mjs': ['3.6556.2', 'shared-16-ByfgAyLr.js', ['Pg']],
 };
 
 // ---------------------------------------------------------------- a small DOM (no DOM library in this repo)
@@ -103,32 +106,39 @@ const CTRL_TAB = key({ key: 'Tab', code: 'Tab', ctrlKey: true }), CTRL_SHIFT_TAB
 const ALT_DOWN = key({ key: 'ArrowDown', code: 'ArrowDown', altKey: true }), ALT_UP = key({ key: 'ArrowUp', code: 'ArrowUp', altKey: true });
 
 // ---------------------------------------------------------------- provenance
-test('the cycle pieces are 2.42304.0 originals: manifest, source hashes, chunk feature strings, qp`s step fragment', () => {
+test('the cycle pieces are 3.6556.2 originals (the step fragment 2.42304.0): manifest, source hashes, chunk feature strings', () => {
   const manifest = JSON.parse(readFileSync(path.join(generated, 'manifest.json'), 'utf8'));
-  for (const [target, [file, bindings]] of Object.entries(TARGETS)) {
+  for (const [target, [version, file, bindings]] of Object.entries(TARGETS)) {
     const entry = manifest.modules.find((module) => module.target === target);
     assert.ok(entry, target);
-    assert.equal(entry.referenceVersion, '2.42304.0', target);
+    assert.equal(entry.referenceVersion, version, target);
     assert.equal(path.basename(entry.source), file, target);
-    assert.equal(entry.sourceSha256, sha(readFileSync(path.join(latest, file))), target);
+    assert.equal(entry.sourceSha256, sha(readFileSync(path.join(version === '3.6556.2' ? v3 : latest, file))), target);
     assert.deepEqual(entry.bindings, bindings, target);
     const text = readFileSync(path.join(generated, target), 'utf8');
     assert.equal(entry.sha256, sha(text), target);
-    assert.match(text, /^\/\/ Original Claude Desktop 2\.42304\.0 bindings/);
+    assert.ok(text.startsWith(`// Original Claude Desktop ${version} bindings`), target);
   }
   const step = manifest.modules.find((module) => module.target === 'session-cycle-step.mjs');
-  assert.deepEqual(step.sourceSelections.map(({ binding, local, direct, parameters }) => ({ binding, local, direct, parameters })), [{ binding: 'qp', local: 'p', direct: true, parameters: 'u, c, f, o, tm' }]);
-  const chunk = readFileSync(path.join(latest, 'shared-16-B0xHzPjj.js'), 'utf8');
-  for (const feature of ['function Up(){return D("__gb__1817753866")}', 'chord:"ctrl_tab"', 'chord:"alt_arrow"', 'chord:"cmd_shift_bracket"',
-    'e.button?.isConnected===!1?Zp(t,e.rowKey):e.button', '$p="data-row-alias-of",em="data-cycle-expands-group"', '.dframe-recents-by-mode [data-kind="${e}"]',
-    'e[i-1]?.getAttribute("aria-current")==="page"', 'for(;h&&rm(h);)[m,h]=p()', 'qp as G', 'im as U', 'tm as W'])
+  assert.deepEqual(step.sourceSelections.map(({ binding, local, direct, initType, parameters }) => ({ binding, local, direct, initType, parameters })), [{ binding: 'Pg', local: 'm', direct: true, initType: 'ArrowFunctionExpression', parameters: 'd, l, p, o, Hg' }]);
+  const chunk = readFileSync(path.join(v3, 'shared-16-ByfgAyLr.js'), 'utf8');
+  // The step owner: Pg's step arrow `m` and the second `m` (the capture keydown) the initType filter leaves out.
+  assert.ok(chunk.includes('m=()=>{let{buttons:e,selectedIdx:t}=Hg(l),n=e.length+1,r=d?zg(d,e):p?0:t+1,i=(r+o+n)%n;'), 'the 3.6556.2 step arrow');
+  assert.ok(chunk.includes('m=J2($,13,t,s)?K2($,13,t,s,'), 'Pg`s second m');
+  const stepText = readFileSync(path.join(generated, 'session-cycle-step.mjs'), 'utf8');
+  assert.match(stepText, /import \{ cycleResumePosition as zg \} from "\.\/session-cycle-rows\.mjs";/);
+  assert.match(stepText, /function Pg\(d, l, p, o, Hg\) \{\n  return \(\) => \{\n    let \{ buttons: e, selectedIdx: t \} = Hg\(l\),/);
+  assert.match(stepText, /export \{ Pg as sessionCycleStep \};/);
+  for (const feature of ['function Tg(){return J("__gb__1817753866")}', 'chord:"ctrl_tab"', 'chord:"alt_arrow"', 'chord:"cmd_shift_bracket"',
+    'e.button?.isConnected===!1?Rg(t,e.rowKey):e.button', 'Bg="data-row-alias-of",Vg="data-cycle-expands-group"', '.dframe-recents-by-mode [data-kind="${e}"]',
+    'e[i-1]?.getAttribute("aria-current")==="page"', 'for(;_&&Wg(_);)', 'Pg as Y', 'Gg as K', 'Hg as q'])
     assert.ok(chunk.includes(feature), feature);
   // The chunk's import table: what the generated imports stand in for.
-  for (const binding of ['fd as Fe', 'td as Ge', 'Cr as Ye', 'wr as $e', 'Eh as Xe', 'vt as wi', 'N as bi', 'kw as xt', 'vl as pr', 'If as W', 'Ca as n'])
+  for (const binding of ['tf as tt', 'Wd as Ye', 'Cr as br', 'wr as Tr', 'Ig as Sr', 'pn as Mi', 'Q as Ni', 'mE as tn', 'Iu as E', 'ah as X', 'Sa as c'])
     assert.ok(new RegExp(`\\b${binding.replace('$', '\\$')}\\b`).test(chunk.slice(0, 6000)), binding);
   const rows = readFileSync(path.join(generated, 'session-cycle-rows.mjs'), 'utf8');
-  assert.match(rows, /import \{ flushSync as n \} from "react-dom";/);
-  assert.match(rows, /import \{ sessionCycleGroupStore as W \} from "\.\.\/\.\.\/session-cycle-adapters\.mjs";/);
+  assert.match(rows, /import \{ flushSync as c \} from "react-dom";/);
+  assert.match(rows, /import \{ sessionCycleGroupStore as X \} from "\.\.\/\.\.\/session-cycle-adapters\.mjs";/);
   assert.equal(sessionCycleRepeatMs, 50); assert.equal(CYCLE_REPEAT_MS, 50);
   assert.equal(rowAliasAttribute, 'data-row-alias-of'); assert.equal(cycleExpandsGroupAttribute, 'data-cycle-expands-group');
   assert.equal(cycleComposerSelector, '[data-testid="chat-input"],[data-testid="code-prompt-input"]');
@@ -404,6 +414,23 @@ test('repeats within 50 ms are swallowed; modifiers, Alt, blur, a layer, focus g
   assert.equal(empty.cycler.keydown(NEXT), false); assert.equal(empty.cycler.step(-1), false); assert.deepEqual(empty.calls, []);
 });
 
+test('3.6556.2 Pg: a mousedown without a modifier ends the held sequence; the ctrl_tab tab-strip branch is behind an off gate', () => {
+  onMac(true);
+  const doc = documentOf(sidebar(row('A'), row('B', { selected: 'focused', current: true }), row('C')));
+  globalThis.document = doc;
+  const { cycler } = harness(doc);
+  cycler.keydown(CTRL_TAB); assert.notEqual(cycler.last, null);
+  cycler.mousedown({ ctrlKey: true, metaKey: false, altKey: false }); assert.notEqual(cycler.last, null, 'Ctrl still held');
+  cycler.mousedown({ ctrlKey: false, metaKey: false, altKey: true }); assert.notEqual(cycler.last, null, '⌥ still held');
+  cycler.mousedown({ ctrlKey: false, metaKey: false, altKey: false }); assert.equal(cycler.last, null);
+  const chunk = readFileSync(path.join(v3, 'shared-16-ByfgAyLr.js'), 'utf8');
+  assert.ok(chunk.includes('x=J1($,20,s)?K1($,20,s,e=>{!e.ctrlKey&&!e.metaKey&&!e.altKey&&s(null)}):$[21],S=we(x)'));
+  assert.ok(chunk.includes('gr("mousedown",S,w)') && chunk.includes('w=J0($,23)?K0($,23,{capture:!0}):$[23]'));
+  // Ctrl+Tab first cycles a registered pane tab strip (xg over bg's vg) only behind _g(), a new GrowthBook key (R15: off).
+  assert.ok(chunk.includes('r.chord==="ctrl_tab"&&a.current===null&&!Q.getState().extraPanesByMode[i]?.length&&_g()&&xg(r.dir,n.repeat)'));
+  assert.ok(chunk.includes('var hg="__gb__320800483";function gg(){return J(hg)}function _g(){return Ee(hg)}'));
+});
+
 test('the Go menu`s onCycleSession is one fresh step from the selection each time', () => {
   onMac(true);
   const doc = documentOf(sidebar(row('A', { selected: 'focused', current: true }), row('B'), row('C')));
@@ -438,6 +465,10 @@ test('main.jsx and SourceSidebar wire the original cycle: host tm, im, Home draf
   assert.doesNotMatch(main, /function sidebarCycleRows/);
   assert.match(main, /else if \(sessionCycler\.current\.keydown\(e\)\) \{ e\.preventDefault\(\); return; \}/);
   assert.match(main, /sessionCycler\.current\.step\(e\.delta\)/);
+  // 3.6556.2 Pg x / gr("mousedown",S,w) with w={capture:!0}: the capture-phase window mousedown, removed the same way.
+  assert.match(main, /mousedown = \(e\) => cycler\.mousedown\(e\);/);
+  assert.match(main, /window\.addEventListener\("mousedown", mousedown, \{ capture: true \}\);/);
+  assert.match(main, /window\.removeEventListener\("mousedown", mousedown, \{ capture: true \}\);/);
   const sidebarSource = readFileSync(path.join(app, 'src/source-sidebar.jsx'), 'utf8');
   assert.match(sidebarSource, /import \{ connectSessionCycleGroups \} from "\.\/session-cycle-adapters\.mjs";/);
   assert.match(sidebarSource, /useEffect\(\(\) => connectSessionCycleGroups\(\{ collapsedGroups: \(\) => cycleGroups\.current\.collapsedGroups\(\), expandGroup: \(key\) => cycleGroups\.current\.expandGroup\(key\) \}\), \[\]\);/);

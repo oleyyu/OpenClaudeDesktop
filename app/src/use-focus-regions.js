@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { PASS_THROUGH_REGIONS, orderStops, regionJumpStop, regionKeyAction } from "./focus-region-model.mjs";
+import { LAST_MESSAGE_SELECTOR, PASS_THROUGH_REGIONS, labelLandingGroup, lastFeedArticle, orderStops, regionJumpStop, regionKeyAction } from "./focus-region-model.mjs";
 import { isMacPlatform } from "./pane-keys-model.mjs";
 import "./focus-regions.css";
 
@@ -44,6 +44,9 @@ function conversationShown(doc) {
   return [...doc.querySelectorAll('[data-focus-region="conversation"]')].some((element) => element.matches('[role="feed"]') || !!element.querySelector('[role="feed"]'));
 }
 
+// The feed a "lastMessage" landing scrolls (its focus pins the conversation to the bottom).
+const scrollers = new WeakMap();
+
 export function collectRegionStops(doc = document, { modalRoot = false } = {}) {
   const elements = new Map();
   const landings = [...doc.querySelectorAll("[data-focus-region]")].filter((element) => visibleLanding(element, doc, { modalRoot })).map((element, index) => {
@@ -54,6 +57,18 @@ export function collectRegionStops(doc = document, { modalRoot = false } = {}) {
     elements.set(`${landing.region}:${landing.instance}:${landing.fallback}`, element);
     return landing;
   });
+  // w13-close-chat-messages: ca1d33d05 rn's "lastMessage" — the chat column's feed (data-focus-region-last-message,
+  // source-transcript.jsx on a Chat conversation) lands on its last article (c1f21cfe3 `i`), one stop per split pane.
+  for (const feed of doc.querySelectorAll("[data-focus-region-last-message]")) {
+    if (!visibleLanding(feed, doc, { modalRoot })) continue;
+    const article = lastFeedArticle(feed.querySelectorAll(LAST_MESSAGE_SELECTOR));
+    if (!article) continue;
+    const pane = feed.closest(".split-pane")?.getAttribute("data-pane-index");
+    const landing = { region: "lastMessage", instance: pane == null ? "" : `pane${pane}`, index: landings.length, fallback: false };
+    elements.set(`${landing.region}:${landing.instance}:false`, article);
+    scrollers.set(article, feed);
+    landings.push(landing);
+  }
   return orderStops(landings, { conversation: conversationShown(doc) }).map((stop) => ({ ...stop, element: elements.get(`${stop.id}:${stop.fallback}`) }));
 }
 
@@ -80,9 +95,11 @@ function modalFocus(active) {
 let clearRing = null;
 // F: focus the landing (a temporary tabindex=-1 when it is not focusable) and draw the region ring on it, or on
 // ringOn; the ring goes with a pointer press on it or a focus that leaves it, and with clearOnInput also with the
-// next non-modifier key or input.
-export function focusRegionLanding(element, { ring = "overlay", ringOn = element, clearOnInput = false } = {}) {
+// next non-modifier key or input. prepare (3.6556.2 ca1d33d05 V `prepare:i` … `a=i?.()`, cleared first by m): runs
+// before the focus and returns its undo.
+export function focusRegionLanding(element, { ring = "overlay", ringOn = element, clearOnInput = false, prepare } = {}) {
   clearRing?.();
+  const undoPrepare = prepare?.();
   const doc = element.ownerDocument, view = doc.defaultView;
   let temporary = !element.hasAttribute("tabindex") && element.tabIndex < 0;
   const observer = new view.MutationObserver(() => { temporary = false; });
@@ -104,6 +121,7 @@ export function focusRegionLanding(element, { ring = "overlay", ringOn = element
     if (dialog === null || dialog.contains(ringOn) || ringOn.contains(dialog)) clear();
   };
   function clear() {
+    undoPrepare?.();
     if (temporary && observer.takeRecords().length === 0) element.removeAttribute("tabindex");
     observer.disconnect();
     ringOn.removeAttribute(LANDING); ringOn.removeAttribute(AROUND); element.removeAttribute(INSIDE);
@@ -126,10 +144,20 @@ export function focusRegionLanding(element, { ring = "overlay", ringOn = element
 
 function landStop(stop) {
   const element = stop.element;
+  // ca1d33d05 rn lastMessage focus: `V(e,{ring:!1})`, then setPinToBottom(!0) and scrollToBottom("auto",{onlyIfPinned:!0}).
+  if (stop.region === "lastMessage") {
+    focusRegionLanding(element, { ring: "none" });
+    const feed = scrollers.get(element);
+    if (feed) feed.scrollTop = feed.scrollHeight;
+    return;
+  }
   const ringOnSelector = element.getAttribute("data-focus-region-ring-on");
   const ringOn = (ringOnSelector && element.closest(ringOnSelector)) || element;
+  // data-focus-region-label: the landing reads as a labelled group while it holds the jump (ca1d33d05 tn → en).
+  const label = element.getAttribute("data-focus-region-label");
   focusRegionLanding(element, { ring: element.getAttribute("data-focus-region-ring") || "overlay", ringOn,
-    clearOnInput: element.hasAttribute("data-focus-region-clear-on-input") });
+    clearOnInput: element.hasAttribute("data-focus-region-clear-on-input"),
+    prepare: label ? () => labelLandingGroup(element, label) : undefined });
 }
 
 // Pe / Fe: a jump stays in the focused split pane (or lands outside every pane).

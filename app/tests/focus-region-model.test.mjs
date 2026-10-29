@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { JUMP_COMMANDS, NOTIFICATIONS_STOP, compareOrderKeys, nextRegionStop, orderStops, regionDirection, regionJumpStop, regionKeyAction, tileRegion } from "../src/focus-region-model.mjs";
+import { JUMP_COMMANDS, NOTIFICATIONS_STOP, compareOrderKeys, labelLandingGroup, nextRegionStop, orderStops, regionDirection, regionJumpStop, regionKeyAction, tileRegion } from "../src/focus-region-model.mjs";
 import { paletteActions } from "../src/sidebar-palette-model.mjs";
 
 const f6 = (extra = {}) => ({ key: "F6", altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, repeat: false, isComposing: false, ...extra });
@@ -92,12 +92,12 @@ test("regionKeyAction (bn): repeats are swallowed, owned focus yields, the toast
 });
 
 test("jump_to_* (gn Q / O): palette rows for the available jumps; a jump stays in the focused pane", () => {
-  assert.deepEqual(JUMP_COMMANDS.map((command) => command.id), ["jump_to_navigation", "jump_to_main_content", "jump_to_input", "jump_to_preview", "jump_to_terminal", "jump_to_pane"]);
+  assert.deepEqual(JUMP_COMMANDS.map((command) => command.id), ["jump_to_navigation", "jump_to_main_content", "jump_to_last_message", "jump_to_input", "jump_to_artifact", "jump_to_preview", "jump_to_terminal", "jump_to_pane"]); // w13-chatui-artifact-inline: + jump_to_artifact; w13-close-chat-messages: + jump_to_last_message (ca1d33d05 Q order)
   assert.deepEqual(JUMP_COMMANDS.find((command) => command.id === "jump_to_main_content").regions, ["header", "main"]);
   const jumped = [];
   const rows = paletteActions({ jumps: JUMP_COMMANDS.filter((command) => command.id !== "jump_to_terminal"), onJump: (regions) => jumped.push(regions) });
-  assert.deepEqual(rows.map((row) => row.label), ["Jump to navigation", "Jump to main content", "Jump to input", "Jump to preview", "Jump to pane"]);
-  rows[2].run();
+  assert.deepEqual(rows.map((row) => row.label), ["Jump to navigation", "Jump to main content", "Jump to last message", "Jump to input", "Jump to artifact", "Jump to preview", "Jump to pane"]);
+  rows[3].run();
   assert.deepEqual(jumped, [["composer"]]);
   assert.deepEqual(paletteActions({ jumps: JUMP_COMMANDS }), [], "no host jump, no rows");
   const stops = [{ id: "composer:pane0:", region: "composer", pane: 0 }, { id: "composer:pane1:", region: "composer", pane: 1 }];
@@ -125,4 +125,24 @@ test("wiring: the landings carry region markers and the primary side mounts the 
   assert.match(read("source-tile-layout.jsx"), /data-focus-region=\{node\.tileId === "chat" \? undefined : tileRegion\(node\.tileId\)\}/);
   assert.match(read("main.jsx"), /useFocusRegionNavigation\(side === 0\)/);
   assert.match(read("use-focus-regions.js"), /addEventListener\("keydown", onKey, \{ capture: true \}\)/);
+});
+
+// w13-chatui-artifact-inline: 3.6556.2 ca1d33d05-DdOyUCec.js en / tn / V prepare.
+test("labelLandingGroup (en): role=group + aria-label while the jump ring is on, removed by the undo; landStop reads data-focus-region-label", () => {
+  const attrs = new Map();
+  const element = { setAttribute: (name, value) => attrs.set(name, value), removeAttribute: (name) => attrs.delete(name) };
+  const undo = labelLandingGroup(element, "Quarterly report");
+  assert.deepEqual([...attrs], [["role", "group"], ["aria-label", "Quarterly report"]]);
+  undo();
+  assert.equal(attrs.size, 0);
+  const hook = readFileSync(new URL("../src/use-focus-regions.js", import.meta.url), "utf8");
+  // V: prepare runs before the focus (`let a=i?.()`), its undo first in the clear (`m=()=>{a?.(),…`).
+  assert.match(hook, /clearOnInput = false, prepare \} = \{\}\) \{\n  clearRing\?\.\(\);\n  const undoPrepare = prepare\?\.\(\);/);
+  assert.match(hook, /function clear\(\) \{\n    undoPrepare\?\.\(\);/);
+  assert.match(hook, /const label = element\.getAttribute\("data-focus-region-label"\);[\s\S]*?prepare: label \? \(\) => labelLandingGroup\(element, label\) : undefined/);
+  const official = readFileSync(new URL("../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/ca1d33d05-DdOyUCec.js", import.meta.url), "utf8");
+  assert.ok(official.includes('function en(e,t){return e.setAttribute("role","group"),e.setAttribute("aria-label",t),()=>{e.removeAttribute("role"),e.removeAttribute("aria-label")}}'));
+  assert.ok(official.includes('t?.trim()||r.formatMessage({defaultMessage:"Artifact",id:"07/fBlW5U3"})'));
+  assert.ok(official.includes('V(e,{ring:"overlay",prepare:()=>en(e,a)})'));
+  assert.match(readFileSync(new URL("../src/source-chat-artifact-panel.jsx", import.meta.url), "utf8"), /data-focus-region="artifact" data-focus-region-label=\{shown\?\.title\?\.trim\(\) \|\| t\('Artifact'\)\}/);
 });

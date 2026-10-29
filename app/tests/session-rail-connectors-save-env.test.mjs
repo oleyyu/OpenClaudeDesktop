@@ -6,6 +6,9 @@
 //   cc43287c9        the session view puts the MCP opener on the scope store; host: Customize › Connectors.
 //   cf74bc599 Ay / Iy / Ly / Py / My / Ny, c73f45bc3 qc   the save setup, the link, the request and its dialog;
 //                    host: the generated save-environment.mjs over adapter stores, the host's saved environment dialog.
+// V3-w6-rail-host (3.6556.2, panes:C1-6 / C1-9): cf74bc599-CRYqipWN.js TN (the rail host now), its NA row opener,
+//   c227f4d5e yJ / _J (the counts, Cd's successor), the Mj localIcon, the stacked Save row's `!_e || savedAs` rule
+//   and the Save link in Zj's mark slot (`flex shrink-0 ps-xs`).
 // Nothing here launches Electron or a browser: the fake DOM is tests/fixtures/preview-r3b-dom.mjs, the desktop bridge a
 // stub that answers from tables (no processes, no ports, no network, no real config).
 import test, { before, after } from 'node:test';
@@ -21,6 +24,8 @@ import { withPreviewDom, reactProps, createDesktop } from './fixtures/preview-r3
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const official = (name) => fs.readFileSync(path.join(v1, name), 'utf8');
+const v1Next = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+const officialV3 = (name) => fs.readFileSync(path.join(v1Next, name), 'utf8');
 const read = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const pin = (text, needles, expected = 1) => { for (const needle of needles) assert.equal(count(text, needle), expected, needle); };
@@ -78,6 +83,40 @@ test('official 2.42304.0: fO wiring, Cd, the opener on the scope store, Ay / Iy 
   assert.ok(official('c73f45bc3-CFrHin0p.js').includes('[c,l]=r({id:e,counts:s}),d=c.id===e;'));
 });
 
+test('official 3.6556.2: TN\'s connectors with targets and the NA opener, yJ / _J, Mj localIcon, the Save row and link rules', () => {
+  const rail = officialV3('cf74bc599-CRYqipWN.js');
+  pin(rail, [
+    'servers:yj({names:e.counts.listedNames,states:e.counts.listedStates,iconTypes:e.counts.listedIconTypes,iconSrcs:e.counts.listedIconSrcs,targets:e.counts.listedTargets,labelOf:HA}),onOpen:t=>Xe(t,e.onOpen)}',
+    'function NA(){let $=J9(3),e=MA(),t=So();return J2($,0,e,t)?K2($,0,e,t,(n,r)=>{if(n?.kind==="account"&&t){e(gt({connector:n.id}));return}r(n?.kind==="session"?n.id:void 0)}):$[2]}',
+    'onClick:()=>o(e.target)', 'Mi as gp', 'cs as So',
+    'kinds:tt?{...De,local:tt.hint}:De,localIcon:tt?void 0:ua("local"),named:_e&&{name:_e.name,icon:ua(_e.target.kind)}}', 'L as ua', 'Pn as c_',
+    'clonesRepos:Aj(He)&&L.environmentKind!==void 0,repoSlugs:L.repoSlugs}', 'inCheckout:o||L.git!==void 0||L.repoSlugs.length>0||K.headUnread',
+    'wj({metaFetched:Wt,metaPending:Bt,props:zt.props,available:Gt,prefsPending:Ut})',
+    'bn&&!l&&(!_e||bn.savedAs!==void 0)?s($x,{scopeStore:n,sessionId:t.id,setup:bn}):void 0', 'bn&&!l&&d&&!_e?s(Qx,{scopeStore:n,sessionId:t.id,setup:bn}):void 0',
+    'Y="flex shrink-0 ps-xs"', 'pluginSections:wn',
+  ]);
+  pin(officialV3('c73f45bc3-B7hbL7H9.js'), ['Gu=()=>void 0', 'Gu as Pn']);
+  pin(officialV3('shared-20-mUr7IqZY.js'), ['function cA(e){switch(e){case"local":return"Laptop";case"cloud":return"Cloud";case"ssh":return"CommandLine";case"bridge":return"Cursor"}}', 'cA as L']);
+  const c227 = officialV3('c227f4d5e-B-FYKrwT.js');
+  pin(c227, ['yJ as Mi', 'listedToolPrefixes:vJ(a.map(xJ),i.map(bJ))}', 'function iJ(e){return`mcp__${Ol(e)}__`}',
+    'function vJ(e,t){let n=t.map(iJ);return e.map(iJ).map(e=>n.filter(t=>t.startsWith(e)||e.startsWith(t)).length===1?e:"").join(`\n`)}']);
+  const _J = /_J=\{([^}]*)\}/.exec(c227);
+  assert.ok(_J);
+  assert.deepEqual(_J[1].split(',').map((entry) => entry.split(':')[0]), Object.keys(Model.NO_SESSION_MCP_COUNTS), 'the host keeps _J\'s keys in order');
+  pin(officialV3('shared-156-BLTosN8U.js'), ['function lb(e){return e.replace(/[^a-zA-Z0-9_-]/g,"_")}', 'lb as pm']);
+});
+
+test('NA without a connector directory: a session target opens the fallback with its id, anything else with undefined', () => {
+  const opened = [];
+  const open = (id) => opened.push(id);
+  Model.openConnectorTarget({ kind: 'session', id: 'srv' }, open);
+  Model.openConnectorTarget({ kind: 'account', id: 'uuid' }, open);
+  Model.openConnectorTarget(undefined, open);
+  assert.deepEqual(opened, ['srv', undefined, undefined]);
+  assert.deepEqual(Model.listedToolPrefixes(['a', 'ab', 'x y'], ['a', 'ab', 'x y']).split('\n'), ['mcp__a__', 'mcp__ab__', 'mcp__x_y__']);
+  assert.deepEqual(Model.listedToolPrefixes(['a', 'a'], ['a', 'a']).split('\n'), ['', ''], 'two servers with one prefix: neither has one');
+});
+
 // ---------------------------------------------------------------------------------------------------------------
 const rows = [
   { name: 'docs', kind: 'connected' }, { name: 'github', kind: 'signIn' }, { name: 'linear', kind: 'unreachable' },
@@ -90,10 +129,16 @@ test('Cd over the host list: statuses, counts, listed names and states; loading,
   assert.equal(counts.count, 8);
   assert.equal(counts.needReconnect, 2);
   assert.equal(counts.unavailable, 2);
-  assert.equal(counts.listedNames, rows.map((row) => row.name).join('\n'));
-  assert.equal(counts.listedStates, ['', 'needs-auth', 'failed', '', 'unavailable', 'unavailable', '', ''].join('\n'));
-  assert.equal(counts.reconnectNames, 'github\nlinear');
+  // V3-w10-ccres-rail-connectors: yJ lists through c9081d688 v (sorted by display name, the plugin's by its connector)
+  const listed = ['blocked-one', 'docs', 'github', 'linear', 'project-tool', 'quiet', 'plugin:acme:search', 'slow'];
+  assert.equal(counts.listedNames, listed.join('\n'));
+  assert.equal(counts.listedStates, ['unavailable', '', 'needs-auth', 'failed', 'unavailable', '', '', ''].join('\n'));
+  // yJ (3.6556.2): no account connectors; the user's own servers to reconnect, each server's grouped target and prefix
+  assert.equal(counts.reconnectOwnShownNames, 'github\nlinear');
   assert.equal(counts.listedIconTypes, '\n\n\n\n\n\n\n');
+  assert.equal(counts.listedTargets, listed.map((name) => `session:${encodeURIComponent(`session-mcp:${name}`)}`).join('\n'));
+  assert.equal(counts.listedToolPrefixes.split('\n')[6], 'mcp__plugin_acme_search__');
+  assert.equal('reconnectNames' in counts || 'needReconnectOwn' in counts || 'reconnectStates' in counts, false, '_J dropped them');
   // Sd while loading, for another thread or without a session; null when the core cannot list (no source).
   assert.equal(Model.sessionMcpCounts({ status: 'loading', threadId: 's1', rows: [] }, 's1'), Model.NO_SESSION_MCP_COUNTS);
   assert.equal(Model.sessionMcpCounts({ status: 'ready', threadId: 's2', rows }, 's1'), Model.NO_SESSION_MCP_COUNTS);
@@ -105,8 +150,12 @@ test('Cd over the host list: statuses, counts, listed names and states; loading,
   assert.equal(Model.heldMcpCounts({ id: 's1', counts }, 's2', Model.NO_SESSION_MCP_COUNTS).shown, Model.NO_SESSION_MCP_COUNTS);
   // fO ke with PE / uE: the servers to reconnect first, plugin connectors labelled with their plugin, the opener
   const open = () => {};
-  const card = Model.railConnectors(counts, open, Derive.connectorRows, Derive.connectorLabel);
-  assert.equal(card.onOpen, open);
+  const opened = [];
+  const card = Model.railConnectors(counts, (id) => opened.push(id), Derive.connectorRows, Derive.connectorLabel);
+  // TN `onOpen: t => Xe(t, e.onOpen)`: a row's session target goes through NA to the opener with its grouped id
+  card.onOpen(card.servers[0].target);
+  assert.deepEqual(opened, ['session-mcp:github']);
+  assert.equal(card.servers.every((row) => row.target?.kind === 'session'), true);
   assert.deepEqual(card.servers.map((row) => [row.name, row.state]).slice(0, 2), [['github', 'needs-auth'], ['linear', 'failed']]);
   assert.deepEqual(card.servers.find((row) => row.name === 'plugin:acme:search').plugin, 'Acme');
   assert.equal(Model.railConnectors(counts, null, Derive.connectorRows, Derive.connectorLabel), undefined);
@@ -234,6 +283,8 @@ test('fO stand-in: the flat rail\'s Save link beside an unnamed local environmen
     assert.equal(link.getAttribute('aria-label'), 'Save as environment');
     assert.equal(link.getAttribute('data-cds'), 'TextLink');
     assert.equal(link.textContent, 'Save');
+    // 3.6556.2 Zj (panes:C1-6): the link sits in the environment row's mark slot, `Y = "flex shrink-0 ps-xs"`
+    assert.equal(link.parentNode.getAttribute('class'), 'flex shrink-0 ps-xs');
     assert.equal(aside(container).querySelector('[data-testid="rail-save-environment"]'), null, 'Ly is null in the flat rail');
     // Py: the request goes on the scope store; qc (the host dialog) opens for it
     await act(async () => { reactProps(link).onClick?.({ preventDefault() {}, stopPropagation() {}, currentTarget: link, target: link, button: 0, nativeEvent: {} }); });
@@ -278,7 +329,8 @@ test('Ay: the setup for a local folder (label, suggested name), none for a remot
   await settle(h(Probe, { meta: { originCwd: '/Users/me/widgets', isScratchWorkspace: false } }));
   assert.deepEqual(setup.target, { kind: 'local', cwd: '/Users/me/widgets' });
   assert.equal(setup.suggestedName, 'widgets');
-  assert.equal(setup.label, 'This computer · widgets');
+  // 3.6556.2 Vx: `${BL(intl)} \u00B7 ${name}`, shared-46 BL defaultMessage "this computer" (lower case, w5-session-rail-gen).
+  assert.equal(setup.label, 'this computer · widgets');
   assert.equal(setup.startCount, 1);
   assert.deepEqual(setup.settings, {});
   await settle(h(Probe, { meta: { originCwd: '/Users/me/widgets', remote: { kind: 'ssh' } } }));
@@ -319,9 +371,20 @@ test('main.jsx and zh-CN: the rail host gets the connector list, the opener and 
   const main = read('src/main.jsx');
   pin(main, [
     'connectors: boot?.connected ? { mcp: customizeSnapshot.mcp, load: () => customizeStore.loadMcp({ cwd: workdir || cwd, threadId: current ?? null }) } : undefined,',
-    'openSessionMcpDialog: boot?.connected ? () => setSettings("customize-connectors") : null,',
+    // w11-sweep-ccres: the opener takes the pressed row's grouped id (cc43287c9 iv `ev({rowId: e})`) to its Customize page.
+    'openSessionMcpDialog: boot?.connected ? (id) => setSettings(sessionMcpSettingsPage(id)) : null,',
     "saveEnvironment: async (value) => { const result = await savedEnvironments.run({ op: 'save', value }); await selectSavedEnvironment(result.environment.id); return result.environment; },",
   ]);
+  // V3-w6-rail-host: the stand-in follows 3.6556.2 TN's Save row rule, Remote Control args, Cj / Dj inputs and plugin sections
+  const view = read('src/source-session-rail.jsx');
+  pin(view, [
+    'saveEnvironment={St && !o && (!K || St.savedAs !== undefined) ? <RailSaveEnvironmentRow scopeStore={t} sessionId={e.id} setup={St} /> : undefined}',
+    'environmentSave={St && !o && c && !K ? <RailSaveEnvironmentLink scopeStore={t} sessionId={e.id} setup={St} /> : undefined}',
+    'const at = remoteControlState({ metaFetched: !!C, metaPending: rt, props: undefined, available: false, prefsPending: Ut });',
+    'clonesRepos: false, repoSlugs: k.repoSlugs });', 'inCheckout: liveWorktree || k.git !== undefined || k.repoSlugs.length > 0 || ee.headUnread,',
+    'localIcon: environmentIcon("local"),', 'pluginSections={NO_PLUGIN_SECTIONS}', 'editEnvironmentRequest: null, openMemoryDialog: null }));',
+  ]);
+  assert.equal(count(view, 'discoveryPending: D') + count(view, 'hasBranchRow:'), 0, 'wj lost discoveryPending / hasRepo / hasBranchRow');
   const zh = (await import('../electron/i18n/zh-CN/session.mjs')).default;
   assert.equal(zh['Save as environment'], '另存为环境');
   assert.equal(zh['Saved as environment “{name}”'], '已另存为环境“{name}”');

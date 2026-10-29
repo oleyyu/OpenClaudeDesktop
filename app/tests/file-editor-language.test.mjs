@@ -32,7 +32,7 @@ test('original indentation detection chooses tabs or smallest likely unit and re
  state=state.update({changes:{from:0,to:state.doc.length,insert:'block\n    body'},annotations:resetIndentation.of(true)}).state;
  assert.equal(state.facet(indentUnit),'    ');
 });
-test('2.42304.0 Makefile family falls back to tab indentation; detection and the disabled field stay unchanged',()=>{
+test('Makefile family falls back to tab indentation; detection and the disabled field stay unchanged',()=>{
  const unit=(path,doc='all:\n',enabled=true)=>EditorState.create({doc,extensions:[detectedIndentation(enabled,path)]}).facet(indentUnit);
  for(const path of ['Makefile','/repo/GNUmakefile','src/rules.mk','build.mak','C:\\repo\\Makefile']) assert.equal(unit(path),'\t',path);
  for(const path of ['a.js','Makefile.am','notes.txt']) assert.equal(unit(path),'  ',path);
@@ -41,6 +41,13 @@ test('2.42304.0 Makefile family falls back to tab indentation; detection and the
  let state=EditorState.create({doc:'all:\n    echo ok\n',extensions:[detectedIndentation(true,'Makefile')]});
  state=state.update({changes:{from:0,to:state.doc.length,insert:'all:\n'},annotations:resetIndentation.of(true)}).state;
  assert.equal(state.facet(indentUnit),'\t','an external replacement re-detects with the Makefile fallback');
+});
+test('3.6556.2 .tsv files also fall back to tab indentation (cbd02b8f2 Ua)',()=>{
+ const unit=(path,doc='a\tb\n',enabled=true)=>EditorState.create({doc,extensions:[detectedIndentation(enabled,path)]}).facet(indentUnit);
+ for(const path of ['data.tsv','/repo/OUT.TSV','C:\\repo\\rows.tsv']) assert.equal(unit(path),'\t',path);
+ for(const path of ['data.csv','data.tsv.txt']) assert.equal(unit(path),'  ',path);
+ assert.equal(unit('data.tsv','a\n    b\n'),'    ','detected indentation still wins over the .tsv fallback');
+ assert.equal(unit('data.tsv','a\n',false),'  ','disabled detection keeps the two-space unit');
 });
 test('Tab inserts to next indentation stop; selected lines indent together',()=>{
  let state=EditorState.create({doc:'x\n  y',selection:{anchor:1},extensions:[detectedIndentation(true,'x.txt')]});

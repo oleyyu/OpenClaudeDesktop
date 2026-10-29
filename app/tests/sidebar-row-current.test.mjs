@@ -7,14 +7,16 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { currentSidebarDetails } from '../src/sidebar-details-current-model.mjs';
 import { normalizeSidebarPreferences } from '../src/sidebar-model.js';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
-let server, Sidebar, Row, Details, Cds;
+let server, Sidebar, Row, Details, Cds, HostRow;
 before(async()=>{
   server=await createServer({configFile:false,root:new URL('..',import.meta.url).pathname,plugins:[react()],server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error'});
   Sidebar=await server.ssrLoadModule('/src/source-sidebar.jsx');
   Row=await server.ssrLoadModule('/src/generated/code-current/sidebar-row-view.mjs');
   Details=await server.ssrLoadModule('/src/generated/code-current/sidebar-details-view.mjs');
-  Cds=await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  Cds=await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  HostRow=await server.ssrLoadModule('/src/source-code-sidebar-row.jsx');
 });
 after(()=>server?.close());
 const session={id:'row',name:'A task',cwd:'/work/repository',createdAt:1,updatedAt:1};
@@ -84,13 +86,14 @@ function fixture(component,props={}){
     useMemo(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps))cells[i]={value:fn(),deps};return cells[i].value;},
     useCallback(fn,deps){return hooks.useMemo(()=>fn,deps);},
     useContext(context){return context._currentValue;},
+    use(context){return context._currentValue;},
     useSyncExternalStore(_subscribe,snapshot,serverSnapshot){return (serverSnapshot??snapshot)();},
     useId(){return hooks.useMemo(()=>`button-fixture-${cursor}`,[]);},
     useImperativeHandle(ref,create,deps){hooks.useEffect(()=>{if(ref)ref.current=create();},deps);},
     useEffectEvent(fn){const ref=hooks.useRef(fn);ref.current=fn;return hooks.useCallback((...args)=>ref.current(...args),[]);},
     useEffect(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps)){const old=cells[i];cells[i]={deps};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}},
   };hooks.useLayoutEffect=hooks.useEffect;
-  const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internal.H;internal.H=hooks;try{return tree=component(props);}finally{internal.H=old;}};
+  const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internal.H;internal.H=withMemoCache(hooks);try{return tree=component(props);}finally{internal.H=old;}};
   render();return {get tree(){return tree;},render,flush(){while(effects.length)effects.shift()();},close(){cells.forEach(c=>c.cleanup?.());}};
 }
 test('Metadata checkbox persists the preference while leaving its menu open and preserving other settings',()=>{
@@ -138,12 +141,92 @@ test('failed rename rolls back the original optimistic label',async()=>{
 });
 test('original input ignores IME Enter/Escape, stops bubbling and preserves the host length limit',()=>{
   let submitted=0,cancelled=0,stopped=0,prevented=0;const values=[];
-  const tree=Row.SidebarRenameInput({inputRef:{current:null},value:'Old',maxLength:200,onSubmit:()=>submitted++,onCancel:()=>cancelled++,onValueChange:v=>values.push(v)});
+  // 3.6556.2 Ok is React Compiler output: one direct call still needs a dispatcher with useMemoCache (R5).
+  const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internal.H;internal.H=withMemoCache({});
+  let tree;try{tree=Row.SidebarRenameInput({inputRef:{current:null},value:'Old',maxLength:200,onSubmit:()=>submitted++,onCancel:()=>cancelled++,onValueChange:v=>values.push(v)});}finally{internal.H=old;}
   const input=nodes(tree,n=>n.type==='input')[0];assert.equal(input.props.maxLength,200);assert.equal(input.props.dir,'auto');assert.match(input.props.className,/\[text-align:match-parent\]/);
   for(const isComposing of [true,false])for(const key of ['Enter','Escape'])input.props.onKeyDown({key,nativeEvent:{isComposing},stopPropagation(){stopped++;},preventDefault(){prevented++;}});
   assert.deepEqual([submitted,cancelled,stopped,prevented],[1,1,4,2]);input.props.onChange({target:{value:'新标题'}});assert.deepEqual(values,['新标题']);
 });
 
+
+test('3.6556.2 row: multi-select suffix, nameId labelling, nav marker, muted-as-secondary tail and the shared hover mask',()=>{
+  // shared-18 Ak (old LE), research/sidebar.md §2.1 C1/C3; "oirQ+bswp8" is the official ", selected" descriptor.
+  const row=props=>renderToStaticMarkup(React.createElement(Row.CurrentSidebarRow,{variant:'nav',tail:'1h',description:'feature',...props},'A task'));
+  const labelled=row({'aria-label':'A task',multiSelected:true});
+  assert.match(labelled,/ data-row-nav="" aria-label="A task, selected"/);
+  assert.match(labelled,/<span class="sr-only">, selected<\/span><\/button>$/);
+  assert.match(labelled,/<span class="shrink-0 flex items-center gap-1\.5 text-xs text-muted-as-secondary[^"]*">1h<\/span>/);
+  assert.match(labelled,/<span class="df-row-description flex min-w-0 items-center text-muted-as-secondary[^"]*">feature<\/span>/);
+  assert.doesNotMatch(labelled,/text-muted(?!-as-secondary)/);
+  assert.match(labelled,/\[--df-hover-mask:linear-gradient\(var\(--df-fade-to,to_right\)[^ ]* group-hover:\[mask-image:var\(--df-hover-mask\)\] group-focus-visible:\[mask-image:var\(--df-hover-mask\)\] group-has-\[:focus-visible\]:\[mask-image:var\(--df-hover-mask\)\] group-data-\[menu-open=true\]:\[mask-image:var\(--df-hover-mask\)\]/);
+  assert.doesNotMatch(labelled,/group-hover:\[mask-image:linear-gradient/);
+  // With a name suffix and no aria-label, the name, description and selection are announced through nameId.
+  const named=row({multiSelected:true,nameId:'row-1',nameSuffix:'·'});
+  assert.match(named,/aria-labelledby="row-1 row-1-description row-1-selected"/);
+  assert.match(named,/<span id="row-1-selected" class="sr-only">, selected<\/span>/);
+  assert.match(named,/id="row-1-description"/);
+  const plain=row({'aria-label':'A task'});
+  assert.doesNotMatch(plain,/, selected|sr-only|aria-labelledby/);
+  assert.doesNotMatch(row({variant:'session','aria-label':'A task'}),/data-row-nav/);
+  // fizzy-lake `type` stays off (E12): no body-weight marker.
+  assert.doesNotMatch(row({variant:'session','aria-label':'A task'}),/data-body-weight/);
+});
+
+test('W4 host row: the bulk selection reaches Ak as multiSelected (3.6556.2 shared-21 Zee), announced as ", selected"',async()=>{
+  const view={mark:null,archived:false};
+  const host=props=>renderToStaticMarkup(React.createElement(HostRow.SourceCodeSidebarRow,{view,details:project({},view),title:'A task',label:'A task',...props}));
+  // Zee: o = Au(rowKey) (shared-6 iA: selectedKeys.has(key)), s = o || paneSelected, then {selected:s, multiSelected:o}.
+  const multi=host({selected:true,multiSelected:true});
+  assert.match(multi,/data-selected="focused"/);
+  assert.match(multi,/<span class="sr-only">, selected<\/span><\/button>/);
+  assert.doesNotMatch(multi,/data-row-nav/,'session rows are not nav rows');
+  // Only the pane-shown row (aria-current) is selected without the multi-select announcement.
+  const shown=host({selected:true,shown:true});
+  assert.match(shown,/data-selected="focused"/);assert.match(shown,/aria-current="page"/);
+  assert.doesNotMatch(shown,/, selected|sr-only">, /);
+  // A row in the selection is selected even when the caller only says multiSelected (s = o || a).
+  assert.match(host({multiSelected:true}),/data-selected="focused"[^>]*>(?:(?!<\/button>).)*<span class="sr-only">, selected<\/span>/s);
+  // The real sidebar passes the host selection model (sidebar-selection.mjs isSelected), not the shown row.
+  const sidebar=readFileSync(new URL('../src/source-sidebar.jsx',import.meta.url),'utf8');
+  assert.match(sidebar,/<SourceCodeSidebarRow [^>]*selected=\{selected\} shown=\{shown\}\s+multiSelected=\{isSelected\(selection, session\.id\)\}/);
+  const rowSource=readFileSync(new URL('../src/source-code-sidebar-row.jsx',import.meta.url),'utf8');
+  assert.match(rowSource,/from '\.\/generated\/view-tabs\/index\.js'/,'R6: the edited host row imports view-tabs through the facade');
+  assert.doesNotMatch(rowSource,/shared-frame-BfjMqbuN/);
+  // The facade and the legacy shim the rest of the sidebar still imports hand out one density context (no second instance).
+  const facade=await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  assert.equal(facade.CdsDensityContext,Cds.CdsDensityContext);
+});
+test('W10 rename request: the host row starts the original editor and the row renders data-editing (3.6556.2 Ak)',()=>{
+  // notdone 15/80: SourceCodeSidebarRow's layout effect calls startEditRef (Ak's useImperativeHandle: () => ve()), then
+  // Ak's editing branch is `m("div", {"data-row": "", "data-editing": "", ..., "data-selected": ce, children: Le})`.
+  const view={mark:null,archived:false};let started=0;const names=[];
+  const host=fixture(HostRow.SourceCodeSidebarRow,{view,details:project({},view),title:'A task',label:'A task',selected:true,
+    renameRequested:true,onRenameStarted:()=>started++,onRename:name=>names.push(name)});
+  const element=nodes(host.tree,n=>n.type===Row.CurrentSidebarRow)[0];assert.ok(element,'the host renders Ak');
+  assert.equal(element.props.renameValue,'A task');assert.equal(element.props.renameMaxLength,200);
+  const row=fixture(Row.CurrentSidebarRow,element.props);
+  try{
+    const rest=renderToStaticMarkup(row.tree);
+    assert.doesNotMatch(rest,/data-editing/,'at rest the row is not editing');assert.match(rest,/data-row-main-button=""/);
+    row.flush();host.flush();assert.equal(started,1,'the request is acknowledged once');
+    row.render();row.flush();
+    const html=renderToStaticMarkup(row.tree);
+    assert.match(html,/^<div data-row="" data-editing="" class="[^"]*" data-selected="focused">/);
+    assert.match(html,/<input[^>]*maxLength="200"[^>]*value="A task"|<input[^>]*value="A task"[^>]*maxLength="200"/i);
+    assert.doesNotMatch(html,/data-row-main-button/,'the row button is replaced by the editor');
+  }finally{row.close();host.close();}
+});
+test('W4 drag ghost copies the same seven row geometry variables as 3.6556.2 shared-46 dj',()=>{
+  const official=readFileSync(new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js',import.meta.url),'utf8');
+  const body=official.slice(official.indexOf('function dj('));
+  const names=list=>JSON.parse(list.replace(/'/g,'"'));
+  const officialList=names(body.match(/for\(let e of(\["--df-row-indent"[^\]]*\])\)t\.style\.setProperty/)[1]);
+  assert.deepEqual(officialList,['--df-row-indent','--df-described-trim','--df-row-h','--df-row-ctl','--df-heading-pitch','--df-described-line','--df-rail-shift']);
+  const host=readFileSync(new URL('../src/source-sidebar-drag.jsx',import.meta.url),'utf8');
+  const hostList=names(host.match(/for \(const name of (\["--df-row-indent"[^\]]*\])\)/)[1]);
+  assert.deepEqual(hostList,officialList);
+});
 
 test('More uses the original compact CDS ghost button, 12px icon and source control size',()=>{
   const html=render({onSessionAction(){}});

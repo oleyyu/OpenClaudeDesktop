@@ -10,6 +10,8 @@
 // The server listens on 127.0.0.1 only, on a free port, and keeps the relay's
 // base path so the adapter's /v1 handling stays the same.
 const http = require("node:http");
+// The relay is usually a remote host: its requests follow the system proxy (system-fetch.cjs).
+const { systemFetch } = require("./system-fetch.cjs");
 
 const HOP_BY_HOP = new Set(["host", "connection", "content-length", "transfer-encoding", "keep-alive", "upgrade", "proxy-connection", "te", "trailer"]);
 const RESPONSE_SKIP = new Set(["content-encoding", "content-length", "transfer-encoding", "connection", "keep-alive"]);
@@ -19,7 +21,7 @@ function rewriteBody(text) {
   return text.replace(/<(\/?)system-reminder>/g, "<$1system_reminder>");
 }
 
-function createRelayProxy({ fetchImpl = (...args) => globalThis.fetch(...args) } = {}) {
+function createRelayProxy({ fetchImpl = (...args) => systemFetch(...args) } = {}) {
   let server = null, target = null, port = 0;
 
   async function handle(req, res) {

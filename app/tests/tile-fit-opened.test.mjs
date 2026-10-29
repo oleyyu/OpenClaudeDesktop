@@ -1,6 +1,7 @@
-// layout-06 (R3-toolcards TT-14): opening a pane re-flexes the layout through the mounted tile host, as 2.42304.0 does —
-// cc43287c9 registers `{ fitOpenedLayout: Ne }` (Rre / B9 over cf53e1812, generated tile-fit-opened.mjs) with its panes
-// store, and c03935b01 Ei returns `i?.fitOpenedLayout(c, c === o) ?? c` for a pane the layout did not have. Covered here:
+// layout-06 (R3-toolcards TT-14): opening a pane re-flexes the layout through the mounted tile host, as the official
+// build does — 3.6556.2 cc43287c9 registers `{ fitOpenedLayout: st }` (dbe / B9 over cf53e1812 and c9543da06, generated
+// tile-fit-opened.mjs, W2 w2-titlebar-current) with its panes store, and c03935b01 returns
+// `i?.fitOpenedLayout(c, c === o) ?? c` for a pane the layout did not have. Covered here:
 // the store's per-owner host registry, SourceTileLayout's registration under a controlled fake DOM
 // (tests/fixtures/split-tiles-fake-dom.mjs), the measured width / config the host passes, and main.jsx's call site.
 import test, { after, before } from 'node:test';
@@ -12,7 +13,7 @@ import react from '@vitejs/plugin-react';
 import { React, mount, withEnvironment } from './fixtures/split-tiles-fake-dom.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 let server, Tiles, Store, Model, Fit, Glue;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -39,18 +40,18 @@ function widths(layout, width) {
 
 // ---------------------------------------------------------------- official source
 test('the official host registration, store slot and opening call this port follows', () => {
-  const host = readFileSync(path.join(v1, 'cc43287c9-DAfOi8yP.js'), 'utf8');
+  const host = readFileSync(path.join(v1, 'cc43287c9-Me-M2ucD.js'), 'utf8');
   for (const feature of [
-    'Ne=Lt((e,t)=>{let n=fe.current;return n===null?e:Rre({layout:e,containerWidth:n.getBoundingClientRect().width,splitConfig:Me,tileById:G9,rootRowOnly:t})})',
-    'let e={fitOpenedLayout:Ne};return V.getState().setTileHost(e),()=>{V.getState().tileHost===e&&V.getState().setTileHost(null)}',
-    'paddingEnd:K.padding+Oe', 'Gre={id:"chat",overflowMin:{width:320,anchor:"left"}}',
+    '(e,t)=>{let n=J.current;return n===null?e:dbe({layout:e,containerWidth:n.getBoundingClientRect().width,splitConfig:at,tileById:G9,rootRowOnly:t})}',
+    'let e={fitOpenedLayout:st};return se.getState().setTileHost(e),()=>{se.getState().tileHost===e&&se.getState().setTileHost(null)}',
+    'it=Ve.padding+Qe,at=J3($,118,Ve,et,it)?K3($,118,Ve,et,it,{...Ve,paddingTop:et,paddingEnd:it})', 'Sbe={id:"chat",overflowMin:{width:320,anchor:"left"}}',
   ]) assert.ok(host.includes(feature), feature);
-  const store = readFileSync(path.join(v1, 'c03935b01-CyJKQj4N.js'), 'utf8');
-  for (const feature of ['return i?.fitOpenedLayout(c,c===o)??c', 'setTileHost:e=>i({tileHost:e})', '...o?U(n):W(n,e,void 0)',
-    'i?x(r,e):Ei(r,e,t.lastPaneFlexByKind,Ya(t,e),t.tileHost)', 'a=Ei(po(e),t,e.lastPaneFlexByKind,r?void 0:Ya(e,t),e.tileHost)'])
+  const store = readFileSync(path.join(v1, 'c03935b01-yhcY34vt.js'), 'utf8');
+  for (const feature of ['return i?.fitOpenedLayout(c,c===o)??c', 'setTileHost:e=>i({tileHost:e})',
+    'i?C(r,e):Qa(r,e,t.lastPaneFlexByKind,Es(t,e),t.tileHost)', 'a=Qa(Xs(e),t,e.lastPaneFlexByKind,r?void 0:Es(e,t),e.tileHost)'])
     assert.ok(store.includes(feature), feature);
   // shared-18 Tb is the local TILE_CONFIG; the official contentBox subtracts a 1px border by default.
-  assert.ok(readFileSync(path.join(v1, 'shared-18-D4XxL6Tg.js'), 'utf8').includes('Tb={gap:12,padding:8,minTileBasePx:100,minTileWidthPx:280,dragLift:24}'));
+  assert.ok(readFileSync(path.join(v1, 'shared-18-D3y8YMFN.js'), 'utf8').includes('Tb={gap:12,padding:8,minTileBasePx:100,minTileWidthPx:280,dragLift:24}'));
   assert.deepEqual({ ...Model.TILE_CONFIG }, { gap: 12, padding: 8, minTileBasePx: 100, minTileWidthPx: 280, dragLift: 24 });
 });
 

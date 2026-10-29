@@ -63,7 +63,7 @@ test('local CSS never redeclares the --font-anthropic-* chains (design-system.cs
       redeclared.push(`${path.basename(file)} ${match[1]}`);
   assert.deepEqual(redeclared, []);
   // The loaded stylesheet does define the full chains (CJK and ui-monospace fallbacks).
-  const loaded = readFileSync(path.join(official, 'c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const loaded = readFileSync(path.join(official, 'c6a992d55-Che1orl5.css'), 'utf8');
   // 2.31226.0 routes the sans chain through --font-sans-fallbacks (CJK, then the script fallbacks).
   assert.match(loaded, /--font-anthropic-sans:"anthropic-sans", var\(--font-sans-fallbacks\)/);
   assert.match(loaded, /--font-sans-fallbacks:[^;}]*var\(--font-cjk-sans-fallback\), var\(--font-script-fallbacks\)/);

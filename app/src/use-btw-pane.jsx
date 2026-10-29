@@ -10,6 +10,7 @@ import { t } from '../electron/i18n/index.mjs';
 import { rpcResult } from './rpc-error.mjs';
 import { createBtwQueueStore } from './btw-queue-store.mjs';
 import { captureBtwFocus, rememberBtwFocus } from './generated/code-current/btw-focus-intent.mjs';
+import { btwParentRefusal } from './btw-parent-refusal-model.mjs';
 
 let storage; try { if (typeof window !== 'undefined') storage = window.localStorage; } catch {}
 export const btwDrafts = createBtwDraftStore(storage);
@@ -18,7 +19,7 @@ export const btwDrafts = createBtwDraftStore(storage);
 // boundaries so a navigation cannot send into the newly selected main session.
 export function useBtwPane(host) {
   const latest = useRef(host); latest.current = host;
-  const [pending, setPending] = useState({}), [stopping, setStopping] = useState({});
+  const [pending, setPending] = useState({}), [stopping, setStopping] = useState({}), [opening, setOpening] = useState({});
   const sends = useRef(new Map()), stops = useRef(new Set()), resumed = useRef(new Map()), created = useRef(new Map());
   const reviewing = useRef(new Map());
   const permissions = useRef(new Map()), answered = useRef({});
@@ -164,13 +165,21 @@ export function useBtwPane(host) {
       return null;
     }
   }
+  // 3.6556.2 cccc2cf0a tab activation (`if (n) { let t = a?.activeElement; su(e, Vu(a), { afterKeyPress:
+  // t?.matches(":focus-visible") === !0 && t !== a?.body && t.closest("input, textarea, [contenteditable]") === null }) }`):
+  // a keyboard activation from outside a text field also makes the child's composer swallow the stray Enter on landing.
   function select(parentId, id, { focus = true } = {}) {
-    if (focus) rememberBtwFocus(id, captureBtwFocus(globalThis.document));
+    if (focus) {
+      const doc = globalThis.document, active = doc?.activeElement;
+      rememberBtwFocus(id, captureBtwFocus(doc), { afterKeyPress: active?.matches?.(':focus-visible') === true && active !== doc?.body
+        && active.closest?.('input, textarea, [contenteditable]') === null });
+    }
     latest.current.tileStore.setSession(parentId, { btwSessionId: id });
   }
   const controller = useMemo(() => createBtwPaneController({
     epoch,
     captureFocus: () => captureBtwFocus(globalThis.document),
+    onPendingChange: (parentId, busy) => setOpening(value => !!value[parentId] === busy ? value : { ...value, [parentId]: busy }),
     start: async ({ question, ...payload }) => {
       const h = latest.current;
       return h.call('btw-session', { op: 'start', ...payload, titleWords: question, expected: expected() });
@@ -197,6 +206,23 @@ export function useBtwPane(host) {
       if (h.currentRef.current === parentId) h.fallback({ open: true, pending: question || null, legacy: true });
     },
   }), []);
+  // 3.6556.2 cccc2cf0a qP `onCreate:P,createBusy:F` with `P=Ph(t)`, `F=xh(t)`: c73f45bc3 Op (Vt) and vp (Bt).
+  //   Op: `d=()=>{let n=r?.getState();if(!(_p(e)||n?.currentSessionId!==e)){if(!lp()){a(void 0,{openedBy:"bare"});return}…}}`,
+  //       `return r&&X?.startBtwChild&&!c&&!u?f:void 0`; vp: `o(gp,()=>_p(e),yp)` (mp, the parent's in-flight starts).
+  // lp() is false here (no prestartBtwChild, as in 3.6556.2's own bridge), so the button starts a bare child through Tp's
+  // openChild, the controller's open with forceNew (no toggle, no reuse of an open child). X?.startBtwChild is a connected
+  // core that keeps /btw children; c (Xf, the parent handed back to the floating side chat) is the caller's `handedBack`;
+  // u is ip, btw-parent-refusal-model over the parent's thread and metadata.
+  function createTab(parentId, handedBack = false) {
+    const h = host;
+    if (!parentId || handedBack || !h.boot?.connected || h.boot?.core?.capabilities?.btwChildSessions !== true) return undefined;
+    const parent = h.sessionsRef.current.find(thread => thread.id === parentId) ?? h.stateRef.current.threads[parentId];
+    if (btwParentRefusal(parent, h.metadata[parentId])) return undefined;
+    return () => {
+      if (controller.isOpening(parentId) || latest.current.currentRef.current !== parentId) return;
+      void controller.open({ parentId, forceNew: true });
+    };
+  }
   const queueEpoch = epoch();
   const busy = { ...pending };
   for (const [id, value] of Object.entries(queueState)) if (value.epoch === queueEpoch && value.busy) busy[id] = true;
@@ -212,7 +238,7 @@ export function useBtwPane(host) {
         planAnswered[id]?.epoch === queueEpoch ? planAnswered[id].turnId : null]) });
     if (handoff || reviewing.current.get(id) === queueEpoch) tabPending[id] = true;
   }
-  return { controller, load, send, stop, select, detach, implementPlan, stayPlan, planAnswered, planBusy,
+  return { controller, load, send, stop, select, detach, implementPlan, stayPlan, planAnswered, planBusy, createTab, opening,
     pending: busy, tabPending, stopping, queues, queueState, queueEpoch,
     queueEnabled: host.boot?.core?.capabilities?.reorderQueued === true };
 }

@@ -4,6 +4,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 let server, Dialog, Menu, useSaved, View, Adapters, Checkbox, Fields;
 before(async () => {
@@ -50,7 +51,7 @@ function fixture(component, props, { effects = false } = {}) {
   function render() {
     cursor = 0;
     const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
-    internals.H = dispatcher;
+    internals.H = withMemoCache(dispatcher);
     try { tree = component(props); } finally { internals.H = previous; }
     return tree;
   }
@@ -69,11 +70,16 @@ test('current field and folder markup retains source layout and accessible name/
   const label = html.match(/<label[^>]*for="([^"]+)"[^>]*id="([^"]+)"/);
   assert.ok(label); assert.ok(html.includes(`id="${label[1]}"`)); assert.ok(html.includes(`aria-labelledby="${label[2]}"`));
   assert.match(html, /rounded shadow-card-ring/);
-  // 2.42304.0 he on the primary row: the inline branch picker (the selected branch), the Worktree box and the X.
+  // cd8823d73 Ge (2.42304.0 he) on the primary row: the inline branch picker (the selected branch), the Worktree box and the X.
   assert.match(html, /<span class="sr-only">Branch for app:<\/span>/); assert.match(html, /aria-haspopup="menu" aria-expanded="false"/);
   assert.match(html, /data-cds-part="menu-caret"/); assert.match(html, /role="checkbox"[^>]*aria-checked="true"[^>]*aria-label="Worktree for app"|aria-label="Worktree for app"[^>]*role="checkbox"[^>]*aria-checked="true"/);
   assert.match(html, /data-cds="Checkbox"/); assert.match(html, />Worktree<\/span>/); assert.match(html, /aria-label="Remove app"/); assert.match(html, /aria-label="Remove shared"/);
   assert.match(html, /group\/place flex min-w-0/); assert.doesNotMatch(html, /More options|DotsVertical/);
+  // cc-rest-env-ui, 3.6556.2 cd8823d73 J / Ge: the name column grows to its content (me-auto max-w-max flex-[28_1_0%]),
+  // the controls take flex-[72_1_0%] instead of max-w-[72%].
+  assert.match(html, /class="me-auto flex min-h-7 max-w-max min-w-0 flex-\[28_1_0%\] items-center text-body text-primary"/);
+  assert.match(html, /class="flex min-h-7 max-w-max min-w-0 flex-\[72_1_0%\] items-center gap-xs"/);
+  assert.doesNotMatch(html, /max-w-\[72%\]|flex min-h-7 min-w-0 flex-1 items-center text-body/);
   assert.match(html, /Environment variables apply to every local session/);
   assert.match(html, /footer data-align="between" class="sdlg-footer mt-0"/);
   assert.doesNotMatch(html, /Permission mode|icon picker/);
@@ -138,6 +144,17 @@ test('delete requires the source confirmation and keeps the form on failure', as
   assert.ok(elements(f.tree).some(node => node.props.children === 'cannot delete'));
 });
 
+test('3.6556.2 cd8823d73 X: a long folder name is the full run over a measured head/tail pair (middle ellipsis, SSR)', () => {
+  const name = 'a-very-long-repository-folder-name';
+  const long = renderToStaticMarkup(React.createElement(View.EnvironmentFolderName, { name }));
+  assert.match(long, /^<span dir="ltr" class="relative grid min-w-0 overflow-hidden"><span dir="auto" data-name-run="" class="col-start-1 row-start-1 overflow-hidden whitespace-nowrap">a-very-long-repository-folder-name<\/span>/);
+  assert.match(long, /<span aria-hidden="true" class="invisible col-start-1 row-start-1 flex min-w-0 select-none"><span class="min-w-\[2em\] truncate">[^<]+<\/span><span class="max-w-\[calc\(100%-2em\)\] shrink-0 truncate">[^<]+<\/span><\/span><\/span>$/);
+  // Nothing measured yet (no layout effect in SSR): no drawn ellipsis overlay.
+  assert.doesNotMatch(long, /absolute inset-0 truncate|<bdi/);
+  const short = renderToStaticMarkup(React.createElement(View.EnvironmentFolderName, { name: 'app' }));
+  assert.equal(short, '<span dir="auto" class="min-w-0 truncate">app</span>');
+});
+
 test('named environment search and edit/star actions never select a different environment', () => {
   const selected = [], edited = [], starred = [];
   const f = fixture(Menu, { popup: { label: 'Choose environment', onClose: noop }, environments: [record, { ...record, id: 'prod', name: 'Production' }], selectedId: 'dev', starred: ['preset:dev'], onSelect: id => selected.push(id), onEdit: id => edited.push(id), onStar: id => starred.push(id), onCreate: noop });
@@ -147,7 +164,8 @@ test('named environment search and edit/star actions never select a different en
   const rows = fixture(popup.props.children('product').type, popup.props.children('product').props).tree;
   // The query lists A0's rows for the local kind: render A0 to reach its k0 rows.
   const a0 = find(rows, node => node.props.kind === 'local' && node.props.query === 'product');
-  const k0 = elements(a0.type(a0.props)).filter(node => node.props.item);
+  // 3.6556.2 Rae is React Compiler output (useMemoCache): render it through the dispatcher.
+  const k0 = elements(fixture(a0.type, a0.props).tree).filter(node => node.props.item);
   assert.equal(k0.length, 1); assert.equal(k0[0].props.item.name, 'Production');
   const row = fixture(k0[0].type, k0[0].props).tree;
   assert.equal(row.props['data-testid'], 'env-picker-environment');
@@ -238,7 +256,7 @@ test('cd8823d73 he: submitting a search picks its first option; the box and X re
   assert.equal(root.props.open, false); assert.equal(root.props.modal, false);
   root.props.onOpenChange(true, { reason: 'trigger-press' }); f.render();
   const popup = find(f.tree, node => node.props.onSubmitQuery);
-  assert.deepEqual([popup.props.side, popup.props.align, popup.props.className, popup.props.searchLabel], ['bottom', 'end', 'w-max min-w-64 max-w-96', 'Search branches…']);
+  assert.deepEqual([popup.props.side, popup.props.align, popup.props.className, popup.props.searchLabel], ['bottom', 'end', 'w-96 max-w-[var(--available-width)]', 'Search branches…']);
   popup.props.onSubmitQuery('rel'); assert.deepEqual(picked, ['release']);
   const rows = popup.props.children('', '');
   assert.equal(rows.type, Adapters.EnvironmentMenu.Group);
@@ -264,23 +282,31 @@ test('cd8823d73 he: submitting a search picks its first option; the box and X re
   assert.match(remove.props.className, /opacity-0 group-focus-within\/place:opacity-100 group-hover\/place:opacity-100/);
 });
 
-test('host overlays: the menu trigger is the CDS Button with its caret; the Checkbox is the CDS wA over a Base UI root', () => {
+test('host overlays: the menu trigger is the CDS Button with its caret; the Checkbox is view-tabs CdsCheckbox (3.6556.2 xP over Base UI)', () => {
   const trigger = renderToStaticMarkup(React.createElement(Adapters.EnvironmentMenu.Root, { open: false },
     React.createElement(Adapters.EnvironmentMenu.TriggerButton, { variant: 'ghost', size: 'xs', className: 'min-w-0 shrink text-muted-as-secondary' }, 'main')));
   assert.match(trigger, /^<button type="button" data-cds="Button" data-cds-ghost="" data-size="xs" class="[^"]*min-w-0 shrink text-muted-as-secondary"[^>]*aria-haspopup="menu" aria-expanded="false"/);
   assert.match(trigger, /class="shrink-0 opacity-60" data-cds-part="menu-caret"/);
   const box = renderToStaticMarkup(React.createElement(Checkbox, { size: 'xxs', checked: true, 'aria-label': 'Worktree for app', label: 'Worktree', onCheckedChange: noop }));
-  assert.match(box, /^<span[^>]*role="checkbox" tabindex="0" aria-checked="true"[^>]*data-checked=""/);
+  // cc-rest-env-ui: environment-checkbox.mjs re-exports view-tabs CdsCheckbox (official Base UI Checkbox.Root).
+  const boxRoot = box.match(/^<span[^>]*>/)?.[0] ?? '';
+  for (const attribute of ['role="checkbox"', 'tabindex="0"', 'aria-checked="true"', 'data-checked=""']) assert.ok(boxRoot.includes(attribute), attribute);
   assert.match(box, /data-cds="Checkbox"/); assert.match(box, /data-size="xxs"/);
   assert.match(box, /class="cds-reset group\/cb [^"]*inline-flex gap-xs text-start[^"]*\[--cds-checkbox:var\(--cds-checkbox-xxs\)\]/);
   assert.match(box, /size-\[var\(--cds-checkbox\)\][^"]*group-data-\[checked\]\/cb:bg-fill-accent/);
-  assert.match(box, /<input type="checkbox"[^>]*aria-hidden="true" tabindex="-1"/);
+  const hidden = box.match(/<input [^>]*>/)?.[0] ?? '';
+  for (const attribute of ['type="checkbox"', 'aria-hidden="true"', 'tabindex="-1"', 'checked=""']) assert.ok(hidden.includes(attribute), attribute);
+  // 3.6556.2: a label puts the box on its first line (items-start + the 1lh offset).
+  assert.match(box, /items-start/); assert.match(box, /mt-\[calc\(\(1lh_-_var\(--cds-checkbox,1rem\)\)_\/_2\)\]/);
   const disabled = renderToStaticMarkup(React.createElement(Checkbox, { size: 'xxs', checked: false, disabled: true, disabledReason: 'Shared', label: 'Worktree', onCheckedChange: noop }));
-  assert.match(disabled, /aria-disabled="true"[^>]*data-unchecked=""[^>]*data-disabled=""|data-unchecked=""[^>]*data-disabled=""/);
+  const disabledRoot = disabled.match(/<span [^>]*role="checkbox"[^>]*>/)?.[0] ?? '';
+  for (const attribute of ['aria-disabled="true"', 'data-unchecked=""', 'data-disabled=""', 'tabindex="-1"']) assert.ok(disabledRoot.includes(attribute), attribute);
+  // The reason wraps the box in the official CDS disabled-reason wrapper (shared-frame pu), not the host tooltip.
+  assert.match(disabled, /^<span tabindex="0" aria-describedby="[^"]+" data-cds-disabled-reason-wrapper=""/);
   assert.match(disabled, /data-cds-disabled-reason="">Shared<\/span>/);
 });
 
-test('2.42304.0 field controls: logical end padding beside a clear button, wrapping errors (SSR)', () => {
+test('3.6556.2 field controls (shared-frame uC/Zj/Jj, 2.42304.0 tx/wO/xO): logical end padding beside a clear button, wrapping errors (SSR)', () => {
   const input = renderToStaticMarkup(React.createElement(Fields.EnvironmentTextInput, { clearable: true, value: 'x', onChange: noop, 'aria-label': 'Name' }));
   assert.match(input, /ps-md/); assert.match(input, /pe-\[calc\(\(var\(--cds-h-control\)-var\(--cds-h-control-nested\)\)\/2\)\]/);
   assert.doesNotMatch(input, /\bp[lr]-(md|\[calc)/);
@@ -323,19 +349,9 @@ test('host SearchablePopup: raised over the dialog, Base UI close reasons, Tab r
   assert.deepEqual(key('a'), ['stop']); assert.deepEqual(key('Tab'), []); assert.deepEqual(key('Escape'), []);
 });
 
-test('host Base UI checkbox root: click and Space toggle through onCheckedChange; Enter submits the form', () => {
-  const changes = [], clicks = [];
-  const f = fixture(props => Adapters.EnvironmentCheckboxRoot.render(props, null), { checked: true, onCheckedChange: (value, details) => changes.push([value, details.reason]), children: 'Worktree' });
-  const [root, input] = f.tree.props.children;
-  assert.deepEqual([root.props.role, root.props['aria-checked'], root.props['data-checked'], root.props.tabIndex], ['checkbox', true, '', 0]);
-  assert.deepEqual([input.props.type, input.props['aria-hidden'], input.props.tabIndex, input.props.checked], ['checkbox', 'true', -1, true]);
-  const event = (key, extra = {}) => ({ key, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, nativeEvent: {}, ...extra });
-  root.props.onClick(event()); root.props.onKeyUp(event(' ')); assert.deepEqual(changes, [[false, 'none'], [false, 'none']]);
-  const submit = { tagName: 'BUTTON', type: 'submit', disabled: false, click: () => clicks.push('submit') };
-  root.props.onKeyDown(event('Enter', { currentTarget: { closest: () => ({ elements: [{ tagName: 'INPUT', type: 'text' }, submit] }) } }));
-  assert.deepEqual(clicks, ['submit']);
-  const off = fixture(props => Adapters.EnvironmentCheckboxRoot.render(props, null), { checked: false, disabled: true, onCheckedChange: () => changes.push('no') });
-  const [disabled] = off.tree.props.children;
-  assert.deepEqual([disabled.props['data-unchecked'], disabled.props['data-disabled'], disabled.props['aria-disabled'], disabled.props.tabIndex], ['', '', true, -1]);
-  disabled.props.onClick(event()); assert.equal(changes.length, 2);
+test('host checkbox adapters retired: the Worktree box is view-tabs CdsCheckbox (3.6556.2 shared-frame xP), not a host root', () => {
+  // environment-checkbox.mjs re-exports the official CdsCheckbox, so the folder adapters no longer carry a Base UI
+  // Checkbox.Root or a disabled-reason wrapper of their own.
+  assert.equal(Adapters.EnvironmentCheckboxRoot, undefined);
+  assert.equal(Adapters.EnvironmentDisabledReason, undefined);
 });

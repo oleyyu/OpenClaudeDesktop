@@ -1,599 +1,1309 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-sidebar-resize.mjs",
   "adapterModule": "src/source-sidebar-resize-adapters.jsx",
   "modules": [
     {
       "target": "class-names.mjs",
-      "source": "vendor-frame-DfPJ1QmD.js",
-      "sourceSha256": "c96b504f7ecd3b5749b6913c9bad6b7950719b38636083e1496002b219e6bbdc",
-      "sha256": "dd3d23741c520d673eddee65b97585869d4413ac548656d54872b13ededaef34",
-      "referenceVersion": "2.42304.0",
+      "source": "vendor-frame-CnSY1sxv.js",
+      "sourceSha256": "7064f152d05f6a7f477fc13a4b24606b82cbd401336a7e3a59840236818699e6",
+      "sha256": "339552f5290bfb3b1c12de29d75bc4a42c70cd8086bf0651cca6fbb6ffa92b48",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "he",
-          "sha256": "8df1c934bd199c52b318559d814e52aba56aee4a2eb1b6b3c194d7e9ccd152b3"
+          "name": "_e",
+          "sha256": "bcd792e27dd8558392d1c33840d665388cb40ba810262b823eecf5b3ff2fa856"
         },
         {
-          "name": "ge",
-          "sha256": "fa7a5fc8bfd534c12841fdc266de1a949f6b2893bd2103fb190b54b25a3c9093"
+          "name": "ve",
+          "sha256": "d9810211b4124d7de6740055a27e650a9029fac8fb01b9e23b0a1fa169b7daf4"
         }
       ],
       "imports": [],
       "exports": {
-        "ge": "clsx"
+        "ve": "clsx"
       }
     },
     {
       "target": "layout-effect.mjs",
-      "source": "shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
-      "sha256": "fc094d72e7d285e453129d98e5c09e367b7c5b3396526e57e79179863f5a7e94",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "sha256": "d960533addc72d50821927650c2d5cb6b4778e4a06c92582a5db4699560a5a45",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "Q",
-          "sha256": "4ac1e26bfc6b74706a404eb3c6fb395cb726ac3c7f3257e0bf56b259f5549939"
+          "name": "Ln",
+          "sha256": "3bed8f1fdd4be8c28156422b2cc3c21a67b09cac419688210a1b2aab57004f7c"
         }
       ],
       "imports": [
         {
-          "local": "K",
+          "local": "Te",
           "from": "react",
-          "name": "useEffect",
-          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
           "kind": "react"
         },
         {
-          "local": "wt",
+          "local": "Y",
           "from": "react",
-          "name": "useLayoutEffect",
-          "via": "vendor-frame-DfPJ1QmD.js:yo",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
           "kind": "react"
         }
       ],
       "exports": {
-        "Q": "useIsomorphicLayoutEffect"
+        "Ln": "useIsomorphicLayoutEffect"
       }
     },
     {
       "target": "resize-handle.mjs",
-      "source": "shared-15-Cc9xvKlF.js",
-      "sourceSha256": "ea1fc6daf88e365b17cc582776945acd1b25be1f9e01c79664b360bba776db97",
-      "sha256": "d93b2d658ca0510fefb10add0a789bdbb8899c0e2e16efe767a99635de0fd264",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-9-CM21XrJw.js",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "7a4148d71da3f81c3d646ac1bb38c78a8cc6e45146a1340f2abc58d5eae216a6",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "Ht",
-          "sha256": "19621e50cb3cae725f09cd944ec41ab07d260e3cbbd0c480c15cacb5c6489025"
+          "name": "mm",
+          "sha256": "c1c0de0ee118f68cd252a56cd5412ae79c2cec041547c4d3e12c7a43b888759b"
         },
         {
-          "name": "Ut",
-          "sha256": "1f74707566c2b1457535c43b95cd09615432740539f23c2cafa12c8b3022c632"
+          "name": "hm",
+          "sha256": "ee7317822dbf8c9a5fd93314626457c5312c0bf86cd4288b33ccacc34b8ac051"
         },
         {
-          "name": "Wt",
-          "sha256": "a7043a3bed36aa624ede1af60d4facb85fc2608f0cb24240c4fbada9f5ff6582"
+          "name": "gm",
+          "sha256": "de2cb5926736006ff3c2af97a2407a4dfd1ecc6e3b66c0c23f1b6f1fdbb2bcd7"
         },
         {
-          "name": "Gt",
-          "sha256": "bef7b681eaa8055f38f9b8877a91ad8ef836e2470d05efde8ca3a4a17b59d14f"
+          "name": "_m",
+          "sha256": "d9cb2cf2d91845f1a08d62d4f9e8694fef73bddf43070b4322a904d0ad61dc80"
         },
         {
-          "name": "Kt",
-          "sha256": "917040d683b384b93c6924e105f6b7c482f7322d0fc703c4dc8c5130bb2deef0"
+          "name": "vm",
+          "sha256": "1a3e8eab792e4bad0d848259401c54b655ab2fdc81e0c557a33c64702891284b"
         },
         {
-          "name": "qt",
-          "sha256": "3b403296bc14e14691048f1792c0bc9e7eda1105a37e674259fcbf01bb60c013"
+          "name": "ym",
+          "sha256": "68d3ed4e3e5ff2d1841c60475479d1105725d44cfb193281e13fa1c673b903ae"
         },
         {
-          "name": "Jt",
-          "sha256": "6488b045e79c1c3a616edf572114d1610fccb339ce199a2ef31a309e51fb9383"
+          "name": "bm",
+          "sha256": "18cae2af0344da024d097b922b752e6fdb67417cf887f8ae7197ee45f4de2941"
         }
       ],
       "imports": [
         {
-          "local": "o",
+          "local": "i",
+          "from": "./class-names.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "generated"
+        },
+        {
+          "local": "a",
           "from": "react",
-          "name": "useState",
-          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
           "kind": "react"
         },
         {
-          "local": "s",
+          "local": "o",
           "from": "react/jsx-runtime",
-          "name": "jsxs",
-          "via": "vendor-frame-DfPJ1QmD.js:Ha",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
           "kind": "react"
         },
         {
           "local": "l",
-          "from": "react",
-          "name": "useRef",
-          "via": "vendor-frame-DfPJ1QmD.js:So",
-          "kind": "react"
-        },
-        {
-          "local": "u",
           "from": "react/jsx-runtime",
-          "name": "jsx",
-          "via": "vendor-frame-DfPJ1QmD.js:Va",
-          "kind": "react"
-        },
-        {
-          "local": "h",
-          "from": "react",
-          "name": "useEffect",
-          "via": "vendor-frame-DfPJ1QmD.js:mo",
-          "kind": "react"
-        },
-        {
-          "local": "_",
-          "from": "react",
-          "name": "forwardRef",
-          "via": "vendor-frame-DfPJ1QmD.js:ro",
-          "kind": "react"
-        },
-        {
-          "local": "v",
-          "from": "react",
-          "name": "useCallback",
-          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
           "kind": "react"
         },
         {
           "local": "x",
-          "from": "./class-names.mjs",
-          "name": "clsx",
-          "via": "vendor-frame-DfPJ1QmD.js:za",
-          "kind": "generated"
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
         },
         {
-          "local": "ot",
+          "local": "S",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-CnSY1sxv.js:io",
+          "kind": "react"
+        },
+        {
+          "local": "M",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "R",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-6jtSkIit.js:Hf",
+          "kind": "view-tabs",
+          "original": "Q"
+        },
+        {
+          "local": "I3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst3",
+          "via": "shared-frame-6jtSkIit.js:Jf",
+          "kind": "view-tabs",
+          "original": "I3"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "pe",
           "from": "./layout-effect.mjs",
           "name": "useIsomorphicLayoutEffect",
-          "via": "shared-frame-BfjMqbuN.js:Qu",
+          "via": "shared-frame-6jtSkIit.js:_f",
           "kind": "generated"
         },
         {
-          "local": "st",
-          "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "useCdsFeature",
-          "via": "shared-frame-BfjMqbuN.js:Uu",
-          "kind": "adapter",
-          "original": "vr"
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
         },
         {
-          "local": "gt",
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "xe",
           "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "cdsClassNames",
-          "via": "shared-frame-BfjMqbuN.js:xd",
+          "name": "useCdsFeature",
+          "via": "shared-frame-6jtSkIit.js:hf",
           "kind": "adapter",
-          "original": "X"
+          "original": "er"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "via": "shared-frame-6jtSkIit.js:rp",
+          "kind": "view-tabs",
+          "original": "J8"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
         }
       ],
       "exports": {
-        "Jt": "ResizeHandle",
-        "Ht": "resizeDragThreshold",
-        "Ut": "resizeKeyStep",
-        "Wt": "resizeKeyStepLarge",
-        "Gt": "resizeHandleSideClasses",
-        "Kt": "resizePillClasses",
-        "qt": "resizeLineClasses"
+        "bm": "ResizeHandle",
+        "mm": "resizeDragThreshold",
+        "hm": "resizeKeyStep",
+        "gm": "resizeKeyStepLarge",
+        "_m": "resizeHandleSideClasses",
+        "vm": "resizePillClasses",
+        "ym": "resizeLineClasses"
       }
     },
     {
       "target": "composed-frame.mjs",
-      "source": "shared-0-ByI5P0CP.js",
-      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
-      "sha256": "801d93e84a0ebf917e8bf60ec82de4d284fefa08a44cab9f0199a48c536dcd35",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "bc3fb37ed08ac674a8f747b67df66a6d647687a95c429551de25e6c0385b7107",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "dI",
-          "sha256": "4e05eeb9541b2f976b4d394d4df9528af0b0513c228ff266c37bd3c2b8e613e3"
+          "name": "qR",
+          "sha256": "ea0130d34772c8fac94c4e3fa6a8911408d4c90dd8b265b644b4e975bf21806d"
         }
       ],
       "imports": [],
       "exports": {
-        "dI": "artifactComposedAttribute"
+        "qR": "artifactComposedAttribute"
       }
     },
     {
       "target": "sidebar-width.mjs",
-      "source": "shared-52-DGviI8xb.js",
-      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
-      "sha256": "6b2a8ed97c7df6c9846d0dafb7ba25c3e05769407323abe2416bd2cf48de2e96",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "sha256": "39dc2e7d6547f296ca5326bc16134c6a1ac9f02af068126bdc1279f65f1cfc30",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "Yu",
-          "sha256": "28245998f081c0bd9d07adf8dbe5dfcb2bf3e5707811e8010a1528bba9c74a2e"
+          "name": "Yd",
+          "sha256": "b898adfdc6b8bdcb6e32ef6710f3fa889732af578b6a1dcde3b3f7d6f73b0ffa"
         },
         {
-          "name": "Xu",
-          "sha256": "51256528774ef2d22e45301e62c228eaca4a8c3b82558627a0a6bd431bb8ae3f"
+          "name": "Xd",
+          "sha256": "20432064b6ae544736d41e17df87621729ff069d002daae50382d712eb5c5a3d"
         },
         {
-          "name": "$u",
-          "sha256": "ae309a895c3bd2c9276a172fa878d4f9c70743121a115d448a97514674e8d8aa"
+          "name": "$d",
+          "sha256": "1ff00ca7505e8785c547446db2553bfceb3978e2ec6998cb9afb980ef1dfcf54"
         },
         {
-          "name": "Vp",
-          "sha256": "93c78cf122ef3d27e419bdf1d1809511805ea7018680062fbb7fa4f0bdf6b771"
+          "name": "Ah",
+          "sha256": "6dacc69454fc6f6a2a5d0b33c759af605efefec0c61379e0423b9bb6426e8e08"
         },
         {
-          "name": "Rm",
-          "sha256": "0c88eb8a3177770d3911acb81500bb76361dd9a8c984a316b848108261cd4603"
+          "name": "zg",
+          "sha256": "0704fe0bd61f90ca25f211ed97543b81417a1e6c9d47f5657097e54167560ba4"
         },
         {
-          "name": "Bm",
-          "sha256": "909ea5a5f2204b044092d329b549b994d201b8aa11d987983fb2d01ff532f458"
+          "name": "Hg",
+          "sha256": "273936f671907432aa0228774380531c18632871ebe24015beb9848a253d5d49"
         },
         {
-          "name": "rh",
-          "sha256": "1a4c01a3629bd3b2dd8fb21b6c5776b205b2b9d2693fd13d6a9d698c5f995de3"
+          "name": "l_",
+          "sha256": "8570f2406f9004a4a76943453b875a2d1bc62c91793763fbf9fdd59a2692805f"
         },
         {
-          "name": "uh",
-          "sha256": "09766cdf1fecdb252ebe9690429a421897cd2b7d5710f90c614da89af7f2ea68"
+          "name": "y_",
+          "sha256": "e03376d98e8b35552565614b5aee9d0a6838305afeae6099dd9373cb8f2c17ea"
         },
         {
-          "name": "fh",
-          "sha256": "28f198c38d5f300816f38504c35a12dd88392f84c427def26ed74289d70df9c0"
+          "name": "b_",
+          "sha256": "e1e7b889a9c697350090b88535f0df5f5cac7f4218fca5af9efa5d129d37b03d"
+        },
+        {
+          "name": "C_",
+          "sha256": "98db54bf96d634fe73123b12a2e9a20140a73300bcda69d1e31a063a1c3cdf3a"
+        },
+        {
+          "name": "w_",
+          "sha256": "99ba9fabefb670d068df0f5fb39fc72aa3477c6d33e412d0981eb336f30174bf"
         }
       ],
       "imports": [
         {
-          "local": "G",
+          "local": "q",
           "from": "../../source-sidebar-resize-adapters.jsx",
           "name": "useSidebarFrameStore",
-          "via": "shared-52-DGviI8xb.js:G",
+          "via": "shared-52-uHFNjl7C.js:q",
           "kind": "adapter",
-          "original": "G"
+          "original": "q"
         },
         {
-          "local": "Wn",
+          "local": "br",
           "from": "./composed-frame.mjs",
           "name": "artifactComposedAttribute",
-          "via": "shared-0-ByI5P0CP.js:dl",
+          "via": "shared-0-DDOOdL6P.js:eu",
           "kind": "generated"
         }
       ],
       "exports": {
-        "Yu": "sidebarWidthBounds",
-        "Xu": "clampSidebarWidth",
-        "$u": "sidebarMaxWidth",
-        "uh": "useSidebarWidth",
-        "fh": "useSidebarResizing",
-        "rh": "sidebarHidden",
-        "Bm": "sidebarForcedClosed"
+        "Yd": "sidebarWidthBounds",
+        "Xd": "clampSidebarWidth",
+        "$d": "sidebarMaxWidth",
+        "y_": "useSidebarWidth",
+        "C_": "useSidebarResizing",
+        "l_": "sidebarHidden",
+        "Hg": "sidebarForcedClosed"
       }
     },
     {
       "target": "hide-threshold.mjs",
-      "source": "shared-16-B0xHzPjj.js",
-      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
-      "sha256": "02d96260b2f60f5b2ae81e4452fba03e4d0172f8c1a6928f60a139edaaa1f83e",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-16-ByfgAyLr.js",
+      "sourceSha256": "f3380feb106ca8c422b85b5cbcdfa567cb4f359eded26b6f89d9c0efbbdd35f7",
+      "sha256": "14ae4543813a10fcf0ba52d93d8e6f46800cdd25bc017c19248ba5b235d19caf",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "pc",
-          "sha256": "953257fb4c5e32ebb4798ff2978227e5cf2983eb7a58b309f16b911d66cb6e47"
+          "name": "nl",
+          "sha256": "06318902789bc04a4a7b0b0c35757da4f8ec30b355898ca1faaa431b0228f5e7"
         }
       ],
       "imports": [],
       "exports": {
-        "pc": "keepsSidebarOpen"
+        "nl": "keepsSidebarOpen"
       }
     },
     {
       "target": "escape-hold.mjs",
-      "source": "shared-156-Bikz018e.js",
-      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
-      "sha256": "794d5f47d45d16aaacce1797869aa51fadf33778d8de579bf48b51734a92655f",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-156-BLTosN8U.js",
+      "sourceSha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+      "sha256": "cd37911e532b0e66e48b3c1b26a3721cffc28bb36fd2d029c37585b5c775870e",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "uV",
-          "sha256": "ad60a1db7867775a63aeb0bc93dd123d23cf1b466cb2d0aa1036ca5ffc846894"
+          "name": "oq",
+          "sha256": "d5abffed3bbb7c754dd5eda59983688bbcdf5124901e98c526c3a88cdc19238f"
         },
         {
-          "name": "dV",
-          "sha256": "ed6eed3cd97450f4f7dc12eb497d60ff093cc076b679a03553290a6c72a11118"
+          "name": "sq",
+          "sha256": "8f4d5ceac0c34b34d587b364803d4e58e52750b64fe6d85503f66d7dfa1b245c"
         },
         {
-          "name": "fV",
-          "sha256": "806097b98f3d1903e5686df67b8f77b3aede628c6356684909c3884a41ca1e26"
+          "name": "cq",
+          "sha256": "6f65be10f6cf471612232e9a010bc6d0fc555531e2c865d1a9634fdf604407be"
         }
       ],
       "imports": [],
       "exports": {
-        "dV": "holdEscape",
-        "fV": "escapeHeld"
+        "sq": "holdEscape",
+        "cq": "escapeHeld"
       }
     },
     {
       "target": "escape-cancel.mjs",
-      "source": "shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "sha256": "faab61b460cdb6673dd90d9a1e42b99f6b236a8f1a1b53c78ca43af0d9ead36d",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "sha256": "0c635adb568daf1f7a3f386280f75de1d3d415d65a04ba2106d649c03fa7e260",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "XL",
-          "sha256": "bf9654d2d8362e470161911643bbbeb2e5bae005b16f3120b8e2ef1a57089176"
+          "name": "gH",
+          "sha256": "eb2edd25c8a06b59a40db4389763025a5334f46687cd3f040e53ebc15bd0f697"
         }
       ],
       "imports": [
         {
-          "local": "kr",
+          "local": "Lp",
           "from": "./escape-hold.mjs",
           "name": "holdEscape",
-          "via": "shared-156-Bikz018e.js:nr",
+          "via": "shared-156-BLTosN8U.js:$n",
           "kind": "generated"
         }
       ],
       "exports": {
-        "XL": "onEscapeCancel"
+        "gH": "onEscapeCancel"
       }
     },
     {
       "target": "logical-side.mjs",
-      "source": "shared-28-DcgD7xXH.js",
-      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
-      "sha256": "09a26b840de95479bf2c4ff8eb282407563512bb02d27d4cc5ed86cbd0cae7ec",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "89c5fdac3e7954cd233ffe892dc9c128fc11db7467b482c2bb7868732520578b",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "Pm",
-          "sha256": "bdf884c1a4c64043da4762e72758e77a3728fae1920f9bbb79257242b93b0c7d"
+          "name": "$h",
+          "sha256": "9ca7006cf3846a2aae897fa2e80861db1c4fc7fa8e7ad3b69eef7a172782502c"
         }
       ],
       "imports": [],
       "exports": {
-        "Pm": "physicalSide"
+        "$h": "physicalSide"
       }
     },
     {
       "target": "focus-origin.mjs",
-      "source": "shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
-      "sha256": "772a792d29c6802ec58ee86547f7033104612cfe9fb908bd6c6552b3ad4674c9",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-19-DIKJVT7c.js",
+      "sourceSha256": "d1cf17f173b5bc379212f11b92e173feceed10ecdb1fe8fdd85ebcbc0e57190f",
+      "sha256": "6d809a9f4feb9622db37efb6594ec00ac1b78350e7c9af94de51fbc58b0fb909",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "JY",
-          "sha256": "026e596cbecd2941bffe053dcc96967f0e9a0e4b75f3613c67b2f5990c5805d4"
+          "name": "gj",
+          "sha256": "b36cfb2cc2f1c16d79244a13f2d690c0ad27e509ab728668a132ec2c3f9cfa3c"
         },
         {
-          "name": "YY",
-          "sha256": "7a809b4b6b63d78be22e7184a7f1cd581d3b4ffba19d2d470c7c41a89fec43f0"
+          "name": "_j",
+          "sha256": "f11bd7f99abebd6d12d20bd6ee57c89211c04d4b283c53f4dc0d51976a2a90b5"
         },
         {
-          "name": "ZY",
-          "sha256": "57e75ed8eb199b3add66ffd496a040a0b120c1666be7f24a524d6517a89a22cd"
+          "name": "yj",
+          "sha256": "5f4f5e89cee07ac8c6225e7d03961ed5a10405ab19cb1d129a0a5f05ac664cc4"
         }
       ],
       "imports": [],
       "exports": {
-        "ZY": "rememberFocusOrigin",
-        "JY": "focusOrigins",
-        "YY": "toggleFocusOrigin"
+        "yj": "rememberFocusOrigin",
+        "gj": "focusOrigins",
+        "_j": "toggleFocusOrigin"
+      }
+    },
+    {
+      "target": "panels-part.mjs",
+      "source": "shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "sha256": "7c68c3c8f76c60dbc926c50c8243a52c131f3fa353128b2c6be3192cdf135927",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "fx",
+          "sha256": "b1b3b7a8c7200ade2cec1a0f2366ea769083b173e9deba5dadb4f99ff757283a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J",
+          "from": "../view-tabs/shared-4-DUB1Oi0O.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-DUB1Oi0O.js:Yo",
+          "kind": "view-tabs",
+          "original": "lp"
+        }
+      ],
+      "exports": {
+        "fx": "panelsPartEnabled"
       }
     },
     {
       "target": "sidebar-resize-handle.mjs",
-      "source": "shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "sha256": "33f84db6df688806709aa9790933b9f7eaa60bcb40085bb37bdc10561b8fc4e2",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "sha256": "271b6247f9e8a4c7a447d13005594210e7d81dbd25d47dadbdc06235204dd377",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "_k",
-          "sha256": "b1d1190ac7737d31d56609547a4e72ebbd4db24441afd0f828bc2cb12053bd4a"
+          "name": "RM",
+          "sha256": "4067ca40e8ec3c1bf5aa9f7245317d3f2a6fa9da7cb71c2bcccc2cc37da657c2"
         },
         {
-          "name": "vk",
-          "sha256": "4dc3d6a1a8a01d351433d92089f6ee74a922c5c8b24c2540fb55a0cb78167924"
+          "name": "zM",
+          "sha256": "5607c7607f52cab0c64fd333771ef63b58ccd07574d24867968332deb074df32"
         },
         {
-          "name": "yk",
-          "sha256": "4aa5597c323bc5b0ddd67a49a15e2badf600349b403b8ffd5c597b9828fd66d1"
+          "name": "BM",
+          "sha256": "6769844f6202d30358ec389c128f2575a78dfd96c0a2fdedfa23ea5179c30f24"
         },
         {
-          "name": "Tk",
-          "sha256": "32d1515f5c3cb5fc894da6133d996eea844a87d4df93a94be116b439942c6ff2"
+          "name": "KM",
+          "sha256": "a4aca520064f2b6ff94a2bc4fbd318f19375912eed54dfaf4ed85245e05e3eae"
         },
         {
-          "name": "Ek",
-          "sha256": "86fd2d55b31c85fbd7b226011ff31b11f1e90a7f5df429e343b52e48d222dac1"
+          "name": "qM",
+          "sha256": "225727e6a0d0b38583d5da9aaa0ce33db7435da40b85096fb30694b70b5a574c"
         },
         {
-          "name": "TF",
-          "sha256": "63ee3b90f0bc64026eafa8cde95c5f410c847be841536b7240d778688cfed72a"
+          "name": "bz",
+          "sha256": "d991948c78882494c9888b9f50952460a949902f690ed5cca4914eb729976724"
         },
         {
-          "name": "EF",
-          "sha256": "13e63b714ce541b8781f39069a2e1ad0979f5ffed76bea738d8e4539cd60c592"
+          "name": "xz",
+          "sha256": "fcfca75a9440a584f673704538c83ab1ea734cf52d8a56fd517d281977616bb1"
         },
         {
-          "name": "DF",
-          "sha256": "48f255b4f4e5457dcf1d5d9bf38da98a1779f65859d11f27d590797bf8152b05"
+          "name": "Sz",
+          "sha256": "c24968bbdb69b2857296e2639964ee1773c4156005433de0dfb9e4c2d394d90d"
+        },
+        {
+          "name": "Cz",
+          "sha256": "fd90b1c5bd481f3232aa3142f23a69f06d64bae23818ca7c0e08daf7631d2227"
+        },
+        {
+          "name": "wz",
+          "sha256": "765e319e0eca2236e4109560bef6aad4cd22d430a2620da39c49a346fb0ac4e8"
+        },
+        {
+          "name": "Tz",
+          "sha256": "3609f55ad13b90f2056a6fe7c414f850ebdd746c2adb7c24ca0dcb524c97f447"
         }
       ],
       "imports": [
         {
           "local": "l",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useDirection",
+          "via": "vendor-frame-CnSY1sxv.js:Ia",
+          "kind": "adapter",
+          "original": "un"
+        },
+        {
+          "local": "p",
           "from": "react-dom",
           "name": "flushSync",
-          "via": "vendor-frame-DfPJ1QmD.js:Ca",
+          "via": "vendor-frame-CnSY1sxv.js:Sa",
+          "kind": "react"
+        },
+        {
+          "local": "M",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "U",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "SidebarResizeTooltip",
+          "via": "shared-frame-6jtSkIit.js:Kl",
+          "kind": "adapter",
+          "original": "Xm"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "Qi",
+          "from": "./sidebar-width.mjs",
+          "name": "sidebarWidthBounds",
+          "via": "shared-52-uHFNjl7C.js:__",
+          "kind": "generated"
+        },
+        {
+          "local": "na",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useSidebarFrameStore",
+          "via": "shared-52-uHFNjl7C.js:ah",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "za",
+          "from": "./sidebar-width.mjs",
+          "name": "useSidebarResizing",
+          "via": "shared-52-uHFNjl7C.js:ph",
+          "kind": "generated"
+        },
+        {
+          "local": "Qa",
+          "from": "./sidebar-width.mjs",
+          "name": "sidebarMaxWidth",
+          "via": "shared-52-uHFNjl7C.js:w_",
+          "kind": "generated"
+        },
+        {
+          "local": "io",
+          "from": "./sidebar-width.mjs",
+          "name": "useSidebarWidth",
+          "via": "shared-52-uHFNjl7C.js:xh",
+          "kind": "generated"
+        },
+        {
+          "local": "ql",
+          "from": "../view-tabs/shared-4-DUB1Oi0O.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-DUB1Oi0O.js:Yo",
+          "kind": "view-tabs",
+          "original": "lp"
+        },
+        {
+          "local": "Sf",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Bm",
+          "from": "./escape-cancel.mjs",
+          "name": "onEscapeCancel",
+          "via": "shared-18-D3y8YMFN.js:tr",
+          "kind": "generated"
+        },
+        {
+          "local": "Y_",
+          "from": "./panels-part.mjs",
+          "name": "panelsPartEnabled",
+          "via": "shared-20-mUr7IqZY.js:gi",
+          "kind": "generated"
+        },
+        {
+          "local": "ny",
+          "from": "./logical-side.mjs",
+          "name": "physicalSide",
+          "via": "shared-28-DNYlf4wu.js:js",
+          "kind": "generated"
+        },
+        {
+          "local": "ly",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useHideSidebarIntent",
+          "via": "shared-8-Db1QN4mf.js:Cu",
+          "kind": "adapter",
+          "original": "Fb"
+        },
+        {
+          "local": "gy",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "sidebarCanHide",
+          "via": "shared-8-Db1QN4mf.js:Iu",
+          "kind": "adapter",
+          "original": "fb"
+        },
+        {
+          "local": "Ey",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "reportSidebarStateSet",
+          "via": "shared-8-Db1QN4mf.js:Ql",
+          "kind": "adapter",
+          "original": "Pb"
+        },
+        {
+          "local": "gb",
+          "from": "./resize-handle.mjs",
+          "name": "ResizeHandle",
+          "via": "shared-9-CM21XrJw.js:Pr",
+          "kind": "generated"
+        },
+        {
+          "local": "kb",
+          "from": "./focus-origin.mjs",
+          "name": "rememberFocusOrigin",
+          "via": "shared-19-DIKJVT7c.js:Cn",
+          "kind": "generated"
+        },
+        {
+          "local": "ow",
+          "from": "./hide-threshold.mjs",
+          "name": "keepsSidebarOpen",
+          "via": "shared-16-ByfgAyLr.js:xi",
+          "kind": "generated"
+        },
+        {
+          "local": "Yi",
+          "from": "./sidebar-width.mjs",
+          "name": "sidebarHidden",
+          "via": "shared-52-uHFNjl7C.js:Xm",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Sz": "SidebarResizeHandle",
+        "zM": "sidebarLiveWidthActive",
+        "BM": "liveSidebarWidth",
+        "RM": "liveSidebarWidthTargets",
+        "qM": "endEdgeResize",
+        "xz": "swallowFollowUpClicks"
+      }
+    },
+    {
+      "target": "resize-shield-layer.mjs",
+      "source": "shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "sha256": "aaf210380791dd1389f580aa3e975b1d059f3dab96182969264eafae958ed373",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ff",
+          "sha256": "4354a7ddde8348671874caf9d0e5ec4f7218f850c96a393c097a9180ea4b4cae"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ff": "resizeShieldZIndex"
+      }
+    },
+    {
+      "target": "clamp.mjs",
+      "source": "shared-130-dWztbTO1.js",
+      "sourceSha256": "cf809697067e7408a0bf3ff7d172d3bc784163429e2d3aa909aabeb73a2f0aea",
+      "sha256": "1c42a94a254a8c3e3c16b0c865e922996b14f795d8b1a9a42ed9f2a8106c15d5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ef",
+          "sha256": "69dacc2bdf9310c4241be75d818cb5ca7a2777ee1fc102fec337d3c9ea0d742b"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ef": "clamp"
+      }
+    },
+    {
+      "target": "diff-tree-column.mjs",
+      "source": "c219730b0-DGG9iA8k.js",
+      "sourceSha256": "09b397f523c1299515b62309317f8bf13dc96aff6716438d9cfe0e06bc220070",
+      "sha256": "eb25eaec1c810ca3aea809f19e76a9df4296fe6745a0403ef9a1d0d94e56f78f",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Z",
+          "sha256": "3fb9f1c94a8b51bbe8e6f53bed9863bca18a33cfda382c31d98de5a764da267d"
+        },
+        {
+          "name": "tn",
+          "sha256": "ba0ae462f01bab75fba6222a4177ce0de839ba2c2d56e74357a8ee32a303d8d3"
+        },
+        {
+          "name": "nn",
+          "sha256": "3a92792db987bce745a1b6e2167220c80c0952f2cbff02cf837331edada13ee8"
+        },
+        {
+          "name": "rn",
+          "sha256": "c93f4e76fa72100d5e1ce39443c74e9eb093d37372f59c50f06119f508e6acb3"
+        },
+        {
+          "name": "an",
+          "sha256": "767e45ce29741c9100204ab9bb6d694ac86fd48352f590498498207afd7a91b3"
+        },
+        {
+          "name": "_n",
+          "sha256": "1fae030a753acd11e07f695bcf7d6810e787f5c37871cb9c934bb9248664a266"
+        },
+        {
+          "name": "Sn",
+          "sha256": "205b1fa9390578a5c1a499f178b842335f80c57c96b8693092a78256af155712"
+        },
+        {
+          "name": "Cn",
+          "sha256": "41cabe9ba1c34e8157f04f9691302094f49293f31484d5b7c0093594a3eb27e1"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useDirection",
+          "via": "vendor-frame-CnSY1sxv.js:Ia",
+          "kind": "adapter",
+          "original": "un"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
           "kind": "react"
         },
         {
           "local": "u",
           "from": "react",
           "name": "useState",
-          "via": "vendor-frame-DfPJ1QmD.js:Co",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
           "kind": "react"
         },
         {
-          "local": "g",
-          "from": "react",
-          "name": "useRef",
-          "via": "vendor-frame-DfPJ1QmD.js:So",
-          "kind": "react"
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
         },
         {
-          "local": "_",
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs",
+          "original": "I1"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "via": "shared-frame-6jtSkIit.js:rp",
+          "kind": "view-tabs",
+          "original": "J8"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "C",
+          "from": "../view-tabs/shared-25-DOWZRSlq.js",
+          "name": "getResizeObserverClass",
+          "via": "shared-25-DOWZRSlq.js:cp",
+          "kind": "view-tabs",
+          "original": "gf"
+        },
+        {
+          "local": "Se",
+          "from": "./clamp.mjs",
+          "name": "clamp",
+          "via": "shared-130-dWztbTO1.js:Ub",
+          "kind": "generated"
+        },
+        {
+          "local": "un",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "diffTreeCanHide",
+          "via": "c219730b0-DGG9iA8k.js:un",
+          "kind": "adapter",
+          "original": "un"
+        },
+        {
+          "local": "gn",
+          "from": "../../source-sidebar-resize-adapters.jsx",
+          "name": "useDiffTreeOnRight",
+          "via": "c219730b0-DGG9iA8k.js:gn",
+          "kind": "adapter",
+          "original": "gn"
+        }
+      ],
+      "exports": {
+        "Sn": "useResizableDiffTree",
+        "Z": "diffTreeWidthBounds"
+      }
+    },
+    {
+      "target": "diff-tree-resize-handle.mjs",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "6ef26bf5545ae98d1b9cc5379150ff67d5c6f24abe2a27ff7951dd7f978112d9",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Fr",
+          "sha256": "f495c9e16efae9566287114dedab1bc26afba7eed2691753b4ec4ce2423333b8"
+        },
+        {
+          "name": "Ir",
+          "sha256": "6237e4d8453247c44d5198435e25c1dbdbcacc09cc3c2be299fa519dfd53ef01"
+        },
+        {
+          "name": "Lr",
+          "sha256": "9ef94f5f703ea646a46a17694bcefb7b196f9fe3c751a092f2283ec148ba7dd7"
+        },
+        {
+          "name": "Rr",
+          "sha256": "a95d73a7a84f48a4d71966a35685baa3019f063070b789762614620c72f3448f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
           "from": "react/jsx-runtime",
           "name": "jsx",
-          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
           "kind": "react"
         },
         {
-          "local": "v",
+          "local": "M",
           "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "useDirection",
-          "via": "vendor-frame-DfPJ1QmD.js:Wn",
+          "name": "DiffTreeResizeTooltip",
+          "via": "c44d00c7f-Cr1FDL2F.js:M",
           "kind": "adapter",
-          "original": "Td"
+          "original": "M"
         },
         {
-          "local": "A",
-          "from": "react",
-          "name": "useCallback",
-          "via": "vendor-frame-DfPJ1QmD.js:uo",
-          "kind": "react"
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
         },
         {
-          "local": "Zi",
-          "from": "./focus-origin.mjs",
-          "name": "rememberFocusOrigin",
-          "via": "shared-19-CkPOiIKm.js:io",
-          "kind": "generated"
+          "local": "I5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst5",
+          "via": "shared-frame-6jtSkIit.js:Xf",
+          "kind": "view-tabs",
+          "original": "I5"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "Be",
+          "from": "../view-tabs/shared-4-DUB1Oi0O.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-DUB1Oi0O.js:Yo",
+          "kind": "view-tabs",
+          "original": "lp"
         },
         {
           "local": "Y",
           "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "useSidebarFrameStore",
-          "via": "shared-52-DGviI8xb.js:If",
-          "kind": "adapter",
-          "original": "G"
-        },
-        {
-          "local": "kc",
-          "from": "./sidebar-width.mjs",
-          "name": "useSidebarWidth",
-          "via": "shared-52-DGviI8xb.js:Qf",
-          "kind": "generated"
-        },
-        {
-          "local": "Lc",
-          "from": "./sidebar-width.mjs",
-          "name": "useSidebarResizing",
-          "via": "shared-52-DGviI8xb.js:Wf",
-          "kind": "generated"
-        },
-        {
-          "local": "Wc",
-          "from": "./sidebar-width.mjs",
-          "name": "sidebarWidthBounds",
-          "via": "shared-52-DGviI8xb.js:_m",
-          "kind": "generated"
-        },
-        {
-          "local": "jl",
-          "from": "./sidebar-width.mjs",
-          "name": "sidebarMaxWidth",
-          "via": "shared-52-DGviI8xb.js:wm",
-          "kind": "generated"
-        },
-        {
-          "local": "mf",
-          "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "SidebarResizeTooltip",
-          "via": "shared-frame-BfjMqbuN.js:Oc",
-          "kind": "adapter",
-          "original": "Zp"
-        },
-        {
-          "local": "xp",
-          "from": "./logical-side.mjs",
-          "name": "physicalSide",
-          "via": "shared-28-DcgD7xXH.js:bo",
-          "kind": "generated"
-        },
-        {
-          "local": "Q",
-          "from": "../../source-sidebar-resize-adapters.jsx",
           "name": "useIntl",
-          "via": "vendor-intl-Db7hDWRO.js:p",
+          "via": "vendor-intl-DYfox5Co.js:p",
           "kind": "adapter",
           "original": "q"
         },
         {
-          "local": "sm",
-          "from": "./escape-cancel.mjs",
-          "name": "onEscapeCancel",
-          "via": "shared-18-D4XxL6Tg.js:Qn",
+          "local": "nt",
+          "from": "./panels-part.mjs",
+          "name": "panelsPartEnabled",
+          "via": "shared-20-mUr7IqZY.js:gi",
           "kind": "generated"
         },
         {
-          "local": "Pv",
-          "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "useHideSidebarIntent",
-          "via": "shared-8-B5lJ8U5C.js:Wl",
-          "kind": "adapter",
-          "original": "J_"
-        },
-        {
-          "local": "Yv",
-          "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "sidebarCanHide",
-          "via": "shared-8-B5lJ8U5C.js:iu",
-          "kind": "adapter",
-          "original": "w_"
-        },
-        {
-          "local": "py",
-          "from": "../../source-sidebar-resize-adapters.jsx",
-          "name": "reportSidebarStateSet",
-          "via": "shared-8-B5lJ8U5C.js:xl",
-          "kind": "adapter",
-          "original": "q_"
-        },
-        {
-          "local": "My",
+          "local": "it",
           "from": "./resize-handle.mjs",
           "name": "ResizeHandle",
-          "via": "shared-15-Cc9xvKlF.js:Zt",
+          "via": "shared-9-CM21XrJw.js:Pr",
           "kind": "generated"
         },
         {
-          "local": "Bx",
-          "from": "./hide-threshold.mjs",
-          "name": "keepsSidebarOpen",
-          "via": "shared-16-B0xHzPjj.js:Zr",
-          "kind": "generated"
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
         },
         {
-          "local": "Dc",
-          "from": "./sidebar-width.mjs",
-          "name": "sidebarHidden",
-          "via": "shared-52-DGviI8xb.js:Of",
+          "local": "D",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-6jtSkIit.js:Hf",
+          "kind": "view-tabs",
+          "original": "Q"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "S",
+          "from": "react-dom",
+          "name": "createPortal",
+          "via": "vendor-frame-CnSY1sxv.js:xa",
+          "kind": "react"
+        },
+        {
+          "local": "O",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "useCdsOwnerWindowAnchor",
+          "via": "shared-frame-6jtSkIit.js:Id",
+          "kind": "view-tabs",
+          "original": "ao"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "L",
+          "from": "./resize-shield-layer.mjs",
+          "name": "resizeShieldZIndex",
+          "via": "shared-frame-6jtSkIit.js:au",
           "kind": "generated"
         }
       ],
       "exports": {
-        "DF": "SidebarResizeHandle",
-        "vk": "sidebarLiveWidthActive",
-        "yk": "liveSidebarWidth",
-        "_k": "liveSidebarWidthTargets",
-        "Ek": "endEdgeResize",
-        "EF": "swallowFollowUpClicks"
+        "Ir": "DiffTreeResizeHandle",
+        "Lr": "DiffTreeEdgeHandle",
+        "Rr": "DiffTreeResizeShield"
       }
     }
   ]

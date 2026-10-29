@@ -16,6 +16,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -55,21 +56,34 @@ test('2.42304.0: the session pane root is YI over the composer dropFiles; YI, it
   assert.equal(count(official('cd06fb298-BHzAz0jN.js'), 'function g(){let e=o();return t(()=>e===null?void 0:{accepts:t=>l?.owner===e&&p(t),onDrop:h},[e])}'), 1);
 });
 
-test('generated: the zone, its drag state and the halo are the original bindings; the halo z-index reads the copied layer base', () => {
+test('generated (3.6556.2): the zone, its drag state and the halo are the original bindings; the halo z-index is view-tabs useCdsLayerAwareZIndex', () => {
+  // code-composer is 3.6556.2 (w2-composer-gen): c4c113f6f-BtSWvkm7 `export{u as n,l as r,d as t}` (d = the zone, YI's
+  // successor), cc63499d2-BBo0dW2q `export{c as n,l as t}`; the old contextCopies Vd (layer base) and Jd (Uc) are now
+  // view-tabs CdsLayerBaseContext / useCdsLayerAwareZIndex (E4), so chat-composer-frame copies no context.
+  const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const zone3 = fs.readFileSync(path.join(v3, 'c4c113f6f-BtSWvkm7.js'), 'utf8'), target3 = fs.readFileSync(path.join(v3, 'cc63499d2-BBo0dW2q.js'), 'utf8');
+  for (const [text, needle] of [[zone3, 'export{u as n,l as r,d as t}'], [zone3, 'import{n as o,t as s}from"./cc63499d2-BBo0dW2q.js"'], [zone3, 'import{oc as i}from"./shared-52-uHFNjl7C.js"'],
+    [target3, 'export{c as n,l as t}'], [target3, 'cu as o'], [target3, 'shadow-[inset_0_0_0_2px_var(--cds-fill-accent)]']])
+    assert.equal(count(text, needle), 1, needle);
   const manifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/code-composer/manifest.json'), 'utf8'));
+  assert.equal(manifest.referenceVersion, '3.6556.2');
   const byTarget = Object.fromEntries(manifest.modules.map((m) => [m.target, m]));
-  assert.deepEqual(byTarget['composer-pane-drop-zone.mjs'].officialExports, { f: 't', u: 'r', d: 'n' });
-  assert.deepEqual(byTarget['composer-pane-drop-zone.mjs'].bindings.map((b) => b.name), ['l', 'u', 'd', 'f']);
-  assert.deepEqual(byTarget['composer-drop-target.mjs'].officialExports, { u: 'n', d: 't' });
+  assert.equal(byTarget['composer-pane-drop-zone.mjs'].source, 'c4c113f6f-BtSWvkm7.js');
+  assert.deepEqual(byTarget['composer-pane-drop-zone.mjs'].officialExports, { d: 't', l: 'r', u: 'n' });
+  assert.deepEqual(byTarget['composer-pane-drop-zone.mjs'].bindings.map((b) => b.name), ['c', 'l', 'u', 'd', 'f', 'p']);
+  assert.equal(byTarget['composer-drop-target.mjs'].source, 'cc63499d2-BBo0dW2q.js');
+  assert.deepEqual(byTarget['composer-drop-target.mjs'].officialExports, { c: 'n', l: 't' });
   const via = (target) => byTarget[target].imports.map((i) => `${i.via}=${i.name}:${i.kind}`).sort();
-  assert.ok(via('composer-pane-drop-zone.mjs').includes('shared-52-DGviI8xb.js:Bl=splitTransferItems:generated'));
-  assert.ok(via('composer-pane-drop-zone.mjs').includes('c98ab6e79-DUMymJb9.js:r=acceptedImageTypes:generated'));
-  assert.ok(via('composer-drop-target.mjs').includes('shared-frame-BfjMqbuN.js:Uc=useLayerAwareZIndex:generated'));
-  assert.ok(via('composer-drop-target.mjs').includes('shared-frame-BfjMqbuN.js:xd=cdsClassNames:view-tabs'));
-  assert.deepEqual(Object.keys(byTarget['chat-composer-frame.mjs'].contextCopies), ['Vd']);
-  assert.equal(byTarget['chat-composer-frame.mjs'].officialExports.Jd, 'Uc');
+  assert.ok(via('composer-pane-drop-zone.mjs').includes('shared-52-uHFNjl7C.js:oc=splitTransferItems:generated'));
+  assert.ok(via('composer-pane-drop-zone.mjs').includes('cafc2a89b-CLdxe4l9.js:i=acceptedImageTypes:generated'));
+  assert.ok(via('composer-pane-drop-zone.mjs').includes('cc63499d2-BBo0dW2q.js:t=DropHalo:generated'));
+  assert.ok(via('composer-drop-target.mjs').includes('shared-frame-6jtSkIit.js:cu=useCdsLayerAwareZIndex:view-tabs'));
+  assert.ok(via('composer-drop-target.mjs').includes('shared-frame-6jtSkIit.js:Hf=cdsClassNames:view-tabs'));
+  assert.equal(byTarget['chat-composer-frame.mjs'].contextCopies, undefined);
   const viewTabs = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
-  for (const name of ['CdsLayerBaseContext', 'useCdsLayerAwareZIndex']) assert.deepEqual(viewTabs.pendingNames[name].waitsFor, ['mcp-app-card', 'code-composer'], name);
+  assert.deepEqual(viewTabs.pendingNames, {});
+  for (const name of ['CdsLayerBaseContext', 'useCdsLayerAwareZIndex']) assert.equal(viewTabs.publicNames[name]?.file, 'shared-frame-6jtSkIit.js', name);
+  assert.equal(viewTabs.publicNames.useCdsLayerAwareZIndex.export, 'cu');
 });
 
 // A minimal hook dispatcher (as tests/btw-pane-render.test.mjs): renders the memo's inner component, runs effects in order.
@@ -88,7 +102,7 @@ function fixture(component, props) {
   const render = (next = props) => {
     cursor = 0; props = next;
     const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internals.H;
-    internals.H = dispatcher;
+    internals.H = withMemoCache(dispatcher);
     try { tree = component(props); } finally { internals.H = old; }
     while (effects.length) effects.shift()();
     return tree;
@@ -176,7 +190,7 @@ test('SSR: the host zone is YI around the pane box, the halo is the official rin
   assert.equal(html, '<div class="relative h-full min-w-0 flex flex-col"><div class="source-chat-tile-content"></div></div>');
   const halo = renderToStaticMarkup(h(Target.DropHalo));
   assert.match(halo, /^<div class="pointer-events-none absolute inset-0 rounded shadow-\[inset_0_0_0_2px_var\(--cds-fill-accent\)\] motion-safe:animate-\[cds-drop-ring-in_0\.15s_cubic-bezier\(0\.215,0\.61,0\.355,1\)\]" style="z-index:40"><div class="absolute inset-0 rounded-\[inherit\]/);
-  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-Bl9zqrv-.css', 'c6a992d55-sXiDGMFQ.css', 'ce598b86c-CctVJsaN.css', 'c3fde7009-BH42YUtA.css']
+  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
     .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
   const escape = (token) => '.' + token.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
   const tokens = [...new Set([...`${html}${halo}`.matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter((t) => t && t !== 'source-chat-tile-content'))];

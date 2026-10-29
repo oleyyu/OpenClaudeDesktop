@@ -10,6 +10,7 @@ import path from 'node:path';
 import React from 'react';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const officialFrame = fs.readFileSync(path.join(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js'), 'utf8');
@@ -54,7 +55,7 @@ function fixture(component, props) {
   const render = () => {
     cursor = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return tree = component(props); } finally { internal.H = old; }
   };
   render();

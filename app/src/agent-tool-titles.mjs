@@ -67,6 +67,22 @@ const TITLES = {
     const files = sentFiles(args);
     return { verbs: [t("Sending"), t("Sent"), t("Failed to send")], meta: files.length === 1 ? baseName(files[0]) : files.length ? tn(files.length, "{count} file", "{count} files") : null };
   },
+  // w13-close-main-process (closeout coworkfn-tools-01): Cowork's tools (agent-tools/cowork.mjs, skills-cowork.mjs) and
+  // its scheduled-task tools (agent-tools/scheduled-tasks.mjs), with the 3.6556.2 row verbs: c52b02f3f's `msg` table
+  // (mcp__cowork__…: "Asking to access a folder" / "Asked to access a folder", …), its failures `G` ("Failed to request
+  // folder access", …) and `Qn` (mcp__scheduled-tasks__…: running / done / failed); shared-130 uB has the same pairs.
+  request_cowork_directory: () => ({ verbs: [t("Asking to access a folder"), t("Asked to access a folder"), t("Failed to request folder access")], meta: null }),
+  allow_cowork_file_delete: () => ({ verbs: [t("Asking to delete a file"), t("Asked to delete a file"), t("Failed to request file deletion")], meta: null }),
+  present_files: () => ({ verbs: [t("Sharing files"), t("Shared files"), t("Failed to share files")], meta: null }),
+  launch_code_session: () => ({ verbs: [t("Opening Claude Code"), t("Opened Claude Code"), t("Failed to open Claude Code")], meta: null }),
+  save_skill: () => ({ verbs: [t("Saving skill"), t("Saved skill"), t("Failed to save skill")], meta: null }),
+  propose_skills: () => ({ verbs: [t("Suggesting skills"), t("Suggested skills"), t("Failed to suggest skills")], meta: null }),
+  list_scheduled_tasks: () => ({ verbs: [t("Listing scheduled tasks"), t("Listed scheduled tasks"), t("Failed to list scheduled tasks")], meta: null }),
+  create_scheduled_task: () => ({ verbs: [t("Creating scheduled task"), t("Created scheduled task"), t("Failed to create scheduled task")], meta: null }),
+  update_scheduled_task: () => ({ verbs: [t("Updating scheduled task"), t("Updated scheduled task"), t("Failed to update scheduled task")], meta: null }),
+  delete_scheduled_task: () => ({ verbs: [t("Deleting scheduled task"), t("Deleted scheduled task"), t("Failed to delete scheduled task")], meta: null }),
+  run_scheduled_task: () => ({ verbs: [t("Starting scheduled task"), t("Started scheduled task"), t("Failed to start scheduled task")], meta: null }),
+  list_task_runs: () => ({ verbs: [t("Listing scheduled task runs"), t("Listed scheduled task runs"), t("Failed to list scheduled task runs")], meta: null }),
   // The terminal tools (agent-tools/terminal.mjs); official 2.2553.1 terminal wording ("Failed to start command in
   // terminal", "Failed to read terminal", "Failed to list terminal tabs").
   run_in_terminal: (args) => ({ verbs: [t("Running in terminal"), t("Ran in terminal"), t("Failed to start command in terminal")], meta: firstLine(args.command) || str(args.title) || null }),

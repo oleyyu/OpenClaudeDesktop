@@ -1,56 +1,61 @@
-// R2-appswitch W3 (research/app-switch.md W3, §1.9): pins for the ⌥⌘←/→ surface chord helpers that
-// scripts/extract-code-ui-current.mjs emits from the 2.42304.0 renderer. The emit slices a hand-listed binding set;
-// before it runs, this module checks that the set is exactly the same-chunk closure of the roots the helper exports, that
-// every binding still carries feature strings of its original text, that the chunk still exports the roots under the
-// official aliases its consumers import (shared-22 AM imports qL as `jn`, $L as `Mn`), and that each replaced import
-// still names the same export of its chunk. It also slices the two shortcut tables of shared-1 jL
-// (`chorus_surface_prev` / `chorus_surface_next` .shortcut.bindings) out of the source, so the binding data the
-// matcher RL compares against is the original, not a restatement.
+// R2-appswitch W3 (research/app-switch.md W3, §1.9), migrated to 3.6556.2 by W2 w2-titlebar-current
+// (analysis/claude-3.6556.2-migrate-20261025/research/titlebar-frame.md §1.1/§3.2): pins for the ⌥⌘←/→ surface chord
+// helpers that scripts/extract-code-ui-current.mjs emits from the 3.6556.2 renderer. The emit slices a hand-listed
+// binding set; before it runs, this module checks that the set is exactly the same-chunk closure of the roots the helper
+// exports, that every binding still carries feature strings of its original text (literals, keys, selectors; no
+// minified statements, R2), that the chunk still exports the roots under the official aliases its consumers import, and
+// that each replaced import still names the same export of its chunk. It also slices the two shortcut tables of
+// shared-1 LV (`chorus_surface_prev` / `chorus_surface_next` .shortcut.bindings) out of the source, so the binding data
+// the matcher GV compares against is the original, not a restatement.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { looseFeature } from './official-3.6556.2.mjs';
 
 export const surfaceChordPins = {
-  // shared-156 $B (exported `_r`): the modal layer selector WL/HL extend; ZB/YB are the ask-user banner selectors.
+  // shared-156 qK (exported `_r`): the modal layer selector JV/YV extend; GK/UK are the ask-user banner selectors.
   'surface-chord-layers.mjs': {
-    source: 'shared-156-Bikz018e.js', roots: ['$B'], bindings: ['YB', 'ZB', '$B'], officialExports: { _r: '$B', gr: 'YB', mr: 'ZB' },
+    source: 'shared-156-BLTosN8U.js', roots: ['qK'], bindings: ['UK', 'GK', 'qK'], officialExports: { _r: 'qK', gr: 'UK', mr: 'GK' },
     features: {
-      YB: ['"[data-ask-user-input-banner]"'], ZB: ['${YB}:not([data-chromeless])'],
-      $B: ['[role="menu"],[role="listbox"],[role="dialog"],[role="alertdialog"],dialog[open],${ZB}'],
+      UK: ['"[data-ask-user-input-banner]"'], GK: [':not([data-chromeless])'],
+      qK: ['[role="menu"],[role="listbox"],[role="dialog"],[role="alertdialog"],dialog[open],'],
     },
   },
-  // shared-78 Wa (exported `kw`): the macOS user-agent test. shared-1 imports it as `Da` (qL: AltGraph only blocks off a
-  // Mac) and shared-22 as `Si` (AM: the extra-panes guard applies only off a Mac). research/app-switch.md W3 called it a
-  // mobile UA check; the source is /(macintosh|macintel|macppc|mac68k|macos)/i.
+  // shared-78 Eo (exported `mE`): the macOS user-agent test. shared-1 imports it as `so` (eH: AltGraph only blocks off a
+  // Mac). The source is /(macintosh|macintel|macppc|mac68k|macos)/i.
   'surface-chord-platform.mjs': {
-    source: 'shared-78-D6VXYXaQ.js', roots: ['Wa'], bindings: ['Ua', 'Wa'], officialExports: { kw: 'Wa' },
-    features: { Ua: ['/(macintosh|macintel|macppc|mac68k|macos)/i'], Wa: ['typeof window > "u"', 'window.navigator.userAgent.toLowerCase()', 'Ua.test(e)'] },
+    source: 'shared-78-D5Fw2h0a.js', roots: ['Eo'], bindings: ['To', 'Eo'], officialExports: { mE: 'Eo' },
+    features: { To: ['/(macintosh|macintel|macppc|mac68k|macos)/i'], Eo: ['typeof window > "u"', 'window.navigator.userAgent.toLowerCase()'] },
   },
-  // shared-1 qL (`jn`): the chord direction (repeat, AltGraph and modal-layer guards, RTL swap); $L (`Mn`): the next
-  // mode in the list, no wrap; RL: the useShortcut binding matcher (LL matchShortcut) that it("chorus_surface_*") runs.
+  // shared-1 eH (`On`): the chord direction (repeat, AltGraph and modal-layer guards, RTL swap); oH (`kn`): the next
+  // mode in the list, no wrap; GV: the useShortcut binding matcher that it("chorus_surface_*") runs. 3.6556.2 adds a
+  // `host` / `doc` option to QV (the open-layer test, exported `jn`) and a `host` to HP (`Ji`) for popout windows;
+  // eH calls tH → QV({passiveLayers: !0}) without them, so the document is shared-25 ap (ownerDocument, imported as
+  // Ze) of null: globalThis.document, as in 2.42304.0.
   'surface-chord.mjs': {
-    source: 'shared-1-CAAiD7E3.js', roots: ['qL', '$L', 'RL'],
-    bindings: ['vj', 'xj', 'Sj', 'Tj', 'BL', 'VL', 'HL', 'WL', 'GL', 'JL', 'RL', 'qL', '$L'],
-    officialExports: { jn: 'qL', Mn: '$L', kn: 'JL', Pn: 'GL', Gi: 'Tj' },
-    imports: { ci: 'shared-156-Bikz018e.js:_r', Da: 'shared-78-D6VXYXaQ.js:kw' },
+    source: 'shared-1-BJhqMmkf.js', roots: ['eH', 'oH', 'GV'],
+    bindings: ['FP', 'RP', 'zP', 'HP', 'qV', 'JV', 'YV', 'ZV', 'QV', 'tH', 'GV', 'eH', 'oH'],
+    officialExports: { On: 'eH', kn: 'oH', En: 'tH', jn: 'QV', Ji: 'HP' },
+    imports: { so: 'shared-78-D5Fw2h0a.js:mE', Ze: 'shared-25-DOWZRSlq.js:ap', Ws: 'shared-156-BLTosN8U.js:_r' },
     dependencies: {
-      'shared-156-Bikz018e.js:_r': ['[role="menu"],[role="listbox"],[role="dialog"],[role="alertdialog"],dialog[open]'],
-      'shared-78-D6VXYXaQ.js:kw': ['window.navigator.userAgent.toLowerCase()'],
+      'shared-156-BLTosN8U.js:_r': ['[role="menu"],[role="listbox"],[role="dialog"],[role="alertdialog"],dialog[open]'],
+      'shared-78-D5Fw2h0a.js:mE': ['window.navigator.userAgent.toLowerCase()'],
+      'shared-25-DOWZRSlq.js:ap': ['globalThis.document'],
     },
     features: {
-      vj: ['[aria-hidden="true"], [inert]'], xj: ['e.closest(vj)'], Sj: ['!xj(e)', '"[hidden], [aria-live]"'],
-      Tj: ['"[data-aria-hidden]"', '\'[role="dialog"], [role="alertdialog"]\'', '"data-closed"', '[data-cds="ConfirmationDialog"]'],
-      BL: ['"[data-radix-popper-content-wrapper]"'], VL: ['[role="menu"],[role="listbox"],[role="dialog"],[role="alertdialog"],${BL}'],
-      HL: ['${ci},${BL}'], WL: ['e.closest(HL)', 'e.closest(VL)', '"[data-ask-user-input-banner]"'],
-      GL: ['passiveLayers: t = !1', 'document.activeElement', 'WL(r, t)', '!Tj(n)'], JL: ['!GL({ passiveLayers: !0 })'],
-      RL: ['e.code !== t.code', 'e.key.toLowerCase() !== t.key.toLowerCase()', 'getModifierState?.("AltGraph")', 'e.metaKey !== r', 'e.altKey !== o'],
-      qL: ['if (e.repeat) return null;', 't(e) ? "prev" : n(e) ? "next" : null', '!Da() && e.getModifierState?.("AltGraph")', 'JL()'],
-      $L: ['if (e.length < 2) return null;', 'Math.max(0, e.indexOf(t)) + (n === "prev" ? -1 : 1)', 'r < 0 || r >= e.length ? null : e[r]'],
+      FP: ['[aria-hidden="true"], [inert]'], RP: [looseFeature('e.closest(FP)')], zP: [looseFeature('!RP(e)'), '"[hidden], [aria-live]"', '"aria-modal"'],
+      HP: ['"[data-aria-hidden]"', '\'[role="dialog"], [role="alertdialog"]\'', '"data-closed"', '[data-cds="ConfirmationDialog"]'],
+      qV: ['"[data-radix-popper-content-wrapper]"'], JV: ['[role="menu"],[role="listbox"],[role="dialog"],[role="alertdialog"],'],
+      YV: ['`${Ws},${qV}`'], ZV: [looseFeature('e.closest(YV)'), looseFeature('e.closest(JV)'), '"[data-ask-user-input-banner]"'],
+      QV: ['passiveLayers: t = !1', 'ownedBy: n', 'host: r = null', 'e.doc ??', '.activeElement'], tH: [looseFeature('!QV({ passiveLayers: !0 })')],
+      GV: ['e.code !== t.code', 'e.key.toLowerCase() !== t.key.toLowerCase()', 'getModifierState?.("AltGraph")', 'e.metaKey !== r', 'e.altKey !== o'],
+      eH: ['if (e.repeat) return null;', '? "prev"', '? "next"', 'getModifierState?.("AltGraph")', looseFeature('i === "prev" ? "next" : "prev"')],
+      oH: ['if (e.length < 2) return null;', '(n === "prev" ? -1 : 1)', 'r >= e.length ? null : e[r]'],
     },
-    // jL.<command>.shortcut.bindings, emitted as `surfaceChordShortcuts`; each command must stay hidden from the palette.
-    shortcuts: { owner: 'jL', commands: ['chorus_surface_prev', 'chorus_surface_next'], features: ['hiddenFromCommandPalette: !0', 'app: "desktop"'] },
+    // LV.<command>.shortcut.bindings, emitted as `surfaceChordShortcuts`; each command must stay hidden from the palette.
+    shortcuts: { owner: 'LV', commands: ['chorus_surface_prev', 'chorus_surface_next'], features: ['hiddenFromCommandPalette: !0', 'app: "desktop"'] },
   },
 };
 
@@ -81,8 +86,8 @@ export async function pinSurfaceChordHelper(target, directory, run = true) {
   for (const [alias, local] of Object.entries(pin.officialExports ?? {}))
     if (exported.get(alias) !== local) throw Error(`${label}: exports ${alias} as ${exported.get(alias)}, not ${local}`);
   for (const [name, features] of Object.entries(pin.features)) {
-    const absent = features.filter(f => !text(declaration(name)).includes(f));
-    if (absent.length) throw Error(`${label}: ${name} lacks ${absent.map(f => JSON.stringify(f)).join(', ')}`);
+    const absent = features.filter(f => typeof f === 'string' ? !text(declaration(name)).includes(f) : !f.test(text(declaration(name))));
+    if (absent.length) throw Error(`${label}: ${name} lacks ${absent.map(f => typeof f === 'string' ? JSON.stringify(f) : String(f)).join(', ')}`);
   }
   // The same-chunk closure of the roots, stopping at imports.
   const closure = new Set(), imports = new Map();

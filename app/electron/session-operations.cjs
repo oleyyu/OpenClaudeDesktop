@@ -264,7 +264,8 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
       throw error;
     }
   }
-  return { run, observe, assertAvailable, reserveMessage, isActive: id => active.has(id),
+  // activeTurn (w13-close-main-process): the thread's running turn, for a Cowork rewind that stops it first (main.cjs cowork-rewind).
+  return { run, observe, assertAvailable, reserveMessage, isActive: id => active.has(id), activeTurn: id => active.get(id) ?? null,
     isReviewing: id => typeof id === 'string' && (reviewing.has(id) || (pending.get(id)?.operation === 'review' && pending.get(id)?.dispatched === true)), snapshot: () => [...pending.values()].filter(e => e.operation !== 'message').map(e => ({ threadId:e.threadId, operation:e.operation, phase:e.phase, turnId:e.turnId || null, activeTurnId:e.activeTurnId || null, error:e.error || null })) };
 }
 module.exports = { createSessionOperations, connectionMatches, reviewTarget };

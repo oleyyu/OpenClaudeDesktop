@@ -7,7 +7,8 @@ import path from 'node:path';
 const app = path.resolve(import.meta.dirname, '..');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null } };
+// D21: the Settings import graph reaches view-tabs, whose preload-helper calls document.createElement at evaluation.
+globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
 let server, React, render, load;
 before(async () => {
   React = (await import('react')).default;

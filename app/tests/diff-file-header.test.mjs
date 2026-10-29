@@ -25,7 +25,8 @@ after(async () => { await server?.close(); });
 const actions = { root: '/repo', onCopy() {}, onOpenFile() {}, onAttachFile() {} };
 const render = (value, props = {}) => renderToStaticMarkup(React.createElement(SourceDiff, { value, placement: 'changes', fileActions: actions, ...props }));
 // Each FileDiff section's header (the aa trigger div) up to its body.
-const headers = (html) => [...html.matchAll(/<div class="sdiff-header group\/diff-file relative"[\s\S]*?(?=<div id=|<\/section>)/g)].map((match) => match[0]);
+// 3.6556.2 c44d00c7f (w10-ccres-e31-diff): the trigger is `group/diff-file @container/diff-file relative`.
+const headers = (html) => [...html.matchAll(/<div class="sdiff-header group\/diff-file @container\/diff-file relative"[\s\S]*?(?=<div id=|<\/section>)/g)].map((match) => match[0]);
 const labelsOf = (header) => [...header.matchAll(/class="sdiff-row-label [^"]*">([^<]*)</g)].map((match) => match[1]);
 
 const MODIFIED = 'diff --git a/src/app.js b/src/app.js\nindex 1..2 100644\n--- a/src/app.js\n+++ b/src/app.js\n@@ -1 +1 @@\n-export const answer = 1;\n+export const answer = 2;\n';
@@ -63,7 +64,7 @@ test('model: c3e58cab4 copy choices and control stripping', () => {
   assert.equal(stripClipboardControls('a\u0000b\nc\u202ed\u2028e\u200f'), 'abcde');
 });
 
-test('Changes placement header follows We: chevron svg, fileKindIcon glyph, path tooltip span, counts, reserve, Ze; no native title', () => {
+test('Changes placement header follows aa: chevron svg, file-type icon, path tooltip span, counts, reserve, Ze; no native title', () => {
   const html = render(MODIFIED);
   const [header] = headers(html);
   assert.ok(header, 'header rendered');
@@ -71,12 +72,13 @@ test('Changes placement header follows We: chevron svg, fileKindIcon glyph, path
   assert.doesNotMatch(header, /\stitle="/, 'no native title in a modified-file header');
   assert.doesNotMatch(html, /Copy patch|sdiff-copy|role="status"/);
   assert.match(header, /<button type="button" class="sdiff-file-toggle aria-disabled:cursor-default" aria-expanded="true" aria-controls="[^"]+">/);
-  assert.match(header, /<span aria-hidden="true" class="sdiff-chevron flex items-center justify-center size-\[16px\] shrink-0 text-muted"><svg width="16" height="16" viewBox="0 0 16 16" class="transition-transform duration-fast motion-reduce:transition-none"><path d="M3\.47 5\.47a\.75\.75 0 0 1 1\.06 0L8 8\.94l3\.47-3\.47a\.75\.75 0 1 1 1\.06 1\.06l-4 4a\.75\.75 0 0 1-1\.06 0l-4-4a\.75\.75 0 0 1 0-1\.06" fill="currentColor"><\/path><\/svg><\/span>/);
-  assert.equal(fileKindIcon('app.js'), 'Code');
-  assert.match(header, new RegExp(`class="sdiff-file-kind shrink-0 text-muted" style="font-size:12px;[^"]*">${glyph(fileKindIcon('app.js'))}</span>`));
+  assert.match(header, /<span aria-hidden="true" class="sdiff-chevron flex items-center justify-center size-\[16px\] shrink-0 text-muted-as-secondary"><svg width="16" height="16" viewBox="0 0 16 16" class="transition-transform duration-fast motion-reduce:transition-none"><path d="M3\.47 5\.47a\.75\.75 0 0 1 1\.06 0L8 8\.94l3\.47-3\.47a\.75\.75 0 1 1 1\.06 1\.06l-4 4a\.75\.75 0 0 1-1\.06 0l-4-4a\.75\.75 0 0 1 0-1\.06" fill="currentColor"><\/path><\/svg><\/span>/);
+  // aa: c280f9bbb wt (FileTypeIcon) for the path, size xs, text-muted-as-secondary (not the host fileKindIcon glyph).
+  assert.match(header, /<\/svg><\/span><span data-cds="Icon" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\);[^"]*" class="shrink-0 text-muted-as-secondary" aria-hidden="true">[^<]*<\/span><span class="sdiff-path /);
+  assert.doesNotMatch(header, /sdiff-file-kind/);
   assert.match(header, /<span class="sdiff-path flex min-w-0 text-body text-secondary"><span dir="ltr" class="flex min-w-0 items-baseline gap-1 overflow-hidden whitespace-nowrap"><span class="max-w-full shrink-0 truncate">app\.js<\/span><span class="sdiff-path-directory flex min-w-0 text-footnote text-muted data-\[clipped\]:opacity-0"><span dir="ltr" class="flex min-w-0 overflow-hidden whitespace-nowrap"><span class="min-w-0 truncate">src<\/span><\/span><\/span><\/span><\/span>/);
-  assert.match(header, /<span class="sdiff-counts flex shrink-0 items-center gap-0\.5 text-body tabular-nums"><span class="text-git-added">\+1<\/span><span class="text-git-removed">−1<\/span><\/span><span aria-hidden="true" data-size="xs" class="w-control shrink-0"><\/span><\/button>/);
-  assert.match(header, /<span class="sdiff-open-file absolute inset-y-0 right-0 flex items-center pr-md opacity-0 transition-opacity motion-reduce:transition-none group-hover\/diff-file:opacity-100 group-focus-within\/diff-file:opacity-100 pointer-coarse:opacity-100">/);
+  assert.match(header, /<span dir="ltr" class="sdiff-counts flex shrink-0 items-center gap-0\.5 text-body tabular-nums"><span class="text-git-added">\+1<\/span><span class="text-git-removed">−1<\/span><\/span><span aria-hidden="true" data-size="xs" class="w-control shrink-0"><\/span><\/button>/);
+  assert.match(header, /<span class="sdiff-open-file absolute inset-y-0 end-0 flex items-center pe-md opacity-0 transition-opacity motion-reduce:transition-none group-hover\/diff-file:opacity-100 group-focus-within\/diff-file:opacity-100 pointer-coarse:opacity-100">/);
   assert.match(header, /<button aria-label="Open file" type="button" data-cds="Button" data-variant="ghost"[^>]*data-size="xs" data-cds-icon-only=""/);
   assert.deepEqual(labelsOf(header), []);
 });
@@ -89,7 +91,7 @@ test('Changes placement labels come only from W; Renamed from uses the basename 
   assert.doesNotMatch(html, /New file|Deleted file|Copied from|Mode \d/);
   const [added, renamed, moved, executable, cleared, symlink, binary] = all;
   assert.deepEqual(labelsOf(added), []);
-  assert.match(renamed, /<span class="sdiff-renamed flex min-w-0 shrink-\[9999\] items-baseline gap-1 overflow-hidden whitespace-nowrap text-body text-muted"><span class="min-w-0 truncate">Renamed from <\/span><span class="flex min-w-0 shrink-\[9999\]"><span dir="ltr" class="flex min-w-0 overflow-hidden whitespace-nowrap" title="docs\/old\.txt"><span class="min-w-0 truncate">old\.txt<\/span><\/span><\/span><\/span>/);
+  assert.match(renamed, /<span class="sdiff-renamed flex min-w-0 shrink-\[9999\] items-baseline gap-1 overflow-hidden whitespace-nowrap text-body text-muted-as-secondary"><span class="min-w-0 truncate">Renamed from <\/span><span class="flex min-w-0 shrink-\[9999\]"><span dir="ltr" class="flex min-w-0 overflow-hidden whitespace-nowrap" title="docs\/old\.txt"><span class="min-w-0 truncate">old\.txt<\/span><\/span><\/span><\/span>/);
   assert.equal(renamed.replace(/<[^>]+>/g, '').includes('Renamed from old.txt'), true);
   // The only native title in a rename header is Ke's c784da984 title (the full previous path).
   assert.deepEqual([...renamed.matchAll(/\stitle="([^"]*)"/g)].map((match) => match[1]), ['docs/old.txt']);
@@ -98,9 +100,9 @@ test('Changes placement labels come only from W; Renamed from uses the basename 
   assert.deepEqual(labelsOf(cleared), ['No longer executable']);
   assert.deepEqual(labelsOf(symlink), []);
   assert.deepEqual(labelsOf(binary), ['Binary file']);
-  assert.match(binary, new RegExp(glyph(fileKindIcon('logo.png'))));
+  assert.match(binary, /<span data-cds="Icon" style="[^"]*" class="shrink-0 text-muted-as-secondary" aria-hidden="true">/);
   // We renders the counts unconditionally; a binary patch has 0/0 text lines (aa passes additions/deletions as is).
-  assert.match(binary, /<span class="sdiff-counts flex shrink-0 items-center gap-0\.5 text-body tabular-nums"><span class="text-git-added">\+0<\/span><span class="text-git-removed">−0<\/span><\/span>/);
+  assert.match(binary, /<span dir="ltr" class="sdiff-counts flex shrink-0 items-center gap-0\.5 text-body tabular-nums"><span class="text-git-added">\+0<\/span><span class="text-git-removed">−0<\/span><\/span>/);
 });
 
 // panes-diff-view-current.js:3279 hasBody = meta !== null && hunks.length > 0; aa :3717-3723 and We (disabled).
@@ -115,7 +117,7 @@ test('a Changes file without text hunks gets the aa no-body header: aria-disable
   for (const header of all) {
     assert.match(header, /<button type="button" class="sdiff-file-toggle aria-disabled:cursor-default" aria-disabled="true">/);
     assert.doesNotMatch(header, /aria-expanded|aria-controls/);
-    assert.match(header, /<span aria-hidden="true" class="sdiff-chevron flex items-center justify-center size-\[16px\] shrink-0 text-muted opacity-40"><svg width="16" height="16" viewBox="0 0 16 16" class="transition-transform duration-fast motion-reduce:transition-none -rotate-90">/);
+    assert.match(header, /<span aria-hidden="true" class="sdiff-chevron flex items-center justify-center size-\[16px\] shrink-0 text-muted-as-secondary opacity-40"><svg width="16" height="16" viewBox="0 0 16 16" class="transition-transform duration-fast motion-reduce:transition-none -rotate-90 \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:rotate-90">/);
   }
   assert.doesNotMatch(html, /sdiff-file-body|sdiff-metadata-only|No text hunks in this patch/);
   // The row labels still come only from W (no body repeats them), and the context menu / Open file stay available.

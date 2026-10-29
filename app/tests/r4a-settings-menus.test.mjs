@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import { viewTabsViewFor } from '../scripts/view-tabs-compat.mjs';
 import { EventEmitter } from 'node:events';
 import { appearancePreferences, appearanceDefaults } from '../electron/preferences.mjs';
 import { pluginListView } from '../src/customize-list-model.mjs';
@@ -150,27 +151,41 @@ test('menus-04 fizzy-lake parts: the generated 2.42304.0 allowlist is empty, so 
   once(official('c518a31cc-CSChENN1.js'), ['className:"-mx-pad-xl -mb-pad-xl min-h-0 flex-1 overflow-y-auto rounded-b-[inherit] px-xl pb-xl in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible',
     'className:o("font-base mt-5 py-2",e&&"in-data-cds-fizzy:mt-0 in-data-cds-fizzy:pt-0")'], 'c518a31cc');
 
-  // (b) the local gate is the generated module, line for line, and evaluates closed even when the root asks for parts.
-  const generatedFile = 'src/generated/view-tabs/shared-4-CJsHhp5n.js';
-  const generated = local(generatedFile);
-  for (const line of [...lines, 'var Sf="data-cds-fizzy-lake";', 'var Cf=[];', 'var Ef=Cf;']) assert.equal(count(generated, line), 1, line);
-  // R4i-graph GR1 (D46) added the semantic name isCaiCuriousTowerEnabled for Ad (tests/view-tabs-d46-names.test.mjs); the gate is unchanged.
-  assert.equal(count(generated, 'export {jf,kf,Of,wf,Sf,Ef,Cf,Df,Af,Ad,Od,Dd,mt,jf as isFizzyLakePartEnabled,Ad as isCaiCuriousTowerEnabled};'), 1);
-  const body = generated.split('\n').filter(line => !/^(import|export|\/\/)/.test(line.trim())).join('\n');
-  const evaluate = attribute => vm.runInNewContext(`${body}\n;({jf,kf,Of,wf,Ef})`, {
-    mt: { getItem: () => '1' }, // spa:cai_curious_tower on: Af.panels would allow it, the allowlist still does not
+  // (b) 3.6556.2 migration (W1): view-tabs runs the 3.6556.2 graph. shared-4-CJsHhp5n.js was the legacy shim that kept
+  // the 2.42304.0 name jf (retired in W7: no importer left); the gate itself is shared-4 lp over shared-52 th, whose allowlist is Qm=[] (cds:C25). The local
+  // gate is that generated pair, line for line with the official 3.6556.2 chunks, and evaluates closed even when the root
+  // asks for parts.
+  const viewTabs = JSON.parse(local('src/generated/view-tabs/manifest.json'));
+  assert.deepEqual(viewTabsViewFor(viewTabs, '3.6556.2').publicNames.isFizzyLakePartEnabled, { file: 'shared-4-DUB1Oi0O.js', local: 'lp', export: 'Yo' });
+  assert.equal(fs.existsSync(path.join(app, 'src/generated/view-tabs/shared-4-CJsHhp5n.js')), false, 'legacy shim retired (W7)');
+  const v3 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+  const partLines = ['function ip(){return np}', 'function lp(e){return xr(e)&&(cp[e]?.()??!0)}'];
+  const allowLines = ['function Xm(e,t){let n=new Set(e?.split(" "));return t.filter(e=>n.has(e)).sort()}',
+    'function eh(){return $m??={parts:typeof document>"u"?[]:Xm(document.documentElement.getAttribute(Ym),Qm)},$m}', 'function th(e){return eh().parts.includes(e)}'];
+  once(v3('shared-4-DUB1Oi0O.js'), [...partLines, 'cp={panels:ip}', 'tp=ur'], 'official 3.6556.2 shared-4');
+  once(v3('shared-52-uHFNjl7C.js'), [...allowLines, 'Ym="data-cds-fizzy-lake"', 'Qm=[]', 'Jm="spa:cai_curious_tower"'], 'official 3.6556.2 shared-52');
+  const parts = local('src/generated/view-tabs/shared-4-DUB1Oi0O.js'), allow = local('src/generated/view-tabs/shared-52-uHFNjl7C.js');
+  once(parts, [...partLines, 'var cp={panels:ip};', 'var tp=ur;', 'import {th as xr} from "./shared-52-uHFNjl7C.js";', 'import {Jm as ur} from "./shared-52-uHFNjl7C.js";',
+    'import {Xm as fr} from "./shared-52-uHFNjl7C.js";', 'export {lp,cp,ip,np,tp,xr,ht,ur,fr,lp as isFizzyLakePartEnabled,ip as isCaiCuriousTowerEnabled};'], 'generated shared-4');
+  once(allow, [...allowLines, 'var Ym="data-cds-fizzy-lake";', 'var Qm=[];', 'var Jm="spa:cai_curious_tower";'], 'generated shared-52');
+  const body = text => text.split('\n').filter(line => !/^(import|export|\/\/)/.test(line.trim())).join('\n');
+  const evaluate = attribute => vm.runInNewContext(`${body(allow)}\nvar xr=th,ur=Jm,fr=Xm;\n${body(parts)}\n;({lp,th,eh,Xm,Qm})`, {
+    ht: { getItem: () => '1' }, // spa:cai_curious_tower on: cp.panels would allow it, the allowlist still does not
     document: { documentElement: { getAttribute: name => (name === 'data-cds-fizzy-lake' ? attribute : null) } } });
   const on = evaluate('panels color');
-  assert.deepEqual([...on.Ef], []);
-  assert.deepEqual([...on.Of().parts], []);
-  assert.equal(on.jf('panels'), false);
-  assert.equal(on.kf('color'), false);
-  assert.deepEqual([...on.wf('panels color', ['panels'])], ['panels'], 'only the empty allowlist keeps it closed');
+  assert.deepEqual([...on.Qm], []);
+  assert.deepEqual([...on.eh().parts], []);
+  assert.equal(on.lp('panels'), false);
+  assert.equal(on.th('color'), false);
+  assert.deepEqual([...on.Xm('panels color', ['panels'])], ['panels'], 'only the empty allowlist keeps it closed');
   // Consumers read the generated gate: the file tree's icon stays "xs" and the view tabs import it.
+  // (file-tree-style moved to 3.6556.2 in wave 2: it imports the current gate lp directly, or the legacy shim's jf.)
   const tree = local('src/generated/code-current/file-tree-style.mjs');
-  assert.equal(count(tree, 'import { isFizzyLakePartEnabled as p } from "../view-tabs/shared-4-CJsHhp5n.js";'), 1);
-  assert.equal(count(tree, 'return p("panels") ? "sm" : "xs";'), 1);
-  assert.equal(count(local('src/generated/view-tabs/cfe7c4b3b-CP-IQXj8.js'), 'import {jf as ne} from "./shared-4-CJsHhp5n.js";'), 1);
+  const treeGate = /import \{ isFizzyLakePartEnabled as ([\w$]+) \} from "\.\.\/view-tabs\/shared-4-(?:DUB1Oi0O|CJsHhp5n)\.js";/.exec(tree);
+  assert.ok(treeGate, 'file-tree-style imports the view-tabs gate by its semantic name');
+  assert.equal(count(tree, `return ${treeGate[1]}("panels") ? "sm" : "xs";`), 1);
+  // The view tabs the host draws are the current strip (cfe7c4b3b-CP-IQXj8.js is its legacy shim); it imports the current gate.
+  assert.equal(count(local(`src/generated/view-tabs/${viewTabsViewFor(viewTabs, '3.6556.2').publicNames.ViewTabBar.file}`), 'import {lp as k} from "./shared-4-DUB1Oi0O.js";'), 1);
   // Hand-written shapes are the non-fizzy branch: the shortcuts region scrolls, every section keeps mt-5 py-2, and
   // nothing local sets the root parts attribute.
   const css = local('src/source-session-actions.css');
@@ -179,7 +194,9 @@ test('menus-04 fizzy-lake parts: the generated 2.42304.0 allowlist is empty, so 
   assert.doesNotMatch(region, /flex:none|overflow:visible/);
   assert.match(/\.shortcuts-section\{([^}]*)\}/.exec(css)[1], /^margin-top:20px;padding:8px 0;/);
   assert.doesNotMatch(css, /\.shortcuts-section:first-child/);
-  for (const [file, text] of handWritten()) assert.equal(count(text, 'data-cds-fizzy-lake'), 0, file);
+  // (Comment lines may name the attribute, as source-app-switch-adapters.jsx does for its closed isFizzyLakePart.)
+  const code = text => text.split('\n').filter(line => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n');
+  for (const [file, text] of handWritten()) assert.equal(count(code(text), 'data-cds-fizzy-lake'), 0, file);
   assert.equal(count(local('index.html'), 'fizzy'), 0);
 });
 
@@ -203,7 +220,7 @@ test('menus-07 "Jump to question" pinned row: needs the region-navigation gate a
 
   // (b) local: no jump_to_question command and no question stop, so the pinned row never exists.
   assert.deepEqual(JUMP_COMMANDS.map(command => command.id),
-    ['jump_to_navigation', 'jump_to_main_content', 'jump_to_input', 'jump_to_preview', 'jump_to_terminal', 'jump_to_pane']);
+    ['jump_to_navigation', 'jump_to_main_content', 'jump_to_last_message', 'jump_to_input', 'jump_to_artifact', 'jump_to_preview', 'jump_to_terminal', 'jump_to_pane']); // w13-chatui-artifact-inline; w13-close-chat-messages: + jump_to_last_message
   assert.equal(JUMP_COMMANDS.some(command => command.regions.includes('question')), false);
   assert.ok(REGION_ORDER.includes('question'), 'the model knows the region; nothing declares a stop for it');
   assert.equal(regionJumpStop([{ id: 'c', region: 'composer' }, { id: 'n', region: 'navigation' }], 'question'), null);
@@ -374,12 +391,24 @@ test('cov9-09 preview URL bar: no pill variant; the 2.42304.0 addition is fizzy 
   for (const word of ['pill', 'rounded-full']) assert.equal(count(field, word), 0, word);
 
   // (b) local: the generated Page URL field with the same class string, no pill, labelled as the original.
+  // w10-editor-preview-shell-a: the field is now cut from 3.6556.2 cf550b864-hZr1-4Cn (`pe`), which keeps the base class
+  // string and still has no pill; its scheme spacers are `shrink-[1000000] … transition-[flex-grow,flex-shrink]`
+  // (the 2.31226.0 `basis-0 grow transition-[flex-grow]` spacer is gone) and it has no reload button (`oe` lost `reload`).
+  const v3Field = fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf550b864-hZr1-4Cn.js'), 'utf8');
+  assert.equal(count(v3Field, fieldClass), 1);
+  for (const word of ['pill', 'rounded-full', 'reload:']) assert.equal(count(v3Field, word), 0, word);
   const generated = local('src/generated/code-editor/preview-address-field.mjs');
+  assert.match(generated.split('\n')[0], /3\.6556\.2/);
   assert.equal(count(generated, fieldClass), 1);
-  for (const word of ['pill', 'rounded-full', 'rounded-[5px] px-sm']) assert.equal(count(generated, word), 0, word);
+  for (const word of ['pill', 'rounded-full', 'rounded-[5px] px-sm', 'basis-0 grow transition-[flex-grow]', 'reload:', 'onReload']) assert.equal(count(generated, word), 0, word);
+  const spacer = 'invisible min-w-0 shrink-[1000000] grow overflow-hidden whitespace-nowrap text-heading before:content-[attr(data-scheme)] transition-[flex-grow,flex-shrink] duration-150 ease-out group-focus-within/field:shrink-0 group-focus-within/field:grow-0';
+  assert.equal(count(v3Field, spacer), 1);
+  assert.equal(count(generated, spacer), 1);
   const address = local('src/source-preview-address.jsx');
   assert.equal(count(address, 'rounded-full'), 0);
   // R4h-intl I1 passes every label of the field through t() (the generated default table is English).
-  for (const label of ["address: t('Page URL'),", "reload: t('Reload'),", "openExternal: t('Open in default browser'),", "loading: t('Loading page'),", "}} placeholder={t('Type a URL')} onNavigate={onNavigate}"]) assert.equal(count(address, label), 1, label);
+  // V3-w12b-settings-dialogs: openExternal is the c8ae173c6 named / generic label (cf580efe9 On(), use-default-browser-label.mjs).
+  for (const label of ["address: t('Page URL'),", "      openExternal,\n", "const openExternal = useDefaultBrowserLabel();", "loading: t('Loading page'),", "}} placeholder={t('Type a URL')} onNavigate={onNavigate}"]) assert.equal(count(address, label), 1, label);
+  for (const gone of ["reload: t('Reload'),", 'onReload={onReload}', 'ownerDocument:']) assert.equal(count(address, gone), 0, gone);
   assert.equal(count(address, "import { createPreviewAddressField, displayPreviewURL } from './generated/code-editor/preview-address-field.mjs';"), 1);
 });

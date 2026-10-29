@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // R2 composer-send-cell: the Code card's Send/Stop is the original 2.42304.0 c227f4d5e lM (generated
 // composer-send-cell.mjs). Its crossfade Ij (2.2553.1 sm, unchanged): the first mount renders only the active layer
@@ -73,10 +74,12 @@ test('a host command can still be sent without a connection; a skill message can
 let probeServer, P;
 before(async () => {
   const probe = { name: 'tooltip-probe', enforce: 'pre', transform(code, id) {
-    if (!id.endsWith('/src/generated/view-tabs/shared-frame-BfjMqbuN.js')) return null;
-    if (code.split('Zp as CdsTooltip').length !== 2) throw Error('shared-frame no longer exports Zp as CdsTooltip');
-    return code.replace('Zp as CdsTooltip', '__probeTooltip as CdsTooltip')
-      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nimport { renderToStaticMarkup as __probeMarkup } from "react-dom/server";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(Zp, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, markup: typeof props.content === "string" ? null : __probeMarkup(props.content), shortcut: props.shortcut ?? null, multiline: props.multiline ?? null, open: props.open ?? null }) })); }\n';
+    // w2-composer-gen: the generated Send cell is 3.6556.2 and imports the 3.6556.2 view-tabs graph (CdsTooltip = Xm); the
+    // 2.42304.0 shim re-exports the same binding, so wrapping it here covers every caller.
+    if (!id.endsWith('/src/generated/view-tabs/shared-frame-6jtSkIit.js')) return null;
+    if (code.split('Xm as CdsTooltip').length !== 2) throw Error('shared-frame no longer exports Xm as CdsTooltip');
+    return code.replace('Xm as CdsTooltip', '__probeTooltip as CdsTooltip')
+      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nimport { renderToStaticMarkup as __probeMarkup } from "react-dom/server";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(Xm, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, markup: typeof props.content === "string" ? null : __probeMarkup(props.content), shortcut: props.shortcut ?? null, multiline: props.multiline ?? null, open: props.open ?? null }) })); }\n';
   } };
   probeServer = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [probe, react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -127,6 +130,32 @@ test("Send and Stop are the original lM buttons: names, test ids, the md glyphs 
   const stopTip = probes({ running: true, draft: '' }).find(entry => entry.content === 'Stop');
   assert.deepEqual([stopTip.shortcut, stopTip.open], ['escape', null], 'B = escapeClaimed ? void 0 : "escape"; U = L ? void 0 : !1');
   assert.equal(probes({ running: true, draft: '', escapeClaimed: true }).find(entry => entry.content === 'Stop').shortcut, null);
+});
+// composer-send-held (3.6556.2, E22): a failed send that puts its draft back holds Send for XP (1500ms). The controller's
+// state `{until, storeKey}` reads `gn = au(mn.storeKey === o ? mn.until : 0)` and KM disables Send while held
+// (`G = !a && (_ || !j && M === void 0)`); cc43287c9 calls the handle's holdSendButton when the draft is restored.
+test('sendButtonHeld: KM disables Send while held; the host holds it 1.5s from main.jsx\'s failed-start restore', async () => {
+  const fs = await import('node:fs/promises');
+  const root = path.resolve(import.meta.dirname, '..');
+  const official = path.resolve(root, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const card = await fs.readFile(path.join(official, 'c227f4d5e-B-FYKrwT.js'), 'utf8');
+  for (const pin of ['XP=1500', 'holdSendButton:()=>hn({until:Date.now()+XP,storeKey:o})', 'gn=au(mn.storeKey===o?mn.until:0)', 'sendButtonHeld:gn', 'G=!a&&(_||!j&&M===void 0)'])
+    assert.equal(card.split(pin).length, 2, pin);
+  assert.equal((await fs.readFile(path.join(official, 'cc43287c9-Me-M2ucD.js'), 'utf8')).split('u.current?.holdSendButton(),A(q,Ce,Se)').length, 2);
+  const { composerTextStore } = await server.ssrLoadModule('/src/source-composer-current-adapters.jsx');
+  const cell = (held) => renderToStaticMarkup(React.createElement(Cell.ComposerSendCell, {
+    hasTextStore: composerTextStore(() => true), hasAttachments: false, submitBlocked: false, submitQueued: false, busy: false, showStop: false,
+    isBashMode: false, isCoarsePointer: false, plainEnterSends: true, draftStoreKey: 'draft', handleSubmit() {}, clickSteerOptions: () => ({}),
+    handleStopClick() {}, stopClickAtRef: { current: 0 }, enableQueueVsSteer: true, swapToSendOnDraft: false, enableForkSubmit: false,
+    stayOnDraftHint: false, escapeClaimed: false, cmdEnterClaimed: false, sendOnDraftOnly: true, idleSendAction: null, sendButtonHeld: held }));
+  assert.match(sendTag(cell(true)), / disabled=""/, 'held: Send is disabled');
+  assert.doesNotMatch(sendTag(cell(false)), / disabled=""/);
+  assert.doesNotMatch(sendTag(composer({})), / disabled=""/, 'nothing held by default');
+  const host = await fs.readFile(path.join(root, 'src/source-composer.jsx'), 'utf8');
+  for (const pin of ['const SEND_HOLD_MS = 1500;', 'sendButtonHeld={sendButtonHeld}', 'const sendButtonHeld = useBeforeDeadline(sendHold.storeKey === draftStoreKey ? sendHold.until : 0);',
+    'if (element) element.holdSendButton = (scope) => setSendHold({ until: Date.now() + SEND_HOLD_MS,'])
+    assert.equal(host.split(pin).length, 2, pin);
+  assert.equal((await fs.readFile(path.join(root, 'src/main.jsx'), 'utf8')).split('textarea.current?.holdSendButton?.(null);').length, 2, 'discardFailedStart restores the draft into the Home composer and holds its Send');
 });
 test('presets card: trailing-controls > send-cell with the inert size-control placeholder; Send only with a draft; Stop while running', () => {
   const empty = composer({ draft: '' });
@@ -193,7 +222,7 @@ test('running with the queue lane: the editor names both lanes, with the spoken 
 // variant), the host's legacy native-button reset is released for those buttons, and no local rule styles lM's DOM.
 test("lM's and the fit probe's classes are all in the official sheet, and the host's button reset is released for them", async () => {
   const fsp = await import('node:fs/promises');
-  const sheet = await fsp.readFile(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const sheet = await fsp.readFile(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   const html = [composer({ draft: '' }), composer({ draft: 'hi' }), composer({ draft: '', running: true }), composer({ draft: 'hi', sending: true }),
     composer({ draft: 'hi', canSubmit: false, connectingHint: 'x' }), composer({ draft: '', running: true, queueEnabled: true })].join('');
   // Each code-prompt-trailing-controls subtree, cut at its matching </div>.
@@ -221,7 +250,7 @@ function shallow(props) {
     useLayoutEffect() {}, useEffect() {}, useContext: context => context._currentValue, useSyncExternalStore: (_subscribe, get) => get(),
   };
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-  internal.H = hooks;
+  internal.H = withMemoCache(hooks);
   try { return Cell.ComposerSendCell(props); } finally { internal.H = old; }
 }
 function find(tree, predicate, out = []) {
@@ -301,4 +330,17 @@ test('the connecting hint is not shown until Enter is refused, and main wires it
   assert.match(main, /connectingHint=\{!boot\?\.connected && \(loading \|\| !initSettled\)/);
   const zh = (await import('../electron/i18n/zh-CN/index.mjs')).default;
   assert.equal(typeof zh['Still connecting to DeepSeek. Try again in a moment.'], 'string');
+});
+
+// W12 frame (w11-sweep-ccres #40): 3.6556.2 c227f4d5e gives the composer's ProseMirror element the tiles focus target,
+// `{role:"textbox","aria-multiline":"true",enterkeyhint:"enter","aria-label":Fa,"data-testid":Nn,[Gn]:La,[pb]:""}` with
+// pb = c9bc99274 `a="data-tile-focus-target"` (generated code-current/pane-focus-target.mjs tileFocusTargetAttribute).
+test('the editor root (role textbox) carries data-tile-focus-target="" (c227f4d5e [pb]:"")', async () => {
+  const { tileFocusTargetAttribute } = await import('../src/generated/code-current/pane-focus-target.mjs');
+  assert.equal(tileFocusTargetAttribute, 'data-tile-focus-target');
+  for (const props of [{}, { editable: false }]) assert.match(editorTag(composer(props)), /\sdata-tile-focus-target=""/);
+  const { readFileSync } = await import('node:fs');
+  const v1 = new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/', import.meta.url);
+  assert.ok(readFileSync(new URL('c227f4d5e-B-FYKrwT.js', v1), 'utf8').includes('"data-testid":Nn,[Gn]:La,[pb]:""'));
+  assert.ok(readFileSync(new URL('c9bc99274-DTZfHMJt.js', v1), 'utf8').includes('a="data-tile-focus-target"'));
 });

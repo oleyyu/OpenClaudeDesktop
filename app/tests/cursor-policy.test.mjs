@@ -43,8 +43,8 @@ test('<html> carries data-dframe so the loaded desktop-layout cursor rules apply
   assert.match(root, /class="cds-root"/);
   assert.match(root, /data-platform="desktop"/);
   // The rules themselves come from the loaded shared-styles copy, not from local CSS.
-  assert.match(html, /<link rel="stylesheet" href="\/assets\/v1\/shared-styles-Bl9zqrv-\.css"/);
-  const shared = readFileSync(path.join(official, 'shared-styles-Bl9zqrv-.css'), 'utf8');
+  assert.match(html, /<link rel="stylesheet" href="\/assets\/v1\/shared-styles-D_GJawPO\.css"/);
+  const shared = readFileSync(path.join(official, 'shared-styles-D_GJawPO.css'), 'utf8');
   // 2.31226.0 (shared-styles-Bl9zqrv-.css) keeps explicit grab/move/resize cursors out of both rules.
   const keep = ':where(:not([class*=cursor-grab],[class*=cursor-move],[class*=cursor-all-scroll],[class*=cursor-][class*=-resize]))';
   assert.ok(shared.includes([':root[data-dframe] button', ':root[data-dframe] [role=button]', ':root[data-dframe] [role=menuitem]', ':root[data-dframe] a:not([target=_blank])', ':root[data-dframe] .cursor-pointer', ':root[data-dframe] .cursor-interactive'].map((selector) => selector + keep).join(',') + '{cursor:default}'));

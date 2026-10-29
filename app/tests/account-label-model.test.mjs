@@ -66,7 +66,8 @@ test("main.jsx renders the IO identity in the header and footer, with no 'Local 
   assert.doesNotMatch(main, /planType \|\| "DeepSeek API"/);
   const sidebar = await fs.readFile(path.join(root, "src/source-sidebar.jsx"), "utf8");
   assert.doesNotMatch(sidebar, /displayName\.split\(/, "the first-name rule lives in accountFooter");
-  assert.match(sidebar, /<span className="whitespace-nowrap text-secondary max-w-full shrink-0 truncate">\{accountName\}<\/span>/);
+  // W12b-FTS-1 shared-19 $N: df-footer-name, no truncate (the df-footer-suffix mask fades a long name).
+  assert.match(sidebar, /<span className="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">\{accountName\}<\/span>/);
 });
 
 // R02 account menu (sidebar-rows.js:16155-16432 $B, pw w-[17rem] at sidebar-groups.js:5250-5253).

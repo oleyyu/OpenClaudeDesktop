@@ -57,7 +57,7 @@ const turns = [
     // R06: the DeepSeek bridge names the shell (Uoe approval-current.js:6874-6907 'Bash').
     commandItem("rc-solo", "printf RC_SOLO", { status: "completed", exitCode: 0, durationMs: 10, aggregatedOutput: "RC_SOLO_OUTPUT\n", shell: "bash" }),
   ] },
-  // A non-tool TurnStatusStep (Compacted conversation) keeps the 26px step geometry.
+  // A non-tool TurnStatusStep (Compacted session, c80ec48f8 rt) keeps the 26px step geometry.
   { id: "rc-t3", status: "completed", items: [
     userItem("rc-u3", "RC_USER_THREE"),
     { id: "rc-compact", type: "contextCompaction" },
@@ -465,8 +465,8 @@ try {
     return { classic: node.classList.contains("source-step-classic"), label: trigger.textContent, minHeight: s.minHeight,
       height: trigger.getBoundingClientRect().height, marginLeft: s.marginLeft, paddingLeft: s.paddingLeft };
   });
-  assert.deepEqual(metrics.compactionStep, { classic: false, label: "Compacted conversation", minHeight: "26px", height: 26, marginLeft: "-4px", paddingLeft: "4px" });
-  checks.push("Standalone classic row: zv padding 0, no margin, min-height 0, rounded-sm radius, one text-body line, always-visible caret with duration-fast transform; settled caret muted, secondary on hover, keyboard focus-visible (shadow-focus) and when expanded; Compacted conversation keeps 26px");
+  assert.deepEqual(metrics.compactionStep, { classic: false, label: "Compacted session", minHeight: "26px", height: 26, marginLeft: "-4px", paddingLeft: "4px" });
+  checks.push("Standalone classic row: zv padding 0, no margin, min-height 0, rounded-sm radius, one text-body line, always-visible caret with duration-fast transform; settled caret muted, secondary on hover, keyboard focus-visible (shadow-focus) and when expanded; Compacted session keeps 26px");
   await collapse("rc-solo");
   // R06: without item.shell (the Codex protocol has none) the standalone card keeps 'Shell' and the '$' prompt.
   await expand("rc-codex");

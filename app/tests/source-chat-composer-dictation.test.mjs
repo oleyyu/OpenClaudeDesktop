@@ -11,6 +11,9 @@ import path from 'node:path';
 // its portal host when neither dictation nor voice mode is available (`if(!p&&!y)return G.host`). This host has
 // neither, so the Chat / Cowork composer renders no disabled Microphone / Voice button, no CaretDown beside them and
 // no host-written 'Voice is not available with this provider' tooltip, in the new-chat form or the reply form.
+// w10-curchat-composer: the card is now the 3.6556.2 shell (code-composer shared-5-Bg6ZMqvt vm / Sm); its hp Actions
+// still has the idle-slot cell only when `idle` is passed, so idle=null keeps the slot out (curchat-composer-v3 covers
+// the shell itself).
 let server, C;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
@@ -47,7 +50,8 @@ for (const [name, props] of [['new chat', {}], ['new cowork', { mode: 'cowork' }
 test('the reply chin leading holds the Add control alone (no Microphone + CaretDown pair)', () => {
   const chin = leadingChin(render({ current: true }));
   const labels = [...chin.matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map(match => match[1]);
-  assert.equal(labels[0], 'Add');
+  // w13-chatui-composer-tools: the Add control is shared-8 kF (aria-label "Add files, connectors, and more").
+  assert.equal(labels[0], 'Add files, connectors, and more');
   assert.ok(!labels.includes('Dictate'));
   assert.equal(chin.split('data-cds="ChatComposerChin"').length - 1, 1);
 });

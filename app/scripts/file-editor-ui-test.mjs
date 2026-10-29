@@ -59,7 +59,8 @@ try {
   assert.match(await content().innerText(), /third\nfourth/);
   await page.keyboard.press('Meta+s'); await clean();
   assert.match(await fs.readFile(path.join(workspace, 'notes.txt'), 'utf8'), /third\r\nfourth/);
-  assert.equal(await pane.locator('.source-file-tab[data-preview]').count(), 0);
+  // W12c files-tabbar: the strip is the ViewTabBar; a preview tab's label is italic (cfe7c4b3b `o.preview && "italic"`).
+  assert.equal(await pane.locator('[data-view-tab-bar] [data-vtb-id] [data-vtb-label] .italic').count(), 0);
   report.checks.push('direct editing, Enter, Cmd+S, CRLF preservation, dirty preview pinned');
   await edit('mine'); await fs.writeFile(path.join(workspace, 'notes.txt'), 'external');
   await pane.getByRole('button', { name: 'Save', exact: true }).click();
@@ -75,13 +76,13 @@ try {
   assert.equal(await fs.readFile(path.join(workspace, 'notes.txt'), 'utf8'), 'recreated');
   report.checks.push('external conflict retains draft; Override and deleted-file Save anyway work');
   await edit('do not lose');
-  await pane.locator('.source-file-tab-close').click();
+  await pane.locator('[data-view-tab-bar] [data-vtb-id] button[aria-label="Close file"]').click();
   await page.getByText('Discard unsaved changes?', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
   assert.equal(await content().innerText(), 'do not lose');
-  await pane.locator('.source-file-tab-close').click();
+  await pane.locator('[data-view-tab-bar] [data-vtb-id] button[aria-label="Close file"]').click();
   await page.getByRole('button', { name: 'Discard', exact: true }).click();
-  await pane.locator('.source-file-tab').waitFor({ state: 'detached' });
+  await pane.locator('[data-view-tab-bar] [data-vtb-id]').waitFor({ state: 'detached' });
   report.checks.push('closing a dirty tab prompts; Keep editing retains draft; Discard closes');
   await open('notes.txt'); await edit('keep across navigation');
   if (!(await tree.isVisible())) await pane.getByRole('button', { name: 'Show file tree', exact: true }).click();
@@ -171,7 +172,7 @@ try {
   async function openMenu() { await content().click({button:'right'}); await menu().waitFor(); }
   await goto('2'); await openMenu();
   const labels=await menu().locator('[role="menuitem"], [role="separator"]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('role')==='separator'?'|':n.querySelector('.smenu-label')?.textContent));
-  assert.deepEqual(labels,['Attach as context','Add comment','|','Undo','Redo','|','Cut','Copy','Paste','|','Select all','|','Go to line','|','Copy file contents','Download file']);
+  assert.deepEqual(labels,['Attach as context','Add comment','|','Undo','Redo','|','Cut','Copy','Paste','|','Select all','|','Go to line','|','Download file']); // cd2efac6e: no Copy file contents for a Code local file (z false)
   await menu().getByRole('menuitem',{name:'Go to line',exact:true}).click(); await go.waitFor(); await go.fill('2'); await go.press('Enter');
   // Keyboard context-menu entry preserves the exact caret (a secondary mouse press may reposition it).
   await content().press('Shift+F10'); await menu().waitFor();
@@ -208,7 +209,8 @@ try {
   const firstBox=await firstLine.boundingBox(),thirdBox=await thirdLine.boundingBox();
   await page.mouse.move(firstBox.x+firstBox.width-2,firstBox.y+firstBox.height/2);await page.mouse.down();
   await page.mouse.move(thirdBox.x+thirdBox.width-2,thirdBox.y+thirdBox.height/2,{steps:8});await page.mouse.up();
-  const toolbar=page.locator('.sfv-selection-toolbar');await toolbar.waitFor();
+  const toolbar=pane.locator('.group\\/split'); // cbd02b8f2 li > ceb49ada3 t (SelectionActionBar root `… !rounded group/split flex`)
+  await toolbar.waitFor();
   assert.equal((await page.evaluate(()=>getSelection().toString())).trimEnd(),'alpha\nbeta\ngamma');
   assert.deepEqual(await toolbar.getByRole('button').allTextContents(),['Attach as context','Add comment']);
   await page.screenshot({path:path.join(directory,'selection-toolbar.png')});

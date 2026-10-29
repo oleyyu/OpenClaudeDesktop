@@ -9,6 +9,11 @@ import { SourceShortcut } from "./source-shortcut";
 import { tooltipContentKey } from "./generated/code-current/tooltip-structure.mjs";
 import { suppressNativeContextMenu } from "./generated/files-changes/menu-context-guard.mjs";
 import { preventContextMenu } from "./generated/files-changes/diff-context-guard.mjs";
+// Straight from the two view-tabs files, not the index.js facade: the facade evaluates every view-tabs module, and
+// c9c7785eb imports source-code-start-adapters.jsx, which reaches source-chat-adapters.jsx -> this file again. That
+// cycle left current-chat's vendor-frame half-evaluated (forwardRef undefined) when current-chat loaded first.
+import { CdsTooltip } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { findSessionTitleMatch } from "./generated/view-tabs/cdfb0c433-OOm3enZf.js";
 import { t } from "../electron/i18n/index.mjs";
 import {
   CONTEXT_MENU_LAYER_OFFSET, MENU_LAYER_OFFSET, NESTED_SIDE_OFFSET, ROOT_SIDE_OFFSET, SAFE_POLYGON_LINGER,
@@ -192,7 +197,8 @@ function PopupImpl({
   const resolvedSide = side ?? (nested ? "right" : "bottom");
   const resolvedOffset = sideOffset ?? (nested ? NESTED_SIDE_OFFSET : ROOT_SIDE_OFFSET);
   // Roots: "first" / "last" (keyboard entry), "popup" (focus the popup, nothing highlighted), null (leave focus
-  // alone, e.g. a search field takes it); undefined follows focusItemOnOpen "auto" (keyboardOpened above).
+  // alone, e.g. a search field takes it), "checked" (the checked row, else the first); undefined follows
+  // focusItemOnOpen "auto" (keyboardOpened above).
   const [highlightOnOpen] = useState(() => initialHighlight !== undefined ? initialHighlight
     : nested ? (submenu.focusFirst.current ? "first" : null) : keyboardOpened() ? "first" : "popup");
   const latest = useRef({});
@@ -326,14 +332,19 @@ function PopupImpl({
   // Initial highlight: first item (keyboard-opened root or submenu) or last
   // (ArrowUp from the trigger); "popup" focuses the popup with no highlighted
   // row. Focus lands on the next frame, as before.
+  // "checked" (shared-7 gw / shared-frame PT on the Effort submenu): the checked row, else the first. A root that
+  // only focuses itself leaves focus on a child popup that already took it (the child's frame runs first).
   useLayoutEffect(() => {
     const list = enabledItems(popupRef.current);
-    const target = highlightOnOpen === "last" ? list[list.length - 1] : highlightOnOpen === "first" ? list[0] : null;
+    const target = highlightOnOpen === "last" ? list[list.length - 1] : highlightOnOpen === "first" ? list[0]
+      : highlightOnOpen === "checked" ? list.find((node) => node.getAttribute("aria-checked") === "true") ?? list[0] ?? null : null;
     if (target) setHighlightedState(target);
     if (nested) submenu.focusFirst.current = false;
     if (!target && highlightOnOpen === null) return undefined;
     const frame = requestAnimationFrame(() => {
-      if (!closing.current) (target ?? popupRef.current)?.focus({ preventScroll: true });
+      if (closing.current) return;
+      if (!target && [...popups].some((node) => node !== popupRef.current && node?.contains(document.activeElement))) return;
+      (target ?? popupRef.current)?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -402,6 +413,7 @@ function PopupImpl({
     if (event.target !== popupRef.current && event.target.matches?.("input,textarea") && !["ArrowDown", "ArrowUp", "Enter", "Escape", "Tab"].includes(key)) return;
     if (nested && (key === "ArrowLeft" || key === "Escape")) {
       event.preventDefault(); event.stopPropagation();
+      if (key === "Escape" && submenu.closeParentOnEsc) { requestClose("escape-key"); return; }
       submenu.close({ focusTrigger: true });
       return;
     }
@@ -482,8 +494,17 @@ function PopupImpl({
   );
 }
 
+/* 3.6556.2 shared-frame-6jtSkIit dT reads `labelDir` and hands it with F = (useDirection() === "rtl") to uT:
+   `e === "auto" && t ? { dir: "auto", className: `${n} rtl:text-right` } : { className: n }` — the label span only gets
+   dir="auto" inside an RTL tree. The host has no Base UI DirectionProvider, so (as the official one without a provider)
+   its direction is "ltr" and a labelDir="auto" row renders the plain label span. */
+const HOST_DIRECTION_RTL = false;
+export function menuLabelDirProps(labelDir, rtl, className) {
+  return labelDir === "auto" && rtl ? { dir: "auto", className: `${className} rtl:text-right` } : { className };
+}
+
 const MenuItem = forwardRef(function MenuItem({
-  children, label, description, labelId, descriptionId, icon, leading, trailing, hint, shortcut, checked, checkedRole = "checkbox",
+  children, label, description, labelId, descriptionId, icon, leading, trailing, hint, labelDir, shortcut, checked, checkedRole = "checkbox",
   disabled = false, disabledReason, keepOpen = false, variant = "default", digit, className = "", role: roleProp,
   onClick, onPointerEnter, onFocus, onKeyDown, ...rest
 }, forwardedRef) {
@@ -535,8 +556,8 @@ const MenuItem = forwardRef(function MenuItem({
       {leading}
       {icon !== undefined && <span className="smenu-icon"><Icon name={icon} size={16} /></span>}
       {description
-        ? <span className="smenu-copy"><span className="smenu-label" id={labelId}>{children}</span><span className="smenu-description" id={descriptionId}>{description}</span></span>
-        : <span className="smenu-label smenu-copy-single" id={labelId}>{children}</span>}
+        ? <span className="smenu-copy"><span {...menuLabelDirProps(labelDir, HOST_DIRECTION_RTL, "smenu-label")} id={labelId}>{children}</span><span className="smenu-description" id={descriptionId}>{description}</span></span>
+        : <span {...menuLabelDirProps(labelDir, HOST_DIRECTION_RTL, "smenu-label smenu-copy-single")} id={labelId}>{children}</span>}
       {(trailing || hasCheckSlot || hint || shortcut) && (
         <span className="smenu-trailing" data-shortcut-only={shortcutOnly ? "" : undefined}>
           {trailing}
@@ -597,10 +618,12 @@ function MenuHeader({ children, className = "" }) {
 
 const isMouse = (event) => !event.pointerType || event.pointerType === "mouse";
 
-function MenuSubmenu({ children, onOpenChange }) {
+// Base UI Menu.SubmenuRoot defaultOpen / closeParentOnEsc (3.6556.2 shared-7 ww passes both as `ne`, the model
+// menu's Effort submenu opened from the Effort chord): mounted open, and Escape inside it closes the whole menu.
+function MenuSubmenu({ children, onOpenChange, defaultOpen = false, closeParentOnEsc = false }) {
   const parent = useContext(PopupContext);
   const tree = useContext(TreeContext);
-  const [open, setOpenState] = useState(false);
+  const [open, setOpenState] = useState(defaultOpen);
   const openRef = useRef(false);
   openRef.current = open;
   const triggerRef = useRef(null), focusFirst = useRef(false), childApi = useRef(null);
@@ -685,7 +708,7 @@ function MenuSubmenu({ children, onOpenChange }) {
     sample(leaveEvent, true);
   }, [id, block, parent, tree, close, stopTracking]);
   const value = useMemo(() => ({
-    open, id, triggerRef, focusFirst, childApi,
+    open, id, triggerRef, focusFirst, childApi, closeParentOnEsc,
     openChild: (focus = false) => {
       cancelOpen();
       focusFirst.current = focus;
@@ -705,7 +728,7 @@ function MenuSubmenu({ children, onOpenChange }) {
       cancelOpen();
       if (openRef.current) startTracking(event);
     },
-  }), [open, id, setOpen, close, cancelOpen, block, startTracking]);
+  }), [open, id, closeParentOnEsc, setOpen, close, cancelOpen, block, startTracking]);
   // Moving the parent highlight to another row closes the child.
   useEffect(() => {
     if (open && parent?.highlighted && parent.highlighted !== triggerRef.current) close();
@@ -779,29 +802,83 @@ function MenuPendingList({ pending = false, loading = false, placeholderRows = 3
   );
 }
 
-/* Cr (c752b32f8 :616-653) + the i() card (c17e03edc): a skill row shows a
-   hover popover to the right of the item with its description and, for a
-   plugin skill, a "{pluginName} plugin" line. The card is pointer-events:none
-   and is not part of the menu's accessibility tree. */
+/* 3.6556.2 c17e03edc-fLVjIlvB d: the skill / slash-command description is the CDS Tooltip (shared-frame Kl = Xm,
+   the view-tabs CdsTooltip), not a hand-drawn card. Constants l = {fallbackAxisSide:"none"} (flip only along the
+   same axis) and u = the width cap; the description is the content ("line-clamp-[10]", dir "auto" for RTL text,
+   query matches through c253a9ab3 t with "font-semibold"), and "via {repo}" / "{pluginName} plugin" is the detail —
+   or, without a description, the content. side = shared-28 $h("inline-end", direction); align start, sideOffset 8,
+   hoverable false; the tooltip's own data-[anchor-hidden]:invisible hides it while the row is scrolled out. */
+const SKILL_DESCRIPTION_AVOIDANCE = Object.freeze({ fallbackAxisSide: "none" });
+const SKILL_DESCRIPTION_WIDTH = "max-w-[max(9rem,calc(var(--available-width,100vw)-1rem))]";
+// shared-0-DDOOdL6P LL (shared-78 zs/UW also accepts a Bidi_Control character).
+const RTL_TEXT = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u;
+const BIDI_CONTROL = /\p{Bidi_Control}/u;
+/** shared-28 $h: the physical side of a logical one ("inline-end" is the right side in LTR). */
+export const skillDescriptionSide = (direction = "ltr") => (direction === "rtl" ? "left" : "right");
+/** shared-52 mJ (hJ for a string): "my-plugin" reads "My plugin". */
+export const skillPluginDisplayName = (name) => {
+  const parts = name.split("-");
+  if (parts.length === 0 || (parts.length === 1 && parts[0] === "")) return name;
+  parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+  return parts.join(" ");
+};
+/** c253a9ab3 t over cdfb0c433 r (findSessionTitleMatch) and i: the matched run in a font-semibold span. */
+function DescriptionText({ text, query }) {
+  const ranges = query ? findSessionTitleMatch(text, query) : undefined;
+  if (!ranges) return <>{text}</>;
+  const parts = [];
+  let at = 0;
+  for (const range of ranges) {
+    if (range.start > at) parts.push(<span key={parts.length}>{text.slice(at, range.start)}</span>);
+    parts.push(<span key={parts.length} className="font-semibold">{text.slice(range.start, range.end)}</span>);
+    at = range.end;
+  }
+  if (at < text.length) parts.push(<span key={parts.length}>{text.slice(at)}</span>);
+  return <>{parts}</>;
+}
+/** The CdsTooltip props c17e03edc d passes (exported for the tests). The host has no Base UI DirectionProvider, so
+ *  its useDirection is "ltr", as the official one is without a provider. */
+export function skillDescriptionTooltipProps({ anchor, open = true, description, sourcePluginName, sourceRepo, query = "", direction = "ltr" }) {
+  const rtl = direction === "rtl";
+  const dir = description && (rtl || RTL_TEXT.test(description) || BIDI_CONTROL.test(description)) ? "auto" : undefined;
+  const source = sourceRepo ? t("via {repo}", { repo: sourceRepo })
+    : sourcePluginName ? t("{name} plugin", { name: skillPluginDisplayName(sourcePluginName) }) : undefined;
+  const sourceLine = source ? <span data-shrinkwrap={dir && "fill"} className={`block ${SKILL_DESCRIPTION_WIDTH}`}>{source}</span> : source;
+  const content = description
+    ? <span dir={dir} className={`line-clamp-[10] ${SKILL_DESCRIPTION_WIDTH}`}><DescriptionText text={description} query={query} /></span>
+    : sourceLine;
+  return {
+    open, anchor, side: skillDescriptionSide(direction), align: "start", sideOffset: 8,
+    collisionAvoidance: SKILL_DESCRIPTION_AVOIDANCE, hoverable: false, content, detail: description ? sourceLine : undefined,
+  };
+}
+export function SkillDescriptionTooltip(props) {
+  return <CdsTooltip {...skillDescriptionTooltipProps(props)} />;
+}
+
+/** c752b32f8 Qi `w = typeof l == "string" && l, T = e("group", w)` (e = vendor-frame Ba, clsx): the row's className. */
+export const skillItemClassName = (className) => (typeof className === "string" && className ? `group ${className}` : "group");
+
+/* Skill rows of a menu: 3.6556.2 c752b32f8-mYZAs6yC Qi (the composer "+" menu skill row) —
+   `n(h.Item,{labelDir:"auto",ref:b,icon:c,hint:m,disabled:_,onClick:C,onMouseEnter:x,onMouseLeave:S,className:T,children:s})`
+   with m = the item's pluginLabel (the plugin's name on a row whose label another row shares) and _ = its disabled;
+   hovering a row that has a description, a plugin or a repo mounts c17e03edc n (anchorRef → the row) until the
+   pointer leaves. */
 function MenuSkillItem({ item, onSelect }) {
   const ref = useRef(null);
-  const [box, setBox] = useState(null);
-  const description = item.description || "";
-  const pluginName = item.sourcePluginName || "";
-  const hasCard = !!(description || pluginName);
+  const [hovered, setHovered] = useState(false);
+  const description = item.description || item.skillDescription || "";
+  const { sourcePluginName, sourceRepo } = item;
+  const hasTooltip = !!(description || sourcePluginName || sourceRepo);
   return (
     <>
-      <MenuItem ref={ref} icon={item.icon || "Scroll"} data-skill-path={item.path}
-        onMouseEnter={() => { if (hasCard && ref.current) setBox(ref.current.getBoundingClientRect()); }}
-        onMouseLeave={() => setBox(null)}
+      <MenuItem labelDir="auto" ref={ref} icon={item.icon || "Scroll"} hint={item.pluginLabel || undefined} disabled={!!item.disabled}
+        className={skillItemClassName(item.className)} data-skill-path={item.path}
+        onMouseEnter={() => { if (hasTooltip) setHovered(true); }}
+        onMouseLeave={() => setHovered(false)}
         onClick={() => onSelect(item)}>{item.label}</MenuItem>
-      {box && createPortal(
-        <div className="smenu-hovercard" data-skill-card={item.path}
-          style={{ top: `${Math.round(box.top)}px`, left: `${Math.round(box.right + 8)}px`,
-            maxWidth: `min(26rem, max(10rem, ${Math.max(0, Math.floor(window.innerWidth - box.right - 16))}px))` }}>
-          {description && <div className="smenu-hovercard-text">{description}</div>}
-          {pluginName && <div className="smenu-hovercard-source" data-first={description ? undefined : ""}>{t("{name} plugin", { name: pluginName })}</div>}
-        </div>, document.body)}
+      {hovered && <SkillDescriptionTooltip anchor={ref} description={description || undefined}
+        sourcePluginName={sourcePluginName || undefined} sourceRepo={sourceRepo || undefined} />}
     </>
   );
 }

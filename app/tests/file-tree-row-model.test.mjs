@@ -2,13 +2,14 @@ import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { viewTabsViewFor } from "../scripts/view-tabs-compat.mjs";
 import { createServer } from "vite";
 
 // R2-files FT-01: file-tree-style is the 2.42304.0 ca7840910 geometry, which reads the fizzy-lake gate from the
 // view-tabs graph (shared-4 → vendor-frame → the .jsx React seam), so the model loads through Vite SSR.
 let server, SINGLE_CHILD_EXPAND_LIMIT, singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, REVEAL_FLASH_MS,
   onEnterReleased, fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux, FILE_TREE_NUX_ID, nuxAccountAged,
-  NUX_ACCOUNT_MIN_AGE_MS, treeIndent, fileTreeRowStyle, Style, Density, Gate;
+  NUX_ACCOUNT_MIN_AGE_MS, treeIndent, fileTreeRowStyle, Style, Gate;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, ".."),
     server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
@@ -16,8 +17,8 @@ before(async () => {
     onEnterReleased, fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux, FILE_TREE_NUX_ID, nuxAccountAged,
     NUX_ACCOUNT_MIN_AGE_MS, treeIndent, fileTreeRowStyle } = await server.ssrLoadModule("/src/file-tree-row-model.mjs"));
   Style = await server.ssrLoadModule("/src/generated/code-current/file-tree-style.mjs");
-  Density = await server.ssrLoadModule("/src/generated/code-current/file-tree-density.mjs");
-  Gate = await server.ssrLoadModule("/src/generated/view-tabs/shared-4-CJsHhp5n.js");
+  // W7: the 2.42304.0 shared-4 shim is retired; the gate is read through the view-tabs facade (its 3.6556.2 file).
+  Gate = await server.ssrLoadModule("/src/generated/view-tabs/index.js");
 });
 after(() => server?.close());
 const read = (file) => fs.readFileSync(path.resolve(import.meta.dirname, "..", file), "utf8");
@@ -65,28 +66,29 @@ test("ca7840910 B (was ce9ca5630 g): one 1px border guide per ancestor level fro
   assert.equal(REVEAL_FLASH_MS, 1200);
 });
 
-test("2.42304.0 ca7840910: E reads the fizzy-lake panels part, off in this build; V = L + B; literal --cds-border", () => {
-  const V = "../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/";
-  const official = read(`${V}ca7840910-DSVFtTw1.js`);
-  assert.match(official, /var w=8,T=4;function E\(\)\{return p\("panels"\)\?"sm":"xs"\}/);
-  assert.match(official, /import\{co as p\}from"\.\/shared-4-CJsHhp5n\.js"/);
-  assert.match(official, /Wl as v/);
-  // shared-4 jf: kf("panels") needs the part listed in Ef, and Ef = Cf = [] in this build.
-  const gate = read(`${V}shared-4-CJsHhp5n.js`);
-  assert.match(gate, /Sf="data-cds-fizzy-lake",Cf=\[\];/);
-  assert.match(gate, /var Ef=Cf,Df;/);
+test("3.6556.2 c621b1e2d: i reads the fizzy-lake panels part, off in this build; y = h + v; literal --cds-border", () => {
+  // w2-files (research/panes.md §2.3 C3-2): 3.6556.2 moved the 2.42304.0 ca7840910 geometry (w,T,E,…,V) to c621b1e2d
+  // with identical bodies (n,r,i,…,y); the icon size table is shared-frame Ro (exported `cd`, view-tabs cdsIconSizes).
+  const V = "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/";
+  const official = read(`${V}c621b1e2d-CU5cG_mP.js`);
+  assert.match(official, /var n=8,r=4;function i\(\)\{return t\("panels"\)\?"sm":"xs"\}/);
+  assert.match(official, /import\{cd as e\}from"\.\/shared-frame-6jtSkIit\.js";import\{Yo as t\}from"\.\/shared-4-DUB1Oi0O\.js"/);
+  // shared-52 th: a part is on only when listed, and the fizzy-lake list Qm = [] in this build (E12).
+  assert.match(read(`${V}shared-52-uHFNjl7C.js`), /Qm=\[\]/);
   assert.equal(Gate.isFizzyLakePartEnabled("panels"), false);
   const manifest = JSON.parse(read("src/generated/view-tabs/manifest.json"));
-  assert.deepEqual(manifest.publicNames.isFizzyLakePartEnabled, { file: "shared-4-CJsHhp5n.js", local: "jf", export: "co" });
+  assert.deepEqual(manifest.publicNames.isFizzyLakePartEnabled, { file: "shared-4-DUB1Oi0O.js", local: "lp", export: "Yo" });
+  assert.deepEqual(manifest.publicNames.cdsIconSizes, { file: "shared-frame-6jtSkIit.js", local: "Ro", export: "cd" });
   const generated = read("src/generated/code-current/file-tree-style.mjs");
-  assert.match(generated, /^\/\/ Original Claude Desktop 2\.42304\.0 bindings/);
-  assert.match(generated, /import \{ isFizzyLakePartEnabled as p \} from "\.\.\/view-tabs\/shared-4-CJsHhp5n\.js";/);
-  assert.match(generated, /return p\("panels"\) \? "sm" : "xs";/);
+  assert.match(generated, /^\/\/ Original Claude Desktop 3\.6556\.2 bindings/);
+  assert.match(generated, /import \{ isFizzyLakePartEnabled as t \} from "\.\.\/view-tabs\/shared-4-DUB1Oi0O\.js";/);
+  assert.match(generated, /import \{ cdsIconSizes as e \} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  assert.match(generated, /return t\("panels"\) \? "sm" : "xs";/);
   assert.doesNotMatch(generated, /cssVar|const n = \{/);
-  // v is shared-frame Wl (local Co), emitted whole rather than restated.
-  assert.match(read(`${V}shared-frame-BfjMqbuN.js`), /var Co=\{xs:\{px:12,master:"small",stroke:\{regular:\.8\}\},sm:\{px:16,/);
-  assert.equal(Density.iconDensities.xs.px, 12);
-  assert.equal(Density.iconDensities.sm.px, 16);
+  assert.match(read(`${V}shared-frame-6jtSkIit.js`), /Ro=\{xs:\{px:12,master:"small",stroke:\{regular:\.8\}\},sm:\{px:16,/);
+  // cc-rest-files: the 2.42304.0 density copy (code-current file-tree-density.mjs) is retired; the table is cdsIconSizes.
+  assert.equal(fs.existsSync(path.resolve(import.meta.dirname, "..", "src/generated/code-current/file-tree-density.mjs")), false);
+  assert.equal(JSON.parse(read("src/generated/code-current/manifest.json")).modules.some((m) => m.target === "file-tree-density.mjs"), false);
   // xs geometry: 8px pad, 6 + 4 = 10px per level, guides from 8 + 6 = 14px.
   assert.deepEqual(treeIndent(0), { paddingInlineStart: 8 });
   assert.deepEqual(treeIndent(2), { paddingInlineStart: 28 });

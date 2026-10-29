@@ -38,3 +38,19 @@ export function addPluginsEntry({ loading = false, status = "ready", groups = []
   if (loading) return { kind: "loading" };
   return status === "ready" ? { kind: "add" } : { kind: "hidden" };
 }
+
+// 3.6556.2 c752b32f8-mYZAs6yC Gi, the popup of an Add menu submenu (zi → Ui, `frame = {align, className:
+// submenuClassName, maxVisibleItems}`): `_ = s?.includes("max-h-") ? void 0 : (g ?? 8.5)` caps the list at 8.5 rows
+// unless the submenu brings its own max-h class, and the footer items sit after a Separator in the popup's fixed footer
+// (`footer: p.length > 0 ? [Separator, ...p] : void 0`). The class joins the CDS popup's through Q (tailwind-merge), so a
+// `max-h-[Npx]` replaces `max-h-[var(--available-height)]`; the host popup's own max-height lives in source-menu.css,
+// so the same value goes inline as well (w12b-slash-plugin-groups).
+export const ADD_SUBMENU_MAX_VISIBLE_ITEMS = 8.5;
+export function addSubmenuFrame(className, maxVisibleItems) {
+  const fixed = /(?:^|\s)max-h-\[(\d+(?:\.\d+)?px)\](?=\s|$)/.exec(className ?? "");
+  return {
+    className,
+    maxVisibleItems: className?.includes("max-h-") ? undefined : (maxVisibleItems ?? ADD_SUBMENU_MAX_VISIBLE_ITEMS),
+    style: fixed ? { maxHeight: fixed[1] } : undefined,
+  };
+}

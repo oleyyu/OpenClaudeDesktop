@@ -1,4 +1,5 @@
-// composer-gen (research/composer.md §1.2/§4.1/§5): the Code composer pieces are original 2.42304.0 bindings extracted by
+// composer-gen (research/composer.md §1.2/§4.1/§5; 3.6556.2: migration research/composer.md §1/§3.2, w2-composer-gen): the Code
+// composer pieces are original 3.6556.2 bindings extracted by
 // scripts/extract-code-composer.mjs into src/generated/code-composer. Nothing here opens a window: the generator
 // contract, the verbatim official tokens, the pure helpers (cM / QX / Xj / wv / i0) under fake DOM objects, and SSR
 // markup of the Send cell (lM) and the environment bar (l0 / u0). Mounting into the composer is composer-send-cell /
@@ -16,7 +17,7 @@ import { extractCodeComposer } from '../scripts/extract-code-composer.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/code-composer');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const h = React.createElement;
 let server, manifest, Adapters, ViewTabs, AdapterModules;
@@ -34,46 +35,48 @@ before(async () => {
 after(() => server?.close());
 
 // ---------------------------------------------------------------- generator contract
-test('generator output matches the pinned 2.42304.0 sources (check mode); imports resolve to React, itself, view-tabs semantic names or the adapter', async () => {
+test('generator output matches the pinned 3.6556.2 sources (check mode); imports resolve to React, itself, view-tabs semantic names or the adapter', async () => {
   manifest = await extractCodeComposer({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.equal(manifest.generator, 'scripts/extract-code-composer.mjs');
   assert.deepEqual(manifest.modules.map(m => m.target), [
     'composer-tokens.mjs', 'composer-testids.mjs', 'composer-glyph.mjs', 'owner-support.mjs', 'placeholder-fit.mjs', 'shortcut-caps.mjs',
     'transcript-surface.mjs', 'path-tooltip-placement.mjs', 'composer-card-tokens.mjs', 'composer-dialog-focus.mjs',
-    'composer-focus-yield.mjs', 'composer-key-label.mjs', 'composer-send-cell.mjs',
+    'composer-focus-yield.mjs', 'composer-key-label.mjs',
+    // 3.6556.2: shared-8 HF (Jr), the Stop glyph name KM reads (fizzy-lake icons part, off).
+    'composer-stop-glyph.mjs', 'composer-send-cell.mjs',
     // R3-composer composer-copy-command: the transcript predicates and the /copy reply reader.
     'transcript-text-item.mjs', 'transcript-provisional.mjs', 'transcript-user-kind.mjs', 'transcript-replies.mjs',
     'copy-reply-arg.mjs', 'copy-reply-replies.mjs', 'environment-bar.mjs',
     // R3-composer composer-row-chin: the shared-8 context ring and the row chin's mode label / model class.
     'usage-ring.mjs', 'composer-row-chin.mjs',
-    // R3-composer focus call sites (cc43287c9 Rte via cf74bc599 Da): shared-8 xM, consumed by src/composer-focus-handoff.mjs.
+    // R3-composer focus call sites: shared-8 pR (2.42304.0 xM), consumed by src/composer-focus-handoff.mjs.
     'keyboard-activation.mjs',
-    // R3-composer step 3 composer-shell: the CDS ChatComposer shell (shared-5 Af / jf / Df / Ef) over its closure.
+    // R3-composer step 3 composer-shell: the CDS ChatComposer shell (shared-5 vm / Sm / hm / mm) over its closure.
     'chat-composer-react-version.mjs', 'chat-composer-frame.mjs', 'chat-composer-attachments.mjs', 'chat-composer-dock.mjs',
     'chat-composer-presence.mjs', 'chat-composer-layout.mjs', 'chat-composer-shell.mjs',
-    // R4g-composer CP2 (X7-08): shared-28 Jx, the elementtiming mark of cm's placeholder span.
+    // R4g-composer CP2 (X7-08): shared-28 nw, the elementtiming mark of cm's placeholder span.
     'chat-composer-placeholder-timing.mjs',
-    // R4g-composer CP3 (X7-09): the Add trigger's pure pieces (c227f4d5e Ej / Dj / Sj) and its popup's padding (shared-18 GR).
+    // R4g-composer CP3 (X7-09): the Add trigger's pure pieces (c227f4d5e dM / fM / sM) and its popup's padding (shared-18 wU).
     'composer-add-menu.mjs', 'menu-collision-padding.mjs',
-    // R4g-composer CP4 (X7-10, composer-12): c0fbbe82d's tile wrappers, the Code pane's experimental flags (shared-18 Ub),
-    // and the one intake route (shared-52 mb / Dy, c98ab6e79 r, cc43287c9 aK).
-    // R4i-graph GR3: the Video wrapper's object URL (shared-7 dC) and Vi's video name test (shared-28 bk) come first.
+    // R4g-composer CP4 / R4i-graph GR3: the object URL hook, the video name test, c0fbbe82d's tile wrappers, the Code
+    // pane's experimental flags, the one intake route (shared-52 nP / pb, cafc2a89b a, cc43287c9 Kq) and the pane drop zone.
     'composer-object-url.mjs', 'composer-video-types.mjs',
     'composer-attachment-tiles.mjs', 'code-pane-experimental.mjs', 'composer-intake-split.mjs', 'composer-image-types.mjs', 'composer-intake-route.mjs',
-    // R4i-graph GR3: the Code pane's drop zone (c4c113f6f f, cc43287c9 YI) and its drag-over state / halo (cc63499d2 u / d).
     'composer-drop-target.mjs', 'composer-pane-drop-zone.mjs',
   ]);
   assert.deepEqual((await fs.readdir(generated)).sort(), [...manifest.modules.map(m => m.target), 'manifest.json'].sort());
   for (const module of manifest.modules) {
-    assert.equal(module.referenceVersion, '2.42304.0');
+    assert.equal(module.referenceVersion, '3.6556.2');
     assert.equal(module.sourceSha256, sha(await fs.readFile(path.join(reference, module.source))), module.source);
     assert.equal(module.sha256, sha(await fs.readFile(path.join(generated, module.target), 'utf8')), module.target);
     for (const entry of module.imports) {
       assert.ok(['react', 'generated', 'view-tabs', 'adapter'].includes(entry.kind), `${module.target}:${entry.local}`);
+      if (entry.kind === 'react') assert.ok(['react', 'react/jsx-runtime', 'react-dom', 'react/compiler-runtime'].includes(entry.from), `${module.target}:${entry.local}`);
       if (entry.kind === 'adapter') {
         assert.ok(AdapterModules[entry.from], `${module.target}: adapter module ${entry.from}`);
-        // ComposerAttachmentTiles is the tile set object (Hp's members); every other adapter is a component or hook.
+        // ComposerAttachmentTiles is the tile set object (th's members); every other adapter is a component or hook.
         assert.equal(typeof AdapterModules[entry.from][entry.name], entry.name === 'ComposerAttachmentTiles' ? 'object' : 'function', `adapter export ${entry.name}`);
       }
       if (entry.kind === 'view-tabs') {
@@ -87,99 +90,103 @@ test('generator output matches the pinned 2.42304.0 sources (check mode); import
     }
   }
   const byTarget = Object.fromEntries(manifest.modules.map(m => [m.target, m]));
-  assert.deepEqual(byTarget['composer-send-cell.mjs'].bindings.map(b => b.name), ['QO', 'vA', 'Mj', 'Ij', 'sM', 'lM']);
-  // R2 composer-send-cell: cM has its own pure module (the placeholder model reads it); c1c6ea9ac's overflow hook (Kf)
-  // reads shared-25 fp (Af) / pp (Nf) through owner-support.
-  assert.deepEqual(byTarget['composer-key-label.mjs'].bindings.map(b => b.name), ['cM']);
-  assert.deepEqual(byTarget['placeholder-fit.mjs'].bindings.map(b => b.name), ['o']);
-  assert.deepEqual(byTarget['placeholder-fit.mjs'].officialExports, { o: 't' });
+  // KM (2.42304.0 lM) with its crossfade bM, hint rows WM, idle-action context gM, focus-steal guard mj and hasText reader Gk.
+  assert.deepEqual(byTarget['composer-send-cell.mjs'].bindings.map(b => b.name), ['Gk', 'Kk', 'qk', 'mj', 'gM', 'bM', 'WM', 'KM']);
+  assert.deepEqual(byTarget['composer-stop-glyph.mjs'].bindings.map(b => b.name), ['HF']);
+  assert.deepEqual(byTarget['composer-stop-glyph.mjs'].officialExports, { HF: 'Jr' });
+  // R2 composer-send-cell: GM (cM) has its own pure module (the placeholder model reads it); c1c6ea9ac's overflow hook a
+  // reads shared-25 hf (ap) through owner-support and getResizeObserverClass (cp) from view-tabs (published since 3.6556.2).
+  assert.deepEqual(byTarget['composer-key-label.mjs'].bindings.map(b => b.name), ['GM']);
+  assert.deepEqual(byTarget['placeholder-fit.mjs'].bindings.map(b => b.name), ['a']);
+  assert.deepEqual(byTarget['placeholder-fit.mjs'].officialExports, { a: 't' });
   assert.deepEqual(byTarget['placeholder-fit.mjs'].imports.map(i => `${i.via}=${i.name}`).sort(), [
-    'shared-25-DP8p7i1Z.js:Af=ownerDocument', 'shared-25-DP8p7i1Z.js:Nf=ownerResizeObserver', 'vendor-frame-DfPJ1QmD.js:Co=useState',
-    'vendor-frame-DfPJ1QmD.js:So=useRef', 'vendor-frame-DfPJ1QmD.js:uo=useCallback', 'vendor-frame-DfPJ1QmD.js:yo=useLayoutEffect',
+    'shared-25-DOWZRSlq.js:ap=ownerDocument', 'shared-25-DOWZRSlq.js:cp=getResizeObserverClass',
+    'shared-frame-6jtSkIit.js:$f=memoChanged2', 'shared-frame-6jtSkIit.js:Qf=memoChanged1', 'shared-frame-6jtSkIit.js:cp=memoStore3',
+    'shared-frame-6jtSkIit.js:ep=memoChanged3', 'shared-frame-6jtSkIit.js:ip=reactMemoCache', 'shared-frame-6jtSkIit.js:lp=memoStore4',
+    'shared-frame-6jtSkIit.js:op=memoStore1', 'shared-frame-6jtSkIit.js:sp=memoStore2',
+    'vendor-frame-CnSY1sxv.js:Co=useRef', 'vendor-frame-CnSY1sxv.js:bo=useLayoutEffect', 'vendor-frame-CnSY1sxv.js:wo=useState',
   ]);
-  assert.equal(byTarget['owner-support.mjs'].officialExports.fp, 'Af');
-  assert.deepEqual(byTarget['environment-bar.mjs'].bindings.map(b => b.name), ['n0', 'r0', 'i0', 'a0', 'o0', 's0', 'c0', 'l0', 'u0', 'y6', 'b6']);
-  assert.deepEqual(byTarget['composer-focus-yield.mjs'].bindings.map(b => b.name), ['Yj', 'Xj']);
-  assert.deepEqual(byTarget['copy-reply-arg.mjs'].bindings.map(b => b.name), ['QX']);
-  // R3-composer: $X / eZ read c227f4d5e's predicates by their official export aliases (zs / Bs / Ws / nc), which read
-  // cb27dab29 y (Pe), c06cf64bb _r (yu) and c4d199b75 C (ot); the folder tooltip body hn rides in path-tooltip-placement.
-  assert.deepEqual(byTarget['copy-reply-replies.mjs'].bindings.map(b => b.name), ['$X', 'eZ']);
+  // shared-25 pf / gf / _f are view-tabs ownerWindow / getResizeObserverClass / getMutationObserverClass now (not copied).
+  assert.deepEqual(byTarget['owner-support.mjs'].exports, { mf: 'ownerWindowOrGlobal', ni: 'noopSubscribe', hf: 'ownerDocument' });
+  assert.equal(byTarget['owner-support.mjs'].officialExports.hf, 'ap');
+  // Dae / a8 / i8 / Eae (2.42304.0 l0 / u0 / c0 / a0); o0 is r8 `rounded ${TF}` and s0 is gone with the landing texture.
+  assert.deepEqual(byTarget['environment-bar.mjs'].bindings.map(b => b.name), ['t8', 'Tae', 'n8', 'Eae', 'r8', 'i8', 'Dae', 'a8', 'Q5', '$5']);
+  assert.ok(!('s0' in byTarget['environment-bar.mjs'].exports) && !Object.values(byTarget['environment-bar.mjs'].exports).includes('environmentLineSurfaceClass'));
+  assert.deepEqual(byTarget['composer-focus-yield.mjs'].bindings.map(b => b.name), ['NM', 'PM']);
+  assert.deepEqual(byTarget['copy-reply-arg.mjs'].bindings.map(b => b.name), ['V$']);
+  // H$ / U$ read c227f4d5e's predicates by their official export aliases (cl / ll / pl / El), which read cb27dab29 y (Fe),
+  // c06cf64bb Sr (jy) and c4d199b75 C (ot).
+  assert.deepEqual(byTarget['copy-reply-replies.mjs'].bindings.map(b => b.name), ['H$', 'U$']);
   assert.deepEqual(byTarget['copy-reply-replies.mjs'].imports.map(i => `${i.via}=${i.name}`).sort(), [
-    'c227f4d5e-Ba-r--Rl.js:Bs=endsFinishedReply', 'c227f4d5e-Ba-r--Rl.js:Ws=replyItems', 'c227f4d5e-Ba-r--Rl.js:nc=replyText',
-    'c227f4d5e-Ba-r--Rl.js:zs=isAssistantEntry',
+    'c227f4d5e-B-FYKrwT.js:El=replyText', 'c227f4d5e-B-FYKrwT.js:cl=isAssistantEntry', 'c227f4d5e-B-FYKrwT.js:ll=endsFinishedReply',
+    'c227f4d5e-B-FYKrwT.js:pl=replyItems',
   ]);
-  assert.deepEqual(byTarget['transcript-replies.mjs'].bindings.map(b => b.name), ['cE', 'gE', '_E', 'yE', 'TE', 'EE', 'DE']);
-  assert.deepEqual(byTarget['transcript-replies.mjs'].officialExports, { yE: 'zs', DE: 'Bs', EE: 'Ws', cE: 'nc' });
+  // WE (2.42304.0 DE) now counts an aside entry as a turn boundary (FE: channel or aside) and skips aside entries.
+  assert.deepEqual(byTarget['transcript-replies.mjs'].bindings.map(b => b.name), ['wE', 'ME', 'NE', 'FE', 'IE', 'HE', 'UE', 'WE']);
+  assert.deepEqual(byTarget['transcript-replies.mjs'].officialExports, { IE: 'cl', WE: 'll', UE: 'pl', wE: 'El' });
   assert.deepEqual(byTarget['transcript-replies.mjs'].imports.map(i => `${i.via}=${i.name}`).sort(), [
-    'c06cf64bb-BE5q2vSr.js:_r=isEmptyProvisionalEntry', 'c4d199b75-BCsc0Miu.js:C=userEntryKind', 'cb27dab29-_H2_XKli.js:y=isTranscriptTextItem',
+    'c06cf64bb-CdJdJuVd.js:Sr=isEmptyProvisionalEntry', 'c4d199b75-D3cQB-UP.js:C=userEntryKind', 'cb27dab29-B4WyL7_M.js:y=isTranscriptTextItem',
   ]);
-  for (const [target, names, alias] of [['transcript-text-item.mjs', ['Pe'], { Pe: 'y' }], ['transcript-provisional.mjs', ['yu'], { yu: '_r' }],
-    ['transcript-user-kind.mjs', ['ot'], { ot: 'C' }], ['path-tooltip-placement.mjs', ['mn', 'hn'], { mn: 'I', hn: 'L' }]]) {
+  for (const [target, names, alias] of [['transcript-text-item.mjs', ['Fe'], { Fe: 'y' }], ['transcript-provisional.mjs', ['jy'], { jy: 'Sr' }],
+    ['transcript-user-kind.mjs', ['ot'], { ot: 'C' }], ['path-tooltip-placement.mjs', ['t', 'n'], { t: 't', n: 'n' }]]) {
     assert.deepEqual(byTarget[target].bindings.map(b => b.name), names, target);
     assert.deepEqual(byTarget[target].officialExports, alias, target);
   }
-  // R3-composer composer-row-chin: KV / UV with their thresholds and the memo wrapper; rQ merges with view-tabs cdsClassNames.
-  assert.deepEqual(byTarget['usage-ring.mjs'].bindings.map(b => b.name), ['PV', 'FV', 'IV', 'RV', 'HV', 'UV', 'WV', 'GV', 'KV']);
-  assert.deepEqual(byTarget['usage-ring.mjs'].officialExports, { KV: 'v', UV: 'b' });
+  // E39: the path tooltip placement and body are the split-out cc5c56f5c t / n (2.42304.0 c0fbbe82d mn / hn).
+  assert.equal(byTarget['path-tooltip-placement.mjs'].source, 'cc5c56f5c-BoRtnbt1.js');
+  // The context ring EX / SX (2.42304.0 KV / UV) is React Compiler output: memo + the view-tabs memo helpers.
+  assert.deepEqual(byTarget['usage-ring.mjs'].bindings.map(b => b.name), ['pX', 'mX', 'hX', '_X', 'xX', 'SX', 'CX', 'wX', 'EX']);
+  assert.deepEqual(byTarget['usage-ring.mjs'].officialExports, { EX: 'O', SX: 'A' });
   assert.deepEqual(byTarget['usage-ring.mjs'].imports.map(i => `${i.via}=${i.name}`).sort(), [
-    'vendor-frame-DfPJ1QmD.js:Ha=jsxs', 'vendor-frame-DfPJ1QmD.js:Va=jsx', 'vendor-frame-DfPJ1QmD.js:oo=memo',
+    'shared-frame-6jtSkIit.js:$f=memoChanged2', 'shared-frame-6jtSkIit.js:ip=reactMemoCache', 'shared-frame-6jtSkIit.js:lp=memoStore4',
+    'shared-frame-6jtSkIit.js:np=memoChanged5', 'shared-frame-6jtSkIit.js:sp=memoStore2', 'shared-frame-6jtSkIit.js:tp=memoChanged4',
+    'shared-frame-6jtSkIit.js:up=memoStore5', 'vendor-frame-CnSY1sxv.js:Ha=jsx', 'vendor-frame-CnSY1sxv.js:Ua=jsxs', 'vendor-frame-CnSY1sxv.js:so=memo',
   ]);
-  assert.deepEqual(byTarget['composer-row-chin.mjs'].bindings.map(b => b.name), ['DK', 'rQ']);
-  assert.equal(byTarget['composer-tokens.mjs'].officialExports.Eg, 'Ed');
-  assert.deepEqual(byTarget['keyboard-activation.mjs'].bindings.map(b => b.name), ['xM']);
-  assert.deepEqual(byTarget['keyboard-activation.mjs'].officialExports, { xM: 'Cr' });
+  assert.deepEqual(byTarget['composer-row-chin.mjs'].bindings.map(b => b.name), ['D$', 'H6']);
+  assert.equal(byTarget['composer-tokens.mjs'].officialExports.Lg, 'Ud');
+  assert.deepEqual(byTarget['keyboard-activation.mjs'].bindings.map(b => b.name), ['pR']);
+  assert.deepEqual(byTarget['keyboard-activation.mjs'].officialExports, { pR: 'vr' });
   const routed = kind => manifest.modules.flatMap(m => m.imports.filter(i => i.kind === kind).map(i => `${i.via}=${i.name}`));
-  // D24 (R3-graph named them): the CDS Tooltip / Shortcut / SplitDropdownButton are the view-tabs originals now; only
-  // react-intl is still a host adapter.
-  // R3-composer step 3: the shell's page drop scrim surface (gf, unreachable without onFileDrop) is the second adapter.
-  // R4g-composer CP4 (X7-10): the tile wrappers' tile set (shared-2 Hp), path hover card (c856385e2 On) and FormattedMessage,
-  // R4i-graph GR3: the tiles' failed-strip TextLink is view-tabs CdsTextLink now, no longer a refusing stand-in.
-  assert.deepEqual([...new Set(routed('adapter'))].sort(), ['c856385e2-DVsjb2QL.js:i=ComposerPathHoverCard', 'shared-2-Cb74JByF.js:zg=ComposerAttachmentTiles',
-    'shared-frame-BfjMqbuN.js:Fc=ComposerPageDropSurface', 'vendor-intl-Db7hDWRO.js:l=ComposerMessage',
-    'vendor-intl-Db7hDWRO.js:p=useComposerIntl']);
-  assert.deepEqual([...new Set(routed('view-tabs'))].sort(), [
-    'shared-frame-BfjMqbuN.js:Hl=CdsIcon', 'shared-frame-BfjMqbuN.js:Oc=CdsTooltip', 'shared-frame-BfjMqbuN.js:Ol=CdsShortcut',
-    'shared-frame-BfjMqbuN.js:cl=CdsButton', 'shared-frame-BfjMqbuN.js:kc=CdsTooltipProvider', 'shared-frame-BfjMqbuN.js:la=CdsDensityContext',
-    'shared-frame-BfjMqbuN.js:li=CdsSplitDropdownButton', 'shared-frame-BfjMqbuN.js:xd=cdsClassNames', 'vendor-frame-DfPJ1QmD.js:za=clsx',
-    // R4g-composer CP1 (X7-07): the seven contexts the shell's closure reads are view-tabs names now, no longer copies.
-    'shared-frame-BfjMqbuN.js:Oa=CdsOwnerWindowContext', 'shared-frame-BfjMqbuN.js:da=CdsModeStoreContext', 'shared-frame-BfjMqbuN.js:hr=CdsFizzyLakePartsContext',
-    'shared-frame-BfjMqbuN.js:ll=CdsButtonIconSizeContext', 'shared-frame-BfjMqbuN.js:nu=CdsSurfaceContext', 'shared-frame-BfjMqbuN.js:vn=CdsLabelsContext',
-    'shared-frame-BfjMqbuN.js:xa=CdsNaturalImageTilesContext',
-    // R4g-composer CP4: the shared-2 tiles' CDS Card and Badge, and the frame copies' twMerge join by its local name.
-    'shared-frame-BfjMqbuN.js:ol=CdsCard', 'shared-frame-BfjMqbuN.js:Vl=CdsBadge', 'shared-frame-BfjMqbuN.js:X=cdsClassNames',
-    // R4i-graph GR3: the Skeleton's two contexts (no longer copies), the failed strip's TextLink and the Video tile's platform.
-    'shared-frame-BfjMqbuN.js:xu=CdsSkeletonShimmerContext', 'shared-frame-BfjMqbuN.js:Su=CdsSkeletonElementContext',
-    'shared-frame-BfjMqbuN.js:Xc=CdsTextLink', 'shared-frame-BfjMqbuN.js:hu=useCdsPlatform',
-  ].sort());
-  // composer-shell (D1): nothing is imported from view-tabs by its minified name; what view-tabs holds without a name is
-  // copied once. R4g-composer CP1: no React context is among the copies any more (the seven it listed — CdsRoot's xa / Oa /
-  // vn / da / hr, the shell-provided Ea / Xl — are view-tabs names; tests/composer-cds-root.test.mjs).
+  // Host adapters: react-intl (useIntl, FormattedMessage), the tile wrappers' tile set (shared-2 th) and path hover card
+  // (c856385e2 Kn). 3.6556.2: the page drop scrim's portal root is view-tabs CdsPortalRoot, so its stand-in is gone.
+  assert.deepEqual([...new Set(routed('adapter'))].sort(), ['c856385e2-aEyDzrcK.js:a=ComposerPathHoverCard', 'shared-2-TF8v67kg.js:ry=ComposerAttachmentTiles',
+    'vendor-intl-DYfox5Co.js:l=ComposerMessage', 'vendor-intl-DYfox5Co.js:p=useComposerIntl']);
+  assert.equal(Adapters.ComposerPageDropSurface, undefined, 'the throwing drop surface stand-in is removed');
+  const viewTabs = new Set(routed('view-tabs'));
+  for (const pin of ['shared-frame-6jtSkIit.js:Eu=CdsButton', 'shared-frame-6jtSkIit.js:od=CdsIcon', 'shared-frame-6jtSkIit.js:Kl=CdsTooltip',
+    'shared-frame-6jtSkIit.js:Ku=CdsShortcut', 'shared-frame-6jtSkIit.js:ql=CdsTooltipProvider', 'shared-frame-6jtSkIit.js:bi=CdsSplitDropdownButton',
+    'shared-frame-6jtSkIit.js:Hf=cdsClassNames', 'vendor-frame-CnSY1sxv.js:Ba=clsx', 'shared-frame-6jtSkIit.js:$l=CdsPortalRoot',
+    // The contexts the shell's closure reads are view-tabs instances (R4g-composer CP1 / E4).
+    'shared-frame-6jtSkIit.js:Sa=CdsModeStoreContext', 'shared-frame-6jtSkIit.js:Du=CdsButtonIconSizeContext', 'shared-frame-6jtSkIit.js:bd=CdsSurfaceContext',
+    'shared-frame-6jtSkIit.js:Ma=CdsNaturalImageTilesContext', 'shared-frame-6jtSkIit.js:cu=useCdsLayerAwareZIndex',
+    // E3: the React Compiler cache and its helpers come from view-tabs (one helper copy for every compiled closure).
+    'shared-frame-6jtSkIit.js:ip=reactMemoCache', 'shared-frame-6jtSkIit.js:Qf=memoChanged1', 'shared-frame-6jtSkIit.js:op=memoStore1'])
+    assert.ok(viewTabs.has(pin), pin);
+  // The compiler runtime itself is never imported directly: J9 is view-tabs reactMemoCache (vendor-frame Oo underneath).
+  assert.ok(!manifest.modules.some(m => m.imports.some(i => i.from === 'react/compiler-runtime')));
   assert.equal(manifest.modules.flatMap(m => m.imports).filter(i => !['react', 'generated', 'view-tabs', 'adapter'].includes(i.kind)).length, 0);
-  // R4g-composer CP4 copied the CDS Skeleton's two contexts (xu / Su); R4i-graph GR3 named them in view-tabs. The one copy
-  // left is the layer base Vd the pane drop halo's z-index reads (view-tabs holds it back for mcp-app-card).
-  assert.deepEqual(manifest.modules.filter(m => m.contextCopies).map(m => [m.target, Object.keys(m.contextCopies)]), [['chat-composer-frame.mjs', ['Vd']]]);
-  assert.match(byTarget['chat-composer-frame.mjs'].contextCopies.Vd, /never above the Code session pane/);
+  // No React context is copied any more: the layer base the pane drop halo reads is view-tabs CdsLayerBaseContext (E4).
+  assert.deepEqual(manifest.modules.filter(m => m.contextCopies).map(m => m.target), []);
   const copied = new Set(manifest.modules.flatMap(m => m.bindings.map(b => `${m.source}:${b.name}`)));
   for (const [name, { file, local }] of Object.entries(ViewTabs.publicNames)) assert.ok(!copied.has(`${file}:${local}`), `${name} is copied instead of imported`);
   assert.deepEqual(byTarget['chat-composer-shell.mjs'].imports.filter(i => i.substitute).map(i => `${i.via}=${i.name} (${i.substitute})`),
-    ['shared-2-Cb74JByF.js:zg=MessageAttachments (Hp → Vp)']);
-  assert.deepEqual(byTarget['chat-composer-shell.mjs'].officialExports, { Af: 'Ac', jf: 'kc', Df: 'Mc', Ef: 'Nc', Xf: 'Dc', Yf: 'Ec' });
-  // R4g-composer CP2 (X7-08): cm's placeholder pieces — shared-26 Ja / Ya / Qa / $a / eo (shared-9 imports yh / ch / lh /
-  // uh / th), shared-5 Xf / Yf (Dc / Ec), shared-28 Jx (Fi).
-  assert.deepEqual(Object.fromEntries(['Ja', 'Ya', 'Qa', '$a', 'eo'].map(k => [k, byTarget['chat-composer-layout.mjs'].officialExports[k]])),
-    { Ja: 'yh', Ya: 'ch', Qa: 'lh', $a: 'uh', eo: 'th' });
-  assert.deepEqual(byTarget['chat-composer-placeholder-timing.mjs'].bindings.map(b => b.name), ['Jx']);
-  assert.deepEqual(byTarget['chat-composer-placeholder-timing.mjs'].officialExports, { Jx: 'Fi' });
-  // R4g-composer CP3 (X7-09): Oj's glyph box / icon tone / glyph size (cfca6870a a / n / r, c227f4d5e ry / ay / sy), its size
-  // table, first row and accept list (pure, no imports), and shared-18 GR (xn, c227f4d5e zl).
-  assert.deepEqual(byTarget['composer-glyph.mjs'].bindings.map(b => b.name), ['u', 'd', 'f', 'p', 'm']);
-  assert.deepEqual(byTarget['composer-glyph.mjs'].officialExports, { d: 't', p: 'i', f: 'a', m: 'n', u: 'r' });
-  assert.deepEqual(byTarget['composer-add-menu.mjs'].bindings.map(b => b.name), ['Sj', 'Ej', 'Dj']);
+    ['shared-2-TF8v67kg.js:ry=MessageAttachments (th → eh)']);
+  assert.deepEqual(byTarget['chat-composer-shell.mjs'].officialExports, { vm: 'Ll', Sm: 'Il', hm: 'zl', mm: 'Bl', Vm: 'Pl', Bm: 'Nl' });
+  // cm's placeholder pieces — shared-26 uo / fo / ho / go / _o, shared-5 Vm / Bm, shared-28 nw.
+  assert.deepEqual(Object.fromEntries(['uo', 'fo', 'ho', 'go', '_o'].map(k => [k, byTarget['chat-composer-layout.mjs'].officialExports[k]])),
+    { uo: 'Jg', fo: 'Lg', ho: 'Rg', go: 'zg', _o: 'Ag' });
+  assert.deepEqual(byTarget['chat-composer-placeholder-timing.mjs'].bindings.map(b => b.name), ['nw']);
+  assert.deepEqual(byTarget['chat-composer-placeholder-timing.mjs'].officialExports, { nw: 'Ea' });
+  // Oj's glyph pieces: cfca6870a p (now a function of the fizzy-lake icons part) / h / m / g / f.
+  assert.deepEqual(byTarget['composer-glyph.mjs'].bindings.map(b => b.name), ['f', 'p', 'm', 'h', 'g']);
+  assert.deepEqual(byTarget['composer-glyph.mjs'].officialExports, { p: 'a', h: 'r', m: 'i', g: 't', f: 'n' });
+  assert.deepEqual(byTarget['composer-add-menu.mjs'].bindings.map(b => b.name), ['sM', 'dM', 'fM']);
   assert.deepEqual(byTarget['composer-add-menu.mjs'].imports, []);
-  assert.deepEqual(byTarget['menu-collision-padding.mjs'].bindings.map(b => b.name), ['GR']);
-  assert.deepEqual(byTarget['menu-collision-padding.mjs'].officialExports, { GR: 'xn' });
-  assert.deepEqual(byTarget['shortcut-caps.mjs'].exports, { Gs: 'shortcutCaps', Us: 'parseShortcutKeys', Bs: 'ownEntry' });
-  assert.ok(byTarget['chat-composer-frame.mjs'].imports.some(i => i.via === 'shared-frame-BfjMqbuN.js:Us' && i.from === './shortcut-caps.mjs'), 'one copy of the key parser');
+  assert.deepEqual(byTarget['menu-collision-padding.mjs'].bindings.map(b => b.name), ['wU']);
+  assert.deepEqual(byTarget['menu-collision-padding.mjs'].officialExports, { wU: 'Sn' });
+  assert.deepEqual(byTarget['shortcut-caps.mjs'].exports, { wc: 'shortcutCaps', Sc: 'parseShortcutKeys', yc: 'ownEntry' });
+  // The card-tokens module lost nM (placeholderShapeResetClass): 3.6556.2 qM passes trailingNotch "pad" instead.
+  assert.ok(!Object.values(byTarget['composer-card-tokens.mjs'].exports).includes('placeholderShapeResetClass'));
   for (const name of ['ComposerTooltip', 'ComposerShortcut', 'ComposerSplitDropdownButton']) assert.equal(Adapters[name], undefined, `${name} stand-in removed`);
   // D1: view-tabs only by semantic name; D0: own verify-gen script that prepare-ui discovers.
   for (const file of [...(await fs.readdir(generated)).filter(f => f.endsWith('.mjs')).map(f => path.join(generated, f)), path.join(app, 'src/source-composer-current-adapters.jsx')]) {
@@ -205,7 +212,7 @@ test('class tokens are the official strings, verbatim in the shipped chunks', as
   const Glyph = await load('composer-glyph.mjs'), Ids = await load('composer-testids.mjs');
   const Surface = await load('transcript-surface.mjs'), Placement = await load('path-tooltip-placement.mjs');
   const raw = async file => fs.readFile(path.join(reference, file), 'utf8');
-  const shared6 = await raw('shared-6-Cby4X-ms.js'), card = await raw('c227f4d5e-Ba-r--Rl.js');
+  const shared6 = await raw('shared-6-sd9jbJqs.js'), card = await raw('c227f4d5e-B-FYKrwT.js');
   const expected = {
     composerCardSizeClass: '[--cds-h-control:calc(1.75rem*var(--cds-rem-scale,1))] [--cds-radius-composer:calc(0.875rem*var(--cds-rem-scale,1))]',
     composerRowControlClass: '[--cds-h-control:calc(1.5rem*var(--cds-rem-scale,1))] [--cds-pad-md:calc(0.375rem*var(--cds-rem-scale,1))] [--cds-font-size-body:calc(0.8125rem*var(--cds-rem-scale,1))] [--cds-leading-body:calc(1.25rem*var(--cds-rem-scale,1))]',
@@ -233,7 +240,7 @@ test('class tokens are the official strings, verbatim in the shipped chunks', as
   });
   const cardExpected = {
     sendCellClass: 'grid shrink-0 items-center justify-items-end', sendCellLayerClass: 'col-start-1 row-start-1 flex',
-    bashModeRingClass: 'inset-ring-1 inset-ring-pro', placeholderShapeResetClass: '[&_.ProseMirror]:before:[shape-outside:none]',
+    bashModeRingClass: 'inset-ring-1 inset-ring-pro',
     shelfStartProperty: '--epitaxy-shelf-start', shelfStartPaddingClass: 'ltr:ps-[var(--epitaxy-shelf-start,0px)]',
     suggestionGhostClass: 'italic text-muted-as-secondary',
     submitLayerClass: 'col-start-1 row-start-1 flex cursor-default items-center justify-end',
@@ -247,14 +254,20 @@ test('class tokens are the official strings, verbatim in the shipped chunks', as
   assert.equal(Card.shelfStartInset, 4);
   assert.equal(Card.stopSendGuardMs, 500);
   assert.equal(Card.strayEnterWindowMs, 500);
-  assert.equal(Glyph.sendGlyphBoxClass, 'flex scale-90');
+  // 3.6556.2 cfca6870a p: a call, "flex scale-90" unless the fizzy-lake icons part is on (never: shared-52 Qm = [], E12).
+  assert.equal(typeof Glyph.sendGlyphBoxClass, 'function');
+  assert.equal(Glyph.sendGlyphBoxClass(), 'flex scale-90');
+  assert.equal(Card.placeholderShapeResetClass, undefined, 'nM is gone in 3.6556.2');
+  assert.ok(!card.includes('[shape-outside:none]'));
   assert.deepEqual(Glyph.dockGlyphProps, { size: 'base', dockGlyph: true });
   assert.equal(Ids.sendTestId, 'code-prompt-send');
   assert.equal(Ids.stopTestId, 'code-prompt-stop');
   assert.equal(Surface.transcriptSurfaceClass, 'bg-[var(--epitaxy-transcript-surface,var(--cds-surface-1))]');
   assert.deepEqual(Placement.pathTooltipPlacement, { side: 'bottom', align: 'start', className: 'max-w-[min(480px,var(--available-width))]' });
   const Bar = await load('environment-bar.mjs');
-  assert.equal(Bar.environmentChipClass, `rounded ${Surface.transcriptSurfaceClass} [[data-landing-texture=canvas]~div_&]:rounded-none [[data-landing-texture=canvas]~div_&]:transform-gpu`);
+  // 3.6556.2 r8: the landing-texture variants are gone with the texture (E10); s0 is gone too.
+  assert.equal(Bar.environmentChipClass, `rounded ${Surface.transcriptSurfaceClass}`);
+  assert.equal(Bar.environmentLineSurfaceClass, undefined);
   assert.equal(Bar.environmentBarHysteresis, 2);
 });
 
@@ -381,7 +394,7 @@ test('SSR: a draft shows the official Send button with the md glyph box; running
 test('SSR: the coarse-pointer placeholder is the original CDS SplitDropdownButton (view-tabs ej), the joined group', async () => {
   const { ComposerSendCell } = await load('composer-send-cell.mjs');
   const html = sendCell(ComposerSendCell, { isCoarsePointer: true });
-  assert.match(html, /<div aria-hidden="true" inert="" class="col-start-1 row-start-1 flex invisible"><div data-cds="SplitDropdownButton" style="--cds-split-inset:[^"]*" role="group" aria-label="Send" class="relative inline-flex w-fit shrink-0 items-stretch rounded group\/split /);
+  assert.match(html, /<div aria-hidden="true" inert="" class="col-start-1 row-start-1 flex invisible"><div data-cds="SplitDropdownButton" style="--cds-split-inset:[^"]*" role="group" aria-label="Send" class="relative inline-flex w-fit shrink-0 items-stretch rounded-\[calc\(var\(--cds-radius\)\+var\(--cds-button-radius-add,0px\)\)\] group\/split /, '3.6556.2 CDS: the split radius adds --cds-button-radius-add');
   assert.match(html, /<div data-cds-segment="" class="contents">/, 'NA variant "joined"');
   assert.match(html, /aria-label="More send options"/, 'lM menuLabel, not the CDS default "More options"');
 });

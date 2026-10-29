@@ -1,7 +1,10 @@
-import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { SourceMenu } from "./source-menu";
-import { queuedCountLabel, reorderEntries } from "./queued-messages-model.mjs";
+// E41: the queue bar sits in the composer graph, so view-tabs comes from the concrete file by semantic name.
+import { CdsContextMenu, CdsTextLink } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { queuedBandStep, queuedBandView, queuedCountLabel, reorderEntries } from "./queued-messages-model.mjs";
+import { useReducedMotion } from "./use-reduced-motion.js";
 import "./source-queued-messages.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -50,6 +53,20 @@ function SingleRow({ entry, locked, steering, onCancel, onEdit, onSteer, coreNam
   );
 }
 
+// 3.6556.2 cf74bc599 BE `R`: Edit in composer (lWwW3BF7Wa), Send now (drJdjjprFp, disabled while one is being sent),
+// then Remove from queue (pu9H1Nruwc, variant danger, separatorBefore when anything precedes it). The ⋮ menu and the
+// row's context menu list the same items, each on its own menu kit (Item / Separator).
+function QueuedMenuItems({ Menu, entry, locked, steerBusy = false, onCancel, onEdit, onSteer }) {
+  return (
+    <>
+      {onEdit && <Menu.Item disabled={locked} onClick={() => onEdit(entry.id)}>{t("Edit in composer")}</Menu.Item>}
+      {onSteer && <Menu.Item disabled={locked || steerBusy} onClick={() => onSteer(entry.id)}>{t("Send now")}</Menu.Item>}
+      {(onEdit || onSteer) && onCancel && <Menu.Separator />}
+      {onCancel && <Menu.Item variant="danger" disabled={locked} onClick={() => onCancel(entry.id)}>{t("Remove from queue")}</Menu.Item>}
+    </>
+  );
+}
+
 function RowMenu({ entry, locked, onCancel, onEdit, onSteer, steerBusy = false, onOpenChange }) {
   const [anchor, setAnchor] = useState(null);
   const trigger = useRef(null);
@@ -61,10 +78,7 @@ function RowMenu({ entry, locked, onCancel, onEdit, onSteer, steerBusy = false, 
         aria-haspopup="menu" aria-expanded={!!anchor} onClick={open} />
       {anchor && (
         <SourceMenu.Popup anchor={anchor} side="bottom" align="end" label={t("Queued message actions")} onClose={close}>
-          {onEdit && <SourceMenu.Item disabled={locked} onClick={() => onEdit(entry.id)}>{t("Edit in composer")}</SourceMenu.Item>}
-          {onSteer && <SourceMenu.Item disabled={locked || steerBusy} onClick={() => onSteer(entry.id)}>{t("Send now")}</SourceMenu.Item>}
-          {(onEdit || onSteer) && onCancel && <SourceMenu.Separator />}
-          {onCancel && <SourceMenu.Item variant="danger" disabled={locked} onClick={() => onCancel(entry.id)}>{t("Remove from queue")}</SourceMenu.Item>}
+          <QueuedMenuItems Menu={SourceMenu} entry={entry} locked={locked} steerBusy={steerBusy} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} />
         </SourceMenu.Popup>
       )}
     </>
@@ -73,8 +87,10 @@ function RowMenu({ entry, locked, onCancel, onEdit, onSteer, steerBusy = false, 
 
 // Sortable row: a 5px activation distance pointer drag on the Reorder handle
 // (dnd-kit PointerSensor equivalent) plus ArrowUp/ArrowDown on the handle.
-function Row({ entry, locked, steering = false, steerBusy = false, onCancel, onEdit, onSteer, sortable, onDragStart, onDragMove, onDragEnd, dragging, anyDragging, onKeyReorder }) {
+export function Row({ entry, locked, steering = false, steerBusy = false, onCancel, onEdit, onSteer, sortable, onDragStart, onDragMove, onDragEnd, dragging, anyDragging, onKeyReorder }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // BE `R.length > 0`: the row has menu items (a locked row is given none of the callbacks).
+  const hasMenu = !locked && (!!onEdit || !!onCancel || !!onSteer);
   const hasActions = sortable || !!onEdit || !!onCancel || !!onSteer || locked;
   const pinned = dragging || menuOpen || locked;
   // nS P = sortable || busy (h: removing or sending): the wide 120px mask, else the 76px one.
@@ -82,9 +98,10 @@ function Row({ entry, locked, steering = false, steerBusy = false, onCancel, onE
   const fade = hasActions ? (pinned ? "" : anyDragging && !dragging ? "sqm-hide" : "sqm-reveal") : "";
   const mask = hasActions ? (wide ? "sqm-mask-wide" : "sqm-mask-narrow") : "";
   const maskMode = pinned ? "sqm-mask-on" : anyDragging && !dragging ? "" : "sqm-mask-hover";
-  return (
-    <div role="listitem" aria-busy={locked || undefined} data-take-back-entry={entry.id} data-dragging={dragging || undefined}
-      className={`sqm-item ${dragging ? "sqm-item--dragging" : ""}`}>
+  const rowProps = { role: "listitem", "aria-busy": locked || undefined, "data-take-back-entry": entry.id, "data-dragging": dragging || undefined,
+    className: `sqm-item ${dragging ? "sqm-item--dragging" : ""}` };
+  const body = (
+    <>
       <span className={`sqm-item-text ${locked ? "sqm-item-text--muted" : ""} ${mask} ${maskMode}`}>{entry.preview}</span>
       {hasActions && (
         <span className={`sqm-item-actions ${fade}`}>
@@ -99,10 +116,23 @@ function Row({ entry, locked, steering = false, steerBusy = false, onCancel, onE
               <Icon name="Reorder" size={16} />
             </button>
           )}
-          {(onEdit || onCancel || onSteer) && !locked && <RowMenu entry={entry} locked={locked} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} steerBusy={steerBusy} onOpenChange={setMenuOpen} />}
+          {hasMenu && <RowMenu entry={entry} locked={locked} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} steerBusy={steerBusy} onOpenChange={setMenuOpen} />}
         </span>
       )}
-    </div>
+    </>
+  );
+  // BE: without menu items the row is a plain div; with them the whole row is the context-menu trigger
+  // (`s(te.Trigger,{role:"listitem","aria-busy":Y,"data-take-back-entry":t.id,…})` + `s(te.Popup,{children:B(R)})` in
+  // `u(te.Root,{onOpenChange:I,…})`, te = shared-frame qi = view-tabs CdsContextMenu). Its open state pins the row
+  // (I → F → V) as the ⋮ menu's does.
+  if (!hasMenu) return <div {...rowProps}>{body}</div>;
+  return (
+    <CdsContextMenu.Root onOpenChange={setMenuOpen}>
+      <CdsContextMenu.Trigger {...rowProps}>{body}</CdsContextMenu.Trigger>
+      <CdsContextMenu.Popup>
+        <QueuedMenuItems Menu={CdsContextMenu} entry={entry} locked={locked} steerBusy={steerBusy} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} />
+      </CdsContextMenu.Popup>
+    </CdsContextMenu.Root>
   );
 }
 
@@ -175,21 +205,45 @@ function MultiEntry({ entries, lockedIds, steeringId = null, sendNow, onCancel, 
           </React.Fragment>
         ))}
       </div>
+      {/* GE: `s(G,{onClick:F,onMouseDown:uh,disabled:!N.includes(!1),className:"text-footnote text-danger",children:"Clear all"})`
+          (G = shared-frame hu = CdsTextLink, QW+Q5NHmeF; N = each entry's locked flag): off while every entry is locked. */}
       {onCancel && (
         <div className="sqm-footer">
-          <button type="button" className="sqm-clear" onMouseDown={stopMouseDown} onClick={clearAll}>{t("Clear all")}</button>
+          <CdsTextLink onClick={clearAll} onMouseDown={stopMouseDown} disabled={!entries.some((entry) => !locked(entry.id))}
+            className="text-footnote text-danger">{t("Clear all")}</CdsTextLink>
         </div>
       )}
     </div>
   );
 }
 
-export function SourceQueuedMessages({ entries = [], lockedIds = [], steeringId = null, sendNow, coreName, onCancel, onEdit, onSteer, onReorder, onClearAll }) {
+// 3.6556.2 cc43287c9 Jfe over the bar's entries: the last lone entry is remembered (`i`, per session scope); when the
+// queue empties and that entry has landed in the transcript (PM = c6b8adeaf bi, `e in t.landed`) — and motion is not
+// reduced — the bar stays mounted with that entry (`o`) as `exiting` until its exit animation ends (onExited). Any other
+// emptying (removed, cleared, another session) unmounts at once. `landed(entry)` is the host's landed test
+// (queuedEntryLanded: its userMessage with clientId = clientUserMessageId is in the transcript). The epitaxy gate `n`
+// (shared-11 us, claudeai_cc_epitaxy_session_presets_main) is always on in the host.
+const QUEUED_BAND_IDLE = Object.freeze({ last: null, leaving: null });
+export function useQueuedBandExit(entries, scope, landed) {
+  const reduced = useReducedMotion();
+  const [state, setState] = useState(QUEUED_BAND_IDLE);
+  // Jfe's render-phase updates (a(...) / s(...)): React re-renders before committing, so the view reads the next state.
+  const next = queuedBandStep(state, { entries, scope, landed, reduced });
+  if (next !== state) setState(next);
+  const onExited = useCallback(() => setState((current) => (current.leaving === null ? current : { ...current, leaving: null })), []);
+  return { ...queuedBandView(next, { entries, scope }), onExited };
+}
+export function SourceQueuedMessages({ entries = [], lockedIds = [], steeringId = null, sendNow, coreName, onCancel, onEdit, onSteer, onReorder, onClearAll, exiting = false, onExited }) {
   if (!entries.length) return null;
   const head = entries[0], headLocked = lockedIds.includes(head.id);
   const content = entries.length === 1
     ? <SingleRow entry={head} locked={headLocked} steering={steeringId === head.id} coreName={coreName} onCancel={onCancel} onEdit={headLocked ? undefined : onEdit}
       onSteer={onSteer && !headLocked && (!sendNow || sendNow(head.id)) ? onSteer : undefined} />
     : <MultiEntry entries={entries} lockedIds={lockedIds} steeringId={steeringId} sendNow={sendNow} onCancel={onCancel} onEdit={onEdit} onSteer={onSteer} onReorder={onReorder} onClearAll={onClearAll} />;
-  return <div className="sqm-band epitaxy-band-enter" data-queued-messages="" data-count={entries.length}>{content}</div>;
+  // VE: `${Kv} ${a ? "epitaxy-band-exit" : ""}` (Kv = c0b46114c "epitaxy-band-enter"), inert while exiting, and
+  // onAnimationEnd → onExited for the band's own animation (c6a992d55 `.epitaxy-root .epitaxy-band-exit`:
+  // epitaxy-band-exit var(--cds-dur-snap) var(--cds-ease-out) forwards, to {opacity:0; translate:0 6px}).
+  return <div className={`sqm-band epitaxy-band-enter${exiting ? " epitaxy-band-exit" : ""}`} inert={exiting || undefined}
+    onAnimationEnd={exiting ? (event) => { if (event.target === event.currentTarget) onExited?.(); } : undefined}
+    data-queued-messages="" data-count={entries.length}>{content}</div>;
 }

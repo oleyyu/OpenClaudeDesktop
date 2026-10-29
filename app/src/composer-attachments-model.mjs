@@ -1,6 +1,8 @@
 import { t, tn } from "../electron/i18n/index.mjs";
 import { coreCapabilities, coreForEngine } from "../electron/core-registry.mjs";
 import { withoutSystemReminders, workflowNotificationSummary } from "../electron/prefs/workflow-keyword.mjs";
+// w13-chatfn-attachments: a Chat document converted to text travels as a <document> block (chat-attachment-model.mjs).
+import { documentInput, splitDocumentBlocks, previewWithoutDocuments } from "./chat-attachment-model.mjs";
 
 // Composer attachment staging (2.2553.1 c099c328d :1520-1625 image lane and
 // :2947-2975 image/file pills), reduced to what the local Codex backend can
@@ -159,13 +161,50 @@ export function snippetLabel(text) {
 }
 let snippetSeq = 0;
 /** A snippet entry; null for empty text. `key` names its source so a second add from it replaces the first. */
-export function makeSnippet(text, { label, key, terminalTabId, id, sourceFile } = {}) {
+export function makeSnippet(text, { label, key, terminalTabId, id, sourceFile, annotation } = {}) {
   const body = String(text ?? "").replace(/\s+$/, "").replace(/^\n+/, "");
   if (!body.trim()) return null;
+  const note = commentAnnotation(annotation);
   return { id: id ?? `snippet-${Date.now().toString(36)}-${snippetSeq++}`, kind: "snippet", status: "ready", text: body,
     label: typeof label === "string" && label.trim() ? label.trim() : snippetLabel(body),
     ...(typeof sourceFile === "string" && sourceFile ? { sourceFile } : {}),
-    ...(key ? { key } : {}), ...(terminalTabId ? { terminalTabId } : {}) };
+    ...(key ? { key } : {}), ...(terminalTabId ? { terminalTabId } : {}), ...(note ? { annotation: note } : {}) };
+}
+
+// W12b cf-01: a saved line comment (Changes or Files) is the official composer's annotation, not an Excerpt. 3.6556.2
+// c0fbbe82d Go renders `P.map(e => fs({annotation: e, onClickAnnotation: E, onRemove: q}))` after the snippets; fs is Wi
+// (the Quote tile) named "Comment on {where}", its text `t.body.trim() || t.snippet?.trim() || Bo(a, t)`, badge
+// "Comment", the badge tooltip Bo: the file's last segment, ":start" or ":start-end", "{where} (before changes)" for
+// side "deletions". The message the model gets stays the snippet's serialized text (serializeLineComment).
+/** The annotation of a host comment entry ({path, start, end, side, body, code, source}); null when it names no file. */
+export function commentAnnotation(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const filePath = typeof entry.filePath === "string" ? entry.filePath : entry.path;
+  const startLine = Number.isInteger(entry.startLine) ? entry.startLine : entry.start;
+  const endLine = Number.isInteger(entry.endLine) ? entry.endLine : Number.isInteger(entry.end) ? entry.end : startLine;
+  if (typeof filePath !== "string" || !filePath || !Number.isInteger(startLine) || startLine < 1) return null;
+  const body = typeof entry.body === "string" ? entry.body : "";
+  const snippet = typeof entry.snippet === "string" ? entry.snippet : typeof entry.code === "string" ? entry.code : undefined;
+  return { source: entry.source === "file" ? "file" : "diff", filePath, startLine, endLine: Math.max(startLine, endLine), body,
+    ...(entry.side === "deletions" || entry.side === "additions" ? { side: entry.side } : {}), ...(snippet ? { snippet } : {}) };
+}
+/** c0fbbe82d Bo (without zo's message): `${last segment}:${start}` or `:${start}-${end}`; deletions mark it (before changes). */
+export function annotationWhere(annotation) {
+  const at = annotation.filePath.lastIndexOf("/");
+  const name = at >= 0 ? annotation.filePath.slice(at + 1) : annotation.filePath;
+  return `${name}:${annotation.startLine === annotation.endLine ? `${annotation.startLine}` : `${annotation.startLine}-${annotation.endLine}`}`;
+}
+/** fs's text: `t.body.trim() || t.snippet?.trim() || Bo(a, t)` (`where` is Bo's localized string). */
+export function annotationText(annotation, where) {
+  return annotation.body.trim() || annotation.snippet?.trim() || where;
+}
+/** cc43287c9 lg: a file comment opens the Files pane on the file at its endLine (UT); any other reopens the Changes diff
+ * scrolled to the annotation (IC → scrollToAnnotation {side, line}). */
+export function annotationClickTarget(annotation) {
+  if (!annotation) return null;
+  return annotation.source === "file"
+    ? { pane: "files", path: annotation.filePath, line: annotation.endLine }
+    : { pane: "changes", path: annotation.filePath, anchor: { side: annotation.side ?? "additions", line: annotation.endLine } };
 }
 export function addSnippet(entries, snippet) {
   const list = Array.isArray(entries) ? entries : [];
@@ -256,9 +295,11 @@ export function userMessageContent(content = []) {
   const shown = [], noted = [];
   for (const part of parts) {
     if (part?.type !== "text" || typeof part.text !== "string") { shown.push(part); continue; }
-    const split = splitAttachmentNote(part.text);
-    if (!split.paths.length) { shown.push(part); continue; }
-    noted.push(...split.paths);
+    // A converted Chat document (w13-chatfn-attachments) trails the note: it leaves the text and shows as its file.
+    const documents = splitDocumentBlocks(part.text);
+    const split = splitAttachmentNote(documents.text);
+    if (!split.paths.length && !documents.documents.length) { shown.push(part); continue; }
+    noted.push(...split.paths, ...documents.documents.map((entry) => entry.path).filter(Boolean));
     // The note's byte ranges are past the kept text, so the span list stays valid.
     if (split.text) shown.push({ ...part, text: split.text });
   }
@@ -270,7 +311,8 @@ export function userMessageContent(content = []) {
   return shown;
 }
 
-const hasNote = (content) => Array.isArray(content) && content.some((part) => part?.type === "text" && typeof part.text === "string" && splitAttachmentNote(part.text).paths.length > 0);
+const hasNote = (content) => Array.isArray(content) && content.some((part) => part?.type === "text" && typeof part.text === "string"
+  && (splitAttachmentNote(part.text).paths.length > 0 || splitDocumentBlocks(part.text).documents.length > 0));
 
 // A turn's hidden workflow reminders (<system-reminder> text the app adds for the model: the "ultracode" keyword,
 // ultracode mode) and a finished workflow's notification turn (electron/prefs/workflow-keyword.mjs) are not the
@@ -330,10 +372,15 @@ export function shownQueueList(response) {
 // message that was only files reads as their names.
 const PARTIAL_NOTE = /\n\n\[Attached file: [^\n]*$/u;
 export function shownPreview(preview) {
-  if (typeof preview !== "string" || !preview.includes(NOTE_OPEN)) return preview;
-  const split = splitAttachmentNote(preview);
-  const text = (split.paths.length ? split.text : preview.replace(PARTIAL_NOTE, "")).trim();
-  return text || split.paths.map(basename).join(", ");
+  if (typeof preview !== "string") return preview;
+  // w13-chatfn-attachments: converted Chat documents come after the note; what is left before them is the preview.
+  const documents = previewWithoutDocuments(preview);
+  if (!documents.cut && !preview.includes(NOTE_OPEN)) return preview;
+  const value = documents.text;
+  if (!value.includes(NOTE_OPEN)) return value.trim() || documents.names.join(", ");
+  const split = splitAttachmentNote(value);
+  const text = (split.paths.length ? split.text : value.replace(PARTIAL_NOTE, "")).trim();
+  return text || [...split.paths.map(basename), ...documents.names].join(", ");
 }
 export function shownThread(thread) {
   if (!thread || typeof thread.preview !== "string") return thread;
@@ -356,15 +403,19 @@ export function firstMessageName(text, entries = [], { max = 64, firstLine = fal
 // the file card in the live transcript. fileMentions (coreTakesFileMentions) is
 // false for a core that drops a file mention: the files' paths then also go as
 // an attachment-note text item, ahead of the parts, so the model sees them.
-export function attachmentInputs(entries, { fileMentions = true } = {}) {
-  const ready = entries.filter((entry) => entry.kind !== "elementContext" && entry.status === "ready" && entry.path);
+// w13-chatfn-attachments: a Chat file converted to text (entry.converted, set only in a Chat session) goes as its
+// <document> block instead of a mention or note line; `surface` other than "chat" sends it as a plain file again.
+export function attachmentInputs(entries, { fileMentions = true, surface } = {}) {
+  const all = entries.filter((entry) => entry.kind !== "elementContext" && entry.status === "ready" && entry.path);
+  const asDocument = (entry) => entry.kind === "file" && !!entry.converted && (surface === undefined || surface === "chat");
+  const documents = all.filter(asDocument).map(documentInput), ready = all.filter((entry) => !asDocument(entry));
   // An image for a model without vision on a core that reads it itself (asFile): a file mention, which the core
   // routes to its vision model.
   const parts = ready.map((entry) => (entry.kind === "image" && !entry.asFile
     ? { type: "localImage", path: entry.path }
     : { type: "mention", name: entry.name || basename(entry.path), path: entry.path }));
   const note = fileMentions ? "" : attachmentNote(ready.filter((entry) => entry.kind !== "image").map((entry) => entry.path));
-  return note ? [{ type: "text", text: note, text_elements: [] }, ...parts] : parts;
+  return [...(note ? [{ type: "text", text: note, text_elements: [] }] : []), ...documents, ...parts];
 }
 
 export function attachmentLabel(entry) {

@@ -1,164 +1,176 @@
-// Original current secret detector, mask and whole-text redaction.
-function k(e) {
-  let t,
-    n = !1;
-  return () => ((n ||= ((t = e()), !0)), t);
-}
-const xA =
-  /[\p{Cc}\p{Cf}\p{Cs}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\u2800\uFFFC\u{1D159}\u{13441}\u{13442}\u{16910}\uFDD0-\uFDEF\uFFFE\uFFFF\u{1FFFE}\u{1FFFF}\u{2FFFE}\u{2FFFF}\u{3FFFE}\u{3FFFF}\u{4FFFE}\u{4FFFF}\u{5FFFE}\u{5FFFF}\u{6FFFE}\u{6FFFF}\u{7FFFE}\u{7FFFF}\u{8FFFE}\u{8FFFF}\u{9FFFE}\u{9FFFF}\u{AFFFE}\u{AFFFF}\u{BFFFE}\u{BFFFF}\u{CFFFE}\u{CFFFF}\u{DFFFE}\u{DFFFF}\u{EFFFE}\u{EFFFF}\u{FFFFE}\u{FFFFF}\u{10FFFE}\u{10FFFF}]/u;
-const ve = xA,
-  E = k;
-var os = "(?<![A-Za-z0-9_-])";
-var ss = "\\u00A0\\u1680\\u2000-\\u200A\\u202F\\u205F\\u3000";
-var cs = `\\t\\v\\f\\r\\n\\u2028\\u2029 ${ss}`;
-var ls = `[${cs}]*`;
-var us = "-{4,5}";
-var ds = `[ \\t${ss}]*`;
-var fs = RegExp(`PRIVATE${ls}KEY(?:${ls}BLOCK)?${ds}${us}`);
-var ps = RegExp(`${us}${ds}BEGIN[A-Z0-9${cs}]*${fs.source}`);
-var ms = RegExp(`${us}${ds}END[A-Z0-9${cs}]*${fs.source}`);
-var hs = [
+// Original secret detector, mask and whole-text redaction.
+import { once as Dt } from "../r4e-findings/once.mjs";
+import { AL } from "../routines-shared/shared-0-DDOOdL6P.mjs";
+const bt = AL;
+var bc = "(?<![A-Za-z0-9_-])";
+var xc = "\\u00A0\\u1680\\u2000-\\u200A\\u202F\\u205F\\u3000";
+var Sc = `\\t\\v\\f\\r\\n\\u2028\\u2029 ${xc}`;
+var Cc = `[${Sc}]*`;
+var wc = "-{4,5}";
+var Tc = `[ \\t${xc}]*`;
+var Ec = RegExp(`PRIVATE${Cc}KEY(?:${Cc}BLOCK)?${Tc}${wc}`);
+var Dc = RegExp(`${wc}${Tc}BEGIN[A-Z0-9${Sc}]*${Ec.source}`);
+var Oc = RegExp(`${wc}${Tc}END[A-Z0-9${Sc}]*${Ec.source}`);
+var kc = "(?![A-Za-z0-9_-]*----BEGIN)";
+var Ac = `eyJ[A-Za-z0-9_-]{10,}\\.(?:${kc}[A-Za-z0-9_-]*\\.(?!-?eyJ)${kc}[A-Za-z0-9_-]{10,}\\.(?!-?eyJ)${kc}[A-Za-z0-9_-]{10,}\\.(?!-?eyJ)(?:[A-Za-z0-9_]|-(?!---)){10,64}(?:(?![A-Za-z0-9_-]*----)[A-Za-z0-9_-]*)?|eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,})`;
+var jc = [
   {
     id: "anthropic",
-    regex: RegExp(`${os}sk-ant-[A-Za-z0-9_-]{20,}`),
+    regex: RegExp(`${bc}sk-ant-[A-Za-z0-9_-]{20,}`),
     trigger: "sk-ant-",
   },
   {
     id: "openai_proj",
-    regex: RegExp(`${os}sk-proj-[A-Za-z0-9_-]{20,}`),
+    regex: RegExp(`${bc}sk-proj-[A-Za-z0-9_-]{20,}`),
     trigger: "sk-proj-",
   },
   {
     id: "openai",
-    regex: RegExp(`${os}sk-[A-Za-z0-9]{20,}`),
+    regex: RegExp(`${bc}sk-[A-Za-z0-9]{20,}`),
     trigger: "sk-[A-Za-z0-9]{20}",
   },
   {
     id: "github",
-    regex: RegExp(`${os}(?:gh[opsu]_|github_pat_)[A-Za-z0-9_]{20,}`),
+    regex: RegExp(`${bc}(?:gh[opsu]_|github_pat_)[A-Za-z0-9_]{20,}`),
     trigger: "gh[opsu]_|github_pat_",
   },
-  { id: "aws", regex: RegExp(`${os}AKIA[A-Z0-9]{16}`), trigger: "AKIA" },
+  { id: "aws", regex: RegExp(`${bc}AKIA[A-Z0-9]{16}`), trigger: "AKIA" },
   {
     id: "slack",
-    regex: RegExp(`${os}xox[abprs]-[A-Za-z0-9-]{10,}`),
+    regex: RegExp(`${bc}xox[abprs]-[A-Za-z0-9-]{10,}`),
     trigger: "xox[abprs]-",
   },
   {
     id: "google",
-    regex: RegExp(`${os}AIza[A-Za-z0-9_-]{35}`),
+    regex: RegExp(`${bc}AIza[A-Za-z0-9_-]{35}`),
     trigger: "AIza",
   },
   {
     id: "stripe",
-    regex: RegExp(`${os}(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{20,}`),
+    regex: RegExp(`${bc}(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{20,}`),
     trigger: "[sr]k_(?:live|test)_[A-Za-z0-9]{20}",
   },
   {
     id: "stripe_webhook",
-    regex: RegExp(`${os}whsec_[A-Za-z0-9]{20,}`),
+    regex: RegExp(`${bc}whsec_[A-Za-z0-9]{20,}`),
     trigger: "whsec_[A-Za-z0-9]{20}",
   },
   {
     id: "age",
-    regex: RegExp(`${os}AGE-SECRET-KEY-1[02-9AC-HJ-NP-Z]{58}`),
+    regex: RegExp(`${bc}AGE-SECRET-KEY-1[02-9AC-HJ-NP-Z]{58}`),
     trigger: "AGE-SECRET-KEY-1",
   },
   {
     id: "jwt",
-    regex: RegExp(
-      `${os}eyJ[A-Za-z0-9_-]{10,}\\.eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}`,
-    ),
-    trigger: "\\.eyJ",
+    regex: RegExp(`${bc}${Ac}`),
+    trigger: "\\.eyJ|(?:^|[^A-Za-z0-9_-])-?eyJ[A-Za-z0-9_-]{10,}\\.",
   },
   {
     id: "private_key",
     regex: RegExp(
-      `${ps.source}[A-Za-z0-9+/=$\\\\\\r\\n\\u2028\\u2029${ss}]{0,5000}?${ms.source}`,
+      `${Dc.source}[A-Za-z0-9+/=$\\\\\\r\\n\\u2028\\u2029${xc}]{0,5000}?${Oc.source}`,
     ),
-    trigger: fs.source,
+    trigger: Ec.source,
   },
 ];
-var gs = hs.map((e) => `(?:${e.regex.source})`).join("|");
-var _s = new RegExp(hs.map((e) => `(?:${e.trigger})`).join("|"));
-function vs() {
-  return new RegExp(gs, "g");
+var Mc = jc.map((e) => `(?:${e.regex.source})`).join("|");
+var Nc = jc
+  .filter(({ regex: e }) => e.source.startsWith(bc))
+  .map(({ regex: e }) => `(?:${e.source.slice(18)})`);
+var Pc = `(?<=${bc}-)(?:${Nc.join("|")})`;
+var Fc = `(?<=\\.)(?=(${Ac}))`;
+var Ic = /(?<!-)-{4,}(?=BEGIN|END|$)|PRIVATE/;
+var Lc = new RegExp(jc.map((e) => `(?:${e.trigger})`).join("|"));
+function Rc() {
+  return new RegExp(Mc, "g");
 }
-function ys(e) {
-  return hs.find((t) => t.regex.test(e));
+function* zc(e, t) {
+  for (let t of e.matchAll(Rc())) yield { index: t.index, value: t[0] };
+  for (let t of e.matchAll(new RegExp(Pc, "g"))) {
+    let e = t[0].search(/(?<!-)-{4,}(?=BEGIN|END|$)/);
+    yield { index: t.index, value: e < 0 ? t[0] : t[0].slice(0, e) };
+  }
+  if (e.includes(".eyJ"))
+    for (let n of e.matchAll(new RegExp(Fc, "g"))) {
+      let r = e.codePointAt(n.index + n[1].length),
+        i = r === void 0 ? "" : String.fromCodePoint(r);
+      (i === "" ? t : !tl.test(i) && !(Gc.test(i) && Uc(i))) &&
+        !Ic.test(n[1]) &&
+        (yield { index: n.index, value: n[1] });
+    }
 }
-var bs = 262144;
-var xs = E(
+function Bc(e) {
+  return jc.find((t) => t.regex.test(e));
+}
+var Vc = 262144;
+var Hc = Dt(
   () =>
-    new RegExp(String.raw`(?![\t\n\r])${ve.source}|[\p{M}\p{Co}\p{Cn}]`, "u"),
+    new RegExp(String.raw`(?![\t\n\r])${bt.source}|[\p{M}\p{Co}\p{Cn}]`, "u"),
 );
-var Cs = E(() => RegExp(`(?:${xs().source})+`, "gu"));
-var ws = /[^\t\n\r\x20-\x7E]/;
-var Ts = /[\u0100-\uffff]/;
-var Es = 1;
-var Ds = Array.from({ length: 4352 }, () => void 0);
-var Os = 8;
-function ks(e) {
-  let t = Ds[e];
+function Uc(e) {
+  return Hc().test(e);
+}
+var Wc = Dt(() => RegExp(`(?:${Hc().source})+`, "gu"));
+var Gc = /[^\t\n\r\x20-\x7E]/;
+var Kc = /[\u0100-\uffff]/;
+var qc = 1;
+var Jc = Array.from({ length: 4352 }, () => void 0);
+var Yc = 8;
+function Xc(e) {
+  let t = Jc[e];
   if (t === void 0) {
     t = new Uint8Array(256);
     let n = [];
     for (let t = 0; t < 256; t++) n.push((e << 8) | t);
     let r = e > 255 ? 2 : 1,
-      { source: i, flags: a } = xs(),
+      { source: i, flags: a } = Hc(),
       o = new RegExp(i, a.includes("g") ? a : `g${a}`);
     for (let e of String.fromCodePoint(...n).matchAll(o))
-      t[e.index >> (r - 1)] = Es;
-    Ds[e] = t;
+      t[e.index >> (r - 1)] = qc;
+    Jc[e] = t;
   }
   return t;
 }
-function As(e) {
-  let t = ws.exec(e);
+function Zc(e) {
+  let t = Gc.exec(e);
   if (t === null) return !1;
-  if (!Ts.test(e)) return xs().test(e);
+  if (!Kc.test(e)) return Hc().test(e);
   let n = 0;
   for (let r = t.index; r < e.length; r++) {
     let t = e.codePointAt(r) ?? 0,
-      i = Ds[t >> 8];
+      i = Jc[t >> 8];
     if (i === void 0) {
-      if (n === Os) return xs().test(e.slice(r));
-      ((n += 1), (i = ks(t >> 8)));
+      if (n === Yc) return Hc().test(e.slice(r));
+      ((n += 1), (i = Xc(t >> 8)));
     }
-    if (i[t & 255] === Es) return !0;
+    if (i[t & 255] === qc) return !0;
     t > 65535 && r++;
   }
   return !1;
 }
-var js = RegExp(
-  `^(?:${hs
-    .filter(({ regex: e }) => e.source.startsWith(os))
-    .map(({ regex: e }) => `(?:${e.source.slice(18)})`)
-    .concat(ps.source)
-    .join("|")})`,
-);
-var Ms = 512;
-var Ns = /^eyJ[A-Za-z0-9_-]{10,}(?:\.[A-Za-z0-9_-]*){0,2}$/;
-var Ps = /[A-Za-z0-9_-]/;
-var Fs = /(?:[A-Za-z0-9_]|(?<=[A-Za-z0-9_])-(?=[A-Za-z0-9_]))*/y;
-var Is = "\0";
-function Ls(e, t) {
+var Qc = RegExp(`^(?:${Nc.concat(Dc.source).join("|")})`);
+var $c = 512;
+var el = /^eyJ[A-Za-z0-9_-]{10,}(?:\.[A-Za-z0-9_-]*){0,2}$/;
+var tl = /[A-Za-z0-9_-]/;
+var nl = /(?:[A-Za-z0-9_]|(?<=[A-Za-z0-9_])-(?=[A-Za-z0-9_]))*/y;
+var rl = "\0";
+function il(e, t) {
   let n = 0,
     r = [],
     i = [],
     a = 0,
     o = 0;
   return {
-    shadow: e.replace(Cs(), (s, c) => {
+    shadow: e.replace(Wc(), (s, c) => {
       let l = c - n;
       n += s.length;
       let u =
-          t !== void 0 && c > 0 && Ps.test(e[c - 1])
-            ? t.slice(l, l + Ms)
+          t !== void 0 && c > 0 && tl.test(e[c - 1])
+            ? t.slice(l, l + $c)
             : void 0,
         d =
-          u !== void 0 && (js.test(u) || (u.length === Ms && Ns.test(u)))
-            ? Is
+          u !== void 0 && (Qc.test(u) || (u.length === $c && el.test(u)))
+            ? rl
             : "";
       return (
         (o += d.length),
@@ -180,51 +192,54 @@ function Ls(e, t) {
     },
   };
 }
-function Rs(e) {
+function al(e) {
+  return ol(e, !0);
+}
+function ol(e, t) {
   if (e.length > 262144) return [];
-  let t = [],
-    n = (e, n, r) => {
-      t.push({ start: e, end: n, patternId: ys(r)?.id ?? "unknown" });
+  let n = [],
+    r = (e, t, r) => {
+      n.push({ start: e, end: t, patternId: Bc(r)?.id ?? "unknown" });
     };
-  if (_s.test(e))
-    for (let t of e.matchAll(vs())) n(t.index, t.index + t[0].length, t[0]);
-  if (As(e)) {
-    let t = (t) => {
-      let { shadow: r, edges: i, toRaw: a } = Ls(e, t);
-      if ((t === void 0 || i !== 0) && _s.test(r))
-        for (let e of r.matchAll(vs()))
-          n(a(e.index), a(e.index + e[0].length - 1) + 1, e[0]);
-      return r;
+  if (Lc.test(e))
+    for (let n of zc(e, t)) r(n.index, n.index + n.value.length, n.value);
+  if (Zc(e)) {
+    let n = (n) => {
+      let { shadow: i, edges: a, toRaw: o } = il(e, n);
+      if ((n === void 0 || a !== 0) && Lc.test(i))
+        for (let e of zc(i, t))
+          r(o(e.index), o(e.index + e.value.length - 1) + 1, e.value);
+      return i;
     };
-    t(t());
+    n(n());
   }
-  t.sort((e, t) => e.start - t.start);
-  let r = [];
-  for (let e of t) {
-    let t = r[r.length - 1];
+  n.sort((e, t) => e.start - t.start);
+  let i = [];
+  for (let e of n) {
+    let t = i[i.length - 1];
     t !== void 0 && e.start < t.end
       ? (t.end = Math.max(t.end, e.end))
-      : r.push({ ...e });
+      : i.push({ ...e });
   }
-  for (let [t, n] of r.entries()) {
+  for (let [t, n] of i.entries()) {
     if (n.patternId === "private_key") continue;
-    Fs.lastIndex = n.end;
-    let i = Fs.exec(e)?.[0].length ?? 0;
-    n.end = Math.min(n.end + i, r[t + 1]?.start ?? e.length);
+    nl.lastIndex = n.end;
+    let r = nl.exec(e)?.[0].length ?? 0;
+    n.end = Math.min(n.end + r, i[t + 1]?.start ?? e.length);
   }
-  return r.map(({ start: t, end: n, patternId: r }) => ({
+  return i.map(({ start: t, end: n, patternId: r }) => ({
     start: t,
     end: n,
     value: e.slice(t, n),
     patternId: r,
   }));
 }
-var zs = 8;
-var Bs = "-----BEGIN";
-var Vs = "-----END";
-var Hs = /^[^-]*(?:-[^A-Za-z0-9]*)?$/;
-function Us(e) {
-  let t = xs(),
+var sl = 8;
+var cl = "-----BEGIN";
+var ll = "-----END";
+var ul = /^[^-]*(?:-[^A-Za-z0-9]*)?$/;
+function dl(e) {
+  let t = Hc(),
     n = 0;
   for (let r = 10; r < e.length; ) {
     let i = String.fromCodePoint(e.codePointAt(r) ?? 0);
@@ -238,67 +253,73 @@ function Us(e) {
   }
   return -1;
 }
-function Ws(e) {
-  if (e.startsWith(Bs)) {
-    let t = e.lastIndexOf(Vs),
-      n = t >= 0 && Hs.test(e.slice(t + 8)) ? t : e.length,
-      r = Us(e),
+function fl(e) {
+  if (e.startsWith(cl)) {
+    let t = e.lastIndexOf(ll),
+      n = t >= 0 && ul.test(e.slice(t + 8)) ? t : e.length,
+      r = dl(e),
       i = r >= 0 && r <= n ? r : 10;
     return (
-      Js(e.slice(0, i)) +
+      yl(e.slice(0, i)) +
       e.slice(i, n).replace(/[^\n]/g, "\u2022") +
-      Js(e.slice(n))
+      yl(e.slice(n))
     );
   }
-  if (!xs().test(e))
+  if (!Hc().test(e))
     return e.length <= 12
       ? "\u2022".repeat(e.length)
-      : e.slice(0, zs) + "\u2022".repeat(e.length - zs);
-  let t = xs(),
+      : e.slice(0, sl) + "\u2022".repeat(e.length - sl);
+  let t = Hc(),
     n = 0,
     r = 0;
   for (let i = 0; i < e.length; ) {
     let a = String.fromCodePoint(e.codePointAt(i) ?? 0);
-    ((i += a.length), t.test(a) || ((n += 1), n === zs && (r = i)));
+    ((i += a.length), t.test(a) || ((n += 1), n === sl && (r = i)));
   }
   return n <= 12
     ? "\u2022".repeat(e.length)
     : e.slice(0, r) + "\u2022".repeat(e.length - r);
 }
-function Ks(e) {
-  let t = Rs(e);
-  return t.length > 0 ? qs(e, t) : e;
+function ml(e) {
+  let t = al(e);
+  return t.length > 0 ? hl(e, t) : e;
 }
-function qs(e, t) {
+function hl(e, t) {
+  return gl(e, t, fl);
+}
+function gl(e, t, n) {
   if (t.length === 0) return e;
-  let n = "",
-    r = 0;
-  for (let i of t) ((n += e.slice(r, i.start) + Ws(i.value)), (r = i.end));
-  return n + e.slice(r);
+  let r = "",
+    i = 0;
+  for (let a of t) ((r += e.slice(i, a.start) + n(a.value)), (i = a.end));
+  return r + e.slice(i);
 }
-function Js(e) {
-  if (e.length <= 262144) return Ks(e);
-  let t = [];
-  for (let n = 0; n < e.length; n += 253952)
-    for (let r of Rs(e.slice(n, n + bs)))
-      t.push({
+function vl(e, t) {
+  if (e.length <= 262144) return gl(e, al(e), t);
+  let n = [];
+  for (let t = 0; t < e.length; t += 253952)
+    for (let r of ol(e.slice(t, t + Vc), t + Vc >= e.length))
+      n.push({
         patternId: r.patternId,
         value: r.value,
-        start: n + r.start,
-        end: n + r.end,
+        start: t + r.start,
+        end: t + r.end,
       });
-  t.sort((e, t) => e.start - t.start || e.end - t.end);
-  let n = [];
-  for (let r of t) {
-    let t = n[n.length - 1];
-    t !== void 0 && r.start <= t.end
-      ? r.end > t.end && ((t.end = r.end), (t.value = e.slice(t.start, t.end)))
-      : n.push(r);
+  n.sort((e, t) => e.start - t.start || e.end - t.end);
+  let r = [];
+  for (let t of n) {
+    let n = r[r.length - 1];
+    n !== void 0 && t.start <= n.end
+      ? t.end > n.end && ((n.end = t.end), (n.value = e.slice(n.start, n.end)))
+      : r.push(t);
   }
-  return qs(e, n);
+  return gl(e, r, t);
+}
+function yl(e) {
+  return vl(e, fl);
 }
 export {
-  Rs as detectSideChatSecrets,
-  Ws as maskSideChatSecret,
-  Ks as maskSideChatSecrets,
+  al as detectSideChatSecrets,
+  fl as maskSideChatSecret,
+  ml as maskSideChatSecrets,
 };

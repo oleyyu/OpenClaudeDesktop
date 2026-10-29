@@ -47,3 +47,24 @@ test('scoped preview retains legacy encoding and never makes that content UTF-8 
     assert.deepEqual(await fs.readFile(path.join(root, 'utf16.txt')), bytes);
   } finally { await fs.rm(root, { recursive: true, force: true }); }
 });
+
+// cc-rest-files: 3.6556.2 moved the binary-text check (2.42304.0 cd2efac6e Uc) to c650084fd T; the decoder (cd2efac6e
+// cd/dd/pd/md/gd/_d) and the renderer's needsPlainTextView share that one electron/generated copy.
+test('3.6556.2: the decoder and its binary-text check come from cd2efac6e and c650084fd', async () => {
+  const app = path.resolve(import.meta.dirname, '..');
+  const manifest = JSON.parse(await fs.readFile(path.join(app, 'src/generated/code-current/manifest.json'), 'utf8'));
+  const entry = target => manifest.modules.find(module => module.target === target);
+  assert.deepEqual([entry('../../../electron/generated/file-text-binary.mjs').referenceVersion, path.basename(entry('../../../electron/generated/file-text-binary.mjs').source), entry('../../../electron/generated/file-text-binary.mjs').bindings], ['3.6556.2', 'c650084fd-BlejO2XR.js', ['T']]);
+  assert.deepEqual([entry('../../../electron/generated/file-text-decoder.mjs').referenceVersion, path.basename(entry('../../../electron/generated/file-text-decoder.mjs').source), entry('../../../electron/generated/file-text-decoder.mjs').bindings], ['3.6556.2', 'cd2efac6e-Be7wcc4w.js', ['cd', 'dd', 'pd', 'md', 'gd', '_d']]);
+  assert.deepEqual([entry('file-text-decoding.mjs').referenceVersion, entry('file-text-decoding.mjs').bindings], ['3.6556.2', ['vd', 'yd', 'Ed']]);
+  const decoder = await fs.readFile(path.join(app, 'electron/generated/file-text-decoder.mjs'), 'utf8');
+  assert.match(decoder, /^\/\/ Original Claude Desktop 3\.6556\.2 bindings/);
+  assert.match(decoder, /import \{ looksBinaryText as ha \} from "\.\/file-text-binary\.mjs";/);
+  const decoding = await fs.readFile(path.join(app, 'src/generated/code-current/file-text-decoding.mjs'), 'utf8');
+  assert.match(decoding, /import \{ looksBinaryText as ha \} from "\.\.\/\.\.\/\.\.\/electron\/generated\/file-text-binary\.mjs";/);
+  const { looksBinaryText } = await import('../electron/generated/file-text-binary.mjs');
+  assert.equal(looksBinaryText(''), false);
+  assert.equal(looksBinaryText('a\0b'), true);
+  assert.equal(looksBinaryText('�' + 'a'.repeat(40)), true);
+  assert.equal(looksBinaryText('�' + 'a'.repeat(60)), false);
+});

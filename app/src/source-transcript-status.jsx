@@ -6,8 +6,9 @@ import { createThinkingReader, elapsedTurnSeconds, subscribeThinkingClock, subsc
 import { turnWaiting, workingLineProps, workingLineThinking } from "./working-line-model.mjs";
 import { SourceWorkingLine } from "./source-working-line.jsx";
 import { TranscriptTail } from "./source-transcript-rows.jsx";
-// cb6930dae Ja (c96d752d0 `ev`): whether a running tool row holds the turn's mark (the transcript's TurnMarkBroker).
-import { Ja as useTurnMarkHeld } from "./generated/working-line/morph.mjs";
+// 3.6556.2 cb6930dae So (2.42304.0 Ja; c96d752d0 `ev`): whether a running tool row holds the turn's mark (the transcript's
+// TurnMarkBroker), under its working-line semantic name.
+import { useTurnMarkHeld } from "./generated/working-line/morph.mjs";
 
 // The static path now lives in source-spark.jsx; re-exported for existing imports.
 export const TRANSCRIPT_SPARK_PATH = SPARK_PATH;

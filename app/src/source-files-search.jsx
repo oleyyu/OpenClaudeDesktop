@@ -15,6 +15,11 @@ import {contentResults,contentPreview} from './file-content-results.mjs';
 import {DEFAULT_SEARCH_OPTIONS} from './file-find-model.mjs';
 import { Icon } from "./icons";
 import { fileKindIcon } from "./file-kind-icon.mjs";
+import { CdsIcon } from "./generated/view-tabs/index.js";
+import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
+import { LitText } from "./generated/files-changes/path-segments.mjs";
+import { fileTreeRowClassName, fileTreeRowPrimary, fileTreeIconClassName, fileTreeIconSize } from "./file-tree-row-model.mjs";
+import { treeIndent } from "./generated/code-current/file-tree-style.mjs";
 import { createFileSearchController, emptySearchState, isPlainSearchKey,
   pathSegments, resultNavigation, searchLimitMessage } from "./files-search-model.mjs";
 import "./source-files-search.css";
@@ -339,7 +344,11 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
       {shownMatches.map((entry, index) => {
         const slash = entry.path.lastIndexOf("/"), parent = slash >= 0 ? entry.path.slice(0, slash) : "";
         const hasNameMatches = entry.positions.some(position => position > slash);
-        return <React.Fragment key={entry.key??entry.path}><div className="sfs-result-row" role="treeitem" aria-level={entry.line?2:1}
+        // cccc2cf0a _T renders a filename result as RT (the tree's row, depth 0, showPath): the row is
+        // `R(de(), dw, W ? nl : ie ? fw : ol)` at el(0), the button pw. Content results (zT) keep the sfs rows.
+        const treeRow = !content, rowCurrent = activePath === entry.path, rowSelected = !content && selected.has(entry.path);
+        return <React.Fragment key={entry.key??entry.path}><div className={treeRow ? fileTreeRowClassName({ current: rowCurrent, selected: rowSelected }) : "sfs-result-row"}
+          style={treeRow ? treeIndent(0) : undefined} data-pressed={treeRow && menu?.entry===entry ? "" : undefined} role="treeitem" aria-level={entry.line?2:1}
           data-content-match={entry.line||undefined}
           draggable={!entry.line&&!!fileMenu?.drag}
           onDragStart={event=>{
@@ -352,13 +361,22 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
           aria-selected={content?undefined:selected.has(entry.path)} aria-current={(!content||entry.header)&&activePath === entry.path || undefined}
           data-tree-row="" data-row-index={index} tabIndex={-1}
           onFocus={() => { focused.current = { path: entry.key??entry.path, index }; }}>
-          <button type="button" tabIndex={-1} data-tree-primary="" aria-label={entry.line?`${entry.path}:${entry.line}`:entry.path}
+          <button type="button" tabIndex={-1} data-tree-primary="" className={treeRow ? fileTreeRowPrimary : undefined} aria-label={entry.line?`${entry.path}:${entry.line}`:entry.path}
             onClick={event => activate(index, event, event.detail!==1)} onDoubleClick={event => activate(index, event, true)}
             onMouseDown={event=>{if(event.button===1&&!entry.directory)event.preventDefault();}}
             onAuxClick={event=>{if(event.button===1&&!entry.directory){event.preventDefault();activate(index,event,true);}}}>
-            {/* shared-14 cP file-kind glyph (panes-tile-current.js:5692 zr(name)); B33 My: a folder row (no
-                onToggle in a result list) shows the Folder glyph. */}
-            {entry.line?<ContentSnippet entry={entry}/>:<><Icon name={entry.directory?"Folder":fileKindIcon(entry.name)} size={12} />
+            {/* RT: a folder (no onToggle in a result list, so not a caret) is the Folder glyph, a file c280f9bbb ul
+                (FileTypeIcon), both $c() sized, `shrink-0 self-center text-muted-control`; the name
+                `truncate text-secondary|text-primary` (data-has-matches) and the folder `truncate text-footnote
+                text-muted-as-secondary`, their lit runs c784da984 l (Af). */}
+            {entry.line?<ContentSnippet entry={entry}/>:treeRow?<>{entry.directory
+              ? <CdsIcon name="Folder" size={fileTreeIconSize()} className={fileTreeIconClassName({ openable: true })} />
+              : <FileTypeIcon fileName={entry.name} size={fileTreeIconSize()} className={fileTreeIconClassName({ openable: true })} />}
+            <span data-has-matches={hasNameMatches || undefined} className={hasNameMatches ? "truncate text-secondary" : "truncate text-primary"}>
+              {entry.positions ? <LitText text={entry.name} positions={entry.positions} offset={slash + 1} /> : entry.name}
+            </span>
+            {parent && <span className="truncate text-footnote text-muted-as-secondary">{entry.positions ? <LitText text={parent} positions={entry.positions} offset={0} /> : parent}</span>}</>
+            :<><Icon name={entry.directory?"Folder":fileKindIcon(entry.name)} size={12} />
             <span className="sfs-result-name" data-has-matches={hasNameMatches || undefined}>
               <LitPath text={entry.name} positions={entry.positions} offset={slash + 1} />
             </span>

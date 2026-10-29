@@ -20,7 +20,9 @@ import { visibleApprovals, isPlanReviewRequest } from './approval-draft-model.mj
 import { approvalItem, planHandoff } from './approval-card-model.mjs';
 import { CardComposerContext } from './use-card-hotkeys.js';
 import { t, tn, getLocale } from '../electron/i18n/index.mjs';
-import { useBtwFocusIntent, rememberBtwFocus } from './generated/code-current/btw-focus-intent.mjs';
+import { useBtwFocusIntent, focusBtwComposer, armBtwSessionComposer, focusBtwSessionComposer } from './generated/code-current/btw-focus-intent.mjs';
+import { paneFocusTarget } from './generated/code-current/pane-focus-target.mjs';
+import { registerBtwComposer } from './btw-composer-registry.mjs';
 import { paneOwnsFocus } from './generated/code-current/pane-focus-owner.mjs';
 import { SourceTurnError } from './source-turn-error.jsx';
 import { SourceTranscriptStatus } from './source-transcript-status.jsx';
@@ -30,12 +32,14 @@ import { btwSessionNotice, btwNoticeDismissals, sendFailureToasts } from './btw-
 import { SourceApprovalSlot } from './source-approval-card.jsx';
 import { ApprovalCardWatch } from './generated/approval-landing/card-landing.mjs';
 // cccc2cf0a Qn = shared-frame Ii: the CDS ContextMenu whose Popup the ViewTabBar tab menu is (cfe7c4b3b ge `C.Popup`).
-import { CdsContextMenu, CdsRoot } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+// R6/E2: hand-written code reads view-tabs through its version-free facade.
+import { CdsContextMenu, CdsRoot } from './generated/view-tabs/index.js';
 import { codePaneExperimental } from './generated/code-composer/code-pane-experimental.mjs';
 import './source-btw-pane.css';
-// R4g-btw BT4 (X7-16): c96d752d0 Kj (the watch over the card slot, ccf527892 useFocusHandBack) and the approval
-// area's slot (qj with its next-card landing and the Gj window guard) are the shared originals now: the generated
-// ApprovalCardWatch and source-approval-card.jsx's SourceApprovalSlot, which the main session's area mounts too.
+// R4g-btw BT4 (X7-16): the watch over the card slot (3.6556.2 c9ed5627b it over shared-1 useFocusHandBack mC;
+// 2.42304.0 c96d752d0 Kj / ccf527892 o) and the approval area's slot (c9ed5627b A with its next-card landing and the k
+// window guard; 2.42304.0 qj / Gj) are the shared originals: the generated ApprovalCardWatch and
+// source-approval-card.jsx's SourceApprovalSlot, which the main session's area mounts too.
 export const SourceBtwCardWatch = ApprovalCardWatch;
 export const SourceBtwApprovalSlot = SourceApprovalSlot;
 
@@ -51,21 +55,32 @@ export function SourceBtwTabMenuItems({ id, pinned, detachable, detaching, onUnp
   </>;
 }
 
-// cccc2cf0a FT passes no onReorder/onCreate: the side-chat strip is ordered
-// by creation time even though the shared component also supports reordering.
+// cccc2cf0a qP passes no onReorder: the side-chat strip is ordered by creation time even though the shared component
+// also supports reordering. It does pass `onCreate:P,createBusy:F` (c73f45bc3 Op / vp, use-btw-pane createTab / opening):
+// the strip's "New side chat" button, "Starting side chat…" while the start is in flight.
 // 2.42304.0 RO adds renderTabMenuItems N (LO when the tab is pinned (m) or detachable (p = Sa(sessions, id)); `menu` is
 // btw-tab-menu-model's per-tab state) and IO: when the active tab's lineageDetached turns from false to true after a
 // Detach from this menu (`j.delete(t)`) and its draft is empty (`!Gh(t)`), the pane yields (A: the next, then previous
 // tab, else it closes) through onYield. activeDetached is undefined while the active session's record is unknown.
 export function SourceBtwTabs({ tabs, activeId, state, pending, onSelect, onClose, onReselect, density, direction,
-  menu = null, onUnpin, onDetach, activeDetached, onYield }) {
+  menu = null, onUnpin, onDetach, activeDetached, onYield, closing = NO_CLOSING, onCreate, createBusy = false }) {
   const fallback=t('Side chat'),locale=getLocale();
-  const views=useMemo(()=>tabs.map((tab,index)=>({id:tab.id,
-    label:tab.name && tab.name!==fallback ? tab.name.startsWith('btw: ') ? tab.name.slice(5) : tab.name : tabs.length===1 ? fallback : t('Side chat {n}',{n:index+1}),
-    closable:!state.active[tab.id]&&!pending[tab.id],status:state.active[tab.id]?t('Working'):undefined})),[tabs,state.active,pending,fallback]);
-  const labels=useMemo(()=>({moreTabs:t('More side chats'),closeTab:t('Close side chat'),
+  // 3.6556.2 qP: an untitled tab is "Side chat" when it is the parent's first /btw child (HP's ordinal, y[t] === 1), else
+  // "Side chat {n}" with that ordinal (btw-pane-controller btwPaneTabs gives each tab its HP ordinal; 2.42304.0 RO used the
+  // strip position, "Side chat" only for a lone tab).
+  const views=useMemo(()=>tabs.map((tab,index)=>{const ordinal=tab.ordinal??index+1;return {id:tab.id,
+    label:tab.name && tab.name!==fallback ? tab.name.startsWith('btw: ') ? tab.name.slice(5) : tab.name : ordinal===1 ? fallback : t('Side chat {n}',{n:ordinal}),
+    // qP: `closable:!(I.has(e)||L.has(e)),status:x[t]?L.has(e)?"Stopping…":Wt.working:void 0`. A working tab stays
+    // closable (closing stops it first, SourceBtwPane closeTab); L = c73f45bc3 uf is `closing`, the tabs being stopped and
+    // closed. I (open in another window) is left to main's closeBtwTab / the controller's isOpenElsewhere. Host
+    // difference: a tab protected by tabPending (a send, queue or Plan decision in flight) stays unclosable.
+    closable:!closing.has(tab.id)&&!pending[tab.id],
+    status:state.active[tab.id]?closing.has(tab.id)?t('Stopping…'):t('Working'):undefined};}),[tabs,state.active,pending,fallback,closing]);
+  // qP G: `{...j,newTab:B,newTabBusy:V,moreTabs:H,closeTab:U,closeTabDeleteHint:ee}` (42YfXqKAm8, y9B3O29aGR, Qifwwi0/7E,
+  // fyPrl4HbZ6, iCxvGkWlgx; CI-08 restored: a working side chat is stopped first, SourceBtwPane closeTab).
+  const labels=useMemo(()=>({newTab:t('New side chat'),newTabBusy:t('Starting side chat…'),moreTabs:t('More side chats'),closeTab:t('Close side chat'),
     closeTabHint:t('press right arrow to close'),closeTabHintRtl:t('press left arrow to close'),
-    closeTabDeleteHint:t('Press Delete or Backspace to close the side chat')}),[locale]);
+    closeTabDeleteHint:t('Press Delete or Backspace to close the side chat. A working side chat is stopped first.')}),[locale]);
   const [detaching]=useState(()=>new Set());
   const renderTabMenuItems=useMemo(()=>id=>{
     const entry=menu?.get(id);
@@ -81,18 +96,95 @@ export function SourceBtwTabs({ tabs, activeId, state, pending, onSelect, onClos
     if(prior.id!==activeId||prior.detached!==false||activeDetached!==true)return;
     if(detaching.delete(activeId)&&!btwDrafts.get(activeId).trim())yieldTo.current?.(activeId,prior.tabs);
   },[activeId,activeDetached,tabs]);
+  // 3.6556.2 cccc2cf0a UP(n, ne): `let n=Pa(e);return Fa(()=>{let r=n;n=Pa(e),n&&!r&&t()})` (Pa = shared-8 Kd, the
+  // archive set): when the active child turns archived the pane yields (ne: Y over the strip, the next then previous tab
+  // that is not archived, else the side pane closes). Host: the active tab stays in the strip once archived
+  // (btwPaneTabs), with `archived: true` from its session record, so an archive from anywhere else (the sidebar, another
+  // window) yields here; the pane's own close already moves on before it archives (main closeBtwTab). w11-sweep-ccres.
+  const activeArchived=tabs.some(tab=>tab.id===activeId&&tab.archived===true);
+  const archivedSeen=useRef({id:activeId,archived:activeArchived,tabs});
+  useEffect(()=>{
+    const prior=archivedSeen.current;archivedSeen.current={id:activeId,archived:activeArchived,tabs};
+    if(prior.id===activeId&&prior.archived===false&&activeArchived)yieldTo.current?.(activeId,prior.tabs);
+  },[activeId,activeArchived,tabs]);
   return <div className="relative flex items-center flex-1 min-w-0 gap-1">
     <div className="draggable absolute inset-0 -z-[1]" aria-hidden="true"/>
     <SourceViewTabBar className="min-w-0 flex-1" aria-label={t('Side chat tabs')} density={density} direction={direction}
-      tabs={views} activeId={activeId} onActivate={onSelect} onReselect={onReselect} onClose={onClose}
-      renderTabMenuItems={renderTabMenuItems} minTabWidth={92} labels={labels}/>
+      tabs={views} activeId={activeId} onActivate={onSelect} onReselect={onReselect} onClose={onClose} overflowArrowCloses={false}
+      onCreate={onCreate} createBusy={createBusy} renderTabMenuItems={renderTabMenuItems} minTabWidth={92} maxLabelWidth={320} labels={labels}/>
   </div>;
 }
 
+const NO_CLOSING = new Set();
+// c73f45bc3 bh = Tf → wf: `pf=1e4` (stop deadline), `hf=5` close attempts, each waiting `mf=1e3` for the archive (Cf over
+// shared-8 Kd = Pg, the optimistic archive set).
+const STOP_DEADLINE_MS = 10000, CLOSE_ATTEMPTS = 5, CLOSE_WAIT_MS = 1000;
+const closeFailures = {
+  not_stopped: () => t('Couldn’t stop the side chat. Try closing it again.'),
+  pinned: () => t('This side chat is pinned. Unpin it before closing its tab.'),
+  not_closed: () => t('Stopped the side chat, but couldn’t close its tab. It stays open while something still needs it, such as an open pull request.'),
+};
+
 export function SourceBtwPane(props) {
   const { sessionId, meta, tabs, state, pending = {}, tabPending = pending, stopping = {}, density, onStop, onSelect, onCloseTab,
-    tabMenu = null, onUnpinTab, onDetachTab, onYieldTab, headerCenter, controls, onError } = props;
+    tabMenu = null, onUnpinTab, onDetachTab, onYieldTab, onCreateTab, createBusy = false, headerCenter, controls, onError } = props;
   const root = useRef(null), input = useRef(null), running = !!state.active[sessionId];
+  // 3.6556.2 cccc2cf0a qP oe (onClose) with c73f45bc3 bh (Tf/wf). `closing` is uf (L), `live` the store reads wf's check
+  // makes, `waiters` Cf's subscriptions (run after each render, as the session store's subscribers run on each update).
+  const [closing, setClosing] = useState(NO_CLOSING);
+  const live = useRef(null); live.current = { state, tabs, menu: tabMenu, onCloseTab, onStop, onError };
+  const waiters = useRef(new Set()), mounted = useRef(true);
+  useEffect(() => { for (const check of [...waiters.current]) check(); });
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; for (const check of [...waiters.current]) check(); }; }, []);
+  const waitFor = (test, ms) => new Promise(resolve => {
+    let timer;
+    const done = value => { clearTimeout(timer); waiters.current.delete(check); resolve(value); };
+    const check = () => { if (!mounted.current || test()) done(true); };
+    timer = setTimeout(() => done(false), ms); waiters.current.add(check); check();
+  });
+  const mark = (id, on) => { if (mounted.current) setClosing(value => { const next = new Set(value); if (on) next.add(id); else next.delete(id); return next; }); };
+  // wf: `X.stop(e)` within pf (a failure is "not_stopped"), then up to hf times `closeBtwChild(e)` and Cf's wait for the
+  // archive; still open after that is "not_closed". Its check (`n` once seen idle; the record still a live /btw child of
+  // this parent, not shown elsewhere, not running again) gates every step and each failure toast. Host: X.stop is the
+  // pane's onStop (interrupt), and the close is main's closeBtwTab once the turn has ended (it refuses a working tab and
+  // moves the pane off the tab before the controller's closeChild); the archive is the tab leaving the strip. The run is
+  // the mounted pane's: switching to another parent remounts the pane and ends it (uf is module state in 3.6556.2).
+  async function stopThenClose(id, focus) {
+    let idle = false;
+    const check = () => {
+      const { state, tabs } = live.current, working = !!state.active[id], tab = tabs.find(entry => entry.id === id);
+      if (!working) idle = true;
+      return mounted.current && !!tab && tab.archived !== true && !(idle && working);
+    };
+    const fail = reason => { if (check()) live.current.onError?.(closeFailures[reason]()); };
+    mark(id, true);
+    try {
+      let timer;
+      try {
+        await Promise.race([Promise.resolve().then(() => live.current.onStop?.(id)),
+          new Promise((_resolve, reject) => { timer = setTimeout(() => reject(new Error('btw child stop timed out')), STOP_DEADLINE_MS); })]);
+      } catch { fail('not_stopped'); return; } finally { clearTimeout(timer); }
+      for (let attempt = 0; attempt < CLOSE_ATTEMPTS; attempt++) {
+        if (!check()) return;
+        // The interrupt has returned; the turn ends with its notification, and the close follows it at once.
+        if (live.current.state.active[id] && !(await waitFor(() => !live.current.state.active[id], CLOSE_WAIT_MS) && check())) continue;
+        live.current.onCloseTab(id, focus);
+        if (await waitFor(() => !live.current.tabs.some(entry => entry.id === id && entry.archived !== true), CLOSE_WAIT_MS)) return;
+      }
+      fail('not_closed');
+    } finally { mark(id, false); }
+  }
+  // oe: a draft (Mu) the host has none of; open elsewhere (Th) and an archived or no longer own child (BP) are main's
+  // closeBtwTab (it moves the pane off the tab); a close already in flight (Lh, lf) is `closing` here and the controller's
+  // closings; pinned (starredIds) is the "pinned" toast; working is bh; else Fh, main's closeBtwTab.
+  const closeTab = id => {
+    const tab = tabs.find(entry => entry.id === id);
+    if (closing.has(id)) return;
+    if (tab && tab.archived !== true && tabMenu?.get(id)?.pinned === true) { onError?.(closeFailures.pinned()); return; }
+    const focus = paneOwnsFocus(root.current);
+    if (state.active[id]) { void stopThenClose(id, focus); return; }
+    onCloseTab(id, focus);
+  };
   return <aside ref={root} className="source-file-panel detail-panel btw-pane" data-side-session-pane={sessionId} aria-label={t('Side chat')}
     onKeyDown={event => {
       if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing || event.nativeEvent?.isComposing || event.keyCode === 229 || event.target.closest?.('[role="menu"],[role="dialog"]')) return;
@@ -101,7 +193,12 @@ export function SourceBtwPane(props) {
     }}>
     <header className="source-pane-header" data-pane-header="session">
       <SourceBtwTabs density={density} tabs={tabs} activeId={sessionId} state={state} pending={tabPending} onSelect={onSelect}
-        onClose={id => onCloseTab(id, paneOwnsFocus(root.current))} onReselect={() => input.current?.focus()}
+        onClose={closeTab} closing={closing} onCreate={onCreateTab} createBusy={createBusy}
+        // 3.6556.2 cccc2cf0a qP J: `let t=N.current?.closest("[data-pane-root]");t&&(cu(e),P_(t)?.focus())`. cu = c03935b01 Yr
+        // (`Rr.get(e)?.composerRef.current?.ignoreStrayEnter()`, the registry SourceBtwContent fills) arms the reselected
+        // child's composer against the activating Enter; P_ = c9bc99274 b picks the pane's focus target (its
+        // [data-tile-focus-target], else its first focusable text field). No pane root: nothing is focused.
+        onReselect={id => { const pane = root.current?.closest?.('[data-pane-root]'); if (pane) { armBtwSessionComposer(id); paneFocusTarget(pane)?.focus(); } }}
         menu={tabMenu} onUnpin={onUnpinTab} onDetach={onDetachTab} activeDetached={meta ? meta.lineageDetached === true : undefined}
         onYield={(id, order) => onYieldTab?.(id, paneOwnsFocus(root.current), order)}/>{headerCenter}{controls}
     </header>
@@ -119,6 +216,9 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
   const draft = useSyncExternalStore(btwDrafts.subscribe, () => btwDrafts.get(sessionId), () => '');
   draftRef.current = !!draft.trim();
   const composer = useMemo(() => ({ composerRef: input, draftRef }), []);
+  // c03935b01 ni: while this child's composer is shown it is the session's entry in the composer registry Rr
+  // (btw-composer-registry.mjs), which Xr / Yr read; cleanup removes the entry only while it is still this mount's.
+  useEffect(() => registerBtwComposer(sessionId, input), [sessionId, input]);
   const running = !!state.active[sessionId], [read, setRead] = useState({ id: null, pending: false, error: null }), [retry, setRetry] = useState(0);
   const reading = read.id !== sessionId || read.pending, readError = read.id === sessionId ? read.error : null;
   // R4i-mcp MC1: an MCP App call is its own row in the side chat too (c96d752d0 KBe mcp_app, UV stands-alone).
@@ -139,8 +239,10 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
     load.current(sessionId).then(() => { if (live) setRead({ id: sessionId, pending: false, error: null }); }, error => { if (live) setRead({ id: sessionId, pending: false, error }); });
     return () => { live = false; };
   }, [sessionId, connected, state.approvalConnectionId, state.approvalConnectionEpoch, retry]);
-  // jT `B = Jh(e); T(() => { B && m.current?.scheduleFocus(); }, [B])`: the consumed focus intent focuses the composer
-  // with its caret at the end (c227f4d5e OP scheduleFocus, on the editor element; composer-focus-api.mjs).
+  // 3.6556.2 cccc2cf0a `f = $l(i); … f && ql(o.current, f)` (2.42304.0 jT `B && m.current?.scheduleFocus()`): the consumed
+  // focus intent is now its record (c03935b01 Zr, null when stale) and Jr = focusBtwComposer applies it: a keyboard one
+  // (`afterKeyPress`) first makes the composer swallow a stray Enter, then the caret goes to the end (c227f4d5e OP
+  // scheduleFocus, on the editor element; composer-focus-api.mjs). The editor element carries both methods together.
   const focusIntent = useBtwFocusIntent(sessionId);
   useEffect(() => {
     if (!focusIntent || planReview) return;
@@ -149,7 +251,7 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
     // The header shares a ref to the currently mounted editor. A retiring
     // child's effect must not focus the next child's replacement editor.
     if (node.closest && node.closest('[data-side-session-pane]')?.getAttribute('data-side-session-pane') !== sessionId) return;
-    node.scheduleFocus?.();
+    if (typeof node.scheduleFocus === 'function') focusBtwComposer(node, focusIntent);
   }, [focusIntent, input]);
   const queueView = queueState?.epoch === queueEpoch ? queueState : null;
   const queued = queueView?.queue, pendingSteers = queueView?.pending ?? [];
@@ -182,11 +284,11 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
     if (!from || from.control.isConnected) return;
     const doc = from.control.ownerDocument;
     if (doc.activeElement && doc.activeElement !== doc.body) return;
-    // nT f: Uh (c5259f582 pe: `n ? n.scheduleFocus() : K(e, t)`) focuses the mounted composer, else remembers a focus
-    // intent for its next mount; focus still on the body lands on the approval scope itself.
-    const node = input.current;
-    if (node && node.isConnected !== false) node.scheduleFocus?.();
-    else rememberBtwFocus(sessionId, performance.now());
+    // nT f: 3.6556.2 `ou(t.id, performance.now(), { afterKeyPress: !0 })` = c03935b01 Xr (`let r=Rr.get(e)?.composerRef.
+    // current;r?Jr(r,n):qr(e,t,n)`; 2.42304.0 c5259f582 pe: `n ? n.scheduleFocus() : K(e, t)`): the registered composer
+    // swallows the dismissing key's stray Enter and takes focus, else a keyboard focus intent waits for its next mount;
+    // focus still on the body lands on the approval scope itself.
+    focusBtwSessionComposer(sessionId, performance.now(), { afterKeyPress: true });
     if (from.scope && doc.activeElement === doc.body) { from.scope.tabIndex = -1; from.scope.focus(); }
   }, [dismissRevision]);
   // jT N (onFocusHandBack, qj's toComposer): `m.current?.focusPreservingSelection(), m.current?.ignoreStrayEnter()` on

@@ -11,8 +11,9 @@
 // segments rendered only with >= 2 non-empty groups).
 
 import { coreForEngine, corePath, coreSupports } from "../electron/core-registry.mjs";
-import { getLocale, t } from "../electron/i18n/index.mjs";
+import { getLocale, t, tn } from "../electron/i18n/index.mjs";
 import { splitArgs } from "../electron/prefs/harness-profile.mjs";
+import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 
 export const SERVER_NAME_PATTERN = /^[A-Za-z0-9_.-]{1,64}$/;
 
@@ -396,6 +397,10 @@ export function mcpRows(response) {
     runtimeStatus: server.runtimeStatus ?? null,
     authStatus: text(server.authStatus) || "unknown",
     pluginId: typeof server.pluginId === "string" && server.pluginId ? server.pluginId : null,
+    // The CLI scope customize-operations' mcp list put on the server (mcpScope: the core's own, else the config layer
+    // user / project, else plugin / project / user), for the Session rail's Connectors grouping (c9081d688 v / O;
+    // session-rail-connectors-model hostMcpScope). w11-sweep-ccres (w10-ccres-rail-connectors' missing hand-off).
+    ...(typeof server.scope === "string" && server.scope ? { scope: server.scope } : {}),
     tools: server.tools && typeof server.tools === "object" ? Object.keys(server.tools) : [],
     resourceCount: Array.isArray(server.resources) ? server.resources.length : 0,
     // The startup error a core lists with the server (toolsError), else the one a startupStatus notification brings.
@@ -781,16 +786,65 @@ export function filterPlugins(rows, { query = "" } = {}) {
   return rows.filter((row) => `${row.name} ${row.pluginName} ${row.description} ${names.get(row.id)?.suffix ?? ""}`.toLowerCase().includes(term));
 }
 
-// Composer Add menu → Plugins submenu (official zv): one submenu per enabled
-// plugin that owns enabled skills; duplicate display names get " (local)".
-export function pluginMenuGroups(plugins, skills) {
+// Composer Add menu → Plugins submenu, 3.6556.2 c752b32f8-mYZAs6yC gs → us (w12b-slash-plugin-groups).
+//
+// gs reads the plugins from shared-5 lw, which keeps only enabled plugins that own a user-invocable skill (cw
+// `!e.enabled || … || !e.skills.some(nu) ? !1 : …`), and hands us its flags:
+//   singleSkillRows  `h = G() && (!f || a)`  G = shared-52 YL = ze("__gb__254483703"), f = isAgentMode, a = canFold;
+//   skillsFolded     `M = Ue(Sr()) && A`     A = canFold = shared-8 di = NP, which returns the constant `MP = !1`;
+//   connectorsFolded `i !== null`            i = te = `N ? R : null`, N = `Ue(a === "on" && j) && j`, j = Ar(A) =
+//                                            shared-8 PP(!1) = `e && !t && !Sn()` = false.
+// So with canFold false only the GrowthBook gate could turn singleSkillRows on, and only outside agent mode; the host
+// answers every gate from host-growthbook.mjs (a flag not listed there is off, D29 / D31 / R15).
+export const PLUGIN_MENU_SINGLE_SKILL_ROWS_GATE = "__gb__254483703";
+export function pluginMenuFlags({ singleSkillRowsGate = hostGrowthBookFlag(PLUGIN_MENU_SINGLE_SKILL_ROWS_GATE), isAgentMode = true, canFold = false, skillsFoldedGate = false, connectorsFolded = false } = {}) {
+  const singleSkillRows = !!singleSkillRowsGate && (!isAgentMode || !!canFold);
+  const skillsFolded = !!skillsFoldedGate && !!canFold;
+  const folded = !!connectorsFolded;
+  // us `_ = i || o` (the Plugin icon on a plugin's submenu; the search field b = Ue(_)), `v = a || o` (the count subtitle).
+  return Object.freeze({ singleSkillRows, skillsFolded, connectorsFolded: folded, pluginIcon: singleSkillRows || folded, countSubtitle: skillsFolded || folded, search: singleSkillRows || folded });
+}
+
+// us's per-plugin mapper: `{name: e.name, label: o, skills: t, singleRow: i && t.length === 1 ? n : void 0}`, where o is
+// the display name W(e) with " (local)" when another offered plugin shares it (`(O.get(a) ?? 0) > 1 && e.source ===
+// "local"`, O counting the display names of the offered plugins n only). The skill rows (cs → shared-5 aw) carry the
+// plugin for the hover card (sourcePluginName).
+export function pluginMenuGroups(plugins, skills, { singleSkillRows = pluginMenuFlags().singleSkillRows } = {}) {
+  const offered = plugins.filter((plugin) => plugin.enabled)
+    .map((plugin) => ({ plugin, rows: skillMenuItems(skills.filter((skill) => skill.pluginId === plugin.id)) }))
+    .filter((entry) => entry.rows.length > 0);
   const counts = new Map();
-  for (const plugin of plugins) counts.set(plugin.name, (counts.get(plugin.name) || 0) + 1);
-  return plugins.filter((plugin) => plugin.enabled).map((plugin) => {
+  for (const { plugin } of offered) counts.set(plugin.name, (counts.get(plugin.name) || 0) + 1);
+  return offered.map(({ plugin, rows }) => {
     const label = counts.get(plugin.name) > 1 && plugin.source === "local" ? t("{name} (local)", { name: plugin.name }) : plugin.name;
-    // Cr's hover card reads sourcePluginName for plugin-owned skills.
-    return { id: plugin.id, label, items: skillMenuItems(skills.filter((skill) => skill.pluginId === plugin.id)).map((item) => ({ ...item, sourcePluginName: label })) };
-  }).filter((group) => group.items.length > 0);
+    const items = rows.map((item) => ({ ...item, sourcePluginName: label }));
+    return { id: plugin.id, name: plugin.pluginName || plugin.name, label, items, singleRow: singleSkillRows && items.length === 1 ? items[0] : undefined };
+  });
+}
+
+// us's rows over those groups (3.6556.2 c752b32f8 :3434-3460):
+//   a plugin folded to its one skill (singleRow) is that skill row, with `pluginLabel` (the row's hint, Qi `hint: m`)
+//   only when another single row or a folded Skills row has the same label, case-insensitively;
+//   any other plugin is `{type: "submenu", label, ...(_ ? {icon: "Plugin"} : {}), ...(v && n.length > 1 ? {subtitle:
+//   "{count, plural, one {# skill} other {# skills}}"} : {}), items: n, submenuClassName: "max-h-[284px]"}`;
+// then the folded Skills rows (`[...u, ...s]`). namedRows keeps `{name, label, row}` (A), which us's search reads.
+export const PLUGIN_SUBMENU_CLASS = "max-h-[284px]";
+export function pluginMenuRows(groups, flags = pluginMenuFlags(), skillRows = []) {
+  const labels = new Map();
+  for (const row of [...groups.map((group) => group.singleRow), ...skillRows.filter((row) => row.type === "skill")]) {
+    if (!row) continue;
+    const key = row.label.toLowerCase();
+    labels.set(key, (labels.get(key) ?? 0) + 1);
+  }
+  const rows = groups.map(({ id, label, items, singleRow }) => singleRow
+    ? (labels.get(singleRow.label.toLowerCase()) ?? 0) > 1 ? { ...singleRow, pluginLabel: label } : singleRow
+    : {
+      type: "submenu", id, label,
+      ...(flags.pluginIcon ? { icon: "Plugin" } : {}),
+      ...(flags.countSubtitle && items.length > 1 ? { subtitle: tn(items.length, "{count} skill", "{count} skills") } : {}),
+      items, submenuClassName: PLUGIN_SUBMENU_CLASS,
+    });
+  return { items: [...rows, ...skillRows], namedRows: groups.map(({ name, label }, index) => ({ name, label, row: rows[index] })) };
 }
 
 // Official rows format updatedAt with dateStyle "short"; the local value is a

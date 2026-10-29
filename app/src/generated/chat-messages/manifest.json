@@ -1,0 +1,2630 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-chat-messages.mjs",
+  "adapterModule": "src/source-chat-messages-adapters.jsx",
+  "modules": [
+    {
+      "target": "feedback-type.mjs",
+      "source": "shared-0-DDOOdL6P.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "cb12b527e931ac528bf4997250326b4e12e6bb8631cd53acc285d7d8c5675484",
+      "bindings": [
+        {
+          "name": "Cn",
+          "sha256": "11aca27660d3ef8b8be78b7c79b9df67a2d26f1a2ac7877b95524620861a12bc"
+        },
+        {
+          "name": "wn",
+          "sha256": "9d06e7d8eda1ac04dc4ab8b496defba9fe154c7b7560541e88284e21fe0ed07c"
+        },
+        {
+          "name": "$W",
+          "sha256": "307b0690eb5a40487c92bcc0160b26f8a74dea9370318586b374756d37835951"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "$W": "ChatFeedbackType",
+        "wn": "NEW_HUMAN_MESSAGE_PREFIX",
+        "Cn": "NEW_ASSISTANT_MESSAGE_PREFIX"
+      },
+      "features": {
+        "$W": [
+          "e.UPVOTE = \"upvote\"",
+          "e.FLAG = \"flag\"",
+          "e.FLAG_BUG = \"flag/bug\""
+        ],
+        "wn": [
+          "\"new-human-message-uuid\""
+        ],
+        "Cn": [
+          "\"new-assistant-message-uuid\""
+        ]
+      }
+    },
+    {
+      "target": "message-uuid.mjs",
+      "source": "shared-130-dWztbTO1.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "cf809697067e7408a0bf3ff7d172d3bc784163429e2d3aa909aabeb73a2f0aea",
+      "sha256": "a4c96bbddfb197cbbec15b18da918873775a3df96bd6401102d9ad06d9e3bfa5",
+      "bindings": [
+        {
+          "name": "Mf",
+          "sha256": "2e9b16357b5afd4777bb6d4a072e13b9c3de9d71e932c8d490c6ecc5d8ff2bce"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ar",
+          "from": "./feedback-type.mjs",
+          "name": "NEW_HUMAN_MESSAGE_PREFIX",
+          "via": "shared-0-DDOOdL6P.js:mS",
+          "kind": "generated",
+          "original": "wn"
+        },
+        {
+          "local": "_r",
+          "from": "./feedback-type.mjs",
+          "name": "NEW_ASSISTANT_MESSAGE_PREFIX",
+          "via": "shared-0-DDOOdL6P.js:pS",
+          "kind": "generated",
+          "original": "Cn"
+        }
+      ],
+      "exports": {
+        "Mf": "serverMessageUuid"
+      },
+      "features": {
+        "Mf": [
+          "e.startsWith(\"new-assistant-message-uuid-\")",
+          "e.startsWith(\"new-human-message-uuid-\")"
+        ]
+      }
+    },
+    {
+      "target": "composer-lock.mjs",
+      "source": "shared-26-CGuBxVt9.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
+      "sha256": "06d74375da1ab5d24fc8584f91a871978acb57be4b8ef3f4a312f13f45f6806b",
+      "bindings": [
+        {
+          "name": "bF",
+          "sha256": "2101cae7d0117884736603b4220c2013e4c121b96df9356a3572594883c7ac6b"
+        },
+        {
+          "name": "xF",
+          "sha256": "eb15fff5bd27192997cf5c87f53e2610bfe9997372368296b8314dbc6903452a"
+        },
+        {
+          "name": "wF",
+          "sha256": "307130fa37d232cc10e9f2e0439f9df47832b52aafccd96549fe978a7d64ae53"
+        },
+        {
+          "name": "TF",
+          "sha256": "6387c935fc6d7a81d09e0cddeb71b5fda2e2ec0c17a4275018f6605be9d30300"
+        }
+      ],
+      "imports": [
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react",
+          "original": "fo"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react",
+          "original": "to"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "Ki",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "CF",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useComposerLockReason",
+          "via": "shared-26-CGuBxVt9.js#CF",
+          "kind": "adapter",
+          "original": "CF"
+        }
+      ],
+      "exports": {
+        "xF": "useComposerLock",
+        "wF": "useLockedLabel",
+        "TF": "lockedLabel"
+      },
+      "features": {
+        "xF": [
+          "return _(bF);"
+        ],
+        "wF": [
+          "t = Ki(),",
+          "n = CF();"
+        ],
+        "TF": [
+          "defaultMessage: \"{label}: {reason}\"",
+          "id: \"3bWl9QCEK/\""
+        ]
+      }
+    },
+    {
+      "target": "user-message-row.mjs",
+      "source": "shared-2-TF8v67kg.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+      "sha256": "2c79fe3a2e69057928842867d453faaa2da74c78cbb0801c72e6ee51f3f97d2c",
+      "bindings": [
+        {
+          "name": "z8",
+          "sha256": "72347b76e2251dfc8eb3b605c878274134b90d32a196b60578753101adb1512d"
+        },
+        {
+          "name": "B8",
+          "sha256": "177f81df4ec434244a0cd47297fe371f1df6d39217514e0a742f10a63945c149"
+        }
+      ],
+      "imports": [
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react",
+          "original": "fo"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react",
+          "original": "to"
+        }
+      ],
+      "exports": {
+        "B8": "useUserMessageRow"
+      },
+      "features": {
+        "B8": [
+          "return x(z8);"
+        ]
+      }
+    },
+    {
+      "target": "retry-action.mjs",
+      "source": "shared-4-DUB1Oi0O.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "53570bd6cff2c45361f2d93f93f44ea768032a4ddffe14aaf54657c974c09068",
+      "sha256": "5ef8919e2499ae94d05e81e702a75bc7c023ddd36a04307e91de25b1d3cbcfba",
+      "bindings": [
+        {
+          "name": "Uv",
+          "sha256": "9bbf280cd92a0800d7a16d29816a5d7703ed2fef0b1644b39928590c72738514"
+        },
+        {
+          "name": "Gv",
+          "sha256": "6c6b0a18cb7b79e66bf33f05de1a574285f5af74f9c1644c9de13ccd991f985c"
+        },
+        {
+          "name": "Jv",
+          "sha256": "549486685bc1f74217d453ce77b58e636c6a481da39050a7282ea1f6d8e0a724"
+        }
+      ],
+      "imports": [
+        {
+          "local": "S",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "W",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-6jtSkIit.js:Hf",
+          "kind": "view-tabs",
+          "original": "Q"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "I5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst5",
+          "via": "shared-frame-6jtSkIit.js:Xf",
+          "kind": "view-tabs",
+          "original": "I5"
+        },
+        {
+          "local": "Z2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps2",
+          "via": "shared-frame-6jtSkIit.js:fp",
+          "kind": "view-tabs",
+          "original": "Z2"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "yi",
+          "from": "./composer-lock.mjs",
+          "name": "lockedLabel",
+          "via": "shared-26-CGuBxVt9.js:Xn",
+          "kind": "generated",
+          "original": "TF"
+        },
+        {
+          "local": "Zi",
+          "from": "./user-message-row.mjs",
+          "name": "useUserMessageRow",
+          "via": "shared-2-TF8v67kg.js:$",
+          "kind": "generated",
+          "original": "B8"
+        },
+        {
+          "local": "io",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatMessageRetryParts",
+          "via": "shared-2-TF8v67kg.js:it",
+          "kind": "adapter",
+          "original": "i8"
+        },
+        {
+          "local": "Lo",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "Wv",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useRetryPacing",
+          "via": "shared-4-DUB1Oi0O.js#Wv",
+          "kind": "adapter",
+          "original": "Wv"
+        }
+      ],
+      "exports": {
+        "Jv": "ChatRetryAction"
+      },
+      "features": {
+        "Jv": [
+          "{ blocked: t, blockedReason: n, onRetry: i, className: r, quotaHoldReason: a, ...o }",
+          "s.formatMessage({ defaultMessage: \"Retry\", id: \"62nsdyMyIO\" })",
+          "W(\"aria-disabled:opacity-disabled\", r)",
+          "S(d.RetryAction, { ...o, className: f, disabled: t, \"aria-disabled\": p, label: m, onClick: h"
+        ]
+      }
+    },
+    {
+      "target": "feedback.mjs",
+      "source": "cc1aae219-CeSwM-tp.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "665bfb18bdd4da836a9fac982f3beb78526c6cb86589f9c917d054627e000ba0",
+      "sha256": "52b310d016375b659474f07437fa947cb313aef30532650990053bc5c02a4eea",
+      "bindings": [
+        {
+          "name": "JE",
+          "sha256": "ed5d6630fc3dc042f3355eca5d1074f2f51cd1fb33e7115813cfe8e9a1ff4857"
+        },
+        {
+          "name": "YE",
+          "sha256": "43efb39221ffb800c8b05e0eb630d90f5bfce82b27500e4b8f0d423d9c4e6196"
+        },
+        {
+          "name": "TF",
+          "sha256": "14fca86bb8192ecad1d2d3c526e5e24de9308db1e055bb849e58a3bab5bcb080"
+        },
+        {
+          "name": "EF",
+          "sha256": "e3bf1f5540f53a5f5b91b996e93f91a102c64107d548ecc54ac0772e72fa5c2c"
+        },
+        {
+          "name": "DF",
+          "sha256": "a71bfb5aedd14c34c7bae5f7f3e6203abe92a2aea0cf1a917fdafc96105f7772"
+        },
+        {
+          "name": "UF",
+          "sha256": "da019b96b358680a9872dd537432b1fb748b9a195c66426fd1c289fcbc1e725d"
+        },
+        {
+          "name": "WF",
+          "sha256": "926dc2050c0bc5bd4f2788ee922abf446d6a672baeebc3a28989c7b8cc656ee0"
+        },
+        {
+          "name": "n1",
+          "sha256": "6e5a19ffd1d0af7e008f48f88fff1a747872d43dc3d53c0e8ebf91e894207d8d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-CnSY1sxv.js:so",
+          "kind": "react",
+          "original": "so"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react",
+          "original": "Co"
+        },
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "y",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react",
+          "original": "Va"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react",
+          "original": "ho"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react",
+          "original": "wo"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "R",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs",
+          "original": "Uu"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "J",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-6jtSkIit.js:od",
+          "kind": "view-tabs",
+          "original": "us"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "_t",
+          "from": "./feedback-type.mjs",
+          "name": "ChatFeedbackType",
+          "via": "shared-0-DDOOdL6P.js:Ji",
+          "kind": "generated",
+          "original": "$W"
+        },
+        {
+          "local": "ua",
+          "from": "./composer-lock.mjs",
+          "name": "useComposerLock",
+          "via": "shared-26-CGuBxVt9.js:Qn",
+          "kind": "generated",
+          "original": "xF"
+        },
+        {
+          "local": "ha",
+          "from": "./composer-lock.mjs",
+          "name": "useLockedLabel",
+          "via": "shared-26-CGuBxVt9.js:Zn",
+          "kind": "generated",
+          "original": "wF"
+        },
+        {
+          "local": "Dc",
+          "from": "../working-line/shared-2.mjs",
+          "name": "R6",
+          "via": "shared-2-TF8v67kg.js:at",
+          "kind": "linked",
+          "original": "R6"
+        },
+        {
+          "local": "vl",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "Md",
+          "from": "./message-uuid.mjs",
+          "name": "serverMessageUuid",
+          "via": "shared-130-dWztbTO1.js:Bb",
+          "kind": "generated",
+          "original": "Mf"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "useEffectEvent",
+          "via": "vendor-frame-CnSY1sxv.js:go",
+          "kind": "react",
+          "original": "go"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useReducer",
+          "via": "vendor-frame-CnSY1sxv.js:So",
+          "kind": "react",
+          "original": "So"
+        },
+        {
+          "local": "OF",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatFeedbackForm",
+          "via": "cc1aae219-CeSwM-tp.js#OF",
+          "kind": "adapter",
+          "original": "OF"
+        },
+        {
+          "local": "MF",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatFeedbackRecorder",
+          "via": "cc1aae219-CeSwM-tp.js#MF",
+          "kind": "adapter",
+          "original": "MF"
+        }
+      ],
+      "exports": {
+        "WF": "ChatMessageFeedback",
+        "n1": "MESSAGE_ACTIONS_INSET"
+      },
+      "features": {
+        "WF": [
+          "WF = M(UF)"
+        ],
+        "n1": [
+          "\"ms-[calc(var(--msg-text-inset,0.5rem)_-_0.375rem)]\""
+        ]
+      }
+    },
+    {
+      "target": "message-links.mjs",
+      "source": "shared-130-dWztbTO1.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "cf809697067e7408a0bf3ff7d172d3bc784163429e2d3aa909aabeb73a2f0aea",
+      "sha256": "c7db5a08e49315b5782a22592ab652fdd8ae0020f5e224a185120054bdfc45a9",
+      "bindings": [
+        {
+          "name": "Lq",
+          "sha256": "404a84f5a7c075526d7c04b9ef6d187531b90217781f9be9c51369fc40673281"
+        },
+        {
+          "name": "Rq",
+          "sha256": "8b9656ca5fcd5696b03384eccd8da24a8b2e4584b9b950dba99829f518c600d0"
+        },
+        {
+          "name": "zq",
+          "sha256": "1af79a7ef84b4a45f1d406717f284af0ccdd59420d277d5247fc75e4ce827ab9"
+        },
+        {
+          "name": "Bq",
+          "sha256": "09be8662682262dc55791cdcdc96bdeae2335ac0e0d19ee30a740359ce5d32d7"
+        },
+        {
+          "name": "Vq",
+          "sha256": "546a51efdd43c56447310ad15dec62f757d0f0d998c4fe90fe8078ddaa8d2691"
+        },
+        {
+          "name": "Hq",
+          "sha256": "22b5b1a646487dca1371ba773894fdbfbb19830a0fff7dcc4f73712598dc8f87"
+        },
+        {
+          "name": "Uq",
+          "sha256": "362242aef2cb767740d25dc090110acb433030d00b712e58c502bfcaa4483c57"
+        },
+        {
+          "name": "Wq",
+          "sha256": "be93386bfd6d60541aff824ad3279ffeb87033781a7f21ed32b40332daf12249"
+        },
+        {
+          "name": "Gq",
+          "sha256": "20e5937127b2ec6fa76b687c9dd734aa47b58838dcd5f41890f06b35d8d7dc74"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Gq": "messageTextFeatures"
+      },
+      "features": {
+        "Gq": [
+          "{ hasCodeBlock: t, hasWebLink: n } = Wq(e, null);",
+          "return { hasCodeBlock: t, hasWebLink: n };"
+        ]
+      }
+    },
+    {
+      "target": "context-class.mjs",
+      "source": "shared-9-CM21XrJw.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "20de368fbaad88fe750c07b89246da5f682b5c800b7e96d9ec02bf8f688828a4",
+      "bindings": [
+        {
+          "name": "_O",
+          "sha256": "83ad575f8c56fee3ef70c826020872f42dc28e993f11ae1fabca14ca4df60987"
+        },
+        {
+          "name": "yO",
+          "sha256": "4bfae85517b1ca3c3c5ebba925542c811b13c76396dfd275ebef647ec36632dc"
+        },
+        {
+          "name": "bO",
+          "sha256": "189023d50ab64ceedfdc3770080f82a368ad58ed13b66db042af8aa316dbbedd"
+        }
+      ],
+      "imports": [
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react",
+          "original": "fo"
+        },
+        {
+          "local": "k",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react",
+          "original": "to"
+        }
+      ],
+      "exports": {
+        "bO": "classUnlessContext"
+      },
+      "features": {
+        "bO": [
+          "return yO() ? void 0 : e;"
+        ]
+      }
+    },
+    {
+      "target": "message-warning.mjs",
+      "source": "cc1aae219-CeSwM-tp.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "665bfb18bdd4da836a9fac982f3beb78526c6cb86589f9c917d054627e000ba0",
+      "sha256": "50b0e4f42450e7a46448629bc9306029692a0b475c014115346553611f4646e7",
+      "bindings": [
+        {
+          "name": "SN",
+          "sha256": "1d15099c3a359bee64307384e93a644e2d7ba3a92116df740c1b9be9586dab80"
+        },
+        {
+          "name": "CN",
+          "sha256": "f8182fc54bd7489c017fc00942be72181143c22cd1e01825cbac10b43934af03"
+        },
+        {
+          "name": "eP",
+          "sha256": "e836c0bf4b904c93883c68e3868ae6fe1d7cc0e20f56140348b04ae5d7e92e8d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "be",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsBanner",
+          "via": "shared-frame-6jtSkIit.js:ya",
+          "kind": "view-tabs",
+          "original": "NO"
+        },
+        {
+          "local": "vl",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "__",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatWarningMarkdown",
+          "via": "vendor-markdown-CTRWgQFt.js:s",
+          "kind": "adapter",
+          "original": "wo"
+        },
+        {
+          "local": "p",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs",
+          "original": "Ba"
+        },
+        {
+          "local": "wh",
+          "from": "./context-class.mjs",
+          "name": "classUnlessContext",
+          "via": "shared-9-CM21XrJw.js:P",
+          "kind": "generated",
+          "original": "bO"
+        }
+      ],
+      "exports": {
+        "eP": "ChatMessageWarning"
+      },
+      "features": {
+        "eP": [
+          "showWebSearchNudge: t,",
+          "showDriveImagesWarning: n,",
+          "id: \"uUjlNFGg26\"",
+          "\"data-testid\": \"message-warning\"",
+          "components: SN"
+        ]
+      }
+    },
+    {
+      "target": "version-selector.mjs",
+      "source": "cc1aae219-CeSwM-tp.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "665bfb18bdd4da836a9fac982f3beb78526c6cb86589f9c917d054627e000ba0",
+      "sha256": "48bb7231059747366b56cc193616ba610c0fc0bd5f5cc9c9ca7dd918fe137523",
+      "bindings": [
+        {
+          "name": "lI",
+          "sha256": "92b1c4f79f38f0d0bbe7f2523e034ffc10b7dc6c92cd58067b4fe4144f41964b"
+        }
+      ],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "y",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "M",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-CnSY1sxv.js:so",
+          "kind": "react",
+          "original": "so"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "R",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs",
+          "original": "Uu"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "_l",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "shared-adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "vl",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        }
+      ],
+      "exports": {
+        "lI": "ChatVersionSelector"
+      },
+      "features": {
+        "lI": [
+          "r = (t.selectedOption ?? 0) + 1,",
+          "i = t.nOptions ?? 0,",
+          "s = t.sender === \"human\",",
+          "\"user-message-previous-version\" : \"action-bar-previous-version\"",
+          "\"user-message-next-version\" : \"action-bar-next-version\"",
+          "defaultMessage: \"Previous version\", id: \"nZObrEhD3u\"",
+          "defaultMessage: \"Next version\", id: \"vfItgW2tkJ\"",
+          "defaultMessage: \"{selectedOption} / {totalOptions}\",",
+          "className: \"!text-muted-as-secondary hover:!text-primary !w-6\",",
+          "\"self-center shrink-0 select-none font-small text-muted-as-secondary\"",
+          "className: \"inline-flex items-center gap-1\""
+        ]
+      }
+    },
+    {
+      "target": "disclaimer-classes.mjs",
+      "source": "shared-8-Db1QN4mf.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "8642e94c7ca85d091e27bd7a4de87b2253b4e5a43a00df325b5110a264e91a3a",
+      "bindings": [
+        {
+          "name": "EZ",
+          "sha256": "feff29b03aa1321139ce1a093469493937b69033240b53ae827b6cbd65fd198e"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "EZ": "DISCLAIMER_PLACEMENT_CLASSES"
+      },
+      "features": {
+        "EZ": [
+          "cowork: \"text-muted-as-secondary text-end [&_a]:text-inherit [&_:is(button,a):last-child:not(:first-child)]:ms-4\"",
+          "besideControls: \"text-muted-as-secondary [&_a]:text-inherit text-start @[24rem]:ps-md\"",
+          "centred: \"text-muted-as-secondary [&_a]:text-inherit text-center\""
+        ]
+      }
+    },
+    {
+      "target": "disclaimer.mjs",
+      "source": "ca2ef848d-ChLvq6yZ.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "a7f9fd99dd46c51cd9fd53cf9eca3cfc8c0df8539b00de8c35498a19651844b3",
+      "sha256": "cc8b74436624e0c1f415f79c341fbddce2808813fccca4cd0c714919a1b41319",
+      "bindings": [
+        {
+          "name": "U9",
+          "sha256": "7f0fbc449d889dafc24cf8d284a3c63af85aa4c1e73b03b8e31691fb33e96d52"
+        }
+      ],
+      "imports": [
+        {
+          "local": "u",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs",
+          "original": "Ba"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "v",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react",
+          "original": "Va"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "we",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTextLink",
+          "via": "shared-frame-6jtSkIit.js:hu",
+          "kind": "view-tabs",
+          "original": "_f"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "Ye",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatDisclaimerLink",
+          "via": "shared-25-DOWZRSlq.js:Gl",
+          "kind": "adapter",
+          "original": "Cx"
+        },
+        {
+          "local": "ta",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useAgentRoute",
+          "via": "shared-78-D5Fw2h0a.js:J_",
+          "kind": "adapter",
+          "original": "KE"
+        },
+        {
+          "local": "za",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useIsLocalAgentModeContext",
+          "via": "shared-78-D5Fw2h0a.js:rv",
+          "kind": "adapter",
+          "original": "QE"
+        },
+        {
+          "local": "Bf",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatQuestionCard",
+          "via": "shared-5-Bg6ZMqvt.js:ur",
+          "kind": "adapter",
+          "original": "Cj"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "shared-adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Yv",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useIncognitoMemoryNotice",
+          "via": "shared-182-BI1KJccu.js:Jd",
+          "kind": "adapter",
+          "original": "kA"
+        },
+        {
+          "local": "By",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatRoute",
+          "via": "shared-182-BI1KJccu.js:td",
+          "kind": "adapter",
+          "original": "Pj"
+        },
+        {
+          "local": "HC",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useOpenChatFeedback",
+          "via": "shared-15-BvlV43cI.js:gt",
+          "kind": "adapter",
+          "original": "Eo"
+        },
+        {
+          "local": "GC",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useCanGiveChatFeedback",
+          "via": "shared-15-BvlV43cI.js:mt",
+          "kind": "adapter",
+          "original": "To"
+        },
+        {
+          "local": "Yw",
+          "from": "./disclaimer-classes.mjs",
+          "name": "DISCLAIMER_PLACEMENT_CLASSES",
+          "via": "shared-8-Db1QN4mf.js:n",
+          "kind": "generated",
+          "original": "EZ"
+        },
+        {
+          "local": "Xw",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useModelControlsInChin",
+          "via": "shared-8-Db1QN4mf.js:s",
+          "kind": "adapter",
+          "original": "TZ"
+        },
+        {
+          "local": "Vee",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useIncognitoChat",
+          "via": "shared-7-DBAgAi5H.js:Dr",
+          "kind": "adapter",
+          "original": "AM"
+        },
+        {
+          "local": "Yee",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatComposerLayout",
+          "via": "shared-7-DBAgAi5H.js:Za",
+          "kind": "adapter",
+          "original": "bC"
+        },
+        {
+          "local": "pT",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatSettingsPanel",
+          "via": "shared-7-DBAgAi5H.js:xn",
+          "kind": "adapter",
+          "original": "fI"
+        },
+        {
+          "local": "Gz",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatConversationStale",
+          "via": "ca2ef848d-ChLvq6yZ.js#Gz",
+          "kind": "adapter",
+          "original": "Gz"
+        },
+        {
+          "local": "aB",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useStaleBannerMessages",
+          "via": "ca2ef848d-ChLvq6yZ.js#aB",
+          "kind": "adapter",
+          "original": "aB"
+        },
+        {
+          "local": "oB",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatStaleSharedBanner",
+          "via": "ca2ef848d-ChLvq6yZ.js#oB",
+          "kind": "adapter",
+          "original": "oB"
+        },
+        {
+          "local": "Nae",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatQuestionKeyHint",
+          "via": "ca2ef848d-ChLvq6yZ.js#Nae",
+          "kind": "adapter",
+          "original": "Nae"
+        }
+      ],
+      "exports": {
+        "U9": "ChatDisclaimer"
+      },
+      "features": {
+        "U9": [
+          "inline: o,",
+          "incognitoString: r,",
+          "hasWebSearchResponse: i,",
+          "isMcpAppFullscreen: a,",
+          "\"pointer-events-auto relative z-0 -mt-10 bg-surface-1 pb-2 pt-12 text-center text-xs text-muted-as-secondary\"",
+          "\"https://support.anthropic.com/en/articles/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on\"",
+          "defaultMessage: \"Claude is AI and can make mistakes. Please double-check responses.\"",
+          "id: \"Hz3uf5n9Ga\"",
+          "defaultMessage: \"Claude is AI and can make mistakes. Please double-check cited sources.\"",
+          "id: \"FGmLea0H7Z\"",
+          "className: \"hover:text-secondary transition\"",
+          "role: \"note\",",
+          "\"data-disclaimer\": !0"
+        ]
+      }
+    },
+    {
+      "target": "context-menu.mjs",
+      "source": "c79f7d2ef-Dx3psRYW.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "dd16a89488a69437312e7032c7377be0a149197c85c0570ff67538fc85ddac1b",
+      "sha256": "dc1179489598d43463701aa337586e0a27b5f28388486cd1df904cddfe2ac023",
+      "bindings": [
+        {
+          "name": "x",
+          "sha256": "cf165bd12ccf9cc7c498e703d6ca2813c27c0c3ef0784a667e012923b8a5cdba"
+        },
+        {
+          "name": "S",
+          "sha256": "b2ff355803ec5edf18b41d1a9b0fb4e33e462ff11e01c33b6eab80da56efd053"
+        },
+        {
+          "name": "C",
+          "sha256": "ee3e8bb9c380f6fb25cccf83639b7fc5342eee147d1ae968b4822723df4751be"
+        },
+        {
+          "name": "w",
+          "sha256": "3bf147adc0767673d13b9c7d65b47299f60b94ee76ac296ac063fcf3267978f8"
+        }
+      ],
+      "imports": [
+        {
+          "local": "s",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-CnSY1sxv.js:so",
+          "kind": "react",
+          "original": "so"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react",
+          "original": "Co"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react",
+          "original": "bo"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react",
+          "original": "ho"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react",
+          "original": "wo"
+        },
+        {
+          "local": "l",
+          "from": "react-dom",
+          "name": "createPortal",
+          "via": "vendor-frame-CnSY1sxv.js:xa",
+          "kind": "react",
+          "original": "xa"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsNodeOwnerWindow",
+          "via": "shared-frame-6jtSkIit.js:Bd",
+          "kind": "view-tabs",
+          "original": "aa"
+        },
+        {
+          "local": "f",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "asElementNode",
+          "via": "shared-frame-6jtSkIit.js:Iu",
+          "kind": "view-tabs",
+          "original": "Uc"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "p",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "connectedOwnerWindow",
+          "via": "shared-frame-6jtSkIit.js:Vd",
+          "kind": "view-tabs",
+          "original": "sa"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "m",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "useCdsLayerAwareZIndex",
+          "via": "shared-frame-6jtSkIit.js:cu",
+          "kind": "view-tabs",
+          "original": "Uf"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "h",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-6jtSkIit.js:od",
+          "kind": "view-tabs",
+          "original": "us"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-6jtSkIit.js:qf",
+          "kind": "view-tabs",
+          "original": "I2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "_",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "shared-adapter",
+          "original": "Gt"
+        }
+      ],
+      "exports": {
+        "w": "MessageContextMenu"
+      },
+      "features": {
+        "w": [
+          "w = s(S)"
+        ]
+      }
+    },
+    {
+      "target": "feedback-form-parts.mjs",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+      "sha256": "c699592e5a0beb3484680e4c04ae01581628a295525d3fd5a932696b75328f46",
+      "bindings": [
+        {
+          "name": "eP",
+          "sha256": "ab087c6e8ca170ffd75170de2f38ba89ea09e8afc13d1a46f4593e52744e57b1"
+        },
+        {
+          "name": "tP",
+          "sha256": "4f50f1163d8ca167574eb69b3b14adfb252888db5ce324e15e2c968b6b0b63ea"
+        },
+        {
+          "name": "nP",
+          "sha256": "1e1d8a69368a565fa3f0c6e760828f8390f854e7f666347ba1f6ab1ed59b6a1c"
+        },
+        {
+          "name": "sP",
+          "sha256": "e4f12d618bd175e2ebdabaea2a00cabfc3b9205603949d032f20234ef75fd2c6"
+        },
+        {
+          "name": "cP",
+          "sha256": "65ea11474463aa0c30e2599597517ceb313087bba1ce5a0dad97782f86a1565e"
+        },
+        {
+          "name": "lP",
+          "sha256": "f8130dd399e3d91085d2d78a271ff1d4c4072cf08dbe05734b3cb4bd03e9ce34"
+        },
+        {
+          "name": "uP",
+          "sha256": "40c151acdfe84a84263508a9fbed32ac62be7bd6a28d642a0003d2d0a9b51589"
+        },
+        {
+          "name": "dP",
+          "sha256": "c0aec2ffd9553eaa89f3f0276c99d31edcab22a81fc7c78e0bef9634a49f6318"
+        },
+        {
+          "name": "ER",
+          "sha256": "1f1b6125eb592c4e5bfa3d814f8e535c1544ee9225bbacae4a4d7bf9872e4e15"
+        }
+      ],
+      "imports": [
+        {
+          "local": "bn",
+          "from": "./feedback-type.mjs",
+          "name": "ChatFeedbackType",
+          "via": "shared-0-DDOOdL6P.js:Ji",
+          "kind": "generated",
+          "original": "$W"
+        }
+      ],
+      "exports": {
+        "dP": "syncTextDirection",
+        "lP": "TEXT_DIRECTION_CLASSES",
+        "ER": "artifactFeedbackOptions"
+      },
+      "features": {
+        "dP": [
+          "sP.set(e, { dir: t, paragraphs: n })",
+          "e.dataset.firstLetterDir = n"
+        ],
+        "lP": [
+          "\"[&[dir=ltr][data-first-letter-dir=ltr]]:[unicode-bidi:plaintext] [&[dir=rtl][data-first-letter-dir=rtl]]:[unicode-bidi:plaintext]\""
+        ],
+        "ER": [
+          "if (t === void 0) return [];",
+          "defaultMessage: \"Took too long\"",
+          "id: \"9XjnizZDac\"",
+          "t === \"design\""
+        ]
+      }
+    },
+    {
+      "target": "content-report-link.mjs",
+      "source": "shared-0-DDOOdL6P.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "9f4c5c9202e53b2542e3d39967acbdf7636bb6891864de1afa11dc96a34514ad",
+      "bindings": [
+        {
+          "name": "zR",
+          "sha256": "1581f28f732a135f1734edbb0388db4608aca307a0c6d85d50405dc04f304596"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "zR": "CONTENT_REPORT_FORM_URL"
+      },
+      "features": {
+        "zR": [
+          "\"https://claude.com/form/anthropic-content-reporting\""
+        ]
+      }
+    },
+    {
+      "target": "feedback-form.mjs",
+      "source": "shared-6-sd9jbJqs.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+      "sha256": "5cc33f6ff69645eeed30c25691449dad901963b942e5b5587bb2632a6fce9e5a",
+      "bindings": [
+        {
+          "name": "kw",
+          "sha256": "96b09c57f8aa1cabead782fc4acd60a6fd8af323f627360334562b0708413259"
+        },
+        {
+          "name": "Aw",
+          "sha256": "05eb498df5845ac89f6556b67a246683a16fc8fa1eb8aa94282279edccd4f0cd"
+        },
+        {
+          "name": "Kw",
+          "sha256": "a7c00d60f009d6edddbab4d7de37463701e3e9b018db688970bc9ae1ea5fe17f"
+        },
+        {
+          "name": "qw",
+          "sha256": "9344388c1cf7cfca93d5847d758a87370045347aa1b225420871723438e234c2"
+        },
+        {
+          "name": "Jw",
+          "sha256": "3af86f94df0cef9d5f04478ddb3056f188742f7db0c2638ff82a9de20bb82477"
+        },
+        {
+          "name": "Xw",
+          "sha256": "48be231ecdd55d4dd2c06049c42757370ed1b23b5d4f45fe660bc50157140443"
+        },
+        {
+          "name": "Zw",
+          "sha256": "774f6153402ec9ae48be7334c93f29aea37dd98752015ad106f7648202fbebf1"
+        },
+        {
+          "name": "Qw",
+          "sha256": "2689591f468b6a941509bec0a6c4ca70bdad490c4bfcf369fd1d45866965c673"
+        },
+        {
+          "name": "$w",
+          "sha256": "52644b1179ca58aee07736d8135dcdfd4a769c0ed9ac43233177804c74ed69c8"
+        },
+        {
+          "name": "eT",
+          "sha256": "6b6d5e9976fb4d889c0afae5c884561f69e3508c8b235a9f53329c4b8e0f4371"
+        },
+        {
+          "name": "tT",
+          "sha256": "71db5cbf1392733df166a5d777f932262fc358c92f19b3015c2480847303c09f"
+        },
+        {
+          "name": "nT",
+          "sha256": "c512f939a0825dbb1dd689353e7daeb5bc4a844968dbe76bcdccee86f8492e8f"
+        },
+        {
+          "name": "rT",
+          "sha256": "ce1901403c8da7f106d877a88c2ea98f55e68cdd304b10a07d449c1021d62290"
+        },
+        {
+          "name": "iT",
+          "sha256": "d43015d1dc8d42d9a1263c74d6a5613875d7611d8f23f61c47a2cfccfd375ce9"
+        },
+        {
+          "name": "aT",
+          "sha256": "f044f44933f1064729302cef5c22f7a72ff7000d5e938f5199f9037069ca946d"
+        },
+        {
+          "name": "oT",
+          "sha256": "9eb687371fa1b000703e869660d5191f7546efda6770f3210baf452589d8d3c4"
+        },
+        {
+          "name": "sT",
+          "sha256": "33ad84f2e95429000682917d5f056b80c130bb075f2bd1e4bebfdf44f51e97e4"
+        },
+        {
+          "name": "cT",
+          "sha256": "7043462fa7fd3cdf7c15aa6aea129e857f0f2f2dc54b2bcab3cfc1119681c06a"
+        },
+        {
+          "name": "lT",
+          "sha256": "e5f3894984df2b53b671ad9afd1db3adebbb273d0cc3a53df6a7619719f12528"
+        },
+        {
+          "name": "uT",
+          "sha256": "f6185c0359349e46dd72be8138623197b87e81c1fe0ca327e8b41808ea5a56b0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react",
+          "original": "Co"
+        },
+        {
+          "local": "b",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "C",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "w",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react",
+          "original": "Va"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "useId",
+          "via": "vendor-frame-CnSY1sxv.js:_o",
+          "kind": "react",
+          "original": "_o"
+        },
+        {
+          "local": "k",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react",
+          "original": "fo"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react",
+          "original": "ho"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react",
+          "original": "wo"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "F",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs",
+          "original": "Uu"
+        },
+        {
+          "local": "I3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst3",
+          "via": "shared-frame-6jtSkIit.js:Jf",
+          "kind": "view-tabs",
+          "original": "I3"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs",
+          "original": "I1"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "V",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsComboboxField",
+          "via": "shared-frame-6jtSkIit.js:Si",
+          "kind": "view-tabs",
+          "original": "yP"
+        },
+        {
+          "local": "ne",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsDialog",
+          "via": "shared-frame-6jtSkIit.js:Zc",
+          "kind": "view-tabs",
+          "original": "nb"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "U",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTextArea",
+          "via": "shared-frame-6jtSkIit.js:da",
+          "kind": "view-tabs",
+          "original": "nk"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "W",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTextLink",
+          "via": "shared-frame-6jtSkIit.js:hu",
+          "kind": "view-tabs",
+          "original": "_f"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "via": "shared-frame-6jtSkIit.js:rp",
+          "kind": "view-tabs",
+          "original": "J8"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "ie",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsBanner",
+          "via": "shared-frame-6jtSkIit.js:ya",
+          "kind": "view-tabs",
+          "original": "NO"
+        },
+        {
+          "local": "bt",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useAccountPlan",
+          "via": "shared-25-DOWZRSlq.js:xi",
+          "kind": "adapter",
+          "original": "eV"
+        },
+        {
+          "local": "Ht",
+          "from": "./feedback-type.mjs",
+          "name": "ChatFeedbackType",
+          "via": "shared-0-DDOOdL6P.js:Ji",
+          "kind": "generated",
+          "original": "$W"
+        },
+        {
+          "local": "Wt",
+          "from": "../view-tabs/shared-0-DDOOdL6P.js",
+          "name": "useEventCallback",
+          "via": "shared-0-DDOOdL6P.js:LS",
+          "kind": "view-tabs",
+          "original": "ve"
+        },
+        {
+          "local": "_a",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatFeatureAvailability",
+          "via": "shared-78-D5Fw2h0a.js:LC",
+          "kind": "adapter",
+          "original": "V"
+        },
+        {
+          "local": "Ka",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "chatBackendVariant",
+          "via": "shared-78-D5Fw2h0a.js:YS",
+          "kind": "adapter",
+          "original": "D_"
+        },
+        {
+          "local": "yc",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatClientFlag",
+          "via": "shared-4-DUB1Oi0O.js:_r",
+          "kind": "adapter",
+          "original": "DS"
+        },
+        {
+          "local": "iu",
+          "from": "./feedback-form-parts.mjs",
+          "name": "syncTextDirection",
+          "via": "shared-5-Bg6ZMqvt.js:Fn",
+          "kind": "generated",
+          "original": "dP"
+        },
+        {
+          "local": "uu",
+          "from": "./feedback-form-parts.mjs",
+          "name": "TEXT_DIRECTION_CLASSES",
+          "via": "shared-5-Bg6ZMqvt.js:Nn",
+          "kind": "generated",
+          "original": "lP"
+        },
+        {
+          "local": "fu",
+          "from": "../sidebar-sections/dialog-presence.mjs",
+          "name": "useDialogPresence",
+          "via": "shared-5-Bg6ZMqvt.js:R",
+          "kind": "linked",
+          "original": "$L"
+        },
+        {
+          "local": "xu",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useMessageArtifactKind",
+          "via": "shared-5-Bg6ZMqvt.js:p",
+          "kind": "adapter",
+          "original": "iz"
+        },
+        {
+          "local": "Eu",
+          "from": "./feedback-form-parts.mjs",
+          "name": "artifactFeedbackOptions",
+          "via": "shared-5-Bg6ZMqvt.js:w",
+          "kind": "generated",
+          "original": "ER"
+        },
+        {
+          "local": "X",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "shared-adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "ju",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "pf",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatMemoryMode",
+          "via": "shared-182-BI1KJccu.js:Qd",
+          "kind": "adapter",
+          "original": "Rk"
+        },
+        {
+          "local": "Ef",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatMemoryAvailability",
+          "via": "shared-182-BI1KJccu.js:df",
+          "kind": "adapter",
+          "original": "dA"
+        },
+        {
+          "local": "np",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "ChatFeedbackFormSettings",
+          "via": "shared-182-BI1KJccu.js:sd",
+          "kind": "adapter",
+          "original": "Cj"
+        },
+        {
+          "local": "xp",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatConversationQuery",
+          "via": "shared-130-dWztbTO1.js:$v",
+          "kind": "adapter",
+          "original": "Xh"
+        },
+        {
+          "local": "Xp",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatConversationSettings",
+          "via": "shared-130-dWztbTO1.js:Xx",
+          "kind": "adapter",
+          "original": "gu"
+        },
+        {
+          "local": "tm",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatConversationMessage",
+          "via": "shared-130-dWztbTO1.js:Zt",
+          "kind": "adapter",
+          "original": "YJ"
+        },
+        {
+          "local": "Cm",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useSubmitChatFeedback",
+          "via": "shared-130-dWztbTO1.js:uy",
+          "kind": "adapter",
+          "original": "L_"
+        },
+        {
+          "local": "N",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react",
+          "original": "to"
+        },
+        {
+          "local": "$p",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "chatMessageFiles",
+          "via": "shared-130-dWztbTO1.js:Zi",
+          "kind": "adapter",
+          "original": "nW"
+        },
+        {
+          "local": "ce",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "useChatAccount",
+          "via": "shared-25-DOWZRSlq.js:Br",
+          "kind": "adapter",
+          "original": "VB"
+        },
+        {
+          "local": "kn",
+          "from": "./content-report-link.mjs",
+          "name": "CONTENT_REPORT_FORM_URL",
+          "via": "shared-0-DDOOdL6P.js:ou",
+          "kind": "generated",
+          "original": "zR"
+        },
+        {
+          "local": "Rp",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "isChatWebTool",
+          "via": "shared-130-dWztbTO1.js:Lo",
+          "kind": "adapter",
+          "original": "LV"
+        },
+        {
+          "local": "Bc",
+          "from": "../../source-chat-messages-adapters.jsx",
+          "name": "chatMessageArtifacts",
+          "via": "shared-104-CTONUSaz.js:Ut",
+          "kind": "adapter",
+          "original": "NL"
+        }
+      ],
+      "exports": {
+        "iT": "ChatFeedbackDialog"
+      },
+      "features": {
+        "iT": [
+          "requestedFeedbackType: r,",
+          "setRequestedFeedbackType: i,",
+          "onMessageFeedback: d,",
+          "initialFeedbackInput: h,",
+          "onKeepFeedbackInput: g,",
+          "defaultMessage: \"Give positive feedback\"",
+          "id: \"3eBGtYvhrI\"",
+          "defaultMessage: \"Give negative feedback\"",
+          "id: \"jOz9SoiS5x\"",
+          "defaultMessage: \"Please provide details: (optional)\"",
+          "defaultMessage: \"What type of issue do you wish to report? (optional)\"",
+          "defaultMessage: \"Submit\"",
+          "className: \"mt-4 flex flex-col\"",
+          "b(ne.Popup, { size: \"md\", initialFocus: Ge, children: [Ke, qe, q] })"
+        ]
+      }
+    }
+  ],
+  "adapters": [
+    {
+      "original": "ca2ef848d-ChLvq6yZ.js#Gz",
+      "name": "useChatConversationStale",
+      "features": [
+        "{ fetch: n, held: r } = t,",
+        "Iy(e, Uz)",
+        "Iy(e, Wz)"
+      ]
+    },
+    {
+      "original": "ca2ef848d-ChLvq6yZ.js#Nae",
+      "name": "ChatQuestionKeyHint",
+      "features": [
+        "{ data: n, currentQuestionIndex: r } = Bf(),",
+        "i?.type === \"multi_select\"",
+        "defaultMessage: \"{submit} to send\""
+      ]
+    },
+    {
+      "original": "ca2ef848d-ChLvq6yZ.js#aB",
+      "name": "useStaleBannerMessages",
+      "features": [
+        "oa(e.messages, \"ea9v3k\")",
+        "oa(e.messages, \"wxq794\")"
+      ]
+    },
+    {
+      "original": "ca2ef848d-ChLvq6yZ.js#oB",
+      "name": "ChatStaleSharedBanner",
+      "features": [
+        "{ updateSharedChat: r, busy: i } = $z(t),",
+        "defaultMessage: \"Sharing isn\\u2019t available.\""
+      ]
+    },
+    {
+      "original": "cc1aae219-CeSwM-tp.js#MF",
+      "name": "useChatFeedbackRecorder",
+      "features": [
+        "event_key: \"claudeai.message.feedback_clicked\"",
+        "rating: n.rating",
+        "rating_surface: n.ratingSurface"
+      ]
+    },
+    {
+      "original": "cc1aae219-CeSwM-tp.js#OF",
+      "name": "ChatFeedbackForm",
+      "features": [
+        "byConversationModel: a,",
+        "ratingSurface: o,",
+        "formTexts: n,",
+        "formKey: t,",
+        "wF(e, c)"
+      ]
+    },
+    {
+      "original": "shared-104-CTONUSaz.js#NL",
+      "name": "chatMessageArtifacts",
+      "features": [
+        "i.messageUuid===e.uuid&&i.createdAt===e.created_at"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#LV",
+      "name": "isChatWebTool",
+      "features": [
+        "function LV(e){return IV.has(e)}"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#L_",
+      "name": "useSubmitChatFeedback",
+      "features": [
+        "preview_feature_uses_artifacts",
+        "{chatBackend:u,refetchConversation:f,...d}=i"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#Xh",
+      "name": "useChatConversationQuery",
+      "features": [
+        "suppressError:n,enabled:r,returnDanglingHumanMessage:i,refetchOnMount:a"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#YJ",
+      "name": "useChatConversationMessage",
+      "features": [
+        "n.getConversationMessages(e).find(t)"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#gu",
+      "name": "useChatConversationSettings",
+      "features": [
+        "gu=()=>{let e=x(hu);return e===void 0?null:e}"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#nW",
+      "name": "chatMessageFiles",
+      "features": [
+        "serverFileUuid:e.serverFileUuid??e.file_uuid"
+      ]
+    },
+    {
+      "original": "shared-15-BvlV43cI.js#Eo",
+      "name": "useOpenChatFeedback",
+      "features": [
+        "e=To(),t=So(Do)",
+        "e&&t(n)"
+      ]
+    },
+    {
+      "original": "shared-15-BvlV43cI.js#To",
+      "name": "useCanGiveChatFeedback",
+      "features": [
+        "function To(){let e=Co(),t=wo();return e&&t}"
+      ]
+    },
+    {
+      "original": "shared-182-BI1KJccu.js#Cj",
+      "name": "ChatFeedbackFormSettings",
+      "features": [
+        "Cj=T(xj)"
+      ]
+    },
+    {
+      "original": "shared-182-BI1KJccu.js#Pj",
+      "name": "useChatRoute",
+      "features": [
+        "function Pj(){return S(kj)}"
+      ]
+    },
+    {
+      "original": "shared-182-BI1KJccu.js#Rk",
+      "name": "useChatMemoryMode",
+      "features": [
+        "L(\"melange_enabled_for_chat\")",
+        "claudified_melange_memory_migration_v2"
+      ]
+    },
+    {
+      "original": "shared-182-BI1KJccu.js#dA",
+      "name": "useChatMemoryAvailability",
+      "features": [
+        "{settings:e,accessWith:t}=fA()"
+      ]
+    },
+    {
+      "original": "shared-182-BI1KJccu.js#kA",
+      "name": "useIncognitoMemoryNotice",
+      "features": [
+        "pa.orgMemory",
+        "pa.orgNoMemory",
+        "pa.memory",
+        "pa.noMemory"
+      ]
+    },
+    {
+      "original": "shared-2-TF8v67kg.js#i8",
+      "name": "ChatMessageRetryParts",
+      "features": [
+        "i8=Object.assign(r8,{",
+        "RetryAction:R6.RetryAction"
+      ]
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#Cx",
+      "name": "ChatDisclaimerLink",
+      "features": [
+        "href:t,replace:a,scroll:s,prefetch:r,onClick:n,target:c,ref:i"
+      ]
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#VB",
+      "name": "useChatAccount",
+      "features": [
+        "VB=()=>v(kz)"
+      ]
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#eV",
+      "name": "useAccountPlan",
+      "features": [
+        "e?\"raven\":t?\"claude_pro\":n?\"claude_max\":\"free\""
+      ]
+    },
+    {
+      "original": "shared-26-CGuBxVt9.js#CF",
+      "name": "useComposerLockReason",
+      "features": [
+        "{ locked: t, reasonKind: n } = xF(),",
+        "if (t)",
+        "n === \"voiceSessionActive\"",
+        "defaultMessage: \"Respond to the prompt above to continue\""
+      ]
+    },
+    {
+      "original": "shared-4-DUB1Oi0O.js#DS",
+      "name": "useChatClientFlag",
+      "features": [
+        "function DS(e){return j(ES)[e]===!0}"
+      ]
+    },
+    {
+      "original": "shared-4-DUB1Oi0O.js#Wv",
+      "name": "useRetryPacing",
+      "features": [
+        "{ overloaded: c, secondsRemaining: l } = wo(e, s)",
+        "{ overloaded: c, pacedLabel: u }"
+      ]
+    },
+    {
+      "original": "shared-5-Bg6ZMqvt.js#Cj",
+      "name": "useChatQuestionCard",
+      "features": [
+        "function Cj(){return A(xj)}"
+      ]
+    },
+    {
+      "original": "shared-5-Bg6ZMqvt.js#iz",
+      "name": "useMessageArtifactKind",
+      "features": [
+        "{activeOrganization:n}=un()",
+        "type_slug"
+      ]
+    },
+    {
+      "original": "shared-7-DBAgAi5H.js#AM",
+      "name": "useIncognitoChat",
+      "features": [
+        "{isLocalAgentRoute:e}=dm()",
+        "return!e&&t"
+      ]
+    },
+    {
+      "original": "shared-7-DBAgAi5H.js#bC",
+      "name": "useChatComposerLayout",
+      "features": [
+        "function bC(){return O(vC)}"
+      ]
+    },
+    {
+      "original": "shared-7-DBAgAi5H.js#fI",
+      "name": "useChatSettingsPanel",
+      "features": [
+        "e=O(uI),t=O(dI)",
+        "{...e,...t}"
+      ]
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#D_",
+      "name": "chatBackendVariant",
+      "features": [
+        "l_===\"c1\"||l_===\"c2\"?l_:void 0"
+      ]
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#KE",
+      "name": "useAgentRoute",
+      "features": [
+        "GE(WE(e.pathname),t,n)",
+        "e.agentRouteType"
+      ]
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#QE",
+      "name": "useIsLocalAgentModeContext",
+      "features": [
+        "considerEnabledForNonUI??!1",
+        "n===\"cowork\"",
+        "e.isLocalAgentModeContext"
+      ]
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#V",
+      "name": "useChatFeatureAvailability",
+      "features": [
+        "function V(e){return th[e].useAvailable()}"
+      ]
+    },
+    {
+      "original": "shared-8-Db1QN4mf.js#TZ",
+      "name": "useModelControlsInChin",
+      "features": [
+        "{modelControlsInChin:t}=k(cm)",
+        "t??e===\"bottom\""
+      ]
+    },
+    {
+      "original": "vendor-markdown-CTRWgQFt.js#wo",
+      "name": "ChatWarningMarkdown",
+      "features": [
+        "let t=To(e),n=Eo(e);return Do(t.runSync(t.parse(n),n),e)"
+      ]
+    }
+  ],
+  "sharedAdapters": [
+    {
+      "original": "vendor-intl-DYfox5Co.js#q",
+      "graph": "routines-shared",
+      "name": "useIntl"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#Gt",
+      "graph": "routines-shared",
+      "name": "FormattedMessage"
+    }
+  ],
+  "linked": [
+    {
+      "original": "shared-2-TF8v67kg.js#R6",
+      "graph": "working-line",
+      "target": "shared-2.mjs",
+      "name": "R6"
+    },
+    {
+      "original": "shared-5-Bg6ZMqvt.js#$L",
+      "graph": "sidebar-sections",
+      "target": "dialog-presence.mjs",
+      "name": "useDialogPresence"
+    }
+  ]
+}

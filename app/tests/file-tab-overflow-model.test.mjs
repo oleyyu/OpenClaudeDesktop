@@ -1,6 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { COMPACT_TAB_WIDTH, MIN_TAB_WIDTH, stableIds, tabOverflowLayout } from '../src/file-tab-overflow-model.mjs';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { ionSource } from '../scripts/official-3.6556.2.mjs';
+import { COMPACT_TAB_WIDTH, MIN_TAB_WIDTH, TIGHT_ACTIVE_WIDTH, stableIds, tabOverflowLayout } from '../src/file-tab-overflow-model.mjs';
+
+// w10-trans-tab-overflow: the widths are the 3.6556.2 originals (cfe7c4b3b be/H, cccc2cf0a ViewTabBar minTabWidth).
+test('3.6556.2: the compact, tight-active and minimum tab widths are the shipped ones', () => {
+  const tabs = readFileSync(path.join(ionSource, 'cfe7c4b3b-BF79K6ux.js'), 'utf8');
+  assert.equal(tabs.split('var be=64,H=50,xe="--vtb-room";').length - 1, 1);
+  assert.deepEqual([COMPACT_TAB_WIDTH, TIGHT_ACTIVE_WIDTH], [64, 50]);
+  const pane = readFileSync(path.join(ionSource, 'cccc2cf0a-DhZC33Gc.js'), 'utf8');
+  assert.equal(pane.split('minTabWidth:104').length - 1, 1);
+  assert.equal(MIN_TAB_WIDTH, 104);
+});
 
 // _e x (panes-tabs-current.js:503-600). Tabs are 104px wide with 4px gaps; start = offsetLeft - 4.
 const strip = (count, width = 104, gap = 4) => Array.from({ length: count }, (_, index) => {

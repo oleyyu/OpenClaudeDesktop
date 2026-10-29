@@ -44,6 +44,42 @@ export function steerTextCount(items, text) {
   return count;
 }
 
+/** 3.6556.2 c6b8adeaf bi (PM, `e in t.landed`): a queued entry has landed once the transcript holds its userMessage —
+ * the item whose clientId is the entry's clientUserMessageId (the same delivery test the steer pending list uses). An
+ * entry without the id, or a core that doesn't echo it, never counts as landed (the bar then unmounts without exit). */
+export function queuedEntryLanded(entry, items) {
+  const id = entry?.clientUserMessageId;
+  if (!id || !Array.isArray(items)) return false;
+  return items.some((item) => item?.type === "userMessage" && item.clientId === id);
+}
+
+/** 3.6556.2 cc43287c9 Jfe as a pure step over its two states: `last` (i: the lone entry and its session scope) and
+ * `leaving` (o: the entry the bar keeps while it exits). Entries present: `last` follows the lone entry (null for 0 or
+ * 2+), `leaving` clears. Entries gone: `last` clears and, when it had landed (`landed(entry)`, PM) in the same scope and
+ * motion is not reduced (Mh), becomes `leaving`. Returns the same state object when nothing changes. */
+export function queuedBandStep(state, { entries, scope, landed, reduced = false }) {
+  const { last = null, leaving = null } = state ?? {};
+  const list = Array.isArray(entries) && entries.length > 0 ? entries : null;
+  const single = list?.length === 1 ? list[0] : null;
+  let nextLast = last, nextLeaving = leaving;
+  if (list === null) {
+    if (last !== null) {
+      nextLast = null;
+      if (!reduced && last.scope === scope && !!landed?.(last.entry)) nextLeaving = last;
+    }
+  } else {
+    if ((last?.entry.id ?? null) !== (single?.id ?? null) || (last !== null && last.scope !== scope)) nextLast = single === null ? null : { scope, entry: single };
+    if (leaving !== null) nextLeaving = null;
+  }
+  return nextLast === last && nextLeaving === leaving ? (state ?? { last, leaving }) : { last: nextLast, leaving: nextLeaving };
+}
+/** What the bar renders after a step: the leaving entry while it exits, else the live entries. */
+export function queuedBandView(state, { entries, scope }) {
+  const live = Array.isArray(entries) ? entries : [];
+  const exiting = live.length === 0 && state?.leaving != null && state.leaving.scope === scope;
+  return { entries: exiting ? [state.leaving.entry] : live, exiting };
+}
+
 // Official ep: text parts joined by a space, images become "[Image]", empty → "…".
 export function previewText(input = []) {
   const parts = [];

@@ -1,0 +1,553 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-chat-composer.mjs",
+  "hostModule": "src/source-chat-composer.jsx",
+  "roots": {
+    "XI": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "XI",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "0ca1c9dcea202d61acb80526240f7dd42b2ef61495aa92a3056d91c2047892c0",
+      "features": [
+        "replyToClaude: { defaultMessage: \"Reply to Claude\\u2026\", id: \"ZA4ifEIe2U\" }",
+        "loadEarlierMessages: { defaultMessage: \"Load earlier messages\", id: \"/V89Z1BeEm\" }"
+      ]
+    },
+    "lD": {
+      "source": "shared-9-CM21XrJw.js",
+      "local": "lD",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "c7d1fb7c57596bd1c03886b4a0f391430c6a524ed337a74e8908b3080a5835da",
+      "features": [
+        "defaultMessage: \"How can I help you today?\", id: \"ye34lid+ov\"",
+        "defaultMessage: \"Type / for skills\", id: \"uSmGqlwE3c\""
+      ]
+    },
+    "kH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "kH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "6c1a2d8b7cf8d0192e4e16c617add9ba9c548e7e64eaf700e04ab78feaba5605",
+      "features": [
+        "n = t.findIndex((e) => /^\\d+(\\.\\d+)?$/.test(e))",
+        "base: t.slice(0, n + 1).join(\" \"), tail: t.slice(n + 1).join(\" \")",
+        "base: e, tail: \"\""
+      ]
+    },
+    "ZH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "ZH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "acabbdaf52723d206030b6d00b26d9aa515cd63a4ba278201d62ae503b8a9d56",
+      "features": [
+        "\"max-w-[min(26rem,var(--available-width))]\""
+      ]
+    },
+    "QH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "QH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "44a99698b80d5d785fe658ebb0367edf94769895298fe4c45da0ab6fa0afe38d",
+      "features": [
+        "\"max-h-[min(50vh,var(--available-height))]\""
+      ]
+    },
+    "$H": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "$H",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "1c2a835c0929eeb0feff291bbbb764780c68647eaa8e3b293089c9e89fe8a896",
+      "features": [
+        "\"data-testid\": \"model-selector-dropdown\"",
+        "id: \"e15QX1hh5v\"",
+        "id: \"0ZMx/tNv6m\"",
+        "id: \"D90Mq4jCm6\"",
+        "id: \"bV+YmcFCEb\""
+      ]
+    },
+    "NH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "NH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "abe2565d59a2e5e4734508680e2787e489c1dc8765706b07a62085d89a4f34b3",
+      "features": [
+        "\"data-testid\": \"model-label-qualifier\"",
+        "\"model-label-thinking-warning\""
+      ]
+    },
+    "KH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "KH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "7a8e86625acaf36b681cf5ef1690403cd7aacfb6c65fa57139913b1a3624399f",
+      "features": [
+        "\"data-testid\": \"model-selector-more-models\"",
+        "id: \"4mzlmbbRYe\"",
+        "id: \"96GJ5wSQam\""
+      ]
+    },
+    "dn": {
+      "source": "c6eb5f8cf-DfRr7hmI.js",
+      "local": "dn",
+      "sourceSha256": "7488989e5b444605032a5350ede768ce94baa77264dede00a4e901674a58345f",
+      "sha256": "6cbdfb00a9133ef1ec8436df41679e2efd9d7e76f8398880194822b62311848b",
+      "features": [
+        "placement: \"compact\"",
+        "compact: !0",
+        "isNewConversation: !0",
+        "triggerClassName: \"!rounded-lg\"",
+        "\"yukon_silver_thinking\""
+      ]
+    },
+    "oD": {
+      "source": "shared-9-CM21XrJw.js",
+      "local": "oD",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "e49a64ff985cedf31c54833c6c19cd64c7b407a117bf74814aaa8d98a989ad25",
+      "features": [
+        "fade: 5e3",
+        "typewriter: 3500"
+      ]
+    },
+    "dD": {
+      "source": "shared-9-CM21XrJw.js",
+      "local": "dD",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "6c5856e2bf7e2834e01f86e6925afe220cfd83afb9c1e6f10b415bab78dec78a",
+      "features": [
+        "animation: n,",
+        "\"animate-placeholder-fade-out motion-reduce:hidden\"",
+        "\"animate-placeholder-fade-in motion-reduce:animate-none\""
+      ]
+    },
+    "WH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "WH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "bc75e27087c4651c24a1456dda5b1123370507b2e60abb3363970d39298a0bf5",
+      "features": [
+        "\"data-testid\": \"model-selector-option\"",
+        "checkedRole: \"radio\"",
+        "\"model-config-badge\""
+      ]
+    },
+    "jH": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "jH",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "22d54e704cae585a0bc5cf9162128a2896b805599dde87261b0b9e695a291e54",
+      "features": [
+        "if (e.label_override) return e.label_override;",
+        "mutedSuffix"
+      ]
+    },
+    "wE": {
+      "source": "shared-28-DNYlf4wu.js",
+      "local": "wE",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "b5e2408d6665669d65308456cba69cd7b0800261bed680ad03800c3f70b2d8cd",
+      "features": [
+        "\"data-testid\": \"effort-menu-trigger\"",
+        "id: \"VKZ/U8vAsk\"",
+        "id: \"Fb3qrhlDSI\""
+      ]
+    },
+    "TE": {
+      "source": "shared-28-DNYlf4wu.js",
+      "local": "TE",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "617b0d17a4daeb7535697bfc5c815265c73b3a303c422179499f34a5b8b29ab3",
+      "features": [
+        "effort-option-",
+        "id: \"7Aqe2/LqFL\"",
+        "\"effort-option-info-icon\""
+      ]
+    },
+    "hE": {
+      "source": "shared-28-DNYlf4wu.js",
+      "local": "hE",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "0f29c3f8504d6dfa85db6bba17b38adb2f454d28f9184ee2bff5303da62ebd0c",
+      "features": [
+        "\"data-testid\": \"thinking-mode-toggle\"",
+        "keepOpen: !0",
+        "onCheckedChange: "
+      ]
+    }
+  },
+  "modules": [
+    {
+      "target": "messages.mjs",
+      "sources": [
+        "shared-8-Db1QN4mf.js",
+        "shared-9-CM21XrJw.js"
+      ],
+      "sha256": "b348c2ba91c73e1718e831423680aea5cbbe659ac12ef2b8c728289d96b465d0",
+      "exports": [
+        "chatComposerMessages",
+        "chatPlaceholderRotation"
+      ]
+    },
+    {
+      "target": "model-selector.mjs",
+      "sources": [
+        "shared-8-Db1QN4mf.js",
+        "c6eb5f8cf-DfRr7hmI.js",
+        "shared-28-DNYlf4wu.js"
+      ],
+      "sha256": "018f7ff43d1e216ae2bda540212989b6096ac04c772135f93b0c90f3d223d4a6",
+      "sliced": [
+        "kH",
+        "ZH",
+        "QH"
+      ],
+      "exports": [
+        "splitModelName",
+        "modelSelectorPopupClass",
+        "modelSelectorSubmenuPopupClass",
+        "modelSelectorMessages",
+        "modelSelector",
+        "effortMenuMessages"
+      ]
+    }
+  ],
+  "picks": [
+    {
+      "name": "messages.replyToClaude",
+      "root": "XI",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "b6b89751b61315fcb9840661f3b4a7d7037f3353481b4618a3fef76e59a34bb7"
+    },
+    {
+      "name": "messages.howCanIHelpYouToday",
+      "root": "lD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "cefc1bfced53724ab854d875dbfacab9a917874acca7eb8d56f2e50dc52833df"
+    },
+    {
+      "name": "trigger",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "636f9f939301fe328fd9414abcb61a69e73fea85c79d8759f5b6de20db181932"
+    },
+    {
+      "name": "caret",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "da962d9b2319e9dc41d308436f2f262f97610e2d60aed49bf113bb7b52fedad3"
+    },
+    {
+      "name": "tooltipWrapperClass",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "0c0f29f69d121a51676489b774243cf61af61bf7b9a2937de6d106c592e00c48"
+    },
+    {
+      "name": "baseClass",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "48f3dd9dfd4ba310cd4d091c07f50f8a115ae942e490da171ac337e5fd3e1ba1"
+    },
+    {
+      "name": "typeClass",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "bd331e0b3ec9457677c4504fb4af041ac4fa640654f786d01b7b8a57b850c09f"
+    },
+    {
+      "name": "compactClass",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "e3c71b0d09ee91b089822e8c51c22cec68eacc5a27bac7c51371ecd90edf3112"
+    },
+    {
+      "name": "loading",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "1261c8560133f0e6998c8dbbcef0c8896471c5fc6d7f421ad99b2f2c7fbc7528"
+    },
+    {
+      "name": "popupSide",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "4498564a83a2ac8650ac37d38f034cf901bc6f5cefe3638f49147dd3723ed93f"
+    },
+    {
+      "name": "popup",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "86369f64cb061da84be798b2b84eeea1367e596256873c0869e85ca7386dc157"
+    },
+    {
+      "name": "alignDefault",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "821fbe82b4c2f3b72c4448cf80185636c9f7458a44380153024fb3c5d84f9246"
+    },
+    {
+      "name": "emptyClass",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "ace6226a579b682d85fcf1bc6cfe9a673863bf624ebc2c438eb51a21d796c338"
+    },
+    {
+      "name": "caller",
+      "root": "dn",
+      "source": "c6eb5f8cf-DfRr7hmI.js",
+      "sha256": "83cf10390bc18081da66eec9bb35e46bfa0ba8e1a437b70aa085288347273c90"
+    },
+    {
+      "name": "messages.loadingModels",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "9a69ba0b0a2bf4230073792c1d7ddcde48ff5a412e5b33fc0ffbbdfb47481970"
+    },
+    {
+      "name": "messages.defaultModel",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "39f56f48f45e493b7be04ca379580a29e86beffca27b771095e8032fbc0fe565"
+    },
+    {
+      "name": "messages.modelName",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "c6a67680bcb7f9e05b3c0a689731fa4fd01b5fa013395d92cffffa5b0a1353eb"
+    },
+    {
+      "name": "messages.selectModel",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "eb5ebbfa9ddc480eb90dc7dca350c8ab553ea1655d242d0b911aad1dcaaa432a"
+    },
+    {
+      "name": "ariaNameJoin",
+      "root": "$H",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "400f9414bbf634f67185a3381bfb2a117b01d651a396e2861a8c0714b7949261"
+    },
+    {
+      "name": "label.root",
+      "root": "NH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "1593a0f0b3162926f46d112e105629bf7dcc2ceeb25cf56394978190fe519a8b"
+    },
+    {
+      "name": "label.name",
+      "root": "NH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "7825801d71a75e0bc4bac173fd0c3971a7f39ef464b81e8b8a79d72180cf0ad9"
+    },
+    {
+      "name": "label.tail",
+      "root": "NH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "3c7dc8895cbb90d6e8430dbb3bebc72f11422383d110821e827a1202dd32a9d8"
+    },
+    {
+      "name": "label.join",
+      "root": "NH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "132069de0100bd6157547c6886519581ea2499322990f4f9ccf936f856217b78"
+    },
+    {
+      "name": "menu.moreModelsTestId",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "d906b334d120a9d7e56500d776430203bbf209a401d5b19212d98fbdf0b221ec"
+    },
+    {
+      "name": "menu.noMatchesClass",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "25547002eba2917d47c8028c43eb486f7301a1461f95e60368d07fa35dde4361"
+    },
+    {
+      "name": "messages.moreModels",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "4422b3db96a26edbf283037ad0d173bd57e6827ed2daee5538cbb32d3bdba578"
+    },
+    {
+      "name": "messages.searchModels",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "99f12f092314bdc059d254db4e4b19105514b78d53f410cf61176b8b85fe0a93"
+    },
+    {
+      "name": "messages.noMatches",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "c1add9d71a39b45443e1ba3a06f2e67f5442b01d3768cf866924b1f56666b526"
+    },
+    {
+      "name": "messages.typeForSkills",
+      "root": "lD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "eb0e8409bab586ab81fefba6128be03ece82f12272da65cdda672d45f1c99553"
+    },
+    {
+      "name": "rotation.interval",
+      "root": "oD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "b98db3f8cee34e18695ab729b9ca754aa8e1ce57e897360680ae555a9246f752"
+    },
+    {
+      "name": "rotation.itemClass",
+      "root": "dD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "fc349253693ffd01179a8dce593d0f21fc45090cece0ffa2e193b67bd270244a"
+    },
+    {
+      "name": "rotation.frame",
+      "root": "dD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "04b4083e2d4c4e524f1bdec1108766ce55a4620a4447c0c8095bfbcd63777d87"
+    },
+    {
+      "name": "rotation.fadeOutClass",
+      "root": "dD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "20cda84ab3011549b5e0570087d50a5f1b6d00d78a69f1f1bb414bf67407e5cc"
+    },
+    {
+      "name": "rotation.fadeInClass",
+      "root": "dD",
+      "source": "shared-9-CM21XrJw.js",
+      "sha256": "7d0a6d734e07a52bc92602dc7e4022fdb5a1491f335f349eba6ef9dc4663cd8c"
+    },
+    {
+      "name": "messages.legacyModel",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "bd22720182da8dc795d0ceeaf93f2bb2abd2edc870517a8124a19b3c71c6a2af"
+    },
+    {
+      "name": "menu.moreModelsRowClass",
+      "root": "KH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "86ef3359ffbd324d6fbb9f769c673b9573aea7a8879e781cd83eb3d08dc297d4"
+    },
+    {
+      "name": "menu.row",
+      "root": "WH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "6ebcafc500093c5937f937b308ab794e65ca3ceb197ce88315fa3ec06121f9e9"
+    },
+    {
+      "name": "menu.rowNameClass",
+      "root": "WH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "5f1dd93e587540b91142329cacd36c10a459d22e5c184580177a3dd865e3c75c"
+    },
+    {
+      "name": "menu.badge",
+      "root": "WH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "c0f26527458a77580c2464d847112fa88ecdfe4a1b42c79d4db93f4b20737cc7"
+    },
+    {
+      "name": "menu.mutedTailClass",
+      "root": "jH",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "8de0d3001e9de9d753b6b2aeb1c4230417781e036cd6c0f165c1fdc8a5b5b58b"
+    },
+    {
+      "name": "effortMessages.effort",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "16f1848d2eed2c855ff9758e79898cde7194fd37a4513cce60550b2d31956c44"
+    },
+    {
+      "name": "effortMessages.header",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "c76cfecf7599d72880ca5595b2eb3dfd175505b0cfc3d6b42383cf4d8c0de27c"
+    },
+    {
+      "name": "effortMenu.trigger",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "eb96feecc4f73fa8ffb9eed385cced6f8e3682198b0ef5bb26fce721313fe2b1"
+    },
+    {
+      "name": "effortMenu.labelClass",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "67d14a750a107c6ab552ff54bc17548cfec64f27b1393c8cacb967fe2dbcb23e"
+    },
+    {
+      "name": "effortMenu.labelTextClass",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "9415409cb30d7db61b988629ef861aa48a37ac7f04631e20ecff485d6db5dc5c"
+    },
+    {
+      "name": "effortMenu.hintClass",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "0e74c37de87ec80143b980c512952a81c1caf6a66b5afdd8ae98c12ce7d934ff"
+    },
+    {
+      "name": "effortMenu.headerClass",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "346e1497fa48cac293c04f8ada5739469a85d4b477eeb0ccdd58840624b3cc11"
+    },
+    {
+      "name": "effortMenu.popupAlign",
+      "root": "wE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "c16009d4e06d22c49089651aa0f619f4ba68a1f77aaf278ed03b2f2eb8a01ac6"
+    },
+    {
+      "name": "effortMenu.optionTestIdPrefix",
+      "root": "TE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "fb20d0b5e8ec79876909bad0a3febd42cb1cae5243f099fe2f1a1fb0fc5e3cf8"
+    },
+    {
+      "name": "effortMenu.optionNameClass",
+      "root": "TE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "ea9c0090dd95b94fdd6175e51e0705f139f3d51f9bb093712cba66fbb4839c92"
+    },
+    {
+      "name": "effortMenu.defaultBadge",
+      "root": "TE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "cd13efb68df09b64bb36a772ef03ab5880adb3d0ca6e8e8758b9e205b7f0fb56"
+    },
+    {
+      "name": "effortMessages.default",
+      "root": "TE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "3246ca8d1bd975556841b84f670a349944bd2c3235673fad0b6d2bb3a34f69b2"
+    },
+    {
+      "name": "thinkingRow.testId",
+      "root": "hE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "1758a88b7215aefdaf72d3888dad4212b7765b13111a31c081a705d4e058405e"
+    },
+    {
+      "name": "thinkingRow.copyClass",
+      "root": "hE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "ff5ae306c38b003dd749ee07a842188b9fd94c2bd425750eaec5e9599112342a"
+    },
+    {
+      "name": "thinkingRow.titleClass",
+      "root": "hE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "0f550c367197b9a509989732860857b2d55351b033ecdbfa2f664ac6a5d896a7"
+    },
+    {
+      "name": "thinkingRow.descriptionClass",
+      "root": "hE",
+      "source": "shared-28-DNYlf4wu.js",
+      "sha256": "c3cddfcc3860549a9bd8e8aed7bc0f2b79a445fa61457d47e515cfe5f5d140f1"
+    }
+  ]
+}

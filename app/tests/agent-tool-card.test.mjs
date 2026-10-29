@@ -51,7 +51,9 @@ test('agentToolCard: the terminal, preview and workflow cards read as Claude’s
   const terminal = card({ kind: 'terminal-command', tabTitle: 'dev' }, { command: 'npm run dev' });
   assert.equal(terminal.heading.action, 'run a command in your terminal');
   assert.equal(terminal.detail.text, 'npm run dev');
-  assert.deepEqual(terminal.context.map((part) => part.text), ['In /w, in a tab named dev']);
+  // 3.6556.2 cd/nd run_in_terminal: the folder and tab ride as the tooltip description (descriptionAsTooltip), not a context line.
+  assert.deepEqual(terminal.context, []);
+  assert.deepEqual([terminal.heading.overrideDescription, terminal.heading.descriptionAsTooltip], ['In “/w”, in a tab named “dev”', true]);
   assert.deepEqual(terminal.allows.map((action) => action.key), ['accept'], 'no session grant for a command typed into the terminal');
   const site = card({ kind: 'preview-site', host: 'example.com', url: 'https://example.com/a' });
   assert.equal(site.heading.action, 'use example.com in the preview');

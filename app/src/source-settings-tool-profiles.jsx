@@ -3,7 +3,9 @@ import { SettingsGroup, settingRow } from './source-settings-kit.jsx';
 import { SettingsEmptyState } from './source-settings-pages.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSwitch } from './source-switch.jsx';
-import { SourceSettingsCheckbox } from './source-settings-checkbox.jsx';
+// The checkboxes are the CDS Checkbox with its own label (3.6556.2 shared-frame xP, `label` prop), as the cleanup dialog's
+// (c71860c77 `r(F,{checked,disabled,onCheckedChange,label})`); facade import (R6: not in the chat / composer / menu graphs).
+import { CdsCheckbox } from './generated/view-tabs/index.js';
 import { SourceSelect } from './source-select.jsx';
 import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { isToolOff, newProfileId, normalizeProfiles, offCount, requiredToolOff, toggleInSelection } from '../electron/prefs/tool-profiles.mjs';
@@ -77,17 +79,15 @@ function ProfileEditor({ initial, catalog, models, onCancel, onSubmit }) {
           {tools.map(tool => {
             const withTool = tool.disabledReason ? null : requiredToolOff(tool, form.tools);
             const reason = tool.disabledReason ? t(tool.disabledReason) : withTool ? t('Turned off with {tool}', { tool: withTool }) : null;
-            return <label key={tool.name} className="tprof-check" title={reason || (tool.description ? t(tool.description) : undefined)} data-tool-locked={reason ? '' : undefined}>
-              <SourceSettingsCheckbox checked={!reason && !isToolOff(tool.name, form.tools)} disabled={!!reason} onChange={() => toggle(tool.name)}/><span className="tprof-name">{tool.name}</span>
-            </label>;
+            return <CdsCheckbox key={tool.name} className="tprof-check" title={reason || (tool.description ? t(tool.description) : undefined)} data-tool-locked={reason ? '' : undefined}
+              checked={!reason && !isToolOff(tool.name, form.tools)} disabled={!!reason} onCheckedChange={() => toggle(tool.name)} label={<span className="tprof-name">{tool.name}</span>}/>;
           })}
         </div>
         {servers.length > 0 && <><span className="ccmd-label tprof-sub">{t('MCP servers')}</span>
           <div className="tprof-grid">
-            {servers.map(server => <label key={server.name} className="tprof-check">
-              <SourceSettingsCheckbox checked={!form.tools?.disabledServers?.includes(server.name)} onChange={() => toggle(server.name, true)}/>
-              <span className="tprof-name">{server.name}</span>{server.tools.length > 0 && <span className="ccmd-muted"> {server.tools.length}</span>}
-            </label>)}
+            {servers.map(server => <CdsCheckbox key={server.name} className="tprof-check" checked={!form.tools?.disabledServers?.includes(server.name)}
+              onCheckedChange={() => toggle(server.name, true)}
+              label={<><span className="tprof-name">{server.name}</span>{server.tools.length > 0 && <span className="ccmd-muted"> {server.tools.length}</span>}</>}/>)}
           </div></>}
       </fieldset>
       {error && <p className="ccmd-error" role="alert">{error}</p>}

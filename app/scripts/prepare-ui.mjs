@@ -6,20 +6,14 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import './build-workflow-parser.mjs';
 import './build-workflow-schema.mjs';
-import './verify-chat-ui.mjs';
-import './prepare-current-chat-ui.mjs';
-import './verify-code-editor.mjs';
-import './verify-code-start.mjs';
-import './verify-code-ui-current.mjs';
-import './verify-view-tabs.mjs';
-import './verify-code-editor-current.mjs';
-import './verify-terminal-shell.mjs';
-import './verify-release-notes.mjs';
 // Generators added during the 2.42304.0 migration each ship a `verify-gen-<area>.mjs` that runs the generator's
 // `--check`; discovering them here keeps parallel migration lanes from editing this file. Each one runs in its own
 // process: every generator parses multi-megabyte minified chunks, and importing them all into this process kept those
-// ASTs alive until the heap ran out (about 2 GB after the first few, during the R4 gate).
-for (const name of (await fs.readdir(import.meta.dirname)).filter((n) => /^verify-gen-[a-z0-9-]+\.mjs$/.test(n)).sort()) {
+// ASTs alive until the heap ran out (about 2 GB after the first few, during the R4 gate). The older verifiers run the
+// same way: imported together after the 3.6556.2 migration they ran this process out of its 4 GB heap.
+const verifiers = ["verify-chat-ui.mjs", "verify-code-editor.mjs", "verify-code-start.mjs", "verify-code-ui-current.mjs", "verify-view-tabs.mjs",
+  "verify-code-editor-current.mjs", "verify-terminal-shell.mjs", "verify-release-notes.mjs"];
+for (const name of [...verifiers, ...(await fs.readdir(import.meta.dirname)).filter((n) => /^verify-gen-[a-z0-9-]+\.mjs$/.test(n)).sort()]) {
   const run = spawnSync(process.execPath, [path.join(import.meta.dirname, name)], { stdio: "inherit" });
   if (run.status !== 0) throw new Error(`${name} failed (${run.signal ?? `exit ${run.status}`})`);
 }
@@ -102,11 +96,18 @@ await copyAsset("c25011d97-Dg-b7-mk.png");
 for (const { name } of JSON.parse(await fs.readFile(path.join(root, "src/generated/working-line/manifest.json"), "utf8")).publicAssets) {
   await copyAsset(name, undefined, path.join(root, "src/generated/working-line/public-assets"));
 }
-for (const name of ['session-progress.svg', 'session-progress-dark.svg', 'session-artifacts.svg', 'session-artifacts-dark.svg']) {
-  await copyAsset('../../images/illustrations/' + name, path.join(root, 'public/images/illustrations', name));
-}
+// The Cowork progress empty-state art (public/images/illustrations/session-*.svg) is written from the 3.6556.2 snapshot by
+// scripts/extract-cowork-progress.mjs, whose --check pins it (w11-sweep-curchat); it is no longer copied from 2.2553.1 here.
 const copied = ["claude-spark.svg"];
-for (const file of files) {
+// Sheets a generated lazy chunk preloads through its __vite__mapDeps list ("assets/v1/<name>.css"), as the original
+// does: shipped as-is next to the design sheets but not linked from index.html, so vitePreload finds them on demand
+// (3.6556.2 inline diff: c19e90103 markdown; MCP app card: c6a73f447 sheet card, cd5136de8 image preview).
+const lazySheets = new Set();
+for (const file of (await fs.readdir(path.join(root, "src/generated"), { recursive: true })).filter((f) => /\.(?:m?js)$/.test(f))) {
+  for (const m of (await fs.readFile(path.join(root, "src/generated", file), "utf8")).matchAll(/"assets\/v1\/([\w-]+\.css)"/g))
+    if (!files.includes(m[1])) lazySheets.add(m[1]);
+}
+for (const file of [...files, ...[...lazySheets].sort()]) {
   const raw = await fs.readFile(path.join(designSource, file), "utf8");
   for (const m of raw.matchAll(/url\(["']?\/assets\/v1\/([^\s)"']+)/g)) {
     const name = m[1];
@@ -118,7 +119,7 @@ for (const file of files) {
     raw.replaceAll("/assets/v1/", "./"),
   );
   copied.push(file);
-  provenance.push({ source: file, sourceDir: path.relative(root, designSource), output: "public/assets/v1/" + file, sourceSha256: digest(raw), outputSha256: digest(raw.replaceAll("/assets/v1/", "./")) });
+  provenance.push({ source: file, sourceDir: path.relative(root, designSource), output: "public/assets/v1/" + file, sourceSha256: digest(raw), outputSha256: digest(raw.replaceAll("/assets/v1/", "./")), ...(lazySheets.has(file) ? { loading: "lazy (vitePreload)" } : {}) });
 }
 provenance.push({ source: "shared-7-DsClUbcz.js", sourceSha256: digest(logoModule), output: "public/assets/v1/claude-spark.svg", outputSha256: digest(await fs.readFile(path.join(dest, "claude-spark.svg"))), transform: "Original mf spark path wrapped in SVG" });
 await fs.writeFile(

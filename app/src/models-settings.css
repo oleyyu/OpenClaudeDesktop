@@ -49,8 +49,7 @@
 .msx-help { color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px);overflow-wrap:anywhere; }
 .msx-error { margin:0;color:var(--cds-text-danger,var(--cds-fill-danger));font-size:var(--cds-font-size-footnote,12px);overflow-wrap:anywhere; }
 /* CDS Checkbox row (shared-frame Ux: inline-flex gap-xs, text-body text-primary, opacity-disabled when off). */
-.msx-check { display:inline-flex;align-self:flex-start;align-items:center;gap:var(--cds-gap-xs,6px);color:var(--cds-text-primary);font-size:var(--cds-font-size-body,14px); }
-.msx-check:has(input:disabled) > span:last-child { opacity:var(--cds-opacity-disabled,.4); }
+.msx-check { align-self:flex-start; } /* the CDS Checkbox (xP) row; only its placement in the form column is the host's */
 .msx-form :is(input[data-cds=TextInput], textarea[data-cds=TextArea]) { box-sizing:border-box;width:100%;min-width:0;padding:0 var(--cds-pad-md);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);outline:none;transition:box-shadow var(--cds-dur-fast); }
 .msx-form input[data-cds=TextInput] { height:var(--cds-h-control); }
 .msx-form textarea.msx-models { min-height:88px;max-height:160px;field-sizing:content;overflow-y:auto;padding:8px var(--cds-pad-md);resize:none;font-family:var(--cds-font-mono);font-size:var(--cds-font-size-footnote,12px);line-height:1.5; }

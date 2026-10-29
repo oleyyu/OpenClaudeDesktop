@@ -9,7 +9,10 @@ import fs from 'node:fs';
 const app = path.resolve(import.meta.dirname, '..');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {} } };
+// D21: the Settings graph now reaches view-tabs (source-menu's CdsTooltip, the Developer page's CdsBadge, the plugin
+// Overview's compiler helpers), whose preload-helper calls document.createElement while it evaluates.
+globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
+  createElement: () => ({ relList: { supports: () => false } }) };
 let server, Settings, React, render;
 before(async () => {
   React = (await import('react')).default;
@@ -21,7 +24,7 @@ before(async () => {
 });
 after(() => server?.close());
 const page = (initialSection, config = {}, props = {}) => render(React.createElement(Settings, { open: true, config: { threadIds: [], ...config },
-  model: 'm', effort: 'medium', permission: 'ask', boot: { connected: true, models: [] }, busy: false, initialSection,
+  model: 'm', effort: 'medium', permission: 'ask', boot: { connected: true, models: [], coworkEnabled: true }, busy: false, initialSection,
   desktopCall: async () => ({}), onSave: async () => ({}), onClose() {}, ...props }));
 const settingIds = html => [...html.matchAll(/data-setting-id="([^"]+)"/g)].map(match => match[1]);
 const control = (html, label) => new RegExp(`<button[^>]*aria-label="${label}"[^>]*>`).exec(html)?.[0] ?? '';
@@ -61,8 +64,11 @@ test('chrome: General / Usage / This computer › System nav, search field witho
   // B23 shared-19 ZC/BC: Settings (General first, Usage listed), This computer (System, Developer…), Customize.
   // The host's developer-facing pages (Profiles, Harness, Hooks, Core options) sit in an Advanced group, last.
   assert.deepEqual([...nav.matchAll(/<p>([^<]+)<\/p>/g)].map(match => match[1]), ['Settings', 'This computer', 'Customize', 'Advanced']);
-  assert.deepEqual([...nav.matchAll(/<span>([^<]+)<\/span><\/button>/g)].map(match => match[1]).slice(0, 10),
-    ['General', 'Usage', 'Theme', 'Code', 'Instructions', 'Commands', 'Models', 'System', 'Developer', 'Cores']);
+  // w13-chatfn-memory: shared-46 lists Memory (id memory) after Usage / Capabilities; the host has no Capabilities page.
+  // w13-chatfn-history: shared-46 pushes Privacy (id data-privacy-controls) right after General.
+  assert.deepEqual([...nav.matchAll(/<span>([^<]+)<\/span><\/button>/g)].map(match => match[1]).slice(0, 13),
+    // w13-coworkui-settings: shared-46 pushes Cowork right after Claude Code.
+    ['General', 'Privacy', 'Usage', 'Memory', 'Theme', 'Code', 'Cowork', 'Instructions', 'Commands', 'Models', 'System', 'Developer', 'Cores']);
   assert.match(nav, /<button aria-current="page"><span[^>]*>[^<]*<\/span><span>General<\/span>/);
   assert.match(nav, /<div class="ss-search"><span[^>]*data-cds="Icon"[^>]*>[^<]*<\/span><input aria-label="Search settings"[^>]*\/><\/div>/, 'icon + input only');
   assert.equal(html.includes('Clear settings search'), false);
@@ -78,7 +84,10 @@ test('chrome: General / Usage / This computer › System nav, search field witho
     // Customization pages (C1–C6) join the Settings and This computer groups; Customize stays last.
     // Harness (DeepSeek Harness profile overlays) is listed only on a core with harnessProfile; the fixture is Codex.
     // Hooks (hooks/list) is listed on a core with hooksList: the Codex fixture lists it, the DeepSeek core doesn't.
-    assert.deepEqual(tabs, ['General', 'Usage', 'Theme', 'Code', 'Instructions', 'Commands', 'Models', 'System', 'Developer', 'Cores', 'Skills', 'Connectors', 'Plugins', 'Hooks', 'Profiles']);
+    assert.deepEqual(tabs, ['General', 'Privacy', 'Usage', 'Memory', 'Theme', 'Code', 'Cowork', 'Instructions', 'Commands', 'Models', 'System', 'Developer', 'Cores', 'Skills', 'Connectors', 'Plugins', 'Hooks', 'Profiles']);
+    // w13-coworkui-settings: shared-46 `if(d&&!k)` pushes Cowork only while Cowork is on (CODE_DESKTOP_COWORK=0: boot.coworkEnabled false).
+    const noCowork = page('preferences', {}, { boot: { connected: true, models: [], coworkEnabled: false } });
+    assert.deepEqual([...noCowork.matchAll(/role="tab"[^>]*>([^<]+)</g)].map(match => match[1]).slice(0, 7), ['General', 'Privacy', 'Usage', 'Memory', 'Theme', 'Code', 'Instructions']);
     const deepseek = page('preferences', {}, { boot: { connected: true, models: [], core: { engine: 'deepseek', capabilities: {} } } });
     assert.ok([...deepseek.matchAll(/role="tab"[^>]*>([^<]+)</g)].map(match => match[1]).includes('Harness'));
     assert.equal([...deepseek.matchAll(/role="tab"[^>]*>([^<]+)</g)].map(match => match[1]).includes('Hooks'), false);
@@ -158,7 +167,8 @@ test('Code › Browser: Browser tools gates Open links and Keep cookies; Session
   for (const gone of ['Local sessions', 'Preview']) assert.equal(headings.includes(gone), false, gone);
   const ids = settingIds(html), at = ids.indexOf('agentPreview');
   // B39: then Allowed sites (cdc95db1a m) with its secondary sm Manage button.
-  assert.deepEqual(ids.slice(at, at + 4), ['agentPreview', 'previewLinks', 'previewStorage', 'previewAllowedSites']);
+  // V3-w11-sweep-shell-b: c71860c77 Or's Auto-open row sits between them, an `invisible` placeholder until its first read.
+  assert.deepEqual(ids.slice(at, at + 5), ['agentPreview', 'previewLinks', 'launchAutoOpenFiles', 'previewStorage', 'previewAllowedSites']);
   assert.match(html, /Sites where DeepSeek can use its Browser tools without a permission prompt\./);
   assert.match(html, /without a permission prompt\.[\s\S]*?<button[^>]*data-variant="secondary"[^>]*data-size="sm"[^>]*>(?:(?!<\/button>)[\s\S])*Manage/);
   assert.match(control(html, 'Browser tools'), /aria-checked="true"/);
@@ -189,17 +199,34 @@ test('Code › Sessions › Prompt suggestions: listed after keep-awake only for
 });
 
 // B23: shared-19 BD — zy.Tabs activateOnFocus:false: a narrow tab is chosen by click (Enter/Space on the button), never on focus.
+// W12 settings (Xh): 3.6556.2 shared-46 Zh renders the stacked tabs as Xd (shared-10 Qr, view-tabs CdsTabs) with
+// List activateOnFocus:!1 and className v=a?Xh:void 0 (kh() = GrowthBook __gb__2598786380, off): Base UI's composite
+// owns the roving tab stop and arrow keys, and the list carries only its own shared-10 classes.
 test('narrow tabs select on click only', () => {
+  const shell = fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js'), 'utf8');
+  assert.ok(shell.includes('v=a?Xh:void 0') && shell.includes('o(Xd.List,{activateOnFocus:!1,"aria-label":_,className:v,children:y})'));
+  assert.ok(shell.includes('o(Xd.Root,{value:f,onValueChange:g,children:b})'));
+  assert.ok(shell.includes('className:"shrink-0 pb-md",children:_'));
   const text = fs.readFileSync(path.join(app, 'src/source-settings.jsx'), 'utf8');
-  const tablist = text.slice(text.indexOf('<div role="tablist"'), text.indexOf('</div></header>', text.indexOf('<div role="tablist"')));
+  assert.ok(text.includes("import { CdsLayerProvider, CdsTabs } from './generated/view-tabs/index.js';"));
+  const tablist = text.slice(text.indexOf('<CdsTabs.Root'), text.indexOf('</CdsTabs.Root>'));
   assert.ok(tablist.length > 0);
   assert.equal(tablist.includes('onFocus'), false);
-  assert.match(tablist, /<button role="tab" aria-selected=\{tab===t\.id\}[^>]*onClick=\{\(\)=>\{selectTab\(t\.id\);/);
-  // B23 review: the roving tab stop follows the arrowed (highlighted) tab, as Base UI's composite does.
-  assert.match(tablist, /setTabHighlight\(navTabs\[next\]\?\.id\?\?null\);controls\[next\]\.focus\(\)/);
-  assert.match(tablist, /tabIndex=\{rovingTab===t\.id\?0:-1\}/);
-  assert.match(text, /const rovingTab=navTabs\.some\(entry=>entry\.id===tabHighlight\)\?tabHighlight:tab;/);
-  assert.match(text, /useEffect\(\(\)=>setTabHighlight\(null\),\[tab\]\);/);
+  assert.ok(tablist.includes('<CdsTabs.Root value={tab} onValueChange={id=>selectTab(id)}><CdsTabs.List activateOnFocus={false} aria-label={t(\'Settings\')}>'));
+  assert.equal(/<CdsTabs\.List[^>]*className/.test(tablist), false, 'kh() off: no Xh className');
+  assert.match(tablist, /<CdsTabs\.Tab key=\{t\.id\} value=\{t\.id\} disabledReason=\{null\} disabledReasonSide="bottom"/);
+  for (const gone of ['tabHighlight', 'rovingTab', 'settingsTabIndex', '.ss-narrow [role=tab]']) assert.equal(text.includes(gone), false, gone);
+  globalThis.innerWidth = 700;
+  try {
+    const narrow = page('preferences');
+    assert.match(narrow, /<\/div><div class="shrink-0 pb-md"><div data-orientation="horizontal"[^>]*data-cds="Tabs">/);
+    const list = /<div[^>]*role="tablist"[^>]*>/.exec(narrow)?.[0] ?? '';
+    assert.match(list, /aria-label="Settings"/);
+    assert.match(list, /class="flex items-center font-sans /, 'shared-10 Kr: Mr Nr Pr, no Xh');
+    assert.equal(list.includes('overflow-x-auto'), false);
+    assert.match(narrow, /<button type="button" data-active=""[^>]*role="tab" aria-selected="true"[^>]*class="relative isolate inline-flex shrink-0 items-center justify-center gap-1\.5 rounded-none h-control px-md /);
+  } finally { globalThis.innerWidth = 1200; }
+  assert.equal(fs.readFileSync(path.join(app, 'src/source-settings.css'), 'utf8').includes('.ss-narrow [role=tab]'), false, 'no host copy of the tab paint');
   const css = fs.readFileSync(path.join(app, 'src/source-settings.css'), 'utf8');
   assert.match(css, /\.ss-settings-dialog:not\(\[data-usage\]\) \{ max-width:max\(1024px,min\(1280px,calc\(100vw - 6rem\)\)\); max-height:max\(50rem,min\(60rem,calc\(100dvh - 6rem\)\)\); \}/);
 });
@@ -216,4 +243,76 @@ test('Storage: code actions under Code session details and Clear cache and resta
   assert.deepEqual([...html.matchAll(/aria-label="([^"]+ details)"/g)].map(match => match[1]), ['Code session details', 'App cache details']);
   const bare = render(React.createElement(pages.StorageRows, { value }));
   assert.deepEqual([...bare.matchAll(/aria-label="([^"]+ details)"/g)].map(match => match[1]), [], 'nothing measured and no actions: no Details');
+});
+
+// 3.6556.2 (lane w2-settings). Official text is read from the snapshot (never executed).
+const v3 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+test('menus C4 / CI-14: Transcript text size has no description (c0db37792 zt, QmhFCiN99p gone)', () => {
+  const official = v3('c0db37792-BYADKWA1.js');
+  assert.equal(official.includes('Size of the conversation transcript text.'), false);
+  assert.ok(official.includes('Maximum width of the transcript and composer columns.'), 'Transcript width keeps its description');
+  const html = page('code');
+  const at = html.indexOf('data-setting-id="transcriptSize"'), row = html.slice(at, html.indexOf('data-setting-id="', at + 20));
+  assert.ok(at > 0 && row.includes('Transcript text size'));
+  assert.equal(row.includes('data-settings-desc'), false, 'no description slot');
+  assert.equal(/aria-describedby/.test(row.slice(0, row.indexOf('>'))), false);
+  assert.equal(html.includes('Size of the conversation transcript text.'), false);
+  assert.ok(html.includes('Maximum width of the transcript and composer columns.'));
+});
+
+test('menus C5: the Developer server status is the view-tabs CdsBadge (success / danger / neutral, Starting is neutral)', async () => {
+  const official = v3('c8828a060-Co46iXy1.js');
+  assert.ok(official.includes('S=y==="running"?"success":y==="failed"||y==="not_responding"?"danger":"neutral"'));
+  assert.ok(official.includes('n(c,{variant:S,children:x})'));
+  const pages = await server.ssrLoadModule('/src/source-settings-pages.jsx');
+  const { CdsBadge } = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  const server_ = (name, runtimeStatus, extra = {}) => ({ name, runtimeStatus, tools: {}, ...extra });
+  for (const [runtimeStatus, label, variant] of [['connected', 'Running', 'success'], ['failed', 'Failed', 'danger'], ['starting', 'Starting', 'neutral'], [undefined, 'Status unavailable', 'neutral']]) {
+    assert.equal(pages.mcpStatusBadgeVariant(label), variant);
+    const html = render(React.createElement(pages.DeveloperServers, { desktop: { servers: [server_('alpha', runtimeStatus)], mcpDefinitions: [{ name: 'alpha', command: 'node', args: [] }] }, connected: true, onEditConfig() {} }));
+    const badge = render(React.createElement(CdsBadge, { variant }, label));
+    assert.ok(html.includes(`<h2>alpha</h2>${badge}`), `${label}: ${badge}`);
+    assert.match(badge, /^<span data-cds="Badge" class="inline-flex items-center gap-1 align-middle h-control-nested[^"]*"><span class="pb-\[0\.05em\]">/);
+    assert.equal(html.includes('ss-mcp-status'), false);
+  }
+  const css = fs.readFileSync(path.join(app, 'src/source-settings-pages.css'), 'utf8');
+  assert.equal(css.includes('.ss-mcp-status'), false, 'the hand-styled pill is gone');
+});
+
+test('menus C10: Disk space used reads "Calculated {when}.", "… Refreshing…" over a shown report, and adds the lower-bound line', async () => {
+  const official = v3('c71860c77-BH7EuJ1o.js');
+  assert.ok(official.includes('defaultMessage:"Calculated {when}. Refreshing\\u2026",id:"1fxFuk2hWl"'));
+  assert.ok(official.includes('defaultMessage:"Calculated {when}.",id:"EE2KwIs/V5"'));
+  assert.ok(official.includes('i&&o(s,{children:[" ",r("br",{}),r(Y,{defaultMessage:"Some folders couldn\\u2019t be measured, so this is a lower bound.",id:"AmBpsg2ljY"})]})'));
+  const pages = await server.ssrLoadModule('/src/source-settings-pages.jsx');
+  const value = { computedAt: Date.now(), bytes: 0, incomplete: false, areas: [] };
+  const desc = html => /<div id="[^"]+" data-settings-desc="">([\s\S]*?)<\/div>/.exec(html)?.[1];
+  assert.match(desc(render(React.createElement(pages.StorageRows, { value }))), /^Calculated <time[^>]*>just now<\/time>\.$/);
+  assert.match(desc(render(React.createElement(pages.StorageRows, { value, refreshing: true }))), /^Calculated <time[^>]*>just now<\/time>\. Refreshing…$/);
+  assert.match(desc(render(React.createElement(pages.StorageRows, { value: { ...value, incomplete: true } }))),
+    /^Calculated <time[^>]*>just now<\/time>\. <br\/>Some folders couldn’t be measured, so this is a lower bound\.$/);
+  const I18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
+  const zh = I18n.dictionary('zh-CN');
+  assert.equal(zh['Calculated {when}.'], '计算于{when}。');
+  assert.equal(zh['Calculated {when}. Refreshing…'], '计算于{when}。正在刷新…');
+});
+
+test('menus C3: the search popup starts with an empty sr-only status line; "+N more" outside Customize expands in place', async () => {
+  const official = v3('cc011544b-Bdta0Cl7.js');
+  assert.ok(official.includes('defaultMessage:"Showing {count, plural, one {# more match} other {# more matches}} in {section}",id:"X9YCIEhPuo"'));
+  assert.ok(official.includes('i("p",{role:"status",className:"sr-only",children:U})'));
+  const Search = await server.ssrLoadModule('/src/source-settings-search.jsx');
+  const results = [{ key: 'a', kind: 'hit', tab: 'code', section: 'Code', label: 'Code' }, { key: 'b', kind: 'more', tab: 'code', section: 'Code', count: 2 }];
+  const quiet = render(React.createElement(Search.SettingsSearchResults, { results, query: 'x', active: 0, onSelect() {}, onActive() {} }));
+  assert.match(quiet, /^<div class="ss-search-results" aria-label="Settings search results"><p role="status" class="sr-only"><\/p><button/);
+  const said = render(React.createElement(Search.SettingsSearchResults, { results, query: 'x', active: 0, onSelect() {}, onActive() {}, announcement: 'Showing 2 more matches in Code' }));
+  assert.ok(said.includes('<p role="status" class="sr-only">Showing 2 more matches in Code</p>'));
+  const text = fs.readFileSync(path.join(app, 'src/source-settings.jsx'), 'utf8');
+  assert.ok(text.includes("if(settingsSearchMoreExpands(result)){"));
+  assert.ok(text.includes("tn(result.count,'Showing {count} more match in {section}','Showing {count} more matches in {section}',{section:result.section})"));
+  assert.ok(text.includes('settingsSearch(searchTabs,[...groups,...settingsCatalogGroups(catalog,{cwd:customize?.cwd,threadId:customize?.threadId??null})],query,searchExpanded?.sections)'));
+  const I18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
+  const zh = I18n.dictionary('zh-CN');
+  assert.equal(zh['Showing {count} more matches in {section}'], '已在{section}中显示另外 {count} 项匹配');
+  assert.equal(zh['Showing {count} more match in {section}'], '已在{section}中显示另外 {count} 项匹配');
 });

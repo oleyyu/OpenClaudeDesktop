@@ -1,7 +1,8 @@
 // Work item sidebar-sections-store (research/sidebar-sections.md WI-2, decisions D10): config.sidebarSections and the
 // sidebar-state section operations (electron/sidebar-sections-store.mjs), seeded once from the legacy custom groups
-// (customGroups / sessionMetadata[].customGroupId / "ccg::" order / sidebarPreferences) the way 2.42304.0 seeds its
-// sections from the account's legacy preferences: shared-52 Em (kp) and shared-22 $b (Bp over Qb). The seeding waits for
+// (customGroups / sessionMetadata[].customGroupId / "ccg::" order / sidebarPreferences) the way 3.6556.2 seeds its
+// sections from the account's legacy preferences: shared-52 Dg (Nm) and shared-21 vE (Km over _E) -- 2.42304.0's
+// shared-52 Em (kp) and shared-22 $b (Bp over Qb), the names the comments below still use. The seeding waits for
 // the sections layout (its first section operation, or sections-seed): until then the classic list keeps writing the
 // legacy preferences, and the sections are derived from them as they are (R2 review fix). Nothing here opens a
 // window or talks to a core: pure functions over config objects, the original store actions on a plain store, a mocked
@@ -22,7 +23,8 @@ import * as RendererModel from '../src/generated/sidebar-sections/sections-model
 const require = createRequire(import.meta.url);
 const codexSections = require('../electron/codex-sections.cjs');
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+// w4-sidebar-filter: the sections model is 3.6556.2 (w3-sidebar-sections-gen); the reference is that snapshot.
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const read = (file) => fs.readFile(file, 'utf8');
 const copy = (value) => structuredClone(value);
 
@@ -103,27 +105,39 @@ function deps(config, calls = []) {
 }
 
 // ---------------------------------------------------------------- the functions called are the originals
-test('the model functions the store calls are the original 2.42304.0 shared-52 declarations; Qb / $b read what the host maps', async () => {
-  const code = await format(await read(path.join(reference, 'shared-52-DGviI8xb.js')), { parser: 'babel' });
+test('the model functions the store calls are the original 3.6556.2 shared-52 declarations; _E / vE read what the host maps', async () => {
+  const code = await format(await read(path.join(reference, 'shared-52-uHFNjl7C.js')), { parser: 'babel' });
   const ast = parsers.babel.parse(code, {});
   const generated = await read(path.join(app, 'electron/generated/sidebar-sections-model.mjs'));
-  for (const name of ['kp', 'Bp', 'Em', 'zp', 'Lp', 'Ip', 'Rp', 'Sp', 'Tp', 'xp', 'Dp', 'Ep', 'um', 'pm', '_m', 'gm', 'Tm', 'km', 'Om', 'Fp']) {
+  // 3.6556.2 locals (2.42304.0 in brackets): Nm [kp] Km [Bp] Em [Sp] Gm [zp] Um [Lp] Wm [Rp] Hm Tm km Om dg [um] pm _m
+  // vm wm Sm Cm Dg [Em] Am mg vg. The generated model keeps the official locals (its export list names them).
+  const exportsOf = Object.fromEntries([...generated.matchAll(/^\s+([\w$]+) as ([\w$]+),$/gm)].map((m) => [m[2], m[1]]));
+  const wanted = ['reconcileSections', 'seedSectionPrefs', 'normalizeSections', 'moveSection', 'setSectionView', 'inheritSessionsView',
+    'patchSectionView', 'normalizeSectionView', 'dedupeSections', 'withSectionId', 'customGroupKey', 'createSection',
+    'sessionsGroupByFromLegacy', 'legacyGroupByFromSessions', 'normalizeSectionGroupBy', 'isSectionGroupBy', 'isSectionSortBy',
+    'reconcileCodeSidebar', 'ensureFixedSections', 'normalizeCustomGroups', 'findCustomGroupByName'];
+  assert.deepEqual(wanted.map((name) => exportsOf[name]),
+    ['Nm', 'Km', 'Em', 'Gm', 'Um', 'Wm', 'Hm', 'Tm', 'km', 'Om', 'dg', 'pm', '_m', 'vm', 'wm', 'Sm', 'Cm', 'Dg', 'Am', 'mg', 'vg']);
+  for (const name of wanted.map((semantic) => exportsOf[semantic])) {
     const node = ast.program.body.find((n) => n.type === 'FunctionDeclaration' && n.id?.name === name);
     assert.ok(node, `shared-52 ${name}`);
     assert.ok(generated.includes(code.slice(node.start, node.end)), `electron model carries shared-52 ${name} verbatim`);
   }
-  // Exported names the other chunks use: Bp → Op (shared-22 Aa), kp → Sp (Ia), Em → Tf (La), um → ff ($a).
-  const shared52 = await read(path.join(reference, 'shared-52-DGviI8xb.js'));
-  for (const alias of ['Bp as Op', 'kp as Sp', 'Em as Tf', 'um as ff']) assert.ok(shared52.includes(alias), alias);
-  const shared22 = await read(path.join(reference, 'shared-22-HztmyUTM.js'));
-  for (const alias of ['Op as Aa', 'Sp as Ia', 'Tf as La', 'ff as $a', 'gt as gi', 'vt as Ni']) assert.ok(shared22.includes(alias), alias);
-  // shared-22 Qb / $b / onIdentityResolve as officialQb / officialSeed above read them.
-  assert.ok(shared22.includes('Zb="ccg::";function Qb(e){let{collapsedGroups:t}=Q.getState(),n=t=>`${t}.${e}`,r=jc(n(gi),[]);return{ascending:jc(n(Ub),!1)===!0,emptyGroups:jc(n(Ni),!1)===!0,routinesCollapsed:!qo.getState().expandedIds.includes(Ho),sessionsCollapsed:t.includes("recents"),pinnedCollapsed:t.includes("pinned"),isManualCollapsed:e=>t.includes($a(e)),manualOrder:(Array.isArray(r)?r:[]).filter(e=>typeof e=="string"&&e.startsWith(Zb)).map(e=>e.slice(5))}}'));
-  assert.ok(shared22.includes('function $b(e,t,n){if(e.prefsSeeded)return e;let r=Yb()[t],i=r?Xb(r,n??Kb(t)):e;if(i.prefsSeeded)return i;let a=t.slice(0,t.indexOf("/"));return{...i,sections:Aa(i.sections,Qb(a)),prefsSeeded:!0}}'));
-  assert.ok(shared22.includes('i=La(t,n);!i.prefsSeeded&&Ic()&&(i=$b(i,n,t.customGroupsByScope?.[n]))'));
-  assert.ok(shared22.includes('Ub="code-sessions-sort-ascending"'));
-  const shared78 = await read(path.join(reference, 'shared-78-D6VXYXaQ.js'));
-  for (const key of ['DX="code-projects-order"', 'OX="code-sessions-show-empty-projects"', 'DX as gt', 'OX as vt']) assert.ok(shared78.includes(key), key);
+  // SB-03: wm reads 2.42304.0's "environment" (folder) as "folder"; ym lists the 3.6556.2 groupings.
+  assert.ok(generated.includes('function wm(e) {\n  return e === "environment" ? "folder" : Sm(e) ? e : void 0;\n}'));
+  assert.ok(generated.includes('var ym = ["none", "folder", "savedEnvironment", "status", "date"];'));
+  // Exported names the other chunks use: Km → Og (shared-21 Ti), Dg → qm (Ua), dg → Nm (Ci).
+  const shared52 = await read(path.join(reference, 'shared-52-uHFNjl7C.js'));
+  for (const alias of ['Km as Og', 'Dg as qm', 'dg as Nm']) assert.ok(shared52.includes(alias), alias);
+  const shared21 = await read(path.join(reference, 'shared-21-R7LldJ05.js'));
+  for (const alias of ['Og as Ti', 'qm as Ua', 'Nm as Ci', 'pr as Uc', 'hr as Tc']) assert.ok(shared21.includes(alias), alias);
+  // shared-21 _E / vE / onIdentityResolve (2.42304.0 shared-22 Qb / $b) as officialQb / officialSeed above read them.
+  assert.ok(shared21.includes('gE="ccg::";function _E(e){let{collapsedGroups:t}=na.getState(),n=t=>`${t}.${e}`,r=Gv(n(Uc),[]);return{ascending:Gv(n(hE),!1)===!0,emptyGroups:Gv(n(Tc),!1)===!0,routinesCollapsed:!tu.getState().expandedIds.includes($l),sessionsCollapsed:t.includes("recents"),pinnedCollapsed:t.includes("pinned"),isManualCollapsed:e=>t.includes(Ci(e)),manualOrder:(Array.isArray(r)?r:[]).filter(e=>typeof e=="string"&&e.startsWith(gE)).map(e=>e.slice(5))}}'));
+  assert.ok(shared21.includes('function vE(e,t,n){if(e.prefsSeeded)return e;let r=fE()[t],i=r?pE(r,n??_ee(t)):e;if(i.prefsSeeded)return i;let a=t.slice(0,t.indexOf("/"));return{...i,sections:Ti(i.sections,_E(a)),prefsSeeded:!0}}'));
+  assert.ok(shared21.includes('i=Ua(t,n);!i.prefsSeeded&&Jv()&&(i=vE(i,n,t.customGroupsByScope?.[n]))'));
+  assert.ok(shared21.includes('hE="code-sessions-sort-ascending"'));
+  const shared78 = await read(path.join(reference, 'shared-78-D5Fw2h0a.js'));
+  for (const key of ['cQ="code-projects-order"', 'lQ="code-sessions-show-empty-projects"', 'cQ as pr', 'lQ as hr']) assert.ok(shared78.includes(key), key);
   // The store reads the legacy fields the same way as the independent reading above.
   const config = legacyConfig();
   const qb = Store.legacySectionPrefs(config), expected = officialQb(config);
@@ -149,16 +163,17 @@ test('a legacy config (groupBy custom, ccg:: order, custom:<id> folds) seeds the
   assert.deepEqual(sections.find((s) => s.id === 'g2').members, ['code:old'], 'archived members stay filed');
   const sessions = sections.at(-1);
   // show.metadata: the host's Show › Metadata (R3-sections seedLegacyMetadata, as 2.37337.1's Bp seeded it).
-  assert.deepEqual([sessions.groupBy, sessions.sortBy, sessions.ascending, sessions.show], ['none', 'alpha', true, { metadata: true, emptyGroups: true }]);
+  // 3.6556.2 dm.show carries sideChats (off by default; SB-11).
+  assert.deepEqual([sessions.groupBy, sessions.sortBy, sessions.ascending, sessions.show], ['none', 'alpha', true, { metadata: true, emptyGroups: true, sideChats: false }]);
   const off = { ...legacyConfig(), sidebarPreferences: { ...legacyConfig().sidebarPreferences, showMetadata: false } };
   assert.equal(Store.sidebarSectionsFor(off).at(-1).show.metadata, false, 'without the legacy switch Sessions keeps the 2.42304.0 default');
   const plain = Model.reconcileCodeSidebar({ activeGroupScope: 'local', codeSidebarByScope: {}, customGroupsByScope: { local: officialGroups(off) },
     groupByByMode: { code: 'custom' }, sortByByMode: { code: 'alpha' } }, 'local');
   itemByItem(Store.sidebarSectionsFor(off), Model.seedSectionPrefs(plain.sections, officialQb(off)), 'switch off: exactly 2.42304.0 Em + Bp');
   assert.ok(sections.every((s) => s.v === 2));
-  // mp: project → environment, state → status, date / unknown-to-mp → date; unset (or a value the host never offered)
-  // → no groupBy, which the sections read as the default (shared-16 Qf → vh: project).
-  for (const [groupBy, expected] of [['project', 'environment'], ['state', 'status'], ['date', 'date'], ['none', 'none'], [undefined, undefined], ['status', undefined]]) {
+  // _m (3.6556.2, SB-03): project → folder, state → status, date / unknown → date; unset (or a value the host never
+  // offered) → no groupBy, which the sections read as the default (vm → M_: project).
+  for (const [groupBy, expected] of [['project', 'folder'], ['state', 'status'], ['date', 'date'], ['none', 'none'], [undefined, undefined], ['status', undefined]]) {
     const one = { ...legacyConfig(), sidebarPreferences: { groupBy } };
     assert.equal(Store.sidebarSectionsFor(one).at(-1).groupBy, expected, String(groupBy));
     itemByItem(Store.sidebarSectionsFor(one), officialSeed(Model, one).sections, String(groupBy));
@@ -353,10 +368,12 @@ test('create-group in the sections layout copies the Sessions view (Rp) and keep
   assert.deepEqual(config.customGroups.at(-1), { id: 'cg-uuid-1', name: 'Release' });
   const created = config.sidebarSections.find((s) => s.id === 'cg-uuid-1');
   assert.deepEqual({ ...created, id: officialGroup.id }, official.get().codeSidebarByScope.local.sections.find((s) => s.id === officialGroup.id));
-  assert.deepEqual([created.groupBy, created.sortBy, created.ascending, created.show], ['status', 'created', true, { metadata: true, emptyGroups: false }]);
+  assert.deepEqual([created.groupBy, created.sortBy, created.ascending, created.show], ['status', 'created', true, { metadata: true, emptyGroups: false, sideChats: false }]);
   assert.deepEqual(config.sidebarSections.map((s) => s.id), ['pinned', 'routines', 'g3', 'g1', 'g2', 'cg-uuid-1', 'sessions']);
-  // An environment grouping is not copied (Rp: `r === "environment" ? {}`).
+  // A folder grouping is not copied (3.6556.2 Wm: `r === "folder" || r === "savedEnvironment" ? {}`). 2.42304.0's wire
+  // value "environment" (its folder grouping) is stored as "folder" (wm, SB-03).
   Store.applySidebarSectionOperation(config, { operation: 'section-view', id: 'sessions', view: { groupBy: 'environment' } }, d);
+  assert.equal(config.sidebarSections.at(-1).groupBy, 'folder');
   Store.applySidebarSectionOperation(config, { operation: 'create-group', name: 'Env', sections: true, sessionIds: ['s5', 'nope'] }, d);
   const env = config.sidebarSections.find((s) => s.name === 'Env');
   assert.equal(env.groupBy, undefined);
@@ -568,7 +585,8 @@ test('main.cjs keeps the record in step at startup (no seeding) and delegates; m
   assert.match(main, /sidebarSections: sidebarSectionsStore \? sidebarSectionsStore\.sidebarSectionsFor\(config\) :/);
   assert.match(main, /\} else if \(!sidebarSectionsStore\.applySidebarSectionOperation\(config, p, \{ knownSessionIds: \(\) => new Set\(\[\.\.\.config\.threadIds, \.\.\.config\.archivedThreadIds\]\),\n\s+mirror: mirrorSections, codexSections,/);
   assert.match(main, /throw new Error\("Unsupported sidebar operation\."\);\n\s+sidebarSectionsStore\.syncSidebarSections\(config\);\n\s+config\.sidebarRevision =/);
-  assert.equal((main.match(/mirrorSections\(/g) ?? []).length, 2, 'metadata pin/group mirror and the helper itself stay in main.cjs');
+  // w13 closeout: chatfn-history's branch pin follow (chat-branches pinMoved) mirrors the moved pin the same way.
+  assert.equal((main.match(/mirrorSections\(/g) ?? []).length, 3, 'metadata pin/group mirror, the branch pin follow and the helper itself stay in main.cjs');
   const jsx = await read(path.join(app, 'src/main.jsx'));
   assert.match(jsx, /import \{ sidebarSectionRequest, sidebarSectionsFor \} from "\.\.\/electron\/sidebar-sections-store\.mjs";/);
   assert.match(jsx, /if \(Array\.isArray\(result\.sidebarSections\)\) setSidebarSections\(result\.sidebarSections\);/);
@@ -615,4 +633,29 @@ test('hydrateSidebarSectionsStore loads a sidebar-state snapshot into the origin
   // The original selector path the sections chunks use (shared-16 Gf via group-mode) reads the hydrated Sessions view.
   state.setSectionView('sessions', { groupBy: 'status' });
   assert.equal(rendererModel.selectCodeSidebar(store.getState()).sections.at(-1).groupBy, 'status');
+});
+
+// ---------------------------------------------------------------- 3.6556.2 groupings and Show › Side chats (w4-sidebar-filter)
+test('SB-03 / SB-11: a stored groupBy "environment" (2.42304.0 folder) is rewritten as "folder"; savedEnvironment and show.sideChats persist', () => {
+  const config = legacyConfig();
+  Store.applySidebarSectionOperation(config, { operation: 'sections-seed' }, deps(config));
+  // A record written by 2.42304.0: Sessions grouped by "environment" (gp's folder grouping, _p `case "project": return "environment"`).
+  config.sidebarSections = config.sidebarSections.map((s) => s.id === 'sessions' ? { ...s, groupBy: 'environment', show: { metadata: true, emptyGroups: true } } : s);
+  // main.cjs at startup: the record is normalized through Em → Tm → wm and written back once.
+  assert.equal(Store.syncSidebarSections(config), true);
+  const sessions = () => config.sidebarSections.find((s) => s.id === 'sessions');
+  assert.deepEqual([sessions().groupBy, sessions().show], ['folder', { metadata: true, emptyGroups: true, sideChats: false }]);
+  assert.equal(Store.syncSidebarSections(config), false, 'idempotent');
+  // The renderer's writers (3.6556.2 _m): Environment → savedEnvironment; Side chats → show.sideChats.
+  const d = deps(config);
+  Store.applySidebarSectionOperation(config, { operation: 'section-view', id: 'sessions', view: { groupBy: 'savedEnvironment', show: { sideChats: true } } }, d);
+  assert.deepEqual([sessions().groupBy, sessions().show.sideChats], ['savedEnvironment', true]);
+  assert.deepEqual(Store.sectionViewPatch({ groupBy: 'environment' }), { groupBy: 'folder' });
+  assert.deepEqual(Store.sectionViewPatch({ show: { sideChats: false } }), { show: { sideChats: false } });
+  for (const bad of [{ groupBy: 'project' }, { groupBy: 'coder' }, { show: { sideChats: 'yes' } }, { show: { pr: true } }]) assert.equal(Store.sectionViewPatch(bad), null, JSON.stringify(bad));
+  // A new section does not copy a folder or saved-environment grouping (Wm).
+  Store.applySidebarSectionOperation(config, { operation: 'create-group', name: 'Saved', sections: true }, d);
+  assert.equal(config.sidebarSections.find((s) => s.name === 'Saved').groupBy, undefined);
+  // The legacy classic-list fields are not touched (D10: the Codex threadSection mirror reads groups and members only).
+  assert.equal(config.sidebarPreferences.groupBy, 'custom');
 });

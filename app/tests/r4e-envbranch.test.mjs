@@ -1,5 +1,5 @@
 // R4e-envbranch (home-15): a named environment's start branch that doesn't exist is cleared with a warning, as in
-// 2.42304.0 Te / qZ. Main's branch-on-origin (the original GitStatusService.isBranchOnOrigin over a stub git runner —
+// 3.6556.2 De / L0 (2.42304.0 Te / qZ; lane w1-composer-pure moved the generator). Main's branch-on-origin (the original GitStatusService.isBranchOnOrigin over a stub git runner —
 // no git process runs), the generator's source pins, the warning's ICU text in both locales (Vite SSR, no browser), and
 // the host wiring in main.jsx / main.cjs (source text).
 import test, { before, after } from 'node:test';
@@ -67,7 +67,7 @@ test('branch-on-origin: any other failure, or an implausible name, is null (unkn
   assert.equal(await createHostBranchOnOrigin(stubRun({}))('/repo', undefined), null);
 });
 
-test('the original refspec helpers: zur all/patterns/refused and Bur matching', () => {
+test('the original refspec helpers: C3tnPGuy _ all/patterns/refused and v matching (2.42304.0 zur / Bur)', () => {
   const { parseFetchRefspecs, refspecsCoverBranch, isPlausibleBranchName, gitExitCode } = generated;
   assert.deepEqual(parseFetchRefspecs(['+refs/heads/*:refs/remotes/origin/*'], 'origin'), { kind: 'all', prune: true });
   const patterns = parseFetchRefspecs(['+refs/heads/main:refs/remotes/origin/main', '+refs/heads/release/*:refs/remotes/origin/release/*'], 'origin');
@@ -82,14 +82,30 @@ test('the original refspec helpers: zur all/patterns/refused and Bur matching', 
   assert.equal(gitExitCode({ result: { code: 1 }, remoteExitSynthesized: true }), undefined);
 });
 
-test('generator: the originals and their call sites still match 2.42304.0, and the outputs are current', async () => {
+test('generator: the originals and their call sites still match 3.6556.2, and the outputs are current', async () => {
   await extractR4eEnvbranch({ check: true });
   const manifest = JSON.parse(await fs.readFile(new URL('../src/generated/r4e-envbranch/manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   const [module] = manifest.modules;
-  assert.deepEqual(module.bindings.map(binding => binding.exportedAs), ['startBranchMissing', 'branchMissingMessage']);
-  assert.deepEqual(module.imports.map(entry => [entry.local, entry.name]), [['J', 'LocalSessions']]);
-  assert.equal(module.callSites.me.in !== null, true, 'me is located inside its hook');
+  assert.deepEqual(module.bindings.map(binding => [binding.file, binding.name, binding.exportedAs]),
+    [['cc43287c9-Me-M2ucD.js', 'L0', 'startBranchMissing'], ['c3efc6f9e-BnLNtm1h.js', 'C.branchMissing', 'branchMissingMessage']]);
+  assert.deepEqual(module.imports.map(entry => [entry.local, entry.name, entry.via]), [['Tn', 'LocalSessions', './shared-0-DDOOdL6P.js:dh (pC)']]);
+  assert.deepEqual(Object.keys(module.callSites), ['R0', 'ue', 'onSelectBranch', 'setSourceBranch', 'stableHandler', 'sourceBranchHandler']);
+  assert.equal(module.callSites.ue.in, 'Lse', 'ue is located inside the environment apply hook');
+  assert.equal(module.callSites.onSelectBranch.in, 'wpe', 'the draft composer hands the picker the a4 setSourceBranch');
+  for (const label of ['setSourceBranch', 'stableHandler', 'sourceBranchHandler']) assert.equal(module.callSites[label].in, 'a4', label);
+  assert.match(module.callSites.R0.sha256, /^[0-9a-f]{64}$/);
+  // The 2.42304.0 message chunk is gone; the descriptor kept its id and text.
+  const snapshot = new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/', import.meta.url);
+  await assert.rejects(fs.access(new URL('ion-dist/assets/v1/cc0051c10-pi8fKHOz.js', snapshot)));
+  const origin = JSON.parse(await fs.readFile(new URL('../electron/generated/r4e-envbranch-origin-manifest.json', import.meta.url), 'utf8'));
+  assert.equal(origin.referenceVersion, '3.6556.2');
+  assert.deepEqual([origin.service.file, origin.service.class, origin.host.binding], ['index.chunk-Da165atI.js', 'W', 'un']);
+  assert.deepEqual(Object.fromEntries(Object.entries(origin.service.namespaces).map(([name, entry]) => [name, entry.require])), {
+    u: './index.chunk-DXSKLguD.js', s: './index.chunk-CArOlz-X.js', i: './index.chunk-NwjHwcLG.js', a: './index.chunk-C3tnPGuy.js' });
+  assert.deepEqual(origin.functions.map(fn => [fn.binding, fn.as]), [['F', 'isPlausibleBranchName'], ['r', 'gitExitCode'], ['_', 'parseFetchRefspecs'], ['v', 'refspecsCoverBranch']]);
+  assert.deepEqual(origin.callers.map(caller => caller.file), ['index.chunk-DVWJXMwL.js', 'index.chunk-jPKPzV-P.js']);
   const { branchMissingMessage } = await import('../src/generated/r4e-envbranch/start-branch-missing.mjs');
   assert.equal(branchMissingMessage.id, '94ae6MV2dl');
 });
@@ -103,7 +119,7 @@ before(async () => {
 });
 after(async () => { i18n?.setLocale('en-US'); await server?.close(); });
 
-test('the warning: FA.branchMissing with its known/saved selects, keyed branch-missing:<branch>, in en-US and zh-CN', () => {
+test('the warning: Hj.branchMissing (2.42304.0 FA) with its known/saved selects, keyed branch-missing:<branch>, in en-US and zh-CN', () => {
   i18n.setLocale('en-US');
   assert.deepEqual(notice.branchMissingNotice({ branch: 'gone', fallback: 'main', savedBranch: 'gone' }), {
     message: 'Branch gone wasn’t found in this folder’s repository. This session will start from main. To pick another branch, edit the environment.',
@@ -455,6 +471,18 @@ test('2.42304.0: branchCheckPending holds the draft submit, keyed by the start b
   for (const needle of ['holdSubmit:x=!1', 'if(x||ft.current)return e?.machineSend||X.isEmpty&&!_t.current?!1:(pt.current={',
     'gt=H(()=>{pt.current!==null&&(pt.current=null,ht(!1))},[])', 'if(t.targetKey!==C){gt();return}',
     'Ni=H(()=>{let e=pt.current;e===null||e.targetKey!==C||ot.current||ft.current||(gt(),Mi(e.opts))}', 'releaseQueuedSubmit:Ni,dropQueuedSubmit:gt'])
+    assert.equal(occurrences(composer, needle), 1, needle);
+});
+
+// The same hold in 3.6556.2 (R0 je / cc43287c9 cy; React Compiler shapes, so the anchors are the shipped text).
+const officialV3 = new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/', import.meta.url);
+test('3.6556.2: branchCheckPending still holds the draft submit, keyed by the start branch; the composer queues, drops and releases', async () => {
+  const draft = await fs.readFile(new URL('cc43287c9-Me-M2ucD.js', officialV3), 'utf8');
+  for (const needle of ['Ae=G||u||ne?void 0:Y,je=ye!==void 0', 'let Y=ye??j', 'else r?me(t):M(t)', 'branchCheckPending:je,dirtyTreeDialog:xe',
+    'Z.startIntent.modelPending===!0||Z.branchCheckPending)', 'holdSubmit:cy,holdTargetKey:hy', 'cy||Xo.current?.releaseQueuedSubmit()', 'onQueuedSubmitReady:Dy,'])
+    assert.equal(occurrences(draft, needle), 1, needle);
+  const composer = await fs.readFile(new URL('c227f4d5e-B-FYKrwT.js', officialV3), 'utf8');
+  for (const needle of ['onQueuedSubmitReady:v,holdSubmit:b,onSubmitHeld:S,holdTargetKey:C', 'releaseQueuedSubmit:gs,dropQueuedSubmit:en'])
     assert.equal(occurrences(composer, needle), 1, needle);
 });
 

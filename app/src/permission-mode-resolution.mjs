@@ -1,55 +1,77 @@
-// R4g-composer CP6 (composer-14): the composer's permission mode as Claude Desktop 2.42304.0 layers it, on the host.
+// R4g-composer CP6 (composer-14): the composer's permission mode as Claude Desktop 3.6556.2 layers it, on the host
+// (migrated from 2.42304.0 by lane w1-composer-pure).
 //
-// Official (c227f4d5e JI, pinned by scripts/extract-permission-mode.mjs): a draft's base mode is c8eb45883 d
-// (generated/permission-mode/resolution.mjs, `yy`): userChoice ?? userSettingsDefault ?? folderChoice ??
-// repoSettingsDefault ?? globalPref. A running session's mode is `q ?? (vt ? bypass) ?? _t ?? yt ?? l ?? De`: its own
-// pick, else the mode the session reports (or was spawned with), else the global preference. The layers:
-//   userChoice           `[q,tt]=zt(E,()=>null)`: an in-memory pick per opening (a draft, or the session it became),
-//                        never persisted with the draft (shared-1 lC has no permission field).
+// Official (c227f4d5e RR, pinned by scripts/extract-permission-mode.mjs): a draft's base mode is c8eb45883 p
+// (generated/permission-mode/resolution.mjs, `qb`; the 2.42304.0 d byte for byte): userChoice ?? userSettingsDefault ??
+// folderChoice ?? repoSettingsDefault ?? globalPref. A running session's mode is
+// `ct ?? (At ? bypass) ?? kt ?? jt ?? A ?? Ee`: its own pick, else the mode the session reports (or was spawned with),
+// else the global preference. The layers:
+//   userChoice           `[ct,lt]=$l(k,WR)` (WR returns null): an in-memory pick per opening (a draft, or the session
+//                        it became), never persisted with the draft.
 //   userSettingsDefault  settings.json defaultPermissionMode (user/managed source), local and SSH environments only.
-//   folderChoice         `Bc("epitaxy-folder-permission-mode",{},{scope:"account"})[folder]`, Plan excluded; the
-//                        session's folder is its originCwd without `/.claude/worktrees/<name>`.
+//   folderChoice         `Xd("epitaxy-folder-permission-mode-v2",{},AR)[folder]`, Plan excluded; the session's folder is
+//                        its originCwd without `/.claude/worktrees/<name>` (pR). For a remote session or an SSH/WSL
+//                        draft the key is environment-scoped and an unscoped pick is used only when it is less
+//                        permissive than the default (Jb over the rank table); the host has local folders only.
 //   repoSettingsDefault  settings.json defaultPermissionMode from the project's own settings.
-//   globalPref           `cc-landing-draft-permission-mode` through c8eb45883 u; only the auto-default nudge writes it.
-// A Mode-menu pick (gn) that differs from the current mode sets userChoice and, unless it is Plan or comes from the
-// approval card, the folder's pick; it never writes the global preference. When a draft moves from no folder to a
-// folder, a pick made before it is kept as that folder's pick; any folder move then clears the draft's userChoice.
+//   globalPref           `cc-landing-draft-permission-mode` through c8eb45883 f; only the auto-default nudge writes it.
+// A Mode-menu pick that differs from the current mode sets userChoice and, unless it is Plan, comes from the approval
+// card or is Bypass on a scratch / remote-env key (DR), the folder's pick; it never writes the global preference. When a
+// draft moves from no folder to a folder, a pick made before it is kept as that folder's pick (not a Bypass into an fR
+// key); any folder move then clears the draft's userChoice.
+//
+// The v2 folder map (E11, the 3.6556.2 migration): AR = {scope:"account", seedFromPref:{key:"epitaxy-folder-permission-mode",
+// map: OR}}. While the v2 map has never been stored, it is seeded once from the 2.42304.0 map through
+// `OR(e)=Object.fromEntries(Object.entries(e).filter(([e,t])=>t!=="bypassPermissions"||fR(e)))`, with
+// `fR(e)=/^(?:remote|remote-env|remote-session|scratch|ssh|wsl):/.test(e)`: every Bypass remembered on a local folder is
+// dropped; any other pick carries over. The v1 map is only read (no `retire`), never written or removed. After the
+// seed, picking Bypass in a folder remembers it in v2 as before. Host: the same, under the same two keys; the host has
+// no remote-prefixed keys, so in effect every remembered folder Bypass is dropped once, and Auto / Accept edits / Manual
+// picks survive. (The kept-Bypass pick of a running Codex turn, permission-mode-kept-bypass.mjs, is not affected.)
 //
 // Host adapter:
 //   - userSettingsDefault and repoSettingsDefault: the host cores have no settings.json defaultPermissionMode, so both
 //     layers are absent (undefined), the official branch for an environment without settings.
 //   - globalPref is the host's own Settings › Default permission mode (config.permission through savedPermission), used
-//     as is: a saved Plan or Bypass keeps working (official u would turn Plan into Accept edits, and without the
+//     as is: a saved Plan or Bypass keeps working (official f would turn Plan into Accept edits, and without the
 //     GrowthBook auto-default gate `ccd_auto_default_mode` would also turn Auto into Accept edits). Settings is the only
 //     writer; there is no auto-default nudge on the host.
-//   - The folder map lives in this renderer's localStorage under the official key (one local account, so no account
-//     scope), and follows other windows through the storage event.
-//   - A running session's mode: official _t is the session record's permissionMode (`_t=s?.permissionMode`), kept with
+//   - The folder map lives in this renderer's localStorage under the official keys (one local account, so no account
+//     scope), and follows other windows through the storage event on the v2 key.
+//   - A running session's mode: official kt is the session record's permissionMode (`kt=c?.permissionMode`), kept with
 //     the session across restarts. The host cores do not report one and the session record (config.sessionMetadata) is
 //     main-process owned, so the renderer keeps the session's last mode (the mode it was started with from this window,
 //     then every in-session Mode-menu pick) in localStorage under a host key (SESSION_PERMISSION_KEY, capped at
-//     SESSION_PERMISSION_LIMIT sessions). The spawn layer (l) stays this app run only. A session with no entry (started
+//     SESSION_PERMISSION_LIMIT sessions). The spawn layer (A) stays this app run only. A session with no entry (started
 //     before this layer existed, or storage unavailable) falls back to the global preference.
+//   - Not ported (no host counterpart): the forced-Auto branch (`st`, a model that requires Auto mode), the effects keyed
+//     on a session-reported mode (kt), and the pick's undo (`y`) when a running session rejects the change — the host
+//     pick is local state and its core call has no failure path back into these layers.
 //   - Host mode values: ask = default (Manual), bypass = bypassPermissions. A remembered Bypass is still subject to the
 //     opt-in (source-bypass-permission.jsx reads it as Auto while unavailable); turning the opt-in off drops every
 //     remembered Bypass pick, as preferences.mjs does for the saved default.
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { resolvePermissionBaseMode } from './generated/permission-mode/resolution.mjs';
 
-export const FOLDER_PERMISSION_KEY = 'epitaxy-folder-permission-mode';
-/** Host stand-in for the session record's permissionMode (_t): not an official key. */
+/** c227f4d5e RR `[We,Ge]=Xd("epitaxy-folder-permission-mode-v2",kR,AR)`: the folder map the composer reads and writes. */
+export const FOLDER_PERMISSION_KEY = 'epitaxy-folder-permission-mode-v2';
+/** AR.seedFromPref.key: the 2.42304.0 folder map, read once to seed the v2 map (OR), never written. */
+export const FOLDER_PERMISSION_SEED_KEY = 'epitaxy-folder-permission-mode';
+/** c227f4d5e fR: keys a Bypass pick survives the seed on (none of them are host folder keys). */
+export const SCOPED_FOLDER_KEY = /^(?:remote|remote-env|remote-session|scratch|ssh|wsl):/;
+/** Host stand-in for the session record's permissionMode (kt): not an official key. */
 export const SESSION_PERMISSION_KEY = 'openclaude-session-permission-mode';
 export const SESSION_PERMISSION_LIMIT = 500;
 export const PERMISSION_MODES = Object.freeze(['auto', 'ask', 'acceptEdits', 'plan', 'bypass']);
 export const isPermissionMode = value => PERMISSION_MODES.includes(value);
 
-/** zt(E): one opening per draft surface, and one per session. */
+/** $l(k, …): one opening per draft surface, and one per session. */
 export function permissionOpeningKey({ sessionId = null, surface = 'code' } = {}) {
   return sessionId ? `session:${sessionId}` : `draft:${surface || 'code'}`;
 }
 const isDraftOpening = key => typeof key === 'string' && key.startsWith('draft:');
 
-/** c227f4d5e Xe for a local opening: the session's origin folder (worktree suffix stripped), else the draft's folder. */
+/** c227f4d5e $e for a local opening: the session's origin folder (worktree suffix stripped), else the draft's folder. */
 export function permissionFolderKey({ sessionId = null, originCwd = null, sessionCwd = null, draftCwd = null } = {}) {
   const text = value => typeof value === 'string' && value ? value : null;
   if (sessionId) {
@@ -59,25 +81,29 @@ export function permissionFolderKey({ sessionId = null, originCwd = null, sessio
   return text(draftCwd);
 }
 
-/** gn: `_=!!h&&o!=="approval_card"&&a!=="plan"&&!(a==="bypassPermissions"&&zI(h))` (the host has no scratch or
- * remote-env folder keys, so zI never holds). */
+/** The pick: `v=!!g&&c!=="approval_card"&&e!=="plan"&&!(e==="bypassPermissions"&&DR(g))`, DR = the scratch key
+ * `scratch:` or a `remote-env:` key (the host has neither, so DR never holds for a host folder). */
+const scratchOrRemoteEnv = key => key === 'scratch:' || key.startsWith('remote-env:');
 export function folderPickWrites({ folderKey, value, how = 'mode_dropdown' } = {}) {
-  return !!folderKey && how !== 'approval_card' && value !== 'plan';
+  return !!folderKey && how !== 'approval_card' && value !== 'plan' && !(value === 'bypass' && scratchOrRemoteEnv(folderKey));
 }
 
-/** The rt effect for a draft whose folder changed from `previous` to `next` (host: no scratch or remote-env keys). */
+/** The ht effect for a draft whose folder changed from `previous` to `next`: a pick made with no folder carries into the
+ * first one, except a Bypass into an fR key (`!(t==="bypassPermissions"&&$e!==null&&fR($e))`); host: no scratch,
+ * remote-env or fR keys. */
 export function draftFolderMove({ previous = null, next = null, userChoice = null } = {}) {
   if (previous === next) return { save: null, reset: false };
-  const fromNone = previous === null, carries = fromNone && userChoice !== null && userChoice !== 'plan';
+  const fromNone = previous === null;
+  const carries = fromNone && userChoice !== null && userChoice !== 'plan' && !(userChoice === 'bypass' && next !== null && SCOPED_FOLDER_KEY.test(next));
   return { save: carries && next !== null ? { key: next, value: userChoice } : null, reset: true };
 }
 
-/** The opening's mode: a draft through the original d, a running session through its own chain. */
+/** The opening's mode: a draft through the original p, a running session through its own chain. */
 export function resolveOpeningMode({ sessionId = null, userChoice = null, sessionMode, spawnMode, folderChoice, globalPref = 'auto', settled = true } = {}) {
   const pick = isPermissionMode(userChoice) ? userChoice : null;
   const global = isPermissionMode(globalPref) ? globalPref : 'auto';
   if (sessionId) {
-    // `q ?? … ?? _t ?? yt ?? l ?? De`: the pick, the session's recorded mode, the spawn mode, the global preference.
+    // `ct ?? … ?? kt ?? jt ?? A ?? Ee`: the pick, the session's recorded mode, the spawn mode, the global preference.
     const recorded = isPermissionMode(sessionMode) ? sessionMode : undefined;
     const spawned = isPermissionMode(spawnMode) ? spawnMode : undefined;
     return { mode: pick ?? recorded ?? spawned ?? global,
@@ -89,11 +115,26 @@ export function resolveOpeningMode({ sessionId = null, userChoice = null, sessio
   return { mode: base.baseMode, source: base.baseModeSource, hasExplicitChoice: base.hasExplicitChoice };
 }
 
+const validPicks = value => !value || typeof value !== 'object' || Array.isArray(value) ? null
+  : Object.fromEntries(Object.entries(value).filter(([key, mode]) => key && isPermissionMode(mode)));
+/** c227f4d5e OR over host mode values: drop every Bypass pick whose key is not an fR (remote / scratch / ssh / wsl) key. */
+export function seedFolderPicks(v1) {
+  return Object.fromEntries(Object.entries(v1 ?? {}).filter(([key, mode]) => mode !== 'bypass' || SCOPED_FOLDER_KEY.test(key)));
+}
+/**
+ * The v2 folder map. While it has never been stored, it is seeded once from the v1 map through seedFolderPicks and the
+ * seed is stored as v2 (official Qp: `Se(persisted.<v2>, seed.read())` when the mapped value is not null); v1 is left
+ * as it is. Bad entries and broken storage read as none.
+ */
 export function readFolderPicks(storage) {
   try {
-    const value = JSON.parse(storage?.getItem?.(FOLDER_PERMISSION_KEY) ?? 'null');
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-    return Object.fromEntries(Object.entries(value).filter(([key, mode]) => key && isPermissionMode(mode)));
+    const stored = storage?.getItem?.(FOLDER_PERMISSION_KEY);
+    if (stored != null) return validPicks(JSON.parse(stored)) ?? {};
+    const v1 = validPicks(JSON.parse(storage?.getItem?.(FOLDER_PERMISSION_SEED_KEY) ?? 'null'));
+    if (!v1) return {};
+    const seeded = seedFolderPicks(v1);
+    writeFolderPicks(storage, seeded);
+    return seeded;
   } catch { return {}; }
 }
 export function writeFolderPicks(storage, picks) {
@@ -135,7 +176,7 @@ export function permissionLayersReducer(state, action) {
       if (!openingKey || !isPermissionMode(value) || value === current) return state;
       const next = { ...state, choices: { ...state.choices, [openingKey]: value } };
       if (folderPickWrites({ folderKey, value, how })) next.folders = { ...state.folders, [folderKey]: value };
-      // A pick in a session is that session's mode from now on (official: set_permission_mode updates _t).
+      // A pick in a session is that session's mode from now on (official: set_permission_mode updates kt).
       if (openingKey.startsWith('session:')) next.sessions = rememberSessionMode(state.sessions ?? {}, openingKey.slice('session:'.length), value);
       return next;
     }

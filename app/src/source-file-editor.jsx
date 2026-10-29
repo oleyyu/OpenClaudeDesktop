@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+import { CdsRoot, useDirection } from './generated/view-tabs/index.js';
+import { SelectionActionBar } from './generated/code-current/terminal-action-bar.mjs';
 import { Icon } from './icons';
 import { FileCommentCard } from './source-file-comments.jsx';
 import { fileCommentsStore, fileCommentAttachmentKey } from './file-comments-store.mjs';
@@ -10,9 +11,10 @@ import { useSourceToasts } from './source-toast.jsx';
 import { editorClipboardExtension, editorMenuItems, editorSelectedContext, editorCaret, goToEditorLocation, syncEditorSelection, runEditorCommand } from './file-editor-commands.mjs';
 import React, { useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { EditorState, EditorView, Compartment, Decoration, keymap, drawSelection, history, historyKeymap, highlightWhitespace, scrollPastEnd, Transaction } from './code-editor-core.mjs';
-import { loadEditorLanguage, cachedEditorLanguage } from './generated/code-editor-current/wrapper.mjs';
+import { loadEditorLanguage, cachedEditorLanguage, pendingEditorLanguage, settleEditorParse } from './generated/code-editor-current/wrapper.mjs';
 import { rememberEditorView, restoreEditorView, restoredHistory, restoredFolds, baseLanguageBehavior, detectedIndentation, resetIndentation, editorKeymap, codeFolding, bracketIndentation, bracketJump, autoCloseBrackets, tabIndentation, columnSelection, indentGuides, externalEditorChange, externalEditorUpdate, updateEditorTransactions } from './generated/code-editor-current/wrapper.mjs';
 import { unfoldEditorRange } from './file-editor-folds.mjs';
+import { createFindReveal, runFindReveal } from './file-editor-find.mjs';
 import { useSettledHighlight } from './use-settled-highlight.mjs';
 import { tokenLines, fileHighlightLanguage, fileViewerTooSlow } from './file-preview-model.mjs';
 import { tokenCSS } from './highlight-model.mjs';
@@ -21,6 +23,8 @@ import { useCodeThemes } from './code-theme-store.mjs';
 import themeColors from './generated/code-theme-colors.json';
 import { t } from '../electron/i18n/index.mjs';
 
+// shared-18 lx, the experimental flags fx hands its compact CdsRoot.
+const CHIP_ROOT_EXPERIMENTAL = { naturalImageTiles: 'sized' };
 // The current source theme uses the user's code-theme palette, including active indent guides.
 const viewOptions = (settings, hintId) => [
   settings.wordWrap ? EditorView.lineWrapping : [], EditorState.tabSize.of(settings.tabSize),
@@ -41,7 +45,8 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
   const actions = useRef(null);
   actions.current = { onGoToLine, onAttachFile, onAttachSelection, onDownload, onSaveComment, onDeleteComment };
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
-  const host = useRef(null), view = useRef(null);
+  const host = useRef(null), view = useRef(null), findReveal = useRef(null);
+  if (!findReveal.current) findReveal.current = createFindReveal(find);
   const themes = useCodeThemes();
   const [mode,setMode] = useState(() => typeof document !== 'undefined' && document.documentElement.dataset.mode === 'dark' ? 'dark' : 'light');
   const theme = useMemo(() => editorTheme(themeColors[themes[mode]].editor), [themes,mode]);
@@ -59,9 +64,9 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
   const tokens = useSettledHighlight({ text: normalized, language: fileViewerTooSlow(normalized, language) ? 'text' : language, isFrontier: false, languageSettled: true, scopeKey: editor.key }, host);
   useLayoutEffect(() => { editor.setAutoSave(settings.autoSave !== false); }, [editor, settings.autoSave]);
   useLayoutEffect(() => {
-    const parent=host.current.closest('[data-pane-root]') ?? host.current.parentElement;
-    const tooltipParent=host.current.ownerDocument.createElement('div');
-    Object.assign(tooltipParent.style,{position:'absolute',left:'0',top:'0',width:'0',height:'0'});parent.appendChild(tooltipParent);
+    // Official Jo: vo(e)=e.closest("[data-pane-root]"); without a pane root no chip container is made.
+    const parent=host.current.closest('[data-pane-root]'); const tooltipParent=parent?.ownerDocument.createElement('div');
+    if(parent&&tooltipParent){tooltipParent.className='absolute left-0 top-0 size-0'; parent.append(tooltipParent);}
     const selections=selectionActions({
       getHandler:()=>actions.current.onAttachSelection ? (text,range)=>actions.current.onAttachSelection({text,...range}) : undefined,
       getCommentHandler:()=>actions.current.onSaveComment ? (start,end,code)=>comments.create(start,end,code) : undefined,
@@ -75,7 +80,8 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       commentWidgets((event,value)=>setCards(current=>event==='mount'?[...current,value]:current.filter(item=>item!==value))),
       baseLanguageBehavior, detectedIndentation(true, editor.path), bracketIndentation(true), bracketJump(true), autoCloseBrackets(true), columnSelection(true),
       codeFolding(true, { formatMessage: ({ defaultMessage }) => t(defaultMessage) }),
-      grammar.current.of(cachedEditorLanguage(editor.path) ?? []),
+      // Official Jo seeds the grammar compartment with Yt ?? qi(h): the cached grammar, else the pending closeBrackets data.
+      grammar.current.of(cachedEditorLanguage(editor.path) ?? pendingEditorLanguage(editor.path)),
       EditorView.clipboardInputFilter.of((text, state) => text.replace(/\r\n|\r|\n/g, state.lineBreak)),
       EditorState.allowMultipleSelections.of(true),
       EditorState.phrases.of({ 'Selection deleted': t('Selection deleted') }),
@@ -88,9 +94,13 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       EditorView.updateListener.of(update => { if (update.docChanged) editor.change(update.state.sliceDoc()); }),
     ] }) });
     view.current = cm;
+    // A new view starts like a fresh Jo mount: Nr=t(x?.query) and the Pr effect runs once.
+    findReveal.current = createFindReveal(find);
     cm.dispatch({effects:setCommentSlots.of(commentEnabled?comments.getSnapshot().entries.map(entry=>({id:entry.id,line:entry.end})):[])});
+    // Official Jo's [Zt] effect (on mount and after the grammar loads): reconfigure(Zt), then uo(e) force-parses near the viewport.
+    settleEditorParse(cm);
     void loadEditorLanguage(editor.path).then(language => {
-      if (view.current === cm && language) cm.dispatch({ effects: grammar.current.reconfigure(language) });
+      if (view.current === cm && language) { cm.dispatch({ effects: grammar.current.reconfigure(language) }); settleEditorParse(cm); }
     });
     if (apiRef) apiRef.current = { caret: () => editorCaret(cm.state), focus: () => cm.focus(), go: (line, column) => goToEditorLocation(cm, line, column) };
     const document = host.current.ownerDocument;
@@ -98,7 +108,7 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     const flush = () => { void editor.flushAutoSave(); };
     document.addEventListener('visibilitychange', hidden);
     document.defaultView.addEventListener('pagehide', flush);
-    return () => { flush(); document.removeEventListener('visibilitychange', hidden); document.defaultView.removeEventListener('pagehide', flush); rememberEditorView(editor.key, cm, {}); view.current = null; if (apiRef) apiRef.current = null; cm.destroy(); selectionController.current=null; tooltipParent.remove(); comments.release(); };
+    return () => { flush(); document.removeEventListener('visibilitychange', hidden); document.defaultView.removeEventListener('pagehide', flush); rememberEditorView(editor.key, cm, {}); view.current = null; if (apiRef) apiRef.current = null; cm.destroy(); selectionController.current=null; tooltipParent?.remove(); comments.release(); };
   }, [editor]); // Initial text and options are subsequently updated without losing selection/history.
   useLayoutEffect(() => { view.current?.dispatch({effects:paint.current.reconfigure(theme)}); }, [theme]);
   useLayoutEffect(()=>{view.current?.dispatch({effects:setCommentSlots.of(commentEnabled?commentState.entries.map(entry=>({id:entry.id,line:entry.end})):[])});},[commentState.entries,commentEnabled]);
@@ -147,9 +157,11 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     const jump = !find && Number.isInteger(line) && line > 0 ? Math.min(line, cm.state.doc.lines) : null;
     if (jump) for (let n = jump; n <= Math.min(endLine || jump, cm.state.doc.lines); n++) ranges.push(Decoration.line({ class: 'cm-epitaxyJumpRange' }).range(cm.state.doc.line(n).from));
     const effects = [search.current.reconfigure(EditorView.decorations.of(Decoration.set(ranges, true)))];
-    const target = active ? cm.state.doc.line(Math.min(active.line, cm.state.doc.lines)).from + active.start : jump ? cm.state.doc.line(jump).from : null;
-    if (target !== null) effects.push(...unfoldEditorRange(cm.state, target), EditorView.scrollIntoView(Math.min(target, cm.state.doc.length), { y: 'center' }));
+    if (jump) { const target = cm.state.doc.line(jump).from; effects.push(...unfoldEditorRange(cm.state, target), EditorView.scrollIntoView(target, { y: 'center' })); }
     cm.dispatch({ effects });
+    // 3.6556.2 cbd02b8f2 Jo Pr, deps Rr=[query,options,activeLine,scrollNonce]: `t&&J!==void 0&&(fo(e,t),t.query===Nr.current&&uo(e)),Nr.current=t?.query`.
+    // fo centers the active hit and puts the caret on it; uo settles the parse only for another hit of the same query.
+    runFindReveal(cm, find, findReveal.current);
   }, [find, line, endLine, scrollNonce, normalized]);
   const openMenu = event => {
     const cm = view.current;
@@ -162,6 +174,11 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     const cm = menu.view;
     void runEditorCommand(cm, action, { isCurrent: () => view.current === cm }).catch(() => toasts?.add(t(action === 'paste' ? 'Couldn’t paste from clipboard.' : 'Couldn’t copy to clipboard.'), { variant: 'danger' }));
   };
+  const direction = useDirection();
+  const chipActions = chip ? [
+    ...(onAttachSelection ? [{ key: 'add-to-chat', label: t('Attach as context'), shortcut: 'cmd+shift+l', onSelect: chip.attach }] : []),
+    ...(commentEnabled ? [{ key: 'add-comment', label: t('Add comment'), ariaLabel: chip.range.fromLine===chip.range.toLine?t('Comment on line {line}',{line:chip.range.fromLine}):t('Comment on lines {start}–{end}',{start:chip.range.fromLine,end:chip.range.toLine}), onSelect: chip.comment }] : []),
+  ] : [];
   const hintKey = event => { if (settings.tabIndents && event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey && !pointerUsed.current && event.target === view.current?.contentDOM) setShowTabHint(true); };
   return <>
     <div ref={shell} className="sfv-editor-shell"
@@ -176,13 +193,17 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       : 'Tab inserts indentation. To move the focus with Tab, press Control+M first.')}</span>}
     {commentEnabled&&hover&&<button type="button" className="sfv-gutter-comment" aria-label={t('Comment on line {line}',{line:hover.line})} style={{top:hover.top+(hover.rowHeight-16)/2}} onMouseDown={event=>event.preventDefault()} onClick={()=>{const cm=view.current;if(!cm)return;const line=cm.state.doc.line(Math.min(hover.line,cm.state.doc.lines));comments.create(line.number,line.number,line.text);if(cm.state.selection.ranges.some(range=>!range.empty))cm.dispatch({selection:{anchor:line.from}});}}><Icon name="Add" size={12} weight="strong"/></button>}
     </div>
-    {chip&&createPortal(<div className="sfv-selection-toolbar" style={menu?{visibility:'hidden'}:undefined}>
-      {onAttachSelection&&<SourceSettingsButton variant="ghost" aria-keyshortcuts="Meta+Shift+L" onMouseDown={event=>event.preventDefault()} onClick={chip.attach}>{t('Attach as context')}</SourceSettingsButton>}
-      {onAttachSelection&&commentEnabled&&<span aria-hidden="true" className="sfv-selection-divider"/>}
-      {commentEnabled&&<SourceSettingsButton variant="ghost" aria-label={chip.range.fromLine===chip.range.toLine?t('Comment on line {line}',{line:chip.range.fromLine}):t('Comment on lines {start}–{end}',{start:chip.range.fromLine,end:chip.range.toLine})} onMouseDown={event=>event.preventDefault()} onClick={chip.comment}>{t('Add comment')}</SourceSettingsButton>}
-    </div>,chip.dom)}
+    {/* cbd02b8f2 li: `W !== null && Z.length > 0 ? p(n(oe, {children: n("div", {dir: Je, className: Ft ? "pointer-events-auto
+        invisible" : "pointer-events-auto", children: n(le, {actions: Z})})}), W.dom) : null`. oe is shared-18 fx (shared-frame yd,
+        view-tabs CdsRoot, density compact, experimental lx, className contents), le is ceb49ada3 t (the SelectionActionBar the
+        terminal and the Changes chip render), Ft the editor's context menu being open, Je `useDirection() === "rtl" ? "rtl" : undefined`.
+        Z: `{key: "add-to-chat", label: "Attach as context", shortcut: "cmd+shift+l", onSelect: W.attach}` when attaching is possible,
+        then `{key: "add-comment", label: "Add comment", ariaLabel: Tt(P, {start, end}), onSelect: W.comment}` when commenting is. */}
+    {chip&&chipActions.length>0&&createPortal(<CdsRoot density="compact" experimental={CHIP_ROOT_EXPERIMENTAL} className="contents">
+      <div dir={direction==='rtl'?'rtl':undefined} className={menu?'pointer-events-auto invisible':'pointer-events-auto'}><SelectionActionBar actions={chipActions}/></div>
+    </CdsRoot>,chip.dom)}
     {commentEnabled&&cards.map(card=>{const entry=commentState.entries.find(entry=>entry.id===card.id);return entry?createPortal(<FileCommentCard entry={entry} active={commentState.active===entry.id} store={comments}
-      onSave={(entry,options)=>onSaveComment({...entry,key:fileCommentAttachmentKey(editor.key,entry.id)},options)}
+      onSave={(entry,options)=>onSaveComment({...entry,key:fileCommentAttachmentKey(editor.key,entry.id),source:'file'},options)}
       onDelete={entry=>onDeleteComment?.({...entry,key:fileCommentAttachmentKey(editor.key,entry.id)})}/>,card.dom,card.seq):null;})}
     {menu && <SourceMenu.Popup anchor={menu.view.contentDOM} point={menu.point} trigger={null} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard
@@ -196,9 +217,10 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       {editorMenuItems(menu.view.state, { windows: typeof navigator !== 'undefined' && /Win/.test(navigator.platform) }).map((item, index) => item.separator
         ? <SourceMenu.Separator key={index} /> : <SourceMenu.Item key={item.action} shortcut={item.shortcut} disabled={item.disabled} onClick={() => command(item.action)}>{t(item.label)}</SourceMenu.Item>)}
       {onGoToLine && <><SourceMenu.Separator /><SourceMenu.Item shortcut="ctrl+g" onClick={onGoToLine}>{t('Go to line')}</SourceMenu.Item></>}
-      <SourceMenu.Separator />
-      <SourceMenu.Item onClick={() => { void navigator.clipboard.writeText(menu.view.state.sliceDoc()).catch(() => toasts?.add(t('Couldn’t copy to clipboard.'), { variant: 'danger' })); }}>{t('Copy file contents')}</SourceMenu.Item>
-      {onDownload && <SourceMenu.Item disabled={downloading} disabledReason={t('Downloading…')} onClick={() => onDownload(menu.view.state.sliceDoc())}>{t('Download file')}</SourceMenu.Item>}
+      {/* cd2efac6e (editor branch, zu set): `(z || pg) && F.Separator, z && Copy file contents, pg && Download`. z = R !== null
+          only for channel/chat/task files, so a Code local file has no Copy file contents here (the ⋮ menu and the preview keep it). */}
+      {onDownload && <><SourceMenu.Separator />
+      <SourceMenu.Item disabled={downloading} disabledReason={t('Downloading…')} onClick={() => onDownload(menu.view.state.sliceDoc())}>{t('Download file')}</SourceMenu.Item></>}
     </SourceMenu.Popup>}
   </>;
 }

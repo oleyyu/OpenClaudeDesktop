@@ -1,17 +1,18 @@
 // R4e-plugin (settings-14): the plugin page's Overview tab, 2.42304.0 c12456454 ni (rendered by c24c8737b pc for
 // `qt === "overview"`) over plugin/read's data (plugin-detail-model.mjs pluginOverview). Every part is the original,
 // emitted by scripts/extract-r4e-plugin.mjs: the shared-19 kD layout (main + rail), cae01a6fc W (Description), the
-// shared-19 AD rail card and cae01a6fc se (Connectors & tools, X rows); the CDS primitives under them are the host
-// stand-ins of source-r4e-plugin-adapters.jsx.
+// shared-19 AD rail card and cae01a6fc se (Connectors & tools, X rows); the CDS primitives under them are the view-tabs
+// CDS components that source-r4e-plugin-adapters.jsx re-exports.
 import React from "react";
-import { Icon } from "./icons.jsx";
+import { CdsIcon } from "./generated/view-tabs/index.js";
 import { OverviewRailCard, PluginOverviewLayout } from "./generated/r4e-plugin/overview-layout.mjs";
 import { OverviewConnectorsAndTools, OverviewDescription } from "./generated/r4e-plugin/overview-sections.mjs";
 
 // cae01a6fc ae draws each server's icon with cd85e132d (size 14, glyph 12); a server without an icon URL — every local
 // MCP server — falls back to c28f9f509 u: the kind glyph (connector: "Connectors") at the glyph size,
-// "text-muted-as-secondary". The host draws that fallback glyph (host Icon) directly in X's size-5 tile.
-const SERVER_GLYPH = <Icon name="Connectors" size={12} className="text-muted-as-secondary" />;
+// "text-muted-as-secondary": `e(t, { name: s, customSize: i, className: "text-muted-as-secondary" })`, t = shared-frame od
+// (the CDS Icon). The host draws that fallback glyph directly in X's size-5 tile.
+const SERVER_GLYPH = <CdsIcon name="Connectors" customSize={12} className="text-muted-as-secondary" />;
 
 // `onOpenConnectors`: pc passes `Kt.some(e => e.id === "connectors") ? Dn : void 0`, Dn switching to the Connectors
 // tab, as every row's onClick (a ghost xs flush-both button; a plain row without it).

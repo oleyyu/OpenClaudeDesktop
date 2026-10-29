@@ -75,8 +75,10 @@ test('composer plan usage: fullest base window, hd tooltip copy, countdown and s
  const now=Date.UTC(2026,9,5,12,0,0)/1000;
  assert.equal(usageResetCountdown(now+59*60,300,{now:now*1000}),'Resets in 59 min');
  assert.equal(usageResetCountdown(now+125*60,300,{now:now*1000}),'Resets in 2 hr 5 min');
- assert.equal(usageResetCountdown(now-5,300,{now:now*1000}),'Resets soon');
- assert.match(usageResetCountdown(now+3*86400,10080,{now:now*1000,locale:'en-US'}),/^Resets /);assert.equal(usageResetCountdown(null,300),null);
+ // shared-156 lU: a passed reset is no label (3.6556.2 has no 'Resets soon'); a day or more out is cU 'Resets {time}'.
+ assert.equal(usageResetCountdown(now-5,300,{now:now*1000}),null);
+ assert.match(usageResetCountdown(now+3*86400,10080,{now:now*1000,locale:'en-US'}),/^Resets (Mon|Tue|Wed|Thu|Fri|Sat|Sun) /);assert.equal(usageResetCountdown(null,300),null);
+ assert.match(usageResetCountdown(now+8*86400,10080,{now:now*1000,locale:'en-US'}),/^Resets (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d+, /);
  // AccountRateLimitsUpdatedNotification: windows replace, null metadata keeps what was seen, other buckets stay.
  const merged=mergeRateLimits(limits,{limitId:'codex',limitName:null,normalModelSlug:null,primary:window(60),secondary:null,credits:null,individualLimit:null,spendControlReached:null,planType:null,rateLimitReachedType:'rate_limit_reached'});
  assert.equal(merged.rateLimitsByLimitId.codex.primary.usedPercent,60);assert.equal(merged.rateLimitsByLimitId.codex.secondary.usedPercent,80);
@@ -89,10 +91,13 @@ test('usage preserves text as data and ignores malformed daily buckets without t
  const p=usagePresentation({account:{account:{planType:'<img onerror=alert(1)>'}},tokenUsage:{dailyUsageBuckets:[null,{startDate:'2026-09-22',tokens:0},{startDate:'bad',tokens:null},{startDate:'<b>x</b>',tokens:1234}]}});
  assert.equal(p.plan,'<img onerror=alert(1)>');assert.deepEqual(p.daily.map(d=>[d.startDate,d.tokens]),[['<b>x</b>',1234],['2026-09-22',0]],'kept as data, sorted newest (greatest key) first');assert.deepEqual(usagePresentation({tokenUsage:{dailyUsageBuckets:{bad:true}}}).daily,[]);
 });
-test('reset labels use window-specific formats and omit missing or out-of-range dates',()=>{
- for(const v of [null,undefined,'12',Infinity,1e30])assert.equal(usageResetLabel(v,300,'en-US'),null);
- assert.match(usageResetLabel(1790035200,300,'en-US'),/^Resets at /);
- assert.match(usageResetLabel(1790035200,10080,'en-US'),/^Resets (Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) /);
+test('reset labels follow shared-156 fU: same day, weekday, a week out; missing, out-of-range or passed dates omitted',()=>{
+ const now=new Date(2026,9,5,9,0,0).getTime(),at=(d,h,m=0)=>new Date(2026,9,5+d,h,m).getTime()/1000;
+ for(const v of [null,undefined,'12',Infinity,1e30])assert.equal(usageResetLabel(v,300,'en-US',now),null);
+ assert.equal(usageResetLabel(at(0,8),300,'en-US',now),null,'a passed reset has no label');
+ assert.equal(usageResetLabel(at(0,14,30),300,'en-US',now),'Resets at 2:30 PM');
+ assert.equal(usageResetLabel(at(2,14,30),10080,'en-US',now),'Resets Wed 2:30 PM','the window length no longer picks the copy');
+ assert.equal(usageResetLabel(at(9,14,30),300,'en-US',now),'Resets Oct 14, 2:30 PM');
 });
 test('DeepSeek core: per-token billing copy instead of unavailable limits, and the bridge daily table',()=>{
  assert.equal(usageEmptyText('deepseek'),'Usage on DeepSeek Harness is billed per token by your provider; there are no plan usage limits.');
@@ -171,7 +176,7 @@ test('usage copy is core-neutral and translated',async()=>{
   const p=usagePresentation({limits:{rateLimitsByLimitId:{codex:{primary:window(3)},model:{limitName:'Fast model',secondary:window(95,1440)},extra:{credits:{unlimited:true}}}}});
   assert.deepEqual(p.rows.map(r=>[r.label,r.description]),[['当前会话',null],['Fast model · 1 天限额','Fast model 的单独用量限额']]);
   assert.deepEqual(p.credits.map(c=>c.balance),['无限']);
-  assert.match(usageResetLabel(1790035200,300,'zh-CN'),/重置/);
+  assert.match(usageResetLabel(1790035200,300,'zh-CN',1790035200*1000-3600e3),/^.+ 重置$/);assert.match(usageResetLabel(1790035200,300,'zh-CN',1790035200*1000-3*86400e3),/^.+ 重置$/);
   assert.equal(creditDisplay({hasCredits:true,unlimited:false,balance:'1250'},'en-US').value,'1,250 额度');
   assert.equal(usageLimitNotice({rateLimits:{rateLimitReachedType:'workspace_owner_credits_depleted'}},'Codex').body,'你的工作区额度已用完。添加额度后才能继续使用 Codex。');
   assert.equal(planWindowSummary({used:45,minutes:300,label:'当前会话'}),'已用 5 小时限额的 45%');

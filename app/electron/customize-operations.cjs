@@ -155,6 +155,25 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
     return { enabled: value?.enabled !== false, enabledTools: strings(value?.enabled_tools), disabledTools: strings(value?.disabled_tools) ?? [],
       defaultMode: MCP_TOOL_MODES.has(value?.default_tools_approval_mode) ? value.default_tools_approval_mode : null, tools, editable };
   }
+  // V3-w10-ccres-rail-connectors: a listed server's CLI `scope` (the keys c9081d688 `_` maps, or "plugin"). A scope
+  // the core reports itself is kept; else the config layer that defines mcp_servers.<name> (user / project, the two
+  // layer types the host reads elsewhere); else a plugin's server (pluginId, or the CLI's plugin:<plugin>:<connector>
+  // name), an untrusted folder's project connector (codeDesktop.trustRequired), or the core's own configuration ("user").
+  // w11-sweep-ccres: the other Codex config layer types. This layer -> scope table is the host's own inference from how
+  // it already reads those layers (hooks-model SOURCES, settings-model's managed check), not official text: session flags
+  // are the CLI's "flag"; the system file, MDM, the legacy managed files and the cloud requirements / managed config are
+  // the organization's ("managed"). Official c9081d688 `_` then only maps scope -> category (flag -> local,
+  // enterprise/managed -> managed).
+  const MCP_LAYER_SCOPES = { user: "user", project: "project", sessionFlags: "flag", system: "managed", mdm: "managed", enterpriseManaged: "managed",
+    legacyManagedConfigFile: "managed", legacyManagedConfigMdm: "managed", legacyManagedConfigToml: "managed", cloudRequirements: "managed", cloudManagedConfig: "managed" };
+  function mcpScope(server, origins) {
+    if (typeof server.scope === "string" && server.scope) return server.scope;
+    const origin = origins[`mcp_servers.${server.name}.command`] ?? origins[`mcp_servers.${server.name}.url`];
+    const layer = origin?.name?.type ?? origin?.source?.type;
+    if (Object.hasOwn(MCP_LAYER_SCOPES, layer)) return MCP_LAYER_SCOPES[layer];
+    if ((typeof server.pluginId === "string" && server.pluginId) || /^plugin:[^:]+:.+$/.test(server.name)) return "plugin";
+    return server.codeDesktop?.trustRequired === true ? "project" : "user";
+  }
   function toolName(value) {
     if (typeof value !== "string" || !value || value.length > 128 || /[\u0000-\u001f]/.test(value)) throw new Error("Unknown tool.");
     return value;
@@ -281,11 +300,19 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
         if (threadId) params.threadId = threadId;
         const cursor = optionalString(p.cursor, "cursor");
         if (cursor) params.cursor = cursor;
+        // V3-w10-ccres-rail-connectors: where each server is configured, as the CLI's `scope` (c9081d688 v leaves a
+        // server without one out of the session rail's Connectors card). A native core answers config/read with the
+        // layer of mcp_servers.<name> (origins[…].name.type, as the Agents listing reads it); asked alongside the list,
+        // and a core that cannot answer only leaves the scope to mcpScope's fallback.
+        let scopeCwd;
+        try { scopeCwd = cwdsParam(p.cwd)?.[0]; } catch { scopeCwd = undefined; }
+        const configRead = descriptorOf(owner).kind === "native" ? owner.request("config/read", scopeCwd ? { cwd: scopeCwd } : {}, MCP_LIST_TIMEOUT).catch(() => null) : null;
         // The listing may start configured servers; bound the wait.
         const listed = await owner.request("mcpServerStatus/list", params, MCP_LIST_TIMEOUT);
+        const origins = plainObject((await configRead)?.origins) ?? {};
         // OpenClaude Desktop's own tools server (agent-tools-host.cjs "code_desktop", which every core runs for the app's
         // sessions) is never one of the user's connectors: Settings › Code › Preview and Dynamic workflows control it.
-        const result = listed && Array.isArray(listed.data) ? { ...listed, data: listed.data.filter((server) => server?.name !== APP_TOOLS_SERVER) } : listed;
+        const result = listed && Array.isArray(listed.data) ? { ...listed, data: listed.data.filter((server) => server?.name !== APP_TOOLS_SERVER).map((server) => (plainObject(server) && typeof server.name === "string" ? { ...server, scope: mcpScope(server, origins) } : server)) } : listed;
         knownServerNames.clear();
         for (const server of result?.data || []) if (typeof server?.name === "string" && server.name) knownServerNames.add(server.name);
         return result;

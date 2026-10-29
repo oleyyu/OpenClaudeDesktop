@@ -55,13 +55,21 @@ export function SourceLoadingPane({ label, className = "h-full w-full", delay = 
 export const CHANGES_LOADING_LABEL = t("Loading changes");
 export const CHANGES_FAILED_TITLE = t("Couldn’t load the changes");
 export const CHANGES_RETRY_LABEL = t("Try again");
-export function changesEmptyTitle(uncommittedOnly) { return uncommittedOnly ? t("No uncommitted changes") : t("No changes to show"); }
-export function SourceChangesState({ state, uncommittedOnly = false, onRetry = null, retrying = false }) {
+// W12b cf-02: 3.6556.2 cb61be3a2 it — `noRepo` (ut `On = E && Oe !== void 0 && !v`: a local session whose repo lookup
+// resolved without a repository) titles the state "Changes need a Git repository" (ZSmll0R5ni) and, when empty, adds the
+// body "None was found for this session, or its folder couldn’t be reached." (oY/OLoumIq).
+export const CHANGES_NO_REPO_TITLE = t("Changes need a Git repository");
+export const CHANGES_NO_REPO_BODY = t("None was found for this session, or its folder couldn’t be reached.");
+export function changesEmptyTitle(uncommittedOnly, noRepo = false) {
+  return noRepo ? CHANGES_NO_REPO_TITLE : uncommittedOnly ? t("No uncommitted changes") : t("No changes to show");
+}
+export function SourceChangesState({ state, uncommittedOnly = false, noRepo = false, onRetry = null, retrying = false }) {
   if (state === "loading") return <SourceLoadingPane label={CHANGES_LOADING_LABEL} />;
   const failed = state === "failed";
   return <div data-diff-pane-body="" tabIndex={-1} className="h-full w-full outline-none source-pane-state">
     <SourceEmptyState role={failed ? "alert" : undefined} icon={failed ? "Warning" : undefined}
-      title={failed ? CHANGES_FAILED_TITLE : changesEmptyTitle(uncommittedOnly)}
+      title={failed ? CHANGES_FAILED_TITLE : changesEmptyTitle(uncommittedOnly, noRepo)}
+      body={state === "empty" && noRepo ? CHANGES_NO_REPO_BODY : undefined}
       actions={failed && onRetry ? <SourceSettingsButton variant="secondary" busy={retrying} aria-label={retrying ? CHANGES_LOADING_LABEL : undefined}
         onClick={onRetry}>{CHANGES_RETRY_LABEL}</SourceSettingsButton> : undefined} />
   </div>;

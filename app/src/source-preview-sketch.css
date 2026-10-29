@@ -1,16 +1,8 @@
-/* The original Wt/x trees keep their own classes. Restore only properties
-   affected by the app's unlayered generic button/textarea resets. */
+/* Host layout of the sketch layer only. w11-sweep-rest: the 3.6556.2 toolbar/canvas carry their own classes; the
+   bar-drop utilities are in the linked c6a992d55-Che1orl5.css, the control resets are in @layer base (D26), and the
+   2.42304.0 swatch / substitute-button rules matched nothing in the 3.6556.2 output, so those local rules are gone. */
 /* R4i-small SM3: sketch glyphs use the official Anthropicons-Variable face (public shared-frame-CegduNQ2.css). */
 .spv-sketch-layer { position:absolute;inset:0;pointer-events:none; }
 .spv-pane[data-page-tools] .spv-viewport { overflow:visible; }
-/* Current source _e utilities are absent from the older imported utility sheet. */
-.spv-sketch-layer [class*="--sketch-bar-drop"] { top:calc(100% + var(--sketch-bar-drop,0px));margin-top:0.625rem;margin-inline:calc(-1 * var(--sketch-bar-reach,0px)); }
 .spv-sketch-layer[data-drawing] { pointer-events:auto; }
-.spv-sketch-layer [data-layout] button[class*="group/swatch"] { padding:0;border:0;background:transparent;line-height:normal; }
-.spv-sketch-layer span[class*="group-hover/swatch"][class*="--cds-alpha-5"] { box-shadow:0 0 0 1px var(--cds-alpha-5); }
-.spv-sketch-layer span[class*="group-hover/swatch"][class*="--cds-alpha-3"] { box-shadow:0 0 0 1px var(--cds-alpha-3); }
-.spv-sketch-layer span[class*="group-hover/swatch"][class*="0_0_0_2px_var"] { box-shadow:0 0 0 2px var(--cds-text-primary); }
-.spv-sketch-layer button[class*="group/swatch"]:hover > span { box-shadow:0 0 0 1px var(--cds-text-secondary); }
-.spv-sketch-layer [data-layout] .source-settings-button[aria-pressed=true] { color:var(--cds-text-accent); }
-.spv-sketch-layer textarea[aria-label="Text label"] { border:0;padding:0;outline:none;background:transparent;box-shadow:none;resize:none; }
 .spv-sketch-reservation { flex:none;height:calc(var(--cds-h-control) + var(--cds-pad-xs)*2 + 1.25rem); }

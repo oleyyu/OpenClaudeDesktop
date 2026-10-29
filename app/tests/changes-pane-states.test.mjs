@@ -138,7 +138,8 @@ test('header: ghost ListBullet "Show files" (aria-pressed, ⇧⌘Y) before the s
   const head = header(html);
   const button = head.match(/<button[^>]*aria-label="Show files"[^>]*>/)?.[0];
   assert.ok(button, head);
-  assert.match(button, /class="source-icon-button -ml-\[4px\]"/);
+  // 3.6556.2 ca9ee6f68 `os`: className h = "text-secondary" (no -ml-[4px]).
+  assert.match(button, /class="source-icon-button text-secondary"/);
   assert.match(button, /data-diff-file-list-toggle=""/);
   assert.match(button, /aria-pressed="false"/);
   assert.match(button, /aria-keyshortcuts="Meta\+Shift\+Y"/);
@@ -164,7 +165,9 @@ test('file list column: hidden by default with the "Show files" edge; shown with
   // cccc2cf0a: the Changes view sits in the focusable div[data-diff-pane-body] (R3-files FT-07, for cae42d46f Ue).
   assert.match(hidden, /<div class="sdiff-changes-layout outline-none" data-diff-pane-body="" tabindex="-1">/);
   assert.doesNotMatch(hidden, /role="tree"/);
-  assert.match(hidden, /<div class="source-tree-edge sdiff-file-list-edge" role="separator" tabindex="0" aria-label="Show files" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="640" aria-valuenow="0">/);
+  // W12 diff-main: the hidden column's edge is the generated c44d00c7f Lr (`relative w-0 shrink-0` around Ir over shared-9
+  // bm, "w-[3px] [&>*]:pointer-events-none start-0 end-auto"), labelled "Resize file list" (Mn) at z-index cu(5).
+  assert.match(hidden, /<div class="relative w-0 shrink-0"><div aria-valuenow="0" aria-valuemin="0" aria-valuemax="640" aria-label="Resize file list" style="z-index:5" data-cds="ResizeHandle" role="separator" aria-orientation="vertical" tabindex="0" class="cds-reset group\/resize outline-none focus-visible:outline-hidden cursor-col-resize absolute inset-y-0 w-\[3px\] \[&amp;&gt;\*\]:pointer-events-none start-0 end-auto">/);
   // The scroller keeps its class and holds the diff view.
   assert.match(hidden, /<div class="sdiff-changes-main"><div class="source-changes"><div data-layout="unified"/);
   const html = body(panel({ diff: twoFiles, diffTree: { diffShowTree: true, diffTreeWidth: 300, diffFileTree: true, diffGroupByKind: false }, onDiffTreeChange: () => {} }));
@@ -172,7 +175,8 @@ test('file list column: hidden by default with the "Show files" edge; shown with
   // `${A} h-full overflow-y-auto ${N} outline-none hide-focus-ring` (ca7840910 A = group/file-tree).
   assert.match(html, /<div class="sdiff-file-list relative shrink-0 flex flex-col min-h-0 border-e" data-pane-line="" style="width:300px;min-width:min\(160px, 100% - 160px\);max-width:min\(640px, 100% - 160px\)">/);
   assert.match(html, /<div role="tree" aria-label="Changed files" tabindex="0" class="group\/file-tree \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:\[--file-tree-guides-to:to_left\] h-full overflow-y-auto px-xs py-1\.25 outline-none hide-focus-ring">/);
-  assert.match(html, /role="separator" tabindex="0" aria-label="Resize file list" aria-orientation="vertical" aria-valuemin="160"/);
+  // c44d00c7f Ir (inside the column, Jd `be &&`): bm at its inline-end side with Fr's clip-path, Sn's aria values.
+  assert.match(html, /<div aria-valuenow="300" aria-valuemin="160" aria-valuemax="640" aria-label="Resize file list" style="z-index:5" data-cds="ResizeHandle" role="separator" aria-orientation="vertical" tabindex="0" class="cds-reset group\/resize outline-none focus-visible:outline-hidden w-3 cursor-col-resize absolute inset-y-0 end-\[calc\(-6px_-_\(var\(--cds-ring-outer,0px\)_-_var\(--cds-ring-inner,0px\)\)_\/_2\)\] \[clip-path:inset\(0_0_0_37\.5%\)\]/);
   assert.doesNotMatch(html, /aria-label="Show files" aria-orientation/);
   // Folder rows first (tree order), then root files; file rows carry the kind icon, name and footnote counts.
   const rows = [...html.matchAll(/<button[^>]*data-diff-tree-row=""[^>]*>(.*?)<\/button>/g)].map(match => match[0]);
@@ -190,7 +194,8 @@ test('file list column: hidden by default with the "Show files" edge; shown with
   // Separate test, build, and generated files: a separated "Test files" section, closed by default.
   const kind = body(panel({ diff: twoFiles + filePatch('src/app.test.js', 3), diffTree: { diffShowTree: true, diffTreeWidth: 240, diffFileTree: true, diffGroupByKind: true }, onDiffTreeChange: () => {} }));
   assert.match(kind, /<div role="none" class="mt-1 border-t pt-1" data-pane-line=""><button[^>]*data-diff-tree-section="test" role="treeitem" tabindex="-1" aria-level="1" aria-expanded="false"/);
-  assert.match(kind, /<span class="truncate min-w-0 flex-1 text-secondary">Test files<\/span><span class="shrink-0 text-footnote tabular-nums text-muted-as-secondary">1<\/span>/);
+  // 3.6556.2 c44d00c7f Xo: the section count is `shrink-0 text-footnote tabular-nums text-muted` (w10-trans-changes-tree).
+  assert.match(kind, /<span class="truncate min-w-0 flex-1 text-secondary">Test files<\/span><span class="shrink-0 text-footnote tabular-nums text-muted">1<\/span>/);
   assert.doesNotMatch(kind.slice(kind.indexOf('role="tree"'), kind.indexOf('sdiff-changes-main')), /app\.test\.js/);
   // Group files by folder off: flat rows show the folder prefix.
   const flat = body(panel({ diff: twoFiles, diffTree: { diffShowTree: true, diffTreeWidth: 240, diffFileTree: false, diffGroupByKind: false }, onDiffTreeChange: () => {} }));
@@ -225,17 +230,20 @@ test('Commits section: under the tree (border-t, max-height 40%), header "Commit
   const column = html.slice(html.indexOf('sdiff-file-list '), html.indexOf('sdiff-changes-main'));
   assert.ok(column.indexOf('role="tree"') < column.indexOf('sdiff-commits-section'), 'the section follows the tree');
   assert.match(column, /<div class="sdiff-commits-section flex shrink-0 flex-col border-t" data-pane-line="" style="max-height:40%">/);
-  assert.match(column, /<div class="shrink-0 px-xs py-1\.25"><div class="rounded hover:bg-fill-ghost-hover"><button type="button" aria-expanded="true" aria-controls="[^"]+" style="padding-left:8px" class="sdiff-commits-trigger flex items-center gap-1 h-control pr-md rounded text-body text-left w-full select-none focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus text-secondary">/);
+  // 3.6556.2 c44d00c7f Bi: CdsCollapsible Trigger (hideCaret, ht(0), `${xt} text-secondary-control` merged over its own classes).
+  assert.match(column, /<div class="shrink-0 px-xs py-1\.25"><div class="rounded hover:bg-fill-ghost-hover"><button type="button" data-panel-open="" tabindex="0" aria-disabled="false" aria-controls="[^"]+" aria-expanded="true" class="cds-reset group\/clp [^"]*flex items-center gap-1 h-control app-list-row pe-md rounded text-body text-start w-full select-none focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus text-secondary-control" style="padding-inline-start:8px">/);
   assert.match(column, /<span class="min-w-0 flex-1 truncate">Commits<\/span><span class="shrink-0 text-footnote tabular-nums text-muted">2<\/span>/);
-  assert.match(column, /class="[^"]*rotate-90"/, 'expanded caret');
+  // 3.6556.2 c44d00c7f Bi (w10-ccres-e31-diff): CdsIcon CaretRight with the rotate prop (m=s?0:90), no rotate-90 class.
+  assert.match(column, /data-cds-rotate="" style="[^"]*--cds-icon-rotate:90deg" class="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none"/, 'expanded caret');
+  assert.doesNotMatch(column, /rotate-90/);
   assert.match(column, /<div role="toolbar" aria-orientation="vertical" aria-label="Commits" tabindex="0" class="sdiff-commits-list flex flex-col gap-0\.5 pb-md outline-none hide-focus-ring pt-0\.5">/);
   const rows = [...column.matchAll(/<button[^>]*data-commit-row="([^"]*)"[^>]*>/g)].map((match) => [match[1], /aria-pressed="true"/.test(match[0])]);
   assert.deepEqual(rows, [['', false], ['', false], ['commit', false], ['commit', true]], 'All changes, Uncommitted changes, then commits; the picked commit is pressed');
   assert.match(column, />All changes<\/button>/);
   assert.match(column, />Uncommitted changes<\/button>/);
-  assert.match(column, /class="sdiff-commit-row group flex w-full flex-col items-start gap-\[2px\] rounded px-xs py-\[6px\] text-left text-body[^"]*bg-fill-control hover:bg-fill-control text-primary"/);
+  assert.match(column, /class="sdiff-commit-row group flex w-full flex-col items-start gap-\[2px\] rounded px-xs py-\[6px\] text-start text-body[^"]*bg-fill-control hover:bg-fill-control text-primary"/);
   assert.match(column, /<span class="w-full truncate" data-cds="OverflowTooltip">\(no message\)<\/span>/);
-  assert.match(column, /<span class="flex w-full items-center gap-1 text-footnote text-muted"><span class="text-code">ccccccc<\/span><span aria-hidden="true">·<\/span><span class="truncate">Ada<\/span><\/span>/);
+  assert.match(column, /<span class="flex w-full items-center gap-1 text-footnote text-muted-as-secondary"><span class="text-code">ccccccc<\/span><span aria-hidden="true">·<\/span><span class="truncate">Ada<\/span><\/span>/);
   // Collapsed: header only, caret not rotated.
   const collapsed = body(panel({ diff: twoFiles, diffTree: { ...shownTree, diffCommitsCollapsed: true }, onDiffTreeChange: () => {}, diffCommits: commits }));
   assert.match(collapsed, /aria-expanded="false"/);
@@ -256,7 +264,7 @@ test('Commits section: 100 rows, a picked older commit appended, "{n} older comm
   const html = body(panel({ diff: twoFiles, diffTree: shownTree, onDiffTreeChange: () => {},
     diffCommits: { list, total: 140, selectedSha: sha(101), onSelect: () => {} } }));
   assert.equal((html.match(/data-commit-row="commit"/g) || []).length, 101, '100 newest plus the selected 101st');
-  assert.match(html, /<span class="px-xs py-\[6px\] text-footnote text-muted select-none">39 older commits not shown<\/span>/);
+  assert.match(html, /<span class="px-xs py-\[6px\] text-footnote text-muted-as-secondary select-none">39 older commits not shown<\/span>/);
   assert.match(html, /<span class="shrink-0 text-footnote tabular-nums text-muted">140<\/span>/);
 });
 

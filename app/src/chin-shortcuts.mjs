@@ -33,10 +33,13 @@ export function chinShortcutCommand(event) {
 // menu is open the chord closes it only when it names that same (resolved) menu, otherwise it is ignored; a
 // disabled model picker ignores model/effort; with no items it is a no-op (onModelChordRedirect has no local
 // counterpart). T (:4719-4760) never opens on a repeat (it is still preventDefault'ed by the caller).
+// 3.6556.2 c227f4d5e Q6 H: `let t=e==="effort"&&(p||a<=1)?"model":e` — with effortInModelMenu (p; AK `bt=et||$e`,
+// the row / titlebar placement) the effort chord resolves to the model menu too (opened on its Effort submenu,
+// `S(e==="effort"&&p)`), so an open model menu closes on it.
 // Returns { action: "open" | "close", kind: "mode" | "model" | "effort" } or null.
-export function resolveChinRequest({ command, openKind = null, effortCount = 0, modelCount = 0, modeCount = 0, pickerDisabled = false, repeat = false } = {}) {
+export function resolveChinRequest({ command, openKind = null, effortCount = 0, modelCount = 0, modeCount = 0, pickerDisabled = false, repeat = false, effortInModelMenu = false } = {}) {
   if (repeat || !Object.hasOwn(CHIN_MENU_KINDS, command ?? "")) return null;
-  const kind = command === "effort" && effortCount <= 1 ? "model" : command;
+  const kind = command === "effort" && (effortInModelMenu || effortCount <= 1) ? "model" : command;
   if (openKind) return openKind === kind ? { action: "close", kind } : null;
   if (pickerDisabled && (command === "model" || command === "effort")) return null;
   const available = command === "mode" ? modeCount > 0 : (command === "effort" && effortCount > 1) || modelCount > 0;

@@ -69,7 +69,7 @@ const labels=shape=>shape.map(e=>e==='|'?e:e.label);
 const FULL_MENU=['Show files','Group files by folder','Separate test, build, and generated files','|','Collapse all files','Expand all files','|','Side by side','Word wrap','Highlight changed words','Hide whitespace changes','|','Refresh'];
 // R10 Changed files column locators.
 const listToggle=()=>diffTile().locator('.source-pane-header [data-diff-file-list-toggle]'),fileTree=()=>diffTile().getByRole('tree',{name:'Changed files',exact:true});
-const listColumn=()=>diffTile().locator('.sdiff-file-list'),listEdge=()=>diffTile().getByRole('separator',{name:'Show files',exact:true}),listDivider=()=>diffTile().getByRole('separator',{name:'Resize file list',exact:true});
+const listColumn=()=>diffTile().locator('.sdiff-file-list'),listEdge=()=>diffTile().locator('.sdiff-changes-layout > .relative.w-0.shrink-0 [role="separator"]'),listDivider=()=>listColumn().getByRole('separator',{name:'Resize file list',exact:true}); // W12 diff-main: both handles are c44d00c7f Ir (bm) labelled "Resize file list"; the edge is Lr's 0-width wrapper
 const listShown=async()=>await fileTree().count()===1;
 const listWidth=()=>listColumn().evaluate(n=>n.getBoundingClientRect().width);
 const treeRows=()=>fileTree().evaluate(t=>[...t.querySelectorAll('[data-diff-tree-row]')].map(r=>[r.getAttribute('aria-level'),r.querySelector('[dir=ltr][aria-label]')?.getAttribute('aria-label')??r.querySelector('.truncate')?.textContent,r.getAttribute('aria-current')]));
@@ -262,20 +262,21 @@ try{
  await runFile().locator('.sdiff-header').click({button:'right',position:{x:120,y:16}});await contextMenu().waitFor();
  {const items=await itemsOf(contextMenu());assert.deepEqual(items.slice(0,4),['Attach as context','Copy','|','Open file']);assert.deepEqual(fileMenuTail(items),['Show in Finder']);}await page.keyboard.press('Escape');await contextMenu().waitFor({state:'detached'});await neutral();
  report.checks.push('A mode-only change (run.sh 100644 -> 100755, no hunks) renders the aa no-body header: aria-disabled="true" without aria-expanded/aria-controls, cursor default, chevron span opacity 0.4 with the svg at -90deg; click, Enter and Expand all files add no body and no filler text; W "Made executable", counts +0/−0, tooltip "run.sh (made executable)"; right-click still opens the ContextMenu');
- // F12 zm diff scope (panes-tile-current.js:2949-3110): a ghost "Diff scope: main → working tree" trigger in place of the
+ // F12 zm diff scope (panes-tile-current.js:2949-3110; W12 diff-cont: 3.6556.2 cccc2cf0a $S/rC, the view-tabs CdsDropdown
+ // TriggerButton / Popup over ca5db7aaf U — selectors rewritten for that markup, not run): a ghost "Diff scope: main → working tree" trigger in place of the
  // title, popup side bottom / align start with All changes (vs main) | Compare against; Uncommitted changes refetches.
  step('scope');await neutral();
- const scopeTrigger=name=>diffTile().getByRole('button',{name,exact:true}),scopeMenu=()=>page.getByRole('menu',{name:'Diff scope',exact:true});
+ const scopeTrigger=name=>diffTile().getByRole('button',{name,exact:true}),scopeMenu=()=>page.getByRole('menu').filter({has:page.getByRole('menuitemradio',{name:/^All changes/})});
  await scopeTrigger('Diff scope: main → working tree').waitFor();
  report.metrics.scopeTrigger=await scopeTrigger('Diff scope: main → working tree').evaluate(n=>{const probe=document.createElement('span');probe.style.color='var(--cds-text-secondary)';document.body.append(probe);const secondary=getComputedStyle(probe).color;probe.remove();
-  return {variant:n.dataset.variant,parts:[...n.querySelectorAll('.sds-part')].map(p=>p.textContent),arrow:n.querySelector('.sds-arrow')?.getAttribute('aria-label'),partColor:getComputedStyle(n.querySelector('.sds-part')).color,secondary};});
+  return {variant:n.hasAttribute('data-cds-ghost')?'ghost':null,parts:[...n.querySelectorAll('.grid > span.truncate')].map(p=>p.textContent),arrow:n.querySelector('.grid > [data-cds=Icon]')?.getAttribute('aria-label'),partColor:getComputedStyle(n.querySelector('.grid > span.truncate')).color,secondary};});
  assert.equal(report.metrics.scopeTrigger.variant,'ghost');assert.deepEqual(report.metrics.scopeTrigger.parts,['main','working tree']);assert.equal(report.metrics.scopeTrigger.arrow,'to');
  assert.equal(report.metrics.scopeTrigger.partColor,report.metrics.scopeTrigger.secondary,'label spans are text-secondary');
  await scopeTrigger('Diff scope: main → working tree').click();await scopeMenu().waitFor();await frames();
  report.metrics.scopeMenu=await scopeMenu().evaluate(m=>[...m.querySelectorAll('[role^="menuitem"],[role="separator"]')].filter(n=>n.closest('[role="menu"]')===m)
-  .map(n=>n.getAttribute('role')==='separator'?'|':[n.querySelector('.smenu-label')?.textContent,n.getAttribute('aria-checked'),n.querySelector('.smenu-hint')?.textContent??null]));
+  .map(n=>n.getAttribute('role')==='separator'?'|':[n.querySelector('span.min-w-0.flex-1')?.textContent,n.getAttribute('aria-checked'),n.querySelector('span.ms-md')?.textContent||null]));
  assert.deepEqual(report.metrics.scopeMenu,[['All changes','true','vs main'],['Uncommitted changes','false',null],'|',['Compare against',null,'main']]);
- report.metrics.scopeAlign=await page.evaluate(()=>({trigger:document.querySelector('[data-pane-kind="diff"] .sds-trigger').getBoundingClientRect().left,menu:[...document.querySelectorAll('[role=menu]')].find(n=>n.getAttribute('aria-label')==='Diff scope').getBoundingClientRect().left}));
+ report.metrics.scopeAlign=await page.evaluate(()=>({trigger:document.querySelector('[data-pane-kind="diff"] button[aria-label^="Diff scope:"]').getBoundingClientRect().left,menu:[...document.querySelectorAll('[role=menu]')].find(n=>[...n.querySelectorAll('[role=menuitemradio]')].some(i=>i.textContent.startsWith('All changes'))).getBoundingClientRect().left}));
  assert.ok(Math.abs(report.metrics.scopeAlign.trigger-report.metrics.scopeAlign.menu)<=1,'scope popup align start '+JSON.stringify(report.metrics.scopeAlign));await shot('changes-scope-menu');
  const scopeBefore=await gitCalls();await scopeMenu().getByRole('menuitemradio',{name:'Uncommitted changes',exact:true}).click();await scopeMenu().waitFor({state:'detached'});
  await scopeTrigger('Diff scope: Uncommitted changes').waitFor();await poll(async()=>(await gitCalls()).diff===scopeBefore.diff+1,'uncommitted scope refetch');
@@ -300,7 +301,7 @@ try{
  // -ml-[4px]) precedes the scope trigger; the body carries the "Show files" edge handle.
  step('file-list-toggle');await neutral();
  const toggleInfo=await listToggle().evaluate(b=>({label:b.getAttribute('aria-label'),pressed:b.getAttribute('aria-pressed'),keys:b.getAttribute('aria-keyshortcuts'),title:b.getAttribute('title'),
-  beforeScope:!!(b.compareDocumentPosition(b.closest('.source-pane-header').querySelector('.sds-trigger'))&Node.DOCUMENT_POSITION_FOLLOWING),marginLeft:getComputedStyle(b).marginLeft}));
+  beforeScope:!!(b.compareDocumentPosition(b.closest('.source-pane-header').querySelector('button[aria-label^="Diff scope:"]'))&Node.DOCUMENT_POSITION_FOLLOWING),marginLeft:getComputedStyle(b).marginLeft}));
  report.metrics.fileListToggle=toggleInfo;
  assert.deepEqual(toggleInfo,{label:'Show files',pressed:'false',keys:'Meta+Shift+Y',title:null,beforeScope:true,marginLeft:'-4px'});
  assert.equal(await fileTree().count(),0);await listEdge().waitFor();assert.deepEqual(await storedTiles(),{shown:false,width:240,tree:true,kind:false});

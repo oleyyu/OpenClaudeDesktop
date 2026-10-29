@@ -261,10 +261,10 @@ test('DeepSeek Connectors: no notice paragraphs, Edit config in the header, the 
   // customize-page-notices: Edit config takes the header actions slot (secondary, base size like the source's add action).
   for (const html of [empty, listed]) assert.match(html, /<header class="cz-header">.*<div class="cz-actions"><button type="button" data-cds="Button" data-variant="secondary" class="source-settings-button "[^>]*>.*?Edit config<\/span><\/button><\/div><\/div><\/header>/);
   // Ee (page shell :566-612) as the flex-1 body child: NodeShapes pictogram, the source copy with the profile entry, Edit config as the action.
-  assert.match(empty, /<div class="cz-connectors-body flex flex-1 flex-col gap-lg pt-sm"><div class="cz-empty flex flex-1 flex-col items-center justify-center gap-lg py-lg text-center" data-cz-empty=""><svg data-cds="Pictogram" data-pictogram="NodeShapes" width="96" height="96" viewBox="0 0 500 500" fill="none" xmlns="http:\/\/www\.w3\.org\/2000\/svg" style="flex-shrink:0" aria-hidden="true">/);
+  assert.match(empty, /<div class="cz-connectors-body flex flex-1 flex-col gap-lg pt-sm"><div class="cz-empty flex flex-1 flex-col items-center justify-center gap-lg py-lg text-center" data-cz-empty=""><svg data-cds="Pictogram" width="96" height="96" viewBox="0 0 500 500" fill="none" xmlns="http:\/\/www\.w3\.org\/2000\/svg" style="flex-shrink:0" aria-hidden="true">/);
   assert.match(empty, /<p class="max-w-xs text-pretty text-body text-secondary">Unlock more with DeepSeek when you connect your team’s tools\.<span class="block" data-cz-config-hint="">Add a <code>@deepseek-ai\/dsh-mcp-client<\/code> entry to <code>\/h\/profile\/cordis\.patch\.yml<\/code>, then Reconnect\.<\/span><\/p><div class="flex flex-col items-center gap-3"><button type="button" data-cds="Button" data-variant="secondary"[^>]*>.*?Edit config<\/span><\/button><\/div><\/div>/);
   assert.equal(count(empty, 'role="status"'), 0, 'Ee has no live region');
-  assert.doesNotMatch(listed, /data-cz-empty|data-pictogram/);
+  assert.doesNotMatch(listed, /data-cz-empty|data-cds="Pictogram"/);
   // In the drill the header is gone; Reconnect stays and the ⋮ menu (Edit config) replaces it.
   assert.match(detail, /data-cz-detail="connector"/); assert.doesNotMatch(detail, /cz-header|Edit config/);
   assert.match(detail, />Reconnect<\/span><\/button><button aria-label="More options for gh"/);
@@ -279,12 +279,12 @@ test('DeepSeek Connectors: no notice paragraphs, Edit config in the header, the 
   // A search with no match is Ee's plain p (no pictogram, no live region).
   const search = corePage('connectors', readyStore({ mcp: rows }), { focus: { searchSeed: 'zzz' } });
   assert.match(search, /<p class="cz-empty-search py-lg text-center text-body text-secondary">No connectors match your search<\/p>/);
-  assert.doesNotMatch(search, /data-pictogram|data-cz-empty|<table/);
+  assert.doesNotMatch(search, /data-cds="Pictogram"|data-cz-empty|<table/);
 });
 
 test('DeepSeek Skills: ObjectBulb empty state with the Harness roots, and the c9a7e510b skill header, facts and Description', () => {
   const empty = corePage('skills', readyStore(), { core: deepseekCore });
-  assert.match(empty, /<\/header><div class="cz-page-body scroll-fade-y scroll-fade-size-6"><div class="cz-empty flex flex-1 flex-col items-center justify-center gap-lg py-lg text-center" data-cz-empty=""><svg data-cds="Pictogram" data-pictogram="ObjectBulb" width="96" height="96"/);
+  assert.match(empty, /<\/header><div class="cz-page-body scroll-fade-y scroll-fade-size-6"><div class="cz-empty flex flex-1 flex-col items-center justify-center gap-lg py-lg text-center" data-cz-empty=""><svg data-cds="Pictogram" width="96" height="96"/);
   assert.match(empty, /<path d="[^"]+" class="fill-pictogram-highlight-default"><\/path>/); assert.match(empty, /<path d="[^"]+" fill="currentColor"><\/path>/);
   // The actions repeat the header's Add skill menu (customize-skills :1440-1462), then the core's skill folders as the
   // muted footnote, each with Open.
@@ -329,7 +329,7 @@ test('DeepSeek Skills: ObjectBulb empty state with the Harness roots, and the c9
   assert.match(list, /<\/header><div class="cz-page-body scroll-fade-y scroll-fade-size-6"><div class="flex w-full flex-col gap-lg" data-testid="skills-tabbed-list-mine">/, 'the "Your skills" list follows the header directly');
   const nomatch = corePage('skills', readyStore({ skills }), { core: deepseekCore, focus: { searchSeed: 'zzz' } });
   assert.match(nomatch, /<p class="cz-empty-search py-lg text-center text-body text-secondary">No skills match your search<\/p>/);
-  assert.doesNotMatch(nomatch, /data-pictogram|role="status"/);
+  assert.doesNotMatch(nomatch, /data-cds="Pictogram"|role="status"/);
 });
 
 test('B24 Skills toolbar: "Your skills" tab, the K Filter and dn Sort controls, and the grouped sections with counts', () => {
@@ -360,7 +360,7 @@ test('DeepSeek Plugins: no notice, the "(marketplace)" suffix only on name colli
   assert.doesNotMatch(ready, /DeepSeek Harness profile|data-plugin-suffix/, 'a unique name has no marketplace suffix');
   const twins = corePage('plugins', readyStore({ plugins: [plugin('foo-a', 'Foo', 'Alpha'), plugin('foo-b', 'Foo', 'Beta')] }));
   assert.deepEqual([...twins.matchAll(/<span class="truncate text-body-medium text-primary">(Foo)<\/span><span class="truncate text-footnote text-muted" data-plugin-suffix="">([^<]+)<\/span>/g)].map(match => match[2]), ['(Alpha)', '(Beta)']);
-  assert.match(empty, /<div class="cz-empty flex flex-1 flex-col items-center justify-center gap-lg py-lg text-center" data-cz-empty=""><svg data-cds="Pictogram" data-pictogram="ObjectPuzzle"[^>]*>.*<\/svg><p class="max-w-xs text-pretty text-body text-secondary">Give DeepSeek role-level expertise with plugins<\/p><\/div>/);
+  assert.match(empty, /<div class="cz-empty flex flex-1 flex-col items-center justify-center gap-lg py-lg text-center" data-cz-empty=""><svg data-cds="Pictogram"[^>]*>.*<\/svg><p class="max-w-xs text-pretty text-body text-secondary">Give DeepSeek role-level expertise with plugins<\/p><\/div>/);
   assert.doesNotMatch(corePage('plugins', readyStore({ plugins })), /needs the ChatGPT plugin service|cz-notice/, 'Codex has no notice either');
   const nomatch = corePage('plugins', readyStore({ plugins }), { focus: { searchSeed: 'zzz' } });
   assert.match(nomatch, /<p class="cz-empty-search py-lg text-center text-body text-secondary">No plugins match your search<\/p>/);

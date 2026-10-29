@@ -207,26 +207,26 @@ try{
  await shot('preview-address-light');
 
  step('browser-tabs');
- const tabs=()=>pane().locator('[data-preview-tab-id]');
- const originalId=await tabs().first().getAttribute('data-preview-tab-id'),originalView=await mainView();
+ const tabs=()=>pane().locator('[data-vtb-id]');
+ const originalId=await tabs().first().getAttribute('data-vtb-id'),originalView=await mainView();
  await pane().getByRole('button',{name:'New tab',exact:true}).click();
  await poll(async()=>await tabs().count()===2,'second tab');
  await field.waitFor();await field.fill(`localhost:${port}/second`);await field.press('Enter');
  await poll(async()=>(await mainView())?.url?.endsWith('/second'),'second page');
- const secondId=await tabs().last().getAttribute('data-preview-tab-id'),secondView=await mainView();
+ const secondId=await tabs().last().getAttribute('data-vtb-id'),secondView=await mainView();
  assert.notEqual(secondView.id,originalView.id,'each tab has its own WebContents');
  step('per-tab-address-drafts');
  await field.click();await field.fill('second.example/draft');await field.evaluate(el=>el.setSelectionRange(2,8));
- await pane().locator(`[data-preview-tab-id="${originalId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===originalView.id,'draft switch to original');await poll(async()=>await field.inputValue()===`localhost:${port}/about`,'original address settled');
+ await pane().locator(`[data-vtb-id="${originalId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===originalView.id,'draft switch to original');await poll(async()=>await field.inputValue()===`localhost:${port}/about`,'original address settled');
  await field.click();await field.fill('original.example/draft');await field.evaluate(el=>el.setSelectionRange(1,5));
- await pane().locator(`[data-preview-tab-id="${secondId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===secondView.id,'draft switch to second');
+ await pane().locator(`[data-vtb-id="${secondId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===secondView.id,'draft switch to second');
  await poll(async()=>await field.inputValue()==='second.example/draft','second draft restored');await field.click();assert.deepEqual(await selection(),{focused:true,start:2,end:8,length:20});
  await field.press('Meta+KeyL');assert.equal(await field.inputValue(),'second.example/draft');assert.equal((await selection()).end,20);
  await field.press('Escape');await field.press('Escape');assert.ok((await mainView()).url.endsWith('/second'));
- await pane().locator(`[data-preview-tab-id="${originalId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===originalView.id,'draft original restored');
+ await pane().locator(`[data-vtb-id="${originalId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===originalView.id,'draft original restored');
  await poll(async()=>await field.inputValue()==='original.example/draft','original draft restored');await field.click();assert.deepEqual(await selection(),{focused:true,start:1,end:5,length:22});
  await field.press('Escape');await field.press('Escape');assert.ok((await mainView()).url.endsWith('/about'));
- await pane().locator(`[data-preview-tab-id="${secondId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===secondView.id,'second selected after draft test');
+ await pane().locator(`[data-vtb-id="${secondId}"] [role="tab"]`).click();await poll(async()=>(await mainView())?.id===secondView.id,'second selected after draft test');
  report.checks.push('Each tab retains its unsent URL draft and selection across blur/switch; Cmd+L selects the draft and Escape discards it without navigating either native page');
 
  const nativeKey=(id,keyCode,modifiers)=>app.evaluate(({webContents},args)=>{const contents=webContents.fromId(args.id);contents.sendInputEvent({type:'keyDown',keyCode:args.keyCode,modifiers:args.modifiers});contents.sendInputEvent({type:'keyUp',keyCode:args.keyCode,modifiers:args.modifiers});},{id,keyCode,modifiers});
@@ -235,19 +235,19 @@ try{
  await nativeKey(secondView.id,'Tab',['control','shift']);await poll(async()=>(await mainView())?.id===originalView.id,'native previous tab');
  await new Promise(resolve=>setTimeout(resolve,75));
  await nativeKey(originalView.id,'Tab',['control']);await poll(async()=>(await mainView())?.id===secondView.id,'native next tab');
- await pane().locator(`[data-preview-tab-id="${secondId}"] [role="tab"]`).press('Meta+Digit1');await poll(async()=>(await mainView())?.id===originalView.id,'chrome Cmd+1');
- await pane().locator(`[data-preview-tab-id="${originalId}"] [role="tab"]`).press('Meta+Digit9');await poll(async()=>(await mainView())?.id===secondView.id,'chrome Cmd+9');
+ await pane().locator(`[data-vtb-id="${secondId}"] [role="tab"]`).press('Meta+Digit1');await poll(async()=>(await mainView())?.id===originalView.id,'chrome Cmd+1');
+ await pane().locator(`[data-vtb-id="${originalId}"] [role="tab"]`).press('Meta+Digit9');await poll(async()=>(await mainView())?.id===secondView.id,'chrome Cmd+9');
  report.checks.push('Native and chrome Cmd+1–9 select preview tabs; Ctrl+Tab/Shift+Ctrl+Tab cycle without changing the session');
 
- await pane().locator(`[data-preview-tab-id="${originalId}"] [role="tab"]`).click();
+ await pane().locator(`[data-vtb-id="${originalId}"] [role="tab"]`).click();
  await poll(async()=>(await mainView())?.id===originalView.id,'original page restored');
  assert.ok((await mainView()).url.endsWith('/about'));
  await pane().getByRole('button',{name:'Back',exact:true}).click();
  await poll(async()=>(await mainView())?.url?.endsWith('/'),'original page history');
- await pane().locator(`[data-preview-tab-id="${secondId}"] [role="tab"]`).click();
+ await pane().locator(`[data-vtb-id="${secondId}"] [role="tab"]`).click();
  await poll(async()=>(await mainView())?.id===secondView.id,'second view preserved');
  assert.ok((await mainView()).url.endsWith('/second'));
- const tabGeometry=await pane().evaluate(el=>{const last=[...el.querySelectorAll('[data-preview-tab-id]')].at(-1),add=el.querySelector('button[aria-label="New tab"]'),lead=last.querySelector('.spv-tab-icon');return {gap:add.getBoundingClientRect().left-last.getBoundingClientRect().right,minWidth:parseFloat(getComputedStyle(last).minWidth),leadWidth:lead.getBoundingClientRect().width};});
+ const tabGeometry=await pane().evaluate(el=>{const last=[...el.querySelectorAll('[data-vtb-id]')].at(-1),add=el.querySelector('button[aria-label="New tab"]'),lead=last.querySelector('.spv-tab-icon');return {gap:add.getBoundingClientRect().left-last.getBoundingClientRect().right,minWidth:parseFloat(getComputedStyle(last).minWidth),leadWidth:lead.getBoundingClientRect().width};});
  assert.ok(tabGeometry.gap>=0&&tabGeometry.gap<=8,'create control follows the tab list');assert.equal(tabGeometry.minWidth,24);assert.equal(tabGeometry.leadWidth,20);report.metrics.tabGeometry=tabGeometry;
  await shot('browser-tabs-light');
  await app.evaluate(({webContents},args)=>webContents.fromId(args.id).executeJavaScript(`window.open(${JSON.stringify(args.url)}, '_blank')`),{id:secondView.id,url:`http://localhost:${port}/popup`});
@@ -262,15 +262,15 @@ try{
  report.checks.push('Native Cmd+Shift+T restores the latest closed web URL in a fresh native view');
 
  // Focused tab keyboard reorder, then a middle-button close while a same-server tab remains.
- await pane().locator(`[data-preview-tab-id="${secondId}"] [role="tab"]`).press('Meta+Shift+ArrowLeft');
- await poll(async()=>await tabs().first().getAttribute('data-preview-tab-id')===secondId,'reordered tabs');
- await pane().locator(`[data-preview-tab-id="${originalId}"] [role="tab"]`).click({button:'middle'});
+ await pane().locator(`[data-vtb-id="${secondId}"] [role="tab"]`).press('Meta+Shift+ArrowLeft');
+ await poll(async()=>await tabs().first().getAttribute('data-vtb-id')===secondId,'reordered tabs');
+ await pane().locator(`[data-vtb-id="${originalId}"] [role="tab"]`).click({button:'middle'});
  await poll(async()=>await tabs().count()===1,'middle click closes one tab');
  assert.equal(await page.getByRole('dialog').or(page.getByRole('alertdialog')).count(),0,'same server remains open elsewhere');
  report.checks.push('Preview tabs keep independent native views and history; keyboard reorder and middle close preserve the other same-server page');
  await pane().getByRole('button',{name:'New tab',exact:true}).click();await poll(async()=>await tabs().count()===2,'blank tab for Close others');
  await field.press('Escape');
- await pane().locator(`[data-preview-tab-id="${secondId}"] [role="tab"]`).click({button:'right'});
+ await pane().locator(`[data-vtb-id="${secondId}"] [role="tab"]`).click({button:'right'});
  await page.getByRole('menuitem',{name:'Close other tabs',exact:true}).click();
  await poll(async()=>await tabs().count()===1 && (await mainView())?.id===secondView.id,'context menu keeps its own tab');
  report.checks.push('Close other tabs from a background tab selects and retains that tab');
@@ -345,7 +345,7 @@ try{
  report.checks.push('Original settings Copy URL writes the complete URL with a success toast and reports a refused write with the source error toast; Show annotation tools opens the resting bar over a live page, draws on demand, attaches a plain capture, returns to rest and hides');
  step('logs');
  await pane().getByRole('button',{name:'Preview settings',exact:true}).click();await page.getByRole('menuitem',{name:'Show dev server logs',exact:true}).click();
- const logs=pane().getByRole('region',{name:'Dev server logs'});await logs.waitFor();await poll(async()=>/site listening on/.test(await logs.textContent()),'logs show the server output');
+ const logs=pane().getByTestId('preview-logs-source').locator('xpath=../..');await logs.waitFor();await poll(async()=>/site listening on/.test(await logs.textContent()),'logs show the server output');
  await logs.getByRole('button',{name:'Close dev server logs',exact:true}).click();await logs.waitFor({state:'detached'});
  report.checks.push('Show dev server logs opens the drawer with the server output');
  step('menu');
@@ -453,8 +453,10 @@ try{
  const overflowGeometry=await moreMenu().evaluate(el=>{const row=el.querySelector('[role="menuitem"]'),close=row.querySelector('[title="Close tab"]');return {rowGap:getComputedStyle(row).gap,closeWidth:close.getBoundingClientRect().width,closeHeight:close.getBoundingClientRect().height,details:el.textContent,describedBy:row.getAttribute('aria-describedby')};});
  assert.equal(overflowGeometry.closeWidth,20);assert.equal(overflowGeometry.closeHeight,20);assert.ok(overflowGeometry.details.includes('file://'));assert.ok(overflowGeometry.describedBy);report.metrics.overflowGeometry=overflowGeometry;
  await shot('preview-overflow-dark');
- const selectId=await firstRow.evaluate(el=>el.closest('[data-preview-overflow-id]').dataset.previewOverflowId);await firstRow.press('Enter');await moreMenu().waitFor({state:'detached'});
- await poll(async()=>await pane().locator(`[data-preview-tab-id="${selectId}"] [role="tab"]`).getAttribute('aria-selected')==='true','hidden tab activates');assert.equal(await tabs().count(),9);
+ // w11-sweep-trans: the row is cfe7c4b3b se (a CdsDropdown item, no host data-preview-overflow-id wrapper since
+ // w10-trans-tab-overflow); the hidden tab is known by the row's label (its text-body OverflowTooltip).
+ const selectLabel=await firstRow.evaluate(el=>el.querySelector('.text-body [data-cds="OverflowTooltip"]').textContent);await firstRow.press('Enter');await moreMenu().waitFor({state:'detached'});
+ await poll(async()=>((await pane().locator('[data-vtb-id] [role="tab"][aria-selected="true"]').textContent())??'').includes(selectLabel),'hidden tab activates');assert.equal(await tabs().count(),9);
  await openMore();const active=()=>page.locator('.spv-overflow-menu [role="menuitem"]:focus');
  await active().dispatchEvent('keydown',{key:'Delete',repeat:true,bubbles:true});assert.equal(await tabs().count(),9);
  await active().press('Delete');await poll(async()=>await tabs().count()===8,'Delete closes hidden tab');await poll(async()=>await active().count()===1,'focus transfers after closing hidden row');
@@ -471,9 +473,9 @@ try{
  await poll(async()=>await moreMenu().count()===0,'overflow menu disappears when remaining tabs fit');
  assert.equal(await more.count(),0);report.metrics.tabsWithoutOverflow=await tabs().count();
  for(let count=await tabs().count()+1;count<=9;count++){await addTab.click();await poll(async()=>await tabs().count()===count,'restore overflow for pointer close');}
- await openMore();const beforeActive=await pane().locator('[role="tab"][aria-selected="true"]').evaluate(el=>el.closest('[data-preview-tab-id]').dataset.previewTabId);
+ await openMore();const beforeActive=await pane().locator('[role="tab"][aria-selected="true"]').evaluate(el=>el.closest('[data-vtb-id]').dataset.vtbId);
  await moreMenu().locator('[title="Close tab"]').first().click();await poll(async()=>await tabs().count()===8,'pointer X closes');
- assert.equal(await pane().locator('[role="tab"][aria-selected="true"]').evaluate(el=>el.closest('[data-preview-tab-id]').dataset.previewTabId),beforeActive,'closing hidden tab does not activate it');
+ assert.equal(await pane().locator('[role="tab"][aria-selected="true"]').evaluate(el=>el.closest('[data-vtb-id]').dataset.vtbId),beforeActive,'closing hidden tab does not activate it');
  if(await moreMenu().count())await page.keyboard.press('Escape');
  assert.equal(await addTab.isDisabled(),false);
  report.checks.push('Source overflow rows show page details and 20px close controls; keyboard opening/selection, Delete/repeat guard, typeahead-protected Backspace, ArrowRight, middle-click and pointer close work without activating closed tabs');

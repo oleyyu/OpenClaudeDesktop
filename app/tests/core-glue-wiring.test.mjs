@@ -11,7 +11,8 @@ const app = path.resolve(import.meta.dirname, '..');
 const require = createRequire(path.join(app, 'package.json'));
 require('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {} } };
+// D21: the Settings import graph reaches view-tabs, whose preload-helper calls document.createElement at evaluation.
+globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
 const read = file => readFileSync(path.join(app, file), 'utf8');
 let server, React, render, Settings, account, i18n;
 before(async () => {

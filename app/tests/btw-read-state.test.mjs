@@ -1,17 +1,24 @@
 // R2-btw NBS-5: a /btw child the session tile shows is marked read and kept out of the automatic unread mark.
-// 2.42304.0 cccc2cf0a KO calls shared-11 v_(child, true); the turn-result path (ce401cf8e) calls x_, which skips a
-// session in the window's pane set (h_) or the shown list (__). Both originals are generated
-// (src/generated/btw-pane/shown-session.mjs) over the local host adapter (src/btw-read-state.mjs).
-import test from 'node:test';
+// 3.6556.2 cccc2cf0a calls shared-11 Yb(child, true) (2.42304.0 v_); the turn-result path calls Qb (x_), which skips a
+// session in the window's pane set (Kb, 2.42304.0 h_) or the shown list (Jb, __). Both originals are generated
+// (src/generated/btw-pane/shown-session.mjs) over the local host adapter (src/btw-read-state.mjs). Yb is React Compiler
+// output importing its cache helpers from the view-tabs graph (E3), whose host adapters are .jsx: the two modules load
+// through Vite SSR (one module graph, so btw-read-state.mjs and the test share the generated registry).
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import React from 'react';
-import { useShownSession, markUnreadUnlessShown } from '../src/generated/btw-pane/shown-session.mjs';
-import { useBtwReadStateHost, bindBtwReadState, unreadStore, paneSessions, useReportShownSession, shownSideSessions } from '../src/btw-read-state.mjs';
+import { createServer } from 'vite';
+import react from '@vitejs/plugin-react';
 import { unreadOnTurnCompleted } from '../src/sidebar-model.js';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
+const server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+after(() => server.close());
+const { useShownSession, markUnreadUnlessShown } = await server.ssrLoadModule('/src/generated/btw-pane/shown-session.mjs');
+const { useBtwReadStateHost, bindBtwReadState, unreadStore, paneSessions, useReportShownSession, shownSideSessions } = await server.ssrLoadModule('/src/btw-read-state.mjs');
 
 // D21: deterministic hook cells; effects run on flush, in declaration order, cleanups before re-runs.
 function hookFixture(body, props) {
@@ -26,7 +33,7 @@ function hookFixture(body, props) {
     if (next) props = next;
     cursor = 0;
     const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internals.H;
-    internals.H = dispatcher;
+    internals.H = withMemoCache(dispatcher);
     try { body(props); } finally { internals.H = old; }
     while (effects.length) effects.shift()();
   };
@@ -46,22 +53,26 @@ function host(metadata = {}) {
   return { calls, errors, props };
 }
 
-test('the shown-session registry is the generated 2.42304.0 shared-11 v_/x_ over the host unread store', async () => {
+test('the shown-session registry is the generated 3.6556.2 shared-11 Yb/Qb over the host unread store', async () => {
   const { extractBtwPane } = await import('../scripts/extract-btw-pane.mjs');
   const manifest = await extractBtwPane({ check: true });
+  assert.equal(manifest.referenceVersion, '3.6556.2');
   const shown = manifest.modules.find(module => module.target === 'shown-session.mjs');
-  assert.equal(shown.source, 'shared-11-BuQ3CK5I.js');
-  assert.deepEqual(shown.bindings.map(binding => binding.name), ['__', 'v_', 'x_']);
-  assert.deepEqual(shown.exports, { v_: 'useShownSession', x_: 'markUnreadUnlessShown' });
+  assert.equal(shown.source, 'shared-11-_AVGLHEz.js');
+  assert.deepEqual(shown.bindings.map(binding => binding.name), ['Jb', 'Yb', 'Qb']);
+  assert.deepEqual(shown.exports, { Yb: 'useShownSession', Qb: 'markUnreadUnlessShown' });
   assert.deepEqual(shown.imports.map(entry => [entry.local, entry.kind, entry.from, entry.name, entry.via]), [
-    ['S', 'react', 'react', 'useEffect', 'vendor-frame-DfPJ1QmD.js:mo'],
-    ['y_', 'host', '../../btw-read-state.mjs', 'unreadStore', 'shared-11-BuQ3CK5I.js:y_'],
-    ['h_', 'host', '../../btw-read-state.mjs', 'paneSessions', 'shared-11-BuQ3CK5I.js:h_'],
+    ['S', 'react', 'react', 'useEffect', 'vendor-frame-CnSY1sxv.js:ho'],
+    ['J2', 'view-tabs', '../view-tabs/shared-frame-6jtSkIit.js', 'memoChanged2', 'shared-frame-6jtSkIit.js:$f'],
+    ['K3', 'view-tabs', '../view-tabs/shared-frame-6jtSkIit.js', 'memoStore3', 'shared-frame-6jtSkIit.js:cp'],
+    ['J9', 'view-tabs', '../view-tabs/shared-frame-6jtSkIit.js', 'reactMemoCache', 'shared-frame-6jtSkIit.js:ip'],
+    ['Xb', 'host', '../../btw-read-state.mjs', 'unreadStore', 'shared-11-_AVGLHEz.js:Xb'],
+    ['Kb', 'host', '../../btw-read-state.mjs', 'paneSessions', 'shared-11-_AVGLHEz.js:Kb'],
   ]);
   assert.ok(shown.imports.filter(entry => entry.kind === 'host').every(entry => /^[0-9a-f]{64}$/.test(entry.replacedSha256)));
   const text = readFileSync(path.join(app, 'src/generated/btw-pane/shown-session.mjs'), 'utf8');
-  assert.match(text, /t && y_\.getState\(\)\.unreadIds\.includes\(e\) && y_\.getState\(\)\.markRead\(e\)/);
-  assert.match(text, /h_\.has\(e\) \|\| __\.includes\(e\) \|\| y_\.getState\(\)\.markUnread\(e\)/);
+  assert.match(text, /n &&\s+Xb\.getState\(\)\.unreadIds\.includes\(e\) &&\s+Xb\.getState\(\)\.markRead\(e\)/);
+  assert.match(text, /Kb\.has\(e\) \|\| Jb\.includes\(e\) \|\| Xb\.getState\(\)\.markUnread\(e\)/);
 });
 
 test('showing an unread /btw child marks it read once; a read child or no child writes nothing', () => {
@@ -148,18 +159,19 @@ test('main.jsx wires KO and x_: side 0 binds the host, the session tile register
   assert.doesNotMatch(source, /updateSessionMetadata\(e\.params\.threadId, \{ unread: true \}, \{ automatic: true \}\)/);
 });
 
-// R4g-btw BT1 (X7-15): the official y_ hydrates from localStorage (shared-52 $p) while it is created, so v_'s mount
-// check always reads stored state; the local metadata arrives later, and the check is kept until the child's record does.
+// R4g-btw BT1 (X7-15): the official unread store (3.6556.2 shared-11 Xb, 2.42304.0 y_) hydrates from localStorage
+// (shared-52 Qh, 2.42304.0 $p) while it is created, so Yb's mount check always reads stored state; the local metadata
+// arrives later, and the check is kept until the child's record does.
 test('the official unread store hydrates synchronously, and its rehydrate hook re-marks only the open session', () => {
-  const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+  const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
   const count = (text, needle) => text.split(needle).length - 1;
-  const shared11 = readFileSync(path.join(v1, 'shared-11-BuQ3CK5I.js'), 'utf8');
-  assert.equal(count(shared11, '{name:p_,storage:Bi(()=>mr),onRehydrateStorage:()=>()=>{m_&&y_.getState().markRead(m_)}}'), 1);
-  assert.equal(count(shared11, 'up as mr'), 1);
-  assert.equal(count(shared11, 'function E_(e){let t=y_(e=>e.markRead);S(()=>(m_=e,'), 1, 'm_ is the open session (E_), not a /btw child');
-  const shared52 = readFileSync(path.join(v1, 'shared-52-DGviI8xb.js'), 'utf8');
-  assert.equal(count(shared52, 'var $p=Qp(()=>On("localStorage"),"local_storage",Zp)'), 1);
-  assert.equal(count(shared52, '$p as up'), 1);
+  const shared11 = readFileSync(path.join(v1, 'shared-11-_AVGLHEz.js'), 'utf8');
+  assert.equal(count(shared11, '{name:Wb,storage:ra(()=>jt),onRehydrateStorage:()=>()=>{Gb&&Xb.getState().markRead(Gb)}}'), 1);
+  assert.equal(count(shared11, 'Ph as jt'), 1);
+  assert.equal(count(shared11, 'function ax(e){let $=J9(4),t=Xb(sx),n,r;J2($,0,e,t)?(n=()=>(Gb=e,'), 1, 'Gb is the open session (ax), not a /btw child');
+  const shared52 = readFileSync(path.join(v1, 'shared-52-uHFNjl7C.js'), 'utf8');
+  assert.equal(count(shared52, 'var Qh=Zh(()=>cn("localStorage"),"local_storage",Xh)'), 1);
+  assert.equal(count(shared52, 'Qh as Ph'), 1);
 });
 
 test('a /btw child shown before its record arrives is marked read once the record arrives unread', () => {

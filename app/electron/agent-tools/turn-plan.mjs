@@ -1,26 +1,27 @@
-// Claude Desktop 2.42304.0's ccd_turn server (main index.chunk-B5tintml.js Qt / Zt / ft): update_plan (the task list the
-// app shows under the latest message while the agent works) and wrap_up (the next-step box at the end of a turn), served
-// to every core through OpenClaude Desktop's own MCP server (mcp__code_desktop__update_plan / wrap_up; officially
-// mcp__ccd_turn__update_plan / wrap_up).
+// Claude Desktop 3.6556.2's ccd_turn server (main index.chunk-DBIg6EBr.js Yt / Jt / it; 2.42304.0 index.chunk-B5tintml.js
+// Qt / Zt / ft): update_plan (the task list the app shows under the latest message while the agent works) and wrap_up (the
+// next-step box at the end of a turn), served to every core through OpenClaude Desktop's own MCP server
+// (mcp__code_desktop__update_plan / wrap_up; officially mcp__ccd_turn__update_plan / wrap_up).
 //
-// The definitions (Tt / Ft descriptions, Et / Lt inputSchemas, readOnlyHint, alwaysLoad) and the handler (Zt: every
-// check, answer and the `claude/endTurn` result meta) are the originals in electron/generated/turn-plan/ccd-turn.mjs
-// (scripts/extract-turn-plan.mjs); GrowthBook 2371478310 (ht) is on (electron/turn-plan-adapters.mjs). The renderer
-// draws the card and the box from the calls' inputs (src/turn-plan-model.mjs over the original c1ebb1aa4 Rt).
+// The definitions (Yt: the update_plan / wrap_up descriptions, jt the wrap_up one, their inputSchemas, readOnlyHint,
+// alwaysLoad) and the handler (Jt: every check, answer and the `claude/endTurn` result meta Tt) are the originals in
+// electron/generated/turn-plan/ccd-turn.mjs (scripts/extract-turn-plan.mjs); GrowthBook 2371478310 (st) is on
+// (electron/turn-plan-adapters.mjs). The renderer draws the card and the box from the calls' inputs (src/turn-plan-model.mjs
+// over the original c4ea84cb3 Br).
 //
 // What the official main process does around the server, here:
-//   - turnPlan (dt): one plan per session; getAvailableNextActions: what the renderer's next-actions row publishes
-//     (cccc2cf0a rT / iT → LocalSessions.setAvailableNextActions; main.cjs desktop:call turn-plan:available-next-actions);
+//   - turnPlan (et): one plan per session; getAvailableNextActions: what the renderer's next-actions row publishes
+//     (cccc2cf0a zA / BA → LocalSessions.setAvailableNextActions; main.cjs desktop:call turn-plan:available-next-actions);
 //     drivenOverRemoteControl: false (the host has no Remote Control).
-//   - The PostToolUse / SessionStart(compact) hooks (ft): observe() runs the original PostToolUse hook on each finished
+//   - The PostToolUse / SessionStart(compact) hooks (it): observe() runs the original PostToolUse hook on each finished
 //     update_plan / wrap_up call of a session's own thread (prompt_id: the call's turn), and the original SessionStart
 //     hook when a compaction of that thread completes. No core runs Claude Code hooks, and none injects context in the
 //     middle of a turn, so the hook's additionalContext goes in front of the session's next turn/start as a hidden
 //     <system-reminder> input item (turnStart(); the app's other reminders travel the same way).
-//   - A sub-agent's call (official PreToolUse deny with ot): refused with ot when the core names a calling thread other
+//   - A sub-agent's call (official PreToolUse deny with Qe): refused with Qe when the core names a calling thread other
 //     than the session (Codex); the DeepSeek core refuses it itself (harness codex-app-server tools/pre-execute).
 //   - Codex: its built-in update_plan is turned off for the app's sessions (codexBuiltin, agent-tools-host.cjs codexArgs).
-//   - Qt(false): the description leaves out the start_session sentence; start_session / sideSessions are not migrated.
+//   - Yt(false): the description leaves out the start_session sentence; start_session / sideSessions are not migrated.
 import { SUBAGENT_TURN_TOOL_REFUSAL, UPDATE_PLAN, UPDATE_PLAN_TOOL_NAME, WRAP_UP, WRAP_UP_TOOL_NAME, emptyTurnPlan, turnPlanHooks, turnServerDefinition }
   from "../generated/turn-plan/ccd-turn.mjs";
 

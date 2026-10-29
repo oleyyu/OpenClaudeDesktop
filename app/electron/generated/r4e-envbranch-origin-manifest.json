@@ -1,47 +1,47 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r4e-envbranch.mjs",
   "output": "r4e-envbranch-origin.cjs",
   "service": {
-    "file": "index.chunk-CxZMGoHL.js",
-    "sourceSha256": "d1568d61adbef5ed542c24e9561fea2458d4f3286cc5f9be45546f4e2cd7e789",
-    "class": "j",
+    "file": "index.chunk-Da165atI.js",
+    "sourceSha256": "5c9097c9b8cb83ef56d9ffe64fedd6e9b00bf93f1f444a157f11aaee9cf5ffb7",
+    "class": "W",
     "exported": "t",
     "methods": [
       {
         "name": "isBranchOnOrigin",
-        "sha256": "e426a86fd6500e70d25f9df20bd212514a3508990cd7fa01bb67e3e91733c594"
+        "sha256": "54c0dd374642c5232110d28ef00b5a6fe85e3d87f6dd5a851d9784245d406d65"
       },
       {
         "name": "pushLeavesOriginRef",
-        "sha256": "44907d6151e433fabf18b03f71ff755795b5a917381c75ddee3fb5fdb6e76878"
+        "sha256": "59e006abcece816792d7bf338e4681692d78778bc5722a35f711d126671cfe32"
       }
     ],
     "namespaces": {
-      "a": {
-        "require": "./index.chunk-BhBOA_v0.js",
+      "u": {
+        "require": "./index.chunk-DXSKLguD.js",
         "members": [
           "n"
         ]
       },
-      "n": {
-        "require": "./index.chunk-BQi7slPm.js",
+      "s": {
+        "require": "./index.chunk-CArOlz-X.js",
         "members": [
           "r"
         ]
       },
-      "r": {
-        "require": "./index.chunk-BDxF0-vT.js",
+      "i": {
+        "require": "./index.chunk-NwjHwcLG.js",
         "members": [
           "v"
         ]
       },
-      "t": {
-        "require": "./index.chunk-muI2IV6k.js",
+      "a": {
+        "require": "./index.chunk-C3tnPGuy.js",
         "members": [
-          "FO",
-          "IO"
+          "a",
+          "o"
         ]
       }
     },
@@ -54,24 +54,24 @@
   },
   "functions": [
     {
-      "file": "index.chunk-BhBOA_v0.js",
+      "file": "index.chunk-DXSKLguD.js",
       "exported": "n",
-      "binding": "j",
+      "binding": "F",
       "as": "isPlausibleBranchName",
-      "sourceSha256": "65233bad6a0b94c685876527cfadeae5cbecbf8e41153adef0119b0b5bacb7e9",
+      "sourceSha256": "bd6385da65cbcb8c451c6e67c7c08be98c3be82da44e97cdb243833aafb341ae",
       "bindings": [
         {
-          "name": "j",
-          "sha256": "cd13deaa399dd8d7e9d118c75dbd688110bf96b0c17b532aaf4f3761a8c36883"
+          "name": "F",
+          "sha256": "4d4050cafe5bcdaa918267c5cc216538f236696f17335c2dd31ed3e7a3b6746a"
         }
       ]
     },
     {
-      "file": "index.chunk-BQi7slPm.js",
+      "file": "index.chunk-CArOlz-X.js",
       "exported": "r",
       "binding": "r",
       "as": "gitExitCode",
-      "sourceSha256": "94fd76f8aa087bd2fe6977ace767d3259f916775c9fe1499118a79c3c39cbcac",
+      "sourceSha256": "4543e382d944461f953e08eed76d6747e2e58bffe68d482fc7cb15c1a6757974",
       "bindings": [
         {
           "name": "r",
@@ -80,56 +80,56 @@
       ]
     },
     {
-      "file": "index.chunk-muI2IV6k.js",
-      "exported": "FO",
-      "binding": "zur",
+      "file": "index.chunk-C3tnPGuy.js",
+      "exported": "a",
+      "binding": "_",
       "as": "parseFetchRefspecs",
-      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+      "sourceSha256": "b5e0f0418c706b3811b49ce0df99fb83a670b67a57c0e4fa5fb6bf704322bc1f",
       "bindings": [
         {
-          "name": "zur",
-          "sha256": "f1804a6310ea6578fe14f4c82f9637b8cb5245da85187b0e2df6e877cc65dcfa"
+          "name": "_",
+          "sha256": "2181c28aa9a9453dd210cbb672319ada7cdf7eb003a209895eeb7c5b35fc556f"
         },
         {
-          "name": "Vur",
-          "sha256": "45cfd921755f2d24f85568a8d7a2edba6689c451d6592568bb37308c05373fd8"
+          "name": "b",
+          "sha256": "3fbc103a8a56b9dacee61fdd5424844b8640a0dce9c952931067e1bef1e6af81"
         },
         {
-          "name": "Hur",
-          "sha256": "63524cbba5a4ef8d14e023d390e94a90489a112b560a2f2844cc66934745cc06"
+          "name": "y",
+          "sha256": "186fa124c663e174f45edeeab8fc4fbe147666e4bdde9124753c7c9e2e82010f"
         }
       ]
     },
     {
-      "file": "index.chunk-muI2IV6k.js",
-      "exported": "IO",
-      "binding": "Bur",
+      "file": "index.chunk-C3tnPGuy.js",
+      "exported": "o",
+      "binding": "v",
       "as": "refspecsCoverBranch",
-      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+      "sourceSha256": "b5e0f0418c706b3811b49ce0df99fb83a670b67a57c0e4fa5fb6bf704322bc1f",
       "bindings": [
         {
-          "name": "Bur",
-          "sha256": "d40b310585d965ab249ddc4a255c62b16e035c03e787d9da63d91857cde7d9c7"
+          "name": "v",
+          "sha256": "1c409fe1e60f2daeab721686cefd710eec8fcb65718e044e8662e517432eca99"
         }
       ]
     }
   ],
   "host": {
-    "file": "index.chunk-BDxF0-vT.js",
+    "file": "index.chunk-NwjHwcLG.js",
     "exported": "v",
-    "binding": "an",
-    "sourceSha256": "5a78a0d199d6fb6d1f54ed0c4f4fad1766a7e2ad22f9bf96b75477c2cee414b2"
+    "binding": "un",
+    "sourceSha256": "6887ce8313a840a5a78a3dc883412e9a2bd4b07d4494275c32c9ffa3ef9466de"
   },
   "callers": [
     {
-      "file": "index.chunk-DLn6Mdsc.js",
-      "needle": "async isBranchOnOrigin(e,t){return l.gitStatus.isBranchOnOrigin(e,t)}",
-      "sourceSha256": "6a544137b9be53f9d3dd3d4505c711c97aa38ec970fe59fa553f9e2e61d789aa"
+      "file": "index.chunk-DVWJXMwL.js",
+      "needle": "async isBranchOnOrigin(e,t){return p.gitStatus.isBranchOnOrigin(e,t)}",
+      "sourceSha256": "08514102edb2f37953613c8deb8da8247a5954c4178aa06224a40f4e18cace88"
     },
     {
-      "file": "index.chunk-muI2IV6k.js",
+      "file": "index.chunk-jPKPzV-P.js",
       "needle": "[\"isBranchOnOrigin\",[[\"cwd\",F],[\"branch\",F]],R(I)]",
-      "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5"
+      "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5"
     }
   ],
   "exports": [
@@ -139,5 +139,5 @@
     "parseFetchRefspecs",
     "refspecsCoverBranch"
   ],
-  "sha256": "3fa576df7827ecb3510eb46d71e657042dbcdee155af3d7ca916c4b2bf86e9c9"
+  "sha256": "e84bd5a3961947dbc65c33ab608f62094d409017c1c874fee789528b502d2ba7"
 }

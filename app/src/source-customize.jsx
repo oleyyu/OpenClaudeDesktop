@@ -4,6 +4,8 @@ import { bindCustomizeScroll } from './customize-scroll.mjs';
 import { BUILTIN_PLUGINS, builtinPluginRow, filterBuiltinPlugins } from './builtin-plugins.mjs';
 import { pluginDetailTabList, pluginDetailTabs, pluginDetailView, pluginOverview } from './plugin-detail-model.mjs';
 import { PluginOverview } from './source-r4e-plugin-overview.jsx';
+// V3-w10-shell-plugin-settings: the Settings tab (3.6556.2 c24c8737b ol / yc / bc).
+import { PluginSettingsPanel, PluginSettingsTabLabel, pluginSettingsTab, usePluginOptions } from './source-plugin-settings-tab.jsx';
 import { Icon } from "./icons";
 import { SourceSkillFile } from './source-skill-file.jsx';
 import { SourceSwitch as Switch } from './source-switch.jsx';
@@ -1643,12 +1645,14 @@ export function OfficialPlugins({ rows, store, manage = false, onOpen, copy = DE
 // `mcp` = {rows, loading} of the Customize connectors catalog (connector rows'
 // titles and status); `onConnector(name)` opens a connector's drill.
 // `manage` = the header actions (PluginManageControls), `notices` = the row below the header (workspace sharing).
-export function PluginDetail({ plugin, detail, error, skills, view, onView, onBack, onSkill, onConnector, scrollMemory, copy = DEFAULT_COPY, mcp = null, manage = null, notices = null, onServerToggle = null, serverBusy = false }) {
+export function PluginDetail({ plugin, detail, error, skills, view, onView, onBack, onSkill, onConnector, scrollMemory, copy = DEFAULT_COPY, mcp = null, manage = null, notices = null, onServerToggle = null, serverBusy = false, pluginOptionsApi = globalThis.desktop, cwd = null }) {
   const id = useId();
   const scroll = useRef(null);
   const mcpRows = mcp?.rows;
   // R4e-plugin (2.42304.0 c24c8737b pc Kt): Overview first, then the content tabs; no Tool permissions servers here.
-  const tabs = useMemo(() => detail ? pluginDetailTabList(pluginDetailTabs(detail, plugin.id, skills, { descriptions: copy.pluginTabDescriptions, mcpRows: mcpRows || [] })) : [], [detail, plugin.id, skills, copy, mcpRows]);
+  // 3.6556.2 ol: `en = Be ? $t : void 0` (RE's data on an installed plugin's page), pushed as the last tab.
+  const { data: pluginOptions, save: savePluginOptions } = usePluginOptions(plugin.id, !!detail, pluginOptionsApi, cwd);
+  const tabs = useMemo(() => detail ? [...pluginDetailTabList(pluginDetailTabs(detail, plugin.id, skills, { descriptions: copy.pluginTabDescriptions, mcpRows: mcpRows || [] })), ...(pluginOptions ? [pluginSettingsTab(pluginOptions)] : [])] : [], [detail, plugin.id, skills, copy, mcpRows, pluginOptions]);
   const overview = useMemo(() => pluginOverview(detail, plugin, { mcpRows: mcpRows || [] }), [detail, plugin, mcpRows]);
   const { tab, searchable, items } = pluginDetailView(tabs, view?.tab, view?.query);
   useLayoutEffect(() => scrollMemory ? bindCustomizeScroll(scroll.current, scrollMemory, `detail:${plugin.id}`) : undefined, [scrollMemory, plugin.id]);
@@ -1696,14 +1700,15 @@ export function PluginDetail({ plugin, detail, error, skills, view, onView, onBa
               }}>
                 {/* Kt always holds Overview once plugin/read answers, so there is no empty tab strip. */}
                 {tabs.map(entry => <button type="button" role="tab" key={entry.id} id={`${id}-${entry.id}`} aria-controls={`${id}-panel`} aria-selected={entry.id === tab.id} tabIndex={entry.id === tab.id ? 0 : -1}
-                  onFocus={() => { if (entry.id !== tab.id) changeTab(entry.id); }} onClick={() => { if (entry.id !== tab.id) changeTab(entry.id); }}>{t(entry.label)}</button>)}
+                  onFocus={() => { if (entry.id !== tab.id) changeTab(entry.id); }} onClick={() => { if (entry.id !== tab.id) changeTab(entry.id); }}>{entry.id === 'settings' ? <PluginSettingsTabLabel options={entry.options} /> : t(entry.label)}</button>)}
               </div></div>
               {searchable && <PageSearch key={tab.id} label={t(`Search ${tab.id}`)} value={view?.query || ''} onChange={query => onView({ tab: tab.id, query })} />}
             </div>
             {tab ? <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab.id}`}>
-              {tab.id !== 'overview' && <p className="cz-plugin-tab-description">{tab.description}</p>}
+              {tab.id !== 'overview' && tab.id !== 'settings' && <p className="cz-plugin-tab-description">{tab.description}</p>}
               {/* pc: `qt === "overview" && a(pa, { …, onOpenConnectors: Kt.some(e => e.id === "connectors") ? Dn : void 0 })`. */}
               {tab.id === 'overview' ? <PluginOverview overview={overview} onOpenConnectors={tabs.some(entry => entry.id === 'connectors') ? () => changeTab('connectors') : undefined} /> :
+              tab.id === 'settings' ? <PluginSettingsPanel key={plugin.id} pluginId={plugin.id} options={tab.options} save={savePluginOptions} /> :
               tab.id === 'connectors' ? <PluginConnectors tab={tab} items={items} loading={!!mcp?.loading} onSelect={onConnector} onToggle={onServerToggle} busy={serverBusy} /> : items.length ? <ul className="cz-plugin-items" {...{ [`data-plugin-${tab.id}`]: '' }}>
                 {items.map(item => <li key={item.key}>{item.path ? <button type="button" className="cz-plugin-item" onClick={() => onSkill(item.path)}><span>{item.label}</span>{item.description.trim().length > 1 && <small title={item.description}>{item.description}</small>}{item.disabled && <Badge>{t("Disabled")}</Badge>}</button> :
                   <div className="cz-plugin-item"><span>{item.label}</span>{item.description.trim().length > 1 && <small title={item.description}>{item.description}</small>}{item.disabled && <Badge>{t("Disabled")}</Badge>}
@@ -2212,7 +2217,7 @@ function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPa
       view={ownedView?.id===current.id?ownedView:null} onView={value=>setOwnedView({id:current.id,...value})}
       onBack={()=>{setSelected(null);setSkillPath(null);}} onSkill={setSkillPath} scrollMemory={scrollMemory.current} copy={copy} mcp={mcp}
       onConnector={onNavigate?connectorName=>onNavigate('customize-connectors',{connectorName}):undefined}
-      onServerToggle={copy.pluginServerToggle?toggleServer:null} serverBusy={serverBusy}/>
+      onServerToggle={copy.pluginServerToggle?toggleServer:null} serverBusy={serverBusy} cwd={cwd||null}/>
     {serverError&&<p className="cz-error" role="alert">{serverError}</p>}
   </div>;
   // Built-in plugins: the entries for the running core, where the core lets the app install bundles.

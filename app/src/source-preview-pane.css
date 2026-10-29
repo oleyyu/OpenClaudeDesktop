@@ -212,45 +212,6 @@ button.spv-server-main { outline: none; }
 .spv-link:hover { color: var(--cds-text-secondary); }
 .spv-link:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 3px; }
 
-.spv-pane .spv-log-line[data-tone="danger"] { color: var(--cds-text-danger); }
-.spv-pane .spv-log-line[data-tone="warning"] { color: var(--cds-text-warning); }
-
-/* Logs drawer (Jv): 200px bottom drawer, 80px minimum, at most 60% of the pane, resized from its top edge. */
-.spv-logs {
-  position: relative;
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  min-height: 80px;
-  max-height: 60%;
-  border-top: 1px solid var(--cds-border);
-  background: var(--cds-alpha-1);
-}
-.spv-logs-handle {
-  position: absolute;
-  top: -4px;
-  left: 0;
-  right: 0;
-  height: 8px;
-  cursor: ns-resize;
-  z-index: 1;
-}
-.spv-logs-handle:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--cds-fill-accent); }
-.spv-logs-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  padding: 0 12px 12px;
-  color: var(--cds-text-secondary);
-  font-family: var(--cds-font-mono, ui-monospace, monospace);
-  font-size: var(--cds-font-size-code);
-  line-height: 1.5;
-  user-select: text;
-}
-.spv-logs-body:focus-visible { outline: none; box-shadow: inset var(--cds-focus-shadow); }
-.spv-log-line { white-space: pre-wrap; overflow-wrap: anywhere; }
-.spv-logs-empty { color: var(--cds-text-muted); }
-
 /* A download the page started (state.download): saved (Show in Finder), failed, or not started while the preview was
    off screen. A row under the page, in the pane's own surface. */
 .spv-download { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 8px 4px 12px; flex-shrink: 0;
@@ -262,17 +223,4 @@ button.spv-server-main { outline: none; }
 
 /* Current native Preview: shared 32px view-tab row above navigation. */
 .spv-tabs-header { flex:none;gap:4px; }
-.spv-tabs { overflow-x:hidden; }
-.spv-tab { min-width:calc(1.25rem * var(--cds-rem-scale,1) + 4px); }
-.spv-tab [role="tab"] { gap:2px; }
-.spv-tab[data-has-icon] [role="tab"] { min-width:22px;padding-left:0; }
-.spv-tab[data-tight] [role="tab"] { min-width:0;padding-left:2px; }
-.spv-tabs .source-file-tabs-spacer { width:calc(1.25rem * var(--cds-rem-scale,1) + 8px); }
-.spv-tab-icon { display:flex;align-items:center;justify-content:center;flex:none;width:calc(1.25rem * var(--cds-rem-scale,1));height:calc(1.25rem * var(--cds-rem-scale,1)); }
-.spv-tab-icon img { object-fit:contain; }
 
-.spv-close-tabs-dialog{max-width:28rem;overflow-wrap:break-word}
-.spv-close-tabs-dialog .sdlg-footer>button:first-child{margin-inline-end:auto}
-
-/* Original shared overflow row uses gap-sm over the host menu default. */
-.spv-overflow-menu .smenu-item { gap: var(--cds-gap-sm); }

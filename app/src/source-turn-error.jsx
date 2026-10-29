@@ -36,17 +36,20 @@ function CopyDetails({ details }) {
 
 // approval-shared-current.js:4084-4199 Rp/zp: "View details" disclosure whose
 // panel (order-first) holds the error body, the Status line and Copy details;
-// the card's actions sit at the end of the same wrapping row.
+// the card's actions sit at the end of the same wrapping row. 3.6556.2 cb1a6e506 k wraps the details box (with its
+// optional guide line above it, which no host error has) in "flex flex-col gap-sm" (.ste-details-stack).
 function TurnErrorDetails({ details, status, actions }) {
   if (!details && !actions) return null;
   const after = actions ? <div className="ste-actions">{actions}</div> : null;
   if (!details) return <div className="ste-details">{after}</div>;
   return <SourceDisclosure className="ste-details" triggerClassName="ste-details-trigger" caret="end" label={t("View details")} after={after}>
     <div className="ste-details-panel">
-      <div className="ste-details-box">
-        <span className="ste-details-text">{details}</span>
-        {status !== undefined && <div className="ste-details-facts"><span>{t("Status: {status}", { status })}</span></div>}
-        <div className="ste-details-copy"><CopyDetails details={details}/></div>
+      <div className="ste-details-stack">
+        <div className="ste-details-box">
+          <span className="ste-details-text">{details}</span>
+          {status !== undefined && <div className="ste-details-facts"><span>{t("Status: {status}", { status })}</span></div>}
+          <div className="ste-details-copy"><CopyDetails details={details}/></div>
+        </div>
       </div>
     </div>
   </SourceDisclosure>;
@@ -68,7 +71,8 @@ function ErrorIcon({ kind }) {
 // signedInAgain: a sign-in succeeded after this failure, so the card settles into the official quiet 'Signed in again'
 // marker (cd5a31703 Hq/Uq). Exactly one action is primary, as the official card marks one (c3e34355f V).
 // onDismiss (card only): the session error notice's Dismiss (2.42304.0 cccc2cf0a nT → c3e34355f → cb1a6e506 A
-// `onDismiss: P`), a ghost sm X ending the header row; its mousedown is prevented (c81ea1931) so focus stays put.
+// `onDismiss: P`; 3.6556.2 cb1a6e506 j `onDismiss: I`), a ghost sm X ending the header row, "text-muted-as-secondary
+// hover:text-primary" (TR-T5/T10); its mousedown is prevented (c81ea1931) so focus stays put.
 // onGoBack / onPrefill (card only, Cowork, R4i-cowork CW3): 2.42304.0 cb55fb7c6 N's onRewind (mk's onSessionRewind,
 // so): `Ce=!!p&&!F.isConfirmPrompt` shows "You can edit your message and send it again." (LqvlIfVjNO, `p.text-secondary`)
 // and a secondary sm "Go back" (orvpWhO3rI, icon ArrowReturn) before Try again; `Se`: `let e=await p();e&&(U(e,…),W?.())`
@@ -149,7 +153,7 @@ export function SourceTurnError({ error, turnId, variant = "card", onRetry, onCo
       <div className="ste-header"><ErrorIcon kind={view.icon}/><span className="ste-headline">{view.headline}</span>
         {onDismiss && <span className="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0">
           <SourceSettingsButton variant="ghost" iconOnly size="sm" icon="X" iconSize="auto" aria-label={t("Dismiss")}
-            onMouseDown={(event) => event.preventDefault()} onClick={onDismiss} className="text-muted hover:text-primary"/>
+            onMouseDown={(event) => event.preventDefault()} onClick={onDismiss} className="text-muted-as-secondary hover:text-primary"/>
         </span>}</div>
       {view.hint && <span className="ste-hint">{autoContinue?.armed && limitReset?.resetsAtMs ? t("Auto-resuming at {time}", { time: new Date(limitReset.resetsAtMs).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) }) : view.hint}</span>}
       {misaligned && reviewing && view.findings && <div className="ste-findings" role="region" aria-label={t("Findings")}>

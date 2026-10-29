@@ -81,7 +81,7 @@ test('the composer submit swap keeps its visibility transition under reduced mot
   const Card = await import('../src/generated/code-composer/composer-card-tokens.mjs');
   assert.equal(Card.submitLayerEnterClass, 'motion-safe:animate-[cds-fade-in_0.12s_ease-out_0.08s_backwards]');
   assert.equal(Card.submitLayerExitClass, 'pointer-events-none invisible opacity-0 [transition:visibility_0s_linear_80ms] motion-safe:[transition:opacity_80ms_ease-out,visibility_0s_linear_80ms]');
-  const official = postcss.parse(readFileSync(path.resolve(src, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8'));
+  const official = postcss.parse(readFileSync(path.resolve(src, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'));
   const keys = ['.motion-safe\\:animate-\\[cds-fade-in_0\\.12s_ease-out_0\\.08s_backwards\\]', '.motion-safe\\:\\[transition\\:opacity_80ms_ease-out\\,visibility_0s_linear_80ms\\]', '.\\[transition\\:visibility_0s_linear_80ms\\]'];
   const found = {};
   official.walkRules((rule) => {

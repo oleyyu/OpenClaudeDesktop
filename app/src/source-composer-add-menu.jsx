@@ -28,7 +28,8 @@
 //   - Oj never disables the trigger in Code (`disabled: !r && j.length === 0` with a plus-menu scope), so neither does
 //     the host (the former host + was disabled while a turn/start was in flight).
 import React from "react";
-import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+// E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
+import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { DockGlyphBox, autoGlyphSize, dockGlyphIconClass, dockGlyphProps, sendGlyphBoxClass } from "./generated/code-composer/composer-glyph.mjs";
 import { addFilesMenuItem, addTriggerSizes } from "./generated/code-composer/composer-add-menu.mjs";
 import { menuCollisionPadding } from "./generated/code-composer/menu-collision-padding.mjs";
@@ -39,8 +40,9 @@ import { t } from "../electron/i18n/index.mjs";
 // Oj's trigger className and jj's popup className, verbatim.
 export const ADD_TRIGGER_CLASS = "shrink-0";
 export const ADD_MENU_POPUP_CLASS = "epitaxy-root break-words";
-// c73f45bc3 pv: the presets card's + (`...rc, glyphSize: "md", glyphBoxClassName: ic`).
-export const CARD_ADD_TRIGGER = Object.freeze({ ...dockGlyphProps, glyphSize: "md", glyphBoxClassName: sendGlyphBoxClass });
+// c73f45bc3 pv: the presets card's + (`...rc, glyphSize: "md", glyphBoxClassName: ic`). 3.6556.2: the box class is a call,
+// `glyphBoxClassName: cl()` (cfca6870a p: "flex scale-90" unless the fizzy-lake icons part is on, which it never is, E12).
+export const CARD_ADD_TRIGGER = Object.freeze({ ...dockGlyphProps, glyphSize: "md", glyphBoxClassName: sendGlyphBoxClass() });
 // R4i-graph GR3: c73f45bc3 tv, the classic layout's chin + (`c(Fi, {…, side: "top", isPanelActive: t, ...rc})`): rc alone,
 // so the auto glyph size and no glyph box.
 export const CHIN_ADD_TRIGGER = Object.freeze({ ...dockGlyphProps });

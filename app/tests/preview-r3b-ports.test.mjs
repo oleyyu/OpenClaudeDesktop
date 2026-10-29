@@ -1,4 +1,4 @@
-// R3b-preview: the 2.42304.0 dev-server port policy and identity check (electron/generated/r3b-preview-ports.mjs, run
+// R3b-preview: the 3.6556.2 dev-server port policy and identity check (electron/generated/r3b-preview-ports.mjs, run
 // through its host side electron/r3b-preview-host.mjs) and the preview user agent (generated/r3b-preview-user-agent.mjs),
 // over a stand-in socket world (tests/fixtures/preview-r3b-world.mjs): no real port, process, lsof or ps.
 import test from 'node:test';
@@ -25,18 +25,21 @@ function folder(scripts) {
 }
 const npmDev = (cwd, extra = {}) => ({ name: 'web', command: 'npm', args: ['run', 'dev'], cwd, port: 3000, autoPort: undefined, ...extra });
 
-test('the generated policy is the 2.42304.0 chunk, its host values and call sites anchored', () => {
-  assert.equal(manifest.referenceVersion, '2.42304.0');
-  assert.equal(manifest.source, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js');
+test('the generated policy is the 3.6556.2 chunk, its host values and call sites anchored', () => {
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.equal(manifest.source, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js');
   const ports = manifest.targets['r3b-preview-ports.mjs'];
-  assert.deepEqual(Object.keys(ports.host), ['n', 'p', 'g', 'N', 'ih', 'xi', 'zy', 'Y0', 'J0', 'a2', 'mM', '$0']);
-  assert.deepEqual(ports.host.a2.members, ['servers'], 'only the registry rows are read from a2');
-  assert.deepEqual(ports.host.g.members, ['Socket', 'createServer']);
-  for (const [local, exported] of Object.entries({ I2i: 'resolvePort', P2i: undefined, O0i: 'verifyServerIdentity', a0i: 'portMayReassign', o0i: 'portRetargetability', t0i: 'pinnedPortsOf', k1i: 'rewritePortArgs', q4i: 'conflictingServers' }))
+  assert.deepEqual(Object.keys(ports.host), ['n', 'p', '_', 'N', 'Bh', 'ji', 'nx', 'a3', 'i3', 'P3', 'lP', 'l3']);
+  // The host passes them under the 2.42304.0 keys (electron/r3b-preview-host.mjs is unchanged).
+  assert.deepEqual(Object.values(ports.host).map((host, i) => host.key ?? Object.keys(ports.host)[i]), ['n', 'p', 'g', 'N', 'ih', 'xi', 'zy', 'Y0', 'J0', 'a2', 'mM', '$0']);
+  assert.deepEqual(ports.host.P3.members, ['servers'], 'only the registry rows are read from P3 (2.42304.0 a2)');
+  assert.deepEqual(ports.host._.members, ['Socket', 'createServer']);
+  for (const [local, exported] of Object.entries({ s3i: 'resolvePort', a3i: undefined, $2i: 'verifyServerIdentity', LXi: 'portMayReassign', RXi: 'portRetargetability', NXi: 'pinnedPortsOf', sXi: 'rewritePortArgs', N6i: 'conflictingServers' }))
     assert.equal(ports.bindings[local].exportedAs, exported, local);
-  assert.ok(ports.callSites.a2.needles.some((needle) => needle.includes('O0i(n,t.port,c.pid,e,i)')));
-  assert.ok(ports.callSites.D3i.needles.some((needle) => needle.includes('configuredPort:_.movedFrom')));
-  assert.ok(manifest.targets['r3b-preview-user-agent.mjs'].callSites.Pfi.needles.some((needle) => needle.includes('hy("3868149774")')));
+  assert.ok(ports.callSites.P3.needles.some((needle) => needle.includes('$2i(n,t.port,c.pid,e,i)')));
+  assert.ok(ports.callSites.p8i.needles.some((needle) => needle.includes('configuredPort:_.movedFrom')));
+  assert.ok(manifest.targets['r3b-preview-user-agent.mjs'].callSites.ZQ.needles.some((needle) => needle.includes('Pb("3868149774")')));
   assert.deepEqual(manifest.targets['r3b-preview-launch-fields.mjs'].exports, ['launchPortFields', 'launchUrlPortMismatch']);
 });
 

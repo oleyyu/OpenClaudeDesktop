@@ -1,5 +1,5 @@
 // The app's own windows let the screen-wide pointer through while it acts, and input bursts (official 2.42304.0
-// executor, muI2IV6k@4016600–4019000: NG, yPr, _Pr, vPr, TPr, gPr, CPr; spec §1.1 computer_batch "输入突发").
+// executor, muI2IV6k@4016600–4019000: NG, yPr, _Pr, vPr, TPr, gPr, CPr; 3.6556.2 jPKPzV-P N4, GUi, UUi, WUi, ZUi, HUi, YUi, the same apart from N4's D4() / O4() "A Claude dialog is waiting for the user" checks, which never fire there: their counter CUi is never written; spec §1.1 computer_batch "输入突发").
 //
 // Before a click / press / release / drag / scroll on the global HID stream, every window of this app within 16 px of
 // the action's points (or of the cursor) stops taking the mouse (setIgnoreMouseEvents(true)) — and then all of the

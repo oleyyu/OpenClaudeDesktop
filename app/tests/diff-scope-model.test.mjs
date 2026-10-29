@@ -13,11 +13,13 @@ const shape = (sections) => sections.map((section) => [section.key, section.item
 
 test('trigger: branch label "main → working tree", aria-label "Diff scope: …"; uncommitted and commit labels; null without a base', () => {
   const branch = diffScopeTrigger(DEFAULT_DIFF_SCOPE, { base: 'main' });
-  assert.deepEqual(branch, { label: 'main → working tree', ariaLabel: 'Diff scope: main → working tree', branch: { base: 'main', head: 'working tree' } });
-  assert.deepEqual(diffScopeTrigger(UNCOMMITTED_DIFF_SCOPE, { base: 'main' }), { label: 'Uncommitted changes', ariaLabel: 'Diff scope: Uncommitted changes', branch: null });
+  assert.deepEqual(branch, { label: 'main → working tree', ariaLabel: 'Diff scope: main → working tree', branch: { base: 'main', head: 'working tree' }, range: { base: 'main', head: 'working tree' } });
+  assert.deepEqual(diffScopeTrigger(UNCOMMITTED_DIFF_SCOPE, { base: 'main' }), { label: 'Uncommitted changes', ariaLabel: 'Diff scope: Uncommitted changes', branch: null, range: { base: 'main', head: 'working tree' } });
   const listed = commit(3);
   assert.equal(diffScopeTrigger({ kind: 'commit', sha: listed.sha }, { base: 'main', commits: [listed] }).label, `${listed.shortSha} Commit 3`);
-  assert.equal(commitScopeLabel('0123456789abcdef', []), '0123456', 'Bm falls back to the 7-character sha');
+  assert.equal(commitScopeLabel('0123456789abcdef', []), '0123456', 'iC falls back to the 7-character sha');
+  // 3.6556.2 cccc2cf0a iC: `${r.shortSha} ${r.subject || n}`, n = "(no message)".
+  assert.equal(diffScopeTrigger({ kind: 'commit', sha: listed.sha }, { base: 'main', commits: [{ ...listed, subject: '' }] }).label, `${listed.shortSha} (no message)`);
   assert.equal(diffScopeTrigger(DEFAULT_DIFF_SCOPE, { base: null }), null);
 });
 
@@ -98,7 +100,9 @@ test('Compare against helpers: Fm order, Im empty labels, H search filter', () =
   assert.equal(branchSearchEmptyLabel({ error: true }), 'Couldn’t load branches');
   assert.equal(branchSearchEmptyLabel({ loaded: true, count: 3 }), 'No branches match');
   assert.equal(branchSearchEmptyLabel({ loaded: false }), 'Loading branches…');
-  assert.equal(branchSearchEmptyLabel({ loaded: true, count: 0 }), 'Loading branches…');
+  // 3.6556.2 cccc2cf0a YS `p = O ? e : A || j ? x : "No branches match"`: a loaded, empty list has no match (the
+  // "diff-base-note" row covers loading / a failed empty load).
+  assert.equal(branchSearchEmptyLabel({ loaded: true, count: 0 }), 'No branches match');
   assert.deepEqual(filterSearchItems([{ label: 'Main' }, { label: 'feature/x' }, { label: 'release' }], 'MA').map((row) => row.label), ['Main']);
   assert.equal(filterSearchItems([{ label: 'a' }], '').length, 1);
 });

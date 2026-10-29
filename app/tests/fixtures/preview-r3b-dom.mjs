@@ -257,6 +257,10 @@ export function createPreviewDom() {
     // Frames run on setImmediate, so a test that mocks setTimeout still gets them.
     requestAnimationFrame: fn => { const id = ++nextFrame; frames.set(id, setImmediate(() => { frames.delete(id); fn(Date.now()); })); return id; },
     cancelAnimationFrame: id => { clearImmediate(frames.get(id)); frames.delete(id); },
+    // view-tabs CDS (shared-frame tooltip/delay timers) calls window.setTimeout/clearTimeout; resolve the global at call
+    // time so a test that mocks the timers still drives these.
+    setTimeout: (...args) => globalThis.setTimeout(...args), clearTimeout: id => globalThis.clearTimeout(id),
+    setInterval: (...args) => globalThis.setInterval(...args), clearInterval: id => globalThis.clearInterval(id),
     localStorage: memoryStorage(),
     getSelection: () => document.getSelection(),
   });

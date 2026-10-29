@@ -24,9 +24,14 @@ test('the card shows the question, its options, Other and Skip; Send waits for a
   assert.match(html, /Which database should I target\?/);
   assert.match(html, />Postgres</);
   assert.match(html, />SQLite</);
-  assert.match(html, /aria-label="Other"/);
+  // W12: the question card's 3.6556.2 structure (c9ed5627b ut rows, the Other row, CdsButton footer).
+  assert.match(html, /class="source-async-questions epitaxy-approval-card /);
+  assert.match(html, /<span class="flex-1 select-text">Other<\/span>/);
   assert.match(html, />Skip</);
-  assert.match(html, /<button type="button" class="sq-submit" disabled="">/);
+  const primary = html.slice(html.lastIndexOf('<button'));
+  assert.match(primary, /^<button type="button" disabled="" data-cds="Button"/);
+  assert.match(primary, />Send answer</);
+  assert.doesNotMatch(html, /sq-/);
 });
 
 test('a settled question (answered, skipped, or followed by a user message) is not shown; nor without the session context', () => {

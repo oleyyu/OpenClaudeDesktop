@@ -35,6 +35,13 @@ test('vm placeholders per mode and the mode parser', () => {
   assert.equal(palettePlaceholder('default'), 'Search or start a session');
   assert.equal(palettePlaceholder('search'), 'Search sessions and projects');
   assert.equal(palettePlaceholder('actions'), 'Search actions');
+  // V3-w13-surfaces-shortcuts: 3.6556.2 c2771e1f6 yr, P (the code list) false off Code.
+  for (const surface of ['chat', 'cowork']) {
+    assert.equal(palettePlaceholder('default', { surface }), 'Search or start a chat');
+    assert.equal(palettePlaceholder('search', { surface }), 'Search chats and projects');
+    assert.equal(palettePlaceholder('actions', { surface }), 'Search actions');
+  }
+  assert.equal(palettePlaceholder('search', { surface: 'code' }), 'Search sessions and projects');
   assert.equal(paletteMode('search'), 'search');
   assert.equal(paletteMode('bogus'), 'default');
 });

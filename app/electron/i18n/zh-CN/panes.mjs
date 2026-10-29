@@ -531,4 +531,88 @@ export default {
   "Right-click the file’s tab, choose Reload file, then try again.": "右键点击该文件的标签页，选择“重新加载文件”，然后重试。",
   "Couldn’t read this file.": "无法读取此文件。",
   "This file is too large to load in full, so the download is incomplete.": "此文件太大，无法完整加载，因此下载的内容不完整。",
+  // V3-w2-tr-findings: the 3.6556.2 finding card (c44d00c7f Cc, 4PjoX4rZSt) is in the i18n-coverage-v3 scan; its "Claude"
+  // header stays as written (D23), so the entry is the English text itself.
+  "Claude": "Claude",
+  // The 3.6556.2 proposal group card (w2-tr-findings): the started-session error copy (shared-14 Ft), the usage-limit
+  // titles it reads (shared-3) and the environment scope labels (cf0aa9840) are in the closure; "Claude Code" stays (D23).
+  "Only you": "仅你自己",
+  "Organization": "组织",
+  "Everyone at {orgName}": "{orgName} 的所有人",
+  "Everyone in your organization": "你组织中的所有人",
+  "Image is too large": "图片过大",
+  "Connection went idle": "连接因空闲而断开",
+  "The connection from {host} to the API failed": "从 {host} 到 API 的连接失败",
+  "The request from {host} was refused": "来自 {host} 的请求被拒绝",
+  "Claude Code on {host} couldn’t verify the API connection’s certificate": "{host} 上的 Claude Code 无法验证 API 连接的证书",
+  "Claude Code on {host} needs to sign in again": "{host} 上的 Claude Code 需要重新登录",
+  "Claude Code on {host} stopped when its sign-in expired": "{host} 上的 Claude Code 因登录过期而停止",
+  "Claude Code has no working credentials": "Claude Code 没有可用的凭据",
+  "Claude Code on {host} has no working credentials": "{host} 上的 Claude Code 没有可用的凭据",
+  "Your model provider refused the request": "你的模型服务商拒绝了该请求",
+  "No model provider credentials found": "未找到模型服务商凭据",
+  "Message flagged": "消息已被标记",
+  "Blocked by your organization’s policy": "已被你组织的策略阻止",
+  "Organization access is disabled": "组织访问已停用",
+  "Image couldn’t be processed": "无法处理图片",
+  "Request is too large": "请求过大",
+  "Model isn’t available": "模型不可用",
+  "This session needs auto mode": "此会话需要自动模式",
+  "This model needs strict sandbox mode": "此模型需要严格沙盒模式",
+  "Extra usage is required": "需要额外用量",
+  "Session limit reached": "已达到会话用量上限",
+  "Weekly limit reached": "已达到每周用量上限",
+  "{model} limit reached": "已达到 {model} 用量上限",
+  "Monthly spend limit reached": "已达到每月支出上限",
+  "Org spend limit reached": "已达到组织支出上限",
+  "Spend limit reached": "已达到支出上限",
+  "Out of usage credits": "用量额度已用完",
+  "Your org is out of usage credits": "你的组织用量额度已用完",
+  "Your organization is out of usage credits": "你的组织用量额度已用完",
+  "Your organization is out of usage": "你的组织用量已用完",
+  "Your seat doesn’t include usage credits": "你的席位不含用量额度",
+  "Usage credits are off for your account": "你的账户已关闭用量额度",
+  "Your group’s usage limit is $0": "你所在群组的用量上限为 $0",
+  // V3-w2-tr-findings end.
+  // V3-w2-cds-followup: 3.6556.2 view-tabs cfe7c4b3b N.newTabBusy (cds:C10), the busy create control's role="status"
+  // text; source-view-tabs.jsx passes it as labels.newTabBusy.
+  "Opening new tab…": "正在打开新标签页…",
+  // V3-w2-cds-followup end.
+  // V3-w3-rail-changes: 3.6556.2 c96d752d0 Ike, the rail Changes row's ⋮ label when the row shows a repo name
+  // (8RgmijlEMA, panes:C2-2); without one it keeps the {title} label (YCz8Z2UnCJ, session.mjs).
+  "More options for {repo} on {branch}": "{repo} 上 {branch} 的更多选项",
+  // V3-w3-rail-changes end.
+  // V3-w3-rail-context: 3.6556.2 rail Context card (panes:C1-10): c73f45bc3 Fx row action hints (KwN+nYX98p, E5D1fbsFcT,
+  // uGAx8N52ZS, ehjv6hrVDx), shared-12 X.manage (OodrbpaVPv, the host's useCustomizeNouns), c2d611398 te "Since last update"
+  // (aG22T1eEpE) and Le's window-only text (lKin9Ues9t).
+  "Manage connector": "管理连接器",
+  "Edit memory files": "编辑记忆文件",
+  "View memory files": "查看记忆文件",
+  "View custom agents": "查看自定义代理",
+  "Manage skills": "管理技能",
+  "Since last update": "自上次更新以来",
+  "Send a message to see the breakdown.": "发送一条消息即可查看明细。",
+  // V3-w3-rail-context end.
+  // V3-cc-rest-terminal-b: 3.6556.2 c6bf19e8f ci (generated/code-current/terminal-errors.mjs), the terminal error cover's
+  // copy: needsNewerApp split into a title (UmCCqFiseY) and a body (e/Nyj1sdtt), startFailed rewritten (4oGvcz1sbM).
+  // loadFailed "Couldn’t load the terminal" (OqP0kTN27G) is already in terminal.mjs. "Claude" stays as written (D23).
+  "Additional terminal tabs require a newer Claude desktop app": "更多终端标签页需要更新版本的 Claude 桌面应用",
+  "Restart Claude to update.": "请重启 Claude 以完成更新。",
+  "Couldn’t start the shell": "无法启动 Shell",
+  // V3-cc-rest-terminal-b end.
+  // V3-w10-ccres-rail-env-edit: 3.6556.2 c73f45bc3 Zx (generated/session-rail/environment-edit.mjs), the environment row's
+  // icon button label for a cloud environment (B2B5sIxbna). "Edit environment" (cfNkVEwvig) is already in app.mjs.
+  "Edit cloud environment": "编辑云端环境",
+  // V3-w10-ccres-rail-env-edit end.
+  // V3-w12b-changes-files: c0fbbe82d fs / zo (a saved line comment's composer tile), cb61be3a2 it (noRepo),
+  // cccc2cf0a CC (a renamed file's title in Go to file).
+  "Comment on {where}": "评论 {where}",
+  "{where} (before changes)": "{where}（更改前）",
+  "Changes need a Git repository": "查看更改需要 Git 仓库",
+  "None was found for this session, or its folder couldn’t be reached.": "此会话中没有找到仓库，或无法访问其文件夹。",
+  "{previousPath} → {path}": "{previousPath} → {path}",
+  // V3-w12b-changes-files end.
+  // V3-w12c-files-tabbar: 3.6556.2 cccc2cf0a ND Ge closeTabsToRightRtl (2ySX7d/Uua), the Files tab menu under dir="rtl".
+  "Close files to the left": "关闭左侧文件",
+  // V3-w12c-files-tabbar end.
 };

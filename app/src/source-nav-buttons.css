@@ -1,41 +1,9 @@
-/* qM wrapper (sidebar-session.js:10762-10766): "flex items-center draggable-none"
-   in the sidebar placement, "gap-0.5" (2px) everywhere else. */
-.source-nav-buttons {
-  display: flex;
-  align-items: center;
-  -webkit-app-region: no-drag;
-}
-.source-nav-buttons:not([data-placement="sidebar"]) {
-  gap: 2px;
-}
-/* KM "aria-disabled:pointer-events-none aria-disabled:*:opacity-50". */
-.source-nav-buttons > .code-icon-button[aria-disabled="true"] {
-  pointer-events: none;
-}
-.source-nav-buttons > .code-icon-button[aria-disabled="true"] > * {
-  opacity: 0.5;
-}
-/* sidebar-groups.js:2774-2840 Ib: div.df-collapsed-chrome.flex.items-center
-   holds Nb ("Show sidebar") and, withNavButtons, div.df-collapsed-nav
-   "draggable-none relative flex items-center" around Pb (qM, placement
-   sidebar). desktop-layout.css:2331-2335 pulls the nav -2px toward the 28px
-   (size-7) df-compact-trigger; the local trigger is the 24px titlebar
-   ToolButton, so that offset is not applied. */
-.df-collapsed-chrome {
-  display: flex;
-  align-items: center;
-  flex: none;
-}
-/* 2.42304.0 shared-styles: the collapsed content reserves the chrome's extent plus 8px before the titlebar
-   (--df-collapsed-chrome-clearance: max(0px, calc(var(--df-trigger-right) + 8px - var(--df-content-gutter-start)))
-   on .dframe-content-inner, applied as the title row's start clearance). The host's chrome sits in the titlebar row,
-   so the same 8px follow it there. */
-.st-toolbar .df-collapsed-chrome {
-  margin-inline-end: 8px;
-}
-.df-collapsed-nav {
-  position: relative;
-  display: flex;
-  align-items: center;
-  -webkit-app-region: no-drag;
-}
+/* W12 frame: no host rules. 3.6556.2 shared-20 Cm draws the Back/Forward cluster with official classes only: the wrapper
+   "flex items-center draggable-none" (sidebar placement) / "flex items-center gap-0.5 draggable-none", and Sm
+   "aria-disabled:pointer-events-none aria-disabled:*:opacity-50" on each CDS Button; all are loaded c6a992d55 utilities.
+   w11-sweep-shell-a: the collapsed chrome (3.6556.2 shared-21 CI: div.df-collapsed-chrome.flex.items-center holding
+   gI and, withNavButtons, div.df-collapsed-nav.draggable-none.relative.flex.items-center around Cm, placement sidebar)
+   lives in the aside since w11-frame-root-cont, so its layout is the official markup classes plus shared-styles
+   (`.dframe-root[data-variant=web]:not([data-web]):not([data-wco])[data-collapsed] .dframe-sidebar:not([data-density=comfortable])
+   .df-collapsed-nav{margin-inline-start:-2px}` and the nav z-index rules; main.jsx root data-variant="web", no data-web/data-wco). No host rule restates them; the old `.st-toolbar .df-collapsed-chrome` 8px titlebar clearance has no
+   element left to match. */

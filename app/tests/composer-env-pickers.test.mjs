@@ -219,3 +219,16 @@ test("the env pill tooltip names the running core's assistant, in English and zh
   const source = fs.readFileSync(path.join(app, 'src/source-composer.jsx'), 'utf8');
   assert.match(source, /<SourceTooltip \{\.\.\.tooltip\} content=\{t\(tooltip\.content\)\}>/);
 });
+
+// composer-env-chip-caret (3.6556.2 cc43287c9 a8 `caret: o`): the place chip shows CaretDown only for a cloud auto place
+// (`caret: U`, `U = B !== void 0`, B = cloudAuto); the host has no cloud environments, so the presets Home bar's chips
+// carry no caret, as the official closed branch.
+test('the Home environment bar chips carry no caret (official caret only with cloudAuto)', () => {
+  const official = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc43287c9-Me-M2ucD.js'), 'utf8');
+  assert.ok(official.includes('name:"CaretDown",size:"xs",className:"shrink-0 text-muted-as-secondary"'));
+  assert.ok(official.includes('caret:!1,onClick:e'));
+  const html = render({ codeLayout: 'presets', environmentMenu: true });
+  const bar = html.slice(html.indexOf('data-env-bar-host'));
+  assert.ok(bar.includes('data-testid="environment-bar-trigger"'), 'the place chip rendered');
+  assert.doesNotMatch(bar, /shrink-0 text-muted-as-secondary/, 'no chip caret');
+});

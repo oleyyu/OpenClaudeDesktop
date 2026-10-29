@@ -14,7 +14,6 @@ export default {
   "Close other tabs?": "关闭其他标签页？",
   "Close {host}?": "关闭 {host}？",
   "Stop server and close": "停止服务器并关闭",
-  "Stop {count} servers and close": "停止 {count} 个服务器并关闭",
   "Stop servers": "停止服务器",
   "Stop server": "停止服务器",
   "Keep running": "保持运行",
@@ -26,7 +25,8 @@ export default {
   "Hide Preview": "隐藏预览",
   "Toggle preview": "切换预览",
   "Let DeepSeek use the preview": "允许 DeepSeek 使用预览",
-  "DeepSeek can start your dev servers, open them in the Preview pane, and check its changes with screenshots, page snapshots and clicks. Outside sites always ask first.": "DeepSeek 可以启动你的开发服务器、在预览面板中打开它们，并通过截图、页面快照和点击来检查自己的改动。打开外部网站前总会先征求你的同意。",
+  // w12c-wiring (w12b-settings-dialogs S4): c71860c77 idMrSFp0DS, Claude named DeepSeek.
+  "DeepSeek can start dev servers, open a live preview, and verify code changes with screenshots, snapshots, and DOM inspection.": "DeepSeek 可以启动开发服务器、打开实时预览，并通过截图、快照和 DOM 检查来验证代码改动。",
   "Not running": "未运行",
   "The command for {name} wasn’t found. Check “runtimeExecutable” in .claude/launch.json.": "找不到 {name} 的命令。请检查 .claude/launch.json 中的 “runtimeExecutable”。",
   "The dev server exited during startup. Check its output below.": "开发服务器在启动时退出了。请查看下方的输出。",
@@ -308,4 +308,39 @@ export default {
   "Open in default browser": "在默认浏览器中打开",
   "Reload": "重新加载",
   // R4h-intl end.
+  // V3-w10-editor-preview-shell-a: 3.6556.2 cfca6870a S, the RTL trailing-action hint.
+  "press left arrow to activate": "按左方向键激活",
+  // V3-w10-editor-preview-shell-a end.
+  // V3-w10-editor-preview-element: 3.6556.2 c0fbbe82d wi, the selected-element detail row labels (React props / HTML stay as terms).
+  "Props": "Props",
+  "HTML": "HTML",
+  // V3-w10-editor-preview-element end.
+  // V3-w12-preview: 3.6556.2 c0fbbe82d ko, the attachment pill's context menu item ("ZPKWqGjW88").
+  "Show what this sends": "查看将发送的内容",
+  // V3-w12-preview end.
+  // V3-w10-editor-preview-sketch: 3.6556.2 c23255574 toolbar — Step tool, redaction styles, the Shapes menu and the line width menu.
+  "Step": "步骤",
+  "Redact": "遮盖",
+  "Solid": "纯色",
+  "Mosaic": "马赛克",
+  "Noise": "噪点",
+  "Shapes": "形状",
+  "Redaction style": "遮盖样式",
+  "Line width": "线宽",
+  "Thin": "细",
+  "Thick": "粗",
+  "Extra thick": "特粗",
+  // V3-w10-editor-preview-sketch end.
+  // V3-w10-editor-preview-shell-b: 3.6556.2 cf700d36e p, the in-app card's description when the first link is a pull request.
+  "Opens this pull request beside the chat. Other links open there too, where Claude can see and act on the page.": "在聊天旁边打开这个拉取请求。其他链接也会在那里打开，Claude 可以查看并操作页面。",
+  // V3-w10-editor-preview-shell-b end.
+  // V3-w12b-settings-dialogs: 3.6556.2 c8ae173c6 named (1WdokkZgcZ), the default browser's name once known.
+  "Open in {browserName}": "在 {browserName} 中打开",
+  // V3-w12b-settings-dialogs end.
+  // V3-w12b-terminal-preview-tabs: 3.6556.2 c62dc633f t (r+CF5sMADW), the Preview strip's move hint; cf580efe9 va, the
+  // close confirmation's server fallback (Qfb02UEU5e) and the danger button's name (pcQAGNzCUk).
+  "Press Control+Shift+Left Arrow or Right Arrow to move the tab": "按 Control+Shift+左箭头或右箭头移动标签页",
+  "the dev server": "开发服务器",
+  "{count, plural, one {Stop server and close} other {Stop servers and close}}": "{count, plural, other {停止服务器并关闭}}",
+  // V3-w12b-terminal-preview-tabs end.
 };

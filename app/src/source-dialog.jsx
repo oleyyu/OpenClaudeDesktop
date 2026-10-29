@@ -16,8 +16,11 @@ import "./source-dialog.css";
  * - :5738-5869 Gf Popup portalled into the layer root (al('modal'): base 100, z 140), Yf Header
  *   (mb-pad-md flex items-start gap-2), Jf CloseButton (ghost icon-only X, aria-label 'Close',
  *   flush -me-pad-sm -mt-pad-sm), Qf Footer (mt-pad-lg flex-col-reverse gap-2, sm:flex-row justify-end).
- * - shared-11 Lf (the bleed header IR and the release notes use): h-12 bar with a 0.5px border-strong
- *   rule, alpha-1 tint, text-heading-semibold title and a plain CloseButton.
+ * - V3-w12b-settings-dialogs: the 2.2553.1 shared-11 Lf bleed header (h-12 alpha-1 bar) is gone. 3.6556.2 renders the
+ *   Keyboard shortcuts (shared-19 jM `c={showClose:!0}` through shared-78 va: `g(ae.Header,{...e.header,children:e.title})`)
+ *   and What's new (cb63ed069 B `t(u.Header,{showClose:!0,…})`) dialogs with shared-frame Zc's Header Zy, whose branch
+ *   with py off is `Q("mb-pad-md flex items-start gap-2",o)`, the My (-mt-1) title column and `b(Xy,{"aria-label":i,flush:!0})`
+ *   (Zy's py-on header is not migrated: plan.md E12/E13).
  * - :5909-5990 rp ConfirmationDialog: size sm, title + description straight in the body, Cancel
  *   (secondary) and Confirm (confirmVariant, busy while pending), initial focus on Confirm.
  * Base UI behaviour: Escape (useDismiss) closes only this dialog and is consumed; a backdrop press
@@ -89,7 +92,7 @@ export function SourceDialog({ open = true, onExited, ...props }) {
 
 function DialogPopup({
   presence, open, onClose, title, description, descriptionClassName = "", size = "md", alert = false,
-  sourceVersion, showClose = true, bleed = false, footer, initialFocusRef, popupRef, density, className = "", children, onKeyDown, layer = MODAL_LAYER, ...rest
+  sourceVersion, showClose = true, footer, initialFocusRef, popupRef, density, className = "", children, onKeyDown, layer = MODAL_LAYER, ...rest
 }) {
   const popup = presence.popup, titleId = useId(), descriptionId = useId();
   const setPopup = React.useCallback(node => { popup.current = node; if (typeof popupRef === 'function') popupRef(node); else if (popupRef) popupRef.current = node; }, [popup, popupRef]);
@@ -161,24 +164,18 @@ function DialogPopup({
     else if (!event.shiftKey && (active === last || active === popup.current)) { event.preventDefault(); first.focus(); }
   };
 
-  const header = bleed
-    ? <header className="sdlg-bleed-header">
-        <h2 id={titleId} className="sdlg-bleed-title">{title}</h2>
-        <span className="sdlg-spacer" />
-        {showClose && <SourceDialogCloseButton onClick={() => close.current?.("close-press")} />}
+  const header = alert
+    ? <header className="sdlg-header" data-alert="">
+        <h2 id={titleId} className="sdlg-title">{title}</h2>
+        {description && <p id={descriptionId} className={`sdlg-description ${descriptionClassName}`.trim()}>{description}</p>}
       </header>
-    : alert
-      ? <header className="sdlg-header" data-alert="">
+    : <header className="sdlg-header">
+        <div className="sdlg-heading">
           <h2 id={titleId} className="sdlg-title">{title}</h2>
           {description && <p id={descriptionId} className={`sdlg-description ${descriptionClassName}`.trim()}>{description}</p>}
-        </header>
-      : <header className="sdlg-header">
-          <div className="sdlg-heading">
-            <h2 id={titleId} className="sdlg-title">{title}</h2>
-            {description && <p id={descriptionId} className={`sdlg-description ${descriptionClassName}`.trim()}>{description}</p>}
-          </div>
-          {showClose && <SourceDialogCloseButton flush onClick={() => close.current?.("close-press")} />}
-        </header>;
+        </div>
+        {showClose && <SourceDialogCloseButton flush onClick={() => close.current?.("close-press")} />}
+      </header>;
 
   return createPortal(
     <div className="sdlg-portal cds-root" data-cds-portal="" data-chat-source-version={sourceVersion} {...portalAttributes(density)}

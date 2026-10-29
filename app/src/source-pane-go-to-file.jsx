@@ -1,58 +1,86 @@
-import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Icon } from "./icons";
-import { SourceTooltip } from "./source-tooltip";
-import { fileKindIcon } from "./file-kind-icon.mjs";
-import { positionMenu } from "./menu-model.mjs";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { CdsCombobox, CdsIcon, CdsTooltip, ariaKeyShortcuts, useIsMacPlatform } from "./generated/view-tabs/index.js";
+import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
+import { PathSegments } from "./generated/files-changes/path-segments.mjs";
+import { fileTreeRowGap } from "./generated/files-changes/file-tree-row-classes.mjs";
+import { diffPaneFocusRoot } from "./generated/files-changes/diff-pane-body.mjs";
+import { fileTreeIconSize } from "./file-tree-row-model.mjs";
 import { parseUnifiedDiff } from "./diff-model";
 import { diffFileEntries } from "./diff-file-list-model.mjs";
 import { requestDiffReveal } from "./diff-reveal.mjs";
-import { GO_TO_FILE_SHORTCUT, goToFileItems, goToFileSide, isGoToFileShortcut } from "./diff-go-to-file-model.mjs";
+import { GO_TO_FILE_FLIP_PX, GO_TO_FILE_LIMIT, GO_TO_FILE_SHORTCUT, goToFileItems, isGoToFileShortcut } from "./diff-go-to-file-model.mjs";
 import { t, tn } from "../electron/i18n/index.mjs";
-import "./source-select.css";
-import "./source-pane-go-to-file.css";
 
-// The Changes header's "Go to file" (2.2553.1 panes-tile-current.js nh :3222-3390): a ghost square Search trigger
-// (Ut tooltip with the ⌘P keycap, goToDiffFile) opening a CDS Combobox popup, w-[22rem] max-w-[calc(100vw-16px)],
-// align end, its side chosen on open (eh) and kept: PopupSearch "Search changed files", the matches (file kind
-// icon, the Pc name-then-folder path with the matched characters in font-semibold text-primary, the +N −N counts),
-// "No matching files", and "{count} more files. Keep typing to narrow." past 100 rows. Choosing a path scrolls its
-// section into view (oo.scrollToAnnotation → onPick). ⌘P opens it while focus is anywhere inside the pane.
+// The Changes header's "Go to file" — 3.6556.2 cccc2cf0a CC (W12b cf-04), on shared-frame Ci (view-tabs CdsCombobox):
+//   P.Root {items, filteredItems (the first SC = 100 matches), open, onOpenChange, value: null, onValueChange, inputValue,
+//     onInputValueChange, onItemHighlighted, autoHighlight: true}
+//   > ee (CdsTooltip) {content: "Go to file", shortcut: X("goToDiffFile")} > P.Trigger {variant: "ghost", aria-label,
+//     aria-keyshortcuts: re(shortcut, isMac), className: "aspect-square w-control justify-center px-0 rounded"} > the sm
+//     Search icon (fe; the fizzy-lake "panels" aC glyph never applies here)
+//   > P.Popup {side (xC, chosen on open), align: "end", collisionPadding: oi, collisionAvoidance: {side: "none"},
+//     positionerClassName: "w-[22rem] max-w-[calc(100vw-16px)]", maxVisibleItems: 12, finalFocus: I, style: hC}
+//     > P.PopupSearch "Search changed files", P.Empty "No matching files", P.List of P.Item rows (span
+//       `flex w-full min-w-0 items-center ${Qc}`: ul FileTypeIcon "shrink-0 text-muted-control", jf PathSegments posix
+//       with the match positions — titled "{previousPath} → {path}" when only the old path matched — and Hp's counts),
+//       the "{count} more files. Keep typing to narrow." line (px-md py-1.5 text-body text-muted-as-secondary
+//       select-none, the search's aria-describedby), P.Status (loading while the items are null; the host's are not).
+// Choosing a row is Y_.scrollToAnnotation (here the Changes diff's reveal request, diff-reveal.mjs); the popup then hands
+// focus to the pane body (I: shared-1 iC). Filtering: the host ranker (diff-go-to-file-model.mjs) stands in for FileIndex
+// (oC/vC), a native index; gC's previous paths join the search the way vC has them. ⌘P (I_ goToDiffFile) opens it
+// while focus is anywhere inside the pane.
 
-function Lit({ text, positions, offset }) {
-  if (!positions?.length) return text;
-  const parts = [];
-  let at = 0, index = 0;
-  while (index < positions.length && positions[index] < offset) index++;
-  while (at < text.length) {
-    if (index < positions.length && positions[index] === at + offset) {
-      const start = at;
-      while (index < positions.length && positions[index] === at + offset) { at++; index++; }
-      parts.push(<span key={start} data-lit="" className="sgf-lit">{text.slice(start, at)}</span>);
-    } else {
-      const start = at;
-      while (at < text.length && (index >= positions.length || positions[index] !== at + offset)) at++;
-      parts.push(text.slice(start, at));
-    }
+// shared-18 Sn (oi), the popup's collision padding; xC flips the popup up with less than yC = 200px below and more above.
+const COLLISION_PADDING = { top: 48, right: 8, bottom: 8, left: 8 };
+const COLLISION_AVOIDANCE = { side: "none" };
+// hC: `{ backgroundColor: vp }`, vp = c6e73333a C.
+const POPUP_STYLE = { backgroundColor: "var(--diff-widget-bg, var(--cds-surface-3))" };
+
+/** xC: the side the popup opens on, from the trigger. */
+export function goToFilePopupSide(trigger) {
+  if (!trigger) return "bottom";
+  const rect = trigger.getBoundingClientRect();
+  const below = trigger.ownerDocument.documentElement.clientHeight - rect.bottom - COLLISION_PADDING.bottom;
+  const above = rect.top - COLLISION_PADDING.top;
+  return below < GO_TO_FILE_FLIP_PX && above > below ? "top" : "bottom";
+}
+
+/** The rows CC lists (C): each file's {value, name, additions, deletions, previousPath?}. */
+export function goToFileRows(patch) {
+  const sections = parseUnifiedDiff(patch ?? "").sections;
+  const renamed = new Map(sections.filter((section) => section?.type === "file" && section.path && section.renamedFrom)
+    .map((section) => [section.path, section.renamedFrom]));
+  return diffFileEntries(sections).map((entry) => {
+    const cut = entry.filePath.lastIndexOf("/");
+    return { value: entry.filePath, name: entry.filePath.slice(cut + 1), additions: entry.additions, deletions: entry.deletions,
+      ...(renamed.has(entry.filePath) ? { previousPath: renamed.get(entry.filePath) } : {}) };
+  });
+}
+
+/**
+ * vC over the rows: {filtered, positions (value → match positions), byPreviousPath (values only their previous path
+ * matched)}. gC indexes each previous path that is not itself a row; a hit on it lists its row unless the row's own path
+ * matched too.
+ */
+export function goToFileMatches(rows, query) {
+  if (!String(query ?? "").trim()) return { filtered: rows, positions: new Map(), byPreviousPath: new Set() };
+  const byPath = new Map(rows.map((row) => [row.value, row]));
+  for (const row of rows) if (row.previousPath !== undefined && !byPath.has(row.previousPath)) byPath.set(row.previousPath, row);
+  const { items } = goToFileItems([...byPath.keys()].map((filePath) => ({ filePath })), query, Infinity);
+  const hits = new Set(items.map((item) => item.value));
+  const filtered = [], positions = new Map(), byPreviousPath = new Set(), listed = new Set();
+  for (const item of items) {
+    const row = byPath.get(item.value);
+    if (!row || listed.has(row.value)) continue;
+    if (item.value === row.value) { filtered.push(row); listed.add(row.value); positions.set(row.value, item.positions); }
+    else if (!hits.has(row.value)) { filtered.push(row); listed.add(row.value); byPreviousPath.add(row.value); }
   }
-  return parts;
+  return { filtered, positions, byPreviousPath };
 }
 
-// Pc (c784da984 p): the file name (text-secondary while a match falls in it), then its folder in footnote muted.
-function MatchPath({ path, positions }) {
-  const cut = path.lastIndexOf("/");
-  const folder = cut > 0 ? path.slice(0, cut) : cut === 0 ? "/" : "";
-  const name = path.slice(cut + 1), offset = cut + 1;
-  const inName = positions?.some((position) => position >= offset) ?? false;
-  return <span dir="ltr" className="sgf-path" title={path}>
-    <span className="sgf-name" data-matched={inName || undefined}><Lit text={name} positions={positions} offset={offset} /></span>
-    {folder && <span className="sgf-folder"><span className="sgf-folder-text"><Lit text={folder} positions={positions} offset={0} /></span></span>}
-  </span>;
-}
-
+// Hp (c44d00c7f hs): the footnote +N / −N; a parser fallback (unknown counts) has none.
 function Counts({ additions, deletions }) {
   if (!Number.isFinite(additions) || !Number.isFinite(deletions)) return null;
-  return <span className="sdiff-tree-counts sgf-counts">
+  return <span className="flex shrink-0 items-center gap-0.5 text-footnote tabular-nums">
     <span className="text-git-added">{`+${additions}`}</span><span className="text-git-removed">{`−${deletions}`}</span>
   </span>;
 }
@@ -62,9 +90,39 @@ function Counts({ additions, deletions }) {
  * the Changes diff's reveal request, diff-reveal.mjs).
  */
 export function SourceDiffGoToFile({ patch, onPick = requestDiffReveal }) {
-  const [open, setOpen] = useState(null);
-  const trigger = useRef(null);
-  const label = t("Go to file");
+  const isMac = useIsMacPlatform();
+  const [open, setOpen] = useState(false);
+  const [side, setSide] = useState("bottom");
+  const [query, setQuery] = useState("");
+  const trigger = useRef(null), via = useRef("button"), highlighted = useRef(undefined), picked = useRef(false);
+  const moreId = useId();
+  const rows = useMemo(() => goToFileRows(patch), [patch]);
+  const { filtered, positions, byPreviousPath } = useMemo(() => goToFileMatches(rows, query), [rows, query]);
+  const shown = filtered.length > GO_TO_FILE_LIMIT ? filtered.slice(0, GO_TO_FILE_LIMIT) : filtered;
+  const more = filtered.length - shown.length;
+  const label = t("Go to file"), searchLabel = t("Search changed files");
+  // M: opening picks the side (xC); closing clears the query and the shortcut flag.
+  const openChange = (next) => {
+    setOpen(next);
+    if (next) setSide(goToFilePopupSide(trigger.current));
+    else { setQuery(""); via.current = "button"; }
+  };
+  const latestOpenChange = useRef(openChange);
+  latestOpenChange.current = openChange;
+  // N: a chosen row shows its section (Y_.scrollToAnnotation).
+  const pick = (item) => {
+    if (!item) return;
+    picked.current = true;
+    onPick?.(item.value);
+  };
+  // I: after a pick the focus goes to the pane body (shared-1 iC), otherwise back to the trigger.
+  const finalFocus = () => {
+    if (!picked.current) return true;
+    picked.current = false;
+    diffPaneFocusRoot(trigger.current)?.focus({ preventScroll: true });
+    return false;
+  };
+  // I_ {target: the pane root, command: "goToDiffFile", onMatch: via "shortcut", open}.
   useEffect(() => {
     const root = trigger.current?.closest(".source-file-panel");
     if (!root) return undefined;
@@ -72,105 +130,50 @@ export function SourceDiffGoToFile({ patch, onPick = requestDiffReveal }) {
       if (!isGoToFileShortcut(event)) return;
       event.preventDefault();
       event.stopPropagation();
-      if (!event.repeat) setOpen({ token: Date.now(), side: goToFileSide(trigger.current?.getBoundingClientRect(), window.innerHeight) });
+      if (event.repeat) return;
+      via.current = "shortcut";
+      latestOpenChange.current(true);
     };
     root.addEventListener("keydown", keyDown);
     return () => root.removeEventListener("keydown", keyDown);
   }, []);
-  return <>
-    <SourceTooltip content={label} shortcut={GO_TO_FILE_SHORTCUT} side="bottom" hoverable={false} open={open ? false : undefined}>
-      <button ref={trigger} type="button" className="source-icon-button spc-ghost sgf-trigger" aria-label={label} aria-keyshortcuts="Meta+P"
-        aria-haspopup="listbox" aria-expanded={!!open} data-go-to-file="" onMouseDown={(event) => event.preventDefault()}
-        onClick={() => setOpen(open ? null : { token: Date.now(), side: goToFileSide(trigger.current?.getBoundingClientRect(), window.innerHeight) })}>
-        <Icon name="Search" size={16} />
-      </button>
-    </SourceTooltip>
-    {open && <GoToFilePopup key={open.token} side={open.side} patch={patch} trigger={trigger}
-      onClose={(restore) => { setOpen(null); if (restore) trigger.current?.focus({ preventScroll: true }); }}
-      onPick={(path) => { setOpen(null); onPick?.(path); }} />}
-  </>;
-}
-
-function GoToFilePopup({ side, patch, trigger, onClose, onPick }) {
-  const id = useId();
-  const entries = useMemo(() => diffFileEntries(parseUnifiedDiff(patch ?? "").sections), [patch]);
-  const [query, setQuery] = useState("");
-  const { items, more } = useMemo(() => goToFileItems(entries, query), [entries, query]);
-  const [active, setActive] = useState(0);
-  const popup = useRef(null), input = useRef(null), latest = useRef(onClose);
-  latest.current = onClose;
-  const [position, setPosition] = useState({ visibility: "hidden" });
-  useEffect(() => { setActive(0); }, [query]);
-  useLayoutEffect(() => {
-    const owner = trigger.current, node = popup.current;
-    if (!owner || !node) return undefined;
-    const update = () => {
-      const anchor = owner.getBoundingClientRect();
-      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const width = Math.min(22 * rem, innerWidth - 16);
-      node.style.width = `${width}px`;
-      const placed = positionMenu({ anchor, size: { width, height: node.offsetHeight }, viewport: { width: innerWidth, height: innerHeight }, side, align: "end", sideOffset: 6 });
-      const next = { left: placed.left, top: placed.top, width, visibility: "visible" };
-      setPosition((old) => (Object.keys(next).every((key) => old[key] === next[key]) ? old : next));
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    window.addEventListener("resize", update);
-    return () => { observer.disconnect(); window.removeEventListener("resize", update); };
-  }, [trigger, side]);
-  useLayoutEffect(() => { if (position.visibility === "visible") input.current?.focus({ preventScroll: true }); }, [position.visibility]);
-  useLayoutEffect(() => { document.getElementById(`${id}-option-${active}`)?.scrollIntoView?.({ block: "nearest" }); }, [active, id]);
-  useEffect(() => {
-    const outside = (event) => { if (!popup.current?.contains(event.target) && !trigger.current?.contains(event.target)) latest.current(false); };
-    document.addEventListener("pointerdown", outside, true);
-    document.addEventListener("focusin", outside);
-    return () => { document.removeEventListener("pointerdown", outside, true); document.removeEventListener("focusin", outside); };
-  }, [trigger]);
-  const owner = trigger.current;
-  const attrs = {};
-  for (const attr of ["data-density", "data-mode", "data-theme", "data-cds-theme", "data-font", "data-color-version"]) {
-    const value = (owner?.closest(`[${attr}]`) ?? document.documentElement).getAttribute(attr);
-    if (value != null) attrs[attr] = value;
-  }
-  const keyDown = (event) => {
-    if (event.nativeEvent.isComposing || event.keyCode === 229) { event.stopPropagation(); return; }
-    // ⌘P again inside the popup is swallowed (L: goToDiffFile → preventDefault).
-    if (isGoToFileShortcut(event)) { event.preventDefault(); event.stopPropagation(); return; }
-    if (event.altKey || event.metaKey || event.ctrlKey) return;
-    event.stopPropagation();
-    if (event.key === "Escape") { event.preventDefault(); onClose(true); }
-    else if (event.key === "Tab") { event.preventDefault(); onClose(true); }
-    else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (items.length) setActive((at) => (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length);
-    } else if (event.key === "Enter") {
-      event.preventDefault();
-      const item = items[active] ?? items[0];
-      if (item) onPick(item.value);
-    }
+  // L: ⌘P inside the search is swallowed; while composing Base UI's handler is skipped; Enter with nothing highlighted
+  // picks the first match and closes.
+  const searchKeyDown = (event) => {
+    if (isGoToFileShortcut(event.nativeEvent ?? event)) { event.preventDefault(); return; }
+    if (event.nativeEvent?.isComposing || event.keyCode === 229) { event.preventBaseUIHandler?.(); return; }
+    const first = filtered[0];
+    if (event.key === "Enter" && !highlighted.current && first) { event.preventDefault(); pick(first); openChange(false); }
   };
-  return createPortal(<div {...attrs} className="sselect-portal cds-root" data-cds-portal="" style={{ zIndex: 120 }}>
-    <div ref={popup} data-cds="Combobox" className="sselect-popup sgf-popup" data-side={side} style={position} onKeyDown={keyDown}>
-      <div className="sselect-body">
-        <input ref={input} className="sselect-search" role="combobox" aria-label={t("Search changed files")} placeholder={t("Search changed files")}
-          aria-expanded="true" aria-controls={`${id}-list`} aria-autocomplete="list" aria-describedby={more > 0 ? `${id}-more` : undefined}
-          aria-activedescendant={items[active] ? `${id}-option-${active}` : undefined}
-          autoComplete="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} />
-        <div id={`${id}-list`} role="listbox" aria-label={t("Search changed files")} tabIndex={-1} className="sselect-list scroll-fade-y sgf-list">
-          {items.map((item, index) => <div key={item.value} id={`${id}-option-${index}`} role="option" aria-selected={index === active}
-            data-highlighted={index === active || undefined} data-value={item.value} className="sselect-option sgf-option"
-            onPointerMove={() => setActive(index)} onMouseDown={(event) => event.preventDefault()} onClick={() => onPick(item.value)}>
-            <span className="sgf-row">
-              <Icon name={fileKindIcon(item.value)} size={12} className="sgf-icon" />
-              <span className="sgf-path-slot"><MatchPath path={item.value} positions={item.positions} /></span>
-              <Counts additions={item.additions} deletions={item.deletions} />
+  return <CdsCombobox.Root items={rows} filteredItems={shown} open={open} onOpenChange={openChange} value={null}
+    onValueChange={pick} inputValue={query} onInputValueChange={setQuery} onItemHighlighted={(item) => { highlighted.current = item; }} autoHighlight>
+    <CdsTooltip content={label} shortcut={GO_TO_FILE_SHORTCUT}>
+      <CdsCombobox.Trigger ref={trigger} variant="ghost" aria-label={label} aria-keyshortcuts={ariaKeyShortcuts(GO_TO_FILE_SHORTCUT, isMac)}
+        data-go-to-file="" className="aspect-square w-control justify-center px-0 rounded">
+        <CdsIcon name="Search" size="sm" />
+      </CdsCombobox.Trigger>
+    </CdsTooltip>
+    <CdsCombobox.Popup side={side} align="end" collisionPadding={COLLISION_PADDING} collisionAvoidance={COLLISION_AVOIDANCE}
+      positionerClassName="w-[22rem] max-w-[calc(100vw-16px)]" maxVisibleItems={12} finalFocus={finalFocus} style={POPUP_STYLE}>
+      <CdsCombobox.PopupSearch aria-label={searchLabel} aria-describedby={more > 0 ? moreId : undefined} placeholder={searchLabel} onKeyDown={searchKeyDown} />
+      <CdsCombobox.Empty>{t("No matching files")}</CdsCombobox.Empty>
+      <CdsCombobox.List>
+        {(item) => <CdsCombobox.Item key={item.value} value={item}>
+          <span className={`flex w-full min-w-0 items-center ${fileTreeRowGap}`}>
+            <FileTypeIcon fileName={item.name} size={fileTreeIconSize()} className="shrink-0 text-muted-control" />
+            <span className="flex min-w-0 flex-1">
+              <PathSegments path={item.value} posix positions={positions.get(item.value)}
+                title={item.previousPath === undefined || !byPreviousPath.has(item.value) ? undefined
+                  : t("{previousPath} → {path}", { previousPath: item.previousPath, path: item.value })} />
             </span>
-          </div>)}
-          {!items.length && <div className="sselect-empty">{t("No matching files")}</div>}
-        </div>
-        {more > 0 && <div id={`${id}-more`} className="sgf-more">{tn(more, "{count} more file. Keep typing to narrow.", "{count} more files. Keep typing to narrow.")}</div>}
-      </div>
-    </div>
-  </div>, document.body);
+            <Counts additions={item.additions} deletions={item.deletions} />
+          </span>
+        </CdsCombobox.Item>}
+      </CdsCombobox.List>
+      {more > 0 && <div id={moreId} className="px-md py-1.5 text-body text-muted-as-secondary select-none">
+        {tn(more, "{count} more file. Keep typing to narrow.", "{count} more files. Keep typing to narrow.")}
+      </div>}
+      <CdsCombobox.Status loading={false} />
+    </CdsCombobox.Popup>
+  </CdsCombobox.Root>;
 }

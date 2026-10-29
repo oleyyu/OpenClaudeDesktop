@@ -39,12 +39,15 @@ test('icon glyph map comes from the same snapshot as the loaded font',async()=>{
 test('migration compatibility preserves source slices only for absent utilities and remains separately loaded',async()=>{
   const manifest=await prepareStyleCompatibility({check:true});
   const css=await read(new URL('public/'+manifest.output,app));
-  const source=await read(new URL('../../reference/'+manifest.baselineSource,import.meta.url));
-  const original=postcss.parse(source), current=new Set();
+  const baselines=new Map();
+  for(const b of manifest.baselines){const text=await read(new URL('../../reference/'+b.source,import.meta.url));assert.equal(sha(text),b.sha256,b.source);baselines.set(b.source,text);}
+  assert.deepEqual(manifest.baselines.map(b=>b.version),['2.42304.0','2.37337.1']);
+  const current=new Set();
   for(const name of designStylesheets)postcss.parse(await read(new URL(name,reference))).walkRules(r=>selectorClasses(r.selector).forEach(c=>current.add(c)));
   const ast=postcss.parse(css);
   // The count only falls as owning modules migrate (it may reach zero); see style-compatibility-scan.test.mjs.
-  assert.ok(manifest.rules.length>=0 && manifest.rules.length<100);
+  // 3.6556.2 pin (2026-10-25): 186 rules, 178 of them 2.42304.0 utilities that 3.6556.2 purged.
+  assert.ok(manifest.rules.length>=0 && manifest.rules.length<200);
   assert.equal(manifest.scanner.mode,'class-token');
   assert.ok(ast.nodes.every(n=>n.type==='comment'||n.type==='atrule'&&n.name==='layer'&&['utilities','theme'].includes(n.params)));
   for(const rule of manifest.rules){
@@ -61,6 +64,9 @@ test('migration compatibility preserves source slices only for absent utilities 
     }
     // No retained class is held only by a withheld (metadata/registry) position.
     for(const ref of rule.references)assert.ok(ref.hits.some(hit=>!manifest.scanner.exclusions.some(group=>group.file===hit.file&&group.binding===hit.binding&&group.suppressed.includes(ref.className))),ref.className);
+    // A class is retained from the newest baseline that ships it, never from two.
+    const source=baselines.get(rule.baseline);
+    assert.ok(source,rule.baseline);
     const fragment=source.slice(rule.start,rule.end);
     assert.doesNotThrow(()=>postcss.parse(fragment));
     assert.equal(sha(fragment),rule.sha256);
@@ -69,9 +75,26 @@ test('migration compatibility preserves source slices only for absent utilities 
   assert.equal(sha(css),manifest.outputSha256);
   const html=await read(new URL('index.html',app));
   assert.ok(html.indexOf('/assets/legacy-utilities.css')>html.indexOf('/assets/v1/c3fde7009-'));
-  assert.doesNotMatch(css,/data-cds=DataTable|\.cds-root|\.df-app-switch/);
+  // .cds-root may only appear as the dark variant's scope inside a utility selector (2.42304.0 dark:* rules).
+  assert.doesNotMatch(css.replaceAll(':where(.cds-root,.cds-root *)',''),/data-cds=DataTable|\.cds-root|\.df-app-switch/);
 });
 
 test('CSS class extraction handles escaped punctuation, variants and numeric escapes',()=>{
   assert.deepEqual(selectorClasses('.foo\\:bar:hover .my-\\[\\.5em\\] .\\32 xl\\:p-2'),['foo:bar','my-[.5em]','2xl:p-2']);
+});
+
+test('every sheet a generated lazy chunk preloads is shipped as the pinned original and left unlinked', async () => {
+  const generated = new URL('src/generated/', app);
+  const lazy = new Set();
+  for (const file of (await fs.readdir(generated, { recursive: true })).filter((f) => /\.m?js$/.test(f)))
+    for (const m of (await read(new URL(file, generated))).matchAll(/"assets\/v1\/([\w-]+\.css)"/g)) if (!designStylesheets.includes(m[1])) lazy.add(m[1]);
+  assert.ok(lazy.has('c19e90103-CuNz46ca.css'), '3.6556.2 inline diff preloads the markdown sheet');
+  const html = await read(new URL('index.html', app));
+  const provenance = JSON.parse(await read(new URL('public/ui-provenance.json', app)));
+  for (const name of lazy) {
+    const source = await read(new URL(name, reference));
+    assert.equal(await read(new URL('public/assets/v1/' + name, app)), source.replaceAll('/assets/v1/', './'), name);
+    assert.ok(!html.includes(`/assets/v1/${name}`), `${name} loads on demand, not from index.html`);
+    assert.equal(provenance.files.find((f) => f.output === 'public/assets/v1/' + name)?.loading, 'lazy (vitePreload)', name);
+  }
 });

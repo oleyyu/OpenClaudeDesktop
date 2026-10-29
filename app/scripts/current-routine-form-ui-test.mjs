@@ -89,7 +89,8 @@ try {
 
   const calendar=page.locator('[data-cds="Calendar"]');
   // R4i-gui GU1 (R4g-routines RTC): the form is the generated 2.42304.0 c97b955f1 Ca (cowork-scheduled), no longer the
-  // 2.31226.0 current-chat bundle, so the calendar is no longer tagged data-chat-source-version 2.31226.0.
+  // 2.31226.0 current-chat bundle (retired by w10-curchat-retire), so the calendar is no longer tagged
+  // data-chat-source-version 2.31226.0.
   assert.notEqual(await calendar.evaluate(n=>n.closest('[data-chat-source-version]')?.dataset.chatSourceVersion??null),'2.31226.0');
   const selected=calendar.locator('[aria-selected="true"] [role="button"]');
   const before=await date.locator('input').inputValue();

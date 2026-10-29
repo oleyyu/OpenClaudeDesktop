@@ -18,6 +18,8 @@ const assets = path.join(reference, 'ion-dist/assets/v1');
 const cache = new Map();
 const read = file => { if (!cache.has(file)) cache.set(file, fs.readFileSync(file, 'utf8')); return cache.get(file); };
 const official = name => read(path.join(assets, name));
+// 3.6556.2 (the sidebar handle moved there in the 3.6556.2 migration, w2-sidebar-resize-nested).
+const v3Assets = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const local = rel => read(path.join(app, rel));
 const count = (text, needle) => text.split(needle).length - 1;
 const once = (text, needles) => { for (const needle of needles) assert.equal(count(text, needle), 1, needle); };
@@ -239,15 +241,21 @@ test('layout-10 official: ResizeHandle picks the line classes (qt) only when st(
   assert.equal(qt.vertical, 'inset-y-0 start-[calc(50%_-_var(--resize-line)_/_2)] my-auto w-[var(--resize-line)]');
   // st is shared-frame vr over the hr context; with the 2.42304.0 fizzy-lake list it is false (see the gate test).
   assert.equal(officialFrameFeature(undefined, officialPanelsGate().Of().parts).vr('panels'), false);
+  // 3.6556.2 moved the handle to shared-9 bm (React Compiler output) with the same choice and the same two literals.
+  const v3 = read(path.join(v3Assets, 'shared-9-CM21XrJw.js'));
+  once(v3, ['v=xe("panels")?ym:vm', 'hf as xe', '"data-cds-part":"resize-pill",className:ae']);
+  assert.deepEqual(objectLiteral(v3, /,vm=(\{base:[^}]*\}),ym=/), PILL);
+  assert.deepEqual(objectLiteral(v3, /,ym=(\{base:[^}]*\}),bm=/), qt);
 });
 
-test('layout-10 local: the generated sidebar handle keeps Kt behind useCdsFeature → false; the split-view handle spells the same pill', () => {
-  // Sidebar: src/generated/sidebar-resize/resize-handle.mjs is the extracted shared-15 Jt; its st is the host adapter.
+test('layout-10 local: the generated sidebar handle keeps vm (old Kt) behind useCdsFeature → false; the split-view handle spells the same pill', () => {
+  // Sidebar: src/generated/sidebar-resize/resize-handle.mjs is the extracted 3.6556.2 shared-9 bm (old shared-15 Jt);
+  // its xe (old st) is the host adapter.
   const generated = local('src/generated/sidebar-resize/resize-handle.mjs');
-  assert.deepEqual(objectLiteral(generated, /\nvar Kt = (\{[\s\S]*?\});\n/), PILL);
-  assert.deepEqual(objectLiteral(generated, /\nvar qt = (\{[\s\S]*?\});\n/), objectLiteral(official('shared-15-Cc9xvKlF.js'), /,qt=(\{base:[^}]*\}),Jt=/));
-  assert.equal(count(generated, 'y = st("panels") ? qt : Kt,'), 1);
-  assert.equal(count(generated, 'useCdsFeature as st,'), 1);
+  assert.deepEqual(objectLiteral(generated, /\nvar vm = (\{[\s\S]*?\});\n/), PILL);
+  assert.deepEqual(objectLiteral(generated, /\nvar ym = (\{[\s\S]*?\});\n/), objectLiteral(read(path.join(v3Assets, 'shared-9-CM21XrJw.js')), /,ym=(\{base:[^}]*\}),bm=/));
+  assert.equal(count(generated, 'v = xe("panels") ? ym : vm,'), 1);
+  assert.equal(count(generated, 'useCdsFeature as xe '), 1);
   const adapters = local('src/source-sidebar-resize-adapters.jsx');
   assert.equal(count(adapters, 'export function useCdsFeature(_name) {\n  return false;\n}'), 1);
   // Split view: src/source-resize-handle.jsx is hand-written; evaluate its pill className expression for all four
@@ -352,15 +360,21 @@ test('layout-12 official: the side chat asks the composer to follow the transcri
 
 test('layout-12 local: the side chat composer and user bubble take no text size and no inline style', () => {
   const sideChat = local('src/source-side-chat.jsx');
-  assert.doesNotMatch(sideChat, /textSize|TextSize|fontSize|font-size/);
+  // W12 sidechat-cont: HF hands r8 textSize fP() (undefined: fizzy-lake "type" off), so r8 writes only E3's density
+  // fallback as data-text-size; nothing sets a font size inline.
+  assert.doesNotMatch(sideChat, /fontSize|font-size|TextSize/);
+  assert.equal(count(sideChat, 'textSize'), 2);
+  once(sideChat, ["const textSize = useCdsDensity() === 'compact' ? 'md' : undefined;", 'data-text-size={textSize}']);
   const composer = fnBody(sideChat, 'function SideChatComposer(');
-  assert.equal(count(composer, 'return <div className="ssc-composer" data-mention-open={suggest.open || undefined}>'), 1);
+  assert.equal(count(composer, 'return <div className="ssc-composer shrink-0 px-md pb-md" data-approval-hotkey-scope={scope} data-mention-open={suggest.open || undefined}>'), 1);
   assert.doesNotMatch(composer, /style=/);
   const user = fnBody(sideChat, 'function SideChatUserMessage(');
-  assert.equal(count(user, '{rest && <div className="ssc-user-message" data-cds="UserMessage"><div className="ssc-user-bubble"><SourceSideChatUserContent text={rest}/></div></div>}'), 1);
+  assert.equal(count(user, '<div className="cds-user-message-body"><SourceSideChatUserContent text={rest}/></div>'), 1);
   assert.doesNotMatch(user, /style=/);
-  // The only inline styles in the panel are the floating geometry and the resize handles.
-  assert.equal(count(sideChat, 'style={'), 2);
-  once(sideChat, ['style={windowed ? undefined : geometry.rect ?? undefined}', "style={{ touchAction: 'none', cursor: sideChatResizeCursor(edges) }}"]);
+  // The only inline styles are the floating geometry, the resize handles, the qF bounds layer's {zIndex}, N_'s
+  // {flex:1,minHeight:0} and its header's {touchAction:"none"} while it drags the panel.
+  assert.equal(count(sideChat, 'style={'), 5);
+  once(sideChat, ['style={geometry.rect ?? undefined}', "style={{ touchAction: 'none', cursor: sideChatResizeCursor(edges) }}", 'style={SIDE_CHAT_BOUNDS_STYLE}',
+    'style={PANE_STYLE}', "style={onHeaderPointerDown ? { touchAction: 'none' } : undefined}"]);
   assert.doesNotMatch(local('src/source-side-chat-user-content.jsx'), /textSize|style=/);
 });

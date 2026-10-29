@@ -1,6 +1,6 @@
 // R3-composer composer-copy-command (research/composer.md §3.18 composer-n02): /copy [N] copies Claude's latest reply or
 // an earlier one. The argument parser (QX) and the reply reader (eZ / $X over c227f4d5e's transcript predicates) are the
-// original 2.42304.0 bindings in src/generated/code-composer; composer-copy-reply.mjs maps the host items to official
+// original 3.6556.2 bindings in src/generated/code-composer (cc43287c9 H$ / U$, w2-composer-gen); composer-copy-reply.mjs maps the host items to official
 // transcript entries and transcribes cc43287c9's `case "copy-reply"`. Pure functions, a fake clipboard, no window.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,7 +16,7 @@ import { sessionCommands, matchCommands, parseSessionCommand, commandUnavailable
 import { setLocale, DEFAULT_LOCALE } from '../electron/i18n/index.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const raw = file => fs.readFile(path.join(reference, file), 'utf8');
 // The minified chunks keep U+2019 as a ’ escape inside their string literals.
 const literal = text => JSON.stringify(text).replace(/’/g, '\\u2019');
@@ -125,15 +125,29 @@ test('the reply goes to the owning window clipboard as text/plain plus the markd
 });
 
 test('the copy messages are the official cc43287c9 / cc183b3ab ones, the plural in the host catalog form', async () => {
-  const handler = await raw('cc43287c9-DAfOi8yP.js'), registry = await raw('cc183b3ab-BlACljsv.js');
+  const handler = await raw('cc43287c9-Me-M2ucD.js'), registry = await raw('cc183b3ab-hP35rWpv.js');
   for (const [key, id] of [['badArgument', 'd6GVin8ZgF'], ['replying', 'iAkUwGZZtY'], ['none', 'iZ+iUUQvSB'], ['copied', 'wSG94kLy28'], ['failed', 'z7U1VhFXoU']])
     assert.ok(handler.includes(`defaultMessage:${literal(COPY_REPLY_MESSAGES[key])},id:${JSON.stringify(id)}`), key);
   const plural = '{count, plural, one {Only # reply is available to copy. Use /copy without a number.} other {Only # replies are available to copy. Use a number up to #.}}';
   assert.ok(handler.includes(`defaultMessage:${JSON.stringify(plural)},id:"kT+SiiA0vq"`));
   assert.equal(COPY_REPLY_MESSAGES.exceedsOne, 'Only {count} reply is available to copy. Use /copy without a number.');
   assert.equal(COPY_REPLY_MESSAGES.exceedsOther, 'Only {count} replies are available to copy. Use a number up to {count}.');
-  assert.ok(registry.includes('{name:"copy",description:E.copy,argumentHint:"[N]",terminalAction:"copy-reply",hideIfCliHas:!0,gate:e=>e.hostInterceptSurface&&e.hasSession}'));
+  assert.ok(registry.includes('{name:"copy",description:w.copy,argumentHint:"[N]",terminalAction:"copy-reply",hideIfCliHas:!0,gate:e=>e.hostInterceptSurface&&e.hasSession}'));
   assert.ok(registry.includes(`copy:{defaultMessage:${literal(COPY_REPLY_DESCRIPTION)},id:"X7oz/QBPDV"}`));
+});
+
+// composer-copy-aside (3.6556.2 cc43287c9 H$): `$5.aside === !0` replies are skipped; c06cf64bb qh builds them (an
+// assistant entry `aside:!0` from a message's annotations.code.aside). The host items carry no such annotation, so
+// copyReplyEntries never marks one and every host reply stays copyable.
+test('/copy skips aside replies (3.6556.2 H$); host entries are never aside', async () => {
+  const handler = await raw('cc43287c9-Me-M2ucD.js');
+  assert.ok(handler.includes('if(!bO(i)||i.localOutput===!0||i.aside===!0||!Lee(e,r,t))continue'), 'H$ aside skip');
+  assert.ok((await raw('c06cf64bb-CdJdJuVd.js')).includes('author:"assistant",aside:!0,turnEnded:!0'));
+  const turn = [{ id: 'u', author: 'user', items: [{ kind: 'text', text: 'q' }] },
+    { id: 'x', author: 'assistant', aside: true, turnEnded: true, items: [{ kind: 'text', text: 'aside note' }] },
+    { id: 'y', author: 'assistant', turnEnded: true, items: [{ kind: 'text', text: 'answer' }] }];
+  assert.deepEqual(copyableReplies(turn, false).map(reply => reply.entryId), ['y']);
+  assert.ok(copyReplyEntries(items).every(entry => !('aside' in entry)));
 });
 
 test("session commands: '/copy [N]' needs only an open session (offline and mid-turn too) and parses N as its argument", () => {

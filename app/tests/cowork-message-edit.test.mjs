@@ -15,6 +15,7 @@ import { createRequire } from 'node:module';
 import { userMessageActions } from '../src/message-actions-model.mjs';
 import { coworkRewindCapabilities } from '../src/cowork-session-capabilities.mjs';
 import { CoworkSessions } from '../electron/cowork-runtime/session-service.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1dir = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -242,7 +243,7 @@ function fixture(component, props) {
     useId() { return ':edit:'; }, useLayoutEffect() {}, useEffect() {},
   };
   const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internals.H;
-  const run = () => { cursor = 0; internals.H = dispatcher; try { return component(props); } finally { internals.H = old; } };
+  const run = () => { cursor = 0; internals.H = withMemoCache(dispatcher); try { return component(props); } finally { internals.H = old; } };
   return { run };
 }
 function findNode(tree, predicate) {
@@ -331,8 +332,9 @@ test('main.jsx wiring: the open edit replaces the user row; Edit and the editor 
     'const coworkEdit = useCoworkMessageEdit(current);',
     'openEditor: (uuid, options) => coworkMessageEdits.start(current, uuid, options),',
     'const coworkLastHuman = coworkActions?.onEditMessage ? lastHumanMessage(state.items?.[current] || []) : undefined;',
-    '{coworkEdit && coworkActions?.onEditMessage && item.type === "userMessage" && coworkEdit.uuid === item.id',
-    'onSave={(text) => void coworkActions.onEditMessage({ uuid: item.id }, text)} onClose={() => coworkMessageEdits.clear(current)} />',
+    // w13-close-chat-messages (chatfn-branches-03): the same editor also edits a Chat prompt (a new version of it).
+    '{coworkEdit && (coworkActions?.onEditMessage || mode === "chat") && item.type === "userMessage" && coworkEdit.uuid === item.id',
+    'onSave={(text) => void (mode === "chat" ? chatBranches.edit(item.turnId, text, turnAttachments(items, item.turnId)) : coworkActions.onEditMessage({ uuid: item.id }, text))} onClose={() => coworkMessageEdits.clear(current)} />',
     'onEditFrom: coworkActions?.onEditMessage ? (uuid) => coworkMessageEdits.start(current, uuid) : null, isLastHuman: !!coworkLastHuman && coworkLastHuman.uuid === item.id,',
   ]) assert.equal(occurrences(main, needle), 1, needle);
 });

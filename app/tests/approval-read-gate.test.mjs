@@ -1,5 +1,7 @@
 // toolcards-01: the approval card's read gate for an MCP tool's arguments (2.42304.0 c96d752d0 Kk rowsReadGate loose,
-// Rj's held / Allow bookkeeping, Mj's "What Claude sent" rows block, UDe = generated ApprovalReadRows).
+// Rj's held / Allow bookkeeping, Mj's "What Claude sent" rows block, UDe = generated ApprovalReadRows; since W9
+// cc-rest-transcript the generated gate is 3.6556.2 cc32965c2 jc, which imports the React Compiler helpers from view-tabs
+// shared-frame, so it loads through Vite like the card).
 //  1. approval-read-gate-model.mjs (Rj st/gt/yt/bt/Et/At/pn) as pure functions;
 //  2. SSR of SourceApprovalCardView in the states a store can be in (held, unlaid, read, not gated);
 //  3. a controlled mount of the generated ApprovalReadRows in a small fake DOM (rAF, IntersectionObserver,
@@ -15,7 +17,6 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { approvalCardModel } from '../src/approval-card-model.mjs';
 import { createReadGateStore, nextReadGateReplay, readGateAllowIntent, readGateKey, readGateView, recordReadState, recordRowsFit } from '../src/approval-read-gate-model.mjs';
-import { ApprovalReadRows } from '../src/generated/code-current/approval-read-gate.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const HINT = 'Scroll through what Claude sent to allow it.';
@@ -130,11 +131,12 @@ test('rt: the key is the card identity plus the rows text; no gate, no key', () 
 
 // ---- 2. SSR of the card ------------------------------------------------------------------------------------------
 
-let server, A;
+let server, A, ApprovalReadRows;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   A = await server.ssrLoadModule('/src/source-approval-card.jsx');
+  ({ ApprovalReadRows } = await server.ssrLoadModule('/src/generated/code-current/approval-read-gate.mjs'));
 });
 after(() => server?.close());
 

@@ -1,34 +1,38 @@
-// R4e-plugin (settings-14): extract the 2.42304.0 plugin page Overview parts without executing any desktop runtime
+// R4e-plugin (settings-14): extract the 3.6556.2 plugin page Overview parts without executing any desktop runtime
 // (decision D0: own generator, own output folder src/generated/r4e-plugin, own scripts/verify-gen-r4e-plugin.mjs).
 //
-//   overview-sections.mjs  cae01a6fc U / W / X / J / se: the section heading (classic "text-caption text-secondary"
-//                          outside the unified plugins UI), the Description section (sanitized, dir=auto,
-//                          "whitespace-pre-wrap break-words text-primary text-body"), a rail row (size-5 icon tile,
-//                          OverflowTooltip label with " · note", ghost xs flush-both Button when it opens something),
-//                          the rail group (h3 + rows, "pt-md first:pt-0") and the "Connectors & tools" group.
-//   overview-layout.mjs    shared-19 kD (exported Gp): the Overview main + rail layout ("flex flex-col gap-lg px-xl
-//                          md:flex-row", rail aside "md:w-60"); AD (exported Kp) / OD: the rail card (CDS Card, fill
-//                          bg-surface-1 outside pageLayout, gap-md, no ring); RE is W's heading leading for the
+//   overview-sections.mjs  cae01a6fc G / K / X / Y / oe (2.42304.0 U / W / X / J / se): the section heading (classic
+//                          "text-caption text-secondary" outside the unified plugins UI), the Description section
+//                          (sanitized, dir=auto, "whitespace-pre-wrap break-words text-primary text-body"), a rail row
+//                          (size-5 icon tile, OverflowTooltip label with " · note" in text-muted-as-secondary (menus
+//                          C7), ghost xs flush-both Button when it opens something), the rail group (h3 + rows,
+//                          "pt-md first:pt-0") and the "Connectors & tools" group.
+//   overview-layout.mjs    shared-19 w_ (exported ms): the Overview main + rail layout ("flex flex-col gap-lg px-xl
+//                          md:flex-row", rail aside "md:w-60"); T_ (exported hs) / C_: the rail card (CDS Card, fill
+//                          bg-surface-1 outside pageLayout, gap-md, no ring); Eg is K's heading leading for the
 //                          connector page style.
-//   text-sanitize.mjs      shared-52 jV / kV (exported C / S): strip control, format, private-use and unassigned code
-//                          points (keeping ZWNJ, ZWJ, VS15, VS16 and, per line, tabs) — W's description and ae's note.
-//   lazy-value.mjs         shared-0 Hi (exported Py): the lazy one-shot value jV's pattern is built with.
-//   clsx.mjs               vendor-frame ge / he (exported za): clsx, which W, X and OD join their classes with.
+//   text-sanitize.mjs      shared-52 rJ / tJ (exported S / x): strip control, format, private-use and unassigned code
+//                          points (keeping ZWNJ, ZWJ, VS15, VS16 and, per line, tabs) — K's description and ie's note.
+//   lazy-value.mjs         shared-0 Pa (exported Lb): the lazy one-shot value $q's pattern is built with.
+//   clsx.mjs               vendor-frame ve / _e (exported Ba): clsx, which K, X and C_ join their classes with.
+//
+// 3.6556.2 is React Compiler output: every component reads the compiler's memo cache (shared-frame J9 = vendor-frame
+// `Oo`, react/compiler-runtime `c`) and the J/K/I/Z slot helpers. Those are imported from the view-tabs graph by their
+// E3 semantic names (official.compilerHelpers; never sliced a second time), checked with official.assertCompilerHelpers.
 //
 // Every emitted binding is an original top-level declaration sliced from the prettier-formatted source; each module is
 // the reachable closure of its roots (Babel scope analysis), so a renamed or re-pointed minified import fails
 // generation instead of binding the wrong value. An import resolves, in this order, to: a named host adapter in
 // src/source-r4e-plugin-adapters.jsx (feature-checked against the original it replaces), a verified React export of
-// vendor-frame, or another module generated here. The view-tabs graph is deliberately not used: its shared-frame
-// module imports preload-helper, which calls document.createElement while it is evaluated, and the plugin page sits in
-// the import graph of every Settings page (source-customize.jsx ← source-settings.jsx / source-hooks-settings.jsx /
-// source-diff.jsx), whose SSR tests stub a document without createElement. The CDS primitives the Overview parts
-// draw (Button, Icon, OverflowTooltip, InfoTip, Card) are therefore the host stand-ins the Customize page already
-// uses, each feature-checked against the shared-frame original it replaces.
-// `callSites` pin the original text the host follows but cannot import: c24c8737b pc's tab list Kt (Overview first and
-// unconditional, Tool permissions only when the resolved servers are non-empty, then the content tabs), xs (those
-// servers need the unified plugins UI), c12456454 ni (what the Overview draws, in order) and its closed branches (Try it
-// gn, curated / directory prompts ei / ti), and cae01a6fc ae (the Connectors & tools rows).
+// vendor-frame (official.assertVendorAlias), a compiler helper of the view-tabs graph, or another module generated
+// here. The CDS primitives the Overview parts draw (Button, Icon, OverflowTooltip, InfoTip, Card) are named adapters that
+// re-export the view-tabs components themselves (CdsButton, CdsIcon, CdsOverflowTooltip, CdsInfoTooltip, CdsCard; w10
+// notdone 44), each feature-checked against the shared-frame original.
+// `callSites` pin the original text the host follows but cannot import: c24c8737b ol's tab list (Overview first and
+// unconditional, Tool permissions only when the resolved servers are non-empty, then the content tabs, and since
+// 3.6556.2 a Settings tab for the plugin's userConfig, menus N2), Ys (those servers need the unified plugins UI),
+// c12456454 ya (what the Overview draws) and its closed branches (Try it cr, curated / directory prompts ha / _a), and
+// cae01a6fc ie (the Connectors & tools rows).
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,147 +40,162 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
+import { routinesSharedLink } from './routines-shared-compat.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const { referenceVersion, referenceSnapshot } = official;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/r4e-plugin');
 const adapterModule = '../../source-r4e-plugin-adapters.jsx';
+const viewTabsModule = `../view-tabs/${official.sharedFrame}`;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment.
+// vendor-frame re-exports React; each alias is checked with official.assertVendorAlias (R3: in 3.6556.2 `Ha` is jsx,
+// `Ua` jsxs, `Va` the jsx-runtime Fragment and `Ya` react's Fragment).
 const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'], Ba: ['react/jsx-runtime', 'Fragment'],
-  },
+  [official.vendorFrame]: Object.fromEntries(['Ha', 'Ua', 'Va', 'Ya'].map(alias => [alias, official.reactAliases[alias]])),
 };
 // Host dependencies. `features` must appear in the same-chunk closure of the original binding the adapter replaces.
 const adapters = {
-  'vendor-intl-Db7hDWRO.js': {
+  [official.vendorIntl]: {
     p: { name: 'useIntl', features: ['[React Intl]'] },
     l: { name: 'FormattedMessage', features: ['textComponent'] },
   },
-  // shared-52 gk: the unified plugins UI is GrowthBook __gb__2406162393 (closed on the host).
-  'shared-52-DGviI8xb.js': {
-    Go: { name: 'useUnifiedPluginsUi', features: ['"__gb__2406162393"'] },
+  // shared-52 QL: the unified plugins UI is GrowthBook __gb__2406162393 (closed on the host).
+  'shared-52-uHFNjl7C.js': {
+    uo: { name: 'useUnifiedPluginsUi', features: ['"__gb__2406162393"'] },
   },
-  // shared-5 Jm: the pageLayout context (Customize is the classic settings dialog here).
-  'shared-5-kdJVRUsT.js': {
-    _s: { name: 'usePageLayout', features: ['?.pageLayout === !0'] },
+  // shared-5 Qg: the pageLayout context (Customize is the classic settings dialog here).
+  'shared-5-Bg6ZMqvt.js': {
+    xc: { name: 'usePageLayout', features: ['?.pageLayout === !0'] },
   },
   // c79fa23ba g / _: linkified descriptions behind GrowthBook __gb__1063785924 (closed on the host).
-  'c79fa23ba-vPN4ZRvE.js': {
+  'c79fa23ba-C-z2OzjO.js': {
     r: { name: 'useLinkifiedDescription', features: ['"__gb__1063785924"'] },
     t: { name: 'linkifyDescription', features: ['renderLink: S'] },
   },
-  // shared-frame CDS primitives (host stand-ins, see the header): $l Button (host SourceSettingsButton), Jo Icon (host
-  // Icon), gm OverflowTooltip (host SourceTooltip while truncated), oE InfoTip (host SourceInfoTip) and
-  // yu = Object.assign(pu, { Link, Media }) Card (its class strings are pinned here; the adapter draws the same DOM).
-  'shared-frame-BfjMqbuN.js': {
-    cl: { name: 'OverviewButton', features: ['iconPosition: i = "start",', 'hideShortcut: u = !1,', 'flush: g = !1,'] },
-    Hl: { name: 'OverviewIcon', features: ['"data-cds": "Icon",', '"data-cds-mirror"'] },
-    Dc: { name: 'OverviewOverflowText', features: ['"data-cds": "OverflowTooltip",', '"block min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap",'] },
-    Xi: { name: 'OverviewInfoTip', features: ['"data-cds": "InfoTip"', 'openOnHover: !0'] },
-    ol: { name: 'OverviewCard', features: [
-      'yu = Object.assign(pu, { Link: hu, Media: vu })', '"data-cds": "Card",', '...aa(e),', 'className: X(ru, au, t),',
-      'H("span", { "aria-hidden": !0, className: X(ou, n) }),', 'H("div", { "data-cds-card-body": "", className: iu, children: r }),',
+  // shared-frame CDS primitives (see the header): the adapters re-export the view-tabs components themselves — Uu Button
+  // (CdsButton), us Icon (CdsIcon), hh OverflowTooltip (CdsOverflowTooltip), Tk InfoTip (CdsInfoTooltip) and
+  // cd = Object.assign(td, { Link, Media }) Card (CdsCard; its class strings are pinned here).
+  [official.sharedFrame]: {
+    Eu: { name: 'OverviewButton', features: ['iconPosition: o', 'flush: y', 'o === void 0 ? "start" : o'] },
+    od: { name: 'OverviewIcon', features: ['"data-cds": "Icon",', '"data-cds-mirror"'] },
+    Gl: { name: 'OverviewOverflowText', features: ['"data-cds": "OverflowTooltip",', '"block min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap",'] },
+    la: { name: 'OverviewInfoTip', features: ['"data-cds": "InfoTip"', 'openOnHover: !0'] },
+    Tu: { name: 'OverviewCard', features: [
+      'cd = Object.assign(td, { Link: rd, Media: sd })', '"data-cds": "Card",', 'm = n === void 0 && Zu,', 'Q(Ju, Xu, m, i)', 'Q(Qu, n)',
+      'b("span", { "aria-hidden": !0, className: g })', 'b("div", { "data-cds-card-body": "", className: Yu, children: r })',
       'return e && e !== "base" ? { "data-size": e } : {};',
-      'ru = "group/card relative isolate flex flex-col rounded-card after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-card-ring after:content-[\'\']"',
-      'au = "has-[[data-cds=CardLink]:focus-visible]:after:shadow-focus"',
-      'ou = "cds-card-fill pointer-events-none absolute inset-0 -z-[1] m-0 rounded-[inherit]"',
-      'iu = "cds-card-body flex min-h-0 flex-1 flex-col self-stretch [gap:inherit] [align-items:inherit] [justify-content:inherit] rounded-[inherit] p-lg"',
+      'Ju =\n    "group/card relative isolate flex flex-col rounded-card after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-card-ring after:content-[\'\']"',
+      'Xu = "has-[[data-cds=CardLink]:focus-visible]:after:shadow-focus"',
+      'Qu =\n    "cds-card-fill pointer-events-none absolute inset-0 -z-[1] m-0 rounded-[inherit]"',
+      'Yu =\n    "cds-card-body flex min-h-0 flex-1 flex-col self-stretch [gap:inherit] [align-items:inherit] [justify-content:inherit] rounded-[inherit] p-lg"',
+      // E12/R15: the fizzy-lake `stacks:` card classes only apply without a backgroundClassName; the adapter always passes one.
+      'Zu =\n    "stacks:',
     ] },
   },
 };
 const modules = [
-  { target: 'lazy-value.mjs', source: 'shared-0-ByI5P0CP.js', exports: { Hi: 'lazyValue' },
-    features: { Hi: ['return () => ((n ||= ((t = e()), !0)), t);'] } },
-  { target: 'clsx.mjs', source: 'vendor-frame-DfPJ1QmD.js', exports: { ge: 'clsx' },
+  // W13 G11 (D1): Pa is routines-shared's shared-0 copy (no imports, plain node); lazy-value.mjs re-exports it.
+  { target: 'lazy-value.mjs', source: 'shared-0-DDOOdL6P.js', exports: { Pa: 'lazyValue' }, routinesShared: 'shared-0-DDOOdL6P.mjs',
+    features: { Pa: ['return () => ((n ||= ((t = e()), !0)), t);'] } },
+  { target: 'clsx.mjs', source: official.vendorFrame, exports: { ve: 'clsx' },
     features: {
-      ge: ['(e = arguments[n]) && (t = he(e)) && (r && (r += " "), (r += t));'],
-      he: ['if (typeof e == "string" || typeof e == "number") r += e;', 'if (Array.isArray(e)) {'],
+      ve: ['(e = arguments[n]) && (t = _e(e)) && (r && (r += " "), (r += t));'],
+      _e: ['if (typeof e == "string" || typeof e == "number") r += e;', 'if (Array.isArray(e)) {'],
     } },
-  { target: 'text-sanitize.mjs', source: 'shared-52-DGviI8xb.js', exports: { jV: 'sanitizeMultilineText', kV: 'sanitizeText' },
+  { target: 'text-sanitize.mjs', source: 'shared-52-uHFNjl7C.js', exports: { rJ: 'sanitizeMultilineText', tJ: 'sanitizeText' },
     features: {
-      jV: ['return e.split(/\\r?\\n/).map(AV).join(`'], kV: ['return e.replace(DV(), (e) => (OV.has(e) ? e : ""));'],
-      DV: ['DV = F(() => /[\\p{Cc}\\p{Cf}\\p{Co}\\p{Cn}\\p{Cs}\\p{DI}\\u2028\\u2029]/gu)'],
-      OV: ['OV = new Set(["\\u200C", "\\u200D", "\\uFE0E", "\\uFE0F"])'],
+      rJ: ['return e.split(/\\r?\\n/).map(nJ).join(`'], tJ: ['return e.replace($q(), (e) => (eJ.has(e) ? e : ""));'],
+      nJ: ['return e.replace($q(), (e) => (e === "\t" || eJ.has(e) ? e : ""));'],
+      $q: ['$q = sn(() => /[\\p{Cc}\\p{Cf}\\p{Co}\\p{Cn}\\p{Cs}\\p{DI}\\u2028\\u2029]/gu)'],
+      eJ: ['eJ = new Set(["\\u200C", "\\u200D", "\\uFE0E", "\\uFE0F"])'],
     } },
-  { target: 'overview-layout.mjs', source: 'shared-19-CkPOiIKm.js', exports: { kD: 'PluginOverviewLayout', AD: 'OverviewRailCard', RE: 'OVERVIEW_HEADING_LEADING' },
+  { target: 'overview-layout.mjs', source: 'shared-19-DIKJVT7c.js', exports: { w_: 'PluginOverviewLayout', T_: 'OverviewRailCard', Eg: 'OVERVIEW_HEADING_LEADING' },
     features: {
-      kD: ['className: "flex flex-col gap-lg px-xl md:flex-row",', 'className: "flex min-w-0 flex-1 flex-col gap-lg",',
-        'className: "flex w-full shrink-0 flex-col gap-md md:w-60",', 'className: R("@container", r === !1 && "px-md md:px-xl"),', 'className: gE,'],
-      AD: ['let t = hh();', 'backgroundClassName: t ? "bg-surface-0" : "bg-surface-1",', 'className: "gap-md",'],
-      OD: ['return x(lp, { ...e, className: R("after:shadow-none", e.className) });'],
-      RE: ['RE = "leading-[1.65rem]"'],
+      w_: ['className: "flex flex-col gap-lg px-xl md:flex-row",', 'className: "flex min-w-0 flex-1 flex-col gap-lg",',
+        'className: "flex w-full shrink-0 flex-col gap-md md:w-60",', 'let e = o === !1 && "px-md md:px-xl",', 'p("@container", e)', 'className: ig,'],
+      T_: ['n = Sc() ? "bg-surface-0" : "bg-surface-1";', 'h(C_, { backgroundClassName: n, className: "gap-md", children: t })'],
+      C_: ['p("after:shadow-none", e.className)', 'h(q, { ...e, className: t })'],
+      Eg: ['Eg = "leading-[1.65rem]"'],
     } },
-  { target: 'overview-sections.mjs', source: 'cae01a6fc-FlNR9WHF.js',
-    exports: { U: 'OverviewSectionHeading', W: 'OverviewDescription', X: 'OverviewRow', J: 'OverviewRailGroup', se: 'OverviewConnectorsAndTools' },
+  { target: 'overview-sections.mjs', source: 'cae01a6fc-CssbXTs8.js',
+    exports: { G: 'OverviewSectionHeading', K: 'OverviewDescription', X: 'OverviewRow', Y: 'OverviewRailGroup', oe: 'OverviewConnectorsAndTools' },
     features: {
-      U: ['let i = c();', '? "text-heading-semibold text-primary"', '? "text-title text-primary"', ': "text-caption text-secondary",', 'r("h3", {'],
-      W: ['let i = R();', 'if (!e) return null;', 'let c = s(e);', 'className: "flex flex-col gap-sm",', 'n === !1 &&',
-        'defaultMessage: "Description", id: "Q8Qw5BZ1VA"', 'dir: "auto",', '"whitespace-pre-wrap break-words text-primary",',
-        'n ? `text-heading ${o}` : "text-body",', 'children: i ? z(c) : c,'],
-      X: ['v = y(),', 'o && t("span", { className: "text-muted", children: [" \\u00B7 ", o] }),', 'S = "min-w-0 flex-1 text-footnote text-secondary",',
-        '"flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-chip text-secondary",', 'v ? "bg-alpha-2" : "bg-fill-control",',
-        'children: typeof n == "string" ? r(m, { name: n, size: "xs" }) : n,', ': r(p, { className: S, children: b }),',
-        'if (d === void 0 && !u)', 'return r("div", { className: a("flex gap-xs", w), children: C });', 'variant: "ghost",', 'size: "xs",',
-        'flush: "both",', 'className: "w-full justify-start",', 'onClick: u,'],
-      J: ['className: "flex flex-col gap-xs pt-md first:pt-0",', 'children: [r(U, { children: e }), n],'],
-      se: ['return e.length === 0', 'defaultMessage: "Connectors & tools", id: "mEdG/OmTPo"', 'children: e.map(({ key: e, ...t }) => r(X, { ...t }, e)),'],
+      G: ['m() === !0', '? "text-heading-semibold text-primary"', '? "text-title text-primary"', ': "text-caption text-secondary";', 't("h3", { id: i, className: o, children: n })'],
+      K: ['s = B();', 'if (!i) return null;', 'let n = d(i);', '(f = "flex flex-col gap-sm")', 'o === !1 &&',
+        'defaultMessage: "Description",', 'id: "Q8Qw5BZ1VA",', '(c = "auto")', 'e("whitespace-pre-wrap break-words text-primary", r)',
+        'let r = o ? `text-heading ${w}` : "text-body";', '(u = s ? V(n) : n)', 't("p", { dir: c, className: l, children: u })'],
+      X: ['x = y(),', 'S = _(),', 'className: "text-muted-as-secondary",', 'children: [" \\u00B7 ", d],', 'T = S ? "bg-alpha-2" : "bg-fill-control",',
+        '"flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-chip text-secondary",',
+        'typeof s == "string" ? t(l, { name: s, size: "xs" }) : s', 'className: "min-w-0 flex-1 text-footnote text-secondary",',
+        't(c, { size: S ? void 0 : "xs", content: f, "aria-label": p?.(x) })', 'if (g === void 0 && !h) {', 'e("flex gap-xs", M)',
+        'variant: "ghost",', 'size: "xs",', 'flush: "both",', 'className: "w-full justify-start",', 'onClick: h,'],
+      Y: ['className: "flex flex-col gap-xs pt-md first:pt-0",', 'children: [a, i],', 't(G, { children: r })'],
+      oe: ['if (n.length === 0) return null;', 'defaultMessage: "Connectors & tools", id: "mEdG/OmTPo"', 'n.map(se)', 't(Y, { title: r, children: i })'],
+      se: ['let { key: n, ...r } = e;', 'return t(X, { ...r }, n);'],
     } },
 ];
 const callSites = [
-  { source: 'c24c8737b--Vxi4LBp.js', binding: 'pc', role: 'Plugin page: the tab list Kt (Overview first, Tool permissions only for a non-empty resolved list, then the content tabs), Overview as the initial and fallback tab, and its panel',
+  { source: 'c24c8737b-Czj7X1dz.js', binding: 'ol', role: 'Plugin page: the tab list (Overview first, Tool permissions only for a non-empty resolved list, then the content tabs, then Settings only when the plugin options query answers; menus N2), Overview as the initial and fallback tab, and its panel',
     features: [
-      'hostToolPermissionsServers: xe,', '[U, Te] = n(() => ne(ge) ?? "overview"),', 'K = we(),',
-      'Ut = Ht !== "loading" && Ht.length > 0,',
-      'let e = [ { id: "overview", href: F("overview"), label: a(Z, { defaultMessage: "Overview", id: "9uOFF3L8kp" }), }, ];',
-      'Ut === !0 && e.push({ id: "permissions", href: F("permissions"), label: a(Ks, {}), }),',
-      'w && e.push({ id: "contents",', 'ht.length > 0 && e.push({ id: "skills",', 'gt.length > 0 && e.push({ id: "commands",',
-      'kt && e.push({ id: "connectors",', '(xt > 0 || Ct) && e.push({ id: "hooks",', '(wt.length > 0 || Tt) && e.push({ id: "monitors",',
-      'Et.length > 0 && e.push({ id: "language-servers",', 'Dt.length > 0 && e.push({ id: "agents",', 'bt(is(e, Ce), Gt)',
-      'qt = Kt.some((e) => e.id === U) ? U : "overview";', 'Dn = u(() => Ee("connectors"), [Ee]),', 'qt === "overview" && a(pa, {',
-      'onOpenConnectors: Kt.some((e) => e.id === "connectors") ? Dn : void 0,',
-      'qt === "permissions" && Ht !== "loading" && a(Us, { connectors: Ht, connectorPageStyle: R }),',
+      'hostToolPermissionsServers: me,', '() => bt(ie) ?? "overview"', 'Yt = Jt !== "loading" && Jt.length > 0,',
+      't = [{ id: "overview", href: se("overview"), label: e }];', 'defaultMessage: "Overview", id: "9uOFF3L8kp"',
+      'if (Yt === !0) {', 'K0($, 73, i(Oc, {}))', 't.push({ id: "permissions", href: se("permissions"), label: e });',
+      'id: "contents",', 'if (St.length > 0) {', 'id: "skills",', 'if (Ct.length > 0) {', 'id: "commands",', 'if (Pt) {', 'id: "connectors",',
+      'if (Et > 0 || Dt) {', 'id: "hooks",', 'if (Ot.length > 0 || kt) {', 'id: "monitors",', 'if (At.length > 0) {', 'id: "language-servers",',
+      'if (jt.length > 0) {', 'id: "agents",',
+      // N2 (E26: closed branch): the Settings tab exists only when `en` (the plugin options) is set; Be = installed and
+      // not the unified connector page, Mt = shared-130 RE (enabled only with the bridge's getPluginOptions).
+      'Be = T && !Re,', '{ data: $t } = Mt(Qt, Be),', 'en = Be ? $t : void 0,', 'if (en) {', 'i(yc, { options: en })',
+      't.push({ id: "settings", href: se("settings"), label: e });',
+      '(tn = gt(Gs(t, Te), Zt))', 'nn.some((e) => e.id === Ee) ? Ee : "overview"', 'Gn = J1($, 124, Oe) ? K1($, 124, Oe, () => Oe("connectors")) : $[125],',
+      'rn === "overview" &&', 'onOpenConnectors: nn.some(sl) ? Gn : void 0,',
+      'rn === "permissions" &&', 'i(wc, { connectors: Jt, connectorPageStyle: H })',
+      'rn === "settings" &&', 'i(bc, { pluginId: Qt, options: en, connectorPageStyle: H }, Qt)',
     ] },
-  { source: 'c24c8737b--Vxi4LBp.js', binding: 'xs', role: 'Tool permissions servers: the host servers only with the unified plugins UI; otherwise the listed servers, enabled only with that UI too',
+  { source: 'c24c8737b-Czj7X1dz.js', binding: 'Ys', role: 'Tool permissions servers: the host servers only with the unified plugins UI; otherwise the listed servers, enabled only with that UI too',
     features: ['return e === !0 && n !== void 0 && n.length > 0', '? { servers: n, serversSettled: !0, enabled: !0, hostConnector: r }',
       'enabled: e === !0 && (t === !0 || r !== void 0),'] },
-  { source: 'c24c8737b--Vxi4LBp.js', binding: 'Ks', role: 'Tool permissions tab label', features: ['defaultMessage: "Tool permissions", id: "xq9OFmeici"'] },
-  { source: 'c24c8737b--Vxi4LBp.js', binding: 'is', role: 'A plugin blocked by the sales cloud access check keeps only Overview, Tool permissions and Connectors',
-    features: ['return t ? e.filter((e) => rs.some((t) => t === e.id)) : e;'] },
-  { source: 'shared-18-D4XxL6Tg.js', binding: 'Q_', role: 'Kt bt(…, Gt): the tab list is unchanged unless the unified UI and the connector page style both hold',
+  { source: 'c24c8737b-Czj7X1dz.js', binding: 'Oc', role: 'Tool permissions tab label', features: ['defaultMessage: "Tool permissions", id: "xq9OFmeici"'] },
+  { source: 'c24c8737b-Czj7X1dz.js', binding: 'Gs', role: 'A plugin blocked by the sales cloud access check keeps only Overview, Tool permissions and Connectors',
+    features: ['return t ? e.filter((e) => Ws.some((t) => t === e.id)) : e;'] },
+  { source: 'c24c8737b-Czj7X1dz.js', binding: 'sl', role: 'Overview opens Connectors only when that tab exists', features: ['return e.id === "connectors";'] },
+  { source: 'shared-130-dWztbTO1.js', binding: 'RE', role: 'N2: the plugin options query (Settings tab data) is enabled only when the bridge has getPluginOptions; the host answers it from electron/plugin-options.cjs (src/source-plugin-settings-tab.jsx usePluginOptions), so the tab appears for a plugin that declares userConfig',
+    features: ['let a = t && n && !!U?.getPluginOptions,', 'enabled: a,'] },
+  { source: 'shared-18-D3y8YMFN.js', binding: '$v', role: 'gt(…, Zt): the tab list is unchanged unless the unified UI and the connector page style both hold',
     features: ['if (t === !1) return e;'] },
-  { source: 'c76f00e40-CN9FziLk.js', binding: 'gr', role: 'The only caller that passes hostToolPermissionsServers: the directory connector record shown as a plugin page',
-    features: ['connectorPageStyle: !0,', 'hostDirectoryPlugin: e,', 'hostToolPermissionsServers: ee,'] },
-  { source: 'c12456454-Dz_kF7My.js', binding: 'ni', role: 'Overview: org usage (Dr), what’s new, the Description, categories, the degraded-read warning, Try it; the rail lists Connectors & tools',
+  { source: 'c76f00e40-YUpQMsTD.js', binding: 'zr', role: 'The only caller that passes hostToolPermissionsServers: the directory connector record shown as a plugin page',
+    features: ['connectorPageStyle: !0,', 'hostDirectoryPlugin: t,', 'hostToolPermissionsServers: b,'] },
+  { source: 'c12456454-DrLqfhYF.js', binding: 'ya', role: 'Overview: org usage, what’s new, the Description, categories, Try it; the rail lists Connectors & tools (in the classic layout)',
     features: [
-      're = ti(t, D?.examplePrompts),', 'O = Ct(u, {', 'k = a !== null && t.provenance.source === "shared" ? i(xt, { credit: o }) : null,',
-      'ue = j === !1 && (k !== null || O.length > 0),', 'i(Dr, {', 'i(vt, { backendId: t.plugin?.backend_id, connectorPageStyle: f }),',
-      'R === !1 && i(bt, { description: ii({ item: t, directoryPlugin: h, signedInRecord: E }), connectorPageStyle: f, }),',
-      'i(St, { categories: ce(t), connectorPageStyle: f }),', 'i(_t, { plugin: u }),', 'ae && a !== null && i(gn, {',
-      'slashCommand: u?.skills.some(Me) ? `/${t.name}` : void 0,',
-      ': ue === !0 ? n(w, { children: [k, O.length > 0 && i(yt, { rows: O })] }) : y ? void 0',
+      'ie = _a(t, re?.examplePrompts),', 'z = Ht(d, oe),', 'i !== null && t.provenance.source === "shared"', '? n(Bt, { credit: s })',
+      'ue = H === !0 && A === !0,', 'W = ue === !1 && (se !== null || z.length > 0),', 'n(Vt, { categories: P(t), connectorPageStyle: A })',
+      'n(cr, {', 'slashCommand: d?.skills.some(xe) ? `/${t.name}` : void 0,',
+      ': W === !0\n                ? a(Ie, { children: [se, z.length > 0 && n(Lt, { rows: z })] })',
+      'n(Le, { connectorPageStyle: A, main: Me, rail: Ne, embedded: j })',
     ] },
-  { source: 'c12456454-Dz_kF7My.js', binding: 'gn', role: 'Try it: nothing without prompts; the “…or type {command} in any chat.” line lives inside it',
-    features: ['if (e.length === 0) return null;', 'defaultMessage: "Try it", id: "g3Yfya3FKa"', 'a && r === "ready" && i("p", { className: "text-footnote text-muted-as-secondary",',
-      'defaultMessage: "\\u2026or type {command} in any chat.", id: "04Z43F3yGZ",'] },
-  { source: 'c12456454-Dz_kF7My.js', binding: 'ei', role: 'Try it prompts: the curated catalog’s suggested prompts, for default-catalog plugins only',
-    features: [')?.suggested_prompts;', 'e.provenance.source === "default" && t ? t.map((e) => ({ ...e, origin: "curated" })) : $r,'] },
-  { source: 'c12456454-Dz_kF7My.js', binding: 'ti', role: 'Try it prompts: a directory listing’s example prompts win over the curated ones',
-    features: ['t === void 0 || t.length === 0 ? n : t.map((e) => ({ prompt: e.prompt, origin: "directory_listing" })),'] },
-  { source: 'c12456454-Dz_kF7My.js', binding: 'ii', role: 'Description: the item’s own description without a directory listing or signed-in record',
+  { source: 'c12456454-DrLqfhYF.js', binding: 'cr', role: 'Try it: nothing without prompts; the “…or type {command} in any chat.” line lives inside it',
+    features: ['if (t.length === 0) return null;', 'defaultMessage: "Try it", id: "g3Yfya3FKa"', 'className: "text-footnote text-muted-as-secondary",',
+      'defaultMessage: "\\u2026or type {command} in any chat.",'] },
+  { source: 'c12456454-DrLqfhYF.js', binding: 'ha', role: 'Try it prompts: the curated catalog’s suggested prompts, for default-catalog plugins only',
+    features: [')?.suggested_prompts;', 'e.provenance.source === "default" && r ? r.map(ga) : ma,'] },
+  { source: 'c12456454-DrLqfhYF.js', binding: 'ga', role: 'A curated prompt', features: ['return { ...e, origin: "curated" };'] },
+  { source: 'c12456454-DrLqfhYF.js', binding: '_a', role: 'Try it prompts: a directory listing’s example prompts win over the curated ones',
+    features: ['t === void 0 || t.length === 0 ? n : t.map(va)'] },
+  { source: 'c12456454-DrLqfhYF.js', binding: 'va', role: 'A directory listing prompt', features: ['return { prompt: e.prompt, origin: "directory_listing" };'] },
+  { source: 'c12456454-DrLqfhYF.js', binding: 'Sa', role: 'Description: the item’s own description without a directory listing or signed-in record',
     features: ['return t === null || t === "loading" ? n === void 0 || n.summary.trim() === "" ? e.description : n.summary : t.oneLiner;'] },
-  { source: 'cae01a6fc-FlNR9WHF.js', binding: 'ae', role: 'Connectors & tools rows: reach rows, one row per MCP server (display name, the server name as the note when it differs, opens Connectors), CLI components',
-    features: ['e.reach &&', 'e.mcpServers.forEach((s, c) => {', 'f = u(s.name);', 'key: `mcp:${c}:${s.name}`,',
-      'icon: r(L, { server: l, size: Q, glyphSize: 12 }),', 'label: d,', 'note: d === f ? void 0 : f,', 'onClick: n,', 'e.type === "cli" &&'] },
-  { source: 'cd14a8022-CnQTOs75.js', binding: 'x', role: 'A server’s display name: the directory / sync-source / connector name, else its own name (sanitized)',
-    features: ['e.connector?.name ??', 'e.name,'] },
-  { source: 'c28f9f509-CoVhao0t.js', binding: 'u', role: 'A server without an icon: the kind glyph (connector: Connectors) at the glyph size, text-muted-as-secondary',
-    features: ['let o = e(n, { name: f(t), customSize: r, className: "text-muted-as-secondary", });'] },
-  { source: 'c28f9f509-CoVhao0t.js', binding: 'h', role: 'Kind glyphs', features: ['connector: "Connectors"'] },
+  { source: 'cae01a6fc-CssbXTs8.js', binding: 'ie', role: 'Connectors & tools rows: reach rows (remote_privileged reads as remote plus the privileged row, menus C8), one row per MCP server (display name, the server name as the note when it differs, opens Connectors), CLI components',
+    features: ['if (e.reach) {', 'let t = e.reach === "remote_privileged",', 'e.mcpServers.forEach((s, c) => {', 'd = h(s.name);', 'key: `mcp:${c}:${s.name}`,',
+      'icon: t(z, { server: l, size: Q, glyphSize: 12 }),', 'label: u,', 'note: u === d ? void 0 : d,', 'onClick: r,', 'e.type === "cli" &&'] },
+  { source: 'cd14a8022-D1-_IMYH.js', binding: 'a', role: 'A server’s display name: the directory / sync-source / connector name, else its own name (sanitized)',
+    features: ['n.connector?.name ??', 'n.name,'] },
+  { source: 'c28f9f509-DTH_B8Rb.js', binding: 'u', role: 'A server without an icon: the kind glyph (connector: Connectors) at the glyph size, text-muted-as-secondary',
+    features: ['e(t, {\n            name: s,\n            customSize: i,\n            className: "text-muted-as-secondary",\n          })'] },
+  { source: 'c28f9f509-DTH_B8Rb.js', binding: 'h', role: 'Kind glyphs', features: ['connector: "Connectors"'] },
 ];
 
 async function readSource(name, cache) {
@@ -220,11 +239,20 @@ function assertFeatures(label, text, features = []) {
 function vendorImport(file, alias, src) {
   const target = vendor[file]?.[alias];
   if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.bytes.toString()))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  official.assertVendorAlias(src.bytes.toString(), alias, target);
   return target;
+}
+// E3: a shared-frame compiler helper is imported from view-tabs by its semantic name. The view-tabs manifest must
+// publish that name for the same file/local/export, and the helper declarations are checked whole (once per run).
+let compilerHelpers;
+async function compilerHelperImport(file, alias, src) {
+  const helper = file === official.sharedFrame ? official.compilerHelpers[alias] : undefined;
+  if (!helper) return null;
+  compilerHelpers ??= official.assertCompilerHelpers(src.bytes.toString());
+  const manifest = await viewTabsManifestFor(referenceVersion), entry = manifest.publicNames?.[helper.name];
+  if (compilerHelpers[helper.name]?.local !== helper.local || entry?.file !== file || entry.local !== helper.local || entry.export !== alias)
+    throw Error(`view-tabs ${helper.name} is not ${file}:${helper.local} (${JSON.stringify(entry)})`);
+  return { from: viewTabsModule, name: helper.name };
 }
 function topLevelDeclaration(src, name) {
   const hits = [];
@@ -268,6 +296,8 @@ export async function extractR4ePlugin({ check = false } = {}) {
         const dep = await readSource(file, cache);
         const react = vendorImport(file, alias, dep);
         if (react) { imports.set(name, { from: react[0], name: react[1], via, kind: 'react' }); return; }
+        const helper = await compilerHelperImport(file, alias, dep);
+        if (helper) { imports.set(name, { ...helper, via, kind: 'view-tabs' }); return; }
         const local = dep.exported.get(alias);
         if (!local) throw Error(`${spec.target}: ${via} is not exported`);
         const generated = emitted.find(m => m.spec.source === file && m.spec.exports[local]);
@@ -286,10 +316,15 @@ export async function extractR4ePlugin({ check = false } = {}) {
     for (const name of Object.keys(spec.exports)) {
       const binding = program.scope.getBinding(name);
       if (!binding || binding.path.isImportSpecifier()) throw Error(`${spec.target}: root ${name} is not a declaration of ${spec.source}`);
-      await add(name);
+      if (spec.routinesShared) {
+        // `routinesShared`: the root is imported from that routines-shared module (checked to be this declaration).
+        assertFeatures(`${spec.target}: ${name}`, declarationText(src, binding.path), spec.features?.[name]);
+        const from = await routinesSharedLink({ referenceVersion, ionSource: source, target: spec.routinesShared, source: spec.source, names: [name] });
+        imports.set(name, { from, name, via: `${spec.source}:${name}`, kind: 'routines-shared' });
+      } else await add(name);
     }
     // Features: every pinned binding must be in the closure and carry its original text.
-    for (const [name, features] of Object.entries(spec.features ?? {})) {
+    for (const [name, features] of spec.routinesShared ? [] : Object.entries(spec.features ?? {})) {
       const p = selected.get(name);
       if (!p) throw Error(`${spec.target}: pinned binding ${name} is not in the closure of ${Object.keys(spec.exports).join(',')}`);
       assertFeatures(`${spec.target}: ${name}`, declarationText(src, p), features);

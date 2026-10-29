@@ -5,13 +5,18 @@ const {createKeepAwakeNotice}=require('./keep-awake-notice.cjs');
 // notificationLevels {} and rH reads an unset level as banner (c71860c77-yvGrrWO9.js:2270 `A?.[e] ?? "banner"`);
 // ccKeepAwakeWhileWorking / ccKeepAwakeOnBattery default to true (tV: `Db(...) !== !1`). This reverses the
 // earlier "off until enabled" local policy (analysis/settings-complete-20260921/source-contract.md:10).
-const defaults={permissionNotifications:'banner',questionNotifications:'banner',completeNotifications:'banner',notificationSound:'system',drawAttention:false,keepAwake:true,keepAwakeOnBattery:true,menuBarEnabled:true,archiveInactiveDays:0,worktreeLocation:'project'};
+const defaults={permissionNotifications:'banner',questionNotifications:'banner',completeNotifications:'banner',notificationSound:'system',drawAttention:false,keepAwake:true,keepAwakeOnBattery:true,keepAwakeEnabled:false,menuBarEnabled:true,archiveInactiveDays:0,worktreeLocation:'project'};
+// w13-close-cowork-ui (coworkui-scheduled-02): keepAwakeEnabled is the desktop's other keep-awake, the Scheduled page
+// banner's "Keep awake" switch (c6ad19bb9 / c1e3f823e: shared-78 MC _b("keepAwakeEnabled", !1)); asar
+// index.chunk-jPKPzV-P.js holds the computer awake while it is on (Yjr `Hy("keepAwakeEnabled")===!0?mU(Jjr):hU(Jjr)`, Kjr
+// `powerSaveBlocker.start("prevent-app-suspension")`), with or without work and on battery too. Default off (main
+// default `keepAwakeEnabled:!1`). keepAwake / keepAwakeOnBattery stay ccKeepAwakeWhileWorking / ccKeepAwakeOnBattery.
 // c71860c77:2004-2029 D: permission and question offer Off/Badge only/Banners; Task complete (idle) only Off/Banners.
 const NOTIFICATION_LEVELS={permissionNotifications:['off','badge','banner'],questionNotifications:['off','badge','banner'],completeNotifications:['off','banner']};
 // A Task complete level saved as 'badge' by an older build reads as Banners, the nearest level the original offers.
 function desktopPreferences(config){const result={...defaults,...config};if(result.completeNotifications==='badge')result.completeNotifications='banner';return result;}
 function desktopPatch(patch){const result={};for(const [key,levels] of Object.entries(NOTIFICATION_LEVELS))if(key in patch){if(!levels.includes(patch[key]))throw Error('Invalid notification level.');result[key]=patch[key];}
- for(const key of ['drawAttention','keepAwake','keepAwakeOnBattery','menuBarEnabled'])if(key in patch){if(typeof patch[key]!=='boolean')throw Error('Invalid desktop setting.');result[key]=patch[key];}
+ for(const key of ['drawAttention','keepAwake','keepAwakeOnBattery','keepAwakeEnabled','menuBarEnabled'])if(key in patch){if(typeof patch[key]!=='boolean')throw Error('Invalid desktop setting.');result[key]=patch[key];}
  if('notificationSound' in patch){if(!['system','none'].includes(patch.notificationSound))throw Error('Invalid notification sound.');result.notificationSound=patch.notificationSound;}
  if('archiveInactiveDays' in patch){if(![0,1,2,7,14,30].includes(patch.archiveInactiveDays))throw Error('Invalid archive interval.');result.archiveInactiveDays=patch.archiveInactiveDays;}
  if('worktreeLocation' in patch){if(!['project','custom'].includes(patch.worktreeLocation))throw Error('Invalid worktree location.');result.worktreeLocation=patch.worktreeLocation;}
@@ -47,7 +52,7 @@ function createDesktopSettings({app,powerSaveBlocker,powerMonitor,Notification,g
   ...(keepAwakeClock?{now:keepAwakeClock}:{}),...(keepAwakeTimers?{setInterval:keepAwakeTimers.setInterval,clearInterval:keepAwakeTimers.clearInterval}:{}),...(keepAwakeLog?{log:keepAwakeLog}:{})});
  const keepAwakeSuspended=()=>keepAwake.suspended();
  // A session the user keeps awake (its row menu's 'Keep computer awake', sessionMetadata keepAwake) holds the Mac awake while it runs, whatever the app-wide switch.
- function power(){if(disposed)return;const p=prefs(),metadata=getConfig()?.sessionMetadata||{},sessionAwake=[...active.keys()].some(id=>metadata[id]?.keepAwake===true),needed=(p.keepAwake&&(active.size>0||workflowThreads.size>0)||sessionAwake)&&(p.keepAwakeOnBattery||!powerMonitor.isOnBatteryPower());if(needed&&blocker===null)blocker=powerSaveBlocker.start('prevent-app-suspension');else if(!needed&&blocker!==null){powerSaveBlocker.stop(blocker);blocker=null;}
+ function power(){if(disposed)return;const p=prefs(),metadata=getConfig()?.sessionMetadata||{},sessionAwake=[...active.keys()].some(id=>metadata[id]?.keepAwake===true),needed=(p.keepAwake&&(active.size>0||workflowThreads.size>0)||sessionAwake)&&(p.keepAwakeOnBattery||!powerMonitor.isOnBatteryPower())||p.keepAwakeEnabled===true;if(needed&&blocker===null)blocker=powerSaveBlocker.start('prevent-app-suspension');else if(!needed&&blocker!==null){powerSaveBlocker.stop(blocker);blocker=null;}
   // cov0-05: the working hold (official Fvr "code_turn": ccKeepAwakeWhileWorking and the battery rule) is what the
   // stayed-awake notice measures; a session's own 'Keep computer awake' hold is the other hold (wvr()) that suppresses it.
   const working=p.keepAwake&&(active.size>0||workflowThreads.size>0),batteryOk=()=>p.keepAwakeOnBattery||!powerMonitor.isOnBatteryPower();
@@ -87,7 +92,7 @@ function createDesktopSettings({app,powerSaveBlocker,powerMonitor,Notification,g
  if(thread.cwd&&(getConfig().worktreeBases?.[thread.cwd]||(getConfig().worktreeDirectories||[]).includes(thread.cwd))){const status=await gitStatus(thread.cwd);if(!status.isRepo||(status.workingTreeDirty??status.hasChanges))continue;}/* F12: hasChanges now spans the branch's commits; the sweep keeps its dirty-tree gate. */
  if(disposed||owner!==getClient())return;if(revision!==eventRevision||!prefs().archiveInactiveDays)continue;const release=sessionOperations.reserveMessage(id);try{await owner.request('thread/archive',{threadId:id});const c=getConfig();c.threadIds=c.threadIds.filter(x=>x!==id);c.archivedThreadIds=[...new Set([...c.archivedThreadIds,id])];save();keepAwake.turnEnded(id,'gone');keptAwakeSessions.delete(id);emit({kind:'desktop-archived',threadId:id});}finally{release();}
  }catch{/* A failed state query is not permission to archive. */}}}finally{archiving=false;}}
- function start(){powerMonitor.on('on-ac',power);powerMonitor.on('on-battery',power);powerMonitor.on('suspend',keepAwakeSuspended);getWindow()?.on('focus',clearNotices);timer=setInterval(sweep,60000);timer.unref();}
+ function start(){powerMonitor.on('on-ac',power);powerMonitor.on('on-battery',power);powerMonitor.on('suspend',keepAwakeSuspended);getWindow()?.on('focus',clearNotices);timer=setInterval(sweep,60000);timer.unref();power();} // power(): a saved keepAwakeEnabled holds from launch
  function dispose(){disposed=true;clearInterval(timer);keepAwake.dispose();powerMonitor.removeListener('on-ac',power);powerMonitor.removeListener('on-battery',power);powerMonitor.removeListener('suspend',keepAwakeSuspended);getWindow()?.removeListener('focus',clearNotices);clearNotices();if(blocker!==null)powerSaveBlocker.stop(blocker);blocker=null;}
  // clearNotices: main.cjs also calls it when any other main window takes the focus (start() binds only the first).
  return {observe,notifyWorkflow,notifyAgent,power,start,dispose,sweep,clearNotices,noteKeptAwake,keptAwake:id=>keptAwakeSessions.get(id)??null,snapshot:()=>({notifications:Notification.isSupported(),runOnStartup:app.getLoginItemSettings().openAtLogin,powerActive:blocker!==null}),setStartup(value){if(typeof value!=='boolean')throw Error('Invalid startup setting.');app.setLoginItemSettings({openAtLogin:value});return app.getLoginItemSettings().openAtLogin;}};

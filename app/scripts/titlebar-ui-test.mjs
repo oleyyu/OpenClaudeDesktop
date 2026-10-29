@@ -399,17 +399,16 @@ try {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
   // R03 (titlebar-release-notes.js:5156-5236 B): the shared CDS Dialog, size md, max-h min(720px,85vh), initial focus
-  // on the popup, the bleed header (h-12, alpha-1 tint) with one dialog-scoped 'Close', #root inert while open.
+  // on the popup, the standard Header (3.6556.2 cb63ed069 B `t(u.Header, { showClose: !0 })`: no h-12 alpha-1 bleed bar)
+  // with one dialog-scoped 'Close', #root inert while open.
   metrics.release = await dialog.evaluate((node) => {
-    const header = node.querySelector(".sdlg-bleed-header"), probe = document.createElement("span");
-    probe.style.background = "var(--cds-alpha-1)"; header.append(probe);
-    const tint = getComputedStyle(probe).backgroundColor; probe.remove();
+    const header = node.querySelector(".sdlg-header");
     const badge = node.querySelector('.st-release-entry [data-cds="Badge"]');
     return {
       cds: node.dataset.cds, size: node.dataset.dialogSize,
       width: node.getBoundingClientRect().width,
       maxHeight: parseFloat(getComputedStyle(node).maxHeight), expectedMaxHeight: Math.min(720, innerHeight * 0.85),
-      headerHeight: header.getBoundingClientRect().height, headerBackground: getComputedStyle(header).backgroundColor, tint,
+      bleed: !!node.querySelector(".sdlg-bleed-header"), headerBackground: getComputedStyle(header).backgroundColor,
       focused: document.activeElement === node,
       shadow: getComputedStyle(node).boxShadow,
       rootInert: document.getElementById("root").inert,
@@ -423,8 +422,8 @@ try {
   assert.equal(metrics.release.size, "md");
   assert.equal(metrics.release.width, 520);
   assert.ok(Math.abs(metrics.release.maxHeight - metrics.release.expectedMaxHeight) <= 0.5, `max-height ${metrics.release.maxHeight}`);
-  assert.equal(metrics.release.headerHeight, 48);
-  assert.equal(metrics.release.headerBackground, metrics.release.tint, "bleed header carries the alpha-1 tint");
+  assert.equal(metrics.release.bleed, false);
+  assert.equal(metrics.release.headerBackground, "rgba(0, 0, 0, 0)", "the standard Header has no tint");
   assert.equal(metrics.release.focused, true);
   assert.notEqual(metrics.release.shadow, "none");
   assert.equal(metrics.release.rootInert, true);
@@ -533,7 +532,7 @@ try {
     build.version,
   );
   checks.push(
-    "Release notes: shared CDS Dialog md (520px, max-h min(720px,85vh), #root inert), bleed 48px alpha-1 header with a single dialog-scoped Close, neutral font-mono version Badge, dated entry with New/Improved groups; initial focus on the popup, Tab trap, Escape (exit transition) and Close; nudge returns for an older stored version and hides after closing; truthful local-client identity",
+    "Release notes: shared CDS Dialog md (520px, max-h min(720px,85vh), #root inert), standard Header (no bleed bar) with a single dialog-scoped Close, neutral font-mono version Badge, dated entry with New/Improved groups; initial focus on the popup, Tab trap, Escape (exit transition) and Close; nudge returns for an older stored version and hides after closing; truthful local-client identity",
   );
   }
   assert.deepEqual(errors, []);

@@ -177,7 +177,7 @@ try {
   await poll(async()=>JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[fork.id].turns.length===1,'durable history reverted');assert.equal(await page.getByText('Fixture response',{exact:true}).count(),0);assert.equal(await editor.evaluate(node=>node.value),'fixture:complete branch prompt');
   assert.equal((await requests()).filter(r=>r.method==='thread/revert').length,1);
   checks.push('Usage targets settings; fork prompt goes only to new branch; export reads full history and excludes local status; rewind confirms and reloads paginated retained history');
-  await fillComposer(page,editor,'');await fillComposer(page,editor,'/');await menu.waitFor();await editor.press('ArrowDown');await page.locator('.slash-description').waitFor();await page.screenshot({path:path.join(directory,'menu-light.png')});await editor.press('Escape');await command('/theme dark');await fillComposer(page,editor,'');await fillComposer(page,editor,'/');await menu.waitFor();await page.screenshot({path:path.join(directory,'menu-dark.png')});
+  await fillComposer(page,editor,'');await fillComposer(page,editor,'/');await menu.waitFor();await editor.press('ArrowDown');await page.locator('[data-cds="Tooltip"]').waitFor();await page.screenshot({path:path.join(directory,'menu-light.png')});await editor.press('Escape');await command('/theme dark');await fillComposer(page,editor,'');await fillComposer(page,editor,'/');await menu.waitFor();await page.screenshot({path:path.join(directory,'menu-dark.png')});
   assert.deepEqual(rendererErrors,[]);
 } catch (error) {
   failure = error;

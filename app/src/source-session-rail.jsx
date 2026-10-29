@@ -22,6 +22,30 @@
 // Background tasks pane's tasks with the app's Monitor and schedule feeds, and the panes / terminal / Finder actions.
 // Nothing is invented: Remote Control, artifacts, goal, cloud / SSH environments, connectors (see SR-7 report) and the
 // Context card (deferred, SR-3) are not passed, exactly as fO passes nothing when their sources are absent.
+//
+// V3-w6-rail-host (3.6556.2): the generated session-rail is cf74bc599-CRYqipWN.js now, and the stand-in follows its
+// host TN (`var LN = y(TN)`, `LN as EpitaxySessionRailHost`; fO's successor) over the same host data. What TN changed:
+// - the session (`ot`): Mj gets `localIcon: tt ? void 0 : ua("local")` (shared-20 cA: "Laptop") and the environment
+//   `caution: tt?.caution` (tt = c73f45bc3 Gu, `() => void 0`); Cj gets `clonesRepos: Aj(He) && L.environmentKind !==
+//   void 0` and `repoSlugs: L.repoSlugs`; Dj's inCheckout adds `|| K.headUnread` (xN's bN).
+// - Remote Control: `wj({metaFetched, metaPending, props, available, prefsPending: Ut})` (Ut needs the Remote Control
+//   preference, mm(): none here, so the hold is off); the old discoveryPending / hasRepo / hasBranchRow are gone.
+// - `saveEnvironment: bn && !l && (!_e || bn.savedAs !== void 0) ? $x : void 0` (stacked Save row only beside an unnamed
+//   environment, or right after a save); `environmentSave` (Qx) is unchanged and Zj puts it in the mark slot (C1-6).
+// - Connectors: `onOpen: t => Xe(t, e.onOpen)` (cf74bc599 NA, session-rail-connectors-model openConnectorTarget).
+// - `pluginSections: wn` (dN, engine plugin rail panes): none here, Zj's own empty default Wj (C1-5).
+// - the Context card (L_): `openConnectors: Ue ? qe : g` (Ue is a remote session's: the scope store's
+//   openSessionMcpDialog `p`), `openSkills: Je ? Ye : null` (Je = shared-78 tQ; here the host's host.openSkills, Customize ›
+//   Skills while the core is connected, else null: w10-ccres-rail-openers),
+//   `openMemory: v` (the scope store's openMemoryDialog, FN) and `mcpToolOpener: Ze` (PA without a connector directory:
+//   session-rail-connectors-model NO_MCP_TOOL_OPENER). pV marks the press with the kit's EB (rail-rows markRailPointerPress).
+// - w10-ccres-rail-env-edit: `environmentAction: kn` (`kn = y ? M_({onOpen: y}) : xn === null ? void 0 : M_({kind: "local",
+//   onOpen: Sn})`, M_ = c73f45bc3 Zx, generated environment-edit.mjs): a local session's named environment the rail can edit
+//   (`xn`, n_ = c73f45bc3 fu: local, not WSL, no variant) gets the row's "Edit environment" button, which puts the
+//   environment's id on the scope store as `editEnvironmentRequest` (`Sn`); SessionRailSaveEnvironment (c73f45bc3 pu)
+//   opens the host's saved environment dialog on it. `y` (PN, the scope store's cloud editor opener) is never set here.
+// Not followed (see the w6-rail-host report): `computer`, `addFolder` ("Add repository…", needs the meta query), the
+// goal, plan, artifacts and Nm's plan-drawn context.
 import React, { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { SessionRailDockedColumn, SessionRailOverlay, SessionRailOpener, RailShownStoreProvider, useRailShown } from "./generated/session-rail-kit/rail-shell.mjs";
 import { useRailFits, RAIL_CHAT_GEOMETRY_CLASS, RAIL_GUTTER_CLASS, RAIL_TITLEBAR_INSET_CLASS, RAIL_CONTAINER_CLASS,
@@ -30,7 +54,7 @@ import { useRailFlat } from "./generated/session-rail-kit/rail-card.mjs";
 import { createStore, useStore } from "./generated/session-rail-kit/react-store.mjs";
 import { RailFolderRow } from "./generated/session-rail-kit/rail-rows.mjs";
 import { SessionRailHostContext, useIntl } from "./source-session-rail-kit-adapters.jsx";
-import { SessionRail } from "./generated/session-rail/rail-view.mjs";
+import { SessionRail, NO_PLUGIN_SECTIONS } from "./generated/session-rail/rail-view.mjs";
 import { RepoNameChip } from "./generated/session-rail/repo-name-chip.mjs";
 import { railFolder, railExtraFolders, otherRepos, knownBranch, railBranch, railWorktree, lazyWorktreePending, lazyWorktreeState, railEnvironment,
   environmentKind, environmentConnection, isSideSessionNotesFolder, remoteControlState, RAIL_PENDING_GIVE_UP_MS } from "./generated/session-rail/rail-derive.mjs";
@@ -54,8 +78,9 @@ import { monitorTasks } from "./background-tasks-model.mjs";
 import { taskRowsStore, dismissedTasksStore } from "./source-background-tasks.jsx";
 import { connectorRows, connectorLabel } from "./generated/session-rail/rail-derive.mjs";
 import { useSaveEnvironmentSetup, RailSaveEnvironmentLink, RailSaveEnvironmentRow } from "./generated/session-rail/save-environment.mjs";
+import { RailEditEnvironmentButton, isRailEditableEnvironment } from "./generated/session-rail/environment-edit.mjs";
 import { setRailSavedEnvironments, setRailLocalSession, useSessionEnvironmentId } from "./source-session-rail-adapters.jsx";
-import { sessionMcpCounts, heldMcpCounts, railConnectors, NO_SESSION_MCP_COUNTS } from "./session-rail-connectors-model.mjs";
+import { sessionMcpCounts, heldMcpCounts, railConnectors, NO_SESSION_MCP_COUNTS, NO_MCP_TOOL_OPENER } from "./session-rail-connectors-model.mjs";
 import { SourceSavedEnvironmentDialog } from "./source-saved-environment-dialog.jsx";
 import { SessionRailContext } from "./generated/session-rail-context/context-card.mjs";
 import { SessionRailContextHostContext } from "./source-session-rail-context-adapters.jsx";
@@ -88,7 +113,10 @@ export function createRailScopeStore() {
     railMode: false, railActive: false, openSessionMcpDialog: null, openEditEnvironment: null, addSessionFolder: null,
     // R4i-rail RL1: the save environment state Ay / Py / My / Ny and c73f45bc3 qc read and write (c227f4d5e's initial
     // values): the start's setup, the move line's outcome, the open save request, and the session the scope shows.
-    startedSetup: null, moveLineOutcome: null, saveEnvironmentRequest: null, sessionRef: null }));
+    startedSetup: null, moveLineOutcome: null, saveEnvironmentRequest: null, sessionRef: null,
+    // V3-w6-rail-host: 3.6556.2 c227f4d5e's initial `editEnvironmentRequest: null` (TN's Sn writes it, c73f45bc3 pu reads
+    // it: w10-ccres-rail-env-edit) and `openMemoryDialog: null` (TN's FN, the Context card's openMemory; nothing sets it).
+    editEnvironmentRequest: null, openMemoryDialog: null }));
 }
 
 // ---- the jre state machine -------------------------------------------------------------------------------------------
@@ -258,19 +286,49 @@ function useRailScopeOpeners(scopeStore, sessionRef, openSessionMcpDialog) {
  * (source-saved-environment-dialog.jsx, ca690a791 fn's local kind) over main's saved-environments; `host.saveEnvironment`
  * saves and selects it as the existing Save environment flow does. Differences: the host dialog focuses its first field
  * rather than the name (focusName), and keeps no per-folder checkouts (folderCheckouts off).
+ *
+ * w10-ccres-rail-env-edit, 3.6556.2 c73f45bc3 pu (qc's successor): one dialog for the save request and the edit request.
+ * `a = En(t, mu)` (saveEnvironmentRequest), `s = En(t, gu)` (editEnvironmentRequest: an environment id, TN's Sn), `u =
+ * o.find(e => e.id === s)` over the saved environments; an edit request whose environment is gone is dropped (`s !== null
+ * && !u && c()`), and so is any edit request when the scope's session changes (`qi(p, c)`, c2934b6b4 d: on mount and on
+ * each change of `p = e.sessionRef?.id`). `isOpen: a !== null || u !== void 0`, `editing: y` (`a ? null : v`, the edited
+ * environment), `focusName: !y`; onClose (E) clears both requests; onCreate (D) saves and hands the environment to the
+ * save request's onSaved; onUpdate (O) writes the edited environment in place (`lu(r, t, {source: "session_rail", touch:
+ * !1})`: no selection, no touch). Host: `host.updateEnvironment(id, value)` (main's saved-environments `save` with the id)
+ * and `host.deleteEnvironment(id)` (the dialog's Delete environment, as main's own editor). c2934b6b4 d
+ * (`d(e,n)`: `n()` on mount and on each `e` change, plus shared-1 `wc` -> `n()` when the hidden-pane store turns hidden)
+ * is the layout effect below: the host keeps no pane mounted while hidden (no shared-1 `l` HiddenPane / content-visibility
+ * keep-alive; this component only exists while `rail.on`), so hiding unmounts it and showing again re-runs the mount
+ * clear, the same visible result as `wc` (w11-sweep-ccres). The host dialog has no close animation, so pu's latest-value
+ * hold (`Oe(u ?? null, {when, mode: "latest", key})`, which keeps the editing value during the exit) has nothing to hold.
  */
 export function SessionRailSaveEnvironment({ scopeStore, host }) {
   const r = useStore(scopeStore, (e) => e.saveEnvironmentRequest);
-  if (!r || typeof host?.saveEnvironment !== "function") return null;
-  const close = () => { scopeStore.getState().saveEnvironmentRequest === r && scopeStore.setState({ saveEnvironmentRequest: null }); };
-  return <SourceSavedEnvironmentDialog initialTarget={r.setup.target ?? null} initialSettings={r.checkout ?? {}}
-    environments={host.savedEnvironments ?? []} recentFolders={host.recentFolders ?? []} call={host.call}
+  const s = useStore(scopeStore, (e) => e.editEnvironmentRequest);
+  const p = useStore(scopeStore, (e) => e.sessionRef?.id);
+  const o = host?.savedEnvironments ?? NO_ENVIRONMENTS;
+  const c = useCallback(() => {
+    scopeStore.getState().editEnvironmentRequest !== null && scopeStore.setState({ editEnvironmentRequest: null });
+  }, [scopeStore]);
+  const u = s === null ? undefined : o.find((e) => e?.id === s);
+  useEffect(() => { s !== null && !u && c(); }, [s, u, c]);
+  useLayoutEffect(() => { c(); }, [p, c]);
+  const y = r ? null : u ?? null;
+  const canSave = !!r && typeof host?.saveEnvironment === "function";
+  const canEdit = !!y && typeof host?.updateEnvironment === "function";
+  if (!canSave && !canEdit) return null;
+  const close = () => { scopeStore.setState({ saveEnvironmentRequest: null, editEnvironmentRequest: null }); };
+  return <SourceSavedEnvironmentDialog key={y ? `edit:${y.id}` : "save"} editing={y} initialTarget={r?.setup.target ?? null}
+    initialSettings={r?.checkout ?? {}} environments={o} recentFolders={host.recentFolders ?? []} call={host.call}
     onVariables={host.openLocalEnvironment} onClose={close}
+    onDelete={y && typeof host.deleteEnvironment === "function" ? (id) => host.deleteEnvironment(id) : undefined}
     onSave={async (value) => {
+      if (y) { await host.updateEnvironment(y.id, value); return; }
       const created = await host.saveEnvironment(value);
       scopeStore.getState().saveEnvironmentRequest?.onSaved({ id: created.id, name: created.name, target: created.target });
     }} />;
 }
+const NO_ENVIRONMENTS = [];
 
 /**
  * jre's chat panel body around the transcript: tz (`epitaxy-chat-panel-body flex-1 min-h-0 relative`) holding the
@@ -464,6 +522,8 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
   // e.id : null)` (R4i-rail RL1: the session's MCP counts over the host connector list, session-rail-connectors-model).
   const c = useRailFlat();
   const p = useStore(t, (state) => state.openSessionMcpDialog);
+  // V3-w6-rail-host: TN `v = Xr(n, FN)` (FN: `e.openMemoryDialog`), the Context card's openMemory; nothing here sets it.
+  const v = useStore(t, (state) => state.openMemoryDialog);
   const g = useSessionMcpCounts(e.type === "local" && p !== null ? e.id : null, host.connectors, host.cwd);
   const x = isLocalRef(e);
   // fO `S = Td(e, rO)`: no session meta query here; the record fallback `k` below is the meta (its pending state `w`).
@@ -517,12 +577,16 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     Ne = _.formatMessage({ defaultMessage: "No folder", id: "OknGVA5bmf" });
   const Pe = useMemo(() => {
     if (!k) return { environment: A ? { label: null, kind: null } : null, folder: null, extraFolders: [], branch: null, worktree: null, goal: null, isLocal: x };
+    // V3-w6-rail-host: TN's Mj adds `localIcon: tt ? void 0 : ua("local")` (tt = c73f45bc3 Gu: always undefined).
     const env = railEnvironment({ kind: J, remoteHost: ae, remoteKind: k.remote?.kind, environmentName: pe, selfHostedPoolName: k.selfHostedPoolName,
-      namePending: me, labels: { local: le, cloud: ue, bridge: de }, kinds: q, named: K && { name: K.name, icon: environmentIcon(K.target?.kind) } });
+      namePending: me, labels: { local: le, cloud: ue, bridge: de }, kinds: q, localIcon: environmentIcon("local"),
+      named: K && { name: K.name, icon: environmentIcon(K.target?.kind) } });
     const details = [...(env.details ?? []), ...Me];
-    const n = { ...env, place: env.place, connection: ve, details: details.length > 0 ? details : undefined, learnMoreUrl: undefined };
+    const n = { ...env, place: env.place, connection: ve, details: details.length > 0 ? details : undefined, caution: undefined, learnMoreUrl: undefined };
+    // TN's Cj adds `clonesRepos: Aj(He) && L.environmentKind !== void 0` (no environment kind for a local session) and
+    // `repoSlugs: L.repoSlugs`.
     const r = railFolder({ isLocal: x, originCwd: k.originCwd, workingDir: k.workingDir, isScratchWorkspace: k.isScratchWorkspace, scratchLabel: Ne,
-      discoveredSlug: P?.repo, cachedRepoName: ee.repoName ?? L.repoName });
+      discoveredSlug: P?.repo, cachedRepoName: ee.repoName ?? L.repoName, clonesRepos: false, repoSlugs: k.repoSlugs });
     const i = new Set([k.workingDir, k.originCwd]);
     const a = railExtraFolders({
       directories: [...new Set(k.additionalDirectories ?? [])].filter((dir) => !i.has(dir) && !isSideSessionNotesFolder(dir)),
@@ -536,7 +600,8 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     const known = knownBranch({ liveWorktree, recorded: O?.branch, checkedOut: ee.branch, metaBranch: k.git?.branch });
     return {
       environment: n, folder: r, extraFolders: a,
-      branch: railBranch({ discovered: D ? undefined : F?.currentBranch || F?.branch || null, known, inCheckout: liveWorktree || k.git !== undefined || k.repoSlugs.length > 0,
+      branch: railBranch({ discovered: D ? undefined : F?.currentBranch || F?.branch || null, known,
+        inCheckout: liveWorktree || k.git !== undefined || k.repoSlugs.length > 0 || ee.headUnread,
         startedWithWorktree: x ? k.startedWithWorktree : undefined }),
       worktree: railWorktree({ isLocal: x, originCwd: k.originCwd, workingDir: k.workingDir, hasDesktopWorktree: k.hasDesktopWorktree }),
       startedWithWorktree: x ? k.startedWithWorktree : undefined,
@@ -570,10 +635,12 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     const dir = V && H.branch !== undefined ? V : Re;
     return [{ label: _.formatMessage({ defaultMessage: "Open in terminal", id: "M1fJAb8qse" }), separatorBefore: true, onSelect: () => Ve(dir) }];
   }, [_, Re, Ve, V, H.branch]);
-  // fO's Remote Control row (`nt = cu(…)`, claude.ai): no props, not available, so zE answers undefined.
+  // TN's Remote Control row (`zt = qf(Rt)`, claude.ai): no props, not available, so wj answers undefined. V3-w6-rail-host:
+  // `Ut = SN(mm() && t.type === "local" && (k === void 0 ? Ht : k?.remoteControlAvailable) === !0, Tj)` — the host has no
+  // Remote Control preference (mm) or availability, so the preference hold never starts.
   const rt = useRailPendingHold(!C && w, RAIL_PENDING_GIVE_UP_MS);
-  const at = remoteControlState({ metaFetched: !!C, metaPending: rt, props: undefined, available: false, discoveryPending: D,
-    hasRepo: (k?.repoSlugs?.length ?? 0) > 0 || (E?.some((repo) => repo.repo) ?? false), hasBranchRow: Pe.branch !== null });
+  const Ut = useRailPendingHold(false, RAIL_PENDING_GIVE_UP_MS);
+  const at = remoteControlState({ metaFetched: !!C, metaPending: rt, props: undefined, available: false, prefsPending: Ut });
   // R4i-rail RL1, fO `St = Ay({scopeStore: t, environmentsOn: ce, sessionId: e.id, isLocal: e.type === "local", meta: S.data,
   // besideNamed: c && !K})`: the folder's save setup. Host: the meta query has no source, so its record fallback `k` is the
   // meta (as everywhere in this stand-in); Ay reads the saved environments and this session's record from the adapter
@@ -581,6 +648,14 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
   useLayoutEffect(() => { setRailSavedEnvironments(host.savedEnvironments); }, [host.savedEnvironments]);
   useLayoutEffect(() => { if (e.type === "local") setRailLocalSession(e.id, O); }, [e.type, e.id, O]);
   const St = useSaveEnvironmentSetup({ scopeStore: t, environmentsOn: ce, sessionId: e.id, isLocal: e.type === "local", meta: k, besideNamed: c && !K });
+  // w10-ccres-rail-env-edit: TN `y = Xr(n, PN)` (the scope store's openEditEnvironment, a cloud environment's editor; never
+  // set here), `xn = t.type === "local" && !l && n_(_e) ? _e.id : null` (_e: the named environment K, n_ = c73f45bc3 fu),
+  // `Sn = () => n.setState({ editEnvironmentRequest: xn })` and `kn = y ? s(M_, {onOpen: y}) : xn === null ? void 0 :
+  // s(M_, {kind: "local", onOpen: Sn})` (M_ = c73f45bc3 Zx), Zj's environmentAction (the environment row's mark slot).
+  const y = useStore(t, (state) => state.openEditEnvironment);
+  const xn = e.type === "local" && !o && isRailEditableEnvironment(K) ? K.id : null;
+  const Sn = useCallback(() => t.setState({ editEnvironmentRequest: xn }), [t, xn]);
+  const kn = y ? <RailEditEnvironmentButton onOpen={y} /> : xn === null ? undefined : <RailEditEnvironmentButton kind="local" onOpen={Sn} />;
   // c227f4d5e pW (fO `Ct = il(t)`): rD's tail slot is the scope store's railTailEl.
   const Ct = useMemo(() => (el) => { t.setState({ railTailEl: el }); return () => { t.getState().railTailEl === el && t.setState({ railTailEl: null }); }; }, [t]);
   const sections = useSectionsHost(mount, e, k, B);
@@ -604,18 +679,26 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     outputsSession={e}
     sessionKey={e.id}
     connectors={ke}
-    saveEnvironment={St && !o ? <RailSaveEnvironmentRow scopeStore={t} sessionId={e.id} setup={St} /> : undefined}
+    environmentAction={kn}
+    // V3-w6-rail-host: TN `An = bn && !l && (!_e || bn.savedAs !== void 0) ? $x : void 0`.
+    saveEnvironment={St && !o && (!K || St.savedAs !== undefined) ? <RailSaveEnvironmentRow scopeStore={t} sessionId={e.id} setup={St} /> : undefined}
     environmentSave={St && !o && c && !K ? <RailSaveEnvironmentLink scopeStore={t} sessionId={e.id} setup={St} /> : undefined}
     remoteControl={at}
     controls={undefined}
     // R4i-rail RL3: fO `contextSection: o ? void 0 : u(cg, { scopeStore: t, sessionRef: e })` (c73f45bc3 iy over the
     // host's context source, SessionRailContextHostContext below).
-    contextSection={o ? undefined : <SessionRailContext scopeStore={t} sessionRef={e} />}
+    // V3-w6-rail-host: TN `Nn = l ? void 0 : u(L_, {scopeStore: n, sessionRef: t, openConnectors: Ue ? qe : g, openSkills:
+    // Je ? Ye : null, openMemory: v, mcpToolOpener: Ze})`: a local session (Ue false) opens connectors with `g` (here `p`),
+    // w10-ccres-rail-openers: `openSkills: Je ? Ye : null` is the host's Customize › Skills opener (null without one),
+    // and PA has no connector directory (every tool: undefined).
+    contextSection={o ? undefined : <SessionRailContext scopeStore={t} sessionRef={e} openConnectors={p} openSkills={host.openSkills ?? null} openMemory={v} mcpToolOpener={NO_MCP_TOOL_OPENER} />}
     usageSection={undefined}
     serversSection={<SessionRailServers sessionRef={e} readOnly={o} />}
     // The computer-use card (source-session-rail-computer-use.jsx) after Background tasks, outside the section order.
     backgroundSection={<><SessionRailBackgroundTasks sessionRef={e} readOnly={o} />
       {e.type === "local" && <SessionRailComputerUse sessionId={e.id} items={host.items} desktop={host.desktop} coreName={host.coreName} />}</>}
+    // TN `pluginSections: wn` (dN: the engine's rail panes); no engine plugins here (panes:C1-5, not-applicable-host).
+    pluginSections={NO_PLUGIN_SECTIONS}
     tailRef={Ct}
     className={s} />;
   // fO `u(ug, { snapshot: j, held: N, … })`: c73f45bc3 Ty shows a draft rail snapshot while it is held; never here.

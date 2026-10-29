@@ -15,6 +15,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { find, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -28,7 +29,7 @@ before(async () => {
   Tiles = await server.ssrLoadModule('/src/source-composer-tiles.jsx');
   Wrappers = await server.ssrLoadModule('/src/generated/code-composer/composer-attachment-tiles.mjs');
   Attachments = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-attachments.mjs');
-  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   TileAdapters = await server.ssrLoadModule('/src/source-composer-attachment-adapters.jsx');
   VideoTypes = await server.ssrLoadModule('/src/generated/code-composer/composer-video-types.mjs');
   Experimental = await server.ssrLoadModule('/src/generated/code-composer/code-pane-experimental.mjs');
@@ -89,31 +90,46 @@ test('2.42304.0: Ri lays tiles then pills in one row; hr / _r / vr wrap Hp.Image
   assert.equal(count(session, 'jn=A(e=>oe.current?.dropFiles(e),[])'), 1);
 });
 
-test('generated: the tiles, the wrappers, Ub, and the route are the original bindings with their official export aliases', () => {
+test('generated (3.6556.2): the tiles, the wrappers, lx, and the route are the original bindings with their official export aliases', () => {
+  // code-composer is 3.6556.2 (w2-composer-gen §2.1): c0fbbe82d-COsmfHJY's wrappers Vi/Ui/Wi/Hi (Image/File/Quote/Video),
+  // Co (the video MIME test), Bi (tile attributes, old mr), Ri (old pr), Ii (old dr); shared-2-TF8v67kg
+  // `th=Object.assign(eh,{Image:Im,Video:Um,File:qm,Quote:$m})` exported as ry (old Hp/zg), the attachment attributes
+  // wp/Tp/jp/Vp exported as iy/oy/ay/cy (old hf/gf/Sf/jf → Bg/Hg/Vg/Wg).
+  const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const official3 = (name) => fs.readFileSync(path.join(v3, name), 'utf8');
+  const tiles3 = official3('c0fbbe82d-COsmfHJY.js'), shared2v3 = official3('shared-2-TF8v67kg.js');
+  for (const needle of ['function Vi(', 'function Ui(', 'function Wi(', 'function Hi(', 'function Bi(', 'function Ri(', 'function Ii(', ',Co=/^video\\/[a-z0-9.-]+$/;',
+    'import{ay as $e,cy as et,iy as tt,ly as nt,oy as rt,ry as it}from"./shared-2-TF8v67kg.js"']) assert.equal(count(tiles3, needle), 1, needle);
+  for (const needle of ['th=Object.assign(eh,{Image:Im,Video:Um,File:qm,Quote:$m})', 'th as ry', 'wp as iy', 'Tp as oy', 'jp as ay', 'Vp as cy'])
+    assert.equal(count(shared2v3, needle), 1, needle);
+  assert.equal(count(official3('shared-18-D3y8YMFN.js'), 'naturalImageTiles:"sized"'), 1);
   const manifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/code-composer/manifest.json'), 'utf8'));
+  assert.equal(manifest.referenceVersion, '3.6556.2');
   const byTarget = Object.fromEntries(manifest.modules.map((m) => [m.target, m]));
-  // R4i-graph GR3: gr (the Video wrapper) and Si (Vi's video MIME test) join the wrappers; Ap (the Video tile) the tiles.
-  assert.deepEqual(byTarget['composer-attachment-tiles.mjs'].bindings.map((b) => b.name), ['dr', 'fr', 'pr', 'mr', 'hr', 'gr', '_r', 'vr', 'Si']);
-  for (const local of ['wp', 'Ap', 'Pp', 'Bp', 'hf', 'gf', 'Sf', 'jf']) assert.ok(byTarget['chat-composer-attachments.mjs'].bindings.some((b) => b.name === local), local);
-  assert.ok(!byTarget['chat-composer-attachments.mjs'].bindings.some((b) => b.name === 'Hp'), 'no Object.assign on Vp');
-  assert.deepEqual(byTarget['composer-object-url.mjs'].officialExports, { dC: 'ci' });
-  assert.deepEqual(byTarget['composer-video-types.mjs'].officialExports, { bk: 'In' });
-  assert.ok(byTarget['composer-attachment-tiles.mjs'].imports.some((i) => i.via === 'shared-7-B8UIMGDr.js:ci' && i.name === 'useFileObjectUrl' && i.kind === 'generated'));
+  assert.equal(byTarget['composer-attachment-tiles.mjs'].source, 'c0fbbe82d-COsmfHJY.js');
+  assert.deepEqual(byTarget['composer-attachment-tiles.mjs'].bindings.map((b) => b.name), ['Ii', 'Li', 'Ri', 'zi', 'Bi', 'Vi', 'Hi', 'Ui', 'Wi', 'Co']);
+  assert.equal(byTarget['chat-composer-attachments.mjs'].source, 'shared-2-TF8v67kg.js');
+  for (const local of ['Im', 'Um', 'qm', '$m', 'eh', 'wp', 'Tp', 'jp', 'Vp']) assert.ok(byTarget['chat-composer-attachments.mjs'].bindings.some((b) => b.name === local), local);
+  assert.ok(!byTarget['chat-composer-attachments.mjs'].bindings.some((b) => b.name === 'th'), 'no Object.assign on eh');
+  assert.deepEqual(byTarget['composer-object-url.mjs'].officialExports, { ME: 'ha' });
+  assert.deepEqual(byTarget['composer-video-types.mjs'].officialExports, { iN: 'rr' });
+  assert.ok(byTarget['composer-attachment-tiles.mjs'].imports.some((i) => i.via === 'shared-7-DBAgAi5H.js:ha' && i.name === 'useFileObjectUrl' && i.kind === 'generated'));
+  assert.ok(byTarget['composer-attachment-tiles.mjs'].imports.some((i) => i.via === 'shared-2-TF8v67kg.js:ry' && i.name === 'ComposerAttachmentTiles' && i.kind === 'adapter'));
   // The failed strip's Retry is view-tabs CdsTextLink (no stand-in), the Video tile's platform view-tabs useCdsPlatform.
   const attachmentImports = byTarget['chat-composer-attachments.mjs'].imports;
-  assert.ok(attachmentImports.some((i) => i.via === 'shared-frame-BfjMqbuN.js:Xc' && i.name === 'CdsTextLink' && i.kind === 'view-tabs'));
-  assert.ok(attachmentImports.some((i) => i.via === 'shared-frame-BfjMqbuN.js:hu' && i.name === 'useCdsPlatform' && i.kind === 'view-tabs'));
+  assert.ok(attachmentImports.some((i) => i.via === 'shared-frame-6jtSkIit.js:hu' && i.name === 'CdsTextLink' && i.kind === 'view-tabs'));
+  assert.ok(attachmentImports.some((i) => i.via === 'shared-frame-6jtSkIit.js:Pd' && i.name === 'useCdsPlatform' && i.kind === 'view-tabs'));
   assert.ok(!attachmentImports.some((i) => i.kind === 'adapter'), 'no adapter left in the tiles module');
   assert.ok(!fs.existsSync(path.join(app, 'src/source-composer-tile-retry-adapter.jsx')), 'the refusing retry stand-in is gone');
-  assert.deepEqual(Object.fromEntries(['hf', 'gf', 'Sf', 'jf'].map((k) => [k, byTarget['chat-composer-attachments.mjs'].officialExports[k]])), { hf: 'Bg', gf: 'Hg', Sf: 'Vg', jf: 'Wg' });
-  assert.deepEqual(byTarget['code-pane-experimental.mjs'].officialExports, { Ub: 'Du' });
-  assert.deepEqual(byTarget['composer-intake-split.mjs'].officialExports, { mb: 'Bl', Dy: 'Tu' });
-  assert.deepEqual(byTarget['composer-image-types.mjs'].officialExports, { i: 'r' });
-  assert.deepEqual(byTarget['composer-intake-route.mjs'].bindings.map((b) => b.name), ['aK']);
+  assert.deepEqual(Object.fromEntries(['wp', 'Tp', 'jp', 'Vp'].map((k) => [k, byTarget['chat-composer-attachments.mjs'].officialExports[k]])), { wp: 'iy', Tp: 'oy', jp: 'ay', Vp: 'cy' });
+  assert.deepEqual(byTarget['code-pane-experimental.mjs'].officialExports, { lx: 'Xd' });
+  assert.deepEqual(byTarget['composer-intake-split.mjs'].officialExports, { nP: 'oc', pb: 'Tp' });
+  assert.deepEqual(byTarget['composer-image-types.mjs'].officialExports, { a: 'i' });
+  assert.deepEqual(byTarget['composer-intake-route.mjs'].bindings.map((b) => b.name), ['Kq']);
   assert.deepEqual(Experimental.codePaneExperimental, { naturalImageTiles: 'sized' });
   // The tile set adapter is all four of Hp's members (R4i-graph GR3 added Video).
   assert.deepEqual(TileAdapters.ComposerAttachmentTiles, { Image: Attachments.AttachmentImage, Video: Attachments.AttachmentVideo, File: Attachments.AttachmentFile, Quote: Attachments.AttachmentQuote });
-  assert.equal(Attachments.MessageAttachments.Image, undefined, 'Vp is not mutated');
+  assert.equal(Attachments.MessageAttachments.Image, undefined, 'eh is not mutated');
   // Vi's video branch: a File-backed, video-named, video-typed attachment only.
   assert.ok(VideoTypes.videoFileNamePattern.test('clip.MOV') && !VideoTypes.videoFileNamePattern.test('clip.mkv'));
   assert.ok(Wrappers.videoMimeTypePattern.test('video/mp4') && !Wrappers.videoMimeTypePattern.test('image/png'));
@@ -162,8 +178,10 @@ test("SSR: Ri's row in uM's shelf — image tiles, file / folder tiles, quote ti
   assert.equal(find(quote.children, (n) => n.tag === 'blockquote').text, 'first line second line');
   assert.equal(badge(quote), 'Excerpt');
   assert.ok(find(quote.children, (n) => n.attrs['aria-label'] === 'Remove From the transcript'));
-  // Ri's pill group: the agent pill, then the element context (host pills).
-  assert.deepEqual(kids(pills).map((n) => n.attrs['data-kind']), ['agent', 'elementContext']);
+  // Ri's pill group: the agent pill, then the element context, both Go's ko (w12 preview-cont), no host shells.
+  assert.deepEqual(kids(pills).map((n) => cls(n)), Array(2).fill('group/pill relative shrink-0 hover:z-10 focus-within:z-10'));
+  assert.ok(find(kids(pills)[0].children, (n) => n.attrs['aria-label'] === 'Remove Reviewer'));
+  assert.equal(find(pills.children, (n) => cls(n).includes('sca-pill')), null);
   assert.equal(renderToStaticMarkup(h(Tiles.ComposerAttachmentTiles, { entries: [] })), '', 'nothing staged: nothing rendered');
 });
 
@@ -178,7 +196,7 @@ test('SSR: each tile is the generated wrapper with the props Bi / Vi / Hi give i
 });
 
 test('every class the tiles and the row draw is in the loaded official sheets', () => {
-  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-Bl9zqrv-.css', 'c6a992d55-sXiDGMFQ.css', 'ce598b86c-CctVJsaN.css', 'c3fde7009-BH42YUtA.css']
+  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
     .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
   const html = renderToStaticMarkup(inRoot(h(Tiles.ComposerAttachmentTiles, { entries: [image, pending, notes, folder, snippet], onRemove: noop, onOpenFile: noop })));
   const tokens = new Set();
@@ -186,8 +204,13 @@ test('every class the tiles and the row draw is in the loaded official sheets', 
   assert.ok(tokens.size > 60, String(tokens.size));
   const escape = (token) => '.' + token.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
   // group/tile and group/card are group markers (no rule of their own); cds-root / contents come from CdsRoot.
-  assert.deepEqual([...tokens].filter((t) => !['group/tile', 'group/card'].includes(t)
-    && !['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => sheets.includes(escape(t) + next))), []);
+  // 3.6556.2 CdsBadge also writes the fizzy-lake `stacks:` variant (shared-frame-6jtSkIit, e.g.
+  // `stacks:rounded-[calc(var(--cds-h-control-nested)/2)]`); fizzy-lake is off (E12, Qm=[]) and no official 3.6556.2 sheet
+  // carries a single `stacks:` rule, so those tokens are unstyled in the official app too.
+  assert.equal(sheets.includes('.stacks\\:'), false, 'no official stacks: rule');
+  const unstyled = [...tokens].filter((t) => !['group/tile', 'group/card'].includes(t)
+    && !['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => sheets.includes(escape(t) + next)));
+  assert.deepEqual(unstyled.filter((t) => !t.startsWith('stacks:')), []);
 });
 
 // ---------------------------------------------------------------- the presses (hook dispatcher)
@@ -207,7 +230,7 @@ function hookFixture(component) {
   const render = (...args) => {
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
     for (let pass = 0; pass < 8; pass++) {
-      dirty = false; cursor = 0; internal.H = hooks;
+      dirty = false; cursor = 0; internal.H = withMemoCache(hooks);
       try { result = component(...args); } finally { internal.H = old; }
       if (!dirty) break;
     }
@@ -259,9 +282,49 @@ test('presses: an image opens the viewer from its tile, a file / folder opens / 
   const sending = hookFixture(Tiles.ComposerAttachmentTiles);
   of(sending.render({ ...props, disabled: true }), Wrappers.ComposerFileTile)[0].props.onRemove();
   assert.deepEqual(removed, ['i1', 'f1', 's1'], 'held while the card sends');
-  // Element context entries stay the host pill, in Ri's pill group.
+  // Element context entries are SourceSelectedElementPill (ko), in Ri's pill group.
   const pills = of(fixture.render({ ...props, entries: [element] }), Elements.SourceSelectedElementPill);
   assert.equal(pills.length, 1);
+});
+
+test("Go's one strip intent: the pill group carries s / d / m, every pill gets the same intent, a move between pills switches at once", (t) => {
+  const timers = new Map();
+  let next = 1;
+  const saved = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', { configurable: true, writable: true,
+    value: { setTimeout: (fn, ms) => { timers.set(next, { fn, ms }); return next++; }, clearTimeout: (id) => timers.delete(id) } });
+  t.after(() => { if (saved) Object.defineProperty(globalThis, 'window', saved); else delete globalThis.window; });
+  const second = { ...element, id: 'e2' };
+  const fixture = hookFixture(Tiles.ComposerAttachmentTiles);
+  const props = { entries: [element, second], contextPills: [agent], onRemove: noop, onOpenFile: noop };
+  const of = (tree, type) => elements(tree).filter((e) => e.type === type);
+  const state = () => {
+    const out = fixture.render(props);
+    const group = elements(out).find((e) => e.props.className === Tiles.PILL_ROW_CLASS);
+    const pills = [...of(out, Elements.SourceContextPill), ...of(out, Elements.SourceSelectedElementPill)];
+    return { group, pills, intent: pills[0].props.intent };
+  };
+  let { group, pills, intent } = state();
+  assert.equal(pills.length, 3);
+  assert.ok(pills.every((p) => p.props.intent === intent), 'one intent for the whole strip');
+  assert.deepEqual(['onMouseEnter', 'onMouseLeave', 'onBlur'].map((k) => typeof group.props[k]), ['function', 'function', 'function']);
+  assert.equal(pills[1].props.anchorRef !== undefined && pills[2].props.anchorRef === undefined, true, 'ue anchors the first element pill');
+  // Hover e1: opens after Go's 600 ms (fo).
+  intent.onPreviewIntent('e1');
+  assert.deepEqual([...timers.values()].map((x) => x.ms), [600]);
+  [...timers.values()].forEach((x) => x.fn()); timers.clear();
+  ({ intent } = state());
+  assert.equal(intent.open, 'e1');
+  // Move to e2: the strip's intent is already open, so it switches with no timer.
+  intent.onPreviewIntent('e2');
+  assert.equal(timers.size, 0);
+  ({ intent } = state());
+  assert.equal(intent.open, 'e2');
+  // Leaving the strip (d = () => nn()) closes after Go's 200 ms (po).
+  state().group.props.onMouseLeave();
+  assert.deepEqual([...timers.values()].map((x) => x.ms), [200]);
+  [...timers.values()].forEach((x) => x.fn()); timers.clear();
+  assert.equal(state().intent.open, null);
 });
 
 test('the generated wrapper under a press: pr removes once per two frames and hands focus on; mr stamps the attachment attributes', (t) => {
@@ -301,7 +364,8 @@ test('the generated wrapper under a press: pr removes once per two frames and ha
 // ---------------------------------------------------------------- the wiring
 test('wiring: the Code shelf renders the tiles; paste / drop go through mb + aK; main.jsx hands the composer CdsRoot Ub', () => {
   const composer = fs.readFileSync(path.join(app, 'src/source-composer.jsx'), 'utf8');
-  assert.equal(count(composer, '<ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} disabled={sending} />'), 1);
+  // W12b cf-01: cc43287c9 `onClickAnnotation: lg` rides along to the tiles (fs).
+  assert.equal(count(composer, '<ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} onClickAnnotation={onClickAnnotation} disabled={sending} />'), 1);
   // Chat / Cowork (SourceChatComposer) keep the host pills.
   assert.equal(count(composer, 'attachments={attachments.length > 0 || contextPills.length > 0 ? <SourceComposerAttachments entries={attachments}'), 1);
   assert.equal(count(composer, 'import { splitTransferItems } from "./generated/code-composer/composer-intake-split.mjs";'), 1);

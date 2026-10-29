@@ -30,11 +30,13 @@ test('folded family summary has disjoint status counts, full accessible name and
     sessionMetadata: { failed: { unread: true }, unread: { unread: true } },
     state: { errors: { failed: 'error' }, active: { failed: 'turn', unread: 'turn', working: 'turn' } },
   });
-  assert.match(html, /aria-label="Show 3 nested sessions, 1 failed, 1 new, 1 working"/);
+  // 3.6556.2 shared-20 wE.hiddenUnread "{count} unread" (w2-sidebar-resize-nested; 2.42304.0 hiddenNew "{count} new").
+  assert.match(html, /aria-label="Show 3 nested sessions, 1 failed, 1 unread, 1 working"/);
   assert.match(html, /data-drag-key="label:stub:parent"/, 'drag metrics must keep the summary out of session ordering');
   assert.match(html, /df-fade-truncate flex items-center whitespace-nowrap/);
   assert.match(html, /aria-hidden="true" data-row-decoration=""/);
-  assert.match(html, /class="text-warning" style="font-size:calc\(1rem/);
+  // w10-ccres-nested-parts: the error mark is 3.6556.2 shared-18 HA, the CDS Icon (view-tabs CdsIcon, sm), not the host StartIcon.
+  assert.match(html, /<span data-cds="Icon" style="font-size:calc\(1rem \* var\(--cds-rem-scale, 1\)\);font-weight:533\.3" class="text-warning" aria-hidden="true">/);
   assert.doesNotMatch(html, /df-family-handle|source-nested-stub-text|source-nested-stub-meta/);
   assert.doesNotMatch(html, /data-source-session-id="(?:failed|unread|working)"/);
 });
@@ -183,11 +185,14 @@ test('account footer is the pw df-user-menu-btn: df-on-rail CDS Avatar, name, mu
   assert.match(body, /^<span class="df-on-rail relative flex w-\[var\(--df-leading-slot\)\] shrink-0 items-center justify-center"><span data-cds="Avatar" aria-hidden="true" class="inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full [^"]*size-\[var\(--cds-avatar-sm\)\][^"]*" role="img" aria-label="Fixture Person">FP<\/span><\/span>/);
   assert.doesNotMatch(body, /data-cds="Spark"/);
   assert.match(render({ displayName: 'Solo' }), /aria-label="Solo">S<\/span>/, 'without avatarName the shown name is the avatar name');
-  assert.match(body, /<span class="flex min-w-0 gap-1 overflow-hidden text-\[length:var\(--df-row-font\)\] df-footer-suffix items-baseline"><span class="whitespace-nowrap text-secondary max-w-full shrink-0 truncate">Fixture<\/span><span aria-hidden="true" class="df-footer-suffix-text text-muted">·<\/span><span class="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted">Plus<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="shrink-0 text-muted" style="font-size:12px;font-weight:[\d.]+">[^<]+<\/span>$/);
+  // W12b-FTS-1 shared-19 $N: the suffix span p("df-user-menu-trailing flex …","df-footer-suffix items-baseline"), the name
+  // p("df-footer-name whitespace-nowrap text-secondary","max-w-full shrink-0") (no truncate), text-muted-as-secondary dot and
+  // suffix, and the xs CaretDown "df-user-menu-trailing shrink-0 text-muted-as-secondary" as the button's last child.
+  assert.match(body, /<span class="df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-\[length:var\(--df-row-font\)\] df-footer-suffix items-baseline"><span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><span aria-hidden="true" class="df-footer-suffix-text text-muted-as-secondary">·<\/span><span class="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted-as-secondary">Plus<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary" style="font-size:12px;font-weight:[\d.]+">[^<]+<\/span>$/);
   assert.doesNotMatch(html, /<small|class="avatar"|class="account-name"/);
   const bare = render({ displayName: 'Fixture', accountLabel: '' });
-  // The shown name is what main.jsx passes (accountFooter's first name), CSS-truncated.
-  assert.match(bare, /<span class="whitespace-nowrap text-secondary max-w-full shrink-0 truncate">Fixture<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="shrink-0 text-muted"/, 'no dot or suffix without a label');
+  // The shown name is what main.jsx passes (accountFooter's first name), faded by the df-footer-suffix mask.
+  assert.match(bare, /<span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary"/, 'no dot or suffix without a label');
 });
 
 // sidebar-session.js:13916/13924 and sidebar-groups.js:18641-18669 promise a
@@ -270,7 +275,7 @@ test('the sidebar aside is a CDS root carrying data-density, data-platform and d
 test('group and confirm dialogs use the shared Dialog with the CDS primary/danger Button', () => {
   const read = (file) => readFileSync(path.resolve(import.meta.dirname, '../src/' + file), 'utf8');
   const css = read('source-sidebar.css'), jsx = read('source-sidebar.jsx'), button = read('source-settings-button.css');
-  const official = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const official = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   assert.doesNotMatch(css, /\.source-group-dialog(-backdrop)?\s*\{/);
   assert.doesNotMatch(css, /--cds-text-on-primary/);
   assert.match(jsx, /<SourceDialog open=\{open\} onExited=\{onExited\} size="sm" showClose=\{false\}/);
@@ -301,7 +306,7 @@ test('Code status glyphs are trailing; idle/archived stay iconless and live copy
   assert.doesNotMatch(archived, /class="source-status-archived"|data-cds="Pulse"/);
   const failed = render({ state: { turnErrors: { s1: { t1: { message: 'boom', codexErrorInfo: 'internalServerError' } } }, items: { s1: [{ id: 'i1', turnId: 't1' }] } } });
   assert.match(failed, /data-find-omitted=""> Server error<\/span>/);
-  assert.match(failed, /<span aria-hidden="true" data-cds="Icon" class="text-danger"/);
+  assert.match(failed, /<span data-cds="Icon" style="font-size:calc\(1rem \* var\(--cds-rem-scale, 1\)\);font-weight:533\.3" class="text-danger" aria-hidden="true">/);
   const css = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.css'), 'utf8');
   assert.match(css, /\.source-session-row:not\(\.source-current-session-host\)\[data-archived\] \{ color: var\(--cds-text-muted\); opacity: 0\.5; \}/);
   assert.doesNotMatch(css, /\[data-unread\] \.source-session-name/, 'no local unread title colour');
@@ -321,20 +326,47 @@ test('rows carry the jump-hint attributes; the body is the peek card target', ()
   assert.match(render({ collapsed: true, peekOpen: true }), /<div class="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover" data-focus-region="navigation" data-focus-region-holds="contains">/);
 });
 
-test('custom group headers: no DotsVertical trigger, the empty copy invites a drop, Other has no "+"', () => {
+test('custom group headers: no DotsVertical trigger, the empty copy invites a drop; a plain folder row is in This computer, not Other', () => {
   const html = render({ sessions: [thread('s1')], customGroups: [{ id: 'g1', name: 'Research' }], sidebarPreferences: { groupBy: 'custom', showEmptyGroups: true },
     onSessionAction() {}, onGroupAction() {}, onProject() {} });
   assert.doesNotMatch(html, /More options for group/);
   // shared-22 bC (R3-sections layout): the empty manual section's hint is a shiftable row (_Y shiftKey label:hint:{key})
   // while a drag opens a gap above it; the legacy Show empty groups seeded Sessions' show.emptyGroups, so it is listed.
   assert.match(html, /<div class="df-drag-shiftable" data-drag-key="label:hint:custom-g1"><p data-empty-group-hint="" class="df-label-inset [^"]*">Drag or move sessions here<\/p><\/div>/);
+  // w11-gate-sidebar: the session list layout groups with 3.6556.2 shared-22 OE's F = bE (w10-shell-sidebar-folder): a row
+  // whose folder is not a repo is an {unsaved: {kind: "local"}} place group, `bE … {kind:"unsaved",unsaved:mE(e)}`, headed
+  // "This computer" (shared-46 VL); Other (LE) only fills without F, so there is no Other bucket here.
   const other = render({ sessions: [thread('s1', { cwd: '/tmp/plain' })], repoIdentities: { '/tmp/plain': { isRepo: false } }, onProject() {}, onSessionAction() {} });
-  assert.match(other, /data-group-key="project:__no_project__"><div class="df-drag-shiftable" data-drag-key="label:project:__no_project__"><div data-sidebar-group-label="" data-kind="group"[^>]*><button[^>]*data-group-toggle=""[^>]*><span data-group-name=""[^>]*><span[^>]*>(?:<[^>]+>)*Other</);
+  assert.match(other, /data-group-key="project:kind::local"><div class="df-drag-shiftable" data-drag-key="label:project:kind::local"><div data-sidebar-group-label="" data-kind="group"[^>]*><button[^>]*data-group-toggle=""[^>]*><span data-group-name=""[^>]*><span[^>]*>(?:<[^>]+>)*This computer</);
+  assert.doesNotMatch(other, /data-group-key="project:__no_project__"|>Other</);
   assert.doesNotMatch(other, /New session in Other/);
   const source = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8');
   for (const copy of ['>Move up<', '>Move down<', '>Sort A to Z<', '>Rename group<', '>Delete group<', 'label="Rename group"', 'Create and group by custom', '"Create group"', 'The list will switch to Custom groups to show it.'])
     assert.ok(source.includes(copy), copy);
   assert.doesNotMatch(source, />Remove group</);
+});
+
+// Official "+" condition (3.6556.2 shared-22 IE → GC): Z is set for the local place bucket (`if(U||!oe)`: not Other, a
+// local place needs no prefill), and GC draws shared-21 H7 whenever onNewSession is set (`x?o(Ah,{groupLabel:n,…})`),
+// labelled "New session in {group}" (V7.newSessionIn) with no target. Only Other (`project-${LE}`, oe) and an unknown /
+// remote place without a prefill get none. w11-sweep-shell-a wired it (source-sidebar.jsx sessionsPlaceNewSession).
+test('the This computer place bucket gets the "+" labelled New session in This computer', () => {
+  const html = render({ sessions: [thread('s1', { cwd: '/tmp/plain' })], repoIdentities: { '/tmp/plain': { isRepo: false } }, onProject() {}, onSessionAction() {}, onNew() {} });
+  assert.match(html, /data-group-key="project:kind::local"/);
+  assert.match(html, /aria-label="New session in This computer"/);
+});
+
+// W12: IE wraps the place bucket in `o(FE,{mark:"plainHeading",children:je})`; shared-21's row reads it
+// (`e=r.plainHeading===!0&&!r.metadata&&!i`) and draws A_ with `folderOnly:e`: a place line with just the folder. A folder
+// bucket has no mark, so its rows stay undescribed while metadata is off.
+test('This computer rows show the folder-only line (plainHeading); folder bucket rows do not', () => {
+  const html = render({ sessions: [thread('s1', { cwd: '/tmp/plain' }), thread('s2', { cwd: '/w/repo' })], knownFolders: ['/w/repo'],
+    repoIdentities: { '/tmp/plain': { isRepo: false }, '/w/repo': { isRepo: true } }, onProject() {}, onSessionAction() {}, onNew() {} });
+  const row = (id) => { const at = html.indexOf(`data-source-session-id="${id}"`); assert.ok(at >= 0, id); const next = html.indexOf('data-source-session-id=', at + 10); return html.slice(at, next < 0 ? undefined : next); };
+  assert.match(html, /data-group-key="project:kind::local"[\s\S]*data-source-session-id="s1"/);
+  assert.match(row('s1'), /<div data-row="" data-described="true"/);
+  assert.match(row('s1'), /title="plain"><span[^>]*><bdi[^>]*>plain<\/bdi>/);
+  assert.doesNotMatch(row('s2'), /data-described=/);
 });
 
 // R01: sidebar-groups.js:17392-17410 / :18560-18590 cI on custom headers with the Dz target (the folder the
@@ -465,11 +497,24 @@ test('Show more / Show less (H0): labels, held state and the status live region'
   assert.equal((render({ sessions: now22.slice(0, 21), sidebarPreferences: { groupBy: 'none' } }).match(/source-show-more/g) || []).length, 0);
 });
 
-test('Hide sidebar sits in df-sidebar-hover-reveal (tK); the row menu separates Keep computer awake and shows Unarchiving…', () => {
+test('Hide sidebar is shared-21 Pz (CdsButton df-chrome-btn in GI ms-0.5); the row menu separates Keep computer awake and shows Unarchiving…', () => {
   const html = render({});
-  assert.match(html, /<div class="df-sidebar-hover-reveal flex"><button[^>]*aria-label="Hide sidebar"/);
+  // W12b-FTS-2 shared-22 GI `o("div",{className:i(e,"ms-0.5"),children:o(Ex,…)})`, e = i("draggable-none",Ys,_&&"flex")
+  // (Ys = shared-5 pS); Ex = shared-21 Pz: a ghost icon-only CdsButton, className "df-chrome-btn", shortcut cmd+b.
+  const hide = html.match(/<div class="draggable-none static-composer-boot-fade flex ms-0\.5">(<button[^>]*>)/)?.[1];
+  assert.ok(hide, 'Hide sidebar sits in GI\'s ms-0.5 wrapper');
+  assert.match(hide, /data-cds="Button"/); assert.match(hide, /data-cds-icon-only=""/); assert.match(hide, /data-cds-ghost=""/);
+  assert.match(hide, /aria-label="Hide sidebar"/); assert.match(hide, /aria-keyshortcuts="(?:Meta|Control)\+b"/i);
+  assert.match(hide, /class="[^"]*\bdf-chrome-btn"/);
+  assert.doesNotMatch(html, /df-sidebar-hover-reveal/, 'Fz (the hover-reveal wrapper) only draws while Yh() (sidebar_app_switcher)');
+  assert.doesNotMatch(hide, /code-icon-button/);
+  // GI `de && o("div",{className:i(e,"me-2"),children:o(Mv,{})})`: the Back / Forward pair (xI → Cm) follows.
+  assert.match(html, /<div class="draggable-none static-composer-boot-fade flex me-2"><div class="flex items-center draggable-none"><button[^>]*aria-label="Back"/);
   const css = readFileSync(path.resolve(import.meta.dirname, '../src/style.css'), 'utf8');
-  assert.match(css, /\.sidebar-toolbar > \.df-sidebar-hover-reveal > \.code-icon-button,/);
+  assert.doesNotMatch(css, /\.df-sidebar-hover-reveal > \.code-icon-button/);
+  const official = readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js'), 'utf8');
+  assert.ok(official.includes('className:"df-chrome-btn","aria-label":c,shortcut:"cmd+b",onClick:a,onKeyDown:nx'));
+  assert.ok(official.includes('className:"df-sidebar-hover-reveal flex",children:u(Pz,{holdPeekOnCollapse:"mouse",size:r})'));
   const menu = (props) => renderToStaticMarkup(React.createElement(SourceSidebarSessionMenu, { session: thread('s1'), onAction() {}, onClose() {}, onRename() {}, onDelete() {}, ...props }));
   const plain = menu({});
   assert.match(plain, /data-label="Export"[^]*?<\/div><div role="separator" class="smenu-separator"><\/div><div role="group"><div aria-checked="false" data-keep-awake="" role="menuitemcheckbox"/);
@@ -556,4 +601,66 @@ test('drag targets: an empty Pinned stub, custom sections as group drop zones, s
   assert.match(pinned, /data-group-key="pinned" data-pinned-list=""/);
   assert.match(pinned, /data-group-rows="" data-pinned-rows=""/);
   assert.doesNotMatch(render({ sessions: [thread('s1')] }), /source-pinned-drop/, 'no drop targets without session actions');
+});
+
+// W12b (w12b-frame-titlebar-sidebar): official evidence for the account trailing marks, the Code list's jump keycap and
+// the New row's running mark (3.6556.2 shared-19 $N, shared-21 q0 / l5 / UY / GY, shared-styles).
+const officialAsset = (name) => readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+const sidebarSource = () => readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8');
+
+test('W12b-FTS-1: the account button trails with df-user-menu-trailing as in shared-19 $N, pushed to the row end by shared-styles', () => {
+  const shared19 = officialAsset('shared-19-DIKJVT7c.js'), styles = officialAsset('shared-styles-D_GJawPO.css');
+  assert.ok(shared19.includes('name:"CaretDown",size:"xs",className:"df-user-menu-trailing shrink-0 text-muted-as-secondary"'));
+  assert.ok(shared19.includes('p("df-footer-name whitespace-nowrap text-secondary",N)') && shared19.includes('N=r?"min-w-0 truncate":"max-w-full shrink-0"'));
+  assert.ok(shared19.includes('p("df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-[length:var(--df-row-font)]",A)'));
+  assert.ok(styles.includes('.df-footer-row:has(.df-footer-aux:empty) .df-user-menu-btn>.df-user-menu-trailing:last-child{margin-inline-start:auto}'));
+  // Healthy core: the aux is empty, and the caret is the button's last child.
+  const html = render({ displayName: 'Fixture', accountLabel: 'Plus' });
+  assert.match(html, /<div class="df-footer-aux ml-auto flex shrink-0 items-center"><\/div>/);
+  assert.match(html, /<span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary"[^>]*>[^<]+<\/span><\/button>/);
+  assert.doesNotMatch(html, /max-w-full shrink-0 truncate">Fixture/);
+});
+
+test('W12b-FTS-3: Code rows draw shared-21 q0\'s df-jump-hint keycap (row end in the presets list); Chat rows keep the leading-slot keycap', () => {
+  const shared21 = officialAsset('shared-21-R7LldJ05.js'), styles = officialAsset('shared-styles-D_GJawPO.css');
+  const q0 = 'df-jump-hint pointer-events-none absolute top-[calc(var(--df-row-h)/2)] -translate-y-1/2 start-[calc(var(--df-row-px)+var(--df-rail-shift,0px)+(var(--df-leading-slot)-16px)/2)] flex h-4 min-w-4 items-center justify-center rounded-[3px] border-[0.5px] bg-surface-1 px-[3px] font-sans text-[10px] font-medium leading-none text-secondary';
+  assert.ok(shared21.includes(`"aria-hidden":!0,className:"${q0}"`));
+  assert.ok(styles.includes('.df-session-list [data-jump-hint-row]>kbd{inset-inline-start:auto;inset-inline-end:'));
+  assert.ok(styles.includes('.df-session-list [data-jump-hint-row]:has(.df-described-row):not(:has(.df-accordion-guide))>.df-jump-hint{top:'));
+  const source = sidebarSource();
+  assert.ok(source.includes(`const JUMP_HINT_CLASS = "${q0}";`));
+  const code = source.slice(source.indexOf('    if (code) {'), source.indexOf('    // sidebar-groups.js:17202-17213'));
+  assert.match(code, /\{hint && <kbd aria-hidden="true" className=\{JUMP_HINT_CLASS\}>\{hint\}<\/kbd>\}/);
+  assert.doesNotMatch(code, /source-jump-hint/);
+  assert.equal((source.match(/className="source-jump-hint"/g) || []).length, 1, 'only the Chat (classic) row keeps the host keycap');
+  const css = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.css'), 'utf8');
+  assert.match(css, /\.source-sidebar \.source-session-row > \.source-jump-hint \{/);
+  assert.doesNotMatch(css, /df-jump-hint\s*\{/, 'no host override of the official keycap');
+  // The Code list sits in .df-session-list, so the official row-end rule applies.
+  assert.match(render({}), /<div class="df-session-list flex flex-col">/);
+});
+
+test('W12b-FTS-4: the Code New row shows shared-21 GY (running mark) instead of ⌘N while the New session page is active elsewhere', async () => {
+  const shared21 = officialAsset('shared-21-R7LldJ05.js');
+  assert.ok(shared21.includes('K=av(f5),q=W&&K&&!L'));
+  assert.ok(shared21.includes('q&&u(GY,{label:x.formatMessage({defaultMessage:"Terminal or browser active on the New session page",id:"ABK5ECanMV"})})'));
+  assert.ok(shared21.includes('shortcut:q||!O?void 0:T'));
+  assert.ok(officialAsset('c155b6b71-66pw54FW.js').includes('function b(e){return!e.origin||e.origin==="about:blank"||e.origin.startsWith("data:")}'));
+  const { SidebarRunningMark } = await server.ssrLoadModule('/src/generated/code-current/sidebar-running-mark.mjs');
+  const mark = renderToStaticMarkup(React.createElement(SidebarRunningMark, { label: 'Terminal or browser active on the New session page' }));
+  assert.equal(mark, '<span role="img" aria-label="Terminal or browser active on the New session page" class="ms-auto me-[calc((var(--df-row-h)-var(--df-row-ctl))/2-var(--df-row-px))] flex size-[var(--df-row-ctl)] shrink-0 items-center justify-center"><span class="status-dot" data-kind="running"></span></span>');
+  const { newPageActive, blankBrowserTab } = await server.ssrLoadModule('/src/source-new-page-activity.jsx');
+  assert.equal(newPageActive({ terminalBusy: true, tabs: [] }), true);
+  assert.equal(newPageActive({ terminalBusy: false, tabs: [{ url: 'about:blank' }, { url: 'data:text/html,x' }, { url: '' }] }), false);
+  assert.equal(newPageActive({ terminalBusy: false, tabs: [{ url: 'http://localhost:5173/' }] }), true);
+  assert.equal(newPageActive({}), false);
+  assert.equal(blankBrowserTab('about:blank'), true); assert.equal(blankBrowserTab('https://example.com'), false);
+  // Idle (no busy terminal or page): the New row keeps its ⌘N keycap and draws no mark.
+  const html = render({ current: 's1', section: 'new' });
+  assert.match(html, /<kbd aria-hidden="true">⌘ N<\/kbd>/);
+  assert.doesNotMatch(html, /Terminal or browser active/);
+  const source = sidebarSource();
+  assert.match(source, /const newPageActivity = useNewPageActivity\(fallbackCwd, mode === "code" && !\(section === "new" && !current\)\);/);
+  assert.match(source, /\{newPageMark && <SidebarRunningMark label=\{t\("Terminal or browser active on the New session page"\)\} \/>\}/);
+  assert.match(source, /\{key === "new" && !newPageMark && <kbd aria-hidden="true">⌘ N<\/kbd>\}/);
 });

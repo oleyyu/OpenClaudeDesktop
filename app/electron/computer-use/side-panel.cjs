@@ -1,5 +1,5 @@
 // Full control docks the main window as a side panel (official 2.42304.0 [cu-side-panel], asar
-// index.chunk-muI2IV6k.js @6423900–6425800; spec §2.5.2). When a session takes the display lock the window leaves full
+// index.chunk-muI2IV6k.js @6423900–6425800, 3.6556.2 jPKPzV-P TPa…IPa / Fnr; spec §2.5.2). When a session takes the display lock the window leaves full
 // screen / un-maximizes, remembers its bounds and minimum size, and shrinks to min(520, work-area width - 20) ×
 // min(720, work-area height - 20) in the top-right corner of the work area of the display its centre is on (20 px from
 // the right and top edges); it floats above other windows and on every Space, full-screen ones included. When the lock

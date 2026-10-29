@@ -59,7 +59,11 @@ test('tasks-12 official: the Plan popover (Ko = Cat) claims Escape in a document
   assert.match(local, /import \{ ownerWindow \} from "\.\/generated\/files-changes\/owner-window\.mjs";/);
   assert.match(local, /const keys = \(event\) => planPopoverDocumentKeyDown\(event, \{ card: card\.current, dismiss: onDismiss \}\);/);
   assert.match(local, /const keyDown = \(event\) => planCommentFieldKeyDown\(event, \{ save, cancel: onDismiss \}\);/);
-  assert.match(fs.readFileSync(path.join(app, 'src/generated/code-editor-current/keyboard-repeat.mjs'), 'utf8'), /function pZ\(e\) \{\n  dZ\("Escape", e\);\n\}/);
+  // code-editor-current is 3.6556.2 now (w1-editor): 2.42304.0 shared-19 pZ/dZ are 3.6556.2 shared-19-DIKJVT7c Gj/Uj,
+  // byte-for-byte the same body (Escape → the held-key suppressor); the generated module is that Gj.
+  const keys3 = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-19-DIKJVT7c.js'), 'utf8');
+  for (const text of ['function Gj(e){Uj("Escape",e)}', 'Gj as cn']) assert.equal(count(keys3, text), 1, text);
+  assert.match(fs.readFileSync(path.join(app, 'src/generated/code-editor-current/keyboard-repeat.mjs'), 'utf8'), /function Gj\(e\) \{\n  Uj\("Escape", e\);\n\}[\s\S]*Gj as suppressEscapeRepeat/);
 });
 
 const keyEvent = (init) => {

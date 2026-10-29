@@ -1,9 +1,28 @@
-import test from 'node:test';
+// w10-editor-preview-sketch: the canvas adapter is the 3.6556.2 c23255574-B0Bkz_WU.js canvas (EditFilled glyph to the
+// export, React Compiler output with view-tabs helpers), so it loads through Vite SSR (E42). The keys adapter is the
+// shared-46-BIbZBGFq.js command table and stays plain-node importable.
+import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPreviewSketchCanvas } from '../src/generated/code-editor/preview-sketch-canvas.mjs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createServer } from 'vite';
+import react from '@vitejs/plugin-react';
+import { parseAst } from 'rolldown/parseAst';
+import { format } from '../../tools/node_modules/prettier/index.mjs';
 import { matchSketchCommand, sketchShortcut } from '../src/generated/code-editor/preview-sketch-keys.mjs';
-const model = createPreviewSketchCanvas({});
+
+const app = path.resolve(import.meta.dirname, '..');
 const line = { kind: 'arrow', x1: 10, y1: 20, x2: 110, y2: 20, color: '#E03131', width: 4 };
+let server, C, model;
+before(async () => {
+  server = await createServer({ configFile: false, root: app, plugins: [react()],
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  C = await server.ssrLoadModule('/src/generated/code-editor/preview-sketch-canvas.mjs');
+  model = C.createPreviewSketchCanvas({});
+});
+after(() => server?.close());
 
 test('original history preserves undoable clears, limits snapshots, and keeps stroke identity across resize', () => {
   let history = model.emptyHistory;
@@ -30,6 +49,8 @@ test('source constrained shapes, arrow bending and text resizing preserve real e
   const measure = item => ({ x: item.x, y: item.y, width: item.size * 3, height: item.size * 1.2 });
   const resized = model.resizeText(text, measure, 4, 'se', { x: 130, y: 90 }, 8);
   assert.ok(resized.size > text.size); assert.equal(resized.x, text.x); assert.equal(resized.y, text.y);
+  const moved = model.moveStroke(line, 5, 7);
+  assert.deepEqual([moved.x1, moved.y1, moved.x2, moved.y2], [15, 27, 115, 27]);
 });
 
 test('source keyboard table distinguishes physical selection shortcuts from character undo commands', () => {
@@ -44,28 +65,50 @@ test('source keyboard table distinguishes physical selection shortcuts from char
   assert.equal(sketchShortcut('toggleSelectionMode', true, options), 'cmd+shift+s');
 });
 
-// R4g SM2 (preview-08 / X7-13): the canvas is the 2.42304.0 c467aa787-B4L-l_bi.js St, whose two aria-labels are
-// formatMessage descriptors from the injected useIntl (ce = me()), not literals.
-test('2.42304.0 canvas formats its Sketch canvas / Text label aria-labels through the injected useIntl', async () => {
-  const fs = await import('node:fs/promises');
-  const path = await import('node:path');
-  const React = (await import('react')).default;
-  const { renderToStaticMarkup } = await import('react-dom/server');
+// preview-08: the canvas formats its "Sketch canvas" / "Text label" aria-labels through the injected useIntl.
+test('3.6556.2 canvas formats its Sketch canvas / Text label aria-labels through the injected useIntl', async () => {
   const calls = [];
   const intl = { formatMessage: message => { calls.push(message); return `zh:${message.defaultMessage}`; } };
-  const { Canvas } = createPreviewSketchCanvas({ ownerWindow: () => null, optionalOwnerWindow: () => null, useToken: () => '#000', reducedMotion: () => false, useIntl: () => intl });
+  const { Canvas } = C.createPreviewSketchCanvas({ useToken: () => '#000', useIntl: () => intl });
   const html = renderToStaticMarkup(React.createElement(Canvas, {}));
   assert.match(html, /<canvas role="application" aria-label="zh:Sketch canvas"/);
   assert.deepEqual(calls, [{ defaultMessage: 'Sketch canvas', id: 'jvMtXRguc4' }]);
-  const dir = path.resolve(import.meta.dirname, '../src/generated/code-editor');
+  const dir = path.join(app, 'src/generated/code-editor');
   const source = await fs.readFile(path.join(dir, 'preview-sketch-canvas.mjs'), 'utf8');
   const count = s => source.split(s).length - 1;
-  assert.equal(count('ce.formatMessage({\n              defaultMessage: "Sketch canvas",\n              id: "jvMtXRguc4",'), 1);
-  assert.equal(count('ce.formatMessage({\n                defaultMessage: "Text label",\n                id: "c29+YCh/oq",'), 1);
+  assert.equal(count('defaultMessage: "Sketch canvas",'), 1);
+  assert.equal(count('defaultMessage: "Text label",'), 1);
+  assert.equal(count('id: "jvMtXRguc4"'), 1);
+  assert.equal(count('id: "c29+YCh/oq"'), 1);
   assert.equal(count('"aria-label": "'), 0);
   const manifest = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
   const entry = manifest.adapters.find(item => item.name === 'preview-sketch-canvas.mjs');
-  assert.equal(entry.referenceVersion, '2.42304.0');
-  assert.equal(entry.sources[0].name, '../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c467aa787-B4L-l_bi.js');
-  assert.ok(entry.sources.every(item => item.name.startsWith('../../../../installed-2.42304.0-20261017/')));
+  assert.equal(entry.referenceVersion, '3.6556.2');
+  assert.deepEqual(entry.sources[0], { name: 'c23255574-B0Bkz_WU.js', sha256: entry.sources[0].sha256, base: 'ion' });
+  assert.ok(entry.sources.every(item => item.base === 'ion'));
+});
+
+// Parity: the canvas factory body is c23255574's statements from the EditFilled glyph to the export, and the keys module
+// carries shared-46's matcher/formatter declarations unchanged (whitespace and trailing commas aside).
+test('canvas and keys carry the 3.6556.2 statements unchanged', async () => {
+  const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const normal = async code => (await format(code, { parser: 'babel' })).replace(/\s+/g, '').replace(/,(?=[)\]}])/g, '');
+  const read = async name => fs.readFile(path.join(v1, name), 'utf8');
+  const sketch = await read('c23255574-B0Bkz_WU.js'), body = parseAst(sketch).body.filter(node => node.type !== 'ImportDeclaration' && node.type !== 'ExportNamedDeclaration');
+  const start = body.findIndex(node => /^var [\w$]+=\{name:"EditFilled"/.test(sketch.slice(node.start, node.end)));
+  assert.ok(start > 0);
+  const canvas = await fs.readFile(path.join(app, 'src/generated/code-editor/preview-sketch-canvas.mjs'), 'utf8');
+  const open = canvas.indexOf('export function createPreviewSketchCanvas('), from = canvas.indexOf(') {\n', open) + 4, to = canvas.lastIndexOf('  return {');
+  assert.equal(await normal(canvas.slice(from, to)), await normal(body.slice(start).map(node => sketch.slice(node.start, node.end)).join('\n')));
+  const keys = await fs.readFile(path.join(app, 'src/generated/code-editor/preview-sketch-keys.mjs'), 'utf8');
+  const shared = await read('shared-46-BIbZBGFq.js');
+  const exported = new Map(parseAst(shared).body.filter(node => node.type === 'ExportNamedDeclaration' && !node.declaration).flatMap(node => node.specifiers.map(s => [s.exported.name, s.local.name])));
+  // c23255574 imports shared-46 `v` as the matcher and `g` as the shortcut formatter.
+  assert.ok(/import\{[^}]*\bg as S\b[^}]*\bv as oe\b[^}]*\}from"\.\/shared-46-BIbZBGFq\.js"/.test(sketch));
+  assert.match(keys, new RegExp(`export \\{ ${exported.get('v').replace('$', '\\$')} as matchSketchCommand, ${exported.get('g')} as sketchShortcut \\};`));
+  for (const node of parseAst(shared).body) for (const d of node.type === 'VariableDeclaration' ? node.declarations : node.type === 'FunctionDeclaration' ? [node] : []) {
+    if (!keys.includes(`${node.type === 'FunctionDeclaration' ? 'function' : node.kind} ${d.id.name}`)) continue;
+    const official = node.type === 'FunctionDeclaration' ? shared.slice(node.start, node.end) : `${node.kind} ${shared.slice(d.start, d.end)};`;
+    assert.ok((await normal(keys)).includes((await normal(official)).replace(/;$/, '')), d.id.name);
+  }
 });

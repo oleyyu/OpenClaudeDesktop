@@ -1,0 +1,19 @@
+/* w13-chatfn-artifacts: the Chat artifact panel's place beside the conversation (src/source-chat-artifact-panel.jsx).
+   Only layout lives here; the panel's own look is the official utility classes (ca2ef848d file detail view). The column
+   sits in the session body row (main.jsx, after the conversation), like the Cowork activity column. */
+.chat-artifact-panel {
+  flex: 0 0 min(50%, 720px);
+  min-width: 320px;
+  max-width: 100%;
+  min-height: 0;
+  border-inline-start: 0.5px solid hsl(var(--border-300) / 0.25);
+}
+.chat-artifact-panel-header {
+  min-height: 3rem;
+  flex-shrink: 0;
+  border-bottom: 0.5px solid hsl(var(--border-300) / 0.25);
+}
+.surface-artifact-library .chat-artifact-panel {
+  flex: 1 1 auto;
+  border-inline-start: 0;
+}

@@ -43,17 +43,21 @@ import {
   resolvePlaceholderFit, stackedEditorClass,
 } from './generated/code-composer/chat-composer-layout.mjs';
 import { placeholderElementTiming } from './generated/code-composer/chat-composer-placeholder-timing.mjs';
-import { cdsClassNames } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+// E41: this module is in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name,
+// not from the facade (index.js evaluates every view-tabs module, some of which import host adapters back).
+import { cdsClassNames } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 
 /** jf: Header / Attachments / Actions / PrimaryAction / Chin / Overlay / Tray (bp carries them as statics). */
 export const ComposerShellParts = ChatComposerParts;
 
 /**
- * shared-5 yp for the local editor. `editor` is the host's half of the contract: what the shell reads (hasDraftText,
- * draftStoreKey, minLines, disabled, onMeasureTarget, extraEditorAttributes) and what yp passes on to its editor
- * (everything else, e.g. the editor node, className, maxHeight, placeholder), as `{...n, ...e}` does.
+ * shared-5 yp (3.6556.2 hh) for the local editor. `editor` is the host's half of the contract: what the shell reads
+ * (hasDraftText, draftStoreKey, minLines, disabled, onMeasureTarget, extraEditorAttributes) and what yp passes on to its
+ * editor (everything else, e.g. the editor node, className, maxHeight, placeholder), as `{...n, ...e}` does.
+ * 3.6556.2 hh takes `trailingNotch` as a prop (`u = s === void 0 ? "float" : s`); the presets one-row card passes "pad"
+ * (c227f4d5e qM `It = he ? "pad" : void 0`), which makes vm reserve the trailing column (columnReservesTrailing).
  */
-export const SourceComposerShell = forwardRef(function SourceComposerShell({ variant = 'default', dropScope = 'card', editor, editorRef, ...props }, ref) {
+export const SourceComposerShell = forwardRef(function SourceComposerShell({ variant = 'default', dropScope = 'card', editor, editorRef, trailingNotch = 'float', ...props }, ref) {
   // yp: `let { ref: o, focus: s, handle: c } = Df(r)`.
   const { ref: handleRef, focus, handle } = useChatComposerFocusRef(editorRef);
   // yp `l` = vp(c.current?.getEditor(), node, offset): the caret the shell resolved from a click goes where it pointed.
@@ -68,7 +72,7 @@ export const SourceComposerShell = forwardRef(function SourceComposerShell({ var
     extraEditorAttributes: editor.extraEditorAttributes,
     focus,
     storeCaret,
-    trailingNotch: 'float',
+    trailingNotch,
     render: (shellProps) => <ComposerShellEditor ref={handleRef} {...editor} placeholder={editor.placeholder ?? formPlaceholder} {...shellProps} />,
   };
   return <ChatComposerShell ref={ref} {...props} variant={variant} dropScope={dropScope} editor={shellEditor} />;

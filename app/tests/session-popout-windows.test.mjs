@@ -179,7 +179,8 @@ test('main.cjs: Open in new window, ⌘-click, tear-off and File › New Window 
 test('main.jsx: the popout renders without sidebar or split, ends its titlebar with Open in main window and the pin, and pops panes out', () => {
   const jsx = read('src/main.jsx');
   assert.match(jsx, /const NO_SIDEBAR = SESSION_POPOUT \|\| !!PANE_WINDOW;/);
-  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && <SourceSidebarBoundary>/);
+  // w13-close-chat-surface (E77): the incognito shell (shared-78 vK) also unmounts the sidebar; NO_SIDEBAR still does.
+  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) && <SourceSidebarBoundary>/);
   assert.match(jsx, /popoutWindow=\{SESSION_POPOUT \? \{ alwaysOnTop: popoutPinned, onDock: dockSessionPopout, onTogglePin: toggleSessionPopoutPin \} : null\}/);
   assert.match(jsx, /if \(SESSION_POPOUT\) \{ window\.close\(\); return; \}/, '⌘W closes the popout once no pane is left');
   assert.match(jsx, /storage: \(SESSION_POPOUT_WINDOW \|\| PANE_WINDOW\) && tileStorage\n\s+\? \{ getItem: \(name\) => tileStorage\.getItem\(name\), setItem: \(\) => \{\}, removeItem: \(\) => \{\} \}/);
@@ -198,8 +199,10 @@ test('main.jsx: the popout renders without sidebar or split, ends its titlebar w
   assert.match(titlebar, /label=\{t\("Open in main window"\)\}\n\s+icon="ArrowInSquare"/);
   assert.match(titlebar, /icon=\{popoutWindow\.alwaysOnTop \? "PinFilled" : "Pin"\}/);
   const sideChat = read('src/source-side-chat.jsx');
-  assert.match(sideChat, /icon="WindowNew" iconSize=\{16\} iconOnly aria-label=\{t\('Open in new window'\)\}/);
-  assert.match(sideChat, /icon="ArrowInSquare" iconSize=\{16\} iconOnly aria-label=\{t\('Open in main window'\)\}/);
+  // W12 sidechat-cont: UF's own CdsButtons (lt WindowNew; shared-18 bx ArrowInSquare / gx Pin, PinFilled).
+  assert.match(sideChat, /<CdsButton variant="ghost" iconOnly icon="WindowNew" aria-label=\{t\('Open in new window'\)\}/);
+  assert.match(sideChat, /<CdsButton variant="ghost" iconOnly icon="ArrowInSquare" aria-label=\{dockLabel\}/);
+  assert.match(sideChat, /const dockLabel = t\('Open in main window'\)/);
 });
 
 // R4g-btw BT3 (X7-14): the windows' reported /btw children suppress automatic unread marks in other windows, and an
@@ -215,7 +218,7 @@ test('main.cjs takes each window\'s shown /btw children and closes a removed ses
   assert.match(archive.slice(0, 1400), /if \(!windowRegistry\.windowsShowing\(params\.threadId, \{ panes: true, side: true \}\)\.length\) closeSidePanePopoutsForSession\(params\.threadId\);/);
   assert.doesNotMatch(main, /if \(!windowRegistry\.windowsShowing\((params\.threadId|thread\.id)\)\.length\) closeSidePanePopoutsForSession/);
   const remove = main.slice(main.indexOf('if (p.method === "thread/delete") {\n          const id = params.threadId;'));
-  assert.match(remove.slice(0, 1200), /closeSidePanePopoutsForSession\(id\);/);
+  assert.match(remove.slice(0, 2400), /closeSidePanePopoutsForSession\(id\);/); // w13 closeout: the delete branch now also cascades Chat data (chatfn-history)
   const changed = main.slice(main.indexOf('onChanged: (op, thread) => {'));
   assert.match(changed.slice(0, 600), /if \(!windowRegistry\.windowsShowing\(thread\.id, \{ panes: true, side: true \}\)\.length\) closeSidePanePopoutsForSession\(thread\.id\);/);
   assert.match(main, /entryPoint: entry\.removed \? "session-removed" : entry\.closed \? "close" : entry\.docked \? "dock" : "window-close"/);

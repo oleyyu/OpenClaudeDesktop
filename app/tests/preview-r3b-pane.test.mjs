@@ -67,8 +67,8 @@ test('preview-05 source: 2.42304.0 si/ui toast a Run with no usable launch.json 
     assert.equal(count(pane, text), 1, text);
   const old = official('cf580efe9-BNVXQZS1.js', v137);
   assert.equal(count(old, 'defaultMessage:"Couldn\\u2019t start {name}. Check that .claude/launch.json has a usable entry for it.",id:"uV3BfEC8hz"'), 1);
-  // Main: startFromConfig answers {} when Y4i denies (no config, or no entry by that name).
-  const main = fs.readFileSync(path.resolve(app, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js'), 'utf8');
+  // Main: startFromConfig answers {} when the config resolver denies (no config, or no entry by that name; 3.6556.2, as in 2.42304.0).
+  const main = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'), 'utf8');
   assert.equal(count(main, 'if(Q("desktop_launch_button_clicked",{has_config:i.action!=="deny"}),i.action==="deny")return N.info("[Preview] No config resolved for %s (%s)",e,i.reason),{}'), 1);
   assert.equal(count(main, 'denyUnmatchedName:!0'), 1);
 });
@@ -246,27 +246,36 @@ test('preview-07: the pane keeps one pending action, guarded like Zr, dropped li
     'if (pendingDiscard !== null && (!sketch || surface === "stopped")) setPendingDiscard(null);',
     'setPendingDiscard(null); closeSketch();',
     'if (action === "picking" && !pickBlocked) void beginPick();',
-    'onCancel={() => setPendingDiscard(null)} onConfirm={discardAndContinue} />}',
+    '<CdsConfirmationDialog initialFocus="cancel" open={pendingDiscard !== null} onOpenChange={(open) => { if (!open) setPendingDiscard(null); }}',
+    'onConfirm={discardAndContinue} confirmVariant="danger" title={t(\'Discard your annotations?\')}',
   ]) assert.equal(count(pane, text), 1, text);
   assert.equal(count(pane, 'switchToPick'), 0);
 });
 
 // ---- preview-08 ----------------------------------------------------------------------------------------------------
 
-test('preview-08: 2.37337.1+ format the canvas labels; the host passes its intl, zh-CN has both, and the generated canvas is the 2.42304.0 St', () => {
+test('preview-08: 2.37337.1+ format the canvas labels; the host passes its intl, zh-CN has both, and the generated canvas is the 3.6556.2 c23255574 one', () => {
   for (const [name, dir, intl] of [['c467aa787-B4L-l_bi.js', v1, 'ce'], ['c467aa787-t1coKIFM.js', v137, 'se']]) {
     const chunk = official(name, dir);
     assert.equal(count(chunk, `"aria-label":${intl}.formatMessage({defaultMessage:"Sketch canvas",id:"jvMtXRguc4"})`), 1, name);
     assert.equal(count(chunk, `"aria-label":${intl}.formatMessage({defaultMessage:"Text label",id:"c29+YCh/oq"})`), 1, name);
   }
-  assert.equal(count(official('c467aa787-B4L-l_bi.js'), 'let ce=me(),'), 1, '2.42304.0 St: ce = useIntl()');
-  assert.equal(count(local('src/source-preview-sketch.jsx'), 'createPreviewSketchCanvas({ ownerWindow, optionalOwnerWindow, useToken, reducedMotion, useIntl: useRoutineIntl })'), 1);
+  // 3.6556.2 moved the canvas into c23255574-B0Bkz_WU.js: `fe=se()` with `p as se` from vendor-intl (useIntl); the
+  // canvas label is memoised (`K1($,144,fe,fe.formatMessage(…"Sketch canvas"…))`), the text label stays inline.
+  const v3 = official('c23255574-B0Bkz_WU.js', path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1'));
+  assert.equal(count(v3, 'import{f as C,l as w,p as se}from"./vendor-intl-DYfox5Co.js"'), 1);
+  assert.equal(count(v3, 'fe=se(),'), 1, '3.6556.2: fe = useIntl()');
+  assert.equal(count(v3, 'fe.formatMessage({defaultMessage:"Sketch canvas",id:"jvMtXRguc4"})'), 1);
+  assert.equal(count(v3, '"aria-label":fe.formatMessage({defaultMessage:"Text label",id:"c29+YCh/oq"})'), 1);
+  assert.equal(count(local('src/source-preview-sketch.jsx'), 'createPreviewSketchCanvas({ useToken, useIntl: useRoutineIntl })'), 1);
   const generated = local('src/generated/code-editor/preview-sketch-canvas.mjs');
-  // R4g SM2 (X7-13): extract-code-editor.mjs now slices the canvas from 2.42304.0 c467aa787-B4L-l_bi.js.
+  assert.ok(generated.startsWith('// Complete original drawing canvas and geometry/history/rendering helpers (3.6556.2).'));
+  assert.equal(count(generated, 'export function createPreviewSketchCanvas({ useToken: ue, useIntl: se })'), 1);
   assert.equal(count(generated, '"aria-label": "Sketch canvas"'), 0, 'no 2.31226.0 literal left');
   assert.equal(count(generated, 'id: "jvMtXRguc4"'), 1);
   assert.equal(count(generated, 'id: "c29+YCh/oq"'), 1);
-  assert.equal(count(local('scripts/extract-code-editor.mjs'), "const sketchCanvasName='c467aa787-B4L-l_bi.js';"), 1);
+  // w10-editor-preview-sketch: the canvas adapter lives in scripts/code-editor-gen/preview-sketch.mjs and reads 3.6556.2.
+  assert.equal(count(local('scripts/code-editor-gen/preview-sketch.mjs'), "const sketchFile = 'c23255574-B0Bkz_WU.js'"), 1);
   const zh = I18n.dictionary('zh-CN');
   assert.equal(zh['Sketch canvas'], '草图画布');
   assert.equal(zh['Text label'], '文本标签');
@@ -299,19 +308,19 @@ test('preview-13 source: createDisabled = lr(count) (U: > 8), the sr-only cap no
 const tabsOf = n => Array.from({ length: n }, (_, i) => ({ id: `t${i + 1}`, url: `http://localhost:${3000 + i}/`, title: `Tab ${i + 1}` }));
 const stripProps = (n, extra = {}) => ({ tabs: tabsOf(n), activeId: `t${n}`, onSelect() {}, onCreate() {}, onClose() {}, onCloseOthers() {}, onExternal() {}, onReorder() {}, ...extra });
 
+// w12b-terminal-preview-tabs TPT-1: the strip is cf580efe9 Oa's ViewTabBar (cfe7c4b3b t), so + and its cap are the
+// shared strip's own create slot (createDisabled mr = c224804cc G, newTabAtCap = c62dc633f "Tab limit reached…").
 test('preview-13: at the cap + keeps its slot, gains the sr-only note and a focusable reason wrapper (SSR)', () => {
   const open = renderToStaticMarkup(React.createElement(Tabs.SourcePreviewTabs, stripProps(8)));
-  const wrapper = 'class="inline-flex rounded outline-none focus-visible:outline-hidden [&amp;[data-initial-focus]:focus]:outline-hidden transition-shadow duration-fast focus-visible:shadow-focus [&amp;[data-initial-focus]:focus]:shadow-focus"';
-  assert.match(open, new RegExp(`<span class="inline-flex shrink-0" data-preview-new-tab=""><span tabindex="-1" data-cds-disabled-reason-wrapper="" ${wrapper.replace(/[[\]().*+?^$|]/g, '\\$&')}><button[^>]*aria-label="New tab"`));
+  assert.match(open, /<span class="inline-flex shrink-0" role="presentation"><span tabindex="-1" data-cds-disabled-reason-wrapper=""[^>]*><button[^>]*aria-label="New tab"/);
   assert.doesNotMatch(open, /Tab limit reached/);
-  assert.doesNotMatch(open, /<button[^>]*aria-label="New tab"[^>]*disabled/);
+  assert.doesNotMatch(open, /<button[^>]*disabled=""[^>]*aria-label="New tab"/);
   const capped = renderToStaticMarkup(React.createElement(Tabs.SourcePreviewTabs, stripProps(9)));
-  const note = /<span id="([^"]+)" class="sr-only">Tab limit reached\. Close a tab to open a new one\.<\/span><span class="inline-flex shrink-0" data-preview-new-tab="">/.exec(capped);
+  const note = /<span id="([^"]+)" class="sr-only">Tab limit reached\. Close a tab to open a new one\.<\/span><span class="inline-flex shrink-0" role="presentation">/.exec(capped);
   assert.ok(note, 'the sr-only note sits right before the slot');
-  const reason = new RegExp(`<span tabindex="0" aria-describedby="([^"]+)" data-cds-disabled-reason-wrapper="" ${wrapper.replace(/[[\]().*+?^$|]/g, '\\$&')}>`).exec(capped);
+  const reason = /<span tabindex="0" aria-describedby="([^"]+)" data-cds-disabled-reason-wrapper=""/.exec(capped);
   assert.ok(reason, 'the wrapper is the focus stop, described by the hidden reason');
-  assert.match(capped, new RegExp(`<button[^>]*aria-describedby="${note[1]}"[^>]*disabled=""[^>]*>|<button[^>]*disabled=""[^>]*aria-describedby="${note[1]}"[^>]*>`));
-  assert.match(capped, /<button aria-label="New tab"[^>]*disabled=""/);
+  assert.match(capped, new RegExp(`<button type="button" disabled=""[^>]*aria-label="New tab" aria-describedby="${note[1]}"`));
   assert.match(capped, new RegExp(`<span id="${reason[1]}" hidden="" data-cds-disabled-reason="">Tab limit reached\\. Close a tab to open a new one\\.</span></span></span>`));
 });
 
@@ -320,7 +329,7 @@ test('preview-13: reaching the cap hands focus from + (or the body) to the open 
     const host = dom.document.body.appendChild(dom.document.createElement('div'));
     const root = createRoot(host);
     const render = (n, extra) => act(async () => root.render(React.createElement(Tabs.SourcePreviewTabs, stripProps(n, extra))));
-    const plus = () => host.querySelector('[data-preview-new-tab] button');
+    const plus = () => host.querySelector('[data-view-tab-bar] button[aria-label="New tab"]');
     const wrapper = () => host.querySelector('[data-cds-disabled-reason-wrapper]');
     const tab = id => host.querySelector(`[data-vtb-id="${id}"] [role="tab"]`);
     await render(8);

@@ -188,20 +188,21 @@ try {
   await projectMenu.waitFor({ state: "detached" });
   assert.equal(await page.getByRole("menu", { name: "Group options", exact: true }).count(), 0, "the Other heading has no menu");
   report.checks.push("Folder grouping by repo identity: repo buckets, a final 'Other' with no '+', header menu Move down persisted as projectOrder");
-  // pj/bL jump hints: holding ⌘ 250ms shows 1..n over the leading slots; release hides; ⌘2 opens the 2nd row.
+  // pj/bL jump hints: holding ⌘ 250ms shows 1..n; release hides; ⌘2 opens the 2nd row. W12b-FTS-3: Code rows draw
+  // shared-21 q0's df-jump-hint, which the loaded shared-styles `.df-session-list [data-jump-hint-row]>kbd` puts at the row end.
   await page.mouse.move(700, 700);
   await page.keyboard.down("Meta");
   await page.waitForTimeout(250);
-  assert.deepEqual(await page.locator(".source-session-row .source-jump-hint").allTextContents(), ["1", "2", "3"]);
-  report.metrics = { ...(report.metrics || {}), jumpHint: await page.locator(".source-jump-hint").first().evaluate((node) => {
-    const style = getComputedStyle(node), slot = node.parentElement.querySelector(".source-leading-slot").getBoundingClientRect(), box = node.getBoundingClientRect();
+  assert.deepEqual(await page.locator(".source-session-row > .df-jump-hint").allTextContents(), ["1", "2", "3"]);
+  report.metrics = { ...(report.metrics || {}), jumpHint: await page.locator(".source-session-row > .df-jump-hint").first().evaluate((node) => {
+    const style = getComputedStyle(node), row = node.parentElement.getBoundingClientRect(), box = node.getBoundingClientRect();
     return { height: box.height, minWidth: style.minWidth, radius: style.borderRadius, fontSize: style.fontSize, fontWeight: style.fontWeight,
-      centerOffset: Math.round((box.left + box.width / 2) - (slot.left + slot.width / 2)), ariaHidden: node.getAttribute("aria-hidden") };
+      endGap: Math.round(row.right - box.right), rowWidth: Math.round(row.width), ariaHidden: node.getAttribute("aria-hidden") };
   }) };
   assert.equal(report.metrics.jumpHint.height, 16); assert.equal(report.metrics.jumpHint.fontSize, "10px"); assert.equal(report.metrics.jumpHint.ariaHidden, "true");
-  assert.ok(Math.abs(report.metrics.jumpHint.centerOffset) <= 1, "the keycap is centred on the leading slot");
+  assert.ok(report.metrics.jumpHint.endGap < report.metrics.jumpHint.rowWidth / 2, "the keycap sits at the row end");
   await page.keyboard.up("Meta");
-  await page.locator(".source-jump-hint").first().waitFor({ state: "detached" });
+  await page.locator(".source-session-row > .df-jump-hint").first().waitFor({ state: "detached" });
   await page.keyboard.press("Meta+2");
   await page.waitForFunction((id) => document.querySelector(`[data-source-session-id="${id}"] [data-row-main-button]`)?.getAttribute("aria-current") === "page", beta);
   report.checks.push("⌘1–9 jump: held ⌘ shows aria-hidden 16px keycaps 1–3 centred on the leading slots, release hides them, ⌘2 opens the second row");

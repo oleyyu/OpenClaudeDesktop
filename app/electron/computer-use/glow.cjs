@@ -1,5 +1,5 @@
 // The screen glow while a session uses the computer (docs/computer-use-glow-design-20261020.md): the 2.42304.0 original
-// (asar index.chunk-muI2IV6k.js, log tag [cu-glow]) — fIr creates the window, pIr shows, mIr hides, dIr moves it to a
+// (asar index.chunk-muI2IV6k.js, log tag [cu-glow]; 3.6556.2 jPKPzV-P ANa / jNa / MNa / kNa) — fIr creates the window, pIr shows, mIr hides, dIr moves it to a
 // display. A transparent, click-through, screen-saver-level panel over one display that loads the original page
 // (glow-page.cjs) from tmpdir/cu-glow.html. It is created on the first show and kept: a hide fades #overlay out (its
 // .3s transition) and hides the window HIDE_MS later. Every show and hide takes a new generation, so a show that is

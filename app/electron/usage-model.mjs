@@ -18,14 +18,42 @@ export function usageWindowLabel(minutes, slot) {
  }
  return slot === 'primary' ? t('Primary limit') : t('Secondary limit');
 }
-export function usageResetLabel(seconds, minutes, locale) {
+// Reset copy, from Claude 3.6556.2's own formatters (shared-156-BLTosN8U qH/cU/fU/lU, the plan usage meters, and
+// c227f4d5e-B-FYKrwT VI, the Code usage-limit band). qH: the reset rounded to the minute and the whole minutes
+// left; null once it has passed (or for a missing/out-of-range date).
+const formatDate = (date, locale, options) => new Intl.DateTimeFormat(locale, options).format(date);
+function resetLeft(seconds, now) {
+ if (!finite(seconds)) return null;
+ const at = seconds * 1000;
+ if (!Number.isFinite(new Date(at).getTime()) || at <= now) return null;
+ const reset = new Date(Math.round(at / 6e4) * 6e4);
+ return {reset, totalMinutes: Math.floor(Math.max(0, reset.getTime() - now) / 6e4)};
+}
+// cU: 'Resets {time}', a date a week or more out, else the weekday.
+function resetsOn(reset, totalMinutes, locale, weekday = 'short') {
+ return t('Resets {time}', {time: formatDate(reset, locale, totalMinutes >= 10080
+  ? {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'} : {weekday,hour:'numeric',minute:'2-digit'})});
+}
+// fU: 'Resets at {time}' on the same calendar day, else cU. The window length (minutes) no longer picks the copy;
+// it stays in the signature for the Usage page's callers.
+export function usageResetLabel(seconds, minutes, locale, now = Date.now()) {
+ const left = resetLeft(seconds, now);
+ if (!left) return null;
+ const day = date => formatDate(date, locale, {year:'numeric',month:'numeric',day:'numeric'});
+ return day(left.reset) === day(new Date(now))
+  ? t('Resets at {time}', {time: formatDate(left.reset, locale, {hour:'numeric',minute:'2-digit'})})
+  : resetsOn(left.reset, left.totalMinutes, locale);
+}
+// VI (todayIso is the local YYYY-MM-DD, shared-78 FD): 'Resets at {time}' today, else 'Resets {time}' with the
+// weekday and date. No passed-reset check, like VI.
+const localDay = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+function bandResetLabel(seconds, {now = Date.now(), locale} = {}) {
  if (!finite(seconds)) return null;
  const date = new Date(seconds * 1000);
  if (!Number.isFinite(date.getTime())) return null;
- const time = date.toLocaleTimeString(locale, {hour:'numeric',minute:'2-digit'});
- if (minutes === 300) return t('Resets at {time}', {time});
- if (minutes === 10080) return t('Resets {day} {time}', {day: date.toLocaleDateString(locale,{weekday:'long'}), time});
- return t('Resets {date}', {date: date.toLocaleString(locale,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})});
+ return localDay(date) === localDay(new Date(now))
+  ? t('Resets at {time}', {time: formatDate(date, locale, {hour:'numeric',minute:'numeric'})})
+  : t('Resets {time}', {time: formatDate(date, locale, {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})});
 }
 // The empty limits copy, translated. A core with capabilities.perTokenBilling (DeepSeek Harness, OpenCode, MiMo, a
 // ZCode API key; core is boot.core — whose reported capabilities win — a core id or an engine name) is billed per
@@ -301,16 +329,15 @@ export function planWindowSummary(row) {
  const percent = Math.round(row.used);
  return row.minutes === 300 ? t('{percent}% of 5-hour limit', {percent}) : t('{limit}: {percent}%', {limit: row.label, percent});
 }
-// shared-5 sA: 'Resets in {minutes} min' within the hour, 'Resets in {hours} hr {minutes} min' within the day, else the
-// window's own reset label.
+// shared-156 lU (2.42304.0 shared-5 sA): 'Resets in {minutes} min' within the hour, 'Resets in {hours} hr {minutes} min'
+// within the day, else cU; null once the reset has passed (3.6556.2 has no 'Resets soon').
 export function usageResetCountdown(seconds, minutes, {now = Date.now(), locale} = {}) {
- if (!finite(seconds)) return null;
- const total = Math.ceil((seconds * 1000 - now) / 60000);
- if (!Number.isFinite(total)) return null;
- if (total <= 0) return t('Resets soon');
+ const left = resetLeft(seconds, now);
+ if (!left) return null;
+ const total = left.totalMinutes;
  if (total < 60) return t('Resets in {minutes} min', {minutes: total});
  if (total < 1440) return t('Resets in {hours} hr {minutes} min', {hours: Math.floor(total / 60), minutes: total % 60});
- return usageResetLabel(seconds, minutes, locale);
+ return resetsOn(left.reset, total, locale);
 }
 // account/rateLimits/updated is a sparse rolling update (AccountRateLimitsUpdatedNotification): its snapshot merges
 // into the last read, keyed by limitId (codex when absent); a null field never clears a value seen before.
@@ -324,25 +351,50 @@ export function mergeRateLimits(previous, snapshot) {
   rateLimits: id === legacyId || !prior.rateLimits ? merge(prior.rateLimits) : prior.rateLimits,
   rateLimitsByLimitId: map ? {...map, [id]: merge(map[id])} : prior.rateLimitsByLimitId ?? null};
 }
-// The notice above the composer (Claude's input warning: '{pct} of your session limit', 'Reached your session limit',
-// 'Resets at {time}'; Codex's TUI warns from 50/75/90/95%): a limit state from usageLimitNotice first, else the base
-// bucket's fullest window once it passes 80%. dismissKey stays the same while the window and its reset do, so a
-// dismissed notice comes back only for the next window (or a reached limit). null below the threshold.
+// The notice above the composer, in the copy of Claude 3.6556.2's Code usage-limit band (c227f4d5e-B-FYKrwT $I/tL:
+// 'Approaching session usage limit' / 'Approaching weekly usage limit' / 'Approaching usage limit' while approaching,
+// zs (shared-3 t4) 'Session limit reached' / 'Weekly limit reached' / 'Usage limit reached' once reached, the reset
+// from VI; Codex's TUI warns from 50/75/90/95%): a limit state from usageLimitNotice first, else the base bucket's
+// fullest window once it passes 80%. 3.6556.2 dropped the old shared-4 '{pct} of your session limit' and the five
+// 'Reached your … limit' strings. The shared-3 dE rewrite 'Resets at {time} · Session limit reached' / 'Resets {day}
+// at {time} · Weekly limit reached' is GrowthBook experiment __gb__1608543032 arm "a" on the chat surface only
+// ($T: Lp()==="chat"; UT: en locales), so it never shows here (E13/E49). dismissKey stays the same while the window
+// and its reset do, so a dismissed notice comes back only for the next window (or a reached limit). null below it.
 export const COMPOSER_USAGE_THRESHOLD = 80;
 export function composerUsageNotice(limits, {core = 'Codex', locale, now = Date.now()} = {}) {
  if (!limits) return null;
  const {base} = limitEntries(limits), snapshot = base?.[1] ?? null;
  const windows = ['primary', 'secondary'].map(slot => ({slot, window: snapshot?.[slot]})).filter(entry => finite(entry.window?.usedPercent));
  const fullest = windows.reduce((best, entry) => !best || entry.window.usedPercent > best.window.usedPercent ? entry : best, null);
- const reset = fullest ? usageResetCountdown(fullest.window.resetsAt, fullest.window.windowDurationMins, {now, locale}) : null;
+ const reset = fullest ? bandResetLabel(fullest.window.resetsAt, {now, locale}) : null;
+ const minutes = fullest?.window.windowDurationMins;
  const limit = usageLimitNotice(limits, core);
- if (limit) return {kind: 'usage', level: limit.tone === 'info' ? 'info' : 'danger', summary: limit.title, details: [limit.body, limit.kind === 'credits_in_use' ? null : reset].filter(Boolean).join(' '),
-  dismissKey: `usage:${limit.kind}:${fullest?.window.resetsAt ?? ''}`, reset: limit.reset === true};
+ if (limit) {
+  // zs.session / zs.weekly for the plan window that is full (Ue = W.kind), else the notice's own title.
+  const planLimit = (limit.kind === 'rate_limit_reached' || limit.kind === 'ordinary_usage_blocked') && fullest?.window.usedPercent >= 100;
+  const summary = planLimit && minutes === 300 ? t('Session limit reached') : planLimit && minutes === 10080 ? t('Weekly limit reached') : limit.title;
+  const shown = limit.kind === 'credits_in_use' ? null : reset;
+  // W12b: the band's reached detail is the reset alone (tL `J === "exceeded" && !Qe ? HI($e, et)`); remedies are its CTA
+  // group (NI). A plan limit with no remedy here (no earned reset: Codex's 'Try again after your limit resets.') has no
+  // CTA there either (NI variant "none"), so its body goes; a body naming a remedy (an earned reset, the workspace
+  // owner, credits) stays until the host wires that remedy as a CTA (W12b report: main.jsx owns the notice actions).
+  // w12c-wiring: a workspace member's request to the owner (Codex account/sendAddCreditsNudgeEmail, `nudge`) is now the
+  // band's CTA (NI case "request-extra-usage": "Request usage credits", then "Request sent to admin"; main.jsx), so its
+  // body goes too. An earned reset, an owner's own credits / limit and spend control have no NI counterpart; they stay.
+  const lead = (limit.kind === 'rate_limit_reached' || limit.kind === 'ordinary_usage_blocked') && limit.reset !== true || limit.nudge ? null : limit.body || null;
+  // A reached limit's reset is the band's live countdown (c227f4d5e tL `et = y(QF, {resetsAtSeconds: _e, absolute:
+  // VI(_e, u)})`, rendered by source-session-notices.jsx through generated/usage-countdown): `lead` is the text before
+  // it, `absolute` the VI text it falls back to (an hour or more out, before the first tick). `details` keeps the
+  // plain-text form.
+  return {kind: 'usage', level: limit.tone === 'info' ? 'info' : 'danger', summary, details: [lead, shown].filter(Boolean).join(' '),
+   ...(shown ? {countdown: {resetsAtSeconds: fullest.window.resetsAt, absolute: shown, lead}} : {}),
+   dismissKey: `usage:${limit.kind}:${fullest?.window.resetsAt ?? ''}`, reset: limit.reset === true, nudge: limit.nudge ?? null};
+ }
  if (!fullest || fullest.window.usedPercent < COMPOSER_USAGE_THRESHOLD) return null;
- const percent = Math.min(100, Math.round(fullest.window.usedPercent)), minutes = fullest.window.windowDurationMins;
- const summary = minutes === 300 ? t('You’ve used {percent}% of your session limit', {percent})
-  : minutes === 10080 ? t('You’ve used {percent}% of your weekly limit', {percent})
-  : t('You’ve used {percent}% of your {limit}', {percent, limit: usageWindowLabel(minutes, fullest.slot).toLowerCase()});
+ const percent = Math.min(100, Math.round(fullest.window.usedPercent));
+ const summary = minutes === 300 ? t('Approaching session usage limit')
+  : minutes === 10080 ? t('Approaching weekly usage limit')
+  : t('Approaching usage limit');
  return {kind: 'usage', level: percent >= 90 ? 'danger' : 'warning', summary, details: reset, dismissKey: `usage:${fullest.slot}:${fullest.window.resetsAt ?? ''}`, reset: false};
 }
 // A failed turn's usage-limit card (turn-error-model rate_limit): when the plan limit resets, from the base bucket's

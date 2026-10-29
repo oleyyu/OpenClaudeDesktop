@@ -1,38 +1,33 @@
-// R4g-routines RTC (CW-1, tasks-cowork-scheduled-2.42304; D0/D32): extract the 2.42304.0 Cowork Scheduled page pieces the
-// host page src/source-routines.jsx composes, replacing the 2.31226.0 roots current-chat used to carry for it
-// (cdbc75b4b Fi / yi / Ii, ccd3f68fe _o / gc / fc / dc, c97b955f1 ga, shared-18 GV, shared-16 Id, shared-150 dL,
-// ca0c38004 n and the shared-frame field parts). Own generator, own output folder src/generated/cowork-scheduled, own
-// scripts/verify-gen-cowork-scheduled.mjs (decision D0).
+// R4g-routines RTC (CW-1, D0/D32), moved to 3.6556.2 by w3-cowork-scheduled (research/routines-cowork-chat.md §1.3 / §3.2,
+// plan.md "w3-cowork-scheduled"): extract the 3.6556.2 Cowork Scheduled page pieces the host page src/source-routines.jsx
+// composes. Own generator, own output folder src/generated/cowork-scheduled, own scripts/verify-gen-cowork-scheduled.mjs.
 //
-//   ccd3f68fe  qo (the scheduled task detail, old _o), el (the starter template card, old gc), Xc (the templates, old fc),
-//              Yc (their copy, old dc); the task grid's class (ws) and the template grid's classes (Qc) as literals.
-//   c97b955f1  Ca (UpsertScheduledTaskModal, old ga).
-//   shared-156 sB (the pictogram, old shared-150 dL) and ca0c38004 n (its ObjectStopwatch asset, an unchanged file).
-//   shared-frame xO / SO / CO / wO / RT (the CDS Field family the form renders), for the page's native field registry.
+//   ccd3f68fe  ps (the scheduled task detail, old qo), su (the starter template card, old el), eu (the templates, old Xc),
+//              $l (their copy, old Yc); the task grid's class (hc) as a literal.
+//   c97b955f1  La (UpsertScheduledTaskModal, old Ca; export t).
+//   shared-156 KG (the pictogram, export Hr) and ca0c38004 n (its ObjectStopwatch asset, an unchanged file).
+//   shared-frame Jj / Yj / Xj / Zj / nk (the CDS Field family the form renders), for the page's native field registry.
+//   KG and nk are view-tabs' (CdsPictogram / CdsTextArea since w11-pictogram-d1, D1): index.mjs re-exports them from
+//   there as Pictogram / CdsTextArea and this graph imports them by those semantic names instead of copying them.
+//   cdbc75b4b  Wr (RC-05): the starter template grid classes, one and two columns (ccd3f68fe wraps it as `w-full ${Wr(u)}`).
 //
-// The cards (cdbc75b4b Ji / ji / Yi) come from src/generated/routines-shared (R4g-routines RT0, WI-0). The card menu
-// (shared-18 Az, old GV) and the scheduled copy (shared-16 gd, old Id) are routines-shared's too and are re-exported from
-// there under semantic names. Every binding routines-shared holds is imported from it instead of sliced a second time, so
-// a React context stays one object across the Code and Cowork pages.
+// The cards come from src/generated/routines-shared (3.6556.2 since w2-routines-shared). The card menu (shared-18 vW) and
+// the scheduled copy (shared-16 Wp) are routines-shared's too and are re-exported from there under semantic names; every
+// binding routines-shared holds is imported from it instead of sliced a second time, so a React context stays one object.
 //
-// The engine is the RT0 one (scripts/extract-routines-shared.mjs): every emitted binding is an original top-level
-// declaration sliced from the installed chunk, the bindings of each chunk are the reachable closure of the roots across
-// chunks (free variables resolved through import statements and re-export chains), nothing is hand-picked, and a renamed
-// or re-pointed minified import fails generation. A binding resolves, in this order, to: a host adapter of this graph
-// (src/source-routine-cowork-adapters.jsx; its original declaration must carry `features`), a host adapter routines-shared
-// already uses for it (src/source-routines-shared-adapters.jsx), a namespace / verified React export of vendor-frame, a
-// semantic public name of view-tabs (D1/D24/D46), a binding routines-shared holds, or a copy in this
-// graph's module for its chunk. Differences from the RT0 engine: a destructuring declarator is copied once (all its names);
-// declarations of the UI library chunks view-tabs also copies (Base UI vendor-frame / vendor-base-ui, vendor-all-0,
-// vendor-icons) are copied; an adapter may answer a plain value routines-shared also holds when it says why
-// (`overridesShared`, never a context). A service vendor binding (react-query, zod, GrowthBook, Datadog, react-intl, the
-// router), a class declaration, a dynamic import, a React context another graph holds, or a binding view-tabs holds
-// without a semantic name (D46: name it in extract-view-tabs.mjs; a name it lists in `pendingNames` is imported by
-// its local until published) stops generation. --survey prints
-// the closure's size by chunk, the heaviest cross-chunk edges and (SURVEY_CUT / SURVEY_DIRECT) cut candidates, without
-// writing anything.
+// The engine is the RT0 one with the 3.6556.2 rules (R1 constants from official-3.6556.2.mjs; R2/E5 features as text or
+// looseFeature; R3 vendor-frame React aliases through official.reactAliases + assertVendorAlias, `Oo` being
+// react/compiler-runtime's c; E3 the React Compiler helpers come from view-tabs by semantic name). A binding resolves, in
+// this order, to: a host adapter of this graph (src/source-routine-cowork-adapters.jsx; its original declaration must carry
+// `features`), a host adapter routines-shared already uses for it, a React namespace / alias of vendor-frame, a semantic
+// public name of view-tabs (D1/D24/D46), a binding routines-shared holds, or a copy in this graph's module for its chunk.
+// A service vendor binding, a class declaration, a dynamic import, a React context another graph holds, or a binding
+// view-tabs holds without a semantic name stops generation. --survey prints the closure without writing anything.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import { routinesSharedManifestFor } from './routines-shared-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -40,9 +35,9 @@ import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const referenceVersion = official.referenceVersion;
+const referenceSnapshot = official.referenceSnapshot;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/cowork-scheduled');
 const viewTabs = path.join(root, 'src/generated/view-tabs');
 const routinesShared = path.join(root, 'src/generated/routines-shared');
@@ -50,164 +45,178 @@ const adapterModule = '../../source-routine-cowork-adapters.jsx';
 const sharedAdapterModule = '../../source-routines-shared-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-// The roots: chunk -> original local -> { name, features }. `features` must appear in the root's prettier form.
+// The roots: chunk -> original local -> { name, export, features }. `features` must appear in the root's prettier form
+// (text or looseFeature, R2/E5); `export` is the root's export alias in its chunk when it has one.
 const roots = {
-  'ccd3f68fe-DGWS8cEm.js': {
-    qo: { name: 'ScheduledTaskDetail', features: ['routineRead: u = "unavailable",', 'onTakeComputerWayBack: _e,', 'readOnlyNotice: Ae,', '"Approvals you grant during a run appear here."'] },
-    el: { name: 'ScheduledTaskTemplateCard', features: ['function el({ template: e, busy: t = !1, disabled: n = !1, onSelect: r }) {', 'title: i.formatMessage(Yc[e.title]),', 'preview: Jc[e.id],'] },
-    Xc: { name: 'SCHEDULED_TASK_TEMPLATES', features: ['id: "daily_briefing",', 'cron: "0 8 * * 1-5",', 'id: "monitor_topic",', 'prompt: "monitorTopicPrompt",'] },
-    Yc: { name: 'scheduledTaskTemplateMessages', features: ['heading: { defaultMessage: "Or start from a template", id: "UNcFp+is2w" },', 'dailyBriefingTitle: { defaultMessage: "Daily briefing", id: "ZQwJxzS4/G" },'] },
+  'ccd3f68fe-C8Xiv_qI.js': {
+    ps: { name: 'ScheduledTaskDetail', features: ['routineRead: f,', 'onTakeComputerWayBack:', '"Approvals you grant during a run appear here."', 'runQueued: x,'] },
+    su: { name: 'ScheduledTaskTemplateCard', features: ['{ template: t, busy: n, disabled: r, onSelect: a } = e,', 'c.formatMessage($l[t.title])', 'm = Ql[t.id];'] },
+    eu: { name: 'SCHEDULED_TASK_TEMPLATES', features: ['id: "daily_briefing",', 'cron: "0 8 * * 1-5",', 'id: "monitor_topic",', 'prompt: "monitorTopicPrompt",'] },
+    $l: { name: 'scheduledTaskTemplateMessages', features: ['heading: { defaultMessage: "Or start from a template", id: "UNcFp+is2w" },', 'dailyBriefingTitle: { defaultMessage: "Daily briefing", id: "ZQwJxzS4/G" },'] },
   },
-  'c97b955f1-BlGH1qrk.js': {
-    Ca: { name: 'UpsertScheduledTaskModal', features: ['collideWithCodeRoutines: ie = !1,', 'onSetUpWithClaude: je,', '"Scheduled task creation isn\'t available. Restart the desktop app to enable this feature."'] },
+  'c97b955f1-Dd4YYfBl.js': {
+    La: { name: 'UpsertScheduledTaskModal', export: 't', features: ['collideWithCodeRoutines:', 'onSetUpWithClaude:', '"Scheduled task creation isn\'t available. Restart the desktop app to enable this feature."'] },
   },
-  'shared-156-Bikz018e.js': {
-    sB: { name: 'Pictogram', features: ['highlightFill: n = "default",', '"data-cds": "Pictogram",'] },
+  'shared-156-BLTosN8U.js': {
+    KG: { name: 'Pictogram', export: 'Hr', features: ['highlightFill:', '"data-cds": "Pictogram",'] },
   },
   'ca0c38004-CEGIs7-p.js': {
     n: { name: 'STOPWATCH_PICTOGRAM', features: ['name: "ObjectStopwatch",'] },
   },
-  // Held by routines-shared (re-exported): the card menu (old shared-18 GV) and the scheduled-task copy (old shared-16 Id).
-  'shared-18-D4XxL6Tg.js': {
-    Az: { name: 'ScheduledTaskMenu', features: ['{ defaultMessage: "More options for {label}", id: "rKQPgfPvWS" },', 'showPauseToggle: d = !0,'] },
+  // w13-close-cowork-ui (coworkui-scheduled-02): the list banner's "Keep awake" switch (ccd3f68fe Na
+  // `action:Qe?i("div",{className:"flex items-center pe-md",children:i(go,{size:"md",context:"scheduled-task"})}):void 0`,
+  // go = c6ad19bb9 m); its desktop preference store (c1e3f823e) and wake scheduler status (c0fe64a00 _) are host adapters.
+  'c6ad19bb9-C-Rlvdl1.js': {
+    m: { name: 'KeepAwakeSwitch', export: 't', features: ['context: ee,', 'controlOnly: _,', 'defaultMessage: "Keep awake", id: "LyhK7RvVf3"',
+      'name: "Sun", size: "md"', 'multiline: !0,', 'side: "bottom",'] },
   },
-  'shared-16-B0xHzPjj.js': {
-    gd: { name: 'SCHEDULED_TASK_COPY', features: ['var gd = { kind: "scheduled", ...md };'] },
+  // Held by routines-shared (re-exported): the card menu (shared-18 vW, old Az) and the scheduled-task copy (shared-16 Wp, old gd).
+  'shared-18-D3y8YMFN.js': {
+    vW: { name: 'ScheduledTaskMenu', export: 'Vt', features: ['{ defaultMessage: "More options for {label}", id: "rKQPgfPvWS" },', 'showPauseToggle:'] },
+  },
+  'shared-16-ByfgAyLr.js': {
+    Wp: { name: 'SCHEDULED_TASK_COPY', export: 'wn', features: ['kind: "scheduled",'] },
   },
   // The form's field parts (CDS Field / Label / Description / Error / TextArea over Base UI Field), which the host's
   // native field registry recognises (source-field-adapters.jsx registerNativeFieldComponents).
-  'shared-frame-BfjMqbuN.js': {
-    xO: { name: 'CdsField', features: ['"data-cds": "Field",', 'className: X("flex flex-col gap-xs font-sans", e),'] },
-    SO: { name: 'CdsFieldLabel', features: ['"text-body font-medium leading-none text-primary"'] },
-    CO: { name: 'CdsFieldDescription', features: ['"text-footnote font-normal leading-snug",'] },
-    wO: { name: 'CdsFieldError', features: ['"flex items-start gap-1 text-footnote font-normal leading-snug text-danger",', 'name: "WarningCircle",'] },
-    RT: { name: 'CdsTextArea', features: ['resize: n = "none",', 'autosize: r = !1,'] },
+  'shared-frame-6jtSkIit.js': {
+    Jj: { name: 'CdsField', export: 'Mi', features: ['"data-cds": "Field",', '"flex flex-col gap-xs font-sans"'] },
+    Yj: { name: 'CdsFieldLabel', export: 'ji', features: ['"text-body font-medium leading-none text-primary"'] },
+    Xj: { name: 'CdsFieldDescription', export: 'ki', features: ['"text-footnote font-normal leading-snug"'] },
+    Zj: { name: 'CdsFieldError', export: 'Ai', features: ['"flex items-start gap-1 text-footnote font-normal leading-snug text-danger"', 'name: "WarningCircle",'] },
+    nk: { name: 'CdsTextArea', export: 'da', features: ['resize:', 'autosize:'] },
   },
 };
 // Class strings the host page applies to its own list elements, pinned in their official owner (exact value, once).
+// RC-05: 3.6556.2 dropped ccd3f68fe's template grid (old Qc, "grid w-full grid-cols-1 gap-x-6 gap-y-md" + "md:grid-cols-2");
+// the starter templates lay out through cdbc75b4b Wr (columns === 2 ? two-column hit grid : one column).
 const literals = {
-  routineGridClass: { file: 'ccd3f68fe-DGWS8cEm.js', owner: 'ws', value: 'mb-3 grid auto-rows-fr grid-cols-1 gap-3 md:mb-6 md:grid-cols-2 md:gap-6',
-    role: 'the scheduled task grid (also Bl, the list route, with the starting opacity)' },
-  routineTemplateGridClass: { file: 'ccd3f68fe-DGWS8cEm.js', owner: 'Qc', value: 'grid w-full grid-cols-1 gap-x-6 gap-y-md', role: 'the starter template grid' },
-  routineTemplateColumnsClass: { file: 'ccd3f68fe-DGWS8cEm.js', owner: 'Qc', value: 'md:grid-cols-2', role: 'its two columns (columns === 2)' },
+  routineGridClass: { file: 'ccd3f68fe-C8Xiv_qI.js', owner: 'hc', value: 'mb-3 grid auto-rows-fr grid-cols-1 gap-3 md:mb-6 md:grid-cols-2 md:gap-6',
+    role: 'the scheduled task grid (also the list route, with the starting opacity)' },
+  routineTemplateGridClass: { file: 'cdbc75b4b-BCUW8bqT.js', owner: 'Wr', value: 'grid grid-cols-1 hit-grid-gap-y-md', role: 'the starter template grid (one column)' },
+  routineTemplateTwoColumnGridClass: { file: 'cdbc75b4b-BCUW8bqT.js', owner: 'Wr', value: 'grid grid-cols-1 hit-grid-gap-y-md md:grid-cols-2 md:hit-grid-gap-x-6', role: 'the starter template grid (columns === 2)' },
 };
-// vendor-frame re-exports React as `local=<namespace>.<member>`; the namespace is checked against its module.
-const reactNamespaces = { fe: 'react/jsx-runtime', o: 'react', Ln: 'react-dom' };
-const reactMembers = {
-  'react/jsx-runtime': new Set(['jsx', 'jsxs', 'Fragment']),
-  react: new Set(['default', 'useState', 'useRef', 'useCallback', 'useMemo', 'useEffect', 'useLayoutEffect', 'useContext', 'createContext', 'memo',
-    'forwardRef', 'useSyncExternalStore', 'useId', 'useReducer', 'use', 'Children', 'Fragment', 'cloneElement', 'isValidElement',
-    'useTransition', 'useDeferredValue', 'useEffectEvent', 'useInsertionEffect', 'useImperativeHandle', 'startTransition', 'createElement', 'Component', 'Suspense', 'lazy']),
-  'react-dom': new Set(['flushSync', 'createPortal']),
-};
+// vendor-frame's CommonJS interop namespaces for React itself map to namespace imports, never to a copy.
+const namespaceImports = { [`${official.vendorFrame}#c`]: 'react', [`${official.vendorFrame}#me`]: 'react/jsx-runtime', [`${official.vendorFrame}#Hn`]: 'react-dom' };
 // Pure vendor declarations this graph may copy (chunk#local -> features).
 const vendorCopies = {};
 // The UI library chunks view-tabs also copies from (Base UI, clsx, zustand): their declarations are copied like any
 // other. Service / data vendors (react-query, zod, GrowthBook, Datadog, react-intl, the router) are never copied.
 const copyableVendors = ['vendor-frame-', 'vendor-base-ui-', 'vendor-all-0-', 'vendor-icons-'];
-// vendor-frame's CommonJS interop bindings for React itself map to namespace imports, never to a copy.
-const namespaceImports = { 'vendor-frame-DfPJ1QmD.js#o': 'react', 'vendor-frame-DfPJ1QmD.js#fe': 'react/jsx-runtime', 'vendor-frame-DfPJ1QmD.js#Ln': 'react-dom' };
 // Host services of this graph: chunk -> original local -> { name, features, also, overridesShared }. Each one is
 // documented where it is implemented (src/source-routine-cowork-adapters.jsx).
 const adapters = {
-  'shared-0-ByI5P0CP.js': {
-    // The desktop bridge window["claude.web"].CoworkScheduledTasks. routines-shared keeps its own (undefined) copy for the
-    // cloud-migration checks it reads (shared-2 oO / zw); the form, detail and menu here read the host bridge.
-    Ux: { name: 'CoworkScheduledTasks', overridesShared: true, features: ['Ux = globalThis["claude.web"]?.CoworkScheduledTasks'] },
-    // The ConfigurationProvider value (the web app's boot configuration); throws outside the provider.
-    zJ: { name: 'useAppConfiguration', features: ['"useConfiguration must be called from within ConfigurationProvider"'] },
-    // The Datadog RUM error reporter (o11y): no telemetry here (D17).
-    LA: { name: 'reportError', features: ['var LA = L(RA, I.O11Y_INTERNALS);'] },
+  // c6ad19bb9 m's store: the desktop preference keepAwakeEnabled (shared-78 MC _b("keepAwakeEnabled", !1)) — o (n): the key
+  // is known and the desktop's keep-awake is supported (shared-78 Sw), a (r): its value, l (a): its writer.
+  'c1e3f823e-Dck_crfE.js': {
+    o: { name: 'useKeepAwakeAvailable', features: ['let e = i.useHasKey(),', 'return e && t;'] },
+    a: { name: 'useKeepAwakeEnabled', features: ['a = i.useEnabled'] },
+    l: { name: 'useKeepAwakeWriter', features: ['event_key: "claudeai.desktop.keep_awake_toggled",'] },
+    // c (export t): the switch's tooltip message, a react-intl defineMessage (vendor-intl nn, which working-line holds and
+    // this graph cannot link): the host keeps the same descriptor (pinned by its id and text).
+    c: { name: 'keepAwakeTooltipMessage', features: ['"When enabled, Claude will prevent your computer from going to sleep."', 'id: "pkPdf3LvZO",'] },
   },
-  'shared-1-CAAiD7E3.js': {
-    // The surface model catalog. routines-shared answers it with { models, hasModel, servesModel, cdsCatalog } for the
-    // stale-model check; the form reads the whole official catalog object (selectableModels, nameFor, entryFor,
-    // requiresAutoMode, isNonSelectable, disabledReasonFor …), so this graph answers it with that shape over the host's
-    // model list.
-    FP: { name: 'useCoworkModelCatalog', features: ['extraLongContextIds: t.extraLongContextIds,', 'setStoredModel: a.setModel,'] },
+  // The wake scheduler's status (index c0fe64a00 n, the desktop's WakeScheduler bridge); m only destructures it.
+  'c0fe64a00-CJQlkZcs.js': {
+    _: { name: 'useWakeScheduler', features: ['"wakeSchedulerEnabled"', 'handleOpenLoginItems:'] },
   },
-  'shared-52-DGviI8xb.js': {
-    bP: { name: 'useServedDeploymentConfig', features: ['let { asks: e, query: t } = rP(),', 'n = e ? t.data?.served : void 0;'] },
+  'shared-0-DDOOdL6P.js': {
+    bC: { name: 'CoworkScheduledTasks', overridesShared: true, features: ['globalThis["claude.web"]?.CoworkScheduledTasks'] },
+    B: { name: 'trackEvent', features: ['var B = I(Nv, F.O11Y_INTERNALS);'] },
+    bN: { name: 'reportError', features: ['var bN = I(xN, F.O11Y_INTERNALS);'] },
+    AQ: { name: 'useAppConfiguration', features: ['"useConfiguration must be called from within ConfigurationProvider"'] },
   },
-  'shared-5-kdJVRUsT.js': {
-    EM: { name: 'useSkillChipCatalog', features: ['{ skills: t } = Cn(),', 'source: "cowork",', 'source: "plugin",'] },
+  'shared-1-BJhqMmkf.js': {
+    ER: { name: 'useCoworkModelCatalog', features: ['extraLongContextIds:', 'setStoredModel:'] },
   },
-  'shared-13-C8pTuOID.js': {
-    N: { name: 'SkillChip', features: ['function N({ id: e, info: a }) {', 'return a.unresolved'] },
+  'shared-52-uHFNjl7C.js': {
+    SO: { name: 'useServedDeploymentConfig', features: ['{ asks: e, query: t } = GD(),', 'n = e ? t.data?.served : void 0,'] },
   },
-  'shared-78-D6VXYXaQ.js': {
-    // A server-assigned gate (the configuration's serverGateNames, else the gate store) and GrowthBook: none here.
-    WK: { name: 'useServerGate', features: ['let t = GK(e);', 'return O(e) && t;'], also: { JK: ['let { serverGateNames: t } = pn(),'] } },
-    pz: { name: 'useDeviceRegistryQuery', features: ['cr(`/api/organizations/${c}/cowork/devices`, {', 'refetchInterval: e ? t : !1,'] },
-    V: { name: 'useClaudeAiFeature', features: ['return Wp[e].useAvailable();'],
-      also: { B: ['return n ? (r.isAvailable ? yp : r) : bp;'], bp: ['status: "blocked_by_platform",', 'isAvailable: !1,', 'isPolicyBlocked: !0,', 'isUpsellEligible: !1,'] } },
+  'shared-13-DBkfWBVo.js': {
+    P: { name: 'SkillChip', features: ['{ id: i, info: o } = e,', 'if (o.unresolved) {'] },
   },
-  'c3a5facd2-C8tl80Ln.js': {
-    F: { name: 'SessionHostHoldAction', features: ['{ openConnectorLink: h, connectorLinkModal: g } = k(void 0),', '"session-host-connection-hold-pending"'] },
-    I: { name: 'SessionHostHoldNote', features: ['"session host connection hold"', '"session-host-connection-hold-none"'] },
+  'shared-182-BI1KJccu.js': {
+    Jb: { name: 'useComposerDraftState', features: ['return Cb(e, t);'], also: { Cb: ['r = J1($, 0, n) ? K1($, 0, n, n || Sb()) : $[1];', 'return Fo(r, ni(e));'] } },
+    jL: { name: 'useDismissedBanners', features: ['r.settings?.dismissed_claudeai_banners ?? [],', 'dismissMany: a,', 'isDismissed: i,'] },
   },
-  'shared-8-B5lJ8U5C.js': {
-    _D: { name: 'useProjectsReady', features: ['t = _p({ enabled: !e, untilSettled: !0 });', 'return e || t;'] },
-    rB: { name: 'FolderPicker', features: ['controlledSelection: r,', 'browsePrompt: d,', 'remoteWorkspaceTraffic: L = "cowork",', 'handleBrowse: le,'] },
+  'shared-5-Bg6ZMqvt.js': {
+    Dz: { name: 'useSkillChipCatalog', features: ['source: "cowork",'] },
   },
-  'shared-4-CJsHhp5n.js': {
-    xh: { name: 'useRemoteToolGrants', features: ['"[useCoworkScheduledTaskRemoteGrants] fetch failed"', 'removeGrant: j,', 'stillAllowed: A,', '? "unavailable"'] },
+  'shared-78-D5Fw2h0a.js': {
+    // The registry's useAvailable (B) answers Om (blocked_by_platform) when the client-side gate is off, else the account
+    // feature (shared-0 vZ: blocked_by_platform for dramatic_shrimp with no account data); both pinned for the host value.
+    V: { name: 'useClaudeAiFeature', features: ['.useAvailable()'],
+      also: { B: ['return n ? (r.isAvailable ? Dm : r) : Om;'], Om: ['status: "blocked_by_platform",', 'isAvailable: !1,', 'isPolicyBlocked: !0,', 'isUpsellEligible: !1'] } },
+    kS: { name: 'useOrgComputeSettings', features: ['c = !!i?.claude_code_disable_anthropic_compute,', 'disableAnthropicCompute: c,', 'isColdError: r && n === void 0,'] },
+    Zb: { name: 'useDeviceRegistryQuery', features: ['/cowork/devices', 'refetchIntervalInBackground:'] },
   },
-  'c0efc2620-D6kh0Iid.js': {
-    _e: { name: 'useRoutineDraftGenerator', features: ['/dust/generate_routine_draft`,', 'generateRoutineDraft: u('] },
+  'c3a5facd2-CzkMZ0h5.js': {
+    P: { name: 'SessionHostHoldAction', features: ['"session-host-connection-hold-pending"'] },
+    F: { name: 'SessionHostHoldNote', features: ['"session host connection hold"', '"session-host-connection-hold-none"'] },
   },
-  'shared-18-D4XxL6Tg.js': {
-    eB: { name: 'useTaskFileModelUnavailable', features: ['queryKey: ["cowork-scheduled-task-frontmatter-model", e.id],', 'Nt?.getScheduledTaskFileContent?.(e.id)'] },
-    Uz: { name: 'useCodeRoutineNames', features: ['{ data: l, isLoading: u } = wn({ enabled: s, excludeTags: FS });', 'if (!s) return Hz;'] },
-    sC: { name: 'useUnifiedRoutineForm', features: ['let e = oC(),', 'return e === !0 && t && n === !0;'] },
-    dC: { name: 'useCodeRoutineCreateOffered', features: ['n = WS() === !0;', 'return e && t && !n && !!bt?.createScheduledTask;'] },
-    pC: { name: 'useCloudEnvironmentsMissing', features: ['{ data: a, isError: o, isPaused: s } = BS({ enabled: e && i });', 'if (fC(t?.environments ?? [], a?.pools?.length ?? 0)) return !0;'] },
-    o_: { name: 'unusedConfigSchema', features: ['autoDownloadInBackground: o().default(a_.autoDownloadInBackground),', 'showScheduledTaskExactTimeOption: o().optional(),'] },
-    i_: { name: 'unusedConfigSchema', features: ['var i_ = e();'] },
+  'shared-8-Db1QN4mf.js': {
+    bM: { name: 'useProjectsReady', features: ['untilSettled: !0'] },
+    _J: { name: 'FolderPicker', features: ['controlledSelection:', 'browsePrompt:', 'remoteWorkspaceTraffic:', 'handleBrowse:'] },
   },
-  'shared-156-Bikz018e.js': {
-    Pb: { name: 'useConnectorLookup', features: ['return X(Nb);'], also: { jb: ['remoteServers: e.remoteServers,', 'internalToolsOnlyNames: e.internalToolsOnlyNames,'] } },
+  'shared-4-DUB1Oi0O.js': {
+    __: { name: 'useRemoteToolGrants', features: ['"[useCoworkScheduledTaskRemoteGrants] fetch failed"'] },
   },
-  'shared-26-CgdP_nTj.js': {
-    ob: { name: 'toolLabelInfo', features: ['return Ut(e, t, "forLabel");'] },
-    AT: { name: 'useUnsupervisedPermissionModes', features: ['e.has("auto") && n && i && r.add("auto"),', 'e.has("bypassPermissions") && t && r.add("bypassPermissions"),'],
-      also: { kT: ['L("cowork_auto_permission_mode")', 'L("cowork_bypass_permissions_mode");'] } },
+  // 3.6556.2: c0efc2620 `_` (old _e's caller) is now the whole draft assistant (setName / onNameBlur / setInstructions /
+  // stop / reset / isDrafting …, GrowthBook __gb__2682097403); it is copied, and its org API hook `p` is the service.
+  'c0efc2620-BbVUZz1E.js': {
+    p: { name: 'useRoutineDraftGenerator', features: ['/dust/generate_routine_draft', 'generateRoutineDraft:'] },
   },
-  'shared-25-DP8p7i1Z.js': {
-    // A GrowthBook feature's evaluation (Ls over the GrowthBook context; routines-shared's As throws without a provider).
-    Rs: { name: 'useGrowthBookFeature', features: ['return Ls(ks(), e);'] },
-    bc: { name: 'useDynamicConfig', features: ['() => Ws(r?.shared, i, a, n, t, { type: "dynamic_config", name: e }),'] },
+  'shared-18-D3y8YMFN.js': {
+    YW: { name: 'useTaskFileModelUnavailable', features: ['"cowork-scheduled-task-frontmatter-model"'] },
+    AT: { name: 'useUnifiedRoutineForm', features: ['let e = kT(),', 'return e === !0 && t && n === !0;'] },
+    LT: { name: 'useCodeRoutineCreateOffered', features: ['return e && t && !n && !!sn?.createScheduledTask;'] },
+    zT: { name: 'useCloudEnvironmentsMissing', features: ['if (RT(t?.environments ?? [], o?.pools?.length ?? 0)) return !0;'] },
+    RW: { name: 'useCodeRoutineNames', features: ['excludeTags: aT', 'p = LW;'] },
+    rv: { name: 'unusedConfigSchema', features: ['var rv = e();'] },
+    av: { name: 'unusedConfigSchema', features: ['autoDownloadInBackground: o().default(iv.autoDownloadInBackground),'] },
   },
-  'cae55dd08-oEwAOna-.js': {
+  'shared-156-BLTosN8U.js': {
+    iw: { name: 'useConnectorLookup', features: ['return X(rw);'],
+      also: { tw: ['remoteServers: e.remoteServers,', 'remoteLiveRunToolTest: e.remoteLiveRunToolTest,', 'mcpUrlKeyNamesOn: e.mcpUrlKeyNamesOn,', 'internalToolsOnlyNames: e.internalToolsOnlyNames,'] } },
+  },
+  'shared-26-CGuBxVt9.js': {
+    Ux: { name: 'toolLabelInfo', features: ['"forLabel"'] },
+    vD: { name: 'useUnsupervisedPermissionModes', features: ['e.has("auto") && n && i && r.add("auto"),', 'e.has("bypassPermissions") && t && r.add("bypassPermissions"),'],
+      also: { _D: ['W("cowork_auto_permission_mode")', 'W("cowork_bypass_permissions_mode")'] } },
+  },
+  'shared-25-DOWZRSlq.js': {
+    Rs: { name: 'useDynamicConfig', features: ['type: "dynamic_config"'] },
+    // A GrowthBook feature's evaluation (useFeature; old Rs). c2d1766e9's device poll interval reads it through ds; the
+    // copied Qo asks routines-shared Ho, which throws without a GrowthBookProvider.
+    $o: { name: 'useGrowthBookFeature', features: ['return Qo(Vo(), e);'], also: { Qo: ['n !== null && n.hashedKeys.has(t) ? n : null'] } },
+  },
+  'cae55dd08-CqJTQ965.js': {
     h: { name: 'unavailableCodeRoutineChunk', features: ['id: "routine_code_state_engine",'] },
     v: { name: 'unavailableCodeRoutineChunk', features: ['id: "code_local_create_engine",'] },
     l: { name: 'unavailableCodeRoutineChunk', features: ['id: "code_routine_create_form",'] },
     f: { name: 'unavailableCodeRoutineChunk', features: ['id: "code_local_routine_create_form",'] },
   },
-  'shared-182-eT1kXtya.js': {
-    $P: { name: 'useDismissedBanners', features: ['dismissed_claudeai_banners ?? [],', 'dismissMany: a,', 'isDismissed: i,'] },
-    Pk: { name: 'useComposerDraftState', features: ['return hk(e, t);'], also: { hk: ['let n = x(fk) || mk();'] } },
+  'shared-7-DBAgAi5H.js': {
+    Hk: { name: 'ConnectorServerIcon', features: ['"connector-icon-globe-fallback"'] },
+    Mv: { name: 'useSubscriptionPastDue', features: ['s === "stripe_subscription_contracted" ||', 'return d ? f && h : a?.status === "past_due" && !c;'] },
+    hv: { name: 'useAppNavigate', features: ['(kf(n) || e.push(n), t && ws());'] },
+    hk: { name: 'useThisDeviceName', features: ['registryRowId'] },
+    lw: { name: 'EffortControl', features: ['import("./c8e04f916-39YFkTtR.js")', 'e?.EffortControl ??'] },
+    YF: { name: 'useRefusalFallback', features: ['"claudeai.cowork.refusal_fallback.edit_retry_clicked"'] },
   },
-  'shared-7-B8UIMGDr.js': {
-    RT: { name: 'ConnectorServerIcon', features: ['fallbackToGlobe: i,', '"data-testid": "connector-icon-globe-fallback",'] },
-    sx: { name: 'EffortControl', features: ['import("./c8e04f916-__6cSvtd.js").then(', 'default: e?.EffortControl ?? cx'] },
-    lg: { name: 'useAppNavigate', features: ['(vn(n) || e.push(n), t && Ua());'] },
-    uT: { name: 'useThisDeviceName', features: ['return lT(e ? t?.registryRowId : void 0)?.display_name || t?.displayName;'] },
-    zk: { name: 'useRefusalFallback', features: ['n = Rl((e) => e.sessionContext?.rewindSession),', '"claudeai.cowork.refusal_fallback.edit_retry_clicked"'] },
-    Tg: { name: 'useSubscriptionPastDue', features: ['o === "stripe_subscription_contracted" ||', '{ isRavenPastDue: f } = rm({ enabled: t && d, recheckWhilePastDue: r });'] },
-  },
-  'c97b955f1-BlGH1qrk.js': {
-    _i: { name: 'SavedProjectCard', features: ['"data-testid": "routine-saved-project-link",', 'webBehavior: "new-tab",'] },
-    hi: { name: 'RemoteApprovalsList', features: ['function hi({ approvals: e, bindings: t, revoked: n, onRevoke: r }) {'] },
-    fi: { name: 'RemoteApprovalsEmpty', features: ['function fi({ approvalsBypassed: e }) {'] },
+  'c97b955f1-Dd4YYfBl.js': {
+    Ri: { name: 'useFormCloudEnvironmentsMissing', features: ['e && Li(t?.environments ?? [], n ? (a?.pools?.length ?? 0) : 0),'] },
+    bi: { name: 'RemoteApprovalsList', features: ['{ approvals: t, bindings: n, revoked: a, onRevoke: o } = e,'] },
+    hi: { name: 'RemoteApprovalsEmpty', features: ['{ approvalsBypassed: t } = e,'] },
+    Ti: { name: 'SavedProjectCard', features: ['"routine-saved-project-link"', 'webBehavior: "new-tab",'] },
   },
 };
-// Raw minified text the host page and its adapters follow (each must occur exactly once).
+// Raw minified text the host page and its adapters follow (each must occur exactly once; `{ loose }` through looseFeature).
 const rawCallSites = [
-  { source: 'ccd3f68fe-DGWS8cEm.js', role: 'The official list renders the cards in this grid, asks the form for the Code routine name collision, and marks a run "Only this computer" by its ranOn',
-    features: ['className:y("mb-3 grid auto-rows-fr grid-cols-1 gap-3 md:mb-6 md:grid-cols-2 md:gap-6",B&&"opacity-50 transition-opacity")', 'collideWithCodeRoutines:!0', 'e.ranOn==="this_computer"&&'] },
-  { source: 'c97b955f1-BlGH1qrk.js', role: 'The form offers local tasks when the CoworkScheduledTasks bridge can create them, saves through the page bridge (dh), and requires a description for a local task',
-    features: ['qs=!!le?.createScheduledTask&&!w?.localTasksOff', 'Np=Rl&&W.trim().length===0', 'var Ki=e({UpsertScheduledTaskModal:()=>Ca})'] },
+  { source: 'ccd3f68fe-C8Xiv_qI.js', role: 'The official list renders the cards in this grid, asks the form for the Code routine name collision, and marks a run "Only this computer" by its ranOn',
+    features: ['o("div",{className:`w-full ${eo(u)}`,children:[a,I.map((e,t)=>i(su,{template:e,', 'collideWithCodeRoutines:!0', 't.ranOn==="this_computer"&&', { loose: 'className:n("mb-3 grid auto-rows-fr grid-cols-1 gap-3 md:mb-6 md:grid-cols-2 md:gap-6",q&&"opacity-50 transition-opacity")' }] },
+  { source: 'c97b955f1-Dd4YYfBl.js', role: 'The form offers local tasks when the CoworkScheduledTasks bridge can create them and requires a description for a local task',
+    features: [{ loose: 'qs=!!we?.createScheduledTask&&!He?.localTasksOff' }, { loose: '$p=Kl&&yu.trim().length===0' }, { loose: 'var aa=e({UpsertScheduledTaskModal:()=>La})' }] },
 ];
 const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'TypeError', 'String', 'Boolean', 'Set', 'Map', 'WeakMap', 'WeakSet', 'JSON',
   'Symbol', 'Promise', 'RegExp', 'Date', 'Intl', 'undefined', 'Infinity', 'NaN', 'globalThis', 'window', 'document', 'navigator', 'console',
@@ -217,7 +226,9 @@ const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'T
   'RangeError', 'HTMLButtonElement', 'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLSelectElement', 'SVGElement', 'Event', 'FocusEvent', 'KeyboardEvent',
   'MouseEvent', 'PointerEvent', 'NodeFilter', 'CSS', 'MessagePort', 'ClipboardItem', 'Blob', 'Float64Array', 'crypto', 'indexedDB', 'arguments',
   // react-aria (the calendar, cff2bf6cb) reads these behind typeof guards to detect a test environment.
-  'IS_REACT_ACT_ENVIRONMENT', 'jest']);
+  'IS_REACT_ACT_ENVIRONMENT', 'jest',
+  // react-aria's id registry (cff2bf6cb `kr`) is created behind `typeof FinalizationRegistry < "u"`.
+  'FinalizationRegistry']);
 
 async function readSource(name, cache) {
   if (cache.has(name)) return cache.get(name);
@@ -247,7 +258,39 @@ async function readSource(name, cache) {
       }
     } else if (node.type === 'ClassDeclaration') top.set(node.id.name, { kind: 'class', node });
   }
-  const record = { name, bytes, code, ast, exported, top, formatted: new Map(), deps: new Map() };
+  // Top-level statements that initialise a binding after its declaration, run when the chunk loads: the bundler's
+  // `var tr = {}; tr = { "ar-AE": xn, … }` (react-aria's locale dictionaries in cff2bf6cb), a static member
+  // (`Co.Range = xo`, `ba.displayName = …`), a mutation (`oi.push(…)`) or a feature probe (`try { Cc = … } catch {}`).
+  // Each belongs to the declared bindings it writes outside any function (an assignment to a top-level name or to a
+  // member of one, or a member call on one) and is emitted with them, at its original position. A statement that
+  // writes no declared binding (a listener, a bare probe) belongs to nothing, as in extract-session-rail.mjs.
+  const initializers = new Map();
+  for (const node of ast.program.body) {
+    if (node.type !== 'ExpressionStatement' && node.type !== 'TryStatement') continue;
+    const text = code.slice(node.start, node.end);
+    const parsed = babel.babelParse(text, `${name}@${node.start}`, true);
+    const targets = new Set(), reads = new Set();
+    const declared = id => id?.type === 'Identifier' && top.has(id.name) && top.get(id.name).kind !== 'import';
+    const root = expr => { let e = expr; while (e?.type === 'MemberExpression') e = e.object; return e; };
+    babel.traverse(parsed, {
+      Program(p) { for (const g of Object.keys(p.scope.globals)) if (top.has(g)) reads.add(g); },
+      AssignmentExpression(p) {
+        const id = root(p.node.left);
+        if (!p.getFunctionParent() && declared(id) && !p.scope.hasBinding(id.name)) targets.add(id.name);
+      },
+      CallExpression(p) {
+        if (p.node.callee.type !== 'MemberExpression') return;
+        const id = root(p.node.callee);
+        if (!p.getFunctionParent() && declared(id) && !p.scope.hasBinding(id.name)) targets.add(id.name);
+      },
+    });
+    const entry = { kind: 'statement', node, id: `#init@${node.start}`, deps: [...reads], targets: [...targets] };
+    for (const target of targets) {
+      if (!initializers.has(target)) initializers.set(target, []);
+      initializers.get(target).push(entry);
+    }
+  }
+  const record = { name, bytes, code, ast, exported, top, initializers, formatted: new Map(), deps: new Map() };
   cache.set(name, record);
   return record;
 }
@@ -269,9 +312,13 @@ function declarationDeps(src, name) {
   return deps;
 }
 const normalised = text => text.replace(/\s+/g, ' ');
+// R2/E5: a feature is the declaration's text (whitespace-insensitive) or, failing that, its looseFeature() pattern.
+const looseCache = new Map();
+const loose = f => { if (!looseCache.has(f)) looseCache.set(f, official.looseFeature(f)); return looseCache.get(f); };
+const featureHit = (text, flat, f) => text.includes(f) || flat.includes(normalised(f)) || loose(f).test(text);
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
+  const missing = features.filter(f => !featureHit(text, flat, f));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
 async function resolveImport(entry, cache, via) {
@@ -288,7 +335,7 @@ async function resolveImport(entry, cache, via) {
   throw Error(`${via}: re-export chain too long`);
 }
 async function viewTabsGraph() {
-  const manifest = JSON.parse(await fs.readFile(path.join(viewTabs, 'manifest.json'), 'utf8'));
+  const manifest = await viewTabsManifestFor(referenceVersion);
   if (manifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   const published = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) published.set(`${entry.file}#${entry.local}`, name);
@@ -301,7 +348,7 @@ async function viewTabsGraph() {
 }
 // routines-shared: the bindings it holds (imported from its chunk modules) and the host adapters it answers with.
 async function routinesSharedGraph() {
-  const manifest = JSON.parse(await fs.readFile(path.join(routinesShared, 'manifest.json'), 'utf8'));
+  const manifest = await routinesSharedManifestFor(referenceVersion);
   if (manifest.referenceVersion !== referenceVersion) throw Error(`routines-shared is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   const held = new Map();
   for (const mod of manifest.modules) for (const b of mod.bindings) held.set(`${mod.source}#${b.name}`, { target: mod.target, sha256: b.sha256 });
@@ -309,6 +356,8 @@ async function routinesSharedGraph() {
   return { held, adapters: shared, contexts: new Set(manifest.contexts ?? []) };
 }
 const moduleName = file => file.replace(/\.js$/, '.mjs');
+// The vendor-frame export alias of `local` that official-3.6556.2.mjs knows as a React export, or undefined.
+const reactAlias = (src, local) => [...src.exported].find(([alias, l]) => l === local && Object.hasOwn(official.reactAliases, alias))?.[0];
 
 export async function extractCoworkScheduled({ check = false, survey = false } = {}) {
   const cache = new Map();
@@ -316,6 +365,8 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
   const rs = await routinesSharedGraph();
   const resolved = new Map();
   const chunks = new Map();
+  // chunk -> Map(#init@start -> initializer statement entry) of the selected bindings (readSource `initializers`).
+  const statements = new Map();
   const edges = new Map();
   const used = { adapters: new Set(), sharedAdapters: new Set(), react: new Set(), viewTabs: new Set(), routinesShared: new Set() };
   const classify = async key => {
@@ -344,12 +395,11 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
       result = { kind: 'shared-adapter', name: rs.adapters.get(key) };
     } else if (namespaceImports[key]) {
       result = { kind: 'react', module: namespaceImports[key], name: '*' };
-    } else if (file.startsWith('vendor-frame-') && !published.has(key) && /^[\w$]+=(?:o|fe|Ln)\.[\w$]+$/.test(entry?.kind === 'var' ? declarationText(src, entry) : '')) {
-      const text = entry && entry.kind === 'var' ? declarationText(src, entry) : '';
-      const m = /^([\w$]+)=([\w$]+)\.([\w$]+)$/.exec(text);
-      const module = m && reactNamespaces[m[2]];
-      if (module && reactMembers[module].has(m[3])) result = { kind: 'react', module, name: m[3] };
-      else throw Error(`vendor-frame ${local} (${text.slice(0, 60)}) is not a known React export`);
+    } else if (file === official.vendorFrame && !published.has(key) && reactAlias(src, local)) {
+      // R3: vendor-frame re-exports React as a top-level `local=<namespace>.<member>` (official-3.6556.2.mjs reactAliases,
+      // proved on the chunk by assertVendorAlias; `Oo` is react/compiler-runtime's c).
+      const { module, member } = official.assertVendorAlias(src.code, reactAlias(src, local));
+      result = { kind: 'react', module, name: member };
     } else if (published.has(key)) {
       result = { kind: 'view-tabs', name: published.get(key), file };
     } else if (held.has(key)) {
@@ -398,12 +448,26 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
       reads.add(depKey);
       await visit(depKey, key);
     }
+    // The statements that initialise this binding come with it, and so does everything they read.
+    for (const init of src.initializers.get(local) ?? []) {
+      if (!statements.has(file)) statements.set(file, new Map());
+      if (statements.get(file).has(init.id)) continue;
+      statements.get(file).set(init.id, init);
+      for (const dep of init.deps) {
+        const entry = src.top.get(dep);
+        const target = entry.kind === 'import' ? await resolveImport(entry, cache, `${key} ${init.id}`) : { file, local: dep };
+        const depKey = `${target.file}#${target.local}`;
+        reads.add(depKey);
+        await visit(depKey, key);
+      }
+    }
   };
   for (const [file, names] of Object.entries(roots)) {
     const src = await readSource(file, cache);
     for (const [local, spec] of Object.entries(names)) {
       const entry = src.top.get(local);
       if (!entry || entry.kind === 'import') throw Error(`root ${file}#${local} is not a declaration`);
+      if (spec.export !== undefined && src.exported.get(spec.export) !== local) throw Error(`root ${file}#${local} (${spec.name}) is not exported as ${spec.export}`);
       assertFeatures(`root ${file}#${local} (${spec.name})`, await featureText(src, entry), spec.features);
       await visit(`${file}#${local}`);
     }
@@ -468,9 +532,13 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
   for (const [file, locals] of [...chunks].sort((a, b) => a[0].localeCompare(b[0]))) {
     const src = await readSource(file, cache);
     const order = [...locals].map(l => [l, src.top.get(l)]).sort((a, b) => a[1].node.start - b[1].node.start);
+    const inits = [...(statements.get(file)?.values() ?? [])].sort((a, b) => a.node.start - b.node.start);
+    // A statement writes only bindings this module declares (never one it imports from another graph).
+    for (const init of inits) for (const t of init.targets)
+      if (!locals.has(t)) throw Error(`${file} ${init.id} writes ${t}, which this graph does not copy (${resolved.get(`${file}#${t}`)?.kind ?? 'unselected'})`);
     const imports = new Map();
-    for (const [local] of order) {
-      for (const dep of declarationDeps(src, local)) {
+    for (const [local, deps] of [...order.map(([local]) => [local, declarationDeps(src, local)]), ...inits.map(init => [init.id, init.deps])]) {
+      for (const dep of deps) {
         if (locals.has(dep) && src.top.get(dep).kind !== 'import') continue;
         const entry = src.top.get(dep);
         const target = entry.kind === 'import' ? await resolveImport(entry, cache, `${file}#${local}`) : { file, local: dep };
@@ -514,7 +582,9 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
     const importText = [...groups].sort((a, b) => a[0].localeCompare(b[0]))
       .map(([from, names]) => `import { ${names.sort().join(', ')} } from ${JSON.stringify(from)};`).concat(namespaceLines.sort()).join('\n');
     const emittedNodes = new Set();
-    const blocks = order.filter(([, entry]) => !emittedNodes.has(entry.node) && emittedNodes.add(entry.node)).map(([, entry]) => emittedText(src, entry));
+    const statementText = init => { const text = declarationText(src, init); return init.node.type === 'ExpressionStatement' && !text.endsWith(';') ? `${text};` : text; };
+    const blocks = [...order.filter(([, entry]) => !emittedNodes.has(entry.node) && emittedNodes.add(entry.node)).map(([, entry]) => [entry.node.start, emittedText(src, entry)]),
+      ...inits.map(init => [init.node.start, statementText(init)])].sort((a, b) => a[0] - b[0]).map(([, text]) => text);
     const exportText = `export { ${order.map(([l]) => l).join(', ')} };`;
     const header = `// Original Claude Desktop ${referenceVersion} bindings from ${file}; generated by extract-cowork-scheduled.mjs.\n// Edit the extractor or src/source-routine-cowork-adapters.jsx, never this file.\n`;
     const target = moduleName(file);
@@ -529,6 +599,7 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
       target, source: file, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion,
       bindings: order.map(([name, entry]) => ({ name, sha256: sha(declarationText(src, entry)) })),
       imports: [...imports].map(([local, e]) => ({ local, from: e.from, name: e.name, kind: e.kind, via: e.via })),
+      ...(inits.length && { statements: inits.map(init => ({ start: init.node.start, targets: init.targets, sha256: sha(declarationText(src, init)) })) }),
     });
   }
   if (unboundGlobals.length) throw Error(`unbound globals:\n${unboundGlobals.join('\n')}`);
@@ -543,15 +614,18 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
   for (const name of moduleGraph.keys()) walk(name, []);
   const indexLines = [];
   for (const [file, names] of Object.entries(roots)) {
-    // A root routines-shared holds (the card menu, the scheduled copy) is re-exported from there under its semantic name.
+    // A root routines-shared holds (the card menu, the scheduled copy) is re-exported from there under its semantic name;
+    // so is a root view-tabs publishes (D1, w11-pictogram-d1: the CDS Pictogram KG and TextArea nk), under this graph's
+    // name for it, so the index keeps its names (R4) while the binding stays one copy.
     const groups = new Map();
     for (const [local, spec] of Object.entries(names)) {
       const cls = resolved.get(`${file}#${local}`);
-      const from = cls?.kind === 'generated' ? `./${moduleName(file)}` : cls?.kind === 'routines-shared' ? `../routines-shared/${cls.target}` : null;
+      const from = cls?.kind === 'generated' ? `./${moduleName(file)}` : cls?.kind === 'routines-shared' ? `../routines-shared/${cls.target}`
+        : cls?.kind === 'view-tabs' ? `../view-tabs/${cls.file}` : null;
       if (!from) throw Error(`root ${file}#${local} (${spec.name}) is answered by ${cls?.kind}; import it from there instead`);
-      manifest.publicNames[spec.name] = { file, local, ...(cls.kind === 'routines-shared' && { routinesShared: cls.target }) };
+      manifest.publicNames[spec.name] = { file, local, ...(cls.kind === 'routines-shared' && { routinesShared: cls.target }), ...(cls.kind === 'view-tabs' && { viewTabs: cls.name }) };
       if (!groups.has(from)) groups.set(from, []);
-      groups.get(from).push(`${local} as ${spec.name}`);
+      groups.get(from).push(`${cls.kind === 'view-tabs' ? cls.name : local} as ${spec.name}`);
     }
     for (const [from, specs] of groups) indexLines.push(`export { ${specs.join(', ')} } from "${from}";`);
   }
@@ -577,7 +651,7 @@ export async function extractCoworkScheduled({ check = false, survey = false } =
     const bytes = (await readSource(site.source, cache)).bytes;
     const text = bytes.toString();
     for (const feature of site.features) {
-      const count = text.split(feature).length - 1;
+      const count = typeof feature === 'string' ? text.split(feature).length - 1 : [...text.matchAll(official.looseFeature(feature.loose, { flags: 'g' }))].length;
       if (count !== 1) throw Error(`call site ${site.source} (raw): ${JSON.stringify(feature)} occurs ${count} times, expected 1`);
     }
     manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, features: site.features });

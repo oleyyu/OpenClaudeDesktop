@@ -45,6 +45,7 @@ import { SourceArtifacts, SourceDeliverables, itemDeliverables } from "./source-
 import { chapterOf } from "./agent-tool-titles.mjs";
 import { SourceClaudeChapter } from "./source-chapters.jsx";
 import { localizeBridgeNote } from "./bridge-text-model.mjs";
+import { ChatSurfaceAnswer } from "./source-chat-markdown.jsx"; // w13-chatui-markdown-code
 import { approvalIdentity, isPlanReviewRequest } from "./approval-draft-model.mjs";
 import { SourcePlanApprovalCard, planTargetOf, planAcceptOptions, PlanMoreOptions } from "./source-plan-card.jsx";
 import { useCardHotkeys } from './use-card-hotkeys.js';
@@ -53,7 +54,6 @@ import { userMessageContent, shownUserItem } from "./composer-attachments-model.
 import { demonstrationOf } from "./watch-record-model.mjs";
 import { SourceWatchRecordMessage } from "./source-watch-record.jsx";
 import { WebLinkContext } from "./web-link-context.mjs";
-import { moveToIndex, useTabDragReorder } from "./use-tab-drag-reorder.mjs";
 import React, {
   useCallback,
   useEffect,
@@ -78,16 +78,15 @@ import { SourceResponseImage } from './source-response-image.jsx';
 import { responseImageTarget } from './response-image-model.mjs';
 import { ResponseTaskInput, ResponseTaskItem } from './source-response-task.jsx';
 import { Icon } from "./icons";
-import { SourceTooltip, SourceTooltipGroup } from "./source-tooltip.jsx";
+import { SourceTooltip } from "./source-tooltip.jsx";
 import { SourceUserFileCard } from "./source-user-file-card.jsx"; // R2-topbar TT-07
 import { SourceMenu } from "./source-menu.jsx";
-import { FILE_TAB_LABELS, fileViewerMenuItems, fileTabsToRight, insertFileTab, moveFileTab, tabDetail, tabMenuItems, tabRelativePath, tabTooltip } from "./file-tab-menu-model.mjs";
+import { fileViewerMenuItems, fileTabsToRight, insertFileTab, reorderFileTab, tabRelativePath } from "./file-tab-menu-model.mjs";
+import { SourceFileTabs } from "./source-file-tabs.jsx"; // W12c files-tabbar
 import { fileContextMenu, multiFileContextMenu, fileCopyChoices, fileLinkLabel } from "./file-context-menu-model.mjs";
 import { CurrentSessionIdContext, useFileGone, inMultiSelection, openWhenChecked } from "./file-gone-menu.mjs"; // R3-files FT-05
-import { stableIds, tabOverflowLayout } from "./file-tab-overflow-model.mjs";
 import { SourceSessionFileViewer, FILE_VIEWER_LABELS } from "./source-file-viewer.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
-import { menuTriggerProps } from "./source-menu.jsx";
 import { SourceTaskEvent } from "./source-task-event.jsx";
 import { workflowTaskEvent } from "./task-event-model.mjs";
 import { useSourcePointerResize } from "./use-pointer-resize.js";
@@ -120,7 +119,7 @@ import { singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, treeInde
 // its glyphs (CDS Icon, the c280f9bbb file-type icon), the multi-selection Escape (c856385e2 nt) and the worktree start folder.
 import { FILE_TREE_CONTAINER_CLASS, FILE_TREE_GUIDE_LAYER_CLASS, fileTreeRowClassName, fileTreeRowPrimary, fileTreeIconClassName,
   fileTreeNameClassName, fileTreeIconSize, applyKeptGuides } from "./file-tree-row-model.mjs";
-import { CdsIcon } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+import { CdsIcon } from "./generated/view-tabs/index.js";
 import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
 import { useMultiSelectionEscape } from "./generated/files-changes/file-selection-escape.mjs";
 import { FilesQueryScope, useTreeStartFolder, startRevealNonce } from "./file-tree-start-folder.jsx";
@@ -138,6 +137,9 @@ import { StatusStep, useTurnStatusRows } from "./source-transcript-rows.jsx";
 import { runningCandidate } from "./transcript-rows-model.mjs";
 import { SourceToolRun } from "./source-transcript-tool-rows.jsx";
 import { ThoughtProcessStep, ToolRow } from "./generated/transcript-rows/group-status.mjs";
+import { SourceChatThinking, chatThinkingRow, useChatThinkingSurface } from "./source-chat-thinking.jsx"; // w13-chatui-thinking-search
+import { SourceUserShell, userShellItem } from "./source-user-shell.jsx"; // w12b-transcript
+import { formatContextTokens } from "./generated/session-rail-context/context-tokens.mjs"; // shared-8 cX (c80ec48f8 Pe)
 import { TranscriptToolScope } from "./transcript-tool-scope.mjs";
 const TOOL_SCOPE_DEFAULTS = Object.freeze({ showThinking: true, surface: null, pendingApprovalItemIds: null, renderImages: null, renderMarkdown: null, renderAttachedFiles: null, renderCard: null, liveOutputTask: null, openLiveOutput: null });
 import { pathChoices } from "./file-tool-model.mjs";
@@ -681,6 +683,7 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
   // A send the core does not have yet (pending-send-model.mjs pendingUserRow): dimmed with 'Sending…', or
   // 'Not delivered · {time}' with Retry / Discard once turn/start was refused.
   const delivery = item.localDelivery ?? null;
+  const chatSurface = useChatThinkingSurface(); // w13-close-chat-messages: true in a Chat conversation's transcript
   return (
     <article
       className="source-message message user-message source-user-message"
@@ -707,14 +710,15 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
           </div>
         )}
         {elementCards.map(({ view, screenshot }, index) => <SourceSelectedElementTranscript key={index} view={view} screenshot={screenshot} />)}
-        {text && <div className="source-user-bubble" ref={bubbleRef}><SourceUserText text={text} sessionKey={sessionKey} itemId={item.id}
+        {/* w13-close-chat-messages (chatui-message-actions-01): a Chat prompt's text is s4's `div[data-testid="user-message"]`. */}
+        {text && <div className="source-user-bubble" ref={bubbleRef} data-testid={chatSurface ? "user-message" : undefined}><SourceUserText text={text} sessionKey={sessionKey} itemId={item.id}
           cwd={cwd} onOpenFileRef={onOpenFileRef} hasFileAttachments={hasFileAttachments} /></div>}
       </div>
       {/* Codex has one startedAt per turn: only the user row that opens its turn
           shows it; a steer added mid-turn gets no time (no per-message timestamp). */}
       <SourceUserDelivery delivery={delivery} />
       {text && !agentNested && !delivery && <SourceUserActions sessionKey={sessionKey} itemId={item.id} text={text} interacted={interacted}
-        startedAtMs={turnStart ? turnStartedAtMs : null} rewind={userActions?.rewind ?? null} onFork={userActions?.fork ?? null} />}
+        startedAtMs={turnStart ? turnStartedAtMs : null} rewind={userActions?.rewind ?? null} onFork={userActions?.fork ?? null} chat={userActions?.chat ?? null} />}
     </article>
   );
 }
@@ -760,6 +764,8 @@ const NO_PENDING_APPROVALS = new Set();
 // engine surface).
 export function officialToolItem(item) {
   if (!item || item.workflowRun || chapterOf(item) || itemDeliverables(item) || reportFindingsCardTool(item)) return false;
+  // w12b-transcript: the user's own '!' command is a user entry (c96d752d0 `ii === "bash"`, source-user-shell.jsx).
+  if (userShellItem(item)) return false;
   if (item.type === "commandExecution" || item.type === "fileChange" || fileAction(item)) return true;
   if (!isGenericTool(item) || item.type === "functionCallOutput") return false;
   return !questionReceipt(item, commandRowState(item));
@@ -816,7 +822,11 @@ function SourceOfficialToolMessage(props) {
 }
 
 export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null, officialChecked = false, liveTail = false }) {
+  // w13-chatui-thinking-search: in a Chat conversation a thought or a search is cc1aae219's timeline step (c05b96c7f Gg, shared-130 uq).
+  const chatSurface = useChatThinkingSurface();
   if (isHiddenTranscriptItem(item, transcriptView)) return null;
+  if (chatSurface && !inToolGroup && chatThinkingRow(item)) return <SourceChatThinking item={item} isStreaming={isStreaming} />;
+  if (userShellItem(item)) return <SourceUserShell item={item} turnStart={turnStart} />;
   if (!inToolGroup && !officialChecked && officialToolItem(item))
     return <SourceOfficialToolMessage isInterrupting={isInterrupting} item={item} agentContext={agentContext} agentNested={agentNested} turnStart={turnStart} isStreaming={isStreaming}
       sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} onOpenChanges={onOpenChanges} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItemIds}
@@ -838,16 +848,20 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
     if (shown.workflowNotification) return <SourceWorkflowNotice item={shown} onOpen={agentContext?.onTaskEvent ?? null} />;
     return <SourceUserMessage agentNested={agentNested} item={shown} turnStart={turnStart} sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} turnStartedAtMs={turnStartedAtMs} userActions={userActions} />;
   }
-  if (item.type === "agentMessage" || item.type === "plan")
+  if (item.type === "agentMessage" || item.type === "plan") {
+    // A bridge's own italic turn note (`_…_`, e.g. Gemini's turn-limit note) reads in the UI language.
+    const answerText = isStreaming ? item.text || "" : localizeBridgeNote(item.text || "");
     return (
       <article
         className="source-message message assistant-message source-assistant-message"
         data-transcript-item-id={item.id}
         data-cds="AssistantMessage"
+        // w13-close-chat-messages (chatui-message-actions-01): r1's `L_ {"data-testid":"assistant-message","data-is-streaming":en}` in a Chat.
+        data-testid={chatSurface ? "assistant-message" : undefined} data-is-streaming={chatSurface ? String(!!isStreaming) : undefined}
         data-turn-start={turnStart || undefined}
       >
-        {/* A bridge's own italic turn note (`_…_`, e.g. Gemini's turn-limit note) reads in the UI language. */}
-        <SourceMarkdown text={isStreaming ? item.text || "" : localizeBridgeNote(item.text || "")} isStreaming={isStreaming} paceReveal={item.type === "agentMessage"} isInterrupting={isInterrupting} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} />
+        {/* w13-chatui-markdown-code: a Chat transcript draws the answer as 3.6556.2 ChatMarkdown (source-chat-markdown.jsx); the Code transcript keeps SourceMarkdown. */}
+        <ChatSurfaceAnswer text={answerText} fallback={<SourceMarkdown text={answerText} isStreaming={isStreaming} paceReveal={item.type === "agentMessage"} isInterrupting={isInterrupting} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} />} />
         {/* AgentMessage.memoryCitation {entries[{path, lineStart, lineEnd, note}]}: Codex answered from its memories. */}
         {!isStreaming && Array.isArray(item.memoryCitation?.entries) && item.memoryCitation.entries.length > 0 && <p className="source-memory-citation">
           <span>{t("Used memory")}</span>{" "}
@@ -858,6 +872,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
         {!isStreaming && item.type === "agentMessage" && Array.isArray(item.questions) && item.questions.length > 0 && <SourceAsyncQuestions item={item} />}
       </article>
     );
+  }
   if (item.type === "reasoning") {
     // Plain text without the Markdown markers (a Codex summary's '**Title**' line), shown and copied alike.
     const text = plainReasoningText(reasoningText(item));
@@ -892,7 +907,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
           onKeyDown={event => event.stopPropagation()}>{t("View live output")}</button>
       : undefined;
     return (
-      <SourceStep item={item} {...stepDefaults} {...commandRowLabel(item.command, state, item.description, item.source)} state={state} classic caretSize={14} trailing={live}>
+      <SourceStep item={item} {...stepDefaults} {...commandRowLabel(item.command, state, item.description)} state={state} classic caretSize={14} trailing={live}>
         <SourceCommandBody
           item={item}
           state={state}
@@ -957,24 +972,30 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
       className="source-media-step" after={inToolGroup ? null : image}>{inToolGroup && image ? <>{body}{image}</> : body}</SourceStep>;
   }
   if (item.type === "contextCompaction") {
-    // A core that reports what it compacted (the DeepSeek bridge's codeDesktop {summary, shadowedItems, shadowedTokens},
-    // as the DeepSeek app's 'Compacted {items} history items (~{tokens} tokens)') shows the count and the summary.
-    // Any other core: how full the context was before and after (state.js preTokens / postTokens, from the usage the
-    // core re-sends after compacting), as the official marker's 'saved {tokens} tokens' / 'from {tokens} tokens'. A
-    // compaction that errored failed; only one the user stopped was interrupted. Counts follow the UI language.
-    const info = item.codeDesktop, result = outcome(item), done = !isStreaming && !["failed", "stopped"].includes(result);
-    const counted = done && info && Number.isFinite(info.shadowedItems) && info.shadowedItems > 0;
+    // c80ec48f8 it/nt/rt (the step's label): running 'Compacting…', failed 'Compaction failed', done 'Compacted session ·
+    // saved {tokens} tokens' / '· from {tokens} tokens' / 'Compacted session' ('Compacted conversation' only for Chat's
+    // subject "conversation", cc1aae219 $D). Code inserts the marker only once compaction is done (c96d752d0
+    // `case"compacted":g(s,HW(n,u))`, state "done"); while it runs the working line says 'Compacting session…'
+    // (transcript-runtime-stats), and a compaction the user stopped leaves no marker. Host extension kept: a core that
+    // reports what it compacted (the DeepSeek bridge's codeDesktop {summary, shadowedItems, shadowedTokens}, as the DeepSeek
+    // app's 'Compacted {items} history items (~{tokens} tokens)') shows the count and the summary (counts in the UI language);
+    // rt's {tokens} is c80ec48f8 Pe = shared-8 cX ('90k', '1.2M').
+    const info = item.codeDesktop, result = outcome(item);
+    if (isStreaming || result === "busy" || result === "stopped") return null;
+    const done = result !== "failed";
+    const counted = done && !chatSurface && info && Number.isFinite(info.shadowedItems) && info.shadowedItems > 0;
     const tokens = (value) => formatTokenCount(Math.round(value), getLocale());
-    const pre = Number.isFinite(item.preTokens) && item.preTokens > 0 ? item.preTokens : null, post = Number.isFinite(item.postTokens) ? item.postTokens : null;
-    const label = isStreaming ? t("Compacting conversation") : result === "failed" ? t("Compaction failed") : !done ? t("Compaction interrupted")
+    const pre = Number.isFinite(item.preTokens) ? item.preTokens : null, post = Number.isFinite(item.postTokens) ? item.postTokens : null;
+    const label = !done ? t("Compaction failed")
+      : chatSurface ? t("Compacted conversation")
       : counted ? (Number.isFinite(info.shadowedTokens) && info.shadowedTokens > 0
         ? tn(info.shadowedItems, "Compacted {count} item (~{tokens} tokens)", "Compacted {count} items (~{tokens} tokens)", { tokens: tokens(info.shadowedTokens) })
         : tn(info.shadowedItems, "Compacted {count} item", "Compacted {count} items"))
-      : pre !== null && post !== null && post < pre ? t("Compacted conversation · saved {tokens} tokens", { tokens: tokens(pre - post) })
-      : pre !== null ? t("Compacted conversation · from {tokens} tokens", { tokens: tokens(pre) })
-      : t("Compacted conversation");
+      : pre !== null && post !== null && pre > post ? t("Compacted session · saved {tokens} tokens", { tokens: formatContextTokens(pre - post) })
+      : pre !== null && pre > 0 ? t("Compacted session · from {tokens} tokens", { tokens: formatContextTokens(pre) })
+      : t("Compacted session");
     return (
-      <SourceStep item={item} {...stepDefaults} label={label} state={outcome(item)}>
+      <SourceStep item={item} {...stepDefaults} label={label} state={result}>
         {done && typeof info?.summary === "string" && info.summary.trim() ? <SourceMarkdown text={info.summary} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} /> : null}
       </SourceStep>
     );
@@ -1548,202 +1569,10 @@ function SourceTree({ children, busy, filterInputSelector, selectionStore, activ
 // R3-files FT-14: the tree and its rows, exported for SSR tests (tests/file-tree-current.test.mjs).
 export { SourceTree as SourceFileTree, SourceTreeNode as SourceFileTreeNode };
 
-// Files pane tab (2.2553.1 readable/panes-tabs-current.js:333-491 he; model
-// panes-tile-current.js:6656-6710 ce/le). Local adaptations: no Base UI Tabs /
-// ContextMenu primitives (the local roving keys, SourceTooltip and
-// SourceMenu stand in); pointer drag reorder is use-tab-drag-reorder.mjs. data-vtb-id is the strip
-// measure's key (_e); an overflowed tab stays laid out but invisible, a compact
-// one drops its close button and label mask (he :364-372, :463-466).
-function SourceFileTab({ file, cwd, selected, tabIndex, solo, posinset, setsize, hintId, moveHintId, overflowed = false, compact = false, fileMenu = null, onSelect, onClose, onCloseOthers, onCloseRight, onCloseAll, onKeep, onKeyDown, onPointerDown }) {
-  const root = useRef(null), tabRef = useRef(null), labelRef = useRef(null), returnFocus = useRef(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  // he N/F/ie: a pointer-down on the tab hides its tooltip until the pointer leaves the tab.
-  const [pressed, setPressed] = useState(false);
-  const [clipped, setClipped] = useState(false);
-  const label = basename(file.path), detail = tabDetail(file.path, cwd), preview = file.preview === true;
-  // Be (clipped): the label span overflows its max-w-[140px] box.
-  useLayoutEffect(() => {
-    const node = labelRef.current;
-    if (!node) return undefined;
-    const measure = () => setClipped(node.scrollWidth > node.clientWidth);
-    measure();
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
-    observer?.observe(node);
-    return () => observer?.disconnect();
-  }, [label, preview]);
-  const tooltip = tabTooltip({ label, detail, clipped, suppressed: menuOpen || pressed });
-  const fileEntries = menuOpen && fileMenu ? fileMenu.entries(file.path, { surface: "file_tab", unavailable: file.unavailable }) : null;
-  const actions = { keep: () => onKeep(file.path), close: () => onClose(file.path), "close-others": () => onCloseOthers(file.path), "close-right": () => onCloseRight(file.path), "close-all": () => onCloseAll() };
-  // Base UI returns focus to where it was before the context menu opened; a
-  // closed tab hands it to the tab that is selected afterwards.
-  const restoreTarget = () => {
-    const previous = returnFocus.current;
-    if (previous?.isConnected && previous !== previous.ownerDocument.body) return previous;
-    return tabRef.current?.isConnected ? tabRef.current
-      : root.current?.ownerDocument.querySelector('.source-file-tabs [role="tab"][aria-selected="true"]') ?? null;
-  };
-  return (
-    <div
-      ref={root}
-      role="presentation"
-      className="source-file-tab"
-      data-vtb-id={file.path}
-      data-file-path={file.path}
-      data-preview={preview || undefined}
-      data-deleted={file.unavailable === "missing" || undefined}
-      data-selected={selected || undefined}
-      data-compact={compact || undefined}
-      data-overflowed={overflowed || undefined}
-      data-popup-open={menuOpen || undefined}
-      onMouseDown={(event) => {
-        // _e/Z: a secondary (or macOS Control-) press never moves focus; a middle press is claimed for close.
-        if (event.button === 2 || event.button === 1 || (event.button === 0 && event.ctrlKey && /Mac/i.test(navigator.platform ?? ""))) event.preventDefault();
-      }}
-      // Z (:309-314, he onMouseUp :359): a middle-button mouseup on a closable tab is claimed too.
-      onMouseUp={(event) => {
-        if (event.button === 1) event.preventDefault();
-      }}
-      onAuxClick={(event) => {
-        if (event.button === 1) {
-          event.preventDefault();
-          onClose(file.path);
-        }
-      }}
-      onDoubleClick={preview ? () => onKeep(file.path) : undefined}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        returnFocus.current = event.currentTarget.ownerDocument.activeElement;
-        setMenuOpen(true);
-      }}
-      onPointerDown={overflowed ? undefined : onPointerDown}
-      onPointerLeave={() => setPressed(false)}
-    >
-      <span aria-hidden="true" className="source-file-tab-bg" />
-      <SourceTooltip content={tooltip.content} detail={tooltip.detail} side="bottom" align="start" delay={700} hoverable={false}>
-        <div
-          ref={tabRef}
-          role="tab"
-          aria-selected={selected}
-          aria-posinset={posinset}
-          aria-setsize={setsize}
-          aria-describedby={[hintId, moveHintId].filter(Boolean).join(" ") || undefined}
-          aria-disabled={overflowed || undefined}
-          tabIndex={tabIndex}
-          onPointerDown={() => setPressed(true)}
-          onClick={() => onSelect(file.path)}
-          onKeyDown={(event) => {
-            // Base UI useButton (nativeButton:false): Enter/Space activate the div tab.
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              onSelect(file.path);
-              return;
-            }
-            onKeyDown(event, file.path);
-          }}
-        >
-          <span ref={labelRef} className="source-file-tab-label" data-vtb-label="" data-clipped={(clipped && !compact) || undefined}>
-            <span>
-              {label}
-              {preview && <span className="source-sr-only">, {FILE_TAB_LABELS.previewTabHint}</span>}
-              {file.unavailable === "missing" && <span className="source-sr-only">, {FILE_TAB_LABELS.deletedTabHint}</span>}
-            </span>
-          </span>
-        </div>
-      </SourceTooltip>
-      {/* pe: pointer-only close; keyboard users close with Delete/Backspace. A compact tab has none. */}
-      {!compact && <button
-        type="button"
-        tabIndex={-1}
-        aria-hidden="true"
-        aria-label={FILE_TAB_LABELS.closeTab}
-        className="source-file-tab-close"
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => onClose(file.path)}
-      >
-        <Icon name="X" size={12} />
-      </button>}
-      {menuOpen && (
-        <SourceMenu.Popup
-          anchor={root.current}
-          trigger={null}
-          side="bottom"
-          align="start"
-          dataCds="ContextMenu"
-          layer="contextmenu"
-          contextMenuGuard="always"
-          finalFocus={restoreTarget}
-          onClose={(reason) => {
-            setMenuOpen(false);
-            if (reason === "escape-key") restoreTarget()?.focus({ preventScroll: true });
-          }}
-        >
-          {/* he popup (:470-485): renderTabMenuItems Ce — the l_ file items
-              (panes-tile-current.js:6809-6862) — then a separator before the
-              Keep open / Close items. */}
-          {fileEntries?.length > 0 && <>
-            <SourceFileMenuEntries entries={fileEntries} onSelect={(item) => fileMenu.select(item, file.path)} />
-            <SourceMenu.Separator />
-          </>}
-          {tabMenuItems({ preview, solo, hasTabsToRight: posinset < setsize }).map((item) => (
-            <SourceMenu.Item key={item.action} onClick={actions[item.action]}>
-              {item.label}
-            </SourceMenu.Item>
-          ))}
-        </SourceMenu.Popup>
-      )}
-    </div>
-  );
-}
-
-// K/q (panes-tabs-current.js:68-178): the ghost icon-only CaretDown "More
-// files" trigger (te tooltip) and a menu (side bottom, align end) of the hidden
-// tabs: the basename (italic for a preview, sr-only ", preview"), the folder as
-// a caption, a pointer-only X "Close file", and ArrowRight closes the
-// highlighted row (sr-only "press right arrow to close").
-const EMPTY_STRIP = Object.freeze({ hiddenIds: [], compactIds: [], overflowing: false });
+// W12c files-tabbar: the open-file strip is the ViewTabBar (source-file-tabs.jsx, cccc2cf0a ND `ey`).
 // Re-opening a restored tab makes it an ordinary open tab (a later "missing" read shows the deleted card).
 const withoutRestored = ({ restored, ...file }) => file;
 const TREE_TOGGLE_SHORTCUT = "cmd+shift+y";
-function SourceFileTabOverflow({ tabs, cwd, onActivate, onClose }) {
-  const [open, setOpen] = useState(null);
-  const button = useRef(null);
-  const hintId = useId();
-  return <>
-    <SourceTooltip content={FILE_TAB_LABELS.moreTabs} hoverable={false}>
-      <SourceSettingsButton ref={button} variant="ghost" iconOnly icon="CaretDown" iconSize="auto" aria-label={FILE_TAB_LABELS.moreTabs}
-        className="source-file-tabs-more" {...menuTriggerProps({ open: !!open, onOpen: (entry) => setOpen(entry) })}
-        onClick={() => setOpen((value) => (value ? null : "click"))} />
-    </SourceTooltip>
-    {open && <SourceMenu.Popup anchor={button.current} side="bottom" align="end" label={FILE_TAB_LABELS.moreTabs} contextMenuGuard="always"
-      initialHighlight={open === "first" || open === "last" ? open : undefined} onClose={() => setOpen(null)}>
-      <span id={hintId} className="source-sr-only">{FILE_TAB_LABELS.closeTabHint}</span>
-      {tabs.map((file) => {
-        const label = basename(file.path), detail = tabDetail(file.path, cwd), preview = file.preview === true;
-        return <SourceMenu.Item key={file.path} aria-describedby={hintId} className="source-file-overflow-row" data-file-path={file.path}
-          onClick={() => onActivate(file.path)}
-          onKeyDown={(event) => {
-            if (event.key !== "ArrowRight") return;
-            event.preventDefault();
-            event.stopPropagation();
-            onClose(file.path);
-          }}
-          trailing={<span aria-hidden="true" title={FILE_TAB_LABELS.closeTab} className="source-file-overflow-close"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => { event.stopPropagation(); onClose(file.path); }}>
-            <Icon name="X" size={12} />
-          </span>}>
-          <span className="source-file-overflow-copy">
-            <span className="source-file-overflow-label" data-deleted={file.unavailable === "missing" || undefined} data-preview={preview || undefined} title={label}>
-              {label}{preview && <span className="source-sr-only">, {FILE_TAB_LABELS.previewTabHint}</span>}
-              {file.unavailable === "missing" && <span className="source-sr-only">, {FILE_TAB_LABELS.deletedTabHint}</span>}
-            </span>
-            {detail !== undefined && <span className="source-file-overflow-detail" title={detail}>{detail}</span>}
-          </span>
-        </SourceMenu.Item>;
-      })}
-    </SourceMenu.Popup>}
-  </>;
-}
 
 export function SourceFilePanel(props) {
   // R3-files FT-05: the session id context (c9b8e0296) the gone hook reads, as the official session pane provides it.
@@ -1799,6 +1628,8 @@ function FilePane({
   diffRetrying = false,
   // B15 (c44d00c7f Zr): useDiffScope().commits for the Commits section of the Changed files column.
   diffCommits = null,
+  // W12b cf-02 (cb61be3a2 ut `noRepo: On`, On = local && repo lookup resolved && no repo): from main.jsx.
+  diffNoRepo = false,
   onClose,
   onRefresh,
   openRequest = null,
@@ -1936,77 +1767,6 @@ function FilePane({
   const closeFocus = useRef(null);
   const mounted = useRef(true);
   const pane = useRef(null);
-  const closeHintId = useId(), moveHintId = useId();
-  // Tab strip overflow (_e, panes-tabs-current.js:503-680; pure model in
-  // file-tab-overflow-model.mjs): hidden tabs stay laid out but invisible and
-  // are listed in "More files"; the strip scrolls so the active tab shows.
-  const tabBar = useRef(null), tabList = useRef(null), reorderFocus = useRef(null);
-  // Drag a file tab to a new slot (panes-tabs-current.js Oe, onReorder :6782); Ctrl/⌘+Shift+←/→ stays the keyboard
-  // path. The strip shows the drag's order live and commits it on release.
-  const fileTabDrag = useTabDragReorder({ stripRef: tabList, itemSelector: "[data-vtb-id]", idOf: (node) => node.dataset.vtbId,
-    onReorder: (path, toIndex) => setFileTabs((files) => moveToIndex(files, path, toIndex, (file) => file.path)) });
-  const [strip, setStrip] = useState(EMPTY_STRIP);
-  useLayoutEffect(() => {
-    const list = tabList.current, root = tabBar.current;
-    if (!list || tab !== "files") {
-      setStrip((previous) => (previous === EMPTY_STRIP ? previous : EMPTY_STRIP));
-      return undefined;
-    }
-    const measure = () => {
-      if (!list.isConnected) return;
-      const nodes = [...list.querySelectorAll("[data-vtb-id]")];
-      const tabs = nodes.map((node) => {
-        const label = node.querySelector("[data-vtb-label]");
-        return { id: node.dataset.vtbId, start: node.offsetLeft - 4, end: node.offsetLeft - 4 + node.offsetWidth,
-          compact: node.hasAttribute("data-compact"), clipped: !!label && label.scrollWidth > label.clientWidth + 1 };
-      });
-      let overflowWidth = 0, compactSlack = 0;
-      const button = root?.querySelector(":scope > [data-vtb-overflow]");
-      const win = list.ownerDocument.defaultView;
-      if (root && button) overflowWidth = Math.floor(button.getBoundingClientRect().width) + (parseFloat(win?.getComputedStyle(root).columnGap ?? "") || 0);
-      const compactCount = tabs.filter((value) => value.compact).length;
-      if (root && compactCount > 0) {
-        // The free width at the end of the bar, shared by the compact tabs (:589-601).
-        const box = root.getBoundingClientRect();
-        let right = box.left;
-        for (const child of root.children) {
-          const rect = child.getBoundingClientRect();
-          if (rect.width > 0) right = Math.max(right, child === list ? rect.right - 4 : rect.right);
-        }
-        compactSlack = Math.max(0, box.right - right) / compactCount;
-      }
-      const layout = tabOverflowLayout({ tabs, clientWidth: list.clientWidth, scrollWidth: list.scrollWidth, scrollLeft: list.scrollLeft,
-        overflowWidth, activeId: activePath, compactSlack });
-      if (Math.abs(list.scrollLeft - layout.scrollLeft) > 1) list.scrollLeft = layout.scrollLeft;
-      setStrip((previous) => {
-        const hiddenIds = stableIds(previous.hiddenIds, layout.hiddenIds), compactIds = stableIds(previous.compactIds, layout.compactIds);
-        return hiddenIds === previous.hiddenIds && compactIds === previous.compactIds && previous.overflowing === layout.overflowing
-          ? previous : { hiddenIds, compactIds, overflowing: layout.overflowing };
-      });
-    };
-    measure();
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
-    if (observer) {
-      observer.observe(list);
-      if (root) observer.observe(root);
-      for (const node of list.querySelectorAll("[data-vtb-id]")) observer.observe(node);
-    }
-    list.addEventListener("scroll", measure, { passive: true });
-    return () => { observer?.disconnect(); list.removeEventListener("scroll", measure); };
-  }, [fileTabs, activePath, tab]);
-  // _e (:640-663): a focused tab that becomes hidden hands focus to the active
-  // tab; a reordered tab keeps focus.
-  useLayoutEffect(() => {
-    const list = tabList.current;
-    if (!list) return;
-    const focusTab = (path) => [...list.querySelectorAll("[data-vtb-id]")].find((node) => node.dataset.vtbId === path)?.querySelector('[role="tab"]');
-    const moved = reorderFocus.current;
-    reorderFocus.current = null;
-    if (moved) { const node = focusTab(moved); if (node && node.ownerDocument.activeElement !== node) node.focus({ preventScroll: true }); return; }
-    const active = list.ownerDocument.activeElement;
-    if (strip.hiddenIds.some((path) => focusTab(path)?.contains(active))) focusTab(activePath)?.focus({ preventScroll: true });
-  }, [strip.hiddenIds, fileTabs]); // eslint-disable-line react-hooks/exhaustive-deps
-  const hiddenTabs = useMemo(() => fileTabs.filter((file) => strip.hiddenIds.includes(file.path)), [fileTabs, strip.hiddenIds]);
   const activeTab = fileTabs.find((file) => file.path === activePath);
   // The file view (fileView, panes-tile-current.js:6328-6352): the active tab,
   // whatever its body state (loading, text or an unavailable card).
@@ -2174,11 +1934,11 @@ function FilePane({
     if (!request || tab !== "files") return;
     closeFocus.current = null;
     const tabs = [...(pane.current?.querySelectorAll('[role="tab"]') || [])];
-    const visible = (node) => node && !node.disabled && node.getClientRects().length > 0 && !node.closest("[hidden], [inert], [data-overflowed]");
+    const visible = (node) => node && !node.disabled && node.getClientRects().length > 0 && !node.closest("[hidden], [inert], [data-vtb-hidden]");
     const browserInput = [...(pane.current?.querySelectorAll(`.source-files-tree input[aria-label="${t("Filter files")}"]`) || [])].find(visible);
     const treeButton = [...(pane.current?.querySelectorAll(".source-files-tree button:not(:disabled)") || [])].find(visible);
     const target =
-      tabs.find((node) => visible(node) && node.closest(".source-file-tab")?.dataset.filePath === request.path) ||
+      tabs.find((node) => visible(node) && node.closest("[data-view-tab-bar] [data-vtb-id]")?.dataset.vtbId === request.path) ||
       tabs.find((node) => visible(node) && node.getAttribute("aria-selected") === "true") ||
       browserInput || treeButton ||
       pane.current?.querySelector(`button[aria-label="${t("Show file tree")}"]`);
@@ -2490,8 +2250,8 @@ function FilePane({
       ? (remaining[Math.min(index, remaining.length - 1)]?.path ?? null)
       : activePath);
     const rows = [
-      ...(pane.current?.querySelectorAll(".source-file-tab") || []),
-    ].filter((node) => closing.has(node.dataset.filePath));
+      ...(pane.current?.querySelectorAll("[data-view-tab-bar] [data-vtb-id]") || []),
+    ].filter((node) => closing.has(node.dataset.vtbId));
     if (rows.some((row) => row.contains(row.ownerDocument.activeElement)))
       closeFocus.current = { path: nextPath };
     setFileTabs((files) => files.filter((file) => !closing.has(file.path)));
@@ -2669,105 +2429,19 @@ function FilePane({
           </SourceCoachmark>
         )}
         {tab === "files" && fileTabs.length > 0 ? (
-          // Xd tab list (panes-tabs-current.js:1128-1195): the data-view-tab-bar
-          // root holds the tablist (a 700ms tooltip provider ne around the
-          // tabs, then the end spacer shown while overflowing), the sr-only
-          // delete and move hints every tab is described by, and the
-          // [data-vtb-overflow] "More files" menu while tabs are hidden.
-          <div ref={tabBar} className="source-file-tabbar" data-view-tab-bar="">
-          <div
-            ref={tabList}
-            className="source-file-tabs"
-            role="tablist"
-            aria-label={t("Open files")}
-          >
-            <SourceTooltipGroup delay={700}>
-              {fileTabDrag.order(fileTabs, (file) => file.path).map((file, index) => (
-                <SourceFileTab
-                  key={file.path}
-                  onPointerDown={(event) => fileTabDrag.onPointerDown(file.path, event)}
-                  file={file}
-                  cwd={cwd}
-                  selected={activePath === file.path}
-                  tabIndex={
-                    activePath === file.path ||
-                    (!activePath && fileTabs[0].path === file.path)
-                      ? 0
-                      : -1
-                  }
-                  solo={fileTabs.length === 1}
-                  posinset={index + 1}
-                  setsize={fileTabs.length}
-                  hintId={closeHintId}
-                  moveHintId={moveHintId}
-                  overflowed={strip.hiddenIds.includes(file.path)}
-                  compact={activePath !== file.path && strip.compactIds.includes(file.path)}
-                  fileMenu={fileMenu}
-                  onSelect={selectFile}
-                  onClose={closeFile}
-                  onKeep={keepFile}
-                  onCloseOthers={(path) => closeFiles(fileTabs.filter((value) => value.path !== path).map((value) => value.path), path)}
-                  onCloseRight={(path) => closeFiles(fileTabsToRight(fileTabs, path))}
-                  onCloseAll={() => closeFiles(fileTabs.map((value) => value.path), null)}
-                  onKeyDown={(event, path) => {
-                    // ge (:275-302): Control (or Meta) + Shift + ArrowLeft/Right
-                    // moves the tab one slot (onReorder, panes-tile-current.js:6779).
-                    if (event.shiftKey && (event.ctrlKey || event.metaKey) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-                      event.preventDefault();
-                      reorderFocus.current = path;
-                      setFileTabs((files) => moveFileTab(files, path, event.key === "ArrowLeft" ? -1 : 1, strip.hiddenIds));
-                      return;
-                    }
-                    // ge (:275-302): Delete/Backspace close the closable tab.
-                    if (event.key === "Delete" || event.key === "Backspace") {
-                      event.preventDefault();
-                      closeFile(path);
-                      return;
-                    }
-                    // Roving focus skips the tabs hidden behind "More files"
-                    // (they are disabled Base UI tabs, he :393-397).
-                    const reachable = fileTabs.filter((tab) => tab.path === path || !strip.hiddenIds.includes(tab.path));
-                    const index = reachable.findIndex(
-                      (tab) => tab.path === path,
-                    );
-                    const next =
-                      event.key === "ArrowRight"
-                        ? (index + 1) % reachable.length
-                        : event.key === "ArrowLeft"
-                          ? (index - 1 + reachable.length) % reachable.length
-                          : event.key === "Home"
-                            ? 0
-                            : event.key === "End"
-                              ? reachable.length - 1
-                              : null;
-                    if (next !== null) {
-                      event.preventDefault();
-                      const target = reachable[next].path;
-                      selectFile(target);
-                      [...event.currentTarget.closest('[role="tablist"]').querySelectorAll("[data-vtb-id]")]
-                        .find((node) => node.dataset.vtbId === target)?.querySelector('[role="tab"]')?.focus();
-                    }
-                  }}
-                />
-              ))}
-            </SourceTooltipGroup>
-            <span aria-hidden="true" className="source-file-tabs-spacer" hidden={!strip.overflowing} />
-          </div>
-          <span id={closeHintId} className="source-sr-only">
-            {FILE_TAB_LABELS.closeTabDeleteHint}
-          </span>
-          <span id={moveHintId} className="source-sr-only">
-            {FILE_TAB_LABELS.moveTabHint}
-          </span>
-          {hiddenTabs.length > 0 && (
-            <span data-vtb-overflow="" className="source-file-tabs-overflow">
-              <SourceFileTabOverflow tabs={hiddenTabs} cwd={cwd} onActivate={selectFile} onClose={closeFile} />
-            </span>
-          )}
-          </div>
+          // W12c files-tabbar: cccc2cf0a ND `u(ey,{…})` (source-file-tabs.jsx) — the ViewTabBar with the pane's file
+          // actions: c03935b01 activateFileTab / keepFileTab / closeFileTab / closeOtherFileTabs / closeFileTabsToRight /
+          // closeAllFileTabs / reorderFileTab.
+          <SourceFileTabs tabs={fileTabs} cwd={cwd} activePath={activePath} previewTabs={fileViewSettings.previewTabs} fileMenu={fileMenu}
+            onActivate={selectFile} onKeep={keepFile} onClose={closeFile}
+            onCloseOthers={(path) => closeFiles(fileTabs.filter((value) => value.path !== path).map((value) => value.path), path)}
+            onCloseToRight={(path) => closeFiles(fileTabsToRight(fileTabs, path))}
+            onCloseAll={() => closeFiles(fileTabs.map((value) => value.path), null)}
+            onReorder={(path, toIndex) => setFileTabs((files) => reorderFileTab(files, path, toIndex))}
+            onFocusFile={(path) => setFileFocusRequest({ path, seq: opened.current.seq })} />
         ) : tab === "changes" && (diffScopeControl || diffListAvailable) ? (
           // dh (panes-tile-current.js:3640-3690): while uh, the ghost iconOnly
-          // ListBullet "Show files"/"Hide files" (-ml-[4px], pressed while shown;
+          // ListBullet "Show files"/"Hide files" (pressed while shown;
           // Ut side top / align start with the ⇧⌘Y keycap) comes before the F12 zm
           // scope trigger (:2949-3110). The lu coachmark is not ported.
           <>
@@ -2776,7 +2450,8 @@ function FilePane({
                 side="top" align="start" hoverable={false}>
                 <SourceIconButton
                   name="ListBullet"
-                  className="source-icon-button -ml-[4px]"
+                  // 3.6556.2 ca9ee6f68 `os`: className h=ge(Ra) (shared-18 Mb, panels off) = "text-secondary", no -ml-[4px].
+                  className="source-icon-button text-secondary"
                   data-diff-file-list-toggle=""
                   label={diffShowTree ? t("Hide files") : t("Show files")}
                   nativeTitle={false}
@@ -2797,7 +2472,7 @@ function FilePane({
         {/* ka (panes-toggle-current.js:1614-1632) renders the tile's center drag
             handle o after the header/title content ([H, t, o], then trailing pe),
             so the absolute 44x16 handle paints above the position:relative tab
-            strip (.source-file-tabs) it overlaps in a narrow tile. */}
+            strip (the [data-view-tab-bar] ViewTabBar) it overlaps in a narrow tile. */}
         {headerCenter}
         {/* Trailing slot (panes-tile-current.js:16366-16378): for the file pane
             c_ "Search files" comes before the yh settings menu, then Expand and
@@ -2988,12 +2663,14 @@ function FilePane({
         // R10: SourceDiff lays the body out beside the Changed files column and
         // owns the .source-changes scroller (ChangesFileLayout). B15 (c44d00c7f cl emptyPlaceholder): with
         // commits, an empty comparison keeps the column (Commits section) beside the empty state.
-        <Diff value={diffView.patch || ""} emptyPlaceholder={<SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} />} completeContext={diffView.completeContext} patchesWithheld={diffView.patchesWithheld} comparisonFiles={Array.isArray(diff?.files) ? diff.files : undefined} scopeKey={JSON.stringify([sessionId, cwd, diffStale ? diffStale.scope : diffScope])} layout={diffPreferences.layout} wordWrap={diffPreferences.wordWrap} wordDiff={diffPreferences.wordDiff} hideWhitespace={diffPreferences.hideWhitespace} onCanFitSplitChange={setDiffCanFitSplit} foldAll={diffFoldAll} placement="changes" fileActions={diffFileActions} commentScope={sessionId ? JSON.stringify([sessionId, cwd]) : null}
-          onIsLargeChange={setDiffIsLarge} review={diffReview} fileList={{ shown: diffShowTree, width: diffTreeWidth, tree: diffFileTree, groupByKind: diffGroupByKind,
-            onShownChange: setDiffShowTree, onWidthChange: setDiffTreeWidth, onCanFitChange: setDiffCanFitTree }}
+        <Diff value={diffView.patch || ""} emptyPlaceholder={<SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} noRepo={diffNoRepo} />} completeContext={diffView.completeContext} patchesWithheld={diffView.patchesWithheld} comparisonFiles={Array.isArray(diff?.files) ? diff.files : undefined} scopeKey={JSON.stringify([sessionId, cwd, diffStale ? diffStale.scope : diffScope])} layout={diffPreferences.layout} wordWrap={diffPreferences.wordWrap} wordDiff={diffPreferences.wordDiff} hideWhitespace={diffPreferences.hideWhitespace} onCanFitSplitChange={setDiffCanFitSplit} foldAll={diffFoldAll} placement="changes" fileActions={diffFileActions} commentScope={sessionId ? JSON.stringify([sessionId, cwd]) : null}
+          onIsLargeChange={setDiffIsLarge} review={diffReview} fileList={{ sessionId: sessionId || undefined, shown: diffShowTree, width: diffTreeWidth, tree: diffFileTree, groupByKind: diffGroupByKind,
+            onShownChange: setDiffShowTree, onWidthChange: setDiffTreeWidth, onCanFitChange: setDiffCanFitTree,
+            // cccc2cf0a treeToggleShortcut (c73f45bc3 Id("diff")): ⇧⌘Y on the column handles' tooltip, as on the menu item.
+            toggleShortcut: treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined }}
           stale={!!diffStale} commits={diffCommits ? { ...diffCommits, collapsed: diffCommitsCollapsed, onCollapsedChange: setDiffCommitsCollapsed } : null} />
       ) : (
-        <SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} />
+        <SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} noRepo={diffNoRepo} />
       )}
     </aside>
   );

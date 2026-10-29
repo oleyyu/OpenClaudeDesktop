@@ -62,13 +62,16 @@ test("quit: agent work and terminal commands share one confirmation; background 
   await tick();
   assert.equal(both.prompts.length, 1);
   assert.equal(both.prompts[0].buttons.length, 3);
-  assert.match(both.prompts[0].detail, /working in 1 session\. Quitting now will interrupt that work\. Commands are also running in 3 terminals\.$/);
+  // 3.6556.2 c5t joins the detail's paragraphs with a blank line (V3-w1-desktop-i18n).
+  assert.match(both.prompts[0].detail, /working in 1 session\. Quitting now will interrupt that work\.\n\nCommands are also running in 3 terminals\.$/);
   const lookup = setup({ terminals: 1, background: 1, responses: [2] });
   lookup.app.quit();
   await tick(); await tick();
   assert.equal(lookup.prompts.length, 1);
-  assert.equal(lookup.prompts[0].buttons.length, 3, "a session with background commands makes it the agent prompt");
-  assert.match(lookup.prompts[0].detail, /A command is also running in 1 terminal\.$/);
+  // 3.6556.2 c5t: background commands alone make it the background-commands prompt (no Wait), not the agent prompt.
+  assert.equal(lookup.prompts[0].message, "Background commands are still running");
+  assert.equal(lookup.prompts[0].buttons.length, 2, "a session with background commands alone: Quit anyway / Cancel");
+  assert.match(lookup.prompts[0].detail, /Quitting will stop them\.\n\nA command is also running in 1 terminal\.$/);
   setLocale("zh-CN");
   const zh = setup({ terminals: 1, responses: [1] });
   zh.app.quit();

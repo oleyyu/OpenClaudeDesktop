@@ -1,13 +1,14 @@
-function Ju(e, t, n) {
+// Original 3.6556.2 Preview link chooser decisions (c11959232-TLc_9Vpx).
+function If(e, t, n) {
   return t === e.url ? e : { url: t, settled: n, prompted: !1 };
 }
-function Yu(e) {
+function Lf(e) {
   return {
     canRoute: e.linksInPreview && e.infraOk,
-    explicitReady: e.infraOk && e.hasLocalDisk,
+    explicitReady: e.infraOk && e.paneOffered,
   };
 }
-function Xu(e) {
+function Rf(e) {
   return e.hasPendingUrl
     ? e.chooserOpen
       ? "hold"
@@ -23,10 +24,12 @@ function Xu(e) {
           ? "prompt"
           : e.linksInPreview && e.infraOk
             ? "dispatch"
-            : "none"
+            : e.cloudSession && !e.infraOk
+              ? "release"
+              : "none"
     : "none";
 }
-function Zu(e) {
+function zf(e) {
   return e.explicit
     ? "keep"
     : e.confirmed
@@ -36,8 +39,8 @@ function Zu(e) {
       : "drop";
 }
 export {
-  Ju as linkArrival,
-  Yu as linkCapabilities,
-  Xu as linkDispatch,
-  Zu as linkConfirmation,
+  If as linkArrival,
+  Lf as linkCapabilities,
+  Rf as linkDispatch,
+  zf as linkConfirmation,
 };

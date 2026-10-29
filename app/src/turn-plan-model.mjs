@@ -1,23 +1,32 @@
 // turn-plan: the Code session's turn tail (task list card, next-step box, settled wrap-ups) from the ccd_turn calls in the
-// transcript — the app tools of electron/agent-tools/turn-plan.mjs, Claude Desktop 2.42304.0's mcp__ccd_turn__update_plan
+// transcript — the app tools of electron/agent-tools/turn-plan.mjs, Claude Desktop 3.6556.2's mcp__ccd_turn__update_plan
 // and mcp__ccd_turn__wrap_up.
 //
-// The derivation is the original: c1ebb1aa4 Rt (generated/turn-plan/turn-tail.mjs deriveTurnTail) reads the session's
-// SDK messages for the latest prompt — the newest update_plan items call is the plan, later advance / done / start calls
-// apply over it, an errored call is skipped, a wrap_up after the plan checks every step off and keeps the list it had
-// (planBeforeWrapUp), a turn that ended cleanly with only its last step in progress completes it (Mt), and the newest
-// settling wrap_up is the box's wrapUp / receipt — and c1ebb1aa4 Ft / It give the settled wrap-ups of earlier turns.
+// The derivation is the original: 3.6556.2 c4ea84cb3 Br (generated/turn-plan/turn-tail.mjs deriveTurnTail; 2.42304.0
+// c1ebb1aa4 Rt) reads the session's SDK messages for the latest prompt — the newest update_plan items call is the plan,
+// later advance / done / start calls apply over it, an errored call is skipped, a wrap_up after the plan checks every step
+// off and keeps the list it had (planBeforeWrapUp), a turn that ended cleanly with only its last step in progress
+// completes it (Nr), the newest settling wrap_up is the box's wrapUp / receipt, text after that wrap_up in the same turn
+// is its closing message (closingMessageFollows, Lr), and a turn the user interrupted (an interrupt tool result, no clean
+// end) keeps an unfinished plan open (planCutShort) — and c4ea84cb3 Ir / Rr give the settled wrap-ups of earlier turns.
 // What differs is only the input: the host's transcript is Codex-protocol items, so turnMessages() writes them as the SDK
-// messages Rt reads (the official desktop reads the CLI's own):
+// messages Br reads (the official desktop reads the CLI's own):
 //   userMessage       {type:"user", uuid:item.id, message:{content:[text…]}}     (latestPromptId is its id)
 //   agentMessage      an assistant message with its text (stamped: message id and model)
 //   a tool call       an assistant tool_use (update_plan / wrap_up under their official mcp__ccd_turn__ names, with the
 //                     call's arguments as input) and, once it finished, the user tool_result (is_error when it failed)
 //   contextCompaction a system compact_boundary
-//   a turn's end      a result message (success, or error_during_execution when the turn failed) after its items; the
-//                     running turn has none
+//   an interrupted    a tool call the user's stop cut off (status "interrupted"): its tool_result is the CLI's
+//   tool call         interrupt (is_error, "[Request interrupted by user for tool use]", shared-52 mG), followed once
+//                     per turn by the user interrupt message with that text (c06cf64bb Ff), as the CLI writes them
+//   a turn's end      a result message (success, or error_during_execution when the turn failed or was interrupted)
+//                     after its items; the running turn has none
 // Running agents (Rt's r): the spawnAgent calls whose agents still run.
 import { EMPTY_TURN_TAIL, deriveTurnTail, wrapUpReceipt, wrapUpsByPrompt } from "./generated/turn-plan/turn-tail.mjs";
+// c4ea84cb3 Wr / zr pass turnBoxAtReplies (c96d752d0 QV) to Br / Ir: the reply chips a wrap-up may offer (eH filters labels
+// with cd4f82e77 qe when on, M when off). The host's QV is on (source-turn-box-adapters.jsx useTurnBoxAtReplies; the
+// 3.6556.2 main process reports `turnBoxAtReplies:{status:"supported"}`).
+const AT_REPLIES = true;
 import { UPDATE_PLAN_TOOL, WRAP_UP_TOOL, legacyWrapUpText } from "./generated/turn-plan/plan-update.mjs";
 import { sdkToolName } from "./transcript-sdk-tools.mjs";
 
@@ -61,6 +70,8 @@ const toolName = (item) => {
   if (turn) return OFFICIAL[turn];
   return sdkToolName(item) ?? item.type;
 };
+// shared-52 mG: the CLI's interrupt texts (c06cf64bb Ff reads a user message carrying one as the user's stop).
+const INTERRUPTED_FOR_TOOL_USE = "[Request interrupted by user for tool use]";
 const TOOL_ITEMS = new Set(["commandExecution", "fileChange", "mcpToolCall", "dynamicToolCall", "webSearch", "collabAgentToolCall", "imageView", "imageGeneration", "computerUse", "sleep"]);
 
 /**
@@ -72,18 +83,18 @@ const TOOL_ITEMS = new Set(["commandExecution", "fileChange", "mcpToolCall", "dy
 export function turnMessages(items, { activeTurnId = null, turnErrors = null, agentLifecycle = null } = {}) {
   const list = Array.isArray(items) ? items : [];
   const messages = [], runningAgents = new Set();
-  let turn, open = false;
+  let turn, open = false, interrupted = false;
   const close = () => {
     if (!open) return;
     open = false;
     if (!turn || turn === activeTurnId) return;
-    const error = !!turnErrors?.[turn];
+    const error = !!turnErrors?.[turn] || interrupted;
     messages.push({ type: "result", uuid: `result:${turn}`, subtype: error ? "error_during_execution" : "success", is_error: error, num_turns: 1 });
   };
   for (const item of list) {
     if (!item || typeof item !== "object" || item.localCommand || item.workflowRun) continue;
     const turnId = item.turnId ?? null;
-    if (!open || turnId !== turn) { close(); turn = turnId; open = true; }
+    if (!open || turnId !== turn) { close(); turn = turnId; open = true; interrupted = false; }
     const id = str(item.id);
     if (item.type === "userMessage") {
       messages.push({ type: "user", uuid: id, message: { role: "user", content: userText(item) } });
@@ -100,7 +111,11 @@ export function turnMessages(items, { activeTurnId = null, turnErrors = null, ag
     if (!TOOL_ITEMS.has(item.type)) continue;
     messages.push({ type: "assistant", uuid: `${id}:use`, message: { id: `${id}:use`, model: "host", role: "assistant", stop_reason: "tool_use",
       content: [{ type: "tool_use", id, name: toolName(item), input: toolArgs(item) }] } });
-    if (finished(item)) messages.push({ type: "user", uuid: `${id}:result`, message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, is_error: failedCall(item), content: resultText(item) }] } });
+    if (item.status === "interrupted" && !failedCall(item)) {
+      messages.push({ type: "user", uuid: `${id}:result`, message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, is_error: true, content: INTERRUPTED_FOR_TOOL_USE }] } });
+      if (!interrupted) messages.push({ type: "user", uuid: `${id}:interrupt`, message: { role: "user", content: [{ type: "text", text: INTERRUPTED_FOR_TOOL_USE }] } });
+      interrupted = true;
+    } else if (finished(item)) messages.push({ type: "user", uuid: `${id}:result`, message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, is_error: failedCall(item), content: resultText(item) }] } });
     if (item.type === "collabAgentToolCall" && item.tool === "spawnAgent") {
       const agents = [...(item.receiverThreadIds || []), ...Object.keys(item.agentsStates || {})];
       if (agents.some((agent) => agentLifecycle?.[agent]?.status === "running")) runningAgents.add(id);
@@ -110,18 +125,20 @@ export function turnMessages(items, { activeTurnId = null, turnErrors = null, ag
   return { messages, runningAgents };
 }
 
-/** N_ (c1ebb1aa4 Wt → Ut → Rt, the update_plan branch: no TaskCreate todos) over the host transcript. */
+/** c4ea84cb3 Wr → Ur → Br (the update_plan branch: no TaskCreate todos) over the host transcript. */
 export function codeTurnTail({ items, latestPromptId, activeTurnId = null, turnErrors = null, agentLifecycle = null } = {}) {
   const list = Array.isArray(items) ? items : [];
   if (list.length === 0) return EMPTY_TURN_TAIL;
   const { messages, runningAgents } = turnMessages(list, { activeTurnId, turnErrors, agentLifecycle });
   if (messages.length === 0) return EMPTY_TURN_TAIL;
-  return deriveTurnTail(messages, latestPromptId, undefined, runningAgents);
+  return deriveTurnTail(messages, latestPromptId, undefined, runningAgents, AT_REPLIES);
 }
 
 /**
- * c1ebb1aa4 Lt: prompt id → the receipt (It) of the wrap_up that settled the turn before that prompt, for every prompt
- * row (the host's userMessage items), unless its call was dismissed (G: dismissed wrap-up call ids).
+ * c4ea84cb3 zr: prompt id → the receipt (Rr) of the wrap_up that settled the turn before that prompt, for every prompt
+ * row (the host's userMessage items), unless its call was dismissed (wr: dismissed wrap-up call ids). zr also files the
+ * calls of turns a non-bubble user row opens (opensTurn / calls); every host prompt is a bubble, so Ir runs over the
+ * prompts alone, as zr does when no other row opens a turn.
  */
 export function settledWrapUps(items, { activeTurnId = null, turnErrors = null, dismissed = null } = {}) {
   const list = Array.isArray(items) ? items : [];
@@ -129,21 +146,21 @@ export function settledWrapUps(items, { activeTurnId = null, turnErrors = null, 
   const out = new Map();
   if (prompts.size === 0) return out;
   const { messages } = turnMessages(list, { activeTurnId, turnErrors });
-  for (const [prompt, found] of wrapUpsByPrompt(messages, (uuid) => prompts.has(uuid), false)) {
+  for (const [prompt, found] of wrapUpsByPrompt(messages, (uuid) => prompts.has(uuid), false, AT_REPLIES)) {
     const receipt = wrapUpReceipt(found);
     if (prompt !== null && receipt !== null && !(found.callId !== null && dismissed?.has?.(found.callId))) out.set(prompt, receipt);
   }
   return out;
 }
 
-/** A prompt item as the transcript row c96d752d0 AL reads ({id, author:"user", items:[{kind:"text", id, text}]}). */
+/** A prompt item as the transcript row c96d752d0 dN reads ({id, author:"user", items:[{kind:"text", id, text}]}). */
 export function promptRowOf(item) {
   return { id: str(item?.id), author: "user", items: userText(item).map((part, index) => ({ kind: "text", id: `${str(item?.id)}-t${index}`, text: part.text })) };
 }
 
 /**
  * The Code transcript's rows with the ccd_turn calls taken out (c06cf64bb: update_plan draws no row, wrap_up none either
- * unless an old-style call's text — Vr = cb27dab29 Me — shows as text), and each settled wrap-up's receipt row in front
+ * unless an old-style call's text — ea = cb27dab29 Ne — shows as text), and each settled wrap-up's receipt row in front
  * of the prompt row that answered it (c96d752d0 `settledTurnBox`, rendered by generated SettledTurnBox).
  *   settled   settledWrapUps(...)  (prompt id → receipt); the row carries the prompt row the receipt quotes (AL).
  */

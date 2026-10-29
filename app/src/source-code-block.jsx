@@ -55,7 +55,9 @@ function useBlockRun(actions, id) {
     tracked: !!mine,
     output: shown?.output || null,
     altScreen: !!shown?.altScreen,
-    error: mine?.errorKind === "shell-exited" ? t("Shell exited.") : mine?.error ? t(mine.error) : null,
+    // Bh `l = t.inlineRun.error`: the store's plain text (c6bf19e8f li, "Shell exited", or a raw message), shown in
+    // the app language.
+    error: mine?.error ? t(mine.error) : null,
     running: !!mine && !mine.settled,
     finished: !!mine && mine.settled && mine.dispatched,
     // Ng commandDone: the tracked run ended at an idle prompt (endedBy "idle" only).
@@ -248,7 +250,7 @@ export function SourceCodeBlock({ text = "", language = "text", isFrontier = fal
             onOpenInTerminal={actions ? () => actions.openInTerminal(runId) : null} />
           : kept === undefined ? null
           // Bg: the kept box offers Open in terminal while its run is the tracked one (`onOpenInTerminal: se ? De : null`).
-          : <RunOutput command={blockRun.command} output={kept.output || t("(no output)")} altScreen={false} error={kept.error === "shell-exited" ? t("Shell exited.") : kept.error || null}
+          : <RunOutput command={blockRun.command} output={kept.output || t("(no output)")} altScreen={false} error={kept.error ? t(kept.error) : null}
             onOpenInTerminal={live.tracked && actions ? () => actions.openInTerminal(runId) : null} />}
       </div>}
     <span id={statusId} className="scb-status" role="status" aria-live="polite">{message}</span>

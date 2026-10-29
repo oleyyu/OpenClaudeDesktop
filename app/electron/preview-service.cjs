@@ -1069,6 +1069,45 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     entry.agentDriven = false;
     return navigate(sessionId, require("node:url").pathToFileURL(file).href);
   }
+  // V3-w10-shell-auto-open-behavior (asar index.chunk-jPKPzV-P loadHtmlPreview: evictHtmlPreviewsForScope(sessionId,
+  // "html") then a new html-preview entry; index.chunk-DNPOm2Zc Fk initiator:"agent"): a file the agent wrote opens in
+  // the session's one agent-file tab, never over the user's page. That tab is reused while it still shows a file; a
+  // lone blank start page is taken over; otherwise a new tab opens. The agent opened the page, so it is agentDriven and
+  // its outside navigations ask with the session's approval when the agent installed one (else they stay blocked).
+  // V3-w11-sweep-shell-b (evictHtmlPreviewsForScope: `a=i.slice(0,Math.max(0,i.length-3))`): of the html previews other
+  // scopes still hold, only the 3 most recent stay. Host: the agent-file tabs other sessions still show a file in.
+  let agentFileOrder = 0;
+  function evictAgentFiles(group) {
+    const others = new Set();
+    for (const entry of previews.values()) if (entry.group !== group) for (const tab of entry.group.tabs.values())
+      if (tab.agentFile === true && (!tab.url || /^file:/i.test(tab.url))) others.add(tab);
+    const order = [...others].sort((a, b) => (a.agentFileOrder ?? 0) - (b.agentFileOrder ?? 0));
+    for (const tab of order.slice(0, Math.max(0, order.length - 3))) void closeTab(tab.id, tab.tabId).catch(() => {});
+  }
+  function openAgentFile(sessionId, file) {
+    const active = preview(sessionId);
+    if (typeof file !== "string" || !path.isAbsolute(file)) throw new Error("Choose a file.");
+    const url = require("node:url").pathToFileURL(file).href, allowed = launch.navigationAllowed(url, active.cwd);
+    if (!allowed.ok) throw new Error(allowed.reason);
+    // V3-w11-sweep-shell-b (index.chunk-DNPOm2Zc rA `if(m&&!(p&&e()))`, p = Wk /\.html?$/i, e = isAutoVerifyEnabled(cwd):
+    // `t?t.autoVerify!==!1:!1`): with auto verify on in the session folder's launch.json the agent checks its own HTML,
+    // so it is not opened. Checked here so it holds for every session, not only the one a pane shows. getConfigFile is
+    // `t.status==="ok"?t.config:null`, and parseLaunchJson answers "ok" only with at least one usable configuration
+    // (`if(s.length===0){…"no-valid-configs"…:{status:"parse-error"…}}`): a launch.json that does not parse, has no
+    // configurations or none that can be used is no config, so auto verify reads off (w11 review low 2).
+    const info = launchInfo(active.cwd);
+    if (/\.html?$/i.test(file) && info.exists && info.configs.length > 0 && info.autoVerify !== false) return { opened: false };
+    const tabs = [...active.group.tabs.values()];
+    let next = tabs.find((tab) => tab.agentFile === true && (!tab.url || /^file:/i.test(tab.url)));
+    if (next) activateTab(sessionId, next.tabId);
+    else next = tabEntry(sessionId, newTab(sessionId).activeTabId);
+    next.agentFile = true;
+    next.agentDriven = true;
+    next.agentFileOrder = ++agentFileOrder;
+    evictAgentFiles(next.group);
+    if (typeof next.siteApproval !== "function") next.siteApproval = tabs.find((tab) => typeof tab.siteApproval === "function")?.siteApproval ?? null;
+    return navigate(sessionId, url, { tabId: next.tabId });
+  }
   function userNavigate(sessionId, text) {
     const entry = preview(sessionId);
     const url = launch.parseUserUrl(text, entry.cwd, home);
@@ -1739,6 +1778,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       case "preview-occlude": return occlude(sender, p);
       case "preview-focus": return focusPage(sender, p);
       case "preview-navigate": subscribe(preview(id), sender); return userNavigate(id, p.url);
+      case "preview-agent-file": subscribe(preview(id), sender); return openAgentFile(id, p.path); // V3-w10-shell-auto-open-behavior
       case "preview-link-open": subscribe(preview(id), sender); return openTranscriptLink(id, p.url);
       case "preview-address-navigate": subscribe(preview(id), sender); return addressNavigate(id, p.text);
       case "preview-selection": return selectElement(sender, p);

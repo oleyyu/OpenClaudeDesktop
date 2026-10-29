@@ -1,8 +1,8 @@
 // R3-sections step 3, work item sidebar-filter-sessionlist-current (research/sidebar-sections.md WI-5; ledger sidebar-17):
-// the Code list's Group and sort is 2.42304.0 shared-21 _U / vU / aU / oU in its sessionList layout -- the generated
-// code-current sidebar-filter-options / -controls / -view (oU's Se, its sessionList branch, one copy of the controls
-// shared with the section view menu) over the view-tabs CDS Dropdown -- and the nested Hide / Show all items moved to the
-// command palette (shared-20 _S). Nothing opens a window: generator manifests against an independent parse of the
+// the Code list's Group and sort is shared-21 rY / iY / NJ / PJ in its sessionList layout (3.6556.2, w4-sidebar-filter;
+// 2.42304.0 _U / vU / aU / oU) -- the generated code-current sidebar-group-options / -controls / -view (GJ, PJ's
+// sessionList block, one copy of the controls shared with the section view menu) over the view-tabs CDS Dropdown -- and
+// the nested Hide / Show all items moved to the command palette (shared-20 _S). Nothing opens a window: generator manifests against an independent parse of the
 // original chunk, SSR of the real SourceSidebar, and controlled renders through a hook dispatcher (D21).
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,9 +16,10 @@ import react from '@vitejs/plugin-react';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import * as Store from '../electron/sidebar-sections-store.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const read = (file) => fs.readFile(path.join(app, file), 'utf8');
 const sha = (text) => createHash('sha256').update(text).digest('hex');
 // D21: view-tabs' preload-helper calls document.createElement while it evaluates; sidebar-resize reads documentElement.
@@ -37,7 +38,9 @@ before(async () => {
   M.view = await load('/src/generated/code-current/sidebar-filter-view.mjs');
   M.controls = await load('/src/generated/code-current/sidebar-filter-controls.mjs');
   M.sectionControls = await load('/src/generated/sidebar-sections/section-filter-controls.mjs');
-  M.viewTabs = await load('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  M.viewTabs = await load('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  M.groupOptions = await load('/src/generated/code-current/sidebar-group-options.mjs');
+  M.model = await load('/src/sidebar-filter-current-model.mjs');
   M.palette = await load('/src/source-sidebar-palette.jsx');
 });
 after(async () => {
@@ -65,7 +68,7 @@ function fixture(component, props = {}) {
   hooks.useLayoutEffect = hooks.useEffect;
   hooks.useInsertionEffect = hooks.useEffect;
   const run = () => { cursor = 0; const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
-    internals.H = hooks; try { tree = component(props); } finally { internals.H = previous; } return tree; };
+    internals.H = withMemoCache(hooks); try { tree = component(props); } finally { internals.H = previous; } return tree; };
   run();
   return { get tree() { return tree; }, render: run, flush: () => { while (effects.length) effects.shift()(); }, close: () => cells.forEach((c) => c?.cleanup?.()) };
 }
@@ -77,111 +80,253 @@ function nodes(tree, predicate) {
 const node = (tree, predicate) => nodes(tree, predicate)[0];
 
 // ---------------------------------------------------------------- generator: the three code-current targets
-async function originalOU() {
-  const code = await format((await fs.readFile(path.join(reference, 'shared-21-IP-SVetq.js'))).toString(), { parser: 'babel' });
+async function originalPJ() {
+  const code = await format((await fs.readFile(path.join(reference, 'shared-21-R7LldJ05.js'))).toString(), { parser: 'babel' });
   const ast = parsers.babel.parse(code, {});
-  const oU = ast.program.body.find((n) => n.type === 'FunctionDeclaration' && n.id?.name === 'oU');
-  const found = { Se: [], sessionList: [] };
+  const fn = (name) => ast.program.body.find((n) => n.type === 'FunctionDeclaration' && n.id?.name === name);
+  const blocks = [];
   const visit = (n) => {
     if (!n || typeof n !== 'object') return;
-    if (n.type === 'VariableDeclarator' && n.id?.name === 'Se') found.Se.push(n.init.arguments[0].body);
-    if (n.type === 'ConditionalExpression' && code.slice(n.test.start, n.test.end) === 't === "sessionList"' && n.consequent.callee?.name === 'f') found.sessionList.push(n.consequent);
+    if (n.type === 'IfStatement' && code.slice(n.test.start, n.test.end) === 'n === "sessionList"') blocks.push(n.consequent);
     for (const v of Object.values(n)) if (Array.isArray(v)) v.forEach(visit); else if (v && typeof v === 'object') visit(v);
   };
-  visit(oU);
-  return { code, found };
+  visit(fn('PJ'));
+  return { code, GJ: fn('GJ'), blocks };
 }
 
-test('code-current sidebar-filter-options / -view are shared-21 oU (2.42304.0): its Se and its sessionList branch, verbatim', async () => {
+test('code-current sidebar-group-options / -view are shared-21 GJ and PJ (3.6556.2): GJ whole, PJ\'s sessionList block, verbatim', async () => {
   const manifest = JSON.parse(await read('src/generated/code-current/manifest.json'));
   const entry = (target) => manifest.modules.find((m) => m.target === target);
-  const { code, found } = await originalOU();
-  assert.equal(found.Se.length, 1); assert.equal(found.sessionList.length, 1);
-  const options = entry('sidebar-filter-options.mjs'), view = entry('sidebar-filter-view.mjs'), controls = entry('sidebar-filter-controls.mjs');
-  for (const m of [options, view, controls]) assert.deepEqual([m.referenceVersion, path.basename(m.source)], ['2.42304.0', 'shared-21-IP-SVetq.js'], m.target);
-  const fragment = (n) => code.slice(n.start, n.end);
-  assert.deepEqual(options.sourceSelections.map((s) => [s.binding, s.local, s.fragmentSha256]), [['oU', 'Se', sha(fragment(found.Se[0]))]]);
-  assert.deepEqual(view.sourceSelections.map((s) => [s.binding, s.test, s.callee, s.fragmentSha256]), [['oU', 't === "sessionList"', 'f', sha(fragment(found.sessionList[0]))]]);
+  const { code, GJ, blocks } = await originalPJ();
+  assert.ok(GJ); assert.equal(blocks.length, 1);
+  const options = entry('sidebar-group-options.mjs'), view = entry('sidebar-filter-view.mjs'), controls = entry('sidebar-filter-controls.mjs');
+  for (const m of [options, view, controls]) assert.deepEqual([m.referenceVersion, path.basename(m.source)], ['3.6556.2', 'shared-21-R7LldJ05.js'], m.target);
+  assert.deepEqual(options.bindings, ['GJ']);
+  const optionsText = await read('src/generated/code-current/sidebar-group-options.mjs');
+  assert.ok(optionsText.includes(code.slice(GJ.start, GJ.end)), 'GJ verbatim');
+  assert.match(optionsText, /export \{ GJ as useSidebarGroupByOptions \};/);
+  // GJ: Date / [Status] / Folder (project) / Environment (bYA6fPCd5A) / [Custom] / None.
+  for (const needle of ['["date", r]', '["project", o]', 'defaultMessage: "Environment", id: "bYA6fPCd5A"', '["environment", c]', '[i, ...a, s, l, ...u, f]'])
+    assert.ok(optionsText.includes(needle), needle);
+  assert.deepEqual(view.sourceSelections.map((s) => [s.binding, s.ifTest, s.result, s.cache]), [['PJ', 'n === "sessionList"', 'fn', '$ = J9(482)']]);
+  assert.equal(view.sourceSelections[0].fragmentSha256, sha(code.slice(blocks[0].start, blocks[0].end)));
   assert.deepEqual(controls.bindings, [], 'controls: a re-export of the one sidebar-sections copy');
   const viewText = await read('src/generated/code-current/sidebar-filter-view.mjs');
-  // oU's dt reaches sU as atDefaults: !dt (the selection's resetAvailable parameter).
-  assert.match(viewText, /resetAvailable: dt,/); assert.match(viewText, /_\(sU, \{ atDefaults: !dt, onReset: ft \}\)/);
-  assert.match(viewText, /import \{ CdsDropdown as X \} from "\.\.\/view-tabs\/shared-frame-BfjMqbuN\.js";/);
-  for (const text of [viewText, await read('src/generated/code-current/sidebar-filter-controls.mjs'), await read('src/generated/code-current/sidebar-filter-options.mjs')]) {
+  // PJ's Zt reaches UJ as atDefaults: !Zt (the selection's resetAvailable parameter); Group by keeps the menu open.
+  assert.match(viewText, /resetAvailable: Zt,/); assert.match(viewText, /u\(UJ, \{ atDefaults: y, onReset: Qt \}\)/);
+  assert.match(viewText, /keepOpen: !0,\s+label: e,\s+options: we,\s+value: Xt,\s+onChange: Vt,\s+separatorBefore: "none",/);
+  assert.match(viewText, /CdsDropdown as H,\n\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  for (const text of [viewText, await read('src/generated/code-current/sidebar-filter-controls.mjs'), optionsText]) {
     assert.doesNotMatch(text, /source-menu\.jsx|source-sidebar-filter-adapters|nested-session-copy|allNestedToggleLabel|hideAllNested|cds-merge-props/);
-    assert.doesNotMatch(text, /Original Claude Desktop 2\.37337\.1/);
+    assert.doesNotMatch(text, /Original Claude Desktop 2\.(37337\.1|42304\.0)/);
   }
-  // JC (old shared-20 Hide / Show all nested copy) was deleted in 2.42304.0; it is not re-pointed to shared-2 PH (pin copy).
-  assert.doesNotMatch(viewText + (await read('src/generated/code-current/sidebar-filter-controls.mjs')), /pinFailed|unpinFailed|\bPH\b|\bJC\b/);
+  // The host takes Group by from GJ now; the 2.42304.0 oU Se slice (sidebar-filter-options.mjs) has no host consumer left.
+  const host = await read('src/source-sidebar-filter-current.jsx');
+  assert.match(host, /import \{ useSidebarGroupByOptions \} from '\.\/generated\/code-current\/sidebar-group-options\.mjs';/);
+  assert.doesNotMatch(host, /sidebar-filter-options|keyRegroups|onRegroup|shared-frame-BfjMqbuN/);
   await fs.access(path.join(app, 'src/source-sidebar-filter-adapters.jsx')).then(() => assert.fail('the 2.37337.1 filter adapters are gone'), () => {});
 });
 
-test('one copy of the controls: code-current re-exports the sidebar-sections slice (KH, uU, dU, lU, sU, cU, aU, CB, hU, gU)', () => {
+test('GJ in the host menu: Date first, Folder, Environment (the host buckets by saved environment, E17)', () => {
+  const all = [['date', 'Date'], ['state', 'Status'], ['project', 'Folder'], ['environment', 'Environment'], ['none', 'None']];
+  assert.equal(M.model.SAVED_ENVIRONMENT_GROUPS_HOST, true);
+  assert.deepEqual(M.model.sessionListGroupOptions(all), all);
+  assert.deepEqual(M.model.sessionListGroupOptions(all, { savedEnvironmentGroups: false }), [['date', 'Date'], ['state', 'Status'], ['project', 'Folder'], ['none', 'None']]);
+  // Rendered through the real host adapters (overlay gate on: no Custom; status grouping on).
+  const f = fixture(M.filter.SessionListFilterMenu, { handle: {}, open: true, onOpenChange() {}, preferences: { groupBy: 'date' } });
+  const content = f.tree.props.children.props.children.props;
+  assert.deepEqual(content.groupOptions, all);
+  assert.equal(content.groupBy, 'date');
+  // Environment stays the shown radio (normalizeSidebarPreferences keeps it; the classic menu does not offer it).
+  const g = fixture(M.filter.SessionListFilterMenu, { handle: {}, open: true, onOpenChange() {}, preferences: { groupBy: 'environment' } });
+  assert.equal(g.tree.props.children.props.children.props.groupBy, 'environment');
+});
+
+test('Group by › Environment: shared-22 OE buckets by saved environment (SE / _E / yE / JE / YE), stored as savedEnvironment (E17)', async () => {
+  const shared22 = await fs.readFile(path.join(reference, 'shared-22-Bwn3sJTG.js'), 'utf8');
+  const shared46 = await fs.readFile(path.join(reference, 'shared-46-BIbZBGFq.js'), 'utf8');
+  const shared20 = await fs.readFile(path.join(reference, 'shared-20-mUr7IqZY.js'), 'utf8');
+  for (const [text, needle] of [
+    [shared22, 'r&&!t){P=bE;break bb0}P=J3($,7,n,A,N)?K3($,7,n,A,N,n&&A?SE(n,A,N):null)'],
+    [shared22, 'a=(typeof i=="string"?r.get(i)??(typeof e.startedFromEnvironmentId=="string"?r.get(e.startedFromEnvironmentId):void 0):void 0)??t(e);return a&&xE(a)?{kind:"saved",environment:a}:bE(e)'],
+    [shared22, 'for(let e of r.values())e.sort(rE);return e=>{for(let i of uE(e,t,n)){let e=r.get(i)?.[0];if(e)return e}}'],
+    [shared22, 'function vE(e){let t,n=0;for(let[r,i]of e)i>n&&(t=r,n=i);return t}'],
+    [shared22, 't!==void 0&&e.target.kind==="local"&&(!i||rE(e,i)<0)&&n.set(t,e)'],
+    [shared22, 'e.kind==="folder"&&e.folder.ran===void 0&&mE(t).kind==="local"?n.get(e.folder'],
+    [shared22, 'case"saved":return`project-${BE}${e.environment.id}`;case"folder":return`project-${tE(e.folder)}`;case"unsaved":return`project-${VE}${eE(e.unsaved)}`'],
+    [shared22, 'i.push({...qE(a,e.name,o),environment:e,legacyOrderKey:vE(o.legacyKeys)})'],
+    [shared22, 'BE="preset::",VE="kind::"'],
+    [shared22, 'function XE(e,t,n){return e.kind==="local"?Pi(n)'],
+    [shared22, 'environment===void 0&&d!==void 0?20:d,'],
+    [shared46, 'function LL(e,t=ML.getState().bySessionId){let n=Object.hasOwn(t,e.id)?t[e.id]:void 0;'],
+    [shared46, 'function VL(e){return e.formatMessage({defaultMessage:"This computer",id:"Red8UM0oCv"})}'],
+    [shared46, 'e.legacyOrderKey&&!n.has(t)&&n.has(e.legacyOrderKey)&&r.set(e.legacyOrderKey,'],
+    [shared46, 'n=Kj(t)?-1/0:1/0;return[e,i.get(t)??n]'],
+    [shared20, 'case"local":return`local:${e.wslDistro??""}:${e.cwd}`'],
+  ]) assert.ok(text.includes(needle), needle);
+  const { buildSidebarGroups } = await import('../src/sidebar-model.js');
+  const Layout = await import('../src/sidebar-sections-layout.mjs');
+  const Model = await import('../electron/generated/sidebar-sections-model.mjs');
+  const now = Date.UTC(2026, 9, 26, 12);
+  const s = (id, cwd, ago) => ({ id, cwd, name: id, updatedAt: now - ago, createdAt: now - ago });
+  const sessions = [s('a', '/w/app', 1), s('b', '/w/app/', 2), s('c', '/w/lib', 3), s('d', '/tmp/x', 4), s('e', '/w/repo', 5), s('f', '/w/repo2', 6), s('g', '/w/app', 7)];
+  const environments = [
+    { id: 'E1', name: 'App env', createdAt: 2, target: { kind: 'local', cwd: '/w/app' } },
+    { id: 'E0', name: 'Older app', createdAt: 1, target: { kind: 'local', cwd: '/w/app/' } },
+    { id: 'E2', name: 'Zeta', createdAt: 3, target: { kind: 'local', cwd: '/elsewhere' } },
+    { id: 'E3', name: 'Unused', createdAt: 4, target: { kind: 'local', cwd: '/nowhere' } },
+  ];
+  const repoIdentities = { '/w/app': { isRepo: true, owner: 'o', name: 'app' }, '/w/app/': { isRepo: true, owner: 'o', name: 'app' },
+    '/w/lib': { isRepo: true, owner: null, name: 'lib' }, '/tmp/x': { isRepo: false }, '/w/repo': { isRepo: true, owner: 'o', name: 'repo' },
+    '/w/repo2': { isRepo: true, owner: 'o', name: 'repo' } };
+  // e was started in E2 (main's sessionMetadata.environmentId); g in E1, a deleted id falls back to its place (_E).
+  const metadata = { e: { environmentId: 'E2' }, g: { environmentId: 'E1' }, b: { environmentId: 'gone' } };
+  const shape = (groups) => groups.map((g) => [g.key, g.kind, g.label, g.sessions.map((x) => x.id).join('')]);
+  const groups = buildSidebarGroups({ sessions, preferences: { groupBy: 'environment' }, metadata, repoIdentities, savedEnvironments: environments, currentLayout: true, now });
+  assert.deepEqual(shape(groups), [
+    // _E: the oldest environment of the place (E0 over E1, trailing separators trimmed); SE: g's own E1 first.
+    ['project:preset::E1', 'environment', 'App env', 'g'],
+    ['project:/w/lib', 'project', 'lib', 'c'],
+    ['project:preset::E0', 'environment', 'Older app', 'ab'],
+    // yE: f is in o/repo, the repo E2's rows are in, so it joins E2's bucket.
+    ['project:preset::E2', 'environment', 'Zeta', 'ef'],
+    // YE: no repo, the place bucket "This computer" (XE → zL), last.
+    ['project:kind::local', 'project', 'This computer', 'd'],
+  ]);
+  assert.equal(groups[0].environmentId, 'E1'); assert.equal(groups[0].cwd, undefined, 'a saved bucket is no folder bucket');
+  assert.equal(groups.at(-1).projectKey, '__no_project__');
+  // Yj / Xj over the stored order: lib first; E1 and E0 (their rows mostly o/app) right after a stored o/app, in label
+  // order; E2 (o/repo, not stored) unranked after them.
+  const ordered = buildSidebarGroups({ sessions, preferences: { groupBy: 'environment' }, metadata, repoIdentities, savedEnvironments: environments,
+    currentLayout: true, now, projectOrder: ['/w/lib', 'ccg::x', 'o/app'] });
+  assert.deepEqual(ordered.map((g) => g.key), ['project:/w/lib', 'project:preset::E1', 'project:preset::E0', 'project:preset::E2', 'project:kind::local']);
+  const stored = buildSidebarGroups({ sessions, preferences: { groupBy: 'environment' }, metadata, repoIdentities, savedEnvironments: environments,
+    currentLayout: true, now, projectOrder: ['preset::E2', '/w/lib'] });
+  assert.deepEqual(stored.map((g) => g.key), ['project:preset::E2', 'project:/w/lib', 'project:preset::E1', 'project:preset::E0', 'project:kind::local']);
+  // Without saved environments: folder buckets, sorted by label, and the place bucket.
+  assert.deepEqual(shape(buildSidebarGroups({ sessions, preferences: { groupBy: 'environment' }, repoIdentities, currentLayout: true, now })).map((g) => g[0]),
+    ['project:o/app', 'project:/w/lib', 'project:o/repo', 'project:kind::local']);
+  // The sections layout: the Sessions section's savedEnvironment reads back as environment; IE's cut (preset 5, others 20).
+  const sections = Model.setSectionView(Model.normalizeSections([]), 'sessions', { groupBy: 'savedEnvironment' });
+  assert.equal(Layout.sessionsGroupBy(sections), 'environment');
+  const model = Layout.buildSidebarSections({ sections, sessions, preferences: {}, metadata, repoIdentities, savedEnvironments: environments, now });
+  assert.equal(model.preferences.groupBy, 'environment');
+  assert.deepEqual(model.buckets.map((b) => [b.key, b.truncateAt]), [['project:preset::E1', 5], ['project:/w/lib', 20], ['project:preset::E0', 5],
+    ['project:preset::E2', 5], ['project:kind::local', 20]]);
+  // OE serves the Folder grouping too: its folder / place buckets (no environment) cut at 20 (w10-shell-sidebar-folder).
+  assert.equal(Layout.environmentBucketTruncateAt('project', { key: 'project:/w/lib' }), 20, 'a folder bucket cuts at 20');
+  assert.equal(Layout.environmentBucketTruncateAt('project', { key: 'project:kind::local' }), 20, 'the place bucket cuts at 20');
+  assert.equal(Layout.environmentBucketTruncateAt('date', { key: 'date:today' }), 5, 'other groupings keep 5');
+  // Choosing Environment writes the Sessions section's savedEnvironment (shared-11 vf: Ft = shared-52 _m).
+  assert.deepEqual(Layout.sessionsViewPatch({ groupBy: 'project' }, { groupBy: 'environment' }), { groupBy: 'savedEnvironment' });
+  // main passes its saved environments to the sidebar, which hands them to the sections layout.
+  const main = await read('src/main.jsx'), sidebar = await read('src/source-sidebar.jsx');
+  assert.match(main, /savedEnvironments=\{savedEnvironments\.environments\}\n\s+onSaveAsEnvironment|sidebarSections=\{sidebarSections\}\n(?:\s*\/\/.*\n)?\s+savedEnvironments=\{savedEnvironments\.environments\}/);
+  assert.match(sidebar, /held: loading, savedEnvironments \}\) : null,/);
+});
+
+test('one copy of the controls: code-current re-exports the sidebar-sections slice (_J, qJ, JJ, KJ, UJ, WJ, NJ, OG, nY)', () => {
   for (const name of ['SidebarViewAllContext', 'SidebarOptionMenu', 'SidebarSortMenu', 'useSidebarSortOptions', 'SidebarViewResetItems', 'SidebarViewAllItem',
-    'SidebarFilterTrigger', 'trailingControlClass', 'focusSidebarAfterRegroup', 'useSidebarRegroupFocus', 'sortAscendingShown', 'sortAscendingStored'])
+    'SidebarFilterTrigger', 'trailingControlClass', 'focusSidebarAfterRegroup', 'sortAscendingShown', 'sortAscendingStored']) {
+    assert.equal(typeof M.controls[name], name === 'SidebarViewAllContext' ? 'object' : 'function', name);
     assert.equal(M.controls[name], M.sectionControls[name], name);
+  }
+  // SB-26: 3.6556.2 deleted gU (useSidebarRegroupFocus).
+  assert.equal(M.controls.useSidebarRegroupFocus, undefined);
   assert.equal(M.controls.SidebarNestedVisibilityItems, undefined);
 });
 
-// ---------------------------------------------------------------- the trigger and its menu (shared-21 _U / vU / aU)
-test('SourceCodeSidebarFilter (_U + vU): CB span, aU trigger on the lazy menu handle, the body mounts on the first press, open state and regroup focus', () => {
+// ---------------------------------------------------------------- the trigger and its menu (shared-21 rY / iY / NJ)
+test('SourceCodeSidebarFilter (rY + iY): OG span, NJ trigger on the lazy menu handle, the body mounts on the first press, the frozen anchor and the wheel guard', () => {
   const store = M.adapters.useSidebarSectionsStore;
-  const focused = [];
-  const heading = { focus: () => focused.push('heading') };
-  const list = { ownerDocument: { body: {}, activeElement: null }, querySelector: (selector) => selector === '[data-group-toggle]' ? heading : null };
-  const f = fixture(M.filter.SourceCodeSidebarFilter, { preferences: { groupBy: 'project' }, listRef: { current: list } });
+  store.setState({ overflowMenuOpen: false, sortMenuOpen: false });
+  const listeners = [];
+  const doc = { addEventListener: (type, fn, options) => listeners.push(['add', type, fn, options]), removeEventListener: (type, fn) => listeners.push(['remove', type, fn]) };
+  const f = fixture(M.filter.SourceCodeSidebarFilter, { preferences: { groupBy: 'project' }, listRef: { current: null } });
   f.flush();
   const span = () => f.tree.props.children[0];
   const trigger = () => span().props.children;
-  assert.equal(span().type, 'span');
-  assert.equal(span().props.className, M.controls.trailingControlClass(false, false), 'hidden until the label row is hovered');
-  // aU: CDS Tooltip {content, hoverable:false, open: !n && void 0} around the CDS Dropdown trigger rendering CdsButton.
+  const id = span().props['data-group-sort-trigger'];
+  // iY: the span OG(o && !held, s) with scrollMarginBlock 8 and data-group-sort-trigger = the trigger's id.
+  assert.deepEqual([span().type, span().props.className, span().props.style], ['span', M.controls.trailingControlClass(false, false), { scrollMarginBlock: 8 }], 'hidden until the label row is hovered');
+  assert.equal(typeof id, 'string');
+  // NJ: CDS Tooltip {content, hoverable:false, open: !n && void 0} around the CDS Dropdown trigger rendering yJ.
   assert.equal(trigger().type, M.viewTabs.CdsTooltip);
   assert.deepEqual([trigger().props.content, trigger().props.hoverable, trigger().props.open], ['Group and sort', false, undefined]);
   const button = trigger().props.children;
   assert.equal(button.type, M.viewTabs.CdsDropdown.Trigger);
-  assert.equal(button.props.className, M.filter.FILTER_TRIGGER_MARKER);
-  assert.equal(button.props['aria-expanded'], false);
-  assert.equal(typeof button.props.onFocusCapture, 'function', 'L$ trigger props');
+  assert.deepEqual([button.props.className, button.props.id, button.props['aria-expanded']], [M.filter.FILTER_TRIGGER_MARKER, id, false]);
+  assert.equal(typeof button.props.onFocusCapture, 'function', 'xl trigger props');
   assert.equal(typeof button.props.handle?.open, 'function', 'a CdsMenuCreateHandle handle');
-  assert.deepEqual([button.props.render.type, button.props.render.props.icon, button.props.render.props.variant, button.props.render.props.className, button.props.render.props['aria-label'],
-    button.props.render.props.tooltip, button.props.render.props.size], [M.viewTabs.CdsButton, 'Filter', 'ghost', 'df-chrome-btn relative -my-1', 'Group and sort', false, 'xs']);
-  // aU `size: a ? "sm" : i ? "xs" : void 0`: comfortable here (no CDS density around); the sidebar heading is compact (Shift).
-  assert.equal(f.tree.props.children[1], false, 'no menu body before the first press (L$)');
+  // SB-23: yJ reads the density itself (no comfortable / sm arguments), the class gains aria-expanded:touch-none, data-held.
+  const render = button.props.render;
+  assert.equal(typeof render.type, 'function');
+  assert.deepEqual([render.props.icon, render.props.className, render.props['aria-label'], render.props['data-row-action'], render.props['data-held'], render.props['data-list-filter']],
+    ['Filter', 'df-chrome-btn relative -my-1 aria-expanded:touch-none', 'Group and sort', '', undefined, undefined]);
+  assert.equal(f.tree.props.children[1], false, 'no menu body before the first press (xl)');
   button.props.onFocusCapture();
   f.render();
   const menu = () => f.tree.props.children[1];
   assert.equal(menu().type, M.filter.SessionListFilterMenu);
-  assert.equal(menu().props.handle, button.props.handle);
-  assert.equal(menu().props.open, false);
-  // Opening: the trigger shows expanded, CB keeps the span shown, the tooltip is held closed, the overflow flag is set.
-  menu().props.onOpenChange(true, 'trigger-id');
+  assert.deepEqual([menu().props.handle, menu().props.open, menu().props.triggerId, menu().props.anchor], [button.props.handle, false, null, undefined]);
+  // Opening from the trigger (rY y): its id and ZJ(trigger), the rect frozen at that moment; the overflow flag with the
+  // sort-menu flag (Fj, `m(e, !0)`); QJ guards the wheel on the trigger's document while open.
+  let top = 40;
+  const element = { id, ownerDocument: doc, getBoundingClientRect: () => ({ top, left: 0, width: 24, height: 24 }) };
+  menu().props.onOpenChange(true, element, 'trigger-press');
   f.render(); f.flush();
-  assert.deepEqual([menu().props.open, span().props.className, trigger().props.open, trigger().props.children.props['aria-expanded']],
-    [true, M.controls.trailingControlClass(true, false), false, true]);
-  assert.equal(store.getState().overflowMenuOpen, true);
-  // A keyboard regroup, then the close: gU focuses the list's first heading (hU).
-  menu().props.onRegroup(true);
-  menu().props.onRegroup(false);
+  assert.deepEqual([menu().props.open, menu().props.triggerId, span().props.className, trigger().props.open, trigger().props.children.props['aria-expanded']],
+    [true, id, M.controls.trailingControlClass(true, false), false, true]);
+  const anchor = menu().props.anchor;
+  top = 400;
+  assert.deepEqual([anchor.contextElement, anchor.getBoundingClientRect().top], [element, 40], 'ZJ: the rect at the open');
+  assert.deepEqual([store.getState().overflowMenuOpen, store.getState().sortMenuOpen], [true, true]);
+  assert.deepEqual(listeners.map(([kind, type, fn, options]) => [kind, type, fn, options]), [['add', 'wheel', M.filter.menuWheelGuard, { passive: false }]]);
+  // $J: a wheel outside the menu is held, one inside it (or a ctrl zoom) is not.
+  const prevented = [];
+  const wheel = (target, ctrlKey = false) => ({ target, ctrlKey, preventDefault: () => prevented.push(target?.name ?? null) });
+  const inside = { nodeType: 1, name: 'item', closest: (selector) => selector === '[role="menu"]' ? {} : null };
+  const outside = { nodeType: 1, name: 'row', closest: () => null };
+  M.filter.menuWheelGuard(wheel(inside)); M.filter.menuWheelGuard(wheel(outside)); M.filter.menuWheelGuard(wheel(outside, true)); M.filter.menuWheelGuard(wheel({ nodeType: 3 }));
+  assert.deepEqual(prevented, ['row', null]);
+  // Closing (Escape): the record keeps the trigger and the anchor (`{...t, open: !1}`); the guard and the flag go.
+  menu().props.onOpenChange(false, undefined, 'escape-key');
   f.render(); f.flush();
-  assert.deepEqual(focused, []);
-  menu().props.onOpenChange(false);
-  f.render(); f.flush();
-  assert.deepEqual(focused, ['heading']);
+  assert.deepEqual([menu().props.open, menu().props.triggerId, menu().props.anchor, trigger().props.children.props['aria-expanded']], [false, id, anchor, false]);
+  assert.deepEqual(listeners.at(-1), ['remove', 'wheel', M.filter.menuWheelGuard]);
   assert.equal(store.getState().overflowMenuOpen, false);
   f.close();
+});
+
+test('SessionListFilterMenu (PJ): Root with the opening trigger, Popup at the frozen anchor with finalFocus; Reset has no regroup step', () => {
+  const anchor = { contextElement: {}, getBoundingClientRect: () => ({}) }, opened = [];
+  const f = fixture(M.filter.SessionListFilterMenu, { handle: {}, open: true, onOpenChange: (...args) => opened.push(args), triggerId: 'trigger', anchor, preferences: { groupBy: 'date' } });
+  const root = f.tree, popup = root.props.children;
+  assert.deepEqual([root.type, root.props.open, root.props.triggerId], [M.viewTabs.CdsDropdown.Root, true, 'trigger']);
+  assert.deepEqual([popup.type, popup.props.side, popup.props.align, popup.props.sideOffset, popup.props.anchor, popup.props.finalFocus, popup.props.className],
+    [M.viewTabs.CdsDropdown.Popup, 'bottom', 'end', 4, anchor, true, undefined]);
+  // en: `a(e, r?.trigger, r?.reason)`.
+  const element = { id: 'trigger' };
+  root.props.onOpenChange(false, { trigger: element, reason: 'item-press' });
+  assert.deepEqual(opened, [[false, element, 'item-press']]);
+  const plain = fixture(M.filter.SessionListFilterMenu, { handle: {}, open: false, onOpenChange() {}, triggerId: null, preferences: {} }).tree;
+  assert.deepEqual([plain.props.triggerId, plain.props.children.props.anchor, plain.props.children.props.finalFocus], [null, undefined, undefined]);
+  // Qt (3.6556.2): no regroup step.
+  assert.deepEqual(M.model.sessionListResetSteps({ sortBy: 'created', ascending: true, emptyGroups: true }), { sortBy: 'recency', descending: true, emptyGroupsOff: true });
 });
 
 test('SSR: the Sessions heading carries the original trigger once; the menu body is not rendered until it is asked for', () => {
   const now = Math.floor(Date.now() / 1000);
   const html = renderToStaticMarkup(React.createElement(M.sidebar.SourceSidebar, { knownFolders: ['/fixture/work'],
     sessions: [{ id: 'a', name: 'A', cwd: '/fixture/work', createdAt: now, updatedAt: now }], onSessionAction() {} }));
-  const triggers = [...html.matchAll(/<span class="([^"]*)"><button([^>]*)>/g)].filter((m) => /aria-label="Group and sort"/.test(m[2]));
+  const triggers = [...html.matchAll(/<span class="([^"]*)" style="([^"]*)" data-group-sort-trigger="([^"]*)"><button([^>]*)>/g)].filter((m) => /aria-label="Group and sort"/.test(m[4]));
   assert.equal(triggers.length, 1);
   assert.equal(triggers[0][1], 'flex w-0 overflow-hidden group-hover/labelrow:w-auto group-hover/labelrow:overflow-visible group-has-[:focus-visible]/labelrow:w-auto group-has-[:focus-visible]/labelrow:overflow-visible touch:w-auto touch:overflow-visible');
-  for (const attribute of ['data-cds="Button"', 'aria-haspopup="menu"', 'aria-expanded="false"', 'data-row-action=""', 'data-base-ui-tooltip-trigger=""'])
-    assert.ok(triggers[0][2].includes(attribute), attribute);
-  assert.match(triggers[0][2], /class="[^"]*df-chrome-btn relative -my-1 source-current-filter-button"/);
+  assert.equal(triggers[0][2], 'scroll-margin-block:8px');
+  for (const attribute of ['data-cds="Button"', 'aria-haspopup="menu"', 'aria-expanded="false"', 'data-row-action=""', 'data-base-ui-tooltip-trigger=""', `id="${triggers[0][3]}"`])
+    assert.ok(triggers[0][4].includes(attribute), attribute);
+  assert.doesNotMatch(triggers[0][4], /data-held|data-list-filter/);
+  assert.match(triggers[0][4], /class="[^"]*df-chrome-btn relative -my-1 aria-expanded:touch-none source-current-filter-button"/);
   assert.doesNotMatch(html, /role="menu"|Reset to defaults|Hide all nested/);
 });
 

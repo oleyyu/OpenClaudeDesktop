@@ -14,6 +14,8 @@ import { classifyKeyScroll, keyScrollIntentMs } from '../src/generated/code-curr
 // Tab moved focus above the viewport is decided by attachTabFocusRelease (c9f414608 i), mounted on the scroller.
 // R3-topbar TT-05: the other up keys only record the intent too; the upward scroll within `re` = 1e3 lets go. The
 // classifier is c7f8992b4 C itself (cccc2cf0a mO `classifyKeyScroll:$o`, `n as $o`), generated as tab-focus-key-scroll.
+// W9 cc-rest-transcript: both helpers are 3.6556.2 now (c7f8992b4 ge / ne, pure renames of C / re; c9f414608 i over the
+// c99ca27a0 Tab tracker), with the same behaviour asserted below.
 const ROOT = path.resolve(import.meta.dirname, '..');
 let server, A;
 before(async () => {
@@ -177,22 +179,22 @@ test('source: keys go through attachSubagentKeyIntent (generated C) on the docum
   assert.match(source, /attachTabFocusRelease\(scroller\.current,\{isPinned:\(\)=>follow\.current\.pinned,setPinned:value=>\{if\(!value\)follow\.current\.release\(\);\}\}\)/);
 });
 
-test('manifest: tab-focus-key-scroll is c7f8992b4 C / g / v / he / re from 2.42304.0', () => {
+test('manifest: tab-focus-key-scroll is c7f8992b4 ge / m / g / he / ne from 3.6556.2', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/code-current/manifest.json'), 'utf8'));
   const entry = manifest.modules.find((module) => module.target === 'tab-focus-key-scroll.mjs');
-  assert.equal(entry.referenceVersion, '2.42304.0');
-  assert.match(entry.source, /installed-2\.42304\.0-20261017\/ion-dist\/assets\/v1\/c7f8992b4-BX_ywd4_\.js$/);
-  assert.deepEqual(entry.bindings, ['g', 'v', 'he', 'C', 're']);
-  const reference = path.resolve(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+  assert.equal(entry.referenceVersion, '3.6556.2');
+  assert.match(entry.source, /snapshots\/claude-3\.6556\.2-20261025-192807\/ion-dist\/assets\/v1\/c7f8992b4-DUZwS58e\.js$/);
+  assert.deepEqual(entry.bindings, ['m', 'g', 'he', 'ge', 'ne']);
+  const reference = path.resolve(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
   const raw = fs.readFileSync(path.join(reference, path.basename(entry.source)));
   assert.equal(createHash('sha256').update(raw).digest('hex'), entry.sourceSha256);
   const generated = fs.readFileSync(path.join(ROOT, 'src/generated/code-current/tab-focus-key-scroll.mjs'));
   assert.equal(createHash('sha256').update(generated).digest('hex'), entry.sha256);
   const text = raw.toString();
-  // C and its intent consumers in the shipped chunk; the sub-agent view hands C to the follow hook.
-  for (const needle of ['var he=new Set(["ArrowUp","Home"]);function C(e,t){if((e.ctrlKey||e.altKey||e.metaKey)&&!he.has(e.key))return"none";if(e.key==="Tab")return e.shiftKey?"up":"none";',
-    're=1e3,', 'n==="up"&&(I.current=performance.now())', 'ae=u-I.current<re']) assert.ok(text.includes(needle), needle);
-  const subagent = fs.readFileSync(path.join(reference, 'cccc2cf0a-B0D--VZp.js'), 'utf8');
-  assert.ok(subagent.includes('import{n as $o,r as es}from"./c7f8992b4-BX_ywd4_.js"'));
-  assert.ok(subagent.includes('es({initialPinned:!1,getScrollElement:n,adjustmentAtRef:r,classifyKeyScroll:$o,'));
+  // ge and its intent consumers in the shipped chunk; the sub-agent view hands ge to the follow hook.
+  for (const needle of ['var he=new Set(["ArrowUp","Home"]);function ge(e,t){if((e.ctrlKey||e.altKey||e.metaKey)&&!he.has(e.key))return"none";if(e.key==="Tab")return e.shiftKey?"up":"none";',
+    'ne=1e3,', 'n==="up"&&(N.current=performance.now())', 'ce=p-N.current<ne']) assert.ok(text.includes(needle), needle);
+  const subagent = fs.readFileSync(path.join(reference, 'cccc2cf0a-DhZC33Gc.js'), 'utf8');
+  assert.ok(subagent.includes('import{n as ys,r as bs}from"./c7f8992b4-DUZwS58e.js"'));
+  assert.ok(subagent.includes('{initialPinned:!1,getScrollElement:n,adjustmentAtRef:r,classifyKeyScroll:ys,'));
 });

@@ -4,7 +4,7 @@
 // and formatted by the bundle's react-intl createIntl, so the known/saved selects pick the same sentences as official
 // u.formatMessage(FA.branchMissing, {branch, known, fallback, saved}). Callable outside render (the warning is raised
 // from selectBranch's async check).
-import { kt as createIntl } from './generated/chat/vendor-intl-Cf4IuK3L.js';
+import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
 import { getLocale, t } from '../electron/i18n/index.mjs';
 import { branchMissingMessage } from './generated/r4e-envbranch/start-branch-missing.mjs';
 import { branchMissingValues } from './branch-picker-model.mjs';

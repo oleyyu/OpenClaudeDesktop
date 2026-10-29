@@ -1,6 +1,7 @@
 // R4f-rail SR-5: the Session rail's local session record (main.cjs `session-rail-meta`, electron/session-rail-meta.cjs)
-// and the rO meta built from it (src/session-rail-meta-model.mjs), pinned to 2.42304.0 shared-8 zh, cf74bc599 rO / fO
-// and asar index.chunk-CFJssAFf.js formatSessionForEvent.
+// and the gN meta built from it (src/session-rail-meta-model.mjs), pinned to 3.6556.2 cf74bc599 gN / TN, shared-8 M_
+// (V3-w6-rail-host, panes:C1-8), with the 2.42304.0 shared-8 zh / rO / fO and asar index.chunk-CFJssAFf.js
+// formatSessionForEvent the main side still follows.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -19,6 +20,8 @@ const reference = path.resolve(root, '../reference/installed-2.42304.0-20261017'
 const v1 = (name) => fs.readFileSync(path.join(reference, 'ion-dist/assets/v1', name), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const rail = v1('cf74bc599-D9NZWRyl.js');
+const v3 = (name) => fs.readFileSync(path.resolve(root, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+const railV3 = v3('cf74bc599-CRYqipWN.js');
 
 const tempDir = (t) => {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'session-rail-meta-')));
@@ -37,11 +40,48 @@ const $E = original(rail, '$E');
 const ZE = original(rail, 'ZE');
 const XE = original(rail, 'XE', { YE: /[\\/]\.claude[\\/]worktrees[\\/]/, $E });
 
-test('2.42304.0: rO, the shared-8 zh record, fO\'s record fallback and its other reads of the record', () => {
+test('3.6556.2: gN (with c227f4d5e nY spread in), the shared-8 M_ record, TN\'s record fallback and its other reads of the record', () => {
+  const gN = /var gN=gn\(([^)]*)\)/.exec(railV3);
+  assert.ok(gN);
+  assert.equal(occurrences(railV3, gN[0]), 1);
+  const nY = /,nY=(\[[^\]]*\]);/.exec(v3('c227f4d5e-B-FYKrwT.js'));
+  assert.ok(nY, 'c227f4d5e nY');
+  assert.equal(occurrences(v3('c227f4d5e-B-FYKrwT.js'), nY[0]), 1);
+  const fields = gN[1].split(',').flatMap((entry) => (entry === '...Ip' ? JSON.parse(nY[1]) : [JSON.parse(entry)]));
+  assert.deepEqual(fields, RAIL_META_FIELDS);
+  assert.deepEqual(JSON.parse(nY[1]), ['bridgeSessionUrl', 'remoteControlConnecting', 'remoteControlAvailable', 'startedViaRemoteControl', 'isCloudRun']);
+  // against 2.42304.0 rO: the Remote Control fields stay (now through nY); isCloudRun and sshConnectionRemoved are new
+  const rO = JSON.parse(`[${/var rO=kn\(([^)]*)\)/.exec(rail)[1]}]`);
+  assert.deepEqual(RAIL_META_FIELDS.filter((key) => !rO.includes(key)), ['isCloudRun', 'sshConnectionRemoved']);
+  assert.deepEqual(rO.filter((key) => !RAIL_META_FIELDS.includes(key)), []);
+  assert.match(v3('c227f4d5e-B-FYKrwT.js').slice(-20000), /\bnY as Ti\b/);
+  for (const needle of ['Ti as Ip', 'D=Eu(t,gN)', 'P=go(t.type==="local"?t.id:null),I;bb0:{if(k){I=k;break bb0}', '_f as go', 'i as td', 'E as tn',
+    'P!==void 0&&Rj({isLocal:E,cwd:P.cwd,originCwd:P.originCwd,worktreePath:P.worktreePath,harnessCwd:P.harnessCwd,branch:P.branch,startedWithWorktree:P.startedWithWorktree,worktreeRemoved:P.worktreeRemoved})',
+    'ie=(J1($,31,P)?K1($,31,P,tn(P)):$[32])!==void 0,ae=P?.isArchived===!0,oe=re&&!ae&&!ie?P?.lazyWorktreePath:void 0', 'recorded:P?.branch'])
+    assert.equal(occurrences(railV3, needle), 1, needle);
+  // the generated rail's gN is the same list
+  const derive = fs.readFileSync(path.join(root, 'src/generated/session-rail/rail-derive.mjs'), 'utf8');
+  assert.equal(occurrences(derive, 'import { REMOTE_CONTROL_META_FIELDS as Ip } from "./remote-control-meta.mjs";'), 1);
+  assert.equal(occurrences(derive, '  gN as RAIL_SESSION_META,'), 1);
+  // shared-8 M_: the record, unchanged from 2.42304.0 zh; cef1e6037 er / shared-78 w4: the same bodies as Fn / tz
+  const shared8v3 = v3('shared-8-Db1QN4mf.js');
+  const record = /function M_\(e\)\{let \$=J9\(2\),t=J1\(\$,0,e\)\?K1\(\$,0,e,t=>\{let n=e\?t\.sessions\.find\(t=>t\.sessionId===e\):void 0;return n\?\{([^}]*)\}:void 0\}\)/.exec(shared8v3);
+  assert.ok(record, 'shared-8 M_');
+  assert.match(shared8v3.slice(shared8v3.lastIndexOf('export{')), /\bM_ as _f\b/);
+  assert.deepEqual(record[1].split(',').map((entry) => entry.split(':')[0]), LOCAL_SESSION_RECORD_FIELDS);
+  const cefV3 = v3('cef1e6037-C9OZ_iaL.js');
+  assert.equal(occurrences(cefV3, 'function er(e){let t=e.originCwd||e.cwd;return{originCwd:t,workingDir:e.harnessCwd??e.worktreePath??t}}'), 1);
+  assert.match(cefV3.slice(cefV3.lastIndexOf('export{')), /\ber as i\b/);
+  const shared78 = v3('shared-78-D5Fw2h0a.js');
+  assert.equal(occurrences(shared78, 'function w4(e){let t=e?.remoteTarget;if(t)switch(t.kind){case"ssh":return{kind:"ssh",sshHost:t.sshHost,sshPort:t.sshPort,sshIdentityFile:t.sshIdentityFile,remoteCwd:t.remoteCwd};case"wsl":return{kind:"wsl",distro:t.distro};default:return}if(e?.sshConfig)return{kind:"ssh",sshHost:e.sshConfig.sshHost,sshPort:e.sshConfig.sshPort,sshIdentityFile:e.sshConfig.sshIdentityFile,remoteCwd:e.sshConfig.remoteCwd}}'), 1);
+  assert.match(shared78.slice(shared78.lastIndexOf('export{')), /\bw4 as E\b/);
+});
+
+test('2.42304.0 (the previous slice, main still follows it): rO, the shared-8 zh record, fO\'s record fallback and its other reads', () => {
   const rO = /var rO=kn\(([^)]*)\)/.exec(rail);
   assert.ok(rO);
   assert.equal(occurrences(rail, rO[0]), 1);
-  assert.deepEqual(JSON.parse(`[${rO[1]}]`), RAIL_META_FIELDS);
+  assert.equal(JSON.parse(`[${rO[1]}]`).length, 24);
   assert.equal(occurrences(rail, 'S=Td(e,rO)'), 1);
   assert.equal(occurrences(rail, 'import{r as $d}from"./cef1e6037-8DivyY4m.js"'), 1);
   assert.equal(occurrences(rail, 'Fd as Oa'), 1);
@@ -74,13 +114,16 @@ test('2.42304.0: rO, the shared-8 zh record, fO\'s record fallback and its other
     assert.equal(occurrences(asar, needle), 1, needle);
 });
 
-test('railMetaFromRecord is fO\'s fallback: the same keys in the same order, built as the original builds them', () => {
-  const fallback = /if\(O\)return\{(\.\.\.\$d\(O\),[^}]*)\}\},\[C,O\]\)/.exec(rail);
+test('railMetaFromRecord is TN\'s fallback (3.6556.2 I): the same keys in the same order, built as the original builds them', () => {
+  const fallback = /Z1\(\$,7,\{(\.\.\.e,[^}]*)\},P\.additionalDirectories\)/.exec(railV3);
   assert.ok(fallback);
-  const keys = fallback[1].split(',').flatMap((entry) => entry === '...$d(O)' ? ['originCwd', 'workingDir'] : [entry.split(':')[0]]);
+  assert.equal(occurrences(railV3, fallback[0]), 1);
+  const keys = fallback[1].split(',').flatMap((entry) => entry === '...e' ? ['originCwd', 'workingDir'] : [entry.split(':')[0]]);
   const meta = railMetaFromRecord({ cwd: '/r/wt', originCwd: '/r', worktreePath: '/r/wt', startedWithWorktree: true, worktreeRemoved: false });
   assert.deepEqual(Object.keys(meta), keys);
-  assert.deepEqual(RAIL_META_FIELDS.filter((key) => !keys.includes(key)), ['folderTrees', 'pendingCwd'], 'the fallback leaves these two unset');
+  assert.ok(keys.includes('isCloudRun'));
+  assert.deepEqual(RAIL_META_FIELDS.filter((key) => !keys.includes(key)), ['folderTrees', 'pendingCwd', 'sshConnectionRemoved'], 'the fallback leaves these unset');
+  assert.equal(meta.isCloudRun, undefined);
   assert.deepEqual(meta.repoSlugs, []);
   assert.equal(meta.originCwd, '/r');
   assert.equal(meta.workingDir, '/r/wt');

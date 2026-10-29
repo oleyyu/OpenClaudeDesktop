@@ -12,16 +12,19 @@ import { sidebarAscendingComparators, sidebarDescendingComparators } from '../sr
 import { currentSidebarComparator, sidebarSortRecord } from '../src/sidebar-filter-current-model.mjs';
 import { currentSidebarDetails } from '../src/sidebar-details-current-model.mjs';
 import zhSidebar from '../electron/i18n/zh-CN/sidebar.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import { ionSource, referenceVersion } from '../scripts/official-3.6556.2.mjs';
 
 // R2-sidebar step 2 (map-cc-sidebar, SC-4): the seven sidebar helpers that changed between 2.37337.1 and 2.42304.0
-// (PR card, row details model/view, status glyph, sort order, search field, group view) now come from 2.42304.0.
+// (PR card, row details model/view, status glyph, sort order, search field, group view). W2 (w2-sidebar-current-a/b)
+// moved all seven to 3.6556.2; W4 w4-sidebar-row repins this file to the 3.6556.2 snapshot and its new behaviour.
 // Only source text, generated output, SSR and controlled calls are inspected; no window, browser or service.
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/code-current');
-const latest = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const latest = ionSource;
 const manifest = JSON.parse(readFileSync(path.join(generated, 'manifest.json'), 'utf8'));
 const viewTabs = JSON.parse(readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
-const utilities = readFileSync(path.join(app, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+const utilities = readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const read = target => readFileSync(path.join(generated, target), 'utf8');
 const entry = target => manifest.modules.find(module => module.target === target);
@@ -37,38 +40,41 @@ before(async () => {
   View = await server.ssrLoadModule('/src/generated/code-current/sidebar-group-view.mjs');
   Groups = await server.ssrLoadModule('/src/generated/code-current/sidebar-menu-groups.mjs');
   Start = await server.ssrLoadModule('/src/source-code-start-adapters.jsx');
-  Fizzy = await server.ssrLoadModule('/src/generated/view-tabs/shared-4-CJsHhp5n.js');
+  Fizzy = await server.ssrLoadModule('/src/generated/view-tabs/shared-4-DUB1Oi0O.js');
   Sidebar = await server.ssrLoadModule('/src/source-sidebar.jsx');
 });
 after(() => server?.close());
 
 const targets = {
-  'sidebar-pr-card.mjs': { file:'shared-20-B7UqYfsi.js', bindings:['_E','vE','yE','bE','xE','SE','CE','wE','TE','OE','AE','jE','ME','NE','VE','HE','UE','WE','GE','KE','qE','JE','YE','XE','ZE','eD'],
+  // 3.6556.2 bindings (research/sidebar.md §1.2/§1.3, data/sidebar-targets.json; old 2.42304.0 names in comments).
+  'sidebar-pr-card.mjs': { file:'shared-20-mUr7IqZY.js', bindings:['PE','FE','IE','LE','RE','zE','BE','VE','HE','GE','qE','JE','YE','XE','aD','oD','sD','cD','lD','uD','dD','fD','mD','pD','hD','gD','yD'],
     exports:['SidebarDetailTooltip','SidebarPrCard','SidebarPrCardContext','SidebarPrEntry','SidebarPrGlyph','sidebarPrCoveredControl','sidebarPrEntryLabel','sidebarPrMessages','sidebarPrTitle'] },
-  'sidebar-details-model.mjs': { file:'shared-20-B7UqYfsi.js', bindings:['PE','FE','IE','uD','dD','tT','fD','pD'],
+  'sidebar-details-model.mjs': { file:'shared-20-mUr7IqZY.js', bindings:['ZE','QE','$E','jD','MD','eT','ND','PD'],
     exports:['sidebarBranch','sidebarDescription','sidebarEnvironment','sidebarEnvironmentPlace','sidebarFolder','sidebarRemoteEnvironment'] },
-  'sidebar-details-view.mjs': { file:'shared-20-B7UqYfsi.js', bindings:['DE','kE','zE','BE','QE','$E','nD'],
+  'sidebar-details-view.mjs': { file:'shared-20-mUr7IqZY.js', bindings:['WE','KE','nD','iD','rD','_D','vD','xD'],
     exports:['SidebarDescription','SidebarEnvironmentGlyph','sidebarEnvironmentLabel','sidebarRightDecoration'] },
-  'sidebar-status-glyph.mjs': { file:'shared-18-D4XxL6Tg.js', bindings:['CT','TT','jT','MT','PT','fE','pE','uE','TD','ED','DD','PD','FD','ZD'],
+  // PD -> FA (status colors), FD -> IA (status glyph); BC is the new unread-look context (its provider stays off, E12).
+  'sidebar-status-glyph.mjs': { file:'shared-18-D3y8YMFN.js', bindings:['oO','cO','mO','hO','_O','YO','XO','KO','BC','EA','DA','OA','FA','GC','WC','KC','JO','IA','$A'],
     exports:['SidebarStatusGlyph','SidebarStatusLabel','SidebarStatusLayout','SidebarStatusTooltips','sidebarErrorColors','sidebarErrorKind','sidebarErrorShapes','sidebarStatusMessages','useSidebarStatusTooltips'] },
-  'sidebar-sort-order.mjs': { file:'shared-21-IP-SVetq.js', bindings:['VR','HR'], exports:['sidebarAscendingComparators','sidebarDescendingComparators'] },
-  'sidebar-search.mjs': { file:'shared-21-IP-SVetq.js', bindings:['RF','zF'], exports:['SidebarSearchField','sidebarSearchPlacement'] },
-  'sidebar-group-view.mjs': { file:'shared-19-CkPOiIKm.js', bindings:['nZ','oZ','sZ','cZ','lZ','uZ'],
-    exports:['SidebarGroupViewItems','SidebarListContext','sidebarGroupToggles','sidebarHasCollapsedGroups','sidebarPrecedingToggles','sidebarToggleVisible'] },
+  'sidebar-sort-order.mjs': { file:'shared-21-R7LldJ05.js', bindings:['AU','jU'], exports:['sidebarAscendingComparators','sidebarDescendingComparators'] },
+  'sidebar-search.mjs': { file:'shared-21-R7LldJ05.js', bindings:['Dz','Vz','Uz','Hz'], exports:['SidebarSearchField','sidebarSearchPlacement'] },
+  // The group view moved from shared-19 to shared-46 (sZ -> hk, uZ -> vk) and now also exports the MO disabled reasons.
+  'sidebar-group-view.mjs': { file:'shared-46-BIbZBGFq.js', bindings:['YO','mk','hk','gk','_k','MO','vk'],
+    exports:['SidebarGroupViewItems','SidebarListContext','sidebarGroupToggles','sidebarHasCollapsedGroups','sidebarListMenuReasons','sidebarPrecedingToggles','sidebarToggleVisible'] },
 };
 const exportsOf = text => [...text.matchAll(/export \{([^}]*)\}/g)].flatMap(([, list]) => list.split(',').map(item => item.trim().split(/\s+as\s+/).pop()).filter(Boolean)).sort();
 const importsOf = text => [...text.matchAll(/import\s*\{([^}]*)\}\s*from\s*"([^"]+)"/g)].flatMap(([, list, from]) => list.split(',').map(s => s.trim()).filter(Boolean).map(s => ({ name:s.split(/\s+as\s+/)[0], local:s.split(/\s+as\s+/).pop(), from })));
 
-test('the seven changed sidebar helpers are sliced from the installed 2.42304.0 chunks, export names kept', () => {
+test('the seven changed sidebar helpers are sliced from the 3.6556.2 snapshot chunks, export names kept', () => {
   for (const [target, expected] of Object.entries(targets)) {
     const module = entry(target), text = read(target);
-    assert.equal(module.referenceVersion, '2.42304.0', target);
+    assert.equal(module.referenceVersion, referenceVersion, target);
     assert.equal(path.basename(module.source), expected.file, target);
-    assert.match(module.source, /installed-2\.42304\.0-20261017\/ion-dist\/assets\/v1\//, target);
+    assert.match(module.source, /snapshots\/claude-3\.6556\.2-20261025-192807\/ion-dist\/assets\/v1\//, target);
     assert.equal(sha(readFileSync(path.join(latest, expected.file))), module.sourceSha256, target);
     assert.equal(sha(text), module.sha256, target);
     assert.deepEqual(module.bindings, expected.bindings, target);
-    assert.ok(text.startsWith('// Original Claude Desktop 2.42304.0 bindings'), target);
+    assert.ok(text.startsWith('// Original Claude Desktop 3.6556.2 bindings'), target);
     assert.deepEqual(exportsOf(text), expected.exports, target);
     // No 2.37337.1 CDS shim, token table or host stand-in for an original function is left in these modules.
     assert.doesNotMatch(text, /cds-badge\.mjs|cds-merge-props\.mjs|cssVar|const (?:wd|Ws|Oe)\b|owner-document\.mjs/, target);
@@ -77,16 +83,25 @@ test('the seven changed sidebar helpers are sliced from the installed 2.42304.0 
   }
   const imports = Object.fromEntries(Object.keys(targets).map(target => [target, importsOf(read(target))]));
   const has = (target, name, local, from) => assert.ok(imports[target].some(s => s.name === name && s.local === local && s.from === from), `${target}: ${name} as ${local} from ${from}`);
-  // The new pr-card references: W = shared-4 co (isFizzyLakePartEnabled), Ec = shared-28 Pm, k = vendor-frame ge.
-  has('sidebar-pr-card.mjs', 'isFizzyLakePartEnabled', 'W', '../view-tabs/shared-4-CJsHhp5n.js');
-  has('sidebar-pr-card.mjs', 'physicalSide', 'Ec', '../sidebar-resize/logical-side.mjs');
-  has('sidebar-pr-card.mjs', 'clsx', 'k', '../view-tabs/vendor-frame-DfPJ1QmD.js');
-  has('sidebar-pr-card.mjs', 'cdsClassNames', 'ic', '../view-tabs/shared-frame-BfjMqbuN.js');
-  assert.ok(!imports['sidebar-pr-card.mjs'].some(s => s.name === 'Fragment'), 'bE no longer needs Fragment');
-  has('sidebar-details-view.mjs', 'clsx', 'k', '../view-tabs/vendor-frame-DfPJ1QmD.js');
-  has('sidebar-status-glyph.mjs', 'CdsPulse', 'xf', '../view-tabs/shared-frame-BfjMqbuN.js');
-  has('sidebar-status-glyph.mjs', 'SidebarCodeErrorGlyph', 'UD', '../../source-sidebar-error-adapters.jsx');
-  has('sidebar-group-view.mjs', 'ownerWindow', 'le', './owner-window.mjs');
+  // 3.6556.2 pr-card references: J = shared-4 Yo (isFizzyLakePartEnabled), El = shared-28 $h, n = vendor-frame ve,
+  // O = shared-frame Hf; every view-tabs import names the new (non-legacy) file (R6).
+  has('sidebar-pr-card.mjs', 'isFizzyLakePartEnabled', 'J', '../view-tabs/shared-4-DUB1Oi0O.js');
+  has('sidebar-pr-card.mjs', 'physicalSide', 'El', '../sidebar-resize/logical-side.mjs');
+  has('sidebar-pr-card.mjs', 'clsx', 'n', '../view-tabs/vendor-frame-CnSY1sxv.js');
+  has('sidebar-pr-card.mjs', 'cdsClassNames', 'O', '../view-tabs/shared-frame-6jtSkIit.js');
+  assert.ok(!imports['sidebar-pr-card.mjs'].some(s => s.name === 'Fragment'), 'oD no longer needs Fragment');
+  has('sidebar-details-view.mjs', 'clsx', 'n', '../view-tabs/vendor-frame-CnSY1sxv.js');
+  has('sidebar-status-glyph.mjs', 'CdsPulse', 'B', '../view-tabs/shared-frame-6jtSkIit.js');
+  has('sidebar-status-glyph.mjs', 'SidebarCodeErrorGlyph', 'WA', '../../source-sidebar-error-adapters.jsx');
+  has('sidebar-group-view.mjs', 'ownerWindow', '$e', './owner-window.mjs');
+  // No 2.42304.0 legacy shim file (E36: a same-named file is the new graph itself, not a shim).
+  const current = new Set(viewTabs.modules.map(module => module.source));
+  const shims = new Set((viewTabs.legacy?.['2.42304.0']?.modules ?? []).filter(module => module.shim && !current.has(module.target)).map(module => module.target));
+  // W7: every 2.42304.0 file-name shim is retired (the 2.42304.0 areas import the current files by semantic name).
+  assert.deepEqual([...shims], []);
+  for (const [target, specs] of Object.entries(imports))
+    for (const spec of specs.filter(spec => spec.from.includes('/view-tabs/')))
+      assert.ok(!shims.has(path.basename(spec.from)), `${target} imports the legacy shim ${spec.from}`);
   assert.equal(Fizzy.isFizzyLakePartEnabled('panels'), false, 'the shipped fizzy-lake part list is empty');
 });
 
@@ -109,7 +124,7 @@ test('SC-4: the title PR glyph pads with the 2.42304.0 ps/pe variables, sizes it
   assert.match(many, /tabular-nums">2<\/span>/); assert.doesNotMatch(many, /data-cds="PreviewCard"/);
 });
 
-test('the PR preview entry follows 2.42304.0: match-parent title, secondary footnote, LTR diff counts, no panels wrapper', () => {
+test('the PR preview entry follows 3.6556.2: match-parent title, secondary footnote, LTR diff counts, no panels wrapper', () => {
   const record = { repo:'acme/widget', number:12, state:'open', url:'https://github.com/acme/widget/pull/12', title:'Fix', ciState:'failed', additions:9, deletions:2 };
   const html = renderToStaticMarkup(h(Card.SidebarPrEntry, { entry:record }));
   assert.match(html, /<bdi class="min-w-0 truncate text-body-medium \[text-align:-webkit-match-parent\] supports-\[text-align:match-parent\]:\[text-align:match-parent\]">Fix<\/bdi>/);
@@ -118,7 +133,8 @@ test('the PR preview entry follows 2.42304.0: match-parent title, secondary foot
   assert.doesNotMatch(html, /text-left|text-muted"|text-muted /);
   // isFizzyLakePartEnabled("panels") is false, so bE does not wrap the (null) icon.
   assert.doesNotMatch(html, /size-\[calc\(1rem\*var\(--cds-rem-scale,1\)\)\]/);
-  assert.match(read('sidebar-pr-card.mjs'), /className: `\$\{u\} w-full text-start`/);
+  // sD (old bE) keeps the full-width start-aligned link class: `${h} w-full text-start` in shared-20.
+  assert.match(read('sidebar-pr-card.mjs'), /`\$\{[\w$]+\} w-full text-start`/);
   assert.deepEqual(Card.sidebarPrMessages.selfHosted, { defaultMessage:'Self-hosted', id:'08itlpYbB9' });
 });
 
@@ -158,9 +174,9 @@ test('row details render text-muted-as-secondary and a Cloud glyph for selfHoste
   assert.equal(zhSidebar['Self-hosted'], '自托管');
 });
 
-test('PD inlines the three status colors on the view-tabs CdsPulse; no host token table remains', () => {
+test('FA (old PD) inlines the three status colors on the view-tabs CdsPulse; no host token table remains', () => {
   const text = read('sidebar-status-glyph.mjs');
-  assert.match(text, /var PD = \{\s*running: "var\(--cds-text-muted\)",\s*awaiting: "var\(--cds-fill-warning\)",\s*ready: "var\(--cds-fill-accent\)",?\s*\}/);
+  assert.match(text, /var [\w$]+ = \{\s*running: "var\(--cds-text-muted\)",\s*awaiting: "var\(--cds-fill-warning\)",\s*ready: "var\(--cds-fill-accent\)",?\s*\}/);
   for (const [state, color] of [['running', 'text-muted'], ['awaiting', 'fill-warning'], ['ready', 'fill-accent']]) {
     const html = renderToStaticMarkup(h(Status.SidebarStatusLayout.Provider, { value:{} }, h(Status.SidebarStatusGlyph, { state, live:false })));
     assert.match(html, /data-cds="Pulse"/, state); assert.match(html, new RegExp(`background:var\\(--cds-${color}\\)`), state);
@@ -185,8 +201,9 @@ test('HR flips Name order only between titled rows, so untitled sessions stay la
 test('zF joins the hit-row family; the loaded utilities define it and no local rule fights its geometry', () => {
   const html = renderToStaticMarkup(h(Search.SidebarSearchField));
   assert.match(html, /<button[^>]*class="df-search-field hit-row hit-row-main \[--cds-hit-gap-y:10px\] mx-\[calc\(var\(--df-rail-shift,0px\)\/2\)\] mt-1 /);
-  assert.match(utilities, /\.hit-row\{--cds-hit-row-reach:var\(--cds-hit-gap-y,0px\);isolation:isolate;position:relative\}/);
-  assert.match(utilities, /\.hit-row-main:before\{content:"";z-index:-1;inset:0 0 calc\(var\(--cds-hit-row-reach\) \* -1\);position:absolute\}/);
+  // 3.6556.2 splits the reach into top / x / bottom (bottom = gap-y + grid-y; with no hit grid it is 2.42304.0's gap-y).
+  assert.ok(utilities.includes('.hit-row{--cds-hit-row-reach-top:var(--cds-hit-grid-y,0px);--cds-hit-row-reach-x:var(--cds-hit-grid-x,0px);--cds-hit-row-reach-bottom:calc(var(--cds-hit-gap-y,0px) + var(--cds-hit-grid-y,0px));isolation:isolate;position:relative}'));
+  assert.ok(utilities.includes('.hit-row-main:before{content:"";z-index:-1;inset:calc(var(--cds-hit-row-reach-top) * -1) calc(var(--cds-hit-row-reach-x) * -1) calc(var(--cds-hit-row-reach-bottom) * -1);position:absolute}'));
   assert.ok(utilities.includes('.\\[--cds-hit-gap-y\\:10px\\]{--cds-hit-gap-y:10px}'));
   // The host's unlayered .df-search-field restores only paint (button reset), never position/isolation/inset.
   const local = readFileSync(path.join(app, 'src/source-sidebar.css'), 'utf8');
@@ -199,21 +216,27 @@ test('zF joins the hit-row family; the loaded utilities define it and no local r
 // Controlled hooks for the group view menu (no renderer).
 function run(component, contexts) {
   const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
-  internals.H = { useContext:c => contexts.has(c) ? contexts.get(c) : c._currentValue, useState:init => [typeof init === 'function' ? init() : init, () => {}] };
+  internals.H = withMemoCache({ useContext:c => contexts.has(c) ? contexts.get(c) : c._currentValue, useState:init => [typeof init === 'function' ? init() : init, () => {}] });
   try { return component({}); } finally { internals.H = previous; }
 }
 const items = (tree, out = []) => { if (Array.isArray(tree)) tree.forEach(t => items(t, out)); else if (tree && typeof tree === 'object') { if (tree.type === Groups.SidebarMenuItem) out.push(tree); items(tree.props?.children, out); } return out; };
-test('sZ (any collapsed, non-inert group) decides Expand all, the same rule the blank-area Select all reads', () => {
+test('hk (old sZ: any collapsed, non-inert group) decides Expand all; 3.6556.2 keeps both items and disables the idle one', () => {
   const toggle = (expanded, inert = false) => ({ expanded, closest:() => inert ? {} : null, checkVisibility:() => true });
   const list = toggles => ({ ownerDocument:{ activeElement:null }, contains:() => false,
     querySelectorAll:selector => { const m = selector.match(/aria-expanded="(true|false)"/); return m ? toggles.filter(t => t.expanded === (m[1] === 'true')) : toggles; } });
   assert.equal(View.sidebarHasCollapsedGroups(list([toggle(true), toggle(false)])), true);
   assert.equal(View.sidebarHasCollapsedGroups(list([toggle(true), toggle(false, true)])), false, 'inert (outside a sheet) toggles do not count');
   assert.equal(View.sidebarHasCollapsedGroups(null), false);
-  const labels = toggles => items(run(View.SidebarGroupViewItems, new Map([[View.SidebarListContext, { getList:() => list(toggles) }]]))).map(i => i.props.children.props.defaultMessage);
-  assert.deepEqual(labels([toggle(true), toggle(false)]), ['Collapse all', 'Expand all']);
-  assert.deepEqual(labels([toggle(true)]), ['Collapse all']);
-  assert.deepEqual(labels([toggle(false)]), ['Expand all']);
+  // shared-46 vk (old uZ): both items always render (null only when neither applies); the one that cannot act is
+  // disabled with its MO reason (research/sidebar.md §2.1 B4).
+  const menu = toggles => items(run(View.SidebarGroupViewItems, new Map([[View.SidebarListContext, { getList:() => list(toggles) }]])))
+    .map(i => [i.props.children.props.defaultMessage, i.props.disabled, i.props.disabledReason?.props.defaultMessage ?? null]);
+  assert.deepEqual(menu([toggle(true), toggle(false)]), [['Collapse all', false, null], ['Expand all', false, null]]);
+  assert.deepEqual(menu([toggle(true)]), [['Collapse all', false, null], ['Expand all', true, 'Everything is already expanded.']]);
+  assert.deepEqual(menu([toggle(false)]), [['Collapse all', true, 'Everything shown is already collapsed.'], ['Expand all', false, null]]);
+  assert.deepEqual(menu([]), []);
+  assert.deepEqual(View.sidebarListMenuReasons.expandAll, { defaultMessage:'Everything is already expanded.', id:'WVqS3QU7Yg' });
+  assert.deepEqual(View.sidebarListMenuReasons.collapseAll, { defaultMessage:'Everything shown is already collapsed.', id:'YbG7pENd2I' });
 });
 
 test('the status glyph import graph never reaches the row-details view, and each entry module loads on its own', async () => {

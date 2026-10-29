@@ -323,6 +323,7 @@ test('comparison: detached HEAD compares against the inferred default without a 
   const status = await workspaceGitStatus(cwd);
   assert.equal(status.detached, true);
   assert.equal(status.comparison.base, 'main'); assert.equal(status.comparison.baseSource, 'default');
+  assert.equal(status.scopeBase, 'main', 'a detached HEAD with a resolvable default keeps it (no self-naming)');
   assert.equal(status.comparison.ahead, 1); assert.equal(status.comparison.behind, 0); assert.equal(status.comparison.unpushed, null);
 });
 
@@ -333,10 +334,17 @@ test('comparison: without a remote the current branch is its own base (HEAD diff
   const result = await workspaceGitComparison(cwd);
   assert.deepEqual(result, { base: 'fixture', baseSource: 'current', baseRef: 'refs/heads/fixture', mergeBase: head, ahead: 0, behind: 0, same: true, unpushed: null });
   assert.equal((await workspaceGitStatus(cwd)).comparison.base, 'fixture');
-  // A detached HEAD without a remote resolves no base at all.
+  // A detached HEAD without a remote resolves no base: the comparison has none and the diff is the HEAD diff, while the
+  // Changes scope names the detached HEAD itself (W12 diff-cont: 3.6556.2 c5da7eb42 `baseBranch: … ?? t.branch` on the
+  // `detachedHead: !0` repo; the renderer shows it as "HEAD", Zf). Its value is the status's own `branch`.
   await git(cwd, ['checkout', '-q', '--detach']);
   const detached = await workspaceGitStatus(cwd);
-  assert.equal(detached.comparison.base, null); assert.equal(detached.scopeBase, null); assert.equal(detached.diffBase, head);
+  assert.equal(detached.comparison.base, null); assert.equal(detached.diffBase, head);
+  assert.equal(detached.detached, true); assert.equal(detached.branch, head.slice(0, 7)); assert.equal(detached.scopeBase, detached.branch);
+  assert.equal(detached.baseKind, 'HEAD');
+  // An attached branch keeps resolving its own base as before.
+  await git(cwd, ['checkout', '-q', 'fixture']);
+  assert.equal((await workspaceGitStatus(cwd)).scopeBase, 'fixture');
   const plain = await directory(t, false);
   assert.equal(await workspaceGitComparison(plain), null);
   assert.equal((await workspaceGitStatus(plain)).comparison, null);

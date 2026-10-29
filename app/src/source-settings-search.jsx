@@ -12,8 +12,11 @@ function Match({ text, query }) {
 // cc011544b gt:720–830: section + optional via, indented child, or +N more.
 // The parent label always identifies the destination; a solitary row is its
 // subtitle, not an ungrouped replacement for the section.
-export function SettingsSearchResults({ results, query, active, onSelect, onActive }) {
+// 3.6556.2 (menus C3): the popup's first child is the sr-only status line (hn pe: `p role=status sr-only`) that
+// announces a "+N more" opened in place; always present, empty until one is.
+export function SettingsSearchResults({ results, query, active, onSelect, onActive, announcement }) {
   return <div className="ss-search-results" aria-label={t('Settings search results')}>
+    <p role="status" className="sr-only">{announcement}</p>
     {results.length ? results.map((result, index) => {
       const label = result.kind === 'more'
         ? tn(result.count, '{count} more match in {section}', '{count} more matches in {section}', { section: result.section })

@@ -2,28 +2,29 @@ import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractCodeRoutines } from '../scripts/extract-code-routines.mjs';
 
-// R4g-routines RT4 (tasks-code-routines WI-4, D32): the 2.42304.0 Code Routines page sliced by
-// scripts/extract-code-routines.mjs (cbd6c85c8 zl and its local path, cfc18e0f4 local detail, c0243d234 create page / edit
+// R4g-routines RT4 (tasks-code-routines WI-4, D32), 3.6556.2 since w3-code-routines: the Code Routines page sliced by
+// scripts/extract-code-routines.mjs (cbd6c85c8 Ou and its local path, cfc18e0f4 local detail, c0243d234 create page / edit
 // dialog, c0fd2fda3 form fields) over src/source-code-routines-adapters.jsx and the routines-shared graph.
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(ROOT, 'src/generated/code-routines');
-const REFERENCE = path.resolve(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const REFERENCE = path.resolve(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 let server, page, chunk, adapters, sharedAdapters, createIntl, manifest;
 before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   page = await server.ssrLoadModule('/src/generated/code-routines/index.mjs');
   // Tests may read a chunk module's original locals (host code imports index.mjs only).
-  chunk = await server.ssrLoadModule('/src/generated/code-routines/cbd6c85c8-PO73iD62.mjs');
+  chunk = await server.ssrLoadModule('/src/generated/code-routines/cbd6c85c8-D1xuycDy.mjs');
   adapters = await server.ssrLoadModule('/src/source-code-routines-adapters.jsx');
   sharedAdapters = await server.ssrLoadModule('/src/source-routines-shared-adapters.jsx');
-  ({ kt: createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-Cf4IuK3L.js'));
+  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js'));
   manifest = JSON.parse(await fs.readFile(path.join(OUT, 'manifest.json'), 'utf8'));
 });
 after(() => server?.close());
@@ -37,15 +38,18 @@ const text = (html) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 
 test('the generated graph is current (--check) and every mapping is accounted for', async () => {
   const checked = await extractCodeRoutines({ check: true });
-  assert.equal(checked.referenceVersion, '2.42304.0');
+  assert.equal(checked.referenceVersion, '3.6556.2');
+  assert.equal(checked.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.deepEqual(Object.keys(checked.publicNames).sort(), Object.keys(page).sort());
   assert.equal(Object.keys(checked.publicNames).length, 20);
   for (const { name } of checked.adapters) assert.ok(name in adapters, `adapter ${name} is exported`);
   for (const { name } of checked.sharedAdapters) assert.ok(name in sharedAdapters, `shared adapter ${name} is exported`);
   // Every unreachable branch replaced by an adapter is listed as a host difference with its reason.
   const boundaries = new Set(checked.hostDifferences.map((d) => d.original));
-  for (const original of ['cbd6c85c8-PO73iD62.js#Ec', 'cbd6c85c8-PO73iD62.js#Oc', 'cbd6c85c8-PO73iD62.js#Nc', 'cbd6c85c8-PO73iD62.js#Ml',
-    'cd1ced056-CT2SxE9T.js#r', 'shared-1-CAAiD7E3.js#UT', 'shared-104-Cqo2-vQh.js#yO', 'shared-78-D6VXYXaQ.js#VW'])
+  for (const original of ['cbd6c85c8-D1xuycDy.js#el', 'cbd6c85c8-D1xuycDy.js#nl', 'cbd6c85c8-D1xuycDy.js#sl', 'cbd6c85c8-D1xuycDy.js#du',
+    'cd1ced056-BUYB9IOz.js#r', 'shared-1-BJhqMmkf.js#eO', 'shared-104-CTONUSaz.js#_A', 'shared-78-D5Fw2h0a.js#WK',
+    // RC-17: the old c0efc2620 is now the cloud routine draft generator (GrowthBook __gb__2682097403), an off boundary.
+    'c0efc2620-BbVUZz1E.js#p'])
     assert.ok(boundaries.has(original), `${original} is a recorded host difference`);
   for (const difference of checked.hostDifferences) assert.ok(difference.difference.length > 20, difference.original);
   // The graph copies no binding routines-shared or view-tabs holds (one copy of each binding, so contexts stay single).
@@ -59,37 +63,42 @@ test('the generated graph is current (--check) and every mapping is accounted fo
   // The reachable lazy surfaces keep their declaration; only the specifier points at the generated module, which carries
   // the export alias `pick` reads.
   assert.deepEqual(checked.lazyImports.map((l) => `${l.declaration}>${l.target}:${l.alias}`).sort(), [
-    'cae55dd08-oEwAOna-.js#f>c0243d234-Bc7r1pNg.mjs:EpitaxyLocalRoutineCreateFormEmbed',
-    'cbd6c85c8-PO73iD62.js#Dc>c0243d234-Bc7r1pNg.mjs:EpitaxyLocalRoutineCreatePage',
-    'cbd6c85c8-PO73iD62.js#kc>cfc18e0f4-Cr7owzD3.mjs:EpitaxyLocalRoutineDetail',
+    'cae55dd08-CqJTQ965.js#f>c0243d234-CVQfH8d_.mjs:EpitaxyLocalRoutineCreateFormEmbed',
+    'cbd6c85c8-D1xuycDy.js#rl>cfc18e0f4-CmiyhJoV.mjs:EpitaxyLocalRoutineDetail',
+    'cbd6c85c8-D1xuycDy.js#tl>c0243d234-CVQfH8d_.mjs:EpitaxyLocalRoutineCreatePage',
   ]);
-  const routeChunk = await fs.readFile(path.join(OUT, 'cbd6c85c8-PO73iD62.mjs'), 'utf8');
-  assert.match(routeChunk, /import\("\.\/c0243d234-Bc7r1pNg\.mjs"\)/);
-  assert.match(routeChunk, /import\("\.\/cfc18e0f4-Cr7owzD3\.mjs"\)/);
+  const routeChunk = await fs.readFile(path.join(OUT, 'cbd6c85c8-D1xuycDy.mjs'), 'utf8');
+  assert.match(routeChunk, /import\("\.\/c0243d234-CVQfH8d_\.mjs"\)/);
+  assert.match(routeChunk, /import\("\.\/cfc18e0f4-CmiyhJoV\.mjs"\)/);
   assert.doesNotMatch(routeChunk, /import\("\.\/c1c5fa449|import\("\.\/cd3378dac/);
-  const detailChunk = await fs.readFile(path.join(OUT, 'cfc18e0f4-Cr7owzD3.mjs'), 'utf8');
-  assert.match(detailChunk, /export \{ J as EpitaxyLocalRoutineDetail \}/);
+  const detailChunk = await fs.readFile(path.join(OUT, 'cfc18e0f4-CmiyhJoV.mjs'), 'utf8');
+  assert.match(detailChunk, /export \{ Je as EpitaxyLocalRoutineDetail \}/);
+  // R3/E3: React and the React Compiler helpers come from React and view-tabs' semantic names, never a copy.
+  const imports = checked.modules.flatMap((mod) => mod.imports);
+  assert.ok(imports.some((i) => i.kind === 'view-tabs' && i.name === 'reactMemoCache'));
+  assert.ok(!imports.some((i) => i.kind === 'view-tabs-held'), 'no minified view-tabs import (D46)');
 });
 
-test('the pinned 2.42304.0 feature strings occur exactly once in their chunks', async () => {
+test('the pinned 3.6556.2 feature strings occur exactly once in their chunks', async () => {
   assert.equal(manifest.callSites.length, 5);
   for (const site of manifest.callSites) {
     const source = await fs.readFile(path.join(REFERENCE, site.source), 'utf8');
     for (const feature of site.features) assert.equal(source.split(feature).length - 1, 1, `${site.source}: ${feature}`);
+    assert.equal(site.sourceSha256, createHash('sha256').update(source).digest('hex'), site.source);
   }
 });
 
 test('an adapter the closure never reaches (an unused mapping) stops generation', async () => {
-  await assert.rejects(extractCodeRoutines({ check: true, extraAdapters: { 'cbd6c85c8-PO73iD62.js': { Bl: { name: 'Unused', features: [] } } } }),
-    /adapter cbd6c85c8-PO73iD62\.js#Bl is not reached/);
+  await assert.rejects(extractCodeRoutines({ check: true, extraAdapters: { 'cbd6c85c8-D1xuycDy.js': { Lu: { name: 'Unused', features: [] } } } }),
+    /adapter cbd6c85c8-D1xuycDy\.js#Lu is not reached/);
   // A mapping whose original declaration lost its feature string fails too.
-  await assert.rejects(extractCodeRoutines({ check: true, extraAdapters: { 'shared-78-D6VXYXaQ.js': { VW: { name: 'useCodeScheduledTasksGate', features: ['no such text'] } } } }),
-    /adapter shared-78-D6VXYXaQ\.js#VW lacks "no such text"/);
+  await assert.rejects(extractCodeRoutines({ check: true, extraAdapters: { 'shared-78-D5Fw2h0a.js': { WK: { name: 'useCodeScheduledTasksGate', features: ['no such text'] } } } }),
+    /adapter shared-78-D5Fw2h0a\.js#WK lacks "no such text"/);
 });
 
-test('Hc words a failed Run now from the [ccdErrorCategory:<cat>] suffix (cov11-01)', () => {
-  const { Hc, zc, Bc, Vc } = chunk;
-  const toast = (error, m = zc) => Hc({ intl: intl(), m, displayName: 'Nightly tests', billingNotSelfManageable: false, place: undefined }, error, undefined);
+test('gl words a failed Run now from the [ccdErrorCategory:<cat>] suffix (cov11-01)', () => {
+  const { gl, pl, ml, hl } = chunk;
+  const toast = (error, m = pl) => gl({ intl: intl(), m, displayName: 'Nightly tests', billingNotSelfManageable: false, place: undefined }, error, undefined);
   const folder = toast(new Error('Folder not found: /gone [ccdErrorCategory:cwd_not_found]'));
   assert.equal(folder.message, 'Couldn’t start “Nightly tests”. Folder not found.');
   // retryHelps adds "Try again" (network_error is not rate_limit).
@@ -97,15 +106,15 @@ test('Hc words a failed Run now from the [ccdErrorCategory:<cat>] suffix (cov11-
   // Through the preload's IPC wrapper the suffix still ends the message.
   assert.equal(toast(new Error("Error invoking remote method 'desktop:call': Error: Not a repo [ccdErrorCategory:not_git_repo]")).message,
     'Couldn’t start “Nightly tests”. This folder isn’t a Git repository.');
-  // No suffix, or a category in Vc: the generic sentence.
+  // No suffix, or a category in hl: the generic sentence.
   assert.equal(toast(new Error('core disconnected')).message, 'Couldn’t start “Nightly tests”. Try again.');
-  assert.ok(Vc.has('spawn_failed'));
+  assert.ok(hl.has('spawn_failed'));
   assert.equal(toast(new Error('spawn ENOENT [ccdErrorCategory:spawn_error_enoent]')).message, 'Couldn’t start “Nightly tests”. Try again.');
-  // The Scheduled vocabulary (Bc) says the same with its own messages.
-  assert.match(toast(new Error('x [ccdErrorCategory:cwd_not_found]'), Bc).message, /^Couldn’t start “Nightly tests”\. Folder not found\.$/);
-  // Run now needs a folder and instructions (Wc).
-  assert.equal(chunk.Wc({ cwd: '/repo', prompt: 'go' }), true);
-  assert.equal(chunk.Wc({ cwd: '/repo', prompt: '' }), false);
+  // The Scheduled vocabulary (ml) says the same with its own messages.
+  assert.match(toast(new Error('x [ccdErrorCategory:cwd_not_found]'), ml).message, /^Couldn’t start “Nightly tests”\. Folder not found\.$/);
+  // Run now needs a folder and instructions (vl).
+  assert.equal(chunk.vl({ cwd: '/repo', prompt: 'go' }), true);
+  assert.equal(chunk.vl({ cwd: '/repo', prompt: '' }), false);
 });
 
 test('the list page renders the original frame and waits for the host bridge (loading rows)', () => {
@@ -119,6 +128,15 @@ test('the list page renders the original frame and waits for the host bridge (lo
   // No cloud pieces: no template grid, no Yours / Templates tabs.
   assert.doesNotMatch(html, /grid w-full grid-cols-1 gap-x-6 gap-y-md md:grid-cols-2/);
   assert.doesNotMatch(text(html), /Templates/);
+});
+
+test('RC-01: a failed task read shows the official alert with Retry (hu tasksReadFailed / onRefetchTasks)', () => {
+  const html = render(React.createElement(chunk.hu, { scheduledTasks: [], isLoading: false, tasksReadFailed: true, onRefetchTasks: async () => ({ isError: false }),
+    localRoutinesEnabled: true, onCreateRemote() {}, onCreateLocal() {}, createPending: false, remoteCreateOpensDialog: false, localCreateOpensDialog: false }),
+  { bridge: { getAllScheduledTasks: async () => [] } });
+  assert.match(html, /<div class="py-16">/);
+  assert.match(html, /role="alert"/);
+  assert.match(text(html), /Couldn’t load routines Retry$/);
 });
 
 test('new-local mounts the lazy local create page (its original loading frame first), the cloud "new" renders nothing', () => {

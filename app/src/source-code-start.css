@@ -9,7 +9,7 @@
 .oc-start-slot { flex: 1; min-height: 0; }
 /* SourcePopover's unlayered .sp-popup sizes (zT max-w-[320px], max-h) stand in for
    the CDS popup classes; the official class a start-card popup passes wins there
-   (tailwind-merge in the source): a6's max-w-[min(26rem,90vw)] on the rest list,
-   hR's preview-card min/max width and no max height on the task preview. */
+   (tailwind-merge in the source): Bce's max-w-[min(26rem,90vw)] on the rest list,
+   WU's preview-card min/max width and no max height on the task preview (3.6556.2). */
 .sp-popup.oc-start-popup { max-width: revert-layer; }
 .sp-popup.oc-start-preview { max-width: revert-layer; max-height: revert-layer; }

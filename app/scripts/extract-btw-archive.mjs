@@ -1,17 +1,18 @@
-// Extract the 2.42304.0 main-process predicates the /btw auto-archive and the parent-archive cascade are built on,
+// Extract the 3.6556.2 main-process predicates the /btw auto-archive and the parent-archive cascade are built on,
 // without executing any desktop runtime:
-//   index.chunk-CFJssAFf.js  SD  (open PR of the session itself: `e.prs?.some(e => !e.inherited && !pe.o(e.state))`)
-//                            wD  (side session sharing its parent's checkout: `spawnedFrom.sharedCheckout && sessionId`)
-//   index.chunk-DzrvTkKz.js  t   (exported as `o`, read through CFJssAFf's `pe` namespace)
-//   index.chunk-muI2IV6k.js  nwa (exported as `Oi`: merged or closed), twa (exported as `ki`: the PR state kind)
+//   index.chunk-DNPOm2Zc.js  KI  (open PR of the session itself: `e.prs?.some(e => !e.inherited && !Je.o(e.state))`)
+//                            JI  (side session sharing its parent's checkout: `spawnedFrom.sharedCheckout && sessionId`)
+//   index.chunk-BE87qAbH.js  t   (exported as `o`, read through DNPOm2Zc's `Je` namespace)
+//   index.chunk-jPKPzV-P.js  Dxa (exported as `Br`: merged or closed), Exa (the PR state kind)
+// (2.42304.0: CFJssAFf SD/wD, DzrvTkKz t through `pe`, muI2IV6k nwa/twa through `e.Oi`.)
 // The class methods that combine them (sideSessionSettled/archiveCascadeSettled/archiveCascadeOf/
 // cascadeArchiveSideSessions) read the desktop's own session table and brokers; the host adapter in
 // electron/btw-sessions.cjs reproduces those against the local config and core.
 //
-// The main-process chunks are CommonJS: `pe = require("./index.chunk-DzrvTkKz.js")` and DzrvTkKz's
-// `e = require("./index.chunk-muI2IV6k.js")`. Each namespace member read by an emitted declaration is resolved through
+// The main-process chunks are CommonJS: `Je = require("./index.chunk-BE87qAbH.js")` and BE87qAbH's
+// `e = require("./index.chunk-jPKPzV-P.js")`. Each namespace member read by an emitted declaration is resolved through
 // the target chunk's `Object.defineProperty(exports, …)` table, and the emitted module rebuilds exactly those members
-// (`const pe = { o: t }`, `const e = { Oi: nwa }`). A renamed export or a re-pointed require fails generation instead
+// (`const Je = { o: t }`, `const e = { Br: Dxa }`). A renamed export or a re-pointed require fails generation instead
 // of silently binding another value. The emitted text is then parsed and must have no unbound identifiers.
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -19,11 +20,11 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { referenceVersion, referenceSnapshot, asarSource } from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'asar/.vite/build');
+// R1: version, snapshot and asar directory from the shared 3.6556.2 constants.
+const source = asarSource;
 const output = path.join(root, 'electron/generated');
 const target = 'btw-archive.mjs', manifestName = 'btw-archive-manifest.json';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -32,11 +33,11 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 // declarations read from it; each member must resolve, through the required chunk's export table, to a declaration
 // emitted earlier in this list.
 const chunks = [
-  { file: 'index.chunk-muI2IV6k.js', bindings: ['twa', 'nwa'] },
-  { file: 'index.chunk-DzrvTkKz.js', bindings: ['t'], namespaces: { e: { file: 'index.chunk-muI2IV6k.js', members: ['Oi'] } } },
-  { file: 'index.chunk-CFJssAFf.js', bindings: ['SD', 'wD'], namespaces: { pe: { file: 'index.chunk-DzrvTkKz.js', members: ['o'] } } },
+  { file: 'index.chunk-jPKPzV-P.js', bindings: ['Exa', 'Dxa'] },
+  { file: 'index.chunk-BE87qAbH.js', bindings: ['t'], namespaces: { e: { file: 'index.chunk-jPKPzV-P.js', members: ['Br'] } } },
+  { file: 'index.chunk-DNPOm2Zc.js', bindings: ['KI', 'JI'], namespaces: { Je: { file: 'index.chunk-BE87qAbH.js', members: ['o'] } } },
 ];
-const exported = { twa: 'prStateKind', nwa: 'prStateSettled', SD: 'hasOpenOwnPullRequest', wD: 'sharesParentCheckout' };
+const exported = { Exa: 'prStateKind', Dxa: 'prStateSettled', KI: 'hasOpenOwnPullRequest', JI: 'sharesParentCheckout' };
 
 async function readChunk(file, cache) {
   if (cache.has(file)) return cache.get(file);

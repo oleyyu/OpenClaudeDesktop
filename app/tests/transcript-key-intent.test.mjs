@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import React from "react";
 import { useTranscriptScroll } from "../src/use-transcript-scroll.js";
 import { keyScrollIntentMs } from "../src/generated/code-current/tab-focus-key-scroll.mjs";
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // R3-topbar TT-05 (transcript-02): the main transcript's follow controller, driven through the real hook with
 // controlled DOM, scroll and key events. 2.42304.0 c7f8992b4 T: a classified "up" key only records the intent
@@ -80,7 +81,7 @@ function mount(sessionKey) {
   };
   hooks.useEffect = hooks.useLayoutEffect;
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-  const render = () => { cursor = 0; const old = internal.H; internal.H = hooks; try { out = useTranscriptScroll({ sessionKey, ready: true }); } finally { internal.H = old; } };
+  const render = () => { cursor = 0; const old = internal.H; internal.H = withMemoCache(hooks); try { out = useTranscriptScroll({ sessionKey, ready: true }); } finally { internal.H = old; } };
   const settle = () => {
     for (let round = 0; round < 50; round++) {
       while (effects.length) effects.shift()();

@@ -66,11 +66,10 @@ html[data-reduce-motion="true"] .swf-phase-caret>[data-cds=Icon] { transition: n
 html[data-reduce-motion="true"] .swf-cell[data-state=ghost]{opacity:.45;animation:none}
 
 .swf-member-controls{display:inline-flex;gap:8px;margin-left:10px;opacity:0;transition:opacity .12s}.swf-table li:hover .swf-member-controls,.swf-table li:focus-within .swf-member-controls{opacity:1}.swf-member-controls button{border:0;background:transparent;padding:0;color:var(--text-secondary);font:inherit;font-size:11px}.swf-member-controls button:hover{text-decoration:underline}.swf-member-controls button:disabled{opacity:.5;cursor:wait}.swf-attempt{font-size:11px;opacity:.65}
-/* /workflows controls (Claude Code 2.1.280): pause/resume beside Stop, the agent filter beside Phases, Save, the
-   large-workflow warning and each agent's tool calls. */
+/* /workflows controls (Claude Code 2.1.280): pause/resume beside Stop, the large-workflow warning and each
+   agent's tool calls. No agent filter or Save entry on the card. */
 .swf-phases-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
 .swf-phases-head>span{font-weight:inherit}
-.swf-phases-head .swf-filter{font-weight:var(--cds-font-weight-regular,400);--cds-font-axis-wght:normal}
 .swf-actions{display:flex;gap:var(--cds-gap-sm,8px);margin-top:8px}
 .swf-large{display:inline-flex;align-items:center;gap:3px;color:var(--cds-text-warning)}
 .swf-tools{color:var(--cds-text-muted)}

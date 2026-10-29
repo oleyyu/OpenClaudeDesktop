@@ -1,68 +1,72 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r4e-envbranch.mjs",
   "adapterModule": "src/source-r4e-envbranch-adapters.mjs",
   "modules": [
     {
       "target": "start-branch-missing.mjs",
-      "sha256": "8cebec4450c38803c739c5f4a66aeea44a58188c9a10b16a7180c5ba7649b1d5",
+      "sha256": "b4ca2f959ad82d3482e3546bff00d782601e0802a16a2c5ee41bd24490c2b929",
       "sources": {
-        "cc43287c9-DAfOi8yP.js": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
-        "cc0051c10-pi8fKHOz.js": "da8ab6ee87808d5a6c6e17b4233ec2f19bdd705c4aca1813d9865b70a102c2ba"
+        "cc43287c9-Me-M2ucD.js": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+        "c3efc6f9e-BnLNtm1h.js": "773f6723dc1f8d05f65502c59e6758b4132972545c7296a713a9eaad4f9cf52b"
       },
       "bindings": [
         {
-          "file": "cc43287c9-DAfOi8yP.js",
-          "name": "qZ",
-          "sha256": "796e9a899f3afbbdd39a9646b6ed5db0494dbd2d81ba132b3de1675b93a56723",
+          "file": "cc43287c9-Me-M2ucD.js",
+          "name": "L0",
+          "sha256": "dae1cc2e1c225d994a11e110f40f3feac530d9dc14fbf9a3594e17890a86794f",
           "exportedAs": "startBranchMissing"
         },
         {
-          "file": "cc0051c10-pi8fKHOz.js",
-          "name": "te.branchMissing",
+          "file": "c3efc6f9e-BnLNtm1h.js",
+          "name": "C.branchMissing",
           "sha256": "c5a1781ad4046f488c5192c76e365622e939940cbbb1e20fcd8089c27d2ad7f0",
           "exportedAs": "branchMissingMessage"
         }
       ],
       "imports": [
         {
-          "local": "J",
+          "local": "Tn",
           "name": "LocalSessions",
           "from": "../../source-r4e-envbranch-adapters.mjs",
-          "via": "./shared-0-ByI5P0CP.js:Om (Ix)"
+          "via": "./shared-0-DDOOdL6P.js:dh (pC)"
         }
       ],
       "callSites": {
-        "JZ": {
-          "sha256": "65e03d530e1df963ff2817308e3abf5c8cf85c0fdb7096fb4449b4b124511f5e",
+        "R0": {
+          "sha256": "09b6a006a7d3ba836340336e04aaa45f61001ba1a9e9ed4ffa7c3a2aa3bc1ff7",
           "needles": [
-            "let Te=A(async(e,t)=>{let n={target:t};_e(n);let r=!0;try{J?.checkBranchSwitchConflict?r=await J.checkBranchSwitchConflict(e,t):J?.isWorkingTreeDirty&&(r=await J.isWorkingTreeDirty(e))}catch{}let i=r&&await qZ(e,t,B);",
-            "if(ye(n),ue.current===e&&we.current===t){if(i){M(void 0),pe(void 0);let e=de.current,{environments:n,selectedEnvironmentId:r}=$P.getState();f(u.formatMessage(FA.branchMissing,{branch:t,known:e?\"yes\":\"no\",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?\"yes\":\"no\"}),{uniqueKey:`branch-missing:${t}`})}else r?pe(t):M(t)}",
-            "G=A(e=>{if(we.current=e,!k&&!l&&!ie&&!p&&e!==void 0&&e!==L&&ee!==!1){",
-            "r.trusted?await Te(t,e)",
-            "_e(void 0),M(e)},[",
-            "{addError:d,addWarning:f}=Ao()",
-            "{branches:R,isAvailable:z,refetch:B}=yC(h,m)",
-            "ue=_(n),de=_(L);P(()=>{ue.current=n,de.current=L},[n,L])",
-            "handleSelectSourceBranch:G,"
+            "async(e,t)=>{let n={target:t};ve(n);let r=!0;try{Tn?.checkBranchSwitchConflict?r=await Tn.checkBranchSwitchConflict(e,t):Tn?.isWorkingTreeDirty&&(r=await Tn.isWorkingTreeDirty(e))}catch{}let i=r&&await L0(e,t,V);",
+            "if(q(n),le.current===e&&Te.current===t){if(i){M(void 0),me(void 0);let e=ue.current,{environments:n,selectedEnvironmentId:r}=jF.getState();m(d.formatMessage(Hj.branchMissing,{branch:t,known:e?\"yes\":\"no\",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?\"yes\":\"no\"}),{uniqueKey:`branch-missing:${t}`})}else r?me(t):M(t)}",
+            "e=>{if(Te.current=e,!A&&!u&&!ne&&!h&&e!==void 0&&e!==R&&H!==!1){",
+            "r.trusted?await De(t,e)",
+            "ve(void 0),M(e)})",
+            "{addError:p,addWarning:m}=Bi()",
+            "{branches:z,isAvailable:B,refetch:V}=ax(_,g)",
+            "le=f(r),ue=f(R),de,fe;J2($,28,R,r)?(de=()=>{le.current=r,ue.current=R},fe=[r,R],K3($,28,R,r,de,fe)):(de=$[30],fe=$[31])",
+            "handleSelectSourceBranch:Oe,"
           ]
         },
-        "me": {
-          "in": "y4",
-          "needle": "me=(t,n,r)=>{let i=n.kind===\"ssh\"||n.kind===\"local\"&&!!n.wslDistro,a=t.worktree??e.settings.worktree.preference,o=n.kind===\"local\"&&!!n.variant,s=i&&!a||o?void 0:t.branch;!s&&e.branch&&!r?e.onSelectBranch(void 0):s&&e.branch!==s&&e.onSelectBranch(s)}"
+        "ue": {
+          "in": "Lse",
+          "needle": "ue=(t,n,r)=>{let i=n.kind===\"ssh\"||n.kind===\"local\"&&!!n.wslDistro,a=t.worktree??e.settings.worktree.preference,o=n.kind===\"local\"&&!!n.variant,s=i&&!a||o?void 0:t.branch;!s&&e.branch&&!r?e.onSelectBranch(void 0):s&&e.branch!==s&&e.onSelectBranch(s)}"
         },
         "onSelectBranch": {
-          "in": "Mte",
-          "needle": "onSelectBranch:q.setSourceBranch,"
+          "in": "wpe",
+          "needle": "branchPickerDisabled:eu,onSelectBranch:Y.setSourceBranch,worktree:Y.worktree"
         },
         "setSourceBranch": {
-          "in": "_Q",
-          "needle": "setSourceBranch:Cn,"
+          "in": "a4",
+          "needle": "sourceBranch:Zt,setSourceBranch:Fn,branchChanged:$t"
         },
         "stableHandler": {
-          "in": "_Q",
-          "needle": "Cn=Lt(Yt);"
+          "in": "a4",
+          "needle": "Pn=rn(sn),Fn=rn(Qt),In=ee&&!ye,Ln=Ae&&at.length>0"
+        },
+        "sourceBranchHandler": {
+          "in": "a4",
+          "needle": "handleSelectSourceBranch:Qt,branchChanged:$t,branchCheckPending:en"
         }
       }
     }

@@ -1,188 +1,223 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r3b-settings.mjs",
   "adapterModule": "src/source-r3b-settings-adapters.jsx",
   "modules": [
     {
       "target": "shared-0.mjs",
-      "source": "shared-0-ByI5P0CP.js",
-      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
-      "sha256": "9c494ea0fc5a3f0bf29a6888595e5efd3d9205b38aeafbce0b6dae362fb61e64",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "d18db24c6204a615e4e60746c38b486b4605ad7e42f868678ada0b0c8a0fe8a2",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "I",
-          "sha256": "6c0b72ce80b345b42606719dbf357e708d31b6e5370daa31655d41d4f06b2af2"
+          "name": "Ni",
+          "sha256": "6ab1306a98803da82070f3ff78ba4423c4f2e77db88e1aeaf53e940dacf4adf3"
         },
         {
-          "name": "Xr",
-          "sha256": "e1b85359069acb4d67f87e8dc86fba4bf8f379f53b4a4998503ded5a35bc843c"
+          "name": "Fi",
+          "sha256": "0671dd1e09225ca42d44d7537a883a218b80aca9e30a453180a9fc87c8586145"
         },
         {
-          "name": "Zr",
-          "sha256": "709a2bbe1cc6ca7844db081ccce25344eb503c2d630b3e26fb7657ef32c1cf00"
+          "name": "Ii",
+          "sha256": "1297494ed0a29faefec57e71559c05ee6e904412df247e773af3608608d09bd3"
         },
         {
-          "name": "Qr",
-          "sha256": "1fd1a27a88099f772c397866f5179958b401a6052c13e862869eb0f3553a45d9"
+          "name": "Li",
+          "sha256": "66721047537e2cade0ad01c4585b1350fea754393fa8e3e78580eb446abd7df4"
         },
         {
-          "name": "$r",
-          "sha256": "123bd919cf330a46bbcaf4ef9cdbcd53b55e3cf1e75d44b98502004d78ac11f0"
+          "name": "Ri",
+          "sha256": "c1e4315688f09eeca9be08ccebd8b8fe8748bcd41ff0cc90530f61d4adbe9f46"
+        },
+        {
+          "name": "F",
+          "sha256": "5e45fc163f638fbc4ad307a94e711f0b5d23088587cbd45efb4c293b649fe846"
+        },
+        {
+          "name": "zi",
+          "sha256": "b45673ac0cc43571010aac148163d3d879bd3d64e42ff2699f3926bc96653d6d"
+        },
+        {
+          "name": "Bi",
+          "sha256": "1d174b6b23ca1987a5c466114ec7f3b3915ee5c965c0f85afeb6a7c2116b1f51"
+        },
+        {
+          "name": "Vi",
+          "sha256": "a5c245441e24387e5fc6f38d35747e8ab7d3451e930f5a56bcbf3e9d78ec6257"
         },
         {
           "name": "Hi",
-          "sha256": "70954d35fa9ddf932eb0bd948f344f7b14454a6bb992bada54b460832f08d544"
+          "sha256": "1b3838cce9c7f92324ea1a09f23e3fda44a07a0adc7682721936d610f1d8a027"
         },
         {
-          "name": "tF",
-          "sha256": "04af6a848eb35296914676369cf4452d5a741574d9abf7f83f9303cd145aa96d"
+          "name": "Ui",
+          "sha256": "3e19d765966edff14020cc6002dbd6f5707bfba3e1c695b6d688a915b616031c"
+        },
+        {
+          "name": "LL",
+          "sha256": "f0779b248fdfa42a416487b812b45423657c114318df02ed23ff7909a35cb931"
         }
       ],
       "imports": [],
       "exports": {
-        "$r": "logger",
-        "I": "logCategory",
-        "Hi": "lazyValue",
-        "tF": "rtlCharacterPattern"
+        "Ui": "logger",
+        "F": "logCategory",
+        "LL": "rtlCharacterPattern"
       }
     },
     {
       "target": "persisted-store.mjs",
-      "source": "shared-25-DP8p7i1Z.js",
-      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
-      "sha256": "89c9d4386b70be49869675b28d54915099eec97096c9881eede086d1cf75cbc6",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "sha256": "dffbe2996bd3ef6c23d41c66a8ffa4ced8a69ffb0ac4484622cd3e9ebd62f993",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
+          "name": "fH",
+          "sha256": "967609066e537ddd4d3109c616f76e2374a0d0fae60c8eda7f813d17c38a89f0"
+        },
+        {
+          "name": "pH",
+          "sha256": "f293f2c7a16e26002fa9bcd382a2dd1ad76428c0715970cec1eeb6dafbfb61b2"
+        },
+        {
+          "name": "hH",
+          "sha256": "eaf8ec6e6ccd9fc3db1348b717bb9b4148aacdca20a97c5f1788aec38fb3d438"
+        },
+        {
+          "name": "xH",
+          "sha256": "9fc1668d482ff4f994727980c1f1114742443b9573dc9fe65ee1d62859d2be9b"
+        },
+        {
+          "name": "DH",
+          "sha256": "3db5ebc5eb8f8cd2637a1f2dc51bcf02fa04377338ead4cfc51d2ed0ee2e3529"
+        },
+        {
+          "name": "OH",
+          "sha256": "9d124b463b89d444dde7c0d10300c1300b44ff75cae8d682ebb8536c8f75f3c1"
+        },
+        {
           "name": "AH",
-          "sha256": "05011a0536fb138ddf3efb6f66eb0238e6b4a11055d5cec3af6adc9e54e0f3be"
-        },
-        {
-          "name": "jH",
-          "sha256": "a2f9ea414d65cbd10ac41eddc6c80d5c8e727313d10a903b32760c93b63a3af9"
-        },
-        {
-          "name": "NH",
-          "sha256": "e31ef3c1479c6e27a30b7e211d3fe48687f46e848bff976f83e9cd24e4324493"
-        },
-        {
-          "name": "zH",
-          "sha256": "f7b0b0804aa81ea0934365f1f3f09b20a9c531d1911829d59bbafc3de3814489"
-        },
-        {
-          "name": "GH",
-          "sha256": "c56d08b03007706d6b437eb20a52f3234130bba671a1a6fc829f50f948dd64f1"
-        },
-        {
-          "name": "KH",
-          "sha256": "962c012733d300688cd80c950fe1dda2e7c60e72d6e0f2d6c34191da241ebd38"
-        },
-        {
-          "name": "JH",
-          "sha256": "a56b3197ec9a6366a690d804e8e92a6933f320518f946d3fc574bf374095e74c"
+          "sha256": "927f6b528e7c1856bc116ff8aa6475105c3ac4c822de1f5a57c3140d371b4e7e"
         }
       ],
       "imports": [
         {
-          "local": "L",
+          "local": "V",
           "from": "./shared-0.mjs",
           "name": "logCategory",
-          "via": "shared-0-ByI5P0CP.js:db",
+          "via": "shared-0-DDOOdL6P.js:_x",
           "kind": "generated"
         },
         {
-          "local": "Jt",
+          "local": "tr",
           "from": "./shared-0.mjs",
           "name": "logger",
-          "via": "shared-0-ByI5P0CP.js:fb",
+          "via": "shared-0-DDOOdL6P.js:vx",
           "kind": "generated"
         }
       ],
       "exports": {
-        "AH": "persistedStorageKey",
-        "JH": "readPersisted",
-        "GH": "removePersisted",
-        "KH": "writePersisted"
+        "fH": "persistedStorageKey",
+        "AH": "readPersisted",
+        "DH": "removePersisted",
+        "OH": "writePersisted"
       }
     },
     {
       "target": "bidi-isolate.mjs",
-      "source": "shared-130-DnUXVlYq.js",
-      "sourceSha256": "699331f0e4329cc5405e11fbb6eeba57b4715aefd2166a934e363d4acda2af8e",
-      "sha256": "b14ab36c342a1becba508709fb3fb382a9024be6a1a7e110f1e15649f8b5bb67",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
+      "sha256": "29ef6cac41e107c1250c6f4c0d4af8e94550603d3c1e3d026e9c2cb081b92844",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "XP",
-          "sha256": "b29f5aad5e7842b6a0bf98c97fac514f0edeed8fc8fa0b014c8c1417ac24afeb"
+          "name": "IW",
+          "sha256": "e8dbeddb569044ac8c7a1f8221163735f84fe27d1b3f3b025ad4fc0beaab11af"
         },
         {
-          "name": "ZP",
-          "sha256": "e674548a79c498aa14fcede2f857237ba403e607208ac6a8a634f28161eb0335"
+          "name": "LW",
+          "sha256": "e8b690f94834112c234ef08e5d5708f9efc251ce1ad86e3bf5e020235cde5950"
         },
         {
-          "name": "eF",
-          "sha256": "b75e47ebbb9a201bcf3a3f702ffdc887b6547fe180e7a6532c957e0b466ca6a6"
+          "name": "RW",
+          "sha256": "bd1b46d5308632963aea9677db95a20adc38e5b6667921ba6668899f8adc7227"
+        },
+        {
+          "name": "zW",
+          "sha256": "c9695ee82b709230f38f23253a1f80f525781f733f7b67ba01c0d82d0868cda4"
+        },
+        {
+          "name": "BW",
+          "sha256": "f6cbbd06ae6a70f33701a1871ba0344d93e8f9875dfdbe18a4ee54472a3c7b7c"
+        },
+        {
+          "name": "VW",
+          "sha256": "3c459672d09950ca1f24b72ceb197b1578d348e8be63ddb923019125826b25b1"
+        },
+        {
+          "name": "WW",
+          "sha256": "27522e28db5ec34ad44ac6277ef22ba336d217bb17f5e96e985ee1f0ce1404db"
         }
       ],
       "imports": [
         {
-          "local": "Ht",
-          "from": "./shared-0.mjs",
-          "name": "lazyValue",
-          "via": "shared-0-ByI5P0CP.js:Py",
-          "kind": "generated"
+          "local": "Ut",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "Pa",
+          "via": "shared-0-DDOOdL6P.js:Lb",
+          "kind": "linked"
         },
         {
-          "local": "yr",
+          "local": "mn",
           "from": "./shared-0.mjs",
           "name": "rtlCharacterPattern",
-          "via": "shared-0-ByI5P0CP.js:tu",
+          "via": "shared-0-DDOOdL6P.js:Wu",
           "kind": "generated"
         }
       ],
       "exports": {
-        "eF": "isolateDirection"
+        "WW": "isolateDirection"
       }
     },
     {
       "target": "format-bytes.mjs",
-      "source": "shared-3-DnHYUZdJ.js",
-      "sourceSha256": "50970f7a24446daa0264bdff8fea02521746fe38d8a93589def7feb8808fdeec",
-      "sha256": "0f2f70b245602d053fc276f0596ba8ebaa9f3ad0cca2912c31d6ba4a6e984a8b",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-3-BCEbd8Fv.js",
+      "sourceSha256": "fc82785f5d40bc42d95be0d959e1c4b56c9365b6aaa921d6da06f2625b5ba7b2",
+      "sha256": "2874d7a70942aa7410a945cac6229c5321f5821c6d950629f38068a53416ebc0",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "XC",
-          "sha256": "4fb6f7b57e678a427764e4670e8b1a44018abf21de10169793929a218e00a65e"
+          "name": "PD",
+          "sha256": "0c7c4315a1c9e274635fccd2f890cb34aeb2bd6f3b0171faeccac7c930f0d37e"
         },
         {
-          "name": "ZC",
-          "sha256": "90465d757da83b0b9745ebe34149b26ff1bf45742a4b48286ed5c06ac2800f0c"
+          "name": "FD",
+          "sha256": "542ac465e97b1323fba840bf8324745d843c5dcae8366a3d1a178a65152cf3f2"
         }
       ],
       "imports": [
         {
-          "local": "Mp",
+          "local": "gl",
           "from": "./bidi-isolate.mjs",
           "name": "isolateDirection",
-          "via": "shared-130-DnUXVlYq.js:Zo",
+          "via": "shared-78-D5Fw2h0a.js:Vs",
           "kind": "generated"
         }
       ],
       "exports": {
-        "ZC": "formatBytes",
-        "XC": "byteUnits"
+        "FD": "formatBytes",
+        "PD": "byteUnits"
       }
     },
     {
       "target": "low-disk-toast.mjs",
-      "source": "cf615570b-CMSKc5h8.js",
-      "sourceSha256": "1db7f3ace084c56486d0d81d027ec01d9c5790a60dc8ef4420e85d40df150130",
-      "sha256": "99fc075711c9d62885558f6c1c36e919597ce4a47efde59bf2eacfbcd2c0a406",
-      "referenceVersion": "2.42304.0",
+      "source": "cf615570b-BgBm9Y8P.js",
+      "sourceSha256": "8945d62677cbf173e47f46ec4ed65c3ca9bb59ca3b4eb65416972d6b23193aed",
+      "sha256": "70014d2673b80350b2596d99ef4b9ffccb636fe87e5d24740da105253af5b301",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
           "name": "p",
@@ -198,7 +233,11 @@
         },
         {
           "name": "g",
-          "sha256": "7d67b1d6479116bc9f690ed36067292153afef78f66f59057b6a084cf2a28283"
+          "sha256": "97d5a259daa9ddae1c99b0d0a0360b944d824145c7429ea26a5f354bb52360fb"
+        },
+        {
+          "name": "_",
+          "sha256": "17ef1ca4c890b3303240656461f66f4007c396587e5e8716d511cbe5131bf92d"
         }
       ],
       "imports": [
@@ -206,92 +245,141 @@
           "local": "e",
           "from": "react",
           "name": "useRef",
-          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
           "kind": "react"
         },
         {
           "local": "t",
           "from": "react/jsx-runtime",
           "name": "jsx",
-          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
           "kind": "react"
         },
         {
           "local": "n",
           "from": "react",
           "name": "useEffectEvent",
-          "via": "vendor-frame-DfPJ1QmD.js:ho",
+          "via": "vendor-frame-CnSY1sxv.js:go",
           "kind": "react"
         },
         {
           "local": "r",
           "from": "react",
           "name": "useEffect",
-          "via": "vendor-frame-DfPJ1QmD.js:mo",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
           "kind": "react"
         },
         {
           "local": "i",
-          "from": "./persisted-store.mjs",
-          "name": "readPersisted",
-          "via": "shared-25-DP8p7i1Z.js:in",
-          "kind": "generated"
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
         },
         {
           "local": "a",
           "from": "./persisted-store.mjs",
           "name": "removePersisted",
-          "via": "shared-25-DP8p7i1Z.js:on",
+          "via": "shared-25-DOWZRSlq.js:Fn",
           "kind": "generated"
         },
         {
           "local": "o",
           "from": "./persisted-store.mjs",
           "name": "writePersisted",
-          "via": "shared-25-DP8p7i1Z.js:sn",
+          "via": "shared-25-DOWZRSlq.js:In",
           "kind": "generated"
         },
         {
           "local": "s",
-          "from": "../../source-r3b-settings-adapters.jsx",
-          "name": "DeviceStorage",
-          "via": "shared-0-ByI5P0CP.js:pm (tx)",
-          "kind": "adapter"
+          "from": "./persisted-store.mjs",
+          "name": "readPersisted",
+          "via": "shared-25-DOWZRSlq.js:Nn",
+          "kind": "generated"
         },
         {
           "local": "c",
           "from": "../../source-r3b-settings-adapters.jsx",
-          "name": "useErrors",
-          "via": "shared-52-DGviI8xb.js:Ya (Sj)",
+          "name": "DeviceStorage",
+          "via": "shared-0-DDOOdL6P.js:Ym (jS)",
           "kind": "adapter"
         },
         {
           "local": "l",
-          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
-          "name": "CdsButton",
-          "via": "shared-frame-BfjMqbuN.js:cl",
-          "kind": "view-tabs"
+          "from": "../../source-r3b-settings-adapters.jsx",
+          "name": "useErrors",
+          "via": "shared-52-uHFNjl7C.js:ha (cB)",
+          "kind": "adapter"
         },
         {
           "local": "u",
-          "from": "./format-bytes.mjs",
-          "name": "formatBytes",
-          "via": "shared-3-DnHYUZdJ.js:Gu",
-          "kind": "generated"
+          "from": "../../source-r3b-settings-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l (Gt)",
+          "kind": "adapter"
         },
         {
           "local": "d",
           "from": "../../source-r3b-settings-adapters.jsx",
-          "name": "FormattedMessage",
-          "via": "vendor-intl-Db7hDWRO.js:l (Gt)",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p (q)",
           "kind": "adapter"
         },
         {
           "local": "f",
-          "from": "../../source-r3b-settings-adapters.jsx",
-          "name": "useIntl",
-          "via": "vendor-intl-Db7hDWRO.js:p (q)",
-          "kind": "adapter"
+          "from": "./format-bytes.mjs",
+          "name": "formatBytes",
+          "via": "shared-3-BCEbd8Fv.js:Sd",
+          "kind": "generated"
         }
       ],
       "exports": {

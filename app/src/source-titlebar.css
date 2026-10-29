@@ -213,8 +213,9 @@
   white-space: nowrap;
 }
 
-/* B (titlebar-release-notes.js:5156-5236): the shared Dialog (source-dialog.jsx) at size md with the bleed
-   'What’s new' header; the popup is `flex max-h-[min(720px,85vh)] flex-col`, so only the entry list scrolls. */
+/* B (titlebar-release-notes.js:5156-5236; 3.6556.2 cb63ed069 B): the shared Dialog (source-dialog.jsx) at size md with
+   the standard Header 'What’s new'; the popup is `flex max-h-[min(720px,85vh)] flex-col`, so only the entry list scrolls
+   (the list fills the popup to its side and bottom edges and takes the leftover height, so the popup has nothing to scroll). */
 .sdlg-popup.st-release-notes {
   max-height: min(720px, 85vh);
 }
@@ -226,14 +227,17 @@
   line-height: var(--cds-leading-caption);
   color: var(--cds-text-muted);
 }
-/* flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto pt-md. */
+/* V3-w12b-settings-dialogs: 3.6556.2 cb63ed069 B `-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg
+   overflow-y-auto px-xl pb-xl pt-md`: the list bleeds to the popup's side and bottom edges, so its scrollbar sits at
+   the edge (the in-data-cds-fizzy variants do not apply: no fizzy root here). */
 .st-release-scroll {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   gap: var(--cds-gap-lg);
-  padding-top: var(--cds-pad-md);
+  margin: 0 calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-xl));
+  padding: var(--cds-pad-md) var(--cds-pad-xl) var(--cds-pad-xl);
   overflow-y: auto;
 }
 /* "No release notes yet.": p-lg text-center text-body text-secondary. */

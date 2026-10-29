@@ -1,5 +1,5 @@
 // R3-sections, work item sidebar-sections-layout (research/sidebar-sections.md WI-3; decisions D10): the Code sidebar is
-// laid out by sections -- Pinned → the manual sections → Sessions -- with the original 2.42304.0 heading (shared-18 uD),
+// laid out by sections -- Pinned → the manual sections → Sessions -- with the original heading (shared-18 uD; 3.6556.2 oA),
 // section header menu (shared-20 yx), section view button (shared-22 eO), sortable wrapper (shared-19 x$) and visibility
 // rule (shared-22 KO), and the store the original pieces call is bridged to main's sidebar-state. Nothing opens a
 // window: the pure layout model, SSR markup of the real SourceSidebar, its handlers taken from a controlled render (a
@@ -16,9 +16,13 @@ import * as Layout from '../src/sidebar-sections-layout.mjs';
 import * as Store from '../electron/sidebar-sections-store.mjs';
 import * as Model from '../electron/generated/sidebar-sections-model.mjs';
 import { extractSidebarSections } from '../scripts/extract-sidebar-sections.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import * as official from '../scripts/official-3.6556.2.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+// The sections generator is 3.6556.2 (w3-sidebar-sections-gen); the host bulk-archive copy is checked against 3.6556.2
+// shared-46 rO / nO (w4-sidebar-menus CI-04).
+const v3Reference = official.ionSource;
 const read = (file) => fs.readFile(file, 'utf8');
 // D21: view-tabs' preload-helper calls document.createElement while it evaluates; sidebar-resize reads documentElement.
 const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
@@ -75,7 +79,7 @@ function fixture(component, props = {}) {
   };
   hooks.useLayoutEffect = hooks.useEffect;
   const run = () => { cursor = 0; const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
-    internals.H = hooks; try { tree = component(props); } finally { internals.H = previous; } return tree; };
+    internals.H = withMemoCache(hooks); try { tree = component(props); } finally { internals.H = previous; } return tree; };
   run();
   return { get tree() { return tree; }, render: run, flush: () => { while (effects.length) effects.shift()(); }, close: () => cells.forEach((c) => c?.cleanup?.()) };
 }
@@ -119,7 +123,8 @@ test('Sessions groups, sorts and shows from its own section; a manual section su
   assert.equal(byFolder.preferences.groupBy, 'project', 'the legacy groupBy no longer decides once the sections are seeded');
   const sessionsPart = byFolder.layout.at(-1);
   assert.equal(sessionsPart.flat, false);
-  assert.deepEqual(sessionsPart.buckets.map((b) => [b.key, b.heading, b.truncateAt]).sort(), [['project:/fixture/other', 'group', 5], ['project:/fixture/work', 'group', 5]]);
+  // 3.6556.2 shared-22 OE → IE: a folder bucket (no saved environment) cuts at 20 (w10-shell-sidebar-folder).
+  assert.deepEqual(sessionsPart.buckets.map((b) => [b.key, b.heading, b.truncateAt]).sort(), [['project:/fixture/other', 'group', 20], ['project:/fixture/work', 'group', 20]]);
   assert.deepEqual(sessionsPart.buckets.flatMap((b) => b.sessions.map((s) => s.id)).sort(), ['c', 'd'], 'Sessions holds the unsectioned rows only');
   // The manual section: date sub-buckets keyed `${rO(id)}:`, not cut (sO cap Infinity), drawsOpenRows, first heading flush.
   const dated = Model.setSectionView(base, 'g1', { groupBy: 'date', sortBy: 'alpha' });
@@ -234,8 +239,10 @@ test('SSR: Pinned → manual sections → Sessions, every heading the original u
   assert.doesNotMatch(pinned, /data-group-list|Group and sort/);
   const sessions = body.slice(body.indexOf('data-group-key="sessions"'));
   assert.match(sessions, /<span data-group-name="" class="min-w-0"><span dir="auto" class="dframe-fade-label [^"]*"[^>]*>(?:<[^>]+>)*Sessions</);
-  // The list's own Group and sort (shared-21 vU → aU, R3-sections step 3): the same CDS trigger in CB's hover-revealed span.
-  assert.match(sessions, /<span class="flex w-0 overflow-hidden group-hover\/labelrow:w-auto[^"]*"><button[^>]*class="[^"]*df-chrome-btn relative -my-1 source-current-filter-button"[^>]*aria-label="Group and sort" data-row-action=""[^>]*aria-haspopup="menu"/);
+  // The list's own Group and sort (shared-21 vU → aU, R3-sections step 3; 3.6556.2 NJ in OG's span): the same CDS
+  // trigger in the hover-revealed span, its class now ending in aria-expanded:touch-none; the span is iY's (w4-sidebar-filter:
+  // scrollMarginBlock 8, data-group-sort-trigger = the trigger's id).
+  assert.match(sessions, /<span class="flex w-0 overflow-hidden group-hover\/labelrow:w-auto[^"]*" style="scroll-margin-block:8px" data-group-sort-trigger="[^"]+"><button[^>]*class="[^"]*df-chrome-btn relative -my-1 aria-expanded:touch-none source-current-filter-button"[^>]*aria-label="Group and sort" data-row-action=""[^>]*aria-haspopup="menu"/);
   assert.doesNotMatch(sessions, /data-group-list/);
   assert.doesNotMatch(body, /data-kind="group"/, 'Pinned, manual and the flat Sessions headings carry no kind');
 });
@@ -263,7 +270,7 @@ test('SSR: an empty kept section shows bC\'s drop hint; Sessions sub-buckets car
   assert.match(folded, /data-group-key="section:g1:[^"]+" data-flush-heading=""/, 'the first sub-bucket heading is flush (sO flushFirstHeading)');
 });
 
-test('SSR: truncation 5 for a manual section and grouped Sessions, 20 for the flat list (Cj / Sr)', () => {
+test('SSR: truncation 5 for a manual section, 20 for the flat list and folder buckets (Cj / Sr / IE)', () => {
   const ids = Array.from({ length: 23 }, (_, i) => `r${i}`);
   const metadata = Object.fromEntries(ids.slice(0, 7).map((id) => [id, { customGroupId: 'g1' }]));
   const sessions = ids.map((id, i) => thread(id, { updatedAt: now - i }));
@@ -273,8 +280,12 @@ test('SSR: truncation 5 for a manual section and grouped Sessions, 20 for the fl
   assert.doesNotMatch(html, /Show \d+ more in Sessions/, '16 unsectioned rows fit the flat 20');
   const more = render({ sessions: [...sessions, ...Array.from({ length: 6 }, (_, i) => thread(`x${i}`, { updatedAt: now - 100 - i }))], customGroups: groups, sessionMetadata: metadata, sidebarSections: sections });
   assert.match(more, /aria-label="Show 2 more in Sessions"/, '22 unsectioned rows: 20 shown');
+  // shared-22 OE → IE (`r && e.environment === void 0 && d !== void 0 ? 20 : d`): a folder bucket cuts at 20.
   const grouped = render({ sessions: ids.slice(0, 7).map((id) => thread(id)), sidebarSections: Model.setSectionView(sections, 'sessions', { groupBy: 'environment' }) });
-  assert.match(grouped, /aria-label="Show 2 more in work"/, 'grouped Sessions: 5 per bucket');
+  assert.match(grouped, /data-group-key="project:\/fixture\/work"/);
+  assert.doesNotMatch(grouped, /Show \d+ more in work/, 'grouped Sessions: a folder bucket shows 20');
+  const crowded = render({ sessions: ids.map((id) => thread(id)), sidebarSections: Model.setSectionView(sections, 'sessions', { groupBy: 'environment' }) });
+  assert.match(crowded, /aria-label="Show 3 more in work"/, '23 rows in one folder bucket: 20 shown');
 });
 
 test('SSR: a folded section (its collapsed flag) hides its rows; the legacy custom:<id> key no longer folds once main sends the record', () => {
@@ -609,26 +620,29 @@ test('R4g review fix (X7-03): a dropped section is at its new place before main 
   }
 });
 
-test('zh-CN: the Archive all confirmation reads the R3-sections dictionary block (ICU plural / select)', async () => {
+test('zh-CN: the Archive all confirmation reads the V3-w4-sidebar-menus dictionary block (shared-46 rO, ICU plural)', async () => {
   const i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   const start = await server.ssrLoadModule('/src/source-code-start-adapters.jsx');
   const previous = i18n.getLocale();
   i18n.setLocale('zh-CN');
   try {
-    let copy, plain;
+    let copy, plain, working;
     renderToStaticMarkup(React.createElement(function Probe() {
       const intl = start.useStartIntl();
       copy = M.sections.bulkArchiveConfirmCopy(intl, { groupName: '研究', count: 3, unloadedRemain: true });
       plain = M.sections.bulkArchiveConfirmCopy(intl, { count: 1 });
+      working = M.sections.bulkArchiveConfirmCopy(intl, { count: 3, workingCount: 2 });
       return null;
     }));
-    assert.deepEqual(copy, { title: '归档“研究”中的所有会话？', body: '将归档 3 个会话。尚未加载的会话不会被归档。', confirmLabel: '全部归档', danger: false });
+    // shared-46 rO joins its sentences with i.join(" ") (CI-04): will be archived, then the unloaded note.
+    assert.deepEqual(copy, { title: '归档“研究”中的所有会话？', body: '将归档 3 个会话。 尚未加载的会话不会被归档。', confirmLabel: '全部归档', danger: false });
     assert.deepEqual([plain.title, plain.body], ['归档所有会话？', '将归档 1 个会话。']);
+    assert.equal(working.body, '将归档 3 个会话。 其中 2 个仍在运行，归档会使其停止。');
   } finally { i18n.setLocale(previous); }
-  // The English source strings are shared-19's, verbatim.
-  const shared19 = await read(path.join(reference, 'shared-19-CkPOiIKm.js'));
+  // The English source strings are 3.6556.2 shared-46's (rO / nO), verbatim.
+  const shared46 = await read(path.join(v3Reference, 'shared-46-BIbZBGFq.js'));
   for (const message of Object.values(M.sections.BULK_ARCHIVE_COPY))
-    assert.ok(shared19.includes(`defaultMessage:${JSON.stringify(message.defaultMessage).replace(/[\u2018-\u201d]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).toUpperCase())},id:"${message.id}"`), message.id);
+    assert.ok(shared46.includes(`defaultMessage:${JSON.stringify(message.defaultMessage).replace(/[\u2018-\u201d]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).toUpperCase())},id:"${message.id}"`), message.id);
 });
 
 test('the store bridge: the original actions run locally, the outermost one is sent to main; add proposes its id', () => {
@@ -681,21 +695,23 @@ test('main takes the proposed id for a new section and refuses a malformed or ta
   assert.equal(config.customGroups.at(-1).id, 'cg-00000000-0000-4000-8000-000000000000', 'the classic create never takes a renderer id');
 });
 
-test('generator: the new section pieces are original 2.42304.0 bindings (x$ v$ y$ _$, f$, shared-11 Ub/Wb, shared-21 Uk)', async () => {
+test('generator: the new section pieces are original 3.6556.2 bindings (shared-46 lM uM dM gM, rM, shared-11 Ww/Kw/qw, shared-21 xN)', async () => {
   const manifest = await extractSidebarSections({ check: true });
   const find = (target) => manifest.modules.find((m) => m.target === target);
-  assert.deepEqual(find('section-sortable.mjs').bindings.map((b) => b.name).sort(), ['_$', 'v$', 'x$', 'y$']);
-  assert.equal(find('section-sortable.mjs').source, 'shared-19-CkPOiIKm.js');
-  assert.deepEqual(find('section-focus.mjs').bindings.map((b) => b.name).sort(), ['Ub', 'Vb', 'Wb']);
-  assert.ok(find('group-reorder.mjs').bindings.some((b) => b.name === 'f$'));
-  assert.ok(find('section-hover.mjs').bindings.some((b) => b.name === 'Uk'));
-  // shared-19 imports dx / xx from shared-11's D / N (Wb / Ub), shared-22 its hv from shared-21's do (Uk), cn from Ii (f$).
-  const shared19 = await read(path.join(reference, 'shared-19-CkPOiIKm.js'));
-  assert.match(shared19, /D as dx,/); assert.match(shared19, /N as xx,/); assert.match(shared19, /f\$ as Ii/); assert.match(shared19, /x\$ as Li/);
-  const shared11 = await read(path.join(reference, 'shared-11-BuQ3CK5I.js'));
-  assert.match(shared11, /Wb as D[,}]/); assert.match(shared11, /Ub as N[,}]/);
-  const shared22 = await read(path.join(reference, 'shared-22-HztmyUTM.js'));
-  assert.match(shared22, /do as hv/); assert.match(shared22, /Ii as cn/); assert.match(shared22, /Li as pn/);
+  // 3.6556.2 (research/sidebar.md §3.2): _$ v$ y$ x$ -> lM uM dM gM (with fM hM pM), f$ -> rM, Vb Ub Wb -> Ww Kw qw, Uk -> xN.
+  assert.deepEqual(find('section-sortable.mjs').bindings.map((b) => b.name).sort(), ['dM', 'fM', 'gM', 'hM', 'lM', 'pM', 'uM']);
+  assert.equal(find('section-sortable.mjs').source, 'shared-46-BIbZBGFq.js');
+  assert.deepEqual(find('section-focus.mjs').bindings.map((b) => b.name).sort(), ['Kw', 'Ww', 'qw']);
+  assert.ok(find('group-reorder.mjs').bindings.some((b) => b.name === 'rM'));
+  assert.ok(find('section-hover.mjs').bindings.some((b) => b.name === 'xN'));
+  // shared-46 imports pf / df from shared-11's U / R (Kw / qw), shared-22 its nv from shared-21's Vo (xN), ni / gi from
+  // shared-46's cr / lr (rM / gM).
+  const shared46 = await read(path.join(v3Reference, 'shared-46-BIbZBGFq.js'));
+  assert.match(shared46, /[{,]U as pf[,}]/); assert.match(shared46, /[{,]R as df[,}]/); assert.match(shared46, /rM as cr[,}]/); assert.match(shared46, /gM as lr[,}]/);
+  const shared11 = await read(path.join(v3Reference, 'shared-11-_AVGLHEz.js'));
+  assert.match(shared11, /qw as R[,}]/); assert.match(shared11, /Kw as U[,}]/);
+  const shared22 = await read(path.join(v3Reference, 'shared-22-Bwn3sJTG.js'));
+  assert.match(shared22, /Vo as nv[,}]/); assert.match(shared22, /cr as ni[,}]/); assert.match(shared22, /lr as gi[,}]/);
   // The host wiring stays in the R3-sections modules: source-sidebar.jsx only mounts SidebarSectionsList.
   const sidebar = await read(path.join(app, 'src/source-sidebar.jsx'));
   assert.match(sidebar, /sectionsModel \? <SidebarSectionsList model=\{sectionsModel\} host=\{sectionsHost\} createRef=\{sectionDialog\} \/> : displayed\.map/);

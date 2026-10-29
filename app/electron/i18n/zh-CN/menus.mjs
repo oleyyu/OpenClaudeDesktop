@@ -94,4 +94,14 @@ export default {
   '{who} is asking you to choose between options.': '{who} 请你在几个选项中做出选择。',
   '{who} needs your approval to use a tool.': '{who} 需要你批准使用工具。',
   'Use folder': '使用此文件夹',
+  // V3-w13-surfaces-menus: File / Go labels by area (3.6556.2 rSi, Qxi, SSi).
+  'New Chat': '新建聊天',
+  'New Task': '新建任务',
+  'Close Chat': '关闭聊天',
+  'Close Task': '关闭任务',
+  'Close Page': '关闭页面',
+  'Previous Chat': '上一个聊天',
+  'Next Chat': '下一个聊天',
+  'Previous Task': '上一个任务',
+  'Next Task': '下一个任务',
 };

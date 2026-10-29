@@ -1,0 +1,329 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-usage-countdown.mjs",
+  "adapterModule": "src/source-usage-countdown-adapters.jsx",
+  "linkedAreas": [
+    {
+      "area": "working-line",
+      "modules": [
+        "elapsed-clock.mjs"
+      ]
+    },
+    {
+      "area": "session-rail-sections",
+      "modules": [
+        "minute-clock.mjs"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "target": "seconds-until.mjs",
+      "source": "c93058e68-CMBi_EBm.js",
+      "sourceSha256": "de3cac2eb20e5ca78f991ac5426735c7e189f05c2b75dd67684af08ca3ca0a74",
+      "sha256": "ac2c355f92bec5ead2c4f850831ec3a509d36e178a0650706de0b50d8cb6d756",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "ea58eb0fc5c0e89bc8625c161592b158e335d3729ffd5f33facbc8f11816e30d"
+        },
+        {
+          "name": "r",
+          "sha256": "72293c26cca510cae5648edf0a895e8394191efaf01d6bda0240f98719869cf2"
+        },
+        {
+          "name": "i",
+          "sha256": "c6b870c1c7a037882ebda1cf64d016827389c3cbcb8d628d4847bde1ddac756f"
+        },
+        {
+          "name": "a",
+          "sha256": "644a49e179a1d8bb0b216a37c559b044b80740382bb47a62db65f0db82277ea1"
+        },
+        {
+          "name": "o",
+          "sha256": "21ae19374eb8031f0b3ca00731d07de6edf381bea94b6f0ab36b6543387d1e6c"
+        },
+        {
+          "name": "s",
+          "sha256": "c13cfa6125a85f86ec3b2a98bfc7f7a317e4369a08657af80b95619dc5fcd05d"
+        },
+        {
+          "name": "c",
+          "sha256": "29391a3f44102b1faf30cd3b101be481366ebdef4350eeb553a93e0b6b1c7b81"
+        },
+        {
+          "name": "l",
+          "sha256": "3499f18e3501d07be188c16412dc27d8516c69efab1b26dc2738b28bcefc54db"
+        },
+        {
+          "name": "u",
+          "sha256": "52dc0c97b14ee732740262e28cf59f49ac517be74f1aec4a3f9b1005c274ad11"
+        },
+        {
+          "name": "f",
+          "sha256": "30b0b2e739c4deb9faf0e5212a09d6f2ab76c162af48f30ac39ef24fc4624cd8"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-CnSY1sxv.js:To",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "f"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "usage-countdown.mjs",
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "3c4c1f4e5c460cd4c8a70b489d280c906178f11c8b87bc9b5f242f8581e8d549",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "YF",
+          "sha256": "8d04703704f1f35cd61918638712ff084d383bd82eaa881764628b4c96640746"
+        },
+        {
+          "name": "XF",
+          "sha256": "191689570b92b207de1892df3d80e5cadb34ae7b5ab4e850e580cf3376d6a855"
+        },
+        {
+          "name": "ZF",
+          "sha256": "2a86c2b6374a88741ff4ce05849ba6d24770237e0ac3612f778371a237d1240e"
+        },
+        {
+          "name": "QF",
+          "sha256": "bc5a5ccb32a1d35cf3db36f62ee57e44cb7f8bd4531a5b00d369a97d0eb43ecd"
+        },
+        {
+          "name": "$F",
+          "sha256": "502a3974b2b65c69e3651545aec518a68b1c153490f27d74d65b6d7b8261a584"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "E",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "H",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs",
+          "original": "I1"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "Jo",
+          "from": "../../source-usage-countdown-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "O",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-usage-countdown-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Yp",
+          "from": "./seconds-until.mjs",
+          "name": "f",
+          "via": "c93058e68-CMBi_EBm.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "cl",
+          "from": "../session-rail-sections/minute-clock.mjs",
+          "name": "useMinuteNow",
+          "via": "shared-156-BLTosN8U.js:Rr",
+          "kind": "linked",
+          "original": "fK"
+        },
+        {
+          "local": "y",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "QF": "UsageResetCountdown",
+        "ZF": "UsageNoticeCardContext"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "binding": "$F",
+      "role": "The countdown copy and its thresholds (YF one hour, XF ten minutes); aria-live off outside a card",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "502a3974b2b65c69e3651545aec518a68b1c153490f27d74d65b6d7b8261a584",
+      "features": [
+        "s = o - cl()",
+        "c = s > 0 && s < YF",
+        "l = Yp(c ? o : null)",
+        "if (s >= YF || u === null)",
+        "defaultMessage: \"Resetting\\u2026\", id: \"26SvXGZRRO\"",
+        "defaultMessage: \"Resets in {minutes}:{seconds}\"",
+        "id: \"LE8RI8JdZv\"",
+        "minimumIntegerDigits: 2",
+        "defaultMessage: \"Resets in {duration}\"",
+        "id: \"3UVgP+t08Q\"",
+        "unit: \"minute\"",
+        "unitDisplay: \"short\"",
+        "d = i ? void 0 : \"off\"",
+        "\"aria-live\": d, className: \"tabular-nums\""
+      ]
+    },
+    {
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "binding": "YF",
+      "role": "One hour (ms): within it the reset counts down",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "8d04703704f1f35cd61918638712ff084d383bd82eaa881764628b4c96640746",
+      "features": [
+        "YF = 36e5"
+      ]
+    },
+    {
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "binding": "XF",
+      "role": "Ten minutes (s): under it minutes:seconds",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "191689570b92b207de1892df3d80e5cadb34ae7b5ab4e850e580cf3376d6a855",
+      "features": [
+        "XF = 600"
+      ]
+    },
+    {
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "binding": "tL",
+      "role": "The band puts QF in the reached limit's detail (host: usage-model.mjs composerUsageNotice countdown)",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "b179ed87aae57a2a5c32a35ced0b3a10266418f9d343afbe9e30405b2cad4f83",
+      "features": [
+        "y(QF, { resetsAtSeconds: _e, absolute: VI(_e, u) })",
+        "J === \"exceeded\" && !Qe"
+      ]
+    },
+    {
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "binding": "aL",
+      "role": "The notice card provides ZF around its headline and detail (host: source-session-notices.jsx ssn-body)",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "10a0a3b1eb9d15c49c13965cc06a3092b4eeb32effad5fff676a5a2a43688376",
+      "features": [
+        "E(ZF.Provider, { value: !0, children: [T, D] })"
+      ]
+    }
+  ],
+  "publicAssets": []
+}

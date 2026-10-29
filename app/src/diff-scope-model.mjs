@@ -1,4 +1,6 @@
 import { getLocale, t, tn } from "../electron/i18n/index.mjs";
+import { commitScopeTriggerLabel } from "./generated/files-changes/diff-scope-label.mjs";
+import { scopeBranchLabel } from "./generated/files-changes/diff-scope-base-label.mjs";
 
 // Changes-pane diff scope, 2.2553.1 readable/panes-tile-current.js:2842-3117
 // (Fm branch order, Im "Compare against" section, zm scope trigger + sections,
@@ -74,25 +76,29 @@ export function diffScopeParam(scope) {
   return scope?.kind === "uncommitted" ? "uncommitted" : "branch";
 }
 
-/** Bm: "{shortSha} {subject}" for a listed commit, else the 7-character sha. */
+/** 3.6556.2 cccc2cf0a iC (generated diff-scope-label.mjs): "{shortSha} {subject || (no message)}" for a listed commit,
+ * else the 7-character sha. */
 export function commitScopeLabel(sha, commits) {
-  const commit = commits?.find((entry) => entry.sha === sha);
-  return commit ? `${commit.shortSha} ${commit.subject}` : String(sha ?? "").slice(0, 7);
+  return commitScopeTriggerLabel(String(sha ?? ""), commits, DIFF_SCOPE_LABELS.noMessage);
 }
 
-/** zm y / w: the branch label "{base} → {head ?? working tree}" (two truncating
- * spans around the ArrowRight), "Uncommitted changes", or the commit label; the
- * trigger is named "Diff scope: {label}". Null without a base (zm returns null). */
-export function diffScopeTrigger(scope, { base, head, commits } = {}) {
-  if (!base) return null;
+/** 3.6556.2 cccc2cf0a $S D / J: the branch label "{base} → {head ?? working tree}" (two truncating
+ * spans around the ArrowRight), "Uncommitted changes", or iC's commit label; the
+ * trigger is named "Diff scope: {label}". Null without a base ($S `if (!b) return null`). $S's b is cb61be3a2 ut's
+ * `base: jt` = `lt = Te(v, C)`, i.e. c5da7eb42 Zf (kc) over the session repo: a detached HEAD's own branch reads "HEAD". */
+export function diffScopeTrigger(scope, { base: rawBase, head, commits, repo } = {}) {
+  if (!rawBase) return null;
+  const base = scopeBranchLabel(repo, rawBase);
   const target = head ?? DIFF_SCOPE_LABELS.workingTree;
   const label = scope?.kind === "uncommitted" ? DIFF_SCOPE_LABELS.uncommitted
     : scope?.kind === "commit" ? commitScopeLabel(scope.sha, commits)
     : `${base} ${DIFF_SCOPE_ARROW} ${target}`;
+  // `range` is $S's q (base → head) for every scope: the label of the branch scope and of the !f (no menu) span.
   return {
     label,
     ariaLabel: t("Diff scope: {label}", { label }),
     branch: scope?.kind === "commit" || scope?.kind === "uncommitted" ? null : { base, head: target },
+    range: { base, head: target },
   };
 }
 
@@ -104,10 +110,18 @@ export function compareAgainstBranches(branches, defaultBase, current) {
   return defaultBase === undefined || defaultBase === null ? rest : [defaultBase, ...rest];
 }
 
-/** Im search-empty label: a load failure, a loaded list with no match, else loading. */
-export function branchSearchEmptyLabel({ error = false, loaded = false, count = 0 } = {}) {
+/** 3.6556.2 cccc2cf0a YS search-empty label `p = O ? e : A || j ? x : "No branches match"`: a load failure, the list
+ * still loading, else no match. */
+export function branchSearchEmptyLabel({ error = false, loaded = false } = {}) {
   if (error) return DIFF_SCOPE_LABELS.branchesFailed;
-  return loaded && count > 0 ? DIFF_SCOPE_LABELS.noBranchesMatch : DIFF_SCOPE_LABELS.loadingBranches;
+  return loaded ? DIFF_SCOPE_LABELS.noBranchesMatch : DIFF_SCOPE_LABELS.loadingBranches;
+}
+
+/** YS `S = A ? x : O && E.length === 0 ? e : void 0`: the disabled "diff-base-note" row under the branches while they
+ * load ("loading", drawn in `animate-placeholder-reveal`) or after a failed load left none ("error"); else null. */
+export function branchNoteRow({ error = false, loaded = false, count = 0 } = {}) {
+  if (!loaded) return { value: "diff-base-note", label: DIFF_SCOPE_LABELS.loadingBranches, disabled: true, searchable: false, note: "loading" };
+  return error && count === 0 ? { value: "diff-base-note", label: DIFF_SCOPE_LABELS.branchesFailed, disabled: true, searchable: false, note: "error" } : null;
 }
 
 /** H (cd5e3435c): rows whose string label contains the lower-cased query. A row whose label is not
@@ -166,14 +180,16 @@ const SCOPE_ROW = Object.freeze({ via: "scope" });
  *   message)", shortSha hint, checked only when the commit scope is listed),
  *   then a disabled "{n} older commit(s) not shown" row. n = zm m.length − 50
  *   over the whole base..HEAD list: `commitTotal` (workspace-git-commits
- *   `total`, which fetches only 51 rows) when known, else the rows given. */
+ *   `total`, which fetches only 51 rows) when known, else the rows given.
+ * - repo: the session repo as YS's `a` ({detachedHead, branch}); c5da7eb42 Zf (`kc`, generated diff-scope-base-label.mjs)
+ *   names the hint and the rows: the detached HEAD's own branch value reads "HEAD". */
 export function diffScopeSections({
   scope = DEFAULT_DIFF_SCOPE, base, defaultBase, overridden = false, current, uncommittedAvailable = true,
-  commits = [], commitTotal, branches = { list: [], loaded: false, error: false }, baseAvailable = true,
+  commits = [], commitTotal, branches = { list: [], loaded: false, error: false }, baseAvailable = true, repo,
   onSelectScope = noop, onSelectBase = noop, onBaseMenuOpen = noop,
 } = {}) {
   const sections = [{ key: "diff-scope", items: [
-    { value: "branch", label: DIFF_SCOPE_LABELS.allChanges, hint: t("vs {base}", { base }), checked: scope.kind === "branch", checkedRole: "radio",
+    { value: "branch", label: DIFF_SCOPE_LABELS.allChanges, hint: t("vs {base}", { base: scopeBranchLabel(repo, base) }), checked: scope.kind === "branch", checkedRole: "radio",
       onSelect: () => onSelectScope(DEFAULT_DIFF_SCOPE, SCOPE_ROW) },
     ...(uncommittedAvailable ? [{ value: "uncommitted", label: DIFF_SCOPE_LABELS.uncommitted, checked: scope.kind === "uncommitted",
       checkedRole: "radio", onSelect: () => onSelectScope(UNCOMMITTED_DIFF_SCOPE, SCOPE_ROW) }] : []),
@@ -182,20 +198,25 @@ export function diffScopeSections({
     const list = branches?.list || [];
     const picked = overridden ? base : undefined;
     const names = compareAgainstBranches(picked === undefined ? list : [...list, picked], defaultBase, current);
+    const loadState = { error: !!branches?.error, loaded: !!branches?.loaded, count: list.length };
+    const note = branchNoteRow(loadState);
+    // YS: {value, label, hint, onOpenChange, searchLabel, onSearchQueryChange (remote only), searchPending (`j || A`),
+    // searchEmptyLabel, items: the branch rows plus the note row}.
     sections.push({ key: "diff-base", items: [{
-      value: "diff-base", label: DIFF_SCOPE_LABELS.compareAgainst, hint: base,
+      value: "diff-base", label: DIFF_SCOPE_LABELS.compareAgainst, hint: scopeBranchLabel(repo, base),
       onOpenChange: (open) => { if (open) onBaseMenuOpen(); },
       searchLabel: DIFF_SCOPE_LABELS.searchBranches,
-      searchEmptyLabel: branchSearchEmptyLabel({ error: !!branches?.error, loaded: !!branches?.loaded, count: list.length }),
-      items: names.map((name) => ({
-        value: `diff-base:${name}`, label: name, checked: name === base, checkedRole: "radio",
+      searchPending: !loadState.loaded,
+      searchEmptyLabel: branchSearchEmptyLabel(loadState),
+      items: [...names.map((name) => ({
+        value: `diff-base:${name}`, label: scopeBranchLabel(repo, name), checked: name === base, checkedRole: "radio",
         hint: name === defaultBase ? DIFF_SCOPE_LABELS.defaultHint : undefined,
         onSelect: () => {
           if (name === base && (!overridden || name !== defaultBase)) return;
           onSelectBase(name === defaultBase ? null : name);
           onSelectScope(DEFAULT_DIFF_SCOPE);
         },
-      })),
+      })), ...(note ? [note] : [])],
     }] });
   }
   if (commits?.length > 0) {

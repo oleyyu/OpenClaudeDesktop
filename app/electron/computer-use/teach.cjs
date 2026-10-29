@@ -1,6 +1,6 @@
 // Teach mode (docs/computer-use-official-spec-20261021.md §1.3, §2.2, §2.3): Claude guides the user through a task, one
 // tooltip per step, and does each step's actions when the user clicks Next. Two parts, as the 2.42304.0 original
-// (asar index.chunk-muI2IV6k.js, log tag [cu-teach]):
+// (asar index.chunk-muI2IV6k.js, log tag [cu-teach]; the same code in 3.6556.2 jPKPzV-P, renamed — tests/w10-cu-official-pages.test.mjs):
 //
 //   createTeachOverlay  the tooltip window: hFa creates it, gFa shows it, _Fa hides it (the page fades out, the window
 //                       hides HIDE_MS later), vFa fades only the tooltip, yFa shows a step, bFa switches it to Working…,

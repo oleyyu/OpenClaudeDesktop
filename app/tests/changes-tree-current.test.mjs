@@ -1,4 +1,5 @@
-// R3-files FT-07: the Changes "Changed files" tree and body on their 2.42304.0 originals — rows at ca7840910 V(depth)
+// R3-files FT-07: the Changes "Changed files" tree and body on their 3.6556.2 originals (c44d00c7f-Cr1FDL2F; w10 L38: the
+// folder / kind-section caret turned by the CdsIcon rotate prop, no rotate-90 class; the section count text-muted) — rows at ca7840910 V(depth)
 // (10px a level) with the official row classes and the kept guide of the active file's folder (c44d00c7f Fc, diffgit-03),
 // expansion that scrolls the opened subtree into view (kc, diffgit-04), folder names as c784da984 path segments and the
 // Jr tooltip that splits paths at "/" under a 480px cap (diffgit-05), F7's belowPane anchor (hi / Ds, diffgit-09) and the
@@ -14,6 +15,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup, setState } from './fixtures/transcript-css-cascade.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import * as official3 from '../scripts/official-3.6556.2.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -57,63 +60,106 @@ function harness(component) {
   return (...args) => {
     index = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return component(...args); } finally { internal.H = old; }
   };
 }
 const patchOf = (file, body = '@@ -1 +1 @@\n-a\n+b\n') => `diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n${body}`;
 
-test('FT-07 generator: the tree tooltip, the path forms and the F7 anchors are 2.42304.0 originals with their imports resolved', () => {
+// The 3.6556.2 chunks the generator now reads (W2 w2-files).
+const OFFICIAL_V3 = official3.ionSource;
+const officialV3 = (name) => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
+const DIFF_V3 = 'c44d00c7f-Cr1FDL2F.js';
+function importsOfV3(chunk, from) {
+  const table = new Map();
+  for (const [, list] of officialV3(chunk).matchAll(new RegExp(`import\\{([^}]*)\\}from"\\./${from.replace(/[.$]/g, '\\$&')}"`, 'g')))
+    for (const pair of list.split(',')) { const [name, alias = name] = pair.split(' as '); table.set(alias, name); }
+  return table;
+}
+function exportsOfV3(chunk) {
+  const list = [...officialV3(chunk).matchAll(/export\{([^}]*)\}/g)].at(-1)[1];
+  return new Map(list.split(',').map((pair) => { const [local, name = local] = pair.split(' as '); return [name, local]; }));
+}
+const resolveV3 = (alias, chunk) => exportsOfV3(chunk).get(importsOfV3(DIFF_V3, chunk).get(alias));
+
+test('FT-07 generator: the tree tooltip, the path forms and the F7 anchors are 3.6556.2 originals with their imports resolved', () => {
   const manifest = JSON.parse(source('src/generated/files-changes/manifest.json'));
+  assert.equal(manifest.referenceVersion, official3.referenceVersion);
   const entry = (target) => manifest.modules.find((module) => module.target === target);
   const expected = {
-    'diff-tree-tooltip.mjs': [DIFF, { Jr: 'DiffTreeRowTooltip', Wr: 'rowNameClipped' }, ['Wr', 'Gr', 'Kr', 'qr', 'Jr']],
-    'path-segments.mjs': ['c784da984-B4E9BLV6.js', { d: 'PathSegments', p: 'NameThenFolder' }, ['u', 'd', 'f', 'p']],
-    'diff-change-nav.mjs': [DIFF, { hi: 'adjacentChange', mi: 'sameChangeAnchor', pi: 'changeAnchors' }, ['pi', 'mi', 'hi']],
+    'diff-tree-tooltip.mjs': [DIFF_V3, { Si: 'DiffTreeRowTooltip', vi: 'rowNameClipped' }, ['vi', 'yi', 'bi', 'xi', 'Si']],
+    // W13 G11 (assertion behind the generator): W12b cf-03 also publishes l (c784da984 `l as r`, cccc2cf0a Af) as LitText.
+    'path-segments.mjs': ['c784da984-Bk3OYRhM.js', { u: 'PathSegments', f: 'NameThenFolder', l: 'LitText' }, ['l', 'u', 'd', 'f', 'p']],
+    'diff-change-nav.mjs': [DIFF_V3, { Ui: 'adjacentChange', Hi: 'sameChangeAnchor', Vi: 'changeAnchors' }, ['Vi', 'Hi', 'Ui']],
   };
   for (const [target, [chunk, exports, bindings]] of Object.entries(expected)) {
     const module = entry(target);
     assert.ok(module, target);
-    assert.equal(module.referenceVersion, '2.42304.0', target);
+    assert.equal(module.referenceVersion, official3.referenceVersion, target);
     assert.equal(module.source, chunk, target);
     assert.deepEqual(module.exports, exports, target);
     assert.deepEqual(module.bindings.map((binding) => binding.name), bindings, target);
-    assert.equal(module.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL, chunk))).digest('hex'), target);
+    assert.equal(module.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL_V3, chunk))).digest('hex'), target);
     assert.equal(createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'src/generated/files-changes', target))).digest('hex'), module.sha256, target);
   }
   const via = (target, local) => entry(target).imports.find((item) => item.local === local);
-  // Jr: the host tooltip (shared-frame Oc = FilesTooltip), React's cloneElement, c0fbbe82d mn / hn from code-current.
-  assert.deepEqual([via('diff-tree-tooltip.mjs', 'he').kind, via('diff-tree-tooltip.mjs', 'he').name], ['adapter', 'FilesTooltip']);
-  assert.deepEqual([via('diff-tree-tooltip.mjs', 't').from, via('diff-tree-tooltip.mjs', 't').name], ['react', 'cloneElement']);
-  assert.deepEqual([via('diff-tree-tooltip.mjs', 'Ot').from, via('diff-tree-tooltip.mjs', 'Ot').name, via('diff-tree-tooltip.mjs', 'Dt').name],
+  // Si: the host tooltip (FilesTooltip adapter), React's cloneElement, cc5c56f5c n / t from code-current (E39).
+  assert.deepEqual([via('diff-tree-tooltip.mjs', 'M').kind, via('diff-tree-tooltip.mjs', 'M').name], ['adapter', 'FilesTooltip']);
+  assert.deepEqual([via('diff-tree-tooltip.mjs', 'f').from, via('diff-tree-tooltip.mjs', 'f').name], ['react', 'cloneElement']);
+  assert.deepEqual([via('diff-tree-tooltip.mjs', 'In').from, via('diff-tree-tooltip.mjs', 'In').name, via('diff-tree-tooltip.mjs', 'Ln').name],
     ['../code-current/path-tooltip.mjs', 'pathTooltipContent', 'pathTooltipOptions']);
-  // c784da984: shared-28 WO (code-current path-parts), ce574895a l / g (code-current breadcrumb-measure), twMerge (view-tabs).
-  assert.deepEqual([via('path-segments.mjs', 's').from, via('path-segments.mjs', 's').name], ['../code-current/path-parts.mjs', 'splitPath']);
-  assert.deepEqual([via('path-segments.mjs', 'l').name, via('path-segments.mjs', 'c').name, via('path-segments.mjs', 'l').from],
+  // c784da984: shared-28 DM (code-current path-parts), ce574895a (code-current breadcrumb-measure), cdsClassNames (view-tabs).
+  assert.deepEqual([via('path-segments.mjs', 'o').from, via('path-segments.mjs', 'o').name], ['../code-current/path-parts.mjs', 'splitPath']);
+  assert.deepEqual([via('path-segments.mjs', 'c').name, via('path-segments.mjs', 's').name, via('path-segments.mjs', 'c').from],
     ['useHeadCut', 'observeWidth', '../code-current/breadcrumb-measure.mjs']);
-  assert.deepEqual([via('path-segments.mjs', 'o').kind, via('path-segments.mjs', 'o').name], ['adapter', 'cdsClassNames']);
+  assert.deepEqual([via('path-segments.mjs', 'a').kind, via('path-segments.mjs', 'a').from, via('path-segments.mjs', 'a').name],
+    ['view-tabs', '../view-tabs/shared-frame-6jtSkIit.js', 'cdsClassNames']);
   // What c44d00c7f's tree imports resolve to (minified import / export tables).
-  assert.deepEqual([resolve('St', 'c784da984-B4E9BLV6.js'), resolve('Ct', 'c784da984-B4E9BLV6.js')], ['d', 'p']);
-  assert.deepEqual([resolve('Dt', 'c0fbbe82d-BOWKSems.js'), resolve('Ot', 'c0fbbe82d-BOWKSems.js')], ['mn', 'hn']);
-  const tree = 'ca7840910-DSVFtTw1.js';
-  assert.deepEqual(Object.fromEntries(['$e', 'Ze', 'Q', 'tt', 'Ye', 'Qe', 'Je', 'qe', 'Xe', 'Ke'].map((alias) => [alias, resolve(alias, tree)])),
-    { $e: 'P', Ze: 'j', Q: 'I', tt: 'F', Ye: 'V', Qe: 'L', Je: 'z', qe: 'E', Xe: 'A', Ke: 'N' });
-  const text = official(DIFF);
+  assert.deepEqual([resolveV3('Wt', 'c784da984-Bk3OYRhM.js'), resolveV3('Gt', 'c784da984-Bk3OYRhM.js')], ['u', 'f']);
+  assert.deepEqual([resolveV3('In', 'cc5c56f5c-BoRtnbt1.js'), resolveV3('Ln', 'cc5c56f5c-BoRtnbt1.js')], ['n', 't']);
+  // The row classes / styles moved from ca7840910 to c621b1e2d (file-tree-row-classes + code-current file-tree-style).
+  const tree = 'c621b1e2d-CU5cG_mP.js';
+  assert.deepEqual(Object.fromEntries(['xt', 'bt', '_t', 'St', 'gt', 'ht', 'vt', 'Q', 'Ct', 'yt'].map((alias) => [alias, resolveV3(alias, tree)])),
+    { xt: 'f', bt: 'l', _t: 'm', St: 'p', gt: 'y', ht: 'h', vt: '_', Q: 'i', Ct: 'c', yt: 'd' });
+  const classes = entry('file-tree-row-classes.mjs');
+  assert.equal(classes.source, tree);
+  assert.deepEqual(['f', 'l', 'm', 'p', 'c', 'd'].map((local) => classes.exports[local]),
+    ['fileTreeCompactRow', 'fileTreeKeptGuides', 'fileTreeRowCurrent', 'fileTreeRowIdle', 'fileTreeGroup', 'fileTreePadding']);
+  // Stable strings of the compiled 3.6556.2 tree (R2): class literals, data-*, props.
+  const text = officialV3(DIFF_V3);
   for (const feature of [
-    'function Fc({rows:e,depth:t,...n}){let r=e.some(e=>e.kind==="file"&&e.path===n.activePath)?{"--file-tree-kept-guides":Je(t)}:void 0;return c("div",{role:"none",className:"contents",style:r,',
-    'onClick:t=>kc(t.currentTarget,n,()=>r(e.path)),className:`${$e} ${Ze} ${tt}`',
-    'className:`shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none ${n?"":"rotate-90"}`',
-    'c("span",{ref:f,className:"flex min-w-0",children:c(St,{path:e.name,title:"",posix:!0})})',
-    'detailIsPath:!0', 'className:`${$e} ${Ze} ${r?Q:tt}`', 'c(nt,{fileName:e.name,size:qe(),className:"shrink-0 text-muted-control"})',
-    'c(Ct,{path:e.path,title:"",posix:!0})',
-    'style:Qe(0),"data-diff-tree-row":"","data-diff-tree-section":e', 'onClick:e=>kc(e.currentTarget,!g,()=>_(!g)),className:`${$e} ${tt}`',
-    'className:"shrink-0 text-footnote tabular-nums text-muted-as-secondary",children:n.length',
-    'className:`${Xe} h-full overflow-y-auto ${Ke} outline-none hide-focus-ring`', 'Se,{delay:700',
-    'xe&&(Dt?"border-s":"border-e")', 'hideWhitespace:k&&!Ca({annotations:c,prComments:l,findings:u,drafts:d})',
+    'i.some(e=>e.kind==="file"&&e.path===r.activePath)?{"--file-tree-kept-guides":vt(t)}:void 0', 'n("div",{role:"none",className:"contents",style:a,children:o})',
+    'className:`${xt} ${bt} ${St}`', 'A=`${xt} ${bt} ${f?_t:St}`', 'onClick:L,className:`${xt} ${St}`',
+    // 3.6556.2 (panes:C3-1): the Commits section header's caret (s = collapsed) is CdsIcon CaretRight with the rotate prop,
+    // no rotate-90 class; the tree's folder / section carets are pinned below (w10 L38).
+    'm=s?0:90', 'name:"CaretRight",size:p,rotate:m,className:"shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none"',
+    'n("span",{ref:m,className:"flex min-w-0",children:n(Wt,{path:c,title:"",posix:!0})})',
+    'detailIsPath:!0', 'n(wt,{fileName:t,size:i,className:"shrink-0 text-muted-control"})', 'n(Gt,{path:a,title:"",posix:!0})',
+    'style:ee,"data-diff-tree-row":"","data-diff-tree-section":s', 'ee=J0($,42)?K0($,42,ht(0)):$[42]',
+    // 3.6556.2: the section header name is text-secondary and its count text-muted (2.42304.0: text-muted-as-secondary).
+    'n("span",{className:"truncate min-w-0 flex-1 text-secondary",children:c})', 'n("span",{className:"shrink-0 text-footnote tabular-nums text-muted",children:i.length})',
+    'className:`${Ct} h-full overflow-y-auto ${yt} outline-none hide-focus-ring`',
+    'side:"bottom",align:"start",className:v,delay:700,hoverable:!1,lazy:!0',
+    'We&&(Vn?"border-s":"border-e")', 'hideWhitespace:N&&!Dc({annotations:c,prComments:l,findings:u,drafts:d})',
     'belowPane:c.viewportOffset>=n.getBoundingClientRect().height',
   ]) assert.ok(text.includes(feature), feature);
-  // The rows' style is Ye(t) (V) for folder and file rows, Qe(0) (L) for a kind section's header.
-  assert.equal((text.match(/style:Ye\(t\)/g) ?? []).length, 2);
+  assert.match(text, /\w+,\{delay:700,children:\w+\}/);
+  // w10 L38: the folder row (cs) and the kind section header (Xo) turn CaretRight with the rotate prop (folder: 0 collapsed
+  // / 90 open; section: 90 open / 0 closed), the class without rotate-90; both rows' button attributes (R2: looseFeature).
+  const caret = (size, rotate) => `n(B,{name:"CaretRight",size:${size},rotate:${rotate},className:"shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none"})`;
+  assert.match(text, official3.looseFeature(`b=a?0:90,S=J1($,15,b)?K1($,15,b,${caret('y', 'b')})`));
+  assert.match(text, official3.looseFeature(`R=v?90:0,z=J1($,46,R)?K1($,46,R,${caret('te', 'R')})`));
+  assert.match(text, official3.looseFeature('o("button",{ref:F,type:"button",style:ee,"data-diff-tree-row":"","data-diff-tree-section":s,role:"treeitem",tabIndex:-1,"aria-level":1,"aria-expanded":v,onClick:L,className:`${xt} ${St}`,children:[z,ne,re]})'));
+  assert.match(text, official3.looseFeature('o("button",{ref:d,type:"button",style:h,"data-diff-tree-row":"",role:"treeitem",tabIndex:-1,"aria-level":g,"aria-expanded":_,onClick:v,className:`${xt} ${bt} ${St}`,children:[S,C]})'));
+  assert.doesNotMatch(text, /name:"CaretRight"[^)]*rotate-90/);
+  // The host follows: the rotate prop on both tree carets, no rotate-90 class, the section count text-muted.
+  const host = source('src/source-diff.jsx');
+  assert.ok(host.includes('rotate={isCollapsed ? 0 : 90} className="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none"'));
+  assert.ok(host.includes('rotate={open ? 90 : 0} className="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none"'));
+  assert.ok(host.includes('<span className="shrink-0 text-footnote tabular-nums text-muted">{section.count}</span>'));
+  assert.doesNotMatch(host, /"rotate-90"/);
+  // The rows' style is gt(depth) (y) for folder and file rows, ht(0) (h) for a kind section's header.
+  assert.deepEqual(text.match(/,gt\(\w\)\)/g), [',gt(i))', ',gt(u))']);
 });
 
 test('FT-07 SSR: rows at V(depth) with the ca7840910 classes, the c784da984 folder name, the file-type icon (diffgit-03/05)', async () => {
@@ -141,7 +187,14 @@ test('FT-07 SSR: rows at V(depth) with the ca7840910 classes, the c784da984 fold
   const src = at('src');
   assert.match(src, /aria-expanded="true"/);
   assert.ok(src.includes(`class="${`${classes.fileTreeCompactRow} ${classes.fileTreeKeptGuides} ${classes.fileTreeRowIdle}`.replace(/&/g, '&amp;')}"`));
-  assert.match(src, /<span data-cds="Icon" data-cds-mirror="" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\);[^"]*" class="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none rotate-90" aria-hidden="true">[^<]*<\/span>/);
+  // 3.6556.2 cs: an open folder's caret is CdsIcon rotate 90 (shared-frame zo: data-cds-rotate + --cds-icon-rotate, which
+  // c6a992d55 `[data-cds=Icon][data-cds-rotate]` turns), not a rotate-90 class.
+  assert.match(src, /<span data-cds="Icon" data-cds-mirror="" data-cds-rotate="" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\);[^"]*;--cds-icon-rotate:90deg" class="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none" aria-hidden="true">[^<]*<\/span>/);
+  assert.doesNotMatch(html, /rotate-90/);
+  // A collapsed folder: rotate 0, which zo renders as no rotate attribute or variable at all.
+  const shutFolder = renderToStaticMarkup(h(D.SourceDiffTreeFolder, { node: { kind: 'dir', name: 'src', path: 'src', children: [] }, depth: 0, collapsed: new Set(['src']), onToggle() {}, actions: null, activePath: null, onSelect() {}, showDirectory: false }));
+  assert.match(shutFolder, /aria-expanded="false"[^>]*><span data-cds="Icon" data-cds-mirror="" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\);[^"]*" class="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none" aria-hidden="true">/);
+  assert.doesNotMatch(shutFolder, /data-cds-rotate|--cds-icon-rotate|rotate-90/);
   assert.match(src, /<span class="flex min-w-0"><span dir="ltr" class="relative flex min-w-0 overflow-hidden whitespace-nowrap"><span class="min-w-0 truncate">src<\/span><\/span><\/span>/);
   // A file row: the c280f9bbb file-type icon (xs, text-muted-control), its name, the footnote counts.
   const app = at('app.js');
@@ -193,7 +246,9 @@ test('FT-07 Fc: the folder holding the active file keeps its guide (z at its dep
   assert.match(test, /<\/button><div role="none" class="contents"><button[^>]*aria-level="2" aria-expanded="true"[^>]*>.*?<\/button><div role="none" class="contents" style="--file-tree-kept-guides:linear-gradient\(var\(--file-tree-guides-to, to right\), transparent 10px, var\(--cds-border\) 10px 11px, transparent 11px\)"><button[^>]*aria-level="3" aria-current="true"/);
   const sections = renderToStaticMarkup(h(D.SourceDiffFileTree, { list: L.diffFileList(entries, { tree: false, groupByKind: true }), tree: false, activePath: 'src/app.test.js', onSelect() {} }));
   assert.match(sections, new RegExp(`<div role="none" class="mt-1 border-t pt-1" data-pane-line=""><button type="button" style="padding-inline-start:8px" data-diff-tree-row="" data-diff-tree-section="test"[^>]*aria-expanded="true" class="flex items-center gap-1 h-control app-list-row pe-md rounded text-body text-start w-full select-none focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus bg-alpha-0 text-primary hover:bg-fill-ghost-hover data-\\[pressed\\]:bg-fill-ghost-hover">`));
-  assert.match(sections, /<span class="shrink-0 text-footnote tabular-nums text-muted-as-secondary">1<\/span><\/button><div role="none" class="contents" style="--file-tree-kept-guides:linear-gradient\(var\(--file-tree-guides-to, to right\), transparent 0px, var\(--cds-border\) 0px 1px, transparent 1px\)"><button[^>]*aria-level="2"/);
+  // 3.6556.2 Xo: an open section's caret is CdsIcon rotate 90, the name text-secondary, the count text-muted.
+  assert.match(sections, /data-diff-tree-section="test"[^>]*><span data-cds="Icon" data-cds-mirror="" data-cds-rotate="" style="[^"]*;--cds-icon-rotate:90deg" class="shrink-0 text-muted-as-secondary transition-transform duration-fast motion-reduce:transition-none" aria-hidden="true">[^<]*<\/span><span class="truncate min-w-0 flex-1 text-secondary">Test files<\/span><span class="shrink-0 text-footnote tabular-nums text-muted">1<\/span><\/button>/);
+  assert.match(sections, /<span class="shrink-0 text-footnote tabular-nums text-muted">1<\/span><\/button><div role="none" class="contents" style="--file-tree-kept-guides:linear-gradient\(var\(--file-tree-guides-to, to right\), transparent 0px, var\(--cds-border\) 0px 1px, transparent 1px\)"><button[^>]*aria-level="2"/);
 });
 
 test('FT-07 kc: opening a folder or a section scrolls its subtree into view; closing does not scroll (diffgit-04)', async () => {
@@ -210,12 +265,14 @@ test('FT-07 kc: opening a folder or a section scrolls its subtree into view; clo
   const button = (element) => element.props.children[0].props.children;
   const closed = harness(D.SourceDiffTreeFolder)({ node, depth: 0, collapsed: new Set(['src']), onToggle, actions: null, activePath: null, onSelect() {}, showDirectory: false });
   assert.equal(button(closed).props['aria-expanded'], false);
+  assert.equal(button(closed).props.children[0].props.rotate, 0);
   button(closed).props.onClick({ currentTarget: folder });
   assert.deepEqual(toggled, ['src']);
   // kc: min(last row bottom + 5 - (tree top + height), row top - 5 - tree top) = min(246 + 5 - 200, 150 - 5) = 51.
   assert.equal(tree.scrollTop, 51);
   // Closing an open folder: the update only.
   const open = harness(D.SourceDiffTreeFolder)({ node, depth: 0, collapsed: new Set(), onToggle: (path) => toggled.push(path), actions: null, activePath: null, onSelect() {}, showDirectory: false });
+  assert.equal(button(open).props.children[0].props.rotate, 90);
   button(open).props.onClick({ currentTarget: folder });
   assert.deepEqual(toggled, ['src', 'src']);
   assert.equal(tree.scrollTop, 51);
@@ -226,10 +283,12 @@ test('FT-07 kc: opening a folder or a section scrolls its subtree into view; clo
   tree.scrollTop = 0;
   const section = harness(D.SourceDiffTreeSection)({ section: { kind: 'test', label: 'Test files', count: 2 }, open: false, onToggle: () => { sectionToggles++; } });
   assert.equal(section.props['data-diff-tree-section'], 'test');
+  assert.equal(section.props.children[0].props.rotate, 0);
   section.props.onClick({ currentTarget: header });
   assert.equal(sectionToggles, 1);
   assert.equal(tree.scrollTop, Math.min(348 + 24 + 5 - 200, 300 - 5));
   const shut = harness(D.SourceDiffTreeSection)({ section: { kind: 'test', label: 'Test files', count: 2 }, open: true, onToggle: () => { sectionToggles++; } });
+  assert.equal(shut.props.children[0].props.rotate, 90);
   shut.props.onClick({ currentTarget: header });
   assert.equal(sectionToggles, 2);
   assert.equal(tree.scrollTop, 177, 'closing does not scroll');
@@ -302,7 +361,8 @@ test('FT-07 CSS: no unlayered rule restates the rows; the official utilities win
   const twoFiles = patchOf('src/app.js') + patchOf('README.md');
   const html = renderToStaticMarkup(h(S.SourceFilePanel, { sessionId: 's', cwd: '/tmp/work', tab: 'changes', diff: twoFiles + patchOf('src/app.test.js'),
     diffTree: { diffShowTree: true, diffTreeWidth: 300, diffFileTree: true, diffGroupByKind: true }, onDiffTreeChange() {} }));
-  const column = html.slice(html.indexOf('<div class="sdiff-file-list '), html.indexOf('<div class="source-tree-divider'));
+  // The column ends where the main column starts (W12: the divider is c44d00c7f Ir inside the column, no host divider).
+  const column = html.slice(html.indexOf('<div class="sdiff-file-list '), html.indexOf('<div class="sdiff-changes-main'));
   const loaded = fs.readdirSync(path.join(ROOT, 'public/assets/v1')).filter((name) => name.endsWith('.css')).map((name) => source(`public/assets/v1/${name}`)).join('\n');
   const escape = (name) => `.${name.replace(/[^a-zA-Z0-9_-]/g, (ch) => `\\${ch}`)}`;
   const used = new Set([...column.matchAll(/class="([^"]*)"/g)].flatMap(([, list]) => list.replace(/&amp;/g, '&').split(/\s+/)).filter(Boolean));
@@ -326,6 +386,23 @@ test('FT-07 CSS: no unlayered rule restates the rows; the official utilities win
     official(result, `file row ${property}`);
     assert.equal(result.value, value, property);
   }
+  // w10 L38: the open folder's caret turns by c6a992d55 `[data-cds=Icon][data-cds-rotate]{rotate:var(--cds-icon-rotate)}`
+  // (CdsIcon rotate prop) and no host rule; the kind section's count is the official text-muted.
+  // (The cascade fixture does not track `rotate`: the rule is checked in the loaded sheet, the attributes on the node.)
+  const caretOf = (row) => row.children.find((child) => child.attrs?.['data-cds'] === 'Icon');
+  assert.ok(loaded.includes('[data-cds=Icon][data-cds-rotate]{--cds-icon-rotate:0deg;rotate:var(--cds-icon-rotate)}'));
+  assert.equal(caretOf(folder).attrs['data-cds-rotate'], '');
+  assert.match(caretOf(folder).attrs.style, /--cds-icon-rotate:90deg/);
+  assert.doesNotMatch(appSheets(ROOT).filter((sheet) => sheet.name.startsWith('src/')).map((sheet) => sheet.code).join('\n'), /data-cds-rotate|--cds-icon-rotate/);
+  const section = find(doc, (n) => n.tag === 'button' && n.attrs['data-diff-tree-section'] === 'test');
+  assert.ok(section);
+  // No active file: the Test section is closed, rotate 0, so its caret carries no rotate attribute.
+  assert.equal(section.attrs['aria-expanded'], 'false');
+  assert.equal(caretOf(section).attrs['data-cds-rotate'], undefined);
+  const count = section.children.at(-1);
+  assert.equal(count.attrs.class, 'shrink-0 text-footnote tabular-nums text-muted');
+  official(computed(cascade, count, 'color'), 'section count');
+  assert.equal(computed(cascade, count, 'color').value, 'var(--cds-text-muted)');
   // The row's inline V(depth) padding (SSR above) is beaten by no !important rule.
   assert.ok(!computed(cascade, file, 'padding-left').from?.important);
   // Hover on the tree shows every row's guides; hover on a row paints it.

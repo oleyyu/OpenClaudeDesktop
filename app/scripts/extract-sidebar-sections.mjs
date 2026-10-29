@@ -1,6 +1,8 @@
-// Extract the 2.42304.0 Code sidebar sections (research/sidebar-sections.md WI-1, work item sidebar-sections-extract):
-// the shared-52 sections model and the custom-group store actions it is driven by, the shared-18 group/folder/section
-// copy and group label row, the shared-19 disabled reasons and header-menu pieces, the shared-22 section view menu and
+// Extract the 3.6556.2 Code sidebar sections (3.6556.2 migration w3-sidebar-sections-gen; research/sidebar.md §3.2; first
+// cut research/sidebar-sections.md WI-1): the shared-52 sections model and the custom-group store actions it is driven
+// by, the shared-18 group/folder/section copy, group label row and status dot, the shared-46 disabled reasons, header-menu
+// pieces, Archive all, section reorder and sortable wrapper (2.42304.0 shared-19), the shared-11 group-mode hooks (2.42304.0
+// shared-16), the shared-21 filter controls, blank-area menu and section badge, the shared-22 section view menu and
 // visible-section rule, and the shared-20 header menu, new-section dialog and Move to menus. Nothing is executed.
 //
 // Every emitted binding is an original top-level declaration sliced from the prettier-formatted source; each module's
@@ -9,377 +11,384 @@
 // and wrapped in a `(e, t)` factory whose parameters are the creator's own (set, get), after asserting that nothing
 // else from the creator's scope is read. Each dependency resolves to exactly one of:
 //   - another module generated here (same run, same output tree);
-//   - a React / ReactDOM export of vendor-frame, checked against its `local=<ns>.<member>` assignment;
+//   - a React / ReactDOM / react/compiler-runtime export of vendor-frame (official-3.6556.2.mjs reactAliases, checked
+//     with assertVendorAlias / assertCompilerRuntime, R3);
 //   - an already generated module that holds the *same original binding*: view-tabs by its public (semantic) name
-//     (manifest.publicNames must name this file and local), sidebar-resize by its manifest exports, code-current by its
-//     exports (a 2.42304.0 module must list this very binding; a 2.37337.1 one must be alpha-equivalent to it, i.e.
-//     identical up to a consistent renaming of identifiers) -- never a second copy of a context or store;
+//     (manifest.publicNames must name this file and local; the React Compiler helpers J9/J8/J0…Z5 are view-tabs' only,
+//     E3), sidebar-resize by its manifest exports, code-current / app-switch by their exports (the module must be a
+//     3.6556.2 slice listing this very binding) -- never a second copy of a context or store. Bindings without an explicit `externals` entry are
+//     looked up in those areas automatically (same file, same local, exported), so a producer that already holds a
+//     binding is always preferred over a second slice;
 //   - a named host adapter in src/source-sidebar-sections-adapters.jsx.
-// Roots, adapters and externals all carry feature strings that must still appear in the original text, so a version
-// bump that re-points a minified name fails here instead of silently binding the wrong value.
+// Roots, adapters and externals all carry feature strings that must still appear in the original text (R2: literals,
+// keys, classes, i18n ids; minified statements only through looseFeature), so a version bump that re-points a minified
+// name fails here instead of silently binding the wrong value.
+//
+// Targets whose original bindings now live in two chunks (session-keys, group-mode, menu-triggers, section-badge) keep
+// their file and export names (R4/E7): the second chunk is its own target and the first re-exports it (`reexports`).
+// Its consumer sidebar-reorder reads this manifest as 3.6556.2 through scripts/sidebar-sections-compat.mjs; the E34
+// legacy['2.42304.0'] view and its frozen JSON are gone (w10-cleanup-sidebar-legacy).
 //
 // D0: own generator, own output folder (src/generated/sidebar-sections) plus the main-process copy of the pure model
 // (electron/generated/sidebar-sections-*.mjs, adapter-free), own scripts/verify-gen-sidebar-sections.mjs.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import { sidebarResizeManifestFor } from './sidebar-resize-compat.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
-const previousSource = path.resolve(root, '../reference/installed-2.37337.1-20261015/ion-dist/assets/v1');
+const { referenceVersion, referenceSnapshot } = official;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/sidebar-sections');
 const generatedRoot = path.join(root, 'src/generated');
 const adapterFile = path.join(root, 'src/source-sidebar-sections-adapters.jsx');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const posix = p => p.split(path.sep).join('/');
 const rel = (fromFile, toFile) => { const r = posix(path.relative(path.dirname(fromFile), toFile)); return r.startsWith('.') ? r : `./${r}`; };
+const loose = official.looseFeature;
+const S18 = 'shared-18-D3y8YMFN.js', S46 = 'shared-46-BIbZBGFq.js', S52 = 'shared-52-uHFNjl7C.js', S21 = 'shared-21-R7LldJ05.js';
+const S20 = 'shared-20-mUr7IqZY.js', S22 = 'shared-22-Bwn3sJTG.js', S11 = 'shared-11-_AVGLHEz.js', S16 = 'shared-16-ByfgAyLr.js';
+const S19 = 'shared-19-DIKJVT7c.js', S26 = 'shared-26-CGuBxVt9.js', S6 = 'shared-6-sd9jbJqs.js', S8 = 'shared-8-Db1QN4mf.js';
+const S25 = 'shared-25-DOWZRSlq.js', S78 = 'shared-78-D5Fw2h0a.js', SF = official.sharedFrame, VF = official.vendorFrame;
 
-// vendor-frame re-exports React / ReactDOM; each alias is checked against its `local=<ns>.<member>` assignment.
-const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    Ba: ['react', 'Fragment'], eo: ['react', 'createContext'], lo: ['react', 'use'], oo: ['react', 'memo'],
-    _o: ['react', 'useImperativeHandle'], do: ['react', 'useContext'], bo: ['react', 'useMemo'], uo: ['react', 'useCallback'],
-    Co: ['react', 'useState'], So: ['react', 'useRef'], mo: ['react', 'useEffect'], yo: ['react', 'useLayoutEffect'],
-    ro: ['react', 'forwardRef'], go: ['react', 'useId'], xo: ['react', 'useReducer'], io: ['react', 'isValidElement'],
-    $a: ['react', 'cloneElement'], co: ['react', 'startTransition'], po: ['react', 'useDeferredValue'],
-    Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'], Ca: ['react-dom', 'flushSync'], Sa: ['react-dom', 'createPortal'],
-    so: ['react', 'default'], Ja: ['react', 'Fragment'], wo: ['react', 'useSyncExternalStore'],
-  },
-};
+// vendor-frame re-exports React / ReactDOM / react/compiler-runtime (R3: every alias from official.reactAliases).
+const vendor = { [VF]: official.reactAliases };
 
 // Original bindings (file:local) that already live in a generated module. `features` must appear in the binding's
-// same-chunk closure. view-tabs is addressed only by its public names (D1); code-current and sidebar-resize by the
-// export the module gives that binding.
+// same-chunk closure. view-tabs is addressed only by its public names (D1); code-current, app-switch and sidebar-resize
+// by the export the module gives that binding. Bindings not listed here are still resolved to those areas when one of
+// their modules holds and exports the same file:local (see autoExternal).
 const externals = {
-  'shared-frame-BfjMqbuN.js:Jo': { area: 'view-tabs', name: 'CdsIcon', features: ['"data-cds": "Icon"'] },
-  'shared-frame-BfjMqbuN.js:$l': { area: 'view-tabs', name: 'CdsButton', features: ['iconPosition: i = "start"'] },
-  'shared-frame-BfjMqbuN.js:M_': { area: 'view-tabs', name: 'CdsConfirmationDialog', features: ['confirmLabel:', 'closeOnConfirm'] },
-  'shared-frame-BfjMqbuN.js:la': { area: 'view-tabs', name: 'CdsDensityContext', features: ['("comfortable")'] },
-  'vendor-frame-DfPJ1QmD.js:wd': { area: 'view-tabs', name: 'DirectionContext', features: ['wd = x(void 0)'] },
-  'shared-4-CJsHhp5n.js:jf': { area: 'view-tabs', name: 'isFizzyLakePartEnabled', features: ['getAttribute('] },
-  // R3-sections step 3: clsx is view-tabs' public one (vendor-frame ge, `za`), the copy the code-current filter controls
-  // and every view-tabs CDS part already read (sidebar-resize/class-names.mjs is a second slice of the same declaration).
-  'vendor-frame-DfPJ1QmD.js:ge': { area: 'view-tabs', name: 'clsx', features: ['arguments.length'] },
-  // R3-sections step 3 (D24): the CDS parts the sections pieces render, by their view-tabs public names (R3-graph): the
-  // Tooltip (Zp, `Oc`), the Dropdown (EC, `qa`) with its detached-trigger handle (vendor-frame bm, `Wt`, the same Base
-  // UI instance), the Dialog (k_, `Js`), the TextInput (tx, `ho`) and the CDS root (Za, `tu`). The context menu (iD)
-  // stays the host adapter: its items are code-current's sidebar menu rows (shared-16 au / lu, shared-19 MX / uZ), which
-  // render through the host SourceMenu that the host's own row / blank-area / Older menus share (see the report).
-  'shared-frame-BfjMqbuN.js:Zp': { area: 'view-tabs', name: 'CdsTooltip', features: ['trackCursorAxis', 'openOnHandedBackFocus: y = !1'] },
-  'shared-frame-BfjMqbuN.js:EC': { area: 'view-tabs', name: 'CdsDropdown', features: ['SubmenuTrigger:', 'Popup: qS'] },
-  'vendor-frame-DfPJ1QmD.js:bm': { area: 'view-tabs', name: 'CdsMenuCreateHandle', features: ['new ym()', 'super(Qp(), "Menu")'] },
-  'shared-frame-BfjMqbuN.js:k_': { area: 'view-tabs', name: 'CdsDialog', features: ['Root: O_', 'Footer: D_'] },
-  'shared-frame-BfjMqbuN.js:tx': { area: 'view-tabs', name: 'CdsTextInput', features: ['clearable: a = !1'] },
-  'shared-frame-BfjMqbuN.js:Za': { area: 'view-tabs', name: 'CdsRoot', features: ['density: e', 'pageBackground: a'] },
-  'shared-28-DcgD7xXH.js:Pm': { area: 'sidebar-resize', target: 'logical-side.mjs', name: 'physicalSide', features: ['"inline-start"'] },
-  'shared-18-D4XxL6Tg.js:wE': { area: 'code-current', target: 'sidebar-row-primitive.mjs', name: 'sidebarHitRowClass', features: ['hit-row'] },
-  'shared-18-D4XxL6Tg.js:PE': { area: 'code-current', target: 'sidebar-row-view.mjs', name: 'useSidebarRename', features: ['optimisticLabel'] },
-  'shared-18-D4XxL6Tg.js:FE': { area: 'code-current', target: 'sidebar-row-view.mjs', name: 'SidebarRenameInput', features: ['onValueChange'] },
-  'shared-18-D4XxL6Tg.js:aD': { area: 'code-current', target: 'sidebar-fade-label.mjs', name: 'SidebarFadeLabel', features: ['cleared'] },
-  'shared-52-DGviI8xb.js:rh': { area: 'sidebar-resize', target: 'sidebar-width.mjs', name: 'sidebarHidden', features: ['composedSidebarOpen'] },
-  'shared-25-DP8p7i1Z.js:up': { area: 'code-current', target: 'owner-window.mjs', name: 'ownerWindow', features: ['defaultView'] },
-  // The sidebar menu rows register into the ordered groups' context (shared-16 ru): one instance, code-current's.
-  'shared-16-B0xHzPjj.js:au': { area: 'code-current', target: 'sidebar-menu-groups.mjs', name: 'SidebarMenuItem', features: ['K.Item'] },
-  'shared-16-B0xHzPjj.js:lu': { area: 'code-current', target: 'sidebar-menu-groups.mjs', name: 'OrderedSidebarMenuGroups', features: ['registerRow'] },
-  'shared-19-CkPOiIKm.js:MX': { area: 'code-current', target: 'sidebar-menu-order.mjs', name: 'SidebarOrderedMenu', features: ['order: jX'] },
-  // The sidebar list context (getList) the header menu's organize/view items read: one instance, code-current's.
-  'shared-19-CkPOiIKm.js:nZ': { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'SidebarListContext', features: ['nZ = O(null)'] },
-  'shared-19-CkPOiIKm.js:oZ': { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'sidebarGroupToggles', features: ['[data-group-toggle][aria-expanded='] },
-  'shared-19-CkPOiIKm.js:cZ': { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'sidebarToggleVisible', features: ['checkVisibility'] },
-  'shared-19-CkPOiIKm.js:lZ': { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'sidebarPrecedingToggles', features: ['DOCUMENT_POSITION_FOLLOWING'] },
-  // R3-sections (WI-4): uZ (Collapse all / Expand all) and sZ (any folded toggle: the blank-area Select all's "Expand a
-  // section…" reason) are code-current's too, so the header menus, the reorder menu and the blank-area menu share the
-  // host list's one copy instead of a second slice of the same shared-19 declarations.
-  'shared-19-CkPOiIKm.js:sZ': { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'sidebarHasCollapsedGroups', features: ['oZ(e, "collapsed").length > 0'] },
-  'shared-19-CkPOiIKm.js:uZ': { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'SidebarGroupViewItems', features: ['"Collapse all"', '"Expand all"', 'canExpand: sZ(t)'] },
-  // R4g-sidebar SB1 (X7-04): the folded section status badge draws the sidebar's own status dot and error mark. The
-  // list-view context the dot reads (shared-18 uE, exported `Os`, shared-22 El = dE over it), its copy, error colours,
-  // the plain dot (K_), the error icon (VD) and the infinite-animation sync (G_) are the instances the host rows already
-  // use (code-current); the clay dot (xx) and its "needs you" mapping (Ax) are app-switch's; the CDS Pulse is view-tabs'.
-  'shared-18-D4XxL6Tg.js:uE': { area: 'code-current', target: 'sidebar-status-glyph.mjs', name: 'SidebarStatusLayout', features: ['uE = T(null)'] },
-  'shared-18-D4XxL6Tg.js:DD': { area: 'code-current', target: 'sidebar-status-glyph.mjs', name: 'sidebarStatusMessages', features: ['"Unread response"', '"Running"'] },
-  'shared-18-D4XxL6Tg.js:MT': { area: 'code-current', target: 'sidebar-status-glyph.mjs', name: 'sidebarErrorColors', features: ['warning: "text-danger"'] },
-  'shared-18-D4XxL6Tg.js:K_': { area: 'code-current', target: 'nested-session-parts.mjs', name: 'NestedStatusDot', features: ['className: "status-dot"'] },
-  'shared-18-D4XxL6Tg.js:VD': { area: 'code-current', target: 'nested-session-parts.mjs', name: 'NestedErrorIcon', features: ['shape: t = "Warning"'] },
-  'shared-18-D4XxL6Tg.js:G_': { area: 'code-current', target: 'nested-session-parts.mjs', name: 'synchronizeStatusAnimation', features: ['t.getAnimations()', 'performance.timeOrigin'] },
-  'shared-18-D4XxL6Tg.js:xx': { area: 'app-switch', target: 'app-switch-frame.mjs', name: 'ClayStatusDot', features: ['"data-kind": "clay"'] },
-  'shared-18-D4XxL6Tg.js:Ax': { area: 'app-switch', target: 'app-switch-frame.mjs', name: 'hubAttention', features: ['e === "awaiting" ? "ready" : e'] },
-  'shared-frame-BfjMqbuN.js:eN': { area: 'view-tabs', name: 'CdsPulse', features: ['"data-cds": "Pulse"'] },
+  // E3/R3: the React Compiler helpers are view-tabs' (one copy); their declarations are checked by assertCompilerHelpers.
+  ...Object.fromEntries(Object.values(official.compilerHelpers).map(({ local, name }) => [`${SF}:${local}`, { area: 'view-tabs', name, features: [] }])),
+  [`${SF}:us`]: { area: 'view-tabs', name: 'CdsIcon', features: ['"data-cds": "Icon"', '"data-cds-rotate"'] },
+  [`${SF}:Uu`]: { area: 'view-tabs', name: 'CdsButton', features: ['iconPosition'] },
+  [`${SF}:ab`]: { area: 'view-tabs', name: 'CdsConfirmationDialog', features: ['confirmLabel', 'closeOnConfirm'] },
+  [`${SF}:ba`]: { area: 'view-tabs', name: 'CdsDensityContext', features: ['("comfortable")'] },
+  [`${VF}:ln`]: { area: 'view-tabs', name: 'DirectionContext', features: [] },
+  [`shared-4-DUB1Oi0O.js:lp`]: { area: 'view-tabs', name: 'isFizzyLakePartEnabled', features: ['getAttribute('] },
+  [`${VF}:ve`]: { area: 'view-tabs', name: 'clsx', features: ['arguments.length'] },
+  [`${SF}:Xm`]: { area: 'view-tabs', name: 'CdsTooltip', features: ['trackCursorAxis', 'openOnHandedBackFocus'] },
+  [`${SF}:GT`]: { area: 'view-tabs', name: 'CdsDropdown', features: ['SubmenuTrigger:'] },
+  [`${VF}:Sm`]: { area: 'view-tabs', name: 'CdsMenuCreateHandle', features: ['"Menu")'] },
+  [`${SF}:nb`]: { area: 'view-tabs', name: 'CdsDialog', features: ['Root:', 'Footer:'] },
+  [`${SF}:uC`]: { area: 'view-tabs', name: 'CdsTextInput', features: ['clearable'] },
+  [`${SF}:lo`]: { area: 'view-tabs', name: 'CdsRoot', features: ['pageBackground'] },
+  [`${SF}:mL`]: { area: 'view-tabs', name: 'CdsPulse', features: ['"data-cds": "Pulse"'] },
+  // code-current (3.6556.2, w2-sidebar-current-a/b): the row primitives, rename field, fade label, sidebar menu rows and
+  // ordered groups (shared-16 jl / Ll register into Al's context), the ordered menu (DO), the list context and group
+  // toggles (YO, mk/gk/_k/hk), Collapse all / Expand all (vk) and the list-menu reasons (MO: Archive all's two).
+  [`${S18}:_k`]: { area: 'code-current', target: 'sidebar-row-primitive.mjs', name: 'sidebarHitRowClass', features: ['hit-row'] },
+  [`${S18}:Dk`]: { area: 'code-current', target: 'sidebar-row-view.mjs', name: 'useSidebarRename', features: ['optimisticLabel'] },
+  [`${S18}:Ok`]: { area: 'code-current', target: 'sidebar-row-view.mjs', name: 'SidebarRenameInput', features: ['onValueChange'] },
+  [`${S18}:$k`]: { area: 'code-current', target: 'sidebar-fade-label.mjs', name: 'SidebarFadeLabel', features: ['cleared'] },
+  [`${S16}:jl`]: { area: 'code-current', target: 'sidebar-menu-groups.mjs', name: 'SidebarMenuItem', features: ['.Item, { ...e }'] },
+  [`${S16}:Ll`]: { area: 'code-current', target: 'sidebar-menu-groups.mjs', name: 'OrderedSidebarMenuGroups', features: ['registerRow'] },
+  [`${S46}:DO`]: { area: 'code-current', target: 'sidebar-menu-order.mjs', name: 'SidebarOrderedMenu', features: ['order:'] },
+  [`${S46}:YO`]: { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'SidebarListContext', features: [] },
+  [`${S46}:vk`]: { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'SidebarGroupViewItems', features: ['"Collapse all"', '"Expand all"'] },
+  [`${S46}:MO`]: { area: 'code-current', target: 'sidebar-group-view.mjs', name: 'sidebarListMenuReasons', features: ['"Nothing to archive right now."'] },
+  [`${S18}:KO`]: { area: 'code-current', target: 'sidebar-status-glyph.mjs', name: 'SidebarStatusLayout', features: [] },
+  [`${S18}:OA`]: { area: 'code-current', target: 'sidebar-status-glyph.mjs', name: 'sidebarStatusMessages', features: ['"Unread response"', '"Running"'] },
+  [`${S18}:hO`]: { area: 'code-current', target: 'sidebar-status-glyph.mjs', name: 'sidebarErrorColors', features: ['"text-danger"'] },
+  // w10-ccres-nested-parts: the plain status dot, the hit-row main class and the error icon are code-current's one 3.6556.2
+  // copy (nested-session-parts.mjs); status-dot.mjs and group-label.mjs re-export them under their own names (R4).
+  [`${S18}:qv`]: { area: 'code-current', target: 'nested-session-parts.mjs', name: 'NestedStatusDot', features: ['"status-dot"', 'onAnimationStart: Kv'] },
+  [`${S18}:vk`]: { area: 'code-current', target: 'nested-session-parts.mjs', name: 'sidebarHitRowMainClass', features: ['hit-row-main'] },
+  [`${S18}:HA`]: { area: 'code-current', target: 'nested-session-parts.mjs', name: 'NestedErrorIcon', features: ['"Warning"', 'size: "sm"'] },
+  // app-switch (3.6556.2): the clay dot, its "needs you" mapping and colour, the infinite-animation sync.
+  [`${S18}:NC`]: { area: 'app-switch', target: 'app-switch-frame.mjs', name: 'ClayStatusDot', features: ['"clay"'] },
+  [`${S18}:KC`]: { area: 'app-switch', target: 'app-switch-frame.mjs', name: 'hubAttention', features: ['"awaiting" ? "ready"'] },
+  [`${S18}:WC`]: { area: 'app-switch', target: 'app-switch-frame.mjs', name: 'needsYouColor', features: [] },
 };
 
 // Host dependencies: runtime services this app answers itself, keyed by the original binding (file:local) the import
 // alias resolves to. `features` must appear in that binding's same-chunk closure.
 const adapters = {
   // react-intl useIntl / FormattedMessage over the local catalog (useStartIntl / StartMessage).
-  'vendor-intl-Db7hDWRO.js:q': { name: 'useIntl', features: ['[React Intl]'] },
-  'vendor-intl-Db7hDWRO.js:Gt': { name: 'FormattedMessage', features: ['formatMessage: r, textComponent: i = n', 'Gt = u(Wt, Ut)'] },
-  // G: the frame zustand store; the sections/custom-group slice, the overflow-menu flag and the resolved mode.
-  'shared-52-DGviI8xb.js:G': { name: 'useSidebarSectionsStore', features: ['addSection: (e) =>', 'setSectionView: (t, n) =>', 'setOverflowMenuOpen', 'resolvedMode'] },
-  // Pp: the custom-group overlay gate (GrowthBook + presets gate): {overlayEnabled, environments}.
-  'shared-16-B0xHzPjj.js:Pp': { name: 'useSidebarOverlayGate', features: ['overlayEnabled: e || t, environments: e'] },
-  // shared-11 rc (exported `Ya`): the presets gate (`claudeai_cc_epitaxy_session_presets_main`); D10: on.
-  'shared-11-BuQ3CK5I.js:rc': { name: 'usePresetsGate', features: ['b(Xs) ?? Zs ?? !1'] },
-  // shared-25 ml (exported `Rm`): "running in the Claude desktop app" (user agent + claudeAppBindings).
-  'shared-25-DP8p7i1Z.js:ml': { name: 'useIsDesktopApp', features: ['se(window.navigator.userAgent, { version: e, platform: t })'] },
-  // shared-25 Z (exported `lr`): the current account (the archive rule exempts agent sessions you started).
-  'shared-25-DP8p7i1Z.js:Z': { name: 'useCurrentAccount', features: ['"Must call inside CurrentAccountProvider"'] },
-  // shared-19 e2 (exported `wr`): Status grouping offered (GrowthBook claudeai_session_state + account setting).
-  'shared-19-CkPOiIKm.js:e2': { name: 'useStatusGrouping', features: ['"claudeai_session_state"', 'ccr_session_state_buckets'] },
-  // Telemetry (D17): section_changed, custom_group_changed and the analytics client.
-  'shared-8-B5lJ8U5C.js:iv': { name: 'trackSectionChange', features: ['"claudeai.epitaxy.sidebar.section_changed"'] },
-  'shared-16-B0xHzPjj.js:dp': { name: 'trackCustomGroupChange', features: ['"claudeai.epitaxy.sidebar.custom_group_changed"'] },
-  'shared-52-DGviI8xb.js:EO': { name: 'useAnalytics', features: ['return Qg;'] },
-  // shared-11 Zu (exported `ji`): how many sessions (with their nested families) a group would release.
-  'shared-11-BuQ3CK5I.js:Zu': { name: 'countGroupSessions', features: ['a.startsWith("code:")'] },
+  [`${official.vendorIntl}:q`]: { name: 'useIntl', features: ['[React Intl]'] },
+  // q: the frame zustand store; the sections/custom-group slice, the overflow-menu flag and the resolved mode.
+  [`${S52}:q`]: { name: 'useSidebarSectionsStore', features: ['addSection: (e) =>', 'setSectionView: (t, n) =>', 'setOverflowMenuOpen', 'resolvedMode'] },
+  // shared-16 Fh (exported `Tt`; old Pp): the custom-group overlay gate (GrowthBook + presets gate): {overlayEnabled, environments}.
+  [`${S16}:Fh`]: { name: 'useSidebarOverlayGate', features: ['overlayEnabled: n, environments: e'] },
+  // shared-11 wl (exported `Jo`; old rc) the presets gate hook, Tl (old ic) the same read outside render; D10: on.
+  [`${S11}:wl`]: { name: 'usePresetsGate', features: [loose('b(gl) ?? _l ?? !1')] },
+  [`${S11}:Tl`]: { name: 'presetsGateNow', features: ['"claudeai_cc_epitaxy_session_presets_main"'] },
+  // shared-25 cc (exported `vh`; old ml): "running in the Claude desktop app" (user agent + claudeAppBindings).
+  [`${S25}:cc`]: { name: 'useIsDesktopApp', features: ['window.navigator.userAgent', 'version: t, platform: n'] },
+  // shared-25 Z (exported `zr`): the current account (the archive rule exempts agent sessions you started).
+  [`${S25}:Z`]: { name: 'useCurrentAccount', features: ['"Must call inside CurrentAccountProvider"'] },
+  // shared-46 SN (exported `wn`; old shared-19 e2): Status grouping offered (GrowthBook claudeai_session_state + account setting).
+  [`${S46}:SN`]: { name: 'useStatusGrouping', features: ['"claudeai_session_state"', 'ccr_session_state_buckets'] },
+  // Telemetry (D17): section_changed, custom_group_changed.
+  [`${S8}:qb`]: { name: 'trackSectionChange', features: ['"claudeai.epitaxy.sidebar.section_changed"'] },
+  [`${S16}:zh`]: { name: 'trackCustomGroupChange', features: ['"claudeai.epitaxy.sidebar.custom_group_changed"'] },
+  // shared-11 up (exported `da`; old Zu): how many sessions (with their nested families) a group would release.
+  [`${S11}:up`]: { name: 'countGroupSessions', features: ['a.startsWith("code:")'] },
+  // shared-46 Archive all inputs (old shared-19): FO (old PX) the keys open in a pane, popout or as the current route, tk
+  // (exported `ei`; old YX) the archive flow with its confirmations, XO (old qX) its gate.
+  [`${S46}:FO`]: { name: 'sidebarOpenSessionKeys', features: ['popoutWindows', 'extraPanesByMode'] },
+  [`${S46}:tk`]: { name: 'useSidebarBulkArchive', features: ['beginBulkArchive', 'confirmArchive'] },
+  [`${S46}:XO`]: { name: 'useArchiveAllEnabled', features: ['"__gb__873492543"'] },
+  // The blank-area menu's New environment: the Code page navigator (shared-16 z_, old zm), the home routes (shared-78 FY,
+  // old wq), the draft reset + navigation (shared-20 ET, old ST) and the lazily loaded environment dialog (shared-21 uG, old lB).
+  [`${S16}:z_`]: { name: 'useSidebarNavigate', features: ['markCodeSessionOpenNavQueued'] },
+  [`${S78}:FY`]: { name: 'useHomeRoutes', features: ['cowork: "/new"'] },
+  [`${S20}:ET`]: { name: 'startCodeDraft', features: ['setDraftCustomGroupId(n)'] },
+  [`${S21}:uG`]: { name: 'requestNewEnvironment', features: ['"code_sidebar_environment_dialog"'] },
+  // react-intl FormattedMessage (vendor-intl Gt, exported `l`) over the local catalog.
+  [`${official.vendorIntl}:Gt`]: { name: 'FormattedMessage', features: ['textComponent'] },
+  // shared-11 gc (exported `us`; old Qo): the presets gate New environment waits on; D10: on.
+  [`${S11}:gc`]: { name: 'usePresetsGate', features: [loose('L(hc)'), '"claudeai_cc_epitaxy_session_presets_main"'] },
+  // shared-16 Hm (exported `Zt`; old of): "started by this account".
+  [`${S16}:Hm`]: { name: 'isStartedByAccount', features: ['("user", e) ?? e) === t'] },
+  // shared-52 wT (exported `Ld`; old EO): the analytics client.
+  [`${S52}:wT`]: { name: 'useAnalytics', features: [loose('return Ly;')] },
   // shared-6: the sidebar's row registry (rows by key, keys by bucket, visible keys) and the multi-select store.
-  'shared-6-Cby4X-ms.js:uO': { name: 'sidebarBucketKeys', features: ['cO.get(e)'] },
-  'shared-6-Cby4X-ms.js:mO': { name: 'sidebarVisibleKeys', features: ['oO.values()'] },
-  'shared-6-Cby4X-ms.js:aO': { name: 'sidebarRowRecord', features: ['qD.get(e)'] },
-  'shared-6-Cby4X-ms.js:PD': { name: 'useSidebarSelectionStore', features: ['selectedKeys:', 'selectRange:'] },
-  // shared-19 Archive all: which rows can be archived (UX), the archive flow with its confirmations (YX), its gate (qX).
-  // UX's inputs: the keys open in a pane, popout or as the current route (PX), and "started by this account" (of).
-  'shared-19-CkPOiIKm.js:PX': { name: 'sidebarOpenSessionKeys', features: ['popoutWindows', 'extraPanesByMode'] },
-  'shared-16-B0xHzPjj.js:of': { name: 'isStartedByAccount', features: ['Rt("user", e) ?? e'] },
-  'shared-19-CkPOiIKm.js:YX': { name: 'useSidebarBulkArchive', features: ['beginBulkArchive', 'confirmArchive'] },
-  'shared-19-CkPOiIKm.js:qX': { name: 'useArchiveAllEnabled', features: ['"__gb__873492543"'] },
-  // shared-frame iD (exported `Ii`): the CDS context menu, answered over the host SourceMenu (its items are code-current's
-  // SourceMenu rows; see the externals). The other CDS parts are view-tabs public names since R3-sections step 3.
-  'shared-frame-BfjMqbuN.js:iD': { name: 'SidebarContextMenu', features: ['Root: tD', 'Popup: eD'] },
-  // shared-11 ic (exported `Ja`, shared-16 Oi): the presets gate read outside render (shared-16 qf); D10: on.
-  'shared-11-BuQ3CK5I.js:ic': { name: 'presetsGateNow', features: ['"claudeai_cc_epitaxy_session_presets_main"'] },
-  // R3-sections (WI-4) the blank-area menu: shared-11 Qo (exported `do`) the presets gate New environment waits on (D10:
-  // on); shared-6 iO (exported `So`) every registered row key (Select all's "Expand a section…" reason); its New
-  // environment goes to the Code page (shared-16 zm the navigator, shared-78 wq the home routes, shared-20 ST the draft
-  // reset + navigation) and asks for a new environment (shared-21 lB, the lazily loaded environment dialog).
-  'shared-11-BuQ3CK5I.js:Qo': { name: 'usePresetsGate', features: ['"claudeai_cc_epitaxy_session_presets_main"'] },
-  'shared-6-Cby4X-ms.js:iO': { name: 'sidebarRowKeys', features: ['[...qD.keys()]'] },
-  'shared-16-B0xHzPjj.js:zm': { name: 'useSidebarNavigate', features: ['markCodeSessionOpenNavQueued'] },
-  'shared-78-D6VXYXaQ.js:wq': { name: 'useHomeRoutes', features: ['code: e', 'cowork: "/new"'] },
-  'shared-20-B7UqYfsi.js:ST': { name: 'startCodeDraft', features: ['setDraftCustomGroupId(n)', 'e(t, r)'] },
-  'shared-21-IP-SVetq.js:lB': { name: 'requestNewEnvironment', features: ['"code_sidebar_environment_dialog"', 'requestNewEnvironment(e)'] },
+  [`${S6}:nA`]: { name: 'useSidebarSelectionStore', features: ['selectedKeys:', 'selectRange:'] },
+  [`${S6}:IA`]: { name: 'sidebarBucketKeys', features: [loose('return PA.get(e)')] },
+  [`${S6}:zA`]: { name: 'sidebarBucketScopeKeys', features: [loose('LA.get(e) ?? PA.get(e) ?? []')] },
+  [`${S6}:BA`]: { name: 'sidebarVisibleKeys', features: [loose('e === void 0 ? MA.values() : [MA.get(e) ?? []]')] },
+  [`${S6}:jA`]: { name: 'sidebarRowRecord', features: [loose('return yA.get(e)')] },
+  [`${S6}:AA`]: { name: 'sidebarRowKeys', features: [loose('[...yA.keys()]')] },
+  [`${S6}:VA`]: { name: 'sidebarPinnedKeys', features: ['e.isPinned'] },
+  // shared-11 Db (exported `On`; old n_): the responding session ids (the folded section badge's running state).
+  [`${S11}:Db`]: { name: 'useRespondingSessionIds', module: 'src/source-sidebar-section-badge-adapters.jsx', features: ['subscribeResponding'] },
+  // shared-18 TA (exported `as`; old wD): the error title.
+  [`${S18}:TA`]: { name: 'sidebarErrorTitle', module: 'src/source-sidebar-section-badge-adapters.jsx', features: ['Object.hasOwn(', 'isKnownCategory'] },
+  // shared-21 HJ (exported `br`) a Show toggle item and VJ (`Tr`) the Routines toggle's state, which the manual section's
+  // view menu (Kk) adds after Metadata: they read the side-chat capability (E16: off) and the routines navigation store.
+  [`${S21}:HJ`]: { name: 'SidebarShowToggleItem', features: ['offered: t', 'keepOpen: !0'] },
+  [`${S21}:VJ`]: { name: 'useSidebarRoutinesToggle', features: ['"show_routines"'] },
 };
 
 // Emitted in dependency order. `exports` maps original local binding -> exported name; its keys are the roots and
-// `features` pins each root to strings of its original text. `selections` emits a factory around verbatim object
-// properties of a nested creator (see storeActions).
+// `features` pins each root to strings of its original text (a string, or a looseFeature RegExp). `selections` emits a
+// factory around verbatim object properties of a nested creator (see storeActions). `reexports` maps an export name to
+// a target generated earlier in this run (a second chunk of the same target, R4/E7).
 const storeActionNames = ['toggleGroupCollapsed', 'expandGroup', 'addCustomGroup', 'keepGroupWhileEmpty', 'renameCustomGroup',
-  'deleteCustomGroup', 'assignToCustomGroup', 'setCustomGroupOrder', 'moveCustomGroup', 'addSection', 'renameSection',
-  'deleteSection', 'moveSection', 'setSectionView', 'assignToSection', 'setOverflowMenuOpen'];
+  'renamePinnedSection', 'deleteCustomGroup', 'assignToCustomGroup', 'carryCustomGroupSlot', 'setCustomGroupOrder', 'setCustomGroupOrdered',
+  'moveCustomGroup', 'addSection', 'renameSection', 'deleteSection', 'moveSection', 'setSectionView', 'assignToSection', 'setOverflowMenuOpen'];
 const errorTextSpec = target => ({ target, source: 'preload-helper-D0dM6GpB.js', exports: { e: 'tagErrorText' },
   features: { e: ['Symbol.for("ant.o11y.errorText")', 'enumerable: !1'] } });
-const modelSpec = target => ({
-  target, source: 'shared-52-DGviI8xb.js',
+// shared-52 J (exported `ym`; 2.42304.0 shared-78 U): the `${kind}:${id}` session key.
+const sessionRefKeySpec = target => ({ target, source: S52, exports: { J: 'sessionRefKey' }, features: { J: ['`${e.kind}:${e.id}`'] } });
+const modelSpec = (target, refKey) => ({
+  target, source: S52,
+  // 2.42304.0 locals in order: U W np rp ip ap op sp cp lp up dp fp pp mp hp gp _p vp yp bp xp Sp Cp wp Tp Ep Dp Op kp Ap jp
+  // Mp Np Pp Fp Ip Lp Rp zp Bp lm um dm fm pm mm hm gm _m wm Tm Em Dm Om km Mm _h vh yh jh (research/sidebar.md §3.2).
   exports: {
-    U: 'stringArray', W: 'isPlainRecord', np: 'sectionSchemaVersion', rp: 'sectionMetadataSchemaVersion', ip: 'sectionCarriesMetadata',
-    ap: 'pinnedSectionId', op: 'routinesSectionId', sp: 'sessionsSectionId', cp: 'sectionViewDefaults', lp: 'routinesCollapsedByDefault',
-    up: 'createSection', dp: 'defaultSections', fp: 'defaultSection', pp: 'defaultCodeSidebar', mp: 'sessionsGroupByFromLegacy',
-    hp: 'legacyGroupByFromSessions', gp: 'sectionGroupBys', _p: 'sectionSortBys', vp: 'sectionKinds', yp: 'isSectionGroupBy',
-    bp: 'isSectionSortBy', xp: 'normalizeSectionView', Sp: 'normalizeSections', Cp: 'normalizeCodeSidebarByScope', wp: 'withSectionId',
-    Tp: 'dedupeSections', Ep: 'ensureFixedSections', Dp: 'customGroupMembers', Op: 'sameMembers', kp: 'reconcileSections',
-    Ap: 'defaultSectionCollapsed', jp: 'resetSectionCollapse', Mp: 'restoreSectionCollapse', Np: 'migrateSectionMetadata',
-    Pp: 'sectionsAtDefaults', Fp: 'sameSections', Ip: 'patchSectionView', Lp: 'setSectionView', Rp: 'inheritSessionsView',
-    zp: 'moveSection', Bp: 'seedSectionPrefs', lm: 'customGroupKeyPrefix', um: 'customGroupKey', dm: 'emptyCustomGroups',
-    fm: 'isEmptyCustomGroups', pm: 'normalizeCustomGroups', mm: 'normalizeCustomGroupsByScope', hm: 'nonEmptyCustomGroups',
-    gm: 'selectCustomGroups', _m: 'findCustomGroupByName', wm: 'mergeCustomGroups', Tm: 'selectCodeSidebar',
-    Em: 'reconcileCodeSidebar', Dm: 'reconcileCodeSidebarPatch', Om: 'updateCustomGroups', km: 'updateSections', Mm: 'keptWhileEmptyWith',
-    _h: 'defaultGroupBy', vh: 'effectiveGroupBy', yh: 'groupByShowsCustom', jh: 'codeKeyPrefix',
+    im: 'stringArray', K: 'isPlainRecord', am: 'sectionSchemaVersion', om: 'sectionMetadataSchemaVersion', sm: 'sectionCarriesMetadata',
+    cm: 'pinnedSectionId', lm: 'routinesSectionId', um: 'sessionsSectionId', dm: 'sectionViewDefaults', fm: 'routinesCollapsedByDefault',
+    pm: 'createSection', mm: 'defaultSections', hm: 'defaultSection', gm: 'defaultCodeSidebar', _m: 'sessionsGroupByFromLegacy',
+    vm: 'legacyGroupByFromSessions', ym: 'sectionGroupBys', bm: 'sectionSortBys', xm: 'sectionKinds', Sm: 'isSectionGroupBy',
+    Cm: 'isSectionSortBy', wm: 'normalizeSectionGroupBy', Tm: 'normalizeSectionView', Em: 'normalizeSections', Dm: 'normalizeCodeSidebarByScope',
+    Om: 'withSectionId', km: 'dedupeSections', Am: 'ensureFixedSections', jm: 'customGroupMembers', Mm: 'sameMembers', Nm: 'reconcileSections',
+    Pm: 'defaultSectionCollapsed', Fm: 'resetSectionCollapse', Im: 'restoreSectionCollapse', Rm: 'migrateSectionMetadata',
+    Bm: 'sectionsAtDefaults', Vm: 'sameSections', Hm: 'patchSectionView', Um: 'setSectionView', Wm: 'inheritSessionsView',
+    Gm: 'moveSection', Km: 'seedSectionPrefs', ug: 'customGroupKeyPrefix', dg: 'customGroupKey', fg: 'emptyCustomGroups',
+    pg: 'isEmptyCustomGroups', mg: 'normalizeCustomGroups', hg: 'normalizeCustomGroupsByScope', gg: 'nonEmptyCustomGroups',
+    _g: 'selectCustomGroups', vg: 'findCustomGroupByName', Tg: 'mergeCustomGroups', Eg: 'selectCodeSidebar',
+    Dg: 'reconcileCodeSidebar', Og: 'reconcileCodeSidebarPatch', kg: 'updateCustomGroups', Ag: 'updateSections', Ng: 'keptWhileEmptyWith',
+    M_: 'defaultGroupBy', N_: 'effectiveGroupBy', F_: 'groupByShowsCustom', rv: 'codeKeyPrefix',
     sectionsStoreActions: 'sectionsStoreActions',
   },
+  reexports: refKey ? { sessionRefKey: refKey } : undefined,
   features: {
-    vp: ['["pinned", "routines", "manual", "sessions"]'], np: ['np = 2'], cp: ['emptyGroups: !1'], mp: ['case "coder":', '"environment"'],
-    Sp: ['!vp.includes(n.kind)', 'v: np'], Tp: ['a ??= wp(s, sp)'], kp: ['2 ** 53 - 1', 'mp(t.codeGroupBy)'],
-    Rp: ['"The section list has no Sessions section"', 'r === "environment"'], zp: ['e[r].kind === "sessions"', 'e.length - 2'],
-    Lp: ['(n.sortBy === "alpha") != (r === "alpha")'], Bp: ['t.isManualCollapsed(e.id)', 'sessionsCollapsed'], lm: ['"custom-"'],
-    um: ['"custom-ungrouped"'], Tm: ['codeSidebarByScope'], Em: ['migratedFrom'], Mm: ['groupsKeptWhileEmpty'],
+    xm: ['["pinned", "routines", "manual", "sessions"]'], am: [loose('am = 2')], dm: ['emptyGroups: !1', 'sideChats: !1'],
+    _m: ['case "coder":', 'return "savedEnvironment";', 'return "folder";'], vm: ['case "savedEnvironment":', 'return "environment";'],
+    ym: ['["none", "folder", "savedEnvironment", "status", "date"]'], wm: ['e === "environment" ? "folder"'],
+    Tm: ['sideChats:'], Em: ['!xm.includes(n.kind)', 'v: am'], km: ['a ??= Om(s, um)'], Nm: ['2 ** 53 - 1'],
+    Rm: ['"metadata"'], Wm: ['"The section list has no Sessions section"', 'r === "folder" || r === "savedEnvironment"'],
+    Gm: ['e[r].kind === "sessions"', 'e.length - 2'], Um: ['(n.sortBy === "alpha") != (r === "alpha")'],
+    Km: ['t.isManualCollapsed(e.id)', 'sessionsCollapsed'], ug: ['"custom-"'], dg: ['"custom-ungrouped"'], Eg: ['codeSidebarByScope'],
+    Dg: ['migratedFrom'], Ng: ['groupsKeptWhileEmpty'],
   },
   selections: {
     sectionsStoreActions: { kind: 'storeActions', anchor: 'addSection', parameters: ['e', 't'], properties: storeActionNames,
-      features: ['cg-${crypto.randomUUID()}', 'n.kind !== "manual"', 'km(e, (e) => zp(e, t, n))', 'km(e, (e) => Lp(e, t, n))'] },
+      features: ['cg-${crypto.randomUUID()}', 'r.kind !== "manual"', 'Ag(e, (e) => Gm(e, t, n))', 'Ag(e, (e) => Um(e, t, n))', 'pinnedName: t.trim()'] },
   },
 });
 const rendererModules = [
   // vendor-intl tn (exported `f`): react-intl defineMessages, the identity.
-  { target: 'define-messages.mjs', source: 'vendor-intl-Db7hDWRO.js', exports: { tn: 'defineMessages' }, features: { tn: ['return e;'] } },
+  { target: 'define-messages.mjs', source: official.vendorIntl, exports: { tn: 'defineMessages' }, features: { tn: ['return e;'] } },
   errorTextSpec('error-text.mjs'),
-  // vendor-all-0 ee (exported `I`): zustand `create`, for the shared-21 new-section opener store (uB).
-  { target: 'zustand.mjs', source: 'vendor-all-0-CTKbbUUg.js', exports: { ee: 'create' },
-    features: { ee: ['(e ? x(e) : x)'] } },
-  // vendor-all-0 ge (exported `T`): the debounced callback the header menu's Rename waits on (fx = 100ms).
-  { target: 'debounced-callback.mjs', source: 'vendor-all-0-CTKbbUUg.js', exports: { ge: 'useDebouncedCallback' },
-    features: { ge: ['flushOnUnmount', 'window.clearTimeout(c.current)'] } },
-  // vendor-frame Td (exported `Wn`): Base UI useDirection over the view-tabs DirectionContext.
-  { target: 'direction.mjs', source: 'vendor-frame-DfPJ1QmD.js', exports: { Td: 'useDirection' },
-    features: { Td: ['?.direction ?? "ltr"'] } },
-  // shared-frame ja (exported `su`): the CDS density hook over the view-tabs CdsDensityContext.
-  { target: 'cds-helpers.mjs', source: 'shared-frame-BfjMqbuN.js', exports: { ja: 'useCdsDensity', lc: 'elementOrNull' },
-    features: { ja: ['return W(la)'], lc: ['e?.nodeType === 1 ? e : null'] } },
-  // shared-5 XA (exported `V`): dialog presence (mounted / open on the next frame / unmount after the exit).
-  { target: 'dialog-presence.mjs', source: 'shared-5-kdJVRUsT.js', exports: { XA: 'useDialogPresence' },
-    features: { XA: ['requestAnimationFrame', 'onOpenChangeComplete: o'] } },
-  // shared-78 U (exported `Ib`): the `${kind}:${id}` session key; Kd (exported `YS`): the panel-layout context eO reads.
-  { target: 'session-keys.mjs', source: 'shared-78-D6VXYXaQ.js', exports: { U: 'sessionRefKey', Kd: 'PanelLayoutContext' },
-    features: { U: ['`${e.kind}:${e.id}`'], Kd: ['Kd = y(null)'] } },
+  // vendor-all-0 v (exported `F`; old ee): zustand `create`, for the shared-21 new-section opener store (dG).
+  { target: 'zustand.mjs', source: 'vendor-all-0-DXM0MGjZ.js', exports: { v: 'create' }, features: { v: [loose('(e) => (e ? _(e) : _)')] } },
+  // vendor-all-0 fe (exported `w`; old ge): the debounced callback the header menu's Rename waits on (vw = 100ms).
+  { target: 'debounced-callback.mjs', source: 'vendor-all-0-DXM0MGjZ.js', exports: { fe: 'useDebouncedCallback' },
+    features: { fe: ['flushOnUnmount', 'window.clearTimeout(l.current)'] } },
+  // vendor-frame un (exported `Ia`; old Td): Base UI useDirection over the view-tabs DirectionContext.
+  { target: 'direction.mjs', source: VF, exports: { un: 'useDirection' }, features: { un: ['?.direction ?? "ltr"'] } },
+  // shared-frame Ha (exported `Td`; old ja): the CDS density hook over the view-tabs CdsDensityContext; Uc the element guard.
+  { target: 'cds-helpers.mjs', source: SF, exports: { Ha: 'useCdsDensity', Uc: 'elementOrNull' },
+    features: { Ha: [loose('return J(ba)')], Uc: ['e?.nodeType === 1 ? e : null'] } },
+  // shared-5 $L (exported `R`; old XA): dialog presence (mounted / open on the next frame / unmount after the exit).
+  { target: 'dialog-presence.mjs', source: 'shared-5-Bg6ZMqvt.js', exports: { $L: 'useDialogPresence' },
+    features: { $L: ['requestAnimationFrame', 'onOpenChangeComplete'] } },
+  sessionRefKeySpec('session-ref-key.mjs'),
+  // shared-78 Nf (old Kd, exported `YS`): the panel-layout context the section view button reads; sessionRefKey moved to
+  // shared-52 J (session-ref-key.mjs).
+  { target: 'session-keys.mjs', source: S78, exports: { Nf: 'PanelLayoutContext', $f: 'PanelChromeLayoutContext' }, reexports: { sessionRefKey: 'session-ref-key.mjs' },
+    features: { Nf: [loose('Nf = T(null)')], $f: [loose('$f = T(null)')] } },
+  // shared-9 Sw / yw (exported `Ct` / `wt`, new): the group label's icon nudge under the fizzy-lake icons part (off, E12).
+  { target: 'icon-nudge.mjs', source: 'shared-9-CM21XrJw.js', exports: { Sw: 'iconNudgeStyle', yw: 'iconsPartValue' },
+    features: { Sw: ['translate: "0 0.5px"'], yw: ['("icons") ? e : void 0'] } },
+  // shared-19 Hj / Bj (exported `dn` / `pn`): a header menu's press guards (cancel a press that began elsewhere).
+  { target: 'menu-press.mjs', source: S19, exports: { Hj: 'cancelForeignPress', Bj: 'recordPressInside' },
+    features: { Hj: ['t.cancel()'], Bj: ['e.currentTarget.contains('] } },
+  // shared-104 ff (exported `Sf`): a counter bumped each time a value turns truthy (the rename field's restart key).
+  { target: 'rising-count.mjs', source: 'shared-104-CTONUSaz.js', exports: { ff: 'useRisingCount' }, features: { ff: ['e !== t'] } },
+  // shared-18 hk (exported `Os`, a context read only under the fizzy-lake panels part) and tA (`Cs`, the panel chrome
+  // icon props): the filter trigger's panels branch (off, E12). code-current's sidebar-row-view holds them unexported.
+  { target: 'panel-chrome.mjs', source: S18, exports: { hk: 'PanelChromeRowContext', tA: 'panelChromeIconProps' },
+    features: { hk: [loose('hk = M(null)')], tA: ['icon: eA(e)'] } },
   modelSpec('sections-model.mjs'),
-  // shared-52 hooks over the frame store (renderer only): ih (exported `Rf`) whether the sidebar is hidden.
-  // Its store is the frame store the width handle already answers (source-sidebar-resize-adapters useSidebarFrameStore).
-  { target: 'sections-hooks.mjs', source: 'shared-52-DGviI8xb.js', exports: { ih: 'useSidebarHidden' }, features: { ih: ['G(rh)'] },
-    adapters: { 'shared-52-DGviI8xb.js:G': { name: 'useSidebarFrameStore', features: ['commitSidebarWidth', 'setIsResizing'] } } },
-  // shared-18 vE/yE/bE/xE: the group, folder and section copy; SE picks one, CE (exported `Es`) for the current mode.
-  { target: 'group-copy.mjs', source: 'shared-18-D4XxL6Tg.js',
-    exports: { vE: 'groupMessages', yE: 'folderMessages', bE: 'sectionMessageCatalog', xE: 'sectionMessages', SE: 'groupCopyFor', CE: 'useGroupCopy' },
-    features: { vE: ['"Move to group"', '"Create and group by custom"'], yE: ['"Move to folder"'], bE: ['"New section"', '"Create section"', '"Remove from {groupName}"'],
-      xE: ['dragRemove: bE.removeFrom', 'waiting: vE.waiting'], SE: ['e ? (t ? xE : yE) : vE'], CE: ['e.resolvedMode === "code"', 'SE(e && t, n)'] } },
-  // shared-18 uD (exported `gs`): the group / section label row; dD its inline rename, fD the row itself, lD the min height.
-  { target: 'group-label.mjs', source: 'shared-18-D4XxL6Tg.js',
-    exports: { uD: 'SidebarGroupLabel', dD: 'SidebarGroupRenameLabel', fD: 'renderSidebarGroupLabel', lD: 'sidebarGroupLabelMinHeight', TE: 'sidebarGroupToggleHitClass' },
-    features: { uD: ['e.onRename === void 0'], dD: ['startRenameRef: i', 'onRenameEntered: a', 'o.formatMessage(s.rename)'],
-      fD: ['"data-sidebar-group-label": ""', '"data-group-toggle": ""', '"data-group-name": ""', '"data-group-caret": ""', '"data-group-badge": ""',
-        '"data-group-mark": ""', 'o === "group" ? "group" : void 0', 'group/labelrow df-label-inset', 'group-data-[hover-within]/section:opacity-100'],
-      lD: ['min-h-[calc(var(--df-group-pt)+(var(--df-row-h)-8px)+4px)]'], TE: ['hit-row-main'] } },
-  // shared-16: Np (exported `$`) overlayEnabled; cp (exported `mt`) whether a group-by shows custom groups; ep (exported
-  // `yt`) the mode's effective group-by ($f reads the Sessions section's under the presets gate).
-  // R3-sections step 3 (WI-5): Fp (exported `Q`, shared-21 jx) the group-by the session-list filter shows (custom reads as
-  // project once the overlay is on), and the Sessions section writers its items call: ip (`_t`, shared-21 Vx) Group by,
-  // op (`vt`, uS) Sort by, ap (`pt`, oS) the reset's cleared group-by.
-  { target: 'group-mode.mjs', source: 'shared-16-B0xHzPjj.js',
-    exports: { Np: 'useCustomGroupOverlay', cp: 'showsCustomGroups', ep: 'useEffectiveGroupBy', $f: 'useStoredGroupBy', Qf: 'sessionsGroupByAsLegacy', Gf: 'sectionOrDefault',
-      Fp: 'groupByShown', ip: 'writeSessionsGroupBy', op: 'writeSessionsSortBy', ap: 'clearSessionsGroupBy' },
-    features: { Np: ['Pp().overlayEnabled'], cp: ['(r && e === "code") || on(e, t, n)'], ep: ['Gt($f(e), e, t)'], $f: ['e === "code" && t ? Qf(n) : n.groupByByMode[e]'],
-      Qf: ['Gf(e, sn)'], Gf: ['?? gn(t)'], Fp: ['t && e === "custom" ? "project" : e'],
-      ip: ['n.setSectionView(sn, { groupBy: Wt(t) ?? "none" })'], op: ['n.setSectionView(sn, { sortBy: t })'], ap: ['t.setSectionView(sn, { groupBy: null })'] } },
-  // R3-sections step 3 (WI-5): shared-20 ES (exported `Fr`'s writer, r_ = OS) the Sessions ascending and TS ($g = DS) its
-  // Show › Metadata, as the session-list filter writes them.
-  { target: 'sessions-view-writers.mjs', source: 'shared-20-B7UqYfsi.js', exports: { ES: 'writeSessionsAscending', TS: 'writeSessionsMetadata' },
-    features: { ES: ['setSectionView(ga, { ascending: e })'], TS: ['setSectionView(ga, { show: { metadata: e } })'] } },
-  // shared-21: section/group membership keys (sK scheduled tasks, QR side sessions).
-  { target: 'section-membership.mjs', source: 'shared-21-IP-SVetq.js', exports: { sK: 'scheduledTaskGroup', QR: 'membershipKey', ZR: 'sideParentId' },
-    features: { sK: ['"scheduled-task"'], QR: ['{ kind: "code", id: n }'], ZR: ['sideParentId'] } },
-  // shared-21: the session-list filter controls the section view menu is made of (2.42304.0: Reset to defaults, View all,
-  // Name sort), the new-section opener store (uB/dB) and the panel-chrome helpers eO reads. R3-sections step 3 (WI-5):
-  // this is the one copy of them -- code-current's sidebar-filter-controls.mjs re-exports it for the Sessions list's own
-  // Group and sort (shared-21 oU's sessionList branch) -- so KH (View all's context, HQ provides it around the list), hU /
-  // gU (focus after a keyboard regroup, shared-21 _U) and aU (the Filter trigger iU / vU render) are roots here too.
-  { target: 'section-filter-controls.mjs', source: 'shared-21-IP-SVetq.js',
-    exports: { eU: 'sidebarFilterMessages', uU: 'SidebarOptionMenu', dU: 'SidebarSortMenu', lU: 'useSidebarSortOptions', sU: 'SidebarViewResetItems',
-      cU: 'SidebarViewAllItem', qH: 'useSidebarViewAll', YH: 'sortAscendingShown', XH: 'sortAscendingStored', uB: 'newSectionOpener', dB: 'openNewSection',
-      vB: 'useNewSectionOpener',
-      kF: 'PanelChromeContext', OF: 'panelChromeActive', CB: 'trailingControlClass',
-      KH: 'SidebarViewAllContext', hU: 'focusSidebarAfterRegroup', gU: 'useSidebarRegroupFocus', aU: 'SidebarFilterTrigger' },
-    features: { sU: ['"Reset to defaults"', '"Grouping and sorting are already at their defaults."', 'onClick: dB'],
-      KH: ['KH = C(null)'], hU: ['[data-group-toggle]', 't.closest(\'[role="menu"]\') !== null'], gU: ['r.current !== n', 'hU(e?.current ?? null)'],
-      aU: ['icon: "Filter"', '"df-chrome-btn relative -my-1"', '"data-list-filter": o ? "" : void 0', 'open: !n && void 0'],
-      cU: ['"There are no other sessions to view."', 't === "loading"'], lU: ['"alpha"'], uB: ['({ open: null })'], dB: ['uB.getState().open?.()'],
-      YH: ['e === "alpha" ? !t : t'], OF: ['Ul("panels")'], CB: ['group-hover/labelrow:w-auto'],
-      // vB: the list registers its new-section dialog as the opener tO's "New section…" (sU → dB) calls.
-      vB: ['uB.setState({ open: n })', 't("header_menu")'] } },
-  // shared-22 KO: which manual sections show (members, kept while empty, held rows); GO the code-key filter.
-  { target: 'section-visibility.mjs', source: 'shared-22-HztmyUTM.js', exports: { KO: 'visibleCustomGroups', GO: 'keyInMode' },
-    features: { KO: ['keptWhileEmpty: r', 'withUngrouped: c', '"scheduled-task:"'], GO: ['e !== "code" || t.startsWith(go)'] } },
-  // shared-19 ZX (exported `Da`) the group menu kind, tZ (exported `Ea`) its disabled reasons, QX/$X their copy.
-  { target: 'group-reasons.mjs', source: 'shared-19-CkPOiIKm.js',
-    exports: { ZX: 'groupMenuKind', tZ: 'groupDisabledReasons', QX: 'groupReasonMessages', $X: 'newSessionReasonMessages', eZ: 'tooFewToSelectMessage' },
-    features: { ZX: ['"hand-made"', '"preset"', '"worked-out"'], tZ: ['n === "hosts-loading"', 'reorder: QX.fixedAtEnd'],
-      QX: ['"Select all needs at least two visible sessions in this group."', '"This group stays at the end of the list."'],
-      $X: ['"place-unknown"', '"host-not-saved"', '"host-shared"', '"no-folder"'] } },
-  // shared-19 menu plumbing: AX (exported `Ga`) close when the sidebar hides, kX (`Ka`) the overflow-menu flag, L$ (`Ti`)
-  // the lazily mounted menu body, e2 (`wr`) whether Status grouping is offered.
-  { target: 'menu-triggers.mjs', source: 'shared-19-CkPOiIKm.js',
-    exports: { AX: 'useCloseWhenSidebarHides', kX: 'useOverflowMenuFlag', L$: 'useLazyMenu' },
-    features: { AX: ['t && !n'], kX: ['e.setOverflowMenuOpen'], L$: ['openOnHover', 'requestBody: o'] } },
-  // shared-19 organize items: aZ (exported `wa`) Select all (2.42304.0). Its view items uZ (`Sa`, Collapse all / Expand
-  // all) and sZ resolve to code-current's sidebar-group-view (see externals), one instance with the host list.
-  { target: 'group-organize.mjs', source: 'shared-19-CkPOiIKm.js',
-    exports: { aZ: 'SidebarGroupSelectAll', rZ: 'selectableGroupKeys', iZ: 'tooFewToSelectReason' },
-    features: { aZ: ['"Select all"', 'disabledReason: r ? void 0 : iZ', 'setSelection(n)'] } },
-  // shared-19 XX (exported `Oa`): Archive all ({count}) for a group. R3-sections (WI-4): HX (exported `Ma`) the empty
-  // bulk scope and KX (`ja`) the unloaded-rows hook, which the blank-area menu (shared-21 _B / bB) reads.
-  { target: 'group-archive.mjs', source: 'shared-19-CkPOiIKm.js', exports: { XX: 'SidebarGroupArchiveAll', GX: 'UnloadedRowsContext', UX: 'archivableSessions',
-    HX: 'emptyBulkScope', KX: 'useUnloadedRows' },
-    features: { XX: ['"Archive all ({count})"', 'confirmArchive: { groupName: t }'], GX: ['GX = O(!1)'], UX: ['e.isPinned', 'archivable: r, deletable: i'],
-      HX: ['keys: [], archivableCount: 0, deletableCount: 0'], KX: ['return D(GX)'] } },
-  // shared-19 section reorder: d$ (exported `Mi`) the reorder context, m$ (`Ni`)/h$ Move up/Move down/Reset order or
-  // Sort A to Z, p$ the Alt+Shift+Arrow handle and its header menu (g$).
-  { target: 'group-reorder.mjs', source: 'shared-19-CkPOiIKm.js',
-    exports: { d$: 'SectionReorderContext', m$: 'SectionReorderItems', h$: 'SectionReorderActions', p$: 'SectionReorderHandle', g$: 'SectionReorderMenu', PQ: 'insideRowAction',
-      f$: 'SectionReorderGate' },
-    features: { m$: ['fixedReason: e'], h$: ['"Reset order"', '"Sort A to Z"', '"Move up"', '"Move down"'], f$: ['o === null', 'x(p$, {', 'ctx: o'],
-      p$: ['e.altKey', 'e.shiftKey', '"ArrowUp"', 'd(e.key === "ArrowUp" ? -1 : 1)', 'childOwnsMenu'], g$: ['organize: i &&', 'view: x(uZ, {})'] } },
-  // R3-sections (sidebar-sections-layout): shared-11 Ub/Wb (exported `N`/`D`, shared-19 xx/dx) remember which section
-  // header keeps the focus across a keyboard move; shared-19 x$ (exported `Li`) is the sortable section wrapper iO puts
-  // around every manual section: it provides the reorder context (d$: Move up / Move down / Alt+Shift+Arrow) and, when
-  // a drag bridge is mounted (S$ with the lazy dnd-kit chunk, WI-6), its drag state. y$/_$/v$ are the bridge it reads.
-  // shared-21 Uk (exported `do`, shared-22 hv): the group/section hover-within and focus-within tracking every bucket
-  // spreads on its section element (data-hover-within drives `group-data-[hover-within]/section`, e.g. uD's caret).
-  { target: 'section-hover.mjs', source: 'shared-21-IP-SVetq.js', exports: { Uk: 'sectionHoverHandlers', jk: 'hoverWithinAttribute', Mk: 'focusWithinAttribute' },
-    features: { Uk: ['onMouseOver: zk', 'onMouseOut: Bk', 'onFocus: Vk', 'onBlur: Hk'], jk: ['"data-hover-within"'], Mk: ['"data-focus-within"'] } },
-  { target: 'section-focus.mjs', source: 'shared-11-BuQ3CK5I.js', exports: { Ub: 'markSectionFocus', Wb: 'takeSectionFocus' },
-    features: { Ub: ['Vb = e'], Wb: ['Vb === e && ((Vb = null), !0)'] } },
-  { target: 'section-sortable.mjs', source: 'shared-19-CkPOiIKm.js',
-    exports: { x$: 'SectionSortable', v$: 'SectionDragBridgeContext', _$: 'SectionDragBridge', y$: 'useSectionDrag' },
-    features: { x$: ['sectionIndex: t', 'onMoveUp: t > 0 ? () => r(t, t - 1, "menu") : void 0', 'r(t, a, "keyboard")', '"[data-group-toggle]"', 'u?.isDragging ? "opacity-40" : void 0'],
-      v$: ['v$ = O(null)'], _$: ['this.subscribers = new Map()'], y$: ['e.drag(t)'] } },
-  // shared-22: the manual section's own Filter button (eO) and view menu (tO), its collapse toggle (aO), sortable id (rO).
-  { target: 'section-view-menu.mjs', source: 'shared-22-HztmyUTM.js',
-    exports: { eO: 'SectionViewButton', tO: 'SectionViewMenu', aO: 'toggleSectionCollapsed', rO: 'sectionSortableId', nO: 'noSections' },
-    features: { eO: ['icon: "Filter"', '"df-chrome-btn relative -my-1"', '"data-row-action": ""'],
-      tO: ['section_kind: "manual"', 'source: "header_menu"', 'groupBy: null, sortBy: "recency", ascending: !1', 'defaultMessage: "Metadata"'],
-      aO: ['setSectionView(e.id, { collapsed: !e.collapsed })'], rO: ['`section:${e}`'] } },
-  // shared-20 yx (exported `ui`): the group / section header menu (new, edit, organize, view, remove) and its rename timing.
-  { target: 'group-menu.mjs', source: 'shared-20-B7UqYfsi.js',
-    exports: { yx: 'SidebarGroupMenu', fx: 'renameDelayMs', mx: 'pressAboveGroupLabel', vx: 'BidiGroupName' },
-    features: { yx: ['"Edit environment"', 'disabledReason: px(m?.rename)', 'organize: l !== void 0', 'confirmVariant: "danger"', 'density: "comfortable"'],
-      fx: ['fx = 100'], mx: ['[data-sidebar-group-label]'] } },
-  // shared-20 dx (exported `yi`): openCreate/openCreateFrom/createModal; bx/xx (`hi`) the new group / section dialog.
-  { target: 'group-dialog.mjs', source: 'shared-20-B7UqYfsi.js', exports: { dx: 'useCreateGroupDialog', xx: 'CreateGroupDialog', bx: 'GroupNameDialog' },
-    features: { dx: ['openCreateFrom: u', 'action: "create"'], bx: ['showClose: !1', 'initialFocus: v', 'children: f(J, { ...i.switchNote })', 'i.createAndSwitch', 'disabled: !m'] } },
-  // shared-20 wx (exported `fi`) the row menu's Move to submenu, Cx (`pi`) its items, Sx (`gi`) the remove label.
-  // R3-sections step 3: wx is the row menu's Move to submenu (officially inside the CDS row context menu). The host's row
-  // menu is SourceMenu, so this module keeps the SourceMenu-based dropdown (a module-level adapter wins over the shared
-  // CdsDropdown external); the section view menus and the session-list filter use the real CdsDropdown.
-  { target: 'move-to-menu.mjs', source: 'shared-20-B7UqYfsi.js', exports: { wx: 'MoveToSubmenu', Cx: 'MoveToItems', Sx: 'RemoveFromGroupLabel' },
-    adapters: { 'shared-frame-BfjMqbuN.js:EC': { name: 'SidebarSectionsMenu', features: ['SubmenuTrigger:', 'Popup: qS'] } },
-    features: { wx: ['"move-to-group-trigger"', 'icon: o ? "Folder" : void 0'], Cx: ['"new-custom-group"', 'checkedRole: "radio"'], Sx: ['n.removeFromSeveral'] } },
-  // R3-sections (sidebar-group-menus-current, WI-4): shared-21 _B (exported `Vr`, shared-22 v_) is the Code list's
-  // blank-area context menu host: the list element is its ContextMenu trigger (onContextMenuCapture remembers a press
-  // outside a row), it provides the list context (nZ: getList / onNewSession / onNewSection) to everything inside the
-  // list, mounts its own new-section dialog (dx "whitespace_menu") and registers it as the "New section…" opener (vB).
-  // bB is the menu body: yB's six ordered sections (session / create / select / fold / convert / bulk), mB New session,
-  // hB New section…, New environment, Select all with its two disabled reasons, uZ Collapse all / Expand all.
-  { target: 'blank-area-menu.mjs', source: 'shared-21-IP-SVetq.js',
-    exports: { _B: 'SidebarBlankAreaHost', bB: 'SidebarBlankAreaMenu', mB: 'BlankAreaNewSessionItem', hB: 'BlankAreaNewSectionItem', yB: 'blankAreaMenuOrder' },
-    features: { _B: ['U_("whitespace_menu")', 'vB(e && t, s)', 'onContextMenuCapture: x', '[data-jump-hint-row]', 'Nu.getState().setSelection(wu())', 'onNewSection: t ? o : void 0'],
-      bB: ['order: yB', '"Expand a section to select its sessions."', '"You need at least 2 sessions that can be selected."', '"New environment"',
-        'wu().length < 2', 'Vu().length >= 2 && mi(m?.() ?? null)', 'convert: !1', 'bulk: !1'],
-      mB: ['e?.onNewSession'], hB: ['e?.onNewSection', 't.newEllipsis'], yB: ['["session", "create", "select", "fold", "convert", "bulk"]'] } },
-  // R4g-sidebar SB1 (research-ext/X7-partial-gaps.md X7-04): the status a folded section shows on its heading (shared-22
-  // bC `badge: (W ? Ee.length > 0 : Ee.some(Xv)) ? p($v, {sessions: Ee, onlyBlocked: !W})`, qk's Pinned the same).
-  // shared-18 FD (exported `Qo`, shared-21 cm) is the status dot: the CDS Pulse under the sidebar's list-view context
-  // (uE), otherwise ND (the plain / clay dot by the appearance look Ox); BD (`as`, shared-21 Om) the error ink. Ox is
-  // the host's (no clay / blue appearance settings: kx(false, false)).
-  { target: 'status-dot.mjs', source: 'shared-18-D4XxL6Tg.js', exports: { FD: 'SidebarStatusDot', BD: 'sidebarErrorInk' },
-    adapters: { 'shared-18-D4XxL6Tg.js:Ox': { name: 'useStatusDotLook', module: 'src/source-sidebar-section-badge-adapters.jsx',
+  // shared-52 u_ (exported `sh`; old ih): whether the sidebar is hidden, over the frame store (the resize adapters').
+  { target: 'sections-hooks.mjs', source: S52, exports: { u_: 'useSidebarHidden' }, features: { u_: [loose('return q(l_)')] },
+    adapters: { [`${S52}:q`]: { name: 'useSidebarFrameStore', features: ['commitSidebarWidth', 'setIsResizing'] } } },
+  // shared-18 ck/lk/uk/dk (old vE yE bE xE): the group, folder and section copy; fk picks one, pk (exported `As`) for the
+  // current mode (no longer reads resolvedMode).
+  { target: 'group-copy.mjs', source: S18,
+    exports: { ck: 'groupMessages', lk: 'folderMessages', uk: 'sectionMessageCatalog', dk: 'sectionMessages', fk: 'groupCopyFor', pk: 'useGroupCopy' },
+    features: { ck: ['"Move to group"', '"Create and group by custom"'], lk: ['"Move to folder"'],
+      uk: ['"Move to section"', '"Move {count} to section"', '"Remove from sections"', '"Create section"', '"Remove from {groupName}"'],
+      dk: ['dragRemove: uk.removeFrom', 'waiting: ck.waiting'], fk: ['e ? (t ? dk : lk) : ck'], pk: ['e === "code" && t', 'overlayEnabled: t, environments: n'] } },
+  // shared-18 oA (exported `vs`; old uD): the group / section label row; cA its inline rename, lA the row itself, aA the
+  // min height, vk the toggle hit class.
+  { target: 'group-label.mjs', source: S18,
+    exports: { oA: 'SidebarGroupLabel', cA: 'SidebarGroupRenameLabel', lA: 'renderSidebarGroupLabel', aA: 'sidebarGroupLabelMinHeight', vk: 'sidebarGroupToggleHitClass' },
+    features: { oA: ['e.onRename === void 0', 'label: e.children'], cA: ['startRenameRef: i', 'onRenameEntered: a', 'onRenameCleared: o', 'renameLabel: s'],
+      lA: ['"data-sidebar-group-label": ""', '"data-group-toggle": ""', '"data-group-name": ""', '"data-group-mark": ""', '"data-no-row": h',
+        'group/labelrow df-label-inset', 'text-muted-as-secondary'],
+      aA: ['min-h-[calc(var(--df-group-pt)+(var(--df-row-h)-8px)+4px)]'], vk: ['hit-row-main'] } },
+  // shared-16 Ph (exported `wt`; old Np) overlayEnabled, Ih (exported `Ct`; old Fp) the group-by the session-list filter
+  // shows (custom reads as project once the overlay is on). The rest of group-mode moved to shared-11.
+  { target: 'group-mode-overlay.mjs', source: S16, exports: { Ph: 'useCustomGroupOverlay', Ih: 'groupByShown' },
+    features: { Ph: ['().overlayEnabled'], Ih: ['t && e === "custom" ? "project" : e'] } },
+  // shared-11 (old shared-16): wf (exported `Ca`; old cp) whether a group-by shows custom groups; pf (`Aa`; old ep) the
+  // mode's effective group-by (mf reads the Sessions section's under the presets gate); the Sessions section writers the
+  // filter's items call: vf (`Da`; old ip) Group by, bf (`Oa`; old op) Sort by, yf (`xa`; old ap) the reset's group-by.
+  { target: 'group-mode.mjs', source: S11, reexports: { useCustomGroupOverlay: 'group-mode-overlay.mjs', groupByShown: 'group-mode-overlay.mjs' },
+    exports: { wf: 'showsCustomGroups', pf: 'useEffectiveGroupBy', mf: 'useStoredGroupBy', df: 'sessionsGroupByAsLegacy', Qd: 'sectionOrDefault',
+      vf: 'writeSessionsGroupBy', bf: 'writeSessionsSortBy', yf: 'clearSessionsGroupBy' },
+    features: { wf: [loose('(r && e === "code") || wt(e, t, n)')], mf: ['e === "code" &&', '.groupByByMode[e]'], df: ['{ groupBy: t }'],
+      Qd: ['.sections.find((e) => e.id === t)'], vf: ['t !== "environment"', '{ groupBy: Ft(t) ?? "none" }'], bf: ['{ sortBy: t }'], yf: ['{ groupBy: null }'] } },
+  // shared-20 tC / eC (old ES / TS): the Sessions ascending and Show › Metadata writers.
+  { target: 'sessions-view-writers.mjs', source: S20, exports: { tC: 'writeSessionsAscending', eC: 'writeSessionsMetadata' },
+    features: { tC: ['{ ascending: e }'], eC: ['{ show: { metadata: e } }'] } },
+  // shared-21: section/group membership keys ($Q scheduled tasks, VU side sessions).
+  { target: 'section-membership.mjs', source: S21, exports: { $Q: 'scheduledTaskGroup', VU: 'membershipKey', BU: 'sideParentId' },
+    features: { $Q: ['"scheduled-task"'], VU: ['{ kind: "code", id: n }'], BU: ['sideParentId'] } },
+  // shared-21: the session-list filter controls the section view menu is made of (Reset to defaults, View all, Name
+  // sort), the new-section opener store (dG/fG), the panel-chrome helpers and the Filter trigger NJ (old aU). This is
+  // the one copy of them -- code-current's sidebar-filter-controls.mjs re-exports it. SB-26: gU (focus after a keyboard
+  // regroup, `keyRegroups`) is gone in 3.6556.2 (the menu's close calls nY with the trigger id instead). New: GJ (Group
+  // by options: Date / Status / Folder / Environment / Custom / None). HJ (a Show toggle item: Side chats, Routines) and VJ
+  // (the Routines toggle's state) read the side-chat capability and routines navigation stores: W4 (sidebar-filter).
+  { target: 'section-filter-controls.mjs', source: S21,
+    exports: { OJ: 'sidebarFilterMessages', qJ: 'SidebarOptionMenu', JJ: 'SidebarSortMenu', KJ: 'useSidebarSortOptions', UJ: 'SidebarViewResetItems',
+      WJ: 'SidebarViewAllItem', vJ: 'useSidebarViewAll', xJ: 'sortAscendingShown', SJ: 'sortAscendingStored', dG: 'newSectionOpener', fG: 'openNewSection',
+      yG: 'useNewSectionOpener', XB: 'PanelChromeContext', jz: 'panelChromeActive', OG: 'trailingControlClass',
+      _J: 'SidebarViewAllContext', nY: 'focusSidebarAfterRegroup', NJ: 'SidebarFilterTrigger',
+      GJ: 'useSidebarGroupByOptions', yJ: 'SidebarChromeButton', ZJ: 'menuAnchorFor', QJ: 'useMenuWheelGuard' },
+    features: { UJ: ['"Reset to defaults"', '"Grouping and sorting are already at their defaults."'],
+      _J: [loose('_J = k(null)')], nY: ['[data-group-toggle]', '\'[role="menu"]\''],
+      NJ: ['icon: "Filter"', '"df-chrome-btn relative -my-1 aria-expanded:touch-none"', '"data-list-filter": i ? "" : void 0', '"data-held": a ? "" : void 0'],
+      WJ: ['"There are no other sessions to view."'], KJ: ['"Last updated"', '"alpha"'], dG: ['({ open: null })'], fG: ['dG.getState().open?.()'],
+      xJ: ['e === "alpha" ? !t : t'], jz: ['("panels")'], OG: ['group-hover/labelrow:w-auto'], OJ: ['"Side chats"', '"Group and sort"'],
+      yG: ['dG.setState({ open: n })', 't("header_menu")'], GJ: ['"Environment"', '"bYA6fPCd5A"'] } },
+  // shared-22 KA (old KO): which manual sections show (members, kept while empty, held rows); GA the code-key filter.
+  { target: 'section-visibility.mjs', source: S22, exports: { KA: 'visibleCustomGroups', GA: 'keyInMode' },
+    features: { KA: ['keptWhileEmpty: r', 'withUngrouped: c', '"scheduled-task:"'], GA: ['e !== "code" || t.startsWith('] } },
+  // shared-46 (old shared-19) OO the group menu kind, NO its disabled reasons (new `day-or-status`), kO/AO their copy.
+  { target: 'group-reasons.mjs', source: S46,
+    exports: { OO: 'groupMenuKind', NO: 'groupDisabledReasons', kO: 'groupReasonMessages', AO: 'newSessionReasonMessages', jO: 'tooFewToSelectMessage' },
+    features: { OO: ['"hand-made"', '"preset"', '"worked-out"'], NO: ['n === "hosts-loading"', 'reorder: kO.fixedAtEnd', 'case "day-or-status":'],
+      kO: ['"You need at least 2 sessions here that can be selected."', '"This group stays at the end of the list."'],
+      AO: ['"place-unknown"', '"host-not-saved"', '"host-shared"', '"no-folder"'] } },
+  // shared-16 xl (exported `ui`; old shared-19 L$): the lazily mounted menu body.
+  { target: 'lazy-menu.mjs', source: S16, exports: { xl: 'useLazyMenu' }, features: { xl: ['openOnHover', 'requestBody: u'] } },
+  // shared-19 Lj (exported `mn`; old AX) close when the sidebar hides; Fj (`hn`; old kX) the overflow-menu flag.
+  { target: 'menu-triggers.mjs', source: S19, exports: { Lj: 'useCloseWhenSidebarHides', Fj: 'useOverflowMenuFlag' },
+    reexports: { useLazyMenu: 'lazy-menu.mjs' }, features: { Lj: [loose('i = t && !n')], Fj: [loose('e(!1)')] } },
+  // shared-46 pk (exported `Qr`; old aZ) Select all, dk its keys, fk the too-few reason.
+  { target: 'group-organize.mjs', source: S46,
+    exports: { pk: 'SidebarGroupSelectAll', dk: 'selectableGroupKeys', fk: 'tooFewToSelectReason' },
+    features: { pk: ['"Select all"', 'disabledReason: u', 'setSelection(e)'] } },
+  // shared-46 lk (exported `$r`; old XX) Archive all ({count}), now kept and disabled with a reason (MO, code-current)
+  // when nothing can be archived; its confirm title is `{section}: {heading}` inside a section. WO the empty bulk scope,
+  // JO the unloaded-rows hook, GO the archivable rows.
+  { target: 'group-archive.mjs', source: S46, exports: { lk: 'SidebarGroupArchiveAll', qO: 'UnloadedRowsContext', GO: 'archivableSessions',
+    WO: 'emptyBulkScope', JO: 'useUnloadedRows' },
+    features: { lk: ['"Archive all ({count})"', '"{section}: {heading}"', 'MO.archiveAllEmpty', 'disabled: !0'], qO: [loose('qO = x(!1)')], GO: ['e.isPinned', 'archivable: r, deletable: i'],
+      WO: ['keys: [], archivableCount: 0, deletableCount: 0'], JO: [loose('return h(qO)')] } },
+  // shared-46 section reorder (old shared-19): nM the reorder context, aM / oM Move up / Move down / Sort A to Z (Reset
+  // order is gone), iM the Alt+Shift+Arrow handle and its header menu (sM), rM the gate.
+  { target: 'group-reorder.mjs', source: S46,
+    exports: { nM: 'SectionReorderContext', aM: 'SectionReorderItems', oM: 'SectionReorderActions', iM: 'SectionReorderHandle', sM: 'SectionReorderMenu', lj: 'insideRowAction',
+      rM: 'SectionReorderGate' },
+    features: { aM: ['fixedReason: t'], oM: ['"Sort A to Z"', '"Move up"', '"Move down"'], rM: ['ctx: l'],
+      iM: ['e.altKey', 'e.shiftKey', '"ArrowUp"', 'childOwnsMenu'], sM: ['"New session"', 'view: w'] } },
+  // shared-21 xN (exported `Vo`; old Uk): the group/section hover-within and focus-within tracking.
+  { target: 'section-hover.mjs', source: S21, exports: { xN: 'sectionHoverHandlers', lN: 'hoverWithinAttribute', uN: 'focusWithinAttribute' },
+    features: { xN: [loose('onMouseOver: _N, onMouseOut: vN, onFocus: yN, onBlur: bN')], lN: ['"data-hover-within"'], uN: ['"data-focus-within"'] } },
+  // shared-11 Kw / qw (old Ub / Wb): which section header keeps the focus across a keyboard move.
+  { target: 'section-focus.mjs', source: S11, exports: { Kw: 'markSectionFocus', qw: 'takeSectionFocus' },
+    features: { Kw: [loose('Ww = e')], qw: [loose('Ww === e && ((Ww = null), !0)')] } },
+  // shared-46 gM (exported `lr`; old shared-19 x$): the sortable section wrapper, uM / lM / dM the drag bridge it reads.
+  { target: 'section-sortable.mjs', source: S46,
+    exports: { gM: 'SectionSortable', uM: 'SectionDragBridgeContext', lM: 'SectionDragBridge', dM: 'useSectionDrag' },
+    features: { gM: ['sectionIndex: n', '"menu"', '"keyboard"', '"[data-group-toggle]"'],
+      uM: [loose('uM = x(null)')], lM: ['this.subscribers = new Map()'], dM: ['e.drag(t)'] } },
+  // shared-22: the manual section's own Filter button (Gk) and view menu (Kk), its collapse toggle (tA), sortable id (Qk).
+  { target: 'section-view-menu.mjs', source: S22,
+    exports: { Gk: 'SectionViewButton', Kk: 'SectionViewMenu', tA: 'toggleSectionCollapsed', Qk: 'sectionSortableId', Xk: 'noSections' },
+    features: { Gk: ['icon: "Filter"', '"df-chrome-btn relative -my-1 aria-expanded:touch-none"', '"data-row-action": ""'],
+      Kk: ['"group_by"', '"sort_by"'], tA: ['{ collapsed: !e.collapsed }'], Qk: ['`section:${e}`'] } },
+  // shared-20 Px (exported `ai`; old yx): the group / section header menu (new, edit, organize, view, staff, remove), now
+  // with Save as environment.
+  { target: 'group-menu.mjs', source: S20,
+    exports: { Px: 'SidebarGroupMenu', vw: 'renameDelayMs', kx: 'pressAboveGroupLabel', Nx: 'BidiGroupName' },
+    features: { Px: ['"Edit environment"', '"Save as environment"', 'onSaveAsEnvironment: s', 'confirmVariant: "danger"'],
+      vw: [loose('vw = 100')], kx: ['[data-sidebar-group-label]'], Nx: ['"bdi"'] } },
+  // shared-20 Tx (exported `mi`; old dx): openCreate/openCreateFrom/createModal; zx/Vx (old bx/xx) the dialog.
+  { target: 'group-dialog.mjs', source: S20, exports: { Tx: 'useCreateGroupDialog', Vx: 'CreateGroupDialog', zx: 'GroupNameDialog' },
+    features: { Tx: ['openCreateFrom: d', 'action: "create"'], zx: ['showClose: !1', 'onOpenChangeComplete'] } },
+  // shared-20 Wx (old wx) the row menu's Move to submenu, Ux its items, Hx the remove label. The host's row menu is
+  // SourceMenu, so this module keeps the SourceMenu-based dropdown (a module-level adapter wins over CdsDropdown).
+  { target: 'move-to-menu.mjs', source: S20, exports: { Wx: 'MoveToSubmenu', Ux: 'MoveToItems', Hx: 'RemoveFromGroupLabel' },
+    adapters: { [`${SF}:GT`]: { name: 'SidebarSectionsMenu', features: ['SubmenuTrigger:'] } },
+    features: { Wx: ['"move-to-group-trigger"'], Ux: ['"new-custom-group"'], Hx: ['r.removeFromSeveral'] } },
+  // shared-21 _G (exported `ci`; old _B) the Code list's blank-area context menu host, xG its body (bG's six ordered
+  // sections), hG New session, gG New section…
+  { target: 'blank-area-menu.mjs', source: S21,
+    exports: { _G: 'SidebarBlankAreaHost', xG: 'SidebarBlankAreaMenu', hG: 'BlankAreaNewSessionItem', gG: 'BlankAreaNewSectionItem', bG: 'blankAreaMenuOrder' },
+    features: { _G: ['"whitespace_menu"', '[data-jump-hint-row]'],
+      xG: ['"Expand a section to select its sessions."', '"New environment"', loose('order: bG'), loose('convert: A, bulk: j')],
+      hG: ['e?.onNewSession'], gG: ['e?.onNewSection', 't.newEllipsis'], bG: ['["session", "create", "select", "fold", "convert", "bulk"]'] } },
+  // shared-18 IA (exported `Zo`; old FD): the status dot (CDS Pulse under the list-view context, otherwise PA); VA (`is`;
+  // old BD) the error ink. VC (the appearance look) is the host's (no clay / blue appearance settings).
+  { target: 'status-dot.mjs', source: S18, exports: { IA: 'SidebarStatusDot', VA: 'sidebarErrorInk', HA: 'SidebarErrorIcon', UC: 'useSidebarStatusLook' },
+    adapters: { [`${S18}:VC`]: { name: 'useStatusDotLook', module: 'src/source-sidebar-section-badge-adapters.jsx',
       features: ['working: e ? "clay" : "gray"', 'needsYou: t ? "blue" : "amber"', 'errorInk: t ? "neutral" : "surface"'] } },
-    features: { FD: ['w(uE) === null', '"contents [--cds-page-bg:transparent]"', 'animate: !1', '"df-tab-dot-running"'], BD: ['Ox().errorInk === "neutral" ? zD : e'] } },
-  // shared-21 HG (exported `kn`, shared-22 $v): the badge over a folded bucket's rows -- the first status of IG
-  // (awaiting, error, ready, running) any row has (BG over zG), or with onlyBlocked only "awaiting" (LG); VG (`On`)
-  // draws it (role img, the status copy as its label; the error mark in BD's ink). Rb (shared-11 n_, the responding
-  // session ids) and th (shared-18 wD, the error title) are the host's.
-  { target: 'section-badge.mjs', source: 'shared-21-IP-SVetq.js',
-    exports: { HG: 'SectionStatusBadge', VG: 'SectionStatusGlyph', BG: 'sectionStatusKind', zG: 'rowStatusKind', LG: 'rowAwaitingYou', IG: 'sectionStatusOrder' },
-    adapters: {
-      'shared-11-BuQ3CK5I.js:n_': { name: 'useRespondingSessionIds', module: 'src/source-sidebar-section-badge-adapters.jsx', features: ['subscribeResponding', 'respondingJoined()'] },
-      'shared-18-D4XxL6Tg.js:wD': { name: 'sidebarErrorTitle', module: 'src/source-sidebar-section-badge-adapters.jsx', features: ['Object.hasOwn(CD, t)', 'i.isKnownCategory || t === void 0'] },
-    },
-    features: { HG: ['onlyBlocked: t = !1', 'BG(e, Rb())', 'e.some(LG)', '_(VG, { kind: "awaiting" })'],
-      VG: ['role: "img"', '"aria-label": i', 'Om(Xp.warning)', 'awaiting: t.formatMessage(n.waiting)', 'error: th(t, void 0)', 'e === "error" ? _(Jp, { color: r }) : _(cm, { kind: e })'],
-      BG: ['IG.find((e) => n.has(e)) ?? null'], zG: ['e.source.data.isArchived', 'e.hasError && !t', 'e.liveStatus === "running" || t', 'e.isUnread'],
-      LG: ['e.liveStatus === "awaiting" || e.pendingPermissions > 0'], IG: ['["awaiting", "error", "ready", "running"]'] } },
+    features: { IA: ['"df-tab-dot-running"', 'FA['], VA: ['errorInk === "neutral" ? BA : e'], HA: ['"Warning"', 'size: "sm"'], UC: [loose('return GC()')] } },
+  // shared-26 (new): the section status priorities (Nj; old IG's order) and "waiting on you" (Lj; old shared-21 LG).
+  { target: 'section-status.mjs', source: S26, exports: { Lj: 'rowAwaitingYou', Pj: 'sectionStatusPriority', Fj: 'sectionStatusBlocks' },
+    features: { Lj: ['e.liveStatus === "awaiting" || e.pendingPermissions > 0'], Pj: ['.priority'], Fj: ['e === "awaiting" || e === "error"'] } },
+  // shared-21 NQ (exported `Wn`; old HG): the badge over a folded bucket's rows -- the highest-priority state any row has
+  // (jQ over AQ), or with onlyBlocked only "awaiting"; MQ (`Un`; old VG) draws it.
+  { target: 'section-badge.mjs', source: S21, reexports: { rowAwaitingYou: 'section-status.mjs' },
+    exports: { NQ: 'SectionStatusBadge', MQ: 'SectionStatusGlyph', jQ: 'sectionStatusKind', AQ: 'rowStatusKind' },
+    adapters: {},
+    features: { NQ: ['onlyBlocked: n', 'kind: "awaiting"'],
+      MQ: ['role: "img"', '"aria-label": l', 'Xp.warning'], jQ: ['(r === null ||'], AQ: ['e.source.data.isArchived', 'hasCompleted: !0'] } },
 ];
 // The main process gets the same pure model, adapter-free (electron/main.cjs and its .mjs helpers cannot load src/).
 const electronModules = [
@@ -424,47 +433,18 @@ function closureText(src, name) {
   visit(name);
   return parts.join('\n');
 }
+let featureFailures = null; // --explore: collect instead of throwing
 function assertFeatures(label, text, features = []) {
-  const missing = features.filter(f => !text.includes(f));
-  if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
+  const missing = features.filter(f => (f instanceof RegExp ? !f.test(text) : !text.includes(f)));
+  if (!missing.length) return;
+  const message = `${label} lacks ${missing.map(f => (f instanceof RegExp ? String(f) : JSON.stringify(f))).join(', ')}`;
+  if (featureFailures) featureFailures.push(message); else throw Error(message);
 }
 function vendorImport(file, alias, src) {
   const target = vendor[file]?.[alias];
   if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.bytes.toString()))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  official.assertVendorAlias(src.bytes.toString(), alias, target); // R3 (react/compiler-runtime: assertCompilerRuntime)
   return target;
-}
-
-// Alpha-equivalence: the two declarations are the same program up to a consistent, bijective renaming of identifiers.
-function shape(node, names, out) {
-  if (!node || typeof node !== 'object') return;
-  if (Array.isArray(node)) { out.push(`[${node.length}`); node.forEach(n => shape(n, names, out)); out.push(']'); return; }
-  if (typeof node.type !== 'string') return;
-  out.push(node.type);
-  if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
-    if (!names.has(node.name)) names.set(node.name, names.size);
-    out.push(`#${names.get(node.name)}`);
-    return;
-  }
-  for (const key of ['value', 'operator', 'kind', 'computed', 'prefix', 'async', 'generator', 'shorthand', 'method', 'optional', 'raw'])
-    if (key in node && (typeof node[key] !== 'object' || node[key] === null)) out.push(`${key}=${JSON.stringify(node[key])}`);
-  for (const [key, value] of Object.entries(node)) {
-    if (['type', 'start', 'end', 'loc', 'range', 'extra', 'comments', 'leadingComments', 'trailingComments', 'innerComments'].includes(key)) continue;
-    // Non-computed property keys and member properties are names in the program text, not bindings: keep them literal.
-    if ((key === 'key' && !node.computed) || (key === 'property' && !node.computed && node.type.includes('MemberExpression'))) {
-      if (value?.type === 'Identifier') { out.push(`.${value.name}`); continue; }
-    }
-    if (value && typeof value === 'object') { out.push(`:${key}`); shape(value, names, out); }
-  }
-}
-const alphaShape = node => { const out = []; shape(node, new Map(), out); return out.join(' '); };
-function declarationNode(src, local) {
-  const p = src.program.scope.getBinding(local)?.path;
-  if (!p || p.isImportSpecifier()) return null;
-  return p.node;
 }
 
 const manifestCache = new Map();
@@ -480,17 +460,51 @@ function exportedLocal(text, name) {
     }
   return null;
 }
+// Areas that already hold 3.6556.2 originals; a binding they hold and export is never sliced a second time here.
+const autoAreas = ['code-current', 'app-switch', 'sidebar-resize'];
+let autoIndex = null;
+async function autoExternal(file, local) {
+  if (!autoIndex) {
+    autoIndex = new Map();
+    const viewTabs = await viewTabsManifestFor(referenceVersion);
+    for (const [name, pub] of Object.entries(viewTabs.publicNames ?? {})) {
+      const key = `${pub.file}:${pub.local}`;
+      if (!autoIndex.has(key)) autoIndex.set(key, { area: 'view-tabs', name, features: [] });
+    }
+    for (const area of autoAreas) {
+      const manifest = area === 'sidebar-resize' ? await sidebarResizeManifestFor(referenceVersion) : await readJson(path.join(generatedRoot, area, 'manifest.json'));
+      for (const module of manifest.modules ?? []) {
+        if ((module.referenceVersion ?? manifest.referenceVersion) !== referenceVersion || !module.source) continue;
+        const file = path.basename(module.source);
+        if (area === 'sidebar-resize') {
+          for (const [l, name] of Object.entries(module.exports ?? {})) { const key = `${file}:${l}`; if (!autoIndex.has(key)) autoIndex.set(key, { area, target: module.target, name, features: [] }); }
+          continue;
+        }
+        const names = new Set((module.bindings ?? []).map(b => (typeof b === 'string' ? b : b.name)));
+        const text = await fs.readFile(path.join(generatedRoot, area, module.target), 'utf8').catch(() => '');
+        for (const block of text.matchAll(/export\s*\{([^}]*)\}/g))
+          for (const part of block[1].split(',').map(s => s.trim()).filter(Boolean)) {
+            const [l, as] = part.split(/\s+as\s+/);
+            const key = `${file}:${l}`;
+            if (names.has(l) && !autoIndex.has(key)) autoIndex.set(key, { area, target: module.target, name: as ?? l, features: [] });
+          }
+      }
+    }
+  }
+  return autoIndex.get(`${file}:${local}`) ?? null;
+}
+
 // Proves `entry` (a generated module export) is the original binding file:local and returns the module path.
 async function resolveExternal(file, local, entry) {
   const area = path.join(generatedRoot, entry.area);
   if (entry.area === 'view-tabs') {
-    const manifest = await readJson(path.join(area, 'manifest.json'));
+    const manifest = await viewTabsManifestFor(referenceVersion);
     const pub = manifest.publicNames?.[entry.name];
     if (manifest.referenceVersion !== referenceVersion || !pub || pub.file !== file || pub.local !== local)
       throw Error(`view-tabs public name ${entry.name} is not ${file}:${local}`);
     return path.join(area, pub.file);
   }
-  const manifest = await readJson(path.join(area, 'manifest.json'));
+  const manifest = entry.area === 'sidebar-resize' ? await sidebarResizeManifestFor(referenceVersion) : await readJson(path.join(area, 'manifest.json'));
   const module = manifest.modules.find(m => m.target === entry.target);
   if (!module) throw Error(`${entry.area}/${entry.target} is not generated`);
   const modulePath = path.join(area, entry.target);
@@ -503,16 +517,11 @@ async function resolveExternal(file, local, entry) {
   const names = module.bindings.map(b => (typeof b === 'string' ? b : b.name));
   if (!theirs || !names.includes(theirs)) throw Error(`${entry.area}/${entry.target} does not export ${entry.name}`);
   const sourceName = path.basename(module.source);
-  if (module.referenceVersion === referenceVersion) {
-    if (sourceName !== file || theirs !== local) throw Error(`${entry.area}/${entry.target}: ${entry.name} is ${sourceName}:${theirs}, not ${file}:${local}`);
-    return modulePath;
-  }
-  // An earlier-version module: its binding must be alpha-equivalent to this version's.
-  const prefix = file.slice(0, -'-xxxxxxxx.js'.length); // build hashes are 8 characters and may contain '-'
-  if (!sourceName.startsWith(`${prefix}-`)) throw Error(`${entry.area}/${entry.target} comes from ${sourceName}, not a ${prefix} chunk`);
-  const [mine, old] = [await readSource(file), await readSource(sourceName, previousSource)];
-  const a = declarationNode(mine, local), b = declarationNode(old, theirs);
-  if (!a || !b || alphaShape(a) !== alphaShape(b)) throw Error(`${entry.area}/${entry.target}: ${sourceName}:${theirs} (${entry.name}) is not alpha-equivalent to ${file}:${local}`);
+  // w10-ccres-nested-parts: every producer this tree imports from is 3.6556.2 (owner-window and nested-session-parts were
+  // the last 2.42304.0 ones), so the earlier-release alpha-equivalence branch is gone.
+  const version = module.referenceVersion ?? manifest.referenceVersion;
+  if (version !== referenceVersion) throw Error(`${entry.area}/${entry.target} is ${version}, not ${referenceVersion}`);
+  if (sourceName !== file || theirs !== local) throw Error(`${entry.area}/${entry.target}: ${entry.name} is ${sourceName}:${theirs}, not ${file}:${local}`);
   return modulePath;
 }
 
@@ -558,7 +567,7 @@ function storeActionsSelection(src, name, config) {
 }
 
 // The slicing core: emits `specs` in order (targets relative to `base`) and returns their text plus manifest records.
-export async function sliceOriginalModules({ modules: specs, base = output, explore = null }) {
+export async function sliceOriginalModules({ modules: specs, base = output, explore = null, auto = true }) {
   const emitted = [];
   const manifestModules = [];
   const files = {};
@@ -570,7 +579,7 @@ export async function sliceOriginalModules({ modules: specs, base = output, expl
     const fromSibling = (owner, local, via) => ({ from: rel(self, path.resolve(base, owner.spec.target)), name: owner.spec.exports[local], via, kind: 'generated' });
     const externalFor = async (file, local, via) => {
       if (spec.adapters?.[`${file}:${local}`]) return null; // a module-level adapter answers instead of the shared external
-      const entry = externals[`${file}:${local}`];
+      const entry = externals[`${file}:${local}`] ?? (auto ? await autoExternal(file, local) : null);
       if (!entry) return null;
       const dep = await readSource(file);
       assertFeatures(`${spec.target}: external ${via} (${local})`, closureText(dep, local), entry.features);
@@ -622,7 +631,7 @@ export async function sliceOriginalModules({ modules: specs, base = output, expl
       if (!p.isFunctionDeclaration() && !p.isVariableDeclarator() && !p.isClassDeclaration()) throw Error(`${spec.target}: unsupported declaration ${name}`);
       selected.set(name, p);
       p.traverse({
-        ImportExpression() { throw Error(`${spec.target}: dynamic import inside ${name}`); },
+        ImportExpression() { const m = `${spec.target}: dynamic import inside ${name}`; if (featureFailures) featureFailures.push(m); else throw Error(m); },
         CallExpression(r) { if (r.node.callee.type === 'Import') throw Error(`${spec.target}: dynamic import inside ${name}`); },
       });
       for (const dep of nodeDeps(src, p)) await add(dep);
@@ -643,7 +652,11 @@ export async function sliceOriginalModules({ modules: specs, base = output, expl
       groups.get(entry.from).push(entry.name === local ? local : `${entry.name} as ${local}`);
     }
     const importText = [...groups].map(([from, names]) => `import { ${names.join(', ')} } from ${JSON.stringify(from)};`).join('\n');
-    const exportText = `export { ${Object.entries(spec.exports).map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };`;
+    const exportText = `export { ${Object.entries(spec.exports).map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };` +
+      Object.entries(spec.reexports ?? {}).map(([name, target]) => {
+        if (!emitted.some(m => m.spec.target === target && Object.values(m.spec.exports).includes(name))) throw Error(`${spec.target}: re-export ${name} is not an export of ${target} (emitted earlier)`);
+        return `\nexport { ${name} } from ${JSON.stringify(rel(self, path.resolve(base, target)))};`;
+      }).join('');
     const header = `// Original Claude Desktop ${referenceVersion} bindings from ${spec.source}; generated by extract-sidebar-sections.mjs.\n// Edit the extractor or src/source-sidebar-sections-adapters.jsx, never this file.\n`;
     const text = await format(`${header}${importText}\n${blocks.join('\n')}\n${exportText}\n`, { parser: 'babel' });
     files[spec.target] = text;
@@ -653,6 +666,7 @@ export async function sliceOriginalModules({ modules: specs, base = output, expl
       ...(selections.size ? { sourceSelections: [...selections.values()].map(s => s.record) } : {}),
       imports: [...imports].map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}) })),
       exports: spec.exports,
+      ...(spec.reexports ? { reexports: spec.reexports } : {}),
     });
     emitted.push({ spec });
   }
@@ -660,16 +674,18 @@ export async function sliceOriginalModules({ modules: specs, base = output, expl
 }
 
 export async function extractSidebarSections({ check = false, explore = null } = {}) {
+  official.assertCompilerHelpers((await fs.readFile(path.join(source, SF))).toString()); // E3: the helpers externals name
+  if (explore) featureFailures = [];
   const manifest = {
     referenceVersion, referenceSnapshot, generator: 'scripts/extract-sidebar-sections.mjs',
     adapterModule: 'src/source-sidebar-sections-adapters.jsx', modules: [],
   };
   const renderer = await sliceOriginalModules({ modules: rendererModules, explore });
-  const electron = await sliceOriginalModules({ modules: electronModules, explore });
+  const electron = await sliceOriginalModules({ modules: electronModules, explore, auto: false });
   for (const m of electron.modules) if (m.imports.some(i => i.kind !== 'generated')) throw Error(`${m.target} must stay self-contained`);
   manifest.modules = [...renderer.modules, ...electron.modules];
   const files = { ...renderer.files, ...electron.files, 'manifest.json': JSON.stringify(manifest, null, 2) + '\n' };
-  if (explore) return manifest;
+  if (explore) { explore.features = featureFailures; return manifest; }
   const own = Object.keys(files).filter(n => !n.startsWith('../'));
   if (check) {
     const present = (await fs.readdir(output).catch(() => [])).sort();
@@ -690,5 +706,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const found = [];
     await extractSidebarSections({ explore: found });
     for (const f of found) console.log(`${f.target}\t${f.via}\t${f.local}\t${f.size}`);
+    for (const f of found.features ?? []) console.log(`FEATURE\t${f}`);
   } else await extractSidebarSections({ check: process.argv.includes('--check') });
 }

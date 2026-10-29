@@ -32,3 +32,15 @@ export function settingsCatalogGroups(snapshot, { cwd, threadId = null } = {}) {
     { tab: 'customize-plugins', rows: pluginEntries },
   ];
 }
+
+// menus C3 (3.6556.2 cc011544b hn I): choosing "+N more" opens the rest of that section's matches in place, except in
+// the Customize lists (shared-156 Dm), which keep the 2.42304.0 jump to the section with the query as the panel's search
+// seed. The expanded set lives until the normalized query changes or the search closes; the sr-only status line
+// announces "Showing {count} more matches in {section}".
+export const SETTINGS_SEARCH_JUMP_SECTIONS = Object.freeze(new Set(['customize-skills', 'customize-connectors', 'customize-plugins']));
+export function settingsSearchMoreExpands(result) {
+  return result?.kind === 'more' && !SETTINGS_SEARCH_JUMP_SECTIONS.has(result.tab);
+}
+export function expandSettingsSearch(state, result, announcement) {
+  return { sections: new Set([...(state?.sections ?? []), result.tab]), announcement };
+}

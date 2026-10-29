@@ -49,9 +49,10 @@ import {
   useSidebarSectionsStore, hydrateSidebarSectionsStore, connectSidebarSectionActions, setSidebarRowRegistry,
   connectSidebarSelection, connectSidebarBulkArchive, connectSidebarBlankArea,
 } from './source-sidebar-sections-adapters.jsx';
-import { CdsDensityContext } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { CdsDensityContext } from './generated/view-tabs/index.js';
 import { SectionStatusBadge } from './generated/sidebar-sections/section-badge.mjs';
 import { SidebarStatusLayout } from './generated/code-current/sidebar-status-glyph.mjs';
+import { SidebarListContext } from './generated/code-current/sidebar-group-view.mjs';
 import { SectionRespondingIds } from './source-sidebar-section-badge-adapters.jsx';
 import { foldedBadgeRows, withPendingSectionFolds, withPendingSectionMoves } from './sidebar-sections-layout.mjs';
 import { t } from '../electron/i18n/index.mjs';
@@ -196,18 +197,31 @@ function useFoldedBadge(sessions, folded) {
   return rows ? <SidebarStatusLayout.Provider value={LIST_VIEW}><SectionStatusBadge sessions={rows} /></SidebarStatusLayout.Provider> : undefined;
 }
 
-/** shared-19 (the bulk archive flow, kind "bulk-archive"): the confirmation YX shows before Archive all, verbatim copy. */
+/**
+ * The bulk archive flow's confirmation (kind "bulk-archive") before Archive all, verbatim copy. 3.6556.2 (w4-sidebar-menus,
+ * CI-04): shared-46 the dialog's `b === "bulk-archive"` branch (title cTz9s1QgTQ / +/2B+4uTbv, confirm VCQX6dLcRo) and
+ * `rO(e, count, workingCount, unloadedRemain)` over `nO`: "... will be archived." (Tvqpf+Gcvz, no longer the 2.42304.0
+ * NPJPo26DXn select), then the still-working sentence (Ykerw7pORw for one session, RyGx3mfxyn otherwise) when some are
+ * working, then the unloaded note (unloadedStay, Ww9HXVZlyY), joined with spaces.
+ */
 export const BULK_ARCHIVE_COPY = Object.freeze({
   titleIn: { defaultMessage: 'Archive all sessions in \u201C{groupName}\u201D?', id: 'cTz9s1QgTQ' },
   title: { defaultMessage: 'Archive all sessions?', id: '+/2B+4uTbv' },
-  description: { defaultMessage: '{count, plural, one {# session} other {# sessions}} will be archived.{unloadedRemain, select, true { Sessions that haven\u2019t loaded yet won\u2019t be archived.} other {}}', id: 'NPJPo26DXn' },
+  willBeArchived: { defaultMessage: '{count, plural, one {# session} other {# sessions}} will be archived.', id: 'Tvqpf+Gcvz' },
+  someStillWorking: { defaultMessage: '{workingCount, plural, =1 {One of them is still working, and archiving stops it.} one {# of them is still working, and archiving stops it.} other {# of them are still working, and archiving stops them.}}', id: 'RyGx3mfxyn' },
+  onlyOneStillWorking: { defaultMessage: 'It\u2019s still working, and archiving stops it.', id: 'Ykerw7pORw' },
+  unloadedStay: { defaultMessage: 'Sessions that haven\u2019t loaded yet won\u2019t be archived.', id: 'Ww9HXVZlyY' },
   confirm: { defaultMessage: 'Archive all', id: 'VCQX6dLcRo' },
 });
-/** That confirmation for the host's SourceConfirmDialog (confirmVariant primary). */
-export function bulkArchiveConfirmCopy(intl, { groupName, count, unloadedRemain = false }) {
+/** That confirmation for the host's SourceConfirmDialog (confirmVariant primary). `workingCount`: shared-46 $O, how many
+ * of the archived sessions are still working. */
+export function bulkArchiveConfirmCopy(intl, { groupName, count, unloadedRemain = false, workingCount = 0 }) {
+  const body = [intl.formatMessage(BULK_ARCHIVE_COPY.willBeArchived, { count })];
+  if (workingCount > 0) body.push(count === 1 ? intl.formatMessage(BULK_ARCHIVE_COPY.onlyOneStillWorking) : intl.formatMessage(BULK_ARCHIVE_COPY.someStillWorking, { workingCount }));
+  if (unloadedRemain === true) body.push(intl.formatMessage(BULK_ARCHIVE_COPY.unloadedStay));
   return {
     title: groupName ? intl.formatMessage(BULK_ARCHIVE_COPY.titleIn, { groupName }) : intl.formatMessage(BULK_ARCHIVE_COPY.title),
-    body: intl.formatMessage(BULK_ARCHIVE_COPY.description, { count, unloadedRemain: String(unloadedRemain === true) }),
+    body: body.join(' '),
     confirmLabel: intl.formatMessage(BULK_ARCHIVE_COPY.confirm), danger: false,
   };
 }
@@ -263,20 +277,52 @@ function emptyHint(bucket, host, empty) {
     ? <p className="source-empty-group df-drag-shiftable" data-drag-key={`label:hint:${bucket.key}`} style={host.shiftStyle(`label:hint:${bucket.key}`)}>{empty}</p> : null;
 }
 
-/** A Sessions (or Pinned) bucket: bC without a manual section (W: fadeLabel; kind "group" for a sub-bucket). */
+/**
+ * 3.6556.2 (w4-sidebar-menus, SB-05): shared-22 GC's `groupMenuKind` for a date or status bucket -- the date (LT) and
+ * status (sD) renderers pass `r !== void 0 || v ? "day-or-status" : void 0` (truncateAt set, or drawsOpenRows inside a
+ * manual section), so the Sessions date / status buckets and a manual section's date / status sub-buckets get a header
+ * menu. Pinned (qk), the flat list and folder buckets (their own kinds) do not.
+ */
+export function bucketMenuKind(bucket) {
+  return (bucket?.kind === 'date' || bucket?.kind === 'state') && (bucket.truncateAt !== undefined || bucket.drawsOpenRows === true) ? 'day-or-status' : undefined;
+}
+const DAY_OR_STATUS_GREYED = groupDisabledReasons('day-or-status', true);
+
+/**
+ * A Sessions (or Pinned) bucket: bC without a manual section (W: fadeLabel; kind "group" for a sub-bucket).
+ * 3.6556.2 shared-22 GC: a sub-bucket drawing its open rows (`E`, drawsOpenRows) carries `data-nested-group` (SB-04;
+ * the 3.6556.2 CSS `.df-session-list [data-nested-group]` takes the band margin off its children). A "day-or-status"
+ * bucket (SB-05, `le = J !== null && I !== void 0`) is shared-20 Px's context-menu trigger: `groupEditsHidden: v || ue`
+ * (no Rename / Delete), `onNewSession: ue ? de?.onNewSession : Z` (de = shared-46 YO, the list context: the list's own
+ * New session, or the manual section's from rA), `bulkBucketKey: ot` (truncateAt or drawsOpenRows), `onExpand` while
+ * folded and `greyed: Zr("day-or-status", …)` = {} (shared-46 NO); its heading sits in f$ with `menu: !le` (false).
+ */
 function HostBucket({ bucket, host, folded, trailing, label, pinned = false, foldable = true, empty }) {
   const rows = host.renderRows(bucket);
   const hint = emptyHint(bucket, host, empty);
   const badge = useFoldedBadge(bucket.sessions, foldable && folded);
-  return <div className={SECTION_CLASS} data-group-key={bucket.key} data-pinned-list={pinned ? '' : undefined}
-    data-flush-heading={bucket.flushHeading ? '' : undefined} {...sectionHoverHandlers}>
-    <Shift dragKey={`label:${bucket.key}`} host={host}>
-      <SidebarGroupLabel collapsed={foldable ? folded : undefined} onToggle={foldable ? () => host.toggle(bucket.key) : undefined}
-        trailing={trailing} kind={bucket.heading} badge={badge} fadeLabel rowless={folded || (bucket.sessions.length === 0 && hint === null)}>{label ?? bucket.label}</SidebarGroupLabel>
-    </Shift>
+  const list = useContext(SidebarListContext);
+  const toggle = foldable ? () => host.toggle(bucket.key) : undefined;
+  const menuKind = pinned ? undefined : bucketMenuKind(bucket);
+  const attributes = { className: SECTION_CLASS, 'data-group-key': bucket.key, 'data-pinned-list': pinned ? '' : undefined,
+    'data-flush-heading': bucket.flushHeading ? '' : undefined, 'data-nested-group': bucket.drawsOpenRows ? '' : undefined, ...sectionHoverHandlers };
+  const heading = <SidebarGroupLabel collapsed={foldable ? folded : undefined} onToggle={toggle}
+    trailing={trailing} kind={bucket.heading} badge={badge} fadeLabel rowless={folded || (bucket.sessions.length === 0 && hint === null)}>{label ?? bucket.label}</SidebarGroupLabel>;
+  const shifted = <Shift dragKey={`label:${bucket.key}`} host={host}>
+    {menuKind === undefined ? heading
+      : <SectionReorderGate bulkBucketKey={bucket.key} onExpand={folded ? toggle : undefined} groupName={label ?? bucket.label} menu={false}>{heading}</SectionReorderGate>}
+  </Shift>;
+  // w13-close-cowork-sidebar (cwui-46): shared-22 aM wraps the Pinned heading in its coachmark's anchor
+  // (`vt = o("div", {ref: ze, children: _t})`) and renders the one-time drag-pin coachmark (`wt`) after the rows.
+  const body = () => <>
+    {pinned && host.pinnedAnchor ? <div ref={host.pinnedAnchor}>{shifted}</div> : shifted}
     <BucketRows bucket={bucket} folded={folded} pinned={pinned} rows={rows} hint={hint} />
     {pinned && folded && host.pinnedFoldedDrop}
-  </div>;
+    {pinned && host.pinnedHint}
+  </>;
+  if (menuKind === undefined) return <div {...attributes}>{body()}</div>;
+  return <SidebarGroupMenu groupName={label ?? bucket.label} groupEditsHidden onNewSession={list?.onNewSession} bulkBucketKey={bucket.key}
+    onExpand={folded ? toggle : undefined} section={<div {...attributes} />} greyed={DAY_OR_STATUS_GREYED}>{body}</SidebarGroupMenu>;
 }
 
 /**
@@ -286,14 +332,21 @@ function HostBucket({ bucket, host, folded, trailing, label, pinned = false, fol
  * onNewSession `() => y("header_menu")` (the folder's new session; none for Other, whose New session shows greyed with
  * tZ's place-unknown reason), bulkBucketKey (truncateAt is set) and onExpand while folded; the heading sits in f$ with
  * `menu: !V`. sT wraps it in shared-19 x$ (pn) when the bucket has an order slot (not Other): Move up / Move down and,
- * with a stored order, onResetOrder ("Sort A to Z": resetsToRecent is for presets). `menu`: host.folderMenu(bucket) =
- * {onNewSession?, order: {index, count, move(from, to), reset?} | null}.
+ * with a stored order, onResetOrder ("Sort A to Z"; 3.6556.2 shared-46 gM / oM dropped resetsToRecent and "Reset order",
+ * SB-07). 3.6556.2 shared-22 IE (SB-06): a folder bucket offers shared-20 Px's "Save as environment" (`onSaveAsEnvironment:
+ * Oe = pe ? Y : void 0`, pe = gE(prefill) for a local folder while environments are on): the host's saved-environment
+ * editor with the folder filled in (E17; SSH folders are D37). `menu`: host.folderMenu(bucket) =
+ * {onNewSession?, onSaveAsEnvironment?, order: {index, count, move(from, to), reset?} | null}. w10-shell-sidebar-preset-menu: a
+ * saved-environment bucket (IE W = "preset") comes here too, with onEditEnvironment (Px's Edit environment) and
+ * groupMenuKind "preset" (shared-46 NO("preset")); source-sidebar-sections-adapters.jsx presetBucketMenu.
  */
 function FolderBucket({ bucket, host, folded, trailing, label, empty, menu }) {
   const { key } = bucket;
   const toggle = useCallback(() => host.toggle(key), [host, key]);
   const hasNewSession = menu.onNewSession !== undefined;
-  const greyed = useMemo(() => groupDisabledReasons('worked-out', hasNewSession), [hasNewSession]);
+  // w10-shell-sidebar-preset-menu: a preset bucket's reasons are shared-46 NO("preset") (IE `Ae = Mi({customGroupId, environment})`).
+  const greyedKind = menu.groupMenuKind === 'preset' ? 'preset' : 'worked-out';
+  const greyed = useMemo(() => groupDisabledReasons(greyedKind, hasNewSession), [greyedKind, hasNewSession]);
   const onExpand = folded ? toggle : undefined;
   const rows = host.renderRows(bucket);
   const hint = emptyHint(bucket, host, empty);
@@ -308,11 +361,11 @@ function FolderBucket({ bucket, host, folded, trailing, label, empty, menu }) {
     </Shift>
     <BucketRows bucket={bucket} folded={folded} rows={rows} hint={hint} />
   </>;
-  const groupMenu = <SidebarGroupMenu groupName={label} groupEditsHidden onNewSession={menu.onNewSession} bulkBucketKey={key}
-    onExpand={onExpand} section={element} greyed={greyed}>{body}</SidebarGroupMenu>;
+  const groupMenu = <SidebarGroupMenu groupName={label} groupEditsHidden onNewSession={menu.onNewSession} onEditEnvironment={menu.onEditEnvironment} onSaveAsEnvironment={menu.onSaveAsEnvironment}
+    bulkBucketKey={key} onExpand={onExpand} section={element} greyed={greyed}>{body}</SidebarGroupMenu>;
   if (!menu.order) return groupMenu;
   return <SectionSortable bucketKey={key} sectionIndex={menu.order.index} sectionCount={menu.order.count} onMoveSection={menu.order.move}
-    onResetOrder={menu.order.reset} resetsToRecent={false}>{groupMenu}</SectionSortable>;
+    onResetOrder={menu.order.reset}>{groupMenu}</SectionSortable>;
 }
 
 /**
@@ -335,10 +388,17 @@ export function SidebarBlankArea({ enabled, showCreateGroup, onNewSession, onNew
   </SidebarBlankAreaHost>;
 }
 
-/** oO → bC for a manual section: the section element is yx's context-menu trigger (with dD's rename on its heading). */
+/**
+ * oO → bC for a manual section: the section element is yx's context-menu trigger (with dD's rename on its heading).
+ * 3.6556.2 shared-22 rA (SB-05): the date / status sub-buckets see the list context with the section's name and New
+ * session (`l && { ...l, sectionName: r, onNewSession: s }`), so their "day-or-status" menus start a session in the
+ * section and Archive all names "{section}: {heading}" (shared-46 lk, upppgIfvPF).
+ */
 function ManualSection({ entry, host, folded, onMoveSection, openCreate }) {
   const { section, key, label } = entry;
   const onNewSession = host.newSessionInSection ? () => host.newSessionInSection(entry) : undefined;
+  const list = useContext(SidebarListContext);
+  const subList = useMemo(() => list && { ...list, sectionName: label, onNewSession }, [list, label, host.newSessionInSection, entry]);
   const greyed = useMemo(() => groupDisabledReasons('hand-made', onNewSession !== undefined), [onNewSession !== undefined]);
   const toggle = useCallback(() => host.toggle(key), [host, key]);
   const hot = !!host.drag?.groupIntent && host.drag.groupIntent.groupId === section.id;
@@ -356,10 +416,10 @@ function ManualSection({ entry, host, folded, onMoveSection, openCreate }) {
     </Shift>
     {entry.subgrouped
       // oO's rowsBody (sO) inside bC's container: folded, the sub-buckets stay in `hidden` under rv (no marker of their own).
-      ? <div className={folded ? 'hidden' : 'contents'}><RowsHiddenContext.Provider value={folded}>
+      ? <div className={folded ? 'hidden' : 'contents'}><RowsHiddenContext.Provider value={folded}><SidebarListContext.Provider value={subList}>
         {entry.buckets.map((bucket) => <HostBucket key={bucket.key} bucket={bucket} host={host} folded={host.folded.has(bucket.key)} />)}
         {entry.rows.length === 0 && hint}
-      </RowsHiddenContext.Provider></div>
+      </SidebarListContext.Provider></RowsHiddenContext.Provider></div>
       : <BucketRows bucket={entry.buckets[0]} folded={folded} rows={host.renderRows(entry.buckets[0])} hint={entry.rows.length === 0 ? hint : null} />}
     {host.dropTargets && <DropBand hot={hot} extendTopPx={host.drag?.groupIntent?.extendTopPx} extendBottomPx={host.drag?.groupIntent?.extendBottomPx} />}
   </>;

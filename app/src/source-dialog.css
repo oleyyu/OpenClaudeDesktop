@@ -1,5 +1,5 @@
 /* Shared CDS Dialog (2.2553.1 shared-frame-C_2npUJq.js:5561-5574 mf/hf/gf/_f/vf/yf, :5618-5644 Of/Mf/Nf/If,
-   :5806-5869 Yf/Jf/Qf; shared-11 Lf bleed header). Generalised from source-bypass-permission.css. */
+   :5806-5869 Yf/Jf/Qf). Generalised from source-bypass-permission.css. */
 .sdlg-portal > * { z-index: var(--cds-portal-z); } /* nl: [&>*]:z-[var(--cds-portal-z)] */
 /* yf: fixed inset-0 bg-backdrop backdrop-blur-[2px], faded over duration-base ease-out. The popup is this
    element's child, so the fade runs on the colour and the blur instead of opacity. */
@@ -44,18 +44,6 @@
 .sdlg-popup .sdlg-header[data-alert] .sdlg-description { margin-top: 4px; }
 /* Jf flush: -me-pad-sm -mt-pad-sm. */
 .sdlg-close-flush { margin-inline-end: calc(-1 * var(--cds-pad-sm)); margin-top: calc(-1 * var(--cds-pad-sm)); }
-/* shared-11 Lf bleed: flex h-12 shrink-0 items-center gap-xs border-b-[0.5px] border-strong px-sm bg-alpha-1
-   -mx-pad-xl -mt-pad-xl mb-pad-md; title min-w-0 truncate px-xs text-heading-semibold. */
-.sdlg-bleed-header {
-  display: flex; flex-shrink: 0; align-items: center; gap: var(--cds-gap-xs); height: 48px; box-sizing: border-box;
-  margin: calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-xl)) var(--cds-pad-md); padding: 0 var(--cds-pad-sm);
-  border-bottom: .5px solid var(--cds-border-strong); background: var(--cds-alpha-1);
-}
-.sdlg-bleed-title {
-  min-width: 0; margin: 0; padding: 0 var(--cds-pad-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: var(--cds-font-size-heading); line-height: var(--cds-leading-heading); font-weight: var(--cds-font-weight-semibold);
-}
-.sdlg-spacer { flex: 1; }
 /* Qf: mt-pad-lg flex flex-col-reverse gap-2 sm:flex-row sm:justify-end. */
 .sdlg-footer { display: flex; flex-shrink: 0; flex-direction: column-reverse; gap: 8px; margin-top: var(--cds-pad-lg); }
 @media (min-width: 640px) { .sdlg-footer { flex-direction: row; justify-content: flex-end; } }

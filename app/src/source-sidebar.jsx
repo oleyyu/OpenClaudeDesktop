@@ -1,12 +1,14 @@
 import { sidebarComposerFocus } from './sidebar-open-model.mjs';
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
-import { ToolButton, SIDEBAR_TOGGLE_TOOLTIP } from "./code-ui";
+import { ToolButton } from "./code-ui";
 import { SourceNavButtons } from "./source-nav-buttons";
 import { SourceAppSwitch } from "./source-app-switch.jsx";
+import { surfaceNavRows } from "./surface-nav-model.mjs";
 import { SourceTooltip, textOverflows } from "./source-tooltip";
 import { SourceSpark } from "./source-spark.jsx";
-import { CdsAvatar } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+import { CdsAvatar, CdsButton, CdsTooltip } from "./generated/view-tabs/index.js";
+import { staticComposerBootFade } from "./generated/app-switch/boot-fade.mjs";
 import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 import { SourceMenu, menuTriggerProps } from "./source-menu";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
@@ -26,6 +28,7 @@ import { archiveBlockedByField, archiveChord, archiveNeighbour, collectJumpRows,
 import { connectSessionCycleGroups } from "./session-cycle-adapters.mjs";
 import { useSourceToasts } from "./source-toast.jsx";
 import { useSidebarRowDrag, SidebarDragGhost, PinnedDropRow } from "./source-sidebar-drag.jsx";
+import { DragPinHintCoachmark, dragPinHintStore } from "./source-drag-pin-hint.jsx"; // w13-close-rail-regen cwui-46 (shared-22 aM)
 import { dragRowStyle, pinnedOrderAfterDrop } from "./sidebar-drag-model.mjs";
 import { sessionPaneDropHost, splitStore, useSplitSides } from "./source-split-view.jsx";
 import { useStartIntl } from './source-code-start-adapters.jsx';
@@ -33,8 +36,10 @@ import { nestedSessionLabel, nestedStatusLabels, nestedRevealLabel } from './gen
 import { NestedStatusSeparator } from './generated/code-current/nested-session-separator.mjs';
 import { NestedStatusDot, NestedErrorIcon, nestedFocusClass, sidebarHitRowMainClass } from './generated/code-current/nested-session-parts.mjs';
 import { SidebarSearchField } from './generated/code-current/sidebar-search.mjs';
-import { CdsDensityContext as CdsBadgeDensity } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { CdsDensityContext as CdsBadgeDensity } from './generated/view-tabs/index.js';
 import { SidebarNavBadge } from './generated/code-current/sidebar-nav-badge.mjs';
+import { SidebarRunningMark } from './generated/code-current/sidebar-running-mark.mjs';
+import { useNewPageActivity } from './source-new-page-activity.jsx';
 import { currentSidebarSession } from './sidebar-session-current-model.mjs';
 import { SourceCodeSidebarRow, SidebarCurrentMenuHost, SourceSidebarRowMore } from './source-code-sidebar-row.jsx';
 import { SourceCodeSidebarFilter, sidebarNestedCommands } from './source-sidebar-filter-current.jsx';
@@ -50,7 +55,7 @@ import { listedSidebarSessions } from './nested-less-side-chats.mjs';
 import { buildSidebarSections, folderBucketMenu, foldingSection, sectionFoldTarget, sectionsFoldedKeys, sectionsPreferences, sectionsRowRegistry, sessionsSectionId,
   sessionsViewPatch, sidebarSectionsList, withLegacyListFields } from './sidebar-sections-layout.mjs';
 import { SidebarBlankArea, SidebarSectionsList, bulkArchiveConfirmCopy, useSidebarSectionsHost, usePendingSectionFolds } from './source-sidebar-sections.jsx';
-import { useSectionsKeptWhileEmpty, useSidebarSectionsStore } from './source-sidebar-sections-adapters.jsx';
+import { usePresetsGate, useSectionsKeptWhileEmpty, useSidebarSectionsStore, presetBucketMenu, sessionsBucketOrderKeys } from './source-sidebar-sections-adapters.jsx';
 import { CreateGroupDialog } from './generated/sidebar-sections/group-dialog.mjs';
 import { sectionMessages } from './generated/sidebar-sections/group-copy.mjs';
 import { digitFor, moveToGroupRows, multiHotkeys, multiMenuState, pinTargets,
@@ -66,12 +71,24 @@ import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { SourceSwitch } from "./source-switch.jsx";
 import { hiddenSessionsNotice } from "./session-engine-model.mjs";
 import { SourceSidebarPalette } from "./source-sidebar-palette.jsx";
+import { SourceChatRowMenu } from "./source-chat-row-menu.jsx";
+import { SourceChatProjectMenuItems } from "./source-project-knowledge.jsx"; // w13-chatfn-projects
+import { chatDeleteConfirmCopy } from "./chat-starred-model.mjs";
+// w13-close-cowork-sidebar (G12): the Cowork list's bD buckets and Group and sort menu, the hub multi-selection menu.
+import { CoworkViewProjectButton, SourceCoworkGroupSortMenu, SourceHubBulkMenu, coworkDisplayedGroups, hubMessage, hubViewStore, useHubSidebarView } from "./source-hub-sidebar.jsx";
+import { HUB_MESSAGES, coworkGroupBy, coworkListPreferences, hubBulkActions, hubBulkMenuEntries, hubBulkRow } from "./hub-sidebar-model.mjs";
 import { paletteActions } from "./sidebar-palette-model.mjs";
 import { JUMP_COMMANDS } from "./focus-region-model.mjs";
 import { jumpToRegions, regionJumpAvailable } from "./use-focus-regions.js";
 import "./source-sidebar.css";
 import { getAssistantName, t, tn } from "../electron/i18n/index.mjs";
 import { coreForEngine, coreName, coreSupports } from "../electron/core-registry.mjs";
+// shared-22 GI `e = i("draggable-none", Ys, _ && "flex")` (desktop) wraps each titlebar control; shared-19 Dj (nx) drops
+// Enter/Space key repeat on the Hide sidebar button.
+const TITLEBAR_CHROME_CLASS = `draggable-none ${staticComposerBootFade} flex`;
+const suppressKeyRepeat = (event) => { event.repeat && (event.key === "Enter" || event.key === " ") && event.preventDefault(); };
+// shared-21 q0: the jump keycap's class string, verbatim.
+const JUMP_HINT_CLASS = "df-jump-hint pointer-events-none absolute top-[calc(var(--df-row-h)/2)] -translate-y-1/2 start-[calc(var(--df-row-px)+var(--df-rail-shift,0px)+(var(--df-leading-slot)-16px)/2)] flex h-4 min-w-4 items-center justify-center rounded-[3px] border-[0.5px] bg-surface-1 px-[3px] font-sans text-[10px] font-medium leading-none text-secondary";
 
 /** Current classic sidebar DOM menus on the shared CDS SourceMenu primitive:
  * sidebar-main Z.Root/Z.Popup (Filter: side bottom, align end, sideOffset 4,
@@ -187,6 +204,8 @@ export function SourceSidebarSessionMenu({
   header = false, settingsItems = null,
   // R3-sections: the sections layout's Move to copy (shared-18 xE / shared-20 Sx); null keeps the classic group copy.
   sectionCopy = null,
+  // w13-close-chat-projects-memory: a Cowork row's project block (shared-16 fm's move-to-space, after Rename as fm orders it).
+  projectItems = null,
 }) {
   // The open submenu (its name) and each numbered submenu's digits (official onKeyDownCapture on those popups: 1-9
   // without modifiers pick an entry while it is open); letter hotkeys stand down while any submenu is open.
@@ -341,6 +360,7 @@ export function SourceSidebarSessionMenu({
     {!header && <Choice shortcut="p" onClick={() => act(metadata.pinned ? "unpin" : "pin")}>{metadata.pinned ? t("Unpin") : t("Pin")}</Choice>}
     {!busy && !header && <Choice shortcut="u" onClick={() => act(metadata.unread ? "mark-read" : "mark-unread")}>{metadata.unread ? t("Mark as read") : t("Mark as unread")}</Choice>}
     <Choice shortcut="r" onClick={() => { onClose(); onRename(); }}>{t("Rename")}</Choice>
+    {!header && projectItems}
     {onFork && <Choice shortcut="f" disabled={!!forkReason} disabledReason={forkReason} onClick={() => { onClose(); onFork(session); }}>{t("Fork")}</Choice>}
     {!header && nested && nested.childCount > 0 && <Choice onClick={() => { onClose(); nested.onToggle(); }}>{nested.collapsed ? t("Show nested sessions") : t("Hide nested sessions")}</Choice>}
     </SourceMenu.Group>
@@ -732,6 +752,19 @@ export function SourceShowMoreButton({ bucketLabel, count = 0, fewer, onShowMore
   </>;
 }
 
+/** shared-21 pX (exported as rr; shared-22 LT appends it to the last Recents bucket off Code): the "View all" row
+ * (lX pFK6bJU0EM) in sX = rX (Np Ss + mp Ds + the row classes) + the iconless +2px padding, inside _o (df-drag-shiftable,
+ * shiftKey label:viewall:{bucket}); uX swallows the click a drag ends with. fX = Ie("/chats") only preloads the route
+ * on intent (no local router), so the button carries no href. */
+const sidebarViewAllRowClass = `${nestedFocusClass} ${sidebarHitRowMainClass} flex h-[var(--df-row-h)] w-full shrink-0 items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] text-start text-[length:var(--df-row-font)] text-muted hover:bg-[var(--df-hover)] hover:text-secondary aria-disabled:pointer-events-none aria-disabled:opacity-70 pe-[var(--df-row-px)] ps-[calc(var(--df-row-px)+var(--df-iconless-pad,calc((var(--df-leading-slot)-var(--df-icon-size))/2+2px)))]`;
+export function SourceSidebarViewAllRow({ bucketKey, onViewAll, dragging = false, style }) {
+  const shiftKey = `label:viewall:${bucketKey ?? "recents"}`;
+  return <div className="df-drag-shiftable" data-drag-key={shiftKey} style={style?.(shiftKey)}>
+    <button type="button" onClickCapture={(event) => { if (dragging) { event.stopPropagation(); event.preventDefault(); } }}
+      onClick={() => onViewAll()} data-row="" data-roving-item="" className={sidebarViewAllRowClass}>{t("View all")}</button>
+  </div>;
+}
+
 /** sidebar-groups.js:7761-7830 AO single-line rows: df-leading-slot with a
  * 6x6 rounded-full Ml skeleton, then a kO-width bar at the row font height.
  * The source row count comes from rememberedRecentsRows, which this app does
@@ -764,6 +797,7 @@ function SidebarResizeHandle({ width, minWidth = SIDEBAR_WIDTH.MIN, collapsed, o
 const SELECTION_DOMAIN = "code";
 const SOURCE_TRUNCATE_AT = 20;
 const EMPTY_REVEALED = new Map();
+const EMPTY_ENVIRONMENTS = Object.freeze([]);
 // Dialog backdrops live in a [data-cds-portal] root (source-dialog.jsx).
 const SELECTION_SAFE_SELECTOR = '[data-row], [data-cds-portal], [role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"]';
 
@@ -775,6 +809,14 @@ export function SourceSidebar({
   trafficLightSpacer, cdsFont = "sans",
   sidebarPreferences, onSidebarPreferencesChange, sessionMetadata = {}, customGroups = [], pinnedOrder = [],
   knownFolders, fallbackCwd = "", onSessionAction, onCreateGroup, onCreateEnvironment, onGroupAction, loading = false,
+  // w4-sidebar-menus (3.6556.2 SB-06): a folder bucket's "Save as environment" -- the saved-environment editor prefilled
+  // with `{kind: 'local', cwd}` (main.jsx: setEnvironmentEditor({ initialTarget })); absent, the menu has no such item.
+  onSaveAsEnvironment,
+  // w10-shell-sidebar-preset-menu (3.6556.2 shared-22 IE, W = "preset"): a saved-environment bucket's New session (id) =>
+  // main's new draft with that environment selected, and Edit environment (id) => main's editor on that environment.
+  onNewSessionInEnvironment, onEditEnvironment,
+  // w4-sidebar-filter (E17): main's saved environments, which Sessions' Group by › Environment buckets by.
+  savedEnvironments = EMPTY_ENVIRONMENTS,
   // R3-sections: main's section list (config.sidebarSections) and its section actions (main.jsx sectionAction → sidebar-state).
   sidebarSections, onSectionAction,
   // B37 shared-19 FK/IK: a single Delete opens main's one-dialog worktree check (SourceSessionDeleteDialog) when given.
@@ -783,10 +825,17 @@ export function SourceSidebar({
   loadFailed = false, onRetryLoad,
   // Session ids whose Unarchive is in flight (ce4f4374c Ae isUnarchiving).
   unarchiving = null,
+  // w13-chatfn-projects: main's local projects, for a chat row's Add to project / Change project (shared-16 yf).
+  localProjects = null,
+  // w13-close-cowork-sidebar: opens a local project (main.jsx openLocalProject), Bw's "View project" on a Cowork project bucket.
+  onViewProject,
   engine = "codex", hiddenSessions, onRetryHidden, onForgetHidden, forkUnavailable,
   // Fidelity F08: Folder grouping by repo identity + the persisted section order, and the collapsed
   // hover peek owned by main.jsx (peekOpen mirrors .dframe-root[data-hovering]).
   repoIdentities, projectOrder = [], peekOpen = false, onPeekEnter, onPeekLeave, editors = [], shareable = false, onStartSession,
+  // w11-frame-root-cont (3.6556.2 shared-22 GI `Ue = l ? I ? null : o(Sy, …) : f("div", {className: "df-titlebar …"})`):
+  // while collapsed the aside holds main.jsx's SourceCollapsedChrome (the [data-collapsed] pill) instead of its titlebar.
+  collapsedChrome = null,
   // Split view and windows (main.jsx): the row menu's split / new window items, and rows drag onto the session area.
   windowActions = null,
   // ⌘K palette (source-sidebar-palette.jsx): Settings › section rows, and whether the core has full-text search.
@@ -798,6 +847,8 @@ export function SourceSidebar({
   connectionIssue = false,
   // ce4f4374c Ne: the model catalog (main.jsx models) the multi-selection's 'Set model for {count}' lists.
   models = null,
+  // w13-surfaces-modes: the Home segment's mode, 3.6556.2 shared-21 rT (main.jsx: app-switch-model.mjs homeModeFor).
+  homeMode,
 }) {
   const toasts = useSourceToasts();
   const intl = useStartIntl();
@@ -849,7 +900,9 @@ export function SourceSidebar({
   // eO scrollResetKey (sidebar-main filter epoch): a filter change scrolls the
   // list back to the top and clears the fade. Locally keyed on the normalized
   // status/group/sort/activity/empty-groups preferences.
-  const scrollResetKey = [preferences.status, preferences.groupBy, preferences.sortBy, preferences.ascending, preferences.stateActivityDays, preferences.showEmptyGroups].join("\u0000");
+  // w13-close-cowork-sidebar: the Cowork list's own Group by / Sort by (source-hub-sidebar.jsx) are part of the filter epoch.
+  const hubView = useHubSidebarView(mode);
+  const scrollResetKey = [preferences.status, preferences.groupBy, preferences.sortBy, preferences.ascending, preferences.stateActivityDays, preferences.showEmptyGroups, hubView.groupBy, hubView.sortBy].join("\u0000");
   useEffect(() => {
     const nav = navRef.current;
     if (nav && nav.scrollTop !== 0) nav.scrollTop = 0;
@@ -868,6 +921,7 @@ export function SourceSidebar({
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
   const pendingRevealFocus = useRef(null), toolbarRef = useRef(null);
+  const pinnedHeadingRef = useRef(null); // w13-close-rail-regen cwui-46: aM ze (the drag-pin coachmark's anchor)
   // wL (shared-22-Cz3C_T8d.js:13945-13959) sums the chrome bar parts
   // (traffic-light spacer, search, nav, switcher) into the sidebar floor;
   // locally those parts are the toolbar row, measured at max-content. The
@@ -885,9 +939,6 @@ export function SourceSidebar({
     node.style.width = previous;
     onSidebarFloor(floor);
   }, [fullScreen, collapsed, onSidebarFloor, trafficLightSpacer]);
-  const lastChatSurface = useRef('cowork');
-  if (mode !== 'code') lastChatSurface.current = mode;
-  const [surfaceMenu, setSurfaceMenu] = useState(null);
   const sourceSessions = useMemo(() => sessions ?? groups.flatMap(([, items]) => items), [sessions, groups]);
   // R3-nested NBS-3: the Code list keeps a row only when shared-21 cH's Gb (shared-11 pb) holds, so a /btw child shown in
   // its parent's tabs (nested_less_side_chats) is no row, Pinned entry or family member (nested-less-side-chats.mjs).
@@ -896,15 +947,33 @@ export function SourceSidebar({
   // The list itself is never filtered by text: what is typed searches in the ⌘K palette (source-sidebar-palette.jsx).
   // R3-sections: groupsKeptWhileEmpty (KO keeps a new, still empty section listed) lives in the sections store only.
   const keptWhileEmpty = useSectionsKeptWhileEmpty();
+  // shared-22 IE `environmentsOn` (the list's `k = Up()`, shared-11 gc presets gate; D10 on): gates Save as environment (SB-06).
+  const environmentsOn = usePresetsGate();
   const sectionsModel = useMemo(() => sectionsList ? buildSidebarSections({ sections: sectionsList, sessions: listedSessions, preferences: legacyPreferences,
-    metadata: sessionMetadata, customGroups, knownFolders: folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, held: loading }) : null,
-  [sectionsList, listedSessions, legacyPreferences, sessionMetadata, customGroups, folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, loading]);
-  const displayed = useMemo(() => sectionsModel ? sectionsModel.buckets : buildSidebarGroups({ sessions: listedSessions,
-    preferences: mode === "code" ? preferences : { ...preferences, groupBy: "date" }, metadata: sessionMetadata, customGroups, knownFolders: folders,
-    state, search: "", fallbackCwd, pinnedOrder, repoIdentities, projectOrder, contentMatches: null, currentLayout: mode === "code",
-  }), [mode, listedSessions, preferences.groupBy, preferences.sortBy, preferences.ascending, preferences.status,
+    metadata: sessionMetadata, customGroups, knownFolders: folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, held: loading, savedEnvironments }) : null,
+  [sectionsList, listedSessions, legacyPreferences, sessionMetadata, customGroups, folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, loading, savedEnvironments]);
+  // w13-close-cowork-sidebar (G12): the Cowork list's own view (shared-52 groupByByMode.cowork / sortByByMode.cowork, default
+  // grouping none) laid out as shared-22 bD renders it (source-hub-sidebar.jsx coworkDisplayedGroups); Chat keeps Date.
+  // The facts fw / iw read of a row (hub-sidebar-model coworkStateKey). A local thread is listed once its first turn
+  // ran, so it counts as completed (hasCompleted) unless it runs now.
+  const hubFacts = (session) => ({ error: !!(state.errors?.[session.id] || latestTurnError(state, session.id) || session.hasError),
+    awaiting: hasPendingApproval(state, session.id), running: !!state.active?.[session.id] || sessionState(session, state) === "working",
+    unread: !!sessionMetadata[session.id]?.unread, explicitUnread: !!sessionMetadata[session.id]?.explicitUnread,
+    archived: sessionArchived(session), hasCompleted: true,
+    // iw / fw `u = Fx()` (shared-21 qQ): the sessions on screen (route + split panes), not the running ones.
+    open: openNestedIds.has(session.id) });
+  const displayed = useMemo(() => {
+    if (sectionsModel) return sectionsModel.buckets;
+    const groups = buildSidebarGroups({ sessions: listedSessions,
+      preferences: mode === "code" ? preferences : mode === "cowork" ? coworkListPreferences(preferences, hubView) : { ...preferences, groupBy: "date" },
+      metadata: sessionMetadata, customGroups, knownFolders: folders,
+      state, search: "", fallbackCwd, pinnedOrder, repoIdentities, projectOrder, contentMatches: null, currentLayout: mode === "code",
+    });
+    return mode === "cowork" ? coworkDisplayedGroups(groups, hubView.groupBy, { factsOf: hubFacts,
+      projectIdOf: (session) => sessionMetadata[session.id]?.projectId, projects: localProjects ?? [] }) : groups;
+  }, [mode, listedSessions, preferences.groupBy, preferences.sortBy, preferences.ascending, preferences.status,
     preferences.stateActivityDays, preferences.showEmptyGroups, sessionMetadata, customGroups, folders, state, fallbackCwd, pinnedOrder,
-    repoIdentities, projectOrder, sectionsModel]);
+    repoIdentities, projectOrder, sectionsModel, hubView.groupBy, hubView.sortBy, hubView.showEmptyGroups, localProjects, openNestedIds]);
   const closed = useMemo(() => sectionsModel ? sectionsFoldedKeys(sectionsModel.layout, preferences.collapsedGroups) : new Set(preferences.collapsedGroups),
     [sectionsModel, preferences.collapsedGroups]);
   // sidebar-groups.js:21476-21486 CO(visible, total, hasNonDefaultFilter) + wO
@@ -934,7 +1003,7 @@ export function SourceSidebar({
   // bucket; it survives collapsing/reopening the group and is reset when the
   // vF filter epoch changes, locally the group/sort/status/activity/search
   // preferences (the stand-in for sidebar-main filterEpoch).
-  const revealEpoch = [preferences.groupBy, preferences.sortBy, preferences.status, preferences.stateActivityDays].join("\u0000");
+  const revealEpoch = [preferences.groupBy, preferences.sortBy, preferences.status, preferences.stateActivityDays, hubView.groupBy, hubView.sortBy].join("\u0000");
   const [revealState, setRevealState] = useState(() => ({ epoch: revealEpoch, byKey: new Map() }));
   // xF `m && (o(i), c(0), d(null))`: the epoch reset happens during render.
   if (revealState.epoch !== revealEpoch) setRevealState({ epoch: revealEpoch, byKey: new Map() });
@@ -992,7 +1061,9 @@ export function SourceSidebar({
       const targets = bulkTargets(keys.map((key) => sessionById.get(sectionKeyId(key))).filter(Boolean), { metadata: sessionMetadata, currentId: current, state, action: "archive" });
       if (targets.length === 0) return;
       setConfirmOpen?.(true);
-      setConfirm({ ...bulkArchiveConfirmCopy(intl, { groupName: options.confirmArchive?.groupName, count: targets.length, unloadedRemain: options.unloadedRemain }),
+      // w4-sidebar-menus (3.6556.2 shared-46 tk → lO): the confirm also counts the sessions still working ($O).
+      setConfirm({ ...bulkArchiveConfirmCopy(intl, { groupName: options.confirmArchive?.groupName, count: targets.length, unloadedRemain: options.unloadedRemain,
+        workingCount: targets.filter((session) => sessionState(session, state) === "working").length }),
         onConfirm: () => runBulk("archive", targets), onClosed: () => setConfirmOpen?.(false) });
     } });
   // shared-20 dx: iO's new-section dialog (mounted by SidebarSectionsList), for the blank-area and Group and sort menus too.
@@ -1142,6 +1213,10 @@ export function SourceSidebar({
     onSidebarPreferencesChange?.(normalized);
   };
   const runAction = async (...args) => {
+    // w13-close-rail-regen cwui-46: a menu pin asks for the drag-pin coachmark (shared-11 Nw, shared-21 n0), drawn under the
+    // Pinned heading of either layout (w13-close-cowork-sidebar: the sections layout's Pinned bucket too). `collapsed` is
+    // main.jsx effectiveCollapsed (collapsed || narrow viewport || CU docked = shared-52 e.collapsed || Hg(e)).
+    if (args[0] === "pin") dragPinHintStore.maybeShowDragPinHint({ collapsed: !!collapsed });
     try { await onSessionAction?.(...args); }
     catch (reason) { notifyError(reason); }
   };
@@ -1193,7 +1268,7 @@ export function SourceSidebar({
   // expandGroup unfolds it and its row scrolls into view. Locally the open rows are the current session.
   const openRowBuckets = useRef(new Map());
   const pendingOpenRowScroll = useRef(null);
-  const openGroupBy = mode === "code" ? preferences.groupBy : "date";
+  const openGroupBy = mode === "code" ? preferences.groupBy : mode === "cowork" ? coworkGroupBy(hubView.groupBy) : "date"; // w13-close-cowork-sidebar
   useEffect(() => {
     for (const seen of openRowBuckets.current.values()) for (const id of seen.keys()) if (id !== current) seen.delete(id);
     if (!current) return;
@@ -1240,8 +1315,10 @@ export function SourceSidebar({
     {/* sidebar-main.js:12290-12350 lI: hp (shared-frame Nu, default side "top",
         shared-frame-C_2npUJq.js:4588) {content, hoverable:false, open:false
         while the filter menu is open} around a trigger with tooltip:false. */}
-    <ToolButton label={hasSidebarFilters(preferences) ? t("Filter (active)") : t("Filter")} icon="Filter"
-      tooltip={{ content: hasSidebarFilters(preferences) ? t("Filter (active)") : t("Filter"), hoverable: false, open: menu?.kind === "filter" ? false : undefined }}
+    {/* w13-close-cowork-sidebar: shared-21 MJ's label off Code is `(t === "cowork" && y) || b ? "Filter and group recents" :
+        OJ.groupAndSort` (y = yL, b = S(vl): both off here), so the Cowork trigger reads "Group and sort". */}
+    <ToolButton label={mode === "cowork" ? hubMessage(HUB_MESSAGES.groupAndSort) : hasSidebarFilters(preferences) ? t("Filter (active)") : t("Filter")} icon="Filter"
+      tooltip={{ content: mode === "cowork" ? hubMessage(HUB_MESSAGES.groupAndSort) : hasSidebarFilters(preferences) ? t("Filter (active)") : t("Filter"), hoverable: false, open: menu?.kind === "filter" ? false : undefined }}
       active={menu?.kind === "filter"}
       {...menuTriggerProps({ open: menu?.kind === "filter", onOpen: (entry, event) => setMenu({ kind: "filter", anchor: event.currentTarget, entry }) })}
       onClick={(event) => setMenu(menu?.kind === "filter" ? null : { kind: "filter", anchor: event.currentTarget, entry: keyboardEntry(event) })} />
@@ -1263,12 +1340,16 @@ export function SourceSidebar({
   // open others) ⌘-click toggles the selection as before.
   const rowClick = (event, session) => {
     const command = event.metaKey || event.ctrlKey;
-    if (event.shiftKey && command) {
+    // W13 closeout (E78): 3.6556.2 keeps local Chat/Cowork rows out of the multi-selection — c44373cde Le takes a row
+    // only when `o || e.source.kind === "chat"` with `o = Se()`, shared-21 x7() returning the constant m7 = !1, and a
+    // local chat is a cowork-source local_agent_mode_session (E75). So ⇧-click and ⇧⌘-click select Code rows only.
+    const selectable = mode === "code";
+    if (selectable && event.shiftKey && command) {
       event.preventDefault();
       setSelectionState((previous) => toggleSelection(previous, session.id, SELECTION_DOMAIN));
       return;
     }
-    if (event.shiftKey) {
+    if (selectable && event.shiftKey) {
       event.preventDefault();
       setSelectionState((previous) => selectRange(previous, previous.anchorKey, session.id, visibleOrderRef.current, SELECTION_DOMAIN));
       return;
@@ -1323,6 +1404,8 @@ export function SourceSidebar({
       // A folded Pinned list shows no rows (ZO A && V drop row), so its slot 0 is the top of the list.
       const before = outcome.before ?? (outcome.type === "pin" && outcome.at === 0 && snapshot?.pinnedKeys.length === 0 ? pinnedIds[0] ?? null : null);
       const order = pinnedOrderAfterDrop(pinnedIds, session.id, before);
+      // w13-close-rail-regen cwui-46: lW `t.type === "pin" && o?.()` (onFirstPin HM / lP): a drag pin marks the coachmark seen.
+      if (outcome.type === "pin") dragPinHintStore.markDragPinHintSeen();
       void (async () => {
         try {
           if (outcome.type === "pin") await onSessionAction("pin", session);
@@ -1379,6 +1462,12 @@ export function SourceSidebar({
           openRowMenu(session, { anchor: event.currentTarget.querySelector('[data-row-main-button]'), point: { x: event.clientX, y: event.clientY } });
         }}>
         <SourceCodeSidebarRow view={view} details={details} label={shownName(session)} pinned={pinned} selected={selected} shown={shown}
+          multiSelected={isSelected(selection, session.id)}
+          // w10-shell-sidebar-row: shared-22 wC gives a bucket's family heads the "head" tree place and, while the list
+          // is foldable (jc() = the presets-gated list context), its useId as the caret prefix; shared-20 fC needs the
+          // presets gate too. The Pinned list (no wC) and nested rows draw no caret. g1 toggles one family (nS, "row_caret").
+          nestedHead={environmentsOn && !nested && !pinned && childCount > 0 ? { id: session.id, hidden: collapsedNested.has(session.id),
+            onToggle: () => toggleNested(session.id), guard: guardMultiClick } : undefined}
           title={<><span className="source-session-title">{shownName(session)}</span>{lineage && <span className="source-sr-only"> {lineage}</span>}</>}
           menu={<SidebarCurrentMenuHost>{more}</SidebarCurrentMenuHost>}
           menuOpen={rowMenuOpen} anyMenuOpen={!!menu} contextMenuOpen={rowMenuOpen && !!menu.point} dragging={!!drag}
@@ -1391,7 +1480,10 @@ export function SourceSidebar({
               event.preventDefault(); openRowMenu(session, { anchor: event.currentTarget, entry: 'first' });
             }
           }}/>
-        {hint && <kbd aria-hidden="true" className="source-jump-hint">{hint}</kbd>}
+        {/* W12b-FTS-3 shared-21 q0 (drawn by the Y0 row wrapper): the df-jump-hint keycap. This Code list is shared-20 sC's
+            presets list (y = ZS() && "df-session-list"), so the loaded shared-styles `.df-session-list [data-jump-hint-row]>kbd`
+            moves it to the row end, hides the row decoration / df-tail-mark and tucks described rows' keycaps down. */}
+        {hint && <kbd aria-hidden="true" className={JUMP_HINT_CLASS}>{hint}</kbd>}
       </div>;
     }
     // sidebar-groups.js:17202-17213: rows carry data-row-key and data-jump-hint-row for the pj hints.
@@ -1567,6 +1659,8 @@ export function SourceSidebar({
   const olderCounts = olderGroup ? { archive: olderTargets(olderGroup, "archive").length, delete: olderTargets(olderGroup, "delete").length } : { archive: 0, delete: 0 };
   const olderMenuAvailable = olderCounts.archive > 0 || olderCounts.delete > 0;
   useEffect(() => { if (!olderMenuAvailable) setMenuState((previous) => previous?.kind === "older" ? null : previous); }, [olderMenuAvailable]);
+  // shared-22 LT (off Code, onViewAll set): the last Recents bucket ends with pX View all (shared-21 nX: /chats).
+  const viewAllGroupKey = !sectionsModel && mode !== "code" && onViewAllSessions ? displayed.filter((group) => group.kind !== "pinned").at(-1)?.key : undefined;
   // Group header menus: project buckets other than Other (OB inside LB), custom groups (XB). Both need
   // the persisted section order (onGroupAction "project-order").
   const groupMenuKind = (group) => !onGroupAction || !onSessionAction ? null : group.customGroupId ? "custom"
@@ -1589,10 +1683,25 @@ export function SourceSidebar({
   };
   // A bucket heading's own controls: a folder's "+", a custom group's "+", the Older bucket menu, and (first heading) the
   // list's Group and sort (R3-sections: shared by the classic list and the sections layout).
+  // w11-sweep-shell-a: IE's New session for the sections layout's place and preset buckets (the menu item and the "+").
+  // The local place bucket starts a session with nothing prefilled (v(undefined, undefined, null): the sidebar's New
+  // session); a preset bucket starts one in its saved environment (v(U, void 0, N.id)).
+  const sessionsPlaceNewSession = (group) => group?.unsaved?.kind === "local" && onNew ? () => onNew() : undefined;
+  const sessionsPresetNewSession = (group) => group?.kind === "environment" && typeof group.environmentId === "string" && onNewSessionInEnvironment
+    ? () => onNewSessionInEnvironment(group.environmentId) : undefined;
   const groupActions = (group, withHeaderControls) => <>
+    {/* w13-close-cowork-sidebar: shared-22 Bw's project bucket trailing `o(Cg, {onClick: e => r(l, s, e), "aria-label":
+        g.formatMessage(zw.viewProject)})` before the list controls (`[d, u]`). */}
+    {group.viewProject && onViewProject && <CoworkViewProjectButton onClick={() => onViewProject(group.viewProject)} />}
     {/* sidebar-groups.js:13871-13907 cI: project buckets have no target, so no tooltip.
         :19866-19880: the Other bucket has no cwd, so no '+'. */}
     {group.cwd && onProject && <ToolButton label={t("New session in {name}", { name: group.label })} icon="Add" tooltip={false} onClick={() => onProject(group.cwd)} />}
+    {/* w11-sweep-shell-a: 3.6556.2 shared-22 GC draws shared-21 H7 whenever IE hands it an onNewSession
+        (`x?o(Ah,{groupLabel:n,onNewSession:x,target:w,…})`, label V7.newSessionIn with no target, so no tooltip). IE sets
+        it for the local place bucket ("This computer", `if(U||!oe)`: no prefill, de = null) and for a preset bucket
+        (`Q = v(U, void 0, de)`, de = N.id); only Other and an unknown / remote place without a prefill get none. */}
+    {(sessionsPlaceNewSession(group) || sessionsPresetNewSession(group)) && <ToolButton label={t("New session in {name}", { name: group.label })} icon="Add" tooltip={false}
+      onClick={() => (sessionsPlaceNewSession(group) || sessionsPresetNewSession(group))()} />}
     {/* sidebar-groups.js:17392-17410 / :18560-18590 / :19895-19905: a custom group's '+' (cI with the
         Dz target: the folder its sessions share, else none) is labelled with the target and the group,
         with the target tooltip and an 'Added to {group}' detail; in the code list it is the xs glyph in
@@ -1619,16 +1728,33 @@ export function SourceSidebar({
   // R3-sections: what the sections layout (source-sidebar-sections.jsx) takes from this list.
   const sectionsHost = sectionsModel && {
     renderRows: renderGroupRows, shiftStyle, toggle: toggleGroup, folded: closed, drag, dropTargets: !!onSessionAction, headerControls, canCreate: !!onCreateGroup,
-    trailing: (group, { first }) => first || (group.cwd && onProject) || (group.customGroupId && onGroupAction) || (group === olderGroup && olderMenuAvailable) ? groupActions(group, first) : null,
+    trailing: (group, { first }) => first || (group.cwd && onProject) || sessionsPlaceNewSession(group) || sessionsPresetNewSession(group) || (group.customGroupId && onGroupAction) || (group === olderGroup && olderMenuAvailable) ? groupActions(group, first) : null,
     // R3-sections (WI-4): a Sessions folder bucket's header menu is the original shared-20 yx as a worked-out group (sT → bC,
     // sidebar-sections-layout.mjs folderBucketMenu); Pinned and the date / state buckets have none (bC V).
-    folderMenu: (group) => onSessionAction ? folderBucketMenu(group, { order: sectionKeysOf(false), projectOrder,
-      newSession: group.cwd && onProject ? () => onProject(group.cwd) : undefined,
-      save: onGroupAction ? (ids) => Promise.resolve(onGroupAction("project-order", null, { ids })).catch((reason) => notifyError(reason)) : undefined }) : null,
+    // w10-shell-sidebar-preset-menu: shared-22 OE's one order over the preset and folder buckets (sessionsBucketOrderKeys,
+    // the same keys as sectionOrderKeys while no bucket is a preset), and IE's preset bucket menu (presetBucketMenu: New
+    // session and Edit environment in that environment, Move up / Move down in that order).
+    folderMenu: (group) => {
+      if (!onSessionAction) return null;
+      const order = sessionsBucketOrderKeys(displayed, OTHER_PROJECT_KEY);
+      const save = onGroupAction ? (ids) => Promise.resolve(onGroupAction("project-order", null, { ids })).catch((reason) => notifyError(reason)) : undefined;
+      if (group.kind === "environment") {
+        const slot = folderBucketMenu({ kind: "project", projectKey: group.orderKey }, { order, projectOrder, save });
+        return slot && presetBucketMenu(group, { environmentsOn, order: slot.order, openNewForBucket: onNewSessionInEnvironment, editEnvironment: onEditEnvironment });
+      }
+      // w11-sweep-shell-a: the local place bucket ("This computer") is IE's "place" kind, not Other: its yx New session is
+      // enabled with nothing prefilled (sessionsPlaceNewSession); it stays outside the order (`s.unsaved!==void 0)continue`).
+      return folderBucketMenu(group, { order, projectOrder,
+        newSession: group.cwd && onProject ? () => onProject(group.cwd) : sessionsPlaceNewSession(group), saveAsEnvironment: onSaveAsEnvironment, environmentsOn, save });
+    },
     newSessionInSection: onGroupAction && onSessionAction ? (entry) => newSessionInGroup({ key: entry.key, label: entry.label, customGroupId: entry.section.id, sessions: entry.rows }) : undefined,
     sectionPlus: (entry) => groupActions({ key: entry.key, label: entry.label, customGroupId: entry.section.id, sessions: entry.rows }, false),
     pinnedFoldedDrop: drag?.canPin && drag.keys.length === 1 ? <div className="source-group-rows flex flex-col gap-px" data-pinned-rows=""><PinnedDropRow hot={drag.slotIdx != null} dragging /></div> : null,
     emptyHint: () => t("No active sessions"),
+    // w13-close-cowork-sidebar (cwui-46): shared-22 aM's anchor div around the Pinned heading (`o("div",{ref:ze,children:_t})`)
+    // and its one-time drag-pin coachmark, for the sections layout's Pinned bucket (source-sidebar-sections.jsx HostBucket).
+    pinnedAnchor: pinnedHeadingRef,
+    pinnedHint: <DragPinHintCoachmark kind={mode} anchor={pinnedHeadingRef} hidden={!!collapsed} />,
     // shared-21 HQ facts (R3-sections step 3): View all opens the Sessions page once the list is settled and holds an
     // archived session; while it loads View all shows Loading…; otherwise it is disabled with its reason.
     viewAll: { onViewAll: onViewAllSessions ? () => onViewAllSessions() : undefined, listSettled: !listLoading, archivedInHand: listedSessions.some(sessionArchived) },
@@ -1636,9 +1762,15 @@ export function SourceSidebar({
   // pw u (sidebar-groups.js:5241): the whole IO identity (main.jsx accountIdentity), ellipsized by CSS.
   const primaryRows = mode === 'code'
     ? [["New", "Add", "new"], ["Projects", "Projects", "projects"], ["Artifacts", "Artifacts", "artifacts"], ["Routines", "Clock", "routines"], ["Customize", "Tool", "customize"]]
-    : [["New", "Add", "new"], ["Projects", "Projects", "projects"], ["Artifacts", "Artifacts", "artifacts"], ["Scheduled", "Clock", "routines"], ["Design", "Palette", "design"], ["Customize", "Tool", "customize"]];
+    // w13-surfaces-nav: shared-21 bH/hH (surface-nav-model.mjs). homeMode is rT: "cowork" exactly when Cowork is
+    // available, and then mY has no chat surface, so a chat session on the merged home keeps the cowork rows.
+    : surfaceNavRows(homeMode === 'cowork' ? 'cowork' : mode, { coworkEnabled: homeMode === 'cowork' });
+  // W12b-FTS-4 shared-21 l5: W = f === void 0 && i === "code" (the Code New row), q = W && K && !L (L: the New session
+  // page is the current page), K = the New session page's busy terminal or open browser page (source-new-page-activity).
+  const newPageActivity = useNewPageActivity(fallbackCwd, mode === "code" && !(section === "new" && !current));
   const renderNavRow = ([label, icon, key]) => {
     const selected = key === "new" ? section === "new" && !current : section === key;
+    const newPageMark = key === "new" && mode === "code" && !selected && newPageActivity;
     // shared-21 ND (:7590-7597) puts "group" on every plain row button, so the
     // New glyph's group-hover / group-data-[selected=focused] utilities resolve.
     return <button key={key} type="button" className="source-sidebar-nav-row group" data-row="" data-roving-item="" data-selected={selected ? "focused" : undefined}
@@ -1655,9 +1787,12 @@ export function SourceSidebar({
         ? <span className="source-leading-slot df-leading-slot"><span className="df-new-circle flex shrink-0 items-center justify-center rounded-full">
           <Icon name="Add" size={16} className="text-secondary group-hover:text-primary group-data-[selected=focused]:text-primary" /></span></span>
         : <span className="source-leading-slot"><Icon name={icon} size={16} /></span>}
-      {mode === 'code' ? <span className="flex min-w-0 flex-1 items-center"><span>{t(label)}</span>{key === 'projects' && <CdsBadgeDensity.Provider value="compact"><SidebarNavBadge badge="beta" /></CdsBadgeDensity.Provider>}</span>
-        : <><span>{t(label)}</span>{key === 'projects' && <span className="surface-new-badge">{t("New")}</span>}</>}
-      {key === "new" && <kbd aria-hidden="true">⌘ N</kbd>}
+      {/* l5: `q&&u(GY,{label:"Terminal or browser active on the New session page"})` after the title, and Xm's
+          `shortcut: q || !O ? void 0 : T`, so the running mark replaces the ⌘N keycap (aria-keyshortcuts stays). */}
+      {mode === 'code' ? <span className="flex min-w-0 flex-1 items-center"><span>{t(label)}</span>{key === 'projects' && <CdsBadgeDensity.Provider value="compact"><SidebarNavBadge badge="beta" /></CdsBadgeDensity.Provider>}
+        {newPageMark && <SidebarRunningMark label={t("Terminal or browser active on the New session page")} />}</span>
+        : <span>{t(label)}</span>}
+      {key === "new" && !newPageMark && <kbd aria-hidden="true">⌘ N</kbd>}
     </button>;
   };
   const accountName = displayName;
@@ -1670,31 +1805,37 @@ export function SourceSidebar({
   // (the body) when it shows; focus anywhere in it holds the stop.
   return <aside data-surface={mode} data-code-list={mode === "code" ? "" : undefined} className="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label={t("Sidebar")} data-variant="web" data-density="compact" data-platform="desktop" data-font={cdsFont}
     data-focus-region={collapsed ? undefined : "navigation"} data-focus-region-holds={collapsed ? undefined : "contains"}>
-    <div ref={toolbarRef} className="sidebar-toolbar df-titlebar window-drag">
+    {/* GI children [pt, Ge, mt, ht, gt, Ut, Wt]: the peek bridge (collapsed only), then the titlebar or, collapsed, the pill. */}
+    {collapsed && <div className="dframe-peek-bridge" aria-hidden="true" onPointerEnter={onPeekEnter} onPointerLeave={onPeekLeave} />}
+    {collapsed ? collapsedChrome : <div ref={toolbarRef} className="sidebar-toolbar df-titlebar window-drag">
       <div className="traffic-space" />
-      {/* sidebar-groups.js:5320 hw: "Hide sidebar" with CDS tooltip Kl
-          {shortcut:"cmd+b", hoverable:false} and no native title; the sidebar
-          is hidden (visibility) while collapsed, so this is the open state only. */}
-      {/* shared-21 tK: df-sidebar-hover-reveal flex (shared-styles: .7 until the sidebar is hovered or holds focus-visible). */}
-      <div className="df-sidebar-hover-reveal flex">
-        <ToolButton label={t("Hide sidebar")} tooltip={SIDEBAR_TOGGLE_TOOLTIP.hide} icon="Sidebar" onClick={onCollapse} />
+      {/* W12b-FTS-2 3.6556.2 shared-22 GI (desktop, ee = Yh() false, no wordmark He): `o("div",{className:i(e,"ms-0.5"),
+          children:o(Ex,{holdPeekOnCollapse:_,size:Ce?"sm":void 0})})` with e = i("draggable-none",Ys,_&&"flex") (Ys = shared-5
+          pS "static-composer-boot-fade"); Ex = shared-21 Pz: `u(U,{content:c,shortcut:"cmd+b",hoverable:!1,children:u(R,
+          {iconOnly:!0,tooltip:!1,variant:"ghost",icon:s,size:n,className:"df-chrome-btn","aria-label":c,shortcut:"cmd+b",
+          onClick:a,onKeyDown:nx})})` — U = CdsTooltip, R = CdsButton, s = Gn() "Sidebar" (LTR), Ce off (panels gate), nx =
+          shared-19 Dj. The df-sidebar-hover-reveal wrapper belongs to Fz, drawn only while Yh() (sidebar_app_switcher). */}
+      <div className={TITLEBAR_CHROME_CLASS + " ms-0.5"}>
+        <CdsTooltip content={t("Hide sidebar")} shortcut="cmd+b" hoverable={false}>
+          <CdsButton iconOnly tooltip={false} variant="ghost" icon="Sidebar" className="df-chrome-btn" aria-label={t("Hide sidebar")}
+            shortcut="cmd+b" onClick={onCollapse} onKeyDown={suppressKeyRepeat} />
+        </CdsTooltip>
       </div>
-      {/* sidebar-session.js:10732-10800 qM in the sidebar placement. */}
-      <SourceNavButtons placement="sidebar" historyAt={historyAt} historyLength={historyLength} travel={travel} />
+      {/* GI `de && o("div",{className:i(e,"me-2"),children:o(Mv,{})})`, Mv = shared-21 xI (Cm in the sidebar placement). */}
+      <div className={TITLEBAR_CHROME_CLASS + " me-2"}>
+        <SourceNavButtons placement="sidebar" historyAt={historyAt} historyLength={historyLength} travel={travel} />
+      </div>
       {/* R2-appswitch (D11): 2.42304.0 shared-22 DN ends the macOS titlebar with the compact switch
           (shared-21 vC -> _C -> shared-18 df-app-switch -> CDS SegmentedControl); see source-app-switch.jsx. It
           moves into the peek card while collapsed (W2), and `chord` binds ⌥⌘←/→ with its tooltip hint (W3, AM). */}
-      {!collapsed && <SourceAppSwitch mode={mode} homeMode={lastChatSurface.current} onMode={onMode} chord />}
-    </div>
-    {/* sidebar-main.js:14903-14909: while collapsed, the bridge spans the gap between the 'Show sidebar'
-        trigger and the floating body so the pointer can cross it (pointer events only while peeking). */}
-    {collapsed && <div className="dframe-peek-bridge" aria-hidden="true" onPointerEnter={onPeekEnter} onPointerLeave={onPeekLeave} />}
+      {!collapsed && <SourceAppSwitch mode={mode} homeMode={homeMode} onMode={onMode} chord />}
+    </div>}
     {/* sidebar-main.js:14918-14925: the body is the peek card while collapsed (id = the trigger's
         aria-controls); it is inert while the card is hidden. */}
     <div className="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover" data-focus-region={collapsed ? "navigation" : undefined} data-focus-region-holds={collapsed ? "contains" : undefined} inert={collapsed && !peekOpen ? true : undefined}
       onPointerEnter={collapsed ? onPeekEnter : undefined} onPointerLeave={collapsed ? onPeekLeave : undefined}>
       {/* R2-appswitch W2: shared-22 DN `ae` puts the same switch at the top of the peek card while collapsed. */}
-      {collapsed && <SourceAppSwitch placement="peek" mode={mode} homeMode={lastChatSurface.current} onMode={onMode} chord />}
+      {collapsed && <SourceAppSwitch placement="peek" mode={mode} homeMode={homeMode} onMode={onMode} chord />}
       <div className="source-sidebar-header">
       {mode === 'code' ? <SidebarSearchContext.Provider value={{open: entry => setShowSearch?.(entry), shortcut: 'cmd+k'}}>
         <SidebarSearchField/>
@@ -1711,8 +1852,6 @@ export function SourceSidebar({
             typed after po lowercases it). */}
         {(mode === 'code' ? primaryRows.slice(0, 1) : primaryRows).map(renderNavRow)}
       </div>
-      {mode !== 'code' && <button type="button" className="source-sidebar-nav-row surface-more" aria-haspopup="menu" aria-expanded={!!surfaceMenu}
-        onClick={event => setSurfaceMenu(surfaceMenu ? null : event.currentTarget)}><span className="source-leading-slot"><Icon name="CaretRight" size={16} /></span>{t('More')}</button>}
       {mode === 'code' && <div aria-hidden="true" className="h-1 shrink-0"/>}
       </div>
       {/* _j/EE: New stays above the scroll area; HZ navigation precedes the
@@ -1800,6 +1939,7 @@ export function SourceSidebar({
           {/* sidebar-session.js:15909-16030 OB/kB/MB (project) and :16275-16432 XB (custom): the group
               label row is a ContextMenu trigger; the Other and Ungrouped buckets have none. */}
           <div className="source-group-heading df-drag-shiftable" data-sidebar-group-label="" data-menu-open={menu?.kind === "group" && menu.group.key === group.key || undefined}
+            ref={group.kind === "pinned" ? pinnedHeadingRef : undefined /* aM ze: the coachmark's anchor (cwui-46) */}
             data-drag-key={`label:${group.key}`} style={shiftStyle(`label:${group.key}`)}
             onContextMenu={groupMenuKind(group) ? (event) => {
               if (event.target instanceof Element && event.target.closest("input")) return;
@@ -1817,11 +1957,14 @@ export function SourceSidebar({
               </button>}
             <div className="source-group-actions">{groupActions(group, index === 0)}</div>
           </div>
+          {/* w13-close-rail-regen cwui-46: shared-22 aM's one-time drag-pin coachmark under the Pinned heading. */}
+          {group.kind === "pinned" && <DragPinHintCoachmark kind={mode} anchor={pinnedHeadingRef} hidden={!!collapsed} />}
           {!closed.has(group.key) && <div className="source-group-rows flex flex-col gap-px" data-group-rows="" data-pinned-rows={group.kind === "pinned" ? "" : undefined}>
             {renderGroupRows(group)}
             {/* sidebar-groups.js:17505-17516: an empty custom group invites a drop; xB elsewhere. */}
             {group.sessions.length === 0 && <p className="source-empty-group df-drag-shiftable" data-drag-key={`label:hint:${group.key}`}
               style={shiftStyle(`label:hint:${group.key}`)}>{group.customGroupId ? t("Drag or move sessions here") : t("No active sessions")}</p>}
+            {group.key === viewAllGroupKey && <SourceSidebarViewAllRow bucketKey={group.key} onViewAll={onViewAllSessions} dragging={!!drag} style={shiftStyle} />}
           </div>}
           {/* ZO (A && V): a folded Pinned list still takes a dragged row. */}
           {group.kind === "pinned" && closed.has(group.key) && drag?.canPin && drag.keys.length === 1 && <div className="source-group-rows flex flex-col gap-px" data-pinned-rows="">
@@ -1837,7 +1980,8 @@ export function SourceSidebar({
         {listLoading && sourceSessions.length === 0 && <SourceSidebarSkeleton rows={3} />}
         {mode === "code" && emptyVariant && <SourceSidebarEmpty variant={emptyVariant} onRetry={onRetryLoad}
           onShowAllSessions={onViewAllSessions ? ()=>onViewAllSessions("archived") : ()=>updatePreferences(showAllSessionsPreferences(preferences))} />}
-        {!sectionsModel && preferences.groupBy === "custom" && onCreateGroup && <button className="source-create-group" onClick={() => setGroupDialog({ kind: "create" })}>
+        {/* w13-close-cowork-sidebar: the Cowork list (its own grouping, shared-22 hT) creates groups from its bucket menus only. */}
+        {!sectionsModel && mode !== "cowork" && preferences.groupBy === "custom" && onCreateGroup && <button className="source-create-group" onClick={() => setGroupDialog({ kind: "create" })}>
           <Icon name="Add" size={14} />{t("New group")}
         </button>}
         </div>
@@ -1859,14 +2003,17 @@ export function SourceSidebar({
               <span className="df-on-rail relative flex w-[var(--df-leading-slot)] shrink-0 items-center justify-center">{hostGrowthBookFlag("__gb__496524976")
                 ? <CdsAvatar name={avatarName ?? accountName} size="sm" aria-hidden />
                 : <SourceSpark size={16} className="shrink-0" />}</span>
-              <span className="flex min-w-0 gap-1 overflow-hidden text-[length:var(--df-row-font)] df-footer-suffix items-baseline">
-                <span className="whitespace-nowrap text-secondary max-w-full shrink-0 truncate">{accountName}</span>
+              {/* W12b-FTS-1 shared-19 $N: the suffix span and the xs CaretDown both carry df-user-menu-trailing (shared-styles
+                  pushes the last one to the row end while df-footer-aux is empty); the name is df-footer-name with no truncate
+                  (the df-footer-suffix mask fades it); the dot and suffix are text-muted-as-secondary. */}
+              <span className="df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-[length:var(--df-row-font)] df-footer-suffix items-baseline">
+                <span className="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">{accountName}</span>
                 {accountLabel && <>
-                  <span aria-hidden="true" className="df-footer-suffix-text text-muted">·</span>
-                  <span className="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted">{accountLabel}</span>
+                  <span aria-hidden="true" className="df-footer-suffix-text text-muted-as-secondary">·</span>
+                  <span className="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted-as-secondary">{accountLabel}</span>
                 </>}
               </span>
-              {accountName !== "" && <Icon name="CaretDown" size={12} className="shrink-0 text-muted" />}
+              {accountName !== "" && <Icon name="CaretDown" size={12} className="df-user-menu-trailing shrink-0 text-muted-as-secondary" />}
             </button>
           </div>
           {/* sidebar-main.js:14185-14235 hL df-footer-aux (vL/yL/gL) is empty in code mode. Locally it holds a
@@ -1882,20 +2029,56 @@ export function SourceSidebar({
     </div>
     {setSidebarWidth && <SidebarResizeHandle width={sidebarWidth} minWidth={sidebarFloor} collapsed={collapsed} onCommit={setSidebarWidth} onCollapse={onCollapse} onCollapsedChange={onCollapsedChange} />}
     <SidebarDragGhost drag={drag} />
-    {surfaceMenu && <SourceMenu.Popup anchor={surfaceMenu} side="right" label={t('More')} onClose={() => setSurfaceMenu(null)}>
-      <SourceMenu.Item icon="Chats" checked={mode === 'chat'} checkedRole="radio" onClick={() => { setSurfaceMenu(null); onMode?.('chat'); }}>{t('Chat')}</SourceMenu.Item>
-      <SourceMenu.Item icon="Tasks" checked={mode === 'cowork'} checkedRole="radio" onClick={() => { setSurfaceMenu(null); onMode?.('cowork'); }}>{t('Cowork')}</SourceMenu.Item>
-    </SourceMenu.Popup>}
     {menu && <SidebarListContext.Provider value={{getList:()=>navRef.current}}><SourceSidebarMenu key={menu.token} anchor={menu.anchor} point={menu.point} kind={menu.kind} initialHighlight={menu.entry ?? "popup"}
       label={t(menu.kind === "filter" ? "Filter sessions" : menu.kind === "group" ? "Group options" :menu.kind === "older" ? "Older sessions" : menu.kind === "whitespace" ? "Sessions list options" : "Session options")}
       onClose={() => setMenu(null)}>
-      {menu.kind === "filter" && <SourceSidebarFilterMenu showMetadataOption={false} preferences={preferences} onChange={updatePreferences} onClose={() => setMenu(null)} knownFolders={folders} customGroups={customGroups} />}
-      {menu.kind === "session" && <SourceSidebarSessionMenu session={menu.session} metadata={sessionMetadata[menu.session.id]} customGroups={customGroups}
+      {menu.kind === "filter" && mode !== "cowork" && <SourceSidebarFilterMenu showMetadataOption={false} preferences={preferences} onChange={updatePreferences} onClose={() => setMenu(null)} knownFolders={folders} customGroups={customGroups} />}
+      {/* w13-close-cowork-sidebar: the Cowork list's menu is shared-21 PJ's cowork branch (Group by, Sort by, Show empty groups). */}
+      {menu.kind === "filter" && mode === "cowork" && <SourceCoworkGroupSortMenu view={hubView} hasProjects={Array.isArray(localProjects) && localProjects.length > 0} onClose={() => setMenu(null)} />}
+      {/* W13 sidebar-star: a single Chat row takes shared-16 fm as shared-22 configures a sessionType "chat" row
+          (source-chat-row-menu.jsx); its Delete opens hm's "Delete chat" confirm. Multi-select: the hub bulk menu below. */}
+      {menu.kind === "session" && mode === "chat" && !menu.multi && <SourceChatRowMenu session={menu.session} metadata={sessionMetadata[menu.session.id]}
+        state={state} pinnedSiblings={pinnedIds} onAction={runAction} onClose={() => setMenu(null)} onRename={() => setRenaming(menu.session.id)}
+        projectItems={Array.isArray(localProjects) ? <SourceChatProjectMenuItems projects={localProjects} currentProjectId={sessionMetadata[menu.session.id]?.projectId ?? null}
+          onMove={(projectId) => { setMenu(null); runAction("move-to-project", menu.session, { projectId }); }}
+          onCreateProject={(name) => { setMenu(null); runAction("create-project", menu.session, { name }); }}
+          onRemove={() => { setMenu(null); runAction("remove-from-project", menu.session); }} /> : null}
+        onDelete={(target) => {
+          const copy = chatDeleteConfirmCopy();
+          setConfirm({ title: t(copy.title), body: t(copy.body), confirmLabel: t(copy.confirmLabel), danger: true, onConfirm: () => onSessionAction("delete", target) });
+        }} />}
+      {/* w13-close-cowork-sidebar (chatui-sidebar-star-02): a Chat or Cowork multi-selection takes shared-16 fm's `I` branch,
+          cf259e6ae SidebarBulkMenuItems over c44373cde Le's actions (an action shows when every selected row allows it).
+          W13 closeout (E78): rowClick no longer selects local Chat/Cowork rows (x7() is the constant !1), so this branch is
+          unreachable for them, as Le's cowork-source rows are in the official build. */}
+      {menu.kind === "session" && mode !== "code" && menu.multi && (() => {
+        const rows = selectedSessions.filter((session) => !sessionMetadata[session.id]?.incognito).map((session) => ({ session, ...hubBulkRow({ id: session.id,
+          pinned: !!sessionMetadata[session.id]?.pinned, unread: !!sessionMetadata[session.id]?.unread, explicitUnread: !!sessionMetadata[session.id]?.explicitUnread,
+          running: !!state.active?.[session.id] || sessionState(session, state) === "working", awaiting: hasPendingApproval(state, session.id),
+          archived: sessionArchived(session), open: session.id === current, onCoworkRail: mode === "cowork",
+          // w13-close-chat-surface (E75): a local chat is a local_agent_mode_session with sessionType "chat" (c44373cde Fe's
+          // cowork branch), read off the session, not the rail: the merged Cowork rail lists chats too.
+          sessionType: sessionMetadata[session.id]?.surface === "chat" ? "chat" : "cowork" }) }));
+        const actions = hubBulkActions(rows);
+        const targets = { pin: actions.pin, unpin: actions.unpin, "mark-read": actions.markRead, "mark-unread": actions.markUnread,
+          "move-to-group": actions.moveToGroup, archive: actions.archive, delete: actions.deleteChats.length > 0 ? actions.deleteChats : actions.deleteTasks };
+        const sessionsOf = (action) => (targets[action] ?? []).map((row) => row.session);
+        return <SourceHubBulkMenu entries={hubBulkMenuEntries(actions, { anyAssigned: actions.moveToGroup.some((row) => sessionMetadata[row.id]?.customGroupId) })}
+          customGroups={customGroups} onClose={() => setMenu(null)}
+          onRun={(action, payload) => (action === "delete" ? requestDelete(sessionsOf(action)) : void runBulk(action, sessionsOf(action), payload))}
+          onCreateGroup={onCreateGroup ? () => setGroupDialog({ kind: "create", sessions: sessionsOf("move-to-group") }) : undefined} />;
+      })()}
+      {menu.kind === "session" && !(mode === "chat" && !menu.multi) && !(mode !== "code" && menu.multi) && <SourceSidebarSessionMenu session={menu.session} metadata={sessionMetadata[menu.session.id]} customGroups={customGroups}
         state={state} onAction={runAction} onClose={() => setMenu(null)} onRename={() => setRenaming(menu.session.id)}
         unarchiving={!!unarchiving?.has?.(menu.session.id)}
         onCreateGroup={onCreateGroup ? (targets) => setGroupDialog({ kind: "create", sessions: targets }) : undefined} sectionCopy={sectionsModel ? sectionMessages : null}
         onDelete={(target) => requestDelete([target])} onFork={(target) => runAction("fork", target)} forkUnavailable={forkUnavailable}
         pinnedSiblings={pinnedIds} editors={editors} shareable={shareable} windowActions={menu.multi ? null : windowActions}
+        projectItems={mode === "cowork" && !menu.multi && Array.isArray(localProjects) ? <SourceChatProjectMenuItems kind="cowork" projects={localProjects} // w13-close-chat-projects-memory: fm's move-to-space (a Cowork row)
+          currentProjectId={sessionMetadata[menu.session.id]?.projectId ?? null}
+          onMove={(projectId) => { setMenu(null); runAction("move-to-project", menu.session, { projectId }); }}
+          onCreateProject={(name) => { setMenu(null); runAction("create-project", menu.session, { name }); }}
+          onRemove={() => { setMenu(null); runAction("remove-from-project", menu.session); }} /> : null}
         nested={(() => {
           const count = [...runsByGroup.values()].flatMap((entry) => entry.runs).find((run) => run.parentId === menu.session.id)?.rows.length || 0;
           return count ? { childCount: count, collapsed: collapsedNested.has(menu.session.id), onToggle: () => toggleNested(menu.session.id) } : null;
@@ -1956,9 +2139,11 @@ export function SourceSidebar({
     {/* R3-sections: shared-20 xx for a section made for sessions (row menus), dx's own for the header / blank-area menus. */}
     {sectionsModel && <CreateGroupDialog isOpen={!!groupDialog} onClose={() => setGroupDialog(null)} onSubmit={(name) => createSectionWith(name, groupDialog?.sessions)} />}
     {!sectionsModel && shownGroupDialog.value && <GroupNameDialog key={`group-${shownGroupDialog.key}`} open={shownGroupDialog.open} onExited={shownGroupDialog.onExited}
-      switchesToCustom={preferences.groupBy !== "custom"} onClose={() => setGroupDialog(null)} onSubmit={async (name) => {
+      switchesToCustom={mode === "cowork" ? coworkGroupBy(hubView.groupBy) !== "custom" : preferences.groupBy !== "custom"} onClose={() => setGroupDialog(null)} onSubmit={async (name) => {
         const dialog = shownGroupDialog.value;
         await onCreateGroup(name, dialog.sessions?.[0]?.id, dialog.sessions?.map((session) => session.id));
+        // w13-close-cowork-sidebar: ck.createAndSwitch on the Cowork list switches its own grouping (groupByByMode.cowork).
+        if (mode === "cowork") hubViewStore.setGroupBy("cowork", "custom");
         if (dialog.sessions?.length > 1) setSelectionState(clearSelection);
       }} />}
     {shownConfirm.value && <SourceConfirmDialog key={`confirm-${shownConfirm.key}`} open={shownConfirm.open} onExited={shownConfirm.onExited}
@@ -1968,12 +2153,12 @@ export function SourceSidebar({
         showSearch is false or the entry mode ("default" for ⌘K, "search" for ⇧⌘K / Search). */}
     {setShowSearch && <SourceSidebarPalette open={!!showSearch} entry={showSearch === "search" ? "search" : "default"} onClose={() => setShowSearch(false)}
       query={search} setQuery={setSearch} sessions={sourceSessions} folders={folders} contentMatches={searchMatches} deepSearch={deepSearch}
-      state={state} metadata={sessionMetadata} actions={paletteActions({ onNew, setSection, onToggleSidebar: onCollapse, onOpenSettings,
+      state={state} metadata={sessionMetadata} actions={paletteActions({ onNew, setSection, onToggleSidebar: onCollapse, onOpenSettings, coworkEnabled: homeMode === 'cowork', /* w13-coworkui-settings: Settings → Cowork only while Cowork is on */
         jumps: showSearch ? JUMP_COMMANDS.filter((command) => regionJumpAvailable(command.regions)) : [], onJump: jumpToRegions,
         nested: mode === "code" && showSearch ? sidebarNestedCommands(allParentIds().filter((id) => !sessionMetadata[id]?.pinned && !sessionArchived(sourceSessions.find((session) => session.id === id) ?? {})),
           preferences.collapsedNested, (collapsedNested) => updatePreferences({ ...preferences, collapsedNested })) : null,
         ...(showSearch && typeof paletteCommands === "function" ? paletteCommands() : null) })}
-      onOpenSession={onOpen} onStartSession={onStartSession} onNew={onNew} onProject={onProject} />}
+      onOpenSession={onOpen} onStartSession={onStartSession} onNew={onNew} onProject={onProject} surface={mode} />}
   </aside>;
 }
 

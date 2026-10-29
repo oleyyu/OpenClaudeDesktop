@@ -66,16 +66,12 @@ function MemberControls({agent,onMember}) {
  async function control(action){if(busy)return;setBusy(true);setError('');try{await onMember(agent,action);}catch(e){setError(e.message);}finally{setBusy(false);}}
  return <span className="swf-member-controls">{['retry','skip'].map(action=><button key={action} type="button" disabled={busy} aria-label={t(action==='retry'?'Retry agent: {name}':'Skip agent: {name}',{name:agent.label})} onClick={()=>control(action)}>{t(action==='retry'?'Retry':'Skip')}</button>)}{error&&<span role="alert">{error}</span>}</span>;
 }
-// /workflows f: agents by state (Claude's filter), applied inside every phase; a phase with none left is hidden.
-const FILTERS=['all','running','done','error','skipped','pending'];
-const filterLabel=value=>({all:t('All agents'),running:t('Running'),done:t('Done'),error:t('Failed'),skipped:t('Skipped'),pending:t('Queued')})[value];
 // onPause(paused): /workflows p (OpenClaude Desktop's runner: no new agents start while paused; a model run only when its core
 // pauses it, run.pauseControls: Qwen). onResume(): a settled model run its core can resume (run.resumable: ZCode's own
-// resume gate). onSave({name,scope,overwrite}): /workflows s (the run's script into .claude/workflows or ~/.claude/workflows).
-export function WorkflowCard({run,onStop,onMember,onPause,onResume,onSave,onArtifact,renderMarkdown,onOpenFile,onSettings,models,warningLimits}) {
+// resume gate). The card carries no Save entry: WorkflowSaveDialog is exported for hosts that render it themselves.
+export function WorkflowCard({run,onStop,onMember,onPause,onResume,onArtifact,renderMarkdown,onOpenFile,onSettings,models,warningLimits}) {
  const active=run.status==='running',title=run.title||run.name||run.description,now=useClock(active),allPhases=workflowPhases(run,now),summary=workflowSummary(run.summary,run.description);
- const [filter,setFilter]=useState('all'),[saving,setSaving]=useState(false),[pausing,setPausing]=useState(false),[configuring,setConfiguring]=useState(false);
- const phases=filter==='all'?allPhases:allPhases.map(p=>({...p,agents:p.agents.filter(a=>(a.displayState==='stalled'?'running':a.displayState)===filter)})).filter(p=>p.agents.length>0);
+ const [pausing,setPausing]=useState(false),[configuring,setConfiguring]=useState(false);
  const total=allPhases.reduce((sum,p)=>sum+p.agents.length,0);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),root=useRef(null),alive=useRef(true);
  async function pause(){if(pausing)return;setPausing(true);setError('');try{await onPause(!run.paused);}catch(e){if(alive.current)setError(e.message);}finally{if(alive.current)setPausing(false);}}
@@ -104,11 +100,9 @@ export function WorkflowCard({run,onStop,onMember,onPause,onResume,onSave,onArti
    {error&&<p role="alert">{error}</p>}
    {active&&Array.isArray(run.pendingQuestions)&&run.pendingQuestions.length>0&&<WorkflowQuestions questions={run.pendingQuestions} now={now}/>}
    {onArtifact&&workflowArtifacts(run).length>0&&<WorkflowArtifacts run={run} onArtifact={onArtifact} renderMarkdown={renderMarkdown} onOpenFile={onOpenFile}/>}
-   {onSave&&!isModelWorkflow(run)&&!run.plan&&<div className="swf-actions"><SourceSettingsButton size="sm" variant="secondary" onClick={()=>setSaving(true)}>{t('Save workflow…')}</SourceSettingsButton></div>}
    {onSettings&&active&&!!run.runId&&<div className="swf-actions"><SourceSettingsButton size="sm" variant="secondary" onClick={()=>setConfiguring(true)}>{t('Configure…')}</SourceSettingsButton></div>}
   </div>
-  {allPhases.length>0&&<div className="swf-phases"><span className="swf-phases-head"><span>{t('Phases')}</span>{total>1&&<SourceSelect label={t('Filter agents')} align="end" className="swf-filter" value={filter} onChange={setFilter} items={FILTERS.map(value=>({value,label:filterLabel(value)}))}/>}</span><ul>{phases.map(p=><Phase key={p.index} phase={p} run={run} now={now} onMember={onMember}/>)}</ul>{!phases.length&&<p className="swf-empty-phase">{t('No agents match this filter')}</p>}</div>}
-  {saving&&<WorkflowSaveDialog run={run} onSave={onSave} onClose={()=>setSaving(false)}/>}
+  {allPhases.length>0&&<div className="swf-phases"><span className="swf-phases-head"><span>{t('Phases')}</span></span><ul>{allPhases.map(p=><Phase key={p.index} phase={p} run={run} now={now} onMember={onMember}/>)}</ul></div>}
   {configuring&&<WorkflowSettingsDialog run={run} models={models} onSettings={onSettings} onClose={()=>setConfiguring(false)}/>}
  </div>;
 }
@@ -179,6 +173,7 @@ export function WorkflowSettingsDialog({run,models=[],onSettings,onClose}){
  </form></ActionDialog>;
 }
 // /workflows s (Claude's "Save dynamic workflow"): Project scope → .claude/workflows/<slug>.js, User → ~/.claude/workflows.
+// Exported only: the card no longer renders a Save entry, so a host that wants the dialog mounts it itself.
 const slug=name=>String(name??'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'workflow';
 export function WorkflowSaveDialog({run,onSave,onClose}){
  const [name,setName]=useState(run.name||slug(run.description)),[scope,setScope]=useState('project'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[exists,setExists]=useState(null),[saved,setSaved]=useState(null);

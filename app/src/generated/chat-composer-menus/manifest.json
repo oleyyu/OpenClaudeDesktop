@@ -1,0 +1,432 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-chat-composer-menus.mjs",
+  "hostModule": "src/source-chat-tools-menu.jsx",
+  "roots": {
+    "kF": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "kF",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "0d5132b8e1a59fccb023744f79239dd738bd365adc74f9f483be14525aae5b60",
+      "features": [
+        "\"data-chorus-callout\": \"attach\"",
+        "id: \"OnsnuZtVJO\"",
+        "tooltip: !1"
+      ]
+    },
+    "iN": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "iN",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "30bde37903ea99d364e700b8c641ed076695a2c9be55567c642f5e2af11d8654",
+      "features": [
+        "[\"uploadFile\", \"addPeople\", \"googleDrive\", \"addFolder\", \"teach\", \"screenshot\", \"shareScreen\", \"project\", \"github\"]",
+        "[\"skills\", \"connectors\", \"designSystem\", \"plugins\", \"devices\"]",
+        "[\"haystack\", \"research\", \"webSearch\", \"memory\", \"permissionMode\"]"
+      ]
+    },
+    "oN": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "oN",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "f1660652477c2fe94ccc0e654fb5f2f70da7b53a318369f9cac35f9e58b61f8f",
+      "features": [
+        "new Set([\"project\", \"github\", ...",
+        ".filter((e) => e !== \"memory\" && e !== \"permissionMode\")"
+      ]
+    },
+    "sN": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "sN",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "effc7c549199085fbf7c2b053875f4f3e2b562f538f2e91b84b586d839ff6232",
+      "features": [
+        "new Set([\"designSystem\", \"googleDrive\"])"
+      ]
+    },
+    "cN": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "cN",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "1773be641baac640282a5961925be0602147951e874a4f6063d0cbf13ee38da3",
+      "features": [
+        "\"googleDrive\", \"teach\", \"haystack\", \"memory\"]"
+      ]
+    },
+    "lN": {
+      "source": "shared-8-Db1QN4mf.js",
+      "local": "lN",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
+      "sha256": "6423652b0de612db89f5dfb106f3cffd255147942251fcfc4a49773a18c154bf",
+      "features": [
+        "return r && !a(t) ? [n(t, r)] : [];",
+        "return [o(iN[0]), o(iN[1]), o(iN[2])];"
+      ]
+    },
+    "na": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "na",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "04e9223a7d30b05f6833fd1e1b08c2b0c897ed06d167e6bb3d131234dbcfffaa",
+      "features": [
+        "uploadFile: \"add-menu-upload-file\"",
+        "screenshot: \"add-menu-screenshot\"",
+        "webSearch: \"add-menu-web-search\""
+      ]
+    },
+    "ra": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "ra",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "c67eacbb3db27ea2beb8c27e2bb2fcd22d3809ef395fb408887f3eae008f1830",
+      "features": [
+        "for (let e of Object.keys(na))",
+        "n && r && (t[e] = ia(n, r));"
+      ]
+    },
+    "ia": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "ia",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "17fcc3c5f8ede6c7be5899ec92043647b56fac3281ddc9362b20aee40cdf8697",
+      "features": [
+        "case \"toggle\":",
+        "case \"submenu\":",
+        "return { ...e, testId: t };"
+      ]
+    },
+    "Js": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "Js",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "41afe9919906ae98e78ce3c6fca6893593b7f6820d8581096407246a0f4ef1d3",
+      "features": [
+        "\"separator-tools\"",
+        "\"separator-modes\"",
+        "\"composer.plus_menu.upload_file\"",
+        "\"composer.plus_menu.web_search\""
+      ]
+    },
+    "Ws": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "Ws",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "c3dcb7d73bfd52eab8cd91c8f7821aaa5fd98ac3cb6f47356d1bd5b93803817f",
+      "features": [
+        "id: \"vVSGqeakjA\"",
+        "icon: \"Attachment\"",
+        "focusesNothing: !0"
+      ]
+    },
+    "Fs": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "Fs",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "9a6ea36cadc1d0bbe8b3c8116f4e5053e2251def73b6b1bad4221a6ffe553a35",
+      "features": [
+        "id: \"fVVgugcqfW\"",
+        "id: \"uGOETn5bfV\"",
+        "\"screenshot.png\""
+      ]
+    },
+    "ks": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "ks",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "cf0fd479e915e047882ceb4a1fd80da4682ff5da3b8b845291aa081e44421612",
+      "features": [
+        "id: \"VTbz0vOf5i\"",
+        "icon: \"Projects\""
+      ]
+    },
+    "Es": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "Es",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "13c03760fb5c12a0608d2a3c406121e6f83881d6849a66671169e6dfd1f2b872",
+      "features": [
+        "id: \"x1GW6kgtFG\"",
+        "id: \"C1IFDydllb\"",
+        "id: \"gkvdf7tU5r\"",
+        "id: \"ld45uLSco8\""
+      ]
+    },
+    "Ms": {
+      "source": "c752b32f8-mYZAs6yC.js",
+      "local": "Ms",
+      "sourceSha256": "f94252f35bc4f254842c52dbdc175e0bc042f0df5e419396d43802c477961686",
+      "sha256": "51de561ff54da49018ec108017cfbcabf2de4206a26c5fcb19827d0d9b4fcfb5",
+      "features": [
+        "{ popup: t } = e,",
+        "leadingRows: i, rows: a, maxVisibleItems:"
+      ]
+    },
+    "Tz": {
+      "source": "shared-5-Bg6ZMqvt.js",
+      "local": "Tz",
+      "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+      "sha256": "e29edb513a21a261f23cf01cf9f57743dca32c238f78c3e358f69165629e802e",
+      "features": [
+        "id: \"0/w13aoHrd\"",
+        "icon: \"Globe\"",
+        "icon: \"Lock\""
+      ]
+    },
+    "yz": {
+      "source": "shared-5-Bg6ZMqvt.js",
+      "local": "yz",
+      "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+      "sha256": "d15007119990eb8df5c5e5b2762c6f68fc11746cee6d8f36cb8a95023d1fa0c8",
+      "features": [
+        "id: \"C5I8J3lxs3\"",
+        "icon: \"Research\"",
+        "id: \"CzjOV5rgPZ\"",
+        "id: \"WyiVeak7w5\""
+      ]
+    }
+  },
+  "resolved": {
+    "triggerTestId": {
+      "source": "shared-1-BJhqMmkf.js",
+      "export": "Qd",
+      "local": "S_",
+      "value": "chat-input-attach"
+    },
+    "projectMaxVisibleItems": {
+      "source": "shared-182-BI1KJccu.js",
+      "export": "es",
+      "local": "ZR",
+      "value": 8.5
+    }
+  },
+  "modules": [
+    {
+      "target": "add-menu-slots.mjs",
+      "sources": [
+        "shared-8-Db1QN4mf.js",
+        "c752b32f8-mYZAs6yC.js"
+      ],
+      "sha256": "76e8008fa29f9e6dff055c2ee1d5f3a23240280f3a7a1331ec4a4d47d36e0849",
+      "sliced": [
+        "iN",
+        "oN",
+        "sN",
+        "cN",
+        "lN",
+        "na",
+        "ia",
+        "ra"
+      ],
+      "exports": [
+        "addMenuSlotGroups",
+        "splitAddMenuSlots",
+        "addMenuTestIds",
+        "withAddMenuTestIds"
+      ]
+    },
+    {
+      "target": "add-menu.mjs",
+      "sources": [
+        "shared-8-Db1QN4mf.js",
+        "shared-1-BJhqMmkf.js",
+        "c752b32f8-mYZAs6yC.js",
+        "shared-5-Bg6ZMqvt.js",
+        "shared-182-BI1KJccu.js"
+      ],
+      "sha256": "a76ff72920ea605bd1dbf9eabf1e95164bb0ea3b86d861ab8ce38d2b8cd424cd",
+      "exports": [
+        "chatAddMenuMessages",
+        "chatAddMenu"
+      ]
+    }
+  ],
+  "picks": [
+    {
+      "name": "messages.addFilesConnectorsAndMore",
+      "root": "kF",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "3d5816dcf82f9f183de1143cf73db36bf7c18e9e836581593c155570cadca413"
+    },
+    {
+      "name": "trigger.button",
+      "root": "kF",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "97bca7bfe7853e3a4b98e99b94ef3a1cca462ccfb5d97d9cc6cde1cc97df2aaa"
+    },
+    {
+      "name": "trigger.icon",
+      "root": "kF",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "6f807359ec1782d42568ecca2c711d1a53ccde6a226c287ce595a2cda3f35d32"
+    },
+    {
+      "name": "trigger.className",
+      "root": "kF",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "5e8d7e0076717f4907779a60e02e9958780a1cb007fdbf0267c672e0da297ff6"
+    },
+    {
+      "name": "trigger.shortcut",
+      "root": "kF",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "9a870bc4b7823129a694d641354a57ac4c97fc53586d9b0b9d38d48af0fba701"
+    },
+    {
+      "name": "trigger.tooltip",
+      "root": "kF",
+      "source": "shared-8-Db1QN4mf.js",
+      "sha256": "3cf8bbb89498f3c447dddfe47287e6e8b7899c8a503204051afaf166f7725332"
+    },
+    {
+      "name": "separators",
+      "root": "Js",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "16c7e6c3dd96568a7bfce0ba02a21cd35ac2e513988e492abbe5b0c03391fe16"
+    },
+    {
+      "name": "assembly",
+      "root": "Js",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "1b8879fea1dcf695e2a5cd42b32dfa3eaab086acbfd0faf202cf26299cc4a8d1"
+    },
+    {
+      "name": "messages.addFilesOrPhotos",
+      "root": "Ws",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "7eeccfd10ccda8f9c1845c5a747bf78594e86cbf8cb7fdc804f7acf46d64d4f1"
+    },
+    {
+      "name": "items.uploadFile",
+      "root": "Ws",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "0cfc8f94f0f63ddf3dcdab3d95f33aaa3894f83b46001e5b7313b64c2303209f"
+    },
+    {
+      "name": "messages.takeAScreenshot",
+      "root": "Fs",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "b3fb86844abc704ce2ebdbfc930e99dad4309c685fb9e762ec10d44467b503e9"
+    },
+    {
+      "name": "messages.couldNotCaptureScreen",
+      "root": "Fs",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "ec8cb466efa314334b7e3511ff3d1a8a20f3dabde3edbc73c5dd62293595a88b"
+    },
+    {
+      "name": "items.screenshot",
+      "root": "Fs",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "b0362291a9d9b21ed0744179bda0b33e21dae2db96d4c4a1823fbb5deb6724e7"
+    },
+    {
+      "name": "messages.addToProject",
+      "root": "ks",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "ebf20a5f7bbd97eb93851e2228db6709dcf6a000440b6bfbd7f423384430ff80"
+    },
+    {
+      "name": "items.project",
+      "root": "ks",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "766f7c4ab7d0d3b2b9f4b42150ab3d6569a707ebb272a1aa47980d73552bdc4d"
+    },
+    {
+      "name": "messages.searchOrCreateProject",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "d19c63e275a634e6ce5b2e098152b1d87fe42df9ce957a3543bdc5714f39d8a3"
+    },
+    {
+      "name": "messages.searchProjects",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "5ef72d8c507b7478a4e7ef8a56c108415b1f36481e5c9fee98275de72cb0e45d"
+    },
+    {
+      "name": "messages.noMatches",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "c1add9d71a39b45443e1ba3a06f2e67f5442b01d3768cf866924b1f56666b526"
+    },
+    {
+      "name": "messages.noProjectsYet",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "071cf6112e66b3c589c84ab75d4efd40bb1bac44e009adcb9c6c8ab8cf0b9a8c"
+    },
+    {
+      "name": "messages.noProjectsAvailable",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "f3dab25e911f4626d88e496e0b1a17a37b7c4afc9f803e0da9e01e52ec73315d"
+    },
+    {
+      "name": "messages.failedToLoadProjects",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "b33df6b876ba2af50ab32c26dbc7f87af015906f5ed22c3a845a0498b56b099b"
+    },
+    {
+      "name": "items.projectRow",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "6990d0c6ce303711e727f3b7da3acfcdf144c051daeeb91c312a334651c42715"
+    },
+    {
+      "name": "items.projectNotice",
+      "root": "Es",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "bd5f313826866ee509f735a28a87c5a2a0e0c6bc73019183b067c55f78d7417d"
+    },
+    {
+      "name": "projectPopup",
+      "root": "Ms",
+      "source": "c752b32f8-mYZAs6yC.js",
+      "sha256": "2f9653ca6a8d59ae361cfc2b6b74a50d83031782319a583c0ab0ddc58af7e69d"
+    },
+    {
+      "name": "messages.webSearch",
+      "root": "Tz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "77f562b4364ef75e991febd944e82fa4b08bdbdf1434fb19c0172fc4b3ca3c09"
+    },
+    {
+      "name": "items.webSearch",
+      "root": "Tz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "7a81aae5c6362ace0d497ff50085f32db358c00d8b165f63da9f9197db7e266b"
+    },
+    {
+      "name": "items.webSearchBlocked",
+      "root": "Tz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "b1adc0a87b3f66c097bad5205b39eeb0a655cb67e2e712b5bc0b4ed8b5ec1a30"
+    },
+    {
+      "name": "messages.research",
+      "root": "yz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "4baab740721a6b157a2510f33d828017e81392ad9b6a5ea77577801b2f233bdb"
+    },
+    {
+      "name": "messages.researchNeedsSearchTool",
+      "root": "yz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "7c0103217f023575f943e1dfa5432b99e871891b3fcafec97de44df4ba9d946b"
+    },
+    {
+      "name": "messages.researchNeedsSearchIntegration",
+      "root": "yz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "da700701fc5ec5cba08e5f929cc6b7c7d8d817bfc27d840aaf89def86ec257b1"
+    },
+    {
+      "name": "items.research",
+      "root": "yz",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sha256": "aec5feb9eeb601220932a9d3d57b034e2a1df7fb958cb6b494d9027adfa5f9a9"
+    }
+  ]
+}

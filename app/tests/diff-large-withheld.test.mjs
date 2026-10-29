@@ -11,6 +11,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const h = React.createElement;
@@ -132,7 +133,7 @@ function hookFixture(body, props) {
     if (next) props = next;
     cursor = 0;
     const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internals.H;
-    internals.H = dispatcher;
+    internals.H = withMemoCache(dispatcher);
     try { output = body(props); } finally { internals.H = old; }
     while (effects.length) effects.shift()();
     return output;

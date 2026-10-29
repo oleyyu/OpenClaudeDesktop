@@ -6,13 +6,21 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
-let server, source, current, FormSelect;
+// W10 (w10-chat-tests): the 2.2553.1 chat field family (shared-frame _y / vy / yy / by / Bh / $v and the TextField Sy)
+// was retired with the chat generator's move to 3.6556.2 (chat:M12); its five subtests went with it. The host
+// native-field boundary is still exercised: a NativeFieldControl inside the NativeField-wired 3.6556.2 field family that
+// code-current publishes (environment-field-controls: shared-frame Jj / Yj over NativeFieldRoot / NativeFieldLabel),
+// and the slotted search below. w10-curchat-retire: the search is the 3.6556.2 view-tabs CdsTextInput (shared-frame uC),
+// the copy the project page renders, in place of the retired 2.31226.0 current-chat shared-frame yy.
+// w10-cleanup-final: the 2.31226.0 routine form adapter FormSelect (source-routine-form-adapters.jsx) had no importer and
+// was deleted; the boundary is checked through NativeFieldControl, the native-control boundary the field family exports.
+let server, ViewTabs, Env, NativeFieldControl;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
-    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  current = await server.ssrLoadModule('/src/generated/current-chat/shared-frame-DVFSKIcx.js');
-  source = await server.ssrLoadModule('/src/generated/chat/shared-frame-C_2npUJq.js');
-  ({ FormSelect } = await server.ssrLoadModule('/src/source-routine-form-adapters.jsx'));
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  Env = await server.ssrLoadModule('/src/generated/code-current/environment-field-controls.mjs');
+  ({ NativeFieldControl } = await server.ssrLoadModule('/src/source-field-adapters.jsx'));
 });
 after(() => server?.close());
 const h = React.createElement;
@@ -20,70 +28,23 @@ const render = node => renderToStaticMarkup(node);
 const tag = (html, name) => html.match(new RegExp(`<${name}\\b[^>]*>`))?.[0];
 const attr = (html, name) => html?.match(new RegExp(`(?:^|\\s)${name}="([^"]*)"`))?.[1];
 
-test('original TextField retains both hint and error, and links them to its invalid input', () => {
-  const html = render(h(source.Sy, { label: 'Task name', hint: 'Use a unique name', error: 'Already exists', value: 'Notes', onChange() {} }));
-  const input = tag(html, 'input'), label = tag(html, 'label');
-  assert.equal(attr(label, 'for'), attr(input, 'id'));
-  assert.equal(attr(input, 'aria-labelledby'), attr(label, 'id'));
-  assert.equal(attr(input, 'aria-invalid'), 'true');
-  assert.equal(attr(input, 'data-invalid'), 'true');
-  assert.match(html, /Use a unique name/);
-  assert.match(html, /Already exists/);
-  assert.match(html, /role="alert"/);
-  assert.match(html, /data-cds="Icon"/);
-  const described = attr(input, 'aria-describedby').split(' ');
-  assert.equal(described.length, 2);
-  for (const id of described) assert.ok(html.includes(`id="${id}"`));
-  assert.ok(html.indexOf('Use a unique name') < html.indexOf('Already exists'));
-});
-
-test('valid fields preserve explicit input IDs, required state and source hint typography', () => {
-  const html = render(h(source.Sy, { label: 'Description', id: 'task-description', hint: 'What this does', required: true, value: '', onChange() {} }));
-  assert.equal(attr(tag(html, 'label'), 'for'), 'task-description');
-  assert.equal(attr(tag(html, 'input'), 'id'), 'task-description');
-  assert.match(tag(html, 'input'), /required=""/);
-  assert.doesNotMatch(html, /(?:aria-invalid|data-invalid)=|role="alert"/);
-  assert.match(html, /text-footnote font-normal leading-snug text-muted/);
-});
-
-test('original field providers carry disabled state to inputs and the local select boundary', () => {
-  for (const child of [h(source.Bh), h(FormSelect, { items: [{ value: 'daily', label: 'Daily' }], value: 'daily', onChange() {} })]) {
-    const html = render(h(source._y, { disabled: true, className: 'contents' }, h(source.vy, null, 'Frequency'), child));
-    const control = tag(html, child.type === source.Bh ? 'input' : 'button');
-    assert.match(control, /disabled=""/);
-    assert.equal(attr(control, 'aria-labelledby'), attr(tag(html, 'label'), 'id'));
-    assert.equal(attr(control, 'id'), attr(tag(html, 'label'), 'for'));
-    assert.match(tag(html, 'div'), /class="[^\"]*contents/);
-    assert.doesNotMatch(tag(html, 'div'), /class="(?:[^"]* )?flex(?: |")/);
-  }
-});
-
-test('nested fields do not replace the outer label or collect each other’s hints', () => {
-  const html = render(h(source._y, null,
-    h(source.vy, null, 'Instructions'),
-    h('div', null, h(source.$v, { id: 'instructions', 'aria-label': 'Instructions', 'aria-describedby': 'external-help' }),
-      h(source.Sy, { label: 'Inner name', hint: 'Inner hint', id: 'inner-name' }))));
-  const textarea = tag(html, 'textarea');
-  assert.equal(attr(tag(html, 'label'), 'for'), 'instructions');
-  assert.equal(attr(textarea, 'aria-describedby'), 'external-help');
-  assert.equal(attr(textarea, 'aria-label'), 'Instructions');
-  assert.equal(attr(textarea, 'aria-labelledby'), undefined);
-  assert.notEqual(attr(tag(html, 'input'), 'aria-describedby'), 'external-help');
-});
-
-test('unbound source inputs keep their existing explicit accessibility attributes', () => {
-  const html = render(h(source.Bh, { id: 'search', 'aria-label': 'Search', 'aria-describedby': 'search-help', disabled: true }));
-  const input = tag(html, 'input');
-  assert.equal(attr(input, 'id'), 'search');
-  assert.equal(attr(input, 'aria-label'), 'Search');
-  assert.equal(attr(input, 'aria-describedby'), 'search-help');
-  assert.equal(attr(input, 'aria-labelledby'), undefined);
-  assert.match(input, /disabled=""/);
+const nativeControl = () => h(NativeFieldControl, { render: h('button', { type: 'button' }, 'Daily') });
+test('a native field provider carries disabled state and the label link to the native control boundary', () => {
+  const html = render(h(Env.EnvironmentField, { disabled: true }, h(Env.EnvironmentLabel, null, 'Frequency'), nativeControl()));
+  const control = tag(html, 'button'), label = tag(html, 'label');
+  assert.match(control, /disabled=""/);
+  assert.equal(attr(control, 'aria-labelledby'), attr(label, 'id'));
+  assert.equal(attr(control, 'id'), attr(label, 'for'));
+  assert.match(tag(html, 'div'), /data-cds="Field"/);
+  // Without a field the control keeps its own (unlinked) props.
+  const bare = tag(render(nativeControl()), 'button');
+  assert.equal(attr(bare, 'aria-labelledby'), undefined);
+  assert.doesNotMatch(bare, /disabled=""/);
 });
 
 // Slotted controls pass disabled and hint attributes to the native-control boundary.
-test('current slotted search retains disabled, hint and invalid semantics', () => {
-  const html = render(h(current.yy, { id: 'current-search', 'aria-label': 'Search projects',
+test('view-tabs slotted search retains disabled, hint and invalid semantics', () => {
+  const html = render(h(ViewTabs.CdsTextInput, { id: 'current-search', 'aria-label': 'Search projects',
     'aria-describedby': 'search-hint', 'aria-invalid': true, disabled: true,
     slotStart: h('span', null, 'Search'), clearable: 'always', value: 'query', onChange() {} }));
   const input = tag(html, 'input');

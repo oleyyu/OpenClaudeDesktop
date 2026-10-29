@@ -10,10 +10,14 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const official = name => fs.readFileSync(path.join(OFFICIAL, name), 'utf8');
+// code-start (pet.mjs, the start card's s8) is sliced from 3.6556.2; the environment picker targets stay 2.42304.0 (E9).
+const OFFICIAL_V3 = path.join(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+const officialV3 = name => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
 const source = name => fs.readFileSync(path.join(ROOT, name), 'utf8');
 const glyphs = JSON.parse(source('src/generated/icons.json'));
 const glyph = name => String.fromCodePoint(glyphs[name]);
@@ -72,7 +76,7 @@ function fixture(component, props, { effects = false } = {}) {
     for (let pass = 0; pass < 5; pass++) {
       cursor = 0; dirty = false;
       const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
-      internals.H = dispatcher;
+      internals.H = withMemoCache(dispatcher);
       try { tree = component(props); } finally { internals.H = previous; }
       if (!dirty) break;
     }
@@ -118,16 +122,20 @@ test('official 2.42304.0 h2: Starred then Local (This computer, first unstarred,
   assert.match(start, /children:\[l&&v\(qy,\{onOpen:l\}\),r!==void 0&&v\(Yv,\{starred:r,onToggle:\(\)=>Zr\(Dr\(e\),ti\(e\)\)\}\)\]/);
   // yC puts its search field in the popup header.
   assert.match(official('shared-frame-BfjMqbuN.js'), /function yC\(\{[\s\S]{0,4000}?header:T\(l,\{children:\[o!==void 0&&H\("div"/);
-  // The generated rows are those originals, not host rewrites.
+  // The generated rows are the 3.6556.2 originals (cc-rest-env-ui: cc43287c9-Me-M2ucD m8/Rae/zae/uoe/w8/D8/M8, the
+  // 2.42304.0 k0/A0/j0/e2/a2/l2/p2 after the React Compiler), not host rewrites.
   const rows = source('src/generated/code-current/environment-menu-rows.mjs');
-  assert.match(rows, /^\/\/ Original Claude Desktop 2\.42304\.0 bindings/);
-  assert.match(rows, /labelDir: "auto"/); assert.match(rows, /"env-picker-this-computer"/); assert.match(rows, /x = LR\(h\)/);
+  assert.match(rows, /^\/\/ Original Claude Desktop 3\.6556\.2 bindings/);
+  assert.match(rows, /labelDir: "auto"/); assert.match(rows, /"env-picker-this-computer"/); assert.match(rows, /S = hR\(h\)/);
+  assert.match(rows, /Symbol\.for\("react\.early_return_sentinel"\)/);
+  assert.match(officialV3('cc43287c9-Me-M2ucD.js'), /labelDir:"auto",icon:t\.icon,\.\.\.d,shortcut:f,"data-testid":"env-picker-environment"/);
   const manifest = JSON.parse(source('src/generated/code-current/manifest.json'));
   const entry = target => manifest.modules.find(module => module.target === target);
-  assert.deepEqual(entry('environment-menu-rows.mjs').bindings, ['k0', 'A0', 'j0', 'e2', 'a2', 'l2', 'p2']);
-  assert.equal(entry('environment-menu-rows.mjs').referenceVersion, '2.42304.0');
-  assert.deepEqual(entry('environment-picker-keys.mjs').bindings, ['YB', 'ZB', 'QB', '$B', 'sV', 'j7', 'A7']);
-  assert.deepEqual(entry('environment-machine-variables.mjs').bindings, ['I', 'Me']);
+  assert.deepEqual(entry('environment-menu-rows.mjs').bindings, ['m8', 'Rae', 'zae', 'uoe', 'w8', 'D8', 'M8']);
+  assert.equal(entry('environment-menu-rows.mjs').referenceVersion, '3.6556.2');
+  // cc-rest-env-model's targets (their binding lists are pinned by its own tests).
+  assert.equal(entry('environment-picker-keys.mjs').referenceVersion, '3.6556.2');
+  assert.equal(entry('environment-machine-variables.mjs').referenceVersion, '3.6556.2');
 });
 
 test('h2 SSR: Starred group in starring order, Local group with This computer, the first unstarred environment and More (count)', () => {
@@ -256,7 +264,7 @@ test('T2/p0: the picker lists environments by last use and keeps that order whil
   // A new environment joins by its last use without moving the rest.
   const added = [...used, item('d', 'Delta', 50)];
   assert.deepEqual(order(f.render({ popup, environments: added, onStar: noop })), ['d', 'b', 'c', 'a']);
-  assert.equal(StartView.useStableEnvironmentOrder.name, 'p0');
+  assert.equal(StartView.useStableEnvironmentOrder.name, 's8');
 });
 
 test('h2 popup: the SearchablePopup (min-w-[260px]) with the search field fixed in the header; the sr-only status', () => {
@@ -278,7 +286,7 @@ test('h2 popup: the SearchablePopup (min-w-[260px]) with the search field fixed 
   // The popup classes are official utilities released from source-menu.css's unlayered min-width.
   const css = source('src/source-environment-menu.css');
   assert.match(css, /\.smenu-popup\.environment-picker-popup,\s*\.smenu-popup\.environment-picker-more \{ min-width: revert-layer; \}/);
-  const sheet = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const sheet = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   for (const name of ['min-w-[260px]', 'min-w-[220px]', 'w-max', 'min-w-48', 'max-w-96']) assert.ok(sheet.includes(`.${cssEscape(name)}{`), name);
 });
 
@@ -294,7 +302,7 @@ test('c3f9f1667 Me (LR): This computer offers its settings once the machine has 
     onDownload: noop, onPick: noop, settingsOffered: true, machineVarsQueried: true, onOpenSettings: noop, star: null };
   const calls = [];
   const desktop = variables => ({ call: (action, request) => { calls.push([action, request]); return Promise.resolve({ variables }); } });
-  const settings = tree => elements(tree.props.trailing).some(node => node.type?.name === 'BK');
+  const settings = tree => elements(tree.props.trailing).some(node => node.type?.name === 'V$');
   await withGlobal('desktop', desktop({ CLAUDE_CONFIG_DIR: '/x' }), async () => {
     const f = fixture(Rows.EnvironmentPickerComputer, props, { effects: true });
     assert.equal(settings(f.tree), false, 'not until the query answers');
@@ -339,7 +347,7 @@ test('cd8823d73 ge "+ Add": the official Select trigger, recent folders with col
   // Ak select-mode trigger: data-cds Combobox, size sm, HO + outline + select + pe-sm, twMerged with ge's min-w-0 shrink; no caret.
   const trigger = html.match(/<div data-cds="Combobox" data-size="sm" class="([^"]+)"><button type="button" aria-label="Add" aria-haspopup="menu" aria-expanded="false" class="([^"]+)"><span id="[^"]+" class="min-w-0 flex-1 truncate"><span class="flex items-center gap-xs text-primary">(.*?)<\/span><\/span><\/button><\/div>/);
   assert.ok(trigger, html);
-  assert.equal(unescape(trigger[1]), (await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js')).cdsClassNames(`${Select.selectTriggerClassName} ${Select.selectTriggerVariantClassNames.outline} ${Select.selectTriggerModeClassNames.select} pe-sm shrink-0`, 'min-w-0 shrink'));
+  assert.equal(unescape(trigger[1]), (await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js')).cdsClassNames(`${Select.selectTriggerClassName} ${Select.selectTriggerVariantClassNames.outline} ${Select.selectTriggerModeClassNames.select} pe-sm shrink-0`, 'min-w-0 shrink'));
   assert.match(trigger[1], /\bshrink\b/); assert.doesNotMatch(trigger[1], /shrink-0/);
   assert.equal(trigger[2], Select.selectTriggerButtonClassName);
   assert.match(trigger[3], new RegExp(`data-cds="Icon"[^>]*>${glyph('Add')}</span>Add`));
@@ -393,7 +401,7 @@ test('Ak past five options: the popup search (rk) filters by label or path (Sk) 
   assert.deepEqual(picked, ['/w/f4']);
 });
 
-test('shared-frame tx clear button: the CDS tooltip prop stays off the DOM (no React warning)', () => {
+test('shared-frame uC (2.42304.0 tx) clear button: the CDS tooltip prop stays off the DOM (no React warning)', () => {
   const errors = [], original = console.error;
   console.error = (...args) => errors.push(args.join(' '));
   let html;
@@ -402,8 +410,10 @@ test('shared-frame tx clear button: the CDS tooltip prop stays off the DOM (no R
   assert.match(html, /aria-label="Clear"|aria-label="[^"]+"[^>]*data-cds="Button"/);
   assert.doesNotMatch(html, /tooltip=/);
   assert.deepEqual(errors.filter(line => /tooltip/.test(line)), []);
-  assert.match(source('src/generated/code-current/environment-field-controls.mjs'), /import \{ NativeFieldButton as \$l \} from "\.\.\/\.\.\/source-field-adapters\.jsx";/);
-  assert.match(source('src/generated/code-current/environment-field-controls.mjs'), /tooltip: !1,/, 'the generated tx is unchanged');
+  // cc-rest-env-ui: 3.6556.2 shared-frame uC renders its clear X with Uu (the CDS Button) -> the host native-field button.
+  assert.match(source('src/generated/code-current/environment-field-controls.mjs'), /import \{ NativeFieldButton as Uu \} from "\.\.\/\.\.\/source-field-adapters\.jsx";/);
+  assert.match(source('src/generated/code-current/environment-field-controls.mjs'), /tooltip: !1,/, 'the generated uC is unchanged');
+  assert.match(officialV3('shared-frame-6jtSkIit.js'), /icon:"X","aria-label":T,tooltip:!1,tabIndex:ae\?-1:void 0,onMouseDown:dC,onClick:re/);
 });
 
 test('home-env-07: the Clawd button carries O7 and ClawdLaptopInner’s classes; no host position rule reaches it', () => {
@@ -411,12 +421,17 @@ test('home-env-07: the Clawd button carries O7 and ClawdLaptopInner’s classes;
   assert.match(start, /O7="absolute right-\[-13px\] bottom-\[calc\(var\(--cds-ring-outer,0px\)-144px\/11\)\] w-\[80px\] h-\[80px\] -scale-x-100"/);
   assert.match(start, /v\(LB,\{replayToken:e,listeningLoop:n,className:O7,replayOnClick:!0\}\)/);
   assert.match(official('cc13f8cc7--_rF5jpy.js'), /className:`\$\{r\?\?""\} border-0 bg-transparent p-0 outline-none hide-focus-ring cursor-default pointer-events-none \[&_path:not\(\[fill-opacity='0'\]\)\]:pointer-events-auto`,children:S/);
+  // 3.6556.2 (the generated source): O7 is jfe with the same value; the replay classes moved into a `let` (HS-10).
+  const startV3 = officialV3('cc43287c9-Me-M2ucD.js');
+  assert.match(startV3, /jfe="absolute right-\[-13px\] bottom-\[calc\(var\(--cds-ring-outer,0px\)-144px\/11\)\] w-\[80px\] h-\[80px\] -scale-x-100"/);
+  assert.match(startV3, /p\(EB,\{replayToken:e,listeningLoop:n,className:jfe,replayOnClick:!0\}\)/);
+  assert.match(officialV3('cc13f8cc7-BHF1aIvS.js'), /let k=`\$\{u\?\?""\} border-0 bg-transparent p-0 outline-none hide-focus-ring cursor-default pointer-events-none \[&_path:not\(\[fill-opacity='0'\]\)\]:pointer-events-auto`;/);
   assert.equal(PetClasses.clawdClassName, 'absolute right-[-13px] bottom-[calc(var(--cds-ring-outer,0px)-144px/11)] w-[80px] h-[80px] -scale-x-100');
   const stubs = { matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), document: { documentElement: { dataset: {} } } };
   const html = withGlobal('matchMedia', stubs.matchMedia, () => withGlobal('document', stubs.document, () => renderToStaticMarkup(React.createElement(Pet))));
   assert.equal(unescape(html), `<div class="sc-pet-slot " aria-hidden="true" style="z-index:2"><button type="button" tabindex="-1" aria-hidden="true" data-clawd="" class="${PetClasses.clawdClassName} ${PetClasses.clawdReplayButtonClassName}"><span class="sc-pet-animation w-full h-full"></span></button></div>`);
   // Every class is in the loaded official sheet; no local stylesheet targets the button any more.
-  const sheet = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const sheet = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   for (const name of [...PetClasses.clawdClassName.split(' '), ...PetClasses.clawdReplayButtonClassName.split(' ')])
     assert.ok(sheet.includes(`.${cssEscape(name)}`), `${name} in c6a992d55`);
   const local = fs.readdirSync(path.join(ROOT, 'src')).filter(name => name.endsWith('.css')).map(name => source(`src/${name}`)).join('\n');
@@ -427,11 +442,13 @@ test('home-env-07: the Clawd button carries O7 and ClawdLaptopInner’s classes;
 test('generators: the R3-home environment targets and the code-start outputs match their committed modules', async () => {
   const { extractCurrentCodeHelpers } = await import('../scripts/extract-code-ui-current.mjs');
   await extractCurrentCodeHelpers({ check: true, only: new Set(['environment-picker-keys.mjs', 'environment-machine-variables.mjs', 'environment-menu-rows.mjs',
-    'environment-select-parts.mjs', 'environment-folder-view.mjs', 'environment-field-controls.mjs', 'environment-menu-controls.mjs']) });
+    'environment-select-parts.mjs', 'environment-folder-view.mjs', 'environment-field-controls.mjs', 'environment-menu-controls.mjs',
+    'environment-form-layout.mjs', 'environment-field-header.mjs', 'environment-checkbox.mjs']) });
   const { extractCodeStart } = await import('../scripts/extract-code-start.mjs');
   await extractCodeStart({ check: true });
   const start = JSON.parse(source('src/generated/code-start/manifest.json'));
   const pet = start.outputs.find(output => output.target === 'pet.mjs');
-  assert.deepEqual(pet.bindings.map(binding => binding.name), ['O7']);
-  assert.deepEqual(pet.fragments.map(fragment => [fragment.name, fragment.source]), [['clawdReplayButtonClassName', 'cc13f8cc7--_rF5jpy.js']]);
+  assert.equal(start.referenceVersion, '3.6556.2');
+  assert.deepEqual(pet.bindings.map(binding => binding.name), ['jfe']);
+  assert.deepEqual(pet.fragments.map(fragment => [fragment.name, fragment.source]), [['clawdReplayButtonClassName', 'cc13f8cc7-BHF1aIvS.js']]);
 });

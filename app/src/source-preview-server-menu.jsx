@@ -23,10 +23,12 @@ const MenuHost = {
   Trigger: ({ render, disabled }) => <RoutineSourceMenu.Trigger render={React.cloneElement(render, { disabled })} />,
   Popup: ({ container, collisionPadding, ...props }) => <RoutineSourceMenu.Popup {...props} label={t('Dev servers')} />,
 };
-const renderItems = createPreviewMenuItems({ Menu: MenuHost, Tooltip: SourceTooltip, Spinner, collisionPadding: 8 });
+// 3.6556.2 cfca6870a S / cf580efe9 mi: collision padding is the official shared-18 menu padding (imported by the
+// generated adapters); the row label Fragment and the RTL direction are the official ones too.
+const renderItems = createPreviewMenuItems({ Menu: MenuHost, Tooltip: SourceTooltip, Spinner });
 export const { Menu: OriginalPreviewServerMenu } = createPreviewServerMenu({
-  Menu: MenuHost, Tooltip: SourceTooltip, Button, Spinner, Provider: React.Fragment,
-  useStable, useOptionalStable, usePortal: () => undefined, useIntl: useRoutineIntl, renderItems, collisionPadding: 8,
+  Menu: MenuHost, Tooltip: SourceTooltip, Button, Spinner,
+  useStable, useOptionalStable, usePortal: () => undefined, useIntl: useRoutineIntl, renderItems,
 });
 
 export function SourcePreviewServerMenu({ rows, loading, onStart, onStop, onAddServer }) {

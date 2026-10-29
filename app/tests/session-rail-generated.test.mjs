@@ -1,5 +1,6 @@
-// R4f-rail SR-2: the Code session rail's view (cf74bc599 iD / rD / DE and the cards) and its pure derivations,
-// generated from the installed 2.42304.0 originals into src/generated/session-rail (scripts/extract-session-rail.mjs).
+// R4f-rail SR-2: the Code session rail's view (cf74bc599 Zj / Gj / sj and the cards) and its pure derivations,
+// generated from the Claude Desktop 3.6556.2 originals into src/generated/session-rail (scripts/extract-session-rail.mjs;
+// w5-session-rail-gen moved it from 2.42304.0: iD→Zj, rD→Gj, DE→sj, wE→ij, gD→uM, lD→rM, TD→xM, xE→$A …).
 // Source/AST pins, Vite SSR renders over fixtures and the pure functions driven directly: no browser, no Electron, no
 // network, no real storage (a Map-backed localStorage stub), no external process.
 import test, { before, after } from 'node:test';
@@ -8,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createHash } from 'node:crypto';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractSessionRail, unlistedSlices } from '../scripts/extract-session-rail.mjs';
@@ -21,7 +23,8 @@ const generated = file => fs.readFileSync(path.join(directory, file), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 const render = node => renderToStaticMarkup(node);
-const RAIL = 'cf74bc599-D9NZWRyl.js';
+const RAIL = 'cf74bc599-CRYqipWN.js';
+const DND = 'c09f6b4e5-CLm8I7_i.js';
 
 const storage = new Map();
 const localStorageStub = {
@@ -44,7 +47,7 @@ before(async () => {
   FileAccess = await server.ssrLoadModule('/src/generated/r3b-transcript/session-file-access.mjs');
   Query = await server.ssrLoadModule('/src/generated/files-changes/file-browser-query.mjs');
   GitKey = await server.ssrLoadModule('/src/generated/files-changes/git-info-key.mjs');
-  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
 });
 after(async () => {
   await server?.close();
@@ -79,56 +82,87 @@ const rail = (props, { isFlat = true } = {}) => {
   return render(isFlat ? flat(node) : node);
 };
 
-test('generator: the originals still match 2.42304.0 and src/generated/session-rail is current', async () => {
+test('generator: the originals still match 3.6556.2 and src/generated/session-rail is current', async () => {
   const checked = await extractSessionRail({ check: true });
-  assert.equal(checked.referenceVersion, '2.42304.0');
+  assert.equal(checked.referenceVersion, '3.6556.2');
+  assert.equal(checked.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807', 'E6');
+  // R1: the release constants come from official-3.6556.2.mjs; no 2.42304.0 chunk is read any more.
+  const generator = fs.readFileSync(path.join(app, 'scripts/extract-session-rail.mjs'), 'utf8');
+  assert.match(generator, /import \* as official from '\.\/official-3\.6556\.2\.mjs';/);
+  assert.equal(occurrences(generator, 'D9NZWRyl'), 0);
+  for (const m of checked.modules) assert.equal(m.referenceVersion, '3.6556.2', m.target);
+  // E34 / wave 7: the frozen 2.42304.0 view transcript-rows linked through is gone (transcript-rows is on 3.6556.2).
+  assert.equal(manifest.legacy, undefined);
+  assert.equal(fs.existsSync(path.join(app, 'scripts/session-rail-legacy-2.42304.0.json')), false);
   assert.deepEqual(checked.modules.map(m => m.target), manifest.modules.map(m => m.target));
   assert.equal(fs.existsSync(path.join(app, 'scripts/verify-gen-session-rail.mjs')), true, 'prepare-ui verifies it (D0)');
 });
 
-// R4i GR4: the copiedLater list (shared-25 IU / RU / JU / qU copied by turn-box and routines-shared after SR-2) is gone.
-// stable-array.mjs imports zU / ZU from turn-box and drag-click-guard.mjs imports u$ from sidebar-reorder (their one
-// copy) and re-exports them under this area's public names; only `duplicates` still allows a second copy.
+// One copy: a binding another importable area slices is imported from there (its root re-exported under this area's
+// public name); a second slice is allowed only where `duplicates` says why it is harmless.
 test('one copy rule: a binding another area also slices is refused unless duplicates names it', () => {
   const at = (area, target) => ({ area, target });
-  const turnBox = at('turn-box', 'owner-window.mjs'), routines = at('routines-shared', 'shared-25-DP8p7i1Z.mjs');
-  assert.deepEqual(unlistedSlices('shared-25-DP8p7i1Z.js:RU', [turnBox]), ['turn-box/owner-window.mjs'], 'copiedLater is gone');
-  assert.deepEqual(unlistedSlices('shared-25-DP8p7i1Z.js:qU', [routines, turnBox]), ['routines-shared/shared-25-DP8p7i1Z.mjs', 'turn-box/owner-window.mjs']);
-  assert.deepEqual(unlistedSlices('shared-130-DnUXVlYq.js:Y', [at('anywhere', 'x.mjs')]), [], 'duplicates: harmless everywhere');
+  assert.deepEqual(unlistedSlices('shared-25-DOWZRSlq.js:IH', [at('session-rail-sections', 'stable-value.mjs')]), ['session-rail-sections/stable-value.mjs']);
+  for (const key of ['c96d752d0-CWv_7-n9.js:vke', 'c96d752d0-CWv_7-n9.js:uL', 'c73f45bc3-B7hbL7H9.js:sx', 'c73f45bc3-B7hbL7H9.js:dx', 'shared-78-D5Fw2h0a.js:w4'])
+    assert.deepEqual(unlistedSlices(key, [at('anywhere', 'x.mjs')]), [], key);
   const source = fs.readFileSync(path.join(app, 'scripts/extract-session-rail.mjs'), 'utf8');
   assert.equal(occurrences(source, 'const copiedLater'), 0);
-  // Not one binding of this area is also sliced by turn-box, routines-shared or sidebar-reorder.
+  // Not one binding of this area is also sliced by sidebar-reorder or routines-shared (3.6556.2).
   const generatedRoot = path.join(app, 'src/generated');
   const mine = new Set(manifest.modules.flatMap(m => m.bindings.map(b => `${m.source}#${b.name ?? b}`)));
-  for (const area of ['turn-box', 'routines-shared', 'sidebar-reorder']) {
+  for (const area of ['routines-shared', 'sidebar-reorder', 'session-rail-sections', 'session-rail-context']) {
     const other = JSON.parse(fs.readFileSync(path.join(generatedRoot, area, 'manifest.json'), 'utf8'));
     for (const m of other.modules) for (const b of m.bindings ?? [])
       assert.equal(mine.has(`${path.basename(m.source)}#${b.name ?? b}`), false, `${area}/${m.target} ${b.name ?? b}`);
   }
-  // The former slices are imports of the owning area's copy, re-exported under the same public names.
-  const stable = manifest.modules.find(m => m.target === 'stable-array.mjs');
-  assert.deepEqual(stable.bindings.map(b => b.name ?? b).sort(), ['$U', 'YU']);
+  // Roots another area slices and exports are imports of that copy, re-exported under the same public names.
   const reexports = manifest.modules.filter(m => m.target !== 'dnd-kit.mjs') // dnd-kit's 13 roots: checked with the card stack below
     .flatMap(m => m.imports.filter(i => i.reexport).map(i => `${m.target}:${i.local}<-${i.kind}:${i.name}`));
-  assert.deepEqual(reexports.sort(), ['drag-click-guard.mjs:u$<-sidebar-reorder:suppressClickAfterDrag', 'stable-array.mjs:ZU<-turn-box:ZU', 'stable-array.mjs:zU<-turn-box:zU']);
-  assert.match(generated('stable-array.mjs'), /import \{ zU, ZU \} from "\.\.\/turn-box\/owner-window\.mjs";/);
-  assert.match(generated('stable-array.mjs'), /export \{ zU as useStableArray, ZU as stripInvisible, \$U as displayPath \};/);
-  assert.match(generated('drag-click-guard.mjs'), /import \{ suppressClickAfterDrag as u\$ \} from "\.\.\/sidebar-reorder\/reorder-support\.mjs";/);
-  assert.equal(occurrences(generated('stable-array.mjs'), 'function IU('), 0);
-  assert.equal(occurrences(generated('drag-click-guard.mjs'), 'function u$('), 0);
+  assert.deepEqual(reexports.sort(), [
+    // connector-name's eB / BP (shared-78 connector naming, with UP under eB) and saved-output's zA (shared-130) are
+    // cowork-progress's one copy since W13 (D1, w13-close-rail-regen); that slice imports only mcp-app-card's shared-78
+    // (qz, published there by w13-close-gen-dedup), so no Cowork host adapter enters the rail graph (E41). qz itself is
+    // mcp-app-card's one copy.
+    // coachmark.mjs's Sj (the CDS coachmark, cwui-46) is cowork-scheduled's one copy.
+    'coachmark.mjs:Sj<-cowork-scheduled:Sj',
+    'connector-name.mjs:BP<-cowork-progress:BP', 'connector-name.mjs:eB<-cowork-progress:eB', 'connector-name.mjs:qz<-mcp-app-card:claudeInChromeServerName',
+    'drag-click-guard.mjs:tM<-sidebar-reorder:suppressClickAfterDrag','environment-target.mjs:S<-code-current:splitEnvironmentSettings', 'plugin-connector.mjs:Ro<-mcp-app-card:ix',
+    // plugin-connector's hJ (and the mJ under it) is cowork-home's one shared-52 copy (D1, w11-sweep-ccres).
+    'plugin-connector.mjs:hJ<-cowork-home:hJ',
+    // saved-output's WV (shared-130, exported pathFileName) is code-current file-output-paths' outputBasename (cc-rest-files),
+    // and since w12-viewtabs its UV (forwardSlashes) is that module's forwardSlashes too (D1: one copy of shared-130 UV).
+    'saved-output.mjs:UV<-code-current:forwardSlashes', 'saved-output.mjs:WV<-code-current:outputBasename', 'saved-output.mjs:zA<-cowork-progress:zA']);
+  assert.match(generated('connector-name.mjs'), /import \{ eB, BP \} from "\.\.\/cowork-progress\/shared-78-D5Fw2h0a\.mjs";/);
+  assert.match(generated('connector-name.mjs'), /import \{ claudeInChromeServerName as qz \} from "\.\.\/mcp-app-card\/shared-78\.mjs";/);
+  assert.equal(occurrences(generated('connector-name.mjs'), 'function UP('), 0);
+  assert.deepEqual(fs.readFileSync(path.join(generatedRoot, 'cowork-progress/shared-78-D5Fw2h0a.mjs'), 'utf8').match(/^import .*$/gm),
+    ['import { claudeInChromeServerName as qz } from "../mcp-app-card/shared-78.mjs";']);
+  assert.match(generated('drag-click-guard.mjs'), /import \{ suppressClickAfterDrag as tM \} from "\.\.\/sidebar-reorder\/reorder-support\.mjs";/);
+  assert.equal(occurrences(generated('drag-click-guard.mjs'), 'function tM('), 0);
+  // shared-25 UH / DG / kG are sliced here (turn-box, which held their 2.42304.0 copies, is still 2.42304.0); the stable
+  // value hook IH under UH is session-rail-sections' one copy.
+  const stable = manifest.modules.find(m => m.target === 'stable-array.mjs');
+  assert.deepEqual(stable.bindings.map(b => b.name ?? b).sort(), ['BH', 'DG', 'HH', 'TG', 'UH', 'kG', 'wG']);
+  assert.match(generated('stable-array.mjs'), /import \{ useStableValue as IH \} from "\.\.\/session-rail-sections\/stable-value\.mjs";/);
+  assert.match(generated('stable-array.mjs'), /export \{ UH as useStableArray, DG as stripInvisible, kG as displayPath \};/);
 });
 
 test('feature strings: each pinned string is in the original chunk (counted) and in the generated module', () => {
   const pins = [
     [RAIL, 'Session details', 1, 'rail-view.mjs'], [RAIL, 'Draggable section', 1, 'rail-view.mjs'],
     [RAIL, 'To pick up a section, press Space or Enter', 1, 'rail-view.mjs'], [RAIL, 'Picked up {name}', 1, 'rail-view.mjs'],
+    [RAIL, 'Moving {name} was cancelled.', 1, 'rail-view.mjs'],
     [RAIL, 'Claude is reading from {folder} on {branch}', 1, 'rail-view.mjs'], [RAIL, 'Claude hasn\\u2019t moved to this session', 1, 'rail-view.mjs'],
     [RAIL, 'Working folder', 1, 'rail-view.mjs'], [RAIL, 'Additional folder', 2, 'rail-view.mjs'], [RAIL, 'Choose folder\\u2026', 1, 'rail-view.mjs'],
-    [RAIL, 'Manage connectors', 1, 'rail-view.mjs'], [RAIL, '{count} to reconnect', 1, 'rail-view.mjs'], [RAIL, 'ohKjpG6KDI', 1, 'rail-view.mjs'],
+    [RAIL, 'Manage connectors', 1, 'rail-view.mjs'], [RAIL, '{count} to reconnect', 1, 'rail-view.mjs'], [RAIL, 'NM9g1WPqsR', 1, 'rail-view.mjs'],
+    [RAIL, 'ZHe7cLKE7v', 1, 'rail-view.mjs'], [RAIL, 'ohKjpG6KDI', 1, 'rail-view.mjs'],
     [RAIL, 'data-rail-card', 1, 'rail-view.mjs'], [RAIL, 'data-rail-slot-off', 1, 'rail-view.mjs'], [RAIL, '{server} image', 1, 'rail-view.mjs'],
-    [RAIL, 'has-[[data-epitaxy-branch-row-ghost]]:flex', 1, 'rail-derive.mjs'], [RAIL, 'EpitaxySessionRailHost', 1, null],
-    // R4i GR4: dnd-kit's text lives in its one copy, sidebar-reorder/dnd-kit.mjs.
-    ['c09f6b4e5-DErbwtLQ.js', 'DndDescribedBy', 1, '../sidebar-reorder/dnd-kit.mjs'], ['c09f6b4e5-DErbwtLQ.js', 'translate3d(', 1, '../sidebar-reorder/dnd-kit.mjs'],
+    // C1-5: the engine plugin rail pane (Close, rbrahOGMC3) and C1-6: the Save link in the mark slot (ps-xs).
+    [RAIL, 'rbrahOGMC3', 1, 'rail-view.mjs'], [RAIL, 'flex max-w-40', 1, 'rail-view.mjs'], [RAIL, 'flex shrink-0 ps-xs', 2, 'rail-view.mjs'],
+    [RAIL, 'has-[[data-epitaxy-branch-row-ghost]]:flex', 1, 'rail-derive.mjs'], [RAIL, '"sshConnectionRemoved"', 1, 'rail-derive.mjs'],
+    [RAIL, 'EpitaxySessionRailHost', 1, null],
+    // dnd-kit's text lives in its one copy, sidebar-reorder/dnd-kit.mjs.
+    [DND, 'DndDescribedBy', 1, '../sidebar-reorder/dnd-kit.mjs'], [DND, 'translate3d(', 1, '../sidebar-reorder/dnd-kit.mjs'],
   ];
   for (const [file, needle, count, target] of pins) {
     assert.equal(occurrences(raw(file), needle), count, `${file}: ${needle}`);
@@ -137,9 +171,12 @@ test('feature strings: each pinned string is in the original chunk (counted) and
     const unescaped = needle.replace('\\u2019', '’').replace('\\u2026', '…');
     assert.ok(text.includes(needle) || text.includes(unescaped), `${target}: ${needle}`);
   }
-  // The generated modules carry the original text: rD's aside and DE's announcements, verbatim.
-  assert.match(generated('rail-view.mjs'), /onMouseDownCapture: tl,\n\s+onClickCapture: tl,\n\s+onDoubleClickCapture: tl,/);
+  // The generated modules carry the original text: Gj's aside and sj's announcements, verbatim.
+  assert.match(generated('rail-view.mjs'), /onMouseDownCapture: op,\n\s+onClickCapture: op,\n\s+onDoubleClickCapture: op,/);
   assert.match(generated('rail-view.mjs'), /"\{name\} dropped at section \{position\} of \{count\}\."/);
+  // E37: the rail itself renders no CDS Toolbar (cf74bc599 has none); the pane titles that use it are another area's.
+  assert.equal(occurrences(raw(RAIL), '"data-cds":"Toolbar"'), 0);
+  for (const m of manifest.modules) assert.ok(!m.imports.some(i => i.name === 'CdsToolbar'), m.target);
 });
 
 test('one copy: view-tabs and the kit by public names, dnd-kit and the rail contexts sliced only here', () => {
@@ -155,10 +192,14 @@ test('one copy: view-tabs and the kit by public names, dnd-kit and the rail cont
   // The rail view reads the kit's contexts, store and components (SR-1), never a second slice of them.
   const view = manifest.modules.find(m => m.target === 'rail-view.mjs');
   const kitImport = local => view.imports.find(i => i.local === local);
-  for (const [local, name] of [['ki', 'RailFlatContext'], ['rl', 'RailSessionKeyContext'], ['Tl', 'railSectionsStore'], ['ag', 'RailCard'], ['Zh', 'RailCardGripContext'],
-    ['i_', 'BranchChipFaceContext'], ['r_', 'ChangesRowLayoutContext'], ['n_', 'BranchChip'], ['Rl', 'RailWorktreeMark']])
+  for (const [local, name] of [['wi', 'RailFlatContext'], ['Uf', 'RailSessionKeyContext'], ['Yf', 'railSectionsStore'], ['N_', 'RailCard'], ['W_', 'RailCardGripContext'],
+    ['Kl', 'BranchChipFaceContext'], ['Ds', 'ChangesRowLayoutContext'], ['dc', 'BranchChip'], ['kp', 'RailWorktreeMark'], ['E_', 'RailPluginSectionsContext']])
     assert.deepEqual([kitImport(local)?.kind, kitImport(local)?.name], ['session-rail-kit', name], local);
-  // R4i GR4: dnd-kit (c09f6b4e5) has one copy, sidebar-reorder's byte-for-byte chunk copy (enum and activator
+  // React Compiler helpers by their E3 semantic names from view-tabs' shared-frame (R3), never a second copy.
+  for (const m of manifest.modules) for (const i of m.imports.filter(i => /^(J[0-9]|K[0-5]|I[1-5]|Z[1-5])$/.test(i.local)))
+    assert.deepEqual([i.kind, i.from], ['view-tabs', '../view-tabs/shared-frame-6jtSkIit.js'], `${m.target}: ${i.local}`);
+  assert.ok(view.imports.some(i => i.local === 'J9' && i.name === 'reactMemoCache'));
+  // dnd-kit (c09f6b4e5) has one copy, sidebar-reorder's byte-for-byte chunk copy (enum and activator
   // initialisers included); no other area holds it, and this area's dnd-kit.mjs only re-exports its 13 roots from there.
   for (const area of fs.readdirSync(path.join(app, 'src/generated'))) {
     if (area === 'session-rail' || area === 'sidebar-reorder') continue;
@@ -166,7 +207,7 @@ test('one copy: view-tabs and the kit by public names, dnd-kit and the rail cont
     if (fs.existsSync(file)) assert.ok(!fs.readFileSync(file, 'utf8').includes('c09f6b4e5'), `${area} slices dnd-kit`);
   }
   const reorder = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/sidebar-reorder/manifest.json'), 'utf8'));
-  assert.deepEqual(reorder.modules.filter(m => m.source === 'c09f6b4e5-DErbwtLQ.js').map(m => [m.target, m.kind]), [['dnd-kit.mjs', 'copy']]);
+  assert.deepEqual(reorder.modules.filter(m => m.source === DND).map(m => [m.target, m.kind]), [['dnd-kit.mjs', 'copy']]);
   const dnd = manifest.modules.find(m => m.target === 'dnd-kit.mjs');
   assert.deepEqual(dnd.bindings, [], 'no second slice of dnd-kit');
   assert.equal(dnd.imports.length, 13);
@@ -177,25 +218,32 @@ test('one copy: view-tabs and the kit by public names, dnd-kit and the rail cont
   assert.equal(occurrences(generated('dnd-kit.mjs'), 'function '), 0);
   // Contexts this area owns, each instantiated once (no other area slices them).
   const contexts = Object.fromEntries(manifest.modules.filter(m => m.contexts).map(m => [m.target, m.contexts]));
-  assert.deepEqual(contexts['region-reading-order.mjs'], ['ft']);
-  assert.deepEqual(contexts['pr-count-context.mjs'], ['qz']);
-  assert.deepEqual(contexts['preview-placement.mjs'], ['D']);
+  assert.deepEqual(contexts['region-reading-order.mjs'], ['Ze']);
+  assert.deepEqual(contexts['pr-count-context.mjs'], ['cL']);
+  assert.deepEqual(contexts['preview-placement.mjs'], ['T']);
+  assert.deepEqual(contexts['repo-name-chip.mjs'], ['uL'], 'the chip slot flag, provided by vke and read by lM (duplicates)');
+  assert.ok(view.imports.some(i => i.local === 'pc' && i.from === './repo-name-chip.mjs' && i.name === 'RepoNameChipSlotContext'));
   // The CdsDropdown parts the repo menu renders are members of the view-tabs CdsDropdown, not slices.
   assert.deepEqual(manifest.modules.find(m => m.target === 'menu-items.mjs').members,
-    { $S: 'EC.Separator', QS: 'EC.Submenu', ZS: 'EC.SubmenuTrigger', qS: 'EC.Popup', XS: 'EC.Item' });
+    { mT: 'GT.Separator', pT: 'GT.Submenu', fT: 'GT.SubmenuTrigger', cT: 'GT.Popup', dT: 'GT.Item' });
   // Adapters stand for these originals (each feature-checked by the generator).
   const adapted = new Set(manifest.modules.flatMap(m => m.imports.filter(i => i.kind === 'adapter').map(i => i.original)));
-  for (const original of [`${RAIL}:yE`, `${RAIL}:sE`, `${RAIL}:ED`, `${RAIL}:CD`, `${RAIL}:pD`, `${RAIL}:mE`, 'shared-frame-BfjMqbuN.js:nd', 'shared-frame-BfjMqbuN.js:dd',
-    'shared-frame-BfjMqbuN.js:Jd', 'c856385e2-DVsjb2QL.js:In', 'shared-7-B8UIMGDr.js:RT', 'shared-11-BuQ3CK5I.js:Fd',
-    // R4i-rail RL1: the stores and creators the Save environment reads.
-    'cd0cf5b5e-BajR1nyG.js:z', 'shared-8-B5lJ8U5C.js:Q', 'shared-19-CkPOiIKm.js:D7', 'c73f45bc3-CFrHin0p.js:Kc', 'c4e18af0a-BPhGaxmd.js:c'])
-    assert.ok(adapted.has(original), original);
-  // R4i-rail RL1: the CDS TextLink (shared-frame Cd) is view-tabs' generated CdsTextLink, no longer an adapter.
-  assert.equal(adapted.has('shared-frame-BfjMqbuN.js:Cd'), false);
-  assert.ok(manifest.modules.find(m => m.target === 'rail-view.mjs').imports.some(i => i.local === 'Cr' && i.kind === 'view-tabs' && i.name === 'CdsTextLink'));
-  // The pinned fO assembly the host replaces (SR-7) and the export of the rail host.
-  assert.ok(manifest.callSites.some(site => site.binding === 'fO' && site.features.includes('ee = cO(I, k?.remote),')));
-  assert.ok(manifest.callSites.some(site => site.raw && site.features.includes('pO as EpitaxySessionRailHost')));
+  assert.deepEqual([...adapted].sort(), [`${RAIL}:KA`, `${RAIL}:SM`, `${RAIL}:ZA`, `${RAIL}:sM`, `${RAIL}:vM`, `${RAIL}:zA`,
+    'c280f9bbb-CutcMso2.js:L', 'c68c4283d-CWbOoVxS.js:_f', 'c73f45bc3-B7hbL7H9.js:Vb', 'c73f45bc3-B7hbL7H9.js:du', 'c856385e2-aEyDzrcK.js:rr',
+    // w10-ccres-rail-env-edit: the lazy environment dialog handles Zx preloads (null here).
+    'c73f45bc3-B7hbL7H9.js:ou', 'cc5b397c6-BgWEcD7A.js:l',
+    'cd0cf5b5e-BCzJmEwZ.js:z', 'cecbf1aa5-BT0v8IlE.js:l', 'shared-11-_AVGLHEz.js:_m', 'shared-4-DUB1Oi0O.js:Sk', 'shared-46-BIbZBGFq.js:IL',
+    'shared-8-Db1QN4mf.js:og', 'vendor-intl-DYfox5Co.js:Gt', 'vendor-intl-DYfox5Co.js:q'].sort());
+  // 3.6556.2: the skeletons, the layer-aware z-index and the text link are view-tabs' generated CDS (no stand-ins), and the
+  // connector icon is mcp-app-card's one copy of shared-7 Hk.
+  for (const [local, name] of [['U', 'CdsLoadingSkeleton'], ['ne', 'CdsSkeleton'], ['W', 'useCdsLayerAwareZIndex'], ['G', 'CdsTextLink']])
+    assert.ok(view.imports.some(i => i.local === local && i.kind === 'view-tabs' && i.name === name), name);
+  assert.ok(view.imports.some(i => i.local === 'Co' && i.from === '../mcp-app-card/shared-7.mjs'), 'shared-7 Hk (exported di)');
+  // The pinned TN assembly the host replaces (SR-7) and the export of the rail host.
+  const tn = manifest.callSites.find(site => site.binding === 'TN');
+  for (const feature of ['K = xN(te, L?.remote),', 'pluginSections: wn,', 'Pe = L?.sshConnectionRemoved === !0,', 'openSkills: Je ? Ye : null,'])
+    assert.ok(tn.features.includes(feature), feature);
+  assert.ok(manifest.callSites.some(site => site.raw && site.loose && site.features.includes('LN as EpitaxySessionRailHost')));
   // Every root is pinned to its original text.
   const generator = fs.readFileSync(path.join(app, 'scripts/extract-session-rail.mjs'), 'utf8');
   for (const m of manifest.modules) for (const root of Object.keys(m.exports))
@@ -323,12 +371,17 @@ test('lD: Connectors — folded by default, the counts summary, the single row, 
   const pending = open({ count: null, needReconnect: 0, servers: [], onOpen() {} });
   assert.match(pending, /aria-label="Manage connectors"/);
   assert.match(pending, /data-cds="SkeletonGroup"[^>]*aria-hidden="true"/, 'TD: a decorative skeleton while the count loads');
-  // PE: names / states as fO builds them (failed and needs-auth first), labelled by uE.
-  const servers = Derive.connectorRows({ names: 'github\nlinear_app\nplugin:acme:docs', states: '\nfailed\nunavailable', iconTypes: '', iconSrcs: '', labelOf: Derive.connectorLabel });
+  // yj: names / states / targets as TN builds them (failed and needs-auth first), labelled by HA; C1-9: each row carries the
+  // target its click opens ("account:<id>" / "session:<id>", c227f4d5e cJ).
+  const servers = Derive.connectorRows({ names: 'github\nlinear_app\nplugin:acme:docs', states: '\nfailed\nunavailable', iconTypes: '', iconSrcs: '',
+    targets: '\naccount:abc\n', labelOf: Derive.connectorLabel });
   assert.deepEqual(servers.map(s => [s.name, s.label, s.state]), [['linear_app', 'Linear app', 'failed'], ['github', 'Github', undefined], ['plugin:acme:docs', 'Docs', 'unavailable']]);
   assert.equal(servers[2].plugin, 'Acme');
+  assert.deepEqual(servers[0].target, { kind: 'account', id: 'abc' });
+  assert.equal(servers[1].target, undefined);
   const list = open({ count: 3, needReconnect: 1, unavailable: 1, servers, onOpen() {} });
-  assert.match(list, /<p class="font-sans shrink-0 leading-tight">L<\/p>/, 'RT\'s letter avatar (MT) for a server without an icon source');
+  assert.match(list, /<p class="font-sans shrink-0 leading-tight">L<\/p>/, 'shared-7 Hk\'s letter avatar (Ik) for a server without an icon source');
+  assert.match(list, /style="width:16px;height:16px;border-radius:4\.32px" class="shrink-0 bg-surface-3 border shadow-sm flex items-center justify-center !border-0 !shadow-none !bg-transparent"/, 'Fk, the tile');
   assert.match(list, /text-warning">Reconnect<\/span>/);
   assert.match(list, /text-muted-as-secondary">Unavailable<\/span>/);
   assert.ok(list.indexOf('Linear app') < list.indexOf('Github'));
@@ -417,8 +470,8 @@ test('pure derivations: RE / XE / ZE / QE / HE / VE / ME / GE / UE / AE / zE / n
   assert.deepEqual(folders, [
     { name: 'lib', path: '/r/lib', cwd: '/r/lib', branch: 'dev', repoLinks: ['x'] },
     { name: 'tool', path: '/r/tool', cwd: '/r/tool/.claude/worktrees/t', branch: 'claude/t', worktree: { name: 't', path: '/r/tool/.claude/worktrees/t' } },
-    { name: 'other', path: 'acme/other', cwd: undefined, branch: 'main', repoLinks: undefined },
-    { name: 'docs', path: 'acme/docs' },
+    { name: 'other', path: 'acme/other', cwd: undefined, repoSlug: 'acme/other', branch: 'main', repoLinks: undefined },
+    { name: 'docs', path: 'acme/docs', repoSlug: 'acme/docs' },
   ]);
   // GE / KE: the environment row. Local: the machine label and "Local session"; a named environment shows its name.
   const labels = { local: 'This Mac', cloud: 'Cloud', bridge: 'Remote Control' };
@@ -434,16 +487,24 @@ test('pure derivations: RE / XE / ZE / QE / HE / VE / ME / GE / UE / AE / zE / n
   // AE / zE / nD.
   assert.deepEqual(['connecting', 'idle', 'connected', undefined].map(environmentConnection), ['connecting', 'notConnected', undefined, undefined]);
   assert.equal(remoteControlState({ metaFetched: true, props: 'p' }), 'p');
-  assert.equal(remoteControlState({ metaFetched: false, metaPending: true, available: true, hasRepo: true, hasBranchRow: true }), 'pending');
-  assert.equal(remoteControlState({ metaFetched: true, available: true, discoveryPending: false, hasBranchRow: true }), undefined);
+  // C1-8: wj's inputs are metaFetched / metaPending / props / available / prefsPending (no discovery or repo inputs).
+  assert.equal(remoteControlState({ metaFetched: false, metaPending: true, available: true }), 'pending');
+  assert.equal(remoteControlState({ prefsPending: true }), 'pending');
+  assert.equal(remoteControlState({ metaFetched: true, available: true }), undefined);
   assert.deepEqual(railPlanSteps([{ id: 'a', content: 'A', status: 'completed' }, { id: 'b', content: 'B', status: 'pending', activeForm: 'Doing B' }, { id: 'c', content: 'C', status: 'pending' }]),
     [{ key: '0:a', label: 'A', state: 'done', status: 'completed' }, { key: '1:b', label: 'B', state: 'current', status: 'pending', activeLabel: 'Doing B' },
       { key: '2:c', label: 'C', state: 'pending', status: 'pending' }]);
   // sO: cO's git-info select (a detached HEAD is no branch; the repo slug's name is the repo name).
-  assert.deepEqual(checkoutInfo({ branch: 'HEAD', repo: 'acme/widgets' }), { branch: undefined, repoName: 'widgets' });
-  assert.deepEqual(checkoutInfo({ branch: 'detached:abc', repo: 'widgets' }), { branch: undefined, repoName: undefined });
-  assert.deepEqual(checkoutInfo({ branch: 'main' }), { branch: 'main', repoName: undefined });
-  assert.deepEqual(NO_CHECKOUT_INFO, { branch: undefined, repoName: undefined });
+  // bN / yN carry headUnread (C1-8).
+  assert.deepEqual(checkoutInfo({ branch: 'HEAD', repo: 'acme/widgets' }), { branch: undefined, repoName: 'widgets', headUnread: false });
+  assert.deepEqual(checkoutInfo({ branch: 'detached:abc', repo: 'widgets' }), { branch: undefined, repoName: undefined, headUnread: false });
+  assert.deepEqual(checkoutInfo({ branch: 'main' }), { branch: 'main', repoName: undefined, headUnread: false });
+  assert.deepEqual(NO_CHECKOUT_INFO, { branch: undefined, repoName: undefined, headUnread: false });
+  // gN: the meta select (shared-78 L4) keeps sshConnectionRemoved and the Remote Control fields of c227f4d5e nY.
+  const meta = Derive.RAIL_SESSION_META({ sshConnectionRemoved: true, bridgeSessionUrl: 'u', isCloudRun: false, other: 1 });
+  assert.equal(meta.sshConnectionRemoved, true);
+  assert.equal(meta.bridgeSessionUrl, 'u');
+  assert.ok(Object.hasOwn(meta, 'isCloudRun') && Object.hasOwn(meta, 'remoteControlAvailable') && !Object.hasOwn(meta, 'other'));
   assert.deepEqual(['/a/b/', 'C:\\x\\y', 'solo'].map(pathLeaf), ['b', 'y', 'solo']);
   assert.equal(isSideSessionNotesFolder('/Users/me/.claude/side-session-notes/local_abc-1/'), true);
   assert.equal(environmentSummary({ folder: { name: '' }, branch: { name: 'main' } }), 'main');
@@ -469,23 +530,17 @@ test('hooks: lO holds while pending, cO reads the git-info query (cached data th
   assert.equal(info, Derive.NO_CHECKOUT_INFO);
   client.setQueryData([GitKey.gitInfoQueryKey, '/r/repo', 'local'], { isRepo: true, root: '/r/repo', repo: 'acme/widgets', branch: 'feat/x' });
   within(h(Checkout, { cwd: '/r/repo' }));
-  assert.deepEqual(info, { branch: 'feat/x', repoName: 'widgets' });
+  assert.deepEqual(info, { branch: 'feat/x', repoName: 'widgets', headUnread: false });
   client.clear();
   assert.equal(typeof Hooks.useComposerMenuOpensRailSection, 'function');
 });
 
-test('adapters: the skeleton DOM, the z-index base, the connector icon, the file reference, and the refusals', () => {
+test('adapters: the skeleton is the CDS one, the file reference, and the refusals', () => {
+  // xM: the decorative CdsLoadingSkeleton group around one CdsSkeleton bar (view-tabs; no stand-in any more).
   const skeleton = render(h(View.RailSkeleton, { width: 110 }));
   assert.equal(skeleton, '<span data-cds="SkeletonGroup" data-motion="wave" data-hold="delayed" aria-hidden="true" class="flex min-w-0 items-center">'
     + '<span aria-hidden="true" class="contents"><span data-cds="Skeleton" class="block h-[1em] max-w-full rounded bg-[var(--cds-skeleton-base)]" style="width:110px;height:12px"></span></span></span>');
-  const status = render(h(Adapters.SkeletonGroup, { label: 'Loading folders' }, h(Adapters.Skeleton, { width: 20, height: 20 })));
-  assert.match(status, /^<div data-cds="SkeletonGroup" data-motion="wave" data-hold="delayed" role="status"><span class="sr-only" data-skeleton-label=""><\/span><div aria-hidden="true" class="contents"><div data-cds="Skeleton"/);
-  assert.match(render(h(Adapters.Skeleton, { width: 4 })), /role="status"[\s\S]*<span class="sr-only">Loading<\/span>/);
-  assert.equal(Adapters.useLayerAwareZIndex(1), 1);
-  const icon = render(h(Adapters.ConnectorIcon, { size: 16, type: 'favicon', name: 'plugin:acme:docs', fadeInOnLoad: false }));
-  assert.match(icon, /^<div style="width:16px;height:16px;border-radius:4\.32px" class="shrink-0 bg-surface-3 border shadow-sm flex items-center justify-center !border-0 !shadow-none !bg-transparent">/);
-  assert.match(icon, /<p class="font-sans shrink-0 leading-tight">D<\/p>/);
-  assert.throws(() => render(h(Adapters.ConnectorIcon, { size: 16, type: 'favicon', src: 'https://x/icon.png', name: 'x' })), /connector icon with a source/);
+  for (const gone of ['SkeletonGroup', 'Skeleton', 'useLayerAwareZIndex', 'ConnectorIcon']) assert.equal(Adapters[gone], undefined, gone);
   const opened = [];
   const ref = render(h(FileAccess.SessionFileOpenerProvider, { value: (...args) => opened.push(args) },
     h(Adapters.SessionFileRef, { fileRef: { path: '/r/a.md' }, className: 'x', fallback: h('b', null, 'fallback') }, 'a.md')));
@@ -493,16 +548,16 @@ test('adapters: the skeleton DOM, the z-index base, the connector icon, the file
   assert.equal(render(h(Adapters.SessionFileRef, { fileRef: { path: '/r/a.md' }, fallback: h('b', null, 'fallback') }, 'a.md')), '<b>fallback</b>');
   for (const Part of [Adapters.RemoteControlRow, Adapters.GoalCardBody, Adapters.ProgressCardBody, Adapters.ArtifactOutputRow, Adapters.addRemoteEnvironment])
     assert.throws(() => render(h(Part, {})), /not available in this host/);
-  // rD only reaches ED for a Remote Control session object, which the host never passes; "pending" is a skeleton row.
+  // Gj only reaches SM for a Remote Control session object, which the host never passes; "pending" is a skeleton row.
   assert.throws(() => rail({ session: localSession, remoteControl: { active: true } }), /Remote Control row/);
   assert.match(rail({ session: localSession, remoteControl: 'pending' }), /Remote Control[\s\S]*data-cds="SkeletonGroup"/);
   assert.equal(Adapters.useFileIconSetEnabled(), false);
   assert.equal(Adapters.useScratchCopyOf(), null);
   assert.equal(Adapters.useLiveCheckoutBranch('/r'), undefined);
-  assert.equal(Adapters.useGoneOutputPaths(), Adapters.useGoneOutputPaths(), 'one empty Set (sE\'s iE)');
+  assert.equal(Adapters.useGoneOutputPaths(), Adapters.useGoneOutputPaths(), 'one empty Set (zA\'s IA)');
 });
 
-test('iC / Yz: the repo menu body is CdsDropdown parts; the folder chip is static without items, a menu trigger with them', () => {
+test('yT / dL: the repo menu body is CdsDropdown parts; the folder chip is static without items, a menu trigger with them', () => {
   const items = MenuItems.renderMenuItems([{ label: 'Show in Finder', onSelect() {} }, 'separator', { label: '' }, { label: 'Open in', items: [{ label: 'Terminal' }] }]);
   assert.equal(items.length, 4);
   assert.equal(items[0].type, React.Fragment);
@@ -514,7 +569,7 @@ test('iC / Yz: the repo menu body is CdsDropdown parts; the folder chip is stati
   const plain = render(h(Chip.RepoNameChip, { repoName: 'repo' }));
   assert.equal(plain, '<span class="inline-flex h-control min-w-0 max-w-[160px] shrink items-center whitespace-nowrap px-md text-body font-normal text-muted-as-secondary"><span class="truncate">repo</span></span>');
   const menu = render(h(Chip.RepoNameChip, { repoName: 'repo', menuItems: [{ label: 'Copy path', onSelect() {} }] }));
-  assert.match(menu, /aria-haspopup="menu" aria-expanded="false"/);
+  assert.match(menu, /aria-haspopup="menu" id="[^"]+" aria-expanded="false"/);
   assert.match(menu, /shrink min-w-0 max-w-\[160px\] !justify-start \*:min-w-0 text-muted hover:text-primary/);
 });
 

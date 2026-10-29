@@ -1,105 +1,89 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Icon } from "./icons";
-import { SourceMenu, useMenuPopup } from "./source-menu.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
 import {
-  DEFAULT_DIFF_SCOPE, DIFF_SCOPE_LABELS, UNCOMMITTED_DIFF_SCOPE, commitScopeGone, diffScopeParam, diffScopePick, diffScopeSections, diffScopeTrigger, filterSearchItems,
+  DEFAULT_DIFF_SCOPE, DIFF_SCOPE_LABELS, UNCOMMITTED_DIFF_SCOPE, commitScopeGone, diffScopeParam, diffScopePick, diffScopeSections, diffScopeTrigger,
   resolveDiffScope, uncommittedScopeAvailable,
 } from "./diff-scope-model.mjs";
 import { rememberDiffScope, useStoredDiffScope } from "./generated/files-changes/diff-scope-memory.mjs";
 import { onSessionEvicted } from "./source-files-changes-adapters.jsx";
-import { t } from "../electron/i18n/index.mjs";
+import { asElementNode, CdsDropdown, CdsIcon, CdsTooltip, useCdsOwnerWindow, useCdsOwnerWindowAnchor } from "./generated/view-tabs/index.js";
+import { createPreviewPaneMenu } from "./generated/code-editor/preview-pane-menu.mjs";
+import { suppressNativeContextMenu } from "./generated/files-changes/menu-context-guard.mjs";
+import { menuCollisionPadding } from "./generated/code-composer/menu-collision-padding.mjs";
+import { scopeLabelClipped } from "./generated/files-changes/diff-scope-label.mjs";
+import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 import "./source-diff-scope.css";
 
-// Changes-pane diff scope dropdown, 2.2553.1 readable/panes-tile-current.js:2949-3110 zm:
-// It.TriggerButton variant ghost, `shrink min-w-0 text-secondary`, aria-label "Diff scope: {label}";
-// the branch label is a `grid min-w-0 grid-cols-[minmax(0,max-content)_auto_minmax(0,max-content)]
-// items-center gap-xs` of two `min-w-0 truncate text-secondary` spans around an xs text-muted
-// ArrowRight (alt "to"); It.Popup side bottom, align start, over Id (cd5e3435c B/U/H) sections.
+// 3.6556.2 cccc2cf0a $S renders its menu as `u(qv, {sections: L, portalContainer: a})` in `H.Popup`, where qv is
+// ca5db7aaf U (exported `n`): the sections over CdsDropdown (`Jo as d`), rows Z, searchable submenus J / X (d.SearchablePopup,
+// maxVisibleItems 10.5). That original is generated once, as code-editor/preview-pane-menu.mjs's `Sections` (D1); here its
+// factory gets ca5db7aaf's own shared-frame imports from view-tabs: Menu = CdsDropdown (Jo), Tooltip = CdsTooltip (Kl),
+// useOwnerWindow = useCdsOwnerWindow (Nd), asElement = asElementNode (Iu). Only Sections is used (not the pane trigger H).
+const { Sections: DiffScopeSections } = createPreviewPaneMenu({ Menu: CdsDropdown, Tooltip: CdsTooltip, useOwnerWindow: useCdsOwnerWindow, asElement: asElementNode });
 
-/** cd5e3435c H + F_ (shared-frame SearchablePopup): the search field heads the
- * submenu, rows filter by lower-cased substring, an empty match shows the
- * item's searchEmptyLabel (`px-md py-sm text-footnote text-muted`). */
-function SearchableRows({ item }) {
-  const popup = useMenuPopup();
-  const [query, setQuery] = useState("");
-  const input = useRef(null);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => input.current?.focus({ preventScroll: true }));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-  const rows = filterSearchItems(item.items, query);
-  return <>
-    <div className="sds-search">
-      <Icon name="Search" size={12} />
-      <input ref={input} type="text" value={query} placeholder={item.searchLabel} aria-label={item.searchLabel}
-        autoComplete="off" spellCheck={false} onChange={(event) => setQuery(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.nativeEvent.isComposing) { event.stopPropagation(); return; }
-          if (event.key === "Enter") {
-            event.preventDefault(); event.stopPropagation();
-            const highlighted = popup?.highlighted;
-            if (highlighted?.isConnected) highlighted.click();
-            return;
-          }
-          if (["ArrowDown", "ArrowUp", "ArrowLeft", "Escape", "Tab"].includes(event.key)) return;
-          event.stopPropagation();
-        }} />
-    </div>
-    {rows.length > 0
-      ? <div className="sds-search-rows">{rows.map((child, index) => <ScopeItem key={child.value ?? index} item={child} />)}</div>
-      : <div role="presentation" className="sds-search-empty">{item.searchEmptyLabel}</div>}
-  </>;
-}
-
-/** cd5e3435c U: a submenu row (a hint or trailing turns hover-open off) or a plain row. */
-function ScopeItem({ item }) {
-  if (item.items) {
-    return <SourceMenu.Submenu onOpenChange={item.onOpenChange}>
-      <SourceMenu.SubmenuTrigger hint={item.hint} openOnHover={item.hint !== undefined || item.trailing !== undefined ? false : undefined}
-        disabled={item.disabled}>{item.label}</SourceMenu.SubmenuTrigger>
-      <SourceMenu.Popup label={item.label} side="right" align="start" sideOffset={-4}
-        className={item.searchLabel !== undefined ? "sds-search-popup" : undefined}>
-        {item.searchLabel !== undefined ? <SearchableRows item={item} />
-          : item.items.map((child, index) => <ScopeItem key={child.value ?? index} item={child} />)}
-      </SourceMenu.Popup>
-    </SourceMenu.Submenu>;
+// The model's labels are strings; a row whose original label is an element — YS's "diff-base-note" (`span.animate-
+// placeholder-reveal` while loading, else a Fragment) and $S's "more-commits" FormattedMessage — is marked
+// `searchable: false` there and becomes that element here, so ca5db7aaf K (string labels only) skips it in a search.
+function cdsItem(item) {
+  const children = item.items ? { items: item.items.map(cdsItem) } : null;
+  if (item.searchable === false) {
+    const { searchable: _searchable, note, ...rest } = item;
+    const label = note === "loading" ? <span className="animate-placeholder-reveal">{item.label}</span> : <>{item.label}</>;
+    return { ...rest, ...children, label };
   }
-  return <SourceMenu.Item checked={item.checked} checkedRole={item.checkedRole} hint={item.hint} disabled={item.disabled}
-    keepOpen={item.keepOpen} onClick={item.onSelect}>{item.label}</SourceMenu.Item>;
+  return children ? { ...item, ...children } : item;
+}
+export const diffScopeMenuSections = (sections) => sections.map((section) => ({ ...section, items: section.items.map(cdsItem) }));
+
+// 3.6556.2 c03935b01 $n `return !v("__gb__3676555858")` (cccc2cf0a $S `f = Ul()`): the scope menu is offered unless that
+// GrowthBook flag is on; the host answers every flag from host-growthbook.mjs, where an unlisted flag is off.
+export const DIFF_SCOPE_MENU_OFF_FLAG = "__gb__3676555858";
+export const diffScopeMenuEnabled = () => !hostGrowthBookFlag(DIFF_SCOPE_MENU_OFF_FLAG);
+
+// 3.6556.2 cccc2cf0a rC: one CdsDropdown Root holds the Tooltip-wrapped trigger and the menu Popup; the tooltip is held
+// closed while the menu is open (`o = !i && void 0`, `u(ee, {content: t, open: o, children: n})`, `h(H.Root, {open: i,
+// onOpenChange: a, children: [s, r]})`).
+function DiffScopeMenuRoot({ tooltip, trigger, children }) {
+  const [open, setOpen] = useState(false);
+  return <CdsDropdown.Root open={open} onOpenChange={setOpen}>
+    <CdsTooltip content={tooltip} open={!open && undefined}>{trigger}</CdsTooltip>
+    {children}
+  </CdsDropdown.Root>;
 }
 
-/** zm trigger + popup. `trigger` from diffScopeTrigger, `sections` from diffScopeSections. */
+/** 3.6556.2 cccc2cf0a $S (trigger + menu) and rC (menu root, tooltip). `trigger` from diffScopeTrigger, `sections` from
+ * diffScopeSections.
+ * - q: `grid min-w-0 grid-cols-[minmax(0,max-content)_auto_minmax(0,max-content)] items-center gap-xs` of two
+ *   `min-w-0 truncate ${B}` spans (B = `f ? ii("text-secondary") : "text-secondary"`; shared-18 Mb answers
+ *   "text-secondary" while fizzy `panels` is off, the local case) around an xs ArrowRight (alt "to", text-muted-as-secondary).
+ * - !f (the scope menu flagged off): q alone in `flex min-w-0 items-center text-body text-muted-as-secondary`, no button.
+ * - f: `H.TriggerButton` (CdsDropdown, ghost) `shrink min-w-0 ${ii("text-secondary")}`, aria-label "Diff scope: {J}",
+ *   holding q for the branch scope, else `<span className="min-w-0 truncate">{J}</span>`; J is the branch label,
+ *   "Uncommitted changes", or iC's commit label. The tooltip's content is J while one of the label spans is clipped (QS).
+ *   The menu is `H.Popup` {onContextMenu: Jv (ca5db7aaf P), side bottom, align start, container: Id(), collisionPadding:
+ *   shared-18 Sn} over qv. */
 export function SourceDiffScope({ trigger, sections = [] }) {
-  const [open, setOpen] = useState(null);
-  const button = useRef(null);
+  const container = useCdsOwnerWindowAnchor();
+  const baseRef = useRef(null), headRef = useRef(null), labelRef = useRef(null);
+  const menuSections = useMemo(() => diffScopeMenuSections(sections), [sections]);
   if (!trigger) return null;
-  const filled = sections.filter((section) => section.items.length > 0);
-  return <>
-    <SourceSettingsButton ref={button} variant="ghost" className="sds-trigger" aria-label={trigger.ariaLabel}
-      aria-haspopup="menu" aria-expanded={!!open} data-popup-open={open ? "" : undefined}
-      onClick={() => setOpen(open ? null : { token: Date.now() })}
-      onKeyDown={(event) => {
-        if (open || event.metaKey || event.ctrlKey || event.altKey || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
-        event.preventDefault();
-        setOpen({ token: Date.now(), entry: event.key === "ArrowDown" ? "first" : "last" });
-      }}>
-      {trigger.branch
-        ? <span className="sds-label">
-          <span className="sds-part">{trigger.branch.base}</span>
-          <Icon name="ArrowRight" size={12} className="sds-arrow" role="img" aria-hidden={false} aria-label={DIFF_SCOPE_LABELS.to} />
-          <span className="sds-part">{trigger.branch.head}</span>
-        </span>
-        : <span className="sds-part">{trigger.label}</span>}
-    </SourceSettingsButton>
-    {open && <SourceMenu.Popup key={open.token} anchor={button.current} trigger={button.current} side="bottom" align="start"
-      label={t("Diff scope")} onClose={() => setOpen(null)} initialHighlight={open.entry} contextMenuGuard>
-      {filled.map((section, index) => <React.Fragment key={section.key ?? index}>
-        {index > 0 && <SourceMenu.Separator />}
-        <SourceMenu.Group>{section.items.map((item, itemIndex) => <ScopeItem key={item.value ?? itemIndex} item={item} />)}</SourceMenu.Group>
-      </React.Fragment>)}
-    </SourceMenu.Popup>}
-  </>;
+  const range = trigger.range ?? trigger.branch;
+  const part = "min-w-0 truncate text-secondary";
+  const grid = <span className="grid min-w-0 grid-cols-[minmax(0,max-content)_auto_minmax(0,max-content)] items-center gap-xs">
+    <span ref={baseRef} className={part}>{range?.base}</span>
+    <CdsIcon name="ArrowRight" size="xs" alt={DIFF_SCOPE_LABELS.to} className="text-muted-as-secondary" />
+    <span ref={headRef} className={part}>{range?.head}</span>
+  </span>;
+  if (!diffScopeMenuEnabled()) return <span className="flex min-w-0 items-center text-body text-muted-as-secondary">{grid}</span>;
+  // eC over [o, s, c]: the label is the tooltip only while a span is clipped; undefined cancels the open.
+  const tooltip = () => ([baseRef, headRef, labelRef].some((ref) => scopeLabelClipped(ref.current)) ? trigger.label : undefined);
+  return <DiffScopeMenuRoot tooltip={tooltip}
+    trigger={<CdsDropdown.TriggerButton variant="ghost" className="shrink min-w-0 text-secondary" aria-label={trigger.ariaLabel}>
+      {trigger.branch ? grid : <span ref={labelRef} className="min-w-0 truncate">{trigger.label}</span>}
+    </CdsDropdown.TriggerButton>}>
+    <CdsDropdown.Popup onContextMenu={suppressNativeContextMenu} side="bottom" align="start" container={container} collisionPadding={menuCollisionPadding}>
+      <DiffScopeSections sections={menuSections} portalContainer={container} />
+    </CdsDropdown.Popup>
+  </DiffScopeMenuRoot>;
 }
 
 // c03935b01 `$e((e) => Rn(e, "branch"))` (2.42304.0): a session that goes away leaves the remembered set.
@@ -176,14 +160,18 @@ export function useDiffScope({ call, cwd, sessionId, status, active = false, ref
   }, [call, cwd]);
   const branchState = branches.cwd === cwd ? branches : NO_BRANCHES;
   const current = status?.detached ? undefined : status?.branch || undefined;
-  const trigger = isRepo ? diffScopeTrigger(scope, { base, commits: commitList }) : null;
+  // YS `a` (the session repo) for c5da7eb42 Zf: git-status.cjs reports a detached HEAD as `detached: true` with the short
+  // HEAD sha as `branch`, the host's value of the official detachedHead repo's branch.
+  const detachedBranch = status?.detached ? status.branch || undefined : undefined;
+  const repo = useMemo(() => (detachedBranch === undefined ? undefined : { detachedHead: true, branch: detachedBranch }), [detachedBranch]);
+  const trigger = isRepo ? diffScopeTrigger(scope, { base, commits: commitList, repo }) : null;
   const sections = useMemo(() => !trigger ? [] : diffScopeSections({
-    scope, base, defaultBase, overridden: !!override, current, uncommittedAvailable, commits: commitList, commitTotal, branches: branchState,
+    scope, base, defaultBase, overridden: !!override, current, uncommittedAvailable, commits: commitList, commitTotal, branches: branchState, repo,
     onSelectScope: (next, meta) => pickScope(next, meta?.via),
     onSelectBase: (name) => update({ base: name || undefined }),
     // Im I(): opening the list drops an override that names the checked-out branch, then refetches.
     onBaseMenuOpen: () => { if (override && override === current) update({ base: undefined }); loadBranches(); },
-  }), [trigger?.ariaLabel, scope, base, defaultBase, override, current, uncommittedAvailable, commitList, commitTotal, branchState, update, pickScope, loadBranches]);
+  }), [trigger?.ariaLabel, scope, base, defaultBase, override, current, uncommittedAvailable, commitList, commitTotal, branchState, repo, update, pickScope, loadBranches]);
   // B15 Commits section (cccc2cf0a Xb H/U/B): a commit row narrows to that commit, null is "All changes";
   // "Uncommitted changes" is offered while the working tree is dirty or that scope is picked.
   const selectCommit = useCallback((sha) => pickScope(sha ? { kind: "commit", sha } : DEFAULT_DIFF_SCOPE, "commit_list"), [pickScope]);

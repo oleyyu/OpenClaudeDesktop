@@ -13,14 +13,12 @@ const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const count = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
-let server, i18n, labelsModule, frame, chatFrame, currentChatFrame;
+let server, i18n, labelsModule, frame;
 before(async () => {
   server = await createServer({configFile:false, root:app, plugins:[react()], server:{middlewareMode:true, hmr:false, ws:false, watch:null}, appType:'custom', logLevel:'error'});
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   labelsModule = await server.ssrLoadModule('/src/cds-labels.mjs');
-  frame = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
-  chatFrame = await server.ssrLoadModule('/src/generated/chat/shared-frame-C_2npUJq.js');
-  currentChatFrame = await server.ssrLoadModule('/src/generated/current-chat/shared-frame-DVFSKIcx.js');
+  frame = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
 });
 after(async () => { i18n?.setLocale('en-US'); await server?.close(); });
 
@@ -101,75 +99,56 @@ test('SSR: under the host labels, CdsTextInput clearable\'s clear button is 清�
 
 test('main.jsx provides the host labels at the app root, around every window, and the Code composer\'s CdsRoot passes none', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
-  assert.equal(count(main, 'import { CdsLabelsContext } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";'), 1);
+  assert.equal(count(main, 'import { CdsLabelsContext } from "./generated/view-tabs/index.js";'), 1);
   assert.equal(count(main, 'import { cdsLabels } from "./cds-labels.mjs";'), 1);
   const render = main.slice(main.indexOf('createRoot(document.getElementById("root")).render('));
-  // R4i-graph fix: the chat / current-chat graphs' own labels contexts (Ft / mn) are provided at the same root.
-  assert.equal(count(main, 'import { Ft as ChatCdsLabelsContext } from "./generated/chat/shared-frame-C_2npUJq.js";'), 1);
-  assert.equal(count(main, 'import { mn as CurrentChatCdsLabelsContext } from "./generated/current-chat/shared-frame-DVFSKIcx.js";'), 1);
-  assert.match(render, /^createRoot\(document\.getElementById\("root"\)\)\.render\(\n(?:\s*\/\/[^\n]*\n)*\s*<CdsLabelsContext\.Provider value=\{cdsLabels\}><ChatCdsLabelsContext\.Provider value=\{cdsLabels\}><CurrentChatCdsLabelsContext\.Provider value=\{cdsLabels\}><SourceToastProvider>/);
-  assert.match(render, /<\/SourceToastProvider><\/CurrentChatCdsLabelsContext\.Provider><\/ChatCdsLabelsContext\.Provider><\/CdsLabelsContext\.Provider>,\n\);/);
+  // w10-chat-gen: the 2.2553.1 chat graph (and its Ft) is gone; the 3.6556.2 chat slice reads no labels context.
+  // w10-curchat-retire (CC-13): the 2.31226.0 current-chat graph (and its mn) is gone too; every 3.6556.2 slice reads
+  // view-tabs vn, so the root provides that one context only.
+  assert.doesNotMatch(main, /ChatCdsLabelsContext|generated\/chat\/shared-frame|generated\/current-chat\//);
+  // w11-sweep-rest: the CDS locale context (what the official root CdsRoot's `locale` provides) wraps the labels.
+  assert.match(render, /^createRoot\(document\.getElementById\("root"\)\)\.render\(\n(?:\s*\/\/[^\n]*\n)*\s*<CdsLocaleContext\.Provider value=\{getLocale\(\)\}><CdsLabelsContext\.Provider value=\{cdsLabels\}><SourceToastProvider>/);
+  assert.match(render, /<\/SourceToastProvider><\/CdsLabelsContext\.Provider><\/CdsLocaleContext\.Provider>,\n\);/);
   assert.equal(count(main, '<CdsLabelsContext.Provider value='), 1);
-  assert.equal(count(main, '<ChatCdsLabelsContext.Provider value='), 1);
-  assert.equal(count(main, '<CurrentChatCdsLabelsContext.Provider value='), 1);
+  assert.equal(count(main, '.Provider value={cdsLabels}'), 1);
   assert.equal(count(main, 'labels={'), 0);
 });
 
-// R4i-graph fix (review finding: CDS labels reached only view-tabs vn): the two Chat graphs are older chunks with their own
-// labels context and the same reader shape; nothing in them provides it, so the host root provides each.
-test('chat / current-chat: their labels context is the one their Z reads, nothing in the graph provides it, and the host labels answer in zh-CN', () => {
-  for (const [dir, file, context, reader] of [
-    ['chat', 'shared-frame-C_2npUJq.js', 'Ft', 'function Z(e,t,n){return Lt(A(Ft),e,t,n)}'],
-    ['current-chat', 'shared-frame-DVFSKIcx.js', 'mn', 'function Z(e,t,n){return gn(r(mn),e,t,n)}'],
-  ]) {
-    const directory = path.join(app, 'src/generated', dir);
-    const text = fs.readFileSync(path.join(directory, file), 'utf8');
-    assert.equal(count(text, `var ${context}=`), 1, dir);
-    assert.equal(count(text, reader), 1, dir);
-    for (const other of fs.readdirSync(directory).filter(name => /\.m?js$/.test(name)))
-      assert.equal(count(fs.readFileSync(path.join(directory, other), 'utf8'), `${context}.Provider`), 0, `${dir}/${other}`);
-  }
-  i18n.setLocale('zh-CN');
-  const zhLabels = labelsModule.createCdsLabels();
-  for (const graph of [chatFrame, currentChatFrame]) {
-    const context = graph === chatFrame ? graph.Ft : graph.mn;
-    const Probe = () => h('span', null, graph.Z('clear', 'Clear'), '|', graph.Z('removeItem', 'Remove {item}', {item: 'a.txt'}));
-    assert.equal(renderToStaticMarkup(h(context.Provider, {value: zhLabels}, h(Probe))), `<span>${i18n.t('Clear')}|${i18n.t('Remove {item}', {item: 'a.txt'})}</span>`);
-    assert.match(renderToStaticMarkup(h(context.Provider, {value: zhLabels}, h(Probe))), /清除/);
-    assert.equal(renderToStaticMarkup(h(Probe)), '<span>Clear|Remove a.txt</span>');
-  }
-  i18n.setLocale('en-US');
-});
-
-test('zh-CN covers every CDS label key the chat / current-chat graphs call with a literal or table default', () => {
+// w10-curchat-retire: the 2.31226.0 current-chat graph and its own labels context (mn) are retired (CC-13); the 3.6556.2
+// folders that replaced it read view-tabs vn, which the root provides. The scan covers those folders.
+test('zh-CN covers every CDS label key the folders that replaced current-chat call with a literal default', () => {
   const table = officialTable();
   return import('../electron/i18n/zh-CN/index.mjs').then(({default: zh}) => {
     const used = new Set();
-    for (const dir of ['chat', 'current-chat']) {
+    assert.equal(fs.existsSync(path.join(app, 'src/generated/current-chat')), false);
+    for (const dir of ['cowork-scheduled', 'routines-shared', 'cowork-home', 'cowork-progress', 'artifact-library', 'chat-projects']) {
       const directory = path.join(app, 'src/generated', dir);
       for (const file of fs.readdirSync(directory).filter(name => /\.m?js$/.test(name))) {
         const text = fs.readFileSync(path.join(directory, file), 'utf8');
         for (const m of text.matchAll(/\(\s*"([A-Za-z]+)"\s*,\s*"((?:[^"\\]|\\.)*)"/g)) if (Object.hasOwn(table, m[1])) used.add(JSON.parse(`"${m[2]}"`));
       }
     }
-    // current-chat shared-5's drop overlay reads oo("dropFilesHere", Nf.dropFilesHere) with Nf.dropFilesHere "Drop files here".
-    const shared5 = fs.readFileSync(path.join(app, 'src/generated/current-chat/shared-5-DXmEIvP_.js'), 'utf8');
-    assert.equal(count(shared5, 'oo("dropFilesHere",Nf.dropFilesHere)'), 1);
-    assert.equal(count(shared5, 'Nf={dropFilesHere:"Drop files here"'), 1);
-    used.add('Drop files here');
-    assert.ok(used.has('Clear') && used.has('Loading') && used.has('Previous month'));
+    // cowork-scheduled's calendar and model menu (the scheduled-task form current-chat used to carry). 3.6556.2 calls
+    // ("clear","Clear") only in shared-frame (CdsTextInput's clear button, the combobox footer), which these folders now
+    // import from view-tabs instead of copying (w13-close-gen-dedup, cross-red-04); the view-tabs scan above covers it.
+    assert.ok(used.has('Previous month'));
+    assert.equal(used.has('Clear'), false);
+    const official = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js'), 'utf8');
+    assert.equal(count(official, '("clear","Clear")'), 2);
+    assert.equal(count(fs.readFileSync(path.join(app, 'src/generated/view-tabs/shared-frame-6jtSkIit.js'), 'utf8'), '("clear","Clear")'), 2);
     assert.deepEqual([...used].filter(source => !Object.hasOwn(zh, source)), []);
   });
 });
 
 // R4i-graph fix (GR3 followUp 2): the attachment tiles read two labels through a table default (G("key", Mf.key)), which
-// the literal-only scan above cannot see; both are the official Fl defaults and have zh-CN text.
+// the literal-only scan above cannot see; both are the official Fl defaults and have zh-CN text. 3.6556.2 (w2-composer-gen):
+// the tiles are the shared-2-TF8v67kg Im / Um (table Hp), so the call shape is matched with minified names generalized.
 test('zh-CN covers the Code composer attachment tiles\' table-default labels (uploadFailed, playVideo)', async () => {
   const table = officialTable();
   const zh = (await import('../electron/i18n/zh-CN/index.mjs')).default;
   const tiles = fs.readFileSync(path.join(app, 'src/generated/code-composer/chat-composer-attachments.mjs'), 'utf8');
-  assert.equal(count(tiles, 'G("uploadFailed", Mf.uploadFailed)'), 1);
-  assert.equal(count(tiles, 'G("playVideo", Mf.playVideo, { item: m })'), 1);
+  assert.equal(tiles.match(/(?<![\w$])[\w$]{1,3}\("uploadFailed", ([\w$]{1,3})\.uploadFailed\)/g)?.length, 1);
+  assert.equal(tiles.match(/(?<![\w$])[\w$]{1,3}\("playVideo", ([\w$]{1,3})\.playVideo, [\w$]{1,3}\)/g)?.length, 1);
   for (const key of ['uploadFailed', 'playVideo']) {
     assert.equal(count(tiles, `${key}: ${JSON.stringify(table[key])}`), 1, key);
     assert.ok(Object.hasOwn(zh, table[key]), table[key]);

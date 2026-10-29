@@ -1,22 +1,26 @@
 // R4f-rail SR-5: the Session rail's local session record and the rO meta fields built from it (renderer half of
 // main.cjs `session-rail-meta`, electron/session-rail-meta.cjs).
 //
-// 2.42304.0 source (ion-dist v1):
-// - cf74bc599-D9NZWRyl.js `rO = kn("originCwd", "workingDir", … "startedViaRemoteControl")`: the 24 meta fields the
-//   rail host fO asks the session meta query for (`S = Td(e, rO)`, c5da7eb42 Q).
-// - shared-8-B5lJ8U5C.js `zh` (exported Fd, cf74bc599 `Oa`): the local session record fO reads,
-//   `{cwd, originCwd, worktreePath, startedWithWorktree, worktreeRemoved, lazyWorktreePath, isArchived, harnessCwd,
-//   branch, additionalDirectories, isScratchWorkspace, remoteTarget, sshConfig}`.
-// - fO `k`: without meta (C) the rO fields come from that record: `{...$d(O), additionalDirectories:
-//   O.additionalDirectories, hasDesktopWorktree: !!O.worktreePath, startedWithWorktree: O.startedWithWorktree,
-//   worktreeRemoved: O.worktreeRemoved, isScratchWorkspace: O.isScratchWorkspace, remote: Fn(O), environmentId: void 0,
-//   …, repoSlugs: [], goal: void 0, …}`; `$d` = cef1e6037-8DivyY4m.js `Fn` (export r) and `Fn` = shared-104-Cqo2-vQh.js
-//   `tz` (export w).
-// - fO's other reads of the record: `R = O !== void 0 && ZE({isLocal: x, cwd: O.cwd, originCwd: O.originCwd,
-//   worktreePath: O.worktreePath, harnessCwd: O.harnessCwd, branch: O.branch, startedWithWorktree, worktreeRemoved})`,
-//   `z = Fn(O) !== void 0`, `B = O?.isArchived === !0`, `V = R && !B && !z ? O?.lazyWorktreePath : void 0` and
-//   `VE({…, recorded: O?.branch, …})`. ZE / QE / VE themselves are rail view functions (SR-2's generated session-rail);
+// 3.6556.2 source (ion-dist v1; V3-w6-rail-host, panes:C1-8):
+// - cf74bc599-CRYqipWN.js `gN = gn("originCwd", "workingDir", … "goal", ...Ip, "sshConnectionRemoved")` (generated as
+//   session-rail/rail-derive.mjs RAIL_SESSION_META): the 26 meta fields the rail host TN asks the session meta query for
+//   (`D = Eu(t, gN)`). `Ip` is c227f4d5e `nY` (session-rail/remote-control-meta.mjs): "bridgeSessionUrl",
+//   "remoteControlConnecting", "remoteControlAvailable", "startedViaRemoteControl", "isCloudRun". So against 2.42304.0
+//   rO the four Remote Control fields stay (now through nY), "isCloudRun" and "sshConnectionRemoved" are new.
+// - shared-8-Db1QN4mf.js `M_` (exported _f, cf74bc599 `go`): the local session record TN reads, unchanged from
+//   2.42304.0 zh: `{cwd, originCwd, worktreePath, startedWithWorktree, worktreeRemoved, lazyWorktreePath, isArchived,
+//   harnessCwd, branch, additionalDirectories, isScratchWorkspace, remoteTarget, sshConfig}`.
+// - TN `I` (bb0): without meta (k) the fields come from that record: `{...e, additionalDirectories: t,
+//   hasDesktopWorktree: n, startedWithWorktree: r, worktreeRemoved: i, isScratchWorkspace: a, remote: o, environmentId:
+//   void 0, …, repoSlugs: s, goal: void 0, bridgeSessionUrl: void 0, …, isCloudRun: void 0}` with `e = td(P)` =
+//   cef1e6037-C9OZ_iaL.js `er` (export i, same body as 2.42304.0 Fn) and `o = tn(P)` = shared-78-D5Fw2h0a.js `w4`
+//   (export E, same body as 2.42304.0 shared-104 tz). "sshConnectionRemoved" is not in the fallback (undefined).
+// - TN's other reads of the record: `re = P !== void 0 && Rj({isLocal: E, cwd: P.cwd, originCwd: P.originCwd,
+//   worktreePath: P.worktreePath, harnessCwd: P.harnessCwd, branch: P.branch, startedWithWorktree, worktreeRemoved})`,
+//   `ie = tn(P) !== void 0`, `ae = P?.isArchived === !0`, `oe = re && !ae && !ie ? P?.lazyWorktreePath : void 0` and
+//   `Ej({…, recorded: P?.branch, …})`. Rj / zj / Ej themselves are rail view functions (the generated session-rail);
 //   this module only assembles their inputs from the record, in the original's expressions.
+// - 2.42304.0 (the previous slice): cf74bc599-D9NZWRyl.js rO (24 fields), shared-8 zh, fO `k`.
 //
 // Host: the meta query has no source here (the cloud session meta, Slack, Remote Control, environments and goal are
 // claude.ai's), so the rail uses fO's own record fallback for every local session; the fields the host records are
@@ -24,13 +28,13 @@
 
 export const SESSION_RAIL_META_ACTION = "session-rail-meta";
 
-/** cf74bc599 rO: the session meta fields the rail reads, in the original's order. */
+/** cf74bc599 gN (3.6556.2): the session meta fields the rail reads, in the original's order (`...Ip` spread in place). */
 export const RAIL_META_FIELDS = Object.freeze(["originCwd", "workingDir", "additionalDirectories", "hasDesktopWorktree", "startedWithWorktree",
   "worktreeRemoved", "folderTrees", "isScratchWorkspace", "pendingCwd", "remote", "environmentId", "environmentKind", "selfHostedPoolId",
   "selfHostedPoolName", "selfHostedRunnerClientLabel", "sessionStatus", "isSlackOrigin", "git", "repoSlugs", "goal", "bridgeSessionUrl",
-  "remoteControlConnecting", "remoteControlAvailable", "startedViaRemoteControl"]);
+  "remoteControlConnecting", "remoteControlAvailable", "startedViaRemoteControl", "isCloudRun", "sshConnectionRemoved"]);
 
-/** shared-8 zh: the local session record's fields, in the original's order. */
+/** shared-8 M_ (2.42304.0 zh): the local session record's fields, in the original's order. */
 export const LOCAL_SESSION_RECORD_FIELDS = Object.freeze(["cwd", "originCwd", "worktreePath", "startedWithWorktree", "worktreeRemoved",
   "lazyWorktreePath", "isArchived", "harnessCwd", "branch", "additionalDirectories", "isScratchWorkspace", "remoteTarget", "sshConfig"]);
 
@@ -63,13 +67,13 @@ export function localSessionRecord(value) {
   return Object.fromEntries(LOCAL_SESSION_RECORD_FIELDS.filter((key) => record[key] !== undefined).map((key) => [key, record[key]]));
 }
 
-/** cef1e6037 Fn ($d): the folder a session started from and the one it works in. */
+/** cef1e6037 er (TN td; 2.42304.0 Fn / $d): the folder a session started from and the one it works in. */
 export function railFolders(record) {
   const originCwd = record.originCwd || record.cwd;
   return { originCwd, workingDir: record.harnessCwd ?? record.worktreePath ?? originCwd };
 }
 
-/** shared-104 tz (cf74bc599 Fn): the record's SSH / WSL target, else undefined. */
+/** shared-78 w4 (TN tn; 2.42304.0 shared-104 tz): the record's SSH / WSL target, else undefined. */
 export function railRemote(record) {
   const target = record?.remoteTarget;
   if (target) switch (target.kind) {
@@ -80,7 +84,7 @@ export function railRemote(record) {
   if (record?.sshConfig) return { kind: "ssh", sshHost: record.sshConfig.sshHost, sshPort: record.sshConfig.sshPort, sshIdentityFile: record.sshConfig.sshIdentityFile, remoteCwd: record.sshConfig.remoteCwd };
 }
 
-/** fO k without meta: the rO fields from the local record (undefined without one). */
+/** TN I without meta: the gN fields from the local record (undefined without one). */
 export function railMetaFromRecord(record) {
   if (!record) return undefined;
   return {
@@ -89,18 +93,19 @@ export function railMetaFromRecord(record) {
     remote: railRemote(record), environmentId: undefined, environmentKind: undefined, selfHostedPoolId: undefined, selfHostedPoolName: undefined,
     selfHostedRunnerClientLabel: undefined, sessionStatus: undefined, isSlackOrigin: undefined, git: undefined, repoSlugs: [], goal: undefined,
     bridgeSessionUrl: undefined, remoteControlConnecting: undefined, remoteControlAvailable: undefined, startedViaRemoteControl: undefined,
+    isCloudRun: undefined,
   };
 }
 
-/** fO's ZE argument for this record (x: the session is local or CLI). */
+/** TN's Rj argument for this record (E: the session is local or CLI). */
 export function railLazyPendingArgs(record, isLocal) {
   return { isLocal, cwd: record.cwd, originCwd: record.originCwd, worktreePath: record.worktreePath, harnessCwd: record.harnessCwd,
     branch: record.branch, startedWithWorktree: record.startedWithWorktree, worktreeRemoved: record.worktreeRemoved };
 }
 
 /**
- * fO's record facts around ZE: `remote` (z), `archived` (B), `leasedPath` (V, from ZE's answer `pending`) and the
- * recorded branch VE reads.
+ * TN's record facts around Rj: `remote` (ie), `archived` (ae), `leasedPath` (oe, from Rj's answer `pending`) and the
+ * recorded branch Ej reads.
  */
 export function railRecordFacts(record, pending) {
   const remote = railRemote(record) !== undefined, archived = record?.isArchived === true;

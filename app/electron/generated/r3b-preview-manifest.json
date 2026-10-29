@@ -1,9 +1,9 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r3b-preview.mjs",
-  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
-  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+  "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
   "targets": {
     "r3b-preview-ports.mjs": {
       "factory": "createPreviewPortPolicy",
@@ -28,9 +28,10 @@
           "calls": 0,
           "values": 0
         },
-        "g": {
+        "_": {
+          "key": "g",
           "role": "node:net",
-          "sourceSha256": "042ed212adb02b87443c0670598e17d845aaae2882bf6f96296f7215712f43d9",
+          "sourceSha256": "adacaf228ac9866270c12d121d6c04b73b5e95adeef49b83d9bf93739b0c671c",
           "members": [
             "Socket",
             "createServer"
@@ -40,314 +41,322 @@
         },
         "N": {
           "role": "logger (info / warn / error / debug)",
-          "sourceSha256": "6755c5edbd0a8106bb387820056876fbe448e7788da40b85dc6a450771337e90",
+          "sourceSha256": "bb1581364c03182f58cbb443408fff8f413bf4d40f8fba2c178f396e8823ca96",
           "members": [
             "warn"
           ],
           "calls": 0,
           "values": 0
         },
-        "ih": {
+        "Bh": {
+          "key": "ih",
           "role": "sleep(ms, signal?)",
-          "sourceSha256": "52b47f512edd1dab0b9d5be73ad473b5896b4f5d9342ae0c8e85ef863fe9463f",
+          "sourceSha256": "2560af1e54245c605e6a34430032005f349d350eb2707bc31516bcee6bc05b3d",
           "members": [],
           "calls": 1,
           "values": 0
         },
-        "xi": {
+        "ji": {
+          "key": "xi",
           "role": "@ant/claude-native loader: { listTcpListeners, getProcessLineage } or null",
-          "sourceSha256": "fa65a0fe39fa6816b3c8bf1581f54aaab718fec481e8f2ca5dcd8f409f064b2d",
+          "sourceSha256": "290a9e352d405a8f9cba8bba4307f282e4ef4e451aaa1c604f34e6729c1c8a2e",
           "members": [],
           "calls": 3,
           "values": 0
         },
-        "zy": {
+        "nx": {
+          "key": "zy",
           "role": "isRealpathWithin(path, root, options) → real path | false",
-          "sourceSha256": "af98d218bee2279e9ab1aa9d5a095002d6187b53e1190eb269f47f72c7ae5476",
+          "sourceSha256": "66b09617951669bf532ee0816c257f38d4c8dd28ba0c581679a9b611114a084a",
           "members": [],
           "calls": 2,
           "values": 0
         },
-        "Y0": {
+        "a3": {
+          "key": "Y0",
           "role": "read a file as text → string | null",
-          "sourceSha256": "35f80cb7039e0c909cc0d238a690d08becfb7469bab906b27460c704a9807731",
+          "sourceSha256": "a1e1839ead1048aa1d5bafa36a679e622a8b7bd9774be731c151a51dd728387c",
           "members": [],
           "calls": 1,
           "values": 0
         },
-        "J0": {
-          "role": "path guard options passed to zy",
-          "sourceSha256": "577ccad9ead24855f9c9cfae879a2b86a2949030841f9a891af12d9a61bbd103",
+        "i3": {
+          "key": "J0",
+          "role": "path guard options passed to nx",
+          "sourceSha256": "4b90bb82e80f9def848999f4bec336ca07a384b203873081f3296d2150061b6f",
           "members": [],
           "calls": 0,
           "values": 2
         },
-        "a2": {
+        "P3": {
+          "key": "a2",
           "role": "server registry: `.servers` → [{ serverId, name, port, status, cwd, sessionId }]",
-          "sourceSha256": "32fbb549c0df8ccd40d1c338b6e21120b033bc2f48ef36acbf1dd35608380e32",
+          "sourceSha256": "62532c48a38566f647f0518b8efa1caf57ff9a23f88854acaf4c637007edf06d",
           "members": [
             "servers"
           ],
           "calls": 0,
           "values": 0
         },
-        "mM": {
+        "lP": {
+          "key": "mM",
           "role": "in-app Browser preview enabled",
-          "sourceSha256": "6d3db2d3034c341537843518562c5947f1ded8708b69a6cf99831497fc34749e",
+          "sourceSha256": "9d8906c56c4d17b983185e593c1b0a21125b4c969e5e844b2adeee0a618f525f",
           "members": [],
           "calls": 1,
           "values": 0
         },
-        "$0": {
+        "l3": {
+          "key": "$0",
           "role": "GrowthBook 2711562102 (default true)",
-          "sourceSha256": "3c1bfcf6f9489d5bb912ee23b4928e38cf451070f4420164e637207dcac22780",
+          "sourceSha256": "b1feaeb183e4c0d78f37ca5c6de654e229ae92e05207fb4aeeb43be5b617eff5",
           "members": [],
           "calls": 2,
           "values": 0
         }
       },
       "bindings": {
-        "UN": {
-          "sha256": "aeabf4859c08d382209b9f55e7d62b6780bba6de7d0f23d11f35b5ece7dbbe2d",
+        "UF": {
+          "sha256": "1ef1228c2fd7f0b115157b689d2a96ff3524a433fdf689e2c82019edad3af44f",
           "exportedAs": "messageName"
         },
-        "k1i": {
-          "sha256": "fe85be2a995e0290d1c197e33a7927054d59d79bd2ecae1fa5114a8b29ea7972",
+        "sXi": {
+          "sha256": "65511c92d11ad37f7076d81f1a82ba690d0f21bbb4aa2ae01cb47662d0ba9b9e",
           "exportedAs": "rewritePortArgs"
         },
-        "A1i": {
-          "sha256": "ee19e95161bae6b878c09c1b4c3f9c05f8a64f9efeef85405870152d372d44e4"
+        "cXi": {
+          "sha256": "fd2416c0095143f083f65d33f38729824db4c4c46999a9a5827ed28cb2773032"
         },
-        "j1i": {
-          "sha256": "d4483f3f86175d15222996782b75c1c00dc0597ee5727852091a2b756a0cad39"
+        "lXi": {
+          "sha256": "b2cb5df16b2e0c8965858ff0353d6d8605c5505416bcba5bd0e32d6a98afa353"
         },
-        "M1i": {
-          "sha256": "bcc79cb0f256d819d9c936c8e8f44e49ad2938d95538ece9fb104bbc5a54c645"
+        "uXi": {
+          "sha256": "ccf11b30984a53c95630a65a1940fe1211013523b1569cc03fc6d7f680b50aa8"
         },
-        "Z0": {
-          "sha256": "e9bddf15ea4d2fca8a4e9308a1dcb5b14c9228c5a2a6a7113d2ea5ad11e3dd57"
+        "s3": {
+          "sha256": "248421ad890640466c15d235c1109942953baddbbe3de4a40346590c1364f028"
         },
-        "N1i": {
-          "sha256": "886c684d33d012db673b7d2aaf5ce1bb942cb9a55484cdeacfb90fbcee3e92ac"
+        "dXi": {
+          "sha256": "80407da4d3147e216842eabaf318078e0333e474e36fdafa220e2ba99b0b4e68"
         },
-        "P1i": {
-          "sha256": "5c3ab13b4038189df1dcf7b62c245f63778d42fc67507779f4337675110bbb93"
+        "fXi": {
+          "sha256": "5dfc0204038f10a44242dba94b441546485c8335afb602a9f55f04de072c8a67"
         },
-        "F1i": {
-          "sha256": "d1830ae70de35b09b3fd100268f2a03befad0f8d82527cdb1a08a92071945dc7"
+        "pXi": {
+          "sha256": "6c84ea987cd81cd0c2c5d566c199472bed563a302c9a97c79ef9f8e598d1097e"
         },
-        "I1i": {
-          "sha256": "f2dc0cecd86245667e788353d815e7b64f5a2ff785076e68e94957a78483e653"
+        "mXi": {
+          "sha256": "b304dab922a93065541af68f67877c43088b10949518df323336f678b567051e"
         },
-        "L1i": {
-          "sha256": "6f53ce21410d8dc4b4f7beac25380ce4cf5e7e910e4fe985b335a0ba3262ae9e"
+        "hXi": {
+          "sha256": "4ec4eba77ac4f4bf40c700851885c12fdcfb6124ce0e94b3593f25c25d0993a8"
         },
-        "R1i": {
-          "sha256": "04ddd5685a25250c3b549b30fb5a76ac4baa84c2af32eea31917a8b59c050234"
+        "gXi": {
+          "sha256": "ad7dc2e442c66aba203abce3b004befb3038027dba5cb7ba9f644e56d5f7a6a7"
         },
-        "z1i": {
-          "sha256": "e1669f647093b7094f42b6098aa54023d7a01a8ad4507f44658c830779ff2cb8"
+        "_Xi": {
+          "sha256": "725e626db40e5bbb7a6c3dacd7ab316e77add42e414206f45072ed7b4e70cf78"
         },
-        "B1i": {
-          "sha256": "f6922624198fce77c6a0191d1110590c08a40059a26a66a94dec4ea96d636a8d"
+        "vXi": {
+          "sha256": "9f0ab87522454523abfeb8e0cf8215500dea4cbafd10609bfc1d55c17726f35b"
         },
-        "V1i": {
-          "sha256": "eb255c87da3cd203c5361335d6a7cc469cc149a75285651aaf2654be67756b85"
+        "yXi": {
+          "sha256": "3ff61cacb42b8db0bb09eb5ded3006222d5cb0156c25d239cf57cb73d8c3fade"
         },
-        "H1i": {
-          "sha256": "e70bb95a36dac68670612c0806b6517b485ef0f70f0b9fcab5b364a2849b447f"
+        "bXi": {
+          "sha256": "993d21980f5b741f0ce19595a520aef751c6710b0d4df1d936ef465a7a90dc79"
         },
-        "U1i": {
-          "sha256": "0426211643fb96021f884fdae4e745c9a5f870fd27f4fcec04d33daaa9f285c0"
+        "xXi": {
+          "sha256": "4aa293c0ac11a87c25bcbd2744e7d008f559b9118a58e76d1cae05bb1ffaf59f"
         },
-        "W1i": {
-          "sha256": "3ba9add670fd63ebbc7e0d23bf36b99409d8a4b075e01f40dd42805543488a29"
+        "SXi": {
+          "sha256": "d88c9427d50437764fc67c626c34b2bf54c2c0afe9666649589b621bc903cdb8"
         },
-        "G1i": {
-          "sha256": "93e07c71df69fdfbdfd745a04c7db489c4d9d094811728c71164f836b8444087"
+        "CXi": {
+          "sha256": "1790f6ce9d1f89bec3b3003d0d885196ea5ecfacadb9e1d11ef09fb007297ffa"
         },
-        "K1i": {
-          "sha256": "08a1c66efd9be6ea822b6e12a2df9f0f6de6db0c9c37186afc59ccde022d5fa8"
+        "wXi": {
+          "sha256": "7ea1b8704b010d077ab13677c72a642897efbe503bcbda8f57fd51979171d405"
         },
-        "q1i": {
-          "sha256": "866ac08bd4ac4cbdf5f3e1fdae5c8975013a3008ef587ee75ff5294c74e46c0b"
+        "TXi": {
+          "sha256": "e7b0686ed04d6306c97e8f637a3f10dc2c1fc256cf5bf3bc43150ce145278385"
         },
-        "J1i": {
-          "sha256": "229829949aba40413fc811d5d0745b27ce1485c83c9d3358467afce9ce39d303"
+        "EXi": {
+          "sha256": "c4300ea099d0d509bec26ee3db11302bf1fbebf582c9396a37578361d3e9e2d7"
         },
-        "Y1i": {
-          "sha256": "fe9bfffa30094241a46abfd0976f050ba014b1f445f3447cc41ba0701dee64c4"
+        "DXi": {
+          "sha256": "8b69357d41c7b3ae80cbad6c4eb868de8a23e20347cb32acf1f6393c8d8a392a"
         },
-        "X1i": {
-          "sha256": "4c876089d347bfb03f283df1a890ee3406678f6fbe0d5e6896a05279a24ed670"
+        "OXi": {
+          "sha256": "83101074d10bf529811d1ee2f692639ab6bfe75d52bc48f8dae4770ed944a116"
         },
-        "Z1i": {
-          "sha256": "4cdaf40914902818a62636923c0a5b80b3704c9f15db48c6b86cd44fb9965896"
+        "kXi": {
+          "sha256": "2d5e65ae344bd04e363b098ca82bba41fade9fdd98dc4cf27ae09b0ef388736c"
         },
-        "Q1i": {
-          "sha256": "099212b8f69eeed9bd4613127e682a1525932d22d6ac8001c0f6981c0d474aa4"
+        "AXi": {
+          "sha256": "cc579464d5547baa308cc37a349a3161b7f5f82902bd3c24a6484b82803a2cbb"
         },
-        "$1i": {
-          "sha256": "cea526706daf1abe3574e1405cfc6bd30f217ca9a5ce0326236feb6cc1e8d580"
+        "jXi": {
+          "sha256": "bbeb90ed220ee42d15e4508e3eee6606cf94b959818a6f354edeac636fb0d51b"
         },
-        "e0i": {
-          "sha256": "d6f100627ce4168204f662e26af06a9bdbde489d30459e73f3c4dd2416f54180"
+        "MXi": {
+          "sha256": "a7aa45a81f6fafdbc67571c8c8a1730c9fb1a3b676ded6682befa53cc1db4dde"
         },
-        "t0i": {
-          "sha256": "7c5d0b52367605b0621cf3bd0099f20d49e25fee79834bdff0688e6f9cc57474",
+        "NXi": {
+          "sha256": "6d1cd67cf40967d0db1ef9bcc9e47edb8be65f5bdf3c79f3738f846b73ea0d09",
           "exportedAs": "pinnedPortsOf"
         },
-        "n0i": {
-          "sha256": "1edc199245ec540d97363a9bba1408aa401d63ac03efd33e1ff484f9966e4707"
+        "PXi": {
+          "sha256": "e21d160a1f990b58ef46211bd5520d30833b4a6989f19ecbed34f18c829c0700"
         },
-        "Q0": {
-          "sha256": "61b4d18d93c621558175eb86669063edcc165f45ba2086de1b18935304ddb158"
+        "c3": {
+          "sha256": "bd1d3d289dc883cc1e6275b6644d6ecac07e26cd6c2a721ec952cc746cd093b0"
         },
-        "r0i": {
-          "sha256": "ba2b6adf012936c36c4b6e32b3f491faf13b925577cd09537b60896cbc4b5bec"
+        "FXi": {
+          "sha256": "0c15e6d90e68ad6b5911a386a405e3f77621cf2780efe1ce399815e4c7c50e1e"
         },
-        "i0i": {
-          "sha256": "e75600eb53d540a444e8c572c7f067b6cf68f32604bc54f408e592accb40c8f5"
+        "IXi": {
+          "sha256": "318c321fbcd219518de768ff23997e87f95afa6eb66326d9dbae5c0e0f3d5229"
         },
-        "a0i": {
-          "sha256": "f897db68f5e4b361e4c3ee86df74f39c5f510a1faee9a267a6dba673c84211ea",
+        "LXi": {
+          "sha256": "ab88506c1ad7b90e37af04bd331760980eb42d018094e01f04d5c9532d1ff9e0",
           "exportedAs": "portMayReassign"
         },
-        "o0i": {
-          "sha256": "24e96043b11c849ad966e7e26090faf8b905f25b937cbfa9a0abcf2a5b5c76a7",
+        "RXi": {
+          "sha256": "b12fc265042b4db8b6a8340b0d5cfca47c37ff9e7946d9051d3bde06b265a320",
           "exportedAs": "portRetargetability"
         },
-        "m0i": {
-          "sha256": "4c0099e55b112ddcfff3dfa5a612326c3df6e769b035bcbaecbe36a28cf08826"
+        "z2i": {
+          "sha256": "fea43dfd5e0c7e46f3253224e2ad23ca2f344ff40725d1092f70c7c462ee31b1"
         },
-        "h0i": {
-          "sha256": "0c44153723863fd17334860d14efa76cd8ef9f6686f70f97f8609361f9078032"
+        "B2i": {
+          "sha256": "e84d70a465b5bb3a2508452e971451e4344a8e221d9bbeeb1c0bb554eab5517f"
         },
-        "g0i": {
-          "sha256": "a6407447cf302c670a0216b4f7ae44f036c4a47334af20dd0e03cb83449b0c24"
+        "V2i": {
+          "sha256": "c3d37838ca13e660224458f4dee0ec6e668a005484fc30edc08579621c57dee1"
         },
-        "_0i": {
-          "sha256": "935961c958590462debb443d8c2236dad8502d79adf3c9fc9a96923fff489671"
+        "H2i": {
+          "sha256": "20ce81b89614bfd3bd5524275cc3d8a68c9133fd9edd6cc7d68952bb6faa4396"
         },
-        "v0i": {
-          "sha256": "754613a0c4bb52c8150bdb1aef99c68bf1409a980ffc90e7c6009e5180a2699a"
+        "U2i": {
+          "sha256": "e8c6b224ab1e51f8dc72c8ca7f05f79b945e7dc66c47005f15fb4a7ffd42b526"
         },
-        "e2": {
-          "sha256": "bab0f1c5d192b191d3ab55449921e2934b6a4951c9ea5042f7e2a1c10f9f2d31",
+        "k3": {
+          "sha256": "b73c265ec557b6853c0d219b385766dba1d96d8283bb39a885d0a9805e6edf0e",
           "exportedAs": "lsofHint"
         },
-        "y0i": {
-          "sha256": "db1f9b5032b4b995cfc0329863a8b44a719b9666417d4a3d08e26a697ca319da"
+        "W2i": {
+          "sha256": "f2d549d05d736bde38ff5c6b29f5de6dbaa69004f937f9d8cf6ad7c67db9aeb7"
         },
-        "b0i": {
-          "sha256": "bbbf278f8b1484b25d91301a2e8ff32a3c8e8b4be73620e2f732c81e122a6176"
+        "G2i": {
+          "sha256": "9bfc410a01a4a49164246bdd570876d38b1018b81237b987696a3d38219180b9"
         },
-        "x0i": {
-          "sha256": "fccbfff36272469b874634a9e6772c115e3b6279f99d148dec1722bb2eab9396"
+        "K2i": {
+          "sha256": "3d0f9fa994355d77db18e94072525f72cf731d54ee93fcc3d0b45aa418bb269c"
         },
-        "S0i": {
-          "sha256": "f1ec2e476a9b4c4b918dff4b33a77e1f64cdf0ca0f45148d79d6e2899381426f"
+        "q2i": {
+          "sha256": "50710035fd81a402642c98e928ef6026d0f78273ed58fdd7b8d46948205bea53"
         },
-        "C0i": {
-          "sha256": "0dcba4e1e5b51785af389924c97e674ea2bcce4fb2b9f7023e1b18baf0451653"
+        "J2i": {
+          "sha256": "1b46082f359611ee6e808bbe4fd421d59aa799c568a330f5402cfdd45d38596e"
         },
-        "w0i": {
-          "sha256": "f4653ae6cd3391135bdc644d7a37f0669a94891ee35b69e5e5c33424f7aa9215"
+        "Y2i": {
+          "sha256": "503d701d44040c880c8dd720a92e6ddc93f431ad7c0e267f1c1e800d81935316"
         },
-        "T0i": {
-          "sha256": "420b688c70728fc7fa45891ebe99cdf9724caf39e7b445ce58946ba356fdfa1f"
+        "X2i": {
+          "sha256": "c97180160743d7e6ea24634db9a5b8f3cfb1557f6492b95d0353c89bf8d65a33"
         },
-        "E0i": {
-          "sha256": "65f439c6d6abf50ce15d9305f034562bf4ba3ffc51197d41825794f856453276"
+        "Z2i": {
+          "sha256": "52f5c384d9e73f471cfd2ce41e2b259f45938360de728610a85f60eefe7bdbac"
         },
-        "D0i": {
-          "sha256": "a42e9906fac4191cf6202e673d789b96f9e614eb4be856c3530bf887e1a3879b"
+        "Q2i": {
+          "sha256": "9d99f04fb548824a7464e534387d3ad793946ce63c871d53c649d86f69930321"
         },
-        "O0i": {
-          "sha256": "ef47f334d2dd06790c8b20c17b0fea805efc1fb7bbbeec9b2b6f68f29a2ffa89",
+        "$2i": {
+          "sha256": "185964bf380ae73f820eaac79bb6f8ca726c4bf0b57dd9e1974be294de966fbf",
           "exportedAs": "verifyServerIdentity"
         },
-        "P0i": {
-          "sha256": "adf49b974047c2d7c5a99e713f307b29b3d54e36a3b0febf1fc8cc0bde14a4df"
+        "a4i": {
+          "sha256": "e9fa483547bf934a68823eeba07c63cc4a7db8ee31f1a8fdf3d6da7ee4dfcd69"
         },
-        "F0i": {
-          "sha256": "36c1cd8610868d8c99f245a5f5d1405dd7a5eb14b762d7de383769a849e8a127"
+        "o4i": {
+          "sha256": "e11060d5fd06ffb2c3198be60c7fda4a06cc534cf808a25d8b1a4d9254d96b04"
         },
-        "I0i": {
-          "sha256": "1ac068cf87909975f4437948579b78bcb3ba090abe8d96d28ebd6c604bd11bb8"
+        "s4i": {
+          "sha256": "bf05efd9aa59b5a1fe54a1b32c45a6ac1a523c28d01e3f6726469faa3539f17f"
         },
-        "L0i": {
-          "sha256": "ebde906e3af9ce48b70d8401eb5ca830871b17f5e943f79f28c1defe8ec77980"
+        "c4i": {
+          "sha256": "81080ba18e8ed4930e2d7fd83e3005b66c47720538eebf7b4846538458c30c30"
         },
-        "z0i": {
-          "sha256": "e67e5c0b44b2a88738903546cff8d8934d10c771eab76d632ee3274bad1d5a7f"
+        "u4i": {
+          "sha256": "4d295550a98e3a71333b2cde6a764f81fb7889f5491b008574b9070b1a4984fd"
         },
-        "B0i": {
-          "sha256": "3b6cfbc5ecead38b299162f087e5785958c29f8616cbde775fe075a503a6996f"
+        "d4i": {
+          "sha256": "cfafcfa8bfa2b419235e6de3891c8973a9dcf16ad41539a2901b5356ac0f72e1"
         },
-        "V0i": {
-          "sha256": "e1dc9f0eb7dafe95fcfed0e091b10aaafb0f496d59bc55b60f1212b6321aa6e4"
+        "f4i": {
+          "sha256": "311127dcec56dd5419d18acbf07b291a59ea00aa1b754b104f11666c489f319d"
         },
-        "H0i": {
-          "sha256": "fc30c24d878ceda4f4d58a29765120978add5f35eb6a675d93a09602425550c2"
+        "p4i": {
+          "sha256": "708ba5c9bc15fb59b2c4a846b0094fd37206d60730ce793f6b6b337ce9df9df7"
         },
-        "U0i": {
-          "sha256": "c55be89f01db5990751857d69cdea48e8f019c8fa8cd458e00682e17565b86ae"
+        "m4i": {
+          "sha256": "a02fae842af6faf77df0a7962a839d31702211fff5adcece8c85ba3cf5cf2444"
         },
-        "E2i": {
-          "sha256": "cacc9835b90fc2b2d696ba1aa3ffb14110751cfb85985771cca47c793bf08818"
+        "Z4i": {
+          "sha256": "ce65fbf60fbd14b8a4c4958fd8bf88a0193e03eeff0f62bacdd1a73c6be3b622"
         },
-        "D2i": {
-          "sha256": "0ccd955161744a24d6a1d273c7d4b797a51f1552e2f28a43307045486384715f"
+        "Q4i": {
+          "sha256": "43679a8dad12eaa9f9ca224dec29f1c7e59c2c6b8d255a8432dd0956d61810e4"
         },
-        "O2i": {
-          "sha256": "3ec86097862eb3c77a1c37fc000a01cab54fd41a440c2707cccaca3d90c783bd"
+        "$4i": {
+          "sha256": "1b2cdc7ab2dd1358bfb865c1d68cd38fe08a7d6a6138d310942b0159327368a7"
         },
-        "k2i": {
-          "sha256": "e331f6f7c1781d1299dde349dcc980b5715aac398cce4c2fb5c651a756194646"
+        "e3i": {
+          "sha256": "be90c9d6378e58a27e763d674677866d2454673ba8f88c2d607ed5619c21744f"
         },
-        "A2i": {
-          "sha256": "e86412fa3828e261caa5e422e394bdf5d1298a00ab9f9952bf0a7518fd420ee9"
+        "t3i": {
+          "sha256": "ee8e959d0d8f9e1c2623e97978acee4e33ceb9e4a4467955cf39ef4fa460e1b0"
         },
-        "j2i": {
-          "sha256": "3fa3ecff7ea79a651943cdc26c877bc2d506d32e3b2c13965dc574cffdcb2a87"
+        "n3i": {
+          "sha256": "971b8b64e0ee633379725bc68644a2d4994d1728f2ad63cf57db19b741771f6c"
         },
-        "t2": {
-          "sha256": "26a65a7fb10f5fab9a92a6c7bb45b6a80fa96824b9ae0c4b76bd3ea37739b9af",
+        "A3": {
+          "sha256": "27269085c6f71b6ead22e4bb19c73971bdeef9ddcc3e548329cc4741981b8e67",
           "exportedAs": "pendingAllocations"
         },
-        "n2": {
-          "sha256": "e5ec8689748181eaa348180240f5411ee68e93e81e0b734d06f0489efd8393e8",
+        "j3": {
+          "sha256": "186de506eeef2b503cbf83c23379cc2e274e63755605f91c8c9547ec06ee2d45",
           "exportedAs": "exactPortBinds"
         },
-        "M2i": {
-          "sha256": "80577a3e3900a362f2bdc0dfd3f7d5653cac80b734bdf68fdf7884424bb43ea2",
+        "r3i": {
+          "sha256": "7362aa019f360fb3ba48a4eafd4cfde1497562eb4073cd37cf43c4e6843e23b5",
           "exportedAs": "releasePort"
         },
-        "N2i": {
-          "sha256": "8ece45ee9acdfc1e3e903f27359a85b92f148a5be3400ce2147f5627dd789d86",
+        "i3i": {
+          "sha256": "5b5edad920ee265f5a7cd09cb670eff9f022a862e879674685954c1411734436",
           "exportedAs": "scanSpan"
         },
-        "P2i": {
-          "sha256": "d9ec2b67fdc45b5089457df42d90ca53e572e6fec8128046a54c72fc3a8b445f"
+        "a3i": {
+          "sha256": "4848a5c25d9d628929826f14bbdf361355751fc5aa3add3141f72624d68ca78b"
         },
-        "F2i": {
-          "sha256": "56c2545603a9e2f56a5cb32aef0ac199914caee9fafd8b3bec01e5404881f309",
+        "o3i": {
+          "sha256": "c7b3c7b10a452c2d540732bfa1311f51f2b84ff2a9e89b2d49574621adc5f7dc",
           "exportedAs": "portOccupancy"
         },
-        "I2i": {
-          "sha256": "60d9e5f66ddc234fb415ce544bd1b86e1f28e12db0b85a0a0c5e0b274f6a627f",
+        "s3i": {
+          "sha256": "6bf7ab6f9ad44350f002dd52b6a67b36728a3c0536808b5302933dc8c5c628a6",
           "exportedAs": "resolvePort"
         },
-        "r2": {
-          "sha256": "59d8f12b66e1640dcc6a5feb26e1728942cc67ec346da87c5bb9a3f864799038",
+        "M3": {
+          "sha256": "bd7eec6ad277f650d93ee1e83465310660f2513839e4c74e61548fab72f3bf6a",
           "exportedAs": "PortInUseError"
         },
-        "K4i": {
-          "sha256": "333a2f75b227baa71a466cfb3176c2c6cc519deadc44624006862a4b6d5b3561"
+        "M6i": {
+          "sha256": "5420182ef28d62aeae1643dcf5fdb76169c4a76909b33c204cd8e8687b12e598"
         },
-        "q4i": {
-          "sha256": "1d3cd3733483b0a496578488707c88651437fd5bba70f61b793c8a17408f0547",
+        "N6i": {
+          "sha256": "a8ec6b6245c33e77f5b30bff796e63442c129e4057a75ec7f6726d10961e0a85",
           "exportedAs": "conflictingServers"
         }
       },
@@ -366,91 +375,91 @@
         "process"
       ],
       "callSites": {
-        "a2": {
-          "sha256": "32fbb549c0df8ccd40d1c338b6e21120b033bc2f48ef36acbf1dd35608380e32",
+        "P3": {
+          "sha256": "62532c48a38566f647f0518b8efa1caf57ff9a23f88854acaf4c637007edf06d",
           "needles": [
-            "let e=F2i(this.servers,a,t.port,r),i=this.collectSiblingRoots(a,r),o=await O0i(n,t.port,c.pid,e,i);if(u.status!==\"starting\")return;",
-            "pendingAllocation:t2.has(t.port),exactPortBind:n2.has(t.port)};d.set(a,u),M2i(t.port)"
+            "let e=o3i(this.servers,a,t.port,r),i=this.collectSiblingRoots(a,r),o=await $2i(n,t.port,c.pid,e,i);if(u.status!==\"starting\")return;",
+            "pendingAllocation:A3.has(t.port),exactPortBind:j3.has(t.port)};d.set(a,u),r3i(t.port)"
           ]
         },
-        "D3i": {
-          "sha256": "d4efe5144e493612b8c3c58230d6e5c0bf7a838312bd291e60a45b713c188971",
+        "p8i": {
+          "sha256": "091c3b8e56c52784d9ed7ae70bd31e516d2a77f2797925343defc8374e3bf727",
           "needles": [
-            "let _=await I2i(r.port,r.autoPort,a,d,g,f),v=_.port",
-            "y.args=k1i(r.args,v,{joinedShortForm:d,command:r.command})",
-            "g=await t0i(((await new X0(s).getConfigFile())?.servers??[]).filter((e=>e.name!==r.name)),s)",
+            "let _=await s3i(r.port,r.autoPort,a,d,g,f),v=_.port",
+            "y.args=sXi(r.args,v,{joinedShortForm:d,command:r.command})",
+            "g=await NXi(((await new o3(s).getConfigFile())?.servers??[]).filter((e=>e.name!==r.name)),s)",
             "..._.movedFrom===void 0?{}:{configuredPort:_.movedFrom}"
           ]
         },
-        "E3i": {
-          "sha256": "58a4897245b2046d7eaa62bb81b37a7b5597e41a78aab8c708f09ed9652f5822",
+        "f8i": {
+          "sha256": "0f68a9c5418271cce6599a859ecfa26497d0cb2206c086a3b1f204b46e35761f",
           "needles": [
-            "await o0i(m,d,g)",
-            "portMayReassign:await a0i(m,g,_)"
+            "await RXi(m,d,g)",
+            "portMayReassign:await LXi(m,g,_)"
           ]
         },
-        "y6i": {
-          "sha256": "7448cabf4fbecb8d4d3f2bb452e901e67c03b8825d1fcd95e7f659d7aabd01b9",
+        "m5i": {
+          "sha256": "bc331cab49d6c9308877031f67cc8bc7bdf4914dac9c65d7ec8c4b626d97a3de",
           "needles": [
-            "let t=q4i(a2.servers,i.config,e,n);",
-            "portMayReassign:await a0i(i.config,o,s)",
+            "let t=N6i(P3.servers,i.config,e,n);",
+            "portMayReassign:await LXi(i.config,o,s)",
             "(i.config.autoPort===!0||o&&s)"
           ]
         }
       },
-      "sha256": "557d10deb9b82bf9cccf65bc5542075ec28b9800d4bf6f69165f5ef0df0353e2"
+      "sha256": "439065d22d7670a20303da97ec130ae5d1c5e5ca39fe7f86efa142c90b5b6e6f"
     },
     "r3b-preview-user-agent.mjs": {
       "bindings": {
-        "CIt": {
-          "sha256": "82eb03683a6f969c3824f9a768dc22dd1d79f7b999184c11ea8aa2f84ebbc63f"
+        "qHt": {
+          "sha256": "2e0746f304cacfca2d31a452b82168e8c46a523f44d2a02e61440d70ede632c8"
         },
-        "wIt": {
-          "sha256": "3ba92b344ab0d9b432bdd2eef7f21aaea396368d63b7ad3fcc24959bd9ff668a"
+        "JHt": {
+          "sha256": "dbe7a12b17ae8ebf32c294794c8b5d79fec6c0756642c9cb7d845cc99e233653"
         },
-        "TIt": {
-          "sha256": "7c9eefd3e374214d7f8aae2259c3f84b5590cbf70d6715d3178eca8fba5b802f"
+        "YHt": {
+          "sha256": "71082779fb867c697a0a68006ac43f8f92c5e7f6c53bbc3c59af84f6fbaa9e12"
         },
-        "Mv": {
-          "sha256": "9597a94344fdeeda8ed8c036616dd7c5eca61e3ffc23706e58aa21bf79d3b03f"
+        "My": {
+          "sha256": "21d42bf48d16a1d2b346717b9554a3290b116228367a16db49f427bc6d6581a7"
         },
-        "Nv": {
-          "sha256": "f35a2368b0913925694a4cf57785a981b4ae06eb47c2df4803099bc7a5bec2c0"
+        "Ny": {
+          "sha256": "97af3ebb0aaf18d6d24e9e56cb97fbfebf9ce21e9c9f1440ba83f3dc5e7e6ad9"
         },
-        "DIt": {
-          "sha256": "86a4a3830e7c138af1b5d265de6d28715ae761567d7254aa0bb8d42d6d1cd724"
+        "ZHt": {
+          "sha256": "96f1771dbebe7dad3431d8fd705fbecf0e54a9c3b6b6dc2a1b30baffcab4db30"
         },
-        "kIt": {
-          "sha256": "a7509c722ebbdc7deb1a3aa63da8b746676d45c5420702d1b704868a93b470b2"
+        "$Ht": {
+          "sha256": "12d6949f67e03afc61425d5d55d07aed2ada3957fc5e28b45ebd1bd34c9f3341"
         },
-        "hA": {
-          "sha256": "c10a6a25d1bb40289616840aca1f869869a62e4d16bc6b94f3274e4ed50a725f"
+        "NHn": {
+          "sha256": "3163003559c5456dc39b74109e1b678ee019e5e3624ecfda965e8180624230d4"
         },
-        "kAn": {
-          "sha256": "51ca107d78eace404f60be1d6f118350ac7398a797e1e4855aee92dfa2b4083c"
+        "PHn": {
+          "sha256": "c26ca937ba516d31c4a6829e372892aaa635c63523449c5d2fd8d111888d20ba"
         },
-        "AAn": {
-          "sha256": "15666f84b50f9f64e330faf5e272f390ba23089ddefebb6613a98e663b7e9dee"
+        "FHn": {
+          "sha256": "295082be8650451e77a7c7cb582c0e3a03d012c0d67db46457cfe6b573b92324"
         },
-        "xA": {
-          "sha256": "c81de5617da3f65445842026f15a52dc05acc5e70c283a8f4b32e9e83aa17e0c"
+        "MM": {
+          "sha256": "032bc057beb5ce247d7e0bbbd16e8255f180efb26af0e8819df0aaeea5fff3db"
         },
-        "wA": {
-          "sha256": "961135a0823c569fc8ba43d290d51458e1f981997658629bf6bc43baa6b78ea7"
+        "vUn": {
+          "sha256": "0cfb530c52642917635d7d8cc9798e64c857cd18d98ad6c0125e8209269a0aaf"
         },
-        "lai": {
-          "sha256": "4ae8275eae2a8adc7f88d3ffaee4292999ed7cc423763d5deb7e75527383c94d"
+        "rii": {
+          "sha256": "2a8b81f3cfe5ae5b0df64a72ef13e1cfd81496940abfad64eaf627744d21a1b3"
         },
-        "uai": {
-          "sha256": "eecf1cba8dcf6f9a589dd7aa91cace99fe509feb1d4f972626991132844b9ae3",
+        "iii": {
+          "sha256": "df40fa68285cb5ffd8a8df0b5dc9499a6dce9b8f16935c45570a4f217b35eef5",
           "exportedAs": "isClaudeHost"
         },
-        "ydi": {
-          "sha256": "b953f83853dc71fdbe5d7bb31fa03c1b1a5a1bf3cd775b8634036fa7dc7f4064",
+        "eui": {
+          "sha256": "246713b35fda4dce1dad481d710356055fd0a5b96434d3018409fee8a79e4732",
           "exportedAs": "previewUserAgents"
         },
-        "bdi": {
-          "sha256": "62f2fff452b12fe24295847d3a5e5003ee1f798513361b03b95759862e21917d",
+        "tui": {
+          "sha256": "036c4e2cf18d652c0ce99eed22baa2ce9d0e0dd0ea51e15137ed48cc3d05837d",
           "exportedAs": "previewRequestUserAgent"
         }
       },
@@ -460,20 +469,20 @@
         "URL"
       ],
       "callSites": {
-        "Pfi": {
-          "sha256": "139e4495ab22ec1721f70ae835428f4c287a12ad11d41970af58238dde15485f",
+        "ZQ": {
+          "sha256": "80ea1534086fc3c8f979bd45150e29c26a0e0ed18c3b85ca466759161f859bbc",
           "needles": [
-            "let t=ydi(e),n=()=>hy(\"3868149774\");",
+            "let t=eui(e),n=()=>Pb(\"3868149774\");",
             "o.setUserAgent?.(n()?t.claudeHosts:t.sites),o.webRequest.onBeforeSendHeaders(",
-            "o=bdi(t,r[a],n()||uai(xA(e.url)?.hostname??\"\"))",
+            "o=tui(t,r[a],n()||iii(MM(e.url)?.hostname??\"\"))",
             "e?.includes(\" Electron/\")"
           ]
         }
       },
-      "sha256": "1360e6ed466688989d23d6ce8754d7f9ec9239ee66d99ff87a52301600858758"
+      "sha256": "8afc7274022c7280c3e56b1857ed93e2bd161e57f59b5fcec069cdc7b0750ad7"
     },
     "r3b-preview-launch-fields.mjs": {
-      "from": "X0.parseConfiguration",
+      "from": "o3.parseConfiguration",
       "statementSha256": [
         "61d0a7482ddbfd1b2fcd5bfbb987d9feb09d09d53249a976b07037ad1f61fa37",
         "cbc417c5fc1673fd9c17dba4f0a1ba33c1e7c2c6765bdc907c4f015624eea184",
@@ -490,7 +499,7 @@
         "Number"
       ],
       "callSites": {},
-      "sha256": "2cf063e7e810c106f7313845988f738fe8b99be9371c16e3dc50997598319d4d"
+      "sha256": "e8147afb63bbe4935aa90a819aa444d9126c78a1ff516a4a56d7b15b7978fe80"
     }
   }
 }

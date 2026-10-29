@@ -9,6 +9,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { userMessageActions } from '../src/message-actions-model.mjs';
 import { coworkRewindCapabilities, coworkRewindBridge } from '../src/cowork-session-capabilities.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1dir = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -95,12 +96,12 @@ function harness({ rewind = async () => ({ prefill: 'again' }), running = false,
 }
 
 test('visibility: Bt for restart, Vt for Go back (read-only, scheduled, no bridge → none)', () => {
-  const bridge = coworkRewindBridge(async () => ({}), { coworkEnabled: true });
+  const bridge = coworkRewindBridge(async () => ({}), { cowork: true });
   const on = A.coworkSessionActions({ sessionId: SESSION, bridge, capabilities: coworkRewindCapabilities({ bridge }), send() {} });
   assert.equal(typeof on.onRestartFromHere, 'function');
   assert.equal(typeof on.onSessionRewind, 'function');
   for (const capabilities of [coworkRewindCapabilities({ bridge, readOnly: true }), coworkRewindCapabilities({ bridge, scheduledTaskId: 'task' }),
-    coworkRewindCapabilities({ bridge: coworkRewindBridge(async () => ({}), { coworkEnabled: false }) }), coworkRewindCapabilities()]) {
+    coworkRewindCapabilities({ bridge: coworkRewindBridge(async () => ({}), { cowork: false }) }), coworkRewindCapabilities()]) {
     const off = A.coworkSessionActions({ sessionId: SESSION, bridge, capabilities, send() {} });
     assert.equal(off.onRestartFromHere, null);
     assert.equal(off.onSessionRewind, null);
@@ -235,7 +236,7 @@ function fixture(component, props) {
     useState(initial) { const i = cursor++; cells[i] ??= { value: typeof initial === 'function' ? initial() : initial }; return [cells[i].value, (next) => { cells[i].value = typeof next === 'function' ? next(cells[i].value) : next; }]; },
   };
   const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internals.H;
-  internals.H = dispatcher;
+  internals.H = withMemoCache(dispatcher);
   try { return component(props); } finally { internals.H = old; }
 }
 function findNode(tree, predicate) {
@@ -273,7 +274,9 @@ test('main.jsx wiring: the Cowork actions over the CW2 bridge, the restart actio
   for (const needle of [
     // R4i-cowork CW4 widened this import (lastHumanMessage for the edit's isLastHuman).
     "import { coworkSessionActions, coworkSessionHost, lastHumanMessage } from './cowork-session-actions.mjs';",
-    "const coworkBridge = isCoworkSession(current) ? coworkRewindBridge(call, { coworkEnabled: boot?.coworkEnabled === true }) : null;",
+    // w13-coworkfn-caps (cwf-17, cwf-45 third lock): the bridge is the Cowork session's (cw- VM or a core thread whose
+    // sessionMetadata surface is cowork), no longer the boot's Cowork switch.
+    "const coworkBridge = isCoworkSession(current, sessionMetadata) ? coworkRewindBridge(call, { cowork: true }) : null;",
     "capabilities: coworkRewindCapabilities({ readOnly: !!session?.archived || !boot?.connected, bridge: coworkBridge,",
     "scheduledTaskId: session?.scheduledTaskId || sessionMetadata[current]?.scheduledTaskId || null }),",
     // R4i-cowork review fix: the host calls come from coworkSessionHost (behaviour tested below), sends go out as resends.
@@ -299,7 +302,7 @@ function hostHarness({ rewind = () => ({ prefill: 'again' }), send = () => ({ st
   const calls = { ipc: [], refresh: [], send: [], retry: [], toast: [], focus: 0 };
   const composer = { draft };
   const call = async (channel, payload) => { calls.ipc.push([channel, payload]); return rewind(payload); };
-  const bridge = coworkRewindBridge(call, { coworkEnabled: true });
+  const bridge = coworkRewindBridge(call, { cowork: true });
   const host = A.coworkSessionHost({
     sessionId: SESSION,
     sendMessage: async (...args) => { calls.send.push(args); return send(...args); },
@@ -375,7 +378,7 @@ test('host: an empty rewind retries the last turn (Me); Go back puts the vz text
 // sendMessage(draft, attachments, mentions, {priority, beside, resend, demonstration}): the body up to the next function.
 function sendMessageBody() {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
-  const start = main.indexOf('  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false, demonstration = null } = {}) {');
+  const start = main.indexOf('  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false, demonstration = null, title: startTitle = null } = {}) {');
   assert.ok(start > 0);
   return { main, body: main.slice(start, main.indexOf('\n  async function deliverDemonstration(', start)) };
 }
@@ -419,7 +422,7 @@ test('main.jsx sendMessage demonstration path: queued while running, new session
     'if (sending || !boot?.connected || (!demonstration?.newSession && (loading || session?.archived))) return;',
     'let id = demonstration?.newSession ? null : current;',
     'const startedGroup = current || beside || demonstration ? null : newSessionGroup.current;',
-    'const name = demonstration ? demonstration.title : firstMessageName(',
+    'const name = demonstration ? demonstration.title : startTitle || firstMessageName(',
     '...(demonstration ? { content: demonstration.input } : {})',
     'const kept = demonstration ? liveComposer.current : { text, attachments: entries, mentions: mentionList };',
   ]) assert.equal(occurrences(body, needle), 1, needle);

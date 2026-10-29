@@ -6,6 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // R4f-proposal P5 (tasks-proposal-group-card WI-5; tasks-03 / tasks-04 / tasks-11 / toolcards-20 / transcript-03): the
 // inline proposal group card mounted in the transcript. src/source-proposal-host.jsx (the host's Lb: data from the open
@@ -14,10 +15,10 @@ import react from '@vitejs/plugin-react';
 // mcpToolCalls) and stub rpc / call. SSR for the markup; the card's own components under a hook dispatcher (D21) for
 // the clicks; main.jsx's wiring itself checked on its AST. No browser, no DOM, no network, no process, no port.
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
-let server, H, G, A;
+let server, H, G, A, Rows, Session, Group;
 before(async () => {
   // hmr: false, ws: false — no WebSocket server, so the test listens on no port.
   server = await createServer({ configFile: false, root: app, plugins: [react()],
@@ -25,6 +26,9 @@ before(async () => {
   H = await server.ssrLoadModule('/src/source-proposal-host.jsx');
   G = await server.ssrLoadModule('/src/generated/proposal-group/index.mjs');
   A = await server.ssrLoadModule('/src/source-proposal-group-adapters.jsx');
+  Rows = await server.ssrLoadModule('/src/source-transcript-rows.jsx');
+  Session = await server.ssrLoadModule('/src/source-session.jsx');
+  Group = await server.ssrLoadModule('/src/generated/transcript-rows/group-status.mjs');
 });
 after(async () => { await server?.close(); });
 
@@ -130,7 +134,7 @@ function fixture(component, props, contexts) {
   const run = () => {
     cursor = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return (tree = component(props)); } finally { internal.H = old; }
   };
   run();
@@ -154,16 +158,18 @@ function mountedCard(cards, rows) {
 }
 const settle = () => new Promise(resolve => setTimeout(resolve, 0));
 
-test('official pins: the two feed rows the host mounts and the presets-on gate (2.42304.0)', () => {
-  const c96 = raw('c96d752d0-BOCqU7c2.js'), cf74 = raw('cf74bc599-D9NZWRyl.js');
+test('official pins: the two feed rows the host mounts and the presets-on gate (3.6556.2)', () => {
+  // 3.6556.2: the rows are mQ / hQ (2.42304.0 R$ / z$), the session pane's provider is tw (Lb), the gate qr (lr).
+  const c96 = raw('c96d752d0-CWv_7-n9.js'), cf74 = raw('cf74bc599-CRYqipWN.js');
   for (const needle of [
-    'case"turnSuggestions":return n===void 0?null:D9(Ye,b("div",{"data-find-omitted":"",className:Ye===!1?"flex flex-col gap-[var(--chat-item-gap)]":"flex flex-col",children:b(R$,{sessionRef:n,tools:e.tools})}))',
-    'case"unplacedSuggestions":return n===void 0?null:D9(Ye,b("div",{"data-find-omitted":"",className:"contents",children:b(z$,{sessionRef:n,tasks:e.tasks})}))',
-    'le!==void 0&&ce.length>0&&tf(e,r,!1,I)&&((ce.length!==1||t.sentHereSuggestionIds?.includes(pL(ce[0])??"")!==!0)&&s.push({kind:"turnSuggestions",id:`turnSuggestions:${le}`,tools:ce})',
-    't.hostDrawsTurnSuggestions===!0&&gL(e)',
+    'case"turnSuggestions":{if(r===void 0)return null;let e=Et===!1?"flex flex-col gap-[var(--chat-item-gap)]":"flex flex-col",n=J2($,262,t.tools,r)?I2($,262,f(mQ,{sessionRef:r,tools:t.tools}),t.tools,r):$[264],i=J2($,265,e,n)?K2($,265,e,n,f("div",{"data-find-omitted":"",className:e,children:n})):$[267]',
+    'case"unplacedSuggestions":{if(r===void 0)return null;let e=J2($,256,t.tasks,r)?I2($,256,f("div",{"data-find-omitted":"",className:"contents",children:f(hQ,{sessionRef:r,tasks:t.tasks})}),t.tasks,r):$[258]',
+    'ue!==void 0&&le.length>0&&gv(e,r,!1,I)&&((le.length!==1||t.sentHereSuggestionIds?.includes(NM(le[0])??"")!==!0)&&s.push({kind:"turnSuggestions",id:`turnSuggestions:${ue}`,tools:le})',
+    't.hostDrawsTurnSuggestions===!0&&LM(e)',
   ]) assert.equal(occurrences(c96, needle), 1, needle);
-  for (const needle of ['cr=to(),lr=Zs(cr,t)', 'Or&&t&&dr&&!lr&&u(lb,{sessionRef:t,scrollRef:r,captureGuardedSnapToBottom:x},`chip-${e}`)',
-    'function Lb({active:e,host:t,sessionRef:n,children:r}){let[i,s]=a(null),c=e?i:null;return u(Sc.Provider,{value:t,children:o(mc.Provider,{value:c,children:[r,u(nc,{task:c?.lastSentHere})'])
+  for (const needle of ['Tr=Bo()', 'qr=J2($,162,Tr,n)?K2($,162,Tr,n,Ts(Tr,n)):$[164]',
+    'Si&&n&&Zr&&!qr&&s(CC,{sessionRef:n,scrollRef:i,captureGuardedSnapToBottom:b},`chip-${t}`)',
+    'function tw(e){let $=J9(14),{active:t,host:n,sessionRef:r,children:i}=e,[a,o]=x(null),c=t?a:null,l=c?.lastSentHere,d=J1($,0,l)?K1($,0,l,s(xs,{task:l})):$[1]'])
     assert.equal(occurrences(cf74, needle), 1, needle);
 });
 
@@ -367,12 +373,15 @@ test('Do it here, dismiss and a failed start go through the host bridge', async 
 
 test('zh-CN: the card\'s copy is translated, ICU plurals included', async () => {
   // The intl the card formats with (source-code-start-adapters.jsx useStartIntl: the vendored react-intl createIntl).
-  const { kt: createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-Cf4IuK3L.js');
+  const { createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js');
   const zh = (await import('../electron/i18n/zh-CN/agent-tools.mjs')).default;
   const source = fs.readFileSync(path.join(app, 'electron/i18n/zh-CN/agent-tools.mjs'), 'utf8');
   const block = source.slice(source.indexOf('// R4f-proposal:'), source.indexOf('// R4f-proposal end.'));
   const keys = [...block.matchAll(/^  "((?:[^"\\]|\\.)*)":/gm)].map(m => JSON.parse(`"${m[1]}"`));
-  assert.equal(keys.length, 70);
+  // 69: W7 dropped the stale 2.42304.0 key "Claude pauses so you can approve each action." (copy-i18n zhStale; no
+  // source, generated or host, uses it in 3.6556.2).
+  assert.equal(keys.length, 69);
+  assert.ok(!keys.includes('Claude pauses so you can approve each action.'));
   const intl = createIntl({ locale: 'zh-CN', defaultLocale: 'zh-CN', messages: {}, onError: error => { throw error; } });
   const values = { count: 2, title: 'T', status: 'S', mode: '计划', dir: 'repo', host: 'h', state: '工作中', reason: 'r', name: 'n', value: 'v', repo: 'o/r' };
   for (const key of keys) assert.equal(typeof intl.formatMessage({ id: key, defaultMessage: zh[key] }, values), 'string', key);
@@ -399,7 +408,7 @@ test('main.jsx: the floating card is gone; Lb is wired; the card mounts after a 
   // Imports: the host module, and no floating card.
   const imports = ast.body.filter(n => n.type === 'ImportDeclaration');
   assert.deepEqual(imports.filter(n => n.source.value === './source-proposal-host.jsx').map(n => n.specifiers.map(s => s.imported.name)),
-    [['useProposalCards', 'proposalCardsActive', 'withoutProposalCardTools', 'ProposalTurnCard', 'ProposalFeedEnd']]);
+    [['useProposalCards', 'proposalCardsActive', 'withoutProposalCardTools', 'ProposalTurnCard', 'ProposalFeedEnd', 'ProposalTranscriptScope']]);
   assert.equal(imports.some(n => /source-suggested-tasks/.test(n.source.value)), false);
   assert.equal(jsx('SourceSuggestedTasks').length, 0);
   // The gate and the one filtered list both the footers and the rows read.
@@ -448,6 +457,11 @@ test('main.jsx: the floating card is gone; Lb is wired; the card mounts after a 
   assert.equal(text(end), '<ProposalFeedEnd cards={proposalCards} />');
   const pending = calls('pendingUserRow')[0];
   assert.ok(rowsMap.end < end.start && end.end < pending.start);
+  // w10-trans-proposal-inline: the pane context (cf74bc599 uo) around the rows, the turn's cards and the feed end.
+  const [scope] = jsx('ProposalTranscriptScope');
+  assert.equal(jsx('ProposalTranscriptScope').length, 1);
+  assert.equal(text(scope.openingElement), '<ProposalTranscriptScope cards={proposalCards}>');
+  assert.ok(scope.start < rowsMap.start && end.end < scope.end, 'the rows and the feed end inside it');
   // Both inside the session's load error boundary, with the transcript.
   const [boundary] = jsx('SourceSessionErrorBoundary');
   assert.ok(boundary.start < card.start && end.end < boundary.end);
@@ -508,4 +522,78 @@ test('a start keeps its parent\'s tools and agent when the window switches to an
   const [, , turn] = stub.calls.find(c => c[1] === 'turn/start');
   assert.equal(turn.codeDesktop.agent, 'agent-of-local_tools_a');
   assert.deepEqual(stub.calls.find(c => c[1] === 'task-proposals')[2].parentId, 'local_tools_a');
+});
+
+// w10-trans-proposal-inline (L30): 3.6556.2 Z1e — a tool group whose calls all propose (cb27dab29 Je) draws the ones
+// without a task id inline as mQ while the pane context says inline (cf74bc599 uo.inline = qr && Jr) and the session is
+// local; the placed ones already left the rows (hostDrawsTurnSuggestions). The host's pane context is
+// ProposalTranscriptScope around main.jsx's rows; mQ is generated/proposal-group's TurnProposalGroup.
+test('inline: a tool group of proposing calls is mQ under the pane context, the tool row otherwise (3.6556.2 Z1e)', () => {
+  const c96 = raw('c96d752d0-CWv_7-n9.js');
+  for (const needle of ['var PZ=N({inline:!1,captureGuardedSnapToBottom:zZe});function FZ(){return T(PZ)}',
+    'ue=J1($,39,t)?K1($,39,t,t.length>0&&t.every(Qy)):$[40],Z=FZ().inline&&s?.type==="local",de=ue&&Z,fe=J2($,41,de,t)?K2($,41,de,t,de?qM(t):t):$[43]',
+    'if(de&&s){let e=J2($,199,Me,t)?K2($,199,Me,t,Me?t.flatMap(r0e):[]):$[201],n=J2($,202,fe,s)?K2($,202,fe,s,fe.length===0?null:f(mQ,{tools:fe,sessionRef:s})):$[204]',
+    'function qM(e){let t=e.filter(e=>!LM(e));return t.length===e.length?e:t}',
+    'he=J1($,23,Y)?K1($,23,Y,Y?{hostDrawsTurnSuggestions:Y}:{}):$[24]', 'turnSuggestions:me,sentHereSuggestionIds:he,',
+    'function FQe(e){return f(iL,{tool:e},e.id)}', 'PZ as Rt,'])
+    assert.equal(occurrences(c96, needle), 1, needle);
+  const cf74 = raw('cf74bc599-CRYqipWN.js');
+  for (const needle of ['co=qr&&Jr', 'Jr=!xn&&!B', 'inline:co,captureGuardedSnapToBottom:b,anchoredSuggestions:lo,sentHereSuggestionIds:Xa'])
+    assert.equal(occurrences(cf74, needle), 1, needle);
+  // The transcript-rows copy of mQ is proposal-group's; PZ is that area's context.
+  const group = fs.readFileSync(path.join(app, 'src/generated/transcript-rows/group-status.mjs'), 'utf8');
+  assert.ok(group.includes('TurnProposalGroupRow as mQ,'));
+  assert.ok(group.includes('PZ as ProposalPaneContext,'));
+  assert.equal(Group.ProposalPaneContext._currentValue.inline, false, 'PZ default: not inline');
+  // w11-sweep-trans: the host provider covers one PZ only, so no other generated area may cut its own copy (a later
+  // proposal-group binding that reads FZ must link this one).
+  const pzCopies = [];
+  const walk = (dir) => { for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(file);
+    else if (/\.m?js$/.test(entry.name) && /=\s*\w+\(\{\s*inline:\s*!1,\s*captureGuardedSnapToBottom:/.test(fs.readFileSync(file, 'utf8'))) pzCopies.push(path.relative(app, file));
+  } };
+  walk(path.join(app, 'src/generated'));
+  assert.deepEqual(pzCopies, ['src/generated/transcript-rows/group-status.mjs']);
+
+  const stub = stubHost();
+  const running = spawn(3, 't1', { status: 'inProgress', result: null });
+  const failed = spawn(4, 't1', { status: 'failed', result: null, error: { message: 'no' } });
+  const items = [user('u1', 't1'), spawn(1, 't1'), running, failed, reply('a1', 't1')];
+  // main.jsx's renderToolFallback: the transcript's own row for the item.
+  stub.host.renderToolFallback = item => h('div', { 'data-host-tool': item.id }, h(Session.SourceMessage, { item, sessionKey: 'local_inline' }));
+  function Transcript({ mode = 'code', rows }) {
+    const active = H.proposalCardsActive(mode, 'local_inline');
+    const cards = H.useProposalCards({ ...optionsFor('local_inline', items, stub), active });
+    return h(H.ProposalTranscriptScope, { cards }, h(Rows.TranscriptRowsScope, { sessionKey: 'code:local_inline' },
+      rows.map(item => h(Session.SourceMessage, { key: item.id, item, sessionKey: 'local_inline' }))));
+  }
+  // A running call (no task id yet): mQ — its status region (nQ), then gQ's all-proposing branch draws the call as iL
+  // (RQe), here the host's row for it with the inline branch off (drawn once: no mQ inside it again).
+  // cf74bc599 `Jr=!xn&&!B`: while the transcript shows its bootstrap / empty state (xn) inline is off; the scope then
+  // holds no rows, so nothing reads PZ and the host need not model xn.
+  assert.equal(renderToStaticMarkup(h(Transcript, { rows: [] })), '');
+  const inline = renderToStaticMarkup(h(Transcript, { rows: [running] }));
+  assert.match(inline, /^<div data-transcript-item-id="call_3" class="source-message flex w-full min-w-0 flex-col"><span role="status" class="sr-only select-none"><\/span><div data-host-tool="call_3">/);
+  assert.equal(occurrences(inline, 'data-host-tool="call_3"'), 1);
+  assert.equal(occurrences(inline, 'role="status" class="sr-only select-none"'), 1);
+  assert.equal(occurrences(inline, 'data-cds="TurnStatusStep" data-state="busy"'), 1);
+  assert.match(inline, />Suggesting task Task 3</);
+  // Cowork (cards off: inline false): the same call is the original tool group's row, no mQ.
+  const off = renderToStaticMarkup(h(Transcript, { mode: 'cowork', rows: [running] }));
+  assert.match(off, /data-cds="TurnStatusStep"/);
+  assert.doesNotMatch(off, /data-host-tool=|role="status" class="sr-only select-none"/);
+  // A failed call is the group's failed-call row (FQe → iL): the host's row for it, drawn once, not inline again.
+  const fail = renderToStaticMarkup(h(Transcript, { rows: [failed] }));
+  assert.equal(occurrences(fail, 'data-host-tool="call_4"'), 1);
+  assert.equal(occurrences(fail, 'data-cds="TurnStatusStep"'), 1, 'the fallback row is the tool row itself');
+  // A session that is not local: Z1e keeps the tool row whatever the pane says.
+  const tools = [{ id: 'call_9', name: 'mcp__ccd_session__spawn_task', input: { title: 'T', prompt: 'P' }, status: 'running' }];
+  const remote = renderToStaticMarkup(h(Group.ProposalPaneContext.Provider, { value: { inline: true, captureGuardedSnapToBottom: () => () => {} } },
+    h(Rows.TranscriptRowsScope, { sessionKey: 'code:r' }, h(Group.ToolGroupRows, { tools, sessionRef: { id: 'r', type: 'remote' }, groupKey: 'call_9' }))));
+  assert.match(remote, /data-cds="TurnStatusStep"/);
+  assert.doesNotMatch(remote, /role="status" class="sr-only select-none"/);
+  const local = renderToStaticMarkup(h(Group.ProposalPaneContext.Provider, { value: { inline: true, captureGuardedSnapToBottom: () => () => {} } },
+    h(Rows.TranscriptRowsScope, { sessionKey: 'code:r' }, h(Group.ToolGroupRows, { tools, sessionRef: { id: 'r', type: 'local' }, groupKey: 'call_9' }))));
+  assert.match(local, /role="status" class="sr-only select-none"/, 'the same calls, local: mQ');
 });

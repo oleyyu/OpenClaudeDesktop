@@ -21,8 +21,6 @@ export default {
   "Thought process": "思考过程",
   "Thinking actions": "思考操作",
   "View live output": "查看实时输出",
-  "Compacting conversation": "正在压缩对话",
-  "Compaction interrupted": "压缩已中断",
   "Compacted conversation": "已压缩对话",
   "Review started": "审查已开始",
   "Review result": "审查结果",
@@ -631,8 +629,9 @@ export default {
   "Changing the directory isn’t available for this session.": "此会话不支持更改目录。",
   "/{command} isn’t available in the app.": "/{command} 在此应用中不可用。",
   "/{command} isn’t a command here.": "/{command} 在此处不是命令。",
-  "/{command} only works on a single line. Remove the extra lines and try again.": "/{command} 只能在单行中使用。请删除多余的行后重试。",
-  "/{command} doesn’t take arguments here. Remove the text after the command and try again.": "/{command} 在此处不接受参数。请删除命令后的文本后重试。",
+  // 3.6556.2 cc43287c9 hH0Sho9AXl / cgTRRpTLBX (w12b-composer; main.jsx /theme, /init too since w12c-wiring).
+  "/{command} only works on a single line. Remove the extra lines, then send it again.": "/{command} 只能在单行中使用。请删除多余的行，然后重新发送。",
+  "/{command} doesn’t take arguments here. Remove the text after the command, then send it again.": "/{command} 在此处不接受参数。请删除命令后的文本，然后重新发送。",
   "Enable Dynamic workflows in Code settings first": "请先在 Code 设置中启用动态工作流",
   "[what the workflow should accomplish]": "[工作流要完成的目标]",
   "{core} runs workflows only in Bypass permissions mode": "{core} 仅在“绕过权限”模式下运行工作流",
@@ -724,16 +723,27 @@ export default {
   "press right arrow to close": "按右方向键关闭",
   "press left arrow to close": "按左方向键关闭",
   "Press Delete or Backspace to close the side chat": "按 Delete 或 Backspace 关闭侧聊",
+  // V3-w10-ccres-e31-btw: 3.6556.2 cccc2cf0a qP, the side-chat strip's New side chat button (42YfXqKAm8 / y9B3O29aGR),
+  // its close hint (iCxvGkWlgx) and the stop-then-close toasts (87M9qS2gRQ / UAFwvlnF7A / wiqPHH3gjn).
+  "New side chat": "新建侧聊",
+  "Starting side chat…": "正在启动侧聊…",
+  "Press Delete or Backspace to close the side chat. A working side chat is stopped first.": "按 Delete 或 Backspace 关闭侧聊。正在工作的侧聊会先停止。",
+  "Couldn’t stop the side chat. Try closing it again.": "无法停止侧聊。请再次尝试关闭。",
+  "This side chat is pinned. Unpin it before closing its tab.": "此侧聊已置顶。请先取消置顶再关闭其标签页。",
+  "Stopped the side chat, but couldn’t close its tab. It stays open while something still needs it, such as an open pull request.": "已停止侧聊，但无法关闭其标签页。在仍有内容需要它时（例如未关闭的拉取请求），它会保持打开。",
+  // V3-w10-ccres-e31-btw end.
   "Sees {count} message from main chat": "可看到主会话中的 {count} 条消息",
   "Sees {count} messages from main chat": "可看到主会话中的 {count} 条消息",
   "read-only": "只读",
   "Ask on the side without touching the main chat. DeepSeek sees the full context, and nothing here is added to it.": "在旁边提问，不影响主会话。DeepSeek 能看到完整上下文，这里的内容不会加入主会话。",
+  // w13-close-chat-sidechat: Chat's side chat (ca2ef848d b1 ctWkktQM0M, x1 3XI+xKIxnt).
+  "Ask on the side without touching the main chat. Claude sees the full context, and nothing here is added to it.": "在旁边提问，不影响主会话。Claude 能看到完整上下文，这里的内容不会加入主会话。",
+  "Sees {count, plural, one {# message} other {# messages}} from main chat": "可看到主会话中的 {count, plural, other {# 条消息}}",
   "Follow up…": "继续追问…",
   "Ask a quick question…": "问个简短的问题…",
   "Copy answer": "复制回答",
   "Branch to new chat": "转到新会话",
   "Continuing from a side question.\n\nQ: {question}\n\nA: “{answer}”\n\n": "接着一个旁问继续。\n\n问：{question}\n\n答：“{answer}”\n\n",
-  "This core doesn’t support side questions.": "当前内核不支持旁问。",
   "Something went wrong": "出了点问题",
   "Thinking…": "思考中…",
   "Send": "发送",
@@ -948,7 +958,6 @@ export default {
   "Recap": "回顾",
   "Get a short catch-up on this session": "快速了解此会话的进展",
   "Could not generate a recap. Please try again.": "无法生成回顾，请重试。",
-  "Writing a recap…": "正在生成回顾…",
   "Auto-continue when limits reset": "额度重置后自动继续",
   "Auto-resuming at {time}": "将于 {time} 自动继续",
   "Fork from here": "从这里分叉",
@@ -1008,7 +1017,7 @@ export default {
   "Diagnostics": "诊断",
   "{count} error from the language server": "语言服务器报告了 {count} 个错误",
   "{count} errors from the language server": "语言服务器报告了 {count} 个错误",
-  "No answer came back.": "没有收到回答。",
+  "Attached context": "附加的上下文",
   "{name} (free)": "{name}（免费）",
   // Cross-area fixes (round 5).
   "This conversation was started in MiniMax Code’s terminal, so it runs in your own MiniMax home as it is: {mode} can’t stop edits inside the project, and OpenClaude Desktop’s tool switches and instructions don’t apply. Start a new session in OpenClaude Desktop to use them.": "此对话是在 MiniMax Code 的终端中开始的，因此会直接在你自己的 MiniMax 主目录中运行：“{mode}”无法阻止对项目内文件的编辑，OpenClaude Desktop 的工具开关和指令也不适用。请在 OpenClaude Desktop 中新建会话以使用它们。",
@@ -1017,8 +1026,13 @@ export default {
   "Pull request": "拉取请求",
   "Number or URL, e.g. 42": "编号或 URL，例如 42",
   "{core} reads the pull request with the GitHub CLI (gh), which must be installed and signed in.": "{core} 会通过 GitHub CLI（gh）读取拉取请求，因此需要已安装并登录 gh。",
-  "Compacted conversation · saved {tokens} tokens": "已压缩对话 · 节省了 {tokens} 个 token",
-  "Compacted conversation · from {tokens} tokens": "已压缩对话 · 压缩前 {tokens} 个 token",
+  // V3-w12b-transcript: c80ec48f8 rt (l7c01euK+q / HKBIcgP7KE / D4ZSZJLOdx).
+  "Compacted session · saved {tokens} tokens": "已压缩会话 · 节省了 {tokens} 个 token",
+  "Compacted session · from {tokens} tokens": "已压缩会话 · 压缩前 {tokens} 个 token",
+  "Compacted session": "已压缩会话",
+  // V3-w12b-transcript: c19e90103 Dg (Vebvte+Plj) and Bh (gFIx0kYaij), the user's '!' command entry.
+  "Running…": "正在运行…",
+  "Output preview failed to load. Reload the page to try again.": "输出预览加载失败。请重新加载页面后重试。",
   "Compaction failed": "压缩失败",
   "Sign in to {core}": "登录 {core}",
   "Signed in again": "已重新登录",
@@ -1037,9 +1051,6 @@ export default {
   "Let {core} retry this once? {action}": "要让 {core} 重试一次吗？{action}",
   "This denial can’t be approved from here.": "无法在此批准这次拒绝。",
   "Send input to terminal {id}": "向终端 {id} 发送输入",
-  "Running your command": "正在运行你的命令",
-  "Your command failed": "你的命令运行失败",
-  "You ran": "你运行了",
   "Until you trust them, {core} skips them.": "在你信任之前，{core} 会跳过它们。",
   "Review hooks": "审查钩子",
   // A connector's model request (MCP sampling).
@@ -1131,8 +1142,6 @@ export default {
   "system settings": "系统设置",
   "admin settings": "管理员设置",
   "settings": "设置",
-  "Rewound. {count} file was restored.": "已回退。已恢复 {count} 个文件。",
-  "Rewound. {count} files were restored.": "已回退。已恢复 {count} 个文件。",
   "Needs a Git repository": "需要 Git 仓库",
   "Forked here: {title}": "已从此处分叉：{title}",
   // Transcript: hover toolbar Rewind, link menu, optimistic send, grouped media rows.
@@ -1194,7 +1203,8 @@ export default {
   "Enter a shell command": "输入 shell 命令",
   "Bash mode. Press Escape to return to chat.": "Bash 模式。按 Esc 返回聊天。",
   "Chat mode": "聊天模式",
-  "@-mentions can’t be used in a shell command. Remove the mention or send it as a message.": "shell 命令中不能使用 @ 提及。请移除提及，或将其作为消息发送。",
+  // 3.6556.2 c227f4d5e VnmOeizKjx (w12b-composer): the bash-mode refusal toast.
+  "A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting.": "Shell 命令只接受纯文本，因此未发送任何内容。请移除 @ 提及、斜杠命令和格式。",
   "Search history:": "搜索历史记录：",
   "Search history: {query}": "搜索历史记录：{query}",
   " — match {index} of {total}": " — 第 {index} 个匹配，共 {total} 个",
@@ -1631,7 +1641,6 @@ export default {
   "Failed to run command": "运行命令失败",
   "Failed to list files": "列出文件失败",
   "Failed to send message": "发送消息失败",
-  "Failed to send file": "发送文件失败",
   "Failed to run code": "运行代码失败",
   "Failed to ask a question": "提问失败",
   "Failed to propose a plan": "提出计划失败",
@@ -1728,4 +1737,75 @@ export default {
   "Hide {count, plural, one {secret} other {secrets}}": "隐藏{count, plural, other {密钥}}",
   "Reveal {count, plural, one {secret} other {secrets}}": "显示{count, plural, other {密钥}}",
   // tool-results end.
+  // V3-w2-tr-working: 3.6556.2 c4a9ee384 hm / vm / bm (generated/working-line/api-errors.mjs), the working line's API
+  // retry label: the long error names and the no-response retry (`noResponse`, U6 apiRetry).
+  "Rate limit reached": "已达到速率限制",
+  "Server is busy": "服务器繁忙",
+  "Cloud credentials expired or unavailable": "云端凭据已过期或不可用",
+  "No response from the API": "API 没有响应",
+  "The API didn’t respond to {host}": "API 没有响应 {host}",
+  "Trying once more, for up to {minutes} min": "正在再试一次，最多 {minutes} 分钟",
+  // V3-w2-tr-working end.
+  // V3-w2-rail-kit: 3.6556.2 cc43287c9 TH (generated/session-rail-kit/rail-shell.mjs), the titlebar rail toggle's fixed
+  // aria-label FUvHAfJy+j (C1-14; Hide / Show session rail stay the tooltip, R4f-rail block above).
+  "Session rail": "会话详情栏",
+  // V3-w2-rail-kit end.
+  // V3-w3-mcp-card: 3.6556.2 c96d752d0 vYe (generated/mcp-app-card/tool-card.mjs). The SSH host entry forms of the card
+  // title and server label (H7+OhBL0+m, j7hAGxq49x; menus:C12, never drawn here: no SSH sessions, D37) and the card
+  // header's pane button (menus:C13, drawn only with the MCP App side pane, which the host keeps off).
+  "Widget from {server} on {host}": "来自 {host} 上 {server} 的小组件",
+  "{server} on {host}": "{host} 上的 {server}",
+  "Show in another pane": "在另一个面板中显示",
+  // V3-w3-mcp-card end.
+  // V3-w5-session-rail-gen: 3.6556.2 shared-46 BL (generated/session-rail/this-computer-label.mjs), the local place in a
+  // saved environment's suggested label (cf74bc599 Vx).
+  "this computer": "这台电脑",
+  // V3-w5-session-rail-gen end.
+  // V3-w6-transcript-rows: 3.6556.2 c96d752d0 B0e (generated/r3b-transcript/turn-edits-card.mjs), the Turn edits card's
+  // See-all form: the totals row when no file is in the Changes diff ("See all" / "Show {count} more" / "Show less" exist).
+  "Total": "合计",
+  // V3-w6-transcript-rows end.
+  // V3-w2-tr-turn-cont: 3.6556.2 cd4f82e77 (generated/turn-box/chip-text.mjs) no longer gates the rule chip copy on
+  // `secret:` catalog ids (`function U(e,t,n,r){return n()}`): the next row's group label, the rule prompts and the
+  // draft notices now come from their defaultMessage. c227f4d5e A5 (epitaxy-session.mjs) "+{count}" is the overflow chip.
+  "Suggested next actions": "建议的后续操作",
+  "Create a pull request for these changes.": "为这些更改创建拉取请求。",
+  "Commit the working tree changes with a sensible message.": "用恰当的提交信息提交工作区中的更改。",
+  "Verify the changes you made actually work.": "验证你所做的更改确实有效。",
+  "Merge the base branch into this branch and resolve the conflicts.": "将基础分支合并到此分支并解决冲突。",
+  "CI is failing on the PR. Find out why, fix it, and push.": "PR 的 CI 未通过。找出原因，修复后推送。",
+  "Address the open review comments on the PR, then push the changes.": "处理 PR 上未解决的审查意见，然后推送更改。",
+  "The PR is approved and green. Merge it.": "PR 已获批准且检查全部通过。请合并它。",
+  "Send or clear your draft first, then click the chip again to load its prompt.": "请先发送或清空草稿，然后再次点击该建议以载入其提示词。",
+  "Send or clear your draft first, then hold ⌘ or Ctrl and click the chip to load its prompt.": "请先发送或清空草稿，然后按住 ⌘ 或 Ctrl 点击该建议以载入其提示词。",
+  "The chip won’t replace what’s in the message box. Clear it, then click the chip again.": "该建议不会替换输入框中已有的内容。请先清空，然后再次点击该建议。",
+  "+{count}": "+{count}",
+  // V3-w2-tr-turn-cont end.
+  // V3-w10-ccres-approval-card: 3.6556.2 cc32965c2 bg (s6kKhfroqV), the change card's announcement for a group whose
+  // exact lines are only on the card (approval-card-model.mjs approvalAnnouncement).
+  "Some of what was sent can’t be read out here. It is listed on the card.": "部分发送内容无法在此朗读，已在卡片中列出。",
+  // V3-w10-ccres-approval-card end.
+  // V3-w10-trans-approval-titles-host: 3.6556.2 cc32965c2 L, the card title of a title builder's heading (7px6ACmQ5k /
+  // EFOijHTneN / a2973u92KO / wF6CuCZpBR, with the card's {name} for Claude), and so's "Description" (Q8Qw5BZ1VA).
+  "Allow {name} to <b>{action}</b> <meta>{metaText}</meta> <b>{tail}</b>?": "允许 {name} <b>{action}</b> <meta>{metaText}</meta> <b>{tail}</b>？",
+  "Allow {name} to <b>{action}</b> <meta>{metaText}</meta>?": "允许 {name} <b>{action}</b> <meta>{metaText}</meta>？",
+  "Allow {name} to <b>{action} {tail}</b>?": "允许 {name} <b>{action} {tail}</b>？",
+  "Allow {name} to <b>{action}</b>?": "允许 {name} <b>{action}</b>？",
+  "Description": "描述",
+  // V3-w10-trans-approval-titles-host end.
+  // V3-w12-question: 3.6556.2 c9ed5627b dt, the question card's collapse (Lwr6fkobrQ) and dismiss (YsRc+anYk2) buttons.
+  "View question options": "查看问题选项",
+  "Dismiss question": "关闭问题",
+  // V3-w12-question end.
+  // V3-w12b-terminal-preview-tabs: 3.6556.2 cccc2cf0a vF, the side chat's error row (gYPvvv2FIZ / TOHoonVIan).
+  "Couldn’t get an answer. Try again.": "无法获取回答，请重试。",
+  "Side chat isn’t supported in this session’s environment yet.": "此会话所在的环境暂不支持侧聊。",
+  // V3-w12b-terminal-preview-tabs end.
+  // V3-w12b-settings-dialogs: 3.6556.2 c518a31cc Ae / He, the Code shortcuts dialog's find rows (Y0vy52rLux /
+  // VCvfZj2sBv) and the Code-route prompt history rows (thN37Qzrz2 / 2m7kGHXIB0).
+  "Find next": "查找下一个",
+  "Find previous": "查找上一个",
+  "Reuse an earlier prompt": "重新使用之前的提示词",
+  "Search earlier prompts": "搜索之前的提示词",
+  // V3-w12b-settings-dialogs end.
 };

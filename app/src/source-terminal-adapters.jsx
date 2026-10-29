@@ -1,12 +1,13 @@
-// Local services for the original terminal pane pieces that extract-code-ui-current.mjs emits from 2.42304.0
-// (generated/code-current/terminal-clear-item.mjs = cccc2cf0a Xy/Zy). The official item renders inside the CDS
-// context menu (shared-frame Ii = CdsContextMenu); the terminal tab menu here is the host SourceMenu, so its Item is
-// the menu primitive the item is placed in. Messages go through the local catalog (useStartIntl / StartMessage).
-// R3-terminal FT-15: the shared strip's overflow row (generated/code-current/terminal-tab-overflow.mjs = cfe7c4b3b ce)
-// renders `O.Item` of the CDS dropdown (shared-frame qa); its rows sit in a SourceMenu popup here, so the same Item.
-import { SourceMenu } from "./source-menu.jsx";
+// Local services for the original 3.6556.2 terminal pane pieces extract-code-ui-current.mjs emits
+// (generated/code-current/terminal-clear-item.mjs = cccc2cf0a sS). Its `me` is shared-frame qi, view-tabs'
+// CdsContextMenu: since w10-ccres-e31-terminal the terminal strip is the official ViewTabBar (cfe7c4b3b t, as
+// cccc2cf0a Zx renders it), whose tab menu is that CdsContextMenu (`S.Popup` with `renderTabMenuItems` inside), so
+// TerminalMenu is a plain re-export of it, no host menu stand-in. Messages go through the local catalog
+// (useStartIntl / StartMessage, vendor-intl l / p).
+// The overflow row (terminal-tab-overflow.mjs = cfe7c4b3b se) no longer reads this file: w10-trans-tab-overflow gave it
+// the CDS dropdown (shared-frame Jo) directly.
+export { CdsContextMenu as TerminalMenu } from "./generated/view-tabs/index.js";
 import { StartMessage, useStartIntl } from "./source-code-start-adapters.jsx";
 
-export const TerminalMenu = { Item: SourceMenu.Item };
 export const TerminalMessage = StartMessage;
 export const useTerminalIntl = useStartIntl;

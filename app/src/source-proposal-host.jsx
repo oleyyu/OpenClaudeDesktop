@@ -16,11 +16,24 @@
 // records of electron/task-proposals.cjs (P4). main.jsx passes the open session's state and its own primitives (rpc,
 // call, setSessions, turnOptions, …) in `useProposalCards`, and mounts ProposalTurnCard after a turn's last shown row and
 // ProposalFeedEnd after the rows.
+//
+// 3.6556.2 (w10-trans-proposal-inline): the session pane (cf74bc599) also provides the pane context PZ (c96d752d0, its
+// export Rt) around the feed: `uo = {inline: co, captureGuardedSnapToBottom: b, anchoredSuggestions: lo,
+// sentHereSuggestionIds: Xa}`, `co = qr && Jr`, `qr = Ts(Bo(), n)` (VZe: presets on, a local session, the desktop's
+// popBackgroundTaskSuggestionById) and `Jr = !xn && !B` (xn: c1dad0703 pe, the transcript's intro state — a review
+// session, or no entries yet; B: the Slack view, which this host has none of). With inline on, the feed builder pushes the
+// turnSuggestions rows (lP `turnSuggestions: me`, me = FZ().inline — this host's ProposalTurnCard) and the tool rows drop
+// every placed call (`hostDrawsTurnSuggestions: Y`, Y = FZ().inline — withoutProposalCardTools), and a tool group whose
+// calls all propose (cb27dab29 Je) draws the ones still without a task id inline as mQ (c96d752d0 Z1e's `de` branch,
+// generated/transcript-rows; its mQ is generated/proposal-group's TurnProposalGroup). ProposalTranscriptScope is that
+// provider for the transcript's rows: the pane context of generated/transcript-rows (the copy Z1e reads) with the card's
+// own contexts, so the inline group has the same spawner and session data as the turn's card.
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { coreEffort } from "./model-menu-model.mjs";
 import { threadPermissionParams, turnPermissionParams } from "../electron/permission-policy.mjs";
 import { ProposalHostProvider } from "./source-proposal-group-adapters.jsx";
 import { useStartIntl } from "./source-code-start-adapters.jsx";
+import { ProposalPaneContext } from "./generated/transcript-rows/group-status.mjs";
 import {
   TurnProposalGroup, UnplacedProposalGroup, ProposalSpawnerContext, SentHereNotice, inlineSpawnerGate,
   proposalKey, isOfferProposal, crossRepoCwdOf, keepSessionMode, proposalHereText, resolveStartPermissionMode, startModeNeedsConsent,
@@ -53,6 +66,11 @@ function useStable(value, keyOf) {
   return kept.current.value;
 }
 const noSpawner = () => null;
+// c96d752d0 zZe: the pane context's default snap (nothing to restore).
+const noSnap = () => () => undefined;
+// iL, the fallback row of a proposing call the card cannot draw (a failed call, FQe), is the tool row itself in the
+// original; the host's row is its tool group (Z1e), which must not take the inline branch again for that same call.
+const NOT_INLINE = Object.freeze({ inline: false, captureGuardedSnapToBottom: noSnap });
 
 /**
  * Whether the open session draws the inline card: lr = g1e(presets, sessionRef) — presets on (D10) and a local session
@@ -272,7 +290,8 @@ export function useProposalCards(options) {
     openSession: (id, opener) => live.current.host?.openSession?.(id, opener),
     renderToolFallback: (tool) => {
       const item = (Array.isArray(live.current.items) ? live.current.items : EMPTY).find((entry) => entry?.id === tool?.id);
-      return item ? live.current.host?.renderToolFallback?.(item) ?? null : null;
+      const row = item ? live.current.host?.renderToolFallback?.(item) ?? null : null;
+      return row === null ? null : <ProposalPaneContext.Provider value={NOT_INLINE}>{row}</ProposalPaneContext.Provider>;
     },
     renderMarkdown: (text) => live.current.host?.renderMarkdown?.(text) ?? text,
     // cardTools / fallbackKey: the host tool row and the prompt preview are read through `live`; a new value (another
@@ -299,10 +318,18 @@ export function useProposalCards(options) {
     controller ? controller.getSnapshot : noSpawner);
 
   const sessionRef = useMemo(() => (sessionId ? { id: sessionId, type: "local" } : null), [sessionId]);
+  // uo: inline = qr (active: presets on, a local Code session, the bridge's pop) && Jr (no Slack view here; xn, the intro
+  // state, only holds while the transcript has no entries, so no row this scope covers reads it).
+  const pane = useMemo(() => ({
+    inline: !!active && !!sessionRef,
+    captureGuardedSnapToBottom: () => live.current.host?.captureGuardedSnapToBottom?.() ?? noSnap(),
+    anchoredSuggestions: undefined,
+    sentHereSuggestionIds: sentHere,
+  }), [active, sessionRef, sentHere]);
   return useMemo(() => ({
-    active: !!active && !!sessionRef, sessionRef, spawner: active ? spawner : null, host, unplaced,
+    active: !!active && !!sessionRef, sessionRef, spawner: active ? spawner : null, host, unplaced, pane,
     anchors: (rows) => (active ? proposalAnchors(rows, proposals) : EMPTY_MAP),
-  }), [active, sessionRef, spawner, host, unplaced, proposals]);
+  }), [active, sessionRef, spawner, host, unplaced, pane, proposals]);
 }
 
 // Lb: the session store host (Sc) and the spawner (mc) around what the card renders.
@@ -310,6 +337,19 @@ function ProposalProviders({ cards, children }) {
   return <ProposalHostProvider value={cards.host}>
     <ProposalSpawnerContext.Provider value={cards.spawner}>{children}</ProposalSpawnerContext.Provider>
   </ProposalHostProvider>;
+}
+
+/**
+ * The pane context (PZ) and the card's contexts around the transcript's rows (cf74bc599 tw / the session pane's uo): a
+ * tool group of proposing calls draws them inline (mQ) only inside it, and only while the cards are active (pane.inline).
+ * Always the same elements, so the rows under it keep their state when the cards turn on or off.
+ */
+export function ProposalTranscriptScope({ cards, children }) {
+  return <ProposalPaneContext.Provider value={cards?.active ? cards.pane : NOT_INLINE}>
+    <ProposalHostProvider value={cards?.host ?? null}>
+      <ProposalSpawnerContext.Provider value={cards?.active ? cards.spawner : null}>{children}</ProposalSpawnerContext.Provider>
+    </ProposalHostProvider>
+  </ProposalPaneContext.Provider>;
 }
 
 /** The feed's turnSuggestions row (Ye === false: `flex flex-col gap-[var(--chat-item-gap)]`) after a turn's last row. */

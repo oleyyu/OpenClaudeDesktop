@@ -5,8 +5,11 @@ const scripts=shellScripts();
 const version=crypto.createHash('sha256').update(JSON.stringify(scripts)).digest('hex').slice(0,16);
 // Copy original scripts outside ASAR, into the app's private data directory.
 // The source launch planner preserves each shell's startup order; no user rc is edited.
+// As 3.6556.2 shellIntegrationForSpawn (asar index.chunk-hSh48Lyb.js): only the shell kind (B80dqaMC R = shellKind) gates
+// before the nonce file is written; which arguments a shell may carry (`-l`, or only `-NoLogo` for pwsh) is the
+// planner's (B80dqaMC F = shellLaunch), and a refused launch removes the nonce file again.
 function prepareTerminalShell({shell,args,env,directory}) {
- if(!directory||!shellKind(shell)||args.length!==1||args[0]!=='-l')return null;
+ if(!directory||!shellKind(shell))return null;
  const root=path.join(directory,version),spawnDir=path.join(root,'spawn');let nonceFile;
  try {
   fs.mkdirSync(spawnDir,{recursive:true,mode:0o700});

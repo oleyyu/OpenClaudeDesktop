@@ -6,18 +6,29 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import {
   startCardPlacement, startCardGroups, startDismissKey, withDismissal, isDismissed, startRowOrder, isLowPriorityRow, startRowFamily, dismissalsPrefKey,
+  setupRowsRem, environmentsAttribute,
 } from '../src/generated/code-start/model.mjs';
 import { environmentLastUsed, startEnvironmentRows } from '../src/generated/code-start/environments.mjs';
 import { homeRelativePath } from '../src/generated/code-start/home-path.mjs';
 import { startAsk, startEnvironmentItems, startEnvironmentRecords, startSessions, startSetupRows, startWaitingSessions } from '../src/code-start-host-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
-// Tests exercise the official 2.42304.0 algorithms with independent boundary cases and the local service mapping.
-test('start-card keeps setup at the height boundary, hides it below it and reserves hysteresis', () => {
-  assert.deepEqual(startCardPlacement({ room: 324, rest: 400, environments: 100, setup: 100, hidden: false }), { top: 100, setupFits: true });
-  assert.deepEqual(startCardPlacement({ room: 323, rest: 400, environments: 100, setup: 100, hidden: false }), { top: 100, setupFits: false });
-  assert.equal(startCardPlacement({ room: 324, rest: 400, environments: 100, setup: 100, hidden: true }).setupFits, false);
-  assert.equal(startCardPlacement({ room: 325, rest: 400, environments: 100, setup: 100, hidden: true }).setupFits, true);
-  assert.deepEqual(startCardPlacement({ room: 80, rest: 80, environments: 100, setup: 100 }), { top: 0, setupFits: false });
+// Tests exercise the official 3.6556.2 algorithms with independent boundary cases and the local service mapping.
+// DK (3.6556.2): the card centres the environments list plus one setup row (EK(1) = 3.25rem with a list, 2.5rem
+// without) and a 2px gap in `rest`; setup fits while top + environments + setup + foot (+1 once hidden) <= room.
+test('start-card centres the list plus one setup row; setup fits at the height boundary with hysteresis', () => {
+  const at = extra => ({ room: 0, rest: 354, list: 100, rem: 16, environments: 100, setup: 100, foot: 24, hidden: false, ...extra });
+  // c = 100 + 2 + 3.25 * 16 = 154, top = (354 - 154) / 2.
+  assert.deepEqual(startCardPlacement(at({ room: 324 })), { top: 100, setupFits: true });
+  assert.deepEqual(startCardPlacement(at({ room: 323 })), { top: 100, setupFits: false });
+  assert.equal(startCardPlacement(at({ room: 324, hidden: true })).setupFits, false);
+  assert.equal(startCardPlacement(at({ room: 325, hidden: true })).setupFits, true);
+  // No list: c = 0 + 2 + 2.5 * 16 = 42; a rest shorter than that pins the card to the top (no 24px clamp any more).
+  assert.deepEqual(startCardPlacement(at({ room: 300, rest: 142, list: 0 })), { top: 50, setupFits: true });
+  assert.deepEqual(startCardPlacement(at({ room: 80, rest: 40, list: 0, foot: 0 })), { top: 0, setupFits: false });
+  assert.equal(setupRowsRem(1, true), 3.25);
+  assert.equal(setupRowsRem(0, true), 0);
+  assert.equal(environmentsAttribute, 'data-start-card-environments');
 });
 
 const candidate = (id, extra = {}) => ({ facts: { id, ...extra } });
@@ -128,7 +139,7 @@ before(async () => {
 });
 after(async () => { await server?.close(); });
 const noop = () => {};
-const hostValue = (sessions = [], extra = {}) => ({ sessions, settled: true, splitPane: false, onOpenSession: noop, ...extra });
+const hostValue = (sessions = [], extra = {}) => ({ sessions, settled: true, onOpenSession: noop, ...extra });
 function render(props = {}, sessions = [], extra = {}) {
   return renderToStaticMarkup(React.createElement(Adapters.StartHostContext.Provider, { value: hostValue(sessions, extra) },
     React.createElement(View.StartCard, { ready: true, environments: [], setupRows: [], openingKey: 'test', onSelect: noop, onChoose: noop, chooseOpen: false, ...props })));
@@ -147,9 +158,35 @@ test('original markup shows three environments, replacing the third with an out-
   assert.match(html, /aria-hidden="true" class="border-t" style="margin-inline:var\(--cds-ring-inner\)"/);
   assert.match(html, /hidden="">~\/work\/A/);
   assert.match(html, /aria-haspopup="menu" aria-expanded="false"/);
-  // o6: the transcript surface and the landing-texture variant classes come along verbatim.
-  assert.match(html, /bg-\[var\(--epitaxy-transcript-surface,var\(--cds-surface-1\)\)\] \[\[data-landing-texture=canvas\]~div_&amp;\]:transform-gpu/);
-  assert.match(html, /\[\[data-landing-texture=canvas\]~div_&amp;\]:after:shadow-card-ring/);
+  // ele: the list carries Xce (data-start-card-environments="", the placement's measured list); each row is X5's li.
+  assert.match(html, /<ul role="list" aria-label="Recent environments" data-testid="start-card-environments" data-start-card-environments="" class="/);
+  assert.equal((html.match(/<li class="px-1 pt-0\.5 first:pt-1"/g) || []).length + (html.match(/<li aria-current="true" class="px-1 pt-0\.5 first:pt-1"/g) || []).length, 3);
+  assert.doesNotMatch(html, /start-card-auto/, 'no cloud auto row without `auto` (HS-04, E13)');
+  // G5: the transcript surface comes along verbatim; 3.6556.2 dropped every landing-texture variant (HS-08).
+  assert.equal(View.startCardClassName, 'flex w-80 max-w-full shrink-0 flex-col rounded-xl shadow-card-ring bg-[var(--epitaxy-transcript-surface,var(--cds-surface-1))]');
+  assert.ok(html.includes(`class="${View.startCardClassName}"`));
+  assert.doesNotMatch(html, /data-landing-texture/);
+});
+test('StartSlot: an aria-hidden max-h-0 spacer before the slot; the measure ref is the module-level kK', () => {
+  const html = renderToStaticMarkup(React.createElement(View.StartSlot, { slotRef: noop }));
+  assert.equal(html, '<div class="flex min-h-full w-full flex-col pb-6"><div aria-hidden="true" class="max-h-0 grow basis-0"></div><div class="flex w-full flex-col"></div></div>');
+  assert.equal(View.useStartSlotMeasure(), View.measureStartSlot);
+});
+test('a suggested task row dismisses with Delete; blocked sessions keep Dismiss', () => {
+  const f = steps({ tasks: tasks(1) }, [waiting('a', 'Alpha')]);
+  const byId = Object.fromEntries(rowsOf(f.tree).map(r => [r.id, r]));
+  assert.equal(byId['suggested-task'].props.dismiss.tooltip, 'Delete');
+  assert.equal(byId['waiting-session'].props.dismiss.tooltip, undefined);
+  // HS-07: H5 appends the place to the row tooltip's screen-reader text (a task: its folder's basename).
+  assert.match(byId['suggested-task'].props.tooltip.text, / repo$/);
+  // _5's X button: `tooltip: m.tooltip ?? "Dismiss"`.
+  const xTooltip = dismiss => {
+    const row = fixture(View.StartRow, { title: 'T', onPress: noop, dismiss });
+    const [button] = nodes(row.tree, n => n.type === Adapters.StartButton && n.props['aria-label'] === dismiss.label);
+    return button.props.tooltip;
+  };
+  assert.equal(xTooltip(byId['suggested-task'].props.dismiss), 'Delete');
+  assert.equal(xTooltip(byId['waiting-session'].props.dismiss), 'Dismiss');
 });
 test('Next steps: a lone blocked session is a row with the warning status; tasks fill the spare seats and the rest', () => {
   const html = render({ tasks: tasks(3) }, [waiting('a', 'Alpha')]);
@@ -210,7 +247,7 @@ function fixture(component, props = {}, contexts = new Map()) {
     if (next) current = next;
     cursor = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return tree = component(current); } finally { internal.H = old; }
   };
   run();
@@ -234,13 +271,14 @@ function rowsOf(tree) {
 }
 const steps = (props, host) => fixture(View.StartNextSteps, { rows: [], openingKey: 'A', groupClassName: '', previousRowRef: { current: null }, ...props }, hostContext(hostValue(host)));
 
-test('G3: nothing shows until every source settled; split panes hide blocked-session rows', () => {
+test('Fce: nothing shows until every source settled; 3.6556.2 keeps blocked-session rows in split panes too', () => {
   const unsettled = fixture(View.StartNextSteps, { rows: [], tasks: tasks(1), openingKey: 'A', groupClassName: '', previousRowRef: { current: null } }, hostContext({ ...hostValue([waiting('a', 'Alpha')]), settled: false }));
   assert.equal(unsettled.tree, null);
   const split = steps({ tasks: tasks(1) }, [waiting('a', 'Alpha')]);
   assert.deepEqual(rowsOf(split.tree).map(r => r.id), ['waiting-session', 'suggested-task']);
+  // HS-05: Bce no longer reads the split-pane context, so a stray split flag changes nothing.
   const paned = fixture(View.StartNextSteps, { rows: [], tasks: tasks(1), openingKey: 'A', groupClassName: '', previousRowRef: { current: null } }, hostContext({ ...hostValue([waiting('a', 'Alpha')]), splitPane: true }));
-  assert.deepEqual(rowsOf(paned.tree).map(r => r.id), ['suggested-task']);
+  assert.deepEqual(rowsOf(paned.tree).map(r => r.id), ['waiting-session', 'suggested-task']);
 });
 test('fills rows (continue-branch) hide after a press for this opening and come back in the next one', () => {
   let pressed = 0;
@@ -391,11 +429,12 @@ test('zh-CN: the Blocked status keeps its warning span; family and task labels c
 // B4 is wired to main.jsx's Send and stay here path (send()'s sendMessage with `beside`): any prompt, and the Home
 // composer (text, attachments, mentions, issue, tools, agent choice, group) stays as it is. main.jsx is a shared
 // file other lanes edit; this pins the wiring the start card relies on.
-test('main.jsx: the start card gets the split flag and B4, which sends a plain prompt beside the kept draft', async () => {
+test('main.jsx: the start card gets startBesideDraft (no split flag), which sends a plain prompt beside the kept draft', async () => {
   const main = await fs.readFile(new URL('../src/main.jsx', import.meta.url), 'utf8');
   const at = main.indexOf('<SourceCodeStart');
   const mount = main.slice(at, main.indexOf('/>', at));
-  assert.match(mount, /splitPane=\{splitView\.open\} onStartBesideDraft=\{startBesideDraft\}/);
+  assert.match(mount, /onStartBesideDraft=\{startBesideDraft\}/);
+  assert.doesNotMatch(mount, /splitPane/);
   assert.match(mount, /sessions=\{startCardSessions\}/);
   assert.match(main, /approvals: state\.approvals\.map\(approval => \(\{ sessionId: ownerThreadId\(state, approval\.params\?\.threadId\), method: approval\.method \}\)\)/);
   assert.match(main, /if \(backgroundSpawnsRef\.current > 0\) return "busy";/);

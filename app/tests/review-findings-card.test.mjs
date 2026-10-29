@@ -8,9 +8,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createRoot } from 'react-dom/client';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { looseFeature } from '../scripts/official-3.6556.2.mjs';
 
-// R4e-findings (toolcards-18): a finished ReportFindings call in the transcript is the 2.42304.0 findings card — the
-// generated c96d752d0 X$ / h0e (src/generated/r4e-findings/findings-card.mjs, scripts/extract-r4e-findings.mjs) over the
+// R4e-findings (toolcards-18), w2-tr-findings: a finished ReportFindings call in the transcript is the 3.6556.2 findings
+// card — the generated c96d752d0 EQ / UQe (2.42304.0 X$ / h0e; src/generated/r4e-findings/findings-card.mjs,
+// scripts/extract-r4e-findings.mjs) over the
 // host services of src/source-review-findings-adapters.jsx, mounted by src/source-findings-card.jsx. SSR for the
 // structure and class strings; a small fake DOM driven by React's own props (controlled events) for the expansion and the
 // actions. No browser, no Electron, no network, no real send.
@@ -54,7 +56,7 @@ function hostRecorder(sessionKey, overrides = {}) {
 }
 const mount = (host, props) => React.createElement(Card.FindingsCardHost.Provider, { value: host }, React.createElement(Card.SourceFindingsCard, props));
 
-test('generator: the card and every original it reads are the installed 2.42304.0 bindings (generator --check)', async () => {
+test('generator: the card and every original it reads are the 3.6556.2 bindings (generator --check)', async () => {
   const { extractR4eFindings } = await import('../scripts/extract-r4e-findings.mjs');
   const checked = await extractR4eFindings({ check: true });
   assert.deepEqual(checked, manifest);
@@ -62,55 +64,75 @@ test('generator: the card and every original it reads are the installed 2.42304.
     assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, entry.source))), entry.source);
     assert.equal(entry.sha256, sha(fs.readFileSync(path.join(directory, entry.target))), entry.target);
   }
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.ok(manifest.modules.every(m => m.referenceVersion === '3.6556.2'));
   const card = manifest.modules.find(m => m.target === 'findings-card.mjs');
-  assert.equal(card.source, 'c96d752d0-BOCqU7c2.js');
-  assert.deepEqual(card.bindings.map(b => b.name), ['V$', 'H$', 'U$', 'd0e', 'W$', 'G$', 'K$', 'q$', 'f0e', 'J$', 'p0e', 'm0e', 'Y$', 'h0e', 'X$']);
-  // Jw (the fix message) is a plain sibling module the card and the review model (the Changes pane's Fix) both import.
+  assert.equal(card.source, 'c96d752d0-CWv_7-n9.js');
+  assert.deepEqual(card.bindings.map(b => b.name), ['_Q', 'vQ', 'zQe', 'yQ', 'bQ', 'xQ', 'SQ', 'CQ', 'BQe', 'wQ', 'VQe', 'HQe', 'TQ', 'UQe', 'EQ', 'WQe', 'GQe', 'KQe', 'qQe', 'JQe', 'YQe']);
+  // $T (the fix message) is a plain sibling module the card and the review model (the Changes pane's Fix) both import.
   const fix = manifest.modules.find(m => m.target === 'fix-findings-text.mjs');
-  assert.equal(fix.source, 'c96d752d0-BOCqU7c2.js');
-  assert.deepEqual(fix.bindings.map(b => b.name), ['qw', 'nEe', 'Jw']);
+  assert.equal(fix.source, 'c96d752d0-CWv_7-n9.js');
+  assert.deepEqual(fix.bindings.map(b => b.name), ['QT', 'oCe', '$T']);
   assert.deepEqual(fix.imports.map(i => `${i.name}<-${i.from}`), ['neutralizeMentions<-./text-sanitize.mjs']);
-  assert.ok(card.imports.some(i => i.local === 'Jw' && i.from === './fix-findings-text.mjs' && i.name === 'fixFindingsText'));
+  assert.ok(card.imports.some(i => i.local === '$T' && i.from === './fix-findings-text.mjs' && i.name === 'fixFindingsText'));
   const byKind = kind => card.imports.filter(i => i.kind === kind).map(i => `${i.name}<-${i.via}`).sort();
-  // D1/D24: the CDS components come from the shared view-tabs graph by semantic name; CdsOverflowTooltip is the original.
-  assert.deepEqual(byKind('view-tabs'), ['CdsBadge<-shared-frame-BfjMqbuN.js:Vl', 'CdsButton<-shared-frame-BfjMqbuN.js:cl', 'CdsOverflowTooltip<-shared-frame-BfjMqbuN.js:Dc',
-    'CdsTooltipProvider<-shared-frame-BfjMqbuN.js:kc', 'clsx<-vendor-frame-DfPJ1QmD.js:za']);
+  // D1/D24/E3: the CDS components and React Compiler helpers come from the shared view-tabs graph by semantic name
+  // (concrete 3.6556.2 files, R6); CdsOverflowTooltip is the original.
+  const viewTabs = byKind('view-tabs');
+  assert.deepEqual(viewTabs.filter(name => !/^(memo|reactMemoCache)/.test(name)), ['CdsBadge<-shared-frame-6jtSkIit.js:ad', 'CdsButton<-shared-frame-6jtSkIit.js:Eu',
+    'CdsOverflowTooltip<-shared-frame-6jtSkIit.js:Gl', 'CdsTooltipProvider<-shared-frame-6jtSkIit.js:ql', 'clsx<-vendor-frame-CnSY1sxv.js:Ba']);
+  assert.ok(viewTabs.includes('reactMemoCache<-shared-frame-6jtSkIit.js:ip'));
+  assert.ok(manifest.modules.flatMap(m => m.imports).every(i => i.kind !== 'view-tabs' || /^\.\.\/view-tabs\/(shared-frame-6jtSkIit|shared-25-DOWZRSlq|vendor-frame-CnSY1sxv)\.js$/.test(i.from)), 'no legacy view-tabs file');
   assert.deepEqual(byKind('adapter'), [
-    'FilePathMenu<-c856385e2-DVsjb2QL.js:i', 'FormattedMessage<-vendor-intl-Db7hDWRO.js:l', 'logFindingExpanded<-c68c4283d-CPuRD0vx.js:xt',
-    'logFindingsCardRendered<-c68c4283d-CPuRD0vx.js:St', 'logFixApplied<-c68c4283d-CPuRD0vx.js:Ct', 'logRerunReview<-c68c4283d-CPuRD0vx.js:wt',
-    'logWalkthroughOpened<-c68c4283d-CPuRD0vx.js:Et', 'reviewFindingsActions<-cc8941b7b-CZT9QwXr.js:A', 'reviewFindingsStore<-cc8941b7b-CZT9QwXr.js:V',
-    'useErrors<-shared-52-DGviI8xb.js:Ya', 'useFindingStatuses<-cc8941b7b-CZT9QwXr.js:nt', 'useIntl<-vendor-intl-Db7hDWRO.js:p',
-    'useLatestSettledAtActivation<-cc8941b7b-CZT9QwXr.js:$', 'usePaneStore<-c03935b01-CyJKQj4N.js:pt', 'usePaneStoreContext<-c03935b01-CyJKQj4N.js:mt',
-    'usePaneStoreState<-c03935b01-CyJKQj4N.js:ft', 'useSeededFindingsToolIds<-cc8941b7b-CZT9QwXr.js:ot', 'useSendWithOutcome<-c6b8adeaf-C5Aww7gq.js:g',
-    'useSessionDiffEntries<-c5da7eb42-B8cTG8SI.js:St', 'useSessionTurnRunning<-c06cf64bb-BE5q2vSr.js:on', 'useSurfaceHidden<-shared-1-CAAiD7E3.js:ic',
-    'useUnanchoredFindingIds<-cc8941b7b-CZT9QwXr.js:ft']);
+    'FilePathMenu<-c856385e2-aEyDzrcK.js:a', 'FormattedMessage<-vendor-intl-DYfox5Co.js:l', 'logFindingExpanded<-c68c4283d-CWbOoVxS.js:xt',
+    'logFindingsCardRendered<-c68c4283d-CWbOoVxS.js:St', 'logFixApplied<-c68c4283d-CWbOoVxS.js:Ct', 'logRerunReview<-c68c4283d-CWbOoVxS.js:wt',
+    'logWalkthroughOpened<-c68c4283d-CWbOoVxS.js:Et', 'reviewFindingsActions<-cc8941b7b-DAgMZRvX.js:k', 'reviewFindingsStore<-cc8941b7b-DAgMZRvX.js:V',
+    'useErrors<-shared-52-uHFNjl7C.js:ha', 'useFindingStatuses<-cc8941b7b-DAgMZRvX.js:nt', 'useIntl<-vendor-intl-DYfox5Co.js:p',
+    'useLatestSettledAtActivation<-cc8941b7b-DAgMZRvX.js:Q', 'usePaneStore<-c03935b01-yhcY34vt.js:_t', 'usePaneStoreContext<-c03935b01-yhcY34vt.js:vt',
+    'usePaneStoreState<-c03935b01-yhcY34vt.js:gt', 'useSeededFindingsToolIds<-cc8941b7b-DAgMZRvX.js:ot', 'useSendWithOutcome<-c6b8adeaf-bLEQVSWL.js:g',
+    'useSessionDiffEntries<-c5da7eb42-XijZdwf1.js:Tt', 'useSessionTurnRunning<-c06cf64bb-CdJdJuVd.js:cn', 'useSurfaceHidden<-shared-1-BJhqMmkf.js:Cc',
+    'useUnanchoredFindingIds<-cc8941b7b-DAgMZRvX.js:dt']);
+  // The summary caret's fizzy-lake icon override is a host answer (off, E12).
+  const parts = manifest.modules.find(m => m.target === 'summary-card-parts.mjs');
+  assert.deepEqual(parts.imports.filter(i => i.kind === 'adapter').map(i => `${i.name}<-${i.via}`), ['useSummaryCaretIcon<-cced621b6-BqCKLL3Y.js:t']);
+  assert.equal(Adapters.useSummaryCaretIcon(), undefined);
   // Each adapter is an export of the adapter module.
   for (const entry of manifest.modules.flatMap(m => m.imports).filter(i => i.kind === 'adapter')) assert.ok(entry.name in Adapters, entry.name);
-  assert.deepEqual(manifest.callSites.map(site => site.binding ?? `${site.source} (raw)`), ['m2e', 'e0', 'A5', 'uat', 'c8a3f7430-DosKuJ6G.js (raw)', 'cc43287c9-DAfOi8yP.js (raw)']);
+  assert.deepEqual(manifest.callSites.map(site => site.binding ?? `${site.source} (raw)`), ['K1e', 'n1', 'Q8', 'Rat', 'c8a3f7430-CZl53PLL.js (raw)', 'cc43287c9-Me-M2ucD.js (raw)']);
   assert.ok(fs.readdirSync(path.join(app, 'scripts')).includes('verify-gen-r4e-findings.mjs'));
 });
 
-test('toolcards-18 evidence: the category badge, its tooltip and the ungated card request occur once in 2.42304.0', () => {
+test('toolcards-18 evidence: the category badge, its tooltip and the ungated card request occur once in 3.6556.2', () => {
+  // Minified statements are matched through looseFeature (R2/E5: short names generalised, literals exact).
   const pins = [
-    ['c96d752d0-BOCqU7c2.js', 'className:"max-w-[7rem]"'],
-    ['c96d752d0-BOCqU7c2.js', 'b(ds,{variant:"neutral",size:"xs",truncate:!0,className:"max-w-[7rem]",children:b($o,{lazy:!0,hoverable:!1,children:e.category})})'],
-    ['c96d752d0-BOCqU7c2.js', 'p(Ts,{closeDelay:0,children:[b(rb,{}),'],
-    ['c96d752d0-BOCqU7c2.js', 'if(a&&H$(e.tools[0]))return b(X$,{tool:e.tools[0],sessionRef:t,onPrefillComposer:n,fallback:c})'],
-    ['c8a3f7430-DosKuJ6G.js', 'reportFindingsCard:!0'],
+    ['c96d752d0-CWv_7-n9.js', 'className:"max-w-[7rem]"'],
+    ['c96d752d0-CWv_7-n9.js', 'f(ke,{variant:"neutral",size:"xs",truncate:!0,className:"max-w-[7rem]",children:f(Y,{lazy:!0,hoverable:!1,children:t.category})})'],
+    ['c96d752d0-CWv_7-n9.js', '_(qe,{closeDelay:0,children:[f(Ex,{}),'],
+    ['c96d752d0-CWv_7-n9.js', 'if(o&&_Q(t.tools[0]))return J1($,12,r)||J3($,13,t.tools[0],n,l)?I3($,13,Z1($,12,f(EQ,{tool:t.tools[0],sessionRef:n,onPrefillComposer:r,fallback:l}),r),'],
+    ['c8a3f7430-CZl53PLL.js', 'reportFindingsCard:!0'],
     // R4h-findings (Y1-R4e-findings-1, Y1-R4e-findings-2): Apply fixes is not disabled by running, sendWithOutcome
-    // queues mid-turn sends, and hasSidePanes defaults to true while ae (useSessionDiffEntries) gates Walk through.
-    ['c96d752d0-BOCqU7c2.js', 'disabled:z!=="actionable"||!q'],
-    ['c96d752d0-BOCqU7c2.js', 'v=Yh(e=>e.hasSidePanes)&&_!==null'],
-    ['c96d752d0-BOCqU7c2.js', 'w=t!==void 0&&v&&S>0'],
-    ['c96d752d0-BOCqU7c2.js', 'ae=k!=="local"||(K??[]).some(e=>!e.stackParent)'],
-    ['c03935b01-CyJKQj4N.js', 'hasSidePanes:e?.hasSidePanes??!0'],
-    ['c6b8adeaf-C5Aww7gq.js', 'let b=R(n.id),x=Hi(t,b),S=x!==null&&L.getState().hasEchoedUuid(n.id,s);S||m(n.id,s,Ui(t,b)),x&&!S&&p(n.id,x)'],
+    // queues mid-turn sends, and hasSidePanes defaults to true while fe (useSessionDiffEntries) gates Walk through;
+    // 3.6556.2 disables Apply fixes until the diff entries are known (pe).
+    ['c96d752d0-CWv_7-n9.js', 'disabled:W!=="actionable"||!pe'],
+    ['c96d752d0-CWv_7-n9.js', 'pe=M!=="local"||de!==void 0'],
+    ['c96d752d0-CWv_7-n9.js', 'b=bm(WQe)&&y!==null', ['WQe']],
+    ['c96d752d0-CWv_7-n9.js', 'function WQe(e){return e.hasSidePanes}', ['WQe']],
+    ['c96d752d0-CWv_7-n9.js', 'w=n!==void 0&&b&&C>0'],
+    ['c96d752d0-CWv_7-n9.js', 'M!=="local"||(de??[]).some(KQe)'],
+    ['c96d752d0-CWv_7-n9.js', 'function KQe(e){return!e.stackParent}'],
+    ['c03935b01-yhcY34vt.js', 'hasSidePanes:e?.hasSidePanes??!0'],
+    ['c6b8adeaf-bLEQVSWL.js', 'let h=Rn(n.id),g=Oa(t,h),_=g!==null&&z.getState().hasEchoedUuid(n.id,o);_||z.getState().noteQueuedSend(n.id,o,ka(t,h)),g&&!_&&z.getState().echoPending(n.id,g)'],
   ];
-  for (const [name, needle] of pins) assert.equal(occurrences(raw(name), needle), 1, `${name}: ${needle}`);
+  for (const [name, needle, keep = []] of pins) assert.equal((raw(name).match(looseFeature(needle, { keep, flags: 'g' })) ?? []).length, 1, `${name}: ${needle}`);
   // The generated card carries the badge as shipped.
   const text = fs.readFileSync(path.join(directory, 'findings-card.mjs'), 'utf8');
-  assert.match(text, /b\(ds, \{\s*variant: "neutral",\s*size: "xs",\s*truncate: !0,\s*className: "max-w-\[7rem\]",\s*children: b\(\$o, \{\s*lazy: !0,\s*hoverable: !1,\s*children: e\.category,\s*\}\),\s*\}\)/);
-  assert.match(text, /import \{\s*CdsButton as Ss,\s*CdsTooltipProvider as Ts,\s*CdsBadge as ds,\s*CdsOverflowTooltip as \$o,\s*\} from "\.\.\/view-tabs\/shared-frame-BfjMqbuN\.js";/);
+  assert.match(text, /f\(ke, \{\s*variant: "neutral",\s*size: "xs",\s*truncate: !0,\s*className: "max-w-\[7rem\]",\s*children: f\(Y, \{\s*lazy: !0,\s*hoverable: !1,\s*children: t\.category,\s*\}\),\s*\}\)/);
+  for (const name of ['CdsButton as J', 'CdsTooltipProvider as qe', 'CdsBadge as ke', 'CdsOverflowTooltip as Y']) assert.ok(text.includes(`  ${name},\n`), name);
+  assert.match(text, /\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  // T13: 3.6556.2 ids of Fixed / Plausible.
+  assert.match(text, /defaultMessage: "Fixed",\s*id: "BNEz9MFGbU"/);
+  assert.match(text, /defaultMessage: "Plausible",\s*id: "FNzj2neHoF"/);
 });
 
 test('SSR: header, file groups, rows and badges carry the original structure and classes', () => {
@@ -122,7 +144,8 @@ test('SSR: header, file groups, rows and badges carry the original structure and
   // Actionable: Apply fixes (ghost, muted) and Walk through in diff (secondary); Re-run review only once terminal.
   assert.ok(html.indexOf('>Apply fixes<') > 0 && html.indexOf('>Apply fixes<') < html.indexOf('>Walk through in diff<'));
   assert.doesNotMatch(html, /Re-run review/);
-  assert.match(html, /text-muted hover:text-secondary text-footnote shrink-0"/, 'Yb muted action class on the ghost button');
+  // T5: 3.6556.2 c219730b0 Jr is text-muted-as-secondary (2.42304.0 nn text-muted).
+  assert.match(html, /text-muted-as-secondary hover:text-secondary text-footnote shrink-0"/, 'Zx muted action class on the ghost button');
   assert.match(html, /<div aria-hidden="true" class="-mx-\[calc\(var\(--cds-pad-md\)-1px\)\] h-px shrink-0 bg-alpha-2"><\/div><div class="grid w-full min-w-0 grid-cols-\[minmax\(0,max-content\)_1fr\] gap-y-0\.75">/);
   // f0e: one group per file in first-seen order, its basename labelling the list, the path on the file menu trigger.
   assert.match(html, /<div id="rf1-file-0" class="col-span-full truncate pt-0\.75 text-body font-semibold text-secondary" title="src\/a\.js" data-file-ref="src\/a\.js">a\.js<\/div><ul role="list" aria-labelledby="rf1-file-0" class="col-span-full grid min-w-0 grid-cols-subgrid ps-\[calc\(var\(--cds-pad-lg\)\+var\(--cds-pad-xs\)\)\]">/);
@@ -131,9 +154,11 @@ test('SSR: header, file groups, rows and badges carry the original structure and
   assert.equal(occurrences(html, 'aria-expanded="false" class="-mx-pad-xs flex min-w-0 grow items-center gap-md rounded-[5px] px-xs py-xs text-start focus-visible:outline-hidden hover:bg-fill-ghost-hover hide-focus-ring focus-visible:shadow-focus col-span-full grid grid-cols-subgrid"'), 3);
   // toolcards-18: the category badge truncates (CdsBadge truncate → min-w-0 + an ellipsis span) at 7rem, its text inside
   // a lazy CdsOverflowTooltip trigger (no tooltip mounted until it overflows and is hovered).
-  assert.match(html, /<span data-cds="Badge" data-size="xs" class="[^"]*min-w-0 bg-neutral text-secondary max-w-\[7rem\]"><span class="pb-\[0\.05em\] min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap"><span data-cds="OverflowTooltip" class="block min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap" id="[^"]+" data-base-ui-tooltip-trigger="">Off by one in a long category name<\/span><\/span><\/span>/);
+  // The 3.6556.2 CdsBadge (view-tabs) appends its `stacks:*` variant classes after the tone (inert: fizzy-lake off, E12).
+  const STACKS = String.raw`(?: stacks:[^ "]+)*`;
+  assert.match(html, new RegExp(String.raw`<span data-cds="Badge" data-size="xs" class="[^"]*min-w-0 bg-neutral text-secondary${STACKS} max-w-\[7rem\]"><span class="pb-\[0\.05em\] min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap"><span data-cds="OverflowTooltip" class="block min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap" id="[^"]+" data-base-ui-tooltip-trigger="">Off by one in a long category name<\/span><\/span><\/span>`));
   assert.doesNotMatch(html, /role="tooltip"|data-popup/);
-  assert.match(html, /<span data-cds="Badge" data-size="xs" class="[^"]*shrink-0 bg-tint-red text-danger"><span class="pb-\[0\.05em\]">Confirmed<\/span><\/span>/);
+  assert.match(html, new RegExp(String.raw`<span data-cds="Badge" data-size="xs" class="[^"]*shrink-0 bg-tint-red text-danger${STACKS}"><span class="pb-\[0\.05em\]">Confirmed<\/span><\/span>`));
   assert.match(html, />Unverified</);
   // p0e: trailing punctuation dropped, at most 72 characters cut at a word with an ellipsis, short_summary first; q$ in sr-only.
   assert.match(html, /<span class="sr-only">src\/a\.js:12\. <\/span>Off by one in the loop bound<\/span>/);

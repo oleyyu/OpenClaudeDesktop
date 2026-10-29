@@ -113,8 +113,10 @@ test('shell mode: a leading ! on a core with thread/shellCommand is the user’s
   assert.equal(shellModeCommand('!git status', { engine: 'deepseek-harness', capabilities: {} }), null, 'a core without it sends a message');
   assert.equal(shellModeCommand('run !this', codex), null);
   const { commandRowLabel } = await import('../src/command-row-model.mjs');
-  assert.deepEqual(commandRowLabel("/bin/zsh -lc 'echo hi | tr a-z A-Z'", 'done', null, 'userShell'), { label: 'You ran', meta: 'echo hi | tr a-z A-Z' });
-  assert.equal(commandRowLabel('ls', 'busy', null, 'userShell').label, 'Running your command');
+  // w12b-transcript (W12b-TR-4): the user's '!' command is the user entry c19e90103 Dg (source-user-shell.jsx), so the
+  // command row has no 'You ran' branch of its own any more.
+  assert.deepEqual(commandRowLabel('ls', 'busy', null, 'userShell'), commandRowLabel('ls', 'busy', null));
+  assert.notEqual(commandRowLabel("/bin/zsh -lc 'echo hi'", 'done', null, 'userShell').label, 'You ran');
 });
 
 test('hooks: Codex’s hooks/list grouped by event, the review count, and which rows run', async () => {

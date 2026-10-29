@@ -16,12 +16,20 @@ export function sessionPageRecord(session,{state={},metadata={},repoIdentities={
     hostSession:session};
 }
 // engine: boot.core; its btwChildSessions capability turns on nested_less_side_chats (shared-11 Nu).
-export function sessionPageRows(sessions,{surface='code',query='',sortBy='type',engine,...context}={}) {
-  const seen=new Set(),lower=query.trim().toLowerCase();
+// Every local session once, as the Hf row the merged list hands the 3.6556.2 Sessions page (shared-11 GC `sessions`):
+// active and archived together. Hf itself lists them (ba = shared-11 pw before the surface filter, ia for Archived,
+// jC search, AC sort), so nothing is filtered here.
+export function sessionPageRecords(sessions,{engine,...context}={}) {
+  const seen=new Set();
   const unique=sessions.filter(session=>session?.id&&!seen.has(session.id)&&seen.add(session.id));
-  // R3-nested NBS-3: gd lists a Code row only when ra(e.source.data) (shared-11 pb) holds, before the surface filter.
   const inParentTabs=parentTabChildIds(unique,context.metadata,engine);
-  const rows=unique.map(session=>sessionPageRecord(session,{...context,inParentTabs})).filter(row=>isListedSession(row.source.data))
+  return unique.map(session=>sessionPageRecord(session,{...context,inParentTabs}));
+}
+// The rows Hf shows for one surface and query (its Code branch, for the host's own checks).
+export function sessionPageRows(sessions,{surface='code',query='',sortBy='type',...context}={}) {
+  const lower=query.trim().toLowerCase();
+  // R3-nested NBS-3: Hf lists a Code row only when ba(e.source.data) (shared-11 pw) holds, before the surface filter.
+  const rows=sessionPageRecords(sessions,context).filter(row=>isListedSession(row.source.data))
     .filter(row=>isSessionArchived(row)===(surface==='archived')&&(!lower||(row.title??'').toLowerCase().includes(lower)));
   return sortSessionPageRows(rows,!!lower&&sortBy==='type');
 }

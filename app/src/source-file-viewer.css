@@ -248,10 +248,6 @@
 .sfv-go-to-line .sfv-find-input[aria-invalid="true"] { border-color: var(--cds-text-danger); }
 .sfv-editor-shell { position: relative; flex: 1; min-height: 0; height: 100%; }
 .sfv-editor-tab-hint { position: absolute; bottom: 8px; right: 12px; pointer-events: none; border-radius: 4px; border: .5px solid var(--cds-border-strong); background: var(--cds-surface-1); padding: 4px 8px; font-size: var(--cds-font-size-footnote); color: var(--cds-text-secondary); box-shadow: 0 1px 2px #0001; }
-/* ceb49ada3 split action strip: native popover paint, rounded, ghost buttons. */
-.sfv-selection-toolbar { display: flex; width: max-content; pointer-events: auto; border-radius: 4px; background: var(--cds-surface-3); box-shadow: inset 0 0 0 var(--cds-ring-inner,0px) var(--cds-ring-color,transparent),0 0 0 var(--cds-ring-outer,0px) var(--cds-ring-color,transparent),var(--cds-shadow-popover); color:var(--cds-text-primary); font:var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans); }
-.sfv-selection-divider { width: 1px; margin-block: 7px; background:var(--cds-alpha-2); flex-shrink:0; transition:opacity 150ms; }
-.sfv-selection-toolbar:hover .sfv-selection-divider,.sfv-selection-toolbar:focus-within .sfv-selection-divider { opacity:0; }
 .sfv-gutter-comment { position:absolute; left:1px; display:flex; align-items:center; justify-content:center; width:16px; height:16px; padding:0; border:0; border-radius:4px; color:var(--cds-on-accent); background:var(--cds-fill-accent); cursor:var(--cds-cursor-interactive,pointer); }
 .sfv-gutter-comment:hover { background:var(--cds-fill-accent-hover); }
 /* c82eca2bd H/U inline comment card. */
@@ -271,7 +267,7 @@
 .sfv-comment-card[data-editing] .sfv-comment-actions { align-self:flex-end; width:24px; justify-content:center; }
 .sfv-comment-actions button { display:flex; position:relative; border:0; border-radius:4px; padding:3px; background:transparent; color:var(--diff-widget-muted,var(--cds-text-muted)); }
 .sfv-comment-actions button:hover { background:var(--cds-fill-ghost-hover); color:var(--diff-widget-fg,var(--cds-text-primary)); }
+.sfv-comment-actions button[data-comment-delete]:hover { color:var(--cds-text-danger); }
 .sfv-comment-actions button:disabled { opacity:.4; }
 .sfv-comment-card:not([data-editing]) .sfv-comment-actions button { opacity:0; }
 .sfv-comment-card:hover .sfv-comment-actions button,.sfv-comment-card:focus-within .sfv-comment-actions button { opacity:1; }
-@media (prefers-reduced-motion: reduce) { .sfv-selection-divider { transition:none; } }

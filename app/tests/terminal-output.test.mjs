@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-// 2.42304.0 c6bf19e8f In..$n (generated/code-current, R3-terminal FT-03; identical to the 2.31226.0 kn..Kn).
+// 3.6556.2 c6bf19e8f Jn..dr (generated/code-current, R3-terminal FT-03, cc-rest-terminal-a; identical to the 2.42304.0 In..$n
+// and the 2.31226.0 kn..Kn).
 import {attachVisibleTerminalOutput,terminalSelectionText} from '../src/generated/code-current/terminal-output.mjs';
 
 function fixture({selection='',visible='viewport output\n\n',viewportY=20,cols=80,rows=10,wrapped=[]}={}) {

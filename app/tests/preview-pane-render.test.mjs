@@ -81,8 +81,10 @@ test('cf580efe9 Si pn: the New session page browser says Browse the web', () => 
 test('cf580efe9 Or setting-off: the preview setting off shows Browser tools are turned off with Turn on', () => {
   const html = render(base, { agentUsesPreview: false, onTurnOnAgentPreview: () => {} });
   assert.match(html, /data-preview-start="setting-off"/);
-  assert.match(html, /<div role="status" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state">/);
-  assert.match(html, />Browser tools are turned off</);
+  // w12b TPT-8: the generated cc0a875c8 EmptyState f (classes r / o / s, text-pretty, text-muted-as-secondary).
+  assert.match(html, /<div role="status" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center">/);
+  assert.match(html, /<p class="max-w-\[36ch\] text-pretty break-words text-body text-primary">Browser tools are turned off<\/p>/);
+  assert.match(html, /<p class="max-w-\[36ch\] text-pretty break-words text-footnote text-muted-as-secondary">They let /);
   assert.match(html, /They let \S+ start your dev server and open pages here\./);
   assert.match(html, /<button type="button" data-cds="Button" data-variant="secondary"[^>]*>(?:(?!<\/button>).)*<span class="ssb-content">Turn on Browser tools<\/span><\/button>/);
   const configured = { ...base, launch: { ...base.launch, exists: true, configs: [{ name: 'web', port: 5173, url: 'http://localhost:5173', attach: false }] } };
@@ -126,7 +128,9 @@ test('a page: the URL shows host and path, the skip link explains F6, the start 
   const html = render({ ...base, hasPage: true, url: 'http://localhost:5173/about?x=1', title: 'App', canGoBack: true, viewport: { ...base.viewport, preset: 'mobile', width: 375, height: 812 } });
   assert.match(html, /data-preview-surface="page"/);
   assert.match(html, /aria-label="Page URL"/);
-  assert.match(html, /<span class="text-primary">localhost:5173<\/span><span class="text-muted">\/about\?x=1<\/span>/);
+  // 3.6556.2 cf550b864-hZr1-4Cn: `t("span",{className:"text-primary",children:Q.host}),Q.suffix&&t("span",
+  // {className:"text-muted-as-secondary",children:Q.suffix})` (2.42304.0 used text-muted).
+  assert.match(html, /<span class="text-primary">localhost:5173<\/span><span class="text-muted-as-secondary">\/about\?x=1<\/span>/);
   assert.match(html, /press F6 or Ctrl\+F6 to move back out/);
   assert.match(html, /Mobile · 375 × 812/);
   assert.doesNotMatch(html, /data-preview-start/);
@@ -159,17 +163,32 @@ test('header: Select element follows navigation and needs a page and a composer'
   assert.match(render(base, { onAttachElement: () => {} }).match(/<button[^>]*aria-label="Select element"[^>]*>/)[0], /disabled=""/);
 });
 
-test('current sketch host renders the original canvas, text/white controls and source actions', async () => {
+test('current sketch host renders the 3.6556.2 canvas, the tool/shape/color/width toolbar and the host actions', async () => {
   const S = await server.ssrLoadModule('/src/source-preview-sketch.jsx');
   const html = renderToStaticMarkup(React.createElement(S.SourcePreviewSketch, { backdrop: null, onCancel() {}, onAttach() {} }));
-  for (const label of ['Pen', 'Line', 'Arrow', 'Rectangle', 'Ellipse', 'Text', 'Red', 'Blue', 'Green', 'Black', 'White', 'Undo', 'Redo', 'Clear all']) assert.match(html, new RegExp(`aria-label="${label}"`));
+  // 3.6556.2 c23255574-B0Bkz_WU toolbar: `role:"group","aria-label":kt,"data-sketch-tools":!0` holds Pen, the Shapes
+  // menu (`i(Oe,{label:At,current:Lt,…pinnedOpen:I==="shape"…})`) and Text; Ink color and Line width are menus too
+  // (`pinnedOpen:I==="color"` / `I==="width"`), so Line/Arrow/Rectangle/Ellipse and the swatches only render in their
+  // popups and the triggers carry the current pick as aria-description.
+  assert.match(html, /role="group" aria-label="Annotation tool" data-sketch-tools="true"/);
+  for (const label of ['Pen', 'Text', 'Close']) assert.match(html, new RegExp(`<button[^>]*aria-label="${label}"`));
+  assert.match(html, /<button[^>]*aria-pressed="true" aria-label="Pen"/);
+  assert.match(html, /aria-label="Shapes" aria-description="Rectangle"[^>]*aria-haspopup="menu"/);
+  assert.match(html, /aria-label="Ink color" aria-description="Red"[^>]*aria-haspopup="menu"/);
+  assert.match(html, /aria-label="Line width" aria-description="Medium"[^>]*aria-haspopup="menu"/);
+  for (const label of ['Line', 'Arrow', 'Rectangle', 'Ellipse', 'Red', 'Blue', 'Green', 'Black', 'White']) assert.doesNotMatch(html, new RegExp(`aria-label="${label}"`), `${label} is a menu item`);
+  // `let it=T||ue||E` (can clear / undo / redo): with nothing drawn the Undo/Redo/Clear all group is not rendered.
+  for (const label of ['Undo', 'Redo', 'Clear all']) assert.doesNotMatch(html, new RegExp(`aria-label="${label}"`), `${label} waits for a mark`);
   assert.match(html, /aria-label="Sketch canvas"/);
-  assert.match(html, /data-layout="full"/);
-  assert.match(html, /data-surface="panel"/);
-  assert.match(html, /bg-surface-2 shadow-panel-sm/);
-  assert.match(html, />Close</);
-  assert.match(html, /Add to chat/);
-  assert.match(html, /<button[^>]*aria-label="Undo"[^>]*disabled=""/);
+  // w11-sweep-rest: the panel is view-tabs' CdsSurface (shared-frame cg): `b("div",{ref:t,"data-cds":"Surface",
+  // "data-surface":i,...a,className:c,style:l,…})`, style `{...sg(eg[i]),...o}` with the --cds-focus-shadow pair.
+  assert.match(html, /data-cds="Surface" data-surface="panel" data-layout="full" class="rounded-card bg-surface-2 shadow-panel-sm/);
+  assert.match(html, /style="--cds-page-bg:var\(--cds-surface-2\);--cds-focus-shadow:inset 0 0 0 1px var\(--cds-page-bg\)[^"]*;--cds-focus-shadow-danger:/);
+  // Close is `i(p,{variant:"ghost",iconOnly:!0,icon:"X","aria-label":Kt,onClick:G})`, no text child.
+  assert.doesNotMatch(html, />Close</);
+  // cda4f50bb-BYPh13KQ: `n(re,{variant:"primary",disabled:Y,onClick:ht,children:q})`, q "Add to chat", disabled with
+  // "Nothing to add yet" until there is a mark.
+  assert.match(html, /<button type="button" disabled=""[^>]*>(?:(?!<\/button>).)*>Add to chat<\/span><\/button><span id="[^"]+" hidden="" data-cds-disabled-reason="">Nothing to add yet<\/span>/);
 });
 
 test('cf580efe9 yr: the start failure card — Warning, title, the meta and last-line chip, Copy and Try again', () => {

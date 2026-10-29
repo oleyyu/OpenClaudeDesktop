@@ -22,7 +22,10 @@ const local = rel => read(path.join(app, rel));
 const count = (text, needle) => text.split(needle).length - 1;
 const once = (text, needles) => { for (const needle of needles) assert.equal(count(text, needle), 1, needle); };
 const OFFICIAL_CSS = 'c6a992d55-sXiDGMFQ.css';
-const LOCAL_CSS = `public/assets/v1/${OFFICIAL_CSS}`;
+// The served sheets follow the design pin (3.6556.2 since 2026-10-25); the (a) halves above stay 2.42304.0 locks.
+const pinned = name => read(path.join(app, '../reference', designSnapshot, 'ion-dist/assets/v1', name));
+const PINNED_CSS = 'c6a992d55-Che1orl5.css';
+const LOCAL_CSS = `public/assets/v1/${PINNED_CSS}`;
 // The only difference between an official stylesheet and its public/assets/v1 copy: font url()s made relative.
 const asServed = text => text.replaceAll('url(/assets/v1/', 'url(./');
 const walk = dir => fs.readdirSync(dir, { withFileTypes: true })
@@ -63,9 +66,9 @@ test('global-02 account row: pw\'s ps-[var(--df-row-px)] pe-2 text-start class s
   assert.deepEqual(classes, [OFFICIAL_CLASS.replace('df-user-menu-btn', 'df-user-menu-btn account-button')]);
   // No local sheet styles the trigger by its own classes any more (D26 removed style.css's padding restatement).
   for (const rel of [...fs.readdirSync(path.join(app, 'src')).filter(name => name.endsWith('.css')).map(name => `src/${name}`),
-    'public/assets/legacy-utilities.css', 'public/assets/current-chat/layout.css'])
+    'public/assets/legacy-utilities.css'])
     assert.doesNotMatch(stripComments(local(rel)), /\.(df-user-menu-btn|account-button)(?![\w-])/, rel);
-  assert.equal(local(LOCAL_CSS), asServed(css), 'the served c6a992d55 is the official sheet');
+  assert.equal(local(LOCAL_CSS), asServed(pinned(PINNED_CSS)), 'the served c6a992d55 is the pinned official sheet');
   // The cascade over every loaded sheet: the three utilities of the official copy decide padding and alignment.
   const footer = append(append(documentRoot(), element('div', { class: 'desktop-app dframe-root' })), element('div', { class: 'df-bottom-tray shrink-0' }));
   const row = append(footer, element('div', { class: 'df-footer-row account-footer shrink-0 flex items-center gap-[var(--df-footer-gap)]' }));
@@ -92,7 +95,7 @@ test('global-09 tokens: the served sheets are the 2.42304.0 originals; menu gutt
   const TOKENS = { '--cds-menu-gutter:initial': 2, 'var(--cds-menu-gutter': 12, '--control-ink': 7, '--control-ink:': 0,
     '--frame-row-h': 29, '--frame-row-h:': 0, 'text-prose-medium': 3, 'radius-4xl': 0 };
   for (const [token, n] of Object.entries(TOKENS)) assert.equal(count(css, token), n, token);
-  for (const name of designStylesheets) assert.equal(count(official(name), 'radius-4xl'), 0, name);
+  for (const name of designStylesheets) assert.equal(count(pinned(name), 'radius-4xl'), 0, name);
   const old = read(path.join(previous, 'ion-dist/assets/v1/c6a992d55-CNGsCU46.css'));
   once(old, ['--radius-4xl:2rem;', '.rounded-4xl{border-radius:var(--radius-4xl)}']);
   // shared-frame Hx: the menu frame's header / footer gutters and the list's max-height, all on the .25rem fallback.
@@ -103,16 +106,17 @@ test('global-09 tokens: the served sheets are the 2.42304.0 originals; menu gutt
 
   // (b) local: the pinned design snapshot is 2.42304.0, index.html links the same-hash sheets, and each served copy is
   // the original byte for byte but for the relative font url()s — so every token count above holds for what loads.
-  assert.equal(designVersion, '2.42304.0'); assert.equal(designSnapshot, 'installed-2.42304.0-20261017');
-  assert.ok(designStylesheets.includes(OFFICIAL_CSS));
+  assert.equal(designVersion, '3.6556.2'); assert.equal(designSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.ok(designStylesheets.includes(PINNED_CSS));
   const html = local('index.html');
   for (const name of designStylesheets) {
     assert.equal(count(html, `<link rel="stylesheet" href="/assets/v1/${name}" />`), 1, name);
-    assert.equal(local(`public/assets/v1/${name}`), asServed(official(name)), name);
+    assert.equal(local(`public/assets/v1/${name}`), asServed(pinned(name)), name);
   }
-  for (const [token, n] of Object.entries(TOKENS)) assert.equal(count(local(LOCAL_CSS), token), n, `served ${token}`);
+  // The served counts are the pinned sheet's (3.6556.2 reads --frame-row-h twice more); never-declared stays never-declared.
+  for (const [token, n] of Object.entries(TOKENS)) assert.equal(count(local(LOCAL_CSS), token), n === 0 ? 0 : count(pinned(PINNED_CSS), token), `served ${token}`);
   // Nothing local redefines the tokens or still uses the removed radius.
-  const files = [...sources(['.css', '.jsx', '.js', '.mjs'], { generated: false }), 'index.html', 'public/assets/legacy-utilities.css', 'public/assets/current-chat/layout.css'];
+  const files = [...sources(['.css', '.jsx', '.js', '.mjs'], { generated: false }), 'index.html', 'public/assets/legacy-utilities.css'];
   for (const pattern of [/--cds-menu-gutter\s*:/, /--control-ink\s*:/, /--frame-row-h\s*:/, /radius-4xl/, /rounded-4xl/])
     assert.deepEqual(files.filter(rel => pattern.test(local(rel))), [], String(pattern));
   // source-menu.css restates zx / Bx with the same .25rem fallback, and menuListMaxHeight is Hx's template.
@@ -172,9 +176,9 @@ test('global-11 forced colors: the official base rule hides a resting button / l
 // Equivalent since R4e-small: the official inheritColor TextLink rests at 35% (vd). Since R4g-routines RTC (CW-1) the
 // Cowork page renders the 2.42304.0 routine form (cowork-scheduled c97b955f1 Ca), whose four inheritColor links are the
 // official shared-frame Cd itself (with its target / rel and "(opens in new tab)" note); the page host hands their clicks
-// to the host's external opener. FormLink (still exported for the old graphs) emits the same class string. Default
+// to the host's external opener. (The host FormLink restatement had no importer and was deleted by w10-cleanup-final.) Default
 // (non-inheritColor) links are aligned as before. (SSR markup, click and cascade checks: tests/r4e-small-routine-link.test.mjs.)
-test('global-13 TextLink inheritColor: official vd rests at 35%; the local routine form\'s inheritColor links (FormLink) carry _d + vd', () => {
+test('global-13 TextLink inheritColor: official vd rests at 35%; the local routine form\'s inheritColor links are the official TextLink', () => {
   // (a) 2.42304.0 shared-frame Cd (TextLink, exported as Xc; md = the inheritColor provider, exported as Zc).
   const frame = official('shared-frame-BfjMqbuN.js');
   const VD = 'vd="text-inherit [transition-property:text-decoration-color,box-shadow] [&:not(:hover,:focus-visible)]:[--_text-link-line:color-mix(in_srgb,currentColor,transparent_35%)]"';
@@ -198,30 +202,26 @@ test('global-13 TextLink inheritColor: official vd rests at 35%; the local routi
     ['src/source-plan-card.css', 'color: var(--cds-text-accent); --_text-link-line: color-mix(in srgb, currentColor, transparent 60%);', '.spc-open-plan:is(:hover, :focus-visible) { --_text-link-line: currentColor; }'],
     ['src/source-bypass-permission.css', 'color:var(--cds-text-accent);--_text-link-line:color-mix(in srgb,currentColor,transparent 60%);', '.source-bypass-dialog .source-bypass-link:is(:hover,:focus-visible){--_text-link-line:currentColor}'],
   ]) { once(local(rel), [rest, hover]); assert.equal(count(local(rel), 'transparent 35%'), 0, rel); }
-  // (b) local, the routine form: the generated 2.42304.0 routine form (cowork-scheduled, mounted by source-routines.jsx
-  // through source-routine-cowork-page-adapters.jsx) takes the official TextLink Cd as Zt and passes inheritColor at four sites.
-  const form = local('src/generated/cowork-scheduled/c97b955f1-BlGH1qrk.mjs');
-  // D1/D46 (R4i-graph GR3 published CdsTextLink = shared-frame Cd): cowork-scheduled now imports the TextLink by its
-  // semantic name from view-tabs instead of slicing its own shared-frame copy; same original binding Cd.
-  once(form, ['  CdsTextLink as Zt,', 's(Zt, { external: !0, inheritColor: !0, href: ue, children: e });']);
+  // (b) local, the routine form: the generated routine form (cowork-scheduled c97b955f1, 3.6556.2 La since
+  // w3-cowork-scheduled; mounted by source-routines.jsx through source-routine-cowork-page-adapters.jsx) takes the official
+  // TextLink and passes inheritColor at four sites. Its module is found by the stable chunk prefix in the manifest.
+  const coworkManifest = JSON.parse(local('src/generated/cowork-scheduled/manifest.json'));
+  const formModule = coworkManifest.modules.filter(entry => entry.source.startsWith('c97b955f1-'));
+  assert.equal(formModule.length, 1);
+  const form = local(`src/generated/cowork-scheduled/${formModule[0].target}`);
+  // D1/D46 (R4i-graph GR3 published CdsTextLink): cowork-scheduled imports the TextLink by its semantic name from view-tabs
+  // instead of slicing its own shared-frame copy.
+  const textLink = form.match(/\n  CdsTextLink as ([\w$]+),\n/)?.[1];
+  assert.ok(textLink, 'CdsTextLink import');
+  assert.equal(count(form, `(${textLink}, { external: !0, inheritColor: !0, href: `), 1);
   assert.equal(count(form, 'inheritColor: !0'), 4);
   once(local('src/source-routines.jsx'), ["CoworkUpsertScheduledTaskModal as OriginalRoutineForm } from './source-routine-cowork-page-adapters.jsx';"]);
   once(local('src/source-routine-cowork-page-adapters.jsx'), ["import { ScheduledTaskDetail, UpsertScheduledTaskModal } from './generated/cowork-scheduled/index.mjs';"]);
-  const adapters = local('src/source-routine-form-adapters.jsx');
-  const formLink = adapters.slice(adapters.indexOf('export const TEXT_LINK_CLASS ='), adapters.indexOf('export const useNoRoutineReview'));
-  // The lines that decide the link's look: the official _d and vd strings (read from shared-frame above), joined as Cd's
-  // X(X(_d, p && vd), "cursor-pointer", className), plus Cd's data-inherit-color stamp.
+  // w10-cleanup-final: the 2.31226.0 form's host FormLink (source-routine-form-adapters.jsx) is gone with that form.
+  assert.doesNotMatch(local('src/source-routine-form-adapters.jsx'), /FormLink|TEXT_LINK_CLASS/);
   const officialVd = frame.match(/,vd="([^"]+)"/)[1];
-  once(formLink, [
-    "export const TEXT_LINK_CLASS = 'cds-reset cds-text-link cds-text-link-underline inline';",
-    `export const TEXT_LINK_INHERIT_COLOR_CLASS = '${officialVd}';`,
-    "[TEXT_LINK_CLASS, inheritColor && TEXT_LINK_INHERIT_COLOR_CLASS, 'cursor-pointer', className].filter(Boolean).join(' ')",
-    'data-cds="TextLink" data-inherit-color={inheritColor ? \'\' : undefined} href={href} className={formLinkClassName(inheritColor, className)}',
-  ]);
   assert.match(officialVd, /transparent_35%\)\]$/);
-  // The old hand-written look (Tailwind underline at 2px offset, text-inherit / text-link) is gone.
-  assert.doesNotMatch(formLink, /underline-offset-2|'text-link'/);
-  // The served c6a992d55 already compiles every class vd and _d need, so FormLink only has to emit them.
+  // The served c6a992d55 compiles every class vd and _d need.
   for (const rule of ['.\\[\\&\\:not\\(\\:hover\\,\\:focus-visible\\)\\]\\:\\[--_text-link-line\\:color-mix\\(in_srgb\\,currentColor\\,transparent_35\\%\\)\\]:not(:hover,:focus-visible){',
     '.\\[transition-property\\:text-decoration-color\\,box-shadow\\]{', '.text-inherit{', ':where(.cds-root) .cds-text-link-underline{'])
     assert.equal(count(local(LOCAL_CSS), rule), 1, rule);
@@ -254,11 +254,12 @@ test('global-14 F6 regions: composer stops skip [data-turn-next], the content ri
   const stops = orderStops([{ region: 'main', instance: '', index: 0 }, { region: 'composer', instance: 'pane0:', index: 1, order: [0, 0, 0] },
     { region: 'navigation', instance: '', index: 2 }]);
   assert.deepEqual(stops.map(stop => stop.id), ['navigation:', 'main:', 'composer:pane0:']);
-  // The local region order is S without "artifact" (no artifact region locally); composer keeps its place after the
+  // The local region order is 3.6556.2's xe (w13-chatui-artifact-inline: "artifact", the Chat artifact panel's body;
+  // w13-close-chat-messages: "lastMessage", a Chat conversation's last article); composer keeps its place after the
   // pass-through question stop.
-  assert.deepEqual(REGION_ORDER, ['navigation', 'discoveryScreen', 'header', 'conversation', 'main', 'question', 'composer', 'sidePanel', 'overview',
+  assert.deepEqual(REGION_ORDER, ['navigation', 'discoveryScreen', 'header', 'conversation', 'lastMessage', 'main', 'question', 'composer', 'sidePanel', 'artifact', 'overview',
     'activity', 'sessionDetails', 'preview', 'terminal', 'tile', 'projectKnowledge']);
-  assert.ok(PASS_THROUGH_REGIONS.has('question'));
+  assert.ok(PASS_THROUGH_REGIONS.has('question') && PASS_THROUGH_REGIONS.has('artifact'));
   // … and no element carries the dframe-content class (the local "main" landing is source-split-view's .split-host),
   // so the .dframe-content ring rules, logical or physical, never apply. focus-regions.css is the inline sheet's
   // generic landing rules verbatim and stops before them.

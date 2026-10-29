@@ -4,9 +4,10 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { viewTabsViewFor } from '../scripts/view-tabs-compat.mjs';
 import { sideSessionDetachable } from '../src/generated/btw-pane/detach-eligibility.mjs';
 import { detachFromParentAvailable, detachLineageParents } from '../src/btw-detach-host.mjs';
 import { btwTabMenuState } from '../src/btw-tab-menu-model.mjs';
@@ -31,21 +32,25 @@ before(async () => {
 });
 after(() => server?.close());
 
-test('df/lf/cf are generated from 2.42304.0 shared-11 with uf and Iu as host adapters', async () => {
+// 3.6556.2 (w2-btw-approval): the generated detach eligibility is shared-11 Xm / Jm / qm (2.42304.0 df / lf / cf) with
+// Ym and qf (uf / Iu) as host adapters; the detach action is Qm (pf) and the unpin Rw (Fb).
+const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+test('Xm/Jm/qm are generated from 3.6556.2 shared-11 with Ym and qf as host adapters', async () => {
   const manifest = JSON.parse(readFileSync(path.join(app, 'src/generated/btw-pane/manifest.json'), 'utf8'));
   const entry = manifest.modules.find(module => module.target === 'detach-eligibility.mjs');
-  assert.equal(manifest.referenceVersion, '2.42304.0'); assert.equal(entry.source, 'shared-11-BuQ3CK5I.js');
-  assert.equal(entry.sourceSha256, sha(readFileSync(path.join(v1, entry.source))));
-  assert.deepEqual(entry.bindings.map(binding => binding.name), ['cf', 'lf', 'df']); assert.deepEqual(entry.exports, { df: 'sideSessionDetachable' });
+  assert.equal(manifest.referenceVersion, '3.6556.2'); assert.equal(entry.source, 'shared-11-_AVGLHEz.js');
+  assert.equal(entry.sourceSha256, sha(readFileSync(path.join(v3, entry.source))));
+  assert.deepEqual(entry.bindings.map(binding => binding.name), ['qm', 'Jm', 'Xm']); assert.deepEqual(entry.exports, { Xm: 'sideSessionDetachable' });
   assert.deepEqual(entry.imports.map(i => [i.local, i.kind, i.from, i.name, !!i.replacedSha256]),
-    [['Iu', 'host', '../../btw-detach-host.mjs', 'detachLineageParents', true], ['uf', 'host', '../../btw-detach-host.mjs', 'detachFromParentAvailable', true]]);
+    [['qf', 'host', '../../btw-detach-host.mjs', 'detachLineageParents', true], ['Ym', 'host', '../../btw-detach-host.mjs', 'detachFromParentAvailable', true]]);
   assert.equal(entry.sha256, sha(readFileSync(path.join(app, 'src/generated/btw-pane/detach-eligibility.mjs'))));
-  const shared11 = official('shared-11-BuQ3CK5I.js');
-  for (const feature of ['function cf(e){return e.spawnedFrom?.sideSession===!0&&e.spawnedFrom.sharedCheckout===!0}',
-    'function lf(e,t){return!e.isArchived&&!cf(e)&&t.has(e.sessionId)}',
-    'function df(e,t){let n=uf()?e.find(e=>e.sessionId===t):void 0;return n!==void 0&&lf(n,Iu(e,!0))}',
-    'function uf(){return!!V?.detachFromParent}', 'df as Rr', 'pf as Vr', 'Fb as L',
-    'defaultMessage:"Couldn\\u2019t detach the session. Try again.",id:"frOpVXffev"', 'i(n).then(()=>{Za(a,{lineageDetached:!0}),ad(a)},n=>{od(a),r?.(),e(']) {
+  const shared11 = readFileSync(path.join(v3, 'shared-11-_AVGLHEz.js'), 'utf8');
+  for (const feature of ['function qm(e){return e.spawnedFrom?.sideSession===!0&&e.spawnedFrom.sharedCheckout===!0}',
+    'function Jm(e,t){return!e.isArchived&&!qm(e)&&t.has(e.sessionId)}',
+    'function Xm(e,t){let n=Ym()?e.find(e=>e.sessionId===t):void 0;return n!==void 0&&Jm(n,qf(e,!0))}',
+    'function Ym(){return!!G?.detachFromParent}', 'Xm as oi', 'Qm as Nn', 'Rw as q',
+    'function qf(e,t){return t?(Kf?.sessions!==e&&(Kf={sessions:e,parents:Ad(e,!0)}),Kf.parents):Bf}',
+    'defaultMessage:"Couldn\\u2019t detach the session. Try again.",id:"frOpVXffev"', 'i(n).then(()=>{Lo(a,{lineageDetached:!0}),yp(a)},n=>{bp(a),r?.(),e(']) {
     assert.ok(shared11.includes(feature), feature);
   }
   const { extractBtwPane } = await import('../scripts/extract-btw-pane.mjs');
@@ -61,11 +66,20 @@ test('RO / LO / IO in cccc2cf0a are what the host tab strip follows', () => {
     'Rr as Sa', 'Vr as wa', 'L as ya', 'Ii as Qn']) {
     assert.ok(pane.includes(feature), feature);
   }
-  const strip = readFileSync(path.join(app, 'src/generated/view-tabs/cfe7c4b3b-CP-IQXj8.js'), 'utf8');
-  assert.match(strip, /import \{iD as C\} from "\.\/shared-frame-BfjMqbuN\.js";/, 'the tab menu Popup is shared-frame iD (exported Ii)');
-  assert.ok(strip.includes('qe=ce?.(e.id)??null'), 'the strip draws renderTabMenuItems(id) inside it');
-  const names = JSON.parse(readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8')).publicNames;
-  assert.deepEqual(names.CdsContextMenu, { file: 'shared-frame-BfjMqbuN.js', local: 'iD', export: 'Ii' });
+  // 3.6556.2 migration (W1): view-tabs runs the 3.6556.2 graph, so the strip the host draws is the current ViewTabBar
+  // file, and its tab menu Popup is the current CdsContextMenu (2.42304.0 shared-frame iD / Ii in the frozen legacy view).
+  // W7: the 2.42304.0 strip file cfe7c4b3b-CP-IQXj8.js had no importer left and is retired.
+  const viewTabs = JSON.parse(readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+  const { ViewTabBar: bar, CdsContextMenu: popup } = viewTabsViewFor(viewTabs, '3.6556.2').publicNames;
+  const escape = text => text.replace(/[$.*+?^()[\]{}|\\]/g, '\\$&');
+  assert.equal(existsSync(path.join(app, 'src/generated/view-tabs/cfe7c4b3b-CP-IQXj8.js')), false, 'the 2.42304.0 strip shim is retired');
+  assert.equal(bar.file, 'cfe7c4b3b-BF79K6ux.js');
+  const strip = readFileSync(path.join(app, 'src/generated/view-tabs', bar.file), 'utf8');
+  assert.match(strip, new RegExp(`import \\{${escape(popup.local)} as [\\w$]+\\} from "\\./${escape(popup.file)}";`), 'the tab menu Popup is the view-tabs CdsContextMenu');
+  const items = [...strip.matchAll(/renderTabMenuItems:([\w$]+)/g)].map(match => match[1]);
+  assert.ok(items.some(local => new RegExp(`${escape(local)}\\?\\.\\([\\w$]+\\.id\\)`).test(strip)), 'the strip draws renderTabMenuItems(id) inside it');
+  // The 2.42304.0 tab menu Popup it replaces: shared-frame iD, exported as Ii (official original text).
+  assert.match(official('shared-frame-BfjMqbuN.js'), /[,{]iD as Ii[,}]/);
 });
 
 test('df over the local records: a live attached child of a listed parent, not archived, not sharing the checkout', () => {
@@ -170,4 +184,15 @@ test('use-btw-pane detach: op detach with the binding; a failure calls back and 
   reply = async () => ({ status: 'disabled', reason: 'unsupported_core' });
   assert.equal(await pane.detach('child', () => failed++), null);
   assert.equal(failed, 2); assert.deepEqual(errors, ['Couldn’t detach the session. Try again.', 'Couldn’t detach the session. Try again.']);
+});
+
+// w10-ccres-e31-btw: cccc2cf0a HP numbers each tab by its place among every /btw child the parent spawned (archived and
+// detached ones too, by createdAt); a tab outside that list is numbered after it.
+test('btwPaneTabs gives each tab its HP ordinal', () => {
+  const sessions = [thread('parent'), thread('first', { archived: true }), thread('second'), thread('third'), thread('other')];
+  const metadata = { first: btwMeta('parent', { btw: { createdAt: 1, ownTurnIds: [] } }), second: btwMeta('parent', { btw: { createdAt: 2, ownTurnIds: [] } }),
+    third: btwMeta('parent', { btw: { createdAt: 3, ownTurnIds: [] }, lineageDetached: true }), other: btwMeta('elsewhere', { btw: { createdAt: 0, ownTurnIds: [] } }) };
+  assert.deepEqual(btwPaneTabs(sessions, metadata, 'parent', 'second').map(tab => [tab.id, tab.ordinal]), [['second', 2]]);
+  assert.deepEqual(btwPaneTabs(sessions, metadata, 'parent', 'third').map(tab => [tab.id, tab.ordinal]), [['second', 2], ['third', 3]]);
+  assert.deepEqual(btwPaneTabs(sessions, metadata, 'parent', 'arriving').map(tab => [tab.id, tab.ordinal]), [['second', 2], ['arriving', 4]]);
 });

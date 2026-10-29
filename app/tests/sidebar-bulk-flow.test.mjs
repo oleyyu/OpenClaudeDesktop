@@ -42,7 +42,7 @@ before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [dialogStub, react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
   ({ SidebarBulkWorktreeConfirm: Confirm } = await server.ssrLoadModule("/src/source-sidebar-bulk-worktree.jsx"));
-  ({ kt: createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-Cf4IuK3L.js"));
+  ({ createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-DYfox5Co.js"));
 });
 after(() => server?.close());
 

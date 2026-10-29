@@ -62,7 +62,7 @@ button.sac-heading:focus-visible { box-shadow: var(--cds-focus-shadow); }
 .sac-reason:focus-visible { box-shadow: var(--cds-focus-shadow); }
 .sac-details[hidden] { display: none; }
 /* mcpServer/elicitation/request: the server's message, a url-mode link and a form-mode form
-   (field chrome follows the question card's custom field, source-question-card.css). */
+   (field chrome is this file's own; the question card's sq-* field it once followed went with source-question-card.css in W12). */
 .sac-message {
   margin: 0; color: var(--cds-text-primary); user-select: text;
   white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: plaintext;

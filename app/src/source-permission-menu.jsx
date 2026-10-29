@@ -1,5 +1,6 @@
 import React, { useId } from "react";
 import { SourceMenu } from "./source-menu";
+import { SourceTooltip } from "./source-tooltip";
 import "./source-permission-menu.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -77,10 +78,14 @@ export function SourcePermissionMenu({ anchor, value, defaultValue, onChange, on
             {badgedLabel(option.label, labelId, badge)}
           </SourceMenu.Item>;
         })}
-        {!bypassEnabled && bypassOffer === "enable" && onEnableBypass && <SourceMenu.Item className="sp-permission-item sp-permission-enable" label={BYPASS_LABEL}
-          description={t("Turn on in Settings to use it")} data-permission-action="enable-bypass"
-          trailing={<span className="sp-permission-enable-text">{t("Enable")}</span>}
-          onClick={() => onEnableBypass()}>{BYPASS_LABEL}</SourceMenu.Item>}
+        {/* 3.6556.2 c227f4d5e: the appended Bypass row `{value:"bypassPermissions",label,checked:!1,noQuickKey:!0,onSelect,
+            trailing:span "pointer-events-none shrink-0 text-footnote text-primary" "Enable" (TqSTI0/TZI),tooltip:"Enable in
+            Claude Code settings" (9aM6b8EJG/)}` has no description (sR fills X[r] only for the base modes). cfca6870a `v`
+            puts an enabled row's tooltip on the Item itself: shared-frame Kl, side inline-end, multiline. */}
+        {!bypassEnabled && bypassOffer === "enable" && onEnableBypass && <SourceTooltip content={t("Enable in Claude Code settings")} side="right" multiline>
+          <SourceMenu.Item className="sp-permission-item sp-permission-enable" label={BYPASS_LABEL} data-permission-action="enable-bypass"
+            trailing={<span className="sp-permission-enable-text">{t("Enable")}</span>}
+            onClick={() => onEnableBypass()}>{BYPASS_LABEL}</SourceMenu.Item></SourceTooltip>}
         {!bypassEnabled && bypassOffer === "blocked" && <SourceMenu.Item className="sp-permission-item" label={BYPASS_LABEL} disabled
           disabledReason={t("Disabled by your organization")} data-permission-action="bypass-blocked">{BYPASS_LABEL}</SourceMenu.Item>}
       </SourceMenu.Group>

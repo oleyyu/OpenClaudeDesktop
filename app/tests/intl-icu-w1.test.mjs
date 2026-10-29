@@ -4,7 +4,9 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 
-let server, i18n, startAdapters, artifactAdapters, homeAdapters, projectAdapters, chatAdapters, previewAddress;
+// w10-cleanup-final: the 2.31226.0 artifact / home / project adapters (useArtifactIntl, ArtifactMessage, useHomeIntl,
+// useProjectIntl) had no importer and were deleted; their two checks went with them.
+let server, i18n, startAdapters, chatAdapters, previewAddress;
 
 before(async () => {
   server = await createServer({
@@ -16,9 +18,6 @@ before(async () => {
   });
   i18n = await server.ssrLoadModule("/electron/i18n/index.mjs");
   startAdapters = await server.ssrLoadModule("/src/source-code-start-adapters.jsx");
-  artifactAdapters = await server.ssrLoadModule("/src/source-artifact-adapters.jsx");
-  homeAdapters = await server.ssrLoadModule("/src/source-home-adapters.jsx");
-  projectAdapters = await server.ssrLoadModule("/src/source-project-adapters.jsx");
   chatAdapters = await server.ssrLoadModule("/src/source-chat-adapters.jsx");
   previewAddress = await server.ssrLoadModule("/src/source-preview-address.jsx");
 });
@@ -51,23 +50,10 @@ test("Y3-W1: useStartIntl and createStartIntl format ICU plural and select expre
   );
 });
 
-test("Y3-W1: useHomeIntl and useProjectIntl reuse useStartIntl and support ICU plural and select", () => {
-  assert.equal(homeAdapters.useHomeIntl, startAdapters.useStartIntl);
-  assert.equal(projectAdapters.useProjectIntl, startAdapters.useStartIntl);
-});
-
-test("Y3-W1: ArtifactMessage and LocalizedMessage components render ICU formatted markup", () => {
+test("Y3-W1: the LocalizedMessage component renders ICU formatted markup", () => {
   const prevLocale = i18n.getLocale();
   i18n.setLocale("en-US");
   try {
-    const artifactHtml = renderToStaticMarkup(
-      React.createElement(artifactAdapters.ArtifactMessage, {
-        defaultMessage: "{count, plural, one {# earlier step} other {# earlier steps}}",
-        values: { count: 3 }
-      })
-    );
-    assert.equal(artifactHtml, "3 earlier steps");
-
     const chatHtml = renderToStaticMarkup(
       React.createElement(chatAdapters.LocalizedMessage, {
         defaultMessage: "{approx, select, yes {~} other {}}{time}",
@@ -130,7 +116,22 @@ test("Y3-W4: SourcePreviewAddress supplies localized labels to AddressField", ()
       })
     );
     assert.match(html, /aria-label="在默认浏览器中打开"/);
-    assert.match(html, /aria-label="重新加载"/);
+    // 3.6556.2 cf550b864-hZr1-4Cn: the field's labels are `oe={address:"Address",openExternal:"Open in default
+    // browser",loading:"Loading page"}` (no `reload`); Reload sits in the navigation row (c224804cc P), which the
+    // pane renders through SourcePreviewNavigation with t('Reload').
+    assert.doesNotMatch(html, /aria-label="(?:重新加载|Reload)"/);
+    const nav = renderToStaticMarkup(
+      React.createElement(previewAddress.SourcePreviewNavigation, {
+        canGoBack: false,
+        canGoForward: false,
+        canReload: true,
+        onBack: () => {},
+        onForward: () => {},
+        onReload: () => {},
+        labels: { navigation: i18n.t("Navigation"), back: i18n.t("Back"), forward: i18n.t("Forward"), reload: i18n.t("Reload") },
+      })
+    );
+    assert.match(nav, /aria-label="重新加载"/);
   } finally {
     i18n.setLocale(prevLocale);
   }

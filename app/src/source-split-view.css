@@ -1,6 +1,8 @@
 /* Split view (source-split-view.jsx). The grid itself is the reference's: the loaded shared-styles sheet
    (index.html) carries .dframe-pane-host (grid tracks from --df-col-tracks, rows from --df-pane-row), .dframe-pane-col
-   (a 1px --cds-border column line), the 12px .dframe-pane-resize-col / -row / -corner hit areas, the extra pane fading
+   (a 1px --cds-border column line), the 12px .dframe-pane-resize-col / -row / -corner hit areas (3.6556.2: the column
+   area is clipped to its trailing 62.5% and only its .dframe-pane-resize-col-no-drag child, the row and the corner are
+   -webkit-app-region: no-drag, so no local app-region rule is added for the column), the extra pane fading
    in (0.18s, none under reduced motion), the unfocused pane dimmed (filter opacity .75 saturate .85), the ⌘-held ring,
    the .dframe-pane-grip and the .dframe-drop-overlay badge. These rules fit the local workspace into it. */
 .split-host {

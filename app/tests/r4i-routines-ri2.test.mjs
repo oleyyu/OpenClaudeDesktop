@@ -1,6 +1,6 @@
 // R4i-routines RI2: the R4g-routines follow-ups.
 //   (1) captureOptions receives the task's kind, and main.cjs captures a new Code task on the connected core (never the
-//       Cowork engine when CODE_DESKTOP_COWORK=1);
+//       Cowork VM engine, which since w13-coworkfn-engine runs only with CODE_DESKTOP_COWORK_ENGINE=vm);
 //   (2) a Code routine in a repository with no commits starts in its folder (2.42304.0 asar index.chunk-BAdej_RQ.js
 //       createWorktree: "Skipping worktree creation - … has no commits yet"), HEAD without a commit in a repository
 //       with refs refuses (unbornHead → git_startup_failed), an unresolved start point falls back to HEAD;
@@ -67,9 +67,10 @@ test('main.cjs captures a new Code task on the connected core (null engine), Cow
   const main = read('electron/main.cjs');
   assert.equal(occurrences(main, 'captureOptions: async (execution, previous, kind) => captureRoutineOptions({ config,'), 1);
   assert.equal(occurrences(main, "...await routineContext(previous?.coreId ?? (kind === 'code' ? null : COWORK_ENGINE)), execution, previous }),"), 1);
-  // routineContext only answers with the Cowork engine for that engine (null goes to the connected core).
+  // routineContext only answers with the Cowork engine for that engine (null goes to the connected core), and since
+  // w13-coworkfn-engine only while the Cowork VM engine is the one in use (the default local-core runs Cowork tasks on the core).
   assert.equal(occurrences(main, 'const routineContext = async (engine = COWORK_ENGINE) => {'), 1);
-  assert.equal(occurrences(main, '    if (engine === COWORK_ENGINE && COWORK_ENABLED) {'), 1);
+  assert.equal(occurrences(main, '    if (engine === COWORK_ENGINE && COWORK_ENABLED && COWORK.engine === COWORK_ENGINE) {'), 1);
   assert.equal(occurrences(read('electron/local-routines.mjs'), 'await captureOptions(p.execution, previous?.options, kind)'), 1);
 });
 
@@ -203,7 +204,7 @@ before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   page = await server.ssrLoadModule('/src/source-code-routines.jsx');
-  coworkStatus = await server.ssrLoadModule('/src/generated/routines-shared/shared-14-u0TSV9dR.mjs');
+  coworkStatus = await server.ssrLoadModule('/src/generated/routines-shared/shared-14-BP8q-CX5.mjs');
 });
 after(async () => { await server?.close(); });
 
@@ -227,9 +228,9 @@ test('the Code form’s Recent folders: getAll over the Code sessions and recent
     { sessionId: 's1', cwd: '/work/repo/.code/worktrees/wt', createdAt: 1_760_000_000_000, lastActivityAt: 1_760_000_100_000, originCwd: '/work/repo', folderExists: true, isScratchWorkspace: false },
     { sessionId: 's3', cwd: '/scratch/x', createdAt: Date.UTC(2026, 9, 1), lastActivityAt: Date.UTC(2026, 9, 1), originCwd: '/scratch/x', isScratchWorkspace: true },
   ]);
-  // The official list (c749529a1 O) keeps the worktree session's repository and drops the scratch workspace.
-  const recent = await server.ssrLoadModule('/src/generated/code-routines/c749529a1-Bq5B67O8.mjs');
-  assert.deepEqual(recent.O(rows, [{ path: '/detected/project', lastActivity: 1 }]), [{ path: '/work/repo' }, { path: '/detected/project' }]);
+  // The official list (3.6556.2 c749529a1 k, the 2.42304.0 O) keeps the worktree session's repository and drops the scratch workspace.
+  const recent = await server.ssrLoadModule('/src/generated/code-routines/c749529a1-CBmAknRk.mjs');
+  assert.deepEqual(recent.k(rows, [{ path: '/detected/project', lastActivity: 1 }]), [{ path: '/work/repo' }, { path: '/detected/project' }]);
   // No Code session with a folder: nothing is asked.
   source = { sessions: [], metadata: {} };
   requests.length = 0;

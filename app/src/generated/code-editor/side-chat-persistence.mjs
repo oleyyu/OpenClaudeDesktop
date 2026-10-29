@@ -1,22 +1,24 @@
-// Original stored panel rectangle parser; storage object supplied by host.
+// Original stored panel rectangle parser (zod schema); storage object supplied by host.
+import { y as s, T as r, w as o, N as n } from "../mcp-app-host/zod.mjs";
+var Fi = s(() =>
+  r({ left: o(), top: o(), width: o(), height: o(), viewport: n().optional() }),
+);
+var Ii = s(() => r({ width: o(), height: o() }));
+function Ri(e) {
+  let t = Ii.safeParse(e);
+  return t.success ? t.data : void 0;
+}
 export function readSideChatPanelRect(localStorage, key) {
-  function Xn(e) {
+  function Li(e) {
     try {
-      let t = JSON.parse(localStorage.getItem(e) ?? "null");
-      if (typeof t != "object" || !t) return null;
-      let { left: n, top: r, width: i, height: a, viewport: o } = t;
-      if (![n, r, i, a].every(Number.isFinite)) return null;
-      let s = { left: n, top: r, width: i, height: a },
-        c = Zn(o);
-      return c ? { ...s, viewport: c } : s;
+      let t = Fi.safeParse(JSON.parse(localStorage.getItem(e) ?? "null"));
+      if (!t.success) return null;
+      let { viewport: n, ...r } = t.data,
+        i = Ri(n);
+      return i ? { ...r, viewport: i } : r;
     } catch {
       return null;
     }
   }
-  function Zn(e) {
-    if (typeof e != "object" || !e) return;
-    let { width: t, height: n } = e;
-    return [t, n].every(Number.isFinite) ? { width: t, height: n } : void 0;
-  }
-  return Xn(key);
+  return Li(key);
 }

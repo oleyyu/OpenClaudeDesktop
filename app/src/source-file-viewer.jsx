@@ -56,7 +56,7 @@ export const FILE_VIEWER_LABELS = Object.freeze({
   // The subheader Eye/Code toggle (cd2efac6e :4169-4186).
   preview: t("Preview"),
   viewSource: t("View source"),
-  // EpitaxyCsvPreview (cd5fd9055-AkFKEmX0.js).
+  // EpitaxyCsvPreview (3.6556.2 cd5fd9055-BXQRn_nx.js b).
   tablePreview: t("Table preview"),
   csvEmpty: t("This file is empty"),
   csvError: t("Couldn’t parse this file as a table"),
@@ -423,7 +423,7 @@ function SourceFileMarkdown({ text, renderMarkdown, typography = "epitaxy" }) {
   </div>;
 }
 
-// Current cd5fd9055: original pane/document component, including filtering,
+// Current cd5fd9055 (3.6556.2 b, cc-rest-csv): original pane/document component, including filtering,
 // stable sorting, numeric cells and both upstream/parser truncation notices.
 export function SourceFileCsv({ text, delimiter, presentation = "pane", truncatedUpstream = false }) {
   return <div data-file-viewer="" data-file-preview="csv" className={presentation === 'document'
@@ -643,7 +643,8 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
   // Find in file (Yi / Xi): ⌘F in the viewer or the pane menu's "Find in file" (findRequest bumps) opens the bar on
   // the source; Escape closes it and puts the focus back in the viewer.
   const searchable = !media && !reason && typeof file.text === "string";
-  const [find, setFind] = useState({ open: false, query: "", index: -1, nonce: 0, options: getSearchOptions() });
+  // scrollNonce is zs's m: setQuery (Hs), toggleOption (Vs) and next/prev (Bs) bump it, so the editor re-reveals the hit (Jo Pr).
+  const [find, setFind] = useState({ open: false, query: "", index: -1, nonce: 0, scrollNonce: 0, options: getSearchOptions() });
   const findInput = useRef(null);
   const root = useRef(null);
   const editorApi = useRef(null);
@@ -676,13 +677,13 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
       setContinuedSearch({ initial: initialSearch, result });
       if (result.partial && index >= result.matches.length - 1) return;
     }
-    setFind(value => ({ ...value, index: stepFindIndex(index, delta, result.matches.length) }));
+    setFind(value => ({ ...value, index: stepFindIndex(index, delta, result.matches.length), scrollNonce: value.scrollNonce + 1 }));
   }, [searchResult, initialSearch, index, matches.length, file.text, find.query, find.options]);
   const toggleFindOption = key => {
     const options = rememberSearchOptions({ ...find.options, [key]: !find.options[key] });
     const line = matches[index]?.line ?? editorApi.current?.caret()?.line;
     const result = searchInText(file.text, find.query, options);
-    setFind(value => ({ ...value, options, index: firstMatchFrom(result.matches, line) }));
+    setFind(value => ({ ...value, options, index: firstMatchFrom(result.matches, line), scrollNonce: value.scrollNonce + 1 }));
   };
   useEffect(() => { if (find.open) { findInput.current?.focus(); findInput.current?.select(); } }, [find.open, find.nonce]);
   const lastRequest = useRef(findRequest);
@@ -693,9 +694,10 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
     appliedContentFind.current=contentFind;
     const options=contentFind.findOptions??getSearchOptions(),result=searchInText(file.text,contentFind.findQuery,options);
     setShowSource(true);onViewModeChange?.('source');
-    setFind(value=>({...value,open:true,query:contentFind.findQuery,options,index:firstMatchFrom(result.matches,contentFind.line),nonce:value.nonce+1}));
+    setFind(value=>({...value,open:true,query:contentFind.findQuery,options,index:firstMatchFrom(result.matches,contentFind.line),nonce:value.nonce+1,scrollNonce:value.scrollNonce+1}));
   },[contentFind,searchable,file.text,onViewModeChange]);
-  const findProps = useMemo(() => (find.open ? { matches, index } : null), [find.open, matches, index]);
+  // Jo's findHighlight carries the query, options and scrollNonce (cd2efac6e dh); the editor settles only for the same query.
+  const findProps = useMemo(() => (find.open ? { query: find.query, options: find.options, matches, index, scrollNonce: find.scrollNonce } : null), [find.open, find.query, find.options, find.scrollNonce, matches, index]);
   const preview = canToggle && !showSource ? kind : null;
   const [loadedImage, setLoadedImage] = useState(null);
   const imageSource = media === 'image' ? filePreviewUrl(fullPath || file.path) : preview?.kind === 'svg' ? svgPreviewUrl(file.text) : null;
@@ -734,9 +736,10 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
   } : null), [fileMenu, file.unavailable]);
   const selectBodyItem = (item) => {
     if (item.disabled) return;
-    // md: "Copied to clipboard." once the copy lands.
+    // cd2efac6e eg: `Qh().then((e) => { e && Zt("Copied to clipboard.") })`; Qh is shared-1 CR's copyToClipboard, which
+    // resolves false on a failed write and shows nothing.
     if (item.action === "copy-file-contents") void Promise.resolve().then(() => navigator.clipboard.writeText(file.text))
-      .then(() => toasts?.add(t("Copied to clipboard."), { variant: "neutral" }), () => toasts?.add(t("Couldn’t copy to clipboard."), { variant: "danger" }));
+      .then(() => toasts?.add(t("Copied to clipboard."), { variant: "neutral" }), () => {});
     else if (item.action === "download-file") onDownload?.(file.text);
     // R4i-files FI1 (files-12): 2.42304.0 c26fb8b6b Le — addSuccess "Image copied to clipboard." (wxBR7bytpr), addError
     // "Couldn’t copy image." (mpiKUCMipZ). addSuccess is the neutral CDS toast here (source-routines-shared-adapters).
@@ -800,7 +803,7 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
         {t(editState.error.status !== 'conflict' ? 'Try again' : editState.error.currentHash === null ? 'Save anyway' : 'Override')}</SourceSettingsButton>}
     </div>}
     {find.open && searchable && <SourceFileFindBar query={find.query} options={find.options} result={searchResult} onToggle={toggleFindOption} status={findStatus(matches, index)} inputRef={findInput}
-      onQuery={(query) => setFind((value) => ({ ...value, query, index: 0 }))}
+      onQuery={(query) => setFind((value) => ({ ...value, query, index: 0, scrollNonce: value.scrollNonce + 1 }))}
       onNext={() => stepFind(1)} onPrev={() => stepFind(-1)} onClose={closeFind} />}
     <div ref={bodyRef} className="sfv-body" data-popup-open={bodyMenu ? "" : undefined} onContextMenu={fileMenu ? openBodyMenu : undefined} onKeyDown={fileMenu ? openBodyMenu : undefined}>{body}</div>
     {bodyMenuEntries?.length > 0 && <SourceMenu.Popup anchor={bodyRef.current} point={bodyMenu.point} trigger={null} side="bottom" align="start"

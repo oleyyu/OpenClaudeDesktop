@@ -1,5 +1,5 @@
 // Original side tool announcement; host supplies the intl formatter.
-function rT(e, t) {
+function gF(e, t) {
   switch (e.tool) {
     case "Read":
       return e.detail
@@ -33,4 +33,4 @@ function rT(e, t) {
       });
   }
 }
-export { rT as sideChatToolAnnouncement };
+export { gF as sideChatToolAnnouncement };

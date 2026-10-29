@@ -8,15 +8,26 @@ import { SourceRoutines } from './source-routines.jsx';
 import { SourceCodeRoutines } from './source-code-routines.jsx';
 import { threadPermissionParams, turnPermissionParams, approvesPlan, afterPlanPermission, approvedPlanPermission, workflowAccess, planImplementationTurn, bypassAvailability as requirementsBypass } from '../electron/permission-policy.mjs';
 import { sessionSurface, surfaceSessions, surfaceDraftKey, surfaceInstructions, validSurface } from '../electron/surface-policy.mjs';
+// w13-surfaces-modes: the 3.6556.2 desktop surface list (shared-78 mY), home mode (shared-21 rT) and saved-mode restore.
+import { desktopSurfaces, homeModeFor, resolveSurface } from './app-switch-model.mjs';
+// V3-w13-surfaces-menus: the Home segment name (shared-21 cT) labels the Go menu area (shared-22 $P n[e].label).
+import { homeNameFor } from './app-switch-model.mjs';
 import { codeRewindServed, codeForkServed, coworkRewindBridge, coworkRewindCapabilities, isCoworkSession } from './cowork-session-capabilities.mjs';
 import { coworkSessionActions, coworkSessionHost, lastHumanMessage } from './cowork-session-actions.mjs';
 import { SourceUserMessageEdit, coworkMessageEdits, useCoworkMessageEdit } from './source-user-message-edit.jsx';
 import { SourceArtifactLibrary } from './source-artifact-library.jsx';
 import { SourceProjects } from './source-projects.jsx';
-import { SourceSurfaceGreeting, SourceSurfaceHome, homeScrollClass, SourceCoworkProgress, SourceCoworkComingSoon } from './source-surfaces.jsx';
+import { SourceNewProjectDialog } from './source-new-project-dialog.jsx'; // w13-close-chat-projects-memory
+import { SourceSurfaceGreeting, SourceSurfaceHome, homeScrollClass, SourceCoworkProgress, coworkStepRow, revealCoworkStep } from './source-surfaces.jsx';
+// w13-chatui-home: the Chat greeting is the 3.6556.2 shared-23 Dy choice ("You’re here!" unless a local greeting slot applies).
+import { SourceChatGreeting } from './source-chat-home.jsx';
+import { SourceChatMessageActions, useChatFeedback, useChatBranches, withChatBranchMetadata, turnAttachments } from './source-chat-message-actions.jsx'; // w13-chatui-message-actions, w13-chatfn-branches, w13-close-chat-messages
+import { incognitoLeft, isIncognitoSession, withIncognito } from './chat-incognito-model.mjs'; // w13-chatfn-history
+import { retryPrompt } from './chat-feedback-model.mjs'; // w13-chatui-message-actions
 import { SourceCoworkHome } from './source-cowork-home.jsx';
+import { SourceCoworkSessionStates } from './source-cowork-session-states.jsx';
 // R4f-proposal P5: the transcript's inline proposal group card (2.42304.0 c96d752d0 R$ / z$ → B$, presets-on branch, D10).
-import { useProposalCards, proposalCardsActive, withoutProposalCardTools, ProposalTurnCard, ProposalFeedEnd } from "./source-proposal-host.jsx";
+import { useProposalCards, proposalCardsActive, withoutProposalCardTools, ProposalTurnCard, ProposalFeedEnd, ProposalTranscriptScope } from "./source-proposal-host.jsx";
 import { SourceCodeStart } from "./source-code-start.jsx";
 import { startSessions } from "./code-start-host-model.mjs";
 import { SourceTaskBacklog } from "./source-task-backlog.jsx";
@@ -124,20 +135,22 @@ import { gitRepoMenuItems, COMMIT_RESPONDING_REASON, pullRequestAction, CREATE_P
 import { sessionPullRequestUrl } from "./sidebar-palette-model.mjs";
 import { humanPrompts } from "./prompt-history-model.mjs";
 import { composerPlaceholder, composerFirstRun } from "./composer-placeholder.mjs";
-import { SourceQueuedMessages } from "./source-queued-messages";
+import { SourceQueuedMessages, useQueuedBandExit } from "./source-queued-messages";
 import { stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, isMaxImagesNotice, MAX_IMAGES_TIMEOUT, makeSnippet, addSnippet, removeSnippetByKey, snippetText, coreTakesFileMentions, modelAcceptsImages, skillChipInput, IMAGE_PROCESS_ERROR, basename as attachmentBasename, shownThread, shownUserItem, shownUserItems, shownTurns, shownQueueList, firstMessageName } from "./composer-attachments-model.mjs";
 import { draftKey as sessionDraftKey, saveDraft, takeDraft, clearDraft, mapDraftAttachments, HOME_DRAFT_KEY, browserStorage, persistDraft, readPersistedDraft, forgetDraft } from "./composer-draft-store.mjs";
 import { makeSelectedElementAttachment, addSelectedElementAttachment, selectedElementInputs } from './preview-element-attachments.mjs';
 import { IMAGE_FALLBACK_NOTE, imageRefusedNotice } from './composer-attachments-model.mjs';
 import { planFolderIntake, planFolderPaste, folderGrantError } from "./composer-attachments-model.mjs";
 import { createCustomizeStore } from "./customize-store.mjs";
-import { skillInvocable, skillMenuItems, pluginMenuGroups } from "./customize-model.mjs";
+import { skillInvocable, skillMenuItems, pluginMenuGroups, pluginMenuRows } from "./customize-model.mjs";
 import { agentMentionText, mentionInputs, sessionMentionMatches, agentMentionMatches, sessionMentionsBlock } from "./mention-model.mjs";
 import { githubIssueUnavailableMessage, issueSelection, withIssueBody, githubIssueContext, withIssueContext } from "./github-issue-model.mjs";
 import { SourceGithubIssuePicker } from "./source-github-issue-picker.jsx";
-import { emptyQueue, queueFromList, previewText, steerInputText, steerTextCount, submitLane, optimisticRemove, optimisticReorder, lockEntry, unlockEntry, editableDraft, isNotSteerable, lastDequeueable, canSendNow, restoredOrder } from "./queued-messages-model.mjs";
+import { emptyQueue, queueFromList, previewText, steerInputText, steerTextCount, submitLane, optimisticRemove, optimisticReorder, lockEntry, unlockEntry, editableDraft, isNotSteerable, lastDequeueable, canSendNow, restoredOrder, queuedEntryLanded } from "./queued-messages-model.mjs";
 import { rpcResult } from "./rpc-error.mjs";
 import { SourceModelMenu } from "./source-model-menu";
+import { SourceChatModelMenu } from "./source-chat-model-menu.jsx"; // w13-close-chat-composer
+import { ChatImageLimitNotice } from "./source-chat-composer.jsx"; // w13-close-chat-composer
 import { SourceMenu } from "./source-menu";
 import { SourceToolsMenu } from "./source-tools-menu.jsx";
 import { SourceOnboarding } from "./source-onboarding.jsx";
@@ -180,9 +193,12 @@ import { SourceSessionErrorBoundary } from "./source-session-error-boundary.jsx"
 import { SourceAutoResumeStatus } from "./source-auto-resume-status.jsx";
 import { nextResumeAnnouncement, retryFailedTurnFlow, runAutoResumeAfterLimit, scheduleComposerFocus } from "./retry-failed-turn-model.mjs";
 import { turnEdits, undoTurnText, fileChangesDiff } from "./turn-edits-model.mjs";
+import { autoOpenTarget, autoOpenSessionState } from "./auto-open-files-watch.mjs"; // V3-w10-shell-auto-open-behavior
+import { autoOpenFilesEnabled } from "./auto-open-files-model.mjs"; // V3-w10-shell-auto-open-behavior
 import { editInvalidation } from "./file-live-refresh-model.mjs";
 import { SourceTurnEdits } from "./source-turn-edits.jsx";
 import { matchDiffPath, requestDiffReveal } from "./diff-reveal.mjs";
+import { annotationClickTarget } from "./composer-attachments-model.mjs"; // w12c-wiring (w12b-changes-files §3 cf-01)
 import { parseUnifiedDiff } from "./diff-model";
 import { diffFileEntries, INLINE_PATCH_BUDGET, lazyDiffScope } from "./diff-file-list-model.mjs";
 import { SourceRecapCard } from "./source-recap-card.jsx";
@@ -193,6 +209,14 @@ import { SourceResumeDialog } from "./source-resume-dialog.jsx";
 import { autoCompactHint } from "./context-usage-model.mjs";
 import { MCP_STATUS_LABELS, customizeCore } from "./customize-model.mjs";
 import { addConnectorsEntry, addPluginsEntry } from "./add-menu-model.mjs";
+import { AddPluginsPopup } from "./source-add-plugins-menu.jsx";
+// w13-chatfn-attachments: Chat documents converted to text, the Chat image budget, Add › Take a screenshot.
+import { pendingConversions, conversionPatch, conversationImageCount, imageLimitNotice, SCREENSHOT_ICON, SCREENSHOT_TESTID } from "./chat-attachment-model.mjs";
+// w13-chatfn-tools: the Chat + menu (c752b32f8 Js) and its Web search / Research switches.
+import { ChatAddMenuItems, chatAddMenuEntries, chatAddMenuSlots } from "./source-chat-tools-menu.jsx";
+import { ChatProjectPopup } from "./source-chat-project-popup.jsx";
+import { chatSettingsFor, chatThinkingSection, chatToolSlots, chatToolsMessages, searchSupport, toggleResearch, toggleThinking, toggleWebSearch, webSearchNudge } from "./chat-tools-model.mjs";
+import { ChatMessageWarning } from "./generated/chat-messages/message-warning.mjs"; // w13-chatfn-tools: cc1aae219 eP
 import { SourceSwitch } from "./source-switch.jsx";
 import { CodexFeedbackDialog } from "./source-codex-feedback.jsx";
 import { retryingStatus, spawnPhaseLabel } from "./transcript-status-model.mjs";
@@ -205,8 +229,9 @@ import { runCopyReply } from "./composer-copy-reply.mjs";
 import { approvalHandBackFocus, createdSessionFocus, forkAutoSendFocus, goalEditFocus, restoredTextFocus, selectionReplyFocus } from "./composer-focus-handoff.mjs";
 // R3-composer composer-shell review fix: the Code card is a div since step 3, so outside callers submit through the composer element.
 import { requestComposerSubmit } from "./composer-submit-request.mjs";
-// R3-composer blue-bg-02: the 2.42304.0 Code landing texture host (cc43287c9 mH, generated by extract-landing-texture.mjs).
-import { LandingTextureHost } from "./generated/landing-texture/host.mjs";
+// w10-shell-submit-queue (3.6556.2 c227f4d5e wF Xt / gs): editing the draft drops a held start; its release waits while the composer is disabled or a send is in flight.
+// w11-submit-queue-wiring: a send in flight holds the next one (busy Send), a failed send or restored text drops it, /fork's prompt goes through the co queue.
+import { createEditorSubmitQueue, dropHeldSubmit, heldStartReleaseWaits, heldSubmitQueued, holdSubmitWhileInFlight, trackHeldStartText } from "./composer-submit-queue.mjs";
 import { runSubtask } from "./r3b-tasks-subtask.mjs";
 import { turnSecondsToMs } from "./relative-time-model.mjs";
 import { useTurnFooterInteraction } from "./use-turn-footer-interaction.js";
@@ -243,15 +268,30 @@ import { carriedOverDiff } from "./diff-scope-model.mjs";
 import { sessionsPageRoute, isSessionsPageRoute, replaceSessionsPageSurface } from "./sessions-page-navigation.mjs";
 import { clearSessionsPageSearches, sessionsPageAccountScope } from "./sessions-page-search-state.mjs";
 import { SourceSessionsPage } from "./source-sessions-page.jsx";
+// w13-chatui-chats-page: the Chat mode Chats page (3.6556.2 c623cddd3 H with the shared-78 gv chat copy).
+import { SourceChatsPage } from "./source-chats-page.jsx";
+// w13-chatfn-artifacts: Chat artifacts' transcript chip and side panel (cc1aae219 chip, ca2ef848d file detail view).
+import { SourceChatArtifactPanel } from "./source-chat-artifact-panel.jsx";
+// w13-chatui-artifact-inline: a Chat's artifacts call is the official artifact block (cc1aae219 Y3 → shared-9 sO, artifact-block-cell).
+import { SourceChatArtifactCard, restoreChatArtifactTrigger } from "./source-chat-artifact-card.jsx";
+import { artifactToolCall, withArtifactChips } from "./chat-artifact-model.mjs";
 import { SourceSidebar, SourceSidebarBoundary, SourceSidebarMenu, SourceSidebarSessionMenu, SessionKeepAwakeItem, SourceConfirmDialog, deleteConfirmCopy } from "./source-sidebar";
 import { SourceSessionDeleteDialog, SourceWorktreeDirtyDialog } from "./source-worktree-dispose-dialog.jsx";
 import { SidebarBulkWorktreeConfirm } from "./source-sidebar-bulk-worktree.jsx";
 import { connectWorktreeConfirmQueue, worktreeConfirmVariant, sessionWorktreeGate, worktreeGatedAction, settleWorktreeQueue } from "./sidebar-bulk-model.mjs";
 import { RENAME_START_DELAY_MS, renameSubmission, renameSubmittable } from "./session-title-menu-model.mjs";
+// w13-close-cowork-sidebar (chatui-sidebar-star-02): a Chat session's title menu, ca2ef848d F5 → shared-16 om / fm.
+import { SourceChatTitleMenu } from "./source-chat-row-menu.jsx";
+import { SourceChatProjectMenuItems } from "./source-project-knowledge.jsx";
+import { CHAT_TITLE_DELETE_DELAY_MS, CHAT_TITLE_MENU_MESSAGES, TURN_INTO_SKILL_PROMPT, chatDeleteConfirmCopy } from "./chat-starred-model.mjs";
 import { titlebarFoldedToggles, titlebarRailMenuItems } from "./titlebar-controls-model.mjs";
+import { titlebarSpawnSource } from "./titlebar-spawn-lead-model.mjs"; // w12c-wiring (w12b-titlebar-spawn-lead §6)
 import { useSessionRail, useSessionRailHidesBand, SessionRailShownScope, SessionRailRow, SessionRailChatBody, SessionRailColumn } from "./source-session-rail.jsx";
+import { openRailTask } from "./source-session-rail-sections-adapters.jsx";
+import { sessionMcpSettingsPage } from "./session-rail-connectors-model.mjs";
 import { SourceMessage as Message, SourceApproval as Approval, SourceFilePanel as FilePanel, SourcePlanHandoffCard, sessionHasThinking, SourceMarkdown } from "./source-session";
 import { CardComposerContext } from "./use-card-hotkeys.js";
+import { SourceCoworkToolApproval, coworkApprovalApplies } from "./source-cowork-approval.jsx"; // w13-coworkui-approval
 import { pendingCommandItemIds } from "./command-row-model.mjs";
 import { approvalItem, pendingElicitationItemIds, planHandoff } from "./approval-card-model.mjs";
 import { setCodeThemes } from "./code-theme-store.mjs";
@@ -274,15 +314,13 @@ import { initialAppearance, parseThemeCommand, resolveThemeMode, writeThemeMode,
 import { applyCjkOrder } from "./cjk-order.mjs";
 import { applyCustomTheme, themeDensity } from "./theme-custom-model.mjs";
 // R4g-composer CP1 (X7-07): the original CDS root (shared-frame Za) around the Code composer.
-import { CdsRoot } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+import { CdsRoot } from "./generated/view-tabs/index.js";
+import { SourceIncognitoShell, frameShellMounted } from "./source-incognito-shell.jsx"; // w13-close-chat-surface (E77)
+import { CdsIcon } from "./generated/view-tabs/index.js"; // w12c-wiring: the account menu's Learn more links (cd75f6c8c X)
+import { CdsLocaleContext } from "./generated/view-tabs/index.js"; // w11-sweep-rest: the root CDS locale (below)
 // R4i-graph GR2 (Y1-R3-graph-1): the app root's CDS labels (shared-23 UG passes CdsRoot `labels: Ev()`); see cds-labels.mjs.
-import { CdsLabelsContext } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+import { CdsLabelsContext } from "./generated/view-tabs/index.js";
 import { cdsLabels } from "./cds-labels.mjs";
-// R4i-graph fix: the Chat graphs (2.2553.1 chat / 2.31226.0 current-chat shared-frame) each hold their own labels
-// context (Ft / mn, read by their Z the way view-tabs Z reads vn; nothing in those graphs provides it), so the root
-// gives each the same host labels.
-import { Ft as ChatCdsLabelsContext } from "./generated/chat/shared-frame-C_2npUJq.js";
-import { mn as CurrentChatCdsLabelsContext } from "./generated/current-chat/shared-frame-DVFSKIcx.js";
 import { codePaneExperimental } from "./generated/code-composer/code-pane-experimental.mjs";
 // R4i-graph GR3: the Code session pane's drop zone (cc43287c9 YI over c4c113f6f f), see source-composer-pane-drop.jsx.
 import { SourcePaneDropZone } from "./source-composer-pane-drop.jsx";
@@ -305,6 +343,10 @@ import { btwTabMenuState } from "./btw-tab-menu-model.mjs";
 import { useShownSession, markUnreadUnlessShown } from "./generated/btw-pane/shown-session.mjs";
 import { useBtwReadStateHost, useReportShownSession } from "./btw-read-state.mjs";
 import { SourceSideChat, askSideQuestion } from "./source-side-chat.jsx";
+// w13-close-chat-sidechat (G9): Chat's own side chat (ca2ef848d T1, generated chat-side-chat) and its store.
+import { SourceChatSideChat } from "./source-chat-side-chat.jsx";
+import { chatSideChatStore, useChatSideChatOpen } from "./generated/chat-side-chat/side-chat-store.mjs";
+import { chatSideChatInheritedCount } from "./chat-side-chat-model.mjs";
 import { t, tn } from "../electron/i18n/index.mjs";
 import { sessionOutputFiles, mergeSessionOutputMatches } from './mention-output-model.mjs';
 import { coreAssistant, coreById, coreForEngine, coreName, coreSupports, hasSignInOptions, registerCores } from "../electron/core-registry.mjs";
@@ -368,7 +410,11 @@ const SESSION_POPOUT = SESSION_POPOUT_WINDOW;
 // in main window, Keep window on top). Its ⌘W closes the window, which docks the pane back; other commands belong to
 // the window showing the session. PANE_WINDOW: { pane, sessionId, cwd } or null.
 const NO_SIDEBAR = SESSION_POPOUT || !!PANE_WINDOW;
-const MENU_COMMANDS = new Set(["new-session", "new-session-current", "open-folder", "open-file", "toggle-pane", "close-pane", "close-session", "reopen-closed", "open-shortcuts", "cycle-session", "open-search", "find-in-files"]);
+// w13-close-main-jsx-tests (E63 panel-live-05, B): the Cowork panel's gate answers. shared-78 vR
+// "cowork_computer_use_side_panel_card" (yR/bR, AT's Vn) is answered on, as the Code rail's computer-use card already is
+// (E49/E53); every other gate stays at the official default (off).
+const COWORK_PANEL_GATES = Object.freeze({ cowork_computer_use_side_panel_card: true });
+const MENU_COMMANDS = new Set(["new-session", "new-session-current", "open-folder", "open-file", "toggle-pane", "close-pane", "close-session", "reopen-closed", "open-shortcuts", "cycle-session", "open-search", "find-in-files", "select-area"]);
 const call = (action, p) =>
   api
     ? api.call(action, p)
@@ -468,6 +514,9 @@ function App({ side = 0, initialSession = null }) {
   const setMode = value => { modeRef.current = value; setModeState(value); };
   const [projectDraftId, setProjectDraftId] = useState(null);
   const projectDraftRef = useRef(null);
+  // w13-close-chat-projects-memory: shared-16 xf / c752b32f8 Es — a picker's create row opens the New project dialog with
+  // the typed name; { sessionId } then moves that session into the new project, { draft: true } gives it to the draft.
+  const [newProjectFor, setNewProjectFor] = useState(null);
   const homeKey = (surface, projectId) => surfaceDraftKey(surface, side) + (projectId ? `:project-${projectId}` : '');
   const homeDraftKey = homeKey(mode, projectDraftId);
   const draftKey = (sessionId, surface = modeRef.current, projectId = projectDraftRef.current) => (typeof sessionId === "string" && sessionId ? sessionDraftKey(sessionId) : homeKey(surface, projectId));
@@ -610,10 +659,10 @@ function App({ side = 0, initialSession = null }) {
     [pinnedOrder, setPinnedOrder] = useState([]),
     // Fidelity F08: persisted Folder/Custom section order (main.cjs sidebar-state "project-order"),
     // cwd -> repo identity for the Folder grouping (main.cjs "repo-identities"), and the collapsed
-    // sidebar's hover peek (shared-2 store hovering/peeked + the trigger geometry for the card).
+    // sidebar's hover peek (shared-2 store hovering/peeked; the drawer is placed by the loaded [data-collapsed] rules).
     [projectOrder, setProjectOrder] = useState([]),
     [repoIdentities, setRepoIdentities] = useState({}),
-    [peek, setPeek] = useState({ hovering: false, peeked: false, top: 46, left: 6 }),
+    [peek, setPeek] = useState({ hovering: false, peeked: false }),
     [confirmDelete, setConfirmDelete] = useState(null),
     // shared-19 cK/yK → SK: archive / bulk-delete confirms of dirty worktrees wait in a queue, SK shows its head.
     [worktreeQueue, setWorktreeQueue] = useState([]),
@@ -874,6 +923,9 @@ function App({ side = 0, initialSession = null }) {
   const knownThread = (id) => sessionsRef.current.find((thread) => thread.id === id);
   const items = state.items[current] || [],
     running = !!state.active[current];
+  // w12c-wiring (w12b-composer §7.1; cc43287c9 Jfe `{entries:p,exiting:f,onExited:d}`): the queued band keeps the last
+  // entry while it exits once that entry has landed in the transcript (PM), then unmounts on its animation end.
+  const queueBand = useQueuedBandExit(current && queue.threadId === current ? queue.entries : [], current, (entry) => queuedEntryLanded(entry, items));
   // cc70f2bdf Ko h / git-chips M I: `Ke(u, text).then(e => e === "written" && addSuccess(message))`;
   // a rejected write raises no success toast and keeps the app error path.
   const toasts = useSourceToasts();
@@ -1095,6 +1147,12 @@ function App({ side = 0, initialSession = null }) {
     }, () => {});
     return () => { live = false; };
   }, [current, ratingsCore, loading]);
+  // w13-chatfn-artifacts: the Chat artifact open beside the conversation ({threadId, id}), from a chip in the transcript.
+  const [chatArtifact, setChatArtifact] = useState(null);
+  // w13-chatui-message-actions: Chat's Good / Bad response, kept locally (electron/chat-feedback.mjs), toast "Feedback sent".
+  const chatFeedback = useChatFeedback({ threadId: mode === "chat" ? current : null, call,
+    onSent: useCallback(() => toasts?.add(t("Feedback sent"), { variant: "neutral" }), [toasts]),
+    onError: useCallback((e) => toasts?.add(e.message, { variant: "danger" }), [toasts]) });
   const rateReply = async (threadId, itemId, rating) => {
     const known = messageRatings[threadId]?.[itemId] ?? null;
     const next = known?.rating === rating ? null : rating;
@@ -1477,19 +1535,25 @@ function App({ side = 0, initialSession = null }) {
   // The ⌘K search's 'Start a session' row (official palette 'Write a message…' + Send): the text goes to the Home composer
   // and is sent there, in the Home folder, core and mode, as a Home send would.
   const pendingSearchSend = useRef(null);
-  const startSessionFromSearch = (text) => {
+  // w13-close-cowork-ui scheduled-03 (ccd3f68fe nu `y({prompt:t.text,title:m.formatMessage($l[e.title]),…})`): a Scheduled
+  // page template's task is created under the template's title; the send names the new session with it.
+  const pendingSearchTitle = useRef(null);
+  const startSessionFromSearch = (text, surface, { title } = {}) => {
     if (!text || settings) return;
     pendingSearchSend.current = text;
-    navigate(null);
+    pendingSearchTitle.current = typeof title === "string" && title.trim() ? title.trim() : null;
+    navigate(null, surface ? { surface } : undefined); // surface: a Scheduled page template's Cowork task (w13-close-cowork-ui)
     // After the Home view restored its own draft: the search text replaces it; an unsent one is dropped after a moment.
     setTimeout(() => setDraft(text), 0);
-    setTimeout(() => { if (pendingSearchSend.current === text) pendingSearchSend.current = null; }, 3000);
+    setTimeout(() => { if (pendingSearchSend.current === text) { pendingSearchSend.current = null; pendingSearchTitle.current = null; } }, 3000);
   };
   useEffect(() => {
     const text = pendingSearchSend.current;
     if (!text || current || draft !== text) return;
+    const title = pendingSearchTitle.current;
     pendingSearchSend.current = null;
-    void send();
+    pendingSearchTitle.current = null;
+    void send(title ? { title } : undefined);
   });
   // File › Open File… (⌘O): a file in the open session's folder opens in its Files pane; any other starts a session draft
   // in the file's folder and opens it once that session starts (pendingFileOpen).
@@ -1919,7 +1983,7 @@ function App({ side = 0, initialSession = null }) {
   const [searchMatches, setSearchMatches] = useState(null);
   useEffect(() => {
     const term = search.trim();
-    if (term.length < 2 || !boot?.connected || !coreSupports(boot?.core, "threadSearch")) { setSearchMatches(null); return; }
+    if (term.length < 2 || !boot?.connected || !(coreSupports(boot?.core, "threadSearch") || mode === "chat")) { setSearchMatches(null); return; } // w13-chatfn-history: Chat searches the local index without thread/search
     let live = true;
     const timer = setTimeout(() => {
       call("thread-search", { searchTerm: term }).then((result) => {
@@ -1927,7 +1991,7 @@ function App({ side = 0, initialSession = null }) {
       }, () => { if (live) setSearchMatches(null); });
     }, 300);
     return () => { live = false; clearTimeout(timer); };
-  }, [search, boot?.connected, boot?.core]);
+  }, [search, boot?.connected, boot?.core, mode]);
   const groups = useMemo(() => {
     const g = {};
     // The ⌘K palette's query never filters the sidebar (source-sidebar-palette.jsx searches on its own).
@@ -2261,11 +2325,24 @@ function App({ side = 0, initialSession = null }) {
   function heldStartKeyNow() {
     return currentHeldStartKey({ current, workdir, worktree, branchCheckRef, workspaceInfo });
   }
-  // OP gt / Ni (parent: gh || releaseQueuedSubmit()): a held start goes out once the check settles with its key unchanged,
-  // and is dropped (the draft keeps its text) when the key changes or the dirty-tree dialog opens.
+  // w10-shell-submit-queue (3.6556.2 c227f4d5e wF `Xt.current!==null&&Xt.current.text!==e&&en()`): the held start keeps
+  // the draft text it was held with (stamped here, before the settle effect below looks at it); an edit drops it and the
+  // edited draft stays unsent.
+  // w11-submit-queue-wiring: a drop is en's `Qt(!1)` too — the busy Send (heldSubmitQueued) re-renders.
   useEffect(() => {
+    if (trackHeldStartText({ heldStart, text: draft }) === "drop") bumpHeldStart();
+  }, [draft, heldRevision]); // eslint-disable-line react-hooks/exhaustive-deps
+  // OP gt / Ni (parent: gh || releaseQueuedSubmit()): a held start goes out once the check settles with its key unchanged,
+  // and is dropped (the draft keeps its text) when the key changes or the dirty-tree dialog opens. w10-shell-submit-queue
+  // review fix (3.6556.2 wF gs `zt.current||Yt.current`, re-run by `!Qe&&!e&&!Rt&&gs()`): the release waits while the
+  // composer is disabled (canSubmit off) or a send is in flight, and goes out when that clears.
+  // w11-submit-queue-wiring: a held submit that leaves (en: released or dropped) re-renders the busy Send (`Qt(!1)`).
+  useEffect(() => {
+    const held = heldStart.current;
+    if (heldStartReleaseWaits({ heldStart, pending: startBranchCheckPending(), key: heldStartKeyNow(), branchSwitch, disabled: !boot?.connected || loading, inFlight: sending || actionPending })) return;
     settleHeldStart({ heldStart, pending: startBranchCheckPending(), key: heldStartKeyNow(), branchSwitch, send });
-  }, [branchCheck, heldRevision, branchSwitch, workspaceInfo?.branch, workdir, current, worktree]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (held && !heldStart.current) bumpHeldStart();
+  }, [branchCheck, heldRevision, branchSwitch, workspaceInfo?.branch, workdir, current, worktree, boot?.connected, loading, sending, actionPending]); // eslint-disable-line react-hooks/exhaustive-deps
   // Late staging results (markReady / markFailed) reach the live composer and every stashed draft.
   function updateComposerAttachments(update) {
     setAttachments(update);
@@ -2550,7 +2627,7 @@ function App({ side = 0, initialSession = null }) {
       setTheme(b.config.theme);
       if (!currentRef.current) {
         // A session popout is a Code window (cd377abb5 si: File › New Window opens a code-draft).
-        const next = NO_SIDEBAR ? 'code' : validSurface(b.config.mode) ? b.config.mode : 'code';
+        const next = NO_SIDEBAR ? 'code' : validSurface(b.config.mode) ? resolveSurface(b.config.mode, { coworkEnabled: b.coworkEnabled === true }) : 'code';
         if (next !== modeRef.current) switchComposerDraft(null, null, modeRef.current, next);
         setMode(next);
         surfaceFolders.current.code = b.config.cwd;
@@ -2612,6 +2689,21 @@ function App({ side = 0, initialSession = null }) {
     setSessionsLoaded(true);
     return { active, archived };
   }
+  // V3-w10-shell-auto-open-behavior (asar index.chunk-DNPOm2Zc rA → Fk, auto-open-files-watch.mjs): what an agent
+  // edit's auto-open reads when it arrives. Browser tools = the hook is installed; launchAutoOpenFiles (G0); auto
+  // verify of the session folder (isAutoVerifyEnabled: a launch.json whose autoVerify isn't false; known here for the
+  // session this side's preview shows, and preview-agent-file re-checks it for every session); agentEditSessionState (gone / hidden / watched = shown in this window). A
+  // sub-agent's edit belongs to its parent session (ownerThreadId).
+  const autoOpenContext = useRef(null);
+  autoOpenContext.current = (threadId) => {
+    const id = childThreads.current.has(threadId) ? ownerThreadId(latestState.current, threadId) ?? threadId : threadId;
+    const row = sessionsRef.current.find((thread) => thread.id === id), known = latestState.current.threads?.[id];
+    const launch = id === previewOwner ? previewSnapshot?.launch : null;
+    return { sessionId: id, cwd: known?.cwd || row?.cwd || null, browserTools: boot?.config?.agentPreview !== false,
+      enabled: autoOpenFilesEnabled(boot?.config), autoVerify: launch?.exists === true && launch.autoVerify !== false,
+      sessionState: autoOpenSessionState({ known: !!row || !!known, archived: row?.archived === true || known?.archived === true,
+        visible: ((id === currentRef.current && previewAvailable) || splitStore.isShown(id)) && globalThis.document?.visibilityState !== "hidden" }) };
+  };
   useEffect(() => {
     const unsub = api?.onEvent((e) => {
       if(e.kind === "workflow") {setWorkflowRuns(old=>mergeWorkflow(old,e.run));return;}
@@ -2632,6 +2724,9 @@ function App({ side = 0, initialSession = null }) {
           .done.catch((reason) => setError(reason?.message ?? String(reason)));
       }
       if(e.kind === "desktop-archived") setSessions(rows=>rows.map(row=>row.id===e.threadId?{...row,archived:true}:row));
+      // w13-coworkui-approval (cwf-33): main asked instead of a Cowork turn's Bypass / Auto (cowork-runtime/approval-policy.mjs
+      // clampMode); ce401cf8e permission_mode_clamped's error toast (L3SmTmhYss / WO7zv5DRWf; no errorCategory locally).
+      if (e.kind === "permission-mode-clamped" && side === 0) toasts?.add?.(e.permissionMode === "bypassPermissions" ? t("Bypass permissions isn’t available for this session. Asking for permissions instead.") : t("Auto mode isn’t available for this session. Asking for permissions instead."), { variant: "danger" });
       if (e.kind === "window") setFullScreen(e.fullScreen);
       if (e.kind === "zoom-factor" && Number.isFinite(e.zoomFactor)) setZoomFactor(e.zoomFactor);
       if (e.kind === "popouts") setPopouts(Array.isArray(e.popouts) ? e.popouts : []);
@@ -2661,6 +2756,13 @@ function App({ side = 0, initialSession = null }) {
       }
       // The agent opened a page in a session's preview (preview_start / navigate): that session shows its Preview pane.
       if (e.kind === "preview-reveal" && typeof e.sessionId === "string" && side === 0) openPaneTile("preview", e.sessionId);
+      // V3-w10-shell-auto-open-behavior: a file the agent wrote that the browser shows (HTML, SVG, images, PDFs, videos)
+      // opens in its session's Preview pane — Fk's `!t.oI()` branch, `t.Tu.loadHtmlPreview(e, r, {sessionId: n})`
+      // (no file tabs here): preview-agent-file loads it in the session's one agent-file tab, never over the user's
+      // page; a failed open is dropped, as Fk's catch returns "skipped". V3-w11-sweep-shell-b: the pane opens once the
+      // file did (the service also holds back HTML under the session folder's auto verify, `{ opened: false }`).
+      const autoOpen = side === 0 && !PANE_WINDOW ? autoOpenTarget(e, autoOpenContext.current) : null;
+      if (autoOpen) call("preview-agent-file", { sessionId: autoOpen.sessionId, path: autoOpen.path }).then((result) => { if (result?.opened !== false) openPaneTile("preview", autoOpen.sessionId); }, () => {});
       if (e.kind === "toggle-sidebar" && side === 0) toggleSidebarRef.current?.();
       // Menu commands go to the focused split side; the sidebar search lives in the primary side.
       if (e.kind === "navigate" && (e.delta === -1 || e.delta === 1) && splitActiveRef.current) travelShortcutRef.current?.(e.delta);
@@ -2836,7 +2938,9 @@ function App({ side = 0, initialSession = null }) {
   const shownWhatsNew = useDialogRetention(whatsNew);
   const setSessionView = (sessionId, view) => setSessionViews((map) => withSessionView(map, sessionId, view, prefs.transcriptView));
   const hasThinking = sessionHasThinking(items);
-  const transcriptView = effectiveView(sessionViews[current], prefs.transcriptView, { hasThinking });
+  // w13-close-chat-messages (chatui-thinking-search-01): a Chat conversation has no ctrl+o view — cc1aae219's timeline
+  // always draws a thought as c05b96c7f Gg's folded step — so it reads as the Thinking view (reasoning kept, steps shut).
+  const transcriptView = mode === "chat" ? "thinking" : effectiveView(sessionViews[current], prefs.transcriptView, { hasThinking });
   // Closed dialogs stay mounted through their exit transition (source-dialog.jsx useDialogRetention); the rename
   // form is keyed by its session so typing (a new rename object per keystroke) does not remount it.
   const shownActionDialog = useDialogRetention(actionDialog), shownConfirmDelete = useDialogRetention(confirmDelete);
@@ -3023,12 +3127,14 @@ function App({ side = 0, initialSession = null }) {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   });
-  // Km s/l: releasing the modifier (or every modifier) and leaving the window end a held cycle.
+  // Km s/l: releasing the modifier (or every modifier) and leaving the window end a held cycle. 3.6556.2 Pg x
+  // (gr("mousedown",S,w), w={capture:!0}): a capture-phase mousedown without Ctrl/⌘/⌥ ends it too.
   useEffect(() => {
-    const cycler = sessionCycler.current, keyup = (e) => cycler.keyup(e), blur = () => cycler.reset();
+    const cycler = sessionCycler.current, keyup = (e) => cycler.keyup(e), blur = () => cycler.reset(), mousedown = (e) => cycler.mousedown(e);
     window.addEventListener("keyup", keyup);
     window.addEventListener("blur", blur);
-    return () => { window.removeEventListener("keyup", keyup); window.removeEventListener("blur", blur); };
+    window.addEventListener("mousedown", mousedown, { capture: true });
+    return () => { window.removeEventListener("keyup", keyup); window.removeEventListener("blur", blur); window.removeEventListener("mousedown", mousedown, { capture: true }); };
   }, []);
   // c360a9e1c-GPs-MV9u.js:4655-4775 Zd T: a CAPTURE-phase window keydown while the composer panel is active
   // (chin-shortcuts.mjs). Inert for defaultPrevented events, under Settings/dialogs/rename/search, while a
@@ -3061,6 +3167,7 @@ function App({ side = 0, initialSession = null }) {
       }
       const command = chinShortcutCommand(e);
       if (!command) return;
+      if (command === "model" && mode === "chat") return; // w13-chatfn-history: ⇧⌘I is the incognito chat shortcut in Chat (shared-1 / shared-21 oO)
       if (command === "fast") {
         // ca80fca8d B$ (:29068-29075): honored whenever the model menu's own Fast control is (s && !a), a running
         // turn included: the speed is saved at once and the next turn goes out with it, like Mode and Model.
@@ -3070,15 +3177,17 @@ function App({ side = 0, initialSession = null }) {
         return;
       }
       e.preventDefault(); e.stopPropagation();
-      const request = resolveChinRequest({ command, openKind, repeat: e.repeat, effortCount: efforts.length, modelCount: models.length,
+      // E21 c227f4d5e Q6 p (effortInModelMenu): no effort chip of its own — the effort lives in the model menu.
+      const effortInModelMenu = !chinNode.querySelector(".sc-effort-trigger");
+      const request = resolveChinRequest({ command, openKind, repeat: e.repeat, effortCount: efforts.length, modelCount: models.length, effortInModelMenu,
         modeCount: PERMISSION_OPTIONS.filter(option => option.value !== "bypass" || bypassMode.available).length });
       if (!request) return;
       if (request.action === "close") { closeMenu(); return; }
-      let kind = request.kind, trigger = chinNode.querySelector({ mode: ".sc-permission", model: ".sc-model-trigger", effort: ".sc-effort-trigger" }[kind]);
-      // x6 (cc43287c9 :28518-28522): in the environment bar the effort request opens the model menu (its Effort submenu).
-      if (!trigger && kind === "effort") { trigger = chinNode.querySelector(".sc-composer .sc-model-trigger, [data-env-bar-host] .sc-model-trigger"); if (trigger) kind = "model"; }
+      // x6 (cc43287c9 :28518-28522) / Q6 `S(e==="effort"&&p)`: the effort request opens the model menu on its Effort submenu.
+      const effortOpen = command === "effort" && effortInModelMenu, kind = request.kind;
+      const trigger = chinNode.querySelector(effortOpen ? ".sc-composer .sc-model-trigger, [data-env-bar-host] .sc-model-trigger" : { mode: ".sc-permission", model: ".sc-model-trigger", effort: ".sc-effort-trigger" }[kind]);
       if (!trigger || trigger.disabled) return;
-      openMenu(CHIN_MENU_KINDS[kind], trigger);
+      openMenu(CHIN_MENU_KINDS[kind], trigger, effortOpen ? { effortOpen: true } : undefined);
     }
     window.addEventListener("keydown", chin, true);
     return () => window.removeEventListener("keydown", chin, true);
@@ -3121,6 +3230,26 @@ function App({ side = 0, initialSession = null }) {
     document.addEventListener("keydown", paneKey);
     return () => { document.removeEventListener("keydown", paneKey); transcriptRef.current?.cancelKeyScroll?.(); };
   }, []);
+  // w13-close-main-jsx-tests (coworkui-panel-03): c21f11e6d cN binds the activity panel toggle through shared-6 Sb
+  // `{enabled, code: "KeyS", boundStore: um, toggle}`: a capture keydown on this side's document, no repeat, not already
+  // handled, Shift without Alt and ⌘ alone on a Mac (⌃ alone elsewhere), then preventDefault + stopPropagation and the
+  // toggle. Enabled while this side shows a Chat or Cowork session (the panel's host); on Code ⇧⌘S stays the Preview
+  // pane's Select element. While bound, the titlebar button's tooltip shows "cmd+shift+s" (shared-16 Oc `C = vc(kc)`).
+  const activityKeyBound = mode !== "code" && !!current && section === "new";
+  const activityToggleRef = useRef(null);
+  activityToggleRef.current = () => setSurfaceActivity(value => ({ ...value, [current]: !(value[current] ?? mode === "cowork") }));
+  useEffect(() => {
+    if (!activityKeyBound) return;
+    const mac = isMacPlatform();
+    function activityKey(event) {
+      if (event.repeat || event.defaultPrevented || event.code !== "KeyS" || !event.shiftKey || event.altKey) return;
+      if (!(mac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey) || !splitActiveRef.current) return;
+      event.preventDefault(); event.stopPropagation();
+      activityToggleRef.current?.();
+    }
+    document.addEventListener("keydown", activityKey, true);
+    return () => document.removeEventListener("keydown", activityKey, true);
+  }, [activityKeyBound]);
   // retry: xu's Retry (approval-entry-current.js:4214 onRetry A) refetches the
   // same session in place, so it keeps the composer draft, attachments, queue
   // and history position that a navigation resets.
@@ -3223,6 +3352,7 @@ function App({ side = 0, initialSession = null }) {
   // B27 side chat window (cd377abb5 _i): while this session's side chat has its own window the panel stays hidden here,
   // and opening it again (⌘;, /btw, Ask about a selection) brings that window forward with the question or selection.
   const sideChatPoppedOut = !!current && popoutKeys.has(`${current}:side-chat`);
+  const chatSideChatOpen = useChatSideChatOpen(mode === "chat" ? current : null); // G9: the View menu's Side Chat check in Chat
   const btwEligible = mode === 'code' && !!current && !session?.archived && !PANE_WINDOW && !sideChatPoppedOut && boot?.core?.capabilities?.btwChildSessions === true;
   useEffect(() => {
     if (!btwEligible || !sideChat.open || sideChat.legacy) return;
@@ -3254,6 +3384,8 @@ function App({ side = 0, initialSession = null }) {
     const toggle = (event) => {
       if (event.repeat || event.isComposing || !event.metaKey || event.shiftKey || event.altKey || event.ctrlKey || event.key !== ";") return;
       if (!currentRef.current || settings || !splitActiveRef.current) return;
+      // G9: in Chat, ⌘; is Chat's side chat (its own btw_side_chat listener, source-chat-side-chat-adapters.jsx p1).
+      if (modeRef.current === "chat") return;
       // A core without side questions (Codex) leaves ⌘; alone; an open card still closes.
       if (!sideQuestionsRef.current) { setSideChat(value => value.open ? { open: false, pending: null } : value); return; }
       event.preventDefault(); event.stopPropagation();
@@ -3491,6 +3623,8 @@ function App({ side = 0, initialSession = null }) {
       else if (e.pane === "terminal" && !(settings || actionDialog || rename || whatsNew)) toggleTerminalPane();
       else if (e.pane === "preview") paneShortcutRef.current?.("preview");
       // View › Show/Hide Side Chat: what ⌘; does (the /btw card), where the core serves side questions.
+      // G9: in Chat, Chat's side chat (ca2ef848d T1) instead of the Code card.
+      else if (e.pane === "sideChat" && modeRef.current === "chat") { if (current && !settings && commandContext.sideQuestions) chatSideChatStore.getState().toggle(current); }
       else if (e.pane === "sideChat" && current && !settings && commandContext.sideQuestions) setSideChat((value) => ({ open: !value.open, pending: null }));
     }
     else if (e.kind === "close-pane") {
@@ -3504,6 +3638,8 @@ function App({ side = 0, initialSession = null }) {
     else if (e.kind === "cycle-session") { if (!(settings || actionDialog || rename || whatsNew) && (e.delta === -1 || e.delta === 1)) sessionCycler.current.step(e.delta); }
     // View › Command Palette… toggles like ⌘K; Go › Search… only opens.
     else if (e.kind === "open-search") { if (e.toggle === true) { if (!(settings || actionDialog || rename || whatsNew)) searchShortcut(true); } else openSearchRef.current?.(); }
+    // V3-w13-surfaces-menus: Go's area checkbox (3.6556.2 xSi dispatchSelectArea) switches to that area like its segment.
+    else if (e.kind === "select-area") { if (!settings && typeof e.id === "string") void switchMode(e.id); }
   };
   // View > Show/Hide Changes and Files, Close Pane and File's ⌘W item follow the renderer's pane report
   // (index.chunk-ChZ67Jhw.js cSr sessionPanes / bNr): a pane is available where its ⌘⇧D / ⌘⇧F key works
@@ -3511,12 +3647,21 @@ function App({ side = 0, initialSession = null }) {
   // session view shows: ⌘W reads Close Session) and reopenClosed is cb24e6301's report ({available: true,
   // enabled: Jh}). Main rebuilds only on a change.
   const paneMenuAvailable = !!session && section === "new";
+  // V3-w13-surfaces-menus: shared-22 $P reports the mode segments (mY) as Go/File areas — {id, label, selected, items},
+  // items Sessions for code, Tasks for an unmerged cowork, else Chats (the merged home's cowork is Chats) — and JP/YP the
+  // ⌘W target of an open chat (Chat) or task (Task; Chat on the merged home), null without one (app-menu.cjs menuState).
+  const menuSurfaces = desktopSurfaces({ coworkEnabled: boot?.coworkEnabled === true }), menuMerged = !menuSurfaces.includes('chat');
+  const menuHome = homeModeFor({ coworkEnabled: boot?.coworkEnabled === true });
+  const menuAreas = menuSurfaces.map(id => ({ id, label: t(id === 'code' ? 'Code' : homeNameFor(id)), selected: (mode === 'code' ? 'code' : menuHome) === id,
+    items: id === 'code' ? 'sessions' : id === 'cowork' && !menuMerged ? 'tasks' : 'chats' }));
+  const menuCloseTarget = paneMenuAvailable && mode !== 'code' ? (mode === 'cowork' && !menuMerged ? 'task' : 'chat') : null;
   const menuState = { findInFiles: {enabled:paneMenuAvailable && !!workdir && !settings && !actionDialog && !rename && !whatsNew}, panes: { changes: { enabled: paneMenuAvailable, open: openPanes.has("changes") }, files: { enabled: filesAvailable, open: openPanes.has("files") },
     terminal: { enabled: terminalAvailable && !settings, open: openPanes.has("terminal") },
     preview: { enabled: previewAvailable && !settings, open: openPanes.has("preview") },
-    ...(commandContext.sideQuestions !== false ? { sideChat: { enabled: !!current && !settings && commandContext.sideQuestions === true, open: sideChat.open || (btwEligible && openPanes.has('session')) } } : {}) },
+    ...(commandContext.sideQuestions !== false ? { sideChat: { enabled: !!current && !settings && commandContext.sideQuestions === true, open: mode === "chat" ? chatSideChatOpen : sideChat.open || (btwEligible && openPanes.has('session')) } } : {}) },
     closePane: { enabled: PANE_KINDS.some((kind) => openPanes.has(kind)) },
-    session: { open: paneMenuAvailable || splitView.open }, reopenClosed: { available: true, enabled: !!canReopenPreview || hasClosedSession(closedSessions, sessionExists) } };
+    session: { open: paneMenuAvailable || splitView.open }, reopenClosed: { available: true, enabled: !!canReopenPreview || hasClosedSession(closedSessions, sessionExists) },
+    goMenuAreas: menuAreas, closeMenuTarget: menuCloseTarget };
   const menuStateKey = JSON.stringify(menuState);
   useEffect(() => { if (splitActive) call("menu-state", menuState).catch(() => {}); }, [menuStateKey, splitActive]);
   async function folder() {
@@ -3623,8 +3768,8 @@ function App({ side = 0, initialSession = null }) {
     return () => clearTimeout(timer);
   }, [autoResume]);
   // /recap: Codex's catch-up prompt (tui app/recap.rs RECAP_PROMPT_PREFIX) asked as a side question, so the answer
-  // never joins the session; shown as Claude's dismissible 'Recap' card at the transcript tail, whose answer renders as
-  // Markdown in a bounded scroller (models answer in Markdown even when asked not to).
+  // never joins the session; shown as Claude's dismissible 'Recap' card at the transcript tail, whose answer is c96d752d0
+  // OLe's plain text (shared-11 qE: one line, at most 500 characters) and which appears once the answer is there.
   const [recaps, setRecaps] = useState({});
   async function runRecap(threadId) {
     if (!threadId) return;
@@ -3878,11 +4023,31 @@ function App({ side = 0, initialSession = null }) {
   }), [asyncQuestionsSettled, boot?.connected, session?.archived, loading, current]);
   const answerAsyncQuestionRef = useRef(answerAsyncQuestion);
   answerAsyncQuestionRef.current = answerAsyncQuestion;
-  async function send({ priority } = {}) {
+  // w11-submit-queue-wiring (3.6556.2 c227f4d5e wF): `Yt` — the message send in flight ({text}, set while sendMessage
+  // runs, `let C={text:Wl(xM(Z))};…(Yt.current=C)…finally(()=>{(Yt.current===C&&(Yt.current=null),…)`). A submit of
+  // other text meanwhile is held (send() below) and the settle effect releases it once `sending` clears.
+  const sendInFlight = useRef(null);
+  // The `co` editor queue for /fork <prompt> (cc43287c9 `n={text:ce,onLost:t};Xo.current?.submit({forkAutoSend:e},n)||t()`):
+  // the fork's draft is seeded with the prompt and its submit waits until that session's composer can take it (the fork
+  // is the open session, loaded, no session action pending); the effect below is wF's [Z, o, hs] effect. Same key and the
+  // same text: it goes out through send() like a typed message; another session opened or the draft edited first: it
+  // stays unsent in the fork's draft. onLost is the c68c4283d fork prompt_outcome "not_sent" report the host does not log.
+  const forkSubmitQueue = useRef(null), forkSubmitNow = useRef(null), [forkQueueRevision, bumpForkQueue] = useReducer((value) => value + 1, 0);
+  if (!forkSubmitQueue.current) forkSubmitQueue.current = createEditorSubmitQueue({ submitNow: (opts) => forkSubmitNow.current?.(opts) ?? false });
+  // hs refuses a disabled composer (canSubmit off, an archived session): onLost, the prompt stays in the draft.
+  forkSubmitNow.current = (opts) => { if (!boot?.connected || session?.archived) return false; void send(opts); return true; };
+  useEffect(() => {
+    forkSubmitQueue.current.editorChanged({ editorReady: !loading && !actionPending && !!textarea.current, storeKey: current, editorText: draft });
+  }, [current, draft, loading, actionPending, forkQueueRevision]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function send({ priority, title } = {}) {
     if (boot?.account?.deepseek && !boot.account.account) return; // R02: no DeepSeek key → no thread/turn (composer warning); the draft stays.
     // R4e-envbranch home-15 review (cc43287c9 gh holdSubmit, c227f4d5e OP pt.current): a Home submit while the draft's
     // start-branch check runs is held; the effect after selectBranch releases or drops it.
     if (holdStartWhileBranchCheck({ current, pending: startBranchCheckPending(), priority, key: heldStartKeyNow(), heldStart, bumpHeldStart })) return;
+    // w11-submit-queue-wiring (wF hs `if(Qe||Yt.current)…Xt.current={opts,text,targetKey:$e}),Qt(!0)`): while a message
+    // send is in flight, other text is held behind it (busy Send) and goes out when it is over; the text in flight again,
+    // or an empty composer, is refused.
+    if (holdSubmitWhileInFlight({ inFlight: sendInFlight.current, priority, key: heldStartKeyNow(), text: draft, empty: !draft && !attachments.length, heldStart, bumpHeldStart }) !== "send") return;
     // A known skill ('/pdf …', a chip from '/' or Add › Skills) parses without error and goes out as a message.
     const parsed = parseSessionCommand(draft, commandContext);
     if (parsed?.coreCommand) {
@@ -3917,7 +4082,7 @@ function App({ side = 0, initialSession = null }) {
       await executeCommand("fork", draft.trim(), draft);
       return;
     }
-    await sendMessage(draft, attachments, mentions, { priority });
+    await sendMessage(draft, attachments, mentions, { priority, title });
   }
   // send()'s message launch. `beside` ({onStart}) is B4's start beside the draft (startBesideDraft below): the given
   // text goes out as a plain message (no shell mode or keyword) on the 'Send and stay here' path, and the composer
@@ -3928,7 +4093,9 @@ function App({ side = 0, initialSession = null }) {
   // `demonstration` ({input, title, newSession}) is a recorded demonstration (watch-record, official shared-6 jz / Mz): its
   // turn input as it is, into this session or, with newSession, a session of its own titled `title`; the composer is
   // neither read nor emptied, and a session running a turn gets it queued.
-  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false, demonstration = null } = {}) {
+  // `title` (startSessionFromSearch's Scheduled page template, ccd3f68fe nu `y({…title…})`) names a session this send
+  // starts, as a Rename would: set even on a core that titles its sessions, and no generated title replaces it.
+  async function sendMessage(draft, attachments, mentions, { priority, beside, resend = false, demonstration = null, title: startTitle = null } = {}) {
     // The draft's GitHub issue goes with its first message, and can be sent alone (cc43287c9 hasAttachments).
     const sentIssue = !current && !beside && !demonstration && draftIssue ? draftIssue : null;
     if (demonstration) {
@@ -3951,7 +4118,9 @@ function App({ side = 0, initialSession = null }) {
       if (!shellCommand) return;
       if (running) { setError(t("Wait for {core} to finish before running a shell command.", { core: coreName(boot?.core) })); return; }
       if (attachments.length) { setError(t("A shell command can’t include attachments. Remove them, or remove the ! to send a message.")); return; }
-      if (mentions.length) { setError(t("@-mentions can’t be used in a shell command. Remove them, or remove the ! to send a message.")); return; }
+      // w12c-wiring (w12b-composer §7.2; c227f4d5e submit `or?.addError(i?Ot.formatMessage({…id:"VnmOeizKjx"})…)`, runsAsShell
+      // being the `!` prefix): a refused shell send is a danger toast (shared-52 lB addError).
+      if (mentions.length) { const refused = t("A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting."); if (toasts) toasts.add(refused, { variant: "danger" }); else setError(refused); return; }
       if (shellModeKind(boot?.core, shellOptions) === "terminal") { await runTerminalShell(shellCommand); return; }
     }
     if (running && !demonstration) { if (!resend) await sendWhileRunning(priority); return; }
@@ -3973,7 +4142,9 @@ function App({ side = 0, initialSession = null }) {
       });
     }
     const sendSequence = loadSeq.current, origin = current;
-    if (!stay) setSending(true);
+    // w11-submit-queue-wiring: `Yt.current=C` (C={text}) for this send; send() holds other text behind it.
+    const inFlight = { text: draft };
+    if (!stay) { setSending(true); sendInFlight.current = inFlight; }
     setError("");
     const text = draft;
     const entries = attachments, mentionList = mentions;
@@ -4070,7 +4241,7 @@ function App({ side = 0, initialSession = null }) {
           ...threadPermissionParams({permission: effectivePermission, mode, ...permissionHints()}),
           // Codex only: the DeepSeek core honors developerInstructions (structured.js, for workflow agents), and its
           // persona and custom instructions come from the profile and codeDesktop.customization instead.
-          codeDesktop: { surface: mode, ...(projectDraftId ? { projectId: projectDraftId } : {}), ...(selectedEnvironment ? { environmentId: selectedEnvironment.id } : {}) },
+          codeDesktop: withIncognito({ surface: mode, ...(projectDraftId ? { projectId: projectDraftId } : {}), ...(selectedEnvironment ? { environmentId: selectedEnvironment.id } : {}) }, { surface: mode, incognito: incognitoDraft }), // w13-chatfn-history
           ...(mode !== 'code' ? { developerInstructions: surfaceInstructions(mode) } : coreSupports(boot?.core, "customization") ? {} : { developerInstructions:
             "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. Do not claim to be Claude." }),
         };
@@ -4091,8 +4262,8 @@ function App({ side = 0, initialSession = null }) {
         bypassMode.adoptSession(id);
         // :35161-35168 vi(a, t.split('\n')[0].slice(0, 80)): a background launch is titled from its first line.
         // A message that is only attachments is named after its files (a core refuses an empty name).
-        const name = demonstration ? demonstration.title : firstMessageName(text, entries, stay ? { max: 80, firstLine: true } : { max: 64 });
-        setSessionMetadata(value => ({ ...value, [id]: { ...value[id], surface: mode, ...(projectDraftId ? { projectId: projectDraftId } : {}) } }));
+        const name = demonstration ? demonstration.title : startTitle || firstMessageName(text, entries, stay ? { max: 80, firstLine: true } : { max: 64 });
+        setSessionMetadata(value => ({ ...value, [id]: { ...value[id], surface: mode, ...(projectDraftId ? { projectId: projectDraftId } : {}), ...(startParams.codeDesktop?.incognito ? { incognito: true } : {}) } })); // w13-chatfn-history: incognito
         setSessions((s) => [{ ...r.thread, name }, ...s.filter((t) => t.id !== r.thread.id)]);
         if (!stay && sendSequence === loadSeq.current) {
           // The New session page's terminals (its folder) go with the session they started: their pane stays open,
@@ -4116,9 +4287,9 @@ function App({ side = 0, initialSession = null }) {
         }
         resumed.current.add(id);
         // A core that names its sessions (generatesTitles) keeps its own title; the first message stays the local name meanwhile.
-        if (name.trim() && !coreSupports(boot?.core, "generatesTitles")) await rpc("thread/name/set", { threadId: id, name });
+        if (name.trim() && (startTitle || !coreSupports(boot?.core, "generatesTitles"))) await rpc("thread/name/set", { threadId: id, name });
         // Codex names a new session from its first message (titleRequest): the first-message name stays until it does.
-        if (name.trim() && text.trim() && coreSupports(boot?.core, "titleRequest")) void requestThreadTitle(id, name, text, turnCwd);
+        if (name.trim() && text.trim() && !startTitle && coreSupports(boot?.core, "titleRequest")) void requestThreadTitle(id, name, text, turnCwd);
       }
       if (startedGroup && newSessionGroup.current === startedGroup) setDraftGroup(null);
       await updateSessionMetadata(id, { additionalFolders, ...(startedGroup && !origin ? { customGroupId: startedGroup } : {}) });
@@ -4139,6 +4310,9 @@ function App({ side = 0, initialSession = null }) {
         if (!beside) forgetDraft(browserStorage(), homeDraftKey, { text });
       } else if (!resend && !demonstration) clearComposerDraft(sendSequence, text, entries, origin, id);
     } catch (e) {
+      // w11-submit-queue-wiring (cc43287c9 :49054 `(!Ot||kt)&&M()&&u.current?.dropQueuedSubmit()`, :56265 for a start): a
+      // failed send drops what was held behind it; that draft stays unsent.
+      dropHeldSubmit({ heldStart, bumpHeldStart });
       if (stay) { if (!launched) restoreStay(); }
       else setTurnRequested(value => value === id ? null : value);
       const refused = pendingEntry;
@@ -4159,7 +4333,7 @@ function App({ side = 0, initialSession = null }) {
         backgroundSpawnsRef.current -= 1;
         spawnFocus.current = true;
         setBackgroundSpawns((count) => count - 1);
-      } else setSending(false);
+      } else { if (sendInFlight.current === inFlight) sendInFlight.current = null; setSending(false); }
     }
     // B4 onStart: the started task's session opens once its first turn is under way (the source opens it at dispatch).
     if (beside && launched) beside.onStart?.(id);
@@ -4205,6 +4379,7 @@ function App({ side = 0, initialSession = null }) {
         const live = { text, attachments: entries, mentions: mentionList };
         liveComposer.current = live;
         setDraft(text); setAttachments(entries); setMentions(mentionList);
+        textarea.current?.holdSendButton?.(null); // E22: cc43287c9 `u.current?.holdSendButton(), A(q, Ce, Se)` — the Home draft's Send waits 1.5s.
       } else {
         // The user already left: the message waits in Home's composer slot instead of the deleted session's.
         // An optimistic send already emptied that composer, so an empty stash falls back to the message itself.
@@ -4249,6 +4424,9 @@ function App({ side = 0, initialSession = null }) {
     const entry = pendingSends[threadId]?.find((shown) => shown.id === entryId);
     if (!entry || entry.status !== "failed") return;
     updatePendingSend(threadId, entryId, () => null);
+    // w11-submit-queue-wiring (cc43287c9 sc `Fr()&&(Xo.current?.dropQueuedSubmit(),QM(Xo.current,e,t,n))`): text put back
+    // drops a held submit even when the draft reads the same afterwards.
+    dropHeldSubmit({ heldStart, bumpHeldStart });
     const live = liveComposer.current;
     if (!live.text.trim() && !live.attachments.length) { setDraft(entry.text); setAttachments(entry.attachments); setMentions(entry.mentions || []); }
     else {
@@ -4339,7 +4517,8 @@ function App({ side = 0, initialSession = null }) {
     setError("");
     if (nativeInit && entry.name === "init") {
       try {
-        if (args) { setError(t("/{command} doesn’t take arguments here. Remove the text after the command and try again.", { command: "init" })); return; }
+        // w12c-wiring (w12b-composer §7.3; cc43287c9 P cgTRRpTLBX).
+        if (args) { setError(t("/{command} doesn’t take arguments here. Remove the text after the command, then send it again.", { command: "init" })); return; }
         await ensureResumed(origin);
         setTurnRequested(origin);
         await rpc("turn/start", { threadId: origin, input: [{ type: "text", text: INIT_PROMPT, text_elements: [] }], ...turnOptions(workdir || cwd) });
@@ -4452,14 +4631,22 @@ function App({ side = 0, initialSession = null }) {
           prefill:(thread,text)=>putDraft(thread.id,text)});
       }
       else if (id === "fork") {
-        const origin=current,originCwd=workdir,options=turnOptions(workdir);
+        const origin=current;
         const result=await performOperation("fork");
-        if(args){await ensureResumed(result.thread.id);await rpc("turn/start",{threadId:result.thread.id,input:[{type:"text",text:args,text_elements:[]}],...options,cwd:result.thread.cwd||originCwd});
-          // R2-composer cc43287c9 :47139: after the fork's auto-send the composer takes focus unless the user is typing elsewhere.
-          if(currentRef.current===result.thread.id)forkAutoSendFocus(textarea.current);}
         // Navigation during fork increments loadSeq; only clear the command in the new fork.
         if(currentRef.current===result.thread.id || currentRef.current===origin) setDraft(value=>value===sourceDraft?'':value);
         if(sourceDraft!==undefined) clearStashedDraft(origin,sourceDraft);
+        // w11-submit-queue-wiring (cc43287c9 `if(!ce||!$n(r))return;…n={text:ce,onLost:t};Xo.current?.submit({forkAutoSend:e},n)||t()`):
+        // the prompt is the fork draft's text (an empty draft takes it) and goes out through the composer's `co` queue
+        // (forkSubmitQueue above), not a turn/start of its own.
+        if(args){const forkId=result.thread.id;
+          if(currentRef.current===forkId)setDraft(value=>value.trim()?value:args);
+          else{const key=draftKey(forkId),stashed=composerDrafts.current.get(key);
+            if(!stashed?.text?.trim()){const value={text:args,attachments:stashed?.attachments??[],mentions:stashed?.mentions??[]};composerDrafts.current=saveDraft(composerDrafts.current,key,value);persistComposer(key,value);}}
+          forkSubmitQueue.current.submit({},{text:args,onLost:()=>{}},{editorReady:false,storeKey:forkId});
+          bumpForkQueue();
+          // R2-composer cc43287c9 :47139: after the fork's auto-send the composer takes focus unless the user is typing elsewhere.
+          if(currentRef.current===forkId)forkAutoSendFocus(textarea.current);}
       } else {
         switch (id) {
           case "review": setActionDialog({kind:"review", instructions:args}); break;
@@ -4491,7 +4678,8 @@ function App({ side = 0, initialSession = null }) {
             // cc43287c9 r4: auto is system, the localized names count too; no or an unknown argument opens the picker.
             const parsed=parseThemeCommand(args);
             // c4 "extra_lines" → rejectExtraLines: the shared single-line notice; the draft stays.
-            if(parsed.extraLines)throw new Error(t('/{command} only works on a single line. Remove the extra lines and try again.',{command:'theme'}));
+            // w12c-wiring (w12b-composer §7.3; cc43287c9 M hH0Sho9AXl).
+            if(parsed.extraLines)throw new Error(t('/{command} only works on a single line. Remove the extra lines, then send it again.',{command:'theme'}));
             if(parsed.open){setSettings("preferences#theme");break;}
             // c4 :34672-34689 addSuccess('Appearance set to …'): shared-75 Eb addSuccess is addInfo (toastType "info"),
             // which the CDS Toast (shared-19 aV) paints as its neutral variant.
@@ -4603,9 +4791,9 @@ function App({ side = 0, initialSession = null }) {
       // the confirm has closed and released the modal inert.
       // R2-composer cc43287c9 :41729 La: scheduleFocus() + ignoreStrayEnter(), so the Enter that confirmed the rewind can't send it.
       if(sequence===loadSeq.current){setDraft(text||'');restoredTextFocus({composer:()=>textarea.current,stillCurrent:()=>sequence===loadSeq.current});}
-      // A core that restored files in the same rewind (thread/revert codeDesktop.filesRestored: Qwen's file history) says how many.
-      const restoredFiles=Array.isArray(result?.codeDesktop?.filesRestored)?result.codeDesktop.filesRestored.length:0;
-      if(restoredFiles&&toasts)toasts.add(tn(restoredFiles,'Rewound. {count} file was restored.','Rewound. {count} files were restored.',{count:restoredFiles}));
+      // W12c: no success toast. cc43287c9 Qme confirmRewind / $b runConversationRewind toast only a skipped-file warning
+      // (iVjBjhoPGU) or a code-only 'Code restored' (qnOcSJx9vQ); neither is offered here (rewindRestoreItems), and files
+      // restored with the conversation (codeDesktop.filesRestored) go unannounced, as officially.
     } catch (error) {
       // runConversationRewind: 'Can’t rewind to this message.' (HXRzK0tCC9) unless the core said why.
       const message=error?.message||t('Can’t rewind to this message.');
@@ -4677,6 +4865,26 @@ function App({ side = 0, initialSession = null }) {
       actions: [{ label: t("Review hooks"), run: () => setSettings("customize-hooks") }], onDismiss: () => setHooksReview(null) } : null;
   const usageNotice = useMemo(() => planLimits && !coreSupports(boot?.core, "perTokenBilling")
     ? composerUsageNotice(planLimits, { core: coreName(boot?.core), locale: getLocale() }) : null, [planLimits, boot?.core]);
+  // w12c-wiring (w12b-usage-notices §3; c227f4d5e NI case "request-extra-usage"): a workspace member's limit has the
+  // band's request CTA, "Request usage credits" (3gNFS1DF0J) while it is open (busy while sending), "Request sent to admin"
+  // (n8OjslQAdc, `disabled:!0`) once Codex took it (account/sendAddCreditsNudgeEmail sent / cooldown_active); a failed
+  // request is fe's addError (5iDKTQDvkY). Other reached limits keep the host's View usage (NI has no Codex counterpart).
+  const [usageNudge, setUsageNudge] = useState(null);
+  const usageNudgeState = usageNotice?.nudge && usageNudge?.key === usageNotice.dismissKey ? usageNudge.state : null;
+  const usageNoticeActions = !usageNotice ? [] : !usageNotice.nudge ? [{ label: t("View usage"), run: () => setSettings("usage") }]
+    : usageNudgeState === "sent" ? [{ label: t("Request sent to admin"), disabled: true, run: () => {} }]
+    : [{ label: t("Request usage credits"), busy: usageNudgeState === "busy", run: () => {
+      const key = usageNotice.dismissKey, failed = () => {
+        setUsageNudge((value) => value?.key === key ? null : value);
+        const message = t("There was an error submitting your request. Try again later.");
+        if (toasts) toasts.add(message, { variant: "danger" }); else setError(message);
+      };
+      setUsageNudge({ key, state: "busy" });
+      rpc("account/sendAddCreditsNudgeEmail", { creditType: usageNotice.nudge }).then((value) => {
+        if (["sent", "cooldown_active"].includes(value?.status)) setUsageNudge((current) => current?.key === key ? { key, state: "sent" } : current);
+        else failed();
+      }, failed);
+    } }];
   // Codex's backend banner from the same usage read (rateLimitUpsell; tui backend_banners.rs): the backend's own title,
   // description and remedies, plus its fallback for a blocked model, which Codex switches to and back from once
   // ordinary usage is allowed again (chatwidget/backend_banners.rs, luna_reserve_return.rs). Here the switch is one
@@ -4950,6 +5158,18 @@ function App({ side = 0, initialSession = null }) {
           return result;
         } finally { actionLock.current.delete(target.id); }
       }
+      // w13-close-chat-projects-memory: yf / fm's create rows (Sf: "New project", "Create {name}") open the New project dialog.
+      case "create-project": setNewProjectFor({ sessionId: target.id, name: typeof payload?.name === "string" ? payload.name : "" }); return true;
+      // w13-chatfn-projects: shared-16 yf "Add to project" / "Change project" / "Remove from project" (a Chat or Cowork
+      // session's project, main local-projects assign / unassign; the sidebar snapshot comes back with it).
+      case "move-to-project":
+      case "remove-from-project": {
+        const projectId = action === "move-to-project" ? payload.projectId : sessionMetadata[target.id]?.projectId;
+        if (typeof projectId !== "string" || !projectId) return false;
+        const result = await call("local-projects", { action: action === "move-to-project" ? "assign" : "unassign", id: projectId, threadId: target.id });
+        if (result?.state) applySidebarState(result.state);
+        return true;
+      }
       case "open-terminal": return call("open-terminal", { cwd: target.cwd });
       // ce4f4374c Oe Open PR (g): the session's pull request on GitHub (no in-app PR pane locally).
       case "open-pr": return typeof payload?.url === "string" && /^https:\/\//i.test(payload.url) ? call("external", { url: payload.url }) : undefined;
@@ -5152,8 +5372,20 @@ function App({ side = 0, initialSession = null }) {
     return updatePreferences({[key]:value}).catch(error => { setError(error.message); });
   }
   // Switching products leaves a running session alone and restores that surface's own draft.
+  // w13-close-main-jsx-tests (coworkui-placeholder-02): shared-78 mY lists no cowork surface while Cowork is unavailable
+  // (CODE_DESKTOP_COWORK=0), so no entry point navigates there (switchMode refuses it as well).
+  const coworkSurfaceListed = () => desktopSurfaces({ coworkEnabled: boot?.coworkEnabled === true }).includes('cowork');
   async function openLocalProject(project) {
     const opened = await call('local-projects', { action: 'open', id: project.id });
+    if (!coworkSurfaceListed()) {
+      // The project page then opens on the Chat surface, as its Composer mode Chat does (setProjectComposerMode).
+      if (!surfaceFolders.current.chat) surfaceFolders.current.chat = (await call('surface-workspace', { surface: 'chat' })).cwd;
+      setWorktree(false);
+      navigate(null, { surface: 'chat', projectId: opened.id });
+      setSection('projects');
+      await call('settings', { mode: 'chat' });
+      return opened;
+    }
     surfaceFolders.current.cowork = opened.cwd;
     setBoot(previous => ({ ...previous, config: { ...previous.config, localProjects: [...(previous.config.localProjects ?? []).filter(project => project.id !== opened.id), opened], surfaceFolders: { ...previous.config.surfaceFolders, cowork: opened.cwd } } }));
     setWorktree(false);
@@ -5162,8 +5394,19 @@ function App({ side = 0, initialSession = null }) {
     await call('settings', { mode: 'cowork' });
     return opened;
   }
+  // w13-chatfn-projects: the project page's Composer mode (c71dee58b td, Chat / Cowork): the project's next session starts
+  // on that surface (a Chat one in the project's folder, read-only: local-projects applyProjectContext).
+  async function setProjectComposerMode(project, next) {
+    if (!['chat', 'cowork'].includes(next) || next === modeRef.current || sending) return;
+    if (!surfaceFolders.current[next]) surfaceFolders.current[next] = (await call('surface-workspace', { surface: next })).cwd;
+    navigate(null, { surface: next, projectId: project.id });
+    setSection('projects');
+  }
   async function switchMode(next) {
     if (!validSurface(next) || next === modeRef.current || sending) return;
+    // w13-surfaces-modes: no navigation to a surface shared-78 mY does not list (cowork while Cowork is unavailable); a
+    // chat session stays reachable on the merged home.
+    if (!desktopSurfaces({ coworkEnabled: boot?.coworkEnabled === true }).includes(next) && next !== 'chat') return;
     const request = ++surfaceNavigation.current;
     surfaceFolders.current[modeRef.current] = current ? surfaceFolders.current[modeRef.current] || cwd : cwd;
     try {
@@ -5463,6 +5706,32 @@ function App({ side = 0, initialSession = null }) {
     const branches = workspaceInfo?.branches || [];
     return sortBranches(branches, defaultBranch({ originHead: workspaceInfo?.originHead, branches }));
   }, [workspaceInfo]);
+  // w13-chatfn-attachments (C5): in a Chat session a staged PDF / Word / RTF / HTML / ODT file is converted to text by the
+  // main process (convert-document) and sent as that text (attachmentInputs); a refusal leaves it a file reference. Until
+  // the answer the send is held (source-composer.jsx attachmentsReady, w13-close-chat-composer). C6: from 80 of the 100 images the chat
+  // says so once per conversation and state (shared-7 Cv; the composer band below, ChatImageLimitNotice). C2: Fs's capture.
+  const conversionsInFlight = useRef(new Set());
+  useEffect(() => {
+    for (const entry of pendingConversions(attachments, { surface: mode, inFlight: conversionsInFlight.current })) {
+      conversionsInFlight.current.add(entry.id);
+      call("convert-document", { path: entry.path }).catch(() => ({ ok: false, reason: "unreadable" }))
+        .then((result) => setAttachments((entries) => entries.map((item) => (item.id === entry.id ? { ...item, ...conversionPatch(result) } : item))))
+        .finally(() => conversionsInFlight.current.delete(entry.id));
+    }
+  }, [attachments, mode]);
+  // w13-close-chat-composer (chatfn-attachments-03): Cv's warning is the composer band (ChatImageLimitNotice, below the
+  // composer's beforeComposer slot), dismissed per conversation in localStorage, not a toast.
+  const chatImageNotice = mode === "chat" ? imageLimitNotice(conversationImageCount({ items, entries: attachments })) : null;
+  const captureScreenshot = () =>
+    call("capture-screenshot")
+      .then((file) => setAttachments((entries) => {
+        const staged = stageFiles(entries, [file], { imagesAllowed, imageNotice });
+        if (staged.notices.length) setError(staged.notices.join("\n"));
+        let next = staged.entries;
+        for (const entry of staged.added) if (entry.kind === "image") next = markReady(next, entry.id, { previewUrl: filePreviewUrl(entry.path) });
+        return next;
+      }))
+      .catch(() => setError(t("Could not capture screen.")));
   // Add → "Add files or photos": the dialog returns stat facts; images are
   // referenced by path (preview from the file), other files become mentions.
   attachRef.current = () => attach();
@@ -5498,6 +5767,8 @@ function App({ side = 0, initialSession = null }) {
     loading: customizeSnapshot.plugins.status === "loading" || customizeSnapshot.skills.status === "loading",
     groups: pluginMenuGroups(customizeSnapshot.plugins.rows, customizeSnapshot.skills.skills),
   }), [customizeSnapshot.plugins, customizeSnapshot.skills]);
+  // w12b-slash-plugin-groups: us's rows over those groups (customize-model pluginMenuRows, 3.6556.2 c752b32f8).
+  const addPluginRows = useMemo(() => pluginMenuRows(addPlugins.groups).items, [addPlugins.groups]);
   // Settings › Customize props: `call` is module-level, so these stay stable
   // across App re-renders. An unstable `call` would re-run PluginsPage's
   // plugin/read effect (and reset its detail) on every streamed token.
@@ -5506,11 +5777,13 @@ function App({ side = 0, initialSession = null }) {
   const customizeReveal = useCallback((target) => call("reveal-item", { path: target }).catch(actionFailed("reveal-file")), []);
   const toolSelection = boot?.core?.capabilities?.toolSelection === true;
   useEffect(() => {
-    if (menu?.kind !== "add" || !toolSelection) return;
+    // w13-close-main-process: a Chat conversation (or the New chat) reads it as it opens, so its Web search row, the
+    // recommended tools and the web search nudge (chat-tools-model.mjs searchSupport) aren't "loading" until + is opened.
+    if ((menu?.kind !== "add" && section !== "projects" && mode !== "chat") || !toolSelection) return; // w13-chatfn-tools: the project page's recommended tools read it too
     let live = true;
     call("tools-list").then(result => { if (live) setToolsCatalog(result); }, () => {});
     return () => { live = false; };
-  }, [menu?.kind, toolSelection]);
+  }, [menu?.kind, section === "projects", toolSelection, mode === "chat" ? current ?? "new" : null]);
   // The tools the open session (or the New draft) turns off, and switching them: a session's set is saved by
   // main (config.threadTools) and reaches the core with its next message.
   const toolProfiles = normalizeProfiles(boot?.config?.toolProfiles);
@@ -5525,6 +5798,32 @@ function App({ side = 0, initialSession = null }) {
       if (saved) threadTools[threadId] = saved; else delete threadTools[threadId];
       return { ...value, config: { ...value.config, threadTools } };
     })).catch(e => setError(e.message));
+  }
+  // w13-chatfn-tools (chatfn-23): the project page's recommended tools (c9b54eb90 pe / ye adapters,
+  // source-project-v3-adapters.jsx): this machine's search support and customize connectors, the New chat's switches
+  // (chat-tools-model.mjs recommendedToolsChange → the New chat's settings, its tool selection, a connector's switch).
+  const projectTools = section === "projects" ? {
+    support: searchSupport({ codexNative: coreForEngine(boot?.core?.engine).id === "codex" && !coreSupports(boot?.core, "permissionHints"), toolSelection, catalog: toolsCatalog }),
+    thinking: models.some((m) => (m.supportedReasoningEfforts?.length ?? 0) > 0),
+    connectors: (customizeSnapshot.mcp?.rows || []).filter((row) => !row.blocked).map((row) => ({ name: row.name, title: row.title, connected: row.kind === "connected", connecting: row.kind === "connecting",
+      enabled: (customizeSnapshot.mcpConfig?.status === "ready" ? customizeSnapshot.mcpConfig.servers?.[row.name]?.enabled : row.kind !== "disabled") !== false })),
+    settings: chatSettingsFor(boot?.config?.chatTools, null), selection: draftTools !== undefined ? draftTools : defaultProfile(boot?.config)?.tools ?? null,
+    globalMode: boot?.config?.codexWebSearch ?? null,
+    apply: (change) => {
+      if (change.selection !== undefined) setDraftTools(normalizeSelection(change.selection));
+      if (Object.keys(change.settings).length) call("chat-tools", { op: "set", threadId: null, settings: change.settings })
+        .then((store) => setBoot((value) => (value?.config ? { ...value, config: { ...value.config, chatTools: store } } : value)), (e) => setError(e.message));
+      for (const { name, on } of change.connectors) customizeStore.setMcpEnabled(name, on).catch((e) => setError(e.message));
+    },
+  } : undefined;
+  // w13-chatfn-tools (chatfn-39): a Chat conversation's Extended thinking switch in the model menu (shared-7 vw rows,
+  // chat-tools-model.mjs chatThinkingSection): kept as its paprika_mode ("chat-tools" set), applied as the model effort.
+  const chatThinking = mode === "chat" ? chatThinkingSection({ levels: efforts, settings: chatSettingsFor(boot?.config?.chatTools, current || null), label: (message) => t(message.defaultMessage) }) : null;
+  function toggleChatThinking(next) {
+    const change = toggleThinking({ levels: efforts, mode: next });
+    if (change.effort) pickEffort(change.effort);
+    call("chat-tools", { op: "set", threadId: current || null, settings: change.settings })
+      .then((store) => setBoot((value) => (value?.config ? { ...value, config: { ...value.config, chatTools: store } } : value)), (e) => setError(e.message));
   }
   function applyToolProfile(profile) {
     setSessionTools(profile?.tools ?? null);
@@ -5593,31 +5892,22 @@ function App({ side = 0, initialSession = null }) {
   // bridge or the card opens it (setHovering: hovering + peeked); leaving starts the 180ms Ah grace, which
   // waits while a menu is open or a text field in the card has focus. Mh: a navigation closes it and,
   // when focus was in the card, returns focus to the trigger; Escape (Nb) closes it and focuses the trigger.
-  // The card sits 8px under the trigger (desktop-layout.css:1388-1396 top calc(100% + 8px)) and 6px from
-  // the toolbar's start edge.
+  // W12 frame: no trigger geometry is measured any more; since w11-frame-root-cont the drawer is laid out by the
+  // loaded shared-styles [data-collapsed] rules, and nothing read the old top/left/bridge fields.
   const peekTimer = useRef(null), peekState = useRef(peek);
   peekState.current = peek;
   const peekTrigger = () => document.querySelector('.df-collapsed-chrome button[aria-controls="frame-peek-popover"]');
-  const peekGeometry = (trigger) => {
-    const root = trigger?.closest(".dframe-root"), toolbar = trigger?.closest(".workspace-toolbar");
-    if (!trigger || !root) return null;
-    const rect = trigger.getBoundingClientRect(), base = root.getBoundingClientRect(), start = (toolbar ?? root).getBoundingClientRect();
-    return { top: Math.round(rect.bottom - base.top + 8), left: Math.round(start.left - base.left + 6), bridge: Math.round(rect.bottom - base.top) };
-  };
   // The frame is collapsed by the stored preference or by the narrow viewport (shared-2 Dg).
   const frameCollapsed = () => collapsedRef.current || narrowRef.current;
   const peekEnter = (event) => {
     if (event.pointerType !== "mouse" || !frameCollapsed()) return;
     clearTimeout(peekTimer.current); peekTimer.current = null;
-    const trigger = event.currentTarget instanceof Element && event.currentTarget.matches('[aria-controls="frame-peek-popover"]') ? event.currentTarget : null;
-    const geometry = peekGeometry(trigger);
-    setPeek((previous) => previous.hovering && !geometry ? previous : { ...previous, hovering: true, peeked: true, ...geometry });
+    setPeek((previous) => previous.hovering ? previous : { ...previous, hovering: true, peeked: true });
   };
-  // shared-2 toggleCollapsed while Dg (narrow): {hovering: true, peeked: true} placed under the trigger.
+  // shared-2 toggleCollapsed while Dg (narrow): {hovering: true, peeked: true}.
   const openPeek = () => {
     clearTimeout(peekTimer.current); peekTimer.current = null;
-    const geometry = peekGeometry(peekTrigger());
-    setPeek((previous) => ({ ...previous, hovering: true, peeked: true, ...geometry }));
+    setPeek((previous) => ({ ...previous, hovering: true, peeked: true }));
   };
   const peekLeave = (event) => {
     if (event.pointerType !== "mouse") return;
@@ -5765,7 +6055,7 @@ function App({ side = 0, initialSession = null }) {
         // with worktree off a different branch checks the working tree (selectBranch).
         return <SourceBranchPickerMenu branches={branchChoices} current={workspaceInfo?.branch || ""}
           onSelect={(branch) => { selectBranch(branch); }} />;
-      case "add":
+      case "add": {
         // Official composer Add menu (ca80fca8d KN/GN + zN :12490-12620 = [GN 'Add files or photos', 'Add folder'
         // (icon Folder), ...jN: 'Slash commands', connectors, plugins], no separators; 'Import GitHub/Linear issue'
         // need integrations absent here). GN's 'Add image' label is for a surface without file attachments; every
@@ -5773,6 +6063,104 @@ function App({ side = 0, initialSession = null }) {
         // Local additions between Slash commands and Connectors: the per-session Tools submenu and the Skills
         // submenu (an older build's jy: icon Scroll, skill rows sorted by label, footer separator + 'Manage
         // skills'); the current build reaches skills through '/', which lists them too.
+        // w13-chatfn-tools: the host rows the Chat + menu reuses as c752b32f8 Js element slots (Record a skill, Skills,
+        // Connectors; their comments stay at their place in the Code menu below, which renders them as before).
+        const addTeachRow = watchRecord.available && <SourceMenu.Item icon="Recording" data-testid="add-record-skill" disabled={watchRecord.isStarting}
+          onClick={() => watchRecord.tryStart("plus_menu")}>{t(WATCH_RECORD_COPY.menuLabel)}</SourceMenu.Item>;
+        const addSkillsRow = addSkills.items.length > 0 && (
+          <SourceMenu.Submenu>
+            <SourceMenu.SubmenuTrigger icon="Scroll" data-testid="add-skills">{t("Skills")}</SourceMenu.SubmenuTrigger>
+            <SourceMenu.Popup label={t("Skills")} className="add-skills-popup">
+              {addSkills.items.map((item) => <SourceMenu.SkillItem key={item.path} item={item} onSelect={applySkill} />)}
+              <SourceMenu.Separator />
+              <SourceMenu.Item icon="Tool" onClick={() => setSettings("customize-skills")}>{t("Manage skills")}</SourceMenu.Item>
+            </SourceMenu.Popup>
+          </SourceMenu.Submenu>
+        );
+        const addConnectorsRow = boot?.connected && (() => {
+          const entry = addConnectorsEntry({ rows: customizeSnapshot.mcp?.rows || [], status: customizeSnapshot.mcp?.status,
+            settingFor: (row) => customizeSnapshot.mcpConfig?.status === "ready" ? customizeSnapshot.mcpConfig.servers?.[row.name]
+              : customizeCore(boot?.core).connectorToggle ? { enabled: row.kind !== "disabled", editable: true } : null });
+          const openConnectors = () => setSettings("customize-connectors");
+          // ne (:12085-12090): a connector's row and its Reconnect open that connector's page.
+          const openConnector = (row) => setSettings(`customize-connectors#${encodeURIComponent(row.name)}`);
+          if (entry.kind === "loading") return <div className="smenu-skeleton-row" data-add-loading="connectors">
+            <span className="smenu-skeleton" style={{ width: 20, height: 20 }} />
+            <span aria-hidden="true" className="smenu-skeleton" style={{ width: 96, height: 16 }} />
+          </div>;
+          if (entry.kind === "manage") return <SourceMenu.Item icon="Connectors" data-testid="add-connectors" onClick={openConnectors}>{t("Manage connectors")}</SourceMenu.Item>;
+          return <SourceMenu.Submenu>
+            <SourceMenu.SubmenuTrigger icon="Connectors" data-testid="add-connectors"
+              hint={entry.reconnectCount > 0 ? tn(entry.reconnectCount, "{count} needs reconnection", "{count} need reconnection") : undefined}>{t("Connectors")}</SourceMenu.SubmenuTrigger>
+            <SourceMenu.Popup label={t("Connectors")} className="add-connectors-popup">
+              <SourceMenu.Item icon="Tool" onClick={openConnectors}>{t("Manage connectors")}</SourceMenu.Item>
+              <SourceMenu.Separator />
+              {entry.items.map((item) => {
+                const { row, setting } = item;
+                if (item.type === "connecting") return <SourceMenu.Item key="connecting" disabled aria-busy="true">{t("Connecting…")}</SourceMenu.Item>;
+                if (item.type === "reconnect") return <SourceMenu.Item key={row.id} icon="CloudSlash" data-connector={row.name} description={t("Reconnect")}
+                  onClick={() => openConnector(row)}>{row.title || row.name}</SourceMenu.Item>;
+                if (item.type === "toggle") return <SourceMenu.Item key={row.id} icon="Connectors" data-connector={row.name} keepOpen role="menuitemcheckbox"
+                  aria-checked={setting.enabled !== false} hint={setting.enabled === false ? t("Off") : row.kind !== "connected" ? MCP_STATUS_LABELS[row.kind] || undefined : undefined}
+                  trailing={<SourceSwitch decorative checked={setting.enabled !== false} />}
+                  onClick={() => { customizeStore.setMcpEnabled(row.name, setting.enabled === false).catch((e) => { if (toasts) toasts.add(e.message, { variant: "warning" }); else setError(e.message); }); }}>{row.title || row.name}</SourceMenu.Item>;
+                return <SourceMenu.Item key={row.id} icon="Connectors" data-connector={row.name} onClick={() => openConnector(row)}>{row.title || row.name}</SourceMenu.Item>;
+              })}
+            </SourceMenu.Popup>
+          </SourceMenu.Submenu>;
+        })();
+        // w13-chatfn-tools: the Chat + menu is c752b32f8 Js (source-chat-tools-menu.jsx: ra testids → shared-8 lN groups →
+        // separator-tools / separator-modes). Slots: uploadFile (Ws), teach (Us, while Record a skill is available),
+        // screenshot (Fs), skills, connectors, plugins (gs's Chat branch: `isChatModeGatedOff` → a disabled "Plugins" row
+        // with its reason), research (yz), webSearch (Tz), memory (ns). Add folder (IN) is for an agent or Cowork route,
+        // not Chat; Slash commands, Import GitHub issue and the local Tools submenu are Code's (no Js slot). Web search and
+        // Research are this conversation's (chat-tools-model.mjs: Codex's thread web_search, a tool-selection core's web
+        // tools, else no Web search row and Research disabled).
+        if (mode === "chat") {
+          const codexNative = coreForEngine(boot?.core?.engine).id === "codex" && !coreSupports(boot?.core, "permissionHints");
+          const toolsInput = { support: searchSupport({ codexNative, toolSelection, catalog: toolsCatalog }),
+            settings: chatSettingsFor(boot?.config?.chatTools, current || null), selection: sessionTools, globalMode: boot?.config?.codexWebSearch ?? null };
+          const toolSlots = chatToolSlots(toolsInput);
+          // mz: the switch's patch goes to this conversation (or the New chat), a tool-selection core's web tools with it.
+          const switchTools = (result) => {
+            if (result.selection !== undefined) setSessionTools(result.selection);
+            call("chat-tools", { op: "set", threadId: current || null, settings: result.settings })
+              .then((store) => setBoot((value) => (value?.config ? { ...value, config: { ...value.config, chatTools: store } } : value)), (e) => setError(e.message));
+            if (result.autoEnabledWebSearch) toasts?.add(t(chatToolsMessages.webSearchAutoEnabled.defaultMessage), { variant: "neutral" });
+          };
+          // w13-chatfn-memory: c752b32f8 ns — checkbox, icon Memory, closes on click; this conversation's memory, else (no
+          // conversation yet) the account setting. The label is a server string (`me({id:"quond8"})`); the host shows the
+          // Memory section's name.
+          const memory = boot?.config?.chatMemory ?? {};
+          const memoryOn = memory.enabled === true && memory.paused !== true && !(current && memory.threads?.[current] === false);
+          // w13-chatfn-tools (review 补做): c752b32f8 ks "Add to project" — gated by shared-8 EP, which hides it on a
+          // project's page (wP `/project/`); its popup (As → Ms over Es) lists the local projects, and a pick is Ns: the
+          // conversation moves to the project or leaves it (local-projects assign / unassign), a draft takes it or drops it.
+          const currentProjectId = current ? sessionMetadata[current]?.projectId ?? null : projectDraftId;
+          const pickChatProject = ({ action, projectId }) => {
+            if (current) { sessionAction(action === "remove" ? "remove-from-project" : "move-to-project", { id: current }, { projectId }).catch((e) => setError(e.message)); return; }
+            const next = action === "remove" ? null : projectId;
+            if (next === projectDraftRef.current) return;
+            forgetDraft(browserStorage(), draftKey(null, modeRef.current, projectDraftRef.current), { text: liveComposer.current?.text ?? "" });
+            projectDraftRef.current = next;
+            setProjectDraftId(next);
+          };
+          const projectSlot = section !== "projects" ? { popup: <ChatProjectPopup projects={boot?.config?.localProjects ?? []} currentProjectId={currentProjectId} onPick={pickChatProject}
+            onCreate={(name) => setNewProjectFor(current ? { sessionId: current, name } : { draft: true, name })} /> } : undefined; // w13-close-chat-projects-memory: Es's create rows
+          const slots = {
+            ...chatAddMenuSlots({ attach, attachShortcut: "cmd+u", screenshot: captureScreenshot, teach: addTeachRow, skills: addSkillsRow, project: projectSlot,
+              connectors: addConnectorsRow,
+              webSearch: toolSlots.webSearch && { ...toolSlots.webSearch, onToggle: () => switchTools(toggleWebSearch({ ...toolsInput, on: !toolSlots.webSearch.checked })) },
+              research: toolSlots.research && { ...toolSlots.research, tooltip: toolSlots.research.tooltip ? t(toolSlots.research.tooltip.defaultMessage) : undefined,
+                onToggle: () => switchTools(toggleResearch({ ...toolsInput, on: !toolSlots.research.checked })) } }),
+            plugins: { type: "button", label: t(chatToolsMessages.plugins.defaultMessage), icon: "Plugin", disabled: true, tooltip: t(chatToolsMessages.pluginsUnavailableInChat.defaultMessage) },
+            memory: { type: "checkbox", label: t("Memory"), icon: "Memory", checked: memoryOn, closeOnClick: true, onAction: () => {
+              call("chat-memory", { op: "thread", threadId: current || null, enabled: !memoryOn })
+                .then((result) => { if (result?.settings) setBoot((previous) => ({ ...previous, config: { ...previous.config, chatMemory: result.settings } })); }, (e) => setError(e.message));
+            } },
+          };
+          return <ChatAddMenuItems entries={chatAddMenuEntries(slots)} />;
+        }
         return (
           <>
             {/* c227f4d5e Dj (generated): "Add files or photos", icon Attachment, ⌘U; the host native file dialog (attach). */}
@@ -5782,8 +6170,10 @@ function App({ side = 0, initialSession = null }) {
             {!!workdir && <SourceMenu.Item icon="Folder" onClick={addFolderFromMenu}>{t("Add folder")}</SourceMenu.Item>}
             {/* c752b32f8 zo (Uo's `teach` slot, after Add folder): "Record a skill", icon Recording, disabled while a start
                 is in flight; the recording goes to this session, or to a new one from Home (source-watch-record.jsx). */}
-            {watchRecord.available && <SourceMenu.Item icon="Recording" data-testid="add-record-skill" disabled={watchRecord.isStarting}
-              onClick={() => watchRecord.tryStart("plus_menu")}>{t(WATCH_RECORD_COPY.menuLabel)}</SourceMenu.Item>}
+            {addTeachRow}
+            {/* w13-close-chat-composer (E63 chatfn-attachments-07): the Cowork card's + menu is c752b32f8 Js too, so its Fs
+                screenshot slot follows teach (ra order addFolder → teach → screenshot), as in Chat. */}
+            {mode === "cowork" && <SourceMenu.Item icon={SCREENSHOT_ICON} data-testid={SCREENSHOT_TESTID} onClick={captureScreenshot}>{t("Take a screenshot")}</SourceMenu.Item>}
             {/* zN :12540-12590: in the draft, 'Import GitHub issue' (GitHub glyph) opens the picker, or sits disabled with
                 gH's reason; the user's gh answers (github-issues.cjs). Linear needs a connector the cores don't have. */}
             {!current && issueStatus?.folder === issueFolder && (issueStatus.available || issueStatus.unavailableReason) && (
@@ -5805,53 +6195,13 @@ function App({ side = 0, initialSession = null }) {
             {/* jy (:9309-9338) returns null when it has no skill rows: there is
                 no "loading"/"empty" row in the Skills submenu, the entry is
                 simply absent until skills/list answers. */}
-            {addSkills.items.length > 0 && (
-              <SourceMenu.Submenu>
-                <SourceMenu.SubmenuTrigger icon="Scroll" data-testid="add-skills">{t("Skills")}</SourceMenu.SubmenuTrigger>
-                <SourceMenu.Popup label={t("Skills")} className="add-skills-popup">
-                  {addSkills.items.map((item) => <SourceMenu.SkillItem key={item.path} item={item} onSelect={applySkill} />)}
-                  <SourceMenu.Separator />
-                  <SourceMenu.Item icon="Tool" onClick={() => setSettings("customize-skills")}>{t("Manage skills")}</SourceMenu.Item>
-                </SourceMenu.Popup>
-              </SourceMenu.Submenu>
-            )}
+            {addSkillsRow}
             {/* re (ca80fca8d jN :12093-12290, add-menu-model addConnectorsEntry): a skeleton while the list loads with
                 nothing to show; no connector → a plain 'Manage connectors' row; otherwise the Connectors submenu with
                 'Manage connectors' (icon Tool) first, a separator, then the connector rows (icon Connectors: a switch for
                 a connector the core's config can turn on or off, else a row opening its page), the ones that need a
                 sign-in again (CloudSlash, 'Reconnect') and 'Connecting…'; the hint counts the reconnect rows. */}
-            {boot?.connected && (() => {
-              const entry = addConnectorsEntry({ rows: customizeSnapshot.mcp?.rows || [], status: customizeSnapshot.mcp?.status,
-                settingFor: (row) => customizeSnapshot.mcpConfig?.status === "ready" ? customizeSnapshot.mcpConfig.servers?.[row.name]
-                  : customizeCore(boot?.core).connectorToggle ? { enabled: row.kind !== "disabled", editable: true } : null });
-              const openConnectors = () => setSettings("customize-connectors");
-              // ne (:12085-12090): a connector's row and its Reconnect open that connector's page.
-              const openConnector = (row) => setSettings(`customize-connectors#${encodeURIComponent(row.name)}`);
-              if (entry.kind === "loading") return <div className="smenu-skeleton-row" data-add-loading="connectors">
-                <span className="smenu-skeleton" style={{ width: 20, height: 20 }} />
-                <span aria-hidden="true" className="smenu-skeleton" style={{ width: 96, height: 16 }} />
-              </div>;
-              if (entry.kind === "manage") return <SourceMenu.Item icon="Connectors" data-testid="add-connectors" onClick={openConnectors}>{t("Manage connectors")}</SourceMenu.Item>;
-              return <SourceMenu.Submenu>
-                <SourceMenu.SubmenuTrigger icon="Connectors" data-testid="add-connectors"
-                  hint={entry.reconnectCount > 0 ? tn(entry.reconnectCount, "{count} needs reconnection", "{count} need reconnection") : undefined}>{t("Connectors")}</SourceMenu.SubmenuTrigger>
-                <SourceMenu.Popup label={t("Connectors")} className="add-connectors-popup">
-                  <SourceMenu.Item icon="Tool" onClick={openConnectors}>{t("Manage connectors")}</SourceMenu.Item>
-                  <SourceMenu.Separator />
-                  {entry.items.map((item) => {
-                    const { row, setting } = item;
-                    if (item.type === "connecting") return <SourceMenu.Item key="connecting" disabled aria-busy="true">{t("Connecting…")}</SourceMenu.Item>;
-                    if (item.type === "reconnect") return <SourceMenu.Item key={row.id} icon="CloudSlash" data-connector={row.name} description={t("Reconnect")}
-                      onClick={() => openConnector(row)}>{row.title || row.name}</SourceMenu.Item>;
-                    if (item.type === "toggle") return <SourceMenu.Item key={row.id} icon="Connectors" data-connector={row.name} keepOpen role="menuitemcheckbox"
-                      aria-checked={setting.enabled !== false} hint={setting.enabled === false ? t("Off") : row.kind !== "connected" ? MCP_STATUS_LABELS[row.kind] || undefined : undefined}
-                      trailing={<SourceSwitch decorative checked={setting.enabled !== false} />}
-                      onClick={() => { customizeStore.setMcpEnabled(row.name, setting.enabled === false).catch((e) => { if (toasts) toasts.add(e.message, { variant: "warning" }); else setError(e.message); }); }}>{row.title || row.name}</SourceMenu.Item>;
-                    return <SourceMenu.Item key={row.id} icon="Connectors" data-connector={row.name} onClick={() => openConnector(row)}>{row.title || row.name}</SourceMenu.Item>;
-                  })}
-                </SourceMenu.Popup>
-              </SourceMenu.Submenu>;
-            })()}
+            {addConnectorsRow}
             {/* oe (ca80fca8d jN :12313-12440, add-menu-model addPluginsEntry): the c752b32f8 Q skeleton row (h-control,
                 20x20 + 96x16, no text) while plugins load with none ready; no plugin with skills → the on-this-device
                 branch's plain 'Add plugins' row (icon Plugin, `n = e === "org"` false); otherwise the Plugins submenu
@@ -5868,23 +6218,14 @@ function App({ side = 0, initialSession = null }) {
               if (entry.kind !== "submenu") return null;
               return <SourceMenu.Submenu>
                 <SourceMenu.SubmenuTrigger icon="Plugin" data-testid="add-plugins">{t("Plugins")}</SourceMenu.SubmenuTrigger>
-                <SourceMenu.Popup label={t("Plugins")} className="add-plugins-popup">
-                  {addPlugins.groups.map((group) => (
-                    <SourceMenu.Submenu key={group.id}>
-                      <SourceMenu.SubmenuTrigger icon="Plugin" data-plugin-id={group.id}>{group.label}</SourceMenu.SubmenuTrigger>
-                      <SourceMenu.Popup label={group.label} className="add-plugin-skills-popup">
-                        {group.items.map((item) => <SourceMenu.SkillItem key={item.path} item={item} onSelect={applySkill} />)}
-                      </SourceMenu.Popup>
-                    </SourceMenu.Submenu>
-                  ))}
-                  <SourceMenu.Separator />
-                  <SourceMenu.Item icon="Tool" onClick={() => setSettings("customize-plugins")}>{t("Manage plugins")}</SourceMenu.Item>
-                  <SourceMenu.Item icon="Add" data-add-browse-plugins="" onClick={() => setSettings("customize-plugins")}>{t("Browse plugins")}</SourceMenu.Item>
-                </SourceMenu.Popup>
+                {/* w12b-slash-plugin-groups: 3.6556.2 c752b32f8 us (source-add-plugins-menu.jsx). */}
+                <AddPluginsPopup rows={addPluginRows} onSkill={applySkill}
+                  onManage={() => setSettings("customize-plugins")} onBrowse={() => setSettings("customize-plugins")} />
               </SourceMenu.Submenu>;
             })()}
           </>
         );
+      }
       case "titlebar":
         return <>
           {/* R3-topbar TT-03 (2.42304.0 c73f45bc3 Vh): first the toggles the titlebar folded away (`jh(Rh(...),
@@ -5921,6 +6262,24 @@ function App({ side = 0, initialSession = null }) {
           })()}
         </>;
       case "session-title":
+        // w13-close-cowork-sidebar (chatui-sidebar-star-02): a Chat session's title is ca2ef848d F5 (y5's session branch,
+        // c21f11e6d BP's props; chat-starred-model.mjs chatTitleMenuEntries): Schedule / Turn into skill fill the composer
+        // (Bae Fi / Ii), Pin / Unpin, Rename (om me: the nm rename dialog), the move-to-space block (fm oe), Delete (om he:
+        // hm "Delete chat", 100ms later). No Archive for a chat session (y5 `Ot = Dt ? void 0 : D`).
+        if (mode === "chat") {
+          const target = menu.data;
+          const projects = boot?.config?.localProjects;
+          return <SourceChatTitleMenu session={target} metadata={sessionMetadata[target.id]} onClose={closeMenu}
+            onAction={(...args) => sessionAction(...args).catch(actionFailed(sessionActionErrorKind(args[0])))}
+            onRename={() => setRename(renameDialogFor(target))}
+            onDelete={() => { setTimeout(() => setActionDialog({ kind: "delete-chat", target }), CHAT_TITLE_DELETE_DELAY_MS); }}
+            onSchedule={() => setDraft(t(CHAT_TITLE_MENU_MESSAGES.schedulePrompt.defaultMessage))}
+            onTurnIntoSkill={() => { setDraft(TURN_INTO_SKILL_PROMPT); setMentions([]); setAttachments([]); }}
+            projectItems={Array.isArray(projects) ? <SourceChatProjectMenuItems kind="cowork" projects={projects} currentProjectId={sessionMetadata[target.id]?.projectId ?? null}
+              onMove={(projectId) => { closeMenu(); sessionAction("move-to-project", target, { projectId }).catch(actionFailed(sessionActionErrorKind("move-to-project"))); }}
+              onCreateProject={(name) => { closeMenu(); sessionAction("create-project", target, { name }).catch(actionFailed(sessionActionErrorKind("create-project"))); }}
+              onRemove={() => { closeMenu(); sessionAction("remove-from-project", target).catch(actionFailed(sessionActionErrorKind("remove-from-project"))); }} /> : null} />;
+        }
         // c593f7513 wm Rt → Om k (7740-7850, 8150-8210): the title's CaretDown and its context menu. canPin false, no
         // readState, hideMoveToGroup, and Om drops keepAwake/paneItems: Open PR, Open in, Rename (onRenameStart: the
         // inline title edit, deferred 100ms), Export, Share/Copy link, Fork, then the Transcript view submenu (xm),
@@ -5971,11 +6330,17 @@ function App({ side = 0, initialSession = null }) {
             <SourceMenu.Submenu>
               <SourceMenu.SubmenuTrigger icon="Info">{t("Learn more")}</SourceMenu.SubmenuTrigger>
               <SourceMenu.Popup label={t("Learn more")} className="account-learn-more">
+                {/* w12c-wiring (w12b-settings-dialogs S6; 3.6556.2 cd75f6c8c `c.Popup,{className:"min-w-[208px]",…children:[Qt,en,…,fn,pn,gn]}`):
+                    the external links first, each St `c.Item,{trailing:X,href:o,target:"_blank",rel:"noopener"}` with
+                    `X=n(g,{name:"ArrowOutSquare",size:"sm"})`, then the Separator (pn), Keyboard shortcuts (gn) last. */}
+                {boot?.connected && /^https:\/\//.test(coreForEngine(boot?.core?.engine).homepage || "") && <>
+                  <SourceMenu.Item data-testid="user-menu-core-homepage" trailing={<CdsIcon name="ArrowOutSquare" size="sm" />}
+                    onClick={() => call("external", { url: coreForEngine(boot.core?.engine).homepage }).catch(actionFailed("open-link"))}>
+                    {t("{core} project page", { core: coreName(boot.core) })}</SourceMenu.Item>
+                  <SourceMenu.Separator />
+                </>}
                 {/* shared-21-D098Wd--.js:16424-16431: J.Item {shortcut: Mn("shortcuts_modal").shortcutString} → ⌘/, no icon. */}
                 <SourceMenu.Item shortcut={SHORTCUTS_DIALOG_KEYS} onClick={()=>setActionDialog({kind:"shortcuts"})}>{t("Keyboard shortcuts")}</SourceMenu.Item>
-                {boot?.connected && /^https:\/\//.test(coreForEngine(boot?.core?.engine).homepage || "") && <SourceMenu.Item data-testid="user-menu-core-homepage"
-                  onClick={() => call("external", { url: coreForEngine(boot.core?.engine).homepage }).catch(actionFailed("open-link"))}>
-                  {t("{core} project page", { core: coreName(boot.core) })}</SourceMenu.Item>}
               </SourceMenu.Popup>
             </SourceMenu.Submenu>
             {accountMenuSignOut(boot?.account, { engine: boot?.core, connected: boot?.connected }) && <>
@@ -6048,6 +6413,7 @@ function App({ side = 0, initialSession = null }) {
         preview: pane(menuState.panes.preview), sideChat: pane(menuState.panes.sideChat) },
       onTogglePane: (kind) => {
         if (kind === "terminal") toggleTerminalPane();
+        else if (kind === "sideChat" && modeRef.current === "chat") { if (current) chatSideChatStore.getState().toggle(current); } // G9: Chat's side chat
         else if (kind === "sideChat") setSideChat((value) => ({ open: !value.open, pending: null }));
         else paneShortcutRef.current?.(kind);
       },
@@ -6161,7 +6527,8 @@ function App({ side = 0, initialSession = null }) {
   // R4i-cowork CW3 (X2 CW-4 / CW-6): a Cowork session's Restart conversation from here and the error card's Go back
   // (cowork-session-actions.mjs: 2.42304.0 CoworkSessionView mo / so) over the CW2 rewind bridge (IPC cowork-rewind).
   // mk's inputDisabled `a` is an archived or disconnected session here; Me (sessionCtx.retry) is the existing Try again.
-  const coworkBridge = isCoworkSession(current) ? coworkRewindBridge(call, { coworkEnabled: boot?.coworkEnabled === true }) : null;
+  // w13-coworkfn-caps (cwf-17): a Cowork session on the connected core (sessionMetadata surface cowork) has the bridge too.
+  const coworkBridge = isCoworkSession(current, sessionMetadata) ? coworkRewindBridge(call, { cowork: true }) : null;
   // R4i-cowork CW4 (X2 CW-5): the open inline edit (source-user-message-edit.jsx) of this Cowork session's last human message.
   const coworkEdit = useCoworkMessageEdit(current);
   // The host calls (send, afterRewind, retry, toast, the composer prefill) are cowork-session-actions.mjs coworkSessionHost.
@@ -6191,7 +6558,7 @@ function App({ side = 0, initialSession = null }) {
   const coworkPrefill = (text) => coworkHost?.prefill(text);
   const transcriptActions = {
     threadId: current,
-    onSideChatContext: current && commandContext.sideQuestions ? text => { sideChatStore.stageContext(current, text); setSideChat({ open: true, pending: null }); } : null,
+    onSideChatContext: current && commandContext.sideQuestions && mode !== "chat" ? text => { sideChatStore.stageContext(current, text); setSideChat({ open: true, pending: null }); } : null,
     cwd: workdir || cwd,
     resolveMessage: (itemId) => messageItemText(shownUserItem(items.find((item) => item.id === itemId))),
     onAttachText: composerAttachable ? (text) => attachQuoteToDraft(text, "transcript") : null,
@@ -6210,10 +6577,10 @@ function App({ side = 0, initialSession = null }) {
       return { turnId: row.turnId, user: row.type === "userMessage" };
     },
     // onRewindToMessage (cc43287c9 :33905): the message's own rewind request, no picker.
-    onRewindTo: current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities)
+    onRewindTo: current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)
       ? (turnId) => requestRewind(current, turnId, rewindChoices(shownTurns([{ id: turnId, items: items.filter((item) => item.turnId === turnId) }]))[0]?.text ?? "", items) : null,
     // capabilities.forkAtTurn false (MiniMax): the core forks only whole conversations, so no 'Fork from here'.
-    onForkFrom: current && !running && !session?.archived && boot?.connected && codeForkServed(current, boot?.core?.capabilities)
+    onForkFrom: current && !running && !session?.archived && boot?.connected && codeForkServed(current, boot?.core?.capabilities, sessionMetadata)
       ? (turnId) => void sessionAction("fork", session ?? { id: current }, { lastTurnId: turnId }).catch(actionFailed("fork")) : null,
     // Pin as chapter / Unpin chapter (TI): an assistant message of an open session; the heading goes before it.
     resolvePin: (itemId) => {
@@ -6223,6 +6590,66 @@ function App({ side = 0, initialSession = null }) {
     },
     onTogglePin: current ? (itemId, text) => toggleChapterPin(itemId, text) : null,
   };
+  // w13-chatfn-history (H7, chat-incognito-model.mjs): ⌘K's "Incognito chat" (shared-1 incognito command, href
+  // "/new?incognito=true") arms the New chat page it opens (the history entry `at`); a navigation that did not land there,
+  // or leaving it, disarms it. The chat sent from it starts with codeDesktop.incognito, and once the window leaves that
+  // chat it is deleted (a running one when its turn ends; main sweeps what a quit left, chat-history.mjs).
+  const [incognitoArm, setIncognitoArm] = useState(null);
+  useEffect(() => { if (incognitoArm && (historyAt !== incognitoArm.at || mode !== "chat")) setIncognitoArm(null); }, [historyAt, mode, incognitoArm]);
+  const incognitoDraft = mode === "chat" && !current && incognitoArm?.at === historyAt;
+  // w13-close-chat-surface (E77): the incognito page / chat; in the main window (side 0, not a popout or pane window)
+  // it gets the official incognito shell (source-incognito-shell.jsx: shared-78 vK unmounts the frame shell and its
+  // sidebar, shared-23 VA's 48px Fy row, LA's vA() padding, shared-20 Jy's frame).
+  const incognitoActive = mode === "chat" && (incognitoDraft || isIncognitoSession(current, sessionMetadata));
+  const incognitoShell = incognitoActive && side === 0 && !NO_SIDEBAR;
+  const startIncognito = () => { if (mode !== "chat") return; if (current) { navigate(null); setIncognitoArm({ at: historyAt + 1 }); } else setIncognitoArm({ at: historyAt }); };
+  // ⇧⌘I (shared-1 `incognito` shortcut; shared-21 oO, a capture listener that is off on Code routes, sO): on the New chat
+  // page or in an incognito chat it toggles incognito, elsewhere in Chat it opens an incognito New chat. Code keeps ⇧⌘I
+  // for Open model menu (c518a31cc He); the chin chord stands down in Chat.
+  const incognitoKey = useRef(null);
+  incognitoKey.current = () => { if (!current) setIncognitoArm(incognitoDraft ? null : { at: historyAt }); else if (isIncognitoSession(current, sessionMetadata)) navigate(null); else startIncognito(); };
+  useEffect(() => {
+    if (mode !== "chat") return undefined;
+    const onKey = (e) => {
+      if (e.defaultPrevented || e.isComposing || !e.metaKey || !e.shiftKey || e.altKey || e.ctrlKey || e.code !== "KeyI" || !splitActiveRef.current || settings) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (!e.repeat) incognitoKey.current?.();
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [mode, settings]);
+  const incognitoOpen = useRef(null), incognitoLeaving = useRef(new Set());
+  useEffect(() => {
+    const shown = mode === "chat" ? current : null, left = incognitoLeft(incognitoOpen.current, shown, sessionMetadata);
+    if (left) incognitoLeaving.current.add(left);
+    incognitoOpen.current = isIncognitoSession(shown, sessionMetadata) ? shown : null;
+    for (const id of [...incognitoLeaving.current]) {
+      if (state.active?.[id]) continue;
+      incognitoLeaving.current.delete(id);
+      // w13-close-main-process: another split side still showing the chat keeps it; that side deletes it when it leaves.
+      if (splitStore.getState().sides?.some((other, index) => index !== side && other?.current === id)) continue;
+      void sessionAction("delete", sessions.find((thread) => thread.id === id) ?? { id }).catch(() => {});
+    }
+  }, [current, mode, sessionMetadata, state.active]);
+  // w13-chatfn-branches: Chat versions (electron/chat-branches.mjs). Retry forks before the reply's turn where the core
+  // forks at a turn, opens that version and sends the same prompt there; Previous / Next version open another version.
+  const chatBranches = useChatBranches({ threadId: mode === "chat" ? current : null, call,
+    canBranch: mode === "chat" && !!current && !running && !sending && !loading && !session?.archived && !!boot?.connected && codeForkServed(current, boot?.core?.capabilities, sessionMetadata),
+    firstTurn: !!current && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata),
+    params: () => ({ permission: bypassMode.forSession(current, session?.cwd), afterPlan: afterPlan.current,
+      expected: { connectionId: state.approvalConnectionId, connectionEpoch: state.approvalConnectionEpoch } }),
+    onChange: ({ metadata, thread, show }) => {
+      setSessionMetadata((value) => withChatBranchMetadata(value, metadata));
+      if (thread?.id) setSessions((value) => [thread, ...value.filter((entry) => entry.id !== thread.id)]);
+      if (show && show !== currentRef.current) navigate(show);
+    },
+    onError: actionFailed("fork") });
+  useEffect(() => {
+    const next = chatBranches.pendingFor(current);
+    if (!next || loading || running || sending || !boot?.connected) return;
+    chatBranches.clearPending();
+    void sendMessage(next.text, next.attachments ?? [], [], { resend: true }); // w13-close-chat-messages: with the turn's files
+  }, [chatBranches.pending, current, loading, running, sending, boot?.connected]);
   // Files pane tree-row and tab menus (file-context-menu-model.mjs, Mn): Attach as context through the same
   // path attachment as the Changes header and the transcript, Show in Finder through the session-scoped reveal IPC.
   const fileContextOwner=useMemo(()=>({}),[current]);
@@ -6235,7 +6662,8 @@ function App({ side = 0, initialSession = null }) {
     onAskAbout: current && commandContext.sideQuestions ? question => setSideChat({ open: true, pending: question }) : null,
     onSaveComment: composerAttachable ? (entry,{viaKeyboard,submit}) => {
       const text=serializeLineComment({...entry,text:entry.body});
-      const snippet=makeSnippet(text,{key:entry.key,label:entry.start===entry.end?`${entry.path}:L${entry.start}`:`${entry.path}:L${entry.start}-L${entry.end}`});
+      // w12c-wiring (w12b-changes-files cf-01; c0fbbe82d fs): the saved comment rides as its annotation (Comment tile).
+      const snippet=makeSnippet(text,{key:entry.key,label:entry.start===entry.end?`${entry.path}:L${entry.start}`:`${entry.path}:L${entry.start}-L${entry.end}`,annotation:entry});
       setAttachments(entries=>addSnippet(entries,snippet));
       if(viaKeyboard)requestAnimationFrame(()=>{textarea.current?.focus();if(submit)requestComposerSubmit(textarea.current);});
     } : null,
@@ -6297,7 +6725,8 @@ function App({ side = 0, initialSession = null }) {
   const mcpAppRows = useMcpAppTranscript({ sessionId: current, onPrefillComposer: (text) => {
     if (!current || session?.archived || typeof text !== "string" || !text) return false;
     setDraft((value) => (value.trim() ? `${value}\n\n${text}` : text)); scheduleComposerFocus(textarea.current); return true; } });
-  const shownRows =mcpAppRows.group(groupFileTools, withLocalCommandRows(withModelWorkflowRows(toolRuns.items),[...(localCommandRows[current]||[]),...toolRuns.rows]),transcriptView);
+  // w13-chatfn-artifacts: in a Chat an artifact call is its own chip, never a tool group member (chat-artifact-model withArtifactChips).
+  const shownRows =mcpAppRows.group(groupFileTools, withLocalCommandRows(withModelWorkflowRows(toolRuns.items),[...(localCommandRows[current]||[]),...toolRuns.rows]),transcriptView).flatMap((row) => (mode === "chat" ? withArtifactChips([row]) : [row]));
   shownRowCount.current = { id: current, count: shownRows.length };
   // QL's turnSuggestions rows: after the last shown row of each proposing turn.
   const proposalAnchors = proposalCards.anchors(shownRows);
@@ -6329,6 +6758,9 @@ function App({ side = 0, initialSession = null }) {
   const turnBoxScope = useTurnBoxScope(current);
   const turnBoxPlanMarks = useTurnBoxPlanMarks(state);
   const turnBoxHost = useCodeTurnBoxHost({ state, planMarks: turnBoxPlanMarks, requestOwner: approvalOwner, currentId: current, sessions,
+    // W12c (w12b-turnbox-ls #27): Sg's sL reads pinned / keepAwake / side-session family (metadata as the sidebar shows it)
+    // and the open session's background tasks; the family's loops / monitors come from the bridge (desktop: api).
+    metadata: shownSessionMetadata, tasks, desktop: api,
     onOpenSession: (id) => navigate(id), onNewSession: () => navigate(null),
     onArchiveSession: (id) => { const row = sessions.find((entry) => entry.id === id); if (row) void sessionAction("archive", row).catch(actionFailed("archive")); },
     onOpenTasksPane: session && section === "new" ? () => { if (!openPanes.has("tasks")) openPaneTile("tasks"); } : undefined,
@@ -6391,7 +6823,7 @@ function App({ side = 0, initialSession = null }) {
       // B08: an existing PR (bandPrView) sets view/merged/queued mode; with it a clean tree offers no primary action
       // (cd5a31703 Te null), a dirty one keeps Commit changes. The chips' menus add Open branch on GitHub and Open in
       // terminal (c0a531389 T, cd5a31703 Hle/bt).
-      beforeComposer={mode === 'code' && current && !railHidesBand && (bandStatus ? <SourceGitStatus status={bandStatus}
+      beforeComposer={mode === 'chat' ? <ChatImageLimitNotice notice={chatImageNotice} conversationId={current || null} /> /* w13-close-chat-composer: shared-7 Cv band */ : mode === 'code' && current && !railHidesBand && (bandStatus ? <SourceGitStatus status={bandStatus}
         prMode={bandPrView ? bandPrMode(bandPrView) : bandPr ? bandPr.mode : "commit"} pr={bandPr} prView={bandPrView}
         prHint={bandPr?.hint ? { cause: bandPr.hint, onInstall: (url) => call("external", { url }).catch(actionFailed("open-link")),
           onRunInTerminal: terminalAvailable ? (command) => { runInTerminal(command, "sh").catch((e) => setError(e.message)); } : null } : null}
@@ -6431,6 +6863,11 @@ function App({ side = 0, initialSession = null }) {
       // R06 pill click (c099c328d Gl :3542-3550, adapted): a file opens in the Files pane (F11 viewer), a directory is revealed.
       onOpenAttachmentFile={(entry, action) => action === "reveal" ? transcriptActions.onRevealFile?.(entry.path)
         : openFileRef({ path: pathChoices(entry.path, workdir)?.relative || entry.path })}
+      // w12c-wiring (w12b-changes-files cf-01; cc43287c9 lg): a Comment tile reopens its Files line (source "file", UT at
+      // `line:e.endLine`) or reveals its Changes diff at the annotation's anchor (IC + tI.scrollToAnnotation).
+      onClickAnnotation={(annotation) => { const target = annotationClickTarget(annotation); if (!target) return;
+        if (target.pane === "files") openFileRef({ path: target.path, line: target.line });
+        else { requestDiffReveal(target.path, { anchor: target.anchor }); setPanel("changes"); } }}
       onStageFiles={(files, options) => void stageComposerIntake(files, options)}
       onAddFolders={addFolderFiles}
       fileContextOwner={fileContextOwner}
@@ -6446,6 +6883,11 @@ function App({ side = 0, initialSession = null }) {
       forkAvailable={mode === "code" && !!current && !session?.archived && !!boot?.connected && !unsupportedCommand("fork", commandContext)}
       running={running}
       sending={sending || actionPending}
+      // w11-submit-queue-wiring (3.6556.2 c227f4d5e wF `Is=Zt||it` → KM submitQueued): a held submit (a Home start behind the
+      // branch check, or a message behind the send in flight) keeps the Send busy; while a message send is in flight Enter
+      // still reaches send(), which holds other text (hs) instead of dropping it.
+      submitHeld={heldSubmitQueued(heldStart)}
+      holdWhileSending={!!sendInFlight.current && !actionPending}
       stopping={stopping}
       // cc43287c9-BMbiZYzF.js:27612 Jr / :28636-28638: the editor stays typeable while the session loads or
       // the core is away (only an archived session locks it); sending waits for both (send() checks too).
@@ -6462,7 +6904,7 @@ function App({ side = 0, initialSession = null }) {
         || (current && shownApprovals.length > 0 && !!boot?.connected && !loading))}
       // Esc Esc (code-workspace.js Gl → openRewindPicker): Rewind for an idle, live session whose core serves
       // thread/revert and that has a turn to go back to, as the message menu's 'Rewind to here'.
-      onRewind={current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities)
+      onRewind={current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)
         && items.some((item) => item.type === "userMessage" && item.turnId && item.turnId !== state.active[current])
         ? () => { void executeCommand("rewind", "", undefined); } : null}
       // c099c328d :11162-11188 / cc43287c9 :28653 onEmptyArrowUp = handleDequeueLastQueued (:31152-31156).
@@ -6507,7 +6949,8 @@ function App({ side = 0, initialSession = null }) {
       usageFresh={!current}
       mode={mode}
       onCodeMode={mode === "chat" ? () => switchMode("code") : undefined}
-      onMode={switchMode} surfaceFolder={current ? workdir : boot?.config?.surfaceFolders?.[mode]}
+      surfaceFolder={current ? workdir : boot?.config?.surfaceFolders?.[mode]}
+      incognito={incognitoDraft || (mode === "chat" && isIncognitoSession(current, sessionMetadata))} // w13-close-chat-composer: shared-9 wD Ae → vm variant "incognito"
       surfaceFolderLabel={boot?.config?.localProjects?.find(project => project.id === (current ? sessionMetadata[current]?.projectId : projectDraftId))?.name}
       surfacePreviewPrompt={!current && mode === 'cowork' && section === 'new' ? homeIdeaPreview : undefined}
       onClearSurfacePreview={() => setHomeIdeaPreview(undefined)}
@@ -6532,7 +6975,10 @@ function App({ side = 0, initialSession = null }) {
     // R4i-rail RL1: the Connectors card (the session's connector list from the Customize store, its opener Customize ›
     // Connectors while the core is connected) and the rail's Save environment (the saved environment dialog's save).
     connectors: boot?.connected ? { mcp: customizeSnapshot.mcp, load: () => customizeStore.loadMcp({ cwd: workdir || cwd, threadId: current ?? null }) } : undefined,
-    openSessionMcpDialog: boot?.connected ? () => setSettings("customize-connectors") : null,
+    openSessionMcpDialog: boot?.connected ? (id) => setSettings(sessionMcpSettingsPage(id)) : null,
+    // w10-ccres-rail-openers: cf74bc599 TN `openSkills: Je ? Ye : null` (Je = shared-78 tQ, the skills feature; Ye opens
+    // the skills page): the Context card's Skills row opens Customize › Skills while the core is connected.
+    openSkills: boot?.connected ? () => setSettings("customize-skills") : null,
     // R4i-rail RL3: the Context card's source (source-session-rail-context-adapters.jsx), the composer usage popover's own:
     // the thread tokenUsage report, the core's auto-compact limit, and its Compact session (executeCommand("compact")).
     context: current ? { usage: state.usage[current] ?? null, core: boot?.core, modelId: model || null,
@@ -6554,18 +7000,32 @@ function App({ side = 0, initialSession = null }) {
     preview: { snapshot: previewSnapshot, available: previewAvailable },
     openPanes, openPane: openPaneTile,
     tasks, stopTask: stopBackgroundTask,
-    openTasks: ({ taskId, finished }) => { changeTileView({ taskViews: [], ...(finished ? { finishedExpanded: true } : {}) }); if (taskId) setTaskFocus(taskId); openPaneTile("tasks"); },
+    // w10-ccres-rail-openers: c227f4d5e mQ `l === void 0 ? s === void 0 ? n("tasks") : r(s) : i("tasks", {kind: "subagent",
+    // ...l}, {fromRoot: !0})`: a sub-agent row (agent { toolUseId, description }) pushes that agent's view from the root.
+    openTasks: (request) => openRailTask(request, { tasks, changeTileView, openAgent, setTaskFocus, openPane: openPaneTile }),
     openFile: (path, line, endLine) => openFileRef({ path: pathChoices(path, workdir)?.relative || path, line, endLine }),
     revealFolder: (dir) => { call("reveal-folder", { cwd: dir }).catch(actionFailed("reveal")); },
     copyText: (text, message) => copyWithToast(text, message),
     openTerminal: terminalAvailable ? (dir) => { openTerminalIn(dir).catch((e) => setError(terminalError(e, t("Failed to open terminal tab")))); } : undefined,
+    // w10-ccres-rail-env-edit: the rail's Edit environment (c73f45bc3 pu onUpdate, `lu(r, t, {source: "session_rail", touch:
+    // !1})`) writes the saved environment in place without selecting it; Delete environment as main's environment editor.
+    updateEnvironment: (id, value) => savedEnvironments.run({ op: 'save', id, value }),
+    deleteEnvironment: (id) => savedEnvironments.run({ op: 'delete', id }),
   };
   return (
     <div
       className={
-        // R01: collapsed by the stored preference or the narrow viewport (sidebar-main.js:15367-15372).
-        "desktop-app dframe-root " + (effectiveCollapsed ? "sidebar-collapsed" : "") + (side > 0 ? " split-secondary" : "")
+        // 3.6556.2 shared-22 oR: className "dframe-root draggable-none" (c6a992d55 .draggable-none{app-region:no-drag};
+        // the titlebars' own drag regions sit inside and still win).
+        "desktop-app dframe-root draggable-none" + (side > 0 ? " split-secondary" : "")
       }
+      // R01 / oR `"data-collapsed": F` (F = i && !0 || void 0): collapsed by the stored preference or the narrow viewport
+      // (sidebar-main.js:15367-15372). The loaded shared-styles lay the collapsed frame out from it: the aside is the
+      // trigger pill (SourceCollapsedChrome, passed below), its body the full-height drawer of width --df-peek-width.
+      // A session popout / pane window has no sidebar, so no collapsed frame either.
+      data-collapsed={effectiveCollapsed && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) || undefined}
+      // oR `"data-sidebar-density": m` (m = Ha(), the density the aside also writes: source-sidebar.jsx data-density).
+      data-sidebar-density="compact"
       data-variant="web"
       data-frame-mode={mode}
       data-session-popout={SESSION_POPOUT || undefined}
@@ -6574,15 +7034,23 @@ function App({ side = 0, initialSession = null }) {
       // sidebar-main.js:15304-15320 dR mirrors the peek store onto the root (F08).
       data-hovering={effectiveCollapsed && peek.hovering || undefined}
       data-peeked={effectiveCollapsed && peek.peeked || undefined}
-      // sidebar-main.js:15391-15392 with shared-2 Qg: max(sidebarWidth,
-      // sidebarFloor), and _v's zoom-aware traffic-light spacer.
-      style={{ "--df-sidebar-width": effectiveSidebarWidth(sidebarWidth, sidebarFloor) + "px", "--df-traffic-light-spacer": trafficLightSpacer + "px",
-        "--df-peek-top": peek.top + "px", "--df-peek-left": peek.left + "px", "--df-peek-bridge-top": (peek.bridge ?? peek.top - 8) + "px" }}
+      // 3.6556.2 shared-22-Bwn3sJTG.js oR: --df-sidebar-width = shared-52 x_ max(sidebarWidth, sidebarFloor),
+      // --df-sidebar-floor = lR sidebarFloor, the spacer = shared-10 Gn trafficLightSpacerWidth (0 in full screen) in
+      // the app-top-offset formula, --df-window-border = XL({ macAppInWindow: !fullscreen, zoomFactor }) and
+      // --df-drag-ghost-z = Wi (shared-46 kj = shared-frame au 9e3 + 1). Exactly oR's five; the drawer is placed by the
+      // [data-collapsed] rules (no host --df-peek-top/-left any more).
+      style={{ "--df-sidebar-width": effectiveSidebarWidth(sidebarWidth, sidebarFloor) + "px", "--df-sidebar-floor": sidebarFloor + "px",
+        "--df-traffic-light-spacer": `max(0px, calc(${fullScreen ? 0 : trafficLightSpacer}px - 1000 * max(0px, var(--app-top-offset, 0px) - 48px)))`,
+        "--df-window-border": fullScreen ? "0px" : `${1 / zoomFactor}px`, "--df-drag-ghost-z": 9001 }}
     >
       {/* shared-21 lK / shared-22 15368-15373: a sidebar render error shows "Sidebar failed to load." with Try again
           (remount) instead of taking the window down. */}
-      {side === 0 && !NO_SIDEBAR && <SourceSidebarBoundary>
+      {/* w13-close-chat-surface (E77): shared-78 vK — no frame shell, so no sidebar, while the window is incognito. */}
+      {side === 0 && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) && <SourceSidebarBoundary>
       <SourceSidebar
+        homeMode={homeModeFor({ coworkEnabled: boot?.coworkEnabled === true })}
+        localProjects={boot?.config?.localProjects}
+        onViewProject={(project) => openLocalProject(project).catch((reason) => setError(reason.message))} // w13-close-cowork-sidebar: Bw View project
         windowActions={windowActions}
         paletteCommands={paletteCommands}
         models={models}
@@ -6594,13 +7062,18 @@ function App({ side = 0, initialSession = null }) {
         peekOpen={effectiveCollapsed && peek.hovering}
         onPeekEnter={peekEnter}
         onPeekLeave={peekLeave}
+        // shared-22 GI: collapsed, the aside renders Sy (shared-21 CI) where its titlebar was.
+        collapsedChrome={effectiveCollapsed ? <SourceCollapsedChrome onExpand={expandSidebar} peekOpen={peek.hovering} onPeekEnter={peekEnter} onPeekLeave={peekLeave}
+          historyAt={historyAt} historyLength={history.length} travel={travel} trafficLightSpacer={fullScreen ? 0 : trafficLightSpacer} /> : null}
         sessions={sidebarSessions}
-        onViewAllSessions={mode === "code" ? showSessionsPage : undefined}
+        onViewAllSessions={mode === "code" || mode === "chat" || mode === "cowork" ? showSessionsPage : undefined /* w13-close-chat-surface (E74): shared-21 nX, off Code View all is /chats on the Cowork rail too */}
         sidebarPreferences={sidebarPreferences}
         onSidebarPreferencesChange={updateSidebarPreferences}
         sessionMetadata={shownSessionMetadata}
         customGroups={customGroups}
         sidebarSections={sidebarSections}
+        // w4-sidebar-filter (E17): Sessions' Group by › Environment buckets by these (sidebar-model.js environment branch).
+        savedEnvironments={savedEnvironments.environments}
         pinnedOrder={pinnedOrder}
         knownFolders={groups.map(([dir]) => dir)}
         fallbackCwd={cwd}
@@ -6626,6 +7099,14 @@ function App({ side = 0, initialSession = null }) {
         forkUnavailable={unsupportedCommand("fork", commandContext) || undefined}
         onCreateGroup={createGroup}
         onCreateEnvironment={() => editSavedEnvironment()}
+        // 3.6556.2 shared-22 IE / shared-20 Px (SB-06): a folder bucket's "Save as environment" opens the saved-environment
+        // editor with that folder filled in (official Yv(void 0, place); host editor, E17).
+        onSaveAsEnvironment={(target) => { closeMenu(); setEnvironmentEditor({ initialTarget: { ...target, additionalFolders: [] }, initialSettings: {} }); }}
+        // w10-shell-sidebar-preset-menu (3.6556.2 shared-22 IE, W = "preset"): a saved-environment bucket's New session is
+        // official `v(U, void 0, N.id)` (a new draft in that environment: the start card's selectSavedEnvironment), its Edit
+        // environment `Yv(N.id)` (requestEnvironmentDialog({ editId })): the host editor on that environment (E17).
+        onNewSessionInEnvironment={(id) => { navigate(null); selectSavedEnvironment(id); }}
+        onEditEnvironment={(id) => editSavedEnvironment(id)}
         onGroupAction={groupAction}
         onSectionAction={sectionAction}
         collapsed={effectiveCollapsed}
@@ -6657,7 +7138,7 @@ function App({ side = 0, initialSession = null }) {
         searchMatches={searchMatches?.query === search.trim() ? searchMatches.ids : null}
         showSearch={showSearch}
         setShowSearch={setShowSearch}
-        deepSearch={!!boot?.connected && coreSupports(boot?.core, "threadSearch")}
+        deepSearch={!!boot?.connected && (coreSupports(boot?.core, "threadSearch") || mode === "chat")}
         onOpenSettings={(section) => { setMenu(null); setSettings(section); }}
         connectionIssue={!!boot && !boot.connected}
         onFolder={folder}
@@ -6672,6 +7153,8 @@ function App({ side = 0, initialSession = null }) {
         // Customize opens its real pages (Settings › Customize: Skills, Connectors, Plugins), not an empty surface.
         setSection={(key) => { if (key === "customize") { setMenu(null); setSettings("customize-skills"); } else { setRoutineSelection(null); setSection(key); } }}
       /></SourceSidebarBoundary>}
+      {/* w13-close-chat-surface (E77): shared-23 VA/LA + shared-20 Fy/Jy while incognito; display: contents otherwise. */}
+      <SourceIncognitoShell active={incognitoShell} onExit={() => incognitoKey.current?.()} trafficLights={isMacPlatform() && !fullScreen}>
       <SourceSplitHost side={side}>
       <main
         ref={mainRef}
@@ -6709,7 +7192,7 @@ function App({ side = 0, initialSession = null }) {
             the window; its X closes the side chat with the window, Open in main window docks it back. */}
         {PANE_WINDOW?.pane === "side-chat" ? (
           <SourceSideChat windowed threadId={PANE_WINDOW.sessionId} open={paneWindowSeed !== undefined} rpc={rpc}
-            assistantName={coreName(boot?.core)} searchFiles={searchSideMentionFiles} mentionActions={mentionActions}
+            assistantName={coreName(boot?.core)} searchFiles={searchSideMentionFiles} mentionActions={mentionActions} cwd={workdir} onOpenFileRef={openFileRef}
             onClose={() => dockPaneWindow({ close: true })}
             windowControls={{ onDock: () => dockPaneWindow(), alwaysOnTop: popoutPinned, onTogglePin: togglePaneWindowPin }} />
         ) : (
@@ -6726,6 +7209,7 @@ function App({ side = 0, initialSession = null }) {
               onLoad={btwPane.load} onSend={btwPane.send} onStop={btwPane.stop} onSelect={id => btwPane.select(current, id)}
               onCloseTab={closeBtwTab} headerCenter={tileApi.dragHandle} approvalRuntime={approvalRuntime.current}
               tabMenu={btwTabMenu} onUnpinTab={id => updateSessionMetadata(id, { pinned: false }).catch(actionFailed("unpin"))} onDetachTab={btwPane.detach} onYieldTab={yieldBtwTab}
+              onCreateTab={btwPane.createTab(current, sideChat.open && sideChat.legacy === true)} createBusy={!!btwPane.opening[current]}
               respond={(_request, payload) => call('respond', payload)} onOpenFile={openFileRef} onError={setError}
               onOpenSettings={(page) => setSettings(page)} onOpenLink={(url) => call("external", { url }).catch(actionFailed("open-link"))}
               onEditConfig={boot?.connected ? () => call("desktop-edit-config").catch(actionFailed("open-config")) : undefined}
@@ -6785,6 +7269,8 @@ function App({ side = 0, initialSession = null }) {
               sessionId={current ?? null}
               searchPane="main"
               tab={tileId}
+              // w12c-wiring (w12b-changes-files cf-02; cb61be3a2 ut `noRepo:On`): Changes' empty state for a non-git folder.
+              diffNoRepo={!!current && gitStatus?.isRepo === false}
               // R3-files FT-14 (files-10, cccc2cf0a zx): the folder a worktree session was started from.
               worktreeOrigin={tileId === "files" && current ? sessionMetadata[current]?.originCwd ?? null : null}
               nuxAllowed={nuxAllowed}
@@ -6829,16 +7315,13 @@ function App({ side = 0, initialSession = null }) {
           // a drop anywhere over the Code pane goes to the composer; inert (filesElsewhere) on Chat / Cowork.
           <SourcePaneDropZone dropRef={paneDropRef} owner={fileContextOwner} filesElsewhere={mode !== "code"} disabled={!composerAttachable}>
           <div className="source-chat-tile-content" data-surface={mode} data-section={section} data-home={!current && section === "new" || undefined}>
-            {/* R3-composer blue-bg-02: cc43287c9 jre `children: [v(mH, { available: Jt && !Ot, onLanding: Kt }), …]`, the first
-                child of the session pane root YI (c4c113f6f, `relative`; since R4i-graph GR3 SourcePaneDropZone, around this box). Local Code Home
-                is always the start-card face (Gt): Kt = no session, no draft entry, not spawning; Ot = another session pane. */}
-            {mode === "code" && <LandingTextureHost available={!splitView.open} onLanding={!current && section === "new" && !spawnPhase} />}
             {!artifactPreviewOpen && <SourceTitlebar surface={mode} activityOpen={surfaceActivity[current] ?? mode === "cowork"}
-              onToggleActivity={() => setSurfaceActivity(value => ({ ...value, [current]: !(value[current] ?? mode === "cowork") }))} collapsed={effectiveCollapsed && !SESSION_POPOUT} onExpand={expandSidebar} section={section}
+              onToggleActivity={() => setSurfaceActivity(value => ({ ...value, [current]: !(value[current] ?? mode === "cowork") }))} activityShortcut={activityKeyBound} onExitIncognito={incognitoActive && !incognitoShell ? () => incognitoKey.current?.() : undefined /* w13-close-chat-surface (E77): in the shell, Iy sits in the Fy row */} collapsed={effectiveCollapsed && !SESSION_POPOUT} onExpand={expandSidebar} section={section}
               sectionLabel={mode !== 'code' && section === 'routines' ? t('Scheduled') : undefined}
-              peekOpen={effectiveCollapsed && peek.hovering} onPeekEnter={peekEnter} onPeekLeave={peekLeave}
               session={session} panes={openPanes} onTogglePane={(kind) => (kind === "terminal" ? toggleTerminalPane() : togglePaneTile(kind))} onMenu={openMenu} menuKind={menu?.kind} menuAtPointer={!!menu?.point} loading={loading}
               terminalAvailable={terminalAvailable} terminalBusy={terminalBusy} spawning={!current && !!spawnPhase}
+              spawn={!current ? titlebarSpawnSource({ spawnPhase, cwd }) : null}
+              sessionNotFound={!!current && historyUnavailable === current} starting={!current && !!spawnPhase}
               previewAvailable={previewAvailable} previewRunning={previewRunning} filesAvailable={filesAvailable} onFoldChange={setTitlebarHidden}
               railToggle={sessionRailToggle} onRailToggleFoldChange={setTitlebarRailFolded} railToggleRef={sessionRail.railToggleRef}
               railMode={sessionRail.railMode}
@@ -6853,7 +7336,7 @@ function App({ side = 0, initialSession = null }) {
                 (Ey band padding while docked) and, last, the docked column (bH). */}
             <SessionRailRow rail={sessionRail} host={sessionRailHost}>
           <div className={`conversation ${!current && mode !== 'code' && section === 'new' ? homeScrollClass : ''} ${sessionRail.bandClassName}`}>
-            {section === "new" && mode === 'cowork' && boot?.coworkEnabled !== true ? <SourceCoworkComingSoon onMode={switchMode} /> : section === "new" ? (
+            {section === "new" ? (
               <SourceSurfaceHome active={!current && mode !== 'code'}>
                 {/* R4f-error E36: the chat panel's load error boundary (c11959232 Nm / Pm, c5638815a lt: RenderErrorBoundary with
                     cc43287c9 fV), one fixed place for a session and the draft alike (source-session-error-boundary.jsx). */}
@@ -6862,7 +7345,8 @@ function App({ side = 0, initialSession = null }) {
                     transcript, so a session switch keeps the bar and its query and
                     recounts against the new transcript (scope and reveal are read
                     through transcriptRef at call time). */}
-                {!current && mode !== 'code' && <SourceSurfaceGreeting name={boot?.config?.displayName} />}
+                {!current && mode === 'chat' && <SourceChatGreeting incognito={incognitoDraft || undefined} />}{/* w13-chatfn-history: shared-23 Dy "You’re incognito" */}
+                {!current && mode === 'cowork' && <SourceSurfaceGreeting name={boot?.config?.displayName} />}
                 <SourceFindBar ref={findBarRef} shortcuts={splitActive} sessionKey={current ?? "draft"}
                   getScope={() => transcriptRef.current?.getContent?.()}
                   scroll={{ reveal: (rect) => transcriptRef.current?.reveal?.(rect) ?? false }} />
@@ -6880,7 +7364,7 @@ function App({ side = 0, initialSession = null }) {
                   ready={!loading}
                   pendingInput={approvals.length > 0}
                   interactionHandlers={turnInteraction.handlers}
-                  messageActions={transcriptActions}
+                  messageActions={mode === "chat" ? { ...transcriptActions, surface: "chat", incognito: isIncognitoSession(current, sessionMetadata) /* w13-close-chat-messages */ } : transcriptActions /* w13-chatui-message-actions */}
                   responding={running}
                   turnScope={current ? { turnId: state.active[current], turnStats: state.turnStats?.[current], items: state.items[current], itemPhases: state.itemPhases?.[current] } : null}
                   onFeedEscape={() => textarea.current?.focus()}
@@ -6895,7 +7379,7 @@ function App({ side = 0, initialSession = null }) {
                         onSelect={pickRecentFolder} onChoose={anchor => openMenu("home-environment", anchor)} chooseOpen={menu?.kind === "home-environment"}
                         call={call} onError={setError} sessions={startCardSessions} onOpenSession={navigate}
                         workspace={workspaceInfo} worktree={worktree} onSetWorktree={setWorktree} starting={!!spawnPhase}
-                        splitPane={splitView.open} onStartBesideDraft={startBesideDraft}
+                        onStartBesideDraft={startBesideDraft}
                         onTake={takeStartTask} onFocusComposer={() => textarea.current?.focus()} />}
                       {/* Zk (cc43287c9-BMbiZYzF.js:5104-5180) has no connection card: nothing shows
                           while the core starts, and a lost connection is the composer's warning
@@ -6947,6 +7431,8 @@ function App({ side = 0, initialSession = null }) {
                   <FindingsCardHost.Provider value={FindingsCardHost.value({ current, running, canViewChanges, fileInChanges: turnFileInChanges,
                     connected: !!boot?.connected, archived: !!session?.archived, openChanges: () => setPanel("changes"),
                     sendFixedTurn, rerun: () => { void executeCommand("review"); }, prefill: (text) => setDraft(text) })}>
+                  {/* w10-trans-proposal-inline: the session pane's PZ (cf74bc599 uo) around the rows — a tool group of proposing calls draws them inline (mQ). */}
+                  <ProposalTranscriptScope cards={proposalCards}>
                   {/* A fork names the session it came from and links back (official 'Forked from {title}'). */}
                   {current && (() => {
                     const forked = typeof session?.forkedFromId === "string" && session.forkedFromId || sessionMetadata[current]?.forkedFrom;
@@ -6962,23 +7448,31 @@ function App({ side = 0, initialSession = null }) {
                     if(item.settledTurnBox)return <SourceTranscriptRowBoundary key={item.id} sessionId={current} item={item} kind="row"><SourceSettledTurnBox {...item.settledTurnBox}/></SourceTranscriptRowBoundary>; // turn-plan
                     if(item.localCommand)return <SourceTranscriptRowBoundary key={item.id} sessionId={current} item={item} kind="row"><div data-local-command="status"><div className="source-user-bubble"><SourceUserText text="/status" nonInteractive/></div><SessionStatusDialog {...item} inline readStatus={readSessionStatus} onClose={()=>setLocalCommandRows(rows=>({...rows,[current]:(rows[current]||[]).filter(row=>row.id!==item.id)}))}/></div></SourceTranscriptRowBoundary>;
                     const footer = turnFooters.get(item.toolGroup?.at(-1)?.id || item.id);
+                    const artifactChip = mode === "chat" && current ? artifactToolCall(item) : null; // w13-chatfn-artifacts (A3)
                     return <React.Fragment key={`${current}:${item.id}`}>
                       {/* Pinned chapters (KL/CX) head the row they were pinned at. */}
                       {pinnedChaptersForRow(chapterSession, item).map((chapter) => <SourceTranscriptRowBoundary key={`chapter:${chapter.id}`} sessionId={current} item={item} kind="row"><SourceChapterHeading
                         id={chapter.id} title={chapter.title} sessionId={current} source="user" /></SourceTranscriptRowBoundary>)}
                       {item.workflowRun ? <SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}><WorkflowRow run={item.workflowRun} warningLimits={workflowWarningLimits} onOpen={()=>openWorkflow(workflowKey({...item.workflowRun,itemId:item.id}))}/></SourceTranscriptRowBoundary> :
-                      <SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}>{coworkEdit && coworkActions?.onEditMessage && item.type === "userMessage" && coworkEdit.uuid === item.id
-                        ? <SourceUserMessageEdit key={`edit:${item.id}`} originalText={lastHumanMessage([item])?.text ?? ""} request={coworkEdit} isStreaming={running}
-                          onSave={(text) => void coworkActions.onEditMessage({ uuid: item.id }, text)} onClose={() => coworkMessageEdits.clear(current)} />
+                      artifactChip && !artifactChip.failed ? <SourceTranscriptRowBoundary sessionId={current} item={item} kind="row"><div className="source-message" data-transcript-item-id={item.id}>
+                        <SourceChatArtifactCard rows={displayedItems} index={index} threadId={current} isStreaming={isItemStreaming(state, current, item)}
+                          selected={chatArtifact?.threadId === current ? chatArtifact : null} onOpen={({ id, toolUseId, version }) => setChatArtifact({ threadId: current, id, toolUseId, version })}
+                          onClose={() => setChatArtifact(null)} /></div></SourceTranscriptRowBoundary> :
+                      <SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}>{coworkEdit && (coworkActions?.onEditMessage || mode === "chat") && item.type === "userMessage" && coworkEdit.uuid === item.id
+                        ? <SourceUserMessageEdit key={`edit:${item.id}`} originalText={lastHumanMessage([item])?.text ?? ""} request={coworkEdit} isStreaming={running} isCoworkSession={mode !== "chat"}
+                          /* w13-close-chat-messages (chatfn-branches-03): a Chat prompt's edit is a new version of it (chat-branches kind "edit"). */
+                          onSave={(text) => void (mode === "chat" ? chatBranches.edit(item.turnId, text, turnAttachments(items, item.turnId)) : coworkActions.onEditMessage({ uuid: item.id }, text))} onClose={() => coworkMessageEdits.clear(current)} />
                         : <Message item={item} isInterrupting={stopping} agentContext={{state,onOpen:openAgent,onTask:openBackgroundTask,onTaskEvent:openTaskEvent}} sessionKey={current} isStreaming={isItemStreaming(state, current, item)} turnStart={!!item.turnId && item.turnId !== displayedItems[index - 1]?.turnId}
                         cwd={workdir} onOpenFileRef={openFileRef} onOpenChanges={() => { if (!canViewChanges) return false; setPanel("changes"); return true; }} transcriptView={transcriptView} pendingApprovalItemIds={pendingApprovalItems}
                         turnStartedAtMs={item.type === "userMessage" ? turnSecondsToMs(state.turnTimes?.[current]?.[item.turnId]?.startedAt) : null}
                         reasoningPlacement={item.type === "reasoning" ? reasoningPlacement(displayedItems, index, transcriptView) : undefined}
                         liveTail={toolRunLiveTail(displayedItems, index, running ? state.active[current] ?? null : null, transcriptView)}
-                        userActions={item.type === "userMessage" ? userMessageActions({ turnId: item.turnId, itemId: item.id, activeTurnId: state.active[current], running,
+                        /* w13-close-chat-messages (chatfn-branches-03): a Chat prompt's actions are cc1aae219 s4's — Edit (a new version)
+                           and lI with sender "human" — not the Code Rewind / Fork (s4 shows rewind only in agent mode). */
+                        userActions={item.type === "userMessage" ? mode === "chat" ? { rewind: null, fork: null, chat: chatBranches.forUserTurn(items, item.turnId, () => coworkMessageEdits.start(current, item.id), (row) => messageItemText(shownUserItem(row)), turnAttachments) } : userMessageActions({ turnId: item.turnId, itemId: item.id, activeTurnId: state.active[current], running,
                           onRestartFrom: coworkActions?.onRestartFromHere ? (uuid) => void coworkActions.onRestartFromHere({ uuid }) : null,
                           onEditFrom: coworkActions?.onEditMessage ? (uuid) => coworkMessageEdits.start(current, uuid) : null, isLastHuman: !!coworkLastHuman && coworkLastHuman.uuid === item.id,
-                          rewindServed: !!(current && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities)),
+                          rewindServed: !!(current && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)),
                           busyReason: t("Rewind is unavailable while {name} is working", { name: coreName(boot?.core) }),
                           onRewindTo: transcriptActions.onRewindTo, onForkFrom: transcriptActions.onForkFrom }) : null} />}</SourceTranscriptRowBoundary>}
                       {(() => {
@@ -6987,6 +7481,22 @@ function App({ side = 0, initialSession = null }) {
                           <SourceAutoReviews reviews={reviews} onApproveOnce={approveDeniedOnce ?? undefined} /></SourceTranscriptRowBoundary> : null;
                       })()}
                       {footer && (() => {
+                        // w13-chatui-message-actions: Chat draws cc1aae219 r1's toolbar (Copy, Good / Bad response, Retry on the latest reply).
+                        if (mode === "chat" && current) {
+                          const chatReplyId = items.findLast((row) => row.turnId === footer.turnId && row.type === "agentMessage")?.id ?? null;
+                          const chatPrompt = footer.turnId === latestTurnId ? retryPrompt(items, footer.turnId, (row) => messageItemText(shownUserItem(row))) : null;
+                          const chatBranch = chatBranches.forTurn(items, footer.turnId, (row) => messageItemText(shownUserItem(row)), turnAttachments); // w13-chatfn-branches; w13-close-chat-messages: + the turn's files
+                          // w13-chatfn-tools (review 补做, C9): cc1aae219 fP → rP → tP → eP before the toolbar — a reply with a web link
+                          // while this conversation doesn't search (and the core can) shows the "Turn on web search…" banner.
+                          const chatNudge = webSearchNudge({ text: footer.text, settings: chatSettingsFor(boot?.config?.chatTools, current), selection: sessionTools, globalMode: boot?.config?.codexWebSearch ?? null,
+                            support: searchSupport({ codexNative: coreForEngine(boot?.core?.engine).id === "codex" && !coreSupports(boot?.core, "permissionHints"), toolSelection, catalog: toolsCatalog }) });
+                          return <SourceTranscriptRowBoundary sessionId={current} item={item} kind="reply">{chatNudge && <ChatMessageWarning showWebSearchNudge />}<SourceChatMessageActions conversationUuid={current}
+                            itemId={chatReplyId ?? footer.turnId} text={footer.text} feedback={chatFeedback.feedback} onFeedback={chatReplyId ? chatFeedback.rate : null}
+                            onRetry={chatBranch.onRetry ?? (chatPrompt ? () => void sendMessage(chatPrompt, turnAttachments(items, footer.turnId), [], { resend: true }) : null)}
+                            versions={chatBranch.versions} onVersion={chatBranches.select /* w13-chatfn-branches: a version where the core forks at a turn */}
+                            retryBlocked={running || sending || !boot?.connected || !!session?.archived}
+                            createdAt={turnSecondsToMs(state.turnTimes?.[current]?.[footer.turnId]?.completedAt) /* w13-close-chat-messages: r1 Ic.Timestamp */} /></SourceTranscriptRowBoundary>;
+                        }
                         // The reply the rating belongs to: the turn's last agent message.
                         const replyId = ratingsCore ? items.findLast((row) => row.turnId === footer.turnId && row.type === "agentMessage")?.id : null;
                         return <SourceTranscriptRowBoundary sessionId={current} item={item} kind="reply"><SourceTurnFooter sessionKey={current} turnId={footer.turnId}
@@ -7057,6 +7567,7 @@ function App({ side = 0, initialSession = null }) {
                     const row = pendingUserRow(entry, { onRetry: () => { void retryPendingSend(current, entry.id); }, onDiscard: () => discardPendingSend(current, entry.id) });
                     return <SourceTranscriptRowBoundary key={`${current}:${row.id}`} sessionId={current} item={row}><Message item={row} sessionKey={current} isStreaming={false} turnStart={true} cwd={workdir} onOpenFileRef={openFileRef} transcriptView={transcriptView} /></SourceTranscriptRowBoundary>;
                   })}
+                  </ProposalTranscriptScope>
                   </FindingsCardHost.Provider>
                   </SourceForgeRepoContext.Provider>
                   </CodeBlockActionsContext.Provider>
@@ -7078,6 +7589,11 @@ function App({ side = 0, initialSession = null }) {
                     extraCard={handoff && shownApprovals.length === 0 ? handoff.turnId : null}
                     hasDraft={approvalLanding.hasDraft} toComposer={approvalLanding.toComposer}
                     renderRequest={(a) => (<CardComposerContext.Provider key={a.bridgeApproval.instanceId} value={cardComposer}>
+                    {/* w13-coworkui-approval (cwui-27): a Cowork session's tool request on the 3.6556.2 tool card (c96142a4d Je + c14f706e5 wt). */}
+                    {mode === "cowork" && coworkApprovalApplies(a, approvalItem(a, items)) ? <SourceCoworkToolApproval runtime={approvalRuntime.current} request={a}
+                      item={approvalItem(a, items)} call={call} respond={payload => respondApproval(a, payload)} isActive={!!boot?.connected && !loading && current === approvalOwner(a)}
+                      onError={({ message }) => toasts?.add?.(message, { variant: "danger" })}
+                      getVisibleThreadId={() => (currentRef.current && approvalOwner(a) === currentRef.current ? a.params?.threadId : currentRef.current)} /> :
                     <Approval
                       runtime={approvalRuntime.current}
                       request={a}
@@ -7092,12 +7608,14 @@ function App({ side = 0, initialSession = null }) {
                       getVisibleThreadId={() => (currentRef.current && approvalOwner(a) === currentRef.current ? a.params?.threadId : currentRef.current)}
                       respond={payload => respondApproval(a, payload)}
                       isActive={!!boot?.connected && !loading && current === approvalOwner(a)}
+                      // c9ed5627b dt T (isFocusedPane): only the focused split side's question card takes digits / ⌘↵.
+                      isFocusedPane={splitActive}
                       menuOpen={!!menu || settings || showSearch || !!rename || whatsNew || !!actionDialog || (effectiveCollapsed && peek.hovering)}
                       // R07 plan card: the primary's target (Mk) and the 'Open plan' link.
                       planTarget={afterPlanPermission(afterPlan.current, { bypass: bypassMode.available })}
                       bypassAvailable={bypassMode.available}
                       onOpenPlan={(() => { const plan = planItemFor(a); return plan ? () => openPlanItem(plan.id) : undefined; })()}
-                    />
+                    />}
                     </CardComposerContext.Provider>)}>
                   {handoff && shownApprovals.length === 0 && <SourcePlanHandoffCard key={`${current}:${handoff.turnId}`} handoffKey={`${current}:${handoff.turnId}`}
                     target={afterPlanPermission(afterPlan.current, { bypass: bypassMode.available })} bypassAvailable={bypassMode.available} busy={planHandoffBusy}
@@ -7135,7 +7653,7 @@ function App({ side = 0, initialSession = null }) {
                     onToggleTasksPane={session && section === "new" ? () => togglePaneTile('tasks') : null}
                     /* X5 V :58762-58778 (onToggleThinking only when the view is Thinking or
                        does not already show reasoning, i.e. never in Verbose). */
-                    onToggleThinking={current && transcriptView !== "verbose" ? () => {
+                    onToggleThinking={current && mode !== "chat" /* w13-close-chat-messages: no view to switch in Chat */ && transcriptView !== "verbose" ? () => {
                       const next = transcriptView === "thinking" ? "normal" : "thinking";
                       setSessionView(current, next);
                       toasts?.add(next === "thinking" ? t("Switched transcript view to Thinking.") : t("Switched transcript view to Normal."));
@@ -7164,7 +7682,7 @@ function App({ side = 0, initialSession = null }) {
                   onEdit={nativeGoals && state.goals[current].status !== "complete" ? (event) => { setDraft(`/goal edit ${state.goals[current].objective}`); goalEditFocus({ composer: () => textarea.current, event }); } : undefined} />}
                 <SourceSessionNotices
                   notices={[...(workflowSizeNotice ? [workflowSizeNotice] : []), ...(hooksNotice ? [hooksNotice] : []), ...(bufferingNotice ? [bufferingNotice] : []), ...(upsellNotice ? [upsellNotice] : []), ...(upgradeNotice ? [upgradeNotice] : []), ...(headlineNotice ? [headlineNotice] : []), ...(keptAwakeNotice ? [keptAwakeNotice] : []),
-                    ...(usageNotice ? [{ ...usageNotice, actions: [{ label: t("View usage"), run: () => setSettings("usage") }] }] : []),
+                    ...(usageNotice ? [{ ...usageNotice, actions: usageNoticeActions }] : []),
                     ...sessionNotices({ notices: state.notices, warnings: (current && state.warnings[current]) || [], threadNotices: (current && state.threadNotices?.[current]) || [] })
                       // A bridge core's 'ignores this folder's … until you trust the folder' (Gemini's folder trust): gone once
                       // trusted here, and 'Trust this folder' writes the agent's own trust rule (codeDesktop/workspace/trust).
@@ -7178,7 +7696,7 @@ function App({ side = 0, initialSession = null }) {
                         : notice)]}
                   onReveal={(file) => call("reveal-config-file", { path: file }).catch((error) => setError(error.message))}
                   onTrust={canTrustProject ? trustProject : undefined} trusting={trustingProject} />
-                {session?.archived && <div className="archive-notice">{t("This session is archived.")}<button onClick={() => sessionAction("unarchive", session).catch(actionFailed("unarchive"))}>{t("Restore session")}</button></div>}
+                {mode !== 'cowork' && session?.archived && <div className="archive-notice">{t("This session is archived.")}<button onClick={() => sessionAction("unarchive", session).catch(actionFailed("unarchive"))}>{t("Restore session")}</button></div>}
                 {operation && <div className="session-operation-status" role="status" data-operation={operation.operation} data-phase={operation.phase}>
                   <span>{operation.phase === "failed" ? operation.error || t("Session action failed.")
                     : operation.phase === "unknown" ? operation.error
@@ -7192,12 +7710,17 @@ function App({ side = 0, initialSession = null }) {
                     <span className="sqm-preview">{pendingSteers[current].map((entry) => entry.preview).join(" · ")}</span>
                   </div>
                 </div>}
-                {current && queue.threadId === current && queue.entries.length > 0 && (
-                  <SourceQueuedMessages key={`${current}:queued`} entries={queue.entries} lockedIds={queue.lockedIds}
+                {current && queueBand.entries.length > 0 && (
+                  <SourceQueuedMessages key={`${current}:queued`} entries={queueBand.entries} exiting={queueBand.exiting} onExited={queueBand.onExited} lockedIds={queue.lockedIds}
                     steeringId={queueSteering} coreName={coreName(boot?.core)} onSteer={running ? queueSteer : undefined}
                     sendNow={(id) => canSendNow(queue, id, { turnId: state.active[current], connected: !!boot?.connected, archived: !!session?.archived, steeringId: queueSteering })}
                     onCancel={queueCancel} onEdit={queueEdit} onReorder={queueReorder} />
                 )}
+                {/* w13-coworkui-session-states (c21f11e6d endedNotice → ca2ef848d `hn===void 0 ? composer : stand-in`): an
+                    archived / ended Cowork task shows the official ended notice in place of the composer slot; otherwise
+                    (and in Code / Chat) the children render unchanged. */}
+                <SourceCoworkSessionStates session={mode === 'cowork' ? session : undefined} status={current ? state.threadStatus?.[current] : undefined}
+                  onUnarchive={(row) => sessionAction("unarchive", row)} onNewTask={() => navigate(null)}>
                 {/* R4f-error E36: cc43287c9's sr-only status just before the composer (N_'s 'Limits reset — resuming session'). */}
                 <SourceAutoResumeStatus announcement={resumeAnnouncement?.threadId === current ? resumeAnnouncement : null} />
                 {/* R4g-turnbox TB-3: cc43287c9 Mte's probe and turn box (inline here until the tail slot exists). Mte's da
@@ -7208,13 +7731,24 @@ function App({ side = 0, initialSession = null }) {
                   onSessionRemoved={() => navigate(null)} />}
                 {renderMainComposer()}
                 {!current && mode === 'cowork' && <SourceCoworkHome call={call} sessions={sessions} metadata={sessionMetadata} state={state} ready={sessionsLoaded}
+                  sidebarCollapsed={NO_SIDEBAR || collapsed || narrowViewport}
                   onOpenRoutine={id => { setRoutineSelection(id); setSection('routines'); }}
                   onOpen={navigate} onClearActive={rows => Promise.all(rows.map(row => updateSessionMetadata(row.sessionId, { unread: false })))}
                   onPrompt={setDraft} onPreviewPrompt={setHomeIdeaPreview} onFocusInput={() => requestAnimationFrame(() => textarea.current?.focus())}
                   onError={error => setError(error.message)} />}
+                </SourceCoworkSessionStates>
                 </SourceSessionErrorBoundary>
               </SourceSurfaceHome>
-            ) : section === 'sessions' && mode === 'code' ? <SourceSessionsPage key={`${coreEngine(boot?.core)}:${historyAt}`} scopeKey={coreEngine(boot?.core)} historyKey={history[historyAt]?.key}
+            ) : section === 'sessions' && (mode === 'chat' || mode === 'cowork') ? <SourceChatsPage key={`chats:${historyAt}`} sessions={sidebarSessions} metadata={shownSessionMetadata}
+              loading={!sessionsLoaded && (!initSettled || loading)} menuSessionId={menu?.kind === "session" ? menu.data?.id : undefined}
+              /* w13-close-chat-surface (E74): with Cowork listed (shared-78 mY folds "chat" into "cowork") /chats is c623cddd3 H,
+                 one Tasks list of Chat and Cowork sessions: New task starts a Cowork task, Archive / Move to project act on them. */
+              merged={coworkSurfaceListed()} projects={boot?.config?.localProjects ?? []}
+              pendingPermissionsOf={id => (state.approvals || []).filter(approval => approval.params?.threadId && ownerThreadId(state, approval.params.threadId) === id).length}
+              onOpen={id=>navigate(id)} onNew={() => (coworkSurfaceListed() && mode !== 'cowork' ? switchMode('cowork') : navigate(null))}
+              onDelete={session => sessionAction("delete", session)} onArchive={session => sessionAction("archive", session)}
+              onMoveToProject={(id, projectId) => sessionAction("move-to-project", { id }, { projectId })} onSessionMenu={(session,anchor,entry)=>openMenu("session",anchor,session,entry)}
+            /> : section === 'sessions' && mode === 'code' ? <SourceSessionsPage key={`${coreEngine(boot?.core)}:${historyAt}`} scopeKey={coreEngine(boot?.core)} historyKey={history[historyAt]?.key}
               sessions={sidebarSessions} state={state} metadata={shownSessionMetadata} repoIdentities={repoIdentities} engine={boot?.core}
               initialSurface={sessionsPageSurface} onSurfaceChange={surface=>{setSessionsPageSurface(surface);setHistory(entries=>replaceSessionsPageSurface(entries,historyAt,surface));}} loading={!sessionsLoaded && (!initSettled || loading)} loadFailed={!sessionsLoaded && initSettled}
               menuSessionId={menu?.kind === "session" ? menu.data?.id : undefined}
@@ -7223,9 +7757,16 @@ function App({ side = 0, initialSession = null }) {
               models={models} bypassEnabled={bypassMode.available} executionProfile={{ model, permission: effectivePermission }} sessions={sessions} sessionMetadata={sessionMetadata} state={state} sessionsReady={sessionsLoaded} />
             : section === 'routines' && mode !== 'code' ? <SourceRoutines call={call} onSession={navigate} selectedId={routineSelection} onSelect={setRoutineSelection}
               onBack={() => setRoutineSelection(null)}
+              // w13-coworkui-scheduled-page cwui-33: Create with Claude opens the Cowork home with the official prompt as its draft (after the home restored its own draft, as startSessionFromSearch does) and focuses the composer.
+              // w13-close-cowork-misc (E77, coworkui-placeholder-02 third site): with Cowork off (CODE_DESKTOP_COWORK=0) the page offers neither entry (ccd3f68fe Zu `onCreateWithClaude: tn ? mr : void 0`, Vu offered), and neither handler opens the Cowork surface.
+              coworkStartable={coworkSurfaceListed()}
+              onCreateWithClaude={async prompt => { if (!coworkSurfaceListed()) return; await switchMode('cowork'); navigate(null, { surface: 'cowork' }); setTimeout(() => { setDraft(prompt); textarea.current?.focus(); }, 0); }}
+              // w13-close-cowork-ui scheduled-03 (ccd3f68fe nu): a starter template's prompt is sent as a new Cowork task from the Cowork home, titled with the template's title.
+              onStartTemplate={async (prompt, { title } = {}) => { if (!coworkSurfaceListed()) return; await switchMode('cowork'); startSessionFromSearch(prompt, 'cowork', { title }); }}
               models={models} bypassEnabled={bypassMode.available} executionProfile={{ model, permission: effectivePermission }} sessions={sessions} sessionMetadata={sessionMetadata} state={state} /> : section === 'artifacts' && mode !== 'code' ? <SourceArtifactLibrary call={call} onSession={navigate} onPreviewChange={setArtifactPreviewOpen}
-              viewerNavigation={effectiveCollapsed ? <SourceCollapsedChrome onExpand={expandSidebar} peekOpen={peek.hovering} onPeekEnter={peekEnter} onPeekLeave={peekLeave} historyAt={historyAt} historyLength={history.length} travel={travel} /> : null}
-              viewerWindowActions={splitView.open ? <ToolButton icon="X" label={t("Close split view")} onClick={() => splitStore.close(side)} /> : null} onCreate={async () => { await switchMode('cowork'); navigate(null, { surface: 'cowork' }); textarea.current?.focus(); }} /> : section === 'projects' ? <SourceProjects call={call} onOpen={openLocalProject} composer={renderMainComposer()} sessions={sessions} sessionMetadata={sessionMetadata} onSession={navigate} onBack={() => { navigate(null, { surface: mode }); setSection('projects'); }} onUpdated={project => setBoot(value => ({ ...value, config: { ...value.config, localProjects: value.config.localProjects.map(entry => entry.id === project.id ? project : entry) } }))} /> : (
+              // w11-frame-root-cont: the collapsed chrome lives in the aside (shared-22 GI Sy); the viewer header shows none.
+              viewerNavigation={null}
+              viewerWindowActions={splitView.open ? <ToolButton icon="X" label={t("Close split view")} onClick={() => splitStore.close(side)} /> : null} onCreate={async () => { if (!coworkSurfaceListed()) return; await switchMode('cowork'); navigate(null, { surface: 'cowork' }); textarea.current?.focus(); }} /> : section === 'projects' ? <SourceProjects call={call} onOpen={openLocalProject} composer={renderMainComposer()} composerMode={mode} coworkBlocked={!coworkSurfaceListed()} onComposerMode={(project, next) => void setProjectComposerMode(project, next).catch(error => setError(error.message))} sessions={sessions} sessionMetadata={sessionMetadata} onSession={navigate} onBack={() => { navigate(null, { surface: mode }); setSection('projects'); }} onUpdated={project => setBoot(value => ({ ...value, config: { ...value.config, localProjects: value.config.localProjects.map(entry => entry.id === project.id ? project : entry) } }))} onSessionAction={sessionAction} onOpenSettings={(page) => setSettings(page)} projectTools={projectTools} /> : (
               <div className="section-surface">
                 <header>
                   <h1>{t(section[0].toUpperCase() + section.slice(1))}</h1>
@@ -7254,6 +7795,7 @@ function App({ side = 0, initialSession = null }) {
                     sessionId={current ?? null}
                     searchPane="artifacts"
                     tab="files"
+                    diffNoRepo={!!current && gitStatus?.isRepo === false}
                     nuxAllowed={nuxAllowed}
                     onClose={() => setSection("new")}
                   />
@@ -7261,8 +7803,14 @@ function App({ side = 0, initialSession = null }) {
               </div>
             )}
           </div>
-              {mode !== 'code' && (surfaceActivity[current] ?? mode === 'cowork') && current && section === 'new' && <SourceCoworkProgress key={current} sessionId={current} plan={state.plans[current]} items={items} cwd={workdir}
-                running={running} waiting={approvals.length > 0} onOpenFile={openFileRef} onOpenFolder={() => togglePaneTile('files')} />}
+              {mode !== 'code' && (surfaceActivity[current] ?? mode === 'cowork') && current && section === 'new' && <SourceCoworkProgress key={current} sessionId={current} plan={state.plans[current]} items={items} cwd={workdir} gates={COWORK_PANEL_GATES}
+                running={running} onOpenFile={openFileRef} call={call} sessions={sessions} metadata={sessionMetadata} state={state}
+                onOpenSession={navigate} onOpenRoutine={id => { setRoutineSelection(id); setSection('routines'); }}
+                canRevealStep={id => !!coworkStepRow(scope(), id)} onRevealStep={id => { transcriptRef.current?.release?.(); revealCoworkStep(scope(), id); }} />}{/* w13-close-cowork-ui panel-04: AT onRevealStep / canRevealStep */}
+              {/* w13-chatfn-artifacts (A4): the open Chat artifact beside the conversation; a later write of it reloads the panel. */}
+              {mode === 'chat' && current && section === 'new' && chatArtifact?.threadId === current && <SourceChatArtifactPanel key={`${current}:${chatArtifact.id}`} call={call}
+                threadId={current} artifactId={chatArtifact.id} initialVersion={chatArtifact.version} refreshKey={items.filter((row) => row.status === 'completed' && artifactToolCall(row)?.id === chatArtifact.id).length}
+                onClose={() => { setChatArtifact(null); restoreChatArtifactTrigger(); }} onNotice={(message, variant) => { if (toasts) toasts.add(message, { variant }); else setError(message); }} />}
               <SessionRailColumn />
             </SessionRailRow>
             </div>
@@ -7271,19 +7819,30 @@ function App({ side = 0, initialSession = null }) {
           )} />
         )}
         </WebLinkContext.Provider>
+        {/* oR: main.dframe-content ends with div.dframe-peek-nodrag (aria-hidden); shared-styles shows it only while the
+            collapsed drawer is open (`.dframe-root[data-collapsed][data-hovering]:not([data-web]) .dframe-peek-nodrag{…
+            width:var(--df-peek-width);app-region:no-drag;display:block;position:absolute;inset-inline-start:0}`), after
+            the titlebars' drag regions in tree order, so the drawer over them takes clicks. */}
+        <div className="dframe-peek-nodrag" aria-hidden="true" />
       </main>
       </SourceSplitHost>
+      </SourceIncognitoShell>
       {/* cc43287c9 J$: the draft folder's issues through the user's gh; a pick becomes the draft's issue pill. */}
       {watchRecord.host}
       {issuePicker && issueFolder && <SourceGithubIssuePicker open onClose={() => { setIssuePicker(false); requestAnimationFrame(() => textarea.current?.focus()); }} onSelect={pickIssue}
         load={(query) => call("github-issues", { operation: "list", cwd: issueFolder, query })} />}
       {shownBypass.value && <SourceBypassDialog key={`bypass-${shownBypass.key}`} open={shownBypass.open} onExited={shownBypass.onExited} cwd={workdir || cwd} guide={bypassGuide(coreForEngine(boot?.core?.engine))} onConfirm={bypassMode.confirm} onClose={bypassMode.cancel}/> }
-      {menu?.kind === "model" ? <SourceModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} defaultModel={boot?.config?.model || null} onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(e=>setError(e.message)); }} fastTier={fastTier} fastMode={fastEnabled} speedTiers={speedTiers} speed={activeTier?.key ?? STANDARD_SPEED} onSpeedChange={value=>changeSpeed(value).catch(e=>setError(e.message))} fastDisabled={fastSaving || sending || !boot?.connected} fastSaving={fastSaving} onFastModeChange={value=>changeFastMode(value).catch(e=>setError(e.message))} onClose={closeMenu} initialHighlight={menu.entry}
+      {/* w13-close-chat-composer (K4): the Chat / Cowork card's menu is shared-8 $H → KH (source-chat-model-menu.jsx), with the Effort submenu (shared-28 wE) and Chat's thinking rows (hE). */}
+      {menu?.kind === "model" && mode !== "code" ? <SourceChatModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} defaultModel={boot?.config?.model || null} isNewConversation={!current}
+        onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(e=>setError(e.message)); }} onClose={closeMenu} initialHighlight={menu.entry}
+        effort={efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null}
+        thinking={chatThinking && { ...chatThinking, onToggle: toggleChatThinking }} />
+      : menu?.kind === "model" ? <SourceModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} defaultModel={boot?.config?.model || null} onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(e=>setError(e.message)); }} fastTier={fastTier} fastMode={fastEnabled} speedTiers={speedTiers} speed={activeTier?.key ?? STANDARD_SPEED} onSpeedChange={value=>changeSpeed(value).catch(e=>setError(e.message))} fastDisabled={fastSaving || sending || !boot?.connected} fastSaving={fastSaving} onFastModeChange={value=>changeFastMode(value).catch(e=>setError(e.message))} onClose={closeMenu} initialHighlight={menu.entry} effortOpen={!!menu.data?.effortOpen}
         effort={menu.anchor?.closest?.("[data-env-bar-host], .sc-composer") && efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null} /> : menu?.kind === "permission" ? <SourcePermissionMenu key={menu.token ?? "permission"} anchor={menu.anchor} value={effectivePermission} defaultValue={permission} bypassEnabled={bypassMode.available} bypassKept={bypassMode.kept}
         bypassOffer={bypassOffer({ enabled: bypassOptIn && !bypassRefusal, availability: bypassOptIn ? bypassRefusal : bypassRequirements })}
         onEnableBypass={() => { closeMenu(); setSettings("code#bypass"); }} onChange={value => bypassMode.select(value)} onClose={closeMenu} onSelectComplete={() => textarea.current?.focus()} initialHighlight={menu.entry}
         agents={primaryAgents?.rows ?? null} agentValue={agentChoice ?? primaryAgents?.defaultAgent ?? null} defaultAgent={primaryAgents?.defaultAgent ?? null}
-        onAgentChange={(name) => setAgentChoices((choices) => ({ ...choices, [current || ""]: name }))} /> : ["session", "session-title", "titlebar"].includes(menu?.kind) ? <SourceSidebarMenu key={menu.token ?? menu.kind} anchor={menu.anchor} point={menu.point} kind={menu.kind} label={t("Session menu")} onClose={closeMenu} initialHighlight={menu.entry} align={menu.kind === "session-title" ? "start" : undefined}>{menuContent()}</SourceSidebarMenu> : menu?.kind === "account" ? <SourceMenu.Popup key={menu.token ?? "account"} anchor={menu.anchor} side="top" align="start" label={t("Account menu")} className="account-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</SourceMenu.Popup> : menu?.kind === "add" ? <ComposerAddMenuPopup key={menu.token ?? "add"} anchor={menu.anchor} label={t("Add")} className="add-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</ComposerAddMenuPopup> : menu?.kind === "effort" ? <SourceEffortPopover key={menu.token ?? "effort"} anchor={menu.anchor} levels={markDefaultEffort(efforts, chosen?.defaultReasoningEffort)} value={effort}
+        onAgentChange={(name) => setAgentChoices((choices) => ({ ...choices, [current || ""]: name }))} /> : ["session", "session-title", "titlebar"].includes(menu?.kind) ? <SourceSidebarMenu key={menu.token ?? menu.kind} anchor={menu.anchor} point={menu.point} kind={menu.kind} label={t("Session menu")} onClose={closeMenu} initialHighlight={menu.entry} align={menu.kind === "session-title" && mode !== "chat" ? "start" : undefined}>{menuContent()}</SourceSidebarMenu> : menu?.kind === "account" ? <SourceMenu.Popup key={menu.token ?? "account"} anchor={menu.anchor} side="top" align="start" label={t("Account menu")} className="account-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</SourceMenu.Popup> : menu?.kind === "add" ? <ComposerAddMenuPopup key={menu.token ?? "add"} anchor={menu.anchor} label={t("Add")} className="add-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</ComposerAddMenuPopup> : menu?.kind === "effort" ? <SourceEffortPopover key={menu.token ?? "effort"} anchor={menu.anchor} levels={markDefaultEffort(efforts, chosen?.defaultReasoningEffort)} value={effort}
         onChange={pickEffort} onClose={closeMenu}
         plan={planEffort ? { ...planEffort, onChange: (value) => { setPlanEffort((old) => old && { ...old, saving: true }); call("plan-effort", { op: "write", value }).then((next) => setPlanEffort({ ...next, saving: false }), (e) => { setPlanEffort((old) => old && { ...old, saving: false }); setError(e.message); }); } } : null} />
       : menu?.kind === "usage" ? <SourceUsagePopover key={menu.token ?? "usage"} anchor={menu.anchor} usage={state.usage[current]} fresh={!current}
@@ -7298,6 +7857,13 @@ function App({ side = 0, initialSession = null }) {
       : ENV_MENUS[menu?.kind] ? <SourceMenu.Popup key={menu.token ?? menu.kind} anchor={menu.anchor} {...ENV_MENUS[menu.kind]} label={t(ENV_MENUS[menu.kind].label)}
         onClose={closeMenu} initialHighlight={["branch", "home-environment"].includes(menu.kind) ? null : menu.entry}>{menuContent()}</SourceMenu.Popup>
       : null}
+      {newProjectFor && <SourceNewProjectDialog key={`new-project-${newProjectFor.sessionId ?? "draft"}`} call={call} initialName={newProjectFor.name} onClose={() => setNewProjectFor(null)}
+        onCreated={async (project) => { // w13-close-chat-projects-memory: xf's handleProjectCreated — the session (or the draft) goes into the new project
+          setBoot((value) => ({ ...value, config: { ...value.config, localProjects: [...(value.config.localProjects ?? []), project] } }));
+          if (newProjectFor.sessionId) { const result = await call("local-projects", { action: "assign", id: project.id, threadId: newProjectFor.sessionId }); if (result?.state) applySidebarState(result.state); }
+          else if (newProjectFor.draft) { projectDraftRef.current = project.id; setProjectDraftId(project.id); }
+          setNewProjectFor(null);
+        }} />}
       {environmentEditor && <SourceSavedEnvironmentDialog {...environmentEditor} environments={savedEnvironments.environments} recentFolders={recentFolderList.rows} call={call}
         onClose={() => setEnvironmentEditor(null)} onVariables={() => setLocalEnvOpen(true)}
         onSave={async value => { const result = await savedEnvironments.run({ op: 'save', id: environmentEditor.editing?.id, value }); await selectSavedEnvironment(result.environment.id); }}
@@ -7324,7 +7890,9 @@ function App({ side = 0, initialSession = null }) {
           recordBranch(targetBranch, currentBranch); setBranchSwitch(null); refreshChanges(); }}
         onCancel={() => cancelBranchSwitch({ dialog: shownBranchSwitch.value, recordBranch, setBranchSwitch })}
         onError={() => { if (toasts) toasts.add(t(WORKING_TREE_ERROR), { variant: "danger" }); else setError(t(WORKING_TREE_ERROR)); }} />}
-      {shownActionDialog.value?.kind === "shortcuts" && <KeyboardShortcutsDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("shortcuts")} fastMode={models.some(m => speedTiersForModel(m).length > 0)} sideChat={commandContext.sideQuestions !== false} rewind={codeRewindServed(current, boot?.core?.capabilities)} onClose={()=>setActionDialog(null)}/>}
+      {/* w13-close-main-jsx-tests (surfaces-shortcuts-01/02): route is the open session's own kind (shared-52 Mv), not the
+          sidebar mode; rewind reads its metadata (a core Cowork session has no Esc Esc); Te's rows follow the sidebar. */}
+      {shownActionDialog.value?.kind === "shortcuts" && <KeyboardShortcutsDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("shortcuts")} fastMode={models.some(m => speedTiersForModel(m).length > 0)} sideChat={commandContext.sideQuestions !== false} rewind={codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)} surface={mode} route={current && section === "new" ? sessionSurface(current, sessionMetadata) : null} sidebarChord={!NO_SIDEBAR} onClose={()=>setActionDialog(null)}/>}
       {shownActionDialog.value?.kind === "sign-out" && <SourceConfirmDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("sign-out")}
         title={t("Sign out")} body={signOutConfirmText(boot?.core)} confirmLabel={t("Confirm sign out")} onClose={() => setActionDialog(null)}
         onConfirm={() => call("account-auth", { operation: "logout", confirmed: true })} />}
@@ -7333,6 +7901,10 @@ function App({ side = 0, initialSession = null }) {
       {shownActionDialog.value?.kind === "share" && <SourceConfirmDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("share")}
         title={t("Share this conversation?")} body={t("Anyone with the link can read it on {core}’s public share page until you stop sharing.", { core: coreName(boot?.core) })}
         confirmLabel={t("Share conversation")} onClose={() => setActionDialog(null)} onConfirm={() => sessionAction("share", shownActionDialog.value.target, { confirmed: true })} />}
+      {/* w13-close-cowork-sidebar (chatui-sidebar-star-02): the Chat title menu's Delete, shared-16 hm kind "chat" (mm.chat). */}
+      {shownActionDialog.value?.kind === "delete-chat" && <SourceConfirmDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("delete-chat")}
+        {...(() => { const copy = chatDeleteConfirmCopy(); return { title: t(copy.title), body: t(copy.body), confirmLabel: t(copy.confirmLabel), danger: true }; })()}
+        onClose={() => setActionDialog(null)} onConfirm={() => sessionAction("delete", shownActionDialog.value.target)} />}
       {shownActionDialog.value?.kind === "move-changes" && <MoveChangesDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("move-changes")}
         changes={shownActionDialog.value.changes} folder={shownActionDialog.value.folder} onClose={() => setActionDialog(null)} onChoose={(moveChanges) => shownActionDialog.value.run(moveChanges)} />}
       {shownActionDialog.value?.kind === "goal-replace" && <SourceConfirmDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("goal-replace")}
@@ -7367,8 +7939,15 @@ function App({ side = 0, initialSession = null }) {
         onClose={() => setActionDialog(null)} onSubmit={async target => { const dialog = actionDialog; await performOperation("review", {target}); setActionDialog(value => value === dialog ? null : value); }} />}
       {shownWhatsNew.value && <LocalReleaseNotes key={`whats-new-${shownWhatsNew.key}`} open={shownWhatsNew.open} onExited={shownWhatsNew.onExited} onClose={() => setWhatsNew(false)} />}
       {languagePicker && <SourceLanguagePicker open onClose={() => setLanguagePicker(false)} onSave={updatePreferences} />}
-      {current && !PANE_WINDOW && <SourceSideChat threadId={current} open={sideChat.open && !sideChatPoppedOut && (!btwEligible || sideChat.legacy)} rpc={rpc}
-        assistantName={coreName(boot?.core)} searchFiles={searchSideMentionFiles} mentionActions={mentionActions}
+      {/* G9 (E63 chatfn-branches-09): a Chat conversation mounts ca2ef848d T1 (`lc`), not the Code card below. Branch to new chat
+          pushes `/new?q=…`: a new chat with that prompt in its composer (c5e8ef052 fills, it does not send). Split view: only the
+          focused pane's panel is offered (T1 is `fixed bottom-4 end-4`, one per window; ⌘; and View › Side Chat act on that pane);
+          an unfocused pane's T1 stays mounted but renders nothing (p1 enabled false), so its answer keeps streaming. */}
+      {mode === "chat" && current && !PANE_WINDOW && section === "new" && !settings && <SourceChatSideChat conversationId={current} rpc={rpc}
+        enabled={!!commandContext.sideQuestions && splitActive} inheritedMessageCount={chatSideChatInheritedCount(items)}
+        onBranch={text => { navigate(null, { surface: "chat" }); setTimeout(() => setDraft(text), 0); }} />}
+      {current && !PANE_WINDOW && mode !== "chat" && <SourceSideChat threadId={current} open={sideChat.open && !sideChatPoppedOut && (!btwEligible || sideChat.legacy)} rpc={rpc}
+        assistantName={coreName(boot?.core)} searchFiles={searchSideMentionFiles} mentionActions={mentionActions} cwd={workdir} onOpenFileRef={openFileRef}
         pending={sideChatPoppedOut ? null : sideChat.pending} onPendingTaken={() => setSideChat(value => ({ ...value, pending: null }))}
         // B27 (cccc2cf0a AT H → openPopout {type: "side-chat", initialBounds}): the conversation moves into its own window.
         // Not from a session popout: AT w gates onDetach on !xn() (shared-frame Wa: rendered outside the main window).
@@ -7554,6 +8133,7 @@ function PopoutApp({ sessionId, pane, cwd }) {
             sessionId={sessionId}
             searchPane="main"
             tab={pane}
+            diffNoRepo={gitStatus?.isRepo === false}
             plan={plan?.plan ?? null}
             planDocument={plan?.document ?? null}
             planCommentsEnabled={plan?.commentsEnabled === true}
@@ -7586,8 +8166,9 @@ const popoutSession = popoutQuery.get("popout");
 createRoot(document.getElementById("root")).render(
   // Files, Changes and Plan windows run PopoutApp; a pane window (B27: Tasks, Terminal, Side chat) runs App.
   // R4i-graph GR2: every window's CDS controls read the host's labels (the root has no CdsRoot; nested CdsRoots chain to it).
-  // R4i-graph fix: the chat / current-chat graphs' own labels contexts get the same labels.
-  <CdsLabelsContext.Provider value={cdsLabels}><ChatCdsLabelsContext.Provider value={cdsLabels}><CurrentChatCdsLabelsContext.Provider value={cdsLabels}><SourceToastProvider><SourceFileEditGuard />{popoutSession && !PANE_WINDOW && PANE_KINDS.includes(popoutQuery.get("pane"))
+  // w11-sweep-rest: likewise the CDS locale (3.6556.2 frame-shell-chrome Ji passes CdsRoot `locale:r.locale`), which
+  // useCdsLocale readers (date fields, meters, transcript rows) and nested CdsRoots read.
+  <CdsLocaleContext.Provider value={getLocale()}><CdsLabelsContext.Provider value={cdsLabels}><SourceToastProvider><SourceFileEditGuard />{popoutSession && !PANE_WINDOW && PANE_KINDS.includes(popoutQuery.get("pane"))
     ? <PopoutApp sessionId={popoutSession} pane={popoutQuery.get("pane")} cwd={popoutQuery.get("cwd") || ""} />
-    : <SessionRailShownScope popout={SESSION_POPOUT}><SourceSplitRoot renderSide={(side, secondary) => <App side={side} initialSession={secondary?.sessionId ?? null} />} /></SessionRailShownScope>}</SourceToastProvider></CurrentChatCdsLabelsContext.Provider></ChatCdsLabelsContext.Provider></CdsLabelsContext.Provider>,
+    : <SessionRailShownScope popout={SESSION_POPOUT}><SourceSplitRoot renderSide={(side, secondary) => <App side={side} initialSession={secondary?.sessionId ?? null} />} /></SessionRailShownScope>}</SourceToastProvider></CdsLabelsContext.Provider></CdsLocaleContext.Provider>,
 );

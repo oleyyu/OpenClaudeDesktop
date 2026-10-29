@@ -1,9 +1,9 @@
-// Local services for the original 2.42304.0 Code Routines page scripts/extract-code-routines.mjs emits
-// (src/generated/code-routines: cbd6c85c8 zl with the list Pl and the local detail data layer Jc, cfc18e0f4 local detail,
-// c0243d234 create page / edit dialog, c0fd2fda3 form fields; R4g-routines RT4, tasks-code-routines WI-4, D32). Each
+// Local services for the original 3.6556.2 Code Routines page scripts/extract-code-routines.mjs emits
+// (src/generated/code-routines: cbd6c85c8 Ou with the list hu and Run now bl, cfc18e0f4 local detail, c0243d234 create
+// page / edit dialog, c0fd2fda3 form fields; R4g-routines RT4, tasks-code-routines WI-4, D32; w3-code-routines). Each
 // export replaces one original declaration, which the extractor feature-checks (see the `adapters` table there; the
 // manifest's `hostDifferences` lists every boundary with its reason). The adapters the routines-shared graph already
-// answers (intl, router, errors, analytics, account, GrowthBook, SSH configs, the shared-4 dh bridge) stay in
+// answers (intl, router, errors, analytics, account, GrowthBook, SSH configs, the shared-4 n_ bridge) stay in
 // src/source-routines-shared-adapters.jsx and are imported from there by the generated modules.
 //
 // Host facts behind these answers: no claude.ai account or organization, no GrowthBook client, no cloud routines (remote
@@ -14,7 +14,8 @@
 // adapter before it is initialised). It may import other graphs.
 import { createContext, createElement, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { sessionsPageBand } from './generated/code-current/sessions-page-band.mjs';
-import { Gp as REMOTE_DELETE_MESSAGES } from './generated/routines-shared/shared-4-CJsHhp5n.mjs';
+// The remote delete copy (shared-4 Rh, the 2.42304.0 Gp) from routines-shared's 3.6556.2 module, not its legacy shim (E34).
+import { Rh as REMOTE_DELETE_MESSAGES } from './generated/routines-shared/shared-4-DUB1Oi0O.mjs';
 
 // ---- the page's host ----
 // CodeRoutinesHost (WI-5 provides it around the generated page, inside RoutinesSharedHost):
@@ -46,7 +47,7 @@ const bridgeMethod = (name) => {
   return typeof bridge?.[name] === 'function' ? (...args) => bridge[name](...args) : undefined;
 };
 
-// shared-0 Wx (window["claude.web"].CCDScheduledTasks): each method exists only when the mounted page's bridge has it,
+// shared-0 xC (window["claude.web"].CCDScheduledTasks): each method exists only when the mounted page's bridge has it,
 // so the original `!!z?.createScheduledTask` / `if (!z?.removeApprovedPermission) return` checks read the host's facts.
 export const CCDScheduledTasks = Object.freeze({
   get getAllScheduledTasks() { return bridgeMethod('getAllScheduledTasks'); },
@@ -57,7 +58,7 @@ export const CCDScheduledTasks = Object.freeze({
   get removeApprovedPermission() { return bridgeMethod('removeApprovedPermission'); },
   get getScheduledTaskFileContent() { return bridgeMethod('getScheduledTaskFileContent'); },
 });
-// shared-0 Ix (window["claude.web"].LocalSessions): the methods the mounted page's host has; the SSH / WSL / trust /
+// shared-0 pC (window["claude.web"].LocalSessions): the methods the mounted page's host has; the SSH / WSL / trust /
 // start-target methods (getSSHLocalBranches, listWslDistros, checkTrust, onStartTargetsRequest, …) are absent.
 const localSessionsMethod = (name) => {
   const sessions = registeredHost?.localSessions;
@@ -70,30 +71,30 @@ export const LocalSessions = Object.freeze({
   get getDetectedProjects() { return localSessionsMethod('getDetectedProjects'); },
   get onOnEvent() { return localSessionsMethod('onOnEvent'); },
 });
-// shared-0 Ax (window["claude.web"].FileSystem): only browseFolder (the host folder picker).
+// shared-0 oC (window["claude.web"].FileSystem): only browseFolder (the host folder picker).
 export const FileSystem = Object.freeze({
   get browseFolder() {
     const browse = registeredHost?.browseFolder;
     return typeof browse === 'function' ? (prompt) => browse(prompt) : undefined;
   },
 });
-// ce2cf86ad V (startLocalSession): Run now through the host scheduler. Like the original, nothing happens without a start.
+// ce2cf86ad U (startLocalSession): Run now through the host scheduler. Like the original, nothing happens without a start.
 export function useStartLocalSession() {
   const start = useContext(CodeRoutinesHost).localSessions?.start;
   return useCallback(async (options) => (typeof start === 'function' ? start(options) : undefined), [start]);
 }
-// ce2cf86ad P (ensureWorkspaceTrust): no trust dialog here; the folder was approved when the routine was saved.
+// ce2cf86ad I (ensureWorkspaceTrust): no trust dialog here; the folder was approved when the routine was saved.
 const TRUSTED = async () => true;
 export function useEnsureWorkspaceTrust() {
   return TRUSTED;
 }
-// shared-11 Ud (isGitRepo for a folder on a place): local folders only (no places here).
+// shared-11 km (isGitRepo for a folder on a place): local folders only (no places here).
 export function useIsGitRepo(cwd, remote) {
   const { isGitRepo } = useContext(CodeRoutinesHost);
   if (remote !== null && remote !== undefined && remote !== 'local') return undefined;
   return cwd && typeof isGitRepo === 'function' ? isGitRepo(cwd) : undefined;
 }
-// cf50036ec O (bypass permissions availability) over the host's bypass mode.
+// cf50036ec A (bypass permissions availability) over the host's bypass mode.
 export function useBypassPermissionsAvailability() {
   const { bypassAvailable } = useContext(CodeRoutinesHost);
   return useMemo(() => ({
@@ -102,7 +103,7 @@ export function useBypassPermissionsAvailability() {
   }), [bypassAvailable]);
 }
 
-// shared-8 Q (the CCD sessions store, read as `_i(selector)`): a host store the page fills from its sessions
+// shared-8 og (the CCD sessions store, read as `Si(selector)` in cbd6c85c8): a host store the page fills from its sessions
 // ({ sessionId, scheduledTaskId, isRunning, isArchived, title, createdAt, error }). Not initialised until the page sets it.
 function hostStore(initial) {
   let state = initial;
@@ -121,13 +122,13 @@ function hostStore(initial) {
 export const ccdSessionsStore = hostStore({
   sessions: [], isInitialized: false, initialLoadTimedOut: false, loadFailed: false, archivedRowsPending: false, selectedProjects: [],
 });
-// c06cf64bb H_ (the live session runtime store): Run now only marks the started session spawned-fresh; no-op here.
+// c06cf64bb iD (the live session runtime store): Run now only marks the started session spawned-fresh; no-op here.
 const SPAWNED_FRESH = Object.freeze({ markSpawnedFresh() {} });
 export const spawnedFreshStore = Object.freeze({ getState: () => SPAWNED_FRESH });
 
 // ---- lazy surfaces ----
-// shared-104 Fo (the tiered lazy loader): React.lazy over the same entry.load / pick, with options.loading as the
-// Suspense fallback. The handle answers preload (the intent handlers of shared-104 Dz) and its load state.
+// shared-104 ss (the tiered lazy loader): React.lazy over the same entry.load / pick, with options.loading as the
+// Suspense fallback. The handle answers preload (the intent handlers of shared-104) and its load state.
 export function lazySurface(spec) {
   let loaded, promise;
   const load = () => (promise ??= Promise.resolve().then(() => spec.entry.load()).then((module) => {
@@ -147,7 +148,7 @@ export function lazySurface(spec) {
   };
   return { Component: LazySurface, handle };
 }
-// shared-6 ST (pending while a lazy chunk loads): the surfaces load from the host bundle.
+// shared-6 sD (pending while a lazy chunk loads): the surfaces load from the host bundle.
 export const useLazySurfacePending = () => false;
 // cbd6c85c8 / cae55dd08 __vite__mapDeps (the lazy chunks' stylesheets): the host bundles the official styles (D2).
 export function viteChunkStylesheets() {
@@ -163,7 +164,8 @@ export const CloudRoutineDetailSurface = nullSurface('epitaxy_routine_detail');
 export const CloudRoutineCreateFormSurface = nullSurface('code_routine_create_form');
 export const UpsertScheduledTaskModalSurface = nullSurface('scheduled_task_upsert_modal');
 export const SshFolderBrowserSurface = nullSurface('epitaxy_ssh_folder_browser');
-// cbd6c85c8 Nc / Ml / pl: the cloud routine detail, the template grid and the Yours / Templates tabs (St() off).
+// cbd6c85c8 sl / du / Kl: the cloud routine detail, the template grid and the Yours / Templates tabs (cloud routines
+// off: shared-4 Ch, useCloudRoutinesEnabled).
 export function CloudRoutineDetail() {
   return null;
 }
@@ -173,15 +175,15 @@ export function RoutineTemplatesGrid() {
 export function RoutineScopeTabs() {
   return null;
 }
-// shared-7 sx (the lazily loaded effort slider): not migrated.
+// shared-7 lw (the lazily loaded effort slider): not migrated.
 export function EffortControlSlot() {
   return null;
 }
-// shared-7 RT (MCP connector favicons for approved tools): no per-routine approvals here (hostGap 7).
+// shared-7 Hk (MCP connector favicons for approved tools): no per-routine approvals here (hostGap 7).
 export function ConnectorFavicon() {
   return null;
 }
-// shared-13 N / shared-5 EM: slash command chips over the skill / plugin / MCP catalog; no catalog here.
+// shared-13 P / shared-5 Dz: slash command chips over the skill / plugin / MCP catalog; no catalog here.
 export function SlashCommandChip() {
   return null;
 }
@@ -195,9 +197,9 @@ const COWORK_GATE_OFF = Object.freeze({ loading: false, enabled: false, statusUn
 export const useCoworkScheduledTasksGate = () => COWORK_GATE_OFF;
 export const useLocalRoutinesAvailable = () => true;
 export const useOneRoutineForm = () => false;
+export const useUnifiedRoutinesGate = () => false;
 export const useOneFormCreate = () => false;
 export const useLocalOneFormCreate = () => false;
-export const useRoutineSourceFilter = () => false;
 export const useRoutinesDisabledByPolicy = () => false;
 export const useSshRoutinesSupported = () => false;
 export const useWslRoutinesSupported = () => false;
@@ -212,9 +214,17 @@ export const createWithClaudePrompt = () => '';
 const NO_DRAFT_GENERATOR = Object.freeze({ generateRoutineDraft: () => Promise.reject(new Error('Routine drafting is not available in this app.')) });
 export const useGenerateRoutineDraft = () => NO_DRAFT_GENERATOR;
 export const useIsFocusedExtraPane = () => false;
+// shared-78 xD (new in 3.6556.2): the auto / bypass permission answers wait for the claude.ai account and organization
+// settings. No account here; the permission answers are the host's own, so they are settled.
+export const useAccountSettingsSettled = () => true;
+// shared-8 mT (RC-07): an approved tool of a remote claude.ai connector is named after its connector; none here.
+export const remoteConnectorToolWords = () => undefined;
+// c30c42d34 f (RC-01 Retry): refetch, reading whether the refetch failed. react-query only refetches while its
+// onlineManager is online; the host reads the local scheduler, so it always refetches.
+export const refetchWhenOnline = (refetch) => refetch().then((result) => result.isError);
 
 // ---- cloud data (no cloud routines here) ----
-const noRefetch = async () => undefined;
+const noRefetch = async () => ({ data: undefined, isError: false });
 const NO_REMOTE_TRIGGERS = Object.freeze({ data: undefined, isLoading: false, isError: false, refetch: noRefetch });
 export const useRemoteTriggers = () => NO_REMOTE_TRIGGERS;
 const NO_WEBHOOK_TRIGGERS = Object.freeze({ data: undefined, isSuccess: false });
@@ -227,11 +237,11 @@ const NO_ROLLUP = Object.freeze({
 export const useRemoteTriggerRunRollup = () => NO_ROLLUP;
 const canManage = () => true;
 export const useCanManageRemoteTrigger = () => canManage;
-// shared-4 qp: with no account bootstrap config, `delete_removes_runs` is unset; the plain remote delete body.
+// shared-4 Bh: with no account bootstrap config, `delete_removes_runs` is unset; the plain remote delete body.
 export function remoteRoutineDeleteBody() {
   return REMOTE_DELETE_MESSAGES.deleteBody;
 }
-// shared-52 zP (the account bootstrap config): no account, so every optional flag is unset.
+// shared-52 JO (the account bootstrap config): no account, so every optional flag is unset.
 const EMPTY_BOOTSTRAP = Object.freeze({ permission_modes: Object.freeze({}), routines: Object.freeze({}) });
 export function accountBootstrapConfig() {
   return EMPTY_BOOTSTRAP;
@@ -298,7 +308,7 @@ export async function resolveRunMcpServers({ enabledMcpTools } = {}) {
   return { mcpServers: undefined, remoteMcpServers: [], enabledMcpTools };
 }
 export const useEnsureToolsReady = () => undefined;
-// shared-25 bc (GrowthBook dynamic config) and the zod schema handed to it: the caller's default.
+// shared-25 Rs (GrowthBook dynamic config) and the zod schema handed to it: the caller's default.
 export function useDynamicConfig(name, fallback) {
   return fallback;
 }
@@ -306,22 +316,22 @@ const INERT_SCHEMA = Object.freeze({ catch: () => INERT_SCHEMA, parse: (value) =
 export function zodNumber() {
   return INERT_SCHEMA;
 }
-// shared-2 MH (load telemetry): nothing is sent (D17).
+// shared-2 OX (load telemetry): nothing is sent (D17).
 export function useLoadTelemetry() {}
-// shared-6 Xj (auto mode availability): a host permission mode that is always offered.
+// shared-8 hK (auto mode availability): a host permission mode that is always offered.
 const AUTO_AVAILABLE = Object.freeze({ kind: 'available' });
 export const useAutoModeAvailability = () => AUTO_AVAILABLE;
-// shared-6 Ij (managed settings for a folder): none here, settled.
+// shared-8 iy (managed settings for a folder): none here, settled.
 const NO_MANAGED_SETTINGS = Object.freeze({
   capabilities: Object.freeze({ fastMode: undefined, bypassPermissions: undefined, autoPermissions: undefined, workflows: undefined }),
   config: null, configSettled: true, configErrored: false, rereadConfig() {}, desktopResolvesDisableModes: false,
 });
 export const useManagedPermissionSettings = () => NO_MANAGED_SETTINGS;
-// shared-156 Pb / $b (the MCP tool catalog for approved tools): none (hostGap 7).
+// shared-156 iw / Cw (the MCP tool catalog for approved tools): none (hostGap 7).
 export const useToolCatalogState = () => undefined;
 export const lookupCatalogTool = () => undefined;
 
 // ---- page frame ----
-// shared-18 ty (the page band): the band the host Sessions page uses (no frame shell, a desktop top bar).
+// shared-18 hb (the page band): the band the host Sessions page uses (no frame shell, a desktop top bar).
 const PAGE_BAND = sessionsPageBand({ hasFrameShell: false, hasDesktopTopBar: true, isClaudeApp: true });
 export const useRoutinesPageBand = () => PAGE_BAND;

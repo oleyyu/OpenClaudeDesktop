@@ -41,6 +41,8 @@ const GENERAL = [
   { command: "previous-session", label: t("Previous session"), keys: ["cmd+shift+[", "ctrl+shift+tab"] },
   // ⌘1–9 (sidebar-jump-model.mjs bL).
   { command: "jump-session", label: t("Jump to session"), keys: ["cmd+1…9"] },
+  // He `t(Te, {})` after Jump to session: SIDEBAR_TAB_ROWS (sidebarTabOnly).
+  ...sidebarTabPlaceholder(),
   // Ce {shortcut:"alt+click"}: ⌥-click a sidebar row (source-sidebar.jsx onOpenSplit), then he
   // (new_session_pane_right and new_session_pane_below, View › Split View's chords: split-view-model.mjs splitShortcut) and the
   // focus_next_pane / focus_previous_pane / close rows.
@@ -50,11 +52,12 @@ const GENERAL = [
   { command: "split-focus-next", label: t("Focus next split view"), keys: ["ctrl+]"] },
   { command: "split-focus-previous", label: t("Focus previous split view"), keys: ["ctrl+["] },
   { command: "split-close", label: t("Close split view"), keys: ["ctrl+cmd+w"] },
-  // Ce h block (ccd_palette_session_actions): ⌥⌘P/R/A/U/G/O on the open session. Archive keeps the sidebar's
-  // ⌘⇧⌫ (shared-19 rg) as a second chord since this app still binds it.
+  // Ce h block (ccd_palette_session_actions): ⌥⌘P/R/A/U/G/O on the open session. V3-w12b-settings-dialogs: 3.6556.2
+  // c518a31cc He lists ⌘⇧⌫ "Archive session" only under `!m` (palette session actions off); with m on, Archive is h's
+  // `shortcut: "cmd+alt+a"` alone, so the sidebar's ⌘⇧⌫ (still bound) is not listed.
   { command: "pin-session", label: t("Pin / unpin session"), keys: ["cmd+alt+p"] },
   { command: "rename-session", label: t("Rename session"), keys: ["cmd+alt+r"] },
-  { command: "archive-session", label: t("Archive session"), keys: ["cmd+alt+a", "cmd+shift+backspace"] },
+  { command: "archive-session", label: t("Archive session"), keys: ["cmd+alt+a"] },
   { command: "unread-session", label: t("Mark session as read/unread"), keys: ["cmd+alt+u"] },
   // open_code_session_pr "cmd+alt+g" (cf74bc599 wO it(t) && xe: the session's PR, else nothing).
   { command: "open-session-pr", label: t("Open session PR"), keys: ["cmd+alt+g"] },
@@ -64,6 +67,13 @@ const GENERAL = [
   { command: "jump-next-prompt", label: t("Jump to next prompt"), keys: ["cmd+alt+down"] },
   // cycleTranscriptMode = "ctrl+o".
   { command: "transcript-view", label: t("Transcript view"), keys: ["ctrl+o"] },
+  // V3-w12b-settings-dialogs: 3.6556.2 c518a31cc He General `F = J0($, 71) ? K0($, 71, t(Ae, {}))` between Transcript view
+  // (P) and Stop (I). Ae: `shortcut: "cmd+f"` Find, `e ? "cmd+g" : Oe` Find next, `e ? "cmd+shift+g" : ke` Find previous
+  // (e = S(), the Mac check; Oe = ["cmd+g", "f3"], ke = ["cmd+shift+g", "shift+f3"]). Bound by the transcript find bar
+  // (source-find-bar.jsx, transcript-find-model.mjs findShortcut: ⌘F, ⌘G / ⇧⌘G and F3 / ⇧F3).
+  { command: "find", label: t("Find"), keys: ["cmd+f"] },
+  { command: "find-next", label: t("Find next"), keys: ["cmd+g"], offMac: ["cmd+g", "f3"] },
+  { command: "find-previous", label: t("Find previous"), keys: ["cmd+shift+g"], offMac: ["cmd+shift+g", "shift+f3"] },
   { command: "stop", label: t("Stop DeepSeek’s response"), keys: ["esc"] },
   // Ce !L "esc esc": the composer's createDoubleEscape opens Rewind (composer-keys-model.mjs); listed where the core
   // can rewind (thread/revert).
@@ -105,8 +115,8 @@ const PANES = [
   // Ce "cmd+;" Toggle side chat, bound in main.jsx; listed only where the core serves side questions
   // (session-command-model.mjs sideQuestionsSupported).
   { command: "side-chat", label: t("Toggle side chat"), keys: ["cmd+;"], sideChatOnly: true },
-  // backgroundTasks "ctrl+b" (matchBy key): the Tasks pane's background list; left to a focused text field.
-  { command: "background-tasks", label: t("Background tasks"), keys: ["ctrl+b"] },
+  // V3-w12b-settings-dialogs: 3.6556.2 c518a31cc He has no "ctrl+b" Background tasks row (the chord stays bound below,
+  // globalShortcutCommand "background-tasks", but the dialog does not list it).
 ];
 const COMPOSER = [
   { command: "mode", label: t("Open mode menu"), keys: [MODE_MENU_KEYS] },
@@ -117,6 +127,12 @@ const COMPOSER = [
   { command: "menu-item", label: t("Select menu item"), keys: ["1…9"] },
   // file_upload {key:"u", modifiers:["cmd"]}: Add › Add files or photos.
   { command: "file-upload", label: t("Add files or photos"), keys: ["cmd+u"] },
+  // V3-w12b-settings-dialogs: 3.6556.2 c518a31cc He Composer `Qe = … N && r(i, { children: [t(Q, { shortcut: De, …
+  // "Reuse an earlier prompt" }), t(Q, { shortcut: "ctrl+r", … "Search earlier prompts" })] })` after Xe (file_upload),
+  // with `N = l(Ue)`, `function Ue(e) { return _(e)?.kind === "code" }`: only while a Code session is open (route "code").
+  // De = ["up", "down"] is SourceComposer's prompt history (promptHistoryStep), ⌃R its history search (isHistorySearchKey).
+  { command: "reuse-prompt", label: t("Reuse an earlier prompt"), keys: ["up", "down"], routeOnly: ["code"] },
+  { command: "search-prompts", label: t("Search earlier prompts"), keys: ["ctrl+r"], routeOnly: ["code"] },
   // Ce !L "cmd+enter" (named for the local agent, like Stop): queued while a turn runs (composer-keys-model.mjs submitPriority "later"), and ne: on the Home
   // draft it sends and stays there (submitPriority "stay", main.jsx stayOnDraft).
   { command: "queue", label: t("Queue for later (while DeepSeek is working)"), keys: ["cmd+enter"] },
@@ -125,10 +141,100 @@ const COMPOSER = [
   { command: "send-fork", label: t("Send in a forked session (local sessions)"), keys: ["cmd+alt+enter"] },
 ];
 
-/** Ce's General / Panes / Composer sections, filtered to this app's bindings. */
-export function shortcutsDialogSections({ fastMode = false, sideChat = false, rewind = true } = {}) {
-  const rows = (list) => list.filter((row) => (!row.fastOnly || fastMode) && (!row.sideChatOnly || sideChat) && (!row.rewindOnly || rewind))
-    .map(({ fastOnly, sideChatOnly, rewindOnly, ...row }) => row);
+// V3-w13-surfaces-shortcuts (surf-22): 3.6556.2 c518a31cc Me picks `t(n ? He : Ne, {})` by isEpitaxyRoute, so off the
+// Code route the dialog body is Ne, with the chat message table (shared-78 Sv: `cp() ? xv : bv`, cp off -> bv: "New chat",
+// "Close chat", "Next chat", "In chats", "Pin / unpin chat"…). Ne's rows, in Ne order, filtered like the Code list to the
+// chords this app binds in Chat and Cowork (one SourceComposer and main.jsx's window keydown serve every surface):
+//  - General F: ne command_palette "Quick chat or search" ⌘K, ie search_palette ⇧⌘K, E Toggle sidebar he = "cmd+b",
+//    j newConversation `n ? "cmd+n" : …` (n = the desktop app), M `n && H() && … "cmd+w" shortcutClose` (H: shared-22
+//    reportCloseMenuTarget), ce Ce next/previous (["cmd+shift+]", "ctrl+tab"] with xe() off) and "cmd+1…9" shortcutJumpTo,
+//    N shortcuts_modal, P ve `e ? "cmd+," : …`.
+//  - "In chats" xe: L "enter" Send message, R "shift+enter" New line in message, W file_upload, K `(b === "chat" ||
+//    b === "cowork") && … shortcut: De` (De = ["up", "down"]: SourceComposer's prompt history), de "esc" Stop, then be
+//    `_ && b === "chat" &&` [n && ⌥⌘P shortcutPinUnpin, ⌥⌘R renameConversation, v && ⌥⌘U shortcutMarkReadUnread].
+//  - we `_ && b === "cowork" &&` "In tasks": n && ⌥⌘P "Pin / unpin task", ⌥⌘R "Rename task", ⌥⌘U "Mark task as
+//    read/unread", ⌥⌘A "Archive task" (session-chord-model.mjs dispatchSessionChord runs on any surface's open session).
+// b is the route kind (shared-52 Mv: "chat" only for /chat/<id>, "cowork" for a task route), so the Reuse row and the
+// chat/task action rows show only while a chat or task is open (`route`). Left out, each for a reason: T Se and ae
+// (gated: shared-18 N, me = !1), le je
+// (__gb__1686253244, off), B ge Queue/Send now (re()/oe() gates unverified here), V extended_thinking ⇧⌘E (this app's ⇧⌘E
+// opens the effort selector), U model_selector ⇧⌘. (not bound; in Chat ⇧⌘I is the incognito chat, shared-21 oO, and the
+// model menu opens from the chin), ae the incognito row (`I1($, 4, me, e.incognito)`, me = !1: never listed), G ye (dictation
+// binding), fe "esc esc" Edit your last message (se() gate; the local Esc Esc opens Rewind), pe Find ⌘F/⌘G (not bound),
+// q/J browser rows, X Toggle activity sidebar ⇧⌘S (`o && d`: o = shared-78 GT, the Cowork built-in browser, off here per
+// E63 panel-live-06, even though main.jsx now binds ⇧⌘S), _e cai_rosy_feather_toggle,
+// Ee "In projects" (x: a /project/ route; no ⌥⌘R binding there).
+const HOME_GENERAL = [
+  { command: "search", label: t("Quick chat or search"), keys: ["cmd+k"] },
+  { command: "search-palette", label: t("Search"), keys: ["cmd+shift+k"] },
+  { command: "toggle-sidebar", label: t("Toggle sidebar"), keys: ["cmd+b"] },
+  { command: "new-session", label: t("New chat"), keys: ["cmd+n"] },
+  { command: "close-session", label: t("Close chat"), keys: ["cmd+w"] },
+  { command: "next-session", label: t("Next chat"), keys: ["cmd+shift+]", "ctrl+tab"] },
+  { command: "previous-session", label: t("Previous chat"), keys: ["cmd+shift+[", "ctrl+shift+tab"] },
+  { command: "jump-session", label: t("Jump to chat"), keys: ["cmd+1…9"] },
+  ...sidebarTabPlaceholder(),
+  { command: "shortcuts", label: t("Keyboard shortcuts"), keys: [SHORTCUTS_DIALOG_KEYS] },
+  { command: "settings", label: t("Settings"), keys: ["cmd+,"] },
+];
+const IN_CHATS = [
+  { command: "send", label: t("Send message"), keys: ["enter"] },
+  { command: "newline", label: t("New line in message"), keys: ["shift+enter"] },
+  { command: "file-upload", label: t("Add files or photos"), keys: ["cmd+u"] },
+  { command: "reuse-message", label: t("Reuse an earlier message"), keys: ["up", "down"], routeOnly: ["chat", "cowork"] },
+  { command: "stop", label: t("Stop DeepSeek’s response"), keys: ["esc"] },
+  { command: "pin-session", label: t("Pin / unpin chat"), keys: ["cmd+alt+p"], routeOnly: ["chat"] },
+  { command: "rename-session", label: t("Rename chat"), keys: ["cmd+alt+r"], routeOnly: ["chat"] },
+  { command: "unread-session", label: t("Mark chat as read/unread"), keys: ["cmd+alt+u"], routeOnly: ["chat"] },
+];
+const IN_TASKS = [
+  { command: "pin-session", label: t("Pin / unpin task"), keys: ["cmd+alt+p"] },
+  { command: "rename-session", label: t("Rename task"), keys: ["cmd+alt+r"] },
+  { command: "unread-session", label: t("Mark task as read/unread"), keys: ["cmd+alt+u"] },
+  { command: "archive-session", label: t("Archive task"), keys: ["cmd+alt+a"] },
+];
+
+// w13-close-main-jsx-tests (surfaces-shortcuts-02): c518a31cc Te, listed right after "Jump to session" / "Jump to chat" by
+// both He and Ne: `e = n() === "rtl"` (useDirection), "Next sidebar tab" (nqrh9gXo0z) `e ? "cmd+alt+left" :
+// "cmd+alt+right"`, "Previous sidebar tab" (ObojkXu2Us) the other one. Here the chord is SourceAppSwitch's
+// (source-app-switch.jsx useSurfaceChord, AM: ⌥⌘←/→, swapped under RTL), mounted with the sidebar, so the rows are
+// listed while main.jsx reports that sidebar (`sidebarChord`).
+function sidebarTabPlaceholder() { return [{ command: "sidebar-tabs", sidebarTabOnly: true }]; }
+function sidebarTabRows(rtl) {
+  return [
+    { command: "next-sidebar-tab", label: t("Next sidebar tab"), keys: [rtl ? "cmd+alt+left" : "cmd+alt+right"] },
+    { command: "previous-sidebar-tab", label: t("Previous sidebar tab"), keys: [rtl ? "cmd+alt+right" : "cmd+alt+left"] },
+  ];
+}
+const withSidebarTabs = (list, { sidebarChord, rtl }) => list.flatMap((row) => (row.sidebarTabOnly ? (sidebarChord ? sidebarTabRows(rtl) : []) : [row]));
+
+// shared-78 Do (SE, the S() of c518a31cc Ae; Eo tests the user agent for macintosh|macintel…): the Mac check, read here
+// as source-find-bar.jsx isMac reads it (findShortcut takes F3 / ⇧F3 on every platform; Ae lists them off a Mac only).
+const isMacPlatform = () => typeof navigator === "undefined" || /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+
+/** Ne off the Code route: General, "In chats" and, on an open task, "In tasks". `route`: Mv's kind of the open view. */
+function homeShortcutsDialogSections(route, tabs) {
+  const rows = (list) => withSidebarTabs(list, tabs).filter((row) => !row.routeOnly || row.routeOnly.includes(route)).map(({ routeOnly, ...row }) => row);
+  return [
+    { title: t("General"), rows: rows(HOME_GENERAL) },
+    { title: t("In chats"), rows: rows(IN_CHATS) },
+    ...(route === "cowork" ? [{ title: t("In tasks"), rows: rows(IN_TASKS) }] : []),
+  ];
+}
+
+/**
+ * Ce's General / Panes / Composer sections, filtered to this app's bindings. `surface` is the sidebar mode: off Code
+ * (chat, cowork) the dialog is Ne (homeShortcutsDialogSections), with `route` the open chat's or task's surface (null on Home).
+ */
+export function shortcutsDialogSections({ fastMode = false, sideChat = false, rewind = true, surface = "code", route = null, mac = isMacPlatform(),
+  sidebarChord = false, rtl = false } = {}) {
+  const tabs = { sidebarChord, rtl };
+  if (surface === "chat" || surface === "cowork") return homeShortcutsDialogSections(route === "chat" || route === "cowork" ? route : null, tabs);
+  // V3-w12b-settings-dialogs: He's `N && …` rows (routeOnly) show only on the open Code session's route; Ae's Find next /
+  // previous take Oe / ke (with F3) off a Mac.
+  const rows = (list) => withSidebarTabs(list, tabs).filter((row) => (!row.fastOnly || fastMode) && (!row.sideChatOnly || sideChat) && (!row.rewindOnly || rewind)
+    && (!row.routeOnly || row.routeOnly.includes(route)))
+    .map(({ fastOnly, sideChatOnly, rewindOnly, routeOnly, offMac, ...row }) => (offMac && !mac ? { ...row, keys: offMac } : row));
   return [
     { title: t("General"), rows: rows(GENERAL) },
     { title: t("Panes"), rows: rows(PANES) },

@@ -190,7 +190,8 @@ test('Stop sends the goal pause to the core; quitting pauses working goals on a 
   assert.match(main, /nativeGoals && state\.goals\?\.\[request\.threadId\]\?\.status === "active" \? \{ pauseGoal: true \}/);
   assert.match(main, /if \(patch\?\.status === "active"\) await ensureResumed\(threadId\);/);
   const electron = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
-  assert.match(electron, /await pauseActiveGoals\(\)\.catch\(\(\) => \{\}\);\n    await Promise\.all\(\[stopAllCodexClients\(\)/);
+  // w13 closeout: the incognito-chat sweep (w13-close-main-process) sits between the goal pause and the core stop.
+  assert.match(electron, /await pauseActiveGoals\(\)\.catch\(\(\) => \{\}\);\n(?:    \/\/[^\n]*\n    await quitChatHistory\?\.quit\(\)\.catch\(\(\) => \{\}\);\n)?    await Promise\.all\(\[stopAllCodexClients\(\)/);
   // A core whose agents keep background sub-agents (every core but a native one, round 4: DeepSeek too) leaves their
   // tool calls alone at a normal turn end; a stopped turn cancels the calls of the thread whose turn it was.
   assert.match(electron, /if \(interrupted\) agentTools\.cancelThread\(e\.params\.threadId, "The turn was stopped\."\);\n    else if \(!coreKeepsBackgroundAgents\(\)\) agentTools\.cancelThread/);

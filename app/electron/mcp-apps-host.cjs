@@ -22,6 +22,11 @@
 //   B5tintml Bn             which tools are App tools: In(_meta) has a ui:// resourceUri; ≤256 servers, ≤128 tools,
 //                           names ≤128 matching Fe, descriptions cut at Pe=1024, uris ≤2048.
 //   unavailable enum        muI2IV6k bgt / BaLvO2wi T: blocked_by_policy, needs_sign_in, not_connected, read_failed.
+// Re-checked against 3.6556.2 (w10-trans-mcp-v3-pins, tests/mcp-apps-host.test.mjs): the same values and branches, now in
+// index.chunk-DNPOm2Zc.js (readFromCliMcpAppServer; RA with the 30 s deadline IA and the 10 MB cap NA; PA dropping a list
+// over MA=1048576; mcpCallTool "Tool '<r>' is not permitted"; widgetIpcRefusal "Session not found"),
+// index.chunk-DBIg6EBr.js (Wn / Hn _meta filter, Ln / Mn ui://, In read reply, Vn App tools: ≤256 servers, ≤128 tools,
+// names ≤128 matching P, descriptions cut at N=1024, uris ≤2048 = ke) and index.chunk-CbnfBP-3.js T (the unavailable enum).
 //
 // Host mapping. The servers the running core connects (its config's MCP servers) are the host's counterpart of the
 // official CLI-owned servers: they are read through the core and get the official CLI-server treatment (list → [],
@@ -54,20 +59,20 @@ const WIDGET_ACTIONS = Object.freeze(ACTIONS.slice(0, 5));
 const UNAVAILABLE = Object.freeze({ BlockedByPolicy: "blocked_by_policy", NeedsSignIn: "needs_sign_in", NotConnected: "not_connected", ReadFailed: "read_failed" });
 // Host reason beside `unavailable`: the running core has no MCP App source (no resource read, no Tool _meta).
 const CORE_UNSUPPORTED = "core_unsupported";
-const READ_DEADLINE_MS = 30000; // CFJssAFf VA
-const MAX_CONTENTS_CHARS = 10485760; // CFJssAFf RA
-const MAX_SERVER_LIST_CHARS = 1048576; // CFJssAFf LA
-const UI_SCHEME = "ui://"; // B5tintml Nn = U7().startsWith(jn)
-const MAX_SERVERS = 256, MAX_TOOLS = 128, MAX_NAME = 128, MAX_URI = 2048, MAX_DESCRIPTION = 1024; // B5tintml Rn / Bn / Pe
-const TOOL_NAME = /^[\x21-\x7e]+(?: [\x21-\x7e]+)*$/; // B5tintml Fe
-const UI_META_KEYS = new Set(["resourceUri", "visibility", "prefersBorder"]); // B5tintml Vn
+const READ_DEADLINE_MS = 30000; // 3.6556.2 DNPOm2Zc IA (2.42304.0 CFJssAFf VA)
+const MAX_CONTENTS_CHARS = 10485760; // 3.6556.2 DNPOm2Zc NA (2.42304.0 CFJssAFf RA)
+const MAX_SERVER_LIST_CHARS = 1048576; // 3.6556.2 DNPOm2Zc MA (2.42304.0 CFJssAFf LA)
+const UI_SCHEME = "ui://"; // 3.6556.2 DBIg6EBr Pn = Wit().startsWith(Mn) (2.42304.0 B5tintml Nn)
+const MAX_SERVERS = 256, MAX_TOOLS = 128, MAX_NAME = 128, MAX_URI = 2048, MAX_DESCRIPTION = 1024; // 3.6556.2 DBIg6EBr zn / Vn / N / ke (2.42304.0 B5tintml Rn / Bn / Pe)
+const TOOL_NAME = /^[\x21-\x7e]+(?: [\x21-\x7e]+)*$/; // 3.6556.2 DBIg6EBr P (2.42304.0 B5tintml Fe)
+const UI_META_KEYS = new Set(["resourceUri", "visibility", "prefersBorder"]); // 3.6556.2 DBIg6EBr Hn (2.42304.0 B5tintml Vn)
 const VISUALIZE_SERVER_UUID = "6f616b42-0ed8-571e-823f-ee4aca6b7ce9"; // shared-78 KD
 const OWN_SERVER_NAME = "code_desktop"; // agent-tools-host.cjs SERVER_NAME
 const METHOD_NOT_FOUND = -32601;
 const MAX_PAGES = 100;
 const MAX_SERVER_ID = 512;
 const MAX_CACHED_SESSIONS = 32;
-const SESSION_NOT_FOUND = "Session not found"; // CFJssAFf widgetIpcRefusal
+const SESSION_NOT_FOUND = "Session not found"; // DNPOm2Zc (2.42304.0 CFJssAFf) widgetIpcRefusal
 const STARTING = "starting"; // Codex McpServerStatus.runtimeStatus while the server connects (customize-model.mjs)
 const READ_WIDGET_CONTEXT = "read_widget_context"; // muI2IV6k y1t / B5tintml t.vJ
 const MAX_TOOL_STATES = 256;

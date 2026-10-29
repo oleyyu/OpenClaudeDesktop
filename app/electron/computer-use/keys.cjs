@@ -1,4 +1,4 @@
-// app_key combos, as the official 2.42304.0 build reads them (muI2IV6k nH / gn / Asr / ksr, docs/computer-use-official-spec-20261021.md §1.6.1):
+// app_key combos, as the official 2.42304.0 build reads them (muI2IV6k nH / gn / Asr / ksr, 3.6556.2 jPKPzV-P PH / bn / dTr / uTr, docs/computer-use-official-spec-20261021.md §1.6.1):
 //   parse      "Command+Shift+Down" → {mods: ["shift", "meta"], keys: ["down"]}: modifier aliases folded, modifiers
 //              de-duplicated and ordered ctrl, alt, shift, meta; "esc" → "escape", "del" → "delete"
 //   normalize  the same as one string with meta spelled cmd: "shift+cmd+down"

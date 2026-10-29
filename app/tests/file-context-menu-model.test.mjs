@@ -71,10 +71,12 @@ test('source multi-file menu snapshots visual order, sanitizes each copied path,
 
 test('original editor eligibility excludes binary/media paths while retaining text, SVG and directories', async()=>{
  const {multiFileContextMenu,fileContextMenu}=await import('../src/file-context-menu-model.mjs');
- // R3-files FT-05: the menus read the 2.42304.0 rule (shared-28 Fk over shared-104 bP), same answers as the 2.31226.0 one.
+ // R3-files FT-05: the menus read the 2.42304.0 rule (shared-28 Fk over shared-104 bP). The answers below are the ones the
+ // retired 2.31226.0 adapter (generated/code-editor/file-editor-path.mjs, removed by w10-editor-split) gave as well.
  const {canOpenFileInEditor}=await import('../src/generated/files-changes/file-editor-path.mjs');
- const {canOpenFileInEditor:previous}=await import('../src/generated/code-editor/file-editor-path.mjs');
- for(const path of ['photo.PNG','pic.avif','vector.svg','clip.mp4','archive.tar.gz','book.pdf','doc.docx','icon.ico','db.sqlite3','font.woff2','lib.so.2','app.ts','Makefile','file.unknown','.env','dir/'])assert.equal(canOpenFileInEditor(path),previous(path),path);
+ const expected={'photo.PNG':false,'pic.avif':false,'vector.svg':true,'clip.mp4':false,'archive.tar.gz':false,'book.pdf':false,'doc.docx':false,'icon.ico':false,'db.sqlite3':false,'font.woff2':false,'lib.so.2':false,'app.ts':true,'Makefile':true,'file.unknown':true,'.env':true,'dir/':true};
+ for(const [path,answer] of Object.entries(expected))assert.equal(canOpenFileInEditor(path),answer,path);
+ assert.equal(fs.existsSync(new URL('../src/generated/code-editor/file-editor-path.mjs',import.meta.url)),false);
  const source=fs.readFileSync(new URL('../src/file-context-menu-model.mjs',import.meta.url),'utf8');
  assert.match(source,/import \{ canOpenFileInEditor \} from "\.\/generated\/files-changes\/file-editor-path\.mjs";/);
  assert.doesNotMatch(source,/generated\/code-editor\/file-editor-path/);

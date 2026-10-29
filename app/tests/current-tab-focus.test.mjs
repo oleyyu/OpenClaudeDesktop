@@ -25,7 +25,7 @@ function fixture() {
     document.dispatchEvent(event);
     viewport.dispatchEvent(event);
   };
-  return { key, focus, viewport, dispose, pinned: () => pinned };
+  return { key, focus, viewport, dispose, pinned: () => pinned, pin: () => { pinned = true; } };
 }
 test('Tab to a control above the padded viewport releases following, including browser scroll compensation', () => {
   for (const browserScroll of [0, -200]) {
@@ -42,4 +42,12 @@ test('visible focus, pointer focus, cancelled Tab and control-modified Tab prese
 test('focus guards do not consume the real Tab target and cleanup disconnects the listener', () => {
   const f = fixture(); f.key(); f.focus(80, 20, true); assert.equal(f.pinned(), true); f.focus(80); assert.equal(f.pinned(), false); f.dispose();
   const disposed = fixture(); disposed.key(); disposed.dispose(); disposed.focus(80); assert.equal(disposed.pinned(), true);
+});
+// W9 cc-rest-transcript, 3.6556.2: the Tab tracking lives in c99ca27a0 r (tab-focus-tracker.mjs); c9f414608 i releases
+// at most once per Tab press (`l === d`), and a new press can release again.
+test('one release per Tab press; the next press releases again', () => {
+  const f = fixture(); f.key(); f.focus(80); assert.equal(f.pinned(), false);
+  f.pin(); f.focus(80); assert.equal(f.pinned(), true, 'the same press does not release twice');
+  f.key(); f.focus(60); assert.equal(f.pinned(), false, 'a new Tab press does');
+  f.dispose();
 });

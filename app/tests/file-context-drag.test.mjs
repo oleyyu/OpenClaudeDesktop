@@ -4,13 +4,12 @@ import { createServer } from 'vite';
 // R3-files FT-18: the drag wrapper runs on the 2.42304.0 cd06fb298 originals (generated/files-changes), whose gate reads
 // the GrowthBook adapter in source-files-changes-adapters.jsx, so the modules load through Vite SSR (one module graph:
 // the wrapper and the generated module share one drag state, as in the app).
-let server, Drag, Original, Pointer, Legacy;
+let server, Drag, Original, Pointer;
 before(async () => {
  server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
  Drag = await server.ssrLoadModule('/src/file-context-drag.mjs');
  Original = await server.ssrLoadModule('/src/generated/files-changes/file-context-drag.mjs');
  Pointer = await server.ssrLoadModule('/src/generated/files-changes/file-tree-pointer.mjs');
- Legacy = await server.ssrLoadModule('/src/generated/code-editor/file-context-drag.mjs');
 });
 after(() => server?.close());
 const read = file => fs.readFileSync(path.resolve(import.meta.dirname, '..', file), 'utf8');
@@ -28,8 +27,8 @@ test('original drag protocol uses an owner-scoped marker and consumes one attach
  const cancelled=drag();startFileContextDrag(cancelled,owner,['/repo/c'],()=>attached++);cancelled.handlers.get('dragend').fn();assert.equal(acceptsFileContextDrag(cancelled,owner),false);
  const forged=drag();forged.dataTransfer.setData('application/x-claude-file-context','1');assert.equal(acceptsFileContextDrag(forged,owner),false);
  for(const paths of [[],Array(101).fill('/repo/a')]){const refused=drag();assert.equal(startFileContextDrag(refused,owner,paths,()=>attached++),false);assert.equal(refused.prevented,true);}
- // The old 2.31226.0 instance holds nothing: no consumer begins a drag there any more.
- assert.equal(Legacy.draggedFilePaths(owner),undefined);
+ // w10-editor-split: the old 2.31226.0 copy (generated/code-editor/file-context-drag.mjs) is retired, so no second drag state exists.
+ assert.equal(fs.existsSync(path.resolve(import.meta.dirname,'../src/generated/code-editor/file-context-drag.mjs')),false);
 });
 test('2.42304.0 gate d: a coarse pointer (touch, no hover) refuses the drag; the rollout keeps its default without GrowthBook',()=>{
  const saved=globalThis.window;
@@ -41,14 +40,16 @@ test('2.42304.0 gate d: a coarse pointer (touch, no hover) refuses the drag; the
  }finally{if(saved===undefined)delete globalThis.window;else globalThis.window=saved;}
  assert.equal(Original.fileContextDragEnabled(),true,'no window: not coarse; growthBookValue undefined !== false');
 });
-test('original blank click rule excludes rows, nonprimary buttons and scrollbars, on the left in RTL (cccc2cf0a Ux/Wx/Gx)',()=>{
+test('original blank click rule excludes rows, nonprimary buttons and scrollbars, on the left in RTL (3.6556.2 cccc2cf0a Ww/Gw/Kw)',()=>{
  const {isBlankTreePress,isBlankTreeTarget}=Pointer;
  let direction='ltr';
  const view={getComputedStyle:()=>({direction})};
- const tree={contains:()=>true,ownerDocument:{defaultView:view},getBoundingClientRect:()=>({left:10,top:20}),offsetWidth:115,clientWidth:100,offsetHeight:215,clientHeight:200,clientLeft:0,clientTop:0};
+ const tree={contains:()=>true,ownerDocument:{defaultView:view},getBoundingClientRect:()=>({left:10,top:20}),offsetWidth:115,clientWidth:100,offsetHeight:215,clientHeight:200,scrollHeight:400,clientLeft:0,clientTop:0};
  const event={currentTarget:tree,target:{closest:()=>null},button:0,clientX:50,clientY:50};assert.equal(isBlankTreePress(event),true);assert.equal(isBlankTreeTarget(event),true);
  assert.equal(isBlankTreePress({...event,button:2}),false);assert.equal(isBlankTreePress({...event,clientX:112}),false);assert.equal(isBlankTreePress({...event,clientY:225}),false);
  assert.equal(isBlankTreePress({...event,target:{closest:()=>({})}}),false);
+ // 3.6556.2 Gw: the vertical scrollbar strip is excluded only while the tree actually scrolls (scrollHeight > clientHeight).
+ assert.equal(isBlankTreePress({...event,currentTarget:{...tree,scrollHeight:200},clientX:112}),true,'no vertical overflow: the gutter is blank space');
  direction='rtl';
  assert.equal(isBlankTreePress({...event,clientX:112}),true,'RTL: the scrollbar is on the left');assert.equal(isBlankTreePress({...event,clientX:9}),false);
 });

@@ -10,7 +10,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { parseAst } from 'rolldown/parseAst';
 
-// R4g-mcp MA-7: the transcript mount of the 2.42304.0 MCP App / Visualize card (c96d752d0 KBe / m2e / e0 → VX).
+// R4g-mcp MA-7: the transcript mount of the 3.6556.2 MCP App / Visualize card (c96d752d0 ZNe / K1e / n1 → lY).
 // A tool call item goes through the host's row (source-session.jsx SourceMessage) to source-mcp-app.jsx, which lists the
 // session's servers through the real main-process bridge (electron/mcp-apps-host.cjs, MA-4, driven in process with a
 // fake core client), loads the generated card (MA-6) and mounts it; the AppRenderer chunk (the sandbox iframe) is a test
@@ -142,7 +142,7 @@ async function withDom(desktopCall, run) {
     for (const [name, descriptor] of saved) { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else delete globalThis[name]; }
   }
 }
-// The AppRenderer chunk (the sandbox iframe) is a double that records the props PQe hands it.
+// The AppRenderer chunk (the sandbox iframe) is a double that records the props vYe hands it.
 function withRendererDouble(run) {
   const handle = Card.appRendererChunk.handle;
   const saved = { module: handle.module, resident: handle.resident, state: handle.state };
@@ -159,6 +159,9 @@ test('source-session.jsx mounts SourceMcpAppRow for MCP calls only, with the gen
   assert.ok(parseAst(source, { lang: 'jsx' }));
   assert.equal(source.split("import {SourceMcpAppRow,isMcpCallItem} from './source-mcp-app.jsx';").length - 1, 1);
   assert.equal(source.split('return isMcpCallItem(item)?<SourceMcpAppRow item={item} sessionKey={sessionKey} awaitingApproval={pendingApprovalItemIds.has(item.id)} turnStart={turnStart} fallback={row}/>:row;').length - 1, 1);
+  // The mount passes what the official K1e / n1 rows pass, savesViewState included.
+  const mount = fs.readFileSync(path.join(app, 'src/source-mcp-app.jsx'), 'utf8');
+  assert.equal(mount.split('<Card.McpAppToolCard tool={toMcpAppTool(item, { awaitingApproval })} sessionRef={sessionRef} onPrefillComposer={onPrefillComposer} fallback={fallback} savesViewState />').length - 1, 1);
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   // R4i-mcp MC1 adds the send-time model context hand-over to the same import.
   assert.equal(main.split('import { useMcpAppTranscript, noteMcpAppSendContext } from "./source-mcp-app.jsx";').length - 1, 1);
@@ -207,7 +210,7 @@ test('SSR: once listed and loaded, a visualize call is the card row (item anchor
   try { await Mount.ensureMcpAppServers('s1', 'mcp__visualize__show_widget'); } finally { globalThis.window = saved; }
   const html = renderToStaticMarkup(message(widgetCall(), { turnStart: true }));
   assert.match(html, /^<div class="source-message source-mcp-app-row" data-transcript-item-id="call-w" data-mcp-app-row="" data-turn-start="true">/);
-  // kQe on the server: the conversation hash is computed in an effect, so the fallback (the host's own row) is drawn.
+  // lYe on the server: the conversation hash is computed in an effect, so the fallback (the host's own row) is drawn.
   assert.match(html, /<div class="source-message source-step source-step-classic source-generic-step" data-transcript-item-id="call-w"/);
   assert.doesNotMatch(html, /data-mcp-app-card/);
   // Another session that was never listed: plain row.
@@ -259,9 +262,13 @@ test('full chain: tool call → servers → card → conversation hash → sandb
     const row = container.find(node => node.getAttribute?.('data-mcp-app-row') === '');
     assert.ok(row, 'the card row is mounted');
     assert.equal(row.getAttribute('data-transcript-item-id'), 'call-w');
-    assert.ok(row.find(node => node.getAttribute?.('data-mcp-app-card') === ''), 'PQe drew its card');
+    assert.ok(row.find(node => node.getAttribute?.('data-mcp-app-card') === ''), 'vYe drew its card');
     const props = seen.at(-1);
     assert.ok(props, 'the sandbox renderer (double) is mounted');
+    // K1e / n1 pass savesViewState; the deny-connectors gate is off here, so CJe builds no view-state store (E24).
+    assert.equal(props.onSetViewState, undefined);
+    assert.equal(props.resolveHostContextExtras, undefined);
+    assert.equal(props.smoothInitialHeight, false);
     assert.equal(props.toolResourceUri, 'ui://imagine/show-widget.html');
     assert.match(props.conversationHash, /^[0-9a-f]{32}$/);
     assert.equal(props.serverIdentifier, VISUALIZE_UUID);
@@ -307,7 +314,7 @@ test('full chain, third-party App on Codex: the core’s server is session-owned
   }));
 });
 
-test('a call waiting on approval keeps the host row (kQe pending_approval) and releases it once answered', async () => {
+test('a call waiting on approval keeps the host row (lYe pending_approval) and releases it once answered', async () => {
   const { call } = bridge();
   await withRendererDouble(async () => withDom(call, async ({ container, root }) => {
     const running = widgetCall({ status: 'inProgress', result: null });
@@ -326,7 +333,7 @@ test('a call waiting on approval keeps the host row (kQe pending_approval) and r
 test('zh-CN: the card, link and download dialogs, the widget’s host strings and the Settings visualize row are translated', async () => {
   const keys = ['Making a visual', 'Made a visual', 'Failed to make a visual', 'Visual from Claude', 'Rendering widget', 'Widget from {server}',
     'Widget from this session’s server: {server}', 'Widget from a server on {host}: {server}', 'A server on {host}: {server}', 'This session’s server: {server}',
-    '{names}. {tool}', 'Showing in another pane', 'Show here', 'More actions', 'Copy as image', 'Download as HTML', 'Download as SVG', 'Download as PNG', 'Copying…',
+    '{names}. {tool}', 'Widget from {server} on {host}', '{server} on {host}', 'Show in another pane', 'Showing in another pane', 'Show here', 'More actions', 'Copy as image', 'Download as HTML', 'Download as SVG', 'Download as PNG', 'Copying…',
     'Couldn’t copy image. Try again.', 'Couldn’t copy image.\nTake a screenshot instead.', 'Couldn’t download image. Try again.',
     'Couldn’t download image.\nTake a screenshot instead.', 'Couldn’t download image.', 'Not sent:', 'Download files', 'This app wants to download a file to your device:',
     'This app wants to download {count} files to your device:', 'Don’t ask again for links to <code>{domain}</code>', 'Start a call?', 'Start call',

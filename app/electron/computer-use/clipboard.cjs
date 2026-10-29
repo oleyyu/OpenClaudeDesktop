@@ -1,4 +1,4 @@
-// The clipboard for computer use, as the official 2.42304.0 build handles it (docs/computer-use-official-spec-20261021.md
+// The clipboard for computer use, as the official 2.42304.0 build handles it, the same in 3.6556.2 (ot() and its callers in BEf0UhNC → st() in Cgwbta3N; DPr / rPr / vlr / EPr in muI2IV6k → $Ui / kUi / bDr / QUi in jPKPzV-P) (docs/computer-use-official-spec-20261021.md
 // §1.5): the text read_clipboard / write_clipboard read and write, the clipboard guard (official ot(): while a
 // click-tier app — a terminal or an IDE — is in front, the clipboard is put aside and emptied so its Paste can't be used
 // to inject text, and put back once a different app is in front or the turn ends), and the paste path of the

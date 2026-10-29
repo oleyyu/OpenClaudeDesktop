@@ -1,5 +1,5 @@
 // Full control (the display-scope mode): request_full_control / release_full_control and the display lock
-// (official 2.42304.0 §1.4, the lock manager pw in index.chunk-muI2IV6k.js). This build's lock manager, per session:
+// (official 2.42304.0 §1.4, the lock manager KW in index.chunk-muI2IV6k.js, EW in 3.6556.2 jPKPzV-P). This build's lock manager, per session:
 //
 //   preferredMode   "background" (default) or "full_control" (Settings › Computer use). In background, Claude works in
 //                   the apps you allow and asks before taking the whole screen; in full_control it takes the screen by

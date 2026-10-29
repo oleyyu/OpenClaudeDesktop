@@ -25,7 +25,9 @@ const keywordTexts=word=>[...new Set([word,...keywordForms(word)])];
 export function normalizeSettingsQuery(value) {
  return String(value).normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '').replace(/[‘’‛]/g, "'").replace(/[“”]/g, '"').replace(/[\s_-]+/g, ' ').trim();
 }
-function searchSettingsRows(sections, groups, query) {
+// expanded: section ids whose "+N more" was opened in place (3.6556.2 cc011544b dn's third argument): all their rows
+// are children and no more row follows.
+function searchSettingsRows(sections, groups, query, expanded) {
  const normalized=normalizeSettingsQuery(query),terms=normalized.split(' '),needle=normalized.replaceAll(' ','');
  const rankOne=value=>{
   const words=normalizeSettingsQuery(value).split(' '),flat=words.join('');
@@ -61,18 +63,19 @@ function searchSettingsRows(sections, groups, query) {
   if(!nameMatched&&available.length===1){addRow(available[0],'hit');continue;}
   if(!nameMatched&&!available.length)continue;
   hits.push(result(section,'hit',null,{score}));
-  available.slice(0,3).forEach(entry=>addRow(entry,'child'));
-  if(available.length>3)hits.push(result(section,'more',null,{score,count:available.length-3}));
+  const shown=expanded?.has(section.id)?available.length:3;
+  available.slice(0,shown).forEach(entry=>addRow(entry,'child'));
+  if(available.length>shown)hits.push(result(section,'more',null,{score,count:available.length-shown}));
  }
  return hits;
 }
 // A plugin skill visible under Skills should not appear a second time under
 // Plugins. Hidden entries behind +N more remain eligible (source D:933–959).
-export function settingsSearch(sections,groups,query) {
+export function settingsSearch(sections,groups,query,expanded) {
  const skills=searchSettingsRows(sections.filter(section=>section.id==='customize-skills'),groups,query);
  const visible=new Set(skills.filter(hit=>hit.kind!=='more'&&Array.isArray(hit.subpathId)).map(hit=>JSON.stringify(hit.subpathId)));
  const filtered=visible.size?groups.map(group=>group.tab==='customize-plugins'?{...group,rows:group.rows.filter(row=>!Array.isArray(row.subpathId)||!visible.has(JSON.stringify(row.subpathId)))}:group):groups;
- return searchSettingsRows(sections,filtered,query);
+ return searchSettingsRows(sections,filtered,query,expanded);
 }
 // shared-14 Cy/Ty: first literal lower-case substring only. Map back to original
 // UTF-16 offsets so expanding case folds (İ) cannot split or eat adjacent text.

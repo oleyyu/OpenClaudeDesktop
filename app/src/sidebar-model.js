@@ -4,7 +4,7 @@ import { hasPendingApproval, latestTurnError } from "./state.js";
 import { t, tn } from "../electron/i18n/index.mjs";
 import {orderSidebarFamilies,splitSidebarFamilies} from './generated/code-current/sidebar-family-sort.mjs';
 import {currentSidebarDateGroups} from './generated/code-current/sidebar-date-groups.mjs';
-import { currentSidebarComparator,sidebarSortRecord } from './sidebar-filter-current-model.mjs';
+import { currentSidebarComparator,sidebarSortRecord,savedEnvironmentGroups } from './sidebar-filter-current-model.mjs';
 import { nestedSessionCounts, nestedSessionNeedsInput } from './generated/code-current/nested-session-model.mjs';
 export const CLASSIC_GROUP_OPTIONS = Object.freeze([
   ["date", "Date"],
@@ -42,7 +42,9 @@ export function normalizeSidebarPreferences(value = {}) {
   const option = (key, options) => options.some(([v]) => v === value[key])
     ? value[key] : DEFAULT_SIDEBAR_PREFERENCES[key];
   return {
-    groupBy: option("groupBy", CLASSIC_GROUP_OPTIONS),
+    // w4-sidebar-filter (E17): the sections layout's Group by › Environment (3.6556.2 GJ "environment", stored on the
+    // Sessions section as "savedEnvironment"); not a classic menu option (CLASSIC_GROUP_OPTIONS).
+    groupBy: value.groupBy === "environment" ? "environment" : option("groupBy", CLASSIC_GROUP_OPTIONS),
     sortBy: option("sortBy", CLASSIC_SORT_OPTIONS),
     status: option("status", CLASSIC_STATUS_OPTIONS),
     stateActivityDays: [0, 1, 3, 7, 30].includes(value.stateActivityDays)
@@ -224,6 +226,8 @@ export function buildSidebarGroups({
   repoIdentities = {}, projectOrder = [],
   // Sessions whose conversation matches the search (a core with full-text search: Codex thread/search), by id.
   contentMatches = null, currentLayout = false,
+  // The saved environments (main's savedEnvironments.environments) the Environment grouping buckets by.
+  savedEnvironments = [],
 } = {}) {
   const prefs = {...normalizeSidebarPreferences(preferences),...(currentLayout?{status:"active"}:{})};
   const query = search.trim().toLocaleLowerCase(locale);
@@ -295,6 +299,23 @@ export function buildSidebarGroups({
     if (ungrouped.length) output.push({ key: "custom-ungrouped", label: t("Ungrouped"), sessions: ungrouped, kind: "custom" });
     return output;
   }
+  // w10-shell-sidebar-folder: in the session list layout (the host's sections layout, currentLayout; 3.6556.2 shared-22
+  // DE → OE with manualSectionsApart), the Folder grouping is OE's `if (r && !t) { P = bE; … }`: every row is a {folder}
+  // group by its project key or an {unsaved} place group (bE: dE / mE), so a row without a repo goes to "This computer"
+  // (YE → XE, shared-46 zL) and there is no Other; folder buckets are sorted by label (JE, Mc) and then laid over the
+  // stored order (`ai(p, h, F ? li(K, h) : K)`, shared-46 Yj over Xj); no empty folder buckets (`g = F ? [] : fe`). That is
+  // the Environment grouping's pass without saved environments.
+  if (prefs.groupBy === "environment" || (currentLayout && prefs.groupBy === "project")) {
+    // w4-sidebar-filter (E17): 3.6556.2 shared-22 OE grouping by saved environment (sidebar-filter-current-model.mjs
+    // savedEnvironmentGroups) over this list's folder identity of each row.
+    const place = (session) => {
+      const cwd = session.cwd || fallbackCwd, identity = cwd ? repoIdentities?.[cwd] : null, key = projectKey(cwd, identity);
+      return { cwd, projectKey: key === OTHER_PROJECT_KEY ? null : key, owned: !!(identity?.isRepo && identity.owner && identity.name),
+        name: projectName(cwd, identity), extra: identity?.owner || identity?.parent || parentFolder(cwd) };
+    };
+    return output.concat(savedEnvironmentGroups(rest, { environments: prefs.groupBy === "environment" ? savedEnvironments : [], environmentIdOf: (session) => metadata[session.id]?.environmentId,
+      place, projectOrder, otherProjectKey: OTHER_PROJECT_KEY, thisComputer: t("This computer") }));
+  }
   // sidebar-groups.js:19580-19592: a project bucket per repo identity (IJ, sidebar-session.js:20892-20903),
   // sessions without one in the `__no_project__` bucket appended last (:19640-19650, label otherProjects
   // 'Other'). An identity still resolving (repoIdentities has no entry) keys on the cwd, as before.
@@ -317,10 +338,8 @@ export function buildSidebarGroups({
   // an owner, else ' · {parent folder}' of its local path.
   const nameCount = new Map();
   for (const bucket of named) nameCount.set(bucket.name, (nameCount.get(bucket.name) || 0) + 1);
-  const nameParts = new Map();
   const folderGroups = named.map((bucket) => {
     const extra = nameCount.get(bucket.name) > 1 ? bucket.identity?.owner || bucket.identity?.parent || parentFolder(bucket.cwd) : null;
-    nameParts.set(`project:${bucket.key}`, [bucket.name, extra ?? ""]);
     return { key: `project:${bucket.key}`, projectKey: bucket.key, label: extra ? `${bucket.name} · ${extra}` : bucket.name,
       cwd: bucket.cwd, sessions: bucket.sessions, kind: "project" };
   });
@@ -332,19 +351,13 @@ export function buildSidebarGroups({
   // project, ranked buckets come first in that order and the rest follow; otherwise the local sort applies.
   const rank = new Map((Array.isArray(projectOrder) ? projectOrder : []).filter((key) => !isCustomOrderKey(key)).map((key, index) => [key, index]));
   const manual = folderGroups.some((group) => rank.has(group.projectKey));
-  // R3-sections (WI-4): the current layout orders folder buckets as 2.42304.0 shared-22 nT does (`Tr(…, Ln(U, W), U)`,
-  // shared-19 c2 / s$): by name, then the disambiguation (`Dg(e.name, t.name) || Dg(e.disambiguationText ?? "", …)`),
-  // whatever the sort, until a stored order names a present folder ("Sort A to Z" clears it back to this); then the ranked
-  // ones in that order and the rest after them, the most recently active first (`n.latestTimestamp - t.latestTimestamp`).
-  const latest = (group) => group.sessions.reduce((max, session) => Math.max(max, sessionUpdatedAt(session)), 0);
-  const byName = (a, b) => collator.compare(nameParts.get(a.key)[0], nameParts.get(b.key)[0]) || collator.compare(nameParts.get(a.key)[1], nameParts.get(b.key)[1]);
+  // The classic list's own order (the session list layout's Folder grouping is the bE pass above).
   folderGroups.sort((a, b) => {
     if (manual) {
       const left = rank.get(a.projectKey), right = rank.get(b.projectKey);
       if (left !== undefined || right !== undefined) return left === undefined ? 1 : right === undefined ? -1 : left - right;
-      if (currentLayout) return latest(b) - latest(a);
     }
-    return currentLayout ? byName(a, b) : byDefault(a, b);
+    return byDefault(a, b);
   });
   if (other.length) folderGroups.push({ key: `project:${OTHER_PROJECT_KEY}`, projectKey: OTHER_PROJECT_KEY, label: t("Other"), sessions: other, kind: "project" });
   return output.concat(folderGroups);

@@ -1,6 +1,6 @@
 // Lane R3b-settings: settings-01 (Worktree location "…on this computer."), the Settings end of cov0-04 (the low-disk
 // toast's Manage storage opens Settings › General with the Storage dialog: 'general#open-storage') and menus-01 (the
-// CDS Shortcut text variant's 0.15em glyph gap and "+" joiner, checked against the 2.42304.0 shared-frame source and
+// CDS Shortcut text variant's 0.15em glyph gap and "+" joiner, checked against the 3.6556.2 shared-frame source and
 // the view-tabs CdsShortcut that renders it). SSR only (portals inline, effects do not run).
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
 // D21: view-tabs' preload-helper calls document.createElement while it evaluates.
@@ -26,7 +26,7 @@ before(async () => {
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   ({ SourceSettings: Settings } = await server.ssrLoadModule('/src/source-settings.jsx'));
   Shortcut = await server.ssrLoadModule('/src/source-shortcut.jsx');
-  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
   I18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
 });
 after(async () => {
@@ -38,9 +38,10 @@ const page = (initialSection, config = {}) => render(React.createElement(Setting
   desktopCall: async () => ({}), onSave: async () => ({}), onClose() {} }));
 const rowOf = (html, id) => { const at = html.indexOf(`data-setting-id="${id}"`); return at < 0 ? '' : html.slice(at, html.indexOf('data-setting-id="', at + 20) >>> 0 || undefined); };
 
-test('settings-01: Code › Sessions › Worktree location says "…on this computer." (2.42304.0 cd19fedd2 P0gQiUc0+j), in zh-CN too', async () => {
-  const official = await fs.readFile(path.join(reference, 'cd19fedd2-7Tk-qNbq.js'), 'utf8');
-  assert.ok(official.includes('description:s({defaultMessage:"Where to store Git worktrees for isolated coding sessions on this computer.",id:"P0gQiUc0+j"})'));
+test('settings-01: Code › Sessions › Worktree location says "…on this computer." (3.6556.2 cc7db14f1 P0gQiUc0+j), in zh-CN too', async () => {
+  // 3.6556.2 moved the settings catalog rows from cd19fedd2 to the new cc7db14f1 (menus §2.2); the copy is unchanged.
+  const official = await fs.readFile(path.join(reference, 'cc7db14f1-gBe2zwpj.js'), 'utf8');
+  assert.ok(official.includes('description:c({defaultMessage:"Where to store Git worktrees for isolated coding sessions on this computer.",id:"P0gQiUc0+j"})'));
   const html = page('code');
   const row = rowOf(html, 'worktreeLocation');
   assert.ok(row, 'the row renders');
@@ -55,8 +56,8 @@ test('settings-01: Code › Sessions › Worktree location says "…on this comp
 });
 
 test('cov0-04: general#open-storage opens Settings on the System page with the Storage dialog; plain general does not', async () => {
-  const official = await fs.readFile(path.join(reference, 'shared-3-DnHYUZdJ.js'), 'utf8');
-  assert.ok(official.includes('bk="open_storage",xk=`/settings/desktop?${bk}=true`'));
+  const official = await fs.readFile(path.join(reference, 'shared-3-BCEbd8Fv.js'), 'utf8');
+  assert.ok(official.includes('bN="open_storage",xN=`/settings/desktop?${bN}=true`'));
   const opened = page('general#open-storage');
   assert.ok(opened.includes('class="ss-storage-dialog"'), 'the Storage dialog is open');
   assert.ok(opened.includes('aria-label="Calculating storage"'), 'and loading its report');
@@ -68,13 +69,16 @@ test('cov0-04: general#open-storage opens Settings on the System page with the S
 });
 
 test('menus-01: the text variant gap is 0.15em and the non-mac "+" joiner margin -0.15em, as the view-tabs CdsShortcut renders them', async () => {
-  const official = await fs.readFile(path.join(reference, 'shared-frame-BfjMqbuN.js'), 'utf8');
+  const official = await fs.readFile(path.join(reference, 'shared-frame-6jtSkIit.js'), 'utf8');
   assert.ok(official.includes('text:"inline-flex shrink-0 items-baseline gap-[0.15em] text-caption"'));
-  assert.ok(official.includes('className:"mx-[-0.15em] [color:var(--cds-shortcut-cap-ink)]",children:Os'));
+  assert.ok(official.includes('className:"mx-[-0.15em] [color:var(--cds-shortcut-cap-ink)]",children:ac'));
   assert.ok(official.includes('insert:"Insert",plus:"+"}'), 'the plus key glyph');
-  // The original component, through the view-tabs public name (SSR snapshot: non-mac, so "+" joiners).
+  // 3.6556.2: a one-chord shortcut also gets the RTL row reversal (`g=i.length===1&&rc`).
+  assert.ok(official.includes('rc="[&:where(:root[dir=rtl]_:dir(rtl))]:flex-row-reverse"'));
+  assert.ok(official.includes('let h=nc[o],g=i.length===1&&rc'));
+  // The original component, through the view-tabs facade (SSR snapshot: non-mac, so "+" joiners).
   const cds = render(React.createElement(ViewTabs.CdsShortcut, { keys: 'cmd+shift+k', variant: 'text' }));
-  assert.match(cds, /data-cds="Shortcut" data-variant="text" class="inline-flex shrink-0 items-baseline gap-\[0\.15em\] text-caption"/);
+  assert.match(cds, /data-cds="Shortcut" data-variant="text" class="inline-flex shrink-0 items-baseline gap-\[0\.15em\] text-caption \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:flex-row-reverse"/);
   assert.equal(cds.split('class="mx-[-0.15em] [color:var(--cds-shortcut-cap-ink)]">+</span>').length - 1, 2);
   // The host component keeps the same structure, and its stylesheet the same values.
   const host = render(React.createElement(Shortcut.SourceShortcut, { keys: 'cmd+shift+k', variant: 'text', mac: false }));

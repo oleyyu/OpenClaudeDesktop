@@ -66,8 +66,9 @@ test("thread previews, first-send names, recall, copy, rewind, export and the qu
   assert.equal(firstMessageName("", [file("/w/notes.md")]), "notes.md");
   assert.equal(firstMessageName("line one\nline two", [], { max: 80, firstLine: true }), "line one");
   assert.equal(firstMessageName("   ", []), "");
-  // A core that titles its sessions (generatesTitles) keeps its own title; others get the first-message name.
-  assert.match(mainSource, /if \(name\.trim\(\) && !coreSupports\(boot\?\.core, "generatesTitles"\)\) await rpc\("thread\/name\/set"/);
+  // A core that titles its sessions (generatesTitles) keeps its own title; others get the first-message name. A given start
+  // title (a Scheduled page template's, w13-close-cowork-ui) is set on either.
+  assert.match(mainSource, /if \(name\.trim\(\) && \(startTitle \|\| !coreSupports\(boot\?\.core, "generatesTitles"\)\)\) await rpc\("thread\/name\/set"/);
   assert.match(mainSource, /list(?:\.map\(\w+\))*\.map\(shownThread\)/, "every session row goes through shownThread");
   assert.deepEqual(humanPrompts(shownUserItems([history])), ["summarize"]);
   assert.equal(messageItemText(shownUserItem(live)), "summarize");

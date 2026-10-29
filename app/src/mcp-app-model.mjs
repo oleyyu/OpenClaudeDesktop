@@ -19,7 +19,7 @@
 // official shared-156 pb. The built-in visualize tools are served under code_desktop (agent-tools/visualize.mjs, MA-2),
 // not under the official separate "visualize" server, so code_desktop show_widget / read_me read as the official
 // mcp__visualize__show_widget / read_me (X1 G8).
-import { lf as mcpServerSegment } from './generated/mcp-app-card/tool-names.mjs';
+import { mcpServerSegment } from './generated/mcp-app-card/tool-names.mjs';
 
 export const MCP_APP_ROW = 'mcp_app';
 export const OWN_SERVER = 'code_desktop'; // electron/agent-tools-host.cjs SERVER_NAME

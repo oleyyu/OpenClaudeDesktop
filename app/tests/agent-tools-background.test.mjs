@@ -675,9 +675,10 @@ test('reveal_path and open_in_editor hand the user a file inside the session fol
   await assert.rejects(byName.open_in_editor.handler({ path: 'src/app.js' }, ctx), /declined/);
   assert.equal(done.length, count, 'nothing opens when declined');
   const card = approvalCardModel({ method: 'item/commandExecution/requestApproval', params: { threadId: 't', cwd: '/w', codeDesktop: { agentTool: { kind: 'open-path', action: 'editor', path: '/w/src/app.js', editor: 'Zed', line: 4 } } } }, null);
-  assert.equal(card.heading.action, 'open app.js in Zed');
+  // 3.6556.2 cd/nd open_in_editor: "open" + the file as meta, and the editor and line as the description.
+  assert.deepEqual([card.heading.action, card.heading.meta, card.heading.overrideDescription], ['open', 'app.js', 'Opens in Zed at line 4.']);
   assert.equal(card.detail.text, '/w/src/app.js');
-  assert.deepEqual(card.context.map((part) => part.text), ['At line 4']);
+  assert.deepEqual(card.context, []);
   const row = (tool, args) => appToolLabel({ id: tool, type: 'mcpToolCall', server: 'code_desktop', tool, status: 'completed', arguments: args, result: { content: [] } }, 'busy');
   assert.deepEqual(row('reveal_path', { path: 'src' }), { label: 'Showing in file manager', meta: 'src' });
   assert.deepEqual(row('open_in_editor', { path: 'src/app.js' }), { label: 'Opening in editor', meta: 'app.js' });

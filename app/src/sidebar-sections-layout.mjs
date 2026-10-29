@@ -14,7 +14,7 @@
 //   - the cuts: Cj `truncateAt: 5` for a manual section, `Sr = W !== null && U !== "none" ? 5 : 20` for Sessions, qk's
 //     20 for Pinned; sO passes no truncateAt (cap Infinity), so a sub-grouped section is never cut.
 // Rows that are pinned show in Pinned only (Cj `if (Bt.has(Z(n.ref))) continue;`).
-import { buildSidebarGroups, normalizeSidebarPreferences, sessionParentId, OTHER_PROJECT_KEY, isCustomOrderKey, withSectionOrder, sessionArchived } from './sidebar-model.js';
+import { buildSidebarGroups, normalizeSidebarPreferences, sessionParentId, OTHER_PROJECT_KEY, withSectionOrder, sessionArchived } from './sidebar-model.js';
 import { hasPendingApproval, latestTurnError } from './state.js';
 import { sidebarSectionsFor } from '../electron/sidebar-sections-store.mjs';
 import {
@@ -95,6 +95,15 @@ export function withLegacyListFields(next, legacy) {
 
 const subGroupBy = (section) => section.groupBy === 'date' ? 'date' : section.groupBy === 'status' ? 'state' : null;
 
+/** w4-sidebar-filter (E17): a grouped Sessions bucket's cut. 3.6556.2 shared-22 OE → IE in the session list
+ * (`truncateAt: r && e.environment === void 0 && d !== void 0 ? 20 : d`, d = Mi 5, r = manualSectionsApart): OE serves
+ * both the Environment and the Folder grouping, so a saved environment's bucket cuts at 5 and every folder / place
+ * bucket (no environment) at 20, in either grouping (w10-shell-sidebar-folder, notdone 86). Other groupings: 5. */
+export function environmentBucketTruncateAt(groupBy, bucket) {
+  return (groupBy === 'environment' || groupBy === 'project') && bucket?.environment === undefined
+    ? SECTIONS_TRUNCATE_AT.flat : SECTIONS_TRUNCATE_AT.grouped;
+}
+
 /**
  * Lays the Code list out by sections. Returns
  *   preferences: the sections layout's list preferences (sectionsPreferences);
@@ -109,11 +118,13 @@ const subGroupBy = (section) => section.groupBy === 'date' ? 'date' : section.gr
 export function buildSidebarSections({
   sections = [], sessions = [], preferences, metadata = {}, customGroups = [], knownFolders = [], state = {}, fallbackCwd = '',
   now = Date.now(), locale, pinnedOrder = [], repoIdentities = {}, projectOrder = [], keptWhileEmpty = [], held = false, statusGrouping = true,
+  savedEnvironments = [],
 } = {}) {
   const prefs = sectionsPreferences(preferences, sections);
   const groups = customGroups.filter(group => typeof group?.id === 'string' && group.id && typeof group.name === 'string' && group.name);
   const groupIds = new Set(groups.map(group => group.id));
-  const common = { metadata, customGroups, knownFolders, state, fallbackCwd, now, locale, pinnedOrder, repoIdentities, projectOrder, search: '', currentLayout: true };
+  // w4-sidebar-filter (E17): savedEnvironments, main's saved environments, for Sessions' Group by › Environment.
+  const common = { metadata, customGroups, knownFolders, state, fallbackCwd, now, locale, pinnedOrder, repoIdentities, projectOrder, savedEnvironments, search: '', currentLayout: true };
   // The rows of the list (status filter, sort and Pinned order as the host list has them), as one flat pass.
   const listed = buildSidebarGroups({ ...common, sessions, preferences: { ...prefs, groupBy: 'none' } });
   const pinnedBucket = listed.find(group => group.kind === 'pinned') ?? null;
@@ -168,7 +179,7 @@ export function buildSidebarSections({
       const grouped = buildSidebarGroups({ ...common, sessions: unsectioned, preferences: prefs });
       const sessionsBuckets = grouped.map(entry => flat
         ? { ...entry, key: SESSIONS_FLAT_KEY, truncateAt: SECTIONS_TRUNCATE_AT.flat, sectionId: section.id, showMetadata: prefs.showMetadata }
-        : { ...entry, truncateAt: SECTIONS_TRUNCATE_AT.grouped, heading: 'group', showMetadata: prefs.showMetadata });
+        : { ...entry, truncateAt: environmentBucketTruncateAt(prefs.groupBy, entry), heading: 'group', showMetadata: prefs.showMetadata });
       buckets.push(...sessionsBuckets);
       layout.push({ kind: 'sessions', section, key: SESSIONS_FLAT_KEY, flat, buckets: sessionsBuckets });
     }
@@ -315,13 +326,23 @@ export function sectionsRowRegistry({ layout, buckets, visibleOrder = [], metada
  * other than Other (`project-${cT}`), so Other has none and yx shows Move up / Move down greyed with QX.fixedAtEnd --
  * with `move(from, to)` (nT `fe`: the order keys with one moved, saved through `save`) and, only while an order is stored
  * (nT `pe`: `U.length !== 0`), `reset` (H([]): back to the name order; "Sort A to Z" since `resetsToRecent` is for presets).
- * Host: the stored order is config.projectOrder, which also holds the legacy `ccg::` custom-group order (D10 keeps it), so
- * only the folder keys count as "an order is stored" and the reset keeps the `ccg::` keys (officially H([]) clears the
- * whole account preference).
+ * w12b-preset-reset-order (3.6556.2 shared-22 OE): `[se, G] = yd(Ra, yi, W)` (Ra = shared-78 cQ "code-projects-order",
+ * yi = shared-46 Uj `[]`), `K = ii(se)` (shared-46 Zj: the string keys), `Se = K.length === 0 ? void 0 : () => { G([]) … }`
+ * -- the reset is offered while any key is stored (the `ccg::` custom-group keys too) and clears the whole preference.
+ * Host: that preference is config.projectOrder; its `ccg::` keys only feed the sections' seeding (shared-21 _E
+ * manualOrder, read by vE while `!prefsSeeded`), and the sections layout seeds main's record when it first renders
+ * (source-sidebar-sections.jsx useSidebarSectionsHost → `sections-seed`, shared-21 yE) -- before any of these menus can
+ * open -- so clearing them leaves the manual sections where they are, as officially.
  *   order: the folder buckets' order keys in list order (sectionOrderKeys); projectOrder: the stored order;
  *   newSession: the folder's new session (none for Other); save(ids): store a new projectOrder.
+ * 3.6556.2 (w4-sidebar-menus, SB-06): shared-22 IE `onSaveAsEnvironment: Oe = pe ? Y : void 0`, `pe = n && t.folder ?
+ * gE(U, d, f) : void 0` with `n` = IE's `environmentsOn` (the caller's `k = Up()`, shared-11 gc: the
+ * `claudeai_cc_epitaxy_session_presets_main` gate) -- with environments on, a folder bucket with a local folder (not
+ * Other, which has no folder) offers Save as environment, the environment editor with that folder filled in.
+ *   environmentsOn: that gate (host: usePresetsGate, D10 on); saveAsEnvironment(target): opens the host's
+ *   saved-environment editor with `{kind: 'local', cwd}` (E17; an SSH folder's prefill is D37, not the host's).
  */
-export function folderBucketMenu(group, { order = [], projectOrder = [], newSession, save } = {}) {
+export function folderBucketMenu(group, { order = [], projectOrder = [], newSession, save, saveAsEnvironment, environmentsOn = false } = {}) {
   if (group?.kind !== 'project' || typeof save !== 'function') return null;
   const at = group.projectKey && group.projectKey !== OTHER_PROJECT_KEY ? order.indexOf(group.projectKey) : -1;
   const stored = Array.isArray(projectOrder) ? projectOrder.filter(key => typeof key === 'string') : [];
@@ -332,8 +353,11 @@ export function folderBucketMenu(group, { order = [], projectOrder = [], newSess
     next.splice(to, 0, order[from]);
     save(withSectionOrder(stored, next));
   };
-  const reset = stored.some(key => !isCustomOrderKey(key)) ? () => save(stored.filter(isCustomOrderKey)) : undefined;
-  return { onNewSession: newSession, order: at === -1 ? null : { index: at, count: order.length, move, reset } };
+  // OE `Se`: K.length === 0 ? void 0 : () => G([]).
+  const reset = stored.length !== 0 ? () => save([]) : undefined;
+  const folder = group.projectKey !== OTHER_PROJECT_KEY && typeof group.cwd === 'string' && group.cwd ? group.cwd : undefined;
+  const onSaveAsEnvironment = environmentsOn === true && folder && typeof saveAsEnvironment === 'function' ? () => saveAsEnvironment({ kind: 'local', cwd: folder }) : undefined;
+  return { onNewSession: newSession, onSaveAsEnvironment, order: at === -1 ? null : { index: at, count: order.length, move, reset } };
 }
 
 /** The pinned section's id (shared-52 ap). */

@@ -385,12 +385,15 @@ test('a new turn event after a settled plan check prevents automatic archive', a
 const nbs7 = createRequire(import.meta.url)('../electron/btw-sessions.cjs');
 const archives = s => s.requests.filter(r => r.method === 'thread/archive').map(r => r.params.threadId);
 const pr = (extra = {}) => ({ number: 7, url: 'https://github.com/owner/repo/pull/7', ...extra });
-test('extracted SD/wD/nwa are the original 2.42304.0 bindings and verify against the snapshot', async () => {
+// 3.6556.2 (w1-main-gens): the same predicates are DNPOm2Zc KI/JI over BE87qAbH t and jPKPzV-P Exa/Dxa (pure renames,
+// research/panes.md §1.9).
+test('extracted KI/JI/Dxa (2.42304.0 SD/wD/nwa) are the original 3.6556.2 bindings and verify against the snapshot', async () => {
   const generated = await import('../electron/generated/btw-archive.mjs');
   const manifest = JSON.parse((await import('node:fs')).readFileSync(new URL('../electron/generated/btw-archive-manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.deepEqual(manifest.sources.map(source => [source.file.split('/').at(-1), source.bindings]),
-    [['index.chunk-muI2IV6k.js', ['twa', 'nwa']], ['index.chunk-DzrvTkKz.js', ['t']], ['index.chunk-CFJssAFf.js', ['SD', 'wD']]]);
+    [['index.chunk-jPKPzV-P.js', ['Exa', 'Dxa']], ['index.chunk-BE87qAbH.js', ['t']], ['index.chunk-DNPOm2Zc.js', ['KI', 'JI']]]);
   const { extractBtwArchive } = await import('../scripts/extract-btw-archive.mjs');
   await extractBtwArchive({ check: true });
   assert.equal(generated.hasOpenOwnPullRequest({ prs: [{ state: 'OPEN' }] }), true);

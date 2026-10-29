@@ -1,8 +1,8 @@
-// R4g-routines RT5 (tasks-code-routines WI-5, D32): the Code mode Routines page. It mounts the original 2.42304.0 page
-// (src/generated/code-routines CodeRoutinesPage = cbd6c85c8 zl: the list Pl, the local detail Jc → cfc18e0f4, the local
+// R4g-routines RT5 (tasks-code-routines WI-5, D32): the Code mode Routines page. It mounts the original 3.6556.2 page
+// (src/generated/code-routines CodeRoutinesPage = cbd6c85c8 Ou: the list hu, the local detail Cl → cfc18e0f4, the local
 // create page c0243d234 over the c0fd2fda3 form) inside its two hosts:
 //   RoutinesSharedHost   (src/source-routines-shared-adapters.jsx) the router (a /code/routines/<id> push selects that
-//                        task here), the shared-4 dh bridge the card menu calls, and the form's model list;
+//                        task here), the shared-4 n_ bridge the card menu calls, and the form's model list;
 //   CodeRoutinesHost     (src/source-code-routines-adapters.jsx) the CCDScheduledTasks bridge, the LocalSessions /
 //                        FileSystem methods this host has, isGitRepo and the bypass mode's availability.
 // Both bridges are local-routines (kind 'code') through src/code-routine-model.mjs; Run now goes to the main process
@@ -16,7 +16,7 @@ import { surfaceSessions } from '../electron/surface-policy.mjs';
 
 const desktopEvents = (handler) => globalThis.window?.desktop?.onEvent?.(handler);
 
-// isGitRepo is read during render (shared-11 Ud): a folder's answer comes from workspace-info once and is cached;
+// isGitRepo is read during render (shared-11 km): a folder's answer comes from workspace-info once and is cached;
 // undefined while unknown (the worktree switch stays off until it is known).
 function useGitRepoCache(localSessions) {
   const [known, setKnown] = useState({});
@@ -35,7 +35,7 @@ function useGitRepoCache(localSessions) {
   }, [known, localSessions]);
 }
 
-// R4i-routines RI2: c749529a1 F's LocalSessions.getAll for the folder field's Recent list (c0fd2fda3 G(!0) → O / v):
+// R4i-routines RI2: c749529a1 I's LocalSessions.getAll for the folder field's Recent list (c0fd2fda3 `Me(!0)` = c749529a1 I: its sessions g → v):
 // the host's Code sessions with a folder, each with main.cjs 'recent-folder-sessions' fields (originCwd, folderExists,
 // isScratchWorkspace; the same read as the composer's folder picker in main.jsx) and its times in ms (createdAt orders
 // a folder against its dismissal, lastActivityAt its recency). `read()` returns the current { sessions, metadata }.
@@ -71,7 +71,7 @@ export function useCodeRoutinesHosts({ call, selectedId = null, onSelect, models
   recentSource.current = { sessions, metadata: sessionMetadata };
   const getAll = useMemo(() => codeRoutineRecentSessions(call, () => recentSource.current), [call]);
 
-  // The detail's History (Jc reads the CCD sessions store): the scheduler's runs with a session, the sessions that
+  // The detail's History (Cl reads the CCD sessions store): the scheduler's runs with a session, the sessions that
   // name a task in their metadata. Initialised once the task list and the host's sessions are loaded.
   useEffect(() => {
     ccdSessionsStore.setState({

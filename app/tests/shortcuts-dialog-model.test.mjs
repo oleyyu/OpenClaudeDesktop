@@ -17,9 +17,11 @@ import { isTerminalToggle } from '../src/terminal-pane-model.mjs';
 import { splitShortcut } from '../src/split-view-model.mjs';
 import { isGoToFileShortcut } from '../src/diff-go-to-file-model.mjs';
 import { diffChangeCommand } from '../src/diff-change-nav-model.mjs';
+import { INITIAL_PROMPT_HISTORY, isHistorySearchKey, promptHistoryStep } from '../src/prompt-history-model.mjs';
+import { findShortcut } from '../src/transcript-find-model.mjs';
 
 // shared-21-D098Wd--.js:14946-15420 zR, filtered to the chords this app binds.
-const CODES = { '-': 'Minus', '.': 'Period', up: 'ArrowUp', down: 'ArrowDown', ',': 'Comma', '/': 'Slash', '\\': 'Backslash', '[': 'BracketLeft', ']': 'BracketRight', '`': 'Backquote', esc: 'Escape', tab: 'Tab', backspace: 'Backspace', enter: 'Enter', f5: 'F5', f7: 'F7' };
+const CODES = { '-': 'Minus', '.': 'Period', up: 'ArrowUp', down: 'ArrowDown', ',': 'Comma', '/': 'Slash', '\\': 'Backslash', '[': 'BracketLeft', ']': 'BracketRight', '`': 'Backquote', esc: 'Escape', tab: 'Tab', backspace: 'Backspace', enter: 'Enter', f3: 'F3', f5: 'F5', f7: 'F7' };
 // A macOS keydown for one key spec ("cmd+shift+d" -> metaKey, shiftKey, key "D", code "KeyD").
 function keydown(spec) {
   if (spec === 'esc esc') return keydown('esc');
@@ -29,7 +31,7 @@ function keydown(spec) {
   const letter = /^[a-z]$/.test(key), digit = /^\d$/.test(key);
   return {
     metaKey: mods.has('cmd'), shiftKey, altKey: mods.has('alt'), ctrlKey: mods.has('ctrl'), isComposing: false, repeat: false,
-    key: key === 'esc' ? 'Escape' : key === 'tab' ? 'Tab' : key === 'backspace' ? 'Backspace' : key === 'enter' ? 'Enter' : key === 'up' ? 'ArrowUp' : key === 'down' ? 'ArrowDown' : letter ? (shiftKey ? key.toUpperCase() : key) : key,
+    key: /^f\d+$/.test(key) ? key.toUpperCase() : key === 'esc' ? 'Escape' : key === 'tab' ? 'Tab' : key === 'backspace' ? 'Backspace' : key === 'enter' ? 'Enter' : key === 'up' ? 'ArrowUp' : key === 'down' ? 'ArrowDown' : letter ? (shiftKey ? key.toUpperCase() : key) : key,
     code: letter ? `Key${key.toUpperCase()}` : digit ? `Digit${key}` : CODES[key],
   };
 }
@@ -51,6 +53,18 @@ function boundIn(command, event) {
   if (command === 'side-chat') return event.metaKey && !event.shiftKey && !event.altKey && !event.ctrlKey && event.key === ';'
     && main.includes('if (event.repeat || event.isComposing || !event.metaKey || event.shiftKey || event.altKey || event.ctrlKey || event.key !== ";") return;');
   if (command === 'queue') return submitPriority(enterAction({ event }), true) === 'later';
+  // V3-w12b-settings-dialogs: c518a31cc Ae's rows are the transcript find bar's keydown (source-find-bar.jsx findShortcut,
+  // ⌘F opens; ⌘G / ⇧⌘G / F3 / ⇧F3 step while it is open); He's Qe rows are SourceComposer's prompt history (↑ / ↓) and
+  // its ⌃R history search.
+  if (command === 'find') return findShortcut(event, { open: false, mac: true }) === 'open' && /findShortcut\(event, \{ open, mac: isMac\(\) \}\)/.test(findBar);
+  if (command === 'find-next' || command === 'find-previous') return findShortcut(event, { open: true, mac: true }) === (command === 'find-next' ? 'next' : 'prev');
+  if (command === 'reuse-prompt') {
+    const down = event.key === 'ArrowDown';
+    const step = promptHistoryStep({ ...INITIAL_PROMPT_HISTORY, resetKey: 's', index: down ? 0 : null, length: 2 },
+      { resetKey: 's', key: event.key, atStart: true, atEnd: true, text: down ? 'a' : '', prompts: ['a', 'b'] });
+    return ['recall', 'restore'].includes(step.action) && /const step = promptHistoryStep\(history\.current, \{/.test(composer);
+  }
+  if (command === 'search-prompts') return isHistorySearchKey(event) && /isHistorySearchKey\(\{ key: event\.key/.test(composer);
   // B34: the Changes pane's own keydown on its pane root (source-diff.jsx, diffChangeCommand: F7 / ⇧F7, ⌥F5 / ⇧⌥F5).
   if (command === 'next-change' || command === 'previous-change') return diffChangeCommand(event) === (command === 'next-change' ? 'next' : 'prev')
     && /const command = diffChangeCommand\(event, \{ linux \}\);/.test(sourceDiff);
@@ -69,6 +83,7 @@ function boundIn(command, event) {
   return undefined;
 }
 const composer = readFileSync(path.join(import.meta.dirname, '../src/source-composer.jsx'), 'utf8');
+const findBar = readFileSync(path.join(import.meta.dirname, '../src/source-find-bar.jsx'), 'utf8');
 const sourceDiff = readFileSync(path.join(import.meta.dirname, '../src/source-diff.jsx'), 'utf8');
 const main = readFileSync(path.join(import.meta.dirname, '../src/main.jsx'), 'utf8');
 function bound(event) {
@@ -113,17 +128,18 @@ function bound(event) {
 }
 
 test('Ce sections, General / Panes / Composer, with the original labels in Ce order (split rows inside General)', () => {
-  const sections = shortcutsDialogSections({ fastMode: true, sideChat: true });
+  const sections = shortcutsDialogSections({ fastMode: true, sideChat: true, route: 'code', mac: true });
   assert.deepEqual(sections.map((section) => section.title), ['General', 'Panes', 'Composer']);
   assert.deepEqual(sections.map((section) => section.rows.map((row) => row.label)), [
     ['Search or start a session', 'Search', 'Toggle sidebar', 'Keyboard shortcuts', 'Settings', 'New session', 'New session with current settings', 'Close tab, pane, or session', 'Reopen closed session',
       'Next session', 'Previous session', 'Jump to session', 'Open session in split view', 'New session on the right', 'New session below', 'Focus next split view', 'Focus previous split view', 'Close split view',
       'Pin / unpin session', 'Rename session', 'Archive session', 'Mark session as read/unread', 'Open session PR', 'Fork session', 'Jump to previous prompt', 'Jump to next prompt',
-      'Transcript view', 'Stop DeepSeek’s response', 'Rewind the session to an earlier message'],
+      'Transcript view', 'Find', 'Find next', 'Find previous', 'Stop DeepSeek’s response', 'Rewind the session to an earlier message'],
     ['Toggle changes', 'Toggle file list in changes or files', 'Next change in changes', 'Previous change in changes', 'Go to file in changes or files', 'Toggle preview', 'Select element in preview', 'Annotate page in preview',
       'New Browser tab', 'Reopen closed Browser tab', 'Next Browser tab', 'Previous Browser tab', 'Jump to Browser tab', 'Focus address bar in Browser',
-      'Toggle Files', 'Attach selection as context', 'Toggle terminal', 'Close pane', 'Expand or collapse pane', 'Toggle side chat', 'Background tasks'],
-    ['Open mode menu', 'Open model menu', 'Open effort selector', 'Toggle fast mode', 'Select menu item', 'Add files or photos', 'Queue for later (while DeepSeek is working)',
+      'Toggle Files', 'Attach selection as context', 'Toggle terminal', 'Close pane', 'Expand or collapse pane', 'Toggle side chat'],
+    ['Open mode menu', 'Open model menu', 'Open effort selector', 'Toggle fast mode', 'Select menu item', 'Add files or photos', 'Reuse an earlier prompt', 'Search earlier prompts',
+      'Queue for later (while DeepSeek is working)',
       'Send and stay on the new session page', 'Send in a forked session (local sessions)'],
   ]);
   // Ce shows Toggle fast mode only when a model offers it.
@@ -134,7 +150,7 @@ test('Ce sections, General / Panes / Composer, with the original labels in Ce or
 });
 
 test('every listed chord is one the app binds: the main handler, pane, chin, composer Escape or menu digits', () => {
-  for (const section of shortcutsDialogSections({ fastMode: true, sideChat: true }))
+  for (const section of [...shortcutsDialogSections({ fastMode: true, sideChat: true, route: 'code', mac: true }), ...shortcutsDialogSections({ route: 'code', mac: false })])
     for (const row of section.rows)
       for (const spec of row.keys)
         for (const key of expand(spec)) {
@@ -146,16 +162,17 @@ test('every listed chord is one the app binds: the main handler, pane, chin, com
 
 test('caps follow the CDS Shortcut io order (⇧⌘D) and ⌘/ is the shortcuts_modal binding', () => {
   const caps = (spec) => shortcutSequence(spec).flatMap((chord) => shortcutCaps(chord, true)).map((cap) => cap.label).join('');
-  const all = Object.fromEntries(shortcutsDialogSections({ fastMode: true, sideChat: true }).flatMap((section) => section.rows).map((row) => [row.command, row.keys.map(caps)]));
+  const all = Object.fromEntries(shortcutsDialogSections({ fastMode: true, sideChat: true, route: 'code', mac: true }).flatMap((section) => section.rows).map((row) => [row.command, row.keys.map(caps)]));
   assert.deepEqual(all, {
     search: ['⌘K'], 'search-palette': ['⇧⌘K'], 'toggle-sidebar': ['⌘B'], shortcuts: ['⌘/'], settings: ['⌘,'], 'new-session': ['⌘N'], 'new-session-current': ['⇧⌘N'],
     'close-session': ['⌘W'], 'reopen-closed': ['⇧⌘T'],
-    'next-session': ['⇧⌘]', '⌃⇥'], 'previous-session': ['⇧⌘[', '⌃⇧⇥'], 'jump-session': ['⌘1…9'], 'archive-session': ['⌥⌘A', '⇧⌘⌫'], 'transcript-view': ['⌃O'], stop: ['Esc'],
+    'next-session': ['⇧⌘]', '⌃⇥'], 'previous-session': ['⇧⌘[', '⌃⇧⇥'], 'jump-session': ['⌘1…9'], 'archive-session': ['⌥⌘A'], 'transcript-view': ['⌃O'], stop: ['Esc'],
+    find: ['⌘F'], 'find-next': ['⌘G'], 'find-previous': ['⇧⌘G'], 'reuse-prompt': ['↑', '↓'], 'search-prompts': ['⌃R'],
     'pin-session': ['⌥⌘P'], 'rename-session': ['⌥⌘R'], 'unread-session': ['⌥⌘U'], 'open-session-pr': ['⌥⌘G'], 'fork-session': ['⌥⌘O'],
     'jump-prev-prompt': ['⌥⌘↑'], 'jump-next-prompt': ['⌥⌘↓'], rewind: ['EscEsc'],
     changes: ['⇧⌘D'], 'file-list': ['⇧⌘Y'], 'next-change': ['⌥F5', 'F7'], 'previous-change': ['⌥⇧F5', '⇧F7'], 'go-to-file': ['⌘P'], files: ['⇧⌘F'], preview: ['⇧⌘P'], 'select-element': ['⇧⌘S'], annotate: ['⇧⌘X'],
     'preview-new-tab': ['⌘T'], 'preview-reopen-tab': ['⇧⌘T'], 'preview-next-tab': ['⌃⇥'], 'preview-previous-tab': ['⌃⇧⇥'], 'preview-jump-tab': ['⌘1…9'], 'preview-address': ['⌘L'],
-    'attach-selection': ['⇧⌘L'], terminal: ['⌃`', '⌘J'], 'close-pane': ['⌘\\'], 'expand-pane': ['⇧⌘\\'], 'side-chat': ['⌘;'], 'background-tasks': ['⌃B'],
+    'attach-selection': ['⇧⌘L'], terminal: ['⌃`', '⌘J'], 'close-pane': ['⌘\\'], 'expand-pane': ['⇧⌘\\'], 'side-chat': ['⌘;'],
     'split-new-right': ['⌃⌘\\'], 'split-new-below': ['⌃⌘-'], 'split-open': ['⌥Click'], 'split-focus-next': ['⌃]'], 'split-focus-previous': ['⌃['], 'split-close': ['⌃⌘W'],
     mode: ['⇧⌘M'], model: ['⇧⌘I'], effort: ['⇧⌘E'], fast: ['⌥⌘F'], 'menu-item': ['1…9'], 'file-upload': ['⌘U'], queue: ['⌘⏎'], 'send-stay': ['⌘⏎'], 'send-fork': ['⌥⌘⏎'],
   });
@@ -220,7 +237,7 @@ test('main.jsx routes the handler through globalShortcutCommand and renders the 
   assert.match(main, /useLayoutEffect\(\(\) => \{ if \(!showSearch\) setSearch\(""\); \}, \[showSearch\]\);/);
 });
 
-test('official chords: ⌘⌥↑/↓ prompt jumps, ⌃B background tasks, ⌘U add files', async () => {
+test('official chords: ⌘⌥↑/↓ prompt jumps, ⌃B background tasks (bound, not listed), ⌘U add files', async () => {
   const { globalShortcutCommand, shortcutsDialogSections } = await import('../src/shortcuts-dialog-model.mjs');
   const { promptJumpIndex } = await import('../src/transcript-feed-nav.mjs');
   assert.equal(globalShortcutCommand({ metaKey: true, altKey: true, key: 'ArrowUp', code: 'ArrowUp' }), 'jump-prev-prompt');
@@ -234,9 +251,84 @@ test('official chords: ⌘⌥↑/↓ prompt jumps, ⌃B background tasks, ⌘U a
   assert.equal(globalShortcutCommand({ metaKey: true, key: 'u', code: 'KeyU' }), 'file-upload');
   assert.equal(globalShortcutCommand({ metaKey: true, shiftKey: true, key: 'u', code: 'KeyU' }), null);
   const rows = shortcutsDialogSections().flatMap((section) => section.rows.map((row) => row.command));
-  for (const command of ['jump-prev-prompt', 'jump-next-prompt', 'background-tasks', 'file-upload', 'attach-selection']) assert.ok(rows.includes(command), command);
+  for (const command of ['jump-prev-prompt', 'jump-next-prompt', 'file-upload', 'attach-selection']) assert.ok(rows.includes(command), command);
+  // V3-w12b-settings-dialogs: 3.6556.2 c518a31cc He has no ctrl+b row.
+  assert.ok(!rows.includes('background-tasks'));
   assert.equal(promptJumpIndex([-300, -20, 2, 400], -1), 1);
   assert.equal(promptJumpIndex([-300, -20, 2, 400], 1), 3);
   assert.equal(promptJumpIndex([10, 400], -1), -1);
   assert.equal(promptJumpIndex([], 1), -1);
+});
+
+// V3-w13-surfaces-shortcuts (surf-22): off the Code route 3.6556.2 c518a31cc Me renders Ne (General, "In chats",
+// "In tasks" on a task route), filtered like Ce to this app's chords.
+test('Ne off Code: General / In chats (+ In tasks on an open task), every chord bound on any surface', () => {
+  const labels = (sections) => sections.map((section) => [section.title, section.rows.map((row) => row.label)]);
+  const general = ['Quick chat or search', 'Search', 'Toggle sidebar', 'New chat', 'Close chat', 'Next chat', 'Previous chat', 'Jump to chat', 'Keyboard shortcuts', 'Settings'];
+  assert.deepEqual(labels(shortcutsDialogSections({ surface: 'chat' })), [
+    ['General', general], ['In chats', ['Send message', 'New line in message', 'Add files or photos', 'Stop DeepSeek’s response']],
+  ], 'Home (no chat route): no Reuse row, no chat actions, no In tasks');
+  assert.deepEqual(labels(shortcutsDialogSections({ surface: 'chat', route: 'chat' })), [
+    ['General', general], ['In chats', ['Send message', 'New line in message', 'Add files or photos', 'Reuse an earlier message', 'Stop DeepSeek’s response',
+      'Pin / unpin chat', 'Rename chat', 'Mark chat as read/unread']],
+  ]);
+  assert.deepEqual(labels(shortcutsDialogSections({ surface: 'cowork', route: 'cowork', fastMode: true, sideChat: true })), [
+    ['General', general], ['In chats', ['Send message', 'New line in message', 'Add files or photos', 'Reuse an earlier message', 'Stop DeepSeek’s response']],
+    ['In tasks', ['Pin / unpin task', 'Rename task', 'Mark task as read/unread', 'Archive task']],
+  ]);
+  assert.deepEqual(labels(shortcutsDialogSections({ surface: 'cowork' })).map(([title]) => title), ['General', 'In chats']);
+  // Code is unchanged (Ce), whatever the route.
+  assert.deepEqual(shortcutsDialogSections({ surface: 'code', route: 'chat' }), shortcutsDialogSections());
+  const codeOnly = ['split-open', 'open-session-pr', 'fork-session', 'changes', 'terminal', 'transcript-view', 'new-session-current', 'reopen-closed', 'rewind'];
+  for (const surface of ['chat', 'cowork'])
+    for (const route of [null, surface]) {
+      const sections = shortcutsDialogSections({ surface, route, fastMode: true, sideChat: true });
+      for (const section of sections) {
+        for (const row of section.rows) {
+          assert.ok(!codeOnly.includes(row.command), `${surface}: ${row.command} is a Code row`);
+          for (const spec of row.keys)
+            for (const key of expand(spec)) {
+              const event = keydown(key);
+              // SourceComposer's Enter (enterAction) and its prompt history (promptHistoryStep, ↑ / ↓ at the caret edges).
+              if (row.command === 'send') assert.equal(enterAction({ event }), 'submit');
+              else if (row.command === 'newline') assert.equal(enterAction({ event }), 'newline');
+              else if (row.command === 'reuse-message') {
+                const step = promptHistoryStep({ ...INITIAL_PROMPT_HISTORY, resetKey: 's', index: key === 'down' ? 0 : null, length: 2 },
+                  { resetKey: 's', key: event.key, atStart: true, atEnd: true, text: key === 'down' ? 'a' : '', prompts: ['a', 'b'] });
+                assert.ok(['recall', 'restore'].includes(step.action), `${key}: ${step.action}`);
+                assert.match(composer, /const step = promptHistoryStep\(history\.current, \{/);
+              } else {
+                const own = boundIn(row.command, event);
+                if (own !== undefined) assert.equal(own, true, `${section.title} / ${row.label}: ${key}`);
+                else assert.equal(bound(event), row.command, `${section.title} / ${row.label}: ${key}`);
+              }
+            }
+        }
+      }
+    }
+});
+
+// V3-w12b-settings-dialogs (S1): 3.6556.2 c518a31cc He. General F = t(Ae, {}) between Transcript view and Stop (Find ⌘F,
+// Find next `e ? "cmd+g" : Oe`, Find previous `e ? "cmd+shift+g" : ke`); Composer Qe `N && …` (N = l(Ue), Ue: the open
+// route's kind is "code") after Add files; Archive session is only h's ⌥⌘A (m on); no ctrl+b row.
+test('He: Find rows (Oe / ke off a Mac), the Code-route prompt history rows, ⌥⌘A-only Archive, no Background tasks', () => {
+  const commands = (props) => shortcutsDialogSections(props).flatMap((section) => section.rows.map((row) => row.command));
+  const general = shortcutsDialogSections({ route: 'code', mac: true })[0].rows.map((row) => row.command);
+  assert.deepEqual(general.slice(general.indexOf('transcript-view'), general.indexOf('stop') + 1), ['transcript-view', 'find', 'find-next', 'find-previous', 'stop']);
+  const keys = (mac) => Object.fromEntries(shortcutsDialogSections({ route: 'code', mac })[0].rows.filter((row) => row.command.startsWith('find')).map((row) => [row.command, row.keys]));
+  assert.deepEqual(keys(true), { find: ['cmd+f'], 'find-next': ['cmd+g'], 'find-previous': ['cmd+shift+g'] });
+  assert.deepEqual(keys(false), { find: ['cmd+f'], 'find-next': ['cmd+g', 'f3'], 'find-previous': ['cmd+shift+g', 'shift+f3'] });
+  const composerRows = shortcutsDialogSections({ route: 'code', mac: true }).at(-1).rows;
+  assert.deepEqual(composerRows.slice(4, 8).map((row) => [row.command, row.keys]),
+    [['file-upload', ['cmd+u']], ['reuse-prompt', ['up', 'down']], ['search-prompts', ['ctrl+r']], ['queue', ['cmd+enter']]]);
+  for (const route of [null, 'chat', 'cowork'])
+    for (const command of ['reuse-prompt', 'search-prompts']) assert.ok(!commands({ route }).includes(command), `${route}: ${command} is Ue-gated`);
+  assert.ok(commands({ route: null }).includes('find'), 'Ae is not route-gated');
+  assert.deepEqual(shortcutsDialogSections({ route: 'code' })[0].rows.find((row) => row.command === 'archive-session').keys, ['cmd+alt+a']);
+  assert.ok(!commands({ route: 'code', fastMode: true, sideChat: true }).includes('background-tasks'));
+  const official = readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c518a31cc-Vw6f4MYp.js'), 'utf8');
+  for (const needle of ['Oe=["cmd+g","f3"]', 'ke=["cmd+shift+g","shift+f3"]', 'defaultMessage:"Find next"', 'defaultMessage:"Find previous"',
+    'defaultMessage:"Reuse an earlier prompt"', 'shortcut:"ctrl+r"', 'defaultMessage:"Search earlier prompts"', 'function Ue(e){return _(e)?.kind==="code"}'])
+    assert.ok(official.includes(needle), needle);
+  assert.ok(!official.includes('"ctrl+b"'), 'He lists no ctrl+b');
 });

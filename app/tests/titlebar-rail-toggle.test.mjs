@@ -5,6 +5,10 @@
 //   cf74bc599 tE   lists the folded toggle as ⋮'s first group (ListCard, Hide/Show session rail, onToggle).
 //   topbar-09      a pressed ghost Button paints bg-accent under text-accent: pressedVariant "selected" is inert
 //                  (fizzy-lake "color" is never allowed), so the local pressed toggles map to the same two utilities.
+// W2 w2-titlebar-current-cont (panes:C1-14): 3.6556.2 cc43287c9 oG keeps that shape with TH (generated rail-shell.mjs
+// SessionRailToggle) and cd1531e2e t (Fne) for EH / TI: TH's aria-label is fixed to "Session rail" (FUvHAfJy+j), Hide /
+// Show session rail is only its tooltip, and oG passes `unseen: !ae` (TH style CH/wH, opacity 0) with the rule shown only
+// when ae. titlebar-controls-model.mjs (Te / en / Zh / tE) is still the 2.42304.0 evidence below.
 // SR-7 mounted the rail: main.jsx passes jre's railToggle while a Code session has a rail; without one the titlebar draws
 // no toggle and ⋮ no row. R4f-rail fix: the lead's rail mode (c73f45bc3 w_: no origin glyph, no folder pill).
 // Nothing here launches Electron or a browser; the fake DOM is tests/fixtures/preview-r3b-dom.mjs.
@@ -19,17 +23,19 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withPreviewDom, reactProps } from './fixtures/preview-r3b-dom.mjs';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup, setState } from './fixtures/transcript-css-cascade.mjs';
-import { TITLEBAR_RAIL_SEPARATOR, createRailFoldFocus, titlebarRailMenuItems, titlebarRailToggleFoldable } from '../src/titlebar-controls-model.mjs';
+import { TITLEBAR_RAIL_SEPARATOR, createRailFoldFocus, railToggleSelect, titlebarRailMenuItems, titlebarRailToggleFoldable } from '../src/titlebar-controls-model.mjs';
 import { LEAD_NO_ORIGIN_CLASS } from '../src/generated/session-rail-kit/rail-column.mjs';
+import { ionSource } from '../scripts/official-3.6556.2.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const official = (name) => fs.readFileSync(path.join(v1, name), 'utf8');
+const official3 = (name) => fs.readFileSync(path.join(ionSource, name), 'utf8');
 const read = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const pin = (text, needles, expected = 1) => { for (const needle of needles) assert.equal(count(text, needle), expected, needle); };
 const h = React.createElement;
-const UTILITIES = 'public/assets/v1/c6a992d55-sXiDGMFQ.css';
+const UTILITIES = 'public/assets/v1/c6a992d55-Che1orl5.css';
 
 // The titlebar's fold measure (generated cd54a5401 un) needs a laid-out row; this server swaps only its hook for one
 // the test drives (hiddenCount) and that records what the titlebar asks of it. titlebarFoldLimits (en) stays the
@@ -68,7 +74,74 @@ const renderTitlebar = (props = {}) => renderToStaticMarkup(h(T.SourceTitlebar, 
 const trailingOf = (html) => html.slice(html.indexOf('st-trailing'));
 
 // ---------------------------------------------------------------------------------------------------------------
-test('official 2.42304.0: wW places EH + TI before the toggles, Te folds it into ⋮ first, tE lists it first', () => {
+test('official 3.6556.2: oG places TH (unseen until ae) + Fne before the toggles; TH\'s fixed "Session rail" label', () => {
+  const oG = official3('cc43287c9-Me-M2ucD.js');
+  pin(oG, [
+    // G (held → inert) and ae (shown at all → seen); ie = db = shared c5da7eb42 fR.
+    'G=(te||!t&&!o)&&!N',
+    'ie=db(t),ae=G||ie&&!o&&!re.origin&&!N',
+    'R as db',
+    'x&&!Qe&&v(y,{children:[p(TH,{model:x,buttonRef:C,onUnmountFocused:tt,inert:!G,unseen:!ae}),ae&&!Ee&&p(Fne,{})]})',
+    'import{t as Fne}from"./cd1531e2e-DJSqbgrp.js"',
+    'Ee=!1;Zs("panels")&&(Ee=Y&&Te&&!P)',
+    // Te → Be, the fold cap and sample, the focus hand-off (Oe/ke → et/tt), ⋮'s rail props and jre.
+    'Be=x!==void 0&&t!==null&&be.overflowMenuProps!==null&&!Le',
+    'sampleRef:C,title:Ve,interactive:He,clusterMounted:Ue',
+    '{railToggleFolded:Qe,hiddenMainPanes:$e}=J2($,57,Ye,Be)?K2($,57,Ye,Be,IR({railToggleFoldable:Be,hiddenCount:Ye})):$[59]',
+    'nt=J2($,61,Qe,C)?K2($,61,Qe,C,()=>{et.current&&(et.current=!1,Qe&&C?.current?.focus({preventScroll:!0}))})',
+    'railToggle:Qe?x:void 0,railToggleRef:Qe?C:void 0',
+    'railToggle:vn?Fn:void 0,railToggleRef:kn',
+    // TH: unseen picks CH / wH (opacity 0); the label is fixed, Hide / Show is the tooltip (ae content m).
+    'CH={opacity:0},wH={...SH,...CH};function TH(e){let $=J9(26),{model:t,buttonRef:n,onUnmountFocused:r,inert:i,unseen:a}=e',
+    'o.formatMessage({defaultMessage:"Session rail",id:"FUvHAfJy+j"})',
+    'y=g?wH:CH',
+    'x=a?y:v',
+    'E=i||a',
+    '"aria-label":h,inert:E',
+  ]);
+  pin(official3('c5da7eb42-XijZdwf1.js'), [
+    'function fR(e,t){let $=J9(3),n=FR(e,t);return J1($,0,n)||J1($,1,e?.type)?I1($,1,Z1($,0,e?.type==="local"&&pR(n),n),e?.type):$[2]}',
+    'function pR(e){return e.kindKnown&&e.remoteKind===void 0}',
+    'fR as R',
+  ]);
+  pin(official3('cd1531e2e-DJSqbgrp.js'), ['e("span",{role:"separator","aria-orientation":"vertical",className:"h-4 w-px shrink-0 bg-border"})']);
+  assert.deepEqual(TITLEBAR_RAIL_SEPARATOR, { role: 'separator', 'aria-orientation': 'vertical', className: 'h-4 w-px shrink-0 bg-border' });
+  // The host passes TH the official unseen and gates the rule on the same ae (source-titlebar.jsx railSeen).
+  const host = read('src/source-titlebar.jsx');
+  pin(host, [
+    // w10-shell-titlebar: G / ae come from titlebarSessionState (N included, w10-titlebar-starting.test.mjs).
+    'const railSeen = sessionState.seen;',
+    'inert={!sessionState.live} unseen={!railSeen} />',
+    '{railSeen && <span {...TITLEBAR_RAIL_SEPARATOR} />}',
+  ]);
+  // The generated TH is the 3.6556.2 one, and zh-CN has its label.
+  const shell = read('src/generated/session-rail-kit/rail-shell.mjs');
+  pin(shell, ['var CH = { opacity: 0 };', 'unseen: a', 'defaultMessage: "Session rail", id: "FUvHAfJy+j"', 'TH as SessionRailToggle']);
+  assert.equal(count(read('electron/i18n/zh-CN/session.mjs'), '"Session rail": "会话详情栏",'), 1);
+});
+
+// w10-shell-titlebar (notdone 19): 3.6556.2 DA (cf74bc599) hands the folded rail row d_'s handler, not the bare onToggle.
+test('official 3.6556.2: DA\'s rail row is `onSelect: l`, l = I_(a, "overflow") = c73f45bc3 d_ (ka telemetry, then onToggle(r))', () => {
+  pin(official3('cf74bc599-CRYqipWN.js'), [
+    'l=I_(a,"overflow")',
+    'label:a?.onScreen?c.formatMessage({defaultMessage:"Hide session rail",id:"U0R7oYkTM1"}):c.formatMessage({defaultMessage:"Show session rail",id:"JYaBivMdHH"}),onSelect:l}',
+    'ot as I_',
+    'function CA(e,t){return e?[t]:[]}',
+  ]);
+  pin(official3('c73f45bc3-B7hbL7H9.js'), [
+    'function d_(e,t){let $=J9(4),n=W();return J3($,0,n,e,t)?K3($,0,n,e,t,r=>{e!==void 0&&(e.raises?e.onScreen||ka("show_raised",t,n):ka(e.onScreen?"hide":"show",t,n),e.onToggle(r))}):$[3]}',
+    'd_ as ot',
+    'zd as ka',
+  ]);
+  // ka is c68c4283d hf, a telemetry event only (no host counterpart).
+  pin(official3('c68c4283d-CWbOoVxS.js'), ['function hf(e,t,n){d(`claudeai.epitaxy.session_rail.${e}_pressed`,{via:t,in_popout:n})}', 'hf as zd']);
+  pin(official3('shared-1-BJhqMmkf.js'), ['wV="ListCard"', 'wV as Vn']);
+  const model = read('src/titlebar-controls-model.mjs');
+  pin(model, ['onSelect: railToggleSelect(railToggle, "overflow")', 'railToggle.onToggle(event);']);
+  assert.equal(count(model, 'onSelect: railToggle.onToggle'), 0);
+});
+
+test('official 2.42304.0 (titlebar-controls-model evidence): wW places EH + TI before the toggles, Te folds it into ⋮ first, tE lists it first', () => {
   const wW = official('cc43287c9-DAfOi8yP.js');
   pin(wW, [
     'Te=y!==void 0&&e!==null&&de.overflowMenuProps!==null&&!Ce',
@@ -118,12 +191,21 @@ test('model: Te, tE\'s rail row and the fold focus hand-off', () => {
   assert.deepEqual(Fold.titlebarFoldLimits({ railToggleFoldable: true, hiddenCount: 1 }), { maxHidden: 7, railToggleFolded: true, hiddenMainPanes: 0 });
   assert.deepEqual(Fold.titlebarFoldLimits({ railToggleFoldable: true, hiddenCount: 3 }), { maxHidden: 7, railToggleFolded: true, hiddenMainPanes: 2 });
   assert.deepEqual(Fold.titlebarFoldLimits({ railToggleFoldable: false, hiddenCount: 3 }), { maxHidden: 6, railToggleFolded: false, hiddenMainPanes: 3 });
-  // tE k: none without a (folded) toggle; one unchecked ListCard row named for what it does next.
+  // tE k / DA R: none without a (folded) toggle; one unchecked ListCard row named for what it does next. Its onSelect is
+  // d_'s (w10-shell-titlebar, notdone 19): the press, with its event, goes to the model's onToggle.
   assert.deepEqual(titlebarRailMenuItems(undefined), []);
-  const onToggle = () => {};
-  assert.deepEqual(titlebarRailMenuItems(model({ onToggle })), [{ icon: 'ListCard', label: 'Show session rail', onSelect: onToggle }]);
-  assert.deepEqual(titlebarRailMenuItems(model({ onScreen: true, onToggle })), [{ icon: 'ListCard', label: 'Hide session rail', onSelect: onToggle }]);
-  assert.equal('checked' in titlebarRailMenuItems(model())[0], false);
+  const pressed = [];
+  const onToggle = (event) => pressed.push(event);
+  const shape = (items) => items.map(({ icon, label, onSelect }) => ({ icon, label, onSelect: typeof onSelect }));
+  assert.deepEqual(shape(titlebarRailMenuItems(model({ onToggle }))), [{ icon: 'ListCard', label: 'Show session rail', onSelect: 'function' }]);
+  assert.deepEqual(shape(titlebarRailMenuItems(model({ onScreen: true, onToggle }))), [{ icon: 'ListCard', label: 'Hide session rail', onSelect: 'function' }]);
+  assert.deepEqual(Object.keys(titlebarRailMenuItems(model())[0]).sort(), ['icon', 'label', 'onSelect']);
+  const event = { detail: 0 };
+  titlebarRailMenuItems(model({ raises: true, onToggle }))[0].onSelect(event);
+  titlebarRailMenuItems(model({ onScreen: true, onToggle }))[0].onSelect();
+  assert.deepEqual(pressed, [event, undefined], 'onToggle(r): the event as it came');
+  // d_'s `e!==void 0&&…`: no model, no call.
+  assert.doesNotThrow(() => railToggleSelect(undefined, 'overflow')({ detail: 0 }));
   // Oe / ke: only a toggle that unmounted with focus hands it on, only once, and only to a folded ⋮.
   const focused = [];
   const ref = { current: { focus: (options) => focused.push(options) } };
@@ -142,16 +224,16 @@ test('model: Te, tE\'s rail row and the fold focus hand-off', () => {
 
 test('SSR: no rail model, no toggle (no session rail: another surface, the landing page, a pane window)', () => {
   for (const html of [renderTitlebar(), renderTitlebar({ loading: true })]) {
-    assert.doesNotMatch(html, /session rail|role="separator"/);
+    assert.doesNotMatch(html, /session rail|role="separator"/i);
   }
   // Even with a model, only a session's cluster has it (wW `y && …` comes from jre, which has a session).
-  assert.doesNotMatch(renderTitlebar({ session: null, railToggle: model() }), /session rail/);
-  assert.doesNotMatch(renderTitlebar({ section: 'routines', sectionLabel: 'Routines', railToggle: model() }), /session rail/);
+  assert.doesNotMatch(renderTitlebar({ session: null, railToggle: model() }), /session rail/i);
+  assert.doesNotMatch(renderTitlebar({ section: 'routines', sectionLabel: 'Routines', railToggle: model() }), /session rail/i);
 });
 
-test('SSR: EH heads the cluster, TI follows it, then the pane toggles; Show/Hide, pressed, flat style, overlay-only aria-expanded', () => {
+test('SSR: TH heads the cluster, Fne follows it, then the pane toggles; "Session rail", pressed, flat style, overlay-only aria-expanded', () => {
   const off = trailingOf(renderTitlebar({ railToggle: model() }));
-  const toggle = off.match(/<button[^>]*aria-label="Show session rail"[^>]*>/)?.[0];
+  const toggle = off.match(/<button[^>]*aria-label="Session rail"[^>]*>/)?.[0];
   assert.ok(toggle, 'the rail toggle');
   const rule = '<span role="separator" aria-orientation="vertical" class="h-4 w-px shrink-0 bg-border"></span>';
   const group = '<div class="flex items-center gap-1 empty:hidden">';
@@ -166,21 +248,42 @@ test('SSR: EH heads the cluster, TI follows it, then the pane toggles; Show/Hide
   assert.doesNotMatch(toggle, /data-cds-pressed-variant/);
   assert.match(toggle, /style="--cds-bg-accent:var\(--cds-fill-ghost-selected\);--cds-text-accent:var\(--titlebar-text-primary, var\(--cds-text-primary\)\)"/);
   assert.doesNotMatch(toggle, / aria-expanded=| aria-controls=| inert=/);
-  // On screen, docked: pressed, "Hide", still no disclosure semantics.
-  const docked = renderTitlebar({ railToggle: model({ onScreen: true }) }).match(/<button[^>]*aria-label="Hide session rail"[^>]*>/)[0];
+  // TH's label no longer names the action (C1-14): Hide / Show session rail is only the tooltip, closed in SSR.
+  assert.doesNotMatch(off, /Show session rail|Hide session rail/);
+  // On screen, docked: pressed, still "Session rail", still no disclosure semantics.
+  const docked = renderTitlebar({ railToggle: model({ onScreen: true }) }).match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0];
   assert.match(docked, /aria-pressed="true"/);
   assert.doesNotMatch(docked, / aria-expanded=/);
   // Overlay semantics (raises): aria-expanded follows onScreen; aria-controls only while the overlay is up.
-  const raised = renderTitlebar({ railToggle: model({ onScreen: true, raises: true }) }).match(/<button[^>]*aria-label="Hide session rail"[^>]*>/)[0];
+  const raised = renderTitlebar({ railToggle: model({ onScreen: true, raises: true }) }).match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0];
   assert.match(raised, /aria-expanded="true"/);
   assert.match(raised, /aria-controls="rail-panel"/);
-  const closed = renderTitlebar({ railToggle: model({ raises: true }) }).match(/<button[^>]*aria-label="Show session rail"[^>]*>/)[0];
+  const closed = renderTitlebar({ railToggle: model({ raises: true }) }).match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0];
   assert.match(closed, /aria-expanded="false"/);
   assert.doesNotMatch(closed, / aria-controls=/);
-  // A held (loading) session keeps it in place, inert (wW `inert: !B`), like the toggle group.
-  const held = renderTitlebar({ loading: true, railToggle: model() }).match(/<button[^>]*aria-label="Show session rail"[^>]*>/)[0];
+  // A held (loading) session keeps it in place, inert (oG `inert: !G`), like the toggle group; a host session's kind
+  // is known (oG ie), so it stays seen (no opacity 0) and the rule stays.
+  const heldHtml = trailingOf(renderTitlebar({ loading: true, railToggle: model() }));
+  const held = heldHtml.match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0];
   assert.match(held, /\sinert=""/);
   assert.doesNotMatch(held, /\sdisabled(=|\s|>)/);
+  assert.doesNotMatch(held, /opacity:0/);
+  assert.equal(count(heldHtml, rule), 1);
+});
+
+test('SSR: unseen (oG `unseen: !ae`) — a held session behind a spawn draws TH at opacity 0, inert, without the rule', () => {
+  const rule = '<span role="separator" aria-orientation="vertical" class="h-4 w-px shrink-0 bg-border"></span>';
+  const html = trailingOf(renderTitlebar({ loading: true, spawning: true, railToggle: model() }));
+  const toggle = html.match(/<button[^>]*aria-label="Session rail"[^>]*>/)?.[0];
+  assert.ok(toggle, 'TH stays mounted (its fold sample and ref)');
+  // wH = { ...SH, ...CH } under the flat rail (D10).
+  assert.match(toggle, /style="--cds-bg-accent:var\(--cds-fill-ghost-selected\);--cds-text-accent:var\(--titlebar-text-primary, var\(--cds-text-primary\)\);opacity:0"/);
+  assert.match(toggle, /\sinert=""/);
+  assert.equal(count(html, rule), 0, 'ae && !Ee && Fne');
+  // Ready (G), the spawn no longer hides it: seen, not inert, with the rule.
+  const ready = trailingOf(renderTitlebar({ spawning: true, railToggle: model() }));
+  assert.doesNotMatch(ready.match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0], /opacity:0|\sinert=/);
+  assert.equal(count(ready, rule), 1);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -240,13 +343,13 @@ test('mounted: maxHidden 6 → 7 and the sample ref with a rail; the first fold 
       foldHidden = 0; foldCalls.length = 0;
       act(() => root.render(h(T.SourceTitlebar, props())));
       assert.equal(foldCalls.at(-1).maxHidden, 6, 'no rail toggle: en caps the fold at 6');
-      assert.equal(button('Show session rail'), null);
+      assert.equal(button('Session rail'), null);
       assert.deepEqual(reports, [false]);
 
       act(() => root.render(h(T.SourceTitlebar, props({ railToggle: rail }))));
       assert.equal(foldCalls.at(-1).maxHidden, 7, 'with a foldable rail toggle: 7');
       assert.equal(foldCalls.at(-1).sampleRef, railToggleRef, 'wW sampleRef: b');
-      const toggle = button('Show session rail');
+      const toggle = button('Session rail');
       assert.ok(toggle && rule(), 'EH and TI are inline');
       assert.equal(railToggleRef.current, toggle, 'jre\'s ref holds the toggle');
       assert.notEqual(more().getAttribute('aria-label'), null);
@@ -258,7 +361,7 @@ test('mounted: maxHidden 6 → 7 and the sample ref with a rail; the first fold 
       toggle.focus();
       foldHidden = 1;
       act(() => root.render(h(T.SourceTitlebar, props({ railToggle: rail }))));
-      assert.equal(button('Show session rail'), null, 'folded away');
+      assert.equal(button('Session rail'), null, 'folded away');
       assert.equal(rule(), null, 'TI goes with it');
       assert.ok(host.find((node) => node.getAttribute?.('data-pane-toggle') === 'terminal'), 'the pane toggles stay (hiddenMainPanes 0)');
       assert.equal(railToggleRef.current, more(), '⋮ holds the ref while folded (Zh te)');
@@ -273,7 +376,7 @@ test('mounted: maxHidden 6 → 7 and the sample ref with a rail; the first fold 
       // Room again: the toggle comes back; ⋮ gives the ref back; focus stays where it is.
       foldHidden = 0;
       act(() => root.render(h(T.SourceTitlebar, props({ railToggle: rail }))));
-      assert.equal(railToggleRef.current, button('Show session rail'));
+      assert.equal(railToggleRef.current, button('Session rail'));
       assert.equal(dom.document.activeElement, more());
       assert.deepEqual(reports, [false, true, false]);
 

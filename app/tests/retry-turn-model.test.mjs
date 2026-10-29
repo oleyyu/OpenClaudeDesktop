@@ -167,7 +167,9 @@ test('E5 lastPrompt: cc8941b7b qt on the last userMessage, skipping the canned n
   try {
     const zh = retryCannedNudges();
     assert.equal(zh[0], '重试');
-    assert.equal(zh[3], 'Try again');
+    // 3.6556.2 c73f45bc3 u_ adds the shared common tryAgain (shared-9 OT) after the retryNudge: English originals from 4.
+    assert.equal(zh[1], '重试');
+    assert.equal(zh[4], 'Try again');
     assert.equal(lastRetryPrompt([user('t1', '重试')], zh), undefined);
     assert.equal(lastRetryPrompt([user('t1', 'Try again')], zh), undefined);
   } finally { setLocale(DEFAULT_LOCALE); }

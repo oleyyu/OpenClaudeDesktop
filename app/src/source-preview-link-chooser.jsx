@@ -10,6 +10,7 @@ import { useSourceToasts } from './source-toast.jsx';
 import { holdModalInert } from './modal-inert.mjs';
 import { Icon } from './icons.jsx';
 import { t } from '../electron/i18n/index.mjs';
+import { useDefaultBrowserLabel } from './use-default-browser-label.mjs';
 import './source-preview-link-chooser.css';
 
 function useModalPresence(open) { useEffect(() => open ? holdModalInert(document.getElementById('root')) : undefined, [open]); }
@@ -57,5 +58,6 @@ export const SourcePreviewLinkChooser = createPreviewLinkChooser({
   useIntl: useRoutineIntl, useChooserSeen, useLinksPreference, useModalPresence,
   useShortcut: () => [typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl'],
   platform: () => typeof navigator !== 'undefined' ? navigator.platform : '',
-  useBrowserLabel: () => t('Open in default browser'),
+  // V3-w12b-settings-dialogs: 3.6556.2 cf580efe9 On() (c8ae173c6 p): the named browser once known.
+  useBrowserLabel: useDefaultBrowserLabel,
 });

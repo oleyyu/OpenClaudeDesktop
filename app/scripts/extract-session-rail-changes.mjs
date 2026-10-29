@@ -1,45 +1,49 @@
-// R4f-rail SR-4: extract the 2.42304.0 session rail's Changes row (the flat rail's `data-rail-changes-row`), without
-// executing any desktop runtime (decision D0: own generator, own output folder src/generated/session-rail-changes, own
-// scripts/verify-gen-session-rail-changes.mjs).
-// Spec: analysis/code-ui-migrate-20261017/research/r4-session-rail.md §1.5, §2, §8 SR-4.
+// R4f-rail SR-4: extract the session rail's Changes row (the flat rail's `data-rail-changes-row`) and R4i-rail RL2's PR rows,
+// without executing any desktop runtime (decision D0: own generator, own output folder src/generated/session-rail-changes,
+// own scripts/verify-gen-session-rail-changes.mjs).
+// w3-rail-changes (2026-10-26): the originals are Claude Desktop 3.6556.2 (analysis/claude-3.6556.2-migrate-20261025,
+// research/panes.md §1.2, §2.2 C2-1 … C2-6, §3.2; plan R1–R15, E3/E5/E7/E12/E13). Target files and export names are those
+// of 2.42304.0 (R4/E7). New targets: status-dot.mjs (shared-18 JO, the CI dots' StatusDot), pr-mode-messages.mjs (the
+// mode labels moved from c219730b0 to cd4f82e77; pr-bar-labels.mjs re-exports them) and tooltip-deferral.mjs (shared-frame
+// nu). aria-shortcut.mjs and context-menu-key.mjs re-export the one 3.6556.2 copy (view-tabs, files-changes).
 //
-//   changes-row.mjs        c96d752d0 OLe: the PR bar's rail-layout row. With no PR link and the Changes row layout
-//                          context (c0a531389 O, kit ChangesRowLayoutContext) at "row" it renders the flat rail's
-//                          single row: `div[data-rail-changes-row]` with the ChangesPlusMinus icon, the repo name, the
-//                          diff counts button ("Open changes", the toggleDiff shortcut, aria-label "Open changes,
-//                          {added, number} added, {removed, number} removed"), review comments (aB), the warning, the
-//                          checks and verb slots and the sr-only ⋮ "More options for {title}" menu (kLe), all inside the
-//                          row's context menu; otherwise the stacked layout. kLe is the menu body (View changes, Open
-//                          review comments, extra items, Dismiss); aB the review comments count.
-//   changes-verb.mjs       c96d752d0 DLe with Qz: the rail row's verb button (the PR bar's primary action, Commit in a
-//                          local session), CLe / rB its label and busy label.
-//   diff-counts.mjs        c60636ac6 Xe (cf74bc599 / c96d752d0 dS): the +N −M counts with their sr-only "N additions,
-//                          M deletions".
+//   changes-row.mjs        c96d752d0 Ike: the PR bar's rail-layout row. With no PR link and the Changes row layout context
+//                          (kit ChangesRowLayoutContext) at "row" it renders the flat rail's single row:
+//                          `div[data-rail-changes-row]` with the ChangesPlusMinus icon, the repo name, the diff counts
+//                          button ("Open changes", the toggleDiff shortcut), review comments (DL), the warning, the checks
+//                          and verb slots and the sr-only ⋮ menu (OL; "More options for {repo} on {branch}" when a repo
+//                          name shows, else "More options for {title}", C2-2), all inside the row's context menu;
+//                          otherwise the stacked layout. Bke is the menu body (grouped: pull request, changes, create,
+//                          dismiss); DL the review comments count.
+//   changes-verb.mjs       c96d752d0 Fke with yL: the rail row's verb button, jke / TL its label and busy label.
+//   diff-counts.mjs        c60636ac6 Xe: the +N −M counts (Qe, with their sr-only "N additions, M deletions").
+//   pr-rows.mjs            c96d752d0 EL (memo, the PR bar row: its rail branch builds the PR link — live / refused / asks
+//                          by the link policy, C2-3 — and the CI glyph, CL = c219730b0's StatusDot presets, C2-1, and
+//                          hands Ike its props), bAe (the rail rows list over renderRow, Show more) and xAe (earlier pull
+//                          requests, the caret by Icon `rotate`), with Sje's rail shape helpers (mAe / vAe / gke) and
+//                          Zje's mode (hMe).
 //   …                      and the small originals those read.
 //
-// Every emitted binding is an original top-level declaration sliced from the installed chunk. A module's bindings are
-// the reachable closure of its roots: a declaration's dependencies are its free variables (each declaration is parsed
-// on its own; Babel's scope analysis names what it reads from outside). An import or same-chunk binding resolves, in
-// this order, to: a host adapter in src/source-session-rail-changes-adapters.jsx (feature-checked against the original
-// it replaces), an earlier module of this generator, a public name of the session rail kit (SR-1: its contexts, row
-// primitives and constants exist once, in src/generated/session-rail-kit), a semantic public name of the shared
-// view-tabs graph (D1/D24), React (a vendor-frame `X = <React namespace>.member`), or a code-current export of the same
-// original binding. Nothing else is accepted; a binding another generated area slices without exporting is refused
-// unless `duplicates` says why a second copy is harmless, and a context is never instantiated twice.
+// Every emitted binding is an original top-level declaration sliced from the 3.6556.2 chunk. A module's bindings are the
+// reachable closure of its roots: a declaration's dependencies are its free variables (each declaration is parsed on its
+// own; Babel's scope analysis names what it reads from outside). An import or same-chunk binding resolves, in this order,
+// to: a host adapter in src/source-session-rail-changes-adapters.jsx (feature-checked against the original it replaces),
+// an earlier module of this generator, a public name of the session rail kit (SR-1: its contexts, row primitives and
+// constants exist once, in src/generated/session-rail-kit), a semantic public name of the shared view-tabs graph
+// (D1/D24; the React Compiler helpers by their E3 names), React (a vendor-frame export alias of official.reactAliases,
+// react/compiler-runtime included), a code-current export of the same 3.6556.2 binding, or the export of a sibling area
+// sliced from 3.6556.2. Nothing else is accepted; a binding another generated area slices without exporting is refused
+// unless `duplicates` says why a second copy is harmless, and a context is never instantiated twice. A root view-tabs
+// publishes is re-exported under this generator's name (R4), never sliced twice.
 //
-// R4i-rail RL2 adds pr-rows.mjs: c96d752d0 iB (the PR bar row; its rail branch builds the PR link and CI glyph and
-// hands OLe its props), oRe (the rail rows list, Show more) and sRe (earlier pull requests), with eze's rail shape
-// helpers (tRe / aRe / dLe) and nze's mode (yze), plus what they read from other chunks (branch-row-classes.mjs,
-// dismiss-button.mjs, rail-disclosure.mjs, copy-link-item.mjs's link menu and host label, pr-bar-labels.mjs's CI dot).
-// wB (the tile store), Yz / qz / pE (one copy in the sibling rail areas) and the PR panel / in-app link / hover card
-// sources are host adapters.
-//
-// The remaining callers are not sliced: c96d752d0 wB (the rail list item, diffOpenHasChord from the tile layout; a host
-// adapter), nze (the per-repo props assembly against claude.ai's PR stores), eze (the PR bar root),
-// cf74bc599 pC (EpitaxyPrBarSlot) and c73f45bc3 O_ (the card's lazy slot) read GitHub, the PR store and the tile store.
-// `callSites` pin their original text; the host adapter follows it over the local git status (main.jsx gitStatus).
+// The remaining callers are not sliced: c96d752d0 YL (the rail list item, diffOpenHasChord from the tile layout; a host
+// adapter), TR / Zje (the per-repo props assembly against claude.ai's PR stores), Sje (the PR bar root), cf74bc599 Vl
+// (EpitaxyPrBarSlot) and c73f45bc3 Py (the card's lazy slot) read GitHub, the PR store and the tile store. `callSites`
+// pin their original text; the host adapter follows it over the local git status (main.jsx gitStatus).
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -47,282 +51,281 @@ import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+// w3-rail-changes: 3.6556.2 (R1/E6). The constants come from official-3.6556.2.mjs.
+const referenceVersion = official.referenceVersion;
+const referenceSnapshot = official.referenceSnapshot;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/session-rail-changes');
 const generatedRoot = path.join(root, 'src/generated');
 const adapterModule = '../../source-session-rail-changes-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-const VENDOR_FRAME = 'vendor-frame-DfPJ1QmD.js';
-const TRANSCRIPT = 'c96d752d0-BOCqU7c2.js';
-
-// vendor-frame's React namespaces: `X = <ns>.member` is `import { member } from <module>`. Each namespace is proved by
-// strings of the CommonJS factory its closure wraps.
-const reactNamespaces = {
-  o: { module: 'react', features: ['.useSyncExternalStore=function', '.forwardRef=function', '.useEffectEvent=function'] },
-  fe: { module: 'react/jsx-runtime', features: ['.jsxs='] },
-  Ln: { module: 'react-dom', features: ['.createPortal=function', '.flushSync=function'] },
-};
-const reactNamespaceObjects = {
-  a: { module: 'react', features: ['useInsertionEffect: () => B,', 'useSyncExternalStore: () => G,', 'version: () => re,'] },
-};
+const VENDOR_FRAME = official.vendorFrame;
+const TRANSCRIPT = 'c96d752d0-CWv_7-n9.js';
+const RAIL = 'cf74bc599-CRYqipWN.js';
+// React (R3): a vendor-frame import resolves through its export alias in official.reactAliases (measured on
+// vendor-frame-CnSY1sxv.js; aliases were reused across versions, so never by the old name), each alias proved once by
+// official.assertVendorAlias (`Oo` is react/compiler-runtime c).
 
 // Host dependencies, keyed by the original binding (file:local) an import or same-chunk reference resolves to.
 // `features` must appear in that binding's prettier form (`closure: true`: in its same-chunk closure).
 const adapters = {
   // react-intl useIntl / FormattedMessage over the local catalog (the kit's adapters, re-exported).
-  'vendor-intl-Db7hDWRO.js:q': { name: 'useIntl', features: ['let e = o(K);', 'return (Mt(e), e);'] },
-  'vendor-intl-Db7hDWRO.js:Gt': { name: 'FormattedMessage', features: ['var Gt = u(Wt, Ut);'] },
-  // shared-frame qa (exported _u): the CDS layer element (OLe's portalContainer, the menu's window); none here.
-  'shared-frame-BfjMqbuN.js:qa': { name: 'useLayerElement', features: ['return W(Oa);'] },
-  // shared-52 Sj (exported Ya): the ErrorsProvider; the host toasts (the kit's adapter, re-exported).
-  'shared-52-DGviI8xb.js:Sj': { name: 'useErrors', features: ['Error("Must be called within ErrorsProvider")'] },
-  // shared-25 ml (exported Rm): whether this is the Claude desktop app (the user agent test behind the keybinding
-  // table's `when: "isClaudeApp"` rows). This host is the desktop app: true.
-  'shared-25-DP8p7i1Z.js:ml': { name: 'isClaudeDesktopApp', features: ['se(window.navigator.userAgent, { version: e, platform: t })'] },
-  // shared-frame Ya (exported mu): the layer element's window, else the current one (the kit's adapter, re-exported).
-  'shared-frame-BfjMqbuN.js:Ya': { name: 'useLayerOwnerWindow', features: ['return Ji(W(Oa));'] },
-  // shared-frame iC (exported Ya): a menu items array (label / onSelect / checked / separatorBefore / items …) as CDS
-  // dropdown items. view-tabs slices it but does not publish a semantic name (D1/D24); its 80 KB closure (the Base UI
-  // menu parts and their contexts) cannot be sliced twice. Only OLe's extraMenuItems (the PR bar's create-mode radio
-  // items, offered only when a GitHub PR can be created) goes through it, and this host's rail never passes those.
-  'shared-frame-BfjMqbuN.js:iC': { name: 'renderMenuItems', features: ['e === "separator"', 'onClick: e.onSelect,', 'children: iC(e.items)'] },
-  // ---- R4i-rail RL2: the rail PR rows (pr-rows.mjs: c96d752d0 iB / oRe / sRe and the rail shape helpers) ----
-  // c96d752d0 wB: the rail list item reads the tile store (Yh, c03935b01's 68 KB tile layout closure) for
-  // diffOpenHasChord; the host list item takes it from the entry the host stand-in builds (main.jsx's chord rule).
-  'c96d752d0-BOCqU7c2.js:wB': { name: 'RailPrListItem', features: ['if (!e.primary || jhe(t, "diff")) return !1;', 'className: "flex flex-col",',
-    'children: b(iB, { ...e.row, layout: "rail", diffOpenHasChord: t }),'] },
-  // c96d752d0 Yz (the repo name chip, iB's band layout): its one copy is session-rail repo-name-chip.mjs (a sibling area
-  // this generator does not import from), re-exported by the adapter module.
-  'c96d752d0-BOCqU7c2.js:Yz': { name: 'RepoNameChip', features: ['var Yz = M(pLe);'] },
-  // c96d752d0 qz (dLe reports the rail PR count into it): the one instance is session-rail pr-count-context.mjs, which
-  // rail-view's Changes card provides (rD's `Wo.Provider value: ge`); re-exported, never instantiated twice.
-  'c96d752d0-BOCqU7c2.js:qz': { name: 'RailPrCountContext', features: ['var qz = E(null);'] },
-  // shared-20 pE (oRe's Dae): the sr-only status announcement; its one copy is session-rail-sections announcement.mjs.
-  'shared-20-B7UqYfsi.js:pE': { name: 'Announcement', features: ['className: "sr-only",', 'role: "status",', 'children: [e.text, e.nonce % 2 == 1'] },
-  // c227f4d5e Nw (iB's default prPanelPreloadHandle, the lazy EpitaxyPrPanel's handle): the host has no in-app PR panel,
-  // so iB never passes it to yo (`yo(o ? u : null)`, o = onOpenPrPanel is never set): null.
-  'c227f4d5e-Ba-r--Rl.js:Nw': { name: 'prPanelPreloadHandle', features: ['var Nw = Mw.handle;'] },
-  // cc6e65d4b f (iB's Xbe): a PR link click opens the link in the app's preview pane when prLinkOpensInApp. The host
-  // opens PRs in the browser (nze's `prsOpenInBrowser`), so iB is never asked (`Xbe(s ? ve : void 0)`): undefined.
-  'cc6e65d4b-CKlso-Pn.js:f': { name: 'usePrLinkInAppClick', features: ['r.setPendingPreviewLinkUrl(t, { prPane: n, clickedIn: a })', 'return s && t && r(t) ? l : void 0;'] },
-  // c60636ac6 ct / lt (iB's hxe / bLe's pS): the GitHub ref hover card, only in the band layout and only with the
-  // desktop's getGhRefSummary bridge, which the host does not have: no hover card (ct false), lt passes its child.
-  'c60636ac6-DF2ym4tP.js:ct': { name: 'hasPrHoverCard', features: ['if (t?.kind === "github") return !!u?.getGhRefSummary || !1;'] },
-  'c60636ac6-DF2ym4tP.js:lt': { name: 'PrHoverCard', features: ['function lt({ href: e, children: t, surface: n }) {', 'return u?.getGhRefSummary'] },
+  'vendor-intl-DYfox5Co.js:q': { name: 'useIntl', features: ['return (Mt(e), e);'] },
+  'vendor-intl-DYfox5Co.js:Gt': { name: 'FormattedMessage', features: ['var Gt = c(Wt, Ut);'] },
+  // shared-52 cB (exported ha): the ErrorsProvider; the host toasts (the kit's adapter, re-exported).
+  'shared-52-uHFNjl7C.js:cB': { name: 'useErrors', features: ['Error("Must be called within ErrorsProvider")'] },
+  // shared-25 cc (exported vh): whether this is the Claude desktop app (the user agent test behind the keybinding table's
+  // `when: "isClaudeApp"` rows). This host is the desktop app: true.
+  'shared-25-DOWZRSlq.js:cc': { name: 'isClaudeDesktopApp', features: ['(o = An(window.navigator.userAgent, { version: t, platform: n })),'] },
+  // shared-frame yT (exported Xo): a menu items array (label / onSelect / checked / separatorBefore / items …) as CDS
+  // dropdown items. view-tabs slices it without a semantic name (D1/D24); its 93 KB closure (the Base UI menu parts and
+  // their contexts) cannot be sliced twice. Only Ike's extraMenuItems (the PR bar's create-mode radio items) go through it.
+  'shared-frame-6jtSkIit.js:yT': { name: 'renderMenuItems', features: ['e === "separator"', 'checkedRole: e.checkedRole,', 'children: yT(e.items)'] },
+  // shared-frame fu (exported Au), the tooltip Ike / EL wrap their buttons and glyphs in, is no adapter (w10-trans-rail-
+  // deferred-tooltip, L64): view-tabs publishes it as CdsDeferredTooltip, so it resolves to that one copy by its semantic
+  // name. Before the CDS tooltip code loads (first pointermove / keydown / touchstart) or is adopted, it renders the bare
+  // trigger with `data-cds-tooltip-pending` and the hover / focus interceptors; then the tooltip implementation.
+  // ---- the rail PR rows (pr-rows.mjs: c96d752d0 EL / bAe / xAe and the rail shape helpers) ----
+  // c96d752d0 YL (memo): the rail list item reads the tile store (pm / bm over c03935b01's 72 KB tile layout closure) for
+  // diffOpenHasChord and hands it to its render prop; the host list item takes the chord from the Changes card stand-in.
+  'c96d752d0-CWv_7-n9.js:YL': { name: 'RailPrListItem', features: ['if (!n || Cde(e, "diff")) return !1;', 'className: "flex flex-col",', 'hidden: r,', 'i(o)'] },
+  // c96d752d0 cL (gke reports the rail PR count into it): the one instance is session-rail pr-count-context.mjs, which
+  // rail-view's Changes card provides for its "{count} pull requests" summary; re-exported, never instantiated twice.
+  'c96d752d0-CWv_7-n9.js:cL': { name: 'RailPrCountContext', features: ['var cL = N(null);'] },
+  // shared-20 bE (bAe's tie): the sr-only status announcement; its one copy is session-rail-sections announcement.mjs.
+  'shared-20-mUr7IqZY.js:bE': { name: 'Announcement', features: ['className: "sr-only",', 'role: "status",', 'children: [t.text, n],'] },
+  // c227f4d5e UT (EL's default prPanelPreloadHandle, the lazy EpitaxyPrPanel's handle): the host has no in-app PR panel,
+  // so EL never passes it to qa (`qa(s ? oe : null)`, s = onOpenPrPanel is never set): null.
+  'c227f4d5e-B-FYKrwT.js:UT': { name: 'prPanelPreloadHandle', features: ['var UT = HT.handle;'] },
+  // cc6e65d4b f (EL's G_e): a PR link click opens the link in the app's preview pane when prLinkOpensInApp. The host
+  // opens PRs in the browser, so EL is never asked (`G_e(c ? xe : void 0)`): undefined.
+  'cc6e65d4b-D0J5j7gV.js:f': { name: 'usePrLinkInAppClick', features: ['n.setPendingPreviewLinkUrl(e, { prPane: i, clickedIn: a })', 's && e && n(e) ? l : void 0'] },
+  // c2fd10b8d Al (EL's rw): the PR link's policy, live / refused / asks, from the link confirm context (cb8c5a88f An) and
+  // the policy override (shared-1 EP). Neither has a provider in this host, so c9c0413df r answers "live" for every URL
+  // and Dl / kl keep it: "live". Ml (EL's Gve) is the "asks" link (onConfirmLinkClick), never rendered here.
+  'c2fd10b8d-DB1Sgoyz.js:Al': { name: 'usePrLinkPolicy', features: ['let t = Dl(d(li), e, d(pe));', 'return d(Ol) ? kl(t) : t;'] },
+  'c2fd10b8d-DB1Sgoyz.js:Ml': { name: 'ConfirmedPrLink', features: ['p?.onConfirmLinkClick?.(e, t));', 'linkTarget: "_blank",'] },
+  // c60636ac6 mt / ht (EL's hve / Oke's hover card): the GitHub ref hover card, only with the desktop's getGhRefSummary
+  // bridge, which the host does not have: no hover card for a PR URL (mt false), ht passes its child.
+  'c60636ac6-xYOM0GQX.js:mt': { name: 'hasPrHoverCard', features: ['if (t?.kind === "github") return !!p?.getGhRefSummary || !1;'] },
+  'c60636ac6-xYOM0GQX.js:ht': { name: 'PrHoverCard', features: ['{ href: t, children: r, surface: i } = e,', 'return p?.getGhRefSummary'] },
 };
 
 // Original bindings this generator may slice although another generated area slices them without exporting them.
 // Each entry says why a second copy is harmless; anything that holds state is never listed here.
 const duplicates = {
-  // ca7840910 U / H / te: the ContextMenu-key test and the synthetic contextmenu at the row's start edge (files-changes
-  // file-tree-compact.mjs slices them for its tree rows without exporting them).
-  'ca7840910-DSVFtTw1.js:U': 'pure function (no state)',
-  'ca7840910-DSVFtTw1.js:H': 'pure function (no state)',
-  'ca7840910-DSVFtTw1.js:te': 'pure function (no state; dispatches on the element it is given)',
-  // shared-frame Ms / js / As: the Mac platform test (useSyncExternalStore with a constant subscription); Js / Hs / Us /
-  // Bs / qs / Ps / Fs / Ns: the aria-keyshortcuts formatter and its key tables. view-tabs slices them without a
-  // semantic name (D1 forbids importing its minified names).
-  'shared-frame-BfjMqbuN.js:Ms': 'pure hook (constant store, no state)',
-  'shared-frame-BfjMqbuN.js:js': 'constant (a no-op subscribe)',
-  'shared-frame-BfjMqbuN.js:As': 'constant (a RegExp without the g flag)',
-  'shared-frame-BfjMqbuN.js:Js': 'pure function (no state)',
-  'shared-frame-BfjMqbuN.js:Hs': 'pure function (no state)',
-  'shared-frame-BfjMqbuN.js:Us': 'pure function (no state)',
-  'shared-frame-BfjMqbuN.js:Bs': 'pure function (no state)',
-  'shared-frame-BfjMqbuN.js:qs': 'constant (key name table)',
-  'shared-frame-BfjMqbuN.js:Ps': 'pure function (no state)',
-  'shared-frame-BfjMqbuN.js:Fs': 'constant (modifier order)',
-  'shared-frame-BfjMqbuN.js:Ns': 'constant (modifier names)',
+  // c96d752d0 pL: the branch name's head / tail split (the kit's branch-chip.mjs slices it without exporting it).
+  'c96d752d0-CWv_7-n9.js:pL': 'pure function (no state)',
+  // shared-18 JO (exported Fs): the StatusDot wrapper (CdsPulse without animation, the running dot's animation phase
+  // synced on start); code-current sidebar-status-glyph.mjs slices it without exporting it.
+  'shared-18-D3y8YMFN.js:JO': 'pure component (no state)',
+  'shared-18-D3y8YMFN.js:Kv': 'pure function (an animationstart handler, no state)',
+  // w6-transcript-rows: r3b-transcript's Turn edits card (3.6556.2) draws its static +N −M counts through c60636ac6 Ze → Qe
+  // (its own diff-counts.mjs, Qe not exported); this area's animated Xe draws the same Qe.
+  'c60636ac6-xYOM0GQX.js:Qe': 'pure component (no state); r3b-transcript diff-counts.mjs holds the other copy',
+  'c60636ac6-xYOM0GQX.js:Ke': 'a constant (the minus sign); r3b-transcript diff-counts.mjs holds the other copy',
 };
 // Contexts view-tabs also instantiates that a slice here may own a second instance of (none).
 const contextDuplicates = {};
+// 3.6556.2 sibling areas whose exports this generator imports (one copy) and whose slices it does not repeat.
+const SIBLING_AREAS = [];
 
 // Emitted in dependency order. `exports` maps original local binding -> exported name; its keys are the roots and
-// `features` pins each root to strings of its original (prettier-formatted) text.
+// `features` pins each root to strings of its original (prettier-formatted) text (R2: literals, keys, classes, ids).
+// 3.6556.2 bodies are React Compiler output: their cache helpers (J9 J0…J5 K0…K5 I1…I5 Z1…Z5 J8) resolve to the view-tabs
+// semantic names (E3), never sliced again. Export names are those of 2.42304.0 (R4/E7).
 const modules = [
   // vendor-intl sn = J("formatList"): react-intl's FormattedList (the counts' sr-only "N additions, M deletions").
-  { target: 'formatted-list.mjs', source: 'vendor-intl-Db7hDWRO.js', exports: { sn: 'FormattedList' },
+  { target: 'formatted-list.mjs', source: 'vendor-intl-DYfox5Co.js', exports: { sn: 'FormattedList' },
     features: { sn: ['sn = J("formatList")'] } },
-  // shared-25 Di (exported n_): the media query hook (the counts' prefers-reduced-motion test).
-  { target: 'media-query.mjs', source: 'shared-25-DP8p7i1Z.js', exports: { Di: 'useMediaQuery' },
-    features: { Di: ['let r = (t ?? window).matchMedia(e);', 'return b(n, r, () => !1);'] } },
-  // shared-0 SD (exported Gf) and shared-78 Ja (exported Ow): whether the user agent is Linux (the keybinding table's
+  // shared-25 mi (exported I_): the media query hook (the counts' prefers-reduced-motion test).
+  { target: 'media-query.mjs', source: 'shared-25-DOWZRSlq.js', exports: { mi: 'useMediaQuery' },
+    features: { mi: ['let r = (t ?? window).matchMedia(e);', '() => (t ?? window).matchMedia(e).matches'] } },
+  // shared-0 lk (exported jp) and shared-78 jo (exported pE): whether the user agent is Linux (the keybinding table's
   // `!isLinux` rows).
-  { target: 'linux-agent.mjs', source: 'shared-0-ByI5P0CP.js', exports: { SD: 'isLinuxAgent' }, features: { SD: ['return bD.test(e) && !xD.test(e);'] } },
-  { target: 'linux-user-agent.mjs', source: 'shared-78-D6VXYXaQ.js', exports: { Ja: 'isLinuxUserAgent' },
-    features: { Ja: ['return typeof window > "u" ? !1 : Ft(window.navigator.userAgent);'] } },
-  // shared-frame Ms (exported Nl): whether the platform is a Mac (a constant external store); Js (exported Ml): a
-  // shortcut's aria-keyshortcuts form (OLe's diff button). view-tabs slices both without a semantic name.
-  { target: 'aria-shortcut.mjs', source: 'shared-frame-BfjMqbuN.js', exports: { Ms: 'useIsMacPlatform', Js: 'ariaKeyShortcuts' },
-    features: { Ms: ['() => As.test(navigator.userAgent),'], Js: ['let o = t ? "Meta" : "Control",', 'return [...i, ...a].map(s).join("+");'] } },
-  // shared-19 $7 (exported R): the first key of a command in the keybinding table (OLe's toggleDiff chord).
-  { target: 'command-shortcut.mjs', source: 'shared-19-CkPOiIKm.js', exports: { $7: 'commandShortcut' },
-    features: { $7: ['return e9(e, t, n)[0];'] } },
-  // c219730b0: the PR bar's mode labels (_n, "Commit changes" …), busy labels (vn) and the review threads label (Ht).
-  { target: 'pr-bar-labels.mjs', source: 'c219730b0-B08P7Rqk.js', exports: { _n: 'PR_MODE_MESSAGES', vn: 'PR_MODE_BUSY_MESSAGES', Ht: 'useOpenReviewThreadsLabel', Zt: 'CI_SKIPPED_DOT' },
-    features: { _n: ['commit: { defaultMessage: "Commit changes", id: "PQy14pRnLi" },'], vn: ['creating: { defaultMessage: "Creating PR\\u2026", id: "E7tHZPJmaR" },'],
-      Ht: ['"{count, plural, one {# open review thread} other {# open review threads}}",'],
-      // R4i-rail RL2: c219730b0 Zt (tB's skipped / unavailable CI glyph, a hollow dot).
-      Zt: ['className: "size-[6px] rounded-full border border-alpha-5",'] } },
-  // cfb0234e3 h (exported t): the PR link's "Copy link" menu item (only with a PR link).
-// R4i-rail RL2: m (exported r, OS) is the link's "Open on {host}" label, p (exported n, Nxe) the PR link's menu (View
-  // pull request, Open on {host}, Copy link) that iB's band layout opens on the number.
-  { target: 'copy-link-item.mjs', source: 'cfb0234e3-CmyaYk4H.js', exports: { h: 'CopyLinkMenuItem', m: 'openOnHostLabel', p: 'PrLinkMenuItems' },
+  { target: 'linux-agent.mjs', source: 'shared-0-DDOOdL6P.js', exports: { lk: 'isLinuxAgent' }, features: { lk: ['return sk.test(e) && !ck.test(e);'] } },
+  { target: 'linux-user-agent.mjs', source: 'shared-78-D5Fw2h0a.js', exports: { jo: 'isLinuxUserAgent' },
+    features: { jo: ['return typeof window > "u" ? !1 : Wn(window.navigator.userAgent);'] } },
+  // shared-frame lc / Dc: whether the platform is a Mac and a shortcut's aria-keyshortcuts form (Ike's diff button).
+  // view-tabs publishes both in 3.6556.2 (useIsMacPlatform / ariaKeyShortcuts): re-exported, one copy.
+  { target: 'aria-shortcut.mjs', source: 'shared-frame-6jtSkIit.js', exports: { lc: 'useIsMacPlatform', Dc: 'ariaKeyShortcuts' }, closureFeatures: { lc: ['test(navigator.userAgent)'] },
+    features: { lc: ['function lc()'], Dc: ['let o = t ? "Meta" : "Control",', 'return [...i, ...a].map(s).join("+");'] } },
+  // shared-46 iR (exported g; shared-19 in 2.42304.0): the first key of a command in the keybinding table (Ike's
+  // toggleDiff chord). The table (YL) adds nextPrComment / prevPrComment (alt+F9 / shift+alt+F9, panes:C3-8).
+  { target: 'command-shortcut.mjs', source: 'shared-46-BIbZBGFq.js', exports: { iR: 'commandShortcut' },
+    features: { iR: ['return aR(e, t, n)[0];'] },
+    closureFeatures: { iR: ['command:"toggleDiff",key:"cmd+shift+d",code:"KeyD",when:"isClaudeApp"', 'command:"nextPrComment",key:"alt+f9",code:"F9",when:"!isLinux"'] } },
+  // shared-18 JO (exported Fs): the StatusDot (CdsPulse, animate off) c219730b0's CI dot presets are built on.
+  { target: 'status-dot.mjs', source: 'shared-18-D3y8YMFN.js', exports: { JO: 'StatusDot' },
+    features: { JO: ['className: "contents [--cds-page-bg:transparent]",', 'onAnimationStart: Kv,', 'm(B, { animate: !1, ...e })'] } },
+  // cd4f82e77 (3.6556.2): the PR bar's mode labels (j, "Commit changes" …) and busy labels (Ue), moved out of c219730b0.
+  { target: 'pr-mode-messages.mjs', source: 'cd4f82e77-CAMIsQ30.js', exports: { j: 'PR_MODE_MESSAGES', Ue: 'PR_MODE_BUSY_MESSAGES' },
+    features: { j: ['commit: { defaultMessage: "Commit changes", id: "PQy14pRnLi" },', 'view: { defaultMessage: "View PR", id: "OtsPuOcaGS" },'],
+      Ue: ['creating: { defaultMessage: "Creating PR\\u2026", id: "E7tHZPJmaR" },', 'merging: { defaultMessage: "Merging\\u2026", id: "n0g32ofhZQ" },'] } },
+  // c219730b0: the review threads label (Rn) and the CI dots EL's CL picks (C2-1, the StatusDot presets that replace
+  // 2.42304.0's 6px spans): or failed, ar passed, sr running (df-tab-dot-running), cr skipped / unavailable (hollow).
+  // PR_MODE_MESSAGES / PR_MODE_BUSY_MESSAGES moved to cd4f82e77 (re-exported, R4).
+  { target: 'pr-bar-labels.mjs', source: 'c219730b0-DGG9iA8k.js', reexports: { 'pr-mode-messages.mjs': ['PR_MODE_MESSAGES', 'PR_MODE_BUSY_MESSAGES'] },
+    exports: { Rn: 'useOpenReviewThreadsLabel', or: 'CI_FAILED_DOT', ar: 'CI_PASSED_DOT', sr: 'CI_RUNNING_DOT', cr: 'CI_SKIPPED_DOT' },
+    features: { Rn: ['"{count, plural, one {# open review thread} other {# open review threads}}",'],
+      or: ['color: "var(--cds-text-git-removed)"'], ar: ['color: "var(--cds-text-git-opened)"'],
+      sr: ['color: "var(--cds-text-muted)",', 'className: "df-tab-dot-running",'],
+      cr: ['color: "var(--cds-alpha-5)",', 'hollow: !0,', 'className: "forced-colors:border",'] } },
+  // cfb0234e3 h (exported t): the PR link's "Copy link" menu item; m (exported r) the link's "Open on {host}" label;
+  // p (exported n) the PR link's menu (View pull request, Open on {host}, Copy link) that EL's band layout opens.
+  { target: 'copy-link-item.mjs', source: 'cfb0234e3-CAtk05RE.js', exports: { h: 'CopyLinkMenuItem', m: 'openOnHostLabel', p: 'PrLinkMenuItems' },
     features: { h: ['defaultMessage: "Link copied to clipboard.",', 'defaultMessage: "Copy link", id: "lbr3Lq2Lnm"'],
-      m: ['return e.formatMessage(f.openOnHost, { host: g(t) });'], p: ['c && n(a.Item, { onClick: () => c(), children: i }),', 'n(h, { prUrl: p }),'] } },
-  // ca7840910 U (exported r): the ContextMenu / Shift+F10 key opens the row's context menu at its start edge.
-  { target: 'context-menu-key.mjs', source: 'ca7840910-DSVFtTw1.js', exports: { U: 'openContextMenuFromKey' },
-    features: { U: ['return H(e) ? (t && f() && (e.preventDefault(), te(t)), !0) : !1;'] } },
+      m: ['return e.formatMessage(f.openOnHost, { host: g(t) });'], p: ['l && e(o.Item, { onClick: () => l(), children: c })', 'e(h, { prUrl: m }),'] } },
+  // shared-18 ok (exported js; ca7840910 U in 2.42304.0): the ContextMenu / Shift+F10 key opens the row's context menu at
+  // its start edge. files-changes tree-context-menu-keys.mjs exports this 3.6556.2 copy: re-exported, one copy.
+  { target: 'context-menu-key.mjs', source: 'shared-18-D3y8YMFN.js', exports: { ok: 'openContextMenuFromKey' },
+    features: { ok: ['? (t && ws() && (e.preventDefault(), ik(t)), !0)'] } },
   // cd59309dc o (exported t): while a context menu is open, count it on its window (the row menu's mount marker).
   // The store (r) holds per-window state, so its reader a (exported n) is published from this one copy as well.
-  { target: 'context-menu-marker.mjs', source: 'cd59309dc-DjmF_LWt.js', exports: { o: 'ContextMenuOpenMarker', a: 'useContextMenuOpenInWindow' },
-    features: { o: ['return (e(() => (i(n, 1), () => i(n, -1)), [n]), null);'], a: ['return r((t) => t.byWindow.has(e));'] } },
-  // c0cdf4a08 _ (exported t): the row's context menu (right click opens the same items at the pointer).
-  { target: 'row-context-menu.mjs', source: 'c0cdf4a08-h228IL-P.js', exports: { _: 'RowContextMenu' },
-    features: { _: ['nativeMenuWhen: l,', 'r ? h(e.currentTarget, r, n) : n();', 'openEvent: b.event,'] } },
-  { target: 'diff-counts.mjs', source: 'c60636ac6-DF2ym4tP.js', exports: { Xe: 'DiffCounts' },
-    features: { Xe: ['addedClassName: a = "text-git-added",', 'removedClassName: o = "text-git-removed",', '"{count, plural, one {# addition} other {# additions}}",',
-      '"{count, plural, one {# deletion} other {# deletions}}",', 'type: "unit",'] } },
-  { target: 'changes-verb.mjs', source: TRANSCRIPT, exports: { DLe: 'ChangesRowVerb', CLe: 'prModeLabel', rB: 'prModeBusyLabel', Qz: 'PrActionFocusKeeper' },
-    features: { DLe: ['wrapperClassName: "min-w-0 shrink-0",', 'size: "xs",', 'children: b("span", { className: "truncate", children: e }),'],
-      CLe: ['{ defaultMessage: "Commit to {base}", id: "iAjUOOFB7k" },', 'return e.formatMessage(Xb[t]);'], rB: ['return e.formatMessage(Zb.merging);', 'return e.formatMessage(Zb.creating);'],
-      Qz: ['e.current = t && Xz(t) && !Zz(t) ? t.ownerDocument : null;', 'className: "contents",'] } },
-  // c96d752d0 VRe: the rail PR bar nav's class (empty:hidden; the card is hidden while the nav is empty, cf74bc599 aD);
-  // fze: whether a repo's live row is rendered (a PR, else the branch stats' hasChanges unless the branch is known
-  // unpushed without a working tree).
-  { target: 'pr-bar-rail.mjs', source: TRANSCRIPT, exports: { VRe: 'RAIL_PR_BAR_NAV_CLASS', fze: 'prBarRowShown' },
-    features: { VRe: ['VRe = "flex flex-col gap-1 empty:hidden"'], fze: ['return e ? !0 : n === !1 && !r ? !1 : !!t?.hasChanges;'] } },
-  // ---- R4i-rail RL2: what iB / oRe / sRe read from other chunks ----
-  // shared-6: the branch row's class names (iB's band layout: wre / Io / Po / zo / Ro / No / _re).
-  { target: 'branch-row-classes.mjs', source: 'shared-6-Cby4X-ms.js',
-    exports: { v_: 'branchRowClass', y_: 'BRANCH_ROW_LEADING_CLASS', b_: 'BRANCH_ROW_CHECKOUT_CLASS', w_: 'branchChipClass', T_: 'branchChipNameClass',
-      S_: 'BRANCH_ROW_GAP_CLASS', C_: 'PR_NUMBER_CLASS' },
-    features: { v_: ['return `${h_(e)} @container/branch-row`;'], y_: ['var y_ = "flex-1 flex items-center gap-0 min-w-0";'], b_: ['var b_ = "flex-1 flex items-center gap-0 min-w-0";'],
-      w_: ['let r = `${b_} @container/branch-chip text-body`;'], T_: ['"@max-[9em]/branch-chip:hidden"'], S_: ['"w-[32px] min-w-0 shrink [@container_branch-row_(max-width:320px)]:hidden";'],
-      C_: ['"min-w-0 truncate [direction:rtl] px-1.25 text-body tabular-nums"'] } },
-  // c0b46114c x (iB's __e): the band row's Dismiss button.
-  { target: 'dismiss-button.mjs', source: 'c0b46114c-CeR7hhV7.js', exports: { x: 'DismissButton' },
-    features: { x: ['inkClassName: i = "text-muted hover:text-primary",', 'a.formatMessage({ defaultMessage: "Dismiss", id: "TDaF6JVgG6" }),'] } },
-  // c227f4d5e HL / UL (sRe's Due / Bue): the disclosure row trigger and its caret.
-  { target: 'rail-disclosure.mjs', source: 'c227f4d5e-Ba-r--Rl.js', exports: { HL: 'RAIL_DISCLOSURE_TRIGGER_CLASS', UL: 'RAIL_DISCLOSURE_CARET_CLASS' },
-    features: { HL: ['group/disclosure flex min-h-6.5 w-full min-w-0 items-center gap-sm px-xs text-start text-body'],
-      UL: ['"shrink-0 text-muted-as-secondary group-data-[panel-open]/disclosure:rotate-90"'] } },
-  { target: 'changes-row.mjs', source: TRANSCRIPT, exports: { OLe: 'ChangesRow', kLe: 'ChangesRowMenuItems', aB: 'ReviewCommentsCount' },
+  { target: 'context-menu-marker.mjs', source: 'cd59309dc-BZMawR8Y.js', exports: { o: 'ContextMenuOpenMarker', a: 'useContextMenuOpenInWindow' },
+    features: { o: ['((r = () => (i(n, 1), () => i(n, -1))), (a = [n]), K2($, 0, n, r, a))'], a: ['(t) => t.byWindow.has(e)'] } },
+  // c0cdf4a08 g (exported t): the row's context menu (right click opens the same items at the pointer; popupProps new).
+  { target: 'row-context-menu.mjs', source: 'c0cdf4a08-C69Ng1c8.js', exports: { g: 'RowContextMenu' },
+    features: { g: ['nativeMenuWhen: u,', 'r ? m(e.currentTarget, r, n) : n();', 'openEvent: y.event,', 'popupProps: _,'] } },
+  // c60636ac6 Xe (exported r): the +N −M counts (Qe, the shown numbers through Je).
+  { target: 'diff-counts.mjs', source: 'c60636ac6-xYOM0GQX.js', exports: { Xe: 'DiffCounts' },
+    features: { Xe: ['n(Qe, { ...e, shownAdded: t, shownRemoved: r })'] },
+    closureFeatures: { Xe: ['addedClassName:l', 'l===void 0?"text-git-added":l', 'u===void 0?"text-git-removed":u', '"{count, plural, one {# addition} other {# additions}}"',
+      '"{count, plural, one {# deletion} other {# deletions}}"', 'type:"unit"'] } },
+  // c96d752d0 Fke (with yL, the focus keeper): the rail row's verb button; jke / TL its label and busy label.
+  { target: 'changes-verb.mjs', source: TRANSCRIPT, exports: { Fke: 'ChangesRowVerb', jke: 'prModeLabel', TL: 'prModeBusyLabel', yL: 'PrActionFocusKeeper' },
+    features: { Fke: ['wrapperClassName: "min-w-0 shrink-0",', 'size: "xs",', 'f("span", { className: "truncate", children: t })'],
+      jke: ['{ defaultMessage: "Commit to {base}", id: "iAjUOOFB7k" },', 'return e.formatMessage(gp[t]);'], TL: ['return e.formatMessage(_p.merging);', 'return e.formatMessage(_p.creating);'],
+      yL: ['t.current = e && _L(e) && !vL(e) ? e.ownerDocument : null;', 'className: "contents",'] } },
+  // c96d752d0 lje: the rail PR bar nav's class (empty:hidden; the card is hidden while the nav is empty); cMe: whether a
+  // repo's live row is rendered (a PR, else the branch stats' hasChanges unless the branch is known unpushed without a
+  // working tree).
+  { target: 'pr-bar-rail.mjs', source: TRANSCRIPT, exports: { lje: 'RAIL_PR_BAR_NAV_CLASS', cMe: 'prBarRowShown' },
+    features: { lje: ['lje = "flex flex-col gap-1 empty:hidden"'], cMe: ['return e ? !0 : n === !1 && !r ? !1 : !!t?.hasChanges;'] } },
+  // shared-6: the branch row's class names (EL's band layout).
+  { target: 'branch-row-classes.mjs', source: 'shared-6-sd9jbJqs.js',
+    exports: { D_: 'branchRowClass', O_: 'BRANCH_ROW_LEADING_CLASS', k_: 'BRANCH_ROW_CHECKOUT_CLASS', N_: 'branchChipClass', P_: 'branchChipNameClass',
+      j_: 'BRANCH_ROW_GAP_CLASS', M_: 'PR_NUMBER_CLASS' },
+    features: { D_: ['return `${C_(e)} @container/branch-row`;'], O_: ['var O_ = "flex-1 flex items-center gap-0 min-w-0";'], k_: ['var k_ = "flex-1 flex items-center gap-0 min-w-0";'],
+      N_: ['let r = `${k_} @container/branch-chip text-body`;'], P_: ['"@max-[9em]/branch-chip:hidden"'], j_: ['"w-[32px] min-w-0 shrink [@container_branch-row_(max-width:320px)]:hidden";'],
+      M_: ['"min-w-0 truncate [direction:rtl] px-1.25 text-body tabular-nums"'] } },
+  // c0b46114c b (exported n; EL's vxe): the band row's Dismiss button (C2-6: ink text-muted-as-secondary).
+  { target: 'dismiss-button.mjs', source: 'c0b46114c-Tzv34BiL.js', exports: { b: 'DismissButton' },
+    features: { b: ['s = o === void 0 ? "text-muted-as-secondary hover:text-primary" : o,', 'c.formatMessage({ defaultMessage: "Dismiss", id: "TDaF6JVgG6" })'] } },
+  // c227f4d5e SB / CB (xAe's Ufe / K_): the disclosure row trigger (2.42304.0 HL, its `group/disclosure` gone) and its
+  // caret (no rotate-90 class; xAe rotates the icon by `rotate`).
+  { target: 'rail-disclosure.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { SB: 'RAIL_DISCLOSURE_TRIGGER_CLASS', CB: 'RAIL_DISCLOSURE_CARET_CLASS' },
+    features: { SB: ['`flex min-h-6.5 w-full min-w-0 items-center gap-sm px-xs text-start text-body ${hB} hover:bg-alpha-2`'],
+      CB: ['var CB = "shrink-0 text-muted-as-secondary";'] } },
+  // shared-frame nu (exported ku; EL's Ve): the tooltip deferral scope (CdsTooltipDeferralContext) around the band row:
+  // its tooltips adopt the CDS implementation on the first pointer enter / focus. view-tabs does not slice it.
+  { target: 'tooltip-deferral.mjs', source: 'shared-frame-6jtSkIit.js', exports: { nu: 'TooltipDeferralScope' },
+    features: { nu: ['ambientImpl: () => r.current,', 'isDeferred: () => e,', 'onPointerEnter: u(s.engage, c.props.onPointerEnter),'] } },
+  { target: 'changes-row.mjs', source: TRANSCRIPT, exports: { Ike: 'ChangesRow', Bke: 'ChangesRowMenuItems', DL: 'ReviewCommentsCount' },
     features: {
-      OLe: ['if (n === null && j === "row") {', '"data-rail-changes-row": "",', 'className: aue,', 'b(vf, { name: "ChangesPlusMinus" }),', 'defaultMessage: "Open changes",',
-        'id: "FtjWR6UYvS",', '"Open changes, {added, number} added, {removed, number} removed",', 'id: "+7hgPwXakn",', 'N = h ? Nr("toggleDiff", O) : void 0,',
-        '{ defaultMessage: "More options for {title}", id: "YCz8Z2UnCJ" },', '"sr-only flex shrink-0 focus-within:not-sr-only has-[[data-popup-open]]:not-sr-only",',
-        'collisionPadding: Kc,', 'return b(Qg, { trigger: r, disabled: !U, children: ee });', 'className: "inline-flex shrink-0 gap-1 text-body",'],
-      kLe: ['defaultMessage: "View changes",', 'defaultMessage: "Open review comments",', 'defaultMessage: "Dismiss", id: "UvvKWSp/Um"', 's ? ms(s) : null,'],
-      aB: ['return e === void 0 || e <= 0', '"Open review comments, {count, plural, one {# open thread} other {# open threads}}",'],
+      Ike: ['if (r === null && N === "row") {', '"data-rail-changes-row": "",', 'className: nv,', 'f(hg, { name: "ChangesPlusMinus" })', 'defaultMessage: "Open changes",',
+        'id: "FtjWR6UYvS",', '"Open changes, {added, number} added, {removed, number} removed",', 'id: "+7hgPwXakn",', '(L = g ? wi("toggleDiff", A) : void 0),',
+        'defaultMessage: "More options for {repo} on {branch}",', 'id: "8RgmijlEMA",', 'defaultMessage: "More options for {title}",', 'id: "YCz8Z2UnCJ",',
+        '"sr-only flex shrink-0 focus-within:not-sr-only has-[[data-popup-open]]:not-sr-only",', 'className: "min-w-0 text-muted-as-secondary",',
+        'onKeyDownCapture: Nc,', 'f(Yh, { trigger: E, disabled: k, popupProps: A, children: ae })', 'className: "inline-flex shrink-0 gap-1 text-body",'],
+      Bke: ['defaultMessage: "View changes",', 'defaultMessage: "Open review comments",', 'defaultMessage: "Dismiss", id: "UvvKWSp/Um"', 'f(Sd, { children: we(c) })',
+        'groups: { pullRequest: d, changes: h, create: g, ...l, dismiss: y },'],
+      DL: ['if (t === void 0 || t <= 0) return null;', '"Open review comments, {count, plural, one {# open thread} other {# open threads}}",'],
     } },
-  // R4i-rail RL2, c96d752d0: the rail's PR rows. iB (memo) is the PR bar row: in the rail layout it builds the PR link
-  // (xLe glyph + tint, Bc state label, "#{number}", anchor props) and the CI glyph (tB / nB) and hands them to OLe, whose
-  // link branch is the stacked row (state icon, title link, #number, diff counts, CI, verb, ⋮ menu). oRe lists the rail
-  // entries (five before ple's Show more; earlier PRs in sRe's "{count} earlier pull requests" disclosure with
-  // "{count} merged"). tRe / aRe / dLe are eze's rail shape (rows vs history, sorted by xB), its Show more / history
-  // state and the PR count report into the Changes card (qz); yze is nze's PR mode for a row (view / merged / queued).
+  // c96d752d0: the rail's PR rows. EL (memo) is the PR bar row: in the rail layout it builds the PR link (kke glyph +
+  // tint, Wc state label, "#{number}", anchor props, the link policy) and the CI glyph (CL / wL) and hands them to Ike,
+  // whose link branch is the stacked row. bAe lists the rail entries through renderRow (five before Show more; earlier
+  // PRs in xAe's "{count} earlier pull requests" disclosure with "{count} merged"). mAe / vAe / gke are Sje's rail shape
+  // (rows vs history, sorted by KL), its Show more / history state and the PR count report into the Changes card (cL);
+  // hMe is Zje's PR mode for a row (view / merged / queued).
   { target: 'pr-rows.mjs', source: TRANSCRIPT,
-    exports: { iB: 'PrBarRow', oRe: 'RailPrRows', sRe: 'RailPrHistory', Jz: 'PrBarLayoutContext', xLe: 'PR_STATE_GLYPHS', SLe: 'PR_STATE_ACCENTS',
-      tB: 'CiStatusIcon', nB: 'ciStatusLabel', tRe: 'railRowsShape', aRe: 'useRailRowsControls', dLe: 'useReportRailPrCount', SB: 'railRowsOverflow',
-      CB: 'railShownRows', yze: 'prBarMode', WB: 'historyRowKey', JB: 'repoRowId', qB: 'repoRowIdKey' },
+    exports: { EL: 'PrBarRow', bAe: 'RailPrRows', xAe: 'RailPrHistory', lL: 'PrBarLayoutContext', kke: 'PR_STATE_GLYPHS', Ake: 'PR_STATE_ACCENTS',
+      CL: 'CiStatusIcon', wL: 'ciStatusLabel', mAe: 'railRowsShape', vAe: 'useRailRowsControls', gke: 'useReportRailPrCount', qL: 'railRowsOverflow',
+      JL: 'railShownRows', hMe: 'prBarMode', gR: 'historyRowKey', bR: 'repoRowId', yR: 'repoRowIdKey' },
     features: {
-      iB: ['Y = (e ?? oe) === "rail",', 'if (t !== void 0 && ve) {', 'defaultMessage: "View pull request",', '{ defaultMessage: "#{number}", id: "rj4hoKw+Qf" },',
-        'numberText: g,', 'anchorProps: l,', 'openOnHostLabel: m,', 'onExternalClick: a,', 'icon: b(tB, { status: F }),', '"aria-label": nB(J, F),', 'return b(OLe, {'],
-      oRe: ['role: "list",', 'children: c.map((e) => b(wB, { entry: e }, e.rowKey)),', 's ? b(ple, { expanded: r.showAll, onToggle: t.onToggleShowAll }) : null,',
-        'o.history.length > 0 &&'],
-      sRe: ['"{count, plural, one {# earlier pull request} other {# earlier pull requests}}",', 'defaultMessage: "{count} merged",', 'id: "WQh7w3BsRk",'],
-      Jz: ['var Jz = E("band");'],
-      xLe: ['open: { name: "GitPullRequest", tint: $z.opened },', 'queued: { name: "GitMergeQueue", tint: $z.queued },'],
-      SLe: ['var SLe = { merged: "purple", queued: "yellow" };'],
-      tB: ['className: "size-[6px] rounded-full bg-[var(--cds-text-git-removed)]",', 'return b(Mc, { kind: "running" });'],
-      nB: ['defaultMessage: "CI: checks failing",', 'defaultMessage: "CI: status unavailable",'],
-      tRe: ['((i.history ? n : t).push(i), i.facts.prState !== void 0 && (r += 1));', 'historyMerged: a.filter((e) => e.facts.prState === "merged").length,'],
-      aRe: ['onToggleShowAll: i,'], dLe: ['if (t) return (t(e), () => t(null));'],
-      SB: ['return e.rows.length > 5;'], CB: ['return t || e.rows.length <= 5 ? e.rows : e.rows.slice(0, 5);'],
-      yze: ['e.state === "merged"', 'e.state === "queued"'], WB: ['return `${e}#${t}`;'], JB: ['repo: (e.repo.split("/").pop() ?? "").toLowerCase(),'],
-      qB: ['return JSON.stringify([e.cwd, e.repo, e.branch, e.history]);'],
+      EL: ['ce = (t ?? se) === "rail",', 'if (n !== void 0 && xe) {', 'defaultMessage: "View pull request",', '{ defaultMessage: "#{number}", id: "rj4hoKw+Qf" }',
+        'Te = s === void 0 && Ce === void 0 ? we : "live";', 'Te === "asks"', 'Te === "refused"', ' hover:decoration-current`',
+        'numberText: S,', 'anchorProps: _,', 'openOnHostLabel: b,', 'onExternalClick: o,', 'children: f(CL, { status: L }),', '"aria-label": wL(X, L),',
+        'f(Ike, {', 'menuControls: p,', 'defaultMessage: "More PR options",'],
+      bAe: ['{ shape: t, controls: n, announcement: r, renderRow: i, kept: a } = e,', 'role: "list",', 'className: "flex flex-col gap-1",',
+        'children: (e) => i(t, e),', 'f($g, { expanded: o.showAll, onToggle: n.onToggleShowAll })', 'd.history.length > 0 &&'],
+      xAe: ['"{count, plural, one {# earlier pull request} other {# earlier pull requests}}",', 'defaultMessage: "{count} merged",', 'id: "WQh7w3BsRk",',
+        'o = r ? 90 : 0,', 'rotate: o,'],
+      lL: ['var lL = N("band");'],
+      kke: ['open: { name: "GitPullRequest", tint: xL.opened },', 'queued: { name: "GitMergeQueue", tint: xL.queued },'],
+      Ake: ['var Ake = { merged: "purple", queued: "yellow" };'],
+      CL: ['case "failed":', 'return yge;', 'case "unavailable":', 'return vge;', 'return hge;'],
+      wL: ['defaultMessage: "CI: checks failing",', 'defaultMessage: "CI: status unavailable",'],
+      mAe: ['for (let i of e) ((i.history ? n : t).push(i), i.facts.prState !== void 0 && (r += 1));', 'historyMerged: a.filter((e) => e.facts.prState === "merged").length,'],
+      vAe: ['onHistoryOpenChange: r,', 'onToggleShowAll: i'], gke: ['if (t) return (t(e), () => t(null));'],
+      qL: ['return e.rows.length > 5;'], JL: ['return t || e.rows.length <= 5 ? e.rows : e.rows.slice(0, 5);'],
+      hMe: ['e.state === "merged"', 'e.state === "queued"'], gR: ['return `${e}#${t}`;'], bR: ['repo: (e.repo.split("/").pop() ?? "").toLowerCase(),'],
+      yR: ['return JSON.stringify([e.cwd, e.repo, e.branch, e.history]);'],
     } },
 ];
 
 // Original text the host wiring follows but cannot import (prettier form of the named top-level declaration).
 const callSites = [
-  // c96d752d0 iB (memo): the PR bar row. In the rail layout (layout prop or the Jz context) it renders OLe with these
-  // props; the verb is DLe with CLe's label unless the PR mode is view / none (then the PR-only railVerb). The band
-  // layout renders ELe for review comments instead. Host: SessionRailChanges (no PR: link null, the commit verb).
-  { source: TRANSCRIPT, binding: 'iB', role: 'PR bar row: the rail branch hands OLe its props; verb = DLe unless view/none (host: SessionRailChanges)',
-    features: ['Y = (e ?? oe) === "rail",', 'X = CLe(J, U, v),', 'fe = U === "commit" || U === "none",', 'U === "view" || U === "none" || ce ? null : b(Qz, {',
-      'be === null ? V : b(DLe, {', 'busyLabel: rB(J, U),', 'onClick: G ?? Ot,', 'return b(OLe, {', 'link: _e,', 'branchTitle: x,', 'repoName: h ? void 0 : m,',
-      'baseBranch: fe || (t === void 0 && v === x) ? void 0 : v,', 'diff: ce ? void 0 : w,', 'verb: e,', 'checks: n,', 'onDiffClick: ce ? void 0 : E,',
-      'onDiffOpen: ce ? void 0 : D,', 'diffOpenHasChord: k,', 'extraMenuItems: ie,', 'warning: z,', 'hint: ce ? null : B,',
-      '!ce && j !== void 0 && j > 0 && b(ELe, { count: j, onClick: M }),'] },
-  // c96d752d0 ELe: the band layout's review comments chip (Chat icon, accent). Not rendered in the rail, where OLe
-  // shows aB (changes-row.mjs ReviewCommentsCount). r4-session-rail.md §1.5 names ELe as OLe's caller; it is iB.
-  { source: TRANSCRIPT, binding: 'ELe', role: 'Band-only review comments chip (the rail row uses aB); iB, not ELe, renders OLe',
-    features: ['let n = ex(e);', '"shrink-0 inline-flex h-control items-center gap-1 px-md text-body-medium"'] },
-  // c96d752d0 wB: a rail list item, `li.flex.flex-col` around iB with layout "rail"; diffOpenHasChord only for the
-  // primary row while toggleDiff would open its diff (the diff tile is not the visible one).
-  { source: TRANSCRIPT, binding: 'wB', role: 'Rail list item: li around iB layout rail; diffOpenHasChord from the tile layout (host: caller)',
-    features: ['if (!e.primary || jhe(t, "diff")) return !1;', 'return n.has("diff") || n.has(Kh(e.rowKey)) || !Array.from(n).some(Mhe);',
-      'className: "flex flex-col",', 'children: b(iB, { ...e.row, layout: "rail", diffOpenHasChord: t }),'] },
-  // c96d752d0 oRe: the rail rows list (`ul[role=list].flex.flex-col.gap-1`, five rows before Show more, PR history).
-  { source: TRANSCRIPT, binding: 'oRe', role: 'Rail rows list: ul role=list flex flex-col gap-1 of wB (host: one primary row)',
-    features: ['role: "list",', 'className: "flex flex-col gap-1",', 'children: c.map((e) => b(wB, { entry: e }, e.rowKey)),', 'o.history.length > 0 &&'] },
-  // c96d752d0 eze: the PR bar root. Rail: `nav[aria-label="Repository and pull request controls"]` with VRe, the
-  // per-repo rows report rail entries (nze onRailEntries) and oRe lists them; a single repo hides its name.
-  { source: TRANSCRIPT, binding: 'eze', role: 'PR bar root: rail nav (VRe) with oRe; hideRepo for a single repo (host: SessionRailChanges)',
-    features: ['layout: n = "band",', 'Ee = n === "rail",', 'if (!e || (!We && !le.length && we.length === 0)) return null;',
-      'defaultMessage: "Repository and pull request controls",', 'hideRepo: t || (n === "rail" && de.length <= 1),',
-      'onRailEntries: Ee ? ce : void 0,', 'Ee && b(oRe, { shape: je, controls: Me, announcement: Ne }),', '? b("nav", { ...Ke, className: VRe, children: qe })'] },
-  // c96d752d0 nze: one repo's row props. The diff counts only when the diff can open (ze) and something changed; the
-  // counts button opens (mn), the menu's View changes toggles (pn); a local session without a forge repo is in
-  // commit mode, whose verb sends the commit turn; the row shows while fze holds.
-  { source: TRANSCRIPT, binding: 'nze', role: 'Repo row props: diff only when openable and non-zero, open vs toggle, commit mode and its turn (host: caller + SessionRailChanges)',
-    features: ['ze = o !== void 0 || u !== void 0 || (Ie && Le !== null),', 'ze && hn !== void 0 && gn !== void 0 && (hn > 0 || gn > 0)', '? { added: hn, removed: gn }',
-      'ar = ze ? pn : void 0,', 'or = ze ? mn : void 0,', 'Wt = !V && be ? "commit" : yze(V, Ht, Ut),', 'be = t.type === "local" && !n.repo,',
-      'gt = !hze(V?.state, oe, se) && fze(V, De, le, pze(n, Se) || Ee !== void 0),', 'text: "Commit the working tree changes with a sensible message.",',
-      'defaultMessage: "No changes to commit",', 'Gn = n.currentBranch || n.branch,', 'branchName: Gn,', 'diff: _n,', 'onDiffClick: ar,', 'onDiffOpen: or,',
-      'prMode: Wt,', 'prDisabled: on,', 'prDisabledReason: ur,', 'onPrClick: ln,', 'prMenuItems: dn,', 'if (vze(nn, Wt, un))'] },
-  // R4i-rail RL2: nze's rail entries (`pr`: the live row with facts {prState, ciStatus} and `dr`, then the branch's other
-  // PRs as XB rows, history by jc), its rail-only verb (Ln: Ready for review on a draft, Merge on an open GitHub PR), CI
-  // popover slot (jn, FLe) and review comment count (Cn, IRe over the PR store's synced threads); eze collects the
-  // entries (`ce`), shapes them (tRe) and reports the PR count (dLe). Host: railPrEntries / SessionRailChanges.
-  { source: TRANSCRIPT, binding: 'nze', role: 'Rail entries: live row facts + dr, the branch\'s other PRs as history; railVerb / ciSlot / reviewComments sources (host: railPrEntries)',
-    features: ['facts: { prState: ye, ciStatus: An },', 'row: dr,', 'history: jc(n.state),', 'row: XB(n, fr),', 'if (I) return (I(e, pr), () => I(e, null));',
-      'V.state === "draft"', '`ready-${V.number}`', '`merge-${V.number}`', 'if (!(!B || !Bt || n.inheritedPr || !V))', 'V && Bt', 'b(FLe, {', 'Cn = IRe({',
-      'Wt = !V && be ? "commit" : yze(V, Ht, Ut),', 'zt = V ? tV(V.url) : void 0,', 'Bt = V != null && Wc(V.url),', 'prLinkOpensInApp: !He,', 'Xn = eV(V),',
-      'rr = V?.baseRefName ?? n.baseBranch,', 'ciStatus: An,', 'railVerb: Ln,', 'ciSlot: jn,', 'reviewComments: Cn,', 'onPrIconClick: Qn,'] },
-  { source: TRANSCRIPT, binding: 'eze', role: 'Rail shape: entries per repo (ce), tRe, aRe controls, dLe count, oRe (host: SessionRailChanges)',
-    features: ['for (let { key: t } of de) for (let n of se.get(t) ?? WRe) e.push(n);', 'return tRe(e);', 'Me = aRe(je),', 'dLe(Ee ? je.prCount : null);',
-      '{ announcement: Ne, announce: Pe } = Tae();', 'return b(Jz.Provider, {', 'value: n,'] },
-  // c96d752d0 $Re (exported wr): a local session's PR bar is eze (FB for the others).
-  { source: TRANSCRIPT, binding: '$Re', role: 'PR bar entry (cf74bc599 zc): eze for a local session',
-    features: ['return Xne(e.sessionRef?.type, t)', '? b(eze, { ...e })'] },
-  // cf74bc599 fC (EpitaxyPrBarSlot) / pC: the lazy PR bar slot; in the rail it reserves the remembered rail height (Qh)
-  // around zc (= c96d752d0 $Re) with layout "rail".
-  { source: 'cf74bc599-D9NZWRyl.js', binding: 'fC', role: 'EpitaxyPrBarSlot: pC for a local session',
-    features: ['return Sn(e.sessionRef.type, t)', '? u(pC, { ...e })'] },
-  { source: 'cf74bc599-D9NZWRyl.js', binding: 'pC', role: 'PR bar slot: rail reserve (Qh) around zc layout rail (host: synchronous, no reserve)',
-    features: ['[c] = a(t !== "rail"),', 'layout: c ? "band" : "rail",', 'let I = u(zc, {', ': u(Qh, { heightPx: A ? m.heightPx : 0, entries: m.entries, children: I });'] },
-  // c73f45bc3 O_ (exported A; cf74bc599 Sh): the Changes card's child, the lazy slot with the rail placeholder (qm).
-  { source: 'c73f45bc3-CFrHin0p.js', binding: 'O_', role: 'Changes card slot (cf74bc599 Sh): lazy D_ with the rail placeholder qm (host: synchronous)',
-    features: ['let i = oe(E_.handle, !0, { reportWait: !1 }),', 't === "rail"', '? c(qm, {', 'children: c(D_, {'] },
+  // c96d752d0 EL (memo): the PR bar row. In the rail layout (layout prop or the lL context) it renders Ike with these
+  // props; the verb is Fke with jke's label unless the PR mode is view / none or the PR is merged / queued (then the
+  // PR-only railVerb). The band layout renders Pke for review comments instead. Host: SessionRailChanges (no PR: link
+  // null, the commit verb).
+  { source: TRANSCRIPT, binding: 'EL', role: 'PR bar row: the rail branch hands Ike its props; verb = Fke unless view/none (host: SessionRailChanges)',
+    features: ['ce = (t ?? se) === "rail",', 'he = W === "commit" || W === "none",', 'W === "view" || W === "none" || Z', 'f(Fke, {', 'busyLabel: TL(X, W),',
+      'onClick: Y ?? nn,', 'f(Ike, {', 'link: be,', 'branchTitle: C,', 'repoName: r,', 'baseBranch: a,', 'diff: o,', 'verb: e,', 'checks: t,', 'onDiffClick: c,',
+      'onDiffOpen: l,', 'diffOpenHasChord: j,', 'extraMenuItems: ne,', 'menuControls: p,', 'warning: z,', 'hint: m,',
+      '!Z && N !== void 0 && N > 0 && f(Pke, { count: N, onClick: P })'] },
+  // c96d752d0 Pke: the band layout's review comments chip (Chat icon, accent). Not rendered in the rail, where Ike shows
+  // DL (changes-row.mjs ReviewCommentsCount).
+  { source: TRANSCRIPT, binding: 'Pke', role: 'Band-only review comments chip (the rail row uses DL)',
+    features: ['f(We, { name: "Chat", size: "sm", className: "text-accent" })'] },
+  // c96d752d0 YL (memo): a rail list item, `li.flex.flex-col[hidden]` around its render prop with diffOpenHasChord, only
+  // for the primary row while toggleDiff would open its diff (the diff tile is not the visible one).
+  { source: TRANSCRIPT, binding: 'YL', role: 'Rail list item: li (hidden when folded) around renderRow(entry, chord); the chord from the tile layout (host: RailPrListItem)',
+    features: ['if (!n || Cde(e, "diff")) return !1;', 'return r.has("diff") || r.has(xm(t)) || !Array.from(r).some(wde);', 'className: "flex flex-col",', 'hidden: r,'] },
+  // c96d752d0 Sje: the PR bar root. Rail: `nav[aria-label="Repository and pull request controls"]` with lje; the per-repo
+  // rows report rail entries and bAe lists them through renderRow (TR, i.e. Zje's EL with railRowKey and the chord); a
+  // single repo hides its name; the fold props (panes:C2-4) only shape the band.
+  { source: TRANSCRIPT, binding: 'Sje', role: 'PR bar root: rail nav (lje) with bAe over renderRow; hideRepo for a single repo (host: SessionRailChanges)',
+    features: ['w = r === void 0 ? "band" : r,', 'K = w === "rail",', 'defaultMessage: "Repository and pull request controls",', 'hideRepo: n || (w === "rail" && de.length <= 1),',
+      'railRowKey: n,', 'railDiffOpenHasChord: t,', 'renderRow: St,', 'kept: _t,', '? f("nav", { ...xt, className: lje, children: Dt })', 'gke(K ? ze.prCount : null);',
+      '((e = mAe(t)), K2($, 44, de, le, e));', 'Be = vAe(ze),', 'f(lL.Provider, { value: w, children: Ot })', 'fold: g,', 'Ee = Math.max(1, YAe - (g?.rowsBelow ?? 0)),',
+      'Ne = g?.onFoldableCountChange,'] },
+  // c96d752d0 Hje: the rail entries per repo: the live row (rowKey, primary, facts {prState, ciStatus}) and the branch's
+  // other PRs as history rows (rowKey `${key}#${number}`), each entry's row being `{key, repo, repoState}` for renderRow.
+  { source: TRANSCRIPT, binding: 'Hje', role: 'Rail entries: the live row with facts, the branch\'s other PRs as history (host: railPrEntries)',
+    features: ['primary: t === 0,', 'history: !1,', 'facts: { prState: c === "none" ? void 0 : c, ciStatus: SR(r, o, !1) },', 'rowKey: gR(n, t.number),',
+      'history: Tc(t.state),', 'facts: { prState: t.state, ciStatus: void 0 },', 'row: { key: n, repo: e.sessionRepo, repoState: k },'] },
+  // c96d752d0 Zje: one repo's row props. A local session without a forge repo is in commit mode, whose verb sends the
+  // commit turn; the rail renders EL with railRowKey's props, layout "rail" and the chord; railVerb (Ready for review on
+  // a draft, Merge on an open GitHub PR), ciSlot and reviewComments have no host source. Host: railPrEntries.
+  { source: TRANSCRIPT, binding: 'Zje', role: 'Repo row props: commit mode and its turn, EL layout rail with the chord; rail-only sources (host: railPrEntries + SessionRailChanges)',
+    features: ['text: "Commit the working tree changes with a sensible message.",', 'defaultMessage: "No changes to commit",', 'railRowKey: k,', 'Rn = i.currentBranch || i.branch,',
+      'f(EL, { ...or, layout: "rail", diffOpenHasChord: A })', '`ready-${N.number}`', '`merge-${N.number}`', 'railVerb: Dn,', 'ciSlot: yn,', 'reviewComments: ln,',
+      'repoMenu: st,', 'prLinkOpensInApp: ar,'] },
+  // c96d752d0 xje (exported vi; cf74bc599 Vl, EpitaxyPrBarSlot's PR bar): Sje for a local session.
+  { source: TRANSCRIPT, binding: 'xje', role: 'PR bar entry (cf74bc599 Vl): Sje for a local session',
+    features: ['f(Sje, { ...e })'] },
+  // c96d752d0 TMe: the PR bar slot; in the rail it reserves the remembered rail height (P_) around xje with layout "rail".
+  { source: TRANSCRIPT, binding: 'TMe', role: 'PR bar slot: rail reserve (P_) around xje (host: synchronous, no reserve)',
+    features: ['[c] = I(n !== "rail"),', 'layout: c ? "band" : "rail",', 'f(P_, { heightPx: K, entries: h.entries, children: G })'] },
+  // c73f45bc3 Py (exported N; cf74bc599 a_): the Changes card's child, the lazy slot with the rail placeholder (us).
+  { source: 'c73f45bc3-B7hbL7H9.js', binding: 'Py', role: 'Changes card slot (cf74bc599 a_): lazy Ny with the rail placeholder us (host: synchronous)',
+    features: ['if (r !== "rail")', 'r === "rail"', 'i(us, {', 'i(Ny, { sessionRef: t, layout: r, onRequestComposerFocus: a })'] },
 ];
-// Pinned on the minified bytes (each must occur exactly once unless `count` says otherwise).
+// Pinned on the minified bytes (each must occur exactly once unless `count` says otherwise). `loose` features go through
+// official.looseFeature (R2: identifiers of up to three characters generalized, literals and keys kept).
 const rawCallSites = [
-  // cf74bc599 fO / rD: the rail's Changes card gets Sh with layout "rail"; rD wraps it in the PR count report (Wo), the
-  // branch chip face (i_) and the row layout (r_ = c0a531389 O: "row" in the flat rail) contexts; the card is hidden
-  // until its nav has rows (aD).
-  { source: 'cf74bc599-D9NZWRyl.js', role: 'Changes card: Sh layout rail inside the Wo / i_ / r_ providers (r_ "row" when flat); hidden while the nav is empty',
-    features: ['pullRequests:o?void 0:u(Sh,{sessionRef:e,layout:"rail",onRequestComposerFocus:i},e.id)',
-      'children:u(Wo.Provider,{value:ge,children:u(i_.Provider,{value:z,children:u(r_.Provider,{value:R?"row":"stacked",children:t})})})',
-      'aD={pullRequests:"hidden has-[nav:not(:empty)]:flex has-[[data-epitaxy-branch-row-ghost]]:flex"}'] },
-  { source: TRANSCRIPT, role: 'Changes row feature strings (research §1.5 counts)', count: 1, features: ['"data-rail-changes-row":""'] },
+  // cf74bc599: the rail's Changes card gets a_ (c73f45bc3 Py) with layout "rail"; the card wraps it in the PR count report,
+  // the branch chip face and the row layout ("row" in the flat rail) contexts; the card is hidden until its nav has rows.
+  { source: RAIL, role: 'Changes card: a_ layout rail inside the count / face / row layout providers ("row" when flat); hidden while the nav is empty', loose: true,
+    features: ['l?void 0:s(a_,{sessionRef:t,layout:"rail",onRequestComposerFocus:a},t.id)',
+      'children:s(As.Provider,{value:be,children:s(Kl.Provider,{value:H,children:s(Ds.Provider,{value:V?"row":"stacked",children:n})})})',
+      '={pullRequests:"hidden has-[nav:not(:empty)]:flex has-[[data-epitaxy-branch-row-ghost]]:flex"'] },
+  { source: TRANSCRIPT, role: 'Changes row feature strings (research §1.2 counts)', count: 1, features: ['"data-rail-changes-row":""'] },
   { source: TRANSCRIPT, role: 'Changes row aria-label (row and stacked branches)', count: 2, features: ['"Open changes, {added, number} added, {removed, number} removed"'] },
+  { source: TRANSCRIPT, role: 'Changes row ⋮ label with a repo name (C2-2)', count: 1, features: ['defaultMessage:"More options for {repo} on {branch}",id:"8RgmijlEMA"'] },
 ];
-
 const cache = new Map();
 async function readSource(name) {
   if (cache.has(name)) return cache.get(name);
@@ -409,11 +412,11 @@ function exportedNames(text) {
   return out;
 }
 // Areas checked for a second copy of a binding (they slice from this snapshot too).
-const sliceAreas = ['code-current', 'files-changes', 'r3b-transcript', 'r4e-findings', 'view-tabs', 'session-rail-kit'];
+const sliceAreas = ['code-current', 'files-changes', 'r3b-transcript', 'r4e-findings', 'view-tabs', 'session-rail-kit', ...SIBLING_AREAS];
 let areas;
 async function loadAreas() {
   if (areas) return areas;
-  const viewTabs = await readJson(path.join(generatedRoot, 'view-tabs/manifest.json'));
+  const viewTabs = await viewTabsManifestFor(referenceVersion);
   if (viewTabs.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${viewTabs.referenceVersion}, expected ${referenceVersion}`);
   const publicByLocal = new Map();
   for (const [name, entry] of Object.entries(viewTabs.publicNames ?? {})) publicByLocal.set(`${entry.file}#${entry.local}`, { name, ...entry });
@@ -442,7 +445,7 @@ async function loadAreas() {
   const slicedElsewhere = new Map();
   for (const area of sliceAreas) {
     if (area === 'code-current') continue;
-    const manifest = await readJson(path.join(generatedRoot, area, 'manifest.json'));
+    const manifest = area === 'view-tabs' ? await viewTabsManifestFor(referenceVersion) : await readJson(path.join(generatedRoot, area, 'manifest.json'));
     if (manifest.referenceVersion && manifest.referenceVersion !== referenceVersion) continue;
     for (const m of manifest.modules ?? []) {
       if (m.referenceVersion && m.referenceVersion !== referenceVersion) continue;
@@ -466,31 +469,18 @@ async function areaExport(area, target) {
 const codeCurrentExport = target => areaExport('code-current', target);
 // Areas whose generated modules export their slices under the generator's own names (view-tabs exports minified
 // names, which D1 forbids importing; the kit is read through its publicNames).
-const importableAreas = new Set(['files-changes', 'r3b-transcript', 'r4e-findings']);
+const importableAreas = new Set(['files-changes', 'r3b-transcript', 'r4e-findings', ...SIBLING_AREAS]);
 
-// vendor-frame `var X = ns.member` with ns a proved React namespace.
-const provedNamespaces = new Set();
+// vendor-frame: the export alias of `local` that official.reactAliases lists, proved once (R3).
+const provedAliases = new Set();
 async function reactMember(file, local) {
   if (file !== VENDOR_FRAME) return null;
   const src = await readSource(file);
-  const entry = src.top.get(local);
-  if (entry?.kind !== 'var') return null;
-  const object = reactNamespaceObjects[local];
-  if (object) {
-    assertFeatures(`React namespace object ${local}`, await featureText(src, entry), object.features);
-    return { from: object.module, name: '*' };
-  }
-  const init = entry.node.init;
-  if (init?.type !== 'MemberExpression' || init.computed || init.object.type !== 'Identifier' || init.property.type !== 'Identifier') return null;
-  const ns = reactNamespaces[init.object.name];
-  if (!ns) return null;
-  if (!provedNamespaces.has(init.object.name)) {
-    assertFeatures(`React namespace ${init.object.name}`, closureText(src, init.object.name), ns.features);
-    provedNamespaces.add(init.object.name);
-  }
-  const react = await import(ns.module === 'react/jsx-runtime' ? 'react/jsx-runtime' : ns.module);
-  if (!(init.property.name in react)) throw Error(`${ns.module} has no ${init.property.name} (vendor-frame ${local})`);
-  return { from: ns.module, name: init.property.name };
+  const alias = [...src.exported].find(([name, l]) => l === local && Object.hasOwn(official.reactAliases, name))?.[0];
+  if (!alias) return null;
+  if (!provedAliases.has(alias)) { official.assertVendorAlias(src.code, alias); provedAliases.add(alias); }
+  const [module, member] = official.reactAliases[alias];
+  return { from: module, name: member };
 }
 const posix = p => p.split(path.sep).join('/');
 const rel = (fromFile, toFile) => { const r = posix(path.relative(path.dirname(fromFile), toFile)); return r.startsWith('.') ? r : `./${r}`; };
@@ -570,9 +560,13 @@ export async function extractSessionRailChanges({ check = false, explore = null 
       if (!isRoot) {
         const resolved = await resolveBinding(spec, spec.source, name, `${spec.source}:${name}`);
         if (resolved) { imports.set(name, resolved); return; }
-      } else if (adapters[`${spec.source}:${name}`] || publicByLocal.has(`${spec.source}#${name}`) || kitByLocal.has(`${spec.source}#${name}`)) {
+      } else if (adapters[`${spec.source}:${name}`] || kitByLocal.has(`${spec.source}#${name}`)) {
         throw Error(`${spec.target}: root ${name} is provided elsewhere`);
       } else {
+        // R4 (w3-rail-changes): a root that view-tabs publishes, or that a 3.6556.2 sibling area / code-current exports,
+        // keeps its export name here as a re-export of that one copy (D1), never a second slice.
+        const provided = await resolveBinding(spec, spec.source, name, `${spec.source}:${name}`);
+        if (provided) { imports.set(name, provided); return; }
         const elsewhere = [...(codeCurrentByLocal.get(`${spec.source}#${name}`) ?? []).map(t => `code-current/${t}`),
           ...(slicedElsewhere.get(`${spec.source}#${name}`) ?? []).map(e => `${e.area}/${e.target}`)];
         if (elsewhere.length && !duplicates[`${spec.source}:${name}`]) {
@@ -606,6 +600,8 @@ export async function extractSessionRailChanges({ check = false, explore = null 
       if (!entry || entry.kind === 'import') throw Error(`${spec.target}: root ${name} is not a declaration of ${spec.source}`);
       try {
         assertFeatures(`${spec.target}: root ${name}`, await featureText(src, entry), spec.features?.[name]);
+        // `closureFeatures`: strings of the root's same-chunk closure (raw text), for a root whose own body is only calls.
+        assertFeatures(`${spec.target}: root ${name} (closure)`, closureText(src, name), spec.closureFeatures?.[name]);
       } catch (error) {
         if (!explore) throw error;
         explore.push({ target: spec.target, via: 'FEATURE', local: name, size: error.message });
@@ -624,7 +620,16 @@ export async function extractSessionRailChanges({ check = false, explore = null 
       return [...star.map(n => `import ${n} from ${JSON.stringify(from)};`),
         ...(named.length ? [`import { ${named.join(', ')} } from ${JSON.stringify(from)};`] : [])].join('\n');
     }).join('\n');
-    const exportText = `export { ${Object.entries(spec.exports).map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };`;
+    // `reexports` (R4): an export name whose original moved to another chunk in 3.6556.2 is re-exported from the module
+    // that slices it now.
+    const reexportText = Object.entries(spec.reexports ?? {}).map(([target, names]) => {
+      const from = emitted.find(m => m.spec.target === target);
+      if (!from) throw Error(`${spec.target}: re-export from ${target}, which is not an earlier module`);
+      for (const n of names) if (!Object.values(from.spec.exports).includes(n)) throw Error(`${spec.target}: ${target} does not export ${n}`);
+      return `
+export { ${names.join(', ')} } from "./${target}";`;
+    }).join('');
+    const exportText = `export { ${Object.entries(spec.exports).map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };${reexportText}`;
     const header = `// Original Claude Desktop ${referenceVersion} bindings from ${spec.source}; generated by extract-session-rail-changes.mjs.\n// Edit the extractor or src/source-session-rail-changes-adapters.jsx, never this file.\n`;
     const text = await format(`${header}${importText}\n${blocks.join('\n')}\n${exportText}\n`, { parser: 'babel' });
     if (!explore) {
@@ -635,7 +640,8 @@ export async function extractSessionRailChanges({ check = false, explore = null 
       const allowed = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'String', 'Set', 'Map', 'JSON', 'Symbol', 'Promise', 'RegExp',
         'globalThis', 'setTimeout', 'clearTimeout', 'Date', 'Intl', 'undefined', 'Infinity', 'WeakMap', 'Boolean', 'window', 'document',
         'console', 'navigator', 'NaN', 'Element', 'HTMLElement', 'Node', 'parseFloat', 'performance', 'requestAnimationFrame',
-        'cancelAnimationFrame', 'AbortController', 'ResizeObserver', 'TypeError', 'getComputedStyle',
+        'cancelAnimationFrame', 'AbortController', 'ResizeObserver', 'TypeError', 'getComputedStyle', 'WeakSet', 'Reflect', 'isNaN',
+        'MutationObserver', 'queueMicrotask', 'Event',
         // R4i-rail RL2: cfb0234e3 g (the link host for "Open on {host}") parses the URL.
         'URL']);
       const unbound = globals.filter(name => !allowed.has(name));
@@ -647,6 +653,7 @@ export async function extractSessionRailChanges({ check = false, explore = null 
       bindings: order.map(([name, entry]) => ({ name, sha256: sha(declarationText(src, entry)) })),
       imports: [...imports].map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}) })),
       exports: spec.exports,
+      ...(spec.reexports ? { reexports: spec.reexports } : {}),
       ...(contexts.length ? { contexts } : {}),
     });
     emitted.push({ spec });
@@ -667,10 +674,10 @@ export async function extractSessionRailChanges({ check = false, explore = null 
     const bytes = await fs.readFile(path.join(source, site.source));
     const text = bytes.toString();
     for (const feature of site.features) {
-      const count = text.split(feature).length - 1;
+      const count = site.loose ? [...text.matchAll(official.looseFeature(feature, { flags: 'g', keep: site.keep ?? [] }))].length : text.split(feature).length - 1;
       if (count !== (site.count ?? 1)) throw Error(`call site ${site.source} (raw): ${JSON.stringify(feature)} occurs ${count} times, expected ${site.count ?? 1}`);
     }
-    manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, features: site.features });
+    manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, ...(site.loose ? { loose: true } : {}), features: site.features });
   }
   // Every adapter an emitted module imports is exported by the adapter module.
   const adapterText = await fs.readFile(path.join(root, manifest.adapterModule), 'utf8');

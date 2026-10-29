@@ -498,13 +498,13 @@ try {
   // and yk's ep({ allowOnce: K }) (:8011-8023) makes ⌘⏎ advance from the card, not only from the Other input.
   await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("fixture:input card");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
-  const question = page.locator(".sq-card");
+  const question = page.locator(".source-question-card");
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   const questionProbe = () => question.evaluate(element => {
     const shortcuts = [...element.querySelectorAll('[data-cds="Shortcut"]')], shortcut = shortcuts[0];
-    const submit = element.querySelector(".sq-submit"), kbd = shortcut?.querySelector("kbd");
+    const submit = element.querySelector(".justify-end > button:last-child"), kbd = shortcut?.querySelector("kbd");
     return { count: shortcuts.length, inSubmit: !!shortcut && submit.contains(shortcut), ariaHidden: shortcut?.getAttribute("aria-hidden"),
-      label: submit.querySelector(".sq-submit-label").firstChild?.textContent,
+      label: submit.querySelector("span.inline-flex").firstChild?.textContent,
       marginStart: shortcut && getComputedStyle(shortcut).marginInlineStart, disabled: submit.disabled,
       height: kbd?.getBoundingClientRect().height, fontSize: kbd && parseFloat(getComputedStyle(kbd).fontSize),
       radius: kbd && getComputedStyle(kbd).borderRadius, ink: kbd && getComputedStyle(kbd).color, buttonColor: getComputedStyle(submit).color,
@@ -518,15 +518,15 @@ try {
   // Product correction (0.2.115), not a loosening: _se (approval-current.js:7790-7800) preselects options[0],
   // so the single-page Submit starts enabled (was asserted disabled before preselection existed).
   assert.equal(metrics.questionKeycap.ink, metrics.questionKeycap.buttonColor); assert.equal(metrics.questionKeycap.disabled, false);
-  assert.equal(await question.locator(".sq-option").filter({ hasText: "First test choice" }).getAttribute("aria-pressed"), "true");
-  assert.equal(await question.locator('.sq-option[aria-pressed="true"]').count(), 1);
+  assert.equal(await question.locator(".gap-0\\.75 > button").filter({ hasText: "First test choice" }).getAttribute("aria-pressed"), "true");
+  assert.equal(await question.locator('.gap-0\\.75 > button[aria-pressed="true"]').count(), 1);
   // Footer :8232-8258: `flex items-center justify-end gap-sm` = br{secondary 'Skip'} then the primary.
   const skipProbe = () => question.evaluate(element => {
-    const footer = element.querySelector(".sq-actions"), skip = footer.querySelector(".sq-skip"), submit = footer.querySelector(".sq-submit");
+    const footer = element.querySelector(".justify-end"), skip = footer.querySelector(".justify-end > button:nth-last-child(2)"), submit = footer.querySelector(".justify-end > button:last-child");
     const probe = footer.ownerDocument.createElement("div"); probe.style.columnGap = "var(--cds-gap-sm)"; footer.append(probe);
     const gapSm = parseFloat(getComputedStyle(probe).columnGap); probe.remove();
     const a = skip.getBoundingClientRect(), b = submit.getBoundingClientRect(), css = getComputedStyle(skip), paint = getComputedStyle(skip, "::before");
-    return { order: [...footer.children].map(child => child.matches(".sq-submit") || child.querySelector(".sq-submit") ? "submit" : child.className),
+    return { order: [...footer.children].map(child => child === submit ? "submit" : child === skip ? "skip" : child.textContent),
       text: skip.textContent, variant: skip.dataset.variant, disabled: skip.disabled, keycaps: skip.querySelectorAll('[data-cds="Shortcut"]').length,
       justify: getComputedStyle(footer).justifyContent, footerGap: parseFloat(getComputedStyle(footer).columnGap), gapSm,
       spacing: b.left - a.right, skipHeight: a.height, submitHeight: b.height, sameRow: Math.abs(a.top - b.top),
@@ -534,8 +534,9 @@ try {
       skipColor: css.color, paint: paint.backgroundColor, ring: paint.boxShadow, submitPaint: getComputedStyle(submit, "::before").backgroundColor };
   });
   metrics.questionSkip = await skipProbe();
-  assert.deepEqual(metrics.questionSkip.order, ["sq-skip", "submit"]);
-  assert.equal(metrics.questionSkip.text, "Skip"); assert.equal(metrics.questionSkip.variant, "secondary");
+  // W12 (c9ed5627b dt vr): Skip then je's primary in `flex items-center justify-end gap-[8px]`; no Back on page 1.
+  assert.deepEqual(metrics.questionSkip.order, ["skip", "submit"]);
+  assert.equal(metrics.questionSkip.text, "Skip");
   assert.equal(metrics.questionSkip.disabled, false); assert.equal(metrics.questionSkip.keycaps, 0);
   assert.equal(metrics.questionSkip.justify, "flex-end"); assert.ok(metrics.questionSkip.gapSm > 0);
   assert.equal(metrics.questionSkip.footerGap, metrics.questionSkip.gapSm);
@@ -545,8 +546,8 @@ try {
   assert.notEqual(metrics.questionSkip.paint, metrics.questionSkip.submitPaint); assert.match(metrics.questionSkip.ring, /inset/);
   await screenshot("approval-card-question-keycap.png");
   const beforeQuestion = (await records()).length;
-  await question.locator(".sq-option").filter({ hasText: "First test choice" }).click();
-  await question.locator(".sq-option").filter({ hasText: "First test choice" }).focus();
+  await question.locator(".gap-0\\.75 > button").filter({ hasText: "First test choice" }).click();
+  await question.locator(".gap-0\\.75 > button").filter({ hasText: "First test choice" }).focus();
   await page.keyboard.press("Meta+Enter");
   await question.waitFor({ state: "detached" });
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
@@ -561,10 +562,10 @@ try {
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   const beforeSkip = (await records()).length;
   await app.evaluate(() => { globalThis.approvalCardUiGate.holdNext = true; });
-  await question.locator(".sq-skip").click();
-  await page.waitForFunction(() => document.querySelector(".sq-card")?.getAttribute("aria-busy") === "true");
-  metrics.questionSkipBusy = await question.evaluate(element => ({ skipDisabled: element.querySelector(".sq-skip").disabled,
-    submitBusy: element.querySelector(".sq-submit").getAttribute("aria-busy"), spinner: element.querySelectorAll(".sq-spinner").length }));
+  await question.locator(".justify-end > button:nth-last-child(2)").click();
+  await page.waitForFunction(() => document.querySelector(".source-question-card")?.getAttribute("aria-busy") === "true");
+  metrics.questionSkipBusy = await question.evaluate(element => ({ skipDisabled: element.querySelector(".justify-end > button:nth-last-child(2)").disabled,
+    submitBusy: element.querySelector(".justify-end > button:last-child").getAttribute("aria-busy"), spinner: element.querySelectorAll("[data-cds=Spinner]").length }));
   assert.deepEqual(metrics.questionSkipBusy, { skipDisabled: true, submitBusy: "true", spinner: 1 });
   assert.equal((await records()).length, beforeSkip, "Skip's response is still gated before dispatch");
   await screenshot("approval-card-question-skip-busy.png");
@@ -581,14 +582,14 @@ try {
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   const multiProbe = () => question.evaluate(element => ({
-    marks: [...element.querySelectorAll(".sq-option .sq-checkbox-mark, .sq-custom-label .sq-checkbox-mark")].length,
-    radios: element.querySelectorAll(".sq-radio-mark").length,
-    pressed: [...element.querySelectorAll(".sq-option[aria-pressed]")].map(node => node.getAttribute("aria-pressed")),
-    checked: [...element.querySelectorAll(".sq-checkbox-mark[data-checked]")].length,
-    submitDisabled: element.querySelector(".sq-submit").disabled,
-    box: (() => { const mark = element.querySelector(".sq-checkbox-mark"), css = getComputedStyle(mark), rect = mark.getBoundingClientRect();
+    marks: [...element.querySelectorAll(".gap-0\\.75 > button > [data-size=sm], .gap-0\\.75 > div > button > [data-size=sm]")].length,
+    radios: element.querySelectorAll(".gap-0\\.75 > button > .pointer-events-none").length,
+    pressed: [...element.querySelectorAll(".gap-0\\.75 > button[aria-pressed]")].map(node => node.getAttribute("aria-pressed")),
+    checked: [...element.querySelectorAll("[aria-pressed=\"true\"] > [data-size=sm]")].length,
+    submitDisabled: element.querySelector(".justify-end > button:last-child").disabled,
+    box: (() => { const mark = element.querySelector("[data-size=sm] > *"), css = getComputedStyle(mark), rect = mark.getBoundingClientRect();
       return { width: rect.width, height: rect.height, radius: css.borderTopLeftRadius }; })(),
-    filled: (() => { const mark = element.querySelector(".sq-checkbox-mark[data-checked]"); if (!mark) return null;
+    filled: (() => { const mark = element.querySelector("[aria-pressed=\"true\"] > [data-size=sm]"); if (!mark) return null;
       const probe = document.createElement("span"); probe.style.color = "var(--cds-fill-accent)"; element.append(probe);
       const accent = getComputedStyle(probe).color; probe.remove();
       return { background: getComputedStyle(mark).backgroundColor, accent, glyph: mark.querySelector("[data-cds=Icon]") !== null }; })(),
@@ -601,7 +602,7 @@ try {
   near(metrics.multiSelect.initial.box.width, metrics.multiSelect.initial.box.height, .1);
   assert.notEqual(metrics.multiSelect.initial.box.radius, "9999px");
   const beforeMulti = (await records()).length;
-  for (const label of ["Live", "Unit", "UI", "UI"]) await question.locator(".sq-option").filter({ hasText: `${label === "UI" ? "UI suites" : label === "Unit" ? "Unit tests" : "Live smoke"}` }).click();
+  for (const label of ["Live", "Unit", "UI", "UI"]) await question.locator(".gap-0\\.75 > button").filter({ hasText: `${label === "UI" ? "UI suites" : label === "Unit" ? "Unit tests" : "Live smoke"}` }).click();
   metrics.multiSelect.toggled = await multiProbe();
   assert.deepEqual(metrics.multiSelect.toggled.pressed, ["true", "false", "true"], "two aria-pressed options after toggling UI back off");
   assert.equal(metrics.multiSelect.toggled.checked, 2);
@@ -609,7 +610,7 @@ try {
   assert.equal(metrics.multiSelect.toggled.filled.glyph, true);
   assert.equal(metrics.multiSelect.toggled.submitDisabled, false);
   await screenshot("approval-card-question-multiselect.png");
-  await question.locator(".sq-submit").click();
+  await question.locator(".justify-end > button:last-child").click();
   await question.waitFor({ state: "detached" });
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
   assert.equal((await records()).length, beforeMulti + 1);
@@ -657,7 +658,7 @@ try {
   await send("fixture:plan-review", "plan");
   metrics.planCard = await planCard().evaluate(element => {
     const buttons = [...element.querySelectorAll(".sac-button:not(.spc-more)")], more = element.querySelector(".spc-split .spc-more"), link = element.querySelector(".spc-open-plan"), title = element.querySelector(".spc-title");
-    return { heading: title?.textContent, labelledBy: element.getAttribute("aria-labelledby") === title?.id, questionCard: element.querySelectorAll(".sq-option").length,
+    return { heading: title?.textContent, labelledBy: element.getAttribute("aria-labelledby") === title?.id, questionCard: element.querySelectorAll(".gap-0\\.75 > button").length,
       link: link?.textContent, linkInTrailing: !!link?.closest(".spc-trailing"), linkSize: link && getComputedStyle(link).fontSize, linkDecoration: link && getComputedStyle(link).textDecorationLine,
       titleWeight: getComputedStyle(title).fontWeight, titleSize: getComputedStyle(title).fontSize,
       groups: [...element.querySelectorAll(".spc-actions > div")].map(group => [...group.querySelectorAll(".sac-button:not(.spc-more)")].map(button => button.dataset.approvalAction)),
@@ -767,7 +768,7 @@ try {
   assert.equal(dismissLog[1].params.input[0].text, "free reply");
   assert.equal((await records()).length, beforeDismiss.responses + 1);
   await page.getByText("DISMISSED_QUESTION_STEER_REPLY", { exact: false }).waitFor();
-  checks.push("R07 dismiss-on-send: Enter in the composer while fixture:input waits answers every question with the lO marker (logged before the turn/steer carrying 'free reply'); the .sq-card detaches");
+  checks.push("R07 dismiss-on-send: Enter in the composer while fixture:input waits answers every question with the lO marker (logged before the turn/steer carrying 'free reply'); the .source-question-card detaches");
 
   // uk: Other with an empty field answers and enables Submit; R sends 'Something else'.
   await composer().fill("fixture:input other");
@@ -775,11 +776,12 @@ try {
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   // The source's transparent Other button lies behind the textarea, so its center is no pointer target; activate it
   // from the keyboard as approval-transport's chooseOther does.
-  await question.getByRole("button", { name: "Other", exact: true }).focus();
-  await question.getByRole("button", { name: "Other", exact: true }).press("Space");
-  assert.equal(await question.getByRole("button", { name: "Other", exact: true }).getAttribute("aria-pressed"), "true");
-  assert.equal(await question.locator(".sq-submit").isDisabled(), false);
-  await question.locator(".sq-submit").click();
+  await question.getByRole("button", { name: /^Other\b/ }).focus();
+  await question.getByRole("button", { name: /^Other\b/ }).press("Space");
+  // W12: a single-select Other button has no aria-pressed (dt `J ? Y : void 0`); choosing it opens its field (tabIndex 0).
+  assert.equal(await question.locator('[data-cds="TextArea"][aria-label="Other option"]').getAttribute("tabindex"), "0");
+  assert.equal(await question.locator(".justify-end > button:last-child").isDisabled(), false);
+  await question.locator(".justify-end > button:last-child").click();
   await question.waitFor({ state: "detached" }); await settled();
   assert.deepEqual((await records()).at(-1).result, { answers: { approach: { answers: ["Something else"] } } });
   checks.push("R07 empty Other: selecting Other without text enables Submit and sends ['Something else']");
@@ -790,14 +792,14 @@ try {
   await card().waitFor();
   await page.waitForTimeout(250); // the fixture sends B 30 ms after A
   await frames();
-  assert.equal(await page.locator(".sac-card, .sq-card").count(), 1, "only the head request renders");
+  assert.equal(await page.locator(".sac-card, .source-question-card").count(), 1, "only the head request renders");
   const headInstance = await card().getAttribute("data-approval-instance");
   await page.evaluate(first => {
     const observer = new MutationObserver(() => {
       const button = [...document.querySelectorAll(".sac-card")].find(node => node.dataset.approvalInstance !== first)?.querySelector('[data-approval-action="accept"]');
       if (!button) return;
       observer.disconnect();
-      window.pairEarlyClick = { at: performance.now(), cards: document.querySelectorAll(".sac-card, .sq-card").length };
+      window.pairEarlyClick = { at: performance.now(), cards: document.querySelectorAll(".sac-card, .source-question-card").length };
       button.click();
     });
     observer.observe(document.body, { childList: true, subtree: true });

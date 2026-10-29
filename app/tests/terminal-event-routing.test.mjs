@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {terminalOwnsContextMenu as owns} from '../src/generated/code-current/terminal-mouse.mjs';
 import {routeTerminalKey,installTerminalCopyEvent} from '../src/terminal-event-routing.mjs';
-// 2.42304.0 c6bf19e8f Ur (R3-terminal FT-03) reads the platform itself: ae = shared-78 kw (Wa, the macOS user-agent
-// test, generated as surface-chord-platform.mjs). The cases below pin the platform through window.navigator.userAgent.
+// 3.6556.2 c6bf19e8f ti (2.42304.0 Ur; R3-terminal FT-03, cc-rest-terminal-a) reads the platform itself: ce = shared-78 mE
+// (Eo, the macOS user-agent test, generated as surface-chord-platform.mjs). The cases below pin the platform through window.navigator.userAgent.
 const terminalOwnsContextMenu=(term,event,mac)=>{
  const previous=Object.getOwnPropertyDescriptor(globalThis,'window');
  Object.defineProperty(globalThis,'window',{value:{navigator:{userAgent:mac?'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Claude':'Mozilla/5.0 (X11; Linux x86_64) Claude'}},configurable:true,writable:true});

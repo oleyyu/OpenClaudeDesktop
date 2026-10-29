@@ -34,12 +34,23 @@ test('a short name is one clamped <bdi> at 4 lines, after the sr-only name, with
   assert.equal(C.USER_FILE_NAME_LINES, 4);
 });
 
+// W9 gate: the name is code-current attachment-file-name.mjs, 3.6556.2 shared-2-TF8v67kg.js Km (cc-rest-transcript): the
+// two-row column right-aligns under RTL, the head is <span class=bm[lines]><bdi>, and an LTR tail stem (vm) keeps LTR order
+// at the end of an RTL row; under OpenClaude's LTR locales these classes are inert.
+const official3 = (name) => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
 test('an 80-character .tsx name renders the head (max-h-[3lh]), "…", the 12-grapheme tail stem and .tsx', () => {
   const name = `${'a'.repeat(72)}Card.tsx`;
   const html = card(name);
-  assert.ok(html.includes(`<span aria-hidden="true" title="${name}" class="text-footnote font-normal text-primary flex min-w-0 flex-col">`), html);
-  assert.ok(html.includes(`<bdi class="max-h-[3lh] overflow-hidden break-words [overflow-wrap:anywhere]">${'a'.repeat(68)}</bdi>`), html);
-  assert.ok(html.includes(`<span class="flex min-w-0 before:shrink-0 before:content-[&#x27;…&#x27;]"><bdi class="truncate py-[0.125em] -my-[0.125em]">aaaaCard</bdi><span class="shrink-0">.tsx</span></span>`), html);
+  const rtl = '[&amp;:where(:root[dir=rtl]_:dir(rtl))]';
+  assert.ok(html.includes(`<span aria-hidden="true" title="${name}" class="text-footnote font-normal text-primary flex min-w-0 flex-col ${rtl}:text-right">`), html);
+  assert.ok(html.includes(`<span class="max-h-[3lh] overflow-hidden break-words [overflow-wrap:anywhere]"><bdi>${'a'.repeat(68)}</bdi></span>`), html);
+  assert.ok(html.includes(`<span class="flex min-w-0 before:shrink-0 before:content-[&#x27;…&#x27;] ${rtl}:[direction:ltr] ${rtl}:justify-end"><bdi class="truncate py-[0.125em] -my-[0.125em]">aaaaCard</bdi><span class="shrink-0">.tsx</span></span>`), html);
+  const shared2 = official3('shared-2-TF8v67kg.js');
+  for (const signature of ['"flex min-w-0 flex-col [&:where(:root[dir=rtl]_:dir(rtl))]:text-right"', 'bm={2:"max-h-[1lh]",3:"max-h-[2lh]",4:"max-h-[3lh]"}',
+    'B(t,"overflow-hidden break-words [overflow-wrap:anywhere]")', 'h=u("span",{className:l,children:u("bdi",{children:o.head})})',
+    String.raw`c("flex min-w-0 before:shrink-0 before:content-['\u2026']",vm(o.tailStem,r))`,
+    '!=="rtl"&&"[&:where(:root[dir=rtl]_:dir(rtl))]:[direction:ltr] [&:where(:root[dir=rtl]_:dir(rtl))]:justify-end"'])
+    assert.ok(shared2.includes(signature) || shared2.includes(signature.replace('\\u2026', '…')), signature);
   // The sr-only name stays whole, and the badge is TSX.
   assert.ok(html.includes(`<span class="sr-only">${name}</span>`));
   assert.match(html, /<bdi>TSX<\/bdi>/);

@@ -1,5 +1,5 @@
-// R4f-rail SR-4: the session rail's Changes row (c96d752d0 OLe's `data-rail-changes-row` branch with its menu, counts and
-// verb), generated from the installed 2.42304.0 originals into src/generated/session-rail-changes
+// R4f-rail SR-4: the session rail's Changes row (c96d752d0 Ike's `data-rail-changes-row` branch with its menu, counts and
+// verb), generated from the Claude Desktop 3.6556.2 originals (w3-rail-changes) into src/generated/session-rail-changes
 // (scripts/extract-session-rail-changes.mjs), and the host stand-in for the PR bar that feeds it from the local git
 // status (src/source-session-rail-changes-adapters.jsx). Source/AST pins, Vite SSR renders and handlers reached through
 // a test hook dispatcher (no browser, no Electron, no network, no external process, no real storage).
@@ -12,6 +12,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractSessionRailChanges } from '../scripts/extract-session-rail-changes.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const directory = path.join(app, 'src/generated/session-rail-changes');
@@ -21,7 +22,7 @@ const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
 const generated = file => fs.readFileSync(path.join(directory, file), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
-const TRANSCRIPT = 'c96d752d0-BOCqU7c2.js';
+const TRANSCRIPT = 'c96d752d0-CWv_7-n9.js';
 // A class string as React writes it into an attribute, as a RegExp source.
 const attr = text => text.replace(/&/g, '&amp;').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -31,7 +32,7 @@ before(async () => {
   previousWindow = globalThis.window; previousDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21); nothing else reads the document in SSR.
   globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  // A Linux user agent: the keybinding table (shared-19 e9) and the Mac test (code-current isMacUserAgent) read it.
+  // A Linux user agent: the keybinding table (shared-46 aR) and the Mac test (view-tabs isMacUserAgent) read it.
   globalThis.window = { localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } };
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   const load = name => server.ssrLoadModule(`/src/generated/session-rail-changes/${name}`);
@@ -47,41 +48,51 @@ after(async () => {
 });
 
 const render = node => renderToStaticMarkup(node);
-// The flat rail (D10): rD hands the Changes card the "row" layout (c0a531389 O = kit ChangesRowLayoutContext).
+// The flat rail (D10): the rail hands the Changes card the "row" layout (c96d752d0 hL = kit ChangesRowLayoutContext).
 const inRow = node => h(KitChip.ChangesRowLayoutContext.Provider, { value: 'row' }, node);
 const status = (patch = {}) => ({ isRepo: true, cwd: '/work/claude-ui-lab', repoName: 'claude-ui-lab', branch: 'feature/rail', hasChanges: true,
   workingTreeDirty: true, added: 12, removed: 3, comparison: { base: 'main', behind: 0 }, ...patch });
 
-test('generator: the originals still match 2.42304.0 and src/generated/session-rail-changes is current', async () => {
+test('generator: the originals still match 3.6556.2 and src/generated/session-rail-changes is current', async () => {
   const checked = await extractSessionRailChanges({ check: true });
-  assert.equal(checked.referenceVersion, '2.42304.0');
+  assert.equal(checked.referenceVersion, '3.6556.2');
+  assert.equal(checked.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807', 'E6');
   assert.deepEqual(checked.modules.map(m => m.target), manifest.modules.map(m => m.target));
   assert.equal(fs.existsSync(path.join(app, 'scripts/verify-gen-session-rail-changes.mjs')), true, 'prepare-ui verifies it (D0)');
 });
 
-test('feature strings: research §1.5 counts in c96d752d0 and the strings in the generated row', () => {
+test('feature strings: research §1.2 counts in c96d752d0 and the strings in the generated row', () => {
   const transcript = raw(TRANSCRIPT);
   assert.equal(occurrences(transcript, 'data-rail-changes-row'), 1);
-  assert.equal(occurrences(transcript, '"Open changes, {added, number} added'), 2, 'row and stacked branches of OLe');
+  assert.equal(occurrences(transcript, '"Open changes, {added, number} added'), 2, 'row and stacked branches of Ike');
   assert.equal(occurrences(transcript, 'data-session-rail-flat'), 2);
+  // C2-2: the ⋮ label names the repo and branch when the row shows a repo name (8RgmijlEMA), else the title.
+  assert.equal(occurrences(transcript, 'defaultMessage:"More options for {repo} on {branch}",id:"8RgmijlEMA"'), 1);
   const row = generated('changes-row.mjs');
   for (const needle of ['"data-rail-changes-row": ""', '"Open changes, {added, number} added, {removed, number} removed"', 'name: "ChangesPlusMinus"',
-    '"More options for {title}"', 'if (n === null && j === "row") {', 'Nr("toggleDiff", O)', 'defaultMessage: "View changes"', '"Open review comments"'])
+    '"More options for {title}"', '"More options for {repo} on {branch}"', 'if (r === null && N === "row") {', 'wi("toggleDiff", A)',
+    'defaultMessage: "View changes"', '"Open review comments"', '"min-w-0 text-muted-as-secondary"'])
     assert.ok(row.includes(needle), needle);
   assert.equal(occurrences(row, '"Open changes, {added, number} added, {removed, number} removed"'), 2);
+  assert.equal(occurrences(row, '"min-w-0 truncate text-muted-as-secondary"'), 0, 'C2-2: the repo name no longer truncates');
   assert.ok(generated('changes-verb.mjs').includes('wrapperClassName: "min-w-0 shrink-0",'));
-  assert.ok(generated('pr-bar-labels.mjs').includes('commit: { defaultMessage: "Commit changes", id: "PQy14pRnLi" },'));
-  assert.ok(generated('diff-counts.mjs').includes('addedClassName: a = "text-git-added",'));
+  assert.ok(generated('pr-mode-messages.mjs').includes('commit: { defaultMessage: "Commit changes", id: "PQy14pRnLi" },'));
+  assert.match(generated('pr-bar-labels.mjs'), /export \{\s*PR_MODE_MESSAGES,\s*PR_MODE_BUSY_MESSAGES,?\s*\} from "\.\/pr-mode-messages\.mjs";/, 'R4');
+  assert.ok(generated('diff-counts.mjs').includes('d = l === void 0 ? "text-git-added" : l,'));
+  // C2-6: the band's Dismiss ink.
+  assert.ok(generated('dismiss-button.mjs').includes('s = o === void 0 ? "text-muted-as-secondary hover:text-primary" : o,'));
+  // panes:C3-8: the keybinding table the toggleDiff chord is read from carries the PR comment keys.
+  assert.ok(generated('command-shortcut.mjs').includes('command: "nextPrComment", key: "alt+f9", code: "F9", when: "!isLinux"'));
 });
 
-test('one copy: kit contexts and row parts, view-tabs public names (D1), files-changes openAfterCheck, no context sliced', () => {
+test('one copy: kit contexts and row parts, view-tabs public names (D1, E3), files-changes slices, no context sliced', () => {
   const viewTabs = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
   const kit = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/session-rail-kit/manifest.json'), 'utf8'));
   const published = new Set(Object.keys(viewTabs.publicNames));
   for (const m of manifest.modules) {
-    // R4i-rail RL2: c96d752d0 Jz (the PR bar layout, "band" by default) lives only in pr-rows.mjs; eze's rail stand-in
-    // provides "rail".
-    assert.deepEqual(m.contexts, m.target === 'pr-rows.mjs' ? ['Jz'] : undefined, `${m.target} instantiates no other context`);
+    // R4i-rail RL2: c96d752d0 lL (the PR bar layout, "band" by default) lives only in pr-rows.mjs; Sje's rail stand-in
+    // provides "rail". uL is the repo chip's own context (vke provides it; no host reader).
+    assert.deepEqual(m.contexts, m.target === 'pr-rows.mjs' ? ['lL', 'uL'] : undefined, `${m.target} instantiates no other context`);
     for (const i of m.imports) {
       assert.notEqual(i.kind, 'unresolved', `${m.target}: ${i.local}`);
       if (i.kind === 'view-tabs') assert.ok(published.has(i.name), `${m.target} imports view-tabs ${i.name}`);
@@ -89,32 +100,67 @@ test('one copy: kit contexts and row parts, view-tabs public names (D1), files-c
     }
   }
   const row = manifest.modules.find(m => m.target === 'changes-row.mjs');
-  assert.deepEqual(row.bindings.map(b => b.name).sort(), ['OLe', 'aB', 'kLe'].sort());
+  assert.deepEqual(row.bindings.map(b => b.name).sort(), ['Bke', 'DL', 'Ike', 'Lke', 'OL', 'Rke', 'zke'].sort());
   const imported = local => row.imports.find(i => i.local === local);
-  // c0a531389 t / r (cf74bc599 i_ / r_): the face and row layout contexts rD provides, one instance (the kit's).
-  assert.deepEqual([imported('ZCe').kind, imported('ZCe').name], ['session-rail-kit', 'BranchChipFaceContext']);
-  assert.deepEqual([imported('XCe').kind, imported('XCe').name], ['session-rail-kit', 'ChangesRowLayoutContext']);
-  assert.deepEqual([imported('aue').name, imported('vf').name, imported('Kc').name], ['RAIL_ROW_CLASS', 'RailRowIcon', 'RAIL_POPUP_COLLISION_PADDING']);
-  assert.deepEqual([imported('Ps').name, imported('os').name, imported('Ss').name, imported('Ts').name], ['CdsDropdown', 'CdsTooltip', 'CdsButton', 'CdsTooltipProvider']);
-  // c0cdf4a08 h holds the pending menu check (module state): files-changes' copy, imported.
+  // c96d752d0 mL / hL: the face and row layout contexts the rail's Changes card provides, one instance (the kit's).
+  assert.deepEqual([imported('mL').kind, imported('mL').name], ['session-rail-kit', 'BranchChipFaceContext']);
+  assert.deepEqual([imported('hL').kind, imported('hL').name], ['session-rail-kit', 'ChangesRowLayoutContext']);
+  assert.deepEqual([imported('nv').name, imported('hg').name, imported('Lc').name], ['RAIL_ROW_CLASS', 'RailRowIcon', 'RAIL_POPUP_COLLISION_PADDING']);
+  assert.deepEqual([imported('oe').name, imported('se').name, imported('J').name, imported('qe').name], ['CdsDropdown', 'CdsTooltip', 'CdsButton', 'CdsTooltipProvider']);
+  // E3: the compiler cache helpers come from view-tabs by their semantic names; React Compiler's c from vendor-frame Oo.
+  assert.deepEqual([imported('J9').kind, imported('J9').name], ['view-tabs', 'reactMemoCache']);
+  for (const m of manifest.modules) for (const i of m.imports) if (/^[JKIZ][0-9]$/.test(i.local)) assert.equal(i.kind, 'view-tabs', `${m.target} ${i.local}`);
+  // shared-18 ok / sk (the ContextMenu key and the Enter-repeat guard) and c0cdf4a08 m (the pending menu check, module
+  // state): files-changes' 3.6556.2 copies, imported.
   const menu = manifest.modules.find(m => m.target === 'row-context-menu.mjs');
-  assert.deepEqual(menu.imports.find(i => i.local === 'h'), { local: 'h', from: '../files-changes/menu-open-gate.mjs', name: 'openAfterCheck',
-    via: 'c0cdf4a08-h228IL-P.js:h', kind: 'files-changes', original: 'c0cdf4a08-h228IL-P.js:h' });
-  // Adapters: the kit's intl / layer / toasts, the desktop-app test and the menu items renderer (view-tabs has no name);
-  // R4i-rail RL2: the PR rows' wB (tile store), the one copies of Yz / qz / pE in the sibling rail areas, and the
-  // PR panel / in-app link / hover card sources the host does not have.
+  assert.deepEqual(menu.imports.find(i => i.local === 'm'), { local: 'm', from: '../files-changes/menu-open-gate.mjs', name: 'openAfterCheck',
+    via: 'c0cdf4a08-C69Ng1c8.js:m', kind: 'files-changes', original: 'c0cdf4a08-C69Ng1c8.js:m' });
+  assert.equal(imported('Nc').name, 'preventMenuItemEnterRepeat');
+  const key = manifest.modules.find(m => m.target === 'context-menu-key.mjs');
+  assert.deepEqual([key.bindings.length, key.imports[0].from, key.imports[0].name], [0, '../files-changes/tree-context-menu-keys.mjs', 'openContextMenuFromKey']);
+  // view-tabs publishes the Mac test and the aria-keyshortcuts form in 3.6556.2: re-exported (R4), not sliced again.
+  const aria = manifest.modules.find(m => m.target === 'aria-shortcut.mjs');
+  assert.deepEqual([aria.bindings.length, aria.imports.map(i => i.name).sort()], [0, ['ariaKeyShortcuts', 'useIsMacPlatform']]);
+  // Adapters: the kit's intl / toasts, the desktop-app test and the menu items renderer (view-tabs has no name for them;
+  // the tooltip fu is view-tabs' CdsDeferredTooltip since w10-trans-rail-deferred-tooltip); the PR rows' YL (tile store), the one copies of cL / bE in the sibling rail areas, and the PR panel /
+  // in-app link / link policy / hover card sources the host does not have.
   const adapters = manifest.modules.flatMap(m => m.imports.filter(i => i.kind === 'adapter').map(i => i.original));
-  assert.deepEqual([...new Set(adapters)].sort(), ['shared-25-DP8p7i1Z.js:ml', 'shared-52-DGviI8xb.js:Sj', 'shared-frame-BfjMqbuN.js:Ya', 'shared-frame-BfjMqbuN.js:iC',
-    'shared-frame-BfjMqbuN.js:qa', 'vendor-intl-Db7hDWRO.js:Gt', 'vendor-intl-Db7hDWRO.js:q',
-    'c96d752d0-BOCqU7c2.js:wB', 'c96d752d0-BOCqU7c2.js:Yz', 'c96d752d0-BOCqU7c2.js:qz', 'shared-20-B7UqYfsi.js:pE', 'c227f4d5e-Ba-r--Rl.js:Nw',
-    'cc6e65d4b-CKlso-Pn.js:f', 'c60636ac6-DF2ym4tP.js:ct', 'c60636ac6-DF2ym4tP.js:lt'].sort());
+  assert.deepEqual([...new Set(adapters)].sort(), ['shared-25-DOWZRSlq.js:cc', 'shared-52-uHFNjl7C.js:cB', 'shared-frame-6jtSkIit.js:yT',
+    'vendor-intl-DYfox5Co.js:Gt', 'vendor-intl-DYfox5Co.js:q', 'c96d752d0-CWv_7-n9.js:YL', 'c96d752d0-CWv_7-n9.js:cL', 'shared-20-mUr7IqZY.js:bE',
+    'c227f4d5e-B-FYKrwT.js:UT', 'cc6e65d4b-D0J5j7gV.js:f', 'c2fd10b8d-DB1Sgoyz.js:Al', 'c2fd10b8d-DB1Sgoyz.js:Ml', 'c60636ac6-xYOM0GQX.js:mt',
+    'c60636ac6-xYOM0GQX.js:ht'].sort());
   // The callers are pinned, not sliced.
-  for (const binding of ['iB', 'ELe', 'wB', 'oRe', 'eze', 'nze', '$Re', 'fC', 'pC', 'O_'])
+  for (const binding of ['EL', 'Pke', 'YL', 'Sje', 'Hje', 'Zje', 'xje', 'TMe', 'Py'])
     assert.ok(manifest.callSites.some(site => site.binding === binding), binding);
-  assert.ok(manifest.callSites.some(site => site.raw && site.features.some(f => f.includes('u(r_.Provider,{value:R?"row":"stacked",children:t})'))));
+  assert.ok(manifest.callSites.some(site => site.raw && site.loose && site.features.some(f => f.includes('s(Ds.Provider,{value:V?"row":"stacked",children:n})'))));
 });
 
-test('OLe (ChangesRow): no PR link and the "row" layout render the flat rail row; the default layout is stacked', () => {
+test('L64: Ike / EL wrap their controls in view-tabs CdsDeferredTooltip (shared-frame fu), not an eager CdsTooltip', () => {
+  // The original: fu reads su(!0) (impl / wasCold / interceptors / trackTrigger) and, until an implementation is adopted,
+  // returns the bare trigger cloned with the interceptors and Xl = {"data-cds-tooltip-pending": ""}.
+  const frame = fs.readFileSync(path.join(reference, 'shared-frame-6jtSkIit.js'), 'utf8');
+  assert.equal(occurrences(frame, 'function fu(e){let $=J9(11),{impl:t,wasCold:n,interceptors:r,trackTrigger:i}=su(!0),a=e.autoFocus===!1;'), 1);
+  assert.equal(occurrences(frame, 'var Xl={"data-cds-tooltip-pending":""}'), 1);
+  assert.equal(occurrences(frame, 'Me(s,{...r(s.props),...Xl})'), 1);
+  const viewTabs = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+  assert.deepEqual(viewTabs.publicNames.CdsDeferredTooltip, { file: 'shared-frame-6jtSkIit.js', local: 'fu', export: 'Au' });
+  for (const target of ['changes-row.mjs', 'pr-rows.mjs']) {
+    const m = manifest.modules.find(x => x.target === target);
+    const tip = m.imports.find(i => i.original === 'shared-frame-6jtSkIit.js:fu');
+    assert.deepEqual([tip.kind, tip.from, tip.name], ['view-tabs', '../view-tabs/shared-frame-6jtSkIit.js', 'CdsDeferredTooltip'], target);
+    assert.match(generated(target), new RegExp(`CdsDeferredTooltip as ${tip.local.replace(/\$/g, '\\$')},`));
+    assert.doesNotMatch(generated(target), /RailTooltip/);
+  }
+  const adapterText = fs.readFileSync(path.join(app, 'src/source-session-rail-changes-adapters.jsx'), 'utf8');
+  assert.doesNotMatch(adapterText, /export function RailTooltip/);
+  // SSR: no tooltip code has loaded and no deferral scope or ambient implementation is provided, so the counts button is
+  // the bare trigger marked pending (the lazy layer), not a tooltip root.
+  const intl = { formatMessage: (message, values) => message.defaultMessage.replace(/\{(\w+)(?:, number)?\}/g, (_, name) => String(values?.[name] ?? '')) };
+  const flat = render(inRow(h(Row.ChangesRow, { intl, link: null, branchTitle: 'feature/rail', diff: { added: 12, removed: 3 }, onDiffOpen() {}, onDiffClick() {} })));
+  assert.match(flat, /<button[^>]*data-cds-tooltip-pending=""[^>]*aria-label="Open changes, 12 added, 3 removed"|<button[^>]*aria-label="Open changes, 12 added, 3 removed"[^>]*data-cds-tooltip-pending=""/);
+});
+
+test('Ike (ChangesRow): no PR link and the "row" layout render the flat rail row; the default layout is stacked', () => {
   const intl = { formatMessage: (message, values) => message.defaultMessage.replace(/\{(\w+)(?:, number)?\}/g, (_, name) => String(values?.[name] ?? '')) };
   const props = { intl, link: null, branchTitle: 'feature/rail', diff: { added: 12, removed: 3 }, onDiffOpen() {}, onDiffClick() {} };
   const flat = render(inRow(h(Row.ChangesRow, props)));
@@ -129,7 +175,7 @@ test('OLe (ChangesRow): no PR link and the "row" layout render the flat rail row
   const stacked = render(h(Row.ChangesRow, props));
   assert.doesNotMatch(stacked, /data-rail-changes-row/);
   assert.match(stacked, /^<div class="flex min-w-0 gap-sm px-xs py-1">/);
-  // The branch face (c0a531389 t = kit BranchChipFaceContext; rD gives "sans" in the flat rail) only reaches the
+  // The branch face (c96d752d0 mL = kit BranchChipFaceContext; "sans" in the flat rail) only reaches the
   // stacked layout's branch title: mono by default, sans from the context.
   assert.match(stacked, /<span class="min-w-0 truncate font-mono-ui text-code text-primary">feature\/rail<\/span>/);
   const sans = render(h(KitChip.BranchChipFaceContext.Provider, { value: 'sans' }, h(Row.ChangesRow, props)));
@@ -142,13 +188,13 @@ test('OLe (ChangesRow): no PR link and the "row" layout render the flat rail row
   assert.match(quiet, /data-rail-changes-row/);
 });
 
-test('SessionRailChanges: eze / oRe / wB around the row, from the local git status', () => {
+test('SessionRailChanges: Sje / bAe / YL around the row, from the local git status', () => {
   const { SessionRailChanges } = Adapters;
-  assert.equal(render(inRow(h(SessionRailChanges, { status: { isRepo: false } }))), '', 'no repository: eze renders nothing');
+  assert.equal(render(inRow(h(SessionRailChanges, { status: { isRepo: false } }))), '', 'no repository: Sje renders nothing');
   assert.equal(render(inRow(h(SessionRailChanges, { status: null }))), '');
   const nav = `<nav aria-label="Repository and pull request controls" class="${attr(Rail.RAIL_PR_BAR_NAV_CLASS)}">`;
   assert.equal(Rail.RAIL_PR_BAR_NAV_CLASS, 'flex flex-col gap-1 empty:hidden');
-  // A clean branch: the nav stays empty, so rD's `has-[nav:not(:empty)]:flex` keeps the card hidden.
+  // A clean branch: the nav stays empty, so the card's `has-[nav:not(:empty)]:flex` keeps it hidden.
   assert.match(render(inRow(h(SessionRailChanges, { status: status({ hasChanges: false, added: 0, removed: 0 }) }))), new RegExp(`^${nav}</nav>$`));
   const live = render(inRow(h(SessionRailChanges, { status: status(), diffOpenable: true, onOpenChanges() {}, onToggleChanges() {},
     verb: { mode: 'commit', onClick() {}, disabled: false } })));
@@ -157,25 +203,30 @@ test('SessionRailChanges: eze / oRe / wB around the row, from the local git stat
   assert.match(live, /aria-label="Open changes, 12 added, 3 removed"/);
   assert.match(live, />Commit changes<\/span>/);
   assert.match(live, /aria-label="More options for feature\/rail"/);
-  assert.doesNotMatch(live, /claude-ui-lab<\/span>/, 'a single repo hides its name (eze hideRepo)');
-  // The Changes pane cannot open: counts as text, no ⋮ (nze `ze` false).
+  assert.doesNotMatch(live, /claude-ui-lab<\/span>/, 'a single repo hides its name (Sje hideRepo)');
+  // The Changes pane cannot open: counts as text, no ⋮ (Zje: no diff opener).
   const closed = render(inRow(h(SessionRailChanges, { status: status(), diffOpenable: false, verb: { mode: 'commit' } })));
   assert.doesNotMatch(closed, /Open changes/);
   assert.doesNotMatch(closed, /More options for/);
-  assert.doesNotMatch(closed, /\+12/, 'nze _n: no counts unless the diff can open');
+  assert.doesNotMatch(closed, /\+12/, 'Zje: no counts unless the diff can open');
   // A disabled commit carries its reason in the CDS disabled-reason wrapper; view / none have no verb.
   const disabled = render(inRow(h(SessionRailChanges, { status: status({ workingTreeDirty: false }), diffOpenable: true,
     verb: { mode: 'commit', disabled: true, disabledReason: 'No changes to commit' } })));
   assert.match(disabled, /data-cds-disabled-reason-wrapper=""/);
   assert.match(disabled, /No changes to commit/);
   assert.match(disabled, /disabled=""/);
-  // R4i-rail RL2: nze `Wt = yze(V, …)`: with a pull request the row is in view mode, so iB shows no verb (the rail-only
+  // R4i-rail RL2: Zje `vt = hMe(N, …)`: with a pull request the row is in view mode, so EL shows no verb (the rail-only
   // Merge / Ready verb has no host source).
   assert.doesNotMatch(render(inRow(h(SessionRailChanges, { status: status(), diffOpenable: true, verb: { onClick() {} },
     pr: { number: 7, url: 'https://github.com/o/r/pull/7', state: 'open', title: 'Rail' } }))), /Commit changes/);
-  // Several repos show the name (hideRepo false): wze, the repo name.
-  assert.match(render(inRow(h(SessionRailChanges, { status: status(), diffOpenable: true, hideRepo: false }))),
-    /<span class="min-w-0 truncate text-muted-as-secondary">claude-ui-lab<\/span>/);
+  // Several repos show the name (hideRepo false), C2-2: an overflow tooltip in `min-w-0 text-muted-as-secondary` labels
+  // the row (role group, aria-labelledby), and the ⋮ says "More options for {repo} on {branch}".
+  const named = render(inRow(h(SessionRailChanges, { status: status(), diffOpenable: true, hideRepo: false, onOpenChanges() {}, onToggleChanges() {} })));
+  assert.match(named, /<div data-rail-changes-row="" role="group" aria-labelledby="([^"]+)" class="[^"]*"><span class="flex size-5 shrink-0 items-center justify-center text-secondary">/);
+  const [, labelId] = /<div data-rail-changes-row="" role="group" aria-labelledby="([^"]+)"/.exec(named);
+  assert.match(named, new RegExp(`<span class="min-w-0 text-muted-as-secondary"><span id="${labelId}" data-cds="OverflowTooltip"[^>]*>claude-ui-lab</span></span>`));
+  assert.match(named, /aria-label="More options for claude-ui-lab on feature\/rail"/);
+  assert.doesNotMatch(named, /min-w-0 truncate text-muted-as-secondary/);
 });
 
 test('railChangesRowProps: fze, nze _n / Gn and iB baseBranch over the local status', () => {
@@ -203,7 +254,7 @@ function shallow(component, props, contexts = new Map()) {
     useEffectEvent: fn => fn, useReducer: (reducer, initial, init) => [init ? init(initial) : initial, () => {}],
   };
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-  internal.H = hooks;
+  internal.H = withMemoCache(hooks);
   try { return component(props); } finally { internal.H = old; }
 }
 function nodes(tree, predicate) {
@@ -212,17 +263,24 @@ function nodes(tree, predicate) {
   return [...(predicate(tree) ? [tree] : []), ...nodes(tree.props?.children, predicate), ...nodes(tree.props?.trigger, predicate), ...nodes(tree.props?.verb, predicate)];
 }
 
-test('handlers: counts open Changes, the menu toggles it, the verb sends the commit, the chord labels the button', () => {
+test('handlers: counts open Changes, the menu opens it, the verb sends the commit, the chord labels the button', () => {
   const calls = [];
   const outer = shallow(Adapters.SessionRailChanges, { status: status(), diffOpenable: true, diffOpenHasChord: true,
     onOpenChanges: () => calls.push('open'), onToggleChanges: () => calls.push('toggle'), verb: { onClick: () => calls.push('commit') } });
-  // R4i-rail RL2: eze (Jz "rail" > nav > oRe over tRe's shape) > wB (li) > iB (memo) > OLe.
+  // R4i-rail RL2 / w3: Sje (lL "rail" > nav > bAe over mAe's shape, renderRow) > YL (li, the chord) > EL (memo) > Ike.
   assert.equal(outer.props.value, 'rail');
   const [rows] = nodes(outer, n => n.type === PrRows.RailPrRows);
   assert.equal(rows.props.shape.rows.length, 1);
+  assert.equal(rows.props.renderRow, Adapters.railPrRow);
   const [entry] = rows.props.shape.rows;
-  const item = shallow(Adapters.RailPrListItem, { entry });
-  const [barRow] = nodes(item, n => n.type === PrRows.PrBarRow);
+  // YL hands its render prop the chord: the primary row only, while the host says toggleDiff opens the diff.
+  const chords = [];
+  shallow(Adapters.RailPrListItem, { rowKey: entry.rowKey, primary: entry.primary, children: (chord) => (chords.push(chord), null) }, new Map([[Adapters.RailDiffOpenHasChordContext, true]]));
+  shallow(Adapters.RailPrListItem, { rowKey: 'x', primary: false, children: (chord) => (chords.push(chord), null) });
+  assert.deepEqual(chords, [true, false]);
+  const barRow = rows.props.renderRow(entry, true);
+  assert.equal(barRow.type, PrRows.PrBarRow);
+  assert.equal(barRow.props.layout, 'rail');
   const host = shallow(PrRows.PrBarRow.type, barRow.props, new Map([[PrRows.PrBarLayoutContext, 'rail']]));
   const [rowElement] = [host].filter(n => n.type === Row.ChangesRow);
   assert.equal(rowElement.props.link, null);
@@ -238,40 +296,52 @@ test('handlers: counts open Changes, the menu toggles it, the verb sends the com
   assert.equal(buttons[0].props['aria-keyshortcuts'], 'Control+Shift+d', 'cmd+shift+d off a Mac (SSR snapshot)');
   buttons[0].props.onClick();
   const [tooltip] = nodes(row, n => n.props?.shortcut !== undefined);
-  assert.equal(tooltip.props.shortcut, 'cmd+shift+d', 'shared-19 W7 toggleDiff for isClaudeApp');
-  // The ⋮ / context menu body (kLe): View changes toggles (onDiffClick).
+  assert.equal(tooltip.props.shortcut, 'cmd+shift+d', 'shared-46 YL toggleDiff for isClaudeApp');
+  // The ⋮ / context menu body (Bke, grouped): View changes toggles (onDiffClick).
   const [menu] = nodes(row, n => n.type === Row.ChangesRowMenuItems);
   const items = shallow(Row.ChangesRowMenuItems, menu.props);
-  const view = nodes(items, n => n.props?.children?.props?.defaultMessage === 'View changes');
+  assert.deepEqual(Object.keys(items.props.groups), ['pullRequest', 'changes', 'create', 'dismiss']);
+  const view = nodes(items.props.groups.changes, n => n.props?.children?.props?.defaultMessage === 'View changes');
   assert.equal(view.length, 1);
   view[0].props.onClick();
-  assert.deepEqual(calls, ['commit', 'open', 'toggle']);
-  // The row's context menu is enabled once a menu entry exists (U); its keyboard ContextMenu key is ca7840910 U.
+  // 3.6556.2 Ike: `ie = m ? (h ?? m) : void 0`: with an opener the menu's View changes opens (onDiffOpen), the toggle is
+  // only the fallback.
+  assert.deepEqual(calls, ['commit', 'open', 'open']);
+  const toggleOnly = shallow(Row.ChangesRow, { ...rowElement.props, onDiffOpen: undefined }, new Map([[KitChip.ChangesRowLayoutContext, 'row']]));
+  const [fallback] = nodes(toggleOnly, n => n.type === Row.ChangesRowMenuItems);
+  assert.equal(fallback.props.onDiffClick, rowElement.props.onDiffClick);
+  // The row's context menu is enabled once a menu entry exists (re); its keyboard ContextMenu key is shared-18 ok.
   const [contextMenu] = nodes(row, n => n.props?.trigger !== undefined);
   assert.equal(contextMenu.props.disabled, false);
 });
 
-test('DiffCounts (c60636ac6 Xe) and the verb (DLe) as generated', () => {
+test('DiffCounts (c60636ac6 Xe), the Dismiss button and the verb (Fke) as generated', async () => {
   const counts = render(h(Counts.DiffCounts, { added: 1200, removed: 1, className: 'x' }));
   assert.match(counts, /^<span class="tabular-nums x"><span class="sr-only">/);
   assert.match(counts, /1,200 additions/);
   assert.match(counts, /1 deletion/);
   assert.match(counts, /<span class="text-git-added">\+1,200<\/span><span class="text-git-removed">−1<\/span>/);
+  // C2-6: the band's Dismiss (c0b46114c b) inks text-muted-as-secondary by default.
+  const Dismiss = await server.ssrLoadModule('/src/generated/session-rail-changes/dismiss-button.mjs');
+  const dismiss = render(h(Dismiss.DismissButton, { onClick() {} }));
+  assert.match(dismiss, /aria-label="Dismiss"/);
+  assert.match(dismiss, /class="[^"]*shrink-0 text-muted-as-secondary hover:text-primary[^"]*"/);
   const verb = render(h(Verb.ChangesRowVerb, { label: 'Commit changes', onClick() {}, leftWithFocusRef: { current: null } }));
   assert.match(verb, /^<span role="none" class="contents">/);
   assert.match(verb, /<span class="truncate">Commit changes<\/span>/);
   assert.match(verb, /data-cds="Button"/);
 });
 
-test('R4i-rail fix: the GitHub CLI hint (nze Un = kye) on the rail PR row, from the band hint and its handlers', () => {
+test('R4i-rail fix: the GitHub CLI hint (Zje In = Oge) on the rail PR row, from the band hint and its handlers', () => {
   const { SessionRailChanges } = Adapters;
-  // 2.42304.0: nze builds `Un = w && Hn ? b(kye, {cause: Hn, onRunInTerminal: ct})` and hands it to iB as prStatusHint;
-  // kye is c219730b0's export x (dn), the hint card the band also renders.
+  // 3.6556.2: Zje builds `In = x && Nn ? f(Oge, {cause: Nn, onRunInTerminal: qe})` and hands it to EL as prStatusHint;
+  // Oge is c219730b0's export v (ni), the hint card the band also renders.
   const transcript = raw(TRANSCRIPT);
-  assert.equal(occurrences(transcript, 'let Un=C(()=>w&&Hn?b(kye,{cause:Hn,onRunInTerminal:ct}):void 0,[w,Hn,ct])'), 1);
-  assert.equal(occurrences(transcript, 'showGithubStatusHint:w'), 1);
-  assert.equal(occurrences(transcript, 'x as kye'), 1);
-  assert.equal(occurrences(raw('c219730b0-B08P7Rqk.js'), 'dn as x'), 1);
+  assert.equal(occurrences(transcript, 'x&&Nn?f(Oge,{cause:Nn,onRunInTerminal:qe}):void 0'), 1);
+  assert.equal(occurrences(transcript, 'prStatusHint:In'), 1);
+  assert.equal(occurrences(transcript, 'showGithubStatusHint:x'), 1);
+  assert.equal(occurrences(transcript, 'v as Oge'), 1);
+  assert.equal(occurrences(raw('c219730b0-DGG9iA8k.js'), ',ni as v,'), 1);
   const committed = status({ workingTreeDirty: false });
   const prAction = { mode: 'create', onPrimary() {}, onSelectMode() {} };
   const row = hint => render(inRow(h(SessionRailChanges, { status: committed, diffOpenable: true, prAction, hint })));

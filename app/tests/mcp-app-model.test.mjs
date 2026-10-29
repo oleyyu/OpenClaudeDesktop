@@ -8,31 +8,43 @@ import {
   sessionMcpAppServers, coreServesMcpApps, pendingMcpAppRequests,
 } from '../src/mcp-app-model.mjs';
 import { groupFileTools } from '../src/file-tool-model.mjs';
+import { ionSource, looseFeature } from '../scripts/official-3.6556.2.mjs';
 
 // R4g-mcp MA-7: the transcript model of the MCP App row (KBe "mcp_app", m2e / e0, cef1e6037 lt / pt), table-driven over
-// controlled items. The official bindings are counted in the installed 2.42304.0 chunks.
+// controlled items. The official bindings are counted in the 3.6556.2 chunks (w10-trans-mcp-v3-pins; 2.42304.0 had them in
+// c96d752d0-BOCqU7c2 KBe / m2e / e0, cef1e6037-8DivyY4m lt / pt and shared-156-Bikz018e pb). Minified names are matched
+// with looseFeature (R2).
 const require = createRequire(import.meta.url);
-const reference = path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
-const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
+const raw = file => fs.readFileSync(path.join(ionSource, file), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
+const loose = (text, feature) => text.match(new RegExp(looseFeature(feature).source, 'g'))?.length ?? 0;
 const { appResourceUri } = require('../electron/mcp-apps-host.cjs');
 
-test('official bindings: KBe mcp_app, UV stands-alone, m2e / e0 mounts, lt matcher, pt result', () => {
-  const host = raw('c96d752d0-BOCqU7c2.js');
+test('official bindings (3.6556.2): ZNe mcp_app, stands-alone roll-up, the lY mounts, dt matcher, vt result, lb segment', () => {
+  if (!fs.existsSync(ionSource)) return; // reference tree is optional in packaged checkouts
+  const host = raw('c96d752d0-CWv_7-n9.js');
   for (const [needle, n] of [
     ['t.isMcpAppTool?.(e.name)?"mcp_app"', 1],
     ['mcp_app:{rollUp:"stands-alone"}', 1],
     ['"skill_proposal","env_help","mcp_app"]', 1],
-    ['if(a&&r?.(e.tools[0].name))return b(VX,{tool:e.tools[0],sessionRef:t,onPrefillComposer:n})', 1],
-    ['o&&r?.(d.name)?b(VX,{tool:d,sessionRef:i,onPrefillComposer:a,fallback:_})', 1],
-    ['N as cm,', 1],
+    ['(n!=="mcp_app"||t.mcpAppWidgets!==!0)?"unsettled_standalone"', 1],
   ]) assert.equal(count(host, needle), n, needle);
-  const cef = raw('cef1e6037-8DivyY4m.js');
-  assert.equal(count(cef, 'function lt(e,t){let r=ne(),i=Bt(t),a=n(()=>r?e.filter(e=>_(e.name)).map(e=>e.name):ct,[r,e]),o=g(a,{sessionServers:i});return n(()=>ut(o),[o])}'), 1);
+  // The card (lY = memo(lYe)): the solo row of an owned session and the row inside a group, both saving view state.
+  for (const feature of [
+    'function lYe(e){let $=J9(166),{tool:t,sessionRef:n,onPrefillComposer:r,onMessage:i,onOutcome:a,onMenuEvent:o,showCopiedText:s,onOpenLink:c,fallback:l,headerlessTitle:d,centerContent:p,scrollWide:m,drawCards:h,unboxed:g,sharesWithSession:y,drawnWhileWritten:b,savesViewState:x}=e',
+    'if(o&&i?.(t.tools[0].name))return J1($,0,r)||J2($,1,t.tools[0],n)?I2($,1,Z1($,0,f(lY,{tool:t.tools[0],sessionRef:n,onPrefillComposer:r,savesViewState:!0}),r),t.tools[0],n):$[3]',
+    's&&i?.(d.name)?f(lY,{tool:d,sessionRef:a,onPrefillComposer:o,fallback:E,savesViewState:!0})',
+  ]) assert.equal(loose(host, feature), 1, feature);
+  // The session matcher hook (cef1e6037 dt, exported as I) the card host imports.
+  assert.match(host, /import\{[^}]*\bI as dp,[^}]*\}from"\.\/cef1e6037-C9OZ_iaL\.js"/);
+  const cef = raw('cef1e6037-C9OZ_iaL.js');
+  assert.equal(count(cef, ',dt as I,'), 1);
+  assert.equal(loose(cef, 'function dt(e,t){let $=J9(7),n=S(),r=en(t),i=J2($,0,n,e)?K2($,0,n,e,n?e.filter(pt).map(ft):ut):$[2],a=J1($,3,r)?K1($,3,r,{sessionServers:r}):$[4],o=g(i,a);return J1($,5,o)?K1($,5,o,ht(o)):$[6]}'), 1);
   assert.equal(count(cef, 'r=e.rawResultContent??(Array.isArray(t?.content)?t.content:Array.isArray(e.toolUseResult)?e.toolUseResult:n?[{type:"text",text:e.output??""}]:void 0)'), 1);
-  // pb (the server segment cleaner) and one other cleaner share the expression.
-  assert.equal(count(raw('shared-156-Bikz018e.js'), 'e.replace(/[^a-zA-Z0-9_-]/g,"_")'), 2);
-  assert.equal(count(raw('shared-156-Bikz018e.js'), 'function pb(e){return e.replace(/[^a-zA-Z0-9_-]/g,"_")}'), 1);
+  // lb (the server segment cleaner, mcpServerSegment) and two other cleaners share the expression.
+  const s156 = raw('shared-156-BLTosN8U.js');
+  assert.equal(count(s156, 'e.replace(/[^a-zA-Z0-9_-]/g,"_")'), 3);
+  assert.equal(count(s156, 'function lb(e){return e.replace(/[^a-zA-Z0-9_-]/g,"_")}'), 1);
 });
 
 test('mcpCallOf / officialToolName: core MCP calls, OpenClaude Desktop’s own server, OpenCode prefixes', () => {

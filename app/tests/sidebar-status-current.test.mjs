@@ -6,8 +6,10 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 import { resolveSessionDisplayState } from '../src/generated/code-current/sidebar-session-state.mjs';
+import { resolveSessionStatePriority, sessionStatePriorities } from '../src/generated/code-current/sidebar-session-priority.mjs';
 import { currentSidebarSession } from '../src/sidebar-session-current-model.mjs';
 import { sidebarReadStatePatch } from '../electron/sidebar-read-state.cjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // cds-merge-props re-exports the view-tabs vendor-frame (SG-2), whose React boundary is a .jsx host adapter: load via Vite.
 let server, Sidebar, Badge, NavBadge, Status, Fade, mergeCdsProps;
@@ -39,6 +41,12 @@ test('original display-state precedence covers errors, permissions, running, unr
   ];
   for(const [patch,expected] of cases)assert.equal(resolveSessionDisplayState({...base,...patch}),expected,JSON.stringify(patch));
   assert.equal(resolveSessionDisplayState({...base,prState:'open',hasCompleted:true,isUnread:true},{readyAfterPr:true}),'pr');
+  // 3.6556.2 shared-8 pb resolves the live part through shared-26 Ij / Nj, the same table the section badge ranks by.
+  assert.deepEqual(Object.fromEntries(Object.entries(sessionStatePriorities).map(([key,value])=>[key,[value.state,value.priority]])),
+    {awaiting:['awaiting',0],error:['error',1],ready:['ready',2],running:['running',3],idle:['idle',4]});
+  assert.equal(resolveSessionStatePriority({isArchived:true,hasError:true,hasCompleted:true,isUnread:true}),sessionStatePriorities.ready);
+  assert.equal(resolveSessionDisplayState({...base,isArchived:true,hasCompleted:true,isUnread:true,prState:'open'}),'ready');
+  assert.equal(resolveSessionDisplayState({...base,isArchived:true,prState:'open'}),'idle');
 });
 test('local projection suppresses stale errors while responding and attributes child approvals to the owner',()=>{
   assert.equal(currentSidebarSession(thread(),{errors:{row:'old'},active:{row:'turn'}}).mark,'running');
@@ -70,10 +78,12 @@ test('shared metadata boundary distinguishes automatic completions from manual u
 });
 test('Code Projects uses the original compact neutral xs Beta badge with the source label wrapper',()=>{
   const html=render();
-  assert.match(html,/<span class="flex min-w-0 flex-1 items-center"><span>Projects<\/span><span data-cds="Badge" data-size="xs"[^>]*bg-neutral text-secondary ms-2/);
+  // 3.6556.2 CdsBadge also carries its inert fizzy-lake `stacks:` variant classes (E12) between the tone and the host class.
+  assert.match(html,/<span class="flex min-w-0 flex-1 items-center"><span>Projects<\/span><span data-cds="Badge" data-size="xs"[^>]*bg-neutral text-secondary(?: stacks:[^ "]+)* ms-2"/);
   assert.match(html,/leading-\[calc\(0\.75rem\*var\(--cds-rem-scale,1\)\)\] py-\[0\.125em\] -my-\[0\.125em\]">Beta<\/span>/);
   assert.doesNotMatch(html,/surface-new-badge/);
-  const chat=render({mode:'chat'});assert.match(chat,/surface-new-badge/);
+  // w13-surfaces-nav surf-12: shared-21 bH sets y="new-neutral" for projects only when N (tp = !1), so Chat Projects carries no New badge.
+  const chat=render({mode:'chat'});assert.doesNotMatch(chat,/surface-new-badge/);
 });
 test('original navigation badge supports New, Beta, Preview, neutral New and upgrade without fabricating lab labels',()=>{
   const badge=value=>renderToStaticMarkup(React.createElement(Badge.CdsBadgeDensity.Provider,{value:'compact'},React.createElement(NavBadge.SidebarNavBadge,{badge:value})));
@@ -120,7 +130,7 @@ test('original error glyph mapping preserves usage and offline categories; statu
     assert.equal(Status.sidebarErrorKind(category),kind);
   }
   const old=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
-  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H={useContext:()=>false};
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H=withMemoCache({useContext:()=>false});
   let tree;try{tree=Status.SidebarStatusLabel({label:'Running',children:'dot'});}finally{React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H=old;}
   let stopped=0;tree.props.onPointerMove({buttons:0,stopPropagation(){stopped++;}});
   tree.props.onPointerMove({buttons:1,stopPropagation(){stopped++;}});assert.equal(stopped,1);
@@ -153,7 +163,7 @@ test('original label overflow accounts for the decoration slot and shares resize
 test('latest mixed-direction title measures its actual start padding and observes decorated labels',()=>{
   const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
   const previous=internal.H,refs=[],effects=[];
-  internal.H={useRef:value=>{const ref={current:value};refs.push(ref);return ref;},useContext:ctx=>ctx._currentValue,useCallback:fn=>fn,useLayoutEffect:fn=>effects.push(fn)};
+  internal.H=withMemoCache({useRef:value=>{const ref={current:value};refs.push(ref);return ref;},useContext:ctx=>ctx._currentValue,useCallback:fn=>fn,useLayoutEffect:fn=>effects.push(fn)});
   let tree;
   try{tree=Fade.SidebarFadeLabel({children:'مرحبا title',decorated:true,endControls:true});}finally{internal.H=previous;}
   const label=tree.props.children;
@@ -178,7 +188,7 @@ test('latest mixed-direction title measures its actual start padding and observe
 
 test('latest title reserves space for end controls even without a status decoration',()=>{
   const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internal.H;
-  internal.H={useRef:value=>({current:value}),useContext:ctx=>ctx._currentValue,useCallback:fn=>fn,useLayoutEffect(){}};
+  internal.H=withMemoCache({useRef:value=>({current:value}),useContext:ctx=>ctx._currentValue,useCallback:fn=>fn,useLayoutEffect(){}});
   let tree;try{tree=Fade.SidebarFadeLabel({children:'عنوان',endControls:true});}finally{internal.H=previous;}
   const label=tree.props.children;
   assert.match(label.props.className,/df-label-start-fade/);

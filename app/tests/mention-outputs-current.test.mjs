@@ -61,22 +61,62 @@ test('output collection and merged options stay bounded at fifty most recent fil
   assert.equal(mergeSessionOutputMatches('report', [], outputs).length, 50);
 });
 
-// composer-helpers-latest: ca80fca8d no longer ships in 2.42304.0; the @ output merge is c227f4d5e pD/JD/tO/rO/uO.
-test('2.42304.0: the output merge is sliced from the shipped c227f4d5e with the same option shape', () => {
-  const app = path.resolve(import.meta.dirname, '..'), reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+// composer-helpers-latest (w3-composer-host): the @ output merge is 3.6556.2 c227f4d5e QD/FO/HO/WO/ZO (2.42304.0
+// pD/JD/tO/rO/uO; the failure latch JD is FO by its call site in WO).
+test('3.6556.2: the output merge is sliced from the shipped c227f4d5e with the same option shape', () => {
+  const app = path.resolve(import.meta.dirname, '..'), reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
   const sha = bytes => createHash('sha256').update(bytes).digest('hex');
   const manifest = JSON.parse(readFileSync(path.join(app, 'src/generated/code-current/manifest.json'), 'utf8'));
   const entry = manifest.modules.find(module => module.target === 'mention-output-files.mjs');
-  assert.equal(entry.referenceVersion, '2.42304.0');
-  assert.equal(path.basename(entry.source), 'c227f4d5e-Ba-r--Rl.js');
-  assert.equal(entry.sourceSha256, sha(readFileSync(path.join(reference, 'c227f4d5e-Ba-r--Rl.js'))));
+  assert.equal(entry.referenceVersion, '3.6556.2');
+  assert.equal(path.basename(entry.source), 'c227f4d5e-B-FYKrwT.js');
+  assert.equal(entry.sourceSha256, sha(readFileSync(path.join(reference, 'c227f4d5e-B-FYKrwT.js'))));
   assert.equal(entry.sha256, sha(readFileSync(path.join(app, 'src/generated/code-current/mention-output-files.mjs'), 'utf8')));
-  assert.deepEqual(entry.bindings, ['pD', 'JD', 'tO', 'rO', 'uO']);
+  assert.deepEqual(entry.bindings, ['QD', 'FO', 'HO', 'WO', 'ZO']);
   assert.deepEqual(entry.bindings, composerHelperPins['mention-output-files.mjs'].bindings);
-  // oO/aO (CDS Folder/File icons) are carried by name, as the host mention rows draw icons by name.
+  // qO/KO (CDS Folder/File icons, was oO/aO) are carried by name, as the host mention rows draw icons by name.
   assert.deepEqual(toFileMentionOption({ path: 'docs/report.pdf', isDirectory: false, positions: [5] }), {
     id: 'file-docs/report.pdf', label: 'report.pdf', description: 'docs', icon: 'File', category: 'Files',
     metadata: { path: 'docs/report.pdf', isDirectory: false, positions: [5] }, providerId: 'ccd-files', renderedText: 'docs/report.pdf',
   });
   assert.equal(toFileMentionOption({ path: 'docs', isDirectory: true }).icon, 'Folder');
+  // 3.6556.2 ZO(e, t = !0): backslashes split too (HO passes its third argument, default !0).
+  assert.deepEqual([toFileMentionOption({ path: 'docs\\report.pdf', isDirectory: false }).label, toFileMentionOption({ path: 'docs\\report.pdf', isDirectory: false }).description], ['report.pdf', 'docs']);
+});
+
+// cc-rest-files: FileIndex and the output-path helpers are 3.6556.2 renames (c30db9bec, shared-26/28/130, c73f45bc3);
+// c30db9bec Zn (2.42304.0 ql) waits on the injectable clock `n?.clock ?? Xn` (Xn = new Yn()).
+test('3.6556.2: FileIndex and the @ output-path helpers come from the shipped chunks', async () => {
+  const app = path.resolve(import.meta.dirname, '..'), reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+  const manifest = JSON.parse(readFileSync(path.join(app, 'src/generated/code-current/manifest.json'), 'utf8'));
+  const expected = {
+    'file-index.mjs': ['c30db9bec-CdR1oH22.js', ['Yn', 'Xn', 'Zn', 'er', 'tr', 'nr', 'rr', 'ir', 'ar', 'or', 'sr', 'cr', 'lr', 'ur', 'fr', 'pr', 'mr', 'hr', 'gr', '_r', 'vr', 'yr', 'dr']],
+    'file-output-root.mjs': ['shared-26-CGuBxVt9.js', ['DS', 'OS', 'AS']],
+    'file-output-normalize.mjs': ['shared-28-DNYlf4wu.js', ['_M', 'EM', 'SM']],
+    'file-output-paths.mjs': ['shared-130-dWztbTO1.js', ['UV', 'WV', 'XV', 'ZV', 'VH', 'HH', 'UH', 'WH', 'JH', '$H', 'eU', 'tU', 'zH', 'YH', 'XH', 'ZH', 'QH']],
+    'file-output-order.mjs': ['c73f45bc3-B7hbL7H9.js', ['Ub', 'Kb', 'qb', 'Jb', 'Yb', 'Xb', 'Zb', 'Qb', '$b', 'ex', 'rx']],
+  };
+  for (const [target, [file, bindings]] of Object.entries(expected)) {
+    const entry = manifest.modules.find(module => module.target === target);
+    assert.equal(entry.referenceVersion, '3.6556.2', target);
+    assert.equal(path.basename(entry.source), file, target);
+    assert.equal(entry.sourceSha256, sha(readFileSync(path.join(reference, file))), target);
+    assert.deepEqual(entry.bindings, bindings, target);
+    const generated = readFileSync(path.join(app, 'src/generated/code-current', target), 'utf8');
+    assert.equal(entry.sha256, sha(generated), target);
+    assert.match(generated, /^\/\/ Original Claude Desktop 3\.6556\.2 bindings/, target);
+  }
+  const fileIndex = readFileSync(path.join(app, 'src/generated/code-current/file-index.mjs'), 'utf8');
+  assert.match(fileIndex, /let a = \(n\?\.clock \?\? Xn\)\.setTimeout\(/);
+  assert.match(fileIndex, /var Xn = new Yn\(\);/);
+  assert.match(fileIndex, /return \(n\?\.unref && r\.unref\(\), \(\) => clearTimeout\(r\)\);/);
+  assert.match(fileIndex, /export \{ dr as FileIndex \};/);
+  assert.ok(readFileSync(path.join(reference, 'c30db9bec-CdR1oH22.js'), 'utf8').includes('let a=(n?.clock??Xn).setTimeout(()=>{t?.removeEventListener("abort",o),r()},e,{unref:n?.unref})'));
+  // The async build yields through er (setImmediate here) and still finds every path.
+  const index = new FileIndex();
+  const { queryable, done } = index.loadFromFileListAsync(['src/a.ts', 'src/b.ts', 'src/a.ts']);
+  await queryable;
+  assert.equal(await done, true);
+  assert.deepEqual(index.search('b', 5).map(match => match.path), ['src/b.ts']);
 });

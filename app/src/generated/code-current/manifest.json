@@ -1,9 +1,10 @@
 {
-  "referenceVersion": "2.37337.1",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "modules": [
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c63ad9d34-BwRS70iU.js",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c63ad9d34-BwRS70iU.js",
       "sourceSha256": "76b42f5833126167995c3267df8d6c312a2076b6669839004da8ee50925ab2b0",
       "target": "csv-parser-vendor.mjs",
       "sha256": "76b42f5833126167995c3267df8d6c312a2076b6669839004da8ee50925ab2b0",
@@ -11,11 +12,11 @@
       "transform": "byte-for-byte"
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c02d6193d-C2yr-dVD.js",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c02d6193d-C2yr-dVD.js",
       "sourceSha256": "920c537bbbd39fd75de246a11032db34d045db46c8f74b122991375de38498a3",
       "target": "csv-parser.mjs",
-      "sha256": "a943a6939a8f9fd23e130123ba138db38c82c5ea83c49c12277e3b660a6f6fc0",
+      "sha256": "1439627e32cc76346f3cd540aba337b74d111fae20074449920a65f62f0f1484",
       "bindings": [
         "n",
         "r",
@@ -33,1396 +34,1465 @@
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-78-D6VXYXaQ.js",
-      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
       "target": "string-count.mjs",
-      "sha256": "5a60a5b7602182db9af921c4503831398d5d470f42f44fc675118767108eba6c",
+      "sha256": "fb5e07d4c67f5871a103df01b8acb0fc64adf22ce624e1d4c054868f49078df9",
       "bindings": [
-        "Hv"
+        "Ky"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-2-Cb74JByF.js",
-      "sourceSha256": "eba35a1da5c881718b063b0602d7d7fb0fd547c62e3079b2110fa9f7e39a4cff",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-2-TF8v67kg.js",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
       "target": "../../../electron/generated/string-grapheme-limit.mjs",
-      "sha256": "9323ea00beba6a92bb7295a64b8868960bfb16702e5d1ad6c221c76d8b8e3eee",
+      "sha256": "7e7771716710bd8419fb54d8a9bf88f45543bf60497879b952e7888ce53f2973",
       "bindings": [
-        "EI",
-        "DI",
-        "AI"
+        "cU",
+        "lU",
+        "fU"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c73f45bc3-CFrHin0p.js",
-      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
       "target": "../../../electron/generated/btw-title.mjs",
-      "sha256": "2c5b1db6b6e16e1997e30ad8b3535bbcdd0d6d81f688f96cf728a01262ebe8bd",
+      "sha256": "b91c6fff50d903b9c80f2f53af81655fa6f2072518058188782bf7051dfa869f",
       "bindings": [
-        "Su",
-        "Cu",
-        "Tu",
-        "Du"
+        "Mf",
+        "Nf",
+        "Ff",
+        "Lf"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c5259f582-CEcxfnw9.js",
-      "sourceSha256": "60ec283d01b53c97b7fc04b5b961ce2173412e957f8c85559efadb8a2f6f0787",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c03935b01-yhcY34vt.js",
+      "sourceSha256": "473ccdd15e417c375b938e853107ab23a30b5401a379fcc296d9c3f4e5d31be2",
       "target": "btw-focus-intent.mjs",
-      "sha256": "0b4c976a64e61cf35ff4c4671a2a0211f0e7e3ffa7addbe8455a75fb4244ff3f",
+      "sha256": "aa62de72e9ed9756612409d18d42ef295afa67abcf221f3e8e1db227802d1016",
       "bindings": [
-        "H",
-        "de",
-        "U",
-        "W",
-        "G",
-        "fe",
-        "K",
-        "me"
+        "Vr",
+        "Hr",
+        "Ur",
+        "Wr",
+        "Gr",
+        "Kr",
+        "qr",
+        "Jr",
+        "Yr",
+        "Xr",
+        "Zr"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-25-DP8p7i1Z.js",
-      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c9bc99274-DTZfHMJt.js",
+      "sourceSha256": "c389ac61a0bb0cd4e2f1510345e759a120e59f1b8c925e7bcbf8f206e436d803",
+      "target": "pane-focus-target.mjs",
+      "sha256": "6ac06f24096dfd72c75e82cc76c778e3f0f0883ea89f00e19ff87738ea859a01",
+      "bindings": [
+        "a",
+        "c",
+        "l",
+        "u",
+        "f",
+        "_",
+        "v",
+        "y",
+        "b"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
       "target": "owner-document.mjs",
-      "sha256": "f45af019196d26e36758406006fa3b355cb1914428ee97341f1438e581a0ed30",
+      "sha256": "6c09ad58650d7a364abefdf2d4654a5732d930840d407d6d2d710848bb63c697",
       "bindings": [
-        "cp",
-        "lp",
-        "fp"
+        "df",
+        "ff",
+        "hf"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cccc2cf0a-B0D--VZp.js",
-      "sourceSha256": "4f75e5db4ff595b4fc4f22a9092dfa245b4af29f964bb207276b868a606964cb",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
       "target": "pane-focus-owner.mjs",
-      "sha256": "541b944967359187d87224c252f71b5a731a71b083341f9d03534e86767e0950",
+      "sha256": "01fbcde27ef127c345c85f3d068e3690b9619c682fda0db01d2775c9ad20ad73",
       "bindings": [
-        "ey"
+        "ux"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-25-DP8p7i1Z.js",
-      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
       "target": "owner-window.mjs",
-      "sha256": "a3753a7bbca59e346be79b12d6906398382614669609a2764178a4bf4287300a",
+      "sha256": "17488207a8df1ea8d444c2f1f4b1366dd8f2203f5a4be81ff045dfe0009b6aa7",
       "bindings": [
-        "cp",
-        "lp",
-        "up",
-        "dp"
+        "mf"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "sidebar-row-primitive.mjs",
-      "sha256": "a4e465ca640a7a9ba604985f17a7146edf189691789aea2047a63bac13ba5e71",
+      "sha256": "d14e676b1adae1f4ffb0e78b6103f589acd865b729ee6d477e16ec66ba90e603",
       "bindings": [
-        "DE",
-        "IE",
-        "wE"
+        "bk",
+        "kk",
+        "_k"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/vendor-frame-DfPJ1QmD.js",
-      "sourceSha256": "c96b504f7ecd3b5749b6913c9bad6b7950719b38636083e1496002b219e6bbdc",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/vendor-frame-CnSY1sxv.js",
+      "sourceSha256": "7064f152d05f6a7f477fc13a4b24606b82cbd401336a7e3a59840236818699e6",
       "target": "cds-merge-props.mjs",
-      "sha256": "8daa8f5a602a86f6fdb7bd0ffbcff9c2fed670615345365831a1a27e38cdd97e",
+      "sha256": "57bab23c7b87650b38183d358b1f0b33e37ef89b22d7a29ac565dd876a18826d",
       "bindings": []
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
       "target": "cds-badge.mjs",
-      "sha256": "f657519544ad9e65f538d643d31474fa9707facf75ad66b2103b14a52f6d9a0b",
+      "sha256": "af4625feb73f8302dcfbb7dea531ef9dbf28b3816809316bed119322029bc57e",
       "bindings": []
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-3-DnHYUZdJ.js",
-      "sourceSha256": "50970f7a24446daa0264bdff8fea02521746fe38d8a93589def7feb8808fdeec",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-3-BCEbd8Fv.js",
+      "sourceSha256": "fc82785f5d40bc42d95be0d959e1c4b56c9365b6aaa921d6da06f2625b5ba7b2",
       "target": "sidebar-upgrade-badge.mjs",
-      "sha256": "af819370d364df8c67b5d51e3575835a41b49472922bf3cc7e21b0fb41c767ec",
+      "sha256": "2a2735a9c12b1c759e843e6b338a887d5430a1b2ca9025ac20fdf7d542ef44d5",
       "bindings": [
-        "CP"
+        "LR"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
       "target": "sidebar-nav-badge.mjs",
-      "sha256": "38902ef5d1b9a880d6f0a0e92b9c45b158db5e964892ffc95f46975b4915fe78",
+      "sha256": "c545e24f3b288cf7591e2911167206277990640907ddc0406b0dacd4a83e075e",
       "bindings": [
-        "AG",
-        "MG",
-        "NG",
-        "PG",
-        "FG"
+        "CQ",
+        "TQ",
+        "EQ",
+        "DQ",
+        "OQ"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-8-B5lJ8U5C.js",
-      "sourceSha256": "09a1c33cf2e31d076f8e1908ab42933e1e6d702120136cd67418793a7657d086",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "sidebar-running-mark.mjs",
+      "sha256": "dad084280bae57e9096d9cf7c8993e51e7d87b983aee0706404e735c6e064f34",
+      "bindings": [
+        "UY",
+        "GY"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
+      "target": "sidebar-session-priority.mjs",
+      "sha256": "45d5bd586d33d9191d71a70c9b7909f3f10a5ad02a7a4a5fc1ae263e2acd7082",
+      "bindings": [
+        "Nj",
+        "Ij"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-8-Db1QN4mf.js",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
       "target": "sidebar-session-state.mjs",
-      "sha256": "b5984e79a25f07dd386713896620a2cc584905988304a41f48d46f8e62a63284",
+      "sha256": "8636e9a1bbf3d8865ede133fd8d7f8259f2b217c464b2e094a48e163eb382182",
       "bindings": [
-        "T_",
-        "D_"
+        "pb",
+        "hb"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "sidebar-pr-model.mjs",
-      "sha256": "797ee689a99109e8c031cba50f4f1533103d161873a21d9b7907c2015e9c69d2",
+      "sha256": "69a4f665cdef6b95df38091eef6123dd62d5e25c8491e88dc8c790714c50b743",
       "bindings": [
-        "IT",
-        "LT",
-        "zT",
-        "BT",
-        "WT",
-        "GT",
-        "QT"
+        "yO",
+        "bO",
+        "SO",
+        "CO",
+        "DO",
+        "OO",
+        "FO"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "sidebar-pr-icon.mjs",
-      "sha256": "054c8fa27b55c369bbf8c4094990c74be5f16ea6d256b9f4dab42a508ac6902d",
+      "sha256": "260d44ad87215b55549676861cc315f7a99c7b988ea8421b542f939716ed7ce4",
       "bindings": [
-        "Yw",
-        "Xw",
-        "Zw",
-        "eT",
-        "GR"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-20-B7UqYfsi.js",
-      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
-      "target": "sidebar-pr-card.mjs",
-      "sha256": "5d92d948663c08733435220f0a6586fee5020d57ad657afb9aae583245497c57",
-      "bindings": [
-        "_E",
-        "vE",
-        "yE",
-        "bE",
-        "xE",
-        "SE",
-        "CE",
-        "wE",
-        "TE",
-        "OE",
-        "AE",
-        "jE",
-        "ME",
-        "NE",
-        "VE",
-        "HE",
-        "UE",
-        "WE",
-        "GE",
-        "KE",
-        "qE",
-        "JE",
-        "YE",
-        "XE",
-        "ZE",
-        "eD"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-104-Cqo2-vQh.js",
-      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
-      "target": "sidebar-remote-name.mjs",
-      "sha256": "fdf473f04d739709eb5a9a65769455211f130e379708f255b5eea2ad86ab886c",
-      "bindings": [
-        "ez"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-78-D6VXYXaQ.js",
-      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
-      "target": "sidebar-environment-copy.mjs",
-      "sha256": "74a43bd41191028956f4962b08ee2b8b3f08f387336b88619bdf2b8cbb62a26f",
-      "bindings": [
-        "LX"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-20-B7UqYfsi.js",
-      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
-      "target": "sidebar-details-model.mjs",
-      "sha256": "79d5229e7cfef3d3d27e0be765ebd720c182c401da1d0e5db9b3c28f69c55dee",
-      "bindings": [
-        "PE",
-        "FE",
-        "IE",
-        "uD",
-        "dD",
-        "tT",
-        "fD",
-        "pD"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-20-B7UqYfsi.js",
-      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
-      "target": "sidebar-details-view.mjs",
-      "sha256": "5e638e9f3d26f0d5506b4793f3517cf6c39d2321b52a678210529e090487959a",
-      "bindings": [
-        "DE",
-        "kE",
-        "zE",
-        "BE",
-        "QE",
-        "$E",
-        "nD"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "target": "sidebar-status-glyph.mjs",
-      "sha256": "4b896b16cf0f6554e6fa4218918cdeb74b207e063989c2024111d71cc00d6582",
-      "bindings": [
-        "CT",
-        "TT",
-        "jT",
-        "MT",
-        "PT",
-        "fE",
-        "pE",
-        "uE",
         "TD",
         "ED",
         "DD",
-        "PD",
-        "FD",
-        "ZD"
+        "OD",
+        "jD",
+        "wU"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "target": "sidebar-fade-label.mjs",
-      "sha256": "79be5629a0db3342a2c7d6b2a16326f1ea8389df9dd07a3f6340f36718ec3470",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "target": "sidebar-pr-card.mjs",
+      "sha256": "c590c2decb05f52abfe1890325e8c83ff9ce9bea74397e0df8700569b55433bb",
       "bindings": [
+        "PE",
+        "FE",
+        "IE",
+        "LE",
         "RE",
+        "zE",
         "BE",
         "VE",
-        "UE",
-        "WE",
+        "HE",
         "GE",
-        "KE",
         "qE",
         "JE",
         "YE",
         "XE",
+        "aD",
+        "oD",
+        "sD",
+        "cD",
+        "lD",
+        "uD",
+        "dD",
+        "fD",
+        "mD",
+        "pD",
+        "hD",
+        "gD",
+        "yD"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
+      "target": "sidebar-remote-name.mjs",
+      "sha256": "8d16d175379eb7c263af17b3d742baf657c180d83f40fd1ca220234fd3d03755",
+      "bindings": [
+        "C4"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
+      "target": "sidebar-environment-copy.mjs",
+      "sha256": "71844edd16ff7000ea9e97c4f5456347537ce279665880f106bdc81450b23268",
+      "bindings": [
+        "vQ"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "target": "sidebar-details-model.mjs",
+      "sha256": "805b277d815e2e27bd0c66e26a90497881e40bf3e06f0aa9502c28f04a332fc0",
+      "bindings": [
         "ZE",
         "QE",
         "$E",
-        "rD",
-        "iD",
-        "aD"
+        "jD",
+        "MD",
+        "eT",
+        "ND",
+        "PD"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "target": "sidebar-row-view.mjs",
-      "sha256": "ac9a0a7ec269096d1e164286bd102db5408cee91e1d0da50b20782dc794e57be",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "target": "sidebar-details-view.mjs",
+      "sha256": "d1ee27cef30abfe3612657a30d51b8008aa0a947bdb932c3b2500a26e76d27c6",
       "bindings": [
-        "EE",
-        "OE",
-        "kE",
-        "AE",
-        "jE",
-        "ME",
-        "NE",
-        "PE",
-        "FE",
-        "LE",
-        "zE",
-        "HE",
-        "eD",
-        "tD",
+        "WE",
+        "KE",
         "nD",
-        "oD",
-        "sD"
+        "iD",
+        "rD",
+        "_D",
+        "vD",
+        "xD"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "sidebar-status-glyph.mjs",
+      "sha256": "d2aeb933dbaf81f7357e32290607dc8823f96d607f187537eb5431a338416c41",
+      "bindings": [
+        "oO",
+        "cO",
+        "mO",
+        "hO",
+        "_O",
+        "YO",
+        "XO",
+        "KO",
+        "BC",
+        "EA",
+        "DA",
+        "OA",
+        "FA",
+        "GC",
+        "WC",
+        "KC",
+        "JO",
+        "IA",
+        "$A"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "sidebar-fade-label.mjs",
+      "sha256": "b8132cf98930b58583089621a3764d82339eff6dd99513476eef0975bc4f35a3",
+      "bindings": [
+        "jk",
+        "Nk",
+        "Pk",
+        "Ik",
+        "Lk",
+        "Rk",
+        "zk",
+        "Bk",
+        "Vk",
+        "Hk",
+        "Uk",
+        "Wk",
+        "Gk",
+        "Kk",
+        "qk",
+        "Zk",
+        "Qk",
+        "$k"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "sidebar-row-view.mjs",
+      "sha256": "2da9794524dbbd785f84ab9f3cd88b1ae3db05539f6e0053d7abdb94f537684a",
+      "bindings": [
+        "yk",
+        "xk",
+        "Sk",
+        "Ck",
+        "wk",
+        "Tk",
+        "Ek",
+        "Dk",
+        "Ok",
+        "hk",
+        "Ak",
+        "Mk",
+        "Fk",
+        "Jk",
+        "Yk",
+        "Xk",
+        "nA",
+        "eA",
+        "tA",
+        "rA"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "sessions-page-band.mjs",
-      "sha256": "0bd8ec9865c109e1e7f9c30fd5d809c5ad0dd9ffb24b148bdb58303698c0a68f",
+      "sha256": "c1b440e81fe82d0b1a9ab1409e7dd3cec74a6a9d4cfb4549380ca65a50467323",
       "bindings": [
-        "ey"
+        "mb"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-20-B7UqYfsi.js",
-      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
       "target": "sessions-page-load-deadline.mjs",
-      "sha256": "297748345e5c8f5359f8e2dc4a8aa6816717d239f68027cff6714cb03a9d8e92",
+      "sha256": "b337f3d9cd80cc2bf11f6507d917d939103fb624d1550ac4a4d951398be90fe7",
       "bindings": [
-        "eT"
+        "$w"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cbd6c85c8-D1xuycDy.js",
+      "sourceSha256": "46717555f9b430e94c847756ffc0caf859f10f4815ee219eda42e5f63322b5ef",
       "target": "sessions-page-load-hold.mjs",
-      "sha256": "5cdad38de636cf944c11920ef179c5c906b130b3284719cbbc30b339b4848961",
+      "sha256": "a63cb158431ce9e3e647c87e1b89d8791f26d232fd9de0e0370a09c5a6abcb8d",
       "bindings": [
-        "iu"
+        "$u",
+        "ed"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-8-B5lJ8U5C.js",
-      "sourceSha256": "09a1c33cf2e31d076f8e1908ab42933e1e6d702120136cd67418793a7657d086",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-8-Db1QN4mf.js",
+      "sourceSha256": "58111888496145e55cef44216d287e87411fb0cdab1b2f117aa25104e292c39f",
       "target": "sessions-page-live-status.mjs",
-      "sha256": "4fa253f535b178a22d39fca4d7be6f6f318e32dce9cd1a8e72c330f9a6934b31",
+      "sha256": "a4d1f17cc67cc45d912c795daa48fd54c75dc0b4c30e17d5791fa7d82ab65a66",
       "bindings": [
-        "E_"
+        "mb"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-8-B5lJ8U5C.js",
-      "sourceSha256": "09a1c33cf2e31d076f8e1908ab42933e1e6d702120136cd67418793a7657d086",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
       "target": "sessions-page-coordinator.mjs",
-      "sha256": "5d1c458c155273e240a0c8d020273e15495c6a60394bfde922753c5664c25b4b",
+      "sha256": "e28cee69a39e14986673332af8d574857ea472cd1435ad54fa6659d077810368",
       "bindings": [
-        "UR",
-        "WR"
+        "qj",
+        "Jj"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-11-BuQ3CK5I.js",
-      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-11-_AVGLHEz.js",
+      "sourceSha256": "f9171920e9098288a8aceb2642c56c6a4ac6d4aba632fb7e1c8cbf312cfc0011",
       "target": "sessions-page-model.mjs",
-      "sha256": "907eb3f68fcb86bbd2a266392450d61f999026e9f8aebdae3ce45ce04fe42cb6",
+      "sha256": "548fc65464ea7ff7f853cc9083a27e5c01162f7b0441ffda49edff0719adcf9d",
       "bindings": [
-        "db",
-        "Ny",
-        "cb",
-        "Hy",
-        "Vy",
-        "fb",
-        "pb"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-copy.mjs",
-      "sha256": "61e3cc7477014c31830bd01ab3716d94bff5a010342648f9dad3609b17f94d12",
-      "bindings": [
-        "id",
-        "ad",
-        "od",
-        "sd",
-        "cd"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "target": "sessions-page-awaiting-label.mjs",
-      "sha256": "837c6a7e275b0ae940e85eed34775eefb78eeb63cda4dadc04f2b580306192c4",
-      "bindings": [
-        "OD"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-selection-bar.mjs",
-      "sha256": "55b5c8b8d6b6f9d5b148ffce96f00b12653e0f2716e3b89b10c8169e19457e36",
-      "bindings": [
-        "ku",
-        "Au",
-        "ju",
-        "Mu",
-        "Nu"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-bulk-actions.mjs",
-      "sha256": "56299ce1ce6d00a32257f3daa988142d125bdade0e621d6e35d1d1c79cde03c4",
-      "bindings": [
-        "fu",
-        "gu",
-        "_u",
-        "vu",
-        "yu"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-tabs.mjs",
-      "sha256": "64efaf8961d84c75b04f6dc2a1572f3e5e5e38d134cfe5b16982d378850013fc",
-      "bindings": [
-        "gd"
-      ],
-      "sourceSelections": [
-        {
-          "binding": "gd",
-          "local": "gr",
-          "direct": true,
-          "fragmentSha256": "b984696e6549399549988131e4cd8c890e942106639b47e8e7af951442133e89",
-          "parameters": "{surface:L,onSurface:A,replaceSurface:j=()=>{},intl:c,tabsId:ar,panelId:sr,filterLabel:tr,\n    selection:J={isActive:false},bulkMenu:Jt=false,countText:lr,selectionHiddenClass:hr,I=['code','archived'],O='code',cr=true,dr=cr&&!J.isActive}"
-        }
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-count-text.mjs",
-      "sha256": "2eecedd6d29e7d01b669191d06a61663fc166b015a754600e96ec27e7c0ec895",
-      "bindings": [
-        "gd"
-      ],
-      "sourceSelections": [
-        {
-          "binding": "gd",
-          "local": "lr",
-          "direct": true,
-          "fragmentSha256": "214a9a23519187666ce022f0e2dfc929171b695bb7813ef66f0d9bda1f4de6ee",
-          "parameters": "{selectedCount:wn=0}"
-        }
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-empty.mjs",
-      "sha256": "6818e0b361955f7f61584f7f469cd9ecc227c53cdf6a3522eee9657cc91aa8f9",
-      "bindings": [
-        "gd"
-      ],
-      "sourceSelections": [
-        {
-          "binding": "gd",
-          "local": "vr",
-          "fragmentSha256": "fc55034b6b40fd63916981df75d9392cd7e8edeaf82163ded7df91bda2d60266",
-          "parameters": "{query:ce,surface:L,U=!!ce,t=true,y=true,S=false}"
-        }
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-search.mjs",
-      "sha256": "51977448388831ca3720bd7c4135b2adc97f0ad900b97a7dd5b2c71109a5002c",
-      "bindings": [
-        "gd"
-      ],
-      "sourceSelections": [
-        {
-          "binding": "gd",
-          "assignment": "br",
-          "fragmentSha256": "0ef82be6be0fa23ef9d422caade9c419a1465b171c47b304560ca76a75a0971a",
-          "parameters": "{value:H,onChange:Ut,intl:c,sortItems:_r,sortBy:V='type',hasQuery:U=false,heldQuery:z,\n    t=true,x=true,v=false,g='code',be=false,W={}}"
-        }
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-view.mjs",
-      "sha256": "81c18f74261c5160285ef2c2279562c6eea5573a02c8c4f4a582fd6f35c9b7f9",
-      "bindings": [
-        "gd"
-      ],
-      "sourceSelections": [
-        {
-          "binding": "gd",
-          "call": "a",
-          "argument": "Wa",
-          "fragmentSha256": "0e1e2f293276c888353974c3040ecf73197ebabc0da16ec744329f21bf275cec",
-          "parameters": "{tabs:gr,search:br,loading:yr,surface:L,newHref:w,panelId:sr,tabsId:ar,hasQuery:U,rows:Mt,\n    getRowKey:dd,getRowHref:Jn,getRowLabel:Yn,renderContent:Zn,renderActions:er,linkComponent:pd,emptyState:vr,intl:c,selection:J,\n    bulkMenu:Jt=false,selectableRows:Wt=[],selectButtonRef:Gt,countText:lr,tabsStatus:pr,selectionLead:mr,selectionHiddenClass:hr,\n    t=true,x=true,v=false,g='code',rr=[],ir,cr=true,dr=cr&&!J.isActive,selectedCount:wn=0,Tn=[],_n,En,jn=false,Nn=false,Pn=false,Dn=0,zn,qn,\n    G=false,Ue=false,ge=false,W={},fn=null,tn,Qt=()=>{},Y=e=>e.ref.kind!=='code',Ht,h=true,Lt,Nt=false,vt=false,\n    kn=null,An=()=>{},Fn={action:'delete',deletable:0,nonDeletable:0},Hn,Bn,$n=null}"
-        }
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cbd6c85c8-PO73iD62.js",
-      "sourceSha256": "488ff194f722053245e4b7f1abd3f912e3ae60d73518c2ac0c3ea4c68f7b4c3d",
-      "target": "sessions-page-row.mjs",
-      "sha256": "e4b8320633b8b8b35fff6f4d1f5bbe57f58722dd4d88a201f352110dcbdcdea6",
-      "bindings": [
-        "_d",
-        "vd",
-        "yd"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "target": "sidebar-family-sort.mjs",
-      "sha256": "bc14c728c8b52121209e97b2f622c31dacc42f232ca4eaeb190d5faeea7ed803",
-      "bindings": [
-        "ZR",
-        "$R",
-        "ez",
-        "tz",
-        "rz",
-        "iz",
-        "az",
-        "nz",
-        "sz",
-        "cz"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-22-HztmyUTM.js",
-      "sourceSha256": "28629418dc0265d7ffb911e9df66066349a1d650feca61743e4f49aaab9a1ad1",
-      "target": "sidebar-date-pivot.mjs",
-      "sha256": "85fa920329cfec0ae91848d929f0a8c536ed736041de1ea7cc59bd0921d4ab0d",
-      "bindings": [
-        "yw"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-22-HztmyUTM.js",
-      "sourceSha256": "28629418dc0265d7ffb911e9df66066349a1d650feca61743e4f49aaab9a1ad1",
-      "target": "sidebar-date-groups.mjs",
-      "sha256": "71ef204addbeeeb7376ae177a45effa4f2c265bff56a6257d1d8a1fcd303e2ad",
-      "bindings": [
+        "dw",
+        "SC",
+        "cw",
+        "jC",
+        "AC",
         "fw",
-        "pw",
-        "_w",
-        "vw"
+        "pw"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-11-BuQ3CK5I.js",
-      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
-      "target": "sidebar-sort-model.mjs",
-      "sha256": "817d2f7af93b6c03d9a25874fc52403f8e69c5550ea3a6555b66152460407aa5",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cbd6c85c8-D1xuycDy.js",
+      "sourceSha256": "46717555f9b430e94c847756ffc0caf859f10f4815ee219eda42e5f63322b5ef",
+      "target": "sessions-page-copy.mjs",
+      "sha256": "4be4d898a283c7aee025b29bf06220978d1c99db08b711ec5c30cf23254cf8a0",
       "bindings": [
-        "Ry",
-        "zy",
-        "By",
-        "Uy"
+        "Af",
+        "jf",
+        "Mf",
+        "Nf",
+        "Pf"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "target": "sidebar-sort-order.mjs",
-      "sha256": "2c43f673e9d680b457248964bb4e4b1ae7fe7053d2467c4d09caf8c590c7359e",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "sessions-page-awaiting-label.mjs",
+      "sha256": "dff06d260df8bd2b80e4f34718a759b8fa678c081c3c648786ee1adc92d4d561",
       "bindings": [
-        "VR",
-        "HR"
+        "kA"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "target": "sidebar-group-copy.mjs",
-      "sha256": "0be6a0370b2907e17ea6e4ce063a85788ae3239e39f2f189fd93c63d601141ab",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cbd6c85c8-D1xuycDy.js",
+      "sourceSha256": "46717555f9b430e94c847756ffc0caf859f10f4815ee219eda42e5f63322b5ef",
+      "target": "sessions-page-selection-bar.mjs",
+      "sha256": "48d202b345dd1f926e94b17bc8bf7d7dc0a2db457025ce8861fdc220026a6c58",
       "bindings": [
-        "vE"
+        "Gd",
+        "Kd",
+        "qd",
+        "Jd",
+        "Yd"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "target": "sidebar-filter-options.mjs",
-      "sha256": "cfcbfb08ff56a723705d18547e93a5bd82c3a9352a5d2d3d836b02b7361a6dd8",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cbd6c85c8-D1xuycDy.js",
+      "sourceSha256": "46717555f9b430e94c847756ffc0caf859f10f4815ee219eda42e5f63322b5ef",
+      "target": "sessions-page-bulk-actions.mjs",
+      "sha256": "acde46ac3144665c259348c0e22cb42ff304bfc3eefe6572826c98f47d385d54",
       "bindings": [
-        "oU"
-      ],
-      "sourceSelections": [
-        {
-          "binding": "oU",
-          "local": "Se",
-          "fragmentSha256": "e6427f4f2c62d9addc605be85e850907e689153d95961d50c31170595eb725fe",
-          "parameters": "{intl:q,statusGrouping:d=true,customDisabled:be=false}"
-        }
+        "cd",
+        "Dd",
+        "Od",
+        "kd",
+        "Ad"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "target": "sidebar-filter-controls.mjs",
-      "sha256": "bc9eb743e5fab3c130b387f4aec34a460227db8dcc6967d029d8a525d981942d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cbd6c85c8-D1xuycDy.js",
+      "sourceSha256": "46717555f9b430e94c847756ffc0caf859f10f4815ee219eda42e5f63322b5ef",
+      "target": "sessions-page-view.mjs",
+      "sha256": "262decaee7586371e02e7394e38c8a61c33bbddc84b6ee0c607f1020bfa2e38e",
       "bindings": []
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cbd6c85c8-D1xuycDy.js",
+      "sourceSha256": "46717555f9b430e94c847756ffc0caf859f10f4815ee219eda42e5f63322b5ef",
+      "target": "sessions-page-row.mjs",
+      "sha256": "f672fecd8c8531fbfbf9d0a2eb62824cf60e223e7233a81c1167f1458f5fd174",
+      "bindings": [
+        "dp",
+        "fp",
+        "pp"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "sidebar-family-sort.mjs",
+      "sha256": "d5535852ca813ea28528f1fca9966bc7a96e0b4675bed982dc0731ee601a1d5c",
+      "bindings": [
+        "BU",
+        "HU",
+        "UU",
+        "WU",
+        "KU",
+        "qU",
+        "JU",
+        "GU",
+        "XU",
+        "ZU"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-22-Bwn3sJTG.js",
+      "sourceSha256": "7604d119a352d77d8d048a98d7f87103703f932ccdb06cf3dc88bf32041eaaf6",
+      "target": "sidebar-date-pivot.mjs",
+      "sha256": "424410713c903f7c4c4f3ee68aa9c80f62dcba2859771285c8522397840af7ef",
+      "bindings": [
+        "IT"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-22-Bwn3sJTG.js",
+      "sourceSha256": "7604d119a352d77d8d048a98d7f87103703f932ccdb06cf3dc88bf32041eaaf6",
+      "target": "sidebar-date-groups.mjs",
+      "sha256": "02cfe0071920a258f7df55cffe44a07a2755570ce646951dd4079d040d1ae194",
+      "bindings": [
+        "bT",
+        "xT",
+        "PT",
+        "FT"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-11-_AVGLHEz.js",
+      "sourceSha256": "f9171920e9098288a8aceb2642c56c6a4ac6d4aba632fb7e1c8cbf312cfc0011",
+      "target": "sidebar-sort-model.mjs",
+      "sha256": "f4d1fdceca1143ae0cb5a3bc4d985ee74f67cf61400c956e356036c2391f7b7b",
+      "bindings": [
+        "DC",
+        "OC",
+        "kC",
+        "MC"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "sidebar-sort-order.mjs",
+      "sha256": "f3393344dfe5d6a37109fbe3a8a1ce5b6538c248270fbe62d829604dad755fa2",
+      "bindings": [
+        "AU",
+        "jU"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "sidebar-group-copy.mjs",
+      "sha256": "8bb9dda4654a6db5fb1cd951ca0f7a074d4c3eae6e17caeaaf82cc2d356917ef",
+      "bindings": [
+        "ck"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "sidebar-group-options.mjs",
+      "sha256": "0b9ff76be18ca57106144d426fb36231f41366f34e69d9716a855ebb7c054fc9",
+      "bindings": [
+        "GJ"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "sidebar-filter-controls.mjs",
+      "sha256": "90fed9bce829b16bdabc252331323215750bff6988ab65331c696bd78d36e1af",
+      "bindings": []
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
       "target": "sidebar-filter-view.mjs",
-      "sha256": "3fc004f3d1376f8ec120af2020d6ac2d70fca2c411276356880761eacf39f6db",
+      "sha256": "4b94c604eeaa7e014f2d17de7ca7d51ecb0576f607920978a71fcd791a7b007e",
       "bindings": [
-        "oU"
+        "PJ"
       ],
       "sourceSelections": [
         {
-          "binding": "oU",
-          "test": "t === \"sessionList\"",
-          "callee": "f",
-          "fragmentSha256": "cfc36d69d44558d1985261828368c14625581e8e85ab5a11deb183907657cd68",
-          "parameters": "{groupOptions:Se,groupBy:ut,onGroupBy:nt,sortOptions:Oe,sortBy:l,onSortBy:rt,ascending:it,onAscending:at,intl:q,direction:o,metadata:Ce,onMetadata:Ye,routinesAvailable:se=false,routines:ne=false,onRoutines:Xe,routinesCopy:ce,emptyGroupsAvailable:de=true,emptyGroups:W,onEmptyGroups:qe,resetAvailable:dt,onReset:ft}"
+          "binding": "PJ",
+          "ifTest": "n === \"sessionList\"",
+          "result": "fn",
+          "cache": "$ = J9(482)",
+          "fragmentSha256": "2d406e0ef7418043b208b537d6443d7a48fff53384a2b78dc42c927711114d0a",
+          "parameters": "{intl:Q,direction:c,groupOptions:we,groupBy:Xt,onGroupBy:Vt,sortOptions:ke,sortBy:f,onSortBy:Ht,ascending:Ut,onAscending:Wt,metadata:Te,onMetadata:Pt,routinesToggle:ie={offered:false,checked:false},sideChatsOffered:X=false,sideChatRows:ae={sideChatRowsShown:false},onSideChats:Ft,emptyGroupsAvailable:ce=true,emptyGroups:Y,onEmptyGroups:Mt,resetAvailable:Zt,onReset:Qt}"
         }
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
       "target": "sidebar-search.mjs",
-      "sha256": "f5bab532f65e5c8bc7c8b453cd75fc72f2b2dc9e32aa84b40b6ccf50910668e5",
+      "sha256": "54d27a0592720cc06bf0c53c7b177c20ea89895488ba25bcad52dfef24eae438",
       "bindings": [
-        "RF",
-        "zF"
+        "Dz",
+        "Vz",
+        "Uz",
+        "Hz"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-16-B0xHzPjj.js",
-      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-16-ByfgAyLr.js",
+      "sourceSha256": "f3380feb106ca8c422b85b5cbcdfa567cb4f359eded26b6f89d9c0efbbdd35f7",
       "target": "sidebar-menu-groups.mjs",
-      "sha256": "640e7462eb686f0cbc882924a3253cedd605573de4fa78df9c90202ed34a9e82",
+      "sha256": "6ce2eff10d65c70736a3311066a7ef1a3682b9024b999e0ab999a97e5a65257d",
       "bindings": [
-        "ru",
-        "iu",
-        "au",
-        "cu",
-        "lu",
-        "uu"
+        "kl",
+        "Al",
+        "jl",
+        "Il",
+        "Ll",
+        "Rl"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
       "target": "sidebar-menu-order.mjs",
-      "sha256": "6f86633e7d264fb547315f9b594daea912ac3688ac75fa0eb0543f7af4f0e530",
+      "sha256": "bc0b4e0d75a014b92b349189872e75f98a6074d8a911ab7a282e7e079dbac1e8",
       "bindings": [
-        "jX",
-        "MX"
+        "EO",
+        "DO"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
       "target": "sidebar-group-view.mjs",
-      "sha256": "fb6b232d8000b6a6b0d0b34d15cfd4bc9b569df2a40abebe737b350bf74c614a",
+      "sha256": "299c04aa18db9fb1c947ec732e2f4341630262d49fb507179b8781cc76125a7c",
       "bindings": [
-        "nZ",
-        "oZ",
-        "sZ",
-        "cZ",
-        "lZ",
-        "uZ"
+        "YO",
+        "mk",
+        "hk",
+        "gk",
+        "_k",
+        "MO",
+        "vk"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-1-CAAiD7E3.js",
-      "sourceSha256": "c608dab61da6ed8864d0d5356426b3d89eeaec1436e537cfb328004739144f65",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
       "target": "session-cycle-composer.mjs",
-      "sha256": "6f8ee4180ba35c568d37af361bf928b18b1277caee3eb75289e2613374a20908",
+      "sha256": "c7732505d8de85db9f37529282a4404e78a30200924e6cf255db2fa4fb27efae",
       "bindings": [
-        "tg",
-        "lg",
-        "fg"
+        "y_",
+        "D_",
+        "A_"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-156-Bikz018e.js",
-      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-156-BLTosN8U.js",
+      "sourceSha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
       "target": "session-cycle-focus.mjs",
-      "sha256": "aac0c8dee8f1b22f2e1e134a2ac2ebdd8527f9f341b39d14cae2c8d5bfdf6a5c",
+      "sha256": "b16cf262409a1ac2185afbf1b2fce2e2e41fa65c223e6e7503714889cb4d0280",
       "bindings": [
-        "BB",
-        "HB",
-        "WB",
-        "ff",
-        "pf"
+        "PK",
+        "IK",
+        "RK",
+        "pm",
+        "mm"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-9-D7uuiUv7.js",
-      "sourceSha256": "f1a676395b43bcae1fed011716ad24497d93f814ece1671a851682890377d205",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-9-CM21XrJw.js",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
       "target": "session-cycle-claims.mjs",
-      "sha256": "8ea88a1a1ac5f1a7914e3bffcec80d51d9996f1ff7f73db3859bca2a21716a84",
+      "sha256": "24c27d5141d0fc02ee3c59071ee87d536f2e12a1da74318e001b40dc7932294b",
       "bindings": [
-        "Dm",
-        "Om",
-        "km"
+        "zy",
+        "By",
+        "Vy"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-7-B8UIMGDr.js",
-      "sourceSha256": "e5b37f61c326e1d291a559d936b7ace0dec38449778a3ccdc532182f4185a3e5",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-7-DBAgAi5H.js",
+      "sourceSha256": "02dd2a97b533d6c9f3f700d07a682db038be119397578ee0c49055079164c35a",
       "target": "session-cycle-terminal.mjs",
-      "sha256": "4e9e1c131a329c414bbced464bafaa96cebac1babce4c0965a2a13cec15f3cb7",
+      "sha256": "7ec5c3731474d827443477684db7814d01fb13c86825e8a265caeabe6154b18f",
       "bindings": [
-        "XM"
+        "zB"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-16-B0xHzPjj.js",
-      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-16-ByfgAyLr.js",
+      "sourceSha256": "f3380feb106ca8c422b85b5cbcdfa567cb4f359eded26b6f89d9c0efbbdd35f7",
       "target": "session-cycle-chords.mjs",
-      "sha256": "2a36a89cdf2544a506720166a4eb7d77a04c117064e879006a90630c3d1349bb",
+      "sha256": "89ca47c5110fc9de0d22c52e90fe193ef63b1b82af37b60864cb7609a1a7ac79",
       "bindings": [
-        "Wp",
-        "Gp",
-        "Kp",
-        "Jp",
-        "Mf",
-        "jf",
-        "Yp",
-        "am"
+        "jg",
+        "Mg",
+        "Ng",
+        "Fg",
+        "oh",
+        "ah",
+        "Ig",
+        "yh",
+        "bh",
+        "xh",
+        "Sh",
+        "Ch",
+        "wh",
+        "Th",
+        "Kg"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-16-B0xHzPjj.js",
-      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-16-ByfgAyLr.js",
+      "sourceSha256": "f3380feb106ca8c422b85b5cbcdfa567cb4f359eded26b6f89d9c0efbbdd35f7",
       "target": "session-cycle-rows.mjs",
-      "sha256": "332583af71cbfb3db96cad522597859d0478740871ed9502cb0a9253654b8b74",
+      "sha256": "e9cb5fada4400aa26a22c70fe9b9c57ca47235b69517022bb72e2efd7b09fc9a",
       "bindings": [
-        "Xp",
-        "Zp",
-        "Qp",
-        "$p",
-        "em",
-        "tm",
-        "nm",
-        "rm",
-        "im"
+        "Lg",
+        "Rg",
+        "zg",
+        "Bg",
+        "Vg",
+        "Hg",
+        "Ug",
+        "Wg",
+        "Gg"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-16-B0xHzPjj.js",
-      "sourceSha256": "2665ff96e9e354cc35f6dc7a450d7c036a86dda699588f1f70d047dd5c231b70",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-16-ByfgAyLr.js",
+      "sourceSha256": "f3380feb106ca8c422b85b5cbcdfa567cb4f359eded26b6f89d9c0efbbdd35f7",
       "target": "session-cycle-step.mjs",
-      "sha256": "33c65d9d4057ea3d9635f2774ae635117751dc110dcdc161f175b48a66a0f5d5",
+      "sha256": "419de97be6724651db8e6450a2a3f096aa5bfe96e496240fda0c7d712cda95d8",
       "bindings": [
-        "qp"
+        "Pg"
       ],
       "sourceSelections": [
         {
-          "binding": "qp",
-          "local": "p",
+          "binding": "Pg",
+          "local": "m",
           "direct": true,
-          "fragmentSha256": "793c3e59492e1df34edadf7d0db42b5c7dcdb90d586bde488a0961fe08703d30",
-          "parameters": "u, c, f, o, tm"
+          "initType": "ArrowFunctionExpression",
+          "fragmentSha256": "c0e57d48148ed666f8a7cd40eb6379ef40e72742f75f0094b2eb65e3aa4b15cc",
+          "parameters": "d, l, p, o, Hg"
         }
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
       "target": "sidebar-bulk-family.mjs",
-      "sha256": "be9833347b6154cfd47b9faac930cfe1a782b39fcaeeb7839f6272cec2614591",
+      "sha256": "48635ce7b20c5accedebc3b5ae25caeb9b131a62d4ffe1c251fad5e9e9a4cea2",
       "bindings": [
-        "IX"
+        "LO"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
       "target": "sidebar-bulk-delete-copy.mjs",
-      "sha256": "24e7784dd308716c0f59b5825021e3748a8ecc8ec3a7fef0105c5e950ed2cfac",
+      "sha256": "9bbb81b80400c23a4e7e522bb93032e92936875a2aff246fe6c23bf7dd8f4da5",
       "bindings": [
-        "IY",
-        "FY",
-        "LY"
+        "eO",
+        "$D",
+        "tO"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
       "target": "sidebar-bulk-worktree-copy.mjs",
-      "sha256": "65d3dc26cef526d705f1a1261593e2d4852efd8330b527bd70a2ea1c662510d3",
+      "sha256": "8218373e0ff551dd635f5079d0ed073929f8bd1427f4250c27823046bbb9fd10",
       "bindings": [
-        "wY",
-        "DY",
-        "AY",
-        "NY"
+        "RD",
+        "VD",
+        "WD",
+        "JD",
+        "qD"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/asar/.vite/build/index.chunk-B5tintml.js",
-      "sourceSha256": "f5d162e3e6047c12ca0cee15d72574e316513df6a65d52e89e2d456a4a3022ff",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-DBIg6EBr.js",
+      "sourceSha256": "fc36cf3e49487bc7b00e4f039a9f792fedbec135fc49dbd429f7872de89d9090",
       "target": "../../../electron/generated/side-session-prompt.mjs",
-      "sha256": "ceeaf80e50f3dd9dfd4bfdb18601b2e64faa45f16d5c6e6684da980412a54d58",
+      "sha256": "c16679d9cdf7236280c50be2c61350349ebb2e92229e0adc3faee451a1d67f31",
       "bindings": [
         "cy",
+        "Ty",
+        "wy",
+        "Cy",
         "xy",
-        "by",
-        "yy",
-        "_y",
-        "vy",
-        "Sy"
+        "Sy",
+        "Ey"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd5fd9055-CiZdOOG4.js",
-      "sourceSha256": "390a9da4beb6e8c2113b8381131a5e75f874421f0835bfc2e7c4442e8b7d1a73",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd5fd9055-BXQRn_nx.js",
+      "sourceSha256": "6ea426b3860ea6be7e0d6593fb6c57f23fa5dcfbcfd3f46af484b18fec2fc9f5",
       "target": "csv-model.mjs",
-      "sha256": "9dfaf7b2fde77e8e4284f70c14fc6a7ca08c36c93f1e8866a37df187c82ef77f",
+      "sha256": "8a18ced65916295b5622673a0c089413c53771be0ddc1f43b64d69aa175dc25f",
       "bindings": [
+        "f",
+        "p",
+        "m",
+        "h",
+        "g",
+        "ce",
+        "_",
         "v",
         "y",
-        "b",
-        "x",
-        "S",
-        "C",
-        "w",
-        "T",
-        "E",
-        "re",
-        "ie",
-        "ae",
-        "oe",
-        "ce",
         "le",
-        "O",
-        "ue"
+        "ue",
+        "de",
+        "fe",
+        "ge",
+        "_e",
+        "x",
+        "ye"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c3fde7009-BbbO5TX9.js",
-      "sourceSha256": "864647c744c33cb9d853d223f871da7fa55d45c1c923c5d9ce44ede3723ddb06",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c3fde7009-LYGOoUpG.js",
+      "sourceSha256": "3c653ac62d5f1220f0f6591e23862d6d249200aca58f7a6ea198c3f48963c778",
       "target": "document-frame.mjs",
-      "sha256": "668ce6afd54bdd1ccc455ad7343a86bc5241df2aedddc06a3626558e0cecd14c",
+      "sha256": "9ddd8db8838ef20d2aa2ef32799f5cbe667c0a5a9353027ac9983b5606235b36",
       "bindings": [
+        "ct",
         "lt",
-        "ut",
-        "rn"
+        "cn"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd5fd9055-CiZdOOG4.js",
-      "sourceSha256": "390a9da4beb6e8c2113b8381131a5e75f874421f0835bfc2e7c4442e8b7d1a73",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd5fd9055-BXQRn_nx.js",
+      "sourceSha256": "6ea426b3860ea6be7e0d6593fb6c57f23fa5dcfbcfd3f46af484b18fec2fc9f5",
       "target": "csv-view.mjs",
-      "sha256": "b9aa5929704816d234ce12aa91cc0d95ba9c41d390e598873504dd25526b7e09",
+      "sha256": "b20b577341e4de6e00ba0feaf6e186343dd6b37dcb20080ed1f064d07406ce64",
       "bindings": [
-        "D",
-        "se"
+        "b",
+        "pe",
+        "me",
+        "he",
+        "ve"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c9f414608-DLf4iO0V.js",
-      "sourceSha256": "73280f4bde6cf3518ef9dc4cda335dc84ae0c21720c663f1dff4fa1a45d560f8",
-      "target": "tab-focus-release.mjs",
-      "sha256": "380c27f381b9fe14fb500f4bd0ccb0944398c2b2c1acda8fbe31a69e3726cf0f",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c99ca27a0-DVQoBCK_.js",
+      "sourceSha256": "956c0526ae594da1f382602dbd04eb23d7e0f52e20a693449b8578bf3fa3da89",
+      "target": "tab-focus-tracker.mjs",
+      "sha256": "2a207f7c006ac2510f5c916eb30494c38010f4313e311b3b10855b581f99b81c",
       "bindings": [
-        "t",
+        "e",
+        "n",
+        "r"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c9f414608-BplIKcn2.js",
+      "sourceSha256": "e3e46ba0b336ec3fe78dc053aa895a11362abbee6385dfd28a85235577d4a4b7",
+      "target": "tab-focus-release.mjs",
+      "sha256": "4d0a4b1b949896633e8702a2ad21bc382e3f757f9e53ddc3e7cfd898b61b361f",
+      "bindings": [
         "n",
         "r",
         "i"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c7f8992b4-BX_ywd4_.js",
-      "sourceSha256": "5f7576ff836b9c6b141ebf3af41af3737ba3aa6de5b73dfcf2c03225b4b87011",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c7f8992b4-DUZwS58e.js",
+      "sourceSha256": "d21aeb13fb0b7c201c1cadc101f27cf582f34ffbd403c45bf84eef4de59ea9fc",
       "target": "tab-focus-key-scroll.mjs",
-      "sha256": "6a7d3b2ee98507fc9d360fa67d67d23aaea33bb472148e349de6eb6e829e1a30",
+      "sha256": "e1110a09ffbd2ac46f7c9431fe6e0fbe35ed3c47536c2f5e5dc1b4ce7e82b47d",
       "bindings": [
+        "m",
         "g",
-        "v",
         "he",
-        "C",
-        "re"
+        "ge",
+        "ne"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c29df1c52-Ba85JL5f.js",
-      "sourceSha256": "c8032dd3b9d7b49a1be2f21d5c2bad0a098b12afbbbc5454d3640dcb99ae5f20",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c29df1c52-CULYovxc.js",
+      "sourceSha256": "e6744e51fef0aa0e4f2106b984dbacd054bfc095519f776a2256f2ae09863278",
       "target": "environment-form-layout.mjs",
-      "sha256": "8f8b02c257971a8112a5c9647b18dc7a4933825fc55c702e8f19baa89babdf55",
+      "sha256": "4d1adc1a39537d70161c0f30be0b1ec38a34123145d3f7c921bf58fee4e9cc19",
       "bindings": [
-        "v",
-        "y"
+        "_",
+        "v"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
       "target": "button-press.mjs",
-      "sha256": "cccc290d04ab6af64ca6d8a645ec765c5dce22e06e2660ab47860bab467dcd5f",
+      "sha256": "55f768621ed47836db77b63de395d6f8f3847125c46c8bf6433dc0113aadebff",
       "bindings": [
-        "ps",
-        "ms",
-        "hs",
-        "Ll",
-        "Rl",
-        "zl",
-        "Bl"
+        "Hs",
+        "Us",
+        "Ws",
+        "Eu",
+        "Du",
+        "Ou",
+        "ku"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
       "target": "tooltip-structure.mjs",
-      "sha256": "587b20beebd3284fad8bd2f1d6000991d3462130b71aa1e3c3770ec90e478f58",
+      "sha256": "7f5f0736d5d8f1375e5ed30dab5556bd107380f7ffc20781fe9965ddb02975ec",
       "bindings": [
-        "Gc",
-        "Kc",
-        "qc"
+        "Dl",
+        "Ol",
+        "kl"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-2-Cb74JByF.js",
-      "sourceSha256": "eba35a1da5c881718b063b0602d7d7fb0fd547c62e3079b2110fa9f7e39a4cff",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-2-TF8v67kg.js",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
       "target": "grapheme-prefix.mjs",
-      "sha256": "11af46292f61e0f95982995d9b3775c0988556b1e3e187079cb0ba184bc178db",
+      "sha256": "3ebc598a4ee170a85e3e274356ef6287ed713fdb98777474d537bd6cf5f16c2c",
       "bindings": [
-        "EI",
-        "DI",
-        "kI"
+        "cU",
+        "lU",
+        "dU"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cc43287c9-DAfOi8yP.js",
-      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc43287c9-Me-M2ucD.js",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
       "target": "session-menu-tooltip.mjs",
-      "sha256": "830a9951b3ef595de69fbea206c2241a7cc58014a266935e649e9ee9775e15ad",
+      "sha256": "ec8d5ca56661bbee2a000464f1ba6842426ff0c877acad0be466eac925031434",
       "bindings": [
-        "gW",
-        "_W"
+        "JW",
+        "YW"
       ],
       "sourceSelections": [
         {
-          "binding": "_W",
-          "local": "Ue",
-          "direct": true,
-          "fragmentSha256": "10b29165211bbb7612e4e622ff3da6fff031b9b0daed973d04823357739dbe22",
-          "parameters": "Ve"
+          "binding": "YW",
+          "conditional": "Ze.length <= JW || yd(Ze, JW) === Ze",
+          "whole": true,
+          "fragmentSha256": "a8bbc1466ec2cfa34aa671c9a71cb1d0e4747c603fbf70b570c8b4d0fe601a36",
+          "parameters": "Ze"
         }
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cc43287c9-DAfOi8yP.js",
-      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc43287c9-Me-M2ucD.js",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
       "target": "titlebar-draft-title.mjs",
-      "sha256": "12ce3d26588652334d7f5b1a5f0216493be7d009ef3df28dfc7a28feeb907aed",
+      "sha256": "39da707f87d507ae3620e5889eb8b65587fefee5c4dc7ab1f43472f785eb694c",
       "bindings": [
-        "wW"
+        "oG"
       ],
       "sourceSelections": [
         {
-          "binding": "wW",
-          "local": "Me",
-          "direct": true,
-          "fragmentSha256": "eaecc0cf36f7f2f113ec68a365c6e8ed4a8b885f1e4caab6bd139d44f0661ebd",
-          "parameters": "e, a, h"
+          "binding": "oG",
+          "conditional": "!t && !o && _",
+          "whole": true,
+          "fragmentSha256": "e295d158a5938626db87cabf1b06a704493409bc4efb82408b14ccf843cfafb7",
+          "parameters": "t, o, _"
         }
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c73f45bc3-CFrHin0p.js",
-      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
       "target": "titlebar-toggle-fold.mjs",
-      "sha256": "81e05db60effe0cb94e0552b99301dadfade963809c74b6345146dec4232245b",
+      "sha256": "4a59c613283f36f400bca96714c1701e79e09a6b9b440d2ca1975da4780ea4fb",
       "bindings": [
-        "jh"
+        "p_"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
       "target": "dom-owner.mjs",
-      "sha256": "10ba5e8412afbac48055e7b10afdf888e0c44e29e562915d2aea36f6c2d45b63",
+      "sha256": "63db14d6997e0bb41ace6bb4bb017db0802f2f72281c37bc422c3533f4a9d67e",
       "bindings": [
-        "Ji",
-        "lc"
+        "aa",
+        "Uc"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "titlebar-title-rect.mjs",
-      "sha256": "881031b098e5900f673e0a2e2ecb375cc60cd54b39e89a864860580bc2903981",
+      "sha256": "a885fc355858e31c6987260ced736ac6ae55230aebbb3fcefa19ed2b8b3e672e",
       "bindings": [
-        "Wy"
+        "aS"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd54a5401-B0T2EyYD.js",
-      "sourceSha256": "f17649ceef10f9984069763d3b2074755caff05a060b0ce003e31e2cf2a7a902",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd54a5401-wFztHb-d.js",
+      "sourceSha256": "a543a2b3887ca5c75720bdaf5bcb7e4999aeba335e9c9bb87cbd3e3ae4620c01",
       "target": "titlebar-fold-measure.mjs",
-      "sha256": "4187632b3a0bcc9701a36603cb620fb8c4072d363abd8de6c063734bb58e1c2e",
+      "sha256": "c3b6f4d5442d8ca10d9a2681e7b1a936675b3984724c37fb533444ae7c6d53fe",
       "bindings": [
+        "Lt",
+        "Rt",
+        "zt",
+        "Bt",
+        "Vt",
+        "Ht",
+        "Ut",
         "Wt",
         "Gt",
-        "Kt",
         "qt",
         "Jt",
         "Yt",
         "Xt",
         "Zt",
         "Qt",
-        "tn",
+        "$t",
         "en",
+        "tn",
         "nn",
-        "rn",
-        "an",
-        "on",
-        "sn",
-        "cn",
-        "ln",
-        "un"
+        "rn"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-6-Cby4X-ms.js",
-      "sourceSha256": "d637cb22b602b75eeaa11ee8c4a1f072b8ea7f7ac799688ed7744c3304fe80f0",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-6-sd9jbJqs.js",
+      "sourceSha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
       "target": "titlebar-lead-classes.mjs",
-      "sha256": "c320a9ac82074e3842d785e484db90494b794d3a9cbc0d86dea0cd68d1a8166c",
+      "sha256": "f754a521d12791cd772dc7a3e06733f9134442228937ecb9087d145b13da10b4",
       "bindings": [
-        "Jh",
-        "Yh",
-        "Xh",
-        "Fh",
-        "qh",
-        "Zh",
-        "Qh",
-        "$h"
+        "og",
+        "sg",
+        "cg",
+        "Kh",
+        "ig",
+        "lg",
+        "ug",
+        "dg"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-15-Cc9xvKlF.js",
-      "sourceSha256": "ea1fc6daf88e365b17cc582776945acd1b25be1f9e01c79664b360bba776db97",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-15-BvlV43cI.js",
+      "sourceSha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
       "target": "titlebar-panels-scope.mjs",
-      "sha256": "e6beb7a81ff210a00d46ede7fd32126ff930cbcd8a57c14b625ec8a1a04e44a2",
+      "sha256": "59b7f36b64bd093d1bdba9d5f5649cf82f176c6914e85b75b70d5ba962f25773",
       "bindings": [
-        "bn",
-        "xn"
+        "_n",
+        "vn"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "titlebar-lead-parts.mjs",
-      "sha256": "18913d096a9c1489bf6804c01eb4bf2830e7c2935f5b2d3d42175b3c16b7a86f",
+      "sha256": "b65960052a3d12f0aec18e1f79b792831b63c72a7d23e72dfc9a89f7e7868f43",
       "bindings": [
-        "Uy",
-        "Yy",
-        "qb"
+        "iS",
+        "dS",
+        "px"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c73f45bc3-CFrHin0p.js",
-      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
       "target": "titlebar-title-skeleton.mjs",
-      "sha256": "bffc98adab4663f96e79f9d4c5cf8627cef98739e9e8801c848e7059089904ef",
+      "sha256": "531950d7460d9405ca2bc55c69212326b9b8a0c2645d60f9a941b406e05e5baf",
       "bindings": [
-        "n_"
+        "iy"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c70925de4-C8m73NRP.js",
-      "sourceSha256": "95418ab398f0e49a85d8dce981afece9e62d909a71fc2bf4c971dd0a4676c379",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-6-sd9jbJqs.js",
+      "sourceSha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+      "target": "titlebar-origin-classes.mjs",
+      "sha256": "9ed6e865ad8db8ef27b5a66a9b961ec968f973e5ad63d94bc29308ae6e038639",
+      "bindings": [
+        "Yh",
+        "Wh",
+        "Jh",
+        "Gh"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "target": "titlebar-spawn-origin.mjs",
+      "sha256": "0f2911a95f2071443a48a00d9e88021d0328d9181263e5585c87df8fe5419368",
+      "bindings": [
+        "nA"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
+      "target": "titlebar-seed-latch.mjs",
+      "sha256": "d26ee5a56dfd4fb8a0d2b72604460b6c772e38adf4f52da0fb06fdb0313645a5",
+      "bindings": [
+        "xv"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
+      "target": "titlebar-spawn-lead.mjs",
+      "sha256": "7e68d7af9318881f6d5823c29aad5026b63319ed0255f73858d87042dd5dac2a",
+      "bindings": [
+        "wv",
+        "Tv",
+        "Ev",
+        "Dv",
+        "Ov",
+        "kv",
+        "Av",
+        "jv",
+        "Nv",
+        "Fv",
+        "Rv",
+        "zv",
+        "Bv",
+        "Vv",
+        "Zv",
+        "Qv",
+        "ry",
+        "ay"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c70925de4-SEtaxEBR.js",
+      "sourceSha256": "4e289a00313948dc363aeedac915d2eb8df608f2dfafdef7d7979bb706310f1c",
       "target": "titlebar-focus-lost.mjs",
-      "sha256": "dcd535f7f5939d9c315a74d9d0412baf33008527dc907f3761e85c3e2c84d2f8",
+      "sha256": "31e10874bfe539bd8ebba4cd9d80c0fd0cc54b1e3d0c6309e8e310d3737e1df7",
       "bindings": [
         "t"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c4db265df-CAC3hDZP.js",
-      "sourceSha256": "8abe580f97b1d92723f4af5bc26d0815b188d2e86ccf25d56149228ba10f10cf",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c4db265df-fNhlkQCj.js",
+      "sourceSha256": "272a3558bcd643e745286681de1a2e78f1a2d90fc6854197d62c3e792f68f02f",
       "target": "titlebar-focus-orphaned.mjs",
-      "sha256": "79f7b9ccd7028cb756d224337785eeaa88e6765bc39dfaf8ded3908a28eb5cc9",
+      "sha256": "e03fbe8bfcd1abccc40a32f83ab5427cb22bc4a7b524961a8dbbef531115c57e",
       "bindings": [
-        "Ze"
+        "tt"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
       "target": "display-text.mjs",
-      "sha256": "22e68c7c291a27d56b313956a508e92b18b27a98997bf6533a100682f7c0b1b0",
+      "sha256": "d9f80484ae65e51be04d42fb07b67b19b260e4a9b96a98eb4231adc4abbcfb37",
       "bindings": [
-        "ln",
-        "un",
-        "dn",
         "fn",
-        "gn"
+        "pn",
+        "mn",
+        "hn",
+        "yn"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-2-Cb74JByF.js",
-      "sourceSha256": "eba35a1da5c881718b063b0602d7d7fb0fd547c62e3079b2110fa9f7e39a4cff",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-2-TF8v67kg.js",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
       "target": "attachment-file-name.mjs",
-      "sha256": "f2bbcba6f98e559fc2ef74f96863a5c8913eb27f2c09c728f8e137f608bcf57d",
+      "sha256": "c986c0b9fcc0583558920ecaa4f137009ef6fcdd344dea57ea4666d4a83a7e48",
       "bindings": [
-        "ff",
-        "pf",
-        "op",
-        "sp",
-        "cp",
-        "lp",
-        "ap",
-        "np",
-        "up",
-        "Mp",
-        "Np"
+        "xp",
+        "Sp",
+        "gm",
+        "_m",
+        "hm",
+        "fm",
+        "vm",
+        "ym",
+        "bm",
+        "xm",
+        "Gm",
+        "Km"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-156-Bikz018e.js",
-      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-156-BLTosN8U.js",
+      "sourceSha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
       "target": "visible-box.mjs",
-      "sha256": "15962e10c141efeae03fe46d295877e865e0419ab286dc274b2f748c9ee068f6",
+      "sha256": "03c3cad19b524e56187feafcc6fb95d63c7d893215924a16f689ab7916ce08bd",
       "bindings": [
-        "HV",
-        "WV"
+        "Vq",
+        "Uq"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c96d752d0-BOCqU7c2.js",
-      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc32965c2-BQu1bA_w.js",
+      "sourceSha256": "e20d8f6c59d1a2763b9262df981a48d30879fa49b54a8c69b52ae53b28637167",
       "target": "approval-read-gate.mjs",
-      "sha256": "bd0c161f726bd12821f11a5e7b307ca0886ffd71fd2c6239732d0ff0fe50a443",
+      "sha256": "7b17977522dc0bdde0ed950a5bf938fca3f0e59de87f240e862e65b3150773bd",
       "bindings": [
-        "VDe",
-        "eE",
-        "tE",
-        "nE",
-        "rE",
-        "iE",
-        "HDe",
-        "UDe"
+        "wc",
+        "Tc",
+        "Ec",
+        "Dc",
+        "Oc",
+        "kc",
+        "Ac",
+        "jc"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c96d752d0-BOCqU7c2.js",
-      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc32965c2-BQu1bA_w.js",
+      "sourceSha256": "e20d8f6c59d1a2763b9262df981a48d30879fa49b54a8c69b52ae53b28637167",
       "target": "dev-server-description.mjs",
-      "sha256": "8edb26d6eaebf3b0024abde431476a642f343f0747459d125f38d0dcb8e67abb",
+      "sha256": "a4bc89da2ccb62cfd6d78c8eacd3f8106edef093c853b95bf88366e1a656d5a6",
       "bindings": [
-        "wA"
+        "kg"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-23-Bu_lvvVo.js",
-      "sourceSha256": "9b1c4145c0b95e5baf7a7da6c20010272a651001899e9a136cf4942f9d3f8940",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-23-BZ6ZY5fu.js",
+      "sourceSha256": "c8822b773aedbed9269736359e648c905f758baae8f83801fd187e2b235f3c22",
       "target": "split-drag-registry.mjs",
-      "sha256": "4dc4e10657699794708dc044b021ce5aae3c9e190dbfe6279c8e65cae2ab7563",
+      "sha256": "a9795d739442127d051bfad676ee14df71352122b2365153fed63390b4aeb6e7",
       "bindings": [
-        "D2",
-        "O2"
+        "FO",
+        "IO"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf53e1812-CivLPgES.js",
-      "sourceSha256": "779d07e3b298eb5e7f85c861a026e5f48036c0017a5c3c8ebcec60a9809c6a24",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c9543da06-BaufrsQl.js",
+      "sourceSha256": "111038eb20583df952daa9006c7e9c283f2cd02ccdabdaa2011335313ff4dafd",
+      "target": "tile-layout-flex.mjs",
+      "sha256": "1cef789e026e963f28ec8c4cc7eb14bbe33e5d4cf83142327175586c957e8164",
+      "bindings": [
+        "Gd",
+        "Wd",
+        "Kd"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf53e1812-CX9VqRuk.js",
+      "sourceSha256": "fc5612f6ccd2b7f95b70d792c328eb48c99d842b7db78f3aaca02da9b4919890",
       "target": "tile-layout-math.mjs",
-      "sha256": "b5a8991b795e6fa97ed424ab031ce86e615372056cb7e1acde971fbacd7701fb",
+      "sha256": "3db2344a7e49db76e1bcae4c575037423cdda9faf9e3eb8ef9e4112d8597b6e5",
       "bindings": [
         "t",
         "n",
-        "r",
-        "O",
-        "D",
-        "k"
+        "r"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cc43287c9-DAfOi8yP.js",
-      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc43287c9-Me-M2ucD.js",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
       "target": "tile-fit-opened.mjs",
-      "sha256": "bd899b6baa4b7dc42ae5a40f8e71b7a91b00868f61a8e060eb2290e71386ad17",
+      "sha256": "764722b7fb92e082be67b0669d45508eb54e500cf5898e2cd4ca779b2399c325",
       "bindings": [
         "B9",
-        "Rre"
+        "dbe"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-15-Cc9xvKlF.js",
-      "sourceSha256": "ea1fc6daf88e365b17cc582776945acd1b25be1f9e01c79664b360bba776db97",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-15-BvlV43cI.js",
+      "sourceSha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
       "target": "padded-top.mjs",
-      "sha256": "29bf705d45a2f506f0427a5bcf07d3cc5e7e6fe25d5ca2c5706955fa5846a3af",
+      "sha256": "f89bfb007bae6139d64221f8d970dcc8effd16c0afe42abb152e07c35bf20d3c",
       "bindings": [
-        "Ea",
-        "Da"
+        "Xs",
+        "Zs"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c96d752d0-BOCqU7c2.js",
-      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c99ca27a0-DVQoBCK_.js",
+      "sourceSha256": "956c0526ae594da1f382602dbd04eb23d7e0f52e20a693449b8578bf3fa3da89",
+      "target": "transcript-tab-focus.mjs",
+      "sha256": "a78e525f12c570fb3890acf1201221776f23828ff1a9ce59f8c68c6296cd7923",
+      "bindings": [
+        "t"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c96d752d0-CWv_7-n9.js",
+      "sourceSha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
       "target": "transcript-focus-landing.mjs",
-      "sha256": "70427e0629ffaeff6ddfa3c80382e3451d340852f95670243bb3fd870b2e2241",
+      "sha256": "2e9afc2a4f9837ac4b6878337ed0f57bbb0bf2bffa31023a4d93fd408c62d6f8",
       "bindings": [
-        "tet",
-        "Y6",
-        "Z6"
+        "o6",
+        "net",
+        "u6",
+        "f6"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-156-Bikz018e.js",
-      "sourceSha256": "e49ae8b3b38759f672f2ddd8b5ec60aadbc92f1580a1853ce5b62994b6c48ad7",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-156-BLTosN8U.js",
+      "sourceSha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
       "target": "surface-chord-layers.mjs",
-      "sha256": "fc8b81aac6048f4eff18a9bfed2cdad63c27a7901823445483542f9c31c60395",
+      "sha256": "f88fbcf5808c76a4983ece6bc01e26e572e5db0a964206266af443784fdeb9ae",
       "bindings": [
-        "YB",
-        "ZB",
-        "$B"
+        "UK",
+        "GK",
+        "qK"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-78-D6VXYXaQ.js",
-      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
       "target": "surface-chord-platform.mjs",
-      "sha256": "0e05e698e1bbcb06f7bf358d894027d87ace77c76b4e80e6477380d603b28e27",
+      "sha256": "eeba6e16ad9cfbcefe8a487450120b55139e686e04c54721c9028705d9244f7f",
       "bindings": [
-        "Ua",
-        "Wa"
+        "To",
+        "Eo"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-1-CAAiD7E3.js",
-      "sourceSha256": "c608dab61da6ed8864d0d5356426b3d89eeaec1436e537cfb328004739144f65",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
       "target": "surface-chord.mjs",
-      "sha256": "33c183852d5837b9e4eb7f8786115b7e0ed3b30912ed4277784250280b992173",
+      "sha256": "7d239dd1a28a1e83fc125d66b0f0bd003a3e6cd3cc7b96064045c7df724934ae",
       "bindings": [
-        "vj",
-        "xj",
-        "Sj",
-        "Tj",
-        "BL",
-        "VL",
-        "HL",
-        "WL",
-        "GL",
-        "JL",
-        "RL",
-        "qL",
-        "$L"
+        "FP",
+        "RP",
+        "zP",
+        "HP",
+        "qV",
+        "JV",
+        "YV",
+        "ZV",
+        "QV",
+        "tH",
+        "GV",
+        "eH",
+        "oH"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-52-DGviI8xb.js",
-      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
       "target": "../../../electron/generated/environment-basename.mjs",
-      "sha256": "118e8cc4af1efa8cd4637662fef08cfb02e49cfb70a90da214e206329a36e995",
+      "sha256": "ccf8f395e7646a1b25b80ef12c933161965867949ff5527dfa0acd16ea82431a",
       "bindings": [
-        "n_"
+        "nk"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "../../../electron/generated/environment-parent.mjs",
-      "sha256": "657d08b3b65d8b78d156b34040a3e145b1ce083b527ba004009f43f86a41df8e",
+      "sha256": "cec216cd35693e2253357f82343b962a39fa2a623b6b4de95c939efaf6a2c443",
       "bindings": [
-        "jR"
+        "lU"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd0cf5b5e-BajR1nyG.js",
-      "sourceSha256": "7fd0d4ae4fbbadc79a74e6b4e13e4bf5d309d9db7948b49ac92e95f67d9c6e20",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd0cf5b5e-BCzJmEwZ.js",
+      "sourceSha256": "e7e22664d2af9047ac5e89c609b287789b43b1ec6d3769d5b1b8694814f97d3e",
       "target": "../../../electron/generated/environment-presets.mjs",
-      "sha256": "d8d4c1ce6ee0b54c7ed1ee03125b5b3a8aba7343b19fa9e891673eb094607bca",
+      "sha256": "d9d8eb67c0c4e4e655bf39183b1ea03c13b1ae5342a6e70f4ad312b1b3c3d068",
       "bindings": [
         "c",
         "ue",
@@ -1450,520 +1520,564 @@
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-1-CAAiD7E3.js",
-      "sourceSha256": "c608dab61da6ed8864d0d5356426b3d89eeaec1436e537cfb328004739144f65",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
       "target": "environment-modifier-keys.mjs",
-      "sha256": "4e7eb5719621c093a45f203f5a96cc0d44407d905c71be22be1013f799c35ff0",
+      "sha256": "e15c1e350f5c4253cf7832a235ddfc4659b1228df5f06a59305decb6e5c671fd",
       "bindings": [
-        "GV"
+        "tK"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-104-Cqo2-vQh.js",
-      "sourceSha256": "8fa6dc2deb952fdb02f30b1736a86db0b19a5c2c8645a32f852dd8fc3a959045",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
       "target": "environment-common-copy.mjs",
-      "sha256": "0d318df50eaba86250c23640d2e6cb14acec9597ea4277dc7a3078651b7b9dca",
+      "sha256": "8da733e61efca7520ca3ce2b8e04ad2b4556b169370ebb2f918513906a16ed5a",
       "bindings": [
-        "Pl",
-        "Fl"
+        "ZW",
+        "QW"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/ca690a791-BG2HOgzO.js",
-      "sourceSha256": "38a8f440356916f2e88551fe3cb9983c862b6df47c12251dc2abfa2b21a50776",
-      "target": "environment-dialog-model.mjs",
-      "sha256": "33742b0a5c9e83045dd4b9b1eaf34cc809359cb67a03e2b1ffd3198933fcf369",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
+      "target": "environment-wsl-unc.mjs",
+      "sha256": "9567b22f5d6d083a18f2f5924c3dd152381037183d1a48266d384703e1f17605",
       "bindings": [
-        "mt",
-        "ht",
-        "gt",
-        "_t",
-        "vt",
-        "yt",
-        "xt",
+        "AQ"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "target": "environment-wsl-folder.mjs",
+      "sha256": "609cb21058e8d3cfde5e68f832c3d089836bfeaf9f5ca693c4546b7893337dde",
+      "bindings": [
+        "XA",
+        "QA"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/ca690a791-C6pAwzdL.js",
+      "sourceSha256": "de4236f4f34da2cb6a30a7b208d301231c1cb47e2d269404488c90ee9ef43b1c",
+      "target": "environment-dialog-draft.mjs",
+      "sha256": "f8bf6557bf1b6419b10dca0174dbc2766714e895c0258a13316f08a06004eb96",
+      "bindings": [
         "Nt",
         "Pt",
         "Ft",
-        "Bt",
-        "Wt",
-        "qt",
-        "Kt",
-        "sn",
-        "Tt",
-        "Et",
-        "F",
-        "Dt",
-        "Ot",
-        "Qt",
-        "$t",
+        "It",
+        "Lt",
+        "Rt",
+        "Vt",
         "en",
-        "Zt",
-        "rn"
+        "tn",
+        "nn",
+        "cn",
+        "pn",
+        "gn",
+        "_n",
+        "hn",
+        "jn",
+        "Gt",
+        "wn",
+        "Tn",
+        "Cn",
+        "On"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c0a531389-TdrucM3-.js",
-      "sourceSha256": "5dd6b5684d2cc6d0992997bb748e5b649b52d255bf488e37b0dfa5a1a155f43e",
-      "target": "environment-name-parts.mjs",
-      "sha256": "4f4fe677694c3bd3adbc5af7ec9e53714849b952ab7edd0efe719a3dfe8ba050",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/ca690a791-C6pAwzdL.js",
+      "sourceSha256": "de4236f4f34da2cb6a30a7b208d301231c1cb47e2d269404488c90ee9ef43b1c",
+      "target": "environment-dialog-model.mjs",
+      "sha256": "963aad4886dc48e9ca1cdc987c3a87d8d732c19465ebd0fb9838d069ce28cca3",
       "bindings": [
-        "E"
+        "Yt",
+        "Kt",
+        "qt",
+        "Jt"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c387a4508-D8y47PUE.js",
-      "sourceSha256": "7a6f9abd817607c7676aa9e48ec6d873cfb8fa9602252425bb13d4555ee29ce5",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c96d752d0-CWv_7-n9.js",
+      "sourceSha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
+      "target": "environment-name-parts.mjs",
+      "sha256": "c7eefdb72a67b027bf44a02568c77abe00b073e5119b6b49439a1abd58c4cc12",
+      "bindings": [
+        "pL"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c387a4508-CuXnQTW8.js",
+      "sourceSha256": "0efc00a1da51a6a328af8044220151e9538259bf3887a112c29193ee4676f856",
       "target": "environment-field-header.mjs",
-      "sha256": "a1072f193c1b5ea52fa02b791aa05b045668af7d7ebe4d5340ad41eed21bab8f",
+      "sha256": "3301eb858d1505f28784be6d210461ae07d12e9641ae2fbfc71f3fd8e6b8b2d3",
       "bindings": [
         "i"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
       "target": "environment-checkbox.mjs",
-      "sha256": "f6343ef7c4cb8137868127d576134f943c9736b6d1bb1ee53759bae19b7b7df5",
-      "bindings": [
-        "Mt",
-        "aa",
-        "_s",
-        "vs",
-        "Ob",
-        "Ab",
-        "Mb",
-        "CA",
-        "Nb",
-        "wA"
-      ]
+      "sha256": "a2c7cfd70bfc72220239d69052e4644cca51f0e40cfa2187cc04e5ee141406cb",
+      "bindings": []
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd8823d73-CFoM8Jt9.js",
-      "sourceSha256": "f0bf7e83645966f04971d9b24a8b875c82faa666e135934ff5c7b40fffac393c",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd8823d73-CrZFkwi4.js",
+      "sourceSha256": "52741896d5b8f9cb97296c750318ec72d399ce80264564a946678c61f597b0c3",
       "target": "environment-folder-view.mjs",
-      "sha256": "fb48c6fc4a4bcf17a4f07f0d5dee188e41ab31554fe61df2d40825a07ab758ee",
+      "sha256": "a7a125c6e299968dd4695caeeb3fc0053d8680d483ee00a064f3584c1365d0ce",
       "bindings": [
-        "B",
-        "V",
-        "H",
-        "U",
-        "W",
+        "De",
         "G",
         "K",
-        "de",
-        "fe",
         "q",
-        "pe",
-        "me",
+        "Oe",
         "J",
-        "he",
-        "ue",
-        "ge"
+        "ke",
+        "Ae",
+        "je",
+        "Y",
+        "Me",
+        "Ne",
+        "Pe",
+        "Fe",
+        "Ie",
+        "Le",
+        "X",
+        "Re",
+        "ze",
+        "Be",
+        "Ve",
+        "He",
+        "Ue",
+        "We",
+        "Z",
+        "Ge",
+        "Ke"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c227f4d5e-Ba-r--Rl.js",
-      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
       "target": "environment-menu-controls.mjs",
-      "sha256": "c790a4c8cecd1fee9847792d49ac21b6c79961545ea19fd4bf8c55b972dcc17f",
+      "sha256": "dc30eca816147dcdcb4c8f207d9b19041bbed2d1c2b6084a2426dfddaf9133cd",
       "bindings": [
-        "zK",
-        "BK",
-        "VK",
-        "HK",
-        "UK",
-        "JK"
+        "B$",
+        "V$",
+        "H$",
+        "U$",
+        "W$",
+        "Y$"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-19-CkPOiIKm.js",
-      "sourceSha256": "45133785ddcdf5381b29e2f313d4500a5fbe23b975fe049a648652d7151870af",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
       "target": "environment-picker-keys.mjs",
-      "sha256": "69c7e39a73fd09d348bbdaa572cfec435b75ea07ffdfba342e185b33bb6c42fe",
+      "sha256": "2217a0d84e89044612b62dbfe9649290649f1457776ad8c026adf1efdf19cc7f",
       "bindings": [
-        "YB",
-        "ZB",
-        "QB",
-        "$B",
-        "sV",
-        "j7",
-        "A7"
+        "Gx",
+        "qx",
+        "Jx",
+        "Yx",
+        "iS",
+        "VL",
+        "zL"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c3f9f1667-DEkdCUsq.js",
-      "sourceSha256": "9cd035e422eab2142f2609a66d8050160748bec1d556270a01148fdf28af6813",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c3f9f1667-DnyzRZCB.js",
+      "sourceSha256": "4e9cadf512edfade5b628457a7c4e1f45fb01e96a46bbe981397d123c75a34e8",
       "target": "environment-machine-variables.mjs",
-      "sha256": "593c9776c4de92f3a63ff49f08eac0177992df0bf8dce044c430b773ae92d6b6",
+      "sha256": "ef67b2b018ef6067eed3be6a44a827cdb9bc575f32905a7ba6e43dae894756ad",
       "bindings": [
         "I",
-        "Me"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cc43287c9-DAfOi8yP.js",
-      "sourceSha256": "62ef8705cfef03f4e4159dbe8f6f3a052fcdf902cf0e64ab2f5bd8d4279ba1f2",
-      "target": "environment-menu-rows.mjs",
-      "sha256": "f9c71ef23613155e7dd16c6f6d06201b1abb04e4c66c4c5240693b5e18dd69e7",
-      "bindings": [
-        "k0",
-        "A0",
-        "j0",
-        "e2",
-        "a2",
-        "l2",
-        "p2"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
-      "target": "environment-select-parts.mjs",
-      "sha256": "6f9bf3a0fc50bbef053f1e3db30e8303ed3f43a019ebbdbdfce0631730c55bfe",
-      "bindings": [
-        "Yo",
-        "Xo",
-        "Zo",
-        "Qo",
-        "Hb",
-        "Ub",
-        "Gb",
-        "PO",
-        "HO",
-        "UO",
-        "WO",
-        "qO",
-        "rk",
-        "dk",
-        "fk",
-        "pk",
-        "xk",
-        "Sk",
-        "tA"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
-      "target": "environment-field-controls.mjs",
-      "sha256": "b24af3ace97337539a8524588f7903ae506c5660e23b42f3b6fd4d98034824bc",
-      "bindings": [
-        "aa",
-        "Sn",
-        "Cn",
-        "Tn",
-        "En",
-        "Dn",
-        "gs",
-        "uh",
-        "dh",
-        "fh",
-        "ph",
-        "Fb",
-        "Ib",
-        "Lb",
-        "Rb",
-        "zb",
-        "Hb",
-        "Ub",
-        "Wb",
-        "Gb",
-        "Kb",
-        "qb",
-        "Xb",
-        "Zb",
-        "Qb",
-        "$b",
-        "ex",
-        "Mt",
-        "tx",
-        "bO",
-        "xO",
-        "SO",
-        "wO"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
-      "target": "composer-focus-capability.mjs",
-      "sha256": "2ec4b62692c35b457ed3eb92e9565137df4f26b8d517b6d4081356ffc0cbdaa3",
-      "bindings": [
-        "Jt",
-        "Yt",
-        "Xt",
-        "Zt",
-        "en"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "target": "nested-session-model.mjs",
-      "sha256": "70717da4660db43a9f1845fab6896d2a413bfbd262b743883988331bec2e2c6f",
-      "bindings": [
-        "mz",
-        "LG"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-1-CAAiD7E3.js",
-      "sourceSha256": "c608dab61da6ed8864d0d5356426b3d89eeaec1436e537cfb328004739144f65",
-      "target": "nested-session-palette-copy.mjs",
-      "sha256": "53a3cf45007b60c6e16ad5a2cdcce445f1cb2664a61ac0381ef60ad5d5543971",
-      "bindings": [
-        "IM",
-        "LM",
-        "RM"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-20-B7UqYfsi.js",
-      "sourceSha256": "5c0eb5808bf46a0fa9d09bd3938744240c5734fb22fce914869e4ab4cdd21855",
-      "target": "nested-session-copy.mjs",
-      "sha256": "adad314e410073310e4397ea36cbf7d91fa9c81119781a967208185c33efcae5",
-      "bindings": [
-        "Q",
-        "yD",
-        "bD",
-        "xD",
-        "SD"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-21-IP-SVetq.js",
-      "sourceSha256": "05f7d988f8cd8dcf6c8b61a9422afd3ff14248d9083474bc03e48d078cbbd243",
-      "target": "nested-session-separator.mjs",
-      "sha256": "14d45db24a3e4bede697b531597ca59ba4a7b0953fa14750ff7fa9f75928557a",
-      "bindings": [
-        "h$"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-18-D4XxL6Tg.js",
-      "sourceSha256": "0f178aaa40d0c0f2119a69bab11ed1ad48ffd513b3e0e4c236b2420b3f7d6b79",
-      "target": "nested-session-parts.mjs",
-      "sha256": "e4d6f23ac4fc808645336cd6a833b971b43420e06e7650cc509ce667da6425dd",
-      "bindings": [
-        "W_",
-        "G_",
-        "K_",
-        "DE",
-        "TE",
-        "VD"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-11-BuQ3CK5I.js",
-      "sourceSha256": "f101f61944dfbb6f0d38d9ba491018ae1c2940e1ef732dddb02dd309b01ef00f",
-      "target": "nested-session-parent-tabs.mjs",
-      "sha256": "5f6e807d723f343233338cffd8c193cfbbac7704edf145422802a2b1d202f586",
-      "bindings": [
-        "Ou",
-        "Nu",
-        "Fl",
-        "su",
-        "cu"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
-      "target": "file-tree-density.mjs",
-      "sha256": "4126a439a9eb3bb58bbe2af5e475bd0771e0291ea0696442a6894c1ff063434a",
-      "bindings": [
-        "Co"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/ca7840910-DSVFtTw1.js",
-      "sourceSha256": "72e9e1e4eed949ed571b4487ecabf760d8674998576e95b6a51befc2b506aeb9",
-      "target": "file-tree-style.mjs",
-      "sha256": "6f781fa6dea84f625d9e8945942489a0fa1e8d0e50ddd7323f0044318908f892",
-      "bindings": [
-        "w",
-        "T",
-        "E",
-        "D",
-        "O",
-        "k",
         "L",
-        "R",
         "z",
+        "R",
         "B",
         "V"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd2efac6e-C1jvGOgh.js",
-      "sourceSha256": "daed722cc3de0a78aa3f37e3d29007010c797ae1f35ae35088c93a4a028de7de",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc43287c9-Me-M2ucD.js",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+      "target": "environment-menu-rows.mjs",
+      "sha256": "b3282ba5051ae02ecbdb9353809d940fddcfdc58b6e93c6e5cc30ac45bdea14e",
+      "bindings": [
+        "m8",
+        "Rae",
+        "zae",
+        "uoe",
+        "w8",
+        "D8",
+        "M8"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "target": "environment-select-parts.mjs",
+      "sha256": "5db1603c3120f9860b153f46a4263f6a70e2325894dcff59eaea9bdbe9378760",
+      "bindings": [
+        "QS",
+        "$S",
+        "uM",
+        "vM",
+        "yM",
+        "bM",
+        "CM",
+        "FM",
+        "WM",
+        "GM",
+        "KM",
+        "tN",
+        "nN",
+        "QN"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "target": "environment-field-controls.mjs",
+      "sha256": "f3eebf62272afc597100d49d2c894f1c25b75719efe455aa84570fc2ee67a594",
+      "bindings": [
+        "MS",
+        "NS",
+        "PS",
+        "FS",
+        "IS",
+        "LS",
+        "RS",
+        "zS",
+        "BS",
+        "VS",
+        "GS",
+        "nC",
+        "aC",
+        "oC",
+        "sC",
+        "cC",
+        "lC",
+        "uC",
+        "dC",
+        "fC",
+        "qj",
+        "Jj",
+        "Yj",
+        "Zj",
+        "$j"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "target": "composer-focus-capability.mjs",
+      "sha256": "27b0b39c7a5510811020789328c11278665a4b558154449c874d4e8f923b6b65",
+      "bindings": [
+        "Zt",
+        "Qt",
+        "$t",
+        "en",
+        "rn"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
+      "target": "nested-session-needs-input.mjs",
+      "sha256": "69eee0909bbc24f80c4509bb46ff68c040eb8a7a65207beaf2f2ec20dcc149fa",
+      "bindings": [
+        "Lj"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "nested-session-model.mjs",
+      "sha256": "81e6ca351f37fa10ffc2ad6504b87e96bfd7c561651531392c0b098127e55121",
+      "bindings": [
+        "rW"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+      "target": "nested-session-palette-copy.mjs",
+      "sha256": "8f7b81bd5e1e0b51459af83d8bbab6f2444a4ed08b07b16ff5049d476b0a30a1",
+      "bindings": [
+        "eI",
+        "tI",
+        "nI"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "target": "nested-session-copy.mjs",
+      "sha256": "168a44b6aa5e78d8ffda5adb4f142b498ce42e7d27010739f592536106cb6ac0",
+      "bindings": [
+        "wE",
+        "DE",
+        "OE",
+        "kE",
+        "AE"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "nested-session-separator.mjs",
+      "sha256": "c862ae4e21df1c2d2a15799b9b5731beed1bd5d5b362b20c30e1985242f8cc14",
+      "bindings": [
+        "z7"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "nested-session-parts.mjs",
+      "sha256": "ff3e79a7a3b228ae6d8e47fc80ce2ab256b1fcf0cb9a5db552b2f276ef1ae9a1",
+      "bindings": [
+        "qv",
+        "vk",
+        "HA"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js",
+      "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0",
+      "target": "sidebar-nested-caret.mjs",
+      "sha256": "74b93be1df36aaa20f1b757a6947b26d0c1941f3004c8dae5736e4cab29f68bf",
+      "bindings": [
+        "i1",
+        "a1",
+        "c1",
+        "l1",
+        "u1",
+        "d1",
+        "f1",
+        "g1"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-11-_AVGLHEz.js",
+      "sourceSha256": "f9171920e9098288a8aceb2642c56c6a4ac6d4aba632fb7e1c8cbf312cfc0011",
+      "target": "nested-session-parent-tabs.mjs",
+      "sha256": "0dcef8f4ba216216a60770bd5bdf3e5591e5b925423bf95eb9293b3814cdc696",
+      "bindings": [
+        "jl",
+        "Rl",
+        "jd",
+        "Md",
+        "Ef",
+        "Rf",
+        "Uf"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c621b1e2d-CU5cG_mP.js",
+      "sourceSha256": "ff431a6eec4cb2ff61142c690ce8c5639fb9895e674ed5a775c0be66d0015c4a",
+      "target": "file-tree-style.mjs",
+      "sha256": "a7eb16976b673f4e604d0d7b7377dca75aa6de0ce10ffa197ca008fcc1be0a8c",
+      "bindings": [
+        "n",
+        "r",
+        "i",
+        "a",
+        "o",
+        "s",
+        "h",
+        "g",
+        "_",
+        "v",
+        "y"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
       "target": "file-view-memory.mjs",
-      "sha256": "898e314850f15e3226986bdcf46a79012f007af7ab0ea4d99f8ae4ec552f340f",
+      "sha256": "eca346a7d289a6121154f97e83747da83e362b514ad4cd7873685b6c68ff8eeb",
       "bindings": [
-        "Gs",
-        "Ks",
-        "qs",
-        "Js"
+        "Nc",
+        "Pc",
+        "Fc",
+        "Ic"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-28-DcgD7xXH.js",
-      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
       "target": "file-document-types.mjs",
-      "sha256": "91cbfdf0a080c1c6bcc4275ac3d57972b8032d795375da6827af5b602942e406",
+      "sha256": "17a04cb1442f1d9fc7320ee55ea25195b0ab40a52cd3d6856504d66667a138f4",
       "bindings": [
-        "Tk",
-        "Dk",
-        "Pk"
+        "lN",
+        "dN",
+        "vN"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd2efac6e-C1jvGOgh.js",
-      "sourceSha256": "daed722cc3de0a78aa3f37e3d29007010c797ae1f35ae35088c93a4a028de7de",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c650084fd-BlejO2XR.js",
+      "sourceSha256": "b4f41e6f69e17ca8f6e48045dca4e043036d9a14d7ff770818dfa77e40adb06d",
+      "target": "../../../electron/generated/file-text-binary.mjs",
+      "sha256": "1212868f03d7d01092ba75fdf811701bd195789f6b955c0a157578a16c7ee6c5",
+      "bindings": [
+        "T"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
       "target": "file-text-decoding.mjs",
-      "sha256": "b97bcf3cfa0bf0671fbe1e7d76db2291197ed440adff0d55c218acd6e18b4040",
+      "sha256": "caa1d1f39c5295599b2d67f5d1d036c103d3d38e1375dfbef995f6056b3c6a5f",
       "bindings": [
-        "Uc",
-        "$c",
-        "el",
-        "ol"
+        "vd",
+        "yd",
+        "Ed"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd2efac6e-C1jvGOgh.js",
-      "sourceSha256": "daed722cc3de0a78aa3f37e3d29007010c797ae1f35ae35088c93a4a028de7de",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
       "target": "../../../electron/generated/file-text-decoder.mjs",
-      "sha256": "aafa9ab2ae1cff297b545beb70d939089b544fe35c2f2fc33aa770e62a247bbb",
+      "sha256": "01e0b914300162a780faca74c99d5bc1323df871be7f5dd7902ef97ac098d993",
       "bindings": [
-        "Uc",
-        "Y",
-        "Kc",
-        "Jc",
-        "Yc",
-        "Zc",
-        "Qc"
+        "cd",
+        "dd",
+        "pd",
+        "md",
+        "gd",
+        "_d"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c30db9bec-DjF3pT_h.js",
-      "sourceSha256": "15e0fcfe4c140f76e78d3190cc1c18f8bc755f7bea6dabd4f3ef1d327c983c57",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c30db9bec-CdR1oH22.js",
+      "sourceSha256": "7cd98786d3f531d92caef11bf6eecbd7cfa6f2528a6aebb5d04a7bf2327630c6",
       "target": "file-index.mjs",
-      "sha256": "2cd62eef697ea2c0ef8a61e63ec5ab0337f4ee1f5cc5e9ff017401d40e8c3dda",
+      "sha256": "666d978ab0a57e4dde004713f71fd9ce4635b8cf54c195dcbdc47631eb9c349f",
       "bindings": [
-        "ql",
-        "Jl",
-        "Yl",
-        "Xl",
-        "Zl",
-        "Ql",
-        "$l",
-        "eu",
-        "tu",
-        "nu",
-        "ru",
-        "iu",
-        "ou",
-        "su",
-        "cu",
-        "lu",
-        "uu",
-        "du",
-        "fu",
-        "pu",
-        "au"
+        "Yn",
+        "Xn",
+        "Zn",
+        "er",
+        "tr",
+        "nr",
+        "rr",
+        "ir",
+        "ar",
+        "or",
+        "sr",
+        "cr",
+        "lr",
+        "ur",
+        "fr",
+        "pr",
+        "mr",
+        "hr",
+        "gr",
+        "_r",
+        "vr",
+        "yr",
+        "dr"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c227f4d5e-Ba-r--Rl.js",
-      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
       "target": "mention-output-files.mjs",
-      "sha256": "e1ebb539b6c3a9527ea05eb8c0a87f4c403a9c9c1333e5f713c4abbbdf99ac91",
+      "sha256": "7da7523fe924250851c17067f24dae3ec2d65e1e8aa8473899f00ec759e19740",
       "bindings": [
-        "pD",
-        "JD",
-        "tO",
-        "rO",
-        "uO"
+        "QD",
+        "FO",
+        "HO",
+        "WO",
+        "ZO"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-26-CgdP_nTj.js",
-      "sourceSha256": "a9f80593fcdb91be8a2cf93eb71c572d3798b903ef16b8adb42480656cb3c026",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
       "target": "file-output-root.mjs",
-      "sha256": "69e744d0b3da3dde32cbdfb09e13987d15f4853a96393eb2032642b96b10987d",
+      "sha256": "15cb45f66825fcda14070c2964a53d0d48102f6dce31da761e6c5a638243d77f",
       "bindings": [
-        "Wb",
-        "Gb",
-        "qb"
+        "DS",
+        "OS",
+        "AS"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-28-DcgD7xXH.js",
-      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
       "target": "file-output-normalize.mjs",
-      "sha256": "99e46b3bbe9ad1beaa2f0cf6a52c0df1b16d67c9fdb28a0197571cbcc1de939b",
+      "sha256": "26475d1cd2021b238b9169e6a6bf21bc0dc35a5f1a85bd2363e2312e8034b6e8",
       "bindings": [
-        "PO",
-        "UO",
-        "zO"
+        "_M",
+        "EM",
+        "SM"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-0-ByI5P0CP.js",
-      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
       "target": "lazy-init.mjs",
-      "sha256": "37ef25231bfad8f70192c9773e8a2a2aaeb909306c1e9ef3651c3e3a6c323556",
-      "bindings": [
-        "Hi"
-      ]
+      "sha256": "913ddff07e54022bb50c943e03ca12be989988333a5f15e306dad27a4d1251cb",
+      "bindings": []
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-28-DcgD7xXH.js",
-      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
       "target": "path-parts.mjs",
-      "sha256": "239580ad052acd1e47258447bac4a60ff870325651733ebe53afb63709cb8e8c",
+      "sha256": "d2320f029bd8927dfe889ee12ff91cbbb683987b5c931b4fabb764a57b52eaab",
       "bindings": [
-        "WO"
+        "DM"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/ce574895a-h0uyeRAC.js",
-      "sourceSha256": "fc0ab3a7c0c4a80548b32b66af70478790fc9196ea3329c4d1f39796defd8dd6",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/ce574895a-sBAnWI9w.js",
+      "sourceSha256": "bee15e5b6ef8d36a75d583a6c1c6d17e82d5642f2ab1dce620bf5c71193221c8",
       "target": "breadcrumb-measure.mjs",
-      "sha256": "ae64921823981ec1d1ae645417d1ec34d81839a42979811f002fc412e5277abe",
+      "sha256": "db31440d95325d0878fa55d19ca219709994a7ff8b3c471f5fbf830ac667ed7b",
       "bindings": [
         "a",
         "o",
@@ -1978,296 +2092,310 @@
         "h",
         "g",
         "_",
-        "v"
+        "v",
+        "y",
+        "b"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cfac349aa-BiPinwNg.js",
-      "sourceSha256": "07058df2ebe975d30d6a3a93af491c9042758a2b00e5a3fb3e2c820ef9166695",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c0fbbe82d-COsmfHJY.js",
+      "sourceSha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+      "target": "breadcrumb-within-root.mjs",
+      "sha256": "2c52196fffc833196e715d88b9dd3b0eb6dd2a10f8b01792b8e2be1cb2d33dea",
+      "bindings": [
+        "$r"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
       "target": "breadcrumb-paths.mjs",
-      "sha256": "ed7bf9d73c3c7895ac3ab91f92bda40e4309c7d6d287a8262446852f6ec811bc",
+      "sha256": "c99c2b71cc856a24d0247a74460c6895680dfe52f167f6203d86989d2c97190f",
       "bindings": [
-        "jt",
-        "Mt",
-        "Xt",
-        "Ut",
-        "Gt",
-        "Vt"
+        "El",
+        "Dl",
+        "Kl",
+        "Bl",
+        "Rl"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c0fbbe82d-BOWKSems.js",
-      "sourceSha256": "e8d7597d0f086ac57ce77d40d7fc71112619757de69cd3ae6f9bbd9acabe87da",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc5c56f5c-BoRtnbt1.js",
+      "sourceSha256": "cc03e3aff6467dbbcd8a7e05fd7da9c4c83819477e46e93f46285d2beffe95d4",
       "target": "path-tooltip.mjs",
-      "sha256": "2d3d3bdc6ec80707219f230230c8c299abcdad17bbbc49e3e0aedfdbc562c03d",
+      "sha256": "60fbbb7f647fac431ece3cb780e4df554024f88a882aa6960ac1438bd025c71a",
       "bindings": [
-        "mn",
-        "hn"
+        "t",
+        "n"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cfac349aa-BiPinwNg.js",
-      "sourceSha256": "07058df2ebe975d30d6a3a93af491c9042758a2b00e5a3fb3e2c820ef9166695",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
       "target": "breadcrumb-view.mjs",
-      "sha256": "e07cfc92f4120ad3c6c59e6be1fad5d46411321161365b5833a473dcc4b30ff3",
+      "sha256": "fa0e1ccaa1a21ae802a7e940dddcbe1a3997f22195ef2427218ca6c9fa432ed3",
       "bindings": [
-        "Ht",
-        "Kt",
-        "Q",
-        "qt",
-        "Jt",
-        "Yt"
+        "zl",
+        "Vl",
+        "Hl",
+        "Wl",
+        "Gl",
+        "Ul",
+        "ql",
+        "Jl",
+        "Y"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cd2efac6e-C1jvGOgh.js",
-      "sourceSha256": "daed722cc3de0a78aa3f37e3d29007010c797ae1f35ae35088c93a4a028de7de",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
       "target": "breadcrumb-file.mjs",
-      "sha256": "6d461571aa27781f4e3ce6e11d64b8c467b53a6b4eb0ed9d82a9347dc6b857bc",
+      "sha256": "012432cc2961746323a1509ff96c682cca2a47a69830fe6119ec30638d19913d",
       "bindings": [
-        "Yl"
+        "Wf"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-130-DnUXVlYq.js",
-      "sourceSha256": "699331f0e4329cc5405e11fbb6eeba57b4715aefd2166a934e363d4acda2af8e",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-130-dWztbTO1.js",
+      "sourceSha256": "cf809697067e7408a0bf3ff7d172d3bc784163429e2d3aa909aabeb73a2f0aea",
       "target": "file-output-paths.mjs",
-      "sha256": "7b6c6c41cd778b3dbb3cc458937c5af5d6f7e9ab04029924831d62e490f06b49",
+      "sha256": "f1ccdf2cb3239320b3dd22ce8ab9a9759cb8df53d476091d6ebfea39bc5d29b0",
       "bindings": [
-        "Y",
-        "SL",
-        "OL",
-        "kL",
-        "_R",
-        "vR",
-        "yR",
-        "bR",
-        "wR",
-        "kR",
-        "AR",
-        "jR",
-        "hR",
-        "TR",
-        "ER",
-        "DR",
-        "OR"
+        "UV",
+        "WV",
+        "XV",
+        "ZV",
+        "VH",
+        "HH",
+        "UH",
+        "WH",
+        "JH",
+        "$H",
+        "eU",
+        "tU",
+        "zH",
+        "YH",
+        "XH",
+        "ZH",
+        "QH"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c73f45bc3-CFrHin0p.js",
-      "sourceSha256": "c328ce5a89455c1901061fa581e32f471507a474b2d0880d4dc3a626048253c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
       "target": "file-output-order.mjs",
-      "sha256": "6893879bfc9c9beed597ece1cc56dd85c778202bd9839cf2b10b5d984f5bf88c",
+      "sha256": "392d5d0331a02d20a173de6bc7dd6e8d7f76044c18d0dcea2959d693a6a77d67",
       "bindings": [
-        "wv",
-        "Dv",
-        "Ov",
-        "kv",
-        "Av",
-        "jv",
-        "Mv",
-        "Nv",
-        "Pv",
-        "Fv",
-        "Rv"
+        "Ub",
+        "Kb",
+        "qb",
+        "Jb",
+        "Yb",
+        "Xb",
+        "Zb",
+        "Qb",
+        "$b",
+        "ex",
+        "rx"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cccc2cf0a-B0D--VZp.js",
-      "sourceSha256": "4f75e5db4ff595b4fc4f22a9092dfa245b4af29f964bb207276b868a606964cb",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
       "target": "terminal-selection.mjs",
-      "sha256": "a5ecff91bacb0d3dbedf5a3a57ac389200aa6cbf6e02660da5d1cf29b68e5c94",
+      "sha256": "60756d0c9600fdbdf326270cba6df5e7420b62abb0d7dbc24e1e9827ada822cc",
       "bindings": [
-        "qy"
+        "rS"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf718f694-jeQhHLuv.js",
-      "sourceSha256": "c2bc2115b76ad8221b65e5f507f9ebc949a16e7c6d8367c9b89de69dced360c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf718f694-C6OUPnrm.js",
+      "sourceSha256": "f57469002f348942bb2f39f44daa2ae6520d98d3e19d050941a920a9ac2e6304",
       "target": "terminal-description.mjs",
-      "sha256": "b881a21641663f94deadc63b694b08e659a35460006232a33ab37af1513c3172",
+      "sha256": "aa32d4c72255c514e25104fe31dfd3d40f6c29b3544da15187a56ad9231231fd",
       "bindings": [
+        "ue",
         "de",
-        "W",
         "he"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
       "target": "terminal-commands.mjs",
-      "sha256": "15d8dc7a1aeb71d2bbadac9d499232e067eae47bad5e8436ba3548909639bd9c",
+      "sha256": "27a784b801390e0e809bd322a697f950a9fb63b1864a281594854426f44a494e",
       "bindings": [
-        "Bt",
         "Vt",
         "Ht",
         "Ut",
         "Wt",
-        "Gt"
+        "Gt",
+        "Kt"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
       "target": "terminal-geometry.mjs",
-      "sha256": "1894f95364b7882ca18aced58a9bf679d12f676472bebb5ba63c15a0ef98c94e",
+      "sha256": "a41c1df289711746e14581d6cbc81bfca6710ccbd830cb898179948c6fbdc51e",
       "bindings": [
-        "$r",
-        "ei",
-        "ni",
-        "ri",
+        "fi",
+        "pi",
+        "hi",
+        "gi",
+        "_i",
+        "vi",
+        "yi",
+        "bi",
+        "xi"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
+      "target": "terminal-output.mjs",
+      "sha256": "c9fbac9ed1773bae3d7da9a3e2d382668db3288675ed01be322db122372ffe1d",
+      "bindings": [
+        "Jn",
+        "Xn",
+        "Zn",
+        "Qn",
+        "$n",
+        "dr"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
+      "target": "terminal-mouse.mjs",
+      "sha256": "344ef8e26ff4ed6186ba6f1196bf652e67d7a56d355e20ed7f061dba8bf2dad3",
+      "bindings": [
+        "ti"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
+      "target": "terminal-colors.mjs",
+      "sha256": "a462a2899380f0660135b4da42f322ed24e5fb24958f246dcce440d735c5ff0f",
+      "bindings": [
+        "Rn",
+        "zn",
+        "Bn",
+        "Vn"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
+      "target": "terminal-link-selection.mjs",
+      "sha256": "0df6d5b1bdaae879a0f1c027bf2c4b20312ecd452baa8324d838335b7dd09f92",
+      "bindings": [
+        "Dn"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6bf19e8f-CgQ1_Jhf.js",
+      "sourceSha256": "be2d994c7168c552ce5a1b91ea67fdc8423fbacd1ea5c5d18c500cdfaeb827c1",
+      "target": "terminal-errors.mjs",
+      "sha256": "214764ac93b22a865961a735a8a14a9cd0d404a31a9f920ae98ffc9ac62e0be6",
+      "bindings": [
         "ii",
         "ai",
         "oi",
         "si",
-        "ci"
+        "ci",
+        "li",
+        "ui",
+        "di"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
-      "target": "terminal-output.mjs",
-      "sha256": "bfcf0b7f53581b2a36eea2e7d619a73def8ad82da42b499f27928096e9face03",
-      "bindings": [
-        "In",
-        "Rn",
-        "zn",
-        "Bn",
-        "Vn",
-        "$n"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
-      "target": "terminal-mouse.mjs",
-      "sha256": "e23f49dba26f3c5436e2162df5dc152a6342cd9ff55fd66cdbda7ab02a6cd2af",
-      "bindings": [
-        "Ur"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
-      "target": "terminal-colors.mjs",
-      "sha256": "8e5afd33f85f4c3a0afd8fc6e1172f335b719f6e64c335dfb4f88f09d40b1a5b",
-      "bindings": [
-        "Mn",
-        "Nn",
-        "Pn",
-        "Fn"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
-      "target": "terminal-link-selection.mjs",
-      "sha256": "a360362809aaac410c507fd02cfb60c14506beca7c8200cf6bea95f1139e5984",
-      "bindings": [
-        "xn"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/c6bf19e8f-oq2b1_8O.js",
-      "sourceSha256": "790f723035c094b43235c8562da58c760d8f6c4e29d81fc92c381f2669a9e921",
-      "target": "terminal-errors.mjs",
-      "sha256": "337dba2e8928ace7747628b081b3e1cbdb1ed47c7afd2cf58d81a8277321558b",
-      "bindings": [
-        "Kr",
-        "qr",
-        "Jr",
-        "Xr",
-        "Qr"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-25-DP8p7i1Z.js",
-      "sourceSha256": "95798a1e8673c9732df2b7b8d5cbbbdec5e7ca53f9582ca16125dcccea565049",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
       "target": "terminal-title-wellformed.mjs",
-      "sha256": "570851091120720810b75b760ff53aac2d98b4bc02b4bec3fccb5699bd121404",
+      "sha256": "9e698a7c153af9019fa1674f3cf3ebdba22b5dfacafa98415f38f7ae350631ac",
       "bindings": [
-        "OU",
-        "kU",
-        "jU"
+        "MH",
+        "NH",
+        "FH"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-0-ByI5P0CP.js",
-      "sourceSha256": "167cbaf0d68ba07a8b6defad1e3177300a2a044684379bc783bdc3664d1028db",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
       "target": "terminal-title-invisibles.mjs",
-      "sha256": "81632b0bbd404fd032394d92218575cfb1cd3f59c53a92131a719d6e39621b12",
-      "bindings": [
-        "YP",
-        "XP"
-      ]
+      "sha256": "4ea3d118558e822d02e3e20c1cfbe8242b8572978d5d82d393dd4fb46e03aab3",
+      "bindings": []
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-52-DGviI8xb.js",
-      "sourceSha256": "f5ff5b662dfc3b5fb6d2b984365c713271abc7cea6039abdd1c1c9c03d0eb1f4",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
       "target": "terminal-title-runs.mjs",
-      "sha256": "b5f6339634f621fb7325018845806fa37de5a9c54a8014ed5682e9a74a9f249c",
+      "sha256": "d4198df23a5e1d9bb517477988661e8e33bf7ed4bcac0842b62c5ae6792ba2d2",
       "bindings": [
-        "Pj",
-        "Uj",
-        "Gj",
-        "Kj",
-        "qj",
-        "Jj",
-        "Yj"
+        "bB",
+        "kB",
+        "jB",
+        "MB",
+        "NB",
+        "PB",
+        "FB"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-78-D6VXYXaQ.js",
-      "sourceSha256": "9e30f409f92df8c83791a3849c6cfa5fe3cfdd2fbf5fc3eef5febac196cb83b7",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
       "target": "terminal-title-text.mjs",
-      "sha256": "82c470641ad83fcef43389191d3b17f3876ec4b948b5000e1b477251ab54da39",
+      "sha256": "12c4c2dea607339a5a9708942a0eb18de1739cf588ebbaece0b186077b1210cc",
       "bindings": [
-        "ww",
-        "Tw",
-        "Dw",
-        "Ow",
-        "kw",
-        "Mw",
-        "Uw",
-        "Gw",
-        "qw",
-        "Yw",
-        "Xw",
-        "Qw",
-        "$w",
-        "eT"
+        "JA",
+        "YA",
+        "ZA",
+        "QA",
+        "$A",
+        "nj",
+        "pj",
+        "hj",
+        "_j",
+        "yj",
+        "bj",
+        "Cj",
+        "wj",
+        "Tj"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf718f694-jeQhHLuv.js",
-      "sourceSha256": "c2bc2115b76ad8221b65e5f507f9ebc949a16e7c6d8367c9b89de69dced360c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf718f694-C6OUPnrm.js",
+      "sourceSha256": "f57469002f348942bb2f39f44daa2ae6520d98d3e19d050941a920a9ac2e6304",
       "target": "terminal-titles.mjs",
-      "sha256": "8562b7b8eec75f197a945193a8e1f44c02e5e18862f751867bbf74c3db2c1fa4",
+      "sha256": "afcb07650a9f5978163406702d4322a5021d249a4bbb7ac5006b8b7ab4b3cd6f",
       "bindings": [
         "V",
         "H",
         "U",
-        "ue",
+        "W",
         "fe",
         "pe",
         "G",
@@ -2285,11 +2413,11 @@
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf718f694-jeQhHLuv.js",
-      "sourceSha256": "c2bc2115b76ad8221b65e5f507f9ebc949a16e7c6d8367c9b89de69dced360c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf718f694-C6OUPnrm.js",
+      "sourceSha256": "f57469002f348942bb2f39f44daa2ae6520d98d3e19d050941a920a9ac2e6304",
       "target": "terminal-idle-cursor.mjs",
-      "sha256": "82710f38618433501cec20b4f363df097b3a8d4e1bccc17efc349e110947a29a",
+      "sha256": "c22b5fee3ef55fc5d8c7091ee6a6e169907f73b15b0dd2402947f75fc128bd54",
       "bindings": [
         "w",
         "E",
@@ -2298,79 +2426,76 @@
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cf718f694-jeQhHLuv.js",
-      "sourceSha256": "c2bc2115b76ad8221b65e5f507f9ebc949a16e7c6d8367c9b89de69dced360c9",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf718f694-C6OUPnrm.js",
+      "sourceSha256": "f57469002f348942bb2f39f44daa2ae6520d98d3e19d050941a920a9ac2e6304",
       "target": "terminal-registry.mjs",
-      "sha256": "a32af33801a65a4a3856eb423571cfd0e01933f1aed06a2735966efc86360231",
+      "sha256": "de3535e391716c7f6a8891e679ff8c1fdb4bb92fb5f689b7a0ce5cf4a38373a4",
       "bindings": [
-        "_",
-        "oe",
-        "b",
-        "le"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cccc2cf0a-B0D--VZp.js",
-      "sourceSha256": "4f75e5db4ff595b4fc4f22a9092dfa245b4af29f964bb207276b868a606964cb",
-      "target": "terminal-clear-item.mjs",
-      "sha256": "949c0fc5734c72b38813568d36e4af5dcdaa8012837a168f1cebd15ae7d86ffa",
-      "bindings": [
-        "Yy",
-        "Xy",
-        "Zy"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-frame-BfjMqbuN.js",
-      "sourceSha256": "98e615afd19cd8e844d8d05a456f5c27c02c96b223f32594b254c4c3b06cb00d",
-      "target": "terminal-tab-size-attrs.mjs",
-      "sha256": "4a02f819105cc482cc5d3a71ffccccfa626b1b1a45dd6102d0e83bdb4555b2b9",
-      "bindings": [
-        "aa"
-      ]
-    },
-    {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/cfe7c4b3b-CP-IQXj8.js",
-      "sourceSha256": "912ccc487a61a697cad89cecc64e22b7dab99f5c509385905014d46fae398265",
-      "target": "terminal-tab-overflow.mjs",
-      "sha256": "c354e3a452a7f81d0d2dc779321c90d1c249bd967a0d9d7130916c386a2c8f78",
-      "bindings": [
-        "N",
-        "I",
-        "L",
+        "x",
+        "ne",
         "ce",
-        "R"
+        "se"
       ]
     },
     {
-      "referenceVersion": "2.42304.0",
-      "source": "../../../../installed-2.42304.0-20261017/ion-dist/assets/v1/shared-28-DcgD7xXH.js",
-      "sourceSha256": "dd441518e606d5ad7ec8630fa467a3abd457f8f62be1769ff02507356493fdd9",
-      "target": "composer-composition.mjs",
-      "sha256": "e4634a2b7f90df6a6f7c441791d7c1b41c312fec66a4b623994e03c33b876d63",
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "target": "terminal-clear-item.mjs",
+      "sha256": "fcf970830820528edc8fda54b581226c2734626ea844b41caa6f97929a0632cf",
       "bindings": [
-        "Bv",
-        "Vv",
-        "Hv",
-        "Uv",
-        "Wv",
-        "Gv",
-        "Kv",
-        "qv",
-        "zv",
-        "Jv",
-        "Cb",
-        "wb",
-        "Tb",
-        "Eb",
-        "Db",
-        "Ob",
-        "kb",
-        "Ab"
+        "aS",
+        "oS",
+        "sS"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/ceb49ada3-COmVjFwx.js",
+      "sourceSha256": "f01f3a90f50949b106fb92bacac604162f7656604dc678a672fb1ed564fcfd9b",
+      "target": "terminal-action-bar.mjs",
+      "sha256": "17e1f12d5a17f19b0e6fd93fc8f21f277bf2e796a3b9b227deac476ad8f00e22",
+      "bindings": [
+        "c",
+        "l",
+        "u",
+        "d"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cfe7c4b3b-BF79K6ux.js",
+      "sourceSha256": "dd140a37fbb2dd4a2e9276aecda1ed4659034e4bbeed47beaa117061340527db",
+      "target": "terminal-tab-overflow.mjs",
+      "sha256": "51f4be964edefca1f88ca91d42185b431b1fd7274fbf974b77b89d46a0b6f969",
+      "bindings": []
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "target": "composer-composition.mjs",
+      "sha256": "1844f2d292b45f5aa481307babd20c1f5ededd1d550ae9f4ed9d93052252ce13",
+      "bindings": [
+        "Wb",
+        "Gb",
+        "Kb",
+        "qb",
+        "Jb",
+        "Yb",
+        "Xb",
+        "Zb",
+        "Ub",
+        "Qb",
+        "jS",
+        "MS",
+        "NS",
+        "PS",
+        "FS",
+        "IS",
+        "LS",
+        "RS"
       ]
     }
   ]

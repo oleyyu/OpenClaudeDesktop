@@ -16,6 +16,10 @@ import { extractR3bTasks } from '../scripts/extract-r3b-tasks.mjs';
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017');
 const official = name => fs.readFileSync(path.join(reference, 'ion-dist/assets/v1', name), 'utf8');
+// The generated helpers (scripts/extract-r3b-tasks.mjs) moved to 3.6556.2 in w1-routines-a (RC-21); the host /subtask
+// port itself still mirrors the 2.42304.0 send handler checked by 'tasks-05 official'.
+const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+const official3 = name => fs.readFileSync(path.join(v3, name), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const u = text => text.replaceAll('’', '\\u2019'); // the minified chunks spell ’ as ’
 
@@ -48,13 +52,31 @@ test('tasks-05 official: the /subtask row, its gate, the send handler refusals a
     assert.equal(count(main, text), 1, text);
 });
 
-test('tasks-05 generated: Sn (the fork\'s provisional title) and c8f38bf1f i (starts with a command) are the 2.42304.0 originals', async () => {
+test('tasks-05 3.6556.2 call sites: the send handler and the fork still use the generated helpers', () => {
+  // cc43287c9 imports c8f38bf1f's `t` (startsWithCommand) and refuses a command-led task with it; caec4a2d4 imports
+  // cef1e6037's `_` (subtaskTitle, Bn) and titles the background fork with it.
+  const session = official3('cc43287c9-Me-M2ucD.js');
+  for (const text of ['import{t as oN}from"./c8f38bf1f-Ba2QaQov.js"', 'if(s&&c&&oN(c))',
+    u('defaultMessage:"A subtask can’t start with a command, so nothing was sent. Describe the task in words.",id:"vYLcZuUvrF"')])
+    assert.equal(count(session, text), 1, text);
+  const fork = official3('caec4a2d4-6hekX2da.js');
+  for (const text of ['import{_ as qt,u as Jt}from"./cef1e6037-C9OZ_iaL.js"', 'let o=qt(e.sendInBackground?.text)',
+    'defaultMessage:"Started the subtask in a new session.",id:"CAp88u+zH7"'])
+    assert.equal(count(fork, text), 1, text);
+  assert.equal(count(official3('cef1e6037-C9OZ_iaL.js'), 'Bn as _'), 1);
+  assert.equal(count(official3('c8f38bf1f-Ba2QaQov.js'), 'export{r as n,i as t}'), 1);
+});
+
+test('tasks-05 generated: Bn (the fork\'s provisional title) and c8f38bf1f i (starts with a command) are the 3.6556.2 originals', async () => {
   await extractR3bTasks({ check: true });
   const manifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/r3b-tasks/manifest.json'), 'utf8'));
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.deepEqual(manifest.modules.map(entry => [entry.target, entry.source]), [
-    ['lazy-value.mjs', 'shared-0-ByI5P0CP.js'], ['invisible-character.mjs', 'shared-182-eT1kXtya.js'],
-    ['command-prefix.mjs', 'c8f38bf1f-D_EZalnr.js'], ['subtask-title.mjs', 'cef1e6037-8DivyY4m.js']]);
+    ['lazy-value.mjs', 'shared-0-DDOOdL6P.js'], ['invisible-character.mjs', 'shared-182-BI1KJccu.js'],
+    ['command-prefix.mjs', 'c8f38bf1f-Ba2QaQov.js'], ['subtask-title.mjs', 'cef1e6037-C9OZ_iaL.js']]);
+  assert.deepEqual(manifest.modules.map(entry => entry.exports), [{ Pa: 'lazyValue' }, { nm: 'isInvisibleCharacter' },
+    { r: 'stripLeadingInvisible', i: 'startsWithCommand' }, { Bn: 'subtaskTitle' }]);
   assert.equal(subtaskTitle('  Fix the flaky login test in the auth service  '), 'Fix the flaky login test in');
   assert.equal(subtaskTitle('Investigate\nwhy   it\tfails'), 'Investigate why it fails');
   const long = 'Supercalifragilisticexpialidocious-and-then-some-more-words-in-one-token here';

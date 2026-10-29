@@ -8,7 +8,6 @@ import {SourceTimestamp} from './source-timestamp.jsx';
 import {SourceTooltip} from './source-tooltip.jsx';
 import {SourceDialog} from './source-dialog.jsx';
 import {SourceSegments} from './source-segments.jsx';
-import {SourceSettingsCheckbox} from './source-settings-checkbox.jsx';
 import {useSourceToasts} from './source-toast.jsx';
 import {CLEANUP_WINDOWS,DEFAULT_CLEANUP_CHOICES,announcedProgress,cleanupAcknowledgeLabel,cleanupActionCount,cleanupCanConfirm,cleanupConfirmLabel,cleanupConfirmVariant,
   cleanupDeleteLabel,cleanupEmptyText,cleanupErrorText,cleanupHasAnything,cleanupOutcome,cleanupProgressLabel,cleanupSummary,cleanupUncommittedLabel,cleanupVerb} from './storage-cleanup-model.mjs';
@@ -18,7 +17,15 @@ import { joinArguments } from './customize-model.mjs';
 import { mcpStatus } from './settings-model.mjs';
 import { canRemoveDeveloperServer } from './developer-server-actions.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
+import { CdsBadge, CdsCheckbox } from './generated/view-tabs/index.js';
 import './source-settings-pages.css';
+
+// menus C5: 3.6556.2 moved Developer › Local MCP servers into c8828a060-Co46iXy1, whose header status is the CDS Badge
+// (shared-frame Ps, exported ad = view-tabs CdsBadge) — `S = y === "running" ? "success" : y === "failed" ||
+// y === "not_responding" ? "danger" : "neutral"`, `n(c,{variant:S,children:x})` — instead of the 2.42304.0 hand-styled
+// pill (bg-fill-accent-hover / bg-fill-danger-hover / bg-brand-200). Starting is neutral now; the host has no
+// not_responding state.
+export const mcpStatusBadgeVariant = status => status === 'Running' ? 'success' : status === 'Failed' ? 'danger' : 'neutral';
 
 // c71860c77-CCdfSDER j/N: real configured servers on the left, the selected
 // server's transport and runtime facts on the right. Missing status is unknown.
@@ -42,7 +49,6 @@ export function DeveloperServers({ desktop, connected, pending, onEditConfig, on
   const definition = definitions.find(server => server.name === selectedName);
   const server = statuses.find(server => server.name === selectedName);
   const status = mcpStatus(server || {});
-  const failed = status === 'Failed';
   // The fast first read (serversPending) has no statuses yet: keep the skeleton until there is something to list.
   const loading = !desktop || (desktop.serversPending === true && names.length === 0);
   const busy = pending || !!removal.name;
@@ -73,7 +79,7 @@ export function DeveloperServers({ desktop, connected, pending, onEditConfig, on
             </button></li>;
           })}</ul></nav>
           <div className="ss-mcp-detail" key={selectedName} data-setting-id={'mcp-' + selectedName}>
-            <header><div className="ss-mcp-title"><h2>{selectedName}</h2><span className="ss-mcp-status" data-status={failed ? 'failed' : status === 'Running' ? 'running' : status === 'Starting' ? 'starting' : 'unknown'}>{t(status)}</span></div>
+            <header><div className="ss-mcp-title"><h2>{selectedName}</h2><CdsBadge variant={mcpStatusBadgeVariant(status)}>{t(status)}</CdsBadge></div>
               {onRemove && canRemoveDeveloperServer(definition, server) && <SourceSettingsButton className="ssp-button ss-mcp-delete" variant="ghost" size="sm" iconOnly icon="Trash" iconSize={16} aria-label={t('Delete')} title={t('Delete')} disabled={!connected || busy} onClick={remove}/>}
             </header>
             {server?.pluginId && <p>{t('This server is managed by a plugin')}</p>}
@@ -162,8 +168,6 @@ const AREA_COLORS = { code: 'var(--cds-chart-categorical-2)', runtime: 'var(--cd
 export function StorageDialog({ call, settingsRoot, onClose }) {
   const [state, setState] = useState({ value: null, loading: true, error: '' });
   const [revision, setRevision] = useState(0);
-  // Remove worktrees (official Storage '{count} Remove # worktrees'): the ones no session works in and without changes.
-  const [cleaning, setCleaning] = useState(false), [cleaned, setCleaned] = useState('');
   // c71860c77-C_7Gqn1u Kt: the nested Clean up inactive sessions dialog.
   const [cleanup, setCleanup] = useState(false);
   const root = useRef(null), title = useId(), description = useId(), callRef = useRef(call);
@@ -185,8 +189,6 @@ export function StorageDialog({ call, settingsRoot, onClose }) {
     return () => { if (parent) { parent.inert = wasInert; parent.removeAttribute('data-nested-dialog-open'); } if (previous?.isConnected) previous.focus({ preventScroll: true }); };
   }, [settingsRoot]);
   const value = state.value;
-  // The running core's name from main's report (settings-pages.cjs storageReport coreName); none until it loads.
-  const runtimeName = value?.areas?.find(item => item?.id === 'runtime')?.name || '';
   const keyboard = event => {
     if (event.nativeEvent.isComposing || cleanup) return;
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); }
@@ -196,34 +198,28 @@ export function StorageDialog({ call, settingsRoot, onClose }) {
     if (event.shiftKey && (active === first || active === root.current)) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && (active === last || active === root.current)) { event.preventDefault(); first?.focus(); }
   };
-  const removeUnused = () => {
-    setCleaning(true); setCleaned('');
-    Promise.resolve().then(() => callRef.current('worktrees-clean')).then(result => {
-      setCleaned(result?.removed > 0 ? tn(result.removed, 'Removed {count} unused worktree.', 'Removed {count} unused worktrees.') + (result.kept > 0 ? ` ${tn(result.kept, '{count} worktree with uncommitted changes was kept.', '{count} worktrees with uncommitted changes were kept.')}` : '')
-        : result?.kept > 0 ? tn(result.kept, '{count} worktree with uncommitted changes was kept.', '{count} worktrees with uncommitted changes were kept.') : t('No unused worktrees to remove.'));
-      setRevision(current => current + 1);
-    }, error => setState(current => ({ ...current, error: error.message }))).finally(() => setCleaning(false));
-  };
-  const code = value?.areas?.find(item => item?.id === 'code');
-  // bn codeActions (flex gap-xs under the Code session details kinds): 'Clean up inactive sessions…' with any session,
-  // and the local 'Remove unused worktrees' (worktrees no session works in any more) with any worktree.
-  const codeActions = code && (code.sessionCount > 0 || code.worktreeCount > 0) ? <>
-    {code.sessionCount > 0 && <SourceSettingsButton className="ssp-button" size="sm" onClick={() => setCleanup(true)}>{t('Clean up inactive sessions…')}</SourceSettingsButton>}
-    {code.worktreeCount > 0 && <SourceSettingsButton className="ssp-button" size="sm" busy={cleaning} disabled={state.loading || cleaning} onClick={removeUnused}>{t('Remove unused worktrees')}</SourceSettingsButton>}
-  </> : null;
+  const codeActions = storageCodeActions(value?.areas?.find(item => item?.id === 'code'), () => setCleanup(true));
   const clearCache = () => { Promise.resolve().then(() => callRef.current('clear-cache-restart')).catch(error => setState(current => ({ ...current, error: error.message }))); };
   return <>{createPortal(<div className="ss-backdrop ss-storage-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !cleanup) onClose(); }}>
     <section className="ss-storage-dialog" ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={title} aria-describedby={description} onKeyDown={keyboard}>
-      <header className="ss-storage-header"><h2 id={title}>{t('Storage')}</h2><p id={description}>{runtimeName ? t('Space OpenClaude Desktop and local {name} data use on this computer.', { name: runtimeName }) : t('Space OpenClaude Desktop and its agent core use on this computer.')}</p><button className="ss-close" aria-label={t('Close')} onClick={onClose}><Icon name="X" size={16}/></button></header>
+      <header className="ss-storage-header"><h2 id={title}>{t('Storage')}</h2><p id={description}>{t('Space Claude uses on this computer.')}</p><button className="ss-close" aria-label={t('Close')} onClick={onClose}><Icon name="X" size={16}/></button></header>
       <div className="ss-storage-content" aria-busy={state.loading || undefined}>
         {state.error && <p role="alert" className="ss-error">{t('Couldn’t calculate storage. Try again.')} {state.error}</p>}
-        {!value && state.loading ? <div className="ss-storage-skeleton" aria-label={t('Calculating storage')}><i/><i/><i/><i/></div> : value && <StorageRows value={value} codeActions={codeActions} onClearCache={clearCache}/>}
-        {cleaned && <p role="status" className="ss-storage-cleaned">{cleaned}</p>}
+        {!value && state.loading ? <div className="ss-storage-skeleton" aria-label={t('Calculating storage')}><i/><i/><i/><i/></div> : value && <StorageRows value={value} refreshing={state.loading} codeActions={codeActions} onClearCache={clearCache}/>}
       </div>
       <footer><SourceSettingsButton className="ssp-button" variant="ghost" icon="Folder" onClick={() => { Promise.resolve().then(() => callRef.current('reveal-settings')).catch(error => setState(current => ({ ...current, error: error.message }))); }}>{t('Open folder')}</SourceSettingsButton><SourceSettingsButton className="ssp-button" icon="ArrowClockwise" disabled={state.loading} onClick={() => { root.current?.focus({ preventScroll: true }); setRevision(value => value + 1); }}>{t('Refresh')}</SourceSettingsButton></footer>
     </section>
   </div>, document.body)}
   <StorageCleanupDialog open={cleanup} call={call} onClose={() => setCleanup(false)} onDone={() => setRevision(current => current + 1)}/></>;
+}
+
+// 3.6556.2 c71860c77-BH7EuJ1o: the Code session details carry one action. `k = ji()` (`ki = !1`, gate __gb__1522555277)
+// picks it: `j = o && ((k ? A?.worktrees.count : A?.sessionCount) ?? 0) > 0`, then a secondary sm Button reading
+// `k ? "Remove unused worktrees" : "Clean up inactive sessions…"`. With the gate off only Clean up inactive sessions…
+// shows, and only with a session; the host's extra Remove unused worktrees button is gone (main's worktrees-clean stays).
+export function storageCodeActions(code, onCleanup) {
+  if (!onCleanup || !((code?.sessionCount ?? 0) > 0)) return null;
+  return <SourceSettingsButton className="ssp-button" variant="secondary" size="sm" onClick={onCleanup}>{t('Clean up inactive sessions…')}</SourceSettingsButton>;
 }
 
 // c71860c77-C_7Gqn1u Nt/Lt/Jt/Kt: Clean up inactive sessions, nested over Storage (V.Popup md, no close button). The
@@ -316,12 +312,14 @@ export function StorageCleanupDialog({ open, call, onClose, onDone }) {
         </ul>}
         <div className="ss-cleanup-choices">
           {preview.uncommittedCount > 0 && <>
-            <label className="ss-cleanup-check"><SourceSettingsCheckbox checked={current.includeUncommitted} disabled={pending} onChange={checked => choose({ includeUncommitted: checked === true })}/><span>{cleanupUncommittedLabel(preview, formatStorage(preview.uncommittedBytes))}</span></label>
+            {/* c71860c77 `r(F,{checked:t.includeUncommitted,disabled:u,onCheckedChange:e=>i({...t,includeUncommitted:e===!0}),label:…})`, F = shared-frame xP (CdsCheckbox with its own label). */}
+            <CdsCheckbox checked={current.includeUncommitted} disabled={pending} onCheckedChange={checked => choose({ includeUncommitted: checked === true })} label={cleanupUncommittedLabel(preview, formatStorage(preview.uncommittedBytes))}/>
             <ul role="list" className="ss-cleanup-uncommitted">{preview.uncommitted.map((entry, index) => <li key={index}>{example(entry)}</li>)}</ul>
           </>}
-          <label className="ss-cleanup-check"><SourceSettingsCheckbox checked={current.deleteSessions} disabled={pending} onChange={checked => choose({ deleteSessions: checked === true })}/><span>{cleanupDeleteLabel(preview, current)}</span></label>
+          <CdsCheckbox checked={current.deleteSessions} disabled={pending} onCheckedChange={checked => choose({ deleteSessions: checked === true })} label={cleanupDeleteLabel(preview, current)}/>
         </div>
-        {acknowledgement !== null && <label className="ss-cleanup-check"><SourceSettingsCheckbox checked={acknowledged} disabled={pending} onChange={checked => setAcknowledged(checked === true)}/><span>{acknowledgement}</span></label>}
+        {/* `T!==null&&r(F,{checked:u,disabled:H,onCheckedChange:e=>d(e===!0),label:T})` */}
+        {acknowledgement !== null && <CdsCheckbox checked={acknowledged} disabled={pending} onCheckedChange={checked => setAcknowledged(checked === true)} label={acknowledgement}/>}
       </>}
     </div>
     {progress && <><p aria-hidden="true" className="ss-cleanup-progress">{cleanupProgressLabel(progress, verb)}</p>
@@ -331,7 +329,11 @@ export function StorageCleanupDialog({ open, call, onClose, onDone }) {
 }
 
 // The report body: Disk space used with the area meter, then one row per area with its Details kind bar.
-export function StorageRows({ value, codeActions = null, onClearCache }) {
+// menus C10: 3.6556.2 c71860c77-BH7EuJ1o's Disk space used row reads "Calculated {when}." and, while a refresh runs over
+// the shown report, "Calculated {when}. Refreshing…" (1fxFuk2hWl); an incomplete report adds a line break and "Some
+// folders couldn’t be measured, so this is a lower bound." after it rather than replacing it.
+const withWhen = (text, when) => { const at = text.indexOf('{when}'); return at < 0 ? text : <>{text.slice(0, at)}{when}{text.slice(at + 6)}</>; };
+export function StorageRows({ value, refreshing = false, codeActions = null, onClearCache }) {
   // Area and kind labels are main's English copy; shown translated.
   const areas = (value.areas || []).map(item => ({ ...item, label: t(item.label), kinds: (item.kinds || []).map(kind => ({ ...kind, label: kind.template ? t(kind.template, kind.values) : t(kind.label) })) })), area = id => areas.find(item => item.id === id);
   const code = area('code'), runtime = area('runtime'), app = area('app');
@@ -342,7 +344,7 @@ export function StorageRows({ value, codeActions = null, onClearCache }) {
   const outside = code ? code.kinds.filter(kind => kind.outside).reduce((sum, kind) => sum + kind.bytes, 0) : 0;
   return <div className="settings-group-dividers ss-storage-rows">
     <StorageRow label={t('Disk space used')}
-      description={value.incomplete ? t('Some folders couldn’t be measured, so this is a lower bound.') : <>{`${t('Calculated')} `}<SourceTimestamp dateMs={value.computedAt} className="ss-storage-when"/>{t('.')}</>}
+      description={<>{withWhen(refreshing ? t('Calculated {when}. Refreshing…') : t('Calculated {when}.'), <SourceTimestamp dateMs={value.computedAt} className="ss-storage-when"/>)}{value.incomplete && <>{' '}<br/>{t('Some folders couldn’t be measured, so this is a lower bound.')}</>}</>}
       control={<span className="ss-storage-size ss-storage-total-size">{formatStorage(value.bytes)}</span>}
       below={<div className="ss-storage-meter">
         <SourceStorageMeter areas={areas} formatValue={formatStorage}/>

@@ -7,9 +7,13 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { breadcrumbCut, graphemeEnds, headCut, observeWidth } from '../src/generated/code-current/breadcrumb-measure.mjs';
+// 3.6556.2: breadcrumb-measure.mjs is React Compiler output importing the view-tabs graph (JSX adapters), so it loads
+// through Vite SSR (the `before` hook below) rather than a bare node import.
+let breadcrumbCut, graphemeEnds, headCut, observeWidth;
 import { breadcrumbSegments, pathWithinRoot, segmentMenuTarget, segmentKeys } from '../src/generated/code-current/breadcrumb-paths.mjs';
 import { createBreadcrumbLister } from '../src/file-breadcrumb-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import * as official3 from '../scripts/official-3.6556.2.mjs';
 
 test('middle truncation keeps the first folder and the nearest suffix that fit', () => {
   const widths = [30, 40, 50, 60, 100];
@@ -96,6 +100,7 @@ let server;
 const ssr = (file) => server.ssrLoadModule(file);
 before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  ({ breadcrumbCut, graphemeEnds, headCut, observeWidth } = await server.ssrLoadModule('/src/generated/code-current/breadcrumb-measure.mjs'));
 });
 after(async () => { await server?.close(); });
 
@@ -116,40 +121,50 @@ function harness(component, { contexts = new Map(), context } = {}) {
   return (...args) => {
     index = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return component(...args); } finally { internal.H = old; }
   };
 }
 const tick = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 const settle = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 
-test('SC-2 generator: breadcrumb-view / breadcrumb-file are 2.42304.0 cfac349aa / cd2efac6e, pinned (closure, features, import meaning)', async () => {
+// The 3.6556.2 chunks the generators now read (W2 w2-files): cfac349aa is gone; the breadcrumb body, segments and folder
+// popover are cd2efac6e (Vl / Wl / Gl / Hl / Ul / zl, kl / Ol / Nl), next to the FileBreadcrumb shell Wf.
+const OFFICIAL_V3 = official3.ionSource;
+const officialV3 = (name) => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
+const VIEWER = 'cd2efac6e-Be7wcc4w.js';
+
+test('SC-2 generator: breadcrumb-view / breadcrumb-file are 3.6556.2 cd2efac6e, pinned (closure, features, import meaning)', async () => {
   const { extractCurrentCodeHelpers } = await import('../scripts/extract-code-ui-current.mjs');
   await extractCurrentCodeHelpers({ check: true, only: new Set(['breadcrumb-view.mjs', 'breadcrumb-file.mjs', 'file-tree-style.mjs']) });
   const manifest = JSON.parse(source('src/generated/code-current/manifest.json'));
   const entry = (target) => manifest.modules.find((module) => module.target === target);
-  for (const [target, chunk, bindings] of [['breadcrumb-view.mjs', 'cfac349aa-BiPinwNg.js', ['Ht', 'Kt', 'Q', 'qt', 'Jt', 'Yt']], ['breadcrumb-file.mjs', 'cd2efac6e-C1jvGOgh.js', ['Yl']]]) {
-    assert.equal(entry(target).referenceVersion, '2.42304.0', target);
+  for (const [target, chunk, bindings] of [['breadcrumb-view.mjs', VIEWER, ['zl', 'Vl', 'Hl', 'Wl', 'Gl', 'Ul', 'ql', 'Jl', 'Y']], ['breadcrumb-file.mjs', VIEWER, ['Wf']]]) {
+    assert.equal(entry(target).referenceVersion, official3.referenceVersion, target);
     assert.equal(path.basename(entry(target).source), chunk, target);
     assert.deepEqual(entry(target).bindings, bindings, target);
-    assert.equal(entry(target).sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL, chunk))).digest('hex'), target);
+    assert.equal(entry(target).sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL_V3, chunk))).digest('hex'), target);
   }
   const view = source('src/generated/code-current/breadcrumb-view.mjs'), shell = source('src/generated/code-current/breadcrumb-file.mjs');
   assert.match(view, /className: "shrink-0 ps-0\.75 text-muted-as-secondary"/);
-  assert.match(view, /o\(Q, \{ text: g, className: "ps-0\.75" \}\)/);
+  assert.match(view, /a\(Hl, \{ text: h, className: "ps-0\.75" \}\)/);
   assert.doesNotMatch(view, /pl-0\.75|"shrink-0 text-muted"/, 'no 2.37337.1 physical / muted classes');
-  assert.match(view, /import \{ useFileGone as Ee \} from "\.\.\/files-changes\/file-gone-check\.mjs";/);
-  assert.match(view, /import \{ BreadcrumbFolderSegment as Pt \} from "\.\.\/files-changes\/breadcrumb-folder\.mjs";/);
-  assert.match(view, /import \{ BreadcrumbContextMenu as De \} from "\.\.\/\.\.\/source-breadcrumb-adapters\.jsx";/);
+  assert.match(view, /import \{ useFileGone as Ti \} from "\.\.\/files-changes\/file-gone-check\.mjs";/);
+  assert.match(view, /import \{ BreadcrumbFolderSegment as kl \} from "\.\.\/files-changes\/breadcrumb-folder\.mjs";/);
+  assert.match(view, /import \{ BreadcrumbContextMenu as Mi \} from "\.\.\/\.\.\/source-breadcrumb-adapters\.jsx";/);
+  // The compiler's cache helpers come from the view-tabs graph by their E3 names (R3), never by minified name.
+  assert.match(view, /reactMemoCache as J9,/);
+  assert.match(view, /\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
   assert.match(shell, /askIfGone: p,/);
-  assert.match(shell, /import \{ BreadcrumbBody as Da \} from "\.\/breadcrumb-view\.mjs";/);
-  // Feature strings in the shipped (minified) chunks.
-  const cfac = official('cfac349aa-BiPinwNg.js'), cd2e = official('cd2efac6e-C1jvGOgh.js');
-  for (const feature of ['className:`shrink-0 ps-0.75 text-muted-as-secondary`', 'askIfGone:m', '{gone:g,beforeOpen:_}=Ee(h,h)', 'beforeOpen:_,children:m?l?.({...m,gone:g}):null'])
-    assert.ok(cfac.includes(feature) || cfac.includes(feature.replace(/`/g, '"')), feature);
-  assert.ok(cd2e.includes('askIfGone:Tp') && cd2e.includes('askIfGone:p,byline'), 'cd2efac6e passes askIfGone');
-  // The binding map's c230724a2 fa (old sl) is not the guard: it calls preventBaseUIHandler.
-  assert.match(official('c230724a2-B7qAGVlb.js'), /preventBaseUIHandler/);
+  assert.match(shell, /import \{ BreadcrumbBody as Vl \} from "\.\/breadcrumb-view\.mjs";/);
+  // Feature strings in the shipped (minified) 3.6556.2 chunk.
+  const cd2e = officialV3(VIEWER);
+  for (const feature of ['a("span",{className:"shrink-0 ps-0.75 text-muted-as-secondary",children:h})', 'renderSegmentMenu:f,askIfGone:p}=e',
+    '{gone:v,beforeOpen:y}=Ti(_,_)', 'g?l?.({...g,gone:v}):null', 'a(Mi,{trigger:b,disabled:S,onOpenChange:h,beforeOpen:y,children:C})'])
+    assert.ok(cd2e.includes(feature), feature);
+  assert.ok(cd2e.includes('askIfGone:w_,byline') && cd2e.includes('askIfGone:p,byline'), 'cd2efac6e passes askIfGone');
+  // The native-menu guard is zl itself (2.42304.0 Ht; the old binding map's c230724a2 candidate is not it).
+  assert.ok(cd2e.includes('function zl(e){e.currentTarget.contains(e.target)&&e.preventDefault()}'));
 });
 
 test('SC-2 pins: a changed feature, a missing provided binding or a re-pointed import fails the emit', async () => {
@@ -158,59 +173,79 @@ test('SC-2 pins: a changed feature, a missing provided binding or a re-pointed i
   const original = structuredClone({ features: pin.features, provided: pin.provided, imports: pin.imports });
   const restore = () => Object.assign(pin, structuredClone(original));
   try {
-    pin.features = { ...pin.features, Jt: [...pin.features.Jt, 'gone: g, beforeOpen: _, askIfGone'] };
-    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL), /Jt lacks/);
+    pin.features = { ...pin.features, Wl: [...pin.features.Wl, 'gone: v, beforeOpen: y, askIfGone'] };
+    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL_V3), /Wl lacks/);
     restore();
-    const { Pt, ...rest } = pin.provided; pin.provided = rest;
-    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL), /closure of/);
+    const { kl, ...rest } = pin.provided; pin.provided = rest;
+    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL_V3), /closure of/);
     restore();
-    pin.imports = { ...pin.imports, Ee: ['c856385e2-DVsjb2QL.js:vt', '../files-changes/file-selection.mjs', 'useFileGone'] };
-    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL), /is not c856385e2-DVsjb2QL\.js's V/);
+    pin.imports = { ...pin.imports, Ti: ['c856385e2-aEyDzrcK.js:bt', '../files-changes/file-selection.mjs', 'useFileGone'] };
+    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL_V3), /is not c856385e2-aEyDzrcK\.js's q\b/);
     restore();
-    pin.imports = { ...pin.imports, u: ['vendor-frame-DfPJ1QmD.js:oo', 'react', 'useMemo'] };
-    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL), /is not react useMemo/);
+    pin.imports = { ...pin.imports, i: [`${official3.vendorFrame}:Co`, 'react', 'useMemo'] };
+    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL_V3), /is not react useMemo/);
+    restore();
+    // A compiler helper re-pointed to another view-tabs name (same chunk:alias, other semantic name).
+    pin.imports = { ...pin.imports, J9: [pin.imports.J9[0], pin.imports.J9[1], 'memoStore0'] };
+    await assert.rejects(pinFilesHelper('breadcrumb-view.mjs', OFFICIAL_V3), /is not view-tabs memoStore0/);
   } finally { restore(); }
-  const { bindings, imports, exports } = await pinFilesHelper('breadcrumb-view.mjs', OFFICIAL);
-  assert.deepEqual(bindings, ['Ht', 'Kt', 'Q', 'qt', 'Jt', 'Yt']);
-  assert.match(imports, /import \{breadcrumbSegments as Gt,segmentMenuTarget as Vt,folderLabel as Xt\} from '\.\/breadcrumb-paths\.mjs';/);
-  assert.match(exports, /Kt as BreadcrumbBody/);
+  const { bindings, imports, exports } = await pinFilesHelper('breadcrumb-view.mjs', OFFICIAL_V3);
+  assert.deepEqual(bindings, ['zl', 'Vl', 'Hl', 'Wl', 'Gl', 'Ul', 'ql', 'Jl', 'Y']);
+  assert.match(imports, /import \{breadcrumbSegments as Bl,segmentMenuTarget as Rl,folderLabel as Kl\} from '\.\/breadcrumb-paths\.mjs';/);
+  assert.match(imports, /import \{BreadcrumbFolderSegment as kl\} from '\.\.\/files-changes\/breadcrumb-folder\.mjs';/);
+  assert.match(exports, /Vl as BreadcrumbBody/);
 });
 
-test('FT-16 generator: the folder popover, compact tree and their runtime are 2.42304.0 originals with resolved imports', () => {
+test('FT-16 generator: the folder popover, compact tree and their runtime are 3.6556.2 originals with resolved imports', () => {
   const manifest = JSON.parse(source('src/generated/files-changes/manifest.json'));
+  assert.equal(manifest.referenceVersion, official3.referenceVersion);
   const byTarget = Object.fromEntries(manifest.modules.map((module) => [module.target, module]));
   const expect = {
-    'breadcrumb-folder.mjs': 'cfac349aa-BiPinwNg.js', 'file-tree-compact.mjs': 'ca7840910-DSVFtTw1.js', 'file-browser-query.mjs': 'vendor-query-Dqcf4jOo.js',
-    'react-store.mjs': 'vendor-all-0-CTKbbUUg.js', 'file-type-icon.mjs': 'c280f9bbb-Dw5U-PIG.js', 'file-kind-icon-name.mjs': 'shared-9-D7uuiUv7.js',
-    'retry-button.mjs': 'c30c42d34-DW_r0HJ_.js', 'file-entry-order.mjs': 'shared-18-D4XxL6Tg.js', 'file-relative-path.mjs': 'shared-28-DcgD7xXH.js',
-    'diff-widget-background.mjs': 'c6e73333a-HHjd1vH0.js', 'arrow-key-direction.mjs': 'c7037f09e-DXK8RSre.js', 'loading-flag.mjs': 'shared-104-Cqo2-vQh.js',
+    'breadcrumb-folder.mjs': VIEWER, 'folder-list-key.mjs': 'c0fbbe82d-COsmfHJY.js', 'file-tree-compact.mjs': 'ca7840910-By5J0kGX.js',
+    'tree-context-menu-keys.mjs': 'shared-18-D3y8YMFN.js', 'file-browser-query.mjs': 'vendor-query-DVJ0goAF.js',
+    'react-store.mjs': 'vendor-all-0-DXM0MGjZ.js', 'file-type-icon.mjs': 'c280f9bbb-CutcMso2.js', 'file-kind-icon-name.mjs': 'shared-9-CM21XrJw.js',
+    'retry-button.mjs': 'c30c42d34-B0SRB643.js', 'file-entry-order.mjs': 'shared-18-D3y8YMFN.js', 'file-relative-path.mjs': 'shared-28-DNYlf4wu.js',
+    'diff-widget-background.mjs': 'c6e73333a-DjPHi7Jv.js', 'arrow-key-direction.mjs': 'c7037f09e-DXK8RSre.js', 'loading-flag.mjs': 'shared-104-CTONUSaz.js',
   };
-  for (const [target, chunk] of Object.entries(expect)) assert.equal(byTarget[target]?.source, chunk, target);
+  for (const [target, chunk] of Object.entries(expect)) {
+    assert.equal(byTarget[target]?.source, chunk, target);
+    assert.equal(byTarget[target].referenceVersion, official3.referenceVersion, target);
+  }
   const imports = (target) => Object.fromEntries(byTarget[target].imports.map((entry) => [entry.local, `${entry.kind}:${entry.from.replace('../../source-files-changes-adapters.jsx', 'host')}:${entry.name}`]));
   const folder = imports('breadcrumb-folder.mjs');
-  assert.equal(folder.jt, 'code-current:../code-current/breadcrumb-paths.mjs:segmentClass', 'the segment class is not duplicated');
-  assert.equal(folder.Mt, 'code-current:../code-current/breadcrumb-paths.mjs:segmentKeys');
-  assert.equal(folder.Ne, 'code-current:../code-current/path-tooltip.mjs:pathTooltipContent');
-  assert.equal(folder.M, 'generated:./file-browser-query.mjs:useQueryClient');
-  assert.equal(folder.N, 'generated:./file-browser-query.mjs:useQuery');
-  assert.equal(folder.we, 'generated:./file-tree-compact.mjs:FolderTree');
-  assert.equal(folder.Ve, 'generated:./retry-button.mjs:RetryButton');
-  assert.equal(folder.le, 'generated:./react-store.mjs:create');
-  for (const [local, name] of [['O', 'FilesPopover'], ['D', 'FilesTooltip'], ['te', 'FilesSkeletonGroup'], ['E', 'FilesSkeleton'], ['ce', 'useIntl'], ['j', 'FormattedMessage']])
+  assert.equal(folder.El, 'code-current:../code-current/breadcrumb-paths.mjs:segmentClass', 'the segment class is not duplicated');
+  assert.equal(folder.Dl, 'code-current:../code-current/breadcrumb-paths.mjs:segmentKeys');
+  assert.ok(!byTarget['breadcrumb-folder.mjs'].bindings.some((binding) => ['El', 'Dl'].includes(binding.name)), 'El / Dl are not sliced twice');
+  assert.equal(folder.Qa, 'code-current:../code-current/path-tooltip.mjs:pathTooltipContent');
+  assert.equal(folder.$a, 'code-current:../code-current/path-tooltip.mjs:pathTooltipOptions');
+  assert.equal(folder.Ft, 'generated:./file-browser-query.mjs:useQueryClient');
+  assert.equal(folder.It, 'generated:./file-browser-query.mjs:useQuery');
+  assert.equal(folder.Tr, 'generated:./file-tree-compact.mjs:FolderTree');
+  assert.equal(folder.xo, 'generated:./retry-button.mjs:RetryButton');
+  assert.equal(folder.Mt, 'generated:./react-store.mjs:create');
+  assert.equal(folder.Ji, 'generated:./folder-list-key.mjs:folderListQueryKey');
+  for (const [local, name] of [['se', 'FilesPopover'], ['j', 'FilesTooltip'], ['jt', 'useIntl'], ['B', 'FormattedMessage'], ['At', 'defineMessages']])
     assert.equal(folder[local], `adapter:host:${name}`, local);
+  // 3.6556.2: the loading rows are the view-tabs CdsSkeleton / CdsLoadingSkeleton themselves (no host skeleton adapters).
+  assert.equal(folder.le, 'view-tabs:../view-tabs/shared-frame-6jtSkIit.js:CdsSkeleton');
+  assert.equal(folder.ae, 'view-tabs:../view-tabs/shared-frame-6jtSkIit.js:CdsLoadingSkeleton');
   const tree = imports('file-tree-compact.mjs');
-  assert.equal(tree.E, 'code-current:../code-current/file-tree-style.mjs:fileTreeIconSize');
-  assert.equal(tree.L, 'code-current:../code-current/file-tree-style.mjs:treeIndent');
-  assert.equal(tree.P, 'generated:./file-tree-row-classes.mjs:fileTreeCompactRow');
-  assert.equal(tree.f, 'code-current:../code-current/surface-chord-platform.mjs:isMacUserAgent');
-  assert.equal(tree.h, 'adapter:host:CdsIcon');
-  assert.equal(tree.ee, 'generated:./file-type-icon.mjs:FileTypeIcon');
-  assert.equal(imports('file-entry-order.mjs').Ct, 'code-current:../code-current/lazy-init.mjs:lazyInit');
-  assert.equal(imports('react-store.mjs').c, 'react:react:default');
+  assert.equal(tree.b, 'code-current:../code-current/file-tree-style.mjs:fileTreeIconSize');
+  assert.equal(tree.x, 'code-current:../code-current/file-tree-style.mjs:treeIndent');
+  assert.equal(tree.C, 'generated:./file-tree-row-classes.mjs:fileTreeCompactRow');
+  assert.equal(tree._, 'generated:./tree-context-menu-keys.mjs:openContextMenuFromKey');
+  assert.equal(tree.g, 'generated:./tree-context-menu-keys.mjs:preventMenuItemEnterRepeat');
+  assert.equal(tree.u, 'view-tabs:../view-tabs/shared-frame-6jtSkIit.js:CdsIcon');
+  assert.equal(tree.d, 'view-tabs:../view-tabs/shared-frame-6jtSkIit.js:CdsContextMenu');
+  assert.equal(tree.T, 'generated:./file-type-icon.mjs:FileTypeIcon');
+  // W13 G11 (D1): shared-0 Pa is routines-shared's import-free copy (code-current lazy-init.mjs only re-exports it).
+  assert.equal(imports('file-entry-order.mjs').rn, 'routines-shared:../routines-shared/shared-0-DDOOdL6P.mjs:Pa');
+  assert.equal(imports('react-store.mjs').o, 'react:react:default');
   assert.deepEqual(Object.values(imports('file-browser-query.mjs')).every((value) => value.startsWith('react:')), true, 'TanStack Query needs only React');
-  const cfac = official('cfac349aa-BiPinwNg.js');
-  for (const feature of ['kt=150', 'At=`opacity-0 pointer-events-none`', 'Tt=200', 'Et=6', 'Files in {folder}', 'Listing this folder', 'Empty folder', 'variant:`compact`', `epitaxy-file-browser-tree`])
-    assert.ok(cfac.includes(feature) || cfac.includes(feature.replace(/`/g, '"')), feature);
+  const cd2e = officialV3(VIEWER);
+  for (const feature of ['wl=150', 'Tl="opacity-0 pointer-events-none"', 'bl=200,xl=6', 'Files in {folder}', 'Listing this folder', 'Empty folder', 'variant:"compact"', 'O as Ji'])
+    assert.ok(cd2e.includes(feature), feature);
+  assert.ok(officialV3('c0fbbe82d-COsmfHJY.js').includes('function ri(e,t){return["epitaxy-file-browser-tree",e,t]}'));
 });
 
 test('FT-06 SSR: the 2.42304.0 body classes, folder segments as popover triggers, and segment menus asked with `gone`', async () => {
@@ -415,10 +450,12 @@ test('FT-16 Lt SSR: skeleton while pending, "Couldn’t list this folder" + Try 
   const lister = (list) => ({ sessionId: 's1', scope: 'local', root: '/repo', listDirectory: list });
   // Pending.
   const pending = render(new QueryClient(), lister(() => new Promise(() => {})), '/repo/src');
-  assert.match(pending, /^<div data-cds="SkeletonGroup" data-motion="wave" data-hold="delayed" role="status" class="px-xs py-xs"><span class="sr-only" data-skeleton-label=""><\/span><div aria-hidden="true" class="contents">/);
+  // 3.6556.2: the list renders the view-tabs CdsSkeleton / CdsLoadingSkeleton (the official Skeleton, not a host copy):
+  // the label span is data-skeleton-label="true" and rows carry no --cds-skel-i index.
+  assert.match(pending, /^<div data-cds="SkeletonGroup" data-motion="wave" data-hold="delayed" role="status" class="px-xs py-xs"><span class="sr-only" data-skeleton-label="true"><\/span><div aria-hidden="true" class="contents">/);
   assert.equal(pending.match(/class="flex h-control items-center gap-xs compact:px-2 comfortable:px-2\.5"/g).length, 6, 'od: Et rows');
-  assert.match(pending, /<div data-cds="Skeleton" class="h-\[1em\] max-w-full rounded bg-\[var\(--cds-skeleton-base\)\]" style="width:20px;height:20px;--cds-skel-i:0"><\/div>/);
-  assert.match(pending, /style="width:160px;height:16px;--cds-skel-i:1"/);
+  assert.match(pending, /<div data-cds="Skeleton" class="h-\[1em\] max-w-full rounded bg-\[var\(--cds-skeleton-base\)\]" style="width:20px;height:20px"><\/div>/);
+  assert.match(pending, /style="width:160px;height:16px"/);
   // Error (a local listing is not retried, J's lt).
   const failed = new QueryClient();
   const failing = lister(async () => { throw new Error('EACCES'); });

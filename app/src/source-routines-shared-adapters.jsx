@@ -1,4 +1,5 @@
-// Local services for the original 2.42304.0 routines pieces scripts/extract-routines-shared.mjs emits
+// Local services for the original routines pieces scripts/extract-routines-shared.mjs emits (3.6556.2 since
+// w2-routines-shared; the 2.42304.0 code-routines / cowork-scheduled graphs still import the older names below, E34)
 // (src/generated/routines-shared: cdbc75b4b cards / filters / loading frames, c43d31dd8 Runs on helpers, shared-52 kx,
 // shared-14 Ft; R4g-routines RT0, tasks-code-routines WI-0, D32). Each export replaces one original declaration, which the
 // extractor feature-checks (see the `adapters` table there). The Code Routines page (WI-5) and the Cowork Scheduled
@@ -115,12 +116,11 @@ export function useSurfaceModels() {
 }
 
 // shared-4 Ap (cloud routines: claude_code_routines + the org's routines.enabled + chilling_sloth_clocks) and the gates
-// built on it (Bp alumina_drift, Fp ccr_routine_push_notify_reminder, jp marble_sparrow / ccr_triggers_plugin_config):
+// built on it (Bp alumina_drift, Fp ccr_routine_push_notify_reminder):
 // no account, organization or GrowthBook here, so all off (D29/D31/D32).
 export const useCloudRoutinesEnabled = () => false;
 export const useRoutineAluminaDrift = () => false;
 export const useRoutinePushNotifyReminder = () => false;
-export const useRoutinePluginConfig = () => false;
 // shared-4 dh: the scheduled task bridge (window.claude CoworkScheduledTasks / CCDScheduledTasks with the cloud-migration
 // state). Here the page's bridge over the local-routines service.
 export function useScheduledTasksBridge() {
@@ -167,8 +167,18 @@ export function useCurrentAccount() {
 export const useVoiceModeAvailable = () => false;
 export const useGate2142364912 = () => false;
 export const useVoiceRecordingActive = () => false;
-// shared-78 Wg (the hub engine: hubCapable / hubAllowed / GrowthBook): off.
+// shared-78 Wg (3.6556.2 lv; the hub engine: hubCapable / hubAllowed / GrowthBook): off.
 export const useHubAvailable = () => false;
+// 3.6556.2 shared-4 Ap / Np: the page header frame (Lm) reads whether the title strip line is claimed (the sidebar store's
+// stripLineClaims > 0 with no discovery preview) and claims it while shown. Both serve the fizzy-lake panels branch,
+// which is off here (E12), and this host has no sidebar store: not claimed, and the claim renders nothing.
+export const useTitleStripLineClaimed = () => false;
+export function TitleStripLineClaim() {
+  return null;
+}
+// 3.6556.2 shared-8 GP (the card menu: Cowork remote control over the active organization's settings and the
+// cowork_remote_control feature). No organization here, where the original answers false.
+export const useCoworkRemoteControlAvailable = () => false;
 // shared-2 Bw (__gb__672513276, move a local routine to the cloud): off, no cloud routines.
 export const useRoutineMoveToCloudGate = () => false;
 
@@ -183,11 +193,6 @@ export function useSshConfigs() {
   return SSH_UNAVAILABLE;
 }
 
-// shared-6 mH (connector icons). cdbc75b4b Ui draws one only for a remote trigger created from Slack; there are no remote
-// triggers here.
-export function ConnectorIcon() {
-  return null;
-}
 // shared-16 Dd (the lazily loaded emoji shortcode field enhancer, a dynamic chunk). Not loaded here: the rename field is
 // a plain input.
 export function EmojiShortcodeField() {

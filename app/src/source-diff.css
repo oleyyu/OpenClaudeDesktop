@@ -49,11 +49,9 @@
 .sdiff-view[data-placement=changes] .sdiff-view-image .source-tooltip-disabled-trigger { display: inline-flex; white-space: normal; }
 .sdiff-view[data-placement=changes] .sdiff-file-toggle { padding-right: var(--cds-pad-md, 8px); }
 .sdiff-path-directory[data-clipped] { opacity: 0; }
-/* Ze reveal: group-hover/group-focus-within on the trigger, always on a coarse
-   pointer (pointer-coarse:opacity-100 is absent from the loaded utility copy). */
-.sdiff-view[data-placement=changes] .sdiff-open-file { opacity: 0; }
-.sdiff-view[data-placement=changes] .sdiff-header:is(:hover, :focus-within) .sdiff-open-file { opacity: 1; }
-@media (pointer: coarse) { .sdiff-view[data-placement=changes] .sdiff-open-file { opacity: 1; } }
+/* _a reveal (Open file): its own layered utilities (opacity-0, group-hover/diff-file:opacity-100,
+   group-focus-within/diff-file:opacity-100, pointer-coarse:opacity-100) are all in the loaded 3.6556.2 sheets now, so no
+   unlayered restatement here. */
 .sdiff-file-body { min-width:0;padding-block:var(--cds-pad-xs,4px);background:light-dark(var(--code-theme-light-bg,transparent),var(--code-theme-dark-bg,transparent)); }
 .sdiff-hunk { min-width:0; }
 .sdiff-note { min-height: var(--cds-leading-code, 17px); padding: 0 var(--cds-pad-md, 8px); white-space: pre; color: var(--cds-text-muted); }
@@ -138,36 +136,18 @@ html[data-reduce-motion="true"] .sdiff-caret { transition: none; }
    for --available-width. */
 .source-tooltip-positioner:has(> .source-tooltip-popup[class~="max-w-[min(480px,var(--available-width))]"]),
 .source-tooltip-popup[class~="max-w-[min(480px,var(--available-width))]"] { max-width: min(480px, 100vw - 10px); }
-/* B15 Commits section (c44d00c7f Zr/Kr/Wr): the same `button` reset beats the rows' layered px-xs py-[6px],
-   text-body, text-primary/secondary and the ce9ca5630 a/c fills, so they are restated unlayered too.
-   scroll-mt-(--cds-pad-md) (Kr) is in the 2.31226.0 c6a992d55 copy but not in the loaded one. */
-.sdiff-commit-row, .sdiff-commit-scope { padding:6px var(--cds-pad-xs); background:var(--cds-alpha-0); color:var(--cds-text-primary);
-  font-size:var(--cds-font-size-body); line-height:var(--cds-leading-body); }
-.sdiff-commit-scope { scroll-margin-top:var(--cds-pad-md); }
-.sdiff-commit-row:hover, .sdiff-commit-row[data-pressed], .sdiff-commit-scope:hover { background:var(--cds-fill-ghost-hover); }
-.sdiff-commit-row[aria-pressed="true"], .sdiff-commit-row[aria-pressed="true"]:hover,
-.sdiff-commit-scope[aria-pressed="true"], .sdiff-commit-scope[aria-pressed="true"]:hover { background:var(--cds-fill-control); }
-.sdiff-commit-row:focus-visible, .sdiff-commit-scope:focus-visible, .sdiff-commits-trigger:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
-.sdiff-commits-trigger { padding-right:var(--cds-pad-md); color:var(--cds-text-secondary); font-size:var(--cds-font-size-body); line-height:var(--cds-leading-body); }
-@media (prefers-reduced-motion: reduce) { .sdiff-tree-caret { transition:none; } }
-html[data-reduce-motion="true"] .sdiff-tree-caret { transition:none; }
-/* cn shield: while a handle drags, the whole pane keeps the col-resize cursor
-   and text selection is off (as the Files tree's data-tree-resizing rules). */
-.sdiff-changes-layout[data-resizing] { user-select:none; }
-.sdiff-changes-layout[data-resizing] * { cursor:col-resize !important; }
-.sdiff-changes-layout[data-resizing] :is(.sdiff-file-list-divider, .sdiff-file-list-edge) > span { opacity:1; background:var(--cds-fill-primary); }
-/* Yn (c44d00c7f): the hidden list's edge is Jn with "start-0 end-auto w-[3px] [&>*]:pointer-events-none", so it leaves
-   the gutter's line-comment '+' (Ca, -left-0.5) clickable. */
-.source-tree-edge.sdiff-file-list-edge { width:3px; }
-.source-tree-edge.sdiff-file-list-edge > * { pointer-events:none; }
+/* B15 Commits section (3.6556.2 c44d00c7f Ni/Fi/Bi): the host button reset is in @layer base now, so the rows' and the
+   header's official utilities (row fills, px-xs py-[6px], text-start, scroll-mt-(--cds-pad-md), text-secondary-control,
+   focus ring) win as loaded; no unlayered restatement. */
+/* W12: the column's handles are the generated c44d00c7f Ir / Lr over shared-9 bm and the drag shield Rr (a fixed
+   cursor-col-resize layer; bm itself sets the body cursor and user-select while it drags), so nothing is restated here. */
 /* Line comments: Ca (c44d00c7f 2925-2943) in the @pierre/diffs gutter utility slot (absolute,
    top/bottom 0, my-auto, -left-0.5): cda9b4504 "flex size-4 items-center justify-center rounded bg-fill-accent
    text-on-accent hover:bg-fill-accent-hover", shown on the hovered line (or while it has keyboard focus). */
 .sdiff-row[data-commentable] { position: relative; }
-.sdiff-gutter-add { position: absolute; top: 0; bottom: 0; left: -2px; z-index: 1; display: flex; align-items: center; justify-content: center;
-  width: 1rem; height: 1rem; margin-block: auto; padding: 0; border: 0; border-radius: var(--cds-radius); white-space: normal; touch-action: none;
-  background: var(--cds-fill-accent); color: var(--cds-on-accent, #fff); opacity: 0; pointer-events: none; }
-.sdiff-gutter-add:hover { background: var(--cds-fill-accent-hover, var(--cds-fill-accent)); }
+/* Uc: geometry and colours are the button's own utilities and inline style (source-diff.jsx GUTTER_ADD_*); the host
+   only reveals it on the hovered row (the @pierre/diffs gutter utility slot does that officially). */
+.sdiff-gutter-add { z-index: 1; opacity: 0; pointer-events: none; }
 .sdiff-row[data-commentable]:hover > .sdiff-gutter-add, .sdiff-gutter-add:focus-visible { opacity: 1; pointer-events: auto; }
 .sdiff-gutter-add:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .sdiff-row[data-commentable] > .sdiff-line-number { grid-column: 1; }

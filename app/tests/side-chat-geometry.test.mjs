@@ -12,6 +12,8 @@ import { designSnapshot, designStylesheets } from '../scripts/current-design-ass
 import { selectorClasses } from '../scripts/prepare-style-compatibility.mjs';
 
 const latest = new URL(`../../reference/${designSnapshot}/ion-dist/assets/v1/`, import.meta.url);
+// The side-chat module is the 3.6556.2 slice (w10-editor-side-chat): cd97b284f e and cccc2cf0a EF/DF.
+const sliced = new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/', import.meta.url);
 let server, S;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
@@ -53,10 +55,10 @@ test('east/south resizing observes 16px margin while dragging reaches the viewpo
   assert.deepEqual(moveSideChat(rect, { x: 900, y: 900 }, viewport, 45), { ...rect, left: 960, top: 480 });
 });
 
-test('2.42304.0 handles: ck geometry classes verbatim (n/s use inset-x-[8px]), all in the loaded stylesheets', async () => {
-  const source = await fs.readFile(new URL('cccc2cf0a-B0D--VZp.js', latest), 'utf8');
-  const ck = Function(`return ${source.match(/var ck=(\[\{edges:[\s\S]*?\}\]),lk=/)[1]}`)();
-  assert.deepEqual(sideChatResizeHandles, ck);
+test('3.6556.2 handles: DF geometry classes verbatim (n/s use inset-x-[8px]), all in the loaded stylesheets', async () => {
+  const source = await fs.readFile(new URL('cccc2cf0a-DhZC33Gc.js', sliced), 'utf8');
+  const handles = Function(`return ${source.match(/var DF=(\[\{edges:[\s\S]*?\}\]),OF=/)[1]}`)();
+  assert.deepEqual(sideChatResizeHandles, handles);
   assert.equal(sideChatResizeHandles[0].className, '-top-[3px] inset-x-[8px] h-[6px]');
   assert.equal(sideChatResizeHandles[1].className, '-bottom-[3px] inset-x-[8px] h-[6px]');
   assert.ok(sideChatResizeHandles.every(({ className }) => !/(?:^|\s)(?:left|right)-\[8px\]/.test(className)));
@@ -66,14 +68,14 @@ test('2.42304.0 handles: ck geometry classes verbatim (n/s use inset-x-[8px]), a
     assert.ok(loaded.has(token), `${token} is in the current design stylesheets`);
 });
 
-test('2.42304.0 rect: rtl defaults off (LTR placement unchanged) and mirrors the default/anchored start edge', () => {
+test('3.6556.2 rect: rtl defaults off (LTR placement unchanged) and mirrors the default/anchored start edge', () => {
   assert.deepEqual(sideChatRect({ viewport, rtl: false }), sideChatRect({ viewport }));
   assert.deepEqual(sideChatRect({ viewport, rtl: true }), { width: 320, height: 340, left: 24, top: 392 });
   assert.deepEqual(sideChatRect({ viewport, rtl: true, endInset: 12, anchor: { left: 200, right: 1000, bottom: 700, height: 216 } }),
     { width: 320, height: 200, left: 212, top: 492 });
 });
 
-test('SourceSideChat renders each handle as the original ck.map element: draggable-none absolute z-[1] + ck class, touch-action none', () => {
+test('SourceSideChat renders each handle as the original DF.map element: draggable-none absolute z-[1] + DF class, touch-action none', () => {
   const html = renderToStaticMarkup(React.createElement(S.SourceSideChat, { threadId: 'geometry', open: true, onClose() {}, rpc: async () => ({}) }));
   const handles = [...html.matchAll(/<div aria-hidden="true" class="([^"]*)" data-edge="([nswe]+)" style="([^"]*)"><\/div>/g)];
   assert.equal(handles.length, 8);
@@ -85,4 +87,25 @@ test('SourceSideChat renders each handle as the original ck.map element: draggab
   });
   const windowed = renderToStaticMarkup(React.createElement(S.SourceSideChat, { threadId: 'geometry-window', open: true, windowed: true, onClose() {}, rpc: async () => ({}) }));
   assert.doesNotMatch(windowed, /data-edge=/);
+});
+
+// w10-editor-side-chat: the compiled 3.6556.2 hooks (c96d752d0 V6 over working-line EE, c80ec48f8 mn) run under the
+// host React with the view-tabs compiler helpers (SSR through Vite, the way the app loads them).
+test('3.6556.2 compiled status hook V6 holds the waiting label on first render', async () => {
+  const { SourceSideChatStatus } = await server.ssrLoadModule('/src/source-side-chat-status.jsx');
+  const status = await fs.readFile(new URL('../src/generated/code-editor/side-chat-status.mjs', import.meta.url), 'utf8');
+  assert.match(status, /import \{ EE \} from "\.\.\/working-line\/working-line\.mjs";/);
+  assert.match(status, /reactMemoCache as J9/);
+  const props = { status: 'thinking', thinkingSince: Date.now(), progress: { stage: 'waiting' }, awaitingAnswer: true, assistantName: 'DeepSeek' };
+  const html = renderToStaticMarkup(React.createElement(SourceSideChatStatus, props));
+  assert.match(html, /data-side-status="running"/);
+  assert.match(html, /class="source-shimmer sts-activity">[^<]*DeepSeek[^<]*<\/span>/);
+  const idle = renderToStaticMarkup(React.createElement(SourceSideChatStatus, { ...props, status: 'idle' }));
+  assert.match(idle, /data-side-status="idle"/);
+  assert.doesNotMatch(idle, /sts-activity/);
+});
+test('3.6556.2 compiled selection hook mn renders no toolbar without a range', async () => {
+  const { SourceTranscriptSelection } = await server.ssrLoadModule('/src/source-transcript-selection.jsx');
+  const html = renderToStaticMarkup(React.createElement(SourceTranscriptSelection, { containerRef: { current: null }, actions: { threadId: 'sel', onAttachText() {} } }));
+  assert.equal(html, '');
 });

@@ -38,7 +38,10 @@ test('open (a1 / o1): Primary and Secondary pane regions in grid cells, the focu
   assert.match(html, /<div class="split-pane split-pane-primary dframe-pane dframe-pane-primary" id="split-pane-0" role="region" aria-label="Primary pane" data-row="0" data-pos="0:0" data-split-inactive="" data-pane-index="0" style="--pane-col:1">/);
   assert.match(html, /<div class="split-pane split-pane-secondary dframe-pane dframe-pane-extra" id="split-pane-2" role="region" aria-label="Secondary pane" aria-current="true" data-row="0" data-pos="2:0" data-col-last="true" data-focused="" data-pane-index="2" style="--pane-col:3"><div class="split-pane-slot"><\/div><button type="button" aria-hidden="true" tabindex="-1" class="dframe-pane-grip draggable-none"><\/button><\/div>/);
   assert.equal((html.match(/aria-label="Resize pane columns"/g) || []).length, 2, 'one boundary per column pair');
-  assert.match(html, /<div class="dframe-pane-resize-col"><div aria-label="Resize pane columns" aria-valuenow="67" data-cds="ResizeHandle" role="separator" aria-orientation="vertical" tabindex="0"/);
+  // TF-C3 (3.6556.2 shared-23 zO): the column wrapper starts with the aria-hidden no-drag child the loaded CSS
+  // keeps out of the window drag region; the range (aria-valuemin / -max / -disabled) waits for the host to be measured.
+  assert.match(html, /<div class="dframe-pane-resize-col"><div class="dframe-pane-resize-col-no-drag" aria-hidden="true"><\/div><div aria-label="Resize pane columns" aria-valuenow="67" data-cds="ResizeHandle" role="separator" aria-orientation="vertical" tabindex="0"/);
+  assert.equal((html.match(/<div class="dframe-pane-resize-col-no-drag" aria-hidden="true"><\/div>/g) || []).length, 2, 'one no-drag child per column boundary');
   assert.match(html, /data-cds-part="resize-pill"/);
   // Each extra pane closes itself from its own titlebar (SourceTitlebar onCloseSplit "Close pane"): no close here.
   assert.doesNotMatch(html, /Close split view|Close pane|Resize split view/);
@@ -127,8 +130,8 @@ test('the split CSS never sets cursor:pointer, keeps reduced motion, and the sto
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /html\[data-reduce-motion="true"\] \.split-host \.dframe-pane-extra/);
   // The grid rules are the reference's own (the loaded shared-styles sheet), not copies.
-  const sheet = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/shared-styles-Bl9zqrv-.css'), 'utf8');
-  assert.match(readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /href="\/assets\/v1\/shared-styles-Bl9zqrv-\.css"/);
+  const sheet = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/shared-styles-D_GJawPO.css'), 'utf8');
+  assert.match(readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /href="\/assets\/v1\/shared-styles-D_GJawPO\.css"/);
   for (const rule of ['.dframe-pane-host{', '.dframe-pane-col{', '.dframe-pane-resize-col{', '.dframe-pane-resize-row{', '.dframe-pane-resize-corner{', '.dframe-pane-grip{', '.dframe-drop-overlay-badge{', '.dframe-drop-overlay-label{'])
     assert.ok(sheet.includes(rule), rule);
   assert.equal(Split.SESSION_DRAG_TYPE, 'application/x-code-desktop-session');

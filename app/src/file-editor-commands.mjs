@@ -1,6 +1,6 @@
 import { EditorSelection, EditorView, undo, redo, undoDepth, redoDepth, selectAll, findClusterBreak } from './code-editor-core.mjs';
 import { unfoldEditorRange } from './file-editor-folds.mjs';
-import { selectedEditorContext } from './generated/code-editor-current/wrapper.mjs';
+import { selectedEditorContext, settleEditorParse } from './generated/code-editor-current/wrapper.mjs';
 
 // 2.31226.0 cbd02b8f2 sn/U/cn/dn/fn: preserve linewise copy semantics
 // across the context menu and native keyboard clipboard operations.
@@ -98,9 +98,12 @@ export function editorLocation(state, line, column = 1) {
   const before = findClusterBreak(row.text, offset, false);
   return row.from + (offset > 0 ? findClusterBreak(row.text, before, true) : 0);
 }
+// 3.6556.2 cbd02b8f2 Fo (go to line): `e.dispatch({effects:[c,...zn(e.state,r,r)],selection:{anchor:s}}),uo(e)` — the
+// jump settles the parse around the new viewport (uo = settleEditorParse) so the target lines are highlighted.
 export function goToEditorLocation(view, line, column) {
   const anchor = editorLocation(view.state, line, column);
-  view.dispatch({ selection: { anchor }, effects: [...unfoldEditorRange(view.state, anchor), EditorView.scrollIntoView(anchor, { y: 'center' })] }); view.focus();
+  view.dispatch({ selection: { anchor }, effects: [...unfoldEditorRange(view.state, anchor), EditorView.scrollIntoView(anchor, { y: 'center' })] });
+  settleEditorParse(view); view.focus();
 }
 export function goToLineShortcut(event) {
   return !event.isComposing && !event.nativeEvent?.isComposing && !!event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey &&

@@ -8,6 +8,13 @@
 //   recording        xza / Cza start, wza done, Pza discard, jRa mic toggle, hza / gza frames, _za / yza input filter
 //   held recording   Tza take (60 s, tza), X5 / JRa pill hold, Q5 resume after the permission dialog (nza 2 min)
 //
+// 3.6556.2 moved it to its own lazily loaded chunk, index.chunk-DinDpVtd.js (the held-recording store went to
+// B8y0E1Lj as currentHeldCopperHeron / dropHeldCopperHeron / copperHeronIdentityGeneration …). The names above are, in
+// order: y (f, p / m h ee g _, ne, re, ie), $t; He (Be, je…Le, Ve), Ue, Ge Ke Ye Xe, Je; en / nn, rn, mn, st, Jt / Yt,
+// Xt / Qt; an (Pt), X / Dt, Q (Ft); the module state below likewise (w5 D, H5 G, E5 k, T5 O, O5 j, x5 w, …). Each is
+// the same as 2.42304.0 apart from minified names and the calls into B8y0E1Lj / jPKPzV-P, except nn (start), which first
+// refuses a controller that initCuWatchRecord (Ut, 2.42304.0 uza) has not set up: see start() below.
+//
 // Differences, each forced by this build (docs/computer-use-progress-20261021.md 「第二轮 · watch-record」):
 //   - Output mode is the original's default "trajectory" (uur()); the flag-only "events" mode is not built.
 //   - Purpose "context" (Share screen, reached only from the official microphone menu, which this app has no place for)
@@ -466,6 +473,13 @@ function createWatchRecord({ native, BrowserWindow, screen, ipcMain = null, app 
   async function start(requestedSession, resumeRecord = false, { purpose: requestedPurpose = "skill", webContents = null, window = null } = {}) {
     const kind = requestedPurpose === "context" ? "context" : "skill";
     if (platform !== "darwin") { log.info?.("[watch-record] start blocked — unsupported platform"); return RESULT.Cancelled; }
+    // 3.6556.2 nn: `if(!w||!Ze)` — the main window and computer-use host that initCuWatchRecord hands over (the watch-record
+    // chunk loads lazily there). This controller gets the computer-use side and window plumbing when it is created, the
+    // asking window per call; made without them it is not set up, and refuses the same way, before anything else.
+    if (!native || !BrowserWindow || !screen) {
+      log.warn?.("[watch-record] start blocked — controller not set up (initCuWatchRecord has not run)");
+      return RESULT.Cancelled;
+    }
     if (kind === "context") { log.info?.("[watch-record] start blocked — context recording gate disabled"); return RESULT.Cancelled; }
     if (requestedSession !== undefined && requestedSession !== null && (typeof requestedSession !== "string" || !requestedSession)) {
       log.warn?.("[watch-record] start blocked — malformed sessionId");

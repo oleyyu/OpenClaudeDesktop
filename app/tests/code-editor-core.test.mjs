@@ -6,26 +6,28 @@ import {createHash} from 'node:crypto';
 import {EditorState,Compartment,history,undo,redo,highlightWhitespace,scrollPastEnd,lineNumbers} from '../src/code-editor-core.mjs';
 import {EditorView,EditorSelection,Decoration,ViewPlugin,keymap,defaultKeymap,historyKeymap,Transaction,indentUnit,undoDepth,redoDepth,findClusterBreak} from '../src/code-editor-core.mjs';
 
-test('extracted editor bytes match the installed-reference snapshot and contain only the declared vendor dependency',async()=>{
+test('extracted editor bytes match the 3.6556.2 snapshot and contain only the declared vendor dependency',async()=>{
  const root=path.resolve(import.meta.dirname,'..');
  const dir=path.join(root,'src/generated/code-editor-current');
  const manifest=JSON.parse(await fs.readFile(path.join(dir,'manifest.json')));
- assert.equal(manifest.referenceVersion,'2.42304.0');
+ assert.equal(manifest.referenceVersion,'3.6556.2');
+ assert.equal(manifest.referenceSnapshot,'snapshots/claude-3.6556.2-20261025-192807');
  for(const entry of manifest.modules){
   const generated=await fs.readFile(path.join(dir,entry.name));
-  const reference=await fs.readFile(path.join(root,'../reference/installed-2.42304.0-20261017/ion-dist/assets/v1',entry.name));
+  const reference=await fs.readFile(path.join(root,'../reference',manifest.referenceSnapshot,'ion-dist/assets/v1',entry.name));
   assert.deepEqual(generated,reference);assert.equal(createHash('sha256').update(generated).digest('hex'),entry.sha256);
  }
- assert.equal(manifest.modules[0].name,'c148e7537-BbnhrJJt.js');
+ assert.equal(manifest.modules[0].name,'c148e7537-CAXQJmwB.js');
  assert.match(manifest.modules[0].imports[0], /^\.\/vendor-prosemirror-/);
  assert.equal(manifest.modules.length,28);
- // The directory is generator-owned: only manifest entries, the five adapters and the manifest itself.
+ // The directory is generator-owned: only manifest entries, the six adapters and the manifest itself.
  const expected=new Set(['manifest.json',...manifest.modules.map(entry=>entry.name),...manifest.adapters.map(entry=>entry.name)]);
  assert.deepEqual((await fs.readdir(dir)).filter(name=>!expected.has(name)),[]);
- assert.deepEqual(manifest.adapters.map(entry=>entry.name).sort(),['filename-language.mjs','keyboard-repeat.mjs','newlines.mjs','theme.mjs','wrapper.mjs']);
- assert.deepEqual(manifest.adapters.find(entry=>entry.name==='filename-language.mjs').sources.map(source=>source.name),['c8a544a8c-CD0GHG_t.js']);
+ assert.deepEqual(manifest.adapters.map(entry=>entry.name).sort(),['filename-language.mjs','keyboard-repeat.mjs','layout-tokens.mjs','newlines.mjs','theme.mjs','wrapper.mjs']);
+ assert.deepEqual(manifest.adapters.find(entry=>entry.name==='filename-language.mjs').sources.map(source=>source.name),['c8a544a8c-D-YE3_A6.js']);
+ assert.deepEqual(manifest.adapters.find(entry=>entry.name==='layout-tokens.mjs').sources.map(source=>source.name),['cc3bc2027-CqmDBxcX.js']);
 });
-test('core exports keep their CodeMirror identities across the 2.42304.0 export renames',()=>{
+test('core exports keep their CodeMirror identities across the 3.6556.2 export renames',()=>{
  assert.equal(typeof EditorView.theme,'function');assert.equal(typeof EditorState.create,'function');
  assert.equal(typeof keymap.of,'function');assert.equal(typeof Decoration.mark,'function');assert.equal(typeof ViewPlugin.fromClass,'function');
  assert.ok(defaultKeymap.some(binding=>binding.key==='Mod-a'));assert.ok(historyKeymap.some(binding=>binding.key==='Mod-z'));

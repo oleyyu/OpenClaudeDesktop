@@ -8,13 +8,15 @@ import { aggregatePullRequests, pullRequestEntries } from '../src/generated/code
 import { currentSidebarPullRequest } from '../src/sidebar-pr-current-model.mjs';
 import { currentSidebarSession } from '../src/sidebar-session-current-model.mjs';
 import { parsePullRequest, PR_FIELDS } from '../electron/git-pull-request.cjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 let server, Card, Preview, Icons, Sidebar;
 before(async () => {
   server = await createServer({ configFile:false, root:new URL('..',import.meta.url).pathname, plugins:[react()],
     server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error' });
   Card = await server.ssrLoadModule('/src/generated/code-current/sidebar-pr-card.mjs');
-  Preview = await server.ssrLoadModule('/src/generated/view-tabs/shared-156-Bikz018e.js');
+  // W7: the 2.42304.0 shared-156 shim is retired; the preview card parts are read through the view-tabs facade.
+  Preview = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
   Icons = await server.ssrLoadModule('/src/generated/code-current/sidebar-pr-icon.mjs');
   Sidebar = await server.ssrLoadModule('/src/source-sidebar.jsx');
 });
@@ -83,6 +85,10 @@ test('all shipped PR states use their own source glyph, color and 12px sizing', 
     assert.match(html,/font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\)/);
     assert.doesNotMatch(html,/customSize=|bold=|alt=/);
   }
+  // 3.6556.2 shared-18 ED/TD: the "none" state moved to the muted-as-secondary token, the others are unchanged.
+  assert.deepEqual(Icons.sidebarPrAppearance.none,{icon:'Placeholder',color:'var(--muted-as-secondary, var(--cds-text-muted))',textClass:'text-muted-as-secondary'});
+  assert.deepEqual(Icons.sidebarPrAppearance.merged,{icon:'GitMergedSimple',color:'var(--cds-text-git-merged)',textClass:'text-git-merged'});
+  assert.match(render(Icons.SidebarPrIcon,{state:'none'}),/color:var\(--muted-as-secondary, var\(--cds-text-muted\)\)/);
   const accessible=render(Icons.SidebarPrIcon,{state:'merged',alt:'Merged pull request'});
   assert.match(accessible,/role="img" aria-label="Merged pull request"/); assert.doesNotMatch(accessible,/aria-hidden/);
 });
@@ -132,7 +138,7 @@ function fixture(component, props, contexts=new Map()) {
     useEffect(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps)){const old=cells[i];cells[i]={deps};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}},
   }; hooks.useLayoutEffect=hooks.useEffect;
   const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internal.H;
-    internal.H=hooks;try{tree=component(props);return tree;}finally{internal.H=previous;}};
+    internal.H=withMemoCache(hooks);try{tree=component(props);return tree;}finally{internal.H=previous;}};
   render(); return {render,get tree(){return tree;},flush(){for(const effect of effects.splice(0))effect();},close(){for(const cell of cells)cell?.cleanup?.();}};
 }
 

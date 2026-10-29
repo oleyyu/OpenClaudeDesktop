@@ -66,15 +66,17 @@ test('a Stop that interrupts the whole turn says so', () => {
   assert.match(card({ run: run({ source: 'model', itemId: 'w1' }) }), /aria-label="Stop this workflow"/);
 });
 
-test('/workflows controls (Claude Code 2.1.280): pause/resume, filter, save, tool calls, large-workflow warning', () => {
+test('/workflows controls (Claude Code 2.1.280): pause/resume, tool calls, large-workflow warning; no Save entry, no agent filter', () => {
   const local = run({ workflowProgress: [...run().workflowProgress, { type: 'workflow_agent', index: 3, id: '3', label: 'scan c', state: 'progress', phaseIndex: 0, startedAt: now, lastProgressAt: now, toolCalls: 3, lastToolName: 'Bash' }] });
-  const html = card({ run: local, onPause: async () => {}, onSave: async () => {} });
+  const html = card({ run: local, onPause: async () => {} });
   assert.match(html, /aria-label="Pause this workflow"/);
-  assert.match(html, /Save workflow…/);
-  assert.match(html, /aria-label="Filter agents"/);
+  assert.doesNotMatch(html, /Save workflow/, 'the card has no Save entry');
+  assert.doesNotMatch(html, /aria-label="Filter agents"/, 'the Phases row has no agent filter');
+  assert.doesNotMatch(html, /swf-filter/);
+  assert.match(html, /Scan/, 'every phase still renders without the filter');
   assert.match(html, /3 tool calls · last: Bash/);
   assert.match(card({ run: { ...local, paused: true }, onPause: async () => {} }), /aria-label="Resume this workflow"[\s\S]*Paused|Paused[\s\S]*aria-label="Resume this workflow"/);
-  assert.doesNotMatch(card({ run: run({ source: 'model', itemId: 'w1' }), onPause: async () => {}, onSave: async () => {} }), /Pause this workflow|Save workflow/, 'a core\'s own run has neither');
+  assert.doesNotMatch(card({ run: run({ source: 'model', itemId: 'w1' }), onPause: async () => {} }), /Pause this workflow/, 'a core\'s own run cannot pause');
   assert.match(card({ run: local, warningLimits: { agents: 2, tokens: 1_500_000, suppressed: false } }), /data-large-workflow=""/, 'more agents than the cap');
   // Each side passes its own limits: the other side's ultracode never suppresses this one's warning.
   assert.doesNotMatch(card({ run: local, warningLimits: { agents: 2, tokens: 1_500_000, suppressed: true } }), /data-large-workflow=""/);

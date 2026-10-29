@@ -1,6 +1,10 @@
-// R4f-error E4 (transcript-09, WI-4): extract the 2.42304.0 error-card retry decision without executing any desktop
-// runtime (decision D0: own generator, own output folder src/generated/retry-decision, own
-// scripts/verify-gen-retry-decision.mjs).
+// R4f-error E4 (transcript-09, WI-4): extract the error-card retry decision without executing any desktop runtime
+// (decision D0: own generator, own output folder src/generated/retry-decision, own scripts/verify-gen-retry-decision.mjs).
+//
+// w2-tr-r3b: sliced from 3.6556.2 (R1). The names below are the 2.42304.0 ones; in 3.6556.2 they are cee72b629 f / g /
+// s / c / u (l is now the string test) / d, call sites p / m / h, shared-104 Lw / Iw / zw / Ow / Aw, shared-52 oG / eG /
+// TK / iG, shared-0 Ui / F, c06cf64bb HC, c73f45bc3 l_ / u_ (u_ also lists shared-9 OT tryAgain, so common-messages.mjs
+// carries that table), and cc43287c9's handler is ES (iR / eR / tR, retryLastTurn = DS).
 //
 //   retry-decision.mjs        cee72b629 d (exported t; `lz` in cc43287c9): what the error card's Try again does —
 //                             "resend" (the rejected prompt is still the composer text), "focus", "deliver" (held input),
@@ -52,11 +56,11 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+// R1/E6: Claude Desktop 3.6556.2 (scripts/official-3.6556.2.mjs).
+const { referenceVersion, referenceSnapshot, ionSource: source } = official;
 const output = path.join(root, 'src/generated/retry-decision');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -64,111 +68,118 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 // `features` pins each root to strings of its original (prettier-formatted) text. `pins` does the same for bindings the
 // closure reaches (each must be selected by it).
 const modules = [
-  { target: 'define-messages.mjs', source: 'vendor-intl-Db7hDWRO.js', exports: { tn: 'defineMessages' }, features: { tn: ['return e;'] } },
-  { target: 'logger.mjs', source: 'shared-0-ByI5P0CP.js', exports: { $r: 'logger', I: 'logCategory' },
-    features: { $r: ['debug: (e, ...t) => {},', 'console.warn(e, ...Qr(t));', 'console.error(e, ...Qr(t));'], I: ['EPITAXY: "[EPITAXY]",'] } },
-  { target: 'prompt-text.mjs', source: 'shared-52-DGviI8xb.js',
-    exports: { WR: 'hasToolResultBlock', RR: 'stripTrailingContextBlocks', nB: 'isInterruptMarker', HR: 'stripLeadingContextBlocks' },
+  { target: 'define-messages.mjs', source: 'vendor-intl-DYfox5Co.js', exports: { tn: 'defineMessages' }, features: { tn: ['return e;'] } },
+  { target: 'logger.mjs', source: 'shared-0-DDOOdL6P.js', exports: { Ui: 'logger', F: 'logCategory' },
+    features: { Ui: ['debug: (e, ...t) => {},', 'console.warn(e, ...', 'console.error(e, ...', '__errorMarked: (e, t, ...n) => {', 'console.group(e, ...t),'],
+      F: ['EPITAXY: "[EPITAXY]",'] } },
+  { target: 'prompt-text.mjs', source: 'shared-52-uHFNjl7C.js',
+    exports: { oG: 'hasToolResultBlock', eG: 'stripTrailingContextBlocks', TK: 'isInterruptMarker', iG: 'stripLeadingContextBlocks' },
     features: {
-      WR: ['if (!Array.isArray(e)) return !1;', 'if (t[e]?.type === "tool_result") return !0;'],
-      RR: ['let r = e.replace(LR, "");', 'let e = kR(r.replace(PR, ""), t, n);'],
-      nB: ['return t !== 91 && t > 32 && t < 127 ? !1 : QR.has(e.trim());'],
-      HR: ['if (n === zR) return e;', 'return t > 0 && VR.test(n) ? e : n;'],
+      oG: ['if (!Array.isArray(e)) return !1;', 'if (t[e]?.type === "tool_result") return !0;'],
+      eG: [{ loose: 'let r = e.replace($W, "");' }, { loose: 'let e = GW(r.replace(XW, ""), t, n);' }],
+      TK: [{ loose: 'return t !== 91 && t > 32 && t < 127 ? !1 : mG.has(e.trim());' }],
+      iG: [{ loose: 'if (n === tG) return e;' }, { loose: 'return t > 0 && rG.test(n) ? e : n;' }],
     },
     pins: {
-      QR: ['"[Request interrupted by user]",', '"[Request interrupted by user for tool use]",'],
-      BR: ['/<(system-reminder|task-notification)(?=[\\s/>])[^>]*>[\\s\\S]*?<\\/\\1>\\s*/y'],
-      IR: ['["<system-reminder", "<task-notification"]'],
+      mG: ['"[Request interrupted by user]",', '"[Request interrupted by user for tool use]",'],
+      nG: ['/<(system-reminder|task-notification)(?=[\\s/>])[^>]*>[\\s\\S]*?<\\/\\1>\\s*/y'],
+      QW: ['["<system-reminder", "<task-notification"]'],
     } },
-  { target: 'transcript-rows.mjs', source: 'shared-104-Cqo2-vQh.js',
-    exports: { sC: 'lastTerminalRowIndex', oC: 'pendingPromptUuid', lC: 'isFailedTerminalRow', QS: 'isTerminalRow', eC: 'isHumanPromptRow' },
+  { target: 'transcript-rows.mjs', source: 'shared-104-CTONUSaz.js',
+    exports: { Lw: 'lastTerminalRowIndex', Iw: 'pendingPromptUuid', zw: 'isFailedTerminalRow', Ow: 'isTerminalRow', Aw: 'isHumanPromptRow' },
     features: {
-      sC: ['let t = iC(e, QS);', 'return t.kind === "terminal" ? t.index : null;'],
-      oC: ['if (QS(t)) return null;', 'if (eC(t) && !sw(e, n) && !zS(t)) return AS(t) ?? null;'],
-      lC: ['return e.type !== "result" || ("is_error" in e && e.is_error === !0);'],
-      QS: ['e.type === "result" ||', '"isApiErrorMessage" in e &&', 'e.isApiErrorMessage === !0'],
-      eC: ['e.type !== "user" ||', '("isSynthetic" in e && e.isSynthetic) ||', '("isMeta" in e && e.isMeta)',
-        'return (t && t.startsWith("client-")) || YS(e) ? !1 : !XC(e);'],
+      Lw: [{ loose: 'let t = Pw(e, Ow);' }, 'return t.kind === "terminal" ? t.index : null;'],
+      Iw: [{ loose: 'if (Ow(t)) return null;' }, { loose: 'if (Aw(t) && !LT(e, n) && !hw(t)) return ow(t) ?? null;' }],
+      zw: ['return e.type !== "result" || ("is_error" in e && e.is_error === !0);'],
+      Ow: ['e.type === "result" ||', '"isApiErrorMessage" in e &&', 'e.isApiErrorMessage === !0'],
+      Aw: ['e.type !== "user" ||', '("isSynthetic" in e && e.isSynthetic) ||', '("isMeta" in e && e.isMeta)',
+        { loose: 'return (t && t.startsWith("client-")) || Tw(e) ? !1 : !ET(e);' }],
     },
     pins: {
-      iC: ['if (t(r)) return { kind: "terminal", index: i };', 'if (n(r) && !sw(e, i)) return { kind: "prompt", index: i };', '?? { kind: "none" }'],
-      OS: ['if (rS(e)?.isCurrentSnapshot(e)) {', 'let n = ES(e[i]) ? t(e[i], i) : void 0;'],
-      nS: ['nS = new WeakMap()'],
-      DS: ['Symbol("turnRowIndexes")'],
-      ES: ['(e.type === "user" || e.type === "assistant" || e.type === "result") &&', '!TS(e)'],
-      TS: ['return "parent_tool_use_id" in e && !!e.parent_tool_use_id;'],
-      KC: ['return WC(t)?.name === "/model" || GC.test(t);'],
-      zS: ['return e.isOptimisticEcho === !0;'],
-      CS: ['Lt.debug(V.EPITAXY, "incrementalDerive: stale snapshot", {'],
+      Pw: ['return { kind: "terminal", index: i };', 'return { kind: "prompt", index: i };', '?? { kind: "none" }'],
+      iw: ['?.isCurrentSnapshot(e)) {', { loose: 'let n = nw(e[i]) ? t(e[i], i) : void 0;' }],
+      rw: ['Symbol("turnRowIndexes")'],
+      nw: ['(e.type === "user" || e.type === "assistant" || e.type === "result") &&', { loose: '!tw(e)' }],
+      tw: ['return "parent_tool_use_id" in e && !!e.parent_tool_use_id;'],
+      ST: ['?.name === "/model" ||'],
+      hw: ['return e.isOptimisticEcho === !0;'],
+      $C: ['"incrementalDerive: stale snapshot"'],
     } },
-  { target: 'non-resendable.mjs', source: 'c06cf64bb-BE5q2vSr.js', exports: { Am: 'NON_RESENDABLE_REJECTION' },
-    features: { Am: ['Am = Symbol("NON_RESENDABLE_REJECTION")'] } },
-  { target: 'retry-nudge-messages.mjs', source: 'c73f45bc3-CFrHin0p.js', exports: { vh: 'retryNudgeMessages', yh: 'cannedNudges' },
+  { target: 'non-resendable.mjs', source: 'c06cf64bb-CdJdJuVd.js', exports: { HC: 'NON_RESENDABLE_REJECTION' },
+    features: { HC: ['Symbol("NON_RESENDABLE_REJECTION")'] } },
+  // shared-9 OT (exported at): the shared common-copy table; cannedNudges (u_) reads its tryAgain.
+  { target: 'common-messages.mjs', source: 'shared-9-CM21XrJw.js', exports: { OT: 'commonMessages' },
+    features: { OT: ['tryAgain: { defaultMessage: "Try again", id: "FazwRldA7z" },', 'cancel: { defaultMessage: "Cancel", id: "47FYwba+bI" },'] } },
+  { target: 'retry-nudge-messages.mjs', source: 'c73f45bc3-B7hbL7H9.js', exports: { l_: 'retryNudgeMessages', u_: 'cannedNudges' },
     features: {
-      vh: ['retryNudge: { defaultMessage: "Try again", id: "FazwRldA7z" },',
+      l_: ['retryNudge: { defaultMessage: "Try again", id: "hV5oXfyLn2" },',
         '"I hit my usage limit while you were working, but it has reset now. Please continue from where you left off.",', 'id: "UqWMzb4bJb",',
         '"My computer went to sleep while you were working. Please continue from where you left off.",', 'id: "4g6ivTtQ3C",'],
-      yh: ['e.formatMessage(vh.retryNudge),', 'e.formatMessage(vh.afterUsageLimit),', 'e.formatMessage(vh.afterSleep),',
-        'vh.retryNudge.defaultMessage,', 'vh.afterUsageLimit.defaultMessage,', 'vh.afterSleep.defaultMessage,'],
+      u_: [{ loose: 'e.formatMessage(l_.retryNudge),' }, { loose: 'e.formatMessage(ti.tryAgain),' }, { loose: 'e.formatMessage(l_.afterUsageLimit),' },
+        { loose: 'e.formatMessage(l_.afterSleep),' }, { loose: 'l_.retryNudge.defaultMessage,' }, { loose: 'l_.afterUsageLimit.defaultMessage,' },
+        { loose: 'l_.afterSleep.defaultMessage,' }],
     } },
-  { target: 'retry-decision.mjs', source: 'cee72b629-k4HYmvQy.js',
-    exports: { d: 'decideErrorRetry', h: 'rejectedDraftRetryState', s: 'lastTurnFailed', c: 'unansweredPromptUuid', l: 'conversationNotFound',
-      u: 'REPEAT_PROMPT_WINDOW_MS' },
+  // cee72b629: f (exported t) the decision, g (exported a) the rejected-draft input, s / c the turn helpers, u the
+  // "no conversation found" check over the messages (3.6556.2 split its string test into l, exported i), d the window.
+  { target: 'retry-decision.mjs', source: 'cee72b629-BMo5PDZM.js',
+    exports: { f: 'decideErrorRetry', g: 'rejectedDraftRetryState', s: 'lastTurnFailed', c: 'unansweredPromptUuid', u: 'conversationNotFound',
+      d: 'REPEAT_PROMPT_WINDOW_MS' },
     features: {
-      d: ['function d(e, t, n = Date.now()) {', 'let i = e !== void 0 && e.error !== null,', 'a = i ? e.errorRejectedPrompt : null;',
-        'if (a !== null) return a !== r && t.text === a ? "resend" : "focus";', 'if (e !== void 0 && e.heldInput.length > 0)',
-        'return t.isEmpty ? "deliver" : "focus";', 'if (e?.desktopSession && (e.conversationLost || l(e.messages))) {',
-        'e.lastPrompt.uuid !== c(e.messages)', 'let r = n - (e.lastPrompt.sentAt ?? NaN);', 'return e.lastPrompt.whole && r >= 0 && r < u',
-        '? "repeatPrompt"', ': "refillPrompt";', 'return (i && !e.errorKilledTurn) || e === void 0 || !s(e.messages)', '? "focus"',
+      f: [{ loose: 'function f(e, t, n = Date.now()) {' }, 'let i = e !== void 0 && e.error !== null,', 'a = i ? e.errorRejectedPrompt : null;',
+        { loose: 'if (a !== null) return a !== r && t.text === a ? "resend" : "focus";' }, 'if (e !== void 0 && e.heldInput.length > 0)',
+        'return t.isEmpty ? "deliver" : "focus";', { loose: 'if (e?.desktopSession && (e.conversationLost || u(e.messages))) {' },
+        { loose: 'e.lastPrompt.uuid !== c(e.messages)' }, 'let r = n - (e.lastPrompt.sentAt ?? NaN);', { loose: 'return e.lastPrompt.whole && r >= 0 && r < d' },
+        '? "repeatPrompt"', ': "refillPrompt";', { loose: 'return (i && !e.errorKilledTurn) || e === void 0 || !s(e.messages)' }, '? "focus"',
         '? "nudge"', ': "nudgeBesideDraft";'],
-      h: ['return e === void 0', 'error: "",', 'errorKilledTurn: !1,', 'errorRejectedPrompt: e,', 'heldInput: [],', 'messages: [],'],
-      s: ['let i = e(r);', 'return i === null ? t(r) !== void 0 : n(r[i]);'],
-      c: ['i = r === null ? n : n.slice(0, r),', 'o = i.findLastIndex((e) => "uuid" in e && e.uuid === a);',
+      g: ['return e === void 0', 'error: "",', 'errorKilledTurn: !1,', 'errorRejectedPrompt: e,', 'heldInput: [],', 'messages: [],'],
+      s: [{ loose: 'let i = t(r);' }, { loose: 'return i === null ? n(r) !== void 0 : e(r[i]);' }],
+      c: [{ loose: 'i = r === null ? e : e.slice(0, r),' }, 'o = i.findLastIndex((e) => "uuid" in e && e.uuid === a);',
         'return i.slice(o + 1).some((e) => e.type === "assistant") ? void 0 : a;'],
-      l: ['return [r?.result, ...(Array.isArray(r?.errors) ? r.errors : [])].some(', 'e.toLowerCase().includes("no conversation found with session id"),'],
-      u: ['u = 6e5'],
-    } },
+      u: ['return [r?.result, ...(Array.isArray(r?.errors) ? r.errors : [])].some('],
+      d: ['d = 6e5'],
+    },
+    pins: { l: ['typeof e == "string" &&', 'e.toLowerCase().includes("no conversation found with session id")'] } },
 ];
 // Original text the host wiring follows but cannot import (prettier form of the named top-level declaration).
 const callSites = [
-  { source: 'cee72b629-k4HYmvQy.js', binding: 'f', role: 'Decision input (`sz`) from the session bucket: messages snapshot, conversationLost = shownCategory cli_resume_not_found, lastPrompt only for a desktop session (host: the WI-5 projection)',
+  { source: 'cee72b629-BMo5PDZM.js', binding: 'p', role: 'Decision input (exported n, `tR` in cc43287c9) from the session bucket: messages snapshot, conversationLost = shownCategory cli_resume_not_found, lastPrompt only for a desktop session (host: the WI-5 projection)',
     features: ['let n = e.messages.getSnapshot();', 'errorKilledTurn: e.errorKilledTurn,', 'errorRejectedPrompt: e.errorRejectedPrompt,', 'heldInput: e.heldInput,',
-      'desktopSession: t.desktopSession,', 'conversationLost: t.shownCategory === "cli_resume_not_found",', 'lastPrompt: (t.desktopSession && a(n, t.canned)) || void 0,'] },
-  { source: 'cee72b629-k4HYmvQy.js', binding: 'p', role: 'The card\'s retryWouldSend (`az` via m over the bucket store): ownWords / nothing / nudge from d with an empty composer (only remote categories carry retryNeeds; not ported)',
-    features: ['if (e.error !== null && e.errorRejectedPrompt !== null) return "ownWords";', 'let t = d(e, { text: "", isEmpty: !0 });', 'return t === "focus"', '? "nothing"',
-      '(e.error !== null && !e.messages.some((e) => e.type === "assistant"))', '? "ownWords"', ': "nudge";'] },
-  { source: 'cee72b629-k4HYmvQy.js', binding: 'm', role: 'retryWouldSend reads the bucket store (c06cf64bb Y) — store-bound, not emitted',
-    features: ['return i(e, (e) => e && p(f(e, t)));'] },
+      'desktopSession: t.desktopSession,', 'conversationLost: t.shownCategory === "cli_resume_not_found",', { loose: 'lastPrompt: (t.desktopSession && a(n, t.canned)) || void 0,' }] },
+  { source: 'cee72b629-BMo5PDZM.js', binding: 'm', role: 'The card\'s retryWouldSend (h, exported o, over the bucket store): ownWords / nothing / nudge from f with an empty composer (only remote categories carry retryNeeds; not ported)',
+    features: ['if (e.error !== null && e.errorRejectedPrompt !== null) return "ownWords";', { loose: 'let t = f(e, { text: "", isEmpty: !0 });' }, 'return t === "focus"', '? "nothing"',
+      '(t !== "nudge" && t !== "nudgeBesideDraft") ||', '(e.error !== null && !e.messages.some((e) => e.type === "assistant"))', '? "ownWords"', ': "nudge";'] },
+  { source: 'cee72b629-BMo5PDZM.js', binding: 'h', role: 'retryWouldSend reads the bucket store (c06cf64bb wt) through a compiler-memoised selector — store-bound, not emitted',
+    features: [{ loose: 'n = J1($, 0, t) ? K1($, 0, t, (e) => e && m(p(e, t))) : $[1];' }, { loose: 'return i(e, n);' }] },
 ];
 // Pinned on the minified bytes (each must occur exactly once).
 const rawCallSites = [
-  { source: 'cee72b629-k4HYmvQy.js', role: 'Module exports: lz = d (t), oz = h (i), sz = f (n), az = m (a), cz = o (r)',
-    features: ['export{m as a,h as i,f as n,o as r,d as t}', 'import{t as r,wt as i}from"./c06cf64bb-BE5q2vSr.js"', 'import{Ec as e,_c as t,rc as n}from"./shared-104-Cqo2-vQh.js"'] },
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'Error-card retry handler b_ (handleErrorRetry / retryLastTurn = x_): input from the bucket or the restored draft, then the outcome dispatch',
+  { source: 'cee72b629-BMo5PDZM.js', role: 'Module exports: iR = f (t), eR = g (a), tR = p (n), nR = h (o), rR = o (r), tb = l (i)',
+    features: ['export{g as a,l as i,p as n,h as o,o as r,f as t}', 'import{t as r,wt as i}from"./c06cf64bb-CdJdJuVd.js"', 'import{Cs as e,Ks as t,Ls as n}from"./shared-104-CTONUSaz.js"'] },
+  { source: 'cc43287c9-Me-M2ucD.js', role: 'Error-card retry handler ES (handleErrorRetry / retryLastTurn = DS): input from the bucket or the restored draft, then the outcome dispatch',
     features: [
-      'import{a as az,i as oz,n as sz,r as cz,t as lz}from"./cee72b629-k4HYmvQy.js"',
-      'n=(t&&sz(t,{desktopSession:qF(G),shownCategory:Hg,canned:MN(V)}))??oz(zg?.restoredDraft)',
-      'a=lz(n,{text:r.getText(),isEmpty:!r.hasDraft()});return a==="resend"?(r.submit({personSent:i}),!0):a==="nudgeBesideDraft"&&G?(y_(G,i),r.scheduleFocus(),!0):a==="nudge"?(Ro(),Eo(V.formatMessage(xN.retryNudge)),r.submit({retryNudge:!0,personSent:i}),!0):a==="repeatPrompt"&&n?.lastPrompt!==void 0?(Ro(),Eo(n.lastPrompt.text),r.submit({personSent:i}),!0):(a==="refillPrompt"&&n?.lastPrompt!==void 0&&(Ro(),zo(n.lastPrompt.text)),a==="deliver"?(Fs(),!0):(r.scheduleFocus(),!1))',
-      'x_=A(()=>b_()?!0:(bl(fi),!1),[b_,bl])', 'handleErrorRetry:x_', 'retryLastTurn:x_'] },
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'nudgeBesideDraft (y_): a separate "error_retry" sendWithOutcome of the formatted retryNudge that leaves the composer draft alone',
-    features: ['{sendWithOutcome:g_}=Lj("error_retry")', 'g_({ref:t,text:V.formatMessage(xN.retryNudge),uuid:crypto.randomUUID(),retryNudge:!0,personSent:n,',
+      'import{a as eR,n as tR,o as nR,r as rR,t as iR}from"./cee72b629-BMo5PDZM.js"',
+      'n=(t&&tR(t,{desktopSession:eI(q),shownCategory:Sx,canned:gF(I)}))??eR(gx?.restoredDraft)',
+      'a=iR(n,{text:r.getText(),isEmpty:!r.hasDraft()});return a==="resend"?(r.submit({personSent:i}),!0):a==="nudgeBesideDraft"&&q?(TS(q,i),r.scheduleFocus(),!0):a==="nudge"?(ic(),$s(I.formatMessage(rF.retryNudge)),r.submit({retryNudge:!0,personSent:i}),!0):a==="repeatPrompt"&&n?.lastPrompt!==void 0?(ic(),$s(n.lastPrompt.text),r.submit({personSent:i}),!0):(a==="refillPrompt"&&n?.lastPrompt!==void 0&&(ic(),ac(n.lastPrompt.text)),a==="deliver"?(Qc(),!0):(r.scheduleFocus(),!1))',
+      '()=>ES()?!0:(jd(J_),!1)', 'handleErrorRetry:DS', 'retryLastTurn:DS'] },
+  { source: 'cc43287c9-Me-M2ucD.js', role: 'nudgeBesideDraft (TS over wS): a separate "error_retry" sendWithOutcome of the formatted retryNudge that leaves the composer draft alone',
+    features: ['{sendWithOutcome:bS}=GM("error_retry")', 'bS({ref:t,text:I.formatMessage(rF.retryNudge),uuid:crypto.randomUUID(),retryNudge:!0,personSent:n,',
       '"epitaxy: error retry send failed"'] },
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'Send core (one): a local nudge never arms lastSentText (fe) and skips the failed-send restores',
-    features: ['ct=be?.retryNudge===!0&&W.type==="local"', 'ct||fe(He,st)'] },
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'The restored-draft retries (session never started / without worktree) only resend',
-    features: ['lz(oz(yl?.kind==="categorized"?yl.restoredDraft:void 0),{text:e.getText(),isEmpty:e.isEmpty()})==="resend"',
-      'lz(oz(f_),{text:e.getText(),isEmpty:!e.hasDraft()})==="resend"'] },
-  { source: 'c6b8adeaf-C5Aww7gq.js', role: 'sendWithOutcome onError: a failed local send records NON_RESENDABLE (kn) unless it was the retry nudge',
-    features: ['onError:(e,{ref:t,uuid:i,isSynthetic:a,remoteRejectionCard:s,retryNudge:c},p)=>', 'c!==!0&&L.getState().buckets[t.id]?.error===o&&f(t.id,kn,x)'] },
-  { source: 'c06cf64bb-BE5q2vSr.js', role: 'Bucket store: recordRejectedPrompt (sets local_send_rejected when no error yet) and the NON_RESENDABLE selector',
-    features: ['recordRejectedPrompt(e,t,n,r){let i=q(e);if(i){if(i.error===null){if(i.pendingTurn!==null||t===null)return;A(e,{kind:"error",error:n,errorCategory:r?.category??"local_send_rejected",sshFailureReason:r?.sshFailureReason})}J(e,e=>({...e,errorRejectedPrompt:t}))}}',
-      'function cy(e){return Y(e,e=>e?.errorRejectedPrompt===Am)}'] },
+  { source: 'cc43287c9-Me-M2ucD.js', role: 'Send core (one): a local nudge never arms lastSentText (ue) and skips the failed-send restores',
+    features: ['ft=ve?.retryNudge===!0&&be.type==="local"', 'ft||ue(We,dt)'] },
+  { source: 'cc43287c9-Me-M2ucD.js', role: 'The restored-draft retries (session never started / without worktree) only resend',
+    features: ['iR(eR(Ad?.kind==="categorized"?Ad.restoredDraft:void 0),{text:e.getText(),isEmpty:e.isEmpty()})==="resend"',
+      'iR(eR(_S),{text:e.getText(),isEmpty:!e.hasDraft()})==="resend"'] },
+  { source: 'c6b8adeaf-bLEQVSWL.js', role: 'sendWithOutcome onError: a failed local send records NON_RESENDABLE (Ln) unless it was the retry nudge',
+    features: ['let{ref:a,uuid:o,isSynthetic:c,remoteRejectionCard:l,retryNudge:u}=t;', 'u!==!0&&z.getState().buckets[a.id]?.error===r&&z.getState().recordRejectedPrompt(a.id,Ln,f)'] },
+  { source: 'c06cf64bb-CdJdJuVd.js', role: 'Bucket store: recordRejectedPrompt (sets local_send_rejected when no error yet) and the NON_RESENDABLE selector',
+    features: ['recordRejectedPrompt(e,t,n,r){let i=J(e);if(i){if(i.error===null){if(i.pendingTurn!==null||t===null)return;O(e,{kind:"error",error:n,errorCategory:r?.category??"local_send_rejected",sshFailureReason:r?.sshFailureReason})}Y(e,e=>({...e,errorRejectedPrompt:t}))}}',
+      'function qO(e){return e?.errorRejectedPrompt===HC}'] },
 ];
 // The minified names the raw pins use, resolved through the importing chunk's import statement.
 const importPins = [
-  { source: 'cc43287c9-DAfOi8yP.js', from: './c73f45bc3-CFrHin0p.js', names: { it: 'xN', rt: 'MN' } },
-  { source: 'cc43287c9-DAfOi8yP.js', from: './cee72b629-k4HYmvQy.js', names: { t: 'lz', i: 'oz', n: 'sz', a: 'az' } },
-  { source: 'c6b8adeaf-C5Aww7gq.js', from: './c06cf64bb-BE5q2vSr.js', names: { t: 'kn' } },
+  { source: 'cc43287c9-Me-M2ucD.js', from: './c73f45bc3-B7hbL7H9.js', names: { ct: 'rF', st: 'gF' } },
+  { source: 'cc43287c9-Me-M2ucD.js', from: './cee72b629-BMo5PDZM.js', names: { t: 'iR', a: 'eR', n: 'tR', o: 'nR' } },
+  { source: 'c6b8adeaf-bLEQVSWL.js', from: './c06cf64bb-CdJdJuVd.js', names: { t: 'Ln' } },
 ];
 
 async function readSource(name, cache) {
@@ -212,7 +223,9 @@ function declarationDeps(src, name) {
 const normalised = text => text.replace(/\s+/g, ' ');
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
+  // A string feature is matched verbatim (whitespace-insensitive); { loose } through looseFeature() (R2/E5: ≤3-character
+  // identifiers generalised, literals and property keys exact).
+  const missing = features.filter(f => typeof f === 'string' ? !text.includes(f) && !flat.includes(normalised(f)) : !official.looseFeature(f.loose).test(text));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
 

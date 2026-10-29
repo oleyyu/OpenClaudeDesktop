@@ -4,11 +4,13 @@
 // are `config.sidebarSections` (the official wire key) in the host's config.json, owned by the main process and sent to
 // every window with the sidebar-state snapshot.
 //
-// Everything that shapes the list is the original 2.42304.0 code in electron/generated/sidebar-sections-model.mjs
-// (shared-52, verbatim): kp (reconcile the sections with the custom groups), Bp (seed the legacy preferences), zp (move a
-// section), Lp (set a section's view), Rp (a new section copies the Sessions view), Sp (normalize), um, _m. This module
-// only reads the host's legacy store in their input shape -- the part shared-22 Qb / $b / Em read from the account's
-// localStorage and the frame store officially -- and writes the result back:
+// Everything that shapes the list is the original 3.6556.2 code in electron/generated/sidebar-sections-model.mjs
+// (shared-52, verbatim; 2.42304.0 names in brackets): Nm [kp] (reconcile the sections with the custom groups), Km [Bp]
+// (seed the legacy preferences), Gm [zp] (move a section), Um [Lp] (set a section's view), Wm [Rp] (a new section copies
+// the Sessions view), Em [Sp] (normalize; its Tm runs wm, so a stored groupBy "environment" -- 2.42304.0's folder
+// grouping -- reads as "folder", w4-sidebar-filter SB-03), dg [um], _m. This module only reads the host's legacy store in
+// their input shape -- the part shared-21 _E / vE / Dg [shared-22 Qb / $b / Em] read from the account's localStorage and
+// the frame store officially -- and writes the result back:
 //   config.customGroups [{id, name, codexSectionId?}]        -> customGroupsByScope.local.groups
 //   config.sessionMetadata[id].customGroupId                 -> customGroupsByScope.local.assignments["code:<id>"]
 //   config.projectOrder "ccg::<id>" keys                     -> Qb manualOrder (code-projects-order, Zb = "ccg::")
@@ -32,7 +34,7 @@
 // Isomorphic on purpose: the renderer imports the request mapping and the store slice, so no Node built-ins here.
 import {
   isPlainRecord, stringArray, normalizeSections, normalizeCustomGroups, reconcileSections, seedSectionPrefs, moveSection,
-  setSectionView, inheritSessionsView, patchSectionView, customGroupKey, findCustomGroupByName, isSectionGroupBy,
+  setSectionView, inheritSessionsView, patchSectionView, customGroupKey, findCustomGroupByName, normalizeSectionGroupBy,
   isSectionSortBy, codeKeyPrefix, sessionsSectionId,
 } from "./generated/sidebar-sections-model.mjs";
 
@@ -184,15 +186,24 @@ function writeSections(config, sections) {
 }
 
 const VIEW_FLAGS = Object.freeze(["ascending", "collapsed", "shown"]);
-const SHOW_FLAGS = Object.freeze(["metadata", "emptyGroups"]);
+// 3.6556.2 shared-52 dm.show: {metadata, emptyGroups, sideChats} (Show › Side chats, SB-11; Tm keeps a boolean sideChats).
+const SHOW_FLAGS = Object.freeze(["metadata", "emptyGroups", "sideChats"]);
 /** A setSectionView patch from the renderer (eO / tO): only the official view fields, with official values; else null.
- * groupBy null clears it (eO Reset: `{groupBy: null, sortBy: "recency", ascending: false}`). */
+ * groupBy null clears it (eO Reset: `{groupBy: null, sortBy: "recency", ascending: false}`). A groupBy goes through
+ * shared-52 wm (normalizeSectionGroupBy), as Tm reads a stored one: 2.42304.0's "environment" (its folder grouping, which a
+ * renderer of that version still sends) is stored as "folder"; anything wm does not know is refused. */
 export function sectionViewPatch(view) {
   if (!record(view)) return null;
   const patch = {};
   for (const [key, value] of Object.entries(view)) {
     if (value === undefined) continue;
-    if (key === "groupBy") { if (value !== null && !isSectionGroupBy(value)) return null; }
+    if (key === "groupBy") {
+      if (value === null) { patch.groupBy = null; continue; }
+      const groupBy = normalizeSectionGroupBy(value);
+      if (groupBy === undefined) return null;
+      patch.groupBy = groupBy;
+      continue;
+    }
     else if (key === "sortBy") { if (!isSectionSortBy(value)) return null; }
     else if (key === "show") {
       if (!record(value) || Object.entries(value).some(([flag, on]) => !SHOW_FLAGS.includes(flag) || (on !== undefined && typeof on !== "boolean"))) return null;

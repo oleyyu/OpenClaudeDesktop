@@ -5,7 +5,8 @@
 /* One line inside the editor's padding box (left: its 4px start padding): a narrow composer (a split side, a pane
    beside a small window) ellipsizes it instead of wrapping it past the one-line editor into scrollbars. */
 /* R4i-graph GR3: only an editor that carries its placeholder (the side chat's); the Code / side-session shell's editor has
-   none (cm's placeholder span), so its ProseMirror::before stays the official float notch. */
+   none (cm's placeholder span), so its ProseMirror::before stays the official float notch (3.6556.2: the presets one-row
+   card passes trailingNotch "pad" instead, vm's pe-[var(--cmp-trail-w,0px)] column reserve, so no notch there). */
 .sc-composer .sc-input.ProseMirror[data-empty=true][data-placeholder]::before{content:attr(data-placeholder);pointer-events:none;position:absolute;left:4px;right:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--cds-text-muted);}
 .sc-composer .sc-input.ProseMirror[aria-disabled=true]::before{color:var(--cds-text-disabled,var(--cds-text-muted));}
 .sc-input .ProseMirror-selectednode{outline:none;}

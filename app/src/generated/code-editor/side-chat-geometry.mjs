@@ -1,4 +1,4 @@
-// Original panel placement, viewport rebasing, resize handles and cursors (2.42304.0).
+// Original panel placement, viewport rebasing, resize handles and cursors (3.6556.2).
 function e({
   saved: e,
   anchor: n,
@@ -42,7 +42,7 @@ function t(e, t, n, r, i, a = 0) {
     s = o < e - a ? i - o - n : e;
   return Math.max(a, Math.min(s, i - n));
 }
-function sk(e) {
+function EF(e) {
   return (e.n && e.w) || (e.s && e.e)
     ? "nwse-resize"
     : (e.n && e.e) || (e.s && e.w)
@@ -51,7 +51,7 @@ function sk(e) {
         ? "ns-resize"
         : "ew-resize";
 }
-const ck = [
+var DF = [
   { edges: { n: !0 }, className: "-top-[3px] inset-x-[8px] h-[6px]" },
   { edges: { s: !0 }, className: "-bottom-[3px] inset-x-[8px] h-[6px]" },
   { edges: { w: !0 }, className: "-left-[3px] top-[8px] bottom-[8px] w-[6px]" },
@@ -78,6 +78,6 @@ const ck = [
 ];
 export {
   e as sideChatRect,
-  sk as sideChatResizeCursor,
-  ck as sideChatResizeHandles,
+  EF as sideChatResizeCursor,
+  DF as sideChatResizeHandles,
 };

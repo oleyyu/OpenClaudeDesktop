@@ -1,7 +1,7 @@
 // turn-plan: the ccd_turn calls in the transcript become the task list card, the next-step box and the settled receipts.
-// The host items go through turnMessages() into the original c1ebb1aa4 Rt / Ft (generated/turn-plan/turn-tail.mjs); the
-// Code turn box (source-turn-box.jsx, generated cccc2cf0a CT / DT / hT) and the settled receipt (generated c96d752d0
-// Itt over cb6930dae's question receipt) render under SSR with the official DOM. The real state.js reducer drives the
+// The host items go through turnMessages() into the original 3.6556.2 c4ea84cb3 Br / Ir (generated/turn-plan/turn-tail.mjs;
+// 2.42304.0 c1ebb1aa4 Rt / Ft); the Code turn box (source-turn-box.jsx, generated cccc2cf0a pj / vj / ZA) and the settled
+// receipt (generated c96d752d0 Ytt over cb6930dae's question receipt) render under SSR with the official DOM. The real state.js reducer drives the
 // items. No browser, no DOM, no network, no port (Vite in middleware mode with hmr / ws off), no real session.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -151,8 +151,8 @@ test('the next-step box: recap, question and the reply button after wrap_up; the
   assert.equal(count(html, WRAP.recap), 1, 'the recap');
   assert.equal(count(html, 'Commit the fix?'), 1, 'the question');
   assert.equal(count(html, 'Yes, commit'), 1, 'the reply button');
-  // z$ draws the row only with its group label (secret:hlf4y0, not in any installed catalog): the host names it.
-  assert.equal(count(html, 'role="group" aria-label="Suggested next steps"'), 1);
+  // 3.6556.2 A5 labels the row with cd4f82e77 Ft's defaultMessage (U no longer reads secret:hlf4y0 from the catalog).
+  assert.equal(count(html, 'role="group" aria-label="Suggested next actions"'), 1);
   assert.ok(/<button[^>]*>(?:(?!<\/button>).)*Yes, commit/s.test(html), 'the reply is a button');
   assert.ok(html.includes('text-body text-secondary select-text break-words'), 'hT recap paragraph');
   assert.ok(html.includes('text-body text-primary select-text break-words'), 'hT question paragraph');
@@ -195,7 +195,12 @@ test('wiring: main.jsx drops ccd_turn rows, renders the settled receipts and giv
   assert.equal(count(fs.readFileSync(path.join(app, 'src/state.js'), 'utf8'), 'turn-plan'), 0);
   const box = fs.readFileSync(path.join(app, 'src/source-turn-box.jsx'), 'utf8');
   assert.ok(box.indexOf('import "./turn-plan-bridge.mjs";') < box.indexOf('./generated/turn-box/turn-box.mjs'), 'the bridge is set before the generated box loads');
-  assert.ok(box.includes('wrapUp={wrapUpShown(tail.wrapUp, scope.getState().turnHasPendingSuggestion === true)}'));
+  // 3.6556.2 cccc2cf0a cj: ZA gets wrapUp through _m (cb27dab29 De), closingMessageFollows and turnHasPendingSuggestion.
+  assert.ok(box.includes('const pendingSuggestion = scope.getState().turnHasPendingSuggestion === true;'));
+  // cc43287c9 mounts ope (cj) with the props it passes; cj derives wrapUp / closingMessageFollows itself (_m over xy).
+  assert.ok(box.includes('<TurnNextActionsRow key={`${sessionRef.id}:next-actions`}'));
+  assert.ok(box.includes('turnHasPendingSuggestion={pendingSuggestion}'));
+  assert.equal(box.includes('wrapUpShown('), false, 'cj computes wrapUp through _m');
 });
 
 test('the LocalSessions bridge: setAvailableNextActions goes to the main process (desktop:call)', async () => {
@@ -208,4 +213,47 @@ test('the LocalSessions bridge: setAvailableNextActions goes to the main process
     await localSessionsBridge.setAvailableNextActions('P', undefined);
     assert.deepEqual(calls, [['turn-plan:available-next-actions', { sessionId: 'P', actions: ['archive'] }], ['turn-plan:available-next-actions', { sessionId: 'P', actions: null }]]);
   } finally { delete globalThis.window; }
+});
+
+test('closingMessageFollows (c4ea84cb3 Br Lr): text after the wrap_up in its turn is the closing message; the box row gets it', () => {
+  const base = [user('u1', 't1'), call('c1', 'update_plan', { items: PLAN, scope: 'first_task' }, { turnId: 't1' }), call('w1', 'wrap_up', WRAP, { turnId: 't1' })];
+  const closing = { id: 'm9', type: 'agentMessage', text: 'Here is what changed.', turnId: 't1' };
+  assert.equal(codeTurnTail({ items: [...base, closing], latestPromptId: 'u1', activeTurnId: null }).closingMessageFollows, true);
+  assert.equal(codeTurnTail({ items: base, latestPromptId: 'u1', activeTurnId: null }).closingMessageFollows, false, 'nothing after the call');
+  assert.equal(codeTurnTail({ items: [...base.slice(0, 2), closing, base[2]], latestPromptId: 'u1', activeTurnId: null }).closingMessageFollows, false, 'text before the call is not its closing message');
+  // The row still draws the box (Lr only tells ZA the question is answered in the text that follows, `!(R&&F===null&&L)`).
+  const s = session();
+  item(s, call('c1', 'update_plan', { items: PLAN, scope: 'first_task' }));
+  item(s, call('w1', 'wrap_up', WRAP));
+  item(s, { id: 'm9', type: 'agentMessage', text: 'Here is what changed.' });
+  s.step('turn/completed', { threadId: 'P', turn: { id: 't1', status: 'completed' } });
+  const html = mount(s.state, { isResponding: false });
+  assert.equal(count(html, 'Commit the fix?'), 1);
+  assert.equal(count(html, 'Yes, commit'), 1);
+});
+
+test('planCutShort (c4ea84cb3 Br `planCutShort:x&&!C`, cccc2cf0a lb leftOpen): a plan the user\'s stop cut short stays on screen', () => {
+  // The user stops the turn while a command runs: state.js settles it "interrupted"; turnMessages writes the CLI's
+  // interrupt (tool_result + "[Request interrupted by user for tool use]") and the turn's non-success result.
+  const cut = session();
+  item(cut, call('c1', 'update_plan', { items: PLAN, scope: 'first_task' }));
+  cut.step('item/started', { threadId: 'P', turnId: 't1', item: { id: 'x1', type: 'commandExecution', command: 'npm test', status: 'inProgress' } });
+  cut.step('turn/completed', { threadId: 'P', turn: { id: 't1', status: 'interrupted' } });
+  assert.equal(cut.state.items.P.find((i) => i.id === 'x1').status, 'interrupted');
+  const { messages } = turnMessages(cut.state.items.P, {});
+  assert.deepEqual(messages.filter((m) => m.type === 'user').map((m) => m.message.content[0].type === 'tool_result' ? [m.message.content[0].is_error, m.message.content[0].content] : m.message.content[0].text).slice(-2),
+    [[true, '[Request interrupted by user for tool use]'], '[Request interrupted by user for tool use]']);
+  assert.equal(messages.at(-1).subtype, 'error_during_execution');
+  const tail = codeTurnTail({ items: cut.state.items.P, latestPromptId: 'u1', activeTurnId: null });
+  assert.deepEqual([tail.planCutShort, tail.planTurnEnded, tail.planTouchedThisTurn], [true, true, true]);
+  const html = mount(cut.state, { isResponding: false });
+  assert.equal(count(html, '<li'), 3, 'the card stays after the turn ended');
+  assert.ok(html.includes('Read the code') && html.includes('Run the tests'));
+  // The same plan in a turn that ended cleanly (the command finished) is put away once the turn is over (lb: null).
+  const done = session();
+  item(done, call('c1', 'update_plan', { items: PLAN, scope: 'first_task' }));
+  item(done, { id: 'x1', type: 'commandExecution', command: 'npm test', status: 'completed', aggregatedOutput: 'ok' });
+  done.step('turn/completed', { threadId: 'P', turn: { id: 't1', status: 'completed' } });
+  assert.equal(codeTurnTail({ items: done.state.items.P, latestPromptId: 'u1', activeTurnId: null }).planCutShort, false);
+  assert.equal(count(mount(done.state, { isResponding: false }), '<li'), 0);
 });

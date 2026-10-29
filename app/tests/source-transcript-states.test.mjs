@@ -59,7 +59,7 @@ test('official Ob / nd / gp: overflow-hidden, the fillColumn branch and the deco
   assert.match(shared20, /function gp\(\{hasEarlier:e=!1,hold:t,onShown:n\}\)/);
   assert.match(shared20, /"aria-hidden":!0,className:"h-full overflow-hidden \[scrollbar-gutter:stable_both-edges\]",style:\{paddingTop:48\+\(e\?40:0\)\},children:f\("div",\{className:`w-full \[--msg-gap:0px\] \$\{gs\}`,children:f\(Cs,\{hold:t,onShown:n\}\)/);
   // Every class the two branches use is in the loaded official stylesheet.
-  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   for (const rule of ['.overflow-hidden{', '.min-h-0{', '.grow{', '.basis-0{', '.max-h-\\[calc\\(100vh-12\\.5rem\\)\\]{max-height:calc(100vh - 12.5rem)}', '.h-\\[calc\\(100vh-12\\.5rem\\)\\]{', '.fade-out-bottom{', '.text-prose{'])
     assert.ok(css.includes(rule), rule);
 });
@@ -142,7 +142,7 @@ test('real cascade: overflow-hidden and both height branches come from the offic
   const { appSheets, append, computed, element, find, loadCascade, parseMarkup } = await import('./fixtures/transcript-css-cascade.mjs');
   const root = path.resolve(import.meta.dirname, '..');
   const cascade = loadCascade(appSheets(root));
-  const UTILITIES = 'public/assets/v1/c6a992d55-sXiDGMFQ.css';
+  const UTILITIES = 'public/assets/v1/c6a992d55-Che1orl5.css';
   const groupIn = (props) => {
     const pending = element('div', { class: 'loading-state source-transcript-pending', role: 'status' });
     for (const node of parseMarkup(renderToStaticMarkup(React.createElement(M.SourceTranscriptSkeleton)).replace(

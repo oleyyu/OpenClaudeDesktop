@@ -77,6 +77,22 @@ test('MC1 official features re-checked in 2.42304.0 (counts with split)', { skip
   for (const [file, needle] of pins) assert.equal(c(file, needle), 1, `${file}: ${needle}`);
 });
 
+// The card moved to 3.6556.2 (w3-mcp-card): its transcript-side pins, re-counted in the new snapshot. The send path
+// (c6b8adeaf) keeps the same shape under new minified names.
+const reference3 = path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807');
+test('MC1 card-side features re-checked in 3.6556.2', { skip: !fs.existsSync(reference3) }, () => {
+  const V = path.join(reference3, 'ion-dist/assets/v1');
+  const c = (file, needle) => count(fs.readFileSync(path.join(V, file), 'utf8'), needle);
+  for (const [file, needle] of [
+    ['c96d752d0-CWv_7-n9.js', 'mcpAppWidgets:e.isOwnedSession||e.ownershipUndecided===!0'],
+    ['c96d752d0-CWv_7-n9.js', '(n!=="mcp_app"||t.mcpAppWidgets!==!0)?"unsettled_standalone":n'],
+    ['c6b8adeaf-bLEQVSWL.js', 'h=yn()?Rt.getState().getModelContextStates(t.ref.id).filter(e=>!(m&&et(e))):[]'],
+    ['shared-28-DNYlf4wu.js', 'statesByConversation:{}'],
+  ]) assert.equal(c(file, needle), 1, `${file}: ${needle}`);
+  // The model-context store the mount reads is that shared-28 original, by its semantic name.
+  assert.equal(count(read('src/source-mcp-app.jsx'), "const { mcpAppModelContextStore: modelContext } = await import('./generated/mcp-app-card/shared-28.mjs');"), 1);
+});
+
 test('(1) tools/call end to end: the card bridge client sends `name`, MA-4 reads `name` and runs the visualize tool', async () => {
   const bridge = makeHost();
   const calls = [];
@@ -186,7 +202,7 @@ test('(5) model context: the card store → the send → MA-4 widgetToolStates, 
   const bridge = makeHost();
   const calls = [];
   const call = async (action, params) => { calls.push([action, params]); return bridge.call(action, params); };
-  const store = ModelContext.Ha;
+  const store = ModelContext.mcpAppModelContextStore;
   store.getState().clearConversationStates('s1');
   await withWindow(call, async () => {
     // No card loaded yet: no widget can have shared anything, nothing is sent.

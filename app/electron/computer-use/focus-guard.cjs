@@ -1,4 +1,4 @@
-// The focus-steal guard (official armFocusStealGuard; 2.42304.0 muI2IV6k xFr / dispatch, spec §1.6.3): an app_* action
+// The focus-steal guard (official armFocusStealGuard; 2.42304.0 muI2IV6k xFr, 3.6556.2 jPKPzV-P qWi / dispatch, spec §1.6.3): an app_* action
 // works on an app in the background while the user keeps working in another one. Some apps come to the front anyway
 // (a press that activates its app, a window shown from the Dock), and then the user's typing goes to them. So every
 // app_* action that reaches the target app — click, type, key, scroll, drag, a menu press, focus, bring to the current

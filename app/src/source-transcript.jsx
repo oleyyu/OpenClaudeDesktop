@@ -13,6 +13,9 @@ import { SourceChapterToc } from "./source-chapters.jsx";
 import { ResponseImageMenuContext } from "./source-response-image.jsx";
 import { chapterAnchorId } from "./session-chapters-model.mjs";
 import { TranscriptRowsScope } from "./source-transcript-rows.jsx";
+import { SourceChatDisclaimer, SourceChatMessageMenu, chatMessageMenuAttach, messageSelectionText } from "./source-chat-message-actions.jsx"; // w13-chatui-message-actions
+import { ChatMarkdownSurface } from "./source-chat-markdown.jsx"; // w13-chatui-markdown-code
+import { ChatThinkingSurface } from "./source-chat-thinking.jsx"; // w13-chatui-thinking-search
 import "./source-transcript.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -99,6 +102,14 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
     const text = current.resolveMessage?.(row.dataset.transcriptItemId);
     if (typeof text !== "string") return false;
     const selectionText = viewport.ownerDocument.getSelection()?.toString() ?? "";
+    // w13-chatui-message-actions: a Chat message opens c79f7d2ef MessageContextMenu (Attach as context); cc1aae219 B
+    // attaches the selection when it is at least gM (2) characters, else the whole message. As xM `z` does, a target
+    // inside a button / link / field / [role=button|menuitem], or nothing to attach, keeps the row's own menu below.
+    const chatAttach = current.surface === "chat" && current.onAttachText ? chatMessageMenuAttach(target, text, messageSelectionText(row)) : null; // w13-close-chat-messages: kM
+    if (chatAttach !== null) {
+      setMenu({ kind: "chat", point, attach: chatAttach });
+      return true;
+    }
     const link = linkTarget(target.closest("a[href]")?.href);
     const code = codeTargetOf(target);
     // The row's turn (resolveTurn): Rewind to here on a user message, Fork from here on any message of a finished turn.
@@ -118,6 +129,8 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
   const openMenuRef = useRef(openMessageMenu);
   openMenuRef.current = openMessageMenu;
   const openImageMenu = useCallback((target, point, image, byKeyboard = false) => openMenuRef.current(target, point, image, byKeyboard), []);
+  // w13-chatui-markdown-code: a Chat answer's links open through the transcript's onOpenLink (one stable opener).
+  const openChatLink = useCallback((href) => actions.current?.onOpenLink?.(href), []);
 
   function run(id) {
     const current = actions.current, viewport = scroll.viewportRef.current;
@@ -218,6 +231,8 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
         // ca1d33d05 ft: the code conversation (its feed) is the "conversation" region. F6 never lands on it (bn drops
         // it); while it shows, D gives "main" up to the session title's "header" stop.
         data-focus-region="conversation"
+        // w13-close-chat-messages: a Chat conversation is ca2ef848d's chatLayout, whose rn also registers "lastMessage".
+        data-focus-region-last-message={messageActions?.surface === "chat" ? "" : undefined}
         {...interactionHandlers}
         {...feed.feedProps}
         onContextMenu={onContextMenu}
@@ -234,9 +249,16 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
           data-testid="transcript-sizer"
           data-transcript-spacing={sessionKey && ready ? "regular" : undefined}
         >
+          {/* w13-chatui-thinking-search: a Chat conversation's thinking/search rows are c05b96c7f Gg/Wg and shared-130 uq TurnStatus steps (SourceChatThinking). */}
+          <ChatThinkingSurface.Provider value={messageActions?.surface === "chat"}>
           {/* cb6930dae ho / c26fb8b6b He: the rows' scope (turnStatusRows gate, live scope, turn mark broker). */}
           <TranscriptRowsScope sessionKey={sessionKey} turnId={turnScope?.turnId ?? null} items={turnScope?.items ?? null} itemPhases={turnScope?.itemPhases ?? null}
-            turnStats={turnScope?.turnStats ?? null} responding={responding} awaiting={pendingInput}>{children}</TranscriptRowsScope>
+            turnStats={turnScope?.turnStats ?? null} responding={responding} awaiting={pendingInput}>
+            {/* w13-chatui-markdown-code: the rows of a Chat conversation answer with c18fe02d2 ChatMarkdown (SourceChatMarkdown). */}
+            <ChatMarkdownSurface.Provider value={messageActions?.surface === "chat" ? openChatLink : null}>{children}</ChatMarkdownSurface.Provider></TranscriptRowsScope>
+          </ChatThinkingSurface.Provider>
+          {/* w13-chatui-message-actions: ca2ef848d U9, the disclaimer where a Chat conversation ends. */}
+          {sessionKey && messageActions?.surface === "chat" && <SourceChatDisclaimer conversationUuid={messageActions.threadId} onOpenLink={messageActions.onOpenLink} incognito={!!messageActions.incognito} />}
           <div
             ref={scroll.endRef}
             className="source-transcript-end"
@@ -286,7 +308,9 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
       {sessionKey && ready && chapters && <SourceChapterToc sessionId={chapterSessionId} chapters={chapters} viewportRef={scroll.viewportRef}
         scrollKey={sessionKey} onJump={jumpToChapter} />}
       <SourceTranscriptSelection containerRef={scroll.viewportRef} actions={messageActions} hidden={!!menu}/>
-      {menu && <SourceMenu.Popup anchor={scroll.viewportRef.current} point={menu.point} dataCds="ContextMenu" layer="contextmenu"
+      {menu?.kind === "chat" && <SourceChatMessageMenu point={menu.point} container={scroll.viewportRef.current?.ownerDocument.body}
+        onAttach={() => { actions.current?.onAttachText?.(menu.attach); setMenu(null); }} onClose={() => setMenu(null)} />}
+      {menu && menu.kind !== "chat" && <SourceMenu.Popup anchor={scroll.viewportRef.current} point={menu.point} dataCds="ContextMenu" layer="contextmenu"
         initialHighlight={menu.byKeyboard ? "first" : undefined}
         label={menu.kind === "file" ? t("File actions") : t("Message actions")} onClose={() => setMenu(null)}>
         <MenuEntries entries={menu.entries} run={run} />

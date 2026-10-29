@@ -4,8 +4,11 @@ import { Icon } from "./icons";
 import { SourceChatComposer } from "./source-chat-composer.jsx";
 import { SourcePet } from "./source-pet";
 import { SourceTooltip } from "./source-tooltip";
+import { useSourceToasts } from "./source-toast.jsx";
 import { SourceMenu, menuTriggerProps, useMenuPopup } from "./source-menu";
 import { SourceComposerEditor } from "./source-composer-editor";
+// W12 frame: c227f4d5e editor attributes `[pb]:""` (pb = c9bc99274 `a="data-tile-focus-target"`); a pure generated target, no view-tabs (E41).
+import { tileFocusTargetAttribute } from "./generated/code-current/pane-focus-target.mjs";
 import { SourceSlashMenu, SlashHint } from "./source-slash-menu";
 import { matchCommands, parseSessionCommand, slashToken, sessionCommands, sessionCommandHint, sessionCommandDescription, slashSkills, slashCustomCommands } from "./session-command-model.mjs";
 import { SourceComposerAttachments } from "./source-composer-attachments";
@@ -28,13 +31,14 @@ import { ComposerShellParts, SourceComposerShell } from "./source-composer-shell
 // R4g-composer CP3 (X7-09): the presets card's + is c73f45bc3 pv's Oj trigger (source-composer-add-menu.jsx).
 import { CARD_ADD_TRIGGER, CHIN_ADD_TRIGGER, ComposerAddTrigger } from "./source-composer-add-menu.jsx";
 import { composerCardRootClass, composerRowChinClass } from "./generated/code-composer/composer-tokens.mjs";
-import { bashModeRingClass, placeholderShapeResetClass, shelfStartInset, shelfStartPaddingClass, shelfStartProperty } from "./generated/code-composer/composer-card-tokens.mjs";
-import { CdsBadge, cdsClassNames } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+import { bashModeRingClass, shelfStartInset, shelfStartPaddingClass, shelfStartProperty } from "./generated/code-composer/composer-card-tokens.mjs";
+// E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
+import { CdsBadge, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { MODE_MENU_KEYS, MODEL_MENU_KEYS } from "./chin-shortcuts.mjs";
 import { shortcutCaps, useMacShortcuts } from "./source-shortcut";
 import { INITIAL_PROMPT_HISTORY, promptHistoryStep, promptHistoryStatus, historySearchStep, historySearchStatus, isHistorySearchKey, HISTORY_SEARCH_HINT_DELAY } from "./prompt-history-model.mjs";
 import "./source-shortcut.css";
-import { usageTriggerCopy, usagePanelCopy, contextRingStroke, CONTEXT_RING_ROW_SIZE, compactAction, autoCompactHintText } from "./context-usage-model.mjs";
+import { usageTriggerCopy, usagePanelCopy, contextRingStroke, compactAction, autoCompactHintText } from "./context-usage-model.mjs";
 // composer-row-chin: the chin triggers and the presets session's row chin as 2.42304.0 draws them (bQ row, tQ, LK, yZ).
 import { ComposerEffortTrigger, ComposerModeTrigger, ComposerModelTrigger, ComposerUsageRing, ModeTriggerLoadingLabel, ROW_CHIN_LEADING_CLASS, chinTrailingClass } from "./source-composer-row-chin.jsx";
 import { planWindowSummary, usageResetCountdown } from "./usage-model.mjs";
@@ -46,12 +50,28 @@ import { modelAcceptsImages } from "./composer-attachments-model.mjs";
 import { splitTransferItems } from "./generated/code-composer/composer-intake-split.mjs";
 import { routeComposerIntake } from "./generated/code-composer/composer-intake-route.mjs";
 import { ComposerAttachmentTiles } from "./source-composer-tiles.jsx";
+import { pendingConversions } from "./chat-attachment-model.mjs"; // w13-close-chat-composer
 import { BRANCH_EMPTY_MESSAGE, BRANCH_SEARCH_PLACEHOLDER, BRANCH_TOOLTIP, branchTriggerLabel, enterSelection, filterBranches } from "./branch-picker-model.mjs";
 import { SourcePopover, SourcePopoverClose, SourcePopoverTitle } from "./source-popover";
 import "./source-composer.css";
 import { permissionLabel } from "./source-permission-menu.jsx";
 import { SourceSelect } from "./source-select.jsx";
 import { t, getAssistantName, getLocale } from "../electron/i18n/index.mjs";
+
+// composer-send-held: c227f4d5e `XP = 1500` (the hold after a failed send restores its draft).
+const SEND_HOLD_MS = 1500;
+/** shared-130 uL over pL: true while `Date.now() < deadline`, re-rendering once the deadline passes. */
+function useBeforeDeadline(deadline) {
+  const [, expire] = useState(0);
+  const before = Date.now() < deadline;
+  useEffect(() => {
+    const left = deadline - Date.now();
+    if (!(left > 0)) return undefined;
+    const id = setTimeout(() => expire((n) => n + 1), left);
+    return () => clearTimeout(id);
+  }, [deadline]);
+  return before;
+}
 
 // lH (cc43287c9-BMbiZYzF.js:21699): the folder chip reads the basename, or 'Select folder…' with none chosen.
 const basename = (path) => path?.split("/").filter(Boolean).pop() || t("Select folder\u2026");
@@ -98,8 +118,9 @@ function ComposerButton({ icon, iconSize = 16, label, children, className = "", 
 // whose overflow (useOverflowing, the original Kf) swaps in the compact copy. scripts/extract-code-composer.mjs pins it.
 export const PLACEHOLDER_FIT_PROBE_CLASS = "invisible me-px whitespace-nowrap before:content-[attr(data-placeholder-fit-probe)]";
 
-// The usage trigger's context ring is the generated 2.42304.0 shared-8 KV (generated/code-composer/usage-ring.mjs, drawn
-// by source-composer-row-chin.jsx ComposerUsageRing): 12px on the alpha-2 track, 14px on alpha-4 in the presets chin.
+// The usage trigger's context ring is the generated shared-8 ring (3.6556.2 EX, generated/code-composer/usage-ring.mjs,
+// drawn by source-composer-row-chin.jsx ComposerUsageRing): always 14px (c227f4d5e B3 `size: 14`), on the alpha-3 track
+// in the presets row chin and alpha-2 elsewhere (composer-ring-14).
 
 // Caret position of a textarea in viewport pixels via a mirror element that
 // copies the textarea's typography, padding and wrapping. The mirror is a
@@ -149,15 +170,19 @@ export function SourceComposer({
   draft, setDraft, textarea, attachments = [], onRemoveAttachment,
   // The draft's agent and GitHub issue pills (ca80fca8d pk value 'agent' / 'issue'); an issue alone can be sent
   // (cc43287c9 hasAttachments: !!selectedIssue): {kind, label, icon, loading?, onOpen?, onRemove, content?}.
-  contextPills = [], onOpenAttachmentFile, onStageFiles, onAddFolders, fileContextOwner, onSubmit,
+  // W12b cf-01: cc43287c9 `onClickAnnotation: lg` — a saved line comment's tile reopens its Files line or Changes diff.
+  contextPills = [], onOpenAttachmentFile, onClickAnnotation, onStageFiles, onAddFolders, fileContextOwner, onSubmit,
   // R4i-graph GR3: the Code pane's drop zone (source-composer-pane-drop.jsx, cc43287c9 YI) calls dropRef.current(split),
   // the composer's dropFiles (Xh); with it the Code card takes no drop of its own (the official card has none).
   dropRef,
   running, sending, stopping = false, editable = true, canSubmit = true, escapeClaimed = false, onEmptyArrowUp,
+  // w11-submit-queue-wiring (3.6556.2 c227f4d5e wF): submitHeld is `Zt` (a held submit: the Send shows busy, `Is=Zt||it`);
+  // holdWhileSending lets Enter reach onSubmit while a message send is in flight, where hs holds other text behind it.
+  submitHeld = false, holdWhileSending = false,
   // Esc Esc (code-workspace.js Gl): opens Rewind from an empty, idle composer; null where the session can't rewind.
   onRewind = null,
   mentions = [], mentionActions, onStop, onReconnect, reconnectLabel, warning, connectingHint, gitRequired, workdir, environmentName, environmentMenu = false, workspaceInfo, onMenu,
-  model, effort = "", permission, permissionOpen = false, modelOpen = false, modelsLoading = false, menuKind, worktree, setWorktree, usage, usageFresh = false, planUsage = null, mode = "code", onCodeMode, onMode, onFolder, surfaceFolder, surfaceFolderLabel,
+  model, effort = "", permission, permissionOpen = false, modelOpen = false, modelsLoading = false, menuKind, worktree, setWorktree, usage, usageFresh = false, planUsage = null, mode = "code", onCodeMode, onFolder, surfaceFolder, surfaceFolderLabel, incognito = false,
   folderMenu = true,
   showPet = false, showContext = showPet, onAddFolder, additionalFolders = [], onRemoveFolder, beforeComposer, afterComposer, draftGroup = null, onClearDraftGroup,
   commandContext, onCommand, commandScope, searchFiles, onMention, queueEnabled = false, placeholder,
@@ -222,12 +247,12 @@ export function SourceComposer({
   }, []);
   useEffect(() => () => clearTimeout(searchHintTimer.current), []);
   useLayoutEffect(() => { setSearch(null); }, [historyResetKey, setSearch]);
-  // A send refused in the composer itself (a mention in a shell command): Claude's addError copy, until the next edit.
-  const [composerNotice, setComposerNotice] = useState(null);
+  // A send refused in the composer itself (a shell command that is not plain text): c227f4d5e `or?.addError(…)`, or =
+  // yr() = shared-52 lB `w(Qz)` (the ErrorsProvider), whose addError is a danger toast — the host's toast store.
+  const toasts = useSourceToasts();
   // Per-keystroke resets skip a value that is already in place: under fast typing every such no-op setState is still
   // queued (the component always has work pending), each commit then leaves a default-lane update behind, and React
   // counts that chain as nested updates until it throws "Maximum update depth exceeded" (#185).
-  useEffect(() => { if (composerNotice !== null) setComposerNotice(null); }, [draft]);
   // B05 C4: the '/' list opens for the caret's slash token anywhere in the draft (slashToken: shared-5 mS/yS), not only
   // for a draft that starts with '/'. The live editor gives the caret and the start of its text run (after a chip).
   const caretNode=editor.current,liveCaret=caretNode&&Number.isInteger(caretNode.selectionStart)&&caretNode.selectionStart===caretNode.selectionEnd?caretNode.selectionStart:caretNode?-1:(slashCaret??editorText.length);
@@ -279,10 +304,22 @@ export function SourceComposer({
   const chipCatalog=useMemo(()=>[...sessionCommands.map(entry=>({id:entry.id,description:sessionCommandDescription(entry,{perTokenBilling}),argumentHint:sessionCommandHint(entry,{compactInstructions,workflowEngine,skills:commandSkills}),kind:'command'})),
     ...slashCustomCommands(commandCustom).map(command=>({id:command.name,description:command.description,argumentHint:command.argumentHint,kind:'custom'})),
     ...slashSkills(commandSkills,commandCustom).map(skill=>({id:skill.name,description:skill.description,argumentHint:skill.argumentHint,kind:'skill'}))],[commandSkills,commandCustom,compactInstructions,workflowEngine,perTokenBilling]);
+  // composer-send-held (3.6556.2 c227f4d5e controller, E22): `pn = {until: 0, storeKey: o}`, `[mn, hn] = W(pn)`,
+  // `gn = au(mn.storeKey === o ? mn.until : 0)` (shared-130 uL: `Date.now() < e`, re-read at the deadline) and the
+  // handle's `holdSendButton: () => hn({until: Date.now() + XP, storeKey: o})` (XP = 1500); KM gets `sendButtonHeld: gn`.
+  // cc43287c9 calls it when a failed send puts its draft back (`u.current?.holdSendButton(), A(q, Ce, Se)`). The host's
+  // handle is the editor element (like requestComposerSubmit): `holdSendButton(scope)` holds the Send of the composer
+  // whose commandScope is `scope` (null: the Home draft; omitted: this composer's own key at the call).
+  const draftStoreKey = commandScope ?? "draft", draftStoreKeyRef = useRef(draftStoreKey);
+  draftStoreKeyRef.current = draftStoreKey;
+  const [sendHold, setSendHold] = useState(() => ({ until: 0, storeKey: draftStoreKey }));
+  const sendButtonHeld = useBeforeDeadline(sendHold.storeKey === draftStoreKey ? sendHold.until : 0);
   const assignEditor = useCallback((element) => {
     editor.current = element;
     detachSubmitRequest.current?.();
     detachSubmitRequest.current = attachComposerSubmitRequest(element, () => submitRequest.current?.());
+    if (element) element.holdSendButton = (scope) => setSendHold({ until: Date.now() + SEND_HOLD_MS,
+      storeKey: scope === undefined ? draftStoreKeyRef.current : scope ?? "draft" });
     if (typeof textarea === "function") textarea(element);
     else if (textarea) textarea.current = element;
   }, [textarea]);
@@ -404,8 +441,13 @@ export function SourceComposer({
   const hostCommand = !!command && !command.skill && !command.custom;
   const disabled = !editable;
   const hasContent = !!editorText.trim() || attachments.length > 0 || contextPills.some((pill) => pill.content === true);
-  const attachmentsReady = attachments.every((entry) => entry.status === "ready");
-  const canSend = hasContent && (hostCommand ? !!draft.trim() : !sending && editable && canSubmit && attachmentsReady && (!running || queueEnabled));
+  // w13-close-chat-composer (chatfn-attachments-04): a Chat document still converting to text (convert-document has not
+  // answered: chat-attachment-model pendingConversions without the in-flight filter) holds the send like an upload in
+  // progress, so it never goes out as a bare file reference; an answer (text or a refusal) releases it.
+  const attachmentsReady = attachments.every((entry) => entry.status === "ready") && pendingConversions(attachments, { surface: mode }).length === 0;
+  // w11-submit-queue-wiring: a send in flight no longer swallows the press when the host holds it (holdWhileSending; hs
+  // `if(Qe||Yt.current)…Xt.current={…}`); other busy states (a session action, a retry) still refuse it.
+  const canSend = hasContent && (hostCommand ? !!draft.trim() : (!sending || holdWhileSending) && editable && canSubmit && attachmentsReady && (!running || queueEnabled));
   // Official showStop = busy && !interrupting (OP Tt, handed to lM below), then lM's L: while busy the Stop control
   // yields to Send once the editor has content that can go out and the queue-vs-steer lanes are available. Once a stop
   // is requested there is no Stop and Escape is no longer offered. showStop (the yielded value) still drives the Chat
@@ -473,9 +515,12 @@ export function SourceComposer({
       if (connectingHint && hasContent && !hostCommand && !running) setBlockedSubmit(true);
       return;
     }
-    // c099c328d :10795 Jh: a mention in a shell command is refused with Claude's message.
-    if (bashMode && editor.current?.querySelector?.("[data-mention]")) {
-      setComposerNotice(t("@-mentions can’t be used in a shell command. Remove the mention or send it as a message."));
+    // 3.6556.2 c227f4d5e submit: `if (r && lF(xM(Z), {bashMode:t, runsAsShell:i, …})) return or?.addError(i ?
+    // "A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting."
+    // (VnmOeizKjx) : …)` — in bash mode a mention, a command chip, formatting or a code block refuses the send.
+    const shellInput = editor.current;
+    if (bashMode && (shellInput?.shellTextOnlyRefused ?? !!shellInput?.querySelector?.("[data-mention], [data-skill-chip]"))) {
+      toasts?.add(t("A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting."), { variant: "danger" });
       return;
     }
     setDismissed(true);
@@ -667,7 +712,7 @@ export function SourceComposer({
   };
 
   const editorElement = (
-<SourceComposerEditor className={mode === "code" ? "sc-input" : "sc-input epitaxy-prompt-input"} data-cds="ChatComposerEditor" data-focus-region={disabled ? undefined : "composer"} data-focus-region-order="pane" data-focus-region-clear-on-input="" data-focus-region-holds=".epitaxy-prompt" data-focus-region-ring-on={'[data-cds="ChatComposer"] > *, .epitaxy-prompt'}
+<SourceComposerEditor className={mode === "code" ? "sc-input" : "sc-input epitaxy-prompt-input"} {...{ [tileFocusTargetAttribute]: "" }} data-cds="ChatComposerEditor" data-focus-region={disabled ? undefined : "composer"} data-focus-region-order="pane" data-focus-region-clear-on-input="" data-focus-region-holds=".epitaxy-prompt" data-focus-region-ring-on={'[data-cds="ChatComposer"] > *, .epitaxy-prompt'}
               inputRef={assignEditor} scope={commandScope} aria-label={t("Message DeepSeek")} rows={1} disabled={disabled}
               keywordHighlight={!!workflowKeyword && !workflowKeyword.ignored}
               mentions={mentions} chips={chipCatalog} mentionActions={mentionActions}
@@ -693,7 +738,7 @@ export function SourceComposer({
   // composer-row-chin: they are the 2.42304.0 triggers (source-composer-row-chin.jsx: tQ in vQ, the ModelSelector pill,
   // EffortControl's trigger, yZ's ring button, each a view-tabs CdsButton under a CdsTooltip), opening the composer's own
   // menus through onMenu. In the presets chin (the row chin of an open session, and the environment bar) the model / effort
-  // triggers take the row's DK and the ring is 14px on the alpha-4 track (bQ `ringSize: Le ? 14`, c73f45bc3 Y_ 14).
+  // triggers take the row's DK and the ring is 14px on the alpha-3 track (3.6556.2 a8 `inComposerRow: et`, B3 `size: 14`).
   // c360a9e1c-GPs-MV9u.js:4544-4575 Ud / :4942 (disabled only without items), :4961 renderModelSelector and :2829
   // rn = !r || lt > 0: Mode, Model and Effort stay usable while a turn runs; the choice is saved at once and goes out with
   // the next turn/start (and, on the DeepSeek core, to the running agent — main.jsx). `sending` still gates them: a
@@ -741,7 +786,7 @@ export function SourceComposer({
       disabled={sending || !effortAvailable} onClick={open("effort")} label={effortChip} /> : null;
   // yZ: the ghost iconOnly ring button (tooltip false) under {content: ge, detail: xe, open: popover open ? false : undefined}.
   const usageControl = (
-    <ComposerUsageRing className="sc-usage-trigger" pct={usageCopy.ringPct} ringSize={singleRowCard ? CONTEXT_RING_ROW_SIZE : undefined}
+    <ComposerUsageRing className="sc-usage-trigger" pct={usageCopy.ringPct} inComposerRow={singleRowCard}
       aria-label={usageCopy.ariaLabel} onClick={open("usage")} aria-haspopup="dialog" aria-expanded={menuKind === "usage"}
       tooltip={usageCopy.tooltip} detail={usageCopy.detail} tooltipOpen={menuKind ? false : undefined} />
   );
@@ -879,13 +924,6 @@ export function SourceComposer({
       {/* B29 rY (cc43287c9 :33150-33157 Nt): with the worktree option on and no working git, the reason in danger footnote
           text in place of the composer error. */}
       {gitRequired && !warning && <div className="sc-git-required" role="status" data-git-required="">{gitRequired}</div>}
-      {composerNotice && (
-        // Qt.addError (c099c328d :10795): a send the composer refuses says why above the card until the next edit.
-        <div role="alert" className="inline-error sc-composer-notice" data-composer-notice="">
-          <span>{composerNotice}</span>
-          <ComposerButton icon="X" label={t("Dismiss error")} tooltip={{ content: "Dismiss error" }} onClick={() => setComposerNotice(null)} />
-        </div>
-      )}
       {showPet && <SourcePet />}
       {/* composer-shell: the Code card's root is uM's div `Bo("epitaxy-prompt", ye)` (ye = Hc in the presets layout) with
           data-bash-mode, around the shell (whose own root is data-cds ChatComposer); sc-composer, data-busy / data-disabled /
@@ -906,19 +944,22 @@ export function SourceComposer({
         <span className="sc-sr-only" role="status" data-history-status="">{search ? historySearchStatus(search, t) : promptHistoryStatus(historyNav)}</span>
         {mode !== "code" ? <SourceChatComposer editorNode={editorElement}
           attachments={attachments.length > 0 || contextPills.length > 0 ? <SourceComposerAttachments entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} disabled={sending} /> : null}
-          draft={draft} scope={commandScope} current={!!commandContext?.current} mode={mode} onMode={onMode}
+          draft={draft} scope={commandScope} current={!!commandContext?.current} mode={mode} incognito={incognito}
           previewPrompt={surfacePreviewPrompt} onClearPreview={onClearSurfacePreview}
           disabled={disabled} busy={running || sending} sending={sending} canSend={canSend} showStop={showStop}
           onStop={onStop} submit={submit} onMenu={onMenu} model={model} effort={effort} effortLabel={effortLabel}
           modelsLoading={modelsLoading} permission={permission} workdir={surfaceFolder} folderLabel={surfaceFolderLabel} onFolder={onFolder}
-          onDrop={drop} canAttach={acceptsFiles} /> : (
+          onDrop={drop} canAttach={acceptsFiles} addMenuOpen={menuKind === "add"} /> : (
         // c227f4d5e uM `v(lc, {…})`: busy, disabled, hasDraftContent (attachments), multiline `!ve && void 0` (the presets
         // card stays one row: the + leads, Send floats in the editor's notch), onClusterWidthsChange for the shelf, and
-        // cardClassName `Bo(U && tM, ve && nM, ke)` (bash ring, the presets notch's shape-outside reset; sc-card is the
-        // host hook of the drag-over ring). The editor: uM's maxHeight and "epitaxy-prompt-input" on the editor box.
+        // cardClassName (bash ring; sc-card is the host hook of the drag-over ring). 3.6556.2 qM: `ue(U && zM, Ee)`, the
+        // presets notch's shape-outside reset nM is gone; the one-row card passes `trailingNotch: It` (`It = he ? "pad" :
+        // void 0`, he = singleRowCard), so the shell reserves the trailing column (vm columnReservesTrailing, data-end-column).
+        // The editor: uM's maxHeight and "epitaxy-prompt-input" on the editor box.
         <SourceComposerShell busy={running || sending} disabled={disabled} hasDraftContent={hasAttachmentContent}
           multiline={!singleRowCard && undefined} onClusterWidthsChange={singleRowCard ? clusterWidths : undefined}
-          cardClassName={cdsClassNames(bashMode && bashModeRingClass, singleRowCard && placeholderShapeResetClass, "sc-card")}
+          trailingNotch={singleRowCard ? "pad" : undefined}
+          cardClassName={cdsClassNames(bashMode && bashModeRingClass, "sc-card")}
           editor={{ draftStoreKey: commandScope ?? "draft", hasDraftText: () => !!editorText.trim(), hasText: !!editorText,
             maxHeight: "min(24rem, 40svh)", className: "epitaxy-prompt-input", node: editorElement,
             // R4g-composer CP2 (X7-08): uM's `placeholder: K ? "" : Je ? Xe : qe` and `placeholderFit: He === void 0 || U ?
@@ -947,7 +988,7 @@ export function SourceComposer({
           {/* lc.Attachments: uM's shelf (`epitaxy-attachment-shelf w-full`, aM in the presets card) — here it holds the
               strip itself (uM portals YG's into it): R4g-composer CP4 (X7-10), c0fbbe82d Ri's row of the 2.42304.0 tiles. */}
           <ComposerShellParts.Attachments>{hasAttachmentContent ? <div className={cdsClassNames("epitaxy-attachment-shelf w-full", singleRowCard && shelfStartPaddingClass)}>
-              <ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} disabled={sending} />
+              <ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} onClickAnnotation={onClickAnnotation} disabled={sending} />
             </div> : null}</ComposerShellParts.Attachments>
           {/* lc.Actions {leading: Oe ?? ft, trailing: the bash Badge (pt: pro, sm, "Run as a shell command"), send: lM}. The
               presets card leads with cc43287c9's actionsLeading Oe (c73f45bc3 pv: the Oj + with the md glyph in "flex scale-90",
@@ -963,10 +1004,10 @@ export function SourceComposer({
                  mv under hideDictation). Elsewhere (the side session) the plain row keeps a disabled Send (idleSendAction
                  undefined). Stop stamps stopClickAt, and a Send within Qj (500ms) of it is ignored. */
               <ComposerSendCell hasTextStore={hasTextStore} hasAttachments={attachments.length > 0 || contextPills.some((pill) => pill.content === true)}
-              submitBlocked={submitBlocked} blockedSendPress={blockedSendPress} submitQueued={sending} sendBusyLabel={t("Sending")}
+              submitBlocked={submitBlocked} blockedSendPress={blockedSendPress} submitQueued={sending || submitHeld} sendBusyLabel={t("Sending")}
               busy={running} showStop={stopAvailable} isBashMode={bashMode} isCoarsePointer={false} plainEnterSends
-              draftStoreKey={commandScope ?? "draft"} handleSubmit={(options) => submit(options?.priority)} clickSteerOptions={clickSteerOptions}
-              handleStopClick={handleStopClick} stopClickAtRef={stopClickAt} enableQueueVsSteer={queueEnabled} swapToSendOnDraft={false}
+              draftStoreKey={draftStoreKey} handleSubmit={(options) => submit(options?.priority)} clickSteerOptions={clickSteerOptions}
+              handleStopClick={handleStopClick} stopClickAtRef={stopClickAt} sendButtonHeld={sendButtonHeld} enableQueueVsSteer={queueEnabled} swapToSendOnDraft={false}
               // Not while a turn is still busy (sending, or interrupting until the core confirms): send({priority:'fork'}) refuses then.
               enableForkSubmit={forkAvailable && !running && !sending && !stopping} forkSubmitLabel={t("Send in a forked session")}
               stayOnDraftHint={stayOnDraft} escapeClaimed={!!menuKind || escapeClaimed} cmdEnterClaimed={cmdEnterClaimed}

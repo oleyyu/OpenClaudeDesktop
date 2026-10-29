@@ -81,7 +81,9 @@ test("bash mode: purple ring flag, the 'bash' pro badge, 'Enter a shell command'
   // inset-ring-pro' (cardClassName) and the view-tabs CdsBadge {pro, sm} sits in lc.Actions' trailing slot (pt).
   assert.match(html, /<div class="sc-composer epitaxy-prompt [^"]*" data-bash-mode="true"/);
   assert.match(html, /<div class="bg-surface-3 [^"]* inset-ring-1 inset-ring-pro [^"]*sc-card"/);
-  assert.match(html, /<div data-cds="ChatComposerActions" class="contents">.*<span data-cds="Badge" data-size="sm" aria-hidden="true" title="Run as a shell command" class="[^"]*bg-tint-violet text-pro"><span class="pb-\[0\.05em\]">bash<\/span><\/span>/);
+  // 3.6556.2 CdsBadge (view-tabs shared-frame-6jtSkIit Cs / ws / Es.pro) appends the fizzy-lake stacks variant after the
+  // tint; fizzy-lake is off (E12), so the variant never applies and the badge still reads bg-tint-violet text-pro.
+  assert.match(html, /<div data-cds="ChatComposerActions" class="contents">.*<span data-cds="Badge" data-size="sm" aria-hidden="true" title="Run as a shell command" class="[^"]*bg-tint-violet text-pro stacks:rounded-\[calc\(var\(--cds-h-control-nested\)\/2\)\] stacks:border-\[1\.5px\] stacks:border-solid stacks:px-\[calc\(var\(--cds-pad-sm\)-1px\)\] stacks:bg-transparent stacks:border-pro stacks:dark:border-\[color-mix\(in_srgb,var\(--cds-fill-tint-violet\)_40%,transparent\)\]"><span class="pb-\[0\.05em\]">bash<\/span><\/span>/);
   // R4g-composer CP2 (X7-08): the editor is not empty ('ls -la'), so cm shows no placeholder span; the grow ghost stays.
   assert.doesNotMatch(html, /data-composer-placeholder=""/);
   assert.match(html, /data-composer-placeholder-ghost="Enter a shell command"/);
@@ -105,7 +107,7 @@ test("prompt suggestion: bare ghost overlay, the placeholder cleared, no '(Tab t
 
 test("every new composer string has a zh-CN entry", () => {
   for (const key of ["bash", "Run as a shell command", "Enter a shell command", "Bash mode. Press Escape to return to chat.", "Chat mode",
-    "@-mentions can’t be used in a shell command. Remove the mention or send it as a message.", "Search history:", "Search history: {query}",
+    "A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting.", "Search history:", "Search history: {query}",
     " — match {index} of {total}", " — no match", "cycle", "cancel", "Emoji suggestions", "Click to preview", "Maximum of {max} images allowed."])
     assert.ok(typeof zh[key] === "string" && zh[key], key);
 });

@@ -49,8 +49,8 @@ test('nav-hidden sections leave the nav and the narrow tabs but stay searchable;
  assert.match(text,/const baseNavTabs = settingsNavSections\(tabs\);/);
  // Harness is listed only on a core with harnessProfile (or while its page is open).
  // Hooks only on a core with hooksList (or while its page is open). Advanced › Core options only while it has rows.
- assert.match(text,/const navTabs=baseNavTabs\.filter\(section=>\(section\.id!=='harness'\|\|tab==='harness'\|\|coreSupports\(engine,'harnessProfile'\)\)&&\(section\.id!=='customize-hooks'\|\|tab==='customize-hooks'\|\|coreSupports\(engine,'hooksList'\)\)&&\(section\.id!=='advanced'\|\|tab==='advanced'\|\|advancedListed\)\);/);
- assert.match(text,/\{navTabs\.map\(t=><button role="tab"/,'narrow tablist');
+ assert.match(text,/const navTabs=baseNavTabs\.filter\(section=>\(section\.id!=='harness'\|\|tab==='harness'\|\|coreSupports\(engine,'harnessProfile'\)\)&&\(section\.id!=='customize-hooks'\|\|tab==='customize-hooks'\|\|coreSupports\(engine,'hooksList'\)\)&&\(section\.id!=='advanced'\|\|tab==='advanced'\|\|advancedListed\)&&\(section\.id!=='cowork'\|\|boot\?\.coworkEnabled===true\)\);/); // w13-coworkui-settings: Cowork while Cowork is on
+ assert.match(text,/\{navTabs\.map\(t=><CdsTabs\.Tab key=\{t\.id\} value=\{t\.id\}/,'narrow tablist (W12: CDS Tabs)');
  assert.match(text,/<ul>\{navTabs\.filter\(t=>t\.group===group\)\.map\(/,'wide nav');
  assert.match(text,/settingsSearch\(searchTabs,/,'search receives the unfiltered sections');
  assert.match(text,/const searchTabs=[^\n]*\?tabs:tabs\.map\(/,'every section, only the Models keywords narrowed per core');
@@ -98,4 +98,29 @@ test("the nav reads General / This computer › System; 'System' has its own hea
   assert.equal(settingsSearch(shell,[],'系统')[0].tab,'general');
   assert.equal(settingsSearch(shell,[],'系统')[0].section,'系统');
  }finally{setLocale(DEFAULT_LOCALE);}
+});
+
+// menus C3 (3.6556.2 cc011544b dn(items, query, expanded)): an expanded section lists every matching row as a child and
+// no "+N more"; the skills-visibility pass that dedupes Plugins still runs unexpanded. Customize lists keep the jump
+// (shared-156 Dm).
+test('menus C3: "+N more" opens in place for an expanded section; Customize lists still jump', async () => {
+ const fs = await import('node:fs'), path = await import('node:path');
+ const v3 = name => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+ const official = v3('cc011544b-Bdta0Cl7.js');
+ assert.ok(official.includes('let i=n?.has(e.section.id)?t.length:en;'), 'dn: an expanded section shows all its rows');
+ assert.ok(official.includes('if(e.kind==="more"&&!Te.has(t.section.id)){'), 'I: expand unless the section jumps');
+ assert.ok(v3('shared-156-BLTosN8U.js').includes('Dm=new Set(["customize-skills","customize-connectors","customize-plugins"])'));
+ const open = settingsSearch(sections, groups, 'transcript', new Set(['code']));
+ assert.deepEqual(open.map(hit => hit.kind), ['hit', 'child', 'child', 'child', 'child']);
+ assert.deepEqual(open.filter(hit => hit.kind === 'child').map(hit => hit.id), ['size', 'width', 'font', 'view']);
+ assert.deepEqual(settingsSearch(sections, groups, 'transcript', new Set(['general'])).map(hit => hit.kind), ['hit', 'child', 'child', 'child', 'more'], 'only the expanded section');
+ const { SETTINGS_SEARCH_JUMP_SECTIONS, settingsSearchMoreExpands, expandSettingsSearch } = await import('../src/settings-catalog-search.mjs');
+ assert.deepEqual([...SETTINGS_SEARCH_JUMP_SECTIONS], ['customize-skills', 'customize-connectors', 'customize-plugins']);
+ const more = open.length && settingsSearch(sections, groups, 'transcript').at(-1);
+ assert.equal(settingsSearchMoreExpands(more), true);
+ assert.equal(settingsSearchMoreExpands({ ...more, tab: 'customize-plugins' }), false);
+ assert.equal(settingsSearchMoreExpands({ ...more, kind: 'child' }), false);
+ const state = expandSettingsSearch(expandSettingsSearch(undefined, more, 'one'), { ...more, tab: 'general' }, 'two');
+ assert.deepEqual([...state.sections], ['code', 'general']);
+ assert.equal(state.announcement, 'two');
 });

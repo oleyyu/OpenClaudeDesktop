@@ -1,10 +1,10 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-visualize.mjs",
   "output": "electron/generated/visualize/imagine-server.cjs",
-  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-BaLvO2wi.js",
-  "sourceSha256": "a0420d5047175bd4e8b86e7b12b1f6ce7be8c862899f2c61180f398cc677b2e0",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-CbnfBP-3.js",
+  "sourceSha256": "fada090dcbf6939ceb28d6e744da7921858692250e1e3936b66751684893a38a",
   "bindings": [
     {
       "name": "n",
@@ -146,20 +146,30 @@
       "kind": "function",
       "as": "widgetHtml",
       "scope": "module",
-      "sha256": "0b132f1d6210959de8f5c6f8c03611ebc71e7d3c52a24c2eb6e02ac214f00835",
-      "length": 327668,
+      "sha256": "1792aefe8384f0d17a193031ca70d0d65033bd1b57a9ba9e60f05e15ac271e27",
+      "length": 333849,
       "features": [
         "function m(){return`<!DOCTYPE html>",
         "<title>Visualize Widget</title>",
         "/libs/imagine/streaming-helpers-1/streaming-helpers.mjs",
         "applyKeepMenuClear",
         "_keepMenuClear",
-        "ui/notifications/size-changed"
+        "ui/notifications/size-changed",
+        "// src/scripts/ui-cards.ts",
+        "var HOST_DRAWS_CARDS = \"data-draw-cards\";",
+        "var HOSTED_CARDS = \"/libs/imagine/ui-cards-2/ui-cards.mjs\";",
+        "applyDrawCards(hostContext._drawCards);",
+        "applyDrawCards(data.params?._drawCards);",
+        "function hostTakesFiles() {\\n    return hostDisplay().platform !== \"mobile\";\\n  }",
+        "stripScripts: true"
       ],
       "counts": {
         "data-keep-menu-clear": 16,
-        "menu-room": 12,
-        "frame-held": 8
+        "menu-room": 13,
+        "frame-held": 8,
+        "data-draw-cards": 2,
+        "_drawCards": 2,
+        "stripScripts: true": 2
       }
     },
     {
@@ -333,10 +343,10 @@
       "kind": "function",
       "as": "refuseWhenWithheld",
       "scope": "bindImagineServer",
-      "sha256": "faec581f1eff5a102a2121557b4021c6d53613190f91effecee03e22bfd53c83",
-      "length": 139,
+      "sha256": "c0a8e4d520553356cf283fb1951867c9088bc928448600b664e66b4469f29497",
+      "length": 140,
       "features": [
-        "return t.n()?(O||(O=!0,e.p5.info(`[imagine] ${n} refused \\u2014 withheld by the org's Inline visualizations answer`)),!0):!1"
+        "return t.n()?(O||(O=!0,e.ert.info(`[imagine] ${n} refused \\u2014 withheld by the org's Inline visualizations answer`)),!0):!1"
       ]
     },
     {
@@ -368,7 +378,7 @@
   ],
   "hostParams": {
     "e": [
-      "p5"
+      "ert"
     ],
     "t": [
       "n",
@@ -382,14 +392,14 @@
     "module"
   ],
   "callers": {
-    "index.chunk-B5tintml.js": [
-      "try{let{getImagineServerDef:e}=await Promise.resolve().then((()=>require(\"./index.chunk-BaLvO2wi.js\")));c.push(e())}catch{}"
+    "index.chunk-DBIg6EBr.js": [
+      "try{let{getImagineServerDef:e}=await Promise.resolve().then((()=>require(\"./index.chunk-CbnfBP-3.js\")));l.push(e())}catch{}"
     ],
-    "index.chunk-D89SZXs4.js": [
+    "index.chunk-lgtvJrTy.js": [
       "var t=\"inline_visualizations\",n=\"3444158716\",r=\"2742800629\"",
-      "function l(t){return e.LZ(n)&&!c(t)}",
+      "function l(t){return e.m0(n)&&!c(t)}",
       "Object.defineProperty(exports,\"n\",{enumerable:!0,get:function(){return c}}),Object.defineProperty(exports,\"t\",{enumerable:!0,get:function(){return l}})"
     ]
   },
-  "sha256": "301cb03807546ee7bd45ba77db895c8a6e2871e87d447f9c3a68b91447f6b842"
+  "sha256": "7a36f2eca8a89cb997f9a2a4c8b9cec66024479f6aa13af78033a4d88a31d101"
 }

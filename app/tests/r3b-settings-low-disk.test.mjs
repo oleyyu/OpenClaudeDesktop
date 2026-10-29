@@ -1,6 +1,8 @@
-// cov0-04 (lane R3b-settings): the 2.42304.0 low-disk toast. cf615570b DesktopLowDiskToast, the byte label (shared-3 ZC
-// + shared-130 eF), the `LSS-persisted.desktop-low-disk-warned-at` record (shared-25 JH/GH/KH) and the main-process
-// free-space reading (index.chunk-muI2IV6k YAr) are extracted verbatim by scripts/extract-r3b-settings.mjs. Nothing here
+// cov0-04 (lane R3b-settings): the 3.6556.2 low-disk toast. cf615570b DesktopLowDiskToast, the byte label (shared-3 FD
+// + shared-78 WW), the `LSS-persisted.desktop-low-disk-warned-at` record (shared-25 AH/DH/OH) and the main-process
+// free-space reading (index.chunk-jPKPzV-P YUr) are extracted verbatim by scripts/extract-r3b-settings.mjs. The toast
+// is React Compiler output (menus C11: only the compiler rewrite, no visible change); it runs on the real react-dom
+// client here, so the memo cache is React's own. Nothing here
 // opens a window or reads a real profile: the generator contract, the original statfs walk against a scratch folder and
 // injected statfs answers, and the toast under a controlled fake window whose desktop bridge answers injected byte counts
 // into the host's real toast store (toast-store.mjs) with a scheduler that never fires.
@@ -22,7 +24,7 @@ import { createToastStore } from '../src/toast-store.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/r3b-settings');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const require = createRequire(import.meta.url);
 const GB = 1000 ** 3, DAY = 864e5, RECORD = 'LSS-persisted.desktop-low-disk-warned-at';
@@ -99,39 +101,50 @@ function reset(free) { env.storage.clear(); env.calls.length = 0; env.answer(fre
 test('generator: check mode passes, sources are pinned, the toast chunk is whole and its imports resolve to adapters, view-tabs and generated modules', async () => {
   await extractR3bSettings({ check: true });
   const manifest = JSON.parse(await fs.readFile(path.join(generated, 'manifest.json'), 'utf8'));
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   for (const module of manifest.modules) {
     assert.equal(module.sourceSha256, sha(await fs.readFile(path.join(reference, 'ion-dist/assets/v1', module.source))), module.source);
     assert.equal(module.sha256, sha(await fs.readFile(path.join(generated, module.target), 'utf8')), module.target);
   }
   const toast = manifest.modules.find(module => module.target === 'low-disk-toast.mjs');
-  assert.equal(toast.source, 'cf615570b-CMSKc5h8.js');
-  assert.deepEqual(toast.bindings.map(binding => binding.name).sort(), ['g', 'h', 'm', 'p']);
+  assert.equal(toast.source, 'cf615570b-BgBm9Y8P.js');
+  // `_` is the compiler-hoisted no-op rejection handler (`.then(n=>{…},_)`), part of the whole chunk.
+  assert.deepEqual(toast.bindings.map(binding => binding.name).sort(), ['_', 'g', 'h', 'm', 'p']);
   assert.deepEqual(Object.fromEntries(toast.imports.map(entry => [entry.name, entry.kind])), {
     useRef: 'react', useEffectEvent: 'react', useEffect: 'react', jsx: 'react', readPersisted: 'generated', removePersisted: 'generated',
     writePersisted: 'generated', DeviceStorage: 'adapter', useErrors: 'adapter', CdsButton: 'view-tabs', formatBytes: 'generated',
     FormattedMessage: 'adapter', useIntl: 'adapter',
+    // E3: the compiler helpers come from view-tabs by semantic name, never sliced again.
+    reactMemoCache: 'view-tabs', memoIsEmpty: 'view-tabs', memoChanged1: 'view-tabs', memoChanged4: 'view-tabs',
+    memoStore0: 'view-tabs', memoStore1: 'view-tabs', memoStore4: 'view-tabs',
   });
-  const cds = toast.imports.find(entry => entry.name === 'CdsButton');
-  assert.equal(cds.from, '../view-tabs/shared-frame-BfjMqbuN.js');
+  for (const entry of toast.imports.filter(entry => entry.kind === 'view-tabs')) assert.equal(entry.from, '../view-tabs/shared-frame-6jtSkIit.js', entry.name);
   const viewTabs = JSON.parse(await fs.readFile(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
-  assert.deepEqual(viewTabs.publicNames.CdsButton, { file: 'shared-frame-BfjMqbuN.js', local: '$l', export: 'cl' });
+  assert.equal(viewTabs.referenceVersion, '3.6556.2');
+  assert.deepEqual(viewTabs.publicNames.CdsButton, { file: 'shared-frame-6jtSkIit.js', local: 'Uu', export: 'Eu' });
+  assert.deepEqual(viewTabs.publicNames.reactMemoCache, { file: 'shared-frame-6jtSkIit.js', local: 'J9', export: 'ip' });
+  const text = await fs.readFile(path.join(generated, 'low-disk-toast.mjs'), 'utf8');
+  assert.equal(/BfjMqbuN|vendor-frame-|2\.42304\.0/.test(text), false, 'no legacy shim, no vendor-frame, no old release');
   // The official chunk text and its export table.
-  const original = await fs.readFile(path.join(reference, 'ion-dist/assets/v1/cf615570b-CMSKc5h8.js'), 'utf8');
+  const original = await fs.readFile(path.join(reference, 'ion-dist/assets/v1/cf615570b-BgBm9Y8P.js'), 'utf8');
   assert.ok(original.endsWith('export{g as DesktopLowDiskToast,p as LOW_DISK_SPACE_BYTES};'));
+  assert.ok(original.includes('c?.getFreeDiskSpace?.().then(n=>{t===e&&w(n)},_)'));
   assert.equal(Toast.LOW_DISK_SPACE_BYTES, 10 * GB);
   assert.equal(Toast.lowDiskRemindAfterMs, 7 * DAY);
   assert.equal(Toast.lowDiskWarnedAtKey, 'persisted.desktop-low-disk-warned-at');
   assert.equal(Persisted.persistedStorageKey(Toast.lowDiskWarnedAtKey), RECORD);
   // Main process.
   const mainManifest = JSON.parse(await fs.readFile(path.join(app, 'electron/generated/r3b-settings-free-disk-manifest.json'), 'utf8'));
-  assert.equal(mainManifest.sourceSha256, sha(await fs.readFile(path.join(reference, 'asar/.vite/build/index.chunk-muI2IV6k.js'))));
+  assert.equal(mainManifest.referenceVersion, '3.6556.2');
+  assert.equal(mainManifest.sourceSha256, sha(await fs.readFile(path.join(reference, 'asar/.vite/build/index.chunk-jPKPzV-P.js'))));
   assert.equal(mainManifest.sha256, sha(await fs.readFile(path.join(app, 'electron/generated/r3b-settings-free-disk.cjs'), 'utf8')));
-  assert.equal(mainManifest.binding, 'YAr');
+  assert.equal(mainManifest.binding, 'YUr');
+  assert.deepEqual(Object.keys(mainManifest.callers), ['cEa', 'pEa']);
 });
 
 // ---------------------------------------------------------------- main process
-test('main: the original YAr returns statfs bavail × bsize of the folder or its nearest existing parent, undefined when nothing is readable; main.cjs answers desktop-free-disk-space with it on userData', async () => {
+test('main: the original YUr returns statfs bavail × bsize of the folder or its nearest existing parent, undefined when nothing is readable; main.cjs answers desktop-free-disk-space with it on userData', async () => {
   const { freeDiskSpace } = require('../electron/generated/r3b-settings-free-disk.cjs');
   const scratch = await fs.mkdtemp(path.join(os.tmpdir(), 'r3b-free-disk-'));
   try {
@@ -150,7 +163,7 @@ test('main: the original YAr returns statfs bavail × bsize of the folder or its
       assert.equal(await freeDiskSpace(scratch), 5 * GB);
       assert.deepEqual(seen, [scratch, path.dirname(scratch)]);
       fsp.statfs = async () => { throw Error('EACCES'); };
-      assert.equal(await freeDiskSpace(scratch), undefined, 'unreadable up to the root: undefined (BOa turns it into null)');
+      assert.equal(await freeDiskSpace(scratch), undefined, 'unreadable up to the root: undefined (pEa turns it into null)');
     } finally { fsp.statfs = original; }
   } finally { await fs.rm(scratch, { recursive: true, force: true }); }
   const main = await fs.readFile(path.join(app, 'electron/main.cjs'), 'utf8');
@@ -266,7 +279,7 @@ test('mount gate: nothing without the desktop bridge, before boot, or without th
   } finally { env.window.desktop = bridge; }
 });
 
-test('zh-CN: the message and the button label come from the catalog; the byte label is the original ZC with the UI locale', async () => {
+test('zh-CN: the message and the button label come from the catalog; the byte label is the original FD with the UI locale', async () => {
   const intl = { locale: 'en-US', formatNumber: (value, options) => new Intl.NumberFormat('en-US', options).format(value) };
   assert.deepEqual([5 * GB, 999, 1500, 12.34 * GB].map(bytes => FormatBytes.formatBytes(intl, bytes, 'short')), ['5 GB', '999 bytes', '1.5 kB', '12.3 GB']);
   I18n.setLocale('zh-CN');

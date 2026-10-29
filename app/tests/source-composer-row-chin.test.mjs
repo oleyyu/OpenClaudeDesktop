@@ -12,12 +12,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
-import { CONTEXT_RING_ROW_SIZE, CONTEXT_RING_ROW_TRACK, CONTEXT_RING_TRACK, contextRingGeometry, contextRingStroke, contextRingTrack } from '../src/context-usage-model.mjs';
+import { CONTEXT_RING_ROW_SIZE, CONTEXT_RING_TRACK, contextRingGeometry, contextRingStroke } from '../src/context-usage-model.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const readable = path.resolve(app, '../analysis/code-ui-unpack-20261017/readable');
-const OFFICIAL = 'public/assets/v1/c6a992d55-sXiDGMFQ.css';
+const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
 const raw = (file) => fs.readFileSync(path.join(reference, file), 'utf8');
 const h = React.createElement;
 const noop = () => {};
@@ -29,14 +29,15 @@ before(async () => {
   Tokens = await server.ssrLoadModule('/src/generated/code-composer/composer-tokens.mjs');
   Ring = await server.ssrLoadModule('/src/generated/code-composer/usage-ring.mjs');
   RowChin = await server.ssrLoadModule('/src/generated/code-composer/composer-row-chin.mjs');
-  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
-  // The tooltip popups only mount on hover, so a second server wraps the view-tabs CDS Tooltip export (shared-frame Zp)
-  // in a probe recording the props each one receives (the file on disk is untouched).
+  // E41: the chin triggers import the 3.6556.2 view-tabs file by semantic name (the legacy shim re-exports the same values).
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  // The tooltip popups only mount on hover, so a second server wraps the view-tabs CDS Tooltip export (3.6556.2 shared-frame
+  // Xm) in a probe recording the props each one receives (the file on disk is untouched).
   const probe = { name: 'cds-tooltip-probe', enforce: 'pre', transform(code, id) {
-    if (!id.endsWith('/src/generated/view-tabs/shared-frame-BfjMqbuN.js')) return null;
-    if (code.split('Zp as CdsTooltip').length !== 2) throw Error('shared-frame no longer exports Zp as CdsTooltip');
-    return code.replace('Zp as CdsTooltip', '__probeTooltip as CdsTooltip')
-      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(Zp, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, detail: typeof props.detail === "string" ? props.detail : null, shortcut: props.shortcut ?? null, open: props.open ?? null, hoverable: props.hoverable ?? null, collisionPadding: props.collisionPadding ?? null }) })); }\n';
+    if (!id.endsWith('/src/generated/view-tabs/shared-frame-6jtSkIit.js')) return null;
+    if (code.split('Xm as CdsTooltip').length !== 2) throw Error('shared-frame no longer exports Xm as CdsTooltip');
+    return code.replace('Xm as CdsTooltip', '__probeTooltip as CdsTooltip')
+      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(Xm, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, detail: typeof props.detail === "string" ? props.detail : null, shortcut: props.shortcut ?? null, open: props.open ?? null, hoverable: props.hoverable ?? null, collisionPadding: props.collisionPadding ?? null }) })); }\n';
   } };
   probeServer = await createServer({ configFile: false, root: app, plugins: [probe, react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   P = await probeServer.ssrLoadModule('/src/source-composer.jsx');
@@ -94,7 +95,7 @@ test("an open session's presets chin is bQ's row: the mode picker alone in 'flex
   assert.doesNotMatch(html, /sc-folder-chip|Choose environment|EngineFooterStrip/);
 });
 
-test("the classic layout keeps bQ's chin layout: Add then Mode, the plain Va trailing, the 12px alpha-2 ring without Fa, no DK", () => {
+test("the classic layout keeps bQ's chin layout: Add then Mode, the plain Va trailing, the 14px alpha-2 ring (me-px) without Fa, no DK", () => {
   const chin = chinOf(render({ codeLayout: 'classic' }));
   assert.equal(chin.attrs['data-chin-layout'], undefined);
   const leading = slot(chin, 'sc-chin-leading');
@@ -102,10 +103,12 @@ test("the classic layout keeps bQ's chin layout: Add then Mode, the plain Va tra
   assert.ok(!find(leading, (n) => cls(n) === Row.ROW_CHIN_LEADING_CLASS));
   const grid = slot(chin, 'sc-chin-trailing').children[0];
   assert.equal(cls(grid), `${Tokens.composerChinTrailingClass} gap-1`);
+  // composer-ring-14 (3.6556.2 B3): always 14px; outside the row the track is alpha-2 and the trigger is `shrink-0 me-px`.
   const ring = find(grid, (n) => n.tag === 'svg');
-  assert.equal(ring.attrs.width, '12');
+  assert.equal(ring.attrs.width, '14');
   assert.equal(find(ring, (n) => 'data-ring-track' in n.attrs).attrs.stroke, 'var(--cds-alpha-2)');
-  assert.ok(!find(grid, (n) => cls(n) === Tokens.composerRingSlotClass), 'an unsized ring has no Fa slot');
+  assert.ok(cls(button(grid, 'sc-usage-trigger')).endsWith(' shrink-0 me-px sc-usage-trigger'));
+  assert.ok(!find(grid, (n) => cls(n) === Tokens.composerRingSlotClass), 'outside the row: no po slot');
   assert.doesNotMatch(cls(button(grid, 'sc-model-trigger')), /text-secondary/, 'DK is the row placement only');
   // The Home draft (presets, no session) hangs no chin at all: its pickers are the environment bar's.
   assert.equal(chinOf(render({ showContext: true })), null);
@@ -170,7 +173,7 @@ test('Effort: a Code composer folds it into the model pill (c9543da06 G, shared-
   assert.equal(find(button(chinOf(render({ effort: '' })), 'sc-model-trigger'), (n) => cls(n).includes('sc-effort-tail')), null, 'no effort, no tail');
 });
 
-test('Usage: yZ — Fa > a ghost iconOnly CdsButton "shrink-0" (tooltip false) with the 14px KV ring on alpha-4, the context tooltip', () => {
+test('Usage: B3 — po > a ghost iconOnly CdsButton "shrink-0" (tooltip false) with the 14px ring on alpha-3, the context tooltip', () => {
   const usage = { last: { totalTokens: 64000 }, modelContextWindow: 128000 };
   const chin = chinOf(render({ usage }));
   const ring = button(chin, 'sc-usage-trigger');
@@ -182,7 +185,7 @@ test('Usage: yZ — Fa > a ghost iconOnly CdsButton "shrink-0" (tooltip false) w
   const svg = find(ring, (n) => n.tag === 'svg');
   assert.deepEqual([svg.attrs.width, svg.attrs.height, svg.attrs.viewBox, cls(svg), svg.attrs['aria-hidden']], ['14', '14', '0 0 14 14', '-rotate-90', 'true']);
   const track = find(svg, (n) => 'data-ring-track' in n.attrs), arc = find(svg, (n) => 'data-ring-arc' in n.attrs);
-  assert.equal(track.attrs.stroke, 'var(--cds-alpha-4)');
+  assert.equal(track.attrs.stroke, 'var(--cds-alpha-3)', '3.6556.2 B3 `m = l ? "var(--cds-alpha-3)" : "var(--cds-alpha-2)"`');
   assert.equal(cls(arc), 'transition-[stroke-dashoffset] duration-300');
   const geometry = contextRingGeometry(50, 14);
   assert.equal(Number(arc.attrs.r), geometry.radius);
@@ -194,11 +197,11 @@ test('Usage: yZ — Fa > a ghost iconOnly CdsButton "shrink-0" (tooltip false) w
   assert.equal(button(chinOf(render({ menuKind: 'usage' })), 'sc-usage-trigger').attrs['aria-expanded'], 'true');
 });
 
-test('the KV ring agrees with contextRingGeometry / contextRingTrack / contextRingStroke at both sizes and every threshold', () => {
+test('the KV ring agrees with contextRingGeometry / the B3 tracks / contextRingStroke at both sizes and every threshold', () => {
   assert.equal(CONTEXT_RING_ROW_SIZE, 14);
-  assert.equal(contextRingTrack(undefined), CONTEXT_RING_TRACK);
-  assert.equal(contextRingTrack(14), CONTEXT_RING_ROW_TRACK);
-  assert.equal(CONTEXT_RING_ROW_TRACK, 'var(--cds-alpha-4)');
+  // The tracks the host actually draws (3.6556.2 c227f4d5e B3 `m=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"`).
+  assert.equal(Row.USAGE_RING_TRACK, CONTEXT_RING_TRACK);
+  const contextRingTrack = (size) => (size === undefined ? Row.USAGE_RING_TRACK : Row.USAGE_RING_ROW_TRACK);
   for (const size of [undefined, 14]) for (const pct of [0, 18, 50, 74, 75, 89, 90, 100, 140, -5]) {
     const markup = renderToStaticMarkup(h(Ring.UsageRing, { pct, size, trackStroke: contextRingTrack(size) }));
     const [svg] = parseMarkup(markup);
@@ -223,16 +226,19 @@ test('the trigger components hand their props to the view-tabs originals (onClic
   assert.deepEqual([effort.props.content, effort.props.open], ['Effort', false]);
   assert.equal(effort.props.children.type, ViewTabs.CdsButton);
   assert.equal(effort.props.children.props.onClick, onClick);
-  const ring = Row.ComposerUsageRing({ pct: 10, ringSize: 14, tooltip: 'Usage', detail: null, onClick });
+  const ring = Row.ComposerUsageRing({ pct: 10, inComposerRow: true, tooltip: 'Usage', detail: null, onClick });
   assert.equal(ring.props.className, Tokens.composerRingSlotClass);
   const ringTip = ring.props.children;
   assert.equal(ringTip.type, ViewTabs.CdsTooltip);
   assert.equal(ringTip.props.detail, undefined, 'yZ `detail: i ?? void 0`');
   assert.deepEqual([ringTip.props.children.type, ringTip.props.children.props.tooltip, ringTip.props.children.props.iconOnly], [ViewTabs.CdsButton, false, true]);
   assert.equal(ringTip.props.children.props.icon.type, Ring.UsageRing);
-  assert.equal(Row.ComposerUsageRing({ pct: 10, tooltip: 'Usage' }).type, ViewTabs.CdsTooltip, 'unsized: no Fa slot');
+  assert.deepEqual([ringTip.props.children.props.icon.props.size, ringTip.props.children.props.icon.props.trackStroke], [14, 'var(--cds-alpha-3)']);
+  const outside = Row.ComposerUsageRing({ pct: 10, tooltip: 'Usage' });
+  assert.equal(outside.type, ViewTabs.CdsTooltip, 'outside the row: no po slot');
+  assert.deepEqual([outside.props.children.props.icon.props.size, outside.props.children.props.icon.props.trackStroke, outside.props.children.props.className], [14, 'var(--cds-alpha-2)', 'shrink-0 me-px']);
   // The env bar's place chip (h2's td) is the same CDS Tooltip.
-  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";'));
+  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";'));
   for (const file of ['src/source-composer-row-chin.jsx', 'src/source-composer-environment-bar.jsx'])
     assert.doesNotMatch(fs.readFileSync(path.join(app, file), 'utf8'), /source-tooltip|SourceTooltip/, `${file}: no host tooltip`);
   const place = probes({ showContext: true, environmentMenu: true }).find((p) => p.content === 'Where DeepSeek runs');
@@ -309,6 +315,18 @@ test('the host transcriptions are the shipped 2.42304.0 strings (tQ / vQ / _Q, M
   for (const pin of ['"data-cds":"ModelSelectorEffort"', JSON.stringify(Row.EFFORT_TRIGGER_CLASS), 'className:"min-w-0 truncate"']) assert.ok(effort.includes(pin), pin);
   assert.ok(raw('shared-5-kdJVRUsT.js').includes(JSON.stringify(Row.CHIN_BUTTON_TONE_CLASS)), 'Kd button tone');
   assert.ok(raw('c73f45bc3-CFrHin0p.js').includes('ringSize:14'), 'Y_ (the environment bar ring)');
+  // composer-ring-14 (3.6556.2): c227f4d5e B3 draws the ring at 14 everywhere, the row track alpha-3 in po (shared-6 Lg),
+  // the non-row trigger `shrink-0 ${af}` (shared-8 TX me-px); a8 passes `inComposerRow: et` and the bar `inComposerRow:!0`.
+  const v3 = (file) => fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', file), 'utf8');
+  const b3 = v3('c227f4d5e-B-FYKrwT.js');
+  for (const pin of ['m=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"', 'y(_f,{pct:s,trackStroke:m,stroke:c,size:14})', 'D=l?"shrink-0":`shrink-0 ${af}`',
+    'l?y("span",{className:po,children:k}):k', 'inComposerRow:et'])
+    assert.equal(b3.split(pin).length, 2, pin);
+  assert.equal(b3.split('ringSize').length, 1, 'no ringSize any more');
+  assert.ok(v3('shared-8-Db1QN4mf.js').includes('TX="me-px"'));
+  assert.ok(v3('shared-6-sd9jbJqs.js').includes('Lg="flex shrink-0 ms-px"'));
+  assert.ok(v3('c73f45bc3-B7hbL7H9.js').includes('inComposerRow:!0'));
+  assert.deepEqual([Row.USAGE_RING_SIZE, Row.USAGE_RING_ROW_TRACK, Row.USAGE_RING_TRACK, Row.USAGE_RING_TRIGGER_INSET_CLASS], [14, 'var(--cds-alpha-3)', 'var(--cds-alpha-2)', 'me-px']);
   // LK opens the row / composer model menu on top, aligned to the end; the host model menu (main.jsx "model") is placed
   // the same way.
   const lk = fs.readFileSync(path.join(readable, 'c227f4d5e-Ba-r--Rl.js'), 'utf8');
@@ -325,10 +343,14 @@ test('the host transcriptions are the shipped 2.42304.0 strings (tQ / vQ / _Q, M
 test('main.jsx still finds the chin triggers by their hook classes (Mode / Model / Effort chords, /model, /effort, /permissions)', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.ok(main.includes('const chinNode = scope().querySelector(".sc-chin");'));
-  assert.ok(main.includes('trigger = chinNode.querySelector({ mode: ".sc-permission", model: ".sc-model-trigger", effort: ".sc-effort-trigger" }[kind]);'));
-  // x6: in the environment bar (no effort trigger) the Effort chord opens the model menu, as the official bar does.
-  assert.ok(main.includes('if (!trigger && kind === "effort") { trigger = chinNode.querySelector(".sc-composer .sc-model-trigger, [data-env-bar-host] .sc-model-trigger"); if (trigger) kind = "model"; }'));
-  assert.ok(main.includes('openMenu(CHIN_MENU_KINDS[kind], trigger);'));
+  // x6 / E21 (Q6 p): with no effort trigger the Effort chord resolves to the model menu and opens it on its Effort
+  // submenu (menu data effortOpen → SourceModelMenu effortOpen).
+  assert.ok(main.includes('const effortInModelMenu = !chinNode.querySelector(".sc-effort-trigger");'));
+  assert.ok(main.includes('effortCount: efforts.length, modelCount: models.length, effortInModelMenu,'));
+  assert.ok(main.includes('const effortOpen = command === "effort" && effortInModelMenu, kind = request.kind;'));
+  assert.ok(main.includes('const trigger = chinNode.querySelector(effortOpen ? ".sc-composer .sc-model-trigger, [data-env-bar-host] .sc-model-trigger" : { mode: ".sc-permission", model: ".sc-model-trigger", effort: ".sc-effort-trigger" }[kind]);'));
+  assert.ok(main.includes('openMenu(CHIN_MENU_KINDS[kind], trigger, effortOpen ? { effortOpen: true } : undefined);'));
+  assert.ok(main.includes('initialHighlight={menu.entry} effortOpen={!!menu.data?.effortOpen}'));
   assert.ok(main.includes("scope().querySelector('.sc-chin .sc-effort-trigger')"));
   const chin = chinOf(render({}));
   assert.ok(cls(chin).split(/\s+/).includes('sc-chin'));

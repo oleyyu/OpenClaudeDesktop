@@ -2,6 +2,7 @@ import test,{before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
+import {existsSync,readFileSync} from 'node:fs';
 import {dictionary} from '../electron/i18n/index.mjs';
 import {createServer} from 'vite';
 import react from '@vitejs/plugin-react';
@@ -9,10 +10,11 @@ import {buildSidebarGroups,normalizeSidebarPreferences,buildNestedRuns} from '..
 import {sidebarCreatedTimestamp,compareSidebarTitle} from '../src/generated/code-current/sidebar-sort-model.mjs';
 import {sessionListNotAtDefaults,sessionListResetSteps,sidebarNestedAvailability,sidebarNestedCommands,sidebarViewAllValue} from '../src/sidebar-filter-current-model.mjs';
 import {physicalSide} from '../src/generated/sidebar-resize/logical-side.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // D21: view-tabs' preload-helper (shared-frame) calls document.createElement while it evaluates.
 const documentStub={createElement:()=>({relList:{supports:()=>false}}),documentElement:{dir:'ltr',getAttribute:()=>null,hasAttribute:()=>false}};
-let server,Host,Controls,View,Options,Menu,Sections,Mode,Sidebar,savedDocument;
+let server,Host,Controls,View,Menu,Sections,Mode,Sidebar,savedDocument;
 before(async()=>{
   savedDocument=Object.getOwnPropertyDescriptor(globalThis,'document');
   if(!globalThis.document)Object.defineProperty(globalThis,'document',{value:documentStub,configurable:true,writable:true});
@@ -21,9 +23,8 @@ before(async()=>{
   Sidebar=await server.ssrLoadModule('/src/source-sidebar.jsx');
   Controls=await server.ssrLoadModule('/src/generated/code-current/sidebar-filter-controls.mjs');
   View=await server.ssrLoadModule('/src/generated/code-current/sidebar-filter-view.mjs');
-  Options=await server.ssrLoadModule('/src/generated/code-current/sidebar-filter-options.mjs');
   // R3-sections step 3: the session-list filter's menu is the CDS Dropdown (view-tabs), the same Base UI menu as eO / tO.
-  Menu=(await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js')).CdsDropdown;
+  Menu=(await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js')).CdsDropdown;
   Sections=await server.ssrLoadModule('/src/source-sidebar-sections-adapters.jsx');
   Mode=await server.ssrLoadModule('/src/generated/sidebar-sections/group-mode.mjs');
 });after(async()=>{await server?.close();if(savedDocument)Object.defineProperty(globalThis,'document',savedDocument);else delete globalThis.document;});
@@ -68,10 +69,11 @@ test('oU dt / ft: Reset is offered off the defaults, and resets sort, direction,
   assert.equal(sessionListNotAtDefaults(at),false);
   for(const change of [{shown:'date'},{sortBy:'alpha'},{ascending:true},{emptyGroups:true}])assert.equal(sessionListNotAtDefaults({...at,...change}),true,JSON.stringify(change));
   assert.equal(sessionListNotAtDefaults({...at,emptyGroups:true,emptyGroupsAvailable:false}),false,'de gates Empty groups');
-  assert.deepEqual(sessionListResetSteps({...at,shown:'date',sortBy:'created',ascending:true,emptyGroups:true}),{sortBy:'recency',descending:true,emptyGroupsOff:true,regroup:true});
+  // w4-sidebar-filter: 3.6556.2 PJ Qt has no regroup step (oU ft's `ut !== lt && a?.(…)` is gone with gU, SB-26).
+  assert.deepEqual(sessionListResetSteps({...at,shown:'date',sortBy:'created',ascending:true,emptyGroups:true}),{sortBy:'recency',descending:true,emptyGroupsOff:true});
   // `Ee && l !== "alpha" && at(!1)`: a stored ascending under Name is left as it is (Name's stored false reads ascending).
-  assert.deepEqual(sessionListResetSteps({...at,sortBy:'alpha',ascending:true}),{sortBy:'recency',descending:false,emptyGroupsOff:false,regroup:false});
-  assert.deepEqual(sessionListResetSteps(at),{sortBy:null,descending:false,emptyGroupsOff:false,regroup:false});
+  assert.deepEqual(sessionListResetSteps({...at,sortBy:'alpha',ascending:true}),{sortBy:'recency',descending:false,emptyGroupsOff:false});
+  assert.deepEqual(sessionListResetSteps(at),{sortBy:null,descending:false,emptyGroupsOff:false});
 });
 test('HQ: View all opens the page once the settled list holds an archived session; Loading… while it loads; else disabled',()=>{
   const open=()=>{};
@@ -92,14 +94,18 @@ function fixture(component,props={},contexts=new Map()){
     useSyncExternalStore(_subscribe,snapshot,serverSnapshot){return(serverSnapshot??snapshot)();},
     useEffect(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps)){const old=cells[i];cells[i]={deps};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}},
   };
-  const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internal.H;internal.H=hooks;try{return tree=component(props);}finally{internal.H=old;}};
+  const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internal.H;internal.H=withMemoCache(hooks);try{return tree=component(props);}finally{internal.H=old;}};
   render();return {get tree(){return tree;},render,flush(){while(effects.length)effects.shift()();},close(){cells.forEach(c=>c.cleanup?.());}};
 }
 const intl={formatMessage:m=>m.defaultMessage};
-test('oU Se: grouping labels/order; Custom only without the custom-group overlay (be = ux()), Status only with ga()',()=>{
-  assert.deepEqual(Options.sidebarCurrentGroupOptions({intl}),[['none','None'],['state','Status'],['date','Date'],['project','Environment'],['custom','Custom']]);
-  assert.deepEqual(Options.sidebarCurrentGroupOptions({intl,customDisabled:true}).map(([key])=>key),['none','state','date','project']);
-  assert.deepEqual(Options.sidebarCurrentGroupOptions({intl,statusGrouping:false,customDisabled:true}).map(([key])=>key),['none','date','project']);
+// cc-rest-sidebar-nested: the 2.42304.0 oU Se slice (sidebar-filter-options.mjs) is retired; Group by is 3.6556.2 GJ
+// (sidebar-group-options.mjs, tests/sidebar-filter-sessionlist-current.test.mjs).
+test('the retired 2.42304.0 Group by slice is gone from the generator, the manifest and the tree',()=>{
+  const app=new URL('..',import.meta.url).pathname;
+  assert.equal(existsSync(app+'src/generated/code-current/sidebar-filter-options.mjs'),false);
+  const manifest=JSON.parse(readFileSync(app+'src/generated/code-current/manifest.json','utf8'));
+  assert.equal(manifest.modules.some(entry=>entry.target==='sidebar-filter-options.mjs'),false);
+  assert.doesNotMatch(readFileSync(app+'scripts/extract-code-ui-current.mjs','utf8'),/emit\([^)]*'sidebar-filter-options\.mjs'/);
 });
 test('lU / dU: Last updated, Date created and Name; the trailing label comes from the options; radios keep the menu open',()=>{
   const options=fixture(Controls.useSidebarSortOptions).tree;
@@ -116,7 +122,8 @@ test('lU / dU: Last updated, Date created and Name; the trailing label comes fro
 test('uU forwards keyboard activation; the submenus open on the logical inline end (xp)',()=>{
   const called=[],f=fixture(Controls.SidebarOptionMenu,{label:'Group by',options:[['project','Environment']],value:'project',onChange:(...args)=>called.push(args)});
   const item=nodes(f.tree,n=>n.type===Menu.Item)[0];item.props.onClick({detail:0});item.props.onClick({detail:1});
-  assert.deepEqual(called,[['project',true],['project',false]]);
+  // w4-sidebar-filter: 3.6556.2 qJ calls onChange(value) only (uU's keyboard flag fed gU's regroup focus, gone: SB-26).
+  assert.deepEqual(called,[['project'],['project']]);
   assert.equal(nodes(f.tree,n=>n.type===Menu.Popup)[0].props.side,'right');
   assert.equal(physicalSide('inline-end','rtl'),'left');assert.equal(physicalSide('inline-end','ltr'),'right');
 });
@@ -124,21 +131,23 @@ test('the session-list menu writes the Sessions section through the original wri
   const calls=[],regroups=[];
   const disconnect=Sections.connectSidebarSectionActions((action,payload)=>calls.push([action,payload]));
   try{
-    const props={handle:{},open:true,onOpenChange(){},onRegroup:k=>regroups.push(k),preferences:{groupBy:'project',sortBy:'alpha',ascending:false,showMetadata:false,showEmptyGroups:true}};
+    const props={handle:{},open:true,onOpenChange(){},preferences:{groupBy:'project',sortBy:'alpha',ascending:false,showMetadata:false,showEmptyGroups:true}};
     const f=fixture(Host.SessionListFilterMenu,props),root=f.tree;
     assert.equal(root.type,Menu.Root);assert.deepEqual([root.props.handle,root.props.open],[props.handle,true]);
     const popup=root.props.children;assert.deepEqual([popup.type,popup.props.side,popup.props.align,popup.props.sideOffset,popup.props.className],[Menu.Popup,'bottom','end',4,undefined]);
     const content=popup.props.children.props;
     assert.equal(popup.props.children.type,View.CurrentSidebarFilterContent);
-    assert.deepEqual(content.groupOptions.map(([key])=>key),['none','state','date','project'],'Custom hidden (overlay on, D10)');
-    assert.deepEqual([content.groupBy,content.sortBy,content.ascending,content.metadata,content.emptyGroups,content.routinesAvailable,content.resetAvailable],
+    // w4-sidebar-filter (SB-02): GJ's order, Folder for project, Environment (the host buckets by saved environment, E17).
+    assert.deepEqual(content.groupOptions,[['date','Date'],['state','Status'],['project','Folder'],['environment','Environment'],['none','None']],'Custom hidden (overlay on, D10)');
+    // 3.6556.2 PJ (w3-sidebar-sections-gen, E38): Routines is the toggle state routinesToggle (VJ through HJ), not offered here.
+    assert.deepEqual([content.groupBy,content.sortBy,content.ascending,content.metadata,content.emptyGroups,content.routinesToggle.offered,content.resetAvailable],
       ['project','alpha',true,false,true,false,true]);
     assert.deepEqual(content.sortOptions.map(([key])=>key),['recency','created','alpha']);
-    content.onGroupBy('date',true);content.onGroupBy('project',false);
-    assert.deepEqual(regroups,[true],'nt regroups only on a change');
+    content.onGroupBy('date');content.onGroupBy('project');
+    assert.deepEqual(regroups,[],'3.6556.2 Vt writes only (no regroup, SB-26)');
     content.onSortBy('created');content.onAscending(true);content.onMetadata();content.onEmptyGroups();
     assert.deepEqual(calls,[
-      ['view',{id:'sessions',view:{groupBy:'date'}}],['view',{id:'sessions',view:{groupBy:'environment'}}],['view',{id:'sessions',view:{sortBy:'created'}}],
+      ['view',{id:'sessions',view:{groupBy:'date'}}],['view',{id:'sessions',view:{groupBy:'folder'}}],['view',{id:'sessions',view:{sortBy:'created'}}],
       ['view',{id:'sessions',view:{ascending:false}}],['view',{id:'sessions',view:{show:{metadata:true}}}],['view',{id:'sessions',view:{show:{emptyGroups:false}}}],
     ],'XH(alpha, true) stores false');
     calls.length=0;content.onReset({detail:0});
@@ -152,7 +161,8 @@ test('the session-list menu writes the Sessions section through the original wri
 });
 test('oU sessionList: Group by, Sort by, Show (Metadata, Empty groups), then sU; no nested items, PR status or Clear filters',()=>{
   const props=fixture(Host.SessionListFilterMenu,{handle:{},open:true,onOpenChange(){},preferences:{groupBy:'none'}}).tree.props.children.props.children.props;
-  const tree=View.CurrentSidebarFilterContent(props),parts=tree.props.children;
+  // 3.6556.2 PJ's block is React Compiler output (useMemoCache): rendered through the hook dispatcher.
+  const tree=fixture(View.CurrentSidebarFilterContent,props).tree,parts=tree.props.children;
   assert.deepEqual(parts.map(n=>n?.type),[Controls.SidebarOptionMenu,Controls.SidebarSortMenu,Menu.Submenu,Controls.SidebarViewResetItems]);
   assert.equal(parts[3].props.atDefaults,!props.resetAvailable);
   const items=nodes(tree,n=>n.type===Menu.Item);
@@ -168,15 +178,15 @@ test('palette hide_all_nested_sessions / show_all_nested_sessions (shared-20 _S)
   commands.onHideAll();commands.onShowAll();assert.deepEqual(writes,[['p','q'],[]]);
   assert.deepEqual([sidebarNestedCommands(['p'],[],()=>{}).anyHidden,sidebarNestedCommands(['p'],['p'],()=>{}).anyShown],[false,false]);
 });
-test('source keyboard regroup focus returns to the first heading only when the menu closes and focus is not elsewhere',()=>{
-  let focused=0;const body={},outside={},target={focus(){focused++;}},doc={body,activeElement:body};
-  const root={ownerDocument:doc,querySelector:selector=>selector==='[data-group-toggle]'?target:null},props={state:{open:true,keyRegroups:0}};
-  const f=fixture(()=>Controls.useSidebarRegroupFocus({current:root},props.state));f.flush();
-  props.state={open:true,keyRegroups:1};f.render();f.flush();assert.equal(focused,0);
-  props.state={open:false,keyRegroups:1};f.render();f.flush();assert.equal(focused,1);
-  f.render();f.flush();assert.equal(focused,1);
-  doc.activeElement={closest:()=>null};props.state={open:false,keyRegroups:2};f.render();f.flush();assert.equal(focused,1);
-  f.close();
+test('SB-26: gU (useSidebarRegroupFocus) is gone; nY moves focus to the named trigger, else the first heading, only from body or a menu',()=>{
+  assert.equal(Controls.useSidebarRegroupFocus,undefined);
+  const focused=[],body={},heading={focus(){focused.push('heading');}},trigger={focus(){focused.push('trigger');}};
+  const doc={body,activeElement:body,getElementById:id=>id==='t1'?trigger:null};
+  const list={ownerDocument:doc,querySelector:selector=>selector==='[data-group-toggle]'?heading:null};
+  Controls.focusSidebarAfterRegroup(list,'t1');Controls.focusSidebarAfterRegroup(list,null);Controls.focusSidebarAfterRegroup(list,'gone');
+  doc.activeElement={closest:selector=>selector==='[role="menu"]'?{}:null};Controls.focusSidebarAfterRegroup(list,null);
+  doc.activeElement={closest:()=>null};Controls.focusSidebarAfterRegroup(list,'t1');
+  assert.deepEqual(focused,['trigger','heading','heading','heading']);
 });
 
 
@@ -227,4 +237,40 @@ test('the rendered Older heading does not offer bulk actions for recently active
   assert.match(html,/data-group-key="older"/);assert.doesNotMatch(html,/aria-label="Bulk actions for older sessions"/);
   const eligible=renderToStaticMarkup(React.createElement(Sidebar.SourceSidebar,{...props,sessions:[...props.sessions,row('inactive-old',{updatedAtMs:updatedAtMs-10*86400000,createdAtMs})]}));
   assert.match(eligible,/aria-label="Bulk actions for older sessions"/);
+});
+
+// w2-sidebar-current-b: 3.6556.2 shared-21 GJ (code-current sidebar-group-options.mjs), the Group by options as their own
+// hook: Date / Status / Folder (project) / Environment (environment, bYA6fPCd5A) / [Custom] / None. The host overlay gate is
+// on (source-sidebar-sections-adapters overlayGate), so Custom is left out, as GJ's `aw()` does.
+test('GJ (3.6556.2): Date first, Folder for project, the new Environment, None last; Custom only without the overlay',async()=>{
+  const Group=await server.ssrLoadModule('/src/generated/code-current/sidebar-group-options.mjs');
+  let options;
+  const Probe=()=>{options=Group.useSidebarGroupByOptions();return null;};
+  renderToStaticMarkup(React.createElement(Probe));
+  assert.deepEqual(options,[['date','Date'],['state','Status'],['project','Folder'],['environment','Environment'],['none','None']]);
+  const text=await (await import('node:fs/promises')).readFile(new URL('../src/generated/code-current/sidebar-group-options.mjs',import.meta.url),'utf8');
+  assert.match(text,/^\/\/ Original Claude Desktop 3\.6556\.2 bindings/);
+  assert.match(text,/const aw = \(\) => useSidebarOverlayGate\(\)\.overlayEnabled;/);
+  assert.match(text,/\[i, \.\.\.a, s, l, \.\.\.u, f\]/);
+});
+
+// w2-sidebar-current-b: 3.6556.2 shared-46 vk (code-current sidebar-group-view.mjs, sidebar §2.1 B4): Collapse all and
+// Expand all are both listed whenever either can act, the other disabled with MO's reason; nothing when neither can.
+test('vk (3.6556.2): Collapse all / Expand all stay listed, the one that cannot act disabled with its reason',async()=>{
+  const GroupView=await server.ssrLoadModule('/src/generated/code-current/sidebar-group-view.mjs');
+  const Groups=await server.ssrLoadModule('/src/generated/code-current/sidebar-menu-groups.mjs');
+  const run=(contexts)=>{
+    const internals=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internals.H;
+    internals.H=withMemoCache({useContext:c=>contexts.has(c)?contexts.get(c):c._currentValue,useState:init=>[typeof init==='function'?init():init,()=>{}]});
+    try{return GroupView.SidebarGroupViewItems({});}finally{internals.H=previous;}
+  };
+  const found=(tree,out=[])=>{if(Array.isArray(tree))tree.forEach(t=>found(t,out));else if(tree&&typeof tree==='object'){if(tree.type===Groups.SidebarMenuItem)out.push(tree);found(tree.props?.children,out);}return out;};
+  const toggle=expanded=>({expanded,closest:()=>null,checkVisibility:()=>true});
+  const list=toggles=>({ownerDocument:{activeElement:null},contains:()=>false,querySelectorAll:selector=>{const m=selector.match(/aria-expanded="(true|false)"/);return m?toggles.filter(t=>t.expanded===(m[1]==='true')):toggles;}});
+  const rows=toggles=>found(run(new Map([[GroupView.SidebarListContext,{getList:()=>list(toggles)}]]))).map(i=>[i.props.children.props.defaultMessage,!!i.props.disabled,i.props.disabledReason?.props.defaultMessage]);
+  assert.deepEqual(rows([toggle(true),toggle(false)]),[['Collapse all',false,undefined],['Expand all',false,undefined]]);
+  assert.deepEqual(rows([toggle(true)]),[['Collapse all',false,undefined],['Expand all',true,'Everything is already expanded.']]);
+  assert.deepEqual(rows([toggle(false)]),[['Collapse all',true,'Everything shown is already collapsed.'],['Expand all',false,undefined]]);
+  assert.equal(run(new Map([[GroupView.SidebarListContext,{getList:()=>list([])}]])),null);
+  assert.equal(dictionary['zh-CN']?.['Everything is already expanded.']??(await import('../electron/i18n/zh-CN/index.mjs')).default['Everything is already expanded.'],'已全部展开。');
 });

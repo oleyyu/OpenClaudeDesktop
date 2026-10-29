@@ -1,19 +1,20 @@
 // R3-files FT-06 / SC-2 (research/files-terminal.md §2 breadcrumb-view): pins for the breadcrumb view helpers that
-// scripts/extract-code-ui-current.mjs emits from the 2.42304.0 renderer. 2.42304.0 moved the breadcrumb body out of
-// cd2efac6e into the new chunk cfac349aa (Kt, its segments Jt/Yt, the sizer text Q, the middle-cut name qt and the
-// native-menu guard Ht); cd2efac6e keeps only the FileBreadcrumb shell Yl, which now passes askIfGone through.
-// (The binding map's c230724a2 `fa` for the old `sl` is a mismatch: fa calls preventBaseUIHandler; cfac349aa Ht is the
-// identical guard.)
+// scripts/extract-code-ui-current.mjs emits from the 3.6556.2 renderer. w2-files (3.6556.2 migration): the 2.42304.0
+// cfac349aa chunk is gone; its breadcrumb body (Kt), segments (Jt / Yt), sizer text (Q), middle-cut name (qt) and
+// native-menu guard (Ht) are cd2efac6e Vl / Wl / Gl / Hl / Ul / zl now, next to the FileBreadcrumb shell (old Yl, now
+// Wf). The bodies are React Compiler output: their cache helpers are the view-tabs E3 names (R3), imported from that
+// graph's file and checked against its manifest.
 //
 // Before an emit slices its binding list, pinFilesHelper checks against the shipped chunk:
 //   - the list is exactly the same-chunk closure of the roots, stopping at imports and at the same-chunk bindings another
-//     generated module already provides (`provided`, e.g. Gt in code-current breadcrumb-paths.mjs, Pt in files-changes
-//     breadcrumb-folder.mjs);
+//     generated module already provides (`provided`, e.g. Bl in code-current breadcrumb-paths.mjs, kl in files-changes
+//     breadcrumb-folder.mjs, Vl in breadcrumb-view.mjs for the shell);
 //   - each binding still carries feature strings of its original text;
 //   - every import the closure reaches is listed, under the same chunk:alias, and each listed import resolves to what
-//     the emit binds it to: a vendor-frame React export (`local=<ns>.<member>`), a code-current or files-changes module
-//     generated from that chunk that holds and exports the binding, or a host adapter whose original declaration still
-//     reads as the thing the adapter stands in for (`dependencies`);
+//     the emit binds it to: a vendor-frame React export (`local=<ns>.<member>`), a view-tabs public name (same chunk,
+//     same export alias), a code-current or files-changes module generated from that chunk that holds and exports the
+//     binding, or a host adapter whose original declaration still reads as the thing the adapter stands in for
+//     (`dependencies`);
 //   - the official call sites that give a binding its meaning are still there (`uses`).
 // It returns the binding list and the import text the emit prepends.
 import fs from 'node:fs/promises';
@@ -21,79 +22,89 @@ import path from 'node:path';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const view = 'cfac349aa-BiPinwNg.js', viewer = 'cd2efac6e-C1jvGOgh.js', frame = 'vendor-frame-DfPJ1QmD.js';
+const viewer = 'cd2efac6e-Be7wcc4w.js', frame = official.vendorFrame, shared = official.sharedFrame;
 const react = (alias, from, name) => [`${frame}:${alias}`, from, name];
+// E3 cache helpers by the compiled closure's local (J9 … Z5): shared-frame alias -> view-tabs semantic name.
+const memo = locals => Object.fromEntries(locals.split(' ').map(local => {
+  const [alias, entry] = Object.entries(official.compilerHelpers).find(([, e]) => e.local === local) ?? [];
+  if (!alias) throw Error(`No compiler helper ${local}`);
+  return [local, [`${shared}:${alias}`, `../view-tabs/${shared}`, entry.name]];
+}));
 
 export const filesPins = {
-  // cfac349aa Kt (exported `r`; cd2efac6e imports it as Da): the breadcrumb body. Against 2.37337.1 cd2efac6e dl the
-  // lead span is `shrink-0 ps-0.75 text-muted-as-secondary` (was pl-0.75 text-muted), the sizer lead `ps-0.75`, the
-  // folder segments and separators text-muted-as-secondary, and askIfGone reaches every segment (Jt).
-  // Jt (old ml): a segment's context menu (c0cdf4a08 t, the host's BreadcrumbContextMenu) asks the gone hook
-  // (c856385e2 V) for the segment's absolute path when askIfGone(target) says to, passes its beforeOpen to the menu
-  // and its answer to renderSegmentMenu as `gone`. Yt (old hl), Q (old fl) and qt (old pl) are unchanged.
+  // cd2efac6e Vl (old cfac349aa Kt): the breadcrumb body (memo). The lead span is `shrink-0 ps-0.75
+  // text-muted-as-secondary`, the sizer lead `ps-0.75`, the folder segments and separators text-muted-as-secondary, and
+  // askIfGone reaches every segment (Wl). Wl (old Jt): a segment's context menu (c0cdf4a08 t, the host's
+  // BreadcrumbContextMenu) asks the gone hook (c856385e2 q) for the segment's absolute path when askIfGone(target) says
+  // to, passes its beforeOpen to the menu and its answer to renderSegmentMenu as `gone`. Gl (old Yt), Hl (old Q) and Ul
+  // (old qt) are the same markup; ql / Jl / Y are the small callbacks the compiler hoisted out of Vl / Gl.
   'breadcrumb-view.mjs': {
-    source: view, roots: ['Ht', 'Kt', 'Q', 'qt', 'Jt', 'Yt'], bindings: ['Ht', 'Kt', 'Q', 'qt', 'Jt', 'Yt'],
-    exports: { Kt: 'BreadcrumbBody', qt: 'BreadcrumbFileName', Jt: 'BreadcrumbSegment', Yt: 'BreadcrumbSegmentLabel', Q: 'BreadcrumbSizerText', Ht: 'preventBreadcrumbNativeMenu' },
+    source: viewer, roots: ['zl', 'Vl', 'Hl', 'Ul', 'Wl', 'Gl'], bindings: ['zl', 'Vl', 'Hl', 'Wl', 'Gl', 'Ul', 'ql', 'Jl', 'Y'],
+    exports: { Vl: 'BreadcrumbBody', Ul: 'BreadcrumbFileName', Wl: 'BreadcrumbSegment', Gl: 'BreadcrumbSegmentLabel', Hl: 'BreadcrumbSizerText', zl: 'preventBreadcrumbNativeMenu' },
     imports: {
-      r: react('Ha', 'react/jsx-runtime', 'jsxs'), o: react('Va', 'react/jsx-runtime', 'jsx'), t: react('Ba', 'react/jsx-runtime', 'Fragment'),
-      i: react('Ja', 'react', 'Fragment'), a: react('So', 'react', 'useRef'), s: react('bo', 'react', 'useMemo'), u: react('oo', 'react', 'memo'),
-      d: react('uo', 'react', 'useCallback'), n: react('Co', 'react', 'useState'),
-      ke: ['ce574895a-h0uyeRAC.js:r', './breadcrumb-measure.mjs', 'useBreadcrumbCut'],
-      Oe: ['ce574895a-h0uyeRAC.js:n', './breadcrumb-measure.mjs', 'useHeadCut'],
-      Ae: ['ce574895a-h0uyeRAC.js:t', './breadcrumb-measure.mjs', 'graphemeEnds'],
-      Ee: ['c856385e2-DVsjb2QL.js:vt', '../files-changes/file-gone-check.mjs', 'useFileGone'],
-      De: ['c0cdf4a08-h228IL-P.js:t', '../../source-breadcrumb-adapters.jsx', 'BreadcrumbContextMenu'],
+      a: react('Ha', 'react/jsx-runtime', 'jsx'), c: react('Ua', 'react/jsx-runtime', 'jsxs'), l: react('Va', 'react/jsx-runtime', 'Fragment'),
+      u: react('Ya', 'react', 'Fragment'), i: react('Co', 'react', 'useRef'), v: react('so', 'react', 'memo'), x: react('wo', 'react', 'useState'),
+      ...memo('J0 J1 J2 J3 J4 J5 K0 K1 K2 K3 K4 K5 I1 I2 I4 Z1 Z2 Z5 J9'),
+      Ii: ['ce574895a-sBAnWI9w.js:r', './breadcrumb-measure.mjs', 'useBreadcrumbCut'],
+      Fi: ['ce574895a-sBAnWI9w.js:n', './breadcrumb-measure.mjs', 'useHeadCut'],
+      Li: ['ce574895a-sBAnWI9w.js:t', './breadcrumb-measure.mjs', 'graphemeEnds'],
+      Ti: ['c856385e2-aEyDzrcK.js:bt', '../files-changes/file-gone-check.mjs', 'useFileGone'],
+      Mi: ['c0cdf4a08-C69Ng1c8.js:t', '../../source-breadcrumb-adapters.jsx', 'BreadcrumbContextMenu'],
     },
     provided: {
-      Gt: ['./breadcrumb-paths.mjs', 'breadcrumbSegments'], Vt: ['./breadcrumb-paths.mjs', 'segmentMenuTarget'],
-      Xt: ['./breadcrumb-paths.mjs', 'folderLabel'], Pt: ['../files-changes/breadcrumb-folder.mjs', 'BreadcrumbFolderSegment'],
+      Bl: ['./breadcrumb-paths.mjs', 'breadcrumbSegments'], Rl: ['./breadcrumb-paths.mjs', 'segmentMenuTarget'],
+      Kl: ['./breadcrumb-paths.mjs', 'folderLabel'], kl: ['../files-changes/breadcrumb-folder.mjs', 'BreadcrumbFolderSegment'],
     },
     dependencies: {
-      // c0cdf4a08 _ (exported t): the shared right-click menu; the host's BreadcrumbContextMenu takes the same trigger /
-      // disabled / onOpenChange / beforeOpen / children and opens after a pending check through menu-open-gate.mjs (h).
-      'c0cdf4a08-h228IL-P.js:t': ['beforeOpen:_', 'r=_?.();r?h(e.currentTarget,r,n):n()', 'c===!0&&b!==null&&x(null)'],
+      // c0cdf4a08 g (exported t): the shared right-click menu; the host's BreadcrumbContextMenu takes the same trigger /
+      // disabled / onOpenChange / beforeOpen / children and opens after a pending check through menu-open-gate.mjs. Wl
+      // passes none of 3.6556.2's new nativeMenuWhen / onContextMenu / popupProps.
+      'c0cdf4a08-C69Ng1c8.js:t': ['beforeOpen:g', 'r=g?.();r?m(e.currentTarget,r,n):n()', 'l===!0&&y!==null&&b(null)'],
     },
     features: {
-      Ht: ['e.currentTarget.contains(e.target) && e.preventDefault();'],
-      Kt: ['askIfGone: m,', 'className: "shrink-0 ps-0.75 text-muted-as-secondary",', 'o(Q, { text: g, className: "ps-0.75" })',
-        'className: "shrink-0 text-muted-as-secondary",', 'onContextMenu: p && Ht,', '"data-file-breadcrumb": !0,'],
-      Q: ['className: `shrink-0 before:content-[attr(data-text)] ${t}`,'],
-      qt: ['return t.length < 20 ? 0 : t.at(-13);'],
-      Jt: ['h = m && u?.(m) ? m.absPath : void 0,', '{ gone: g, beforeOpen: _ } = Ee(h, h);', 'beforeOpen: _,', 'children: m ? l?.({ ...m, gone: g }) : null,'],
-      Yt: ['return s === null || e.listsDir === void 0', 'o(Pt, {', 'dirLabel: Xt(e.listsDir),'],
+      zl: ['e.currentTarget.contains(e.target) && e.preventDefault();'],
+      Vl: ['askIfGone:', 'className: "shrink-0 ps-0.75 text-muted-as-secondary",', 'className: "ps-0.75"',
+        'className: "shrink-0 text-muted-as-secondary",', '"data-file-breadcrumb": !0,', '"[data-breadcrumb-segment]"'],
+      Hl: ['shrink-0 before:content-[attr(data-text)] '],
+      Ul: ['e.length < 20 ? 0 : e.at(-13)', '"absolute inset-0 truncate text-start select-none"'],
+      Wl: ['askIfGone:', 'beforeOpen:', 'gone:', 'renderMenu:'],
+      Gl: ['.listsDir === void 0', 'dirLabel:'],
     },
     uses: {},
   },
-  // cd2efac6e Yl (old gd): the FileBreadcrumb shell (Copy path button or segment div, byline), now passing askIfGone to
-  // Kt. Its Tooltip / TooltipProvider are the host's SourceTooltip / SourceTooltipGroup (the Files pane's tooltip), as
-  // in the 2.37337.1 emit; useIntl is the local catalog.
+  // cd2efac6e Wf (old Yl): the FileBreadcrumb shell (Copy path button or segment div, byline), passing askIfGone to Vl.
+  // 3.6556.2 adds toolbarStart / omitPath / slotted and drops the Copy path tooltip's trigger inside a CDS Toolbar
+  // (`[data-cds="Toolbar"], [role="toolbar"]`). Its Tooltip / TooltipProvider are the host's SourceTooltip /
+  // SourceTooltipGroup (the Files pane's tooltip), as in the 2.42304.0 emit; useIntl is the local catalog.
   'breadcrumb-file.mjs': {
-    source: viewer, roots: ['Yl'], bindings: ['Yl'], exports: { Yl: 'FileBreadcrumb' },
+    source: viewer, roots: ['Wf'], bindings: ['Wf'], exports: { Wf: 'FileBreadcrumb' },
     imports: {
-      r: react('Ha', 'react/jsx-runtime', 'jsxs'), c: react('Va', 'react/jsx-runtime', 'jsx'), t: react('Ba', 'react/jsx-runtime', 'Fragment'),
-      n: react('Co', 'react', 'useState'), y: react('uo', 'react', 'useCallback'),
-      Da: [`${view}:r`, './breadcrumb-view.mjs', 'BreadcrumbBody'],
-      z: ['c0fbbe82d-BOWKSems.js:I', './path-tooltip.mjs', 'pathTooltipOptions'],
-      pi: ['c0fbbe82d-BOWKSems.js:L', './path-tooltip.mjs', 'pathTooltipContent'],
-      I: ['shared-frame-BfjMqbuN.js:vl', '../files-changes/event-element.mjs', 'elementTarget'],
-      Ut: ['vendor-intl-Db7hDWRO.js:p', '../../source-code-start-adapters.jsx', 'useStartIntl'],
-      it: ['shared-frame-BfjMqbuN.js:Oc', '../../source-tooltip.jsx', 'SourceTooltip'],
-      ut: ['shared-frame-BfjMqbuN.js:kc', '../../source-tooltip.jsx', 'SourceTooltipGroup'],
+      a: react('Ha', 'react/jsx-runtime', 'jsx'), c: react('Ua', 'react/jsx-runtime', 'jsxs'), l: react('Va', 'react/jsx-runtime', 'Fragment'),
+      x: react('wo', 'react', 'useState'),
+      ...memo('J0 J2 J3 J5 K0 K2 K3 K5 J9'),
+      $a: ['cc5c56f5c-BoRtnbt1.js:t', './path-tooltip.mjs', 'pathTooltipOptions'],
+      Qa: ['cc5c56f5c-BoRtnbt1.js:n', './path-tooltip.mjs', 'pathTooltipContent'],
+      O: [`${shared}:Iu`, '../files-changes/event-element.mjs', 'elementTarget'],
+      jt: [`${official.vendorIntl}:p`, '../../source-code-start-adapters.jsx', 'useStartIntl'],
+      j: [`${shared}:Kl`, '../../source-tooltip.jsx', 'SourceTooltip'],
+      oe: [`${shared}:ql`, '../../source-tooltip.jsx', 'SourceTooltipGroup'],
     },
-    provided: {},
+    provided: { Vl: ['./breadcrumb-view.mjs', 'BreadcrumbBody'] },
     dependencies: {
-      'vendor-intl-Db7hDWRO.js:p': ['function q(){let e=o(K);return Mt(e),e}'],
-      'shared-frame-BfjMqbuN.js:Oc': ['openOnHandedBackFocus:y=!1', '"data-cds":"Tooltip"'],
-      'shared-frame-BfjMqbuN.js:kc': ['closeDelay:t=200', '.Provider'],
+      [`${official.vendorIntl}:p`]: ['function q(){let e=a(K);return Mt(e),e}'],
+      [`${shared}:Kl`]: ['openOnHandedBackFocus:S', 'closeOnClick:y'],
+      [`${shared}:ql`]: ['closeDelay:n', 'n===void 0?200:n', '.Provider'],
     },
     features: {
-      Yl: ['askIfGone: p,', 'renderSegmentMenu: f,', '{ defaultMessage: "Copy path {path}", id: "qf/DkufjnS" },', 'c(ut, { children: te })',
-        '"text-body font-normal font-control text-secondary flex min-w-0 -mx-0.75"', 'e.currentTarget.contains(I(e.target)) && (l ? l() : S(!0));'],
+      Wf: ['askIfGone:', 'renderSegmentMenu:', 'defaultMessage: "Copy path {path}"', 'id: "qf/DkufjnS"',
+        '"text-body font-normal font-control text-secondary flex min-w-0 -mx-0.75"', '\'[data-cds="Toolbar"], [role="toolbar"]\''],
     },
-    // cd2efac6e's file view passes askIfGone (Tp: a local session's file, or a folder inside the session root).
-    uses: { '': ['askIfGone: Tp,', '(e) => ua && yp && (!e.isDirectory || Ns(e.absPath, xp)),'] },
+    // cd2efac6e's file view passes askIfGone (a local session's file, or a folder inside the session root).
+    uses: { '': ['askIfGone: w_,'] },
   },
 };
 
@@ -146,7 +157,7 @@ async function checkGenerated(label, from, file, local, name) {
   const manifest = await json(path.join(dir, 'manifest.json'));
   const entry = manifest.modules.find(m => m.target === target);
   const holds = files ? entry?.source === file && entry.exports?.[local] === name
-    : entry?.referenceVersion === '2.42304.0' && path.basename(entry.source) === file && entry.bindings.includes(local);
+    : entry?.referenceVersion === official.referenceVersion && path.basename(entry.source) === file && entry.bindings.includes(local);
   if (!holds) throw Error(`${label}: ${from} is not ${file}'s ${local} (${JSON.stringify(entry && { source: entry.source, bindings: entry.bindings, exports: entry.exports })})`);
   if ((await generatedExports(path.join(dir, target))).get(local) !== name) throw Error(`${label}: ${from} does not export ${local} as ${name}`);
 }
@@ -212,6 +223,11 @@ export async function pinFilesHelper(target, directory, run = true) {
       const { local: member, text: declared } = rawDeclaration(dep, alias);
       if (!member || !new RegExp(`^${member.replace(/\$/g, '\\$')}=[\\w$]+\\.${name}$`).test(declared ?? ''))
         throw Error(`${label}: ${via} (${member}) is not ${from} ${name}: ${declared}`);
+    } else if (from.startsWith('../view-tabs/')) {
+      // R3/R6: a view-tabs public name (same chunk, same export alias) of the 3.6556.2 graph.
+      const entry = (await viewTabsManifestFor(official.referenceVersion)).publicNames?.[name];
+      if (from !== `../view-tabs/${file}` || entry?.file !== file || entry.export !== alias)
+        throw Error(`${label}: ${via} is not view-tabs ${name} (${JSON.stringify(entry)})`);
     } else if (from.startsWith('./') || from.startsWith('../files-changes/')) {
       const original = dep.exported.get(alias);
       if (!original) throw Error(`${label}: ${file} no longer exports ${alias}`);

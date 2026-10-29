@@ -1,7 +1,7 @@
 // R4g-sidebar SB2 (research-ext/X7-partial-gaps.md X7-03; research/sidebar-sections.md WI-6): the Code sidebar's
-// sections and folder buckets reorder by drag with the original 2.42304.0 pieces -- shared-19 S$ / b$ around them,
-// the lazily loaded c1afd40ea ProjectReorderBindings over the c09f6b4e5 dnd-kit copy, shared-19 x$ / f$ on each
-// section -- and a drop commits through the sidebar's existing persistence paths (the store's moveSection, bridged to
+// sections and folder buckets reorder by drag with the original 3.6556.2 pieces (w4-sidebar-reorder) -- shared-46
+// _M / mM around them (2.42304.0 shared-19 S$ / b$; the test titles keep those names), the lazily loaded c1afd40ea
+// ProjectReorderBindings over the c09f6b4e5 dnd-kit copy, the sidebar-sections section sortable on each section -- and a drop commits through the sidebar's existing persistence paths (the store's moveSection, bridged to
 // main's sidebar-state `section-move`; a folder bucket's order move, saved as projectOrder through "project-order").
 // Nothing opens a window: generator checks, SSR, and a real react-dom render into a small fake DOM driven by
 // controlled pointer / keyboard events (the gesture's pointerdown through the React handler x$ / f$ give the heading,
@@ -218,13 +218,14 @@ function listProps(config, { saved, single = false } = {}) {
 }
 
 // ---------------------------------------------------------------- generator
-test('generator: the check passes; the dnd chunks are byte copies, the slices original 2.42304.0 bindings', async () => {
+test('generator: the check passes; the dnd chunks are byte copies, the slices original 3.6556.2 bindings', async () => {
   await extractSidebarReorder({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.deepEqual(manifest.modules.map((m) => [m.target, m.source, m.kind]), [
-    ['dnd-kit.mjs', 'c09f6b4e5-DErbwtLQ.js', 'copy'], ['layer-base.mjs', 'shared-frame-BfjMqbuN.js', 'slice'],
-    ['reorder-support.mjs', 'shared-19-CkPOiIKm.js', 'slice'], ['drag-gesture.mjs', 'shared-11-BuQ3CK5I.js', 'slice'],
-    ['project-reorder-bindings.mjs', 'c1afd40ea-iYz9kai5.js', 'copy'], ['section-reorder.mjs', 'shared-19-CkPOiIKm.js', 'slice']]);
+    ['dnd-kit.mjs', 'c09f6b4e5-CLm8I7_i.js', 'copy'], ['layer-base.mjs', 'shared-frame-6jtSkIit.js', 'slice'],
+    ['reorder-support.mjs', 'shared-46-BIbZBGFq.js', 'slice'], ['drag-gesture.mjs', 'shared-11-_AVGLHEz.js', 'slice'],
+    ['project-reorder-bindings.mjs', 'c1afd40ea-D9tUr40x.js', 'copy'], ['section-reorder.mjs', 'shared-46-BIbZBGFq.js', 'slice']]);
   for (const entry of manifest.modules) assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, entry.source))), entry.source);
   // Copies: everything after the chunk's leading import statements is the generated module's body, byte for byte.
   for (const entry of manifest.modules.filter((m) => m.kind === 'copy')) {
@@ -233,42 +234,62 @@ test('generator: the check passes; the dnd chunks are byte copies, the slices or
     const generated = fs.readFileSync(path.join(directory, entry.target), 'utf8');
     assert.ok(generated.endsWith(`\n${body}\n`), `${entry.target} keeps ${entry.source}'s bytes`);
     assert.equal(sha(Buffer.from(body)), entry.bodySha256);
-    assert.ok(entry.imports.every((i) => ['react', 'react-dom', 'react/jsx-runtime'].includes(i.from) || i.kind === 'generated'), `${entry.target} imports React or generated modules only`);
+    // React, generated siblings, or (E3/R3) the view-tabs React Compiler helpers by their semantic names.
+    assert.ok(entry.imports.every((i) => ['react', 'react-dom', 'react/jsx-runtime'].includes(i.from) || i.kind === 'generated'
+      || (i.kind === 'external' && i.from === '../view-tabs/shared-frame-6jtSkIit.js' && /^(reactMemoCache|memo[A-Z]\w*\d?)$/.test(i.name))), `${entry.target} imports React, generated modules or compiler helpers only`);
   }
-  assert.equal(raw('c09f6b4e5-DErbwtLQ.js').length, 47657);
-  // dnd-kit's own React imports: vendor-frame aliases checked against `local=<ns>.<member>`.
+  assert.equal(raw('c09f6b4e5-CLm8I7_i.js').length, 47657);
+  // dnd-kit's own React imports: vendor-frame aliases checked against `local=<ns>.<member>` (official-3.6556.2.mjs).
   assert.deepEqual(manifest.modules[0].imports.map((i) => `${i.via}=${i.from}:${i.name}`).sort(), [
-    '$a=react:cloneElement', 'Co=react:useState', 'Sa=react-dom:createPortal', 'So=react:useRef', 'Ta=react-dom:unstable_batchedUpdates', 'bo=react:useMemo',
-    'do=react:useContext', 'eo=react:createContext', 'mo=react:useEffect', 'oo=react:memo', 'ro=react:forwardRef', 'so=react:default', 'uo=react:useCallback',
-    'xo=react:useReducer', 'yo=react:useLayoutEffect'].map((s) => `vendor-frame-DfPJ1QmD.js:${s}`).sort());
-  // c1afd40ea: shared-19 Gi / Ki and shared-11 Xa resolve to the slices, c09f6b4e5 to the copy.
+    'Co=react:useRef', 'So=react:useReducer', 'bo=react:useLayoutEffect', 'co=react:default', 'do=react:useCallback', 'eo=react:cloneElement',
+    'fo=react:useContext', 'ho=react:useEffect', 'io=react:forwardRef', 'so=react:memo', 'to=react:createContext', 'wa=react-dom:unstable_batchedUpdates',
+    'wo=react:useState', 'xa=react-dom:createPortal', 'xo=react:useMemo'].map((s) => `vendor-frame-CnSY1sxv.js:${s}`).sort());
+  // c1afd40ea: shared-46 _r / yr and shared-11 Yo resolve to the slices, c09f6b4e5 to the copy, J9/J8/J0…K5 to view-tabs.
   const bindings = manifest.modules.find((m) => m.target === 'project-reorder-bindings.mjs');
   assert.deepEqual(bindings.imports.filter((i) => i.kind === 'generated' && i.from !== './dnd-kit.mjs').map((i) => [i.via, i.from, i.name, i.original]), [
-    ['shared-19-CkPOiIKm.js:Gi', './reorder-support.mjs', 'suppressClickAfterDrag', 'shared-19-CkPOiIKm.js:u$'],
-    ['shared-19-CkPOiIKm.js:Ki', './reorder-support.mjs', 'dragOverlayZIndex', 'shared-19-CkPOiIKm.js:JQ'],
-    ['shared-11-BuQ3CK5I.js:Xa', './drag-gesture.mjs', 'beginDragGesture', 'shared-11-BuQ3CK5I.js:qs']]);
+    ['shared-46-BIbZBGFq.js:_r', './reorder-support.mjs', 'suppressClickAfterDrag', 'shared-46-BIbZBGFq.js:tM'],
+    ['shared-46-BIbZBGFq.js:yr', './reorder-support.mjs', 'dragOverlayZIndex', 'shared-46-BIbZBGFq.js:kj'],
+    ['shared-11-_AVGLHEz.js:Yo', './drag-gesture.mjs', 'beginDragGesture', 'shared-11-_AVGLHEz.js:pl']]);
   assert.equal(bindings.imports.filter((i) => i.from === './dnd-kit.mjs').length, 11);
-  // S$ / b$: the drag bridge is x$'s own (sidebar-sections section-sortable.mjs), the lazy loader a host adapter.
+  assert.deepEqual(bindings.imports.filter((i) => i.kind === 'external').map((i) => `${i.local}=${i.name}`).sort(),
+    ['J0=memoIsEmpty', 'J1=memoChanged1', 'J2=memoChanged2', 'J5=memoChanged5', 'J8=memoSentinel', 'J9=reactMemoCache',
+      'K0=memoStore0', 'K1=memoStore1', 'K2=memoStore2', 'K3=memoStore3', 'K5=memoStore5']);
+  // _M / mM: the drag bridge is gM's own (sidebar-sections section-sortable.mjs), the lazy loader a host adapter.
   const reorder = manifest.modules.find((m) => m.target === 'section-reorder.mjs');
-  assert.deepEqual(reorder.bindings.map((b) => b.name), ['b$', 'S$']);
-  assert.deepEqual(reorder.imports.filter((i) => i.kind === 'external').map((i) => [i.local, i.from, i.name]), [
-    ['_$', '../sidebar-sections/section-sortable.mjs', 'SectionDragBridge'], ['v$', '../sidebar-sections/section-sortable.mjs', 'SectionDragBridgeContext']]);
+  assert.deepEqual(reorder.bindings.map((b) => b.name), ['mM', '_M', 'vM']);
+  assert.deepEqual(reorder.imports.filter((i) => i.kind === 'external' && !i.from.startsWith('../view-tabs/')).map((i) => [i.local, i.from, i.name]), [
+    ['uM', '../sidebar-sections/section-sortable.mjs', 'SectionDragBridgeContext'], ['lM', '../sidebar-sections/section-sortable.mjs', 'SectionDragBridge']]);
   assert.deepEqual(reorder.imports.filter((i) => i.kind === 'adapter').map((i) => [i.local, i.name, i.original]).sort(), [
-    ['K', 'defineLazyChunk', 'shared-104-Cqo2-vQh.js:Fo'], ['Ti', 'useLazyChunkStatus', 'shared-156-Bikz018e.js:dB'],
-    ['Uu', 'noFallback', 'shared-104-Cqo2-vQh.js:ko'], ['f', 'preloadChunk', 'preload-helper-D0dM6GpB.js:s']]);
-  // b$'s only rewrite: its load imports the generated copy and drops vite's asset map.
-  assert.deepEqual(reorder.rewrites, [{ binding: 'b$', original: 'f(() => import("./c1afd40ea-iYz9kai5.js"), __vite__mapDeps([0, 1]))', replacement: 'f(() => import("./project-reorder-bindings.mjs"))' }]);
+    ['ma', 'defineLazyChunk', 'shared-104-CTONUSaz.js:ss'], ['n', 'preloadChunk', 'preload-helper-D0dM6GpB.js:s'],
+    ['ua', 'noFallback', 'shared-104-CTONUSaz.js:ts'], ['wc', 'useLazyChunkStatus', 'shared-156-BLTosN8U.js:SK']]);
+  // pl: the window lookup is code-current's (3.6556.2 shared-25 mf, owner-window.mjs), telemetry a host adapter.
+  const gesture = manifest.modules.find((m) => m.target === 'drag-gesture.mjs');
+  assert.deepEqual(gesture.imports.map((i) => [i.local, i.name, i.kind, i.original]), [
+    ['se', 'dragTelemetry', 'adapter', 'shared-25-DOWZRSlq.js:w_'], ['ge', 'ownerWindowOrGlobal', 'external', 'shared-25-DOWZRSlq.js:mf']]);
+  // mM's only rewrite: its load imports the generated copy and drops vite's asset map.
+  assert.deepEqual(reorder.rewrites, [{ binding: 'mM', original: 'n(() => import("./c1afd40ea-D9tUr40x.js"), __vite__mapDeps([0, 1]))', replacement: 'n(() => import("./project-reorder-bindings.mjs"))' }]);
   const text = fs.readFileSync(path.join(directory, 'section-reorder.mjs'), 'utf8');
   assert.equal(occurrences(text, 'import("./project-reorder-bindings.mjs")'), 1);
   assert.equal(occurrences(text, '__vite__'), 0);
-  // The installed chunks still say what the generated modules rely on (each exactly once).
-  const s19 = raw('shared-19-CkPOiIKm.js'), s22 = raw('shared-22-HztmyUTM.js'), dnd = raw('c1afd40ea-iYz9kai5.js');
-  for (const [chunk, needle] of [[s19, 'id:"sidebar_project_reorder_dnd"'], [s19, 'pick:e=>e.ProjectReorderBindings'], [s19, 'S$ as Fi'], [s19, 'x$ as Li'],
-    [s19, 'u$ as Gi'], [s19, 'JQ as Ki'], [s19, ',JQ=Mf+1;'], [s22, 'Fi as Qt'], [s22, 'Li as pn'],
-    [s22, 'c(Qt,{sortableBucketKeys:v,labelByBucketKey:y,onCommitDrag:b,children:['],
-    [s22, 'c(Qt,{sortableBucketKeys:X.bucketKeys,labelByBucketKey:X.labelByBucketKey,positionByBucketKey:X.orderKeyByBucketKey,onCommitDrag:de,children:['],
-    [s22, 'b=C((e,t)=>{let n=_.find(t=>rO(t.id)===e),r=_.find(e=>rO(e.id)===t);n&&r&&n!==r&&(d(n.id,r.order),Id({action:"reorder",section_kind:n.kind,source:"drag"}))},[_,d])'],
-    [s22, 'de=C((e,t)=>{let n=X.orderKeyByBucketKey.get(e),r=X.orderKeyByBucketKey.get(t),i=n===void 0||r===void 0?null:En(X.orderKeys,n,r);i!==null&&le(i,"drag")},[X,le])'],
+  // E34 is over (w10-cleanup-sidebar-legacy): session-rail, the only consumer, is 3.6556.2, so the manifest carries no
+  // legacy['2.42304.0'] view, the frozen JSON is gone and the compat helper serves 3.6556.2 only.
+  assert.equal(Object.hasOwn(manifest, 'legacy'), false);
+  assert.equal(fs.existsSync(path.join(app, 'scripts/sidebar-reorder-legacy-2.42304.0.json')), false);
+  const { sidebarReorderManifestFor, sidebarReorderExportsFor } = await import('../scripts/sidebar-reorder-compat.mjs');
+  assert.deepEqual(await sidebarReorderManifestFor('3.6556.2'), manifest);
+  await assert.rejects(sidebarReorderManifestFor('2.42304.0'), /sidebar-reorder is 3\.6556\.2, expected 2\.42304\.0/);
+  await assert.rejects(sidebarReorderManifestFor('1.0.0'), /sidebar-reorder is 3\.6556\.2, expected 1\.0\.0/);
+  await assert.rejects(sidebarReorderExportsFor('2.42304.0', 'reorder-support.mjs'), /sidebar-reorder is 3\.6556\.2, expected 2\.42304\.0/);
+  // session-rail areaExports by the 3.6556.2 locals.
+  assert.deepEqual((await sidebarReorderExportsFor('3.6556.2', 'reorder-support.mjs')).get('tM'), ['suppressClickAfterDrag']);
+  assert.deepEqual((await sidebarReorderExportsFor('3.6556.2', 'dnd-kit.mjs')).get('de'), ['_']);
+  // The official chunks still say what the generated modules rely on (each exactly once).
+  const s46 = raw('shared-46-BIbZBGFq.js'), s22 = raw('shared-22-Bwn3sJTG.js'), dnd = raw('c1afd40ea-D9tUr40x.js');
+  for (const [chunk, needle] of [[s46, 'id:"sidebar_project_reorder_dnd"'], [s46, 'pick:e=>e.ProjectReorderBindings'], [s46, '_M as sr'], [s46, 'gM as lr'],
+    [s46, 'tM as _r'], [s46, 'kj as yr'], [s46, 'kj=U+1'], [s22, 'sr as Oi'], [s22, 'lr as gi'],
+    [s22, 'f(Oi,{sortableBucketKeys:te,labelByBucketKey:B,onCommitDrag:R,children:[ne,w]})'],
+    [s22, 'f(Oi,{sortableBucketKeys:Ae,labelByBucketKey:je,positionByBucketKey:Me,onCommitDrag:be,children:[Ne,Pe]})'],
+    [s22, 'f(Oi,{sortableBucketKeys:b,labelByBucketKey:x,onCommitDrag:S,children:[k,u]})'],
     [dnd, 'w={activationConstraint:{distance:8}}'], [dnd, 'export{E as ProjectReorderBindings}']])
     assert.equal(occurrences(chunk, needle), 1, needle);
 });
@@ -387,7 +408,9 @@ test('controlled pointer drag: a folder bucket dropped on another saves the move
   const saved = [];
   const { model, host, folders } = listProps(config, { saved });
   const buckets = model.layout.at(-1).buckets.map((bucket) => bucket.key);
-  assert.deepEqual(buckets, ['project:/w/beta', 'project:/w/alpha', `project:${OTHER_PROJECT_KEY}`], 'the stored order ranks beta first');
+  // 3.6556.2 shared-22 bE: a row without a project key goes to the {unsaved:{kind:"local"}} place bucket (This computer),
+  // after every folder bucket; there is no Other bucket any more (w10-shell-sidebar-folder).
+  assert.deepEqual(buckets, ['project:/w/beta', 'project:/w/alpha', 'project:kind::local'], 'the stored order ranks beta first');
   assert.deepEqual(folders, ['/w/beta', '/w/alpha']);
   await M.reorder.projectReorderChunk.handle.load();
   await withDom(async ({ dom, root }) => {
@@ -395,7 +418,7 @@ test('controlled pointer drag: a folder bucket dropped on another saves the move
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
     const [beta, alpha, other] = buckets.map((key) => sectionEl(dom, key));
     assert.ok(gateOf(beta) && gateOf(alpha), 'folder buckets with an order slot are draggable');
-    // Other has no order slot: no x$, so f$ gives its heading no drag listeners.
+    // The place bucket has no order slot: no x$, so f$ gives its heading no drag listeners.
     assert.equal(gateOf(other), null);
     await drag(dom, alpha, beta);
     const expected = withSectionOrder(config.projectOrder, ['/w/alpha', '/w/beta']);

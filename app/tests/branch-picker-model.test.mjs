@@ -81,8 +81,8 @@ test('B34 RJ otherSessionCount / ETzdRE7DsE: unarchived sessions in the folder, 
   assert.equal(otherSessionsNote(3), '3 other sessions are using this folder. Switching branches will affect them too.');
 });
 
-// R4e-envbranch home-15: Te (2.42304.0 cc43287c9 JZ) over the original qZ (generated/r4e-envbranch). The desktop bridge
-// is a stub; no git runs. `bridge(answer)` installs window.desktop.call answering branch-on-origin.
+// R4e-envbranch home-15: Te (2.42304.0 cc43287c9 JZ; 3.6556.2 R0 De) over the original qZ (3.6556.2 L0, the same text;
+// generated/r4e-envbranch). The desktop bridge is a stub; no git runs. `bridge(answer)` installs window.desktop.call answering branch-on-origin.
 function bridge(answer, calls = []) {
   const previous = globalThis.window;
   globalThis.window = { desktop: { call: async (action, params) => { calls.push([action, params]); if (action !== 'branch-on-origin') throw new Error(`unexpected ${action}`); return typeof answer === 'function' ? answer(params) : answer; } } };

@@ -1,6 +1,8 @@
-// Original native reopen/select/cycle key matchers and closed-tab history bounds.
-const E5r = 35e3;
-function A7r(e, t, n) {
+// Original 3.6556.2 native reopen/select/cycle key matchers and closed-tab history bounds (index.chunk-jPKPzV-P).
+const qst = 25;
+const Dun = 50;
+const mci = 35e3;
+function fli(e, t, n) {
   return e.type !== "keyDown" ||
     !t.cmdPressed ||
     t.otherModifierPressed ||
@@ -12,10 +14,10 @@ function A7r(e, t, n) {
       ? "claim"
       : "forward";
 }
-function M7r(e, t) {
-  return t.enabled ? A7r(e, t, !0) : "pass";
+function pli(e, t) {
+  return t.enabled ? fli(e, t, !0) : "pass";
 }
-function z7r(e, t, n) {
+function Sli(e, t, n) {
   return e.type !== "keyDown" ||
     !t.cmdPressed ||
     t.otherModifierPressed ||
@@ -27,12 +29,12 @@ function z7r(e, t, n) {
       ? "claim"
       : "forward";
 }
-function G7r(e, t) {
+function Dli(e, t) {
   if (e.type !== "keyDown" || !e.control || e.meta || e.alt) return "pass";
-  let n = K7r(e, t.pageKeys ?? !1);
+  let n = Oli(e, t.pageKeys ?? !1);
   return n === null ? "pass" : t.syntheticSuppressed ? "claim" : n;
 }
-function K7r(e, t) {
+function Oli(e, t) {
   return e.key.toLowerCase() === "tab"
     ? e.shift
       ? "previous"
@@ -45,32 +47,30 @@ function K7r(e, t) {
           ? "previous"
           : null;
 }
-const q7r = /^Digit[1-9]$/;
-function J7r(e, t) {
-  let n = z7r(e, t, (e) => q7r.test(e.code));
+const kli = /^Digit[1-9]$/;
+function Ali(e, t) {
+  let n = Sli(e, t, (e) => kli.test(e.code));
   if (n !== "forward") return n;
   let r = Number(e.code.slice(5));
   return r === 9 ? -1 : r - 1;
 }
-const Fti = 25;
-const Iti = 50;
-function uoi(e, t) {
+function Lgi(e, t) {
   let n = Date.now();
-  return (e.set(t, n), n + E5r);
+  return (e.set(t, n), n + mci);
 }
-function doi(e, t, n, r = !0) {
+function Rgi(e, t, n, r = !0) {
   e.delete(t);
   let i = Date.now(),
     a = 0;
   for (let [t, n] of e) r && i - n >= 35e3 ? e.delete(t) : n > a && (a = n);
-  return e.size === 0 ? i + 200 : Math.min(n, a + E5r);
+  return e.size === 0 ? i + 200 : Math.min(n, a + mci);
 }
 export {
-  M7r as reopenTabKey,
-  J7r as selectTabKey,
-  G7r as cycleTabKey,
-  Fti as closedTabsPerSession,
-  Iti as closedTabSessions,
-  uoi as beginSyntheticInput,
-  doi as endSyntheticInput,
+  pli as reopenTabKey,
+  Ali as selectTabKey,
+  Dli as cycleTabKey,
+  qst as closedTabsPerSession,
+  Dun as closedTabSessions,
+  Lgi as beginSyntheticInput,
+  Rgi as endSyntheticInput,
 };

@@ -1,4 +1,4 @@
-// R4g-mcp MA-2: agent-tools/visualize.mjs serves the official 2.42304.0 visualize tools (show_widget, read_me) through
+// R4g-mcp MA-2: agent-tools/visualize.mjs serves the official 3.6556.2 visualize tools (show_widget, read_me) through
 // the agent-tools host, in the "visualize" group (main.cjs agentToolGroupEnabled, on by D35). In-process only: the host
 // is never started (no socket, no child process); tools/list and tools/call go through host.listTools() / host.call().
 import test from 'node:test';

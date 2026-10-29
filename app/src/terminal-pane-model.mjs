@@ -1,11 +1,10 @@
-// Terminal pane: pure renderer helpers (labels, the xterm theme from the code theme, links in terminal output, keys,
-// auto-close). Independent implementation of the behavior traced from the 2.2553.1 terminal pane (c6bf19e8f ShellTerminal,
-// cccc2cf0a pane + tab strip, cf718f694 code theme → xterm theme, c5d464fa3 palettes, shared-21 aR toggleTerminal).
+// Terminal pane: pure renderer helpers (labels and ViewTabBar tabs, close confirmations, the xterm theme from the code
+// theme, links in terminal output, keys, drops, errors, auto-close). Restates the behavior of the 3.6556.2 terminal pane
+// (c6bf19e8f ShellTerminal, cccc2cf0a Zx strip + iS body, cf718f694 code theme → xterm theme, c5d464fa3 palettes) where
+// it runs inside official component bodies; each helper names the lines it follows.
 import { t } from "../electron/i18n/index.mjs";
 import { selectionBlocksTerminalLink } from "./generated/code-current/terminal-link-selection.mjs";
-import { terminalErrorMessages, terminalStartError, loadFailedError } from "./generated/code-current/terminal-errors.mjs";
-import { ownerWindow } from "./generated/code-current/owner-window.mjs";
-import { suppressKeyRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
+import { terminalErrorMessages, terminalStartError, loadFailedError, TerminalLoadFailed, terminalErrorText } from "./generated/code-current/terminal-errors.mjs";
 
 export const TERMINAL_PANE = "terminal";
 export const FOLDER_GONE = "The session folder no longer exists.";
@@ -37,54 +36,25 @@ export function shouldAutoClose(info, lastEnterAt = 0, now = Date.now()) {
 export function renameDraft(info) {
   return typeof info?.title === "string" ? info.title : "";
 }
-/** "More terminals" (cfe7c4b3b ot): the tabs scrolled out of the strip, never the selected one. entries: [{id,start,end}]. */
-export function hiddenTerminalTabs(entries, { scrollLeft = 0, clientWidth = 0, activeId = null } = {}) {
-  const right = scrollLeft + clientWidth;
-  return (Array.isArray(entries) ? entries : [])
-    .filter((tab) => tab.id !== activeId && (tab.end <= scrollLeft + 1 || tab.end > right + 1))
-    .map((tab) => tab.id);
+/**
+ * cccc2cf0a Zx I (w10-ccres-e31-terminal): the ViewTabBar tabs, `{ id: e.id, label: Wm(r, A(e), i), description: n &&
+ * md(n), detail: n, editValue: e.name ?? "" }`. n is the running command or title of a tab without its own name
+ * (terminal-titles, cd); i (the shell's program) appears only when the main process lists more than one shell, which
+ * the host does not. No `closable`, so ViewTabBar's own rule applies (3.6556.2 cfe7c4b3b `W=o.closable??!T`: a lone tab
+ * cannot close); no status or busy mark: Zx shows neither in the strip.
+ */
+export function terminalStripTabs(tabs, titleOf, describe) {
+  const list = Array.isArray(tabs) ? tabs : [];
+  return list.map((tab) => {
+    const detail = titleOf?.(tab) || undefined;
+    return { id: tab.id, label: tabLabel(tab, list.length), description: detail && describe?.(detail), detail, editValue: renameDraft(tab) };
+  });
 }
 
 // ---------------------------------------------------------------------------
-// Tab strip keys and confirmations (2.42304.0 cfe7c4b3b ge/Y, cccc2cf0a Vy). These run inside the official components'
-// bodies, so they are restated here for the local strip; each names the source lines it follows.
+// Close confirmations (cccc2cf0a Zx q/ie/ae). The keys, hints, overflow and move rules of the strip are ViewTabBar's own
+// (cfe7c4b3b t), no longer restated here.
 
-/**
- * cfe7c4b3b ge Le (terminal-11): `!U || (t.key !== "Delete" && t.key !== "Backspace") || t.ctrlKey || t.metaKey ||
- * t.altKey || (t.preventDefault(), t.repeat)` returns early, else the tab closes. "close": prevent and close; "repeat":
- * a held key, prevent only; null: not a close key (any Control/Meta/Alt chord is left alone, unprevented).
- */
-/**
- * cfe7c4b3b ge `U = e.closable ?? !w` (terminal-11/12): `w` is `solo` (`tabs.length === 1`). A lone terminal tab has
- * no `closable` property (cccc2cf0a Vy `M`), so `U` is false when only one tab is open unless `closable: true` is set.
- */
-export function isTerminalTabClosable(tab, solo = false) {
-  return tab?.closable ?? !solo;
-}
-/**
- * cfe7c4b3b Y `nt = tt === 1, ot = s.some(e => e.closable ?? !nt)` (terminal-12): whether the strip renders the
- * screen-reader close hint (`closeTabDeleteHint`).
- */
-export function anyTerminalTabClosable(tabs) {
-  const list = Array.isArray(tabs) ? tabs : [];
-  const solo = list.length === 1;
-  return list.some((tab) => isTerminalTabClosable(tab, solo));
-}
-export function terminalTabDeleteKey(event, closable = true) {
-  if (!closable || !event || (event.key !== "Delete" && event.key !== "Backspace")) return null;
-  if (event.ctrlKey || event.metaKey || event.altKey) return null;
-  return event.repeat ? "repeat" : "close";
-}
-/**
- * cfe7c4b3b Y gt (terminal-12): the tabs the move hint describes, those shown in the strip with a shown neighbour.
- * `hiddenIds` are the tabs the official strip moves to its overflow menu; the local strip scrolls instead and keeps
- * every tab in it (Control+Shift+←/→ moves a scrolled-out tab too), so the pane passes none.
- */
-export function movableTerminalTabs(tabs, hiddenIds = []) {
-  const list = Array.isArray(tabs) ? tabs : [];
-  const shown = (tab) => tab !== undefined && !hiddenIds.includes(tab.id);
-  return new Set(list.filter((tab, index) => shown(tab) && (shown(list[index - 1]) || shown(list[index + 1]))).map((tab) => tab.id));
-}
 const commandRunning = (tab) => tab?.busy === true && tab.status === "running";
 /**
  * cccc2cf0a Vy W/ne (terminal-13): a close confirmation reads its tab from the live list (`M.find(e => e.id === By(W))`,
@@ -101,13 +71,13 @@ export function liveTerminalConfirm(confirm, tabs) {
   return list.some((value) => value.id !== confirm.id && commandRunning(value)) ? { ...confirm, name: tabLabel(tab, list.length) } : null;
 }
 /**
- * Close a tab in the strip: ignored when the tab is not closable (a lone tab in the strip, cfe7c4b3b ge `U`); asks for
- * confirmation while a command runs in it (cccc2cf0a Vy `H`), else closes immediately.
+ * cccc2cf0a Zx q: close a tab of the strip (ViewTabBar only offers it for a closable tab); asks for confirmation while a
+ * command runs in it, else closes immediately.
  */
 export function closeTerminalTab(id, { tabs, owner, sessionId, homeWorkspace, terminals, setConfirm }) {
   const list = Array.isArray(tabs) ? tabs : [];
   const tab = list.find((value) => value.id === id);
-  if (!tab || !isTerminalTabClosable(tab, list.length === 1)) return null;
+  if (!tab) return null;
   if (commandRunning(tab)) {
     setConfirm?.({ kind: "close", id });
     return "confirm";
@@ -115,50 +85,6 @@ export function closeTerminalTab(id, { tabs, owner, sessionId, homeWorkspace, te
   void terminals.close(owner, sessionId, homeWorkspace, id);
   return "closed";
 }
-/**
- * cfe7c4b3b ge Le + Y (terminal-11, terminal-12): keyboard handling on a focused tab in the terminal strip.
- */
-export function handleTerminalTabKeyDown(event, id, {
-  tabs,
-  owner,
-  terminals,
-  close,
-  select,
-  focusTab,
-  getWindow = ownerWindow,
-  onSuppressKeyRepeat = suppressKeyRepeat,
-}) {
-  const list = Array.isArray(tabs) ? tabs : [];
-  const index = list.findIndex((tab) => tab.id === id);
-  if (index < 0) return null;
-  if (event.shiftKey && (event.ctrlKey || event.metaKey) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-    event.preventDefault();
-    terminals.move(owner, id, event.key === "ArrowLeft" ? -1 : 1);
-    focusTab?.(id);
-    return "move";
-  }
-  const closable = isTerminalTabClosable(list[index], list.length === 1);
-  const deleteKey = terminalTabDeleteKey(event, closable);
-  if (deleteKey) {
-    event.preventDefault();
-    if (deleteKey === "repeat") return "repeat";
-    const view = getWindow?.(event.currentTarget);
-    if (view) onSuppressKeyRepeat?.(event.key, view);
-    close(id);
-    return "close";
-  }
-  let next = null;
-  if (event.key === "ArrowRight") next = (index + 1) % list.length;
-  else if (event.key === "ArrowLeft") next = (index - 1 + list.length) % list.length;
-  else if (event.key === "Home") next = 0;
-  else if (event.key === "End") next = list.length - 1;
-  if (next === null) return null;
-  event.preventDefault();
-  select(list[next].id);
-  focusTab?.(list[next].id);
-  return "navigate";
-}
-
 // ---------------------------------------------------------------------------
 // Paths dropped on the terminal (cccc2cf0a lg/og/sg/cg, c73f45bc3 Fo quoteShellPath, shared-28 ek/lk/jk). Every path
 // is quoted for the shell; one that cannot be quoted safely refuses the whole drop.
@@ -466,8 +392,11 @@ export function installTerminalLinks(term, { WebLinksAddon, id, getHandlers, che
   });
 }
 /**
- * c6bf19e8f pi: acquire the active tab's xterm view; on failure clear the host container and record {kind:"raw", text}
- * for an Error with a message, else Jr loadFailedError ("Failed to load terminal").
+ * c6bf19e8f pi: acquire the active tab's xterm view; on failure clear the host container and record the error.
+ * w10-trans-terminal-inline-error: 3.6556.2 Ei keeps `r instanceof Error ? r : new si()` and maps it with
+ * `e instanceof Error && !(e instanceof si) ? { kind: "raw", text: e.message } : oi`: an Error shows its message,
+ * anything else is TerminalLoadFailed and shows loadFailedError (oi, "Couldn’t load the terminal").
+ * w10-ccres-e31-terminal: as Ei, an Error with an empty message is raw too (its empty text is the cover title).
  */
 export function acquireTerminalView({ activeId, sessionId, homeWorkspace, terminals, createView, hostNode, viewError, setViewError }) {
   let view;
@@ -475,9 +404,10 @@ export function acquireTerminalView({ activeId, sessionId, homeWorkspace, termin
     view = terminals.view(activeId, sessionId, homeWorkspace, createView);
   } catch (failure) {
     hostNode?.replaceChildren?.();
+    const error = failure instanceof Error ? failure : new TerminalLoadFailed();
     setViewError?.({
       id: activeId,
-      error: failure instanceof Error && failure.message ? { kind: "raw", text: failure.message } : loadFailedError,
+      error: error instanceof Error && !(error instanceof TerminalLoadFailed) ? { kind: "raw", text: error.message } : loadFailedError,
     });
     return null;
   }
@@ -486,10 +416,12 @@ export function acquireTerminalView({ activeId, sessionId, homeWorkspace, termin
 }
 /**
  * c6bf19e8f Qr/Rr: restart the active tab's shell; on failure mark startFailed for the registry (Clear: "No terminal
- * to clear") and surface Qr(error, ptyKey, sessionId) ({kind:"raw"} when the main process gave a message, else
- * startFailed "Failed to start shell").
+ * to clear") and surface terminalStartError(error, ptyKey, sessionId) (3.6556.2 di: {kind:"raw"} when the main process
+ * gave a message other than "Failed to spawn shell", else startFailed "Couldn’t start the shell").
+ * w10-trans-terminal-inline-error: as Ei's `(R.getState().setInlineError(k, li(r)), t || P(r))`, the failure first goes
+ * to the inline-run store as plain text (li = terminalErrorText; terminal-inline-error-store.mjs), then covers the pane.
  */
-export async function restartTerminalTab({ active, sessionId, homeWorkspace, terminals, startFailedTerminals, setError, setRestartError, onRestarted }) {
+export async function restartTerminalTab({ active, sessionId, homeWorkspace, terminals, startFailedTerminals, setError, setRestartError, onRestarted, inlineErrors = null }) {
   if (!active) return false;
   const id = active.id;
   try {
@@ -501,13 +433,18 @@ export async function restartTerminalTab({ active, sessionId, homeWorkspace, ter
     return true;
   } catch (failure) {
     startFailedTerminals?.add(id);
-    setRestartError?.({ id, error: terminalStartError(terminalError(failure, undefined), id, id) });
+    const error = terminalStartError(terminalError(failure, undefined), id, id);
+    inlineErrors?.setInlineError(id, terminalErrorText(error));
+    setRestartError?.({ id, error });
     return false;
   }
 }
 /**
  * c6bf19e8f pi: the error (A) takes the place of the exited shell (N). A raw message shows as is; every kind but
  * needsNewerApp offers Try again. A tab whose folder is gone says so without a button (local).
+ * cc-rest-terminal-b (3.6556.2 c6bf19e8f Ei): the error cover is an EmptyState with role "alert" (the exited cover has
+ * none); its title is the raw text or the kind's copy, and needsNewerApp adds the body needsNewerAppBody ("Restart
+ * Claude to update.").
  */
 export function terminalCoverState({ active, loadFailed = false, viewError = null, restartError = null, onRetryView, onRestart }) {
   if (loadFailed) return null;
@@ -519,6 +456,8 @@ export function terminalCoverState({ active, loadFailed = false, viewError = nul
     return {
       kind: coverError.kind,
       text: coverError.kind === "raw" ? coverError.text : t(terminalErrorMessages[coverError.kind].defaultMessage),
+      body: coverError.kind === "needsNewerApp" ? t(terminalErrorMessages.needsNewerAppBody.defaultMessage) : null,
+      role: "alert",
       action: coverError.kind !== "needsNewerApp" && !(coverError.kind === "raw" && coverError.text === t(FOLDER_GONE)) ? t("Try again") : null,
       retry: viewError?.id === id ? onRetryView : onRestart,
       exited,

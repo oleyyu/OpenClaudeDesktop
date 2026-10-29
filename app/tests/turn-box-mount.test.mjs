@@ -196,11 +196,11 @@ test('TB-3 mount: inline under the composer when placeable; nothing when not pla
   assert.equal(portalled.target, slot);
   assert.equal(portalled.child.type, B.TurnBox);
   assert.equal(portalled.child.key, 'P:turn-box');
-  // turn-plan: the row sits in the catalog that names its chip group (secret:hlf4y0), keyed as the row was.
+  // 3.6556.2: cc43287c9 mounts ope (cccc2cf0a cj, TurnNextActionsRow) directly; no catalog Provider (cd4f82e77 U/W no longer read secret:hlf4y0).
   const nextRow = portalled.child.props.children;
   assert.equal(nextRow.key, 'P:next-actions');
-  assert.equal(nextRow.props.children.type, B.NextActionsRow, 'fo: the next-step row mounts with presets on');
-  assert.equal(nextRow.props.children.props.wrapUp, null);
+  assert.equal(nextRow.type, B.TurnNextActionsRow, 'ms: cc43287c9 mounts ope (cccc2cf0a cj) with presets on');
+  assert.equal(nextRow.props.wrapUp, undefined, 'cj derives wrapUp itself (_m over xy)');
   assert.equal(typeof portalled.child.props.onCardShownChange, 'function');
   // A steer (a new prompt inside the same running turn) after the plan was written: rv's stale "prompt" card.
   turn.step('item/completed', { threadId: 'P', turnId: 't1', item: user('u2', 't1') });
@@ -241,7 +241,7 @@ const DT_CLASS = 'flex flex-col gap-1 p-4 [&:has(+[data-turn-next]_button:not([h
 const dtHidden = (html) => { const tree = parse(html); const dt = descendants(tree).find((d) => d.attrs.get('class') === DT_CLASS); assert.ok(dt, 'DT rendered'); return ruleButton(dt) || ruleText(dt); };
 
 test('TB-5 the loaded stylesheet carries both DT rules as display:none', () => {
-  const css = fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8');
+  const css = fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   const rule = '.\\[\\&\\:has\\(\\+\\[data-turn-next\\]_button\\:not\\(\\[hidden\\]_button\\)\\:not\\(\\[data-turn-dismiss\\]_button\\)\\)\\]\\:hidden:has(+[data-turn-next] button:not([hidden] button):not([data-turn-dismiss] button)),'
     + '.\\[\\&\\:has\\(\\+\\[data-turn-next\\]_p\\:not\\(\\[hidden\\]_p\\)\\)\\]\\:hidden:has(+[data-turn-next] p:not([hidden] p)){display:none}';
   assert.equal(count(css, rule), 1);
@@ -414,6 +414,8 @@ test('R4g review: main.jsx\'s App wiring over the reducer — the box shows on a
     SourceTurnBoxSlot: M.SourceTurnBoxSlot, SourceTurnBoxRegion: M.SourceTurnBoxRegion,
     ownerThreadId: State.ownerThreadId, visibleApprovals: Approvals.visibleApprovals, isPlanReviewRequest: Approvals.isPlanReviewRequest,
     sessions: [], navigate: (id) => navigated.push(id), sessionAction: async () => {}, actionFailed: () => () => {},
+    // W12c (#27): sL's ZI inputs (sessionMetadata as shown, the open session's background tasks, the bridge: none here).
+    shownSessionMetadata: {}, tasks: [], api: undefined,
     session, section: 'session', openPanes: new Set(), openPaneTile: () => {},
     textarea: { current: null }, liveComposer: { current: null }, draft: '', setDraft: () => {}, shellModeActive: () => false, boot: null, shellOptions: null,
     cardComposerDraft: { current: false }, attachments: [],

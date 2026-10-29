@@ -1,22 +1,32 @@
-// Turn plan (the task list card's data): extract the 2.42304.0 `update_plan` tool of the `ccd_turn` server and the
-// renderer's reading of its calls, without executing any desktop runtime (decision D0: own generator, own output
+// Turn plan (the task list card's data): extract the 3.6556.2 `update_plan` / `wrap_up` tools of the `ccd_turn` server
+// and the renderer's reading of their calls, without executing any desktop runtime (decision D0: own generator, own output
 // folders, own scripts/verify-gen-turn-plan.mjs).
 //
-// Main process (asar/.vite/build, CommonJS chunks) -> electron/generated/turn-plan/ (the agent-tools module imports it,
-// and src/ is not packaged, D47):
-//   ccd-turn.mjs      index.chunk-B5tintml.js: Qt (the ccd_turn server definition: update_plan with Tt's description and
-//                     Et's inputSchema, wrap_up with Ft / Lt, readOnlyHint, alwaysLoad), Zt (createToolHandler: the
-//                     update_plan branch validates items / scope / advance / done / start and answers "Plan shown (n
-//                     steps)." / "Plan updated: …"; the wrap_up branch comes along unused), ot (the sub-agent refusal),
-//                     ct (an empty turn plan), Qe / et / $e / Ze (status updates, the status line, the bad step number
-//                     text, the step number check), at / it (mcp__ccd_turn__update_plan / wrap_up).
-//   tool-result.mjs   index.chunk-BemIcaFh.js n / t (an MCP text result, an error result).
-//   text-guards.mjs   index.chunk-muI2IV6k.js Ep / gj / _j: what Xt / qt run a step's content through before counting it.
-// Renderer (ion-dist/assets/v1, ES modules) -> src/generated/turn-plan/:
+// Main process (asar/.vite/build, CommonJS chunks; 3.6556.2 since w2-tr-turn) -> electron/generated/turn-plan/ (the
+// agent-tools module imports it, and src/ is not packaged, D47):
+//   ccd-turn.mjs      index.chunk-DBIg6EBr.js: Yt (the ccd_turn server definition: update_plan with _t's description and
+//                     vt's inputSchema, wrap_up with jt(t) / Nt; t = Dt() picks the closing-message wording kt or At),
+//                     Jt (createToolHandler: the update_plan branch validates items / scope / advance / done / start and
+//                     answers "Plan shown (n steps)." / "Plan updated: …"; the wrap_up branch comes along unused), Qe
+//                     (the sub-agent refusal), et (an empty turn plan, now with unreadRefusals), We / Ke / Ge / Ue (status
+//                     updates, the status line, the bad step number text, the step number check), Ze / Xe
+//                     (mcp__ccd_turn__update_plan / wrap_up), it (the PostToolUse / SessionStart hooks).
+//   text-guards.mjs   index.chunk-jPKPzV-P.js: the MCP text / error results (Wf / Uf; 2.42304.0 BemIcaFh) and what the
+//                     handler runs a step's content through before counting it.
+//   remote-control.mjs  index.chunk-DlYkVJEe.js: the Remote Control note the handler names.
+// Renderer (ion-dist/assets/v1, ES modules; 3.6556.2 since w8-turn-plan-renderer) -> src/generated/turn-plan/:
 //   plan-update.mjs   cb27dab29: z (a plan from update_plan's items: content cleaned by H, status pending unless
-//                     completed / in_progress, at most 12, `plan-<n>` ids), Se (an update applied to a plan: items
-//                     replaces it, else _e advance / done / start), xe / ye (the tool's name).
-//   …                 the originals H reads (shared-104 secret redaction, shared-2 markup stripping), one module per chunk.
+//                     completed / in_progress, an optional side-session name, at most 12, `plan-<n>` ids), Ce (an update
+//                     applied to a plan: items replaces it, else ve advance / done / start), Se / be and R / ye (the
+//                     tools' names), Me (a wrap_up input read), De (the box's wrap-up while a suggestion is pending), Ne
+//                     (an old-style outcome call's text).
+//   turn-tail.mjs     c4ea84cb3 Br / Er / Y (the turn tail: plan, planBeforeWrapUp, wrapUp and its receipt,
+//                     closingMessageFollows, planCutShort, turnSettled, …), Ir / Rr (the wrap-ups that settled earlier
+//                     turns, by prompt, and their receipts).
+//   settled-turn-box.mjs  c96d752d0 Ytt (the settled wrap-up receipt row over cb6930dae's question receipt), r8 / i8 / dN.
+//   wrap-up-chips.mjs  c96d752d0 eH (a wrap-up reply as a chip), a `part` of that chunk of its own (E42: the plain turn
+//                     tail reads it; the compiled Ytt and the .jsx adapters stay out of its import graph).
+//   …                 the originals those read, one module per chunk; React Compiler helpers and CDS from view-tabs (E3).
 //
 // Every emitted binding is an original top-level declaration sliced from the installed chunk; a module's bindings are
 // the reachable closure of its roots (free variables found with Babel's scope analysis). An ES import, or a CommonJS
@@ -26,133 +36,188 @@
 // import (where the renderer applies update_plan calls, that the transcript skips their rows, the per-session gate).
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const rendererSource = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
-const mainSource = path.resolve(root, '../reference', referenceSnapshot, 'asar/.vite/build');
+// 3.6556.2 migration: the main-process side (electron/generated/turn-plan, the ccd_turn server the agent tools serve)
+// moved in w2-tr-turn, the renderer side (src/generated/turn-plan) in w8-turn-plan-renderer, with the turn box; both read
+// 3.6556.2 (official-3.6556.2.mjs, R1).
+const { referenceVersion, referenceSnapshot } = official;
+const rendererSource = official.ionSource;
+const mainSource = official.asarSource;
+const sideReference = {
+  renderer: { referenceVersion, referenceSnapshot },
+  main: { referenceVersion, referenceSnapshot },
+};
+const loose = (text) => ({ loose: text });
 const outputs = { renderer: path.join(root, 'src/generated/turn-plan'), main: path.join(root, 'electron/generated/turn-plan') };
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 // Host dependencies of the main-process closure: chunk -> export -> { name (adapter export), local (the declaration the
 // export must still name), features (in its prettier form) }.
 const adapterModule = '../../turn-plan-adapters.mjs';
+const rendererAdapters = '../../source-turn-box-adapters.jsx';
 const adapters = {
-  // react-intl useIntl / FormattedMessage over the local catalog: the turn box's own adapters (source-turn-box-adapters.jsx).
-  'vendor-intl-Db7hDWRO.js': {
-    p: { module: '../../source-turn-box-adapters.jsx', name: 'useIntl', local: 'q', features: ['let e = o(K);', 'return (Mt(e), e);'] },
-    l: { module: '../../source-turn-box-adapters.jsx', name: 'FormattedMessage', local: 'Gt', features: ['var Gt = u(Wt, Ut);'] },
+  // react-intl useIntl / FormattedMessage over the local catalog: the turn box's own adapters (source-turn-box-adapters.jsx,
+  // the same pins as extract-turn-box.mjs).
+  [official.vendorIntl]: {
+    p: { module: rendererAdapters, name: 'useIntl', local: 'q', features: [loose('return (Mt(e), e);')], also: { Mt: ['[React Intl] Could not find required `intl` object.'] } },
+    l: { module: rendererAdapters, name: 'FormattedMessage', local: 'Gt', features: [loose('var Gt = c(Wt, Ut);')], also: { Wt: ['p = i({ id: o, description: s, defaultMessage: c }, l, { ignoreTag: f });'] } },
   },
-  'index.chunk-muI2IV6k.js': {
-    // GrowthBook: ht() = LZ("2371478310") turns the ccd_turn tools on (host: on for this flag by the user's decision).
-    LZ: { name: 'growthBookOn', local: 'hy', features: ['if (Uzt.has(e)) return !0;', 'return (py(e, t), t?.on ?? !1);'] },
+  // c96d752d0 QV (exported ir; Ytt calls it in its own chunk): appFeatures.turnBoxAtReplies. The 3.6556.2 main process
+  // reports it supported (index.chunk-jPKPzV-P JU `turnBoxAtReplies:RU`, `RU={status:"supported"}`); host: true, the
+  // turn box's own adapter.
+  'c96d752d0-CWv_7-n9.js': {
+    ir: { module: rendererAdapters, name: 'useTurnBoxAtReplies', local: 'QV', features: [loose('return ma(mLe);')], also: { mLe: ['e.appFeatures?.turnBoxAtReplies?.status === "supported"'] } },
+  },
+  // 3.6556.2: index.chunk-muI2IV6k -> index.chunk-jPKPzV-P (E33: matched on the export name and features).
+  'index.chunk-jPKPzV-P.js': {
+    // GrowthBook: st() = m0("2371478310") turns the ccd_turn tools on (host: on for this flag by the user's decision, D49).
+    m0: { name: 'growthBookOn', local: 'Pb', features: ['if (Nb.has(e)) return !1;', 'if (Mb.has(e)) return !0;', 'return (Ab(e, t), t?.on ?? !1);'] },
+    // GrowthBook with a default: Dt() = h0("2833454025", !0) (the wrap_up closing-message wording) and h0(Et, !0).
+    h0: { name: 'growthBookValue', local: 'Fb', features: ['if (Nb.has(e)) return !1;', 'return (Ab(e, n), n?.on ?? t);'] },
     // Event logging (desktop_ccd_turn_scope): nothing is sent (D17).
-    iz: { name: 'logEvent', local: 'Q', features: ['[EventLogging] Queuing event: %s | metadata: %o'] },
+    uz: { name: 'logEvent', local: 'Q', features: ['[EventLogging] Queuing event: %s | metadata: %o'] },
   },
 };
 
 const modules = [
-  { side: 'main', target: 'ccd-turn.mjs', source: 'index.chunk-B5tintml.js',
-    exports: { Qt: 'turnServerDefinition', Zt: 'createTurnToolHandler', ot: 'SUBAGENT_TURN_TOOL_REFUSAL', ct: 'emptyTurnPlan', Qe: 'applyPlanStatuses',
-      et: 'planStatusLine', $e: 'badStepNumberText', Ze: 'isStepNumber', at: 'UPDATE_PLAN_TOOL_NAME', it: 'WRAP_UP_TOOL_NAME', rt: 'UPDATE_PLAN', tt: 'TURN_SERVER',
-      nt: 'WRAP_UP', ft: 'turnPlanHooks', Nt: 'END_TURN_META' },
+  // 3.6556.2 main process: index.chunk-B5tintml -> index.chunk-DBIg6EBr (Qt -> Yt, Zt -> Jt, ft -> it, …).
+  { side: 'main', target: 'ccd-turn.mjs', source: 'index.chunk-DBIg6EBr.js',
+    exports: { Yt: 'turnServerDefinition', Jt: 'createTurnToolHandler', Qe: 'SUBAGENT_TURN_TOOL_REFUSAL', et: 'emptyTurnPlan', We: 'applyPlanStatuses',
+      Ke: 'planStatusLine', Ge: 'badStepNumberText', Ue: 'isStepNumber', Ze: 'UPDATE_PLAN_TOOL_NAME', Xe: 'WRAP_UP_TOOL_NAME', Ye: 'UPDATE_PLAN', qe: 'TURN_SERVER',
+      Je: 'WRAP_UP', it: 'turnPlanHooks', Tt: 'END_TURN_META', jt: 'wrapUpDescription', kt: 'WRAP_UP_CLOSING_FOLLOWS', At: 'WRAP_UP_BOX_ENDS_TURN' },
     features: {
-      Qt: ['serverName: tt,', '{ name: rt, description: Tt(e), inputSchema: Et, annotations: mt, alwaysLoad: !0 },', 'isEnabled: (e) => e.sessionType === "ccd" && e.turnBoxEnabled === !0,', 'createToolHandler: Zt,'],
-      Zt: ['(n === "update_plan" && r.items !== void 0 && (a.steps = void 0), !ht())', 'return w.t(`${n} is turned off right now; write it as text instead.`);', 'let e = wt(r.scope);', 'return e.some((e) => !Ze(e, o ?? 12))', '"items needs at least one step with content and status."',
-        '`Plan shown (${o.length} steps).${s > 1 ? " Keep only one step in_progress." : ""}', 'w.n(`Plan updated${a.steps ? `: ${et(a.steps)}` : ""}.${bt(i.getAvailableNextActions?.())}`)'],
-      ot: ['"Not shown: you are a subagent, and the app shows only the main conversation\'s task list and wrap-up. Do not call update_plan or wrap_up again; carry on with your task and report your result as usual."'],
-      ct: ['return { steps: void 0, promptId: void 0, wrappedUpIn: void 0 };'],
-      Qe: ['if (Array.isArray(t.done))', 'let t = n.indexOf("pending", e + 1),'],
-      et: ['"every step is done"', '`no step is in progress (${n} of ${e.length} done); {"start": n} starts one`'],
-      $e: ['`Nothing changed: done and start take whole step numbers counted from 1, and ${e === void 0 ? "a list has at most 12 steps" : `the list has ${e} step${e === 1 ? "" : "s"}`}.'],
-      Ze: ['return typeof e == "number" && Number.isInteger(e) && e >= 1 && e <= t;'],
-      nt: ['nt = "wrap_up"'], Nt: ['Nt = "claude/endTurn"'],
-      ft: ['matcher: `${at}|${it}`,', 't.tool_name === at ? (n.promptId = t.prompt_id) : t.tool_name === it && (n.wrappedUpIn = t.prompt_id)', 'Also still to do in this turn, on top of what the summary above lists'],
-      at: ['at = `mcp__${tt}__${rt}`'], it: ['it = `mcp__${tt}__${nt}`'], rt: ['rt = "update_plan"'], tt: ['tt = "ccd_turn"'],
+      Yt: ['serverName: qe,', 'description: _t(e),', 'description: jt(t),', 'alwaysLoad: !0,', 'isEnabled: (e) => e.sessionType === "ccd" && e.turnBoxEnabled === !0,', 'createToolHandler: Jt,'],
+      Jt: ['(n === "update_plan" && r.items !== void 0 && (a.steps = void 0), !st())', '`${n} is turned off right now; write it as text instead.`',
+        '"items needs at least one step with content and status."', '`Plan shown (${o.length} steps).', '"desktop_ccd_turn_scope"', 'i.closingFollowsQuestion ?? Dt()',
+        'return ie && !o && t.h0(Et, !0) ? { ...ae, _meta: { [Tt]: !0 } } : ae;'],
+      Qe: ['"Not shown: you are a subagent, and the app shows only the main conversation\'s task list and wrap-up. Do not call update_plan or wrap_up again; carry on with your task and report your result as usual."'],
+      et: ['return { steps: void 0, promptId: void 0, wrappedUpIn: void 0, unreadRefusals: new Set() };'],
+      We: ['if (Array.isArray(t.done))', 'let t = n.indexOf("pending", e + 1),'],
+      Ke: ['"every step is done"', '`no step is in progress (${n} of ${e.length} done); {"start": n} starts one`'],
+      Ge: ['`Nothing changed: done and start take whole step numbers counted from 1, and ${e === void 0 ? "a list has at most 12 steps" : `the list has ${e} step${e === 1 ? "" : "s"}`}.'],
+      Ue: ['return typeof e == "number" && Number.isInteger(e) && e >= 1 && e <= t;'],
+      Je: ['"wrap_up"'], Ye: ['"update_plan"'], qe: ['"ccd_turn"'], Tt: ['"claude/endTurn"'],
+      it: ['matcher: `${Ze}|${Xe}`,', '(t.tool_name === Ze', '(n.wrappedUpIn = t.prompt_id)', 'Also still to do in this turn, on top of what the summary above lists'],
+      Ze: ['`mcp__${qe}__${Ye}`'], Xe: ['`mcp__${qe}__${Je}`'],
+      jt: ['Fill the "next step" box the app shows at the end of your turn', '${e ? kt : At}', 'a go-ahead to fix, commit, push, post or send'],
+      kt: ['"Your closing message is ordinary text right after this call, the last thing you say this turn: your answer to the user in full, which the recap never replaces.'],
+      At: ['"The result says which case below applies. When the box shows your question, it ends your turn:'],
     } },
-  { side: 'main', target: 'tool-result.mjs', source: 'index.chunk-BemIcaFh.js' },
-  { side: 'main', target: 'text-guards.mjs', source: 'index.chunk-muI2IV6k.js' },
-  { side: 'renderer', target: 'plan-update.mjs', source: 'cb27dab29-_H2_XKli.js',
-    exports: { z: 'planFromItems', Se: 'applyPlanUpdate', _e: 'applyStepStatuses', xe: 'isUpdatePlanTool', ye: 'UPDATE_PLAN_TOOL',
-      R: 'isWrapUpTool', ve: 'WRAP_UP_TOOL', Me: 'legacyWrapUpText', Ee: 'wrapUpShown', je: 'parseWrapUp' },
+  { side: 'main', target: 'text-guards.mjs', source: 'index.chunk-jPKPzV-P.js' },
+  { side: 'main', target: 'remote-control.mjs', source: 'index.chunk-DlYkVJEe.js' },
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  // 3.6556.2 renderer (w8-turn-plan-renderer): cb27dab29 z / Se / _e / xe / ye / R / ve / Me / Ee / je -> z / Ce / ve / Se / be
+  // / R / ye / Ne / De / Me (the names were reused: 3.6556.2 `ve` is the step statuses, `be` update_plan's name).
+  { side: 'renderer', target: 'plan-update.mjs', source: 'cb27dab29-B4WyL7_M.js',
+    exports: { z: 'planFromItems', Ce: 'applyPlanUpdate', ve: 'applyStepStatuses', Se: 'isUpdatePlanTool', be: 'UPDATE_PLAN_TOOL',
+      R: 'isWrapUpTool', ye: 'WRAP_UP_TOOL', Ne: 'legacyWrapUpText', De: 'wrapUpShown', Me: 'parseWrapUp' },
     features: {
-      z: ['r = H(t, "content");', 't.status === "completed" || t.status === "in_progress"', 'id: `plan-${n.length}`,', 'n.length >= 12'],
-      Se: ['if (Array.isArray(t.items)) return z(t);', 'return e.map((e, t) => ({ ...e, status: n[t] }));'],
-      _e: ['t.advance === !0 || t.advance === "true"'], xe: ['return e === ye;'], ye: ['ye = "mcp__ccd_turn__update_plan"'],
-      R: ['return e === ve;'], ve: ['ve = "mcp__ccd_turn__wrap_up"'], Me: ['["outcome", "failures", "not_verified", "needs_user"]'],
-      Ee: ['return t && e?.blocked !== !0 ? null : e;'], je: ['let t = H(e, "recap") ?? H(e, "next_recap") ?? H(e, "outcome");'],
+      z: ['r = H(t, "content");', 't.status === "completed" || t.status === "in_progress"', 'id: `plan-${n.length}`', 'n.length >= 12', '...(a === void 0 ? {} : { session: a })'],
+      Ce: ['if (Array.isArray(t.items)) return z(t);', 'return e.map((e, t) => ({ ...e, status: n[t] }));'],
+      ve: ['t.advance === !0 || t.advance === "true"', 'let t = n.indexOf("pending", e + 1),'], Se: [loose('return e === be;')], be: ['be = "mcp__ccd_turn__update_plan"'],
+      R: [loose('return e === ye;')], ye: ['ye = "mcp__ccd_turn__wrap_up"'], Ne: ['["outcome", "failures", "not_verified", "needs_user"]'],
+      De: ['return t && e?.blocked !== !0 ? null : e;'], Me: ['let t = H(e, "recap") ?? H(e, "next_recap") ?? H(e, "outcome");'],
     } },
-  { side: 'renderer', target: 'secret-redaction.mjs', source: 'shared-104-Cqo2-vQh.js' },
-  { side: 'renderer', target: 'strip-markup.mjs', source: 'shared-2-Cb74JByF.js' },
-  { side: 'renderer', target: 'shared-0.mjs', source: 'shared-0-ByI5P0CP.js' },
-  { side: 'renderer', target: 'cd4f82e77.mjs', source: 'cd4f82e77-BZMvPH7p.js' },
-  { side: 'renderer', target: 'c227f4d5e.mjs', source: 'c227f4d5e-Ba-r--Rl.js' },
-  { side: 'renderer', target: 'shared-11.mjs', source: 'shared-11-BuQ3CK5I.js' },
-  { side: 'renderer', target: 'shared-25.mjs', source: 'shared-25-DP8p7i1Z.js' },
-  { side: 'renderer', target: 'shared-78.mjs', source: 'shared-78-D6VXYXaQ.js' },
-  { side: 'renderer', target: 'cb6930dae.mjs', source: 'cb6930dae-BD0W5ZM9.js' },
-  { side: 'renderer', target: 'shared-156.mjs', source: 'shared-156-Bikz018e.js' },
-  { side: 'renderer', target: 'cd57a9664.mjs', source: 'cd57a9664-BUM4bG19.js' },
-  { side: 'renderer', target: 'shared-130.mjs', source: 'shared-130-DnUXVlYq.js' },
-  { side: 'renderer', target: 'shared-52.mjs', source: 'shared-52-DGviI8xb.js' },
-  { side: 'renderer', target: 'ccae33cda.mjs', source: 'ccae33cda-DCEu0VuC.js' },
-  { side: 'renderer', target: 'cfb444e1a.mjs', source: 'cfb444e1a-C6ExxC04.js' },
-  { side: 'renderer', target: 'c4d199b75.mjs', source: 'c4d199b75-BCsc0Miu.js' },
-  { side: 'renderer', target: 'shared-7.mjs', source: 'shared-7-B8UIMGDr.js' },
-  { side: 'renderer', target: 'shared-182.mjs', source: 'shared-182-eT1kXtya.js' },
-  { side: 'renderer', target: 'shared-frame.mjs', source: 'shared-frame-BfjMqbuN.js' },
+  // c1ebb1aa4 Rt / Et / Bt / Ft / It -> c4ea84cb3 Br / Er / Y / Ir / Rr (Br now also derives closingMessageFollows and
+  // planCutShort, and reads turnBoxAtReplies as its fifth argument; Ir takes it fourth).
+  { side: 'renderer', target: 'turn-tail.mjs', source: 'c4ea84cb3-rXGDAnKH.js',
+    exports: { Br: 'deriveTurnTail', Er: 'EMPTY_TURN_TAIL', Y: 'turnTailEqual', Ir: 'wrapUpsByPrompt', Rr: 'wrapUpReceipt' },
+    features: {
+      Br: [loose('o = a ? jr : B,'), 'closingMessageFollows: he !== null && Lr(e, he),', 'planCutShort: x && !C,', loose('let pe = Ir(e, (e) => e === t, !0, i).get(null),'),
+        '(j = j.map((e) => ({ ...e, status: "completed" })))', 'workedWithoutWrapUp: te && ne === !0 && me === null,'],
+      Er: ['closingMessageFollows: !1,', 'planBeforeWrapUp: null,', 'planCutShort: !1,', 'proposedTaskIds: Object.freeze([]),'],
+      Y: ['e.planCutShort === t.planCutShort &&', 'e.closingMessageFollows === t.closingMessageFollows &&'],
+      Ir: ['i?.opensTurn(f.uuid)', 'let n = { ...e, callId: t.id ?? null };'], Rr: ['return t ? (n ? e : { ...e, recap: "" }) : null;'],
+    } },
+  // c96d752d0 Itt / R8 / z8 / AL -> Ytt / r8 / i8 / dN (r8 now reads turnBoxAtReplies QV for the reply chips).
+  { side: 'renderer', target: 'settled-turn-box.mjs', source: 'c96d752d0-CWv_7-n9.js',
+    exports: { Ytt: 'SettledTurnBox', r8: 'settledTurnBoxPairs', i8: 'settledTurnBoxRecap', dN: 'promptOfRow' },
+    features: { Ytt: [loose('r8(e, t, n)'), loose('f(cy, { recap: i, pairs: a })')], r8: ['e.ruleId !== "new_session" &&', 'if (n)'], i8: [loose('return dd(e.recap) ?? "";')], dN: [] } },
+  // E42: the wrap-up reply chip (eH) the plain turn tail reads (c4ea84cb3 J: `Re(a, t)`), as a part of c96d752d0 of its
+  // own, so turn-tail.mjs does not import the compiled SettledTurnBox (and the .jsx adapters) with it.
+  { side: 'renderer', target: 'wrap-up-chips.mjs', source: 'c96d752d0-CWv_7-n9.js', part: 'chips',
+    exports: { eH: 'wrapUpSendChip' }, locals: ['hLe', '$V', 'dd', 'wme', 'Ele', 'Dle', '_n'],
+    features: { eH: ['key: `wrap:${n}`,', 'source: "model",', 'sendText: a === o ? void 0 : a,'] } },
+  // The originals the roots read, one module per chunk (as extract-turn-box.mjs slices the same chunks).
+  { side: 'renderer', target: 'secret-redaction.mjs', source: 'shared-104-CTONUSaz.js' },
+  { side: 'renderer', target: 'strip-markup.mjs', source: 'shared-2-TF8v67kg.js' },
+  { side: 'renderer', target: 'c06cf64bb.mjs', source: 'c06cf64bb-CdJdJuVd.js' },
+  { side: 'renderer', target: 'c8479260c.mjs', source: 'c8479260c-D5Ma9EoG.js' },
+  { side: 'renderer', target: 'shared-11.mjs', source: 'shared-11-_AVGLHEz.js' },
+  { side: 'renderer', target: 'cd4f82e77.mjs', source: 'cd4f82e77-CAMIsQ30.js' },
+  { side: 'renderer', target: 'shared-0.mjs', source: 'shared-0-DDOOdL6P.js' },
+  { side: 'renderer', target: 'shared-18.mjs', source: 'shared-18-D3y8YMFN.js' },
+  { side: 'renderer', target: 'shared-52.mjs', source: 'shared-52-uHFNjl7C.js' },
+  { side: 'renderer', target: 'cb6930dae.mjs', source: 'cb6930dae-Dw_4c1QI.js' },
+  { side: 'renderer', target: 'c6dc54e94.mjs', source: 'c6dc54e94-E5GA6ry5.js' },
+  { side: 'renderer', target: 'c2f6611a3.mjs', source: 'c2f6611a3-DBT6B0Bq.js' },
+  { side: 'renderer', target: 'shared-1.mjs', source: 'shared-1-BJhqMmkf.js' },
+  { side: 'renderer', target: 'shared-25.mjs', source: 'shared-25-DOWZRSlq.js' },
+  { side: 'renderer', target: 'context-markers.mjs', source: 'cb0636f7b-jouCT0V2.js' },
+  { side: 'renderer', target: 'shared-78.mjs', source: 'shared-78-D5Fw2h0a.js' },
+  { side: 'renderer', target: 'define-messages.mjs', source: official.vendorIntl },
+  { side: 'renderer', target: 'shared-130.mjs', source: 'shared-130-dWztbTO1.js' },
+  { side: 'renderer', target: 'cd4fb5ac7.mjs', source: 'cd4fb5ac7-BD73PU5C.js' },
+  { side: 'renderer', target: 'c4d199b75.mjs', source: 'c4d199b75-D3cQB-UP.js' },
   { side: 'renderer', target: 'c8187a2dc.mjs', source: 'c8187a2dc-Dp9Zia_4.js' },
-  { side: 'renderer', target: 'turn-tail.mjs', source: 'c1ebb1aa4-c89yWBMH.js',
-    exports: { Rt: 'deriveTurnTail', Et: 'EMPTY_TURN_TAIL', Bt: 'turnTailEqual', Ft: 'wrapUpsByPrompt', It: 'wrapUpReceipt' },
-    features: {
-      Rt: ['a = i ? At : N,', 'v && !b', '(z = z.map((e) => ({ ...e, status: "completed" })))', ': !v && x > 0 && S && r.size === 0 && !(E && !D) && (z = Mt(z));', 'let B = Ft(e, (e) => e === t, !0).get(null),'],
-      Et: ['planBeforeWrapUp: null,', 'proposedTaskIds: Object.freeze([]),'], Bt: ['zt(e.planBeforeWrapUp, t.planBeforeWrapUp) &&'],
-      Ft: ['(s.uuid !== void 0 && t(s.uuid) && (a = s.uuid),', 'r.set(a, { ...e, callId: t.id ?? null });'], It: ['return t ? (n ? e : { ...e, recap: "" }) : null;'],
-    } },
-  { side: 'renderer', target: 'c06cf64bb.mjs', source: 'c06cf64bb-BE5q2vSr.js' },
-  { side: 'renderer', target: 'c7d4a4512.mjs', source: 'c7d4a4512-B5-cT4Zn.js' },
-  { side: 'renderer', target: 'c8479260c.mjs', source: 'c8479260c-DaoJ9_2S.js' },
-  { side: 'renderer', target: 'shared-1.mjs', source: 'shared-1-CAAiD7E3.js' },
-  { side: 'renderer', target: 'settled-turn-box.mjs', source: 'c96d752d0-BOCqU7c2.js',
-    exports: { Itt: 'SettledTurnBox', R8: 'settledTurnBoxPairs', z8: 'settledTurnBoxRecap', AL: 'promptOfRow' },
-    features: { Itt: ['let t = R8(e, Q());', 'return b(yv, { recap: z8(e.wrapUp), pairs: [t] });'], R8: ['if (n)', 'e.ruleId !== "new_session" &&'], z8: ['return ed(e.recap) ?? "";'], AL: [] } },
+  { side: 'renderer', target: 'shared-7.mjs', source: 'shared-7-DBAgAi5H.js' },
+  { side: 'renderer', target: 'shared-182.mjs', source: 'shared-182-BI1KJccu.js' },
+  { side: 'renderer', target: 'shared-frame.mjs', source: official.sharedFrame },
 ];
 
 // Prettier form of a named top-level declaration the host follows but does not import.
 const callSites = [
-  { source: 'c1ebb1aa4-c89yWBMH.js', binding: 'Rt', role: 'The turn tail reads update_plan calls newest first: an errored call is skipped, the newest items call is the base (se = z), later advance / done / start inputs are applied over it oldest first (F = Se); host: src/turn-plan-model.mjs appToolPlan',
-    features: ['a = i ? At : N,', 's.length > 0 && M !== null && u > M', '? (o = se(e))', ': (s.push(e), (M = null));', 'for (let e = s.length - 1; e >= 0; e--) z = F(z, s[e]);'] },
-  { source: 'c1ebb1aa4-c89yWBMH.js', binding: 'Wt', role: 'N_: the update_plan branch runs when the session has the turn box (D(e) = Pq); otherwise the TaskCreate todos are passed in',
-    features: ['{ todos: i } = _t(r ? null : e),', '() => (n.length === 0 ? Et : Ut(n, t, r ? void 0 : i, a)),'] },
-  { source: 'c1ebb1aa4-c89yWBMH.js', binding: 'Lt', role: 'settledWrapUps: every prompt row’s preceding wrap_up that settles (It), unless its call was dismissed; host: src/turn-plan-model.mjs settledWrapUps',
-    features: ['T(t, e) && r.add(t[e].sourceUuid ?? t[e].id);', 'for (let [t, a] of Ft(e, (e) => r.has(e), !1)) {', '!(a.callId !== null && n.has(a.callId)) &&'] },
-  { source: 'c1ebb1aa4-c89yWBMH.js', binding: 'Jt', role: 'latestWrapUp: shown in the transcript only once the user left the box for it (leftToTranscript); host: not shown (the host has no leave-to-transcript action)',
-    features: ['m = !i && p !== null && !c.has(p) && (r === !0 || r === p),'] },
-  { source: 'c96d752d0-BOCqU7c2.js', binding: 'Itt', role: 'The settledTurnBox row (pushed before the prompt row that answered it, prompt = AL(row).text); host: main.jsx row',
-    features: ['return b(yv, { recap: z8(e.wrapUp), pairs: [t] });'] },
+  { source: 'c4ea84cb3-rXGDAnKH.js', binding: 'Wr', role: 'The turn tail hook (cccc2cf0a xy): the update_plan branch when the session has the turn box (r = yt(e), no TaskCreate todos), with the running agents and turnBoxAtReplies (o = N() = c96d752d0 QV); host: src/turn-plan-model.mjs codeTurnTail over TurnBoxHost.turnTail',
+    features: [loose('{ todos: i } = Sn(r ? null : e),'), loose('n.length === 0 ? Er : Ur(n, t, r ? void 0 : i, a, o)'), loose('return v(s, Y);')] },
+  { source: 'c4ea84cb3-rXGDAnKH.js', binding: 'Ur', role: 'Wr caches the derivation per message array (keyed by latestPromptId, taskTodos, runningAgents and atReplies) before Br runs',
+    features: [loose('let s = Br(e, t, n, r, i);'), 'e.atReplies === i'] },
+  { source: 'c4ea84cb3-rXGDAnKH.js', binding: 'zr', role: 'settledWrapUps: every prompt row’s preceding wrap_up that settles (Rr), unless its call was dismissed; turns opened by a non-bubble user row add their calls (host: every prompt is a bubble, so src/turn-plan-model.mjs settledWrapUps reads Ir over the prompts alone)',
+    features: [loose('s = Ir(e, (e) => i.has(e), !1, r, { opensTurn: (e) => a.has(e), calls: o }),'), loose('e !== null && r !== null && !(t.callId !== null && n.has(t.callId)) && c.set(e, r);')] },
+  { source: 'c4ea84cb3-rXGDAnKH.js', binding: 'Jr', role: 'latestWrapUp: shown in the transcript only once the user left the box for it (leftToTranscript); host: not shown (the host has no leave-to-transcript action)',
+    features: [loose('!a && p !== null && !c.has(p) && (i === !0 || i === p) && (f.turnSettled || qr(n))')] },
+  { source: 'cccc2cf0a-DhZC33Gc.js', binding: 'cj', role: 'EpitaxyTurnNextActionsRow: reads the tail itself and hands ZA wrapUp through _m = cb27dab29 De (a non-blocked wrap-up waits while a suggestion is pending), closingMessageFollows, turnSettled, workedWithoutWrapUp, agentRunning; host: src/source-turn-box.jsx SourceTurnBoxMount',
+    features: [loose('} = xy(t.sessionRef, t.latestPromptId),'), loose('K2($, 3, n, r, _m(r, n))'), 'closingMessageFollows: a,', 'turnHasPendingSuggestion: n,', 'agentRunning: p,', 'proposalsPending: d,'] },
+  { source: 'c96d752d0-CWv_7-n9.js', binding: 'Ytt', role: 'The settledTurnBox row (pushed before the prompt row that answered it, prompt = dN(row).text); host: main.jsx row',
+    features: [loose('f(cy, { recap: i, pairs: a })')] },
 ];
 const rawCallSites = [
-  { source: 'c96d752d0-BOCqU7c2.js', role: 'Where the transcript puts a settled wrap-up: before the prompt row it answered',
-    features: ['let a=t.settledWrapUps?.get(n.sourceUuid??n.id);if(a!==void 0&&s.push({kind:"settledTurnBox",id:`turn-box-${L(n,r)}`,wrapUp:a,prompt:AL(n)?.text??""})', 'case"settledTurnBox":return D9(Ye,b(Itt,{wrapUp:e.wrapUp,prompt:e.prompt,unanswered:e.unanswered===!0}));'] },
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'Mte hands hT the tail’s wrapUp through BO = cb27dab29 Ee (a non-blocked wrap-up waits while a suggestion is pending)',
-    features: ['wrapUp:BO(La,Ka)', '{wrapUp:La,wrapUpCallId:Ra,turnSettled:za,agentsRunning:Ba,workedWithoutWrapUp:Va,proposedTaskIds:Ha}=$L(Na?tr:null,Ia)', 'import{H as BO}from"./cb27dab29-_H2_XKli.js"'] },
-  { source: 'c06cf64bb-BE5q2vSr.js', role: 'A wrap_up tool_use draws no row; only a legacy outcome call (Vr = cb27dab29 Me) shows as text',
-    features: ['if(n&&Br(o.name)){let t=As.get(o);if(!t){let n=Vr(Ss(o.partialJson));if(n===void 0)continue;', 'L as Br', 'R as Vr'] },
-  { source: 'c06cf64bb-BE5q2vSr.js', role: 'Transcript rows: an update_plan tool_use draws no row when the turn box shows (zr = cb27dab29 F = xe); host: withoutTurnPlanCalls',
-    features: ['if(n&&zr(o.name))continue;', 'if(o&&zr(r.name))continue;', 'F as zr'] },
-  { main: true, source: 'index.chunk-B5tintml.js', role: 'Main process: the ccd_turn tools are on behind GrowthBook 2371478310 (ht, exported Au); Qt is pushed with sideSessions (a!==!1); the server is for Code sessions with the turn box mounted',
-    features: ['function ht(){return t.LZ("2371478310")}', 'c.push(Qt(a!==!1))', 'isEnabled:e=>e.sessionType==="ccd"&&e.turnBoxEnabled===!0',
-      'Object.defineProperty(exports,"Au",{enumerable:!0,get:function(){return ht}})', 'Object.defineProperty(exports,"zu",{enumerable:!0,get:function(){return ot}})',
-      'Object.defineProperty(exports,"Bu",{enumerable:!0,get:function(){return at}})', 'Object.defineProperty(exports,"ku",{enumerable:!0,get:function(){return pt}})'] },
-  { main: true, source: 'index.chunk-CFJssAFf.js', role: 'Main process: a sub-agent\'s update_plan / wrap_up is denied with ot (PreToolUse); the tools are allowed without asking (allowedTools ku); turnBoxEnabled = Au() && turnBoxMounted',
-    features: ['e.agent_id&&(e.tool_name===n.Bu||e.tool_name===n.Vu)?(t.iz("desktop_ccd_permission_auto_denied",{session_id:r,tool_name:e.tool_name,reason:"subagent_turn_tool"}),{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:n.zu}})',
-      '..._.ccd_turn?n.ku:[]', 'turnBoxEnabled:n.Au()&&this.sessions.get(e)?.turnBoxMounted===!0'] },
+  { source: 'c96d752d0-CWv_7-n9.js', role: 'Where the transcript puts a settled wrap-up: before the prompt row it answered (one row per turn the prompt opens), and renders it with Ytt',
+    features: ['for(let e of swe(n)){let i=t.settledWrapUps?.get(e);if(i===void 0)continue;let a=e!==(n.sourceUuid??n.id);s.push({kind:"settledTurnBox",id:`turn-box-${L(n,r)}${a?`-${e}`:""}`,wrapUp:i,prompt:dN(n)?.text??"",...!xv(n)&&{unanswered:!0}})}',
+      'f(Ytt,{wrapUp:t.wrapUp,prompt:t.prompt,unanswered:e})'] },
+  { source: 'cccc2cf0a-DhZC33Gc.js', role: 'cj reads cb27dab29 De (wrapUpShown) as _m', features: ['import{H as _m,I as vm,U as ym,y as bm}from"./cb27dab29-B4WyL7_M.js"'] },
+  { source: 'c06cf64bb-CdJdJuVd.js', role: 'A wrap_up tool_use draws no row; only a legacy outcome call (ea = cb27dab29 Ne) shows as text',
+    features: ['if(n&&$i(o.name)){let t=Pg.get(o);if(!t){let n=ea(Tg(o.partialJson));if(n===void 0)continue;', 'L as $i', 'R as ea'] },
+  { source: 'c06cf64bb-CdJdJuVd.js', role: 'Transcript rows: an update_plan tool_use draws no row when the turn box shows (Qi = cb27dab29 Se); host: withTurnBoxRows',
+    features: ['if(n&&Qi(o.name))continue;', 'if(o&&Qi(r.name))continue;', 'F as Qi'] },
+  { main: true, source: 'index.chunk-DBIg6EBr.js', role: 'Main process (3.6556.2): the ccd_turn tools are on behind GrowthBook 2371478310 (st, exported bd); Yt is pushed with sideSessions (a!==!1) and the closing-message wording s (SS parameter; default Dt() = h0("2833454025", !0)); the server is for Code sessions with the turn box mounted',
+    features: ['function st(){return t.m0("2371478310")}', 'l.push(Yt(a!==!1,s))', 'isEnabled:e=>e.sessionType==="ccd"&&e.turnBoxEnabled===!0', ',Dt=()=>t.h0("2833454025",!0)',
+      'Object.defineProperty(exports,"bd",{enumerable:!0,get:function(){return st}})', 'Object.defineProperty(exports,"kd",{enumerable:!0,get:function(){return Qe}})',
+      'Object.defineProperty(exports,"Ad",{enumerable:!0,get:function(){return Ze}})', 'Object.defineProperty(exports,"jd",{enumerable:!0,get:function(){return Xe}})',
+      'Object.defineProperty(exports,"vd",{enumerable:!0,get:function(){return at}})', 'var at=[Xe,Ze]'] },
+  { main: true, source: 'index.chunk-DNPOm2Zc.js', role: 'Main process (3.6556.2): a sub-agent\'s update_plan / wrap_up is denied with Qe (kd, PreToolUse); the tools are allowed without asking (allowedTools vd); turnBoxEnabled = bd() && turnBoxMounted',
+    features: ['e.agent_id&&(e.tool_name===n.Ad||e.tool_name===n.jd)?(t.uz("desktop_ccd_permission_auto_denied",{session_id:r,tool_name:e.tool_name,reason:"subagent_turn_tool"}),{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:n.kd}})',
+      '...g.ccd_turn?n.vd:[]', 'turnBoxEnabled:n.bd()&&this.sessions.get(e)?.turnBoxMounted===!0', 'n=require("./index.chunk-DBIg6EBr.js")'] },
 ];
 
 const isRequire = (init) => init?.type === 'CallExpression' && init.callee?.type === 'Identifier' && init.callee.name === 'require'
@@ -214,36 +279,72 @@ function declarationDeps(src, name) {
   return deps;
 }
 const normalised = (text) => text.replace(/\s+/g, '').split(',)').join(')').split(',]').join(']').split(',}').join('}').replace(/,$/, '');
+// A feature is a string (whitespace-normalised) or {loose} (official.looseFeature, R2/E5).
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter((f) => !text.includes(f) && !flat.includes(normalised(f)));
+  const missing = features.filter((f) => (typeof f === 'string' ? !text.includes(f) && !flat.includes(normalised(f)) : !official.looseFeature(f.loose).test(text)));
   if (missing.length) throw Error(`${label} lacks ${missing.map((f) => JSON.stringify(f)).join(', ')}${process.env.TURN_PLAN_EXPLAIN ? `\n--- text ---\n${text}` : ''}`);
 }
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment (as extract-turn-box).
-const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    Co: ['react', 'useState'], So: ['react', 'useRef'], uo: ['react', 'useCallback'], bo: ['react', 'useMemo'], mo: ['react', 'useEffect'],
-    yo: ['react', 'useLayoutEffect'], oo: ['react', 'memo'], Ja: ['react', 'Fragment'], eo: ['react', 'createContext'], do: ['react', 'useContext'],
-    wo: ['react', 'useSyncExternalStore'], go: ['react', 'useId'], xo: ['react', 'useReducer'], co: ['react', 'startTransition'],
-    io: ['react', 'isValidElement'], $a: ['react', 'cloneElement'], ro: ['react', 'forwardRef'], po: ['react', 'useDeferredValue'],
-    Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'],
-  },
-};
+// An adapter's original declaration carries `features`; `also` pins further declarations of the same chunk it stands for.
+async function assertAdapter(label, src, local, adapter) {
+  const original = src.top.get(local);
+  if (!original || original.kind === 'import' || original.kind === 'require') throw Error(`${label} (${local}) is not a declaration`);
+  assertFeatures(`${label} (${local})`, await featureText(src, original), adapter.features);
+  for (const [other, features] of Object.entries(adapter.also ?? {})) {
+    const also = src.top.get(other);
+    if (!also || also.kind === 'import' || also.kind === 'require') throw Error(`${label} pins ${other}, which is not a declaration of ${src.name}`);
+    assertFeatures(`${label} (${other})`, await featureText(src, also), features);
+  }
+}
+// R3: vendor-frame re-exports React; an alias is accepted only as official.reactAliases names it (a top-level
+// `local=<namespace>.<member>`, `Oo` the react/compiler-runtime `c` factory; official.assertVendorAlias).
+const vendor = { [official.vendorFrame]: official.reactAliases };
 function vendorImport(file, alias, src) {
   const target = vendor[file]?.[alias];
   if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.code)) throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  official.assertVendorAlias(src.code, alias, target);
   return target;
 }
+// D1/E3: CDS components and the React Compiler helpers come from the shared view-tabs graph by their semantic names.
+// E42: except the shared-0 storage wrappers (stateless) the plain turn tail reaches through shared-52 / shared-130: the
+// view-tabs shared-0 module imports vendor-frame and the .jsx adapters, which plain node (turn-plan-model.mjs) cannot load.
+const slicedHere = new Set(['safeLocalStorage', 'getWindowStorage', 'createSafeStorage']);
 let publicNames = null;
+// Renderer bindings another generated graph holds and exports (D1, w13-close-gen-dedup w12-carry-01): chunk -> { area,
+// target }. shared-156's display-safety helpers (VX and the OX / kX / AX … qX it reads) are code-routines' one copy; that
+// module imports only routines-shared's shared-0 (no host adapter, plain node can load it, E42). Each binding is imported
+// under the name the module exports it as; the module must match its manifest. shared-0's Pa / AL / jL / ML (lazyInit and
+// the bindings around it) are routines-shared's one copy (w13-close-gen-dedup review 1): that module has no import at all,
+// and code-routines' shared-156 already loads it. A linked binding is imported both when another chunk reads it and when a
+// binding of the same chunk does (add), so no second copy is sliced into shared-0.mjs.
+const linkedChunks = {
+  'shared-156-BLTosN8U.js': { area: 'code-routines', target: 'shared-156-BLTosN8U.mjs' },
+  'shared-0-DDOOdL6P.js': { area: 'routines-shared', target: 'shared-0-DDOOdL6P.mjs' },
+};
+let linkedCache = null;
+async function linkedHeld() {
+  if (linkedCache) return linkedCache;
+  linkedCache = new Map();
+  for (const [chunk, { area, target }] of Object.entries(linkedChunks)) {
+    const dir = path.join(root, 'src/generated', area);
+    const manifest = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
+    const mod = manifest.modules.find((m) => m.target === target && m.source === chunk);
+    if (!mod) throw Error(`linked ${area}/${target} does not hold ${chunk}`);
+    const text = await fs.readFile(path.join(dir, target), 'utf8');
+    if (sha(text) !== mod.sha256) throw Error(`linked ${area}/${target} differs from its manifest`);
+    const exported = new Map();
+    for (const m of text.matchAll(/^export \{([^}]*)\};/gm))
+      for (const spec of m[1].split(',').map((x) => x.trim()).filter(Boolean)) { const [local, as] = spec.split(/\s+as\s+/); exported.set(local, as ?? local); }
+    for (const b of mod.bindings) if (exported.has(b.name)) linkedCache.set(`${chunk}#${b.name}`, { from: `../${area}/${target}`, name: exported.get(b.name), area });
+  }
+  return linkedCache;
+}
 async function viewTabsPublic() {
   if (publicNames) return publicNames;
-  const manifest = JSON.parse(await fs.readFile(path.join(root, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+  const manifest = await viewTabsManifestFor(referenceVersion);
   if (manifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   publicNames = new Map();
-  for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) publicNames.set(`${entry.file}#${entry.local}`, { name, ...entry });
+  for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) publicNames.set(`${entry.file}#${entry.local}`, { name, ...entry, currentFile: entry.file });
   return publicNames;
 }
 const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'TypeError', 'String', 'Boolean', 'Set', 'Map', 'WeakMap', 'WeakSet', 'JSON',
@@ -256,7 +357,15 @@ const memberAlias = (ns, member) => `${ns}$${member}`;
 export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
   const cache = new Map();
   const key = (side, file) => `${side}/${file}`;
-  const state = new Map(modules.map((spec) => [key(spec.side, spec.source), { spec: { ...spec, exports: spec.exports ?? {} }, selected: new Map(), imports: new Map(), rewrites: new Map(), seen: new Set(), shared: new Set() }]));
+  // A chunk is one module, unless a spec takes a `part` of it (E42: the plain functions a node-importable model reaches,
+  // kept out of the module that holds the chunk's compiled components): the part owns exactly its `locals` (and roots).
+  const specKey = (spec) => key(spec.side, spec.source) + (spec.part ? `#${spec.part}` : '');
+  const state = new Map(modules.map((spec) => [specKey(spec), { key: specKey(spec), spec: { ...spec, exports: spec.exports ?? {} },
+    locals: new Set([...(spec.locals ?? []), ...Object.keys(spec.exports ?? {})]), selected: new Map(), imports: new Map(), rewrites: new Map(), seen: new Set(), shared: new Set() }]));
+  const stateFor = (side, file, name) => {
+    const part = modules.find((spec) => spec.part && spec.side === side && spec.source === file && state.get(specKey(spec)).locals.has(name));
+    return state.get(part ? specKey(part) : key(side, file));
+  };
   // Resolve chunk `depFile`'s export `alias` (read by module `st`) and record the import under `localName`.
   const importExport = async (st, side, depFile, alias, localName, via) => {
     const target = st.spec.target;
@@ -268,23 +377,35 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
       if (adapter.local !== local) throw Error(`${target}: adapter alias ${via} is ${local}, expected ${adapter.local}`);
       const original = dep.top.get(local);
       if (!original || original.kind === 'import' || original.kind === 'require') throw Error(`${target}: adapter ${via} (${local}) is not a declaration`);
-      assertFeatures(`${target}: adapter ${via} (${local})`, await featureText(dep, original), adapter.features);
+      await assertAdapter(`${target}: adapter ${via}`, dep, local, adapter);
       st.imports.set(localName, { from: adapter.module ?? adapterModule, name: adapter.name, via, kind: 'adapter', original: local });
       return;
     }
     const react = side === 'renderer' ? vendorImport(depFile, alias, dep) : null;
     if (react) { st.imports.set(localName, { from: react[0], name: react[1], via, kind: 'react' }); return; }
     const shared = side === 'renderer' ? (await viewTabsPublic()).get(`${depFile}#${local}`) : null;
-    if (shared) { st.imports.set(localName, { from: `../view-tabs/${depFile}`, name: shared.name, via, kind: 'view-tabs', original: local }); return; }
-    const owner = state.get(key(side, depFile));
+    if (shared && !slicedHere.has(shared.name)) {
+      if (!shared.currentFile) throw Error(`${target}: view-tabs no longer publishes ${shared.name}`);
+      st.imports.set(localName, { from: `../view-tabs/${shared.currentFile}`, name: shared.name, via, kind: 'view-tabs', original: local });
+      return;
+    }
+    const link = side === 'renderer' ? (await linkedHeld()).get(`${depFile}#${local}`) : null;
+    if (link) { st.imports.set(localName, { from: link.from, name: link.name, via, kind: 'linked', original: local }); return; }
+    const owner = stateFor(side, depFile, local);
+    if (!owner && process.env.TURN_PLAN_EXPLORE) {
+      const d = dep.top.get(local);
+      console.error(`[explore] ${target}: ${localName} = ${via} (${local}) :: ${d && d.node ? (await featureText(dep, d)).slice(0, 300).replace(/\n\s*/g, ' ') : d?.kind}`);
+      st.imports.set(localName, { from: adapterModule, name: `EXPLORE_${local}`, via, kind: 'adapter', original: local });
+      return;
+    }
     if (!owner) throw Error(`${target}: unresolved import ${via} (${local}); ${depFile} is not a listed chunk`);
     const dentry = dep.top.get(local);
     if (!dentry || dentry.kind === 'import' || dentry.kind === 'require') throw Error(`${target}: ${via} (${local}) is a re-export`);
     await add(side, depFile, local);
-    st.imports.set(localName, { from: `./${owner.spec.target}`, name: null, chunk: key(side, depFile), local, via, kind: 'generated' });
+    st.imports.set(localName, { from: `./${owner.spec.target}`, name: null, chunk: owner.key, local, via, kind: 'generated' });
   };
   const add = async (side, file, name) => {
-    const st = state.get(key(side, file));
+    const st = stateFor(side, file, name);
     if (!st) throw Error(`the closure enters ${file}, which is not a listed chunk`);
     if (st.seen.has(name)) return;
     st.seen.add(name);
@@ -293,6 +414,22 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
     if (!entry) throw Error(`${st.spec.target}: unbound ${name}`);
     if (entry.kind === 'import') { await importExport(st, side, entry.file, entry.alias, name, `${entry.file}:${entry.alias}`); return; }
     if (entry.kind === 'require') throw Error(`${st.spec.target}: ${name} is a CommonJS namespace`);
+    // A declaration of a listed chunk the host stands in for (the root reads it locally, not through an import).
+    const localAdapter = Object.entries(adapters[file] ?? {}).find(([, a]) => a.local === name && !Object.hasOwn(st.spec.exports, name));
+    if (localAdapter) {
+      const [alias, adapter] = localAdapter;
+      if (src.exported.get(alias) !== name) throw Error(`${st.spec.target}: adapter alias ${file}:${alias} is ${src.exported.get(alias)}, expected ${name}`);
+      await assertAdapter(`${st.spec.target}: adapter ${file}#${name}`, src, name, adapter);
+      st.imports.set(name, { from: adapter.module ?? adapterModule, name: adapter.name, via: `${file}#${name}`, kind: 'adapter', original: name });
+      return;
+    }
+    const published = side === 'renderer' ? (await viewTabsPublic()).get(`${file}#${name}`) : null;
+    if (published && !slicedHere.has(published.name) && !Object.hasOwn(st.spec.exports, name)) {
+      st.imports.set(name, { from: `../view-tabs/${published.currentFile}`, name: published.name, via: `${file}#${name}`, kind: 'view-tabs', original: name });
+      return;
+    }
+    const held = side === 'renderer' && !Object.hasOwn(st.spec.exports, name) ? (await linkedHeld()).get(`${file}#${name}`) : null;
+    if (held) { st.imports.set(name, { from: held.from, name: held.name, via: `${file}#${name}`, kind: 'linked', original: name }); return; }
     if (entry.kind !== 'function' && entry.kind !== 'var') throw Error(`${st.spec.target}: unsupported declaration ${name}`);
     const text = declarationText(src, entry);
     if (/\bimport\s*\(/.test(text) || /\brequire\s*\(/.test(text)) throw Error(`${st.spec.target}: dynamic import inside ${name}`);
@@ -306,7 +443,14 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
           if (!st.imports.has(alias)) await importExport(st, side, depEntry.file, member, alias, `${depEntry.file}:${member}`);
         }
         st.rewrites.set(name, [...(st.rewrites.get(name) ?? []), ...dep.members.map((m) => ({ ...m, alias: memberAlias(dep.name, m.member) }))]);
-      } else await add(side, file, dep.name);
+      } else {
+        const owner = stateFor(side, file, dep.name);
+        if (owner !== st) {
+          if (st.spec.part) throw Error(`${st.spec.target}: ${name} reads ${dep.name}, which is not one of the part's locals`);
+          st.imports.set(dep.name, { from: `./${owner.spec.target}`, name: null, chunk: owner.key, local: dep.name, via: `${file}#${dep.name}`, kind: 'generated' });
+        }
+        await add(side, file, dep.name);
+      }
     }
   };
   for (const st of state.values()) {
@@ -336,11 +480,11 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
     mark.set(chunkKey, 'done');
     order.push(chunkKey);
   };
-  for (const spec of modules) visit(key(spec.side, spec.source), []);
+  for (const spec of modules) visit(specKey(spec), []);
 
   const manifests = {
-    renderer: { referenceVersion, referenceSnapshot, generator: 'scripts/extract-turn-plan.mjs', modules: [], callSites: [] },
-    main: { referenceVersion, referenceSnapshot, generator: 'scripts/extract-turn-plan.mjs', adapterModule: 'electron/turn-plan-adapters.mjs', modules: [], callSites: [] },
+    renderer: { ...sideReference.renderer, generator: 'scripts/extract-turn-plan.mjs', modules: [], callSites: [] },
+    main: { ...sideReference.main, generator: 'scripts/extract-turn-plan.mjs', adapterModule: 'electron/turn-plan-adapters.mjs', modules: [], callSites: [] },
   };
   const files = { renderer: {}, main: {} };
   for (const chunkKey of order) {
@@ -362,7 +506,7 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
       ...[...st.shared].sort().filter((local) => !Object.hasOwn(spec.exports, local))];
     const exportText = exported.length ? `export { ${exported.join(', ')} };` : '';
     const adapterNote = spec.side === 'main' ? 'electron/turn-plan-adapters.mjs' : 'src/turn-plan-model.mjs';
-    const header = `// Original Claude Desktop ${referenceVersion} bindings from ${spec.side === 'main' ? 'asar/.vite/build/' : ''}${spec.source}; generated by extract-turn-plan.mjs.\n// Edit the extractor or ${adapterNote}, never this file.\n`;
+    const header = `// Original Claude Desktop ${sideReference[spec.side].referenceVersion} bindings from ${spec.side === 'main' ? 'asar/.vite/build/' : ''}${spec.source}; generated by extract-turn-plan.mjs.\n// Edit the extractor or ${adapterNote}, never this file.\n`;
     const text = await format(`${header}${importText}\n${blocks.join('\n')}\n${exportText}\n`, { parser: 'babel' });
     const closed = babel.babelParse(text, spec.target, true);
     let globals;
@@ -371,7 +515,7 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
     if (unbound.length) throw Error(`${spec.target}: unbound ${unbound.join(', ')}`);
     files[spec.side][spec.target] = text;
     manifests[spec.side].modules.push({
-      target: spec.target, source: spec.source, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion,
+      target: spec.target, source: spec.source, ...(spec.part ? { part: spec.part } : {}), sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion: sideReference[spec.side].referenceVersion,
       bindings: decls.map(([name, entry]) => ({ name, sha256: sha(declarationText(src, entry)) })),
       imports: [...st.imports].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}) })),
       exports: spec.exports, sharedExports: [...st.shared].sort(),
@@ -409,7 +553,7 @@ export async function extractTurnPlan({ check = false, dryRun = false } = {}) {
     }
   }
   const count = [...manifests.renderer.modules, ...manifests.main.modules].reduce((n, m) => n + m.bindings.length, 0);
-  console.log(`${check ? 'Verified' : 'Extracted'} ${manifests.renderer.modules.length + manifests.main.modules.length} turn plan modules (${count} original ${referenceVersion} bindings, ${manifests.renderer.callSites.length + manifests.main.callSites.length} pinned call sites).`);
+  console.log(`${check ? 'Verified' : 'Extracted'} ${manifests.renderer.modules.length + manifests.main.modules.length} turn plan modules (${count} original bindings: renderer ${referenceVersion}, main ${official.referenceVersion}; ${manifests.renderer.callSites.length + manifests.main.callSites.length} pinned call sites).`);
   return manifests;
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await extractTurnPlan({ check: process.argv.includes('--check'), dryRun: process.argv.includes('--dry-run') });

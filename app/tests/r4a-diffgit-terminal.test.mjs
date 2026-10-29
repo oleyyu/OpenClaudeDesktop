@@ -63,30 +63,33 @@ test('diffgit-06 official: the Changed files column moves to inline-start only b
   ]);
 });
 
-test('diffgit-06 local: the column is fixed at the start with an end border, a forward drag widens it (the gate-off form)', () => {
+test('diffgit-06 local: the column is fixed at the start with an end border, a forward drag widens it (the gate-off form)', async () => {
   const diff = local('src/source-diff.jsx');
   const layout = fnBody(diff, 'function ChangesFileLayout(');
-  // No local preference or gate for the column side.
+  // No local preference or gate for the column side in the host files: the side is the generated c219730b0 Sn's onRight
+  // (W12 diff-main), whose gn answers from the host GrowthBook table, where __gb__2446046106 is not listed (off).
   assert.equal(count(local('src/source-diff.jsx') + local('src/source-session.jsx') + local('src/tile-layout-store.mjs') + local('src/main.jsx'), '2446046106'), 0);
-  assert.doesNotMatch(layout, /row-reverse|onRight|inline-start/);
-  // DOM order [column | edge | main] in a plain flex row (off: no flex-row-reverse), the column bordered at its end.
+  const { HOST_GROWTHBOOK } = await import('../src/host-growthbook.mjs');
+  assert.equal(HOST_GROWTHBOOK.__gb__2446046106, undefined);
+  once(local('src/source-sidebar-resize-adapters.jsx'), ['export function useDiffTreeOnRight() {\n  return false;\n}']);
+  // DOM order [column | edge | shield | main] in the Jd row (`flex-row-reverse` only with onRight), the column bordered
+  // at its end (`We && (Vn ? "border-s" : "border-e")`).
   once(layout, [
     // R3-files made the layout root the focusable diff pane body (outline-none, data-diff-pane-body, tabIndex -1).
-    'return <div ref={layoutRef} className="sdiff-changes-layout outline-none" data-diff-pane-body="" tabIndex={-1} data-file-list-shown={shown || undefined} data-resizing={resizing || undefined}>',
-    // The column border is now the original's logical class: xe&&(Dt?"border-s":"border-e") with Dt (onRight) off.
-    '{columnRendered && <div className="sdiff-file-list relative shrink-0 flex flex-col min-h-0 border-e"',
+    "return <div ref={layoutRef} className={`sdiff-changes-layout outline-none${column.onRight ? ' flex-row-reverse' : ''}`} data-diff-pane-body=\"\" tabIndex={-1} data-file-list-shown={shown || undefined}>",
+    "{shown && <div ref={column.columnRef} className={`sdiff-file-list relative shrink-0 flex flex-col min-h-0 ${column.onRight ? 'border-s' : 'border-e'}`} data-pane-line=\"\"",
   ]);
-  const column = layout.indexOf('className="sdiff-file-list '), edge = layout.indexOf('className="source-tree-edge sdiff-file-list-edge"'), main = layout.indexOf('className={`sdiff-changes-main');
-  assert.ok(column > 0 && column < edge && edge < main, 'column, edge handle, then the diff');
+  const column = layout.indexOf('className={`sdiff-file-list '), edge = layout.indexOf('<DiffTreeEdgeHandle'), shield = layout.indexOf('<DiffTreeResizeShield'), main = layout.indexOf('className={`sdiff-changes-main');
+  assert.ok(column > 0 && column < edge && edge < shield && shield < main, 'column, edge handle, shield, then the diff');
   const css = local('src/source-diff.css');
   once(css, ['.sdiff-changes-layout { position:relative; display:flex; flex:1; min-height:0; min-width:0; }']);
   assert.doesNotMatch(css, /\.sdiff-file-list \{ border-right/, 'the hand-written physical border is gone');
-  assert.doesNotMatch(css, /row-reverse|\.sdiff-file-list \{[^}]*border-left/);
-  // Off in LTR the official drag sign s is 1: width = start + delta, and the edge handle reveals on a positive drag.
-  // The local app ships no right-to-left locale, so k()==="rtl" never holds and s stays 1 (no RTL mirror needed).
+  assert.doesNotMatch(css, /row-reverse|\.sdiff-file-list \{[^}]*border-left|sdiff-file-list-(?:divider|edge)/);
+  // Off in LTR the official drag sign is 1 (Sn `h = m === (n() === "rtl") ? 1 : -1`): width = start + delta, and the edge
+  // handle reveals on a positive drag. The local app ships no right-to-left locale.
   assert.deepEqual([...LOCALE_CODES], ['en-US', 'zh-CN']);
-  assert.equal(count(layout, 'const value = startWidth.current + delta;'), 2);
-  once(layout, ['onMove: (delta) => setDrag(delta >= MIN / 2 ?', "if (event.key === 'ArrowLeft') value = visibleWidth - step;", "else if (event.key === 'ArrowRight') value = visibleWidth + step;"]);
+  once(local('src/generated/sidebar-resize/diff-tree-column.mjs'), ['h = m === (n() === "rtl") ? 1 : -1', 'g = m ? "inline-start" : "inline-end"']);
+  assert.doesNotMatch(layout, /useSourcePointerResize|startWidth|dividerKeyDown/);
   assert.deepEqual({ ...DIFF_FILE_LIST_WIDTH }, { DEFAULT: 240, MIN: 160, MAX: 640 });
 });
 
@@ -328,8 +331,10 @@ test('terminal-05 local: the pane shows Attach only with onAttachSelection, and 
   const pane = local('src/source-terminal-pane.jsx');
   // Pane side = Jy/pi: the body-menu row, the selection button, ⇧⌘L and the attach handler all need the sink.
   once(pane, [
-    '{onAttachSelection && bodyMenu.selection.trim() && <>',
-    '{selectionAnchor&&!selectionAnchor.offscreen&&onAttachSelection&&!bodyMenu&&<TerminalSelectionAction',
+    // w11-e31-terminal-cont: the body menu is cccc2cf0a iS kf (RowContextMenu) with cS's selection (Me), and the
+    // selection bar follows Ei's `B && !B.offscreen && g && !Z` (the bar itself hides while a context menu is open).
+    '{onAttachSelection && bodySelection.trim() && <>',
+    '{selectionAnchor&&!selectionAnchor.offscreen&&onAttachSelection&&!exited&&!coverError&&<TerminalSelectionAction',
     'if (!attachVisibleTerminalOutput(term,onAttachSelection?handlers.current.attach:null) && term.hasSelection()) setSelectionAnchor(null);',
     'if (!onAttachSelection || typeof text !== "string" || !text.trim()) return false;',
   ]);

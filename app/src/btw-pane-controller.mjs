@@ -2,7 +2,7 @@
 // cleanup, 20s opening deadline, and 3s grace for an outstanding close.
 export function createBtwPaneController({ start, close, send, show, hide, currentView, listChildren,
   isParentVisible, isOpenElsewhere = () => false, epoch, registered = () => {}, fallback, restoreDraft,
-  captureFocus = () => undefined,
+  captureFocus = () => undefined, onPendingChange = () => {},
   requestId = () => crypto.randomUUID(), setTimer = setTimeout, clearTimer = clearTimeout }) {
   const attempts = new Map(), closings = new Map(), pending = new Map(), archived = new Set();
   function closeChild(parentId, childId) {
@@ -47,6 +47,8 @@ export function createBtwPaneController({ start, close, send, show, hide, curren
     }
     const sequence = (attempts.get(parentId) ?? 0) + 1;
     attempts.set(parentId, sequence); pending.set(parentId, (pending.get(parentId) ?? 0) + 1);
+    // c73f45bc3 bp/xp (mp, hp.forEach): the parent's in-flight start count drives vp, qP's createBusy.
+    onPendingChange(parentId, true);
     let timedOut = false, timer;
     const opening = Promise.resolve().then(() => start({ parentId, permission, question: text,
       requestId: requestId(), openedBy: context !== null ? 'selection' : text ? 'question' : 'bare' }));
@@ -57,7 +59,7 @@ export function createBtwPaneController({ start, close, send, show, hide, curren
     finally {
       clearTimer(timer);
       const remaining = (pending.get(parentId) ?? 1) - 1;
-      if (remaining) pending.set(parentId, remaining); else pending.delete(parentId);
+      if (remaining) pending.set(parentId, remaining); else { pending.delete(parentId); onPendingChange(parentId, false); }
     }
     const sameEpoch = epoch() === initialEpoch;
     if (!result || result.status !== 'started') {
@@ -94,10 +96,23 @@ export function btwChildren(sessions, metadata, parentId) {
 // Current NT / FT: the active tab remains present even if it was archived or
 // its metadata is still arriving. Closing chooses the next, then previous
 // eligible neighbor; it does not steal a session already open elsewhere.
+// 3.6556.2 cccc2cf0a qP labels an untitled tab by HP's ordinal (`ordinal` on each tab here).
 export function btwPaneTabs(sessions, metadata, parentId, activeId) {
   const tabs=btwChildren(sessions,metadata,parentId).filter(thread=>!thread.archived||thread.id===activeId);
   if(activeId&&!tabs.some(thread=>thread.id===activeId))tabs.push(sessions.find(thread=>thread.id===activeId)??{id:activeId});
-  return tabs;
+  const ordinals=btwTabOrdinals(sessions,metadata,parentId,tabs.map(tab=>tab.id));
+  return tabs.map((tab,index)=>({...tab,ordinal:ordinals[index]}));
+}
+// cccc2cf0a HP: `e.filter(e=>e.spawnedFrom?.btw===!0&&e.spawnedFrom.sessionId===t&&e.sessionId!==r).sort((e,t)=>(e.createdAt??0)-
+// (t.createdAt??0)).map(e=>e.sessionId)`, then each tab's 1-based place in that list, and tabs outside it numbered after it
+// in strip order. Every /btw child the parent ever spawned counts (archived and detached ones too), so a tab keeps its
+// number while siblings close. r is the draft child (btw-draft:), which the host does not have. The host's records are
+// threads plus their metadata: spawnedFrom and btw.createdAt live in metadata.
+export function btwTabOrdinals(sessions, metadata, parentId, ids) {
+  const spawned=sessions.filter(thread=>{const from=metadata[thread.id]?.spawnedFrom;return from?.btw===true&&from.sessionId===parentId;})
+    .sort((a,b)=>(metadata[a.id]?.btw?.createdAt??0)-(metadata[b.id]?.btw?.createdAt??0)).map(thread=>thread.id);
+  let count=spawned.length;
+  return ids.map(id=>{const index=spawned.indexOf(id);return index>=0?index+1:(count+=1,count);});
 }
 export function nextBtwTab(tabs, id, openElsewhere=()=>false) {
   const index=tabs.findIndex(tab=>tab.id===id);

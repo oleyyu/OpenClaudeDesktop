@@ -16,6 +16,9 @@ import { createTurnClipboardFeedback, preventRepeatedSelection, turnFooterKeyInd
 import { clipboardEnvironment, writeClipboardPayload } from './clipboard-payload.mjs';
 import { markdownToClipboardHtml } from './rich-copy-html.mjs';
 import { SourceTimestamp } from './source-timestamp.jsx';
+// w13-close-chat-messages: cc1aae219 lI, generated (chat-messages version-selector), for a Chat prompt's versions.
+import { ChatVersionSelector } from './generated/chat-messages/version-selector.mjs';
+import { showVersionNav } from './chat-branches-model.mjs';
 import './source-user-actions.css';
 import { t } from '../electron/i18n/index.mjs';
 
@@ -66,7 +69,7 @@ function UserAction({ icon, label, detail = null, onClick = null, disabledReason
   </SourceTooltip>;
 }
 
-function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind = null, onFork = null }) {
+function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind = null, onFork = null, chat = null }) {
   const root = useRef(null), copyButton = useRef(null), focusRequested = useRef(false);
   const [latched, setLatched] = useState(false);
   const coarse = useCoarseInput(root);
@@ -82,7 +85,11 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
   const showActions = () => { focusRequested.current = true; setLatched(true); };
   const copied = state === 'copied', failed = state === 'error';
   const announcement = copied ? t('Copied') : failed ? t('Couldn’t copy to the clipboard. Try again.') : '';
-  return <div ref={root} className="sua-row" data-user-actions-id={itemId}>
+  // w13-close-chat-messages (chatui-message-actions-01 / chatfn-branches-03): a Chat prompt's row is s4's
+  // `Ic.Actions {"data-testid":"user-message-actions"}`: [Timestamp, Sn] with Sn's `pn` (Ia "user-message-retry") and
+  // `hn` (Ic.EditAction "user-message-edit") before `gn` (Ic.CopyAction) and `yn` (lI, sender "human") after them.
+  const chatVersions = chat?.versions && typeof chat.onVersion === 'function' && showVersionNav({ optionCount: chat.versions.nOptions }) ? chat.versions : null;
+  return <div ref={root} className="sua-row" data-user-actions-id={itemId} data-testid={chat ? 'user-message-actions' : undefined}>
     {!mounted ? <div className="sua-deferred" data-find-omitted="">
       <span className="sua-placeholder" aria-hidden="true" />
       <button type="button" className="sua-show-actions sua-sr-only" onFocusCapture={showActions}
@@ -99,6 +106,8 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
       }}>
       <SourceTooltipGroup>
         {startedAtMs != null && <SourceTimestamp dateMs={startedAtMs} />}
+        {typeof chat?.onRetry === 'function' && <UserAction action="retry" testId="user-message-retry" icon="ArrowClockwise" label={t("Retry")} onClick={chat.onRetry} />}
+        {typeof chat?.onEdit === 'function' && <UserAction action="edit" testId="user-message-edit" icon="Edit" label={t("Edit")} onClick={chat.onEdit} />}
         <SourceTooltip content={t("Copy")} automatic={true} hoverable={false}>
           <button ref={copyButton} type="button" className="sua-copy" data-cds="Button" data-variant="ghost"
             data-cds-icon-only="" data-cds-ghost=""
@@ -126,6 +135,7 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
           onClick={rewind.onClick ?? null} disabledReason={rewind.disabledReason} />}
         {typeof onFork === 'function' && <UserAction action="fork" icon="ArrowSplitRight" label={t("Fork from here")}
           detail={t("Starts a new session from this point. This one stays as it is.")} onClick={onFork} />}
+        {chatVersions && <ChatVersionSelector message={{ ...chatVersions, sender: 'human' }} changeDisplayedConversationPath={chat.onVersion} />}
       </SourceTooltipGroup>
       <span id={statusId} className="sua-status sua-sr-only" role="status">{announcement}</span>
     </div>}
@@ -136,7 +146,9 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
  * article owns the pointer/focus latch and the hover reveal scope. */
 // rewind: null (not offered) | {onClick} | {disabledReason} (offered, unavailable while the agent works)
 //   | {kind: 'restart', onClick} (a Cowork session's Restart conversation from here, R4i-cowork CW3); onFork: null | fn.
-export function SourceUserActions({ sessionKey, itemId, text = '', startedAtMs = null, interacted = false, rewind = null, onFork = null }) {
+// chat: null off Chat | { onRetry: fn|null, onEdit: fn|null, versions: lI's {selectedOption, nOptions, previous, next}|null, onVersion }
+//   (source-chat-message-actions.jsx useChatBranches forUserTurn).
+export function SourceUserActions({ sessionKey, itemId, text = '', startedAtMs = null, interacted = false, rewind = null, onFork = null, chat = null }) {
   const identity = JSON.stringify(['user', sessionKey, itemId]);
-  return <UserActions key={identity} identity={identity} itemId={itemId} text={text} startedAtMs={startedAtMs} interacted={interacted} rewind={rewind} onFork={onFork} />;
+  return <UserActions key={identity} identity={identity} itemId={itemId} text={text} startedAtMs={startedAtMs} interacted={interacted} rewind={rewind} onFork={onFork} chat={chat} />;
 }

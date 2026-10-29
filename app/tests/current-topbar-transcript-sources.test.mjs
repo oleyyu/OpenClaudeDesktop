@@ -14,74 +14,104 @@ import { ownerViewOf, elementOrNull } from '../src/generated/code-current/dom-ow
 import { titleGroupRect } from '../src/generated/code-current/titlebar-title-rect.mjs';
 import { displayText, displayTitle } from '../src/generated/code-current/display-text.mjs';
 import { visibleBox } from '../src/generated/code-current/visible-box.mjs';
-import { createReadTracker, readLineVisible, ApprovalReadRows } from '../src/generated/code-current/approval-read-gate.mjs';
 import { devServerDescription } from '../src/generated/code-current/dev-server-description.mjs';
 import { splitPointerDrags, markSplitPointerDrag } from '../src/generated/code-current/split-drag-registry.mjs';
 import { contentBox, minSize, walkResolvedFlexes } from '../src/generated/code-current/tile-layout-math.mjs';
 import { fitOpenedLayout } from '../src/generated/code-current/tile-fit-opened.mjs';
-import { paddedTop } from '../src/generated/code-current/padded-top.mjs';
-import { landTranscriptFocus, landedFocusEvents } from '../src/generated/code-current/transcript-focus-landing.mjs';
 import { attachTabFocusRelease } from '../src/generated/code-current/tab-focus-release.mjs';
 
 // R2-topbar TT-01 (analysis/code-ui-migrate-20261017/research/topbar-transcript.md §5.1): the titlebar, attachment,
-// approval read gate, dev-server port line, split drag registry, fitOpenedLayout and transcript focus helpers are
-// extracted from Claude Desktop 2.42304.0. These assertions pin the official behaviour the hosts will consume.
+// approval read gate, dev-server port line, split drag registry, fitOpenedLayout and transcript focus helpers.
+// W2 w2-titlebar-current moved the titlebar, split, tile and focus targets to Claude Desktop 3.6556.2
+// (analysis/claude-3.6556.2-migrate-20261025/research/titlebar-frame.md §1.1/§3.2); attachment, approval, dev-server,
+// cc-rest-transcript (W9) moved display-text, attachment-file-name, visible-box, approval-read-gate, dev-server-description
+// and tab-focus-release (with the new tab-focus-tracker) to 3.6556.2 too (research/code-current-rest.md §2/§3 P0). These
+// assertions pin the official behaviour the hosts consume.
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const V3 = path.join(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const GENERATED = path.join(ROOT, 'src/generated/code-current');
 const official = name => fs.readFileSync(path.join(OFFICIAL, name), 'utf8');
+const current = name => fs.readFileSync(path.join(V3, name), 'utf8');
 const generated = name => fs.readFileSync(path.join(GENERATED, name), 'utf8');
 const manifest = JSON.parse(generated('manifest.json'));
 const entry = target => manifest.modules.find(module => module.target === target);
 
-let server, attachment, fold;
+// padded-top (3.6556.2) reads view-tabs isFizzyLakePartEnabled, so it and transcript-focus-landing load through Vite; the
+// attachment name and the approval read gate import the React Compiler helpers from view-tabs shared-frame (E42).
+let server, attachment, fold, paddedTop, landTranscriptFocus, landedFocusEvents, tabFocusFollows, createReadTracker, readLineVisible, ApprovalReadRows;
 before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   attachment = await server.ssrLoadModule('/src/generated/code-current/attachment-file-name.mjs');
   fold = await server.ssrLoadModule('/src/generated/code-current/titlebar-fold-measure.mjs');
+  ({ paddedTop } = await server.ssrLoadModule('/src/generated/code-current/padded-top.mjs'));
+  ({ landTranscriptFocus, landedFocusEvents } = await server.ssrLoadModule('/src/generated/code-current/transcript-focus-landing.mjs'));
+  ({ tabFocusFollows } = await server.ssrLoadModule('/src/generated/code-current/transcript-tab-focus.mjs'));
+  ({ createReadTracker, readLineVisible, ApprovalReadRows } = await server.ssrLoadModule('/src/generated/code-current/approval-read-gate.mjs'));
 });
 after(() => server?.close());
 
-test('manifest: every TT-01 target comes from the named 2.42304.0 chunk and carries the official signatures', () => {
-  const expected = {
-    'grapheme-prefix.mjs': ['shared-2-Cb74JByF.js', 'granularity:"grapheme"'],
-    'session-menu-tooltip.mjs': ['cc43287c9-DAfOi8yP.js', '`${Ru(Ve,79).trimEnd()}\\u2026`'],
-    'titlebar-draft-title.mjs': ['cc43287c9-DAfOi8yP.js', 'draggable truncate ps-2.5 text-body font-medium font-control text-muted-as-secondary'],
-    'titlebar-toggle-fold.mjs': ['c73f45bc3-CFrHin0p.js', 'folded:e.filter(e=>i.has(e))'],
-    'dom-owner.mjs': ['shared-frame-BfjMqbuN.js', 'e?.ownerDocument.defaultView??globalThis.window'],
-    'titlebar-title-rect.mjs': ['shared-18-D4XxL6Tg.js', '.cc-lined-title-group'],
-    'titlebar-fold-measure.mjs': ['cd54a5401-B0T2EyYD.js', 'code.titlebar_overflow_measure_bounded'],
-    'display-text.mjs': ['shared-frame-BfjMqbuN.js', '\\p{Default_Ignorable_Code_Point}'],
-    'attachment-file-name.mjs': ['shared-2-Cb74JByF.js', 'before:content-[\'\\u2026\']'],
-    'visible-box.mjs': ['shared-156-Bikz018e.js', 'scrollPaddingBottom'],
-    'approval-read-gate.mjs': ['c96d752d0-BOCqU7c2.js', '"data-testid":"approval-read-rows"'],
-    'dev-server-description.mjs': ['c96d752d0-BOCqU7c2.js', 'Runs in {cwd} on port {port} (or the next free port)'],
-    'split-drag-registry.mjs': ['shared-23-Bu_lvvVo.js', 'D2=new WeakMap'],
-    'tile-layout-math.mjs': ['cf53e1812-CivLPgES.js', 'e.borderPx??1'],
-    'tile-fit-opened.mjs': ['cc43287c9-DAfOi8yP.js', 'withRoomForChat: walkResolvedFlexes gave no box for a child of a sized stack'],
-    'padded-top.mjs': ['shared-15-Cc9xvKlF.js', 'getBoundingClientRect().top+Ea(e)'],
-    'transcript-focus-landing.mjs': ['c96d752d0-BOCqU7c2.js', '[role="article"]'],
-    'tab-focus-release.mjs': ['c9f414608-DLf4iO0V.js', '[data-base-ui-focus-guard]'],
+test('manifest: every TT-01 target comes from its named official chunk and carries the official signatures', () => {
+  const v3 = {
+    'grapheme-prefix.mjs': ['shared-2-TF8v67kg.js', 'granularity:"grapheme"'],
+    'session-menu-tooltip.mjs': ['cc43287c9-Me-M2ucD.js', 'Xe=Ze.length<=JW||yd(Ze,JW)===Ze?Ze:`${yd(Ze,79).trimEnd()}\\u2026`'],
+    'titlebar-draft-title.mjs': ['cc43287c9-Me-M2ucD.js', '!t&&!o&&_?p("h1",{"data-pane-title":"",className:"draggable truncate ps-2.5 text-body font-medium font-control text-muted-as-secondary",children:_}):null'],
+    'titlebar-toggle-fold.mjs': ['c73f45bc3-B7hbL7H9.js', 'folded:e.filter(e=>i.has(e))'],
+    'dom-owner.mjs': ['shared-frame-6jtSkIit.js', 'function aa(e){return e?.ownerDocument.defaultView??globalThis.window}'],
+    'titlebar-title-rect.mjs': ['shared-18-D3y8YMFN.js', '.cc-lined-title-group'],
+    'titlebar-fold-measure.mjs': ['cd54a5401-wFztHb-d.js', 'code.titlebar_overflow_measure_bounded'],
+    'split-drag-registry.mjs': ['shared-23-BZ6ZY5fu.js', 'FO=new WeakMap'],
+    'tile-layout-math.mjs': ['cf53e1812-CX9VqRuk.js', 'e.borderPx??1'],
+    'tile-layout-flex.mjs': ['c9543da06-BaufrsQl.js', 'overflowMinReachable'],
+    'tile-fit-opened.mjs': ['cc43287c9-Me-M2ucD.js', 'withRoomForChat: walkResolvedFlexes gave no box for a child of a sized stack'],
+    'padded-top.mjs': ['shared-15-BvlV43cI.js', 'getBoundingClientRect().top+Xs(e)'],
+    'transcript-focus-landing.mjs': ['c96d752d0-CWv_7-n9.js', 'tabPresses:r=null'],
+    'transcript-tab-focus.mjs': ['c99ca27a0-DVQoBCK_.js', 'Node.DOCUMENT_POSITION_FOLLOWING'],
+    'display-text.mjs': ['shared-frame-6jtSkIit.js', '\\p{Default_Ignorable_Code_Point}'],
+    'attachment-file-name.mjs': ['shared-2-TF8v67kg.js', 'flex min-w-0 flex-col [&:where(:root[dir=rtl]_:dir(rtl))]:text-right'],
+    'visible-box.mjs': ['shared-156-BLTosN8U.js', 'scrollPaddingBottom'],
+    'approval-read-gate.mjs': ['cc32965c2-BQu1bA_w.js', '{onReadState:r,onFits:i,headIsFirstLine:a,children:o}=e'],
+    'dev-server-description.mjs': ['cc32965c2-BQu1bA_w.js', 'Runs in {cwd} on port {port} (or the next free port)'],
+    'tab-focus-tracker.mjs': ['c99ca27a0-DVQoBCK_.js', 'isTabFocus:e=>'],
+    'tab-focus-release.mjs': ['c9f414608-BplIKcn2.js', '!f.isTabFocus(t)'],
   };
-  for (const [target, [file, signature]] of Object.entries(expected)) {
-    const module = entry(target);
-    assert.ok(module, `${target} is in the manifest`);
-    assert.equal(module.referenceVersion, '2.42304.0', target);
-    assert.equal(path.basename(module.source), file, target);
-    assert.match(module.source, /installed-2\.42304\.0-20261017/, target);
-    assert.ok(official(file).includes(signature), `${file} still carries ${signature}`);
-    assert.match(generated(target), /^\/\/ Original Claude Desktop 2\.42304\.0 bindings/, target);
+  const legacy = {};
+  for (const [version, table, read, snapshot] of [['3.6556.2', v3, current, /snapshots\/claude-3\.6556\.2-20261025-192807/], ['2.42304.0', legacy, official, /installed-2\.42304\.0-20261017/]]) {
+    for (const [target, [file, signature]] of Object.entries(table)) {
+      const module = entry(target);
+      assert.ok(module, `${target} is in the manifest`);
+      assert.equal(module.referenceVersion, version, target);
+      assert.equal(path.basename(module.source), file, target);
+      assert.match(module.source, snapshot, target);
+      assert.ok(read(file).includes(signature), `${file} still carries ${signature}`);
+      assert.ok(generated(target).startsWith(`// Original Claude Desktop ${version} bindings`), target);
+    }
   }
-  assert.deepEqual(entry('session-menu-tooltip.mjs').sourceSelections.map(s => [s.binding, s.local]), [['_W', 'Ue']]);
-  assert.deepEqual(entry('titlebar-draft-title.mjs').sourceSelections.map(s => [s.binding, s.local]), [['wW', 'Me']]);
+  // The compiled conditionals are selected whole (code-current selections, w1-infra).
+  assert.deepEqual(entry('session-menu-tooltip.mjs').sourceSelections.map(s => [s.binding, s.conditional, s.whole]), [['YW', 'Ze.length <= JW || yd(Ze, JW) === Ze', true]]);
+  assert.deepEqual(entry('titlebar-draft-title.mjs').sourceSelections.map(s => [s.binding, s.conditional, s.whole]), [['oG', '!t && !o && _', true]]);
   // Host boundaries are only official helpers or documented constants; no hand-written look-alikes.
   assert.match(generated('tab-focus-release.mjs'), /import \{ ownerWindow as e \} from "\.\/owner-window\.mjs";/);
-  assert.match(generated('titlebar-fold-measure.mjs'), /import \{ isFizzyLakePartEnabled as te \} from "\.\.\/view-tabs\/shared-4-CJsHhp5n\.js";/);
-  assert.match(generated('attachment-file-name.mjs'), /import \{ cdsClassNames as Ku \} from "\.\.\/view-tabs\/shared-frame-BfjMqbuN\.js";/);
-  const publicNames = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/view-tabs/manifest.json'), 'utf8')).publicNames;
-  assert.deepEqual([publicNames.isFizzyLakePartEnabled.file, publicNames.isFizzyLakePartEnabled.local], ['shared-4-CJsHhp5n.js', 'jf']);
-  assert.deepEqual([publicNames.cdsClassNames.file, publicNames.cdsClassNames.local], ['shared-frame-BfjMqbuN.js', 'X']);
+  assert.match(generated('tab-focus-release.mjs'), /import \{ trackTabFocus as t \} from "\.\/tab-focus-tracker\.mjs";/);
+  assert.match(generated('owner-window.mjs'), /import \{ ownerWindow as pf \} from "\.\.\/view-tabs\/shared-25-DOWZRSlq\.js";/);
+  assert.match(generated('visible-box.mjs'), /import \{ ownerWindow as Xt \} from "\.\/owner-window\.mjs";/);
+  assert.match(generated('approval-read-gate.mjs'), /import \{ ownerWindow as oe \} from "\.\/owner-window\.mjs";\nimport \{ visibleBox as dn \} from "\.\/visible-box\.mjs";\n\/\/ c2d1aeb56 f reads the approval presentation context \(default "dock"\); OpenClaude only renders inline cards\.\nconst oo = \(\) => "card";/);
+  assert.match(generated('attachment-file-name.mjs'), /import \{\s*afterFontsReady as fe,\s*textDirectionOf as Re,?\s*\} from "\.\.\/code-composer\/chat-composer-frame\.mjs";/);
+  assert.match(generated('titlebar-fold-measure.mjs'), /import \{ isFizzyLakePartEnabled as ie \} from "\.\.\/view-tabs\/shared-4-DUB1Oi0O\.js";/);
+  assert.match(generated('padded-top.mjs'), /import \{ isFizzyLakePartEnabled as dt \} from "\.\.\/view-tabs\/shared-4-DUB1Oi0O\.js";/);
+  assert.match(generated('transcript-focus-landing.mjs'), /import \{ tabFocusFollows as due \} from "\.\/transcript-tab-focus\.mjs";/);
+  assert.match(generated('tile-layout-math.mjs'), /export \{\s*minSize,\s*distributeFlex,\s*walkResolvedFlexes,?\s*\} from "\.\/tile-layout-flex\.mjs";/);
+  assert.match(generated('attachment-file-name.mjs'), /import \{\s*cdsClassNames as B,\s*useCdsIsoLayoutEffect as _e,?\s*\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  assert.match(generated('attachment-file-name.mjs'), /import \{ clsx as c \} from "\.\.\/view-tabs\/vendor-frame-CnSY1sxv\.js";/);
+  // Generated code never reaches view-tabs through the facade (R6/E41).
+  for (const target of ['owner-window.mjs', 'attachment-file-name.mjs', 'approval-read-gate.mjs']) assert.doesNotMatch(generated(target), /view-tabs\/index\.js/, target);
+  const viewTabs = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+  const publicNames = viewTabs.publicNames;
+  assert.deepEqual([publicNames.isFizzyLakePartEnabled.file, publicNames.isFizzyLakePartEnabled.local], ['shared-4-DUB1Oi0O.js', 'lp']);
+  // The chunk imports these slices keep stand for the view-tabs public names they are imported as (same file, same local).
+  for (const [name, file, local] of [['cdsClassNames', 'shared-frame-6jtSkIit.js', 'Q'], ['useCdsIsoLayoutEffect', 'shared-frame-6jtSkIit.js', 'Ln'], ['clsx', 'vendor-frame-CnSY1sxv.js', 've'], ['ownerWindow', 'shared-25-DOWZRSlq.js', 'pf']])
+    assert.deepEqual([publicNames[name].file, publicNames[name].local], [file, local], name);
 });
 
 test('graphemePrefix keeps whole grapheme clusters', () => {
@@ -174,14 +204,19 @@ test('attachmentNameSplit returns null for names that fit and keeps the extensio
   assert.equal(attachmentNameSplit(family.repeat(60), 4, false).tailStem, family.repeat(12));
 });
 
+// 3.6556.2 shared-2 Km: the two-row layout right-aligns under an RTL document, the head sits in a clamped span around its
+// own <bdi>, and an LTR name keeps its tail LTR and end-aligned there (vm); a right-to-left name gets no such classes.
 test('AttachmentFileName renders the official clamp or head/tail markup', () => {
   const { AttachmentFileName } = attachment;
   const short = renderToStaticMarkup(React.createElement(AttachmentFileName, { name: 'notes.md', lines: 4 }));
   assert.equal(short, '<span aria-hidden="true" title="notes.md" class="text-footnote font-normal text-primary line-clamp-4 break-words [overflow-wrap:anywhere]"><bdi>notes.md</bdi></span>');
   const long = renderToStaticMarkup(React.createElement(AttachmentFileName, { name: `${'x'.repeat(75)}.tsx`, lines: 4 }));
-  assert.match(long, /^<span aria-hidden="true" title="x{75}\.tsx" class="text-footnote font-normal text-primary flex min-w-0 flex-col">/);
-  assert.match(long, /<bdi class="max-h-\[3lh\] overflow-hidden break-words \[overflow-wrap:anywhere\]">x{67}<\/bdi>/);
-  assert.match(long, /<span class="flex min-w-0 before:shrink-0 before:content-\[&#x27;\u2026&#x27;\]"><bdi class="truncate py-\[0\.125em\] -my-\[0\.125em\]">x{8}<\/bdi><span class="shrink-0">\.tsx<\/span><\/span>/);
+  assert.match(long, /^<span aria-hidden="true" title="x{75}\.tsx" class="text-footnote font-normal text-primary flex min-w-0 flex-col \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:text-right">/);
+  assert.match(long, /<span class="max-h-\[3lh\] overflow-hidden break-words \[overflow-wrap:anywhere\]"><bdi>x{67}<\/bdi><\/span>/);
+  const ltrTail = '\\[&amp;:where\\(:root\\[dir=rtl\\]_:dir\\(rtl\\)\\)\\]:\\[direction:ltr\\] \\[&amp;:where\\(:root\\[dir=rtl\\]_:dir\\(rtl\\)\\)\\]:justify-end';
+  assert.match(long, new RegExp(`<span class="flex min-w-0 before:shrink-0 before:content-\\[&#x27;\u2026&#x27;\\] ${ltrTail}"><bdi class="truncate py-\\[0\\.125em\\] -my-\\[0\\.125em\\]">x{8}<\\/bdi><span class="shrink-0">\\.tsx<\\/span><\\/span><\\/span>$`));
+  const rtl = renderToStaticMarkup(React.createElement(AttachmentFileName, { name: `${'\u05D0'.repeat(75)}.tsx`, lines: 4 }));
+  assert.match(rtl, /<span class="flex min-w-0 before:shrink-0 before:content-\[&#x27;\u2026&#x27;\]"><bdi class="truncate/, 'a right-to-left name keeps its own tail direction');
   // Control characters are removed from the shown name (shared-frame fn) before splitting.
   const control = renderToStaticMarkup(React.createElement(AttachmentFileName, { name: 'a\u0007b\u200Bc.txt', lines: 2 }));
   assert.match(control, /class="text-footnote font-normal text-primary line-clamp-2 break-words \[overflow-wrap:anywhere\]"><bdi>abc\.txt<\/bdi>/);
@@ -366,4 +401,90 @@ test('tab-focus-release now resolves its window through the official ownerWindow
   const dispose = attachTabFocusRelease(viewport, { isPinned: () => true, setPinned() {} });
   assert.equal(typeof dispose, 'function');
   dispose();
+});
+
+// 3.6556.2 c96d752d0 f6: an optional tabPresses watcher. A focus that is not the Tab press's own landing (isTabFocus
+// false) never moves focus itself: it releases following unless c99ca27a0 t (tabFocusFollows) finds the target at or
+// after the last article, visible. Without the watcher (the host today) the 2.42304.0 path above is unchanged.
+test('landTranscriptFocus with a tabPresses watcher only releases following for non-Tab focus', () => {
+  const savedNode = globalThis.Node;
+  globalThis.Node = { DOCUMENT_POSITION_FOLLOWING: 4 };
+  try {
+  const rect = (top, height = 40) => ({ top, bottom: top + height });
+  const node = (top, extra = {}) => ({ nodeType: 1, tabIndex: 0, getAttribute: () => null, matches: () => false, checkVisibility: () => true,
+    getBoundingClientRect: () => rect(top), focus() { throw Error('no focus move'); }, ...extra });
+  const article = node(100), target = node(300), outside = node(0);
+  const inside = new Set([article, target]);
+  const scroller = { nodeType: 1, scrollHeight: 2000, clientHeight: 500, scrollTop: 1500, contains: el => el === scroller || inside.has(el),
+    getBoundingClientRect: () => ({ top: 0, bottom: 500 }), querySelectorAll: selector => selector === '[role="article"]' ? [article] : [] };
+  article.compareDocumentPosition = () => 4; // target follows the last article
+  article.contains = () => false;
+  let pinned = true;
+  const options = (isTabFocus) => ({ scroller, pointerDownAt: -Infinity, tabPresses: { isTabFocus }, isPinned: () => pinned, scrollToTail() { throw Error('no tail'); }, setPinned: value => { pinned = value; } });
+  const event = () => ({ target, relatedTarget: outside, stopPropagation() { throw Error('no stop'); } });
+  const visible = event();
+  assert.equal(landTranscriptFocus(visible, options(() => false)), false);
+  assert.equal(pinned, true, 'a target after the last article, visible, keeps following');
+  assert.equal(landedFocusEvents.has(visible), false);
+  article.compareDocumentPosition = () => 2; // target precedes the last article
+  const before = event();
+  assert.equal(landTranscriptFocus(before, options(() => false)), false);
+  assert.equal(pinned, false, 'otherwise following is released');
+  assert.ok(landedFocusEvents.has(before));
+  // A focus guard entered without a Tab landing is left alone.
+  pinned = true;
+  const guard = { ...event(), target: Object.assign(node(300), { matches: selector => selector === '[data-base-ui-focus-guard]' }) };
+  inside.add(guard.target);
+  assert.equal(landTranscriptFocus(guard, options(() => false)), false);
+  assert.equal(pinned, true);
+  // tabFocusFollows: no last article, a contained or following target, and the visibility callback's verdict.
+  assert.equal(tabFocusFollows(target, null, false, () => true), false);
+  assert.equal(tabFocusFollows(target, { contains: () => true }, true, (_, isArticle) => isArticle), true);
+  assert.equal(tabFocusFollows(target, { contains: () => false, compareDocumentPosition: () => 4 }, false, () => false), false);
+  } finally { globalThis.Node = savedNode; }
+});
+
+// R2-appswitch W3 surface chord, 3.6556.2 since W2 w2-titlebar-current (tests/app-switch-current.test.mjs defers to
+// this file once the targets are 3.6556.2): shared-156 qK, shared-78 Eo and shared-1 eH/oH/GV over the LV tables.
+test('surface chord targets are 3.6556.2 originals pinned by closure, features, aliases and imports', async () => {
+  const { createHash } = await import('node:crypto');
+  const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+  const { pinSurfaceChordHelper, surfaceChordPins } = await import('../scripts/code-current-surface-chord-pins.mjs');
+  const chordTargets = {
+    'surface-chord-layers.mjs': ['shared-156-BLTosN8U.js', ['UK', 'GK', 'qK']],
+    'surface-chord-platform.mjs': ['shared-78-D5Fw2h0a.js', ['To', 'Eo']],
+    'surface-chord.mjs': ['shared-1-BJhqMmkf.js', ['FP', 'RP', 'zP', 'HP', 'qV', 'JV', 'YV', 'ZV', 'QV', 'tH', 'GV', 'eH', 'oH']],
+  };
+  for (const [target, [source, bindings]] of Object.entries(chordTargets)) {
+    const module = entry(target);
+    assert.equal(module.referenceVersion, '3.6556.2', target);
+    assert.equal(path.basename(module.source), source, target);
+    assert.equal(module.sourceSha256, sha(fs.readFileSync(path.join(V3, source))), target);
+    assert.deepEqual(module.bindings, bindings, target);
+    const text = generated(target);
+    assert.equal(sha(text), module.sha256, target);
+    assert.ok(text.startsWith('// Original Claude Desktop 3.6556.2 bindings; generated by extract-code-ui-current.mjs.\n'), target);
+    assert.deepEqual((await pinSurfaceChordHelper(target, V3)).bindings, bindings, target);
+  }
+  const chordText = generated('surface-chord.mjs');
+  assert.match(chordText, /import \{ surfaceChordLayerSelector as Ws \} from "\.\/surface-chord-layers\.mjs";/);
+  assert.match(chordText, /import \{ isMacUserAgent as so \} from "\.\/surface-chord-platform\.mjs";/);
+  assert.match(chordText, /import \{ ownerDocument as Ze \} from "\.\/owner-document\.mjs";/);
+  const Chord = await server.ssrLoadModule('/src/generated/code-current/surface-chord.mjs');
+  assert.deepEqual(Chord.surfaceChordShortcuts, {
+    chorus_surface_prev: [{ key: 'arrowleft', modifiers: ['cmd', 'alt'], platform: 'mac', app: 'desktop' }, { key: 'arrowleft', modifiers: ['ctrl', 'alt'], platform: 'non-mac', app: 'desktop' }],
+    chorus_surface_next: [{ key: 'arrowright', modifiers: ['cmd', 'alt'], platform: 'mac', app: 'desktop' }, { key: 'arrowright', modifiers: ['ctrl', 'alt'], platform: 'non-mac', app: 'desktop' }],
+  });
+  assert.equal(Chord.adjacentSurface(['chat', 'code'], 'chat', 'next'), 'code');
+  assert.equal(Chord.adjacentSurface(['chat', 'code'], 'chat', 'prev'), null);
+  // shared-22 still imports the direction / next-mode helpers and the platform test under the aliases the pins name.
+  const s22 = current('shared-22-Bwn3sJTG.js'), s1 = current('shared-1-BJhqMmkf.js');
+  for (const needle of ['("chorus_surface_prev")', '("chorus_surface_next")', 'On as St', 'kn as Ft']) assert.ok(s22.includes(needle), needle);
+  for (const needle of ['eH as On', 'oH as kn', 'mE as so', 'ap as Ze', '_r as Ws', 'chorus_surface_prev:{description:']) assert.ok(s1.includes(needle), needle);
+  // A binding list that is not the closure is refused.
+  const pin = surfaceChordPins['surface-chord.mjs'];
+  const saved = pin.bindings;
+  pin.bindings = saved.filter(name => name !== 'HP');
+  try { await assert.rejects(pinSurfaceChordHelper('surface-chord.mjs', V3), /closure of eH,oH,GV/); }
+  finally { pin.bindings = saved; }
 });

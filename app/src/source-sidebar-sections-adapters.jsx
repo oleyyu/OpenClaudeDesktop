@@ -1,6 +1,6 @@
 // Host answers for the imports scripts/extract-sidebar-sections.mjs maps to this module (work item
 // sidebar-sections-extract, research/sidebar-sections.md WI-1). The sections model, copy, label row, section view menu,
-// header menu, disabled reasons and new-section dialog are the original 2.42304.0 bindings in
+// header menu, disabled reasons and new-section dialog are the original 3.6556.2 bindings in
 // src/generated/sidebar-sections; this module only supplies what those chunks read from the desktop frame store,
 // GrowthBook, the account, telemetry, the sidebar row registry and the CDS pieces view-tabs does not (yet) name.
 // Each export names the original binding it stands in for.
@@ -13,9 +13,11 @@
 // CDS Dropdown parts (source-sidebar-menu-kit.jsx). One CDS answer stays here, over the host SourceMenu:
 //   - SidebarSectionsMenu (shared-frame EC) for move-to-menu.mjs only: shared-20 wx is the row menu's Move to submenu,
 //     and the host row menu is SourceMenu.
-import React, { useCallback, useSyncExternalStore } from 'react';
+import React, { useCallback, useState, useSyncExternalStore } from 'react';
 import { SourceMenu } from './source-menu.jsx';
-import { CdsContextMenu } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+// E41: this module is reached from the sidebar / menu graph, so it imports the view-tabs file by semantic name (not the
+// facade, which evaluates every view-tabs module and their host adapters).
+import { CdsContextMenu, CdsDropdown } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { create } from './generated/sidebar-sections/zustand.mjs';
 import { sectionsStoreActions, selectCodeSidebar, customGroupKeyPrefix } from './generated/sidebar-sections/sections-model.mjs';
 import { sidebarSectionsStoreSlice } from '../electron/sidebar-sections-store.mjs';
@@ -163,8 +165,17 @@ export function setSidebarRowRegistry({ buckets, rows, visible, open } = {}) {
 }
 // shared-6 uO (exported `bo`): the keys a bucket shows.
 export function sidebarBucketKeys(bucketKey) { return rowRegistry.buckets.get(bucketKey); }
-// shared-6 mO (exported `Co`): the visible keys, in list order.
-export function sidebarVisibleKeys() { return [...rowRegistry.visible]; }
+// shared-6 zA (exported `so`, 3.6556.2): a bucket's archive scope (`LA.get(e) ?? PA.get(e) ?? []`; the host has no
+// separate override registry, so it is the bucket's keys).
+export function sidebarBucketScopeKeys(bucketKey) { return rowRegistry.buckets.get(bucketKey) ?? []; }
+// shared-6 BA (exported `fo`; old mO): the visible keys, in list order; with a bucket key, only that bucket's.
+export function sidebarVisibleKeys(bucketKey) {
+  if (bucketKey === undefined) return [...rowRegistry.visible];
+  const keys = new Set(rowRegistry.buckets.get(bucketKey) ?? []);
+  return rowRegistry.visible.filter(key => keys.has(key));
+}
+// shared-6 VA (exported `do`, 3.6556.2): the pinned rows' keys (the blank-area Select all inside Pinned).
+export function sidebarPinnedKeys() { return [...rowRegistry.rows].filter(([, row]) => row?.isPinned).map(([key]) => key); }
 // shared-6 aO (exported `xo`): a row's record.
 export function sidebarRowRecord(key) { return rowRegistry.rows.get(key); }
 // shared-6 iO (exported `So`): every registered row key (the blank-area Select all's "Expand a section…" test). Officially
@@ -244,3 +255,71 @@ export const SidebarSectionsMenu = Object.freeze({ ...SourceMenu, Item: MenuItem
 // Host difference: none left in the menu itself; the former host Popup also skipped a right-click that React bubbled
 // up from a portaled popup to an enclosing trigger, which Base UI's trigger does not do (official behaviour now).
 export const SidebarContextMenu = CdsContextMenu;
+
+// ---------------------------------------------------------------- shared-21 HJ / VJ: the manual section view menu's extra Show items
+// 3.6556.2 shared-22 Kk adds, after Metadata, HJ (exported `br`: a Show toggle item, rendered only while offered or
+// already on) for Side chats and for VJ (exported `Tr`: the Routines toggle's state). Side chats is offered only with the
+// side-chat tab strip capability (E16: off in this host); the Routines toggle reads the routines navigation store and
+// telemetry, which the host does not have, so it is not offered. HJ's own body: a Separator (separatorBefore) and a
+// keepOpen checkbox Item of the CDS Dropdown.
+// w10-shell-sidebar-preset-menu (notdone 60): HJ's second test is not `checked`. 3.6556.2 shared-21 HJ:
+//   `s = mJ(!1, hJ()), c = cl(s); if (!t && !c) return null`
+// where cl (shared-78 zS = Cv: `[n] = useState(() => e)`) keeps the value of its first render, mJ(e, t) is
+// `(codeEnabled || !ccdGateSettled) && (Ma(org) || e || t)` (Ma = shared-52 mh/yv, navHasCodeRoutinesByOrg[org] === true)
+// and hJ() is `JK().some(gJ) && ys(selectedEnvironments, "local")` (JK: the session list's routine groups, one per
+// scheduled task, isRunning from its newest run; ys = shared-78 Dr/yQ `available.includes(t) && (e.length === 0 ||
+// e.includes(t))`). The host's answers (sidebarShowItemFacts): Code is on and its gate settled (this host is the Code
+// app), there is no organization (Ma(undefined) is false), the Code list has no routine groups
+// (sidebar-filter-current-model CODE_ROUTINES_SECTION_HOST: no scheduled-task bucket in sidebar-model), and local is the
+// only environment with no environment filter (ys(…, "local") true). So an item that is not offered is not drawn, even
+// while it is on.
+const sidebarShowItemFacts = Object.freeze({ codeEnabled: true, ccdGateSettled: true, orgHasCodeRoutines: false,
+  routineGroups: Object.freeze([]), localEnvironmentShown: true });
+/** shared-21 mJ(e, t). */
+export function sidebarShowItemOffered(own, extra, { codeEnabled, ccdGateSettled, orgHasCodeRoutines } = sidebarShowItemFacts) {
+  return Boolean((codeEnabled || !ccdGateSettled) && (orgHasCodeRoutines || own || extra));
+}
+/** shared-21 hJ() (gJ: `e.isRunning`). */
+export function sidebarRoutineRunning({ routineGroups, localEnvironmentShown } = sidebarShowItemFacts) {
+  return routineGroups.some(group => group.isRunning) && localEnvironmentShown;
+}
+export function SidebarShowToggleItem({ offered, checked, label, onToggle, separatorBefore = false }) {
+  const [shownAtFirstRender] = useState(() => sidebarShowItemOffered(false, sidebarRoutineRunning()));
+  if (!offered && !shownAtFirstRender) return null;
+  return <>{separatorBefore && <CdsDropdown.Separator />}<CdsDropdown.Item checked={checked} keepOpen onClick={onToggle}>{label}</CdsDropdown.Item></>;
+}
+const routinesToggleOff = Object.freeze({ offered: false, checked: false, label: '', onToggle() {} });
+export function useSidebarRoutinesToggle() { return routinesToggleOff; }
+
+// ---------------------------------------------------------------- shared-22 IE, W = "preset": a saved-environment bucket's menu
+// w10-shell-sidebar-preset-menu (notdone 85). 3.6556.2 shared-22 IE names a bucket "preset" when it carries an environment
+// (`W = O === zE ? "no_folder" : oe ? "other" : N ? "preset" : t.unsaved ? "place" : "folder"`, N = t.environment) and hands
+// shared-22 GC, and through it shared-20 Px (the group header menu, generated/sidebar-sections/group-menu.mjs), three things:
+//   - onNewSession Q: `v(U, void 0, de)` with `de = N ? N.id : …` -- a new session in that environment (a preset bucket has
+//     no place of its own, so Q is always there: `(G || (se && se !== "local")) && !U` is false, `U || !oe` true);
+//   - onEditEnvironment De: `N && n ? fe : void 0` (n = environmentsOn, the presets gate) with
+//     `fe = () => { N && (v(U, void 0, N.id), Yv(N.id)) }`: the new session in that environment, then shared-21 uG (Yv)
+//     `requestEnvironmentDialog({ editId: e, … })`, the environment editor on that environment;
+//   - its slot in the session list's order: OE's order keys skip only Other, No folder and the place buckets
+//     (`s.key === o || s.key === zE || s.unsaved !== void 0`), so preset and folder buckets share one order (`_i(s)`), and
+//     IE wraps the bucket in shared-46 lr (gi) with Move up / Move down (`sectionIndex: _e.indexByBucketKey.get(e.key)`).
+//   No Save as environment (`Oe = pe ? Y : void 0`, pe only for a folder) and no Rename / Delete (groupEditsHidden:
+//   `ke = n && !j`); its disabled reasons are shared-46 NO("preset") (`Ae = Mi({customGroupId: j, environment: N})`).
+// Host answers: `openNewForBucket(id)` is main's new draft with that saved environment selected, `editEnvironment(id)` its
+// saved-environment editor on that environment (E17); the order is the host's projectOrder, where a preset bucket's key is
+// its orderKey (`preset::<id>`, sidebar-filter-current-model savedEnvironmentGroups).
+/** OE's order keys over the Sessions buckets (custom sections, Pinned, Other and the place bucket have none). */
+export function sessionsBucketOrderKeys(buckets, otherProjectKey) {
+  return (Array.isArray(buckets) ? buckets : []).flatMap(bucket => bucket?.customGroupId ? []
+    : bucket?.kind === 'environment' && typeof bucket.orderKey === 'string' ? [bucket.orderKey]
+      : bucket?.kind === 'project' && bucket.projectKey && bucket.projectKey !== otherProjectKey && bucket.unsaved === undefined ? [bucket.projectKey] : []);
+}
+/** IE's menu pieces for a preset bucket, in the shape the host's folder bucket menu takes (FolderBucket `menu`). */
+export function presetBucketMenu(bucket, { environmentsOn = false, openNewForBucket, editEnvironment, order = null } = {}) {
+  if (bucket?.kind !== 'environment' || typeof bucket.environmentId !== 'string') return null;
+  const id = bucket.environmentId;
+  const onNewSession = typeof openNewForBucket === 'function' ? () => openNewForBucket(id) : undefined;
+  const onEditEnvironment = environmentsOn === true && typeof editEnvironment === 'function'
+    ? () => { openNewForBucket?.(id); editEnvironment(id); } : undefined;
+  return { onNewSession, onEditEnvironment, order, groupMenuKind: 'preset' };
+}

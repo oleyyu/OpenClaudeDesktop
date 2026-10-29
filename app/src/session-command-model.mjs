@@ -144,15 +144,16 @@ export function parseSessionCommand(text, context={}) {
   const skill=named&&!findCommand(named[1].toLowerCase())?findSkill(named[1].toLowerCase(),context):null;
   if(skill)return {id:skill.name,args:value.slice(named[0].length).trim(),requested:named[1].toLowerCase(),command:null,skill,suggestion:null,error:null};
   const core=named&&!findCommand(named[1].toLowerCase())?findCore(named[1].toLowerCase(),context):null;
-  if(core)return {id:core.name,args:value.slice(named[0].length).trim(),requested:named[1].toLowerCase(),command:null,skill:null,custom:null,coreCommand:core,suggestion:null,error:/[\r\n]/.test(value)?t('/{command} only works on a single line. Remove the extra lines and try again.',{command:named[1].toLowerCase()}):null};
+  if(core)return {id:core.name,args:value.slice(named[0].length).trim(),requested:named[1].toLowerCase(),command:null,skill:null,custom:null,coreCommand:core,suggestion:null,error:/[\r\n]/.test(value)?t('/{command} only works on a single line. Remove the extra lines, then send it again.',{command:named[1].toLowerCase()}):null};
   const match=/^\/([a-z0-9][a-z0-9_-]*)\b/i.exec(value);
   if(!match || value[match[0].length]==='/')return null;
   const requested=match[1].toLowerCase(),command=findCommand(requested),id=command?.id||requested,args=value.slice(match[0].length).trim();
   const suggestion=command?null:commandSuggestion(requested);
+  // 3.6556.2 cc43287c9 M / P: '…, then send it again.' (hH0Sho9AXl / cgTRRpTLBX).
   let error=null;
   if(!command)error=['feedback','bug','share','login','logout','ultrareview'].includes(requested)?t('/{command} isn’t available in the app.',{command:requested}):t('/{command} isn’t a command here.',{command:requested});
-  else if(/[\r\n]/.test(value)&&!command.multiline)error=t('/{command} only works on a single line. Remove the extra lines and try again.',{command:requested});
-  else if(args&&!command.argumentHint)error=t('/{command} doesn’t take arguments here. Remove the text after the command and try again.',{command:requested});
+  else if(/[\r\n]/.test(value)&&!command.multiline)error=t('/{command} only works on a single line. Remove the extra lines, then send it again.',{command:requested});
+  else if(args&&!command.argumentHint)error=t('/{command} doesn’t take arguments here. Remove the text after the command, then send it again.',{command:requested});
   return {id,args,requested,command,suggestion,error};
 }
 // /btw asks codeDesktop/sideQuestion. The OpenClaude Desktop cores (the built-in one and the bridges) serve the extension; on a

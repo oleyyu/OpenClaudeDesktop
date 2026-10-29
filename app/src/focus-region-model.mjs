@@ -15,12 +15,38 @@
 // by its split pane and tile) and data-focus-region-fallback (kt: the collapsed sidebar's trigger stands in only
 // while the sidebar itself shows nothing).
 
+// w13-chatui-artifact-inline: 3.6556.2 ca1d33d05-DdOyUCec.js `xe` places "artifact" (the open Chat artifact's box,
+// cbaae0d6d `xe({kind:"artifact",boxRef:Pe,…})`) after "sidePanel", and `Se = new Set(["question","artifact"])` passes it.
+// w13-close-chat-messages: `xe` also places "lastMessage" after "conversation" — ca1d33d05 rn (the chatLayout region set
+// ca2ef848d mounts, `f(Hs,{kind:"chatLayout",…,autoscrollRef:C,owns:Vt,…})`) registers it as
+// `N("lastMessage",{landing:()=>…isFullscreen?null:me(t.current),focus:e=>{V(e,{ring:!1}),…setPinToBottom(!0),
+// …scrollToBottom("auto",{onlyIfPinned:!0})}})`, me = c1f21cfe3 `i`: the feed article with the highest aria-posinset.
 export const REGION_ORDER = Object.freeze([
-  "navigation", "discoveryScreen", "header", "conversation", "main", "question", "composer", "sidePanel", "overview",
+  "navigation", "discoveryScreen", "header", "conversation", "lastMessage", "main", "question", "composer", "sidePanel", "artifact", "overview",
   "activity", "sessionDetails", "preview", "terminal", "tile", "projectKnowledge",
 ]);
-// Ee: a question card is a stop only while it holds the focus (the cycle leaves it, never lands on it).
-export const PASS_THROUGH_REGIONS = new Set(["question"]);
+// c1f21cfe3 `n` / `t` / `r`: the last message is the feed's article with the highest aria-posinset.
+export const LAST_MESSAGE_SELECTOR = '[role="feed"] [role="article"][aria-posinset]';
+/** c1f21cfe3 `i`: of `articles` (elements with aria-posinset), the one with the highest position, or null. */
+export function lastFeedArticle(articles) {
+  let last = null, position = -1;
+  for (const article of articles ?? []) {
+    const value = Number(article?.getAttribute?.("aria-posinset"));
+    if (value > position) { last = article; position = value; }
+  }
+  return last;
+}
+// Ee: a question card is a stop only while it holds the focus (the cycle leaves it, never lands on it); so is the artifact.
+export const PASS_THROUGH_REGIONS = new Set(["question", "artifact"]);
+
+// w13-chatui-artifact-inline: 3.6556.2 ca1d33d05-DdOyUCec.js `en` — the artifact landing is a labelled group while
+// the jump ring is on it (tn: `prepare:()=>en(e,a)`, a = the title trimmed or "Artifact"); V's clear runs the undo.
+// Local landings name it with data-focus-region-label (use-focus-regions.js landStop).
+export function labelLandingGroup(element, label) {
+  element.setAttribute("role", "group");
+  element.setAttribute("aria-label", label);
+  return () => { element.removeAttribute("role"); element.removeAttribute("aria-label"); };
+}
 export const NOTIFICATIONS_STOP = "notifications";
 
 // The side pane kinds (tile-layout-model.mjs PANE_KINDS) as reference regions: Preview and Terminal have their own,
@@ -108,7 +134,13 @@ export function regionKeyAction(event, { mac = true, ownedFocus = false, stops =
 export const JUMP_COMMANDS = Object.freeze([
   { id: "jump_to_navigation", regions: ["navigation"], icon: "Sidebar" },
   { id: "jump_to_main_content", regions: ["header", "main"], icon: "BookText" },
+  // w13-close-chat-messages: shared-1 `jump_to_last_message:{description:vF.description,group:"general",bang:"!jlm",
+  // icon:Q("ChatSimple")}` ("Jump to last message", KoKXeDvWmu), ca1d33d05 `jump_to_last_message:Z("lastMessage")`.
+  { id: "jump_to_last_message", regions: ["lastMessage"], icon: "ChatSimple" },
   { id: "jump_to_input", regions: ["composer"], icon: "Prompt" },
+  // w13-chatui-artifact-inline: shared-1 SF "Jump to artifact" (`jump_to_artifact: {…, bang: "!jr", icon: Q("Artifacts")}`),
+  // ca1d33d05 `jump_to_artifact: Z("artifact")` — the Chat artifact panel's body (source-chat-artifact-panel.jsx).
+  { id: "jump_to_artifact", regions: ["artifact"], icon: "Artifacts" },
   { id: "jump_to_preview", regions: ["preview"], icon: "Globe" },
   { id: "jump_to_terminal", regions: ["terminal"], icon: "CommandLinePrompt" },
   { id: "jump_to_pane", regions: ["tile"], icon: "Grid" },

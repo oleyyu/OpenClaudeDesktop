@@ -1,6 +1,6 @@
-// The Cowork Scheduled page's host for the original 2.42304.0 components (R4g-routines RTC, CW-1): the scheduled task
-// card (routines-shared cdbc75b4b Ji), the detail (cowork-scheduled ccd3f68fe qo) and UpsertScheduledTaskModal
-// (c97b955f1 Ca) read the page's router, scheduler bridge and models from routines-shared's RoutinesSharedHost
+// The Cowork Scheduled page's host for the original 3.6556.2 components (R4g-routines RTC, CW-1; w3-cowork-scheduled): the
+// scheduled task card (routines-shared cdbc75b4b), the detail (cowork-scheduled ccd3f68fe ps) and UpsertScheduledTaskModal
+// (c97b955f1 La) read the page's router, scheduler bridge and models from routines-shared's RoutinesSharedHost
 // (useRouter / RouterLink, useScheduledTasksBridge, useSurfaceModels). src/source-routines.jsx renders these wrappers
 // inside its RoutineContext; each wrapper provides RoutinesSharedHost over that context.
 //
@@ -64,11 +64,14 @@ export function coworkScheduledTasksBridge(host) {
 }
 
 // RoutinesSharedHost over the page's RoutineContext. A card's link (/scheduled-task/<id>) selects the task through the
-// page's own list item click, so the router's navigate has nothing more to do.
-function useCoworkSharedHost(host) {
+// page's own list item click, and a run row's link opens its session through onSessionOpen; the router's navigate only
+// answers the detail's back link (`backHref`, below) with the page's onBack.
+export const COWORK_SCHEDULED_HREF = '/scheduled-task';
+function useCoworkSharedHost(host, onBack) {
   const bridge = useMemo(() => coworkScheduledTasksBridge(host), [host.mutate, host.editingTask, host.executionProfile]);
   setActiveCoworkBridge(bridge);
-  return useMemo(() => ({ navigate() {}, pathname: '/scheduled-task', search: '', bridge, models: host.models ?? [] }), [bridge, host.models]);
+  return useMemo(() => ({ navigate: href => { if (href === COWORK_SCHEDULED_HREF) onBack?.(); }, pathname: COWORK_SCHEDULED_HREF, search: '', bridge,
+    models: host.models ?? [] }), [bridge, host.models, onBack]);
 }
 // The official external links (TextLink `external`: target _blank, e.g. the form's "See safe use tips") leave the app in
 // the desktop shell's browser. This host's windows deny window.open (main.cjs setWindowOpenHandler), so a click on an
@@ -86,7 +89,7 @@ export function openExternalLinkClick(event, host) {
 function withCoworkHost(Component, mapProps = props => props) {
   const Wrapped = props => {
     const host = useContext(RoutineContext) ?? {};
-    return <RoutinesSharedHost.Provider value={useCoworkSharedHost(host)}>
+    return <RoutinesSharedHost.Provider value={useCoworkSharedHost(host, props.onBack)}>
       <div style={{ display: 'contents' }} onClickCapture={event => openExternalLinkClick(event, host)}><Component {...mapProps(props)} /></div>
     </RoutinesSharedHost.Provider>;
   };
@@ -94,10 +97,15 @@ function withCoworkHost(Component, mapProps = props => props) {
   return Wrapped;
 }
 export const CoworkScheduledTaskCard = withCoworkHost(ScheduledTaskCard);
-// The history rows (ccd3f68fe Yo) mark a run "Only this computer" when the session carries ranOn this_computer. The
+// The history rows (ccd3f68fe ks) mark a run "Only this computer" when the session carries ranOn this_computer. The
 // official list sets ranOn only for a task moved to the cloud (its local runs next to the cloud ones); a local task's own
 // runs carry none, so the page's ranOn is dropped unless the task was migrated.
-export const coworkDetailProps = props => (props.scheduledTask?.migratedFromLocalTask || !Array.isArray(props.sessions) ? props
-  : { ...props, sessions: props.sessions.map(({ ranOn, ...session }) => session) });
+// 3.6556.2 ps takes a back link (`backHref`, drawn with the "All scheduled tasks" copy only when set) instead of
+// 2.42304.0's onBack / backLabel; the page's onBack answers that href through the router (useCoworkSharedHost).
+export const coworkDetailProps = ({ onBack, ...props }) => {
+  const withBack = onBack ? { ...props, backHref: COWORK_SCHEDULED_HREF } : props;
+  return props.scheduledTask?.migratedFromLocalTask || !Array.isArray(props.sessions) ? withBack
+    : { ...withBack, sessions: props.sessions.map(({ ranOn, ...session }) => session) };
+};
 export const CoworkScheduledTaskDetail = withCoworkHost(ScheduledTaskDetail, coworkDetailProps);
 export const CoworkUpsertScheduledTaskModal = withCoworkHost(UpsertScheduledTaskModal);

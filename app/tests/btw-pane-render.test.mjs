@@ -7,12 +7,14 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import {sameApprovalPane} from '../src/card-hotkeys-model.mjs';
 import {createApprovalDraftRuntime} from '../src/approval-draft-model.mjs';
-let server, Pane, Hook, Focus, Plan, TurnError, Notice;
+import { withMemoCache } from './support/react-memo-cache.mjs';
+let server, Pane, Hook, Focus, Plan, TurnError, Notice, Registry;
 before(async()=>{
   server=await createServer({configFile:false,root:path.resolve(import.meta.dirname,'..'),plugins:[react()],server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error'});
   Pane=await server.ssrLoadModule('/src/source-btw-pane.jsx');Hook=await server.ssrLoadModule('/src/use-btw-pane.jsx');
   Focus=await server.ssrLoadModule('/src/generated/code-current/btw-focus-intent.mjs');Plan=await server.ssrLoadModule('/src/source-plan-card.jsx');
   TurnError=await server.ssrLoadModule('/src/source-turn-error.jsx');Notice=await server.ssrLoadModule('/src/btw-session-notice-model.mjs');
+  Registry=await server.ssrLoadModule('/src/btw-composer-registry.mjs');
 });
 after(()=>server?.close());
 const noop=()=>{},state=()=>({threads:{},active:{},items:{},approvals:[],approvalConnectionId:'connection',approvalConnectionEpoch:1});
@@ -25,12 +27,13 @@ test('persistent child pane renders own rows and embedded composer, without pare
   assert.doesNotMatch(html,/PARENT PRIVATE HISTORY|HIDDEN BOUNDARY/);assert.match(html,/Reply in this session/);
   assert.match(html,/data-embedded="true"/);assert.doesNotMatch(html,/sc-permission|sc-model-trigger/);assert.match(html,/role="tablist"/);
 });
-test('running or sending tabs cannot be closed; active tab has roving focus',()=>{
+// 3.6556.2 qP: a running tab stays closable (closing stops it first, CI-08 restored); a sending tab (host tabPending) does not.
+test('sending tabs cannot be closed, running ones can; active tab has roving focus',()=>{
   const s=state();s.active.running='turn';const html=renderToStaticMarkup(React.createElement(Pane.SourceBtwTabs,{tabs:[{id:'running',name:'btw: Running'},{id:'sending',name:'btw: Sending'},{id:'idle',name:'btw: Idle'}],activeId:'running',state:s,pending:{sending:true},onSelect:noop,onClose:noop}));
-  assert.equal((html.match(/aria-label="Close side chat"/g)||[]).length,1);
+  assert.equal((html.match(/aria-label="Close side chat"/g)||[]).length,2);
   assert.match(html,/data-vtb-id="running"[\s\S]*?role="tab" tabindex="0" aria-selected="true"/);
   assert.match(html,/data-vtb-id="idle"[\s\S]*?role="tab" tabindex="-1" aria-selected="false"/);
-  assert.doesNotMatch(html,/aria-label="New tab"|touch-none|Press Control\+Shift/,'FT does not enable creation or reordering');
+  assert.doesNotMatch(html,/aria-label="New tab"|touch-none|Press Control\+Shift/,'no onCreate given: no New tab button; qP never enables reordering');
 });
 test('approval keyboard scope isolates children from main and each other; unfocused page belongs to main',()=>{
   const one={},two={},element=pane=>({closest:()=>pane}),a=element(one),b=element(one),c=element(two),main=element(null);
@@ -196,11 +199,12 @@ function componentFixture(component, props) {
     useCallback(fn,deps){return dispatcher.useMemo(()=>fn,deps);},
   };
   const render=()=>{cursor=0;const internals=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internals.H;
-    internals.H=dispatcher;try{tree=component(props);}finally{internals.H=old;}return tree;};
+    internals.H=withMemoCache(dispatcher);try{tree=component(props);}finally{internals.H=old;}return tree;};
   render();return {get tree(){return tree;},render,flush:()=>{while(effects.length)effects.shift()();},close:()=>cells.forEach(c=>c.cleanup?.())};
 }
 function findNode(tree,predicate){if(!tree||typeof tree!=='object')return null;if(!Array.isArray(tree)&&predicate(tree))return tree;const children=Array.isArray(tree)?tree:[tree.props?.children];for(const child of children){const found=findNode(child,predicate);if(found)return found;}return null;}
 // R3-nested step 3: jT `B && m.current?.scheduleFocus()` — the editor element's OP scheduleFocus (caret at the end).
+// cc-rest-btw-focus (3.6556.2 `f && ql(o.current, f)`): a non-keyboard record only schedules focus (c03935b01 Jr).
 test('child mount consumes focus intent once through the composer scheduleFocus, and a passive mount leaves focus alone',()=>{
   for(const intended of [false,true]){
     const scheduled=[],id=`focus-child-${intended}`,input={current:{value:'Draft',scheduleFocus:(...args)=>scheduled.push(args),
@@ -236,23 +240,42 @@ test('native child handoff appears after history loads, hides rather than delete
   f.render();assert.equal(findNode(f.tree,n=>n.props?.handoffKey),null);
   assert.equal(findNode(f.tree,n=>n.props?.['data-btw-composer-hidden']==='true'),null);f.close();
 });
-test('tab close preserves focus in another pane; reselect focuses the current input without changing its selection',()=>{
+test('tab close preserves focus in another pane; reselect focuses the pane focus target without changing its selection',()=>{
   const closed=[],focused=[],inside={},outside={},doc={body:{},activeElement:outside};
   const props={sessionId:'one',tabs:[{id:'one'}],state:state(),onCloseTab:(...args)=>closed.push(args),onSelect:noop};
   const f=componentFixture(Pane.SourceBtwPane,props);
-  f.tree.props.ref.current={ownerDocument:doc,closest:()=>({contains:node=>node===inside})};
+  // The pane root's focus target: an editable textbox (c9bc99274 b falls back to the first focusable text field).
+  const editor={focus:()=>focused.push('focus'),ignoreStrayEnter:()=>focused.push('ignoreStrayEnter'),setSelectionRange:()=>assert.fail('reselect preserves selection'),
+    tabIndex:0,matches:()=>true,hasAttribute:()=>false,classList:{contains:()=>false},closest:()=>null,checkVisibility:()=>true};
+  const paneRoot={contains:node=>node===inside,querySelector:()=>null,querySelectorAll:()=>[editor]};
+  let rootSelector;f.tree.props.ref.current={ownerDocument:doc,closest:selector=>{rootSelector=selector;return paneRoot;}};
   const tabs=findNode(f.tree,n=>n.type===Pane.SourceBtwTabs),body=findNode(f.tree,n=>n.type===Pane.SourceBtwContent);
-  body.props.input.current={focus:()=>focused.push(true),setSelectionRange:()=>assert.fail('reselect preserves selection')};
-  tabs.props.onClose('one');doc.activeElement=inside;tabs.props.onClose('one');tabs.props.onReselect();
-  assert.deepEqual(closed,[['one',false],['one',true]]);assert.equal(focused.length,1);
+  body.props.input.current=editor;const unregister=Registry.registerBtwComposer('one',body.props.input);
+  tabs.props.onClose('one');doc.activeElement=inside;tabs.props.onClose('one');tabs.props.onReselect('one');
+  // 3.6556.2 qP J `t && (cu(e), P_(t)?.focus())`: c03935b01 Yr arms the registered composer against the activating
+  // Enter, then c9bc99274 b's pick over the [data-pane-root] takes focus.
+  assert.deepEqual(closed,[['one',false],['one',true]]);assert.deepEqual(focused,['ignoreStrayEnter','focus']);assert.equal(rootSelector,'[data-pane-root]');
+  focused.length=0;f.tree.props.ref.current={ownerDocument:doc,closest:()=>null};tabs.props.onReselect('one');
+  assert.deepEqual(focused,[],'no pane root: nothing is armed or focused');unregister();
   assert.equal(body.key,'one');props.sessionId='two';f.render();assert.equal(findNode(f.tree,n=>n.type===Pane.SourceBtwContent).key,'two');f.close();
 });
 test('host tab activation remembers focus, while automatic neighbor selection can preserve other-pane focus',()=>{
   const h=transport(),selected=[];h.host.tileStore.setSession=(...args)=>selected.push(args);
   h.controller.select('parent','focus-selection');h.controller.select('parent','passive-selection',{focus:false});
   const consume=id=>{let value;function Check(){value=Focus.useBtwFocusIntent(id);return null;}renderToStaticMarkup(React.createElement(Check));return value;};
-  assert.equal(consume('focus-selection'),true);assert.equal(consume('passive-selection'),false);
+  // 3.6556.2 Zr: the remembered record (no document here: not a key press), or null.
+  assert.equal(consume('focus-selection')?.afterKeyPress,false);assert.equal(consume('passive-selection'),null);
   assert.deepEqual(selected,[['parent',{btwSessionId:'focus-selection'}],['parent',{btwSessionId:'passive-selection'}]]);
+  // cccc2cf0a tab activation: afterKeyPress when the active element is :focus-visible, not the body, and outside a text field.
+  const original=Object.getOwnPropertyDescriptor(globalThis,'document');
+  try{
+    for(const [name,active,expected] of [['tab-key',{matches:s=>s===':focus-visible',closest:()=>null},true],['tab-pointer',{matches:()=>false,closest:()=>null},false],
+      ['tab-field',{matches:s=>s===':focus-visible',closest:s=>s==='input, textarea, [contenteditable]'?{}:null},false],['tab-body',null,false]]){
+      const body={matches:s=>s===':focus-visible',closest:()=>null},doc={body,activeElement:active??body,addEventListener:noop};
+      Object.defineProperty(globalThis,'document',{configurable:true,value:doc});
+      h.controller.select('parent',name);assert.equal(consume(name)?.afterKeyPress,expected,name);
+    }
+  }finally{if(original)Object.defineProperty(globalThis,'document',original);else delete globalThis.document;}
 });
 
 // R2-btw NBS-6: 2.42304.0 cccc2cf0a jT — the session error notice nT before the approvals, the send-failure toast rule,
@@ -303,7 +326,7 @@ test('the child transcript draws its own failed turn (card, then markers); the t
   assert.match(notice,/data-turn-error="card" data-turn-id="thread"/);
   const noticeScope=notice.indexOf('data-approval-hotkey-scope="btw:notice-ssr"'),noticeCard=notice.indexOf('data-turn-id="thread"'),composer=notice.indexOf('Reply in this session');
   assert.ok(noticeScope>=0&&noticeScope<noticeCard&&noticeCard<composer,'nT is the first child of the approval scope, before the composer');
-  assert.match(notice,/<span class="ste-headline">[^<]*<\/span><span class="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0"><button aria-label="Dismiss"[^>]*data-variant="ghost"[^>]*data-size="sm" data-cds-icon-only=""[^>]*class="source-settings-button text-muted hover:text-primary"/);
+  assert.match(notice,/<span class="ste-headline">[^<]*<\/span><span class="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0"><button aria-label="Dismiss"[^>]*data-variant="ghost"[^>]*data-size="sm" data-cds-icon-only=""[^>]*class="source-settings-button text-muted-as-secondary hover:text-primary"/);
   assert.doesNotMatch(notice,/>Try again<|>Compact session</,'c3e34355f under nT: no onRetry, compactHelps: !1');
   const plain=renderToStaticMarkup(React.createElement(TurnError.SourceTurnError,{error:{message:'x'},turnId:'t'}));
   assert.doesNotMatch(plain,/aria-label="Dismiss"|ste-dismiss/,'other cards have no Dismiss unless asked');
@@ -338,7 +361,7 @@ test('SourceTurnError onDismiss only adds the header Dismiss span to a card; mar
   assert.equal(draw({...auth,onDismiss:noop}),draw(auth),'the settled Signed in again marker ignores onDismiss');
   const css=await readFile(path.resolve(import.meta.dirname,'../src/source-turn-error.css'),'utf8');
   const rules=css.replace(/\/\*[^]*?\*\//g,'').split('}').map(rule=>rule.split('{')[0].trim()).filter(selector=>selector.includes('ste-dismiss'));
-  assert.deepEqual(rules,['.ste-dismiss .source-settings-button[data-cds=Button]','.ste-dismiss .source-settings-button[data-cds=Button]:hover'],'only the two scoped colour rules (text-muted / hover:text-primary restated over the unlayered button colour)');
+  assert.deepEqual(rules,['.ste-dismiss .source-settings-button[data-cds=Button]','.ste-dismiss .source-settings-button[data-cds=Button]:hover'],'only the two scoped colour rules (text-muted-as-secondary / hover:text-primary restated over the unlayered button colour)');
 });
 const threadFailed=id=>({...failedChild(id,{ownError:null}),errors:{[id]:{message:'Thread-wide failure'}}});
 const noticeOf=tree=>findNode(tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='thread');
@@ -348,16 +371,17 @@ test('a keyboard Dismiss hides the notice and hands focus to the child composer;
     const scope={tabIndex:0,focus:()=>focused.push('scope')};
     const control={ownerDocument:doc,isConnected:true,matches:selector=>keyboard&&selector===':focus-visible',closest:selector=>selector==='[data-approval-hotkey-scope]'?scope:null};
     doc.activeElement=keyboard?control:body;
-    // c5259f582 pe: the mounted composer's scheduleFocus().
+    // 3.6556.2 `ou(t.id, performance.now(), { afterKeyPress: !0 })` (c03935b01 Xr → Jr; 2.42304.0 c5259f582 pe): the mounted
+    // composer swallows the dismissing key's stray Enter, then scheduleFocus().
     const input={current:{isConnected:true,scheduleFocus:(...args)=>{focused.push(['scheduleFocus',...args]);doc.activeElement=input.current;return true;},
-      focus:()=>assert.fail('pe uses scheduleFocus')}};
+      ignoreStrayEnter:(...args)=>focused.push(['ignoreStrayEnter',...args]),focus:()=>assert.fail('pe uses scheduleFocus')}};
     const props={sessionId:id,meta:{btw:{permission:'ask',ownTurnIds:['own']}},thread:{id},state:threadFailed(id),connected:false,input,root:{current:null},onLoad:async()=>{}};
     const f=componentFixture(Pane.SourceBtwContent,props);f.flush();
     const card=noticeOf(f.tree);assert.ok(card,'the thread-wide notice');
     card.props.onDismiss({currentTarget:control});
     control.isConnected=false;if(keyboard)doc.activeElement=body;
     f.render();assert.equal(noticeOf(f.tree),null,'dismissed');f.flush();
-    assert.deepEqual(focused,keyboard?[['scheduleFocus']]:[],keyboard?'keyboard':'pointer');
+    assert.deepEqual(focused,keyboard?[['ignoreStrayEnter'],['scheduleFocus']]:[],keyboard?'keyboard':'pointer');
     // The bucket is the session's: another mount of the same child keeps it dismissed.
     const again=componentFixture(Pane.SourceBtwContent,props);assert.equal(noticeOf(again.tree),null);again.close();f.close();
   }
@@ -367,6 +391,9 @@ test('a keyboard Dismiss hides the notice and hands focus to the child composer;
   const f=componentFixture(Pane.SourceBtwContent,{sessionId:id,meta:{btw:{ownTurnIds:['own']}},thread:{id},state:threadFailed(id),connected:false,input:{current:null},root:{current:null},onLoad:async()=>{}});
   noticeOf(f.tree).props.onDismiss({currentTarget:control});control.isConnected=false;doc.activeElement=body;
   f.render();f.flush();assert.equal(doc.activeElement,scope);assert.equal(scope.tabIndex,-1);f.close();
+  // Xr's qr branch: the keyboard intent waits for the composer's next mount.
+  let pending;function Check(){pending=Focus.useBtwFocusIntent(id);return null;}renderToStaticMarkup(React.createElement(Check));
+  assert.equal(pending?.afterKeyPress,true);
 });
 test('a failed send toasts unless that failure put a new session error on screen',async()=>{
   for(const kind of ['plain','new-notice','old-notice']){
@@ -513,28 +540,32 @@ test('a card leaving focus nowhere hands it to the child composer through focusP
   assert.match(source,/node\?\.focusPreservingSelection\?\.\(\);\s*node\?\.ignoreStrayEnter\?\.\(\);/);
   assert.doesNotMatch(source,/const cardLeft|queueMicrotask/,'qj f is the generated original, not a local copy');
 });
-test('the /btw pane originals are generated from 2.42304.0 and resolve to the expected bindings',async()=>{
+test('the /btw pane originals are generated from 3.6556.2 and resolve to the expected bindings',async()=>{
   const {extractBtwPane}=await import('../scripts/extract-btw-pane.mjs');const manifest=await extractBtwPane({check:true});
-  assert.equal(manifest.referenceVersion,'2.42304.0');
+  assert.equal(manifest.referenceVersion,'3.6556.2');assert.equal(manifest.referenceSnapshot,'snapshots/claude-3.6556.2-20261025-192807');
   const hand=manifest.modules.find(m=>m.target==='focus-hand-back.mjs');
-  assert.equal(hand.source,'ccf527892-DQjOjuwT.js');assert.deepEqual(hand.bindings.map(b=>b.name),['o']);
-  assert.deepEqual(Object.fromEntries(hand.imports.map(i=>[i.via,i.original??`react:${i.name}`])),{
-    'vendor-frame-DfPJ1QmD.js:yo':'react:useLayoutEffect','shared-25-DP8p7i1Z.js:Pf':'dp','shared-0-ByI5P0CP.js:xx':'_e',
-    'shared-frame-BfjMqbuN.js:fd':'cn','shared-frame-BfjMqbuN.js:vl':'lc','cae42d46f-8Va5mKUX.js:t':'m'});
-  assert.deepEqual(manifest.modules.find(m=>m.target==='focus-guard.mjs').bindings.map(b=>b.name),['an','on','sn','cn','lc']);
-  assert.deepEqual(manifest.modules.find(m=>m.target==='focus-lost.mjs').exports,{Xw:'focusIsLost'});
+  assert.equal(hand.source,'shared-1-BJhqMmkf.js');assert.deepEqual(hand.bindings.map(b=>b.name),['mC']);
+  assert.deepEqual(Object.fromEntries(hand.imports.map(i=>[i.via,i.original??`${i.kind}:${i.name}`])),{
+    'vendor-frame-CnSY1sxv.js:bo':'react:useLayoutEffect','shared-25-DOWZRSlq.js:lp':'mf','shared-0-DDOOdL6P.js:LS':'ve',
+    'shared-frame-6jtSkIit.js:Nf':'dn','shared-frame-6jtSkIit.js:Iu':'Uc','shared-1-BJhqMmkf.js:lC':'lC',
+    'shared-frame-6jtSkIit.js:ip':'view-tabs:reactMemoCache','shared-frame-6jtSkIit.js:$f':'view-tabs:memoChanged2','shared-frame-6jtSkIit.js:cp':'view-tabs:memoStore3'});
+  assert.ok(hand.imports.filter(i=>i.kind==='view-tabs').every(i=>i.from==='../view-tabs/shared-frame-6jtSkIit.js'),'E3: compiler helpers from view-tabs');
+  assert.deepEqual(manifest.modules.find(m=>m.target==='modifier-keys.mjs').exports,{lC:'modifierKeys'});
+  assert.deepEqual(manifest.modules.find(m=>m.target==='focus-guard.mjs').bindings.map(b=>b.name),['cn','ln','un','dn','Uc']);
+  assert.deepEqual(manifest.modules.find(m=>m.target==='focus-lost.mjs').exports,{g:'focusIsLost'});
+  assert.equal(manifest.modules.find(m=>m.target==='focus-lost.mjs').source,'c6dc54e94-E5GA6ry5.js');
 });
 
 // R3-nested NBS-4: 2.42304.0 cccc2cf0a RO renderTabMenuItems N → LO, and IO's yield after a Detach from that menu.
 test('the side-chat tab menu draws LO: Unpin when pinned, Detach to top level when detachable, else nothing',async()=>{
-  const Tabs=await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  const Tabs=await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   const menu=new Map([['both',{pinned:true,detachable:true}],['pin',{pinned:true,detachable:false}],['detach',{pinned:false,detachable:true}],['none',{pinned:false,detachable:false}]]);
   const unpinned=[],detached=[];
   const props={tabs:[...menu.keys()].map(id=>({id})),activeId:'both',state:state(),pending:{},onSelect:noop,onClose:noop,
     menu,onUnpin:id=>unpinned.push(id),onDetach:(id,failed)=>detached.push([id,failed])};
   const f=componentFixture(Pane.SourceBtwTabs,props);f.flush();
   const bar=findNode(f.tree,n=>typeof n.props?.renderTabMenuItems==='function');
-  assert.equal(bar.props.minTabWidth,92);assert.equal(bar.props.onReorder,undefined);assert.equal(bar.props.onCreate,undefined,'RO still passes no onReorder/onCreate');
+  assert.equal(bar.props.minTabWidth,92);assert.equal(bar.props.onReorder,undefined);assert.equal(bar.props.onCreate,undefined,'no onCreate given (qP passes Op, undefined while unavailable)');
   const items=id=>{const element=bar.props.renderTabMenuItems(id);if(!element)return null;
     const drawn=element.type(element.props);return React.Children.toArray(drawn.props.children);};
   assert.equal(bar.props.renderTabMenuItems('none'),null);assert.equal(bar.props.renderTabMenuItems('unknown'),null,'no menu state, no items');
@@ -676,4 +707,142 @@ test('TR2: child error cards take onEditConfig and the child model on the card o
   const main=await readFile(path.resolve(import.meta.dirname,'../src/main.jsx'),'utf8');
   const mount=main.slice(main.indexOf('<SourceBtwPane key={current}'),main.indexOf('controls={PANE_WINDOW ? <SourcePopoutControls paneName={PANE_NAMES.session}')); // R4i-transcript TR3: the /btw popout's controls
   assert.equal(count(mount,'onEditConfig={boot?.connected ? () => call("desktop-edit-config").catch(actionFailed("open-config")) : undefined}'),1);
+});
+// w10-ccres-e31-btw: 3.6556.2 cccc2cf0a qP's tab strip: `overflowArrowCloses:!1`, `maxLabelWidth:320`, and an untitled tab
+// is "Side chat" when it is the parent's first /btw child (HP ordinal 1), else "Side chat {n}" by that ordinal.
+test('the side-chat tab strip passes qP\'s ViewTabBar props and labels untitled tabs by their HP ordinal',()=>{
+  const draw=tabs=>renderToStaticMarkup(React.createElement(Pane.SourceBtwTabs,{tabs,activeId:tabs[0].id,state:state(),pending:{},onSelect:noop,onClose:noop}));
+  const labels=html=>[...html.matchAll(/<span data-vtb-label="true"[^>]*><span[^>]*>([^<]*)/g)].map(match=>match[1]);
+  assert.deepEqual(labels(draw([{id:'a',ordinal:1},{id:'b',ordinal:2}])),['Side chat','Side chat 2'],'2.42304.0 RO said "Side chat 1"');
+  assert.deepEqual(labels(draw([{id:'b',ordinal:2},{id:'c',ordinal:3}])),['Side chat 2','Side chat 3'],'an archived first sibling keeps its number');
+  assert.deepEqual(labels(draw([{id:'a',ordinal:1}])),['Side chat']);
+  assert.deepEqual(labels(draw([{id:'a',name:'btw: Why',ordinal:1},{id:'b',name:'Side chat',ordinal:4}])),['Why','Side chat 4'],'titles drop "btw: "');
+  assert.match(draw([{id:'a',ordinal:1}]),/data-vtb-label="true" style="max-width:320px"/);
+  const f=componentFixture(Pane.SourceBtwTabs,{tabs:[{id:'a',ordinal:1}],activeId:'a',state:state(),pending:{},onSelect:noop,onClose:noop});
+  const bar=findNode(f.tree,n=>n.props?.['aria-label']==='Side chat tabs');
+  assert.equal(bar.props.overflowArrowCloses,false);assert.equal(bar.props.maxLabelWidth,320);assert.equal(bar.props.minTabWidth,92);f.close();
+});
+
+// w10-ccres-e31-btw review fix: 3.6556.2 cccc2cf0a qP `onCreate:P,createBusy:F` (P=Ph(t) = c73f45bc3 Op, F=xh(t) = vp), and its
+// close of a working tab: closable unless open elsewhere or being stopped (L = uf), "Stopping…", bh's stop before the close.
+const v3=path.resolve(import.meta.dirname,'../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+const countIn=(text,needle)=>text.split(needle).length-1;
+test('qP passes Op/vp as onCreate/createBusy and keeps a working tab closable (source lock)',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const qp=await readFile(path.join(v3,'cccc2cf0a-DhZC33Gc.js'),'utf8'),btw=await readFile(path.join(v3,'c73f45bc3-B7hbL7H9.js'),'utf8');
+  assert.equal(countIn(qp,'onClose:oe,overflowArrowCloses:!1,onCreate:P,createBusy:F,renderTabMenuItems:se,minTabWidth:92,maxLabelWidth:320,labels:G'),1);
+  assert.equal(countIn(qp,'N=l(null),P=Ph(t),F=xh(t),'),1);assert.equal(countIn(qp,',Vt as Ph,'),1);assert.equal(countIn(qp,',Bt as xh,'),1);
+  assert.equal(countIn(btw,'Op as Vt'),1);assert.equal(countIn(btw,'vp as Bt'),1);
+  assert.equal(countIn(btw,'return r&&X?.startBtwChild&&!c&&!u?f:void 0}'),1);
+  assert.equal(countIn(btw,'if(!(_p(e)||n?.currentSessionId!==e)){if(!lp()){a(void 0,{openedBy:"bare"});return}'),1);
+  assert.equal(countIn(btw,'function vp(e){let $=J9(2),t=J1($,0,e)?K1($,0,e,()=>_p(e)):$[1];return o(gp,t,yp)}'),1);
+  assert.equal(countIn(qp,'closable:!(I.has(e)||L.has(e)),status:x[t]?L.has(e)?r.formatMessage({defaultMessage:"Stopping\\u2026",id:"NACfNicI6z"}):r.formatMessage(Wt.working):void 0'),1);
+  assert.equal(countIn(qp,'newTab:B,newTabBusy:V,moreTabs:H,closeTab:U,closeTabDeleteHint:ee'),1);
+  for(const needle of ['"New side chat",id:"42YfXqKAm8"','"Starting side chat\\u2026",id:"y9B3O29aGR"',
+    '"Press Delete or Backspace to close the side chat. A working side chat is stopped first.",id:"iCxvGkWlgx"',
+    'if(Lt.getState().starredIds.includes(e)){ae("pinned");return}if(i?.isRunning===!0){let n=!1;bh(e,',
+    '"Couldn\\u2019t stop the side chat. Try closing it again.",id:"87M9qS2gRQ"','"This side chat is pinned. Unpin it before closing its tab.",id:"UAFwvlnF7A"',
+    '"Stopped the side chat, but couldn\\u2019t close its tab. It stays open while something still needs it, such as an open pull request.",id:"wiqPHH3gjn"'])
+    assert.equal(countIn(qp,needle),1,needle);
+  assert.equal(countIn(btw,'var lf=new Map,uf=new Set,df=ie(),ff=3e3,pf=1e4,mf=1e3,hf=5'),1);
+  assert.equal(countIn(btw,'try{await Ft(Promise.resolve(X?.stop?.(e)),pf,"btw child stop timed out")}catch(t){Da(t,"ccd_btw_child_stop",{extra:{session_id:e}}),r("not_stopped");return}for(let n=0;n<hf;n++)if(!t()||(await bf(e),await Cf(e,mf)))return;r("not_closed")'),1);
+});
+test('the strip offers New side chat with its busy label, and a working tab is closable until it is being stopped',()=>{
+  const created=[],onCreate=()=>created.push(true),s=state();s.active.b='turn';
+  const props={tabs:[{id:'a',ordinal:1},{id:'b',ordinal:2}],activeId:'a',state:s,pending:{},onSelect:noop,onClose:noop};
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwTabs,props)),/aria-label="New side chat"/,'no onCreate, no button');
+  assert.match(renderToStaticMarkup(React.createElement(Pane.SourceBtwTabs,{...props,onCreate})),/aria-label="New side chat"/);
+  const f=componentFixture(Pane.SourceBtwTabs,{...props,onCreate,createBusy:true});
+  const bar=findNode(f.tree,n=>n.props?.['aria-label']==='Side chat tabs');
+  assert.equal(bar.props.onCreate,onCreate);assert.equal(bar.props.createBusy,true);
+  assert.equal(bar.props.labels.newTab,'New side chat');assert.equal(bar.props.labels.newTabBusy,'Starting side chat…');
+  assert.equal(bar.props.labels.closeTabDeleteHint,'Press Delete or Backspace to close the side chat. A working side chat is stopped first.');
+  assert.deepEqual(bar.props.tabs.map(tab=>[tab.id,tab.closable,tab.status]),[['a',true,undefined],['b',true,'Working']],'CI-08: working stays closable');
+  f.close();
+  const g=componentFixture(Pane.SourceBtwTabs,{...props,closing:new Set(['b']),pending:{a:true}});
+  assert.deepEqual(findNode(g.tree,n=>n.props?.['aria-label']==='Side chat tabs').props.tabs.map(tab=>[tab.id,tab.closable,tab.status]),
+    [['a',false,undefined],['b',false,'Stopping…']],'L.has(e): Stopping…, not closable; tabPending stays a host guard');g.close();
+});
+test('closing a tab: pinned is refused with a toast, a working tab is stopped first, then closed once its turn has ended',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  const settle=async()=>{for(let i=0;i<5;i++)await Promise.resolve();};
+  const run=({pinned=false,running=true,stop=async()=>{},archive=true,restart=false}={})=>{
+    const closed=[],stops=[],errors=[],s=state();if(running)s.active.b='turn';
+    const doc={body:{},activeElement:null};
+    const props={sessionId:'a',tabs:[{id:'a'},{id:'b'}],state:s,onSelect:noop,onError:message=>errors.push(message),
+      tabMenu:new Map([['b',{pinned,detachable:false}]]),onStop:id=>{stops.push(id);return stop(id);},onCloseTab:(...args)=>closed.push(args)};
+    const f=componentFixture(Pane.SourceBtwPane,props);f.flush();f.tree.props.ref.current={ownerDocument:doc,closest:()=>null};
+    const update=next=>{Object.assign(props,next);f.render();f.flush();};
+    const tabs=()=>findNode(f.tree,n=>n.type===Pane.SourceBtwTabs);
+    return {f,props,closed,stops,errors,update,tabs,close:id=>tabs().props.onClose(id)};
+  };
+  // Pinned (starredIds): the "pinned" toast, nothing stopped or closed.
+  {const h=run({pinned:true});h.close('b');await settle();
+    assert.deepEqual(h.errors,['This side chat is pinned. Unpin it before closing its tab.']);assert.deepEqual(h.stops,[]);assert.deepEqual(h.closed,[]);h.f.close();}
+  // Idle: main's closeBtwTab right away (Fh).
+  {const h=run({running:false});h.close('b');assert.deepEqual(h.closed,[['b',true]]);assert.deepEqual(h.stops,[]);h.f.close();}
+  // Working: bh stops it (Stopping…), waits for the turn to end, then closes; the archive ends the run without a toast.
+  {const h=run();h.close('b');await settle();h.update({});
+    assert.deepEqual(h.stops,['b']);assert.equal(h.tabs().props.closing.has('b'),true);assert.deepEqual(h.closed,[],'not while its turn is still active');
+    h.close('b');await settle();assert.deepEqual(h.stops,['b'],'a close in flight (Lh) is not started twice');
+    h.update({state:{...h.props.state,active:{}}});await settle();
+    assert.deepEqual(h.closed,[['b',true]],'closed as soon as its turn has ended');
+    h.update({tabs:[{id:'a'},{id:'b',archived:true}]});await settle();h.update({});
+    assert.equal(h.tabs().props.closing.has('b'),false);assert.deepEqual(h.errors,[]);
+    t.mock.timers.tick(5000);await settle();assert.deepEqual(h.closed,[['b',true]],'no further attempts');h.f.close();}
+  // The stop fails: "not_stopped", and the tab is left open.
+  {const h=run({stop:async()=>{throw new Error('nope');}});h.close('b');await settle();h.update({});
+    assert.deepEqual(h.errors,['Couldn’t stop the side chat. Try closing it again.']);assert.deepEqual(h.closed,[]);
+    assert.equal(h.tabs().props.closing.has('b'),false);h.f.close();}
+  // Stopped but kept open (pinned meanwhile, an open PR…): hf attempts, then "not_closed".
+  {const h=run();h.close('b');await settle();h.update({state:{...h.props.state,active:{}}});
+    await settle();assert.equal(h.closed.length,1);
+    for(let i=0;i<5;i++){t.mock.timers.tick(1000);await settle();}
+    assert.equal(h.closed.length,5,'hf attempts');assert.deepEqual(h.errors,['Stopped the side chat, but couldn’t close its tab. It stays open while something still needs it, such as an open pull request.']);h.f.close();}
+  // Working again after it was seen idle: wf's check fails and the run ends quietly.
+  {const h=run();h.close('b');await settle();h.update({state:{...h.props.state,active:{}}});await settle();
+    h.update({state:{...h.props.state,active:{b:'again'}}});for(let i=0;i<5;i++){t.mock.timers.tick(1000);await settle();}
+    assert.equal(h.closed.length,1);assert.deepEqual(h.errors,[]);h.f.close();}
+});
+test('use-btw-pane createTab is Op: a connected /btw core, no hand-back, no refused parent; it starts a bare child',async()=>{
+  const h=transport(async(action,p)=>action==='btw-session'&&p.op==='start'?{status:'disabled',reason:'test'}:{});
+  const fallbacks=[];h.host.fallback=value=>fallbacks.push(value);
+  let pane=h.render();
+  assert.equal(pane.createTab('parent',true),undefined,'c: handed back to the floating side chat');
+  h.host.sessionsRef.current=[...h.host.sessionsRef.current,{id:'parent',archived:true}];pane=h.render();
+  assert.equal(pane.createTab('parent'),undefined,'u: ip refuses an archived parent');
+  h.host.sessionsRef.current=h.host.sessionsRef.current.filter(thread=>thread.id!=='parent');
+  h.host.boot={...h.host.boot,core:{id:'codex',capabilities:{}}};pane=h.render();assert.equal(pane.createTab('parent'),undefined,'X?.startBtwChild');
+  h.host.boot={...h.host.boot,core:{id:'codex',capabilities:{btwChildSessions:true}}};pane=h.render();
+  const create=pane.createTab('parent');assert.equal(typeof create,'function');assert.deepEqual(pane.opening,{});
+  h.host.currentRef.current='elsewhere';create();assert.equal(h.calls.length,0,'currentSessionId !== e: nothing');
+  h.host.currentRef.current='parent';create();await new Promise(resolve=>setImmediate(resolve));
+  const start=h.calls.filter(call=>call.action==='btw-session');assert.equal(start.length,1);
+  assert.equal(start[0].op,'start');assert.equal(start[0].openedBy,'bare');assert.equal(start[0].titleWords,'');assert.equal(start[0].parentId,'parent');
+  assert.deepEqual(fallbacks,[{open:true,pending:null,legacy:true}],'a refused start hands back to the floating side chat (Tp handBack)');
+  const {readFile}=await import('node:fs/promises');
+  const main=await readFile(path.resolve(import.meta.dirname,'../src/main.jsx'),'utf8');
+  assert.equal(countIn(main,'onCreateTab={btwPane.createTab(current, sideChat.open && sideChat.legacy === true)} createBusy={!!btwPane.opening[current]}'),1);
+});
+// w11-sweep-ccres: 3.6556.2 cccc2cf0a UP(n, ne): the active child turning archived (Pa false → true) yields the pane,
+// from wherever it was archived; a tab already archived when shown, or another tab's archive, does not.
+test('UP: the active tab turning archived yields with the strip it stood in; no other change does', async () => {
+  const {readFile}=await import('node:fs/promises');
+  const official = await readFile(path.join(v3, 'cccc2cf0a-DhZC33Gc.js'), 'utf8');
+  assert.equal(official.split('function UP(e,t){let $=J9(4),n,r;J2($,0,e,t)?(n=()=>{let n=Pa(e);return Fa(()=>{let r=n;n=Pa(e),n&&!r&&t()})}').length - 1, 1);
+  assert.equal(official.split('UP(n,ne);').length - 1, 1);
+  const run = (change, initial = false) => {
+    const yields = [], before = [{ id: 'a' }, { id: 'x', archived: initial }, { id: 'b' }];
+    const props = { tabs: before, activeId: 'x', state: state(), pending: {}, onSelect: noop, onClose: noop, onYield: (...args) => yields.push(args) };
+    const f = componentFixture(Pane.SourceBtwTabs, props); f.flush();
+    change(props); f.render(); f.flush(); f.close();
+    return { yields, before };
+  };
+  const archived = run(props => { props.tabs = [{ id: 'a' }, { id: 'x', archived: true }, { id: 'b' }]; });
+  assert.equal(archived.yields.length, 1);
+  assert.equal(archived.yields[0][0], 'x');
+  assert.equal(archived.yields[0][1], archived.before, 'Y looks for the neighbours in the strip before the archive');
+  assert.deepEqual(run(props => { props.tabs = [{ id: 'a', archived: true }, { id: 'x' }, { id: 'b' }]; }).yields, [], 'another tab');
+  assert.deepEqual(run(props => { props.tabs = [{ id: 'a' }, { id: 'x', archived: true }, { id: 'b' }]; }, true).yields, [], 'already archived');
+  assert.deepEqual(run(props => { props.activeId = 'b'; props.tabs = [{ id: 'a' }, { id: 'x', archived: true }, { id: 'b' }]; }).yields, [], 'the pane already moved on (its own close)');
 });

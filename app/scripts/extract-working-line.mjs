@@ -1,238 +1,233 @@
-// Working line (transcript-working-line): extract the 2.42304.0 Code transcript's loading line in its turnStatusRows
+// Working line (transcript-working-line): extract the 3.6556.2 Code transcript's loading line in its turnStatusRows
 // branch, without executing any desktop runtime (decision D0: own generator, own output folder
-// src/generated/working-line, own scripts/verify-gen-working-line.mjs).
+// src/generated/working-line, own scripts/verify-gen-working-line.mjs). Migrated from 2.42304.0 in wave 2 of the
+// 3.6556.2 migration (lane w2-tr-working; transcript research §2.1 T2/T3/T4, §3.2).
 //
-// User rulings: the host opens GrowthBook `__gb__2846116625` (turnStatusRows, c26fb8b6b `Ve`), and the line follows the
+// User rulings: the host opens GrowthBook `__gb__2846116625` (turnStatusRows, c26fb8b6b `qe`), and the line follows the
 // desktop with no host trade-off. The host's GrowthBook answers (src/source-working-line-adapters.jsx HOST_GROWTHBOOK)
-// serve the flag on; the original GrowthBook provider He turns it into the context We reads, and w8's raw read of the
-// flag (`fe(S_e)`) sees it on as well. Every other flag stays off (D29 / D31).
+// serve the flag on; the original GrowthBook provider Je turns it into the context Xe reads, and U6's raw read of the
+// flag sees it on as well. Every other flag stays off (D29 / D31). 3.6556.2 dropped the clay mark's gate
+// (`__gb__507049721`, shared-4 Ny, E14): the clay mark always leads, the classic and sprite marks are gone.
 //
-//   working-line.mjs   c96d752d0 w8 (memo): the loading line. `M = m_()` (c26fb8b6b We) picks the branch: on, Het
-//                      (`data-testid="code-working-line"`, `data-turn-working`) → Vet → the CDS TurnStatus row `up`
-//                      (c734f318c jt) with the leading mark seated by tfe (c28b569d3 a), the clock (WM / the elapsed
-//                      prop), the trailing items (x8 tokens: y8 "1 token" / "{tokens} tokens" over ml; the tasks button;
-//                      the "Thinking" chip only while the raw flag is off, so never here), the spinner face (KM =
-//                      cc5c5e22c l, JM's mode) and XM's activity mark (ww: the clay mark behind shared-4 Ny, GrowthBook
-//                      `__gb__507049721`, off); off, the classic row (Zo spark, uv morphs, m8 clock) — kept as original
-//                      code because w8 is one declaration. T8 (how the desktop feeds w8 from its session stores) is
-//                      pinned, not emitted: the host feeds w8 from its own turn state (src/working-line-model.mjs).
-//   turn-status-rows.mjs  c26fb8b6b Ve / D / He / Ue / We: the flag, its context, the GrowthBook provider (the host
+//   working-line.mjs   c96d752d0 U6 (memo): the loading line, React Compiler output (its memo cache helpers are the
+//                      view-tabs compiler helpers, E3). `ce = Pv()` (c26fb8b6b Xe) picks the branch: on, qet
+//                      (`data-testid="code-working-line"`, `data-turn-working`) → Ket → the CDS TurnStatus row `gf`
+//                      (c734f318c It); new since 2.42304.0: the "No response" API retry labels (c4a9ee384 ym / xm) and
+//                      the running tool's label (toolLabel / toolLabelSince / toolLabelEndedAt + 2 s). W6 (how the
+//                      desktop feeds U6 from its session stores and the mark broker) is pinned, not emitted: the host
+//                      feeds U6 from its own turn state (src/working-line-model.mjs).
+//   turn-status-rows.mjs  c26fb8b6b qe / D / Je / Ye / Xe: the flag, its context, the GrowthBook provider (the host
 //                      mounts it, src/source-working-line.jsx), the explicit provider and the reader.
-//   turn-status.mjs    c734f318c jt / At / St: the CDS TurnStatus (data-cds="TurnStatus") and its Step
-//                      (data-cds="TurnStatusStep"), over shared-frame's row parts (the row mark EM with the Spark NT / MT,
-//                      the clock pM, the label swap HM, the settle hook KM, …).
-//   cf2613ee5-Btwr9m9F.js  the Spark's sprite strips, emitted under the chunk's own name so shared-frame AT's lazy
-//                      `import("./cf2613ee5-Btwr9m9F.js")` (`cds_spark_sprites`) resolves unchanged.
-//   morph.mjs          cb6930dae ja (uv): the keyed morph, animated by vendor-motion.mjs.
-//   vendor-motion.mjs  framer-motion as the desktop ships it (vendor-motion-DKLOEafD.js): the slice ja reaches
-//                      (useReducedMotion, AnimatePresence, motion) with its two top-level initializers. No dependency
-//                      is added (D27): it is the installed chunk's own code.
-//   api-errors.mjs     c4a9ee384 zp (the apiRetry label over the API error type) and $f, over vendor-intl's
-//                      defineMessages (define-messages.mjs).
-//   …                  and the small originals those read (c93058e68 f elapsed clock, c60636ac6 X count tween, shared-8
-//                      AV token format, shared-4 Ny / Py, cc5c5e22c l / c, c1e715a58 r, c28b569d3 a / i, shared-52 oD,
-//                      shared-6 ug, c93fb40ec t, c8ba53634, shared-1, shared-156, shared-2, shared-25 Di), each chunk's
-//                      slice in a module of its own.
+//   turn-status.mjs    c734f318c It / Et: the CDS TurnStatus (data-cds="TurnStatus") and its Step.
+//   morph.mjs          cb6930dae Ja: the keyed morph, the turn mark broker ($a) and its said-words store (the tool label).
+//   api-errors.mjs     c4a9ee384 ym / xm: the API retry label and its retry count text ("No response from the API",
+//                      "Trying once more, for up to {minutes} min").
+//   …                  and the small originals those read, each chunk's slice in a module of its own.
 //
-// The machinery is extract-turn-box.mjs's: every emitted binding is an original top-level declaration sliced from the
-// installed chunk; a module's bindings are the reachable closure of its roots (each declaration parsed on its own, its
-// free variables are the chunk's top-level bindings it uses); an import is followed into the chunk it names, so the
-// closure crosses chunks, and every chunk it may enter is listed in `modules`. An import resolves, in this order, to: a
-// named host adapter in src/source-working-line-adapters.jsx (its original declaration must carry `features`), a
-// verified React export of vendor-frame, a semantic public name of the shared view-tabs graph (D1/D46), or the
-// declaration in a listed chunk. A declaration of a listed chunk that view-tabs already publishes is imported from
-// view-tabs too. A declaration view-tabs holds without a public name is sliced again here (recorded in the manifest as
-// `heldByViewTabs`, a followUp for extract-view-tabs.mjs) unless it is module state (a context, a WeakMap / Map / Set)
-// outside the justified `stateCopies`. A destructuring declarator is one binding for each name it declares; a top-level
-// expression statement that assigns to a selected binding is carried as an initializer, in source order. A dynamic
-// import is kept only when it names a listed chunk emitted under its own file name. Anything else unresolved stops
-// generation. `--dry-run` with WORKING_LINE_EXPLORE=1 surveys a closure without writing.
+// Legacy names (E34): transcript-rows imported 2.42304.0 minified names from this area's files (shared-frame.mjs Ji,
+// morph.mjs Ca, …) until it moved to 3.6556.2 in wave 6; it now imports semantic names or `linkExports` (this version's
+// own locals) only, never a legacy name (tests/transcript-rows.test.mjs guards it). Wave 7 removed this area's
+// `legacyExports` and its `legacy['2.42304.0']` segment (scripts/working-line-legacy-2.42304.0.json): no importer is
+// left on 2.42304.0, and the last host import of a legacy name (src/source-transcript-status.jsx `Ja`) now reads the
+// semantic morph.mjs `useTurnMarkHeld`. Wave 10 (w10-cleanup-slicer-d1) removed the E34 machinery from runSlicer as well
+// (the `legacyExports` / `legacyView` options, the frozen linked views, the 2.42304.0 defaults): both of its callers run
+// on 3.6556.2 and pass the snapshot, source and vendor table explicitly.
 //
-// `callSites` / `rawCallSites` pin the original text the host wiring follows but cannot import: T8's props, the gate
-// constant, the root GrowthBook provider, and where the desktop forces the gate on through Ue (c96d752d0 nat,
-// cf74bc599 Cn).
+// The machinery (runSlicer, shared with extract-transcript-rows.mjs, which runs it on 3.6556.2 too): every emitted
+// binding is an original top-level declaration sliced from the official chunk; a module's bindings are the reachable
+// closure of its roots (each declaration parsed on its own, its free variables are the chunk's top-level bindings it
+// uses); an import is followed into the chunk it names, so the closure crosses chunks, and every chunk it may enter is
+// listed in `modules`. An import resolves, in this order, to: a named host adapter in src/source-working-line-adapters.jsx
+// (its original declaration must carry `features`), a verified React export of vendor-frame (official-3.6556.2.mjs
+// assertVendorAlias, the compiler runtime included), a semantic public name of the shared view-tabs graph (D1/D46/E3),
+// or the declaration in a listed chunk. A declaration view-tabs holds without a public name is sliced again here
+// (recorded as `heldByViewTabs`) unless it is module state outside the justified `stateCopies`. `--dry-run` with
+// WORKING_LINE_EXPLORE=1 surveys a closure without writing.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import * as v3 from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const referenceVersion = v3.referenceVersion;
+const referenceSnapshot = v3.referenceSnapshot;
+const source = v3.ionSource;
 const output = path.join(root, 'src/generated/working-line');
-const viewTabs = path.join(root, 'src/generated/view-tabs');
 const adapterModule = '../../source-working-line-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment.
-const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    Co: ['react', 'useState'], So: ['react', 'useRef'], uo: ['react', 'useCallback'], bo: ['react', 'useMemo'], mo: ['react', 'useEffect'],
-    yo: ['react', 'useLayoutEffect'], oo: ['react', 'memo'], Ja: ['react', 'Fragment'], Ba: ['react', 'Fragment'], eo: ['react', 'createContext'],
-    do: ['react', 'useContext'], lo: ['react', 'use'], wo: ['react', 'useSyncExternalStore'], go: ['react', 'useId'], xo: ['react', 'useReducer'],
-    co: ['react', 'startTransition'], io: ['react', 'isValidElement'], $a: ['react', 'cloneElement'], ro: ['react', 'forwardRef'],
-    po: ['react', 'useDeferredValue'], vo: ['react', 'useInsertionEffect'], _o: ['react', 'useImperativeHandle'], To: ['react', 'useTransition'],
-    ho: ['react', 'useEffectEvent'], Ka: ['react', 'Children'], qa: ['react', 'Component'], to: ['react', 'createElement'], Qa: ['react', 'Suspense'], Sa: ['react-dom', 'createPortal'], Ca: ['react-dom', 'flushSync'],
-    Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'],
-    // The React namespace (zustand's useStore in vendor-all-0 reads useSyncExternalStore / useCallback off it).
-    so: ['react', 'default'],
-  },
-};
+// vendor-frame re-exports React: the official-3.6556.2.mjs table (R3), each alias checked against its declarator.
+const vendor = { [v3.vendorFrame]: v3.reactAliases };
 
 // Host dependencies (checked first), keyed by chunk then export alias. `local` is the declaration the alias must still
 // name; `features` must appear in that declaration's prettier form; `also` pins further declarations of the same chunk.
 const adapters = {
   // react-intl useIntl / FormattedMessage over the local catalog (source-code-start-adapters.jsx useStartIntl /
-  // StartMessage: the English message is looked up in zh-CN by t()). useIntl also carries the host's thinking toggle
-  // (see the adapter module).
-  'vendor-intl-Db7hDWRO.js': {
-    p: { name: 'useIntl', local: 'q', features: ['let e = o(K);', 'return (Mt(e), e);'], also: { Mt: ['[React Intl] Could not find required `intl` object.'] } },
-    l: { name: 'FormattedMessage', local: 'Gt', features: ['var Gt = u(Wt, Ut);'], also: { Wt: ['p = r({ id: o, description: s, defaultMessage: c }, l, { ignoreTag: f });'] } },
+  // StartMessage: the English message is looked up in zh-CN by t()).
+  'vendor-intl-DYfox5Co.js': {
+    p: { name: 'useIntl', local: 'q', features: ['return (Mt(e), e);'], also: { Mt: ['[React Intl] Could not find required `intl` object.'] } },
+    l: { name: 'FormattedMessage', local: 'Gt', features: ['(Wt, Ut)'], also: { Wt: ['textComponent:', '{ ignoreTag: f }', 'Array.isArray(p) ? p : [p]'] } },
   },
-  // shared-25 Zs (exported Th): a GrowthBook flag (w8 `fe(S_e)` = the raw turnStatusRows flag, x8 `fe(nfe)` =
-  // ccr_thinking_token_count). No GrowthBook here: off (D29 / D31). turnStatusRows reaches the line through Ue instead.
-  // ec (exported Nh): a GrowthBook flag behind an enable argument (shared-4 Ny: `__gb__507049721`, the clay mark). Off.
-  'shared-25-DP8p7i1Z.js': {
-    Th: { name: 'useGrowthBookFlag', local: 'Zs', features: ['return Rs(I(e)).on;'] },
-    Nh: { name: 'useGrowthBookFlagWhen', local: 'ec', features: ['return !t || !n?.growthbook ? !1 : As(n, I(e)).on;'] },
+  // shared-25 fs (exported Yh): a GrowthBook flag (U6's raw turnStatusRows read `jt(Mpe)`, B6's ccr_thinking_token_count,
+  // c26fb8b6b Je's provider). hs (exported rg): a GrowthBook flag behind an enable argument (shared-4 MS: the activity
+  // sprites' `__gb__2346508742`). No GrowthBook here: the host's answers (HOST_GROWTHBOOK; D29 / D31).
+  'shared-25-DOWZRSlq.js': {
+    Yh: { name: 'useGrowthBookFlag', local: 'fs', features: ['.on;'] },
+    rg: { name: 'useGrowthBookFlagWhen', local: 'hs', features: ['!t || !n?.growthbook', '.on;'] },
   },
-  // shared-14 Ge (exported Y): the chat text size preference (the classic row's spark size c8[j]). Host: the transcript's
+  // shared-7 Rg (exported es): the chat text size preference (the classic row's spark size D6[se]). Host: the transcript's
   // text size, through WorkingLineHost.
-  'shared-14-u0TSV9dR.js': { Y: { name: 'useChatTextSize', local: 'Ge', features: ['return L((e) => e.chatTextSize);'] } },
-  // c06cf64bb: the desktop's per-session turn stores. Cy (yn): the running turn's start time; H (qr): the session's output
-  // token counter; G (In): the session's thinking / waiting state; tc (Jr): their change emitter. The host has no
-  // desktop session id here (w8 gets sessionId null: tokens and the clock come from props), so these answer the empty
+  'shared-7-DBAgAi5H.js': { es: { name: 'useChatTextSize', local: 'Rg', features: ['return jg(zg);'], also: { zg: ['return e.chatTextSize;'] } } },
+  // c06cf64bb: the desktop's per-session turn stores. bk (xn): the running turn's start time; U (ti): the session's
+  // output token counter; K (Bn): the session's thinking / waiting state; a_ (ni): their change emitter. The host has no
+  // desktop session id here (U6 gets sessionId null: tokens and the clock come from props), so these answer the empty
   // session: no start, 0 tokens, no state, nothing to subscribe to.
-  'c06cf64bb-BE5q2vSr.js': {
-    yn: { name: 'useTurnStartTime', local: 'Cy', features: ['function Cy(e) {'] },
-    qr: { name: 'sessionTokenCounter', local: 'H', features: ['addThinkingText(e, t) {', 'firstPositiveAt(e) {', 'return nc.get(e) ?? 0;'] },
-    In: { name: 'sessionActivityStore', local: 'G', features: ['W.set(e, xp("requesting", "sending"))', 'return W.get(e) ?? null;'] },
-    Jr: { name: 'sessionActivityEvents', local: 'tc', features: ['ec.add(e),', 'for (let t of ec) t(e);'] },
+  'c06cf64bb-CdJdJuVd.js': {
+    xn: { name: 'useTurnStartTime', local: 'bk', features: ['function bk(e) {'], also: { xk: ['return e?.pendingTurn?.startTime ?? null;'] } },
+    ti: { name: 'sessionTokenCounter', local: 'U', features: ['addThinkingText(e, t) {', 'setTaskTokens(e, t, n) {'] },
+    Bn: { name: 'sessionActivityStore', local: 'K', features: ['NS("requesting", "sending")', 'awaitsInit(e) {', 'return t === "sending" || t === "starting";'] },
+    ni: { name: 'sessionActivityEvents', local: 'a_', features: ['subscribe(e) {', 'notify(e) {'] },
   },
 };
 
-// Host stand-ins for declarations the closure reaches inside a listed chunk (keyed chunk#local, feature-checked the same
-// way as `adapters`). None at present: the CDS Spark (shared-frame NT / MT with its lazily loaded sprite chunk) is the
-// original, not the host SourceSpark.
+// Host stand-ins for declarations the closure reaches inside a listed chunk (keyed chunk#local). None.
 const localAdapters = {};
 
 // Module state view-tabs also holds (without a public name) that this area copies anyway, each with why a second copy
 // cannot split anything the host relies on. Any other state copy stops generation (see isModuleState).
 const stateCopies = {
-  // CDS router context (CdsRoot provides `router`): TurnStatus links (qi) read it. No host CdsRoot passes a router, so the
+  // CDS router context (CdsRoot provides `router`): TurnStatus links (ia) read it. No host CdsRoot passes a router, so the
   // view-tabs copy and this one both read undefined.
-  'shared-frame-BfjMqbuN.js#ii': 'router context; no host router (both copies undefined)',
-  // The reduced-motion listener set (Am / km over matchMedia and html[data-reduced-motion]): a second copy subscribes to
-  // the same global sources and answers the same value.
-  'shared-frame-BfjMqbuN.js#Em': 'reduced-motion listeners over global sources (same answer)',
-  // A per-document Range cache (Id, text overflow measurement).
-  'shared-frame-BfjMqbuN.js#Fd': 'per-document Range cache',
+  'shared-frame-6jtSkIit.js#hi': 'router context; no host router (both copies undefined)',
+  // The reduced-motion listener set (kh / Dh over matchMedia and the html reduced-motion attribute, Oh): a second copy
+  // subscribes to the same global sources and answers the same value.
+  'shared-frame-6jtSkIit.js#Th': 'reduced-motion listeners over global sources (same answer)',
+  // A per-document Range cache (Af, text overflow measurement).
+  'shared-frame-6jtSkIit.js#kf': 'per-document Range cache',
+  // The toolbar roving-focus hook E_ (Arrow / Home / End keys) keeps its elements in these: every element this copy
+  // registers (Ic.add, Lc.set) it also reads, through the same copy (shared-2 R6, the message action bar the legacy TX
+  // name serves); $g is set by no declaration in this closure, so it answers its default.
+  'shared-frame-6jtSkIit.js#Lc': 'toolbar roving-focus state of elements this copy registers',
+  'shared-frame-6jtSkIit.js#Ic': 'toolbar roving-focus state of elements this copy registers',
+  'shared-frame-6jtSkIit.js#$g': 'toolbar roving-focus overrides, never set in this closure (default)',
 };
 
 // One generated module per chunk the closure may enter. `exports` maps original local binding -> exported name (the
-// roots; `features` pins each to strings of its original prettier-formatted text). Bindings other generated modules
-// import from a chunk are exported under their original names as well.
+// roots; `features` pins each to stable strings of its original prettier-formatted text, R2/E5). Bindings other
+// generated modules import from a chunk are exported under their original names as well. `linkExports` lists the
+// 3.6556.2 locals the transcript rows area (extract-transcript-rows.mjs) imports from a module without a semantic name:
+// each is exported under its own 3.6556.2 name and recorded in the manifest, so that area never depends on an E34
+// legacy name and the legacy shims can go in wave 7 without touching it (w6-transcript-rows-cont review fix).
 const modules = [
-  { target: 'turn-status-rows.mjs', source: 'c26fb8b6b-DfPeiuGP.js',
-    exports: { Ve: 'TURN_STATUS_ROWS_FLAG', He: 'TurnStatusRowsProvider', Ue: 'TurnStatusRowsOverride', We: 'useTurnStatusRows' },
-    features: { Ve: ['Ve = "__gb__2846116625"'], He: ['n = f(Ve);', 'value: t ?? n'], Ue: ['return o(D.Provider, { value: e, children: t });'],
-      We: ['return l(D) ?? !1;'] } },
-  { target: 'elapsed-clock.mjs', source: 'c93058e68-BZctuFpI.js', exports: { f: 'useElapsedSince' },
-    features: { f: ['return d(e ?? null, r);'] } },
-  { target: 'media-query.mjs', source: 'shared-25-DP8p7i1Z.js' },
-  { target: 'count-tween.mjs', source: 'c60636ac6-DF2ym4tP.js', exports: { X: 'useCountTween' },
-    features: { X: ['o = (e) => 1 - (1 - e) ** 3,', 'l = requestAnimationFrame(u)'] } },
-  { target: 'token-format.mjs', source: 'shared-8-B5lJ8U5C.js', exports: { AV: 'formatTokenCount' }, features: { AV: ['return jV(e'] } },
+  { target: 'turn-status-rows.mjs', source: 'c26fb8b6b-B7Friu61.js',
+    exports: { qe: 'TURN_STATUS_ROWS_FLAG', Je: 'TurnStatusRowsProvider', Ye: 'TurnStatusRowsOverride', Xe: 'useTurnStatusRows' },
+    features: { qe: ['qe = "__gb__2846116625"'], Je: ['value: a, children: t'], Ye: ['{ value: t, children: r } = e,', 'value: t, children: r'],
+      Xe: ['?? !1;'] } },
+  { target: 'elapsed-clock.mjs', source: 'c93058e68-CMBi_EBm.js', exports: { d: 'useElapsedSince' }, features: { d: ['e ?? null'] } },
+  { target: 'media-query.mjs', source: 'shared-25-DOWZRSlq.js' },
+  { target: 'shared-0.mjs', source: 'shared-0-DDOOdL6P.js', linkExports: ['ea'] },
+  { target: 'count-tween.mjs', source: 'c60636ac6-xYOM0GQX.js', exports: { Je: 'useCountTween' },
+    features: { Je: ['requestAnimationFrame'] } },
+  { target: 'token-format.mjs', source: 'shared-8-Db1QN4mf.js', exports: { lX: 'formatTokenCount' } },
   { target: 'flag-names.mjs', source: 'c93fb40ec-ueIsHfDz.js', exports: { t: 'THINKING_TOKEN_COUNT_FLAG' }, features: { t: ['t = "ccr_thinking_token_count"'] } },
-  { target: 'transcript-attrs.mjs', source: 'shared-6-Cby4X-ms.js' },
-  { target: 'value-changed.mjs', source: 'shared-52-DGviI8xb.js' },
+  { target: 'transcript-attrs.mjs', source: 'shared-6-sd9jbJqs.js' },
+  { target: 'value-changed.mjs', source: 'shared-52-uHFNjl7C.js' },
   // vendor-intl tn / nn (defineMessages / defineMessage: identity), read by c4a9ee384's message tables.
-  { target: 'define-messages.mjs', source: 'vendor-intl-Db7hDWRO.js' },
-  // c4a9ee384: $f (the thinking-token count the session path reads) and zp (w8's apiRetry label: the short text of an
-  // API error type, "Request failed" for any other). The host passes the official error type (working-line-model.mjs
-  // apiErrorType over the Codex error info).
-  { target: 'api-errors.mjs', source: 'c4a9ee384-ZZIKqgNM.js', exports: { zp: 'apiErrorText' },
-    features: { zp: ['let r = n === "long" ? Ip : Lp;', 'return t.formatMessage(r[e] ?? Rp);'] } },
-  { target: 'activity-marks.mjs', source: 'shared-4-CJsHhp5n.js', exports: { Ny: 'useActivityMarks' },
-    features: { Ny: ['n = ue("__gb__507049721", e && !t);', 'return e && (t || n);'] } },
-  { target: 'spinner-face.mjs', source: 'cc5c5e22c-C8R6koQe.js', exports: { l: 'useSpinnerFace', c: 'SpinnerFaceContext' },
-    features: { l: ['d?.publish(f, t === null ? null : { word: t, message: l, mode: u });', 'd?.faceOf(f) ?? o'] } },
-  { target: 'spinner-native.mjs', source: 'c1e715a58-DfhjCuW6.js' },
-  { target: 'mark-seat.mjs', source: 'c28b569d3-tlK89Xxf.js', exports: { a: 'seatLeadingMark', i: 'MarkSeatContext' },
-    features: { a: ['let s = a && n(t) ? r(i) : null;', '{ leading: t, seated: null }'] } },
-  { target: 'clipboard.mjs', source: 'shared-1-CAAiD7E3.js' },
-  { target: 'shared-156.mjs', source: 'shared-156-Bikz018e.js' },
-  { target: 'shared-2.mjs', source: 'shared-2-Cb74JByF.js' },
-  { target: 'shared-frame.mjs', source: 'shared-frame-BfjMqbuN.js', linkExports: ['Ji', 'fn', 'un', 'ln', 'dn', 'io', 'lo'] },
+  { target: 'define-messages.mjs', source: 'vendor-intl-DYfox5Co.js', linkExports: ['tn'] },
+  // c4a9ee384 ym / xm (U6's apiRetry label `${voe(p, oe, "short", m)} · ${coe(p, oe)}`): the short text of the API
+  // error type, or "No response from the API" / "The API didn’t respond to {host}" for a no-response retry, and the
+  // retry count, or "Trying once more, for up to {minutes} min" for a no-response retry with one try left.
+  { target: 'api-errors.mjs', source: 'c4a9ee384-RLCjceOL.js', exports: { ym: 'apiRetryLabel', xm: 'apiRetryCountText' },
+    features: { ym: ['e.noResponse'], xm: ['e.noResponse && e.maxRetries === 1'] } },
+  { target: 'spinner-face.mjs', source: 'cc5c5e22c-CxzwX9Ie.js', exports: { c: 'useSpinnerFace', s: 'SpinnerFaceContext' },
+    features: { c: ['word:', 'message:', 'mode:'] } },
+  { target: 'spinner-native.mjs', source: 'c1e715a58-5bxKK3Qu.js' },
+  { target: 'mark-seat.mjs', source: 'c28b569d3-Cz90mWvn.js', exports: { a: 'seatLeadingMark', i: 'MarkSeatContext' },
+    features: { a: ['leading:', 'seated:'] } },
+  { target: 'clipboard.mjs', source: 'shared-1-BJhqMmkf.js', linkExports: ['CR'] },
+  { target: 'shared-156.mjs', source: 'shared-156-BLTosN8U.js' },
+  { target: 'shared-2.mjs', source: 'shared-2-TF8v67kg.js', linkExports: ['R6'] },
+  { target: 'shared-4.mjs', source: 'shared-4-DUB1Oi0O.js' },
+  { target: 'shared-28.mjs', source: 'shared-28-DNYlf4wu.js' },
+  // w12 (D1): aa left linkExports once view-tabs published it as cdsNodeOwnerWindow (w12-preview); transcript rows import
+  // it from view-tabs by that name.
+  { target: 'shared-frame.mjs', source: 'shared-frame-6jtSkIit.js', linkExports: ['gn', 'hn', 'ia', 'Mh', 'qF'] },
   { target: 'card-classes.mjs', source: 'c8ba53634-Qe339QHm.js' },
-  // The Spark's sprite strips (shared-frame AT loads them lazily as `cds_spark_sprites`), emitted under the chunk's own
-  // name so AT's `import("./cf2613ee5-Btwr9m9F.js")` resolves unchanged.
+  { target: 'turn-steps.mjs', source: 'c227f4d5e-B-FYKrwT.js' },
+  // The Spark's sprite strips (shared-frame lazily loads them as `cds_spark_sprites`), emitted under the chunk's own
+  // name so the original `import("./cf2613ee5-Btwr9m9F.js")` resolves unchanged.
   { target: 'cf2613ee5-Btwr9m9F.js', source: 'cf2613ee5-Btwr9m9F.js', exports: { e: 'animations' },
     features: { e: ['thinking: {', 'frameCount: 7,'] } },
-  // The clay activity mark (ww → c05970c42 Q, shown when shared-4 Ny is on: GrowthBook `__gb__507049721`, on by the
-  // user's ruling) and its sprite players (cc39db724), with the lazily loaded sheets emitted under their own chunk names
-  // so each original `import("./…")` resolves unchanged: c8677db5f (the activity sheets: inline data URLs plus six
-  // /assets/v1/*.webp sheets, see publicAssets), c98f11b7a (mainSparkSheets) and cca15fd43 (nodeMarkAnimations).
+  // The clay activity mark (jT → c05970c42 s, no gate since 3.6556.2) and its sprite players (cc39db724), with the
+  // lazily loaded sheets emitted under their own chunk name so the original `import("./…")` resolves unchanged:
+  // c8677db5f (the activity sheets: inline data URLs plus six /assets/v1/*.webp sheets, see publicAssets).
   { target: 'c8677db5f-CJKAHncR.js', source: 'c8677db5f-CJKAHncR.js', exports: { D: 'ALIASES', O: 'SHEETS', E: 'SHEET_FRAME', k: 'SHEET_URLS' },
     features: { k: ['"think.loop": x,'] } },
-  { target: 'c98f11b7a-DyaVNKTh.js', source: 'c98f11b7a-DyaVNKTh.js', exports: { e: 'mainSparkSheets' }, features: { e: ['thinkingFast: {'] } },
-  { target: 'cca15fd43-C_oOPIWW.js', source: 'cca15fd43-C_oOPIWW.js', exports: { e: 'nodeMarkAnimations' }, features: { e: ['nodes3: {'] } },
-  { target: 'activity-sprites.mjs', source: 'cc39db724-BRrbVAsR.js' },
-  { target: 'activity-mark.mjs', source: 'c05970c42-Dye5Z-ab.js', exports: { Q: 'ActivityMark' },
-    features: { Q: ['d = f("turnStatusActivityMarks"),', '"data-testid": "TurnStatusClassicMark",', 'mark: e,'] } },
-  { target: 'turn-status.mjs', source: 'c734f318c-BRH2gAJZ.js', internal: true, exports: { jt: 'TurnStatus', St: 'TurnStatusStep' },
-    features: { jt: ['jt = Object.assign(At, { Step: St, Phrases: ut })'], St: ['"data-cds": "TurnStatusStep"'] } },
-  // framer-motion as the desktop ships it (vendor-motion): the slice morph.mjs reaches (useReducedMotion pd,
-  // AnimatePresence ul, motion fd) with its two top-level initializers. D27: no dependency is added; this is the
-  // installed chunk's own code.
-  { target: 'vendor-motion.mjs', source: 'vendor-motion-DKLOEafD.js', linkExports: ['C'] },
-  // The transcript rows area (extract-transcript-rows.mjs) imports the mark broker's context (Ia, Ga, Ka) and the turn
-  // activity context (ro) from here, so each exists once.
-  { target: 'morph.mjs', source: 'cb6930dae-BD0W5ZM9.js', internal: true, linkExports: ['Ca', '_a', 'va', 'ba', 'xa', 'Sa', 'ya'],
-    exports: { ja: 'Morph', Ia: 'TurnMarkBrokerContext', Ga: 'noSubscription', Ka: 'neverHeld', ro: 'TurnActivityContext' },
-    features: { ja: ['mode: n = "popLayout",', 'openWidth: r = !1,', 'let a = Ie(),', 'return a || !o', ': l("span", { className: t, children: i })'] } },
-  { target: 'working-line.mjs', source: 'c96d752d0-BOCqU7c2.js', internal: true, linkExports: ['uM'],
-    exports: { w8: 'WorkingLine', p8: 'thinkingElapsedBucket', Net: 'thinkingLabel', h8: 'waitingLabel', JM: 'spinnerMode', Bet: 'WORKING_LINE_TEST_ID',
-      // Shared with the transcript rows area (XAe / ZAe read them).
-      GM: 'useNeedsYourInputLabel', KM: 'useSpinnerWord', qM: 'spinnerWord', WM: 'useTurnClock', ww: 'activityMark' },
+  { target: 'activity-sprites.mjs', source: 'cc39db724-BVvHv4hP.js' },
+  { target: 'activity-mark.mjs', source: 'c05970c42-1Ws8_hz4.js', exports: { s: 'ActivityMark' },
+    features: { s: ['mark:', 'standalone:', '"classic"'] } },
+  { target: 'turn-status.mjs', source: 'c734f318c-SHcb2X2p.js', internal: true, exports: { It: 'TurnStatus', Et: 'TurnStatusStep' },
+    features: { It: ['Object.assign(', 'Step:', 'Phrases:'], Et: ['"data-cds": "TurnStatusStep"'] } },
+  // framer-motion as the desktop ships it (vendor-motion): the slice morph.mjs reaches, with its top-level initializers.
+  // D27: no dependency is added; this is the official chunk's own code.
+  // w10-ccres-rail-readout (D1): the session rail context area's chart tooltip kit (c0ce8f953 useSpring, ca74e9c4f
+  // useMotionValue, cddbfc1b6) imports the motion values, frame loop and spring generator from here (one framer-motion).
+  { target: 'vendor-motion.mjs', source: 'vendor-motion-DlXQpU4V.js',
+    linkExports: ['C', 'fd', 'pd', 'ul', 'En', 'F', 'G', 'K', 'M', 'N', 'Qr', 'S', 'Sn', 'Zc', 'hn', 'un', 'vn', 'x'] },
+  // cb6930dae: the keyed morph (Ja), the turn mark broker's context ($a: the tool rows hold the mark and say their
+  // words there — U6's toolLabel in the desktop) and the turn activity context (jo). The transcript rows area imports
+  // the contexts from here, so each exists once.
+  { target: 'morph.mjs', source: 'cb6930dae-Dw_4c1QI.js', internal: true,
+    // So: whether a running tool row holds the turn's mark (src/source-transcript-status.jsx; 2.42304.0 Ja).
+    exports: { Ja: 'Morph', $a: 'TurnMarkBrokerContext', vo: 'noSubscription', yo: 'neverHeld', jo: 'TurnActivityContext', So: 'useTurnMarkHeld' },
+    linkExports: ['Ba', 'Fa', 'Ia', 'La', 'Pa', 'Ra', 'za'],
+    features: { Ja: ['morphKey:', 'mode:', 'openWidth:', '"popLayout"'], vo: ['return () => void 0;'], yo: ['return !1;'], So: ['e?.held'] } },
+  { target: 'working-line.mjs', source: 'c96d752d0-CWv_7-n9.js', internal: true,
+    exports: { U6: 'WorkingLine', M6: 'thinkingElapsedBucket', Ret: 'thinkingLabel', P6: 'waitingLabel', iD: 'spinnerMode', Get: 'WORKING_LINE_TEST_ID',
+      // Shared with the transcript rows area (it imports them under these semantic names).
+      tD: 'useNeedsYourInputLabel', nD: 'useSpinnerWord', rD: 'spinnerWord', eD: 'useTurnClock', jT: 'activityMark' },
+    linkExports: ['EE'],
     features: {
-      w8: ['M = m_(),', 'N = fe(S_e),', 'if (M) {', 'b(Het, {', 'b(x8, { sessionId: y, isRunning: n && !e, tokens: m }, "tokens"),',
+      U6: ['toolLabel:', 'toolLabelUnspoken:', 'toolLabelSince:', 'toolLabelEndedAt:', 'apiRetrySshHost:', '+ 2e3', '"short"',
         'defaultMessage: "Thinking", id: "AHQWDTo4+e"', '"{count, plural, one {# running task} other {# running tasks}}",',
-        'defaultMessage: "Stopping\\u2026",', 'defaultMessage: "Compacting session\\u2026",', 'spinnerWord: qM(h),'],
-      p8: ['return e >= f8'], Net: ['defaultMessage: "Almost done thinking\\u2026",', 'defaultMessage: "Still thinking\\u2026",'],
-      h8: ['defaultMessage: "Waiting for Claude\\u2026",', 'defaultMessage: "Running tools\\u2026",', 'case "connecting":'],
-      JM: ['? "thinking"', '? "tool-use"', '? "responding"', ': "requesting";'], Bet: ['Bet = "code-working-line"'],
+        'defaultMessage: "Stopping\\u2026",', 'defaultMessage: "Compacting session\\u2026",', 'defaultMessage: "Working\\u2026"', '"tokens"'],
+      M6: ['e >= 2 ? 2 : 0'], Ret: ['defaultMessage: "Almost done thinking\\u2026",', 'defaultMessage: "Still thinking\\u2026",'],
+      P6: ['defaultMessage: "Waiting for Claude\\u2026",', 'defaultMessage: "Running tools\\u2026",', 'case "connecting":'],
+      iD: ['? "thinking"', '"tool-use"', '"responding"', '"requesting"'], Get: ['Get = "code-working-line"'],
+      tD: ['defaultMessage: "Needs your input"'], rD: ['(\\u2026|\\.\\.\\.)$'], eD: ['>= 2 ?'], jT: ['mark: "clay"'],
     } },
 ];
 
 // Original text the host wiring follows but cannot import (prettier form of the named top-level declaration).
 const callSites = [
-  { source: 'c96d752d0-BOCqU7c2.js', binding: 'T8', role: 'How the desktop feeds w8 from its session stores (host: src/working-line-model.mjs workingLineProps)',
-    features: ['{ elapsedSeconds: l, tokens: u, thinking: d, waiting: f } = Iw(e),', 'j = p8(wp(g) ?? l),', 'return b(w8, {', 'hasTokens: u > 0,',
-      'waiting: f !== null && x ? "connecting" : f,', 'turnStartTime: g,', 'finishedTaskCount: z,', 'onToggleTasksPane: !B && H && V !== null ? ee : null,'] },
-  { source: 'c96d752d0-BOCqU7c2.js', binding: 'x8', role: 'sessionId null: the tokens come from the tokens prop (y8 with the flag, else the b8 count tween)',
-    features: ['return e === null', '? b(r ? y8 : b8, { tokens: n })'] },
-  { source: 'c96d752d0-BOCqU7c2.js', binding: 'Vet', role: 'sessionId and turnStartTime null: the clock is the elapsedSeconds prop when it reaches 2',
-    features: ['v = o !== null || s !== null,', 'j = c >= 2 ? c : void 0;', 'elapsedSeconds: _ ? (v ? y : j) : void 0,'] },
-  { source: 'c96d752d0-BOCqU7c2.js', binding: 'ITe', role: 'The thinking state: active open while a thought streams, active closed during the minimum hold, then done',
-    features: ['if (e.thinkingStart !== null) return { kind: "active", open: !0 };', '? { kind: "active", open: !1 }', ': t < i + FTe'] },
+  { source: 'c96d752d0-CWv_7-n9.js', binding: 'W6', role: 'How the desktop feeds U6 from its session stores and the mark broker (host: src/working-line-model.mjs workingLineProps)',
+    features: ['toolLabel: p,', 'toolLabelUnspoken: m,', 'toolLabelSince: h,', 'toolLabelEndedAt: g,', 'apiRetrySshHost: F,', 'N?.kind === "ssh"',
+      'hasTokens: Z,', 'turnStartTime: T,', 'finishedTaskCount: ie,', '"loading_indicator"'] },
+  { source: 'c96d752d0-CWv_7-n9.js', binding: 'Jet', role: 'toolLabelSince: the said tool call\'s start (startedAt, else looked up), pushed past the waits',
+    features: ['t.startedAt === void 0', 't.startedAt ?? o'] },
+  { source: 'c96d752d0-CWv_7-n9.js', binding: 'B6', role: 'sessionId null: the tokens come from the tokens prop (R6 with the flag, else the z6 count tween)',
+    features: ['t === null'] },
+  { source: 'c96d752d0-CWv_7-n9.js', binding: 'Ket', role: 'sessionId and clockStartTime null: the clock is the elapsedSeconds prop when it reaches 2; clockNotBefore hides it',
+    features: ['clockStartTime: c,', 'clockNotBefore: l,', 'u >= 2 ? u : void 0', '* 1e3 < l'] },
 ];
 // Pinned on the minified bytes (each must occur exactly once).
 const rawCallSites = [
-  { source: 'c96d752d0-BOCqU7c2.js', role: 'nat: the next renderer feed forces turnStatusRows on through Ue (p_), the form the host follows',
-    features: ['C as p_', 'T as m_'] },
-  { source: 'cf74bc599-D9NZWRyl.js', role: 'The transcript turns the rows on when the gate or the renderer chrome says so (Cn = Jp() || Sn) and provides it through Ue (qp)',
-    features: ['Cn=Jp()||Sn', 'u(qp,{value:Cn,'] },
-  { source: 'c9543da06-DX8mZLsD.js', role: 'He (fa): the GrowthBook provider the desktop mounts at its root', features: ['w as fa'] },
+  { source: 'c96d752d0-CWv_7-n9.js', role: 'The next renderer feed forces turnStatusRows on through Ye (Nv), the form the host follows; U6 reads Xe (Pv)',
+    features: ['C as Nv', 'T as Pv'] },
+  { source: 'cf74bc599-CRYqipWN.js', role: 'The transcript turns the rows on when the gate or the renderer chrome says so (Gn = Xe() || Wn) and provides it through Ye ($m)',
+    features: ['Gn=eh()||Wn', 's($m,{value:Gn,'] },
+  { source: 'c9543da06-BaufrsQl.js', role: 'Je (na): the GrowthBook provider the desktop mounts at its root', features: ['w as na'] },
 ];
 
-async function readSource(name, cache) {
+async function readSourceIn(name, cache, dir = source) {
   if (cache.has(name)) return cache.get(name);
-  const bytes = await fs.readFile(path.join(source, name));
+  const bytes = await fs.readFile(path.join(dir, name));
   const code = bytes.toString();
   const ast = parsers.babel.parse(code, {});
   const exported = new Map(ast.program.body.filter(n => n.type === 'ExportNamedDeclaration')
@@ -306,18 +301,18 @@ function assertFeatures(label, text, features = []) {
   const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}${process.env.WORKING_LINE_EXPLAIN ? `\n--- text ---\n${text}` : ''}`);
 }
-function vendorImport(file, alias, src) {
-  const target = vendor[file]?.[alias];
+function vendorImportIn(file, alias, src, table = vendor, version = referenceVersion) {
+  const target = table[file]?.[alias];
   if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.code))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  // 3.6556.2 (R3): official-3.6556.2.mjs checks the alias' declarator, including the compiler runtime's shape. The
+  // pre-3.6556.2 regex branch went with the last non-3.6556.2 caller (w11-sweep-rest, w10-cleanup-slicer-d1 review).
+  if (version !== v3.referenceVersion) throw Error(`vendor-frame aliases are checked for ${v3.referenceVersion} only, not ${version}`);
+  v3.assertVendorAlias(src.code, alias, target);
   return target;
 }
-async function viewTabsGraph() {
-  const manifest = JSON.parse(await fs.readFile(path.join(viewTabs, 'manifest.json'), 'utf8'));
-  if (manifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${referenceVersion}`);
+async function viewTabsGraph(version = referenceVersion) {
+  const manifest = await viewTabsManifestFor(version);
+  if (manifest.referenceVersion !== version) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${version}`);
   const published = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) published.set(`${entry.file}#${entry.local}`, { name, ...entry });
   const held = new Set();
@@ -325,13 +320,13 @@ async function viewTabsGraph() {
   return { published, held };
 }
 // Module state a second copy would split: a context, or a module-level WeakMap / Map / Set.
-async function isModuleState(src, entry) {
+async function isModuleState(src, entry, table = vendor) {
   if (entry.kind !== 'var') return false;
   const init = entry.node.init;
   if (init?.type === 'NewExpression' && init.callee.type === 'Identifier' && ['WeakMap', 'Map', 'Set', 'WeakSet'].includes(init.callee.name)) return true;
   if (init?.type === 'CallExpression' && init.callee.type === 'Identifier') {
     const callee = src.top.get(init.callee.name);
-    if (callee?.kind === 'import' && vendor[callee.file]?.[callee.alias]?.[1] === 'createContext') return true;
+    if (callee?.kind === 'import' && table[callee.file]?.[callee.alias]?.[1] === 'createContext') return true;
   }
   return false;
 }
@@ -345,28 +340,75 @@ const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'T
   'URLSearchParams', 'Event', 'CustomEvent', 'KeyboardEvent', 'MouseEvent', 'HTMLInputElement', 'HTMLTextAreaElement', 'Text', 'DOMParser',
   'escape', 'unescape', 'AggregateError', 'FinalizationRegistry', 'BigInt64Array', 'BigUint64Array', 'Int8Array', 'Int16Array', 'Float32Array', 'Uint8ClampedArray',
   // vendor-frame's reportError fallback reads it behind `typeof process == "object"`.
-  'process', 'ErrorEvent', 'EvalError', 'ReferenceError', 'URIError', 'sessionStorage', 'localStorage', 'matchMedia', 'self', 'StorageEvent', 'Function', 'CSSStyleSheet', 'customElements', 'HTMLStyleElement', 'WebAssembly', 'SharedArrayBuffer', 'Buffer', 'Response', 'WorkerGlobalScope']);
+  'process', 'ErrorEvent', 'EvalError', 'ReferenceError', 'URIError', 'sessionStorage', 'localStorage', 'matchMedia', 'self', 'StorageEvent', 'Function', 'CSSStyleSheet', 'customElements', 'HTMLStyleElement', 'WebAssembly', 'SharedArrayBuffer', 'Buffer', 'Response', 'WorkerGlobalScope',
+  // w6-transcript-rows-cont (3.6556.2 tool rows): the o11y idle queue reads the page visibility entries.
+  'PerformanceObserver', 'fetch', 'Request', 'HTMLScriptElement',
+  // w13-close-chat-renderer (chat-renderer, c76f98194 selection helpers): the DOM Range constants (Range.START_TO_START).
+  'Range']);
 
 // Generated areas this one imports from instead of slicing again: file#local -> { from, name } for every binding a
-// linked area emits and exports; a binding it slices without exporting is `null` (stops generation: export it there).
-// An entry is an area name (every module), or { area, modules } to link only those modules of an area another generator
-// owns (its other modules may hold copies this area also slices; only the listed ones are imported, never resliced).
-async function linkedBindings(areas) {
+// linked area emits and exports; a binding it slices without exporting is `null` (stops generation: export it there,
+// or list it in `linkedCopies` when it is a pure binding). An entry is an area name (every module, the area's manifest
+// on this version), or { area, modules } to link only those modules of an area another generator owns (its other
+// modules may hold copies this area also slices; only the listed ones are imported, never resliced; each listed module
+// must be on this version, by its own `referenceVersion` when it carries one: code-current records it per module).
+export function workingLineManifestFor(manifest, version, label = 'working-line') {
+  if (manifest.referenceVersion === version) return manifest;
+  throw Error(`${label} is ${manifest.referenceVersion}, expected ${version}`);
+}
+// A manifest module without an export table (code-current's helper modules list `bindings` only): the names its file
+// exports, read from the file's own `export { local as name }` (rolldown parseAst; a local of the original is kept
+// under its original name, such as file-output-paths' `WV as outputBasename`).
+let parseAst;
+function exportedLocals(code, label) {
+  parseAst ??= createRequire(path.join(root, 'package.json'))('rolldown/parseAst').parseAst;
+  const names = new Map();
+  for (const node of parseAst(code, { lang: 'js' }, label).body) {
+    if (node.type !== 'ExportNamedDeclaration' || node.source) continue;
+    for (const s of node.specifiers ?? []) names.set(s.local.name ?? s.local.value, s.exported.name ?? s.exported.value);
+    for (const d of node.declaration?.declarations ?? []) if (d.id.type === 'Identifier') names.set(d.id.name, d.id.name);
+    if (node.declaration?.id) names.set(node.declaration.id.name, node.declaration.id.name);
+  }
+  return names;
+}
+async function linkedBindings(areas, version = referenceVersion) {
   const map = new Map();
+  // A binding two linked areas answer for: an exported one is never replaced by a `null` (sliced, not exported) entry; a
+  // later exported entry wins (the area listed last is the one that slices it).
+  const put = (key, value) => { if (value.name === null && map.get(key)?.name) return; map.set(key, value); };
   for (const linkedArea of areas) {
     const area = typeof linkedArea === 'string' ? linkedArea : linkedArea.area;
     const only = typeof linkedArea === 'string' ? null : new Set(linkedArea.modules);
     const dir = path.join(root, 'src/generated', area);
-    const manifest = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
-    if (manifest.referenceVersion !== referenceVersion) throw Error(`${area} is ${manifest.referenceVersion}, expected ${referenceVersion}`);
+    const current = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
+    const manifest = only ? current : workingLineManifestFor(current, version, area);
     for (const target of only ?? []) if (!manifest.modules.some(m => m.target === target)) throw Error(`linked module ${area}/${target} is not in its manifest`);
     for (const m of manifest.modules) {
       if (only && !only.has(m.target)) continue;
-      if (sha(await fs.readFile(path.join(dir, m.target))) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
+      const moduleVersion = m.referenceVersion ?? manifest.referenceVersion;
+      if (moduleVersion !== version) throw Error(`linked module ${area}/${m.target} is ${moduleVersion}, expected ${version}`);
+      const bytes = await fs.readFile(path.join(dir, m.target));
+      if (sha(bytes) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
+      // The manifest's source may be a path into the snapshot (code-current): the chunk is its file name.
+      const chunk = path.basename(m.source);
+      const tabled = m.exports !== undefined || m.linkExports !== undefined || m.sharedExports !== undefined;
+      const parsed = tabled ? null : exportedLocals(bytes.toString(), `${area}/${m.target}`);
+      // A binding is imported under its semantic name, else under its own name when the area exports it so (linkExports /
+      // sharedExports), else (no export table) under the name the file exports it as. Never under an E34 legacy name.
       for (const b of m.bindings ?? []) {
         const local = typeof b === 'string' ? b : b.name;
-        const name = m.exports?.[local] ?? (m.sharedExports?.includes(local) ? local : null);
-        map.set(`${m.source}#${local}`, name === null ? { area, target: m.target, name: null } : { from: `../${area}/${m.target}`, name, area, target: m.target });
+        const name = tabled
+          ? m.exports?.[local] ?? (m.linkExports?.includes(local) || m.sharedExports?.includes(local) ? local : null)
+          : parsed.get(local) ?? null;
+        put(`${chunk}#${local}`, name === null ? { area, target: m.target, name: null } : { from: `../${area}/${m.target}`, name, area, target: m.target });
+      }
+      // A re-export (session-rail saved-output.mjs imports shared-130 WV from code-current and exports it as
+      // pathFileName): the module serves the binding it imports under its export name, without holding a copy.
+      for (const imp of m.imports ?? []) {
+        const exported = m.exports?.[imp.local];
+        const original = typeof imp.original === 'string' ? /^(.+\.js)[:#]([\w$]+)$/.exec(imp.original) : null;
+        if (!exported || !original || (m.bindings ?? []).some(b => (typeof b === 'string' ? b : b.name) === imp.local)) continue;
+        put(`${path.basename(original[1])}#${original[2]}`, { from: `../${area}/${m.target}`, name: exported, area, target: m.target });
       }
     }
   }
@@ -375,12 +417,21 @@ async function linkedBindings(areas) {
 
 export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
   const { name: areaName, generator, output, adapterModule, adapterFile, adapters, localAdapters = {}, stateCopies = {}, modules,
-    callSites = [], rawCallSites = [], gate = null, linkedAreas = [], lazyVerbatim = null } = cfg;
-  const linked = await linkedBindings(linkedAreas);
+    callSites = [], rawCallSites = [], gate = null, linkedAreas = [], lazyVerbatim = null,
+    referenceVersion, referenceSnapshot, source, vendor, linkedCopies = {} } = cfg;
+  // No default snapshot (wave 10): each caller names the version it slices, its snapshot, source folder and vendor table.
+  for (const [key, value] of Object.entries({ referenceVersion, referenceSnapshot, source, vendor }))
+    if (!value) throw Error(`${areaName ?? 'runSlicer'}: ${key} is required`);
+  for (const key of ['legacyExports', 'legacyView']) if (Object.hasOwn(cfg, key)) throw Error(`${areaName ?? 'runSlicer'}: ${key} was removed in wave 10 (E34 legacy names)`);
+  const readSource = (name, c) => readSourceIn(name, c, source);
+  const vendorImport = (file, alias, src) => vendorImportIn(file, alias, src, vendor, referenceVersion);
+  const linked = await linkedBindings(linkedAreas, referenceVersion);
   const unexportedLinks = [];
   const linkedImport = key => {
     const link = linked.get(key);
     if (!link) return null;
+    // linkedCopies (chunk#local -> why): a pure binding a linked area slices without exporting, sliced again here.
+    if (link.name === null && Object.hasOwn(linkedCopies, key)) return null;
     if (link.name === null) { unexportedLinks.push(`${key} (${link.area}/${link.target})`); return null; }
     return link;
   };
@@ -388,7 +439,7 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
   // survey a closure before listing its chunks. Nothing is written in a dry run.
   const explore = dryRun && !!process.env.WORKING_LINE_EXPLORE;
   const cache = new Map();
-  const { published, held } = await viewTabsGraph();
+  const { published, held } = await viewTabsGraph(referenceVersion);
   const specs = new Map(modules.map(spec => [spec.source, { ...spec, exports: spec.exports ?? {} }]));
   const state = new Map([...specs.values()].map(spec => [spec.source, { spec, selected: new Map(), imports: new Map(), seen: new Set(), shared: new Set(), heldCopies: [] }]));
   const stateConflicts = [];
@@ -497,7 +548,7 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     }
     if (entry.kind !== 'function' && entry.kind !== 'var') throw Error(`${target}: unsupported declaration ${name}`);
     if (held.has(`${file}#${name}`)) {
-      if (await isModuleState(src, entry) && !Object.hasOwn(stateCopies, `${file}#${name}`)) stateConflicts.push(`${target}: ${file}#${name}`);
+      if (await isModuleState(src, entry, vendor) && !Object.hasOwn(stateCopies, `${file}#${name}`)) stateConflicts.push(`${target}: ${file}#${name}`);
       st.heldCopies.push(name);
     }
     const text = declarationText(src, entry);
@@ -536,6 +587,12 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
       await add(st.spec.source, name);
     }
   }
+  // linkExports join the closure like roots, so they stay exported.
+  for (const st of state.values()) for (const local of st.spec.linkExports ?? []) {
+    const entry = (await readSource(st.spec.source, cache)).top.get(local);
+    if (!entry || entry.kind === 'import') throw Error(`${st.spec.target}: linkExports ${local} is not a declaration of ${st.spec.source}`);
+    await add(st.spec.source, local);
+  }
   // Initializers: a statement that assigns to a selected binding comes along with its own dependencies (to a fixpoint).
   for (let changed = true; changed;) {
     changed = false;
@@ -567,8 +624,8 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     return local;
   };
   for (const st of state.values()) for (const entry of st.imports.values()) if (entry.kind === 'generated') entry.name = exportName(entry.chunk, entry.local);
-  // linkExports: bindings this area slices for itself that a linked area (extract-transcript-rows.mjs) imports, exported
-  // under their original names so the other area does not slice them a second time. Each must already be selected.
+  // linkExports: bindings a linked area (extract-transcript-rows.mjs) imports from this area, exported under their
+  // original names so the other area does not slice them a second time (added to the closure above).
   for (const st of state.values()) for (const local of st.spec.linkExports ?? []) {
     if (!st.selected.has(local)) throw Error(`${st.spec.target}: linkExports ${local} is not in the closure`);
     if (!Object.hasOwn(st.spec.exports, local)) st.shared.add(local);
@@ -629,6 +686,7 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
       initializers: inits.map(init => sha(init.text)),
       imports: [...st.imports].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}) })),
       exports: spec.exports, sharedExports: [...st.shared].sort(), heldByViewTabs: [...st.heldCopies].sort(),
+      ...(spec.linkExports?.length ? { linkExports: [...spec.linkExports].sort() } : {}),
     });
   }
   for (const site of callSites) {
@@ -708,10 +766,11 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
 export const WORKING_LINE = {
   name: 'working line', generator: 'extract-working-line.mjs', output, adapterModule, adapterFile: 'src/source-working-line-adapters.jsx',
   adapters, localAdapters, stateCopies, modules, callSites, rawCallSites,
-  gate: { flag: '__gb__2846116625', name: 'turnStatusRows', host: 'src/host-growthbook.mjs HOST_GROWTHBOOK, served to We by c26fb8b6b He (TurnStatusRowsProvider)' },
+  referenceVersion, referenceSnapshot, source, vendor,
+  gate: { flag: '__gb__2846116625', name: 'turnStatusRows', host: 'src/host-growthbook.mjs HOST_GROWTHBOOK, served to Xe by c26fb8b6b Je (TurnStatusRowsProvider)' },
 };
 export function extractWorkingLine(options) {
   return runSlicer(WORKING_LINE, options);
 }
-export { vendor, readSource, featureText, assertFeatures, referenceVersion, referenceSnapshot, source as referenceSource };
+export { vendor, readSourceIn as readSource, featureText, assertFeatures, referenceVersion, referenceSnapshot, source as referenceSource };
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await extractWorkingLine({ check: process.argv.includes('--check'), dryRun: process.argv.includes('--dry-run') });

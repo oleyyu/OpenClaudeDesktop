@@ -23,14 +23,27 @@ test('moveToIndex moves one item and keeps the rest in order', () => {
   assert.equal(moveToIndex(same, 'z', 1), same);
 });
 
-test('the Terminal and Files strips drag through the shared hook and commit through their own reorder', () => {
+// 3.6556.2 cccc2cf0a Zx: the terminal strip is the official ViewTabBar (`u(ey,{className:"min-w-0 flex-1",…`), which
+// drags its own tabs and reports the new index through onReorder (`onReorder:Pe,renderTabMenuItems:ye`, with
+// `Pe=E?ve:void 0` and ve = reorderTab(owner, id, toIndex)); w10-ccres-e31-terminal moved the host strip onto it, so
+// the terminal no longer goes through the shared hook. The Files strip still does.
+const OFFICIAL_V3 = path.join(import.meta.dirname, '..', '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+test('the Terminal and Files strips reorder through the official ViewTabBar', () => {
+  const zx = readFileSync(path.join(OFFICIAL_V3, 'cccc2cf0a-DhZC33Gc.js'), 'utf8');
+  assert.equal(zx.split(',onRename:_e,onCloseOthers:ie,onReorder:Pe,renderTabMenuItems:ye,labels:je}').length, 2);
+  assert.equal(zx.split('Pe=E?ve:void 0').length, 2);
+  // The generated ViewTabBar takes onReorder as the official one does (cfe7c4b3b Re).
+  assert.match(read('src/generated/view-tabs/cfe7c4b3b-BF79K6ux.js'), /onReorder:R,/);
   const terminal = read('src/source-terminal-pane.jsx');
-  assert.match(terminal, /useTabDragReorder\(\{ stripRef: tabList, itemSelector: "\[data-terminal-id\]"/);
-  assert.match(terminal, /onReorder: \(id, toIndex, fromIndex\) => terminals\.move\(owner, id, toIndex - fromIndex\)/);
-  assert.match(terminal, /shownTabs\.map\(\(tab, index\) => \(\n\s+<TerminalTab key=\{tab\.id\} tab=\{tab\} onPointerDown=/);
+  assert.match(terminal, /<SourceViewTabBar className="min-w-0 flex-1" aria-label=\{t\("Terminal tabs"\)\}/);
+  assert.match(terminal, /createOnDoubleClick onRename=\{rename\} onCloseOthers=\{closeOthers\} onReorder=\{reorder\}/);
+  assert.match(terminal, /const reorder = \(id, toIndex\) => \{\n\s+const fromIndex = tabs\.findIndex\(\(tab\) => tab\.id === id\);\n\s+if \(fromIndex >= 0 && toIndex !== fromIndex\) terminals\.move\(owner, id, toIndex - fromIndex\);/);
+  assert.doesNotMatch(terminal, /useTabDragReorder|<TerminalTab\b|data-terminal-id/);
+  // W12c files-tabbar: cccc2cf0a ND `onReorder:N?M:void 0` (M = c03935b01 reorderFileTab) on the same ViewTabBar.
+  assert.equal(zx.split('onReorder:N?M:void 0,onCloseAll:F,renderTabMenuItems:pe,labels:Ge,minTabWidth:104}').length, 2);
   const files = read('src/source-session.jsx');
-  assert.match(files, /useTabDragReorder\(\{ stripRef: tabList, itemSelector: "\[data-vtb-id\]"/);
-  assert.match(files, /fileTabDrag\.order\(fileTabs, \(file\) => file\.path\)\.map/);
-  assert.match(files, /onPointerDown=\{overflowed \? undefined : onPointerDown\}/);
-  assert.match(read('src/source-session.css'), /\.source-file-tab\[data-tab-dragging\] \{\n  z-index: 2;\n\}/);
+  assert.match(files, /onReorder=\{\(path, toIndex\) => setFileTabs\(\(files\) => reorderFileTab\(files, path, toIndex\)\)\}/);
+  assert.doesNotMatch(files, /useTabDragReorder|fileTabDrag|tabOverflowLayout/);
+  assert.match(read('src/source-file-tabs.jsx'), /onCloseAll=\{onCloseAll\}\n\s+renderTabMenuItems=\{renderTabMenuItems\} labels=\{FILE_TAB_LABELS\} minTabWidth=\{104\} \/>/);
+  assert.doesNotMatch(read('src/source-session.css'), /\.source-file-tab\b/);
 });

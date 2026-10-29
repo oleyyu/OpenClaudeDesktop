@@ -200,7 +200,8 @@ try {
   await page.screenshot({ path: path.join(evidence, 'artifact-viewer-dark.png') });
   await page.getByRole('button', { name: 'Back to artifacts', exact: true }).click();
   checks.push('Current search expands and collapses with Escape; no header overflow at 800/1000/1440px; dark library and 48px artifact frame render');
-  await page.getByRole('button', { name: 'Artifact options', exact: true }).first().click();
+  // 3.6556.2 c69e9937a cn: the card trigger reads "More options for {label}".
+  await page.getByRole('button', { name: /^More options for / }).first().click();
   await page.getByRole('menuitem', { name: 'Open conversation', exact: true }).click();
   await page.getByText('Fixture artifact ready', { exact: true }).waitFor();
   var artifactCwd = path.dirname(Object.values((await read('preferences.json')).localArtifacts)[0].path);

@@ -1,5 +1,6 @@
 import { t } from "../electron/i18n/index.mjs";
 import { formatDuration } from "./command-row-model.mjs";
+import { describeVerb } from "./description-verb-model.mjs";
 
 // Background task events in the transcript (2.2553.1 ion-dist c06cf64bb Vl/Hl parse <task-notification> into
 // {kind:'task_event', taskId, taskType, status, summary, durationMs}; approval-current.js:44082-44440 M2/N2/P2/F2/aue/R2
@@ -51,11 +52,21 @@ export function workflowTaskEvent(notification) {
     durationMs: Number.isFinite(durationMs) && durationMs >= 0 ? durationMs : null };
 }
 
+// c96d752d0 sXe: `h=t.taskType==="local_agent"||t.taskType==="remote_agent"||t.taskType==="in_process_teammate"`.
+const VERB_TASK_TYPES = new Set(["local_agent", "remote_agent", "in_process_teammate"]);
+
 /** aue (:44297-44400): the settled single row's parts. */
 export function taskEventRow(entry) {
   const status = normalStatus(entry?.status), noun = taskEventNoun(entry?.taskType);
   const running = status === "running";
+  // c96d752d0 sXe: an agent that started or completed with a description reads as the description's tense sentence
+  // (`g=t.description&&m&&h?Dhe(p??t.description)?.[t.status==="running"?"running":"done"]:void 0`, Dhe = c52b02f3f g,
+  // ported as describeVerb), shown alone in place of 'Background agent {status} · {description}'; failed/stopped and a
+  // description whose first word is not a known verb keep that line.
+  const tense = entry?.description && (running || status === "completed") && VERB_TASK_TYPES.has(entry?.taskType)
+    ? describeVerb(entry.description)?.[running ? "running" : "done"] ?? null : null;
   return {
+    tense,
     label: t(SINGLE[noun][status]),
     description: entry?.description || entry?.summary || null,
     elapsed: !running && Number.isFinite(entry?.durationMs) ? t("took {elapsed}", { elapsed: formatDuration(Math.round(entry.durationMs / 1000)) }) : null,

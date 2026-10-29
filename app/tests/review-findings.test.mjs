@@ -8,6 +8,7 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { findingAnnotation, findingCounts, findingsStatusText, fixFindingsPrompt, latestReviewFindings, parseBridgeReview, parseCodeComments, parseCodexReview, reportedFindings, sameFindingFile } from '../src/review-findings-model.mjs';
 import { fixFindingsText } from '../src/generated/r4e-findings/fix-findings-text.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 let server, R, D, A, C;
 before(async () => {
@@ -115,8 +116,11 @@ test('findings bar markup: status, steppers, Apply fixes / Re-run review and Dis
   assert.equal(bar({ findings: [] }), '');
 });
 
-// R3-terminal FT-09 (diffgit-01): the card is the original 2.42304.0 c44d00c7f ya (review-finding-card.mjs).
-test('finding card (2.42304.0 ya): Claude header with its line label, badges, ArrowDown / X, body, Fix this one footer', () => {
+// R3-terminal FT-09 (diffgit-01): the card is the original c44d00c7f card (review-finding-card.mjs), 3.6556.2 wc = memo(Cc).
+// The 3.6556.2 CdsBadge appends its `stacks:*` variant classes after the tone (inert: fizzy-lake is off, E12/R15).
+const STACKS = String.raw`(?: stacks:[^ "]+)*`;
+const badge = (source) => new RegExp(source);
+test('finding card (3.6556.2 Cc): Claude header with its line label, badges, ArrowDown / X, body, Fix this one footer', () => {
   const [one] = parseCodexReview(codex, '/work');
   const card = (props) => renderToStaticMarkup(React.createElement(R.SourceReviewFindingCard, { finding: one, onDismiss() {}, onFix() {}, onNext() {}, ...props }));
   const html = card({ current: true });
@@ -125,7 +129,7 @@ test('finding card (2.42304.0 ya): Claude header with its line label, badges, Ar
   assert.match(html, /<div class="flex min-h-7 items-center gap-1\.5 px-md pt-1"><svg class="[^"]*shrink-0" data-cds="Spark"[^>]* width="16" height="16"/);
   assert.match(html, /<span class="truncate text-body-medium">Claude<\/span><span class="shrink-0 text-footnote text-\[var\(--diff-widget-muted,var\(--muted-as-secondary,var\(--cds-text-muted\)\)\)\]">Lines 3–4<\/span>/);
   // Badges: the category is a truncating xs CdsBadge (max-w-[12rem]) over CdsOverflowTooltip.
-  assert.match(html, /<div class="ms-auto flex min-w-0 items-center gap-1"><span data-cds="Badge" data-size="xs" class="[^"]*bg-neutral text-secondary max-w-\[12rem\]"><span class="[^"]*"><span data-cds="OverflowTooltip"[^>]*>P1<\/span>/);
+  assert.match(html, badge(String.raw`<div class="ms-auto flex min-w-0 items-center gap-1"><span data-cds="Badge" data-size="xs" class="[^"]*bg-neutral text-secondary${STACKS} max-w-\[12rem\]"><span class="[^"]*"><span data-cds="OverflowTooltip"[^>]*>P1<\/span>`));
   // Next is the ghost xs icon-only ArrowDown, named after the finding's line; Dismiss is the ghost xs X.
   assert.match(html, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" data-size="xs" class="[^"]*" aria-label="Next finding after the one on line 3"/);
   assert.match(html, /data-cds-ghost="" data-size="xs" class="[^"]*" aria-label="Dismiss finding"/);
@@ -135,12 +139,12 @@ test('finding card (2.42304.0 ya): Claude header with its line label, badges, Ar
   assert.doesNotMatch(html, /Next →|spr-fix|spr-next|spr-summary/);
   // Fixing: its badge leads (before the verdict), and neither Next nor the footer shows.
   const fixing = card({ status: 'fixing', finding: { ...one, verdict: 'CONFIRMED' } });
-  assert.match(fixing, /class="[^"]*shrink-0 bg-neutral text-secondary"><span class="pb-\[0\.05em\]">Fixing…<\/span>/);
+  assert.match(fixing, badge(String.raw`class="[^"]*shrink-0 bg-neutral text-secondary${STACKS}"><span class="pb-\[0\.05em\]">Fixing…<\/span>`));
   assert.doesNotMatch(fixing, /Confirmed|Fix this one|Next finding after/);
   assert.match(fixing, /pt-xs pb-md"/);
-  assert.match(card({ status: 'addressed' }), /class="[^"]*bg-tint-green text-tint-green"><span class="pb-\[0\.05em\]">Fixed<\/span>/);
-  assert.match(card({ finding: { ...one, verdict: 'CONFIRMED', category: null } }), /class="[^"]*bg-tint-red text-danger"><span class="pb-\[0\.05em\]">Confirmed<\/span>/);
-  assert.match(card({ finding: { ...one, verdict: 'PLAUSIBLE', category: null } }), /bg-tint-yellow text-warning"><span class="pb-\[0\.05em\]">Plausible</);
+  assert.match(card({ status: 'addressed' }), badge(String.raw`class="[^"]*bg-tint-green text-tint-green${STACKS}"><span class="pb-\[0\.05em\]">Fixed<\/span>`));
+  assert.match(card({ finding: { ...one, verdict: 'CONFIRMED', category: null } }), badge(String.raw`class="[^"]*bg-tint-red text-danger${STACKS}"><span class="pb-\[0\.05em\]">Confirmed<\/span>`));
+  assert.match(card({ finding: { ...one, verdict: 'PLAUSIBLE', category: null } }), badge(String.raw`bg-tint-yellow text-warning${STACKS}"><span class="pb-\[0\.05em\]">Plausible<`));
   // No turn to send (onFix null): no footer; one finding (onNext null): no ArrowDown.
   const bare = card({ onFix: null, onNext: null });
   assert.doesNotMatch(bare, /Fix this one|Next finding/);
@@ -171,14 +175,14 @@ test('the annotation the card reads (c96d752d0): a single line, a range, and a r
   assert.equal(findingAnnotation({ ...one, line: 7, endLine: 7 }).line, 7);
 });
 
-// ya's handlers, called through a test hook dispatcher (D21) with the card's state in its context.
+// Cc's handlers, called through a test hook dispatcher (D21) with the card's state in its context.
 function cardTree(props, state = { current: false, status: 'open' }) {
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
   const refs = [];
-  internal.H = {
+  internal.H = withMemoCache({
     useContext: (context) => (context === A.ReviewFindingStateContext ? state : context._currentValue),
     useMemo: (fn) => fn(), useCallback: (fn) => fn, useRef: (value) => { const ref = { current: value }; refs.push(ref); return ref; },
-  };
+  });
   try { return { tree: C.ReviewFindingCard.type(props), refs }; } finally { internal.H = old; }
 }
 function find(tree, predicate) {
@@ -188,15 +192,15 @@ function find(tree, predicate) {
   return find(tree.props?.children, predicate);
 }
 
-test('ya handlers: Next steps, Dismiss hands focus back to the diff pane body a tick later, Fix keeps focus on the card', async () => {
+test('Cc handlers: Next steps, Dismiss hands focus back to the diff pane body a tick later, Fix keeps focus on the card', async () => {
   const [one] = parseCodexReview(codex, '/work');
   const calls = [];
   const { tree, refs } = cardTree({ sessionId: null, annotation: findingAnnotation(one), onNext: () => calls.push('next'), onFix: () => calls.push('fix'), onDismiss: () => calls.push('dismiss') });
   const label = (name) => find(tree, (node) => node.props['aria-label'] === name);
   label('Next finding after the one on line 3').props.onClick();
   assert.deepEqual(calls, ['next']);
-  // Focus inside the card when it is dismissed: cae42d46f s finds the [data-diff-pane-body] (or dialog, or pane root)
-  // around it and u focuses it on the next tick, if focus fell to the body meanwhile.
+  // Focus inside the card when it is dismissed: shared-1 nC (2.42304.0 cae42d46f s) finds the [data-diff-pane-body] (or dialog, or
+  // pane root) around it and aC (u) focuses it on the next tick, if focus fell to the body meanwhile.
   const focused = [];
   const doc = { body: { tagName: 'BODY' } };
   const paneBody = { ownerDocument: doc, isConnected: true, closest: () => null, matches: (selector) => selector.includes('[data-diff-pane-body]'), focus: (options) => focused.push(['pane', options]) };
@@ -217,7 +221,7 @@ test('ya handlers: Next steps, Dismiss hands focus back to the diff pane body a 
   find(tree, (node) => node.props.icon === 'ArrowUp').props.onClick();
   assert.deepEqual(calls, ['next', 'dismiss', 'fix']);
   assert.deepEqual(focused.at(-1), ['card', { preventScroll: true }]);
-  // The current finding is the context's (cc8941b7b rt stand-in): aria-current and the accent ring.
+  // The current finding is the context's (cc8941b7b pt stand-in): aria-current and the accent ring.
   const current = cardTree({ sessionId: null, annotation: findingAnnotation(one), onDismiss() {} }, { current: true, status: 'open' }).tree;
   const currentRoot = find(current, (node) => node.props.tabIndex === -1);
   assert.equal(currentRoot.props['aria-current'], true);

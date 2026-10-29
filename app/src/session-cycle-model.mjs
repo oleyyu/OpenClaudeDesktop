@@ -1,13 +1,18 @@
 // Session cycling (Go > Previous/Next Session, ⌘⇧[ / ⌘⇧], Ctrl+Tab / Ctrl+Shift+Tab, ⌥↑ / ⌥↓) over the 2.42304.0
 // originals (R3-sidebar2, cov7-02). shared-16 qp (exported `G`) is a hook over the desktop's stores; its pieces are
 // generated into generated/code-current/session-cycle-*.mjs and this module is the host form of the hook body:
-//   - a(e, t, a) → step(): tm (the list) / the 50 ms repeat swallow (Wp) / qp's position `p` (sessionCycleStep: from the
-//     last step's row by row key (Qp → Zp when its button left the DOM), else from the selected row, or 0 on a draft,
-//     skipping the aria-current="page" row on a fresh step) / rm while the step lands in a folded group / the record
-//     {mode, button, rowKey, pos, at} / home or open;
+//   - a(e, t, a) → step(): tm (the list) / the 50 ms repeat swallow (Wp) / the position step (sessionCycleStep, the
+//     3.6556.2 Pg step arrow `m`, w10-ccres-cycle-step; 2.42304.0 qp `p`: from the last step's row by row key (zg → Rg
+//     when its button left the DOM), else from the selected row, or 0 on a draft, skipping the aria-current="page" row
+//     on a fresh step) / rm while the step lands in a folded group / the record {mode, button, rowKey, pos, at} / home
+//     or open;
 //   - s (keydown): Jp modifier keys reset the held sequence, am picks the chord (alt_arrow behind its gate), ze() and
 //     Yp (the focus guard) end it, a consumed step preventDefaults (the caller does);
-//   - c (keyup) / l (blur) end it; onCycleSession (the Go menu) is one fresh step.
+//   - c (keyup) / l (blur) end it; onCycleSession (the Go menu) is one fresh step;
+//   - 3.6556.2 Pg adds a capture-phase window mousedown (`x`: `!e.ctrlKey&&!e.metaKey&&!e.altKey&&s(null)`): a click
+//     without a modifier ends a held sequence (mousedown below; main.jsx adds the window listener with {capture: true}).
+//     Pg's other addition, Ctrl+Tab cycling a pane's tab strip first, is behind the new GrowthBook gate _g()
+//     (__gb__320800483, off here: R15/D29), so the chord keeps cycling sessions.
 // Host differences: there is one session list (mode is recorded but every mode reads it); position 0 opens Home (r[c]
 // push) unless Home already shows a draft (`f`), there is no draft parked in a split pane (openDraftInPane) and no
 // telemetry (ni); the alt_arrow chord's GrowthBook gate (shared-16 Up: __gb__1817753866) is a host constant (D41).
@@ -93,6 +98,8 @@ export function createSessionCycler({
   }
   // c: releasing the modifier (or every modifier) ends a held sequence.
   function keyup(event) { if (isCycleModifierKey(event) || (!event.ctrlKey && !event.metaKey && !event.altKey)) last = null; }
+  // Pg x: a capture-phase mousedown with no Ctrl/⌘/⌥ held ends the sequence.
+  function mousedown(event) { if (!event.ctrlKey && !event.metaKey && !event.altKey) last = null; }
   // onCycleSession: one fresh step (none while a layer is open).
   function step(delta) {
     if (blocked()) return false;
@@ -101,5 +108,5 @@ export function createSessionCycler({
     last = null;
     return consumed;
   }
-  return { cycle, keydown, keyup, step, reset: () => { last = null; }, get last() { return last; } };
+  return { cycle, keydown, keyup, mousedown, step, reset: () => { last = null; }, get last() { return last; } };
 }

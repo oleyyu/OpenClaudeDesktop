@@ -76,6 +76,8 @@ export function SourceSidebarPalette({
   state = {}, metadata = {}, actions = [], onOpenSession, onStartSession, onNew, onProject,
   // inline: render in place instead of portalling to the body (server-rendered tests).
   inline = false,
+  // surface: the sidebar mode (V3-w13-surfaces-shortcuts, the placeholder's chat copy off Code).
+  surface = "code",
 }) {
   const [mode, setMode] = useState(() => paletteMode(entry));
   const [filters, setFilters] = useState(EMPTY_PALETTE_FILTERS);
@@ -234,7 +236,7 @@ export function SourceSidebarPalette({
   };
 
   let index = 0;
-  const placeholder = palettePlaceholder(mode);
+  const placeholder = palettePlaceholder(mode, { surface }); // V3-w13-surfaces-shortcuts: c2771e1f6 P (code list) by surface
   const listLabel = mode === "search" ? t("Search results") : mode === "actions" ? t("Actions") : t("Command palette options");
   const tree = (
     <div className="spal-portal cds-root" data-cds-portal="" {...portalAttributes()}>

@@ -117,7 +117,7 @@ test('Hooks: the Customize page shell — header with search and a Refresh toolt
   const loading = el(H.SourceHooksSettings, { boot: { connected: true }, engine: 'codex', customize: { call: noBackend }, cwd: '/w', initialState: { status: 'loading', view: null, error: '' } });
   assert.match(loading, /data-cz-skeleton="hooks"/);
   const empty = el(H.SourceHooksSettings, { boot: { connected: true }, engine: 'kimi', customize: { call: noBackend }, cwd: '/w', initialState: { status: 'ready', view: { total: 0, needsReview: 0, warnings: [], errors: [], groups: [] }, error: '' } });
-  assert.match(empty, /data-pictogram="NodeShapes"[\s\S]*<p class="max-w-xs text-pretty text-body text-secondary">Kimi Code has no hooks for this folder\.<\/p>/);
+  assert.match(empty, /data-cds="Pictogram"[\s\S]*<p class="max-w-xs text-pretty text-body text-secondary">Kimi Code has no hooks for this folder\.<\/p>/);
   assert.deepEqual(H.hookRows(view, 'guard').map((row) => row.key), ['a']);
   assert.deepEqual(H.hookRows(view, 'pretooluse').map((row) => row.key), ['a', 'b']);
   assert.doesNotMatch(readFileSync(path.join(app, 'src/hooks-settings.css'), 'utf8'), /9999px/);

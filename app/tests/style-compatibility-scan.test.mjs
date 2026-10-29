@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {scanClassTokens, buildClassIndex, moduleReachability} from '../scripts/prepare-style-compatibility.mjs';
+import {scanClassTokens, buildClassIndex, moduleReachability, subjectClasses, retainsRule} from '../scripts/prepare-style-compatibility.mjs';
 
 const tokens = (file, text) => scanClassTokens(file, text).tokens.map(hit => hit.token);
 const has = (file, text, token) => tokens(file, text).includes(token);
@@ -106,6 +106,27 @@ test('tailwind-merge registries ({classGroups, conflictingClassGroups}) are with
   assert.ok(groups.find(group => group.key === 'classGroups').tokens.has('isolation-auto'));
   // A classGroups key without the registry shape is an ordinary object.
   assert.deepEqual(bindingsOf(index([['src/a.mjs', 'const g={classGroups:{isolation:["isolation-auto"]}};']]), 'isolation-auto'), {'src/a.mjs':['g']});
+});
+
+// W10 compat-host-119: a retained utility must be referenced in its subject (the leading compound of each selector);
+// a plain host class in a descendant part of a variant selector does not keep the rule.
+test('a rule is retained for its subject utility, not for a class in a variant descendant', () => {
+  const toc = String.raw`.max-sm\:has-\[\>\[data-title-row-ruled\]\]\:\[\&_\.epitaxy-toc_ol\[aria-hidden\]\]\:invisible:has(>[data-title-row-ruled]) .epitaxy-toc ol[aria-hidden]`;
+  assert.deepEqual(subjectClasses(toc), ['max-sm:has-[>[data-title-row-ruled]]:[&_.epitaxy-toc_ol[aria-hidden]]:invisible']);
+  assert.equal(retainsRule(toc, ['epitaxy-toc']), false, 'only epitaxy-toc is referenced: not retained');
+  assert.equal(retainsRule(toc, ['max-sm:has-[>[data-title-row-ruled]]:[&_.epitaxy-toc_ol[aria-hidden]]:invisible', 'epitaxy-toc']), true);
+  // group-* markers inside :is(:where(...)) are not the subject; the utility before them is.
+  const swatch = String.raw`.group-hover\/swatch\:shadow-\[0_0_0_1px_var\(--cds-text-secondary\)\]:is(:where(.group\/swatch):hover *)`;
+  assert.deepEqual(subjectClasses(swatch), ['group-hover/swatch:shadow-[0_0_0_1px_var(--cds-text-secondary)]']);
+  assert.equal(retainsRule(swatch, ['group/swatch']), false);
+  assert.equal(retainsRule(swatch, ['group-hover/swatch:shadow-[0_0_0_1px_var(--cds-text-secondary)]', 'group/swatch']), true);
+  // A selector led by a wrapper takes its argument's subject; every selector of a list counts; escapes and
+  // attribute values are not structure.
+  assert.deepEqual(subjectClasses(String.raw`:is(.\*\:p-2 > *)`), ['*:p-2']);
+  assert.deepEqual(subjectClasses(':where(.space-x-2>:not(:last-child))'), ['space-x-2']);
+  assert.deepEqual(subjectClasses('.a, .b .c'), ['a', 'b']);
+  assert.deepEqual(subjectClasses(String.raw`.\31 0x .y`), ['10x']);
+  assert.deepEqual(subjectClasses('.a[href=".x"] .z'), ['a']);
 });
 
 test('index.html reachability covers main.jsx and records whether the import graph is complete', async () => {

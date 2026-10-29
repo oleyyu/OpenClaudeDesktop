@@ -48,9 +48,10 @@ html.cds-root[data-dyslexic-font][data-font=system] { --cds-font-sans:var(--font
 .ss-licenses-header h2 { margin:0; font:600 14px/20px var(--cds-font-sans,anthropic-sans); }
 .ss-licenses-body { flex:1; min-height:0; margin:0; padding:0 24px 24px; overflow-y:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:var(--cds-font-size-code,12px)/var(--cds-leading-code,17px) var(--cds-font-mono,monospace); color:var(--cds-text-primary); outline:none; }
 .ss-licenses-body:focus-visible { box-shadow:var(--cds-focus-shadow); }
-/* Code appearance grid: grid-cols-2 gap-md py-md; columns flex min-w-0 flex-col gap-sm. */
+/* Code appearance grid: grid-cols-2 gap-md; columns flex min-w-0 flex-col gap-sm. V3-w12b-settings-dialogs: 3.6556.2
+   c71860c77 code-appearance `o("div",{className:"grid grid-cols-2 gap-md",style:p,children:[T,N]})` drops 2.42304.0's py-md. */
 .ss-grid-row+.ss-row,.ss-row+.ss-grid-row { border-top:1px solid var(--cds-alpha-1); }
-.ss-theme-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--cds-gap-md,12px); padding-block:var(--cds-pad-md,8px); }
+.ss-theme-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--cds-gap-md,12px); }
 .ss-theme-column { display:flex; min-width:0; flex-direction:column; gap:var(--cds-gap-sm,8px); }
 .ss-theme-column select { min-height:28px; padding:3px 10px; border:1px solid var(--cds-alpha-2); border-radius:6px; background:var(--cds-surface-3); color:inherit; font:inherit; max-width:100%; }
 .ss-theme-preview-frame { min-height:94px; overflow:clip; border-radius:var(--radius-lg); border:1px solid var(--cds-alpha-2); }
@@ -163,19 +164,42 @@ html[data-reduce-motion="true"] .feature-anchor-highlight:after, html[data-reduc
 .ss-saved-workflow-confirm { display:flex;justify-content:flex-end;gap:var(--cds-gap-sm,8px);margin-top:var(--cds-gap-md,12px); }
 /* shared-21 Nv: group children that are not rows get py-md (the General fallback skeleton rows). */
 .settings-group-dividers>.ss-skeleton-row { padding-block:var(--cds-pad-md,8px); }
-.ss-narrow { flex-shrink:0;display:flex;flex-direction:column;gap:var(--cds-gap-sm,8px);background:var(--cds-surface-1);padding:var(--cds-pad-md,8px) var(--cds-pad-md,8px) var(--cds-pad-sm,6px);border-bottom:1px solid var(--cds-alpha-2); }
-.ss-narrow-heading { display:flex;align-items:center;justify-content:space-between;gap:var(--cds-gap-md,12px); }
-.ss-narrow-heading strong { font-size:var(--cds-font-size-heading,14px);line-height:var(--cds-leading-heading,18px);font-weight:500;overflow-wrap:anywhere; }
-.ss-narrow [role=tablist] { display:flex;overflow-x:auto;scrollbar-width:none;gap:0;margin-inline:-1px;padding-inline:1px; }
-.ss-narrow [role=tab] { position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;white-space:nowrap;background:transparent;color:var(--cds-text-muted);border:0;border-radius:0;padding:0 var(--cds-pad-md,8px);height:var(--cds-h-control,32px);font:inherit;font-weight:500; }
-.ss-narrow [role=tab]:before { content:"";position:absolute;inset:0 1px;z-index:-1;border-radius:var(--cds-radius,6px);transition:box-shadow 100ms; }
-.ss-narrow [role=tab]:first-child:before { inset-inline-start:0; }
-.ss-narrow [role=tab]:last-child:before { inset-inline-end:0; }
-.ss-narrow [role=tab]:hover { color:var(--cds-text-secondary); }
-.ss-narrow [role=tab]:hover:before,.ss-narrow [aria-selected=true]:before { background:var(--cds-fill-ghost-hover); }
-.ss-narrow [aria-selected=true] { color:var(--cds-text-primary); }
-.ss-settings-dialog .ss-narrow [role=tab]:focus-visible { outline:none; }
-.ss-narrow [role=tab]:focus-visible:before { box-shadow:var(--cds-focus-shadow); }
+/* menus W3 (3.6556.2 shared-46-BIbZBGFq ag/fg): stacked = useMediaQuery("(max-width: 767px)"), the host's narrow
+   (innerWidth<=767). fg's stacked branch is a plain CDS Dialog, not the panel popup: B.Popup size "lg" fullHeight
+   (shared-frame qy: Xv/Jv rounded-card bg-surface-3 shadow-panel-lg, wy.lg max-w-[720px], h-dvh under Yv's max-h, the
+   Zv body "overflow-y-auto scroll-fade-y p-xl break-words") holding B.Header (Zy: "mb-pad-md flex items-start gap-2", Jy
+   "text-title font-semibold font-header" in a "-mt-1" column, CloseButton flush "-me-pad-sm -mt-pad-sm"), then
+   "shrink-0 pb-md" around the Yh tabs, then the pane. The pane gets hideHeaderRow and popupScrolls (cc011544b kn): the
+   content drops "overflow-y-auto px-xl pb-lg pt-2" and the sticky top fade, and its root is gg(!0, O) — "flex min-w-0
+   shrink-0 grow flex-col" with no surface, or for Customize "flex min-h-0 min-w-0 flex-1 flex-col -mx-pad-xl -mb-pad-xl".
+   2.42304.0 (shared-19 pA/Zk) kept the panel popup under a bordered bg-surface-1 header strip ("Settings" text-heading
+   font-medium). W12: the popup (Xv) keeps the size, surface and ring and does not scroll; the host's .ss-stacked-body is
+   Zv and scrolls with the scroll-fade-y mask, so the mask never clips the popup's own shadow. The Yh tabs are CDS Tabs
+   (shared-46 Zh: Xd.List activateOnFocus false and, with kh() / __gb__2598786380 off, no Xh className), styled by
+   their own shared-10 classes. */
+.ss-settings-dialog:has(> .ss-stacked-body) {
+  --ss-stacked-height:calc(100dvh - max(2rem, 2 * var(--desktop-titlebar-inset, 0px)) - 2 * max(env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px)));
+  flex-direction:column; width:calc(100vw - 2rem - 2 * max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))); max-width:720px;
+  height:var(--ss-stacked-height); max-height:var(--ss-stacked-height);
+  border:0; border-radius:calc(var(--cds-radius) + .25rem * var(--cds-rem-scale, 1)); background:var(--cds-surface-3);
+  box-shadow:inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color), 0 0 0 var(--cds-ring-outer) var(--cds-ring-color), var(--cds-shadow-lg);
+}
+/* shared-frame Zv: isolate flex min-h-0 flex-1 flex-col overflow-y-auto scroll-fade-y rounded-[inherit] p-xl break-words. */
+.ss-stacked-body { isolation:isolate; display:flex; min-height:0; flex:1 1 0%; flex-direction:column; overflow-y:auto; border-radius:inherit;
+  padding:var(--cds-pad-xl); overflow-wrap:break-word; }
+.ss-narrow { flex-shrink:0; }
+.ss-narrow-heading { display:flex; align-items:flex-start; gap:8px; margin-bottom:var(--cds-pad-md); }
+.ss-narrow-heading strong { flex:1; min-width:0; margin-top:-4px; overflow-wrap:break-word; color:var(--cds-text-primary);
+  font-family:var(--_cds-title-family, var(--cds-font-sans-display)); font-size:var(--cds-font-size-title); line-height:var(--cds-leading-title);
+  --_cds-font-weight-role:var(--cds-font-weight-header); font-weight:var(--_cds-font-weight-role, var(--cds-font-weight-semibold)); }
+.ss-settings-dialog .ss-narrow-heading .ss-close { margin-inline-end:calc(-1 * var(--cds-pad-sm)); margin-top:calc(-1 * var(--cds-pad-sm)); }
+.ss-stacked-body > .ss-pane { flex:1 0 auto; min-height:auto; background:none; }
+.ss-stacked-body > .ss-pane[data-customize=true] { flex:1 1 0%; min-height:0; margin:0 calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-xl)); }
+.ss-stacked-body > .ss-pane[data-customize=false] > .ss-content { min-height:auto; overflow:visible; padding:0; background:none; }
+.ss-stacked-body > .ss-pane[data-customize=false] > .ss-content:before { content:none; }
+/* The host's dialog-wide focus outline (.ss-dialog :is(button…):focus-visible) stays off the CDS tabs, whose ring is
+   shared-10 qr "focus-visible:before:shadow-focus". */
+.ss-settings-dialog .ss-narrow button[role=tab]:focus-visible { outline:none; }
 @media(max-width:767px) { .ss-dialog{flex-direction:column} }
 @media(prefers-reduced-motion:reduce) { .ss-settings-dialog,.ss-settings-backdrop{transition:none} }
 html[data-reduce-motion="true"] .ss-settings-dialog, html[data-reduce-motion="true"] .ss-settings-backdrop { transition: none; }
@@ -216,8 +240,9 @@ html[data-reduce-motion="true"] .ss-settings-dialog, html[data-reduce-motion="tr
 .ss-dsh-setting .cds-input { width:120px; }
 .ss-dsh-unit { color:var(--cds-text-secondary); font-size:12px; }
 /* shared-19 JD (:5649-5680): with the desktop rail (wide, not the stacked Usage dialog) the popup grows with the window,
-   max-w max(1024px,min(1280px,100vw-6rem)) and max-h max(50rem,min(60rem,100dvh-6rem)), at h calc(100dvh-2rem); the
-   narrow (stacked) layout keeps max-h 50rem / max-w 1024px. Font licenses and Storage (.ss-dialog) are unchanged. */
+   max-w max(1024px,min(1280px,100vw-6rem)) and max-h max(50rem,min(60rem,100dvh-6rem)), at h calc(100dvh-2rem). Below
+   768px the stacked Dialog of menus W3 above (max-w 720px, Yv height) applies instead. Font licenses and Storage
+   (.ss-dialog) are unchanged. */
 .ss-settings-dialog { height:calc(100dvh - 2rem); }
 @media (min-width:768px) {
   .ss-settings-dialog:not([data-usage]) { max-width:max(1024px,min(1280px,calc(100vw - 6rem))); max-height:max(50rem,min(60rem,calc(100dvh - 6rem))); }

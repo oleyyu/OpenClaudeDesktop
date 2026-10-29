@@ -1,12 +1,13 @@
-// Extract the 2.42304.0 main-process zoom bindings lane R4e-zoom reuses (menus-14 / layout-16: View › Zoom In / Zoom Out
-// are disabled at the zoom limits), without executing any desktop runtime. From asar index.chunk-muI2IV6k.js:
-//   pure      jHn=.25, MHn=Math.log(1.2), NHn=Math.log(jHn)/MHn, PHn=Math.log(5)/MHn (the zoom-level range, Chromium's
-//             1.2^level steps between factors .25 and 5), FHn (clamp a level to [NHn, PHn]) and mPi=.5 (the step);
-//   host-bound gPi (the main view's level, void 0 without one), _Pi / vPi (Zoom In / Zoom Out enabled: level below PHn /
-//             above NHn, or no level), PPi (I$: after every reset APi, step FPi, dom-ready, blur and hide, set
+// Extract the 3.6556.2 main-process zoom bindings lane R4e-zoom reuses (menus-14 / layout-16: View › Zoom In / Zoom Out
+// are disabled at the zoom limits), without executing any desktop runtime. From asar index.chunk-jPKPzV-P.js:
+//   pure      T4n=.25, E4n=Math.log(1.2), D4n=Math.log(T4n)/E4n, O4n=Math.log(5)/E4n (the zoom-level range, Chromium's
+//             1.2^level steps between factors .25 and 5), k4n (clamp a level to [D4n, O4n]) and rTi=.5 (the step);
+//   host-bound aTi (the main view's level, void 0 without one), oTi / sTi (Zoom In / Zoom Out enabled: level below O4n /
+//             above D4n, or no level), wTi (x0: after every reset bTi, step TTi, dom-ready, blur and hide, set
 //             actual-size / actual-size-numpad / zoom-in / zoom-out enabled from the current level).
+// 2.42304.0 (muI2IV6k) names: jHn MHn NHn PHn FHn mPi / gPi _Pi vPi PPi; callers yPi APi FPi MPi NPi I$ → cTi bTi TTi STi CTi x0.
 //
-// gPi and PPi read the official module-level main view `V` (kSe: V=new a.WebContentsView(e)) and PPi reads the electron
+// aTi and wTi read the official module-level main view `V` (V=new a.WebContentsView(e)) and wTi reads the electron
 // namespace `a` (a.Menu). Those two are the only host bindings: the original declarations are emitted verbatim inside
 // bindZoomMenu(V, a), whose parameters stand in for the module-level `V` and `a` (the host passes its main window,
 // which has the same `.webContents`, and `{ Menu }`). The pure bindings stay at module level.
@@ -14,7 +15,7 @@
 // Each binding is sliced from the minified chunk: a function as the shortest text from `function <name>(` that parses
 // as exactly that one declaration; a `var` declarator as the shortest `<name>=…` cut at a `,`/`;` that parses as exactly
 // that one declarator. A name declared more than once, or ever reassigned, fails generation. Every binding and every
-// official caller that fixes how it is used (yPi's menu items, APi/FPi/MPi/NPi/I$) carries feature strings that must
+// official caller that fixes how it is used (cTi's menu items, bTi/TTi/STi/CTi/x0) carries feature strings that must
 // still appear in the original text, so a version bump that re-points a minified name fails here instead of silently
 // binding the wrong value. The assembled module must be closed (Babel scope: only Math and module are free) and `V` /
 // `a` may only be read as `V.webContents` / `a.Menu`. Output is prettier-formatted after assembly.
@@ -27,46 +28,46 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { referenceVersion, referenceSnapshot, asarSource } from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const mainSource = path.resolve(root, '../reference', referenceSnapshot, 'asar/.vite/build');
+// R1: version, snapshot and asar directory from the shared 3.6556.2 constants.
+const mainSource = asarSource;
 const electronOutput = path.join(root, 'electron/generated');
 const target = 'r4e-zoom.cjs', targetManifest = 'r4e-zoom-manifest.json';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-const file = 'index.chunk-muI2IV6k.js';
+const file = 'index.chunk-jPKPzV-P.js';
 // Module-level (pure) bindings, in source order.
 const pure = [
-  { name: 'jHn', kind: 'var', features: ['jHn=.25'] },
-  { name: 'MHn', kind: 'var', features: ['MHn=Math.log(1.2)'] },
-  { name: 'NHn', kind: 'var', features: ['NHn=Math.log(jHn)/MHn'] },
-  { name: 'PHn', kind: 'var', features: ['PHn=Math.log(5)/MHn'] },
-  { name: 'FHn', kind: 'function', features: ['return Math.min(PHn,Math.max(NHn,e))'] },
-  { name: 'mPi', kind: 'var', features: ['mPi=.5'] },
+  { name: 'T4n', kind: 'var', features: ['T4n=.25'] },
+  { name: 'E4n', kind: 'var', features: ['E4n=Math.log(1.2)'] },
+  { name: 'D4n', kind: 'var', features: ['D4n=Math.log(T4n)/E4n'] },
+  { name: 'O4n', kind: 'var', features: ['O4n=Math.log(5)/E4n'] },
+  { name: 'k4n', kind: 'function', features: ['return Math.min(O4n,Math.max(D4n,e))'] },
+  { name: 'rTi', kind: 'var', features: ['rTi=.5'] },
 ];
 // Bindings that read the official module-level `V` / `a`, emitted inside bindZoomMenu(V, a).
 const hostBound = [
-  { name: 'gPi', kind: 'var', features: ['V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0'] },
-  { name: '_Pi', kind: 'var', features: ['_Pi=(e=gPi())=>e===void 0||e<PHn'] },
-  { name: 'vPi', kind: 'var', features: ['vPi=(e=gPi())=>e===void 0||e>NHn'] },
-  { name: 'PPi', kind: 'function', params: 0, features: ['if(!V?.webContents||V.webContents.isDestroyed())return;', 'let e=V.webContents.getZoomLevel(),t=a.Menu.getApplicationMenu()',
-    'n=[["actual-size",e!==0],["actual-size-numpad",e!==0],["zoom-in",_Pi(e)],["zoom-out",vPi(e)]]', 'for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}'] },
+  { name: 'aTi', kind: 'var', features: ['V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0'] },
+  { name: 'oTi', kind: 'var', features: ['oTi=(e=aTi())=>e===void 0||e<O4n'] },
+  { name: 'sTi', kind: 'var', features: ['sTi=(e=aTi())=>e===void 0||e>D4n'] },
+  { name: 'wTi', kind: 'function', params: 0, features: ['if(!V?.webContents||V.webContents.isDestroyed())return;', 'let e=V.webContents.getZoomLevel(),t=a.Menu.getApplicationMenu()',
+    'n=[["actual-size",e!==0],["actual-size-numpad",e!==0],["zoom-in",oTi(e)],["zoom-out",sTi(e)]]', 'for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}'] },
 ];
 const hostParams = { V: ['webContents'], a: ['Menu'] };
 // Semantic export names (bindZoomMenu returns the host-bound ones).
-const exportsAs = { NHn: 'ZOOM_LEVEL_MIN', PHn: 'ZOOM_LEVEL_MAX', FHn: 'clampZoomLevel', mPi: 'ZOOM_STEP' };
-const boundAs = { gPi: 'zoomLevel', _Pi: 'canZoomIn', vPi: 'canZoomOut', PPi: 'refreshZoomMenu' };
+const exportsAs = { D4n: 'ZOOM_LEVEL_MIN', O4n: 'ZOOM_LEVEL_MAX', k4n: 'clampZoomLevel', rTi: 'ZOOM_STEP' };
+const boundAs = { aTi: 'zoomLevel', oTi: 'canZoomIn', sTi: 'canZoomOut', wTi: 'refreshZoomMenu' };
 // Official callers that fix how the bindings are used.
 const callers = {
-  yPi: { kind: 'var', features: ['{id:"actual-size",', 'enabled:hPi(),click:APi}', '{id:"zoom-in",', 'accelerator:"CmdOrCtrl+Plus",enabled:_Pi(),click:MPi}',
-    '{id:"zoom-out",', 'accelerator:"CmdOrCtrl+-",enabled:vPi(),click:NPi}', '{id:"actual-size-numpad",label:"Actual Size (numpad)"'] },
-  APi: { kind: 'function', features: ['V.webContents.setZoomLevel(0),jPi(0),I$(),F$()'] },
-  FPi: { kind: 'function', features: ['n=FHn(e===0?t:Math.round((t+e)/mPi)*mPi+0);V.webContents.setZoomLevel(n),jPi(n),I$(),F$()'] },
-  MPi: { kind: 'function', features: ['FPi(mPi)'] },
-  NPi: { kind: 'function', features: ['FPi(-.5)'] },
-  I$: { kind: 'function', features: ['function I$(){PPi()}'] },
+  cTi: { kind: 'var', features: ['{id:"actual-size",', 'enabled:iTi(),click:bTi}', '{id:"zoom-in",', 'accelerator:"CmdOrCtrl+Plus",enabled:oTi(),click:STi}',
+    '{id:"zoom-out",', 'accelerator:"CmdOrCtrl+-",enabled:sTi(),click:CTi}', '{id:"actual-size-numpad",label:"Actual Size (numpad)"'] },
+  bTi: { kind: 'function', features: ['V.webContents.setZoomLevel(0),xTi(0),x0(),b0()'] },
+  TTi: { kind: 'function', features: ['n=k4n(e===0?t:Math.round((t+e)/rTi)*rTi+0);V.webContents.setZoomLevel(n),xTi(n),x0(),b0()'] },
+  STi: { kind: 'function', features: ['TTi(rTi)'] },
+  CTi: { kind: 'function', features: ['TTi(-.5)'] },
+  x0: { kind: 'function', features: ['function x0(){wTi()}'] },
 };
 
 const escapeName = name => name.replace(/\$/g, '\\$');
@@ -155,7 +156,7 @@ async function extractMain() {
   const pureText = pure.map(spec => declaration(spec.name, spec, sliced[spec.name])).join('\n');
   const boundText = hostBound.map(spec => declaration(spec.name, spec, sliced[spec.name])).join('\n');
   const header = `// Original Claude Desktop ${referenceVersion} main-process bindings; generated by scripts/extract-r4e-zoom.mjs.\n`
-    + `// ${file}: the zoom-level range (jHn, MHn, NHn, PHn), FHn and mPi; gPi / _Pi / vPi / PPi read the module-level main view V\n`
+    + `// ${file}: the zoom-level range (T4n, E4n, D4n, O4n), k4n and rTi; aTi / oTi / sTi / wTi read the module-level main view V\n`
     + `// and the electron namespace a, which bindZoomMenu(V, a) takes from the host (main window, { Menu }).\n`;
   const factory = `// V: the main view (official module-level \`let V\`); a: the electron namespace (only a.Menu is read).\n`
     + `function bindZoomMenu(V, a) {\n${boundText}\nreturn { ${hostBound.map(spec => `${boundAs[spec.name]}: ${spec.name}`).join(', ')} };\n}\n`;

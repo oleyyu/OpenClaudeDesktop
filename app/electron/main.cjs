@@ -31,8 +31,11 @@ const { createSessionOperations, connectionMatches } = require("./session-operat
 const { createBtwSessions, supportsBtwChildren } = require("./btw-sessions.cjs");
 const { createCustomizeOperations } = require("./customize-operations.cjs");
 const { installShutdownHandler } = require("./shutdown.cjs");
-const { createLiveWork, backgroundSessions, createQuitGuard } = require("./quit-guard.cjs");
+const { createLiveWork, workCounts, createQuitGuard } = require("./quit-guard.cjs");
 const { createTerminalService } = require("./terminal-service.cjs");
+// w12c-wiring (w12b-settings-dialogs S3): the default browser's name for "Open in {browserName}" (3.6556.2 DesktopInfo
+// getDefaultBrowserName → Dtr; electron/default-browser-name.cjs), read at most once per 30 s.
+const defaultBrowserName = require("./default-browser-name.cjs").createDefaultBrowserName({ app, warn: (...args) => console.warn(...args) });
 // Sessions with a running turn or workflow (quit-guard.cjs), fed from receive() and emit().
 const liveWork = createLiveWork({ getConfig: () => config });
 // The running core's own saved-workflow folders (descriptor workflowFolders: Qwen's .qwen/workflows), read and written
@@ -241,7 +244,7 @@ function installFileEditWindowGuard(window) {
   window.once("closed", () => { dirtyFileWindows.delete(id); autoSaveWindows.delete(id); for (const pending of pendingFileFlushes.values()) if (pending.sender === id) pending.finish(); });
 }
 
-const POPOUT_ACTIONS = new Set(["init", "files", "file", "file:document-bytes", "image:copy", "file:edit-read", "file:save", "file:preview-frame", "file:preview-frame-release", "file:gone", "files:search", "files:content-search", "files:search:cancel", "files:watch", "workspace-git-status", "workspace-git-diff", "workspace-git-file-patch", "workspace-git-image", "workspace-git-commits", "workspace-git-branches", "popout-dock", "popout-always-on-top", "popout-add-to-prompt", "popout-state", "home-shape", "mcp-app:servers", "mcp-app:read-resource", "mcp-app:list-resources", "mcp-app:call-tool", "mcp-app:sandbox-origin"]);
+const POPOUT_ACTIONS = new Set(["init", "files", "file", "file:document-bytes", "image:copy", "file:edit-read", "file:save", "file:preview-frame", "file:preview-frame-release", "file:gone", "files:search", "files:content-search", "files:search:cancel", "files:watch", "workspace-git-status", "workspace-git-diff", "workspace-git-file-patch", "workspace-git-image", "workspace-git-commits", "workspace-git-branches", "popout-dock", "popout-always-on-top", "popout-add-to-prompt", "popout-state", "home-shape", "mcp-app:servers", "mcp-app:read-resource", "mcp-app:list-resources", "mcp-app:call-tool", "mcp-app:sandbox-origin", "default-browser-name"]);
 // R4i-mcp MC1: the five mcp-app:* actions above are mcp-apps-host.cjs WIDGET_ACTIONS: a pane window (the side chat, a
 // subagent view) draws MCP App widgets, which read and call through them (official widget IPC is open to every window).
 // R4i-transcript TR3 (layout-08): "session" is the /btw side pane (2.42304.0 c03935b01 pa lists it among the tiles that
@@ -263,9 +266,16 @@ let localRoutines;
 let routineApprovals; // R4g-routines RT6: a Code task's Always allowed rules (routine-approvals.mjs)
 let codeCleanup;
 let coworkSessions;
-// Cowork is still in development: builds keep it off (the renderer shows a placeholder and no Cowork session starts);
-// CODE_DESKTOP_COWORK=1 turns it on for local work.
-const COWORK_ENABLED = process.env.CODE_DESKTOP_COWORK === "1";
+let quitChatHistory = null; // w13-close-main-process: the Chat history service, for the quit's incognito deletes (shutdown stop)
+// w13-coworkfn-engine (cwf-01/02, research/w13-coworkfn.md O-1~O-3): Cowork is available by the official yukonSilver
+// rules (cowork-runtime/engine-policy.mjs) and a new Cowork session runs on the connected core (the official 3P host
+// loop, 'local-core'). CODE_DESKTOP_COWORK=0 turns Cowork off; CODE_DESKTOP_COWORK_ENGINE=vm picks the Cowork VM engine
+// while its reference assets are present.
+const { coworkAvailability, selectCoworkEngine } = require("./cowork-runtime/engine-policy.mjs");
+let COWORK = coworkAvailability({ platform: process.platform, arch: process.arch, systemVersion: process.getSystemVersion?.(), env: process.env });
+const COWORK_ENABLED = COWORK.status === "supported";
+if (COWORK.engine === "cowork-vm") selectCoworkEngine({ env: process.env, inspect: () => import("./cowork-runtime/reference.mjs").then((reference) => reference.inspectCoworkReference()) })
+  .then((engine) => { COWORK = { ...COWORK, engine }; }, () => { COWORK = { ...COWORK, engine: "local-core" }; });
 let configPath;
 let client;
 let initial;
@@ -325,7 +335,7 @@ const { createCodeCleanup } = require("./code-cleanup.cjs");
 const {createMenuBar,showWindow} = require("./menu-bar.cjs");
 // R4f-popout F3 (layout-04): WindowState.getOnScreen / WindowControl show + focus for the asking main window.
 const { windowOnScreen, raiseWindow } = require("./popout-r4f-window.cjs");
-const {appMenuTemplate,refreshZoomMenu,sidebarCollapsedPatch,navigationState,menuState,sameMenuState,closeAction,activateAction,splitMenuState} = require("./app-menu.cjs");
+const {appMenuTemplate,refreshZoomMenu,sidebarCollapsedPatch,navigationState,menuState,sameMenuState,closeAction,activateAction,splitMenuState,isOtherWindowFocused,watchOtherWindowFocus} = require("./app-menu.cjs");
 const { menuZoomLevel, settleWindowZoom, applyWindowZoom, archiveParentCascade } = require("./r4h-main-glue.cjs");
 const {windowBackground,trafficLightPosition,scaleTrafficLights,zoomLevelAfter,clampZoomFactor,ZOOM_HINT_KEY,zoomFactorHint} = require("./window-chrome.cjs");
 const { preferredSystemLanguages } = require("./system-languages.cjs");
@@ -387,7 +397,7 @@ const agentToolApproval = createAgentToolApproval({ dialog, t: (source, values) 
 // Code › Dynamic workflows: the Workflow tool only while workflows are on and the running core uses OpenClaude Desktop's engine.
 // R4g-mcp MA-2: the built-in visualize tools (agent-tools/visualize.mjs, official GrowthBook 3444158716) are on by D35 (unset reads as on).
 // computer-use: Settings › System › Computer use (config.agentComputerUse; unset reads as on).
-const agentToolGroupEnabled = (group) => group === "computer-use" ? config?.agentComputerUse !== false : group === "workflow" ? (() => { try { return workflowSettings().enabled && currentWorkflowEngine() === "codeDesktop"; } catch { return false; } })() : group === "visualize" ? config?.agentVisualize !== false : group !== "preview" || config?.agentPreview !== false;
+const agentToolGroupEnabled = (group) => group === "past-chats" ? config?.chatMemory?.referenceChats !== false : group === "computer-use" ?config?.agentComputerUse !== false : group === "workflow" ? (() => { try { return workflowSettings().enabled && currentWorkflowEngine() === "codeDesktop"; } catch { return false; } })() : group === "visualize" ? config?.agentVisualize !== false : group !== "preview" || config?.agentPreview !== false;
 // R4g-mcp MA-4: the MCP App bridge (desktop:call mcp-app:*): the built-in visualize server directly, the core's servers
 // through Codex's mcpServerStatus/list and mcpServer/resource/read (or a core reporting "mcpApps"); other cores: core_unsupported.
 const mcpAppsHost = require("./mcp-apps-host.cjs").createMcpAppsHost({ client: () => client, session: agentToolSession,
@@ -669,7 +679,8 @@ function computerUseSyncGlow(sessions = computerUseInUse.sessions()) {
 // schedule.mjs, web.mjs).
 const BYPASS_KINDS = new Set(["terminal-command", "preview-site", "chrome-site", "preview-server", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"]);
 async function agentToolAsk(session, request, options = {}) {
-  if (BYPASS_KINDS.has(request?.kind) && typeof session?.id === "string") {
+  // w13-coworkfn-approvals (cwf-32, O-39 V7t): a tool that always asks (approval-policy.mjs managedAsk) asks in Bypass too.
+  if (BYPASS_KINDS.has(request?.kind) && typeof session?.id === "string" && !require("./cowork-runtime/approval-policy.mjs").managedAsk(request)) {
     let access = null;
     try { access = await workflowToolService?.sessionAccess(session.id); } catch { access = null; }
     if (access === "danger-full-access") return true;
@@ -711,17 +722,24 @@ async function agentToolCard(session, request = {}, { signal, call } = {}) {
       phases: (Array.isArray(request.phases) ? request.phases : []).filter((phase) => phase && typeof phase.title === "string").slice(0, 50).map((phase) => ({ title: cardText(phase.title, 300), ...(typeof phase.detail === "string" ? { detail: cardText(phase.detail, 600) } : {}) })),
       ...(args !== undefined ? { args: cardText(args, 2000) } : {}) });
   }
-  if (kind === "other") Object.assign(tool, { title: cardText(request.title, 300), detail: cardText(request.detail) });
+  // w13-close-main-process: an "other" request names its tool (agent-tools/cowork.mjs, scheduled-tasks.mjs, skills-cowork.mjs), so the card heads with it (cc1aae219 `toolName: v || n.name`).
+  if (kind === "other") Object.assign(tool, { title: cardText(request.title, 300), detail: cardText(request.detail), ...(typeof request.tool === "string" && /^[A-Za-z][A-Za-z0-9_:-]{0,99}$/.test(request.tool) ? { tool: request.tool } : {}) });
+  // w13-coworkfn-approvals (cwf-31, O-38): a Cowork session's card may be denied with what to do instead, and a scheduled
+  // run's folder request may be allowed for its task (cowork-runtime/approval-policy.mjs coworkCardOptions).
+  const coworkCard = require("./cowork-runtime/approval-policy.mjs").coworkCardOptions(request, { cowork: config?.sessionMetadata?.[session.id]?.surface === "cowork",
+    task: () => localRoutines?.taskOfSession(session.id) ?? null, folderTitle: i18n ? i18n.t(require("./agent-tools/cowork.mjs").CARDS.folderTitle) : null, session: session.id });
   const params = {
     // turnId: the session's running turn, so the turn's end expires the card (approval-transport.cjs expireTurn).
     threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", itemId: typeof call?.itemId === "string" ? call.itemId : `code-desktop-tool-${require("node:crypto").randomUUID()}`, startedAtMs: Date.now(),
     ...(command ? { command } : {}), ...(typeof (request.cwd ?? session.cwd) === "string" ? { cwd: request.cwd ?? session.cwd } : {}),
-    sessionGrantable: (kind === "workflow" && tool.always) || kind === "web-fetch", codeDesktop: { agentTool: tool },
+    sessionGrantable: (kind === "workflow" && tool.always) || kind === "web-fetch" || !!coworkCard.task, codeDesktop: { agentTool: tool, ...(coworkCard.declineFeedback ? { declineFeedback: true } : {}) },
   };
-  const result = await owner.localApproval("item/commandExecution/requestApproval", params, { signal, outlivesTurn: agentToolCallOutlivesTurn(call, owner) });
+  // w13-coworkfn-approvals: a Cowork WebFetch card the same request asks again is dismissed (coworkCard.signal, Dl8 Superseded).
+  const result = await owner.localApproval("item/commandExecution/requestApproval", params, { signal: coworkCard.signal(signal), outlivesTurn: agentToolCallOutlivesTurn(call, owner) });
   if (result === undefined) return undefined;
   const decision = result?.decision;
   const approved = !signal?.aborted && (decision === "accept" || decision === "acceptForSession");
+  if (coworkCard.cowork) await coworkCard.settle({ result, approved, grantFolders: (id, dirs, options) => localRoutines.grantFolders(id, dirs, options) });
   if (kind === "workflow") return { approved, always: approved && decision === "acceptForSession" && tool.always };
   // WebFetch: "Allow for this session" lets the site's pages be read again without asking (agent-tools/web.mjs).
   if (kind === "web-fetch") return { approved, always: approved && decision === "acceptForSession" };
@@ -1100,6 +1118,8 @@ function decorateAgentTools(method, params, owner = client) {
   params.config = { ...(params.config && typeof params.config === "object" ? params.config : {}), [AGENT_SESSION_KEY]: identity };
   // A fork runs with its parent's web search (thread config is inherited): so does its WebFetch.
   if (method === "thread/fork" && codexWebSearchModes.has(params.threadId)) rememberCodexWebSearch(identity, codexWebSearchModes.get(params.threadId));
+  // w13-close-main-process (closeout chatfn-context-01): a Chat version (fork) lists its parent surface's tools from the start (chat-context.mjs rememberFork).
+  if (method === "thread/fork") { try { require("./chat-context.mjs").rememberFork(config, params); } catch (error) { console.warn("Fork surface:", error?.message ?? error); } }
   // Codex: the thread's server carries that session's own credential (agent-tools-host.cjs sessionToken; a thread-level
   // env value wins over the launch's env_vars, checked against codex 0.155.1), so its process holds nothing that acts
   // for another session. The bridges derive it themselves from the identity.
@@ -1153,6 +1173,21 @@ const btwSessions = createBtwSessions({ getClient: () => client, getConfig: () =
 const customizeOperations = createCustomizeOperations({ getClient: () => client, getConfig: () => config, knownCwd: (cwd) => workspaceQueryRoot(cwd),
   // Skill folders: open in Finder, and a new SKILL.md in the default editor (customize skill-root).
   openPath: (target) => shell.openPath(target) });
+// V3-w10-shell-plugin-settings: a plugin's Settings tab (3.6556.2 LocalPlugins getPluginOptions / setPluginOptions,
+// plugin-options.cjs). The plugin's folder is the core's own plugin/installed answer; values stay on this computer.
+const pluginOptions = (() => {
+  const { createPluginOptions, consentDialog, pluginFolderFrom, createGestureTracker } = require("./plugin-options.cjs");
+  const tr = (source, values) => i18n ? i18n.t(source, values) : String(source).replace(/\{(\w+)\}/g, (match, key) => values?.[key] ?? match);
+  const secure = () => { try { const { safeStorage } = require("electron"); return safeStorage.isEncryptionAvailable() ? safeStorage : null; } catch { return null; } };
+  return Object.assign(createPluginOptions({ storePath: () => path.join(app.getPath("userData"), "plugin-options.json"), t: tr,
+    locate: async (pluginId, cwd) => pluginFolderFrom(await customizeOperations.run({ operation: "plugins", cwd }), pluginId),
+    seal: (value) => { const storage = secure(); return storage ? { sealed: storage.encryptString(value).toString("base64") } : value; },
+    unseal: (value) => { if (typeof value === "string") return value; const storage = secure(); try { return storage && typeof value?.sealed === "string" ? storage.decryptString(Buffer.from(value.sealed, "base64")) : undefined; } catch { return undefined; } },
+    // V3-w11-sweep-shell-b: the consent's title is the official i18n "Claude" (CpAqf7sl `title:…{defaultMessage:"Claude",id:"ZA4at8nJzT"}`).
+    confirm: consentDialog({ showMessageBox: (window, options) => dialog.showMessageBox(window, options), focusedWindow: () => BrowserWindow.getFocusedWindow(), appName: () => tr("Claude"), t: tr }) }),
+    // V3-w11-sweep-shell-b: mP(e), whether the person just pressed Save in that window (createGestureTracker).
+    { gestures: createGestureTracker() });
+})();
 // Settings › Code › Memories and Beta features on the Codex core (codex-features.cjs: /memories, /experimental).
 const codexFeatures = require("./codex-features.cjs").createCodexFeatures({ getClient: () => client });
 const themeFiles = createThemeFiles({ dialog, getWindow: () => win });
@@ -1183,7 +1218,9 @@ const extensionPacks = createExtensionPacks({ dataDir: () => app.getPath("userDa
 const customCommands = createCustomCommands({ app, shell, dialog, getConfig: () => config, emit: (e) => emit(e), getWindow: () => win, knownCwd: (cwd) => workspaceQueryRoot(cwd) });
 // Sidebar metadata snapshot returned by every sidebar-state mutation.
 let taskBacklogStore = null;
-const taskBacklog = () => (taskBacklogStore ??= createTaskBacklog({ dataDir: () => app.getPath("userData") }));
+let chatFeedbackStore = null; // w13-chatui-message-actions (electron/chat-feedback.mjs), created on first use
+let chatBranchesService = null; // w13-chatfn-branches (electron/chat-branches.mjs), created on first use
+const taskBacklog =() => (taskBacklogStore ??= createTaskBacklog({ dataDir: () => app.getPath("userData") }));
 // R2-sections (sidebar-sections-store, D10): the Code sidebar's sections, loaded at startup.
 let sidebarSectionsStore = null;
 function sidebarSnapshot() {
@@ -1371,6 +1408,12 @@ async function stageAttachment(payload) {
   await fs.promises.writeFile(target, bytes, { flag: "wx" });
   return { path: target, name: path.basename(target), size: bytes.length, type };
 }
+// w13-chatfn-attachments: the documents convert-document may read are the ones the user chose in this app session:
+// the Open dialog's paths ("attachments") and the paths preload's pathForFile read off a dropped / pasted File
+// ("desktop:attachment-path", sent by preload itself; the page cannot reach that channel). attachments:inspect never
+// grants: its paths come from the page.
+const userStagedDocuments = require("./document-convert.cjs").createStagedPaths();
+ipcMain.on("desktop:attachment-path", (_event, filePath) => { userStagedDocuments.grant(filePath); });
 // View > Hide/Show Sidebar label follows the persisted state (index.chunk-ChZ67Jhw.js _Nr/gNr).
 // Go > Back/Forward enabled state (index.chunk-D6ATlqeD.js xyr/Syr), reported
 // by the renderer's history and carried into every template rebuild.
@@ -1387,8 +1430,11 @@ function installAppMenu() {
     // R4e-zoom: yPi's enabled:_Pi() / vPi() read the main view's level (gPi: void 0 without one).
     zoomLevel: menuZoomLevel(win, liveContents),
     fullScreen: liveContents(win) && win.isFullScreen(), allowDevTools: !app.isPackaged, menuState: paneMenuState, splitState: splitMenu,
-    newWindow: windowRegistry.sessionPopouts().length < MAX_SESSION_POPOUTS, emit: menuEmit })));
+    newWindow: windowRegistry.sessionPopouts().length < MAX_SESSION_POPOUTS, emit: menuEmit,
+    // w12c-wiring (w12b-menu-ko §4): 3.6556.2 ko() `e!=null&&B!=null&&!B.isDestroyed()&&e!==B`, B being `win`.
+    otherWindowFocused: otherWindowFocused() })));
 }
+function otherWindowFocused() { return isOtherWindowFocused({ focused: BrowserWindow.getFocusedWindow(), main: win }); }
 // Each main window reports its own Go / pane / split state; the menu bar shows the focused window's (window kept
 // in windowRegistry, adopted on focus). A report from a background window is kept for when it is focused.
 const reportFromOtherWindow = (window) => !!window && liveContents(win) && window !== win;
@@ -1470,6 +1516,10 @@ function menuEmit(e, target) {
   // owr: in the main window the renderer's keydown owns ⌘W (pR); one that still reached File > Close
   // Session through the accelerator was declined there (a menu or dialog is open), so it is not re-sent.
   if (e?.kind === "close-session" && e.accelerator) return;
+  // w13-close-main-process (closeout surfaces-menus-01): a Go-area checkbox rebuilds the menu right after it dispatches
+  // (index.chunk-jPKPzV-P.js xSi click: `$1(r,(t=>t.dispatchSelectArea(e.id)),null),setImmediate(CM)`), so the check
+  // never stays on the item Electron toggled.
+  if (e?.kind === "select-area") setImmediate(() => { try { installAppMenu(); } catch (error) { console.warn("[menu] select-area rebuild:", error?.message ?? error); } });
   // Menus act on the focused window only (its renderer routes the command to its focused split side).
   // A pane window (B27) shows one pane: the session's other commands go to the main window.
   const window = revealMainWindow(windowRegistry.isPaneWindow(target) ? null : target);
@@ -1631,14 +1681,27 @@ function withAppToolImages(e) {
   return { ...e, params: { ...e.params, item: { ...item, result: { ...item.result, content: [...text, ...images] } } } };
 }
 let artifactIndex, artifactRead;
+let chatMemory = null; // w13-chatfn-memory: chat-memory.mjs, created in app.whenReady (its hidden threads are observed in receive)
 const artifactIndexed = new WeakMap();
+// w13-coworkfn-tools (cwf-25/26, O-28/O-42/O-43): a Cowork turn on the connected core delivers what present_files showed
+// and the outputs it changed as one card item ahead of its turn/completed (cowork-runtime/outputs.mjs).
+const coworkTurnOutputs = require("./cowork-runtime/outputs.mjs").createTurnDeliverables({ outputsOf: (id) => config?.threadIds?.includes(id)
+  ? require("./cowork-runtime/outputs.mjs").outputsDir(config.sessionMetadata?.[id], app.getPath("userData")) : null });
+let coworkDeleteGuard = null; // w13-coworkfn-approvals: approval-policy.mjs createCoworkDeleteGuard, made on the first event
 function receive(e) {
   e = withAppToolImages(e);
+  for (const delivered of coworkTurnOutputs.observe(e)) receive(delivered);
+  // w13-coworkfn-approvals (O-24): a delete the core asks to make in a connected folder of a Cowork session that
+  // allow_cowork_file_delete didn't open is declined before any card (cowork-runtime/approval-policy.mjs); ahead of a task's
+  // stored rules (a Cowork task's run keeps them too), which never open a folder's deletes.
+  if ((coworkDeleteGuard ??= require("./cowork-runtime/approval-policy.mjs").createCoworkDeleteGuard({ meta: (id) => config?.threadIds?.includes(id) && config.sessionMetadata?.[id]?.surface === "cowork" ? config.sessionMetadata[id] : null,
+    grants: (meta) => require("./cowork-runtime/folder-policy.mjs").sessionGrants(meta, { userData: app.getPath("userData") }), allowed: (meta, file) => require("./agent-tools/cowork.mjs").deleteAllowed(meta, file, { userData: app.getPath("userData") }) })).receive(e, client, respondToApproval)) return;
   // R4g-routines RT6: a Code task run's command approval its task's rule covers is answered (accept, this call) before any card.
   if (routineApprovals?.receive(e, client, respondToApproval)) return;
   // A side-chat fork's events stay in main: the panel gets its deltas, the sidebar never sees the fork.
   if (nativeSideChat.observe(e)) return;
   if (nativeThreadTitles.observe(e)) return;
+  if (chatMemory?.observe(e)) return; // w13-chatfn-memory: a memory synthesis thread's events stay in main
   if (e.method === "externalAgentConfig/import/completed" && typeof e.params?.importId === "string") {
     // Kept briefly too: the notification can arrive before the import call's own response.
     if (pendingImports.has(e.params.importId)) pendingImports.get(e.params.importId)(e.params);
@@ -2559,6 +2622,10 @@ app.whenReady().then(async () => {
   });
   if (!fs.existsSync(config.cwd)) config.cwd = workspace;
   approvedWorkspaceRoots.add(config.cwd);
+  // w13-close-chat-projects-memory (chatfn-projects-09): a local project's folder stays approved across restarts, as the
+  // local-projects create / update / open actions approve it, so its sessions resume before the project is opened again.
+  for (const project of Array.isArray(config.localProjects) ? config.localProjects : [])
+    if (typeof project?.cwd === "string" && path.isAbsolute(project.cwd) && fs.existsSync(project.cwd)) { approvedWorkspaceRoots.add(project.cwd); observedThreadCwds.add(project.cwd); }
   // The agent tools channel is up before the first core spawns (connect() runs on the renderer's init); every core
   // then gets its variables, and a Codex child the -c overrides (codex.cjs setAgentToolsLaunch).
   previewService = createPreviewService({
@@ -2683,14 +2750,82 @@ app.whenReady().then(async () => {
     provider: model => modelSettings.coworkConnection(model), approveFolder: cwd => workspaceQueryRoot(cwd), emit: receive,
     approval: async (method, params, options) => { const owner = client; await owner.start(); if (owner !== client) return null; return owner.localApproval(method, params, options); },
     onThread: thread => { const { turns, ...metadata } = thread; config.threadMetadata[thread.id] = metadata; save(); },
+    // w13-close-main-process: a VM scheduled run's "always" keeps the CLI's suggested rules on its task (session-service.mjs routines).
+    routines: { taskOfSession: (id) => localRoutines?.taskOfSession(id) ?? null, rememberApproval: (taskId, rule) => localRoutines?.rememberApproval(taskId, rule) },
   });
+  // w13-chatfn-context: a tool module's `surfaces` (agent-tools-host.cjs) follows the session's surface; a start token's from its request.
+  agentTools.provide('sessionSurface', (await import('./chat-context.mjs')).sessionSurfaceResolver(() => config));
+  // w13-chatfn-projects: project_knowledge_search reads the knowledge of the calling session's project.
+  agentTools.provide('projectKnowledge', (session) => { const project = () => { const id = session?.id ? config.sessionMetadata?.[session.id]?.projectId : null; return (id && config.localProjects?.find(entry => entry.id === id)) || null; };
+    return { project: () => project(), search: async (query, options) => { const found = project(); return found ? (await import('./project-knowledge.mjs')).searchKnowledge(app.getPath('userData'), found.id, query, options) : []; } }; });
+  // w13-coworkfn-tools (cwf-23~27, O-26~O-30): the cowork tools' main-process side (agent-tools/cowork.mjs header): the
+  // calling session's metadata and folders, the trusted folders, the folder picker, the turn's presented files, and the
+  // core (requestRpc) for launch_code_session's Code session.
+  agentTools.provide("cowork", (session) => ({
+    userData: app.getPath("userData"), t: (text, values) => i18n.t(text, values),
+    meta: () => config.threadIds.includes(session.id) ? config.sessionMetadata?.[session.id] : undefined,
+    update: (change) => {
+      if (!config.threadIds.includes(session.id)) return;
+      config.sessionMetadata[session.id] = change(config.sessionMetadata[session.id]);
+      config.sidebarRevision = (config.sidebarRevision || 0) + 1;
+      save(); emit({ kind: "sidebar-state", state: sidebarSnapshot() });
+    },
+    approveRoot: (dir) => approvedWorkspaceRoots.add(dir),
+    trusted: async (dir) => (await import("./cowork-runtime/folder-policy.mjs")).coworkFolderService({ userData: app.getPath("userData"), dialog, window: () => win, t: (text, values) => i18n.t(text, values) }).trusted.covers(dir),
+    pickFolder: async ({ title, message, defaultPath } = {}) => {
+      const options = { title, ...(message ? { message } : {}), properties: ["openDirectory", "createDirectory"], defaultPath: defaultPath ?? require("node:os").homedir() };
+      const result = win && !win.isDestroyed() ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+      return result.canceled || !result.filePaths?.length ? null : result.filePaths[0];
+    },
+    presented: (paths) => coworkTurnOutputs.present(session.id, paths),
+    rpc: (method, params) => requestRpc({ method, params }, undefined, client),
+    codeDefaults: () => ({ model: config.model ?? null, effort: config.effort ?? null, permission: config.permission ?? "auto", hints: client?.serverInfo?.capabilities?.permissionHints === true,
+      customization: coreSupports(client?.serverInfo, "customization"), networkAccess: config.sandboxNetworkAccess === true }),
+  }));
+  // w13-coworkfn-schedtools (cwf-28/29/39, O-31/O-32): the scheduled-tasks tools on the durable scheduler (localRoutines,
+  // created below, before any session can call) and save_skill's connected core (agent-tools/scheduled-tasks.mjs, skills-cowork.mjs).
+  agentTools.provide("routines", () => ({
+    request: (p) => localRoutines.request(p), grantFolders: (id, dirs, options) => localRoutines.grantFolders(id, dirs, options),
+    taskOfSession: (id) => localRoutines.taskOfSession(id), permission: () => config.permission ?? "auto", t: (text, values) => i18n.t(text, values),
+    session: (id) => [...config.threadIds, ...config.archivedThreadIds].includes(id) ? { title: config.threadMetadata?.[id]?.name ?? null, archived: config.archivedThreadIds.includes(id) } : null,
+  }));
+  agentTools.provide("skills", () => ({ serverInfo: () => client?.serverInfo ?? null, t: (text, values) => i18n.t(text, values) }));
+  // w13-chatfn-memory: Chat memory, the history index and the past-chat tools (chat-memory.mjs); regenerated once a day.
+  chatMemory = (await import('./chat-memory.mjs')).createChatMemory({ dataDir: app.getPath('userData'), getConfig: () => config, save, getClient: () => client,
+    native: (owner) => coreForEngine(owner?.serverInfo?.engine).kind === "native", ownServers: (owner) => agentTools.socketPath && coreForEngine(owner?.serverInfo?.engine).kind === "native" && coreTakesAgentTools(owner) ? [agentTools.SERVER_NAME] : [],
+    context: () => ({ model: config?.model ?? null }), supportsThreadSearch: () => coreSupports(client?.serverInfo, "threadSearch"), coworkEnabled: () => COWORK_ENABLED, projects: () => config.localProjects ?? [],
+    request: async (method, params) => { if (coworkSessions.owns(params?.threadId)) return coworkSessions.request(method, params); await client.start(); return client.request(method, params); },
+    release: (event) => receive(event) }); // w13-close-chat-projects-memory: an ephemeral thread/started held during a hidden start that wasn't ours
+  agentTools.provide('pastChats', (session) => chatMemory.pastChats(session)); chatMemory.startDaily();
+  // w13-chatfn-artifacts: the Chat `artifacts` tool's versions (chat-artifact-store.mjs); the panel reads them through case "chat-artifacts".
+  const chatArtifacts = (await import('./chat-artifact-store.mjs')).createChatArtifactStore({ dataDir: app.getPath('userData') }); agentTools.provide('chatArtifacts', (session) => ({ apply: (args) => chatArtifacts.apply(session.id, args) }));
+  // w13-chatfn-history: a deleted chat's local data goes with it (chat-history.mjs cascade: artifacts, history index, Memory
+  // switch, ratings, the other versions), incognito chats a quit or crash left are deleted once the core is connected,
+  // and Settings › Privacy › Export data writes the chats to a folder (chat-export.mjs, case "chat-export").
+  const chatBranchesReady = async () => (chatBranchesService ??= (await import("./chat-branches.mjs")).createChatBranches({ getConfig: () => config, save,
+    fork: (payload) => sessionOperations.run(payload), request: (method, params) => client.request(method, params),
+    revertServed: () => !client?.serverInfo?.capabilities?.unsupportedMethods?.includes("thread/revert"),
+    deleteThread: (threadId) => requestRpc({ method: "thread/delete", params: { threadId } }, undefined, client),
+    // w13-chatfn-history: a Pin moved to the version now shown (chat-branches.mjs followPin): mirror it, refresh every sidebar.
+    pinMoved: (...ids) => { for (const id of ids) mirrorSections((owner) => codexSections.placeSession(owner, config, id)); sidebarSectionsStore?.syncSidebarSections(config); config.sidebarRevision = (config.sidebarRevision || 0) + 1; save(); emit({ kind: "sidebar-state", state: sidebarSnapshot() }); } }));
+  const chatHistory = (await import('./chat-history.mjs')).createChatHistory({ getConfig: () => config, save, artifacts: () => chatArtifacts, memory: () => chatMemory,
+    feedback: async () => (chatFeedbackStore ??= (await import("./chat-feedback.mjs")).createChatFeedbackStore({ dataDir: () => app.getPath("userData") })),
+    branches: chatBranchesReady, deleteThread: (threadId) => requestRpc({ method: "thread/delete", params: { threadId } }, undefined, client),
+    connected: () => !!client?.serverInfo, log: (message, error) => console.warn(message, error?.message ?? error) });
+  chatHistory.startSweep();
+  quitChatHistory = chatHistory; // w13-close-main-process: a quit deletes this run's incognito chats at once (chat-history.mjs quit)
+  // w13-chatfn-history: a closed window's incognito chats that no other window shows are deleted now (macOS keeps the app running).
+  windowRegistry.onWindowClosed((window) => { void chatHistory.windowClosed(window, (id) => windowRegistry.windowsShowing(id, { panes: true }).length > 0); });
+  const chatExport = (await import('./chat-export.mjs')).createChatExport({ dataDir: app.getPath('userData'), getConfig: () => config });
   async function requestCowork(p) {
-    if (!COWORK_ENABLED) throw new Error(i18n.t('Cowork is still in development.'));
+    // cwf-04 (O-5): a Cowork VM session stays readable everywhere; it only starts or continues on the VM engine.
+    const vmRefusal = (await import('./cowork-runtime/core-cowork.mjs')).vmRequestRefusal(p.method, COWORK); if (vmRefusal) throw new Error(i18n.t(vmRefusal.text, vmRefusal.values));
     const params = { ...(p.params || {}), codeDesktop: { ...p.params?.codeDesktop } };
     const { takeSurface } = await import('./surface-policy.mjs');
     const surface = takeSurface(params);
     const { applyProjectContext } = await import('./local-projects.mjs');
     const project = applyProjectContext(config, p.method, params, surface);
+    await (await import('./chat-context.mjs')).applyChatContext(config, p.method, params, surface, { dataDir: app.getPath('userData'), project }); // w13-chatfn-context: chat-context/*.mjs contributors
     if (p.method !== 'thread/start' && ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId)) throw new Error('Unknown Cowork session.');
     if (['thread/archive', 'thread/delete'].includes(p.method)) sessionOperations.assertAvailable(params.threadId);
     const release = p.method === 'turn/start' ? sessionOperations.reserveMessage(params.threadId) : null;
@@ -2715,12 +2850,14 @@ app.whenReady().then(async () => {
       delete config.threadMetadata[id]; delete config.sessionMetadata[id]; delete config.stats[id];
       config.pinnedOrder = (config.pinnedOrder || []).filter(value => value !== id);
       save(); emitSessionList('deleted', id);
+      void chatHistory.cascade(id); // w13-chatfn-history
     }
     return result;
   }
   const routineContext = async (engine = COWORK_ENGINE) => {
-    // With Cowork off, a routine runs on the connected core instead.
-    if (engine === COWORK_ENGINE && COWORK_ENABLED) {
+    // cwf-07 (O-14): only the Cowork VM engine runs a task on coworkSessions; otherwise (the default 'local-core', or
+    // Cowork off) a task runs on the connected core, a Cowork task as a Cowork session (routine-runner surface 'cowork').
+    if (engine === COWORK_ENGINE && COWORK_ENABLED && COWORK.engine === COWORK_ENGINE) {
       if (!initial) await connect();
       return { owner: coworkSessions, coreId: COWORK_ENGINE, models: initial?.models ?? [], hints: true, autoReview: false };
     }
@@ -2739,10 +2876,15 @@ app.whenReady().then(async () => {
     getState: () => config.localRoutines,
     commit: rows => { config.localRoutines = rows; save(); emit({ kind: 'local-routines' }); },
     dataDir: app.getPath('userData'), approveFolder: workspaceQueryRoot,
+    // w13-close-main-process (E63 coworkfn-schedtools-06): folders the renderer grants a task are confirmed natively first (BtY4LlaK grantRoutineFolders).
+    confirmFolders: (await import("./cowork-runtime/folder-policy.mjs")).createRoutineFolderConsent({ dialog, window: () => (win && !win.isDestroyed() ? win : null), t: (text, values) => i18n.t(text, values) }),
     // R4i-routines RI2: a new Code task captures on the connected core (null engine), never on Cowork's.
     captureOptions: async (execution, previous, kind) => captureRoutineOptions({ config,
       ...await routineContext(previous?.coreId ?? (kind === 'code' ? null : COWORK_ENGINE)), execution, previous }),
     launch: createRoutineRunner({ context: routineContext, rpc: (request, owner) => requestRpc(request, undefined, owner),
+      // w13-close-main-process: a Cowork run's folders (closeout coworkfn-schedtools-01), Cowork off (CODE_DESKTOP_COWORK=0) and a 'cowork-vm' task's move (E63 coworkfn-engine-04).
+      dataDir: app.getPath('userData'), coworkUnavailable: () => (COWORK_ENABLED ? null : i18n.t(COWORK.reasonMessage.text, COWORK.reasonMessage.values)),
+      migrateTask: (task, options) => localRoutines.migrateOptions(task.id, options),
       // R4g-routines RT3 (WI-3): a Code task’s worktree is prepare-worktree’s; its session records the task (scheduledTaskId).
       prepareWorktree: prepareWorktreeInMain, turnErrorCategory: routineTurnErrors?.turnErrorCategory,
       setSessionMetadata: (id, patch) => {
@@ -2798,11 +2940,15 @@ app.whenReady().then(async () => {
         assertExpectedConnection();
         if (deprecated.has(p.method)) throw new Error(deprecated.get(p.method));
         if (!allowed.has(p.method) || deprecated.has(p.method)) throw new Error("Unsupported operation.");
-        const coworkRoute = (p.method === 'thread/start' && p.params?.codeDesktop?.surface === 'cowork' && (!expectedOwner || expectedOwner === coworkSessions)) || coworkSessions.owns(p.params?.threadId);
+        // cwf-02: a new Cowork session goes to the Cowork VM sessions only on the VM engine (or for a task that runs there);
+        // on 'local-core' it starts on the connected core below (core-cowork.mjs decorates it).
+        const coworkStartRequest = p.method === 'thread/start' && p.params?.codeDesktop?.surface === 'cowork';
+        const coworkRoute = (coworkStartRequest && (expectedOwner ? expectedOwner === coworkSessions : COWORK.engine === COWORK_ENGINE)) || coworkSessions.owns(p.params?.threadId);
         if (coworkRoute) {
           if (expectedOwner && expectedOwner !== coworkSessions) throw new Error('The Cowork session belongs to a different runtime.');
           return requestCowork(p);
         }
+        if (coworkStartRequest && !COWORK_ENABLED) throw new Error(i18n.t(COWORK.reasonMessage.text, COWORK.reasonMessage.values));
         if (expectedOwner && expectedOwner !== client) throw new Error("The core connection changed. Try again.");
         await client.start();
         assertExpectedConnection();
@@ -2812,6 +2958,9 @@ app.whenReady().then(async () => {
         const requestedSurface = takeSurface(params);
         const { applyProjectContext } = await import('./local-projects.mjs');
         const requestedProject = applyProjectContext(config, p.method, params, requestedSurface);
+        await (await import('./chat-context.mjs')).applyChatContext(config, p.method, params, requestedSurface, { dataDir: app.getPath('userData'), project: requestedProject }); // w13-chatfn-context
+        // w13-chatfn-history: an incognito chat (codeDesktop.incognito, read by the chat-context memory contributor above) is the app's own mark; the core never sees it.
+        const startIncognito = p.method === "thread/start" && (await import('./chat-incognito-model.mjs')).incognitoStart(params.codeDesktop, requestedSurface); if (params.codeDesktop && Object.hasOwn(params.codeDesktop, "incognito")) { delete params.codeDesktop.incognito; if (!Object.keys(params.codeDesktop).length) delete params.codeDesktop; }
         const requestedEnvironment = await takeSavedEnvironment(params, { method: p.method, surface: requestedSurface,
           getEnvironment: id => savedEnvironments.run({ op: 'get', id }), worktreeOrigins: config.worktreeOrigins });
         // The renderer's per-turn workflow facts (Mode, the "ultracode" keyword, ultracode mode) never reach a core:
@@ -2971,7 +3120,7 @@ app.whenReady().then(async () => {
         // a thread config override (thread/start|resume config); personality goes on thread and turn requests, only
         // for a model that reports supportsPersonality.
         if (["thread/start", "thread/resume", "turn/start"].includes(p.method) && coreForEngine(client.serverInfo?.engine).id === "codex" && client.serverInfo?.capabilities?.permissionHints !== true) {
-          const search = ["disabled", "cached", "live"].includes(config.codexWebSearch) ? config.codexWebSearch : null;
+          const search = (await import('./chat-context/tools.mjs')).codexWebSearchFor(config, p.method, params, requestedSurface) ?? (["disabled", "cached", "live"].includes(config.codexWebSearch) ? config.codexWebSearch : null); // w13-chatfn-tools: a Chat conversation's own Web search first
           if (search && p.method !== "turn/start") params.config = { ...(params.config && typeof params.config === "object" ? params.config : {}), web_search: search };
           const style = ["none", "friendly", "pragmatic"].includes(config.codexPersonality) ? config.codexPersonality : null;
           const modelId = typeof params.model === "string" && params.model ? params.model : config.model;
@@ -3007,7 +3156,32 @@ app.whenReady().then(async () => {
           config.stats[params.threadId] ??= { messages: 0, ids: [] };
           config.stats[params.threadId].model = params.model;
         }
+        // w13-coworkfn-engine (cwf-05/06/08, O-6/O-15): a Cowork session on the connected core runs in its own storage
+        // (<userData>/cowork-sessions/<id>: host-cwd its cwd, outputs its deliverables); host-cwd, outputs and its folders
+        // are the sandbox's writable roots, recomputed every turn, and its system prompt names them (core-cowork.mjs).
+        let coworkStart = null;
+        if (["thread/start", "turn/start"].includes(p.method)) {
+          const cowork = await import("./cowork-runtime/core-cowork.mjs");
+          const coworkCore = p.method === "turn/start" && typeof params.threadId === "string" && config.threadIds.includes(params.threadId) ? cowork.coreCoworkMetadata(config.sessionMetadata?.[params.threadId]) : null;
+          // w13-coworkfn-folders (cwf-19/20/21, O-17~O-21): codeDesktop.coworkFolders never reaches a core; a new Cowork
+          // session's folders (named, drafts, else the renderer's cwd) each pass folder-policy.mjs judgeFolder first, and
+          // every turn's writable roots come from the session's granted folders, re-checked, protected insides carved out.
+          const folderPolicy = await import("./cowork-runtime/folder-policy.mjs");
+          const coworkFolderGrants = folderPolicy.coworkFolderService({ userData: app.getPath("userData"), dialog, window: () => win, t: (text, values) => i18n.t(text, values) });
+          const startFolders = p.method === "thread/start" ? await coworkFolderGrants.takeStartFolders(params, { cowork: requestedSurface === "cowork" }) : null;
+          // w13-coworkfn-approvals (cwf-33, O-41): on a core with no command sandbox a Cowork session only asks; a turn that asked for more says so (approval-policy.mjs clampCoworkRequest).
+          if ((p.method === "thread/start" && requestedSurface === "cowork") || coworkCore) { const clamped = require("./cowork-runtime/approval-policy.mjs").clampCoworkRequest(p.method, params, { sandboxed: require("./core-registry.mjs").coreSandboxed(client?.serverInfo ?? null), networkAccess: config.sandboxNetworkAccess === true }); if (clamped) emit({ kind: "permission-mode-clamped", threadId: params.threadId, permissionMode: clamped }); }
+          if (p.method === "thread/start" && requestedSurface === "cowork") {
+            coworkStart = await cowork.createCoworkStorage(app.getPath("userData"));
+            coworkStart.folders = cowork.decorateCoworkStart(params, { storage: coworkStart, folders: startFolders }).folders;
+            for (const dir of coworkStart.folders) approvedWorkspaceRoots.add(dir);
+          } else if (coworkCore) cowork.decorateCoworkTurn(params, { storage: cowork.coworkStoragePaths(app.getPath("userData"), coworkCore.storage), folders: await folderPolicy.sessionWritableFolders(config.sessionMetadata[params.threadId], { userData: app.getPath("userData") }), networkAccess: config.sandboxNetworkAccess === true });
+        }
         instructionsService.decorate(p.method, params);
+        // w13-close-main-process (closeout coworkfn-engine-02, O-15): the user's global instructions never replace a new Cowork session's own prompt (core-cowork.mjs keepCoworkPrompt).
+        if (coworkStart) require("./cowork-runtime/core-cowork.mjs").keepCoworkPrompt(params, { storage: coworkStart, folders: coworkStart.folders });
+        // w13-close-main-process (closeout chatfn-projects-02): a Chat session runs read-only whatever was asked (surface-policy.mjs enforceChatReadOnly).
+        (await import("./surface-policy.mjs")).enforceChatReadOnly(p.method, params, { surface: requestedSurface, metadata: config.sessionMetadata });
         // Approvals go to the user, except Codex's auto-review ('Approve for me', the renderer's Auto on a core that
         // has it): kept only where this connection reported the feature and approvals can happen at all.
         if (["thread/start", "thread/resume", "turn/start"].includes(p.method)) {
@@ -3045,6 +3219,8 @@ app.whenReady().then(async () => {
           result = await requester.request(p.method, params, 120000, expectedConnection ?? undefined);
         }
         catch (error) {
+          // w13-close-main-process (closeout coworkfn-engine-01): a Cowork thread/start the core refused leaves no storage behind.
+          if (coworkStart) void require("./cowork-runtime/core-cowork.mjs").removeCoworkStorage(app.getPath("userData"), coworkStart.id).catch((cleanup) => console.warn("Cowork storage:", cleanup?.message ?? cleanup));
           if (p.method === "turn/start") workflowToolService?.turnFailed(params.threadId);
           // A per-token account (an API key, or a custom endpoint with no sign-in) has no plan limits or account
           // usage: a native core's auth-required refusal becomes the empty state the Usage page explains, not a raw
@@ -3073,7 +3249,10 @@ app.whenReady().then(async () => {
           }
           if (requestedSurface) {
             const project = requestedProject;
-            config.sessionMetadata[result.thread.id] = { ...config.sessionMetadata[result.thread.id], surface: requestedSurface, ...(project ? { projectId: project.id } : {}) };
+            config.sessionMetadata[result.thread.id] = { ...config.sessionMetadata[result.thread.id], surface: requestedSurface, ...(project ? { projectId: project.id } : {}), ...(startIncognito ? { incognito: true } : {}), // w13-chatfn-history
+              // cwf-05: the Cowork session's engine, storage and connected folders (core-cowork.mjs coreCoworkMetadata).
+              ...(coworkStart ? { engine: "local-core", cowork: { storage: coworkStart.id, folders: coworkStart.folders } } : {}) };
+            if (requestedSurface === "chat" && (await import('./chat-context/tools.mjs')).chatToolsStarted(config, result.thread.id)) emitConfig(); // w13-chatfn-tools: the New chat's switches become this conversation's own
           }
           config.threadIds = [
             ...new Set([result.thread.id, ...config.threadIds]),
@@ -3132,6 +3311,8 @@ app.whenReady().then(async () => {
         }
         if (p.method === "thread/delete") {
           const id = params.threadId;
+          // w13-close-main-process (closeout coworkfn-engine-01): a deleted Cowork session's storage (<root>/<storageId>, checked) goes too.
+          { const storageId = require("./cowork-runtime/core-cowork.mjs").coreCoworkMetadata(config.sessionMetadata?.[id])?.storage; if (storageId) void require("./cowork-runtime/core-cowork.mjs").removeCoworkStorage(app.getPath("userData"), storageId).catch((cleanup) => console.warn("Cowork storage:", cleanup?.message ?? cleanup)); }
           monitorService.stopSession(id);
           scheduleService.removeSession(id);
           config.threadIds = config.threadIds.filter((known) => known !== id);
@@ -3146,9 +3327,11 @@ app.whenReady().then(async () => {
           save();
           // R4g-btw BT3 (X7-14): a deleted session is always evicted (c6b8adeaf delete → evictEpitaxySession).
           closeSidePanePopoutsForSession(id);
+          void chatHistory.cascade(id); // w13-chatfn-history: the chat's artifacts, index entry, ratings and other versions
         }
         // The other windows (and the other split side) follow the session list (main.jsx "session-list").
-        if (p.method === "thread/start" && result?.thread?.id) emitSessionList("added", result.thread);
+        if (p.method === "thread/start" && result?.thread?.id && startIncognito) chatHistory.noteLive(result.thread.id, windowRegistry.windowForSender(sender)); // w13-chatfn-history: an incognito chat joins no window's list
+        else if (p.method === "thread/start" && result?.thread?.id) emitSessionList("added", result.thread);
         else if (p.method === "thread/name/set" && typeof params.threadId === "string" && typeof params.name === "string") emit({ kind: "session-list", op: "renamed", threadId: params.threadId, name: params.name });
         else if (p.method === "thread/unarchive") emitSessionList("unarchived", params.threadId); // R3-nested: "archived" goes out before the /btw cascade above.
         else if (p.method === "thread/delete") emitSessionList("deleted", params.threadId);
@@ -3217,6 +3400,8 @@ app.whenReady().then(async () => {
       return turnPlanTools?.setAvailableNextActions(p.sessionId, p.actions ?? undefined) ?? false;
     }
     switch (action) {
+      // w12c-wiring (w12b-settings-dialogs S3): preload getDefaultBrowserName (c8ae173c6 `r?.getDefaultBrowserName?.()`).
+      case "default-browser-name": return defaultBrowserName();
       case "popout-open": return openPopout(p, windowRegistry.windowForSender(e.sender) ?? win);
       // Multi-window and split view (window-registry.cjs): a new window (empty, or showing a session), this window's
       // layout (its primary session and split side: menus, notification routing and relaunch follow it) and its View ›
@@ -3376,7 +3561,8 @@ app.whenReady().then(async () => {
             bypassCarry: carryFor(bypassCarry, owner.connection?.approvalConnectionId, config),
             connectionNotices,
             threadUsage: Object.fromEntries(threadUsage),
-            coworkEnabled: COWORK_ENABLED,
+            // cwf-01: the official availability object (engine-policy.mjs) and its boolean for the current renderer.
+            cowork: COWORK, coworkEnabled: COWORK_ENABLED,
           };
         } catch (error) {
           return {
@@ -3386,7 +3572,7 @@ app.whenReady().then(async () => {
             extensionCores: extensionPacks.descriptors(),
             config,
             models: [],
-            coworkEnabled: COWORK_ENABLED,
+            cowork: COWORK, coworkEnabled: COWORK_ENABLED,
           };
         }
       }
@@ -3435,6 +3621,8 @@ app.whenReady().then(async () => {
         return sent;
       }
       case "steer": {
+        // w13-coworkfn-caps (cwf-15, O-8 `u.inputStream.enqueue`): only a Cowork VM session (cw-) refuses a message during a
+        // turn; a Cowork session on the connected core takes it like a Code session (steerTurn).
         if (coworkSessions.owns(p.threadId)) return { ok: false, message: 'Stop the current Cowork task before sending another message.', code: null, data: null };
         return steerTurn(client, p, {
           prepareInput: p.keyword === true && workflowToolService && config.threadIds.includes(p.threadId)
@@ -3445,6 +3633,9 @@ app.whenReady().then(async () => {
       }
       case "session-action": {
         if (coworkSessions.owns(p.threadId)) throw new Error('Fork, compact and code review are not available for this Cowork runtime yet.');
+        // w13-coworkfn-caps (cwf-16): the Cowork view has no Fork from here; compact and review of a Cowork session on the
+        // connected core stay the core's.
+        if (p.operation === "fork" && config.sessionMetadata?.[p.threadId]?.surface === "cowork") throw new Error(i18n.t('Fork is not available for Cowork tasks.')); // w13-close-main-process: translated (closeout coworkfn-caps-01)
         const result = await sessionOperations.run(p);
         // A fork joins the other windows' session lists too.
         if (p.operation === "fork" && result?.thread?.id && config.threadIds.includes(result.thread.id) && result.thread.id !== p.threadId) emitSessionList("added", { ...result.thread, ...(config.threadMetadata[result.thread.id]?.name ? { name: config.threadMetadata[result.thread.id].name } : {}) });
@@ -3459,6 +3650,8 @@ app.whenReady().then(async () => {
         throw new Error("Unknown side session action.");
       }
       case "customize": return customizeOperations.run(p);
+      // V3-w10-shell-plugin-settings: shared-130 LE / BE (getPluginOptions(id, {mode:"ccd"}), setPluginOptions(id, values, …)).
+      case "plugin-options": pluginOptions.gestures.track(e.sender); return p?.op === "set" ? pluginOptions.set(p.pluginId, p.values, p.pluginContext, { pressed: pluginOptions.gestures.pressed(e.sender), cwd: p.cwd }) : pluginOptions.get(p?.pluginId, p?.pluginContext, { cwd: p?.cwd });
       case "codex-features": return codexFeatures.run(p);
       case "local-artifacts": {
         if (p.action === 'read') return artifactIndex.readArtifact(config, p.key, readFile, { force: p.force });
@@ -3470,22 +3663,42 @@ app.whenReady().then(async () => {
             pending.promise = (async () => { await owner.start(); const result = await artifactIndex.backfillArtifacts(snapshot, (method, params) => coworkSessions.owns(params.threadId) ? coworkSessions.request(method, params) : owner.request(method, params), artifactIndexed.get(owner)); if (snapshot === config) save(); return result; })().finally(() => { if (artifactRead === pending) artifactRead = null; });
             artifactRead = pending;
           }
-          return artifactRead.promise;
+          // w13-chatfn-artifacts (chatfn-31): Chat artifacts join the library as c230724a2 "chat" items (opened in the artifact panel).
+          const { chatLibraryRecords } = await import('./chat-artifact-store.mjs'), { sessionSurface } = await import('./surface-policy.mjs');
+          const chatThread = (id) => [...config.threadIds, ...config.archivedThreadIds].includes(id) && sessionSurface(id, config.sessionMetadata) === 'chat';
+          return artifactRead.promise.then(async (result) => ({ ...result, records: [...result.records, ...chatLibraryRecords(await chatArtifacts.listAll(chatThread))] }));
         }
+        const chatKey = (await import('./chat-artifact-types.mjs')).parseChatArtifactKey(p.key); // w13-chatfn-artifacts: a Chat artifact's pin lives in its store.
+        if (p.action === 'pin' && chatKey) { await chatArtifacts.pin(chatKey.threadId, chatKey.id, p.starred); return (await import('./chat-artifact-store.mjs')).chatLibraryRecords((await chatArtifacts.listAll((id) => id === chatKey.threadId)).filter((row) => row.id === chatKey.id))[0]; }
         if (p.action === 'pin') { const entry = artifactIndex.updateArtifact(config, p); save(); return entry; }
         throw new Error('Unknown artifact operation.');
+      }
+      // w13-chatfn-artifacts (A4, chatfn-26/27/28/30): the Chat artifact panel's reads and actions (chat-artifact-store.mjs chatArtifactRequest).
+      case "chat-artifacts": {
+        const { chatArtifactRequest } = await import('./chat-artifact-store.mjs'), { sessionSurface } = await import('./surface-policy.mjs'), owner = windowRegistry.windowForSender(e.sender) ?? win;
+        return chatArtifactRequest(p, { store: chatArtifacts, known: (id) => [...config.threadIds, ...config.archivedThreadIds].includes(id) && sessionSurface(id, config.sessionMetadata) === 'chat',
+          projectOf: (id) => { const projectId = config.sessionMetadata?.[id]?.projectId; return (projectId && config.localProjects?.find((entry) => entry.id === projectId)) || null; },
+          saveDialog: (options) => dialog.showSaveDialog(owner, options), writeImage: (dataUrl) => clipboard.writeImage(nativeImage.createFromDataURL(dataUrl)), previewFrames: filePreviewFrames,
+          printToPdf: async (html) => { const page = new BrowserWindow({ show: false, webPreferences: { javascript: false, sandbox: true, contextIsolation: true } }); try { await page.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`); return await page.webContents.printToPDF({ printBackground: true }); } finally { page.destroy(); } },
+          addKnowledgeText: async (projectId, entry) => (await import('./project-knowledge.mjs')).addKnowledgeText(app.getPath('userData'), projectId, entry) });
       }
       case "local-routines": return localRoutines.request(p);
       case "local-projects": {
         const { localProjects } = await import('./local-projects.mjs');
-        const result = await localProjects(config, p, { dataDir: app.getPath('userData'), approveFolder: workspaceQueryRoot });
-        if (p.action !== 'list') { approvedWorkspaceRoots.add(result.cwd); observedThreadCwds.add(result.cwd); save(); }
+        // w13-chatfn-projects: knowledge-add copies only files picked in main's own dialog; assign/unassign set a Chat or Cowork session's project.
+        const result = await localProjects(config, p, { dataDir: app.getPath('userData'), approveFolder: workspaceQueryRoot,
+          pickFiles: async () => { const r = await dialog.showOpenDialog(windowRegistry.windowForSender(e.sender) ?? win, { properties: ["openFile", "multiSelections"] }); return r.canceled ? [] : r.filePaths; } });
+        if (['create', 'update', 'open'].includes(p.action)) { approvedWorkspaceRoots.add(result.cwd); observedThreadCwds.add(result.cwd); }
+        if (p.action === 'assign' || p.action === 'unassign') { config.sidebarRevision = (config.sidebarRevision || 0) + 1; save(); const state = sidebarSnapshot(); emit({ kind: "sidebar-state", state }); return { ...result, state }; }
+        if (p.action !== 'list' && p.action !== 'knowledge-list') save();
         return result;
       }
       case "surface-workspace": {
         const { validSurface } = await import('./surface-policy.mjs');
         if (!validSurface(p.surface) || p.surface === 'code') throw new Error('Choose a valid workspace.');
-        const saved = config.surfaceFolders?.[p.surface];
+        // W13 closeout (E73): a Chat has no folder picker (shared-8 yP disabled), so a folder saved for Chat earlier (or
+        // File › Open Folder while in Chat) no longer decides its cwd; Chats run in the local Chat workspace.
+        const saved = p.surface === 'chat' ? null : config.surfaceFolders?.[p.surface];
         const dir = typeof saved === 'string' && path.isAbsolute(saved) && fs.existsSync(saved) ? saved : path.join(app.getPath('userData'), 'workspaces', p.surface);
         fs.mkdirSync(dir, { recursive: true });
         observedThreadCwds.add(dir);
@@ -3527,10 +3740,18 @@ app.whenReady().then(async () => {
           }
           return respondToApproval(client, { ...p, elicitation });
         }
+        // w13-coworkfn-approvals (cwf-31, O-38): a Cowork card's once / always / deny (+ what to do instead) as the core's
+        // decisions; feedback a core can't take follows the decline into the running turn (cowork-runtime/approval-policy.mjs).
+        p = require("./cowork-runtime/approval-policy.mjs").coworkRespondPayload(client, p, { cowork: (id) => config.sessionMetadata?.[id]?.surface === "cowork" || coworkSessions.owns(id), steer: (q) => steerTurn(client, q) });
         // Capture and validate one live owner synchronously through the wire write.
         // R4g-routines RT6: "Allow for this session" on a Code task run's command also keeps the rule on its task.
         return routineApprovals ? routineApprovals.respond(client, p, respondToApproval) : respondToApproval(client, p);
       }
+      // V3-w10-shell-auto-open-pref: the launchAutoOpenFiles preference as the official getPreferences() hands it over
+      // (asar index.chunk-jPKPzV-P.js default `launchAutoOpenFiles: !0`, so the key is always present).
+      case "auto-open-files-read": return { launchAutoOpenFiles: config?.launchAutoOpenFiles !== false };
+      // w13-close-cowork-ui (scheduled-02): the desktop preference keepAwakeEnabled as getPreferences() hands it over (main default `keepAwakeEnabled: !1`, always present); written through "settings".
+      case "keep-awake-read": return { keepAwakeEnabled: config?.keepAwakeEnabled === true };
       case "settings": {
         if (p.allowBypassPermissions === true || p.permission === "bypass") {
           // Turning the opt-in on, or remembering Bypass as the mode (preferences.mjs requires the opt-in too):
@@ -3559,6 +3780,8 @@ app.whenReady().then(async () => {
         // The Preview pane's "Open links in preview" (src/preview-links-model.mjs), for every window of the profile.
         if (typeof p.previewLinks === "boolean") config.previewLinks = p.previewLinks;
         if (typeof p.previewLinksChooserSeen === "boolean") config.previewLinksChooserSeen = p.previewLinksChooserSeen;
+        // V3-w10-shell-auto-open-pref: Auto-open files Claude writes (src/auto-open-files-model.mjs; unset reads as on).
+        if (typeof p.launchAutoOpenFiles === "boolean") config.launchAutoOpenFiles = p.launchAutoOpenFiles;
         if (["dynamicWorkflows","workflowEngines","workflowSizeGuideline"].some((key) => key in p) || typeof p.agentComputerUse === "boolean" || typeof p.agentPreview === "boolean" || typeof p.agentVisualize === "boolean") {
           agentTools.notifyListChanged();
           // A bridge whose agent keeps the tool list it read when the session opened (ZCode, the ACP agents) reopens
@@ -4102,6 +4325,23 @@ app.whenReady().then(async () => {
       // Code › Local › "Edit local environment": get / save the variables (applied when the core next starts).
       case "local-environment": return localEnvironment.run(p);
       case "saved-environments": return savedEnvironments.run(p);
+      // w13-chatui-message-actions: Chat Good / Bad response kept in userData/chat-feedback.json, never uploaded.
+      case "chat-feedback": return (chatFeedbackStore ??= (await import("./chat-feedback.mjs")).createChatFeedbackStore({ dataDir: () => app.getPath("userData") })).run(p);
+      // w13-chatfn-branches: Chat versions — Retry forks before the turn (session-operations fork), versions switch, and a
+      // deleted conversation's other versions are deleted with the app's own thread/delete bookkeeping.
+      case "chat-branches": return (await chatBranchesReady()).run(p); // w13-chatfn-history: created once (chatBranchesReady), also for the delete cascade
+      // w13-chatfn-history: Settings › Privacy › Export data (chat-export.mjs). "begin" asks for the folder first (null when
+      // canceled); "finish" shows the export folder in Finder.
+      case "chat-export": {
+        if (p?.op === "begin") {
+          const chosen = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender) ?? win, { title: i18n.t("Export data"), defaultPath: app.getPath("downloads"), properties: ["openDirectory", "createDirectory"] });
+          if (chosen.canceled || !chosen.filePaths?.[0]) return null;
+          return chatExport.run({ op: "begin", dir: chosen.filePaths[0], period: p.period, from: p.from, to: p.to, includeCowork: p.includeCowork === true && COWORK_ENABLED });
+        }
+        const done = chatExport.run(p);
+        if (p?.op === "finish" && done?.path) shell.showItemInFolder(path.join(done.path, "conversations.json"));
+        return done;
+      }
       case "reveal-folder":
         await shell.openPath(p.cwd || config.cwd);
         return true;
@@ -4277,7 +4517,10 @@ app.whenReady().then(async () => {
         const term = typeof p.searchTerm === "string" ? p.searchTerm.trim().slice(0, 200) : "";
         if (term.length < 2) return { data: [] };
         await client.start();
-        if (!coreSupports(client.serverInfo, "threadSearch")) return { data: [] };
+        // w13-chatfn-history (H3 conversation/search/v2): without thread/search the Chat sessions are searched in the local
+        // history index (chat-history-search.mjs, kept by chat-memory.mjs; never incognito).
+        if (!coreSupports(client.serverInfo, "threadSearch")) return { data: chatMemory ? (await chatMemory.history.search(term, { n: 100 })).filter((match) => typeof p.archived !== "boolean" || config.archivedThreadIds.includes(match.id) === p.archived)
+          .map((match) => ({ id: match.id, snippet: typeof match.snippet === "string" ? match.snippet.slice(0, 300) : "" })) : [] };
         const found = await client.request("thread/search", { searchTerm: term, limit: 100, ...(typeof p.archived === "boolean" ? { archived: p.archived } : {}) }, 15000);
         return { data: (Array.isArray(found?.data) ? found.data : []).filter((match) => typeof match?.thread?.id === "string")
           .map((match) => ({ id: match.thread.id, snippet: typeof match.snippet === "string" ? match.snippet.slice(0, 300) : "" })) };
@@ -4332,11 +4575,71 @@ app.whenReady().then(async () => {
         await fs.promises.writeFile(chosen.filePath, p.markdown, "utf8");
         return chosen.filePath;
       }
+      case "cowork-open-outputs": {
+        // w13-coworkfn-tools (cwf-26, O-42): LocalAgentModeSessions openOutputsDir (index.chunk-BtY4LlaK.js), the session's
+        // outputs folder in Finder: <storage>/outputs on the connected core (cowork-runtime/outputs.mjs), <folder>/outputs
+        // for a Cowork VM session.
+        const id = typeof p.threadId === "string" && config.threadIds.includes(p.threadId) ? p.threadId : null;
+        if (!id) throw new Error(i18n.t("Unknown Cowork session."));
+        const outputs = require("./cowork-runtime/outputs.mjs").outputsDir(config.sessionMetadata?.[id], app.getPath("userData"))
+          ?? (coworkSessions.owns(id) && typeof config.threadMetadata?.[id]?.cwd === "string" ? path.join(config.threadMetadata[id].cwd, "outputs") : null);
+        if (!outputs) throw new Error(i18n.t("Unknown Cowork session."));
+        // w13-close-main-process (closeout coworkfn-tools-03): as openOutputsDir, a folder that can't be opened is only logged
+        // (`i&&t.ert.error(\`Failed to open outputs directory: ${r}, error: ${i}\`)`); nothing is said to the user.
+        const failed = await shell.openPath(outputs);
+        if (failed) console.error(`Failed to open outputs directory: ${outputs}, error: ${failed}`);
+        return true;
+      }
+      case "cowork-folders": {
+        // w13-coworkfn-folders (cwf-18/20, O-16~O-18): the LocalAgentModeSessions folder calls (index.chunk-BtY4LlaK.js
+        // addTrustedFolder / browseAndAddTrustedFolder / removeTrustedFolder / isFolderTrusted / addFolderToSession /
+        // setDraftSessionFolders / getDefaultWorkspaceFolders) as op trusted-list|trusted-add|trusted-remove|is-trusted|
+        // add-to-session|draft-set|defaults|recent; every folder passes folder-policy.mjs judgeFolder.
+        const folderPolicy = await import("./cowork-runtime/folder-policy.mjs");
+        return folderPolicy.coworkFolderService({ userData: app.getPath("userData"), dialog, window: () => win, t: (text, values) => i18n.t(text, values) })
+          .run(p, { config, save, approve: (dir) => approvedWorkspaceRoots.add(dir) });
+      }
       case "cowork-rewind": {
         // R4i-cowork CW2/CW3 (X2 CW-3): the host LocalAgentModeSessions.rewindV2 (2.42304.0 mainView.js
         // "LocalAgentModeSessions_$_rewindV2", muI2IV6k ["rewindV2",[["sessionId",F],["targetMessageUuid",F]],Kxt]):
         // {prefill?, refusal?} from the Cowork runtime's rewindSessionV2 port; serialized with sends like slash-rewind.
-        if (!COWORK_ENABLED) throw new Error(i18n.t('Cowork is still in development.'));
+        // w13-coworkfn-caps (cwf-17, research/w13-coworkfn.md O-12 rewindSessionV2): a Cowork session on the connected core
+        // (sessionMetadata surface cowork, not a cw- VM session) rewinds on the core. The turn that holds the target user
+        // message and every later turn go (thread/revert beforeTurnId, as slash-rewind) and the message's text comes back
+        // as {prefill}. The runtime's refusal arm answers otherwise (shared-0 By): a core without thread/revert or a legacy
+        // history → unsupported, a message not in the history → unknown, one without text → no_text. A live turn is
+        // refused by reserveMessage: the Cowork view asks only between turns (cowork-session-actions.mjs mo/ho).
+        if (!coworkSessions?.owns(p?.threadId) && config.sessionMetadata?.[p?.threadId]?.surface === "cowork") {
+          if (!config.threadIds.includes(p.threadId) || typeof p.targetMessageUuid !== "string" || !p.targetMessageUuid) throw new Error('Unknown Cowork message.');
+          // w13-close-main-process (closeout coworkfn-caps-01): no core, or a core that changed while the history was read, never reverts.
+          const owner = client, connection = owner?.connection;
+          if (!owner || !connection) throw new Error("This session changed. Reopen it before rewinding.");
+          const matches = () => owner === client && owner.connection === connection && !connection.closed;
+          if (owner?.serverInfo?.capabilities?.unsupportedMethods?.includes("thread/revert")) return { refusal: "unsupported" };
+          // w13-close-main-process (E63 coworkfn-caps-02): as rewindSessionV2 stops a running session before it rewinds, a live
+          // turn is interrupted first and its end awaited (session-operations.cjs activeTurn / isActive).
+          if (sessionOperations.isActive?.(p.threadId)) {
+            const turnId = sessionOperations.activeTurn?.(p.threadId);
+            if (turnId) await owner.request("turn/interrupt", { threadId: p.threadId, turnId });
+            for (let waited = 0; sessionOperations.isActive(p.threadId) && waited < 10000; waited += 50) await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+          const done = sessionOperations.reserveMessage(p.threadId);
+          try {
+            const { readParams, loadThreadHistory } = await import("../src/thread-history-model.mjs");
+            const read = await owner.request("thread/read", readParams(p.threadId, config.threadMetadata?.[p.threadId]));
+            if (read.thread?.historyMode !== "paginated") return { refusal: "unsupported" };
+            const history = await loadThreadHistory((method, params) => owner.request(method, params), { threadId: p.threadId, thread: read.thread, route: "paginated" });
+            const turn = history.unavailable || history.truncated ? null : history.turns.find(turn => (turn.items ?? []).some(item => item?.type === "userMessage" && item.id === p.targetMessageUuid));
+            const message = turn?.items.find(item => item?.type === "userMessage" && item.id === p.targetMessageUuid);
+            if (!turn?.id) return { refusal: "unknown" };
+            const text = Array.isArray(message.content) ? message.content.filter(part => part?.type === "text").map(part => part.text ?? "").join("") : String(message.text ?? "");
+            if (!text.trim()) return { refusal: "no_text" };
+            if (!matches()) throw new Error("This session changed. Reopen it before rewinding.");
+            await owner.request("thread/revert", { threadId: p.threadId, beforeTurnId: turn.id });
+            return { prefill: text };
+          } finally { done(); }
+        }
+        { const refusal = (await import('./cowork-runtime/core-cowork.mjs')).vmRequestRefusal('cowork/rewind', COWORK); if (refusal) throw new Error(i18n.t(refusal.text, refusal.values)); }
         if (!coworkSessions?.owns(p?.threadId) || !config.threadIds.includes(p.threadId)) throw new Error('Unknown Cowork session.');
         if (typeof p.targetMessageUuid !== 'string' || !p.targetMessageUuid) throw new Error('Unknown Cowork message.');
         const release=sessionOperations.reserveMessage(p.threadId);
@@ -4348,7 +4651,9 @@ app.whenReady().then(async () => {
       case "slash-rewind": {
         // R4g-small SM3 (X2 CW-0): a Cowork session never reaches the core's thread/revert; c21f11e6d lO
         // (ke.Unsupported, id "SC1NI+O8Y4") until the Cowork runtime can rewind (CW-2).
-        if (coworkSessions.owns(p.threadId)) throw new Error(i18n.t("Messages in this task can’t be edited or restarted from. Send what you need as a new message instead."));
+        // w13-close-main-process (closeout coworkfn-caps-01): any Cowork session (cowork-session-capabilities.mjs isCoworkSession: a VM
+        // session or a core thread on the Cowork surface) rewinds through cowork-rewind, never here.
+        if (coworkSessions.owns(p.threadId) || config.sessionMetadata?.[p.threadId]?.surface === "cowork") throw new Error(i18n.t("Messages in this task can’t be edited or restarted from. Send what you need as a new message instead."));
         const owner=client, connection=owner?.connection;
         const matches=()=>owner===client && connection && !connection.closed && connection.approvalConnectionId===p.expected?.connectionId && connection.approvalConnectionEpoch===p.expected?.connectionEpoch;
         if(!matches() || !config.threadIds.includes(p.threadId) || typeof p.beforeTurnId!=="string" || !p.beforeTurnId) throw new Error("This session changed. Reopen it before rewinding.");
@@ -4461,10 +4766,33 @@ app.whenReady().then(async () => {
         const r = await dialog.showOpenDialog(win, {
           properties: ["openFile", "multiSelections"],
         });
+        if (!r.canceled) userStagedDocuments.grant(r.filePaths);
         return r.canceled ? [] : inspectAttachments(r.filePaths);
       }
       case "attachments:inspect": return inspectAttachments(p.paths);
       case "attachments:stage": return stageAttachment(p);
+      // w13-chatfn-attachments: a Chat document staged by the user, read as text with macOS PDFKit / textutil (C5
+      // convert_document), only a path the user chose this session (userStagedDocuments), never from the app's own data
+      // folder; Add › Take a screenshot (C2 Fs) into the attachments folder.
+      case "convert-document": return require("./document-convert.cjs").convertDocument(p.path, { internalRoots: [app.getPath("userData")], staged: userStagedDocuments });
+      case "capture-screenshot": return require("./document-convert.cjs").captureScreenshot({ directory: stagingDirectory(), desktopCapturer: require("electron").desktopCapturer, screen });
+      // w13-chatfn-memory: Settings › Memory and the + menu Memory checkbox (chat-memory.mjs run).
+      case "chat-memory": { if (!chatMemory) throw new Error("Memory isn’t ready yet."); return chatMemory.run(p); }
+      case "chat-tools": { const store = (await import('./chat-context/tools.mjs')).chatToolsAction(config, p); if (p.op !== "read") { save(); emitConfig(); } return store; } // w13-chatfn-tools: the Chat + menu's Web search / Research
+      // w13-close-cowork-ui (E67): the Outputs "Instructions · CLAUDE.md" editor's readLocalFile / writeLocalFile, only for a CLAUDE.md in the session's own folders (cowork-runtime/claude-md.mjs).
+      case "cowork-claude-md": return (await import("./cowork-runtime/claude-md.mjs")).coworkClaudeMd(p, { userData: app.getPath("userData"), metadata: (id) => config.sessionMetadata?.[id], vmFolder: (id) => coworkSessions?.owns(id) ? coworkSessions.load(id).thread.cwd : null });
+      // w13-coworkui-settings: Settings › Cowork (3.6556.2 c71860c77 De): the CoworkUserFiles calls and the Use memory in
+      // sessions switch (prefs/cowork-settings.mjs; trusted folders stay on "cowork-folders").
+      // Change (cwui-40, index.chunk-SJiH6Ee8.js migrate): refused while a Cowork task runs (the VM sessions' live turns and
+      // the connected core's running Cowork turns), the files copied to the new root, core-cowork.mjs's pointer moved, relaunch.
+      case "cowork-settings": { const cowork = await import("./cowork-runtime/core-cowork.mjs"), folderPolicy = await import("./cowork-runtime/folder-policy.mjs");
+        const userData = app.getPath("userData"), home = app.getPath("home");
+        return (await import("./prefs/cowork-settings.mjs")).createCoworkSettingsService({ userData, path, fs: fs.promises,
+        dialog, shell, window: () => win, platform: process.platform, log: (message) => console.warn(message),
+        runningCoworkSessions: () => new Set([...(coworkSessions?.live?.keys() ?? []), ...[...computerUseActiveTurns.keys()].filter((id) => config.sessionMetadata?.[id]?.surface === "cowork" || !!coworkSessions?.owns?.(id))]).size,
+        currentRoot: () => cowork.coworkStorageRoot(userData), setRoot: (root) => cowork.writeCoworkFilesPointer(userData, root), relaunch: () => { app.relaunch(); app.quit(); },
+        denied: async (dir) => !!folderPolicy.protectedRoot(dir, { home: [home, await fs.promises.realpath(home).catch(() => home)], platform: process.platform }), home,
+        configDirs: [process.env.CLAUDE_CONFIG_DIR || path.join(home, ".claude"), process.env.CODEX_HOME || path.join(home, ".codex")] }).run(p, { config, save, emitConfig }); }
       case "files":
         return listFiles(p.cwd || config.cwd, p.relative || "", {
           includeChild: p.includeChild,
@@ -4557,6 +4885,9 @@ app.whenReady().then(async () => {
     }
   });
   installAppMenu();
+  // w12c-wiring (w12b-menu-ko §4): ybi `a.app.on("browser-window-focus",t),a.app.on("browser-window-blur",t)` rebuilds
+  // the menu (CM) whenever ko() flips.
+  watchOtherWindowFocus({ app, otherWindowFocused, rebuild: installAppMenu });
   desktopReady = true;
   const [firstWindow, ...otherWindows] = windowRegistry.mainWindows();
   for (const window of otherWindows) loadMainWindow(window).catch(() => {});
@@ -4570,7 +4901,8 @@ app.whenReady().then(async () => {
   void restorePopouts().catch((error) => console.warn("Pane windows:", error?.message ?? error));
 });
 // index.chunk-ChZ67Jhw.js installQuitSessionGuard: a quit while a session has a running turn, workflow or background
-// commands first asks (Quit anyway / Wait for DeepSeek / Cancel). Automated launches (Playwright's remote debugging
+// commands first asks (Quit anyway / Wait for DeepSeek / Cancel; background commands alone: Quit anyway / Cancel,
+// 3.6556.2 index.chunk-jPKPzV-P W8t counts { working, withShells }). Automated launches (Playwright's remote debugging
 // port, the offscreen verification adapter) quit without asking, like the original's skip predicate.
 const quitGuard = createQuitGuard({
   app, dialog, getWindow: () => win,
@@ -4578,11 +4910,7 @@ const quitGuard = createQuitGuard({
   countNow: () => liveWork.sessions().size,
   terminalsNow: () => terminalService.runningCommands().length,
   mayFindMore: () => Boolean(client?.connection && liveWork.touchedSessions().length),
-  count: async () => {
-    const sessions = liveWork.sessions();
-    for (const id of await backgroundSessions({ client, ids: liveWork.touchedSessions().filter((id) => !sessions.has(id)) })) sessions.add(id);
-    return sessions.size;
-  },
+  count: () => workCounts({ liveWork, client }),
   onChange: (listener) => liveWork.onChange(listener),
   skip: () => app.commandLine.hasSwitch("remote-debugging-port") || Boolean(process.env.CODE_DESKTOP_OFFSCREEN_LAUNCH),
   onError: (error) => console.warn("Quit guard:", error),
@@ -4614,6 +4942,8 @@ installShutdownHandler(app, {
     scheduleService.dispose();
     localRoutines?.dispose();
     await pauseActiveGoals().catch(() => {});
+    // w13-close-main-process: this run's incognito chats go before the cores stop (a bounded wait; the next launch sweeps the rest).
+    await quitChatHistory?.quit().catch(() => {});
     await Promise.all([stopAllCodexClients(), coworkSessions?.stop(), fileSearch.dispose(), workflowService?.dispose()]);
     agentTools.stop();
     await Promise.all([terminalsStopped, previewsStopped]);

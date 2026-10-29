@@ -1158,9 +1158,18 @@ try {
   assert.deepEqual(await labels(page.getByRole("menu", { name: "Fx Plugin", exact: true }).locator("[data-skill-path]")), ["fx-plugin-skill"]);
   // Cr (:616-653) + the c17e03edc card: hovering a skill row shows its description and "{plugin} plugin".
   await page.getByRole("menu", { name: "Fx Plugin", exact: true }).locator("[data-skill-path]").first().hover();
-  const hoverCard = page.locator(".smenu-hovercard");
+  // 3.6556.2 shared-frame-6jtSkIit Xm (CdsTooltip): `data-cds:"Tooltip"` sits on the Base UI Positioner
+  // (`positionMethod:"fixed"`); the text lives in its `role:"tooltip"` Popup as spans — with a detail, first
+  // `span.inline-flex.min-w-0.items-center.gap-2` holding the content, then `span.break-words…text-secondary` holding
+  // the detail (here the host's description span and its "{plugin} plugin" line, source-menu.jsx skillDescriptionTooltipProps).
+  const hoverCard = page.locator('[data-cds="Tooltip"]');
   await hoverCard.waitFor();
-  assert.deepEqual(await hoverCard.locator("div").allTextContents(), ["fx-plugin-skill description", "Fx Plugin plugin"]);
+  const hoverPopup = hoverCard.locator('[role="tooltip"]');
+  await hoverPopup.waitFor();
+  assert.deepEqual(await hoverPopup.locator(":scope > div > span").allTextContents(), ["fx-plugin-skill description", "Fx Plugin plugin"]);
+  // pointer-events: the host passes hoverable:false, Xm turns it into `disableHoverablePopup:!j` on the Tooltip root,
+  // and vendor-frame-CnSY1sxv's Tooltip Positioner (qd) passes `inert:!b||S==="both"||C` (C = disableHoverablePopup)
+  // to Kd, which sets `c.pointerEvents="none"` when inert — so the fixed positioner lets the pointer through.
   metrics.hoverCard = await hoverCard.evaluate(node => ({ position: getComputedStyle(node).position, pointerEvents: getComputedStyle(node).pointerEvents }));
   assert.deepEqual(metrics.hoverCard, { position: "fixed", pointerEvents: "none" });
   // Escape closes one popup level at a time (same contract as menus-states-ui-test); repeat until the tree is gone.
@@ -1213,7 +1222,7 @@ try {
   assert.ok(["fx-beta", "fx-repo"].every(name => metrics.slashSkills.includes(name)), `the slash list carries the enabled skills: ${metrics.slashSkills}`);
   assert.ok(!metrics.slashSkills.includes("fx-alpha"), "a disabled skill stays out");
   await slashMenu.getByRole("menuitem").filter({ hasText: /^fx-beta$/ }).hover();
-  await page.locator(".slash-description").filter({ hasText: "fx-beta description" }).waitFor();
+  await page.locator('[data-cds="Tooltip"]').filter({ hasText: "fx-beta description" }).waitFor();
   await slashMenu.getByRole("menuitem").filter({ hasText: /^fx-beta$/ }).click();
   await chip.waitFor();
   assert.equal(await composer().evaluate(node => node.value), "/fx-beta ");

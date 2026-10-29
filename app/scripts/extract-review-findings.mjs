@@ -1,92 +1,96 @@
-// R3-terminal FT-09 (diffgit-01): extract the 2.42304.0 Changes pane review finding card without executing any desktop
-// runtime (decision D0: own generator, own output folder src/generated/review-findings, own
-// scripts/verify-gen-review-findings.mjs).
+// R3-terminal FT-09 (diffgit-01), migrated to 3.6556.2 (w2-tr-findings): extract the Changes pane review finding card
+// without executing any desktop runtime (decision D0: own generator, own output folder src/generated/review-findings,
+// own scripts/verify-gen-review-findings.mjs).
 //
-//   review-finding-card.mjs  c44d00c7f ba = memo(ya): the inline finding card under its line in the diff — the Claude
-//                            spark + "Claude" header with the "Line N" / "Lines N–M" label (ea), the Fixed / Fixing… /
+//   review-finding-card.mjs  c44d00c7f wc = memo(Cc): the inline finding card under its line in the diff — the Claude
+//                            spark + "Claude" header with the "Line N" / "Lines N–M" label (nc), the Fixed / Fixing… /
 //                            Confirmed / Plausible and category badges, the ghost ArrowDown "Next finding" and X
 //                            "Dismiss finding" buttons, the body and failure scenario, and the border-t footer with the
-//                            secondary ArrowUp "Fix this one" while the finding is open and fixable; Zi is the
-//                            --diff-widget-* card skin.
-//   pane-focus-return.mjs    cae42d46f s / u: where focus goes when the card it was in is dismissed (the diff pane body,
-//                            a dialog or the pane root, a tick later and only if focus fell to the body).
-//   finding-category.mjs     c227f4d5e jq: the ReportFindings category label (Mq: `category: jq(t.category)`).
+//                            secondary ArrowUp "Fix this one" while the finding is open and fixable; $s is the
+//                            --diff-widget-* card skin. 3.6556.2 compiles Cc with React Compiler (J9/J1…/K1…, imported
+//                            from view-tabs by their E3 semantic names) and renames two ids (Fixed BNEz9MFGbU,
+//                            Plausible FNzj2neHoF, research T13).
+//   pane-focus-return.mjs    shared-1 nC / aC (2.42304.0 cae42d46f s / u, chunk removed): where focus goes when the card
+//                            it was in is dismissed (the diff pane body, a dialog or the pane root, a tick later and only
+//                            if focus fell to the body).
+//   finding-category.mjs     c227f4d5e b1: the ReportFindings category label (x1: `category: b1(t.category)`).
 //
 // Every emitted binding is an original top-level declaration sliced from the prettier-formatted source. Each module's
 // bindings are the reachable closure of its roots (Babel scope analysis), so nothing is hand-picked and a renamed or
 // re-pointed minified import fails generation instead of silently binding the wrong value. An import resolves, in this
 // order, to: a named host adapter in src/source-review-findings-adapters.jsx (feature-checked against the original it
-// replaces), a verified React export of vendor-frame, a semantic public name of the shared view-tabs graph (D1:
-// CdsButton / CdsBadge / CdsTooltipProvider / CdsOverflowTooltip / clsx), or another module generated here.
-// `callSites` pin the original text the host wiring follows but cannot import: the diff's annotation renderer (Aa), the
-// annotation list (xa) and the findings card's annotation builder in c96d752d0.
+// replaces), a verified React export of vendor-frame (official.reactAliases, R3), a semantic public name of the shared
+// view-tabs graph (D1/E3: CdsButton / CdsBadge / CdsTooltipProvider / CdsOverflowTooltip / clsx and the compiler
+// helpers), or another module generated here.
+// `callSites` pin the original text the host wiring follows but cannot import: the diff's annotation renderer (Pc), the
+// annotation list (Tc) and the findings card's annotation builder in c96d752d0. Features are stable strings, or
+// {loose} (official.looseFeature, R2/E5) where the text names minified bindings.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const { referenceVersion, referenceSnapshot, looseFeature } = official;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/review-findings');
-const viewTabs = path.join(root, 'src/generated/view-tabs');
 const adapterModule = '../../source-review-findings-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const loose = text => ({ loose: text });
 
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment.
-const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    So: ['react', 'useRef'], uo: ['react', 'useCallback'], oo: ['react', 'memo'], Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'],
-  },
-};
+// vendor-frame re-exports React; each alias is checked against official.reactAliases (R3: top-level
+// `local=<namespace>.<member>`, `Oo` is react/compiler-runtime `c`).
+const vendor = { [official.vendorFrame]: official.reactAliases };
 // Host dependencies. `features` must appear in the same-chunk closure of the original binding the adapter replaces.
 const adapters = {
   // react-intl useIntl / FormattedMessage over the local catalog (source-code-start-adapters.jsx useStartIntl).
-  'vendor-intl-Db7hDWRO.js': {
+  [official.vendorIntl]: {
     p: { name: 'useIntl', features: ['[React Intl]'] },
     l: { name: 'FormattedMessage', features: ['textComponent'] },
   },
-  // cc8941b7b rt / it (exported Q / tt): the session review store's current finding and a finding's status. Here the
+  // cc8941b7b pt / mt (exported Z / tt): the session review store's current finding and a finding's status. Here the
   // Changes pane keeps them (source-session.jsx review marks) and hands each card its own through context.
-  'cc8941b7b-CZT9QwXr.js': {
-    Q: { name: 'useIsCurrentFinding', features: ['n.currentFindingBySession[e] === t'] },
-    tt: { name: 'useFindingStatus', features: ['n.findingStatusBySession[e]?.[t] ?? "open"'] },
+  'cc8941b7b-DAgMZRvX.js': {
+    Z: { name: 'useIsCurrentFinding', features: ['.currentFindingBySession[e] === t'] },
+    tt: { name: 'useFindingStatus', features: ['.findingStatusBySession[e]?.[t] ?? "open"'] },
   },
-  // shared-frame NT (exported $i): the CDS Spark — idle/undefined state is the static path _h, `shrink-0` added for a
+  // shared-frame ZO (exported fa): the CDS Spark — idle/undefined state is the static path Jg, `shrink-0` added for a
   // numeric size. The host Spark is SourceSpark (same path, colour and size variable, plus the local persona glyphs).
-  'shared-frame-BfjMqbuN.js': {
-    $i: { name: 'ReviewSpark', features: ['typeof r.size == "string" ? n : X("shrink-0", n)', 'e === void 0 || e === "idle"', '"data-cds": "Spark"',
-      'hh = "var(--cds-clay, #d97757)"', 'gh = "h-[var(--cds-spark-size)] w-[var(--cds-spark-size)]"'] },
+  [official.sharedFrame]: {
+    fa: { name: 'ReviewSpark', features: [loose('typeof r.size == "string" ? t : Q("shrink-0", t)'), loose('i === void 0 || i === "idle"'),
+      '"data-cds": "Spark"', loose('Kg = "var(--cds-clay, #d97757)"'), loose('qg = "h-[var(--cds-spark-size)] w-[var(--cds-spark-size)]"')] },
   },
 };
 const modules = [
-  { target: 'pane-focus-return.mjs', source: 'cae42d46f-8Va5mKUX.js', exports: { s: 'focusReturnRegion', u: 'returnFocusSoon' },
+  { target: 'pane-focus-return.mjs', source: 'shared-1-BJhqMmkf.js', exports: { nC: 'focusReturnRegion', aC: 'returnFocusSoon' },
     features: {
-      s: ['return e?.closest(\'[data-diff-pane-body], [role="dialog"]\') ?? o(e);'], o: ['return e?.closest("[data-pane-root]") ?? null;'],
-      c: ['e.querySelector("[data-diff-pane-body]") ?? e'], u: ['d(e, o(e));'],
-      d: ['setTimeout(() => {', 'if (n.activeElement !== n.body) return;', 'r?.isConnected && c(r).focus({ preventScroll: !0 });'],
+      nC: [loose('return e?.closest(\'[data-diff-pane-body], [role="dialog"]\') ?? tC(e);')], tC: ['?.closest("[data-pane-root]") ?? null;'],
+      rC: ['.querySelector("[data-diff-pane-body]") ??'], aC: [loose('oC(e, tC(e));')],
+      oC: ['setTimeout(() => {', loose('if (n.activeElement !== n.body) return;'), loose('r?.isConnected && rC(r).focus({ preventScroll: !0 });')],
     } },
-  { target: 'finding-category.mjs', source: 'c227f4d5e-Ba-r--Rl.js', exports: { jq: 'findingCategoryLabel' },
-    features: { jq: ['if (typeof e != "string") return;', 'let t = e.replace(/[-_]+/g, " ").trim();', 'return (t.charAt(0).toUpperCase() + t.slice(1)).slice(0, 40);'] } },
-  { target: 'review-finding-card.mjs', source: 'c44d00c7f-zUAG9XyS.js', exports: { ba: 'ReviewFindingCard', ea: 'findingLinesLabel', Zi: 'DIFF_WIDGET_CARD' },
+  { target: 'finding-category.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { b1: 'findingCategoryLabel' },
+    features: { b1: [loose('if (typeof e != "string") return;'), '.replace(/[-_]+/g, " ").trim();', loose('return (t.charAt(0).toUpperCase() + t.slice(1)).slice(0, 40);')] } },
+  { target: 'review-finding-card.mjs', source: 'c44d00c7f-Cr1FDL2F.js', exports: { wc: 'ReviewFindingCard', nc: 'findingLinesLabel', $s: 'DIFF_WIDGET_CARD' },
     features: {
-      ba: ['ba = y(ya)'],
-      Zi: ['"rounded border border-[var(--diff-widget-border,var(--cds-border))] bg-[var(--diff-widget-bg,var(--cds-surface-3))] font-sans text-[var(--diff-widget-fg,var(--cds-text-primary))] shadow-sm"'],
-      ea: ['{ defaultMessage: "Line {line}", id: "qtx2KQoFxt" }', '{ defaultMessage: "Lines {start}\\u2013{end}", id: "LkSZyjr77o" }'],
-      ya: [
-        '(e?.contains(e.ownerDocument.activeElement) && Ve(Ue(e)), n?.());', 'e.focus({ preventScroll: !0 }),', 'f = In(e, t.id),', 'p = $n(e, t.id),',
-        'm = p === "open" && !!r,', 'p === "addressed"', 'variant: "success",', 'defaultMessage: "Fixed", id: "jzcSPWIERo"', 'defaultMessage: "Fixing\\u2026",',
-        't.verdict === "CONFIRMED" ? "danger" : "warning"', 'defaultMessage: "Confirmed", id: "dX7+RvbH/9"', 'defaultMessage: "Plausible", id: "yGFFVQ5iEZ"',
+      wc: [loose('wc = v(Cc)')],
+      $s: ['"rounded border border-[var(--diff-widget-border,var(--cds-border))] bg-[var(--diff-widget-bg,var(--cds-surface-3))] font-sans text-[var(--diff-widget-fg,var(--cds-text-primary))] shadow-sm"'],
+      nc: ['{ defaultMessage: "Line {line}", id: "qtx2KQoFxt" }', '{ defaultMessage: "Lines {start}\\u2013{end}", id: "LkSZyjr77o" }'],
+      Cc: [
+        loose('$ = J9(64)'), '{ sessionId: i, annotation: a, onDismiss: s, onFix: c, onNext: l }',
+        loose('(e?.contains(e.ownerDocument.activeElement) && Ee(Se(e)), s?.());'), '.focus({ preventScroll: !0 }),', loose('m = _r(i, a.id),'), loose('h = kr(i, a.id),'),
+        loose('g = h === "open" && !!c,'), 'h === "addressed"', 'variant: "success",', 'defaultMessage: "Fixed", id: "BNEz9MFGbU"', 'defaultMessage: "Fixing\\u2026",',
+        '.verdict === "CONFIRMED" ? "danger" : "warning"', 'defaultMessage: "Confirmed", id: "dX7+RvbH/9"', 'defaultMessage: "Plausible", id: "FNzj2neHoF"',
         'defaultMessage: "Next finding", id: "5lh5JiLkPH"', 'defaultMessage: "Next finding after the one on line {line}",', 'id: "RkGf6cYgK5",',
-        'className: "px-md py-xs",', 'tabIndex: -1,', '"aria-current": f || void 0,', 'f && "border-accent ring-1 ring-accent",',
-        'className: "flex min-h-7 items-center gap-1.5 px-md pt-1",', 'c(R, { size: 16 }),', 'className: "truncate text-body-medium",',
-        'defaultMessage: "Claude", id: "4PjoX4rZSt"', 'children: ea(t.startLine, t.endLine, o),', 'className: "ms-auto flex min-w-0 items-center gap-1",',
-        'truncate: !0,', 'className: "max-w-[12rem]",', 'lazy: !0,', 'className: "flex shrink-0 items-center gap-0.5",', 'p === "open" && i',
-        'icon: "ArrowDown",', '"aria-label": _,', 'tooltip: g,', 'icon: "X",', 'defaultMessage: "Dismiss finding",', 'm ? "pb-1.25" : "pb-md"',
+        'className: "px-md py-xs",', 'tabIndex: -1,', '"aria-current": b,', '"border-accent ring-1 ring-accent"',
+        'className: "flex min-h-7 items-center gap-1.5 px-md pt-1",', loose('n(ne, { size: 16 })'), 'className: "truncate text-body-medium",',
+        'defaultMessage: "Claude", id: "4PjoX4rZSt"', loose('children: nc(a.startLine, a.endLine, u),'), 'className: "ms-auto flex min-w-0 items-center gap-1",',
+        'truncate: !0,', 'className: "max-w-[12rem]",', 'lazy: !0,', 'className: "flex shrink-0 items-center gap-0.5",', loose('h === "open" && l'),
+        'icon: "ArrowDown",', 'icon: "X",', 'defaultMessage: "Dismiss finding",', '"pb-1.25" : "pb-md"',
         '"whitespace-pre-wrap break-words text-body text-primary"', '"whitespace-pre-wrap break-words text-body text-muted-as-secondary"',
         '"flex justify-end border-t border-[var(--diff-widget-border,var(--cds-border))] px-sm py-xs"', 'variant: "secondary",', 'size: "sm",',
         'icon: "ArrowUp",', 'defaultMessage: "Fix this one",', 'id: "t7GVF0eiPN",',
@@ -94,18 +98,18 @@ const modules = [
     } },
 ];
 const callSites = [
-  { source: 'c44d00c7f-zUAG9XyS.js', binding: 'Aa', role: 'Diff annotation renderer: a finding is ba with Fix / Next (only with more findings) / Dismiss',
-    features: ['if (n.kind === "finding")', 'annotation: n.finding,', 'onFix: f ? () => f(n.finding) : void 0,', 'onNext: n.hasNext',
-      '? () => Dn.stepReviewFinding(r, n.finding.id, s)', 'p ? p(n.finding) : Dn.dismissReviewFinding(r, n.finding.id, s),'] },
-  { source: 'c44d00c7f-zUAG9XyS.js', binding: 'xa', role: 'Annotation list: a finding sits under its end line (lineNumber: endLine), hasNext from the pane',
+  { source: 'c44d00c7f-Cr1FDL2F.js', binding: 'Pc', role: 'Diff annotation renderer: a finding is wc with Fix / Next (only with more findings) / Dismiss',
+    features: [loose('if (r.kind === "finding")'), loose('annotation: r.finding,'), loose('onFix: f ? () => f(r.finding) : void 0,'), loose('onNext: r.hasNext'),
+      '.stepReviewFinding(', loose('p ? p(r.finding) : wr.dismissReviewFinding(i, r.finding.id, c)'), loose('n( wc, {')] },
+  { source: 'c44d00c7f-Cr1FDL2F.js', binding: 'Tc', role: 'Annotation list: a finding sits under its end line (lineNumber: endLine), hasNext from the pane',
     features: ['key: `finding:${e.id}`,', 'lineNumber: e.endLine,', 'metadata: { kind: "finding", finding: e, hasNext: i },'] },
-  { source: 'c227f4d5e-Ba-r--Rl.js', binding: 'Mq', role: 'ReportFindings finding parser: category is jq(category), line only when a number',
-    features: ['line: typeof t.line == "number" ? t.line : void 0,', 'category: jq(t.category),', 't.verdict === "CONFIRMED" || t.verdict === "PLAUSIBLE"'] },
+  { source: 'c227f4d5e-B-FYKrwT.js', binding: 'x1', role: 'ReportFindings finding parser: category is b1(category), line only when a number',
+    features: [loose('line: typeof t.line == "number" ? t.line : void 0,'), loose('category: b1(t.category),'), loose('t.verdict === "CONFIRMED" || t.verdict === "PLAUSIBLE"')] },
 ];
 // Pinned on the minified bytes: c96d752d0 is the transcript chunk (tens of thousands of lines); only this text matters.
 const rawCallSites = [
-  { source: 'c96d752d0-BOCqU7c2.js', role: 'Findings card: the annotation each reported finding becomes (host: review-findings-model.mjs findingAnnotation)',
-    features: ['id:`finding-${e.id}-${n}`,filePath:t.file,side:"additions",startLine:t.line??1,endLine:t.line??1,line:t.line,body:t.summary,detail:t.failure_scenario,source:"finding",category:t.category,verdict:t.verdict'] },
+  { source: 'c96d752d0-CWv_7-n9.js', role: 'Findings card: the annotation each reported finding becomes (host: review-findings-model.mjs findingAnnotation)',
+    features: [loose('id:`finding-${t.id}-${n}`,filePath:e.file,side:"additions",startLine:e.line??1,endLine:e.line??1,line:e.line,body:e.summary,detail:e.failure_scenario,source:"finding",category:e.category,verdict:e.verdict,createdAt:O')] },
 ];
 
 async function readSource(name, cache) {
@@ -143,20 +147,18 @@ function closureText(src, name) {
 }
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
+  const missing = features.filter(f => typeof f === 'string' ? !text.includes(f) && !flat.includes(normalised(f)) : !looseFeature(f.loose).test(text));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
 function vendorImport(file, alias, src) {
   const target = vendor[file]?.[alias];
   if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.bytes.toString()))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  // R3: a top-level `local=<namespace>.<member>` of the module's own namespace (`Oo`: the compiler-runtime factory).
+  official.assertVendorAlias(src.bytes.toString(), alias, target);
   return target;
 }
 async function viewTabsPublic() {
-  const manifest = JSON.parse(await fs.readFile(path.join(viewTabs, 'manifest.json'), 'utf8'));
+  const manifest = await viewTabsManifestFor(referenceVersion);
   if (manifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   const byLocal = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) byLocal.set(`${entry.file}#${entry.local}`, { name, ...entry });

@@ -1,6 +1,11 @@
-// R4f-error E1 (transcript-session-error-boundary, transcript-10): extract the 2.42304.0 session load error boundary
-// fallback without executing any desktop runtime (decision D0: own generator, own output folder
-// src/generated/session-load-error, own scripts/verify-gen-session-load-error.mjs).
+// R4f-error E1 (transcript-session-error-boundary, transcript-10): extract the session load error boundary fallback
+// without executing any desktop runtime (decision D0: own generator, own output folder src/generated/session-load-error,
+// own scripts/verify-gen-session-load-error.mjs).
+//
+// w2-tr-r3b: sliced from 3.6556.2 (R1). The names below are the 2.42304.0 ones; in 3.6556.2: cc43287c9 aV / iV, the
+// error page shared-46 wR (only { message, error, onRetry }, TR-T11), the heal gate shared-15 Pa / la / ca, the claim
+// shared-15 Qa / Ja, shared-52 pf / jf / vf, shared-26 Rd, shared-104 dc / sc, c7f0c0d23 o; the boundaries are
+// c11959232 P_ / F_ and c5638815a dt over shared-26 $l.
 //
 //   session-load-error.mjs  cc43287c9 fV (exported C): "Something went wrong loading this session." with Try again, the
 //                           fallback every EpitaxyChatPanel render-error boundary shows (c11959232 Nm / Pm, c5638815a
@@ -33,130 +38,124 @@
 // boundary to shared-26 Vp (kl, generated as src/generated/r3b-transcript/render-error-boundary.mjs).
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+// R1/E6: Claude Desktop 3.6556.2 (scripts/official-3.6556.2.mjs).
+const { referenceVersion, referenceSnapshot, ionSource: source } = official;
 const output = path.join(root, 'src/generated/session-load-error');
 const viewTabs = path.join(root, 'src/generated/view-tabs');
 const adapterModule = '../../source-session-load-error-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment.
-const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    So: ['react', 'useRef'], uo: ['react', 'useCallback'], mo: ['react', 'useEffect'],
-    Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'],
-  },
-};
 // Host dependencies (checked first). `local` is the declaration the export alias must still name; `features` must appear
 // in that declaration's prettier form, and `also` pins further declarations of the same chunk the adapter answers for.
+// A feature is a string (verbatim, whitespace-insensitive) or { loose } (R2/E5 looseFeature: ≤3-character identifiers
+// generalised).
 const adapters = {
   // react-intl useIntl / FormattedMessage over the local catalog (source-code-start-adapters.jsx useStartIntl).
-  'vendor-intl-Db7hDWRO.js': {
-    p: { name: 'useIntl', local: 'q', features: ['let e = o(K);', 'return (Mt(e), e);'], also: { Mt: ['[React Intl] Could not find required `intl` object.'] } },
-    l: { name: 'FormattedMessage', local: 'Gt', features: ['var Gt = u(Wt, Ut);'], also: { Wt: ['let { formatMessage: r, textComponent: i = n } = q(),'] } },
+  'vendor-intl-DYfox5Co.js': {
+    p: { name: 'useIntl', local: 'q', features: [{ loose: 'let e = a(K);' }, { loose: 'return (Mt(e), e);' }], also: { Mt: ['[React Intl] Could not find required `intl` object.'] } },
+    l: { name: 'FormattedMessage', local: 'Gt', features: [{ loose: 'var Gt = c(Wt, Ut);' }], also: { Wt: [{ loose: 'let { formatMessage: i, textComponent: a = r } = q(),' }] } },
   },
-  // shared-25 Jf (exported Wf): the desktop router (TanStack router navigate, else window.location). T9 calls it on every
-  // render but reads it only in its Back to landing page button, which fV never shows (it always passes onRetry).
-  'shared-25-DP8p7i1Z.js': { Wf: { name: 'useRouter', local: 'Jf', features: ['push: (n, i) => {', 'r.navigate(Gf(a), { resetScroll: i?.scroll ?? !0 });',
-    'back: () => (r ? r.back() : window.history.back()),', 'refresh: () => {', 'n.invalidateQueries();'] } },
-  // cd14a8022 T (exported l): forget the session's transcript scroll anchors in the 50-entry LRU (s, cb670556a r): every
-  // view of the main window (`${id}:`), the pop-out (`popout:${id}:`), the projects rail and the side pane. Here: the
-  // host transcript scroll cache of src/use-transcript-scroll.js, keyed `code:${id}` (main.jsx).
-  'cd14a8022-DDLlDKpQ.js': { l: { name: 'forgetScrollAnchors', local: 'T', features: ['s.clearByPrefix(`${e}:`)', 's.clearByPrefix(`popout:${e}:`)', 's.clear(_(e))', 's.clear(v(e))'],
+  // shared-25 Jd (exported yp): the desktop router (TanStack router navigate, else window.location). wR calls it on every
+  // render but reads it only in its Back to landing page button, which aV never shows (it always passes onRetry).
+  'shared-25-DOWZRSlq.js': { yp: { name: 'useRouter', local: 'Jd', features: ['resetScroll: r?.scroll ?? !0', '(i ? i.back() : window.history.back())',
+    'invalidateQueries();', 'push: a,', 'replace: o,', 'back: s,', 'forward: c,', 'refresh: l,'] } },
+  // cd14a8022 T (exported l): forget the session's transcript scroll anchors in the 50-entry LRU (s): every view of the
+  // main window (`${id}:`), the pop-out (`popout:${id}:`), the projects rail and the side pane. Here: the host transcript
+  // scroll cache of src/use-transcript-scroll.js, keyed `code:${id}` (main.jsx).
+  'cd14a8022-Bt1HiRdE.js': { l: { name: 'forgetScrollAnchors', local: 'T', features: ['s.clearByPrefix(`${e}:`)', 's.clearByPrefix(`popout:${e}:`)', 's.clear(_(e))', 's.clear(v(e))'],
     also: { s: ['s = r({ cap: 50, hot: void 0 })'], _: ['return `projects-rail:${e}`;'], v: ['return `side-pane:${e}`;'] } } },
-  // cc6e9624e u (exported a): drop the session's tool expansion intentions (`t === e || t.endsWith(":" + e)`). Here:
+  // cc6e9624e l (exported a): drop the session's tool expansion intentions (`t === e || t.endsWith(":" + e)`). Here:
   // tool-group-expansion.mjs toolGroupExpansion / toolRowExpansion forgetSession, as the row boundary's Try again does.
-  'cc6e9624e-Dw5fc5HL.js': { a: { name: 'forgetRowExpansion', local: 'u', features: ['for (let t of o.keys()) (t === e || t.endsWith(`:${e}`)) && o.delete(t);'] } },
-  // shared-0 no (exported gy): a GrowthBook value (forced feature, else the client's evaluated features). This host has no
-  // GrowthBook client, so the answer is that of one that never loaded: undefined, and Xg's `?? !1` reads false.
-  'shared-0-ByI5P0CP.js': { gy: { name: 'growthBookValue', local: 'no', features: ['let t = ro(e);', 'return t === void 0 ? Qa(e) : t;'],
-    also: { ro: ['if (!t || typeof t.getForcedFeatures != "function") return;'], Qa: ['return t ? $a(t.getFeatures(), e) : null;'], Ka: ['return typeof window > "u" ? null : Wa;'] } } },
-  // shared-26 qu (exported yp): the chunk cache heal report, a probe fetch then Datadog `app.chunk_cache_heal`. This host
+  'cc6e9624e-CoHywWvV.js': { a: { name: 'forgetRowExpansion', local: 'l', features: [{ loose: 'for (let t of a.keys()) (t === e || t.endsWith(`:${e}`)) && a.delete(t);' }] } },
+  // shared-0 Zo (exported yb): a GrowthBook value (forced feature, else the client's evaluated features). This host has no
+  // GrowthBook client, so the answer is that of one that never loaded: undefined, and shared-15 la's `?? !1` reads false.
+  'shared-0-DDOOdL6P.js': { yb: { name: 'growthBookValue', local: 'Zo', features: [{ loose: 'let t = Qo(e);' }, { loose: 'return t === void 0 ? qo(e) : t;' }],
+    also: { Qo: ['if (!t || typeof t.getForcedFeatures != "function") return;'], qo: ['getFeatures(), e) : null;'] } } },
+  // shared-26 Kd (exported Bm): the chunk cache heal report, a probe fetch then Datadog `app.chunk_cache_heal`. This host
   // sends no telemetry (D17); the adapter resolves at once. Only the pane_retry branch calls it, closed here.
-  'shared-26-CgdP_nTj.js': { yp: { name: 'reportChunkCacheHeal', local: 'qu', features: ['let a = await Ku(Bu(e, i?.url), n, t, r),', 'Be.addAction(Nu, {', 'trigger: t,', 'heal_named_source: s,'],
-    also: { Nu: ['Nu = "app.chunk_cache_heal"'] } } },
+  'shared-26-CGuBxVt9.js': { Bm: { name: 'reportChunkCacheHeal', local: 'Kd', features: [{ loose: 'let a = await Gd(zd(e, i?.url), n, t, r),' }, 'trigger: t,', 'heal_named_source: s,'],
+    also: { Ad: ['Ad = "app.chunk_cache_heal"'] } } },
 };
 // Same-chunk declarations answered by the host (the declaration itself must carry `features`).
 const chunkAdapters = {
-  'shared-20-B7UqYfsi.js': {
-    // __: the heal target of a chunk failure (named source, engine frame or parse form; 74 original declarations: 30 of
-    // shared-20, 19 of shared-78, 14 of shared-0, 10 of shared-26, 1 of shared-25, reached through 12 cross-chunk
-    // imports; among them two more GrowthBook flags, Gg "__gb__550494059" and qg "__gb__2762990909"). g_ calls it only
-    // when Xg(Yg) holds, which it never does here; the adapter answers "no heal target" (the bundled local assets of this
-    // host cannot be healed by a reload either).
-    __: { name: 'resolveChunkHealTarget', features: ['if (m_(e)) return;', 'let t = Ug(e);', 'return n === void 0 ? void 0 : { url: n, form: t.form };',
+  'shared-15-BvlV43cI.js': {
+    // Fa: the heal target of a chunk failure (named source, engine frame or parse form). Pa calls it only when la(ca)
+    // holds, which it never does here; the adapter answers "no heal target" (the bundled local assets of this host cannot
+    // be healed by a reload either).
+    Fa: { name: 'resolveChunkHealTarget', features: [{ loose: 'if (ja(e)) return;' }, { loose: 'let t = na(e);' }, 'return n === void 0 ? void 0 : { url: n, form: t.form };',
       'return n === void 0 ? void 0 : { url: n, form: "parse" };'] },
   },
 };
 // Emitted in dependency order. `exports` maps original local binding -> exported name; its keys are the roots and
 // `features` pins each root to strings of its original (prettier-formatted) text.
 const modules = [
-  // shared-19 T9 (exported y; `gi` in cc43287c9): the error page.
-  { target: 'error-page.mjs', source: 'shared-19-CkPOiIKm.js', exports: { T9: 'ErrorPage' },
-    features: { T9: ['showBackButton: n = !0,', 'redirect: r = "/code",', 'let s = He();', 'className: "min-h-screen flex flex-col items-center justify-center px-4",',
-      'className: "text-center max-w-md",', 'className: "text-danger mb-6 text-lg font-medium",', '? x("div", { className: "mb-6 text-sm text-secondary", children: t })',
-      'variant: "primary",', 'onClick: o,', 'children: x(X, { defaultMessage: "Try again", id: "FazwRldA7z" }),', 'icon: "ArrowLeft",',
-      'onClick: a ?? (() => s.push(r)),', 'defaultMessage: "Back to landing page",'] } },
-  // shared-52 fd (exported qp; `Xo`): the spacing between chunk reloads; Ad (nm; `qo`): mark the page as unloading (the
-  // pagehide listener's handler); _d ($p; `uo`): a chunk reload is already scheduled (hd, set only by gd).
-  { target: 'chunk-reload-state.mjs', source: 'shared-52-DGviI8xb.js',
-    exports: { fd: 'CHUNK_RELOAD_SPACING_MS', Ad: 'markPageUnloading', _d: 'isChunkReloadPending' },
-    features: { fd: ['fd = 1e4'], Ad: ['Od = Date.now();', 'kd = performance.now();', 'kd = void 0;'], _d: ['return hd !== null;'] } },
-  // shared-26 zu (exported _p; `$a`): the heal probe's wait.
-  { target: 'chunk-heal-probe.mjs', source: 'shared-26-CgdP_nTj.js', exports: { zu: 'CHUNK_HEAL_PROBE_MS' }, features: { zu: ['zu = 2e3'] } },
-  // shared-20 g_ (exported ya; `Jh`): the GrowthBook-gated chunk heal target; Yg its flag.
-  { target: 'chunk-heal-gate.mjs', source: 'shared-20-B7UqYfsi.js', exports: { g_: 'chunkHealTarget', Yg: 'CHUNK_HEAL_FLAG', Xg: 'chunkHealFlagOn' },
-    features: { g_: ['return Xg(Yg) ? __(e) : void 0;'], Yg: ['Yg = "__gb__982582273"'], Xg: ['return $e(e) ?? !1;', 'return !1;'] } },
-  // shared-20 j_ (exported _a; `vh`): claim the pane_retry heal once per chunk URL and form in sessionStorage.
-  { target: 'pane-retry-claim.mjs', source: 'shared-20-B7UqYfsi.js', exports: { j_: 'claimPaneRetry', O_: 'PANE_RETRY_CLAIM_PREFIX' },
-    features: { j_: ['return M_(O_, e);'], O_: ['O_ = "spa_pane_retry_claimed:"'] } },
-  // shared-104 Ho (exported lh; `xc`): the first registered reload blocker that is not elective, else null; Ro (sh) the
+  // shared-46 wR (exported n; `Ha` in cc43287c9): the error page. 3.6556.2 drops its hint, Back-button and redirect
+  // props: { message, error, onRetry } (TR-T11).
+  { target: 'error-page.mjs', source: 'shared-46-BIbZBGFq.js', exports: { wR: 'ErrorPage' },
+    features: { wR: ['{ message: t, error: n, onRetry: r } = e,', '"/code"', 'className: "min-h-screen flex flex-col items-center justify-center px-4",',
+      'className: "text-center max-w-md",', 'className: "text-danger mb-6 text-lg font-medium",', 'variant: "primary",', 'onClick: r,',
+      'defaultMessage: "Try again",', 'id: "FazwRldA7z",', 'icon: "ArrowLeft",', 'defaultMessage: "Back to landing page",'] } },
+  // shared-52 pf (exported qg; `Qi`): the spacing between chunk reloads; jf (n_; `Ki`): mark the page as unloading (the
+  // pagehide listener's handler); vf ($g; `Wr`): a chunk reload is already scheduled.
+  { target: 'chunk-reload-state.mjs', source: 'shared-52-uHFNjl7C.js',
+    exports: { pf: 'CHUNK_RELOAD_SPACING_MS', jf: 'markPageUnloading', vf: 'isChunkReloadPending' },
+    features: { pf: ['pf = 1e4'], jf: [{ loose: 'kf = Date.now();' }, { loose: 'Af = performance.now();' }, { loose: 'Af = void 0;' }], vf: [{ loose: 'return gf !== null;' }] } },
+  // shared-26 Rd (exported Rm; `Es`): the heal probe's wait.
+  { target: 'chunk-heal-probe.mjs', source: 'shared-26-CGuBxVt9.js', exports: { Rd: 'CHUNK_HEAL_PROBE_MS' }, features: { Rd: ['Rd = 2e3'] } },
+  // shared-15 Pa (exported Ct; `hh`): the GrowthBook-gated chunk heal target; ca its flag, la the flag check (D33).
+  { target: 'chunk-heal-gate.mjs', source: 'shared-15-BvlV43cI.js', exports: { Pa: 'chunkHealTarget', ca: 'CHUNK_HEAL_FLAG', la: 'chunkHealFlagOn' },
+    features: { Pa: [{ loose: 'return la(ca) ? Fa(e) : void 0;' }], ca: ['ca = "__gb__982582273"'], la: [{ loose: 'return U(e) ?? !1;' }, 'return !1;'] } },
+  // shared-15 Qa (exported bt; `yh`): claim the pane_retry heal once per chunk URL and form in sessionStorage.
+  { target: 'pane-retry-claim.mjs', source: 'shared-15-BvlV43cI.js', exports: { Qa: 'claimPaneRetry', Ja: 'PANE_RETRY_CLAIM_PREFIX' },
+    features: { Qa: [{ loose: 'return eo(Ja, e);' }], Ja: ['Ja = "spa_pane_retry_claimed:"'] } },
+  // shared-104 dc (exported Lp; `vc`): the first registered reload blocker that is not elective, else null; sc (Fp) the
   // registration (nothing on this host registers one).
-  { target: 'reload-blockers.mjs', source: 'shared-104-Cqo2-vQh.js', exports: { Ho: 'reloadBlocker', Ro: 'registerReloadBlocker' },
-    features: { Ho: ['return Vo((e) => !e.electiveOnly);'], Ro: ['holdsClientNavigation: n = !0,', 'electiveOnly: r = !1,', 'Lo.set(e, {'] } },
-  // c7f0c0d23 o (exported t; `YP`): some beforeunload holder still holds.
-  { target: 'unload-veto.mjs', source: 'c7f0c0d23-BDc3qEXV.js', exports: { o: 'unloadHeld' }, features: { o: ['return [...a].some(s);'] } },
-  // cc43287c9 fV (exported C) and dV.
-  { target: 'session-load-error.mjs', source: 'cc43287c9-DAfOi8yP.js', exports: { fV: 'SessionLoadError', dV: 'canReloadPane' },
+  { target: 'reload-blockers.mjs', source: 'shared-104-CTONUSaz.js', exports: { dc: 'reloadBlocker', sc: 'registerReloadBlocker' },
+    features: { dc: [{ loose: 'return uc((e) => !e.electiveOnly);' }], sc: ['holdsClientNavigation: n = !0,', 'electiveOnly: r = !1,', 'holdsDeferredReload: i = !1,', 'holdsSignOutLeave: a = !0,'] } },
+  // c7f0c0d23 o (exported n; `zy`): some beforeunload holder still holds.
+  { target: 'unload-veto.mjs', source: 'c7f0c0d23-BeKocnIJ.js', exports: { o: 'unloadHeld' }, features: { o: ['return [...a].some(s);'] } },
+  // cc43287c9 aV (exported M) and iV.
+  { target: 'session-load-error.mjs', source: 'cc43287c9-Me-M2ucD.js', exports: { aV: 'SessionLoadError', iV: 'canReloadPane' },
     features: {
-      fV: ['function fV({ error: e, reset: t, sessionId: n }) {', '(n !== void 0 && ($A(n), jP(n)), t());', '}, $a + Xo)),', 'window.location.reload();',
-        '(clearTimeout(o.current), (i.current = !1), s());', 'if (i.current) return;', 'let t = Jh(e);', 'if (t !== void 0 && dV()) {', 'if (uo()) {', 'if (vh(t)) {',
-        'lo(e, "pane_retry", $a, void 0, t).finally(() => {', 'if (!dV()) {', 'defaultMessage: "Something went wrong loading this session.",', 'id: "z0PjNhLbSp",',
-        'onRetry: l,', 'error: e,'],
-      dV: ['return xc() === null && !YP();'],
+      aV: ['{ error: t, reset: n, sessionId: r } = e,', { loose: '(r !== void 0 && (lM(r), xne(r)), n());' }, { loose: '}, Es + Qi)),' }, 'window.location.reload();',
+        '(clearTimeout(s.current), (a.current = !1), u());', 'if (a.current) return;', { loose: 'let e = hh(t);' }, { loose: 'if (e !== void 0 && iV()) {' }, { loose: 'if (Wr()) {' },
+        { loose: 'if (yh(e)) {' }, { loose: 'Ss(t, "pane_retry", Es, void 0, e).finally(() => {' }, { loose: 'if (!iV()) {' },
+        'defaultMessage: "Something went wrong loading this session.",', 'id: "z0PjNhLbSp",', { loose: 'p(Ha, { message: h, onRetry: m, error: t })' }],
+      iV: [{ loose: 'return vc() === null && !zy();' }],
     } },
 ];
 // Original text the host wiring follows but cannot import (prettier form of the named top-level declaration); `imports`
 // pins what a local name of that chunk resolves to (file, then the declaration that file exports under the alias).
 const callSites = [
-  { source: 'c11959232-Dx4NfIyJ.js', binding: 'Nm', role: 'Main pane: EpitaxyChatPanel boundary (resetOn = mountKey), fallback fV with the session id',
-    features: ['componentName: "EpitaxyChatPanel",', 'resetOn: i,', 'tags: { feature: "epitaxy" },', 'metadata: { sessionId: r },',
-      'fallback: (e, t) => s(qo, { error: e, reset: t, sessionId: r }),', 'componentName: "EpitaxyAgentGraphView",'],
-    imports: { qo: ['cc43287c9-DAfOi8yP.js', 'fV'], Zt: ['shared-26-CgdP_nTj.js', 'kl'] } },
-  { source: 'c11959232-Dx4NfIyJ.js', binding: 'Pm', role: 'Secondary pane: the same boundary, resetOn = the session id or the pane draft key',
-    features: ['let p = n ?? `pane-draft-${r ?? i}`;', 'resetOn: p,', 'componentName: "EpitaxyChatPanel",', 'tags: { feature: "epitaxy", pane: "secondary" },',
-      'fallback: (e, t) => s(qo, { error: e, reset: t, sessionId: n }),'],
-    imports: { qo: ['cc43287c9-DAfOi8yP.js', 'fV'], Zt: ['shared-26-CgdP_nTj.js', 'kl'] } },
-  { source: 'c5638815a-D1NXo6h5.js', binding: 'lt', role: 'Pop-out window: the same boundary with its own sanitizer; a chunk failure (p) rethrows past it',
-    features: ['componentName: "EpitaxyChatPanel",', 'tags: { feature: "epitaxy", pane: "popout" },', 'sanitizeError: ct,', 'if (p(e)) throw e;',
-      'return n(Se, { error: e, reset: t, sessionId: a });'],
-    imports: { Se: ['cc43287c9-DAfOi8yP.js', 'fV'], w: ['shared-26-CgdP_nTj.js', 'kl'] } },
+  { source: 'c11959232-TLc_9Vpx.js', binding: 'P_', role: 'Main pane: EpitaxyChatPanel boundary (resetOn = mountKey), fallback aV with the session id',
+    features: ['componentName: "EpitaxyChatPanel",', 'resetOn: o,', '{ feature: "epitaxy" }', '(s = { sessionId: a }),',
+      { loose: '(c = (e, t) => i(ls, { error: e, reset: t, sessionId: a })),' }, 'componentName: "EpitaxyAgentGraphView",'],
+    imports: { ls: ['cc43287c9-Me-M2ucD.js', 'aV'], On: ['shared-26-CGuBxVt9.js', '$l'] } },
+  { source: 'c11959232-TLc_9Vpx.js', binding: 'F_', role: 'Secondary pane: the same boundary, resetOn = the session id or the pane draft key',
+    features: ['m = r ?? `pane-draft-${a ?? o}`,', 'resetOn: m,', 'componentName: "EpitaxyChatPanel",', '{ feature: "epitaxy", pane: "secondary" }',
+      { loose: '(_ = (e, t) => i(ls, { error: e, reset: t, sessionId: r })),' }],
+    imports: { ls: ['cc43287c9-Me-M2ucD.js', 'aV'], On: ['shared-26-CGuBxVt9.js', '$l'] } },
+  { source: 'c5638815a-C5PjpJjD.js', binding: 'dt', role: 'Pop-out window: the same boundary with its own sanitizer; a chunk failure (p) rethrows past it',
+    features: ['componentName: "EpitaxyChatPanel",', 'tags: { feature: "epitaxy", pane: "popout" },', 'sanitizeError: ut,', 'if (p(e)) throw e;',
+      'return t(ge, { error: e, reset: n, sessionId: i });'],
+    imports: { ge: ['cc43287c9-Me-M2ucD.js', 'aV'], S: ['shared-26-CGuBxVt9.js', '$l'] } },
 ];
 // Pinned on the minified bytes (each must occur exactly once in its chunk).
 const rawCallSites = [
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'fV is exported as C, and dV is the reload check it reads',
-    features: ['Something went wrong loading this session', 'id:"z0PjNhLbSp"', 'lo(e,"pane_retry",$a,void 0,t)', 'function dV(){return xc()===null&&!YP()}', 'fV as C'] },
-  { source: 'shared-20-B7UqYfsi.js', role: 'The chunk heal gate and its GrowthBook flag',
-    features: ['function g_(e){return Xg(Yg)?__(e):void 0}', 'Yg="__gb__982582273"', '__gb__982582273'] },
-  { source: 'shared-19-CkPOiIKm.js', role: 'The error page layout', features: ['min-h-screen flex flex-col items-center justify-center px-4'] },
+  { source: 'cc43287c9-Me-M2ucD.js', role: 'aV is exported as M, and iV is the reload check it reads',
+    features: ['Something went wrong loading this session', 'id:"z0PjNhLbSp"', 'Ss(t,"pane_retry",Es,void 0,e)', 'function iV(){return vc()===null&&!zy()}', 'aV as M'] },
+  { source: 'shared-15-BvlV43cI.js', role: 'The chunk heal gate and its GrowthBook flag',
+    features: ['function Pa(e){return la(ca)?Fa(e):void 0}', 'ca="__gb__982582273"', '__gb__982582273'] },
+  { source: 'shared-46-BIbZBGFq.js', role: 'The error page layout', features: ['min-h-screen flex flex-col items-center justify-center px-4'] },
 ];
 
 async function readSource(name, cache) {
@@ -200,21 +199,18 @@ function declarationDeps(src, name) {
 const normalised = text => text.replace(/\s+/g, ' ');
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
+  const missing = features.filter(f => typeof f === 'string' ? !text.includes(f) && !flat.includes(normalised(f)) : !official.looseFeature(f.loose).test(text));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
+// R3: a React export of vendor-frame, checked on its top-level `local=<namespace>.<member>` (official.assertVendorAlias).
 function vendorImport(file, alias, src) {
-  const target = vendor[file]?.[alias];
-  if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.code))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
-  return target;
+  if (file !== official.vendorFrame || !official.reactAliases[alias]) return null;
+  const { module, member } = official.assertVendorAlias(src.code, alias);
+  return [module, member];
 }
 // D1: the shared view-tabs graph publishes semantic names for (file, local).
 async function viewTabsPublic() {
-  const manifest = JSON.parse(await fs.readFile(path.join(viewTabs, 'manifest.json'), 'utf8'));
+  const manifest = await viewTabsManifestFor(referenceVersion);
   if (manifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   const byLocal = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) byLocal.set(`${entry.file}#${entry.local}`, { name, ...entry });

@@ -1,56 +1,36 @@
-// Original current status-label hook; React supplied by host.
-import { useState as g, useEffect as b, useRef as D } from "react";
-function pj(e, t, n, r) {
-  let [i, a] = g(e),
-    [o, s] = g(r),
-    c = r !== o;
-  c && s(r);
-  let l = n?.restKey,
-    u = n?.fallHoldMs ?? 0,
-    d = l !== void 0 && e === l,
-    f = l !== void 0 && i === l,
-    p = !f && !d && e !== i && n?.isAdvance?.(i, e) === !0,
-    m = c || f || p ? e : i;
-  m !== i && a(m);
-  let h = D(m),
-    _ = D(0),
-    v = D(null);
-  return (
-    b(() => {
-      let n = performance.now();
-      if (
-        (h.current !== m && ((h.current = m), (_.current = n)),
-        d ? v.current === null && (v.current = n) : (v.current = null),
-        e === m)
-      )
-        return;
-      let r = n - _.current,
-        i = Math.max(t - r, d ? u - (n - (v.current ?? n)) : 0);
-      if (i <= 0) {
-        a(e);
-        return;
-      }
-      let o = setTimeout(() => a((t) => (t === m ? e : t)), i);
-      return () => clearTimeout(o);
-    }, [e, t, m, d, u]),
-    m
-  );
+// Original compiled status-label hook (React Compiler helpers from view-tabs).
+import {
+  reactMemoCache as J9,
+  memoChanged1 as J1,
+  memoStore1 as K1,
+  memoChanged2 as J2,
+  memoStore3 as K3,
+} from "../view-tabs/shared-frame-6jtSkIit.js";
+import { useState as I, useEffect as D } from "react";
+import { EE } from "../working-line/working-line.mjs";
+var Het = 150;
+function V6(e, t, n) {
+  let $ = J9(6),
+    r = J1($, 0, n) ? K1($, 0, n, { working: n, epoch: 0 }) : $[1],
+    [i, a] = I(r),
+    o = n && !i.working;
+  n !== i.working && a({ working: n, epoch: o ? i.epoch + 1 : i.epoch });
+  let [s, c] = I(e),
+    l = e === null && t ? s : e,
+    u = l !== s && (o || l === null || s === null);
+  u && c(l);
+  let d, f;
+  (J2($, 2, s, l)
+    ? ((d = () => {
+        if (l === s || l === null || s === null) return;
+        let e = setTimeout(() => c(l), Het);
+        return () => clearTimeout(e);
+      }),
+      (f = [l, s]),
+      K3($, 2, s, l, d, f))
+    : ((d = $[4]), (f = $[5])),
+    D(d, f));
+  let p = EE((u ? l : s) ?? "", 650, void 0, i.epoch);
+  return p === "" ? null : p;
 }
-const $tt = 150;
-function Z8(e, t, n) {
-  let [r, i] = g({ working: n, epoch: 0 }),
-    a = n && !r.working;
-  n !== r.working && i({ working: n, epoch: a ? r.epoch + 1 : r.epoch });
-  let [o, s] = g(e),
-    c = e === null && t ? o : e,
-    l = c !== o && (a || c === null || o === null);
-  (l && s(c),
-    b(() => {
-      if (c === o || c === null || o === null) return;
-      let e = setTimeout(() => s(c), $tt);
-      return () => clearTimeout(e);
-    }, [c, o]));
-  let u = pj((l ? c : o) ?? "", 650, void 0, r.epoch);
-  return u === "" ? null : u;
-}
-export { Z8 as useSideChatStatusLabel };
+export { V6 as useSideChatStatusLabel };

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-// 2.42304.0 c6bf19e8f Mn..Fn (generated/code-current, R3-terminal FT-03; identical to the 2.31226.0 Tn..On).
+// 3.6556.2 c6bf19e8f Rn..Vn (generated/code-current, R3-terminal FT-03, cc-rest-terminal-a; identical to the 2.42304.0 Mn..Fn
+// and the 2.31226.0 Tn..On).
 import {installTerminalColorPolicy} from '../src/generated/code-current/terminal-colors.mjs';
 const fixture=()=>{const handlers=new Map(),disposed=[];const policy=installTerminalColorPolicy({parser:{registerOscHandler:(code,fn)=>{handlers.set(code,fn);return{dispose:()=>disposed.push(code)};}}});return {handlers,disposed,policy};};
 test('original policy protects palette, foreground/background/cursor and their reset codes',()=>{

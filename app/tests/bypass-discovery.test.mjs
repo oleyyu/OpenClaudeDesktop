@@ -32,7 +32,9 @@ test('bypassOffer: Enable while the opt-in is off, a managed refusal disables it
 test('the Mode menu, main and Settings wire the Enable row to the opt-in without selecting Bypass', async () => {
   const menu = await fs.readFile(path.join(app, 'src/source-permission-menu.jsx'), 'utf8');
   // The Enable row is a plain menuitem (no radio check, no digit): it never selects a mode.
-  assert.match(menu, /bypassOffer === "enable" && onEnableBypass && <SourceMenu\.Item className="sp-permission-item sp-permission-enable" label=\{BYPASS_LABEL\}/);
+  // 3.6556.2 c227f4d5e: no description, the 'Enable in Claude Code settings' (9aM6b8EJG/) tooltip on the row (cfca6870a v).
+  assert.match(menu, /bypassOffer === "enable" && onEnableBypass && <SourceTooltip content=\{t\("Enable in Claude Code settings"\)\} side="right" multiline>\s*<SourceMenu\.Item className="sp-permission-item sp-permission-enable" label=\{BYPASS_LABEL\} data-permission-action="enable-bypass"/);
+  assert.doesNotMatch(menu, /Turn on in Settings to use it/);
   assert.doesNotMatch(menu.slice(menu.indexOf('sp-permission-enable"')), /^[^\n]*checkedRole="radio"/);
   assert.match(menu, /trailing=\{<span className="sp-permission-enable-text">\{t\("Enable"\)\}<\/span>\}/);
   assert.match(menu, /disabledReason=\{t\("Disabled by your organization"\)\} data-permission-action="bypass-blocked"/);

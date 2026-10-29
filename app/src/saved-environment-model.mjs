@@ -1,4 +1,6 @@
-import { environmentDefaultBranch } from './generated/code-current/environment-dialog-model.mjs';
+// E42: the pure ca690a791 draft model (3.6556.2), not environment-dialog-model.mjs, whose compiled height hold reaches
+// view-tabs (this module is imported by plain `node --test`).
+import { environmentDefaultBranch } from './generated/code-current/environment-dialog-draft.mjs';
 
 // shared-11 Vd (a folder's git info, {branch, defaultBranch} for a repository, null otherwise), answered from the host's
 // workspace-info: the checked-out branch, and origin/HEAD's branch as the default when the repository has it as a local
@@ -20,7 +22,7 @@ export function environmentFolderRoot(repository, folder) {
   return repository.gitUnavailable ? undefined : null;
 }
 
-// ca690a791 ht: an unspecified worktree branch starts from the repository's default branch, else main/master locally;
+// ca690a791 Pt (2.42304.0 ht): an unspecified worktree branch starts from the repository's default branch, else main/master locally;
 // an ordinary checkout keeps its current branch. Explicit branches win.
 // R4e-envbranch home-15 (2.42304.0 cc43287c9 me → onSelectBranch → JZ G → Te): with worktree off, a saved branch other
 // than the checked-out one is a branch switch, so it takes the same check as a pick from the branch menu (main.jsx

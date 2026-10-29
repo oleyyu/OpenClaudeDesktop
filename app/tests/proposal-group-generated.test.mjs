@@ -6,11 +6,12 @@ import { createHash } from 'node:crypto';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
+import { viewTabsViewFor } from '../scripts/view-tabs-compat.mjs';
 
 // R4f-proposal P1 (tasks-proposal-group-card WI-1): the transcript's inline proposal group card is generated from
-// 2.42304.0 (scripts/extract-proposal-group.mjs → src/generated/proposal-group, one module per source chunk, public names
+// 3.6556.2 (w2-tr-findings; scripts/extract-proposal-group.mjs → src/generated/proposal-group, one module per source chunk, public names
 // in index.mjs) over the host services of src/source-proposal-group-adapters.jsx. This file pins the generator, the
-// installed source the card follows, the closure's boundaries and the contracts with the host model (P2,
+// official source the card follows, the closure's boundaries and the contracts with the host model (P2,
 // proposal-group-model.mjs) and the host spawner (P3, proposal-spawner.mjs). No browser, no Electron, no network.
 const app = path.resolve(import.meta.dirname, '..');
 const directory = path.join(app, 'src/generated/proposal-group');
@@ -20,7 +21,7 @@ const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
 const generated = file => fs.readFileSync(path.join(directory, file), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-const C96 = 'c96d752d0-BOCqU7c2.js', C227 = 'c227f4d5e-Ba-r--Rl.js';
+const C96 = 'c96d752d0-CWv_7-n9.js', C227 = 'c227f4d5e-B-FYKrwT.js', CF74 = 'cf74bc599-CRYqipWN.js';
 
 let server, G, A, Model, Spawner;
 before(async () => {
@@ -34,16 +35,20 @@ before(async () => {
 });
 after(async () => { await server?.close(); });
 
-test('generator: every module is the installed 2.42304.0 closure (generator --check), with verify-gen and the index', async () => {
+test('generator: every module is the official 3.6556.2 closure (generator --check), with verify-gen and the index', async () => {
   const { extractProposalGroup } = await import('../scripts/extract-proposal-group.mjs');
   const checked = await extractProposalGroup({ check: true });
   assert.deepEqual(checked, manifest);
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  // T12 / E14: c5ef5b59f (the __gb__3627956258 vocabulary gate) is gone from 3.6556.2 and from this closure.
+  assert.equal(manifest.modules.some(m => m.source.startsWith('c5ef5b59f-')), false);
+  assert.equal(fs.readdirSync(directory).some(name => fs.readFileSync(path.join(directory, name), 'utf8').includes('__gb__3627956258')), false);
   for (const entry of manifest.modules) {
     assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, entry.source))), entry.source);
     assert.equal(entry.sha256, sha(fs.readFileSync(path.join(directory, entry.source))), entry.source);
     // Every emitted binding is a top-level declaration of its chunk; --check re-slices them (the manifest's per-binding
-    // hashes are of the installed declaration text).
+    // hashes are of the official declaration text).
     assert.ok(entry.bindings.length > 0, entry.source);
   }
   assert.deepEqual(fs.readdirSync(directory).sort(), [...manifest.modules.map(m => m.source), 'index.mjs', 'manifest.json'].sort());
@@ -57,58 +62,95 @@ test('generator: every module is the installed 2.42304.0 closure (generator --ch
   }
 });
 
-test('source: the group card, its rows and gates are the 2.42304.0 strings the research pinned (grep counts)', () => {
-  const c96 = raw(C96), c227 = raw(C227), cf74 = raw('cf74bc599-D9NZWRyl.js');
+test('source: the group card, its rows and gates are the 3.6556.2 strings the research pinned (grep counts)', () => {
+  const c96 = raw(C96), c227 = raw(C227), cf74 = raw(CF74);
   const pins = [
     [c96, 'yulgEBYVAR', 1], [c96, '3EyqDGYYSx', 1], [c96, '7HOJW6dDhv', 1], [c96, 'uniqueKey:"start-all-left-out"', 1], [c96, 'via:"start_all"', 1],
     [c96, 'requestSpawnAll(e)', 1], [c96, 'epitaxy-card-outline flex w-full max-w-[480px] select-text flex-col overflow-clip rounded-card', 1],
-    [c96, 'Date.now()+400<n||Xl(e)-n>=400', 1], [c96, '$e?.popBackgroundTaskSuggestionById!==void 0', 1], [c96, 'data-proposed-task-state', 4],
-    [c96, 'Ya6NvW8Shh', 1], [c96, 'aGLJDnT0lI', 2], [c96, 'idHR+W+hmS', 1], [c96, 'UuCP/YMcXP', 1], [c96, 'TDUfVk3Q+J', 2], [c96, 'TPp5keYrfx', 1],
-    [c96, 'dqfK1klFfH', 1], [c96, '/oIEN9p4Q2', 1], [c96, 'Start this in its own session?', 1], [c96, 'Z184O6N3fq', 4], [c96, 'N$=5', 1],
+    [c96, 'Date.now()+400<t||Oie(e)-t>=400', 1], [c96, 'Fn?.popBackgroundTaskSuggestionById!==void 0', 1], [c96, 'data-proposed-task-state', 4],
+    // T13: "Sent to this session" moved from TDUfVk3Q+J to dxnBAV35nf.
+    [c96, 'Ya6NvW8Shh', 1], [c96, 'aGLJDnT0lI', 1], [c96, 'idHR+W+hmS', 1], [c96, 'UuCP/YMcXP', 1], [c96, 'TDUfVk3Q+J', 0], [c96, 'dxnBAV35nf', 1], [c96, 'TPp5keYrfx', 1],
+    [c96, 'dqfK1klFfH', 1], [c96, '/oIEN9p4Q2', 1], [c96, 'Start this in its own session?', 1], [c96, 'Z184O6N3fq', 4], [c96, 'lQ=5', 1],
     [c96, '"data-options-toggle"', 1], [c96, 'className:"epitaxy-root flex w-114 max-w-[90vw] flex-col break-words"', 1],
-    [c96, 'kind:"turnSuggestions"', 1], [c96, 'kind:"unplacedSuggestions"', 2], [c96, 'qQ=E(null)', 1],
+    [c96, 'kind:"turnSuggestions"', 1], [c96, 'kind:"unplacedSuggestions"', 2], [c96, 'IZ=N(null)', 1],
     [c227, 'K7kuIZkkhY', 1], [c227, 'tOCeMArEBM', 2], [c227, 'Cqp4C6aPD2', 2], [c227, 'rhSI1/3g21', 2], [c227, 'VKZ/U8vAsk', 2], [c227, 'bpmu8yHqXJ', 2],
     [c227, 'aD2X1yB2+e', 1], [c227, 'hj/DGXIO/C', 1],
-    [cf74, 'inlineCards:!0', 1], [cf74, 'onSpawner:s', 1], [cf74, 'Or&&t&&dr&&!lr&&u(lb', 1],
+    [cf74, 'inlineCards:!0', 1], [cf74, 'onSpawner:o', 1], [cf74, 'Si&&n&&Zr&&!qr&&s(CC', 1],
   ];
   for (const [text, needle, count] of pins) assert.equal(occurrences(text, needle), count, needle);
   // The generated card carries them in its prettier form.
   const card = generated(C96), form = generated(C227);
-  for (const needle of ['id: "yulgEBYVAR"', 'id: "3EyqDGYYSx"', '{ uniqueKey: "start-all-left-out" }', 'via: "start_all"', 'return Date.now() + 400 < n || Xl(e) - n >= 400;',
-    '"data-options-toggle": ""', '"epitaxy-root flex w-114 max-w-[90vw] flex-col break-words"', 'var N$ = 5;', 'defaultMessage: "{mode} mode", id: "aGLJDnT0lI"'])
+  for (const needle of ['id: "yulgEBYVAR"', 'id: "3EyqDGYYSx"', '{ uniqueKey: "start-all-left-out" }', 'via: "start_all"', 'return Date.now() + 400 < t || Oie(e) - t >= 400;',
+    '"data-options-toggle": ""', '"epitaxy-root flex w-114 max-w-[90vw] flex-col break-words"', 'var lQ = 5;', 'id: "aGLJDnT0lI"', 'id: "dxnBAV35nf"'])
     assert.ok(card.includes(needle) || card.replace(/\s+/g, ' ').includes(needle), needle);
   for (const needle of ['id: "K7kuIZkkhY"', 'id: "Cqp4C6aPD2"', 'id: "bpmu8yHqXJ"', 'id: "aD2X1yB2+e"', 'id: "hj/DGXIO/C"']) assert.ok(form.includes(needle), needle);
 });
 
-test('closure: React, the view-tabs CDS names (D1/D24), the adapters and this folder — nothing else; no second context', () => {
+test('closure: React, the view-tabs CDS and compiler names (D1/D24/E3), the adapters and this folder — nothing else; no second context', () => {
   const imports = manifest.modules.flatMap(m => m.imports.map(i => ({ ...i, module: m.source })));
-  assert.deepEqual([...new Set(imports.map(i => i.kind))].sort(), ['adapter', 'generated', 'react', 'view-tabs']);
+  assert.deepEqual([...new Set(imports.map(i => i.kind))].sort(), ['adapter', 'generated', 'linked', 'react', 'view-tabs']);
+  // D1 (W12 question-cont): shared-10's window attention tracker is approval-landing's one instance, never cut here.
+  // W13 G11 (D1, list follows the regenerated output): shared-0 Pa / AL / ML are routines-shared's import-free shared-0 and
+  // sW is session-rail-kit's plain-object.mjs, shared-104 Cm files-changes' loading-flag.mjs, imported where they are read.
+  assert.deepEqual(imports.filter(i => i.kind === 'linked').map(i => `${i.module}:${i.local}=${i.from}:${i.name}`).sort(), [
+    'c30607cef-YKGa83RR.js:r=../approval-landing/window-attention-hook.mjs:useWindowUnattended',
+    'c8f38bf1f-Ba2QaQov.js:e=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'c96d752d0-CWv_7-n9.js:ls=../files-changes/loading-flag.mjs:withLoadingFlag',
+    'c96d752d0-CWv_7-n9.js:sn=../session-rail-kit/plain-object.mjs:isPlainObject',
+    'shared-0-DDOOdL6P.js:AL=../routines-shared/shared-0-DDOOdL6P.mjs:AL',
+    'shared-0-DDOOdL6P.js:Pa=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'shared-10-D6FXWZph.js:mx=../approval-landing/window-attention.mjs:eventDelay',
+    'shared-104-CTONUSaz.js:Dt=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'shared-104-CTONUSaz.js:bt=../routines-shared/shared-0-DDOOdL6P.mjs:AL',
+    'shared-156-BLTosN8U.js:Wn=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'shared-182-BI1KJccu.js:H=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'shared-25-DOWZRSlq.js:ne=../routines-shared/shared-0-DDOOdL6P.mjs:ML',
+    'shared-25-DOWZRSlq.js:we=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'shared-52-uHFNjl7C.js:sn=../routines-shared/shared-0-DDOOdL6P.mjs:Pa',
+    'shared-78-D5Fw2h0a.js:Ct=../routines-shared/shared-0-DDOOdL6P.mjs:ML',
+    'shared-78-D5Fw2h0a.js:Ut=../routines-shared/shared-0-DDOOdL6P.mjs:Pa']);
+  assert.ok(!manifest.modules.some(m => m.source === 'shared-0-DDOOdL6P.js' && m.bindings.some(b => ['Pa', 'AL', 'jL', 'ML', 'sW'].includes(b.name))));
+  assert.ok(!manifest.modules.some(m => m.source === 'shared-104-CTONUSaz.js' && m.bindings.some(b => b.name === 'Cm')));
+  assert.ok(!manifest.modules.some(m => m.source === 'shared-10-D6FXWZph.js' && m.bindings.some(b => ['wx', 'Dx', 'Fx', 'Ix', 'Bx'].includes(b.name))));
   for (const i of imports) {
     if (i.kind === 'react') assert.ok(['react', 'react/jsx-runtime'].includes(i.from), `${i.module}:${i.local}`);
     if (i.kind === 'adapter') assert.equal(i.from, '../../source-proposal-group-adapters.jsx');
     if (i.kind === 'generated') assert.ok(manifest.modules.some(m => `./${m.source}` === i.from), i.from);
     if (i.kind === 'view-tabs') assert.ok(i.from.startsWith('../view-tabs/'), i.from);
   }
-  const viewTabs = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+  // The view of the shared graph this card was generated against (its own referenceVersion: E1 legacy view or current).
+  const viewTabs = viewTabsViewFor(JSON.parse(fs.readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8')), manifest.referenceVersion);
+  const compiler = ['memoChanged1', 'memoChanged2', 'memoChanged3', 'memoChanged4', 'memoChanged5', 'memoIsEmpty', 'memoSentinel', 'memoStore0', 'memoStore1',
+    'memoStore2', 'memoStore3', 'memoStore4', 'memoStore5', 'memoStoreDeps1', 'memoStoreDeps2', 'memoStoreDeps3', 'memoStoreDeps4', 'memoStoreDeps5',
+    'memoStoreValueFirst1', 'memoStoreValueFirst2', 'memoStoreValueFirst3', 'memoStoreValueFirst4', 'memoStoreValueFirst5', 'reactMemoCache'];
   assert.deepEqual([...new Set(imports.filter(i => i.kind === 'view-tabs').map(i => i.name))].sort(), ['CdsButton', 'CdsDisabledReason', 'CdsDropdown', 'CdsIcon',
-    'CdsInfoTooltip', 'CdsOverflowTooltip', 'CdsPopover', 'CdsShimmer', 'CdsSwitch', 'CdsTooltipProvider', 'cdsClassNames', 'isFizzyLakePartEnabled', 'useDirection']);
-  for (const i of imports.filter(i => i.kind === 'view-tabs')) assert.equal(viewTabs.publicNames[i.name].local, i.original, i.name);
+    'CdsInfoTooltip', 'CdsOverflowTooltip', 'CdsPopover', 'CdsShimmer', 'CdsSpinner', 'CdsSwitch', 'CdsTooltipProvider', 'asElementNode', 'cdsClassNames',
+    'isFizzyLakePartEnabled', ...compiler, 'ownerWindow', 'useDirection'].sort());
+  for (const i of imports.filter(i => i.kind === 'view-tabs')) {
+    assert.equal(viewTabs.publicNames[i.name].local, i.original, i.name);
+    // R6: from the concrete 3.6556.2 file that holds the name, never a legacy shim.
+    assert.equal(i.from, `../view-tabs/${viewTabs.publicNames[i.name].file}`, i.name);
+    assert.ok(viewTabs.modules.some(m => m.source === viewTabs.publicNames[i.name].file && !m.shim), i.name);
+  }
   // Each adapter is an export of the adapter module, and the module imports nothing from this folder (no cycle).
   for (const i of imports.filter(i => i.kind === 'adapter')) assert.ok(i.name in A, i.name);
   assert.doesNotMatch(fs.readFileSync(path.join(app, 'src/source-proposal-group-adapters.jsx'), 'utf8'), /from\s+["'][^"']*generated\/proposal-group/);
-  // The two same-chunk host answers: the generic tool row (Uz) and the model selector (LK).
+  // The two same-chunk host answers: the generic tool row (iL) and the model selector (R$).
   assert.deepEqual(imports.filter(i => i.kind === 'adapter' && i.via.includes('#')).map(i => `${i.name}<-${i.via}`).sort(),
-    ['ProposalModelSelector<-c227f4d5e-Ba-r--Rl.js#LK', 'ProposalToolFallback<-c96d752d0-BOCqU7c2.js#Uz']);
-  // The official spawner F1e (20 KB, bound to the desktop bridge and cloud) is not extracted.
-  assert.equal(manifest.modules.find(m => m.source === C96).bindings.some(b => b.name === 'F1e'), false);
+    [`ProposalModelSelector<-${C227}#R$`, `ProposalToolFallback<-${C96}#iL`]);
+  // The official spawner ZS (cf74bc599 since 3.6556.2, bound to the desktop bridge and cloud) is not extracted; only its
+  // pure parts WS / TS / XS (and what they read) come from that chunk.
+  const pane = manifest.modules.find(m => m.source === CF74);
+  assert.equal(pane.bindings.some(b => b.name === 'ZS'), false);
+  assert.deepEqual(Object.keys(pane.publicNames).sort(), ['TS', 'WS', 'XS']);
   // Contexts created here: the spawner context and the offer chord context of the card chunk, and the two Markdown
-  // contexts JQ provides as null; none is one view-tabs instantiates.
+  // contexts LZ provides as null; none is one view-tabs instantiates.
   const held = new Set(viewTabs.modules.flatMap(m => m.bindings.map(b => `${m.source}#${b}`)));
   const contexts = manifest.modules.flatMap(m => m.contexts.map(name => `${m.source}#${name}`));
-  assert.deepEqual(contexts.sort(), ['c02b04696-cOrTvyA6.js#n', 'c19e90103-muBq-gyt.js#Zg', 'c96d752d0-BOCqU7c2.js#YQ', 'c96d752d0-BOCqU7c2.js#qQ']);
+  assert.deepEqual(contexts.sort(), ['c02b04696-DqOSbQOq.js#n', 'c19e90103-BQFzF8EA.js#Ig', `${C96}#HZ`, `${C96}#IZ`]);
   for (const key of contexts) assert.equal(held.has(key), false, key);
-  // Pinned call sites the host wiring follows (Lb / Ib in the session pane, the feed rows, Xx's inline gate).
-  assert.deepEqual(manifest.callSites.map(s => s.binding ?? `${s.source} (raw)`), ['Lb', 'Ib', `${C96} (raw)`, 'cf74bc599-D9NZWRyl.js (raw)']);
+  // Pinned call sites the host wiring follows (tw / ew / ZS in the session pane, the feed rows, the pane's inline gate).
+  assert.deepEqual(manifest.callSites.map(s => s.binding ?? `${s.source} (raw)`), ['tw', 'ew', 'ZS', `${C96} (raw)`, `${CF74} (raw)`]);
 });
 
 test('module evaluation has no host side effect: no localStorage, no DOM, no window read at import time', () => {
@@ -117,9 +159,9 @@ test('module evaluation has no host side effect: no localStorage, no DOM, no win
     const kinds = new Set(parsers.babel.parse(generated(entry), {}).program.body.map(node => node.type));
     for (const kind of kinds) assert.ok(['ImportDeclaration', 'ExportNamedDeclaration', 'VariableDeclaration', 'FunctionDeclaration', 'ClassDeclaration'].includes(kind), `${entry}: ${kind}`);
   }
-  // The sent-here store (kQ) persists into the adapter's storage, not the window's localStorage.
-  assert.ok(generated(C96).includes('storage: fc(() => za),'));
-  assert.equal(manifest.modules.find(m => m.source === C96).imports.find(i => i.local === 'za').name, 'sentHereStorage');
+  // The sent-here store persists into the adapter's storage, not the window's localStorage.
+  assert.ok(generated(C96).includes('storage: lc(() => Fr),'));
+  assert.equal(manifest.modules.find(m => m.source === C96).imports.find(i => i.local === 'Fr').name, 'sentHereStorage');
 });
 
 // ---- P2 contract: the host model's rewrites answer what the generated originals answer.
@@ -134,7 +176,7 @@ const records = [
   { id: 'g', name: 'mcp__other__tool', input: {}, output: 'task_id: task_0000000f', status: 'completed', isError: false },
   { id: 'h', name: SPAWN, input: {}, output: 'Noted (position 2, task_id: task_ABCDEF12).', status: 'completed', isError: false },
 ];
-test('P2 contract: proposal-group-model.mjs pL / hL / gL / mL / PPe and the tool constants equal the generated originals', () => {
+test('P2 contract: proposal-group-model.mjs NM / IM / LM / PM / XM and the tool constants equal the generated originals', () => {
   assert.equal(Model.SPAWN_TASK_TOOL, G.SPAWN_TASK_TOOL);
   assert.equal(String(Model.TASK_ID_PATTERN), String(G.TASK_ID_PATTERN));
   assert.equal(G.PROPOSAL_SESSION_SERVER, Model.PROPOSAL_SERVER);

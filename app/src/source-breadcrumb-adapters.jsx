@@ -1,8 +1,7 @@
 import React, { cloneElement, createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { SourcePopover, useSourcePopover } from './source-popover.jsx';
 import { SourceMenu } from './source-menu.jsx';
-import { cdsClassNames } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
-import { mergeProps } from './generated/view-tabs/vendor-frame-DfPJ1QmD.js';
+import { mergeProps } from './generated/view-tabs/index.js';
 import { QueryClient } from './generated/files-changes/file-browser-query.mjs';
 import { openAfterCheck } from './generated/files-changes/menu-open-gate.mjs';
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from './menu-model.mjs';
@@ -107,63 +106,8 @@ function FolderPopoverPopup({ ref, initialFocus, onFocus, side, align, padding, 
 }
 export const FolderPopover = { Root: FolderPopoverRoot, Trigger: FolderPopoverTrigger, Popup: FolderPopoverPopup };
 
-// Lt's loading placeholder: shared-frame tl (nd, the SkeletonGroup) around $c.Rows (dd = Object.assign(rd, { Rows: od })).
-// Neither is a view-tabs public name. The DOM is nd's delayed-hold branch (data-hold="delayed": the official CSS reveals
-// the group after its delay, and the sr-only label is written when that reveal starts) and od / rd's in-group rows
-// (6 rows of a 20×20 icon and a 160/128/144-wide, 16-high bar, "flex h-control items-center gap-xs compact:px-2
-// comfortable:px-2.5"). nd's wave stagger (--cds-skel-i in DOM order, Gu/qu = 2000/90 slots) is written at render time,
-// as in source-transcript-states.jsx; nd's shown/hidden callbacks and cross-document phase sync have no local caller.
-const SkeletonInGroup = createContext(false);
-const SkeletonIndex = createContext(null);
-const WAVE_SLOTS = Math.floor(2000 / 90);
-const SETTLED_MS = 1e5; // Ju
-export function FolderSkeletonGroup({ children, className, label }) {
-  const text = label ?? t('Loading');
-  const counter = { next: 0 };
-  return <div data-cds="SkeletonGroup" data-motion="wave" data-hold="delayed" role="status" className={className}
-    onAnimationStart={event => {
-      if (event.animationName !== 'cds-placeholder-reveal' || event.target !== event.currentTarget) return;
-      event.currentTarget.setAttribute('data-shown', '');
-      const node = event.currentTarget.querySelector('[data-skeleton-label]');
-      if (node && node.textContent === '') node.textContent = text;
-    }}
-    onAnimationEnd={event => {
-      if (event.animationName !== 'cds-placeholder-reveal' || event.target !== event.currentTarget) return;
-      event.currentTarget.style.setProperty('--cds-skel-settled', `${SETTLED_MS}ms`);
-      event.currentTarget.setAttribute('data-settled', '');
-    }}>
-    <span className="sr-only" data-skeleton-label="" />
-    <SkeletonInGroup.Provider value={true}>
-      <SkeletonIndex.Provider value={counter}><div aria-hidden="true" className="contents">{children}</div></SkeletonIndex.Provider>
-    </SkeletonInGroup.Provider>
-  </div>;
-}
-function Skeleton({ width, height, className }) {
-  const grouped = useContext(SkeletonInGroup), counter = useContext(SkeletonIndex);
-  const [index] = useState(() => (counter ? counter.next++ : 0));
-  if (grouped) return <div data-cds="Skeleton" className={cdsClassNames('h-[1em] max-w-full rounded bg-[var(--cds-skeleton-base)]', className)}
-    style={{ width, height, '--cds-skel-i': String(index % WAVE_SLOTS) }} />;
-  return <div data-cds="Skeleton" role="status"
-    className={cdsClassNames('relative h-[1em] max-w-full overflow-hidden rounded bg-[var(--cds-skeleton-base)] after:absolute after:inset-0 after:animate-[cds-shimmer_2s_linear_infinite] after:bg-[linear-gradient(90deg,transparent,var(--cds-skeleton-sheen),transparent)] motion-reduce:after:hidden', className)}
-    style={{ width, height }}><span className="sr-only">{t('Loading')}</span></div>;
-}
-const ROW_WIDTHS = [160, 128, 144], ROW_WIDTHS_NO_ICON = [120, 88, 104]; // id / ad
-function SkeletonRows({ rows = 3, icon = true }) {
-  const widths = icon ? ROW_WIDTHS : ROW_WIDTHS_NO_ICON;
-  const groups = (typeof rows === 'number' ? [rows] : rows).filter(count => count > 0);
-  const nodes = [];
-  let row = 0;
-  for (const [group, count] of (groups.length > 0 ? groups : [3]).entries()) {
-    if (group > 0) nodes.push(<div key={`separator-${group}`} aria-hidden="true" data-slot="menu-skeleton-separator" className="compact:mx-2 comfortable:mx-2.5 my-1 h-px bg-border" />);
-    for (const end = row + count; row < end; row++)
-      nodes.push(<div key={row} aria-hidden={row > 0 || undefined} className="flex h-control items-center gap-xs compact:px-2 comfortable:px-2.5">
-        {icon && <Skeleton width={20} height={20} />}
-        <span aria-hidden={icon ? true : undefined} className="contents"><Skeleton width={widths[row % widths.length]} height={16} /></span>
-      </div>);
-  }
-  return nodes;
-}
-export const FolderSkeleton = Object.assign(Skeleton, { Rows: SkeletonRows });
+// Lt's loading placeholder is the view-tabs CdsSkeleton / CdsLoadingSkeleton the 3.6556.2 popover list renders itself;
+// the host restatement (FolderSkeletonGroup / FolderSkeleton) had no importer and was removed (w10-cleanup-final).
 
 // The app's QueryClient (shared-23 `new _S({defaultOptions:{queries:{staleTime:3e5,refetchOnWindowFocus:!1,retry:…}}})`):
 // the folder queries (J) set their own staleTime (10 s), retry: false for local listings, and meta noToast. The

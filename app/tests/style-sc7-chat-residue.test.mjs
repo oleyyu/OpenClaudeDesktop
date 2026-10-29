@@ -1,12 +1,14 @@
-// R3-style SC-7 (research/style-compat.md §7): what the Code UI still took from the 2.2553.1 chat extraction.
-// 1. The terminal find bar renders the 2.42304.0 CDS TextInput (shared-frame tx, exported `ho`) by its view-tabs
-//    semantic name CdsTextInput, as the official terminal find (c6bf19e8f en: `ho as O`) does, instead of chat Bh.
-// 2. The native-field registry (source-field-adapters.jsx) no longer imports the chat field family: each family
-//    registers its own parts from its own module. The old import closed a cycle with the chat shared-frame (which
-//    imports the adapter module), so loading the shared-frame first left undefined in the registry — the three
-//    source-field-render failures of the R3 baseline.
-// 3. extract-chat-ui.mjs no longer forces in shared-14 Ga/qa (tv/ev: imported by nothing) and points the two
-//    unreachable chat modules that rendered Bh (caaf77b85 w, cf35aed38 b) at view-tabs CdsTextInput.
+// R3-style SC-7 (research/style-compat.md §7): what the Code UI took from the 2.2553.1 chat extraction, and what is
+// left of that question after W10 retired the 2.2553.1 chat outputs (w10-chat-gen / w10-chat-tests).
+// 1. The terminal find bar renders the CDS TextInput by its view-tabs semantic name CdsTextInput, as the official
+//    terminal find does: 2.42304.0 c6bf19e8f en (`ho as O`, shared-frame tx), now 3.6556.2 c6bf19e8f rn (`vs as v`,
+//    shared-frame-6jtSkIit uC, className "w-48", Enter steps from the field's onKeyDown M). Not the 2.2553.1 chat Bh.
+// 2. The native-field registry (source-field-adapters.jsx) imports no field family: each family registers its own
+//    parts from its own module (code-current environment-field-controls; the 2.31226.0 current-chat family went with
+//    w10-curchat-retire).
+//    No host file imports a 2.2553.1 chat shared-frame any more (the chat field family, Bh and $v went with chat:M12).
+// 3. The compatibility layer: once recomputed from the current tree no rule keeps a hit in src/generated/chat/
+//    (.pr-0 was held only by chat Bh).
 // Source, SSR, controlled events through a hook dispatcher and a stylesheet cascade only: no browser or pixels.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,15 +20,18 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { parseAst } from 'rolldown/parseAst';
 import { appSheets, computed, element, append, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
-import { selectorClasses } from '../scripts/prepare-style-compatibility.mjs';
+import { prepareStyleCompatibility, selectorClasses } from '../scripts/prepare-style-compatibility.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
-const OLD_CHAT = path.join(ROOT, '../reference/current-2.2553.1/ion-dist/assets/v1');
+const OFFICIAL_V3 = path.join(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const official = name => fs.readFileSync(path.join(OFFICIAL, name), 'utf8');
-const CHAT_FRAME = 'src/generated/chat/shared-frame-C_2npUJq.js';
-const VIEW_TABS_FRAME = 'src/generated/view-tabs/shared-frame-BfjMqbuN.js';
+const officialV3 = name => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
+// 3.6556.2 c6bf19e8f rn: the find field element and the props it passes.
+const RN_FIELD = /n\(v,\{(ref:t,value:y,onChange:j,onKeyDown:M,spellCheck:!1,autoComplete:"off","aria-label":F,placeholder:pe,fullWidth:!1,className:"w-48",slotEnd:me)\}\)/;
+const VIEW_TABS_FRAME = 'src/generated/view-tabs/shared-frame-6jtSkIit.js';
 const h = React.createElement;
 const servers = [];
 const vite = async () => {
@@ -34,12 +39,11 @@ const vite = async () => {
   servers.push(server);
   return server;
 };
-let ssr, Find, ViewTabs, Chat, Env;
+let ssr, Find, ViewTabs, Env;
 before(async () => {
   ssr = await vite();
   ({ SourceTerminalFind: Find } = await ssr.ssrLoadModule('/src/source-terminal-find.jsx'));
   ViewTabs = await ssr.ssrLoadModule(`/${VIEW_TABS_FRAME}`);
-  Chat = await ssr.ssrLoadModule(`/${CHAT_FRAME}`);
   Env = await ssr.ssrLoadModule('/src/generated/code-current/environment-field-controls.mjs');
 });
 after(async () => { for (const server of servers) await server.close(); });
@@ -72,17 +76,17 @@ function callWithHooks(render, ...args) {
     useEffectEvent(fn) { return fn; },
   };
   const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
-  internals.H = dispatcher;
+  internals.H = withMemoCache(dispatcher);
   try { return render(...args); } finally { internals.H = previous; }
 }
 const findProps = { view: { current: null }, selectionSuppressed: { current: false }, onClose() {} };
 // SourceTerminalFind's own tree (forwardRef render) and the TextInput element in it.
 const findTree = (props = findProps) => callWithHooks(Find.render, props, null);
 const findInput = tree => { const node = elements(tree).find(node => node.type === ViewTabs.CdsTextInput); assert.ok(node, 'the find bar renders view-tabs CdsTextInput'); return node; };
-// tx's own tree: the native <input> is the `render` element of Base UI Field.Control.
+// uC's own tree: the native <input> is the `render` element of Base UI Field.Control.
 const nativeInput = (props) => {
   const control = elements(callWithHooks(ViewTabs.CdsTextInput.render, props, null)).find(node => node.props.render?.type === 'input');
-  assert.ok(control, 'tx renders its <input> through Field.Control render');
+  assert.ok(control, 'uC renders its <input> through Field.Control render');
   return control.props.render;
 };
 const keyEvent = (key, value, extra = {}) => {
@@ -125,10 +129,25 @@ test('official 2.42304.0: the terminal find bar (c6bf19e8f en) renders shared-fr
   const frame = official('shared-frame-BfjMqbuN.js');
   for (const feature of [/\btx as ho\b/, /[,;]tx=q\(\(\{className:e,size:t,fullWidth:n=!0,slotStart:r,slotEnd:i,clearable:a=!1,/,
     /I=ne&&P&&\(!M\|\|o!==void 0\)&&!_\.readOnly/, /let n=re\?ex:"pe-md"/]) assert.ok(feature.test(frame), `shared-frame-BfjMqbuN.js has ${feature}`);
-  // The 2.2553.1 Bh it replaces: physical pr-0 / pr-md (compatibility rule #42 `.pr-0`).
-  assert.ok(/a=n\?"pr-0":"pr-md"/.test(fs.readFileSync(path.join(OLD_CHAT, 'shared-frame-C_2npUJq.js'), 'utf8')), '2.2553.1 Bh pr-0/pr-md');
+});
+
+test('official 3.6556.2: the terminal find bar (c6bf19e8f rn) renders shared-frame vs = uC with className w-48 and its own Enter handler; uC pads pe-md', () => {
+  const terminal = officialV3('c6bf19e8f-CgQ1_Jhf.js');
+  const has = (re, what) => assert.ok(re.test(terminal), what);
+  has(/import\{[^}]*\bvs as v\b[^}]*\}from"\.\/shared-frame-6jtSkIit\.js"/, 'rn imports vs as v');
+  has(RN_FIELD, 'rn renders v with these props');
+  has(/f\.formatMessage\(\{defaultMessage:"Find in terminal",id:"58b3ZchvoL"\}\)/, 'aria-label copy');
+  has(/f\.formatMessage\(\{defaultMessage:"Find in terminal\\u2026",id:"5\/cV58WKEX"\}\)/, 'placeholder copy');
+  has(/n\("span",\{"aria-live":"polite",className:"text-footnote whitespace-nowrap",children:I\}\)/, 'the polite end slot');
+  // M: Enter steps (Shift+Enter forwards) unless composing; A (the bar): Escape closes, its repeat swallowed (tn).
+  has(/e\.key==="Enter"&&!e\.nativeEvent\.isComposing&&e\.keyCode!==229&&\(e\.preventDefault\(\),C\(e\.shiftKey\?"next":"previous"\)\)/, 'rn M');
+  has(/e\.key==="Escape"&&!e\.nativeEvent\.isComposing\?\(e\.preventDefault\(\),e\.stopPropagation\(\),tn\("Escape",e\.currentTarget\)/, 'rn A closes on Escape');
+  const frame = officialV3('shared-frame-6jtSkIit.js');
+  for (const feature of [/\buC as vs\b/, /[,;]uC=X\(\(e,t\)=>\{let \$=J9\(100\)/, /let e=oe\?lC:"pe-md"/, /Q\("cds-input cds-reset",aC,"pe-md",/])
+    assert.ok(feature.test(frame), `shared-frame-6jtSkIit.js has ${feature}`);
+  // The view-tabs semantic name is that binding.
   const names = JSON.parse(read('src/generated/view-tabs/manifest.json')).publicNames;
-  assert.deepEqual({ file: names.CdsTextInput.file, local: names.CdsTextInput.local, export: names.CdsTextInput.export }, { file: 'shared-frame-BfjMqbuN.js', local: 'tx', export: 'ho' });
+  assert.deepEqual({ file: names.CdsTextInput.file, local: names.CdsTextInput.local, export: names.CdsTextInput.export }, { file: 'shared-frame-6jtSkIit.js', local: 'uC', export: 'vs' });
 });
 
 // ---------------------------------------------------------------- 2. host imports
@@ -140,49 +159,46 @@ const importsOf = rel => {
   return program.body.filter(node => node.source && ['ImportDeclaration', 'ExportNamedDeclaration'].includes(node.type))
     .flatMap(node => (node.specifiers ?? []).map(s => ({ from: path.posix.normalize(path.posix.join(path.posix.dirname(rel), node.source.value)), name: (s.imported ?? s.local)?.name ?? s.local?.name })));
 };
-test('host: the terminal find and the field adapters take nothing from the 2.2553.1 chat shared-frame; Bh is left to CsvTextInput alone', () => {
-  assert.deepEqual(importsOf('src/source-terminal-find.jsx').filter(i => i.name === 'CdsTextInput'), [{ from: VIEW_TABS_FRAME, name: 'CdsTextInput' }]);
+test('host: the terminal find and the field adapters take nothing from a chat shared-frame; no host file imports one', () => {
+  // W7 (R6): through the view-tabs facade, no longer the 2.42304.0 shim file (retired in W7).
+  assert.deepEqual(importsOf('src/source-terminal-find.jsx').filter(i => i.name === 'CdsTextInput'), [{ from: 'src/generated/view-tabs/index.js', name: 'CdsTextInput' }]);
   assert.equal(importsOf('src/source-terminal-find.jsx').some(i => i.from.startsWith('src/generated/chat/')), false);
   assert.equal(importsOf('src/source-field-adapters.jsx').some(i => i.from.startsWith('src/generated/')), false, 'the field registry imports no field family');
-  // Only R3-files' CsvTextInput (re-exported by R3-sections as SidebarSectionsInput) still renders Bh; when those
-  // move to CdsTextInput, Bh keeps no host importer (diagnostic only: the list may shrink, never grow).
-  const holders = hostFiles().filter(rel => importsOf(rel).some(i => i.from === CHAT_FRAME && i.name === 'Bh'));
-  assert.deepEqual(holders.filter(rel => rel !== 'src/source-csv-adapters.jsx'), [], `new host importers of 2.2553.1 Bh: ${holders}`);
-  if (!holders.length) console.log('# SC-7: no host module imports chat Bh any more; rule #42 (.pr-0) now rests on the chat field family (Sy) only');
+  // W10: the 2.2553.1 chat shared-frame (Bh, $v, the field family) is retired; its E34 legacy shim went with the
+  // current-chat slice (w10-curchat-retire). No host module imports any chat shared-frame.
+  assert.equal(fs.existsSync(path.join(ROOT, 'src/generated/chat/shared-frame-C_2npUJq.js')), false);
+  const holders = hostFiles().filter(rel => importsOf(rel).some(i => /^src\/generated\/chat\/shared-frame-/.test(i.from)));
+  assert.deepEqual(holders, []);
 });
 
 // ---------------------------------------------------------------- 3. SSR: the find bar's field is the official tx
-test('SSR: the find bar field is tx — wrapper div[data-cds=TextInput] with pe-md (not pr-md / pr-0), the polite end slot, the official props', () => {
+test('SSR: the find bar field is uC — wrapper div[data-cds=TextInput] with pe-md and w-48 (not pr-md / pr-0), the polite end slot, the official rn props', () => {
   const html = renderToStaticMarkup(h(Find, findProps));
   const wrapper = /<div data-cds="TextInput"[^>]*>/.exec(html)?.[0];
   assert.ok(wrapper, html);
   const wrapperClasses = /class="([^"]*)"/.exec(wrapper)[1].split(/\s+/);
-  for (const name of ['pe-md', 'inline-flex', 'stp-find-input']) assert.ok(wrapperClasses.includes(name), name);
-  for (const name of ['pr-md', 'pr-0']) assert.ok(!wrapperClasses.includes(name), name);
+  for (const name of ['pe-md', 'inline-flex', 'w-48']) assert.ok(wrapperClasses.includes(name), name);
+  for (const name of ['pr-md', 'pr-0', 'stp-find-input']) assert.ok(!wrapperClasses.includes(name), name);
   const input = /<input\b[^>]*>/.exec(html)[0];
   for (const attr of ['aria-label="Find in terminal"', 'placeholder="Find in terminal…"', 'spellCheck="false"', 'autoComplete="off"', 'value=""']) assert.ok(input.includes(attr), attr);
   assert.match(html, /<span data-cds-end-slot="" class="[^"]*"><span aria-live="polite" class="text-footnote whitespace-nowrap"><\/span><\/span>/);
-  // The element the bar renders carries the official en props; only the width class is the host's (.stp-find-input
-  // in source-terminal-pane.css = 12rem, the official w-48). en also passes onKeyDown (Enter steps): the host
-  // handles Enter on the bar (terminalFindKey), R3-terminal's part.
+  // The element the bar renders carries exactly the official rn props (ref, value, onChange, onKeyDown — Enter steps
+  // from the field, rn M — spellCheck, autoComplete, aria-label, placeholder, fullWidth, className "w-48", slotEnd).
   const { props } = findInput(findTree());
-  assert.deepEqual(Object.keys(props).filter(key => key !== 'onChange').sort(), ['aria-label', 'autoComplete', 'className', 'fullWidth', 'placeholder', 'ref', 'slotEnd', 'spellCheck', 'value']);
-  assert.deepEqual([props.spellCheck, props.autoComplete, props.fullWidth, props.className, props.slotEnd.props['aria-live'], props.slotEnd.props.className], [false, 'off', false, 'stp-find-input', 'polite', 'text-footnote whitespace-nowrap']);
-  const asOfficial = renderToStaticMarkup(h(ViewTabs.CdsTextInput, { ...props, className: 'w-48' }));
-  assert.equal(renderToStaticMarkup(h(ViewTabs.CdsTextInput, props)).replace('stp-find-input', 'w-48'), asOfficial);
+  const officialKeys = RN_FIELD.exec(officialV3('c6bf19e8f-CgQ1_Jhf.js'))[1].split(/,(?=[\w"-]+:)/).map(pair => pair.split(':')[0].replace(/"/g, ''));
+  assert.deepEqual(Object.keys(props).sort(), [...officialKeys].sort());
+  assert.deepEqual([props.spellCheck, props.autoComplete, props.fullWidth, props.className, props.slotEnd.props['aria-live'], props.slotEnd.props.className], [false, 'off', false, 'w-48', 'polite', 'text-footnote whitespace-nowrap']);
+  assert.equal(typeof props.onKeyDown, 'function');
 });
 
-test('stylesheets: every class tx gives the find field is in the official 2.42304.0 sheets and none needs the compatibility layer; Bh needed it', () => {
+test('stylesheets: every class uC gives the find field is in the official 3.6556.2 sheets and none needs the compatibility layer', () => {
   const props = findInput(findTree()).props;
-  const tx = tokens(renderToStaticMarkup(h(ViewTabs.CdsTextInput, { ...props, className: 'w-48' })));
-  assert.deepEqual([...tx].filter(name => !officialClasses.has(name)), []);
-  assert.deepEqual([...tx].filter(name => legacyClasses.has(name)), []);
-  // The same props on chat Bh: its end-slot padding class is served only by public/assets/legacy-utilities.css (rule #56).
-  const bh = tokens(renderToStaticMarkup(h(Chat.Bh, { ...props, className: 'w-48' })));
-  assert.deepEqual([...bh].filter(name => legacyClasses.has(name)), ['has-[[data-cds-end-slot]_[data-cds=Button]:not([data-cds-ghost])]:pr-[calc((var(--cds-h-control)-var(--cds-h-control-nested))/2)]']);
-  assert.ok(bh.has('pr-md') && !tx.has('pr-md') && tx.has('pe-md'));
-  // In the renderer's cascade (index.html sheets + bundled src/*.css), the field's padding and box come from the
-  // official sheets' @layer utilities / components; the host only sets the width (unlayered .stp-find-input).
+  const uC = tokens(renderToStaticMarkup(h(ViewTabs.CdsTextInput, props)));
+  assert.deepEqual([...uC].filter(name => !officialClasses.has(name)), []);
+  assert.deepEqual([...uC].filter(name => legacyClasses.has(name)), []);
+  assert.ok(uC.has('pe-md') && !uC.has('pr-md') && uC.has('w-48'));
+  // In the renderer's cascade (index.html sheets + bundled src/*.css), the field's padding, box and width all come
+  // from the official sheets' @layer utilities / components (the host .stp-find-input width rule is gone).
   const cascade = loadCascade(appSheets(ROOT));
   const body = mounted(renderToStaticMarkup(h(Find, findProps)));
   const wrapper = find(body.children, node => node.attrs['data-cds'] === 'TextInput');
@@ -196,18 +212,18 @@ test('stylesheets: every class tx gives the find field is in the official 2.4230
   assert.equal(computed(cascade, wrapper, 'padding-right').from.rule.selectors.length > 0, true);
   assert.match(computed(cascade, wrapper, 'padding-right').value, /--cds-pad-md|--spacing/);
   const width = computed(cascade, wrapper, 'width');
-  assert.equal(width.from.sheet, 'src/source-terminal-pane.css');
+  assert.ok(official.has(width.from.sheet) && width.from.layer, `width ${width.value} from ${width.from.sheet}`);
 });
 
 // ---------------------------------------------------------------- 4. controlled events: Escape
-test('Escape: the non-clearable tx lets it through and the bar closes; a clearable tx with a value consumes it to clear', () => {
+test('Escape: the non-clearable uC lets it through and the bar closes; a clearable uC with a value consumes it to clear', () => {
   let closed = 0;
   const tree = findTree({ ...findProps, onClose() { closed++; } });
   const field = findInput(tree);
   const input = nativeInput(field.props);
   const event = keyEvent('Escape', 'needle');
   input.props.onKeyDown(event);
-  assert.deepEqual([event.defaultPrevented, event.stopped, event.immediate], [false, false, false], 'tx does not intercept Escape without clearable');
+  assert.deepEqual([event.defaultPrevented, event.stopped, event.immediate], [false, false, false], 'uC does not intercept Escape without clearable');
   tree.props.onKeyDown(event); // bubbles to the bar (role=search)
   assert.equal(closed, 1);
   assert.equal(event.defaultPrevented && event.stopped, true);
@@ -224,29 +240,10 @@ test('Escape: the non-clearable tx lets it through and the bar closes; a clearab
 });
 
 // ---------------------------------------------------------------- 5. the native-field registry
-const renderTextField = Sy => renderToStaticMarkup(h(Sy, { label: 'Task name', hint: 'Use a unique name', id: 'task-name', value: 'x', onChange() {} }));
-const linked = html => {
-  const label = /<label\b[^>]*>/.exec(html)[0], input = /<input\b[^>]*>/.exec(html)[0];
-  return { forId: /\bfor="([^"]*)"/.exec(label)?.[1], id: /\bid="([^"]*)"/.exec(input)?.[1], labelledby: /aria-labelledby="([^"]*)"/.exec(input)?.[1], labelId: /\bid="([^"]*)"/.exec(label)?.[1], describedby: /aria-describedby="([^"]*)"/.exec(input)?.[1] };
-};
-test('registry: the chat field family registers itself, so its TextField links label, input and hint whichever module loads first', async () => {
-  const frame = read(CHAT_FRAME);
-  assert.match(frame, /^import \{ registerNativeFieldComponents \} from "\.\.\/\.\.\/source-field-adapters\.jsx";$/m);
-  assert.match(frame, /^registerNativeFieldComponents\(\{ Field: _y, Label: vy, Description: yy, ErrorText: by, TextInput: Bh, TextArea: \$v \}\);$/m);
-  for (const order of [['/src/source-field-adapters.jsx', `/${CHAT_FRAME}`], [`/src/generated/current-chat/shared-frame-DVFSKIcx.js`, `/${CHAT_FRAME}`], [`/${CHAT_FRAME}`]]) {
-    const server = await vite();
-    let chat;
-    for (const id of order) chat = await server.ssrLoadModule(id);
-    const html = renderTextField(chat.Sy);
-    const link = linked(html);
-    assert.deepEqual([link.forId, link.id, link.labelledby], ['task-name', 'task-name', link.labelId], `${order.join(' then ')}: ${html}`);
-    assert.ok(link.describedby && html.includes(`id="${link.describedby}"`), 'hint linked');
-    await server.close(); servers.splice(servers.indexOf(server), 1);
-  }
-});
-
-test('registry: the 2.42304.0 tx in it is EnvironmentTextInput (NativeField-wired); view-tabs CdsTextInput reads Base UI field context, so it is not a part', () => {
-  const field = child => renderToStaticMarkup(h(Chat._y, { disabled: true }, h(Chat.vy, null, 'Name'), child));
+// W10: the 2.2553.1 chat field family (shared-frame _y / vy / Sy) that hosted this check is retired; the NativeField-
+// wired 3.6556.2 family code-current registers (environment-field-controls Jj / Yj) hosts it instead.
+test('registry: the code-current TextInput (3.6556.2 uC) is EnvironmentTextInput (NativeField-wired); view-tabs CdsTextInput reads Base UI field context, so it is not a part', () => {
+  const field = child => renderToStaticMarkup(h(Env.EnvironmentField, { disabled: true }, h(Env.EnvironmentLabel, null, 'Name'), child));
   const env = field(h(Env.EnvironmentTextInput, { value: '', onChange() {} }));
   const envInput = /<input\b[^>]*>/.exec(env)[0], envLabel = /<label\b[^>]*>/.exec(env)[0];
   assert.match(envInput, /disabled=""/);
@@ -260,30 +257,17 @@ test('registry: the 2.42304.0 tx in it is EnvironmentTextInput (NativeField-wire
   assert.match(read('src/source-field-adapters.jsx'), /\['Field', 'Label', 'Description', 'ErrorText', 'TextInput', 'TextArea'\]\.map\(key => \[key, new Set\(\)\]\)/);
 });
 
-// ---------------------------------------------------------------- 6. the chat extraction
-test('extract-chat-ui: no dead shared-14 tv/ev, and no chat module imports Bh; the two unreachable renderers use view-tabs CdsTextInput', () => {
-  const provenance = JSON.parse(read('src/generated/chat/provenance.json'));
-  const entry = name => provenance.find(item => item.source === name);
-  assert.equal(entry('shared-14-BOJVa-jT.js').declarations.some(name => name === 'tv' || name === 'ev'), false);
-  assert.doesNotMatch(read('src/generated/chat/shared-14-BOJVa-jT.js'), /after:border-alpha-1/);
-  for (const [file, local] of [['caaf77b85-DdXwb3ur.js', 'w'], ['cf35aed38-CgXOe11O.js', 'b']]) {
-    assert.match(read(`src/generated/chat/${file}`), new RegExp(`^import \\{ CdsTextInput as ${local} \\} from "\\.\\./view-tabs/shared-frame-BfjMqbuN\\.js";$`, 'm'));
-    assert.deepEqual(entry(file).boundaries.find(([name]) => name === local), [local, ['../view-tabs/shared-frame-BfjMqbuN.js', 'CdsTextInput']]);
-    // and that local was this module's import of shared-frame Bh in the 2.2553.1 source
-    const original = fs.readFileSync(path.join(OLD_CHAT, file), 'utf8');
-    const exported = Object.entries(Object.fromEntries([...fs.readFileSync(path.join(OLD_CHAT, 'shared-frame-C_2npUJq.js'), 'utf8').matchAll(/(\w+|\$\w*) as ([\w$]+)/g)].map(m => [m[2], m[1]]))).filter(([, local]) => local === 'Bh').map(([name]) => name);
-    assert.ok(exported.some(name => new RegExp(`import\\{[^}]*\\b${name.replace('$', '\\$')} as ${local}\\b[^}]*\\}from"\\./shared-frame-C_2npUJq\\.js"`).test(original)), `${file}:${local} imported Bh`);
-  }
-  const chatImportsOfBh = fs.readdirSync(path.join(ROOT, 'src/generated/chat')).filter(name => name.endsWith('.js'))
-    .filter(name => /import \{ Bh as [\w$]+ \} from "\.\/shared-frame-C_2npUJq\.js"/.test(read(`src/generated/chat/${name}`)));
-  assert.deepEqual(chatImportsOfBh, []);
-  assert.deepEqual(entry('shared-frame-C_2npUJq.js').registrations, [{ call: 'registerNativeFieldComponents', from: '../../source-field-adapters.jsx', parts: { Field: '_y', Label: 'vy', Description: 'yy', ErrorText: 'by', TextInput: 'Bh', TextArea: '$v' } }]);
-});
-
-test('compatibility layer: #54 lost its chat hit (current-chat xf keeps it, SC-6); #42 .pr-0 is held only by chat Bh until CsvTextInput moves', () => {
-  const rules = JSON.parse(read('public/style-compatibility.json')).rules;
-  const hits = name => rules.flatMap(rule => rule.references).filter(ref => ref.className === name).flatMap(ref => ref.hits.map(hit => `${hit.file}#${hit.binding}`));
-  assert.deepEqual(hits('after:border-alpha-1'), ['src/generated/current-chat/shared-9-CAAkBVM3.js#xf']);
-  assert.deepEqual(hits('pr-0'), ['src/generated/chat/shared-frame-C_2npUJq.js#Bh']);
+// ---------------------------------------------------------------- 6. the compatibility layer
+// The published public/style-compatibility.json is regenerated by the gate only (R10); the dry run recomputes it from
+// the current tree without writing, which is what the gate will publish.
+test('compatibility layer: no rule keeps a hit in src/generated/chat/ (.pr-0 went with chat Bh); #54 stays retired', async () => {
+  const { rules } = await prepareStyleCompatibility({ dryRun: true });
+  const allHits = rules.flatMap(rule => rule.references).flatMap(ref => ref.hits.map(hit => ({ className: ref.className, ...hit })));
+  const hits = name => allHits.filter(hit => hit.className === name).map(hit => `${hit.file}#${hit.binding}`);
+  // 3.6556.2 ships after:border-alpha-1 again, so the layer no longer needs to hold it (it was for the retired
+  // current-chat xf).
+  assert.deepEqual(hits('after:border-alpha-1'), []);
+  assert.deepEqual(hits('pr-0'), []);
+  assert.deepEqual(allHits.filter(hit => hit.file.startsWith('src/generated/chat/')).map(hit => `${hit.className} ${hit.file}#${hit.binding}`), []);
   assert.equal(hits('has-[[data-cds-end-slot]_[data-cds=Button]:not([data-cds-ghost])]:pr-[calc((var(--cds-h-control)-var(--cds-h-control-nested))/2)]').every(hit => !hit.includes('view-tabs') && !hit.includes('code-current')), true);
 });

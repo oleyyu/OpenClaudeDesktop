@@ -183,12 +183,8 @@ textarea:focus {
   background: var(--cds-fill-ghost-hover);
   color: var(--cds-text-secondary);
 }
-.sidebar-toolbar > .code-icon-button,
-.sidebar-toolbar > .df-sidebar-hover-reveal > .code-icon-button,
-.sidebar-toolbar > .source-nav-buttons > .code-icon-button {
-  width: 24px;
-  height: 28px;
-}
+/* W12b-FTS-2: the sidebar titlebar holds no code-icon-button any more (Hide sidebar is shared-21 Pz, a CdsButton
+   df-chrome-btn like Cm's Back / Forward), so the 24x28 host sizing rule is gone. */
 .sidebar-toolbar [data-cds="Icon"] {
   font-weight: 533.3 !important;
 }
@@ -384,128 +380,24 @@ textarea:focus {
 /* Sidebar resize handle (sidebar-groups.js uw -> shared-19 Os): geometry,
    ring and pill come from Os's utility classes; the loaded shared-styles copy
    of desktop-layout.css supplies :1462-1468 (z-index 25, clip-path inset(0 0
-   0 37.5%) except :focus-visible), :2032-2036 (web top / 0.5px ring) and
-   :1459-1461 ([data-resizing] no sidebar transition). Its :1469-1471 hide
-   keys on [data-collapsed], which this root expresses as .sidebar-collapsed. */
-.sidebar-collapsed .dframe-resize-handle {
-  display: none;
-}
-/* Fidelity F08 collapsed hover peek. This root keeps .sidebar-collapsed rather
-   than the loaded [data-collapsed] layout (whose pill holds the trigger inside
-   the sidebar; locally 'Show sidebar' lives in the titlebar), so
-   desktop-layout.css:1388-1455 is ported here: the collapsed aside stays
-   mounted as a zero-size anchor with its toolbar hidden, and the body floats
-   as the peek card 8px under the trigger (--df-peek-top/-left, measured in
-   main.jsx): 280px, max-height 70vh, padding 7.5px 7.5px 13px (the :1418-1420
-   no-pills top), the card radius, hsl(--df-surface-primary) + border-0.5
-   (sidebar-main.js:14918-14925), --df-shadow-pop, opacity 0 →1 from
-   translate(0,-6px) scale(.98), transitioning only after the first peek
-   ([data-peeked]). While hidden it is also visibility hidden (and inert). */
-.sidebar-collapsed .app-sidebar.dframe-sidebar {
+   0 37.5%) except :focus-visible), :2032-2036 (web top / 0.5px ring),
+   :1459-1461 ([data-resizing] no sidebar transition) and the collapsed hide
+   (.dframe-root[data-collapsed] .dframe-resize-handle{display:none}). */
+/* w11-frame-root-cont: the collapsed frame is the official 3.6556.2 one. The root writes [data-collapsed] (shared-22
+   oR) and the loaded shared-styles-D_GJawPO.css lays it out: .dframe-sidebar becomes the trigger pill holding
+   SourceCollapsedChrome (`.dframe-root[data-collapsed] .dframe-sidebar{width:auto;bottom:auto;top:calc(10px + var(
+   --df-chrome-bar-height));…;flex-direction:row;…;inset-inline-start:var(--df-collapsed-left);overflow:visible}`),
+   .dframe-sidebar-body the full-height drawer (`.dframe-root[data-variant=web][data-collapsed] .dframe-sidebar
+   .dframe-sidebar-body{--df-peek-band:44px;inset-inline-start:-8px;width:var(--df-peek-width);height:var(
+   --app-content-height,100dvh);…;top:-10px;transform:translate(-4px)}`, 46px band and spacer offset on the macOS
+   desktop), the peek bridge, the peek-mode switch in the band and the no-drag strip. The only host rule left undoes
+   this file's own expanded aside (.app-sidebar.dframe-sidebar above: an in-flow column, position relative, height
+   100%, a 0.5px end border) back to the official pill's box: base `.dframe-sidebar{…position:absolute;…}` with no
+   height of its own and no border while collapsed. */
+.dframe-root[data-collapsed] .app-sidebar.dframe-sidebar {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-  border: 0;
-  background: none;
-  z-index: 50;
-}
-.sidebar-collapsed .app-sidebar > .sidebar-toolbar {
-  display: none;
-}
-.dframe-root.sidebar-collapsed .source-sidebar .dframe-sidebar-body {
-  position: absolute;
-  top: var(--df-peek-top, 46px);
-  left: var(--df-peek-left, 6px);
-  width: 280px;
-  max-height: 70vh;
-  flex: none;
-  padding: 7.5px 7.5px 13px;
-  border: 0.5px solid var(--cds-border);
-  border-radius: var(--df-radius-card, 8px);
-  background: hsl(var(--df-surface-primary));
-  box-shadow: var(--df-shadow-pop);
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(var(--df-pop-x, 0px), var(--df-pop-y, -6px)) scale(0.98);
-  transform-origin: 0 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.dframe-root.sidebar-collapsed[data-peeked] .source-sidebar .dframe-sidebar-body {
-  transition: opacity 0.14s ease, transform 0.18s var(--df-ease-out), visibility 0s linear 0.18s;
-}
-.dframe-root.sidebar-collapsed[data-hovering] .source-sidebar .dframe-sidebar-body {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: none;
-  transition-delay: 0s;
-  -webkit-app-region: no-drag;
-}
-/* .dframe-peek-bridge (:1431-1450): the strip between the trigger and the card
-   takes the pointer only while the peek is open. */
-.dframe-peek-bridge {
-  display: none;
-}
-.dframe-root.sidebar-collapsed .dframe-peek-bridge {
-  display: block;
-  position: absolute;
-  top: var(--df-peek-bridge-top, 38px);
-  left: var(--df-peek-left, 6px);
-  width: 280px;
-  height: 12px;
-  pointer-events: none;
-}
-.dframe-root.sidebar-collapsed[data-hovering] .dframe-peek-bridge {
-  pointer-events: auto;
-  -webkit-app-region: no-drag;
-}
-@media (hover: none) {
-  .dframe-root.sidebar-collapsed[data-hovering] .dframe-peek-bridge {
-    pointer-events: none;
-  }
-}
-/* Nb: the trigger is bg-neutral-30 while the peek is open. */
-.st-toolbar .df-collapsed-chrome .code-icon-button[data-peek-open] {
-  background: var(--cds-neutral-30);
-}
-@media (prefers-reduced-motion: reduce) {
-  .dframe-root.sidebar-collapsed .source-sidebar .dframe-sidebar-body {
-    transform: none;
-  }
-  .dframe-root.sidebar-collapsed[data-peeked] .source-sidebar .dframe-sidebar-body {
-    transition: opacity 0.14s ease, visibility 0s linear 0.14s;
-  }
-}
-html[data-reduce-motion="true"] .dframe-root.sidebar-collapsed .source-sidebar .dframe-sidebar-body {
-  transform: none;
-}
-html[data-reduce-motion="true"] .dframe-root.sidebar-collapsed[data-peeked] .source-sidebar .dframe-sidebar-body {
-  transition: opacity 0.14s ease, visibility 0s linear 0.14s;
-}
-/* R2-appswitch W2: the peek card's mode switch (2.42304.0 shared-22 DN `ae`: div.df-peek-mode-switch.mb-2.flex.shrink-0
-   at the top of .dframe-sidebar-body). The loaded shared-styles-Bl9zqrv-.css places it in the peek band on the macOS
-   desktop (data-variant=web, no data-web, no data-wco) with rules keyed on [data-collapsed]:
-     .dframe-root[data-variant=web]:not([data-web]):not([data-wco])[data-collapsed] .dframe-sidebar-body {--df-peek-band:46px}
-     .dframe-root[data-variant=web][data-collapsed] .dframe-sidebar .dframe-sidebar-body {padding:calc(var(--df-peek-band) + 4px) 8px 6px}
-     .dframe-root[data-variant=web][data-collapsed]:not([data-wco]) .df-peek-mode-switch {top:0;height:var(--df-peek-band);align-items:center;margin:0;position:absolute;inset-inline-end:8px}
-     .dframe-root[data-variant=web]:not([data-web]):not([data-wco])[data-collapsed] .df-peek-mode-switch {padding-top:2px}
-   This root writes [data-collapsed] as .sidebar-collapsed (F08 above), so they are ported onto it. The card keeps its
-   F08 geometry; only the band's top padding is taken, and only while the card holds the switch. */
-.dframe-root.sidebar-collapsed .source-sidebar .dframe-sidebar-body:has(> .df-peek-mode-switch) {
-  --df-peek-band: 46px;
-  padding-top: calc(var(--df-peek-band) + 4px);
-}
-.dframe-root.sidebar-collapsed .df-peek-mode-switch {
-  top: 0;
-  height: var(--df-peek-band);
-  align-items: center;
-  margin: 0;
-  position: absolute;
-  inset-inline-end: 8px;
-  padding-top: 2px;
+  height: auto;
+  border-right: 0;
 }
 .workspace {
   flex: 1;
@@ -523,7 +415,10 @@ html[data-reduce-motion="true"] .dframe-root.sidebar-collapsed[data-peeked] .sou
   padding: 0 16px;
   gap: 8px;
 }
-.sidebar-collapsed:not([data-fullscreen]) .workspace-toolbar {
+/* A session popout or pane window has no sidebar (main.jsx NO_SIDEBAR, no [data-collapsed]): its titlebar clears the
+   traffic lights itself. With a sidebar, the collapsed titlebar's clearance is the official [data-top-left] margin. */
+[data-session-popout]:not([data-fullscreen]) .workspace-toolbar,
+[data-pane-window]:not([data-fullscreen]) .workspace-toolbar {
   padding-left: calc(var(--df-traffic-light-spacer, 74px) + 14px);
 }
 .session-title {

@@ -24,9 +24,10 @@ import { SourceUsage } from './source-usage';
 import { SourceHooksSettings } from './source-hooks-settings.jsx';
 import { DeveloperServers, StorageDialog } from './source-settings-pages.jsx';
 import { useModalPresence } from './use-modal-presence';
-import { settingsTabIndex } from './modal-presence.mjs';
+// W12 settings: the stacked tabs are CDS Tabs (shared-46 Zh Xd = shared-10 Qr) in a CDS layer above the z-500 backdrop.
+import { CdsLayerProvider, CdsTabs } from './generated/view-tabs/index.js';
 import { holdModalInert } from './modal-inert.mjs';
-import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore } from './settings-model.mjs';
+import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore, normalizeSettingsQuery } from './settings-model.mjs';
 import { settingsCore, accountCore, accountGroupTitle, engineCopy } from './settings-core-copy.mjs';
 import { workflowSettingsGroup } from './source-settings-workflows.jsx';
 import { computerUseSettingsGroup, useComputerUseGrants, useComputerUsePreferredMode, useComputerUseTeachStatus } from './source-settings-computer-use.jsx';
@@ -34,7 +35,7 @@ import { ListBadge } from './source-customize-list.jsx';
 import { coreName, coreForEngine, coreCapabilities, coreSupports } from '../electron/core-registry.mjs';
 import { SettingsSearchResults } from './source-settings-search.jsx';
 import { bindSettingsAnchor } from './settings-anchor.mjs';
-import { EMPTY_SETTINGS_CATALOG, settingsCatalogGroups } from './settings-catalog-search.mjs';
+import { EMPTY_SETTINGS_CATALOG, expandSettingsSearch, settingsCatalogGroups, settingsSearchMoreExpands } from './settings-catalog-search.mjs';
 import { effortName } from './model-menu-model.mjs';
 import { SourceHarnessSettings } from './source-settings-harness.jsx';
 import { SourceCommandsSettings } from './source-settings-commands.jsx';
@@ -48,9 +49,13 @@ import { SettingRow } from './source-settings-kit.jsx';
 import { SourceInstructionsSettings } from './source-settings-instructions.jsx';
 import { hasAdvancedRows, advancedEmptyNotice } from './settings-advanced-model.mjs';
 import { bootModelsCoreId, namedModels } from './model-names-model.mjs';
-import { settingsNavSections, settingsInitialFocus, NOTIFICATION_LEVEL_ITEMS, notificationLevel, drawAttentionDisabled, keepAwakeEnabled, PREVIEW_STORAGE_ITEMS, previewStorageChoice, promptSuggestionsEnabled } from './settings-shell-model.mjs';
+import { settingsNavSections, settingsInitialFocus, scrollPopupToTop, NOTIFICATION_LEVEL_ITEMS, notificationLevel, drawAttentionDisabled, keepAwakeEnabled, PREVIEW_STORAGE_ITEMS, previewStorageChoice, promptSuggestionsEnabled } from './settings-shell-model.mjs';
 import { previewLinksStore } from './preview-links-model.mjs';
+import { autoOpenFilesSettingRow, autoOpenFilesStore } from './auto-open-files-model.mjs';
 import { SourcePreviewAllowedSites } from './source-preview-allowed-sites.jsx';
+import { SourceSettingsMemory } from './source-settings-memory.jsx'; // w13-chatfn-memory
+import { SourceSettingsPrivacy } from './source-settings-privacy.jsx'; // w13-chatfn-history
+import { SourceCoworkSettings } from './source-cowork-settings.jsx'; // w13-coworkui-settings
 const noCatalogSubscription=()=>()=>{};
 const emptyCatalog=()=>EMPTY_SETTINGS_CATALOG;
 
@@ -94,7 +99,7 @@ function FontLicenses() {
     </div>,document.body)}
   </>;
 }
-// c71860c77 _i: two columns (grid-cols-2 gap-md py-md), each a mode-filtered
+// c71860c77 _i: two columns (3.6556.2 c71860c77-C3tXoNVw `grid grid-cols-2 gap-md`, no py-md since W12b S5), each a mode-filtered
 // Select above the fixed greet.ts diff preview (min-h-[94px] overflow-clip rounded-lg border).
 function CodeThemeGrid({ light, dark, onChange }) {
   const column=(mode,value,items,label)=> <div className="ss-theme-column">
@@ -116,10 +121,16 @@ const ALLOWED_SITES_LAYER = Object.freeze({ base: 520, z: 520 });
 const tabs = [
   // Light / Dark is chosen on General (the Theme page only points there): 'dark mode' finds General.
   {id:'preferences',label:'General',icon:'Settings',group:'Settings',keywords:['preferences','dark mode','light mode']},
+  // w13-chatfn-history: shared-46's Privacy entry (id data-privacy-controls, icon Dp = LockShield) after General: Export data.
+  {id:'privacy',label:'Privacy',icon:'LockShield',group:'Settings',keywords:['export data','export conversations','download my data','data-privacy-controls'],page:SourceSettingsPrivacy},
   // ZC :2468-2482 pushes Usage straight after General (Privacy and Billing, between them, have no local page).
   {id:'usage',label:'Usage',icon:'UsageGaugeMiddle',group:'Settings'},
+  // w13-chatfn-memory: shared-46's Memory entry (id memory, icon Memory) after Capabilities, which has no local page.
+  {id:'memory',label:'Memory',icon:'Memory',group:'Settings',keywords:['memory','remember','past chats','search and reference chats','reset memory','pause memory'],page:SourceSettingsMemory},
   {id:'theme',label:'Theme',icon:'Palette',group:'Settings',keywords:['accent','colors','font size','corner radius','density','appearance'],page:SourceThemeSettings},
   {id:'code',label:'Code',icon:'Code',group:'Settings'},
+  // w13-coworkui-settings: shared-46 pushes Cowork (id cowork, icon Fp = Tasks) right after Claude Code (c71860c77 De).
+  {id:'cowork',label:'Cowork',icon:'Tasks',group:'Settings',keywords:['global instructions','cowork files','trusted cowork folders','use memory in sessions','allowed sites'],page:SourceCoworkSettings},
   {id:'instructions',label:'Instructions',icon:'BookText',group:'Settings',keywords:['custom instructions','system prompt','agents.md','project instructions'],page:SourceInstructionsSettings},
   {id:'commands',label:'Commands',icon:'SlashShortcutCommand',group:'Settings',keywords:['slash commands','prompt templates','custom commands'],page:SourceCommandsSettings},
   {id:'models',label:'Models',icon:'Lightning',group:'Settings',keywords:['api key','relay','base url','proxy','max tokens','temperature','pricing','prices','cost','display name','rename model'],page:SourceModelsSettings},
@@ -189,10 +200,10 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     // simultaneous consumers such as the composer and the actual page.
     void Promise.allSettled([store.loadSkills({cwd}),store.loadPlugins({cwd}),store.loadMcp({cwd,threadId:threadId??null})]);
   },[customize?.store,customize?.cwd,customize?.threadId]);
-  const [desktop,setDesktop]=useState(null),[desktopRevision,setDesktopRevision]=useState(0),[storage,setStorage]=useState(()=>(section==='general'&&anchorRow==='open-storage')||null),[rowErrors,setRowErrors]=useState({}),[searchOpen,setSearchOpen]=useState(false),[searchIndex,setSearchIndex]=useState(0),[highlight,setHighlight]=useState(null),[narrow,setNarrow]=useState(()=>innerWidth<=767);
-  // BD zy.Tabs (activateOnFocus:false): arrowing moves the roving tab stop with the highlighted tab, not the selection.
-  const [tabHighlight,setTabHighlight]=useState(null);
-  useEffect(()=>setTabHighlight(null),[tab]);
+  const [desktop,setDesktop]=useState(null),[desktopRevision,setDesktopRevision]=useState(0),[storage,setStorage]=useState(()=>(section==='general'&&anchorRow==='open-storage')||null),[rowErrors,setRowErrors]=useState({}),[searchOpen,setSearchOpen]=useState(false),[searchIndex,setSearchIndex]=useState(0),[searchExpanded,setSearchExpanded]=useState(),[highlight,setHighlight]=useState(null),[narrow,setNarrow]=useState(()=>innerWidth<=767);
+  // menus W3 (cc011544b On): in the stacked dialog (popupScrolls) a section change scrolls the stacked body to the top.
+  const pane=useRef(null);
+  useLayoutEffect(()=>{if(narrow)scrollPopupToTop(pane.current);},[tab,narrow]);
   const refreshDesktop = useRef(null), removingServer = useRef(false);
   const [claudeImport,setClaudeImport]=useState(false);
   // An ACP agent's own settings (Gemini / Qwen settings.json keys; codeDesktop/coreSettings/*), for Settings › Code.
@@ -336,9 +347,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   // Hooks: a core that lists them (capabilities.hooksList: Codex, the bridges whose agents have hooks).
   // Advanced › Core options: listed while the running core has rows for it (settings-advanced-model.mjs).
   const advancedListed=hasAdvancedRows({coreSettings,harnessSettings,codexFeatures,codexPermissions:codexNative?desktop?.codexPermissions:null});
-  const navTabs=baseNavTabs.filter(section=>(section.id!=='harness'||tab==='harness'||coreSupports(engine,'harnessProfile'))&&(section.id!=='customize-hooks'||tab==='customize-hooks'||coreSupports(engine,'hooksList'))&&(section.id!=='advanced'||tab==='advanced'||advancedListed));
-  // The narrow tabs' roving tab stop: the arrowed (highlighted) tab while it is listed, else the selected one.
-  const rovingTab=navTabs.some(entry=>entry.id===tabHighlight)?tabHighlight:tab;
+  const navTabs=baseNavTabs.filter(section=>(section.id!=='harness'||tab==='harness'||coreSupports(engine,'harnessProfile'))&&(section.id!=='customize-hooks'||tab==='customize-hooks'||coreSupports(engine,'hooksList'))&&(section.id!=='advanced'||tab==='advanced'||advancedListed)&&(section.id!=='cowork'||boot?.coworkEnabled===true)); // w13-coworkui-settings: shared-46 `if(d&&!k)` (CODE_DESKTOP_COWORK=0 hides Cowork)
   // A core without MCP config writes (DeepSeek: capabilities.mcpConfigWrite false) offers no Delete.
   const mcpWritable=boot?.core?.capabilities?.mcpConfigWrite!==false;
   const booleanRow=(id,label,description,{indent=false,checked=!!shownValue(id,config[id]),disabled=false}={})=>({...row(id,label,description,<SettingSwitch label={label} checked={checked} disabled={disabled} onChange={value=>save(id,value)}/>),indent});
@@ -362,6 +371,9 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const computerUsePreferredMode=useComputerUsePreferredMode(desktopCall,tab==='general');
   const computerUseTeachStatus=useComputerUseTeachStatus(desktopCall,tab==='general');
   const linksInPreview=useSyncExternalStore(previewLinksStore.subscribe,previewLinksStore.getSnapshot,previewLinksStore.getSnapshot);
+  // V3-w10-shell-auto-open-pref: c71860c77-C3tXoNVw Or's Auto-open row (auto-open-files-model.mjs). V3-w11-sweep-shell-b:
+  // before the first read it is drawn as Or's `invisible` placeholder (`className: f ? void 0 : "invisible"`).
+  const autoOpenFiles=autoOpenFilesSettingRow(useSyncExternalStore(autoOpenFilesStore.subscribe,autoOpenFilesStore.getState,autoOpenFilesStore.getState));
   const [previewStorage,setPreviewStorage]=useState(()=>previewStorageChoice(config.previewStorage,config.previewKeepCookies));
   useEffect(()=>{if(tab!=='code')return undefined;let live=true;
     Promise.resolve(desktopCall('preview-storage-read')).then(value=>{if(live&&value?.previewStorage)setPreviewStorage(previewStorageChoice(value.previewStorage));},()=>{});
@@ -386,7 +398,8 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     ]},
     {tab:'code',title:'Appearance',rows:[
       row('interfaceFont',t('Interface font'),<>{t('Font for the whole interface — menus, sidebars, and panels.')} <FontLicenses/></>,segments('interfaceFont',t('Interface font'),[{value:'anthropic',label:'Anthropic Sans'},{value:'system',label:t('System')},{value:'dyslexic',label:'OpenDyslexic'}]),`${t('Font for the whole interface — menus, sidebars, and panels.')} ${t('Font licenses')}`),
-      row('transcriptSize',t('Transcript text size'),t('Size of the conversation transcript text.'),segments('transcriptSize',t('Transcript text size'),[{value:'s',label:t('Small')},{value:'m',label:t('Medium')},{value:'l',label:t('Large')}])),
+      // menus C4 / CI-14: 3.6556.2 c0db37792 zt draws Transcript text size without a description (QmhFCiN99p is gone).
+      row('transcriptSize',t('Transcript text size'),'',segments('transcriptSize',t('Transcript text size'),[{value:'s',label:t('Small')},{value:'m',label:t('Medium')},{value:'l',label:t('Large')}])),
       row('transcriptWidth',t('Transcript width'),t('Maximum width of the transcript and composer columns.'),segments('transcriptWidth',t('Transcript width'),[{value:'s',label:t('Narrow')},{value:'m',label:t('Medium')},{value:'l',label:t('Wide')}])),
       row('transcriptView',t('Default transcript view'),t('The view sessions open in. Picking a view from a session’s Transcript view menu changes only that session.'),segments('transcriptView',t('Default transcript view'),['normal','thinking','verbose'].map(value=>({value,label:t(TRANSCRIPT_VIEW_LABELS[value])})))),
     ]},
@@ -425,10 +438,16 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     // pane's own preference) and Keep cookies (the Preview pane's storage mode, the same preview-storage call; the
     // built-in-browser copy MoAjWUV0jP, as the shared jar is one browser for every session and Cowork).
     // Allowed sites (cdc95db1a m) is B39.
+    // w12c-wiring (w12b-settings-dialogs S4): Browser tools' description is Or's off-branch idMrSFp0DS (c71860c77-C3tXoNVw
+    // `"Claude can start dev servers, open a live preview, and verify code changes with screenshots, snapshots, and DOM
+    // inspection."`), Claude named DeepSeek as elsewhere here.
     {tab:'code',title:'Browser',rows:[
-      booleanRow('agentPreview',t('Browser tools'),t('DeepSeek can start your dev servers, open them in the Preview pane, and check its changes with screenshots, page snapshots and clicks. Outside sites always ask first.'),{checked:browserTools}),
+      booleanRow('agentPreview',t('Browser tools'),t('DeepSeek can start dev servers, open a live preview, and verify code changes with screenshots, snapshots, and DOM inspection.'),{checked:browserTools}),
       ...(browserTools?[
         row('previewLinks',t('Open links in built-in browser'),t('Links open in the built-in browser instead of your default browser.'),<SettingSwitch label={t('Open links in built-in browser')} checked={linksInPreview} onChange={value=>previewLinksStore.set(value)}/>),
+        // 3.6556.2 c71860c77-C3tXoNVw Or: Auto-open files Claude writes, right before Keep cookies (`checked: u, disabled: !d,
+        // onCheckedChange: mn`); the Preview pane copy 4uNKbBb+5S, as frontend_preview_external_domains is off here (D36).
+        ...(autoOpenFiles.shown?[{...row('launchAutoOpenFiles',t('Auto-open files Claude writes'),t('HTML, images, PDFs, and videos Claude writes open in the Preview pane.'),<SettingSwitch label={t('Auto-open files Claude writes')} checked={autoOpenFiles.checked} disabled={autoOpenFiles.disabled} onChange={value=>autoOpenFilesStore.set(value)}/>),className:autoOpenFiles.invisible?'invisible':undefined}]:[]),
         row('previewStorage',t('Keep cookies'),t('Browser tabs keep cookies and logins across restarts in one saved browser shared by every session and Cowork. Per session gives each Code session its own copy instead, so sessions never see each other’s logins.'),
           <SourceSelect label={t('Keep cookies')} align="end" value={shownValue('previewStorage',previewStorage)} items={PREVIEW_STORAGE_ITEMS}
             onChange={value=>{if(PREVIEW_STORAGE_ITEMS.some(item=>item.value===value))commit('previewStorage',{previewStorage:value},async()=>{const next=await desktopCall('preview-storage',{mode:value});setPreviewStorage(previewStorageChoice(next?.previewStorage,value!=='none'));});}}/>),
@@ -568,7 +587,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       ...(build?.version?[row('version',t('Desktop app version'),'',<span className="ss-version">{build.version}</span>)]:[]),
       row('startup',t('Run on startup'),t('Automatically start OpenClaude Desktop when you log in to your computer.'),<SettingSwitch label={t('Run on startup')} checked={shownValue('runOnStartup',desktop?.desktop?.runOnStartup)===true} disabled={!desktop?.desktop} onChange={enabled=>commit('startup',{runOnStartup:enabled},async()=>{const value=await desktopCall('desktop-startup',{enabled});setDesktop(current=>current?.desktop?{...current,desktop:{...current.desktop,runOnStartup:value===true}}:current);setDesktopRevision(n=>n+1);})}/>),
       booleanRow('menuBarEnabled',t('Menu bar'),t('Show OpenClaude Desktop in the menu bar.')),
-      row('storage',t('Storage'),t('See how much space OpenClaude Desktop uses on this computer.'),<SourceSettingsButton size="sm" onClick={()=>setStorage(true)}>{t('Manage')}</SourceSettingsButton>),
+      row('storage',t('Storage'),t('See how much space Claude uses on this computer.'),<SourceSettingsButton size="sm" onClick={()=>setStorage(true)}>{t('Manage')}</SourceSettingsButton>),
     ]},
     // After the desktop snapshot, as System's own rows (no extra skeleton rows while it loads).
     ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
@@ -586,11 +605,16 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   // Profile belongs in Preferences, before Appearance (c0db37792:1391–1403).
   groups.sort((a,b)=>a.tab==='preferences'&&b.tab==='preferences'?(['Profile','Persona',accountTitle,'Appearance'].indexOf(a.title)-['Profile','Persona',accountTitle,'Appearance'].indexOf(b.title)):0);
   // Only DeepSeek's Models page has a key field (its connection rows): elsewhere 'api key' doesn't lead there.
-  const searchTabs=coreForEngine(typeof engine==='string'?engine:engine?.engine).id==='deepseek'?tabs:tabs.map(tab=>tab.id==='models'?{...tab,keywords:tab.keywords.filter(word=>word!=='api key')}:tab);
-  const results=settingsSearch(searchTabs,[...groups,...settingsCatalogGroups(catalog,{cwd:customize?.cwd,threadId:customize?.threadId??null})],query),shown=groups.filter(group=>group.tab===tab&&group.title!=='Local MCP servers'&&!tabs.find(t=>t.id===group.tab)?.customize);
+  const searchTabs=(coreForEngine(typeof engine==='string'?engine:engine?.engine).id==='deepseek'?tabs:tabs.map(tab=>tab.id==='models'?{...tab,keywords:tab.keywords.filter(word=>word!=='api key')}:tab)).filter(entry=>entry.id!=='cowork'||boot?.coworkEnabled===true); // w13-coworkui-settings
+  const results=settingsSearch(searchTabs,[...groups,...settingsCatalogGroups(catalog,{cwd:customize?.cwd,threadId:customize?.threadId??null})],query,searchExpanded?.sections),shown=groups.filter(group=>group.tab===tab&&group.title!=='Local MCP servers'&&!tabs.find(t=>t.id===group.tab)?.customize);
   const chooseResult=result=>{
+    // menus C3 (cc011544b I): "+N more" outside Customize expands in place, announces it and keeps the field focused.
+    if(settingsSearchMoreExpands(result)){
+      setSearchExpanded(current=>expandSettingsSearch(current,result,tn(result.count,'Showing {count} more match in {section}','Showing {count} more matches in {section}',{section:result.section})));
+      search.current?.focus();return;
+    }
     const destination=result.targetSection||result.tab;
-    setTab(destination);setUsageFocused(false);setQuery('');setSearchOpen(false);setSearchIndex(0);
+    setTab(destination);setUsageFocused(false);setQuery('');setSearchOpen(false);setSearchIndex(0);setSearchExpanded(undefined);
     setFocus(result.focus||((result.kind==='more'&&destination.startsWith('customize-'))?{searchSeed:query.trim()}:null));
     setHighlight(!result.subpathId&&result.id?{id:result.id}:null);search.current?.blur();root.current?.focus();
   };
@@ -607,12 +631,12 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     onUseSkill={customize.onUseSkill} onOpenExternal={customize.onOpenExternal} onRevealPath={customize.onRevealPath} focus={focus} mcpDefinitions={desktop?.mcpDefinitions} mcpServers={desktop?.servers}
     onRestartCore={customize.onRestartCore} watchRecord={customize.watchRecord ?? null} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
     onNavigate={(section,target)=>{setFocus(target||null);setTab(section);setQuery('');}} /> : null;
-  const closeSearch=()=>{setSearchOpen(false);setQuery('');setSearchIndex(0);};
+  const closeSearch=()=>{setSearchOpen(false);setQuery('');setSearchIndex(0);setSearchExpanded(undefined);};
   // cc011544b _t: the field (icon + input, no clear button; Escape clears) focuses its input when clicked.
   const searchField=<div className="ss-search" onClick={event=>{if(!event.target.closest?.('.ss-search-results'))search.current?.focus();}}><Icon name="Search" size={20}/>
     <input ref={search} aria-label={t('Search settings')} placeholder={t('Search')} value={query} aria-expanded={searchOpen}
       onBlur={closeSearch}
-      onChange={event=>{setQuery(event.target.value);setSearchIndex(0);setSearchOpen(event.target.value.trim()!=='');}}
+      onChange={event=>{const value=event.target.value;if(normalizeSettingsQuery(value)!==normalizeSettingsQuery(query))setSearchExpanded(undefined);setQuery(value);setSearchIndex(0);setSearchOpen(value.trim()!=='');}}
       onKeyDown={event=>{
         if(event.nativeEvent.isComposing){if(event.key==='Escape')event.stopPropagation();return;}
         if(!searchOpen)return;
@@ -621,7 +645,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
         else if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();setSearchIndex(index=>(index+(event.key==='ArrowDown'?1:-1)+Math.max(1,results.length))%Math.max(1,results.length));}
         else if(event.key==='Enter'){event.preventDefault();if(results[searchIndex])chooseResult(results[searchIndex]);}
       }}/>
-    {searchOpen&&<SettingsSearchResults results={results} query={query} active={searchIndex} onActive={setSearchIndex} onSelect={chooseResult}/>}
+    {searchOpen&&<SettingsSearchResults results={results} query={query} active={searchIndex} onActive={setSearchIndex} onSelect={chooseResult} announcement={searchExpanded?.announcement}/>}
   </div>;
   const selectTab = id => { setTab(id);setUsageFocused(false);setQuery('');setError('');setFocus(null);setHighlight(null);setSearchOpen(false); };
   // Official Customize nav entries are links (shared-22 :2568-2593 href /customize/skills …) and a detail is a query on
@@ -629,23 +653,23 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   // a fresh reset token re-runs the page's useCatalogNavigation (focus null would be a no-op when already null).
   const customizeNavFocus = entry => entry.customize&&entry.id===tab?{reset:Date.now()}:null;
   const usagePage = tab==='usage'&&usageFocused;
+  // menus W3 (shared-frame Xv/Zv): the stacked popup does not scroll itself; its body "isolate flex min-h-0 flex-1
+  // flex-col overflow-y-auto scroll-fade-y rounded-[inherit] p-xl break-words" holds the header, the tabs and the pane.
+  const stackedBody = children => narrow ? <div className="ss-stacked-body scroll-fade-y">{children}</div> : children;
   const usageIdentity=JSON.stringify([boot?.connected,account?.type,account?.email,account?.planType]);
   // shared-22:4511-4515 ye and cc011544b's page header CloseButton: both are named 'Close'.
   const closeButton = <button type="button" className="ss-close" aria-label={t('Close')} onClick={onClose}><Icon name="X" size={16}/></button>;
-  return createPortal(<div className="ss-backdrop ss-settings-backdrop" data-open={presence.visible} onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section ref={root} className="ss-dialog ss-settings-dialog" data-usage={usagePage||undefined} data-open={presence.visible} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+  return createPortal(<div className="ss-backdrop ss-settings-backdrop" data-open={presence.visible} onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section ref={root} className="ss-dialog ss-settings-dialog" data-usage={usagePage&&!narrow||undefined} data-open={presence.visible} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
     onKeyDown={e=>{if(!usagePage&&!narrow&&!e.altKey&&(e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();e.stopPropagation();search.current?.focus();search.current?.select();return;}if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.current();}if(e.key==='Tab'){const items=[...root.current.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex="0"]')].filter(el=>el.getClientRects().length&&el.tabIndex>=0);const first=items[0],last=items.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===root.current)){e.preventDefault();last?.focus();}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===root.current)){e.preventDefault();first?.focus();}}}}>
-    <h2 id={titleId} className="sr-only">{usagePage?t('Usage'):t('Settings')}</h2>
-    {usagePage?<header className="ss-usage-header"><h2 className="text-heading-semibold" aria-hidden="true">{t('Usage')}</h2>{closeButton}</header>:narrow?<header className="ss-narrow"><div className="ss-narrow-heading"><strong aria-hidden="true">{t('Settings')}</strong>{closeButton}</div><div role="tablist" aria-label={t('Settings')} onKeyDown={event=>{
-      const controls=[...event.currentTarget.querySelectorAll('[role="tab"]')], index=controls.indexOf(document.activeElement);
-      if(index<0||event.nativeEvent.isComposing||event.altKey||event.metaKey||event.ctrlKey)return;
-      const next=settingsTabIndex(index,controls.length,event.key,getComputedStyle(event.currentTarget).direction==='rtl');
-      if(next===null)return;event.preventDefault();event.stopPropagation();setTabHighlight(navTabs[next]?.id??null);controls[next].focus();controls[next].scrollIntoView({block:'nearest',inline:'nearest'});
-    }}>{navTabs.map(t=><button role="tab" aria-selected={tab===t.id} tabIndex={rovingTab===t.id?0:-1} key={t.id} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}>{navLabel[t.id]}</button>)}</div></header>:<nav className="ss-nav" aria-label={t('Settings')}>{searchField}<div className="ss-nav-scroll scroll-fade-y scroll-fade-size-6">{navGroups.map(group=><div key={group}><p>{settingsHeading(group)}</p><ul>{navTabs.filter(t=>t.group===group).map(t=><li key={t.id}><button aria-current={tab===t.id?'page':undefined} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}><Icon name={t.icon} size={20}/><span>{navLabel[t.id]}</span></button></li>)}</ul></div>)}</div></nav>}
-    <div className="ss-pane" data-customize={!!activeTab?.customize||activeTab?.shell==='customize'}>
+    <h2 id={titleId} className="sr-only">{usagePage&&!narrow?t('Usage'):t('Settings')}</h2>{stackedBody(<>
+    {usagePage&&!narrow?<header className="ss-usage-header"><h2 className="text-heading-semibold" aria-hidden="true">{t('Usage')}</h2>{closeButton}</header>:narrow?<header className="ss-narrow"><div className="ss-narrow-heading"><strong aria-hidden="true">{t('Settings')}</strong>{closeButton}</div>{!usagePage&&<div className="shrink-0 pb-md"><CdsLayerProvider base={500}><CdsTabs.Root value={tab} onValueChange={id=>selectTab(id)}><CdsTabs.List activateOnFocus={false} aria-label={t('Settings')}>
+      {navTabs.map(t=><CdsTabs.Tab key={t.id} value={t.id} disabledReason={null} disabledReasonSide="bottom" onClick={t.id===tab?()=>setFocus(customizeNavFocus(t)):undefined}>{navLabel[t.id]}</CdsTabs.Tab>)}
+    </CdsTabs.List></CdsTabs.Root></CdsLayerProvider></div>}</header>:<nav className="ss-nav" aria-label={t('Settings')}>{searchField}<div className="ss-nav-scroll scroll-fade-y scroll-fade-size-6">{navGroups.map(group=><div key={group}><p>{settingsHeading(group)}</p><ul>{navTabs.filter(t=>t.group===group).map(t=><li key={t.id}><button aria-current={tab===t.id?'page':undefined} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}><Icon name={t.icon} size={20}/><span>{navLabel[t.id]}</span></button></li>)}</ul></div>)}</div></nav>}
+    <div ref={pane} className="ss-pane" data-customize={!!activeTab?.customize||activeTab?.shell==='customize'}>
     {!usagePage&&!narrow&&<div className="ss-page-header">{closeButton}</div>}
     <div className="ss-content" key={tab} data-page={tab}>{error&&<p className="ss-error" role="alert">{error}</p>}{['code','developer','advanced'].includes(tab)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}{tab==='advanced'&&!shown.length&&<p className="ss-connection-notice" role="status">{advancedEmptyNotice(boot?.core&&typeof boot.core==='object'?coreName(boot.core):windowCore()?.name??(typeof engine==='string'?coreName(engine):null))}</p>}{tab==='developer'&&<DeveloperServers desktop={desktop} connected={boot?.connected} pending={!!pending} error={rowErrors['mcp-config']} onRemove={customize?.call&&mcpWritable ? removeServer : undefined} onEditConfig={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))} onDocs={()=>action('mcp-config',()=>desktopCall('external',{url:'https://modelcontextprotocol.io/quickstart'}))}/>} {customizePage}{activeTab?.page&&<activeTab.page {...pageProps}/>}{tab==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>} {shown.map(group=><section className="ss-group" key={group.tab+group.title}><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{group.badge?<span className="flex items-center gap-2">{settingsHeading(group.title)}<ListBadge variant="neutral">{group.badge}</ListBadge></span>:settingsHeading(group.title)}</h3>{group.description&&<p className="text-footnote text-secondary ss-group-description">{group.description}</p>}<div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>)}
       {claudeImport&&<ClaudeImportDialog open desktopCall={desktopCall} cwds={[customize?.cwd].filter(Boolean)} onClose={()=>setClaudeImport(false)}
-        onDone={()=>{void customize?.store?.loadSkills?.({cwd:customize?.cwd,force:true});void customize?.store?.loadMcp?.({cwd:customize?.cwd,threadId:customize?.threadId??null,force:true});setDesktopRevision(n=>n+1);}}/>}</div></div>
+        onDone={()=>{void customize?.store?.loadSkills?.({cwd:customize?.cwd,force:true});void customize?.store?.loadMcp?.({cwd:customize?.cwd,threadId:customize?.threadId??null,force:true});setDesktopRevision(n=>n+1);}}/>}</div></div></>)}
   </section>{storage&&<StorageDialog call={desktopCall} settingsRoot={root} onClose={()=>setStorage(false)}/>}
   <SourcePreviewAllowedSites isOpen={allowedSites} onClose={()=>setAllowedSites(false)} desktop={allowedSitesHost} layer={ALLOWED_SITES_LAYER}/></div>,document.body);
 }

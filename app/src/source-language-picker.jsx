@@ -4,7 +4,9 @@
 // trailing accent Check. Arrow keys / Home / End move between options. The
 // search field only appears when the grid overflows (never with two locales).
 // Picking another language saves the `locale` preference and reloads the
-// window, since module-level copy is translated once at load.
+// window, since module-level copy is translated once at load. V3-w12b-settings-dialogs: 3.6556.2 shared-19 bM passes
+// `header: r` with `r={showClose:!0}` and the title "Choose your language" only (no description; c49da61a8 says nothing
+// about a reload), so the dialog shows no reload note.
 import React, { useRef, useState } from 'react';
 import { Icon } from './icons';
 import { SourceDialog } from './source-dialog.jsx';
@@ -33,7 +35,7 @@ export function SourceLanguagePicker({ open, onClose, onSave }) {
     if (edge) radios[event.key === 'Home' ? 0 : radios.length - 1]?.focus();
     else radios[(at + (forward ? 1 : -1) + radios.length) % radios.length]?.focus();
   };
-  return <SourceDialog open={open} size="lg" title={t('Choose your language')} description={t('Changing the language reloads the window.')}
+  return <SourceDialog open={open} size="lg" title={t('Choose your language')}
     className="slp-dialog" onClose={() => { if (!pending) onClose(); }}>
     <div ref={body} className="slp-body" data-language-picker-body="">
       <div role="radiogroup" aria-label={t('Language')} className="slp-grid">

@@ -1,44 +1,50 @@
-// R4g-routines RT4 (tasks-code-routines WI-4, D32): extract the 2.42304.0 Code Routines page — the local CCD scheduled
-// task path — without executing any desktop runtime (decision D0: own generator, own output folder
+// R4g-routines RT4 (tasks-code-routines WI-4, D32), moved to 3.6556.2 in wave 3 of the 3.6556.2 migration
+// (w3-code-routines, research/routines-cowork-chat.md §1.1 / §3.2 / §3.3): extract the Code Routines page (the local CCD
+// scheduled task path) without executing any desktop runtime (decision D0: own generator, own output folder
 // src/generated/code-routines, own scripts/verify-gen-code-routines.mjs).
 //
-//   cbd6c85c8  zl, the Code Routines layout (list Pl, the local cards jl / Al / Ol / xl, the local detail data layer Jc with
-//              Run now Kc / Uc / Hc / Vc and the Routine / Scheduled copy zc / Bc, the runnable check Wc, the running-id
-//              store Gc, the status write qc), and the two lazy local surfaces it mounts: Dc (c0243d234, the create page)
-//              and kc (cfc18e0f4, the detail).
-//   cfc18e0f4  J EpitaxyLocalRoutineDetail, ze LocalStatusChip, Y SessionRunRow.
-//   c0243d234  J EpitaxyLocalRoutineCreatePage, Y EpitaxyLocalRoutineFormDialog, Z EpitaxyLocalRoutineCreateFormEmbed.
-//   c0fd2fda3  all 13 exports: the form state hook sn, the branch picker Dt, the worktree switch Ot, Runs on wt, and the
-//              schedule / permission / model / folder fields.
+//   cbd6c85c8  Ou, the Code Routines layout (the list hu with its read-failed Retry state (RC-01), the local cards uu / lu,
+//              Run now bl / _l and the Routine / Scheduled copy pl / ml, the running-id store yl), and the two lazy local
+//              surfaces it mounts: tl (c0243d234, the create page) and rl (cfc18e0f4, the detail).
+//   cfc18e0f4  Je EpitaxyLocalRoutineDetail, Xe LocalStatusChip, et SessionRunRow.
+//   c0243d234  U EpitaxyLocalRoutineCreatePage, W EpitaxyLocalRoutineFormDialog, K EpitaxyLocalRoutineCreateFormEmbed.
+//   c0fd2fda3  all 13 exports: the form state hook hn, the branch picker Dt, the worktree switch Ot, Runs on Ct, and the
+//              basics / schedule / permission / model / folder fields. 3.6556.2 moved the old c0efc2620 schedule and
+//              model rows to c7b47b35d; c0efc2620 is now the cloud "generate a routine draft" hook (RC-17, an adapter
+//              boundary, GrowthBook __gb__2682097403 off, E13).
 //
-// Every emitted binding is an original top-level declaration sliced from the installed chunk; the bindings of each chunk
+// Every emitted binding is an original top-level declaration sliced from the 3.6556.2 chunk; the bindings of each chunk
 // are the reachable closure of the roots across chunks (free variables of each declaration, resolved through import and
 // re-export chains to the declaring chunk). A binding resolves, in this order, to: a named host adapter in
 // src/source-code-routines-adapters.jsx (its original declaration must carry `features`), an adapter the routines-shared
-// graph already answers it with (src/source-routines-shared-adapters.jsx, the same host service), a verified React
-// export of vendor-frame, a semantic public name of view-tabs (D1/D24), a binding the routines-shared graph holds
-// (imported from src/generated/routines-shared/<chunk>.mjs under its original local name, so the 12 contexts that graph
+// graph already answers it with (src/source-routines-shared-adapters.jsx, the same host service), a vendor-frame React
+// export (official-3.6556.2.mjs reactAliases, checked with assertVendorAlias; R3), a semantic public name of view-tabs
+// (D1/D24/E3: the React Compiler helpers J9 / J1… / K1… come from there), a binding the routines-shared graph holds
+// (imported from src/generated/routines-shared/<chunk>.mjs under its original local name, so the contexts that graph
 // copied stay one object each), or a copy in this graph's module for its chunk. A vendor binding, a destructuring or
-// class declaration, an unpinned dynamic import, a context another graph holds, or a binding view-tabs holds without a
-// semantic name (D46: name it in extract-view-tabs.mjs; a name it lists in `pendingNames` is imported by its local
-// until published) stops generation.
+// class declaration, an unpinned dynamic import, or a binding view-tabs holds without a semantic name (D46: name it in
+// extract-view-tabs.mjs) stops generation. Features (R2/E5) match the declaration's prettier form as text or through
+// looseFeature(); every exported root also pins its export alias.
 //
 // Unreachable branches on this host are adapter boundaries (null components or constant hooks); each is listed in the
 // manifest's `hostDifferences`. The two reachable lazy surfaces keep their original lazy declaration; only the import
-// specifier is rewritten to the generated module (`import("./c0243d234-Bc7r1pNg.mjs")`), and that module also carries the
+// specifier is rewritten to the generated module (`import("./c0243d234-CVQfH8d_.mjs")`), and that module also carries the
 // original export alias the declaration's `pick` reads.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import { routinesSharedManifestFor } from './routines-shared-compat.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const referenceVersion = official.referenceVersion;
+const referenceSnapshot = official.referenceSnapshot;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/code-routines');
 const viewTabs = path.join(root, 'src/generated/view-tabs');
 const routinesShared = path.join(root, 'src/generated/routines-shared');
@@ -46,258 +52,265 @@ const adapterModule = '../../source-code-routines-adapters.jsx';
 const sharedAdapterModule = '../../source-routines-shared-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-// The roots: chunk -> original local -> { name, features }. `features` must appear in the root's prettier form.
+// The roots: chunk -> original local -> { name, export, features }. `features` must appear in the root's prettier form
+// (text or looseFeature, R2/E5); `export` is the root's export alias in its chunk (cbd6c85c8's Ou is not exported: the
+// route chunk exports only route objects, so its features carry the page's own literals).
 const roots = {
-  'cbd6c85c8-PO73iD62.js': {
-    zl: { name: 'CodeRoutinesPage', features: ['scheduledTaskId: e,', 'onOpenSession: n,', 'e === Ll && d', 'entryPoint: "code_routines_page",', 'collideWithCodeRoutines: !0,'] },
+  'cbd6c85c8-D1xuycDy.js': {
+    Ou: { name: 'CodeRoutinesPage', features: ['{ scheduledTaskId: t, onNavigate: n, onOpenSession: r, embedded: o } = e,', 'u = kr(t === Eu),', 'tasksReadFailed: m,', 'onRefetchTasks: h,', 'entryPoint: "code_routines_page",', 'collideWithCodeRoutines: !0,'] },
   },
-  'cfc18e0f4-Cr7owzD3.js': {
-    J: { name: 'LocalRoutineDetail', features: ['"data-testid": "host-wait",', '"data-testid": "runs-on",'] },
-    ze: { name: 'LocalStatusChip', features: ['? r(v, { name: "CheckCircle", size: "xs", className: "text-success" })', 'e === "needsInput"'] },
-    Y: { name: 'SessionRunRow', features: ['({ session: t, isCompletedUnread: i, onClick: a })', 'l = c(() => a(t.sessionId), [a, t.sessionId]),'] },
+  'cfc18e0f4-CmiyhJoV.js': {
+    Je: { name: 'LocalRoutineDetail', export: 'EpitaxyLocalRoutineDetail', features: ['"data-testid": "host-wait",', '"data-testid": "runs-on",'] },
+    Xe: { name: 'LocalStatusChip', export: 'LocalStatusChip', features: ['name: "CheckCircle",', 'className: "text-success",', ': n === "needsInput"'] },
+    et: { name: 'SessionRunRow', export: 'SessionRunRow', features: ['{ session: i, isCompletedUnread: a, onClick: o } = t,', '() => o(i.sessionId)'] },
   },
-  'c0243d234-Bc7r1pNg.js': {
-    J: { name: 'LocalRoutineCreatePage', features: ['let o = i(() => ({ kind: "create" }), []),', 'kind: "local",'] },
-    Y: { name: 'LocalRoutineFormDialog', features: ['let s = i(() => ({ kind: "edit", task: a }), [a]),'] },
-    Z: { name: 'LocalRoutineCreateFormEmbed', features: ['[v] = t(() => Symbol("routine-dialog-trust-gate")),'] },
+  'c0243d234-CVQfH8d_.js': {
+    U: { name: 'LocalRoutineCreatePage', export: 'EpitaxyLocalRoutineCreatePage', features: ['K0($, 0, { kind: "create" })', 'kind: "local",'] },
+    W: { name: 'LocalRoutineFormDialog', export: 'EpitaxyLocalRoutineFormDialog', features: ['K1($, 0, i, { kind: "edit", task: i })'] },
+    K: { name: 'LocalRoutineCreateFormEmbed', export: 'EpitaxyLocalRoutineCreateFormEmbed', features: ['h = u === void 0 ? "epitaxy" : u,', 'nameCollisionError: m,'] },
   },
-  'c0fd2fda3-DzTjEtm3.js': {
-    sn: { name: 'useLocalRoutineForm', features: ['surface: "code_local",', 'id: "Cox9P9F9a5",'] },
-    Dt: { name: 'RoutineBranchField', features: ['? s.formatMessage(Y.noBranches)', ': s.formatMessage(Y.noBranchesMatch),'] },
-    Ot: { name: 'RoutineWorktreeToggle', features: ['label: i(I, { ...Y.worktree }),'] },
-    wt: { name: 'RoutineRunsOnField', features: ['{ defaultMessage: "{label} (Ant only)", id: "ndHh/LVykO" },', 'emptyMessage: l.formatMessage(Y.noMachines),'] },
-    Ut: { name: 'RoutineBasicsFields', features: ['placeholder: s.formatMessage(Z.namePlaceholder),', 'label: i(I, { ...Z.description }),'] },
-    Lt: { name: 'RoutineScheduleField', features: ['"aria-label": g.formatMessage(X.atTime),', '"aria-label": g.formatMessage(X.cronExpression),'] },
-    At: { name: 'RoutinePermissionModeSelect', features: ['emptyMessage: s.formatMessage(Y.noPermissionModes),'] },
-    Wt: { name: 'RoutinePermissionField', features: ['i(N.Header, { children: i(v, { id: "1ty157t" }) }),'] },
-    Mt: { name: 'RoutineModelSelect', features: ['emptyMessage: o.formatMessage(Y.noModels),'] },
-    Gt: { name: 'RoutineModelField', features: ['() => [{ model: "", name: o.formatMessage(Z.defaultModel) }, ...e],'] },
-    Et: { name: 'RoutineFolderField', features: ['let { cwd: s, handleSelectCwd: l, handleBrowseCwd: u, machine: d } = r,'] },
-    Bt: { name: 'ROUTINE_FORM_MESSAGES', features: ['clearsApprovals: {', 'id: "Ohdw+y7C3b",'] },
-    $t: { name: 'clampRoutinePermissionChoice', features: [': e === "auto" || e === "bypassPermissions"', '? H(e, t)'] },
+  'c0fd2fda3-CntNPbFi.js': {
+    hn: { name: 'useLocalRoutineForm', export: 'n', features: ['surface: "code_local",', 'id: "Cox9P9F9a5",'] },
+    Dt: { name: 'RoutineBranchField', export: 'c', features: ['? s.formatMessage(Y.noBranches)', ': s.formatMessage(Y.noBranchesMatch),'] },
+    Ot: { name: 'RoutineWorktreeToggle', export: 'd', features: ['K0($, 0, n(F, { ...X.worktree }))'] },
+    Ct: { name: 'RoutineRunsOnField', export: 'p', features: ['defaultMessage: "{label} (Ant only)",', 'l.formatMessage(X.noMachines)'] },
+    Zt: { name: 'RoutineBasicsFields', export: 'r', features: ['c.formatMessage(Q.namePlaceholder)', 'n(F, { ...Q.description })'] },
+    Ut: { name: 'RoutineScheduleField', export: 's', features: ['"aria-label": g.formatMessage(X.atTime),', '"aria-label": g.formatMessage(X.cronExpression),'] },
+    At: { name: 'RoutinePermissionModeSelect', export: 'u', features: ['s.formatMessage(X.noPermissionModes)'] },
+    Qt: { name: 'RoutinePermissionField', export: 'a', features: ['n(u.Header, { children: n(A, { id: "1ty157t" }) })'] },
+    Mt: { name: 'RoutineModelSelect', export: 'l', features: ['o.formatMessage(X.noModels)'] },
+    $t: { name: 'RoutineModelField', export: 'i', features: ['K1($, 2, s, { model: "", name: s })', 'Q.defaultModel'] },
+    Et: { name: 'RoutineFolderField', export: 'f', features: ['{ cwd: o, handleSelectCwd: c, handleBrowseCwd: l, machine: u } = t,'] },
+    qt: { name: 'ROUTINE_FORM_MESSAGES', export: 'o', features: ['clearsApprovals: {', 'id: "Ohdw+y7C3b",'] },
+    cn: { name: 'clampRoutinePermissionChoice', export: 't', features: [': e === "auto" || e === "bypassPermissions"', '? H(e, t)'] },
   },
 };
 // Lazy declarations kept with a rewritten specifier: key -> { target chunk: original export alias `pick` reads }.
 const lazyImports = {
-  'cae55dd08-oEwAOna-.js#f': { 'c0243d234-Bc7r1pNg.js': 'EpitaxyLocalRoutineCreateFormEmbed' },
-  'cbd6c85c8-PO73iD62.js#Dc': { 'c0243d234-Bc7r1pNg.js': 'EpitaxyLocalRoutineCreatePage' },
-  'cbd6c85c8-PO73iD62.js#kc': { 'cfc18e0f4-Cr7owzD3.js': 'EpitaxyLocalRoutineDetail' },
-};
-// vendor-frame re-exports React as `local=<namespace>.<member>`; the namespace is checked against its module.
-const reactNamespaces = { fe: 'react/jsx-runtime', o: 'react', Ln: 'react-dom' };
-const reactMembers = {
-  'react/jsx-runtime': new Set(['jsx', 'jsxs', 'Fragment']),
-  react: new Set(['default', 'useState', 'useRef', 'useCallback', 'useMemo', 'useEffect', 'useLayoutEffect', 'useContext', 'createContext', 'memo',
-    'forwardRef', 'useSyncExternalStore', 'useId', 'useReducer', 'use', 'Children', 'Fragment', 'cloneElement', 'isValidElement',
-    'useTransition', 'useDeferredValue', 'useEffectEvent', 'useInsertionEffect', 'useImperativeHandle', 'startTransition', 'createElement', 'Component', 'Suspense', 'lazy']),
-  'react-dom': new Set(['flushSync', 'createPortal']),
+  'cae55dd08-CqJTQ965.js#f': { 'c0243d234-CVQfH8d_.js': 'EpitaxyLocalRoutineCreateFormEmbed' },
+  'cbd6c85c8-D1xuycDy.js#tl': { 'c0243d234-CVQfH8d_.js': 'EpitaxyLocalRoutineCreatePage' },
+  'cbd6c85c8-D1xuycDy.js#rl': { 'cfc18e0f4-CmiyhJoV.js': 'EpitaxyLocalRoutineDetail' },
 };
 // Pure vendor declarations this graph may copy (chunk#local -> features).
 const vendorCopies = {
-  // zustand's React create and its vanilla core (the running-id store Gc, the read-state and pending-read stores).
-  'vendor-all-0-CTKbbUUg.js#ee': ['ee = (e) => (e ? x(e) : x)'],
-  'vendor-all-0-CTKbbUUg.js#x': ['n = (e) => b(t, e);'],
-  'vendor-all-0-CTKbbUUg.js#v': ['v = (e) => (e ? _(e) : _)'],
-  'vendor-all-0-CTKbbUUg.js#b': ['useSyncExternalStore(', 'e.getInitialState'],
-  'vendor-all-0-CTKbbUUg.js#_': ['n = new Set(),', 'for (let r of n) r(t, e);'],
+  // zustand's React create and its vanilla core (the running-id store yl, the read-state and pending-read stores).
+  'vendor-all-0-DXM0MGjZ.js#v': ['v = (e) => (e ? _(e) : _)'],
+  'vendor-all-0-DXM0MGjZ.js#_': ['n = (e) => g(t, e);'],
+  'vendor-all-0-DXM0MGjZ.js#m': ['m = (e) => (e ? p(e) : p)'],
+  'vendor-all-0-DXM0MGjZ.js#p': ['n = new Set(),', 'for (let r of n) r(t, e);'],
+  'vendor-all-0-DXM0MGjZ.js#g': ['useSyncExternalStore(', 'e.getInitialState'],
+  'vendor-all-0-DXM0MGjZ.js#h': ['h = (e) => e'],
   // zustand's persist middleware and JSON storage (the recent folders store of the folder field, c749529a1).
-  'vendor-all-0-CTKbbUUg.js#me': ['storage: fe(() => window.localStorage),'],
-  'vendor-all-0-CTKbbUUg.js#fe': ['getItem: (e) =>'],
-  'vendor-all-0-CTKbbUUg.js#pe': ['return n instanceof Promise'],
-  'vendor-all-0-CTKbbUUg.js#y': ['y = (e) => e'],
-  'vendor-query-Dqcf4jOo.js#nt': ['function nt(e) {\n  return e;\n}'],
-  'vendor-query-Dqcf4jOo.js#ne': ['return Object.prototype.toString.call(e) === "[object Object]";'],
-  // react-query's replaceEqualDeep (the scheduled task list keeps unchanged rows by identity, shared-4 zm).
-  'vendor-query-Dqcf4jOo.js#E': ['if (n > 500) return t;'],
-  'vendor-query-Dqcf4jOo.js#te': ['return Array.isArray(e) && e.length === Object.keys(e).length;'],
-  'vendor-query-Dqcf4jOo.js#O': ['let t = e.constructor;'],
-  'vendor-query-Dqcf4jOo.js#ee': ['ee = Object.prototype.hasOwnProperty'],
-  // the debounced value hook of the search result announcement (c365fd3fe r).
-  'vendor-all-0-CTKbbUUg.js#_e': ['window.clearTimeout(l.current)'],
+  'vendor-all-0-DXM0MGjZ.js#ue': ['storage: le(() => window.localStorage),'],
+  'vendor-all-0-DXM0MGjZ.js#le': ['getItem: (e) =>'],
+  'vendor-all-0-DXM0MGjZ.js#C': ['return n instanceof Promise'],
+  'vendor-query-DVJ0goAF.js#nt': ['function nt(e) {\n  return e;\n}'],
+  'vendor-query-DVJ0goAF.js#ne': ['return Object.prototype.toString.call(e) === "[object Object]";'],
+  // react-query's replaceEqualDeep (the scheduled task list keeps unchanged rows by identity, shared-4 Eg).
+  'vendor-query-DVJ0goAF.js#E': ['if (n > 500) return t;'],
+  'vendor-query-DVJ0goAF.js#te': ['return Array.isArray(e) && e.length === Object.keys(e).length;'],
+  'vendor-query-DVJ0goAF.js#O': ['let t = e.constructor;'],
+  'vendor-query-DVJ0goAF.js#ee': ['ee = Object.prototype.hasOwnProperty'],
+  // the debounced value hook of the search result announcement (c365fd3fe n).
+  'vendor-all-0-DXM0MGjZ.js#pe': ['window.clearTimeout(s.current)'],
+};
+// Top-level member statements kept with their owner binding (chunk#owner -> features of the statement). A selected
+// binding with an unlisted member statement stops generation, so no module tail is dropped silently.
+const memberStatements = {
+  // Fuse 7.4.0's statics: c2b74c150 `a` reads `t.config.getFn` (search over the Chats page, cd2687f9f / c6a930826).
+  'c145fa5ca-_OVos244.js#Q': ['Q.version = "7.4.0"', 'Q.createIndex = A', 'Q.parseIndex = j', 'Q.config = D', 'Q.parseQuery = ie', 'Q.use = function'],
 };
 // Host services and unreachable boundaries (checked first): chunk -> original local -> { name, features, also, boundary }.
 // `boundary` (a host difference) is written to the manifest. Each entry is documented where it is implemented.
 const adapterTable = {
-  'cbd6c85c8-PO73iD62.js': {
-    // The cloud create page / detail (c1c5fa449 / cd3378dac) behind St() (cloud routines, off): null surfaces.
-    Ec: { name: 'CloudRoutineCreateSurface', features: ['id: "epitaxy_routine_create_form",', 'import("./c1c5fa449-DLn1neKb.js")'],
+  'cbd6c85c8-D1xuycDy.js': {
+    // The cloud create page / detail (c1c5fa449 / cd3378dac) behind the cloud routines gate (off): null surfaces.
+    el: { name: 'CloudRoutineCreateSurface', features: ['id: "epitaxy_routine_create_form",', 'import("./c1c5fa449-CZAPNWmp.js")'],
       boundary: 'Cloud routine create page (c1c5fa449 EpitaxyRoutineCreatePage): cloud routines are off (D17/D32); a null surface with an inert handle.' },
-    Oc: { name: 'CloudRoutineDetailSurface', features: ['id: "epitaxy_routine_detail",', 'import("./cd3378dac-qcFogG3w.js")'],
+    nl: { name: 'CloudRoutineDetailSurface', features: ['id: "epitaxy_routine_detail",', 'import("./cd3378dac-BBwl0RB0.js")'],
       boundary: 'Cloud routine detail (cd3378dac EpitaxyRoutineDetail): cloud routines are off; a null surface with an inert handle.' },
-    Nc: { name: 'CloudRoutineDetail', features: ['s(Ac, { triggerId: e.triggerId }), s(Oc.Component, { ...e })'],
-      boundary: 'zl renders Nc (remote trigger query Ac + the cloud detail) only for a remote trigger id with St() on; unreachable, null.' },
-    Ml: { name: 'RoutineTemplatesGrid', features: ['className: "grid w-full grid-cols-1 gap-x-6 gap-y-md md:grid-cols-2",', 'children: ts.map((e) =>'],
-      boundary: 'Template grid Ml (c8d777f38 templates, onSelect opens the cloud /new?template= page) is only shown with St() on; null (tasks-code-routines-templates, not-applicable-host).' },
-    pl: { name: 'RoutineScopeTabs', features: ['activateOnFocus: !1,', 'i ? fl.scheduledTasksView : fl.routinesView,'],
-      boundary: 'Yours / Templates scope tabs pl render only with St() on; null.' },
-    __vite__mapDeps: { name: 'viteChunkStylesheets', features: ['"assets/v1/shared-frame-CegduNQ2.css",', '"assets/v1/shared-styles-Bl9zqrv-.css",'],
+    sl: { name: 'CloudRoutineDetail', features: ['a(il, { triggerId: e.triggerId })', 'a(nl.Component, { ...e })'],
+      boundary: 'Ou renders sl (remote trigger query il + the cloud detail) only for a remote trigger id with cloud routines on; unreachable, null.' },
+    du: { name: 'RoutineTemplatesGrid', features: ['{ createFormIntent: t, scheduledBasePath: n } = e,', 'i.push(`${n}/new?template=${encodeURIComponent(e.id)}`),'],
+      boundary: 'Template grid du (c8d777f38 templates, onSelect opens the cloud /new?template= page) is only shown with cloud routines on; null (tasks-code-routines-templates, not-applicable-host).' },
+    Kl: { name: 'RoutineScopeTabs', features: ['activateOnFocus: !1,', 'o ? Gl.scheduledTasksView : Gl.routinesView'],
+      boundary: 'Yours / Templates scope tabs Kl render only with cloud routines on; null.' },
+    __vite__mapDeps: { name: 'viteChunkStylesheets', features: ['"assets/v1/shared-frame-CegduNQ2.css",', '"assets/v1/shared-styles-D_GJawPO.css",'],
       boundary: 'The lazy chunks\' stylesheet preload list (shared-frame / shared-styles CSS) is empty: the host bundles the official styles in its own layer (D2), so the preload helper injects no <link>.' },
   },
-  'cae55dd08-oEwAOna-.js': {
-    l: { name: 'CloudRoutineCreateFormSurface', features: ['id: "code_routine_create_form",', 'import("./c1c5fa449-DLn1neKb.js")'],
-      boundary: 'Cloud routine create form embed (c1c5fa449): cloud routines are off; a null surface with an inert handle (Pl only preloads it).' },
-    __vite__mapDeps: { name: 'viteChunkStylesheets', features: ['"assets/v1/shared-frame-CegduNQ2.css",', '"assets/v1/shared-styles-Bl9zqrv-.css",'],
+  'cae55dd08-CqJTQ965.js': {
+    l: { name: 'CloudRoutineCreateFormSurface', features: ['id: "code_routine_create_form",', 'import("./c1c5fa449-CZAPNWmp.js")'],
+      boundary: 'Cloud routine create form embed (c1c5fa449): cloud routines are off; a null surface with an inert handle (the list only preloads it).' },
+    __vite__mapDeps: { name: 'viteChunkStylesheets', features: ['"assets/v1/shared-frame-CegduNQ2.css",', '"assets/v1/shared-styles-D_GJawPO.css",'],
       boundary: 'The create form embed chunk\'s stylesheet preload list: empty, as for cbd6c85c8 (D2).' },
   },
-  'cd1ced056-CT2SxE9T.js': {
+  'cd1ced056-BUYB9IOz.js': {
     r: { name: 'UpsertScheduledTaskModalSurface', features: ['id: "scheduled_task_upsert_modal",', 'pick: (e) => e.UpsertScheduledTaskModal,'],
-      boundary: 'The one-form upsert modal (c97b955f1 Ca, about 98 KB) opens only when sC() (one form) is on; off here, so a null surface with an inert handle and the local c0243d234 form is used (hostGap 17).' },
+      boundary: 'The one-form upsert modal (c97b955f1 La, about 111 KB) opens only when the one-form flow (shared-18 AT) is on; off here, so a null surface with an inert handle and the local c0243d234 form is used (hostGap 17).' },
   },
-  'shared-13-C8pTuOID.js': {
-    N: { name: 'SlashCommandChip', features: ['a.unresolved', 'onChipClick: u,'],
-      boundary: 'Slash command chips in the instructions (c32f7beb9 o over the shared-5 EM catalog): the host has no claude.ai skill / plugin / MCP command catalog, so no chip is ever resolved.' },
+  'shared-13-DBkfWBVo.js': {
+    P: { name: 'SlashCommandChip', features: ['if (o.unresolved) {', 'onChipClick: u,'],
+      boundary: 'Slash command chips in the instructions (c32f7beb9 o over the shared-5 Dz catalog): the host has no claude.ai skill / plugin / MCP command catalog, so no chip is ever resolved.' },
   },
-  'shared-5-kdJVRUsT.js': {
-    EM: { name: 'useSlashCommandCatalog', features: ['{ skills: t } = Cn(),', 'source: "mcp",'], boundary: 'The skill / plugin / MCP command catalog (EM) is empty here; instructions render as plain text.' },
+  'shared-5-Bg6ZMqvt.js': {
+    Dz: { name: 'useSlashCommandCatalog', features: ['{ skills: t } = jc(),', 'source: "mcp",'], boundary: 'The skill / plugin / MCP command catalog (Dz) is empty here; instructions render as plain text.' },
   },
-  'shared-104-Cqo2-vQh.js': {
-    Fo: { name: 'lazySurface', features: ['let t = Aa(e.entry),', 'i = e.options.suspense === !0 ? void 0 : e.options.loading,'],
-      boundary: 'The tiered lazy loader (shared-104 Fo: chunk recovery, load telemetry, overlay hosts) is a React.lazy surface over the same entry.load / pick / options.loading; no tier telemetry or chunk-error recovery (the chunks are in the host bundle).' },
-    yO: { name: 'useRemoteTriggerRunRollup', features: ['"/v1/code/sessions?only_trigger_sessions=true&limit=200&exclude_tags=-"', 'latestRunByTriggerId: t.latestRunByTriggerId,'],
+  'shared-104-CTONUSaz.js': {
+    ss: { name: 'lazySurface', features: ['let t = co(e.entry),', 'i = e.options.suspense === !0 ? void 0 : e.options.loading,'],
+      boundary: 'The tiered lazy loader (shared-104 ss: chunk recovery, load telemetry, overlay hosts) is a React.lazy surface over the same entry.load / pick / options.loading; no tier telemetry or chunk-error recovery (the chunks are in the host bundle).' },
+    _A: { name: 'useRemoteTriggerRunRollup', features: ['"/v1/code/sessions?only_trigger_sessions=true&limit=200&exclude_tags=-"', 'latestRunByTriggerId: _,'],
       boundary: 'Cloud trigger session rollup (claude.ai /v1/code/sessions): no cloud routines; empty maps, not loading.' },
   },
-  'shared-6-Cby4X-ms.js': {
-    ON: { name: 'useEnabledMcpTools', features: ['accountEnabledMcpTools: t?.settings?.enabled_mcp_tools,', 'pluginSuggestionsSupported: uN,'],
-      boundary: 'The account / session MCP tool selection (ON) is the host core\'s own MCP configuration (hostGap 11): no account tool list here.' },
-    wN: { name: 'resolveRunMcpServers', features: ['let a = await _N({ enabledExtensionIds: n, filterFilesystem: !0 }),', 'return { mcpServers: a, remoteMcpServers: o, enabledMcpTools: s };'],
+  'shared-6-sd9jbJqs.js': {
+    AF: { name: 'useEnabledMcpTools', features: ['let i = t?.settings?.enabled_mcp_tools;'],
+      boundary: 'The account / session MCP tool selection (AF) is the host core\'s own MCP configuration (hostGap 11): no account tool list here.' },
+    EF: { name: 'resolveRunMcpServers', features: ['let a = await gF({ enabledExtensionIds: n, filterFilesystem: !0 }),', 'return { mcpServers: a, remoteMcpServers: o, enabledMcpTools: s };'],
       boundary: 'Run now does not hand MCP servers to the session: the host core loads its own (hostGap 11), so no servers, no remote servers.' },
-    Xj: { name: 'useAutoModeAvailability', features: ['r = Ji("claude_code_desktop_auto_permissions"),', 'source: "custom-3p",'],
-      boundary: 'Auto mode availability (Xj: GrowthBook rollout, Claude model list, device managed settings) is a host permission mode that is always offered: available.' },
-    Ij: { name: 'useManagedPermissionSettings', features: ['return Rj({ workspacePath: e, sshConfig: t });'],
-      boundary: 'Managed settings for a folder (Ij over the desktop resolveLocalSettings bridge): none here, settled, so no managed default permission mode.' },
-    ST: { name: 'useLazySurfacePending', features: ['t && e.state !== "loaded" ? bT(e, n) : yT', 'return t && !i;'],
-      boundary: 'Pending-while-the-chunk-loads (shared-6 ST) reads the tiered loader\'s handle; the host surfaces load from the local bundle, so never pending.' },
+    sD: { name: 'useLazySurfacePending', features: ['t && e.state !== "loaded" ? aD(e, n) : iD', 'return t && !i;'],
+      boundary: 'Pending-while-the-chunk-loads (shared-6 sD) reads the tiered loader\'s handle; the host surfaces load from the local bundle, so never pending.' },
   },
-  'shared-78-D6VXYXaQ.js': {
-    VW: { name: 'useCodeScheduledTasksGate', features: ['t = O("chilling_sloth_clocks"),', 'r || IU("ccdScheduledTasksEnabled", i);'],
+  'shared-78-D5Fw2h0a.js': {
+    xD: { name: 'useAccountSettingsSettled', features: ['let e = bD(),', 't = Ar().data !== void 0;'],
+      boundary: 'New in 3.6556.2: the auto / bypass permission answers (caf74d8e3 v) read "loading" until the claude.ai account and organization settings have resolved (xD over bD). There is no account here and the permission answers are the host\'s own, so they are settled.' },
+    WK: { name: 'useCodeScheduledTasksGate', features: ['t = O("chilling_sloth_clocks"),', 'hE("ccdScheduledTasksEnabled", i);'],
       boundary: 'D32: the local CCD scheduled tasks gate (Claude Code available + chilling_sloth_clocks + onThisDevice + the CCD bridge) is on, over the host scheduler.' },
-    YH: { name: 'useWslRoutinesSupported', features: ['return Z()?.wslRoutines?.status === "supported";'], boundary: 'WSL routines are not supported here.' },
-    BU: { name: 'useCoworkScheduledTasksGate', features: ['IU("coworkScheduledTasksEnabled", t);', '{ loading: !1, enabled: !0, statusUnknown: !1 }'],
-      boundary: 'Cowork scheduled tasks on the Code page (the chat source rows behind the source filter, ZS off): off.' },
+    wT: { name: 'useWslRoutinesSupported', features: ['return K()?.wslRoutines?.status === "supported";'], boundary: 'WSL routines are not supported here.' },
+    yE: { name: 'useCoworkScheduledTasksGate', features: ['hE("coworkScheduledTasksEnabled", t);', 'K0($, 5, { loading: !1, enabled: !0, statusUnknown: !1 })'],
+      boundary: 'Cowork scheduled tasks on the Code page (the chat source rows behind the source filter, off): off.' },
   },
-  'shared-18-D4XxL6Tg.js': {
-    ty: { name: 'useRoutinesPageBand', features: ['hasFrameShell: Zr(),', 'frameHeader: Dc(),'],
-      boundary: 'The page band (ty over the frame shell / desktop top bar) is the band the host Sessions page uses (code-current sessionsPageBand with no frame shell and a desktop top bar).' },
-    uC: { name: 'useLocalRoutinesAvailable', features: ['n = WS() === !0,', 'return t.enabled === !0 && (!n || i);'],
-      boundary: 'Local routines available (shared-18 uC: the CCD gate and no routines policy): true with D32 (no managed policy here).' },
-    sC: { name: 'useOneRoutineForm', features: ['let e = oC(),', 'return e === !0 && t && n === !0;'], boundary: 'The one-form flow (sC) is off (GrowthBook, hostGap 17).' },
-    jV: { name: 'useOneFormCreate', features: ['n?.createScheduledTask && r', 't.enabled === !0'], boundary: 'One-form create (jV, needs ZS and sC) is off.' },
-    dC: { name: 'useLocalOneFormCreate', features: ['return e && t && !n && !!bt?.createScheduledTask;'], boundary: 'Local one-form create (dC, needs ZS) is off.' },
-    ZS: { name: 'useRoutineSourceFilter', features: ['return aC() === !0;'], boundary: 'The source filter / hideNonCode (ZS, aC) is off: no remote triggers or Cowork rows on the Code page.' },
-    WS: { name: 'useRoutinesDisabledByPolicy', features: ['return US().disabledByPolicy;'], boundary: 'No managed routines policy here: not disabled.' },
-    XS: { name: 'useSshHostAllowlist', features: ['disabled: e ? e.sshHostAllowlist?.value.length === 0 : YS,'],
+  'shared-18-D3y8YMFN.js': {
+    OT: { name: 'useUnifiedRoutinesGate', features: ['let e = Ro(C_),', 'return n ? !r && void 0 : t && e === !0;'],
+      boundary: 'The unified routines server gate (OT: claude_ai_unified_routines over the account\'s server gate names, behind the one-form flow and the Code / Cowork row merge) is a claude.ai GrowthBook gate; off here (no account, D29/D31).' },
+    hb: { name: 'useRoutinesPageBand', features: ['hasFrameShell: e,', 'frameHeader: t,', 'hasDesktopTopBar: n,'],
+      boundary: 'The page band (hb over the frame shell / desktop top bar) is the band the host Sessions page uses (code-current sessionsPageBand with no frame shell and a desktop top bar).' },
+    IT: { name: 'useLocalRoutinesAvailable', features: ['r = Qg() === !0,', 'return n.enabled === !0 && (!r || a);'],
+      boundary: 'Local routines available (shared-18 IT: the CCD gate and no routines policy): true with D32 (no managed policy here).' },
+    AT: { name: 'useOneRoutineForm', features: ['let e = kT(),', 'return e === !0 && t && n === !0;'], boundary: 'The one-form flow (AT) is off (GrowthBook, hostGap 17).' },
+    IK: { name: 'useOneFormCreate', features: ['return e && n?.createScheduledTask && r', 't.enabled === !0'], boundary: 'One-form create (IK, needs the source filter and AT) is off.' },
+    LT: { name: 'useLocalOneFormCreate', features: ['return e && t && !n && !!sn?.createScheduledTask;'], boundary: 'Local one-form create (LT, needs the source filter) is off.' },
+    yT: { name: 'useSshHostAllowlist', features: ['n = e ? e.sshHostAllowlist?.value.length === 0 : vT;'],
       boundary: 'No SSH environments here (D31/D37): the SSH host allowlist reads disabled and known.' },
-    JS: { name: 'useSshRoutinesSupported', features: ['e.appFeatures?.humbleSky?.status === "supported"'], boundary: 'SSH routines (humbleSky) are not supported here (D37).' },
-    TV: { name: 'useCreateWithClaudeSurface', features: ['return ee(() => wV(e, t, n, Oo), wV(e, t, n, CV));'],
-      boundary: 'Create with Claude (TV, which surface drafts the routine) is only offered with St() on; reads "cowork" (wV with no hub look).' },
-    DV: { name: 'useStartDraftConversation', features: ['typeof t == "string" ? e(t, n) : e(t.text, n, { delivery: t.delivery });'],
-      boundary: 'Starting a chat draft for Create with Claude (DV over oV) is unreachable (St() off); a no-op callback.' },
-    dV: { name: 'createWithClaudePrompt', features: ['return uV(e, sV.create, { kind: t });'], boundary: 'The Create with Claude prompt (dV) is unreachable; an empty prompt.' },
+    _T: { name: 'useSshRoutinesSupported', features: ['e.appFeatures?.humbleSky?.status === "supported"'], boundary: 'SSH routines (humbleSky) are not supported here (D37).' },
+    AK: { name: 'useCreateWithClaudeSurface', features: ['((r = () => kK(e, t, n, Ra)),', '(i = kK(e, t, n, OK)),'],
+      boundary: 'Create with Claude (AK, which surface drafts the routine) is only offered with cloud routines on; reads "cowork" (kK with no hub look).' },
+    MK: { name: 'useStartDraftConversation', features: ['typeof t == "string" ? e(t, n) : e(t.text, n, { delivery: t.delivery });'],
+      boundary: 'Starting a chat draft for Create with Claude (MK over dK) is unreachable (cloud routines off); a no-op callback.' },
+    gK: { name: 'createWithClaudePrompt', features: ['return hK(e, fK.create, { kind: t });'], boundary: 'The Create with Claude prompt (gK) is unreachable; an empty prompt.' },
   },
-  'shared-4-CJsHhp5n.js': {
-    bT: { name: 'useEnsureToolsReady', features: ['if (t) return () => (Hn() ? Promise.resolve() : Un(e));'],
-      boundary: 'MCP bootstrap wait (bT): the host core manages its MCP servers; nothing to wait for.' },
-    Wm: { name: 'useCoworkLocalWithheld', features: ['localWithheld: (n && o && (e ? s && !t && !i : !(i && s && !t))) || a,'],
-      boundary: 'The Cowork-served / local-withheld check (Wm: org availability, Cowork verdict) only matters with the source filter on; not served, not withheld.' },
-    qp: { name: 'remoteRoutineDeleteBody', features: ['return Jr().routines.delete_removes_runs'],
-      boundary: 'The remote routine delete body (qp reads the account bootstrap routines config) is only used for remote rows; there are none, so it answers the plain body.' },
+  'shared-11-_AVGLHEz.js': {
+    Fs: { name: 'useRoutinesDisabledByPolicy', features: ['return Ps().disabledByPolicy;'], boundary: 'No managed routines policy here: not disabled.' },
+    km: { name: 'useIsGitRepo', features: ['return Am(e, t).isGitRepo;'], boundary: 'Whether the folder is a Git repository comes from the host workspace-info service (real git); undefined while unknown.' },
   },
-  'shared-1-CAAiD7E3.js': {
-    mT: { name: 'useCanManageRemoteTrigger', features: ['t = Rw().viaCoworkShim;', 'return E((n) => pT(n, e, t), [e, t]);'],
-      boundary: 'Whether a remote trigger can be managed (mT, account + Cowork shim): there are no remote rows; without the shim the original pT answers yes.' },
-    UT: { name: 'useRemoteTriggers', features: ['return mr("/v1/code/triggers", {'], boundary: 'Cloud triggers query (claude.ai /v1/code/triggers): no cloud routines; no data, not loading.' },
+  'shared-4-DUB1Oi0O.js': {
+    UD: { name: 'useEnsureToolsReady', features: ['() => (zc() ? Promise.resolve() : Fc(e))'],
+      boundary: 'MCP bootstrap wait (UD): the host core manages its MCP servers; nothing to wait for.' },
+    jg: { name: 'useCoworkLocalWithheld', features: ['{ orgAvailable: e, localDisabledByPolicy: t } = _i(),', 'c = e ? s && !t && !i : !(i && s && !t),'],
+      boundary: 'The Cowork-served / local-withheld check (jg: org availability, Cowork verdict) only matters with the source filter on; not served, not withheld.' },
+    Bh: { name: 'remoteRoutineDeleteBody', features: ['return Jn().routines.delete_removes_runs'],
+      boundary: 'The remote routine delete body (Bh reads the account bootstrap routines config) is only used for remote rows; there are none, so it answers the plain body.' },
   },
-  'c2bdcaf28-gKS3dLSx.js': {
-    h: { name: 'useWebhookTriggers', features: ['return r(p, { ...t, enabled: t.enabled && (e?.enabled ?? !0) });'], also: { p: ['p = "/v1/code/webhook-triggers"'] },
-      boundary: 'Cloud webhook triggers query (/v1/code/webhook-triggers): none.' },
+  'shared-1-BJhqMmkf.js': {
+    bD: { name: 'useCanManageRemoteTrigger', features: ['t = VE().viaCoworkShim;', '(n) => yD(n, e, t)'],
+      boundary: 'Whether a remote trigger can be managed (bD, account + Cowork shim): there are no remote rows; without the shim the original yD answers yes.' },
+    eO: { name: 'useRemoteTriggers', features: ['persistentSessionId: n,', 'includeSessionBoundOneShots: a,'], boundary: 'Cloud triggers query (claude.ai /v1/code/triggers): no cloud routines; no data, not loading.' },
   },
-  'c735530ca-CFslx6dG.js': {
-    s: { name: 'useRoutineProjects', features: ['{ projects: u } = r({ enabled: l }),'], boundary: 'Claude projects for chat routine rows (shared-16 bl, claude.ai projects): none.' },
+  'c2bdcaf28-CnUOdpb8.js': {
+    m: { name: 'useWebhookTriggers', features: ['r = n.enabled && (e?.enabled ?? !0),'], boundary: 'Cloud webhook triggers query (/v1/code/webhook-triggers): none.' },
   },
-  'cf50036ec-CJx7gDeD.js': {
-    O: { name: 'useBypassPermissionsAvailability', features: ['unverifiedYes: C(t, n),', 'blockedReason: D(t),'],
-      boundary: 'Bypass permissions availability (cf50036ec O: account / org / managed settings signals) is the host\'s bypass mode availability; never unverified.' },
+  'c735530ca-Fi6j0fzb.js': {
+    o: { name: 'useRoutineProjects', features: ['{ projects: f } = n(d),'], boundary: 'Claude projects for chat routine rows (claude.ai projects): none.' },
   },
-  'shared-11-BuQ3CK5I.js': {
-    Ud: { name: 'useIsGitRepo', features: ['return Wd(e, t).isGitRepo;'], boundary: 'Whether the folder is a Git repository comes from the host workspace-info service (real git); undefined while unknown.' },
+  'cf50036ec-ziWdNZkB.js': {
+    A: { name: 'useBypassPermissionsAvailability', features: ['a = t && r === !0 && (n.settingsResolveFailed || n.settingsUnverified);'],
+      boundary: 'Bypass permissions availability (cf50036ec A: account / org / managed settings signals) is the host\'s bypass mode availability; never unverified.' },
   },
-  'vendor-query-Dqcf4jOo.js': {
+  'c201cd217-kSkSzp_R.js': {
+    r: { name: 'SshFolderBrowserSurface', features: ['id: "epitaxy_ssh_folder_browser",', 'pick: (e) => e.FolderBrowserModal,'],
+      boundary: 'The SSH folder browser (FolderBrowserModal) only opens for an SSH place: none here (D37); a null surface.' },
+  },
+  'c0efc2620-BbVUZz1E.js': {
+    p: { name: 'useGenerateRoutineDraft', features: ['/dust/generate_routine_draft'], boundary: 'RC-17: routine auto-drafting (claude.ai generate_routine_draft, GrowthBook __gb__2682097403, E13) is off; no draft generator.' },
+  },
+  'shared-0-DDOOdL6P.js': {
+    oC: { name: 'FileSystem', features: ['oC = globalThis["claude.web"]?.FileSystem'], boundary: 'window["claude.web"].FileSystem: only browseFolder (the host folder picker) is provided.' },
+    xC: { name: 'CCDScheduledTasks', features: ['xC = globalThis["claude.web"]?.CCDScheduledTasks'],
+      boundary: 'window["claude.web"].CCDScheduledTasks is the host bridge over the local-routines service (list / create / update / status), registered by the page; removeApprovedPermission and getScheduledTaskFileContent are absent (hostGaps 5, 7).' },
+    pC: { name: 'LocalSessions', features: ['pC = globalThis["claude.web"]?.LocalSessions'],
+      boundary: 'window["claude.web"].LocalSessions is the host\'s: start (Run now through the host scheduler, hostGap 6), getLocalBranches (real git) and the recent-folder reads (getAll / getDetectedProjects / onOnEvent) when the page provides them; the SSH / WSL / trust / start-target methods are absent.' },
+  },
+  'shared-2-TF8v67kg.js': {
+    OX: { name: 'useLoadTelemetry', features: ['treePrefetchObservedAtEpochMs'], boundary: 'Page load telemetry (OX): nothing is sent (D17).' },
+  },
+  'shared-8-Db1QN4mf.js': {
+    mT: { name: 'remoteConnectorToolWords', features: ['if (n?.server.type !== "remote") return;', 't.startsWith("mcp__") ? [t.slice(5), "__"] : [t, ":"],'],
+      boundary: 'RC-07: an approved MCP tool of a remote (claude.ai) connector is named after its connector (mT over the account\'s remote servers, hashed URL claims). There are no remote connectors and no per-routine approvals here (hostGap 7): no connector words, so the plain "Remove approval for {tool}" copy.' },
+    og: { name: 'ccdSessionsStore', features: ['name: "ccd-sessions-filter",', 'archivedRowsPending: !1,'],
+      boundary: 'The CCD sessions store (shared-8 og) is a host store the page fills from its own sessions (scheduledTaskId from session metadata / runs); the persisted project filter is not used here.' },
+    hK: { name: 'useAutoModeAvailability', features: ['i = Ui("claude_code_desktop_auto_permissions"),', 'u = s?.disableAutoMode?.value === "disable",'],
+      boundary: 'Auto mode availability (hK: GrowthBook rollout, Claude model list, device managed settings) is a host permission mode that is always offered: available.' },
+    iy: { name: 'useManagedPermissionSettings', features: ['K2($, 0, t, e, { workspacePath: e, sshConfig: t })'],
+      boundary: 'Managed settings for a folder (iy over the desktop resolveLocalSettings bridge): none here, settled, so no managed default permission mode.' },
+  },
+  'shared-16-ByfgAyLr.js': {
+    qo: { name: 'useIsFocusedExtraPane', features: ['Math.min(r.focusedIndex, r.extraPanesByMode[t]?.length ?? 0) === e,'],
+      boundary: 'The detail is not hosted in an extra split pane here (the routines page is a main section): never the focused extra pane.' },
+  },
+  'shared-25-DOWZRSlq.js': {
+    Rs: { name: 'useDynamicConfig', features: ['as(r, i, a, n, t, { type: "dynamic_config", name: e })'],
+      boundary: 'GrowthBook dynamic configs (Rs, e.g. claudeai_mcp_bootstrap_wait) are not served here: the caller\'s default value.' },
+  },
+  'vendor-zod-fszujTq6.js': {
+    Ks: { name: 'zodNumber', features: ['return ta(Gs, e);'], boundary: 'The zod number schema Run now hands useDynamicConfig is never consulted (no dynamic configs): an inert schema.' },
+  },
+  'shared-182-BI1KJccu.js': {
+    PV: { name: 'useCliFloorForModel', features: ['(n) => _V(t ?? bV, n, e)'], boundary: 'No Claude Code CLI version floor here (hostGap 11).' },
+  },
+  'c06cf64bb-CdJdJuVd.js': {
+    iD: { name: 'spawnedFreshStore', features: ['protocolHandlers: r', '.getState().clearSession(t),'],
+      boundary: 'The live session runtime store (c06cf64bb iD) is the host transcript engine; Run now only marks a started session spawned-fresh, a no-op here (hostGap 11).' },
+  },
+  'shared-156-BLTosN8U.js': {
+    iw: { name: 'useToolCatalogState', features: ['return X(rw);'], boundary: 'The MCP tool catalog store (iw) names approved tools; no per-routine approvals here (hostGap 7): no catalog.' },
+    Cw: { name: 'lookupCatalogTool', features: ['return r?.toolsEnumerated === !1 && n !== "forLabel" ? void 0 : r;'], boundary: 'Catalog lookup for an approved tool: none (hostGap 7).' },
+  },
+  'shared-7-DBAgAi5H.js': {
+    Nv: { name: 'useBillingNotSelfManageable', features: ['let e = et(),', 'return e && !t;'], boundary: 'No billing here: not self-manageable is false.' },
+    Hk: { name: 'ConnectorFavicon', features: ['"data-testid": "connector-icon-globe-fallback",'],
+      boundary: 'MCP connector favicons (Hk, public suffix lookup chunk cd668e25e) for approved tools: no per-routine approvals here (hostGap 7), so none is drawn.' },
+    lw: { name: 'EffortControlSlot', features: ['import("./c8e04f916-39YFkTtR.js")', 'default: e?.EffortControl ?? uw'],
+      boundary: 'The lazily loaded effort slider (c8e04f916 EffortControl) is not migrated: the routine keeps the host core\'s effort option.' },
+  },
+  'ce2cf86ad-DV2C6-s-.js': {
+    I: { name: 'useEnsureWorkspaceTrust', features: ['async (t, n, r) => (await e(t, n, r)) === "accepted"'],
+      boundary: 'No workspace trust dialog here (hostGap 10): the folder was approved when the routine was saved; a folder missing at run time is the main process\'s cwd_not_found.' },
+    U: { name: 'useStartLocalSession', features: ['let n = i?.start;', 'let { remote: r, attachments: a, ...o } = t,'],
+      boundary: 'startLocalSession runs the routine through the host scheduler (local-routines run): the <scheduled-task> message, MCP servers and permission mode are the scheduler\'s own (hostGaps 5, 6); a launch failure rejects with the category suffix.' },
+  },
+  'c30c42d34-B0SRB643.js': {
+    f: { name: 'refetchWhenOnline', features: ['let t = e().then((e) => e.isError);', 'return c.isOnline() ? t : Promise.resolve(!0);'],
+      boundary: 'New in 3.6556.2: Retry after a failed task read (c30c42d34 f) refetches only while react-query\'s onlineManager is online. The host has no QueryClient or online manager and reads the local scheduler, so it always refetches.' },
+  },
+  'shared-52-uHFNjl7C.js': {
+    JO: { name: 'accountBootstrapConfig', features: ['return KO(UO(dr(), e), !er(), e ? CO() : void 0);'],
+      boundary: 'The account bootstrap config (JO: permission_modes, routines flags) is not served here (no account): an empty config.' },
+  },
+  'vendor-query-DVJ0goAF.js': {
     tt: { name: 'useHostQuery', features: ['return et(e, U, t);'],
       boundary: 'react-query useQuery (the branch list cc233fde2, the WSL distributions of Runs on, the folder browser c6a930826) runs over a small host query cache (queryKey / queryFn / enabled / staleTime / select); the host has no QueryClient, so no retries, window-focus refetch or garbage collection.' },
   },
-  'c201cd217-CpGLdevf.js': {
-    r: { name: 'SshFolderBrowserSurface', features: ['id: "epitaxy_ssh_folder_browser",', 'pick: (e) => e.FolderBrowserModal,'],
-      boundary: 'The SSH folder browser (ca720915e FolderBrowserModal) only opens for an SSH place: none here (D37); a null surface.' },
-  },
-  'c0efc2620-D6kh0Iid.js': {
-    _e: { name: 'useGenerateRoutineDraft', features: ['/dust/generate_routine_'], boundary: 'Routine auto-drafting (claude.ai generate_routine_draft, GrowthBook __gb__2682097403) is off; no draft generator.' },
-  },
-  'shared-0-ByI5P0CP.js': {
-    Ax: { name: 'FileSystem', features: ['Ax = globalThis["claude.web"]?.FileSystem'], boundary: 'window["claude.web"].FileSystem: only browseFolder (the host folder picker) is provided.' },
-    Wx: { name: 'CCDScheduledTasks', features: ['Wx = globalThis["claude.web"]?.CCDScheduledTasks'],
-      boundary: 'window["claude.web"].CCDScheduledTasks is the host bridge over the local-routines service (list / create / update / status), registered by the page; removeApprovedPermission and getScheduledTaskFileContent are absent (hostGaps 5, 7).' },
-    Ix: { name: 'LocalSessions', features: ['Ix = globalThis["claude.web"]?.LocalSessions'],
-      boundary: 'window["claude.web"].LocalSessions is the host\'s: start (Run now through the host scheduler, hostGap 6), getLocalBranches (real git) and the recent-folder reads (getAll / getDetectedProjects / onOnEvent) when the page provides them; the SSH / WSL / trust / start-target methods are absent.' },
-  },
-  'shared-2-Cb74JByF.js': {
-    MH: { name: 'useLoadTelemetry', features: ['treePrefetchObservedAtEpochMs: D,'], boundary: 'Page load telemetry (MH): nothing is sent (D17).' },
-  },
-  'shared-8-B5lJ8U5C.js': {
-    Q: { name: 'ccdSessionsStore', features: ['name: "ccd-sessions-filter",', 'archivedRowsPending: !1,'],
-      boundary: 'The CCD sessions store (shared-8 Q) is a host store the page fills from its own sessions (scheduledTaskId from session metadata / runs); the persisted project filter is not used here.' },
-  },
-  'c06cf64bb-BE5q2vSr.js': {
-    H_: { name: 'spawnedFreshStore', features: ['protocolHandlers: r', 'sr.getState().clearSession(t),'],
-      boundary: 'The live session runtime store (c06cf64bb H_) is the host transcript engine; Run now only marks a started session spawned-fresh, a no-op here (hostGap 11).' },
-  },
-  'shared-25-DP8p7i1Z.js': {
-    bc: { name: 'useDynamicConfig', features: ['() => Ws(r?.shared, i, a, n, t, { type: "dynamic_config", name: e }),'],
-      boundary: 'GrowthBook dynamic configs (bc, e.g. claudeai_mcp_bootstrap_wait) are not served here: the caller\'s default value.' },
-  },
-  'vendor-zod-fszujTq6.js': {
-    Ks: { name: 'zodNumber', features: ['return ta(Gs, e);'], boundary: 'The zod number schema Kc hands useDynamicConfig is never consulted (no dynamic configs): an inert schema.' },
-  },
-  'shared-156-Bikz018e.js': {
-    Pb: { name: 'useToolCatalogState', features: ['return X(Nb);'], boundary: 'The MCP tool catalog store (Pb) names approved tools; no per-routine approvals here (hostGap 7): no catalog.' },
-    $b: { name: 'lookupCatalogTool', features: ['return r?.toolsEnumerated === !1 && n !== "forLabel" ? void 0 : r;'], boundary: 'Catalog lookup for an approved tool: none (hostGap 7).' },
-  },
-  'shared-52-DGviI8xb.js': {
-    zP: { name: 'accountBootstrapConfig', features: ['return LP(PP(Jt(), e), !ln(), e ? xP() : void 0);'],
-      boundary: 'The account bootstrap config (zP: permission_modes, routines flags) is not served here (no account): an empty config. Only remote environments (OL) and remote deletes (qp) read it.' },
-  },
-  'shared-16-B0xHzPjj.js': {
-    Do: { name: 'useIsFocusedExtraPane', features: ['Math.min(r.focusedIndex, r.extraPanesByMode[t]?.length ?? 0) === e,'],
-      boundary: 'The detail is not hosted in an extra split pane here (the routines page is a main section): never the focused extra pane.' },
-  },
-  'shared-7-B8UIMGDr.js': {
-    RT: { name: 'ConnectorFavicon', features: ['"data-testid": "connector-icon-globe-fallback",'],
-      boundary: 'MCP connector favicons (RT, public suffix lookup chunk cd668e25e) for approved tools: no per-routine approvals here (hostGap 7), so none is drawn.' },
-    sx: { name: 'EffortControlSlot', features: ['import("./c8e04f916-__6cSvtd.js")', 'default: e?.EffortControl ?? cx'],
-      boundary: 'The lazily loaded effort slider (c8e04f916 EffortControl) is not migrated: the routine keeps the host core\'s effort option.' },
-    Eg: { name: 'useBillingNotSelfManageable', features: ['let e = he(),', 'return e && !t;'], boundary: 'No billing here: not self-manageable is false.' },
-  },
-  'ce2cf86ad-IkqFS5zj.js': {
-    P: { name: 'useEnsureWorkspaceTrust', features: ['return r(async (t, n, r) => (await e(t, n, r)) === "accepted", [e]);'],
-      boundary: 'No workspace trust dialog here (hostGap 10): the folder was approved when the routine was saved; a folder missing at run time is the main process\'s cwd_not_found.' },
-    V: { name: 'useStartLocalSession', features: ['let n = i?.start;', 'attachments: await u(a),'],
-      boundary: 'startLocalSession runs the routine through the host scheduler (local-routines run): the <scheduled-task> message, MCP servers and permission mode are the scheduler\'s own (hostGaps 5, 6); a launch failure rejects with the category suffix.' },
-  },
-  'shared-182-eT1kXtya.js': {
-    _R: { name: 'useCliFloorForModel', features: ['return w((n) => eR(t ?? rR, n, e), [t, e]);'], boundary: 'No Claude Code CLI version floor here (hostGap 11).' },
-  },
 };
 
-// Pinned on the minified bytes (each must occur exactly once).
+// Pinned on the minified bytes (each must occur exactly once; `{ loose }` through looseFeature).
 const rawCallSites = [
-  { source: 'cbd6c85c8-PO73iD62.js', role: 'zl dispatches the local create page on "new-local"; Jc opens a local routine; Kc refuses Run now without LocalSessions.start; Uc starts the session as a manual scheduled task start',
-    features: ['Ll="new-local"', 'code_routine_open', 'CCD scheduled task Run now skipped: LocalSessions.start bridge unavailable', 'scheduledTaskManualStart:!0'] },
-  { source: 'cbd6c85c8-PO73iD62.js', role: 'The two reachable lazy surfaces (local create page, local detail)',
+  { source: 'cbd6c85c8-D1xuycDy.js', role: 'Ou dispatches the local create page on "new-local"; the detail data layer opens a local routine; Run now refuses without LocalSessions.start and starts the session as a manual scheduled task start',
+    features: ['Eu="new-local"', 'code_routine_open', 'CCD scheduled task Run now skipped: LocalSessions.start bridge unavailable', 'scheduledTaskManualStart:!0'] },
+  { source: 'cbd6c85c8-D1xuycDy.js', role: 'The two reachable lazy surfaces (local create page, local detail)',
     features: ['id:"epitaxy_local_routine_create_form"', 'id:"epitaxy_local_routine_detail"'] },
-  { source: 'cfc18e0f4-Cr7owzD3.js', role: 'Local routine detail: the empty Always allowed line and Run now',
+  { source: 'cfc18e0f4-CmiyhJoV.js', role: 'Local routine detail: the empty Always allowed line and Run now',
     features: ['Q8Ygr2drci', 'tnnK1JFUSw'] },
-  { source: 'c0243d234-Bc7r1pNg.js', role: 'The create form embed gates trust with its own id', features: ['routine-dialog-trust-gate'] },
-  { source: 'c0fd2fda3-DzTjEtm3.js', role: 'The branch picker empty states (cov1-03), Runs on "(Ant only)" and its filter, the reserved name check',
-    features: ['emptyMessage:u?null:l.length===0', 'ndHh/LVykO', 'filterRunsOn', 'Cox9P9F9a5'] },
+  { source: 'c0243d234-CVQfH8d_.js', role: 'The create form embed gates trust with its own id', features: ['routine-dialog-trust-gate'] },
+  { source: 'c0fd2fda3-CntNPbFi.js', role: 'The branch picker empty states (cov1-03), Runs on "(Ant only)" and its filter, the reserved name check',
+    features: ['ndHh/LVykO', 'filterRunsOn', 'Cox9P9F9a5'] },
 ];
 // Globals the emitted modules may read (browser and language built-ins the original declarations use).
 const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'TypeError', 'String', 'Boolean', 'Set', 'Map', 'WeakMap', 'WeakSet', 'JSON',
@@ -335,12 +348,34 @@ async function readSource(name, cache) {
       }
     } else if (node.type === 'ClassDeclaration') top.set(node.id.name, { kind: 'class', node });
   }
-  const record = { name, bytes, code, ast, exported, top, formatted: new Map(), deps: new Map() };
+  // Top-level statements that only assign members of one binding (`Q.version="7.4.0",Q.config=D,…`): they belong to
+  // that binding and are emitted with it (memberStatements pins each one).
+  const members = new Map();
+  for (const node of ast.program.body) {
+    if (node.type !== 'ExpressionStatement') continue;
+    const exprs = node.expression.type === 'SequenceExpression' ? node.expression.expressions : [node.expression];
+    const owners = new Set(exprs.map(e => (e.type === 'AssignmentExpression' && e.left.type === 'MemberExpression' && e.left.object.type === 'Identifier' ? e.left.object.name : null)));
+    const [owner] = owners;
+    if (owners.size !== 1 || !owner || !top.has(owner)) continue;
+    if (!members.has(owner)) members.set(owner, []);
+    members.get(owner).push({ kind: 'statement', owner, node });
+  }
+  const record = { name, bytes, code, ast, exported, top, members, formatted: new Map(), deps: new Map() };
   cache.set(name, record);
   return record;
 }
 const declarationText = (src, entry) => src.code.slice(entry.node.start, entry.node.end);
 const emittedText = (src, entry) => (entry.kind === 'var' ? `var ${declarationText(src, entry)};` : declarationText(src, entry));
+// A member statement's free variables that are top-level bindings of its chunk (the owner included).
+function statementDeps(src, entry) {
+  if (src.deps.has(entry)) return src.deps.get(entry);
+  const ast = babel.babelParse(declarationText(src, entry), `${src.name}#${entry.owner}.members`, true);
+  let globals;
+  babel.traverse(ast, { Program(p) { globals = Object.keys(p.scope.globals); p.stop(); } });
+  const deps = globals.filter(n => src.top.has(n));
+  src.deps.set(entry, deps);
+  return deps;
+}
 async function featureText(src, entry) {
   if (!src.formatted.has(entry)) src.formatted.set(entry, await format(emittedText(src, entry), { parser: 'babel' }));
   return src.formatted.get(entry);
@@ -357,9 +392,13 @@ function declarationDeps(src, name) {
   return deps;
 }
 const normalised = text => text.replace(/\s+/g, ' ');
+// R2/E5: a feature is the declaration's text (whitespace-insensitive) or, failing that, its looseFeature() pattern.
+const looseCache = new Map();
+const loose = f => { if (!looseCache.has(f)) looseCache.set(f, official.looseFeature(f)); return looseCache.get(f); };
+const featureHit = (text, flat, f) => text.includes(f) || flat.includes(normalised(f)) || loose(f).test(text);
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
+  const missing = features.filter(f => !featureHit(text, flat, f));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
 // Follow an import (and re-export chains) to the declaring chunk.
@@ -377,7 +416,7 @@ async function resolveImport(entry, cache, via) {
   throw Error(`${via}: re-export chain too long`);
 }
 async function heldGraph(dir, label) {
-  const manifest = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
+  const manifest = label === 'view-tabs' ? await viewTabsManifestFor(referenceVersion) : label === 'routines-shared' ? await routinesSharedManifestFor(referenceVersion) : JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
   if (manifest.referenceVersion !== referenceVersion) throw Error(`${label} is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   const published = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) published.set(`${entry.file}#${entry.local}`, name);
@@ -391,6 +430,8 @@ async function heldGraph(dir, label) {
   return { published, held, adapted, pending, contexts: new Set(manifest.contexts ?? []) };
 }
 const moduleName = file => file.replace(/\.js$/, '.mjs');
+// The vendor-frame export alias of `local` that official-3.6556.2.mjs knows as a React export, or undefined.
+const reactAlias = (src, local) => [...src.exported].find(([alias, l]) => l === local && Object.hasOwn(official.reactAliases, alias))?.[0];
 
 export async function extractCodeRoutines({ check = false, survey = false, extraAdapters = {} } = {}) {
   const cache = new Map();
@@ -423,13 +464,11 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
       result = { kind: 'adapter', name: adapter.name };
     } else if (rs.adapted.has(key)) {
       result = { kind: 'shared-adapter', name: rs.adapted.get(key) };
-    } else if (file.startsWith('vendor-frame-') && !vt.published.has(key) && /^[\w$]+=(?:o|fe|Ln)\.[\w$]+$/.test(entry && entry.kind === 'var' ? declarationText(src, entry) : '')) {
-      // vendor-frame re-exports React as `local=<namespace>.<member>`: imported from React itself, before the
-      // view-tabs lookups (D46: view-tabs names only the non-React bindings, as routines-shared resolves them).
-      const m = /^([\w$]+)=([\w$]+)\.([\w$]+)$/.exec(declarationText(src, entry));
-      const module = reactNamespaces[m[2]];
-      if (!module || !reactMembers[module].has(m[3])) throw Error(`vendor-frame ${local} (${m[0]}) is not a known React export`);
-      result = { kind: 'react', module, name: m[3] };
+    } else if (file === official.vendorFrame && !vt.published.has(key) && reactAlias(src, local)) {
+      // R3: vendor-frame re-exports React as a top-level `local=<namespace>.<member>` (official-3.6556.2.mjs reactAliases,
+      // proved on the chunk by assertVendorAlias; `Oo` is react/compiler-runtime's c).
+      const { module, member } = official.assertVendorAlias(src.code, reactAlias(src, local));
+      result = { kind: 'react', module, name: member };
     } else if (vt.published.has(key)) {
       result = { kind: 'view-tabs', name: vt.published.get(key), from: `../view-tabs/${file}` };
     } else if (rs.held.has(key)) {
@@ -482,7 +521,15 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
     const src = await readSource(file, cache);
     const reads = new Set();
     edges.set(key, reads);
-    for (const dep of declarationDeps(src, local)) {
+    const statements = src.members.get(local) ?? [];
+    if (statements.length) {
+      const pins = memberStatements[key];
+      if (!pins) throw Error(`${key} has top-level member statements (${declarationText(src, statements[0]).slice(0, 80)}); pin them in memberStatements`);
+      const text = (await Promise.all(statements.map(s => format(declarationText(src, s), { parser: 'babel' })))).join('\n');
+      assertFeatures(`member statements of ${key}`, text, pins);
+    }
+    for (const dep of [...declarationDeps(src, local), ...statements.flatMap(s => statementDeps(src, s))]) {
+      if (dep === local) continue;
       const entry = src.top.get(dep);
       const target = entry.kind === 'import' ? await resolveImport(entry, cache, key) : { file, local: dep };
       const depKey = `${target.file}#${target.local}`;
@@ -495,6 +542,7 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
     for (const [local, spec] of Object.entries(names)) {
       const entry = src.top.get(local);
       if (!entry || entry.kind === 'import') throw Error(`root ${file}#${local} is not a declaration`);
+      if (spec.export !== undefined && src.exported.get(spec.export) !== local) throw Error(`root ${file}#${local} (${spec.name}) is not exported as ${spec.export}`);
       try { assertFeatures(`root ${file}#${local} (${spec.name})`, await featureText(src, entry), spec.features); }
       catch (error) { if (!survey) throw error; problems.push(error.message); }
       if (survey && !spec.features.length) problems.push(`root ${file}#${local} has no features`);
@@ -503,6 +551,10 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
   }
   for (const [file, locals] of Object.entries(adapters)) for (const local of Object.keys(locals))
     if (!used.adapters.has(`${file}#${local}`)) { if (!survey) throw Error(`adapter ${file}#${local} is not reached; remove it`); problems.push(`unreached adapter ${file}#${local}`); }
+  for (const key of Object.keys(memberStatements)) {
+    const [file, local] = key.split('#');
+    if (!chunks.get(file)?.has(local)) { if (!survey) throw Error(`member statements of ${key} are not reached; remove them`); problems.push(`unreached member statements ${key}`); }
+  }
   for (const [key, pins] of Object.entries(lazyImports)) {
     if (!edges.has(key)) { if (!survey) throw Error(`lazy declaration ${key} is not reached`); problems.push(`unreached lazy ${key}`); continue; }
     for (const [target, alias] of Object.entries(pins)) {
@@ -563,9 +615,12 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
   for (const [file, locals] of [...chunks].sort((a, b) => a[0].localeCompare(b[0]))) {
     const src = await readSource(file, cache);
     const order = [...locals].map(l => [l, src.top.get(l)]).sort((a, b) => a[1].node.start - b[1].node.start);
+    // The selected bindings' member statements, emitted in source order between the declarations.
+    const statements = [...locals].flatMap(l => (src.members.get(l) ?? []).map(s => [l, s]));
+    const blocksInOrder = [...order, ...statements].sort((a, b) => a[1].node.start - b[1].node.start);
     const imports = new Map();
-    for (const [local] of order) {
-      for (const dep of declarationDeps(src, local)) {
+    for (const [local, entry] of blocksInOrder) {
+      for (const dep of entry.kind === 'statement' ? statementDeps(src, entry) : declarationDeps(src, local)) {
         if (locals.has(dep) && src.top.get(dep).kind !== 'import') continue;
         const entry = src.top.get(dep);
         const target = entry.kind === 'import' ? await resolveImport(entry, cache, `${file}#${local}`) : { file, local: dep };
@@ -606,7 +661,8 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
     moduleGraph.set(moduleName(file), [...groups.keys()].filter(f => f.startsWith('./')).map(f => f.slice(2)));
     const importText = [...groups].sort((a, b) => a[0].localeCompare(b[0]))
       .map(([from, names]) => `import { ${names.sort().join(', ')} } from ${JSON.stringify(from)};`).join('\n');
-    const blocks = order.map(([local, entry]) => {
+    const blocks = blocksInOrder.map(([local, entry]) => {
+      if (entry.kind === 'statement') return declarationText(src, entry);
       let text = emittedText(src, entry);
       const pins = lazyImports[`${file}#${local}`];
       if (pins) for (const target of Object.keys(pins)) text = text.split(`import("./${target}")`).join(`import("./${moduleName(target)}")`);
@@ -630,6 +686,7 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
     manifest.modules.push({
       target, source: file, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion,
       bindings: order.map(([name, entry]) => ({ name, sha256: sha(declarationText(src, entry)) })),
+      ...(statements.length ? { memberStatements: statements.map(([owner, entry]) => ({ owner, sha256: sha(declarationText(src, entry)) })) } : {}),
       imports: [...imports].map(([local, e]) => ({ local, from: e.from, name: e.name, kind: e.kind, via: e.via })),
     });
   }
@@ -660,7 +717,7 @@ export async function extractCodeRoutines({ check = false, survey = false, extra
     const bytes = (await readSource(site.source, cache)).bytes;
     const text = bytes.toString();
     for (const feature of site.features) {
-      const count = text.split(feature).length - 1;
+      const count = typeof feature === 'string' ? text.split(feature).length - 1 : [...text.matchAll(official.looseFeature(feature.loose, { flags: 'g' }))].length;
       if (count !== 1) throw Error(`call site ${site.source} (raw): ${JSON.stringify(feature)} occurs ${count} times, expected 1`);
     }
     manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, features: site.features });

@@ -61,13 +61,10 @@ export function commandRowState(item = {}, awaitingApproval = false) {
  * one a summarisable command puts the summary in the code-coloured meta, and
  * otherwise the plain meta joins the verb.
  */
-export function commandRowLabel(command, state, description, source) {
-  // The user's own '!' command (Codex thread/shellCommand, source userShell): 'You ran …', with the command as typed.
-  if (source === "userShell") {
-    const typed = commandText(command);
-    const label = state === "busy" || state === "blocked" ? t("Running your command") : state === "failed" ? t("Your command failed") : t("You ran");
-    return { label, meta: typed || null };
-  }
+// w12b-transcript: the user's own '!' command (source userShell) is no command row any more: it is the user entry
+// c19e90103 Dg (source-user-shell.jsx), so the host's 'You ran / Running your command / Your command failed' (copy the
+// desktop does not have) is gone.
+export function commandRowLabel(command, state, description) {
   // Classic PN :17105–17255 uses failedVerb (:4156), unlike gated Step.
   const verb = state === "busy" || state === "blocked" ? RUNNING_VERB : state === "failed" ? t("Failed to run") : DONE_VERB;
   if (typeof description === "string" && description.trim()) {

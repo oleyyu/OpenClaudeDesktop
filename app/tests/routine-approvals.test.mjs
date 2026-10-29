@@ -64,7 +64,9 @@ test('rules compare tool, exact command, relative folder and escalation; the pag
     [{ toolName: 'Bash', ruleContent: 'npm test' }, { toolName: 'Bash', ruleContent: 'ls' }]);
   const rows = [{ id: 'cowork', kind: 'cowork', runs: [{ threadId: 't', status: 'running' }] },
     { id: 'code', kind: 'code', runs: [{ threadId: 'done', status: 'completed' }, { threadId: 't', status: 'running' }] }];
-  assert.equal(routineRunFor(rows, 't', 'cowork'), null);
+  // w13-coworkfn-approvals: a Cowork task's run is one too (3.6556.2 Dl8 persistAlwaysAllowDecision).
+  assert.equal(routineRunFor(rows, 't', 'cowork').task.id, 'cowork');
+  assert.equal(routineRunFor([{ id: 'x', kind: 'other', runs: [{ threadId: 't', status: 'running' }] }], 't', 'x'), null);
   assert.equal(routineRunFor(rows, 'done', 'code'), null, 'a finished run is not a run any more');
   assert.equal(routineRunFor(rows, 't', undefined), null);
   assert.equal(routineRunFor(rows, 't', 'code').task.id, 'code');

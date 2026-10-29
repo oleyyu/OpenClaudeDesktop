@@ -69,7 +69,6 @@ export default {
   "(no output)": "（无输出）",
   // '!' shell mode through the terminal pane (shell-mode-model.mjs, terminal-service.cjs run / wait).
   "Runs in a terminal tab in this session’s folder as your own command, then sends the output to {core}. Remove the ! to message {core}.": "作为你自己的命令在此会话文件夹的终端标签页中运行，然后将输出发送给 {core}。删除 ! 即可向 {core} 发送消息。",
-  "@-mentions can’t be used in a shell command. Remove them, or remove the ! to send a message.": "Shell 命令中不能使用 @ 提及。请删除它们，或删除 ! 以发送消息。",
   "Start a local session first to run shell commands.": "请先开始一个本地会话再运行 Shell 命令。",
   "A shell command is already running": "已有一个 Shell 命令正在运行",
   "Enter a shell command.": "请输入 Shell 命令。",

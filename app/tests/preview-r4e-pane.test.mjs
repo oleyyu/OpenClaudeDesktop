@@ -23,7 +23,7 @@ const official = (name) => fs.readFileSync(path.join(v1, name), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const local = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 
-let server, P, Tabs, M, I18n;
+let server, P, Tabs, M, I18n, V;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -32,6 +32,7 @@ before(async () => {
   P = await server.ssrLoadModule('/src/source-preview-pane.jsx');
   Tabs = await server.ssrLoadModule('/src/source-preview-tabs.jsx');
   M = await server.ssrLoadModule('/src/preview-model.mjs');
+  V = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
 });
 after(() => server?.close());
 
@@ -46,9 +47,9 @@ test('preview-01 source: the original card shows main\'s start error as it came 
   assert.equal(count(pane, 'a.setPreviewStartError({kind:"start-failed",message:r,name:n,...i!==void 0&&{heldPort:i}})'), 1);
   assert.equal(count(official('c227f4d5e-Ba-r--Rl.js'), '{kind:"start-failed",message:r.error,name:f,...e!==void 0&&{heldPort:e}}'), 1);
   assert.equal(count(pane, 'autoPort'), 0, 'the original card has no "autoPort" hint');
-  const main = fs.readFileSync(path.join(reference, 'asar/.vite/build/index.chunk-muI2IV6k.js'), 'utf8');
+  const main = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'), 'utf8'); // 3.6556.2 P3.start (2.42304.0 a2.start), same text
   assert.equal(count(main, 'N.warn("[Preview] Server identity check failed %o",{serverId:a,port:t.port}),l.push(`${o.guidance}\\n`,"stderr"),u.status="error"'), 1,
-    'a2.start: an identity mismatch goes to the log and the output, not to a start error');
+    'P3.start: an identity mismatch goes to the log and the output, not to a start error');
 });
 
 test('preview-01: a port that can\'t move shows main\'s original message; the old "autoPort": true hint is gone', async () => {
@@ -147,13 +148,14 @@ test('preview-03: the mounted start-failed card shows the user-facing identity s
 const tabsOf = n => Array.from({ length: n }, (_, i) => ({ id: `t${i + 1}`, url: `http://localhost:${3000 + i}/`, title: `Tab ${i + 1}` }));
 const stripProps = (n, extra = {}) => ({ tabs: tabsOf(n), activeId: `t${n}`, onSelect() {}, onCreate() {}, onClose() {}, onCloseOthers() {}, onExternal() {}, onReorder() {}, ...extra });
 
-test('preview-13: the + slot is SourceTooltip disabledReason (Qp), not a DisabledReason rebuilt in the tab strip', () => {
+// w12b-terminal-preview-tabs TPT-1: the strip is cf580efe9 Oa's ViewTabBar, so + and its disabled reason are the shared
+// strip's own (cfe7c4b3b), not a host SourceTooltip around a host button.
+test('preview-13: the + slot is the ViewTabBar create slot (createDisabled mr), not a DisabledReason rebuilt in the tab strip', () => {
   const tabs = local('src/source-preview-tabs.jsx');
-  assert.equal(count(tabs, '<SourceTooltip disabledReason={capped ? t(PREVIEW_TAB_CAP_TEXT) : null} keepReasonWrapper side="bottom" hoverable={false}>'), 1);
-  for (const gone of ['data-cds-disabled-reason-wrapper', 'data-cds-disabled-reason=', 'DISABLED_REASON_WRAPPER', 'openOnHandedBackFocus', 'descriptionId'])
+  assert.equal(count(tabs, 'createDisabled={previewTabsAtCap(tabs.length)}'), 1);
+  for (const gone of ['SourceTooltip', 'disabledReason', 'data-cds-disabled-reason-wrapper', 'PREVIEW_TAB_CAP_TEXT', 'openOnHandedBackFocus'])
     assert.equal(count(tabs, gone), 0, gone);
-  const tooltip = local('src/source-tooltip.jsx');
-  assert.equal(count(tooltip, 'keepReasonWrapper = false'), 1, 'off unless asked');
+  assert.match(local('src/generated/code-editor/preview-tab-strip.mjs'), /function G\(e\) \{\n  return e > 8;\n\}/);
 });
 
 test('preview-13: reaching and lifting the cap keeps the same + button and wrapper nodes (no remount)', async () => {
@@ -161,9 +163,9 @@ test('preview-13: reaching and lifting the cap keeps the same + button and wrapp
     const host = dom.document.body.appendChild(dom.document.createElement('div'));
     const root = createRoot(host);
     const render = (n) => act(async () => root.render(React.createElement(Tabs.SourcePreviewTabs, stripProps(n))));
-    const plus = () => host.querySelector('[data-preview-new-tab] button');
-    const wrapper = () => host.querySelector('[data-preview-new-tab] [data-cds-disabled-reason-wrapper]');
-    const reason = () => host.querySelector('[data-preview-new-tab] [data-cds-disabled-reason]');
+    const plus = () => host.querySelector('[data-view-tab-bar] button[aria-label="New tab"]');
+    const wrapper = () => host.querySelector('[data-view-tab-bar] [data-cds-disabled-reason-wrapper]');
+    const reason = () => host.querySelector('[data-view-tab-bar] [data-cds-disabled-reason]');
     await render(8);
     await flush();
     const [button, box, hidden] = [plus(), wrapper(), reason()];
@@ -253,26 +255,42 @@ async function sketchWithMarks(dom, handlers = {}, { draw = true } = {}) {
   }
   return { desktop, host, root, instanceId, drawn, setState: next => { state = next; return act(async () => desktop.push({ kind: 'preview', sessionId: 't1', state: next })); } };
 }
-const dialog = dom => dom.document.querySelector('[role="alertdialog"]');
+// w12b-terminal-preview-tabs TPT-3: Discard your annotations? is the view-tabs CdsConfirmationDialog (c9c84d68b w, `Xc as a`),
+// a Base UI alert dialog this fake DOM doesn't portal; the pane's element is read from React's tree and driven through its
+// own props (onConfirm = Discard, onOpenChange(false) = Keep editing / Escape).
+function confirmation(host) {
+  const key = Object.keys(host).find(name => name.startsWith('__reactContainer$'));
+  const stack = [host[key]?.stateNode?.current]; // the committed tree (FiberRoot.current), not the first HostRoot fiber
+  while (stack.length) {
+    const fiber = stack.pop();
+    if (!fiber) continue;
+    // (Clear browsing data? is a CdsConfirmationDialog too: c224804cc W, mounted closed by the settings menu.)
+    if ((fiber.elementType === V.CdsConfirmationDialog || fiber.type === V.CdsConfirmationDialog) && fiber.memoizedProps.title === 'Discard your annotations?') return fiber.memoizedProps;
+    stack.push(fiber.sibling, fiber.child);
+  }
+  return null;
+}
+const dialogOpen = view => confirmation(view.host)?.open === true;
 const buttonNamed = (scope, name) => [...scope.querySelectorAll('button')].find(node => node.getAttribute('aria-label') === name || node.textContent.trim() === name);
 
 test('preview-07: Select element over a sketch with marks asks first; Discard closes the sketch and turns picking on', async () => {
   await withPreviewDom(async (dom) => {
     const view = await sketchWithMarks(dom);
     assert.ok(view.drawn.some(([method]) => method === 'lineTo'), 'the stroke was drawn into the 2D context');
-    assert.equal(dialog(dom), null);
+    assert.equal(dialogOpen(view), false);
     const layer = view.host.querySelector('[data-preview-sketch]');
     const select = buttonNamed(layer, 'Select element');
     assert.ok(select, 'the sketch bar offers Select element');
     await click(select);
     await flush();
-    const ask = dialog(dom);
-    assert.ok(ask, 'Discard your annotations? (Zr: nothing else was open)');
-    assert.match(ask.textContent, /Discard your annotations\?/);
+    const ask = confirmation(view.host);
+    assert.equal(ask?.open, true, 'Discard your annotations? (Zr: nothing else was open)');
+    assert.deepEqual([ask.title, ask.description, ask.confirmLabel, ask.cancelLabel, ask.confirmVariant, ask.initialFocus],
+      ['Discard your annotations?', 'You have unsaved marks on this image. Discarding removes them.', 'Discard', 'Keep editing', 'danger', 'cancel']);
     assert.equal(view.desktop.count('preview-selection'), 0, 'nothing is picked yet');
-    await click(buttonNamed(ask, 'Discard'));
+    await act(async () => ask.onConfirm());
     await flush(10);
-    assert.equal(dialog(dom), null, 'the confirmation closed');
+    assert.equal(dialogOpen(view), false, 'the confirmation closed');
     assert.equal(view.host.querySelector('[data-preview-sketch] canvas'), null, 'the sketch closed');
     assert.deepEqual(view.desktop.last('preview-selection'), { sessionId: 't1', instanceId: view.instanceId, enabled: true }, 'si: picking, the pending action');
     await act(async () => view.root.unmount());
@@ -284,7 +302,7 @@ test('preview-07: without marks Select element asks nothing and picks at once', 
     const view = await sketchWithMarks(dom, {}, { draw: false });
     await click(buttonNamed(view.host.querySelector('[data-preview-sketch]'), 'Select element'));
     await flush(10);
-    assert.equal(dialog(dom), null, 'no confirmation for an empty sketch');
+    assert.equal(dialogOpen(view), false, 'no confirmation for an empty sketch');
     assert.deepEqual(view.desktop.last('preview-selection'), { sessionId: 't1', instanceId: view.instanceId, enabled: true });
     await act(async () => view.root.unmount());
   });
@@ -296,19 +314,19 @@ test('preview-07: Keep editing leaves the sketch; the confirmation goes by itsel
     const layer = () => view.host.querySelector('[data-preview-sketch]');
     await click(buttonNamed(layer(), 'Select element'));
     await flush();
-    await click(buttonNamed(dialog(dom), 'Keep editing'));
+    await act(async () => confirmation(view.host).onOpenChange(false));
     await flush();
-    assert.equal(dialog(dom), null);
+    assert.equal(dialogOpen(view), false);
     assert.ok(layer()?.querySelector('canvas'), 'still sketching');
     assert.equal(view.desktop.count('preview-selection'), 0);
     // Ask again, then the page's server stops: the pending action is dropped and its confirmation with it.
     await click(buttonNamed(layer(), 'Select element'));
     await flush();
-    assert.ok(dialog(dom));
+    assert.equal(dialogOpen(view), true);
     await view.setState({ ...page, servers: [{ ...page.servers[0], status: 'stopped' }] });
     await flush();
     assert.equal(view.host.querySelector('aside').getAttribute('data-preview-surface'), 'stopped');
-    assert.equal(dialog(dom), null, 'the confirmation went away');
+    assert.equal(dialogOpen(view), false, 'the confirmation went away');
     assert.equal(view.desktop.count('preview-selection'), 0, 'and nothing was picked');
     await act(async () => view.root.unmount());
   });

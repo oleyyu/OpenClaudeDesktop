@@ -1,4 +1,5 @@
 import { t } from "../electron/i18n/index.mjs";
+import { browserLabel } from "./default-browser-name.mjs";
 // Transcript right-click menus. Pure: the caller resolves the DOM target.
 //
 // messageMenu: scroll-messages-current.js:33652-33818 CY. Items in order —
@@ -61,7 +62,9 @@ export function messageMenu({ imageTarget = null, selectionText = null, codeTarg
   if (selection !== null) entries.push(item("copy-selection", t("Copy"), { shortcut: "cmd+c" }));
   if (code) entries.push(item("copy-code", code.isBlock ? t("Copy code block") : code.isPath ? t("Copy path") : t("Copy code")));
   if (link) {
-    if (canOpenInBrowser) entries.push(item("open-link", t("Open in default browser")));
+    // V3-w12b-settings-dialogs: 3.6556.2 c96d752d0 DA `t?.canOpenInBrowser && f(Ke.Item, {…children: T})`, T = DC()
+    // (c8ae173c6 p): "Open in {browserName}" once the default browser is known, else "Open in default browser".
+    if (canOpenInBrowser) entries.push(item("open-link", browserLabel()));
     if (canOpenInPreview) entries.push(item("open-in-preview", t("Open in Preview")));
     entries.push(item("copy-link", t("Copy link")));
   }

@@ -60,33 +60,40 @@ const latest = path.resolve(app, "../reference/installed-2.42304.0-20261017/ion-
 const generated = path.join(app, "src/generated/code-current");
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const official = (file) => readFileSync(path.join(latest, file), "utf8");
+const v3 = path.resolve(app, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1");
+// w2-sidebar-current-b: the generated pieces are 3.6556.2 shared-46 (shared-19's sidebar code moved there): IX -> LO,
+// IY FY LY -> eO $D tO, wY DY AY NY -> RD VD WD qD (qD's row callback hoisted as JD). The host flow around them
+// (src/sidebar-bulk-model.mjs, after YX / LX / KY / yY / EY) still follows 2.42304.0 shared-19, checked below.
 const BULK_TARGETS = {
-  "sidebar-bulk-family.mjs": ["IX"],
-  "sidebar-bulk-delete-copy.mjs": ["IY", "FY", "LY"],
-  "sidebar-bulk-worktree-copy.mjs": ["wY", "DY", "AY", "NY"],
+  "sidebar-bulk-family.mjs": ["LO"],
+  "sidebar-bulk-delete-copy.mjs": ["eO", "$D", "tO"],
+  "sidebar-bulk-worktree-copy.mjs": ["RD", "VD", "WD", "JD", "qD"],
 };
 let server, createIntl, WorktreeCopy;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
-  ({ kt: createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-Cf4IuK3L.js"));
+  ({ createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-DYfox5Co.js"));
   WorktreeCopy = await server.ssrLoadModule("/src/generated/code-current/sidebar-bulk-worktree-copy.mjs");
 });
 after(() => server?.close());
 const englishIntl = () => createIntl({ locale: "en-US", messages: {} });
 
-test("IX / LY / AY / NY are 2.42304.0 shared-19 originals; the flow around them is as the chunks wire it", async () => {
+test("IX / LY / AY / NY are the 3.6556.2 shared-46 originals (LO / tO / WD / qD); the flow around them is as the 2.42304.0 chunk wires it", async () => {
   const manifest = JSON.parse(readFileSync(path.join(generated, "manifest.json"), "utf8"));
   for (const [target, bindings] of Object.entries(BULK_TARGETS)) {
     const entry = manifest.modules.find((module) => module.target === target);
     assert.ok(entry, target);
-    assert.equal(entry.referenceVersion, "2.42304.0");
-    assert.equal(path.basename(entry.source), "shared-19-CkPOiIKm.js");
-    assert.equal(entry.sourceSha256, sha(readFileSync(path.join(latest, "shared-19-CkPOiIKm.js"))));
+    assert.equal(entry.referenceVersion, "3.6556.2");
+    assert.equal(path.basename(entry.source), "shared-46-BIbZBGFq.js");
+    assert.equal(entry.sourceSha256, sha(readFileSync(path.join(v3, "shared-46-BIbZBGFq.js"))));
     assert.deepEqual(entry.bindings, bindings);
     assert.equal(entry.sha256, sha(readFileSync(path.join(generated, target), "utf8")));
   }
   const { extractCurrentCodeHelpers } = await import("../scripts/extract-code-ui-current.mjs");
   await extractCurrentCodeHelpers({ check: true, only: new Set(Object.keys(BULK_TARGETS)) });
+  const next = readFileSync(path.join(v3, "shared-46-BIbZBGFq.js"), "utf8");
+  for (const feature of ["a=i&&e.nestedSessionsToAsk(i.codeRef,t)", 'defaultMessage:"Delete {count, plural, one {session} other {# sessions}}?",id:"kT5Jg7Fz/u"',
+    'defaultMessage:"\\u2026 and {more} more",id:"wHChJytals"', "LO as hi"]) assert.ok(next.includes(feature), feature);
   const chunk = official("shared-19-CkPOiIKm.js");
   for (const feature of [
     "a=i&&e.nestedSessionsToAsk(i.codeRef,t)", // IX asks the nested sessions flow
@@ -198,7 +205,7 @@ test("yY: the several-sessions Couldn’t check confirm (AY's sessions copy over
   assert.match(source, /if \(worktreeConfirmReady\(\{ guardSince, openedAt \}\)\) onConfirm\?\.\(\);/);
   assert.match(source, /<WorktreeSessionTitles titles=\{titles\} \/>/);
   // The official classes are @layer utilities rules of the loaded CSS.
-  const css = readFileSync(path.join(app, "public/assets/v1/c6a992d55-sXiDGMFQ.css"), "utf8");
+  const css = readFileSync(path.join(app, "public/assets/v1/c6a992d55-Che1orl5.css"), "utf8");
   for (const rule of [".gap-xs{gap:var(--cds-gap-xs)}", ".break-words{", ".mt-md{"]) assert.ok(css.includes(rule), rule);
 });
 

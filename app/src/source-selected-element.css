@@ -1,6 +1,0 @@
-/* The app's unlayered button reset otherwise wins over the source utility
-   layer's bg-fill-secondary/px-md/text-secondary declarations. */
-.selected-element-pill .epitaxy-pill-body { cursor: default; font: inherit; padding: 0 var(--cds-pad-md); background: var(--cds-fill-secondary); color: var(--cds-text-secondary); }
-.selected-element-popover { max-width: calc(100vw - 16px); }
-.selected-element-popover [data-epitaxy-pill-preview] { outline: none; }
-.selected-element-disclosure[aria-expanded="true"] > [data-cds="Icon"] { transform: rotate(90deg); }

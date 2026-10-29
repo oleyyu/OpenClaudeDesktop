@@ -1,23 +1,7 @@
-/* Codex's asynchronous questions under their message: the question card's frame (source-question-card.css), in the
-   transcript flow rather than above the composer. */
-.source-async-questions.sq-card {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
+/* Codex's asynchronous questions sit in the transcript flow under their message (no official counterpart): only the
+   placement is the host's; the card itself wears the question card's 3.6556.2 classes (source-async-questions.jsx). */
+.source-async-questions {
   width: 100%;
   max-width: 480px;
   margin-top: 8px;
-  border-radius: calc(var(--cds-radius, 6px) + 0.25rem * var(--cds-rem-scale, 1));
-  background: transparent;
-  box-shadow: 0 0 0 1px var(--cds-border);
-  overflow: clip;
-  color: var(--cds-text-primary);
-  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
-  font-size: var(--cds-font-size-body, 13px);
-  line-height: var(--cds-leading-body, 19px);
-  animation: sq-card-enter 0.16s ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .source-async-questions.sq-card { animation: none; }
 }

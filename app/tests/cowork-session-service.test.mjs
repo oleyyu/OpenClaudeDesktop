@@ -262,3 +262,79 @@ test('a fork the CLI refuses is dropped; a fork init under a new CLI id is adopt
   g.message({ type: 'system', subtype: 'init', session_id: 'yet-another' });
   assert.match(g.events.at(-1).params.turn.error.message, /identity/, 'a second init must keep the adopted id');
 });
+
+// w13-coworkfn-approvals (cwf-31, O-38, cowork-runtime/approval-policy.mjs): the Cowork VM's card offers once / always /
+// deny (+ what to do instead), as the connected core's does.
+test('approvals: always keeps the CLI’s rules or the tool for the task; deny says the official sentence or the feedback', async t => {
+  const answers = [], asked = [];
+  const f = await fixture(t, { approval: async (method, params) => { asked.push(params); return answers.shift(); } });
+  await f.turn(); await setImmediate();
+  const ask = async (id, request) => { f.host.emit('event', { event: 'approval', sessionId: f.id, id: `${f.id}:${id}`, request }); await setImmediate(); await setImmediate(); return f.calls.at(-1).params.response; };
+  answers.push({ decision: 'accept' });
+  assert.deepEqual(await ask('a', { tool_name: 'Write', tool_use_id: 'w1', input: { file_path: 'a.md' } }), { behavior: 'allow', updatedInput: { file_path: 'a.md' } });
+  assert.deepEqual(asked[0].availableDecisions, ['accept', 'acceptForSession', 'decline']);
+  assert.deepEqual(asked[0].codeDesktop, { declineFeedback: true });
+  // Always with the CLI's suggestions: the CLI keeps them; the host remembers nothing.
+  const suggestions = [{ type: 'addRules', rules: [{ toolName: 'Bash', ruleContent: 'npm test:*' }], behavior: 'allow', destination: 'session' }];
+  answers.push({ decision: 'acceptForSession' });
+  assert.deepEqual(await ask('b', { tool_name: 'Bash', tool_use_id: 'b1', input: { command: 'npm test' }, permission_suggestions: suggestions }),
+    { behavior: 'allow', updatedInput: { command: 'npm test' }, updatedPermissions: suggestions });
+  // w13-close-main-process (approvals review low 4, Dl8 persistAlwaysAllowDecision `t.oO(e.suggestions)`): always without
+  // suggestions keeps nothing lasting — the next call asks again; with a suggestion that allows a tool whole (no
+  // ruleContent), that tool runs without another card for the rest of the task.
+  answers.push({ decision: 'acceptForSession' }, { decision: 'accept' });
+  await ask('c', { tool_name: 'WebFetch', tool_use_id: 'f1', input: { url: 'https://example.com' } });
+  let cards = asked.length;
+  await ask('c2', { tool_name: 'WebFetch', tool_use_id: 'f1b', input: { url: 'https://example.net' } });
+  assert.equal(asked.length, cards + 1, 'asked again');
+  assert.equal(JSON.parse(await fs.readFile(f.service.file(f.id), 'utf8')).approvedToolNames, undefined);
+  const whole = [{ type: 'addRules', rules: [{ toolName: 'WebFetch' }], behavior: 'allow', destination: 'session' }];
+  answers.push({ decision: 'acceptForSession' });
+  await ask('c3', { tool_name: 'WebFetch', tool_use_id: 'f1c', input: { url: 'https://example.com/a' }, permission_suggestions: whole });
+  cards = asked.length;
+  assert.deepEqual(await ask('d', { tool_name: 'WebFetch', tool_use_id: 'f2', input: { url: 'https://example.org' } }), { behavior: 'allow', updatedInput: { url: 'https://example.org' } });
+  assert.equal(asked.length, cards, 'no card');
+  assert.deepEqual(JSON.parse(await fs.readFile(f.service.file(f.id), 'utf8')).approvedToolNames, ['WebFetch']);
+  // A tool that always asks (jPK G9t) is never remembered and never given rules.
+  answers.push({ decision: 'acceptForSession' }, { decision: 'accept' });
+  assert.deepEqual(await ask('e', { tool_name: 'mcp__cowork__allow_cowork_file_delete', tool_use_id: 'x1', input: { file_path: '/w/a' }, permission_suggestions: suggestions }),
+    { behavior: 'allow', updatedInput: { file_path: '/w/a' } });
+  await ask('e2', { tool_name: 'mcp__cowork__allow_cowork_file_delete', tool_use_id: 'x2', input: { file_path: '/w/b' } });
+  assert.equal(asked.length, cards + 2, 'asked both times');
+  // Deny: Dl8's sentence, or the user's words after the C5 prefix.
+  answers.push({ decision: 'decline' });
+  assert.deepEqual(await ask('g', { tool_name: 'Write', tool_use_id: 'w2', input: { file_path: 'b.md' } }),
+    { behavior: 'deny', message: 'User rejected writing to file: b.md. Please acknowledge this and suggest alternative approaches.' });
+  answers.push({ decision: 'decline', codeDesktop: { feedback: 'Put it in drafts/' } });
+  assert.deepEqual(await ask('h', { tool_name: 'Write', tool_use_id: 'w3', input: { file_path: 'c.md' } }),
+    { behavior: 'deny', message: "The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). To tell you how to proceed, the user said:\nPut it in drafts/" });
+  // A card that closed without an answer still denies.
+  answers.push(null);
+  assert.equal((await ask('i', { tool_name: 'Write', tool_use_id: 'w4', input: {} })).behavior, 'deny');
+  f.message({ type: 'result', subtype: 'success', is_error: false });
+});
+
+// w13-coworkfn-approvals (复核修复, Dl8 handleToolPermission): the same browser: / computer: / webfetch: request asked again
+// while its card waits dismisses the older card, which answers "Superseded by new permission request"; other tools never.
+test('approvals: a repeated browser: / computer: / webfetch: request supersedes the waiting one', async t => {
+  const signals = [];
+  const f = await fixture(t, { approval: async (_method, _params, { signal }) => { signals.push(signal);
+    return new Promise(resolve => { if (signals.length === 2) setTimeout(() => resolve({ decision: 'accept' }), 5); signal.addEventListener('abort', () => resolve(null), { once: true }); }); } });
+  await f.turn(); await setImmediate();
+  const responses = () => f.calls.filter(call => call.method === 'approval').map(call => [call.params.id, call.params.response]);
+  const ask = (id, request) => f.host.emit('event', { event: 'approval', sessionId: f.id, id: `${f.id}:${id}`, request });
+  const fetch = { tool_name: 'webfetch:example.com', tool_use_id: 'f', input: { domain: 'example.com', url: 'https://example.com/a' } };
+  ask('1', fetch); await setImmediate();
+  ask('2', fetch); await setImmediate(); await setImmediate();
+  assert.equal(signals[0].aborted, true, 'the older card is dismissed');
+  assert.deepEqual(responses()[0], [`${f.id}:1`, { behavior: 'deny', message: 'Superseded by new permission request' }]);
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.deepEqual(responses()[1], [`${f.id}:2`, { behavior: 'allow', updatedInput: fetch.input }]);
+  assert.equal(f.service.supersede.size, 0, 'answered requests are forgotten');
+  // Another input, or a tool outside the three prefixes: both cards stay.
+  ask('3', { ...fetch, input: { domain: 'example.com', url: 'https://example.com/b' } }); await setImmediate();
+  ask('4', { tool_name: 'Write', tool_use_id: 'w', input: { file_path: 'a.md' } }); await setImmediate();
+  ask('5', { tool_name: 'Write', tool_use_id: 'w2', input: { file_path: 'a.md' } }); await setImmediate();
+  assert.deepEqual(signals.slice(2).map(signal => signal.aborted), [false, false, false]);
+  await f.service.stop();
+});

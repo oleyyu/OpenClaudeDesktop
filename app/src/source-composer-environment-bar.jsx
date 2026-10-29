@@ -17,7 +17,7 @@
 //   - trailing = model, effort and the usage ring, each in a c0 group (x6 rail `modelEffort` + `barRing`).
 // Host differences: the mode / model / effort / ring controls are the composer's own triggers (R3-composer
 // composer-row-chin: the official tQ / ModelSelector pill / EffortControl / yZ triggers of source-composer-row-chin.jsx, the
-// ring 14px like c73f45bc3 Y_; their x6 bar variants and menus are home-env's StartCard rail work), the bar's line / note portal (`lineEl`) is not wired (the host's notices
+// ring 14px in the row slot like the 3.6556.2 bar's `inComposerRow: !0` (c73f45bc3); their x6 bar variants and menus are home-env's StartCard rail work), the bar's line / note portal (`lineEl`) is not wired (the host's notices
 // and the draft-group chip stay above the card), and an extra folder is not folded into the folder label (its official
 // "+N" copy is a secret catalog message): it keeps its chip above the card and joins the folder's paths here.
 import React, { useContext } from "react";
@@ -25,7 +25,8 @@ import { EnvironmentBar, EnvironmentChip, EnvironmentChipGroup, EnvironmentIconO
 import { pathTooltipContent } from "./generated/code-composer/path-tooltip-placement.mjs";
 import { homeRelativePath } from "./generated/code-start/home-path.mjs";
 // h2's td is the CDS Tooltip (cc43287c9 `Oc as td`), the view-tabs original since R3 (D24).
-import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+// E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
+import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { menuTriggerProps } from "./source-menu";
 import { t } from "../electron/i18n/index.mjs";
 

@@ -1,304 +1,362 @@
-// Copy the reachable original CDS layout declarations, without evaluating the app bundle.
-// Service boundaries are explicit in source-chat-adapters; no account/network modules are shipped.
+// Chat area (src/generated/chat), migrated to Claude Desktop 3.6556.2 (w10-chat-gen; research/w10-chat.md §2–§3, R1/R2/R4,
+// E34/E36/E42/D1). Official chunks are only read and parsed, never executed.
+//
+// Until 3.6556.2 this generator copied 63 modules of the 2.2553.1 bundle. Only four bindings of that slice were still on
+// a live path; the rest was dead or test-only (data/w10-chat-module-map.json). The 3.6556.2 slice is those four, from
+// the files that now hold them:
+//   vendor-intl-DYfox5Co.js  Ht  createIntl             react-intl's createIntl (formatjs core At under it); host
+//                                                       createIntl callers (code-start, routines, env notice).
+//   shared-9-CM21XrJw.js     wD  ideaPreviewClass       the Chat composer Ideas preview class: one literal of wD
+//                                                       (`text-muted-as-secondary`; 2.2553.1 shared-14 ZP: text-muted).
+//   cbcaf521a-CrWJ5SHy.js    e   HandBlocksDef          the HandBlocks pictogram data (byte-identical to 2.2553.1; E36:
+//                                                       same file name, no shim).
+//   shared-104-CTONUSaz.js   _x  sessionLiveStatus      a session's live status (awaiting / running / idle); a pure
+//                                                       function, so plain node can import the file (E42).
+//
+// Legacy shims (E34): another generator's output that still imports a 2.2553.1 chat file by its old name and minified
+// export gets a re-export file under that name, pointing at the one 3.6556.2 copy of the same binding (D1). The set of
+// names is derived from the actual import statements in src/generated/*/ (not chat itself); a name outside `legacyTable`
+// is an error, and a file nothing imports any more is not written. Host files and tests never use the shims (R4).
+// w11-sweep-rest: current-chat retired its last ../chat/ imports (w10-curchat-retire), so the table is empty and the
+// root and adapter that served only its vendor-intl $t shim (react-intl FormattedRelativeTime `en`, inner `$t` ->
+// HomeRelativeTime) are gone; the derivation still runs, so a new legacy import fails here instead of shipping.
+//
+// `node scripts/extract-chat-ui.mjs` writes the folder (removing every file it no longer emits), `--check` compares it
+// (scripts/verify-chat-ui.mjs).
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
+import { parseAst } from 'rolldown/parseAst';
+import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
-const root = path.resolve(import.meta.dirname, '..');
-const source = path.resolve(root, '../reference/current-2.2553.1/ion-dist/assets/v1');
-const output = path.join(root, 'src/generated/chat');
-const modules = new Map();
-const vendor = {
-  Da: ['react', 'default'], Ha: ['react', 'useReducer'],
-  aa: ['./vendor-frame-BmPfNbgY.js', 'Wt'], oa: ['./vendor-frame-BmPfNbgY.js', 'Lt'],
-  ia: ['./vendor-frame-BmPfNbgY.js', 'qt'],
-  ya: ['react', 'cloneElement'], xa: ['react', 'createElement'],
-  va: ['react', 'Suspense'],
-  Ra: ['react', 'useImperativeHandle'], Ga: ['react', 'useSyncExternalStore'], Ia: ['react', 'useEffectEvent'], za: ['react', 'useInsertionEffect'], La: ['react', 'useId'], Ba: ['react', 'useLayoutEffect'], Ca: ['react', 'forwardRef'], Ea: ['react', 'memo'], Fa: ['react', 'useEffect'], Ma: ['react', 'useContext'],
-  Ua: ['react', 'useRef'], Va: ['react', 'useMemo'], Wa: ['react', 'useState'], ba: ['react', 'createContext'],
-  ca: ['react', 'Fragment'], ha: ['react', 'Fragment'], ja: ['react', 'useCallback'], pa: ['react', 'Children'],
-  wa: ['react', 'isValidElement'], la: ['react/jsx-runtime', 'jsx'], ua: ['react/jsx-runtime', 'jsxs'],
-  ni: ['react-dom', 'flushSync'], ti: ['react-dom', 'createPortal'],
-  qa: ['react', 'version'], sa: ['../../source-chat-adapters.jsx', 'classNames'],
-};
-const adapters = {
-  'c32f7beb9-C22xyv_3.js': { r:['../../source-routine-detail-adapters.jsx','useRoutineSkills'], i:['../../source-routine-detail-adapters.jsx','UnavailableRoutineBadge'] },
-  'c1dd841c3-BG9tG1BD.js': { n:['../../source-artifact-adapters.jsx','messageDescriptors'], r:['../../source-routine-detail-adapters.jsx','RoutineMessage'] },
-  'shared-7-DsClUbcz.js': { Fa:'HostCollapsible' },
-  'vendor-intl-Cf4IuK3L.js': { Qt:['../../source-home-adapters.jsx','HomeRelativeTime'] },
-  'shared-21-D098Wd--.js': { vm:'useDesktopFrame', nc:['../../source-home-adapters.jsx','HomeIcon'], fO:['../../source-home-adapters.jsx','HomeStatusDot'], _O:['../../source-home-adapters.jsx','homeTone'], Xs:'HostTooltip' },
-  // Greeting's only host services are the active locale and locale-transition context.
-  // cp is the source Spark's idle branch (bd); greetings never pass an animation state.
-  'shared-24-C4QZCHDk.js': { $:['../../source-home-adapters.jsx','useHomeIntl'], Ji:'GreetingLocaleTransitionContext', cp:['./shared-frame-C_2npUJq.js','bd'],
-    Gc:['../../source-home-adapters.jsx','useHomePins'], Hc:['../../source-home-adapters.jsx','useHomePins'], dv:['../../source-home-adapters.jsx','useHomeSessions'], Sy:['../../source-home-adapters.jsx','useHomeReadState'], bD:['../../source-home-adapters.jsx','useHomeReady'], tl:['../../source-home-adapters.jsx','useHomeScheduleAccess'], Qv:['../../source-home-adapters.jsx','useHomeSchedules'], Xo:['../../source-home-adapters.jsx','useHomeAttentionIds'], Wo:['../../source-home-adapters.jsx','pendingHomeCreation'], Ey:['../../source-home-adapters.jsx','clearHomeActive'], km:['../../source-home-adapters.jsx','useHomeMotion'], vp:'classNames', Q:'LocalizedMessage', go:['../../source-home-adapters.jsx','HomeLink'], A_:['../../source-home-adapters.jsx','useHomeToday'], fa:['../../source-home-adapters.jsx','homeDateKey'], Lc:['../../source-home-adapters.jsx','HomeClock'], El:['../../source-home-adapters.jsx','HomePause'], Xc:['../../source-home-adapters.jsx','HomeArrow'], Bo:['../../source-home-adapters.jsx','homeTaskName'] },
-  'shared-22-Cz3C_T8d.js': { Kn:['../../source-home-adapters.jsx','useHomePermissions'], Ga:['../../source-home-adapters.jsx','useHomeAnalytics'], uc:['../../source-home-adapters.jsx','useHomePins'], kh:['../../source-home-adapters.jsx','useHomeNow'], Uv:['../../source-home-adapters.jsx','homeSessionOpened'], lo:['../../source-home-adapters.jsx','HomeLink'], Jn:['../../source-home-adapters.jsx','HomeSessionStatus'], Ho:['../../source-home-adapters.jsx','useHomeNeedsAttention'], Kd:['./vendor-intl-Cf4IuK3L.js','$t'], ms:['../../source-home-adapters.jsx','HomePin'], is:['../../source-home-adapters.jsx','HomeStar'], ec:['../../source-home-adapters.jsx','HomeClock'], as:['../../source-home-adapters.jsx','useHomePins'], hc:['../../source-home-adapters.jsx','HomeArrow'], Y:'LocalizedMessage', G:'HostButton', Ql:['../../source-home-adapters.jsx','UnavailableInlineReview'], _O:['../../source-home-adapters.jsx','UnavailableInlineReview'], K:['../../source-home-adapters.jsx','UnavailableInlineReview'] },
-  'ca324bb72-DogKBzRY.js': { W: ['../../source-artifact-adapters.jsx','useArtifactIntl'], H: ['../../source-artifact-adapters.jsx','messageDescriptors'], g:'HostButton', P:'HostTooltip', ie:'SourceIcon' },
-  'c042dc97b-DRO8SqaO.js': { e:['../../source-artifact-adapters.jsx','ARTIFACT_WEEKDAY_FORMAT'] },
-  'shared-20-BrTrXIRV.js': { Y: 'LocalizedMessage' },
-  'cabf52553-BGQcEv7j.js': { x:['../../source-artifact-adapters.jsx','NoCloudArtifact'], X:['../../source-artifact-adapters.jsx','NoCloudArtifact'], ie:['../../source-artifact-adapters.jsx','formatArtifactCount'], F:['../../source-artifact-adapters.jsx','useArtifactIntl'], P:['../../source-artifact-adapters.jsx','ArtifactMessage'], p:'LocalLink', C:'SourceIcon', b:'HostTooltip', ve:['../../source-artifact-adapters.jsx','ArtifactMenu'], V:['../../source-artifact-adapters.jsx','useArtifactOwners'], H:['../../source-artifact-adapters.jsx','isSharedArtifact'], N:['../../source-artifact-adapters.jsx','useArtifactTypeChips'], ne:['../../source-artifact-adapters.jsx','useArtifactAnnouncement'], z:['../../source-artifact-adapters.jsx','useArtifactToday'], oe:['../../source-artifact-adapters.jsx','ArtifactThumbnail'], ee:['../../source-artifact-adapters.jsx','ArtifactDate'], j:['../../source-artifact-adapters.jsx','NoCloudArtifact'] },
-  'cd75b47e6-6gS9HU0g.js': { t:['../../source-artifact-adapters.jsx','useArtifactBand'], n:'useDesktopFrame' },
-  'cfcabf2fa--2rO5Hd_.js': { i:'SourceIcon', a:['../../source-artifact-adapters.jsx','artifactTypeInfo'] },
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
 
-  'c71dee58b-CFLphdFa.js': { 'G': ['../../source-project-adapters.jsx', 'useProjectAnalytics'], 'Z': ['../../source-project-adapters.jsx', 'useProjectIntl'], 'Pt': ['../../source-project-adapters.jsx', 'useDesktopFrame'], 'It': ['../../source-project-adapters.jsx', 'useDesktopFrame'], 'ot': ['../../source-project-adapters.jsx', 'useNoProjectSharing'], 'ct': ['../../source-project-adapters.jsx', 'useNoProjectSharing'], 'Zi': ['../../source-project-adapters.jsx', 'useNoProjectSharing'], 'Tn': ['../../source-project-adapters.jsx', 'useNoProjectSharing'], 'wo': ['../../source-project-adapters.jsx', 'NoProjectSharing'], 'dl': ['../../source-project-adapters.jsx', 'projectSubtitle'], 'yr': ['../../source-project-adapters.jsx', 'useProjectMutation'], 'Sr': ['../../source-project-adapters.jsx', 'useProjectOptimisticUpdate'], 'ai': ['../../source-project-adapters.jsx', 'useLocalSpaceSelector'], 'Ln': ['../../source-project-adapters.jsx', 'LocalProjectMarker'], 'Oe': ['../../source-project-adapters.jsx', 'LocalProjectMenu'], 'Be': ['../../source-project-adapters.jsx', 'LocalProjectMenu'], 'aa': ['../../source-project-adapters.jsx', 'ProjectArchivedBadge'], 'Cn': ['../../source-project-adapters.jsx', 'ThemePortal'], 'Co': ['../../source-project-adapters.jsx', 'NoProjectSharing'], 'ul': ['../../source-project-adapters.jsx', 'NoProjectSharing'], 'vr': ['../../source-project-adapters.jsx', 'ProjectTypes'], 'X': ['../../source-project-adapters.jsx', 'LocalizedMessage'], 'q': ['../../source-project-adapters.jsx', 'HostButton'] },
-  'cf8745532-uXq2n8pj.js': { r:'LocalLink', i:'ThemePortal' },
-  'cbef3b9e7-kx1HRu8z.js': { r:'HostPictogram', i:'HostButton', a:'DensityRoot' },
-  'cf35aed38-CgXOe11O.js': { g:'DisabledReasonTooltip', w:'SourceIcon', p:'HostButton', m:'HostMenuButton', v:'HostTooltip', x:'ThemePortal', y:'useLocalizedCopy', _:'useDesktopPlatform' },
-  'c193cfc9b-B8oGoJPG.js': { s:'usePageLayer' },
-  'cc5a62f6f-ylJcImQa.js': { l:'useDesktopFrame', d:'DensityRoot', f:'SourceIcon' },
-  'ce5658dc8-CJ_gZ6YY.js': { Aa:'useDisabledTodoComment', ja:'DisabledTodoComment', pe:'useScopedState', J:'LocalizedMessage', G:'SourceIcon' },
-  'shared-frame-C_2npUJq.js': {
-    M:['../../source-field-adapters.jsx','NativeFieldRoot'],
-    a:['../../source-field-adapters.jsx','NativeFieldLabel'],
-    I:['../../source-field-adapters.jsx','NativeFieldDescription'],
-    Re:['../../source-field-adapters.jsx','NativeFieldError'],
-    p:['../../source-field-adapters.jsx','NativeFieldControl'],
-    ks:'HostButton',
-  },
-  'shared-11-CDihEvbJ.js': { Ca:'Attachments', ka:'useAttachmentAnchor', ja:'AttachmentAnchorContext', rr:'Presence', oa:'SourceIcon', Yi:'ThemePortal' },
-};
-// The original ideas UI uses local prompt/editor services; its account feature
-// experiment is replaced with the local catalog selection, not a cloud account.
-Object.assign(adapters['shared-24-C4QZCHDk.js'], Object.fromEntries(Object.entries({
-  Dp:'useIdeaSurface', Yl:'ideaTrue', Hg:'ideaFalse', ZD:'useLocalIdeas', oS:'ideaFalse',
-  J:'useIdeaScope', f_:'ideaFalse', qc:'ideaFalse', Sh:'ideaTrue', XD:'useNoSkillIdeas',
-  PD:'useIdeaAnalytics', KD:'useLocalIdeaSelection', JD:'loadIdeaCatalog', r_:'useIdeaPrompt',
-  g_:'useIdeaEditor', Tp:'useIdeaCommands', qp:'useIdeaTarget', Em:'useIdeaTracker',
-  Ge:'ideaMetricName', Be:'ideaMetricHash', Ep:'ideaCommandNodes', bh:'ideaCommandName',
-  Wn:'IdeaLabel', dd:'illustrationColors',
-}).map(([key, value]) => [key, ['../../source-ideas-adapters.jsx', value]])));
-adapters['shared-24-C4QZCHDk.js'].ip = 'HostButton';
-adapters['shared-24-C4QZCHDk.js'].yp = 'SourceIcon';
-Object.assign(adapters['shared-21-D098Wd--.js'], {
-  Z:['../../source-routine-adapters.jsx','useRoutineIntl'],
-  Gr:['../../source-routine-adapters.jsx','useRoutineAnalytics'],
-  Ko:['../../source-routine-adapters.jsx','useRoutineErrors'],
-  sh:['../../source-routine-adapters.jsx','useRoutineBridge'],
-  ta:['../../source-routine-adapters.jsx','noRemoteModel'],
-  qi:['../../source-routine-adapters.jsx','noRemoteModel'],
-  Yi:['../../source-routine-adapters.jsx','unavailableMigration'],
-  zV:['../../source-routine-adapters.jsx','UnavailableRoutineBadge'],
-  Ds:'HostButton', J:['../../source-routine-adapters.jsx','RoutineSourceMenu'], X:'LocalizedMessage',
-});
-// Local routines use the original card; cloud/device/code-only affordances are absent.
-adapters['cdbc75b4b-CaOXO81D.js'] = {
-  fi:['../../source-routine-adapters.jsx','RoutineMenu'],
-  Xe:['../../source-home-adapters.jsx','useHomeNow'],
-  ae:['../../source-routine-adapters.jsx','noRemoteModel'],
-  ui:['../../source-routine-adapters.jsx','UnavailableRoutineBadge'],
-  U:['../../source-routine-adapters.jsx','UnavailableRoutineBadge'],
-  ti:['../../source-routine-adapters.jsx','UnavailableRoutineBadge'],
-  ii:['../../source-routine-adapters.jsx','UnavailableRoutineBadge'],
-  ci:['../../source-routine-adapters.jsx','UnavailableRoutineBadge'],
-  je:['../../source-routine-adapters.jsx','routineAccent'],
-  j:['../../source-routine-adapters.jsx','useRoutineIntl'],
-  k:['../../source-artifact-adapters.jsx','messageDescriptors'],
-};
-// Original Scheduled detail: only account/device services and host primitives are adapted.
-adapters['ccd3f68fe-JzfLnZNI.js'] = Object.fromEntries(Object.entries({
-  xr:'UnavailableRoutineBadge', ht:'routinePermissionSupported',
-  J:'useRoutineIntl', Mn:'useRoutineNow', Ft:'noRemoteModel', ur:'useScheduledCopy',
-  ge:'noRemoteModel', Nn:'noRoutineTools', wt:'noRemoteModel', St:'noRemoteModel',
-  at:'noRoutineDevice', et:'noRoutineDevice', da:'noRoutineEffect', Cr:'noDeviceConnectivity',
-  wa:'noRoutineDevice', tr:'noRoutineEffect', yt:'noRemoteModel', ft:'noRemoteModel',
-  ir:'useRoutineReadState', ct:'noRoutineTools', Wn:'routinePermissionDescription',
-  ve:'UnavailableRoutineBadge', ii:'UnavailableRoutineBadge', vi:'UnavailableRoutineBadge',
-  Gt:'RoutineConfirmation', Jt:'RoutineSwitch', Kt:'RoutineDialog',
-  K:'RoutineFragment', en:'RoutineFragment', Er:'UnavailableRoutineBadge',
-  A:'RoutineSessionStatus', Q:'routineToolLabel', We:'routinePermissionRule',
-  V:'RoutineInfo',
-  Fn:'noRoutineTools',
-  rr:'UnavailableRoutineBadge',
-  Yt:'RoutineCheckbox',
-}).map(([key,value]) => [key,['../../source-routine-detail-adapters.jsx',value]]));
-Object.assign(adapters['ccd3f68fe-JzfLnZNI.js'], {
-  z:'HostButton', W:'HostTooltip', U:'DisabledReasonTooltip', G:'SourceIcon', I:'LocalLink',
-  q:['../../source-routine-detail-adapters.jsx','RoutineMessage'], Zt:'ThemePortal',
-});
-const allowed = new Set(['c3d5d2a6f-Cb6r-Pna.js','c1c6ea9ac-D7jZ2mtx.js','shared-2-C6aD8DvJ.js','shared-19-CjdiaR4X.js','c9e1458cd-hPrW80tG.js','cdbc75b4b-CaOXO81D.js','c07677de0-ZWS1w1fw.js','c2d1766e9-DsxsFFHA.js','c32f7beb9-C22xyv_3.js','c1dd841c3-BG9tG1BD.js','caaf77b85-DdXwb3ur.js','vendor-icons-BwTxPg4q.js','c99caee80-CuPB6kUT.js','ce6cd4a83-B9FjZYye.js','c181900da-Bj4ombfg.js','c4a32f7fb-CEo1L0kf.js','c4059b025-jGtn5Q7K.js','c6ad19bb9-Dtnfr9wq.js','c0eaadb4f-BldfH7Qk.js','c86b36240-IEUa07AX.js','c97b955f1-6SCO-W37.js','rolldown-runtime-CAJkiChf.js','c511d59b8-Cjklq41c.js','c0958e5bf-6J5ZF7yM.js','cc09daa9b-cPVYGM-x.js','shared-0-8LmBcbZC.js','shared-3-YXRuSVZn.js','shared-9-Zi4BzzJw.js','shared-24-C4QZCHDk.js','vendor-intl-Cf4IuK3L.js','shared-22-Cz3C_T8d.js','shared-4-D8W6lHTW.js','shared-16-Cg1UfeMy.js','ca324bb72-DogKBzRY.js','shared-14-BOJVa-jT.js','c042dc97b-DRO8SqaO.js','cabf52553-BGQcEv7j.js','cd75b47e6-6gS9HU0g.js','c7e8a83e5-PPYu2Sp3.js','cfcabf2fa--2rO5Hd_.js','c71dee58b-CFLphdFa.js', 'c75e89812-U9wOm6Ly.js', 'cbcaf521a-CrWJ5SHy.js', 'cf8745532-uXq2n8pj.js', 'cbef3b9e7-kx1HRu8z.js', 'c193cfc9b-B8oGoJPG.js', 'cf35aed38-CgXOe11O.js', 'shared-15-hyCkawKO.js', 'shared-11-CDihEvbJ.js','shared-8-B5xbG2px.js','shared-frame-C_2npUJq.js','shared-21-D098Wd--.js', 'cc5a62f6f-ylJcImQa.js', 'ce5658dc8-CJ_gZ6YY.js', 'shared-7-DsClUbcz.js', 'shared-10-C1vQACzq.js', 'shared-20-BrTrXIRV.js']);
-// The full scheduled form is source code; local services replace cloud/account hooks.
-adapters['c97b955f1-6SCO-W37.js'] = Object.fromEntries(Object.entries({
-  Et:'useRoutineIntl', Xt:'useFormCopy', rt:'useFormMessages', Gt:'useFormBridge',
-  te:'formFeature', re:'formBridgeAvailable', Nt:'useFormPreferences', xe:'useFormAnalytics',
-  Tn:'useOtherRoutineNames', le:'useFormModels', ve:'useModelUnavailable',
-  Me:'useFormPermissions', Re:'formPermissionValue', Bt:'formPermissionItems', Ht:'formPermissionDescription', Lt:'usePermissionSelection',
-  Ce:'useNoAccount', h:'useFormRouter', Tt:'formPermissionStore', Se:'formSeedVersion',
-  bn:'useManualDraft', an:'useFormDebounce', nn:'alreadyAcknowledged', tn:'noFormEffect',
-  Kt:'falseFeature', Ve:'falseFeature', ke:'noFormData', Ut:'noFormData', Je:'falseFeature',
-  At:'falseFeature', jt:'falseFeature', Pt:'falseFeature', Mt:'falseFeature', Le:'falseFeature',
-  nt:'falseFeature', qt:'falseFeature', it:'useNoProjectAccess', tt:'falseFeature', Qe:'falseFeature',
-  Jt:'falseFeature', pe:'noFormData', et:'falseFeature', je:'noFormData', Ke:'falseFeature',
-  Wt:'noFormEffect', ne:'formModelName', de:'identity', ce:'falseFeature',
-  En:'hasRoutineName', He:'noLocalConstraint', Xe:'localSource', Ft:'useFormNow',
-  ie:'useFormMedia', ae:'useStableFormEvent',
-  ot:'FormConfirmation', st:'FormDialog', zt:'FormFolderPicker', gt:'FormSelect',
-  // Not mounted: code-only onboarding, cloud device trust and project/cloud branches.
-  An:'UnavailableFormBranch', jn:'UnavailableFormBranch', Mn:'UnavailableFormBranch', Nn:'UnavailableFormBranch',
-  On:'UnavailableFormBranch', kn:'UnavailableFormBranch', Rt:'UnavailableFormBranch', It:'FormNotice',
-  rn:'UnavailableFormBranch', ue:'UnavailableFormBranch',
-  Dt:'falseFeature', Ot:'invokeFormOperation', kt:'falseFeature', he:'falseFeature', _e:'falseFeature',
-  Vt:'formModelName', g:'noFormData', x:'noFormData', w:'noFormData',
-  me:'noFormData', _:'falseFeature',
-  se:'noFormEffect',
-  Vn:'UnavailableFormBranch',
-  pn:'UnavailableFormBranch',
-}).map(([key,value]) => [key,['../../source-routine-form-adapters.jsx',value]]));
-Object.assign(adapters['c97b955f1-6SCO-W37.js'], {
-  C:['../../source-routine-detail-adapters.jsx','RoutineMessage'], S:['../../source-artifact-adapters.jsx','messageDescriptors'],
-  at:'HostButton', ft:'DisabledReasonTooltip', xt:'SourceIcon',
-  lt:['../../source-routine-detail-adapters.jsx','RoutineInfo'], dt:['../../source-routine-detail-adapters.jsx','RoutineSwitch'],
-  ut:['../../source-routine-adapters.jsx','RoutineSourceMenu'],
-  St:'LocalLink',
-});
-allowed.add('c439baf43-BL3Rl37w.js');
-allowed.add('c615abdf4-CsD8WvEj.js');
-allowed.add('c46686c0b-BrsMROUn.js');
-allowed.add('cff2bf6cb-rlnyJMOd.js');
-allowed.add('c8ff922bb-BPSJpmre.js');
-adapters['cff2bf6cb-rlnyJMOd.js'] = { d:['../../source-calendar-adapters.jsx','CalendarButton'], g:['../../source-calendar-adapters.jsx','CalendarPopover'], y:['../../source-calendar-adapters.jsx','calendarLocale'] };
-adapters['c8ff922bb-BPSJpmre.js'] = { f:['../../source-calendar-adapters.jsx','CalendarButton'], h:['../../source-calendar-adapters.jsx','calendarLocale'] };
-adapters['caaf77b85-DdXwb3ur.js'] = { x:['../../source-routine-detail-adapters.jsx','RoutineSwitch'], S:['../../source-routine-form-adapters.jsx','FormSelect'], D:['../../source-routine-adapters.jsx','useRoutineIntl'],
-  k:['../../source-routine-form-adapters.jsx','FormCatalogPicker'], j:['../../source-routine-form-adapters.jsx','identity'], A:['../../source-routine-form-adapters.jsx','formModelName'], d:['../../source-routine-form-adapters.jsx','formModelName'], y:'HostCollapsible' };
-adapters['c615abdf4-CsD8WvEj.js'] = { n:['../../source-routine-adapters.jsx','useRoutineIntl'] };
-// SC-7: the two unreachable modules that render a TextInput (caaf77b85's cron field in the scheduled form and
-// cf35aed38's page-header search) import the 2.42304.0 TextInput (shared-frame tx) by its view-tabs semantic
-// name instead of pulling in the 2.2553.1 Bh. Checked before writing: each local is that module's import of
-// shared-frame Bh, and view-tabs publishes CdsTextInput from the file named here.
-const viewTabsTextInput = ['../view-tabs/shared-frame-BfjMqbuN.js', 'CdsTextInput'];
-const textInputRedirects = [['caaf77b85-DdXwb3ur.js', 'w'], ['cf35aed38-CgXOe11O.js', 'b']];
-for (const [file, local] of textInputRedirects) adapters[file][local] = viewTabsTextInput;
-// SC-7: the native-field registry (source-field-adapters.jsx) learns this family's parts from the family module
-// itself, as code-current environment-field-controls and source-routines do for theirs. The adapter module used to
-// import them from shared-frame, which imports the adapter module back: whichever of the two loaded first decided
-// whether the registry held the parts or undefined.
-const registrations = { 'shared-frame-C_2npUJq.js': { call: 'registerNativeFieldComponents', from: '../../source-field-adapters.jsx',
-  parts: { Field: '_y', Label: 'vy', Description: 'yy', ErrorText: 'by', TextInput: 'Bh', TextArea: '$v' } } };
-async function get(name) {
-  if (modules.has(name)) return modules.get(name);
-  const code = await fs.readFile(path.join(source,name),'utf8');
-  const ast = await parsers.babel.parse(code); let program;
-  babel.traverse(ast,{Program(p){program=p;}});
-  const exports = new Map();
-  for(const node of ast.program.body) if(node.type==='ExportNamedDeclaration') for(const s of node.specifiers) exports.set(s.exported.name,s.local.name);
-  const m={name,code,program,exports,selected:new Map(),literals:new Map(),initializers:new Map(),imports:new Map(),seen:new Set()}; modules.set(name,m); return m;
-}
-// Some container classes are inline in the service-heavy page component. Copy the
-// literal AST node, not a second handwritten spelling, and record its source range.
-function addSourceLiteral(m, owner, name, prefix) {
-  const matches = [];
-  m.program.scope.getBinding(owner).path.traverse({ StringLiteral(p) {
-    if (p.node.value.startsWith(prefix)) matches.push(p.node);
-  } });
-  if (matches.length !== 1) throw Error(`Expected one source literal ${m.name}:${owner}:${name}, found ${matches.length}`);
-  m.literals.set(name, matches[0]);
-}
-async function add(m,name) {
-  if(m.seen.has(name))return; m.seen.add(name);
-  if(adapters[m.name]?.[name]) { const adapter = adapters[m.name][name]; m.imports.set(name, Array.isArray(adapter) ? adapter : ['../../source-chat-adapters.jsx', adapter]); return; }
-  const binding=m.program.scope.getBinding(name); if(!binding)throw Error(`Unbound ${m.name}:${name}`);
-  const p=binding.path;
-  if(p.isImportSpecifier()) {
-    const filename=p.parent.source.value.slice(2), exported=p.node.imported.name;
-    if(filename==='vendor-frame-BmPfNbgY.js'&&vendor[exported]) {m.imports.set(name,vendor[exported]);return;}
-    if(!allowed.has(filename))throw Error(`External boundary ${m.name}:${name} = ${filename}:${exported}`);
-    const dependency=await get(filename), local=dependency.exports.get(exported);
-    if(!local)throw Error(`Missing export ${filename}:${exported}`);
-    m.imports.set(name,['./'+filename,local]);await add(dependency,local);return;
+const root = path.resolve(import.meta.dirname, '..');
+const { referenceVersion, referenceSnapshot } = official;
+const source = official.ionSource;
+const output = path.join(root, 'src/generated/chat');
+const generatedRoot = path.join(root, 'src/generated');
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const VI = official.vendorIntl, S9 = 'shared-9-CM21XrJw.js', S104 = 'shared-104-CTONUSaz.js', HB = 'cbcaf521a-CrWJ5SHy.js';
+
+// Every chunk a closure may enter; leaving them is an error, and so is a listed chunk no closure enters.
+const files = new Set([VI, S104, HB]);
+// vendor-frame re-exports React; each alias is checked against official.reactAliases (R3).
+const vendor = { [official.vendorFrame]: official.reactAliases };
+// Same-chunk declarations the host answers. `features` must occur in the declaration's minified text. None now.
+const chunkAdapters = {};
+
+// Roots. `export` is the chunk's own export alias of `local`; `expect` (R2/E5) pins strings of the declaration's
+// minified text, `{ in, has }` a string of another declaration the closure must reach, `{ raw }` a string the chunk
+// must hold exactly once. `statements` are top-level statements emitted after the declarations (exact minified text).
+// `alias` adds further export names of `local`.
+const roots = [
+  { source: VI, local: 'Ht', export: 'u', name: 'createIntl',
+    expect: ['({defaultRichTextElements:e,...t},n)=>', 'formatMessage:Vt.bind(null,a,i.formatters)', { in: 'At', has: 'Missing locale data for locale' }] },
+  { source: S104, local: '_x', export: 'ml', name: 'sessionLiveStatus',
+    expect: ['e.liveStatus==="awaiting"?"awaiting"', 'e.pendingToolPermissions?.length?"awaiting"', 'e.isRunning?"running":"idle"'] },
+  { source: HB, local: 'e', export: 'HandBlocksDef', name: 'HandBlocksDef', alias: ['e'],
+    expect: ['name:"HandBlocks"', 'highlight:[', 'line:['] },
+];
+// One string literal of a top-level declaration (`owner`), copied verbatim: exactly one string literal of the owner
+// starts with `prefix`, and it must contain each `expect` string.
+const literals = [
+  { source: S9, owner: 'wD', name: 'ideaPreviewClass', prefix: 'animate-preview-prompt-in line-clamp-2',
+    expect: ['text-muted-as-secondary'] },
+];
+// E34 legacy shims: old 2.2553.1 chat file -> { old export: [module relative to src/generated/chat, semantic name] }.
+// `check` confirms the target still publishes that name for the same official binding. Empty since w11-sweep-rest: the
+// three entries (vendor-intl-Cf4IuK3L $t, shared-frame-C_2npUJq X, shared-8-B5xbG2px vl) served current-chat only.
+const legacyTable = {};
+
+async function readSource(name, cache) {
+  if (cache.has(name)) return cache.get(name);
+  const bytes = await fs.readFile(path.join(source, name));
+  const code = bytes.toString();
+  const ast = babel.babelParse(code, name, true);
+  const exported = new Map(), top = new Map(), statements = [];
+  for (const node of ast.program.body) {
+    if (node.type === 'ExportNamedDeclaration') for (const s of node.specifiers) exported.set(s.exported.name, s.local.name);
+    else if (node.type === 'ImportDeclaration')
+      for (const s of node.specifiers) top.set(s.local.name, { kind: 'import', file: node.source.value.replace(/^\.\//, ''), alias: s.imported?.name ?? 'default', form: s.type });
+    else if (node.type === 'FunctionDeclaration') top.set(node.id.name, { kind: 'function', node });
+    else if (node.type === 'ClassDeclaration') top.set(node.id.name, { kind: 'class', node });
+    else if (node.type === 'VariableDeclaration')
+      for (const d of node.declarations) top.set(d.id.type === 'Identifier' ? d.id.name : `#pattern@${d.start}`, { kind: d.id.type === 'Identifier' ? 'var' : 'pattern', node: d });
+    else if (node.type === 'ExpressionStatement') statements.push(node);
   }
-  m.selected.set(name,p);
-  const deps=new Set();
-  p.traverse({ReferencedIdentifier(r){const b=r.scope.getBinding(r.node.name);if(b?.scope===m.program.scope)deps.add(r.node.name);}});
-  for(const dep of deps) { try { await add(m,dep); } catch (error) { throw new Error(`${m.name}:${name} → ${error.message}`); } }
+  const record = { name, bytes, code, ast, exported, top, statements, deps: new Map() };
+  cache.set(name, record);
+  return record;
 }
-// These two audited React Aria calendar modules assign locale dictionaries
-// after declaring them, and initialize focus/transition tracking at module
-// scope. Keep those statements in source order, along with their dependencies;
-// declarations alone would silently leave the dictionaries empty.
-async function addCalendarInitializers(m) {
-  for (const statement of m.program.get('body')) {
-    if (!statement.isExpressionStatement()) continue;
-    m.initializers.set(statement.node.start, statement);
-    const dependencies = new Set();
-    statement.traverse({ ReferencedIdentifier(p) {
-      const binding = p.scope.getBinding(p.node.name);
-      if (binding?.scope === m.program.scope) dependencies.add(p.node.name);
-    }, AssignmentExpression(p) {
-      const left = p.get('left');
-      if (left.isIdentifier() && left.scope.getBinding(left.node.name)?.scope === m.program.scope) dependencies.add(left.node.name);
+const declarationText = (src, entry) => src.code.slice(entry.node.start, entry.node.end);
+const emittedText = (src, entry) => (entry.kind === 'var' ? `var ${declarationText(src, entry)};` : declarationText(src, entry));
+function globalsOf(text, label) {
+  const ast = babel.babelParse(text, label, true);
+  let globals;
+  babel.traverse(ast, { Program(p) { globals = Object.keys(p.scope.globals); p.stop(); } });
+  return globals;
+}
+function declarationDeps(src, name) {
+  if (!src.deps.has(name)) src.deps.set(name, globalsOf(emittedText(src, src.top.get(name)), `${src.name}#${name}`).filter(n => n !== name && src.top.has(n)));
+  return src.deps.get(name);
+}
+const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'TypeError', 'RangeError', 'String', 'Boolean', 'Set', 'Map',
+  'WeakMap', 'WeakSet', 'JSON', 'Symbol', 'Promise', 'RegExp', 'Reflect', 'globalThis', 'setTimeout', 'clearTimeout', 'Date', 'Intl',
+  'undefined', 'Infinity', 'NaN', 'isNaN', 'console', 'process', 'arguments', 'parseFloat', 'SyntaxError', 'BigInt']);
+
+// Named imports of src/generated/chat/<file> by every other generated folder (E34: the legacy names are derived, not
+// guessed). Returns Map(file -> Map(name -> [importer, ...])).
+async function chatImporters() {
+  const found = new Map();
+  const walk = async dir => {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) { if (full !== output) await walk(full); continue; }
+      if (!/\.(?:m?js|jsx)$/.test(entry.name)) continue;
+      const code = await fs.readFile(full, 'utf8');
+      if (!code.includes('chat/')) continue;
+      const program = parseAst(code, { lang: entry.name.endsWith('.jsx') ? 'jsx' : 'js' }, full);
+      for (const node of program.body) {
+        if (!['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration'].includes(node.type) || !node.source) continue;
+        const target = path.resolve(path.dirname(full), node.source.value);
+        if (path.dirname(target) !== output) continue;
+        const importer = path.relative(root, full), file = path.basename(target);
+        const names = node.type === 'ExportAllDeclaration' ? null
+          : node.specifiers.map(s => (node.type === 'ImportDeclaration'
+            ? (s.type === 'ImportSpecifier' ? (s.imported.name ?? s.imported.value) : null)
+            : (s.local.name ?? s.local.value)));
+        if (!names || names.includes(null) || (node.type === 'ImportDeclaration' && node.specifiers.length === 0))
+          throw Error(`${importer}: only named imports of src/generated/chat/${file} are supported`);
+        if (!found.has(file)) found.set(file, new Map());
+        for (const name of names) {
+          if (!found.get(file).has(name)) found.get(file).set(name, []);
+          found.get(file).get(name).push(importer);
+        }
+      }
+    }
+  };
+  await walk(generatedRoot);
+  return found;
+}
+
+// The legacy targets must still be the published copy of the same binding.
+async function checkLegacyTarget(target, name) {
+  if (target.startsWith('./')) return;
+  if (target === '../view-tabs/shared-frame-6jtSkIit.js') {
+    const manifest = await viewTabsManifestFor(referenceVersion);
+    const entry = manifest.publicNames?.[name];
+    if (entry?.file !== path.basename(target)) throw Error(`view-tabs does not publish ${name} from ${path.basename(target)}`);
+    return;
+  }
+  if (target === '../code-composer/chat-composer-dock.mjs') {
+    const manifest = JSON.parse(await fs.readFile(path.join(generatedRoot, 'code-composer/manifest.json'), 'utf8'));
+    if (manifest.referenceVersion !== referenceVersion) throw Error(`code-composer is ${manifest.referenceVersion}, expected ${referenceVersion}`);
+    const module = manifest.modules.find(m => m.target === path.basename(target));
+    if (!module || !Object.values(module.exports ?? {}).includes(name)) throw Error(`code-composer ${path.basename(target)} does not export ${name}`);
+    return;
+  }
+  throw Error(`legacy target ${target} has no check`);
+}
+
+export async function extractChatUi({ check = false } = {}) {
+  const cache = new Map();
+  const modules = new Map();
+  const used = new Set();
+  const moduleFor = file => {
+    if (!modules.has(file)) modules.set(file, { file, seen: new Set(), selected: new Map(), imports: new Map(), exportsAs: new Map(), publicNames: new Map(), aliases: new Map(), statements: [], literals: new Map() });
+    return modules.get(file);
+  };
+  async function resolveImport(m, name, entry, via) {
+    const key = `${entry.file}:${entry.alias}`;
+    if (entry.form !== 'ImportSpecifier') throw Error(`${m.file}#${name}: unsupported import form ${entry.form} of ${entry.file}`);
+    const dep = await readSource(entry.file, cache);
+    const target = vendor[entry.file]?.[entry.alias];
+    if (target) {
+      official.assertVendorAlias(dep.code, entry.alias, target);
+      m.imports.set(name, { from: target[0], name: target[1], via: key, kind: 'react' });
+      return;
+    }
+    if (entry.file === official.vendorFrame) throw Error(`${m.file}#${name}: vendor-frame ${entry.alias} is not a React alias (via ${via})`);
+    const local = dep.exported.get(entry.alias);
+    if (!local) throw Error(`${m.file}#${name}: ${key} is not exported`);
+    if (!files.has(entry.file)) throw Error(`${m.file}#${name} would enter ${entry.file}: ${key} = ${local} (via ${via})`);
+    const t = moduleFor(entry.file);
+    t.exportsAs.set(local, entry.alias);
+    m.imports.set(name, { from: `./${entry.file}`, name: entry.alias, via: key, kind: 'generated', original: local });
+    await add(t, local, `${m.file}#${name}`);
+  }
+  async function add(m, name, via) {
+    if (m.seen.has(name)) return;
+    m.seen.add(name);
+    const src = await readSource(m.file, cache);
+    const entry = src.top.get(name);
+    if (!entry) throw Error(`${m.file}: unbound ${name} (via ${via})`);
+    if (entry.kind === 'import') return resolveImport(m, name, entry, via);
+    const key = `${m.file}#${name}`, own = chunkAdapters[key];
+    if (own) {
+      used.add(key);
+      const text = declarationText(src, entry);
+      const missing = own.features.filter(f => !text.includes(f));
+      if (missing.length) throw Error(`chunk adapter ${key} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
+      m.imports.set(name, { from: own.from, name: own.name, via: key, kind: 'adapter', original: name });
+      return;
+    }
+    if (entry.kind === 'pattern') throw Error(`${key}: destructuring declaration (via ${via})`);
+    if (/\bimport\s*\(/.test(declarationText(src, entry))) throw Error(`${key}: dynamic import (via ${via})`);
+    m.selected.set(name, entry);
+    for (const dep of declarationDeps(src, name)) await add(m, dep, key);
+  }
+  function assertExpect(label, src, m, entry, expect) {
+    if (!expect?.length) throw Error(`${label} has no expect strings`);
+    const text = declarationText(src, entry);
+    for (const f of expect) {
+      if (typeof f === 'string') { if (!text.includes(f)) throw Error(`${label} lacks ${JSON.stringify(f)}`); continue; }
+      if (f.raw !== undefined) {
+        const count = src.code.split(f.raw).length - 1;
+        if (count !== 1) throw Error(`${label}: ${JSON.stringify(f.raw)} occurs ${count} times in ${src.name}, expected 1`);
+        continue;
+      }
+      const other = m.selected.get(f.in);
+      if (!other) throw Error(`${label}: the closure does not reach ${f.in}`);
+      if (!declarationText(src, other).includes(f.has)) throw Error(`${label}: ${f.in} lacks ${JSON.stringify(f.has)}`);
+    }
+  }
+
+  // Legacy importers (none while legacyTable is empty: any import of a non-emitted chat file fails).
+  const importers = await chatImporters();
+  const legacy = {};
+  const emitted = new Set([...roots.map(r => r.source), ...literals.map(l => l.source)]);
+  for (const [file, names] of [...importers].sort(([a], [b]) => a.localeCompare(b))) {
+    if (emitted.has(file)) continue; // a 3.6556.2 output itself; its names are checked after generation
+    const table = legacyTable[file];
+    if (!table) throw Error(`${[...names.values()].flat().join(', ')} import${''} src/generated/chat/${file}, which is neither emitted nor a known legacy file`);
+    legacy[file] = {};
+    for (const [name, by] of [...names].sort(([a], [b]) => a.localeCompare(b))) {
+      if (!table[name]) throw Error(`${by.join(', ')} import ${name} from legacy src/generated/chat/${file}; it is not in legacyTable`);
+      await checkLegacyTarget(...table[name]);
+      legacy[file][name] = { from: table[name][0], name: table[name][1], importers: [...new Set(by)].sort() };
+    }
+  }
+  for (const r of roots) {
+    const src = await readSource(r.source, cache);
+    const entry = src.top.get(r.local);
+    if (!entry || entry.kind === 'import' || entry.kind === 'pattern') throw Error(`root ${r.name}: ${r.source}#${r.local} is not a declaration`);
+    if (src.exported.get(r.export) !== r.local) throw Error(`root ${r.name}: ${r.source} exports ${r.export} as ${src.exported.get(r.export)}, not ${r.local}`);
+    const m = moduleFor(r.source);
+    m.publicNames.set(r.local, r.name);
+    for (const alias of r.alias ?? []) m.aliases.set(alias, r.local);
+    await add(m, r.local, 'root');
+    assertExpect(`root ${r.name} (${r.source}#${r.local})`, src, m, entry, r.expect);
+    for (const text of r.statements ?? []) {
+      const found = src.statements.filter(s => src.code.slice(s.start, s.end).replace(/;$/, '') === text);
+      if (found.length !== 1) throw Error(`root ${r.name}: statement ${JSON.stringify(text)} found ${found.length} times`);
+      m.statements.push(found[0]);
+    }
+  }
+  for (const l of literals) {
+    const src = await readSource(l.source, cache);
+    const entry = src.top.get(l.owner);
+    if (!entry || entry.kind === 'import' || entry.kind === 'pattern') throw Error(`literal ${l.name}: ${l.source}#${l.owner} is not a declaration`);
+    const matches = [];
+    babel.traverse(src.ast, { StringLiteral(p) {
+      if (p.node.start >= entry.node.start && p.node.end <= entry.node.end && p.node.value.startsWith(l.prefix)) matches.push(p.node);
     } });
-    for (const name of dependencies) await add(m, name);
+    if (matches.length !== 1) throw Error(`Expected one source literal ${l.source}:${l.owner}:${l.name}, found ${matches.length}`);
+    for (const f of l.expect) if (!matches[0].value.includes(f)) throw Error(`literal ${l.name} lacks ${JSON.stringify(f)}`);
+    moduleFor(l.source).literals.set(l.name, { owner: l.owner, node: matches[0], expect: l.expect });
   }
-}
-// SC-7: shared-14 Ga/qa (tv/ev, the 2.2553.1 artifact body and header classes) are no longer forced in: nothing
-// imported them. The live artifact body class is current-chat shared-9 xf (source-artifact-viewer.jsx).
-const shell=await get('shared-11-CDihEvbJ.js');
-await add(await get('vendor-frame-BmPfNbgY.js'), 'qt');
-await add(await get('vendor-frame-BmPfNbgY.js'), 'Wt');
-await add(await get('vendor-frame-BmPfNbgY.js'), 'Lt');
-await add(await get('cdbc75b4b-CaOXO81D.js'), 'pi');
-await add(await get('cdbc75b4b-CaOXO81D.js'), '$r');
-await add(await get('shared-21-D098Wd--.js'), 'VV');
-await add(await get('shared-19-CjdiaR4X.js'), 'lm');
-await add(await get('shared-19-CjdiaR4X.js'), 'dm');
-await add(await get('c97b955f1-6SCO-W37.js'), 'xr');
-for (const name of ['c8ff922bb-BPSJpmre.js', 'cff2bf6cb-rlnyJMOd.js']) await addCalendarInitializers(await get(name));
-await add(await get('ccd3f68fe-JzfLnZNI.js'), 'ga');
-for (const name of ['fo', 'co', 'so']) await add(await get('ccd3f68fe-JzfLnZNI.js'), name);
-addSourceLiteral(await get('ccd3f68fe-JzfLnZNI.js'), 'uo', 'routineTemplateGridClass', 'grid w-full grid-cols-1 gap-x-6');
-await add(await get('vendor-intl-Cf4IuK3L.js'), 'kt');
-addSourceLiteral(await get('ccd3f68fe-JzfLnZNI.js'), 'Zo', 'routineGridClass', 'mb-3 grid auto-rows-fr grid-cols-1');
-// The field family (registered with the native-field registry, see `registrations`) and the Spark (bd). Bh, the
-// 2.2553.1 TextInput, stays for this family's TextField (Sy) and for the host CsvTextInput (source-csv-adapters.jsx,
-// also SidebarSectionsInput); the Code UI terminal find already uses view-tabs CdsTextInput (2.42304.0 tx).
-for (const name of ['Bh', '$v', 'bd', 'Sy', '_y', 'vy', 'yy', 'by']) await add(await get('shared-frame-C_2npUJq.js'), name);
-await add(await get('shared-24-C4QZCHDk.js'), 'tE');
-await add(await get('shared-24-C4QZCHDk.js'), 'TD');
-await add(await get('shared-24-C4QZCHDk.js'), 'QD');
-await add(await get('c2bf50d9e-DFTwgP_Q.js'), 'o');
-await add(await get('shared-22-Cz3C_T8d.js'), 'xO');
-await add(await get('vendor-intl-Cf4IuK3L.js'), '$t');
-for (const name of ['dO','aO']) await add(await get('shared-21-D098Wd--.js'), name);
-const home = await get('shared-24-C4QZCHDk.js');
-addSourceLiteral(home, 'SO', 'homeColumnClass', 'relative flex flex-col items-center gap-6');
-addSourceLiteral(home, 'SO', 'homeScrollClass', 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto');
-addSourceLiteral(await get('shared-14-BOJVa-jT.js'), 'ZP', 'ideaPreviewClass', 'animate-preview-prompt-in line-clamp-2 text-muted');
-for(const name of ['Gu','$l','cu','uu','lu','fu'])await add(shell,name);
-const layout=await get('shared-21-D098Wd--.js');
-for(const name of ['yb','Ab','jb','Nb','bb','Lx','mb','Fb','Xb'])await add(layout,name);
-// Editor typography, insets and intrinsic row metrics belong to the same original contract.
-const geometry=await get('shared-8-B5xbG2px.js');
-for(const exported of ['mp','hp'])await add(geometry,geometry.exports.get(exported));
-const activity = await get('ce5658dc8-CJ_gZ6YY.js');
-for (const name of ['yu', 'bu', 'xu']) await add(activity, name);
-const activityLayout = await get('cc5a62f6f-ylJcImQa.js');
-for (const name of ['O', 'A', 'm', 'h', 'v', '_', 'y']) await add(activityLayout, name);
-for (const [file, names] of [['ca324bb72-DogKBzRY.js',['yt','It']], ['cabf52553-BGQcEv7j.js', ['Le','Ee']], ['cfcabf2fa--2rO5Hd_.js', ['f','p']], ['c71dee58b-CFLphdFa.js', ['wl']], ['c75e89812-U9wOm6Ly.js', ['i', 'a']], ['cbcaf521a-CrWJ5SHy.js', ['e']], ['cf8745532-uXq2n8pj.js', ['l']], ['cbef3b9e7-kx1HRu8z.js', ['s']], ['c193cfc9b-B8oGoJPG.js', ['g']]]) { const mod = await get(file); for (const name of names) await add(mod, name); }
-const viewTabsManifest = JSON.parse(await fs.readFile(path.join(root, 'src/generated/view-tabs/manifest.json'), 'utf8'));
-if (viewTabsManifest.publicNames?.[viewTabsTextInput[1]]?.file !== path.basename(viewTabsTextInput[0]))
-  throw Error(`view-tabs does not publish ${viewTabsTextInput[1]} from ${path.basename(viewTabsTextInput[0])}`);
-for (const [file, local] of textInputRedirects) {
-  const m = modules.get(file), binding = m?.program.scope.getBinding(local);
-  const from = binding?.path.isImportSpecifier() ? binding.path.parent.source.value.slice(2) : null;
-  if (from !== 'shared-frame-C_2npUJq.js' || (await get(from)).exports.get(binding.path.node.imported.name) !== 'Bh')
-    throw Error(`${file}:${local} is not that module's import of shared-frame Bh`);
-  if (m.imports.get(local) !== viewTabsTextInput) throw Error(`${file}:${local} was not redirected`);
-}
-await fs.mkdir(output,{recursive:true});
-const provenance=[];
-for(const m of modules.values()) {
-  const registration = registrations[m.name];
-  if (registration) {
-    if (m.program.scope.hasBinding(registration.call)) throw Error(`${m.name} already binds ${registration.call}`);
-    for (const [role, local] of Object.entries(registration.parts)) if (!m.selected.has(local)) throw Error(`${m.name}: ${role} part ${local} is not extracted`);
+  for (const [key, adapter] of Object.entries(chunkAdapters)) {
+    const [file] = key.split('#');
+    if (modules.has(file) && !used.has(key)) throw Error(`chunk adapter ${key} is no longer reached; drop it`);
   }
-  const imports=[...m.imports].map(([local,[from,name]])=>`import { ${name} as ${local} } from ${JSON.stringify(from)};`).join('\n')
-    + (registration ? `\nimport { ${registration.call} } from ${JSON.stringify(registration.from)};` : '');
-  const register = registration ? `${registration.call}({ ${Object.entries(registration.parts).map(([role, local]) => `${role}: ${local}`).join(', ')} });\n` : '';
-  const declarations=[...m.selected.values(), ...m.initializers.values()].sort((a,b)=>a.node.start-b.node.start).map(p=>(p.isVariableDeclarator()?'var ':'')+m.code.slice(p.node.start,p.node.end)+(p.isVariableDeclarator()?';':'')).join('\n').replaceAll('\"/images/illustrations/', '\"./images/illustrations/').replaceAll('\"/assets/v1/', '\"./assets/v1/');
-  const literals=[...m.literals].map(([name,node])=>`var ${name}=${m.code.slice(node.start,node.end)};`).join('\n');
-  const body=`// Extracted from Claude Desktop 2.2553.1 ${m.name}. Only asset URLs are made relative. Do not edit.\n${imports}\n${declarations}\n${literals}\n${register}export { ${[...m.selected.keys(), ...m.literals.keys(), ...m.imports.keys()].join(', ')} };\n`;
-  await fs.writeFile(path.join(output,m.name),body);
-  provenance.push({source:m.name,outputSha256:createHash('sha256').update(body).digest('hex'),assetUrls:'Root paths made relative for Electron file loading',sha256:createHash('sha256').update(m.code).digest('hex'),declarations:[...m.selected.keys()],literals:[...m.literals].map(([name,node])=>({name,start:node.start,end:node.end})),...(m.initializers.size ? { initializers: [...m.initializers.values()].map(p => ({ start:p.node.start, end:p.node.end })) } : {}),...(registration ? { registrations: [registration] } : {}),boundaries:[...m.imports].filter(([,v])=>!v[0].startsWith('./shared'))});
+  for (const file of files) if (!modules.has(file)) throw Error(`chunk ${file} is listed but no longer entered; drop it`);
+
+  const out = {};
+  const manifest = {
+    referenceVersion, referenceSnapshot, generator: 'scripts/extract-chat-ui.mjs',
+    publicNames: {}, modules: [], legacy: {},
+  };
+  for (const m of [...modules.values()].sort((a, b) => a.file.localeCompare(b.file))) {
+    const src = await readSource(m.file, cache);
+    const selected = [...m.selected].sort((a, b) => a[1].node.start - b[1].node.start);
+    const groups = new Map();
+    for (const [local, entry] of m.imports) {
+      if (!groups.has(entry.from)) groups.set(entry.from, []);
+      groups.get(entry.from).push(entry.name === local ? local : `${entry.name} as ${local}`);
+    }
+    const exportNames = new Map();
+    for (const [local, alias] of m.exportsAs) exportNames.set(alias, local);
+    for (const [local, name] of m.publicNames) {
+      if (exportNames.has(name) && exportNames.get(name) !== local) throw Error(`${m.file}: export ${name} collides`);
+      exportNames.set(name, local);
+    }
+    for (const [alias, local] of m.aliases) exportNames.set(alias, local);
+    for (const name of m.literals.keys()) exportNames.set(name, name);
+    const importText = [...groups].map(([from, names]) => `import { ${names.join(', ')} } from ${JSON.stringify(from)};`).join('\n');
+    const body = [
+      ...selected.map(([, e]) => emittedText(src, e)),
+      ...m.statements.map(s => `${src.code.slice(s.start, s.end).replace(/;$/, '')};`),
+      ...[...m.literals].map(([name, l]) => `var ${name} = ${src.code.slice(l.node.start, l.node.end)};`),
+    ].join('\n');
+    const exportText = `export { ${[...exportNames].map(([name, local]) => (name === local ? local : `${local} as ${name}`)).join(', ')} };`;
+    const header = `// Original Claude Desktop ${referenceVersion} bindings from ${m.file}; generated by extract-chat-ui.mjs.\n// Edit the extractor, never this file.\n`;
+    const text = await format(`${header}${importText}\n${body}\n${exportText}\n`, { parser: 'babel' });
+    const unbound = globalsOf(text, m.file).filter(name => !allowedGlobals.has(name));
+    if (unbound.length) throw Error(`${m.file}: unbound ${unbound.join(', ')}`);
+    out[m.file] = text;
+    for (const [local, name] of m.publicNames) {
+      const r = roots.find(x => x.source === m.file && x.local === local);
+      manifest.publicNames[name] = { file: m.file, local, export: r.export, expect: r.expect };
+    }
+    for (const [name, l] of m.literals)
+      manifest.publicNames[name] = { file: m.file, literal: true, owner: l.owner, start: l.node.start, end: l.node.end, expect: l.expect };
+    manifest.modules.push({
+      source: m.file, target: m.file, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion,
+      bindings: selected.map(([name, e]) => ({ name, sha256: sha(declarationText(src, e)) })),
+      literals: [...m.literals].map(([name, l]) => ({ name, owner: l.owner, start: l.node.start, end: l.node.end })),
+      statements: m.statements.map(s => src.code.slice(s.start, s.end)),
+      imports: [...m.imports].map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}) })),
+      exports: Object.fromEntries(exportNames),
+    });
+  }
+  // Names other generated folders import from a 3.6556.2 output must exist there.
+  for (const [file, names] of importers) {
+    if (!out[file]) continue;
+    const exported = new Set(Object.keys(manifest.modules.find(x => x.target === file).exports));
+    for (const [name, by] of names) if (!exported.has(name)) throw Error(`${by.join(', ')} import ${name} from src/generated/chat/${file}, which does not export it`);
+  }
+  for (const [file, entries] of Object.entries(legacy)) {
+    const groups = new Map();
+    for (const [name, e] of Object.entries(entries)) {
+      if (!groups.has(e.from)) groups.set(e.from, []);
+      groups.get(e.from).push(`${e.name} as ${name}`);
+    }
+    const text = await format(`// Legacy 2.2553.1 name(s) over the ${referenceVersion} binding(s) (E34); generated by extract-chat-ui.mjs for\n`
+      + `// ${[...new Set(Object.values(entries).flatMap(e => e.importers))].join(', ')}. Removed when no generated folder imports this file.\n`
+      + [...groups].map(([from, names]) => `import { ${names.join(', ')} } from ${JSON.stringify(from)};`).join('\n')
+      + `\nexport { ${Object.keys(entries).join(', ')} };\n`, { parser: 'babel' });
+    out[file] = text;
+    manifest.legacy[file] = { referenceVersion: '2.2553.1', sha256: sha(text), exports: entries };
+  }
+  out['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';
+
+  if (check) {
+    const present = (await fs.readdir(output).catch(() => [])).sort(), expected = Object.keys(out).sort();
+    if (JSON.stringify(present) !== JSON.stringify(expected))
+      throw Error(`Chat UI output set changed: on disk ${present.join(',')}; expected ${expected.join(',')}. Run scripts/extract-chat-ui.mjs.`);
+    for (const [name, text] of Object.entries(out))
+      if (await fs.readFile(path.join(output, name), 'utf8') !== text) throw Error(`Chat UI source mismatch: ${name}. Run scripts/extract-chat-ui.mjs.`);
+  } else {
+    await fs.mkdir(output, { recursive: true });
+    for (const name of await fs.readdir(output)) if (!(name in out)) await fs.rm(path.join(output, name), { recursive: true });
+    for (const [name, text] of Object.entries(out)) await fs.writeFile(path.join(output, name), text);
+  }
+  const count = manifest.modules.reduce((n, m) => n + m.bindings.length, 0);
+  console.log(`${check ? 'Verified' : 'Extracted'} chat UI: ${manifest.modules.length} ${referenceVersion} modules (${count} bindings, ${Object.keys(manifest.publicNames).length} public names), ${Object.keys(manifest.legacy).length} legacy shims.`);
+  return manifest;
 }
-await fs.writeFile(path.join(output,'provenance.json'),JSON.stringify(provenance,null,2)+'\n');
-console.log(`Chat UI: extracted ${provenance.reduce((n,m)=>n+m.declarations.length,0)} declarations from ${modules.size} source modules.`);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+  await extractChatUi({ check: process.argv.includes('--check') });

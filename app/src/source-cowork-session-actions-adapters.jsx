@@ -1,5 +1,7 @@
-// Host side of the 2.42304.0 Cowork session actions that scripts/extract-cowork-session-actions.mjs emits
-// (src/generated/cowork-session-actions, R4i-cowork CW1; research-ext/X2 CW-1). The generated modules never import this
+// Host side of the 3.6556.2 Cowork session actions that scripts/extract-cowork-session-actions.mjs emits
+// (src/generated/cowork-session-actions, R4i-cowork CW1; research-ext/X2 CW-1). The names below are the 2.42304.0 ones;
+// in 3.6556.2 (w1-routines-a, RC-21, structure unchanged) c21f11e6d cO/lO/uO/dO/dk are iN/aN/oN/sN/LP, cb1e253a0
+// vm/ym are nh/rh and shared-0 By is dx. Only semantic export names are imported. The generated modules never import this
 // file; the later steps (CW-4 restart from here, CW-5 edit, CW-6 "Go back", CW-7 refusal retry) call through it.
 //
 // What the official CoworkSessionView (c21f11e6d mk) passes that the host answers here:

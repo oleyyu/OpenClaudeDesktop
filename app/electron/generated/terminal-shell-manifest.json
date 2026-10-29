@@ -1,7 +1,49 @@
 {
-  "reference": "2.31226.0",
-  "source": "../reference/current-2.31226.0/desktop/index.chunk-CiiI592G.js",
-  "sourceSha256": "cb1d6a6aaa43efda435b3743bb6346053af8ad0289a1eef6db68cc1a5aa785da",
+  "reference": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-B80dqaMC.js",
+  "sourceSha256": "9e91df9272bd189f1a15e844d0cc5b45dcbde52c6a2ba2b9845039e1c6b1f684",
+  "bindings": [
+    "m",
+    "h",
+    "g",
+    "_",
+    "v",
+    "ee",
+    "y",
+    "b",
+    "x",
+    "te",
+    "S",
+    "ne",
+    "re",
+    "ie",
+    "ae",
+    "oe",
+    "se",
+    "ce",
+    "le",
+    "ue",
+    "de",
+    "C",
+    "w",
+    "T",
+    "pe"
+  ],
+  "exports": {
+    "shellScripts": "de",
+    "shellLaunch": "pe",
+    "shellKind": "T"
+  },
+  "helpers": [
+    {
+      "file": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+      "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+      "export": "P",
+      "binding": "$Ba",
+      "as": "t.P"
+    }
+  ],
   "output": "terminal-shell.cjs",
-  "sha256": "95d7419215a6aa85b13b8cc2f33c32983af517f1b8d606b3124bc91d4c804cbc"
+  "sha256": "43cdc26e63762be374be20fd0a20f40b34f516813c7b07e37151639f58bcae8b"
 }

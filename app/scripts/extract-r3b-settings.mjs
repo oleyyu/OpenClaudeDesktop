@@ -1,16 +1,21 @@
-// Extract the 2.42304.0 originals lane R3b-settings reuses (cov0-04, the desktop low-disk toast), without executing any
+// Extract the 3.6556.2 originals lane R3b-settings reuses (cov0-04, the desktop low-disk toast), without executing any
 // desktop runtime:
-//   renderer  cf615570b DesktopLowDiskToast (the whole chunk: g, p, m, h), shared-3 ZC (the byte formatter it labels the
-//             free space with), shared-130 eF (bidi isolation of that label), shared-25 JH/GH/KH (the `LSS-persisted.*`
-//             localStorage record of the last warning) and the shared-0 helpers those read (logger, lazy value, RTL set);
-//   main      index.chunk-muI2IV6k.js YAr (statfs of a folder, walking up to an existing parent: bavail * bsize), which
-//             the official DeviceStorage.getFreeDiskSpace calls on app.getPath("userData") (FOa, BOa).
+//   renderer  cf615570b DesktopLowDiskToast (the whole chunk: g, p, m, h and the compiler-hoisted no-op _), shared-3 FD
+//             (the byte formatter it labels the free space with), shared-78 WW (bidi isolation of that label), shared-25
+//             AH/DH/OH (the `LSS-persisted.*` localStorage record of the last warning) and the shared-0 helpers those
+//             read (logger, lazy value, RTL set);
+//   main      index.chunk-jPKPzV-P.js YUr (statfs of a folder, walking up to an existing parent: bavail * bsize), which
+//             the official DeviceStorage.getFreeDiskSpace calls on app.getPath("userData") (cEa, pEa).
+// 3.6556.2 is React Compiler output: the toast reads the memo cache (shared-frame J9 = vendor-frame `Oo`,
+// react/compiler-runtime `c`) and the J/K slot helpers; those are imported from view-tabs by their E3 semantic names.
 //
 // Every emitted renderer binding is an original top-level declaration sliced from the minified chunk; each module's
 // bindings are the reachable closure of its roots (Babel scope analysis), so nothing is hand-picked. Imports resolve
 // through the source chunk's export table to exactly one of: another module generated here, a verified React export of
 // vendor-frame, a public (semantic) name of the shared view-tabs graph (D1: CdsButton, checked against its manifest), or
-// a named host adapter in src/source-r3b-settings-adapters.jsx. Roots, adapters and the main-process binding carry
+// a named host adapter in src/source-r3b-settings-adapters.jsx. Migration 3.6556.2: R1 constants from
+// official-3.6556.2.mjs, React aliases checked with official.assertVendorAlias (R3), minified features through
+// official.looseFeature (R2). Roots, adapters and the main-process binding carry
 // feature strings that must still appear in the original text, so a version bump that re-points a minified name fails
 // here instead of silently binding the wrong value. Output is prettier-formatted after assembly.
 //
@@ -18,6 +23,8 @@
 // manifest), own scripts/verify-gen-r3b-settings.mjs.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -25,10 +32,9 @@ import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
-const mainSource = path.resolve(root, '../reference', referenceSnapshot, 'asar/.vite/build');
+const { referenceVersion, referenceSnapshot } = official;
+const source = official.ionSource;
+const mainSource = official.asarSource;
 const output = path.join(root, 'src/generated/r3b-settings');
 const electronOutput = path.join(root, 'electron/generated');
 const electronTarget = 'r3b-settings-free-disk.cjs', electronManifest = 'r3b-settings-free-disk-manifest.json';
@@ -36,61 +42,66 @@ const adapterModule = '../../source-r3b-settings-adapters.jsx';
 const viewTabsModule = '../view-tabs/';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment in the chunk.
+// vendor-frame re-exports React; each alias is checked with official.assertVendorAlias (a top-level
+// `local=<namespace>.<member>` of the right namespace; R3: `Co` is useRef and `Ha` jsx in 3.6556.2).
 const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    So: ['react', 'useRef'], mo: ['react', 'useEffect'], ho: ['react', 'useEffectEvent'], Va: ['react/jsx-runtime', 'jsx'],
-  },
+  [official.vendorFrame]: Object.fromEntries(['Co', 'ho', 'go', 'Ha'].map(alias => [alias, official.reactAliases[alias]])),
 };
 // Host dependencies (file -> export alias -> adapter name). `features` must appear in the resolved local's top-level
-// declaration; `{ in, has }` checks another top-level declaration of the same chunk.
+// declaration (`{ loose }`: official.looseFeature); `{ in, has }` checks another top-level declaration of the same chunk.
 const adapters = {
   // react-intl useIntl (q) / FormattedMessage (Gt = memo(Wt)) over the local catalog.
-  'vendor-intl-Db7hDWRO.js': {
-    p: { name: 'useIntl', features: ['return Mt(e),e', { in: 'Mt', has: '[React Intl] Could not find required `intl` object' }] },
-    l: { name: 'FormattedMessage', features: ['u(Wt,Ut)', { in: 'Wt', has: 'textComponent:i=n' }] },
+  [official.vendorIntl]: {
+    p: { name: 'useIntl', features: [{ loose: 'return Mt(e),e' }, { in: 'Mt', has: '[React Intl] Could not find required `intl` object' }] },
+    l: { name: 'FormattedMessage', features: [{ loose: 'c(Wt,Ut)' }, { in: 'Wt', has: 'textComponent:a=r' }] },
   },
-  // shared-52 Sj (exported `Ya`): useContext(ErrorsProvider) -> { addWarning, clearToast, … }.
-  'shared-52-DGviI8xb.js': { Ya: { name: 'useErrors', features: ['S(pj)', '"Must be called within ErrorsProvider"'] } },
-  // shared-0 tx (exported `pm`): the desktop bridge's DeviceStorage namespace.
-  'shared-0-ByI5P0CP.js': { pm: { name: 'DeviceStorage', features: ['globalThis["claude.web"]?.DeviceStorage'] } },
+  // shared-52 cB (exported `ha`): useContext(ErrorsProvider) -> { addWarning, clearToast, … }.
+  'shared-52-uHFNjl7C.js': { ha: { name: 'useErrors', features: [{ loose: 'w(Qz)' }, '"Must be called within ErrorsProvider"'] } },
+  // shared-0 jS (exported `Ym`): the desktop bridge's DeviceStorage namespace.
+  'shared-0-DDOOdL6P.js': { Ym: { name: 'DeviceStorage', features: ['globalThis["claude.web"]?.DeviceStorage'] } },
 };
-// shared-frame bindings the view-tabs graph publishes (D1): imported from it by public name, never copied.
+// shared-frame bindings the view-tabs graph publishes (D1): imported from it by public name, never copied. The React
+// Compiler helpers (E3) come from official.compilerHelpers: their whole declaration must match the frozen feature.
 const viewTabs = {
-  'shared-frame-BfjMqbuN.js': { cl: { name: 'CdsButton', features: ['iconPosition:i="start"'] } },
+  [official.sharedFrame]: {
+    Eu: { name: 'CdsButton', features: ['iconPosition:o', 'o===void 0?"start":o'] },
+    ...Object.fromEntries(Object.entries(official.compilerHelpers).map(([alias, helper]) => [alias, { name: helper.name, compiler: helper }])),
+  },
 };
 // Emitted in dependency order. `exports` maps original local binding -> exported name (its keys are the roots);
 // `features` pins each root to strings of its original (minified) text.
 const modules = [
-  { target: 'shared-0.mjs', source: 'shared-0-ByI5P0CP.js',
-    exports: { $r: 'logger', I: 'logCategory', Hi: 'lazyValue', tF: 'rtlCharacterPattern' },
-    features: { $r: ['startGroup:'], I: ['LOCAL_STORAGE:"[LOCAL_STORAGE]"'], Hi: ['n||=(t=e(),!0)'], tF: ['\\u0590-\\u08FF'] } },
-  { target: 'persisted-store.mjs', source: 'shared-25-DP8p7i1Z.js',
-    exports: { AH: 'persistedStorageKey', JH: 'readPersisted', GH: 'removePersisted', KH: 'writePersisted' },
-    features: { AH: ['`LSS-${e}`'], JH: ['window.localStorage.getItem(AH(e))', 'acceptBareValue'], GH: ['zH(AH(e),jH,!0)'], KH: ['zH(AH(e),t,!0)'] } },
-  { target: 'bidi-isolate.mjs', source: 'shared-130-DnUXVlYq.js', exports: { eF: 'isolateDirection' },
-    features: { eF: ['XP(e)==="ltr"?t:', '\\u2067'] } },
-  { target: 'format-bytes.mjs', source: 'shared-3-DnHYUZdJ.js', exports: { ZC: 'formatBytes', XC: 'byteUnits' },
-    features: { ZC: ['unitDisplay:n==="short"&&a===0?"long":n', 'maximumFractionDigits:a===0?0:1'], XC: ['["byte","kilobyte","megabyte","gigabyte"]'] } },
+  { target: 'shared-0.mjs', source: 'shared-0-DDOOdL6P.js',
+    // W13 G11 (D1): Pa (lazyInit) is no longer a root here; bidi-isolate imports it from routines-shared (linkedOriginals).
+    exports: { Ui: 'logger', F: 'logCategory', LL: 'rtlCharacterPattern' },
+    features: { Ui: ['startGroup:', '__errorMarked:'], F: ['LOCAL_STORAGE:"[LOCAL_STORAGE]"'], Pa: [{ loose: 'n||=(t=e(),!0)' }], LL: ['\\u0590-\\u08FF'] } },
+  { target: 'persisted-store.mjs', source: 'shared-25-DOWZRSlq.js',
+    exports: { fH: 'persistedStorageKey', AH: 'readPersisted', DH: 'removePersisted', OH: 'writePersisted' },
+    features: { fH: ['`LSS-${e}`'], AH: [{ loose: 'window.localStorage.getItem(fH(e))' }, 'acceptBareValue'], DH: [{ loose: 'xH(fH(e),pH,!0)' }, { in: 'pH', has: 'Symbol("absent")' }],
+      OH: [{ loose: 'xH(fH(e),t,!0)' }, { in: 'xH', has: 'JSON.stringify({value:t,tabId:"",timestamp:Date.now()})' }] } },
+  { target: 'bidi-isolate.mjs', source: 'shared-78-D5Fw2h0a.js', exports: { WW: 'isolateDirection' },
+    features: { WW: [{ loose: 'BW(e)==="ltr"?t:' }, '\\u2067', { in: 'BW', has: 'e==="en-XB"?"ltr"' }] } },
+  { target: 'format-bytes.mjs', source: 'shared-3-BCEbd8Fv.js', exports: { FD: 'formatBytes', PD: 'byteUnits' },
+    features: { FD: ['unitDisplay:n==="short"&&a===0?"long":n', 'maximumFractionDigits:a===0?0:1'], PD: ['["byte","kilobyte","megabyte","gigabyte"]'] } },
   // The whole chunk: `complete` asserts every top-level declaration of cf615570b is reached from the exports, and the
   // chunk's own export table must still name DesktopLowDiskToast / LOW_DISK_SPACE_BYTES.
-  { target: 'low-disk-toast.mjs', source: 'cf615570b-CMSKc5h8.js', complete: true,
+  { target: 'low-disk-toast.mjs', source: 'cf615570b-BgBm9Y8P.js', complete: true,
     officialExports: { DesktopLowDiskToast: 'g', LOW_DISK_SPACE_BYTES: 'p' },
     exports: { g: 'DesktopLowDiskToast', p: 'LOW_DISK_SPACE_BYTES', m: 'lowDiskRemindAfterMs', h: 'lowDiskWarnedAtKey' },
     features: {
       g: ['defaultMessage:"Low disk space: {free} free",id:"3oiLa8/rQB"', 'defaultMessage:"Manage storage",id:"N1UcONKmyo"', 'uniqueKey:"desktop-low-disk"',
-        'e>=2*p&&a(h)', 'n>=0&&n<m', 'window.addEventListener("focus",t)', 's?.getFreeDiskSpace?.()', 'size:"sm",variant:"secondary"'],
+        { loose: 'e>=2*p&&a(h)' }, { loose: 'n>=0&&n<m' }, 'window.addEventListener("focus",t)', 'c?.getFreeDiskSpace?.()', 'size:"sm",variant:"secondary"'],
       p: ['p=10*1e3**3'], m: ['m=6048e5'], h: ['h="persisted.desktop-low-disk-warned-at"'],
     } },
 ];
-// Main process: YAr, the CommonJS namespaces it reads and the official callers that fix its argument and result.
+// Main process: YUr, the CommonJS namespaces it reads and the official callers that fix its argument and result.
 const main = {
-  file: 'index.chunk-muI2IV6k.js', binding: 'YAr', exportedAs: 'freeDiskSpace',
+  file: 'index.chunk-jPKPzV-P.js', binding: 'YUr', exportedAs: 'freeDiskSpace',
   features: ['await(0,p.statfs)(t)', 'return e.bavail*e.bsize', 'n.default.dirname(t)', 'if(r===t)throw e'],
   // `let p=require("node:fs/promises");p=e.a(p)`: rebuilt as the module itself (statfs is a named export of both).
   namespaces: { p: { require: 'node:fs/promises', members: ['statfs'], prelude: 'const p = require("node:fs/promises");' },
     n: { require: 'node:path', members: ['default'], prelude: 'const n = { default: require("node:path") };' } },
-  callers: { FOa: ['return YAr(a.app.getPath("userData"))'], BOa: ['getFreeDiskSpace:async()=>await FOa()??null'] },
+  callers: { cEa: ['return YUr(a.app.getPath("userData"))'], pEa: ['getFreeDiskSpace:async()=>await cEa()??null'] },
 };
 
 const exportTable = text => {
@@ -130,6 +141,7 @@ function checkFeatures(chunk, local, features, label) {
   const text = declarationText(chunk, local);
   for (const feature of features) {
     if (typeof feature === 'string') { if (!text.includes(feature)) throw Error(`${label}: ${chunk.name}:${local} lacks ${JSON.stringify(feature)}`); continue; }
+    if (feature.loose) { if (!official.looseFeature(feature.loose).test(text)) throw Error(`${label}: ${chunk.name}:${local} lacks loose ${JSON.stringify(feature.loose)}`); continue; }
     if (!declarationText(chunk, feature.in).includes(feature.has)) throw Error(`${label}: ${chunk.name}:${feature.in} lacks ${JSON.stringify(feature.has)}`);
   }
 }
@@ -137,20 +149,41 @@ function checkFeatures(chunk, local, features, label) {
 function vendorImport(chunk, alias) {
   const target = vendor[chunk.name]?.[alias];
   if (!target) throw Error(`Unmapped vendor import ${chunk.name}:${alias}`);
-  const local = chunk.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(chunk.code))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  official.assertVendorAlias(chunk.code, alias, target);
   return target;
+}
+
+// W13 G11 (D1): originals another generated 3.6556.2 graph already holds and exports, imported from it instead of cut
+// again here: shared-0 Pa (lazyInit), held by routines-shared's shared-0 (no imports, plain node). The holder's manifest
+// must list the binding for the same source bytes and its module text must match the manifest.
+const linkedOriginals = { 'shared-0-DDOOdL6P.js#Pa': { area: 'routines-shared', target: 'shared-0-DDOOdL6P.mjs' } };
+async function linkedImport(chunk, local) {
+  const link = linkedOriginals[`${chunk.name}#${local}`];
+  if (!link) return null;
+  const dir = path.join(root, 'src/generated', link.area);
+  const held = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
+  const mod = held.modules.find(m => m.target === link.target && m.source === chunk.name);
+  if (held.referenceVersion !== referenceVersion || !mod || mod.sourceSha256 !== sha(chunk.bytes) || !mod.bindings.some(b => b.name === local))
+    throw Error(`${link.area}/${link.target} does not hold the ${referenceVersion} ${chunk.name}#${local}`);
+  const text = await fs.readFile(path.join(dir, link.target), 'utf8');
+  if (sha(text) !== mod.sha256) throw Error(`${link.area}/${link.target} differs from its manifest`);
+  const names = [...text.matchAll(/^export \{([^}]*)\};/gm)].flatMap(m => m[1].split(',').map(x => x.trim()).filter(Boolean))
+    .map(spec => spec.split(/\s+as\s+/)).filter(([l]) => l === local).map(([l, as]) => as ?? l);
+  if (!names.length) throw Error(`${link.area}/${link.target} does not export ${local}`);
+  return { from: `../${link.area}/${link.target}`, name: names[0] };
 }
 
 let viewTabsManifest;
 async function viewTabsImport(chunk, alias, spec) {
-  viewTabsManifest ??= JSON.parse(await fs.readFile(path.join(root, 'src/generated/view-tabs/manifest.json'), 'utf8'));
+  viewTabsManifest ??= await viewTabsManifestFor(referenceVersion);
   const local = chunk.exported.get(alias), entry = viewTabsManifest.publicNames?.[spec.name];
   if (viewTabsManifest.referenceVersion !== referenceVersion || !entry || entry.file !== chunk.name || entry.local !== local || entry.export !== alias)
     throw Error(`view-tabs ${spec.name} is not ${chunk.name}:${local} (${JSON.stringify(entry)}, ${viewTabsManifest.referenceVersion})`);
-  checkFeatures(chunk, local, spec.features, `view-tabs ${spec.name}`);
+  if (spec.compiler) {
+    // E3: the whole helper declaration (and J9 = the vendor-frame `Oo` import) is checked once per shared-frame.
+    chunk.compilerHelpers ??= official.assertCompilerHelpers(chunk.code);
+    if (chunk.compilerHelpers[spec.name]?.local !== local) throw Error(`view-tabs ${spec.name} is not compiler helper ${local}`);
+  } else checkFeatures(chunk, local, spec.features, `view-tabs ${spec.name}`);
   return { from: `${viewTabsModule}${chunk.name}`, name: spec.name };
 }
 
@@ -175,6 +208,8 @@ async function extractRenderer(cache) {
       }
       if (viewTabs[file]?.[alias]) return { ...await viewTabsImport(dep, alias, viewTabs[file][alias]), via, kind: 'view-tabs' };
       const local = dep.exported.get(alias);
+      const link = local && await linkedImport(dep, local);
+      if (link) return { ...link, via, kind: 'linked' };
       const owner = local && emitted.find(m => m.spec.source === file && m.spec.exports[local]);
       if (!owner) throw Error(`${spec.target}: unresolved import ${via}`);
       return { from: `./${owner.spec.target}`, name: owner.spec.exports[local], via, kind: 'generated' };
@@ -292,7 +327,7 @@ async function extractMain() {
     for (const member of memberReads(node, namespace, main.file)) if (!wanted.members.includes(member)) throw Error(`${main.file}: ${main.binding} reads unmapped ${namespace}.${member}`);
   }
   const preludes = Object.entries(main.namespaces).map(([namespace, wanted]) => `// ${namespace} = e.a(require("${wanted.require}"))\n${wanted.prelude}`);
-  const header = `// Original Claude Desktop ${referenceVersion} main-process binding; generated by scripts/extract-r3b-settings.mjs.\n// ${main.file} ${main.binding}: DeviceStorage.getFreeDiskSpace (BOa) returns \`await FOa() ?? null\`, FOa = ${main.binding}(app.getPath("userData")).\n`;
+  const header = `// Original Claude Desktop ${referenceVersion} main-process binding; generated by scripts/extract-r3b-settings.mjs.\n// ${main.file} ${main.binding}: DeviceStorage.getFreeDiskSpace (pEa) returns \`await cEa() ?? null\`, cEa = ${main.binding}(app.getPath("userData")).\n`;
   const text = await format(`${header}"use strict";\n${preludes.join('\n')}\n${fn.text}\nmodule.exports = { ${main.exportedAs}: ${main.binding} };\n`, { parser: 'babel' });
   // The module must be closed: every identifier it reads is declared in it (CommonJS require/module aside).
   const parsed = babel.babelParse(text, electronTarget, false);

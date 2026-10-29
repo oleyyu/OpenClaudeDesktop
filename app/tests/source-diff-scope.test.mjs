@@ -7,8 +7,9 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { DEFAULT_DIFF_SCOPE, UNCOMMITTED_DIFF_SCOPE, diffScopeTrigger } from '../src/diff-scope-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
-// zm trigger (panes-tile-current.js:3060-3105): ghost TriggerButton `shrink min-w-0 text-secondary`,
+// zm trigger (panes-tile-current.js:3060-3105; 3.6556.2 cccc2cf0a $S): ghost TriggerButton `shrink min-w-0 text-secondary`,
 // aria-label "Diff scope: {label}", the branch label grid with an xs ArrowRight (alt "to").
 let server, SourceDiffScope, GitCounts, gitCountsLabel, SourceFilePanel;
 before(async () => {
@@ -22,15 +23,17 @@ after(async () => { await server?.close(); });
 
 test('scope trigger: ghost CDS Button named "Diff scope: main → working tree" with the two-part label', () => {
   const html = renderToStaticMarkup(React.createElement(SourceDiffScope, { trigger: diffScopeTrigger(DEFAULT_DIFF_SCOPE, { base: 'main' }), sections: [] }));
-  assert.match(html, /^<button aria-label="Diff scope: main → working tree" aria-haspopup="menu" aria-expanded="false" type="button" data-cds="Button" data-variant="ghost" class="source-settings-button sds-trigger">/);
-  assert.match(html, /<span class="sds-label"><span class="sds-part">main<\/span><span aria-hidden="false" data-cds="Icon" class="sds-arrow"[^>]*role="img" aria-label="to"[^>]*>.<\/span><span class="sds-part">working tree<\/span><\/span>/);
+  // 3.6556.2 cccc2cf0a $S: CdsDropdown (shared-frame Jo) TriggerButton, ghost, className `shrink min-w-0 ${ii("text-secondary")}`
+  // (rC's Tooltip trigger, a Base UI menu trigger), with the dropdown's own menu caret after the label.
+  assert.match(html, /^<button type="button" data-cds="Button" data-cds-ghost="" class="cds-reset [^"]* shrink min-w-0 text-secondary" aria-label="Diff scope: main → working tree" data-base-ui-tooltip-trigger="" tabindex="0" aria-haspopup="menu" aria-expanded="false" id="[^"]+">/);
+  assert.match(html, /<\/span><span data-cds="Icon"[^>]*class="shrink-0 opacity-60" data-cds-part="menu-caret" aria-hidden="true">[^<]*<\/span><\/span><\/button>$/);
+  assert.match(html, /<span class="grid min-w-0 grid-cols-\[minmax\(0,max-content\)_auto_minmax\(0,max-content\)\] items-center gap-xs"><span class="min-w-0 truncate text-secondary">main<\/span><span data-cds="Icon"[^>]*class="text-muted-as-secondary" role="img" aria-label="to">[^<]*<\/span><span class="min-w-0 truncate text-secondary">working tree<\/span><\/span>/);
   const uncommitted = renderToStaticMarkup(React.createElement(SourceDiffScope, { trigger: diffScopeTrigger(UNCOMMITTED_DIFF_SCOPE, { base: 'main' }) }));
   assert.match(uncommitted, /aria-label="Diff scope: Uncommitted changes"/);
-  assert.match(uncommitted, /<span class="sds-part">Uncommitted changes<\/span>/);
+  assert.match(uncommitted, /<span class="inline-flex min-w-0 items-center gap-1 "><span class="min-w-0 truncate">Uncommitted changes<\/span><span data-cds="Icon"/);
   assert.equal(renderToStaticMarkup(React.createElement(SourceDiffScope, { trigger: null })), '');
   const css = readFileSync(path.resolve(import.meta.dirname, '../src/source-diff-scope.css'), 'utf8');
-  assert.match(css, /\.sds-trigger\.source-settings-button\[data-cds=Button\] \{ flex-shrink: 1; min-width: 0; color: var\(--cds-text-secondary\); \}/);
-  assert.match(css, /grid-template-columns: minmax\(0, max-content\) auto minmax\(0, max-content\)/);
+  assert.doesNotMatch(css, /\.sds-/, 'the trigger, label and menu carry the official utilities and CDS parts, no restatement');
 });
 
 test('GitCounts (shared-21 OV): sr-only unit list, aria-hidden +/− pair, first render at the target value', () => {
@@ -79,7 +82,7 @@ function hookFixture(hook, props) {
   const render = (next = props) => {
     props = next; cursor = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return (result = hook(props)); } finally { internal.H = old; }
   };
   render();
@@ -130,6 +133,39 @@ test('useDiffScope: a scope-row Uncommitted pick is remembered per session; a cl
     assert.deepEqual(stored(), ['s2']);
     notifySessionEvicted('s2');
     assert.deepEqual(stored(), []);
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous); else delete globalThis.localStorage;
+  }
+});
+
+// W12 diff-cont: a detached HEAD with no resolvable base (git-status.cjs names it by its own short sha, as the 3.6556.2
+// detachedHead repo's baseBranch falls back to its branch) keeps the scope trigger, and cb61be3a2 `lt = Te(v, C)` /
+// YS `kc` (c5da7eb42 Zf) show that base as "HEAD"; an attached repo's names are untouched.
+test('useDiffScope: a detached HEAD is its own base, shown as "HEAD" in the trigger, "vs" hint and Compare against', async () => {
+  const values = new Map();
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => values.get(k) ?? null, setItem: (k, v) => values.set(k, String(v)), removeItem: (k) => values.delete(k) } });
+  try {
+    const { useDiffScope } = await server.ssrLoadModule('/src/source-diff-scope.jsx');
+    const call = async () => ({ commits: [], total: 0 });
+    const detached = hookFixture(useDiffScope, { call, cwd: '/repo', sessionId: 'd1', status: { isRepo: true, scopeBase: 'abc1234', branch: 'abc1234', detached: true } });
+    const control = detached.result.control;
+    assert.ok(control, 'the trigger is shown');
+    assert.equal(control.props.trigger.label, 'HEAD → working tree');
+    assert.equal(control.props.trigger.ariaLabel, 'Diff scope: HEAD → working tree');
+    assert.deepEqual(control.props.trigger.range, { base: 'HEAD', head: 'working tree' });
+    const [scopeRows, baseRows] = control.props.sections;
+    assert.equal(scopeRows.items[0].hint, 'vs HEAD');
+    assert.equal(baseRows.items[0].hint, 'HEAD');
+    const html = renderToStaticMarkup(control);
+    assert.match(html, /aria-label="Diff scope: HEAD → working tree"/);
+    assert.match(html, /<span class="min-w-0 truncate text-secondary">HEAD<\/span>/);
+    // Attached: the branch names stay as they are.
+    const attached = hookFixture(useDiffScope, { call, cwd: '/repo', sessionId: 'd2', status: { isRepo: true, scopeBase: 'main', branch: 'feature' } });
+    assert.equal(attached.result.control.props.trigger.label, 'main → working tree');
+    assert.equal(attached.result.control.props.sections[0].items[0].hint, 'vs main');
+    // A status without a scope base still has no trigger.
+    assert.equal(hookFixture(useDiffScope, { call, cwd: '/repo', sessionId: 'd3', status: { isRepo: true, scopeBase: null, branch: 'abc1234', detached: true } }).result.control, null);
   } finally {
     if (previous) Object.defineProperty(globalThis, 'localStorage', previous); else delete globalThis.localStorage;
   }

@@ -107,7 +107,8 @@ export default {
   'Plan': '计划',
   'Background tasks': '后台任务',
   'Pane': '面板',
-  'Artifacts': '工件',
+  // w11-sweep-curchat: the artifact library page (title, entries, search) and its sidebar row say 作品 throughout.
+  'Artifacts': '作品',
   'Routines': '例行任务',
   'Browse project': '浏览项目',
   'Files created in your workspace are available in the project browser.': '在工作区中创建的文件可在项目浏览器中查看。',
@@ -334,6 +335,10 @@ export default {
   'Resets soon': '即将重置',
   'Resets in {minutes} min': '{minutes} 分钟后重置',
   'Resets in {hours} hr {minutes} min': '{hours} 小时 {minutes} 分钟后重置',
+  // W12b (c227f4d5e $F): the usage band's live countdown; {duration} is Intl's short minute unit ("12分钟").
+  'Resets in {duration}': '{duration}后重置',
+  'Resets in {minutes}:{seconds}': '{minutes}:{seconds} 后重置',
+  'Resetting…': '正在重置…',
   'Use a reset…': '使用重置…',
   'Notify owner': '通知所有者',
   'Request increase': '申请提高限额',
@@ -368,8 +373,13 @@ export default {
   'Plan usage limits': '套餐用量限额',
   'View usage in Settings': '在设置中查看用量',
   'View usage': '查看用量',
+  // w12c-wiring: c227f4d5e NI "request-extra-usage" (3gNFS1DF0J / n8OjslQAdc) and fe's addError (5iDKTQDvkY).
+  'Request usage credits': '申请用量额度',
+  'Request sent to admin': '已向管理员发送申请',
+  'There was an error submitting your request. Try again later.': '提交申请时出错。请稍后再试。',
   // Mode menu Bypass row while its opt-in is off (source-permission-menu.jsx).
-  'Turn on in Settings to use it': '在设置中开启后即可使用',
+  // 3.6556.2 c227f4d5e 9aM6b8EJG/: the row's tooltip (w12b-composer).
+  'Enable in Claude Code settings': '在 Claude Code 设置中开启',
   'Enable': '开启',
   'Disabled by your organization': '已被你的组织停用',
   'Where the tokens go': 'Token 构成',
@@ -510,6 +520,32 @@ export default {
   "DeepSeek is working in {count} sessions. Quitting now will interrupt that work.": "DeepSeek 正在 {count} 个会话中工作。现在退出会中断这些工作。",
   "Quit anyway": "仍要退出",
   "Wait for DeepSeek": "等待 DeepSeek",
+  // V3-w1-desktop-i18n: quit-guard.cjs, the 3.6556.2 quit box for background commands (index.chunk-jPKPzV-P.js c5t:
+  // 7mmL6SAXUn, h0Q1qYPJq/, 1iM5Q6x+Ie; the host splits the plural like the lines above and names its assistant).
+  "Background commands are still running": "后台命令仍在运行",
+  "Background commands are running in {count} session. Quitting will stop them.": "{count} 个会话中有后台命令正在运行。退出会停止这些命令。",
+  "Background commands are running in {count} sessions. Quitting will stop them.": "{count} 个会话中有后台命令正在运行。退出会停止这些命令。",
+  "Background commands are running in {count} session. Quitting will stop them, even if you wait for DeepSeek.": "{count} 个会话中有后台命令正在运行。即使等待 DeepSeek，退出时也会停止这些命令。",
+  "Background commands are running in {count} sessions. Quitting will stop them, even if you wait for DeepSeek.": "{count} 个会话中有后台命令正在运行。即使等待 DeepSeek，退出时也会停止这些命令。",
+  // V3-w1-desktop-i18n end.
+  // V3-w2-composer-gen: 3.6556.2 c227f4d5e fM, the Add menu's first row for an image-only session (jsBzHH0H/K).
+  "Add image": "添加图片",
+  // V3-w2-composer-gen end.
+  // V3-w2-home-start: 3.6556.2 cc43287c9 P5 (generated/code-start/view.mjs), the start card's setup-row copy that the
+  // i18n-coverage-v3 scan now reaches (connect-github, pr-ci-failed, pr-review-comments, auto-mode rows).
+  'Work on your repos': '处理你的仓库',
+  'Dismiss Connect GitHub': '关闭“连接 GitHub”建议',
+  'Fix the failing checks': '修复未通过的检查',
+  '{check} is failing on {branch}.': '{check} 在 {branch} 上未通过。',
+  'Checks are failing on {branch}.': '{branch} 上的检查未通过。',
+  'Dismiss the failing checks': '关闭未通过检查建议',
+  'Answer {count, plural, one {# review comment} other {# review comments}}': '回复 {count, plural, one {# 条审查评论} other {# 条审查评论}}',
+  'Dismiss the review comments': '关闭审查评论建议',
+  'Dismiss auto mode': '关闭自动模式建议',
+  // V3-w2-home-start end.
+  // V3-w2-menus-host: 3.6556.2 c17e03edc-fLVjIlvB d, the skill description tooltip's repo line (q8mQGA8/Dv).
+  'via {repo}': '来自 {repo}',
+  // V3-w2-menus-host end.
   "worktree": "工作树",
   "Chat mode is read-only. Switch to Code to commit.": "聊天模式为只读。切换到代码模式后才能提交。",
   "Chat mode is read-only: {assistant} can answer and read files, but can’t edit files or run commands. Switch back to Code to make changes.": "聊天模式为只读：{assistant} 可以回答问题和读取文件，但不能编辑文件或运行命令。要进行修改，请切换回代码模式。",
@@ -646,4 +682,21 @@ export default {
   // R4i-small (SM3): main.cjs slash-rewind's Cowork refusal, the 2.42304.0 c21f11e6d lO Unsupported copy (SC1NI+O8Y4).
   'Messages in this task can’t be edited or restarted from. Send what you need as a new message instead.': '此任务中的消息无法编辑，也无法从这里重新开始。请把需要的内容作为新消息发送。',
   // R4i-small end.
+  // V3-cc-rest-env-ui: 3.6556.2 environment dialog/picker copy now in the i18n-coverage-v3 scan: c387a4508 i (field
+  // header, d1OgEDiJnJ) and cc43287c9 uoe (This computer row, V3wBfuv/n1, V3naafDoCJ). D23: "Claude" stays.
+  '(optional)': '（可选）',
+  'Desktop only': '仅限桌面版',
+  ', downloads the Claude desktop app': '，将下载 Claude 桌面应用',
+  // V3-cc-rest-env-ui end.
+  // V3-w10-shell-usage-copy: electron/usage-model.mjs reset and usage-limit copy from 3.6556.2 shared-156-BLTosN8U cU
+  // (FFu9/eVhGP) and the Code usage-limit band c227f4d5e-B-FYKrwT (TVLQSOK0oC, sax3sR1uez, /yqEJpDlex).
+  'Resets {time}': '{time} 重置',
+  'Approaching session usage limit': '即将达到会话用量上限',
+  'Approaching weekly usage limit': '即将达到每周用量上限',
+  'Approaching usage limit': '即将达到用量上限',
+  // V3-w10-shell-usage-copy end.
+  // V3-w10-shell-new-side-chat: electron/app-menu.cjs File › New Side Chat, 3.6556.2 index.chunk-jPKPzV-P.js aSi
+  // (jO7VoK4TtU); same wording as View › Show Side Chat (menus.mjs).
+  'New Side Chat': '新建侧边对话',
+  // V3-w10-shell-new-side-chat end.
 };

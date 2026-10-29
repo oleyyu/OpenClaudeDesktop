@@ -8,6 +8,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { transform } from 'lightningcss';
 import { parseAst } from 'rolldown/parseAst';
+import * as officialPaths from '../scripts/official-3.6556.2.mjs';
 import { appSheets, append, bundleOrder, computed, declarations, element, find, loadCascade, orderOnly, parseMarkup, setState, specificity }
   from './fixtures/transcript-css-cascade.mjs';
 
@@ -21,7 +22,7 @@ import { appSheets, append, bundleOrder, computed, declarations, element, find, 
 // renderer loads, in bundle order, three ways: with the workaround put back; without it (as shipped — nothing changes,
 // so it was redundant); and without it over the old unlayered reset (the root cause: the reset wins again).
 const ROOT = path.resolve(import.meta.dirname, '..');
-const OFFICIAL = 'public/assets/v1/c6a992d55-sXiDGMFQ.css';
+const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const START = '/* D26 (R3-style)', END = '/* end D26 control resets */';
 // The unlayered reset step 1 replaced, verbatim (R3 snapshot src/style.css:42-64).
@@ -442,7 +443,7 @@ test('.df-user-menu-btn: the source\'s ps-/pe-2/text-start class string, and no 
   const healthy = userButton(sidebar({}));
   for (const c of [withIt, shipped, rootCause]) {
     const r = resolve(c, healthy, 'padding-right');
-    assert.equal(r.value, 'calc(var(--df-tray-caret-col) - 14px)'); assert.equal(r.from.sheet, 'public/assets/v1/shared-styles-Bl9zqrv-.css');
+    assert.equal(r.value, 'calc(var(--df-tray-caret-col) - 14px)'); assert.equal(r.from.sheet, 'public/assets/v1/shared-styles-D_GJawPO.css');
   }
   const atState = (c, property, state = []) => { clearState(host); if (state.length) setState(btn, state); return resolve(c, btn, property); };
   const utility = (r, value, name) => { assert.equal(r.value, value, `${name} → ${r.value} from ${where(r.from)}`); assert.equal(r.from.sheet, OFFICIAL); assert.equal(r.from.layer, 'utilities'); };
@@ -462,12 +463,14 @@ test('.df-user-menu-btn: the source\'s ps-/pe-2/text-start class string, and no 
   // outline-none was never blocked (the old reset sets no outline): the :focus-visible restatement was always moot.
   for (const c of [withIt, shipped, rootCause]) assert.equal(atState(c, 'outline-style', ['focus-visible']).value, 'none');
   assert.equal(atState(shipped, 'outline-style', ['focus-visible']).from.layer, 'utilities');
-  // Why the class string had to change with it: the host's old physical pl-[var(--df-row-px)] is compiled only inside
-  // current-chat/layout.css's Chat @scope, so without the restatement it gives no start padding on the Code side.
+  // Why the class string had to change with it: the host's old physical pl-[var(--df-row-px)] was compiled only inside
+  // the 2.31226.0 Chat @scope copy (current-chat/layout.css, retired by w10-curchat-retire), so no loaded sheet gives
+  // it a start padding.
   btn.attrs.class = btn.attrs.class.replace('ps-[var(--df-row-px)] pe-2 text-start', 'pl-[var(--df-row-px)] pr-2 text-left');
   const pl = atState(shipped, 'padding-left');
   assert.equal(pl.value, '0px'); assert.equal(pl.from.sheet, 'src/style.css'); assert.equal(pl.from.layer, 'base');
-  assert.ok(declarations(shipped, btn, 'padding-left').every((d) => !d.sheet.includes('current-chat') || d.rule.scopes.length), 'the Chat copy is @scope-d away');
+  assert.equal(appSheets(ROOT).some((sheet) => sheet.name.includes('current-chat')), false, 'the 2.31226.0 Chat copy is not loaded');
+  assert.ok(declarations(shipped, btn, 'padding-left').every((d) => !d.sheet.includes('current-chat')));
   btn.attrs.class = official.replace('df-user-menu-btn', 'df-user-menu-btn account-button');
   clearState(host);
 });
@@ -575,11 +578,33 @@ test('source-file-viewer.css: the breadcrumb\'s official buttons need no revert-
 
 // ---- source-sessions-page.css ----------------------------------------------------------------------------------------
 
+// 3.6556.2: the sessions table's row-selection hook (view-tabs c9c7785eb `A`: `useSyncExternalStore(subscribe,
+// () => e.getIsSelected())`) has no server snapshot, so the official page only renders on the client and React's server
+// renderer throws "Missing getServerSnapshot". The cascade check needs the markup of the first client frame, which
+// React builds from getSnapshot: while the page renders, the server dispatcher React installs gets getSnapshot as the
+// missing server snapshot (generated code and the official hook are untouched).
+function withClientSnapshots(t) {
+  const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  const saved = Object.getOwnPropertyDescriptor(internals, 'H');
+  const wrapped = new WeakMap();
+  const wrap = dispatcher => {
+    if (!dispatcher?.useSyncExternalStore) return dispatcher;
+    if (!wrapped.has(dispatcher)) wrapped.set(dispatcher, { ...dispatcher,
+      useSyncExternalStore: (subscribe, getSnapshot, getServerSnapshot) => dispatcher.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot ?? getSnapshot) });
+    return wrapped.get(dispatcher);
+  };
+  let current = internals.H;
+  Object.defineProperty(internals, 'H', { configurable: true, enumerable: true, get: () => wrap(current), set: value => { current = value; } });
+  t.after(() => { delete internals.H; Object.defineProperty(internals, 'H', { ...saved, value: current }); });
+}
 test('source-sessions-page.css: the original page\'s controls need no revert-layer release (the :focus outline one is not D26 and stays)', async (t) => {
   const Host = await server.ssrLoadModule('/src/source-sessions-page.jsx');
   const now = Date.now();
   const sessions = [{ id: 'live', name: 'Live task', updatedAtMs: now }, { id: 'old', name: 'Old task', updatedAtMs: now - 1000 }];
-  const host = mount(renderToStaticMarkup(React.createElement(Host.SourceSessionsPage, { sessions })), 'desktop-app dframe-root');
+  const page = () => renderToStaticMarkup(React.createElement(Host.SourceSessionsPage, { sessions }));
+  assert.throws(page, /Missing getServerSnapshot/, 'the 3.6556.2 sessions table is client-rendered only');
+  withClientSnapshots(t);
+  const host = mount(page(), 'desktop-app dframe-root');
   const controls = all(host, (n) => ['button', 'input', 'textarea', 'select'].includes(n.tag));
   assert.ok(controls.length >= 3, `page controls: ${controls.length}`);
   report(t, 'sessions page', threeWay({ nodes: controls, names: ['sessionsPage'], states: [[], ['hover']], everyNode: false }));
@@ -646,17 +671,18 @@ test('source-saved-environment-dialog.css: the original TextInputs and CDS Butto
 
 // ---- not D26: source-turn-error.css ----------------------------------------------------------------------------------
 
-test('source-turn-error.css: the .ste-dismiss colour rules are still needed — SourceSettingsButton\'s own unlayered colour, not the reset, beats text-muted', async () => {
+test('source-turn-error.css: the .ste-dismiss colour rules are still needed — SourceSettingsButton\'s own unlayered colour, not the reset, beats text-muted-as-secondary', async () => {
   const E = await server.ssrLoadModule('/src/source-turn-error.jsx');
   const html = renderToStaticMarkup(React.createElement(E.SourceTurnError, { error: { message: 'x' }, turnId: 't', onDismiss: noop }));
   const host = mount(html, 'source-transcript-content');
   const dismiss = find(host, (n) => n.tag === 'button' && n.attrs['aria-label'] === 'Dismiss');
-  assert.ok(dismiss && hasClass(dismiss, 'source-settings-button') && hasClass(dismiss, 'text-muted') && hasClass(dismiss, 'hover:text-primary'));
+  assert.ok(dismiss && hasClass(dismiss, 'source-settings-button') && hasClass(dismiss, 'text-muted-as-secondary') && !hasClass(dismiss, 'text-muted') && hasClass(dismiss, 'hover:text-primary'),
+    '3.6556.2 cb1a6e506 j Dismiss: "text-muted-as-secondary hover:text-primary"');
   const css = read('src/source-turn-error.css');
-  const RULES = ['.ste-dismiss .source-settings-button[data-cds=Button] { color: var(--cds-text-muted); }\n', '.ste-dismiss .source-settings-button[data-cds=Button]:hover { color: var(--cds-text-primary); }\n'];
+  const RULES = ['.ste-dismiss .source-settings-button[data-cds=Button] { color: var(--muted-as-secondary, var(--cds-text-muted)); }\n', '.ste-dismiss .source-settings-button[data-cds=Button]:hover { color: var(--cds-text-primary); }\n'];
   for (const rule of RULES) assert.ok(css.includes(rule), rule);
   const shipped = cascade();
-  for (const [state, want] of [[[], 'var(--cds-text-muted)'], [['hover'], 'var(--cds-text-primary)']]) {
+  for (const [state, want] of [[[], 'var(--muted-as-secondary, var(--cds-text-muted))'], [['hover'], 'var(--cds-text-primary)']]) {
     clearState(dismiss); if (state.length) setState(dismiss, state);
     const r = resolve(shipped, dismiss, 'color');
     assert.equal(r.value, want); assert.equal(r.from.sheet, 'src/source-turn-error.css');
@@ -773,4 +799,26 @@ test('hand-written host controls: apart from the kept disabled colour, a propert
     }
   }
   t.diagnostic(`${changed.length} official-class wins on host controls:\n${changed.join('\n')}`);
+});
+
+// w11-gate-style: the plugin Settings RadioGroup item (src/source-plugin-settings-tab.jsx) was a hand-written
+// <button disabled>, so once the layered reset stopped beating utilities its text-primary showed through the old
+// button:disabled colour. 3.6556.2 renders it as base-ui Radio.Root, a <span role="radio"> (no `disabled` attribute,
+// aria-disabled + data-disabled), dimmed only by the class string's data-[disabled]:opacity-disabled. The host now
+// follows that element instead of a keep-rule entry (no local style).
+test('plugin Settings radio items are the official non-native Radio.Root span, not a host button (3.6556.2)', () => {
+  const { ionSource, vendorFrame, sharedFrame } = officialPaths;
+  const vendor = fs.readFileSync(path.join(ionSource, vendorFrame), 'utf8');
+  for (const anchor of ['"aria-labelledby":s,value:c,inputRef:l,nativeButton:u=!1,id:d,style:f,', 'role:"radio","aria-checked":R', 'jn("span",e,{enabled:!ce,state'])
+    assert.ok(vendor.includes(anchor), `vendor-frame Radio.Root: ${anchor}`);
+  const ITEM = 'gap-2 border-0 outline-none focus-visible:outline-hidden text-start text-body font-normal text-primary data-[disabled]:opacity-disabled';
+  assert.ok(fs.readFileSync(path.join(ionSource, sharedFrame), 'utf8').includes(`"cds-reset group/rd inline-flex",m,"${ITEM}"`), 'shared-frame aV class string');
+  // V3-w12-settings-radio: the host no longer copies aV — it renders the generated dV (CdsRadioGroup) from the facade,
+  // whose item is aV itself (src/generated/view-tabs/shared-frame-6jtSkIit.js).
+  const host = read('src/source-plugin-settings-tab.jsx');
+  assert.ok(!host.includes(ITEM), 'no hand-copied aV class string left in the host');
+  assert.match(host, /<CdsRadioGroup options=\{items\} value=\{value\} onChange=/);
+  assert.ok(read('src/generated/view-tabs/shared-frame-6jtSkIit.js').includes(ITEM), 'the generated aV keeps the class string');
+  const radios = controls().controls.filter((c) => c.at.startsWith('src/source-plugin-settings-tab.jsx') && c.attrs.role === 'radio');
+  assert.deepEqual(radios, [], 'no <button role="radio"> left in the plugin settings tab');
 });

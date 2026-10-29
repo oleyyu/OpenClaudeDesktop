@@ -1,7 +1,7 @@
-// Local services for the original start-card view. Layout and row logic live in generated/code-start (2.42304.0
-// cc43287c9 p6/a6/t3); this module answers the imports extract-code-start.mjs maps to it.
+// Local services for the original start-card view. Layout and row logic live in generated/code-start (3.6556.2
+// cc43287c9 ele/Bce/_5); this module answers the imports extract-code-start.mjs maps to it.
 import React, { Children, Fragment, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { kt as createIntl } from './generated/chat/vendor-intl-Cf4IuK3L.js';
+import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
 import { Icon } from './icons.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceTooltip, SourceTooltipGroup } from './source-tooltip.jsx';
@@ -12,14 +12,15 @@ import { previewCardClassName, previewCardPadding } from './generated/code-start
 import { getLocale, t } from '../electron/i18n/index.mjs';
 import { registerLocalizedMessage } from './source-chat-adapters.jsx';
 
-// sessions: P3's awaiting sessions ({id, type, isSsh, title, ask, stamp}); splitPane: shared-2 qh isSplitPane.
-export const StartHostContext = createContext({ sessions: [], settled: false, splitPane: false, onOpenSession() {} });
+// sessions: wce's awaiting sessions ({id, type, isSsh, title, ask, stamp}). 3.6556.2 dropped the split-pane filter of
+// Next steps (HS-05), so the host no longer feeds a split flag.
+export const StartHostContext = createContext({ sessions: [], settled: false, onOpenSession() {} });
 export const StartTooltip = SourceTooltip;
 export const StartTooltipGroup = SourceTooltipGroup;
-// E4/D4: title and tldr of a suggested task (task-backlog-model u0/d0).
+// c5/l5: title and tldr of a suggested task (task-backlog-model u0/d0).
 export const startTaskTitle = backlogTitle;
 export const startTaskDetail = backlogDetail;
-/** O4: the task's prompt text, normalized like the prompt the message box takes (insertTakenPrompt). */
+/** u5: the task's prompt text, normalized like the prompt the message box takes (insertTakenPrompt). */
 export function startTaskPrompt(item) {
   return String(item?.prompt ?? '').replace(/\r\n?/g, '\n').trim();
 }
@@ -31,7 +32,7 @@ export function StartButton({ tooltip, ...props }) {
   const button = <SourceSettingsButton {...props} iconSize="auto" />;
   return tooltip ? <SourceTooltip content={tooltip}>{button}</SourceTooltip> : button;
 }
-// Q/Z (react-intl useIntl/FormattedMessage) over the local catalog: the English message is looked up in zh-CN by t().
+// qd/Q (react-intl useIntl/FormattedMessage) over the local catalog: the English message is looked up in zh-CN by t().
 // As in the official react-intl (vendor-intl Pt/Ft/Bt), a rich-text result (e.g. "<status>Blocked</status> {title}") and
 // the chunks a tag function receives come back keyed: each element in its own keyed Fragment.
 const keyedParts = parts => Children.toArray(parts).map((part, index) => (isValidElement(part) ? <Fragment key={index}>{part}</Fragment> : part));
@@ -53,28 +54,23 @@ export function StartMessage({ values, ...message }) { return useStartIntl().for
 // LocalizedMessage of the chat adapters formats through StartMessage; registered from here so that module stays out of
 // the vendor-intl import chain (see source-chat-adapters.jsx).
 registerLocalizedMessage(StartMessage);
-/** P3: Home's awaiting sessions. The host computes them from local approvals (code-start-host-model startWaitingSessions). */
+/** wce: Home's awaiting sessions. The host computes them from local approvals (code-start-host-model startWaitingSessions). */
 export function useWaitingSessions() {
   const host = useContext(StartHostContext);
   return { sessions: host.sessions, settled: host.settled };
 }
-/** PO: open a session (a row, or the session a suggested task just started beside the draft). */
+/** hk: open a session (a row, or the session a suggested task just started beside the draft). */
 export function useStartNavigation() {
   const { onOpenSession } = useContext(StartHostContext);
   return useCallback((_event, session) => onOpenSession(session.id), [onOpenSession]);
 }
-/** qh: the split-pane context. a6 hides waiting/resume rows when Home is one pane of a split. */
-export function useStartSplitPane() {
-  const { splitPane } = useContext(StartHostContext);
-  return splitPane ? { isSplitPane: true } : null;
-}
-// dr/_f: a session row's href and its drag-to-split intent. The start card's rows are not drag sources here (the
+// X_/Kf: a session row's href and its drag-to-split intent. The start card's rows are not drag sources here (the
 // local split view takes its drags from the sidebar), so the row gets no intent props.
 const noSessionHref = () => null;
 export function useStartSessionHref() { return noSessionHref; }
 export function startDragIntent() { return undefined; }
 
-// fs/ms (shared-28): a persisted preference and whether preferences have loaded. The start card's only one is d3's
+// zc/Vc (shared-28): a persisted preference and whether preferences have loaded. The start card's only one is ice's
 // `startCardDismissals`, kept in this window's localStorage under the same key as before (existing choices carry over)
 // and synced across windows (storage event) and start cards in one window (prefEvent). Storage is synchronous, so
 // preferences are always settled.
@@ -113,7 +109,7 @@ export function useStartPref(key, fallback) {
     return () => { target.removeEventListener(prefEvent, local); target.removeEventListener('storage', storage); };
   }, [key]);
   const update = useCallback(next => {
-    // Like fs, an updater sees the stored value (another window may have written since this one rendered).
+    // Like zc, an updater sees the stored value (another window may have written since this one rendered).
     const value = typeof next === 'function' ? next(readPref(key, initial.current, latest.current)) : next;
     latest.current = value;
     setValue(value);
@@ -149,9 +145,9 @@ function PopupPointer({ onEnter, onLeave, focus = false }) {
   return null;
 }
 
-// Kn (shared-156 Ei): the CDS PreviewCard. Root opens `delay` ms after the pointer rests on the trigger (or at once on
+// Qp (shared-156 Ai): the CDS PreviewCard. Root opens `delay` ms after the pointer rests on the trigger (or at once on
 // keyboard focus) and closes `closeDelay` ms after it leaves trigger and card (Base UI PreviewCard defaults: 600/300);
-// `lazy` content mounts only while open; onOpenChange reports each change. Popup is the official popup class (hR + gR
+// `lazy` content mounts only while open; onOpenChange reports each change. Popup is the official popup class (WU + GU
 // padding) on the local SourcePopover positioner/portal, with data-cds="PreviewCard" and no focus move.
 const PreviewCardContext = createContext(null);
 function PreviewCardRoot({ delay = 600, closeDelay = 300, onOpenChange, children }) {
@@ -203,7 +199,7 @@ function PreviewCardPopup({ side = 'bottom', align = 'start', sideOffset = 6, pa
 }
 export const StartPreviewCard = { Root: PreviewCardRoot, Trigger: PreviewCardTrigger, Popup: PreviewCardPopup };
 
-// sd (shared-frame Zi): the CDS Popover that a6's rest row ("Claude is blocked in # sessions", "# suggested tasks")
+// we (shared-frame ua): the CDS Popover that Bce's rest row ("Claude is blocked in # sessions", "# suggested tasks")
 // opens. Root is controlled (open/onOpenChange); Trigger renders the row button with Base UI's popover trigger props
 // (aria-haspopup="dialog", aria-expanded, aria-controls) and toggles on press; Popup is SourcePopover (data-cds Popover,
 // Escape / outside press / focus-out close) with --anchor-width for the official min-w-(--anchor-width) class.

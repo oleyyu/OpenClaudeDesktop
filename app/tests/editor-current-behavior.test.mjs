@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EditorState, EditorSelection, history, Transaction, undoDepth, foldEffect, codeFoldingState, foldedRanges} from '../src/code-editor-core.mjs';
-import {copyLines, selectedEditorContext, lineIndentLevels, activeIndentBlock, indentGradient, detectedIndentation, externalEditorChange, resolveEditorLanguage, loadEditorLanguage, codeFolding} from '../src/generated/code-editor-current/wrapper.mjs';
+import {copyLines, selectedEditorContext, lineIndentLevels, activeIndentBlock, indentGradient, detectedIndentation, externalEditorChange, resolveEditorLanguage, loadEditorLanguage, codeFolding, pendingEditorLanguage} from '../src/generated/code-editor-current/wrapper.mjs';
 import {editorTheme, editorThemePalette} from '../src/generated/code-editor-current/theme.mjs';
 // CodeMirror theme extensions carry StyleModule rules; collect them without a DOM.
 const themeRules = extension => {
@@ -51,6 +51,13 @@ test('external edits use a small change range, preserve selection, and reveal in
   assert.equal(state.selection.main.head,19);
   assert.equal(undoDepth(state),0);
 });
+test('3.6556.2 seeds OCaml/F# close-bracket data before the grammar loads (cbd02b8f2 qi/Ar)', () => {
+  for(const filename of ['main.ml','lib.fs']) {
+    const state=EditorState.create({doc:'x',extensions:[pendingEditorLanguage(filename)]});
+    assert.deepEqual(state.languageDataAt('closeBrackets',0),[{brackets:['(','[','{','"']}],filename);
+  }
+  assert.deepEqual(pendingEditorLanguage('index.js'),[]);
+});
 test('current grammars include dotenv, configuration, ignore files, and diff/patch', async () => {
   for(const filename of ['.env','local.cfg','change.diff','fix.patch','.assetsignore','.git-blame-ignore-revs','.vercelignore','.gitattributes']) {
     assert.equal(typeof resolveEditorLanguage(filename).loader,'function',filename);
@@ -64,10 +71,14 @@ test('theme respects active guide overrides and official fallback selection colo
   assert.equal(palette.indentGuide,'#123');assert.equal(palette.indentGuideActive,'#abc');
   assert.equal(palette.selection,'#0099ff4d');assert.equal(palette.activeLine,'#ffffff0d');
 });
-test('2.42304.0 theme tokens are literal CDS variables: fold placeholder pad and gutter cursor', () => {
+test('3.6556.2 layout tokens keep the editor padding values; fold pad and gutter cursor stay CDS variables', () => {
   const editorRules=themeRules(editorTheme({type:'light',colors:{'editor.foreground':'#111'}})).join('\n');
   assert.match(editorRules,/\.cm-foldPlaceholder[^}]*padding: 0 var\(--cds-pad-xs\)/);
   assert.doesNotMatch(editorRules,/--cds-pad-xs, 4px/);
+  // cc3bc2027 n/r tokens: the same values 2.42304.0 inlined.
+  assert.match(editorRules,/\.cm-content \{[^}]*padding: 8px 0/);
+  assert.match(editorRules,/\.cm-line \{[^}]*padding: 0 12px 0 4px/);
+  assert.match(editorRules,/\.cm-lineNumbers \.cm-gutterElement \{[^}]*padding: 0 8px 0 18px;[^}]*min-width: 2\.5rem/);
   const foldingRules=themeRules(codeFolding(true,{formatMessage:({defaultMessage})=>defaultMessage})).join('\n');
   assert.match(foldingRules,/\.cm-foldGutter span[^}]*cursor: var\(--cds-cursor-interactive\)/);
   assert.match(foldingRules,/\.cm-foldPlaceholder[^}]*cursor: var\(--cds-cursor-interactive\)/);

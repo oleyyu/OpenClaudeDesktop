@@ -7,6 +7,9 @@ const shape=items=>items.map(item=>item.type==='separator'?'---':item.role&&!ite
 // A menu click that fired through the item's own accelerator with ⌘ held (RZ's qxr(e,"cmd")).
 const viaAccelerator={triggeredByAccelerator:true,metaKey:true};
 const PANES={panes:{changes:{enabled:true,open:false},files:{enabled:true,open:true}},closePane:{enabled:true}};
+// V3-w13-surfaces-menus: the File/Go rows below are the Sessions area's (3.6556.2 $yi: the renderer reports the Code
+// area selected; with no area reported the menu reads as Chats, tests/w13-surfaces-menus.test.mjs).
+const CODE={goMenuAreas:[{id:'code',label:'Code',selected:true,items:'sessions'}]};
 
 test('sidebarCollapsed persists only real booleans (shared-2 Zm collapsed beside sidebarWidth)',()=>{
  assert.deepEqual(sidebarCollapsedPatch({sidebarCollapsed:true}),{sidebarCollapsed:true});
@@ -31,16 +34,16 @@ test('App submenu follows Gtr: About, Settings…, Services, Hide / Hide Others 
  assert.deepEqual(events,[{kind:'open-settings'},{kind:'open-settings'}],'Settings… always navigates (KK, not RZ)');
 });
 
-test('File follows lwr/nwr: New Session, New Window, Open File…, Open Folder…, then ⌘W Close Pane or Close Window (Home: no session view)',()=>{
+test('File follows lwr/nwr and 3.6556.2 oSi: New Session, New Window, New Side Chat, Open File…, Open Folder…, then ⌘W Close Pane or Close Window (Home: no session view)',()=>{
  const events=[];const emit=e=>events.push(e);
- const plain=menu(appMenuTemplate({sidebarOpen:true,emit}),'File');
- assert.deepEqual(shape(plain),['New Session','New Session with Current Settings','New Window','---','Open File…','Open Folder…','---','Close Window','Close Window']);
+ const plain=menu(appMenuTemplate({sidebarOpen:true,menuState:menuState(CODE),emit}),'File');
+ assert.deepEqual(shape(plain),['New Session','New Session with Current Settings','New Window','New Side Chat','---','Open File…','Open Folder…','---','Close Window','Close Window']);
  assert.deepEqual(plain.filter(item=>item.label).map(item=>[item.label,item.accelerator,item.role,item.visible,item.acceleratorWorksWhenHidden]),[
-  ['New Session','CmdOrCtrl+N',undefined,undefined,undefined],['New Session with Current Settings','CmdOrCtrl+Shift+N',undefined,undefined,undefined],['New Window',undefined,undefined,undefined,undefined],['Open File…','CmdOrCtrl+O',undefined,undefined,undefined],['Open Folder…','CmdOrCtrl+Shift+O',undefined,undefined,undefined],
+  ['New Session','CmdOrCtrl+N',undefined,undefined,undefined],['New Session with Current Settings','CmdOrCtrl+Shift+N',undefined,undefined,undefined],['New Window',undefined,undefined,undefined,undefined],['New Side Chat',undefined,undefined,undefined,undefined],['Open File…','CmdOrCtrl+O',undefined,undefined,undefined],['Open Folder…','CmdOrCtrl+Shift+O',undefined,undefined,undefined],
   ['Close Window','CmdOrCtrl+W','close',undefined,undefined],['Close Window','CmdOrCtrl+Shift+W','close',false,true]]);
- const pane=menu(appMenuTemplate({sidebarOpen:true,menuState:menuState(PANES),emit}),'File');
- assert.deepEqual(pane.slice(7).map(item=>[item.label,item.accelerator,item.role,item.visible]),[['Close Pane','CmdOrCtrl+W',undefined,undefined],['Close Window','CmdOrCtrl+Shift+W','close',undefined]]);
- for(const item of [plain[0],plain[1],plain[2],plain[4],plain[5],pane[7]])item.click();
+ const pane=menu(appMenuTemplate({sidebarOpen:true,menuState:menuState({...CODE,...PANES}),emit}),'File');
+ assert.deepEqual(pane.slice(8).map(item=>[item.label,item.accelerator,item.role,item.visible]),[['Close Pane','CmdOrCtrl+W',undefined,undefined],['Close Window','CmdOrCtrl+Shift+W','close',undefined]]);
+ for(const item of [plain[0],plain[1],plain[2],plain[5],plain[6],pane[8]])item.click();
  assert.deepEqual(events,[{kind:'new-session'},{kind:'new-session-current'},{kind:'new-window'},{kind:'open-file'},{kind:'open-folder'},{kind:'close-pane'}]);
  for(const label of ['Reopen Closed Session'])assert.equal(pane.some(item=>item.label===label),false,label);
 });
@@ -49,24 +52,24 @@ test('File follows lwr/nwr: New Session, New Window, Open File…, Open Folder�
 // Session (t77UbkPnXg) only while available, enabled from the report; owr: ⌘W itself belongs to the renderer.
 test('File with a session view: Close Session ⌘W, Close Window ⇧⌘W, then Reopen Closed Session ⇧⌘T (iwr/rwr/owr)',()=>{
  const events=[],targets=[];const emit=(e,window)=>{events.push(e);targets.push(window);};
- const file=state=>menu(appMenuTemplate({sidebarOpen:true,menuState:menuState(state),emit}),'File');
+ const file=state=>menu(appMenuTemplate({sidebarOpen:true,menuState:menuState({...CODE,...state}),emit}),'File');
  const open=file({...PANES,session:{open:true},reopenClosed:{available:true,enabled:true}});
-assert.deepEqual(shape(open),['New Session','New Session with Current Settings','New Window','---','Open File…','Open Folder…','---','Close Session','Close Window','Reopen Closed Session']);
- assert.deepEqual(open.slice(7).map(item=>[item.label,item.accelerator,item.role,item.visible,item.registerAccelerator,item.enabled]),[
+assert.deepEqual(shape(open),['New Session','New Session with Current Settings','New Window','New Side Chat','---','Open File…','Open Folder…','---','Close Session','Close Window','Reopen Closed Session']);
+ assert.deepEqual(open.slice(8).map(item=>[item.label,item.accelerator,item.role,item.visible,item.registerAccelerator,item.enabled]),[
   ['Close Session','CmdOrCtrl+W',undefined,undefined,undefined,undefined],['Close Window','CmdOrCtrl+Shift+W','close',undefined,undefined,undefined],
   ['Reopen Closed Session','CmdOrCtrl+Shift+T',undefined,undefined,true,true]]);
  const target={id:'main'};
- open[7].click({},target);open[7].click({},target,viaAccelerator);open[9].click({},target);open[9].click({},target,viaAccelerator);
+ open[8].click({},target);open[8].click({},target,viaAccelerator);open[10].click({},target);open[10].click({},target,viaAccelerator);
  assert.deepEqual(events,[{kind:'close-session'},{kind:'close-session',accelerator:true},{kind:'reopen-closed'}],'a ⌘W/⇧⌘T that reached the menu is marked or dropped (RZ)');
  assert.deepEqual(targets,[target,target,target]);
  // A session view without a closable pane still reads Close Session; the reopen item follows enabled.
  const disabled=file({session:{open:true},reopenClosed:{available:true,enabled:false}});
- assert.deepEqual(shape(disabled.slice(7)),['Close Session','Close Window','Reopen Closed Session']);assert.equal(disabled[9].enabled,false);
+ assert.deepEqual(shape(disabled.slice(8)),['Close Session','Close Window','Reopen Closed Session']);assert.equal(disabled[10].enabled,false);
  // Home: the original Close Window pair, Reopen still listed while available.
  const home=file({reopenClosed:{available:true,enabled:true}});
- assert.deepEqual(home.slice(7).map(item=>[item.label,item.accelerator,item.role,item.visible]),[['Close Window','CmdOrCtrl+W','close',undefined],['Close Window','CmdOrCtrl+Shift+W','close',false],['Reopen Closed Session','CmdOrCtrl+Shift+T',undefined,undefined]]);
+ assert.deepEqual(home.slice(8).map(item=>[item.label,item.accelerator,item.role,item.visible]),[['Close Window','CmdOrCtrl+W','close',undefined],['Close Window','CmdOrCtrl+Shift+W','close',false],['Reopen Closed Session','CmdOrCtrl+Shift+T',undefined,undefined]]);
  // Home with a pane: Close Pane; unavailable reopen is omitted entirely (rwr returns []).
- assert.deepEqual(shape(file({...PANES,reopenClosed:{available:false,enabled:true}}).slice(7)),['Close Pane','Close Window']);
+ assert.deepEqual(shape(file({...PANES,reopenClosed:{available:false,enabled:true}}).slice(8)),['Close Pane','Close Window']);
 });
 
 test('Edit follows FSr("mac") in place of the editMenu role, then ISr\'s Find submenu',()=>{
@@ -162,7 +165,7 @@ test('View zoom items follow index.chunk-ChZ67Jhw.js dNr: Actual Size only while
 const go=template=>menu(template,'Go');
 test('Go menu follows gyr/Cyr + Swr: Back/Forward twins, Previous/Next Session, Search…',()=>{
  for(const [canGoBack,canGoForward] of [[false,false],[true,false],[false,true],[true,true]]){
-  const events=[];const items=go(appMenuTemplate({sidebarOpen:true,canGoBack,canGoForward,emit:e=>events.push(e)}));
+  const events=[];const items=go(appMenuTemplate({sidebarOpen:true,canGoBack,canGoForward,menuState:menuState(CODE),emit:e=>events.push(e)}));
   assert.equal(items.length,9);
   assert.deepEqual(items.map(item=>item.type==='separator'?'---':[item.label,item.accelerator,item.id,item.visible,item.registerAccelerator,item.enabled]),[
    ['Back','Command+[',undefined,false,undefined,undefined],
@@ -211,10 +214,10 @@ test('navigation-state payload keeps only real true flags (Syr {canGoBack, canGo
 });
 
 test('menu-state payload keeps only real true flags and compares by value (vSr/_Sr)',()=>{
- const none={panes:{changes:{enabled:false,open:false},files:{enabled:false,open:false}},closePane:{enabled:false},session:{open:false},reopenClosed:{available:false,enabled:false}};
+ const none={panes:{changes:{enabled:false,open:false},files:{enabled:false,open:false}},closePane:{enabled:false},session:{open:false},reopenClosed:{available:false,enabled:false},goMenuAreas:[],closeMenuTarget:null};
  assert.deepEqual(menuState(undefined),none);
  assert.deepEqual(menuState({panes:{changes:{enabled:'true',open:1},files:{enabled:true}},closePane:{enabled:{}}}),{...none,panes:{...none.panes,files:{enabled:true,open:false}}});
- assert.deepEqual(menuState({...PANES,extra:1}),{...PANES,session:none.session,reopenClosed:none.reopenClosed});
+ assert.deepEqual(menuState({...PANES,extra:1}),{...PANES,session:none.session,reopenClosed:none.reopenClosed,goMenuAreas:[],closeMenuTarget:null});
  assert.deepEqual(menuState({session:{open:'yes'},reopenClosed:{available:true,enabled:1}}),{...none,reopenClosed:{available:true,enabled:false}});
  assert.equal(sameMenuState(PANES,JSON.parse(JSON.stringify(PANES))),true);
  assert.equal(sameMenuState(PANES,{...PANES,closePane:{enabled:false}}),false);
@@ -254,8 +257,32 @@ test('main.cjs wires the lifecycle: before-quit before the shutdown handler, a n
  assert.match(main,/attachContextMenu\(window\);[\s\S]*attachContextMenu\(window\);/,'main window and pane windows get the native context menu');
 });
 
+// 3.6556.2 index.chunk-jPKPzV-P.js aSi: New Side Chat (jO7VoK4TtU) right after iSi's New Session in New Window,
+// enabled `EM()&&!ko()&&(n||e.enabled&&!e.open)` with n = newSideChat.enabled (false here: btwChildSessions unavailable),
+// clicking dispatchToggleSessionPane(Q_.SideChat) through $1(…, null), i.e. View › Side Chat's toggle-pane event.
+test('File › New Side Chat follows 3.6556.2 aSi: after New Window, enabled while the side chat is available and closed, toggles the side chat pane',()=>{
+ const official=readFileSync(path.resolve(import.meta.dirname,'../../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'),'utf8');
+ for(const text of ['label:X().formatMessage({defaultMessage:"New Side Chat",id:"jO7VoK4TtU"}),enabled:EM()&&!ko()&&(n||e.enabled&&!e.open)',
+  'click:(e,t,r)=>$1(r,(e=>n?e.dispatchNewSideChat():e.dispatchToggleSessionPane(Q_.SideChat)),null)',
+  'submenu:[rSi(e),...iSi(),...aSi(),...Jxi(e),{type:"separator"},...Xxi()]'])assert.ok(official.includes(text),text);
+ const events=[],targets=[];const target={id:'main'};
+ const item=state=>menu(appMenuTemplate({sidebarOpen:true,menuState:menuState({...CODE,...state}),emit:(e,window)=>{events.push(e);targets.push(window);}}),'File').find(entry=>entry.label==='New Side Chat');
+ // Jyi's e0 when the renderer reports no side chat: still listed, disabled; no accelerator (aSi has none).
+ assert.deepEqual([item(undefined).enabled,item(undefined).accelerator,item(undefined).role],[false,undefined,undefined]);
+ assert.equal(item({panes:{sideChat:{enabled:false,open:false}}}).enabled,false);
+ assert.equal(item({panes:{sideChat:{enabled:true,open:true}}}).enabled,false,'already open: nothing new to open without newSideChat');
+ const ready=item({panes:{sideChat:{enabled:true,open:false}}});assert.equal(ready.enabled,true);
+ ready.click({},target);ready.click({},target,viaAccelerator);
+ assert.deepEqual(events,[{kind:'toggle-pane',pane:'sideChat'},{kind:'toggle-pane',pane:'sideChat'}],'$1(…, null): every click dispatches');
+ assert.deepEqual(targets,[target,target]);
+ const file=menu(appMenuTemplate({sidebarOpen:true,menuState:menuState(CODE),emit:()=>{}}),'File');
+ assert.equal(file.findIndex(entry=>entry.label==='New Side Chat'),file.findIndex(entry=>entry.label==='New Window')+1);
+ // aSi: `$yi()!==Y_.Sessions` → []: outside the Sessions area there is no New Side Chat.
+ assert.equal(menu(appMenuTemplate({sidebarOpen:true,menuState:menuState({panes:{sideChat:{enabled:true,open:false}}}),emit:()=>{}}),'File').some(entry=>entry.label==='New Side Chat'),false);
+});
+
 test('File › New Window is disabled at the window limit, with the reason as its tooltip (never a silent no-op)',()=>{
- const item=(newWindow)=>menu(appMenuTemplate({sidebarOpen:true,newWindow,emit:()=>{}}),'File').find(entry=>entry.label==='New Window');
+ const item=(newWindow)=>menu(appMenuTemplate({sidebarOpen:true,newWindow,menuState:menuState(CODE),emit:()=>{}}),'File').find(entry=>entry.label==='New Window');
  assert.equal(item(undefined).enabled,true);assert.equal(item(undefined).toolTip,undefined);
  assert.equal(item(true).enabled,true);
  assert.equal(item(false).enabled,false);assert.equal(item(false).toolTip,'Close a window before opening another.');

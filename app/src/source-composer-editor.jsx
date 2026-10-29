@@ -20,6 +20,7 @@ import {safeHoverHull,insideHoverHull} from './source-tooltip-model.js';
 import './source-composer-editor.css';
 import {emoticonReplacement} from './emoji-model.mjs';
 import {ultracodeMatches} from '../electron/prefs/workflow-keyword.mjs';
+import {shellPlainTextRefused} from './composer-shell-refusal.mjs';
 
 // The "ultracode" keyword while it counts (Claude Code highlights it in the prompt): an inline mark over each match.
 function keywordPlugin(enabled){
@@ -219,6 +220,9 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   Object.defineProperty(input,'textRunStart',{configurable:true,get:()=>caretRunStart(editor.state)});
   // The caret in a code block or inline code: the composer opens no '/', '@' or ':' suggestions there.
   Object.defineProperty(input,'caretInCode',{configurable:true,get:()=>caretInCode(editor.state)});
+  // c227f4d5e lF (bash mode): the draft is more than plain text — a mention, a command chip, a mark other than a bare link,
+  // or a code block — so a shell command refuses it.
+  Object.defineProperty(input,'shellTextOnlyRefused',{configurable:true,get:()=>shellPlainTextRefused(editor.state.doc)});
   // The link bubble (KM): shown while the focused, editable editor has its caret in a link.
   const report=()=>reportLink.current?.(editor);editor.dom.addEventListener('focus',report);editor.dom.addEventListener('blur',report);
   // '@' pick (c099c328d :10502-10520 Vr): the token's range becomes the mention node plus a space.
@@ -246,7 +250,7 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   input.resetComposer=()=>{pendingValue.current=null;echoes.current.clear();editor.updateState(EditorState.create({schema:composerSchema,doc:documentFor(latest.current.value),plugins:plugins()}));};
   syncValue.current=text=>{if(text===''&&composerText(editor.state.doc)!=='')input.resetComposer();else {const tr=reconcileComposerText(editor.state,text,{mentions:latest.current.mentions||[],chips:latest.current.chips||[]});if(tr)editor.dispatch(tr);}input.dataset.empty=composerText(editor.state.doc)?'false':'true';};
   input.dataset.empty=value?'false':'true';latest.current.inputRef?.(input);
-  return()=>{latest.current.inputRef?.(null);view.current=null;syncValue.current=null;pendingValue.current=null;resize.disconnect();children.disconnect();editor.destroy();editor.dom.removeEventListener('focus',report);editor.dom.removeEventListener('blur',report);setBubble(null);for(const key of ['value','selectionStart','selectionEnd','textRunStart','caretInCode','setSelectionRange','focus','insertCommand','insertMention','insertSkill','getCaretViewportRect','caretAtEdge','recallText','resetComposer','replaceText','focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom'])delete input[key];};
+  return()=>{latest.current.inputRef?.(null);view.current=null;syncValue.current=null;pendingValue.current=null;resize.disconnect();children.disconnect();editor.destroy();editor.dom.removeEventListener('focus',report);editor.dom.removeEventListener('blur',report);setBubble(null);for(const key of ['value','selectionStart','selectionEnd','textRunStart','caretInCode','shellTextOnlyRefused','setSelectionRange','focus','insertCommand','insertMention','insertSkill','getCaretViewportRect','caretAtEdge','recallText','resetComposer','replaceText','focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom'])delete input[key];};
  },[]);
  const previousScope=useRef(scope);
  // The keyword highlight follows Dynamic workflows, the trigger setting and alt+w (keywordHighlight).

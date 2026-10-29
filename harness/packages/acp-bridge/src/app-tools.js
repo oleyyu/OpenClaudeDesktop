@@ -43,6 +43,16 @@ export const APP_TOOL_NAMES = Object.freeze([
   // already has navigate / read_page / find on this server).
   'chrome_tabs_context_mcp', 'chrome_tabs_create_mcp', 'chrome_navigate', 'chrome_read_page', 'chrome_find', 'chrome_form_input',
   'chrome_computer', 'chrome_javascript_tool', 'chrome_browser_batch',
+  // agent-tools/project-knowledge.mjs (w13-chatfn-projects): a Chat or Cowork project's knowledge search.
+  'project_knowledge_search',
+  // agent-tools/chat-artifacts.mjs (w13-chatfn-artifacts): a Chat's artifacts (create / update / rewrite, versioned).
+  'artifacts',
+  // W13 (the w13-chatfn-tools review fixed the list): agent-tools/cowork.mjs (w13-coworkfn-tools), scheduled-tasks.mjs
+  // (w13-coworkfn-schedtools), skills-cowork.mjs, past-chats.mjs (w13-chatfn-memory).
+  'request_cowork_directory', 'allow_cowork_file_delete', 'present_files', 'launch_code_session',
+  'create_scheduled_task', 'list_scheduled_tasks', 'update_scheduled_task', 'delete_scheduled_task', 'run_scheduled_task', 'list_task_runs',
+  'propose_skills', 'save_skill',
+  'conversation_search', 'recent_chats',
 ])
 
 /** {name, command, args, env, instructions} (env holds the socket and token; instructions text or null) or null. */

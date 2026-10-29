@@ -3,6 +3,7 @@ import nodePath from 'node:path';
 import { threadPermissionParams, turnPermissionParams } from './permission-policy.mjs';
 import { surfaceInstructions } from './surface-policy.mjs';
 import { tagRoutineLaunchError } from './routine-error-category.mjs';
+import { routineFolders } from './local-routines.mjs';
 
 export function captureRoutineOptions({ config, coreId, models, execution, previous }) {
   if (execution !== undefined && (!execution || typeof execution !== 'object' || Array.isArray(execution))) throw new Error('Choose valid execution settings.');
@@ -54,11 +55,34 @@ async function checkFolder(cwd, fs) {
 // with main's dependencies), setSessionMetadata(threadId, patch) writes the session's sessionMetadata, and
 // turnErrorCategory (src/turn-error-model.mjs) classifies a core RPC failure; launch failures carry the official
 // `[ccdErrorCategory:<cat>]` suffix (routine-error-category.mjs) when a host category fits.
-export function createRoutineRunner({ context, rpc, prepareWorktree, setSessionMetadata, turnErrorCategory,
+//
+// w13-close-main-process (Cowork tasks only):
+//   dataDir             the app's data folder: a Cowork run's thread/start names its task's folders
+//                       (codeDesktop.coworkFolders: local-routines.mjs routineFolders — the working folder unless it is the
+//                       scratch folder, and the folder grant), as BtY4LlaK allowRoutineFolders → N() mounts them; none → []
+//                       (closeout coworkfn-schedtools-01). The run never takes the Cowork home page's draft folders.
+//   coworkUnavailable() the reason Cowork can't run (CODE_DESKTOP_COWORK=0: engine-policy.mjs's official sentence, translated),
+//                       or null; a Cowork run then fails with it before anything starts (E63 coworkfn-engine-04).
+//   migrateTask(task, options)  a Cowork task saved for the Cowork VM engine ('cowork-vm') while that engine isn't the one in
+//                       use moves, once, to the core Cowork runs on now: its coreId, and its model when the saved one isn't
+//                       offered there (the core's default); local-routines.mjs migrateOptions keeps it (E63 coworkfn-engine-04).
+export const VM_CORE_ID = 'cowork-vm';
+export function createRoutineRunner({ context, rpc, prepareWorktree, setSessionMetadata, turnErrorCategory, dataDir = null,
+  coworkUnavailable = () => null, migrateTask = null,
   fs = nodeFs, path = nodePath, inRepository = cwd => folderInRepository(cwd, { fs, path }) }) {
   return async (task, { attach, assertActive = () => {} }) => {
     const code = routineKind(task) === 'code';
-    const before = await context(task.options.coreId);
+    if (!code) { const reason = coworkUnavailable?.(); if (reason) throw new Error(reason); }
+    let before = await context(task.options.coreId);
+    if (!code && task.options.coreId === VM_CORE_ID && before.coreId !== VM_CORE_ID && typeof migrateTask === 'function') {
+      const offered = model => before.models.some(entry => (entry.model ?? entry.id) === model);
+      const fallback = before.models.find(entry => entry.isDefault) ?? before.models[0];
+      const model = offered(task.options.model) ? task.options.model : fallback ? fallback.model ?? fallback.id : task.options.model;
+      const options = { ...task.options, coreId: before.coreId, model, ...(model !== task.options.model ? { effort: fallback?.defaultReasoningEffort ?? null } : {}) };
+      await migrateTask(task, options);
+      task = { ...task, options };
+      before = await context(task.options.coreId);
+    }
     const check = async () => {
       const current = await context(task.options.coreId);
       if (current.owner !== before.owner || current.coreId !== task.options.coreId)
@@ -108,7 +132,7 @@ export function createRoutineRunner({ context, rpc, prepareWorktree, setSessionM
       cwd, model: task.options.model,
       ...threadPermissionParams(permission),
       ...(code ? host.customization === true ? {} : { developerInstructions: CODE_ROUTINE_INSTRUCTIONS } : { developerInstructions: surfaceInstructions('cowork') }),
-      codeDesktop: { ...threadPermissionParams(permission).codeDesktop, surface: mode },
+      codeDesktop: { ...threadPermissionParams(permission).codeDesktop, surface: mode, ...(code ? {} : { coworkFolders: routineFolders(task, dataDir) }) },
     });
     const threadId = start?.thread?.id;
     if (!threadId) throw new Error('The core did not create a session.');

@@ -15,9 +15,12 @@ export function SourceTaskEvent({ events, itemId, onOpen }) {
   if (list.length === 1) {
     const row = taskEventRow(list[0]);
     failed = row.danger;
+    // sXe: with the description's tense sentence (`g`) that one span replaces the label and the description.
     content = <span className="stev-line">
-      <span className="stev-label" data-danger={row.danger || undefined}>{row.label}</span>
-      {row.description && <span className="stev-description"><bdi>{`· ${row.description}`}</bdi></span>}
+      {row.tense ? <span className="stev-description" dir="auto">{row.tense}</span> : <>
+        <span className="stev-label" data-danger={row.danger || undefined}>{row.label}</span>
+        {row.description && <span className="stev-description"><bdi>{`· ${row.description}`}</bdi></span>}
+      </>}
       {row.elapsed && <span className="stev-elapsed">{`· ${row.elapsed}`}</span>}
     </span>;
   } else {

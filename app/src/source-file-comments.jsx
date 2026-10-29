@@ -16,6 +16,8 @@ export function commentFieldKeyDown(event,{save,cancel}){
 }
 
 // c82eca2bd H/U/ot, inline variant with canPostToGitHub=false (Files Wc).
+// Delete (c82eca2bd ke `className: e(d ? W : Oe, "hover:text-danger")`, Trash customSize 14) turns danger on hover;
+// Edit keeps Ee's `hover:text-[var(--diff-widget-fg,var(--cds-text-primary))]`.
 // placeholder: the Changes pane passes ga's 'Tell Claude what to change'; outdated: ot isOutdated, the label then
 // carries the neutral xs 'Outdated' badge (c82eca2bd W).
 export function FileCommentCard({entry,active,store,onSave,onDelete,placeholder,outdated=false}) {
@@ -38,7 +40,7 @@ export function FileCommentCard({entry,active,store,onSave,onDelete,placeholder,
         <div className="sfv-comment-actions">
           {editing?<SourceTooltip content={t('Save comment')}><button type="button" aria-label={t('Save comment')} disabled={!entry.body.trim()} onClick={()=>save()}><Icon name="ChatAdd" size={16}/></button></SourceTooltip>
             :<><SourceTooltip content={t('Edit comment')}><button type="button" aria-label={t('Edit comment')} onClick={()=>store.activate(entry.id)}><Icon name="Edit" size={14}/></button></SourceTooltip>
-              <SourceTooltip content={t('Delete comment')}><button type="button" aria-label={t('Delete comment')} onClick={()=>{store.remove(entry.id);onDelete(entry);}}><Icon name="Trash" size={14}/></button></SourceTooltip></>}
+              <SourceTooltip content={t('Delete comment')}><button type="button" data-comment-delete="" aria-label={t('Delete comment')} onClick={()=>{store.remove(entry.id);onDelete(entry);}}><Icon name="Trash" size={14}/></button></SourceTooltip></>}
         </div>
       </div>
     </div>

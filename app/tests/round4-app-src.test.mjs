@@ -45,7 +45,7 @@ test('View changes is never a dead button: the pane falls back to the session ed
   assert.match(main, /pane: "changes", data: \{ diff \}/, 'a popped-out Changes pane gets the same diff');
 });
 
-test('recap is Claude\'s transcript-tail Recap card (rR) with a bounded Markdown scroller; info notices are never warning-toned', () => {
+test('recap is Claude\'s transcript-tail Recap card (c96d752d0 OLe/gH) with qE plain text; info notices are never warning-toned', () => {
   const main = read('main.jsx'), notices = read('source-session-notices.jsx'), css = read('source-session-notices.css');
   const card = read('source-recap-card.jsx'), cardCss = read('source-recap-card.css');
   assert.doesNotMatch(main, /kind: "recap"/, 'the recap is no longer a notice above the composer');
@@ -53,11 +53,14 @@ test('recap is Claude\'s transcript-tail Recap card (rR) with a bounded Markdown
   assert.match(card, /<section role="status" className="source-message src-recap"/);
   assert.match(card, /<h3 className="src-recap-title">\{t\("Recap"\)\}<\/h3>/);
   assert.match(card, /aria-label=\{t\("Dismiss recap"\)\}/);
-  assert.match(card, /t\("Writing a recap…"\)/);
+  // w12b-transcript (W12b-TR-3): OLe `c=dd(n)` (shared-11 qE) as `p dir=auto > bdi`; no card while loading or empty.
+  assert.doesNotMatch(card, /Writing a recap|SourceMarkdown/);
+  assert.match(card, /import \{ qE as recapPlainText \} from "\.\/generated\/turn-box\/shared-11\.mjs";/);
+  assert.match(card, /<p dir="auto" className="src-recap-body"><bdi>\{text\}<\/bdi><\/p>/);
   assert.match(cardCss, /border-radius: 10px; background: var\(--cds-surface-1\);/);
   assert.match(cardCss, /\.src-recap-header \{[^}]*padding: 6px 12px; border-bottom: 1px solid var\(--cds-border\);/);
   assert.match(cardCss, /\.src-recap-body \{[^}]*padding: 12px;[^}]*color: var\(--cds-text-secondary\);[^}]*font-style: italic;/);
-  assert.match(cardCss, /\.src-recap-markdown \{ max-height: 240px; overflow-y: auto;/);
+  assert.doesNotMatch(cardCss, /src-recap-markdown/);
   assert.match(notices, /<Icon name=\{noticeIcon\(notice\)\}/);
   assert.match(css, /\.ssn-notice\[data-level="info"\] \{\s*border-color: var\(--cds-border\);\s*background: var\(--cds-surface-1\);/);
 });

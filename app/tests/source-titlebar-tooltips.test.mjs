@@ -78,17 +78,19 @@ test('titlebar tooltips carry key specs; the text-variant Shortcut draws Changes
   assert.match(tooltip, /<TooltipShortcut keys=\{secondaryHint\.shortcut\} \/>/);
 });
 
-// R03 (titlebar-release-notes.js:5156-5236 B): What’s new is the shared CDS Dialog at size md with the bleed header and
+// R03 (titlebar-release-notes.js:5156-5236 B): What’s new is the shared CDS Dialog at size md with the standard Header
+// (V3-w12b-settings-dialogs: 3.6556.2 cb63ed069 B `t(u.Header, { showClose: !0, … })`, Zy: flush Close) and
 // a single 'Close'; the lag note z; one section per entry up to the running version with an h4 date and a neutral
 // font-mono version Badge; New / Improved / Fixed groups (empty ones omitted); `code` spans; the limits footnote.
-test('LocalReleaseNotes is the bleed md SourceDialog with versioned entries', () => {
+test('LocalReleaseNotes is the md SourceDialog (standard Header) with versioned entries', () => {
   const hadDocument = 'document' in globalThis;
   if (!hadDocument) globalThis.document = { body: {}, documentElement: { getAttribute: () => null } };
   let html;
   try { html = renderToStaticMarkup(React.createElement(T.LocalReleaseNotes, { onClose() {} })); }
   finally { if (!hadDocument) delete globalThis.document; }
   assert.match(html, /<section[^>]*role="dialog"[^>]*data-cds="Dialog" data-dialog-size="md"[^>]*class="sdlg-popup cds-reset st-release-notes"/);
-  assert.match(html, /<header class="sdlg-bleed-header"><h2 id="[^"]+" class="sdlg-bleed-title">What’s new<\/h2>/);
+  assert.match(html, /<header class="sdlg-header"><div class="sdlg-heading"><h2 id="[^"]+" class="sdlg-title">What’s new<\/h2><\/div><button[^>]*class="[^"]*sdlg-close sdlg-close-flush/);
+  assert.doesNotMatch(html, /sdlg-bleed/);
   assert.deepEqual([...html.matchAll(/aria-label="([^"]+)"/g)].map((match) => match[1]), ['Close']);
   assert.match(html, /<p class="st-release-note">These release notes are included with this version of the app and may be one release behind\.<\/p>/);
   assert.match(html, /<div class="st-release-date"><h4>October 1, 2026<\/h4><span class="st-release-version" data-cds="Badge" data-variant="neutral">0\.2\.130<\/span><\/div>/);
@@ -285,8 +287,9 @@ test('Code title bar: CaretDown session menu beside the title and the View optio
   assert.match(source, /onMenu\?\.\(sessionMenuKind, event\.currentTarget, session, undefined, \{ x: event\.clientX, y: event\.clientY \}\)/);
 });
 
-// R3-topbar TT-02 (2.42304.0 cc43287c9 wW `R ? xW : Wee`, c73f45bc3 n_ and T_): until the session is ready the Code lead
-// is n_ (generated titlebar-title-skeleton.mjs): the known title as a non-interactive span[data-pane-title] beside an
+// R3-topbar TT-02 (2.42304.0 cc43287c9 wW `R ? xW : Wee`, c73f45bc3 n_ and T_; 3.6556.2 oG `ee ? rG : SP`, c73f45bc3 iy,
+// W2 w2-titlebar-current): until the session is ready the Code lead is iy (generated titlebar-title-skeleton.mjs, a
+// React Compiler component rendered here through the host's real React): the known title as a non-interactive span[data-pane-title] beside an
 // aria-hidden caret slot, or the pulsing title ghost when no title is known; there is no caret, and the folder pill is
 // the static Bg branch (a cursor-default span) only once the title is known. Ready, the title button, caret and folder
 // menu button are back, none of them disabled.
@@ -328,4 +331,10 @@ test('a loading Code session shows the official title skeleton, no caret, and a 
   const c73 = official('c73f45bc3-CFrHin0p.js');
   assert.ok(c73.includes('function n_({title:e,titleRef:t}){'));
   assert.ok(c73.includes('className:`${n?Pg:Mg} cursor-default`'));
+  // 3.6556.2: the same branch (oG `ee ? rG : SP`, SP = c73f45bc3 iy) and the static folder pill (`${Sr()?Fv:Nv} cursor-default`).
+  const v3 = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+  assert.ok(v3('cc43287c9-Me-M2ucD.js').includes('ee?p(rG,{model:be,titleButtonRef:Ze}):p(SP,{title:J,titleRef:Ze})'));
+  assert.match(v3('cc43287c9-Me-M2ucD.js'), /import\{[^}]*(?<![\w$])I as SP[,}][^;]*?from"\.\/c73f45bc3-B7hbL7H9\.js"/);
+  assert.ok(v3('c73f45bc3-B7hbL7H9.js').includes('function iy(e){let $=J9(5),{title:t,titleRef:n}=e'));
+  assert.ok(v3('c73f45bc3-B7hbL7H9.js').includes('a=`${Sr()?Fv:Nv} cursor-default`'));
 });

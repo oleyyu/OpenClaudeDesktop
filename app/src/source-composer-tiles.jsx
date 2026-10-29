@@ -13,20 +13,20 @@
 // ({kind: "image" | "file" | "snippet" | "elementContext", …}, src/composer-attachments-model.mjs) plus the host ends of
 // each press. Host differences: a file's press opens it in the Files pane, or reveals a folder (attachmentOpenAction:
 // the official text preview / new tab have no local counterpart); a snippet's press pins the host preview popover with its
-// text (SourcePopover, as the previous pill did) instead of the file-preview modal; the pills stay the host pills (agent /
-// issue as before, element contexts SourceSelectedElementPill) in Ri's pill row; no annotations, saved drafts or the
-// annotate / replace image flow (the host has none); while the card sends, removal is held (the host takes the entries
+// text (SourcePopover, as the previous pill did) instead of the file-preview modal; the pills are Go's ko (agent / issue
+// SourceContextPill, element contexts SourceSelectedElementPill) under one strip intent in Ri's pill row; a saved line comment is
+// fs's annotation tile (a snippet that carries `annotation`, W12b cf-01); no saved drafts or the annotate / replace image flow
+// (the host has none); while the card sends, removal is held (the host takes the entries
 // for the send), as the previous pills' disabled remove did. Ki's project-files rename (c63c52947 Pt, /mnt/project-files/
 // paths) is remote-only: a host file shows `relativePath || name`.
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ComposerFileTile, ComposerImageTile, ComposerQuoteTile, ComposerVideoTile, videoMimeTypePattern } from "./generated/code-composer/composer-attachment-tiles.mjs";
 import { videoFileNamePattern } from "./generated/code-composer/composer-video-types.mjs";
-import { attachmentLabel, attachmentOpenAction, attachmentViewerState } from "./composer-attachments-model.mjs";
-import { createSelectedElementChipBody } from "./generated/code-editor/preview-element-chip.mjs";
+import { annotationText, annotationWhere, attachmentLabel, attachmentOpenAction, attachmentViewerState } from "./composer-attachments-model.mjs";
 import { Icon } from "./icons";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
 import { SourcePopover } from "./source-popover";
-import { SourceSelectedElementPill } from "./source-selected-element.jsx";
+import { SourceContextPill, SourceSelectedElementPill, attachmentStripHandlers, useAttachmentPreviewIntent } from "./source-selected-element.jsx";
 import "./source-composer-attachments.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -41,33 +41,19 @@ export function isVideoTileEntry(entry) {
 export const TILE_ROW_CLASS = "flex flex-wrap items-end gap-xs";
 export const PILL_ROW_CLASS = "flex flex-wrap items-center gap-1";
 
-// The agent / issue pills (ca80fca8d pk value 'agent' / 'issue', source-composer-attachments.jsx ContextPill): the
-// labelled chip body with its thumbnail, a press opens it, the hover × and Delete / Backspace remove it.
-function ChipButton({ onKeyUp, ...props }) {
-  return <button type="button" {...props} onKeyUp={(event) => { event.preventBaseUIHandler = () => {}; onKeyUp?.(event); }} />;
+// W12b cf-01: c0fbbe82d fs over Wi (the Quote tile): a saved line comment (a snippet carrying `annotation`) is named
+// "Comment on {where}" with fs's text, the "Comment" badge and Bo's where (zo's "(before changes)" on deleted lines) as
+// its tooltip; Go maps them after the snippets. Its press is cc43287c9 lg (onClickAnnotation from the host).
+export function annotationWhereLabel(annotation) {
+  const where = annotationWhere(annotation);
+  return annotation.side === "deletions" ? t("{where} (before changes)", { where }) : where;
 }
-const ChipBody = createSelectedElementChipBody({ Button: ChipButton });
-function ContextPill({ pill, disabled }) {
-  const remove = () => { if (!disabled) pill.onRemove?.(); };
-  const thumbnail = pill.loading
-    ? <span role="status" className="sc-context-pill-loading"><span className="sc-spinner" aria-hidden="true" /><span className="sca-sr-only">{t("Loading")}</span></span>
-    : <Icon name={pill.icon} size={12} />;
-  return (
-    <div data-cds-attachment="" data-kind={pill.kind} className="sca-pill sc-context-pill">
-      <ChipBody value={pill.kind} label={pill.label} thumbnail={thumbnail} onClick={pill.onOpen}
-        onKeyDown={(event) => { if ((event.key === "Delete" || event.key === "Backspace") && !event.nativeEvent.isComposing) { event.preventDefault(); remove(); } }} />
-      {pill.onRemove && <button type="button" tabIndex={-1} aria-label={t("Remove {name}", { name: pill.label })} className="epitaxy-pill-remove sca-remove"
-        disabled={disabled} onMouseDown={(event) => event.preventDefault()}
-        onClick={(event) => { event.stopPropagation(); event.preventDefault(); remove(); }}>
-        <Icon name="X" size={12} />
-      </button>}
-    </div>
-  );
-}
-
-export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRemove, onOpenFile, disabled = false, previewLayerBase = 0 }) {
+export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRemove, onOpenFile, onClickAnnotation, disabled = false, previewLayerBase = 0 }) {
   const [viewer, setViewer] = useState(null);
   const [quote, setQuote] = useState(null);
+  // Go's one preview intent for the whole pill group (600 / 200 ms; moving between pills switches at once).
+  const intent = useAttachmentPreviewIntent();
+  const firstElementPill = useRef(null);
   // The viewer and a snippet's preview live only as long as their entry (a send, a draft swap, a removal closes them).
   const shown = attachmentViewerState(viewer, entries);
   if (viewer && !shown) setViewer(null);
@@ -77,13 +63,15 @@ export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRem
   const remove = (id) => { if (!disabled) onRemove?.(id); };
   const images = entries.filter((entry) => entry.kind === "image");
   const files = entries.filter((entry) => entry.kind === "file");
-  const snippets = entries.filter((entry) => entry.kind === "snippet");
+  const snippets = entries.filter((entry) => entry.kind === "snippet" && !entry.annotation);
+  const annotations = entries.filter((entry) => entry.kind === "snippet" && entry.annotation);
   const elements = entries.filter((entry) => entry.kind === "elementContext");
   // Ri `lt !== 0`: the pill group renders only when some pill exists.
   const pills = contextPills.length + elements.length > 0
-    ? <div className={PILL_ROW_CLASS}>
-        {contextPills.map((pill) => <ContextPill key={pill.kind} pill={pill} disabled={disabled} />)}
-        {elements.map((entry) => <SourceSelectedElementPill previewLayerBase={previewLayerBase} key={entry.id} entry={entry} onRemove={onRemove} disabled={disabled} />)}
+    ? <div className={PILL_ROW_CLASS} {...attachmentStripHandlers(intent)}>
+        {contextPills.map((pill) => <SourceContextPill key={pill.kind} pill={pill} intent={intent} disabled={disabled} />)}
+        {elements.map((entry, index) => <SourceSelectedElementPill key={entry.id} entry={entry} intent={intent} anchorRef={index === 0 ? firstElementPill : undefined}
+          onRemove={onRemove} disabled={disabled} />)}
       </div>
     : null;
   return <>
@@ -105,6 +93,12 @@ export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRem
       {snippets.map((entry) => <ComposerQuoteTile key={entry.id} name={entry.label} text={entry.text ?? ""} badge={t("Excerpt")} badgeTooltip={entry.label}
         onOpen={(event) => setQuote((open) => (open?.id === entry.id ? null : { id: entry.id, anchor: event?.currentTarget ?? null }))}
         onRemove={() => remove(entry.id)} />)}
+      {/* fs: Wi {name: "Comment on {where}", text, badge: "Comment", badgeTooltip: where, onOpen: n && (() => n(t)), onRemove}. */}
+      {annotations.map((entry) => {
+        const where = annotationWhereLabel(entry.annotation);
+        return <ComposerQuoteTile key={entry.id} name={t("Comment on {where}", { where })} text={annotationText(entry.annotation, where)} badge={t("Comment")} badgeTooltip={where}
+          onOpen={onClickAnnotation ? () => onClickAnnotation(entry.annotation) : undefined} onRemove={() => remove(entry.id)} />;
+      })}
       {pills}
     </div>
     {shown && <SourceImageViewer key={shown.id} src={shown.src} alt={shown.alt} originRef={{ current: shown.origin }} onClose={() => setViewer(null)} />}

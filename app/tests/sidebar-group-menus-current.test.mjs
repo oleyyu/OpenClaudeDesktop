@@ -7,6 +7,10 @@
 //     Delete / New section, Other greyed with place-unknown), inside shared-19 x$ when it can move (Move up / Move down,
 //     "Sort A to Z" only while an order is stored, which clears it), the folder buckets ordered by name (shared-19 c2);
 //   - the multi-selection menu is flat (ce4f4374c Be).
+// 3.6556.2 (w4-sidebar-menus): the generated pieces are 3.6556.2 (shared-21 hG / gG / _G / xG / bG, shared-20 Px,
+// shared-46 lk / vk / gM / oM, view-tabs kA); the host adds GC's `data-nested-group` and "day-or-status" header menus
+// (SB-04 / SB-05), the folder buckets' Save as environment (SB-06), drops Reset order (SB-07), the Archive all confirm is
+// rO's (CI-04) and the blank-area Select all inside Pinned selects Pinned only (SB-17).
 // Nothing opens a window: generator manifest, controlled renders over a hook dispatcher (D21), SSR markup, pure functions.
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -20,9 +24,10 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import * as Layout from '../src/sidebar-sections-layout.mjs';
 import { buildSidebarGroups, OTHER_PROJECT_KEY, customOrderKey } from '../src/sidebar-model.js';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const read = (file) => fs.readFile(file, 'utf8');
 const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
   documentElement: { dir: 'ltr', getAttribute: () => null, hasAttribute: () => false } };
@@ -48,7 +53,7 @@ before(async () => {
   M.items = await load('/src/generated/code-current/sidebar-menu-groups.mjs');
   M.sourceMenu = await load('/src/source-menu.jsx');
   M.menuModel = await load('/src/menu-model.mjs');
-  M.viewTabs = await load('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  M.viewTabs = await load('/src/generated/view-tabs/index.js');
   M.kit = await load('/src/source-sidebar-menu-kit.jsx');
   M.i18n = await load('/electron/i18n/index.mjs');
 });
@@ -74,7 +79,7 @@ function fixture(component, props = {}, contexts = new Map()) {
   };
   hooks.useLayoutEffect = hooks.useEffect;
   hooks.useInsertionEffect = hooks.useEffect;
-  const render = (next = props) => { props = next; cursor = 0; const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H; internal.H = hooks; try { return (tree = component(props)); } finally { internal.H = old; } };
+  const render = (next = props) => { props = next; cursor = 0; const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H; internal.H = withMemoCache(hooks); try { return (tree = component(props)); } finally { internal.H = old; } };
   render();
   return { get tree() { return tree; }, render, flush() { while (effects.length) effects.shift()(); }, close() { cells.forEach((c) => c?.cleanup?.()); } };
 }
@@ -93,37 +98,41 @@ const listWith = (collapsed) => ({ querySelectorAll: (selector) => (/aria-expand
 const resetRegistry = () => M.adapters.setSidebarRowRegistry({ buckets: new Map(), rows: new Map(), visible: [], open: new Set() });
 
 // ---------------------------------------------------------------- generator
-test('generator: shared-21 _B / bB / mB / hB / yB extracted with the original contexts and the blank-area adapters', async () => {
+test('generator: 3.6556.2 shared-21 hG / gG / _G / vG / bG / xG extracted with the original contexts and the blank-area adapters', async () => {
   const manifest = JSON.parse(await read(path.join(app, 'src/generated/sidebar-sections/manifest.json')));
+  assert.equal(manifest.referenceVersion, '3.6556.2');
   const module = manifest.modules.find((m) => m.target === 'blank-area-menu.mjs');
-  assert.equal(module.source, 'shared-21-IP-SVetq.js');
-  assert.deepEqual(module.bindings.map((b) => b.name).sort(), ['_B', 'bB', 'hB', 'mB', 'yB']);
+  assert.equal(module.source, 'shared-21-R7LldJ05.js');
+  assert.deepEqual(module.bindings.map((b) => b.name).sort(), ['_G', 'bG', 'gG', 'hG', 'vG', 'xG']);
   const imports = Object.fromEntries(module.imports.map((i) => [i.local, `${i.kind}:${i.from}#${i.name}`]));
-  // The same list context instance the header menus read (code-current nZ), and code-current's one copy of uZ
-  // (Collapse all / Expand all) and sZ (sidebarHasCollapsedGroups, the "Expand a section…" test); dx / vB / HX / KX
-  // from this tree.
-  assert.equal(imports.Ni, 'external:../code-current/sidebar-group-view.mjs#SidebarListContext');
-  assert.equal(imports.U_, 'generated:./group-dialog.mjs#useCreateGroupDialog');
-  assert.equal(imports.vB, 'generated:./section-filter-controls.mjs#useNewSectionOpener');
-  assert.equal(imports.ji, 'external:../code-current/sidebar-group-view.mjs#SidebarGroupViewItems');
-  assert.equal(imports.mi, 'external:../code-current/sidebar-group-view.mjs#sidebarHasCollapsedGroups');
-  // No second slice of uZ / sZ anywhere in this tree: every importer reads code-current's.
+  // The same list context instance the header menus read (code-current shared-46 YO), and code-current's one copy of vk
+  // (Collapse all / Expand all) and hk (sidebarHasCollapsedGroups, the "Expand a section…" test); dx / yG / lk from this tree.
+  assert.equal(imports.Qo, 'external:../code-current/sidebar-group-view.mjs#SidebarListContext');
+  assert.equal(imports.iv, 'generated:./group-dialog.mjs#useCreateGroupDialog');
+  assert.equal(imports.yG, 'generated:./section-filter-controls.mjs#useNewSectionOpener');
+  assert.equal(imports.No, 'external:../code-current/sidebar-group-view.mjs#SidebarGroupViewItems');
+  assert.equal(imports.Lo, 'external:../code-current/sidebar-group-view.mjs#sidebarHasCollapsedGroups');
+  assert.equal(imports.pe, 'external:../view-tabs/shared-frame-6jtSkIit.js#CdsContextMenu');
+  // No second slice of vk / hk anywhere in this tree: every importer reads code-current's.
   for (const m of manifest.modules) {
-    assert.ok(!m.bindings.some((b) => b.name === 'uZ' || b.name === 'sZ'), `${m.target} re-slices uZ / sZ`);
-    for (const i of m.imports.filter((i) => i.original === 'shared-19-CkPOiIKm.js:uZ' || i.original === 'shared-19-CkPOiIKm.js:sZ'))
+    assert.ok(!(m.source === 'shared-46-BIbZBGFq.js' && m.bindings.some((b) => b.name === 'vk' || b.name === 'hk')), `${m.target} re-slices vk / hk`);
+    for (const i of m.imports.filter((i) => i.original === 'shared-46-BIbZBGFq.js:vk' || i.original === 'shared-46-BIbZBGFq.js:hk'))
       assert.equal(i.from.endsWith('code-current/sidebar-group-view.mjs'), true, `${m.target} ${i.local}`);
   }
-  assert.equal(imports.wi, 'generated:./group-archive.mjs#emptyBulkScope');
-  assert.equal(imports.Qi, 'generated:./group-archive.mjs#useUnloadedRows');
-  assert.equal(imports.Rx, 'external:../code-current/sidebar-menu-groups.mjs#OrderedSidebarMenuGroups');
-  assert.equal(imports.zx, 'external:../code-current/sidebar-menu-groups.mjs#SidebarMenuItem');
-  for (const [local, name] of Object.entries({ Sb: 'usePresetsGate', Vu: 'sidebarRowKeys', wu: 'sidebarVisibleKeys', Nu: 'useSidebarSelectionStore',
-    uf: 'SidebarContextMenu', mx: 'useSidebarNavigate', Ua: 'useHomeRoutes', Qg: 'startCodeDraft', lB: 'requestNewEnvironment', $i: 'useSidebarBulkArchive' }))
+  assert.equal(imports.Yo, 'generated:./group-archive.mjs#emptyBulkScope');
+  assert.equal(imports.zo, 'generated:./group-archive.mjs#useUnloadedRows');
+  assert.equal(imports.Ub, 'generated:./menu-press.mjs#cancelForeignPress');
+  assert.equal(imports.HC, 'external:../code-current/sidebar-menu-groups.mjs#OrderedSidebarMenuGroups');
+  assert.equal(imports.nw, 'external:../code-current/sidebar-menu-groups.mjs#SidebarMenuItem');
+  // SB-17: shared-6 VA (the pinned rows) beside BA (the visible rows, a bucket's with a key).
+  for (const [local, name] of Object.entries({ ZS: 'usePresetsGate', dd: 'sidebarRowKeys', ed: 'sidebarVisibleKeys', Qu: 'sidebarPinnedKeys', Fu: 'useSidebarSelectionStore',
+    mC: 'useSidebarNavigate', wc: 'useHomeRoutes', C_: 'startCodeDraft', uG: 'requestNewEnvironment', nee: 'useSidebarBulkArchive' }))
     assert.equal(imports[local], `adapter:../../source-sidebar-sections-adapters.jsx#${name}`, local);
   // The strings the menu is pinned to are in the original chunk, verbatim.
-  const chunk = await read(path.join(reference, 'shared-21-IP-SVetq.js'));
-  for (const text of ['yB=["session","create","select","fold","convert","bulk"]', 'defaultMessage:"Expand a section to select its sessions.",id:"K3IOhSxgC/"',
-    'defaultMessage:"You need at least 2 sessions that can be selected.",id:"q1iA95GkB0"', 'defaultMessage:"New environment",id:"bz16qO90l5"', 'U_("whitespace_menu")'])
+  const chunk = await read(path.join(reference, 'shared-21-R7LldJ05.js'));
+  for (const text of ['bG=["session","create","select","fold","convert","bulk"]', 'defaultMessage:"Expand a section to select its sessions.",id:"K3IOhSxgC/"',
+    'defaultMessage:"You need at least 2 sessions that can be selected.",id:"q1iA95GkB0"', 'defaultMessage:"New environment",id:"bz16qO90l5"', 'iv("whitespace_menu")',
+    '[data-pinned-leading], [data-pinned-list]', '[data-sidebar-group-label] [data-group-toggle]', 'ed(x?"pinned":void 0)'])
     assert.ok(chunk.includes(text), text);
 });
 
@@ -171,10 +180,10 @@ test('blank-area menu (bB): yB order, New session / New section… from the list
 });
 
 test('blank-area Select all: disabled under 2 visible rows, "Expand a section…" only when ≥ 2 rows exist and a group is folded', () => {
-  const reason = (registry, collapsed) => {
+  const reason = (registry, collapsed, inPinned = null) => {
     M.adapters.setSidebarRowRegistry(registry);
     const contexts = new Map([[M.view.SidebarListContext, { getList: () => listWith(collapsed) }]]);
-    const select = fixture(M.blank.SidebarBlankAreaMenu, { showCreateGroup: false, onSelectAll() {} }, contexts).tree.props.groups.select;
+    const select = fixture(M.blank.SidebarBlankAreaMenu, { showCreateGroup: false, onSelectAll() {}, inPinned }, contexts).tree.props.groups.select;
     return [select.props.disabled, select.props.disabledReason.props.defaultMessage];
   };
   const three = new Map([['code:a', {}], ['code:b', {}], ['code:c', {}]]);
@@ -185,6 +194,13 @@ test('blank-area Select all: disabled under 2 visible rows, "Expand a section…
     assert.deepEqual(reason({ rows: three, visible: ['code:a', 'code:b'] }, [1]), [false, 'Expand a section to select its sessions.'],
       'enabled: the reason element is passed but the CDS Dropdown item (shared-frame XS) only shows it while disabled (`disabled === !0 && Wc(p)`)');
     assert.deepEqual(M.adapters.sidebarRowKeys(), ['code:a', 'code:b', 'code:c']);
+    // SB-17 (3.6556.2 xG `p`): inside Pinned the test is the Pinned rows -- visible ones while open (BA("pinned")), every
+    // pinned row while folded (VA) -- and the reason never offers "Expand a section…" (`v`: `r === null && …`).
+    const pinned = new Map([['code:a', { isPinned: true }], ['code:b', { isPinned: true }], ['code:c', {}]]);
+    const buckets = new Map([['pinned', ['code:a', 'code:b']], ['sessions', ['code:c']]]);
+    assert.deepEqual(reason({ rows: pinned, buckets, visible: ['code:a', 'code:b', 'code:c'] }, [1], 'open'), [false, 'You need at least 2 sessions that can be selected.']);
+    assert.deepEqual(reason({ rows: pinned, buckets, visible: ['code:a', 'code:c'] }, [1], 'open'), [true, 'You need at least 2 sessions that can be selected.']);
+    assert.deepEqual(reason({ rows: pinned, buckets, visible: ['code:c'] }, [1], 'folded'), [false, 'You need at least 2 sessions that can be selected.']);
   } finally { resetRegistry(); }
 });
 
@@ -212,8 +228,9 @@ test('blank-area host (_B): the list is the ContextMenu trigger, its list contex
     const body = popup.props.children;
     assert.equal(body.type, M.blank.SidebarBlankAreaMenu);
     assert.equal(body.props.showCreateGroup, true);
+    assert.equal(body.props.inPinned, null, 'not inside Pinned until a right-click lands there');
     body.props.onSelectAll();
-    assert.deepEqual(selected, [['code:b', 'code:a']], 'Nu.setSelection(wu()): the visible rows in list order, through the host selection');
+    assert.deepEqual(selected, [['code:b', 'code:a']], 'Fu.setSelection(ed()): the visible rows in list order, through the host selection');
     // vB: _B registers its dialog as the "New section…" opener (a section view menu's sU → dB).
     assert.equal(typeof M.filter.newSectionOpener.getState().open, 'function');
     assert.equal(modal.type, M.dialog.CreateGroupDialog);
@@ -221,10 +238,16 @@ test('blank-area host (_B): the list is the ContextMenu trigger, its list contex
     M.filter.openNewSection();
     f.render();
     assert.equal(f.tree.props.children[1].props.isOpen, true, 'dB opened _B\'s new-section dialog');
-    // The menu's open state holds the frame store's overflow flag (onOpenChange with Base UI's event details).
-    root.props.onOpenChange(true, { event: {} });
-    assert.equal(M.adapters.useSidebarSectionsStore.getState().overflowMenuOpen, true);
-    root.props.onOpenChange(false, { event: undefined });
+    // The menu's open state holds the frame store's overflow flag (onOpenChange with Base UI's event details). 3.6556.2
+    // shared-19 Hj (menu-press.mjs): a press that did not land inside the trigger is cancelled first (`t.cancel()`).
+    let cancelled = 0;
+    const details = (event) => ({ event, cancel() { cancelled++; } });
+    root.props.onOpenChange(true, details({}));
+    assert.deepEqual([cancelled, M.adapters.useSidebarSectionsStore.getState().overflowMenuOpen], [1, false], 'no trigger element yet: the press is foreign');
+    trigger.props.ref.current = { contains: () => true };
+    root.props.onOpenChange(true, details({}));
+    assert.deepEqual([cancelled, M.adapters.useSidebarSectionsStore.getState().overflowMenuOpen], [1, true]);
+    root.props.onOpenChange(false, details(undefined));
     assert.equal(M.adapters.useSidebarSectionsStore.getState().overflowMenuOpen, false);
     f.close();
     assert.equal(M.filter.newSectionOpener.getState().open, null, 'unregistered on unmount');
@@ -234,29 +257,29 @@ test('blank-area host (_B): the list is the ContextMenu trigger, its list contex
 });
 
 // ---------------------------------------------------------------- R4g-sidebar SB3 (X7-06): the CDS ContextMenu
-// shared-20 yx (`Ii as Vs`), shared-19 g$ (`Ii as Rf`) and shared-21 _B (`Ii as uf`) open shared-frame iD (view-tabs
-// CdsContextMenu); the rows inside are shared-16 au / cu / lu over `K` = shared-frame EC (`qa as K`), the CDS Dropdown.
-test('ContextMenu: shared-frame iD is view-tabs CdsContextMenu; the rows are shared-16 K = CDS Dropdown parts, SourceMenu only in a host SourceMenu body', async () => {
+// 3.6556.2: shared-20 Px (`qi as ee`), shared-46 (`qi as ne`) and shared-21 _G (`qi as pe`) open shared-frame kA (view-tabs
+// CdsContextMenu, exported `qi`); the rows inside are shared-16 jl / Il / Ll over `O` = shared-frame GT (`Jo as O`), the CDS
+// Dropdown.
+test('ContextMenu: shared-frame kA is view-tabs CdsContextMenu; the rows are shared-16 O = CDS Dropdown parts, SourceMenu only in a host SourceMenu body', async () => {
   const count = (text, needle) => text.split(needle).length - 1;
   const chunk = async (prefix) => read(path.join(reference, (await fs.readdir(reference)).find((name) => name.startsWith(prefix) && name.endsWith('.js'))));
-  const [frame, s16, s19, s20, s21] = await Promise.all(['shared-frame-BfjMqbuN', 'shared-16-', 'shared-19-', 'shared-20-', 'shared-21-'].map(chunk));
+  const [frame, s16, s20, s21, s46] = await Promise.all(['shared-frame-6jtSkIit', 'shared-16-', 'shared-20-', 'shared-21-', 'shared-46-'].map(chunk));
   for (const [text, needle, times] of [
-    [frame, 'iD={Root:tD,Trigger:E,Popup:eD,Item:EC.Item,Separator:EC.Separator,Group:EC.Group', 1], [frame, 'iD as Ii', 1], [frame, 'EC as qa', 1],
-    [frame, 'QE=q((e,t)=>H(Wx,{ref:t,"data-cds":"ContextMenu",...e}))', 1],
-    [s16, 'qa as K,', 1], [s16, 'function au(e){return s(iu,{children:s(K.Item,{...e})})}', 1], [s16, 'l=(t||i>0)&&s(K.Separator,{})', 1],
-    [s16, 'r&&s(K.Separator,{}),s(K.Group,{role:n?"group":"presentation",children:i})', 1],
-    [s20, ',Ii as Vs,', 1], [s20, 'Vs.Root,', 2], [s19, ',Ii as Rf,', 1], [s19, 'Rf.Root,', 5], [s21, ',Ii as uf,', 1], [s21, 'uf.Root,', 4],
+    [frame, 'kA={Root:EA,Trigger:K,Popup:TA,Item:GT.Item,Separator:GT.Separator,Group:GT.Group,', 1], [frame, 'kA as qi', 1], [frame, 'GT as Jo', 1],
+    [frame, '"data-cds":"ContextMenu"', 2],
+    [s16, ',Jo as O,', 1], [s16, 'function jl(e){let $=J9(2);return J1($,0,e)?K1($,0,e,a(Al,{children:a(O.Item,{...e})})):$[1]}', 1],
+    [s20, ',qi as ee,', 1], [s20, 'ee.Root,', 2], [s46, ',qi as ne,', 1], [s46, 'ne.Root,', 1], [s21, ',qi as pe,', 1], [s21, 'pe.Root,', 3],
   ]) assert.equal(count(text, needle), times, needle);
   // The context menu name every section menu imports is CdsContextMenu itself; its rows are the CDS Dropdown's.
   const { CdsContextMenu, CdsDropdown } = M.viewTabs;
   assert.equal(M.adapters.SidebarContextMenu, CdsContextMenu);
   for (const part of ['Item', 'Separator', 'Group']) assert.equal(CdsContextMenu[part], CdsDropdown[part], part);
-  // code-current sidebar-menu-groups.mjs (D19: `--only sidebar-menu-groups.mjs`): K is the host kit, nothing else changed.
+  // code-current sidebar-menu-groups.mjs (D19: `--only sidebar-menu-groups.mjs`, 3.6556.2): O is the host kit, nothing else changed.
   const generated = await read(path.join(app, 'src/generated/code-current/sidebar-menu-groups.mjs'));
-  assert.equal(count(generated, 'import { SidebarMenuKit as K } from "../../source-sidebar-menu-kit.jsx";'), 1);
+  assert.equal(count(generated, 'import { SidebarMenuKit as O } from "../../source-sidebar-menu-kit.jsx";'), 1);
   assert.equal(count(generated, 'source-menu.jsx'), 0);
   const entry = JSON.parse(await read(path.join(app, 'src/generated/code-current/manifest.json'))).modules.find((m) => m.target === 'sidebar-menu-groups.mjs');
-  assert.deepEqual([entry.referenceVersion, path.basename(entry.source), entry.bindings], ['2.42304.0', 'shared-16-B0xHzPjj.js', ['ru', 'iu', 'au', 'cu', 'lu', 'uu']]);
+  assert.deepEqual([entry.referenceVersion, path.basename(entry.source), entry.bindings], ['3.6556.2', 'shared-16-ByfgAyLr.js', ['kl', 'Al', 'jl', 'Il', 'Ll', 'Rl']]);
   assert.equal(entry.sha256, createHash('sha256').update(generated).digest('hex'));
   // The kit: EC's parts by default (the section menus' CDS ContextMenu), SourceMenu's inside SourceMenuRows.
   const provider = fixture(M.kit.SourceMenuRows, { children: 'rows' }).tree;
@@ -457,14 +480,17 @@ test('controlled right-click: the list opens _B\'s CDS ContextMenu, a section he
 });
 
 // ---------------------------------------------------------------- folder buckets (sT → bC "worked-out")
-test('folderBucketMenu: order slots for folders other than Other, move saves the moved order, Sort A to Z only with a stored folder order', () => {
+test('folderBucketMenu: order slots for folders other than Other, move saves the moved order, Sort A to Z clears the whole stored order', () => {
   const saved = [];
   const options = (projectOrder) => ({ order: ['/a', '/b', '/c'], projectOrder, newSession: () => {}, save: (ids) => saved.push(ids) });
   const folder = (projectKey) => ({ kind: 'project', key: `project:${projectKey}`, projectKey });
   assert.equal(Layout.folderBucketMenu({ kind: 'date', key: 'today' }, options([])), null, 'date / status buckets: no groupMenuKind');
   assert.equal(Layout.folderBucketMenu(folder('/a'), { order: ['/a'] }), null, 'no way to store an order: the host has no menu for it');
   const b = Layout.folderBucketMenu(folder('/b'), options([customOrderKey('g1')]));
-  assert.deepEqual([b.order.index, b.order.count, b.order.reset], [1, 3, undefined], 'only the legacy ccg:: order is stored: no Sort A to Z');
+  // w12b-preset-reset-order: shared-22 OE `Se = K.length === 0 ? void 0 : …` with K = Zj(code-projects-order): a stored
+  // ccg:: key counts as a stored order too.
+  assert.deepEqual([b.order.index, b.order.count, typeof b.order.reset], [1, 3, 'function'], 'a stored ccg:: key is a stored order: Sort A to Z');
+  assert.equal(Layout.folderBucketMenu(folder('/b'), options([])).order.reset, undefined, 'nothing stored: no Sort A to Z');
   b.order.move(1, 0);
   assert.deepEqual(saved.at(-1), [customOrderKey('g1'), '/b', '/a', '/c']);
   b.order.move(0, 0); b.order.move(1, 3);
@@ -472,17 +498,43 @@ test('folderBucketMenu: order slots for folders other than Other, move saves the
   const stored = Layout.folderBucketMenu(folder('/c'), options([customOrderKey('g1'), '/c', '/a', '/gone']));
   assert.equal(typeof stored.order.reset, 'function');
   stored.order.reset();
-  assert.deepEqual(saved.at(-1), [customOrderKey('g1')], 'H([]) for the folder order; the legacy ccg:: keys stay (D10)');
+  assert.deepEqual(saved.at(-1), [], 'OE Se: G([]) clears the whole code-projects-order, ccg:: keys included');
   const other = Layout.folderBucketMenu(folder(OTHER_PROJECT_KEY), options(['/a']));
   assert.equal(other.order, null, 'Other has no order slot (nT X skips project-__no_project__)');
 });
 
-test('folder buckets render the original yx as a worked-out group inside x$; Other is greyed with place-unknown', () => {
+// w11-gate-sidebar: the session list layout groups through 3.6556.2 shared-22 OE with F = bE (w10-shell-sidebar-folder),
+// so a row without a repo lands in the {unsaved: {kind: "local"}} place bucket "This computer" (YE → XE → shared-46 VL),
+// not in Other. That bucket has no order slot: OE's index skips it (`if(s.key===o||s.key===zE||s.unsaved!==void 0)continue`),
+// so IE gets no sectionIndex and returns the bare heading (`if(C===void 0)return Me`), no x$ (gi) around it.
+test('3.6556.2 original: the place bucket is IE\'s "place" kind, outside the order, with New session from the local place', async () => {
+  const shared22 = await read(path.join(reference, 'shared-22-Bwn3sJTG.js'));
+  const shared21 = await read(path.join(reference, 'shared-21-R7LldJ05.js'));
+  const shared46 = await read(path.join(reference, 'shared-46-BIbZBGFq.js'));
+  for (const [text, needle] of [
+    [shared22, 'if(s.key===o||s.key===zE||s.unsaved!==void 0)continue'],
+    [shared22, 'if(C===void 0)return Me'],
+    [shared22, 'W=O===zE?"no_folder":oe?"other":N?"preset":t.unsaved?"place":"folder"'],
+    // A local place has no prefill (ZE only answers remote / ssh) and is not Other (oe), so Z (New session) is set;
+    // only an unknown or remote place without a prefill drops it.
+    [shared22, 'function ZE(e,{defaultCloudEnvironmentId:t,sshConfigIdBySshHost:n,sshDefaultFolderByConfigId:r}){if(e.kind==="remote")'],
+    [shared22, 'if((G||se&&se!=="local")&&!U){Z=void 0;break bb1}if(U||!oe){'],
+    // GC draws the "+" (shared-21 H7) whenever onNewSession is set: "New session in {group}" with no target.
+    [shared22, 'x?o(Ah,{groupLabel:n,onNewSession:x,target:w,kind:X?"group":Y}):null'],
+    [shared21, 'newSessionIn:{defaultMessage:"New session in {group}",id:"2F3XOf5s1W"}'],
+    [shared46, 'function VL(e){return e.formatMessage({defaultMessage:"This computer",id:"Red8UM0oCv"})}'],
+  ]) assert.ok(text.includes(needle), needle);
+});
+
+test('folder buckets render the original yx as a worked-out group inside x$; the This computer place bucket has no x$', () => {
   const sessions = [thread('a1'), thread('a2'), thread('b1', { cwd: '/w/beta' }), thread('o1', { cwd: '' })];
   const sections = Layout.sidebarSectionsList({ sidebarSections: [{ id: 'pinned', kind: 'pinned', order: 0 }, { id: 'sessions', kind: 'sessions', order: 1, groupBy: 'environment' }] });
   const model = Layout.buildSidebarSections({ sections, sessions, preferences: {}, knownFolders: [] });
   const keys = model.layout.at(-1).buckets.map((bucket) => bucket.key);
-  assert.deepEqual(keys, ['project:/w/alpha', 'project:/w/beta', `project:${OTHER_PROJECT_KEY}`]);
+  // No Other bucket in the session list layout: the cwd-less row is in the local place bucket (savedEnvironmentGroups).
+  assert.deepEqual(keys, ['project:/w/alpha', 'project:/w/beta', 'project:kind::local']);
+  assert.deepEqual(model.layout.at(-1).buckets.at(-1).unsaved, { kind: 'local' });
+  assert.equal(model.layout.at(-1).buckets.at(-1).label, 'This computer');
   const saved = [];
   const host = { renderRows: () => null, shiftStyle: () => undefined, toggle() {}, folded: new Set(['project:/w/beta']), dropTargets: true, headerControls: null, trailing: () => null,
     folderMenu: (group) => Layout.folderBucketMenu(group, { order: ['/w/alpha', '/w/beta'], projectOrder: ['/w/beta'], newSession: group.cwd ? () => saved.push(['new', group.cwd]) : undefined, save: (ids) => saved.push(ids) }) };
@@ -496,7 +548,8 @@ test('folder buckets render the original yx as a worked-out group inside x$; Oth
   const [alpha, beta, other] = buckets.map((n) => fixture(n.type, n.props).tree);
   // alpha / beta: x$ (sT pn) with the order slot, Sort A to Z (a folder order is stored), no keyboard reorder.
   assert.equal(alpha.type, M.sortable.SectionSortable);
-  assert.deepEqual([alpha.props.bucketKey, alpha.props.sectionIndex, alpha.props.sectionCount, alpha.props.resetsToRecent, alpha.props.keyboardReorder],
+  // 3.6556.2 shared-46 gM (SB-07): no resetsToRecent any more (oM only offers Sort A to Z).
+  assert.deepEqual([alpha.props.bucketKey, alpha.props.sectionIndex, alpha.props.sectionCount, 'resetsToRecent' in alpha.props, alpha.props.keyboardReorder],
     ['project:/w/alpha', 0, 2, false, undefined]);
   assert.equal(typeof alpha.props.onResetOrder, 'function');
   const menu = alpha.props.children;
@@ -516,10 +569,73 @@ test('folder buckets render the original yx as a worked-out group inside x$; Oth
   assert.deepEqual([gate.props.menu, gate.props.bulkBucketKey, gate.props.groupName], [false, 'project:/w/alpha', 'alpha']);
   // beta is folded: onExpand is its toggle (aZ expands before it selects).
   assert.equal(typeof beta.props.children.props.onExpand, 'function');
-  // Other: no x$, New session greyed with place-unknown.
+  // This computer: outside the order, so no x$ (gi) around its yx.
   assert.equal(other.type, M.menu.SidebarGroupMenu);
-  assert.equal(other.props.onNewSession, undefined);
-  assert.equal(other.props.greyed.newSession.defaultMessage, 'Where these sessions run isn’t known, so there’s nowhere to start a new one.');
+  assert.equal(other.props.groupName, 'This computer');
+});
+
+// Official IE: the local place bucket's Z is set (`if(U||!oe)`, prefill undefined, de = null), so its yx New session is
+// enabled (no place-unknown reason) and GC draws the "+". w11-sweep-shell-a wired it in source-sidebar.jsx
+// (sessionsPlaceNewSession in folderMenu / groupActions): the sidebar New session, nothing prefilled.
+test('the This computer place bucket offers New session (IE Z with no prefill), not the place-unknown grey', () => {
+  const actions = [];
+  const props = { sessions: [thread('one'), thread('o1', { cwd: '' })], knownFolders: ['/w/alpha'], sidebarPreferences: {},
+    sidebarSections: [{ id: 'pinned', kind: 'pinned', order: 0 }, { id: 'sessions', kind: 'sessions', order: 1, groupBy: 'environment' }],
+    onSessionAction() {}, onProject: (cwd) => actions.push(['project', cwd]), onGroupAction() {}, onNew: () => actions.push('new') };
+  const f = fixture(M.sidebar.SourceSidebar, props);
+  const { host, model } = nodes(f.tree, (n) => n.type === M.sections.SidebarSectionsList)[0].props;
+  const place = model.layout.at(-1).buckets.at(-1);
+  assert.equal(place.key, 'project:kind::local');
+  const menu = host.folderMenu(place);
+  assert.equal(typeof menu?.onNewSession, 'function', 'IE Z: New session in the local place');
+  menu.onNewSession();
+  assert.deepEqual(actions, ['new'], 'v(undefined, undefined, null): a new session with nothing prefilled');
+});
+
+// W12 sidebar: the This computer "+" and menu, end to end against 3.6556.2 IE / GC.
+//   - GC's "+" is the same Q (= Z) as the menu's New session, no target (`Te=…j?aT(U,d):void 0`), so no tooltip.
+//   - No Save as environment: `pe=…n&&t.folder?gE(U,d,f):void 0` needs a folder; `Oe=pe?Y:void 0`.
+//   - No leading place icon in the session list: `he=!i||K!=="local"` with K = HE.local ("local").
+//   - The rows carry IE's `o(FE,{mark:"plainHeading",children:je})` (sidebar-filter-current-model.mjs plainHeading).
+test('3.6556.2 original: This computer "+" = the menu New session, no target, no Save as environment, plainHeading rows', async () => {
+  const shared22 = await read(path.join(reference, 'shared-22-Bwn3sJTG.js'));
+  const shared21 = await read(path.join(reference, 'shared-21-R7LldJ05.js'));
+  for (const [text, needle] of [
+    [shared22, 'Te=J3($,118,j,U,d)?K3($,118,j,U,d,j?aT(U,d):void 0)'],
+    [shared22, 'pe=J5($,81,t.folder,n,U,d,f)?I5($,81,n&&t.folder?gE(U,d,f):void 0'],
+    [shared22, 'Oe=pe?Y:void 0'],
+    [shared22, 'he=!i||K!=="local"'],
+    [shared22, 'HE={local:"local",remote:"cloud",ssh:"ssh",bridge:"bridge",slack:void 0}'],
+    [shared22, 't.unsaved===void 0?G?o(FE,{mark:"mixedPlaces",children:je}):je:o(FE,{mark:"plainHeading",children:je})'],
+    [shared21, 'e=r.plainHeading===!0&&!r.metadata&&!i'],
+  ]) assert.ok(text.includes(needle), needle);
+});
+
+test('the This computer "+" starts the sidebar New session (no tooltip); its menu has no Save as environment', () => {
+  const actions = [];
+  const props = { sessions: [thread('one'), thread('o1', { cwd: '' })], knownFolders: ['/w/alpha'], sidebarPreferences: {},
+    sidebarSections: [{ id: 'pinned', kind: 'pinned', order: 0 }, { id: 'sessions', kind: 'sessions', order: 1, groupBy: 'environment' }],
+    onSessionAction() {}, onProject: (cwd) => actions.push(['project', cwd]), onGroupAction() {}, onNew: () => actions.push('new'),
+    onSaveAsEnvironment: (target) => actions.push(['save', target]) };
+  const f = fixture(M.sidebar.SourceSidebar, props);
+  const { host, model } = nodes(f.tree, (n) => n.type === M.sections.SidebarSectionsList)[0].props;
+  const place = model.layout.at(-1).buckets.at(-1);
+  assert.equal(place.key, 'project:kind::local');
+  assert.equal(place.plainHeading, true, 'IE FE mark "plainHeading" on the place bucket');
+  const plus = nodes(host.trailing(place, { first: false }), (n) => n.props?.label === 'New session in This computer');
+  assert.equal(plus.length, 1, 'GC: one "+" for the place bucket');
+  assert.equal(plus[0].props.tooltip, false, 'no target, so no tooltip');
+  assert.equal(plus[0].props.icon, 'Add');
+  plus[0].props.onClick();
+  assert.deepEqual(actions, ['new'], 'the "+" is the same Z as the menu: v(undefined, undefined, null)');
+  const menu = host.folderMenu(place);
+  assert.equal(menu.onSaveAsEnvironment, undefined, 'IE Oe: a place bucket has no folder, so no Save as environment');
+  assert.equal(menu.order, null, 'outside the order (`s.unsaved!==void 0)continue`)');
+  // A folder bucket keeps its own "+" (onProject with its folder), not the place one.
+  const alpha = model.layout.at(-1).buckets.find((bucket) => bucket.cwd === '/w/alpha');
+  assert.ok(alpha && alpha.plainHeading === undefined, 'folder buckets are not plainHeading');
+  nodes(host.trailing(alpha, { first: false }), (n) => n.props?.label === 'New session in alpha')[0].props.onClick();
+  assert.deepEqual(actions, ['new', ['project', '/w/alpha']]);
 });
 
 test('worked-out yx items: New session, Move up / Move down / Sort A to Z from x$, Select all, view, Archive all; no Rename / Delete / New section', () => {
@@ -534,7 +650,7 @@ test('worked-out yx items: New session, Move up / Move down / Sort A to Z from x
   assert.deepEqual(byType(groups.remove, M.items.SidebarMenuItem).map(message), [], 'no Delete');
   assert.equal(byType(groups.remove, M.archive.SidebarGroupArchiveAll)[0].props.groupName, 'alpha');
   // m$ inside x$: Move up / Move down where the bucket can move, Sort A to Z with a stored order.
-  const sortable = fixture(M.sortable.SectionSortable, { bucketKey: 'project:/w/alpha', sectionIndex: 0, sectionCount: 2, onMoveSection() {}, onResetOrder() {}, resetsToRecent: false, children: 'x' });
+  const sortable = fixture(M.sortable.SectionSortable, { bucketKey: 'project:/w/alpha', sectionIndex: 0, sectionCount: 2, onMoveSection() {}, onResetOrder() {}, children: 'x' });
   const ctx = sortable.tree.props.children.props.value;
   const actions = fixture(M.reorder.SectionReorderItems, { fixedReason: undefined }, new Map([[M.reorder.SectionReorderContext, ctx]])).tree;
   assert.equal(actions.type, M.reorder.SectionReorderActions);
@@ -609,7 +725,7 @@ test('SourceSidebar: the Code list is _B\'s trigger, folder buckets get the work
     menu.onNewSession();
     menu.order.move(1, 0);
     menu.order.reset();
-    assert.deepEqual(actions.slice(-3), [['project', '/w/alpha'], ['project-order', null, { ids: [customOrderKey('g'), '/w/alpha', '/w/beta'] }], ['project-order', null, { ids: [customOrderKey('g')] }]]);
+    assert.deepEqual(actions.slice(-3), [['project', '/w/alpha'], ['project-order', null, { ids: [customOrderKey('g'), '/w/alpha', '/w/beta'] }], ['project-order', null, { ids: [] }]]);
     assert.equal(sectionsHost.folderMenu({ key: 'today', kind: 'date' }), null);
     f.close();
     // Chat keeps the host's own blank-area menu (2.42304.0 mounts _B for the Code list only: `enabled: t === "code"`).
@@ -623,7 +739,7 @@ test('SourceSidebar: the Code list is _B\'s trigger, folder buckets get the work
 });
 
 // ---------------------------------------------------------------- multi-selection menu (sidebar-06)
-test('multi menu (ce4f4374c Be): flat items, a separator before Move {count} to, section copy, Unarchive only when every row is archived', async () => {
+test('multi menu (ce4f4374c Be): flat items, a separator before Move {count} to section, section copy, Unarchive only when every row is archived', async () => {
   const copy = (await server.ssrLoadModule('/src/generated/sidebar-sections/group-copy.mjs')).sectionMessages;
   const sessions = [thread('a'), thread('b')];
   const menu = (selected, extra = {}) => renderToStaticMarkup(React.createElement(M.sidebar.SourceSidebarSessionMenu, { session: selected[0], onAction() {}, onClose() {}, onRename() {},
@@ -631,10 +747,215 @@ test('multi menu (ce4f4374c Be): flat items, a separator before Move {count} to,
   const html = menu(sessions, { pin: { count: 2, sessions } });
   assert.doesNotMatch(html, /role="group"/, 'no Menu.Group around the items');
   const sections = html.split('<div role="separator" class="smenu-separator"></div>').map((part) => [...part.matchAll(/data-label="([^"]+)"/g)].map((m) => m[1]));
-  assert.deepEqual(sections, [['Pin 2', 'Mark 2 as unread'], ['Move 2 to'], ['Archive 2', 'Delete 2']]);
+  // 3.6556.2 shared-18 uk.moveCountTo "Move {count} to section" (XLeLUZGrpn; CI-01).
+  assert.deepEqual(sections, [['Pin 2', 'Mark 2 as unread'], ['Move 2 to section'], ['Archive 2', 'Delete 2']]);
   const archived = menu([thread('a', { archived: true }), thread('b', { archived: true })]);
   assert.match(archived, /data-label="Unarchive 2"/);
   assert.match(menu([thread('a', { archived: true }), thread('b')]), /data-label="Archive 2"/, 'one live row: Archive (onUnarchive needs every row archived)');
+});
+
+// ---------------------------------------------------------------- w4-sidebar-menus (3.6556.2)
+const sectionsWith = (groupBy) => Layout.buildSidebarSections({
+  sections: Layout.sidebarSectionsList({ customGroups: [{ id: 'g1', name: 'Research' }], sidebarSections: [{ id: 'pinned', kind: 'pinned', order: 0 },
+    { id: 'g1', kind: 'manual', order: 1, name: 'Research', groupBy, members: ['code:a1', 'code:a2'], v: 2 },
+    { id: 'sessions', kind: 'sessions', order: 2, groupBy }] }),
+  sessions: [thread('a1'), thread('a2'), thread('s1'), thread('s2', { cwd: '/w/beta' })], customGroups: [{ id: 'g1', name: 'Research' }],
+  metadata: { a1: { customGroupId: 'g1' }, a2: { customGroupId: 'g1' } }, preferences: {}, knownFolders: [] });
+const plainHost = (extra = {}) => ({ renderRows: () => null, shiftStyle: () => undefined, toggle() {}, folded: new Set(), dropTargets: false, headerControls: null,
+  trailing: () => null, ...extra });
+
+test('SB-04 / SB-05: date and status buckets are shared-22 GC "day-or-status" menus; a section\'s sub-buckets carry data-nested-group and its New session', () => {
+  const calls = [];
+  const listValue = { getList: () => null, onNewSession: () => calls.push('list-new') };
+  const contexts = new Map([[M.view.SidebarListContext, listValue]]);
+  for (const groupBy of ['date', 'status']) {
+    const model = sectionsWith(groupBy);
+    const host = plainHost({ newSessionInSection: (entry) => calls.push(['section', entry.key]) });
+    const list = fixture(M.sections.SidebarSectionsList, { model, host }, contexts).tree;
+    // Sessions: every date / status bucket (truncateAt set) is Px's trigger with groupEditsHidden, the list's New session
+    // (de?.onNewSession), its own bulk key, NO("day-or-status") = {} and no data-nested-group.
+    const sessionsNode = nodes(list, (n) => n.props?.entry?.kind === 'sessions' && n.props?.host)[0];
+    const buckets = nodes(fixture(sessionsNode.type, sessionsNode.props, contexts).tree, (n) => n.props?.bucket && n.props?.host);
+    assert.ok(buckets.length > 0, groupBy);
+    for (const node of buckets) {
+      assert.equal(M.sections.bucketMenuKind(node.props.bucket), 'day-or-status', node.props.bucket.key);
+      const menu = fixture(node.type, node.props, contexts).tree;
+      assert.equal(menu.type, M.menu.SidebarGroupMenu, node.props.bucket.key);
+      assert.deepEqual([menu.props.groupId, menu.props.groupEditsHidden, menu.props.onNewSession, menu.props.bulkBucketKey, menu.props.greyed, menu.props.onCreateGroup],
+        [undefined, true, listValue.onNewSession, node.props.bucket.key, {}, undefined]);
+      assert.equal(menu.props.section.props['data-group-key'], node.props.bucket.key);
+      assert.equal(menu.props.section.props['data-nested-group'], undefined);
+      const gate = byType(menu.props.children({}), M.reorder.SectionReorderGate)[0];
+      assert.deepEqual([gate.props.menu, gate.props.bulkBucketKey, gate.props.onNewSession], [false, node.props.bucket.key, undefined], 'f$ with `menu: !le`');
+    }
+    // A manual section grouped by date / status: rA hands its sub-buckets the list context with the section's name and
+    // New session; each sub-bucket (drawsOpenRows) is a day-or-status menu with data-nested-group.
+    const manualNode = nodes(list, (n) => n.props?.entry?.kind === 'manual')[0];
+    const sortable = fixture(manualNode.type, manualNode.props, contexts).tree;
+    const body = sortable.props.children.props.children({});
+    const provider = nodes(body, (n) => n.type === M.view.SidebarListContext.Provider || n.type === M.view.SidebarListContext)[0];
+    assert.equal(provider.props.value.sectionName, 'Research');
+    assert.equal(provider.props.value.getList, listValue.getList);
+    provider.props.value.onNewSession();
+    assert.deepEqual(calls.at(-1), ['section', manualNode.props.entry.key]);
+    const inner = new Map([[M.view.SidebarListContext, provider.props.value]]);
+    const subs = nodes(provider, (n) => n.props?.bucket && n.props?.host);
+    assert.ok(subs.length > 0);
+    for (const node of subs) {
+      assert.equal(node.props.bucket.drawsOpenRows, true);
+      const menu = fixture(node.type, node.props, inner).tree;
+      assert.equal(menu.type, M.menu.SidebarGroupMenu);
+      assert.equal(menu.props.onNewSession, provider.props.value.onNewSession, 'ue ? de?.onNewSession');
+      assert.equal(menu.props.section.props['data-nested-group'], '', 'GC ft = H ? "" : void 0');
+    }
+  }
+  // Pinned (qk) and the flat list keep no header menu.
+  assert.equal(M.sections.bucketMenuKind({ kind: 'pinned', key: 'pinned', truncateAt: 5 }), undefined);
+  assert.equal(M.sections.bucketMenuKind({ kind: 'none', key: 'sessions', truncateAt: 20 }), undefined);
+  assert.equal(M.sections.bucketMenuKind({ kind: 'project', key: 'project:/w', truncateAt: 5 }), undefined);
+  // The 3.6556.2 stylesheet the data-nested-group attribute is for.
+  return read(path.join(app, 'public/assets/v1/shared-styles-D_GJawPO.css')).then((css) => assert.ok(css.includes('.df-session-list [data-nested-group]'), 'nested-group CSS'));
+});
+
+test('SB-05: a day-or-status menu has New session, Select all, the view rows and Archive all; no Rename / Delete / reorder', () => {
+  const props = { groupName: 'Today', groupEditsHidden: true, onNewSession() {}, bulkBucketKey: 'day-0', section: React.createElement('div'),
+    greyed: M.reasons.groupDisabledReasons('day-or-status', true), children: () => null };
+  assert.deepEqual(props.greyed, {}, 'shared-46 NO case "day-or-status": return {}');
+  const groups = nodes(fixture(M.menu.SidebarGroupMenu, props).tree, (n) => n.props?.groups)[0].props.groups;
+  assert.deepEqual(byType(groups.new, M.items.SidebarMenuItem).map(message), ['New session']);
+  assert.deepEqual(byType(groups.edit, M.items.SidebarMenuItem).map(message), []);
+  assert.equal(byType(groups.organize, M.organize.SidebarGroupSelectAll)[0].props.bucketKey, 'day-0');
+  assert.deepEqual(byType(groups.remove, M.items.SidebarMenuItem).map(message), []);
+  assert.equal(byType(groups.remove, M.archive.SidebarGroupArchiveAll)[0].props.groupName, 'Today');
+});
+
+test('SB-08 / SB-09 / CI-04: Archive all stays, disabled with a reason, names "{section}: {heading}" in a section; Collapse all / Expand all both stay', async () => {
+  const requests = [];
+  const disconnect = M.adapters.connectSidebarBulkArchive((request) => requests.push(request));
+  try {
+    const list = { getList: () => null, onNewSession() {} };
+    // Nothing in the bucket: MO.archiveAllEmpty, disabled (only inside a list context).
+    M.adapters.setSidebarRowRegistry({ buckets: new Map([['day-0', []]]), rows: new Map(), visible: [] });
+    const empty = fixture(M.archive.SidebarGroupArchiveAll, { bucketKey: 'day-0', groupName: 'Today' }, new Map([[M.view.SidebarListContext, list]])).tree;
+    assert.deepEqual([message(empty), empty.props.disabled, empty.props.disabledReason.props.defaultMessage], ['Archive all', true, 'Nothing to archive right now.']);
+    assert.equal(fixture(M.archive.SidebarGroupArchiveAll, { bucketKey: 'day-0', groupName: 'Today' }).tree, null, 'outside a list: nothing');
+    // Only pinned rows: MO.archiveAllNone.
+    M.adapters.setSidebarRowRegistry({ buckets: new Map([['day-0', ['code:a']]]), rows: new Map([['code:a', { ref: { kind: 'code', id: 'a' }, isPinned: true }]]), visible: ['code:a'] });
+    const none = fixture(M.archive.SidebarGroupArchiveAll, { bucketKey: 'day-0', groupName: 'Today' }, new Map([[M.view.SidebarListContext, list]])).tree;
+    assert.match(none.props.disabledReason.props.defaultMessage, /^Every item here is pinned, open in a pane or window/);
+    // Archivable rows inside a manual section's sub-bucket: the confirm's group name is "{section}: {heading}".
+    M.adapters.setSidebarRowRegistry({ buckets: new Map([['day-0', ['code:a', 'code:b']]]), rows: new Map([['code:a', { ref: { kind: 'code', id: 'a' } }], ['code:b', { ref: { kind: 'code', id: 'b' } }]]), visible: ['code:a', 'code:b'] });
+    const inSection = fixture(M.archive.SidebarGroupArchiveAll, { bucketKey: 'day-0', groupName: 'Today' }, new Map([[M.view.SidebarListContext, { ...list, sectionName: 'Research' }]])).tree;
+    assert.equal(inSection.props.children.props.defaultMessage, 'Archive all ({count})');
+    inSection.props.onClick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual([requests.at(-1).action, requests.at(-1).keys, requests.at(-1).options.confirmArchive.groupName], ['archive', ['code:a', 'code:b'], 'Research: Today']);
+    const plain = fixture(M.archive.SidebarGroupArchiveAll, { bucketKey: 'day-0', groupName: 'Today' }, new Map([[M.view.SidebarListContext, list]])).tree;
+    plain.props.onClick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(requests.at(-1).options.confirmArchive.groupName, 'Today');
+  } finally { disconnect(); resetRegistry(); }
+  // shared-46 vk: both rows, the one that cannot run disabled with MO's reason.
+  const toggles = (expanded, collapsed) => ({ ownerDocument: { activeElement: null }, contains: () => false,
+    querySelectorAll: (selector) => Array.from({ length: /aria-expanded="true"/.test(selector) ? expanded : collapsed }, () => ({ closest: () => null })) });
+  const view = (element) => fixture(M.view.SidebarGroupViewItems, {}, new Map([[M.view.SidebarListContext, { getList: () => element }]])).tree;
+  const rows = (tree) => tree.props.children.map((item) => [message(item), item.props.disabled, item.props.disabledReason?.props.defaultMessage]);
+  assert.deepEqual(rows(view(toggles(2, 0))), [['Collapse all', false, undefined], ['Expand all', true, 'Everything is already expanded.']]);
+  assert.deepEqual(rows(view(toggles(0, 2))), [['Collapse all', true, 'Everything shown is already collapsed.'], ['Expand all', false, undefined]]);
+  assert.equal(view(toggles(0, 0)), null);
+});
+
+test('CI-04: the Archive all confirmation is shared-46 rO: will be archived, then the still-working sentence, then the unloaded note', () => {
+  const intl = { formatMessage: (descriptor, values = {}) => `${descriptor.id}${Object.keys(values).length ? JSON.stringify(values) : ''}` };
+  const copy = (options) => M.sections.bulkArchiveConfirmCopy(intl, options);
+  assert.deepEqual(copy({ count: 3 }), { title: '+/2B+4uTbv', body: 'Tvqpf+Gcvz{"count":3}', confirmLabel: 'VCQX6dLcRo', danger: false });
+  assert.equal(copy({ groupName: 'Research: Today', count: 3, workingCount: 2, unloadedRemain: true }).body, 'Tvqpf+Gcvz{"count":3} RyGx3mfxyn{"workingCount":2} Ww9HXVZlyY');
+  assert.equal(copy({ groupName: 'Research: Today', count: 1 }).title, 'cTz9s1QgTQ{"groupName":"Research: Today"}');
+  assert.equal(copy({ count: 1, workingCount: 1 }).body, 'Tvqpf+Gcvz{"count":1} Ykerw7pORw');
+  assert.equal(M.sections.BULK_ARCHIVE_COPY.willBeArchived.defaultMessage, '{count, plural, one {# session} other {# sessions}} will be archived.');
+  assert.ok(!Object.values(M.sections.BULK_ARCHIVE_COPY).some((m) => /unloadedRemain/.test(m.defaultMessage)), 'no 2.42304.0 NPJPo26DXn select');
+  return read(path.join(reference, 'shared-46-BIbZBGFq.js')).then((chunk) => {
+    // The minified chunk spells curly quotes as \u escapes.
+    const literal = (text) => JSON.stringify(text).replace(/[’“”]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).toUpperCase());
+    for (const [key, value] of Object.entries(M.sections.BULK_ARCHIVE_COPY))
+      assert.ok(chunk.includes(`defaultMessage:${literal(value.defaultMessage)},id:${JSON.stringify(value.id)}`), key);
+  });
+});
+
+test('SB-06: a folder bucket with a folder offers Px\'s Save as environment, opening the host editor with the folder; Other does not', async () => {
+  const opened = [];
+  const folder = (projectKey, cwd) => ({ kind: 'project', key: `project:${projectKey}`, projectKey, cwd });
+  const options = { order: ['/w/alpha'], projectOrder: [], save() {}, saveAsEnvironment: (target) => opened.push(target), environmentsOn: true };
+  const alpha = Layout.folderBucketMenu(folder('/w/alpha', '/w/alpha'), options);
+  alpha.onSaveAsEnvironment();
+  assert.deepEqual(opened, [{ kind: 'local', cwd: '/w/alpha' }]);
+  assert.equal(Layout.folderBucketMenu(folder(OTHER_PROJECT_KEY, undefined), options).onSaveAsEnvironment, undefined, 'Other has no folder');
+  assert.equal(Layout.folderBucketMenu(folder('/w/alpha', '/w/alpha'), { ...options, saveAsEnvironment: undefined }).onSaveAsEnvironment, undefined);
+  // shared-22 IE `pe = n && t.folder ? gE(…) : void 0`: with environments off (n, the presets gate) there is no item.
+  assert.equal(Layout.folderBucketMenu(folder('/w/alpha', '/w/alpha'), { ...options, environmentsOn: false }).onSaveAsEnvironment, undefined, 'environments off');
+  assert.equal(Layout.folderBucketMenu(folder('/w/alpha', '/w/alpha'), { ...options, environmentsOn: undefined }).onSaveAsEnvironment, undefined, 'the gate must be passed');
+  // The FolderBucket hands it to Px, whose edit group shows "Save as environment" (9WSR22vPgm).
+  const sessions = [thread('a1')];
+  const model = Layout.buildSidebarSections({ sections: Layout.sidebarSectionsList({ sidebarSections: [{ id: 'sessions', kind: 'sessions', order: 0, groupBy: 'environment' }] }), sessions, preferences: {}, knownFolders: [] });
+  const host = plainHost({ folderMenu: (group) => Layout.folderBucketMenu(group, { ...options, order: ['/w/alpha'] }) });
+  const sessionsNode = nodes(fixture(M.sections.SidebarSectionsList, { model, host }).tree, (n) => n.props?.entry?.kind === 'sessions' && n.props?.host)[0];
+  const bucket = nodes(fixture(sessionsNode.type, sessionsNode.props).tree, (n) => n.props?.menu && n.props?.bucket)[0];
+  const sortable = fixture(bucket.type, bucket.props).tree;
+  const menu = sortable.props.children;
+  assert.equal(menu.type, M.menu.SidebarGroupMenu);
+  const groups = nodes(fixture(M.menu.SidebarGroupMenu, menu.props).tree, (n) => n.props?.groups)[0].props.groups;
+  const save = byType(groups.edit, M.items.SidebarMenuItem).find((item) => message(item) === 'Save as environment');
+  assert.ok(save, 'Save as environment in the edit group');
+  save.props.onClick();
+  assert.deepEqual(opened.at(-1), { kind: 'local', cwd: '/w/alpha' });
+  // SourceSidebar wires it from its onSaveAsEnvironment prop (main.jsx: the saved-environment editor).
+  const sidebarSource = M.sidebar.SourceSidebar.toString();
+  assert.match(sidebarSource, /saveAsEnvironment: onSaveAsEnvironment,\s*environmentsOn\b/);
+  assert.match(sidebarSource, /environmentsOn = \(0,\s*[\w$]+\.usePresetsGate\)\(\)|environmentsOn = usePresetsGate\(\)/, 'IE environmentsOn: the presets gate (D10 on)');
+  // main.jsx hands SourceSidebar the saved-environment editor, opened with that folder as its local target.
+  const main = await read(path.join(app, 'src/main.jsx'));
+  const wiring = main.match(/onSaveAsEnvironment=\{\(target\) => \{ closeMenu\(\); setEnvironmentEditor\(\{ initialTarget: \{ \.\.\.target, additionalFolders: \[\] \}, initialSettings: \{\} \}\); \}\}/);
+  assert.ok(wiring, 'main.jsx passes onSaveAsEnvironment to <SourceSidebar>');
+  // The element opens at `<SourceSidebar` and closes at its own `\n      />` (w11-frame-root-cont put a self-closed
+  // <SourceCollapsedChrome … /> prop value inside it, so a bare "/>" no longer marks the end).
+  const open = main.lastIndexOf('<SourceSidebar\n', wiring.index);
+  assert.ok(open !== -1 && main.indexOf('\n      />', open) > wiring.index, 'inside the <SourceSidebar> element');
+});
+
+test('SB-17: inside Pinned the blank-area Select all unfolds a folded Pinned first and selects only the Pinned rows', () => {
+  const selected = [];
+  const disconnect = M.adapters.connectSidebarSelection((keys) => selected.push(keys));
+  const rows = new Map([['code:p1', { isPinned: true }], ['code:p2', { isPinned: true }], ['code:s', {}]]);
+  M.adapters.setSidebarRowRegistry({ rows, buckets: new Map([['pinned', ['code:p1', 'code:p2']], ['sessions', ['code:s']]]), visible: ['code:p1', 'code:p2', 'code:s'] });
+  try {
+    const list = React.createElement('div', { className: 'df-session-list flex flex-col' }, 'rows');
+    const f = fixture(M.blank.SidebarBlankAreaHost, { enabled: true, showCreateGroup: false, onNewSession() {}, children: list });
+    const trigger = () => f.tree.props.children[0].props.children[0];
+    const popupBody = () => f.tree.props.children[0].props.children[1].props.children;
+    // A right-click inside the Pinned list (the host's HostBucket: data-pinned-list with the uD toggle inside).
+    let clicked = 0;
+    const toggle = { getAttribute: (name) => (name === 'aria-expanded' ? 'false' : null), click() { clicked++; } };
+    const pinnedList = { hasAttribute: (name) => name === 'data-pinned-list', querySelector: (selector) => (selector === '[data-sidebar-group-label] [data-group-toggle]' ? toggle : null) };
+    const target = { closest: (selector) => (selector === '[data-pinned-leading], [data-pinned-list]' ? pinnedList : null) };
+    trigger().props.onContextMenuCapture({ target, nativeEvent: {} });
+    f.render();
+    assert.equal(popupBody().props.inPinned, 'folded');
+    popupBody().props.onSelectAll();
+    assert.equal(clicked, 1, 'flushSync(() => toggle.click()) while Pinned is folded');
+    assert.deepEqual(selected.at(-1), ['code:p1', 'code:p2'], 'ed("pinned"): the Pinned rows only');
+    // Outside Pinned: every visible row.
+    trigger().props.onContextMenuCapture({ target: { closest: () => null }, nativeEvent: {} });
+    f.render();
+    assert.equal(popupBody().props.inPinned, null);
+    popupBody().props.onSelectAll();
+    assert.deepEqual(selected.at(-1), ['code:p1', 'code:p2', 'code:s']);
+    f.close();
+  } finally { disconnect(); resetRegistry(); }
+  // The host's Pinned bucket carries what _G looks for.
+  const model = Layout.buildSidebarSections({ sections: Layout.sidebarSectionsList({ sidebarSections: [{ id: 'pinned', kind: 'pinned', order: 0 }, { id: 'sessions', kind: 'sessions', order: 1 }] }),
+    sessions: [thread('p1')], metadata: { p1: { pinned: true } }, preferences: {}, knownFolders: [] });
+  const html = renderToStaticMarkup(h(M.view.SidebarListContext.Provider ?? M.view.SidebarListContext, { value: null }, h(M.sections.SidebarSectionsList, { model, host: plainHost() })));
+  assert.match(html, /data-group-key="pinned" data-pinned-list=""[^>]*>[\s\S]*data-sidebar-group-label=""[\s\S]*data-group-toggle=""/);
 });
 
 test('zh-CN: the blank-area Select all reasons read the R3-sections block', () => {
@@ -643,5 +964,9 @@ test('zh-CN: the blank-area Select all reasons read the R3-sections block', () =
   try {
     assert.equal(M.i18n.t('Expand a section to select its sessions.'), '展开分区后才能选择其中的会话。');
     assert.equal(M.i18n.t('You need at least 2 sessions that can be selected.'), '至少需要 2 个可选择的会话。');
+    // V3-w4-sidebar-menus: the 3.6556.2 Archive all confirmation body.
+    for (const value of Object.values(M.sections.BULK_ARCHIVE_COPY)) assert.notEqual(M.i18n.t(value.defaultMessage), value.defaultMessage, value.defaultMessage);
+    assert.equal(M.i18n.t('Save as environment'), '另存为环境');
+    assert.equal(M.i18n.t('Move {count} to section', { count: 2 }), '将 2 个移到分区');
   } finally { M.i18n.setLocale(previous); }
 });

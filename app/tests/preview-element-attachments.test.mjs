@@ -22,7 +22,7 @@ const capture = (patch = {}) => ({ tagName: 'button', id: 'save', classes: ['pri
 // Execute the reference body independently of the generated adapter. The only
 // imported dependencies are looked up from their actual export declarations.
 function originalSerializer() {
-  const directory = new URL('../../reference/current-2.31226.0/ion-dist/assets/v1/', import.meta.url);
+  const directory = new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/', import.meta.url);
   const read = name => fs.readFileSync(new URL(name, directory), 'utf8');
   const binding = (name, exported) => {
     const text = read(name), nodes = parsers.babel.parse(text, {}).program.body;
@@ -35,9 +35,9 @@ function originalSerializer() {
     }
     throw Error(`Missing reference export ${exported}`);
   };
-  const text = read('ce311b43f-BBMmG6RA.js');
+  const text = read('ce311b43f-pp3Qdi66.js');
   const body = parsers.babel.parse(text, {}).program.body.filter(node => !['ImportDeclaration', 'ExportNamedDeclaration'].includes(node.type));
-  return vm.runInNewContext(`const e=${binding('shared-0-tP5vNlHv.js', 'D_')};const t=${binding('shared-1-BPVqFfwb.js', 'sr')};${body.map(node => text.slice(node.start, node.end)).join('\n')};Je`);
+  return vm.runInNewContext(`const e=${binding('shared-0-DDOOdL6P.js', 'Lb')};const t=${binding('shared-1-BJhqMmkf.js', 'nr')};${body.map(node => text.slice(node.start, node.end)).join('\n')};Je`);
 }
 
 test('serializer matches the executable reference across browser metadata and hostile page text', () => {
@@ -78,7 +78,9 @@ test('detail data preserves source geometry limits and reveals direction-changin
 
 test('composer label uses the component and truncates text without half an emoji', () => {
   assert.equal(selectedElementLabel(capture()), '<SaveButton /> Save changes');
-  assert.equal(selectedElementLabel(capture({ component: null, innerText: '' })), '<button class="primary rounded" />');
+  // 3.6556.2 c0fbbe82d: with no visible text the label falls back to aria-label / alt / title / placeholder.
+  assert.equal(selectedElementLabel(capture({ component: null, innerText: '' })), '<button class="primary rounded" /> Save');
+  assert.equal(selectedElementLabel(capture({ component: null, innerText: '', attributes: {} })), '<button class="primary rounded" />');
   const label = selectedElementLabel(capture({ innerText: '\n  ' + 'a'.repeat(38) + '😀more text' }));
   assert.equal(label, '<SaveButton /> ' + 'a'.repeat(38) + '…');
 });

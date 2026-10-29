@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { kt as createIntl } from './generated/chat/vendor-intl-Cf4IuK3L.js';
-import { VV as ScheduledTaskMenu } from './generated/chat/shared-21-D098Wd--.js';
+import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
 import { t, getLocale } from '../electron/i18n/index.mjs';
 import { SourceMenu, menuTriggerProps } from './source-menu.jsx';
 
@@ -29,28 +28,8 @@ export function useRoutineIntl() {
     return { ...intl, formatMessage: (message, values) => intl.formatMessage({ ...message, defaultMessage: t(message.defaultMessage) }, values) };
   }, [locale]);
 }
-export const noRemoteModel = () => false;
-export const routineAccent = () => true;
-export const unavailableMigration = () => ({ ok: false });
-export const UnavailableRoutineBadge = () => null;
-export const useRoutineAnalytics = () => ({ track() {} });
-export const routineErrorMessage = error => error?.message;
-export function CurrentRoutineMenu(props) {
-  const Menu = useContext(RoutineContext).Menu;
-  return <Menu {...props} />;
-}
-export function useRoutineErrors() {
-  const host = useContext(RoutineContext);
-  return { addError: (message, detail) => host.error(detail?.error?.message ?? message), addWarning: host.error };
-}
-export function useRoutineBridge() {
-  const host = useContext(RoutineContext);
-  return { updateScheduledTaskStatus: (id, status) => host.mutate({ action: 'toggle', id, enabled: status === 'enabled' }) };
-}
-export function RoutineMenu({ task, isRunning, onRunNow, onEdit, onDelete }) {
-  return <ScheduledTaskMenu scheduledTask={task} isRunning={isRunning} onRunNow={onRunNow}
-    onEdit={onEdit} onDelete={onDelete} buttonSize="icon" />;
-}
+// The 2.31226.0 routine detail / form adapter exports (noRemoteModel, UnavailableRoutineBadge, CurrentRoutineMenu,
+// useRoutineErrors, useRoutineBridge, ...) had no importer after w10-curchat-retire; w10-cleanup-final removed them.
 
 // Only data shape changes here. Card markup, text sanitization, status formatting,
 // hover actions and the pause/edit/delete menu come from the original modules.

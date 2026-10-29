@@ -2,25 +2,27 @@ import { previewDOMTabKey } from "../electron/preview-tab-shortcuts.mjs";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { previewLinksStore } from "./preview-links-model.mjs";
 import { Icon } from "./icons";
-import { SourcePreviewSettingsMenu, SourcePreviewClearDataDialog } from "./source-preview-settings-menu.jsx";
+import { SourcePreviewSettingsMenu, SourcePreviewClearDataDialog, useAutoOpenFilesMenuProps } from "./source-preview-settings-menu.jsx";
 import { SourcePreviewAllowedSites } from "./source-preview-allowed-sites.jsx";
 import { usePreviewCopyUrl } from "./source-preview-copy-url.jsx";
 import { SourceTooltip } from "./source-tooltip";
 import { SourceSpinner } from "./source-pane-states.jsx";
-import { SourceEmptyState } from "./source-transcript-states.jsx";
+// 3.6556.2 cf580efe9 `import { t as Zt } from "./cc0a875c8-Ba9KI-Fw.js"` (EmptyState): the generated slice.
+import { EmptyState } from "./generated/r3b-transcript/empty-state.mjs";
 import { assistantName } from "./persona-store.mjs";
 import { addServerErrorText, candidateRow, detectedCandidates, detectionActive, detectionKey, serverTriggerVisible, shouldHandOffFocus } from "./preview-detection-model.mjs";
 import { SourceAnsiText } from "./source-ansi-text.jsx";
 import { SourcePreviewAddress, SourcePreviewNavigation } from "./source-preview-address.jsx";
 import { SourcePreviewServerMenu } from "./source-preview-server-menu.jsx";
-import { SourcePreviewTabs } from "./source-preview-tabs.jsx";
+import { SourcePreviewCloseTabsDialog, SourcePreviewTabs } from "./source-preview-tabs.jsx";
 import { ownsSelectedElement } from './preview-element-attachments.mjs';
-import { SourceDialog, SourceConfirmationDialog } from "./source-dialog";
+import { CdsButton, CdsConfirmationDialog } from "./generated/view-tabs/index.js";
+import { devServerLogTone, devServerLogToneClasses } from "./generated/code-editor/preview-log-lines.mjs";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { SourcePreviewSketch } from "./source-preview-sketch.jsx";
 import { matchSketchCommand } from './generated/code-editor/preview-sketch-keys.mjs';
 import {
-  ADD_SERVER_PROMPT, anyServerRunning, LOGS_HEIGHT, SHOW_RETRY_MS, SERVER_SETTLE_MS, boundsOf, clampLogsHeight, failedServer, failureLogLine, heldPort, isOccluded, logTone,
+  ADD_SERVER_PROMPT, anyServerRunning, LOGS_HEIGHT, SHOW_RETRY_MS, SERVER_SETTLE_MS, boundsOf, clampLogsHeight, failedServer, failureLogLine, heldPort, isOccluded,
   logsServer, logsSourceLabel, PREVIEW_LOGS_EXPANDED_KEY, readLogsExpanded, serverStartHold, startFailurePrompt, startFailureText, writeLogsExpanded,
   pageError, pageRefused, pageServer, previewSurface, stoppedServer, sameBounds, serverErrorText, serverRows, serverMenuRows, serverStatus, showsPage, viewportLabel, viewportRows,
   launchEntryMissingText, noLaunchEntry, pickUnavailable, SKETCH_AWAIT_CAPTURE_MS,
@@ -205,7 +207,7 @@ export function PreviewBrowserToolsOff({ onTurnOn }) {
   const assistant = assistantName();
   return (
     <div className="absolute inset-0" data-preview-start="setting-off">
-      <SourceEmptyState role="status" icon="Globe" title={t("Browser tools are turned off")}
+      <EmptyState role="status" icon="Globe" title={t("Browser tools are turned off")}
         body={t("They let {assistant} start your dev server and open pages here. Once they’re on, {assistant} can use them in new sessions on your computer.", { assistant })}
         actions={onTurnOn ? <SourceSettingsButton variant="secondary" onClick={onTurnOn}>{t("Turn on Browser tools")}</SourceSettingsButton> : null} />
     </div>
@@ -329,7 +331,7 @@ export function PreviewStartFailedCard({ logLine, onCopyLog, actions = null, met
 export function PreviewStoppedCard({ serverLabel, onRestart, restartPending = false, onDismiss, onClose, caption, className = "", contentClassName = "" }) {
   if (!serverLabel) {
     return (
-      <SourceEmptyState role="status" icon="Cache" title={t("Preview server stopped")} body={t("Close and reopen the preview to start it again.")}
+      <EmptyState role="status" icon="Cache" title={t("Preview server stopped")} body={t("Close and reopen the preview to start it again.")}
         actions={onClose ? <SourceSettingsButton variant="secondary" onClick={onClose}>{t("Close")}</SourceSettingsButton> : null} />
     );
   }
@@ -379,38 +381,48 @@ export function PreviewSettingUp({ label = null }) {
   );
 }
 
-// cf580efe9 ua (readable 4396-4508): the drawer under the page, "{name} · localhost:{port}" (preview-logs-source) and
-// Close; the output follows the end unless scrolled up.
-function LogsDrawer({ source, lines, height, onResize, onClose, paneHeight }) {
+// 3.6556.2 cf580efe9 So (w12b TPT-4): the drawer under the page — `relative flex flex-col shrink-0 h-[200px] min-h-[80px]
+// max-h-[60%]`, a pointer-only separator along its top edge (`absolute top-0 inset-x-0 h-[8px] cursor-ns-resize z-[1]`,
+// no tab stop, no name), the header "{name} · {host}" (text-muted-as-secondary) with Close (CdsButton ghost iconOnly X,
+// tooltipSide "bottom", className c = shared-18 Mb(c219730b0 Jr) with fizzy-lake "panels" off), and the output, which
+// follows the end unless scrolled up (`<8`). Rows are Go: "whitespace-pre-wrap break-all" plus _o's tint (vo). The
+// host keeps the height the user dragged to (So sets it on the element; the host holds it across drawer toggles).
+export function LogsDrawer({ source, lines, height, onResize, onClose, paneHeight }) {
   const body = useRef(null);
   const pinned = useRef(true);
+  const drag = useRef(null);
   useLayoutEffect(() => { const node = body.current; if (node && pinned.current) node.scrollTop = node.scrollHeight; }, [lines]);
-  const drag = (event) => {
+  useEffect(() => () => drag.current?.abort(), []);
+  const resize = (event) => {
     if (event.button !== 0) return;
-    event.preventDefault();
-    const startY = event.clientY, startHeight = height;
+    const view = event.currentTarget.ownerDocument.defaultView;
+    if (!view) return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const startY = event.clientY, startHeight = height, controller = new AbortController();
+    drag.current = controller;
     const move = (moveEvent) => onResize(clampLogsHeight(startHeight + (startY - moveEvent.clientY), paneHeight));
-    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+    const stop = () => controller.abort();
+    view.addEventListener("pointermove", move, { signal: controller.signal });
+    view.addEventListener("pointerup", stop, { signal: controller.signal });
+    view.addEventListener("pointercancel", stop, { signal: controller.signal });
   };
   return (
-    <section className="spv-logs" style={{ height }} aria-label={t("Dev server logs")}>
-      <div role="separator" aria-orientation="horizontal" aria-label={t("Resize dev server logs")} tabIndex={0} className="spv-logs-handle"
-        aria-valuenow={height} aria-valuemin={LOGS_HEIGHT.min} aria-valuemax={Math.round((paneHeight || 0) * LOGS_HEIGHT.maxRatio)}
-        onPointerDown={drag}
-        onKeyDown={(event) => {
-          if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); onResize(clampLogsHeight(height + (event.key === "ArrowUp" ? 24 : -24), paneHeight)); }
-        }} />
-      <div className="flex shrink-0 items-center gap-sm pt-md pr-xs pl-lg">
-        <span data-testid="preview-logs-source" title={source} className="min-w-0 flex-1 truncate text-caption text-muted">{source}</span>
-        <GhostButton label={t("Close dev server logs")} icon="X" onClick={onClose} />
+    <div className="relative flex flex-col shrink-0 h-[200px] min-h-[80px] max-h-[60%]" style={{ height }}>
+      <div role="separator" aria-orientation="horizontal" onPointerDown={resize} className="absolute top-0 inset-x-0 h-[8px] cursor-ns-resize z-[1]" />
+      <div className="flex shrink-0 items-center gap-sm pt-md pe-xs ps-lg">
+        <span data-testid="preview-logs-source" title={source} className="min-w-0 flex-1 truncate text-caption text-muted-as-secondary">{source}</span>
+        <CdsButton variant="ghost" iconOnly icon="X" className="text-muted-as-secondary hover:text-secondary" tooltipSide="bottom"
+          aria-label={t("Close dev server logs")} onClick={onClose} />
       </div>
-      <div ref={body} className="spv-logs-body" tabIndex={0} onScroll={(event) => { const node = event.currentTarget; pinned.current = node.scrollHeight - node.scrollTop - node.clientHeight < 8; }}>
-        {lines.length === 0 ? <div className="spv-logs-empty">{t("Waiting for output…")}</div>
-          : lines.map((line, index) => <div key={index} className="spv-log-line" data-tone={logTone(line) ?? undefined}><SourceAnsiText text={line} /></div>)}
+      <div ref={body} onScroll={(event) => { const node = event.currentTarget; pinned.current = node.scrollHeight - node.scrollTop - node.clientHeight < 8; }}
+        className="min-h-0 flex-1 overflow-auto [contain:strict] px-lg pb-lg text-code text-secondary select-text">
+        {lines.length === 0 ? <div className="text-muted-as-secondary text-center">{t("Waiting for output…")}</div>
+          : lines.map((line, index) => {
+            const tone = devServerLogTone(line);
+            return <div key={index} className={tone ? `whitespace-pre-wrap break-all ${devServerLogToneClasses[tone]}` : "whitespace-pre-wrap break-all"}><SourceAnsiText text={line} /></div>;
+          })}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -482,10 +494,10 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
   // cf580efe9 Pi: the page from before the app closed ({ key, value }; value null when there is no frame to show).
   const [frame, setFrame] = useState(null);
   const linksInPreview = useSyncExternalStore(previewLinksStore.subscribe, previewLinksStore.getSnapshot, previewLinksStore.getSnapshot);
+  const autoOpenFilesProps = useAutoOpenFilesMenuProps(sessionId);
   const [showTools, setShowTools] = useState(false);
   const [tabClose, setTabClose] = useState(null);
   const [closingTab, setClosingTab] = useState(false);
-  const keepTabRunning = useRef(null);
   const [sessionData, setSessionData] = useState(false);
   // cf580efe9 Xr H === "allowedSites" (B39): Manage allowed sites… opens the Allowed sites dialog (er).
   const [allowedSites, setAllowedSites] = useState(false);
@@ -866,7 +878,8 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
         <SourcePreviewTabs tabs={state?.tabs} activeId={state?.activeTabId} onSelect={selectTab} onCreate={createTab}
           onClose={id => void closeTab(id)} onCloseOthers={id => void closeTab(id, true)}
           onExternal={tabId => call('preview-tab-external', { tabId }).catch(report)}
-          onReorder={(tabId, toIndex) => call('preview-tab-reorder', { tabId, toIndex }).then(acceptTabState, report)} />
+          onReorder={(tabId, toIndex) => call('preview-tab-reorder', { tabId, toIndex }).then(acceptTabState, report)}
+          onFocusPage={() => call('preview-focus').catch(() => {})} />
         <span ref={serverGroup} className="contents">
         {showServerMenu && <SourcePreviewServerMenu rows={menuRows} loading={!state} onStart={start} onStop={stop}
           onAddServer={onAskAgent ? () => onAskAgent(ADD_SERVER_PROMPT) : undefined} />}
@@ -882,7 +895,7 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
           viewportHint={state?.viewport?.preset !== 'responsive' ? viewportLabel(state?.viewport) : undefined} viewportDisabled={!state?.hasPage}
           colorScheme={state?.viewport?.colorScheme ?? 'system'} onColorScheme={colorScheme => call('preview-emulate', { colorScheme }).catch(report)}
           onShowSessionLogs={logsOpen || logsSource ? () => setLogsOpen(value => !value) : undefined}
-          openLinksInPreview={linksInPreview} onOpenLinksInPreviewChange={value => previewLinksStore.set(value)}
+          openLinksInPreview={linksInPreview} onOpenLinksInPreviewChange={value => previewLinksStore.set(value)} {...autoOpenFilesProps}
           autoVerify={state?.launch?.autoVerify !== false}
           onAutoVerifyChange={state?.launch?.exists && agentUsesPreview ? enabled => call('preview-auto-verify', { enabled }).then(next => { if (next) setState(next); }, report) : undefined}
           previewStorage={state?.previewStorage ?? (state?.keepCookies ? 'shared' : 'none')}
@@ -908,14 +921,12 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
             return true;
           }} />
       </SourcePreviewNavigation>
-      {tabClose && <SourceDialog title={tabClose.others ? t('Close other tabs?') : t('Close {host}?', { host: `localhost:${tabClose.processes[0]?.port}` })}
-        description={tabClose.processes.length > 1
-          ? t('{count} dev servers are still running. You can keep them running and reopen a tab any time by entering its localhost address in the URL bar.', { count: tabClose.processes.length })
-          : t(tabClose.others ? '{serverLabel} is still running. You can keep it running and reopen a tab any time by entering {host} in the URL bar.' : '{serverLabel} is still running. You can keep it running and reopen this tab any time by entering {host} in the URL bar.', { serverLabel: tabClose.processes[0]?.name, host: `localhost:${tabClose.processes[0]?.port}` })}
-        showClose={false} size="sm" className="spv-close-tabs-dialog" initialFocusRef={keepTabRunning} onClose={() => { if (!closingTab) setTabClose(null); }}
-        footer={<><SourceSettingsButton variant="secondary" disabled={closingTab} onClick={() => setTabClose(null)}>{t('Cancel')}</SourceSettingsButton>
-          <SourceSettingsButton variant="danger" aria-label={tabClose.processes.length > 1 ? t('Stop {count} servers and close', { count: tabClose.processes.length }) : t('Stop server and close')} disabled={closingTab} onClick={() => closeTab(tabClose.tabId, tabClose.others, 'stop')}>{t(tabClose.processes.length > 1 ? 'Stop servers' : 'Stop server')}</SourceSettingsButton>
-          <SourceSettingsButton ref={keepTabRunning} variant="primary" busy={closingTab} onClick={() => closeTab(tabClose.tabId, tabClose.others, 'keep')}>{t('Keep running')}</SourceSettingsButton></>} />}
+      {/* cf580efe9 Oa Rt: `r(va,{pending:Mt,onCancel:vt,onKeepRunning:bt,onStopServer:St,onClosed:Ct})`, Mt =
+          `{mode:Ye.mode,processes:Ye.processes.map(La)}` (La: name and port). The main process answers a close that would
+          strand a running server with the confirmation (preview-tab-close), and the decision closes it from there. */}
+      <SourcePreviewCloseTabsDialog pending={tabClose ? { mode: tabClose.others ? 'others' : 'single', processes: tabClose.processes.map(({ name, port }) => ({ name, port })) } : null}
+        onCancel={() => setTabClose(null)} onKeepRunning={() => { if (tabClose) void closeTab(tabClose.tabId, tabClose.others, 'keep'); }}
+        onStopServer={() => { if (tabClose) void closeTab(tabClose.tabId, tabClose.others, 'stop'); }} />
       <div className="spv-body">
         <div ref={viewport} className="spv-viewport" data-page={pageVisible || undefined} data-covered={occlusion.covered || undefined}>
           {wantsPage && (
@@ -982,10 +993,13 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
         {downloadNotice && <DownloadNotice download={downloadNotice} onReveal={() => call("preview-download-reveal").catch(report)} onDismiss={() => setDismissedDownload(downloadNotice.at)} />}
         {logsOpen && (logsSource || drawerLines.length > 0) && <LogsDrawer source={logsSourceLabel(logsSource)} lines={drawerLines} height={logsHeight} paneHeight={paneHeight} onResize={setLogsHeight} onClose={() => setLogsOpen(false)} />}
       </div>
-      {/* c9c84d68b-DMgxSiTd r (T): the pane's own Discard your annotations? for the pending action (Gn, open: Kr !== null). */}
-      {pendingDiscard !== null && <SourceConfirmationDialog title={t('Discard your annotations?')} body={t('You have unsaved marks on this image. Discarding removes them.')}
-        confirmLabel={t('Discard')} cancelLabel={t('Keep editing')} confirmVariant="danger" initialFocus="cancel"
-        onCancel={() => setPendingDiscard(null)} onConfirm={discardAndContinue} />}
+      {/* 3.6556.2 c9c84d68b w (cf580efe9 `r as Jn`, mounted `r(Jn,{open:Eu,onKeepEditing:Ji,onDiscard:sa})`): the pane's own
+          Discard your annotations? for the pending action — `t(a,{initialFocus:"cancel",open:n,onOpenChange:o,onConfirm:i,
+          confirmVariant:"danger",title:s,description:c,confirmLabel:l,cancelLabel:d})` with `Xc as a` (view-tabs
+          CdsConfirmationDialog); o closes on `e || r()`. */}
+      <CdsConfirmationDialog initialFocus="cancel" open={pendingDiscard !== null} onOpenChange={(open) => { if (!open) setPendingDiscard(null); }}
+        onConfirm={discardAndContinue} confirmVariant="danger" title={t('Discard your annotations?')}
+        description={t('You have unsaved marks on this image. Discarding removes them.')} confirmLabel={t('Discard')} cancelLabel={t('Keep editing')} />
       <SourcePreviewClearDataDialog isOpen={sessionData} previewStorage={state?.previewStorage ?? 'none'}
         onClose={() => setSessionData(false)} onConfirm={() => {
           setSessionData(false);call('preview-clear-data').then(next => { if (next) setState(next); }, report);

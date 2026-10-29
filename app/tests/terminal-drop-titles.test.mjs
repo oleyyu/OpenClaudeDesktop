@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DROP_ERRORS, hiddenTerminalTabs, isAutomountPath, isPowerShell, normalizePosixPath, quoteShellPath, renameDraft, terminalDropText,
+  DROP_ERRORS, isAutomountPath, isPowerShell, normalizePosixPath, quoteShellPath, renameDraft, terminalDropText,
 } from '../src/terminal-pane-model.mjs';
 import { createTerminalTitleTracker } from '../src/terminal-titles.mjs';
 import { dictionary } from '../electron/i18n/index.mjs';
 
 // B19: paths dropped on the terminal (cccc2cf0a lg/og/sg/cg, c73f45bc3 Fo, shared-28 ek/lk) and the running command
-// on terminal tabs (cf718f694 ge/ue/de through the generated adapter).
+// on terminal tabs (3.6556.2 cf718f694 ge/W/ue, 2.42304.0 ge/ue/de, through the generated adapter).
 
 test('dropped paths are single-quoted for the shell, joined with a trailing space', () => {
   assert.equal(terminalDropText(['/Users/me/My Project'], '/bin/zsh'), "'/Users/me/My Project' ");
@@ -60,12 +60,8 @@ test('rename starts from the tab’s own name (empty for a numbered tab)', () =>
   assert.equal(renameDraft(null), '');
 });
 
-test('More terminals lists the tabs scrolled out of the strip, never the selected one', () => {
-  const entries = [{ id: 'a', start: 0, end: 100 }, { id: 'b', start: 100, end: 200 }, { id: 'c', start: 200, end: 300 }, { id: 'd', start: 300, end: 400 }];
-  assert.deepEqual(hiddenTerminalTabs(entries, { scrollLeft: 100, clientWidth: 200, activeId: 'b' }), ['a', 'd']);
-  assert.deepEqual(hiddenTerminalTabs(entries, { scrollLeft: 0, clientWidth: 400, activeId: 'a' }), []);
-  assert.deepEqual(hiddenTerminalTabs(entries, { scrollLeft: 200, clientWidth: 200, activeId: 'a' }), ['b']);
-});
+// w10-ccres-e31-terminal: "More terminals" is ViewTabBar's own overflow menu (cfe7c4b3b ae, as cccc2cf0a Zx passes
+// labels.moreTabs), so the host's hiddenTerminalTabs (the scrolled-out tabs of the old strip) is gone.
 
 function fakeTerm() {
   const handlers = {};

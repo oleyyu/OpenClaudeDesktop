@@ -1,44 +1,143 @@
 // Original text/list segmentation; serializer is private to parser round-trip checks.
-const sn = "$1";
-function ln(e) {
+var fn;
+var pn = () =>
+  (fn ??=
+    /[\uD800-\uDBFF]*[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\u2800\uFFFC\u{1D159}\u{13441}\u{13442}\u{16910}\u{16FE4}\uFDD0-\uFDEF\uFFFE\uFFFF\u{1FFFE}\u{1FFFF}\u{2FFFE}\u{2FFFF}\u{3FFFE}\u{3FFFF}\u{4FFFE}\u{4FFFF}\u{5FFFE}\u{5FFFF}\u{6FFFE}\u{6FFFF}\u{7FFFE}\u{7FFFF}\u{8FFFE}\u{8FFFF}\u{9FFFE}\u{9FFFF}\u{AFFFE}\u{AFFFF}\u{BFFFE}\u{BFFFF}\u{CFFFE}\u{CFFFF}\u{DFFFE}\u{DFFFF}\u{EFFFE}\u{EFFFF}\u{FFFFE}\u{FFFFF}\u{10FFFE}\u{10FFFF}][\uDC00-\uDFFF]*|([\uD800-\uDBFF]+)/gu);
+var mn = "$1";
+function hn(e) {
+  return e.replace(pn(), mn);
+}
+function gn(e) {
   return e
     .replace(/[\t\n\v\f\r\u0085\u2028\u2029]+/g, " ")
     .replace(
-      /[\uD800-\uDBFF]*(?:(?!\u200C|\u200D|\uFE0E|\uFE0F)[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\u2800\uFFFC\u{1D159}\u{13441}\u{13442}\u{16910}\uFDD0-\uFDEF\uFFFE\uFFFF\u{1FFFE}\u{1FFFF}\u{2FFFE}\u{2FFFF}\u{3FFFE}\u{3FFFF}\u{4FFFE}\u{4FFFF}\u{5FFFE}\u{5FFFF}\u{6FFFE}\u{6FFFF}\u{7FFFE}\u{7FFFF}\u{8FFFE}\u{8FFFF}\u{9FFFE}\u{9FFFF}\u{AFFFE}\u{AFFFF}\u{BFFFE}\u{BFFFF}\u{CFFFE}\u{CFFFF}\u{DFFFE}\u{DFFFF}\u{EFFFE}\u{EFFFF}\u{FFFFE}\u{FFFFF}\u{10FFFE}\u{10FFFF}])[\uDC00-\uDFFF]*|([\uD800-\uDBFF]+)/gu,
-      sn,
+      /[\uD800-\uDBFF]*(?:(?!\u200C|\u200D|\uFE0E|\uFE0F)[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\u2800\uFFFC\u{1D159}\u{13441}\u{13442}\u{16910}\u{16FE4}\uFDD0-\uFDEF\uFFFE\uFFFF\u{1FFFE}\u{1FFFF}\u{2FFFE}\u{2FFFF}\u{3FFFE}\u{3FFFF}\u{4FFFE}\u{4FFFF}\u{5FFFE}\u{5FFFF}\u{6FFFE}\u{6FFFF}\u{7FFFE}\u{7FFFF}\u{8FFFE}\u{8FFFF}\u{9FFFE}\u{9FFFF}\u{AFFFE}\u{AFFFF}\u{BFFFE}\u{BFFFF}\u{CFFFE}\u{CFFFF}\u{DFFFE}\u{DFFFF}\u{EFFFE}\u{EFFFF}\u{FFFFE}\u{FFFFF}\u{10FFFE}\u{10FFFF}])[\uDC00-\uDFFF]*|([\uD800-\uDBFF]+)/gu,
+      mn,
     );
 }
-function un(e) {
-  return dn(e) === "";
+function _n(e) {
+  return vn(e) === "";
 }
-function dn(e) {
+function vn(e) {
   return e.replace(/^(?:\s|\u200C|\u200D|\uFE0E|\uFE0F)+/u, "");
 }
-const Ho = ln,
-  Uo = un;
-function Xv(e) {
+const ee = gn,
+  O = _n,
+  k = hn;
+function V_(e) {
   if (typeof e != "string") return "";
-  let t = Ho(e)
+  let t = ee(e)
     .replace(
       /((?:\u200C|\u200D|\uFE0E|\uFE0F){3})(?:\u200C|\u200D|\uFE0E|\uFE0F)+/g,
       "$1",
     )
     .replace(/ {2,}/g, " ")
     .trim();
-  return Uo(t) ? "" : t;
+  return O(t) ? "" : t;
 }
-var Zv = /^(?=[\w+#.-]{1,24}$)(?!.*www\.)/i;
-function Qv(e) {
+var H_ = /(https?:\/\/[^\s<>"'`]+|\bwww\.[^\s<>"'`]+)/gi;
+var U_ = "\f\r\uFEFF";
+var W_ = `.,;:!?${U_}`;
+function G_(e) {
+  try {
+    return (new URL(e), !0);
+  } catch {
+    return !1;
+  }
+}
+function K_(e) {
+  let t = 0,
+    n = 0;
+  for (let r = 0; r < e.length; r++) {
+    let i = e.charAt(r);
+    i === "(" ? (t += 1) : i === ")" && (n += 1);
+  }
+  let r = e.length;
+  for (; r > 0; r--) {
+    let i = e.charAt(r - 1);
+    if (!W_.includes(i)) {
+      if (i !== ")" || n <= t) break;
+      --n;
+    }
+  }
+  return [e.slice(0, r), e.slice(r)];
+}
+var q_ = new RegExp(H_.source, "gi");
+var J_ = (e, t = e) => {
+  let n = [];
+  for (let r of t.matchAll(q_)) {
+    let [t] = K_(e.slice(r.index, r.index + r[0].length)),
+      i = /^www\./i.test(t) ? `https://${t}` : t;
+    n.push({ index: r.index, text: t, href: G_(i) ? i : null });
+  }
+  return n;
+};
+var ev = (e) =>
+  k(
+    e.replace(
+      /[\t\n\v\u0085\u2028\u2029\u2800\u115F\u1160\u3164\uFFA0]+/g,
+      " ",
+    ),
+  );
+var tv = (e) =>
+  e.replace(/[^\0-\x7F\u2025\u2026\uFE19\uFE30]/gu, (e) => e.normalize("NFKC"));
+var nv = /[.:\u2024-\uffff]/;
+var rv = (e) => {
+  let t = ev(e);
+  return [t, tv(t)].some(
+    (e) =>
+      /^\s*(?:mailto|tel):\S/i.test(e) ||
+      J_(e).length > 0 ||
+      /[^a-z\s](?:\/\/:[a-z]|(?:\.www|:mailto|:tel)(?![a-z]))/i.test(e),
+  );
+};
+var iv = (e, t) => t === e || (/^www\./i.test(e ?? "") && t === `https://${e}`);
+var yv = /^(?=[\w+#.-]{1,24}$)(?!.*www\.)/i;
+function bv(e) {
   if (typeof e != "string" || e === "") return "";
-  if (Zv.test(e)) return e;
+  if (yv.test(e)) return e;
   let t = e.replaceAll("\u200B", "");
-  return Zv.test(t) ? t : "";
+  return yv.test(t) ? t : "";
 }
-var $v = /^(?:https?:\/\/|mailto:|tel:)[\w\-.~:/?#[\]@!$&'*+,;=%{}|^]+$/i;
-var ey = /^(?:https?:\/\/|mailto:|tel:)[\w\-.~:/?#[\]@!$&'()*+,;=%{}|^]+$/i;
-function ty(e) {
-  if ($v.test(e)) return !0;
-  if (!ey.test(e)) return !1;
+function xv(e) {
+  return (
+    (e >= 32 && e < 127) ||
+    e === 9 ||
+    e === 10 ||
+    e === 13 ||
+    e === 160 ||
+    e === 8232 ||
+    e === 8233
+  );
+}
+function Sv(e) {
+  let t = 2,
+    n = 0;
+  for (let r of e ?? []) {
+    let e = r.text ?? "";
+    if (
+      !(
+        n === 0 &&
+        typeof e == "string" &&
+        !e.includes("`") &&
+        !e.includes("\u1FEF") &&
+        !e.includes("\uFF40")
+      )
+    )
+      for (let r = 0; r < e.length; r++) {
+        let i = e.charCodeAt(r);
+        i === 96 || i === 8175 || i === 65344
+          ? ((n += 1), (t = Math.max(t, n)))
+          : xv(i) && (n = 0);
+      }
+  }
+  return "`".repeat(t + 1);
+}
+var Cv = /^(?:https?:\/\/|mailto:|tel:)[\w\-.~:/?#[\]@!$&'*+,;=%{}|^]+$/i;
+var wv = /^(?:https?:\/\/|mailto:|tel:)[\w\-.~:/?#[\]@!$&'()*+,;=%{}|^]+$/i;
+function Tv(e) {
+  if (Cv.test(e)) return !0;
+  if (!wv.test(e)) return !1;
   let t = 0;
   for (let n = 0; n < e.length; n++) {
     let r = e[n];
@@ -47,44 +146,53 @@ function ty(e) {
   }
   return t === 0;
 }
-var ny;
-var ry = () =>
-  (ny ??=
+var Ev;
+var Dv = () =>
+  (Ev ??=
     /(?![\p{Default_Ignorable_Code_Point}\u2800\uFFFC\u{1D159}\u{13441}\u{13442}\u{16910}])[\p{L}\p{N}\p{P}\p{S}]/u);
-var iy = /^(?!.*www(?:\.|$))(?!(?:https?|mailto|tel):)[\w:.-]+$/i;
-var ay = /www(?:\.|$)|^(?:https?|mailto|tel):/i;
-var oy = /[\u0080-\uffff]/;
-var sy;
-var cy = () =>
-  (sy ??=
+var Ov = /^(?!.*www(?:\.|$))(?!(?:https?|mailto|tel):)[\w:.-]+$/i;
+var kv = /www(?:\.|$)|^(?:https?|mailto|tel):/i;
+var Av = /[\u0080-\uffff]/;
+var jv;
+var Mv = () =>
+  (jv ??=
     /^(?!.*www\.)(?:(?!\p{Default_Ignorable_Code_Point})[\p{L}\p{M}\p{N}_:.-])+$/iu);
-function ly(e) {
+function Nv(e) {
   return typeof e != "string" || e.length > 200
     ? ""
-    : iy.test(e) ||
-        (oy.test(e) && cy().test(e) && !ay.test(e.normalize("NFKC")))
+    : Ov.test(e) ||
+        (Av.test(e) && Mv().test(e) && !kv.test(e.normalize("NFKC")))
       ? e
       : "";
 }
-function uy(e) {
-  let t = Xv(e);
+function Pv(e) {
+  let t = V_(e);
   return t && `@${t}`;
 }
-function dy(e, t) {
+function Fv(e, t) {
   if (typeof e != "string" || e === t) return "";
   let n = t.charCodeAt(0);
-  if (!(n > 32 && n < 127) && !ry().test(t)) return "";
-  if (ty(e)) return e;
+  if (!(n > 32 && n < 127) && !Dv().test(t)) return "";
+  if (Tv(e)) return e;
   let r = e.replaceAll("\u200B", "");
-  return r !== t && ty(r) ? r : "";
+  return r !== t && Tv(r) ? r : "";
 }
-var _y = 8203;
-var vy = (e) =>
+var Iv = (e, t) => e.length <= 2048 && !iv(e, t) && rv(e);
+function Lv(e, t) {
+  let n = Fv(e, t);
+  return n !== "" && nv.test(t) && Rv(t, n) ? "" : n;
+}
+function Rv(e, t) {
+  let n = e.replaceAll("\u200B", "");
+  return n === t || Iv(n, t);
+}
+var Wv = 8203;
+var Gv = (e) =>
   e === 32 ||
   e === 160 ||
   (e >= 9 && e <= 13) ||
   (e >= 5760 &&
-    (e === _y ||
+    (e === Wv ||
       (e >= 8192 && e <= 8202) ||
       e === 5760 ||
       e === 8232 ||
@@ -93,25 +201,25 @@ var vy = (e) =>
       e === 8287 ||
       e === 12288 ||
       e === 65279));
-function yy(e) {
+function Kv(e) {
   let t = 0;
-  for (; t < e.length && vy(e.charCodeAt(t)); ) t++;
+  for (; t < e.length && Gv(e.charCodeAt(t)); ) t++;
   return t;
 }
-function by(e, t) {
+function qv(e, t) {
   let n = e.length;
-  for (; n > t && vy(e.charCodeAt(n - 1)); ) n--;
+  for (; n > t && Gv(e.charCodeAt(n - 1)); ) n--;
   return n;
 }
-var xy = (e) => e === "bold" || e === "italic";
-function Sy(e) {
+var Jv = (e) => e === "bold" || e === "italic";
+function Yv(e) {
   for (let t = 0; t < e.length; t++) {
     let n = e[t]?.type;
     if (n === "bold" || n === "italic") return !0;
   }
   return !1;
 }
-var ky = (e) => {
+var ny = (e) => {
   let t = "",
     n = 0,
     r = "",
@@ -141,11 +249,11 @@ var ky = (e) => {
           if (n !== void 0 && n !== "") {
             let t = n.charCodeAt(0),
               o = n.charCodeAt(n.length - 1);
-            if ((t <= 32 || t >= 160 || o <= 32 || o >= 160) && Sy(e.marks)) {
-              let t = yy(n),
-                o = by(n, t);
+            if ((t <= 32 || t >= 160 || o <= 32 || o >= 160) && Yv(e.marks)) {
+              let t = Kv(n),
+                o = qv(n, t);
               if (o === t) {
-                a({ ...e, marks: e.marks.filter((e) => !xy(e.type)) });
+                a({ ...e, marks: e.marks.filter((e) => !Jv(e.type)) });
                 return;
               }
               ((r = n.slice(0, t)), (i = n.slice(o)), (n = n.slice(t, o)));
@@ -158,16 +266,17 @@ var ky = (e) => {
             else if (t.type === "strike") n = `~~${n}~~`;
             else if (t.type === "code") n = `\`${n}\``;
             else if (t.type === "link") {
-              let r = dy(t.attrs?.href, e.text ?? "");
+              let r = Lv(t.attrs?.href, e.text ?? "");
               r !== "" && (n = `[${n}](${r})`);
             }
           (r !== "" || i !== "") && ((n = r + n + i), (r = ""), (i = ""));
         }
         t += n;
       } else if (e.type === "codeBlock") {
-        if (((t += `\n\`\`\`${Qv(e.attrs?.language)}\n`), e.content))
+        let n = Sv(e.content);
+        if (((t += `\n${n}${bv(e.attrs?.language)}\n`), e.content))
           for (let t of e.content) a(t);
-        t += "\n```\n\n";
+        t += `\n${n}\n\n`;
       } else if (e.type === "bulletList" && e.content) {
         n === 0 &&
           t.length > 0 &&
@@ -194,13 +303,13 @@ var ky = (e) => {
         for (let t of e.content) ((n += 1), a(t), --n);
       } else if (e.type === "mention")
         e.content
-          ? (t += uy(e.attrs?.label))
+          ? (t += Pv(e.attrs?.label))
           : (t += `@${e.attrs?.renderedText || e.attrs?.label || ""}`);
       else if (e.type === "skillChip") {
-        let n = ly(e.attrs?.skillId) || e.attrs?.skillDisplayName || "";
+        let n = Nv(e.attrs?.skillId) || e.attrs?.skillDisplayName || "";
         t += `/${n}`;
       } else if (e.type === "commandChip") {
-        let n = ly(e.attrs?.commandId) || e.attrs?.commandDisplayName || "";
+        let n = Nv(e.attrs?.commandId) || e.attrs?.commandDisplayName || "";
         t += `/${n}`;
       } else if (e.type === "connectorToolChip") {
         let n = e.attrs?.toolDisplayName || e.attrs?.toolName || "",
@@ -210,18 +319,18 @@ var ky = (e) => {
     };
   return (a(e), t.replaceAll("\u200B", "").replaceAll("\u00A0", " ").trim());
 };
-const Hd = ky;
-const lE = /^(`{3,})(\S*)\n([\s\S]*?)\n\1[ \t]*$/gm;
-const uE = /^((?: {3})*)\* (.*)$/;
-const dE = /^((?: {3})*)\*$/;
-const fE = /^((?: {3})*)(\d+)\. (.*)$/;
-const pE = /^((?: {3})*)(\d+)\.$/;
-const mE = /^(?: {3})*(?:\*|\d+\.)(?: |$)/m;
-function hE(e, t) {
-  let n = uE.exec(e) ?? (t ? dE.exec(e) : null);
+const up = ny;
+var bP = /^(`{3,})(\S*)\n([\s\S]*?)\n\1[ \t]*$/gm;
+var xP = /^((?: {3})*)\* (.*)$/;
+var SP = /^((?: {3})*)\*$/;
+var CP = /^((?: {3})*)(\d+)\. (.*)$/;
+var wP = /^((?: {3})*)(\d+)\.$/;
+var TP = /^(?: {3})*(?:\*|\d+\.)(?: |$)/m;
+function EP(e, t) {
+  let n = xP.exec(e) ?? (t ? SP.exec(e) : null);
   if (n)
     return { level: n[1].length / 3, ordered: !1, start: 1, text: n[2] ?? "" };
-  let r = fE.exec(e) ?? (t ? pE.exec(e) : null);
+  let r = CP.exec(e) ?? (t ? wP.exec(e) : null);
   if (r) {
     let e = Number(r[2]);
     return r[2] === String(e)
@@ -230,7 +339,7 @@ function hE(e, t) {
   }
   return null;
 }
-function gE(e, t, n, r) {
+function DP(e, t, n, r) {
   let i = [],
     a = [],
     o = [],
@@ -243,7 +352,7 @@ function gE(e, t, n, r) {
   for (let e = 0; e < s.length; e++) {
     let u = s[e],
       d = !n && e === s.length - 1,
-      f = t ? hE(u, d) : null;
+      f = t ? EP(u, d) : null;
     if (t && u === "" && a.length > 0) {
       ((a = []), (o = []), (l = !0));
       continue;
@@ -332,7 +441,7 @@ function gE(e, t, n, r) {
   }
   return i;
 }
-function _E(e, t) {
+function OP(e, t) {
   return (
     e === t ||
     (t.endsWith(`
@@ -340,11 +449,11 @@ function _E(e, t) {
       e === t.slice(0, -1))
   );
 }
-function vE(e, t, n) {
+function kP(e, t, n) {
   let r = t.replaceAll("\u200B", "").replaceAll("\u00A0", " ");
   return n
-    ? _E(
-        Hd({
+    ? OP(
+        up({
           type: "doc",
           content: [
             { type: "paragraph", content: [{ type: "text", text: "x" }] },
@@ -353,9 +462,9 @@ function vE(e, t, n) {
         }),
         `x\n${r}`,
       )
-    : _E(Hd({ type: "doc", content: e }), r);
+    : OP(up({ type: "doc", content: e }), r);
 }
-function yE(
+function AP(
   e,
   {
     parseLists: t = !0,
@@ -364,14 +473,14 @@ function yE(
   } = {},
 ) {
   if (!e) return { type: "doc", content: [{ type: "paragraph", content: [] }] };
-  let i = () => ({ type: "doc", content: gE(e, t, !1, r) });
+  let i = () => ({ type: "doc", content: DP(e, t, !1, r) });
   if (!n) return i();
   let a = [],
     o = 0;
-  for (let n of e.matchAll(lE)) {
+  for (let n of e.matchAll(bP)) {
     let i = e.slice(o, n.index).replace(/\n$/, "");
     if ((o > 0 && (i = i.replace(/^\n{1,2}/, "")), i))
-      for (let e of gE(i, t, !0, o === 0 && r)) a.push(e);
+      for (let e of DP(i, t, !0, o === 0 && r)) a.push(e);
     (a.push({
       type: "codeBlock",
       attrs: { language: n[2] || null },
@@ -381,12 +490,12 @@ function yE(
   }
   if (o === 0) return i();
   let s = e.slice(o).replace(/^\n{1,2}/, "");
-  if (s) for (let e of gE(s, t, !1, !1)) a.push(e);
-  return vE(a, e, r) ? { type: "doc", content: a } : i();
+  if (s) for (let e of DP(s, t, !1, !1)) a.push(e);
+  return kP(a, e, r) ? { type: "doc", content: a } : i();
 }
-const o = yE,
-  a = lE,
-  s = mE;
+const s = TP,
+  o = bP,
+  a = AP;
 function G(e) {
   return (e.content ?? []).map((e) => e.text ?? "").join("");
 }
@@ -481,17 +590,17 @@ function Ue(e, t) {
     i
   );
 }
-const We = 10;
+var We = 10;
 function Ge(e, t) {
   if (!s.test(e)) return q(e);
   let n = t && e.charCodeAt(0) === We ? e.slice(1) : e;
   return Ue(
-    o(n, { parseFences: !1, precededByNonEmptyLine: t }).content ?? [],
+    a(n, { parseFences: !1, precededByNonEmptyLine: t }).content ?? [],
     e,
   );
 }
 function Ke(e) {
-  let t = e.includes("```") ? (o(e).content ?? []) : [];
+  let t = e.includes("```") ? (a(e).content ?? []) : [];
   if (!t.some(He)) return (e, t, n) => Ge(e, n);
   let n = [[]];
   for (let e of t) He(e) ? n.push([]) : n[n.length - 1].push(e);
@@ -520,7 +629,7 @@ function Ye(e) {
     i = () => {
       r !== null && (n.push({ kind: "text", text: r }), (r = null));
     },
-    o = (e, a, o) => {
+    a = (e, a, o) => {
       let s = t(e, a, o);
       if (!s.some((e) => e.kind === "list")) {
         r = (r ?? "") + e;
@@ -540,12 +649,12 @@ function Ye(e) {
     },
     c = 0,
     l = 0;
-  for (let t of e.matchAll(a))
-    (o(e.slice(c, t.index), l++, c > 0),
+  for (let t of e.matchAll(o))
+    (a(e.slice(c, t.index), l++, c > 0),
       (r = (r ?? "") + t[0]),
       (c = t.index + t[0].length));
   return (
-    o(e.slice(c), l, c > 0),
+    a(e.slice(c), l, c > 0),
     i(),
     n.some((e) => e.kind === "list") ? n : [{ kind: "text", text: e }]
   );

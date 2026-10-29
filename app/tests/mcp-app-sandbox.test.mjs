@@ -57,6 +57,35 @@ test("official reference strings are where the module says they are", async () =
   assert.equal(count(s23, 'mcpAppsSandboxProxyUrl:"https://sandbox.claudemcpcontent.com/mcp_apps"'), 1);
 });
 
+// w2-mcp-host: the generated renderer host (src/generated/mcp-app-host) is 3.6556.2; the same contract pieces hold there.
+test("official reference strings: the 3.6556.2 originals the generated host is cut from keep the sandbox contract", async () => {
+  const root = new URL("../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/", import.meta.url);
+  let names;
+  try { names = await fs.readdir(root); } catch { return; } // reference tree not present on this machine
+  const read = async (name) => fs.readFile(new URL(name, root), "utf8");
+  const count = (text, needle) => text.split(needle).length - 1;
+  const cbc7 = await read("cbc7fd025-CL89uHGY.js");
+  assert.equal(count(cbc7, 'i=["connect-src","resource-src","frame-src","dev"],a=new Set([r,"stable-origin","uniq","appVersion"])'), 1);
+  assert.equal(count(cbc7, 'var r="base"'), 1);
+  assert.equal(count(cbc7, "s=/^[0-9a-f]{32}$/"), 1);
+  assert.equal(count(cbc7, "async function x(e,t){return _(e+t)}"), 1);
+  const s78 = await read("shared-78-D5Fw2h0a.js");
+  assert.equal(count(s78, `u.setAttribute("sandbox","${SANDBOX_FLAGS}")`), 1);
+  assert.equal(count(s78, '_I={camera:"camera",microphone:"microphone",geolocation:"geolocation",clipboardWrite:"clipboard-write"}'), 1);
+  assert.equal(count(s78, '"fullscreen *"'), 1);
+  const cd9 = await read("cd9b7fccf-Ccxjzcg4.js");
+  assert.equal(count(cd9, 'o.searchParams.set("connect-src",i.csp.connectDomains.join(" "))'), 1);
+  assert.equal(count(cd9, 'o.searchParams.set("resource-src",c.join(" "))'), 1);
+  assert.equal(count(cd9, 'o.searchParams.set("dev","true")'), 1);
+  assert.equal(count(cd9, "withholdDevicePermissions"), 1, "only the AppRenderer's own default, no caller");
+  const bridge = await read("c131c9a32-CCtH6MRf.js");
+  assert.equal(count(bridge, '"ui/notifications/sandbox-proxy-ready"'), 2);
+  assert.equal(count(bridge, '"ui/notifications/sandbox-resource-ready"'), 3);
+  // The remote proxy URL the local oc-mcp-sandbox: scheme stands in for moved from shared-23 to shared-50.
+  assert.equal(count(await read("shared-50-DopKwmK0.js"), 'mcpAppsSandboxProxyUrl:"https://sandbox.claudemcpcontent.com/mcp_apps"'), 1);
+  assert.equal(names.includes("shared-23-BZ6ZY5fu.js") && count(await read("shared-23-BZ6ZY5fu.js"), "mcpAppsSandboxProxyUrl"), 0);
+});
+
 test("URL parameters: only cbc7fd025's names, each once, with plain https/wss sources", () => {
   const q = (text) => parseSandboxQuery(new URLSearchParams(text));
   assert.deepEqual(q(""), { ok: true, connect: [], resource: [], frame: [], dev: false });

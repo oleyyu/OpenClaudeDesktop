@@ -1,7 +1,10 @@
-// Quitting while an agent works (index.chunk-ChZ67Jhw.js installQuitSessionGuard jjt / Mjt / Bjt / QS): when any
-// session has a running turn, a running workflow or live background commands, the first quit shows a warning box
-// "DeepSeek is still working" (the running core's assistant) with Quit anyway, Wait for DeepSeek (the default: the
-// app quits by itself once that work ends) and Cancel. Quit anyway, or the wait finishing, quits without asking again.
+// Quitting while an agent works (3.6556.2 index.chunk-jPKPzV-P.js updater guard e5t / c5t, counts W8t / U8t / G8t, wait
+// J8t): when any session has a running turn, a running workflow or live background commands, the first quit shows a
+// warning box. With agent work it is "DeepSeek is still working" (the running core's assistant) with Quit anyway, Wait
+// for DeepSeek (the default: the app quits by itself once that work ends) and Cancel; with background commands only it
+// is "Background commands are still running" with Quit anyway and Cancel (no Wait, cancelId 1). The detail is one
+// paragraph per kind, joined by a blank line; Wait waits for the turns, not for background commands that were already
+// running when the box opened. Quit anyway, or the wait finishing, quits without asking again.
 // Does not import Electron so the decision flow is unit-testable; main.cjs feeds it the core's events.
 
 const parentOf = (thread) => thread?.parentThreadId || thread?.source?.subAgent?.thread_spawn?.parent_thread_id || null;
@@ -83,10 +86,35 @@ async function backgroundSessions({ client, ids, timeoutMs = 1500 }) {
 }
 
 /**
+ * W8t's two counts from the host's sources: `working` = sessions with a running turn or workflow (iw skipShells),
+ * `withShells` = sessions with live background commands (U8t countSessionsWithShells), a session doing both counted
+ * in each. main.cjs can pass `count: () => workCounts({ liveWork, client })`.
+ */
+async function workCounts({ liveWork, client, timeoutMs }) {
+  const working = liveWork.sessions().size;
+  const withShells = (await backgroundSessions({ client, ids: liveWork.touchedSessions(), timeoutMs })).length;
+  return { working, withShells };
+}
+
+/**
+ * count() may resolve W8t's { working, withShells } or, as main.cjs's older wiring does, one number: the sessions
+ * with live work plus those idle sessions that have background commands. `now` is countNow() taken just before
+ * count() ran, so the number splits into the agent-working part and the background-only part.
+ */
+function workSplit(result, now = 0) {
+  if (result && typeof result === "object") {
+    return { working: Math.max(0, Number(result.working) || 0), withShells: Math.max(0, Number(result.withShells) || 0) };
+  }
+  const total = Math.max(0, Number(result) || 0), working = Math.min(Math.max(0, Number(now) || 0), total);
+  return { working, withShells: total - working };
+}
+
+/**
  * handle(event) runs first in before-quit and returns true when it held the quit (it then called event.preventDefault());
  * false lets the quit go on. countNow() is the number of sessions with live work known at once (turns, workflows);
- * count() resolves it with background commands too, which takes a core query, so it runs only when mayFindMore() says a
- * session could have some. skip(): quit without asking (automation).
+ * count() resolves the counts with background commands too ({ working, withShells }, or one number: see workSplit),
+ * which takes a core query, so it runs only when mayFindMore() says a session could have some. skip(): quit without
+ * asking (automation).
  */
 // terminalsNow(): the built-in terminal tabs whose foreground program is still running (terminal-service.cjs); they join
 // the same confirmation (a terminal-only quit asks Quit anyway / Cancel).
@@ -94,21 +122,26 @@ function createQuitGuard({ app, dialog, getWindow = () => null, t, count, countN
   let allowed = false, prompting = false, checking = false, stopWaiting = null;
   const quit = () => { cancelWait(); allowed = true; app.quit(); };
   function cancelWait() { if (stopWaiting) { const stop = stopWaiting; stopWaiting = null; stop(); } }
-  // Wait for DeepSeek: quit by itself once no session has live work (rechecked on every change, and on a timer for
-  // background commands, which report no end event). Commands still running in the built-in terminal then get the
-  // terminal-only question (Quit anyway / Cancel) instead of being hung up without asking.
-  function wait() {
+  const counted = async () => { const now = countNow(); return workSplit(await count(), now); };
+  // Wait for DeepSeek (J8t): quit by itself once no session has agent work (rechecked on every change, and on a timer
+  // for background commands, which report no end event). With background commands running when the box opened
+  // (skipShells), those do not hold the quit, but a session that starts new ones meanwhile does (shellsAtOpen; the
+  // host counts sessions, not shell keys). Commands still running in the built-in terminal then get the terminal-only
+  // question (Quit anyway / Cancel) instead of being hung up without asking.
+  function wait({ skipShells = false, shellsAtOpen = 0 } = {}) {
     cancelWait();
     let busy = false, done = false;
     const check = async () => {
       if (busy || done) return;
       busy = true;
       try {
-        if ((await count()) === 0 && !done) {
+        const { working, withShells } = await counted();
+        const left = working + (skipShells ? (withShells > shellsAtOpen ? 1 : 0) : withShells);
+        if (left === 0 && !done) {
           done = true;
           let terminals = 0;
           try { terminals = Number(terminalsNow()) || 0; } catch (error) { onError(error); }
-          if (terminals > 0) { cancelWait(); void prompt(0, terminals); } else quit();
+          if (terminals > 0) { cancelWait(); void prompt({ working: 0, withShells: 0 }, terminals); } else quit();
         }
       }
       catch (error) { onError(error); }
@@ -121,11 +154,13 @@ function createQuitGuard({ app, dialog, getWindow = () => null, t, count, countN
     void check();
   }
   const plural = (count, one, other) => t(count === 1 ? one : other, { count });
-  async function prompt(sessions, terminals = 0) {
+  // c5t: s = working (or, when neither count has anything, the sessions the guard saw running), c = s > 0.
+  async function prompt({ working, withShells }, terminals = 0) {
     prompting = true;
     // t() names the running core's assistant in place of DeepSeek (i18n setAssistantName).
     const terminalNote = terminals > 0 ? plural(terminals, "A command is also running in {count} terminal.", "Commands are also running in {count} terminals.") : "";
-    const options = sessions === 0 ? {
+    const agent = working > 0;
+    const options = !agent && withShells === 0 ? {
       type: "warning",
       message: t("A command is still running in a terminal"),
       detail: plural(terminals, "Quitting now will stop the command running in {count} terminal.", "Quitting now will stop the commands running in {count} terminals."),
@@ -133,10 +168,16 @@ function createQuitGuard({ app, dialog, getWindow = () => null, t, count, countN
       defaultId: 0, cancelId: 1, noLink: true,
     } : {
       type: "warning",
-      message: t("DeepSeek is still working"),
-      detail: [t(sessions === 1 ? "DeepSeek is working in {count} session. Quitting now will interrupt that work." : "DeepSeek is working in {count} sessions. Quitting now will interrupt that work.", { count: sessions }), terminalNote].filter(Boolean).join(" "),
-      buttons: [t("Quit anyway"), t("Wait for DeepSeek"), t("Cancel")],
-      defaultId: 1, cancelId: 2, noLink: true,
+      message: agent ? t("DeepSeek is still working") : t("Background commands are still running"),
+      detail: [
+        agent && plural(working, "DeepSeek is working in {count} session. Quitting now will interrupt that work.", "DeepSeek is working in {count} sessions. Quitting now will interrupt that work."),
+        withShells > 0 && (agent
+          ? plural(withShells, "Background commands are running in {count} session. Quitting will stop them, even if you wait for DeepSeek.", "Background commands are running in {count} sessions. Quitting will stop them, even if you wait for DeepSeek.")
+          : plural(withShells, "Background commands are running in {count} session. Quitting will stop them.", "Background commands are running in {count} sessions. Quitting will stop them.")),
+        terminalNote,
+      ].filter(Boolean).join("\n\n"),
+      buttons: [t("Quit anyway"), ...(agent ? [t("Wait for DeepSeek")] : []), t("Cancel")],
+      defaultId: 1, cancelId: agent ? 2 : 1, noLink: true,
     };
     const window = getWindow();
     const parent = window && !window.isDestroyed?.() && window.isVisible?.() ? window : undefined;
@@ -148,8 +189,7 @@ function createQuitGuard({ app, dialog, getWindow = () => null, t, count, countN
     }
     prompting = false;
     if (response === 0) quit();
-    else if (sessions === 0) cancelWait();
-    else if (response === 1) wait();
+    else if (agent && response === 1) wait({ skipShells: withShells > 0, shellsAtOpen: withShells });
     else cancelWait();
   }
   function handle(event) {
@@ -162,15 +202,26 @@ function createQuitGuard({ app, dialog, getWindow = () => null, t, count, countN
     if (now === 0 && terminals === 0 && !mayFindMore()) return false;
     event.preventDefault();
     if (prompting || checking) return true;
-    if (now > 0 || !mayFindMore()) { void prompt(now, terminals); return true; }
+    if (!mayFindMore()) { void prompt({ working: now, withShells: 0 }, terminals); return true; }
+    // A session could have background commands: ask the core first, so the box names both kinds (W8t).
     checking = true;
     Promise.resolve().then(count).then(
-      (sessions) => { checking = false; if (sessions > 0 || terminals > 0) void prompt(sessions, terminals); else quit(); },
-      (error) => { checking = false; onError(error); quit(); },
+      (result) => {
+        checking = false;
+        const counts = workSplit(result, now);
+        // c5t's fallback: work the guard saw running that neither count names still counts as agent work.
+        if (counts.working === 0 && counts.withShells === 0 && now > 0) counts.working = now;
+        if (counts.working > 0 || counts.withShells > 0 || terminals > 0) void prompt(counts, terminals); else quit();
+      },
+      (error) => {
+        checking = false; onError(error);
+        // A failed lookup never holds the quit, but never drops a known turn either.
+        if (now > 0 || terminals > 0) void prompt({ working: now, withShells: 0 }, terminals); else quit();
+      },
     );
     return true;
   }
   return { handle, get waiting() { return stopWaiting !== null; }, get prompting() { return prompting; } };
 }
 
-module.exports = { createLiveWork, backgroundSessions, createQuitGuard };
+module.exports = { createLiveWork, backgroundSessions, workCounts, workSplit, createQuitGuard };

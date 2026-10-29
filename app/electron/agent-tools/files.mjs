@@ -9,6 +9,9 @@ import path from "node:path";
 
 export const group = "files";
 export const native = "SendUserFile";
+// w13-close-main-process (E63 coworkfn-tools-06): a Cowork session hands the user files with present_files only (the
+// official Cowork server, h5i, has no SendUserFile; agent-tools/cowork.mjs), so this tool serves Chat and Code sessions.
+export const surfaces = ["chat", "code"];
 export const MAX_FILES = 20;
 
 /** A path the agent names (absolute, ~ or relative to the session folder) as a real file inside that folder. */

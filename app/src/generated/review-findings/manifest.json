@@ -1,244 +1,386 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-review-findings.mjs",
   "adapterModule": "src/source-review-findings-adapters.jsx",
   "modules": [
     {
       "target": "pane-focus-return.mjs",
-      "source": "cae42d46f-8Va5mKUX.js",
-      "sourceSha256": "43f45df8bec5d933a1394b296f95925db9dbe3acb9bb6977f64e360d5bee01cf",
-      "sha256": "cb75c8324e05abcfe607e2049e1d18d023832a6a71dff4c304cb93a50f61132f",
-      "referenceVersion": "2.42304.0",
+      "source": "shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+      "sha256": "7b51a664769c1496fd479bce50172a9db15fa73e740dd28de7e7c164df69e966",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "o",
-          "sha256": "23808085a74a9aeef0230ee2102ffdee016c508b381e63772b9bb58f654499cb"
+          "name": "tC",
+          "sha256": "503bb75df8e442f9a8016afdd76b096c16687239a3f5ebc7a9ecce5a6c5922dd"
         },
         {
-          "name": "s",
-          "sha256": "83600054e43ba77b3eac50188c9fa69cf32dd67aa70bb35ac67fa64bb5f36a7c"
+          "name": "nC",
+          "sha256": "b0b6c6ceade4b3a99a3f495934a53cd86a5749d62c4e7d6c0a0ed5a7dfbbaaa8"
         },
         {
-          "name": "c",
-          "sha256": "d033d5cc5f2278d93228b303e6f3acaa5bfe19b8d7f7ae8f35a3db473b762a5b"
+          "name": "rC",
+          "sha256": "be275b188d2ef218283ddc66ac1b5cfd26ca22e35e02095f3b22b66ce6b1d823"
         },
         {
-          "name": "u",
-          "sha256": "d5aaed911ceb744610aecdebba97c51939e809fb1d970084132b437ae92b694d"
+          "name": "aC",
+          "sha256": "2069163e4c236dad3fa81ea1348997f51320ad52a5f8780f4f872805d8ad3746"
         },
         {
-          "name": "d",
-          "sha256": "164623acc5449b8a86f06e92e485587d5e5b2fd4baa9c3944047e66e7e0a4624"
+          "name": "oC",
+          "sha256": "9d929a9b6297fed5f2db7b994f97b28bacd75832edc252fefd3b76e250e6f913"
         }
       ],
       "imports": [],
       "exports": {
-        "s": "focusReturnRegion",
-        "u": "returnFocusSoon"
+        "nC": "focusReturnRegion",
+        "aC": "returnFocusSoon"
       }
     },
     {
       "target": "finding-category.mjs",
-      "source": "c227f4d5e-Ba-r--Rl.js",
-      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
-      "sha256": "f339805c00768d94d5342bd0ee743ad15193d6338b445d33019fc6c32b4e6da6",
-      "referenceVersion": "2.42304.0",
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "3d2f5247f1a6092663d619a6cda77a37427ecd58240374145110811086506411",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "jq",
-          "sha256": "4daf94831fd65045a78ac30d6c03d8a1a7d33c4947e7b2751fcf3e086cbad06d"
+          "name": "b1",
+          "sha256": "4012af4e65d92c009cba7e3fe4b91e7467723016a9addc66b46bedcfa11b0f67"
         }
       ],
       "imports": [],
       "exports": {
-        "jq": "findingCategoryLabel"
+        "b1": "findingCategoryLabel"
       }
     },
     {
       "target": "review-finding-card.mjs",
-      "source": "c44d00c7f-zUAG9XyS.js",
-      "sourceSha256": "1c22acc2085aa1a4f30ddba06de3f2fc7f9f7673e0872e2e8882d16ce262be9d",
-      "sha256": "2101338bc86d1734e7c73ea901270d92bd18123e7ca6640b1ecc3b3a481b05e9",
-      "referenceVersion": "2.42304.0",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "61f5be385f0c743956acd3593d1b81599f1daab4d20d1f8d4f85ea6a4edde831",
+      "referenceVersion": "3.6556.2",
       "bindings": [
         {
-          "name": "Zi",
-          "sha256": "8be70024164433ac858c8c7d1c9b1a067518645edceb8c9a4ca42de8311a9741"
+          "name": "$s",
+          "sha256": "be8517f99a0588b5c7181638b1c042661323ad80a7f67b76987456bf5a93deeb"
         },
         {
-          "name": "ea",
-          "sha256": "760d3ae20889159af9a77bf609869943bdcbf2138a3298e737217a0005dea74f"
+          "name": "nc",
+          "sha256": "25e407d9a23cb39ac2298d5eb3e4f9ec884caa72062f1052d3c95dd0a7793712"
         },
         {
-          "name": "ya",
-          "sha256": "19a0e4bdc7c8e0b2c607e3c16d133bc57af2d66b2502a372606f8cc9a95623e1"
+          "name": "Cc",
+          "sha256": "e91178ec3d808b553f96baa2e98f09023486744f07e2d6ae1ad8d3353f2b1fb7"
         },
         {
-          "name": "ba",
-          "sha256": "ebc9429d2540600a5c6fc2b31765d164ebd84d3f2a5be29a63f21bd9710f69f5"
+          "name": "wc",
+          "sha256": "24cdbe5efe4035e4f15744d0c741989e4fcc8456b7659c535f8827faad1810b9"
         }
       ],
       "imports": [
         {
-          "local": "y",
+          "local": "v",
           "from": "react",
           "name": "memo",
-          "via": "vendor-frame-DfPJ1QmD.js:oo",
+          "via": "vendor-frame-CnSY1sxv.js:so",
           "kind": "react"
         },
         {
-          "local": "a",
-          "from": "react/jsx-runtime",
-          "name": "jsxs",
-          "via": "vendor-frame-DfPJ1QmD.js:Ha",
-          "kind": "react"
+          "local": "e",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs",
+          "original": "ve"
         },
         {
-          "local": "s",
+          "local": "t",
           "from": "react",
           "name": "useRef",
-          "via": "vendor-frame-DfPJ1QmD.js:So",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
           "kind": "react"
         },
         {
-          "local": "c",
+          "local": "n",
           "from": "react/jsx-runtime",
           "name": "jsx",
-          "via": "vendor-frame-DfPJ1QmD.js:Va",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
           "kind": "react"
         },
         {
-          "local": "x",
-          "from": "react",
-          "name": "useCallback",
-          "via": "vendor-frame-DfPJ1QmD.js:uo",
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
           "kind": "react"
         },
         {
-          "local": "w",
-          "from": "../view-tabs/vendor-frame-DfPJ1QmD.js",
-          "name": "clsx",
-          "via": "vendor-frame-DfPJ1QmD.js:za",
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
           "kind": "view-tabs",
-          "original": "ge"
+          "original": "J2"
         },
         {
-          "local": "R",
+          "local": "T",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs",
+          "original": "Uu"
+        },
+        {
+          "local": "E",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsOverflowTooltip",
+          "via": "shared-frame-6jtSkIit.js:Gl",
+          "kind": "view-tabs",
+          "original": "hh"
+        },
+        {
+          "local": "I3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst3",
+          "via": "shared-frame-6jtSkIit.js:Jf",
+          "kind": "view-tabs",
+          "original": "I3"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs",
+          "original": "I1"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "ee",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsBadge",
+          "via": "shared-frame-6jtSkIit.js:ad",
+          "kind": "view-tabs",
+          "original": "Ps"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "ne",
           "from": "../../source-review-findings-adapters.jsx",
           "name": "ReviewSpark",
-          "via": "shared-frame-BfjMqbuN.js:$i",
+          "via": "shared-frame-6jtSkIit.js:fa",
           "kind": "adapter",
-          "original": "NT"
+          "original": "ZO"
         },
         {
-          "local": "fe",
-          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
-          "name": "CdsOverflowTooltip",
-          "via": "shared-frame-BfjMqbuN.js:Dc",
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
           "kind": "view-tabs",
-          "original": "gm"
+          "original": "J9"
         },
         {
-          "local": "_e",
-          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
-          "name": "CdsBadge",
-          "via": "shared-frame-BfjMqbuN.js:Vl",
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
           "kind": "view-tabs",
-          "original": "cs"
+          "original": "K4"
         },
         {
-          "local": "U",
-          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
-          "name": "CdsButton",
-          "via": "shared-frame-BfjMqbuN.js:cl",
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
           "kind": "view-tabs",
-          "original": "$l"
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-6jtSkIit.js:qf",
+          "kind": "view-tabs",
+          "original": "I2"
+        },
+        {
+          "local": "ae",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-6jtSkIit.js:ql",
+          "kind": "view-tabs",
+          "original": "xh"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
         },
         {
           "local": "Se",
-          "from": "../view-tabs/shared-frame-BfjMqbuN.js",
-          "name": "CdsTooltipProvider",
-          "via": "shared-frame-BfjMqbuN.js:kc",
-          "kind": "view-tabs",
-          "original": "Sm"
+          "from": "./pane-focus-return.mjs",
+          "name": "focusReturnRegion",
+          "via": "shared-1-BJhqMmkf.js:cu",
+          "kind": "generated"
         },
         {
-          "local": "W",
+          "local": "Ee",
+          "from": "./pane-focus-return.mjs",
+          "name": "returnFocusSoon",
+          "via": "shared-1-BJhqMmkf.js:mu",
+          "kind": "generated"
+        },
+        {
+          "local": "J",
           "from": "../../source-review-findings-adapters.jsx",
           "name": "FormattedMessage",
-          "via": "vendor-intl-Db7hDWRO.js:l",
+          "via": "vendor-intl-DYfox5Co.js:l",
           "kind": "adapter",
           "original": "Gt"
         },
         {
-          "local": "G",
+          "local": "Y",
           "from": "../../source-review-findings-adapters.jsx",
           "name": "useIntl",
-          "via": "vendor-intl-Db7hDWRO.js:p",
+          "via": "vendor-intl-DYfox5Co.js:p",
           "kind": "adapter",
           "original": "q"
         },
         {
-          "local": "Ve",
-          "from": "./pane-focus-return.mjs",
-          "name": "returnFocusSoon",
-          "via": "cae42d46f-8Va5mKUX.js:l",
-          "kind": "generated"
-        },
-        {
-          "local": "Ue",
-          "from": "./pane-focus-return.mjs",
-          "name": "focusReturnRegion",
-          "via": "cae42d46f-8Va5mKUX.js:r",
-          "kind": "generated"
-        },
-        {
-          "local": "In",
+          "local": "_r",
           "from": "../../source-review-findings-adapters.jsx",
           "name": "useIsCurrentFinding",
-          "via": "cc8941b7b-CZT9QwXr.js:Q",
+          "via": "cc8941b7b-DAgMZRvX.js:Z",
           "kind": "adapter",
-          "original": "rt"
+          "original": "pt"
         },
         {
-          "local": "$n",
+          "local": "kr",
           "from": "../../source-review-findings-adapters.jsx",
           "name": "useFindingStatus",
-          "via": "cc8941b7b-CZT9QwXr.js:tt",
+          "via": "cc8941b7b-DAgMZRvX.js:tt",
           "kind": "adapter",
-          "original": "it"
+          "original": "mt"
         }
       ],
       "exports": {
-        "ba": "ReviewFindingCard",
-        "ea": "findingLinesLabel",
-        "Zi": "DIFF_WIDGET_CARD"
+        "wc": "ReviewFindingCard",
+        "nc": "findingLinesLabel",
+        "$s": "DIFF_WIDGET_CARD"
       }
     }
   ],
   "callSites": [
     {
-      "source": "c44d00c7f-zUAG9XyS.js",
-      "binding": "Aa",
-      "role": "Diff annotation renderer: a finding is ba with Fix / Next (only with more findings) / Dismiss",
-      "sourceSha256": "1c22acc2085aa1a4f30ddba06de3f2fc7f9f7673e0872e2e8882d16ce262be9d",
-      "sha256": "be3342f98d55a431cdb61b896bcb12b7387012ea559721b61e7abb457119659e",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "binding": "Pc",
+      "role": "Diff annotation renderer: a finding is wc with Fix / Next (only with more findings) / Dismiss",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "197299850b7297e39fa118ca0fc2cbbe46793d416ad61dffe99278bf8597453a",
       "features": [
-        "if (n.kind === \"finding\")",
-        "annotation: n.finding,",
-        "onFix: f ? () => f(n.finding) : void 0,",
-        "onNext: n.hasNext",
-        "? () => Dn.stepReviewFinding(r, n.finding.id, s)",
-        "p ? p(n.finding) : Dn.dismissReviewFinding(r, n.finding.id, s),"
+        {
+          "loose": "if (r.kind === \"finding\")"
+        },
+        {
+          "loose": "annotation: r.finding,"
+        },
+        {
+          "loose": "onFix: f ? () => f(r.finding) : void 0,"
+        },
+        {
+          "loose": "onNext: r.hasNext"
+        },
+        ".stepReviewFinding(",
+        {
+          "loose": "p ? p(r.finding) : wr.dismissReviewFinding(i, r.finding.id, c)"
+        },
+        {
+          "loose": "n( wc, {"
+        }
       ]
     },
     {
-      "source": "c44d00c7f-zUAG9XyS.js",
-      "binding": "xa",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "binding": "Tc",
       "role": "Annotation list: a finding sits under its end line (lineNumber: endLine), hasNext from the pane",
-      "sourceSha256": "1c22acc2085aa1a4f30ddba06de3f2fc7f9f7673e0872e2e8882d16ce262be9d",
-      "sha256": "35cf1023f98a838af6179430caa05c9a08f24c71b7036502c656ae21bc86d7fd",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "d90fa2685aaebfac3f9f206b1882b975ed6cc276d826e3929db91c21faf61209",
       "features": [
         "key: `finding:${e.id}`,",
         "lineNumber: e.endLine,",
@@ -246,24 +388,32 @@
       ]
     },
     {
-      "source": "c227f4d5e-Ba-r--Rl.js",
-      "binding": "Mq",
-      "role": "ReportFindings finding parser: category is jq(category), line only when a number",
-      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
-      "sha256": "1d88f280a064a3e095a9665f203f7bb0b987e60a94f1c15505cf8899e0502775",
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "binding": "x1",
+      "role": "ReportFindings finding parser: category is b1(category), line only when a number",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "f5300611cbe29294def704f04e075a261d6f273c7c3a91f6599c3e0804cef9b3",
       "features": [
-        "line: typeof t.line == \"number\" ? t.line : void 0,",
-        "category: jq(t.category),",
-        "t.verdict === \"CONFIRMED\" || t.verdict === \"PLAUSIBLE\""
+        {
+          "loose": "line: typeof t.line == \"number\" ? t.line : void 0,"
+        },
+        {
+          "loose": "category: b1(t.category),"
+        },
+        {
+          "loose": "t.verdict === \"CONFIRMED\" || t.verdict === \"PLAUSIBLE\""
+        }
       ]
     },
     {
-      "source": "c96d752d0-BOCqU7c2.js",
+      "source": "c96d752d0-CWv_7-n9.js",
       "role": "Findings card: the annotation each reported finding becomes (host: review-findings-model.mjs findingAnnotation)",
-      "sourceSha256": "f952fa17eaba9dc89e8d139439e23087fa5ae5469824a9502e741a263ea631fb",
+      "sourceSha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
       "raw": true,
       "features": [
-        "id:`finding-${e.id}-${n}`,filePath:t.file,side:\"additions\",startLine:t.line??1,endLine:t.line??1,line:t.line,body:t.summary,detail:t.failure_scenario,source:\"finding\",category:t.category,verdict:t.verdict"
+        {
+          "loose": "id:`finding-${t.id}-${n}`,filePath:e.file,side:\"additions\",startLine:e.line??1,endLine:e.line??1,line:e.line,body:e.summary,detail:e.failure_scenario,source:\"finding\",category:e.category,verdict:e.verdict,createdAt:O"
+        }
       ]
     }
   ]

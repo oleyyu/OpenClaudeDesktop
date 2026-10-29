@@ -5,7 +5,8 @@
 // Each thread keeps messages, status/error/request, interruption state and its own
 // unsent draft. Drafts survive navigation/unmount, but are never written to disk.
 // A question whose answer failed stays as the last message (no answer after it) and
-// `retry` holds its text while asking again could help, so the panel can offer Retry.
+// `retry` holds its text while asking again could help; it travels with the popout hand-over. The panel shows neither
+// a Retry button (cccc2cf0a UF Ze is a bare error p) nor an empty-answer notice (CF sets no error for an empty response).
 const EMPTY = Object.freeze({ messages: Object.freeze([]), status: 'idle', thinkingSince: null, progress: null, error: null, requestId: null, retry: null, draft: '', draftMentions: Object.freeze([]), interrupting: false, stagedContext: null, started: false });
 
 export function createSideChatStore({ now = () => Date.now() / 1000 } = {}) {
@@ -62,7 +63,7 @@ export function createSideChatStore({ now = () => Date.now() / 1000 } = {}) {
     /**
      * The final text wins over the streamed deltas. With no answer only the empty answer is
      * dropped: the question stays on screen beside the error, and `retryable` (default true)
-     * keeps its text for Retry. The next ask replaces it (popLastIfUser above).
+     * keeps its text. The next ask replaces it (popLastIfUser above).
      */
     finish(id, requestId, { text, error, retryable = true, closed = false } = {}) {
       const state = get(id);

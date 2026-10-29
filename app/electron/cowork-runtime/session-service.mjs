@@ -5,6 +5,8 @@ import { guestWorkdir } from './session-paths.mjs';
 import { outputSnapshot, changedOutputs } from './deliverables.mjs';
 import { readRewindTranscript, sessionConfigDir, decideRewind, assistantMidTurn, isToolResultUser, isForkRefusal, validCliSessionId,
   REWIND_SEND_RACE, REWIND_START_RACE } from './rewind-chain.mjs';
+import { COWORK_DECISIONS, isManagedAskTool, rejectionMessage, SUPERSEDED_MESSAGE, supersedeKey, createSupersede, suggestionToolNames } from './approval-policy.mjs';
+import { suggestionRules, suggestionsCovered } from '../routine-approvals.mjs';
 
 const clone = value => structuredClone(value);
 const now = () => Math.floor(Date.now() / 1000);
@@ -21,15 +23,24 @@ const rewindBuffer = row => row.thread.turns.flatMap(turn => {
 });
 
 export class CoworkSessions {
-  constructor({ dataDir, host, provider, approveFolder, approval, emit, onThread = () => {}, runtime = {} }) {
-    Object.assign(this, { dataDir, host, provider, approveFolder, approval, emit, onThread, runtime });
+  // routines (w13-close-main-process, optional): { taskOfSession(threadId) → task|null, rememberApproval(taskId, rule) } —
+  // a scheduled run's "always" keeps the CLI's suggested rules on its task, and a later run's ask they cover runs
+  // without a card (routine-approvals.mjs suggestionRules / suggestionsCovered; Dl8 persistAlwaysAllowDecision).
+  constructor({ dataDir, host, provider, approveFolder, approval, emit, onThread = () => {}, runtime = {}, routines = null }) {
+    Object.assign(this, { dataDir, host, provider, approveFolder, approval, emit, onThread, runtime, routines });
     this.root = path.join(dataDir, 'cowork-runtime', 'threads');
     this.rows = new Map(); this.live = new Map(); this.approvals = new Map();
+    // w13-coworkfn-approvals: Dl8's waiting browser: / computer: / webfetch: requests (approval-policy.mjs supersedeKey).
+    this.supersede = createSupersede();
     // R4i-cowork CW2: 2.42304.0 CB6cNSrW `_sendCommitGen` — a send committed while a rewind reads aborts the rewind.
     this.sendGen = new Map();
     host.on('event', event => this.observe(event));
   }
   owns(id) { return typeof id === 'string' && /^cw-[a-f0-9-]{36}$/.test(id); }
+  /** The scheduled task whose run this live session is, or null (routines.taskOfSession; never a Code task). */
+  taskOf(live) {
+    try { const task = this.routines?.taskOfSession?.(live?.row?.thread?.id) ?? null; return task && task.kind !== 'code' ? task : null; } catch { return null; }
+  }
   file(id) { if (!this.owns(id)) throw new Error('Invalid Cowork session.'); return path.join(this.root, `${id}.json`); }
   save(row) {
     fs.mkdirSync(this.root, { recursive: true, mode: 0o700 });
@@ -49,7 +60,12 @@ export class CoworkSessions {
     }
     this.save(row); return row;
   }
-  view(row, turns = true) { return clone({ ...row.thread, turns: turns ? row.thread.turns : [], status: { type: this.live.has(row.thread.id) ? 'active' : 'idle' } }); }
+  // w13-close-cowork-ui (coworkui-session-states-01, E59): a session whose last turn ended on a runtime failure (the VM or
+  // its SDK process went away, the run threw) reports the core protocol's ThreadStatus systemError until a new turn starts,
+  // so the Cowork view shows the official ended notice (c21f11e6d EM "This task has ended", reason "failed"); a turn the
+  // model itself finished with an error, a stop and an app restart stay idle.
+  status(row) { return this.live.has(row.thread.id) ? { type: 'active' } : row.systemError ? { type: 'systemError' } : { type: 'idle' }; }
+  view(row, turns = true) { return clone({ ...row.thread, turns: turns ? row.thread.turns : [], status: this.status(row) }); }
   async request(method, params = {}) {
     if (method === 'thread/start') {
       const cwd = await this.approveFolder(params.cwd);
@@ -102,10 +118,12 @@ export class CoworkSessions {
     this.sendGen.set(id, (this.sendGen.get(id) ?? 0) + 1);
     row.thread.turns.push(turn); row.thread.updatedAt = now(); row.thread.preview ||= text.slice(0, 160); row.model = params.model || row.model;
     const live = { row, turn, streams: new Map(), cancelled: false, permissionMode, outputs: outputSnapshot(row.thread.cwd), launch: this.launchFor(row) };
+    delete row.systemError;
     this.live.set(id, live); this.save(row);
+    this.note('thread/status/changed', id, { status: this.status(row) });
     this.note('turn/started', id, { turn });
     this.item(live, { id: randomUUID(), type: 'userMessage', content: clone(params.input) }, true);
-    setImmediate(() => void this.run(live, chosen, text).catch(error => { if (this.live.get(id) === live) this.finish(id, live.cancelled ? 'interrupted' : 'failed', error.message); }));
+    setImmediate(() => void this.run(live, chosen, text).catch(error => { if (this.live.get(id) === live) this.finish(id, live.cancelled ? 'interrupted' : 'failed', error.message, { system: true }); }));
     return { turn: clone(turn) };
   }
   note(method, threadId, params) { this.emit({ kind: 'notification', method, params: clone({ threadId, ...params }) }); }
@@ -168,18 +186,18 @@ export class CoworkSessions {
   }
   observe(event) {
     if (event.event === 'status') { this.emit({ kind: 'cowork-runtime', ...event }); return; }
-    if (event.event === 'disconnected') { for (const id of [...this.live.keys()]) this.finish(id, 'failed', event.error); return; }
+    if (event.event === 'disconnected') { for (const id of [...this.live.keys()]) this.finish(id, 'failed', event.error, { system: true }); return; }
     if (event.event === 'approval-cancel') { this.approvals.get(event.id)?.abort(); return; }
     const live = this.live.get(event.sessionId);
     if (!live) return;
     if (event.turnId && event.turnId !== live.turn.id) return;
     if (event.event === 'approval') { void this.handleApproval(live, event); return; }
     if (event.event === 'failure' || event.event === 'exit') {
-      this.finish(event.sessionId, live.cancelled ? 'interrupted' : 'failed', event.error || 'Cowork SDK exited before returning a result.'); return;
+      this.finish(event.sessionId, live.cancelled ? 'interrupted' : 'failed', event.error || 'Cowork SDK exited before returning a result.', { system: true }); return;
     }
     if (event.event !== 'message') return;
     try { this.message(live, event.record); }
-    catch (error) { this.finish(event.sessionId, 'failed', error.message); }
+    catch (error) { this.finish(event.sessionId, 'failed', error.message, { system: true }); }
   }
   message(live, record) {
     const { row, turn } = live, id = row.thread.id;
@@ -253,7 +271,7 @@ export class CoworkSessions {
   async handleApproval(live, event) {
     const controller = new AbortController(); this.approvals.set(event.id, controller);
     const { request } = event;
-    let response = { behavior: 'deny', message: 'Permission declined.' };
+    let response = { behavior: 'deny', message: 'Permission declined.' }, superseded = false, release = () => {};
     try {
       const questions = request.tool_name === 'AskUserQuestion' && Array.isArray(request.input?.questions) ? request.input.questions : null;
       if (questions?.length) {
@@ -263,21 +281,49 @@ export class CoworkSessions {
         if (result?.answers && !controller.signal.aborted && questions.every((_question, index) => result.answers[String(index)]?.answers?.length)) {
           response = { behavior: 'allow', updatedInput: { ...request.input, answers: Object.fromEntries(questions.map((question, index) => [question.question, result.answers[String(index)].answers.join(', ')])) } };
         }
+      } else if (!isManagedAskTool(request.tool_name) && (live.row.approvedToolNames || []).includes(request.tool_name)) {
+        // w13-coworkfn-approvals (cwf-31, O-38): a tool allowed "for this task" runs without another card.
+        response = { behavior: 'allow', updatedInput: request.input };
+      } else if (!isManagedAskTool(request.tool_name) && suggestionsCovered(this.taskOf(live), request.permission_suggestions)) {
+        // w13-close-main-process: a scheduled run's ask its task's kept rules cover (muI2IV6k shouldAutoApprovePermission).
+        response = { behavior: 'allow', updatedInput: request.input };
       } else {
+        // w13-coworkfn-approvals (cwf-31, O-38, approval-policy.mjs): the Cowork card's once / always / deny (+ what to do
+        // instead) are accept / acceptForSession / decline; a deny says what Dl8 respondToToolPermission says. The same
+        // request asked again while this one waits dismisses this card (Dl8 "Superseded by new permission request").
+        release = this.supersede.claim(supersedeKey(live.row.thread.id, request.tool_name, request.input), () => { superseded = true; controller.abort(); });
         const result = await this.approval('item/commandExecution/requestApproval', {
         threadId: live.row.thread.id, turnId: live.turn.id, itemId: request.tool_use_id,
         command: `${request.tool_name}\n${JSON.stringify(request.input, null, 2)}`, cwd: live.row.thread.cwd,
         reason: request.description || request.decision_reason || 'Cowork requests permission to use this tool.',
-        availableDecisions: ['accept', 'decline'],
+        availableDecisions: [...COWORK_DECISIONS], codeDesktop: { declineFeedback: true },
       }, { signal: controller.signal });
-      if (!controller.signal.aborted && result?.decision === 'accept') response = { behavior: 'allow', updatedInput: request.input };
+      const decision = controller.signal.aborted ? null : result?.decision;
+      if (decision === 'accept') response = { behavior: 'allow', updatedInput: request.input };
+      else if (decision === 'acceptForSession') {
+        // Official always (Dl8 case "always" and persistAlwaysAllowDecision): the CLI keeps its suggested rules for the
+        // session (never for a tool that always asks, `!t.WZ`), and the session remembers the tools those rules allow whole
+        // (`t.oO(e.suggestions)`, approval-policy.mjs suggestionToolNames); no suggestions, nothing lasting
+        // (w13-close-main-process, approvals review low 4).
+        const suggestions = Array.isArray(request.permission_suggestions) && request.permission_suggestions.length ? request.permission_suggestions : null;
+        response = { behavior: 'allow', updatedInput: request.input, ...(suggestions && !isManagedAskTool(request.tool_name) ? { updatedPermissions: suggestions } : {}) };
+        const remembered = suggestions && !isManagedAskTool(request.tool_name) ? suggestionToolNames(suggestions) : [];
+        if (remembered.length) {
+          live.row.approvedToolNames = [...new Set([...(live.row.approvedToolNames || []), ...remembered])].slice(-200); this.save(live.row);
+        }
+        // A scheduled run: its task keeps the suggested rules for later runs (Dl8 `r.scheduledTaskId&&!t.M5(…)&&…
+        // addApprovedPermissions(r.scheduledTaskId,e.suggestions,…)`, for always and scheduled alike).
+        const task = suggestions && !isManagedAskTool(request.tool_name) ? this.taskOf(live) : null;
+        if (task) for (const rule of suggestionRules(suggestions)) { try { this.routines.rememberApproval(task.id, rule); } catch { /* the task is gone */ } }
+      } else if (decision === 'decline') response = { behavior: 'deny', message: rejectionMessage(request.tool_name, request.input, result?.codeDesktop?.feedback) };
+      if (superseded) response = { behavior: 'deny', message: SUPERSEDED_MESSAGE };
       }
       if (this.live.get(live.row.thread.id) !== live) response = { behavior: 'deny', message: 'The Cowork turn ended.' };
       await this.host.request('approval', { id: event.id, response });
     } catch { /* A worker exit already fails the owning turn. */ }
-    finally { this.approvals.delete(event.id); }
+    finally { release(); this.approvals.delete(event.id); }
   }
-  finish(id, status, message) {
+  finish(id, status, message, { system = false } = {}) {
     const live = this.live.get(id); if (!live) return;
     this.live.delete(id);
     for (const [key, controller] of this.approvals) if (key.startsWith(`${id}:`)) { controller.abort(); this.approvals.delete(key); }
@@ -292,7 +338,10 @@ export class CoworkSessions {
     }
     for (const item of turn.items) if (item.status === 'inProgress') this.item(live, { ...item, status: 'failed', success: false }, true);
     turn.status = status; turn.completedAt = now(); turn.error = message ? { message } : null;
-    row.thread.updatedAt = now(); this.save(row); this.note('turn/completed', id, { turn });
+    if (system && status === 'failed') row.systemError = { message: message || null, at: now() };
+    row.thread.updatedAt = now(); this.save(row);
+    this.note('thread/status/changed', id, { status: this.status(row) });
+    this.note('turn/completed', id, { turn });
     void this.host.request('close', { sessionId: id, turnId: turn.id }, 5000).catch(() => {});
   }
   async stop() { for (const id of [...this.live.keys()]) this.finish(id, 'interrupted'); await this.host.stop(); }

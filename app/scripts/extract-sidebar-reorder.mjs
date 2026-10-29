@@ -1,44 +1,58 @@
-// R4g-sidebar SB2 (research-ext/X7-partial-gaps.md X7-03; research/sidebar-sections.md WI-6): extract the 2.42304.0
-// Code sidebar's section drag reorder without executing any desktop runtime. Officially iO (the manual sections) and nT
-// (the Sessions folder buckets) each render shared-19 S$ (exported `Fi`, imported as `Qt`): it gives every shared-19 x$
-// below it a drag bridge (_$ / v$, already generated in src/generated/sidebar-sections/section-sortable.mjs -- the same
-// instance x$ reads, never a second copy) and, once there are at least two positions, mounts the lazily loaded chunk
-// b$ (`sidebar_project_reorder_dnd`) = c1afd40ea `ProjectReorderBindings`: a dnd-kit DndContext (PointerSensor with
-// `activationConstraint: { distance: 8 }`, closestCenter grouped by position, vertical list strategy) whose sortables
-// publish their listeners / transform into the bridge, a drag ghost (DragOverlay at the CDS layer base + 1) and
-// onCommitDrag(activeKey, overKey) on drop.
+// R4g-sidebar SB2 (research-ext/X7-partial-gaps.md X7-03; research/sidebar-sections.md WI-6), moved to 3.6556.2 in the
+// w4-sidebar-reorder lane (analysis/claude-3.6556.2-migrate-20261025 research/sidebar.md §1.1, §1.2, §3.4;
+// data/sidebar-targets.json "sidebar-reorder/*"): extract the Code sidebar's section drag reorder without executing any
+// desktop runtime. Officially the manual sections and the Sessions folder buckets each render shared-46 _M (exported
+// `sr`; 2.42304.0 shared-19 S$): it gives every shared-46 gM below it a drag bridge (lM / uM, already generated in
+// src/generated/sidebar-sections/section-sortable.mjs -- the same instance gM reads, never a second copy) and, once
+// there are at least two positions, mounts the lazily loaded chunk mM (`sidebar_project_reorder_dnd`, 2.42304.0 b$) =
+// c1afd40ea `ProjectReorderBindings`: a dnd-kit DndContext (PointerSensor with `activationConstraint: { distance: 8 }`,
+// closestCenter grouped by position, vertical list strategy) whose sortables publish their listeners / transform into
+// the bridge, a drag ghost (DragOverlay at the CDS layer base + 1) and onCommitDrag(activeKey, overKey) on drop.
 //
 //   dnd-kit.mjs                   c09f6b4e5 (dnd-kit core + sortable + utilities, 47657 bytes): copied byte for byte;
 //                                 only its one import statement (vendor-frame's React / ReactDOM re-exports) is
 //                                 rewritten to import React / ReactDOM, alias by alias, each alias checked against
-//                                 vendor-frame's `local=<ns>.<member>` assignment.
-//   project-reorder-bindings.mjs  c1afd40ea (E ProjectReorderBindings, S the per-key sortable, C the drag ghost, w / T
-//                                 the sensor and accessibility options): copied byte for byte, its imports rewritten to
-//                                 React / ReactDOM, dnd-kit.mjs, reorder-support.mjs and drag-gesture.mjs.
-//   layer-base.mjs                shared-frame Bd (exported `Bc`): the CDS layer base z-index (9e3).
-//   reorder-support.mjs           shared-19 u$ (exported `Gi`: swallow the click a drop would make) and JQ (exported
-//                                 `Ki`: the drag ghost's z-index, Mf + 1 over layer-base.mjs).
-//   drag-gesture.mjs              shared-11 qs (exported `Xa`): the drag gesture session the bindings open on drag start
-//                                 (grabbing cursor chrome Bs / Vs / Hs, selection block Us, the live-drag count Ws, the
-//                                 pointer type Ks) and close on drop / cancel; its telemetry client is a host adapter.
-//   section-reorder.mjs           shared-19 S$ (SectionReorder) and b$ (the lazy chunk handle). b$ is sliced verbatim
-//                                 except its `load`: `f(() => import("./c1afd40ea-….js"), __vite__mapDeps([0, 1]))`
-//                                 becomes `f(() => import("./project-reorder-bindings.mjs"))` -- the specifier points at
+//                                 vendor-frame's `local=<ns>.<member>` assignment (official-3.6556.2.mjs reactAliases).
+//                                 3.6556.2 changed only that import statement against the 2.42304.0 copy (proven by
+//                                 the E34 legacy view while session-rail lagged; removed in w10-cleanup-sidebar-legacy).
+//   project-reorder-bindings.mjs  c1afd40ea (E ProjectReorderBindings, x the per-key sortable, C the drag ghost, w / T
+//                                 the sensor and accessibility options), React Compiler output in 3.6556.2: copied
+//                                 byte for byte, its imports rewritten to React / ReactDOM, dnd-kit.mjs,
+//                                 reorder-support.mjs, drag-gesture.mjs and the view-tabs compiler helpers (E3/R3).
+//   layer-base.mjs                shared-frame Ff (exported `au`; 2.42304.0 Bd): the CDS layer base z-index (9e3).
+//   reorder-support.mjs           shared-46 tM (exported `_r`: swallow the click a drop would make; 2.42304.0 shared-19
+//                                 u$) and kj (exported `yr`: the drag ghost's z-index, layer base + 1; 2.42304.0 JQ).
+//   drag-gesture.mjs              shared-11 pl (exported `Yo`; 2.42304.0 qs): the drag gesture session the bindings
+//                                 open on drag start (grabbing cursor chrome ol / sl / cl, selection block ll, the
+//                                 live-drag count ul, the pointer type fl) and close on drop / cancel; its telemetry
+//                                 client is a host adapter.
+//   section-reorder.mjs           shared-46 _M (SectionReorder) and mM (the lazy chunk handle). mM is sliced verbatim
+//                                 except its `load`: `n(() => import("./c1afd40ea-….js"), __vite__mapDeps([0, 1]))`
+//                                 becomes `n(() => import("./project-reorder-bindings.mjs"))` -- the specifier points at
 //                                 the generated copy and vite's own asset-dependency map (which this app's build makes
 //                                 itself) is dropped; that is the only rewrite, recorded in the manifest. The lazy
-//                                 loader (shared-104 fh / ph, shared-156 Ir) and the preload helper are host adapters.
+//                                 loader (shared-104 ss / ts, shared-156 SK) and the preload helper are host adapters.
 //
 // Slices: every emitted binding is an original top-level declaration sliced from the prettier-formatted source; a
 // module's bindings are the reachable closure of its roots (Babel scope analysis), so nothing is hand-picked. Every
-// import resolves to exactly one of: another module generated here, a React / ReactDOM export of vendor-frame, an
-// already generated module that holds the *same original binding* (sidebar-sections by its manifest exports,
-// code-current by its manifest bindings, both 2.42304.0), or a named host adapter in
-// src/source-sidebar-reorder-adapters.jsx. Roots, adapters and externals carry feature strings that must still appear
-// in the original text, so a version bump that re-points a minified name fails here instead of binding the wrong value.
+// import resolves to exactly one of: another module generated here, a React / ReactDOM export of vendor-frame, a
+// view-tabs public name (the React Compiler helpers, E3), an already generated module that holds the *same original
+// binding* (sidebar-sections and code-current owner-window, both 3.6556.2, by their manifest exports; a producer on
+// any other release fails generation), or a named host adapter in src/source-sidebar-reorder-adapters.jsx. Roots,
+// adapters and externals carry feature strings (R2: literals, keys, class names; minified names only through
+// looseFeature) that must still appear in the original text, so a version bump that re-points a minified name fails
+// here instead of binding the wrong value.
+//
+// Its consumer session-rail (dnd-kit.mjs, reorder-support.mjs) reads this manifest as 3.6556.2 through
+// scripts/sidebar-reorder-compat.mjs; the E34 legacy['2.42304.0'] view, its frozen JSON and the 2.42304.0
+// alpha-equivalence checks are gone (w10-cleanup-sidebar-legacy).
 //
 // D0: own generator, own output folder (src/generated/sidebar-reorder), own scripts/verify-gen-sidebar-reorder.mjs.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { sidebarSectionsManifestFor, sidebarSectionsExportedLocal } from './sidebar-sections-compat.mjs';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -46,92 +60,91 @@ import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const { referenceVersion, referenceSnapshot } = official;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/sidebar-reorder');
 const generatedRoot = path.join(root, 'src/generated');
 const adapterFile = path.join(root, 'src/source-sidebar-reorder-adapters.jsx');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const posix = p => p.split(path.sep).join('/');
 const rel = (fromFile, toFile) => { const r = posix(path.relative(path.dirname(fromFile), toFile)); return r.startsWith('.') ? r : `./${r}`; };
+const loose = official.looseFeature;
 
-// vendor-frame re-exports React / ReactDOM; each alias is checked against its `local=<ns>.<member>` assignment.
-const VENDOR = 'vendor-frame-DfPJ1QmD.js';
-const vendor = {
-  $a: ['react', 'cloneElement'], Co: ['react', 'useState'], So: ['react', 'useRef'], bo: ['react', 'useMemo'],
-  do: ['react', 'useContext'], eo: ['react', 'createContext'], mo: ['react', 'useEffect'], oo: ['react', 'memo'],
-  ro: ['react', 'forwardRef'], so: ['react', 'default'], uo: ['react', 'useCallback'], xo: ['react', 'useReducer'],
-  yo: ['react', 'useLayoutEffect'], wo: ['react', 'useSyncExternalStore'],
-  Sa: ['react-dom', 'createPortal'], Ta: ['react-dom', 'unstable_batchedUpdates'],
-  Va: ['react/jsx-runtime', 'jsx'], Ha: ['react/jsx-runtime', 'jsxs'],
-};
+const VENDOR = official.vendorFrame, SF = official.sharedFrame;
+const S46 = 'shared-46-BIbZBGFq.js', S11 = 'shared-11-_AVGLHEz.js', S25 = 'shared-25-DOWZRSlq.js';
+const S104 = 'shared-104-CTONUSaz.js', S156 = 'shared-156-BLTosN8U.js', PRELOAD = 'preload-helper-D0dM6GpB.js';
+const DND = 'c09f6b4e5-CLm8I7_i.js', BINDINGS = 'c1afd40ea-D9tUr40x.js';
 
 // Original bindings (file:local) that already live in a generated module (the same instance, never a second copy).
 const externals = {
-  // x$ reads v$ and keeps its drag state in _$: S$ must provide that very context, so both come from the module x$ is in.
-  'shared-19-CkPOiIKm.js:_$': { area: 'sidebar-sections', target: 'section-sortable.mjs', name: 'SectionDragBridge', features: ['this.subscribers = new Map()', 'setDrag(e, t)'] },
-  'shared-19-CkPOiIKm.js:v$': { area: 'sidebar-sections', target: 'section-sortable.mjs', name: 'SectionDragBridgeContext', features: ['v$ = O(null)'] },
-  // shared-11 se = shared-25 dp (exported `Pf`): a node's window, else the global one.
-  'shared-25-DP8p7i1Z.js:dp': { area: 'code-current', target: 'owner-window.mjs', name: 'ownerWindowOrGlobal', features: ['up(e) ?? globalThis.window'] },
+  // E3/R3: the React Compiler helpers are view-tabs' (one copy); their declarations are checked by assertCompilerHelpers.
+  ...Object.fromEntries(Object.values(official.compilerHelpers).map(({ local, name }) => [`${SF}:${local}`, { area: 'view-tabs', name, features: [] }])),
+  // gM reads uM and keeps its drag state in lM: _M must provide that very context, so both come from the module gM is in.
+  [`${S46}:lM`]: { area: 'sidebar-sections', target: 'section-sortable.mjs', name: 'SectionDragBridge', features: ['this.subscribers = new Map()', 'setDrag(e, t)'] },
+  [`${S46}:uM`]: { area: 'sidebar-sections', target: 'section-sortable.mjs', name: 'SectionDragBridgeContext', features: [loose('uM = x(null)')] },
+  // shared-11 ge = shared-25 mf (exported `lp`): a node's window, else the global one (code-current, 2.42304.0 dp).
+  [`${S25}:mf`]: { area: 'code-current', target: 'owner-window.mjs', name: 'ownerWindowOrGlobal', features: ['?? globalThis.window'] },
 };
 
 // Host dependencies (src/source-sidebar-reorder-adapters.jsx), keyed by the original binding (file:local).
 const adapters = {
-  // shared-104 fh (Fo): the lazy chunk definition {entry, pick, options} -> {Component, handle}.
-  'shared-104-Cqo2-vQh.js:Fo': { name: 'defineLazyChunk', features: ['loadForRender', '"fail-open"', 'return { Component: u, handle: t };'] },
-  // shared-104 ph (ko): the "no fallback UI" loading marker.
-  'shared-104-Cqo2-vQh.js:ko': { name: 'noFallback', features: ['reason: e'] },
-  // shared-156 Ir (dB): whether a lazy chunk is resident ("resident" / "pending" / "failed"), loading it while enabled.
-  'shared-156-Bikz018e.js:dB': { name: 'useLazyChunkStatus', features: ['reportWait', '"resident"', 'e.preload("open")'] },
+  // shared-104 ss (exported `mm`; 2.42304.0 fh): the lazy chunk definition {entry, pick, options} -> {Component, handle}.
+  [`${S104}:ss`]: { name: 'defineLazyChunk', features: ['loadForRender', '"fail-open"', 'return { Component: u, handle: t, annotateOpen: o.annotate };'] },
+  // shared-104 ts (exported `hm`; 2.42304.0 ph): the "no fallback UI" loading marker.
+  [`${S104}:ts`]: { name: 'noFallback', features: ['reason: e'] },
+  // shared-156 SK (exported `Mr`; 2.42304.0 Ir): whether a lazy chunk is resident ("resident" / "pending" / "failed"),
+  // loading it while enabled.
+  [`${S156}:SK`]: { name: 'useLazyChunkStatus', features: ['reportWait', '"resident"', 'e.preload("open")'] },
   // preload-helper t: vite's dynamic-import wrapper (CSS / dependency preloading, chunk retry).
-  'preload-helper-D0dM6GpB.js:s': { name: 'preloadChunk', features: ['chunkLoadContext'] },
-  // shared-25 id (Tv): the frame telemetry client; qs reports trackDragGesture on end (D17: not migrated).
-  'shared-25-DP8p7i1Z.js:Tv': { name: 'dragTelemetry', features: ['trackDragGesture(e)', '"page.drag_gesture"'] },
+  [`${PRELOAD}:s`]: { name: 'preloadChunk', features: ['chunkLoadContext'] },
+  // shared-25 w_ (exported `Rd`; 2.42304.0 Tv): the frame telemetry client; pl reports trackDragGesture on end (D17).
+  [`${S25}:w_`]: { name: 'dragTelemetry', features: ['trackDragGesture(e)', '"page.drag_gesture"'] },
 };
 
 // Emitted in dependency order. Slices: `exports` maps original local binding -> exported name (its keys are the roots,
 // pinned by `features`). Copies: the whole chunk, byte for byte after its import statements (pinned by `features`).
 const modules = [
-  { target: 'dnd-kit.mjs', copy: 'c09f6b4e5-DErbwtLQ.js',
+  { target: 'dnd-kit.mjs', copy: DND,
     features: ['activationConstraint', 'ct.activators=[{eventName:"onPointerDown"', 'st={cancel:{name:"pointercancel"},move:{name:"pointermove"},end:{name:"pointerup"}}',
       'function Yn(', 'export{de as _,Yn as a'] },
-  { target: 'layer-base.mjs', source: 'shared-frame-BfjMqbuN.js', exports: { Bd: 'cdsLayerBase' }, features: { Bd: ['Bd = 9e3'] } },
-  { target: 'reorder-support.mjs', source: 'shared-19-CkPOiIKm.js', exports: { u$: 'suppressClickAfterDrag', JQ: 'dragOverlayZIndex' },
-    features: { u$: ['e.addEventListener("click", t, !0)', 'e.addEventListener("pointerdown", r, !0)'], JQ: ['JQ = Mf + 1'] } },
-  { target: 'drag-gesture.mjs', source: 'shared-11-BuQ3CK5I.js', exports: { qs: 'beginDragGesture' },
-    features: { qs: ['showCursor(e, t)', 'blockSelection()', 've.trackDragGesture({', '(Ws += 1)'] } },
-  { target: 'project-reorder-bindings.mjs', copy: 'c1afd40ea-iYz9kai5.js',
-    features: ['activationConstraint:{distance:8}', 'u("sidebar_project_reorder",{downEvent:e.activatorEvent})', 'showCursor("grabbing")',
-      'f(String(e.active.id),String(t))', 'shadow-[var(--df-shadow-float)]', 'export{E as ProjectReorderBindings}'] },
-  { target: 'section-reorder.mjs', source: 'shared-19-CkPOiIKm.js', exports: { S$: 'SectionReorder', b$: 'projectReorderChunk' },
+  { target: 'layer-base.mjs', source: SF, exports: { Ff: 'cdsLayerBase' }, features: { Ff: [loose('Ff = 9e3')] } },
+  { target: 'reorder-support.mjs', source: S46, exports: { tM: 'suppressClickAfterDrag', kj: 'dragOverlayZIndex' },
+    features: { tM: ['e.addEventListener("click", t, !0)', 'e.addEventListener("pointerdown", r, !0)'], kj: [loose('kj = U + 1')] } },
+  { target: 'drag-gesture.mjs', source: S11, exports: { pl: 'beginDragGesture' },
+    features: { pl: ['showCursor(', 'blockSelection()', '.trackDragGesture({', 'durationMs:', loose('(ul += 1)')] } },
+  { target: 'project-reorder-bindings.mjs', copy: BINDINGS,
+    features: ['activationConstraint:{distance:8}', '("sidebar_project_reorder",{downEvent:e.activatorEvent})', 'showCursor("grabbing")',
+      loose('f(String(e.active.id),String(t))'), 'shadow-[var(--df-shadow-float)]', 'export{E as ProjectReorderBindings}'] },
+  { target: 'section-reorder.mjs', source: S46, exports: { _M: 'SectionReorder', mM: 'projectReorderChunk' },
     features: {
-      S$: ['let [n] = h(() => new _$())', '(i === void 0 ? r.length : new Set(r.map((e) => i.get(e) ?? e)).size) > 1', '{ reportWait: !1 }', 'a === "resident" ? x(b$.Component, { bridge: n, ...t }) : null'],
-      b$: ['id: "sidebar_project_reorder_dnd"', 'pick: (e) => e.ProjectReorderBindings', 'loading: Uu("no-ui")', 'onChunkError: "fail-open"'],
+      _M: [loose('a === void 0 ? i.length : new Set(i.map((e) => a.get(e) ?? e)).size'), '{ reportWait: !1 }', '"resident"', '.Component, { bridge: r, ...n })', '.Provider, { value: r, children: [t, d] }'],
+      mM: ['id: "sidebar_project_reorder_dnd"', 'tier: "T3"', 'pick: (e) => e.ProjectReorderBindings', '("no-ui")', 'onChunkError: "fail-open"'],
     },
-    lazy: { b$: { chunk: 'c1afd40ea-iYz9kai5.js', target: 'project-reorder-bindings.mjs', helper: 'f', deps: '__vite__mapDeps' } } },
+    lazy: { mM: { chunk: BINDINGS, target: 'project-reorder-bindings.mjs', helper: 'n', deps: '__vite__mapDeps' } } },
 ];
 
 // ---------------------------------------------------------------- reading the original chunks
 const formatted = new Map();
-async function readSource(name) {
-  if (formatted.has(name)) return formatted.get(name);
-  const bytes = await fs.readFile(path.join(source, name));
+async function readSource(name, dir = source) {
+  const key = path.join(dir, name);
+  if (formatted.has(key)) return formatted.get(key);
+  const bytes = await fs.readFile(key);
   const code = await format(bytes.toString(), { parser: 'babel' });
   const ast = parsers.babel.parse(code, {});
   let program;
   babel.traverse(ast, { Program(p) { program = p; } });
   const record = { name, bytes, code, program, exported: chunkExports(bytes.toString()) };
-  formatted.set(name, record);
+  formatted.set(key, record);
   return record;
 }
 const raw = new Map();
-async function readRaw(name) {
-  if (!raw.has(name)) {
-    const bytes = await fs.readFile(path.join(source, name));
-    raw.set(name, { name, bytes, text: bytes.toString(), exported: chunkExports(bytes.toString()) });
+async function readRaw(name, dir = source) {
+  const key = path.join(dir, name);
+  if (!raw.has(key)) {
+    const bytes = await fs.readFile(key);
+    raw.set(key, { name, bytes, text: bytes.toString(), exported: chunkExports(bytes.toString()) });
   }
-  return raw.get(name);
+  return raw.get(key);
 }
 // The chunk's export table (alias -> local) from its trailing `export{…}`.
 function chunkExports(text) {
@@ -161,18 +174,15 @@ function closureText(src, name) {
   visit(name);
   return parts.join('\n');
 }
+// A feature is a literal substring or (R2/E5) a looseFeature() RegExp.
 function assertFeatures(label, text, features = []) {
-  const missing = features.filter(f => !text.includes(f));
-  if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
+  const missing = features.filter(f => (f instanceof RegExp ? !f.test(text) : !text.includes(f)));
+  if (missing.length) throw Error(`${label} lacks ${missing.map(f => (f instanceof RegExp ? String(f) : JSON.stringify(f))).join(', ')}`);
 }
 async function vendorImport(alias) {
-  const target = vendor[alias];
+  const target = official.reactAliases[alias];
   if (!target) return null;
-  const chunk = await readRaw(VENDOR);
-  const local = chunk.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(chunk.text))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  official.assertVendorAlias((await readRaw(VENDOR)).text, alias);
   return target;
 }
 async function readJson(file) { return JSON.parse(await fs.readFile(file, 'utf8')); }
@@ -184,19 +194,29 @@ function exportedLocal(text, name) {
     }
   return null;
 }
+
 // Proves `entry` (a generated module export) is the original binding file:local of this version; returns its path.
 async function resolveExternal(file, local, entry) {
   const area = path.join(generatedRoot, entry.area);
-  const manifest = await readJson(path.join(area, 'manifest.json'));
+  if (entry.area === 'view-tabs') {
+    const manifest = await viewTabsManifestFor(referenceVersion);
+    const pub = manifest.publicNames?.[entry.name];
+    if (manifest.referenceVersion !== referenceVersion || !pub || pub.file !== file || pub.local !== local)
+      throw Error(`view-tabs public name ${entry.name} is not ${file}:${local}`);
+    return path.join(area, pub.file);
+  }
+  const sections = entry.area === 'sidebar-sections';
+  const manifest = sections ? await sidebarSectionsManifestFor(referenceVersion) : await readJson(path.join(area, 'manifest.json'));
   const module = manifest.modules.find(m => m.target === entry.target);
   if (!module) throw Error(`${entry.area}/${entry.target} is not generated`);
   const modulePath = path.join(area, entry.target);
   const names = module.bindings.map(b => (typeof b === 'string' ? b : b.name));
   const version = module.referenceVersion ?? manifest.referenceVersion;
-  if (version !== referenceVersion || path.basename(module.source) !== file || !names.includes(local))
-    throw Error(`${entry.area}/${entry.target} does not hold ${referenceVersion} ${file}:${local}`);
-  const theirs = exportedLocal(await fs.readFile(modulePath, 'utf8'), entry.name);
-  if (theirs !== local || (module.exports && module.exports[local] !== entry.name)) throw Error(`${entry.area}/${entry.target} does not export ${file}:${local} as ${entry.name}`);
+  const sourceName = path.basename(module.source);
+  const theirs = sections ? await sidebarSectionsExportedLocal(referenceVersion, entry.target, entry.name) : exportedLocal(await fs.readFile(modulePath, 'utf8'), entry.name);
+  if (!theirs || !names.includes(theirs) || (module.exports && module.exports[theirs] !== entry.name)) throw Error(`${entry.area}/${entry.target} does not export ${entry.name}`);
+  if (version !== referenceVersion) throw Error(`${entry.area}/${entry.target} is ${version}, expected ${referenceVersion}`);
+  if (sourceName !== file || theirs !== local) throw Error(`${entry.area}/${entry.target}: ${entry.name} is ${sourceName}:${theirs}, not ${file}:${local}`);
   return modulePath;
 }
 
@@ -224,7 +244,7 @@ async function resolveLocal({ self, file, local, emitted, via }) {
   if (sibling) return { from: rel(self, path.join(output, sibling.spec.target)), name: sibling.spec.exports[local], via, kind: 'generated', original: key };
   if (externals[key]) {
     const entry = externals[key];
-    assertFeatures(`external ${key}`, closureText(await readSource(file), local), entry.features);
+    if (entry.features.length) assertFeatures(`external ${key}`, closureText(await readSource(file), local), entry.features);
     const target = await resolveExternal(file, local, entry);
     return { from: rel(self, target), name: entry.name, via, kind: 'external', area: entry.area, original: key };
   }
@@ -279,7 +299,7 @@ async function copyModule(spec, emitted) {
 }
 
 // ---------------------------------------------------------------- slices
-// b$'s load: `<helper>(() => import("./<chunk>"), <deps>([…]))` -> `<helper>(() => import("./<target>"))`.
+// mM's load: `<helper>(() => import("./<chunk>"), <deps>([…]))` -> `<helper>(() => import("./<target>"))`.
 function lazyLoadRewrite(src, p, name, lazy) {
   const hits = [];
   p.traverse({
@@ -370,6 +390,7 @@ async function sliceModule(spec, emitted) {
 }
 
 export async function extractSidebarReorder({ check = false } = {}) {
+  official.assertCompilerHelpers((await readRaw(SF)).text);
   const manifest = {
     referenceVersion, referenceSnapshot, generator: 'scripts/extract-sidebar-reorder.mjs',
     adapterModule: 'src/source-sidebar-reorder-adapters.jsx', modules: [],

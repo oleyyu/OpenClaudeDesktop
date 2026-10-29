@@ -2,9 +2,14 @@ import { buttonPressHandlers } from './button-press.mjs';
 // The shared runtime owns submission, identity and draft lifetime.
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useApprovalDraft } from "./use-approval-draft.js";
-import { approvalActionIndex, approvalAnnouncement, approvalCardModel, approvalHasVisibleIntersection, approvalKeyIntent, createApprovalHotkeyArming, detailsOverflow, elicitationFormContent, elicitationInitialValues, scrollRegionProps } from "./approval-card-model.mjs";
+import { approvalActionIndex, approvalAnnouncement, approvalCardModel, approvalHasVisibleIntersection, approvalKeyIntent, changeGroupsSigned, changeLineParts, changeRowsGated, changeRowsGateKey, createApprovalHotkeyArming, detailsOverflow, elicitationFormContent, elicitationInitialValues, exactLineText, scrollRegionProps } from "./approval-card-model.mjs";
 import { createReadGateStore, nextReadGateReplay, readGateAllowIntent, readGateKey, readGateView, recordReadState, recordRowsFit } from "./approval-read-gate-model.mjs";
 import { ApprovalReadRows } from "./generated/code-current/approval-read-gate.mjs";
+// w11-sweep-ccres (w10-ccres-approval-card review item 2): the card's display escapes, one copy each from approval-titles
+// (D1). cc32965c2 imports shared-9 `S as Y` (LO: bidi controls, line / paragraph separators and Arabic format marks shown
+// as \uXXXX) and shared-18 `G as J` (nq: control and invisible characters escaped, rendered text kept).
+import { LO as Y } from "./generated/approval-titles/shared-9-CM21XrJw.mjs";
+import { nq as J } from "./generated/approval-titles/shared-18-D3y8YMFN.mjs";
 import { SourceTooltip } from "./source-tooltip.jsx";
 import { SourceShortcut } from "./source-shortcut.jsx";
 import { SourceSelect } from "./source-select.jsx";
@@ -258,11 +263,179 @@ function openExternalLink(url) {
 // When qj lands on the card, Zw adds Yw (focus-visible:outline-none plus the ::after ring) and the outline yields to it.
 export const CARD_FOCUS_OUTLINE = "focus-visible:outline-1 focus-visible:outline-fill-accent focus-visible:outline-offset-2";
 
+// V3-w10-ccres-approval-card: the 3.6556.2 change card's blocks (cc32965c2-BQu1bA_w.js, readable :11099-11240 and the
+// card body :11660-11970), for the fields approvalChangeCard sets. Icons are CDS size "sm" (16px).
+// O_ / k_: the sign glyphs and their slot.
+const CHANGE_SIGNS = {
+  add: { icon: "Add", className: "text-git-added" },
+  remove: { icon: "Minus", className: "text-git-removed" },
+  change: { icon: "ArrowClockwise", className: "text-muted-as-secondary" },
+};
+const SIGN_SLOT = "flex h-[1lh] w-4 shrink-0 items-center";
+// rm = 13 lines: E_ the script's scroll height.
+const SCRIPT_STYLE = { maxHeight: "calc(13 * var(--cds-leading-code) + 2 * var(--cds-pad-md))" };
+// w_: the more-lines note.
+const BODY_SECONDARY = "text-body text-secondary select-text break-words [unicode-bidi:plaintext]";
+
+// The line's message with its rich tags: uv <b> "text-primary [unicode-bidi:plaintext]", dv <code>
+// "text-code-medium text-primary [unicode-bidi:plaintext]", lv <sr> "sr-only".
+function ChangeLineText({ text }) {
+  return changeLineParts(text).map((part, index) => part.tag === "b"
+    ? <span key={index} className="text-primary [unicode-bidi:plaintext]">{Y(part.text)}</span>
+    : part.tag === "code" ? <code key={index} className="text-code-medium text-primary [unicode-bidi:plaintext]">{Y(part.text)}</code>
+    : part.tag === "sr" ? <span key={index} className="sr-only">{Y(part.text)}</span>
+    : <React.Fragment key={index}>{Y(part.text)}</React.Fragment>);
+}
+
+// D_: exact lines as a numbered ltr pre (each line a block span whose ::before draws its number).
+export function ApprovalExactLines({ script }) {
+  const trailing = script.endsWith("\n");
+  const lines = script.replace(/\n$/, "").split("\n");
+  return <pre dir="ltr" className="py-md pe-lg text-code text-secondary whitespace-break-spaces break-words select-text [unicode-bidi:bidi-override]">
+    {lines.map((line, index) => <span key={index} data-line={index + 1}
+      className="relative block ps-[6ch] before:absolute before:start-0 before:w-[4.5ch] before:text-end before:text-muted-as-secondary before:select-none before:content-[attr(data-line)]">
+      {Y(line)}{index < lines.length - 1 || trailing ? "\n" : null}</span>)}
+  </pre>;
+}
+
+// A_: a whole script as a labelled group; otherwise a 13-line scroll clamp (c2d1aeb56 J: "epitaxy-scroll-clamp
+// scroll-fade-y …", a focusable labelled group while it scrolls) with the more-lines note when it may run past.
+function ApprovalScript({ label, script, whole, moreNote, estimatedPastBlock, noteId }) {
+  const ref = useRef(null);
+  const overflow = useOverflowFocus(ref, script);
+  if (whole) return <div role="group" aria-label={label} data-testid="approval-script" className="overflow-hidden rounded-[5px] bg-alpha-1">
+    <ApprovalExactLines script={script} />
+  </div>;
+  const note = estimatedPastBlock || overflow ? moreNote : undefined;
+  return <>
+    <div className="overflow-hidden rounded-[5px] bg-alpha-1 has-[:focus-visible]:shadow-focus">
+      <div ref={ref} {...scrollRegionProps(label, overflow)} data-testid="approval-script" aria-describedby={note ? noteId : undefined}
+        className="epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus overflow-y-auto scroll-fade-size-[8px]"
+        style={SCRIPT_STYLE}><ApprovalExactLines script={script} /></div>
+    </div>
+    {note ? <p id={noteId} className={BODY_SECONDARY}>{note}</p> : null}
+  </>;
+}
+
+// me / he: the change groups (each a footnote heading over its line list, exact lines and script), inside the target's
+// bordered box when the card names a target (Cloud glyph, the name, the scope with its glyph; the spoken form sr-only).
+export function ApprovalChangeBlock({ target, groups, signed }) {
+  const groupId = useId();
+  if (!groups?.length) return null;
+  const list = <div className="flex flex-col gap-md">
+    {groups.map((group, index) => {
+      const id = `${groupId}-${index}`;
+      return <div key={id} className="flex flex-col gap-0.75">
+        <div id={id} className="text-footnote text-muted-as-secondary select-text [unicode-bidi:plaintext]">{Y(group.heading)}</div>
+        {group.lines?.length > 0 ? <ul role="list" aria-labelledby={id} className="flex flex-col gap-0.75">
+          {group.lines.map((line, row) => <li key={row} data-sign={line.sign} className="flex gap-sm text-body text-secondary">
+            {signed ? <span className={SIGN_SLOT}>{line.sign && CHANGE_SIGNS[line.sign]
+              ? <Icon name={CHANGE_SIGNS[line.sign].icon} size={16} className={CHANGE_SIGNS[line.sign].className} /> : null}</span> : null}
+            <span className="min-w-0 select-text break-words [unicode-bidi:plaintext]"><ChangeLineText text={line.text} /></span>
+          </li>)}
+        </ul> : null}
+        {group.exactLines?.length ? <div role="group" aria-labelledby={id} data-testid="approval-exact-lines" className="overflow-hidden rounded-[5px] bg-alpha-1">
+          <ApprovalExactLines script={group.exactLines.map(exactLineText).join("\n")} />
+        </div> : null}
+        {group.script === undefined ? null : <ApprovalScript label={group.heading} script={group.script} whole={group.scriptWhole === true}
+          moreNote={group.scriptMoreNote} estimatedPastBlock={group.scriptEstimatedPastBlock} noteId={`${id}-more`} />}
+      </div>;
+    })}
+  </div>;
+  if (!target) return list;
+  return <div className="flex flex-col gap-md rounded-lg border border-alpha-2 p-md">
+    <span className="sr-only">{Y(target.spoken)}</span>
+    <div aria-hidden="true" className="flex items-start gap-md text-body">
+      <span className="flex min-w-0 flex-1 gap-sm font-medium text-primary">
+        <span className={SIGN_SLOT}><Icon name="Cloud" size={16} /></span>
+        <span data-testid="approval-change-target" className="min-w-0 select-text break-words [unicode-bidi:plaintext]">{Y(target.name)}</span>
+      </span>
+      <span className="flex shrink-0 gap-xs text-secondary">
+        <span className={SIGN_SLOT}><Icon name={target.scopeIcon} size={16} /></span>
+        {Y(target.scope)}
+      </span>
+    </div>
+    {list}
+  </div>;
+}
+
+// xe: the footnote paragraph (the lines joined by a space).
+export function ApprovalFootnote({ footnote }) {
+  return footnote?.length ? <p className="text-body text-secondary select-text break-words [unicode-bidi:plaintext]">{Y(footnote.join(" "))}</p> : null;
+}
+
+// se: the served text, a labelled group.
+export function ApprovalServedText({ servedText }) {
+  return servedText ? <div role="group" aria-label={servedText.label} className="rounded bg-alpha-1 px-lg py-md text-body select-text break-words">
+    <p className="whitespace-pre-wrap text-secondary [unicode-bidi:plaintext]">{J(servedText.body)}</p>
+  </div> : null;
+}
+
+// V3-w10-trans-approval-titles-host: the 3.6556.2 card title (cc32965c2 L, readable :12035-12100) for a heading from the
+// generated title builders (approval-card-model.mjs officialHeading): one message per shape with rich tags, each <b> /
+// <meta> part span.text-primary [unicode-bidi:plaintext] (ev…av), <glued> the session line's no-wrap run (hl). The
+// assistant stays the session's own ({name}, the card's C2 persona) where the original says Claude.
+const TITLE_EMPHASIS = "text-primary [unicode-bidi:plaintext]";
+const TITLE_TEMPLATES = {
+  // 7px6ACmQ5k / EFOijHTneN / a2973u92KO / wF6CuCZpBR
+  metaTail: "Allow {name} to <b>{action}</b> <meta>{metaText}</meta> <b>{tail}</b>?",
+  meta: "Allow {name} to <b>{action}</b> <meta>{metaText}</meta>?",
+  tail: "Allow {name} to <b>{action} {tail}</b>?",
+  plain: "Allow {name} to <b>{action}</b>?",
+};
+// FormattedMessage's value functions: a tag's chunks (text and placeholder values, in order) become its element.
+const TITLE_TAGS = {
+  b: (chunks, key) => <span key={key} className={TITLE_EMPHASIS}>{chunks}</span>,
+  meta: (chunks, key) => <span key={key} className={TITLE_EMPHASIS}>{chunks}</span>,
+  glued: (chunks, key) => <span key={key} className="inline-flex max-w-full items-end leading-tight">
+    {chunks.map((chunk, index) => typeof chunk === "string"
+      ? <span key={index} className="shrink-0 whitespace-pre">{chunk}</span>
+      : <span key={index} className="min-w-0">{chunk}</span>)}</span>,
+};
+// The looked-up template (the translation may move the tags) is split into its tags first and the values put in after,
+// so a value is never read as markup.
+export function richTitle(template, values, tags = TITLE_TAGS) {
+  const fill = (text, prefix) => text.split(/\{(\w+)\}/).flatMap((piece, index) => index % 2
+    ? Object.hasOwn(values, piece) ? [typeof values[piece] === "string" ? values[piece] : <React.Fragment key={`${prefix}${index}`}>{values[piece]}</React.Fragment>] : [`{${piece}}`]
+    : piece ? [piece] : []);
+  const out = [];
+  let last = 0, count = 0;
+  for (const match of template.matchAll(/<(b|meta|glued)>([\s\S]*?)<\/\1>/g)) {
+    out.push(...fill(template.slice(last, match.index), `t${count}-`));
+    out.push(tags[match[1]](fill(match[2], `c${count}-`), `tag${count}`));
+    last = match.index + match[0].length;
+    count++;
+  }
+  out.push(...fill(template.slice(last), "end-"));
+  return out.map((part, index) => typeof part === "string" ? <React.Fragment key={`s${index}`}>{part}</React.Fragment> : part);
+}
+export function OfficialHeadingTitle({ heading, name }) {
+  const shape = heading.meta && heading.tail ? "metaTail" : heading.meta ? "meta" : heading.tail ? "tail" : "plain";
+  return <>{richTitle(t(TITLE_TEMPLATES[shape], { name }), { action: heading.action, metaText: heading.meta ?? "", tail: heading.tail ?? "" })}</>;
+}
+// C_ / w_ (readable :11096-11098): the description clamps to three lines and scrolls, unless it is the builder's own
+// prose (ownProse) and is shown whole; T_ is no part of it.
+const DESCRIPTION_CLAMPED = "text-body text-secondary select-text break-words max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]";
+const DESCRIPTION_PROSE = "text-body text-secondary select-text break-words [unicode-bidi:plaintext]";
+// j (readable :11570-11580): the description in so (c2d1aeb56 J: "epitaxy-scroll-clamp scroll-fade-y …", a focusable
+// group labelled "Description" while it scrolls). With descriptionAsTooltip it is not shown: ie, an sr-only sentence,
+// says it instead, and the detail (else the reason, else the title) carries it as its tooltip (le).
+function ApprovalDescription({ heading }) {
+  const ref = useRef(null);
+  const text = heading?.overrideDescription;
+  const overflow = useOverflowFocus(ref, text ?? "");
+  if (!text) return null;
+  if (heading.descriptionAsTooltip) return <span data-testid="approval-hidden-sentence" className="sr-only select-none">{text}</span>;
+  return <div ref={ref} {...scrollRegionProps(t("Description"), overflow)}
+    className={`epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus ${heading.ownProse ? DESCRIPTION_PROSE : DESCRIPTION_CLAMPED}`}>{text}</div>;
+}
+
 export function SourceApprovalCardView({ request, item, busy = false, busyAction = null,
   error = "", onAction, enabled = true, isActive = true, menuOpen = false,
-  armKey, renderDetails, className = "", readGateStore }) {
+  armKey, renderDetails, className = "", readGateStore, model: givenModel }) {
   usePersona(); // C2: re-render the title when the assistant name changes
-  const model = approvalCardModel(request, item);
+  // model: a card model a source already built (approvalChangeCard); otherwise the request's own.
+  const model = givenModel ?? approvalCardModel(request, item);
   const [expanded, setExpanded] = useState(true);
   const root = useRef(null), body = useRef(null), actions = useRef(null), reason = useRef(null);
   const detailsId = useId();
@@ -270,7 +443,9 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
   // toolcards-01 read gate (approval-read-gate-model.mjs; 2.42304.0 c96d752d0 Rj): ApprovalReadRows (UDe) reports
   // into the card's own store (wj, or one handed in); the allows are held / replay the hint from it.
   const gate = model.rowsReadGate;
-  const gateKey = readGateKey(identity, model);
+  // 3.6556.2 cc32965c2 yn: the rows key, else (I_) the change block's key.
+  const gateKey = readGateKey(identity, model) ?? changeRowsGateKey(identity, model);
+  const changeGated = changeRowsGated(model) && gateKey !== null;
   const [ownGateStore] = useState(createReadGateStore);
   const gateStore = readGateStore ?? ownGateStore;
   const gateSnapshot = useSyncExternalStore(gateStore.subscribe, gateStore.get, gateStore.get);
@@ -283,7 +458,7 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
   const clickArmKey = useMemo(() => readGate.held ? { identity, look: "held" } : identity, [identity, readGate.held]);
   const clickArmed = useAllowArming(root, clickArmKey, isActive);
   const hotkeyArmed = useHotkeyArming(root, identity, isActive);
-  const overflow = useOverflowFocus(body, `${expanded}:${model.detail?.text ?? ""}:${model.reason ?? ""}:${JSON.stringify(model.context)}`);
+  const overflow = useOverflowFocus(body, `${expanded}:${model.detail?.text ?? ""}:${model.reason ?? ""}:${JSON.stringify(model.context)}:${JSON.stringify([model.servedText, model.changeTarget, model.changeGroups, model.footnote])}`);
   const reasonOverflow = useOverflowFocus(reason, model.reason ?? "");
   const fields = model.elicitation?.mode === "form" ? model.elicitation.fields : null;
   const [formValues, setFormValues] = useState(() => elicitationInitialValues(fields));
@@ -394,11 +569,18 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
   // A computer-use request_access: its own title variants (computer-use-approval-card.jsx, official ZEe).
   const title = model.access ? <ComputerUseAccessTitle title={model.access.title} name={assistantName()} />
     : model.takeover ? <ComputerUseTakeoverTitle takeover={model.takeover} name={assistantName()} />
+    // 3.6556.2 cc32965c2 L: a card with its own heading (approvalChangeCard) shows it as the whole title.
+    : model.ownHeading ? <span className="text-primary [unicode-bidi:plaintext]">{model.ownHeading}</span>
+    // V3-w10-trans-approval-titles-host: a title builder's heading reads as the 3.6556.2 rich message.
+    : model.heading?.official ? <OfficialHeadingTitle heading={model.heading} name={assistantName()} />
     : model.heading
     ? <>{t("Allow {name} to", { name: assistantName() })} <span className="sac-em">{model.heading.action}</span>{model.heading.meta
       ? <> <span className="sac-em">{model.heading.meta}</span></> : null}{t("?")}</>
     : model.title;
   const clamp = model.clampTitle && model.detail ? "" : undefined;
+  // le (readable :11577): the description shown as a tooltip sits on the detail, else the reason, else the title.
+  const descriptionTip = model.heading?.descriptionAsTooltip ? model.heading.overrideDescription : undefined;
+  const tipOn = descriptionTip === undefined ? null : model.detail ? "detail" : model.reason ? "reason" : "title";
   // c96d752d0 Mj (2.42304.0): the gated rows sit in `q`, "flex flex-col gap-1 rounded bg-alpha-1 px-lg py-md", with
   // the aria-hidden "What Claude sent" footnote while held (`K !== void 0 && h`), wrapped in UDe keyed by the rows.
   // The rows themselves stay the local arguments text in vj's type (the original's rpe row list is not migrated yet).
@@ -411,6 +593,22 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
         </div>
       </ApprovalReadRows>
     : null;
+  // 3.6556.2 cc32965c2 Re / Ve (readable :12245-12268): a gated change block reads together with the footnote inside
+  // ApprovalReadRows (headIsFirstLine, keyed by the gate key); otherwise the footnote is its own block after the rows
+  // (Be) and before the detail (We), or before rows that trail (H, rowsTrail).
+  const changeBlock = <ApprovalChangeBlock target={model.changeTarget} groups={model.changeGroups} signed={changeGroupsSigned(model)} />;
+  const footnote = <ApprovalFootnote footnote={model.footnote} />;
+  const changeArea = changeGated
+    ? <ApprovalReadRows key={gateKey} headIsFirstLine onReadState={onRowsReadState} onFits={onRowsFit}>
+        <div className="flex flex-col gap-md">{changeBlock}{footnote}</div>
+      </ApprovalReadRows>
+    : changeBlock;
+  const looseFootnote = changeGated ? null : footnote;
+  // We / Ie: the detail block, after the body's other blocks or (detailFirst) before them.
+  const details = model.detail ? <div id={detailsId} className="sac-details" hidden={!expanded} title={tipOn === "detail" ? descriptionTip : undefined}>
+      {gatedRows ?? (renderDetails ? renderDetails(model.detail, model) : <pre className="sac-code" title={model.detail.raw}>{model.detail.text}</pre>)}
+    </div> : null;
+  const footnoteAfterDetails = !!gatedRows && model.rowsTrail !== true;
   const footer = model.supported ? <footer ref={actions} className="sac-actions">
       <span className="sac-deny">
         <ActionButton action={model.declineFeedback && feedbackOpen && feedback.trim() ? { ...model.deny, label: t("Deny with feedback") } : model.deny} busy={busy} busyAction={busyAction} enabled={actionable}
@@ -463,13 +661,22 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
       <div className="sac-description">
         {model.detail
           ? <button type="button" className="sac-heading" aria-expanded={expanded}
-              aria-controls={detailsId} onClick={() => setExpanded(value => !value)}><span data-clamp={clamp}>{title}</span></button>
-          : <div className="sac-heading"><span data-clamp={clamp}>{title}</span></div>}
-        {(model.reason || model.message || model.context.length > 0 || model.detail || fields || model.access || model.elicitation?.mode === "url" || model.elicitation?.mode === "toolSuggestion") && <div className="sac-content">
+              aria-controls={detailsId} onClick={() => setExpanded(value => !value)}><span data-clamp={clamp} title={tipOn === "title" ? descriptionTip : undefined}>{title}</span></button>
+          : <div className="sac-heading"><span data-clamp={clamp} title={tipOn === "title" ? descriptionTip : undefined}>{title}</span></div>}
+        {(model.reason || model.message || model.context.length > 0 || model.detail || fields || model.access || model.elicitation?.mode === "url" || model.elicitation?.mode === "toolSuggestion"
+          || model.servedText || model.changeGroups?.length > 0 || model.footnote?.length > 0 || model.heading?.overrideDescription) && <div className="sac-content">
+          {/* Ge [V, Ie, …]: a builder's detailFirst detail (Ie) leads the body. */}
+          {model.detailFirst && details}
+          {/* 3.6556.2 cc32965c2 Ge order: the served text (se) and the change block (Re) come before the reason (ze). */}
+          <ApprovalServedText servedText={model.servedText} />
+          {changeArea}
+          {/* j, ie: the description (or its sr-only sentence) between the change block and the reason. */}
+          <ApprovalDescription heading={model.heading} />
           {/* approval-current.js:15275-15284 D, before the other content blocks: the decision
               reason in a 3-line scroll clamp (wM) whose "Reason" label is its accessible name
               while it scrolls (cf6ae6197 bv); no visible label. */}
           {model.reason && <div ref={reason} className="sac-reason scroll-fade-y scroll-fade-size-[8px]"
+            title={tipOn === "reason" ? descriptionTip : undefined}
             {...scrollRegionProps(t("Reason"), reasonOverflow)}>{model.reason}</div>}
           {/* request_access: the capabilities and apps asked for (official JEe: under the header, above the actions). */}
           {/* Official JEe: Background mode's line, or that other windows will be hidden, above the rows. */}
@@ -478,9 +685,9 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
           {/* An MCP elicitation's own message (server text, shown as written). */}
           {model.message && <p className="sac-message">{model.message}</p>}
           {model.context.map(part => <p key={part.key} className="sac-context" data-context={part.key}>{part.text}</p>)}
-          {model.detail && <div id={detailsId} className="sac-details" hidden={!expanded}>
-            {gatedRows ?? (renderDetails ? renderDetails(model.detail, model) : <pre className="sac-code" title={model.detail.raw}>{model.detail.text}</pre>)}
-          </div>}
+          {!footnoteAfterDetails && looseFootnote}
+          {!model.detailFirst && details}
+          {footnoteAfterDetails && looseFootnote}
           {(model.elicitation?.mode === "url" || model.elicitation?.mode === "toolSuggestion") && model.elicitation.openable && <div className="sac-link">
             <ActionButton action={{ key: "open-link", label: model.elicitation.mode === "toolSuggestion" ? t("Open install page") : t("Open link"), primary: false }} busy={false}
               enabled={actionable && !busy} onAction={openLink} />
@@ -540,9 +747,16 @@ export function SourceApprovalCard({ runtime, request, item, getVisibleThreadId,
 //        hasDraft: m, chordActsAnywhere: st === "plan" || st === "computer_use_app_list", row: wt ? F : null, toComposer: k })
 //   and renders [Ct, Lt (the watch), ot === null ? null : div{ ref: at ? It : void 0, style: { display: "contents" } }].
 // qj, its watch Kj, the landing Hj / Zw and the window guard Gj are the generated originals
-// (scripts/extract-approval-landing.mjs). The host answers __gb__1616707004 "on": R2 already shipped this slot's
-// hand-back half (the composer takes focus when a keyboard decision leaves it nowhere), and the off branch would take
-// that away; the flag's ruling is recorded as a follow-up in R4g-btw-BT4.md.
+// (scripts/extract-approval-landing.mjs), now from 3.6556.2: c9ed5627b A / it / E / k with c6dc54e94 I (the area that
+// mounts A is cc32965c2: `wt=bo()&&ne!==void 0`, the same card / takesFocus / chordActsAnywhere). The host answers
+// __gb__1616707004 (c9ed5627b et) "on": R2 already shipped this slot's hand-back half (the composer takes focus when a
+// keyboard decision leaves it nowhere), and the off branch would take that away; the flag's ruling is recorded as a
+// follow-up in R4g-btw-BT4.md.
+// HS-11 / E23: 3.6556.2 k lets a deliberate Enter through on the landed card once the card marked a deliberate digit or
+// arrow pick (c9ed5627b rt, generated as markCardPick). The AskUserQuestion card calls it as the original dt does,
+// `!rt(e.nativeEvent, E)` before its own digit / arrow handler (source-question-card.jsx questionCardKeyDown,
+// w10-trans-question-keys). The tool card's arrows move between its action buttons (approvalKeyIntent "navigate"), not
+// an option pick, so this card calls nothing and keeps the landing's Enter guard.
 export const APPROVAL_LANDING_FLAG = "__gb__1616707004";
 export const APPROVAL_LANDING_ON = true;
 // $j's card variant `st` for the local requests: the question card is AskUserQuestion's, the bridge's plan review (and

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createLocalRoutines } from '../electron/local-routines.mjs';
+import { createLocalRoutines, FOLDER_GRANT_LIMIT, routineFolders, sanitizeTaskId, taskIdName } from '../electron/local-routines.mjs';
 import { createRoutineRunner, captureRoutineOptions } from '../electron/routine-runner.mjs';
 
 async function fixture(t, launch = async () => {}) {
@@ -289,7 +289,9 @@ test('Code tasks keep Always allowed rules: main adds them, remove-approval remo
     { ...rule, cwd: '/abs' }, { ...rule, ruleContent: 'a\0b' }, { ...rule, escalation: 'x y' }, null])
     assert.equal(f.service.rememberApproval(code.id, invalid), false, JSON.stringify(invalid));
   const cowork = await f.create({ name: 'Cowork brief' });
-  assert.equal(f.service.rememberApproval(cowork.id, rule), false, 'Cowork tasks keep no rules');
+  // w13-coworkfn-approvals: a Cowork task keeps them too (3.6556.2 Dl8 persistAlwaysAllowDecision addApprovedPermissions).
+  assert.equal(f.service.rememberApproval(cowork.id, rule), true, 'Cowork tasks keep rules (3.6556.2)');
+  assert.equal(f.service.rememberApproval(cowork.id, { ...rule }), false);
   assert.equal(f.service.rememberApproval('missing', rule), false);
   const row = () => f.state().find(task => task.id === code.id);
   assert.deepEqual(row().approvedPermissions.map(({ approvedAt, ...value }) => (assert.equal(approvedAt, f.now()), value)), [
@@ -323,4 +325,45 @@ test('Code tasks keep Always allowed rules: main adds them, remove-approval remo
   const moved = await g.service.request({ action: 'update', id: code.id, name: 'Renamed', prompt: code.prompt, cron: code.cron, folder: other });
   assert.equal(moved.cwd, other);
   assert.equal('approvedPermissions' in moved, false);
+});
+
+test('w13-coworkfn-schedtools: a task under the taskId the model names, and a Cowork task\'s folder grant (cwf-28/29)', async t => {
+  const f = await fixture(t); f.service.start();
+  // 3.6556.2 jPKPzV-P Hea / Uea and _6.
+  assert.equal(sanitizeTaskId('  Daily Brief!! '), 'daily-brief');
+  assert.equal(sanitizeTaskId('a'.repeat(130)), 'a'.repeat(120));
+  assert.throws(() => sanitizeTaskId('!!!'), /^Error: Invalid task name: must contain at least one alphanumeric character$/);
+  assert.throws(() => sanitizeTaskId('a'.repeat(501)), /at most 500 characters/);
+  assert.equal(taskIdName('check-inbox'), 'Check inbox');
+  const task = await f.create({ taskId: 'Morning Brief' });
+  assert.equal(task.id, 'morning-brief');
+  assert.equal(task.cwd, path.join(f.dataDir, 'scheduled-tasks', 'morning-brief'));
+  await assert.rejects(f.create({ taskId: 'morning-brief' }), /A scheduled task with ID "morning-brief" already exists\./);
+  // A page-made task keeps a random id.
+  assert.match((await f.create()).id, /^[0-9a-f-]{36}$/);
+  // The grant: judged folders only (folder-policy.mjs), replace or add, kept by edits, revoked one by one or all at once.
+  const outside = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'routine-grant-')));
+  const second = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'routine-grant-')));
+  t.after(async () => { await fs.rm(outside, { recursive: true, force: true }); await fs.rm(second, { recursive: true, force: true }); });
+  const granted = await f.service.grantFolders(task.id, [outside, '/etc', f.dataDir, path.join(outside, 'missing')]);
+  assert.deepEqual(granted.granted, [outside]);
+  assert.deepEqual(granted.rejected.map(entry => entry.path), ['/etc', f.dataDir, path.join(outside, 'missing')]);
+  assert.match(granted.rejected[0].message, /protected host location/);
+  assert.match(granted.rejected[1].message, /application data/);
+  assert.deepEqual(await f.service.request({ action: 'folders', id: task.id }), [outside]);
+  await f.service.request({ action: 'grant-folders', id: task.id, folders: [second], addOnly: true });
+  assert.deepEqual(f.service.folderGrant(task.id), [outside, second]);
+  assert.deepEqual((await f.service.grantFolders(task.id, Array(FOLDER_GRANT_LIMIT + 1).fill(outside))), { granted: [], rejected: [], consentUnavailable: true });
+  const edited = await f.service.request({ action: 'update', id: task.id, name: 'Renamed', prompt: task.prompt, cron: task.cron });
+  assert.deepEqual(edited.folders, [outside, second]);
+  // A run session gets the grant (the scratch working folder is not a folder it is given).
+  assert.deepEqual(routineFolders(f.state().find(value => value.id === task.id), f.dataDir), [outside, second]);
+  assert.deepEqual(routineFolders({ kind: 'cowork', cwd: outside, folders: [second, outside] }, f.dataDir), [outside, second]);
+  assert.deepEqual(routineFolders({ kind: 'code', cwd: outside, folders: [second] }, f.dataDir), []);
+  assert.deepEqual((await f.service.request({ action: 'revoke-folder', id: task.id, folder: outside })).folders, [second]);
+  assert.deepEqual(f.service.revokeFolder(task.id).folders, []);
+  const code = await f.service.request({ action: 'create', kind: 'code', name: 'Code', prompt: 'x', folder: f.dataDir });
+  await assert.rejects(f.service.grantFolders(code.id, [outside]), /only for Cowork tasks/);
+  // The task a run session belongs to.
+  assert.equal(f.service.taskOfSession('nobody'), null);
 });

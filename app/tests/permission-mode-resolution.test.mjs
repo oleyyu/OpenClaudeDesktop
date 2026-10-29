@@ -1,6 +1,12 @@
-// R4g-composer CP6 (composer-14): the composer's layered permission mode (2.42304.0 c227f4d5e JI over c8eb45883 d) on
-// the host. The generated d is compared with the shipped text, the host layers run as a pure reducer, and the two hooks
-// (permission-mode-resolution.mjs, source-bypass-permission.jsx) are rendered once with Vite SSR (hmr and ws off).
+// R4g-composer CP6 (composer-14): the composer's layered permission mode (3.6556.2 c227f4d5e RR over c8eb45883 p; lane
+// w1-composer-pure moved it from 2.42304.0 JI / d) on the host. The generated p is compared with the shipped text, the
+// host layers run as a pure reducer, and the two hooks (permission-mode-resolution.mjs, source-bypass-permission.jsx)
+// are rendered once with Vite SSR (hmr and ws off).
+//
+// Migration note (E11): 3.6556.2 keeps the folder picks under "epitaxy-folder-permission-mode-v2", seeded once from the
+// 2.42304.0 "epitaxy-folder-permission-mode" map through OR, which drops a Bypass remembered on any local folder key.
+// The host follows it: after the update a folder that remembered Bypass opens with the Settings default again (pick
+// Bypass once more to remember it); its other picks carry over, and the v1 map is left untouched.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,15 +16,17 @@ import { renderToString } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolvePermissionBaseMode } from '../src/generated/permission-mode/resolution.mjs';
-import { extractPermissionMode } from '../scripts/extract-permission-mode.mjs';
+import { extractPermissionMode, looseCount } from '../scripts/extract-permission-mode.mjs';
 import {
-  FOLDER_PERMISSION_KEY, SESSION_PERMISSION_KEY, SESSION_PERMISSION_LIMIT, readSessionModes, rememberSessionMode, writeSessionModes, draftFolderMove, folderPickWrites, initialPermissionLayers, permissionFolderKey, permissionLayersReducer,
+  FOLDER_PERMISSION_KEY, FOLDER_PERMISSION_SEED_KEY, SCOPED_FOLDER_KEY, seedFolderPicks, SESSION_PERMISSION_KEY, SESSION_PERMISSION_LIMIT, readSessionModes, rememberSessionMode, writeSessionModes, draftFolderMove, folderPickWrites, initialPermissionLayers, permissionFolderKey, permissionLayersReducer,
   permissionOpeningKey, readFolderPicks, resolveOpeningMode, usePermissionModeLayers, writeFolderPicks,
 } from '../src/permission-mode-resolution.mjs';
 import { savedPermission } from '../electron/preferences.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const official = name => fs.readFileSync(path.join(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
+const official = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+const previous = name => fs.readFileSync(path.join(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
+const COMPOSER = 'c227f4d5e-B-FYKrwT.js';
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const memoryStorage = (initial = {}) => {
@@ -33,11 +41,19 @@ before(async () => {
 });
 after(async () => { await server?.close(); });
 
-test('generated d is the shipped c8eb45883 d (byte slice, --check clean) and agrees with it on every layer combination', async () => {
+test('generated p is the shipped 3.6556.2 c8eb45883 p (byte slice, --check clean) and agrees with it on every layer combination', async () => {
   await extractPermissionMode({ check: true });
-  const chunk = official('c8eb45883-BKWHnsew.js');
+  const manifest = JSON.parse(local('src/generated/permission-mode/manifest.json'));
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.deepEqual(manifest.bindings, { p: { source: 'c8eb45883-BdFVtK0i.js', exportedAs: 'resolvePermissionBaseMode' } });
+  const chunk = official('c8eb45883-BdFVtK0i.js');
   assert.equal(count(chunk, 'baseMode:e??t??r??n??i,'), 1);
-  const at = chunk.indexOf('function d({'), shipped = new Function(`${chunk.slice(at, chunk.indexOf('export{', at))}; return d;`)();
+  assert.equal(count(chunk, 'export{f as a,p as i,o as n,u as o,c as r,l as s,a as t};'), 1);
+  const at = chunk.indexOf('function p({'), body = chunk.slice(at, chunk.indexOf('export{', at)), shipped = new Function(`${body}; return p;`)();
+  // The 3.6556.2 p is the 2.42304.0 d byte for byte, renamed.
+  const old = previous('c8eb45883-BKWHnsew.js'), oldAt = old.indexOf('function d({');
+  assert.equal(body.replace(/^function p\(/, 'function d('), old.slice(oldAt, old.indexOf('export{', oldAt)));
   const values = { userChoice: [null, 'ask', 'plan'], userSettingsDefault: [undefined, 'acceptEdits'], folderChoice: [undefined, 'bypass'],
     repoSettingsDefault: [undefined, 'ask'], globalPref: ['auto', 'acceptEdits'], consultedStoredGlobalPref: [null, 'auto'], storedPickLayersSettled: [false, true] };
   let combos = [{}];
@@ -51,17 +67,25 @@ test('generated d is the shipped c8eb45883 d (byte slice, --check clean) and agr
   assert.equal(resolvePermissionBaseMode({ ...base, userSettingsDefault: 'ask', folderChoice: 'acceptEdits' }).baseModeSource, 'settings_default_mode');
 });
 
-test('the c227f4d5e call sites the host adapter follows are pinned once each', () => {
+test('the c227f4d5e call sites the host adapter follows are pinned once each (looseFeature, R2)', () => {
   const manifest = JSON.parse(local('src/generated/permission-mode/manifest.json'));
-  const composer = official('c227f4d5e-Ba-r--Rl.js');
-  const pins = manifest.pins['c227f4d5e-Ba-r--Rl.js'];
-  assert.ok(pins.length >= 12);
+  const composer = official(COMPOSER);
+  assert.equal(manifest.pinMatch, 'looseFeature');
+  assert.deepEqual(Object.keys(manifest.pins), [COMPOSER]);
+  const pins = manifest.pins[COMPOSER];
+  assert.ok(pins.length >= 13);
+  for (const pin of pins) assert.equal(looseCount(composer, pin), 1, pin);
+  // Every pin is also the shipped text verbatim (the loose match only matters for the next version).
   for (const pin of pins) assert.equal(count(composer, pin), 1, pin);
-  assert.ok(pins.includes('_=!!h&&o!=="approval_card"&&a!=="plan"&&!(a==="bypassPermissions"&&zI(h));tt(a),_&&Ke(e=>({...e,[h]:a}))'));
-  assert.ok(pins.includes('[Ge,Ke]=Bc("epitaxy-folder-permission-mode",BI,{scope:"account"})'));
-  // The global preference: only the auto-default nudge (DI O) writes it, and it is a GrowthBook-gated account pref.
-  assert.equal(count(composer, 'O=H(()=>(n("auto"),a("auto")),[a,n])'), 1);
-  assert.equal(count(composer, 'oe=we("ccd_auto_default_mode")'), 1);
+  assert.ok(pins.includes('v=!!g&&c!=="approval_card"&&e!=="plan"&&!(e==="bypassPermissions"&&DR(g));lt(e),v&&Ge(t=>({...t,[g]:e}))'));
+  assert.ok(pins.includes('[We,Ge]=Xd("epitaxy-folder-permission-mode-v2",kR,AR),Ke=c?.originCwd'));
+  assert.ok(pins.includes('function OR(e){return Object.fromEntries(Object.entries(e).filter(([e,t])=>t!=="bypassPermissions"||fR(e)))}'));
+  // The v1 key is now only the seed source; 2.42304.0 never had the v2 key.
+  assert.equal(count(composer, '"epitaxy-folder-permission-mode"'), 1);
+  assert.equal(count(previous('c227f4d5e-Ba-r--Rl.js'), 'epitaxy-folder-permission-mode-v2'), 0);
+  // The global preference: only the auto-default nudge (XL/QL decision, M) writes it, and it is a GrowthBook-gated pref.
+  assert.equal(count(composer, 'M=J2($,12,o,r)?K2($,12,o,r,()=>(r("auto"),o("auto"))):$[14]'), 1);
+  assert.equal(count(composer, 'se=vt("ccd_auto_default_mode"),ce=vt("ccr_auto_default_mode")'), 1);
 });
 
 test('host layers: opening and folder keys, which picks become the folder pick, the draft folder move', () => {
@@ -143,10 +167,10 @@ test('host layers: a running session is its own pick, else the mode it started w
   assert.equal(permissionLayersReducer(state, { type: 'purgeBypass' }), state);
 });
 
-test('R4g fix: a session keeps its mode across a restart (host stand-in for _t = s?.permissionMode), a pick in it updates it, Bypass drops with the opt-in', () => {
+test('R4g fix: a session keeps its mode across a restart (host stand-in for kt = c?.permissionMode), a pick in it updates it, Bypass drops with the opt-in', () => {
   // Official: the running-session chain reads the session record's permissionMode before the spawn mode and the global.
-  assert.equal(count(official('c227f4d5e-Ba-r--Rl.js'), '_t=s?.permissionMode,vt=tm('), 1);
-  assert.equal(count(official('c227f4d5e-Ba-r--Rl.js'), 'J=M(()=>o?q??(vt?"bypassPermissions":void 0)??_t??yt??l??De'), 1);
+  assert.equal(count(official(COMPOSER), 'kt=c?.permissionMode,At=hh(s?.type==="local"?s.id:null)'), 1);
+  assert.equal(count(official(COMPOSER), 'if(s){Ut=ct??(At?"bypassPermissions":void 0)??kt??jt??A??Ee;break bb1}'), 1);
   const storage = memoryStorage();
   const draft = permissionOpeningKey({});
   let run = initialPermissionLayers(readFolderPicks(storage), readSessionModes(storage));
@@ -178,6 +202,38 @@ test('R4g fix: a session keeps its mode across a restart (host stand-in for _t =
   let bypassed = permissionLayersReducer(initialPermissionLayers({}, { t1: 'bypass', t2: 'ask' }), { type: 'purgeBypass' });
   assert.deepEqual(bypassed.sessions, { t2: 'ask' });
   assert.equal(permissionLayersReducer(bypassed, { type: 'purgeBypass' }), bypassed);
+});
+
+test('E11: the v2 folder map is seeded once from v1 without any local Bypass (OR), v1 untouched; v2 wins once stored', () => {
+  assert.equal(FOLDER_PERMISSION_KEY, 'epitaxy-folder-permission-mode-v2');
+  assert.equal(FOLDER_PERMISSION_SEED_KEY, 'epitaxy-folder-permission-mode');
+  // fR is the shipped regex, byte for byte.
+  assert.equal(count(official(COMPOSER), `function fR(e){return${SCOPED_FOLDER_KEY}.test(e)}`), 1);
+  const v1 = JSON.stringify({ '/r/a': 'bypass', '/r/b': 'acceptEdits', '/r/c': 'ask', '/r/d': 'auto', '/r/e': 'plan', '/r/f': 'bogus' });
+  const storage = memoryStorage({ [FOLDER_PERMISSION_SEED_KEY]: v1 });
+  assert.deepEqual(readFolderPicks(storage), { '/r/b': 'acceptEdits', '/r/c': 'ask', '/r/d': 'auto', '/r/e': 'plan' });
+  assert.equal(storage.memory.get(FOLDER_PERMISSION_KEY), '{"/r/b":"acceptEdits","/r/c":"ask","/r/d":"auto","/r/e":"plan"}', 'the seed is stored as v2');
+  assert.equal(storage.memory.get(FOLDER_PERMISSION_SEED_KEY), v1, 'v1 is only read');
+  // Once v2 exists it is the map: a later v1 change, or a Bypass picked again, is not re-seeded away.
+  storage.memory.set(FOLDER_PERMISSION_SEED_KEY, JSON.stringify({ '/r/z': 'ask' }));
+  assert.equal(writeFolderPicks(storage, { '/r/a': 'bypass' }), true);
+  assert.deepEqual(readFolderPicks(storage), { '/r/a': 'bypass' });
+  // OR keeps Bypass only on fR keys (remote, remote-env, remote-session, scratch, ssh, wsl); the host has none.
+  assert.deepEqual(seedFolderPicks({ 'ssh:[h]:22:/x': 'bypass', 'wsl:Ubuntu:/x': 'bypass', 'scratch:': 'bypass', '/x': 'bypass', '/y': 'ask' }),
+    { 'ssh:[h]:22:/x': 'bypass', 'wsl:Ubuntu:/x': 'bypass', 'scratch:': 'bypass', '/y': 'ask' });
+  // No v1 (or a v1 that is not an object): nothing is seeded and nothing is written (official map → void 0).
+  const empty = memoryStorage();
+  assert.deepEqual(readFolderPicks(empty), {});
+  assert.equal(empty.memory.has(FOLDER_PERMISSION_KEY), false);
+  const array = memoryStorage({ [FOLDER_PERMISSION_SEED_KEY]: '[1]' });
+  assert.deepEqual(readFolderPicks(array), {});
+  assert.equal(array.memory.has(FOLDER_PERMISSION_KEY), false);
+  // The pick and the folder move follow DR / fR (never true for a host folder).
+  assert.equal(folderPickWrites({ folderKey: 'scratch:', value: 'bypass' }), false);
+  assert.equal(folderPickWrites({ folderKey: 'remote-env:e1', value: 'bypass' }), false);
+  assert.equal(folderPickWrites({ folderKey: 'remote-env:e1', value: 'ask' }), true);
+  assert.deepEqual(draftFolderMove({ previous: null, next: 'ssh:[h]:22:/x', userChoice: 'bypass' }), { save: null, reset: true });
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'bypass' }), { save: { key: '/r/a', value: 'bypass' }, reset: true });
 });
 
 test('folder picks persist under the official key; bad entries and broken storage read as none', () => {
@@ -218,6 +274,16 @@ test('the hooks together: the draft reads its folder pick, the Settings default 
   }
   const restarted = Object.fromEntries([...renderToString(React.createElement(Restarted, { sessionId: 't1' })).matchAll(/data-(\w+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
   assert.deepEqual(restarted, { mode: 'ask', source: 'session_mode', other: 'acceptEdits' });
+  // E11 after the update: only the v1 map exists; its Bypass folder now shows the Settings default, its Accept edits stays.
+  const updated = memoryStorage({ [FOLDER_PERMISSION_SEED_KEY]: JSON.stringify({ '/r/x': 'bypass', '/r/a': 'acceptEdits' }) });
+  function Updated({ folder }) {
+    const layers = usePermissionModeLayers({ globalPref: 'ask', folder, storage: updated });
+    return React.createElement('i', { 'data-mode': layers.mode, 'data-source': layers.source });
+  }
+  const show = folder => Object.fromEntries([...renderToString(React.createElement(Updated, { folder })).matchAll(/data-(\w+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
+  assert.deepEqual(show('/r/x'), { mode: 'ask', source: 'global_pick' });
+  assert.deepEqual(show('/r/a'), { mode: 'acceptEdits', source: 'folder_pick' });
+  assert.equal(updated.memory.get(FOLDER_PERMISSION_KEY), '{"/r/a":"acceptEdits"}');
 });
 
 test('the bypass hook hands picks to the layers: Mode-menu picks plainly, the approval card\'s marked approval_card', () => {

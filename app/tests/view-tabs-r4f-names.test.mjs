@@ -10,35 +10,36 @@ import react from '@vitejs/plugin-react';
 // R4f-graph G1 (D24): semantic names added to the shared view-tabs graph for the
 // proposal group card (Popover / Switch / InfoTooltip / Shimmer), the R3b-transcript
 // stand-ins (Banner / Collapsible / DisabledReason / useDirection) and the R4e plugin
-// Overview card (Card). Reads only the local reference copy and the generated output.
+// Overview card (Card). Reads only the local reference copy and the generated output. Since the 3.6556.2 migration
+// (w1-cds-viewtabs) the locals, export aliases and features are the 3.6556.2 ones; the semantic names are unchanged.
 const app = path.resolve(import.meta.dirname, '..');
 const directory = path.join(app, 'src/generated/view-tabs');
 const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json'), 'utf8'));
 const reference = path.resolve(app, '../reference', manifest.referenceSnapshot, 'ion-dist/assets/v1');
-const frame = 'shared-frame-BfjMqbuN.js', vendorFrame = 'vendor-frame-DfPJ1QmD.js';
-// [semantic name, file, 2.42304.0 local, official export alias, features of the local's declaration].
-// The first feature occurs exactly once in the installed chunk (grep -c -F style).
+const frame = 'shared-frame-6jtSkIit.js', vendorFrame = 'vendor-frame-CnSY1sxv.js';
+// [semantic name, file, 3.6556.2 local, official export alias, features of the local's declaration].
+// The first feature occurs exactly once in the official chunk (grep -c -F style).
 const added = [
-  ['CdsPopover', frame, 'nE', 'Zi', ['createHandle:Ce}', 'Popup:KT,']],
-  ['CdsSwitch', frame, 'dD', 'Fi', ['"data-cds":"Switch"', 'disabledReasonSide:r']],
-  ['CdsInfoTooltip', frame, 'oE', 'Xi', ['Z("moreInfo","More info")', '"data-cds":"InfoTip"', 'H(nE.Popup,']],
-  ['CdsShimmer', frame, 'Aj', 'oi', ['active:t=!0,variant:n="default"', '"data-cds":"ShimmerText"']],
-  ['CdsBanner', frame, 'gT', 'oa', ['"data-cds":"Banner"', '"data-prose-box":""', 'T(Qw.Root,']],
-  ['CdsCollapsible', frame, 'Qw', 'ca', ['Root:qw,Trigger:Xw,Panel:']],
-  ['CdsDisabledReason', frame, 'Qp', 'Ec', ['closeOnClick:!1,openOnHandedBackFocus:!0', 'H(Yc,{id:d,reason:e})']],
-  ['useDirection', vendorFrame, 'Td', 'Wn', ['return N(wd)?.direction??"ltr"']],
-  ['CdsCard', frame, 'yu', 'ol', ['Object.assign(pu,{Link:hu,Media:vu})']],
+  ['CdsPopover', frame, 'bk', 'ua', ['Arrow:qe,createHandle:Ce}', 'Popup:uk,']],
+  ['CdsSwitch', frame, 'IA', 'Ki', ['disabledReasonSide:i,onKeyDown:a', 'disabledReason:r']],
+  ['CdsInfoTooltip', frame, 'Tk', 'la', ['"aria-label":n,icon:r,size:i,side:a']],
+  ['CdsShimmer', frame, 'zF', '_i', ['variant:u,delay:a,paused:o', 'active:c']],
+  ['CdsBanner', frame, 'NO', 'ya', ['composerCalibration:p', 'dismissLabel:d']],
+  ['CdsCollapsible', frame, 'fO', 'xa', ['Root:sO,Trigger:uO,Panel:']],
+  ['CdsDisabledReason', frame, 'Zm', 'Wl', ['wrapperClassName:u,children:d}=e', 'hoverable:c']],
+  ['useDirection', vendorFrame, 'un', 'Ia', ['F(ln)?.direction??"ltr"']],
+  ['CdsCard', frame, 'cd', 'Tu', ['Object.assign(td,{Link:rd,Media:sd})']],
 ];
 // The names published before this step, by local: none may move or disappear.
-const prior = ('ViewTabBar:Y useViewTabIconSize:P viewTabSizes:R viewTabLabels:oe ViewTab:ge ViewTabOverflowItem:ce '
-  + 'ViewTabOverflowMenu:se useViewTabOverflow:xe DirectionContext:wd cva:In CdsDensityContext:la CdsButton:$l CdsIcon:Jo '
-  + 'CdsBadge:cs CdsConfirmationDialog:M_ CdsDropdown:EC cdsClassNames:X CdsTooltipProvider:Sm CdsSegmentedControl:hO '
-  + 'CdsPulse:eN CdsPreviewCard:vR CdsPreviewCardContext:fR CdsPreviewCardTrigger:mR isFizzyLakePartEnabled:jf '
-  + 'useEventCallback:_e useMergedRefs:Oe CdsPage:k CdsTabs:ir useRowSelection:O CdsSelectableTable:I SessionsRowLayout:i '
-  + 'SessionsDateLayout:a SessionsMoreButton:o SessionsMenuContext:A SessionsRowRail:D SessionsActionsRail:O '
-  + 'SessionsArchivedBadge:r SessionsHighlight:r findSessionTitleMatch:e CdsRelativeTime:oX mergeProps:Kt clsx:ge '
-  + 'CdsTooltip:Zp CdsShortcut:ks CdsSplitDropdownButton:ej CdsCheckbox:wA CdsTextInput:tx CdsContextMenu:iD '
-  + 'CdsMenuCreateHandle:bm CdsOverflowTooltip:gm CdsLayerProvider:Hd CdsDialog:k_ CdsRoot:Za').split(' ').map(pair => pair.split(':'));
+const prior = ('ViewTabBar:Re useViewTabIconSize:F viewTabSizes:le viewTabLabels:N ViewTab:ve ViewTabOverflowItem:se '
+  + 'ViewTabOverflowMenu:ae useViewTabOverflow:Te DirectionContext:ln cva:Vn CdsDensityContext:ba CdsButton:Uu CdsIcon:us '
+  + 'CdsBadge:Ps CdsConfirmationDialog:ab CdsDropdown:GT cdsClassNames:Q CdsTooltipProvider:xh CdsSegmentedControl:Vj '
+  + 'CdsPulse:mL CdsPreviewCard:qU CdsPreviewCardContext:BU CdsPreviewCardTrigger:HU isFizzyLakePartEnabled:lp '
+  + 'useEventCallback:ve useMergedRefs:Te CdsPage:_ CdsTabs:Qr useRowSelection:T CdsSelectableTable:F SessionsRowLayout:i '
+  + 'SessionsDateLayout:a SessionsMoreButton:o SessionsMenuContext:A SessionsRowRail:E SessionsActionsRail:D '
+  + 'SessionsArchivedBadge:r SessionsHighlight:r findSessionTitleMatch:e CdsRelativeTime:y6 mergeProps:Jt clsx:ve '
+  + 'CdsTooltip:Xm CdsShortcut:oc CdsSplitDropdownButton:cF CdsCheckbox:xP CdsTextInput:uC CdsContextMenu:kA '
+  + 'CdsMenuCreateHandle:Sm CdsOverflowTooltip:hh CdsLayerProvider:Lf CdsDialog:nb CdsRoot:lo').split(' ').map(pair => pair.split(':'));
 
 let server; const loaded = new Map();
 before(async () => {
@@ -50,7 +51,7 @@ const exported = name => loaded.get(manifest.publicNames[name].file)[name];
 const h = React.createElement, render = element => renderToStaticMarkup(element);
 const provider = child => h(exported('CdsTooltipProvider'), {}, child);
 
-test('R4f names point at the 2.42304.0 declarations their features identify, under the official export alias', () => {
+test('R4f names point at the 3.6556.2 declarations their features identify, under the official export alias', () => {
   for (const [name, file, local, exportName, features] of added) {
     assert.deepEqual(manifest.publicNames[name], {file, local, export:exportName}, name);
     assert.ok(manifest.modules.find(m => m.source === file).bindings.includes(local), name);
@@ -71,16 +72,23 @@ test('every name published before R4f keeps its file and local; only new names a
   // R4g-composer CP1 (X7-07) appended the seven contexts extract-code-composer.mjs used to copy (its contextCopies is
   // empty now); tests/composer-cds-root.test.mjs pins them.
   const r4g = ['CdsNaturalImageTilesContext', 'CdsOwnerWindowContext', 'CdsLabelsContext', 'CdsModeStoreContext', 'CdsFizzyLakePartsContext', 'CdsSurfaceContext', 'CdsButtonIconSizeContext'];
-  // R4i-graph GR1 (D46) appended the names the routines graphs import (tests/view-tabs-d46-names.test.mjs pins them):
+  // R4i-graph GR1 (D46) appended the names the routines graphs import (tests/view-tabs-manifest.test.mjs pins them):
   // the block of extract-view-tabs.mjs roots after its D46 header.
   const source = fs.readFileSync(path.join(app, 'scripts/extract-view-tabs.mjs'), 'utf8');
   const block = source.slice(source.indexOf('// R4i-graph GR1 (D46)'), source.indexOf('  // R4i-graph GR3:', source.indexOf('// R4i-graph GR1 (D46)')));
   // 2026-10-18 context-breakdown (D50) added one root inside this block, useInsideCdsTooltipProvider (shared-frame xm, the
   // session-rail-context chart meter reads bm through it); it is a new name, not a D46 one, so it is counted on its own.
   const contextBreakdown = ['useInsideCdsTooltipProvider'];
-  const d46 = [...block.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]).filter(name => !contextBreakdown.includes(name));
+  // Wave 11 added three roots after cdsSurfaceClass inside this block: CdsSurface (w11-e31-terminal-cont, shared-frame cg)
+  // and the D1 move of cowork-scheduled's TextArea / Pictogram roots (w11-pictogram-d1, shared-frame nk, shared-156 KG).
+  const wave11 = [['CdsSurface', 'cg', 'Dl'], ['CdsTextArea', 'nk', 'da'], ['CdsPictogram', 'KG', 'Hr']];
+  const d46 = [...block.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]).filter(name => !contextBreakdown.includes(name) && !wave11.some(([n]) => n === name));
   assert.equal(d46.length, 207);
-  for (const name of contextBreakdown) assert.equal(manifest.publicNames[name]?.local, 'xm', name);
+  for (const name of contextBreakdown) assert.equal(manifest.publicNames[name]?.local, 'bh', name);
+  for (const [name, local, exportName] of wave11) {
+    assert.equal(manifest.publicNames[name]?.local, local, name);
+    assert.equal(manifest.publicNames[name]?.export, exportName, name);
+  }
   // R4i-graph GR3 appended what the composer attachment tiles copied or stood in for (the Skeleton's two contexts, the
   // TextLink, the platform context and its reader); tests/composer-attachment-tiles.test.mjs pins their use.
   const gr3 = ['CdsSkeletonShimmerContext', 'CdsSkeletonElementContext', 'CdsTextLink', 'CdsPlatformContext', 'useCdsPlatform'];
@@ -88,35 +96,48 @@ test('every name published before R4f keeps its file and local; only new names a
   assert.deepEqual([...gr3Block.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]), gr3);
   // 2026-10-18 (user ruling) appended the CDS Avatar (shared-frame uj, exported `si`) the sidebar account button draws.
   const accountAvatar = ['CdsAvatar'];
-  const avatarBlock = source.slice(source.indexOf('  // 2026-10-18 account avatar:'), source.indexOf('\n];', source.indexOf('  // 2026-10-18 account avatar:')));
+  const avatarBlock = source.slice(source.indexOf('  // 2026-10-18 account avatar:'), source.indexOf('  // E3 (3.6556.2): the React Compiler cache helpers'));
   assert.deepEqual([...avatarBlock.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]), accountAvatar);
-  assert.equal(manifest.publicNames.CdsAvatar?.local, 'uj');
-  assert.equal(manifest.publicNames.CdsAvatar?.export, 'si');
-  const known = new Set([...prior.map(([name]) => name), ...added.map(([name]) => name), ...r4g, ...d46, ...gr3, ...contextBreakdown, ...accountAvatar]);
+  assert.equal(manifest.publicNames.CdsAvatar?.local, 'vF');
+  assert.equal(manifest.publicNames.CdsAvatar?.export, 'vi');
+  // 3.6556.2 (E3, cds:C8) appended the 24 React Compiler cache helpers and the CDS Toolbar after the avatar block.
+  const v3Block = source.slice(source.indexOf('  // E3 (3.6556.2): the React Compiler cache helpers'), source.indexOf('  // w2-routines-shared (3.6556.2, D46):'));
+  const v3 = [...v3Block.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]);
+  assert.equal(v3.length, 25); assert.equal(v3.at(-1), 'CdsToolbar');
+  // w2-routines-shared (D46) appended three view-tabs bindings other 3.6556.2 graphs read (routines-shared, files-changes, code-composer).
+  // A later lane's block (w3-code-routines, D46) follows inside the same array: the w2 block ends at its header.
+  const routinesStart = source.indexOf('  // w2-routines-shared (3.6556.2, D46):'), routinesEnd = source.indexOf('\n];', routinesStart);
+  const codeRoutinesStart = source.indexOf('  // w3-code-routines (3.6556.2, D46):', routinesStart);
+  const routinesBlock = source.slice(routinesStart, codeRoutinesStart !== -1 && codeRoutinesStart < routinesEnd ? codeRoutinesStart : routinesEnd);
+  const routinesShared = [...routinesBlock.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]);
+  assert.deepEqual(routinesShared, ['matchesCoarseOrHoverlessPointer', 'subscribeInputMediaChanges', 'isFizzyLakePartOptedIn']);
+  // w3-code-routines (D46) appended the shared-frame bindings the Code Routines form's CDS copies read; counted as their
+  // own block (tests/code-routines-generated.test.mjs pins their use).
+  const codeRoutines = codeRoutinesStart !== -1 && codeRoutinesStart < routinesEnd
+    ? [...source.slice(codeRoutinesStart, routinesEnd).matchAll(/name:'([\w$]+)'/g)].map(m => m[1]) : [];
+  for (const name of codeRoutines) assert.ok(manifest.publicNames[name], name);
+  assert.equal(manifest.publicNames.CdsTooltipImplContext?.local, 'Fl');
+  const known = new Set([...prior.map(([name]) => name), ...added.map(([name]) => name), ...r4g, ...d46, ...gr3, ...contextBreakdown, ...wave11.map(([name]) => name), ...accountAvatar, ...v3, ...routinesShared, ...codeRoutines]);
   assert.deepEqual(Object.keys(manifest.publicNames).filter(name => !known.has(name)), []);
   // The CdsRoot labels context (vn) is named only now that extract-code-composer.mjs no longer copies it.
-  assert.equal(manifest.publicNames.CdsLabelsContext?.local, 'vn');
-  // R4i-graph GR3: the only context extract-code-composer.mjs still copies is the layer base Vd (the pane drop halo's
-  // z-index), which view-tabs holds back in pendingNames for mcp-app-card; none of the published contexts is copied.
+  assert.equal(manifest.publicNames.CdsLabelsContext?.local, 'xn');
+  // R4i-graph GR3 held the layer base Vd back (pendingNames) while extract-mcp-app-card.mjs sliced its own Vd / Jd, and
+  // extract-code-composer.mjs copied it. 3.6556.2 (E4): every pending name is published, so code-composer (3.6556.2)
+  // imports CdsLayerBaseContext / useCdsLayerAwareZIndex from view-tabs and its contextCopies is empty again.
   const composerSource = fs.readFileSync(path.join(app, 'scripts/extract-code-composer.mjs'), 'utf8');
-  const copies = composerSource.slice(composerSource.indexOf('\nconst contextCopies = {'), composerSource.indexOf('\n};\n', composerSource.indexOf('\nconst contextCopies = {')));
-  // R4i-graph fix (review): this is a temporary exception to `contextCopies = {}`, not a new rule. It holds only while
-  // view-tabs keeps CdsLayerBaseContext back because extract-mcp-app-card.mjs still slices its own Vd / Jd; once that
-  // copy is gone (or the name is published) the table must be empty again.
-  const layerBase = manifest.pendingNames.CdsLayerBaseContext;
-  const mcpFrame = path.join(app, 'src/generated/mcp-app-card/shared-frame.mjs');
-  const mcpCopiesVd = fs.existsSync(mcpFrame) && fs.readFileSync(mcpFrame, 'utf8').split('\nvar Vd = G(0);\n').length - 1 === 1;
-  if (layerBase && layerBase.waitsFor.includes('mcp-app-card') && mcpCopiesVd) {
-    assert.deepEqual([...copies.matchAll(/\n    ([\w$]+): '/g)].map(m => m[1]), ['Vd']);
-    assert.equal(layerBase.local, 'Vd');
-    assert.deepEqual(layerBase.waitsFor, ['mcp-app-card', 'code-composer']);
-    assert.deepEqual(manifest.pendingNames.useCdsLayerAwareZIndex?.waitsFor, ['mcp-app-card', 'code-composer']);
-  } else {
-    assert.match(composerSource, /\nconst contextCopies = \{\};\n/, 'mcp-app-card no longer holds Vd back: drop the Vd copy and publish CdsLayerBaseContext');
+  assert.match(composerSource, /\nconst contextCopies = \{\};\n/, 'code-composer copies no view-tabs context');
+  const frameText = fs.readFileSync(path.join(reference, frame), 'utf8');
+  for (const [name, local, exportName] of [['CdsLayerBaseContext', 'If', 'su'], ['useCdsLayerAwareZIndex', 'Uf', 'cu']]) {
+    assert.deepEqual(manifest.publicNames[name], {file:frame, local, export:exportName}, name);
+    assert.match(frameText.slice(frameText.lastIndexOf('export{')), new RegExp(`[{,]${local} as ${exportName}[,}]`), name);
   }
-  // No new module and no new top-level initializer: naming these adds declarations only.
-  assert.equal(manifest.modules.length, 28);
-  assert.deepEqual(manifest.modules.filter(m => m.initializers.length).map(m => [m.source, m.initializers.length]), [[vendorFrame, 1]]);
+  // w10-cleanup-viewtabs-legacy: no 2.42304.0 view holds them back any more.
+  assert.equal(manifest.legacy, undefined);
+  // No new module, and the only top-level initializers are the Base UI store hook and (w11-pictogram-d1) shared-156's
+  // `KG.isCdsPictogram=!0`, the property write that belongs to the CdsPictogram root.
+  // w12 viewtabs-cont: the one module since is c09817156 (CdsCheckboxRow).
+  assert.equal(manifest.modules.length, 30);
+  assert.deepEqual(manifest.modules.filter(m => m.initializers.length).map(m => [m.source, m.initializers.length]), [[vendorFrame, 1], ['shared-156-BLTosN8U.js', 1]]);
 });
 
 test('CdsSwitch renders the original Base UI switch with data-cds="Switch" and its disabled-reason wrapper', () => {

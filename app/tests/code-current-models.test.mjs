@@ -17,15 +17,22 @@ test('file view memory separates sessions, bounds retention to 32 and drops defa
   assert.equal(readFileView('bounded\u000032').forcedText, true);
   rememberFileView(null, { source: true, forcedText: true });
   assert.equal(readFileView(null), undefined);
-  // 2.42304.0 cd2efac6e qs (old oc) also keeps an entry whose only non-default is mediaAsText (the media card's
-  // "View as text anyway", Oh → Pi(!0)); locally that action is a forced read, remembered as forcedText.
+  // cc-rest-files: 3.6556.2 cd2efac6e Fc (2.42304.0 qs, old oc) also keeps an entry whose only non-default is
+  // mediaAsText (the media card's "View as text anyway"); locally that action is a forced read, remembered as forcedText.
   rememberFileView('s1\0photo.png', { source: false, forcedText: false, mediaAsText: true });
   assert.deepEqual(readFileView('s1\0photo.png'), { source: false, forcedText: false, mediaAsText: true });
   rememberFileView('s1\0photo.png', { source: false, forcedText: false, mediaAsText: false });
   assert.equal(readFileView('s1\0photo.png'), undefined);
+  // New in 3.6556.2: toldNoSftp alone keeps an entry too (the host never sets it: no SSH/SFTP sessions, D37).
+  rememberFileView('s1\0remote.txt', { source: false, forcedText: false, toldNoSftp: true });
+  assert.deepEqual(readFileView('s1\0remote.txt'), { source: false, forcedText: false, toldNoSftp: true });
+  rememberFileView('s1\0remote.txt', { source: false, forcedText: false, toldNoSftp: false });
+  assert.equal(readFileView('s1\0remote.txt'), undefined);
   const generated = fs.readFileSync(new URL('../src/generated/code-current/file-view-memory.mjs', import.meta.url), 'utf8');
-  assert.match(generated, /^\/\/ Original Claude Desktop 2\.42304\.0 bindings/);
-  assert.match(generated, /!\(!t\.source && !t\.forcedText && !t\.mediaAsText\)/);
+  assert.match(generated, /^\/\/ Original Claude Desktop 3\.6556\.2 bindings/);
+  assert.match(generated, /!\(!t\.source && !t\.forcedText && !t\.toldNoSftp && !t\.mediaAsText\)/);
+  assert.match(generated, /var Nc = 32;/);
+  assert.match(generated, /export \{ Fc as rememberFileView, Ic as readFileView \};/);
   const viewer = fs.readFileSync(new URL('../src/source-file-viewer.jsx', import.meta.url), 'utf8');
   assert.match(viewer, /rememberFileView\(memoryKey, \{ source: showSource && !sourceFirst && !dirty, forcedText: !!file\.forcedText \}\)/);
   const session = fs.readFileSync(new URL('../src/source-session.jsx', import.meta.url), 'utf8');

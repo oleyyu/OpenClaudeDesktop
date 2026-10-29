@@ -1,21 +1,22 @@
-import React,{createContext,useContext,useEffect,useId,useMemo,useRef,useState} from 'react';
-import {useSessionsPageLoadHold} from './generated/code-current/sessions-page-load-hold.mjs';
+import React,{createContext,useCallback,useContext,useMemo,useState} from 'react';
+// R6: view-tabs through its facade, by semantic name (this page is not in the chat / composer / menu graph, E41).
+import {SessionsActionsRail,SessionsMoreButton} from './generated/view-tabs/index.js';
+// 3.6556.2 cbd6c85c8 Hf, the whole Sessions page (src/generated/sessions-page, re-exported by code-current).
 import {SessionsPageView} from './generated/code-current/sessions-page-view.mjs';
-import {SessionsPageTabs} from './generated/code-current/sessions-page-tabs.mjs';
-import {SessionsPageCountText} from './generated/code-current/sessions-page-count-text.mjs';
-import {SessionsPageEmpty} from './generated/code-current/sessions-page-empty.mjs';
-import {sessionsPageSearchProps} from './generated/code-current/sessions-page-search.mjs';
-import {SessionsPageRow} from './generated/code-current/sessions-page-row.mjs';
-import {sessionsPageBulkMenuEnabled} from './generated/code-current/sessions-page-bulk-actions.mjs';
+import {SessionsPageHfHost} from './source-sessions-page-hf-adapters.jsx';
 import {useStartIntl} from './source-code-start-adapters.jsx';
-import {useSessionsSelection,SessionsMoreButton,SessionsActionsRail} from './source-sessions-primitives.jsx';
-import {sessionPageRows,sessionPageHref,sessionIdFromPageHref} from './sessions-page-model.mjs';
+import {sessionPageRecords,sessionPageHref,sessionIdFromPageHref} from './sessions-page-model.mjs';
+import {sessionsPagePathname,sessionsPageSearch,sessionsPageSurfaceFromHref,mirrorSessionsPageHistoryKey} from './sessions-page-navigation.mjs';
 import {menuTriggerProps} from './source-menu.jsx';
-const keyboardEntry=event=>event?.detail===0?'first':undefined;
-import {readSessionsPageSearch,rememberSessionsPageSearch} from './sessions-page-search-state.mjs';
 import './source-sessions-page.css';
 
-const PageNavigation=createContext(null),empty=[];
+const keyboardEntry=event=>event?.detail===0?'first':undefined;
+const PageNavigation=createContext(null),PageMenu=createContext(null);
+// Hf's primary action is a CDS Button link to the Code start route (shared-52 Jx: shared-25 Qa "/code", or $a
+// "/epitaxy"; "/new" off the Code page). The local app opens a new session instead of navigating the window.
+const NEW_SESSION_HREFS=new Set(['/code','/epitaxy','/new']);
+// The router link Hf renders for each row (shared-25 Cx through cbd6c85c8 Bf, `data-primary`): a local session link
+// opens that session.
 export function SessionsPageLink({href,onClick,...props}) {
   const onOpen=useContext(PageNavigation);
   return <a {...props} href={href} data-primary onClick={event=>{
@@ -23,61 +24,54 @@ export function SessionsPageLink({href,onClick,...props}) {
     const id=sessionIdFromPageHref(href);if(id!==null){event.preventDefault();onOpen?.(id,event);}
   }}/>;
 }
-// 2.42304.0 cbd6c85c8 Sd → gd({codeScoped: true}): t (codeScoped) and x (text-first rows) hold, so only the
-// Code/Archived tabs, the Code rows and the host row menu are reachable. historyKey is the history entry's key
-// (TanStack __TSR_key) and scopeKey the local engine (orgUuid) for the remembered search (ed/td, cov11-02).
-// engine is boot.core: its btwChildSessions capability is nested_less_side_chats (rows pass shared-11 pb).
+// codeRowLinkComponent (cbd6c85c8 Qu on the desktop): Hf hands it `{ item, link }`, item the Code session data
+// (`source.data`), link its router link; Qu makes the row's link the session's context-menu trigger. The local menu is
+// the host session menu, anchored to the row link.
+export function SessionsPageCodeRowLink({item,link}) {
+  const openMenu=useContext(PageMenu);
+  return <span className="contents" onContextMenu={openMenu?event=>{
+    event.preventDefault();openMenu(item.id,event.target?.closest?.('a')??event.currentTarget);
+  }:undefined}>{link}</span>;
+}
+// 3.6556.2 gp → Hf({codeScoped: true, renderCodeRowActions: hp, codeRowLinkComponent}). Hf lists, filters, searches,
+// sorts and holds the rows itself (Code branch: surfaces code / archived, text-first rows, no selectable rows, je false
+// so no load banner, "Sessions loaded." or "Searching…"). The host supplies what the official page reads from its stores
+// through SessionsPageHfHost: the merged list (only local Code sessions; their loading feeds Hf's load hold and the
+// table's isLoading, E20), the route (surface search parameter, router.replace on a tab change), the history entry
+// key for the remembered search (cov11-02; scoped by the local engine, as Hf scopes by orgUuid) and the row link.
+// engine is boot.core: its btwChildSessions capability is nested_less_side_chats (rows pass shared-11 pw).
 export function SourceSessionsPage({sessions=[],state={},metadata={},repoIdentities={},loading=false,engine,
   initialSurface='code',scopeKey='code',historyKey=null,onSurfaceChange,onOpen,onNew,onSessionMenu,menuSessionId,loadFailed=false}) {
-  const intl=useStartIntl(),tabsId=useId(),panelId=`${tabsId}-panel`;
+  const intl=useStartIntl();
   const [surface,setSurface]=useState(initialSurface==='archived'?'archived':'code');
-  // gd z/B: what this entry held when it was left; only Back/Forward to the same entry finds one.
-  const [heldQuery,setHeldQuery]=useState(()=>readSessionsPageSearch(historyKey,scopeKey));
-  const [sortBy,setSortBy]=useState(heldQuery?.sortBy??'type');
-  const [input,setInput]=useState(heldQuery?.input??''),[query,setQuery]=useState(heldQuery?.input.trim()??'');
-  useEffect(()=>rememberSessionsPageSearch(historyKey,input,sortBy,scopeKey),[historyKey,input,sortBy,scopeKey]);
-  useEffect(()=>{const id=setTimeout(()=>setQuery(input.trim()),300);return ()=>clearTimeout(id);},[input]);
-  const changeInput=value=>{setInput(value);if(!value.trim())setQuery('');};
-  const rows=useMemo(()=>sessionPageRows(sessions,{surface,query,sortBy,state,metadata,repoIdentities,engine}),[sessions,surface,query,sortBy,state,metadata,repoIdentities,engine]);
-  const hold=useSessionsPageLoadHold({pending:loading,errored:loadFailed,hasRows:rows.length>0});
-  const displayed=hold.held?empty:rows;
-  // gd Wt/Gt/J: Code rows are never selectable, so the original hook stays inactive (it still resets on a
-  // surface change) and the Select button that would take its restored focus is never rendered.
-  const selectable=useMemo(()=>displayed.filter(row=>row.ref.kind!=='code'),[displayed]);
-  const selectButton=useRef(null);
-  const selection=useSessionsSelection(selectable,row=>row.ref.id,surface,{restoreFocusRef:selectButton});
-  if(heldQuery!==undefined&&selection.isActive)setHeldQuery(undefined);
-  // gd Jt: the GrowthBook bulk menu gate (closed without GrowthBook); with it closed gd has no selection
-  // status (fr), so tabsStatus/selectionLead/selectionHiddenClass stay undefined.
-  const bulkMenu=sessionsPageBulkMenuEnabled(selection.isActive);
-  // gd bn/xn/wn: the selected chat and cowork rows among the shown rows (Mt by getRowKey). Code rows are never selectable,
-  // so this is 0 on the Code page; lr is gd's "{count} selected" label, shown by the tabs while a selection is active.
-  const selectedCount=useMemo(()=>{
-    if(selection.selectedKeys.length===0)return 0;
-    const byKey=new Map(displayed.map(row=>[row.ref.id,row]));
-    return selection.selectedKeys.filter(key=>{const kind=byKey.get(key)?.ref.kind;return kind==='chat'||kind==='cowork';}).length;
-  },[selection.selectedKeys,displayed]);
-  const countText=SessionsPageCountText({selectedCount});
-  const sortItems=[['type','Type','+U6ozcnv4r'],['date','Date','P7PLVjLe4f']].map(([value,label,id])=>({label:intl.formatMessage({defaultMessage:label,id}),checked:sortBy===value,checkedRole:'radio',onSelect:()=>setSortBy(value)}));
-  // gd A/j: the tab sets the page surface, then replaces the history entry (Ru; "all" is the Code default).
-  const tabs=SessionsPageTabs({surface,onSurface:setSurface,replaceSurface:value=>onSurfaceChange?.(value==='all'?'code':value),intl,tabsId,panelId,
-    filterLabel:intl.formatMessage({defaultMessage:'Filter by',id:'/lwQDxsM2S'}),selection,bulkMenu,countText});
-  // gd: `J.isActive || (br = {...})`.
-  const search=selection.isActive?undefined:sessionsPageSearchProps({value:input,onChange:changeInput,intl,sortItems,sortBy,hasQuery:!!query,heldQuery});
-  const renderActions=row=>onSessionMenu?<SessionsActionsRail><SessionsMoreButton
-    aria-label={intl.formatMessage({defaultMessage:'More options for {chatName}',id:'ukZKEVU02W'},{chatName:row.title||intl.formatMessage({defaultMessage:'Untitled',id:'3kbIhS7KZS'})})}
-    {...menuTriggerProps({open:menuSessionId===row.ref.id,onOpen:(entry,event)=>onSessionMenu(row.hostSession,event.currentTarget,entry)})}
-    onClick={event=>onSessionMenu(row.hostSession,event.currentTarget,keyboardEntry(event))}/></SessionsActionsRail>:null;
-  // gd Zn: showArchivedBadge is `fe && Yi(e)` with fe = U && L === "all" && !x, never true on the Code page.
-  return <PageNavigation value={onOpen}><div className="source-sessions-page" onClick={event=>{
+  const records=useMemo(()=>sessionPageRecords(sessions,{state,metadata,repoIdentities,engine}),[sessions,state,metadata,repoIdentities,engine]);
+  const byId=useMemo(()=>new Map(records.map(row=>[row.ref.id,row.hostSession])),[records]);
+  const entryKey=historyKey==null?null:`${scopeKey}\u0000${historyKey}`;
+  mirrorSessionsPageHistoryKey(entryKey);
+  const router=useMemo(()=>({
+    push:href=>{if(NEW_SESSION_HREFS.has(href))onNew?.();},
+    replace:href=>{const next=sessionsPageSurfaceFromHref(href);setSurface(next);onSurfaceChange?.(next);},
+    back(){},forward(){},refresh(){},prefetch(){},
+  }),[onNew,onSurfaceChange]);
+  const list=useMemo(()=>({sessions:records,isInitialLoading:loading,isCodeLoading:loading,isCodeLoadError:loadFailed}),[records,loading,loadFailed]);
+  const host=useMemo(()=>({list,router,search:sessionsPageSearch(surface),pathname:sessionsPagePathname,historyKey:entryKey,
+    getRowHref:ref=>sessionPageHref(ref.id),linkComponent:SessionsPageLink}),[list,router,surface,entryKey]);
+  const openRowMenu=useCallback((id,anchor,entry)=>{const session=byId.get(id);if(session)onSessionMenu?.(session,anchor,entry);},[byId,onSessionMenu]);
+  // hp → Xu: the row's actions rail with its "More options for {chatName}" menu trigger (the host session menu).
+  const renderCodeRowActions=useCallback(data=>{
+    if(!onSessionMenu||!byId.has(data.id))return null;
+    const title=data.name?.trim()||data.title?.trim()||intl.formatMessage({defaultMessage:'Untitled',id:'3kbIhS7KZS'});
+    return <SessionsActionsRail><SessionsMoreButton aria-label={intl.formatMessage({defaultMessage:'More options for {chatName}',id:'ukZKEVU02W'},{chatName:title})}
+      {...menuTriggerProps({open:menuSessionId===data.id,onOpen:(entry,event)=>openRowMenu(data.id,event.currentTarget,entry)})}
+      onClick={event=>openRowMenu(data.id,event.currentTarget,keyboardEntry(event))}/></SessionsActionsRail>;
+  },[byId,intl,menuSessionId,onSessionMenu,openRowMenu]);
+  return <PageNavigation value={onOpen}><PageMenu value={onSessionMenu?openRowMenu:null}><div className="source-sessions-page" onClick={event=>{
     if(event.defaultPrevented)return;
-    if(event.target.closest?.('a[href="#new"]')){event.preventDefault();onNew?.();}
+    const anchor=event.target?.closest?.('a[href]');
+    if(anchor&&NEW_SESSION_HREFS.has(anchor.getAttribute('href'))){event.preventDefault();onNew?.();}
   }}>
-    <SessionsPageView tabs={tabs} search={search} loading={loading||hold.held} surface={surface} newHref="#new" panelId={panelId} tabsId={tabsId}
-      hasQuery={!!query} rows={displayed} getRowKey={row=>row.ref.id} getRowHref={row=>sessionPageHref(row.ref.id)}
-      getRowLabel={row=>row.title||intl.formatMessage({defaultMessage:'Untitled',id:'3kbIhS7KZS'})} selection={selection}
-      bulkMenu={bulkMenu} selectableRows={selectable} selectButtonRef={selectButton} countText={countText} selectedCount={selectedCount}
-      renderContent={row=><SessionsPageRow session={row} lowerQuery={query.toLowerCase()} showArchivedBadge={false} textFirstRows/>}
-      renderActions={renderActions} linkComponent={SessionsPageLink} emptyState={<SessionsPageEmpty query={query} surface={surface}/>} intl={intl}/>
-  </div></PageNavigation>;
+    <SessionsPageHfHost.Provider value={host}>
+      <SessionsPageView codeScoped reportsRecentsLoad={false} renderCodeRowActions={renderCodeRowActions} codeRowLinkComponent={SessionsPageCodeRowLink}/>
+    </SessionsPageHfHost.Provider>
+  </div></PageMenu></PageNavigation>;
 }

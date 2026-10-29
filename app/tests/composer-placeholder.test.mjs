@@ -1,14 +1,24 @@
-import test from "node:test";
+import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import React from "react";
 import { composerPlaceholder, composerFirstRun, SESSION_PLACEHOLDER, DRAFT_PLACEHOLDER, CHAT_PLACEHOLDER, FIRST_RUN_PLACEHOLDER,
   RUNNING_PLACEHOLDER, RUNNING_PLACEHOLDER_COMPACT, runningPlaceholder, runningPlaceholderShown } from "../src/composer-placeholder.mjs";
-import { useOverflowing } from "../src/generated/code-composer/placeholder-fit.mjs";
+import { createServer } from "vite";
+import react from "@vitejs/plugin-react";
 import zhCN from "../electron/i18n/zh-CN/index.mjs";
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const root = path.resolve(import.meta.dirname, "..");
+// 3.6556.2 placeholder-fit (c1c6ea9ac a) is React Compiler output: it imports the memo helpers from view-tabs, whose graph
+// reaches the .jsx host adapters, so the generated module loads through Vite SSR instead of a plain node import.
+let server, useOverflowing;
+before(async () => {
+  server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
+  ({ useOverflowing } = await server.ssrLoadModule("/src/generated/code-composer/placeholder-fit.mjs"));
+});
+after(async () => { await server?.close(); });
 
 // cc43287c9-BMbiZYzF.js:28686 placeholder Yn ? 'Type / for commands' : 'Describe a task or ask a question' (:27454 Yn = Pn?.id ?? null).
 test("Code composer: session id → 'Type / for commands'; draft (null/empty) → draft copy", () => {
@@ -43,6 +53,12 @@ test("Zq: null while the session list or stats are pending, false with any sessi
   assert.equal(composerFirstRun(), null);
 });
 
+test("3.6556.2 cc43287c9 keeps the three Code placeholder copies and the session / draft / first-run choice", async () => {
+  const chunk = await fs.readFile(path.resolve(root, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc43287c9-Me-M2ucD.js"), "utf8");
+  const pin = 'placeholder:or||fn!=="draft"?rr.formatMessage({defaultMessage:"Type / for commands",id:"fHClqd2+bS"}):St??(Js?rr.formatMessage({defaultMessage:"Describe something to build, change, or fix",id:"sIl97ARhWm"}):rr.formatMessage({defaultMessage:"Describe a task or ask a question",id:"RLloCeiLx7"}))';
+  assert.equal(chunk.split(pin).length, 2);
+});
+
 test("Chat mode is not the cc43287c9 Code branch and keeps its own copy with or without a session", () => {
   assert.equal(CHAT_PLACEHOLDER, "How can I help you today?");
   assert.equal(composerPlaceholder({ sessionId: "thread-1", mode: "chat" }), CHAT_PLACEHOLDER);
@@ -62,10 +78,10 @@ test("main.jsx feeds the current session id into the composer placeholder; Sourc
   assert.match(editor, /data-placeholder=\{props\.placeholder\}/, "the ProseMirror editor exposes the copy through data-placeholder (::before content)");
 });
 
-// R2 composer-send-cell: 2.42304.0 c227f4d5e uM — while a turn runs (ze) the placeholder names both lanes, Be(spoken)
-// "{sendKey} to send, {queueKey} to queue for later" (mZ6xnUz7iS), with He "{queueKey} to queue" (FIL0bW8Kgx) once the
-// fit probe overflows; key labels are the original cM (generated composer-key-label.mjs).
-const readable = path.resolve(root, "../analysis/code-ui-unpack-20261017/readable");
+// R2 composer-send-cell: 3.6556.2 c227f4d5e qM (2.42304.0 uM) — while a turn runs (Re, was ze) the placeholder names both
+// lanes "{sendKey} to send, {queueKey} to queue for later" (mZ6xnUz7iS), with "{queueKey} to queue" (FIL0bW8Kgx) once the
+// fit probe overflows; key labels are the original GM (was cM; generated composer-key-label.mjs).
+const official = path.resolve(root, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1");
 test("running placeholder: the full and compact copy with the original cM key labels (mac glyphs, spoken names)", async () => {
   assert.equal(RUNNING_PLACEHOLDER, "{sendKey} to send, {queueKey} to queue for later");
   assert.equal(RUNNING_PLACEHOLDER_COMPACT, "{queueKey} to queue");
@@ -74,10 +90,10 @@ test("running placeholder: the full and compact copy with the original cM key la
   assert.equal(runningPlaceholder({ mac: true, spoken: true }), "Enter to send, Command+Enter to queue for later", "We: the aria-description");
   assert.equal(runningPlaceholder({ mac: false }), "Enter to send, Ctrl+Enter to queue for later");
   assert.equal(runningPlaceholder({ mac: false, compact: true }), "Ctrl+Enter to queue");
-  const chunk = await fs.readFile(path.join(readable, "c227f4d5e-Ba-r--Rl.js"), "utf8");
-  for (const pin of ['defaultMessage: "{sendKey} to send, {queueKey} to queue for later",', 'id: "mZ6xnUz7iS",',
-    '{ defaultMessage: "{queueKey} to queue", id: "FIL0bW8Kgx" },', '{ sendKey: cM("enter", Re, e), queueKey: cM("cmd+enter", Re, e) },',
-    '{ queueKey: cM("cmd+enter", Re) },', 'ze = !!V && !ge && Le && !A && !I && re === null,'])
+  const chunk = await fs.readFile(path.join(official, "c227f4d5e-B-FYKrwT.js"), "utf8");
+  for (const pin of ['defaultMessage:"{sendKey} to send, {queueKey} to queue for later",id:"mZ6xnUz7iS"',
+    '{defaultMessage:"{queueKey} to queue",id:"FIL0bW8Kgx"}', '{sendKey:GM("enter",Le,e),queueKey:GM("cmd+enter",Le,e)}',
+    '{queueKey:GM("cmd+enter",Le)}', 'Re=!!ee&&!me&&Ie&&!A&&!F&&q===null'])
     assert.ok(chunk.includes(pin), pin);
   assert.equal(zhCN[RUNNING_PLACEHOLDER], "{sendKey} 发送，{queueKey} 加入队列稍后发送");
   assert.equal(zhCN[RUNNING_PLACEHOLDER_COMPACT], "{queueKey} 加入队列");
@@ -90,7 +106,7 @@ test("ze: only while Stop is offered, ⌘⏎ is free, Enter sends, the editor is
   assert.equal(runningPlaceholderShown(), false);
 });
 
-// The original Kf (c1c6ea9ac o) under a minimal hook dispatcher: overflow is scrollWidth over clientWidth, measured on
+// The original 3.6556.2 c1c6ea9ac a (2.42304.0 Kf / o) under a minimal hook dispatcher: overflow is scrollWidth over clientWidth, measured on
 // mount, on the probe's ResizeObserver, on the text and once the owner document's fonts are ready.
 function hookFixture(hook) {
   let cursor = 0, result;
@@ -106,7 +122,7 @@ function hookFixture(hook) {
     for (let pass = 0; pass < 5; pass++) {
       render.dirty = false; cursor = 0;
       const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-      internal.H = hooks;
+      internal.H = withMemoCache(hooks);
       try { result = hook(...args); } finally { internal.H = old; }
       while (effects.length) effects.shift()();
       if (!render.dirty) return result;

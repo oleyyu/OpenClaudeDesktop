@@ -1,116 +1,116 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r4e-zoom.mjs",
   "output": "r4e-zoom.cjs",
-  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
-  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+  "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
   "bindings": [
     {
-      "name": "jHn",
+      "name": "T4n",
       "kind": "var",
       "scope": "module",
-      "sha256": "594ed497c84177c97bb9c9f3daaf8e8ddb596cff3f27d3cf058b4c05387d06b8",
+      "sha256": "2539ed9a9aea3c0d9865f947b36c6a100cd08abaf6689becfdc20307f59864b8",
       "features": [
-        "jHn=.25"
+        "T4n=.25"
       ]
     },
     {
-      "name": "MHn",
+      "name": "E4n",
       "kind": "var",
       "scope": "module",
-      "sha256": "6e2d01c976190a1256f8d60cb8b5645db263b26e4d0229b1c9451a473cd42b5b",
+      "sha256": "3443cc7294a731c818a332b3996654d377df875893535460a173f33c15448df3",
       "features": [
-        "MHn=Math.log(1.2)"
+        "E4n=Math.log(1.2)"
       ]
     },
     {
-      "name": "NHn",
+      "name": "D4n",
       "kind": "var",
       "scope": "module",
-      "sha256": "00d3f19b14a40cc78d730d050a5c49b37f74fbdb348b57e6a086bd74ed501d5d",
+      "sha256": "60959a4ad3b6b2bc14fb7a1c0490132ddbd7498c919755988afc1505dbce26d4",
       "features": [
-        "NHn=Math.log(jHn)/MHn"
+        "D4n=Math.log(T4n)/E4n"
       ]
     },
     {
-      "name": "PHn",
+      "name": "O4n",
       "kind": "var",
       "scope": "module",
-      "sha256": "dd3569c791c0fe4f0c91b5ad1d6e3e2dd7da1066633db389133a03ab300239e8",
+      "sha256": "1c69b9b76410dc316948d9940bc7411359dac5ffc043568457916e460e619532",
       "features": [
-        "PHn=Math.log(5)/MHn"
+        "O4n=Math.log(5)/E4n"
       ]
     },
     {
-      "name": "FHn",
+      "name": "k4n",
       "kind": "function",
       "scope": "module",
-      "sha256": "9bfc184ce83e63861089a1750467a07539c21eee4bc32d9825341bd38af9f377",
+      "sha256": "bac6b3d11f04865c2d906b82eabeb0c2194cd011cc526459b4bbdda7d851e213",
       "features": [
-        "return Math.min(PHn,Math.max(NHn,e))"
+        "return Math.min(O4n,Math.max(D4n,e))"
       ]
     },
     {
-      "name": "mPi",
+      "name": "rTi",
       "kind": "var",
       "scope": "module",
-      "sha256": "5c81d537ed8a090a5b10d7960300bae8fa00640b7430022a3a51a6e1212bb847",
+      "sha256": "d4ff10cf3aa12efa36610feb6cb7b5bab3da3f864e379c097fc16c28c93389eb",
       "features": [
-        "mPi=.5"
+        "rTi=.5"
       ]
     },
     {
-      "name": "gPi",
+      "name": "aTi",
       "kind": "var",
       "scope": "bindZoomMenu",
-      "sha256": "591f43f1880026a8f93ea889e1cbe77ad340519c4da870e01f7a297f18e65e68",
+      "sha256": "cb2439a4eab5105d79c16de39a69e25a38ef5b0dfd96041a298bb56d7733f3bd",
       "features": [
         "V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0"
       ]
     },
     {
-      "name": "_Pi",
+      "name": "oTi",
       "kind": "var",
       "scope": "bindZoomMenu",
-      "sha256": "3ca10c81e55c5862cc5001c340d2df9fc5cddf6bc5fcb6b90ee0489a438e6201",
+      "sha256": "b4e386a422315d7515696c4c4439c0c542a6e1c41e6feb9adaa8c4e7ef44d5f0",
       "features": [
-        "_Pi=(e=gPi())=>e===void 0||e<PHn"
+        "oTi=(e=aTi())=>e===void 0||e<O4n"
       ]
     },
     {
-      "name": "vPi",
+      "name": "sTi",
       "kind": "var",
       "scope": "bindZoomMenu",
-      "sha256": "6e8046809c0f6ed41603aaa02a10ad86ff78b641cbc42d07d03e2ae1bfb051e2",
+      "sha256": "12a7c5b52ca4ab73b6b9d491c3a5c84390b13f85ee437a6d21bd572945a7c6d3",
       "features": [
-        "vPi=(e=gPi())=>e===void 0||e>NHn"
+        "sTi=(e=aTi())=>e===void 0||e>D4n"
       ]
     },
     {
-      "name": "PPi",
+      "name": "wTi",
       "kind": "function",
       "scope": "bindZoomMenu",
-      "sha256": "74d2c7d2f2e327cfcf34107a45dcede8caba0af6148181970b73210fd87fdfdf",
+      "sha256": "bec7f089cf4d5306f3f4ca49115f4f25cbb655b456b40d4b89e2b8c91a880cd7",
       "features": [
         "if(!V?.webContents||V.webContents.isDestroyed())return;",
         "let e=V.webContents.getZoomLevel(),t=a.Menu.getApplicationMenu()",
-        "n=[[\"actual-size\",e!==0],[\"actual-size-numpad\",e!==0],[\"zoom-in\",_Pi(e)],[\"zoom-out\",vPi(e)]]",
+        "n=[[\"actual-size\",e!==0],[\"actual-size-numpad\",e!==0],[\"zoom-in\",oTi(e)],[\"zoom-out\",sTi(e)]]",
         "for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}"
       ]
     }
   ],
   "exportsAs": {
-    "NHn": "ZOOM_LEVEL_MIN",
-    "PHn": "ZOOM_LEVEL_MAX",
-    "FHn": "clampZoomLevel",
-    "mPi": "ZOOM_STEP"
+    "D4n": "ZOOM_LEVEL_MIN",
+    "O4n": "ZOOM_LEVEL_MAX",
+    "k4n": "clampZoomLevel",
+    "rTi": "ZOOM_STEP"
   },
   "boundAs": {
-    "gPi": "zoomLevel",
-    "_Pi": "canZoomIn",
-    "vPi": "canZoomOut",
-    "PPi": "refreshZoomMenu"
+    "aTi": "zoomLevel",
+    "oTi": "canZoomIn",
+    "sTi": "canZoomOut",
+    "wTi": "refreshZoomMenu"
   },
   "hostParams": {
     "V": [
@@ -121,30 +121,30 @@
     ]
   },
   "callers": {
-    "yPi": [
+    "cTi": [
       "{id:\"actual-size\",",
-      "enabled:hPi(),click:APi}",
+      "enabled:iTi(),click:bTi}",
       "{id:\"zoom-in\",",
-      "accelerator:\"CmdOrCtrl+Plus\",enabled:_Pi(),click:MPi}",
+      "accelerator:\"CmdOrCtrl+Plus\",enabled:oTi(),click:STi}",
       "{id:\"zoom-out\",",
-      "accelerator:\"CmdOrCtrl+-\",enabled:vPi(),click:NPi}",
+      "accelerator:\"CmdOrCtrl+-\",enabled:sTi(),click:CTi}",
       "{id:\"actual-size-numpad\",label:\"Actual Size (numpad)\""
     ],
-    "APi": [
-      "V.webContents.setZoomLevel(0),jPi(0),I$(),F$()"
+    "bTi": [
+      "V.webContents.setZoomLevel(0),xTi(0),x0(),b0()"
     ],
-    "FPi": [
-      "n=FHn(e===0?t:Math.round((t+e)/mPi)*mPi+0);V.webContents.setZoomLevel(n),jPi(n),I$(),F$()"
+    "TTi": [
+      "n=k4n(e===0?t:Math.round((t+e)/rTi)*rTi+0);V.webContents.setZoomLevel(n),xTi(n),x0(),b0()"
     ],
-    "MPi": [
-      "FPi(mPi)"
+    "STi": [
+      "TTi(rTi)"
     ],
-    "NPi": [
-      "FPi(-.5)"
+    "CTi": [
+      "TTi(-.5)"
     ],
-    "I$": [
-      "function I$(){PPi()}"
+    "x0": [
+      "function x0(){wTi()}"
     ]
   },
-  "sha256": "cbd767420ffc864690b102fa221d0debfd692c4681516f17361fdd0735b01aff"
+  "sha256": "9aa2c6358c8082d5d030e11f50e51c2debb7c40a3c2e2de74a09f14d22419728"
 }

@@ -40,3 +40,46 @@ test('host resolves source file intents relative to the session; displayed file 
   assert.equal(target(null,url,{cwd,home}),null);
   assert.deepEqual(target('https://example.test',url,{cwd,home}),{kind:'navigate',url:'https://example.test'});
 });
+
+// w10-editor-desktop: the eight desktop-area adapters (and their seven electron copies) are cut from 3.6556.2.
+test('desktop code-editor adapters are generated from the 3.6556.2 snapshot', async () => {
+  const fs = await import('node:fs');
+  const app = path.resolve(import.meta.dirname, '..');
+  const snapshot = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807');
+  const read = rel => fs.readFileSync(path.join(app, rel), 'utf8');
+  const area = JSON.parse(read('src/generated/code-editor/areas/desktop.json'));
+  const manifest = JSON.parse(read('src/generated/code-editor/manifest.json'));
+  assert.equal(area.referenceVersion, '3.6556.2');
+  const names = ['search.mjs', 'editor-location.cjs', 'side-chat-history.cjs', 'preview-element-inspector.mjs', 'preview-address-parser.mjs', 'preview-tab-shortcuts.mjs', 'preview-link-decisions.mjs', 'preview-link-origin.mjs'];
+  assert.deepEqual(area.adapters.map(entry => entry.name), names);
+  for (const entry of area.adapters) {
+    assert.equal(entry.referenceVersion, '3.6556.2', entry.name);
+    assert.equal(manifest.modules.find(module => module.target === entry.name)?.referenceVersion, '3.6556.2', entry.name);
+    assert.match(read(`src/generated/code-editor/${entry.name}`).split('\n')[0], /^\/\/ Original 3\.6556\.2 /, entry.name);
+    for (const ref of entry.sources) {
+      assert.ok(ref.base === 'ion' || ref.base === 'asar', `${entry.name} ${ref.name}`);
+      assert.ok(fs.existsSync(path.join(snapshot, ref.base === 'ion' ? 'ion-dist/assets/v1' : 'asar/.vite/build', ref.name)), ref.name);
+    }
+  }
+  assert.equal(area.copies.length, 7);
+  for (const copy of area.copies) assert.equal(read(copy.target), read(`src/generated/code-editor/${copy.name}`), copy.target);
+  // Official text that changed in 3.6556.2 and is carried verbatim (minified spelling in the chunk, formatted here).
+  const official = (dir, name) => fs.readFileSync(path.join(snapshot, dir, name), 'utf8');
+  const ion = name => official('ion-dist/assets/v1', name), asar = name => official('asar/.vite/build', name);
+  assert.ok(ion('cc3bc2027-CqmDBxcX.js').includes('p=`(?<!${f}\\\\p{M}*)`,m=`(?!${f}|\\\\p{M})`'));
+  assert.ok(read('src/generated/code-editor/search.mjs').includes('p = `(?<!${f}\\\\p{M}*)`,'));
+  assert.ok(ion('c224804cc-Ct9XIdre.js').includes('ce.has(s[1].toLowerCase())&&URL.canParse(n)'));
+  assert.ok(read('src/generated/code-editor/preview-address-parser.mjs').includes('ce.has(s[1].toLowerCase()) && URL.canParse(n)'));
+  assert.ok(ion('c11959232-TLc_9Vpx.js').includes('e.cloudSession&&!e.infraOk?"release":"none"'));
+  assert.ok(read('src/generated/code-editor/preview-link-decisions.mjs').includes('e.cloudSession && !e.infraOk'));
+  assert.ok(asar('index.chunk-jPKPzV-P.js').includes('function YM(e){return gWn(e)!==null}'));
+  assert.ok(read('src/generated/code-editor/preview-link-origin.mjs').includes('return gWn(e) !== null;'));
+  assert.ok(asar('index.chunk-DNPOm2Zc.js').includes('`Assistant: ${u0(Fe.t(e.text))}`'));
+  assert.ok(read('src/generated/code-editor/side-chat-history.cjs').includes('`Assistant: ${u0(Fe.t(e.text))}`'));
+});
+
+test('3.6556.2 Preview address parser keeps the original classification rules', () => {
+  assert.equal(parse('ftp://example.com', '').kind, 'search');
+  assert.deepEqual(parse('https://example.com/a', ''), { kind: 'navigate', url: 'https://example.com/a' });
+  assert.equal(parse('https://exa mple.com', '')?.kind, 'search');
+});

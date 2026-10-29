@@ -1,13 +1,13 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r3b-settings.mjs",
   "output": "r3b-settings-free-disk.cjs",
-  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
-  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
-  "binding": "YAr",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+  "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+  "binding": "YUr",
   "exportedAs": "freeDiskSpace",
-  "bindingSha256": "9deb25c881d807988ddf901bb68850bf7f7c5f321200f99cc516e8c01fe8d538",
+  "bindingSha256": "ae417e76d702b7cc64b13d393f443ab7d2696c5a1936e0fdfe157dad3f9c9025",
   "namespaces": {
     "p": {
       "require": "node:fs/promises",
@@ -23,12 +23,12 @@
     }
   },
   "callers": {
-    "FOa": [
-      "return YAr(a.app.getPath(\"userData\"))"
+    "cEa": [
+      "return YUr(a.app.getPath(\"userData\"))"
     ],
-    "BOa": [
-      "getFreeDiskSpace:async()=>await FOa()??null"
+    "pEa": [
+      "getFreeDiskSpace:async()=>await cEa()??null"
     ]
   },
-  "sha256": "ba070b5e75a71881a9ca080d3d7e7505a34b5b5a00323c960597549be1ffb04e"
+  "sha256": "f484e08f4bf04c9ad41017ecad3c769da904873ded863440efc3e68563e7e26a"
 }

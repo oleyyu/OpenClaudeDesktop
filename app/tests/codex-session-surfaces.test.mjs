@@ -42,13 +42,23 @@ test('composer usage notice: nothing below 80%, the fullest base window above it
   const now = Date.UTC(2026, 9, 5, 10, 0, 0), soon = now / 1000 + 90 * 60;
   assert.equal(composerUsageNotice(limits({ usedPercent: 60, windowDurationMins: 300, resetsAt: soon }), { now }), null);
   const session = composerUsageNotice(limits({ usedPercent: 84.4, windowDurationMins: 300, resetsAt: soon }, { usedPercent: 40, windowDurationMins: 10080, resetsAt: soon + 86400 }), { now });
-  assert.deepEqual([session.level, session.summary, session.details], ['warning', 'You’ve used 84% of your session limit', 'Resets in 1 hr 30 min']);
+  // c227f4d5e band copy; the reset is VI: same local day 'Resets at {time}'.
+  const at = new Date(soon * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' });
+  assert.deepEqual([session.level, session.summary, session.details], ['warning', 'Approaching session usage limit', `Resets at ${at}`]);
   const week = composerUsageNotice(limits({ usedPercent: 20, windowDurationMins: 300, resetsAt: soon }, { usedPercent: 93, windowDurationMins: 10080, resetsAt: soon }), { now });
-  assert.deepEqual([week.level, week.summary], ['danger', 'You’ve used 93% of your weekly limit']);
+  assert.deepEqual([week.level, week.summary], ['danger', 'Approaching weekly usage limit']);
+  const other = composerUsageNotice(limits({ usedPercent: 85, windowDurationMins: 1440, resetsAt: soon }), { now });
+  assert.equal(other.summary, 'Approaching usage limit');
   assert.equal(week.dismissKey, `usage:secondary:${soon}`, 'the dismissal holds for this window');
   const reached = composerUsageNotice(limits({ usedPercent: 100, windowDurationMins: 300, resetsAt: soon }, null, { rateLimitReachedType: 'rate_limit_reached' }), { now });
-  assert.deepEqual([reached.level, reached.summary], ['danger', 'Usage limit reached']);
-  assert.match(reached.details, /Resets in 1 hr 30 min/);
+  assert.deepEqual([reached.level, reached.summary], ['danger', 'Session limit reached'], 'zs.session for the full 5-hour window');
+  // W12b: with no remedy (no earned reset) the band's reached detail is the reset alone (c227f4d5e tL HI($e, et)).
+  assert.match(reached.details, /^Resets at /);
+  assert.deepEqual([reached.countdown.resetsAtSeconds, reached.countdown.lead], [soon, null]);
+  const weekly = composerUsageNotice(limits({ usedPercent: 40, windowDurationMins: 300, resetsAt: soon }, { usedPercent: 100, windowDurationMins: 10080, resetsAt: soon }, { rateLimitReachedType: 'rate_limit_reached' }), { now });
+  assert.equal(weekly.summary, 'Weekly limit reached');
+  const generic = composerUsageNotice(limits({ usedPercent: 70, windowDurationMins: 300, resetsAt: soon }, null, { rateLimitReachedType: 'rate_limit_reached' }), { now });
+  assert.equal(generic.summary, 'Usage limit reached', 'no full window: zs.generic');
   assert.equal(composerUsageNotice(null), null);
 });
 
@@ -97,8 +107,8 @@ test('/goal edit changes the objective in place with the goal\u2019s own status;
 test('every new notice, goal and media string has a zh-CN entry', (context) => {
   context.after(() => setLocale(DEFAULT_LOCALE));
   setLocale('zh-CN');
-  for (const key of ['Generating image', 'Generated image', 'Viewed image', 'Waited {seconds}s', 'Hook added context', 'You’ve used {percent}% of your session limit',
-    'You’ve used {percent}% of your weekly limit', 'Token budget reached', 'Goal cleared', 'Trust this folder', 'Dismiss notice', 'Auto-review approved', 'Used memory'])
+  for (const key of ['Generating image', 'Generated image', 'Viewed image', 'Waited {seconds}s', 'Hook added context', 'Approaching session usage limit',
+    'Approaching weekly usage limit', 'Approaching usage limit', 'Resets {time}', 'Session limit reached', 'Weekly limit reached', 'Token budget reached', 'Goal cleared', 'Trust this folder', 'Dismiss notice', 'Auto-review approved', 'Used memory'])
     assert.notEqual(t(key), key, key);
 });
 

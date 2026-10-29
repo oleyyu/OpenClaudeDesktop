@@ -102,3 +102,16 @@ test('drafts and pane selection survive restart per child, failed send never ove
   const tiles=createTileLayoutStore({storage});tiles.setSession('parent',{btwSessionId:'one',tileLayout:fromSpec({direction:'row',children:['chat','session']})});
   const next=createTileLayoutStore({storage}).getSession('parent');assert.equal(next.btwSessionId,'one');assert.ok(tileIds(next.tileLayout).has('session'));
 });
+// w10-ccres-e31-btw: c73f45bc3 bp/xp (mp with hp.forEach) report the parent's in-flight starts, which vp turns into qP's
+// createBusy; the "New side chat" button opens with forceNew (Tp openChild bare: no toggle, no reuse of an open child).
+test('onPendingChange reports a parent busy while its starts are in flight; forceNew starts a bare child beside an open one', async () => {
+  const changes=[],gate=deferred(),s=setup({onPendingChange:(...args)=>changes.push(args),start:p=>{s.events.push(['start',p]);return gate.promise;}});
+  s.children([{id:'open',createdAt:1}]);
+  const first=s.open({forceNew:true});await flush();
+  assert.equal(s.controller.isOpening('parent'),true);assert.deepEqual(changes,[['parent',true]]);
+  assert.deepEqual(s.events.filter(e=>e[0]==='start').map(e=>[e[1].openedBy,e[1].question]),[['bare','']]);
+  gate.resolve({status:'started',sessionId:'fresh'});await first;
+  assert.deepEqual(changes,[['parent',true],['parent',false]],'released once the start settles');
+  assert.equal(s.controller.isOpening('parent'),false);assert.equal(s.view(),'fresh');
+  assert.equal(s.events.some(e=>e[0]==='close'),false,'the open child is not toggled closed');
+});

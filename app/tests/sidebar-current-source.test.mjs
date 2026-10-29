@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 let server, Sidebar, Search, Host, Groups, View, Order, Sections;
 before(async () => {
@@ -37,7 +38,7 @@ function fixture(component, props = {}, contexts = new Map()) {
   };
   hooks.useLayoutEffect=hooks.useEffect;
   const render=()=>{cursor=0;const internals=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internals.H;
-    internals.H=hooks;try {tree=component(props);}finally {internals.H=previous;}return tree;};
+    internals.H=withMemoCache(hooks);try {tree=component(props);}finally {internals.H=previous;}return tree;};
   render();return {get tree(){return tree;},render,flush:()=>{while(effects.length)effects.shift()();},close:()=>cells.forEach(c=>c.cleanup?.())};
 }
 function nodes(tree, predicate) {
@@ -72,7 +73,7 @@ test('Code keeps New above the scroller, with remaining navigation outside the s
   assert.ok(html.indexOf('>New</span>') < scroll && scroll < pins && pins < html.indexOf('>Projects</span>'));
   assert.ok(html.indexOf('>Customize</span>') < list && list < html.indexOf('data-pinned-list=""'));
   assert.match(html,/<span[^>]*data-group-caret=""/);
-  const css=readFileSync(new URL('../public/assets/v1/shared-styles-Bl9zqrv-.css',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../public/assets/v1/shared-styles-D_GJawPO.css',import.meta.url),'utf8');
   assert.match(css,/\[data-testid=nav-pin-rows\]\{padding-bottom:10px\}/);
   assert.match(css,/\.df-session-list\{--df-row-h:28px;--df-row-ctl:24px/);
   assert.match(css,/\[data-pinned-list\]\{--df-row-h:26px;--df-row-ctl:20px/);

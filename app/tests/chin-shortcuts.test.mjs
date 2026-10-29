@@ -56,6 +56,17 @@ test('the same chord closes its open menu; a different open chin menu ignores th
   assert.equal(resolveChinRequest({ command: 'mode', openKind: 'effort', ...counts }), null);
 });
 
+test('E21 Q6 p: with effortInModelMenu the Effort chord resolves to the model menu (open and close)', () => {
+  const inMenu = { ...counts, effortInModelMenu: true };
+  assert.deepEqual(resolveChinRequest({ command: 'effort', ...inMenu }), { action: 'open', kind: 'model' }, 'e==="effort"&&(p||a<=1)');
+  assert.deepEqual(resolveChinRequest({ command: 'effort', openKind: 'model', ...inMenu }), { action: 'close', kind: 'model' }, 'y===t closes');
+  assert.equal(resolveChinRequest({ command: 'effort', openKind: 'mode', ...inMenu }), null);
+  assert.equal(resolveChinRequest({ command: 'effort', ...inMenu, pickerDisabled: true }), null, 'm && (model || effort)');
+  assert.deepEqual(resolveChinRequest({ command: 'effort', ...inMenu, modelCount: 0 }), { action: 'open', kind: 'model' }, '(e==="effort"&&a>1)||i.length>0');
+  assert.equal(resolveChinRequest({ command: 'effort', ...inMenu, effortCount: 1, modelCount: 0 }), null);
+  assert.deepEqual(resolveChinRequest({ command: 'model', ...inMenu }), { action: 'open', kind: 'model' }, 'model chord unchanged');
+});
+
 test('a repeat never opens (or closes) a menu', () => {
   for (const command of ['mode', 'model', 'effort']) {
     assert.equal(resolveChinRequest({ command, repeat: true, ...counts }), null);

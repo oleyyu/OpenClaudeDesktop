@@ -6,10 +6,12 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { pluginDetailTabList, pluginDetailTabs, pluginDetailView, pluginOverview, pluginToolPermissionServers } from '../src/plugin-detail-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
-// R4e-plugin (settings-14): the 2.42304.0 plugin page tab list (c24c8737b pc Kt) and the Overview (c12456454 ni) over
-// plugin/read's data. SSR in Vite middleware mode plus controlled events on the real elements; no browser, Electron or core.
-let server, Overview, Sections, Layout, M;
+// R4e-plugin (settings-14): the 3.6556.2 plugin page tab list (c24c8737b ol; 2.42304.0 pc Kt) and the Overview
+// (c12456454 ya; 2.42304.0 ni) over plugin/read's data. The generated parts are React Compiler output (cae01a6fc
+// G/K/X/Y/oe, shared-19 w_/T_/C_), so the shallow dispatcher carries useMemoCache (R5). SSR in Vite middleware mode plus controlled events on the real elements; no browser, Electron or core.
+let server, Overview, Sections, Layout, M, ViewTabs;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -17,6 +19,7 @@ before(async () => {
   Sections = await server.ssrLoadModule('/src/generated/r4e-plugin/overview-sections.mjs');
   Layout = await server.ssrLoadModule('/src/generated/r4e-plugin/overview-layout.mjs');
   M = await server.ssrLoadModule('/src/source-customize.jsx');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
 });
 after(() => server?.close());
 
@@ -25,11 +28,11 @@ after(() => server?.close());
 function shallow(component, props) {
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
   let id = 0;
-  internal.H = {
+  internal.H = withMemoCache({
     useId: () => `:r${id++}:`, useRef: value => ({ current: value }), useMemo: create => create(), useCallback: fn => fn,
     useState: value => [typeof value === 'function' ? value() : value, () => {}], useEffect() {}, useLayoutEffect() {},
     useContext: context => context._currentValue, useSyncExternalStore: (subscribe, get) => get(),
-  };
+  });
   try { return component(props); } finally { internal.H = old; }
 }
 function findAll(node, predicate, out = []) {
@@ -95,15 +98,23 @@ test('settings-14 overview DOM: the original kD layout, W Description and the AD
   assert.match(html, /<aside class="flex w-full shrink-0 flex-col gap-md md:w-60"><div data-cds="Card" class="group\/card relative isolate flex flex-col rounded-card after:pointer-events-none after:absolute after:inset-0 after:rounded-\[inherit\] after:content-\[&#x27;&#x27;\] has-\[\[data-cds=CardLink\]:focus-visible\]:after:shadow-focus after:shadow-none gap-md"><span aria-hidden="true" class="cds-card-fill pointer-events-none absolute inset-0 -z-\[1\] m-0 rounded-\[inherit\] bg-surface-1"><\/span><div data-cds-card-body="" class="cds-card-body [^"]*p-lg">/);
   assert.doesNotMatch(html, /after:shadow-card-ring/, 'OD’s after:shadow-none replaces the card ring');
   assert.match(html, /<div class="flex flex-col gap-xs pt-md first:pt-0"><h3 class="text-caption text-secondary">Connectors &amp; tools<\/h3>/);
-  // X rows with onClick: a ghost xs flush-both button (host SourceSettingsButton for the CDS Button: outset against
-  // --cds-outset-x) holding the size-5 tile, the label and " · note".
+  // X rows with onClick: the view-tabs CdsButton itself (shared-frame Uu, exported Eu), ghost xs flush-both — Uu's
+  // `V === "ghost" ? { "data-cds-ghost": "" }`, Iu.both "mx-outset" and Lu `{ "--cds-outset-x": "var(--cds-pad-md)" }`
+  // — with its Jc "cds-btn-squish" paint layer, holding the size-5 tile, the label and " · note".
   const buttons = [...html.matchAll(/<button [^>]*data-cds="Button"[^>]*>/g)].map(match => match[0]);
   assert.equal(buttons.length, 2);
-  for (const button of buttons)
-    assert.equal(button, '<button type="button" data-cds="Button" data-variant="ghost" data-flush="both" style="--cds-outset-x:var(--cds-pad-md)" data-size="xs" class="source-settings-button w-full justify-start">');
-  assert.match(html, /<span class="ssb-content"><span class="flex min-w-0 flex-1 gap-xs items-center"><span aria-hidden="true" class="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-chip text-secondary bg-fill-control"><span aria-hidden="true" data-cds="Icon" class="text-muted-as-secondary" style="font-size:12px;/);
-  assert.match(html, /<span data-cds="OverflowTooltip" class="block overflow-x-clip text-ellipsis whitespace-nowrap min-w-0 flex-1 text-footnote text-secondary"[^>]*>GitHub<span class="text-muted"> · gh<\/span><\/span>/);
-  assert.match(html, />fx<\/span>/); assert.doesNotMatch(html, />fx<span class="text-muted">/, 'no note when the label is the server name');
+  for (const button of buttons) {
+    assert.match(button, /^<button type="button" data-cds="Button" data-cds-ghost="" data-size="xs" class="cds-reset group\/btn [^"]* mx-outset w-full justify-start" style="--cds-outset-x:var\(--cds-pad-md\)">$/);
+    assert.doesNotMatch(button, /source-settings-button|data-variant|data-flush/, 'no host SourceSettingsButton stand-in');
+  }
+  assert.match(html, /<span aria-hidden="true" class="absolute -z-\[1\] rounded-\[inherit\] inset-0 cds-btn-squish /);
+  assert.doesNotMatch(html, /ssb-content/);
+  // The tile glyph: c28f9f509 u's `e(t, { name: s, customSize: i, className: "text-muted-as-secondary" })` with t = od, the
+  // CdsIcon — Anthropicons "Connectors" (U+E055) at customSize 12.
+  assert.match(html, /<span class="flex min-w-0 flex-1 gap-xs items-center"><span aria-hidden="true" class="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-chip text-secondary bg-fill-control"><span data-cds="Icon" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\);[^"]*" class="text-muted-as-secondary" aria-hidden="true">\u{E055}<\/span><\/span>/u);
+  // The label: the view-tabs CdsOverflowTooltip (shared-frame hh, exported Gl), a base-ui tooltip trigger span.
+  assert.match(html, /<span data-cds="OverflowTooltip" class="block overflow-x-clip text-ellipsis whitespace-nowrap min-w-0 flex-1 text-footnote text-secondary" id="[^"]+" data-base-ui-tooltip-trigger="">GitHub<span class="text-muted-as-secondary"> · gh<\/span><\/span>/, 'menus C7: the note is text-muted-as-secondary');
+  assert.match(html, />fx<\/span>/); assert.doesNotMatch(html, />fx<span class="text-muted/, 'no note when the label is the server name');
   // Without onOpenConnectors (no Connectors tab) the rows are plain.
   const plain = renderToStaticMarkup(React.createElement(Overview.PluginOverview, { overview }));
   assert.doesNotMatch(plain, /data-cds="Button"/); assert.match(plain, /<div class="flex gap-xs items-center"><span aria-hidden="true" class="flex size-5/);
@@ -121,8 +132,9 @@ test('settings-14 controlled events: a Connectors & tools row opens the Connecto
   const [layout] = findAll(tree, node => node.type === Layout.PluginOverviewLayout);
   const [group] = findAll(layout.props.rail, node => node.type === Sections.OverviewConnectorsAndTools);
   assert.deepEqual(group.props.rows.map(row => [row.key, row.label, row.note, row.onClick === onOpenConnectors]), [['mcp:0:gh', 'GitHub', 'gh', true]]);
-  // The original X row: with onClick it is the (host) CDS Button, ghost xs flush-both, whose onClick is that handler.
+  // The original X row: with onClick it is the view-tabs CdsButton, ghost xs flush-both, whose onClick is that handler.
   const row = shallow(Sections.OverviewRow, group.props.rows[0]);
+  assert.equal(row.type, ViewTabs.CdsButton);
   assert.equal(row.props.variant, 'ghost'); assert.equal(row.props.size, 'xs'); assert.equal(row.props.flush, 'both'); assert.equal(row.props.className, 'w-full justify-start');
   row.props.onClick({ type: 'click' });
   assert.deepEqual(opened, ['connectors']);
@@ -140,7 +152,7 @@ test('settings-14 PluginDetail: Overview is the first and initial tab and holds 
   assert.doesNotMatch(html, /cz-plugin-tab-description|cz-plugin-description/, 'no tab description on the Overview; the Description left the header');
   assert.equal(html.split('Reviews code').length - 1, 1, 'the description is drawn once, in the Overview');
   assert.match(html, /<h3 class="text-caption text-secondary">Description<\/h3><p dir="auto" class="whitespace-pre-wrap break-words text-primary text-body">Reviews code<\/p>/);
-  assert.match(html, /Connectors &amp; tools<\/h3><button type="button" data-cds="Button"[^>]*>.*GitHub<span class="text-muted"> · gh<\/span>/);
+  assert.match(html, /Connectors &amp; tools<\/h3><button type="button" data-cds="Button"[^>]*>.*GitHub<span class="text-muted-as-secondary"> · gh<\/span>/);
   assert.doesNotMatch(html, /Try it|in any chat|Tool permissions|data-plugin-empty|Search overview/);
   // Another tab keeps its own panel; the Overview is not drawn there.
   const skills = renderToStaticMarkup(React.createElement(M.PluginDetail, detailProps({ view: { tab: 'skills', query: '' } })));
@@ -152,10 +164,62 @@ test('settings-14 PluginDetail: Overview is the first and initial tab and holds 
   assert.match(bare, /data-plugin-overview=""/); assert.doesNotMatch(bare, /aside|Connectors &amp; tools/);
 });
 
-test('settings-14 the plugin page keeps the Settings import graph free of view-tabs preload-helper (document.createElement at evaluation)', () => {
+// 3.6556.2: the Overview parts read the compiler's memo cache; E3 has one source for those helpers, the view-tabs graph,
+// so the Settings graph now reaches view-tabs (as source-menu's CdsTooltip does). SSR tests that stub a document must
+// give it createElement (D21). The generated parts take nothing else from view-tabs directly and never a 2.42304.0
+// legacy shim; their CDS primitives come through source-r4e-plugin-adapters.jsx, which re-exports the view-tabs CDS
+// components themselves through the facade (w10 notdone 44).
+test('settings-14 the generated plugin parts are 3.6556.2 and take only the E3 compiler helpers from view-tabs, by semantic name', async () => {
+  const fs = await import('node:fs/promises');
+  const app = path.resolve(import.meta.dirname, '..');
+  const manifest = JSON.parse(await fs.readFile(path.join(app, 'src/generated/r4e-plugin/manifest.json'), 'utf8'));
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  const { compilerHelpers } = await import('../scripts/official-3.6556.2.mjs');
+  const helperNames = new Set(Object.values(compilerHelpers).map(helper => helper.name));
+  const viewTabs = manifest.modules.flatMap(module => module.imports.filter(entry => entry.kind === 'view-tabs').map(entry => [module.target, entry]));
+  assert.ok(viewTabs.length > 0);
+  for (const [target, entry] of viewTabs) {
+    assert.equal(entry.from, '../view-tabs/shared-frame-6jtSkIit.js', target);
+    assert.ok(helperNames.has(entry.name), `${target}: ${entry.name} is a compiler helper`);
+  }
+  for (const module of manifest.modules) {
+    const text = await fs.readFile(path.join(app, 'src/generated/r4e-plugin', module.target), 'utf8');
+    assert.equal(/BfjMqbuN|vendor-frame-DfPJ1QmD|2\.42304\.0/.test(text), false, module.target);
+  }
+  // menus N2: the Settings tab is pinned, and its data needs the bridge's getPluginOptions (the host answers it since
+  // w10-shell-plugin-settings: electron/plugin-options.cjs).
+  const site = (source, binding) => manifest.callSites.find(entry => entry.source === source && entry.binding === binding);
+  assert.ok(site('c24c8737b-Czj7X1dz.js', 'ol').features.includes('t.push({ id: "settings", href: se("settings"), label: e });'));
+  assert.ok(site('shared-130-dWztbTO1.js', 'RE').features.includes('let a = t && n && !!U?.getPluginOptions,'));
+  // w10 notdone 44: each adapter CDS primitive is the view-tabs component itself, not a host stand-in.
+  const Adapters = await server.ssrLoadModule('/src/source-r4e-plugin-adapters.jsx');
+  assert.deepEqual(Object.entries({ OverviewButton: 'CdsButton', OverviewIcon: 'CdsIcon', OverviewOverflowText: 'CdsOverflowTooltip',
+    OverviewInfoTip: 'CdsInfoTooltip', OverviewCard: 'CdsCard' }).filter(([adapter, cds]) => Adapters[adapter] !== ViewTabs[cds] || !ViewTabs[cds]), []);
+  const adapterText = await fs.readFile(path.join(app, 'src/source-r4e-plugin-adapters.jsx'), 'utf8');
+  assert.match(adapterText, /from "\.\/generated\/view-tabs\/index\.js";/, 'R6: the host file imports view-tabs through the facade');
+  assert.doesNotMatch(adapterText, /source-settings-button|source-tooltip|source-infotip|icons\.jsx/);
   const ids = [...server.moduleGraph.idToModuleMap.keys()];
   assert.ok(ids.some(id => id.endsWith('/src/source-customize.jsx')));
-  assert.deepEqual(ids.filter(id => /preload-helper|generated\/view-tabs\//.test(id)), []);
+});
+
+// V3-w11-sweep-shell-b (w10 notdone 44 openIssue): an SSR sample of the hint InfoTip. cae01a6fc X renders
+// `f&&t(c,{size:S?void 0:"xs",content:f,"aria-label":p?.(x)})`; plugin/read never sends the reach rows that carry a hint
+// (the official reach comes from the plugin scan, c2a49a2be `reach:ye(l.reach)`), so the row is fed one directly.
+test('settings-14 X with a hint: the InfoTip is the view-tabs CdsInfoTooltip (shared-frame Sk), xs, labelled', async () => {
+  const fs = await import('node:fs/promises');
+  const v1 = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  assert.equal((await fs.readFile(path.join(v1, 'cae01a6fc-CssbXTs8.js'), 'utf8')).split('f&&t(c,{size:S?void 0:"xs",content:f,"aria-label":p?.(x)})').length - 1, 1);
+  const frame = await fs.readFile(path.join(v1, 'shared-frame-6jtSkIit.js'), 'utf8');
+  assert.equal(frame.split('"data-cds":"InfoTip"').length - 1, 1);
+  assert.equal(frame.split('Sk="cds-reset inline-flex shrink-0 items-center justify-center rounded p-1 -m-1 text-muted outline-none').length - 1, 1);
+  const h = React.createElement, noId = html => html.replace(/ id="[^"]*"/g, '');
+  const row = renderToStaticMarkup(h(Sections.OverviewRow, { icon: 'Connectors', label: 'Remote', hint: 'Can send data.', hintButtonLabel: () => 'About Remote' }));
+  const tip = renderToStaticMarkup(h(ViewTabs.CdsInfoTooltip, { size: 'xs', content: 'Can send data.', 'aria-label': 'About Remote' }));
+  assert.match(tip, /^<button type="button"[^>]*data-cds="InfoTip" aria-label="About Remote" class="cds-reset inline-flex shrink-0 items-center justify-center rounded p-1 -m-1 text-muted /);
+  assert.ok(noId(row).includes(noId(tip)), row);
+  // No hint: no InfoTip (`f&&…`).
+  assert.doesNotMatch(renderToStaticMarkup(h(Sections.OverviewRow, { icon: 'Connectors', label: 'Remote' })), /data-cds="InfoTip"/);
 });
 
 test('settings-14 PluginDetail controlled events: tab clicks and the Overview rows change the controlled view', () => {

@@ -1,37 +1,31 @@
-/* Layout is installed 2.31226.0 home/compact + shared-5 Rf. These rules only
-   connect the existing application frame and ProseMirror host to that layout. */
+/* Layout is the 3.6556.2 home (shared-23 new page, src/generated/cowork-home) + the chat composer shell. These rules
+   only connect the existing application frame and ProseMirror host to that layout. */
 .source-chat-tile-content[data-surface]:not([data-surface="code"])[data-home] .source-transcript-frame { display: none; }
 .surface-greeting { flex: 0 0 auto; }
+/* shared-19 composer card Ti = p("isolate", Ne, …): Ne is "max-w-2xl" (42rem) with voyage_composer_marlin off, the same
+   width as the below-composer slot (src/source-cowork-home.jsx). */
 .source-chat-tile-content[data-surface]:not([data-surface="code"]) .composer-zone {
-  width: 100%; max-width: 640px; padding: 0; margin-inline: auto; gap: 0; flex: 0 0 auto;
+  width: 100%; max-width: 42rem; padding: 0; margin-inline: auto; gap: 0; flex: 0 0 auto;
 }
 .source-chat-tile-content[data-surface]:not([data-surface="code"]):not([data-home]) .composer-zone { margin-bottom: 16px; max-width: 768px; }
 .surface-form { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; }
 .source-chat-editor .sc-input { display: block; width: 100%; min-height: 0; max-height: none; margin: 0; padding: 0; border: 0; outline: none; background: transparent; color: inherit; font: inherit; line-height: inherit; border-radius: 0; }
 .source-chat-editor .sc-input p { margin: 0; }
 .source-chat-editor .sc-input[contenteditable][data-placeholder]:after { font: inherit; line-height: inherit; }
-.source-chat-composer .surface-model { gap: 6px; }
 .source-chat-composer .surface-folder-trigger { min-width: 0; }
 .source-chat-composer .surface-folder-trigger .ssb-content { overflow: hidden; }
 .source-chat-composer .surface-folder-trigger .ssb-content > span { overflow: hidden; text-overflow: ellipsis; }
 .source-chat-presence[data-leaving] { opacity: 0; transition: opacity 200ms; }
 .source-chat-tile-content:not([data-surface="code"]) .source-chat-body { flex-direction: row; }
 .source-chat-tile-content[data-surface]:not([data-surface="code"]) .source-transcript-content { --chat-body: 16px; --chat-leading: 1.6; }
-/* Original SessionActivityPanel nu = 20rem, docked rail surface. */
-.cowork-progress { width: 20rem; flex-shrink: 0; min-height: 0; overflow-y: auto; background: var(--cds-surface-2); }
 
 .source-sidebar[data-surface]:not([data-surface="code"]) .traffic-space { display: none; }
 .surface-sidebar-search { display: flex; align-items: center; gap: var(--df-row-gap); height: var(--df-row-h); width: calc(100% - 4px); margin: 4px 2px 0; padding: 0 var(--df-row-px); border-radius: var(--df-radius-pill); background: var(--cds-fill-field); box-shadow: inset 0 0 0 .5px var(--cds-border), 0 1px 2px #0000000d; color: var(--cds-text-muted); font-size: var(--df-row-font); text-align: left; }
 .surface-sidebar-search:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.surface-more { color: var(--cds-text-muted); }
 .source-sidebar[data-surface]:not([data-surface="code"]) .source-session-list { padding-top: 16px; }
 
 .source-chat-editor .sc-input.ProseMirror { position: relative; white-space: pre-wrap; overflow-wrap: break-word; }
 .source-chat-editor .sc-input.ProseMirror[data-empty=true]::after { content: attr(data-placeholder); pointer-events: none; position: absolute; inset: 0; color: var(--cds-text-muted); white-space: pre-wrap; }
-.surface-new-badge { font-size: 11px; line-height: 16px; padding: 0 4px; border-radius: 4px; background: var(--cds-fill-secondary); color: var(--cds-text-secondary); margin-left: 4px; }
-
-.source-sidebar-nav-row .surface-new-badge { border-radius: 4px; background: var(--cds-fill-ghost-hover); font-size: 11px; padding: 0 4px; }
-@container (max-width: 760px) { .cowork-progress { width: min(20rem, 38%); } }
 
 .source-chat-tile-content[data-section="projects"] .conversation { padding: 0; justify-content: flex-start; }
 .surface-projects { width: 100%; padding-bottom: 24px; }
@@ -56,9 +50,3 @@
 .st-toolbar:not([data-surface="code"]) .st-inner { padding-inline: 24px 12px; }
 .st-toolbar:not([data-surface="code"]) .st-title { font-size: 16px; font-weight: 500; }
 
-/* Cowork in development (SourceCoworkComingSoon): centred in the page, the onboarding title's serif. */
-.cowork-soon { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; min-height:100%; padding:48px 24px; text-align:center; }
-.cowork-soon-spark { margin-bottom:8px; }
-.cowork-soon-title { margin:0; font-family:var(--font-ui-serif, var(--font-anthropic-serif, ui-serif, Georgia, serif)); font-size:1.875rem; line-height:2.25rem; font-weight:500; color:var(--cds-text-primary); }
-.cowork-soon-text { margin:0; max-width:28rem; font-size:1rem; line-height:1.5rem; color:var(--cds-text-muted); }
-.cowork-soon-actions { display:flex; gap:8px; margin-top:8px; }

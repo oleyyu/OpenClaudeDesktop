@@ -22,8 +22,9 @@ function SideChatText({ text }) {
 const renderText = text => <SideChatText text={text}/>;
 
 // OT's ccd_user_message_lists_main branch is enabled locally. Both parser and
-// recursive GR/WR renderer are extracted from the current reference snapshot.
+// recursive SP/xP renderer (c96d752d0, with list dir and bidi isolation) are extracted from the 3.6556.2 snapshot.
+// cccc2cf0a HF `c`: the segments (YF = Ao(segment, index, BF)) sit in `div.flex flex-col gap-1.25`.
 export function SourceSideChatUserContent({ text }) {
   const segments = useMemo(() => parseSideChatUserText(text), [text]);
-  return <div className="ssc-user-content">{segments.map((segment, index) => renderSideChatUserSegment(segment, index, renderText))}</div>;
+  return <div className="flex flex-col gap-1.25">{segments.map((segment, index) => renderSideChatUserSegment(segment, index, renderText))}</div>;
 }

@@ -21,11 +21,17 @@ export function paletteMode(value) {
   return value === "search" || value === "actions" ? value : "default";
 }
 
-/** vm Bn/En: the input's placeholder and accessible name for a mode (code list: k true). */
-export function palettePlaceholder(mode) {
-  if (mode === "search") return t("Search sessions and projects");
+/**
+ * vm Bn/En: the input's placeholder and accessible name for a mode. V3-w13-surfaces-shortcuts (surf-23): 3.6556.2
+ * c2771e1f6 yr `K==="search"&&!dn?P?"Search sessions and projects":"Search chats and projects":K==="actions"||dn?
+ * "Search actions":…:Xn||P?"Search or start a session":"Search or start a chat"`, P the code list: the sidebar's
+ * `surface` (mode) is Code, else chat copy for Chat and Cowork.
+ */
+export function palettePlaceholder(mode, { surface = "code" } = {}) {
+  const code = surface !== "chat" && surface !== "cowork";
+  if (mode === "search") return code ? t("Search sessions and projects") : t("Search chats and projects");
   if (mode === "actions") return t("Search actions");
-  return t("Search or start a session");
+  return code ? t("Search or start a session") : t("Search or start a chat");
 }
 
 /** Xu: the relative time a result row shows (null past a year). */
@@ -95,8 +101,13 @@ export function paletteProjects({ folders = [], sessions = [], query = "", filte
 // c2771e1f6 :9634-10079 'Settings → {section}' / 'Customize → {section}' rows for the local Settings sections
 // (source-settings.jsx tabs: General first, This computer › System; B23 shared-19 ZC; the Advanced group last,
 // settings-advanced-model.mjs).
+// w13-coworkui-settings: Memory (w13-chatfn-memory, after Usage) and Cowork (shared-46 `e.push({id:"cowork",…,icon:Fp})`,
+// Fp = Tasks, after Claude Code) as the Settings nav lists them; Cowork only while Cowork is on (shared-46 `if(d&&!k)`).
+// w13-close-chat-projects-memory: Privacy (w13-chatfn-history; shared-46 `e.push({id:"data-privacy-controls",…"Privacy"…,
+// icon:Dp})`, Dp = LockShield) right after General, as the nav lists it.
 export const PALETTE_SETTINGS_SECTIONS = Object.freeze([
-  ["preferences", "General", "Settings"], ["usage", "Usage", "UsageGaugeMiddle"], ["theme", "Theme", "Palette"], ["code", "Code", "Code"],
+  ["preferences", "General", "Settings"], ["privacy", "Privacy", "LockShield"], ["usage", "Usage", "UsageGaugeMiddle"], ["memory", "Memory", "Memory"], ["theme", "Theme", "Palette"], ["code", "Code", "Code"],
+  ["cowork", "Cowork", "Tasks"],
   ["instructions", "Instructions", "BookText"], ["commands", "Commands", "SlashShortcutCommand"],
   ["models", "Models", "Lightning"], ["general", "System", "Computer"], ["developer", "Developer", "Wrench"], ["cores", "Cores", "Box"],
   ["advanced", "Core options", "Wrench"], ["harness", "Harness", "CommandLine"], ["customize-hooks", "Hooks", "CommandLine"], ["profiles", "Profiles", "Tool"],
@@ -113,7 +124,9 @@ export const PALETTE_CUSTOMIZE_SECTIONS = Object.freeze([
 const JUMP_LABELS = {
   jump_to_navigation: () => t("Jump to navigation"),
   jump_to_main_content: () => t("Jump to main content"),
+  jump_to_last_message: () => t("Jump to last message"), // w13-close-chat-messages: shared-1 vF (KoKXeDvWmu)
   jump_to_input: () => t("Jump to input"),
+  jump_to_artifact: () => t("Jump to artifact"), // w13-chatui-artifact-inline: shared-1 SF
   jump_to_preview: () => t("Jump to preview"),
   jump_to_terminal: () => t("Jump to terminal"),
   jump_to_pane: () => t("Jump to pane"),
@@ -149,7 +162,7 @@ export function sessionCommandLabels(title) {
 /**
  * Action rows ({id, label, icon, group, hints, shortcut?, run}) from what the host can do, in shared-1 _R order.
  * - new session, the sidebar sections, the sidebar toggle and Settings (local rows), the Settings / Customize
- *   sections (c2771e1f6 :9634-10079) and the page-area jumps (`jumps`: the JUMP_COMMANDS whose regions have a stop
+ *   sections (c2771e1f6 :9634-10079; Cowork only while `coworkEnabled`) and the page-area jumps (`jumps`: the JUMP_COMMANDS whose regions have a stop
  *   now, `onJump(regions)` lands there — gn's f(): unavailable ones are disabled, so they are not listed);
  * - `session`: the open session's commands (cf74bc599 wO :15226-15409 B(id, G && … ? fn : undefined)): archive,
  *   delete, unarchive, rename, pin / unpin, fork and New session with current settings, each only when it applies
@@ -168,7 +181,7 @@ export function sessionCommandLabels(title) {
  * open_code_session_pr, archive_code_session_chord …) are left out; copy_code_session_link needs a claude.ai URL.
  */
 export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSettings, jumps = [], onJump,
-  session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload, nested = null } = {}) {
+  session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload, nested = null, coworkEnabled = true } = {}) {
   const rows = [];
   const push = (row) => rows.push({ hints: [], ...row });
   if (onNew) push({ id: "new-session", group: "navigation", label: t("New session"), icon: "Add", shortcut: "⌘N", run: onNew });
@@ -178,6 +191,8 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
   }
   // file_upload (group chat, icon hR Attachment, searchHints upload).
   if (onFileUpload) push({ id: "file_upload", group: "chat", label: t("Add files or photos"), icon: "Attachment", shortcut: capsOf("cmd+u"), hints: [t("upload")], run: onFileUpload });
+  // w13-chatfn-history: no "Incognito chat" row. c2771e1f6 lists the shared-1 commands but filters out
+  // `t==="incognito"`; incognito is ⇧⌘I (main.jsx, shared-21 oO).
   if (session?.onAction) {
     const act = (command) => () => session.onAction(command);
     const hide = t("hide"), remove = t("remove"), trash = t("trash"), named = sessionCommandLabels(session.title);
@@ -219,7 +234,7 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
   if (onShortcuts) push({ id: "shortcuts_modal", group: "general", label: t("Keyboard shortcuts"), icon: "Keyboard", shortcut: capsOf("cmd+/"), run: onShortcuts });
   if (onOpenSettings) {
     push({ id: "settings", group: "settings", label: t("Settings"), icon: "Settings", shortcut: "⌘,", run: () => onOpenSettings(true) });
-    for (const [id, label, icon] of PALETTE_SETTINGS_SECTIONS) push({ id: `settings:${id}`, group: "settings", label: t("Settings → {section}", { section: settingsSectionLabel(label) }), icon, run: () => onOpenSettings(id) });
+    for (const [id, label, icon] of PALETTE_SETTINGS_SECTIONS) if (id !== "cowork" || coworkEnabled) push({ id: `settings:${id}`, group: "settings", label: t("Settings → {section}", { section: settingsSectionLabel(label) }), icon, run: () => onOpenSettings(id) });
     for (const [id, label, icon] of PALETTE_CUSTOMIZE_SECTIONS) push({ id: `settings:${id}`, group: "settings", label: t("Customize → {section}", { section: t(label) }), icon, run: () => onOpenSettings(id) });
   }
   if (onJump) for (const command of jumps) if (JUMP_LABELS[command.id])

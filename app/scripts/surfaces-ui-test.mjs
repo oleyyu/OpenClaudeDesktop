@@ -336,7 +336,8 @@ try {
   await page.getByRole('searchbox', { name: 'Search your artifacts', exact: true }).fill('');
   await page.getByRole('button', { name: 'Switch to grid view', exact: true }).click();
   await page.screenshot({ path: path.join(evidence, 'artifacts-source-grid.png') });
-  await page.getByRole('button', { name: 'Artifact options', exact: true }).first().click();
+  // 3.6556.2 c69e9937a cn: the trigger is "More options for {label}" (w11-sweep-curchat; written for E50, not run).
+  await page.getByRole('button', { name: /^More options for / }).first().click();
   await page.getByRole('menuitem', { name: 'Open conversation', exact: true }).click();
   await page.getByText('Fixture artifact ready', { exact: true }).waitFor();
   checks.push('Official artifact grid/list renders real file outputs, searches, pins, persists on restart, opens scoped files and returns to the source conversation');

@@ -1,9 +1,10 @@
-// R3-topbar TT-03 (2.42304.0): the titlebar folds its pane toggles one by one into ⋮ View options.
-//   cd54a5401 un (generated titlebar-fold-measure.mjs useTitlebarFold) measures the row and returns hiddenCount;
-//   c73f45bc3 jh (titlebar-toggle-fold.mjs foldTitlebarToggles) folds inactive toggles first, both lists in order;
-//   c73f45bc3 Rh is the toggle order (titlebar-controls-model.mjs titlebarToggleSpecs) and Vh lists `.folded`;
-//   cc43287c9 uW hands keyboard focus on when a focused toggle folds (titlebar-fold-focus.mjs).
-// Also pins the R3-topbar generated targets (manifest, official source bytes and feature strings).
+// R3-topbar TT-03, migrated to 3.6556.2 (W2 w2-titlebar-current): the titlebar folds its pane toggles one by one into
+// ⋮ View options.
+//   cd54a5401 nn (generated titlebar-fold-measure.mjs useTitlebarFold) measures the row and returns hiddenCount;
+//   c73f45bc3 p_ (titlebar-toggle-fold.mjs foldTitlebarToggles) folds inactive toggles first, both lists in order;
+//   c73f45bc3 x_ is the toggle order (titlebar-controls-model.mjs titlebarToggleSpecs) and View options lists `.folded`;
+//   cc43287c9 hands keyboard focus on when a focused toggle folds (titlebar-fold-focus.mjs).
+// Also pins the generated targets (manifest, official source bytes and feature strings).
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -13,30 +14,35 @@ import React from 'react';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { titlebarToggleSpecs, titlebarFoldedToggles, foldedTogglesActive } from '../src/titlebar-controls-model.mjs';
-import { titlebarViewOptionsItems } from '../src/session-chord-model.mjs';
 import { foldTitlebarToggles } from '../src/generated/code-current/titlebar-toggle-fold.mjs';
 import { createFoldFocusHandoff } from '../src/titlebar-fold-focus.mjs';
 import { focusOrphaned } from '../src/generated/code-current/titlebar-focus-orphaned.mjs';
 import { focusLost } from '../src/generated/code-current/titlebar-focus-lost.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const read = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 const official = (name) => fs.readFileSync(path.join(reference, name), 'utf8');
+const current = (name) => fs.readFileSync(path.join(v3, name), 'utf8');
+const flat = (text) => text.replace(/\s+/g, '');
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
-let server, Fold;
+// session-chord-model reaches view-tabs (through the 3.6556.2 session-cycle-chords), so it loads through Vite.
+let server, Fold, titlebarViewOptionsItems;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Fold = await server.ssrLoadModule('/src/generated/code-current/titlebar-fold-measure.mjs');
+  ({ titlebarViewOptionsItems } = await server.ssrLoadModule('/src/session-chord-model.mjs'));
 });
 after(() => server?.close());
 
 const panes = (...open) => new Set(open);
 const order = (specs) => specs.map((spec) => spec.pane);
 
-test('Rh order: a session lists Terminal, Changes, Preview, Files; the landing Terminal, Preview, Files', () => {
+test('x_ order: a session lists Terminal, Changes, Preview, Files; the landing Terminal, Preview, Files', () => {
   const all = { surface: 'code', terminalAvailable: true, previewAvailable: true, filesAvailable: true };
   assert.deepEqual(order(titlebarToggleSpecs({ ...all, session: true })), ['terminal', 'changes', 'preview', 'files']);
   assert.deepEqual(order(titlebarToggleSpecs({ ...all, session: false })), ['terminal', 'preview', 'files']);
@@ -53,25 +59,33 @@ test('Rh order: a session lists Terminal, Changes, Preview, Files; the landing T
     ['preview', 'Play', 'Preview', 'cmd+shift+p', false],
     ['files', 'Folder', 'Files', 'cmd+shift+f', true],
   ]);
-  const rh = official('c73f45bc3-CFrHin0p.js');
-  assert.ok(rh.includes('return i?[...o,...r,...s]:[...o,{pane:"diff"'), 'landing vs session order');
+  // 3.6556.2 c73f45bc3 x_: the landing returns [...terminal, ...preview, ...files]; a session [...terminal, diff,
+  // ...preview, ...ios, ...android, ...files] (the simulator rows stay off on the host, D31).
+  const x = current('c73f45bc3-B7hbL7H9.js');
+  assert.ok(x.includes('le=J3($,83,o,n,a)?K3($,83,o,n,a,[...a,...n,...o]):$[86]'), 'landing order');
+  assert.ok(x.includes('[...a,d,...n,...h,..._,...o]'), 'session order');
+  assert.ok(x.includes('pane:"diff",icon:Is.diff,label:c,shortcut:l,active:p,toggle:u'));
 });
 
-// R4g-small SM1 topbar-04 (D36): with `frontend_preview_external_domains` off (no GrowthBook on the host) Rh's
-// preview row is Io.preview "Play", "Preview" and W7's ungated togglePreview ⇧⌘P; a folded row keeps the same icon.
-test('topbar-04: the Code preview toggle is the gate-off Rh row (Play, Preview, ⇧⌘P)', () => {
+// R4g-small SM1 topbar-04 (D36), 3.6556.2: with `frontend_preview_external_domains` off (no GrowthBook on the host)
+// x_'s preview row is Is.preview "Play", "Preview" (TF-C4: the message id is now GD2Vvn5YZe, same English) and the
+// ungated togglePreview ⇧⌘P; a folded row keeps the same icon.
+test('topbar-04: the Code preview toggle is the gate-off x_ row (Play, Preview, ⇧⌘P)', () => {
   const count = (text, needle) => text.split(needle).length - 1;
-  const rh = official('c73f45bc3-CFrHin0p.js');
-  assert.equal(count(rh, 'icon:e==="preview"&&C?"Globe":Io[e]'), 1);
-  assert.equal(count(rh, 'C?n.formatMessage({defaultMessage:"Browser",id:"E3oB+tM0Ou"}):n.formatMessage({defaultMessage:"Preview",id:"TJo5E6JuIN"})'), 1);
-  assert.equal(count(rh, 'G("togglePreview",S,{externalPreviewAvailable:C})'), 1);
-  assert.equal(count(rh, 'C=He(r?.type)'), 1);
-  assert.equal(count(rh, 'ss as He,'), 1);
-  const gate = official('shared-78-D6VXYXaQ.js');
-  assert.equal(count(gate, 'var mU="frontend_preview_external_domains"'), 1);
-  assert.equal(count(gate, 'function SU(e){let t=hU(),n=yU(),r=xU()===null;return e==="remote"?n&&r:t}'), 1);
-  assert.equal(count(official('c26fb8b6b-DfPeiuGP.js'), 'var Cn={preview:"Play",'), 1);
-  assert.equal(count(official('shared-19-CkPOiIKm.js'), '{command:"togglePreview",key:"cmd+shift+b",code:"KeyB",when:"isClaudeApp",gate:"externalPreviewAvailable"},{command:"togglePreview",key:"cmd+shift+p",code:"KeyP",when:"isClaudeApp"}'), 1);
+  const x = current('c73f45bc3-B7hbL7H9.js');
+  assert.equal(count(x, 'icon:e==="preview"&&T?"Globe":Is[e]'), 1);
+  assert.equal(count(x, 'T?r.formatMessage({defaultMessage:"Browser",id:"E3oB+tM0Ou"}):r.formatMessage({defaultMessage:"Preview",id:"GD2Vvn5YZe"})'), 1);
+  assert.equal(count(x, '"TJo5E6JuIN"'), 0, 'the 2.42304.0 Preview id is gone');
+  assert.equal(count(x, 'Ye("togglePreview",w,{externalPreviewAvailable:T})'), 1);
+  assert.equal(count(x, 'T=ct(o?.type)'), 1);
+  assert.equal(count(x, 'My as ct,'), 1);
+  assert.match(x, /import\{[^}]*(?<![\w$])a as Is[,}][^;]*?from"\.\/c26fb8b6b-B7Friu61\.js"/);
+  const gate = current('shared-78-D5Fw2h0a.js');
+  assert.equal(count(gate, 'var qT="frontend_preview_external_domains";function JT(){let e=O(qT)'), 1);
+  assert.equal(count(gate, 'function tE(e){let t=JT(),n=QT(),r=eE()===null;return e==="remote"?n&&r:t}'), 1);
+  assert.equal(count(gate, 'tE as My'), 1);
+  assert.equal(count(current('c26fb8b6b-B7Friu61.js'), 'var wn={preview:"Play",'), 1);
+  assert.equal(count(current('shared-46-BIbZBGFq.js'), '{command:"togglePreview",key:"cmd+shift+b",code:"KeyB",when:"isClaudeApp",gate:"externalPreviewAvailable"},{command:"togglePreview",key:"cmd+shift+p",code:"KeyP",when:"isClaudeApp"}'), 1);
   const input = { surface: 'code', session: true, terminalAvailable: true, previewAvailable: true };
   const row = (specs) => specs.find((spec) => spec.pane === 'preview');
   for (const session of [true, false]) {
@@ -79,13 +93,13 @@ test('topbar-04: the Code preview toggle is the gate-off Rh row (Play, Preview, 
     assert.deepEqual([icon, label, shortcut], ['Play', 'Preview', 'cmd+shift+p']);
   }
   assert.deepEqual(row(titlebarFoldedToggles(input, 4)), row(titlebarToggleSpecs(input)));
-  // Other surfaces are not Rh: the Cowork session view's yE is Globe + "Browser".
+  // Other surfaces are not x_: the 2.42304.0 Cowork session view's yE is Globe + "Browser" (not migrated in W2).
   const ye = official('c21f11e6d-Bd0v2A97.js');
   assert.equal(count(ye, 'v(As,{content:r.formatMessage({defaultMessage:"Browser",id:"E3oB+tM0Ou"}),shortcut:"cmd+shift+b"'), 1);
   assert.deepEqual([row(titlebarToggleSpecs({ ...input, surface: 'cowork' })).icon, row(titlebarToggleSpecs({ ...input, surface: 'chat' })).label], ['Globe', 'Browser']);
 });
 
-test('jh folds inactive toggles first, one per hidden count, and both lists keep the toggle order', () => {
+test('p_ folds inactive toggles first, one per hidden count, and both lists keep the toggle order', () => {
   const input = { surface: 'code', session: true, terminalAvailable: true, previewAvailable: true, panes: panes('terminal') };
   const specs = titlebarToggleSpecs(input);
   const step = (hidden) => { const { inline, folded } = foldTitlebarToggles(specs, hidden); return [order(inline), order(folded)]; };
@@ -104,7 +118,7 @@ test('jh folds inactive toggles first, one per hidden count, and both lists keep
   assert.equal(foldedTogglesActive(titlebarFoldedToggles(input, 1), { previewRunning: true }), false);
   assert.equal(foldedTogglesActive(titlebarFoldedToggles(input, 4), { terminalBusy: true }), false, 'an open terminal shows its own output');
   assert.equal(foldedTogglesActive(titlebarFoldedToggles({ ...input, panes: panes() }, 1), { terminalBusy: true }), true);
-  assert.ok(official('c73f45bc3-CFrHin0p.js').includes('folded:e.filter(e=>i.has(e))'));
+  assert.ok(current('c73f45bc3-B7hbL7H9.js').includes('return{folded:e.filter(e=>i.has(e)),inline:e.filter(e=>!i.has(e))}'));
 });
 
 // A controlled layout for the official measure: .st-inner (row, 12px end padding) holding the lead (origin 32 + title
@@ -125,7 +139,7 @@ function titlebarLayout({ width, titleNatural }) {
     requestAnimationFrame: (callback) => frames.push(callback), cancelAnimationFrame() {} };
   const doc = { nodeType: 9, defaultView: view };
   // Keep the getters live (a spread would read them once).
-  const node = (props) => Object.defineProperties({ nodeType: 1, ownerDocument: doc, style: { position: 'static', display: 'flex' }, contains: () => false },
+  const node = (props) => Object.defineProperties({ nodeType: 1, ownerDocument: doc, style: { position: 'static', display: 'flex' }, contains: () => false, hasAttribute: () => false },
     Object.getOwnPropertyDescriptors(props));
   const title = node({ get clientWidth() { return box().titleClient; }, get scrollWidth() { return state.titleNatural; },
     getBoundingClientRect: () => ({ left: 32, right: 32 + box().titleClient, width: box().titleClient }) });
@@ -154,7 +168,7 @@ function hookHost(component, props) {
   };
   hooks.useLayoutEffect = hooks.useEffect;
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-  const render = () => { cursor = 0; const old = internal.H; internal.H = hooks; try { out = component(props); } finally { internal.H = old; } props.commit?.(out); };
+  const render = () => { cursor = 0; const old = internal.H; internal.H = withMemoCache(hooks); try { out = component(props); } finally { internal.H = old; } props.commit?.(out); };
   const settle = () => {
     for (let round = 0; round < 100; round++) {
       while (effects.length) effects.shift()();
@@ -167,7 +181,7 @@ function hookHost(component, props) {
   return { get out() { return out; }, settle, render };
 }
 
-test('un over the local row folds one toggle at a time as the window narrows, compacting the folder chip first', () => {
+test('nn over the local row folds one toggle at a time as the window narrows, compacting the folder chip first', () => {
   const specs = titlebarToggleSpecs({ surface: 'code', session: true, terminalAvailable: true, previewAvailable: true });
   const layout = titlebarLayout({ width: 1000, titleNatural: 300 });
   const rootRef = { current: layout.root }, togglesRef = { current: layout.group };
@@ -242,9 +256,9 @@ test('uW hand-off: a keyboard-focused toggle that folds passes focus to the togg
   assert.equal(focusLost({ nodeType: 9, body: 1, activeElement: null }), true);
   assert.equal(focusOrphaned({ nodeType: 9, body: 1, activeElement: { isConnected: false } }), true);
   assert.equal(focusOrphaned({ nodeType: 9, body: 1, activeElement: { isConnected: true } }), false);
-  const uw = official('cc43287c9-DAfOi8yP.js');
-  assert.ok(uw.includes('t.matches(":focus-visible")'));
-  assert.ok(official('c4db265df-CAC3hDZP.js').includes('e.activeElement?.isConnected===!1'));
+  const uw = current('cc43287c9-Me-M2ucD.js');
+  assert.ok(uw.includes('t.ownerDocument.activeElement===t&&t.matches(":focus-visible")&&(C.current={pane:e,doc:t.ownerDocument'));
+  assert.ok(current('c4db265df-fNhlkQCj.js').includes('function tt(e){return Je(e)||e.activeElement?.isConnected===!1}'));
 });
 
 test('View options lists the folded toggles from the titlebar\x27s count, before Background tasks and Plan', () => {
@@ -293,39 +307,85 @@ test('View options lists the folded toggles from the titlebar\x27s count, before
   assert.deepEqual(unfoldedItems.map((item) => item.kind), ['plan']);
 });
 
-// R3-topbar generated targets: every entry reads 2.42304.0, pins the official chunk's bytes, and carries its features.
-const targets = {
+// Generated titlebar targets: every W2 w2-titlebar-current entry reads 3.6556.2, pins the official chunk's bytes, and
+// carries its features. button-press / tooltip-structure belong to w2-cds-followup: pinned here only while they still
+// read 2.42304.0.
+const cdsTargets = {
   'button-press.mjs': ['shared-frame-BfjMqbuN.js', ['ps', 'ms', 'hs', 'Ll', 'Rl', 'zl', 'Bl'], ['ps=.8', 'function Bl(e){return Math.min(zl,Math.max(Rl,e*Ll))}']],
   'tooltip-structure.mjs': ['shared-frame-BfjMqbuN.js', ['Gc', 'Kc', 'qc'], ['var Gc=new WeakMap,Kc=0;function qc(e){', 'if(!ze(e))return typeof e']],
-  'titlebar-lead-classes.mjs': ['shared-6-Cby4X-ms.js', ['Jh', 'Yh', 'Xh', 'Fh', 'qh', 'Zh', 'Qh', '$h'], ['qh="truncate text-body font-medium font-control text-primary select-none"', 'Zh="aspect-square w-control shrink-0"']],
-  'titlebar-panels-scope.mjs': ['shared-15-Cc9xvKlF.js', ['bn', 'xn'], ['function xn(){return f(bn)===!0}']],
-  'titlebar-lead-parts.mjs': ['shared-18-D4XxL6Tg.js', ['Uy', 'Yy', 'qb'], ['function qb(){return x()==="rtl"?"auto":void 0}']],
-  'titlebar-title-skeleton.mjs': ['c73f45bc3-CFrHin0p.js', ['n_'], ['"data-slot":"title-preview"', '"data-slot":"title-caret-slot"', '"data-slot":"title-ghost"']],
-  'titlebar-focus-lost.mjs': ['c70925de4-C8m73NRP.js', ['t'], ['r===null||r===n.body']],
-  'titlebar-focus-orphaned.mjs': ['c4db265df-CAC3hDZP.js', ['Ze'], ['e.activeElement?.isConnected===!1']],
 };
-test('R3-topbar targets read 2.42304.0 originals (manifest, source bytes, bindings, feature strings)', () => {
+const targets = {
+  'titlebar-lead-classes.mjs': ['shared-6-sd9jbJqs.js', ['og', 'sg', 'cg', 'Kh', 'ig', 'lg', 'ug', 'dg'], ['ig="truncate text-body font-medium font-control text-primary select-none"', 'lg="aspect-square w-control shrink-0"', 'og as lp', 'Kh as Df']],
+  'titlebar-panels-scope.mjs': ['shared-15-BvlV43cI.js', ['_n', 'vn'], ['function vn(){return u(_n)===!0}', '_n=m(void 0)']],
+  'titlebar-lead-parts.mjs': ['shared-18-D3y8YMFN.js', ['iS', 'dS', 'px'], ['function px(){return h()==="rtl"?"auto":void 0}', 'Ia as h']],
+  'titlebar-title-skeleton.mjs': ['c73f45bc3-B7hbL7H9.js', ['iy'], ['"data-slot":"title-preview"', '"data-slot":"title-caret-slot"', '"data-slot":"title-ghost"', 'function iy(e){let $=J9(5)']],
+  'titlebar-focus-lost.mjs': ['c70925de4-SEtaxEBR.js', ['t'], ['r===null||r===n.body', 'ap as e']],
+  'titlebar-focus-orphaned.mjs': ['c4db265df-fNhlkQCj.js', ['tt'], ['e.activeElement?.isConnected===!1']],
+  'titlebar-fold-measure.mjs': ['cd54a5401-wFztHb-d.js', ['Lt', 'Rt', 'zt', 'Bt', 'Vt', 'Ht', 'Ut', 'Wt', 'Gt', 'qt', 'Jt', 'Yt', 'Xt', 'Zt', 'Qt', '$t', 'en', 'tn', 'nn', 'rn'],
+    ['t.hasAttribute("data-lined-row-end-clearance")?(o+=t.getBoundingClientRect().width,[]):[t]', 'v=(parseFloat(l.paddingInlineEnd)||0)+o', 'function rn(e){return e.getBoundingClientRect()}', 'nn as c', 'qt as s']],
+};
+test('titlebar targets read 3.6556.2 originals (manifest, source bytes, bindings, feature strings)', () => {
   const manifest = JSON.parse(read('src/generated/code-current/manifest.json'));
   for (const [target, [source, bindings, features]] of Object.entries(targets)) {
     const entry = manifest.modules.find((module) => module.target === target);
     assert.ok(entry, target);
-    assert.equal(entry.referenceVersion, '2.42304.0', target);
+    assert.equal(entry.referenceVersion, '3.6556.2', target);
     assert.equal(path.basename(entry.source), source, target);
-    assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, source))), target);
+    assert.match(entry.source, /snapshots\/claude-3\.6556\.2-20261025-192807\/ion-dist\/assets\/v1\//, target);
+    assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(v3, source))), target);
     assert.deepEqual(entry.bindings, bindings, target);
     const text = read(`src/generated/code-current/${target}`);
     assert.equal(sha(text), entry.sha256, target);
-    assert.ok(text.startsWith('// Original Claude Desktop 2.42304.0 bindings; generated by extract-code-ui-current.mjs.\n'), target);
+    assert.ok(text.startsWith('// Original Claude Desktop 3.6556.2 bindings; generated by extract-code-ui-current.mjs.\n'), target);
+    for (const feature of features) assert.ok(current(source).includes(feature), `${target}: ${feature}`);
+  }
+  for (const [target, [source, bindings, features]] of Object.entries(cdsTargets)) {
+    const entry = manifest.modules.find((module) => module.target === target);
+    assert.ok(entry, target);
+    if (entry.referenceVersion !== '2.42304.0') continue;
+    assert.equal(path.basename(entry.source), source, target);
+    assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, source))), target);
+    assert.deepEqual(entry.bindings, bindings, target);
     for (const feature of features) assert.ok(official(source).includes(feature), `${target}: ${feature}`);
   }
-  // The shared-frame chunk imports React's Fragment as `j` and isValidElement as `ze` (vendor-frame Ja = d, io = T).
-  assert.match(official('shared-frame-BfjMqbuN.js'), /io as ze,/);
-  assert.match(official('shared-frame-BfjMqbuN.js'), /Ja as j,/);
-  const vendor = official('vendor-frame-DfPJ1QmD.js');
-  assert.ok(vendor.includes('d=o.Fragment') && vendor.includes('T=o.isValidElement'));
-  assert.match(read('src/generated/code-current/tooltip-structure.mjs'), /import \{ Fragment as j, isValidElement as ze \} from "react";/);
-  // Td, which the skeleton's direction hint calls, is useContext(wd)?.direction ?? "ltr"; the host maps wd to the
-  // view-tabs DirectionContext.
-  assert.ok(vendor.includes('function Td(){return N(wd)?.direction??"ltr"}'));
-  assert.match(read('src/generated/code-current/titlebar-lead-parts.mjs'), /import \{ DirectionContext \} from "\.\.\/view-tabs\/vendor-frame-DfPJ1QmD\.js";/);
+  // The compiled targets take the React Compiler slot helpers by view-tabs name (E3, R3), never by minified name, and
+  // the direction hint calls view-tabs useDirection (vendor-frame un, exported Ia: N(ln)?.direction ?? "ltr").
+  assert.match(read('src/generated/code-current/titlebar-fold-measure.mjs'), /reactMemoCache as J9,[\s\S]*\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  assert.match(read('src/generated/code-current/titlebar-title-skeleton.mjs'), /memoChanged4 as J4,[\s\S]*\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  assert.match(read('src/generated/code-current/titlebar-lead-parts.mjs'), /import \{ useDirection as h \} from "\.\.\/view-tabs\/vendor-frame-CnSY1sxv\.js";/);
+  assert.ok(current('vendor-frame-CnSY1sxv.js').includes('function un(){return fn(ln)?.direction??"ltr"}') || /function un\(\)\{return [\w$]+\(ln\)\?\.direction\?\?"ltr"\}/.test(current('vendor-frame-CnSY1sxv.js')));
+  const viewTabs = JSON.parse(read('src/generated/view-tabs/manifest.json')).publicNames;
+  assert.deepEqual([viewTabs.useDirection.file, viewTabs.useDirection.local], ['vendor-frame-CnSY1sxv.js', 'un']);
+  assert.deepEqual([viewTabs.reactMemoCache.file, viewTabs.reactMemoCache.local], ['shared-frame-6jtSkIit.js', 'J9']);
+});
+
+// TF-C9 (3.6556.2 nn): a row child marked [data-lined-row-end-clearance] (shared-18 Jb, the traffic-light spacer) is
+// measured as room the title may not take, not as a pane; it is 0px wide on the host (LTR, no data-mac-lights).
+test('nn counts an end-clearance child as reserved room, so the title folds toggles sooner', () => {
+  const specs = titlebarToggleSpecs({ surface: 'code', session: true, terminalAvailable: true, previewAvailable: true });
+  const run = (clearance) => {
+    const layout = titlebarLayout({ width: 330, titleNatural: 300 });
+    if (clearance) {
+      const spacer = { nodeType: 1, ownerDocument: layout.root.ownerDocument, style: { position: 'static', display: 'block' }, contains: () => false,
+        hasAttribute: (name) => name === 'data-lined-row-end-clearance', getBoundingClientRect: () => ({ left: 330, right: 330 + clearance, width: clearance }) };
+      layout.root.children.push(spacer);
+    }
+    const rootRef = { current: layout.root }, togglesRef = { current: layout.group };
+    let attached = false;
+    const Harness = () => {
+      const fold = Fold.useTitlebarFold({ rootRef, togglesRef, title: 'Long title', interactive: true, clusterMounted: true, tileLayout: '', sessionId: 'a', maxHidden: 6 });
+      return { ...fold, ...foldTitlebarToggles(specs, fold.hiddenCount) };
+    };
+    const host = hookHost(Harness, { commit(out) {
+      layout.state.inline = out.inline.length; layout.state.compact = out.pillsCompact;
+      if (!attached) { attached = true; out.titleRef(layout.title); }
+    } });
+    host.settle();
+    for (const observer of layout.observers) observer.callback();
+    host.settle();
+    return host.out.hiddenCount;
+  };
+  const without = run(0), withRoom = run(56);
+  assert.equal(without, 2);
+  assert.ok(withRoom > without, `a 56px end clearance folds more toggles (${withRoom} vs ${without})`);
 });

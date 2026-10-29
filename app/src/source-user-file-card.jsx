@@ -3,7 +3,9 @@ import { AttachmentFileName, attachmentNameExtension } from "./generated/code-cu
 import { displayText } from "./generated/code-current/display-text.mjs";
 
 // R2-topbar TT-07 / cov3-01: a non-image file a user message carries, as 2.42304.0 draws it
-// (shared-2-Cb74JByF.js Pp `"data-cds": "MessageAttachmentsFile"` → card frame jp → name Np).
+// (shared-2-Cb74JByF.js Pp `"data-cds": "MessageAttachmentsFile"` → card frame jp → name Np). Since W9
+// cc-rest-transcript the name and the text helpers are 3.6556.2 (shared-2-TF8v67kg.js qm → Km, fm = shared-frame hn,
+// hm; qm keeps the same lines rule, badge text and `${lines}:${name}` key); the names below are the 2.42304.0 ones.
 //
 // - The shown name is `${np(e)}` (np = shared-frame fn, displayText: control and bidi-override characters dropped);
 //   it is the sr-only text, which jp puts before the content column.

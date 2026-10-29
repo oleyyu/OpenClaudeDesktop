@@ -1,10 +1,12 @@
-// Host answers for the CDS pieces the 2.42304.0 environment folder view imports (scripts/extract-code-ui-current.mjs
-// maps them here for generated/code-current/environment-folder-view.mjs and environment-checkbox.mjs). The folder row,
-// its controls `he`, the branch search order `pe` and the Checkbox `wA` are the original bindings; this module only
-// supplies the overlay primitives they render into, because the saved-environment dialog is the host SourceDialog
-// (MODAL_LAYER) and the CDS overlays of the view-tabs graph would stack under it (their layer context starts at 0).
+// Host answers for the CDS pieces the 3.6556.2 environment folder view imports (scripts/extract-code-ui-current.mjs
+// maps them here for generated/code-current/environment-folder-view.mjs, cd8823d73-CrZFkwi4; local-name map 2.42304.0
+// -> 3.6556.2 in code-current-environment-pins.mjs). The folder row, its controls `Ge` (2.42304.0 he) and the branch
+// search order `Ue` (pe) are the original bindings, and the Worktree Checkbox is view-tabs CdsCheckbox (shared-frame xP,
+// re-exported by environment-checkbox.mjs); this module only supplies the overlay primitives they render into, because
+// the saved-environment dialog is the host SourceDialog (MODAL_LAYER) and the CDS overlays of the view-tabs graph would
+// stack under it (their layer context starts at 0).
 import React, { createContext, forwardRef, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CdsButton, CdsDensityContext, CdsIcon, cdsClassNames } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
+import { CdsButton, CdsDensityContext, CdsIcon, cdsClassNames } from './generated/view-tabs/index.js';
 import { EnvironmentTextInput } from './generated/code-current/environment-field-controls.mjs';
 import { SourceMenu, menuTriggerProps, useMenuPopup } from './source-menu.jsx';
 import { SourceTooltip, textOverflows } from './source-tooltip.jsx';
@@ -22,7 +24,7 @@ const changeDetails = (reason, event) => {
   return { reason, event, cancel() { canceled = true; }, get isCanceled() { return canceled; } };
 };
 
-// shared-frame Oc (Zp, the CDS Tooltip). he/me pass content (a node or a function answering it on open), side,
+// shared-frame Xm (exported Kl, the CDS Tooltip; 2.42304.0 Oc). Ge/We/Oe pass content (a node or a function answering it on open), side,
 // open and lazy. SourceTooltip takes the same props; Base UI's logical sides map to the physical ones it places by, and
 // `lazy` (mount the popup on first open) has no counterpart because SourceTooltip renders its popup only while open.
 const LOGICAL_SIDES = { 'inline-start': ['left', 'right'], 'inline-end': ['right', 'left'] };
@@ -31,8 +33,8 @@ export function EnvironmentTooltip({ lazy: _lazy, side, ...props }) {
   return <SourceTooltip {...props} side={LOGICAL_SIDES[side]?.[rootDirection()] ?? side} />;
 }
 
-// shared-frame Dc (gm, OverflowTooltip): a single-line span (its official classes and data-cds) that shows its text in a
-// tooltip only while it is truncated. he wraps a string note ("Not a Git repository") in it.
+// shared-frame hh (exported Gl, OverflowTooltip; 2.42304.0 Dc): a single-line span (its official classes and data-cds)
+// that shows its text in a tooltip only while it is truncated. Ge wraps a string note ("Not a Git repository") in it.
 export function EnvironmentOverflowText({ className, side, align, sideOffset, delay, collisionPadding, hoverable, lazy: _lazy, children, ...rest }) {
   const text = useRef(null);
   return <SourceTooltip side={side} align={align} sideOffset={sideOffset} delay={delay} collisionPadding={collisionPadding} hoverable={hoverable}
@@ -41,59 +43,9 @@ export function EnvironmentOverflowText({ className, side, align, sideOffset, de
   </SourceTooltip>;
 }
 
-// vendor-frame Q (Base UI Checkbox.Root) under wA: a span role=checkbox carrying the checked/unchecked/indeterminate and
-// disabled state attributes the CDS classes key on (group-data-[checked]/cb…), focusable unless disabled, toggled by a
-// click or Space (useButton, non-native), Enter submitting the enclosing form through its first submit button (Fg),
-// followed by the visually hidden native input (za) that keeps form semantics.
-const VISUALLY_HIDDEN = { clipPath: 'inset(50%)', overflow: 'hidden', whiteSpace: 'nowrap', border: 0, padding: 0, width: 1, height: 1, margin: -1, position: 'fixed', top: 0, left: 0 };
-function submitButton(form) {
-  for (const element of form?.elements ?? []) if ((element.tagName === 'BUTTON' || element.tagName === 'INPUT') && element.type === 'submit') return element;
-  return null;
-}
-export const EnvironmentCheckboxRoot = forwardRef(function EnvironmentCheckboxRoot({
-  checked: controlled, defaultChecked = false, indeterminate = false, disabled = false, readOnly = false, required = false,
-  onCheckedChange, name, value, form, inputRef, nativeButton: _nativeButton, render: _render, children, onClick, onKeyDown, onKeyUp, ...rest
-}, ref) {
-  const [own, setOwn] = useState(defaultChecked);
-  const checked = controlled ?? own;
-  const toggle = event => {
-    if (disabled || readOnly) return;
-    const details = changeDetails('none', event.nativeEvent ?? event);
-    onCheckedChange?.(!checked, details);
-    if (!details.isCanceled && controlled === undefined) setOwn(!checked);
-  };
-  const state = indeterminate ? { 'data-indeterminate': '' } : checked ? { 'data-checked': '' } : { 'data-unchecked': '' };
-  return <>
-    <span {...rest} ref={ref} role="checkbox" tabIndex={disabled ? -1 : 0} aria-checked={indeterminate ? 'mixed' : checked}
-      aria-disabled={disabled || undefined} aria-readonly={readOnly || undefined} aria-required={required || undefined}
-      {...state} data-disabled={disabled ? '' : undefined} data-readonly={readOnly ? '' : undefined} data-required={required ? '' : undefined}
-      onClick={event => { onClick?.(event); if (event.defaultPrevented) return; event.preventDefault(); toggle(event); }}
-      onKeyDown={event => {
-        onKeyDown?.(event);
-        if (event.defaultPrevented || disabled) return;
-        if (event.key === ' ') event.preventDefault();
-        else if (event.key === 'Enter') {
-          event.preventDefault();
-          const submit = submitButton(event.currentTarget.closest?.('form'));
-          if (submit && !submit.disabled) submit.click();
-        }
-      }}
-      onKeyUp={event => { onKeyUp?.(event); if (!event.defaultPrevented && event.key === ' ') toggle(event); }}>
-      {children}
-    </span>
-    <input ref={inputRef} type="checkbox" name={name} value={value} form={form} checked={checked} disabled={disabled} required={required}
-      aria-hidden="true" tabIndex={-1} readOnly style={VISUALLY_HIDDEN} />
-  </>;
-});
-
-// shared-frame aD under wA: a disabled checkbox explains itself with its reason (Tl, the disabled-reason tooltip).
-export function EnvironmentDisabledReason({ reason, children }) {
-  return reason === undefined ? children : <SourceTooltip disabledReason={reason}>{children}</SourceTooltip>;
-}
-
-// shared-frame qa (EC, the CDS Menu) as he uses it: a controlled Root (open, modal, onOpenChange(open, {reason})), a
-// TriggerButton (Menu.Trigger rendering the CDS Button plus its caret oC), and a SearchablePopup (yC) over Group /
-// GroupLabel / Separator / Header / Item. The popup is the host SourceMenu.Popup, raised over the dialog's modal layer.
+// shared-frame GT (exported Jo, the CDS Menu; 2.42304.0 qa) as Ge uses it: a controlled Root (open, modal,
+// onOpenChange(open, {reason})), a TriggerButton (kT: Menu.Trigger rendering the CDS Button plus its caret xT), and a
+// SearchablePopup (IT; 2.42304.0 oC / yC) over Group / GroupLabel / Separator / Header / Item. The popup is the host SourceMenu.Popup, raised over the dialog's modal layer.
 const MenuContext = createContext(null);
 // SourceMenu close reasons -> Base UI's.
 const BASE_REASONS = { 'item-click': 'item-press' };
@@ -113,7 +65,8 @@ function MenuRoot({ open: controlled, defaultOpen = false, onOpenChange, childre
   return <MenuContext.Provider value={value}>{children}</MenuContext.Provider>;
 }
 
-// shared-frame oC: the trigger's CaretDown, xs unless the density and size resolve to md or more (aC: ca(density,size) >= 4).
+// shared-frame xT (2.42304.0 oC): the trigger's CaretDown, xs unless the density and size resolve to md or more
+// (bT: ya(density,size) >= 4). xT's extra -me-0.5 / -me-0.75 applies only under the "icons" CDS flag (er), off here (R15).
 const DENSITY_STEP = { compact: 2, comfortable: 4 }, SIZE_STEP = { xs: -2, sm: -1, base: 0, lg: 1 };
 function MenuCaret({ size }) {
   const density = useContext(CdsDensityContext);
@@ -135,13 +88,13 @@ const MenuTriggerButton = forwardRef(function MenuTriggerButton({ children, size
   </CdsButton>;
 });
 
-// yC gC: a printable key (or Backspace / forward Delete) typed while a row has focus goes to the search field.
+// IT jT (2.42304.0 yC gC): a printable key (or Backspace / forward Delete) typed while a row has focus goes to the search field.
 function typedKey(event) {
   const altGraph = event.getModifierState?.('AltGraph');
   return ((event.key.length === 1 && event.key !== ' ') || event.key === 'Backspace' || (event.key === 'Delete' && !event.shiftKey))
     && (!event.ctrlKey || altGraph) && !event.metaKey && (!event.altKey || altGraph) && event.keyCode !== 229;
 }
-// yC O: apply that key to the field's selection through the native value setter, so React sees an input event.
+// IT (2.42304.0 yC O): apply that key to the field's selection through the native value setter, so React sees an input event.
 function applyKey(input, key) {
   const { value } = input;
   let start = input.selectionStart ?? value.length, end = input.selectionEnd ?? value.length;
@@ -156,7 +109,7 @@ function applyKey(input, key) {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-// yC's header: the CDS TextInput (tx) with its menu classes and the rule under it. R3-home: it is the popup's header
+// IT's header (2.42304.0 yC): the CDS TextInput (uC, 2.42304.0 tx) with its menu classes and the rule under it. R3-home: it is the popup's header
 // (SourceMenu.Popup header, shared-frame KS -> Hx), so it stays in place while only the rows scroll.
 export function SearchField({ inputRef, query, searchLabel, onChange, onSubmitQuery }) {
   const popup = useMenuPopup();
@@ -192,8 +145,8 @@ export function SearchField({ inputRef, query, searchLabel, onChange, onSubmitQu
   </>;
 }
 
-// yC's state and key handling: the query (controlled or own), the header field, and a printable key typed on a row
-// going to the field (gC/O). The rows get the trimmed lowercased query and the trimmed query.
+// IT's state and key handling (2.42304.0 yC): the query (controlled or own), the header field, and a printable key
+// typed on a row going to the field (jT, 2.42304.0 gC/O). The rows get the trimmed lowercased query and the trimmed query.
 function useSearchablePopup({ searchLabel, query: controlledQuery, onQueryChange, onSubmitQuery, onKeyDown, children }) {
   const [own, setOwn] = useState('');
   const query = controlledQuery ?? own;
@@ -232,7 +185,7 @@ function MenuSearchablePopup(props) {
 export function SearchablePopupOpen({ menu, children, searchLabel, query, onQueryChange, onSubmitQuery, onKeyDown, side = 'bottom', align = 'start', sideOffset, className = '' }) {
   const popup = useRef(null);
   const parts = useSearchablePopup({ searchLabel, query, onQueryChange, onSubmitQuery, onKeyDown, children });
-  // Base UI hands focus back to the trigger when the menu closes with focus inside it (he closes it on Tab itself).
+  // Base UI hands focus back to the trigger when the menu closes with focus inside it (Ge closes it on Tab itself).
   useLayoutEffect(() => {
     const trigger = menu.triggerRef;
     return () => {
@@ -266,7 +219,8 @@ export const EnvironmentMenu = Object.freeze({
 // the value span) and the popup's Empty (dk), footer rule (fk) / slot (pk), search field (rk, shown past five items as
 // Ak's `a.length > 5`) and filter (Sk) are the generated originals. Host: the popup is SourceMenu.Popup (menu / menuitem
 // rows instead of the Combobox's listbox / option), raised over the dialog's modal layer, and its FooterAction is a
-// menuitem so the arrow keys reach it.
+// menuitem so the arrow keys reach it. The names in this block are 2.42304.0's; in 3.6556.2 ge is cd8823d73 Ke and the
+// generated parts HO/UO/WO/qO/dk/fk/pk/rk/Sk are shared-frame vM/yM/bM/CM/WM/GM/KM/FM/nN (environment-select-parts.mjs).
 const SelectFooterItem = forwardRef(function SelectFooterItem(props, ref) {
   return <SelectFooterAction ref={ref} role="menuitem" tabIndex={-1} {...props} />;
 });

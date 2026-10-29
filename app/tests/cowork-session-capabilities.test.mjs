@@ -62,14 +62,34 @@ test('Code transcript gates: a Cowork session offers no rewind or fork; Code ses
   assert.equal(codeRewindServed('thread-1', { forkAtTurn: false }), true);
 });
 
+// w13-coworkfn-caps (research/w13-coworkfn.md cwf-16/17): a Cowork session on the connected core (sessionMetadata surface
+// cowork, w13-coworkfn-engine) is a Cowork session too: no Code transcript rewind, no Fork from here.
+test('isCoworkSession(id, metadata): cw- VM sessions and core threads whose surface is cowork', () => {
+  const metadata = { 'thread-cowork': { surface: 'cowork', engine: 'local-core' }, 'thread-chat': { surface: 'chat' }, 'thread-code': { surface: 'code' }, 'thread-bare': {} };
+  assert.equal(isCoworkSession('thread-cowork', metadata), true);
+  assert.equal(isCoworkSession('thread-cowork'), false, 'without metadata only the cw- id says Cowork');
+  for (const id of ['thread-chat', 'thread-code', 'thread-bare', 'thread-unknown', 'toString', '__proto__']) assert.equal(isCoworkSession(id, metadata), false, id);
+  for (const bad of [null, undefined, {}, []]) assert.equal(isCoworkSession('thread-cowork', bad), false);
+  assert.equal(isCoworkSession(COWORK, metadata), true);
+  assert.equal(isCoworkSession(COWORK, { [COWORK]: { surface: 'code' } }), true, 'a cw- id is the Cowork runtime\'s whatever the metadata');
+  for (const capabilities of [undefined, {}, { forkAtTurn: true }]) {
+    assert.equal(codeRewindServed('thread-cowork', capabilities, metadata), false);
+    assert.equal(codeForkServed('thread-cowork', capabilities, metadata), false);
+    assert.equal(codeRewindServed('thread-chat', capabilities, metadata), true);
+    assert.equal(codeForkServed('thread-code', capabilities, metadata), true);
+  }
+  assert.equal(codeRewindServed('thread-cowork', {}), true, 'callers without metadata keep the cw- rule');
+});
+
 test('main.jsx: the four message-action gates read the per-session functions', () => {
   const source = fs.readFileSync(path.join(root, 'src/main.jsx'), 'utf8');
   // R4i-cowork CW3 added the Cowork bridge / capabilities to the same import (tests/cowork-session-actions.test.mjs).
   assert.equal(occurrences(source, "import { codeRewindServed, codeForkServed, coworkRewindBridge, coworkRewindCapabilities, isCoworkSession } from './cowork-session-capabilities.mjs';"), 1);
-  assert.equal(occurrences(source, 'onRewindTo: current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities)'), 1);
-  assert.equal(occurrences(source, 'onForkFrom: current && !running && !session?.archived && boot?.connected && codeForkServed(current, boot?.core?.capabilities)'), 1);
-  assert.equal(occurrences(source, 'onRewind={current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities)'), 1);
-  assert.equal(occurrences(source, 'rewindServed: !!(current && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities)),'), 1);
+  // w13-coworkfn-caps: the four gates pass sessionMetadata, so a Cowork session on the connected core has none of them.
+  assert.equal(occurrences(source, 'onRewindTo: current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)'), 1);
+  assert.equal(occurrences(source, 'onForkFrom: current && !running && !session?.archived && boot?.connected && codeForkServed(current, boot?.core?.capabilities, sessionMetadata)'), 1);
+  assert.equal(occurrences(source, 'onRewind={current && !running && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)'), 1);
+  assert.equal(occurrences(source, 'rewindServed: !!(current && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)),'), 1);
   assert.equal(occurrences(source, '!unsupportedMethods?.includes("thread/fork")'), 0);
 });
 
@@ -78,10 +98,10 @@ test('main.cjs slash-rewind: a Cowork session is refused with the original Unsup
   const start = main.indexOf('case "slash-rewind": {');
   assert.ok(start > 0);
   const body = main.slice(start, main.indexOf('owner.request("thread/read"', start));
-  const guard = body.indexOf('if (coworkSessions.owns(p.threadId)) throw new Error(');
+  const guard = body.indexOf('if (coworkSessions.owns(p.threadId) || config.sessionMetadata?.[p.threadId]?.surface === "cowork") throw new Error(');
   assert.ok(guard > 0 && guard < body.indexOf('const owner=client'), 'the guard runs first');
   // R4i-small SM3: the refusal goes through i18n.t (zh-CN app.mjs // R4i-small); the source string stays the lO original.
-  const copy = /coworkSessions\.owns\(p\.threadId\)\) throw new Error\(i18n\.t\("([^"]+)"\)\)/.exec(body)[1];
+  const copy = /surface === "cowork"\) throw new Error\(i18n\.t\("([^"]+)"\)\)/.exec(body)[1];
   const view = v1('c21f11e6d-Bd0v2A97.js');
   const original = /case ke\.Unsupported:return t\.formatMessage\(\{defaultMessage:"([^"]+)",id:"SC1NI\+O8Y4"\}\)/.exec(view)[1]
     .replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
@@ -92,12 +112,14 @@ test('main.cjs slash-rewind: a Cowork session is refused with the original Unsup
 // R4i-cowork CW2/CW3 (X2 CW-3): the host rewind bridge and main's cowork-rewind IPC.
 import { coworkRewindBridge } from '../src/cowork-session-capabilities.mjs';
 
-test('coworkRewindBridge: rewindV2 reaches cowork-rewind only with Cowork on, and serves vm', async () => {
+test('coworkRewindBridge: rewindV2 reaches cowork-rewind only for a Cowork session, and serves vm', async () => {
   const calls = [];
   const call = async (channel, payload) => { calls.push([channel, payload]); return { prefill: 'Two' }; };
-  assert.equal(coworkRewindBridge(call), null); assert.equal(coworkRewindBridge(call, { coworkEnabled: 'yes' }), null);
-  assert.equal(coworkRewindBridge(null, { coworkEnabled: true }), null);
-  const bridge = coworkRewindBridge(call, { coworkEnabled: true });
+  // w13-coworkfn-caps: the option is the session's (cowork: true); the boot's Cowork switch no longer opens it.
+  assert.equal(coworkRewindBridge(call), null); assert.equal(coworkRewindBridge(call, { cowork: 'yes' }), null);
+  assert.equal(coworkRewindBridge(call, { coworkEnabled: true }), null);
+  assert.equal(coworkRewindBridge(null, { cowork: true }), null);
+  const bridge = coworkRewindBridge(call, { cowork: true });
   assert.equal(coworkRewindBridgeServed(bridge), true);
   assert.deepEqual(coworkRewindCapabilities({ bridge }), { canRewindToMessage: true, canEditOrRestart: true, canSessionRewind: true });
   assert.deepEqual(await bridge.rewindV2(COWORK, 'message-uuid'), { prefill: 'Two' });
@@ -110,7 +132,8 @@ test('main.cjs cowork-rewind: Cowork on, a listed Cowork session and a message i
   const main = fs.readFileSync(path.join(root, 'electron/main.cjs'), 'utf8');
   assert.equal(occurrences(main, 'case "cowork-rewind": {'), 1);
   const start = main.indexOf('case "cowork-rewind": {'), body = main.slice(start, main.indexOf('case "slash-rewind": {', start));
-  const order = ["if (!COWORK_ENABLED) throw new Error(i18n.t('Cowork is still in development.'));",
+  // w13-coworkfn-engine: the VM engine refusal (core-cowork.mjs vmRequestRefusal: Cowork off, or the O-5 sentence off the VM engine).
+  const order = ["{ const refusal = (await import('./cowork-runtime/core-cowork.mjs')).vmRequestRefusal('cowork/rewind', COWORK); if (refusal) throw new Error(i18n.t(refusal.text, refusal.values)); }",
     "if (!coworkSessions?.owns(p?.threadId) || !config.threadIds.includes(p.threadId)) throw new Error('Unknown Cowork session.');",
     "if (typeof p.targetMessageUuid !== 'string' || !p.targetMessageUuid) throw new Error('Unknown Cowork message.');",
     'const release=sessionOperations.reserveMessage(p.threadId);',

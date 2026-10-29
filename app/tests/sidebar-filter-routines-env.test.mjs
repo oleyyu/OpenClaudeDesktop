@@ -7,6 +7,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from '../scripts/view-tabs-compat.mjs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
@@ -51,12 +52,16 @@ test('sidebar-17 source: oU draws Show › Routines from se = GH(routines shown)
   ]) assert.equal(count(shared21, needle), 1, needle);
   assert.equal(count(shared16, 'function Xf(e){W.getState().setSectionView(cn,{shown:e})}function Zf(){return[Yf().shown,Xf]}'), 1);
   assert.equal(count(shared52, 'function Uh(e){return G(t=>e!==void 0&&t.navHasCodeRoutinesByOrg[e]===!0)}'), 1);
-  // The host's copy of oU keeps the branch verbatim; the host does not offer it (no Code routines section yet).
+  // The host's copy of the sessionList branch is verbatim; the host does not offer it (no Code routines section yet).
+  // 3.6556.2 (w3-sidebar-sections-gen, E38): PJ's block draws Routines through HJ from VJ's state (`ie`), its Separator
+  // while `ie.offered || ce || X`; the host passes the adapter's not-offered toggle.
   const view = await read(path.join(app, 'src/generated/code-current/sidebar-filter-view.mjs'));
-  assert.equal(count(view, 'routinesAvailable: se = false'), 1);
-  assert.equal(count(view, '(se || de) && _(X.Separator, {})'), 1);
+  assert.equal(count(view, 'routinesToggle: ie = { offered: false, checked: false }'), 1);
+  assert.equal(count(view, 'Z1($, 401, (ie.offered || ce || X) && u(H.Separator, {}), ce)'), 1);
+  assert.equal(count(view, 'u(HJ, { ...ie })'), 1);
   const host = await read(path.join(app, 'src/source-sidebar-filter-current.jsx'));
-  assert.equal(count(host, 'routinesAvailable={CODE_ROUTINES_SECTION_HOST}'), 1);
+  assert.equal(count(host, 'routinesToggle={routinesToggle}'), 1);
+  assert.equal(count(host, 'const routinesToggle = useSidebarRoutinesToggle();'), 1);
   assert.equal(Filter.CODE_ROUTINES_SECTION_HOST, false);
 });
 
@@ -157,10 +162,13 @@ test('SB3 low 2 source: _B\'s trigger and Base UI\'s ContextMenuTrigger have no 
   // _B: the list is the blank-area ContextMenu trigger; its only capture handler records the event (x), no containment check.
   assert.equal(count(shared21, 'f(uf.Root,{onOpenChange:T,children:[_(uf.Trigger,{ref:y,render:i,onContextMenuCapture:x})'), 1);
   assert.equal(count(shared21, 'x=A(e=>{e.target.closest("[data-jump-hint-row]")||(m.current=e.nativeEvent)},[l])'), 1);
-  // Base UI (view-tabs vendor-frame, the host's copy of the original): onContextMenu w only checks disabled, then ti stops it.
-  const vendor = await read(path.join(app, 'src/generated/view-tabs/vendor-frame-DfPJ1QmD.js'));
-  assert.equal(count(vendor, 'function w(e){if(g)return;d.current=!0,ti(e),C(e.clientX,e.clientY,e.nativeEvent)'), 1);
-  assert.equal(count(vendor, 'function ti(e){e.preventDefault(),e.stopPropagation()}'), 1);
+  // Base UI (view-tabs vendor-frame, the host's copy of the original): onContextMenu w only checks disabled, then stopEvent
+  // stops it. 3.6556.2 migration (W1): view-tabs runs the 3.6556.2 vendor-frame (2.42304.0 vendor-frame-DfPJ1QmD.js is a
+  // legacy shim), so read the file and local the current manifest names (stopEvent: 2.42304.0 ti, 3.6556.2 oi).
+  const stop = (await viewTabsManifestFor('3.6556.2')).publicNames.stopEvent;
+  const vendor = await read(path.join(app, 'src/generated/view-tabs', stop.file));
+  assert.equal(count(vendor, `function w(e){if(g)return;d.current=!0,${stop.local}(e),C(e.clientX,e.clientY,e.nativeEvent)`), 1);
+  assert.equal(count(vendor, `function ${stop.local}(e){e.preventDefault(),e.stopPropagation()}`), 1);
   // The host adapter is that trigger itself (no host Popup containment check is put back).
   const adapters = await read(path.join(app, 'src/source-sidebar-sections-adapters.jsx'));
   assert.equal(count(adapters, 'export const SidebarContextMenu = CdsContextMenu;'), 1);

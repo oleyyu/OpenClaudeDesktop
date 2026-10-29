@@ -17,19 +17,22 @@
 //     `text-muted @max-[280px]:hidden ms-1`; loading: `flex min-w-0 items-center gap-xs` with a spinner and the label.
 //   - c8e04f916 EffortControl trigger: CdsTooltip {content: "Effort", open: !open && undefined} over a ghost CdsButton
 //     data-cds="ModelSelectorEffort" `min-w-0 shrink-0` named "Effort: {name}", the name in `min-w-0 truncate`.
-//   - yZ: CdsTooltip {content, detail, open: !open && undefined} over a ghost iconOnly CdsButton `shrink-0`
-//     (tooltip false) whose icon is the KV ring (track alpha-2; alpha-4 once sized); a sized ring sits in Fa.
+//   - yZ (3.6556.2 B3, composer-ring-14): CdsTooltip {content, detail, open: !open && undefined} over a ghost iconOnly
+//     CdsButton (tooltip false) whose icon is the KV ring, always 14px (`y(_f, {pct: s, trackStroke: m, stroke: c, size:
+//     14})`); in the composer row (`inComposerRow: et`, et = the row layout) the track is alpha-3 and the button sits in
+//     po (shared-6 Lg `flex shrink-0 ms-px`), elsewhere the track is alpha-2 and the button is `shrink-0 ${af}` (shared-8
+//     TX `me-px`): `m = l ? "var(--cds-alpha-3)" : "var(--cds-alpha-2)"`, `D = l ? "shrink-0" : \`shrink-0 ${af}\``.
 // Host adapters: the menus stay the composer's SourceMenu / SourcePopover (main.jsx onMenu), so each trigger carries
 // menuTriggerProps instead of the Base UI Menu / Popover trigger; the triggers keep the local hook classes main.jsx's
 // chords and slash commands query (.sc-permission / .sc-model-trigger / .sc-effort-trigger / .sc-usage-trigger) and the
 // accessible names "Permission mode" / "Model" the local automation reads; effort stays its own trigger beside the model
 // (the official row folds it into the CDS ModelSelector) and takes the row's DK like the selector it belongs to.
 import React, { useId } from "react";
-import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
+// E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
+import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { ModeTriggerLabel, rowModelTriggerClass } from "./generated/code-composer/composer-row-chin.mjs";
 import { UsageRing } from "./generated/code-composer/usage-ring.mjs";
 import { composerChinTrailingClass, composerRingSlotClass, composerRowControlClass, composerRowLeadingClass, composerRowTrailingInsetClass } from "./generated/code-composer/composer-tokens.mjs";
-import { contextRingTrack } from "./context-usage-model.mjs";
 
 // bQ `Ot` (row): the slot the mode picker sits in.
 export const ROW_CHIN_LEADING_CLASS = `${composerRowLeadingClass} ${composerRowControlClass}`;
@@ -99,11 +102,18 @@ export function ComposerEffortTrigger({ row = false, tooltip, tooltipOpen, label
   </CdsTooltip>;
 }
 
-/** yZ's trigger: the context ring button (its popover is the composer's usage popover). */
-export function ComposerUsageRing({ pct = 0, ringSize, tooltip, detail, tooltipOpen, className, ...props }) {
+// 3.6556.2 c227f4d5e B3: the ring's size, its two tracks and the non-row trigger's end inset (shared-8 TX).
+export const USAGE_RING_SIZE = 14;
+export const USAGE_RING_ROW_TRACK = "var(--cds-alpha-3)";
+export const USAGE_RING_TRACK = "var(--cds-alpha-2)";
+export const USAGE_RING_TRIGGER_INSET_CLASS = "me-px";
+export const usageRingTriggerClass = (inComposerRow) => inComposerRow ? "shrink-0" : `shrink-0 ${USAGE_RING_TRIGGER_INSET_CLASS}`;
+
+/** yZ / B3's trigger: the context ring button (its popover is the composer's usage popover). */
+export function ComposerUsageRing({ pct = 0, inComposerRow = false, tooltip, detail, tooltipOpen, className, ...props }) {
   const trigger = <CdsTooltip content={tooltip} detail={detail ?? undefined} open={tooltipOpen}>
-    <CdsButton variant="ghost" tooltip={false} className={cdsClassNames("shrink-0", className)} iconOnly
-      icon={<UsageRing pct={pct} trackStroke={contextRingTrack(ringSize)} size={ringSize} />} {...props} />
+    <CdsButton variant="ghost" tooltip={false} className={cdsClassNames(usageRingTriggerClass(inComposerRow), className)} iconOnly
+      icon={<UsageRing pct={pct} trackStroke={inComposerRow ? USAGE_RING_ROW_TRACK : USAGE_RING_TRACK} size={USAGE_RING_SIZE} />} {...props} />
   </CdsTooltip>;
-  return ringSize === undefined ? trigger : <span className={composerRingSlotClass}>{trigger}</span>;
+  return inComposerRow ? <span className={composerRingSlotClass}>{trigger}</span> : trigger;
 }

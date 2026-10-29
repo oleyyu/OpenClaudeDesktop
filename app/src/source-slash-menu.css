@@ -1,6 +1,12 @@
-/* shared-11 BT/UT floating menu and shared-frame sg/Wg. */
-.source-slash-menu{position:fixed;z-index:60;display:flex;flex-direction:column;width:max-content;min-width:240px;max-width:min(512px,calc(100vw - 16px));padding:0;border-radius:calc(var(--cds-radius,6px) + .25rem * var(--cds-rem-scale,1));background:var(--cds-surface-3);box-shadow:inset 0 0 0 var(--cds-ring-inner,0px) var(--cds-ring-color,transparent),0 0 0 var(--cds-ring-outer,0px) var(--cds-ring-color,transparent),var(--cds-shadow-popover);color:var(--cds-text-primary);font-family:var(--cds-font-sans,anthropic-sans),sans-serif;font-size:var(--cds-font-size-body,13px);line-height:var(--cds-leading-body,19px);font-weight:400;}
-.source-slash-body{min-height:0;overflow-y:auto;border-radius:inherit;border-bottom:var(--cds-ring-inner,0px) solid transparent;padding:4px;}
+/* 3.6556.2 shared-5-Bg6ZMqvt TO: the menu is re(ee("popover"), je, "flex flex-col min-w-60 max-w-[min(32rem,calc(100vw-16px))]
+   max-h-96") — shared-frame ig "rounded-card bg-surface-3 shadow-panel" with IC
+   "rounded-[calc(var(--cds-radius)+var(--cds-menu-gutter,calc(0.25rem*var(--cds-rem-scale,1))))]" overriding the radius;
+   its one child is the body div, className Le = shared-frame QC "relative min-h-0 overflow-y-auto overflow-x-hidden
+   scroll-fade-y rounded-[inherit] border-b-[length:var(--cds-ring-inner)] border-transparent forced-colors:border-b-0
+   p-[var(--cds-menu-gutter,0.25rem)]" (2.42304.0 had no relative / overflow-x-hidden and max-w-lg). */
+.source-slash-menu{position:fixed;z-index:60;display:flex;flex-direction:column;width:max-content;min-width:240px;max-width:min(512px,calc(100vw - 16px));padding:0;border-radius:calc(var(--cds-radius,6px) + var(--cds-menu-gutter,calc(.25rem * var(--cds-rem-scale,1))));background:var(--cds-surface-3);box-shadow:inset 0 0 0 var(--cds-ring-inner,0px) var(--cds-ring-color,transparent),0 0 0 var(--cds-ring-outer,0px) var(--cds-ring-color,transparent),var(--cds-shadow-popover);color:var(--cds-text-primary);font-family:var(--cds-font-sans,anthropic-sans),sans-serif;font-size:var(--cds-font-size-body,13px);line-height:var(--cds-leading-body,19px);font-weight:400;}
+.source-slash-body{position:relative;min-height:0;overflow-y:auto;overflow-x:hidden;border-radius:inherit;border-bottom:var(--cds-ring-inner,0px) solid transparent;padding:var(--cds-menu-gutter,.25rem);}
+@media (forced-colors:active){.source-slash-body{border-bottom-width:0}}
 .source-slash-menu [role=menuitem]{display:flex;align-items:center;width:100%;gap:var(--cds-gap-xs,6px);padding:calc((var(--cds-h-control,24px) - var(--cds-leading-body,19px))/2) 8px;border-radius:var(--cds-radius,6px);outline:none;cursor:default;user-select:none;box-sizing:border-box;}
 .source-slash-menu[data-density=comfortable] [role=menuitem],.source-slash-menu[data-density=comfortable] .slash-header{padding-inline:10px;}
 .slash-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -8,9 +14,7 @@
 .source-slash-menu b{font-weight:600}.slash-alias{color:var(--cds-text-muted)}
 .slash-subtitle{margin-left:auto;flex-shrink:0;padding-left:8px;color:var(--cds-text-muted);font-size:var(--cds-font-size-caption,12px);line-height:var(--cds-leading-caption,16px);}
 .slash-header{padding:4px 8px;color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px);line-height:var(--cds-leading-footnote,15px);font-weight:500;}
-/* c17e03edc b/x: dimensions are measured, including wrapped descriptions. */
-.slash-description{position:fixed;z-index:9000;width:max-content;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.8);color:white;font:400 12px/1.25 var(--font-ui);max-width:min(26rem,calc(100vw - 4rem));box-shadow:var(--cds-shadow-md);backdrop-filter:blur(8px);pointer-events:none;overflow-wrap:break-word;text-wrap:pretty;}
-.slash-description b{font-weight:600}.slash-description-text{display:-webkit-box;-webkit-line-clamp:10;-webkit-box-orient:vertical;overflow:hidden;}
+/* The active row's description is the view-tabs CDS Tooltip (3.6556.2 c17e03edc d via ccc334009 B), no local styles. */
 .slash-filter,.slash-argument{position:fixed;z-index:59;pointer-events:none;user-select:none;white-space:pre;font:400 14px/24px var(--font-ui);transform:translateY(-50%);color:var(--cds-text-muted)}.slash-filter{color:color-mix(in oklab,var(--cds-text-muted) 75%,transparent)}.slash-argument{opacity:.5;color:var(--cds-text-primary)}
 .slash-local-status{margin:16px 0;padding:16px;border:1px solid var(--cds-alpha-2,#0002);border-radius:8px;font-size:13px;}
 .slash-local-status header{display:flex;justify-content:space-between;align-items:center;}.slash-local-status h3{margin:0;font-size:14px}.slash-local-status button{background:none;border:0;color:inherit;}

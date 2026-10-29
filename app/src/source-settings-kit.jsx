@@ -5,7 +5,8 @@ import { t } from '../electron/i18n/index.mjs';
 
 export function SettingRow({row,error}) {
  const label=useId(),description=useId();
- return <div className={(row.grid?'ss-grid-row':'ss-row')} role="group" aria-labelledby={label} aria-describedby={row.description&&!row.grid?description:undefined} data-setting-id={row.id} data-settings-row="" data-indent={row.indent||undefined}>
+ // V3-w11-sweep-shell-b: `row.className` is c71860c77 X's className (Or's Auto-open row passes "invisible" until loaded).
+ return <div className={row.className?`${row.grid?'ss-grid-row':'ss-row'} ${row.className}`:(row.grid?'ss-grid-row':'ss-row')} role="group" aria-labelledby={label} aria-describedby={row.description&&!row.grid?description:undefined} data-setting-id={row.id} data-settings-row="" data-indent={row.indent||undefined}>
    <div className="ss-row-top"><div className="ss-row-copy"><div id={label} className={row.grid?'sr-only':'text-body'}><span className="settings-row-title">{row.label}</span></div>{row.description&&!row.grid&&<div id={description} data-settings-desc="">{row.description}</div>}</div>{row.control&&<div className="ss-control">{row.control}</div>}</div>{row.grid}
    {/* c71860c77:1820-1840: a failed save is muted body text in the row's below slot; the raw reason stays in the title (and the console). */}
    {(row.below||error)&&<div className="ss-row-below">{row.below}{error&&<span className="ss-row-error" title={error}>{t('Couldn’t save the setting. Try again.')}</span>}</div>}

@@ -18,7 +18,7 @@ import { rewindLabel, rewindPickerMove, rewindPickerStart, rewindRestoreItems, r
 
 // The local action dialogs (Review code, Help, Rewind, Keyboard shortcuts, Run workflow, Bypass) on the
 // shared CDS Dialog (source-dialog.jsx: shared-frame-C_2npUJq.js:5561-5574, :5738-5869). The props API is
-// unchanged; open/onExited/size/alert/description/bleed/initialFocusRef/footer pass through to SourceDialog.
+// unchanged; open/onExited/size/alert/description/initialFocusRef/footer pass through to SourceDialog.
 export function ActionDialog({ title, onClose, children, className = '', showClose = true, ...props }) {
   return <SourceDialog {...props} title={title} onClose={onClose} showClose={showClose} className={`session-action-dialog ${className}`.trim()}>
     {children}
@@ -26,13 +26,19 @@ export function ActionDialog({ title, onClose, children, className = '', showClo
 }
 
 // 2.31226 shared-19 rZ: Dialog size md in comfortable density, fullHeight on the Code route (h-dvh under the popup's
-// max-h), the bleed header 'Keyboard shortcuts' and initial focus on the popup; c518a31cc ve: one focusable region
+// max-h) and initial focus on the popup; V3-w12b-settings-dialogs: 3.6556.2 shared-19 jM `c={showClose:!0}` through
+// shared-78 va (`g(ae.Header,{...e.header,children:e.title})`), the standard Zc Header 'Keyboard shortcuts', not a bleed bar; c518a31cc ve: one focusable region
 // that scrolls edge to edge (-mx/-mb-pad-xl, px/pb-xl, rounded-b-[inherit], an inset focus ring) holding Ce's
 // sections (q: mt-5 py-2) and rows (Y: label text-sm text-secondary, keycap Shortcuts with 'or' between them).
-export function KeyboardShortcutsDialog({ fastMode = false, sideChat = false, rewind = true, onClose, ...dialog }) {
-  return <ActionDialog {...dialog} title={t("Keyboard shortcuts")} size="md" bleed density="comfortable" className="shortcuts-dialog" onClose={onClose}>
+// V3-w13-surfaces-shortcuts: `surface` (the sidebar mode) and `route` (the open chat's or task's surface) pick c518a31cc
+// Me's Ne body off Code (shortcuts-dialog-model.mjs).
+// w13-close-main-jsx-tests: `sidebarChord` (main.jsx: the window has the sidebar, whose app switch binds ⌥⌘←/→) lists
+// c518a31cc Te's sidebar tab rows, swapped under RTL like Te's `n() === "rtl"`.
+export function KeyboardShortcutsDialog({ fastMode = false, sideChat = false, rewind = true, surface = 'code', route = null, sidebarChord = false, onClose, ...dialog }) {
+  const rtl = typeof document !== 'undefined' && document.documentElement?.dir === 'rtl';
+  return <ActionDialog {...dialog} title={t("Keyboard shortcuts")} size="md" density="comfortable" className="shortcuts-dialog" onClose={onClose}>
     <div role="region" aria-label={t("Keyboard shortcuts")} tabIndex={0} className="shortcuts-region">
-      {shortcutsDialogSections({ fastMode, sideChat, rewind }).map(section => <div key={section.title}>
+      {shortcutsDialogSections({ fastMode, sideChat, rewind, surface, route, sidebarChord, rtl }).map(section => <div key={section.title}>
         <div className="shortcuts-section">{section.title}</div>
         {section.rows.map(row => <div key={row.command} className="shortcuts-row" data-command={row.command}>
           <span className="shortcuts-label">{row.label}</span>

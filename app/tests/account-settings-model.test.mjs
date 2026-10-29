@@ -125,7 +125,7 @@ test("no-key wiring: composer warning + account refresh, a one-line send guard, 
   assert.ok(warning.includes(flat(`reconnectLabel={signInRequired ? t("Sign in") : ${missing} ? t("Add key") : undefined}`)));
   // send() keeps the draft and starts the core's sign-in instead of a request that would fail with a 401.
   assert.match(main, /\n\s+if \(signInRequired\) \{ startCoreSignIn\(\); return; \}/);
-  const send = main.slice(main.indexOf("async function send({ priority } = {}) {"), main.indexOf("const parsed = parseSessionCommand(draft, commandContext);", main.indexOf("async function send({ priority } = {}) {")));
+  const send = main.slice(main.indexOf("async function send({ priority, title } = {}) {"), main.indexOf("const parsed = parseSessionCommand(draft, commandContext);", main.indexOf("async function send({ priority, title } = {}) {")));
   assert.match(send, /\n\s+if \(boot\?\.account\?\.deepseek && !boot\.account\.account\) return;/);
   assert.doesNotMatch(send, /setDraft|thread\/start|turn\/start/, "the guard keeps the draft and starts nothing");
   assert.match(main, /\{boot\?\.account\?\.deepseek && <SourceMenu\.Item icon="Key" data-testid="user-menu-deepseek-key" onClick=\{\(\) => setSettings\("preferences"\)\}>\{t\("DeepSeek API key"\)\}<\/SourceMenu\.Item>\}/);

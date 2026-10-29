@@ -12,6 +12,9 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import { viewTabsViewFor } from '../scripts/view-tabs-compat.mjs';
+import * as official3 from '../scripts/official-3.6556.2.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -39,50 +42,70 @@ function exportsOf(chunk) {
 // cccc2cf0a alias -> the original binding it names in its chunk.
 const resolve = (alias, chunk) => exportsOf(chunk).get(importsOf('cccc2cf0a-B0D--VZp.js', chunk).get(alias));
 
-test('FT-14 / FT-18 generator: the step-3 modules are 2.42304.0 originals with their imports resolved', () => {
+// The 3.6556.2 chunks the generator now reads (W2 w2-files).
+const OFFICIAL_V3 = official3.ionSource;
+const officialV3 = (name) => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
+function importsOfV3(chunk, from) {
+  const table = new Map();
+  for (const [, list] of officialV3(chunk).matchAll(new RegExp(`import\\{([^}]*)\\}from"\\./${from.replace(/[.$]/g, '\\$&')}"`, 'g')))
+    for (const pair of list.split(',')) { const [name, alias = name] = pair.split(' as '); table.set(alias, name); }
+  return table;
+}
+function exportsOfV3(chunk) {
+  const list = [...officialV3(chunk).matchAll(/export\{([^}]*)\}/g)].at(-1)[1];
+  return new Map(list.split(',').map((pair) => { const [local, name = local] = pair.split(' as '); return [name, local]; }));
+}
+
+test('FT-14 / FT-18 generator: the step-3 modules are 3.6556.2 originals with their imports resolved', () => {
   const manifest = JSON.parse(source('src/generated/files-changes/manifest.json'));
+  assert.equal(manifest.referenceVersion, official3.referenceVersion);
   const entry = (target) => manifest.modules.find((module) => module.target === target);
   const expected = {
-    'app-list-row.mjs': ['shared-6-Cby4X-ms.js', { _h: 'appListRow', vh: 'appListRowMin' }],
-    'menu-item-classes.mjs': ['shared-frame-BfjMqbuN.js', { Cx: 'menuItemClasses' }],
-    'file-tree-row.mjs': ['cccc2cf0a-B0D--VZp.js', { dx: 'fileTreeRowBase', fx: 'fileTreeRowSelected', px: 'fileTreeRowPrimary', xS: 'keptGuideFolders', SS: 'keptGuidesOfRow' }],
-    'path-within.mjs': ['shared-28-DcgD7xXH.js', { GO: 'pathWithinRoot', RO: 'joinPath' }],
-    'git-info-key.mjs': ['shared-0-ByI5P0CP.js', { jB: 'gitInfoQueryKey' }],
-    'git-info-query.mjs': ['shared-11-BuQ3CK5I.js', { zd: 'gitInfoQuery' }],
-    'file-tree-start-folder.mjs': ['cccc2cf0a-B0D--VZp.js', { zx: 'useWorktreeStartFolder', Vx: 'normalizeRevealPath', Rx: 'startRevealNonce' }],
-    'file-selection-escape.mjs': ['c856385e2-DVsjb2QL.js', { nt: 'useMultiSelectionEscape' }],
-    'file-frontmatter-view.mjs': ['c3fde7009-BbbO5TX9.js', { Ei: 'Frontmatter', Ti: 'frontmatterLabel' }],
+    'app-list-row.mjs': ['shared-6-sd9jbJqs.js', { Th: 'appListRow', Eh: 'appListRowMin' }],
+    'menu-item-classes.mjs': ['shared-frame-6jtSkIit.js', { FC: 'menuItemClasses' }],
+    'file-tree-row.mjs': ['cccc2cf0a-DhZC33Gc.js', { dw: 'fileTreeRowBase', fw: 'fileTreeRowSelected', pw: 'fileTreeRowPrimary', wT: 'keptGuideFolders', TT: 'keptGuidesOfRow' }],
+    'path-within.mjs': ['shared-28-DNYlf4wu.js', { kM: 'pathWithinRoot', xM: 'joinPath' }],
+    'git-info-key.mjs': ['shared-0-DDOOdL6P.js', { mU: 'gitInfoQueryKey' }],
+    'git-info-query.mjs': ['shared-11-_AVGLHEz.js', { Tm: 'gitInfoQuery' }],
+    'file-tree-start-folder.mjs': ['cccc2cf0a-DhZC33Gc.js', { zw: 'useWorktreeStartFolder', Hw: 'normalizeRevealPath', Rw: 'startRevealNonce' }],
+    'file-selection-escape.mjs': ['c856385e2-aEyDzrcK.js', { Ye: 'useMultiSelectionEscape' }],
+    // The root is qi (Ki its label); Yi is only the document variant's row (panes W3).
+    'file-frontmatter-view.mjs': ['c3fde7009-LYGOoUpG.js', { qi: 'Frontmatter', Ki: 'frontmatterLabel' }],
   };
   for (const [target, [chunk, exports]] of Object.entries(expected)) {
     const module = entry(target);
     assert.ok(module, target);
-    assert.equal(module.referenceVersion, '2.42304.0', target);
+    assert.equal(module.referenceVersion, official3.referenceVersion, target);
     assert.equal(module.source, chunk, target);
     assert.deepEqual(module.exports, exports, target);
-    assert.equal(module.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL, chunk))).digest('hex'), target);
+    assert.equal(module.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL_V3, chunk))).digest('hex'), target);
     assert.equal(createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'src/generated/files-changes', target))).digest('hex'), module.sha256, target);
   }
   const via = (target, local) => entry(target).imports.find((item) => item.local === local);
-  assert.deepEqual([via('file-tree-row.mjs', 'En').from, via('file-tree-row.mjs', 'Pl').name, via('file-tree-row.mjs', 'Il').from],
-    ['./app-list-row.mjs', 'fileTreeRowGap', '../code-current/file-tree-style.mjs']);
-  assert.deepEqual([via('menu-item-classes.mjs', 'g').kind, via('menu-item-classes.mjs', 'g').name], ['adapter', 'cva']);
-  assert.deepEqual([via('git-info-query.mjs', 'V').kind, via('git-info-query.mjs', 'V').name], ['adapter', 'LocalSessions']);
-  assert.deepEqual([via('file-tree-start-folder.mjs', 'yi').name, via('file-tree-start-folder.mjs', 'Ta').name, via('file-tree-start-folder.mjs', 'Zr').name, via('file-tree-start-folder.mjs', 'ti').name],
+  assert.deepEqual([via('file-tree-row.mjs', 'dr').from, via('file-tree-row.mjs', 'dr').name, via('file-tree-row.mjs', 'Qc').name, via('file-tree-row.mjs', 'rl').from],
+    ['./app-list-row.mjs', 'appListRow', 'fileTreeRowGap', '../code-current/file-tree-style.mjs']);
+  assert.deepEqual([via('git-info-query.mjs', 'G').kind, via('git-info-query.mjs', 'G').name], ['adapter', 'LocalSessions']);
+  assert.deepEqual([via('file-tree-start-folder.mjs', 'qr').name, via('file-tree-start-folder.mjs', 'lo').name, via('file-tree-start-folder.mjs', 'ca').name, via('file-tree-start-folder.mjs', 'Qi').name],
     ['useQuery', 'gitInfoQuery', 'pathWithinRoot', 'joinPath']);
-  assert.deepEqual([via('file-selection-escape.mjs', 'p').name, via('file-selection-escape.mjs', 'v').name], ['ownerWindow', 'suppressEscapeRepeat']);
-  // The view-tabs graph's cva is the one shared-frame Cx reads (`g`): same chunk, same local.
-  const names = JSON.parse(source('src/generated/view-tabs/manifest.json')).publicNames;
-  assert.deepEqual([names.cva.file, names.cva.local, names.cva.export], ['vendor-frame-DfPJ1QmD.js', 'In', 'Ea']);
+  assert.deepEqual([via('file-selection-escape.mjs', 'm').name, via('file-selection-escape.mjs', 'm').kind, via('file-selection-escape.mjs', 'me').name],
+    ['ownerWindow', 'view-tabs', 'suppressEscapeRepeat']);
+  // The menu row classes are the view-tabs cdsMenuItemClass itself (D1): re-exported under the old name, no second cva.
+  assert.equal(entry('menu-item-classes.mjs').reexport, 'view-tabs');
+  assert.deepEqual(entry('menu-item-classes.mjs').bindings, []);
+  assert.deepEqual(entry('menu-item-classes.mjs').imports.map((item) => [item.local, item.from, item.name, item.kind]),
+    [['FC', '../view-tabs/shared-frame-6jtSkIit.js', 'cdsMenuItemClass', 'view-tabs']]);
+  const names = viewTabsViewFor(JSON.parse(source('src/generated/view-tabs/manifest.json')), official3.referenceVersion).publicNames;
+  assert.deepEqual([names.cdsMenuItemClass.file, names.cdsMenuItemClass.local], ['shared-frame-6jtSkIit.js', 'FC']);
   // Official minified text of the roots.
-  const tree = official('cccc2cf0a-B0D--VZp.js');
-  for (const text of ['dx=`relative ${En} py-0 focus-visible:outline-hidden focus-visible:shadow-focus`', 'fx=`bg-fill-ghost-selected hover:bg-fill-ghost-selected`',
-    'Rx=-1', 't.hasDesktopWorktree===!0', 'select:e=>e?.root', '{absPath:Vx(j),nonce:Rx,start:!0}'])
-    assert.ok(tree.includes(text) || tree.includes(text.replace(/`/g, '"')), text);
-  assert.ok(official('shared-6-Cby4X-ms.js').includes('vh=`min-h-control app-list-row-min`') || official('shared-6-Cby4X-ms.js').includes('vh="min-h-control app-list-row-min"'));
-  assert.match(official('c856385e2-DVsjb2QL.js'), /function nt\(e,t\)\{u\(\(\)=>\{if\(!e\)return;let n=n=>\{if\(n\.key!==`Escape`\|\||function nt\(e,t\)\{u\(\(\)=>\{if\(!e\)return;let n=n=>\{if\(n\.key!=="Escape"\|\|/);
-  // Nx binds nt to its tree element: `If(z, H.store)` with If = c856385e2 dt (= nt).
-  assert.match(tree, /If\(z,H\.store\)/);
-  assert.equal(exportsOf('c856385e2-DVsjb2QL.js').get(importsOf('cccc2cf0a-B0D--VZp.js', 'c856385e2-DVsjb2QL.js').get('If')), 'nt');
+  const tree = officialV3('cccc2cf0a-DhZC33Gc.js');
+  for (const text of ['dw=`relative ${dr} py-0 focus-visible:outline-hidden focus-visible:shadow-focus`', 'fw="bg-fill-ghost-selected hover:bg-fill-ghost-selected"',
+    'Rw=-1', 't.hasDesktopWorktree===!0', 'select:Bw', 'function Bw(e){return e?.root}', '{absPath:Hw(V),nonce:Rw,start:!0}'])
+    assert.ok(tree.includes(text), text);
+  assert.ok(officialV3('shared-6-sd9jbJqs.js').includes('Eh="min-h-control app-list-row-min"'));
+  assert.match(officialV3('c856385e2-aEyDzrcK.js'), /function Ye\(e,t\)\{let \$=J9\(4\),n,r;J2\(\$,0,t,e\)\?\(n=\(\)=>\{if\(!e\)return;let n=n=>\{if\(n\.key!=="Escape"\|\|/);
+  // The Files tree binds Ye to its tree element: `Sf(J, ie.store)` with Sf = c856385e2 pt (= Ye).
+  assert.match(tree, /Sf\(J,ie\.store\)/);
+  assert.equal(exportsOfV3('c856385e2-aEyDzrcK.js').get(importsOfV3('cccc2cf0a-DhZC33Gc.js', 'c856385e2-aEyDzrcK.js').get('Sf')), 'Ye');
 });
 
 test('FT-14 row classes: the host composes exactly Nx / NS / AS of cccc2cf0a, over the bindings their aliases name', async () => {
@@ -91,7 +114,7 @@ test('FT-14 row classes: the host composes exactly Nx / NS / AS of cccc2cf0a, ov
   const R = await ssr('/src/generated/files-changes/file-tree-row.mjs');
   const L = await ssr('/src/generated/files-changes/app-list-row.mjs');
   const { menuItemClasses } = await ssr('/src/generated/files-changes/menu-item-classes.mjs');
-  const { cdsClassNames } = await ssr('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  const { cdsClassNames } = await ssr('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   const tree = official('cccc2cf0a-B0D--VZp.js');
   // The aliases the templates read, resolved through the minified import / export tables.
   const ca = 'ca7840910-DSVFtTw1.js';
@@ -291,7 +314,7 @@ function harness(component) {
   return (...args) => {
     index = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return component(...args); } finally { internal.H = old; }
   };
 }

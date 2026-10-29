@@ -13,10 +13,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const readable = path.resolve(app, '../analysis/code-ui-unpack-20261017/readable');
-const OFFICIAL = 'public/assets/v1/c6a992d55-sXiDGMFQ.css';
+const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
 const h = React.createElement;
 const noop = () => {};
 let server, C, Host, Shell, Layout, Tokens, Card, Adapters, ViewTabs, AddMenu, Glyph, AddGen, Padding, SourceMenuModule;
@@ -29,7 +30,7 @@ before(async () => {
   Tokens = await server.ssrLoadModule('/src/generated/code-composer/composer-tokens.mjs');
   Card = await server.ssrLoadModule('/src/generated/code-composer/composer-card-tokens.mjs');
   Adapters = await server.ssrLoadModule('/src/source-composer-current-adapters.jsx');
-  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   AddMenu = await server.ssrLoadModule('/src/source-composer-add-menu.jsx');
   Glyph = await server.ssrLoadModule('/src/generated/code-composer/composer-glyph.mjs');
   AddGen = await server.ssrLoadModule('/src/generated/code-composer/composer-add-menu.mjs');
@@ -59,19 +60,26 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   assert.equal(shell.attrs['data-cds-dock-group'], '', 'shared-1 Cu on the shell root');
   assert.equal(shell.attrs['data-multiline'], undefined, 'multiline: !ve && void 0 → the presets card stays one row');
   assert.equal(shell.attrs['data-end-inset'], 'actions');
+  // composer-trailing-notch-pad (3.6556.2 qM `It = he ? "pad" : void 0`): vm `Xe = _e || d.trailingNotch === "pad"`,
+  // `Rn = (Je === "actions" && Xe) || void 0` → data-end-column on the root.
+  assert.equal(shell.attrs['data-end-column'], 'true');
   assert.equal(shell.attrs['data-start-inset'], undefined, 'the + leads: startInset none (the editor pads by --cmp-lead-w)');
   assert.ok(cls(shell).startsWith('flex w-full min-w-0 flex-col font-sans'));
   const [card, chin] = kids(shell);
-  // The card: Af xt with uM's cardClassName (nM: the float notch's shape-outside reset) and the host sc-card hook.
-  for (const token of ['bg-surface-3', 'rounded-composer', 'shadow-composer', 'focus-within:shadow-composer-focus', 'cursor-text', Card.placeholderShapeResetClass, 'sc-card'])
+  // The card: Af xt with uM's cardClassName and the host sc-card hook. w2-composer-gen: 3.6556.2 deleted nM (the float
+  // notch's shape-outside reset; qM passes trailingNotch "pad" instead), so the generated card tokens no longer carry it.
+  assert.equal(Card.placeholderShapeResetClass, undefined);
+  for (const token of ['bg-surface-3', 'rounded-composer', 'shadow-composer', 'focus-within:shadow-composer-focus', 'cursor-text', 'sc-card'])
     assert.ok(cls(card).split(/\s+/).includes(token), token);
   assert.doesNotMatch(cls(card), /inset-ring-pro/, 'no bash ring outside bash mode');
   assert.match(card.attrs.style, /--cds-page-bg:var\(--cds-surface-3\)/, 'Iu: the card surface');
-  // The editor row: the lead / trail widths, the float notch (trailingNotch "float"), the editor box with uM's maxHeight.
+  // The editor row: the lead / trail widths, the trailing column reserve (trailingNotch "pad": vm's `Ka` = shared-26 co
+  // `pe-[var(--cmp-trail-w,0px)]` instead of the float notch), the editor box with uM's maxHeight.
   const row = kids(card).find((n) => cls(n) === 'relative w-full min-w-0');
   assert.match(row.attrs.style, /--cmp-lead-w:\d+px;--cmp-trail-w:\d+px/);
   const wrap = kids(row)[0];
-  assert.ok(cls(wrap).includes('pl-[var(--cmp-lead-w)]') && cls(wrap).includes('[&_.ProseMirror]:before:float-right'), cls(wrap));
+  assert.equal(cls(wrap), 'w-full min-w-0 ps-[var(--cmp-lead-w)] pe-[var(--cmp-trail-w,0px)]'); // 3.6556.2: logical ps- / pe-
+  assert.doesNotMatch(cls(wrap), /float-right/, 'no float notch with "pad"');
   const box = byCds(wrap, 'ChatComposerEditor');
   // R4g-composer CP2 (X7-08): no compact copy, so uM's fit is "grow": cm stacks one placeholder ghost with the editor in
   // the box's grid (eo), even with a draft (the box keeps the placeholder's height).
@@ -86,7 +94,7 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   assert.equal(input.attrs['data-doc-empty'], 'false');
   const ghost = kids(box).find((n) => 'data-composer-placeholder-ghost' in n.attrs);
   assert.equal(ghost.attrs['data-composer-placeholder-ghost'], 'Describe a task or ask a question', 'SourceComposer fallback copy (no placeholder prop)');
-  assert.equal(cls(ghost), 'invisible pointer-events-none select-none max-w-full self-start break-words pr-[var(--cmp-trail-w,0px)]', 'Qa: one row, so it reserves the trailing actions');
+  assert.equal(cls(ghost), 'invisible pointer-events-none select-none max-w-full self-start break-words', 'columnReservesTrailing: the column already reserves the trailing actions (reserveTrailing: !ue)');
   assert.equal(find(wrap, (n) => 'data-composer-placeholder' in n.attrs), null, 'a draft hides the placeholder span (cm fe && W)');
   assert.equal(input.attrs['data-focus-region'], 'composer');
   assert.equal(input.attrs['aria-label'], 'Message DeepSeek');
@@ -94,9 +102,9 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   const actions = byCds(row, 'ChatComposerActions');
   assert.equal(cls(actions), 'contents');
   const [leading, trailing] = kids(actions);
-  assert.ok(cls(leading).startsWith('absolute bottom-0 left-0 flex shrink-0 items-center gap-xs'));
+  assert.ok(cls(leading).startsWith('absolute bottom-0 start-0 flex shrink-0 items-center gap-xs'), '3.6556.2: logical start-0');
   assert.equal(find(leading, (n) => n.tag === 'button').attrs['aria-label'], 'Add');
-  assert.ok(cls(trailing).startsWith('absolute bottom-0 right-0 flex shrink-0 items-center gap-xs'));
+  assert.ok(cls(trailing).startsWith('absolute bottom-0 end-0 flex max-w-[calc(100%_-_var(--cmp-lead-w))] shrink-0 items-center justify-end gap-xs'), '3.6556.2: logical end-0, capped by the lead width');
   assert.ok(find(trailing, (n) => n.attrs['data-testid'] === 'code-prompt-send-cell'));
   // The chin is uM's last child: inside the shell root, after the card (Kd with bQ's row class Ua).
   assert.equal(chin.attrs['data-cds'], 'ChatComposerChin');
@@ -124,12 +132,12 @@ test('the classic layout: no in-card +, so the editor starts at the text inset (
   const shell = byCds(root, 'ChatComposer');
   assert.equal(shell.attrs['data-start-inset'], 'text');
   const card = kids(shell)[0];
-  assert.ok(!cls(card).includes(Card.placeholderShapeResetClass), 'nM is the presets card only');
+  assert.ok(!cls(card).includes('[shape-outside:none]'), 'no shape-outside reset (3.6556.2 deleted nM)');
   const box = byCds(card, 'ChatComposerEditor');
   assert.equal(cls(box), Layout.editorClass({ startInset: 'text', disabled: false, settled: false,
     className: ViewTabs.cdsClassNames(Layout.proseMirrorContentClass, Layout.stackedEditorClass, 'epitaxy-prompt-input') }));
   const [first] = kids(byCds(card, 'ChatComposerActions'));
-  assert.ok(cls(first).startsWith('absolute bottom-0 right-0'), 'only the trailing (send) cluster');
+  assert.ok(cls(first).startsWith('absolute bottom-0 end-0'), 'only the trailing (send) cluster (3.6556.2: logical end-0)');
   const chin = byCds(shell, 'ChatComposerChin');
   assert.deepEqual([...find(chin, (n) => cls(n) === 'flex items-center self-start').children].filter((n) => n.tag).length > 0, true);
   // R4i-graph GR3: the classic chin's + is the official Oj trigger (c73f45bc3 tv, `...rc`), no longer the host .sc-add.
@@ -250,7 +258,8 @@ test("the Add menu (jj + Dj) on the host SourceMenu: side top, align start, 'epi
   assert.match(main, /<ComposerAddFilesItem shortcut="cmd\+u" onSelect=\{attach\} \/>/);
   assert.ok(!main.includes('t("Add files or photos")'), 'the row label is Dj\'s');
   assert.ok(!/Import Linear issue|onCoordinatorModeChange/.test(main));
-  const rows = ['<ComposerAddFilesItem', 'onClick={addFolderFromMenu}>{t("Add folder")}', '{t("Import GitHub issue")}', '{t("Slash commands")}', 'data-testid="add-connectors"', 'data-testid="add-plugins"'];
+  // w13-chatfn-tools: the connectors row is a local (addConnectorsRow) the Chat + menu shares; the Code menu places it here.
+  const rows = ['<ComposerAddFilesItem', 'onClick={addFolderFromMenu}>{t("Add folder")}', '{t("Import GitHub issue")}', '{t("Slash commands")}', '{addConnectorsRow}', 'data-testid="add-plugins"'];
   const at = rows.map((row) => main.indexOf(row));
   assert.ok(at.every((i) => i > 0), rows.filter((_, i) => at[i] < 0).join(', '));
   assert.deepEqual([...at].sort((a, b) => a - b), at, 'Dj, folder, GitHub issue, Slash commands, Connectors, Plugins');
@@ -313,7 +322,8 @@ test('the history hint sits in the Header part (Jd + Presence), the shell row th
 
 // ---------------------------------------------------------------- styles
 test("every class the shell draws is in the loaded official sheet; local rules touch only the host's editor, + and drag ring", () => {
-  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-Bl9zqrv-.css', 'c6a992d55-sXiDGMFQ.css', 'ce598b86c-CctVJsaN.css', 'c3fde7009-BH42YUtA.css']
+  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
+    // w2-composer-gen: the shell is 3.6556.2 output now, so only the official sheets count (no compatibility layer).
     .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
   const html = [render({ ...session }), render({ ...session, codeLayout: 'classic' }), render({ ...session, draft: '!x', shellMode: 'core' }),
     render({ ...session, draft: '', suggestion: 'S' }), render({ ...session, running: true, draft: '', queueEnabled: true }), render({ draft: '', showContext: true })].join('');
@@ -399,7 +409,7 @@ function hookFixture(component, contexts = new Map()) {
   const render = (...args) => {
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
     for (let pass = 0; pass < 8; pass++) {
-      dirty = false; cursor = 0; internal.H = hooks;
+      dirty = false; cursor = 0; internal.H = withMemoCache(hooks);
       try { result = component(...args); } finally { internal.H = old; }
       flushEffects();
       if (!dirty) break;
@@ -431,7 +441,8 @@ function fakeWorld() {
   const p2 = node({ tagName: 'P', getBoundingClientRect: () => rect(24, 44) });
   const ghost = { offsetHeight: 60 };
   const box = node({ querySelectorAll: (sel) => (sel === ':scope > [data-composer-placeholder-ghost]' ? world.ghosts : []) });
-  const editor = node({ isContentEditable: true, offsetHeight: 40, clientWidth: 300, children: [p1], parentElement: box,
+  // 3.6556.2 vm also listens for IME composition on the measured editor (compositionstart … blur, capture).
+  const editor = node({ isContentEditable: true, offsetHeight: 40, clientWidth: 300, children: [p1], parentElement: box, addEventListener() {}, removeEventListener() {},
     focus() { doc.activeElement = editor; editor.focused = (editor.focused ?? 0) + 1; } });
   // Live element counts (a spread would freeze them).
   Object.defineProperties(editor, { childElementCount: { get: () => editor.children.length }, firstElementChild: { get: () => editor.children[0] } });
@@ -539,7 +550,8 @@ test("Af's drop hook stays idle without onFileDrop (the host card's own drop han
   const out = f.render();
   assert.deepEqual(listeners, []);
   assert.equal(elements(out).some((e) => e.props['data-cds'] === 'ChatComposerDropPanel'), false);
-  assert.throws(() => Adapters.ComposerPageDropSurface({ children: null }), /not wired in the host/);
+  // 3.6556.2: the scrim's portal root is view-tabs CdsPortalRoot (no host stand-in); it is still never rendered here.
+  assert.equal(Adapters.ComposerPageDropSurface, undefined);
   const source = fs.readFileSync(path.join(app, 'src/source-composer.jsx'), 'utf8');
   const shell = source.slice(source.indexOf('<SourceComposerShell '), source.indexOf('</SourceComposerShell>'));
   assert.ok(shell.length > 1000);
@@ -630,7 +642,7 @@ test("ComposerShellEditor placeholder: cm's span and grow ghost (clamp: one trun
   const expected = Layout.placeholderProps({ multiline: false, minLines: undefined, maxHeight: 'min(24rem, 40svh)', placeholderFit: 'grow', startInset: 'text', disabled: false, settled: false, reserveTrailing: true, className: undefined });
   assert.equal(span.props.className, expected.className);
   assert.deepEqual(span.props.style, { maxHeight: 'min(24rem, 40svh)' });
-  for (const token of ['pointer-events-none', 'select-none', 'absolute', 'left-0', 'top-0', 'max-h-96', 'overflow-hidden', 'break-words', 'pl-[4px]', 'pr-[var(--cmp-trail-w,0px)]', 'text-muted', 'transition-none'])
+  for (const token of ['pointer-events-none', 'select-none', 'absolute', 'start-0', 'top-0', 'max-h-96', 'overflow-hidden', 'break-words', 'ps-[4px]', 'pe-[var(--cmp-trail-w,0px)]', 'text-muted', 'transition-none'])
     assert.ok(span.props.className.split(/\s+/).includes(token), token);
   assert.ok(!span.props.className.includes('truncate'), 'grow wraps');
   assert.equal(span.props.children.props.resolved.text, 'Describe a task');
@@ -652,9 +664,9 @@ test("ComposerShellEditor placeholder: cm's span and grow ghost (clamp: one trun
   // multiline (or a column that reserves the trailing actions): no trailing reserve; the start inset follows the layout.
   out = renderEditor({ placeholder: 'Describe a task', placeholderFit: 'grow' }, { multiline: true, startInset: 'none' });
   [span, box] = out.props.children;
-  assert.ok(!span.props.className.includes('pr-[var(--cmp-trail-w'));
-  assert.ok(!span.props.className.includes('pl-[4px]'));
-  assert.ok(!box.props.children[1][0].props.className.includes('pr-[var(--cmp-trail-w'));
+  assert.ok(!span.props.className.includes('pe-[var(--cmp-trail-w'));
+  assert.ok(!span.props.className.includes('ps-[4px]'));
+  assert.ok(!box.props.children[1][0].props.className.includes('pe-[var(--cmp-trail-w'));
   // a draft hides the span but keeps the ghost (the box keeps the placeholder's height, as cm's ze ignores emptiness)
   out = renderEditor({ placeholder: 'Describe a task', placeholderFit: 'grow', hasText: true });
   [span, box] = out.props.children;

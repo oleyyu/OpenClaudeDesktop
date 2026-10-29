@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -6,10 +6,28 @@ import path from 'node:path';
 import { createSavedEnvironments, takeSavedEnvironment } from '../electron/saved-environments.mjs';
 import React from 'react';
 import { availableEnvironmentName, readEnvironmentRecord, folderCheckoutSettings, sameFolderSettings } from '../electron/generated/environment-presets.mjs';
-import { environmentDraft, environmentDraftDirty, environmentTarget, environmentBranchOrder, environmentDefaultBranch, environmentBranchLabel,
-  environmentNotRepositoryNote, folderCheckout, environmentDialogClass, pinnedPopupHeightProperty, useCenteredEnvironmentHeight } from '../src/generated/code-current/environment-dialog-model.mjs';
+import { createServer } from 'vite';
+import react from '@vitejs/plugin-react';
+import * as Draft from '../src/generated/code-current/environment-dialog-draft.mjs';
 import { environmentModifierKeys } from '../src/generated/code-current/environment-modifier-keys.mjs';
+import { wslFolderPath } from '../src/generated/code-current/environment-wsl-folder.mjs';
 import { environmentWorkspace, environmentGitInfo, environmentFolderRoot } from '../src/saved-environment-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+
+// W9 cc-rest-env-model (3.6556.2, E42): the ca690a791 draft / branch / target model is plain code (environment-dialog-draft,
+// imported here directly); environment-dialog-model adds the compiled height hold Yt, which reaches view-tabs, so it loads
+// through Vite.
+const { environmentDraft, environmentDraftDirty, environmentTarget, environmentBranchOrder, environmentDefaultBranch, environmentBranchLabel,
+  environmentNotRepositoryNote, folderCheckout, environmentDialogClass, pinnedPopupHeightProperty } = Draft;
+const app = path.resolve(import.meta.dirname, '..');
+let server, DialogModel, useCenteredEnvironmentHeight;
+before(async () => {
+  server = await createServer({ configFile: false, root: app, plugins: [react()],
+    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  DialogModel = await server.ssrLoadModule('/src/generated/code-current/environment-dialog-model.mjs');
+  ({ useCenteredEnvironmentHeight } = DialogModel);
+});
+after(() => server?.close());
 
 async function fixture(context) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'saved-environments-'));
@@ -210,19 +228,21 @@ function heightHold(props) {
   const same = (a, b) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
   const pending = [];
   const dispatcher = {
+    useState(init) { const i = cursor++; return cells[i] ??= [typeof init === 'function' ? init() : init, () => {}]; },
     useRef(value) { const i = cursor++; return cells[i] ??= { current: value }; },
     useEffectEvent(fn) { const i = cursor++; const cell = cells[i] ??= { fn, call: (...a) => cell.fn(...a) }; cell.fn = fn; return cell.call; },
     useLayoutEffect(fn, deps) { const i = cursor++; const previous = cells[i]; if (!previous || !same(previous.deps, deps)) { cells[i] = { deps }; pending.push(() => { previous?.cleanup?.(); cells[i].cleanup = fn(); }); } },
   };
+  let renders = 0;
   const render = next => {
-    current = next ?? current; cursor = 0;
+    current = next ?? current; cursor = 0; renders += 1;
     const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, saved = internals.H;
-    internals.H = dispatcher;
+    internals.H = withMemoCache(dispatcher);
     try { useCenteredEnvironmentHeight(current); } finally { internals.H = saved; }
     for (const effect of pending.splice(0)) effect();
   };
   render();
-  return { render, unmount() { for (const cell of cells) cell?.cleanup?.(); } };
+  return { render, cache: () => cells[0]?.[0], renders: () => renders, unmount() { for (const cell of cells) cell?.cleanup?.(); } };
 }
 function fakeDialog(height) {
   const listeners = new Map(), observers = [];
@@ -241,11 +261,14 @@ function fakeDialog(height) {
 test('Ot: a view change or a press inside the dialog holds its height; a modifier-only key does not', () => {
   const dialog = fakeDialog(400);
   const hold = heightHold({ popup: dialog.popup, open: true, view: 'local main' });
+  const cache = hold.cache();
+  assert.ok(Array.isArray(cache) && cache.length === 13, 'Yt opens with J9(13)');
   assert.equal(dialog.style.getPropertyValue('--pinned-popup-open-height'), '');
   const inside = key => ({ key, repeat: false, composedPath: () => [dialog.popup] });
   dialog.listeners.get('keydown')(inside('Shift'));
   assert.equal(dialog.style.getPropertyValue('--pinned-popup-open-height'), '', 'modifier keys are ignored');
   hold.render({ popup: dialog.popup, open: true, view: 'local variables' });
+  assert.equal(hold.cache(), cache, 'the memo cache is the same array across renders');
   assert.equal(dialog.style.getPropertyValue('--pinned-popup-open-height'), '400px');
   dialog.resize(480);
   assert.equal(dialog.style.marginTop, '40px', 'the held dialog grows downward: half the growth is pushed below');
@@ -256,3 +279,85 @@ test('Ot: a view change or a press inside the dialog holds its height; a modifie
   assert.equal(fresh.style.getPropertyValue('--pinned-popup-open-height'), '300px');
   other.unmount();
 });
+
+// W9 cc-rest-env-model (3.6556.2, research/code-current-rest.md §3 P1, data/code-current-rest-map.json): ca690a791-C6pAwzdL
+// en/nn/_n and the targets that moved chunks.
+test('3.6556.2 en/nn: an opening variant record makes the draft dirty only when the record itself changed', () => {
+  const target = { kind: 'local', cwd: '/work/app' };
+  const plain = environmentDraft(target, ['local'], {}, 'Dev');
+  assert.deepEqual([plain.variantRecord, plain.variantDirty, plain.variantLoad, plain.variantBeneath], [{}, false, 'pending', {}]);
+  const record = { FOO: '1' };
+  const opening = environmentDraft(target, ['local'], {}, 'Dev', undefined, record);
+  assert.deepEqual(opening.variantRecord, record); assert.notEqual(opening.variantRecord, record, 'a copy of the record');
+  assert.equal(opening.variantDirty, true);
+  assert.equal(environmentDraftDirty(opening, { ...opening, variantRecord: { FOO: '1' } }), false, 'same record, compared by JSON');
+  assert.equal(environmentDraftDirty(opening, { ...opening, variantRecord: { FOO: '2' } }), true);
+  assert.equal(environmentDraftDirty(plain, { ...plain, variantDirty: true }), true, 'a newly dirtied record against a clean opening');
+});
+
+test('3.6556.2 _n: a WSL folder is the distro POSIX path (shared-20 QA), null outside the distro; the host never sets wslDistro', () => {
+  const draft = environmentDraft({ kind: 'local', cwd: '/work/app' }, ['local'], {}, 'Dev');
+  assert.deepEqual(environmentTarget(draft, false, false), { kind: 'local', cwd: '/work/app' });
+  assert.deepEqual(environmentTarget({ ...draft, folder: '\\\\wsl.localhost\\Ubuntu\\home\\me', wslDistro: 'Ubuntu' }, false, false), { kind: 'local', cwd: '/home/me', wslDistro: 'Ubuntu' });
+  assert.equal(environmentTarget({ ...draft, folder: '\\\\wsl$\\Debian\\srv', wslDistro: 'Ubuntu' }, false, false), null);
+  assert.equal(environmentTarget({ ...draft, folder: null }, true, false).cwd, '', 'folderless local (gn)');
+  assert.equal(wslFolderPath('/already/posix', 'Ubuntu'), '/already/posix');
+  assert.equal(wslFolderPath('\\\\wsl.localhost\\ubuntu', 'Ubuntu'), '/');
+});
+
+test('3.6556.2 shared-1 tK: the modifier keys include Fn / NumLock / OS / ScrollLock', () => {
+  assert.deepEqual([...environmentModifierKeys].sort(), ['Alt', 'AltGraph', 'CapsLock', 'Control', 'Fn', 'Meta', 'NumLock', 'OS', 'ScrollLock', 'Shift']);
+});
+
+test('generated: env-model targets read 3.6556.2; the dialog model re-exports the draft model plus Yt; E42 closure', async () => {
+  const read = file => fs.readFile(path.join(app, file), 'utf8');
+  const manifest = JSON.parse(await read('src/generated/code-current/manifest.json'));
+  const entry = target => manifest.modules.find(m => m.target === target);
+  for (const [target, file, bindings] of [
+    ['../../../electron/generated/environment-basename.mjs', 'shared-52-uHFNjl7C.js', ['nk']],
+    ['../../../electron/generated/environment-parent.mjs', 'shared-18-D3y8YMFN.js', ['lU']],
+    ['environment-modifier-keys.mjs', 'shared-1-BJhqMmkf.js', ['tK']],
+    ['environment-common-copy.mjs', 'shared-78-D5Fw2h0a.js', ['ZW', 'QW']],
+    ['environment-wsl-unc.mjs', 'shared-78-D5Fw2h0a.js', ['AQ']],
+    ['environment-wsl-folder.mjs', 'shared-20-mUr7IqZY.js', ['XA', 'QA']],
+    ['environment-dialog-draft.mjs', 'ca690a791-C6pAwzdL.js', null],
+    ['environment-dialog-model.mjs', 'ca690a791-C6pAwzdL.js', ['Yt', 'Kt', 'qt', 'Jt']],
+    ['environment-picker-keys.mjs', 'shared-46-BIbZBGFq.js', ['Gx', 'qx', 'Jx', 'Yx', 'iS', 'VL', 'zL']],
+    ['environment-machine-variables.mjs', 'c3f9f1667-DnyzRZCB.js', ['I', 'L', 'z', 'R', 'B', 'V']],
+  ]) {
+    const module = entry(target);
+    assert.equal(module?.referenceVersion, '3.6556.2', target);
+    assert.equal(path.basename(module.source), file, target);
+    assert.ok(module.source.includes('snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/'), target);
+    if (bindings) assert.deepEqual(module.bindings, bindings, target);
+  }
+  // presets / name-parts are 3.6556.2 too; session-rail / -kit / -changes import them from here (one copy, D1).
+  for (const [target, file] of [['../../../electron/generated/environment-presets.mjs', 'cd0cf5b5e-BCzJmEwZ.js'], ['environment-name-parts.mjs', 'c96d752d0-CWv_7-n9.js']]) {
+    assert.equal(entry(target)?.referenceVersion, '3.6556.2', target);
+    assert.equal(path.basename(entry(target).source), file, target);
+  }
+  for (const [area, target, local, from] of [['session-rail-kit', 'branch-chip.mjs', 'pL', '../code-current/environment-name-parts.mjs'],
+    ['session-rail-changes', 'pr-rows.mjs', 'pL', '../code-current/environment-name-parts.mjs'],
+    ['session-rail', 'environment-target.mjs', 'm', '../../../electron/generated/environment-presets.mjs'],
+    ['session-rail', 'environment-target.mjs', 'S', '../../../electron/generated/environment-presets.mjs']]) {
+    const module = JSON.parse(await read(`src/generated/${area}/manifest.json`)).modules.find(m => m.target === target);
+    assert.equal(module.imports.find(i => i.local === local)?.from, from, `${area}/${target} ${local}`);
+  }
+  const names = Object.keys(Draft).sort();
+  assert.deepEqual(Object.keys(DialogModel).sort(), [...names, 'useCenteredEnvironmentHeight'].sort());
+  assert.ok(!names.includes('environmentBodySpacing'), '3.6556.2 dropped the 2.42304.0 body spacing constant');
+  // E42: the draft model's relative import closure stays out of view-tabs and host adapters.
+  const seen = new Set();
+  const walk = async file => {
+    if (seen.has(file)) return; seen.add(file);
+    for (const [, spec] of (await read(file)).matchAll(/from\s+["'](\.[^"']+)["']/g)) await walk(path.relative(app, path.resolve(app, path.dirname(file), spec)));
+  };
+  await walk('src/saved-environment-model.mjs');
+  assert.ok(seen.has('src/generated/code-current/environment-dialog-draft.mjs'));
+  assert.deepEqual([...seen].filter(file => /view-tabs|\.jsx$/.test(file)), []);
+  const hold = await read('src/generated/code-current/environment-dialog-model.mjs');
+  assert.match(hold, /import \{\s*reactMemoCache as J9,/);
+  assert.match(hold, /import \{ ownerWindow as w \} from "\.\.\/view-tabs\/shared-25-DOWZRSlq\.js";/);
+  assert.match(await read('src/generated/code-current/environment-machine-variables.mjs'), /\.then\(z\)\s*\.catch\(R\)/);
+});
+

@@ -15,6 +15,31 @@ test('planner preserves custom ZDOTDIR and creates private, disposable nonce fil
  cleanupTerminalShell(launch);assert.equal(fs.existsSync(launch.nonceFile),false);cleanupTerminalShell(launch);
  for(const [shell,args] of [['/bin/sh',['-l']],['/bin/zsh',['-lc','echo ok']]])assert.equal(prepareTerminalShell({shell,args,env,directory}),null);
 });
+test('3.6556.2 planner: the env shape of each shell (zsh, bash, fish, pwsh) and the Windows Git Bash branch',()=>{
+ const {shellLaunch,shellKind,shellScripts}=require('../electron/generated/terminal-shell.cjs'),dir='/data/int',nonce='/data/int/spawn/abc';
+ const manifest=JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname,'../electron/generated/terminal-shell-manifest.json')));
+ assert.equal(manifest.reference,'3.6556.2');assert.equal(manifest.source,'../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-B80dqaMC.js');
+ assert.deepEqual(manifest.helpers.map(h=>[h.file.split('/').at(-1),h.export,h.as]),[['index.chunk-jPKPzV-P.js','P','t.P']]);
+ assert.deepEqual(shellLaunch('/bin/zsh',['-l'],dir,'/home/u rc',nonce),{kind:'zsh',args:['-l'],env:{ZDOTDIR:'/data/int/zsh',CLAUDE_DESKTOP_ZDOTDIR:'/data/int/zsh',CLAUDE_DESKTOP_USER_ZDOTDIR:'/home/u rc',CLAUDE_DESKTOP_TERMINAL_NONCE_FILE:nonce}});
+ assert.deepEqual(shellLaunch('/bin/zsh',['-l'],dir,undefined,nonce,true).env.CLAUDE_DESKTOP_TERMINAL_HEADLESS,'1');
+ assert.deepEqual(shellLaunch('/bin/bash',['-l'],dir,undefined,nonce),{kind:'bash',args:['--init-file','/data/int/bash/claude-desktop.bash'],env:{CLAUDE_DESKTOP_TERMINAL_NONCE_FILE:nonce}});
+ assert.deepEqual(shellLaunch('/opt/homebrew/bin/fish',['-l'],dir,undefined,"/n/it's"),{kind:'fish',args:['-l','-C',"source '/data/int/fish/claude-desktop.fish' '/n/it\\'s' 0"],env:{}});
+ // pwsh is only Windows' pwsh.exe / powershell.exe (w): a macOS pwsh has no integration.
+ const pwsh=shellLaunch('C:\\Program Files\\PowerShell\\7\\pwsh.exe',['-NoLogo'],dir,undefined,nonce);
+ assert.deepEqual([pwsh.kind,pwsh.args.slice(0,4),pwsh.env],['pwsh',['-NoLogo','-NoProfile','-NoExit','-Command'],{CLAUDE_DESKTOP_TERMINAL_NONCE_FILE:nonce,CLAUDE_DESKTOP_TERMINAL_HOOKS:'/data/int/pwsh/claude-desktop.ps1'}]);
+ assert.equal(shellLaunch('pwsh.exe',['-l'],dir,undefined,nonce),undefined,'pwsh takes only -NoLogo');
+ assert.equal(shellLaunch('/bin/zsh',['-lc','echo ok'],dir,undefined,nonce),undefined);
+ // C5-2: a trailing .exe is dropped from the kind, and Git Bash gets forward-slash paths.
+ for(const [shell,kind] of [['C:\\Git\\bin\\bash.exe','bash'],['C:\\Tools\\ZSH.EXE','zsh'],['pwsh.exe','pwsh'],['/usr/local/bin/pwsh',undefined],['/bin/sh',undefined]])assert.equal(shellKind(shell),kind,shell);
+ const git=shellLaunch('C:\\Git\\bin\\bash.exe',['-l'],'C:\\data\\int',undefined,'C:\\data\\int\\spawn\\abc');
+ assert.equal(git.env.CLAUDE_DESKTOP_TERMINAL_NONCE_FILE,'C:/data/int/spawn/abc');assert.ok(!git.args[1].includes('\\'),git.args[1]);
+ // C5-1: the bash script keeps the nonce file path and removes it again after /etc/profile (Git Bash has no rm before it).
+ const bash=shellScripts()['bash/claude-desktop.bash'];
+ assert.ok(bash.includes('__claude_desktop_nf=$CLAUDE_DESKTOP_TERMINAL_NONCE_FILE'));
+ assert.ok(bash.includes('command rm -f -- "$__claude_desktop_nf" || : >| "$__claude_desktop_nf"'));
+ assert.ok(bash.indexOf('[ -z "$__claude_desktop_nf" ] || command rm -f -- "$__claude_desktop_nf" 2>/dev/null')>bash.indexOf('. /etc/profile'));
+ assert.deepEqual(Object.keys(shellScripts()),['zsh/.zshenv','zsh/.zprofile','zsh/.zshrc','zsh/.zlogin','zsh/claude-desktop.zsh','bash/claude-desktop.bash','fish/claude-desktop.fish','pwsh/claude-desktop.ps1']);
+});
 for(const shell of ['zsh','bash'])for(const backend of ['pty','script'])test(`${shell}/${backend}: user startup preserved, commands automatically emit OSC markers and status`,{timeout:30000},async()=>{
  const home=fs.mkdtempSync(path.join(root,`${shell}-${backend}-`)),rc=path.join(home,'custom rc'),trace=path.join(home,'startup-trace');fs.mkdirSync(rc);
  const files={};const save=(name,text)=>{const file=path.join(shell==='zsh'?rc:home,name);files[file]=text;fs.writeFileSync(file,text);};

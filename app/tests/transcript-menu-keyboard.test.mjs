@@ -6,6 +6,7 @@ import React from 'react';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { OPEN_CONTEXT_MENU, contextMenuOrigin, preventMenuContextMenu } from '../src/transcript-context-menu-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // TT-06 / transcript-05 (2.42304.0 c96d752d0-BOCqU7c2.js): the row's onContextMenu reads `byKeyboard: e.button === -1`,
 // TNe re-dispatches a keyboard opening as PointerEvent("contextmenu", {button: -1}) and a pointer one as
@@ -103,7 +104,7 @@ function fixture(component, props, contexts) {
   const render = () => {
     cursor = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return (tree = component(props)); } finally { internal.H = old; }
   };
   render();

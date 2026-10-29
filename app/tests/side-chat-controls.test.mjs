@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { isSideChatReset } from '../src/side-chat-command.mjs';
 import * as controls from '../src/side-chat-controls.mjs';
 import { sideChatStore as store } from '../src/side-chat-store.mjs';
@@ -96,4 +98,20 @@ test('progress subscription is request-scoped and cannot overwrite a stopping or
 test('source closed state becomes idle without a spurious retry or no-answer error', async () => {
   store.clear('closed');await controls.askSideQuestion({threadId:'closed',question:'q',rpc:async()=>({text:'',closed:true})});
   const state=store.get('closed');assert.equal(state.status,'idle');assert.equal(state.started,false);assert.equal(state.progress,null);assert.equal(state.thinkingSince,null);assert.equal(state.retry,null);assert.equal(state.error,null);assert.equal(state.messages.at(-1).text,'q');
+});
+
+// w12b-terminal-preview-tabs TPT-7: 3.6556.2 cccc2cf0a SF/vF — the error row is vF.unsupported or vF.failed, never the
+// core's raw message (CF's catch maps any failure to "failed").
+test('a failed side question shows the official vF sentence, not the raw error', async () => {
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cccc2cf0a-DhZC33Gc.js'), 'utf8');
+  for (const feature of ['failed:{defaultMessage:"Couldn\\u2019t get an answer. Try again.",id:"gYPvvv2FIZ"}',
+    'unsupported:{defaultMessage:"Side chat isn\\u2019t supported in this session\\u2019s environment yet.",id:"TOHoonVIan"}',
+    'case"timeout":case"failed":return n.formatMessage(r.failed)']) assert.ok(official.includes(feature), feature);
+  store.clear('raw');
+  await controls.askSideQuestion({ threadId: 'raw', question: 'q', rpc: async () => { throw Object.assign(Error('socket hang up'), { code: -32000 }); }, subscribe: () => () => {} });
+  assert.equal(store.get('raw').error, 'Couldn’t get an answer. Try again.');
+  store.clear('none');
+  await controls.askSideQuestion({ threadId: 'none', question: 'q', rpc: async () => { throw Object.assign(Error('Method not found'), { code: -32601 }); }, subscribe: () => () => {} });
+  assert.equal(store.get('none').error, 'Side chat isn’t supported in this session’s environment yet.');
+  assert.equal(controls.sideQuestionErrorText('failed'), 'Couldn’t get an answer. Try again.');
 });

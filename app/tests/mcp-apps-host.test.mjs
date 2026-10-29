@@ -9,10 +9,13 @@ const require = createRequire(import.meta.url);
 const host = require("../electron/mcp-apps-host.cjs");
 const { ACTIONS, UNAVAILABLE, CORE_UNSUPPORTED, VISUALIZE_SERVER_UUID, MAX_CONTENTS_CHARS, filterUiMeta, appResourceUri, appToolsOf, parseReadReply, createMcpAppsHost } = host;
 const visualize = require("../electron/visualize-adapters.cjs");
+const { looseFeature } = await import("../scripts/official-3.6556.2.mjs");
 
-// R4g-mcp MA-4 (research-ext/X1 §6 MA-4, §3): the main-process MCP App bridge. Official 2.42304.0 main
-// index.chunk-CFJssAFf.js mcpReadResource / mcpListResources / mcpCallTool / readFromCliMcpAppServer / UA / zA and
-// index.chunk-B5tintml.js Un (n.lu) / In / Ln (n.pu) / Fn (n.uu) / Bn. The core is a fake owner: no process, no network.
+// R4g-mcp MA-4 (research-ext/X1 §6 MA-4, §3): the main-process MCP App bridge. Official 3.6556.2 main (w10-trans-mcp-v3-pins)
+// index.chunk-DNPOm2Zc.js readFromCliMcpAppServer / RA (read) / PA (server list) / widgetIpcRefusal / mcpCallTool and
+// index.chunk-DBIg6EBr.js Wn (_meta filter) / Ln (ui:// resource) / In (read reply) / Vn (App tools); 2.42304.0 had them in
+// index.chunk-CFJssAFf.js (UA / zA) and index.chunk-B5tintml.js (Un / In / Ln / Fn / Bn). The core is a fake owner: no
+// process, no network.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SESSION = "019a0000-0000-7000-8000-000000000001";
@@ -47,20 +50,36 @@ const weatherStatus = (meta = { ui: { resourceUri: APP_URI, csp: { connectDomain
 const codexOnly = (info) => info?.engine === undefined;
 const make = (owner, extra = {}) => createMcpAppsHost({ client: () => owner, session, coreSupportsMcpApps: codexOnly, ...extra });
 
-test("MA-4 official constants re-checked in 2.42304.0 main chunks (counts with split)", () => {
-  const build = path.join(here, "../../reference/installed-2.42304.0-20261017/asar/.vite/build");
+test("MA-4 official constants re-checked in 3.6556.2 main chunks (counts with split, R2 looseFeature for minified names)", () => {
+  const build = path.join(here, "../../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build");
   if (!fs.existsSync(build)) return; // reference tree is optional in packaged checkouts
-  const count = (file, needle) => fs.readFileSync(path.join(build, file), "utf8").split(needle).length - 1;
-  assert.equal(count("index.chunk-CFJssAFf.js", "async readFromCliMcpAppServer("), 1);
-  assert.equal(count("index.chunk-CFJssAFf.js", "var VA=3e4"), 1);
-  assert.equal(count("index.chunk-CFJssAFf.js", "RA=10485760"), 1);
-  assert.equal(count("index.chunk-CFJssAFf.js", "var LA=1048576"), 1);
-  assert.equal(count("index.chunk-CFJssAFf.js", "if(!i.startsWith(\"ui://\"))return BA()"), 1);
-  assert.equal(count("index.chunk-CFJssAFf.js", "`Tool '${r}' is not permitted`"), 1);
-  assert.equal(count("index.chunk-CFJssAFf.js", "\"Session not found\""), 1);
-  assert.equal(count("index.chunk-B5tintml.js", "var Vn=new Set([\"resourceUri\",\"visibility\",\"prefersBorder\"])"), 1);
-  assert.equal(count("index.chunk-B5tintml.js", ",Pe=1024,Fe=/^[\\x21-\\x7e]+(?: [\\x21-\\x7e]+)*$/"), 1);
-  assert.equal(count("index.chunk-muI2IV6k.js", "e.NotConnected=\"not_connected\",e.ReadFailed=\"read_failed\""), 1);
+  const text = (file) => fs.readFileSync(path.join(build, file), "utf8");
+  const count = (file, needle) => text(file).split(needle).length - 1;
+  const loose = (file, feature) => text(file).match(new RegExp(looseFeature(feature).source, "g"))?.length ?? 0;
+  const read = "index.chunk-DNPOm2Zc.js", tools = "index.chunk-DBIg6EBr.js", types = "index.chunk-CbnfBP-3.js";
+  assert.equal(count(read, "async readFromCliMcpAppServer("), 1);
+  // The server list cap (1 MB) and the read reply cap (10 MB), declared together; the list is dropped over the first.
+  assert.equal(loose(read, "var MA=1048576,NA=10485760;function PA(e,t,r=!1,i){"), 1);
+  assert.equal(loose(read, "return JSON.stringify(a).length>MA?[]:a}function FA(){return{contents:[],unavailable:t.O2.ReadFailed}}"), 1);
+  // The read deadline (30 s), the ui:// guard and the 10 MB check of the read contents.
+  assert.equal(loose(read, 'var IA=3e4,LA=Symbol("no reply before the deadline");async function RA(e,r,i,a,o=!1){if(!i.startsWith("ui://"))return FA();'), 1);
+  assert.equal(loose(read, "let c=await a(t.M3(e.readMcpResource(r,i),IA,LA));if(c===LA)return s(\"no reply\");"), 1);
+  assert.equal(loose(read, "return JSON.stringify(u).length>NA?FA():{contents:u.map("), 1);
+  // readFromCliMcpAppServer: not connected unless listed, read failed unless a tool's _meta names the uri.
+  assert.equal(loose(read, "?{contents:[],unavailable:t.O2.NotConnected}:s.tools.some((e=>n.Xu(e._meta)===i))?RA(o,r,i,"), 1);
+  // mcpCallTool: a CLI-owned server or a switched-off tool is not permitted; widgetIpcRefusal's "Session not found".
+  assert.equal(loose(read, "return OA(o?.cliMcpAppServerNames,n)||t.mq(o,n,r)?{content:[{type:\"text\",text:`Tool '${r}' is not permitted`}],isError:!0}"), 1);
+  assert.equal(loose(read, 'if(!r)return t.ert.warn(`[CCD] ${e}: Session ${JSON.stringify(n)} not found`),"Session not found";'), 1);
+  // The App part of a _meta, the ui:// resource, the read reply shape and the App tool limits.
+  assert.equal(loose(tools, 'var Hn=new Set(["resourceUri","visibility","prefersBorder"]);'), 1);
+  assert.equal(loose(tools, 'ui:Object.fromEntries(Object.entries(n).filter((([e])=>Hn.has(e)||t&&e==="csp")))'), 1);
+  assert.equal(loose(tools, 'var Mn="ui://",'), 1);
+  assert.equal(loose(tools, "contents:t.Mit(t.Bit({uri:t.Wit(),mimeType:t.Wit().optional(),text:t.Wit().optional(),blob:t.Wit().optional(),_meta:t.Hit(t.Wit(),t.qit()).optional()}))"), 1);
+  assert.equal(loose(tools, "tools:t.Mit(t.qit()).optional().catch(void 0)})).max(256)"), 1);
+  assert.equal(loose(tools, "var ke=2048,N=1024,P="), 1);
+  assert.equal(count(tools, "P=/^[\\x21-\\x7e]+(?: [\\x21-\\x7e]+)*$/,"), 1);
+  assert.equal(loose(tools, '.slice(0,128).filter((({name:e,_meta:t})=>e.length<=128&&P.test(e)&&(t.ui?.resourceUri??"").length<=2048&&(t["ui/resourceUri"]??"").length<=2048)).map((({name:e,description:t,_meta:n})=>({name:e,description:t?.slice(0,N),inputSchema:{type:"object"},_meta:n})))'), 1);
+  assert.equal(count(types, 'e.BlockedByPolicy="blocked_by_policy",e.NeedsSignIn="needs_sign_in",e.NotConnected="not_connected",e.ReadFailed="read_failed"'), 1);
   assert.deepEqual(UNAVAILABLE, { BlockedByPolicy: "blocked_by_policy", NeedsSignIn: "needs_sign_in", NotConnected: "not_connected", ReadFailed: "read_failed" });
   assert.equal(MAX_CONTENTS_CHARS, 10485760);
   assert.deepEqual(ACTIONS, ["mcp-app:servers", "mcp-app:read-resource", "mcp-app:list-resources", "mcp-app:call-tool", "mcp-app:sandbox-origin", "mcp-app:tool-states"]);

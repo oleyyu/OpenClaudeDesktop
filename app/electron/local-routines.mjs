@@ -3,6 +3,69 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import cron from './schedule-service.cjs';
 import { APPROVAL_LIMIT, sameRule, storedRule } from './routine-approvals.mjs';
+import { judgeFolder } from './cowork-runtime/folder-policy.mjs';
+
+// w13-coworkfn-schedtools (cwf-28, O-32): a task the scheduled-tasks tools create is stored under the taskId the model
+// names (3.6556.2 asar index.chunk-jPKPzV-P.js Hea / Uea: "Kebab-case identifier … Used as the directory name and storage
+// key. Auto-sanitized as a safety net."). Tasks the pages create keep their random ids.
+export function sanitizeTaskId(value) {
+  if (typeof value !== 'string') throw new Error('Invalid task name: must contain at least one alphanumeric character');
+  if (value.length > 500) throw new Error('Invalid task name: must be at most 500 characters');
+  const id = value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '').replace(/^[-_]+|[-_]+$/g, '');
+  if (!id || !/[a-z0-9]/.test(id)) throw new Error('Invalid task name: must contain at least one alphanumeric character');
+  return id.slice(0, 120).replace(/[-_]+$/, '');
+}
+/** Official _6: a taskId shown as a name ("check-inbox" → "Check inbox"). */
+export const taskIdName = id => String(id).replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());
+
+// w13-coworkfn-schedtools (cwf-29): a Cowork task's folder access (official LocalAgentModeSessions grantRoutineFolders /
+// allowRoutineFolders / revokeRoutineFolderGrant / getRoutineFolderGrant, index.chunk-BtY4LlaK.js): the folders its runs
+// may use besides its working folder. The official bounds (N: at most 16 folders, each at most 1024 characters); each
+// folder passes folder-policy.mjs judgeFolder (protected locations, the app's own data and Cowork's storage refused).
+export const FOLDER_GRANT_LIMIT = 16;
+const FOLDER_PATH_LIMIT = 1024;
+/** The folders a Cowork task's run session gets: its working folder (unless it is the task's scratch folder) and its grant. */
+export function routineFolders(task, dataDir) {
+  if (!task || task.kind === 'code') return [];
+  const scratch = dataDir ? path.join(dataDir, 'scheduled-tasks') : null;
+  const cwd = typeof task.cwd === 'string' && task.cwd && !(scratch && (task.cwd === scratch || task.cwd.startsWith(scratch + path.sep))) ? [task.cwd] : [];
+  return [...new Set([...cwd, ...(Array.isArray(task.folders) ? task.folders : [])])];
+}
+
+// w13-close-cowork-ui (coworkui-scheduled-01, E59): a Cowork task's instructions folder, as the official scheduler keeps
+// one per task (3.6556.2 asar index.chunk-jPKPzV-P.js Lea `join(userData, "scheduled-tasks")`, the task file
+// `<base>/<taskId>/SKILL.md` written by Gea(taskId, Kea(description), prompt):
+// `---\nname: ${e}\ndescription: ${t}\n${r?`model: ${r}\n`:""}---\n\n${n}`). The list and the detail page offer "Also
+// delete the folder that holds this task’s instructions" for every local task (ccd3f68fe ho `J!==null&&du(J)`, ps
+// canRemoveFiles); deleting with removeFiles takes the folder away like Ita: only a direct child of the base, named
+// /^[a-z0-9_-]+$/, never through a symlink. A task saved without a working folder runs in this folder (its scratch).
+export const TASK_FILE = 'SKILL.md';
+export function taskFilesDir(dataDir, id) {
+  if (typeof dataDir !== 'string' || !dataDir || typeof id !== 'string' || !/^[a-z0-9_-]+$/.test(id)) return null;
+  return path.join(dataDir, 'scheduled-tasks', id);
+}
+const oneLine = value => String(value ?? '').replace(/[\r\n\u2028\u2029]+/g, ' ').trim(); // Kea
+/** The official task file text (Gea without a model, as createScheduledTask writes it). */
+export const taskFileText = task => `---\nname: ${task.id}\ndescription: ${oneLine(task.description)}\n---\n\n${task.prompt}`;
+async function writeTaskFile(dataDir, task) {
+  const dir = taskFilesDir(dataDir, task.id);
+  if (!dir) return false;
+  try {
+    await fs.mkdir(dir, { recursive: true });
+    if ((await fs.lstat(dir)).isSymbolicLink()) return false;
+    await fs.writeFile(path.join(dir, TASK_FILE), taskFileText(task), { mode: 0o600 });
+    return true;
+  } catch { return false; }
+}
+/** Ita: remove a task's instructions folder. True when it was removed. */
+export async function removeTaskFiles(dataDir, id) {
+  const dir = taskFilesDir(dataDir, id);
+  if (!dir || path.dirname(dir) !== path.join(dataDir, 'scheduled-tasks')) return false;
+  let stat;
+  try { stat = await fs.lstat(dir); } catch { return false; }
+  if (stat.isSymbolicLink() || !stat.isDirectory()) return false;
+  try { await fs.rm(dir, { recursive: true, force: true }); return true; } catch { return false; }
+}
 
 const running = run => ['starting', 'running'].includes(run.status);
 const copy = value => structuredClone(value);
@@ -76,7 +139,10 @@ export function jitterSecondsForTask(task, { now = Date.now(), maxMinutes = DISP
 // Desktop routines are durable definitions, unlike the session-only CronCreate tool.
 // Missed occurrences are skipped on restart and kept in missedRuns. A wake from sleep dispatches at most one
 // occurrence per routine; a still-running routine skips that occurrence altogether.
-export function createLocalRoutines({ getState, commit, launch, dataDir, approveFolder,
+// confirmFolders({ name, folders }) → Promise<boolean> (w13-close-main-process, E63 coworkfn-schedtools-06): the native
+// consent a task's new folders need when the renderer grants them (main.cjs, folder-policy.mjs createRoutineFolderConsent);
+// a model's create_scheduled_task already showed them on its card, and a run's "always" answered its own card.
+export function createLocalRoutines({ getState, commit, launch, dataDir, approveFolder, confirmFolders = null,
   captureOptions, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout, jitterMaxMinutes = DISPATCH_JITTER_MAX_MINUTES }) {
   let timer, disposed = false, started = false;
   // Official _pendingJitterTimeouts: an on-time cron occurrence waits its jitter here; the task keeps its stored
@@ -236,9 +302,17 @@ export function createLocalRoutines({ getState, commit, launch, dataDir, approve
   }
   async function request(p) {
     if (p.action === 'list') return list(p.kind).map(view);
+    if (p.action === 'folders') return folderGrant(p.id);
     if (disposed) throw new Error('The scheduler is shutting down.');
+    if (p.action === 'grant-folders') return grantFolders(p.id, p.folders, { addOnly: p.addOnly === true, confirm: confirmFolders });
+    if (p.action === 'revoke-folder') return view(revokeFolder(p.id, p.folder));
     if (p.action === 'run') return run(p.id);
-    if (p.action === 'delete') { find(p.id); clearJitter(p.id); write(rows().filter(task => task.id !== p.id)); return { deleted: true }; }
+    if (p.action === 'delete') {
+      const task = find(p.id); clearJitter(p.id); write(rows().filter(value => value.id !== p.id));
+      // ccd3f68fe updateScheduledTaskStatus(id, "deleted", removeFiles): the instructions folder too, when asked (Cowork).
+      if (p.removeFiles === true && kindOf(task) === 'cowork') return { deleted: true, filesRemoved: await removeTaskFiles(dataDir, task.id) };
+      return { deleted: true };
+    }
     if (p.action === 'remove-approval') return view(removeApproval(p));
     if (p.action === 'toggle') {
       const task = find(p.id);
@@ -278,7 +352,10 @@ export function createLocalRoutines({ getState, commit, launch, dataDir, approve
     if (useWorktree && branch !== undefined && !validSourceBranch(branch)) throw new Error('Enter a valid branch name.');
     // Official Code form (c0fd2fda3 tn) refuses to save without a folder; no scratch directory for Code.
     if (kind === 'code' && !p.folder && !previous?.cwd) throw new Error('Select a folder.');
-    const id = previous?.id ?? randomUUID();
+    // w13-coworkfn-schedtools: a model-created task's taskId (sanitizeTaskId); an id already in use is refused.
+    const id = previous?.id ?? (p.taskId === undefined ? randomUUID() : sanitizeTaskId(p.taskId));
+    const taken = () => { if (!previous && rows().some(task => task.id === id)) throw new Error(`A scheduled task with ID "${id}" already exists.`); };
+    taken();
     let cwd = previous?.cwd;
     if (p.folder) {
       if (typeof p.folder !== 'string' || !path.isAbsolute(p.folder)) throw new Error('Choose a directory.');
@@ -288,6 +365,7 @@ export function createLocalRoutines({ getState, commit, launch, dataDir, approve
     // Re-read after I/O: a concurrent run, pause or deletion must not be overwritten.
     const current = previous ? find(id) : null;
     if (!current && rows().length >= 100) throw new Error('You can save up to 100 scheduled tasks.');
+    taken();
     const enabled = p.enabled ?? current?.enabled ?? true;
     // R4g-routines RT6: a task moved to another folder loses its Always allowed rules (official update: `r.moved&&(n.approvedPermissions=void 0)`).
     const { sourceBranch: _branch, ...kept } = current ?? {};
@@ -304,14 +382,16 @@ export function createLocalRoutines({ getState, commit, launch, dataDir, approve
       enabled, nextRunAt: keepPending ? current.nextRunAt : enabled ? next : null, createdAt: current?.createdAt ?? now(), updatedAt: now(), runs: current?.runs ?? [],
       missedRuns: current?.missedRuns ?? [] };
     write(current ? rows().map(task => task.id === id ? value : task) : [...rows(), value]);
+    if (kind === 'cowork') await writeTaskFile(dataDir, value);
     return view(value);
   }
   // R4g-routines RT6 (WI-6): a Code task's Always allowed rules (routine-approvals.mjs). Only main adds one, after the user
   // answered a run's card "Allow for this session"; the page removes them (official removeApprovedPermission: no
   // ruleContent removes every rule of the tool, otherwise the rules with that official key).
+  // w13-coworkfn-approvals: a Cowork task's run keeps them too (Dl8 persistAlwaysAllowDecision addApprovedPermissions).
   function rememberApproval(id, rule) {
     const task = rows().find(value => value.id === id), stored = storedRule(rule);
-    if (!task || kindOf(task) !== 'code' || !stored) return false;
+    if (!task || !stored) return false;
     const rules = Array.isArray(task.approvedPermissions) ? task.approvedPermissions : [];
     if (rules.some(value => sameRule(storedRule(value), stored)) || rules.length >= APPROVAL_LIMIT) return false;
     replace(id, value => ({ ...value, approvedPermissions: [...(Array.isArray(value.approvedPermissions) ? value.approvedPermissions : []), { ...stored, approvedAt: now() }] }));
@@ -330,11 +410,75 @@ export function createLocalRoutines({ getState, commit, launch, dataDir, approve
     });
     return copy(find(task.id));
   }
+  // w13-coworkfn-schedtools (cwf-29): the Cowork task's folder grant. grant replaces it (official grantRoutineFolders),
+  // addOnly adds to it (allowRoutineFolders, O-38: a run's folder request answered "always"); a folder that fails
+  // judgeFolder is left out and named in `rejected`. revoke with no folder clears the grant (revokeRoutineFolderGrant).
+  // confirm: the consent for the folders the grant adds (BtY4LlaK grantRoutineFolders P(): only folders not granted yet
+  // are asked about; declined, the additions are dropped and the removals still apply).
+  async function grantFolders(id, folders, { addOnly = false, confirm = null } = {}) {
+    const task = find(id);
+    if (kindOf(task) !== 'cowork') throw new Error('Folder access is only for Cowork tasks.');
+    if (!Array.isArray(folders) || folders.length > FOLDER_GRANT_LIMIT || folders.some(dir => typeof dir !== 'string' || !dir || dir.length > FOLDER_PATH_LIMIT))
+      return { granted: [], rejected: [], consentUnavailable: true };
+    const granted = [], rejected = [];
+    for (const dir of folders) {
+      const judged = await judgeFolder(dir, { userData: dataDir });
+      if (judged.ok) { if (!granted.includes(judged.canonical)) granted.push(judged.canonical); }
+      else rejected.push({ path: dir, message: judged.message });
+    }
+    // Re-read after I/O: the task may have been deleted meanwhile.
+    const current = rows().find(value => value.id === id);
+    if (!current) throw new Error('Scheduled task not found.');
+    const before = Array.isArray(current.folders) ? current.folders : [];
+    let next = [...new Set(addOnly ? [...before, ...granted] : granted)];
+    if (next.length > FOLDER_GRANT_LIMIT) return { granted: [], rejected, consentUnavailable: true };
+    const added = next.filter(dir => !before.includes(dir));
+    if (added.length && typeof confirm === 'function') {
+      let allowed = false;
+      try { allowed = (await confirm({ name: current.name || taskIdName(current.id), folders: added })) === true; } catch { allowed = false; }
+      if (!allowed) {
+        next = next.filter(dir => before.includes(dir));
+        if (!rows().some(value => value.id === id)) throw new Error('Scheduled task not found.');
+        if (next.length !== before.length) replace(id, value => ({ ...value, folders: next, updatedAt: now() }));
+        return { granted: granted.filter(dir => before.includes(dir)), rejected, declined: true };
+      }
+      if (!rows().some(value => value.id === id)) throw new Error('Scheduled task not found.');
+    }
+    replace(id, value => ({ ...value, folders: next, updatedAt: now() }));
+    return { granted, rejected };
+  }
+  // w13-close-main-process (E63 coworkfn-engine-04): a Cowork task saved for the Cowork VM engine moves to the core Cowork
+  // runs on now (routine-runner.mjs migrateTask): only its coreId, model and effort change.
+  function migrateOptions(id, options) {
+    const task = find(id);
+    if (kindOf(task) !== 'cowork' || !options || typeof options.coreId !== 'string' || !options.coreId || typeof options.model !== 'string' || !options.model) return copy(task);
+    replace(id, value => ({ ...value, options: { ...value.options, coreId: options.coreId, model: options.model,
+      ...(Object.hasOwn(options, 'effort') ? { effort: options.effort ?? null } : {}) }, updatedAt: now() }));
+    return copy(find(id));
+  }
+  function revokeFolder(id, folder) {
+    const task = find(id);
+    const before = Array.isArray(task.folders) ? task.folders : [];
+    if (folder !== undefined && folder !== null && typeof folder !== 'string') throw new Error('Choose a folder to remove.');
+    const next = folder == null ? [] : before.filter(dir => dir !== folder && dir !== path.resolve(folder));
+    if (next.length !== before.length) replace(id, value => ({ ...value, folders: next, updatedAt: now() }));
+    return find(id);
+  }
+  function folderGrant(id) {
+    const task = find(id);
+    return Array.isArray(task.folders) ? [...task.folders] : [];
+  }
+  /** The task whose run started this session (official scheduledTaskId of a run session), or null. */
+  function taskOfSession(threadId) {
+    if (typeof threadId !== 'string' || !threadId) return null;
+    const task = rows().find(value => value.runs?.some(run => run.threadId === threadId));
+    return task ? copy(task) : null;
+  }
   function list(kind) {
     if (kind === undefined) return copy(rows());
     if (!KINDS.includes(kind)) throw new Error('Unknown scheduled task kind.');
     return copy(rows().filter(task => kindOf(task) === kind));
   }
-  return { start, request, observe, tick, list, rememberApproval,
+  return { start, request, observe, tick, list, rememberApproval, grantFolders, revokeFolder, folderGrant, taskOfSession, migrateOptions,
     dispose() { disposed = true; clearTimer(timer); for (const id of [...jitters.keys()]) clearJitter(id); } };
 }

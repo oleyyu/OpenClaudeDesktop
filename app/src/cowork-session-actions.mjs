@@ -102,8 +102,9 @@ export function lastHumanMessage(items = []) {
 /**
  * The Cowork session actions of one session view.
  * @param {object} host
- * @param {string} host.sessionId the Cowork session (cw-…)
- * @param {object|null} host.bridge coworkRewindBridge(call, {coworkEnabled}) (rewindV2 → IPC cowork-rewind)
+ * @param {string} host.sessionId the Cowork session (a cw-… VM session, or a core thread on the Cowork surface)
+ * @param {object|null} host.bridge coworkRewindBridge(call, {cowork}) (rewindV2 → IPC cowork-rewind; main stops a live turn
+ *   first, as rewindSessionV2 does)
  * @param {{canRewindToMessage: boolean, canEditOrRestart: boolean, canSessionRewind: boolean}} host.capabilities
  *   coworkRewindCapabilities (mk Lt / Bt / Vt)
  * @param {() => boolean} host.isRunning uo.current: the session has a live turn

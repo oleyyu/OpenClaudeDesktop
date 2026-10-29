@@ -1,10 +1,12 @@
 // R2-composer (composer-helpers-latest, research/composer.md §3.7/§3.8/§2): pins for the three composer helpers that
-// scripts/extract-code-ui-current.mjs emits from the 2.42304.0 renderer. The emit there slices a hand-listed binding
+// scripts/extract-code-ui-current.mjs emits from the renderer. w3-composer-host moved them to 3.6556.2 (migration
+// research/composer.md §1.3, data/composer-binding-map.json codeCurrentComposerPins; the binding map's JD -> $C is
+// wrong, the call site `if (!FO) { FO = !0; … }` in WO makes it FO). The emit there slices a hand-listed binding
 // set; this module checks, before that emit runs, that the listed set is exactly the same-chunk closure of the roots the
 // helper exports (minus the locals the emit replaces with host adapters), that every binding still carries feature
 // strings of its original text, that the chunk still exports the root under the official alias consumers import, and
 // that every replaced import still names the same vendor export. A version bump that re-points a minified name (the
-// old names are reused for other values in 2.42304.0) fails here instead of emitting the wrong binding.
+// old names are reused for other values across versions) fails here instead of emitting the wrong binding.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -12,37 +14,40 @@ import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 export const composerHelperPins = {
-  // shared-frame en (exported `hd`; 2.37337.1 Xt): click-to-focus is allowed in Electron, otherwise not on touch.
-  // Jt/In and Xt/Ln are content-identical pairs in the chunk; the closure of en selects Jt and Xt.
+  // shared-frame rn (exported `If`; 2.42304.0 en / hd, 2.37337.1 Xt): click-to-focus is allowed in Electron, otherwise
+  // not on touch. The bodies are the 2.42304.0 ones under new names (Jt/Yt/Xt/Zt/en -> Zt/Qt/$t/en/rn).
   'composer-focus-capability.mjs': {
-    source: 'shared-frame-BfjMqbuN.js', roots: ['en'], bindings: ['Jt', 'Yt', 'Xt', 'Zt', 'en'], officialExports: { hd: 'en' },
+    source: 'shared-frame-6jtSkIit.js', roots: ['rn'], bindings: ['Zt', 'Qt', '$t', 'en', 'rn'], officialExports: { If: 'rn' },
     features: {
-      Jt: ['"(pointer: coarse)"'], Yt: ['" Electron/"'], Xt: ['typeof window > "u" ? void 0 : window'],
-      Zt: ['let n = Xt(t);', 'n.matchMedia(e).matches'], en: ['let t = Xt(e);', 'includes(Yt)', 'Zt(Jt, t)', 'maxTouchPoints'],
+      Zt: ['"(pointer: coarse)"'], Qt: ['" Electron/"'], $t: ['typeof window > "u" ? void 0 : window'],
+      en: ['let n = $t(t);', 'typeof n?.matchMedia == "function"', 'n.matchMedia(e).matches'],
+      rn: ['let t = $t(e);', 'includes(Qt)', 'en(Zt, t)', 'maxTouchPoints'],
     },
   },
-  // c227f4d5e pD/JD/tO/rO/uO (2.37337.1 ca80fca8d QA/Nj/Bj/Hj/Yj): the @ menu merges this session's output files.
+  // c227f4d5e QD/FO/HO/WO/ZO (2.42304.0 pD/JD/tO/rO/uO; 2.37337.1 ca80fca8d QA/Nj/Bj/Hj/Yj): the @ menu merges this
+  // session's output files. 3.6556.2 adds HO/ZO's `n = !0` (backslashes read as separators).
   'mention-output-files.mjs': {
-    source: 'c227f4d5e-Ba-r--Rl.js', roots: ['rO', 'tO'], bindings: ['pD', 'JD', 'tO', 'rO', 'uO'],
-    // oO/aO are CDS Icon elements (iO) of the Folder/File glyphs; the host option carries the icon name instead.
-    hosts: { oO: ['iO("directory")'], aO: ['iO("file")'] },
-    imports: { ka: 'shared-104-Cqo2-vQh.js:ul', yh: 'c68c4283d-CPuRD0vx.js:t' },
-    dependencies: { 'shared-104-Cqo2-vQh.js:ul': ['residentModule()'], 'c68c4283d-CPuRD0vx.js:t': ['feature:"ccd"'] },
+    source: 'c227f4d5e-B-FYKrwT.js', roots: ['WO', 'HO'], bindings: ['QD', 'FO', 'HO', 'WO', 'ZO'],
+    // KO/qO are CDS Icon elements (GO) of the File/Folder glyphs; the host option carries the icon name instead.
+    hosts: { KO: ['GO("file")'], qO: ['GO("directory")'] },
+    imports: { Ma: 'shared-104-CTONUSaz.js:Fc', Rg: 'c68c4283d-CWbOoVxS.js:t' },
+    dependencies: { 'shared-104-CTONUSaz.js:Fc': ['residentModule()'], 'c68c4283d-CWbOoVxS.js:t': ['feature:"ccd"'] },
     features: {
-      pD: ['"ccd-files"'], JD: ['JD = !1'], tO: ['providerId: pD', 'icon: r ? oO : aO', 'renderedText: t'],
-      iO: ['name: "Folder", size: "auto"', 'name: "File", size: "auto"'],
-      rO: ['let r = ka();', 'new r.FileIndex()', '.slice(0, 50)', '"composer_mention_outputs_failed"'], uO: ['lastIndexOf("/")'],
+      QD: ['"ccd-files"'], FO: ['FO = !1'], HO: ['providerId: QD', 'icon: i ? qO : KO', 'renderedText: t', 'ZO(r, n)'],
+      GO: ['name: "Folder", size: "auto"', 'name: "File", size: "auto"'],
+      WO: ['let r = Ma();', 'new r.FileIndex()', '.slice(0, 50)', '"composer_mention_outputs_failed"', 'if (!FO) {', 'FO = !0;'],
+      ZO: ['lastIndexOf("/")', 'e.replace(/\\\\/g, "/")'],
     },
   },
-  // shared-28 Bv…Ab (2.37337.1 fv…fy): the IME composition edge guard and composition-before-paste.
+  // shared-28 Wb…RS (2.42304.0 Bv…Ab; 2.37337.1 fv…fy): the IME composition edge guard and composition-before-paste.
   'composer-composition.mjs': {
-    source: 'shared-28-DcgD7xXH.js', roots: ['Jv', 'Ab', 'Db', 'Wv', 'Bv', 'Uv'],
-    bindings: ['Bv', 'Vv', 'Hv', 'Uv', 'Wv', 'Gv', 'Kv', 'qv', 'zv', 'Jv', 'Cb', 'wb', 'Tb', 'Eb', 'Db', 'Ob', 'kb', 'Ab'],
+    source: 'shared-28-DNYlf4wu.js', roots: ['Qb', 'RS', 'FS', 'Jb', 'Wb', 'qb'],
+    bindings: ['Wb', 'Gb', 'Kb', 'qb', 'Jb', 'Yb', 'Xb', 'Zb', 'Ub', 'Qb', 'jS', 'MS', 'NS', 'PS', 'FS', 'IS', 'LS', 'RS'],
     // Telemetry (the editor error sink, its error builder and the paste-fallback reporter) becomes a no-op.
-    hosts: { Rv: ['e?.onError', '[@ant/cds/editor]'], Lv: ['let n = Error(e);'], Sb: ['source: "paste-fallback"'] },
+    hosts: { Hb: ['e?.onError', '[@ant/cds/editor]'], Vb: ['let n = Error(e);'], AS: ['source: "paste-fallback"'] },
     imports: {
-      wd: 'vendor-prosemirror-SdeAXoBV.js:U', bd: 'vendor-prosemirror-SdeAXoBV.js:H', Sd: 'vendor-prosemirror-SdeAXoBV.js:K',
-      Ed: 'vendor-prosemirror-SdeAXoBV.js:W', ef: 'vendor-tiptap-B2NVTMBY.js:j',
+      pf: 'vendor-prosemirror-SdeAXoBV.js:U', lf: 'vendor-prosemirror-SdeAXoBV.js:H', df: 'vendor-prosemirror-SdeAXoBV.js:K',
+      hf: 'vendor-prosemirror-SdeAXoBV.js:W', Hf: 'vendor-tiptap-BH09Geqg.js:j',
     },
     // PluginKey / Plugin / TextSelection / Selection of prosemirror-state, and the Tiptap Extension class.
     dependencies: {
@@ -50,15 +55,17 @@ export const composerHelperPins = {
       'vendor-prosemirror-SdeAXoBV.js:H': ['=class{constructor(e){this.spec=e,this.props={}'],
       'vendor-prosemirror-SdeAXoBV.js:K': ['get $cursor(){'],
       'vendor-prosemirror-SdeAXoBV.js:W': ['=class{constructor(e,t,n){this.$anchor=e,this.$head=t'],
-      'vendor-tiptap-B2NVTMBY.js:j': ['this.type="extension"'],
+      'vendor-tiptap-BH09Geqg.js:j': ['this.type="extension"'],
     },
     officialExports: {},
     features: {
-      Bv: ['"compositionEdgeGuard"'], Vv: ['Bv.getState(e.state)?.pos'], Uv: ['inclusive === !1'], Wv: ['"\\u200B"', '"addToHistory", !1'],
-      Kv: ['e.mapping.maps.forEach'], qv: ['"composition-edge-guard.threw"'], zv: ['e.getMeta("history$") !== void 0'],
-      Jv: ['ef.create({', 'name: "compositionEdgeGuard"', 'setTimeout(t, 25, n)', 'new bd({', 'instanceof Sd', 'r.keyCode !== 229'],
-      Cb: ['Sb('], Tb: ['"focusout"'], Db: ['"compositionend" ? "" : t.data'], Ob: ['new CompositionEvent("compositionend"', 'Ed.fromJSON'],
-      Ab: ['t.type === "paste"', '/Android \\d/', 'Ob(e)', 'kb.set(t, e.state.doc)'],
+      Wb: ['"compositionEdgeGuard"'], Gb: ['Wb.getState(e.state)?.pos'], Kb: ['/Google Inc/.test(navigator.vendor)'],
+      qb: ['inclusive === !1'], Jb: ['"\\u200B"', '"addToHistory", !1'], Yb: ['e.domObserver.flush()'],
+      Xb: ['e.mapping.maps.forEach'], Zb: ['"composition-edge-guard.threw"'], Ub: ['e.getMeta("history$") !== void 0'],
+      Qb: ['Hf.create({', 'name: "compositionEdgeGuard"', 'setTimeout(t, 25, n)', 'new lf({', 'instanceof df', 'r.keyCode !== 229'],
+      jS: ['AS('], MS: ['e.stopImmediatePropagation()'], NS: ['"focusout"'], PS: ['new WeakMap()'],
+      FS: ['"compositionend" ? "" : t.data'], IS: ['new CompositionEvent("compositionend"', 'hf.fromJSON'], LS: ['new WeakMap()'],
+      RS: ['t.type === "paste"', '/Android \\d/', 'IS(e)', 'LS.set(t, e.state.doc)'],
     },
   },
 };

@@ -1,17 +1,24 @@
-// Extract the 2.42304.0 compact Chat/Code mode switch (research/app-switch.md W1, decision D11): shared-21 _C
-// (exported `js`, the segment builder over the CDS SegmentedControl), its activity dot LS/RS, copy QS/ZS, the arrow
-// chord hint bC and the size hook uC; shared-18 yx (exported `au`, the `df-app-switch` frame that tags every
-// `[role='radio']` with its mode) with the clay dot and hub-look helpers; plus the small original leaves they read.
+// Extract the 3.6556.2 compact Chat/Code mode switch (research/app-switch.md W1, decision D11; 3.6556.2 migration
+// titlebar-frame §3.3, TF-C13/C14): shared-21 lT (exported `xc`, the segment builder over the CDS SegmentedControl),
+// its activity dot kw/Aw (with the compiler-hoisted dT indicator and uT value map), copy Uw/Ww, the arrow chord hint mT
+// and the size hook nT; shared-18 jC (exported `hu`, the `df-app-switch` frame that tags every `[role='radio']` with its
+// mode) with the clay dot and hub-look helpers; plus the small original leaves they read.
+//
+// 3.6556.2 is React Compiler output: every component reads the compiler's memo cache (shared-frame J9 = vendor-frame
+// `Oo`, react/compiler-runtime `c`) and the J/K/I/Z slot helpers. Those, like the CDS SegmentedControl, Pulse, density
+// hook, clsx, merged refs and ownerWindow, are published once by the shared view-tabs graph (E3/D1) and imported from it
+// by their semantic names; nothing here slices a second copy. The 2.42304.0 leaves `owner-window.mjs` (shared-25
+// ownerWindow) and `cds-density.mjs` (shared-frame useCdsDensity) are therefore no longer emitted: view-tabs publishes
+// both. Every exported name the other generated areas import (sidebar-sections: ClayStatusDot, hubAttention) is kept.
 //
 // Every emitted binding is an original top-level declaration sliced from the prettier-formatted source. Each module's
 // bindings are the reachable closure of its roots (Babel scope analysis), so nothing is hand-picked and a renamed or
 // re-pointed minified import fails generation instead of silently binding the wrong value. An import (or a same-chunk
 // binding) resolves, in this order, to: a named host adapter in src/source-app-switch-adapters.jsx (feature-checked),
-// a verified React export of vendor-frame, a semantic public name of the shared view-tabs graph (D1: the CDS
-// SegmentedControl, Pulse, density context and merged refs exist once, in src/generated/view-tabs), or another module
-// generated here. Nothing else is accepted.
+// a verified React export of vendor-frame (official-3.6556.2.mjs assertVendorAlias / assertCompilerRuntime), a semantic
+// public name of the shared view-tabs graph, or another module generated here. Nothing else is accepted.
 //
-// The container (shared-21 vC, exported `Ms`) and its call site (shared-22 DN) read the desktop router, GrowthBook,
+// The container (shared-21 fT, exported `Sc`) and its call site (shared-22 GI) read the desktop router, GrowthBook,
 // telemetry and the code-entitlement store, so they are not emitted. Their host replica lives in
 // src/source-app-switch.jsx; `callSites` below pins the exact original text that replica follows, so a version bump
 // that changes the container or the titlebar wrapper stops here.
@@ -19,107 +26,113 @@
 // D0: own generator, own output folder (src/generated/app-switch), own scripts/verify-gen-app-switch.mjs.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import * as official from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+const { referenceVersion, referenceSnapshot, looseFeature } = official;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/app-switch');
-const viewTabs = path.join(root, 'src/generated/view-tabs');
 const publicAssets = path.join(root, 'public');
 const adapterModule = '../../source-app-switch-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+// R2/E5: a feature with minified names is written through looseFeature() (identifiers of up to three characters
+// generalised, recorded as {loose}); plain strings are matched literally (whitespace-normalised).
+const loose = text => ({ loose: text });
 
-// vendor-frame re-exports React; each alias is checked against its `local=<ns>.<member>` assignment.
+// vendor-frame re-exports React; each alias is checked against official.reactAliases (R3: `Co` is useRef and `Ha` jsx
+// in 3.6556.2; the 2.42304.0 aliases point at other members now) and its top-level `local=<ns>.<member>` declarator.
 const vendor = {
-  'vendor-frame-DfPJ1QmD.js': {
-    So: ['react', 'useRef'], yo: ['react', 'useLayoutEffect'], bo: ['react', 'useMemo'], do: ['react', 'useContext'],
-    Va: ['react/jsx-runtime', 'jsx'], eo: ['react', 'createContext'],
-  },
+  [official.vendorFrame]: Object.fromEntries(['Co', 'bo', 'xo', 'fo', 'Ha', 'to', 'Oo'].map(alias => [alias, official.reactAliases[alias]])),
 };
 // Host dependencies (checked first). `features` must appear in the same-chunk closure of the original binding.
 const adapters = {
   // react-intl useIntl -> the local catalog (source-code-start-adapters.jsx useStartIntl: t() + intl-messageformat).
-  'vendor-intl-Db7hDWRO.js': { p: { name: 'useIntl', features: ['[React Intl]'] } },
+  [official.vendorIntl]: { p: { name: 'useIntl', features: ['[React Intl]'] } },
+  // shared-52 th (exported `og`): whether a fizzy-lake part is on, `eh().parts.includes(e)` over the root's
+  // data-cds-fizzy-lake attribute filtered by the allow-list Qm, which 3.6556.2 ships empty (`Qm = []`). E12/R15:
+  // the host keeps fizzy-lake off and never writes that attribute, so the original answers false for every part
+  // (shared-18 GC asks for "type"; WC then keeps the caller's colour).
+  'shared-52-uHFNjl7C.js': { og: { name: 'isFizzyLakePart', features: ['.parts.includes(e)', '"data-cds-fizzy-lake"', loose('Qm = []')] } },
 };
 // Emitted in dependency order. `exports` maps original local binding -> exported name; its keys are the roots and
 // `features` pins each root to strings of its original text. `rewrites` are literal host path rewrites (recorded).
 const modules = [
   // vendor-intl tn (exported `f`): react-intl defineMessages, the identity.
-  { target: 'define-messages.mjs', source: 'vendor-intl-Db7hDWRO.js', exports: { tn: 'defineMessages' },
+  { target: 'define-messages.mjs', source: official.vendorIntl, exports: { tn: 'defineMessages' },
     features: { tn: ['return e;'] } },
-  // shared-25 up (exported `Ff`): ownerWindow (the frame's animation clock reads the element's window).
-  { target: 'owner-window.mjs', source: 'shared-25-DP8p7i1Z.js', exports: { up: 'ownerWindow' },
-    features: { up: ['.defaultView'] } },
-  // shared-4 My (exported `ar`): working-dot kind, clay or sprite.
-  { target: 'dot-kind.mjs', source: 'shared-4-CJsHhp5n.js', exports: { My: 'sidebarDotKind' },
-    features: { My: ['"clay"', '"sprite"'] } },
-  // shared-5 zy (exported `na`): the boot fade class DN puts on every titlebar control wrapper (`je`).
-  { target: 'boot-fade.mjs', source: 'shared-5-kdJVRUsT.js', exports: { zy: 'staticComposerBootFade' },
-    features: { zy: ['"static-composer-boot-fade"'] } },
-  // shared-78 tf (exported `nC`): the hub look, `useContext(Kd) ?? Jd`. Jd only changes when the desktop hub verdict
-  // publisher ($d) runs, which this host has none of, and nothing provides Kd: the original answers false.
-  { target: 'hub-look.mjs', source: 'shared-78-D6VXYXaQ.js', exports: { tf: 'useHubLook' },
-    features: { tf: ['?? Jd'] } },
-  // shared-frame ja (exported `su`): the CDS density, `useContext(la)`; `la` is view-tabs CdsDensityContext.
-  { target: 'cds-density.mjs', source: 'shared-frame-BfjMqbuN.js', exports: { ja: 'useCdsDensity' },
-    features: { ja: ['(la)'] } },
-  // shared-18: yx (exported `au`) the df-app-switch frame; G_ (exported `kf`) aligns infinite animations to the time
-  // origin; xx (exported `iu`) the clay status dot; Ax/Sx/Cx (exported `eu`/`tu`/`ru`) the hub-look dot mapping.
-  { target: 'app-switch-frame.mjs', source: 'shared-18-D4XxL6Tg.js',
-    exports: { yx: 'AppSwitchFrame', G_: 'syncInfiniteAnimations', xx: 'ClayStatusDot', Ax: 'hubAttention', Sx: 'hubDotMode', Cx: 'isClayDot' },
+  // shared-4 jS (exported `sr`): working-dot kind, clay or sprite.
+  { target: 'dot-kind.mjs', source: 'shared-4-DUB1Oi0O.js', exports: { jS: 'sidebarDotKind' },
+    features: { jS: ['"clay"', '"sprite"'] } },
+  // shared-5 pS (exported `oo`): the boot fade class GI puts on every titlebar control wrapper (`e`).
+  { target: 'boot-fade.mjs', source: 'shared-5-Bg6ZMqvt.js', exports: { pS: 'staticComposerBootFade' },
+    features: { pS: ['"static-composer-boot-fade"'] } },
+  // shared-78 cp (exported `kw`; shared-21 kw imports it as `Nc`): the hub look, `useContext($f) ?? tp`. tp only
+  // changes when the desktop hub verdict publisher runs, which this host has none of, and nothing provides $f: the
+  // original answers false.
+  { target: 'hub-look.mjs', source: 'shared-78-D5Fw2h0a.js', exports: { cp: 'useHubLook' },
+    features: { cp: [loose('return C($f) ?? tp;')] } },
+  // shared-18: jC (exported `hu`) the df-app-switch frame; Kv (exported `yp`) aligns infinite animations to the time
+  // origin; NC (exported `mu`) the clay status dot; KC/PC/FC (exported `cu`/`lu`/`pu`) the hub-look dot mapping; WC
+  // (exported `uu`) the "needs you" colour, blue only while the fizzy-lake `type` part is on (GC).
+  { target: 'app-switch-frame.mjs', source: 'shared-18-D3y8YMFN.js',
+    exports: { jC: 'AppSwitchFrame', Kv: 'syncInfiniteAnimations', NC: 'ClayStatusDot', KC: 'hubAttention', PC: 'hubDotMode', FC: 'isClayDot', WC: 'needsYouColor' },
     features: {
-      yx: ['L("df-app-switch", e)', `querySelectorAll("[role='radio']")`, 'new MutationObserver(n)', 'childList: !0, subtree: !0'],
-      G_: ['getAnimations()', 'iterations !== 1 / 0', '(e.startTime = -(n % r))'],
-      xx: ['"status-dot"', '"data-kind": "clay"', 'onAnimationStart: G_'],
-      Ax: ['e === "awaiting" ? "ready" : e'], Sx: ['e !== "code"'], Cx: ['Lc(e) === "clay"'],
+      jC: ['"df-app-switch"', `querySelectorAll("[role='radio']")`, '.dataset.mode', 'childList: !0, subtree: !0', loose('new MutationObserver(t)')],
+      Kv: ['getAnimations()', 'iterations !== 1 / 0', 'performance.timeOrigin', '(e.startTime = -(n % r))'],
+      NC: ['"status-dot"', '"data-kind": "clay"', 'backgroundImage: `url(${', loose('onAnimationStart: Kv')],
+      KC: ['e === "awaiting" ? "ready" : e'], PC: ['e !== "code"'], FC: ['=== "clay"'], WC: ['? "blue" : e'],
     },
     // The official bundle serves its assets from the site root; this app loads index.html from disk, so the clay
     // sprite (already in public/assets/v1) is addressed relative to the page, as the chat generators do.
-    rewrites: [{ binding: 'bx', from: '"/assets/v1/', to: '"./assets/v1/', asset: 'assets/v1/c25011d97-Dg-b7-mk.png' }] },
-  // shared-21: _C (exported `js`) builds the two segments and renders yx > SegmentedControl; LS/RS the activity dot;
-  // QS/ZS the copy; bC the cmd+alt+left/right hint; uC (compact density -> "lg").
-  { target: 'app-switch.mjs', source: 'shared-21-IP-SVetq.js',
-    exports: { _C: 'AppSwitch', LS: 'AppSwitchDot', RS: 'AppSwitchDotKind', ZS: 'appSwitchMessages', QS: 'appSwitchDotMessages',
-      bC: 'appSwitchShortcutHint', uC: 'useAppSwitchSize' },
+    rewrites: [{ binding: 'MC', from: '"/assets/v1/', to: '"./assets/v1/', asset: 'assets/v1/c25011d97-Dg-b7-mk.png' }] },
+  // shared-21: lT (exported `xc`) builds the two segments and renders jC > SegmentedControl; kw/Aw the activity dot;
+  // Uw/Ww the copy; mT the cmd+alt+left/right hint; nT (compact density -> "lg").
+  { target: 'app-switch.mjs', source: 'shared-21-R7LldJ05.js',
+    exports: { lT: 'AppSwitch', kw: 'AppSwitchDot', Aw: 'AppSwitchDotKind', Uw: 'appSwitchMessages', Ww: 'appSwitchDotMessages',
+      mT: 'appSwitchShortcutHint', nT: 'useAppSwitchSize' },
     features: {
-      _C: ['icon: "Chats"', 'icon: "Code"', 'tooltipSide: "bottom"', 'onAnimationStart: Gm', 'disabledReason: a.disabledReason',
-        '"aria-label": c.formatMessage(ZS.label)'],
-      LS: ['t === "running" ? (r ? "clay" : "running")'],
-      RS: ['color: "var(--cds-text-muted)"', 'className: "df-tab-dot-running"', 'color: "var(--cds-fill-warning)"', 'color: "var(--cds-fill-accent)"'],
-      ZS: ['defaultMessage: "Mode", id: "mrOnjMzgC4"'],
-      QS: ['"{tab}, awaiting your input"', '"{tab}, unread activity"', '"{tab}, working"'],
-      bC: ['"cmd+alt+right"', '"cmd+alt+left"', 'i.includes(e.mode)'],
-      uC: ['=== "compact" ? "lg" : "sm"'],
+      lT: ['icon: "Chats"', 'icon: "Code"', 'value: "code"', 'tooltipSide: "bottom"', 'disabled: !0', '.disabledReason === void 0',
+        '"aria-label": v', loose('c.formatMessage(Uw.label)'), loose('onAnimationStart: Ym')],
+      kw: ['=== "running"', '"clay"', '"running"', loose('Um(r ? "blue" : "amber") === "blue" ? sm(n) : n')],
+      Aw: ['color: "var(--cds-text-muted)"', 'className: "df-tab-dot-running"', 'color: "var(--cds-fill-warning)"', 'color: "var(--cds-fill-accent)"'],
+      Uw: ['defaultMessage: "Mode", id: "mrOnjMzgC4"'],
+      Ww: ['"{tab}, awaiting your input"', '"{tab}, unread activity"', '"{tab}, working"'],
+      mT: ['"cmd+alt+right"', '"cmd+alt+left"', 'i.includes(e.mode)'],
+      nT: ['=== "compact" ? "lg" : "sm"'],
     } },
 ];
-// Original text the host replica (src/source-app-switch.jsx) follows but cannot import. Each feature must appear in the
-// whitespace-normalised declaration; each import must still resolve to the named declaration of the named chunk.
+// Original text the host replica (src/source-app-switch.jsx, src/app-switch-model.mjs) follows but cannot import. Each
+// feature must appear in the whitespace-normalised declaration; each import must still resolve to the named
+// declaration of the named chunk.
 const callSites = [
-  { source: 'shared-21-IP-SVetq.js', binding: 'vC', role: 'container (exported Ms): state, sizes, segment props',
-    features: ['i = to()', 'l = uC()', 'd = v() === "rtl"', 'M = i === "code" || T !== null ? "code" : p',
-      'I = i === "code" ? P : void 0', 'L = i !== "code" && g === null ? F : void 0', 'R = +(i === "code")',
-      'z = (e, t) => bC(e, t, R, n, r, d)', '"data-compact-mode-switcher": !0', '"data-chorus-callout": "pills"',
-      'className: "flex"', 'homeMode: p', 'selected: M', 'onChange: k', 'size: l',
-      'home: { name: m, dot: I, shortcut: z({ mode: p }, 0) }', 'name: "Code", dot: L',
-      'shortcut: z( { mode: "code", discoveryUpsell: y ?? void 0 }, 1, )', 'e === "code" && o("code", "data"), a(e, "tab")'],
-    imports: { to: ['shared-78-D6VXYXaQ.js', 'Vq'] } },
-  { source: 'shared-21-IP-SVetq.js', binding: 'YS', role: 'home segment name',
+  { source: 'shared-21-R7LldJ05.js', binding: 'fT', role: 'container (exported Sc): state, sizes, segment props',
+    features: [loose('r = lc()'), loose('i = ju()'), loose('s = nT()'), loose('c = d() === "rtl"'), loose('{ mode: l, name: f } = cT()'),
+      loose('F = r === "code" || S !== null ? "code" : l'), loose('B = r === "code" ? R : void 0'),
+      loose('V = r !== "code" && m === null ? z : void 0'), loose('H = +(r === "code")'), loose('(e, r) => mT(e, r, H, t, n, c)'),
+      '"data-compact-mode-switcher": !0', '"data-chorus-callout": "pills"', 'className: "flex"', 'name: "Code"',
+      loose('homeMode: l'), loose('selected: F'), loose('onChange: N'), loose('size: s'), loose('home: G'), loose('code: K'),
+      loose('{ name: f, dot: B, shortcut: W }'), loose('{ mode: "code", discoveryUpsell: _ ?? void 0 }'),
+      '"claudeai.desktop.sidebar.mode_pill_selected"', 'sidebar_surface: "desktop_frame"', loose('e === "code" && a("code", "data"), i(e, "tab")')],
+    imports: { lc: ['shared-78-D5Fw2h0a.js', '$Y'], ju: ['shared-6-sd9jbJqs.js', 'uM'] } },
+  { source: 'shared-21-R7LldJ05.js', binding: 'Vw', role: 'home segment name',
     features: ['defaultMessage: "Claude", id: "4PjoX4rZSt"', 'defaultMessage: "Chat and Cowork", id: "HS5y16IC13"'] },
-  { source: 'shared-78-D6VXYXaQ.js', binding: 'Vq', role: 'current mode: the pressed mode wins over the route',
-    features: ['zq.getState().pressedMode ?? Pq(t)'] },
-  { source: 'shared-6-Cby4X-ms.js', binding: 'Fk', role: 'press -> pressedMode, then navigate after a 0ms timeout',
-    features: ['pressedMode: t, pressId: e.pressId + 1', 'setTimeout(() => {', 'Za.getState().pressId !== r', 'i || Za.setState({ pressedMode: null })', '}, 0);'] },
-  { source: 'shared-22-HztmyUTM.js', binding: 'DN', role: 'macOS titlebar placement of the switch',
-    features: ['je = O( "draggable-none", _c, d && "flex", d && L !== "web" && "-mt-[12px]", )',
-      'G && p(Zs, { children: p("div", { className: O( je, I ? "ms-auto" : Ae ? "ms-2" : "ms-auto", "flex items-center", I && "df-titlebar-switch", ), children: p(bg, { ref: n }), }), })',
-      '"df-titlebar draggable h-11 shrink-0 flex items-center px-2"'],
-    imports: { bg: ['shared-21-IP-SVetq.js', 'vC'], Zs: ['shared-frame-BfjMqbuN.js', 'Sm'], _c: ['shared-5-kdJVRUsT.js', 'zy'] } },
+  { source: 'shared-78-D5Fw2h0a.js', binding: '$Y', role: 'current mode: the pressed mode wins over the route',
+    features: [loose('ZY.getState().pressedMode ?? KY(t)')] },
+  { source: 'shared-6-sd9jbJqs.js', binding: 'uM', role: 'press -> pressedMode, then navigate after a 0ms timeout',
+    features: ['pressedMode: t, pressId: e.pressId + 1', 'setTimeout(() => {', loose('Xo.getState().pressId !== r'),
+      loose('i || Xo.setState({ pressedMode: null })'), '}, 0);'] },
+  { source: 'shared-22-Bwn3sJTG.js', binding: 'GI', role: 'macOS titlebar placement of the switch',
+    features: [loose('e = i( "draggable-none", Ys, _ && "flex", _ && B !== "web" && "-mt-[12px]", )'),
+      loose('G && o(R, { children: o("div", { className: i( e, ee ? "ms-auto" : He ? "ms-2" : "ms-auto", "flex items-center", ee && "df-titlebar-switch", ), children: o(j_, {}), }), })'),
+      '"df-titlebar draggable h-11 shrink-0 flex items-center px-2"',
+      loose('o("div", { className: "df-peek-mode-switch mb-2 flex shrink-0", children: o(j_, {}), })')],
+    imports: { j_: ['shared-21-R7LldJ05.js', 'fT'], R: [official.sharedFrame, 'xh'], Ys: ['shared-5-Bg6ZMqvt.js', 'pS'] } },
 ];
 
 async function readSource(name, cache) {
@@ -158,24 +171,23 @@ function closureText(src, name) {
 }
 function assertFeatures(label, text, features = []) {
   const flat = normalised(text);
-  const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
+  const missing = features.filter(f => typeof f === 'string' ? !text.includes(f) && !flat.includes(normalised(f)) : !looseFeature(f.loose).test(text));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
 
+// R3: the alias must be a top-level `local=<namespace>.<member>` of the module's own namespace (or, for `Oo`, the
+// react/compiler-runtime `c` factory); a same-named inner local no longer passes.
 function vendorImport(file, alias, src) {
   const target = vendor[file]?.[alias];
   if (!target) return null;
-  const local = src.exported.get(alias);
-  const escaped = local?.replace(/\$/g, '\\$');
-  if (!local || !new RegExp(`(?<![\\w$.])${escaped}=[\\w$]+\\.${target[1]}\\b`).test(src.bytes.toString()))
-    throw Error(`vendor-frame ${alias} no longer resolves to ${target.join(':')}`);
+  official.assertVendorAlias(src.bytes.toString(), alias, target);
   return target;
 }
 
 // D1: the shared view-tabs graph publishes semantic names for (file, local). A binding it publishes is imported from
 // there by that name, never sliced a second time (a second density context or SegmentedControl would split state).
 async function viewTabsPublic() {
-  const manifest = JSON.parse(await fs.readFile(path.join(viewTabs, 'manifest.json'), 'utf8'));
+  const manifest = await viewTabsManifestFor(referenceVersion);
   if (manifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${referenceVersion}`);
   const byLocal = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) byLocal.set(`${entry.file}#${entry.local}`, { name, ...entry });
@@ -193,6 +205,9 @@ async function resolveImportedDeclaration(src, local, cache) {
 export async function extractAppSwitch({ check = false } = {}) {
   const cache = new Map();
   const published = await viewTabsPublic();
+  // Every React alias of the table is checked up front, used or not (R3).
+  const frame = await readSource(official.vendorFrame, cache);
+  for (const [alias, target] of Object.entries(vendor[official.vendorFrame])) official.assertVendorAlias(frame.bytes.toString(), alias, target);
   const emitted = [];
   const manifest = {
     referenceVersion, referenceSnapshot, generator: 'scripts/extract-app-switch.mjs',

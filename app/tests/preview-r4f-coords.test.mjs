@@ -1,5 +1,5 @@
 // R4f-preview-coords (F2, preview-15): the agent's point is in the pixels of its last screenshot — the frame CDP
-// returned, 2× the page's CSS pixels on a Retina display — and is checked against that frame (2.42304.0 S4i,
+// returned, 2× the page's CSS pixels on a Retina display — and is checked against that frame (3.6556.2 $3i, 2.42304.0 S4i;
 // errorClass coordinate_out_of_bounds) and mapped to the page's CSS pixels (y4i, clamped by b4i) before it is
 // dispatched; the screenshot's result names its size (k4i). One emulation rule (emulatedViewport) feeds both
 // applyEmulation and the record's geometry. The real createPreviewService over the stand-in Electron and process
@@ -19,7 +19,7 @@ import { tools } from '../electron/agent-tools/preview.mjs';
 const require = createRequire(import.meta.url);
 const { createPreviewService } = require('../electron/preview-service.cjs');
 const app = path.resolve(import.meta.dirname, '..');
-const main = fs.readFileSync(path.resolve(app, '../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js'), 'utf8');
+const main = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'), 'utf8');
 const serviceSource = fs.readFileSync(path.join(app, 'electron/preview-service.cjs'), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const tool = (name) => tools.find((entry) => entry.name === name);
@@ -77,26 +77,31 @@ const scriptPoint = (code) => {
 const frameMessage = (action, x, y, w, h) => `${action}: coordinate (${x}, ${y}) is outside the coordinate frame (${w}x${h}). Coordinates are pixels in the full-resolution frame — if the page changed, take a new screenshot first.`;
 const outOfBounds = (message) => (error) => error.message === message && error.code === 'coordinate_out_of_bounds';
 
-test('F2 source: y4i / b4i / S4i and what they read, k4i and c4i around them (2.42304.0 index.chunk-muI2IV6k.js), the generator --check', async () => {
+test('F2 source: X3i / Z3i (via K3) / $3i and what they read, o6i and R3i around them (3.6556.2 index.chunk-jPKPzV-P.js; 2.42304.0 y4i / b4i / S4i, k4i, c4i), the generator --check', async () => {
   for (const text of [
-    'function y4i(e,t,n){return[Math.round(t*(e.viewportWidth/e.screenshotWidth)),Math.round(n*(e.viewportHeight/e.screenshotHeight))]}',
-    'function b4i(e,t,n){let r=v4i(e),i=r?Math.min(e.viewportWidth,r.width):e.viewportWidth,a=r?Math.min(e.viewportHeight,r.height):e.viewportHeight,[o,s]=y4i(e,t,n);return[Math.max(0,Math.min(o,Math.ceil(i)-1)),Math.max(0,Math.min(s,Math.ceil(a)-1))]}',
-    'var x4i=2;function S4i(e,t,n){if(!Number.isFinite(t)||!Number.isFinite(n)||t<0||n<0||t>=e.screenshotWidth+x4i||n>=e.screenshotHeight+x4i)return`coordinate (${Math.round(t)}, ${Math.round(n)}) is outside the coordinate frame (${e.screenshotWidth}x${e.screenshotHeight}). Coordinates are pixels in the full-resolution frame \\u2014 if the page changed, take a new screenshot first.`;',
-    'function v4i(e){return e.visible&&Osi(e.visible)?e.visible:null}',
-    'function Esi(e){return e>1.005}var Dsi=.5;function Osi(e){return e.width<e.layoutWidth-Dsi||e.height<e.layoutHeight-Dsi}',
-    'let i=S4i(r.dims,n.coordinate[0],n.coordinate[1]);return i?{error:`${o}: ${i}`,errorClass:"coordinate_out_of_bounds"}:{dispatch:b4i(r.dims,n.coordinate[0],n.coordinate[1]),echo:[Math.round(n.coordinate[0]),Math.round(n.coordinate[1])]}',
-    'let a=S4i(i.dims,n.coordinate[0],n.coordinate[1]);if(a)return BN(`scroll: ${a}`,"coordinate_out_of_bounds");let s=b4i(i.dims,n.coordinate[0],n.coordinate[1])',
-    'd2.set(o,{viewportWidth:r?.w||1280,viewportHeight:r?.h||800,screenshotWidth:i.frameWidth??i.width,screenshotHeight:i.frameHeight??i.height,visible:r&&r.visible.width>0&&r.visible.height>0?r.visible:null})',
+    'function X3i(e,t,n){return[Math.round(t*(e.viewportWidth/e.screenshotWidth)),Math.round(n*(e.viewportHeight/e.screenshotHeight))]}',
+    // 3.6556.2 moved b4i's clamp size into K3; Z3i's result is the same.
+    'function K3(e){let t=Y3i(e);return t?[Math.min(e.viewportWidth,t.width),Math.min(e.viewportHeight,t.height)]:[e.viewportWidth,e.viewportHeight]}',
+    'function Z3i(e,t,n){let[r,i]=K3(e),[a,o]=X3i(e,t,n);return[Math.max(0,Math.min(a,Math.ceil(r)-1)),Math.max(0,Math.min(o,Math.ceil(i)-1))]}',
+    'var Q3i=2;function $3i(e,t,n){if(!Number.isFinite(t)||!Number.isFinite(n)||t<0||n<0||t>=e.screenshotWidth+Q3i||n>=e.screenshotHeight+Q3i)return`coordinate (${Math.round(t)}, ${Math.round(n)}) is outside the coordinate frame (${e.screenshotWidth}x${e.screenshotHeight}). Coordinates are pixels in the full-resolution frame \\u2014 if the page changed, take a new screenshot first.`;',
+    'function Y3i(e){return e.visible&&hoi(e.visible)?e.visible:null}',
+    'function NZ(e){return e>1.005}',
+    'var moi=.5;',
+    'function hoi(e){return e.width<e.layoutWidth-moi||e.height<e.layoutHeight-moi}',
+    'let i=$3i(r.dims,n.coordinate[0],n.coordinate[1]);return i?{error:`${o}: ${i}`,errorClass:"coordinate_out_of_bounds"}:{dispatch:Z3i(r.dims,n.coordinate[0],n.coordinate[1]),echo:[Math.round(n.coordinate[0]),Math.round(n.coordinate[1])],viewport:K3(r.dims)}',
+    'let a=$3i(i.dims,n.coordinate[0],n.coordinate[1]);if(a)return BF(`scroll: ${a}`,"coordinate_out_of_bounds");let s=Z3i(i.dims,n.coordinate[0],n.coordinate[1])',
+    'B3.set(o,{viewportWidth:r?.w||1280,viewportHeight:r?.h||800,screenshotWidth:i.frameWidth??i.width,screenshotHeight:i.frameHeight??i.height,visible:r&&r.visible.width>0&&r.visible.height>0?r.visible:null})',
     'a=Math.max(1,i.scale);return{w:r.w/a,h:r.h/a,visible:i}',
     '{type:"text",text:`Screenshot size: ${o.width}x${o.height}${c}${l}`}',
   ]) assert.equal(count(main, text), 1, text);
-  for (const name of ['y4i', 'b4i', 'S4i', 'v4i']) assert.equal(count(main, `function ${name}(`), 1, name);
+  for (const name of ['X3i', 'K3', 'Z3i', '$3i', 'Y3i']) assert.equal(count(main, `function ${name}(`), 1, name);
   await extractR4ePreview({ check: true });
   const manifest = JSON.parse(fs.readFileSync(path.join(app, 'electron/generated/r4e-preview-manifest.json'), 'utf8'));
   const entry = manifest.targets['r4e-preview-coordinates.mjs'];
-  assert.deepEqual(Object.keys(entry.bindings), ['Esi', 'Dsi', 'Osi', 'g4i', '_4i', 'v4i', 'y4i', 'b4i', 'x4i', 'S4i'], 'in the chunk\'s order');
+  assert.deepEqual(Object.keys(entry.bindings), ['NZ', 'moi', 'hoi', 'q3i', 'J3i', 'Y3i', 'K3', 'X3i', 'Z3i', 'Q3i', '$3i'], 'in the chunk\'s order');
+  assert.equal(entry.host.O1.key, 'Cvi', 'the host still passes the geometry reader as Cvi');
   assert.deepEqual(entry.globals, ['Math', 'Number']);
-  assert.deepEqual(entry.hostCalls, { Cvi: 1 });
+  assert.deepEqual(entry.hostCalls, { O1: 1 });
 });
 
 test('F2 generated: y4i maps a Retina frame to CSS pixels, b4i clamps to the viewport, S4i refuses outside the frame (x4i slack)', () => {

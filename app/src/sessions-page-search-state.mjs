@@ -19,8 +19,19 @@ export function rememberSessionsPageSearch(historyKey,input,sortBy,scope) {
   if(input.trim()==='')searches.delete(historyKey);
   else searches.set(historyKey,{input,sortBy,scope});
 }
+// shared-52 Xi (exported `Jx`) / na: the sign-out reset registry. Generated 3.6556.2 code registers its own
+// module-level stores here (cbd6c85c8 `J(() => Tf.clear())`, through the sessions-page adapter registerSessionsReset);
+// the host runs every callback where the official build runs na() (sign-out / session expiry), i.e. when the engine or
+// the signed-in account changes. `durable` is kept for parity (Ki: also run by ra()); the host has no ra() caller.
+const resets=new Set(),durableResets=new Set();
+export function registerSessionsPageReset(callback,{durable=false}={}) {
+  resets.add(callback);
+  if(durable)durableResets.add(callback);
+  return ()=>{resets.delete(callback);durableResets.delete(callback);};
+}
 export function clearSessionsPageSearches() {
   searches.clear();
+  for(const callback of [...resets])callback({sessionExpired:false});
 }
 // The signed-in identity whose change stands in for sign-out (account/read).
 export function sessionsPageAccountScope(accountRead) {

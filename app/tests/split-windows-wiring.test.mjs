@@ -7,7 +7,7 @@ import { dictionary } from '../electron/i18n/index.mjs';
 
 // Multi-window and split view wiring: View › Split View and File › New Window (app-menu.cjs), main.cjs routing
 // through window-registry.cjs, the renderer's split sides in main.jsx, and zh-CN copy for every new string.
-const { appMenuTemplate, splitMenuState } = appMenu;
+const { appMenuTemplate, splitMenuState, menuState } = appMenu;
 const app = path.resolve(import.meta.dirname, '..');
 const read = (file) => readFileSync(path.join(app, file), 'utf8');
 const viewMenu = (splitState) => appMenuTemplate({ sidebarOpen: true, splitState, emit: (event, window) => calls.push([event, window]) }).find((item) => item.label === 'View').submenu;
@@ -37,7 +37,9 @@ test('View › Split View follows official Yxi/Jxi (2.31226.0): items, accelerat
 
 test('File › New Window emits new-window for the menu window (no accelerator: ⇧⌘N is New Session with Current Settings); main.cjs opens a new-session popout (B27 cd377abb5 si)', () => {
   calls = [];
-  const file = appMenuTemplate({ sidebarOpen: true, emit: (event, window) => calls.push([event, window]) }).find((item) => item.label === 'File').submenu;
+  // V3-w13-surfaces-menus: 3.6556.2 iSi shows these items only in the Sessions (Code) area; no report reads as Chats ($yi).
+  const code = menuState({ goMenuAreas: [{ id: 'code', label: 'Code', selected: true, items: 'sessions' }] });
+  const file = appMenuTemplate({ sidebarOpen: true, menuState: code, emit: (event, window) => calls.push([event, window]) }).find((item) => item.label === 'File').submenu;
   const item = file.find((entry) => entry.label === 'New Window');
   assert.equal(item.accelerator, undefined);
   assert.equal(file.find((entry) => entry.label === 'New Session with Current Settings').accelerator, 'CmdOrCtrl+Shift+N');
@@ -86,7 +88,10 @@ test('main.jsx mounts the window as split sides; only the focused side takes win
   assert.match(jsx, /<SourceSplitRoot renderSide=\{\(side, secondary\) => <App side=\{side\} initialSession=\{secondary\?\.sessionId \?\? null\} \/>\} \/>/);
   // B04: the sidebar sits in its error boundary (shared-21 lK).
   // B27: a session popout or pane window has none.
-  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && <SourceSidebarBoundary>\n\s+<SourceSidebar\n\s+windowActions=\{windowActions\}/, 'the sidebar belongs to the primary side');
+  // w13-close-main-jsx-tests (cross-red-03): other props (homeMode, localProjects, …) may come before windowActions.
+  // w13-close-chat-surface (E77): the sidebar is also unmounted while the window is incognito (shared-78 vK,
+  // frameShellMounted), and the workspace sits in the incognito shell (display: contents when not incognito).
+  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) && <SourceSidebarBoundary>\n\s+<SourceSidebar\n(?:\s+[^\n]*\n)*?\s+windowActions=\{windowActions\}/, 'the sidebar belongs to the primary side');
   // The primary pane's App hosts the grid; a narrow window parks the extra panes (no tab strip, no chrome of its own).
   assert.match(jsx, /<SourceSplitHost side=\{side\}>\n\s+<main\n\s+ref=\{mainRef\}/);
   // A secondary pane's titlebar has the Close pane X; the primary's has none (View › Split View, ⌃⌘W).

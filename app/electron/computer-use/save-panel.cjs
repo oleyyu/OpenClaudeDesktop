@@ -1,17 +1,26 @@
-// savePanelProbe / save_panel_restricted (official 2.42304.0; spec §1.4.5 "存储面板 / 文件对话框等子检查"): before a
+// savePanelProbe / save_panel_restricted (official 3.6556.2; spec §1.4.5 "存储面板 / 文件对话框等子检查"): before a
 // keystroke, click, drag or held press reaches a Mac window, what that window shows is read (native savePanelProbe,
 // SavePanel.swift) and judged here, so that computer use cannot save, rename or move a file to where it would run by
-// itself later (shell start-up files, launch agents, git hooks, hidden folders, files that act when opened) nor type
-// into a window that edits such a file.
+// itself later (shell start-up files, launch agents, git hooks, hidden folders, files that act when opened, files an
+// app runs when it starts) nor type into a window that edits such a file.
 //
-// Port of the official guard, by part:
-//   names and paths    muI2IV6k Kar … Kor (the protected names, folders and path patterns; eH / Hor / Uor / Kor)
-//   protected index    muI2IV6k ONr / jNr / kNr / ANr / TNr (what the home folder links to where, resolved once)
+// Port of the official guard, by part (3.6556.2 asar .vite/build; the "Official X" names further down are 2.42304.0's,
+// muI2IV6k / BEf0UhNC, and map one to one onto the 3.6556.2 names listed here):
+//   names and paths    jPKPzV-P wCr … Cwr (2.42304.0 muI2IV6k Kar … Kor: the protected names, folders and path
+//                      patterns; NH / ywr / bwr / Cwr = eH / Hor / Uor / Kor). The lists changed in 3.6556.2 and are
+//                      taken entry by entry: wCr / TCr / DCr / LCr / RCr / BCr / JCr (Kar / qar / Yar / aor / oor / cor /
+//                      _or) gained app start-up files (SuperCollider, REAPER, iTerm AutoLaunch, QGIS, Maya userSetup,
+//                      ImageJ / Fiji macros, Blender, SketchUp, FreeCAD, KiCad, Igor), git rr-cache / MERGE_RR and the
+//                      antidote / antibody caches; every other function there is the same apart from minified names.
+//   protected index    jPKPzV-P $Hi / nUi / eUi / tUi / XHi (muI2IV6k ONr / jNr / kNr / ANr / TNr: what the home folder
+//                      links to where, resolved once), the same apart from minified names
 //   probe              the darwin executor's savePanelProbe (documentPathIsProtected, saveTargetPathIsProtected,
-//                      resolvedProtectedTargets, fallbackMayHideProtectedTarget added to the native answer)
-//   gates              BEf0UhNC St / Ot (keys, typing), Ht / Vt (a click or drag at a point), kt (a held press),
-//                      Ut (the app_* tools on a window), Et / Rt (a Return or Save in a save sheet: its folder's parents
-//                      read from the folder pop-up), q / J / Ft (750 ms for the sheet to settle after the last input)
+//                      resolvedProtectedTargets, fallbackMayHideProtectedTarget added to the native answer), in jPKPzV-P
+//                      the same apart from minified names
+//   gates              Cgwbta3N wt / jt (BEf0UhNC St / Ot: keys, typing), Gt / Wt (Ht / Vt: a click or drag at a point),
+//                      Mt (kt: a held press), Kt (Ut: the app_* tools on a window), kt / Vt (Et / Rt: a Return or Save in
+//                      a save sheet: its folder's parents read from the folder pop-up), K / Ft / q (q / J / Ft: 750 ms
+//                      for the sheet to settle after the last input); the same apart from minified and imported names
 // Every refusal is reason code save_panel_restricted with the official wording. Only macOS: elsewhere the guard is off.
 // The guard turns off only when the host has no probe (unknown_method / native_unavailable). A probe that fails
 // otherwise refuses the screen-wide input (official St / Vt / kt let gt()'s throw end the call: fail closed) and, for
@@ -33,14 +42,21 @@ const foldName = (text) => fold(unquote(text));
 const baseName = (p) => p.slice(p.lastIndexOf("/") + 1);
 const dirName = (p) => { const i = p.lastIndexOf("/"); return i === -1 ? "" : p.slice(0, i); };
 
-// ── What may not be written (official Kar / qar / Jar / Yar / ior / aor / oor / sor / cor / lor) ──
+// ── What may not be written (official Kar / qar / Jar / Yar / ior / aor / oor / sor / cor / lor; 3.6556.2 jPKPzV-P
+//    wCr / TCr / ECr / DCr / ICr / LCr / RCr / zCr / BCr / VCr, each list entry for entry and in the official order) ──
+// wCr: home-relative files a shell, terminal or app runs when it starts (their last part is also a protected name).
 const SHELL_FILES = [".zshrc", ".zshenv", ".zprofile", ".zlogin", ".zlogout", ".bashrc", ".bash_profile", ".bash_login", ".bash_logout", ".profile",
-  ".wezterm.lua", ".config/fish/config.fish", ".config/fish/fish_variables", ".config/starship.toml", ".gitconfig", ".zcompdump",
+  ".wezterm.lua", "Library/Application Support/SuperCollider/startup.scd", "Library/Application Support/REAPER/Scripts/__startup.lua",
+  "Library/Application Support/REAPER/Scripts/__startup.eel", ".config/fish/config.fish", ".config/fish/fish_variables", ".config/starship.toml",
+  "Library/Application Support/iTerm2/Scripts/AutoLaunch.scpt", "Library/Application Support/iTerm/Scripts/AutoLaunch.scpt", ".gitconfig", ".zcompdump",
   ".cache/prezto/zcompdump", ".cache/zsh4humans/v5/z4h.zsh"];
-const GIT_NAMES = [".git", "gitdir", "commondir", "__fish_build_paths.fish", "Breakpoints_v2.xcbkptlist"];
+// TCr: names refused anywhere (git internals, and the start-up scripts of Maya and ImageJ / Fiji).
+const GIT_NAMES = [".git", "userSetup.py", "userSetup.mel", "StartupMacros.txt", "StartupMacros.ijm", "StartupMacros.fiji.ijm", "RunAtStartup.ijm",
+  "gitdir", "commondir", "__fish_build_paths.fish", "Breakpoints_v2.xcbkptlist", "MERGE_RR"];
 const OPENS_AND_RUNS = [".terminal", ".term", ".fileloc", ".inetloc", ".webloc", ".ftploc", ".afploc", ".smbloc", ".vncloc", ".mailloc", ".newsloc",
   ".mobileconfig", ".webarchive", ".command", ".tool"];
-const GIT_USER_CONFIG = [".config/git/config"];
+// DCr: home-relative files refused under their own name in their own folder (git's user config, QGIS's start-up script).
+const GIT_USER_CONFIG = [".config/git/config", "Library/Application Support/QGIS/QGIS3/startup.py"];
 const ALWAYS = () => true;
 const endsWithAny = (...suffixes) => (name) => { const n = name.replace(/[. ]+$/, ""); return suffixes.some((s) => n.endsWith(s)); };
 const GIT_HOOKS = new Set(("applypatch-msg.pre-applypatch.post-applypatch.pre-commit.pre-merge-commit.prepare-commit-msg.commit-msg.post-commit." +
@@ -68,12 +84,14 @@ const HOME_FOLDERS = [
   ["Library/Developer/Xcode/UserData/xcdebugger", ALWAYS],
 ].map(([homeRelativePath, refusedSaveNames]) => ({ homeRelativePath, refusedSaveNames }));
 const TOOL_PREFIXES = ["opt/homebrew", "usr/local/homebrew", "usr/local/cellar", "share/zsh/site-functions", "share/zsh-completions", "etc/bash_completion.d",
-  "etc/profile.d", "share/zsh-autosuggestions", "share/zsh-syntax-highlighting"];
-const BASH_COMPLETIONS = ["share/bash-completion/completions"];
+  "etc/profile.d", "share/zsh-autosuggestions", "share/zsh-syntax-highlighting", "rr-cache"];
+// RCr: folders anywhere whose files a tool loads (plugin caches, bash completions); no folder-name rule of their own.
+const BASH_COMPLETIONS = ["caches/antidote", "caches/antibody", "share/bash-completion/completions"];
 const GIT_REPO_CONFIG = [".git/config"];
 const PATH_PATTERNS = [
   /(?:^|\/)[^/]*\.git\/(?:modules\/.+\/)?(?:worktrees\/[^/]+\/)?(?:commondir|gitdir|config(?:\.worktree)?)$/,
   /(?:^|\/)[^/]*\.git\/(?:modules\/.+\/)?hooks\/[^/]+$/,
+  /(?:^|\/)[^/]*\.git\/(?:modules\/.+\/)?(?:worktrees\/[^/]+\/)?merge_rr$/,
   /(?:^|\/)\.git$/,
   /\/bin\/activate(?:\.(?:csh|fish|nu|ps1))?$/,
   /\/share\/fish\/(?:(?:vendor_(?:conf|functions|completions)\.d|functions|completions)\/[^/]+|config|__fish_build_paths)\.fish$/,
@@ -82,6 +100,13 @@ const PATH_PATTERNS = [
   /\/bin\/brew$/,
   /\/xcdebugger\/[^/]+$/,
   /\/\.cache\/fish\/(?:generated_completions|completions)\/[^/]+\.fish$/,
+  /\/library\/application support\/blender\/[^/]+\/scripts\/startup\/(?:[^/]+\/__init__|[^/]+)\.py$/,
+  /\/library\/application support\/sketchup \d{4}\/sketchup\/plugins\/[^/]+\.rb$/,
+  /\/library\/application support\/freecad\/(?:[^/]+\/)?mod\/[^/]+\/init(?:gui)?\.py$/,
+  /\/documents\/kicad\/\d+\.\d+\/(?:scripting|scripting\/plugins|3rdparty\/plugins)\/(?:[^/]+\/__init__|[^/]+)\.py$/,
+  /\/igor procedures\/(?:[^/]+\/)*[^/]+\.ipf$/,
+  /\/fiji(?:\.app)?\/macros\/autorun\/[^/]+\.ijm$/,
+  /\/(?:fiji|imagej)(?:\.app)?\/macros\/(?:startupmacros(?:\.fiji)?\.(?:ijm|txt)|runatstartup\.ijm)$/,
   /\/\.cache\/p10k-(?:instant-prompt|dump)-[^/]+\.zsh$/,
   /(?:^|\/)\.zcompdump[^/]*$/,
 ];
@@ -98,12 +123,15 @@ function pathIsProtectedByPattern(p) {
 
 const PROTECTED_NAMES = new Set([...SHELL_FILES.map(baseName), ...SSH_NAMES, ...GIT_NAMES].map(fold));
 const PROTECTED_PREFIXES = ["p10k-instant-prompt-", "p10k-dump-", ".zcompdump"].map(fold);
-// Official _or: a folder name → the names that may not be saved in it (later entries win, as in the original Map).
+// Official _or (3.6556.2 JCr): a folder name → the names that may not be saved in it (later entries win, as in the
+// original Map).
 const FOLDER_RULES = new Map([
   ["bin", (name) => isVenvActivate(name) || name === "brew"],
   ["hooks", isGitHook],
   ["generated_completions", isFish],
   ["etc", (name) => name === "gitconfig"],
+  ["scripts", (name) => name === "autolaunch"],
+  ["igor procedures", endsWithAny(".ipf")],
   ...HOME_FOLDERS.map((e) => [fold(baseName(e.homeRelativePath)), e.refusedSaveNames]),
   ...TOOL_PREFIXES.map((e) => [baseName(e), ALWAYS]),
   ["completions", (name) => isFish(name) || name.endsWith(".bash") || !name.includes(".")],
@@ -736,4 +764,7 @@ module.exports = {
   // The policy, for tests.
   policy: { isProtectedName, saveVerdict, confirmVerdict, pathVerdict, listedFolderVerdict, typingVerdict, sheetBlocker, documentVerdict,
     parentsVerdict, folderNamesOf, pathIsProtectedByPattern, navigationOnly, movesOrWindows, fold, foldName, pathKey },
+  // The protected lists, for the entry-by-entry comparison with the official build (tests/w11-cu-protected-names.test.mjs).
+  lists: { SHELL_FILES, GIT_NAMES, OPENS_AND_RUNS, GIT_USER_CONFIG, HOME_FOLDERS, TOOL_PREFIXES, BASH_COMPLETIONS, GIT_REPO_CONFIG, PATH_PATTERNS,
+    SSH_NAMES, FOLDER_RULES, PROTECTED_PREFIXES, ALWAYS },
 };

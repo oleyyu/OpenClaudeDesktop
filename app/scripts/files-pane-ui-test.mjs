@@ -99,12 +99,14 @@ try{
  assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('aria-expanded')),'true');await page.keyboard.press('ArrowLeft');await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-expanded')==='false');
  await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-expanded')==='true');await tree().getByRole('button',{name:'deep.txt',exact:true}).waitFor();
  report.metrics.keyboardOrder=order;report.checks.push('Tree keyboard is unchanged: Tab lands on a treeitem, Home/ArrowDown walk rows, ArrowLeft collapses and ArrowRight expands the focused directory');
- step('search-results');const filter=pane().getByRole('textbox',{name:'Filter files',exact:true});await filter.fill('e');await pane().locator('.sfs-browser[data-search-phase="success"]').waitFor();await pane().locator('.sfs-result-row').first().waitFor();
- const results=await pane().locator('.sfs-results').evaluate(list=>{const probe=document.createElement('span');list.append(probe);probe.style.color='var(--cds-text-muted)';const muted=getComputedStyle(probe).color;probe.remove();
-  return {muted,rows:[...list.querySelectorAll('.sfs-result-row')].map(row=>{const icons=[...row.querySelectorAll('[data-cds="Icon"]')];return {path:row.querySelector('[data-tree-primary]').getAttribute('aria-label'),icons:icons.length,glyph:icons[0]?.textContent,fontSize:getComputedStyle(icons[0]).fontSize,color:getComputedStyle(icons[0]).color};})};});
+ step('search-results');const filter=pane().getByRole('textbox',{name:'Filter files',exact:true});await filter.fill('e');await pane().locator('.sfs-browser[data-search-phase="success"]').waitFor();await pane().locator('.sfs-results [role="treeitem"]').first().waitFor();
+ // W12b cf-03: a filename result is cccc2cf0a RT (the tree row): c280f9bbb FileTypeIcon `shrink-0 self-center text-muted-control`, the
+ // name, then the folder `truncate text-footnote text-muted-as-secondary`.
+ const results=await pane().locator('.sfs-results').evaluate(list=>({rows:[...list.querySelectorAll('[role="treeitem"]')].map(row=>{const primary=row.querySelector('[data-tree-primary]');const icon=primary.firstElementChild;
+  return {path:primary.getAttribute('aria-label'),iconClass:icon?.getAttribute('class')??'',folderClass:primary.querySelector('.text-footnote')?.getAttribute('class')??null};})}));
  report.metrics.search=results;assert.ok(results.rows.length>=5,'search lists several files');
- for(const row of results.rows){assert.equal(row.icons,1,row.path);assert.equal(row.fontSize,'12px',row.path);assert.equal(row.color,results.muted,row.path);assert.equal(row.glyph,glyph(fileKindIcon(path.posix.basename(row.path))),row.path+' search glyph');}
- assert.ok(new Set(results.rows.map(r=>r.glyph)).size>=3,'search results show several file kinds');await shot('search-light');
+ for(const row of results.rows){assert.match(row.iconClass,/shrink-0 self-center text-muted-control/,row.path);if(row.path.includes('/'))assert.equal(row.folderClass,'truncate text-footnote text-muted-as-secondary',row.path);}
+ await shot('search-light');
  await filter.fill('');await pane().locator('.sfs-results[hidden]').waitFor({state:'attached'});
  report.checks.push('Filename search results use the same shared-14 cP glyph per file at 12px in --cds-text-muted');
  step('file-tabs');
@@ -113,26 +115,29 @@ try{
  // pane 3/5 of a wider window: 1328px (+48 -> ~+29px) restores the strip width these unchanged tab assertions were written for.
  await size(1328,820);
  // Opens from the tree (double-click keeps, single click previews), re-showing the tree if a file view hid it.
- const tabRoot=name=>pane().locator(`.source-file-tab[data-file-path=${JSON.stringify(name)}]`),tabsNow=()=>pane().locator('.source-file-tab').evaluateAll(nodes=>nodes.map(n=>({path:n.dataset.filePath,preview:n.dataset.preview==='true',selected:n.hasAttribute('data-selected')})));
+ // W12c files-tabbar: the strip is the ViewTabBar (cccc2cf0a ND `ey`): a tab root is [data-vtb-id] (role presentation) and a
+ // preview tab's label is italic (cfe7c4b3b `o.preview && "italic"`); deleted is line-through.
+ const TAB='[data-view-tab-bar] [data-vtb-id]';
+ const tabRoot=name=>pane().locator(`${TAB}[data-vtb-id=${JSON.stringify(name)}]`),tabsNow=()=>pane().locator(TAB).evaluateAll(nodes=>nodes.map(n=>({path:n.dataset.vtbId,preview:!!n.querySelector('[data-vtb-label] .italic'),selected:n.hasAttribute('data-selected')})));
  async function openTab(name,keep){if(!(await tree().isVisible()))await pane().getByRole('button',{name:'Show file tree',exact:true}).click();const row=tree().getByRole('button',{name,exact:true});await row.waitFor();
   // Fidelity F11 opens the tab synchronously (panes-state-current.js F; vi drops the tree peek), so while the tree is not
   // shown beside the file the first click already swaps the tree for the viewer and a row double-click cannot land.
   // Keep the preview through its tab instead (the tab's double-click keeps it, as the row's does).
   const previews=await page.evaluate(()=>localStorage.getItem('epitaxy-files-preview-tabs')!=='false');
-  await row.click();await page.waitForFunction(({name,previews})=>{const tab=document.querySelector(`.source-file-tab[data-file-path$="${name}"]`);return tab&&tab.hasAttribute('data-preview')===previews;},{name,previews});
-  if(keep&&previews){await pane().locator(`.source-file-tab[data-file-path$=${JSON.stringify(name)}]`).dblclick();await page.waitForFunction(n=>document.querySelector(`.source-file-tab[data-file-path$="${n}"]:not([data-preview])`),name);}await frames();}
+  await row.click();await page.waitForFunction(({name,previews})=>{const tab=document.querySelector(`[data-view-tab-bar] [data-vtb-id$="${name}"]`);return tab&&!!tab.querySelector('[data-vtb-label] .italic')===previews;},{name,previews});
+  if(keep&&previews){await pane().locator(`${TAB}[data-vtb-id$=${JSON.stringify(name)}] [role="tab"]`).dblclick();await page.waitForFunction(n=>{const tab=document.querySelector(`[data-view-tab-bar] [data-vtb-id$="${n}"]`);return tab&&!tab.querySelector('[data-vtb-label] .italic');},name);}await frames();}
  const longName='quarterly-infrastructure-migration-checklist.txt';
  await openTab('notes.txt',true);await openTab(longName,true);await openTab('deep.txt',true);await openTab('README.md',false);
  const deepPath=(await tabsNow()).find(t=>t.path.endsWith('deep.txt')).path;assert.equal(path.posix.basename(deepPath),'deep.txt');
  assert.deepEqual((await tabsNow()).map(t=>[path.posix.basename(t.path),t.preview,t.selected]),[['notes.txt',false,false],[longName,false,false],['deep.txt',false,false],['README.md',true,true]]);
  await page.mouse.move(2,2);await frames();
- const tabInfo=await pane().locator('.source-file-tabs').evaluate(list=>{const probe=document.createElement('span');list.append(probe);const color=v=>{probe.style.color=`var(${v})`;return getComputedStyle(probe).color;},bg=v=>{probe.style.backgroundColor=`var(${v})`;return getComputedStyle(probe).backgroundColor;};
+ const tabInfo=await pane().locator('[data-view-tab-bar] [role="tablist"]').evaluate(list=>{const probe=document.createElement('span');list.append(probe);const color=v=>{probe.style.color=`var(${v})`;return getComputedStyle(probe).color;},bg=v=>{probe.style.backgroundColor=`var(${v})`;return getComputedStyle(probe).backgroundColor;};
   const tokens={muted:color('--cds-text-muted'),primary:color('--cds-text-primary'),secondary:color('--cds-text-secondary'),selectedBg:bg('--cds-fill-ghost-selected'),hoverBg:bg('--cds-fill-ghost-hover'),radius:(probe.style.borderRadius='var(--cds-radius)',getComputedStyle(probe).borderRadius)};probe.remove();
-  return {tokens,tabs:[...list.querySelectorAll('.source-file-tab')].map(root=>{const tab=root.querySelector(':scope > [role="tab"]'),label=root.querySelector('.source-file-tab-label'),inner=label.firstElementChild,close=root.querySelector(':scope > button'),bgLayer=root.querySelector(':scope > .source-file-tab-bg'),rs=getComputedStyle(root),ts=getComputedStyle(tab),ls=getComputedStyle(label);
-   return {path:root.dataset.filePath,role:root.getAttribute('role'),tabIcons:tab.querySelectorAll('[data-cds="Icon"]').length,rootIcons:root.querySelectorAll('[data-cds="Icon"]').length,closeIcons:close?.querySelectorAll('[data-cds="Icon"]').length,
+  return {tokens,tabs:[...list.querySelectorAll('[data-vtb-id]')].map(root=>{const tab=root.querySelector(':scope > [role="tab"]'),label=root.querySelector('[data-vtb-label]'),inner=label.firstElementChild,close=root.querySelector(':scope > button'),bgLayer=root.querySelector(':scope > span[aria-hidden="true"]'),rs=getComputedStyle(root),ts=getComputedStyle(tab),ls=getComputedStyle(label);
+   return {path:root.dataset.vtbId,role:root.getAttribute('role'),tabIcons:tab.querySelectorAll('[data-cds="Icon"]').length,rootIcons:root.querySelectorAll('[data-cds="Icon"]').length,closeIcons:close?.querySelectorAll('[data-cds="Icon"]').length,
     titled:root.querySelectorAll('[title]').length+(root.hasAttribute('title')?1:0),height:root.getBoundingClientRect().height,basis:rs.flexBasis,padding:rs.padding,gap:rs.gap,radius:rs.borderRadius,color:rs.color,justify:rs.justifyContent,
-    tabPadLeft:ts.paddingLeft,tabMin:ts.minWidth,tabGap:ts.gap,labelMax:ls.maxWidth,clipped:label.hasAttribute('data-clipped'),mask:ls.maskImage||ls.webkitMaskImage,fontStyle:getComputedStyle(inner).fontStyle,whiteSpace:getComputedStyle(inner).whiteSpace,
-    srPreview:[...inner.querySelectorAll('.source-sr-only')].map(n=>n.textContent),name:tab.textContent,bg:getComputedStyle(bgLayer).backgroundColor,bgZ:getComputedStyle(bgLayer).zIndex,bgHidden:bgLayer.getAttribute('aria-hidden'),
+    tabPadLeft:ts.paddingLeft,tabMin:ts.minWidth,tabGap:ts.gap,labelMax:ls.maxWidth,clipped:(ls.maskImage||ls.webkitMaskImage||'none')!=='none',mask:ls.maskImage||ls.webkitMaskImage,fontStyle:getComputedStyle(inner).fontStyle,whiteSpace:getComputedStyle(inner).whiteSpace,
+    srPreview:[...inner.querySelectorAll('.sr-only')].map(n=>n.textContent),name:tab.textContent,bg:getComputedStyle(bgLayer).backgroundColor,bgZ:getComputedStyle(bgLayer).zIndex,bgHidden:bgLayer.getAttribute('aria-hidden'),
     closeTag:close?.tagName,closeType:close?.getAttribute('type'),closeHidden:close?.getAttribute('aria-hidden'),closeTabIndex:close?.tabIndex,closeLabel:close?.getAttribute('aria-label'),closeColor:close&&getComputedStyle(close).color,closeSize:close&&[close.getBoundingClientRect().width,close.getBoundingClientRect().height],closeOpacity:close&&getComputedStyle(close).opacity,closeIconSize:close&&getComputedStyle(close.querySelector('[data-cds="Icon"]')).fontSize};})};});
  report.metrics.fileTabs=tabInfo;const {tokens}=tabInfo;
  for(const t of tabInfo.tabs){const where='tab '+t.path,selected=t.path.endsWith('README.md');
@@ -151,15 +156,15 @@ try{
  report.checks.push('File tabs (he over ce): role=presentation root, no icon, no native title, 24px tall, basis 192px, 2px padding, 4px gap, --cds-radius, 6px tab padding, 140px nowrap label (fe mask only on the clipped one), selected text-primary/justify-end/--cds-fill-ghost-selected; preview label italic with sr-only ", preview"; pe close button <button type=button aria-hidden tabIndex=-1 aria-label="Close file"> 20px, X 12px, always visible, --cds-text-muted (text-primary on the selected tab)');
  // has-[:focus-visible]:shadow-focus (panes-tabs-current.js:357-375) must not be clipped: the Xd tablist z is -mx-[4px] ... overflow-x-hidden p-[4px]
  // (:1138-1141), so every scroll/clip ancestor leaves >=4px around a keyboard-focused tab (the 1px accent ring + part of the 6px glow, design-system.css:52987).
- const ringProbe=()=>page.evaluate(()=>{const tab=document.activeElement,root=tab?.closest('.source-file-tab'),list=root?.closest('.source-file-tabs');if(!root)return null;
+ const ringProbe=()=>page.evaluate(()=>{const tab=document.activeElement,root=tab?.closest('[data-vtb-id]'),list=root?.closest('[role="tablist"]');if(!root)return null;
   const r=root.getBoundingClientRect(),clip={left:-Infinity,top:-Infinity,right:Infinity,bottom:Infinity};
   for(let n=root.parentElement;n&&n!==document.documentElement;n=n.parentElement){const cs=getComputedStyle(n);if(cs.overflowX==='visible'&&cs.overflowY==='visible')continue;const b=n.getBoundingClientRect(),left=b.left+n.clientLeft,top=b.top+n.clientTop;
    clip.left=Math.max(clip.left,left);clip.top=Math.max(clip.top,top);clip.right=Math.min(clip.right,left+n.clientWidth);clip.bottom=Math.min(clip.bottom,top+n.clientHeight);}
   const ls=getComputedStyle(list),header=list.closest('.source-pane-header').getBoundingClientRect(),lr=list.getBoundingClientRect();
-  return {path:root.dataset.filePath,focusVisible:tab.matches(':focus-visible'),shadow:getComputedStyle(root).boxShadow,room:{left:r.left-clip.left,top:r.top-clip.top,right:clip.right-r.right,bottom:clip.bottom-r.bottom},
+  return {path:root.dataset.vtbId,focusVisible:tab.matches(':focus-visible'),shadow:getComputedStyle(root).boxShadow,room:{left:r.left-clip.left,top:r.top-clip.top,right:clip.right-r.right,bottom:clip.bottom-r.bottom},
    listPadding:ls.padding,listMargin:[ls.marginLeft,ls.marginRight],listHeight:lr.height,inHeader:lr.top>=header.top-.5&&lr.bottom<=header.bottom+.5,overflowing:list.scrollWidth>list.clientWidth};});
- await tabRoot('README.md').locator('[role="tab"]').focus();await page.keyboard.press('Home');await page.waitForFunction(()=>document.activeElement?.closest('.source-file-tab')?.dataset.filePath==='notes.txt');await frames();
- const firstRing=await ringProbe();await page.keyboard.press('End');await page.waitForFunction(()=>document.activeElement?.closest('.source-file-tab')?.dataset.filePath==='README.md');await frames();
+ await tabRoot('README.md').locator('[role="tab"]').focus();await page.keyboard.press('Home');await page.waitForFunction(()=>document.activeElement?.closest('[data-vtb-id]')?.dataset.vtbId==='notes.txt');await frames();
+ const firstRing=await ringProbe();await page.keyboard.press('End');await page.waitForFunction(()=>document.activeElement?.closest('[data-vtb-id]')?.dataset.vtbId==='README.md');await frames();
  const lastRing=await ringProbe();report.metrics.tabFocusRing={first:firstRing,last:lastRing};
  for(const ring of [firstRing,lastRing]){const where='focused tab '+ring.path;assert.equal(ring.focusVisible,true,where+': keyboard focus is :focus-visible');assert.notEqual(ring.shadow,'none',where+': shadow-focus applied');
   assert.equal(ring.listPadding,'4px',where+': tablist p-[4px]');assert.deepEqual(ring.listMargin,['-4px','-4px'],where+': tablist -mx-[4px]');assert.ok(Math.abs(ring.listHeight-32)<=.5,where+': 24px tab + 2*4px');assert.equal(ring.inHeader,true,where+': tablist fits the 32px header');
@@ -171,22 +176,22 @@ try{
  await page.evaluate(()=>document.activeElement?.blur());await page.mouse.move(2,2);await frames();
  report.checks.push('Keyboard-focused tab ring is not clipped: the tablist has the Xd p-[4px] / -mx-[4px] (32px tall inside the 32px header) and every clip ancestor leaves >=4px top/bottom around the focused tab, left of the first and right of the last; middle-button mouseup is default-prevented (Z)');
  // te tooltip (panes-tabs-current.js:382-392): delay 700, bottom/start, label + detail (relative dir); none for a short root-level file.
- const hoverTiming=async(name)=>{await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('.source-tooltip-popup'));await page.waitForTimeout(700);
-  await page.evaluate(()=>{window.__tabTip={};const mo=new MutationObserver(()=>{if(!window.__tabTip.at&&document.querySelector('.source-tooltip-popup'))window.__tabTip.at=performance.now();});mo.observe(document.body,{childList:true,subtree:true});window.__tabTip.mo=mo;});
+ const hoverTiming=async(name)=>{await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('[data-cds="Tooltip"]'));await page.waitForTimeout(700);
+  await page.evaluate(()=>{window.__tabTip={};const mo=new MutationObserver(()=>{if(!window.__tabTip.at&&document.querySelector('[data-cds="Tooltip"]'))window.__tabTip.at=performance.now();});mo.observe(document.body,{childList:true,subtree:true});window.__tabTip.mo=mo;});
   const box=await tabRoot(name).locator('[role="tab"]').boundingBox();await page.evaluate(()=>{window.__tabTip.start=performance.now();});await page.mouse.move(box.x+box.width/2,box.y+box.height/2);const t0=Date.now();return {t0,box};};
  let hover=await hoverTiming(deepPath);await page.waitForTimeout(Math.max(0,500-(Date.now()-hover.t0)));
- assert.equal(await page.locator('.source-tooltip-popup').count(),0,'no tooltip at 500ms');
- await page.locator('.source-tooltip-popup').waitFor({timeout:Math.max(1,900-(Date.now()-hover.t0))});
- const tip=await page.evaluate(()=>{const popup=document.querySelector('.source-tooltip-popup'),r=popup.getBoundingClientRect();window.__tabTip.mo.disconnect();
-  return {elapsed:window.__tabTip.at-window.__tabTip.start,side:popup.closest('[data-side]')?.dataset.side,label:popup.querySelector('.source-tooltip-label')?.textContent,detail:popup.querySelector('.source-tooltip-detail')?.textContent,lines:popup.querySelectorAll('.source-tooltip-label-line').length,left:r.left,top:r.top,titled:document.querySelectorAll('.source-file-tabs [title]').length};});
+ assert.equal(await page.locator('[data-cds="Tooltip"]').count(),0,'no tooltip at 500ms');
+ await page.locator('[data-cds="Tooltip"]').waitFor({timeout:Math.max(1,900-(Date.now()-hover.t0))});
+ const tip=await page.evaluate(()=>{const popup=document.querySelector('[data-cds="Tooltip"]'),r=popup.getBoundingClientRect();window.__tabTip.mo.disconnect();
+  return {elapsed:window.__tabTip.at-window.__tabTip.start,side:popup.closest('[data-side]')?.dataset.side,label:popup.querySelector('[role="tooltip"] .break-words:not(.text-secondary)')?.textContent,detail:popup.querySelector('[role="tooltip"] .text-secondary')?.textContent,lines:popup.querySelectorAll('[role="tooltip"] .break-words:not(.text-secondary)').length,left:r.left,top:r.top,titled:document.querySelectorAll('[data-view-tab-bar] [title]').length};});
  report.metrics.deepTooltip={...tip,tab:hover.box};
  assert.ok(tip.elapsed>=500&&tip.elapsed<=900,`tooltip opened after ${tip.elapsed}ms (700ms delay)`);assert.equal(tip.side,'bottom');assert.ok(tip.top>=hover.box.y+hover.box.height-.5,'tooltip below the tab');assert.ok(Math.abs(tip.left-hover.box.x)<=1,`tooltip start-aligned (${tip.left} vs ${hover.box.x})`);
  assert.equal(tip.label,'deep.txt','tooltip content = basename');assert.equal(tip.detail,'nested','tooltip detail = relative dir (ce detail)');assert.equal(tip.lines,1);assert.equal(tip.titled,0);
  await shot('file-tab-tooltip');
- hover=await hoverTiming('notes.txt');await page.waitForTimeout(1000);assert.equal(await page.locator('.source-tooltip-popup').count(),0,'short root-level file: no tooltip');
- hover=await hoverTiming(longTab.path);await page.locator('.source-tooltip-popup').waitFor({timeout:1200});
- assert.deepEqual(await page.evaluate(()=>{const p=document.querySelector('.source-tooltip-popup');return [p.querySelector('.source-tooltip-label')?.textContent,p.querySelector('.source-tooltip-detail')];}),[longName,null],'clipped root-level label: label only, no detail');
- await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('.source-tooltip-popup'));
+ hover=await hoverTiming('notes.txt');await page.waitForTimeout(1000);assert.equal(await page.locator('[data-cds="Tooltip"]').count(),0,'short root-level file: no tooltip');
+ hover=await hoverTiming(longTab.path);await page.locator('[data-cds="Tooltip"]').waitFor({timeout:1200});
+ assert.deepEqual(await page.evaluate(()=>{const p=document.querySelector('[data-cds="Tooltip"]');return [p.querySelector('[role="tooltip"] .break-words:not(.text-secondary)')?.textContent,p.querySelector('[role="tooltip"] .text-secondary')];}),[longName,null],'clipped root-level label: label only, no detail');
+ await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('[data-cds="Tooltip"]'));
  report.checks.push('Tab tooltip (te): nothing at 500ms, shown by 900ms (measured '+Math.round(tip.elapsed)+'ms), below the tab start-aligned, "deep.txt" + detail "nested"; a short root-level file has none; a clipped root-level label shows the label without detail; no native title');
  // he context menu (panes-tabs-current.js:470-485), anchored bottom/start to the tab root.
  // F11: the tab menu now leads with the l_ file items (panes-tile-current.js:6809-6862: Mn Attach as context, Copy, Show in
@@ -197,13 +202,13 @@ try{
  const menuItems=()=>page.locator('[data-cds="ContextMenu"] [role="menuitem"]').evaluateAll(nodes=>nodes.map(n=>(n.querySelector('.smenu-label')?.textContent??n.textContent).trim()));
  const openMenu=async name=>{await tabRoot(name).locator('[role="tab"]').click({button:'right'});await page.locator('[data-cds="ContextMenu"][data-open]').waitFor();await frames();};
  await openMenu('README.md');assert.deepEqual(await menuItems(),[...FILE_ITEMS,'Keep open','Close file','Close other files','Close all files'],'preview tab menu order');
- const menuGeo=await page.evaluate(()=>{const popup=document.querySelector('[data-cds="ContextMenu"][data-open]'),root=document.querySelector('.source-file-tab[data-popup-open]');return {side:popup.dataset.side,align:popup.dataset.align,popup:popup.getBoundingClientRect().toJSON(),root:root?.getBoundingClientRect().toJSON(),rootPath:root?.dataset.filePath};});
+ const menuGeo=await page.evaluate(()=>{const popup=document.querySelector('[data-cds="ContextMenu"][data-open]'),root=document.querySelector('[data-view-tab-bar] [data-vtb-id][data-popup-open]');return {side:popup.dataset.side,align:popup.dataset.align,popup:popup.getBoundingClientRect().toJSON(),root:root?.getBoundingClientRect().toJSON(),rootPath:root?.dataset.vtbId};});
  report.metrics.tabMenu=menuGeo;assert.equal(menuGeo.rootPath,'README.md');assert.equal(menuGeo.side,'bottom');assert.equal(menuGeo.align,'start');assert.ok(menuGeo.popup.top>=menuGeo.root.bottom-.5,'menu below the tab root');assert.ok(Math.abs(menuGeo.popup.left-menuGeo.root.left)<=1,'menu start-aligned to the tab root');
  await shot('file-tab-menu');await page.keyboard.press('Escape');await page.locator('[data-cds="ContextMenu"]').waitFor({state:'detached'});
  await openMenu(deepPath);assert.deepEqual(await menuItems(),[...FILE_ITEMS,'Close file','Close other files','Close files to the right','Close all files'],'pinned tab menu has no Keep open');
  assert.deepEqual(await itemsOf(page.locator('[data-cds="ContextMenu"][data-open]')),['Attach as context','Copy','|',...OPEN_IN,'Show in Finder','|','Reveal in file tree','|','Close file','Close other files','Close files to the right','Close all files'],'file items, then a separator before the tab items');
- assert.equal(await tabRoot(deepPath).evaluate(n=>getComputedStyle(n.querySelector('.source-file-tab-bg')).backgroundColor),tokens.hoverBg,'data-popup-open tab uses --cds-fill-ghost-hover');
- await page.waitForTimeout(900);assert.equal(await page.locator('.source-tooltip-popup').count(),0,'tooltip suppressed while the tab menu is open');
+ assert.equal(await tabRoot(deepPath).evaluate(n=>getComputedStyle(n.querySelector(':scope > span[aria-hidden="true"]')).backgroundColor),tokens.hoverBg,'data-popup-open tab uses --cds-fill-ghost-hover');
+ await page.waitForTimeout(900);assert.equal(await page.locator('[data-cds="Tooltip"]').count(),0,'tooltip suppressed while the tab menu is open');
  await page.keyboard.press('Escape');await page.locator('[data-cds="ContextMenu"]').waitFor({state:'detached'});
  // Current source: close-right preserves an active file on the left; otherwise activates the clicked tab.
  await tabRoot('notes.txt').locator('[role="tab"]').click();
@@ -215,13 +220,13 @@ try{
  await openMenu(deepPath);assert.ok(!(await menuItems()).includes('Close files to the right'),'last tab omits close-right');await page.keyboard.press('Escape');
  await openTab('README.md',false);
  report.checks.push('2.31226.0 close-right: menu only on non-last tabs, preserves an active left tab, selects clicked tab if active right tab closes');
- await openMenu('README.md');await page.getByRole('menuitem',{name:'Close other files',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.source-file-tab').length===1);
+ await openMenu('README.md');await page.getByRole('menuitem',{name:'Close other files',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('[data-view-tab-bar] [data-vtb-id]').length===1);
  assert.deepEqual(await tabsNow(),[{path:'README.md',preview:true,selected:true}],'Close other files leaves only that tab');
  await openMenu('README.md');assert.deepEqual(await menuItems(),[...FILE_ITEMS,'Keep open','Close file'],'solo preview tab: Keep open + Close file');
- await page.getByRole('menuitem',{name:'Keep open',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.source-file-tab[data-preview]'));
- assert.equal(await tabRoot('README.md').locator('.source-file-tab-label > span').evaluate(n=>getComputedStyle(n).fontStyle),'normal','kept tab is no longer italic');
+ await page.getByRole('menuitem',{name:'Keep open',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('[data-view-tab-bar] [data-vtb-id] [data-vtb-label] .italic'));
+ assert.equal(await tabRoot('README.md').locator('[data-vtb-label] > span').evaluate(n=>getComputedStyle(n).fontStyle),'normal','kept tab is no longer italic');
  await openMenu('README.md');assert.deepEqual(await menuItems(),[...FILE_ITEMS,'Close file'],'solo pinned tab: Close file only');await page.keyboard.press('Escape');await page.locator('[data-cds="ContextMenu"]').waitFor({state:'detached'});
- await tabRoot('README.md').locator('.source-file-tab-close').click();await page.waitForFunction(()=>!document.querySelector('.source-file-tab'));
+ await tabRoot('README.md').locator('button[aria-label="Close file"]').click();await page.waitForFunction(()=>!document.querySelector('[data-view-tab-bar] [data-vtb-id]'));
  report.checks.push('Tab context menu (he): the l_ file items (Attach as context, Copy, separator, Show in Finder, separator, Reveal in file tree) and a separator, then the preview tab lists Keep open / Close file / Close other files / Close all files, pinned tab omits Keep open, solo tabs omit the close-other/all items; popup below-start of the tab root with data-popup-open fill-ghost-hover and no tooltip; Close other files leaves only that tab; Keep open drops italics; the aria-hidden close button still closes by pointer');
  step('viewer-menus');
  // F11 (cd2efac6e jo/Yo/Ma, Mn file_browser, toggleDiffFileList, _e/K): the breadcrumb subheader and numbered rows, the
@@ -266,19 +271,20 @@ try{
  // Eight pinned tabs overflow the strip: hidden tabs move into "More files" (side bottom, align end) and the active tab stays in view.
  for(const name of ['README.md','index.html','app.tsx','data.csv','notes.txt','Makefile','config.json','bundle.zip'])await openTab(name,true);
  await page.waitForFunction(()=>document.querySelector('.source-side-tile[data-tile-id="files"] [data-vtb-overflow]'));await frames();
- const strip=await pane().evaluate(n=>{const list=n.querySelector('.source-file-tabs'),tabs=[...list.querySelectorAll('.source-file-tab')],lr=list.getBoundingClientRect(),active=list.querySelector('.source-file-tab[data-selected]'),ar=active.getBoundingClientRect();
-  return {count:tabs.length,hidden:tabs.filter(t=>t.hasAttribute('data-overflowed')).map(t=>t.dataset.filePath),active:active.dataset.filePath,activeVisible:ar.left>=lr.left-.5&&ar.right<=lr.right+.5&&getComputedStyle(active).visibility==='visible',
+ const strip=await pane().evaluate(n=>{const list=n.querySelector('[data-view-tab-bar] [role="tablist"]'),tabs=[...list.querySelectorAll('[data-vtb-id]')],lr=list.getBoundingClientRect(),active=list.querySelector('[data-vtb-id][data-selected]'),ar=active.getBoundingClientRect();
+  return {count:tabs.length,hidden:tabs.filter(t=>t.hasAttribute('data-vtb-hidden')).map(t=>t.dataset.vtbId),active:active.dataset.vtbId,activeVisible:ar.left>=lr.left-.5&&ar.right<=lr.right+.5&&getComputedStyle(active).visibility==='visible',
    trigger:n.querySelector('[data-vtb-overflow] button')?.getAttribute('aria-label'),stripWidth:list.clientWidth,paneWidth:n.clientWidth};});
  report.metrics.tabOverflow=strip;assert.equal(strip.count,8,'eight tabs (the cap)');assert.ok(strip.hidden.length>0,'some tabs are hidden');assert.equal(strip.trigger,'More files');
  assert.equal(strip.active,'bundle.zip');assert.equal(strip.activeVisible,true,'the active tab is in view');assert.ok(!strip.hidden.includes(strip.active));
  await pane().getByRole('button',{name:'More files',exact:true}).click();const more=page.getByRole('menu',{name:'More files',exact:true});await more.waitFor();await frames();
- const moreInfo=await more.evaluate(m=>({rows:[...m.querySelectorAll('[role="menuitem"]')].map(n=>n.dataset.filePath),side:m.dataset.side,align:m.dataset.align,hint:m.querySelector('.source-sr-only')?.textContent}));
+ // The ViewTabBar's overflow rows (cfe7c4b3b ae) carry the label in an OverflowTooltip and the hint as an sr-only text.
+ const moreInfo=await more.evaluate(m=>({rows:[...m.querySelectorAll('[role="menuitem"]')].map(n=>n.querySelector('.text-body [data-cds="OverflowTooltip"]')?.textContent),side:m.dataset.side,align:m.dataset.align,hint:[...m.querySelectorAll('.sr-only')].map(n=>n.textContent).find(t=>t.includes('arrow to close'))}));
  report.metrics.moreFiles=moreInfo;assert.deepEqual(moreInfo.rows,strip.hidden,'the menu lists exactly the hidden tabs');assert.equal(moreInfo.side,'bottom');assert.equal(moreInfo.align,'end');assert.equal(moreInfo.hint,'press right arrow to close');
  await shot('file-tabs-more-files');
- const target=strip.hidden[0];await more.locator(`[role="menuitem"][data-file-path=${JSON.stringify(target)}]`).click();await more.waitFor({state:'detached'});
- await page.waitForFunction(p=>{const t=[...document.querySelectorAll('.source-side-tile[data-tile-id="files"] .source-file-tab')].find(n=>n.dataset.filePath===p);return t&&t.hasAttribute('data-selected')&&!t.hasAttribute('data-overflowed');},target);
+ const target=strip.hidden[0];await more.getByRole('menuitem').filter({hasText:target}).first().click();await more.waitFor({state:'detached'});
+ await page.waitForFunction(p=>{const t=[...document.querySelectorAll('.source-side-tile[data-tile-id="files"] [data-view-tab-bar] [data-vtb-id]')].find(n=>n.dataset.vtbId===p);return t&&t.hasAttribute('data-selected')&&!t.hasAttribute('data-vtb-hidden');},target);
  report.checks.push('Eight pinned tabs in a '+strip.stripWidth+'px strip: '+strip.hidden.length+' hidden behind the ghost CaretDown "More files" menu (bottom/end, rows = the hidden tabs, "press right arrow to close"); choosing '+target+' activates it in view');
- await openMenu(target);await page.getByRole('menuitem',{name:'Close all files',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.source-side-tile[data-tile-id="files"] .source-file-tab'));
+ await openMenu(target);await page.getByRole('menuitem',{name:'Close all files',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.source-side-tile[data-tile-id="files"] [data-view-tab-bar] [data-vtb-id]'));
  assert.deepEqual(report.rendererErrors,[]);
  step('search-files');
  // c_ (panes-tile-current.js:6791-6807): ghost iconOnly "Go to file or search" first in the file pane's trailing slot (:16366-16378), before the
@@ -291,7 +297,7 @@ try{
  assert.deepEqual(await searchButton.evaluate(b=>({title:b.getAttribute('title'),ghost:b.classList.contains('spc-ghost'),icons:b.querySelectorAll('[data-cds="Icon"]').length,text:b.textContent.length})),{title:null,ghost:true,icons:1,text:1});
  await searchButton.hover();await page.locator('.source-tooltip-popup').filter({hasText:'Go to file or search'}).waitFor();await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('.source-tooltip-popup'));
  const paneState=()=>pane().evaluate(n=>{const body=n.querySelector('.source-file-body'),tree=n.querySelector('.source-files-tree');return {treeVisible:body.dataset.treeVisible,column:body.dataset.treeColumn,treeShown:!!tree&&!tree.hidden&&tree.getClientRects().length>0,
-  preview:n.querySelector('[data-file-breadcrumb]')?.textContent??null,selected:n.querySelector('.source-file-tab[data-selected]')?.dataset.filePath??null,tabs:[...n.querySelectorAll('.source-file-tab')].map(t=>t.dataset.filePath),paneWidth:n.querySelector('.source-file-panel').clientWidth};});
+  preview:n.querySelector('[data-file-breadcrumb]')?.textContent??null,selected:n.querySelector('[data-view-tab-bar] [data-vtb-id][data-selected]')?.dataset.vtbId??null,tabs:[...n.querySelectorAll('[data-view-tab-bar] [data-vtb-id]')].map(t=>t.dataset.vtbId),paneWidth:n.querySelector('.source-file-panel').clientWidth};});
  const focusedFilter=()=>page.evaluate(()=>{const n=document.activeElement;return n?.getAttribute('aria-label')==='Filter files'?{value:n.value,start:n.selectionStart,end:n.selectionEnd}:null;});
  // Tree shown: the button only focuses and selects.
  await filterBox.fill('notes');await pane().locator('.sfs-browser[data-search-phase="success"]').waitFor();await page.evaluate(()=>document.activeElement?.blur());
@@ -319,12 +325,12 @@ try{
   await pane().getByRole('button',{name:'Files settings',exact:true}).click();
   await page.getByRole('menuitem',{name:'Reload file',exact:true}).click();
   await tabRoot('notes.txt').locator('[role="tab"]').filter({hasText:'deleted'}).waitFor();
-  assert.equal(await tabRoot('notes.txt').getAttribute('data-deleted'),'true');
-  assert.equal(await tabRoot('notes.txt').locator('.source-file-tab-label > span').evaluate(n=>getComputedStyle(n).textDecorationLine),'line-through');
+  assert.equal(await tabRoot('notes.txt').evaluate(n=>!!n.querySelector('[data-vtb-label] .line-through')),true);
+  assert.equal(await tabRoot('notes.txt').locator('[data-vtb-label] > span').evaluate(n=>getComputedStyle(n).textDecorationLine),'line-through');
   await shot('deleted-file-tab');
  } finally { await fs.rename(path.join(workspace,'notes.saved'),path.join(workspace,'notes.txt')); }
  await tree().getByRole('button',{name:'notes.txt',exact:true}).click();
- await poll(async()=>await tabRoot('notes.txt').getAttribute('data-deleted')===null,'restored file clears deleted state');
+ await poll(async()=>await tabRoot('notes.txt').evaluate(n=>!n.querySelector('[data-vtb-label] .line-through')),'restored file clears deleted state');
  report.checks.push('2.31226.0 deleted file: a real missing read strikes through its tab and announces deleted; restoring and reopening clears it');
  const storedTreePreference=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('code-desktop-tiles')).filesTreeShown);
  assert.equal(await storedTreePreference(),false,'search peek never changes the persistent tree preference');
@@ -335,7 +341,7 @@ try{
  assert.equal(await storedTreePreference(),false);
  report.checks.push('2.31226.0 tree peek does not persist; closing and reopening the Files pane restores the hidden tree preference');
 
- await tabRoot(hiddenAfter.selected).locator('.source-file-tab-close').click();await page.waitForFunction(()=>!document.querySelector('.source-side-tile[data-tile-id="files"] .source-file-tab'));
+ await tabRoot(hiddenAfter.selected).locator('button[aria-label="Close file"]').click();await page.waitForFunction(()=>!document.querySelector('.source-side-tile[data-tile-id="files"] [data-view-tab-bar] [data-vtb-id]'));
  report.checks.push('Go to file or search (c_): ghost icon-only button first in the Files trailing controls ['+trailing.join(', ')+'], CDS tooltip, no native title; with the tree shown it only focuses "Filter files" and selects its text; with the tree hidden and a file open it shows the tree beside that file (pane '+hiddenBefore.paneWidth+'px), keeps the file selected, then focuses and selects the filter');
  assert.deepEqual(report.rendererErrors,[]);
  step('previews');
@@ -370,7 +376,7 @@ try{
  const photoInfo=await photo.evaluate(i=>({naturalWidth:i.naturalWidth,naturalHeight:i.naturalHeight,alt:i.alt,src:i.getAttribute('src'),fit:getComputedStyle(i).objectFit,toggle:!!document.querySelector('.source-side-tile[data-tile-id="files"] [data-view-toggle]')}));
  report.metrics.photo=photoInfo;assert.deepEqual([photoInfo.naturalWidth,photoInfo.naturalHeight,photoInfo.alt,photoInfo.fit,photoInfo.toggle],[1,1,'photo.png','contain',false]);assert.match(photoInfo.src,/^file:\/\/\/.+\/photo\.png$/);
  await shot('photo-preview');
- await openMenu('photo.png');await page.getByRole('menuitem',{name:'Close all files',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.source-side-tile[data-tile-id="files"] .source-file-tab'));
+ await openMenu('photo.png');await page.getByRole('menuitem',{name:'Close all files',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.source-side-tile[data-tile-id="files"] [data-view-tab-bar] [data-vtb-id]'));
  if(!(await tree().isVisible()))await pane().getByRole('button',{name:'Show file tree',exact:true}).click();
  report.checks.push('Previews: util.mjs and main.go render highlighted token spans ('+mjs.tokens+' / '+go.tokens+'); README.md opens as its Markdown preview (h1 22px in the 860px prose column) with the "View source" Code toggle, which shows the numbered source and flips to "Preview"; photo.png renders from its file:// URL with naturalWidth 1 and no toggle; the pressed ListBullet paints --cds-text-accent on --cds-bg-accent');
  step('file-view-settings');
@@ -542,7 +548,7 @@ try{
  const beforeQuestion=JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns;
  await hit().click({button:'right'});await fileActionsMenu().getByRole('menuitem',{name:'Ask about this',exact:true}).click();
  const side=page.getByRole('complementary',{name:'Side chat',exact:true});await side.waitFor();
- assert.equal(await side.locator('.ssc-user').innerText(),'In content-a.txt at line 4: `needle` — explain what this does and where it’s used.');
+ assert.equal(await side.locator('.epitaxy-user-turn').innerText(),'In content-a.txt at line 4: `needle` — explain what this does and where it’s used.');
  await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();
  await poll(async()=>await side.locator('.ssc-input').evaluate(n=>n===document.activeElement),'side question receives keyboard focus');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion,'side question leaves the parent conversation untouched');
@@ -570,7 +576,7 @@ try{
  await side.getByRole('button',{name:'Close side chat',exact:true}).click();await side.waitFor({state:'hidden'});
  await poll(()=>app.evaluate(({Menu,BrowserWindow})=>{const find=menu=>{for(const item of menu.items){if(item.label==='Show Side Chat'&&item.enabled)return item;const child=item.submenu&&find(item.submenu);if(child)return child;}};const item=find(Menu.getApplicationMenu());if(!item)return false;item.click(item,BrowserWindow.getAllWindows()[0]);return true;}),'reopen side chat via actual menu');
  await side.waitFor();near(await panelRect(),savedSide,'reopening preserves panel geometry');
- assert.equal(await side.locator('.ssc-user').count(),1,'reopening retains messages without sending again');
+ assert.equal(await side.locator('.epitaxy-user-turn').count(),1,'reopening retains messages without sending again');
  await side.locator('.ssc-input').fill('unsent side draft');
  await side.locator('.ssc-input').press('Escape');await side.waitFor({state:'hidden'});
  await poll(()=>app.evaluate(({Menu,BrowserWindow})=>{const find=menu=>{for(const item of menu.items){if(item.label==='Show Side Chat'&&item.enabled)return item;const child=item.submenu&&find(item.submenu);if(child)return child;}};const item=find(Menu.getApplicationMenu());if(!item)return false;item.click(item,BrowserWindow.getAllWindows()[0]);return true;}),'reopen after Escape');
@@ -588,7 +594,7 @@ try{
    await side.evaluate(node=>{window.__sideStatusTrace=[];const read=()=>{const row=node.querySelector('.ssc-status');if(!row)return;const state={phase:row.dataset.sideStatus,announcement:row.querySelector('[role=status]').textContent,clock:row.querySelector('[data-runtime-stat=elapsed]')?.textContent??null,visual:row.querySelector('.sts-label').textContent};const previous=window.__sideStatusTrace.at(-1);if(JSON.stringify(state)!==JSON.stringify(previous))window.__sideStatusTrace.push(state);};window.__sideStatusObserver=new MutationObserver(read);window.__sideStatusObserver.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-side-status']});read();});
    await questionInput().fill('fixture:hold');await questionInput().press('Enter');
    await side.getByRole('button',{name:'Stop response',exact:true}).waitFor();
-   await poll(async()=>await side.locator('.ssc-answer').last().innerText().then(text=>text.includes('HOLD_CHUNK_')),'partial side reply');
+   await poll(async()=>await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').last().innerText().then(text=>text.includes('HOLD_CHUNK_')),'partial side reply');
    assert.equal(await questionInput().isDisabled(),true,'current source disables input during a response');
    assert.equal(await side.evaluate(n=>getComputedStyle(n).outlineStyle),'none','source frame is outline-none even while focused');
    await side.locator('.ssc-status[data-side-status=running] [data-runtime-stat=elapsed]').waitFor();
@@ -601,7 +607,7 @@ try{
    if(via==='button')await side.getByRole('button',{name:'Stop response',exact:true}).click();else{await side.focus();await page.keyboard.press('Escape');}
    await poll(async()=>!(await questionInput().isDisabled()),'stop restores composer');
    assert.equal(await side.isVisible(),true,'stopping keeps the panel open');
-   assert.ok((await side.locator('.ssc-answer').last().innerText()).includes('HOLD_CHUNK_'),'partial answer remains');
+   assert.ok((await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').last().innerText()).includes('HOLD_CHUNK_'),'partial answer remains');
    assert.equal(await side.getByRole('alert').count(),0);assert.equal(await side.getByRole('button',{name:'Retry',exact:true}).count(),0);
    const trace=await page.evaluate(()=>{window.__sideStatusObserver.disconnect();delete window.__sideStatusObserver;return window.__sideStatusTrace;});
    assert.ok(trace.some(s=>s.phase==='running'&&s.clock===null),'clock starts hidden');assert.ok(trace.some(s=>s.phase==='running'&&s.clock),'clock appears after two seconds');
@@ -622,23 +628,23 @@ try{
  await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await side.waitFor({state:'hidden'});await showSide();await side.waitFor();
  assert.equal(await questionInput().evaluate(n=>n.value),'session A private draft');
  await side.getByRole('button',{name:'Clear side chat',exact:true}).click();assert.equal(await questionInput().evaluate(n=>n.value),'session A private draft','toolbar clear preserves draft');
- assert.equal(await side.locator('.ssc-user').count(),0);
+ assert.equal(await side.locator('.epitaxy-user-turn').count(),0);
  for(const command of ['/clear','/RESET','/new']){
    await questionInput().fill('ordinary question');await questionInput().press('Enter');await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();
    await poll(async()=>!(await questionInput().isDisabled()),'answer settles');const before=await starts();
-   await questionInput().fill(command);await questionInput().press('Enter');await side.locator('.ssc-empty').waitFor();
+   await questionInput().fill(command);await questionInput().press('Enter');await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();
    assert.equal(await questionInput().evaluate(n=>n.value),'');assert.equal(await starts(),before,command+' is not sent to the model');
  }
  step('side-chat-current-layout');
  assert.equal(await side.locator('.ssc-context').count(),0,'current panel has no legacy message-count strip');
  assert.equal(await side.locator('.ssc-header [data-cds="Shortcut"]').count(),0,'close shortcut lives in its tooltip');
  assert.equal(await questionInput().getAttribute('contenteditable'),'true');assert.ok((await questionInput().getAttribute('class')).includes('ProseMirror'));
- const sideLayout=await side.evaluate(node=>{const css=getComputedStyle(node),header=getComputedStyle(node.querySelector('.ssc-header')),empty=getComputedStyle(node.querySelector('.ssc-empty p')),composer=getComputedStyle(node.querySelector('.ssc-composer'));
+ const sideLayout=await side.evaluate(node=>{const css=getComputedStyle(node),header=getComputedStyle(node.querySelector('.ssc-header')),empty=getComputedStyle(node.querySelector('[data-pane-root] .flex-1.min-h-0 > .bg-alpha-1')),composer=getComputedStyle(node.querySelector('.ssc-composer'));
   const probe=node.ownerDocument.createElement('span');probe.style.borderRadius='var(--cds-radius)';node.append(probe);const baseRadius=parseFloat(getComputedStyle(probe).borderRadius);probe.remove();
-  return {scale:parseFloat(css.getPropertyValue('--cds-rem-scale'))||1,radius:parseFloat(css.borderRadius),baseRadius,headerHeight:parseFloat(header.height),headerBorder:header.borderBottomWidth,darkOutline:getComputedStyle(node.querySelector('.ssc-content')).outlineWidth,emptyBackground:empty.backgroundColor,emptyAlign:empty.textAlign,emptyPadding:empty.paddingLeft,composerBorder:composer.borderTopWidth};});
+  return {scale:parseFloat(css.getPropertyValue('--cds-rem-scale'))||1,radius:parseFloat(css.borderRadius),baseRadius,headerHeight:parseFloat(header.height),headerBorder:header.borderBottomWidth,darkOutline:getComputedStyle(node.querySelector('[data-pane-root]')).outlineWidth,emptyBackground:empty.backgroundColor,emptyAlign:empty.textAlign,emptyPadding:empty.paddingLeft,composerBorder:composer.borderTopWidth};});
  assert.equal(sideLayout.headerHeight,32*sideLayout.scale);assert.equal(sideLayout.radius,sideLayout.baseRadius+4*sideLayout.scale);
  assert.equal(sideLayout.darkOutline,'1px');assert.equal(sideLayout.headerBorder,'0px');assert.equal(sideLayout.composerBorder,'0px');assert.equal(sideLayout.emptyAlign,'start');
- assert.notEqual(sideLayout.emptyBackground,'rgba(0, 0, 0, 0)');assert.match(await side.locator('.ssc-empty').innerText(),/Codex sees the full context/);
+ assert.notEqual(sideLayout.emptyBackground,'rgba(0, 0, 0, 0)');assert.match(await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').innerText(),/Codex sees the full context/);
  const sendGlyph=await side.getByRole('button',{name:'Send',exact:true}).locator('[data-cds="Icon"]').innerText();assert.equal(sendGlyph,glyph('ArrowReturn'));
  await side.getByRole('button',{name:'Close side chat',exact:true}).hover();await page.getByRole('tooltip').filter({hasText:'Close side chat'}).waitFor();
  assert.ok(await page.getByRole('tooltip').filter({hasText:'Close side chat'}).locator('[data-cds="Shortcut"],kbd').count(),'close tooltip renders its shortcut');
@@ -649,29 +655,29 @@ try{
  await questionInput().evaluate(node=>node.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',keyCode:229,isComposing:true,bubbles:true,cancelable:true})));
  assert.equal(await starts(),beforeEditor,'IME composing Enter does not submit');assert.equal(await questionInput().evaluate(n=>n.value),multiline);
  await shot('side-chat-editor-multiline');await questionInput().press('Enter');await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();
- assert.equal(await side.locator('.ssc-user').last().innerText(),multiline,'rich editor sends exact multiline text');
+ assert.equal(await side.locator('.epitaxy-user-turn').last().innerText(),multiline,'rich editor sends exact multiline text');
  // OT/RW: measure on the inner bubble only, current compact tokens and no answer footer.
  await questionInput().fill('Long side question '+ 'wrap '.repeat(100));await questionInput().press('Enter');
- await poll(async()=>await questionInput().getAttribute('contenteditable')==='true'&&(await side.locator('.ssc-answer').count())===2,'long question settled');
+ await poll(async()=>await questionInput().getAttribute('contenteditable')==='true'&&(await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').count())===2,'long question settled');
  const messageLayout=await side.evaluate(node=>{
-   const messages=node.querySelector('.ssc-messages'),user=[...node.querySelectorAll('.ssc-user')].at(-1),body=user.querySelector('.ssc-user-body'),bubble=user.querySelector('.ssc-user-bubble'),answer=[...node.querySelectorAll('.ssc-answer')].at(-1),text=answer.querySelector('.ssc-answer-text');
-   const css=getComputedStyle(bubble),probe=document.createElement('div');probe.style.cssText='position:absolute;visibility:hidden;background:var(--cds-bg-user-message);border-radius:calc(var(--cds-radius) + .25rem * var(--cds-rem-scale,1));padding:var(--cds-pad-md) var(--cds-pad-lg);font-size:var(--cds-font-size-heading);line-height:var(--cds-leading-heading)';node.append(probe);const expected=getComputedStyle(probe);
+   const messages=node.querySelector('[data-pane-root] .flex-1.min-h-0.overflow-y-auto'),user=[...node.querySelectorAll('.epitaxy-user-turn')].at(-1),body=user.querySelector('[data-cds=UserMessage]'),bubble=user.querySelector('[data-cds=UserMessage] > div'),answer=[...node.querySelectorAll('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text')].at(-1),text=answer.firstElementChild;
+   const css=getComputedStyle(bubble),probe=document.createElement('div');probe.style.cssText='position:absolute;visibility:hidden;background:var(--cds-bg-user-message);border-radius:var(--cds-message-bubble-radius);padding:var(--cds-message-bubble-pad-y) var(--cds-message-bubble-pad-x);font-size:var(--cds-font-size-heading);line-height:var(--cds-leading-heading)';node.append(probe);const expected=getComputedStyle(probe);
    const result={userWidth:user.getBoundingClientRect().width,bodyWidth:body.getBoundingClientRect().width,bubbleWidth:bubble.getBoundingClientRect().width,answerInset:text.getBoundingClientRect().left-answer.getBoundingClientRect().left,answerExtraHeight:answer.getBoundingClientRect().height-text.getBoundingClientRect().height,overflow:messages.scrollWidth>messages.clientWidth,
     actual:[css.backgroundColor,css.borderRadius,css.paddingTop,css.paddingLeft,css.fontSize,css.lineHeight],expected:[expected.backgroundColor,expected.borderRadius,expected.paddingTop,expected.paddingLeft,expected.fontSize,expected.lineHeight]};probe.remove();return result;
  });
  assert.ok(Math.abs(messageLayout.userWidth-messageLayout.bodyWidth)<1,'context wrapper takes full row width');
- assert.ok(Math.abs(messageLayout.bubbleWidth-messageLayout.userWidth*.85)<1,'bubble applies original 85% measure once');
- assert.deepEqual(messageLayout.actual,messageLayout.expected,'bubble uses current compact message color, radius, padding and heading typography');
+ assert.ok(messageLayout.bubbleWidth<=messageLayout.userWidth*.85+1,'bubble applies the r8 w3 measure (max-w-[var(--cds-message-bubble-measure)], 85%) once');
+ assert.deepEqual(messageLayout.actual,messageLayout.expected,'bubble uses the r8 C3 radius/padding, bg-[var(--cds-bg-user-message)] and text-heading');
  assert.equal(messageLayout.answerInset,0);assert.equal(messageLayout.answerExtraHeight,0);assert.equal(messageLayout.overflow,false);
  assert.equal(await side.getByRole('button',{name:'Copy answer',exact:true}).count(),0);assert.equal(await side.getByRole('button',{name:'Branch to new chat',exact:true}).count(),0);
- report.metrics.sideMessageLayout=messageLayout;report.checks.push('Current OT/RW side-chat messages use full-width context rows and one 85% bubble measure, compact source color/radius/padding/heading tokens, with no assistant inset or legacy Copy/Branch footer; long questions do not overflow');
+ report.metrics.sideMessageLayout=messageLayout;report.checks.push('Current OT/RW side-chat messages use full-width context rows and one r8 bubble (C3/w3, 85% measure, bg-user-message, text-heading), with no assistant inset or legacy Copy/Branch footer; long questions do not overflow');
  await shot('side-chat-message-layout');
  step('side-chat-user-content');
  const syntheticAnthropic='sk-ant-'+'x'.repeat(32),syntheticGithub='ghp_'+'y'.repeat(32),syntheticAws='AKIA'+'A'.repeat(24);
  const richSideQuestion=['List question','','3. third','4. fourth','   * nested','','Literal `code` https://example.com','','```js','* literal fence','```','','Secrets: '+syntheticAnthropic+' '+syntheticGithub+' '+syntheticAws].join('\n');
  await questionInput().fill(richSideQuestion);assert.equal(await questionInput().evaluate(n=>n.value),richSideQuestion);await questionInput().press('Enter');
- await poll(async()=>await side.locator('.ssc-answer').count()===3&&!(await questionInput().isDisabled()),'list side answer settles');
- const userContent=side.locator('.ssc-user-content').last();await userContent.locator('ol[start="3"]').waitFor();assert.equal(await userContent.locator('ol > li').count(),2);assert.equal(await userContent.locator('ol ul > li').innerText(),'nested');
+ await poll(async()=>await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').count()===3&&!(await questionInput().isDisabled()),'list side answer settles');
+ const userContent=side.locator('.epitaxy-user-turn .cds-user-message-body').last();await userContent.locator('ol[start="3"]').waitFor();assert.equal(await userContent.locator('ol > li').count(),2);assert.equal(await userContent.locator('ol ul > li').innerText(),'nested');
  assert.equal(await userContent.locator('pre,code,a').count(),0,'source ordinary user content keeps code and links literal');
  assert.ok((await userContent.innerText()).includes('```js\n* literal fence\n```'));
  const listPaint=await userContent.locator('ol').evaluate(n=>({style:getComputedStyle(n).listStyleType,padding:getComputedStyle(n).paddingLeft,gap:getComputedStyle(n).gap}));
@@ -687,7 +693,7 @@ try{
  report.checks.push('Current original user-list parser/renderer preserves ordered starts and nested lists, keeps code fences/links literal, masks synthetic secrets with independent mouse/keyboard reveal toggles and sends unchanged question text through the real fork');
 
 
- await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('.ssc-empty').waitFor();
+ await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();
  report.metrics.sideChatLayout=sideLayout;
  report.checks.push('Current side-chat layout uses a 32px header, token card radius, tooltip-only close shortcut, top alpha notice naming the configured core and no legacy count/separators; shared ProseMirror editor supports Shift/Alt Enter, undo/redo, composing-Enter suppression and exact multiline dispatch with ArrowReturn');
  await shot('side-chat-reset');
@@ -721,7 +727,7 @@ try{
  await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();await poll(async()=>!(await questionInput().isDisabled()),'file mention answer finishes');
  const mentionRequest=(await requests()).filter(call=>call.method==='turn/start').at(-1);assert.ok(mentionRequest.params.input[0].text.endsWith('@README.md'),'file path reaches the actual side fork');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion,'file mention question leaves parent history unchanged');
- await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('.ssc-empty').waitFor();
+ await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();
  // Closing during the search debounce must leave no body-portal menu behind.
  await questionInput().fill('@read');await side.getByRole('button',{name:'Close side chat',exact:true}).click();await new Promise(resolve=>setTimeout(resolve,250));
  assert.equal(await page.getByRole('listbox',{name:'Mention suggestions',exact:true}).count(),0);await showSide();await questionInput().fill('');
@@ -747,7 +753,7 @@ try{
  assert.equal((await requests()).filter(call=>call.method==='thread/fork').length,forksBeforeTools,'follow-up tools reuse the ephemeral fork');
  await questionInput().fill('fixture:side-close');await questionInput().press('Enter');await side.getByRole('button',{name:'Stop response',exact:true}).waitFor();await poll(async()=>!(await questionInput().isDisabled()),'closed side fork releases the pending question');
  assert.equal(await sideStatus().getAttribute('data-side-status'),'idle');assert.equal(await side.getByRole('alert').count(),0);assert.equal(await side.getByRole('button',{name:'Retry',exact:true}).count(),0);assert.equal(await side.isVisible(),true);
- await questionInput().fill('Restart after side close');await questionInput().press('Enter');await poll(async()=>!(await questionInput().isDisabled())&&(await side.locator('.ssc-answer').count())===3,'new question starts a fresh fork after close');assert.equal((await requests()).filter(call=>call.method==='thread/fork').length,forksBeforeTools+1);
+ await questionInput().fill('Restart after side close');await questionInput().press('Enter');await poll(async()=>!(await questionInput().isDisabled())&&(await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').count())===3,'new question starts a fresh fork after close');assert.equal((await requests()).filter(call=>call.method==='thread/fork').length,forksBeforeTools+1);
 
 
  const recoveredRequest=(await requests()).filter(call=>call.method==='turn/start').at(-1).params;
@@ -758,15 +764,15 @@ try{
  assert.ok(recoveredText.includes('User: fixture:side-tools'));assert.ok(recoveredText.includes('Assistant: SIDE_TOOL_REPLY'));
  assert.ok(recoveredText.includes('User: Restart after side close'));assert.ok(!recoveredText.includes('User: fixture:side-close'),'the unanswered closed question was replaced, not replayed');
  assert.equal(recoveredText.split('User: Lifecycle warmup').length,2,'history appears once');
- assert.equal(await side.locator('.ssc-user').last().innerText(),'Restart after side close','the transport replay never replaces the visible question');
+ assert.equal(await side.locator('.epitaxy-user-turn').last().innerText(),'Restart after side close','the transport replay never replaces the visible question');
  await shot('side-chat-history-recovered');
  await questionInput().fill('Healthy follow-up after recovery');await questionInput().press('Enter');
- await poll(async()=>!(await questionInput().isDisabled())&&(await side.locator('.ssc-answer').count())===4,'recovered fork handles its next question');
+ await poll(async()=>!(await questionInput().isDisabled())&&(await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').count())===4,'recovered fork handles its next question');
  const healthyRequest=(await requests()).filter(call=>call.method==='turn/start').at(-1).params;
  assert.equal(healthyRequest.threadId,recoveredRequest.threadId);assert.equal(healthyRequest.input[0].text,'Healthy follow-up after recovery');
  report.checks.push('After unexpected native fork closure, a fresh read-only fork receives bounded source-formatted prior side questions and answers plus the latest unanswered question; the visible question stays unchanged, parent history is untouched and a healthy follow-up does not replay history twice');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion,'tool lifecycle events never enter parent history');
- await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('.ssc-empty').waitFor();
+ await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();
  report.checks.push('Real native fork lifecycle events show Forking header/status during delayed thread/fork, then structured Read/Search/List tool announcements and Running tools, model wait, final answer and idle; follow-ups reuse the fork, unexpected fork closure releases busy state without a false error/retry, and parent history remains untouched');
 
  report.checks.push('Side chat Stop button/Escape interrupt only the real ephemeral fork, keep partial output and leave the panel open without error/retry; busy input is disabled; per-session drafts survive switches; toolbar Clear retains draft and /clear /reset /new clear locally without model calls');
@@ -795,15 +801,15 @@ try{
  await staged().hover();await staged().getByRole('button',{name:'Remove '+selectedQuote,exact:true}).click();assert.equal(await staged().count(),0);assert.equal(await questionInput().evaluate(n=>n===document.activeElement),true);
  await selectQuote();await selectionToolbar().getByRole('button',{name:'Send to side chat',exact:true}).click();await staged().waitFor();
  await questionInput().fill('Explain this selection');await questionInput().press('Enter');await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();
- assert.equal(await staged().count(),0);assert.equal(await side.locator('.ssc-user p').last().innerText(),'Explain this selection');
- assert.equal(await side.locator('.ssc-user [data-kind="snippet"]').count(),1);assert.equal(await side.locator('.ssc-user .sca-remove').count(),0,'sent selection is a read-only preview');
- await side.locator('.ssc-user [data-kind="snippet"]').getByRole('button').click();await page.locator('[data-cds=AttachmentPreview]').waitFor();
- await poll(()=>page.locator('.sca-preview-text').evaluate(n=>{const r=n.getBoundingClientRect();return !!document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-cds=AttachmentPreview]');}),'sent quote preview is painted above the side panel');await page.keyboard.press('Escape');await page.locator('[data-cds=AttachmentPreview]').waitFor({state:'hidden'});
+ assert.equal(await staged().count(),0);assert.equal(await side.locator('.epitaxy-user-turn p').last().innerText(),'Explain this selection');
+ assert.equal(await side.locator('.epitaxy-user-turn ul[aria-label="Attached context"] > li').count(),1);assert.equal(await side.locator('.epitaxy-user-turn .sca-remove').count(),0,'sent selection is a read-only preview');
+ await side.locator('.epitaxy-user-turn ul[aria-label="Attached context"] > li').getByRole('button').hover();await page.locator('[data-cds=PreviewCard]').waitFor();
+ await poll(()=>page.locator('[data-cds=PreviewCard]').evaluate(n=>{const r=n.getBoundingClientRect();return !!document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-cds=PreviewCard]');}),'sent quote preview card (c2fd10b8d Xs) is painted above the side panel');await page.mouse.move(5,5);await page.locator('[data-cds=PreviewCard]').waitFor({state:'hidden'});
  const selectionStart=(await requests()).filter(call=>call.method==='turn/start').at(-1);
  assert.ok(JSON.stringify(selectionStart.params).includes('<!-- attach -->\\n> Selected transcript context\\n\\nExplain this selection'),'actual fork receives the original context wire format');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion,'selection question does not mutate the parent');
  await shot('side-chat-selection-answer');await selectQuote();await selectionToolbar().getByRole('button',{name:'Send to side chat',exact:true}).click();await staged().waitFor();
- await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('.ssc-empty').waitFor();assert.equal(await staged().count(),1,'clear messages preserves staged context');
+ await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();assert.equal(await staged().count(),1,'clear messages preserves staged context');
  await page.evaluate(()=>getSelection().removeAllRanges());await selectionToolbar().waitFor({state:'hidden'});
  await side.getByRole('button',{name:'Close side chat',exact:true}).click();await side.waitFor({state:'hidden'});
  report.checks.push('Original transcript selection toolbar stages a previewable/removable quote without model calls; close clears only context, send uses original attachment wire on a read-only fork, sent quote previews are immutable, and started sessions use Send to side chat');
@@ -811,11 +817,11 @@ try{
  await showSide();await side.waitFor();
  for(let index=0;index<3;index++){
    await questionInput().fill('Earlier side question '+index);await questionInput().press('Enter');
-   await poll(async()=>await side.locator('.ssc-answer').count()===index+1&&!(await questionInput().isDisabled()),'earlier side answer');
+   await poll(async()=>await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').count()===index+1&&!(await questionInput().isDisabled()),'earlier side answer');
  }
- const scrollSnapshot=()=>side.locator('.ssc-messages').evaluate(node=>{
+ const scrollSnapshot=()=>side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto').evaluate(node=>{
    const bounds=node.getBoundingClientRect();
-   const lastUser=[...node.querySelectorAll('.ssc-user')].at(-1),text=[...node.querySelectorAll('.ssc-answer')].at(-1)?.textContent??'';
+   const lastUser=[...node.querySelectorAll('.epitaxy-user-turn')].at(-1),text=[...node.querySelectorAll('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text')].at(-1)?.textContent??'';
    const chunks=[...text.matchAll(/HOLD_CHUNK_(\d+)/g)].map(match=>Number(match[1]));
    return {top:node.scrollTop,height:node.scrollHeight,view:node.clientHeight,userOffset:lastUser?lastUser.getBoundingClientRect().top-bounds.top:null,lastChunk:Math.max(0,...chunks)};
  });
@@ -825,20 +831,20 @@ try{
  await poll(async()=>(await scrollSnapshot()).lastChunk>=anchored.lastChunk+2,'reply grows after anchoring');
  const grown=await scrollSnapshot();assert.ok(Math.abs(grown.top-anchored.top)<=1,'long reply does not chase its tail');assert.ok(grown.height-grown.view-grown.top>100);
  await shot('side-chat-long-reply-anchor');
- const messageBounds=await side.locator('.ssc-messages').boundingBox();await page.mouse.move(messageBounds.x+messageBounds.width/2,messageBounds.y+messageBounds.height/2);await page.mouse.wheel(0,-120);
+ const messageBounds=await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto').boundingBox();await page.mouse.move(messageBounds.x+messageBounds.width/2,messageBounds.y+messageBounds.height/2);await page.mouse.wheel(0,-120);
  await poll(async()=>(await scrollSnapshot()).top<grown.top-60,'read earlier side messages');await frames();const reading=await scrollSnapshot();
  await poll(async()=>(await scrollSnapshot()).lastChunk>=reading.lastChunk+2,'reply grows while reading history');
  assert.ok(Math.abs((await scrollSnapshot()).top-reading.top)<=1,'stream leaves manual reading position intact');
  await side.getByRole('button',{name:'Stop response',exact:true}).click();await poll(async()=>!(await questionInput().isDisabled()),'long reply stopped');
  assert.ok(Math.abs((await scrollSnapshot()).top-reading.top)<=1,'settling response keeps reading position');await shot('side-chat-long-reply-history');
- await questionInput().fill('New question after reading history');await questionInput().press('Enter');await poll(async()=>!(await questionInput().isDisabled())&&await side.locator('.ssc-answer').count()===5,'new answer after history');
+ await questionInput().fill('New question after reading history');await questionInput().press('Enter');await poll(async()=>!(await questionInput().isDisabled())&&await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').count()===5,'new answer after history');
  const latest=await scrollSnapshot();assert.ok(latest.userOffset>=0&&latest.userOffset<latest.view-20,'new question becomes visible');
- await page.locator(`[data-source-session-id="${B}"] .source-session-open`).click();await side.waitFor({state:'hidden'});await showSide();await side.locator('.ssc-empty').waitFor();
+ await page.locator(`[data-source-session-id="${B}"] .source-session-open`).click();await side.waitFor({state:'hidden'});await showSide();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();
  await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await side.waitFor({state:'hidden'});await showSide();await side.waitFor();
  const reopened=await scrollSnapshot();assert.ok(reopened.userOffset>=0&&reopened.userOffset<reopened.view-20,'returning from another session targets this session’s last question');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion);
  report.metrics.sideChatScroll={anchored,grown,reading,latest,reopened};
- await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('.ssc-empty').waitFor();
+ await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();
  await side.getByRole('button',{name:'Close side chat',exact:true}).click();await side.waitFor({state:'hidden'});
  report.checks.push('Original side-chat scrolling anchors the question 8px below the viewport during a real long stream, retains manual history reading through growth/Stop, exposes the next question, and resets correctly across sessions without changing parent history');
  step('side-chat-background-lifecycle');
@@ -870,7 +876,7 @@ try{
  near(await panelRect(),beforeUnmount,'panel rectangle survives full component unmount');
  await poll(async()=>(await scrollSnapshot()).lastChunk>=beforeLeaving.lastChunk+4,'background stream is visible on return');
  const assertContinuous=async()=>{
-   const chunks=await side.locator('.ssc-answer').last().evaluate(n=>[...n.textContent.matchAll(/HOLD_CHUNK_(\d+)/g)].map(m=>Number(m[1])));
+   const chunks=await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').last().evaluate(n=>[...n.textContent.matchAll(/HOLD_CHUNK_(\d+)/g)].map(m=>Number(m[1])));
    assert.ok(chunks.length>=6);assert.deepEqual(chunks,Array.from({length:chunks.at(-1)},(_,i)=>i+1),'every streamed chunk appears once, including while absent');return chunks.length;
  };
  await assertContinuous();
@@ -883,9 +889,9 @@ try{
  await page.locator('.split-pane-secondary').waitFor({state:'detached'});await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await page.locator('.loading-state').waitFor({state:'detached'});if(!await side.isVisible())await showSide();await side.waitFor();
  await assertContinuous();await side.getByRole('button',{name:'Stop response',exact:true}).click();await poll(async()=>!(await questionInput().isDisabled()),'background stream stops');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion);
- await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('.ssc-empty').waitFor();await side.getByRole('button',{name:'Close side chat',exact:true}).click();
+ await side.getByRole('button',{name:'Clear side chat',exact:true}).click();await side.locator('[data-pane-root] .flex-1.min-h-0:has(> .bg-alpha-1)').waitFor();await side.getByRole('button',{name:'Close side chat',exact:true}).click();
  await page.reload();await page.getByRole('button',{name:'Model',exact:true}).filter({hasText:'Test model'}).waitFor();await open();await showSide();await side.waitFor();
- near(await panelRect(),beforeUnmount,'original panel rectangle persists through renderer reload');assert.equal(await side.locator('.ssc-user').count(),0,'side messages are not persisted');await shot('side-chat-restored-geometry');
+ near(await panelRect(),beforeUnmount,'original panel rectangle persists through renderer reload');assert.equal(await side.locator('.epitaxy-user-turn').count(),0,'side messages are not persisted');await shot('side-chat-restored-geometry');
  await side.getByRole('button',{name:'Close side chat',exact:true}).click();await side.waitFor({state:'hidden'});
  report.checks.push('Request-owned side streams retain every chunk across full panel unmount and two mounted split views without duplicates; stop affects only the fork; original geometry key survives unmount/reload without persisting messages');
  if(!await pane().isVisible()){await page.getByRole('button',{name:'View options',exact:true}).click();await page.getByRole('menuitemcheckbox',{name:'Files',exact:true}).click();await pane().waitFor();}

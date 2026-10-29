@@ -1,21 +1,23 @@
-// R4g-mcp MA-1 (D35): the original 2.42304.0 main-process built-in visualize MCP server (asar index.chunk-BaLvO2wi.js
+// R4g-mcp MA-1 (D35): the original 3.6556.2 main-process built-in visualize MCP server (asar index.chunk-CbnfBP-3.js
 // getImagineServerDef, show_widget / read_me, ui://imagine/show-widget.html), extracted to
 // electron/generated/visualize/imagine-server.cjs by scripts/extract-visualize.mjs and bound by
-// electron/visualize-adapters.cjs. The official chunk itself is evaluated in a node:vm context with stub imports to
-// compare behaviour; no Electron, no network, no external process.
+// electron/visualize-adapters.cjs. Migrated from 2.42304.0 (index.chunk-BaLvO2wi.js) by w1-routines-a (RC-19/RC-20).
+// The official chunk is only read (R13): it is parsed with Babel and every top-level declaration is compared byte for
+// byte with the generated module, so the generated behaviour is the official behaviour; the behaviour tests then run the
+// generated module only. No Electron, no network, no external process.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import vm from 'node:vm';
+import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 import { extractVisualize } from '../scripts/extract-visualize.mjs';
 
 const require = createRequire(import.meta.url);
 const app = path.resolve(import.meta.dirname, '..');
-const build = path.resolve(app, '../reference/installed-2.42304.0-20261017/asar/.vite/build');
-const officialPath = path.join(build, 'index.chunk-BaLvO2wi.js');
+const build = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build');
+const officialPath = path.join(build, 'index.chunk-CbnfBP-3.js');
 const official = readFileSync(officialPath, 'utf8');
 const generatedDir = path.join(app, 'electron/generated/visualize');
 const generatedText = readFileSync(path.join(generatedDir, 'imagine-server.cjs'), 'utf8');
@@ -25,30 +27,64 @@ const adapters = require('../electron/visualize-adapters.cjs');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const sha = text => createHash('sha256').update(text).digest('hex');
 
-// Evaluate the official chunk with stub module-level imports e (logger) and t (gate / policy).
-function officialModule({ withheld = false, enabled = true, logs = [] } = {}) {
-  const exports = {};
-  const stubs = {
-    './index.chunk-D4B44ehk.js': {},
-    './index.chunk-muI2IV6k.js': { p5: { info: message => logs.push(message) } },
-    './index.chunk-D89SZXs4.js': { n: () => withheld, t: () => enabled },
-  };
-  vm.runInNewContext(official, { exports, require: name => { if (!(name in stubs)) throw Error(`unexpected require ${name}`); return stubs[name]; } });
-  return exports;
+// Top-level declarations of the official chunk, sliced from its text (never executed).
+function officialDeclarations() {
+  const ast = babel.babelParse(official, 'index.chunk-CbnfBP-3.js', false);
+  const slices = new Map();
+  for (const statement of ast.program.body) {
+    if (statement.type === 'FunctionDeclaration') slices.set(statement.id.name, official.slice(statement.start, statement.end));
+    if (statement.type === 'VariableDeclaration' && statement.kind === 'var')
+      for (const declarator of statement.declarations) slices.set(declarator.id.name, official.slice(declarator.start, declarator.end));
+  }
+  return slices;
 }
 
-test('2.42304.0 feature strings occur in the official chunk with the researched counts', () => {
+test('3.6556.2 feature strings occur in the official chunk with the researched counts', () => {
   for (const [needle, count] of [
-    ['data-keep-menu-clear', 16], ['menu-room', 12], ['frame-held', 8], ['<title>Visualize Widget</title>', 1],
+    ['data-keep-menu-clear', 16], ['menu-room', 13], ['data-draw-cards', 2], ['_drawCards', 2],
+    ['var HOSTED_CARDS = "/libs/imagine/ui-cards-2/ui-cards.mjs";', 1], ['stripScripts: true', 2],
+    ['const e=require("./index.chunk-jPKPzV-P.js"),t=require("./index.chunk-lgtvJrTy.js");', 1], ['e.ert.info(', 1], ['e.p5', 0], ['frame-held', 8], ['<title>Visualize Widget</title>', 1],
     ['/libs/imagine/streaming-helpers-1/streaming-helpers.mjs', 1], ['var v="ui://imagine/show-widget.html"', 1],
     ['name:"show_widget"', 1], ['name:"read_me"', 1], ['text/html;profile=mcp-app', 2], ['E="visualize"', 1],
     ['exports.getImagineServerDef=A', 1], ['Content rendered and shown to the user.', 1],
     ['connectDomains:["https://esm.sh","https://cdnjs.cloudflare.com","https://cdn.jsdelivr.net","https://unpkg.com"]', 1],
   ]) assert.equal(occurrences(official, needle), count, needle);
-  const gate = readFileSync(path.join(build, 'index.chunk-D89SZXs4.js'), 'utf8');
+  const gate = readFileSync(path.join(build, 'index.chunk-lgtvJrTy.js'), 'utf8');
   assert.equal(occurrences(gate, 'n="3444158716"'), 1);
   assert.equal(occurrences(gate, 't="inline_visualizations"'), 1);
-  assert.equal(occurrences(readFileSync(path.join(build, 'index.chunk-B5tintml.js'), 'utf8'), 'require("./index.chunk-BaLvO2wi.js")'), 1);
+  assert.equal(occurrences(readFileSync(path.join(build, 'index.chunk-DBIg6EBr.js'), 'utf8'), 'require("./index.chunk-CbnfBP-3.js")'), 1);
+});
+
+test('every official top-level declaration is in the generated module byte for byte (the official chunk is not run)', () => {
+  const slices = officialDeclarations();
+  assert.deepEqual([...slices.keys()].sort(), manifest.bindings.map(binding => binding.name).sort());
+  for (const binding of manifest.bindings) {
+    const slice = slices.get(binding.name);
+    assert.equal(sha(slice), binding.sha256, binding.name);
+    assert.equal(slice.length, binding.length, binding.name);
+    assert.ok(generatedText.includes(slice), `${binding.name} verbatim`);
+  }
+  // m (the widget template) is the binding that changed in 3.6556.2; widgetHtml() returns its literal text.
+  assert.equal(manifest.bindings.find(binding => binding.name === 'm').length, 333849);
+});
+
+test('RC-19: the host never asks the widget to draw ui-cards (no _drawCards, no data-draw-cards outside generated code)', () => {
+  const hits = [];
+  const walk = dir => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) { if (!['generated', 'node_modules'].includes(entry.name)) walk(full); continue; }
+      if (!/\.(c?js|mjs|jsx|html)$/.test(entry.name)) continue;
+      const text = readFileSync(full, 'utf8');
+      if (/_drawCards|data-draw-cards|ui-cards-2/.test(text) && !text.includes('RC-19')) hits.push(path.relative(app, full));
+    }
+  };
+  for (const dir of ['src', 'electron']) walk(path.join(app, dir));
+  assert.deepEqual(hits, []);
+  // The template only loads the hosted cards module when the host context turns _drawCards on.
+  const html = generated.widgetHtml();
+  assert.match(html, /applyDrawCards\(hostContext\._drawCards\);/);
+  assert.match(html, /function applyDrawCards\(value\) \{\n {4}if \(typeof value === "boolean"\) \{\n {6}drawCardsRoot\.toggleAttribute\("data-draw-cards", value\);/);
 });
 
 test('generated module is current (--check), closed and carries every slice verbatim', async () => {
@@ -56,9 +92,11 @@ test('generated module is current (--check), closed and carries every slice verb
   assert.deepEqual(readdirSync(generatedDir).sort(), ['imagine-server.cjs', 'manifest.json']);
   assert.equal(manifest.sourceSha256, sha(readFileSync(officialPath)));
   assert.equal(manifest.sha256, sha(generatedText));
-  assert.deepEqual(manifest.hostParams, { e: ['p5'], t: ['n', 't'] });
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.deepEqual(manifest.hostParams, { e: ['ert'], t: ['n', 't'] });
   // The root entry keeps the template's feature strings with the official counts.
-  for (const [needle, count] of [['data-keep-menu-clear', 16], ['menu-room', 12], ['frame-held', 8], ['ui://imagine/show-widget.html', 1],
+  for (const [needle, count] of [['data-keep-menu-clear', 16], ['menu-room', 13], ['data-draw-cards', 2], ['frame-held', 8], ['ui://imagine/show-widget.html', 1],
     ['name:"show_widget"', 1], ['text/html;profile=mcp-app', 2], ['<title>Visualize Widget</title>', 1]])
     assert.equal(occurrences(generatedText, needle), count, needle);
   // No runtime imports, no Sentry preamble, no CommonJS exports of the chunk.
@@ -68,8 +106,7 @@ test('generated module is current (--check), closed and carries every slice verb
 });
 
 test('tool and resource definitions equal the official values', () => {
-  const o = officialModule();
-  const def = o.getImagineServerDef();
+  const def = generated.bindImagineServer({ ert: { info() {} } }, { n: () => false, t: () => true }).getImagineServerDef();
   assert.equal(generated.IMAGINE_SERVER_NAME, 'visualize');
   assert.equal(generated.WIDGET_RESOURCE_URI, 'ui://imagine/show-widget.html');
   assert.equal(generated.MAX_RESULT_SIZE_CHARS, 2e5);
@@ -82,15 +119,16 @@ test('tool and resource definitions equal the official values', () => {
   assert.deepEqual(generated.IMAGINE_RESOURCES, [{ uri: 'ui://imagine/show-widget.html', name: 'visualize widget',
     description: 'Renders SVG or HTML content progressively as it streams for the show_widget tool', mimeType: 'text/html;profile=mcp-app' }]);
   const bound = adapters.createVisualizeServer().getImagineServerDef();
-  // vm objects come from another realm: compare structurally through JSON.
+  // The adapter binds the same official A: same tool list (alwaysLoad, maxResultSizeChars from _meta) as the bare binding.
   assert.deepEqual(JSON.parse(JSON.stringify(bound.tools)), JSON.parse(JSON.stringify(def.tools)));
+  assert.deepEqual(bound.tools.map(tool => tool.description), generated.IMAGINE_TOOLS.map(tool => tool.description));
   assert.deepEqual(bound.tools.map(tool => [tool.name, tool.alwaysLoad, tool.maxResultSizeChars]), [['show_widget', true, undefined], ['read_me', true, 200000]]);
   assert.equal(bound.serverName, def.serverName);
   assert.deepEqual(JSON.parse(JSON.stringify(bound.handleListResources())), JSON.parse(JSON.stringify(def.handleListResources())));
 });
 
 test('read_me concatenates the official guides exactly, for every module and platform', async () => {
-  const def = officialModule().getImagineServerDef();
+  const def = generated.bindImagineServer({ ert: { info() {} } }, { n: () => false, t: () => true }).getImagineServerDef();
   const bound = adapters.createVisualizeServer().getImagineServerDef();
   const cases = [{ modules: ['chart'], platform: 'desktop' }, { modules: ['chart', 'data_viz'], platform: 'mobile' }, {},
     { modules: ['diagram', 'art'] }, { modules: ['nope'] }, ...generated.READ_ME_MODULES.flatMap(module => generated.READ_ME_PLATFORMS.map(platform => ({ modules: [module], platform })))];
@@ -117,14 +155,14 @@ test('show_widget and unknown tools answer with the official text', async () => 
 });
 
 test('the widget resource returns the official template, CSP and permissions', () => {
-  const def = officialModule().getImagineServerDef();
   const bound = adapters.createVisualizeServer().getImagineServerDef();
   const ours = bound.handleReadResource('ui://imagine/show-widget.html');
-  const theirs = def.handleReadResource('ui://imagine/show-widget.html');
   assert.equal(ours.contents.length, 1);
-  assert.equal(ours.contents[0].text, theirs.contents[0].text);
   assert.equal(ours.contents[0].text, generated.widgetHtml());
-  assert.deepEqual(JSON.parse(JSON.stringify(ours.contents[0]._meta)), JSON.parse(JSON.stringify(theirs.contents[0]._meta)));
+  // The template is m's single expression-free template literal: its cooked value is the official text.
+  const m = officialDeclarations().get('m');
+  const literal = babel.babelParse(m, 'm.js', false).program.body[0].body.body[0].argument;
+  assert.equal(ours.contents[0].text, literal.quasis[0].value.cooked);
   assert.deepEqual(ours.contents[0]._meta, { ui: { permissions: { clipboardWrite: {} }, csp: {
     connectDomains: ['https://esm.sh', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://unpkg.com'],
     resourceDomains: ['https://esm.sh', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://unpkg.com', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'] } } });
@@ -149,17 +187,16 @@ test('host adapter: enabled by default (D35), switchable, never withheld by org 
   assert.throws(() => adapters.createVisualizeServer({ enabled: true }), /enabled must be a function/);
 });
 
-test('the withheld branch matches the official chunk (refusal text, unavailable reason, one log line)', async () => {
-  const logs = [], officialLogs = [];
-  const ours = generated.bindImagineServer({ p5: { info: message => logs.push(message) } }, { n: () => true, t: () => false }).getImagineServerDef();
-  const theirs = officialModule({ withheld: true, enabled: false, logs: officialLogs }).getImagineServerDef();
-  for (const def of [ours, theirs]) {
+test('the withheld branch keeps the official refusal text, unavailable reason and one log line', async () => {
+  const logs = [];
+  const ours = generated.bindImagineServer({ ert: { info: message => logs.push(message) } }, { n: () => true, t: () => false }).getImagineServerDef();
+  for (const def of [ours]) {
     assert.equal(def.isEnabled(), false);
     assert.deepEqual(JSON.parse(JSON.stringify(await def.handleToolCall('show_widget', {}))), { content: [{ type: 'text', text: generated.POLICY_REFUSAL_TEXT }], isError: true });
     assert.deepEqual(JSON.parse(JSON.stringify(def.handleReadResource(generated.WIDGET_RESOURCE_URI))), { contents: [], unavailable: 'blocked_by_policy' });
     assert.deepEqual(JSON.parse(JSON.stringify(def.handleListResources())), []);
   }
-  assert.deepEqual(logs, officialLogs);
+  // O latches: one line however many calls were refused (official k: O||(O=!0,e.ert.info(…))).
   assert.deepEqual(logs, ['[imagine] show_widget refused — withheld by the org\'s Inline visualizations answer']);
   assert.deepEqual({ ...generated.ResourceUnavailable }, { BlockedByPolicy: 'blocked_by_policy', NeedsSignIn: 'needs_sign_in', NotConnected: 'not_connected', ReadFailed: 'read_failed' });
 });

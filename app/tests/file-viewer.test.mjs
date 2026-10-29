@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import path from 'node:path';
 import { breadcrumbParts, fileViewerLines, fileViewerTooSlow, jumpRange } from '../src/file-preview-model.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // Files pane file viewer (2.2553.1 cd2efac6e jo :2576-4674): Yo/Ma breadcrumb
 // subheader, numbered wrapped rows in [data-file-viewer].epitaxy-diff, the Zo
@@ -35,7 +36,7 @@ test('clearing a file-tree multiselection consumes held Escape until key release
   // A hook dispatcher that runs the effect at once (no React DOM); the cleanup removes the listener.
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
   let cleanup;
-  internal.H = { useEffect: (effect) => { cleanup = effect(); } };
+  internal.H = withMemoCache({ useEffect: (effect) => { cleanup = effect(); } });
   try { useMultiSelectionEscape(tree, store); } finally { internal.H = old; }
   const press = (extra = {}) => Object.assign(new Event('keydown', { cancelable: true }), { key: 'Escape', repeat: false, isComposing: false, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, stopPropagation() { this.stopped = true; } }, extra);
   store.getState().selectOnly({ absPath: 'a' });
@@ -294,8 +295,8 @@ test('source: the pane gives each progressive chunk its own Markdown owner', () 
   assert.match(css, /\.sfv-prose\.epitaxy-file-prose-chunk \{\s*margin-bottom: var\(--chat-item-gap\);/);
   // R3-files FT-18: no host frontmatter rule; the dl/dd margins are the loaded 2.42304.0 preflight (@layer base).
   assert.doesNotMatch(css, /sfv-frontmatter/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8'), /@layer base\{\*,:after,:before,::backdrop\{box-sizing:border-box;border:0 solid;margin:0;padding:0\}/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /<link rel="stylesheet" href="\/assets\/v1\/c6a992d55-sXiDGMFQ\.css" \/>/);
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /@layer base\{\*,:after,:before,::backdrop\{box-sizing:border-box;border:0 solid;margin:0;padding:0\}/);
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /<link rel="stylesheet" href="\/assets\/v1\/c6a992d55-Che1orl5\.css" \/>/);
   assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-file-viewer.jsx'), 'utf8'), /import \{ Frontmatter \} from "\.\/generated\/files-changes\/file-frontmatter-view\.mjs";/);
 });
 

@@ -1,1 +1,0 @@
-import{b as e}from"./c477e0dc6-2uiBUH57.js";function t(e){return typeof e=="object"&&!!e&&!("intag"in e&&e.intag)&&!("incomment"in e&&e.incomment)}var n={...e,token(n,r){return t(r)&&n.eat("#")?null:e.token(n,r)},languageData:{commentTokens:{block:{open:"{#",close:"#}"}}}};export{n as jinja};

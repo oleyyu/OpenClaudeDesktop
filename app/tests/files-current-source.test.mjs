@@ -10,6 +10,8 @@ import React from 'react';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractFilesChanges } from '../scripts/extract-files-changes.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import * as official3 from '../scripts/official-3.6556.2.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -21,94 +23,133 @@ before(async () => {
 });
 after(async () => { await server?.close(); });
 
+// The 3.6556.2 generator (W2 w2-files): each module, its 3.6556.2 chunk and roots (data/panes-binding-map.json;
+// reports/W2/w2-files.md §1.1). error-text / event-element are the view-tabs roots tagErrorText / asElementNode
+// re-exported under their old names (D1, manifest reexport:'view-tabs', no bindings of their own); so is coarse-pointer
+// (shared-frame tn = view-tabs matchesCoarseOrHoverlessPointer), which c052e27aa now reads from view-tabs directly.
+const OFFICIAL_V3 = official3.ionSource;
+const officialV3 = (name) => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
 const NEW = {
-  'vanilla-store.mjs': ['vendor-all-0-CTKbbUUg.js', { v: 'createStore' }],
-  'windows-path.mjs': ['shared-26-CgdP_nTj.js', { Wb: 'windowsAbsolutePath' }],
-  'path-absolute.mjs': ['shared-28-DcgD7xXH.js', { ak: 'isAbsolutePathFor' }],
-  'image-path.mjs': ['shared-104-Cqo2-vQh.js', { bP: 'isImagePath', dP: 'rasterImageExtensions' }], // dP: R3-files FT-16 (shared-9 cg)
-  'file-editor-path.mjs': ['shared-28-DcgD7xXH.js', { Fk: 'canOpenFileInEditor' }],
-  'promise-timeout.mjs': ['shared-104-Cqo2-vQh.js', { Nl: 'withTimeout' }],
-  'windows-platform.mjs': ['shared-78-D6VXYXaQ.js', { qa: 'isWindowsPlatform' }],
-  'session-context.mjs': ['c9b8e0296-Bo59dZrJ.js', { r: 'CurrentSessionIdContext' }],
-  'file-gone-check.mjs': ['c856385e2-DVsjb2QL.js', { V: 'useFileGone', qe: 'goneCheckablePath', Ke: 'cloudStoragePath', We: 'fileGoneKillSwitch', Ge: 'fileGoneDeadlineMs' }],
-  'file-selection.mjs': ['c856385e2-DVsjb2QL.js', { $e: 'createFileSelectionStore', et: 'selectFileRange', tt: 'selectAllFiles', it: 'inMultiSelection' }],
-  'file-content-results.mjs': ['cccc2cf0a-B0D--VZp.js', { oS: 'groupContentResults', uS: 'collapseContentWhitespace', pS: 'contentSnippetLayout' }],
-  'file-tree-pointer.mjs': ['cccc2cf0a-B0D--VZp.js', { Ux: 'isBlankTreeTarget', Wx: 'isBlankTreePress' }],
-  'coarse-pointer.mjs': ['shared-frame-BfjMqbuN.js', { Qt: 'isCoarsePointer' }],
-  'file-context-drag.mjs': ['cd06fb298-BHzAz0jN.js', { c: 'fileContextDragType', d: 'fileContextDragEnabled', f: 'beginFileContextDrag', p: 'isFileContextDrag', m: 'draggedFilePaths', h: 'commitFileContextDrag', u: 'clearFileContextDrag' }],
+  'vanilla-store.mjs': ['vendor-all-0-DXM0MGjZ.js', { m: 'createStore' }],
+  'windows-path.mjs': ['shared-26-CGuBxVt9.js', { DS: 'windowsAbsolutePath' }],
+  'path-absolute.mjs': ['shared-28-DNYlf4wu.js', { UM: 'isAbsolutePathFor', vM: 'isRelativePath' }], // vM: the gone hook reads it in 3.6556.2
+  'image-path.mjs': ['shared-104-CTONUSaz.js', { tL: 'isImagePath', KI: 'rasterImageExtensions' }],
+  'file-editor-path.mjs': ['shared-28-DNYlf4wu.js', { yN: 'canOpenFileInEditor' }],
+  'promise-timeout.mjs': ['shared-104-CTONUSaz.js', { Fu: 'withTimeout' }],
+  'windows-platform.mjs': ['shared-78-D5Fw2h0a.js', { Ao: 'isWindowsPlatform' }],
+  'session-context.mjs': ['c9b8e0296-DE2P0m6e.js', { r: 'CurrentSessionIdContext' }],
+  'file-gone-check.mjs': ['c856385e2-aEyDzrcK.js', { q: 'useFileGone', Re: 'goneCheckablePath', Le: 'cloudStoragePath', Fe: 'fileGoneKillSwitch', Ie: 'fileGoneDeadlineMs' }],
+  'file-selection.mjs': ['c856385e2-aEyDzrcK.js', { Ke: 'createFileSelectionStore', qe: 'selectFileRange', Je: 'selectAllFiles', Qe: 'inMultiSelection' }],
+  'file-content-results.mjs': ['cccc2cf0a-DhZC33Gc.js', { cT: 'groupContentResults', pT: 'collapseContentWhitespace', gT: 'contentSnippetLayout' }],
+  'file-tree-pointer.mjs': ['cccc2cf0a-DhZC33Gc.js', { Ww: 'isBlankTreeTarget', Gw: 'isBlankTreePress' }],
+  'coarse-pointer.mjs': ['shared-frame-6jtSkIit.js', { tn: 'isCoarsePointer' }],
+  'file-context-drag.mjs': ['c052e27aa-DlzVwnbz.js', { i: 'fileContextDragType', s: 'fileContextDragEnabled', c: 'beginFileContextDrag', l: 'isFileContextDrag', u: 'draggedFilePaths', d: 'commitFileContextDrag', o: 'clearFileContextDrag' }],
   'error-text.mjs': ['preload-helper-D0dM6GpB.js', { e: 'withErrorText' }],
   'array-min.mjs': ['cf80fba0c-CT5qqVq9.js', { e: 'iterableMin' }],
-  'file-frontmatter.mjs': ['c3fde7009-BbbO5TX9.js', { ki: 'splitFrontmatter', Li: 'frontmatterFields', Oi: 'emptyFrontmatterBlock', Di: 'frontmatterBlock' }],
-  // R3-files FT-07 adds pi (the anchors of one file; changes-tree-current.test.mjs).
-  'diff-change-nav.mjs': ['c44d00c7f-zUAG9XyS.js', { hi: 'adjacentChange', mi: 'sameChangeAnchor', pi: 'changeAnchors' }],
-  'diff-tree-expand.mjs': ['c44d00c7f-zUAG9XyS.js', { kc: 'revealExpandedSubtree', Oc: 'diffTreeRowLevel', Dc: 'diffTreeRowSelector' }],
-  'diff-whitespace-pause.mjs': ['c44d00c7f-zUAG9XyS.js', { Ca: 'whitespaceHidingPaused' }],
-  'file-tree-row-classes.mjs': ['ca7840910-DSVFtTw1.js', { N: 'fileTreePadding', M: 'fileTreeRowGap', A: 'fileTreeGroup', j: 'fileTreeKeptGuides', P: 'fileTreeCompactRow', I: 'fileTreeRowCurrent', F: 'fileTreeRowIdle' }],
-  'menu-pending.mjs': ['shared-156-Bikz018e.js', { dV: 'holdMenuPending', fV: 'menuPending' }],
-  'escape-repeat.mjs': ['shared-19-CkPOiIKm.js', { pZ: 'suppressEscapeRepeat' }],
-  'event-element.mjs': ['shared-frame-BfjMqbuN.js', { lc: 'elementTarget' }],
-  'menu-open-gate.mjs': ['c0cdf4a08-h228IL-P.js', { h: 'openAfterCheck', g: 'useMenuOpenGate' }],
+  'file-frontmatter.mjs': ['c3fde7009-LYGOoUpG.js', { $i: 'splitFrontmatter', sa: 'frontmatterFields', Qi: 'emptyFrontmatterBlock', Zi: 'frontmatterBlock' }],
+  // Vi: the anchors of one file (changes-tree-current.test.mjs).
+  'diff-change-nav.mjs': ['c44d00c7f-Cr1FDL2F.js', { Ui: 'adjacentChange', Hi: 'sameChangeAnchor', Vi: 'changeAnchors' }],
+  'diff-tree-expand.mjs': ['c44d00c7f-Cr1FDL2F.js', { $o: 'revealExpandedSubtree', Qo: 'diffTreeRowLevel', Zo: 'diffTreeRowSelector' }],
+  'diff-whitespace-pause.mjs': ['c44d00c7f-Cr1FDL2F.js', { Dc: 'whitespaceHidingPaused' }],
+  'file-tree-row-classes.mjs': ['c621b1e2d-CU5cG_mP.js', { d: 'fileTreePadding', u: 'fileTreeRowGap', c: 'fileTreeGroup', l: 'fileTreeKeptGuides', f: 'fileTreeCompactRow', m: 'fileTreeRowCurrent', p: 'fileTreeRowIdle' }],
+  'menu-pending.mjs': ['shared-156-BLTosN8U.js', { sq: 'holdMenuPending', cq: 'menuPending' }],
+  'escape-repeat.mjs': ['shared-19-DIKJVT7c.js', { Gj: 'suppressEscapeRepeat' }],
+  'event-element.mjs': ['shared-frame-6jtSkIit.js', { Uc: 'elementTarget' }],
+  'menu-open-gate.mjs': ['c0cdf4a08-C69Ng1c8.js', { m: 'openAfterCheck', h: 'useMenuOpenGate' }],
 };
+const VIEW_TABS_REEXPORT = { 'coarse-pointer.mjs': ['tn', '../view-tabs/shared-frame-6jtSkIit.js', 'matchesCoarseOrHoverlessPointer'], 'error-text.mjs': ['e', '../view-tabs/preload-helper-D0dM6GpB.js', 'tagErrorText'], 'event-element.mjs': ['Uc', '../view-tabs/shared-frame-6jtSkIit.js', 'asElementNode'] };
 
-test('generator: check mode passes; every new module names its 2.42304.0 chunk, roots and resolved imports', async () => {
+test('generator: check mode passes; every new module names its 3.6556.2 chunk, roots and resolved imports', async () => {
   await extractFilesChanges({ check: true });
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/files-changes/manifest.json'), 'utf8'));
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, official3.referenceVersion);
+  assert.equal(manifest.referenceSnapshot, official3.referenceSnapshot);
   const byTarget = Object.fromEntries(manifest.modules.map((entry) => [entry.target, entry]));
+  const { createHash } = await import('node:crypto');
   for (const [target, [source, exports]] of Object.entries(NEW)) {
     assert.equal(byTarget[target]?.source, source, target);
+    assert.equal(byTarget[target].referenceVersion, official3.referenceVersion, target);
     assert.deepEqual(byTarget[target].exports, exports, target);
-    assert.equal(byTarget[target].sourceSha256, (await import('node:crypto')).createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL, source))).digest('hex'), `${target} source bytes`);
+    assert.equal(byTarget[target].sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(OFFICIAL_V3, source))).digest('hex'), `${target} source bytes`);
+    if (VIEW_TABS_REEXPORT[target]) {
+      const [local, from, name] = VIEW_TABS_REEXPORT[target];
+      assert.equal(byTarget[target].reexport, 'view-tabs', target);
+      assert.deepEqual(byTarget[target].bindings, [], target);
+      assert.deepEqual(byTarget[target].imports.map((entry) => [entry.local, entry.from, entry.name, entry.kind]), [[local, from, name, 'view-tabs']], target);
+      continue;
+    }
     for (const root of Object.keys(exports)) assert.ok(byTarget[target].bindings.some((binding) => binding.name === root), `${target}: ${root} emitted`);
   }
-  assert.deepEqual(byTarget['owner-window.mjs'].exports, { up: 'ownerWindow', dp: 'ownerWindowOrGlobal' });
+  assert.deepEqual(byTarget['owner-window.mjs'].exports, { pf: 'ownerWindow', mf: 'ownerWindowOrGlobal' });
   const imports = (target) => Object.fromEntries(byTarget[target].imports.map((entry) => [entry.local, `${entry.kind}:${entry.from}:${entry.name}`]));
+  // Compiler output: the memo helpers come from view-tabs by their E3 names (R3).
+  const VT = 'view-tabs:../view-tabs/shared-frame-6jtSkIit.js:';
   assert.deepEqual(imports('file-gone-check.mjs'), {
-    t: 'react:react:useState', i: 'react:react:useRef', l: 'react:react:use', d: 'react:react:useCallback',
-    m: 'adapter:../../source-files-changes-adapters.jsx:LocalSessions', B: 'adapter:../../source-files-changes-adapters.jsx:localSessionTarget',
-    _: 'adapter:../../source-files-changes-adapters.jsx:growthBookOn', b: 'generated:./windows-platform.mjs:isWindowsPlatform',
-    te: 'generated:./promise-timeout.mjs:withTimeout', F: 'generated:./session-context.mjs:CurrentSessionIdContext',
-    ve: 'generated:./path-absolute.mjs:isAbsolutePathFor',
+    e: 'react:react:useRef', c: 'react:react:use', l: 'react:react:useState',
+    J2: VT + 'memoChanged2', J4: VT + 'memoChanged4', J9: VT + 'reactMemoCache', K2: VT + 'memoStore2', K4: VT + 'memoStore4',
+    v: 'adapter:../../source-files-changes-adapters.jsx:LocalSessions', Oe: 'adapter:../../source-files-changes-adapters.jsx:localSessionTarget',
+    _: 'adapter:../../source-files-changes-adapters.jsx:growthBookOn', O: 'generated:./windows-platform.mjs:isWindowsPlatform',
+    j: 'generated:./promise-timeout.mjs:withTimeout', pe: 'generated:./session-context.mjs:CurrentSessionIdContext',
+    te: 'generated:./path-absolute.mjs:isAbsolutePathFor', de: 'generated:./path-absolute.mjs:isRelativePath',
   });
-  assert.deepEqual(imports('file-selection.mjs'), { Ce: 'generated:./vanilla-store.mjs:createStore' });
-  assert.deepEqual(imports('file-context-drag.mjs'), { n: 'adapter:../../source-files-changes-adapters.jsx:growthBookValue', i: 'generated:./coarse-pointer.mjs:isCoarsePointer' });
-  assert.deepEqual(imports('file-tree-pointer.mjs'), { R: 'generated:./owner-window.mjs:ownerWindowOrGlobal' });
-  assert.deepEqual(imports('diff-tree-expand.mjs'), { r: 'react:react-dom:flushSync' });
-  assert.deepEqual(imports('file-frontmatter.mjs'), { e: 'generated:./error-text.mjs:withErrorText', rt: 'generated:./array-min.mjs:iterableMin' });
-  assert.deepEqual(imports('menu-open-gate.mjs'), { s: 'generated:./owner-window.mjs:ownerWindow', c: 'generated:./menu-pending.mjs:holdMenuPending',
-    l: 'generated:./escape-repeat.mjs:suppressEscapeRepeat', n: 'react:react:useState', o: 'react:react:useCallback', d: 'generated:./event-element.mjs:elementTarget' });
-  // Feature strings in the shipped (minified) chunks.
-  const gone = official('c856385e2-DVsjb2QL.js');
-  assert.match(gone, /var We=`__gb__3212098161`,Ge=150|We=`__gb__3212098161`|We="__gb__3212098161"/);
+  assert.deepEqual(imports('file-selection.mjs'), { F: 'generated:./vanilla-store.mjs:createStore' });
+  assert.deepEqual(imports('file-context-drag.mjs'), { t: 'adapter:../../source-files-changes-adapters.jsx:growthBookValue', e: VT + 'matchesCoarseOrHoverlessPointer' });
+  assert.deepEqual(imports('file-tree-pointer.mjs'), { je: 'generated:./owner-window.mjs:ownerWindowOrGlobal' });
+  assert.deepEqual(imports('diff-tree-expand.mjs'), { i: 'react:react-dom:flushSync' });
+  assert.deepEqual(imports('file-frontmatter.mjs'), { e: 'view-tabs:../view-tabs/preload-helper-D0dM6GpB.js:tagErrorText', nt: 'generated:./array-min.mjs:iterableMin' });
+  assert.deepEqual(imports('menu-open-gate.mjs'), {
+    s: 'view-tabs:../view-tabs/shared-25-DOWZRSlq.js:ownerWindow', c: 'view-tabs:../view-tabs/shared-78-D5Fw2h0a.js:isMacUserAgent',
+    l: 'generated:./menu-pending.mjs:holdMenuPending', u: 'generated:./escape-repeat.mjs:suppressEscapeRepeat', i: 'react:react:useState',
+    a: VT + 'asElementNode', J1: VT + 'memoChanged1', J2: VT + 'memoChanged2', J9: VT + 'reactMemoCache', K1: VT + 'memoStore1', K2: VT + 'memoStore2',
+  });
+  // Feature strings in the shipped (minified) 3.6556.2 chunks.
+  const gone = officialV3('c856385e2-aEyDzrcK.js');
+  assert.match(gone, /var Fe="__gb__3212098161",Ie=150/);
   assert.match(gone, /isSessionPathGone/);
   assert.match(gone, /The desktop did not answer in time/);
-  assert.match(official('cccc2cf0a-B0D--VZp.js'), /\{gone:\w+,beforeOpen:\w+\}=Kf\(/);
-  assert.match(official('c0cdf4a08-h228IL-P.js'), /addEventListener\(`pointerdown`,o,\{capture:!0,signal:a\}\)|addEventListener\("pointerdown",o,\{capture:!0,signal:a\}\)/);
-  assert.match(official('ca7840910-DSVFtTw1.js'), /bg-\(image:--file-tree-kept-guides\) group-hover\/file-tree:bg-\(image:--file-tree-guides\)/);
+  assert.match(gone, /[,{]q as bt[,}]/); // the gone hook, imported by the Files pane as bt
+  assert.match(officialV3('cccc2cf0a-DhZC33Gc.js'), /bt as pf[,}][^]*\{gone:\w+,beforeOpen:\w+\}=pf\(/);
+  assert.match(officialV3('c0cdf4a08-C69Ng1c8.js'), /addEventListener\("pointerdown",o,\{capture:!0,signal:a\}\)/);
+  assert.match(officialV3('c621b1e2d-CU5cG_mP.js'), /bg-\(image:--file-tree-kept-guides\) group-hover\/file-tree:bg-\(image:--file-tree-guides\)/);
 });
 
-test('content results, editor path and tree pointer: the 2.42304.0 bindings answer as the 2.31226.0 adapters did', async () => {
+// w10-editor-split: the 2.31226.0 code-editor copies (file-content-results etc.) are retired; the answers below are the
+// ones both the 2.31226.0 adapter and the files-changes binding gave when the copy was still generated.
+test('content results, editor path and tree pointer: the files-changes bindings keep the answers the retired 2.31226.0 adapters gave', async () => {
   const current = await load('file-content-results.mjs');
-  const previous = await server.ssrLoadModule('/src/generated/code-editor/file-content-results.mjs');
   const matches = [
     { relativePath: 'src/a.ts', absPath: '/r/src/a.ts', line: 1, preview: 'x', matches: [] },
     { relativePath: 'src/a.ts', absPath: '/r/src/a.ts', line: 2, preview: 'y', matches: [] },
     { relativePath: 'src/a.ts', absPath: '/r/src/a.ts', line: 3, preview: 'z', matches: [] },
     { relativePath: 'b.md', absPath: '/r/b.md', line: 9, preview: 'w', matches: [] },
   ];
-  for (const args of [[matches, 10, 10, 2], [matches, 4, 2, 5], [matches, 3, 1, 1]])
-    assert.deepEqual(current.groupContentResults(...args), previous.groupContentResults(...args));
-  for (const [text, ranges] of [['a  b\t\tc', [{ start: 3, end: 6 }]], ['   ', undefined], ['abc', [{ start: 0, end: 1 }]]])
-    assert.deepEqual(current.collapseContentWhitespace(text, ranges), previous.collapseContentWhitespace(text, ranges));
+  const entry = (name, absPath, relativePath) => ({ name, absPath, relativePath, isDirectory: false });
+  const [a1, a2, , b9] = matches;
+  assert.deepEqual(current.groupContentResults(matches, 10, 10, 2), { groups: [
+    { entry: entry('a.ts', '/r/src/a.ts', 'src/a.ts'), matches: [a1, a2], more: true },
+    { entry: entry('b.md', '/r/b.md', 'b.md'), matches: [b9], more: false },
+  ], shown: 3, truncated: false, patternRefused: false });
+  assert.deepEqual(current.groupContentResults(matches, 4, 2, 5), { groups: [
+    { entry: entry('a.ts', '/r/src/a.ts', 'src/a.ts'), matches: [a1, a2], more: true },
+  ], shown: 2, truncated: true, patternRefused: false });
+  assert.deepEqual(current.groupContentResults(matches, 3, 1, 1), { groups: [
+    { entry: entry('a.ts', '/r/src/a.ts', 'src/a.ts'), matches: [a1], more: true },
+  ], shown: 1, truncated: true, patternRefused: false });
+  assert.deepEqual(current.collapseContentWhitespace('a  b\t\tc', [{ start: 3, end: 6 }]), { text: 'a b c', matches: [{ start: 2, end: 4 }] });
+  assert.deepEqual(current.collapseContentWhitespace('   ', undefined), { text: ' ', matches: undefined });
+  assert.deepEqual(current.collapseContentWhitespace('abc', [{ start: 0, end: 1 }]), { text: 'abc', matches: [{ start: 0, end: 1 }] });
   const long = 'const someVeryLongIdentifierName = anotherFunction(argumentOne, argumentTwo) + targetMatch;';
   const at = long.indexOf('targetMatch');
-  for (const ranges of [undefined, [{ start: 2, end: 5 }], [{ start: at, end: at + 11 }, { start: at + 2, end: at + 4 }]])
-    assert.deepEqual(current.contentSnippetLayout(long, ranges), previous.contentSnippetLayout(long, ranges));
+  assert.deepEqual(current.contentSnippetLayout(long, undefined), { lead: '', hit: '', hitMatches: undefined, tail: long, tailMatches: undefined });
+  assert.deepEqual(current.contentSnippetLayout(long, [{ start: 2, end: 5 }]), { lead: 'co', hit: 'nst', hitMatches: [{ start: 0, end: 3 }], tail: long.slice(5), tailMatches: undefined });
+  assert.deepEqual(current.contentSnippetLayout(long, [{ start: at, end: at + 11 }, { start: at + 2, end: at + 4 }]),
+    { lead: '\u2026argumentOne, argumentTwo) +', hit: ' targetMatch', hitMatches: [{ start: 1, end: 12 }], tail: ';', tailMatches: [{ start: -9, end: -7 }] });
   assert.equal(current.contentSnippetLayout(long, [{ start: at, end: at + 11 }]).lead.startsWith('\u2026'), true);
 
   const { isBlankTreeTarget, isBlankTreePress } = await load('file-tree-pointer.mjs');
   const tree = (direction, clientLeft) => ({ nodeType: 1, contains: () => true, getBoundingClientRect: () => ({ left: 0, top: 0 }),
-    offsetWidth: 110, clientWidth: 100, clientLeft, offsetHeight: 50, clientHeight: 50, clientTop: 0,
+    // 3.6556.2 Gw: the vertical scrollbar strip only counts while the tree scrolls (scrollHeight > clientHeight).
+    offsetWidth: 110, clientWidth: 100, clientLeft, offsetHeight: 50, clientHeight: 50, scrollHeight: 200, clientTop: 0,
     ownerDocument: { defaultView: { getComputedStyle: () => ({ direction }) } } });
   const blank = { closest: () => null }, row = { closest: (selector) => (selector === '[data-tree-row]' ? {} : null) };
   const press = (currentTarget, clientX, target = blank, button = 0) => isBlankTreePress({ button, target, currentTarget, clientX, clientY: 5 });
@@ -277,7 +318,7 @@ function harness(component, { session = null } = {}) {
   return (...args) => {
     index = 0;
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = hooks;
+    internal.H = withMemoCache(hooks);
     try { return component(...args); } finally { internal.H = old; }
   };
 }
@@ -463,7 +504,7 @@ function createHostHarness(component, { contexts = new Map() } = {}) {
       pendingPassive.length = 0;
       const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       const old = internal.H;
-      internal.H = hooks;
+      internal.H = withMemoCache(hooks);
       try { lastTree = component(props); } finally { internal.H = old; }
       if (!pendingLayout.length && !pendingPassive.length) break;
       flushEffects(pendingLayout);
@@ -700,7 +741,8 @@ test('host wiring (Y1-R3-files-2): tree rows and search results ask isSessionPat
     await replied;
     await tick();
     searchHarness.render(searchProps);
-    const resultRows = () => findElements(searchHarness.tree, (el) => el.props?.className === 'sfs-result-row');
+    // W12b cf-03: a filename result is RT's tree row (file-tree-row classes), a content result keeps sfs-result-row.
+    const resultRows = () => findElements(searchHarness.tree, (el) => el.props?.role === 'treeitem' && el.props?.['data-tree-row'] === '');
     assert.equal(resultRows().length, 3);
 
     // (3a) Single search result: pending gone check holds menu closed; pointerdown cancels.

@@ -10,7 +10,8 @@ import react from '@vitejs/plugin-react';
 
 // R3b-transcript step 2: toolcards-06 (the Turn edits card's 'See all' form), toolcards-07 (its rows' stops) and
 // toolcards-16 (the tool group's running mark across wire gaps: not applicable here, pinned). The card is the generated
-// 2.42304.0 original (c96d752d0 N2e / M2e in src/generated/r3b-transcript/turn-edits-card.mjs) over the generated
+// 3.6556.2 original since w6-transcript-rows (c96d752d0 U0e / B0e in src/generated/r3b-transcript/turn-edits-card.mjs; TR-T1: the first
+// three files, then Show {count} more / See all / Show less, and the Total row) over the generated
 // c856385e2 session file contexts; the host services come from src/source-r3b-transcript-adapters.jsx. SSR and a small
 // fake DOM driven by React's own props (controlled events): no browser, no Electron, no network.
 const app = path.resolve(import.meta.dirname, '..');
@@ -142,7 +143,12 @@ async function withDom(run) {
 const reactProps = element => element[Object.keys(element).find(key => key.startsWith('__reactProps$'))];
 const classOf = element => element.getAttribute('class') ?? '';
 // CdsIcon draws its glyph as a private-use character of the icon font.
-const visible = container => container.textContent.replace(/[\uE000-\uF8FF]/g, '');
+// What a sighted reader sees: the text without the icon glyphs and without the sr-only spans (3.6556.2 c60636ac6 Qe adds
+// "N additions, M deletions" for screen readers through FormattedList; srOnly() reads those).
+const isSrOnly = node => String(node.getAttribute?.('class') ?? node.className ?? '').split(/\s+/).includes('sr-only');
+const sighted = node => (node.nodeType === 3 ? node.nodeValue ?? '' : isSrOnly(node) ? '' : node.childNodes.map(sighted).join(''));
+const visible = container => sighted(container).replace(/[\uE000-\uF8FF]/g, '');
+const srOnly = container => container.findAll(isSrOnly).map(node => node.textContent);
 const press = element => ({ preventDefault() {}, stopPropagation() {}, isDefaultPrevented: () => false, currentTarget: element, target: element, button: 0, detail: 1, nativeEvent: {} });
 const buttons = container => container.findAll(node => node.tagName === 'BUTTON');
 const buttonNamed = (container, label) => buttons(container).find(node => visible(node) === label);
@@ -157,38 +163,50 @@ function recorder() {
 const card = (props, log) => React.createElement(Host.SourceTurnEdits, { turnId: 't1', sessionKey: 's1', canViewChanges: true,
   onRevealInChanges: log.reveal, onOpenChanges: log.changes, onOpenFile: log.open, ...props });
 
-test('generator: the card, its contexts and the toolcards-16 call sites are pinned to the installed 2.42304.0 chunks', () => {
+test('generator: the card, its contexts and the toolcards-16 call sites are pinned to the 3.6556.2 chunks (w6-transcript-rows)', () => {
+  assert.equal(manifest.referenceVersion, '3.6556.2');
   const card = manifest.modules.find(m => m.target === 'turn-edits-card.mjs');
-  assert.deepEqual(card.exports, { N2e: 'TurnEditsCard', S0: 'useTurnEditStop', F2e: 'useTurnEditFileOpener', A2e: 'turnEditFolderHints' });
+  assert.equal(card.referenceVersion, '3.6556.2');
+  assert.deepEqual(card.exports, { U0e: 'TurnEditsCard', S1: 'useTurnEditStop', K0e: 'useTurnEditFileOpener', R0e: 'turnEditFolderHints' });
   const imports = Object.fromEntries(card.imports.map(i => [i.local, `${i.kind}:${i.name}`]));
-  assert.equal(imports.s0, 'adapter:turnEditsSummary');
-  assert.equal(imports.P2e, 'adapter:useArtifactPageLink');
-  assert.equal(imports.Zu, 'adapter:useSessionPresetsMain');
-  assert.equal(imports.os, 'view-tabs:CdsTooltip');
-  assert.equal(imports.Ss, 'view-tabs:CdsButton');
-  assert.equal(imports.Vg, 'generated:useOutsideRootsCheck');
-  assert.equal(imports.Xge, 'generated:SessionFileBlock');
-  assert.deepEqual(manifest.callSites.map(s => s.binding).filter(b => ['v2', 'p2', 'C0', 'I2e', 'C2e', 'ZM', 'v2e', 'uM', 'nat', 'He', 'Ve'].includes(b)),
-    ['v2', 'p2', 'C0', 'I2e', 'C2e', 'ZM', 'v2e', 'uM', 'nat', 'He', 'Ve']);
+  assert.equal(imports.s1, 'adapter:turnEditsSummary');
+  assert.equal(imports.G0e, 'adapter:useArtifactPageLink');
+  assert.equal(imports.W0e, 'adapter:ArtifactPageIcon');
+  assert.equal(imports.hd, 'adapter:useSessionPresetsMain');
+  assert.equal(imports.QS, 'adapter:useToolGroupExpanded');
+  assert.equal(imports.se, 'view-tabs:CdsTooltip');
+  assert.equal(imports.J, 'view-tabs:CdsButton');
+  assert.equal(imports.J9, 'view-tabs:reactMemoCache');
+  assert.equal(imports.jh, 'generated:useOutsideRootsCheck');
+  assert.equal(imports.Kh, 'generated:SessionFileBlock');
+  assert.equal(imports.dC, 'generated:DiffCounts');
+  // Every step-2 module is 3.6556.2 now (no 2.42304.0 module or call site left in the area).
+  assert.deepEqual(manifest.modules.filter(m => m.referenceVersion !== '3.6556.2').map(m => m.target), []);
+  assert.deepEqual(manifest.callSites.filter(s => s.referenceVersion !== '3.6556.2').map(s => s.binding), []);
+  assert.deepEqual(manifest.callSites.map(s => s.binding).filter(b => ['B0e', 'z0e', 'L0e', 'T0', 'b0', 'C1', 'q0e', 'j0e', 'sD', 'Z1e', 'EE', 'Je', 'qe'].includes(b)),
+    ['B0e', 'z0e', 'L0e', 'T0', 'b0', 'C1', 'q0e', 'j0e', 'sD', 'Z1e', 'EE', 'Je', 'qe']);
+  const C96 = 'c96d752d0-CWv_7-n9.js';
   const pins = [
-    ['c96d752d0-BOCqU7c2.js', 'N2e=M(M2e)'], ['c96d752d0-BOCqU7c2.js', 'S=y&&!i'], ['c96d752d0-BOCqU7c2.js', '"claudeai_cc_epitaxy_turn_edits_card"'],
-    ['c96d752d0-BOCqU7c2.js', 'flex h-control min-w-0 items-center justify-between gap-sm px-xs'],
-    ['c96d752d0-BOCqU7c2.js', 'if(e(i,!0))return"outside_roots";if(t===null&&n?.(i)===!1)return r??"plain"'],
-    ['c96d752d0-BOCqU7c2.js', '$x(`turn-edits:${e[0]?.calls[0]?.id??""}`)'],
-    ['c425fb3cf-CEgSkv8l.js', 'epitaxy-summary-card-control-text flex w-full select-text flex-col gap-1 rounded-card px-md py-xs'],
-    ['shared-11-BuQ3CK5I.js', 'Zo="claudeai_cc_epitaxy_session_presets_main"'], ['c856385e2-DVsjb2QL.js', 'id:"XWwZmSJGiL"'],
-    // c5da7eb42 WN: the read refusal exists only for remote sessions.
-    ['c5da7eb42-B8cTG8SI.js', 'n=t&&e?.type==="remote"?e.id:null'],
+    [C96, 'U0e=M(B0e)'], [C96, 'x=hd()'], [C96, 'O=x&&D.length>3'], [C96, 'flex h-control min-w-0 items-center justify-between gap-sm px-xs'],
+    [C96, 'if(e(i,!0))return"outside_roots";if(t===null&&n?.(i)===!1)return r??"plain"'],
+    // TR-T1: the first three files until expanded, kept per first call id.
+    [C96, 'QS(`turn-edits:${t[0]?.calls[0]?.id??""}`)'], [C96, 'a?t:t.slice(0,3)'],
+    ['c425fb3cf-B-SGR6Na.js', 'epitaxy-summary-card-control-text flex w-full select-text flex-col gap-1 rounded-card px-md py-xs'],
+    ['shared-11-_AVGLHEz.js', 'hc="claudeai_cc_epitaxy_session_presets_main"'], ['c856385e2-aEyDzrcK.js', 'id:"XWwZmSJGiL"'],
+    // c5da7eb42: the read refusal exists only for remote sessions.
+    ['c5da7eb42-XijZdwf1.js', 'n=t&&e?.type==="remote"?e.id:null'],
     // toolcards-16.
-    ['c96d752d0-BOCqU7c2.js', 's=e?.runningIds?.some(a)??!1'], ['c96d752d0-BOCqU7c2.js', 'runningIds:e.flatMap(e=>e.status==="running"?[e.id]:[])'],
-    ['c96d752d0-BOCqU7c2.js', 'ye=m_()'], ['c96d752d0-BOCqU7c2.js', 'He=uM(Ve,650,ye?cv:void 0)'], ['c26fb8b6b-DfPeiuGP.js', 'Ve="__gb__2846116625"'],
+    [C96, 'f=J2($,5,t?.runningIds,l)?I2($,5,t?.runningIds?.some(l)??!1'], [C96, 'runningIds:t.flatMap(e0e)'],
+    [C96, 'Ne=Pv()'], [C96, 'dt=EE(ut,650,Ne?qv:void 0)'], ['c26fb8b6b-B7Friu61.js', 'qe="__gb__2846116625"'],
   ];
   for (const [name, needle] of pins) assert.equal(occurrences(raw(name), needle), 1, `${name}: ${needle}`);
+  // 3.6556.2 dropped the card's GrowthBook gate (claudeai_cc_epitaxy_turn_edits_card) and the plural "N files" count line (CI-09).
+  assert.equal(occurrences(raw(C96), 'claudeai_cc_epitaxy_turn_edits_card'), 0);
   // The card text CSS the chunk injects is the generated stylesheet, verbatim.
   const css = fs.readFileSync(path.join(directory, 'summary-card.css'), 'utf8');
   const rule = '.epitaxy-root .epitaxy-summary-card-control-text{font-size:var(--cds-font-size-body--own,var(--cds-font-size-body));line-height:var(--cds-leading-body--own,var(--cds-leading-body))}';
   assert.ok(css.includes(rule));
-  assert.equal(occurrences(raw('c425fb3cf-CEgSkv8l.js'), rule), 1);
+  assert.equal(occurrences(raw('c425fb3cf-B-SGR6Na.js'), rule), 1);
   assert.equal(Adapters.HOST_GATES.claudeai_cc_epitaxy_session_presets_main, true, 'D10');
 });
 
@@ -198,6 +216,8 @@ test('toolcards-06: See all reveals the first file the Changes diff lists, else 
     const files = [file('/w/a.js'), file('/w/b.js', 2, 0)];
     act(() => root.render(card({ edits: edits(files), fileInChanges: p => p === '/w/b.js', onUndo: log.undo }, log)));
     assert.match(visible(container), /^Edited 2 filesUndoa\.js\+1−1b\.js\+2−0See all\+3−1$/);
+    // 3.6556.2 c60636ac6 Qe: each count carries its screen reader text (FormattedList of the plural messages).
+    assert.deepEqual(srOnly(container), ['1 addition, 1 deletion', '2 additions, 0 deletions', '3 additions, 1 deletion']);
     click(buttonNamed(container, 'See all'));
     assert.deepEqual(log.calls, [['reveal', '/w/b.js']], 'the probe finds b.js, then the opener reveals it');
     click(buttonNamed(container, 'a.js'));
@@ -207,8 +227,9 @@ test('toolcards-06: See all reveals the first file the Changes diff lists, else 
     // Nothing listed (a loaded diff without these files): See all opens the pane, rows go to Files.
     log.calls.length = 0;
     act(() => root.render(card({ edits: edits(files), fileInChanges: () => false }, log)));
-    assert.equal(buttonNamed(container, 'See all'), undefined, 'E is false: the See all row keeps only the totals');
-    assert.match(visible(container), /b\.js\+2−0\+3−1$/);
+    assert.equal(buttonNamed(container, 'See all'), undefined, 'T is false: the See all row keeps only the totals');
+    // TR-T1 (3.6556.2 B0e): that static totals row is labelled Total (MJ2jZQxQnT).
+    assert.match(visible(container), /b\.js\+2−0Total\+3−1$/);
     click(buttonNamed(container, 'a.js'));
     assert.deepEqual(log.calls, [['open', '/w/a.js']]);
     // No Changes pane for this session: same, and no diff opener.
@@ -321,21 +342,19 @@ test('toolcards-07: a stopped row is static; any stop but plain wraps it in the 
   assert.match(host, /data-file-ref="\/elsewhere\/x\.js"><button type="button"/);
 });
 
-test('R4f-graph G2: the embedded card renders through the original CDS Collapsible; a folder hint reads the view-tabs direction', async () => {
-  const { DirectionContext } = await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-DfPJ1QmD.js');
+test('R4f-graph G2: no embedded form in 3.6556.2; a folder hint reads the view-tabs direction', async () => {
+  const { DirectionContext } = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
   const render = (props, direction) => {
     const card = React.createElement(Adapters.TurnEditsHost.Provider, { value: { sessionKey: 's1', canViewChanges: true } },
       React.createElement(Access.SessionFileOpenerProvider, { value: () => {} }, React.createElement(Card.TurnEditsCard, props)));
     return renderToStaticMarkup(direction ? React.createElement(DirectionContext.Provider, { value: { direction } }, card) : card);
   };
-  // M2e `M = i && !w`: the embedded form is Qw.Root (rendered as the list wrapper) with the file list in Qw.Panel. This
-  // host never embeds the card; the old adapter refused to render it, the original renders it closed.
-  const embedded = render({ items: edits(['a', 'b', 'c', 'd', 'e'].map(name => file(`/w/${name}.js`))), embedded: true });
-  assert.match(embedded, /^<div class="flex w-full select-text flex-col gap-0\.5" data-closed="" data-cds="Collapsible"><ul role="list"/);
-  assert.match(embedded, /<button type="button" class="group\/disclosure [^"]*" tabindex="0" aria-disabled="false" aria-expanded="false">/);
-  assert.match(embedded, />5 files</);
-  assert.ok(!embedded.includes('data-file-ref'), 'the closed panel lists no files');
-  // b0 `x() === "rtl"`: under the view-tabs DirectionContext an RTL card isolates the folder hint and keeps the name LTR.
+  // 3.6556.2 dropped the embedded form (M2e `M = i && !w` over the CDS Collapsible): B0e takes { items, onUndo,
+  // artifactPage, layout } only, so an `embedded` prop renders the ordinary card.
+  const five = edits(['a', 'b', 'c', 'd', 'e'].map(name => file(`/w/${name}.js`)));
+  assert.equal(render({ items: five, embedded: true }), render({ items: five }));
+  assert.ok(!render({ items: five }).includes('data-cds="Collapsible"'));
+  // x1 `p() === "rtl"`: under the view-tabs DirectionContext an RTL card isolates the folder hint and keeps the name LTR.
   const hinted = { items: edits([file('/w/src/a/index.js'), file('/w/src/b/index.js')]) };
   const rowOf = html => html.slice(html.indexOf('data-file-ref="/w/src/a/index.js"'), html.indexOf('</li>', html.indexOf('data-file-ref="/w/src/a/index.js"')));
   assert.match(rowOf(render(hinted, 'rtl')), /<span class="min-w-0 truncate text-primary" dir="ltr">index\.js<span class="ms-xs text-footnote text-muted-as-secondary"><span class="sr-only">, <\/span><bdi>a<\/bdi><\/span>/);
@@ -380,7 +399,9 @@ test('toolcards-16: with turnStatusRows the tool group\'s held running key takes
   const group = fs.readFileSync(path.join(app, 'src/source-tool-group.jsx'), 'utf8');
   assert.match(group, /if \(rest && shown\.key === 'settled'\) \{ setShown\(\{ key, at: performance\.now\(\) \}\); return; \}/);
   assert.match(group, /const key = state === 'busy' && running \? running\.id : 'settled', heldKey = useHeldKey\(key, statusRows\);/);
-  assert.match(fs.readFileSync(path.join(app, 'src/generated/transcript-rows/turn-mark.mjs'), 'utf8'), /var Za = \{ restKey: Xa, fallHoldMs: 650 \};/);
-  assert.match(fs.readFileSync(path.join(app, 'src/generated/transcript-rows/group-status.mjs'), 'utf8'), /runningIds\?\.some\(a\)/);
+  // 3.6556.2 (w6-transcript-rows-cont): Z1e `EE(ut, 650, Ne ? qv : void 0)`, cb6930dae To = {restKey: wo ("settled"),
+  // fallHoldMs: 650}; sD holds the candidate's running ids.
+  assert.match(fs.readFileSync(path.join(app, 'src/generated/transcript-rows/turn-mark.mjs'), 'utf8'), /var To = \{ restKey: wo, fallHoldMs: 650 \};/);
+  assert.match(fs.readFileSync(path.join(app, 'src/generated/transcript-rows/group-status.mjs'), 'utf8'), /t\?\.runningIds\?\.some\(l\)/);
   assert.equal(occurrences(fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8'), 'liveRunningToolIds'), 0, 'the live running ids come from the transcript scope (transcript-rows-model.mjs)');
 });

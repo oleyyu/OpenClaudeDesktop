@@ -14,6 +14,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/code-composer');
@@ -21,35 +22,39 @@ const viewTabsDir = path.join(app, 'src/generated/view-tabs');
 const composerManifest = JSON.parse(fs.readFileSync(path.join(generated, 'manifest.json'), 'utf8'));
 const viewTabsManifest = JSON.parse(fs.readFileSync(path.join(viewTabsDir, 'manifest.json'), 'utf8'));
 const reference = path.resolve(app, '../reference', viewTabsManifest.referenceSnapshot, 'ion-dist/assets/v1');
-const frame = 'shared-frame-BfjMqbuN.js';
+const frame = 'shared-frame-6jtSkIit.js';
+// 3.6556.2: view-tabs and code-composer are both 3.6556.2 (w1-cds-viewtabs, w2-composer-gen). The CdsRoot module is the new
+// shared-frame; main.jsx imports CdsRoot through the view-tabs facade (R6, moved off the 2.42304.0 legacy shim in W7), the
+// same instance.
 const h = React.createElement;
 let server, ViewTabs, Frame, Shell;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  ViewTabs = await server.ssrLoadModule(`/src/generated/view-tabs/${frame}`);
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
   Frame = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-frame.mjs');
   Shell = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-shell.mjs');
 });
 after(() => server?.close());
 
-// [semantic name, 2.42304.0 local, official export alias (none for xa / da / hr), reader feature (once in the chunk)].
+// [semantic name, 3.6556.2 local, official export alias (none for Ma / Sa / Zn), reader feature (once in the chunk)].
 const contexts = [
-  ['CdsNaturalImageTilesContext', 'xa', undefined, 'function Sa(){return W(xa)??!1}'],
-  ['CdsOwnerWindowContext', 'Oa', '$l', 'function Ya(){return Ji(W(Oa))}'],
-  ['CdsLabelsContext', 'vn', 'rd', 'function Z(e,t,n){return bn(W(vn),e,t,n)}'],
-  ['CdsModeStoreContext', 'da', undefined, 'function Pa(){let e=W(da)??fa;'],
-  ['CdsFizzyLakePartsContext', 'hr', undefined, 'function gr(){return W(hr)}'],
-  ['CdsSurfaceContext', 'Ea', 'nu', 'function za(){return W(Ea)}'],
-  ['CdsButtonIconSizeContext', 'Xl', 'll', 'n=W(Xl);'],
+  ['CdsNaturalImageTilesContext', 'Ma', undefined, 'function Na(){return J(Ma)??!1}'],
+  ['CdsOwnerWindowContext', 'za', '_d', 'function ao(){return J(za)}'],
+  ['CdsLabelsContext', 'xn', 'wf', 'function wn(e,t,n){let $=J9(5),r=J(xn);'],
+  ['CdsModeStoreContext', 'Sa', undefined, 'function Ga(){let e=J(Sa)??Ca;'],
+  ['CdsFizzyLakePartsContext', 'Zn', undefined, 'function Qn(){return J(Zn)}'],
+  ['CdsSurfaceContext', 'La', 'bd', 'function Xa(){return J(La)}'],
+  ['CdsButtonIconSizeContext', 'Bu', 'Du', 'n=J(Bu);'],
 ];
 
-test('the seven contexts are view-tabs semantic names over the 2.42304.0 declarations (official alias where the chunk exports one)', () => {
+test('the seven contexts are view-tabs semantic names over the 3.6556.2 declarations (official alias where the chunk exports one)', () => {
+  assert.equal(viewTabsManifest.referenceVersion, '3.6556.2');
   const original = fs.readFileSync(path.join(reference, frame), 'utf8');
   const exportsText = original.slice(original.lastIndexOf('export{'));
   const generatedText = fs.readFileSync(path.join(viewTabsDir, frame), 'utf8');
   for (const [name, local, alias, reader] of contexts) {
     assert.deepEqual(viewTabsManifest.publicNames[name], { file: frame, local, ...(alias ? { export: alias } : {}) }, name);
-    assert.equal(original.split(`${local}=G(void 0)`).length - 1, 1, `${name}: ${local}=G(void 0) once`);
+    assert.equal(original.split(`${local}=ut(void 0)`).length - 1, 1, `${name}: ${local}=ut(void 0) once`);
     assert.equal(original.split(reader).length - 1, 1, `${name}: ${reader} once`);
     if (alias) assert.match(exportsText, new RegExp(`[{,]${local.replace('$', '\\$')} as ${alias.replace('$', '\\$')}[,}]`), name);
     else assert.doesNotMatch(exportsText, new RegExp(`[{,]${local} as `), `${name}: the chunk does not export ${local}`);
@@ -57,42 +62,36 @@ test('the seven contexts are view-tabs semantic names over the 2.42304.0 declara
     assert.ok(viewTabsManifest.modules.find((m) => m.source === frame).bindings.includes(local), `${name} was already selected`);
     assert.equal(typeof ViewTabs[name]?.Provider, 'object', name);
   }
-  // CdsRoot provides the first five: they are the Providers of its own return.
-  const root = generatedText.split('\n').find((line) => line.startsWith('function Za('));
-  for (const local of ['xa', 'vn', 'da', 'hr', 'Ea']) assert.ok(root.includes(`H(${local}.Provider,{value:`), local);
+  // CdsRoot (lo, exported yd) provides the first five: they are the Providers of its own return.
+  assert.deepEqual(viewTabsManifest.publicNames.CdsRoot, { file: frame, local: 'lo', export: 'yd' });
+  const root = generatedText.split('\n').find((line) => line.startsWith('function lo('));
+  for (const local of ['Ma', 'xn', 'Sa', 'Zn', 'La']) assert.ok(root.includes(`b(${local}.Provider,{value:`), local);
 });
 
 test('extract-code-composer.mjs copies none of the seven: their readers import the view-tabs instances', () => {
-  // R4g-composer CP4 (X7-10) copied the CDS Skeleton's xu / Su; R4i-graph GR3 named them in view-tabs
-  // (CdsSkeletonShimmerContext / CdsSkeletonElementContext). The one copy left is the layer base Vd under the pane drop
-  // halo's z-index (view-tabs holds that name back for mcp-app-card), listed with its reason; none of the seven CdsRoot /
-  // shell contexts and neither Skeleton context is among the copies.
-  assert.deepEqual(composerManifest.modules.filter((m) => m.contextCopies).map((m) => [m.target, Object.keys(m.contextCopies)]), [['chat-composer-frame.mjs', ['Vd']]]);
+  // 3.6556.2 (w2-composer-gen): the last copy (the layer base Vd under the pane drop halo) is gone too, since view-tabs
+  // names CdsLayerBaseContext / useCdsLayerAwareZIndex (E4); the guard that refuses a second instance stays.
+  assert.equal(composerManifest.referenceVersion, '3.6556.2');
+  assert.deepEqual(composerManifest.modules.filter((m) => m.contextCopies).map((m) => m.target), []);
   const source = fs.readFileSync(path.join(app, 'scripts/extract-code-composer.mjs'), 'utf8');
-  assert.match(source, /\nconst contextCopies = \{\n  'shared-frame-BfjMqbuN\.js': \{\n/, 'the guard stays');
-  const table = source.slice(source.indexOf('\nconst contextCopies = {'), source.indexOf('\n};\n', source.indexOf('\nconst contextCopies = {')));
-  for (const local of [...contexts.map(([, local]) => local), 'xu', 'Su']) assert.doesNotMatch(table, new RegExp(`\\n    ${local.replace('$', '\\$')}: `), local);
+  assert.match(source, /\nconst contextCopies = \{\};\n/, 'the guard table is empty');
   assert.match(source, /would be a second instance; list it in contextCopies with the reason, or have view-tabs name it/);
   const byTarget = Object.fromEntries(composerManifest.modules.map((m) => [m.target, m]));
   const viewTabsImports = (target) => byTarget[target].imports.filter((i) => i.kind === 'view-tabs').map((i) => `${i.original}=${i.name}`);
-  for (const pair of ['xa=CdsNaturalImageTilesContext', 'Oa=CdsOwnerWindowContext', 'vn=CdsLabelsContext', 'da=CdsModeStoreContext', 'hr=CdsFizzyLakePartsContext'])
+  for (const pair of ['Ma=CdsNaturalImageTilesContext', 'Sa=CdsModeStoreContext'])
     assert.ok(viewTabsImports('chat-composer-frame.mjs').includes(pair), pair);
-  for (const pair of ['xu=CdsSkeletonShimmerContext', 'Su=CdsSkeletonElementContext'])
-    assert.ok(viewTabsImports('chat-composer-frame.mjs').includes(pair), pair);
-  for (const pair of ['Ea=CdsSurfaceContext', 'Xl=CdsButtonIconSizeContext'])
+  for (const pair of ['La=CdsSurfaceContext', 'Bu=CdsButtonIconSizeContext', 'wn=useCdsLabel', 'er=useFizzyLakePart'])
     assert.ok(viewTabsImports('chat-composer-shell.mjs').includes(pair), pair);
-  // No generated composer module declares one of them any more.
-  for (const file of fs.readdirSync(generated).filter((f) => f.endsWith('.mjs'))) {
-    const text = fs.readFileSync(path.join(generated, file), 'utf8');
-    for (const [, local] of contexts) assert.doesNotMatch(text, new RegExp(`\\bvar ${local} = G\\(`), `${file} declares ${local}`);
-  }
-  assert.deepEqual(Object.keys(byTarget['chat-composer-frame.mjs'].exports).filter((k) => k === 'Ea' || k === 'Xl'), []);
+  // No generated composer module holds one of them as its own binding any more.
+  for (const module of composerManifest.modules.filter((m) => m.source === frame))
+    for (const [name, local] of contexts) assert.ok(!module.bindings.some((b) => (b.name ?? b) === local), `${module.target} copies ${name}`);
+  assert.deepEqual(Object.keys(byTarget['chat-composer-frame.mjs'].exports).filter((k) => contexts.some(([, local]) => local === k)), []);
   assert.equal(typeof Shell.ChatComposerShell, 'object', 'the shell still loads over the view-tabs contexts');
 });
 
 test('main.jsx wraps the Code composer (renderMainComposer) in the view-tabs CdsRoot, with main.cds-root\'s density / font / platform and className "contents"', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
-  assert.equal(main.split('import { CdsRoot } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";').length - 1, 1);
+  assert.equal(main.split('import { CdsRoot } from "./generated/view-tabs/index.js";').length - 1, 1);
   const start = main.indexOf('const renderMainComposer = () => (');
   const body = main.slice(start, main.indexOf('\n  );\n', start));
   // R4g-composer CP4 (X7-10): experimental is the Code pane's (generated shared-18 Ub), which the image tiles read.
@@ -105,10 +104,25 @@ test('main.jsx wraps the Code composer (renderMainComposer) in the view-tabs Cds
   // main.cds-root carries the same three attributes the root repeats.
   assert.match(main, /className="workspace epitaxy-root cds-root"\n\s+data-density=\{themeDensity\(boot\?\.config\)\}\n\s+data-font=\{cdsFont\}\n\s+data-platform="desktop"/);
   // Only main.jsx renders a CdsRoot among the host sources (the sidebar dialogs' generated ones aside), and, since
-  // R4i-graph GR3, the /btw side-session pane around its composer (tests/composer-pane-drop.test.mjs pins it).
-  for (const file of fs.readdirSync(path.join(app, 'src')).filter((f) => /\.(jsx|mjs|js)$/.test(f) && f !== 'main.jsx' && f !== 'source-btw-pane.jsx'))
+  // R4i-graph GR3, the /btw side-session pane around its composer (tests/composer-pane-drop.test.mjs pins it), and,
+  // since w11-e31-terminal-cont, the terminal pane around its close confirmation (3.6556.2 cccc2cf0a Zx Ie: shared-frame
+  // yd = CdsRoot, density comfortable, around the CdsConfirmationDialog), and, since W12 sidechat-cont, the floating side
+  // chat (3.6556.2 cccc2cf0a qF: `u(be,{density:"compact",className:"contents",children:u("div",{ref:r,className:
+  // "epitaxy-root …`, be = shared-frame yd), and, since W12b changes-files, the file editor's selection chip (3.6556.2
+  // cbd02b8f2 li: `W!==null&&Z.length>0?p(n(oe,{children:n("div",{dir:Je…`, oe = shared-18 fx:
+  // `m(Ce,{density:"compact",experimental:lx,className:"contents",children:t})`), and, since W12b terminal-preview-tabs,
+  // the preview close-tabs dialog (3.6556.2 cf580efe9 va: `r(Pe,{children:r(E.Root,{open:f,…`, Pe = shared-18 Qd = fx).
+  // w13-close-chat-surface (E77): and the incognito top bar's Exit incognito (3.6556.2 shared-20 Qg:
+  // `i(ne,{mode:b,className:"contents",children:x})`, b the opposite of the resolved mode; source-incognito-shell.jsx).
+  const roots = { 'source-btw-pane.jsx': 1, 'source-terminal-pane.jsx': 1, 'source-side-chat.jsx': 1, 'source-file-editor.jsx': 1, 'source-preview-tabs.jsx': 1, 'source-incognito-shell.jsx': 1 };
+  for (const file of fs.readdirSync(path.join(app, 'src')).filter((f) => /\.(jsx|mjs|js)$/.test(f) && f !== 'main.jsx' && !(f in roots)))
     assert.doesNotMatch(fs.readFileSync(path.join(app, 'src', file), 'utf8'), /<CdsRoot\b|createElement\(CdsRoot|h\(CdsRoot/, file);
-  assert.equal(fs.readFileSync(path.join(app, 'src/source-btw-pane.jsx'), 'utf8').split('<CdsRoot ').length - 1, 1);
+  for (const [file, count] of Object.entries(roots))
+    assert.equal(fs.readFileSync(path.join(app, 'src', file), 'utf8').split('<CdsRoot ').length - 1, count, file);
+  assert.match(fs.readFileSync(path.join(app, 'src/source-terminal-pane.jsx'), 'utf8'), /<CdsRoot density="comfortable" className="contents">/);
+  assert.match(fs.readFileSync(path.join(app, 'src/source-side-chat.jsx'), 'utf8'), /<CdsRoot density="compact" className="contents">/);
+  assert.match(fs.readFileSync(path.join(app, 'src/source-file-editor.jsx'), 'utf8'), /<CdsRoot density="compact" experimental=\{CHIP_ROOT_EXPERIMENTAL\} className="contents">/);
+  assert.match(fs.readFileSync(path.join(app, 'src/source-preview-tabs.jsx'), 'utf8'), /<CdsRoot density="compact" experimental=\{codePaneExperimental\} className="contents">/);
 });
 
 test('SSR: the root is div.cds-root.text-primary.contents with the repeated attributes, the body font size, and no data-mode / data-page-bg', () => {
@@ -123,8 +137,8 @@ test('SSR: the root is div.cds-root.text-primary.contents with the repeated attr
   const wrapper = find(root, (n) => n.attrs?.class === 'cds-root text-primary contents');
   const color = computed(cascade, wrapper, 'color');
   assert.equal(color.value, 'var(--cds-text-primary)');
-  assert.equal(color.from?.sheet, 'public/assets/v1/c6a992d55-sXiDGMFQ.css');
-  assert.match(fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-sXiDGMFQ.css'), 'utf8'), /\.contents\{display:contents\}/);
+  assert.equal(color.from?.sheet, 'public/assets/v1/c6a992d55-Che1orl5.css');
+  assert.match(fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /\.contents\{display:contents\}/);
 });
 
 // ---------------------------------------------------------------- the original root, store and readers, driven
@@ -149,7 +163,7 @@ function hookFixture(component, contexts = new Map()) {
   };
   const render = () => {
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    cursor = 0; internal.H = hooks;
+    cursor = 0; internal.H = withMemoCache(hooks);
     try { result = component(); } finally { internal.H = old; }
     while (effects.length) effects.shift()();
     return result;
@@ -171,7 +185,7 @@ const withGlobals = (t, globals) => {
 const LIGHT_GLOW = '0 0 6px 1px var(--cds-bg-accent)';
 const DARK_GLOW = '0 0 6px 1px hsl(from var(--cds-role-accent-600) h s l / 60%)';
 
-test('the card focus shadow (ch) reads CdsRoot\'s mode store: dark html → the dark glow; without a root → the light one (the old copy\'s answer)', (t) => {
+test('the card focus shadow (sg, old ch) reads CdsRoot\'s mode store: dark html → the dark glow; without a root → the light one (the old copy\'s answer)', (t) => {
   let mode = 'dark';
   const observers = [];
   class FakeMutationObserver { constructor(cb) { this.cb = cb; observers.push(this); } observe(node, options) { this.node = node; this.options = options; } disconnect() { this.disconnected = true; } takeRecords() { return []; } }
@@ -186,7 +200,7 @@ test('the card focus shadow (ch) reads CdsRoot\'s mode store: dark html → the 
   store.setElement({ isConnected: true, closest: (selector) => (selector === '[data-mode]' ? documentElement : null) });
   assert.equal(store.getSnapshot(), 'dark');
   // The composer's reader, under that store (the dispatcher's useSyncExternalStore reads getSnapshot, as a client render).
-  const shadow = () => hookFixture(() => Frame.surfaceFocusShadowStyle('surface-3'), new Map([[ViewTabs.CdsModeStoreContext, store]])).render();
+  const shadow = () => hookFixture(() => Frame.useSurfaceFocusShadowStyle('surface-3'), new Map([[ViewTabs.CdsModeStoreContext, store]])).render();
   assert.ok(shadow()['--cds-focus-shadow'].endsWith(DARK_GLOW), shadow()['--cds-focus-shadow']);
   assert.equal(shadow()['--cds-page-bg'], 'var(--cds-surface-3)');
   // A theme flip: the store watches html[data-mode] (subtree) and tells its subscribers; the reader then answers light.
@@ -202,7 +216,7 @@ test('the card focus shadow (ch) reads CdsRoot\'s mode store: dark html → the 
   assert.equal(watcher.disconnected, true);
   // No root: fa's undefined snapshot → "light" (what the context copy always read, dark or not).
   mode = 'dark';
-  const bare = hookFixture(() => Frame.surfaceFocusShadowStyle('surface-3')).render();
+  const bare = hookFixture(() => Frame.useSurfaceFocusShadowStyle('surface-3')).render();
   assert.ok(bare['--cds-focus-shadow'].endsWith(LIGHT_GLOW));
 });
 
@@ -214,15 +228,15 @@ test('the other readers share CdsRoot\'s instances: owner window, labels, natura
   assert.equal(value(ViewTabs.CdsNaturalImageTilesContext), undefined, 'no experimental: the default (MessageAttachments keeps data-fit off)');
   assert.equal(value(ViewTabs.CdsSurfaceContext), undefined, 'no pageBackground');
   const labels = value(ViewTabs.CdsLabelsContext);
-  // Z (useCdsLabel) under the root's labels context: the root's labels win, the English default is the fallback.
-  const read = (key, fallback) => hookFixture(() => Frame.useCdsLabel(key, fallback), new Map([[ViewTabs.CdsLabelsContext, labels]])).render();
+  // wn (useCdsLabel, view-tabs) under the root's labels context: the root's labels win, the English default is the fallback.
+  const read = (key, fallback) => hookFixture(() => ViewTabs.useCdsLabel(key, fallback), new Map([[ViewTabs.CdsLabelsContext, labels]])).render();
   assert.equal(read('reply', 'Reply'), 'Antworten');
   assert.equal(read('dropFiles', 'Drop files here'), 'Drop files here');
-  // Ya (useRootOwnerWindow) reads CdsOwnerWindowContext: an element there yields its window.
+  // so (useCdsOwnerWindow, view-tabs) reads CdsOwnerWindowContext: an element there yields its window.
   const win = { name: 'owner' };
-  assert.equal(hookFixture(() => Frame.useRootOwnerWindow(), new Map([[ViewTabs.CdsOwnerWindowContext, { ownerDocument: { defaultView: win } }]])).render(), win);
+  assert.equal(hookFixture(() => ViewTabs.useCdsOwnerWindow(), new Map([[ViewTabs.CdsOwnerWindowContext, { ownerDocument: { defaultView: win } }]])).render(), win);
   assert.equal(hookFixture(() => Frame.useRootNaturalImageTiles(), new Map([[ViewTabs.CdsNaturalImageTilesContext, 'sized']])).render(), 'sized');
   assert.equal(hookFixture(() => Frame.useRootNaturalImageTiles()).render(), false);
-  assert.equal(hookFixture(() => Frame.useFizzyLakePart('bubbles'), new Map([[ViewTabs.CdsFizzyLakePartsContext, 'bubbles panels']])).render(), true);
-  assert.equal(hookFixture(() => Frame.useFizzyLakePart('bubbles')).render(), false);
+  assert.equal(hookFixture(() => ViewTabs.useFizzyLakePart('bubbles'), new Map([[ViewTabs.CdsFizzyLakePartsContext, 'bubbles panels']])).render(), true);
+  assert.equal(hookFixture(() => ViewTabs.useFizzyLakePart('bubbles')).render(), false);
 });

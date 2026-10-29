@@ -1,4 +1,5 @@
 import { t, tn } from "../electron/i18n/index.mjs";
+import { fileTreeCompactRow, fileTreeRowCurrent, fileTreeRowIdle } from "./generated/files-changes/file-tree-row-classes.mjs";
 
 // "Commits" section of the Changed files column, 2.31226.0 c44d00c7f (readable
 // analysis/code-ui-sync-20261013/readable/c44d00c7f-Buwpp1mI.js.readable.js):
@@ -25,12 +26,20 @@ export const DIFF_COMMITS_LABELS = Object.freeze({
   copyFailed: t("Couldn’t copy to the clipboard."),
 });
 
-// ce9ca5630 i/a/c (f, m, p): the file-tree row base, selected and idle fills (shared with Ya/Ja rows).
-export const COMMIT_ROW_ACTIVE = "bg-fill-control hover:bg-fill-control text-primary";
-export const COMMIT_ROW_IDLE = "bg-alpha-0 text-primary hover:bg-fill-ghost-hover data-[pressed]:bg-fill-ghost-hover";
-export const COMMITS_HEADER_ROW = "flex items-center gap-1 h-control pr-md rounded text-body text-left w-full select-none focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus";
-export const COMMIT_ROW_CLASS = "group flex w-full flex-col items-start gap-[2px] rounded px-xs py-[6px] text-left text-body focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus";
-export const SCOPE_ROW_CLASS = "scroll-mt-(--cds-pad-md) rounded px-xs py-[6px] text-left text-body focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus";
+// 3.6556.2 c44d00c7f imports the file-tree row base, selected and idle fills from c621b1e2d (`xt` r = f, `_t` i = m,
+// `St` s = p; generated/files-changes/file-tree-row-classes.mjs): Ni/Fi pick `a ? _t : St`, Bi's header Trigger is
+// `${xt} text-secondary-control`.
+export const COMMIT_ROW_ACTIVE = fileTreeRowCurrent;
+export const COMMIT_ROW_IDLE = fileTreeRowIdle;
+export const COMMITS_HEADER_ROW = `${fileTreeCompactRow} text-secondary-control`;
+// Ni / Fi (3.6556.2, as 2.42304.0): text-start, not text-left.
+export const COMMIT_ROW_CLASS = "group flex w-full flex-col items-start gap-[2px] rounded px-xs py-[6px] text-start text-body focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus";
+export const SCOPE_ROW_CLASS = "scroll-mt-(--cds-pad-md) rounded px-xs py-[6px] text-start text-body focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus";
+// Ni meta line and Ii "{n} older commits not shown": footnote text-muted-as-secondary.
+export const COMMIT_META_CLASS = "flex w-full items-center gap-1 text-footnote text-muted-as-secondary";
+export const OLDER_COMMITS_CLASS = "px-xs py-[6px] text-footnote text-muted-as-secondary";
+// Bi: Li / Ri, the section body under the header (CdsCollapsible.Panel, no height animation).
+export const COMMITS_PANEL_CLASS = "min-h-0 overflow-y-auto h-auto transition-none duration-0 data-[starting-style]:h-auto data-[starting-style]:overflow-y-auto data-[ending-style]:h-auto data-[ending-style]:overflow-y-auto data-[animating]:overflow-y-auto";
 export const COMMITS_TOOLBAR_CLASS = "flex flex-col gap-0.5 pb-md outline-none hide-focus-ring";
 
 /** qr: the newest 100 commits; a selected commit past them is appended; `hidden` counts the
@@ -43,6 +52,58 @@ export function commitsSectionRows(commits, selectedSha = null, total) {
   const rows = extra ? [...shown, extra] : shown;
   const all = Number.isSafeInteger(total) && total >= list.length ? total : list.length;
   return { rows, hidden: Math.max(0, all - rows.length) };
+}
+
+// shared-1 XG / ZG (c44d00c7f ki = `ZG(e, e.currentTarget) && e.preventDefault()`, mounted while shared-25 vh — the
+// desktop app — holds): the native context menu is suppressed unless the event was already handled, it passes over a
+// field, link, media or menu on its way to the target, or a non-empty selection intersects the target.
+export const NATIVE_MENU_TARGETS = 'input, textarea, select, [contenteditable]:not([contenteditable="false"]), a[href], img, video, audio, [role="menu"]';
+export function suppressNativeMenu(event, target) {
+  if (event.defaultPrevented) return false;
+  const path = event.nativeEvent?.composedPath?.() ?? event.composedPath?.() ?? [];
+  const index = path.indexOf(target);
+  if (index === -1 || path.slice(0, index + 1).some((node) => node?.nodeType === 1 && node.matches?.(NATIVE_MENU_TARGETS))) return false;
+  const selection = target.ownerDocument?.getSelection?.() ?? null;
+  return !(selection !== null && selection.rangeCount > 0 && selection.toString().trim() !== "" && selection.getRangeAt(0).intersectsNode(target));
+}
+export function preventNativeMenu(event) {
+  if (suppressNativeMenu(event, event.currentTarget)) event.preventDefault();
+}
+
+// c44d00c7f Rn = c82eca2bd Se `function Se(){return te(z)??!0}` with `z="__gb__2263689058"`: shared-0 Zo (te) answers
+// null when there is no GrowthBook client (qo `t ? … : null`), so the Enter pick is on. The host has no GrowthBook client.
+export const ENTER_PICK_GATE = "__gb__2263689058";
+export const ENTER_PICK_ENABLED = true;
+
+// c82eca2bd B (c44d00c7f er): once the Enter that picked a row comes back up (keyup Enter, capture, on the window), pick
+// runs if focus is on nothing / the body or still inside the list; a window blur first drops the wait.
+export function pickOnEnterKeyUp(list, pick) {
+  const doc = list.ownerDocument, view = doc?.defaultView;
+  if (!view) return;
+  const controller = new AbortController();
+  view.addEventListener("keyup", (event) => {
+    if (event.key !== "Enter") return;
+    controller.abort();
+    const active = doc.activeElement;
+    if (!active || active === doc.body || list.contains(active)) pick();
+  }, { capture: true, signal: controller.signal });
+  view.addEventListener("blur", () => controller.abort(), { signal: controller.signal });
+}
+
+// c44d00c7f Ci: a plain Enter (no repeat, no modifier) on a row clicks it and, on its keyup, runs onEnterPick (the
+// Changes tile's requestDiffFocus). Nothing happens without a row or an onEnterPick, or with the Rn gate off.
+export function enterPick(event, row, pick, enabled = ENTER_PICK_ENABLED) {
+  if (!row || !pick || event.key !== "Enter" || event.repeat || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || !enabled) return false;
+  event.preventDefault();
+  row.click();
+  pickOnEnterKeyUp(event.currentTarget, pick);
+  return true;
+}
+
+// c44d00c7f Oi `e.altKey && !(e.key === "Tab" && Ie())` (Ie = shared-78 Eo, the macOS user agent): an Alt chord is left
+// alone, except Alt+Tab on macOS, which moves focus like Tab.
+export function commitsAltIgnored(event, isMac) {
+  return !!event.altKey && !(event.key === "Tab" && isMac);
 }
 
 export function olderCommitsLabel(hidden) {

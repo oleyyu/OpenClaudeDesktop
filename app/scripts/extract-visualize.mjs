@@ -1,7 +1,13 @@
-// Extract the 2.42304.0 main-process built-in "visualize" MCP server (R4g-mcp MA-1, D35: the visualize tool and the MCP
+// Extract the 3.6556.2 main-process built-in "visualize" MCP server (R4g-mcp MA-1, D35: the visualize tool and the MCP
 // App host are migrated on their enabled branch) without executing any desktop runtime. Source: asar
-// index.chunk-BaLvO2wi.js, a module whose only exports is `exports.getImagineServerDef=A` (official CCD / Cowork
-// internal-server list index.chunk-B5tintml.js requires it and pushes `getImagineServerDef()`):
+// index.chunk-CbnfBP-3.js, a module whose only exports is `exports.getImagineServerDef=A` (official CCD / Cowork
+// internal-server list index.chunk-DBIg6EBr.js requires it and pushes `getImagineServerDef()`).
+// Migrated 2.42304.0 (index.chunk-BaLvO2wi.js) → 3.6556.2 by w1-routines-a (RC-19/RC-20, routines-cowork-chat §1.5/§3.2):
+// the 26 top-level statements keep their shape; only the logger import was renamed (`e.p5` → `e.ert`, module
+// index.chunk-muI2IV6k.js → index.chunk-jPKPzV-P.js), the gate module moved (index.chunk-D89SZXs4.js →
+// index.chunk-lgtvJrTy.js, same logic) and the widget template `m` changed (ui-cards loader behind the host context's
+// `_drawCards` / `data-draw-cards`, mobile hosts take no attachments, menu-room re-measured on transitionend, SVG and
+// self-closing <script/> stripped). The host never sends `_drawCards`, so the ui-cards module is never requested.
 //   pure      n (CDS vanilla token guide), r (platform → widget width), i (read_me preamble), a / c / l (width-dependent
 //             UI-components / SVG-setup / diagram-type guides), o, s, u, d, f, p (elicitation, color palette, Chart.js,
 //             data-viz, art guides and the closing "Do not overthink" note), m (the visualize widget HTML template, a
@@ -12,20 +18,22 @@
 //             A (getImagineServerDef: { serverName, tools, handleToolCall, handleReadResource, handleListResources,
 //             isEnabled }).
 //
-// The chunk's own module-level imports are `e = require("./index.chunk-muI2IV6k.js")` (only `e.p5`, the main-process
-// logger, is read) and `t = require("./index.chunk-D89SZXs4.js")` (only `t.n`, the org-policy / HIPAA withhold check,
+// The chunk's own module-level imports are `e = require("./index.chunk-jPKPzV-P.js")` (only `e.ert`, the main-process
+// logger, is read) and `t = require("./index.chunk-lgtvJrTy.js")` (only `t.n`, the org-policy / HIPAA withhold check,
 // and `t.t`, GrowthBook 3444158716 && !t.n(), are read). Those two are the only host bindings: O, k and A are emitted
 // verbatim inside bindImagineServer(e, t), whose parameters stand in for the module-level `e` and `t`; the host adapter
 // (electron/visualize-adapters.cjs) supplies them. Every other top-level statement stays at module level, in source
 // order, byte-for-byte (the generated file is not reformatted, so the 327 KB template literal keeps its exact raw text).
 //
 // Every top-level statement of the chunk is accounted for: the Sentry release / debug-id preamble, the side-effect
-// require of index.chunk-D4B44ehk.js, the `const e=…,t=…` imports and the trailing `exports.getImagineServerDef=A` are
+// require of index.chunk-BjdXj7EG.js, the `const e=…,t=…` imports and the trailing `exports.getImagineServerDef=A` are
 // asserted by shape and dropped; everything else must be a listed binding (or one of the two dead `c(680);` /
 // `l(680);` calls the minifier left, kept verbatim). A binding declared more than once, reassigned (O aside, which is
 // host-bound), missing a feature string, or an unlisted top-level statement fails generation, so a version bump that
 // re-points a minified name fails here instead of silently binding the wrong value. The assembled module must be closed
-// (Babel scope: only Math, Set, Error and module are free) and `e` / `t` may only be read as `e.p5` / `t.n`, `t.t`.
+// (Babel scope: only Math, Set, Error and module are free) and `e` / `t` may only be read as `e.ert` / `t.n`, `t.t`.
+// Official-caller and gate features (R2/E5) are matched through looseFeature(): literals exact, minified identifiers of
+// ≤3 characters free, so they pin each call's shape rather than the spelling of its locals.
 //
 // D0: own generator, own output (electron/generated/visualize/imagine-server.cjs and manifest.json), own
 // scripts/verify-gen-visualize.mjs.
@@ -34,18 +42,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { referenceVersion, referenceSnapshot, asarSource as mainSource, looseFeature } from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const mainSource = path.resolve(root, '../reference', referenceSnapshot, 'asar/.vite/build');
 const output = path.join(root, 'electron/generated/visualize');
 const target = 'imagine-server.cjs', targetManifest = 'manifest.json';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-const file = 'index.chunk-BaLvO2wi.js';
-const gateFile = 'index.chunk-D89SZXs4.js';
-const callerFile = 'index.chunk-B5tintml.js';
+const file = 'index.chunk-CbnfBP-3.js';
+const gateFile = 'index.chunk-lgtvJrTy.js';
+const callerFile = 'index.chunk-DBIg6EBr.js';
+const loggerFile = 'index.chunk-jPKPzV-P.js';
+const sideEffectFile = 'index.chunk-BjdXj7EG.js';
 
 // Module-level (pure) bindings, in source order, with their semantic export names.
 const pure = [
@@ -63,8 +71,12 @@ const pure = [
   { name: 'p', kind: 'var', as: 'READ_ME_CLOSING', features: ['p="Do not overthink. Try to keep thinking below 500 tokens.'] },
   { name: 'm', kind: 'function', as: 'widgetHtml', template: true,
     features: ['function m(){return`<!DOCTYPE html>', '<title>Visualize Widget</title>', '/libs/imagine/streaming-helpers-1/streaming-helpers.mjs',
-      'applyKeepMenuClear', '_keepMenuClear', 'ui/notifications/size-changed'],
-    counts: { 'data-keep-menu-clear': 16, 'menu-room': 12, 'frame-held': 8 } },
+      'applyKeepMenuClear', '_keepMenuClear', 'ui/notifications/size-changed',
+      // RC-19: 3.6556.2 additions. ui-cards loads only when the host context sets _drawCards (data-draw-cards).
+      '// src/scripts/ui-cards.ts', 'var HOST_DRAWS_CARDS = "data-draw-cards";', 'var HOSTED_CARDS = "/libs/imagine/ui-cards-2/ui-cards.mjs";',
+      'applyDrawCards(hostContext._drawCards);', 'applyDrawCards(data.params?._drawCards);',
+      'function hostTakesFiles() {\\n    return hostDisplay().platform !== \"mobile\";\\n  }', 'stripScripts: true'],
+    counts: { 'data-keep-menu-clear': 16, 'menu-room': 13, 'frame-held': 8, 'data-draw-cards': 2, _drawCards: 2, 'stripScripts: true': 2 } },
   { name: 'h', kind: 'var', as: 'READ_ME_MODULES', features: ['h=["diagram","mockup","interactive","data_viz","art","chart","elicitation"]'] },
   { name: 'g', kind: 'var', as: 'READ_ME_PLATFORMS', features: ['g=["mobile","desktop","unknown"]'] },
   { name: '_', kind: 'function', as: 'readMeModuleTable',
@@ -95,27 +107,27 @@ const deadCalls = ['c(680);', 'l(680);'];
 // Bindings that read the module-level `e` / `t` (or the mutable latch O), emitted inside bindImagineServer(e, t).
 const hostBound = [
   { name: 'O', kind: 'var', as: 'refusalLogged', mutable: true, features: ['O=!1'] },
-  { name: 'k', kind: 'function', as: 'refuseWhenWithheld', features: ['return t.n()?(O||(O=!0,e.p5.info(`[imagine] ${n} refused \\u2014 withheld by the org\'s Inline visualizations answer`)),!0):!1'] },
+  { name: 'k', kind: 'function', as: 'refuseWhenWithheld', features: ['return t.n()?(O||(O=!0,e.ert.info(`[imagine] ${n} refused \\u2014 withheld by the org\'s Inline visualizations answer`)),!0):!1'] },
   { name: 'A', kind: 'function', as: 'getImagineServerDef',
     features: ['return{serverName:E,tools:b.map((e=>({name:e.name,description:e.description,inputSchema:e.inputSchema,_meta:e._meta,alwaysLoad:!0,maxResultSizeChars:e._meta?.["anthropic/maxResultSizeChars"]})))',
       'handleToolCall:async(e,t)=>k(e)?{content:[{type:"text",text:D}],isError:!0}:S(e,t)',
       'handleReadResource:e=>k("widget resource read")?{contents:[],unavailable:T.BlockedByPolicy}:C(e)',
       'handleListResources:()=>k("widget resource list")?[]:w()', 'isEnabled:()=>t.t()}'] },
 ];
-const hostParams = { e: ['p5'], t: ['n', 't'] };
+const hostParams = { e: ['ert'], t: ['n', 't'] };
 const allowedGlobals = ['Math', 'Set', 'Error', 'module'];
 // The statements of the chunk that are not bindings, by exact text or prefix.
 const dropped = [
   { what: 'Sentry release preamble', test: text => text.startsWith('(function(){try{var e=typeof window<"u"?window') && text.includes('e.SENTRY_RELEASE=') },
   { what: 'Sentry debug-id preamble', test: text => text.startsWith('try{(function(){var e=typeof window<"u"?window') && text.includes('_sentryDebugIds') },
-  { what: 'side-effect require', test: text => text === 'require("./index.chunk-D4B44ehk.js");' },
-  { what: 'imports e, t', test: text => text === `const e=require("./index.chunk-muI2IV6k.js"),t=require("./${gateFile}");` },
+  { what: 'side-effect require', test: text => text === `require("./${sideEffectFile}");` },
+  { what: 'imports e, t', test: text => text === `const e=require("./${loggerFile}"),t=require("./${gateFile}");` },
   { what: 'export', test: text => text === 'exports.getImagineServerDef=A;' },
 ];
 // Official callers and the gate module that fix how the bindings are used.
 const callers = {
-  [callerFile]: ['try{let{getImagineServerDef:e}=await Promise.resolve().then((()=>require("./index.chunk-BaLvO2wi.js")));c.push(e())}catch{}'],
-  [gateFile]: ['var t="inline_visualizations",n="3444158716",r="2742800629"', 'function l(t){return e.LZ(n)&&!c(t)}',
+  [callerFile]: ['try{let{getImagineServerDef:e}=await Promise.resolve().then((()=>require("./index.chunk-CbnfBP-3.js")));l.push(e())}catch{}'],
+  [gateFile]: ['var t="inline_visualizations",n="3444158716",r="2742800629"', 'function l(t){return e.m0(n)&&!c(t)}',
     'Object.defineProperty(exports,"n",{enumerable:!0,get:function(){return c}}),Object.defineProperty(exports,"t",{enumerable:!0,get:function(){return l}})'],
 };
 
@@ -213,17 +225,17 @@ async function extractMain() {
   if (JSON.stringify(pureOrder) !== JSON.stringify(pure.map(spec => spec.name))) throw Error(`${file}: module-level order is ${pureOrder.join(', ')}`);
   for (const [name, features] of Object.entries(callers)) {
     const text = await fs.readFile(path.join(mainSource, name), 'utf8');
-    for (const feature of features) if (occurrences(text, feature) !== 1) throw Error(`${name}: expected ${JSON.stringify(feature)} once`);
+    for (const feature of features) if ((text.match(looseFeature(feature, { flags: 'g' })) ?? []).length !== 1) throw Error(`${name}: expected ${JSON.stringify(feature)} once`);
   }
   const byName = Object.fromEntries([...pure, ...hostBound].map(spec => [spec.name, spec]));
   const moduleText = moduleOrder.map(entry => entry.dead ?? declaration(byName[entry.name], sliced[entry.name])).join('\n');
   const boundText = hostBound.map(spec => declaration(spec, sliced[spec.name])).join('\n');
   const header = `// Original Claude Desktop ${referenceVersion} main-process built-in visualize MCP server; generated by scripts/extract-visualize.mjs.\n`
     + `// ${file}, every top-level binding verbatim and in source order (not reformatted). O / k / A read the chunk's module-level\n`
-    + `// imports e (index.chunk-muI2IV6k.js, only e.p5: the logger) and t (${gateFile}, only t.n: org policy withholds,\n`
+    + `// imports e (${loggerFile}, only e.ert: the logger) and t (${gateFile}, only t.n: org policy withholds,\n`
     + `// t.t: GrowthBook 3444158716 && !t.n()); bindImagineServer(e, t) takes them from the host (electron/visualize-adapters.cjs).\n`
     + `// Do not edit by hand: run node scripts/extract-visualize.mjs.\n`;
-  const factory = `// e: { p5: logger }; t: { n(): policy withholds inline visualizations, t(): the server is enabled }.\n`
+  const factory = `// e: { ert: logger }; t: { n(): policy withholds inline visualizations, t(): the server is enabled }.\n`
     + `function bindImagineServer(e, t) {\n${boundText}\nreturn { ${hostBound.filter(spec => !spec.mutable).map(spec => `${spec.as}: ${spec.name}`).join(', ')} };\n}\n`;
   const exportText = `module.exports = { ${pure.map(spec => `${spec.as}: ${spec.name}`).join(', ')}, bindImagineServer };\n`;
   const text = `${header}"use strict";\n${moduleText}\n${factory}${exportText}`;

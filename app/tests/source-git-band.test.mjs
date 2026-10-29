@@ -165,11 +165,16 @@ test('band: commit mode without onDismiss renders no .sg-dismiss and no .sg-dism
   // git-status-card.js:1116/:1301 `onMouseDown: Mn` on Commit and the counts: a pointer click keeps the composer's focus.
   assert.match(source, /className="sg-action"[^>]*\n?\s*onMouseDown=\{\(event\) => event\.preventDefault\(\)\} onClick=\{\(\) => onAction\(status\)\}/);
   assert.match(source, /className="sg-diff"\s*onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
-  // The rail's Commit keeps the composer's focus the same way: c96d752d0 DLe wraps the verb in Qz, whose span has
-  // `onMouseDown: i_` (c81ea1931 e, generated session-rail-kit preventMouseDown).
+  // The rail's Commit keeps the composer's focus the same way: 3.6556.2 c96d752d0 Fke wraps the verb in yL, whose span has
+  // `onMouseDown: Hv` (`import{t as Hv}from"./c81ea1931-ChuE7vym.js"`: c81ea1931 e, generated session-rail-kit
+  // preventMouseDown; 2.42304.0 DLe / Qz / i_).
   const verb = await fs.readFile(path.resolve(import.meta.dirname, '../src/generated/session-rail-changes/changes-verb.mjs'), 'utf8');
-  assert.match(verb, /import \{ preventMouseDown as i_ \} from "\.\.\/session-rail-kit\/prevent-mouse-down\.mjs";/);
-  assert.match(verb, /role: "none",\s*className: "contents",\s*onMouseDown: i_,/);
+  assert.match(verb, /^\/\/ Original Claude Desktop 3\.6556\.2 bindings from c96d752d0-CWv_7-n9\.js;/);
+  assert.match(verb, /import \{ preventMouseDown as Hv \} from "\.\.\/session-rail-kit\/prevent-mouse-down\.mjs";/);
+  assert.match(verb, /role: "none",\s*className: "contents",\s*onMouseDown: Hv,/);
+  const original = readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c96d752d0-CWv_7-n9.js'), 'utf8');
+  for (const needle of ['import{t as Hv}from"./c81ea1931-ChuE7vym.js"', 'f("span",{ref:a,role:"none",className:"contents",onMouseDown:Hv,children:i})', 'f(yL,{leftWithFocusRef:s,busy:n,onSettle:c,chi'])
+    assert.equal(original.split(needle).length - 1, 1, needle);
   const prevent = await fs.readFile(path.resolve(import.meta.dirname, '../src/generated/session-rail-kit/prevent-mouse-down.mjs'), 'utf8');
   assert.match(prevent, /function e\(e\) \{\s*return e\.preventDefault\(\);\s*\}\s*export \{ e as preventMouseDown \};/);
 });

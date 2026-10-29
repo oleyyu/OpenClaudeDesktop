@@ -1,5 +1,7 @@
 // Host adapters for src/generated/session-load-error (scripts/extract-session-load-error.mjs). Each export answers one
-// import (or one same-chunk declaration) of the original 2.42304.0 chunks that reads a runtime service of the official
+// import (or one same-chunk declaration) of the original chunks (3.6556.2 since w2-tr-r3b: vendor-intl q / Gt, shared-25
+// Jd, cd14a8022 T, cc6e9624e l, shared-0 Zo, shared-26 Kd, shared-15 Fa; the per-adapter notes below keep the 2.42304.0
+// names) that reads a runtime service of the official
 // desktop app; the generator pins every one to strings of the original it replaces (`adapters` / `chunkAdapters` in the
 // extractor). The generated modules import this file, so it imports no module generated there.
 //

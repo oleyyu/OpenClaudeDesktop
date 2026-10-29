@@ -42,6 +42,8 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const { execFile } = require("node:child_process");
 const { offeredCores, coreById, releaseAsset } = require("./core-registry.mjs");
+// A release is fetched over Chromium's network stack, so the system proxy applies (system-fetch.cjs).
+const { systemFetch } = require("./system-fetch.cjs");
 // Messages reach Settings › Cores as given, so they go through the main-process t() (core names stay as written).
 const { t } = require("./i18n/index.mjs");
 const fail = (source, values) => new Error(t(source, values));
@@ -185,7 +187,7 @@ function findBinary(dir, name) {
 }
 
 function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreChoice = () => {}, deepseekScript = () => null, bridgeScript = () => null,
-  nodeBinary = () => process.execPath, fetchImpl = (...args) => fetch(...args), arch = process.arch, home = os.homedir(), env = process.env }) {
+  nodeBinary = () => process.execPath, fetchImpl = (...args) => systemFetch(...args), arch = process.arch, home = os.homedir(), env = process.env }) {
   const coresDir = () => path.join(dataDir(), "cores");
   const coreDir = (id) => path.join(coresDir(), id);
   // id → {controller, phase, received, total}: list() reports it, so Settings can poll progress.

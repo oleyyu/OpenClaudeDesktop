@@ -38,8 +38,10 @@ export { fileTreeGuideStyle, treeIndent, fileTreeRowStyle } from './generated/co
 // variants) and the row parts dx/fx/px, all generated (generated/files-changes). OpenClaude's tree is nested DOM (a
 // treeitem holds its row and its children's group) rather than the official flat virtual list, so the treeitem wrapper
 // carries the ARIA and focus while an inner row element carries what the official treeitem paints.
-import { cdsClassNames } from './generated/view-tabs/shared-frame-BfjMqbuN.js';
-import { clsx } from './generated/view-tabs/vendor-frame-DfPJ1QmD.js';
+// A model (R6 / E42): the concrete 3.6556.2 files by semantic name, not the facade, so its graph stays the two class
+// helpers (the facade evaluates every view-tabs module, the .jsx adapters included).
+import { cdsClassNames } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import { clsx } from './generated/view-tabs/vendor-frame-CnSY1sxv.js';
 import { menuItemClasses } from './generated/files-changes/menu-item-classes.mjs';
 import { fileTreeRowBase, fileTreeRowSelected, fileTreeRowPrimary, keptGuideFolders, keptGuidesOfRow } from './generated/files-changes/file-tree-row.mjs';
 import { fileTreeGroup, fileTreePadding, fileTreeKeptGuides, fileTreeRowCurrent, fileTreeRowIdle } from './generated/files-changes/file-tree-row-classes.mjs';

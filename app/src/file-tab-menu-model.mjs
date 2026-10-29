@@ -11,6 +11,8 @@ export const FILE_TAB_LABELS = Object.freeze({
   closeTab: t("Close file"),
   closeOtherTabs: t("Close other files"),
   closeTabsToRight: t("Close files to the right"),
+  // W12c files-tabbar: 3.6556.2 cccc2cf0a ND Ge — the RTL forms the ViewTabBar picks under dir="rtl" (2ySX7d/Uua, 0Z9DIZBF+Q).
+  closeTabsToRightRtl: t("Close files to the left"),
   closeAllTabs: t("Close all files"),
   keepTab: t("Keep open"),
   previewTabHint: t("preview"),
@@ -20,6 +22,7 @@ export const FILE_TAB_LABELS = Object.freeze({
   // hint, and the Control+Shift+Arrow reorder hint every tab is described by.
   moreTabs: t("More files"),
   closeTabHint: t("press right arrow to close"),
+  closeTabHintRtl: t("press left arrow to close"),
   moveTabHint: t("Press Control+Shift+Left Arrow or Right Arrow to move the file"),
 });
 
@@ -111,4 +114,18 @@ export function fileViewerMenuItems({ onFind, onCopyContents, onDownload, onRelo
 export function fileTabsToRight(tabs, path) {
   const index = tabs.findIndex(tab => tab.path === path);
   return index < 0 ? [] : tabs.slice(index + 1).map(tab => tab.path);
+}
+
+// W12c files-tabbar: 3.6556.2 c03935b01 reorderFileTab (the ViewTabBar's onReorder, by pointer drag or
+// Control/Meta+Shift+Arrow): `let r=n.fileTabs.findIndex(t=>t.path===e);if(r===-1)return n;
+// let i=Math.max(0,Math.min(t,n.fileTabs.length-1));if(i===r)return n;let a=n.fileTabs.slice();
+// return a.splice(i,0,...a.splice(r,1)),{fileTabs:a}`. Pure; the same array when nothing moves.
+export function reorderFileTab(tabs, path, toIndex) {
+  const from = tabs.findIndex((tab) => tab.path === path);
+  if (from === -1) return tabs;
+  const to = Math.max(0, Math.min(toIndex, tabs.length - 1));
+  if (to === from) return tabs;
+  const next = tabs.slice();
+  next.splice(to, 0, ...next.splice(from, 1));
+  return next;
 }

@@ -1,11 +1,15 @@
-// Extract the 2.42304.0 originals lane R3b-tasks reuses for /subtask (tasks-05), without executing any desktop runtime:
-//   cef1e6037 Sn (exported `g`, caec4a2d4 `Ot`): the provisional title of a subtask's session — the task's first six
-//             words, at most 60 characters (59 + "…"); yn titles the fork with it before the generated title arrives.
-//   c8f38bf1f i / r (exported `t` / `n`, cc43287c9 `$j`): "starts with a command" — `/` or `!` after any leading
+// Extract the 3.6556.2 originals lane R3b-tasks reuses for /subtask (tasks-05), without executing any desktop runtime.
+// Migrated 2.42304.0 → 3.6556.2 by w1-routines-a (RC-21, routines-cowork-chat §1.4/§3.2): every binding is structurally
+// identical, only chunk hashes and minified names moved (2.42304.0 names in parentheses).
+//   cef1e6037 Bn (Sn; exported `_`, was `g`): the provisional title of a subtask's session — the task's first six
+//             words, at most 60 characters (59 + "…"); the fork is titled with it before the generated title arrives.
+//   c8f38bf1f i / r (exported `t` / `n`, unchanged): "starts with a command" — `/` or `!` after any leading
 //             whitespace, format characters (\p{Cf}) and invisible characters; the subtask refusal
 //             "A subtask can’t start with a command…" (vYLcZuUvrF) asks it.
-//   shared-182 nC (exported `Uf`): the invisible-character test c8f38bf1f r strips with, and shared-0 Hi (exported
-//             `Py`), the lazy value both chunks build their regular expressions with.
+//   shared-182 nm (nC; exported `Vv`, was `Uf`): the invisible-character test c8f38bf1f r strips with, and shared-0 Pa
+//             (Hi; exported `Lb`, was `Py`), the lazy value both chunks build their regular expressions with.
+// Features: a plain string must occur verbatim; `{ loose }` goes through looseFeature() (R2/E5: literals exact, minified
+// identifiers of ≤3 characters match any name), so statements built from minified names pin shape, not spelling.
 //
 // Every emitted binding is an original top-level declaration sliced from the minified chunk; each module's bindings
 // are the reachable closure of its roots (Babel scope analysis), so nothing is hand-picked. Imports resolve through the
@@ -22,11 +26,10 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { referenceVersion, referenceSnapshot, ionSource as source, looseFeature } from './official-3.6556.2.mjs';
+import { routinesSharedLink } from './routines-shared-compat.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
 const output = path.join(root, 'src/generated/r3b-tasks');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -34,19 +37,22 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 // `officialExports` maps the chunk's own export alias -> the local it must still name; `features` pins each root (or,
 // with `{ in, has }`, another top-level declaration of the chunk) to strings of its original (minified) text.
 const modules = [
-  { target: 'lazy-value.mjs', source: 'shared-0-ByI5P0CP.js', officialExports: { Py: 'Hi' },
-    exports: { Hi: 'lazyValue' }, features: { Hi: ['let t,n=!1;return()=>(n||=(t=e(),!0),t)'] } },
-  { target: 'invisible-character.mjs', source: 'shared-182-eT1kXtya.js', officialExports: { Uf: 'nC' },
-    exports: { nC: 'isInvisibleCharacter' },
-    features: { nC: ['return tC().test(e)', { in: 'tC', has: '[\\p{Cc}\\p{Default_Ignorable_Code_Point}\\uFFF9-\\uFFFB\\uD800-\\uDFFF]$/u' }] } },
+  // W13 G11 (D1): Pa is routines-shared's shared-0 copy (no imports, plain node); lazy-value.mjs re-exports it, so the
+  // siblings keep importing ./lazy-value.mjs and the module list stays.
+  { target: 'lazy-value.mjs', source: 'shared-0-DDOOdL6P.js', officialExports: { Lb: 'Pa' }, routinesShared: 'shared-0-DDOOdL6P.mjs',
+    exports: { Pa: 'lazyValue' }, features: { Pa: [{ loose: 'let t,n=!1;return()=>(n||=(t=e(),!0),t)' }] } },
+  { target: 'invisible-character.mjs', source: 'shared-182-BI1KJccu.js', officialExports: { Vv: 'nm' },
+    exports: { nm: 'isInvisibleCharacter' },
+    features: { nm: [{ loose: 'return tm().test(e)' }, { in: 'tm', has: '[\\p{Cc}\\p{Default_Ignorable_Code_Point}\\uFFF9-\\uFFFB\\uD800-\\uDFFF]$/u' }] } },
   // The whole chunk: `complete` asserts every top-level declaration of c8f38bf1f is reached from the exports.
-  { target: 'command-prefix.mjs', source: 'c8f38bf1f-D_EZalnr.js', complete: true, officialExports: { n: 'r', t: 'i' },
+  { target: 'command-prefix.mjs', source: 'c8f38bf1f-Ba2QaQov.js', complete: true, officialExports: { n: 'r', t: 'i' },
     exports: { r: 'stripLeadingInvisible', i: 'startsWithCommand' },
-    features: { i: ['return/^[/!]/.test(r(e))'], r: ['!n().test(i)&&!t(i)', 'String.fromCodePoint(e.codePointAt(r)??0)'],
+    features: { i: ['/^[/!]/.test(', { loose: 'return/^[/!]/.test(r(e))' }],
+      r: [{ loose: '!n().test(i)&&!t(i)' }, { loose: 'String.fromCodePoint(e.codePointAt(r)??0)' }],
       n: ['/^[\\s\\p{Cf}]$/u'] } },
-  { target: 'subtask-title.mjs', source: 'cef1e6037-8DivyY4m.js', officialExports: { g: 'Sn' },
-    exports: { Sn: 'subtaskTitle' },
-    features: { Sn: ['(e??"").trim().split(/\\s+/)', 'Array.from(t.slice(0,6).join(" "))', 'n.length>60?n.slice(0,59).join("")+"\\u2026":n.join("")'] } },
+  { target: 'subtask-title.mjs', source: 'cef1e6037-C9OZ_iaL.js', officialExports: { _: 'Bn' },
+    exports: { Bn: 'subtaskTitle' },
+    features: { Bn: ['(e??"").trim().split(/\\s+/)', 'Array.from(t.slice(0,6).join(" "))', 'n.length>60?n.slice(0,59).join("")+"\\u2026":n.join("")'] } },
 ];
 
 const exportTable = text => {
@@ -85,6 +91,7 @@ function checkFeatures(chunk, local, features, label) {
   const text = declarationText(chunk, local);
   for (const feature of features) {
     if (typeof feature === 'string') { if (!text.includes(feature)) throw Error(`${label}: ${chunk.name}:${local} lacks ${JSON.stringify(feature)}`); continue; }
+    if ('loose' in feature) { if (!looseFeature(feature.loose).test(text)) throw Error(`${label}: ${chunk.name}:${local} lacks the shape ${JSON.stringify(feature.loose)}`); continue; }
     if (!declarationText(chunk, feature.in).includes(feature.has)) throw Error(`${label}: ${chunk.name}:${feature.in} lacks ${JSON.stringify(feature.has)}`);
   }
 }
@@ -131,7 +138,11 @@ async function extract(cache) {
         .filter(([, b]) => b.referencePaths.some(within) || b.constantViolations.some(within)).map(([n]) => n);
       for (const dep of deps) await add(dep);
     };
-    for (const name of Object.keys(spec.exports)) await add(name);
+    if (spec.routinesShared) {
+      // `routinesShared`: the roots are imported from that routines-shared module (checked to be these declarations).
+      const from = await routinesSharedLink({ referenceVersion, ionSource: source, target: spec.routinesShared, source: spec.source, names: Object.keys(spec.exports) });
+      for (const name of Object.keys(spec.exports)) imports.set(name, { from, name, via: `${spec.source}:${name}`, kind: 'routines-shared' });
+    } else for (const name of Object.keys(spec.exports)) await add(name);
     if (spec.complete) {
       const declared = src.ast.program.body.flatMap(n => n.type === 'FunctionDeclaration' ? [n.id.name]
         : n.type === 'VariableDeclaration' ? n.declarations.map(d => d.id.name ?? '<pattern>') : []);

@@ -1,20 +1,23 @@
-// R4i-cowork CW1 (research-ext/X2 CW-1; ledger cowork-session-actions, transcript-16): extract the 2.42304.0 originals
+// R4i-cowork CW1 (research-ext/X2 CW-1; ledger cowork-session-actions, transcript-16): extract the 3.6556.2 originals
 // the Cowork session actions (restart from here, edit, refusal retry, the error banner's "Go back") are built on.
-// Nothing here executes desktop runtime code:
-//   c21f11e6d cO   the reason text for a rewind the CLI rejected (remote sessions: turn running, commands queued, stale
-//                  target, unseen later turn, target not found, default).
-//   c21f11e6d lO   the text for a local rewind refusal (shared-0 By: Dead, NoText, Unsupported; others → undefined).
-//   c21f11e6d uO   the failure text per surface (restart / refusal_retry / edit).
-//   c21f11e6d dO   CoworkSessionView's outcome → toast map ({kind: sent|timeout|rejected|error|empty}, {surface,
+// Migrated 2.42304.0 → 3.6556.2 by w1-routines-a (RC-21, routines-cowork-chat §1.4/§3.2): every binding is structurally
+// identical, only chunk hashes and minified names moved. Nothing here executes desktop runtime code:
+//   c21f11e6d iN   (2.42304.0 cO) the reason text for a rewind the CLI rejected (remote sessions: turn running, commands
+//                  queued, stale target, unseen later turn, target not found, default).
+//   c21f11e6d aN   (lO) the text for a local rewind refusal (shared-0 dx: Dead, NoText, Unsupported; others → undefined).
+//   c21f11e6d oN   (uO) the failure text per surface (restart / refusal_retry / edit).
+//   c21f11e6d sN   (dO) CoworkSessionView's outcome → toast map ({kind: sent|timeout|rejected|error|empty}, {surface,
 //                  isRemoteSession}, intl) → null | {message, options:{error?, messageForLogging}}.
-//   c21f11e6d dk   the last human bubble, only when `canRewindToMessage`.
-//   cb1e253a0 vm   (export y; c21 Vf) whether a LocalAgentModeSessions bridge can rewind (`rewindV2 ?? rewind`).
-//   cb1e253a0 ym   (export b; c21 Tf) call `rewindV2(sessionId, uuid)` → {prefill, refusal} with an unknown refusal
-//                  normalised to By.Unknown, else the legacy `rewind`, else throw "rewind IPC unavailable".
-//   shared-0 By    (export Ch; c21 ke) the refusal enum dead / no_text / unsupported / unknown.
-//   preload-helper e (export n) the ant.o11y error-text tag ym puts on the "rewind IPC unavailable" error. view-tabs also
+//   c21f11e6d LP   (dk) the last human bubble, only when `canRewindToMessage`.
+//   cb1e253a0 nh   (vm; export b) whether a LocalAgentModeSessions bridge can rewind (`rewindV2 ?? rewind`).
+//   cb1e253a0 rh   (ym; export x) call `rewindV2(sessionId, uuid)` → {prefill, refusal} with an unknown refusal
+//                  normalised to dx.Unknown, else the legacy `rewind`, else throw "rewind IPC unavailable".
+//   shared-0 dx    (By; export cg; c21 Et) the refusal enum dead / no_text / unsupported / unknown.
+//   preload-helper e (export n, byte-identical) the ant.o11y error-text tag rh puts on the "rewind IPC unavailable" error. view-tabs also
 //                  holds this binding but publishes no semantic name for it (D1/D46); it is a stateless function, so this
 //                  generator keeps its own copy rather than importing a compressed name.
+// Features (R2/E5) are matched through looseFeature(): literals stay exact, minified identifiers of ≤3 characters match
+// any name, so a feature written with today's names still pins the statement's shape.
 //
 // The host side (intl through electron/i18n, isRemoteSession false per D17, the bridge supplied by the host) lives in
 // src/source-cowork-session-actions-adapters.jsx; nothing generated imports it.
@@ -33,11 +36,9 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { referenceVersion, referenceSnapshot, ionSource as source, looseFeature } from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
 const output = path.join(root, 'src/generated/cowork-session-actions');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -46,26 +47,26 @@ const hostGlobals = new Set(['Error', 'Object', 'Symbol', 'Set']);
 // Emitted in dependency order; `exports` maps original local binding -> exported name (its keys are the roots).
 // `byExport` names roots by the chunk's export alias; `internal: true` allows roots the chunk does not export.
 const modules = [
-  { target: 'refusal.mjs', source: 'shared-0-ByI5P0CP.js', byExport: { Ch: 'LocalRewindRefusal' },
-    features: { Ch: ['e.Dead = "dead"', 'e.NoText = "no_text"', 'e.Unsupported = "unsupported"', 'e.Unknown = "unknown"'] } },
+  { target: 'refusal.mjs', source: 'shared-0-DDOOdL6P.js', byExport: { cg: 'LocalRewindRefusal' },
+    features: { cg: ['e.Dead = "dead"', 'e.NoText = "no_text"', 'e.Unsupported = "unsupported"', 'e.Unknown = "unknown"'] } },
   { target: 'error-text.mjs', source: 'preload-helper-D0dM6GpB.js', byExport: { n: 'withErrorText' },
     features: { n: ['Symbol.for("ant.o11y.errorText")', 'value: { text: t, kind: n }'] } },
-  { target: 'rewind-bridge.mjs', source: 'cb1e253a0-DQ4zAGBV.js', byExport: { y: 'hasRewindBridge', b: 'rewindLocalSession' },
-    features: { y: ['e?.rewindV2 ?? e?.rewind'],
-      b: ['await e.rewindV2(t, r)', '!gm.has(i) ? H.Unknown : i', 'await e.rewind(t, r)', '"rewind IPC unavailable"', '"literal"'] } },
-  { target: 'rewind-messages.mjs', source: 'c21f11e6d-Bd0v2A97.js', internal: true,
-    exports: { cO: 'remoteRewindRejectionMessage', lO: 'localRewindRefusalMessage', uO: 'rewindFailureMessage',
-      dO: 'rewindOutcomeToast', dk: 'lastHumanBubbleWhenRewindable' },
+  { target: 'rewind-bridge.mjs', source: 'cb1e253a0-DgeDleLc.js', byExport: { b: 'hasRewindBridge', x: 'rewindLocalSession' },
+    features: { b: ['e?.rewindV2 ?? e?.rewind'],
+      x: ['await e.rewindV2(t, n)', '!eh.has(i) ? Me.Unknown : i', 'await e.rewind(t, n)', '"rewind IPC unavailable"', '"literal"'] } },
+  { target: 'rewind-messages.mjs', source: 'c21f11e6d-Cyd8_HO8.js', internal: true,
+    exports: { iN: 'remoteRewindRejectionMessage', aN: 'localRewindRefusalMessage', oN: 'rewindFailureMessage',
+      sN: 'rewindOutcomeToast', LP: 'lastHumanBubbleWhenRewindable' },
     features: {
-      cO: ['case "turn running":', 'case "commands queued":', 'case "stale target":', 'case "unseen later turn":',
+      iN: ['case "turn running":', 'case "commands queued":', 'case "stale target":', 'case "unseen later turn":',
         'case "target not found":', 'id: "QfDweriZQj"', 'id: "N4pAEIJK4/"', 'id: "K1/egsMFpR"', 'id: "cnZntAZvlD"',
         'id: "TW8yay5oV+"', 'id: "pcv56liZj9"'],
-      lO: ['case ke.Dead:', 'case ke.NoText:', 'case ke.Unsupported:', 'id: "YmzbNCp+kq"', 'id: "/FZxzzWOs5"', 'id: "SC1NI+O8Y4"'],
-      uO: ['case "restart":', 'case "refusal_retry":', 'case "edit":', 'id: "N6n//LvbO8"', 'id: "EMw1vE8dOU"', 'id: "fUE4seXTv0"'],
-      dO: ['let { surface: r } = t', 'case "sent":', 'case "timeout":', 'case "rejected":', 'case "error":', 'case "empty":',
+      aN: ['case Et.Dead:', 'case Et.NoText:', 'case Et.Unsupported:', 'id: "YmzbNCp+kq"', 'id: "/FZxzzWOs5"', 'id: "SC1NI+O8Y4"'],
+      oN: ['case "restart":', 'case "refusal_retry":', 'case "edit":', 'id: "N6n//LvbO8"', 'id: "EMw1vE8dOU"', 'id: "fUE4seXTv0"'],
+      sN: ['let { surface: r } = t', 'case "sent":', 'case "timeout":', 'case "rejected":', 'case "error":', 'case "empty":',
         'id: "JAqfKwYq8j"', 'id: "SgdArTNAT/"', 'id: "kvjiUWTVfc"', 't.isRemoteSession', '"CoworkSessionView edit rewind timeout"',
-        'cO(e.error.reason, n)', 'lO(e.refusal, n)'],
-      dk: ['e.canRewindToMessage', 'e.findLastHumanBubble()'] } },
+        'iN(e.error.reason, n)', 'aN(e.refusal, n)'],
+      LP: ['e.canRewindToMessage', 'e.findLastHumanBubble()'] } },
 ];
 
 async function readSource(name, cache) {
@@ -86,7 +87,7 @@ const declarationDeps = (src, p) => Object.entries(src.program.scope.bindings)
   .filter(([, b]) => b.referencePaths.some(q => within(p, q)) || b.constantViolations.some(q => within(p, q))).map(([n]) => n);
 const declarationText = (src, p) => src.code.slice(p.node.start, p.node.end);
 function assertFeatures(label, text, features = []) {
-  const missing = features.filter(f => !text.includes(f));
+  const missing = features.filter(f => !looseFeature(f).test(text));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
 }
 

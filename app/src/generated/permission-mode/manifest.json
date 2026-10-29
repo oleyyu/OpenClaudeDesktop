@@ -1,44 +1,56 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-permission-mode.mjs",
   "output": "resolution.mjs",
   "sources": [
     {
-      "file": "../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c8eb45883-BKWHnsew.js",
-      "sourceSha256": "0d1e13413caebfd153c44b165e26568506322b5a0c5afa9b515fe37e5cd7321b",
+      "file": "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c8eb45883-BdFVtK0i.js",
+      "sourceSha256": "e1cbd2b4681fba09f611c1b2e0e179870b8ce944a68fdc50d9068132b7e2f824",
       "bindings": [
-        "d"
+        "p"
       ]
     },
     {
-      "file": "../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c227f4d5e-Ba-r--Rl.js",
-      "sourceSha256": "8ba75b8f51894e77145af7407c8041e911f5dbe35ae6c6196a46ea5f6fa327d0",
-      "pins": 13
+      "file": "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "pins": 24
     }
   ],
   "bindings": {
-    "d": {
-      "source": "c8eb45883-BKWHnsew.js",
+    "p": {
+      "source": "c8eb45883-BdFVtK0i.js",
       "exportedAs": "resolvePermissionBaseMode"
     }
   },
   "pins": {
-    "c227f4d5e-Ba-r--Rl.js": [
-      "import{a as _y,i as vy,n as yy,r as by,t as xy}from\"./c8eb45883-BKWHnsew.js\"",
-      "[be,xe]=Bc(\"cc-landing-draft-permission-mode\",null,{scope:\"account\"})",
-      "{globalPref:De,consultedStoredGlobalPref:Oe}=by({storedGlobalPref:ye,accountGlobalPref:be,autoDefaultAllowed:Te})",
-      "Me=b?.defaultPermissionMode,Ne=vy(!o&&!!g&&ir(g),S),Pe=U&&Ne?xy(Me?.value):void 0,Fe=_y(Me?.source,S),Ie=Fe?Pe:void 0,Le=Fe?void 0:Pe",
-      "[Ge,Ke]=Bc(\"epitaxy-folder-permission-mode\",BI,{scope:\"account\"})",
-      "qe=s?.originCwd?.replace(/\\/\\.claude\\/worktrees\\/[^/]+$/,\"\")",
-      "Ze=Xe?Ge[Xe]:void 0,Qe=Ze===\"plan\"?void 0:Ze",
-      "[q,tt]=zt(E,()=>null)",
-      "let n=e===null||e===II,r=n&&t!==null&&t!==\"plan\",i=r&&!(zI(Xe)&&AI(t,{autoIsDefault:Ee})&&!(t===\"auto\"&&$e));i&&!Ve||(i&&Xe!==null&&Ke(e=>({...e,[Xe]:t})),n&&RI(Xe)&&(i||!r)||tt(null),rt.current=Xe)",
-      "{baseMode:ft,baseModeSource:pt,hasExplicitChoice:ht,spawnModeIsProvisional:gt}=M(()=>yy({userChoice:q,userSettingsDefault:Ie,repoSettingsDefault:Le,folderChoice:Qe,globalPref:De,consultedStoredGlobalPref:Oe,storedPickLayersSettled:ct}),[q,Ie,Le,Qe,De,Oe,ct])",
-      "J=M(()=>o?q??(vt?\"bypassPermissions\":void 0)??_t??yt??l??De:et?\"auto\":at?Su(ft,he):ft,[o,q,vt,_t,yt,l,ft,De,he,at,et])",
-      "if(a===c)return sn&&on&&(a===\"auto\"||a===\"bypassPermissions\")&&Promise.resolve(on(sn,a)).catch(()=>void 0),!O&&nt.current===null&&RI(dn.current)&&tt(a),Promise.resolve(\"unchanged\")",
-      "_=!!h&&o!==\"approval_card\"&&a!==\"plan\"&&!(a===\"bypassPermissions\"&&zI(h));tt(a),_&&Ke(e=>({...e,[h]:a}))"
+    "c227f4d5e-B-FYKrwT.js": [
+      "import{a as Kb,i as qb,n as Jb,o as Yb,r as Xb,s as Zb}from\"./c8eb45883-BdFVtK0i.js\"",
+      "[ve]=Xd(\"cc-landing-draft-permission-mode\",null),ye=J0($,29)?K0($,29,{scope:\"account\"}):$[29],[be,xe]=Xd(\"cc-landing-draft-permission-mode\",null,ye)",
+      "{globalPref:Ee,consultedStoredGlobalPref:De}=Kb({storedGlobalPref:ve,accountGlobalPref:be,autoDefaultAllowed:we})",
+      "je=w?.defaultPermissionMode,Me=J3($,30,b,s,E)?K3($,30,b,s,E,Yb(!s&&!!b&&mi(b),E)):$[33],Ne=q&&Me?Xb(je?.value):void 0,Pe=Zb(je?.source,E),Fe=Pe?Ne:void 0,Ie=Pe?void 0:Ne",
+      "[We,Ge]=Xd(\"epitaxy-folder-permission-mode-v2\",kR,AR),Ke=c?.originCwd",
+      "var kR={},AR={scope:\"account\",seedFromPref:{key:\"epitaxy-folder-permission-mode\",map:e=>typeof e==\"object\"&&e&&!Array.isArray(e)?OR(e):void 0}}",
+      "function OR(e){return Object.fromEntries(Object.entries(e).filter(([e,t])=>t!==\"bypassPermissions\"||fR(e)))}",
+      "function fR(e){return/^(?:remote|remote-env|remote-session|scratch|ssh|wsl):/.test(e)}",
+      "function pR(e){return e.replace(/\\/\\.claude\\/worktrees\\/[^/]+$/,\"\")}",
+      "Je=Ke===void 0?void 0:pR(Ke);let e;bb0:{",
+      "et=$e?We[$e]:void 0,tt=c?.remote?Je:null",
+      "it=et??(rt!==void 0&&Jb(Ef(rt,X),Ef(Ie??Ee,X))?rt:void 0),at=it===\"plan\"?void 0:it",
+      "[ot]=vR(),st=ge&&(Te||ot),[ct,lt]=$l(k,WR)",
+      "function WR(){return null}var GR={probing:\"Detecting remote OS and shell...\"",
+      "let n=e===null||e===wR,r=n&&t!==null&&t!==\"plan\",i=r&&!(t===\"bypassPermissions\"&&$e!==null&&fR($e))&&!(DR($e)&&cR(t,{autoIsDefault:Te})&&!(t===\"auto\"&&ot));i&&!Be||(i&&$e!==null&&Ge(e=>({...e,[$e]:t})),n&&ER($e)&&(i||!r)||lt(null),mt.current=$e)",
+      "{baseMode:Tt,baseModeSource:Et,hasExplicitChoice:Dt,spawnModeIsProvisional:Ot}=J5($,81,De,at,Ee,Ie,xt,ct,Fe)?K5($,81,De,at,Ee,Ie,xt,ct,Fe,qb({userChoice:ct,userSettingsDefault:Fe,repoSettingsDefault:Ie,folderChoice:at,globalPref:Ee,consultedStoredGlobalPref:De,storedPickLayersSettled:xt})):$[88]",
+      "kt=c?.permissionMode,At=hh(s?.type===\"local\"?s.id:null)",
+      "bb1:{if(s){Ut=ct??(At?\"bypassPermissions\":void 0)??kt??jt??A??Ee;break bb1}if(st){Ut=\"auto\";break bb1}if(!yt){Ut=Tt;break bb1}",
+      "if(e===l)return Pn&&Nn&&(e===\"auto\"||e===\"bypassPermissions\")&&Promise.resolve(Nn(Pn,e)).catch(BR),!j&&ut.current===null&&ER(Rn.current)&&lt(e),Promise.resolve(\"unchanged\")",
+      "v=!!g&&c!==\"approval_card\"&&e!==\"plan\"&&!(e===\"bypassPermissions\"&&DR(g));lt(e),v&&Ge(t=>({...t,[g]:e}))",
+      "y=()=>{_&&Pn&&yy(Pn,\"chosen\"),lt(m),v&&Ge(e=>{if(h===void 0){let t={...e};return delete t[g],t}return{...e,[g]:h}})}",
+      "function DR(e){return e===wR||ER(e)}",
+      "wR=bR,TR=\"remote-env:\"",
+      "var bR=\"scratch:\""
     ]
   },
-  "sha256": "76433f643e69b906313120a2f6b98c9e905260c84042021ffd046e4ef8da9153"
+  "pinMatch": "looseFeature",
+  "sha256": "a447ac694999b69c91b85e721d7d32752742cc7cb91e7285e795cde3e488545a"
 }

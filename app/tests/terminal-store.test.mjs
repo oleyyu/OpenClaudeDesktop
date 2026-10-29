@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { createTerminalStore, ownerKeyOf } from '../src/terminal-store.mjs';
 import { MAX_CACHED_TERMINALS } from '../src/terminal-pane-model.mjs';
 import { inlineCommandDone, keptRunVisible } from '../src/code-block-run-model.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { ionSource as snapshotAssets } from '../scripts/official-3.6556.2.mjs';
 
 // The renderer's terminal store over a fake preload bridge: owners keyed per session (two sessions at once), output
 // routed to kept-alive views, attach replay without duplicates, and agent-opened tabs announced.
@@ -239,10 +242,19 @@ test('inline run: Cancel sends ^C and ends the run; a re-run keeps the previous 
 test('inline run: a shell that ends before any output says so; a dedicated run (output to the model) is kept as a record', async () => {
   const bridge = fakeBridge();
   const store = createTerminalStore({ bridge });
+  // w11-sweep-trans: a shell that exited is c6bf19e8f jr shell_pty_close → setInlineError(k, "Shell exited"); a closed
+  // tab is Er noteShellClosed → Ct(e, null) (no error). Both end the typed run "shell-exit" (it was dispatched).
   const started = await store.runInline({ id: 'r', sessionId: 's1', command: 'exit' });
-  bridge.emit({ kind: 'removed', id: started.ptyKey, owner: 's1', reason: 'closed' });
+  bridge.emit({ kind: 'state', info: { id: started.ptyKey, owner: 's1', status: 'exited', exitCode: 0, generation: 1 } });
   assert.equal(store.inlineRun().settled, true);
-  assert.equal(store.inlineRun().errorKind, 'shell-exited');
+  assert.equal(store.inlineRun().endedBy, 'shell-exit');
+  assert.equal(store.inlineRun().error, 'Shell exited');
+  assert.equal(store.inlineRun().errorKind, null);
+  const closed = await store.runInline({ id: 'r2', sessionId: 's1', command: 'exit' });
+  bridge.emit({ kind: 'removed', id: closed.ptyKey, owner: 's1', reason: 'closed' });
+  assert.equal(store.inlineRun().settled, true);
+  assert.equal(store.inlineRun().endedBy, 'shell-exit');
+  assert.equal(store.inlineRun().error, null);
   const info = await store.runDedicated({ id: 'turn', sessionId: 's1', command: 'git status' });
   assert.deepEqual(bridge.calls.find(([op]) => op === 'run')[1], { sessionId: 's1', command: 'git status', quiet: true });
   assert.equal(store.inlineRun().mode, 'dedicated');
@@ -254,6 +266,27 @@ test('inline run: a shell that ends before any output says so; a dedicated run (
   // A new run of the same block replaces its record.
   await store.runInline({ id: 'turn', sessionId: 's1', command: 'git status' });
   assert.equal(store.runRecord('turn'), undefined);
+  store.dispose();
+});
+
+test('inline run (w11-sweep-trans review): a typed run that printed keeps its output and ends "shell-exit" after the settle delay', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  const bridge = fakeBridge();
+  const store = createTerminalStore({ bridge });
+  // ca41b3815 Ct: a dispatched run with output gets `shellExited: !0` and settles on the quiet timer (H), not at once.
+  const started = await store.runInline({ id: 'r', sessionId: 's1', command: 'echo hi; exit' });
+  bridge.emit({ kind: 'data', id: started.ptyKey, data: '\x1b]133;C\x07hi\r\n', end: 20 });
+  assert.equal(store.inlineRun().hasVisibleOutput, true);
+  bridge.emit({ kind: 'state', info: { id: started.ptyKey, owner: 's1', status: 'exited', exitCode: 3, generation: 1 } });
+  assert.equal(store.inlineRun().settled, false);
+  assert.equal(store.inlineRun().shellExited, true);
+  context.mock.timers.tick(800);
+  const run = store.inlineRun();
+  assert.equal(run.settled, true);
+  assert.equal(run.endedBy, 'shell-exit');
+  assert.equal(run.error, null);
+  assert.equal(run.output, 'hi');
+  assert.equal(run.exitCode, 3);
   store.dispose();
 });
 
@@ -316,5 +349,34 @@ test('inline run → kept box: an idle-settled tracked run is commandDone; a ded
   store.cancelInlineRun();
   assert.equal(store.inlineRun().endedBy, 'cancel');
   assert.equal(inlineCommandDone(store.inlineRun()), false);
+  store.dispose();
+});
+
+test('inline run (w11-sweep-trans): a terminal that cannot start shows c6bf19e8f li(di(error)), not the raw IPC message', async () => {
+  const official = fs.readFileSync(path.join(snapshotAssets, 'c6bf19e8f-CgQ1_Jhf.js'), 'utf8');
+  const count = (needle) => official.split(needle).length - 1;
+  assert.equal(count('let r=di(e?.error,k,c);R.getState().setInlineError(k,li(r)),t||P(r);return}'), 2);
+  assert.equal(count('R.getState().setInlineError(t.sessionId,t.reason?`Shell disconnected: ${t.reason}`:"Shell exited")'), 1);
+  assert.equal(count('!t?.keepPty&&(R.getState().noteShellClosed(e),'), 1);
+  for (const [message, shown] of [
+    ['Error invoking remote method \'terminal:call\': Error: Failed to spawn shell', 'Couldn’t start the shell'],
+    ['posix_spawnp failed.', 'posix_spawnp failed.'],
+    ['', 'Couldn’t start the shell'],
+  ]) {
+    const bridge = fakeBridge();
+    const call = bridge.call;
+    bridge.call = async (op, params) => { if (op === 'create') throw new Error(message); return call(op, params); };
+    const store = createTerminalStore({ bridge });
+    await assert.rejects(store.runInline({ id: 'r', sessionId: 's1', command: 'ls' }));
+    assert.equal(store.inlineRun().settled, true);
+    assert.equal(store.inlineRun().error, shown, message);
+    store.dispose();
+  }
+  const bridge = fakeBridge();
+  const call = bridge.call;
+  bridge.call = async (op, params) => { if (op === 'run') throw new Error('Failed to spawn shell'); return call(op, params); };
+  const store = createTerminalStore({ bridge });
+  await assert.rejects(store.runDedicated({ id: 'turn', sessionId: 's1', command: 'git status' }));
+  assert.equal(store.inlineRun().error, 'Couldn’t start the shell');
   store.dispose();
 });

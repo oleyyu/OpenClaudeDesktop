@@ -15,6 +15,17 @@ export function settingsInitialFocus({ narrow, section }) {
   return !narrow && section !== 'usage' ? 'search' : 'popup';
 }
 
+// menus W3 (cc011544b-Bdta0Cl7 On): with popupScrolls (the stacked Settings dialog) a section change scrolls the
+// pane's nearest scrolling ancestor (overflow-y auto/scroll) back to the top; a position:fixed ancestor ends the walk.
+export function scrollPopupToTop(node) {
+  for (let element = node?.parentElement; element; element = element.parentElement) {
+    const { overflowY, position } = (element.ownerDocument?.defaultView ?? globalThis).getComputedStyle(element);
+    if (overflowY === 'auto' || overflowY === 'scroll') { element.scrollTop = 0; return element; }
+    if (position === 'fixed') return null;
+  }
+  return null;
+}
+
 // c71860c77-yvGrrWO9.js:2004-2029 D: permission and question offer Off / Badge only / Banners; Task complete
 // (idle) offers Off / Banners. No item is disabled (:2240-2275).
 const OFF = { value: 'off', label: t('Off') }, BADGE = { value: 'badge', label: t('Badge only') }, BANNER = { value: 'banner', label: t('Banners') };

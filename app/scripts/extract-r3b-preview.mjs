@@ -1,27 +1,31 @@
-// R3b-preview: extract the 2.42304.0 main-process preview dev-server and preview-browser logic the local preview
-// service is built on, without executing any desktop runtime (asar/.vite/build/index.chunk-muI2IV6k.js):
+// R3b-preview: extract the 3.6556.2 main-process preview dev-server and preview-browser logic the local preview
+// service is built on, without executing any desktop runtime (asar/.vite/build/index.chunk-jPKPzV-P.js; the
+// 2.42304.0 names from index.chunk-muI2IV6k.js are in brackets — every binding is token-for-token the same code):
 //
 //   r3b-preview-ports.mjs        preview-01 / preview-03 / preview-14
 //     createPreviewPortPolicy(host) — the original top-level declarations verbatim inside one factory:
-//       launch.json script port pinning (i0i / t0i / o0i / a0i and the script tokenizer e0i, z1i, F1i, M1i …),
-//       the port-argument rewrite after a move (k1i), the pending / exact-bind reservations (j2i t2 n2, M2i),
-//       the next-free-port scan and the port decision with its errors (P2i, I2i, A2i, U0i, r2, D2i, E2i, k2i, O2i),
-//       the server identity check after readiness (O0i, S0i, C0i, w0i, T0i, E0i, D0i) and the occupancy /
-//       conflicting-server filters (F2i, q4i, K4i).
-//     The chunk-level values these read and the local app replaces are the factory's parameters (`host`): `n`
-//     (node:path), `p` (node:fs/promises), `g` (node:net) — each asserted to be that require in the chunk — and
-//     N (logger), ih (sleep), xi (@ant/claude-native loader), zy (isRealpathWithin), Y0 (guarded read), J0 (path
-//     guard options), a2 (the server registry: only `.servers` is read), mM (in-app Browser preview on), $0
+//       launch.json script port pinning (IXi / NXi / RXi / LXi [i0i / t0i / o0i / a0i] and the script tokenizer MXi,
+//       _Xi, pXi, uXi … [e0i, z1i, F1i, M1i …]), the port-argument rewrite after a move (sXi [k1i]), the pending /
+//       exact-bind reservations (n3i A3 j3, r3i [j2i t2 n2, M2i]), the next-free-port scan and the port decision with
+//       its errors (a3i, s3i, t3i, m4i, M3, Q4i, Z4i, e3i, $4i [P2i, I2i, A2i, U0i, r2, D2i, E2i, k2i, O2i]), the server
+//       identity check after readiness ($2i, q2i, J2i, Y2i, X2i, Z2i, Q2i [O0i, S0i, C0i, w0i, T0i, E0i, D0i]) and the
+//       occupancy / conflicting-server filters (o3i, N6i, M6i [F2i, q4i, K4i]).
+//     The chunk-level values these read and the local app replaces are the factory's parameters (`host`), passed under
+//     their 2.42304.0 keys so electron/r3b-preview-host.mjs is unchanged: `n` (node:path), `p` (node:fs/promises),
+//     `g` → _ (node:net) — each asserted to be that require in the chunk — and N (logger), ih → Bh (sleep), xi → ji
+//     (@ant/claude-native loader), zy → nx (isRealpathWithin), Y0 → a3 (guarded read), J0 → i3 (path guard options),
+//     a2 → P3 (the server registry: only `.servers` is read), mM → lP (in-app Browser preview on), $0 → l3
 //     (GrowthBook 2711562102, default true).
 //   r3b-preview-user-agent.mjs   preview-12
-//     ydi (sites / claudeHosts user agents), bdi (per-request choice), uai (Claude hosts) and the host lists they read.
+//     eui [ydi] (sites / claudeHosts user agents), tui [bdi] (per-request choice), iii [uai] (Claude hosts) and the host
+//     lists they read.
 //   r3b-preview-launch-fields.mjs preview-04
-//     launchPortFields(e): the three statements of X0.parseConfiguration that type-check "autoPort" and "port"
+//     launchPortFields(e): the three statements of o3.parseConfiguration [X0] that type-check "autoPort" and "port"
 //     (verbatim, returning the port they leave in `i`); launchUrlPortMismatch(a, i): its localhost-url port error.
 //
-// Host-side wiring the local service reproduces (a2.start readiness, D3i, E3i, startFromConfig, Pfi) is anchored:
-// the generator fails when those call sites no longer read the extracted functions the same way. The emitted
-// modules are parsed and may read no identifier they don't declare, apart from standard globals.
+// Host-side wiring the local service reproduces (P3.start readiness, p8i, f8i, startFromConfig, ZQ [a2, D3i, E3i, Pfi])
+// is anchored: the generator fails when those call sites no longer read the extracted functions the same way. The
+// emitted modules are parsed and may read no identifier they don't declare, apart from standard globals.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import net from 'node:net';
@@ -30,68 +34,73 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { referenceVersion, referenceSnapshot, asarSource } from './official-3.6556.2.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'asar/.vite/build');
+// R1: version, snapshot and asar directory from the shared 3.6556.2 constants.
+const source = asarSource;
 const output = path.join(root, 'electron/generated');
-const chunkFile = 'index.chunk-muI2IV6k.js';
+const chunkFile = 'index.chunk-jPKPzV-P.js';
 const manifestName = 'r3b-preview-manifest.json';
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const STANDARD_GLOBALS = new Set(['Array', 'Date', 'Error', 'JSON', 'Map', 'Math', 'Number', 'Object', 'Promise', 'Set', 'String', 'URL', 'clearTimeout', 'process', 'setTimeout']);
 
 // Chunk-level requires the factory takes as the same module.
-const requires = { n: { module: 'node:path', api: path }, p: { module: 'node:fs/promises', api: fsPromises }, g: { module: 'node:net', api: net } };
+const requires = { n: { module: 'node:path', api: path }, p: { module: 'node:fs/promises', api: fsPromises }, _: { module: 'node:net', api: net } };
 
 const targets = [
   {
     output: 'r3b-preview-ports.mjs',
     factory: 'createPreviewPortPolicy',
     host: {
-      n: 'node:path', p: 'node:fs/promises', g: 'node:net',
-      N: 'logger (info / warn / error / debug)', ih: 'sleep(ms, signal?)', xi: '@ant/claude-native loader: { listTcpListeners, getProcessLineage } or null',
-      zy: 'isRealpathWithin(path, root, options) → real path | false', Y0: 'read a file as text → string | null', J0: 'path guard options passed to zy',
-      a2: 'server registry: `.servers` → [{ serverId, name, port, status, cwd, sessionId }]', mM: 'in-app Browser preview enabled', $0: 'GrowthBook 2711562102 (default true)',
+      n: 'node:path', p: 'node:fs/promises', _: 'node:net',
+      N: 'logger (info / warn / error / debug)', Bh: 'sleep(ms, signal?)', ji: '@ant/claude-native loader: { listTcpListeners, getProcessLineage } or null',
+      nx: 'isRealpathWithin(path, root, options) → real path | false', a3: 'read a file as text → string | null', i3: 'path guard options passed to nx',
+      P3: 'server registry: `.servers` → [{ serverId, name, port, status, cwd, sessionId }]', lP: 'in-app Browser preview enabled', l3: 'GrowthBook 2711562102 (default true)',
     },
+    // The factory parameter key the host passes each value under: its 2.42304.0 name (R4: electron/r3b-preview-host.mjs is unchanged).
+    hostKeys: { _: 'g', Bh: 'ih', ji: 'xi', nx: 'zy', a3: 'Y0', i3: 'J0', P3: 'a2', lP: 'mM', l3: '$0' },
     // Host values: each must still be a top-level declaration of the chunk, and these source strings must be in it.
-    hostAnchors: { $0: ['getFeatureValue', '"2711562102",!0)!==!1'], xi: ['require("@ant/claude-native")'], ih: ['setTimeout'], zy: ['realpath'], Y0: ['E1i('], mM: ['pM()&&fM()'] },
+    hostAnchors: { l3: ['getFeatureValue', '"2711562102",!0)!==!1'], ji: ['require("@ant/claude-native")'], Bh: ['setTimeout'], nx: ['realpath'], a3: ['iXi('], lP: ['cP()&&sP()'] },
     bindings: [
       // launch.json script port pinning and the port-argument rewrite
-      'k1i', 'A1i', 'j1i', 'M1i', 'Z0', 'N1i', 'P1i', 'F1i', 'I1i', 'L1i', 'R1i', 'z1i', 'B1i', 'V1i', 'H1i', 'U1i', 'W1i', 'G1i', 'K1i', 'q1i', 'J1i', 'Y1i',
-      'X1i', 'Z1i', 'Q1i', '$1i', 'e0i', 't0i', 'n0i', 'Q0', 'r0i', 'i0i', 'a0i', 'o0i',
+      'sXi', 'cXi', 'lXi', 'uXi', 's3', 'dXi', 'fXi', 'pXi', 'mXi', 'hXi', 'gXi', '_Xi', 'vXi', 'yXi', 'bXi', 'xXi', 'SXi', 'CXi', 'wXi', 'TXi', 'EXi', 'DXi',
+      'OXi', 'kXi', 'AXi', 'jXi', 'MXi', 'NXi', 'PXi', 'c3', 'FXi', 'IXi', 'LXi', 'RXi',
       // the identity check
-      'm0i', 'h0i', 'g0i', '_0i', 'v0i', 'e2', 'y0i', 'b0i', 'x0i', 'S0i', 'C0i', 'w0i', 'T0i', 'E0i', 'D0i', 'O0i',
+      'z2i', 'B2i', 'V2i', 'H2i', 'U2i', 'k3', 'W2i', 'G2i', 'K2i', 'q2i', 'J2i', 'Y2i', 'X2i', 'Z2i', 'Q2i', '$2i',
       // binding probes, reservations, the scan and the port decision
-      'P0i', 'F0i', 'I0i', 'L0i', 'z0i', 'B0i', 'V0i', 'H0i', 'U0i', 'E2i', 'D2i', 'O2i', 'k2i', 'A2i', 'j2i', 't2', 'n2', 'M2i', 'N2i', 'P2i', 'F2i', 'I2i', 'r2',
+      'a4i', 'o4i', 's4i', 'c4i', 'u4i', 'd4i', 'f4i', 'p4i', 'm4i', 'Z4i', 'Q4i', '$4i', 'e3i', 't3i', 'n3i', 'A3', 'j3', 'r3i', 'i3i', 'a3i', 'o3i', 's3i', 'M3',
       // the user's Run: the servers it stops when the port can't move
-      'K4i', 'q4i',
+      'M6i', 'N6i',
       // names in messages
-      'UN',
+      'UF',
     ],
     exports: {
-      a0i: 'portMayReassign', o0i: 'portRetargetability', t0i: 'pinnedPortsOf', I2i: 'resolvePort', k1i: 'rewritePortArgs', M2i: 'releasePort',
-      t2: 'pendingAllocations', n2: 'exactPortBinds', F2i: 'portOccupancy', O0i: 'verifyServerIdentity', q4i: 'conflictingServers', r2: 'PortInUseError',
-      N2i: 'scanSpan', UN: 'messageName', e2: 'lsofHint',
+      LXi: 'portMayReassign', RXi: 'portRetargetability', NXi: 'pinnedPortsOf', s3i: 'resolvePort', sXi: 'rewritePortArgs', r3i: 'releasePort',
+      A3: 'pendingAllocations', j3: 'exactPortBinds', o3i: 'portOccupancy', $2i: 'verifyServerIdentity', N6i: 'conflictingServers', M3: 'PortInUseError',
+      i3i: 'scanSpan', UF: 'messageName', k3: 'lsofHint',
     },
     callSites: {
-      a2: ['let e=F2i(this.servers,a,t.port,r),i=this.collectSiblingRoots(a,r),o=await O0i(n,t.port,c.pid,e,i);if(u.status!=="starting")return;',
-        'pendingAllocation:t2.has(t.port),exactPortBind:n2.has(t.port)};d.set(a,u),M2i(t.port)'],
-      D3i: ['let _=await I2i(r.port,r.autoPort,a,d,g,f),v=_.port', 'y.args=k1i(r.args,v,{joinedShortForm:d,command:r.command})',
-        'g=await t0i(((await new X0(s).getConfigFile())?.servers??[]).filter((e=>e.name!==r.name)),s)', '..._.movedFrom===void 0?{}:{configuredPort:_.movedFrom}'],
-      E3i: ['await o0i(m,d,g)', 'portMayReassign:await a0i(m,g,_)'],
-      y6i: ['let t=q4i(a2.servers,i.config,e,n);', 'portMayReassign:await a0i(i.config,o,s)', '(i.config.autoPort===!0||o&&s)'],
+      P3: ['let e=o3i(this.servers,a,t.port,r),i=this.collectSiblingRoots(a,r),o=await $2i(n,t.port,c.pid,e,i);if(u.status!=="starting")return;',
+        'pendingAllocation:A3.has(t.port),exactPortBind:j3.has(t.port)};d.set(a,u),r3i(t.port)'],
+      p8i: ['let _=await s3i(r.port,r.autoPort,a,d,g,f),v=_.port', 'y.args=sXi(r.args,v,{joinedShortForm:d,command:r.command})',
+        'g=await NXi(((await new o3(s).getConfigFile())?.servers??[]).filter((e=>e.name!==r.name)),s)', '..._.movedFrom===void 0?{}:{configuredPort:_.movedFrom}'],
+      f8i: ['await RXi(m,d,g)', 'portMayReassign:await LXi(m,g,_)'],
+      m5i: ['let t=N6i(P3.servers,i.config,e,n);', 'portMayReassign:await LXi(i.config,o,s)', '(i.config.autoPort===!0||o&&s)'],
     },
   },
   {
     output: 'r3b-preview-user-agent.mjs',
-    bindings: ['xA', 'Mv', 'Nv', 'DIt', 'kIt', 'CIt', 'wIt', 'TIt', 'hA', 'kAn', 'AAn', 'wA', 'lai', 'uai', 'ydi', 'bdi'],
-    exports: { ydi: 'previewUserAgents', bdi: 'previewRequestUserAgent', uai: 'isClaudeHost' },
-    callSites: { Pfi: ['let t=ydi(e),n=()=>hy("3868149774");', 'o.setUserAgent?.(n()?t.claudeHosts:t.sites),o.webRequest.onBeforeSendHeaders(',
-      'o=bdi(t,r[a],n()||uai(xA(e.url)?.hostname??""))', 'e?.includes(" Electron/")'] },
+    bindings: ['MM', 'My', 'Ny', 'ZHt', '$Ht', 'qHt', 'JHt', 'YHt', 'NHn', 'PHn', 'FHn', 'vUn', 'rii', 'iii', 'eui', 'tui'],
+    exports: { eui: 'previewUserAgents', tui: 'previewRequestUserAgent', iii: 'isClaudeHost' },
+    callSites: { ZQ: ['let t=eui(e),n=()=>Pb("3868149774");', 'o.setUserAgent?.(n()?t.claudeHosts:t.sites),o.webRequest.onBeforeSendHeaders(',
+      'o=tui(t,r[a],n()||iii(MM(e.url)?.hostname??""))', 'e?.includes(" Electron/")'] },
   },
   { output: 'r3b-preview-launch-fields.mjs', launchFields: true },
 ];
+
+// The launch.json class (2.42304.0 X0): its parseConfiguration is where launch-fields come from.
+const launchClass = 'o3';
 
 async function readChunk() {
   const bytes = await fs.readFile(path.join(source, chunkFile));
@@ -174,10 +183,10 @@ function emitBindings(chunk, spec) {
 }
 
 function launchFields(chunk) {
-  const { node } = topLevel(chunk, 'X0');
-  if (node.init?.type !== 'ClassExpression') throw Error(`${chunkFile}: X0 is no longer the launch.json class`);
+  const { node } = topLevel(chunk, launchClass);
+  if (node.init?.type !== 'ClassExpression') throw Error(`${chunkFile}: ${launchClass} is no longer the launch.json class`);
   const method = node.init.body.body.find((member) => member.type === 'ClassMethod' && member.key?.name === 'parseConfiguration');
-  if (!method || method.params.length !== 1 || method.params[0].name !== 'e') throw Error(`${chunkFile}: X0.parseConfiguration(e) not found`);
+  if (!method || method.params.length !== 1 || method.params[0].name !== 'e') throw Error(`${chunkFile}: ${launchClass}.parseConfiguration(e) not found`);
   const statements = method.body.body;
   const at = statements.findIndex((statement) => statement.type === 'IfStatement' && text(chunk, statement.test).includes('e.autoPort!==void 0&&typeof e.autoPort!="boolean"'));
   if (at < 0) throw Error(`${chunkFile}: parseConfiguration no longer type-checks "autoPort"`);
@@ -203,8 +212,8 @@ function launchFields(chunk) {
   });
   if (!mismatch) throw Error(`${chunkFile}: the localhost-url port mismatch error is gone`);
   const blocks = [
-    `// X0.parseConfiguration(e): its "autoPort" / "port" statements, verbatim; the port they leave in \`i\` is returned.\nfunction launchPortFields(e) {\n${[autoPortCheck, portDeclaration, portCheck].map((statement) => text(chunk, statement)).join('\n')}\nreturn i;\n}`,
-    `// X0.parseConfiguration(e): the localhost "url" port mismatch (\`a\` the parsed url, \`i\` the entry's port).\nfunction launchUrlPortMismatch(a, i) {\nreturn ${text(chunk, mismatch)};\n}`,
+    `// ${launchClass}.parseConfiguration(e): its "autoPort" / "port" statements, verbatim; the port they leave in \`i\` is returned.\nfunction launchPortFields(e) {\n${[autoPortCheck, portDeclaration, portCheck].map((statement) => text(chunk, statement)).join('\n')}\nreturn i;\n}`,
+    `// ${launchClass}.parseConfiguration(e): the localhost "url" port mismatch (\`a\` the parsed url, \`i\` the entry's port).\nfunction launchUrlPortMismatch(a, i) {\nreturn ${text(chunk, mismatch)};\n}`,
   ];
   return { blocks, sourceStatements: [autoPortCheck, portDeclaration, portCheck, mismatch].map((statement) => sha(text(chunk, statement))), exports: 'export { launchPortFields, launchUrlPortMismatch };' };
 }
@@ -218,7 +227,7 @@ export async function extractR3bPreview({ check = false } = {}) {
     if (spec.launchFields) {
       const fields = launchFields(chunk);
       body = `${fields.blocks.join('\n')}\n${fields.exports}\n`;
-      entry = { from: 'X0.parseConfiguration', statementSha256: fields.sourceStatements, exports: ['launchPortFields', 'launchUrlPortMismatch'] };
+      entry = { from: `${launchClass}.parseConfiguration`, statementSha256: fields.sourceStatements, exports: ['launchPortFields', 'launchUrlPortMismatch'] };
     } else {
       const { hits, blocks } = emitBindings(chunk, spec);
       for (const local of Object.keys(spec.exports)) if (!spec.bindings.includes(local)) throw Error(`${spec.output}: export ${local} is not emitted`);
@@ -231,11 +240,11 @@ export async function extractR3bPreview({ check = false } = {}) {
             throw Error(`${spec.output}: ${name} is no longer require(${JSON.stringify(requires[name].module)})`);
         }
         for (const needle of spec.hostAnchors?.[name] ?? []) if (!declared.includes(needle)) throw Error(`${spec.output}: host ${name} no longer contains ${JSON.stringify(needle)}`);
-        hostEntries[name] = { role, sourceSha256: sha(declared) };
+        hostEntries[name] = { ...(spec.hostKeys?.[name] ? { key: spec.hostKeys[name] } : {}), role, sourceSha256: sha(declared) };
       }
       const exportList = Object.entries(spec.exports).map(([local, name]) => `${name}: ${local}`);
       body = spec.factory
-        ? `export function ${spec.factory}({ ${Object.keys(spec.host).join(', ')} }) {\n${blocks.join('\n')}\nreturn { ${exportList.join(', ')} };\n}\n`
+        ? `export function ${spec.factory}({ ${Object.keys(spec.host).map((name) => (spec.hostKeys?.[name] ? `${spec.hostKeys[name]}: ${name}` : name)).join(', ')} }) {\n${blocks.join('\n')}\nreturn { ${exportList.join(', ')} };\n}\n`
         : `${blocks.join('\n')}\nexport { ${Object.entries(spec.exports).map(([local, name]) => `${local} as ${name}`).join(', ')} };\n`;
       entry = { ...(spec.factory ? { factory: spec.factory, host: hostEntries } : {}), bindings: Object.fromEntries(hits.map((hit) => [hit.name, { sha256: sha(text(chunk, hit.node)), ...(spec.exports[hit.name] ? { exportedAs: spec.exports[hit.name] } : {}) }])) };
     }

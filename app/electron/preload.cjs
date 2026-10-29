@@ -13,6 +13,9 @@ const unwrapped = (promise) => promise.catch((error) => {
 });
 contextBridge.exposeInMainWorld("desktop", {
   call: (action, params) => unwrapped(ipcRenderer.invoke("desktop:call", action, params)),
+  // w12c-wiring (w12b-settings-dialogs S3): the default browser's name (main.cjs "default-browser-name", Dtr), which
+  // src/default-browser-name.mjs asks for on mount and window focus (c8ae173c6 `r?.getDefaultBrowserName?.()`).
+  getDefaultBrowserName: () => unwrapped(ipcRenderer.invoke("desktop:call", "default-browser-name")),
   appearance,
   setFileEditDirty: paths => ipcRenderer.sendSync("desktop:file-edit-dirty", paths),
   onFileAutosaveFlush: handler => {
@@ -20,8 +23,14 @@ contextBridge.exposeInMainWorld("desktop", {
     ipcRenderer.on('desktop:file-autosave-flush', listener);
     return () => ipcRenderer.removeListener('desktop:file-autosave-flush', listener);
   },
-  // Finder drops arrive as File objects; only the main process may stat them.
-  pathForFile: (file) => { try { return webUtils.getPathForFile(file) || ""; } catch { return ""; } },
+  // Finder drops arrive as File objects; only the main process may stat them. A path read here belongs to a File the
+  // user gave the page, so main records it as user-chosen (convert-document reads only those; w13-chatfn-attachments).
+  pathForFile: (file) => {
+    let filePath = "";
+    try { filePath = webUtils.getPathForFile(file) || ""; } catch { return ""; }
+    if (filePath) ipcRenderer.send("desktop:attachment-path", filePath);
+    return filePath;
+  },
   onEvent: (handler) => {
     const listener = (_e, event) => handler(event);
     ipcRenderer.on("desktop:event", listener);

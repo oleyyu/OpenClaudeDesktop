@@ -28,6 +28,41 @@ export function titlebarToggleSpecs({ surface = "code", session = false, termina
     : [...terminal, ...preview, ...files];
 }
 
+// w10-shell-titlebar (notdone 20, TF-O1): the Code session titlebar's readiness, as 3.6556.2 cc43287c9 oG derives it.
+//   G   `G=(te||!t&&!o)&&!N`                         live: the session is ready (te), or the landing (no session, no spawn)
+//   ae  `ae=G||ie&&!o&&!re.origin&&!N`               seen: oG shows the session's cluster at all
+//   le  `le=!ae&&!N&&ce?oe:void 0`                   starting: not seen yet, but the spawn's owner is starting
+//   ue  `ue=!G&&le===void 0`                         held: the toggle group is inert
+//   He / Ue `He=te&&!N,Ue=ae&&t!==null`              the fold measure's interactive / clusterMounted
+//   FW  `(ae||o||re.origin)&&p(FW,{sessionRef:ae?t:null,…,held:ue,startingId:le,…})` mounts the pane toggles, and FW's
+//       owner is `t??(u!==null&&i!==void 0?{id:i,type:"starting"}:u)` (u: the landing owner, eb = c5da7eb42 Pm).
+// Host mapping: t is the open session (te = not loading); o is main.jsx's first-send spawn (`spawning`); N is the core's
+// missing history for it (main.jsx historyUnavailable, the same not-found the rail gets); ie (c5da7eb42 fR: a local
+// session of known kind) holds for every host session; the host keeps no pending-launch origin (re.origin); ce
+// (`e.currentSessionId===oe&&(e.ownerStarting||ie)`) is the host's spawn phase for the draft (`starting`).
+// toggleOwner is FW's owner kind: "session", "starting" or "landing" (null while FW is not mounted).
+export function titlebarSessionState({ session = false, loading = false, spawning = false, sessionNotFound = false, starting = false } = {}) {
+  const hasSession = !!session;
+  const notFound = !!sessionNotFound;
+  const ready = hasSession && !loading;
+  const live = (ready || (!hasSession && !spawning)) && !notFound;
+  const seen = live || (hasSession && !spawning && !notFound);
+  const startingShown = !seen && !notFound && !!starting;
+  const held = !live && !startingShown;
+  const togglesMounted = seen || !!spawning;
+  const toggleOwner = !togglesMounted ? null : seen && hasSession ? "session" : startingShown ? "starting" : "landing";
+  return { live, seen, startingShown, held, togglesMounted, toggleOwner, interactive: ready && !notFound, clusterMounted: seen && hasSession };
+}
+
+// TF-O1 (3.6556.2 c73f45bc3 x_, FW's specs): a "starting" owner reads as the landing: `i=Mi(t)` with Mi = c5da7eb42
+// Am `function Am(e){return e?.type==="starting"?Dm:e??null}` (Dm = `{id:nn,type:"landing"}`), so `s=i?.type==="landing"`
+// takes the landing branch `[...a,...n,...o]` (Terminal, Preview, Files), and Files also stays for the starting owner
+// through `y=Rs(t?.type==="starting")` (c0fbbe82d sr: the landing's trusted folder with listDirectoryAtCwd), the host's
+// filesAvailable. So the specs take the session branch only for a "session" owner.
+export function titlebarOwnerSpecs(owner, input = {}) {
+  return titlebarToggleSpecs({ ...input, session: owner === "session" });
+}
+
 // c73f45bc3 Vh `p = jh(Rh(...), hiddenMainPaneCount).folded`: the toggles the titlebar folded away, in toggle order,
 // for main.jsx's View options menu (each row `checked: active`, checkedRole "checkbox", the toggle's shortcut).
 export function titlebarFoldedToggles(input, hiddenMainPanes = 0) {
@@ -76,13 +111,29 @@ export function titlebarRailToggleFoldable({ foldable = false, railToggle } = {}
   return !!foldable && railToggle !== undefined && railToggle !== null;
 }
 
-// cf74bc599 tE: the ⋮ menu's first group, before the folded pane toggles (Kh viewItems), is the folded rail toggle,
-// `k = XT(a, { icon: Oe, label: a?.onScreen ? "Hide session rail" : "Show session rail", onSelect: a?.onToggle })`
-// (XT(e, t) = e ? [t] : []; Oe is shared-1 Wn = yL "ListCard"). wW hands ⋮ the toggle only while it is folded
-// (`railToggle: De ? y : void 0`). No checked state. Labels are catalog keys (English), translated where they render.
+// w10-shell-titlebar (notdone 19, 3.6556.2 c73f45bc3 d_, exported `ot`, imported by cf74bc599 as I_):
+// `function d_(e,t){…r=>{e!==void 0&&(e.raises?e.onScreen||ka("show_raised",t,n):ka(e.onScreen?"hide":"show",t,n),e.onToggle(r))}}`.
+// A press goes to the model's onToggle with its event (the rail reads `e?.detail === 0` for keyboard focus) and only
+// while there is a model. ka (c68c4283d hf) only logs `claudeai.epitaxy.session_rail.${e}_pressed` { via: t, in_popout: n };
+// the host has no telemetry, so `via` ("overflow" for ⋮, "toolbar" for the titlebar toggle) names the caller and the
+// log is a no-op here.
+export function railToggleSelect(railToggle, via) {
+  void via; // ka(…, via, inPopout): no host telemetry.
+  return (event) => {
+    if (railToggle === undefined || railToggle === null) return;
+    railToggle.onToggle(event);
+  };
+}
+
+// cf74bc599 tE (3.6556.2 DA): the ⋮ menu's first group, before the folded pane toggles (Kh / U_ viewItems), is the
+// folded rail toggle. 2.42304.0 `k = XT(a, { icon: Oe, label: …, onSelect: a?.onToggle })`; 3.6556.2 DA
+// `l = I_(a, "overflow")`, `R = CA(a, { icon: it, label: a?.onScreen ? "Hide session rail" : "Show session rail",
+// onSelect: l })` (CA(e, t) = e ? [t] : []; it is shared-1 Vn = wV "ListCard"). wW / oG hand ⋮ the toggle only while
+// it is folded (`railToggle: Qe ? x : void 0`). No checked state. Labels are catalog keys (English), translated where
+// they render.
 export function titlebarRailMenuItems(railToggle) {
   return railToggle
-    ? [{ icon: RAIL_TOGGLE_ICON, label: railToggle.onScreen ? "Hide session rail" : "Show session rail", onSelect: railToggle.onToggle }]
+    ? [{ icon: RAIL_TOGGLE_ICON, label: railToggle.onScreen ? "Hide session rail" : "Show session rail", onSelect: railToggleSelect(railToggle, "overflow") }]
     : [];
 }
 

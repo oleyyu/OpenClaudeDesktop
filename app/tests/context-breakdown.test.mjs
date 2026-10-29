@@ -1,4 +1,4 @@
-// Context card breakdown (2.42304.0 c2d611398 H, sliced into src/generated/session-rail-context): the host's
+// Context card breakdown (3.6556.2 c2d611398 J, 2.42304.0 H; sliced into src/generated/session-rail-context): the host's
 // get_context_usage-shaped report (src/context-breakdown-model.mjs) and the generated breakdown's bindings.
 // Pure: no Electron, no browser, no network.
 import test from 'node:test';
@@ -103,27 +103,31 @@ test('estimates: ceil(chars / 4), JSON for schemas', () => {
   assert.equal(estimateJsonTokens(undefined), 0);
 });
 
-test('generator: H and its chart kit are sliced; the breakdown adapter is gone', () => {
+test('generator: J and its chart kit are sliced; the breakdown adapter is gone', () => {
   const targets = manifest.modules.map((m) => m.target);
   for (const t of ['context-usage-shape.mjs', 'mcp-names.mjs', 'cds-frame-helpers.mjs', 'chart-kit.mjs', 'chart-meter.mjs', 'chart-legend.mjs', 'context-panel.mjs'])
     assert.ok(targets.includes(t), t);
   const panel = manifest.modules.find((m) => m.target === 'context-panel.mjs');
   const bindings = panel.bindings.map((b) => b.name);
-  for (const b of ['H', 'le', 'B', 'ue', 'U', 'V', 'de', 'q', 'oe', 'se', 'z']) assert.ok(bindings.includes(b), b);
-  assert.equal(panel.exports.H, 'ContextBreakdown');
+  for (const b of ['J', 'te', 'W', 'K', 'G', 'U', 're', 'ce', 'me', 'q', 'ee']) assert.ok(bindings.includes(b), b);
+  assert.equal(panel.exports.J, 'ContextBreakdown');
   const via = (m, local) => m.imports.find((i) => i.local === local);
-  assert.deepEqual([via(panel, 'L').name, via(panel, 'R').name, via(panel, 'ie').name], ['StackedMeterGroup', 'StackedMeter', 'ChartLegend']);
-  assert.deepEqual([via(panel, 'E').name, via(panel, 'S').name, via(panel, 'T').name], ['isFreeSpaceCategory', 'isBufferCategory', 'isDeferredCategory']);
-  assert.deepEqual([via(panel, 'h').kind, via(panel, 'h').name, via(panel, 'x').name], ['adapter', 'useMcpServerRegistry', 'findMcpToolForLabel']);
+  assert.deepEqual([via(panel, 'R').name, via(panel, 'z').name, via(panel, 'L').name], ['StackedMeterGroup', 'StackedMeter', 'ChartLegend']);
+  assert.deepEqual([via(panel, 'w').name, via(panel, 'E').name, via(panel, 'T').name], ['isFreeSpaceCategory', 'isBufferCategory', 'isDeferredCategory']);
+  assert.deepEqual([via(panel, 'A').kind, via(panel, 'A').name, via(panel, 'C').name, via(panel, 'F').name], ['adapter', 'useMcpServerRegistry', 'findMcpToolForLabel', 'remoteMcpServerLabel']);
+  // ze's fill class and Ve's focus hand-off (c1564829c b over the kit's severity, ceeeccbd9 t)
+  assert.deepEqual([via(panel, 'V').name, via(panel, 'I').name], ['usageFillClass', 'useDisabledFocusHandOff']);
   assert.ok(!panel.imports.some((i) => i.name === 'ContextBreakdown'));
   const meter = manifest.modules.find((m) => m.target === 'chart-meter.mjs');
-  assert.deepEqual([via(meter, 'l').kind, via(meter, 'l').name], ['view-tabs', 'CdsTooltip']);
-  assert.deepEqual([via(meter, 'u').kind, via(meter, 'u').name], ['view-tabs', 'useInsideCdsTooltipProvider']);
+  assert.deepEqual([via(meter, 'g').kind, via(meter, 'g').name], ['view-tabs', 'CdsTooltip']);
+  assert.deepEqual([via(meter, '_').kind, via(meter, '_').name], ['view-tabs', 'useInsideCdsTooltipProvider']);
+  // the readout card loader (c91b6e9db M) is the host's (no dynamic import), its idle warm-up the sliced shared-28 Cb
+  assert.deepEqual([via(meter, 'M').kind, via(meter, 'M').name, via(meter, 're').name], ['adapter', 'loadStackedMeterReadout', 'scheduleIdleCallback']);
   // the chart kit's two contexts and the meter's group context exist once, here (no other area slices these chunks)
-  assert.equal((read('src/generated/session-rail-context/chart-kit.mjs').match(/^var [m_] = a\(null\);$/gm) ?? []).length, 2);
-  assert.equal((read('src/generated/session-rail-context/chart-meter.mjs').match(/^var T = o\(null\);$/gm) ?? []).length, 1);
+  assert.equal((read('src/generated/session-rail-context/chart-kit.mjs').match(/^var [bS] = c\(null\);$/gm) ?? []).length, 2);
+  assert.equal((read('src/generated/session-rail-context/chart-meter.mjs').match(/^var de = f\(null\);$/gm) ?? []).length, 1);
   const panelText = read('src/generated/session-rail-context/context-panel.mjs');
-  for (const s of ['defaultMessage: "Other"', 'defaultMessage: "MCP tools"', 'defaultMessage: "Memory files"', 'defaultMessage: "Custom agents"',
+  for (const s of ['defaultMessage: "Other"', 'defaultMessage: "Since last update"', 'defaultMessage: "MCP tools"', 'defaultMessage: "Memory files"', 'defaultMessage: "Custom agents"',
     '"var(--cds-chart-reference-tint)"', '"var(--cds-chart-muted)"', 'style: "percent"', 'minimumFractionDigits: 1'])
     assert.ok(panelText.includes(s), s);
   assert.ok(!read('src/source-session-rail-context-adapters.jsx').includes('export function ContextBreakdown'));
@@ -196,7 +200,7 @@ test('wiring: main serves "context-usage"; the rail context carries the read; ag
   assert.ok(main.includes('appServerInstructions: (owner) => { try { return coreForEngine(owner?.serverInfo?.engine).kind === "native" ? null : require("./agent-tools-instructions.cjs").INSTRUCTIONS; }'));
   assert.ok(read('src/main.jsx').includes('contextUsageId: current, readContextUsage: (id) => call("context-usage", { threadId: id, cwd: workdir }),'));
   assert.ok(read('electron/agent-tools-host.cjs').includes('function sessionToolLists(threadId) {'));
-  assert.ok(read('src/source-session-rail-context.jsx').includes('const report = useRailContextReport(host, w && u);'));
+  assert.ok(read('src/source-session-rail-context.jsx').includes('const report = useRailContextReport(host, M && x);'));
   const zh = read('electron/i18n/zh-CN/session.mjs');
   for (const s of ['"MCP tools": "MCP 工具",', '"Memory files": "记忆文件",', '"Custom agents": "自定义代理",', '"Context window": "上下文窗口",']) assert.ok(zh.includes(s), s);
 });

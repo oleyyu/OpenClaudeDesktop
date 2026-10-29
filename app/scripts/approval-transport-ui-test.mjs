@@ -35,8 +35,8 @@ const card = (request) =>
   page.locator(
     `[data-approval-instance=${JSON.stringify(request.bridgeApproval.instanceId)}]`,
   );
-const cards = () => page.locator(".sac-card, .sq-card");
-const custom = (request) => card(request).locator(".sq-custom-control");
+const cards = () => page.locator(".sac-card, .source-question-card");
+const custom = (request) => card(request).locator("[data-cds=\"TextArea\"], input[type=password]");
 async function call(action, params = {}) {
   return page.evaluate(
     ({ action, params }) => window.desktop.call(action, params),
@@ -160,15 +160,12 @@ async function action(request, value) {
     .click();
 }
 async function chooseOther(request) {
-  // The source places this transparent button behind the textarea. Its center
-  // is not a pointer target; exercise its normal keyboard activation instead.
-  const other = card(request).getByRole("button", {
-    name: "Other",
-    exact: true,
-  });
+  // W12 (c9ed5627b dt Qn): the Other row's button carries the label and the digit keycap; a single-select Other has no
+  // aria-pressed, so choosing it shows as its field taking tabIndex 0.
+  const other = card(request).getByRole("button", { name: /^Other\b/ });
   await other.focus();
   await other.press("Space");
-  assert.equal(await other.getAttribute("aria-pressed"), "true");
+  assert.equal(await custom(request).getAttribute("tabindex"), "0");
 }
 async function screenshot(name) {
   const filename = path.join(directory, name);
@@ -555,9 +552,9 @@ try {
       questions: [null],
     }),
   );
-  await card(malformed).locator(".sq-error[role=alert]").waitFor();
+  await card(malformed).locator("[role=alert]").waitFor();
   assert.equal(await card(malformed).getAttribute("data-approval-invalid"), "");
-  assert.equal(await card(malformed).locator(".sq-submit").count(), 0);
+  assert.equal(await card(malformed).locator(".justify-end > button:last-child").count(), 0);
   assert.deepEqual(rendererErrors, []);
   const qa = await emit(
     rawRequest("question-A", "question", threadA, { questions }),
@@ -570,12 +567,12 @@ try {
   await card(qa).waitFor();
   metrics.questionGeometry = await card(qa).evaluate((node) => {
     const style = getComputedStyle(node);
-    const footer = node.querySelector(".sq-actions");
+    const footer = node.querySelector(".justify-end");
     const footerStyle = getComputedStyle(footer);
-    const button = footer.querySelector(".sq-submit");
-    const other = node.querySelector(".sq-custom");
+    const button = footer.querySelector(".justify-end > button:last-child");
+    const other = node.querySelector(".gap-0\\.75 > div");
     const otherStyle = getComputedStyle(other);
-    const input = other.querySelector(".sq-custom-control");
+    const input = other.querySelector("[data-cds=\"TextArea\"], input[type=password]");
     const inputStyle = getComputedStyle(input);
     const px = (value) => Number.parseFloat(value);
     const edges = (s, prefix, suffix = "") =>
@@ -634,10 +631,10 @@ try {
   assert.equal(geometry.inputLineHeight, 19);
   // approval-current.js:7790-7800 _se preselects options[0], so Next starts enabled (product
   // correction in 0.2.115; previously asserted disabled).
-  assert.equal(await card(qa).locator(".sq-submit").isDisabled(), false);
+  assert.equal(await card(qa).locator(".justify-end > button:last-child").isDisabled(), false);
   assert.equal(
     await card(qa)
-      .locator(".sq-option")
+      .locator(".gap-0\\.75 > button")
       .filter({ hasText: "First fixture option" })
       .getAttribute("aria-pressed"),
     "true",
@@ -645,14 +642,14 @@ try {
   await chooseOther(qa);
   await custom(qa).fill("A custom choice");
   await card(qa)
-    .locator(".sq-option")
+    .locator(".gap-0\\.75 > button")
     .filter({ hasText: "First fixture option" })
     .click();
   await chooseOther(qa);
   assert.equal(await custom(qa).inputValue(), "A custom choice");
-  await card(qa).locator(".sq-submit").click();
+  await card(qa).locator(".justify-end > button:last-child").click();
   await card(qa)
-    .locator(".sq-question")
+    .locator("[data-question-stop-name]")
     .filter({ hasText: "Add a fixture note" })
     .waitFor();
   await custom(qa).fill("A retained note");
@@ -667,16 +664,16 @@ try {
   assert.deepEqual((await requestFor(qb.id)).bridgeApproval, qb.bridgeApproval,
     "The other thread's replay also retains its question identity");
   assert.equal(
-    await card(qa).locator(".sq-question").textContent(),
+    await card(qa).locator("[data-question-stop-name]").textContent(),
     "Add a fixture note",
   );
   assert.equal(await custom(qa).inputValue(), "A retained note");
   await card(qa)
-    .getByRole("button", { name: "Show previous question", exact: true })
+    .getByRole("button", { name: "Back", exact: true })
     .click();
   assert.equal(await custom(qa).inputValue(), "A custom choice");
-  await card(qa).locator(".sq-submit").click();
-  const buttonBefore = await card(qa).locator(".sq-submit").boundingBox();
+  await card(qa).locator(".justify-end > button:last-child").click();
+  const buttonBefore = await card(qa).locator(".justify-end > button:last-child").boundingBox();
   const beforeQuestion = (await responses()).length;
   await arm({
     id: "question-failure",
@@ -685,19 +682,19 @@ try {
     reject: true,
     instanceId: qa.bridgeApproval.instanceId,
   });
-  await card(qa).locator(".sq-submit").click();
+  await card(qa).locator(".justify-end > button:last-child").click();
   await held("question-failure");
   assert.equal(await card(qa).getAttribute("aria-busy"), "true");
-  const buttonBusy = await card(qa).locator(".sq-submit").boundingBox();
+  const buttonBusy = await card(qa).locator(".justify-end > button:last-child").boundingBox();
   assert.equal(buttonBefore.width, buttonBusy.width);
   assert.equal(buttonBefore.height, buttonBusy.height);
   metrics.questionSubmit = {
     width: buttonBusy.width,
     height: buttonBusy.height,
   };
-  await card(qa).locator(".sq-submit").dispatchEvent("click");
+  await card(qa).locator(".justify-end > button:last-child").dispatchEvent("click");
   await card(qa)
-    .locator(".sq-submit")
+    .locator(".justify-end > button:last-child")
     .dispatchEvent("keydown", { key: "Enter", repeat: true });
   const pendingCalls = await app.evaluate(
     (_, instanceId) =>
@@ -713,12 +710,12 @@ try {
   assert.equal((await responses()).length, beforeQuestion);
   await release("question-failure");
   await card(qa)
-    .locator(".sq-error")
+    .locator("[role=alert]")
     .filter({ hasText: "Isolated pre-dispatch rejection" })
     .waitFor();
   assert.equal(await custom(qa).inputValue(), "A retained note");
   await screenshot("question-retained-after-failure.png");
-  await card(qa).locator(".sq-submit").click();
+  await card(qa).locator(".justify-end > button:last-child").click();
   await card(qa).waitFor({ state: "detached" });
   const questionResponse = (await awaitResponses(beforeQuestion + 1)).at(
     -1,
@@ -732,7 +729,7 @@ try {
       },
     },
   });
-  await card(malformed).locator(".sq-error").waitFor();
+  await card(malformed).locator("[role=alert]").waitFor();
   assert.equal(
     (await responses()).some((row) => row.wire.id === malformed.id),
     false,
@@ -755,7 +752,7 @@ try {
     reject: true,
     instanceId: background.bridgeApproval.instanceId,
   });
-  await card(background).locator(".sq-submit").click();
+  await card(background).locator(".justify-end > button:last-child").click();
   await held("background-failure");
   await select(threadB);
   await card(qb).waitFor();
@@ -765,12 +762,12 @@ try {
     await page.locator(".composer-error").allTextContents(),
     errorBefore,
   );
-  assert.equal(await card(qb).locator(".sq-error").count(), 0);
+  assert.equal(await card(qb).locator("[role=alert]").count(), 0);
   assert.equal(await custom(qb).inputValue(), "B separate choice");
-  await card(qb).locator(".sq-submit").click();
+  await card(qb).locator(".justify-end > button:last-child").click();
   await card(qb).waitFor({ state: "detached" });
   await select(threadA);
-  await card(background).locator(".sq-error").waitFor();
+  await card(background).locator("[role=alert]").waitFor();
   assert.equal(
     await custom(background).inputValue(),
     "Background retained note",
@@ -856,10 +853,10 @@ try {
   }
   assert.equal((await responses()).length, beforeInvalid);
   await card(restricted)
-    .locator(".sq-option")
+    .locator(".gap-0\\.75 > button")
     .filter({ hasText: "First fixture option" })
     .click();
-  await card(restricted).locator(".sq-submit").click();
+  await card(restricted).locator(".justify-end > button:last-child").click();
   await card(restricted).waitFor({ state: "detached" });
   checks.push(
     "Real IPC preserves command/file decisions and turn-only permission grant/deny payloads with no bridge fields; question mapping rejects unknown IDs, disallowed Other and multi-valued answers before writing",

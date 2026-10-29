@@ -1,65 +1,70 @@
 {
-  "referenceVersion": "2.42304.0",
-  "referenceSnapshot": "installed-2.42304.0-20261017",
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
   "generator": "scripts/extract-r4e-preview.mjs",
-  "source": "../reference/installed-2.42304.0-20261017/asar/.vite/build/index.chunk-muI2IV6k.js",
-  "sourceSha256": "4a8f1c07e69231e47127d3c55fcdda84eddb089ce06d347ad29591e25b6fb5f5",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+  "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
   "targets": {
     "r4e-preview-coordinates.mjs": {
       "factory": "createPreviewCoordinateCheck",
       "host": {
-        "Cvi": {
+        "O1": {
+          "key": "Cvi",
           "role": "the tab's current geometry: { scale, width, height } (readVisualViewportGeometry)",
-          "sourceSha256": "e59e51ebb4cadf1445b8c05a36066094fd8fb9fcc9897a94ec6024c0ae6ff0df"
+          "sourceSha256": "c84537367ca4f11d5bff7261c8645c47706b18ecab51f5dd9f886faff4fe396f"
         }
       },
       "bindings": {
-        "Esi": {
-          "sha256": "f900d7136f15914c2563060a180e6b58b261f58c5af1bdb2b4ef1b5430dc3de3",
+        "NZ": {
+          "sha256": "a1af55d31d6e3efa456db9a7c327ebc7c4681aae7d7bfe027dabd584c3588049",
           "exportedAs": "zoomedIn"
         },
-        "Dsi": {
-          "sha256": "f8406fe3ba5dcec8876b3c2c78772cd435fcc2a946b91f2e4e69793ecd5f4430"
+        "moi": {
+          "sha256": "f52bc72022539ab44301753cddfb7a158cd87e849bc1e1ddee24cb2292f4a30b"
         },
-        "Osi": {
-          "sha256": "6594b1200e7ea1d117442ff16a07ca7d5068734b2b711e4d927e66e1ab60ff42",
+        "hoi": {
+          "sha256": "d008aa65794f369fdb4b2f82387ece671c27e194689ef0a8a9ec15ce782d9d9a",
           "exportedAs": "partlyVisible"
         },
-        "g4i": {
-          "sha256": "eb7410551d7454045bc4dc07eb47c1c3a3be39105a9bc9fb6b723204b1e26c73",
+        "q3i": {
+          "sha256": "81825dea38226570cf0f618aeea00ba8a31dd18d125cde0fc21e2a894a9709fa",
           "exportedAs": "sizeTolerance"
         },
-        "_4i": {
-          "sha256": "a6d9f2adf0fa69e2201af35127782ec92f473756bae3158d3c5371c50546531c",
+        "J3i": {
+          "sha256": "d814737ea9fb003a52586cf4fccf8fab65eb174015548f6d1bfcf57645f1466a",
           "exportedAs": "zoomOrSizeChanged"
         },
-        "v4i": {
-          "sha256": "0c5721d1c04e88b775204a93fa1d937b45fd643c0f6e6500cff66932f5f81775",
+        "Y3i": {
+          "sha256": "ada20592c3ac906f100cd3cc973ed28a757f3776ca02f3b41380e59127020bf0",
           "exportedAs": "visiblePart"
         },
-        "y4i": {
-          "sha256": "25897fca7af607769069ee1951fbca51a4604a1746102e9ae5bd0834ed1be959",
+        "K3": {
+          "sha256": "cb65803b9abece341104008ae98f6282c2739a466ce5f583df47bc9575ac96f5",
+          "exportedAs": "clampSize"
+        },
+        "X3i": {
+          "sha256": "5a7405fecb836bc729291afea76b727e4b4fb30556614390644c0cbb4c29f419",
           "exportedAs": "frameToViewport"
         },
-        "b4i": {
-          "sha256": "74dc954186796b07e78cc62eaf1aac1f91a9ea9279a553cd85c646eb062faad6",
+        "Z3i": {
+          "sha256": "df8586bf3244f7887d1ebc1dad0b58d155ea32e6d86092564fe4382e84a7b981",
           "exportedAs": "dispatchPoint"
         },
-        "x4i": {
-          "sha256": "b0d5ddd3235e92b114e28303c5f3e4158fe6033350a2b90569d168190ae39eb0"
+        "Q3i": {
+          "sha256": "c97a6b0b85039bacfe78472a4f7335ccc51071458166e9a51723e4b23a6817c6"
         },
-        "S4i": {
-          "sha256": "37d861f052c7200d12c7a5ddb17a032a669c7805541197e6704f074fd98a7acc",
+        "$3i": {
+          "sha256": "91a5f191646e2f75be335ac3f81d74587be80bfe95569a82c2bacfc8f4202b7d",
           "exportedAs": "coordinateProblem"
         }
       },
       "messages": {
         "zoomChangedError": {
-          "from": "C4i",
+          "from": "e6i",
           "sha256": "cc79bbe6d5b1e43c21420e06ccd66973e03b430f0bf2d043786ff92ba4c35f5a"
         },
         "pageChangedError": {
-          "from": "C4i",
+          "from": "e6i",
           "sha256": "9daf00c1c704a8ca8a89d3351b1a5dc79bf2fff88ad2266d7afca31946cbcfea"
         }
       },
@@ -68,48 +73,48 @@
         "Number"
       ],
       "hostCalls": {
-        "Cvi": 1
+        "O1": 1
       },
       "callSites": {
-        "C4i": {
-          "sha256": "a0cff1e0ddfc36287fc54cd32707915a5d072da6e0d9d049ff55f67ca966e48f",
+        "e6i": {
+          "sha256": "742af241c490fabe98001681a696b8a048ed7c0b7fe500fec1d390c16e921c37",
           "needles": [
-            "i=()=>{let e=d2.get(r);return e&&e.screenshotWidth>0&&e.screenshotHeight>0?e:void 0},a=i();",
-            "if(a&&await _4i(e,t,a))return m2(e,t,!0),{error:",
-            "errorClass:\"needs_screenshot\"};if(a=i(),!a&&f2.get(r)!==!0){",
-            "return a?{dims:a}:{error:f2.get(r)===!0?"
+            "i=()=>{let e=B3.get(r);return e&&e.screenshotWidth>0&&e.screenshotHeight>0?e:void 0},a=i();",
+            "if(a&&await J3i(e,t,a))return U3(e,t,!0),{error:",
+            "errorClass:\"needs_screenshot\"};if(a=i(),!a&&V3.get(r)!==!0){",
+            "return a?{dims:a}:{error:V3.get(r)===!0?"
           ]
         },
-        "c4i": {
-          "sha256": "96d2426f1a6247883d3d18d149271c9bd70771a4a1437ca7e911b9efe0cecc4b",
+        "R3i": {
+          "sha256": "49c1c06a43b8f077663409e515f2deecdbd2f2048af3a68d90894fd697bd67db",
           "needles": [
-            "d2.set(o,{viewportWidth:r?.w||1280,viewportHeight:r?.h||800,screenshotWidth:i.frameWidth??i.width,screenshotHeight:i.frameHeight??i.height,",
-            "visible:r&&r.visible.width>0&&r.visible.height>0?r.visible:null}),(!a||!f2.has(o))&&f2.set(o,!1)"
+            "B3.set(o,{viewportWidth:r?.w||1280,viewportHeight:r?.h||800,screenshotWidth:i.frameWidth??i.width,screenshotHeight:i.frameHeight??i.height,",
+            "visible:r&&r.visible.width>0&&r.visible.height>0?r.visible:null}),(!a||!V3.has(o))&&V3.set(o,!1)"
           ]
         },
-        "h4i": {
-          "sha256": "fa8fbe79756b9b593a51035f06002d789880b24afd61caf5516e56ba159e8acb",
+        "K3i": {
+          "sha256": "94ef83163ea6856660655e559b7e4417a0f46612917c021ae5f033ea6f0650ab",
           "needles": [
             "a=Math.max(1,i.scale);return{w:r.w/a,h:r.h/a,visible:i}"
           ]
         },
-        "m2": {
-          "sha256": "c69ee4b81a2ad0cbbc407889d88abb185637994af2eec38cad2497cdfb550dd8",
+        "U3": {
+          "sha256": "051e35e368d710fb9a9c39164251d6657053af8290e3ec2fce5daca9e2d9fee2",
           "needles": [
-            "d2.delete(r),n&&f2.has(r)&&f2.set(r,!0);return"
+            "B3.delete(r),n&&V3.has(r)&&V3.set(r,!0);return"
           ]
         },
-        "k4i": {
-          "sha256": "f89f4eefe703213c66a00a2ae875e3b845afcafd69766a2a9083186f4fe9301b",
+        "o6i": {
+          "sha256": "e66edb9fff2937a7a1c5d6ae4be4d9043115723b3bd91e758cc357c4a76d5b57",
           "needles": [
-            "if(n.coordinate){let r=await C4i(e,t,o);if(\"error\"in r)return r;",
-            "let i=S4i(r.dims,n.coordinate[0],n.coordinate[1]);return i?{error:`${o}: ${i}`,errorClass:\"coordinate_out_of_bounds\"}:{dispatch:b4i(r.dims,n.coordinate[0],n.coordinate[1]),echo:[Math.round(n.coordinate[0]),Math.round(n.coordinate[1])]}",
-            "let a=S4i(i.dims,n.coordinate[0],n.coordinate[1]);if(a)return BN(`scroll: ${a}`,\"coordinate_out_of_bounds\");let s=b4i(i.dims,n.coordinate[0],n.coordinate[1])",
+            "if(n.coordinate){let r=await e6i(e,t,o);if(\"error\"in r)return r;",
+            "let i=$3i(r.dims,n.coordinate[0],n.coordinate[1]);return i?{error:`${o}: ${i}`,errorClass:\"coordinate_out_of_bounds\"}:{dispatch:Z3i(r.dims,n.coordinate[0],n.coordinate[1]),echo:[Math.round(n.coordinate[0]),Math.round(n.coordinate[1])],viewport:K3(r.dims)}",
+            "let a=$3i(i.dims,n.coordinate[0],n.coordinate[1]);if(a)return BF(`scroll: ${a}`,\"coordinate_out_of_bounds\");let s=Z3i(i.dims,n.coordinate[0],n.coordinate[1])",
             "text:`Screenshot size: ${o.width}x${o.height}${c}${l}`"
           ]
         }
       },
-      "sha256": "8cc40a861b808809cc1d0c389c9f4bf09e77435f1ff9ad555677e63efdcf031b"
+      "sha256": "a9e292d55c4f3fd5bf36906d51662062e6d9ae38c47f573d4253968cf99a4e76"
     }
   }
 }

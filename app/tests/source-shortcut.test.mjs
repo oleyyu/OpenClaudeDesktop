@@ -170,50 +170,55 @@ function question(extra = {}) {
   runtime.reconcile([request]);
   return { runtime, request, ticket: runtime.ticketFor(request), html: props => render(Q.SourceQuestionCard, { runtime, request, ...extra, ...props }) };
 }
-const submitButton = html => buttons(html).find(button => button.includes('class="sq-submit"'));
+// W12: the footer is c9ed5627b dt's — CdsButton secondary Skip, then je (c30607cef i: CdsButton primary, `shortcut: w ?
+// "cmd+enter"`); the CDS Button keeps the cap inside its content span, which fades (opacity-0) while busy.
+const footerButtons = html => buttons(html.slice(html.lastIndexOf('<div class="flex items-center justify-end gap-[8px]">')));
+const submitButton = html => footerButtons(html).at(-1);
 
 test('question card: active primary Submit carries the keycap after its label; inactive or menu-open does not', () => {
   const { html } = question();
   const submit = submitButton(html());
-  assert.equal(count(html(), 'data-cds="Shortcut"'), 1);
-  assert.match(submit, /<span class="sq-submit-label">Submit<span aria-hidden="true" data-cds="Shortcut" data-variant="keycap" class="scds-shortcut scds-in-button scds-trailing">/);
-  assert.equal(count(html({ isActive: false }), 'data-cds="Shortcut"'), 0);
-  assert.equal(count(html({ menuOpen: true }), 'data-cds="Shortcut"'), 0);
+  assert.match(submit, /data-cds="Button"/);
+  assert.match(submit, /<span class="inline-flex min-w-0 items-center gap-1 ">Submit<span aria-hidden="true" data-cds="Shortcut" data-variant="keycap"/);
+  assert.equal(count(footerButtons(html()).join(''), 'data-cds="Shortcut"'), 1);
+  assert.equal(count(footerButtons(html({ isActive: false })).join(''), 'data-cds="Shortcut"'), 0);
+  assert.equal(count(footerButtons(html({ menuOpen: true })).join(''), 'data-cds="Shortcut"'), 0);
 });
 
-test('question card: while busy the cap stays inside the aria-hidden, faded content span (stable width)', async () => {
+test('question card: while busy the cap stays inside the faded content span (stable width)', async () => {
   const { runtime, ticket, html } = question();
   runtime.selectOption(ticket, 'choice', 'Alpha');
   void runtime.submit(ticket, null, () => new Promise(() => {}), { getVisibleThreadId: () => 'T' });
   assert.equal(runtime.snapshot(ticket).busy, true);
   const submit = submitButton(html());
   assert.match(submit, /aria-busy="true"/);
-  assert.match(submit, /<span class="sq-submit-label" aria-hidden="true">Submit<span aria-hidden="true" data-cds="Shortcut"/);
+  assert.match(submit, /<span class="inline-flex min-w-0 items-center gap-1 opacity-0">Submit<span aria-hidden="true" data-cds="Shortcut"/);
+  assert.match(submit, /data-cds="Spinner"/);
 });
 
 test('question card: secondary Skip precedes the primary, has no keycap, and follows the busy/inactive guards', async () => {
-  // approval-current.js:8232-8258 footer: br{secondary, 'Skip', disabled: busy} then the primary; _se preselects [0].
   const { runtime, ticket, html } = question();
-  const [skip, submit] = buttons(html()).slice(-2);
-  assert.match(skip, /^ type="button" class="sq-skip" data-variant="secondary">Skip$/);
-  assert.match(submit, /class="sq-submit"/);
-  assert.doesNotMatch(submit, /disabled/);
-  assert.match(html(), /aria-pressed="true"><span class="sq-radio-mark" aria-hidden="true" data-checked="">/);
-  assert.match(buttons(html({ isActive: false })).at(-2), /disabled=""/);
-  assert.match(buttons(html({ menuOpen: true })).at(-2), /disabled=""/);
+  const [skip, submit] = footerButtons(html()).slice(-2);
+  assert.match(skip, /^ type="button" data-cds="Button"[^>]*>.*>Skip<\/span>$/);
+  assert.doesNotMatch(skip, /data-cds="Shortcut"/);
+  assert.doesNotMatch(submit.slice(0, submit.indexOf('>')), /\sdisabled=""/);
+  // The runtime preselects options[0]: its row wears st.
+  assert.match(html(), /bg-\[light-dark\(var\(--cds-surface-popover\),var\(--cds-alpha-2\)\)\][^"]*"><div class="flex flex-col gap-0\.5 min-w-0 flex-1 select-text"><div class="text-body text-primary[^"]*">Alpha</);
+  assert.match(footerButtons(html({ isActive: false })).at(-2), /^ type="button" disabled=""/);
+  assert.match(footerButtons(html({ menuOpen: true })).at(-2), /^ type="button" disabled=""/);
   void runtime.submit(ticket, null, () => new Promise(() => {}), { getVisibleThreadId: () => 'T' });
-  assert.match(buttons(html()).at(-2), /class="sq-skip" data-variant="secondary" disabled="">Skip/);
+  assert.match(footerButtons(html()).at(-2), /^ type="button" disabled=""[^>]*>.*Skip/);
 });
 
-test('question card: the disabled reason is the source copy for option and free-form pages', () => {
+test('question card: like dt, the primary carries no disabled reason (je takes only `disabled: !Dn`)', () => {
   const request = { id: 2, method: 'item/tool/requestUserInput', bridgeApproval: { connectionId: 'q', instanceId: `q-${++instance}` },
     params: { threadId: 'T', turnId: 'turn', questions: [{ id: 'notes', question: 'Notes', options: [] }, { id: 'choice', question: 'Pick', options: [{ label: 'A' }] }] } };
   const runtime = createApprovalDraftRuntime();
   runtime.reconcile([request]);
   const ticket = runtime.ticketFor(request);
   const markup = () => render(Q.SourceQuestionCard, { runtime, request });
-  assert.match(markup(), /Choose an option or skip this question/);
+  assert.doesNotMatch(markup(), /Choose an option or skip this question|Question 1 is unanswered/);
+  assert.match(submitButton(markup()).slice(0, submitButton(markup()).indexOf('>')), /\sdisabled=""/);
   runtime.setPage(ticket, 1);
-  assert.match(markup(), /Question 1 is unanswered/);
-  assert.doesNotMatch(markup(), /Enter an answer|Choose an option<|enter an answer/);
+  assert.match(footerButtons(markup())[0], />Back<\/span>$/, 'page 2 has Back (dt ur, me-auto)');
 });

@@ -6,14 +6,17 @@ import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { linkDispatch, linkConfirmation, linkCapabilities, linkArrival } from '../src/generated/code-editor/preview-link-decisions.mjs';
 import { canRoutePreviewLink, createPreviewLinkRouter, createPreviewChooserStore } from '../src/preview-link-routing.mjs';
 import { previewLinkOrigin } from '../src/generated/code-editor/preview-link-origin.mjs';
-const text = fs.readFileSync(new URL('../../reference/current-2.31226.0/ion-dist/assets/v1/c11959232-CDBo_AYC.js', import.meta.url), 'utf8');
+// 3.6556.2 c11959232: If/Lf/Rf/zf (Lf reads paneOffered; Rf releases a cloud session whose infra is not ready).
+const text = fs.readFileSync(new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c11959232-TLc_9Vpx.js', import.meta.url), 'utf8');
 const nodes = parsers.babel.parse(text, {}).program.body;
-const source = vm.runInNewContext(`(()=>{${['Ju','Yu','Xu','Zu'].map(name => {const n=nodes.find(n=>n.id?.name===name);return text.slice(n.start,n.end);}).join('\n')};return {Ju,Yu,Xu,Zu};})()`);
+const source = vm.runInNewContext(`(()=>{${['If','Lf','Rf','zf'].map(name => {const n=nodes.find(n=>n.id?.name===name);return text.slice(n.start,n.end);}).join('\n')};return {If,Lf,Rf,zf};})()`);
 test('routing decisions match original for every boolean gate combination', () => {
-  const keys=['hasPendingUrl','explicit','chooserOpen','chooserSeen','alreadyPrompted','settledAtUrlArrival','linksInPreview','infraOk'];
-  for(let mask=0;mask<256;mask++){const state=Object.fromEntries(keys.map((key,i)=>[key,!!(mask&(1<<i))]));assert.equal(linkDispatch(state),source.Xu(state));}
-  for(let mask=0;mask<8;mask++){const state={explicit:!!(mask&1),confirmed:!!(mask&2),inPreview:!!(mask&4)};assert.equal(linkConfirmation(state),source.Zu(state));}
-  assert.equal(JSON.stringify(linkCapabilities({linksInPreview:true,infraOk:true,hasLocalDisk:false})),JSON.stringify(source.Yu({linksInPreview:true,infraOk:true,hasLocalDisk:false})));
+  const keys=['hasPendingUrl','explicit','chooserOpen','chooserSeen','alreadyPrompted','settledAtUrlArrival','linksInPreview','infraOk','cloudSession'];
+  for(let mask=0;mask<512;mask++){const state=Object.fromEntries(keys.map((key,i)=>[key,!!(mask&(1<<i))]));assert.equal(linkDispatch(state),source.Rf(state));}
+  assert.equal(linkDispatch({hasPendingUrl:true,cloudSession:true,infraOk:false}),'release');
+  assert.equal(linkDispatch({hasPendingUrl:true,infraOk:false}),'none');
+  for(let mask=0;mask<8;mask++){const state={explicit:!!(mask&1),confirmed:!!(mask&2),inPreview:!!(mask&4)};assert.equal(linkConfirmation(state),source.zf(state));}
+  for(let mask=0;mask<8;mask++){const state={linksInPreview:!!(mask&1),infraOk:!!(mask&2),paneOffered:!!(mask&4)};assert.equal(JSON.stringify(linkCapabilities(state)),JSON.stringify(source.Lf(state)));}
   assert.deepEqual(linkArrival({url:'a',settled:false,prompted:true},'b',true),{url:'b',settled:true,prompted:false});
 });
 function fixture(){let enabled=true,seen=false;const calls=[];const router=createPreviewLinkRouter({linksEnabled:()=>enabled,chooserSeen:()=>seen,

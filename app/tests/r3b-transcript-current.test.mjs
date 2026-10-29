@@ -13,15 +13,19 @@ import { transcriptRowCrashKind } from '../src/transcript-row-boundary-model.mjs
 import { createToolGroupExpansion, groupExpansionKey, rowExpansionKey } from '../src/tool-group-expansion.mjs';
 
 // R3b-transcript step 1: transcript-03 (suggested task bottom edge), cov1-06 (streaming table column freeze),
-// transcript-v01 (per-row crash boundary) and cov2-05 (unavailable transcript, Archive hidden once archived), all from
-// the installed 2.42304.0 originals generated into src/generated/r3b-transcript. Source/AST, SSR and a small fake DOM
+// transcript-v01 (per-row crash boundary) and cov2-05 (unavailable transcript, Archive hidden once archived), from the
+// 3.6556.2 originals (w2-tr-r3b; step 2, the Turn edits card, since w6-transcript-rows) generated
+// into src/generated/r3b-transcript. Source/AST, SSR and a small fake DOM
 // driven by hand (controlled events through React's own props): no browser, no Electron, no network.
 const app = path.resolve(import.meta.dirname, '..');
 const directory = path.join(app, 'src/generated/r3b-transcript');
 const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json'), 'utf8'));
-const reference = path.resolve(app, '../reference', manifest.referenceSnapshot, 'ion-dist/assets/v1');
+const V3 = 'snapshots/claude-3.6556.2-20261025-192807', V2 = 'installed-2.42304.0-20261017';
+const referenceOf = snapshot => path.resolve(app, '../reference', snapshot, 'ion-dist/assets/v1');
+const reference = referenceOf(V3);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
+const sourceOf = entry => path.join(referenceOf(entry.referenceVersion === '3.6556.2' ? V3 : V2), entry.source);
 const occurrences = (text, needle) => text.split(needle).length - 1;
 
 let server, Region, Freeze, Row, Unavailable, Host, Table, Adapters, Expansion;
@@ -146,33 +150,47 @@ const reactProps = element => element[Object.keys(element).find(key => key.start
 const classOf = element => element.getAttribute('class') ?? '';
 const press = element => ({ preventDefault() {}, stopPropagation() {}, isDefaultPrevented: () => false, currentTarget: element, target: element, button: 0, detail: 1, nativeEvent: {} });
 
-test('generator: the check passes, every module and call site is pinned to the installed 2.42304.0 chunks', async () => {
+test('generator: the check passes; step 1 (w2-tr-r3b) and step 2 (w6-transcript-rows) are pinned to the 3.6556.2 chunks', async () => {
   await extractR3bTranscript({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  // The whole area is 3.6556.2; each module and call site still records its own version and snapshot. transcript-rows
+  // (2.42304.0) links session-file-access.mjs through its own frozen view (E34).
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, V3);
   for (const entry of [...manifest.modules, ...manifest.callSites])
-    assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, entry.source))), entry.source);
-  assert.deepEqual(manifest.modules.map(m => m.target), ['owner-resize-observer.mjs', 'transcript-region-edge.mjs', 'table-column-freeze.mjs',
-    'define-messages.mjs', 'row-crash-messages.mjs', 'chunk-load-error.mjs', 'error-stack.mjs', 'render-error-boundary.mjs',
-    'transcript-row-boundary.mjs', 'empty-state.mjs', 'prevent-mouse-down.mjs', 'transcript-unavailable.mjs',
-    // Step 2 (toolcards-06/07): the Turn edits card and what it reads.
+    assert.equal(entry.sourceSha256, sha(fs.readFileSync(sourceOf(entry))), entry.source);
+  for (const m of manifest.modules) assert.equal(m.referenceSnapshot, m.referenceVersion === '3.6556.2' ? V3 : V2, m.target);
+  const step1 = ['transcript-region-edge.mjs', 'table-column-freeze.mjs', 'define-messages.mjs', 'row-crash-messages.mjs', 'chunk-load-error.mjs',
+    'error-stack.mjs', 'page-leave-state.mjs', 'document-teardown.mjs', 'render-error-boundary.mjs', 'row-part-boundary.mjs',
+    'transcript-row-boundary.mjs', 'empty-state.mjs', 'prevent-mouse-down.mjs', 'transcript-unavailable.mjs'];
+  assert.deepEqual(manifest.modules.filter(m => m.referenceVersion !== '3.6556.2').map(m => m.target), []);
+  assert.deepEqual(manifest.callSites.filter(c => c.referenceVersion !== '3.6556.2').map(c => c.binding), []);
+  assert.deepEqual(manifest.modules.map(m => m.target), [...step1,
+    // Step 2 (toolcards-06/07): the Turn edits card and what it reads (3.6556.2 adds the
+    // +N −M counts, the path tooltip, the caret's fizzy icon override).
+    'diff-counts.mjs', 'path-tooltip.mjs', 'invisible-characters.mjs', 'icon-override.mjs', 'caret-override.mjs',
     'summary-card.mjs', 'file-basename.mjs', 'windows-path.mjs', 'relative-path.mjs', 'muted-action-class.mjs', 'session-output-files.mjs',
     'file-icon-override.mjs', 'source-extensions.mjs', 'file-kind-tables.mjs', 'file-icon-name.mjs', 'session-file-access.mjs', 'turn-edits-card.mjs']);
-  assert.deepEqual(manifest.inlineStyles.map(s => [s.target, s.source, s.id]), [['summary-card.css', 'c425fb3cf-CEgSkv8l.js', 'cbbd9b21e']]);
-  for (const entry of manifest.inlineStyles) assert.equal(entry.sourceSha256, sha(fs.readFileSync(path.join(reference, entry.source))), entry.source);
+  assert.deepEqual(manifest.inlineStyles.map(s => [s.target, s.source, s.id]), [['summary-card.css', 'c425fb3cf-B-SGR6Na.js', 'cbbd9b21e']]);
+  for (const entry of manifest.inlineStyles) assert.equal(entry.sourceSha256, sha(fs.readFileSync(sourceOf(entry))), entry.source);
   // Every host dependency is a named adapter of this lane, React, view-tabs or a sibling module: nothing else.
   const kinds = new Set(manifest.modules.flatMap(m => m.imports.map(i => i.kind)));
   assert.deepEqual([...kinds].sort(), ['adapter', 'generated', 'react', 'view-tabs']);
+  // E3: the React Compiler helpers come from view-tabs under their semantic names, like the CDS components.
+  const compiler = /^(reactMemoCache|memoSentinel|memoIsEmpty|memoChanged[1-5]|memoStore[0-5]|memoStoreValueFirst[1-5]|memoStoreDeps[1-5])$/;
   for (const i of manifest.modules.flatMap(m => m.imports).filter(i => i.kind === 'view-tabs'))
-    assert.ok(['CdsButton', 'CdsIcon', 'CdsTooltip', 'CdsTooltipProvider', 'cdsClassNames'].includes(i.name), i.name);
-  // The distinctive strings, once each in the minified originals.
+    assert.ok(['CdsButton', 'CdsIcon', 'CdsBanner', 'CdsTooltip', 'CdsTooltipProvider', 'cdsClassNames', 'useCdsOwnerWindow', 'getResizeObserverClass',
+      'CdsDisabledReason', 'useDirection', 'clsx', 'isFizzyLakePartEnabled', 'isFizzyLakePartOptedIn'].includes(i.name)
+      || compiler.test(i.name), i.name);
+  // The distinctive strings, once each in the minified 3.6556.2 originals.
   const pins = [
-    ['cf74bc599-D9NZWRyl.js', 'jv="--epitaxy-suggested-task-end"'], ['cf74bc599-D9NZWRyl.js', 'ge=Nv(jv,me,ab)'],
-    ['cf74bc599-D9NZWRyl.js', '"text-body text-primary break-words line-clamp-6"'], ['cf74bc599-D9NZWRyl.js', 'closest("[data-epitaxy-transcript-region]")??'],
-    ['c89efce1a-8S3RzgR0.js', 'Math.min(kc,Math.max(1,Math.floor(e/Oc)))'], ['c89efce1a-8S3RzgR0.js', 'l-f.rows<Ac(f.rows)'], ['c89efce1a-8S3RzgR0.js', 's=jc(Ze(),t)'],
-    ['c4a9ee384-ZZIKqgNM.js', 'componentName:"TranscriptRow"'], ['c4a9ee384-ZZIKqgNM.js', '"data-transcript-row-crashed":e'], ['c4a9ee384-ZZIKqgNM.js', 'sp="__gb__3525173228"'],
-    ['c05b96c7f-DklIyA-P.js', 'id:"qlw7hIBZl4"'], ['c05b96c7f-DklIyA-P.js', 'id:"vHA8qpGWmW"'],
-    ['cf74bc599-D9NZWRyl.js', 'Session not found on disk'], ['cf74bc599-D9NZWRyl.js', 'n&&!d?null:'], ['cf74bc599-D9NZWRyl.js', 'isArchived:T.isArchived===!0'],
-    ['c96d752d0-BOCqU7c2.js', 't.kind==="assistant"||t.kind==="assistantItem"?"reply":"row"'],
+    ['cf74bc599-CRYqipWN.js', 'Ob="--epitaxy-suggested-task-end"'], ['cf74bc599-CRYqipWN.js', 'xe=Ab(Ob,be,yC)'],
+    ['cf74bc599-CRYqipWN.js', '"text-body text-primary break-words line-clamp-6"'], ['cf74bc599-CRYqipWN.js', 'closest("[data-epitaxy-transcript-region]")??'],
+    ['c89efce1a-C_nlrFif.js', 'Math.min(Is,Math.max(1,Math.floor(e/Fs)))'], ['c89efce1a-C_nlrFif.js', 'l-f.rows<Ls(f.rows)'], ['c89efce1a-C_nlrFif.js', 'u=Rs(We(),t)'],
+    ['c4a9ee384-RLCjceOL.js', 'componentName:"TranscriptRow"'], ['c4a9ee384-RLCjceOL.js', '"data-transcript-row-crashed":t'], ['c4a9ee384-RLCjceOL.js', 'Ip="__gb__3525173228"'],
+    ['c4a9ee384-RLCjceOL.js', '"data-transcript-row-stage":m'],
+    ['c05b96c7f-MPVkefMW.js', 'id:"qlw7hIBZl4"'], ['c05b96c7f-MPVkefMW.js', 'id:"vHA8qpGWmW"'], ['c05b96c7f-MPVkefMW.js', 'id:"BPi/T6wZmd"'],
+    ['cf74bc599-CRYqipWN.js', 'Session not found on disk'], ['cf74bc599-CRYqipWN.js', 'r&&!m?null:'], ['cf74bc599-CRYqipWN.js', 'isArchived:w.isArchived===!0'],
+    ['c96d752d0-CWv_7-n9.js', 't.kind==="assistant"||t.kind==="assistantItem"?"reply":"row"'],
   ];
   for (const [file, needle] of pins) assert.equal(occurrences(raw(file), needle), 1, `${file}: ${needle}`);
   // The adapter flag is the generated flag.
@@ -181,19 +199,21 @@ test('generator: the check passes, every module and call site is pinned to the i
 });
 
 test('transcript-03: presets on (D10), the floating suggested task card is not mounted and nothing publishes its edge', async () => {
-  // 2.42304.0 cf74bc599 Xx mounts the floating card lb only while `lr` is false (`lr=Zs(cr,t)`, cr = the presets switch);
-  // the inline card (c96d752d0 R$ / z$ → B$) reads no Nv/jv, so --epitaxy-suggested-task-end has no publisher on this branch.
-  // The host takes that branch (R4f-proposal P5): the floating card is retired and no host file publishes the variable.
-  const xx = raw('cf74bc599-D9NZWRyl.js');
-  assert.equal(occurrences(xx, 'cr=to(),lr=Zs(cr,t)'), 1);
-  assert.equal(occurrences(xx, 'Or&&t&&dr&&!lr&&u(lb,{sessionRef:t,scrollRef:r,captureGuardedSnapToBottom:x},`chip-${e}`)'), 1);
+  // 3.6556.2 cf74bc599 FT mounts the floating card CC only while `qr` is false (`qr=Ts(Tr,n)`, Tr = Bo(), the
+  // claudeai_cc_epitaxy_session_presets_main switch of shared-11); the inline card reads no Ab/Ob, so
+  // --epitaxy-suggested-task-end has no publisher on this branch. The host takes that branch (R4f-proposal P5): the
+  // floating card is retired and no host file publishes the variable.
+  const xx = raw('cf74bc599-CRYqipWN.js');
+  assert.equal(occurrences(xx, 'Tr=Bo()'), 1);
+  assert.equal(occurrences(xx, 'qr=J2($,162,Tr,n)?K2($,162,Tr,n,Ts(Tr,n)):$[164]'), 1);
+  assert.equal(occurrences(xx, 'Si&&n&&Zr&&!qr&&s(CC,{sessionRef:n,scrollRef:i,captureGuardedSnapToBottom:b},`chip-${t}`)'), 1);
   assert.equal(fs.existsSync(path.join(app, 'src/source-suggested-tasks.jsx')), false);
   const hostFiles = fs.readdirSync(path.join(app, 'src')).filter(name => /\.(jsx|mjs|js)$/.test(name));
   assert.deepEqual(hostFiles.filter(name => fs.readFileSync(path.join(app, 'src', name), 'utf8').includes('SUGGESTED_TASK_END')), []);
   assert.equal(Region.SUGGESTED_TASK_END, '--epitaxy-suggested-task-end');
   assert.equal(Region.STICKY_PROMPT_END, '--epitaxy-sticky-prompt-end');
   assert.equal(Region.SUGGESTED_TASK_EDGE_OFFSET, 12);
-  // The generated hook (Nv) stays for a later publisher (the sticky prompt bubble): what lb did with it, kept tested.
+  // The generated hook (Ab) stays for a later publisher (the sticky prompt bubble): what lb did with it, kept tested.
   function Edge({ shown }) {
     const ref = Region.useTranscriptRegionEdge(Region.SUGGESTED_TASK_END, shown, Region.SUGGESTED_TASK_EDGE_OFFSET);
     return shown ? React.createElement('div', { ref, 'data-edge': '' }) : null;
@@ -203,7 +223,7 @@ test('transcript-03: presets on (D10), the floating suggested task card is not m
     act(() => root.render(React.createElement(Edge, { shown: true })));
     const anchor = container.find(node => node.hasAttribute?.('data-edge'));
     assert.ok(anchor, 'edge mounted');
-    // Nv's fallback region is the parent (no [data-epitaxy-transcript-region] in this host): bottom - top + 12, measured
+    // Ab's fallback region is the parent (no [data-epitaxy-transcript-region] in this host): bottom - top + 12, measured
     // at once (the fake anchor has no box yet: 0 - 40 + 12).
     assert.equal(container.style.getPropertyValue('--epitaxy-suggested-task-end'), '-28px');
     const observer = dom.observers.find(o => o.targets.includes(anchor));
@@ -311,18 +331,33 @@ test('transcript-v01: the row kind, the expansion forget and the original Banner
   assert.equal(notified, 1);
   store.forgetSession('s1');
   assert.equal(notified, 1, 'nothing to forget, no notification');
+  // 3.6556.2 c4a9ee384 cp over the 3.6556.2 CDS Banner (shared-frame ya: neutral tint layer and ring, stacks: variants, the
+  // icon's neutral colour only under stacks, cds:C2).
   for (const [kind, copy] of [['reply', 'This response didn’t load.'], ['row', 'Couldn’t load this.']]) {
     const html = renderToStaticMarkup(React.createElement(Row.TranscriptRowCrashed, { kind, again: false, onRetry() {} }));
-    assert.match(html, new RegExp(`^<div data-transcript-row-crashed="${kind}" class="py-sm"><div data-cds="Banner" data-prose-box="" data-icon-layout="first-line" data-cta-layout="inline" data-action-align="first-line" role="status" class="flex items-start gap-xs py-md font-sans text-body font-normal break-words px-lg rounded-card bg-surface-1 text-primary shadow-card-ring`));
-    assert.match(html, /<span class="flex min-h-\[1lh\] shrink-0 items-center text-secondary">/);
+    assert.match(html, new RegExp(`^<div data-transcript-row-crashed="${kind}" class="py-sm"><div data-cds="Banner" data-prose-box="" data-icon-layout="first-line" data-cta-layout="inline" data-action-align="first-line" role="status" class="flex items-start gap-xs py-md font-sans text-body font-normal break-words px-lg rounded-card bg-surface-1 layers-1-\\[color:var\\(--cds-banner-neutral-tint\\)\\] text-primary shadow-\\[inset_0_0_0_var\\(--cds-ring-inner\\)_var\\(--cds-banner-neutral-ring,var\\(--cds-ring-color\\)\\)`));
+    assert.match(html, /<span class="flex min-h-\[1lh\] shrink-0 items-center stacks:text-secondary">/);
     assert.match(html, /data-cds="Icon"[^>]*/);
     assert.ok(html.includes(copy), copy);
     assert.match(html, /<span data-step="3" class="flex shrink-0 items-center gap-xs min-h-control my-\[calc\(\(1lh-var\(--cds-h-control\)\)\/2\)\] -ms-\[2px\] -me-\[calc\(var\(--cds-pad-md\)-2px\)\]">/);
     assert.match(html, />Try again</);
+    // TR-T8: the copy sits in its own span, and the button is described by it (cp `"aria-describedby": f`, f = useId()).
+    const id = /<span id="([^"]+)">/.exec(html)?.[1];
+    assert.ok(id, 'the copy span has an id');
+    assert.ok(html.includes(`<span id="${id}">${copy}</span>`), 'the copy is the described-by span');
+    assert.match(html, new RegExp(`<button [^>]*aria-describedby="${id}"`));
+    assert.doesNotMatch(html, /data-transcript-row-stage/);
   }
   // `again`: a row that failed again right after Try again offers no button.
   const again = renderToStaticMarkup(React.createElement(Row.TranscriptRowCrashed, { kind: 'row', again: true, onRetry() {} }));
   assert.doesNotMatch(again, /Try again|<button/);
+  // TR-T8: the new Reload branch (onReload; this host never passes it, chunk heal is off, D33): stage "reload", the
+  // partNeedsReload copy and a Reload button described by it.
+  const reload = renderToStaticMarkup(React.createElement(Row.TranscriptRowCrashed, { kind: 'row', again: false, onRetry() {}, onReload() {} }));
+  assert.match(reload, /^<div data-transcript-row-crashed="row" data-transcript-row-stage="reload" class="py-sm">/);
+  assert.match(reload, /<span id="([^"]+)">Couldn’t load this\. Reload the page to continue\.<\/span>[\s\S]*aria-describedby="\1"[\s\S]*>Reload<\/span><\/button>/);
+  // announce false (the shared rows form): no status role.
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Row.TranscriptRowCrashed, { kind: 'row', again: false, onRetry() {}, announce: false })), /role="status"/);
   // R4f-graph G2: the Banner is the view-tabs original gT, so the branches the old host replica refused render as in
   // 2.42304.0: details over the CDS Collapsible (role "none", so no role attribute) and gT's ghost icon-only Dismiss.
   const details = renderToStaticMarkup(React.createElement(Adapters.CdsBanner, { details: 'More detail', defaultDetailsOpen: true }, 'Summary'));
@@ -338,34 +373,33 @@ test('transcript-v01: the row kind, the expansion forget and the original Banner
   assert.match(dismiss, /<span data-step="3" class="-me-\[calc\(var\(--cds-pad-md\)-2px\)\] flex h-\[1lh\] shrink-0 items-center"><button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost=""[^>]* aria-label="Dismiss">/);
 });
 
-test('R4f-graph G2: the Banner, DisabledReason, Collapsible and useDirection adapters are the view-tabs originals', async () => {
-  const shared = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-BfjMqbuN.js');
-  const vendor = await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-DfPJ1QmD.js');
-  assert.equal(Adapters.CdsBanner, shared.CdsBanner);
-  assert.equal(Adapters.CdsDisabledReason, shared.CdsDisabledReason);
-  assert.equal(Adapters.CdsCollapsible, shared.CdsCollapsible);
-  assert.equal(Adapters.useDirection, vendor.useDirection);
-  // The view-tabs names G1 published are the originals the generator routes here (exported oa / Ec / ca / Wn).
+test('R4f-graph G2: the Banner adapter is the view-tabs original; the 3.6556.2 card reads DisabledReason / useDirection from view-tabs itself', async () => {
+  const facade = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  assert.equal(Adapters.CdsBanner, facade.CdsBanner);
+  // One instance: W7 retired the 2.42304.0 shim files, so no second path to the Banner exists.
+  assert.equal(fs.existsSync(path.join(app, 'src/generated/view-tabs/shared-frame-BfjMqbuN.js')), false);
+  // Step 1 (3.6556.2): c4a9ee384 cp imports the Banner from view-tabs itself (shared-frame ya = CdsBanner).
   const published = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8')).publicNames;
-  const routed = { CdsBanner: ['shared-frame-BfjMqbuN.js', 'gT', 'oa'], CdsDisabledReason: ['shared-frame-BfjMqbuN.js', 'Qp', 'Ec'],
-    CdsCollapsible: ['shared-frame-BfjMqbuN.js', 'Qw', 'ca'], useDirection: ['vendor-frame-DfPJ1QmD.js', 'Td', 'Wn'] };
-  const adapterImports = manifest.modules.flatMap(m => m.imports).filter(i => i.kind === 'adapter' && i.name in routed);
-  assert.deepEqual([...new Set(adapterImports.map(i => i.name))].sort(), Object.keys(routed).sort());
-  for (const [name, [file, local, exported]] of Object.entries(routed)) {
-    assert.equal(published[name].file, file, name);
-    assert.equal(published[name].local, local, name);
-    assert.equal(occurrences(raw(file), `${local} as ${exported}`), 1, `${file}: ${local} as ${exported}`);
-    for (const i of adapterImports.filter(i => i.name === name)) {
-      assert.equal(i.via, `${file}:${exported}`, name);
-      assert.equal(i.original, local, name);
-    }
-  }
-  // No hand-written replica is left in the adapter file: it re-exports the view-tabs bindings.
+  const row = manifest.modules.find(m => m.target === 'transcript-row-boundary.mjs');
+  const banner = row.imports.find(i => i.name === 'CdsBanner');
+  assert.equal(banner.kind, 'view-tabs');
+  assert.equal(banner.from, '../view-tabs/shared-frame-6jtSkIit.js');
+  assert.equal(published.CdsBanner.file, 'shared-frame-6jtSkIit.js');
+  assert.equal(occurrences(raw('shared-frame-6jtSkIit.js'), `${published.CdsBanner.local} as ya`), 1);
+  // Step 2 (3.6556.2): session-file-access sr and the card's x1 import the DisabledReason / useDirection by their
+  // view-tabs semantic names (shared-frame Wl = Zm, vendor-frame Ia = un); nothing routes them through the adapter file.
+  const access = manifest.modules.find(m => m.target === 'session-file-access.mjs').imports.find(i => i.name === 'CdsDisabledReason');
+  assert.deepEqual([access.kind, access.from, access.original], ['view-tabs', '../view-tabs/shared-frame-6jtSkIit.js', published.CdsDisabledReason.local]);
+  const direction = manifest.modules.find(m => m.target === 'turn-edits-card.mjs').imports.find(i => i.name === 'useDirection');
+  assert.deepEqual([direction.kind, direction.from, direction.original], ['view-tabs', '../view-tabs/vendor-frame-CnSY1sxv.js', published.useDirection.local]);
+  assert.equal(occurrences(raw('vendor-frame-CnSY1sxv.js'), `${published.useDirection.local} as Ia`), 1);
+  assert.deepEqual(manifest.modules.flatMap(m => m.imports).filter(i => i.kind === 'adapter' && ['CdsDisabledReason', 'CdsCollapsible', 'useDirection'].includes(i.name)), []);
+  // No hand-written replica is left in the adapter file: it re-exports the view-tabs Banner through the facade (R6).
   const source = fs.readFileSync(path.join(app, 'src/source-r3b-transcript-adapters.jsx'), 'utf8');
-  assert.equal(occurrences(source, "export { CdsBanner } from './generated/view-tabs/shared-frame-BfjMqbuN.js';"), 1);
-  assert.equal(occurrences(source, "export { CdsDisabledReason, CdsCollapsible } from './generated/view-tabs/shared-frame-BfjMqbuN.js';"), 1);
-  assert.equal(occurrences(source, "export { useDirection } from './generated/view-tabs/vendor-frame-DfPJ1QmD.js';"), 1);
-  for (const gone of ['function CdsBanner', 'function CdsDisabledReason', 'refuseCollapsible', 'function useDirection', 'BANNER_SURFACE', 'DISABLED_REASON_WRAPPER', 'isPictogram'])
+  assert.equal(occurrences(source, "export { CdsBanner } from './generated/view-tabs/index.js';"), 1);
+  assert.doesNotMatch(source, /generated\/view-tabs\/(?!index\.js)/);
+  for (const gone of ['function CdsBanner', 'function CdsDisabledReason', 'refuseCollapsible', 'function useDirection', 'BANNER_SURFACE', 'DISABLED_REASON_WRAPPER', 'isPictogram',
+    'export { useDirection }', 'CdsCollapsible'])
     assert.ok(!source.includes(gone), gone);
 });
 
@@ -444,7 +478,7 @@ test('cov2-05 / transcript-v01: main.jsx mounts the row boundary on each message
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.equal(occurrences(main, 'import { SourceTranscriptRowBoundary, SourceTranscriptUnavailable } from "./source-r3b-transcript.jsx";'), 1);
   // The message row's boundary wraps the Cowork in-place edit or the Message (cowork message edit).
-  assert.equal(occurrences(main, '<SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}>{coworkEdit && coworkActions?.onEditMessage && item.type === "userMessage" && coworkEdit.uuid === item.id'), 1);
+  assert.equal(occurrences(main, '<SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}>{coworkEdit && (coworkActions?.onEditMessage || mode === "chat") && item.type === "userMessage" && coworkEdit.uuid === item.id'), 1);
   assert.equal(occurrences(main, ': <Message item={item} isInterrupting={stopping}'), 1);
   assert.equal(occurrences(main, 'onRewindTo: transcriptActions.onRewindTo, onForkFrom: transcriptActions.onForkFrom }) : null} />}</SourceTranscriptRowBoundary>}'), 1);
   assert.equal(occurrences(main, 'setHistoryUnavailable((value) => historyMissing(history, known, r.thread) ? id : value === id ? null : value);'), 1);

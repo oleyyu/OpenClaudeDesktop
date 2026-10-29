@@ -23,6 +23,68 @@ export function selectorClasses(selector) {
   return [...selector.matchAll(/\.((?:\\(?:[a-fA-F0-9]{1,6}\s?|[^\r\n\f])|[\w-]|[^\x00-\x7f])+)/g)].map(m => decode(m[1]));
 }
 
+// The classes a utility rule styles (its subject). Tailwind emits the utility class in the leading compound selector of
+// each selector in the list; variants add functional pseudo-classes (:is/:where/:has/:not) and descendant parts after
+// it, which may name other classes (`.max-sm\:has-…:has(>[data-title-row-ruled]) .epitaxy-toc ol[aria-hidden]`). Only
+// the leading compound's classes outside parentheses count; a selector that starts with a wrapper (`:is(.\*\:p-2 > *)`,
+// `:where(.space-x-2>…)`) takes the subject of the wrapper's argument. A reference to a class elsewhere in the
+// selector (a plain host class such as epitaxy-toc) does not keep the rule.
+function maskSelector(selector) {
+  let out = '';
+  for (let i = 0; i < selector.length;) {
+    const char = selector[i];
+    if (char === '\\') { const escape = /^\\(?:[a-fA-F0-9]{1,6}\s?|[^\r\n\f]|$)/.exec(selector.slice(i))[0]; out += '_'.repeat(escape.length); i += escape.length; continue; }
+    if (char === '[') {
+      // Attribute selector: its name and value (quoted or not) are neither structure nor classes (masked as U+0001).
+      let j = i + 1, quote = null;
+      for (; j < selector.length; j++) {
+        const c = selector[j];
+        if (c === '\\') { j++; continue; }
+        if (quote) { if (c === quote) quote = null; continue; }
+        if (c === '"' || c === "'") quote = c; else if (c === ']') break;
+      }
+      const end = Math.min(j + 1, selector.length);
+      out += '[' + '\u0001'.repeat(Math.max(0, end - i - 2)) + (end - i >= 2 ? ']' : ''); i = end; continue;
+    }
+    out += char; i++;
+  }
+  return out;
+}
+export function subjectClasses(selector) {
+  const masked = maskSelector(selector), parts = [];
+  let depth = 0, from = 0;
+  for (let i = 0; i <= masked.length; i++) {
+    const c = masked[i];
+    if (c === '(') depth++; else if (c === ')') depth--;
+    else if ((c === ',' && depth === 0) || i === masked.length) { parts.push([from, i]); from = i + 1; }
+  }
+  const subjects = [];
+  for (let [start, end] of parts) {
+    while (start < end && /\s/.test(masked[start])) start++;
+    let stop = start, level = 0, outside = '';
+    for (; stop < end; stop++) {
+      const c = masked[stop];
+      if (c === '(') { level++; continue; }
+      if (c === ')') { level--; continue; }
+      if (level === 0 && /[\s>+~]/.test(c)) break;
+      if (level === 0 && c !== '\u0001') outside += selector[stop];
+    }
+    const own = selectorClasses(outside);
+    if (own.length) { subjects.push(...own); continue; }
+    const wrapper = /^:(?:is|where)\(/.exec(masked.slice(start, stop));
+    if (!wrapper) continue;
+    let close = start + wrapper[0].length, inner = 1;
+    for (; close < stop && inner; close++) { if (masked[close] === '(') inner++; else if (masked[close] === ')') inner--; }
+    subjects.push(...subjectClasses(selector.slice(start + wrapper[0].length, close - 1)));
+  }
+  return subjects;
+}
+// A prior-snapshot utility rule is retained only when a referenced (absent) class is in its subject.
+export function retainsRule(selector, referencedClasses) {
+  const subject = new Set(subjectClasses(selector));
+  return referencedClasses.some(name => subject.has(name));
+}
+
 const SOURCE_FILE = /\.(?:js|jsx|mjs|css)$/;
 // Object shapes whose string values are class metadata rather than rendered classes.
 // A CDS design-token record carries both keys; the values are names / var() refs.
@@ -239,11 +301,21 @@ async function generatedOwners() {
   return records;
 }
 
-export async function prepareStyleCompatibility({check = false} = {}) {
-  const baseline = 'installed-2.37337.1-20261015';
-  const baselineFile = 'c6a992d55-CNGsCU46.css';
-  const baselineText = await fs.readFile(path.join(root, '../reference', baseline, 'ion-dist/assets/v1', baselineFile), 'utf8');
-  const old = postcss.parse(baselineText);
+const BASELINES = [
+  ['2.42304.0', 'installed-2.42304.0-20261017', 'c6a992d55-sXiDGMFQ.css'],
+  ['2.37337.1', 'installed-2.37337.1-20261015', 'c6a992d55-CNGsCU46.css'],
+];
+
+// dryRun computes the manifest without writing or comparing the published files (a scanner change can be measured
+// before the gate regenerates them, R10).
+export async function prepareStyleCompatibility({check = false, dryRun = false} = {}) {
+  // Prior snapshots, newest first: an absent utility is retained from the newest one that still ships it, so modules
+  // generated from 2.42304.0 keep that version's rules after the pin moved past it, and older ones fall back further.
+  const baselines = [];
+  for (const [version, snapshot, file] of BASELINES) {
+    const text = await fs.readFile(path.join(root, '../reference', snapshot, 'ion-dist/assets/v1', file), 'utf8');
+    baselines.push({version, source:snapshot + '/ion-dist/assets/v1/' + file, text, ast:postcss.parse(text)});
+  }
   const currentClasses = new Set(), currentVariables = new Set(), stylesheets = [];
   for (const file of designStylesheets) {
     const text = await fs.readFile(path.join(root, '../reference', designSnapshot, 'ion-dist/assets/v1', file), 'utf8');
@@ -269,44 +341,54 @@ export async function prepareStyleCompatibility({check = false} = {}) {
   const hitsOf = name => [...(index.get(name) ?? new Map())].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
     .flatMap(([file, bindings]) => [...bindings].sort().map(binding => ({file, binding, ...origin(file), reachable:!reach.complete ? true : reach.reachable.has(file)})));
   const utilities = [];
-  old.walkRules(rule => {
+  for (const baseline of baselines) baseline.ast.walkRules(rule => {
     const parents=[];
     for(let parent=rule.parent;parent&&parent.type!=='root';parent=parent.parent)parents.unshift(parent);
     if(!parents.some(p=>p.type==='atrule'&&p.name==='layer'&&p.params==='utilities'))return;
     // Nested rule bodies are already retained in their owning utility.
     if(parents.some(p=>p.type==='rule'))return;
-    utilities.push({rule, parents});
+    utilities.push({rule, parents, baseline});
   });
   const absent = new Set(utilities.flatMap(({rule}) => selectorClasses(rule.selector).filter(name => !currentClasses.has(name))));
   const retained = [], fragments = [];
-  for (const {rule, parents} of utilities) {
-    const references=selectorClasses(rule.selector).filter(name=>!currentClasses.has(name))
-      .map(name=>({className:name,hits:hitsOf(name)})).filter(ref=>ref.hits.length);
-    if(!references.length)continue;
-    const start=rule.source.start.offset,end=rule.source.end.offset;
-    const raw=baselineText.slice(start,end);
-    let fragment=raw;
-    const wrappers=parents.filter(p=>p.type==='atrule'&&!(p.name==='layer'&&p.params==='utilities'));
-    for(const parent of wrappers.toReversed()){
-      const from=parent.source.start.offset;
-      const header=baselineText.slice(from,baselineText.indexOf('{',from)+1);
-      fragment=header+fragment+'}';
+  // Class names a newer baseline already retained: an older baseline's rules for them are not merged in.
+  const covered = new Set();
+  for (const baseline of baselines) {
+    const taken = new Set();
+    for (const {rule, parents} of utilities.filter(u => u.baseline === baseline)) {
+      const references=selectorClasses(rule.selector).filter(name=>!currentClasses.has(name)&&!covered.has(name))
+        .map(name=>({className:name,hits:hitsOf(name)})).filter(ref=>ref.hits.length);
+      // The references it records stay all referenced absent classes of the selector.
+      if(!retainsRule(rule.selector,references.map(ref=>ref.className)))continue;
+      const text=baseline.text, start=rule.source.start.offset,end=rule.source.end.offset;
+      const raw=text.slice(start,end);
+      let fragment=raw;
+      const wrappers=parents.filter(p=>p.type==='atrule'&&!(p.name==='layer'&&p.params==='utilities'));
+      for(const parent of wrappers.toReversed()){
+        const from=parent.source.start.offset;
+        const header=text.slice(from,text.indexOf('{',from)+1);
+        fragment=header+fragment+'}';
+      }
+      fragments.push(fragment);
+      references.forEach(ref => taken.add(ref.className));
+      retained.push({selector:rule.selector,references,baseline:baseline.source,start,end,sha256:sha(raw),
+        contexts:wrappers.map(p=>({name:p.name,params:p.params})),fragmentSha256:sha(fragment)});
     }
-    fragments.push(fragment);
-    retained.push({selector:rule.selector,references,start,end,sha256:sha(raw),
-      contexts:wrappers.map(p=>({name:p.name,params:p.params})),fragmentSha256:sha(fragment)});
+    taken.forEach(name => covered.add(name));
   }
   const tokens = [];
-  const theme = old.nodes.find(n => n.type === 'atrule' && n.name === 'layer' && n.params === 'theme');
-  const globalTheme = theme?.nodes.find(n => n.type === 'rule' && n.selector === ':root,:host');
-  const missing = globalTheme?.nodes.filter(n => n.type === 'decl' && n.prop.startsWith('--') && !currentVariables.has(n.prop)) ?? [];
+  const missing = baselines.flatMap(baseline => {
+    const theme = baseline.ast.nodes.find(n => n.type === 'atrule' && n.name === 'layer' && n.params === 'theme');
+    const globalTheme = theme?.nodes.find(n => n.type === 'rule' && n.selector === ':root,:host');
+    return (globalTheme?.nodes.filter(n => n.type === 'decl' && n.prop.startsWith('--') && !currentVariables.has(n.prop)) ?? []).map(decl => ({decl, baseline}));
+  });
   let references = sources.map(s => s.text).join('\n') + fragments.join('\n');
   for (let changed = true; changed;) {
     changed = false;
-    for (const decl of missing) {
+    for (const {decl, baseline} of missing) {
       if (tokens.some(t => t.property === decl.prop) || !references.includes(decl.prop)) continue;
-      const text = baselineText.slice(decl.source.start.offset, decl.source.end.offset);
-      tokens.push({property:decl.prop, value:decl.value, text, sha256:sha(text)});
+      const text = baseline.text.slice(decl.source.start.offset, decl.source.end.offset);
+      tokens.push({property:decl.prop, value:decl.value, baseline:baseline.source, text, sha256:sha(text)});
       references += '\n' + decl.value;
       changed = true;
     }
@@ -317,8 +399,8 @@ export async function prepareStyleCompatibility({check = false} = {}) {
   postcss.parse(css); // Fail preparation on malformed source slices, before emitting assets.
   const byPosition = (a, b) => a.file < b.file ? -1 : a.file > b.file ? 1 : a.binding < b.binding ? -1 : a.binding > b.binding ? 1 : a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
   const manifest = {
-    currentVersion:designVersion, baselineVersion:'2.37337.1',
-    baselineSource:baseline + '/ion-dist/assets/v1/' + baselineFile, baselineSha256:sha(baselineText),
+    currentVersion:designVersion,
+    baselines:baselines.map(({version, source, text}) => ({version, source, sha256:sha(text)})),
     currentStylesheets:stylesheets, output:'assets/legacy-utilities.css', outputSha256:sha(css),
     note:'Only absent utilities whose exact class token is still named by a src string literal, template fragment or CSS selector, plus their missing theme tokens. Hits list the owning file/binding, its generator and source version; reachable is informational (rules are never dropped for it). Remove as owning modules migrate.',
     scanner:{
@@ -326,6 +408,7 @@ export async function prepareStyleCompatibility({check = false} = {}) {
       sources:'src/**/*.{js,jsx,mjs,css}',
       parser:'rolldown/parseAst (ESTree) for scripts; postcss rule selectors for stylesheets',
       tokens:'string Literal values and TemplateLiteral quasis (cooked), split on whitespace; CSS selector classes. Comments are not tokens.',
+      retention:'a rule is retained only when a referenced absent class is in its subject: the leading compound of each selector in its list, outside functional pseudo-class arguments (a selector led by :is()/:where() takes its argument\'s subject). Classes elsewhere in the selector are recorded as references but never retain it alone.',
       exclusionRules:[
         {reason:TOKEN_RECORD.reason, object:'has keys ' + TOKEN_RECORD.keys.join(' + '), excludedKeys:TOKEN_RECORD.keys},
         {reason:MERGE_REGISTRY.reason, object:'has keys ' + MERGE_REGISTRY.keys.join(' + '), excludedKeys:MERGE_REGISTRY.excluded},
@@ -339,6 +422,7 @@ export async function prepareStyleCompatibility({check = false} = {}) {
     },
     rules:retained, tokens,
   };
+  if (dryRun) return manifest;
   for (const [file, text] of [['assets/legacy-utilities.css',css], ['style-compatibility.json',JSON.stringify(manifest,null,2)+'\n']]) {
     const dest = path.join(root, 'public', file);
     if (check) { if (await fs.readFile(dest, 'utf8') !== text) throw Error('Style compatibility mismatch: ' + file); }
@@ -346,4 +430,9 @@ export async function prepareStyleCompatibility({check = false} = {}) {
   }
   console.log(`${check?'Verified':'Prepared'} ${retained.length} prior-source utility rules and ${tokens.length} theme tokens.`);
   return manifest;
+}
+
+// `node scripts/prepare-style-compatibility.mjs [--check]`: regenerate (gate only, R10) or verify the published files.
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.dirname, 'prepare-style-compatibility.mjs')) {
+  await prepareStyleCompatibility({check:process.argv.includes('--check')});
 }

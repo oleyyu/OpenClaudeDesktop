@@ -1,5 +1,6 @@
-// R4f-rail SR-3: the Code session rail's Servers and Background tasks sections, generated from the installed 2.42304.0
-// originals into src/generated/session-rail-sections (scripts/extract-session-rail-sections.mjs), over the host adapters
+// R4f-rail SR-3: the Code session rail's Servers and Background tasks sections, generated from the Claude Desktop 3.6556.2
+// originals (w4-rail-sections; 2.42304.0 before) into src/generated/session-rail-sections
+// (scripts/extract-session-rail-sections.mjs), over the host adapters
 // in src/source-session-rail-sections-adapters.jsx. Source/AST pins, pure functions, Vite SSR renders and mounts in the
 // R3b fake DOM (tests/fixtures/preview-r3b-dom.mjs) driven through React's own props, with fixture servers, tasks and
 // loops and stub stop / open callbacks: no browser, no Electron, no network, no process, no real storage.
@@ -13,6 +14,7 @@ import { createRoot } from 'react-dom/client';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractSessionRailSections } from '../scripts/extract-session-rail-sections.mjs';
+import * as official from '../scripts/official-3.6556.2.mjs';
 import { createPreviewDom, reactProps } from './fixtures/preview-r3b-dom.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
@@ -142,9 +144,21 @@ const byLabel = (container, label) => buttons(container).find(node => node.getAt
 const status = container => container.querySelectorAll('[role="status"]').map(node => node.textContent.replace(/\u200B/g, '')).join('|');
 
 // ---- source ---------------------------------------------------------------------------------------------------------
-test('generator: the originals still match 2.42304.0 and src/generated/session-rail-sections is current', async () => {
+test('generator: the originals still match 3.6556.2 and src/generated/session-rail-sections is current', async () => {
   const checked = await extractSessionRailSections({ check: true });
-  assert.equal(checked.referenceVersion, '2.42304.0');
+  assert.equal(checked.referenceVersion, '3.6556.2');
+  assert.equal(checked.referenceSnapshot, official.referenceSnapshot, 'E6');
+  const extractor = fs.readFileSync(path.join(app, 'scripts/extract-session-rail-sections.mjs'), 'utf8');
+  assert.match(extractor, /import \* as official from '\.\/official-3\.6556\.2\.mjs';/, 'R1: the constants are official-3.6556.2.mjs\'s');
+  assert.doesNotMatch(extractor, /installed-2\.42304\.0|vendor-frame-DfPJ1QmD/);
+  // R4: every 2.42304.0 target and export name is still there (moved originals are re-exported from their new target).
+  const kept = { 'task-groups.mjs': ['groupTasks', 'isDismissedTask', 'loopNextRunAt', 'formatCountdown'], 'minute-clock.mjs': ['useMinuteNow', 'useDeferredWhileSame'],
+    'announcement.mjs': ['useAnnouncement', 'Announcement'], 'duration-units.mjs': ['formatDurationUnits'],
+    'servers-card.mjs': ['SessionRailServers', 'RailServersCard', 'RailServerRow', 'useSessionDevServers', 'railServerState', 'railServerName', 'railServerAddress', 'railServerKey', 'RAIL_SERVERS_LIMIT', 'SERVER_META_FIELDS'],
+    'background-tasks-card.mjs': ['SessionRailBackgroundTasks', 'RailBackgroundTasksCard', 'RailBackgroundTaskRow', 'railTaskTitle', 'railTaskIcon', 'railStopLabel', 'railTaskKey', 'RAIL_TASKS_LIMIT', 'TASK_META_FIELDS'] };
+  for (const [target, names] of Object.entries(kept)) for (const name of names) assert.match(generated(target), new RegExp(`export \\{[^}]*\\b${name}\\b`), `${target} exports ${name}`);
+  assert.deepEqual(manifest.modules.find(m => m.target === 'task-groups.mjs').reexports, { 'task-grouping.mjs': ['groupTasks'] });
+  assert.deepEqual(manifest.modules.find(m => m.target === 'minute-clock.mjs').reexports, { 'deferred-while-same.mjs': ['useDeferredWhileSame'] });
   assert.deepEqual(checked.modules.map(m => m.target), manifest.modules.map(m => m.target));
   const verify = fs.readFileSync(path.join(app, 'scripts/verify-gen-session-rail-sections.mjs'), 'utf8');
   assert.match(verify, /from '\.\/extract-session-rail-sections\.mjs'/, 'prepare-ui verifies it (D0)');
@@ -157,25 +171,33 @@ test('feature strings: each pinned message is in the original chunk (exact count
     ['defaultMessage:"Open {name} in Preview",id:"rrBTXINTfh"', 1, 'servers-card.mjs'], ['defaultMessage:"Open {name} in Browser",id:"UH4Po59ttY"', 1, 'servers-card.mjs'],
     ['defaultMessage:"Stop this server",id:"QfdbSIr/ZZ"', 1, 'servers-card.mjs'], ['defaultMessage:"Stopping server\\u2026",id:"YyAB/Ltrj7"', 2, 'servers-card.mjs'],
     ['defaultMessage:"Failed to start",id:"4fGytPLZ4o"', 1, 'servers-card.mjs'], ['defaultMessage:"Starting\\u2026",id:"RFCwI6lJ1a"', 1, 'servers-card.mjs'],
-    ['B("sink_planter_vase")', 1, 'servers-card.mjs'],
+    // panes:C1-12: a server being stopped says "Stopping…" (YM), as a task does (MM, also its Stop button's busyLabel).
+    ['defaultMessage:"Stopping\\u2026",id:"NACfNicI6z"', 3, 'servers-card.mjs'], ['"pe-xs"', 2, 'servers-card.mjs'],
+    ['"sink_planter_vase"', 1, 'servers-card.mjs'],
     ['defaultMessage:"Background tasks",id:"PO+0DdDIId"', 1, 'background-tasks-card.mjs'], ['defaultMessage:"{count} finished",id:"ltUUM7UiZ8"', 1, 'background-tasks-card.mjs'],
     ['defaultMessage:"Open {name} in Background tasks",id:"fFubbBep+3"', 1, 'background-tasks-card.mjs'],
     ['defaultMessage:"Stop requested\\u2026",id:"V02rUvAsBz"', 2, 'background-tasks-card.mjs'], ['defaultMessage:"Task stopped",id:"GNohzeuiQ7"', 1, 'background-tasks-card.mjs'],
     ['defaultMessage:"Loop stopped",id:"1rcSX6fVan"', 1, 'background-tasks-card.mjs'], ['defaultMessage:"Scheduled prompt stopped",id:"o0tDiNLMXL"', 1, 'background-tasks-card.mjs'],
     ['defaultMessage:"Stop this task",id:"+ZLTl3VMv+"', 1, 'background-tasks-card.mjs'],
     ['defaultMessage:"Stop this loop. Claude will cancel it.",id:"w393XAy25t"', 1, 'background-tasks-card.mjs'],
-    ['defaultMessage:"Next {countdown}",id:"o/mZ8m2Nmr"', 1, 'background-tasks-card.mjs'], ['defaultMessage:"Stopping\\u2026",id:"NACfNicI6z"', 2, 'background-tasks-card.mjs'],
-    ['ju("session_rail")', 1, 'background-tasks-card.mjs'],
+    ['defaultMessage:"Stop this scheduled prompt. Claude will cancel it.",id:"CdHw1PhHmP"', 1, 'background-tasks-card.mjs'],
+    // the scheduled prompt's title id changed (2.42304.0 Eo33pIfibL), the countdown's too (o/mZ8m2Nmr)
+    ['defaultMessage:"Scheduled prompt",id:"2gsTFbSUQm"', 1, 'background-tasks-card.mjs'], ['defaultMessage:"Recurring loop",id:"oLE/XBJnEl"', 1, 'background-tasks-card.mjs'],
+    ['defaultMessage:"Next {countdown}",id:"OCt80bz0DY"', 1, 'background-tasks-card.mjs'], ['defaultMessage:"Stopping\\u2026",id:"NACfNicI6z"', 3, 'background-tasks-card.mjs'],
+    ['busyLabel:', 10, 'background-tasks-card.mjs'], ['agentToolUseId:', 1, 'background-tasks-card.mjs'], ['"pe-xs"', 2, 'background-tasks-card.mjs'],
   ];
-  const chunk = raw('cf74bc599-D9NZWRyl.js');
+  const chunk = raw('cf74bc599-CRYqipWN.js');
   for (const [needle, count, target] of pins) {
     assert.equal(occurrences(chunk, needle), count, `cf74bc599: ${needle}`);
     assert.ok(squeeze(generated(target)).includes(squeeze(needle)), `${target}: ${needle}`);
   }
-  // Both sections reach the rail through fO, which this host replaces (SR-7): pinned on the bytes.
-  const sites = manifest.callSites.map(site => site.features).flat();
-  assert.ok(sites.includes('serversSection:u(QD,{sessionRef:e,readOnly:o}),backgroundSection:u(BD,{sessionRef:e,readOnly:o})'));
-  for (const feature of sites) assert.equal(occurrences(chunk, feature), 1, feature);
+  assert.equal(occurrences(chunk, 'Eo33pIfibL'), 0);
+  // Both sections reach the rail through TN, which this host replaces (SR-7): pinned on the bytes (R2, loose).
+  const site = manifest.callSites.find(entry => entry.source === 'cf74bc599-CRYqipWN.js');
+  assert.ok(site.loose && site.raw);
+  assert.ok(site.features.includes('J2($,299,l,t)?(Fn=s($M,{sessionRef:t,readOnly:l}),In=s(IM,{sessionRef:t,readOnly:l}),K3($,299,l,t,Fn,In))'));
+  for (const feature of site.features) assert.equal([...chunk.matchAll(official.looseFeature(feature, { flags: 'g', keep: ['$M', 'IM'] }))].length, 1, feature);
+  assert.ok(chunk.includes('serversSection:Fn,backgroundSection:In,pluginSections:wn'));
 });
 
 test('one copy: the rail parts are the kit\'s, CDS parts are view-tabs public names, no context is sliced here', () => {
@@ -192,37 +214,47 @@ test('one copy: the rail parts are the kit\'s, CDS parts are view-tabs public na
   }
   const imported = (target, local) => manifest.modules.find(m => m.target === target).imports.find(i => i.local === local);
   for (const target of ['servers-card.mjs', 'background-tasks-card.mjs']) {
-    assert.deepEqual([imported(target, 'ag').kind, imported(target, 'ag').name], ['session-rail-kit', 'RailCard']);
-    assert.equal(imported(target, 'qu').name, 'useRailCardPresence');
-    assert.equal(imported(target, '_u').name, 'RailLimitedList');
-    assert.equal(imported(target, 'Su').name, 'RailRowButton');
-    assert.equal(imported(target, 'Vg').name, 'useRailFocusRescue');
-    assert.equal(imported(target, 'kn').name, 'pickFields');
-    assert.equal(imported(target, 'kr').name, 'CdsButton');
-    assert.equal(imported(target, 'gr').name, 'CdsOverflowTooltip');
-    assert.deepEqual([imported(target, 'li').kind, imported(target, 'li').name], ['sidebar-resize', 'physicalSide']);
+    assert.deepEqual([imported(target, 'N_').kind, imported(target, 'N_').name], ['session-rail-kit', 'RailCard']);
+    assert.equal(imported(target, 'Pm').name, 'useRailCardPresence');
+    assert.equal(imported(target, 'km').name, 'RailLimitedList');
+    assert.equal(imported(target, 'Jf').name, 'RailRowButton');
+    assert.equal(imported(target, 'Cv').name, 'useRailFocusRescue');
+    assert.equal(imported(target, 'gn').name, 'pickFields');
+    assert.deepEqual([imported(target, 'T').kind, imported(target, 'T').name], ['view-tabs', 'CdsButton']);
+    assert.equal(imported(target, 'E').name, 'CdsOverflowTooltip');
+    assert.equal(imported(target, 'D').name, 'cdsClassNames');
+    assert.deepEqual([imported(target, 'Ka').kind, imported(target, 'Ka').name], ['sidebar-resize', 'physicalSide']);
+    assert.deepEqual([imported(target, 'oo').kind, imported(target, 'oo').name], ['generated', 'railStopIcon']);
   }
+  // R3/E3: React Compiler helpers only by their view-tabs semantic names, React by vendor-frame aliases; no 2.42304.0 file.
+  const helpers = new Set(Object.values(official.compilerHelpers).map(entry => entry.name));
+  for (const m of manifest.modules) {
+    for (const i of m.imports) if (helpers.has(i.name)) assert.deepEqual([i.kind, i.from.endsWith(`/view-tabs/${official.sharedFrame}`)], ['view-tabs', true], `${m.target}: ${i.name}`);
+    assert.doesNotMatch(generated(m.target), /BfjMqbuN|DfPJ1QmD|Db7hDWRO|from "react\/compiler-runtime"/, `${m.target}: no 2.42304.0 import, the compiler runtime only through view-tabs`);
+  }
+  // E12: the Stop icon's fizzy-lake pick reads view-tabs' part gate (always off): "Stop".
+  assert.deepEqual([imported('stop-icon.mjs', 'ks').kind, imported('stop-icon.mjs', 'ks').name], ['view-tabs', 'isFizzyLakePartEnabled']);
   // A binding another area slices is imported from it; vendor-query's replaceEqualDeep is the one recorded second copy.
-  assert.equal(imported('minute-clock.mjs', 'qe').name, 'subscribeNever');
+  assert.deepEqual([imported('minute-clock.mjs', 'dn').kind, imported('minute-clock.mjs', 'dn').name], ['files-changes', 'subscribeNever']);
   const servers = manifest.modules.find(m => m.target === 'servers-card.mjs');
-  assert.deepEqual(servers.bindings.map(b => b.name).sort(), ['GD', 'HD', 'JD', 'KD', 'QD', 'UD', 'VD', 'WD', 'XD', 'YD', 'ZD', 'qD'].sort());
+  assert.deepEqual(servers.bindings.map(b => b.name).sort(), ['$M', 'GM', 'HM', 'JM', 'KM', 'QM', 'UM', 'VM', 'WM', 'XM', 'YM', 'ZM', 'eN', 'iN', 'nN', 'qM', 'rN', 'tN'].sort());
   const tasks = manifest.modules.find(m => m.target === 'background-tasks-card.mjs');
-  assert.deepEqual(tasks.bindings.map(b => b.name).sort(), ['AD', 'BD', 'FD', 'ID', 'LD', 'MD', 'ND', 'OD', 'PD', 'RD', 'jD', 'kD', 'zD'].sort());
+  assert.deepEqual(tasks.bindings.map(b => b.name).sort(), ['AM', 'BM', 'DM', 'EM', 'FM', 'IM', 'LM', 'MM', 'NM', 'OM', 'PM', 'RM', 'TM', 'jM', 'kM', 'wM', 'zM'].sort());
 });
 
 test('adapters: exactly the host data plane is replaced, each original checked; no GrowthBook, no Launch, no remote', () => {
   const replaced = new Map();
   for (const m of manifest.modules) for (const i of m.imports) if (i.kind === 'adapter') replaced.set(i.original, i.name);
   assert.deepEqual(Object.fromEntries([...replaced].sort()), Object.fromEntries([
-    ['c03935b01-CyJKQj4N.js:Q', 'useRailScopeState'], ['c03935b01-CyJKQj4N.js:To', 'railSidePaneOpen'], ['c03935b01-CyJKQj4N.js:_c', 'useRailScopeStoreApi'],
-    ['c03935b01-CyJKQj4N.js:wc', 'useRailPreviewViews'], ['c155b6b71-CwKMsMtR.js:f', 'useSessionPreviewId'], ['c227f4d5e-Ba-r--Rl.js:HW', 'useOpenTasksPane'],
-    ['c227f4d5e-Ba-r--Rl.js:Mz', 'useRemoteSessionServers'], ['c227f4d5e-Ba-r--Rl.js:WR', 'usePreferredPreviewServers'],
-    ['c5da7eb42-B8cTG8SI.js:LM', 'useRemoteSessionBridgeUp'], ['c5da7eb42-B8cTG8SI.js:iM', 'useSessionRailMeta'], ['c68c4283d-CPuRD0vx.js:Cd', 'logRailStopPressed'],
-    ['c68c4283d-CPuRD0vx.js:_u', 'logSidePaneOpened'], ['cccc2cf0a-B0D--VZp.js:iE', 'useServerStop'], ['cccc2cf0a-B0D--VZp.js:nE', 'useRailStoppingIds'],
-    ['cccc2cf0a-B0D--VZp.js:oE', 'useTaskStop'], ['cccc2cf0a-B0D--VZp.js:rE', 'useLoopStop'], ['cccc2cf0a-B0D--VZp.js:tE', 'useDismissedTaskIds'],
-    ['cea7057eb-p4xbrGBz.js:ve', 'useSessionTasks'], ['shared-0-ByI5P0CP.js:Fx', 'claudeWebLaunch'], ['shared-1-CAAiD7E3.js:cu', 'useActiveServers'],
-    ['shared-25-DP8p7i1Z.js:Zs', 'useGrowthBookFeature'], ['shared-78-D6VXYXaQ.js:SU', 'usePreviewOpensInBrowser'],
-    ['vendor-intl-Db7hDWRO.js:Gt', 'FormattedMessage'], ['vendor-intl-Db7hDWRO.js:q', 'useIntl'],
+    ['c03935b01-yhcY34vt.js:Q', 'useRailScopeState'], ['c03935b01-yhcY34vt.js:lc', 'railSidePaneOpen'], ['c03935b01-yhcY34vt.js:fu', 'useRailScopeStoreApi'],
+    ['c03935b01-yhcY34vt.js:Su', 'useRailPreviewViews'], ['c155b6b71-66pw54FW.js:u', 'useSessionPreviewId'], ['c227f4d5e-B-FYKrwT.js:mQ', 'useOpenTasksPane'],
+    ['c227f4d5e-B-FYKrwT.js:PU', 'useRemoteSessionServers'], ['c227f4d5e-B-FYKrwT.js:LH', 'usePreferredPreviewServers'],
+    ['c5da7eb42-XijZdwf1.js:jL', 'useRemoteSessionBridgeUp'], ['c5da7eb42-XijZdwf1.js:QI', 'useSessionRailMeta'], ['c68c4283d-CWbOoVxS.js:mf', 'logRailStopPressed'],
+    ['c68c4283d-CWbOoVxS.js:sd', 'logSidePaneOpened'], ['cccc2cf0a-DhZC33Gc.js:eM', 'useServerStop'], ['cccc2cf0a-DhZC33Gc.js:Qj', 'useRailStoppingIds'],
+    ['cccc2cf0a-DhZC33Gc.js:rM', 'useTaskStop'], ['cccc2cf0a-DhZC33Gc.js:$j', 'useLoopStop'], ['cccc2cf0a-DhZC33Gc.js:Zj', 'useDismissedTaskIds'],
+    ['cea7057eb-De2BQu3K.js:_e', 'useSessionTasks'], ['shared-0-DDOOdL6P.js:dC', 'claudeWebLaunch'], ['shared-1-BJhqMmkf.js:nd', 'useActiveServers'],
+    ['shared-25-DOWZRSlq.js:fs', 'useGrowthBookFeature'], ['shared-78-D5Fw2h0a.js:tE', 'usePreviewOpensInBrowser'],
+    ['vendor-intl-DYfox5Co.js:Gt', 'FormattedMessage'], ['vendor-intl-DYfox5Co.js:q', 'useIntl'],
   ].sort()));
   assert.equal(Adapters.useGrowthBookFeature('sink_planter_vase'), false);
   assert.equal(Adapters.usePreviewOpensInBrowser('local'), false);
@@ -235,20 +267,23 @@ test('adapters: exactly the host data plane is replaced, each original checked; 
   assert.equal(Adapters.railSidePaneOpen({}, 's1', 'preview'), false);
 });
 
-// R4i-rail RL3: the Context section left this area for its own generator (extract-session-rail-context.mjs).
-test('the Context section is no longer deferred here: session-rail-context emits it and pins fO\'s call site', () => {
+// R4i-rail RL3: the Context section left this area for its own generator (extract-session-rail-context.mjs, 3.6556.2 since
+// w3-rail-context: TN's `contextSection: l ? void 0 : s(L_, …)`, c73f45bc3 Lx, c227f4d5e F3 adapted).
+const CONTEXT_SITE = 'l?void 0:s(L_,{scopeStore:n,sessionRef:t,openConnectors:Ue?qe:g,openSkills:Je?Ye:null,openMemory:v,mcpToolOpener:Ze})';
+test('the Context section is no longer deferred here: session-rail-context emits it and pins TN\'s call site', () => {
   assert.deepEqual(manifest.deferred, []);
-  assert.ok(!manifest.callSites.some(site => site.features.includes('contextSection:o?void 0:u(cg,{scopeStore:t,sessionRef:e})')));
+  assert.ok(!manifest.callSites.some(site => site.features.includes(CONTEXT_SITE)));
   const context = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/session-rail-context/manifest.json'), 'utf8'));
-  assert.ok(context.callSites.some(site => site.features.includes('contextSection:o?void 0:u(cg,{scopeStore:t,sessionRef:e})')));
-  assert.equal(occurrences(raw('c73f45bc3-CFrHin0p.js'), 'defaultMessage:"Context",id:"V2qutIKrxy"'), 2);
-  assert.equal(context.adapted.binding, 'hZ');
+  assert.equal(context.referenceVersion, '3.6556.2');
+  assert.ok(context.callSites.some(site => site.features.includes(CONTEXT_SITE)));
+  assert.equal(occurrences(raw('c73f45bc3-B7hbL7H9.js'), 'defaultMessage:"Context",id:"V2qutIKrxy"'), 2);
+  assert.equal(context.adapted.binding, 'F3');
   assert.ok(context.adapted.declarations >= 100 && context.adapted.imports >= 100 && context.adapted.chunks >= 20, JSON.stringify(context.adapted));
-  assert.ok(!manifest.modules.some(m => m.source === 'c73f45bc3-CFrHin0p.js'), 'nothing of c73f45bc3 is sliced here (RailCard is the kit\'s)');
+  assert.ok(!manifest.modules.some(m => m.source.startsWith('c73f45bc3-')), 'nothing of c73f45bc3 is sliced here (RailCard is the kit\'s)');
 });
 
 // ---- pure originals ---------------------------------------------------------------------------------------------------
-test('cccc2cf0a cE / QT / EE, cea7057eb T / D: task groups, dismissal, a loop\'s next run and expiry', () => {
+test('c96d752d0 G$e, cccc2cf0a Jj / oM, cea7057eb w / E / Te: task groups, dismissal, a loop\'s next run and expiry, agent rows', () => {
   const now = Date.UTC(2026, 9, 17, 12, 0, 0);
   const tasks = taskRows(now);
   const groups = Groups.groupTasks(tasks);
@@ -269,9 +304,14 @@ test('cccc2cf0a cE / QT / EE, cea7057eb T / D: task groups, dismissal, a loop\'s
   assert.equal(Groups.loopNextRunAt({ nextRunAt: now - 1000, cron: '17 9 * * 1' }, now), undefined, 'not a simple interval');
   assert.equal(Kinds.isAmbientTask({ wireTaskType: 'auto_mode_scan' }), true);
   assert.equal(Kinds.isAmbientTask({ taskType: 'local_bash' }), false);
+  // cea7057eb Te (new): an agent task's tool use id (the subagent view a row opens); never for other kinds.
+  assert.equal(Kinds.taskAgentToolUseId({ taskType: 'local_agent', toolUseId: 'toolu_1' }), 'toolu_1');
+  assert.equal(Kinds.taskAgentToolUseId({ taskType: 'remote_agent', toolUseId: 'toolu_2' }), 'toolu_2');
+  assert.equal(Kinds.taskAgentToolUseId({ taskType: 'local_bash', toolUseId: 'toolu_3' }), undefined);
+  assert.equal(Kinds.taskAgentToolUseId({ taskType: 'local_agent' }), undefined);
 });
 
-test('cf74bc599 KD / JD / qD / GD / RD / MD / FD / jD and c227f4d5e oz / zR: row state, names, icons, labels, scope', () => {
+test('cf74bc599 KM / JM / qM / GM / PM / OM / jM / DM and c227f4d5e cU / MH: row state, names, icons, labels, scope', () => {
   const row = server => ({ kind: 'local', server });
   assert.equal(Servers.railServerState(row({ status: 'running' })), 'running');
   assert.equal(Servers.railServerState(row({ status: 'error' })), 'failed');
@@ -339,7 +379,7 @@ test('host shapes: preview servers, background tasks and scheduled prompts becom
 });
 
 // ---- Servers ------------------------------------------------------------------------------------------------------
-test('QD (Servers): this session\'s servers by start, open in Preview when running, the current one, Stop on each', () => {
+test('$M (Servers): this session\'s servers by start, open in Preview when running, the current one, Stop on each', () => {
   const { host } = hostFor(Date.now());
   const html = render(withHost(host, h(Servers.SessionRailServers, { sessionRef: local, readOnly: false })));
   assert.match(html, /^<section data-rail-section="" [^>]*data-open="" data-cds="Collapsible" class="group\/railcard /);
@@ -354,6 +394,7 @@ test('QD (Servers): this session\'s servers by start, open in Preview when runni
   assert.match(html, />localhost:5173<\/span>/);
   assert.match(html, /<div class="flex min-h-6\.5 w-full min-w-0 items-center gap-sm px-xs text-body flex-1">/, 'not openable: the row class without a button');
   assert.equal(occurrences(html, 'aria-label="Stop this server"'), 3);
+  assert.equal(occurrences(html, '<div class="flex min-w-0 items-center pe-xs">'), 3, 'panes:C1-12: a row with Stop keeps room for it (pe-xs)');
   assert.match(html, /<span class="sr-only" role="status"><\/span>/);
   // read-only: no Stop and no announcements
   const readOnly = render(withHost(host, h(Servers.SessionRailServers, { sessionRef: local, readOnly: true })));
@@ -361,7 +402,7 @@ test('QD (Servers): this session\'s servers by start, open in Preview when runni
   assert.doesNotMatch(readOnly, /role="status"/);
 });
 
-test('QD: nothing without side panes or servers; a remote session lists no remote servers (sink_planter_vase off)', () => {
+test('$M: nothing without side panes or servers; a remote session lists no remote servers (sink_planter_vase off)', () => {
   const { host } = hostFor(Date.now());
   assert.equal(render(h(Servers.SessionRailServers, { sessionRef: local, readOnly: false })), '', 'no provider: no scope store');
   assert.equal(render(withHost({ ...host, sidePanes: { ...host.sidePanes, hasSidePanes: false } }, h(Servers.SessionRailServers, { sessionRef: local, readOnly: false }))), '');
@@ -374,7 +415,7 @@ test('QD: nothing without side panes or servers; a remote session lists no remot
   assert.doesNotMatch(noViews, /Open web in Preview/);
 });
 
-test('QD: more than four servers show four and Show more (QL, the kit\'s limited list)', () => {
+test('$M: more than four servers show four and Show more (km, the kit\'s limited list)', () => {
   const now = Date.now();
   const servers = Array.from({ length: 6 }, (_, index) => ({ serverId: `preview:s${index}`, name: `s${index}`, port: 3000 + index, status: 'running', cwd: '/w/app', startedAt: iso(now + index) }));
   const { host } = hostFor(now, { servers });
@@ -384,7 +425,7 @@ test('QD: more than four servers show four and Show more (QL, the kit\'s limited
   assert.match(html, />6 running<\/span>/);
 });
 
-test('QD mounted: a row opens its server in the Preview pane; Stop asks the host, is busy until the server is gone', async () => {
+test('$M mounted: a row opens its server in the Preview pane; Stop asks the host, is busy until the server is gone', async () => {
   const now = Date.now();
   const { host, calls, rowsStore } = hostFor(now);
   await mounted(async ({ container, show }) => {
@@ -397,6 +438,7 @@ test('QD mounted: a row opens its server in the Preview pane; Stop asks the host
     assert.deepEqual(calls.splice(0), [['stopServer', 'preview:api']]);
     assert.deepEqual([...rowsStore.stopping('s1', 'server')], ['preview:api'], 'the stop is the Background tasks pane\'s stop too');
     assert.equal(byLabel(container, 'Stopping server…')?.getAttribute('aria-busy'), 'true');
+    assert.match(container.textContent, /apiStopping…/, 'panes:C1-12: the stopping row says "Stopping…" (YM) instead of "Starting…"');
     assert.equal(status(container), 'Stopping server…');
     await press(byLabel(container, 'Stopping server…'));
     await settle();
@@ -409,7 +451,7 @@ test('QD mounted: a row opens its server in the Preview pane; Stop asks the host
   });
 });
 
-test('QD mounted: a stop the host refuses is released (the row is not left busy)', async () => {
+test('$M mounted: a stop the host refuses is released (the row is not left busy)', async () => {
   const now = Date.now();
   const { host, calls, rowsStore } = hostFor(now, {});
   host.stopServer = server => { calls.push(['stopServer', server.serverId]); return Promise.reject(Error('busy')); };
@@ -421,25 +463,30 @@ test('QD mounted: a stop the host refuses is released (the row is not left busy)
     assert.deepEqual([...rowsStore.stopping('s1', 'server')], []);
     assert.equal(byLabel(container, 'Stopping server…'), undefined, 'the row is not busy');
     assert.equal(buttons(container).filter(node => node.getAttribute('aria-label') === 'Stop this server').length, 3);
-    assert.equal(status(container), 'Stopping server…', 'the press was announced (QD announces when the stop is accepted)');
+    assert.equal(status(container), 'Stopping server…', 'the press was announced ($M announces when the stop is accepted)');
   });
 });
 
 // ---- Background tasks ----------------------------------------------------------------------------------------------
-test('BD (Background tasks): the card is folded by default (kZ) with "{count} running"; nothing without the Tasks pane', () => {
+test('IM (Background tasks): the card is open by default (the kit\'s o6 no longer folds it) with "{count} running"; nothing without the Tasks pane', () => {
   const { host } = hostFor(Date.now());
   const html = render(withHost(host, h(Tasks.SessionRailBackgroundTasks, { sessionRef: local, readOnly: false })));
-  assert.match(html, /^<section data-rail-section="" [^>]*data-closed="" data-cds="Collapsible"/);
+  assert.match(html, /^<section data-rail-section="" [^>]*data-open="" data-cds="Collapsible"/, '3.6556.2 o6 = ["connectors","context","usage"]');
   assert.match(html, /<span class="shrink-0">Background tasks<\/span>/);
-  assert.match(html, /<span class="ms-auto min-w-0 truncate ps-sm text-footnote font-normal text-muted-as-secondary">4 running<\/span>/,
-    'two live loops and two running tasks (not the ambient task, not the expired loops)');
+  assert.match(html, /<span aria-hidden="true" class="ms-auto min-w-0 truncate ps-sm text-footnote font-normal text-muted-as-secondary invisible">4 running<\/span>/,
+    'two live loops and two running tasks (not the ambient task, not the expired loops); the summary hides while open');
+  // panes:C1-12: a row with Stop keeps room for it (pe-xs); read-only rows do not.
+  assert.equal(occurrences(html, '<div class="flex min-w-0 items-center pe-xs">'), 4);
+  const readOnly = render(withHost(host, h(Tasks.SessionRailBackgroundTasks, { sessionRef: local, readOnly: true })));
+  assert.equal(occurrences(readOnly, '<div class="flex min-w-0 items-center">'), 4);
+  assert.equal(occurrences(readOnly, 'pe-xs'), 0);
   assert.equal(render(withHost({ ...host, openTasksPane: undefined }, h(Tasks.SessionRailBackgroundTasks, { sessionRef: local, readOnly: false }))), '');
   assert.equal(render(h(Tasks.SessionRailBackgroundTasks, { sessionRef: local, readOnly: false })), '');
   assert.equal(render(withHost({ ...host, tasks: [], meta: { ...host.meta, loops: [] } }, h(Tasks.SessionRailBackgroundTasks, { sessionRef: local, readOnly: false }))),
     '<span class="sr-only" role="status"></span>', 'nothing running: no card');
 });
 
-test('BD mounted: loops by next run then tasks by start, Next / elapsed, finished count without dismissed, open in the Tasks pane', async () => {
+test('IM mounted: loops by next run then tasks by start, Next / elapsed, finished count without dismissed, open in the Tasks pane', async () => {
   const now = Date.now();
   const { host, calls, dismissedStore } = hostFor(now);
   dismissedStore.dismiss('s1', ['bash:5']);
@@ -462,12 +509,13 @@ test('BD mounted: loops by next run then tasks by start, Next / elapsed, finishe
     const finished = buttons(container).find(node => node.textContent.endsWith('finished'));
     assert.match(finished?.textContent ?? '', /^\p{Co}?2 finished$/u, 'the AgentsSimple icon glyph, then the count');
     await press(finished);
-    assert.deepEqual(calls.splice(0), [['openTasksPane', { taskId: 'bash:1', finished: false }], ['openTasksPane', { finished: true }]]);
+    // FM: an agent task with a tool use id would also name its subagent view (`agent`); the host rows carry none.
+    assert.deepEqual(calls.splice(0), [['openTasksPane', { taskId: 'bash:1', agent: undefined, finished: false }], ['openTasksPane', { finished: true }]]);
   });
   Sections.railSectionsStore.getState().setOpen('session-rail', 'backgroundTasks', false);
 });
 
-test('BD mounted: Stop on a task is busy until it stops ("Task stopped"); Stop on a loop is "Stop requested…" until it is gone ("Loop stopped")', async () => {
+test('IM mounted: Stop on a task is busy until it stops ("Task stopped"); Stop on a loop is "Stop requested…" until it is gone ("Loop stopped")', async () => {
   const now = Date.now();
   const { host, calls, rowsStore } = hostFor(now);
   Sections.railSectionsStore.getState().setOpen('session-rail', 'backgroundTasks', true);
@@ -504,7 +552,7 @@ test('BD mounted: Stop on a task is busy until it stops ("Task stopped"); Stop o
   Sections.railSectionsStore.getState().setOpen('session-rail', 'backgroundTasks', false);
 });
 
-test('BD mounted: read-only has no Stop; a stop the host refuses is released', async () => {
+test('IM mounted: read-only has no Stop; a stop the host refuses is released', async () => {
   const now = Date.now();
   const { host, calls, rowsStore } = hostFor(now);
   host.stopTask = taskId => { calls.push(['stopTask', taskId]); return Promise.reject(Error('offline')); };

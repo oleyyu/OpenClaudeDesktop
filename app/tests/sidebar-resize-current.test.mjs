@@ -1,11 +1,11 @@
-// cov8-01 (research/sidebar-sections.md WI-7): the sidebar width handle is the original 2.42304.0 shared-21 DF over
-// shared-15 Jt, extracted by scripts/extract-sidebar-resize.mjs. Nothing here opens a window: the generator contract,
+// cov8-01 (research/sidebar-sections.md WI-7; 3.6556.2: research/sidebar.md §3.3 F1/F2): the sidebar width handle is the
+// original 3.6556.2 shared-21 Sz over shared-9 bm (2.42304.0: shared-21 DF over shared-15 Jt), extracted by
+// scripts/extract-sidebar-resize.mjs. Nothing here opens a window: the generator contract,
 // SSR markup, and the official drag/keyboard/release logic under a controlled fake DOM, clock and event sequence (React
 // handlers are invoked with synthetic-shaped events; document/window listeners receive dispatched plain events).
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import React, { act } from 'react';
@@ -13,83 +13,135 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createRoot } from 'react-dom/client';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { extractSidebarResize, sliceOriginalModules } from '../scripts/extract-sidebar-resize.mjs';
+import { extractSidebarResize } from '../scripts/extract-sidebar-resize.mjs';
+import { sidebarResizeManifestFor, sidebarResizeExportsFor } from '../scripts/sidebar-resize-compat.mjs';
+import * as official from '../scripts/official-3.6556.2.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/sidebar-resize');
-const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const reference = official.ionSource;
 const sha = text => createHash('sha256').update(text).digest('hex');
-let server, Handle, Resize, Adapters, Sidebar;
+let server, Handle, Resize, Adapters, Sidebar, ViewTabs;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Handle = await server.ssrLoadModule('/src/generated/sidebar-resize/sidebar-resize-handle.mjs');
   Resize = await server.ssrLoadModule('/src/generated/sidebar-resize/resize-handle.mjs');
   Adapters = await server.ssrLoadModule('/src/source-sidebar-resize-adapters.jsx');
   Sidebar = await server.ssrLoadModule('/src/source-sidebar.jsx');
+  ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
 });
 after(() => server?.close());
 
-// The handle's root className: Jt `gt("cds-reset …", "w-3 cursor-col-resize", ["absolute", Gt[side]], className)`.
+// The handle's root className: bm `R("cds-reset …", "w-3 cursor-col-resize", ["absolute", _m[side]], className)`.
 const handleClass = side => `cds-reset group/resize outline-none focus-visible:outline-hidden w-3 cursor-col-resize absolute ${Resize.resizeHandleSideClasses[side]} dframe-resize-handle`;
 
 // ---------------------------------------------------------------- generator contract
-test('generator output matches the pinned 2.42304.0 sources (check mode) and resolves only to React, itself or the adapter', async () => {
+test('generator output matches the pinned 3.6556.2 sources (check mode) and resolves only to React, itself, view-tabs public names or the adapter', async () => {
   const manifest = await extractSidebarResize({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  const viewTabs = JSON.parse(await fs.readFile(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
   const byTarget = Object.fromEntries(manifest.modules.map(m => [m.target, m]));
   for (const module of manifest.modules) {
     assert.equal(module.sourceSha256, sha(await fs.readFile(path.join(reference, module.source))), module.source);
     assert.equal(module.sha256, sha(await fs.readFile(path.join(generated, module.target), 'utf8')), module.target);
     for (const entry of module.imports) {
-      assert.ok(['react', 'generated', 'adapter'].includes(entry.kind), `${module.target}:${entry.local}`);
+      assert.ok(['react', 'generated', 'adapter', 'view-tabs'].includes(entry.kind), `${module.target}:${entry.local}`);
       if (entry.kind === 'adapter') assert.equal(typeof Adapters[entry.name], 'function', `adapter export ${entry.name}`);
+      if (entry.kind === 'view-tabs') {
+        // R6 (generator output): the concrete view-tabs file, by semantic name only (E3: one copy of the compiler helpers).
+        const pub = viewTabs.publicNames[entry.name];
+        assert.ok(pub, entry.name);
+        assert.equal(entry.from, `../view-tabs/${pub.file}`, entry.name);
+        assert.equal(entry.via, `${pub.file}:${pub.export}`, entry.name);
+      }
     }
   }
-  assert.equal(byTarget['sidebar-resize-handle.mjs'].source, 'shared-21-IP-SVetq.js');
-  assert.deepEqual(byTarget['sidebar-resize-handle.mjs'].bindings.map(b => b.name), ['_k', 'vk', 'yk', 'Tk', 'Ek', 'TF', 'EF', 'DF']);
-  assert.deepEqual(byTarget['resize-handle.mjs'].bindings.map(b => b.name), ['Ht', 'Ut', 'Wt', 'Gt', 'Kt', 'qt', 'Jt']);
-  assert.deepEqual(byTarget['sidebar-width.mjs'].bindings.map(b => b.name), ['Yu', 'Xu', '$u', 'Vp', 'Rm', 'Bm', 'rh', 'uh', 'fh']);
-  assert.deepEqual(byTarget['escape-cancel.mjs'].bindings.map(b => b.name), ['XL']);
+  assert.equal(byTarget['sidebar-resize-handle.mjs'].source, 'shared-21-R7LldJ05.js');
+  assert.deepEqual(byTarget['sidebar-resize-handle.mjs'].bindings.map(b => b.name), ['RM', 'zM', 'BM', 'KM', 'qM', 'bz', 'xz', 'Sz', 'Cz', 'wz', 'Tz']);
+  assert.equal(byTarget['resize-handle.mjs'].source, 'shared-9-CM21XrJw.js');
+  assert.deepEqual(byTarget['resize-handle.mjs'].bindings.map(b => b.name), ['mm', 'hm', 'gm', '_m', 'vm', 'ym', 'bm']);
+  assert.deepEqual(byTarget['sidebar-width.mjs'].bindings.map(b => b.name), ['Yd', 'Xd', '$d', 'Ah', 'zg', 'Hg', 'l_', 'y_', 'b_', 'C_', 'w_']);
+  assert.deepEqual(byTarget['escape-cancel.mjs'].bindings.map(b => b.name), ['gH']);
+  assert.deepEqual(byTarget['focus-origin.mjs'].bindings.map(b => b.name), ['gj', '_j', 'yj']);
+  assert.deepEqual(byTarget['panels-part.mjs'].bindings.map(b => b.name), ['fx']);
   const adapterImports = manifest.modules.flatMap(m => m.imports.filter(i => i.kind === 'adapter').map(i => `${i.via}=${i.name}`)).sort();
   assert.deepEqual(adapterImports, [
-    'shared-52-DGviI8xb.js:G=useSidebarFrameStore', 'shared-52-DGviI8xb.js:If=useSidebarFrameStore',
-    'shared-8-B5lJ8U5C.js:Wl=useHideSidebarIntent', 'shared-8-B5lJ8U5C.js:iu=sidebarCanHide', 'shared-8-B5lJ8U5C.js:xl=reportSidebarStateSet',
-    'shared-frame-BfjMqbuN.js:Oc=SidebarResizeTooltip', 'shared-frame-BfjMqbuN.js:Uu=useCdsFeature', 'shared-frame-BfjMqbuN.js:xd=cdsClassNames',
-    'vendor-frame-DfPJ1QmD.js:Wn=useDirection', 'vendor-intl-Db7hDWRO.js:p=useIntl',
+    // W12 diff-main: the Changed files column (c219730b0 Sn's gates) and its handles' tooltip (c44d00c7f Ir's Kl).
+    'c219730b0-DGG9iA8k.js:gn=useDiffTreeOnRight', 'c219730b0-DGG9iA8k.js:un=diffTreeCanHide', 'c44d00c7f-Cr1FDL2F.js:M=DiffTreeResizeTooltip',
+    'shared-52-uHFNjl7C.js:ah=useSidebarFrameStore', 'shared-52-uHFNjl7C.js:q=useSidebarFrameStore',
+    'shared-8-Db1QN4mf.js:Cu=useHideSidebarIntent', 'shared-8-Db1QN4mf.js:Iu=sidebarCanHide', 'shared-8-Db1QN4mf.js:Ql=reportSidebarStateSet',
+    'shared-frame-6jtSkIit.js:Kl=SidebarResizeTooltip', 'shared-frame-6jtSkIit.js:hf=useCdsFeature',
+    'vendor-frame-CnSY1sxv.js:Ia=useDirection', 'vendor-frame-CnSY1sxv.js:Ia=useDirection',
+    'vendor-intl-DYfox5Co.js:p=useIntl', 'vendor-intl-DYfox5Co.js:p=useIntl',
   ]);
-  // The release states, verbatim.
+  // Non-helper view-tabs names: tailwind-merge for bm's root and the fizzy-lake part gate (Sz and fx, `Qm = []`).
+  const viewTabsNames = [...new Set(manifest.modules.flatMap(m => m.imports.filter(i => i.kind === 'view-tabs').map(i => i.name)))]
+    .filter(name => !/^(reactMemoCache|memo)/.test(name)).sort();
+  // W12 diff-main adds the ResizeObserver lookup (c219730b0 Sn) and the shield's portal anchor (c44d00c7f Rr).
+  assert.deepEqual(viewTabsNames, ['cdsClassNames', 'getResizeObserverClass', 'isFizzyLakePartEnabled', 'useCdsOwnerWindowAnchor']);
+  // The release states, verbatim (3.6556.2 renamed the press record u -> l and the release callback's n/t -> t/e).
   const text = await fs.readFile(path.join(generated, 'sidebar-resize-handle.mjs'), 'utf8');
-  for (const feature of ['release: "held"', '(u.release = "awaited")', '(u.release = "lost")', 'n.release === "lost" || (t && n.release === "awaited")', '}, 200)'])
+  for (const feature of ['release: "held"', '(l.release = "awaited")', '(l.release = "lost")', 't.release === "lost" || (e && t.release === "awaited")', '}, 200)',
+    'o || (ql("panels") && Y_())'])
     assert.ok(text.includes(feature), feature);
-  // D0/R1: no view-tabs import anywhere in this lane, and no second React context.
+  // No second React context here; view-tabs only through the generated modules' own public-name imports.
   for (const file of [...(await fs.readdir(generated)).map(f => path.join(generated, f)), path.join(app, 'src/source-sidebar-resize-adapters.jsx')]) {
     const source = await fs.readFile(file, 'utf8');
-    assert.doesNotMatch(source, /(?:from|import)\s*\(?\s*['"][^'"]*view-tabs/, file);
     assert.doesNotMatch(source, /createContext\(/, file);
+    if (file.endsWith('.jsx')) assert.doesNotMatch(source, /(?:from|import)\s*\(?\s*['"][^'"]*view-tabs/, file);
   }
   assert.equal(await fs.readFile(path.join(app, 'scripts/verify-gen-sidebar-resize.mjs'), 'utf8'),
     "import { extractSidebarResize } from './extract-sidebar-resize.mjs';\nawait extractSidebarResize({ check: true });\n");
 });
 
-test('cdsClassNames is the identity tailwind-merge would be on the handle: checked against the original merge', async () => {
-  // Slice the original shared-frame X (tailwind-merge over clsx, with its vendor-frame closure) from the reference and run it.
-  const vendor = await fs.readFile(path.join(reference, 'vendor-frame-DfPJ1QmD.js'), 'utf8');
-  const local = Object.fromEntries(vendor.match(/export\{([^}]*)\}/)[1].split(',').map(s => s.split(' as ').reverse()));
-  const { files } = await sliceOriginalModules({ modules: [
-    { target: 'merge-vendor.mjs', source: 'vendor-frame-DfPJ1QmD.js', exports: { [local.La]: 'La', [local.Ra]: 'Ra', [local.za]: 'za' } },
-    { target: 'merge.mjs', source: 'shared-frame-BfjMqbuN.js', exports: { X: 'cn' }, features: { X: ['Gt(Y(e))'] } },
-  ] });
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'sidebar-resize-merge-'));
-  try {
-    for (const [name, text] of Object.entries(files)) await fs.writeFile(path.join(dir, name), text);
-    const { cn } = await import(path.join(dir, 'merge.mjs'));
-    assert.equal(cn('px-2', 'px-4'), 'px-4', 'the sliced original really merges');
-    for (const side of ['inline-start', 'inline-end']) {
-      const args = ['cds-reset group/resize outline-none focus-visible:outline-hidden', 'w-3 cursor-col-resize', ['absolute', Resize.resizeHandleSideClasses[side]], 'dframe-resize-handle'];
-      assert.equal(Adapters.cdsClassNames(...args), cn(...args));
-      assert.equal(Adapters.cdsClassNames(...args), handleClass(side));
-    }
-  } finally { await fs.rm(dir, { recursive: true, force: true }); }
+test('bm merges its root className with the view-tabs tailwind-merge (cdsClassNames), the identity on the handle', async () => {
+  // 2.42304.0 answered shared-frame X with clsx (adapter); 3.6556.2 bm imports view-tabs cdsClassNames (shared-frame Q).
+  assert.match(await fs.readFile(path.join(generated, 'resize-handle.mjs'), 'utf8'), /import \{[^}]*cdsClassNames as R,[^}]*\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  assert.equal(Adapters.cdsClassNames, undefined, 'no host stand-in left');
+  assert.equal(ViewTabs.cdsClassNames('px-2', 'px-4'), 'px-4', 'the view-tabs original really merges');
+  for (const side of ['inline-start', 'inline-end']) {
+    const args = ['cds-reset group/resize outline-none focus-visible:outline-hidden', 'w-3 cursor-col-resize', ['absolute', Resize.resizeHandleSideClasses[side]], 'dframe-resize-handle'];
+    assert.equal(ViewTabs.cdsClassNames(...args), handleClass(side));
+  }
+});
+
+// ---------------------------------------------------------------- E34 is over: 3.6556.2 only
+test('no legacy 2.42304.0 view: the compat helper serves 3.6556.2 only and covers every consumer import', async () => {
+  const manifest = JSON.parse(await fs.readFile(path.join(generated, 'manifest.json'), 'utf8'));
+  // w10-cleanup-sidebar-legacy: every consumer (sidebar-sections, session-rail, session-rail-sections) is 3.6556.2.
+  assert.equal(Object.hasOwn(manifest, 'legacy'), false);
+  await assert.rejects(fs.access(path.join(app, 'scripts/sidebar-resize-legacy-2.42304.0.json')));
+  assert.deepEqual(await sidebarResizeManifestFor('3.6556.2'), manifest);
+  await assert.rejects(sidebarResizeManifestFor('2.42304.0'), /sidebar-resize is 3\.6556\.2, expected 2\.42304\.0/);
+  await assert.rejects(sidebarResizeManifestFor('2.37337.1'), /sidebar-resize is 3\.6556\.2, expected 2\.37337\.1/);
+  await assert.rejects(sidebarResizeExportsFor('2.42304.0', 'logical-side.mjs'), /sidebar-resize is 3\.6556\.2, expected 2\.42304\.0/);
+  // sidebar-sections resolveExternal (3.6556.2 file:local -> target export) and session-rail(-sections) areaExports.
+  const byTarget = Object.fromEntries(manifest.modules.map(m => [m.target, m]));
+  assert.deepEqual([byTarget['logical-side.mjs'].source, byTarget['logical-side.mjs'].exports.$h], ['shared-28-DNYlf4wu.js', 'physicalSide']);
+  assert.deepEqual([...await sidebarResizeExportsFor('3.6556.2', 'logical-side.mjs')], [['$h', ['physicalSide']]]);
+  // Every name another area imports from sidebar-resize (derived from the import statements under src/) is exported now,
+  // and every generated importer is a 3.6556.2 module.
+  const consumers = [];
+  const walk = async dir => { for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) { if (full !== generated) await walk(full); } else if (/\.(m?js|jsx)$/.test(entry.name)) consumers.push(full);
+  } };
+  await walk(path.join(app, 'src'));
+  const imported = new Map();
+  for (const file of consumers) for (const [, names, target] of (await fs.readFile(file, 'utf8')).matchAll(/import\s*\{([^}]*)\}\s*from\s*["'][^"']*sidebar-resize\/([\w.-]+)["']/g))
+    for (const name of names.split(',').map(s => s.trim().split(/\s+as\s+/)[0]).filter(Boolean)) imported.set(`${target}:${name}`, path.relative(app, file));
+  assert.ok(imported.has('logical-side.mjs:physicalSide') && imported.has('sidebar-width.mjs:sidebarHidden'), [...imported.keys()].join(' '));
+  for (const [key, file] of imported) {
+    const [target, name] = key.split(':');
+    const now = byTarget[target];
+    assert.ok(now && Object.values(now.exports).includes(name), `${file}: ${key}`);
+    if (!file.startsWith('src/generated/')) continue;
+    const [area, ...rest] = path.relative(path.join(app, 'src/generated'), path.join(app, file)).split(path.sep);
+    const areaManifest = JSON.parse(await fs.readFile(path.join(app, 'src/generated', area, 'manifest.json'), 'utf8'));
+    const entry = areaManifest.modules?.find(m => m.target === rest.join('/'));
+    assert.equal(entry?.referenceVersion ?? areaManifest.referenceVersion, '3.6556.2', `${file} imports ${key}`);
+  }
 });
 
 // ---------------------------------------------------------------- SSR

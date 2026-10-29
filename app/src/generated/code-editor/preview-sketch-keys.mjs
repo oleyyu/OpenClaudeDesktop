@@ -1,10 +1,10 @@
-// Original command matching (2.42304.0), including physical-key versus character rules.
-const $o = () =>
+// Original command matching (3.6556.2), including physical-key versus character rules.
+const $r = () =>
     typeof navigator !== "undefined" && /Mac/.test(navigator.platform),
-  io = () =>
+  ni = () =>
     typeof navigator !== "undefined" && /Linux/.test(navigator.platform);
-const V7 = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-const H7 = [...V7, "0"].flatMap((e) => {
+var KL = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+var qL = [...KL, "0"].flatMap((e) => {
   let t = e === "0" ? "newPreset" : `selectPreset${e}`,
     n = `Digit${e}`;
   return [
@@ -25,14 +25,14 @@ const H7 = [...V7, "0"].flatMap((e) => {
     },
   ];
 });
-const U7 = V7.map((e) => ({
+var JL = KL.map((e) => ({
   command: `selectBrowserTab${e}`,
   key: `cmd+${e}`,
   code: `Digit${e}`,
   when: "isClaudeApp",
   gate: "browserTabStrip",
 }));
-const W7 = [
+var YL = [
   {
     command: "togglePreview",
     key: "cmd+shift+b",
@@ -135,8 +135,15 @@ const W7 = [
     when: "!isLinux",
   },
   { command: "prevDiffChange", key: "shift+f7", code: "F7" },
-  ...H7,
-  ...U7,
+  { command: "nextPrComment", key: "alt+f9", code: "F9", when: "!isLinux" },
+  {
+    command: "prevPrComment",
+    key: "shift+alt+f9",
+    code: "F9",
+    when: "!isLinux",
+  },
+  ...qL,
+  ...JL,
   {
     command: "toggleSideChat",
     key: "cmd+;",
@@ -190,7 +197,7 @@ const W7 = [
     mac: !1,
   },
 ];
-function G7(e) {
+function XL(e) {
   let t = e.split("+");
   return {
     cmd: t.includes("cmd"),
@@ -199,7 +206,7 @@ function G7(e) {
     alt: t.includes("alt"),
   };
 }
-function K7(e, t, n) {
+function ZL(e, t, n) {
   let r = n && t.cmd,
     i = t.ctrl || (!n && t.cmd);
   return (
@@ -209,7 +216,7 @@ function K7(e, t, n) {
     e.altKey === t.alt
   );
 }
-function q7(e, t, n) {
+function QL(e, t, n) {
   return e === "isClaudeApp"
     ? t
     : e === "!isClaudeApp"
@@ -218,7 +225,7 @@ function q7(e, t, n) {
         ? t || !n
         : e !== "!isLinux" || !n;
 }
-function J7(e, t) {
+function $L(e, t) {
   return e === "externalPreviewAvailable"
     ? !!t.externalPreviewAvailable
     : e === "promptJump"
@@ -227,28 +234,28 @@ function J7(e, t) {
         ? !!t.sessionEnvironments
         : e !== "browserTabStrip" || !!t.browserTabStrip;
 }
-function Y7(e, t) {
+function eR(e, t) {
   if (typeof e.key != "string") return null;
-  let n = t.mac ?? $o(),
-    r = t.linux ?? io();
-  for (let i of W7)
+  let n = t.mac ?? $r(),
+    r = t.linux ?? ni();
+  for (let i of YL)
     if (!(t.commands !== void 0 && !t.commands.includes(i.command))) {
       if (i.matchBy === "key") {
         if (e.key.toLowerCase() !== i.key.split("+").at(-1)) continue;
       } else if (i.matchBy === "char") {
-        if (!Z7(e, i.key.split("+").at(-1), i.code)) continue;
-      } else if (!X7(e, i.code)) continue;
+        if (!nR(e, i.key.split("+").at(-1), i.code)) continue;
+      } else if (!tR(e, i.code)) continue;
       if (
-        q7(i.when, t.isClaudeApp, r) &&
+        QL(i.when, t.isClaudeApp, r) &&
         (i.mac === void 0 || i.mac === n) &&
-        J7(i.gate, t) &&
-        K7(e, G7(i.key), n)
+        $L(i.gate, t) &&
+        ZL(e, XL(i.key), n)
       )
         return i.command;
     }
   return null;
 }
-function X7(e, t) {
+function tR(e, t) {
   return [...e.key].length > 1 &&
     e.key !== "Dead" &&
     e.key !== "Unidentified" &&
@@ -256,22 +263,22 @@ function X7(e, t) {
     ? e.key === t
     : e.code === t;
 }
-function Z7(e, t, n) {
-  return /^[ -~]$/.test(e.key) ? e.key.toLowerCase() === t : X7(e, n);
+function nR(e, t, n) {
+  return /^[ -~]$/.test(e.key) ? e.key.toLowerCase() === t : tR(e, n);
 }
-function $7(e, t, n) {
-  return e9(e, t, n)[0];
+function iR(e, t, n) {
+  return aR(e, t, n)[0];
 }
-function e9(e, t, n) {
-  let r = n?.mac ?? $o(),
-    i = n?.linux ?? io(),
+function aR(e, t, n) {
+  let r = n?.mac ?? $r(),
+    i = n?.linux ?? ni(),
     a = [];
-  for (let o of W7)
+  for (let o of YL)
     o.command === e &&
-      q7(o.when, t, i) &&
+      QL(o.when, t, i) &&
       (o.mac === void 0 || o.mac === r) &&
-      J7(o.gate, n ?? {}) &&
+      $L(o.gate, n ?? {}) &&
       a.push(o.key);
   return a;
 }
-export { Y7 as matchSketchCommand, $7 as sketchShortcut };
+export { eR as matchSketchCommand, iR as sketchShortcut };

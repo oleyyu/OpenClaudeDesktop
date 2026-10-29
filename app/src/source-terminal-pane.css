@@ -1,6 +1,6 @@
-/* Terminal pane (2.2553.1 cccc2cf0a / c6bf19e8f): the source-file-panel shell with the Xd tab strip in its header
-   (source-session.css .source-file-tab*), and the xterm body: padding --cds-pad-md 0, the gutter on the left of
-   .xterm, a transparent viewport over the theme background, a 6px rounded scrollbar thumb. */
+/* Terminal pane (3.6556.2 cccc2cf0a Zx / iS, c6bf19e8f): the source-file-panel shell with the official ViewTabBar in its
+   header (styled by its own utilities and source-view-tabs.css), and the xterm body: padding --cds-pad-md 0, the gutter
+   on the left of .xterm, a transparent viewport over the theme background, a 6px rounded scrollbar thumb. */
 .stp-pane.source-file-panel {
   display: flex;
   flex-direction: column;
@@ -9,67 +9,6 @@
 }
 .stp-pane > .source-pane-header {
   flex: none;
-}
-.stp-tabbar {
-  overflow: hidden;
-}
-.stp-tabs {
-  flex: 0 1 auto;
-  overflow-x: auto;
-}
-.stp-tabs::-webkit-scrollbar {
-  display: none;
-}
-.stp-tab {
-  flex-basis: 160px;
-}
-.stp-tab[data-exited] .source-file-tab-label > span {
-  color: var(--cds-text-muted);
-}
-/* "Terminal (command running)": a small accent dot before the label. */
-.stp-tab-dot {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  margin-left: 2px;
-  border-radius: 50%;
-  background: var(--cds-text-accent);
-}
-.stp-tab[data-bell] > .source-file-tab-bg {
-  animation: stp-bell 1.2s ease-out;
-}
-@keyframes stp-bell {
-  0%, 40% { background-color: var(--cds-fill-ghost-selected); }
-  100% { background-color: transparent; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .stp-tab[data-bell] > .source-file-tab-bg { animation: none; }
-}
-html[data-reduce-motion="true"] .stp-tab[data-bell] > .source-file-tab-bg { animation: none; }
-.stp-rename {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  margin: 0 2px;
-  padding: 0 4px;
-  border: 0;
-  border-radius: var(--radius-sm, 0.25rem);
-  outline: none;
-  background: var(--cds-surface-0, transparent);
-  box-shadow: var(--cds-focus-shadow);
-  color: var(--cds-text-primary);
-  font: inherit;
-}
-.stp-new {
-  flex: none;
-}
-/* At the per-session terminal cap: dimmed, with its tooltip saying why (aria-disabled, so it still hovers). */
-.stp-new[aria-disabled="true"] {
-  opacity: .45;
-}
-.stp-new[aria-disabled="true"]:hover {
-  background: none;
-  color: var(--cds-text-secondary);
 }
 .stp-body {
   position: relative;
@@ -120,11 +59,8 @@ html[data-reduce-motion="true"] .stp-tab[data-bell] > .source-file-tab-bg { anim
 .stp-xterm .xterm .xterm-scrollable-element > .shadow {
   box-shadow: none !important;
 }
-/* 2.31226.0 Jt: Surface panel, top-2/right-5, w-48 input, gap-xs/p-xs. */
-.stp-find { position:absolute;top:calc(.5rem * var(--cds-rem-scale,1));right:calc(1.25rem * var(--cds-rem-scale,1));z-index:13;display:flex;align-items:center;gap:var(--cds-gap-xs);padding:var(--cds-pad-xs);max-width:calc(100% - 24px); }
-.stp-find-input { width:calc(12rem * var(--cds-rem-scale,1));min-width:0; }
-.stp-find > .source-settings-button { flex-shrink:0; }
-@media (forced-colors:active) { .stp-find {border:1px solid CanvasText;} }
+/* The find bar (3.6556.2 c6bf19e8f rn) is styled by its official utilities alone (Surface panel classes, absolute
+   top-2 right-5 flex items-center gap-xs p-xs, the w-48 field), no local rule. */
 .stp-error {
   position: absolute;
   left: var(--cds-pad-md);
@@ -163,15 +99,6 @@ html[data-reduce-motion="true"] .stp-tab[data-bell] > .source-file-tab-bg { anim
 /* The idle cursor is cf718f694 B (generated/code-current/terminal-idle-cursor.mjs): its pointer-events-none block
    h-[1lh] w-[1ch] opacity-50 / motion-safe:animate-blink and the pane's group-has-[[data-ccd-terminal]]/terminal:hidden
    come from the loaded c6a992d55 utilities, so no local rule styles it. */
-/* Narrow panes: the strip keeps the selected tab and the + button. */
-@container (max-width: 320px) {
-  .stp-tab:not([data-selected]) {
-    flex-basis: 72px;
-  }
-}
-
-/* 2.31226.0 Xr and ceb49ada3 action strip: original geometry is source-extracted. */
-.stp-selection-action { position:absolute;transform:translate(-50%,-100%);z-index:12;width:max-content;border-radius:4px;background:var(--cds-surface-3);box-shadow:inset 0 0 0 var(--cds-ring-inner,0px) var(--cds-ring-color,transparent),0 0 0 var(--cds-ring-outer,0px) var(--cds-ring-color,transparent),var(--cds-shadow-popover); }
 
 /* c6bf19e8f exited shell / cccc2cf0a Bg load failure: "absolute inset-0 bg-surface-1" over the terminal surface,
    holding the centered EmptyState. */
@@ -181,13 +108,6 @@ html[data-reduce-motion="true"] .stp-tab[data-bell] > .source-file-tab-bg { anim
   z-index: 5;
   background: var(--cds-surface-1);
 }
-/* cccc2cf0a Zg tab description: "ms-xs text-muted" after the name. */
-.stp-tab-description {
-  margin-inline-start: var(--cds-gap-xs, 4px);
-  color: var(--cds-text-muted);
-}
-/* cfe7c4b3b ae rows: the original gap-sm over the host menu default. */
-.stp-overflow-menu .smenu-item { gap: var(--cds-gap-sm); }
 /* cc63499d2 Qm on-target drop ring (z-index layer 40): inset 2px accent ring, then a 24px inner accent glow. */
 .stp-drop-ring {
   position: absolute;

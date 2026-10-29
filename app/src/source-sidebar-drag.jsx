@@ -8,6 +8,9 @@ import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { t } from "../electron/i18n/index.mjs";
 import { sessionPaneDropHost } from "./source-split-view.jsx";
+// 3.6556.2 shared-46 `O` (shared-frame Hf) and `T` (shared-frame Al): the ghost's class merge and its neutral-tone surface;
+// `F` (shared-frame Vo = vE, CdsCounter) the multi-row count and `s` (vendor-frame Ia, useDirection) its side.
+import { CdsCounter, cdsClassNames, cdsSurfaceClass, useDirection } from "./generated/view-tabs/index.js";
 import {
   DEFAULT_ROW_STEP, DRAG_THRESHOLD, GHOST_Z_INDEX, IDLE_INTENT, dragLabel, dropOutcome, intentChanged, intentShifts, nextIntent,
 } from "./sidebar-drag-model.mjs";
@@ -22,7 +25,8 @@ function ignoredPress(target, row) {
     || (target instanceof Node && !row.contains(target));
 }
 
-/** SY: the ghost's copy of the row, without the keys, ids and drag classes, its indent kept, inert. */
+/** SY (3.6556.2 shared-46 dj): the ghost's copy of the row, without the keys, ids and drag classes, its geometry
+ * variables copied from the source row, inert. */
 function cloneRow(row) {
   const clone = row.cloneNode(true);
   for (const node of [clone, ...clone.querySelectorAll("[data-drag-key], [data-row-key], [data-jump-hint-row], [id], .df-drag-shiftable")]) {
@@ -31,7 +35,8 @@ function cloneRow(row) {
   }
   clone.removeAttribute("style");
   const style = getComputedStyle(row);
-  for (const name of ["--df-row-indent", "--df-described-trim"]) clone.style.setProperty(name, style.getPropertyValue(name));
+  for (const name of ["--df-row-indent", "--df-described-trim", "--df-row-h", "--df-row-ctl", "--df-heading-pitch", "--df-described-line", "--df-rail-shift"])
+    clone.style.setProperty(name, style.getPropertyValue(name));
   clone.style.paddingLeft = style.paddingLeft;
   clone.setAttribute("inert", "");
   clone.setAttribute("aria-hidden", "true");
@@ -267,18 +272,30 @@ export function PinnedDropRow({ hot = false, dragging = false }) {
   </div>;
 }
 
-/** LY: the ghost. With a row: the row's copy (or, over a target, the target's label centred and shrunk to it; red
- * over Release to unpin), a count badge for a multi-row drag; with no row (the New session row): a small label
- * bubble. Outside the window (tear-off) it fades into a little window card titled with the session. */
+/** 3.6556.2 shared-46 Dj / Oj: the ghost row's tone surface. Without a label (and in the danger tone) it keeps the
+ * sidebar background and float shadow; a neutral label sits on the popover surface (`Oj=T("popover")`). */
+const GHOST_ROW_SURFACE = "bg-[var(--df-web-sidebar-bg,var(--df-sidebar-bg))] [background-image:var(--df-web-sidebar-bg-image,none)] shadow-[var(--df-shadow-float)]";
+const GHOST_ROW_NEUTRAL = cdsSurfaceClass("popover");
+
+/** LY (3.6556.2 shared-46 Mj): the ghost. With a row: the row's copy (or, over a target, the target's label centred
+ * and shrunk to it; data-tone "danger" over Release to unpin and Ungroup, else "neutral"), a count badge for a
+ * multi-row drag; with no row (the New session row): a small label bubble. Outside the window (tear-off) it fades into
+ * a little window card titled with the session; a native-halo tear-off (`d`, drag.nativeHalo) shrinks further and
+ * shows no card. */
 export function SidebarDragGhost({ drag }) {
-  const outer = useRef(null), cloneHost = useRef(null), measure = useRef(null);
+  const outer = useRef(null), cloneHost = useRef(null), measure = useRef(null), rtl = useDirection() === "rtl";
   const [kept, setKept] = useState(null), [labelWidth, setLabelWidth] = useState(null), [narrowed, setNarrowed] = useState(false);
   const active = drag !== null;
   const ghost = drag?.rowGhost ?? null, hasRow = ghost !== null;
-  const unpin = !!drag?.unpinIntent, tearOff = !!drag?.tearOffIntent;
+  const tearOff = !!drag?.tearOffIntent, nativeHalo = !!drag?.nativeHalo;
+  // Mj `M=r||p===null`: Release to unpin, or a group drop that removes the rows from their group. `p` is pA:
+  // `e.drag?.groupIntent&&!e.drag.groupIntent.reorder?e.drag.groupIntent.groupId:!1` (a reorder inside the group is no drop).
+  const groupId = drag?.groupIntent && !drag.groupIntent.reorder ? drag.groupIntent.groupId : false;
+  const danger = !!drag?.unpinIntent || groupId === null;
   const label = dragLabel(drag);
   const text = label ? t(label.message, label.values) : null;
   const showsLabel = text !== null;
+  const tone = showsLabel ? (danger ? "danger" : "neutral") : undefined;
   if (showsLabel && text !== kept) setKept(text);
   const shown = text ?? kept;
   useLayoutEffect(() => { if (measure.current) setLabelWidth(Math.ceil(measure.current.offsetWidth)); }, [shown, active, hasRow]);
@@ -301,33 +318,35 @@ export function SidebarDragGhost({ drag }) {
     return () => clone.remove();
   }, [clone]);
   if (!active) return null;
-  const hidden = " opacity-0 scale-75";
+  const hidden = nativeHalo ? " opacity-0 scale-[0.35]" : " opacity-0 scale-75";
   const box = ghost ?? { dx: 0, dy: 0, w: 0, h: 0 };
   const width = narrow ? Math.min(labelWidth ?? box.w, box.w) : box.w;
   const left = narrow ? Math.round(width / 2) : box.dx, top = narrow ? Math.round(box.h / 2) : box.dy;
   const name = drag.label || t("Untitled");
   const font = "font-medium text-[length:var(--df-row-font)]";
   return createPortal(<div ref={outer} aria-hidden="true" className="fixed top-0 left-0 pointer-events-none will-change-transform source-drag-ghost" style={{ zIndex: GHOST_Z_INDEX }}>
-    {hasRow && <div className={"absolute overflow-hidden rounded-[var(--df-radius-pill)] bg-[var(--df-web-sidebar-bg,var(--df-sidebar-bg))] [background-image:var(--df-web-sidebar-bg-image,none)] shadow-[var(--df-shadow-float)] transition-[opacity,transform,width,left,top] duration-150 ease-out motion-reduce:transition-none source-drag-ghost-row"
-      + (tearOff ? hidden : unpin ? " opacity-100" : " opacity-90")}
+    {hasRow && <div data-tone={tone} className={cdsClassNames(tone === "neutral" ? GHOST_ROW_NEUTRAL : GHOST_ROW_SURFACE,
+      "absolute overflow-hidden rounded-[var(--df-radius-pill)] transition-[opacity,transform,width,left,top,background-color] duration-150 ease-out motion-reduce:transition-none",
+      tearOff ? hidden : showsLabel ? "opacity-100" : "opacity-90 dark:ring-1 dark:ring-alpha-2", "source-drag-ghost-row")}
       style={{ left: -left, top: -top, width, height: box.h, transformOrigin: `${left}px ${top}px` }}>
       <div ref={cloneHost} className={"absolute inset-0 transition-opacity duration-150 ease-out motion-reduce:transition-none" + (showsLabel ? " opacity-0" : " opacity-100")} />
-      <div className={"absolute inset-0 rounded-[inherit] bg-danger shadow-ring-danger transition-opacity duration-150 ease-out motion-reduce:transition-none" + (unpin ? " opacity-100" : " opacity-0")} />
+      <div className={"absolute inset-0 rounded-[inherit] bg-danger shadow-ring-danger stacks:shadow-none transition-opacity duration-150 ease-out motion-reduce:transition-none" + (tone === "danger" ? " opacity-100" : " opacity-0")} />
       <div className={`absolute inset-0 flex items-center justify-center px-2 ${font} transition-[opacity,color] duration-150 ease-out motion-reduce:transition-none`
-        + (showsLabel ? " opacity-100" : " opacity-0") + (unpin ? " text-danger" : " text-primary")}>
+        + (showsLabel ? " opacity-100" : " opacity-0") + (tone === "danger" ? " text-danger" : " text-primary")}>
         <span className="min-w-0 truncate" data-drag-label="">{shown}</span>
       </div>
       {shown !== null && <span ref={measure} aria-hidden="true" className={`invisible absolute w-max px-3 whitespace-nowrap ${font}`}>{shown}</span>}
     </div>}
-    {hasRow && drag.keys.length > 1 && <span data-cds="Badge" data-variant="accent" data-size="xs"
-      className="source-drag-count absolute -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-150 ease-out motion-reduce:transition-none"
-      style={{ left: width - left - 4, top: -top + 2 }}>{drag.keys.length}</span>}
+    {/* Mj `n&&v>1?o(F,{value:v,variant:"accent",size:"xs",className:…,style:{left:y?-ie+4:re-ie-4,top:-Y+2}}):null` (y = rtl). */}
+    {hasRow && drag.keys.length > 1 && <CdsCounter value={drag.keys.length} variant="accent" size="xs"
+      className="absolute -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-150 ease-out motion-reduce:transition-none"
+      style={{ left: rtl ? -left + 4 : width - left - 4, top: -top + 2 }} />}
     {!hasRow && <div className={"absolute bottom-4 left-0 -translate-x-1/2 px-2 py-1 rounded-md text-[13px] whitespace-nowrap transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none origin-[50%_42px] "
       + (tearOff ? "" : "backdrop-blur-md ")
-      + (unpin ? "bg-danger text-danger border-[0.5px] border-danger font-medium" : "bg-[color-mix(in_srgb,var(--cds-surface-3)_80%,transparent)] text-primary border-[0.5px] shadow-sm")
+      + (danger ? "bg-danger text-danger border-[0.5px] border-danger stacks:border-transparent font-medium" : "bg-[color-mix(in_srgb,var(--cds-surface-3)_80%,transparent)] text-primary border-[0.5px] shadow-sm")
       + (tearOff ? hidden : " opacity-100 scale-100")} data-drag-label="">{text ?? name}</div>}
     <div aria-hidden="true" className={"absolute left-0 -translate-x-1/2 -top-[26px] w-[224px] h-[148px] rounded-lg bg-[color-mix(in_srgb,var(--cds-surface-3)_70%,transparent)] backdrop-blur-md border border-alpha-4 shadow-lg flex flex-col items-center justify-center gap-3 transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none origin-top "
-      + (tearOff ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none")} data-tear-off-card={tearOff ? "" : undefined}>
+      + (tearOff && !nativeHalo ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none")} data-tear-off-card={tearOff && !nativeHalo ? "" : undefined}>
       <div className="relative w-[52px] h-[44px]">
         <div className="absolute right-0 bottom-0 w-[44px] h-[34px] rounded border-[1.5px] border-alpha-3" />
         <div className="absolute left-0 top-0 w-[44px] h-[34px] rounded bg-[color-mix(in_srgb,var(--cds-surface-3)_90%,transparent)] border-[1.5px] border-alpha-4">

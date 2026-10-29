@@ -1,5 +1,5 @@
-// Original current Preview address classifier and Unicode normalization.
-function LU(e, t) {
+// Original 3.6556.2 Preview address classifier and Unicode normalization (c224804cc-Ct9XIdre, shared-25-DOWZRSlq).
+function MH(e, t) {
   let n = "";
   for (let r = 0; r < e.length; r++) {
     let i = e.charCodeAt(r),
@@ -10,7 +10,7 @@ function LU(e, t) {
   }
   return n;
 }
-function RU(e) {
+function NH(e) {
   let t = e.isWellFormed;
   if (typeof t == "function") return t.call(e);
   for (let t = 0; t < e.length; t++) {
@@ -23,42 +23,42 @@ function RU(e) {
   }
   return !0;
 }
-function zU(e) {
+function PH(e) {
   let t = e.toWellFormed;
-  return typeof t == "function" ? t.call(e) : LU(e, "\uFFFD");
+  return typeof t == "function" ? t.call(e) : MH(e, "\uFFFD");
 }
-function BU(e) {
-  return RU(e) ? e : LU(e, "");
+function FH(e) {
+  return NH(e) ? e : MH(e, "");
 }
-const p = BU,
-  m = zU,
-  h = RU;
-const G = /^([a-z][a-z0-9+.-]*):\/\//i;
-const K = new Set(["http", "https"]);
+const m = FH,
+  h = PH,
+  g = NH;
+const se = /^([a-z][a-z0-9+.-]*):\/\//i;
+const ce = new Set(["http", "https"]);
 const le = /^(localhost|127(\.\d+){3}|\[?::1\]?|0\.0\.0\.0)$/i;
-const q = /^[A-Za-z]:[/\\]/;
-const ue = /^["'`\u2018-\u201F\s]*\\\\/;
-const J = /^[/\\~$%]/;
-function Y(e) {
+const ue = /^[A-Za-z]:[/\\]/;
+const de = /^["'`\u2018-\u201F\s]*\\\\/;
+const fe = /^[/\\~$%]/;
+function q(e) {
   return e.endsWith(".localhost") || le.test(e);
 }
-function de(e) {
+function J(e) {
   return e.endsWith(".") ? e.slice(0, -1) : e;
 }
-function X(e) {
+function Y(e) {
   let t = e.replace(/^https?:\/\//, "");
   if (t === e) return e;
   let n = /^([^/?#]+)\/$/.exec(t)?.[1];
   return n === void 0 ? t : pe(n.slice(n.lastIndexOf("@") + 1)) ? n : t;
 }
-const Z = /[^\s:@]*:(?!\/\/)[^\s@]+@/;
-const fe = /(?:^|[^\w-])(ghp_|gho_|ghu_|ghs_|ghr_|github_pat_|glpat-)[^\s@]*@/i;
+const X = /[^\s:@]*:(?!\/\/)[^\s@]+@/;
+const Z = /(?:^|[^\w-])(ghp_|gho_|ghu_|ghs_|ghr_|github_pat_|glpat-)[^\s@]*@/i;
 function Q(e) {
-  return Z.test(e) || fe.test(e)
+  return X.test(e) || Z.test(e)
     ? null
     : {
         kind: "search",
-        url: `https://www.google.com/search?q=${encodeURIComponent(m(e))}`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(h(e))}`,
       };
 }
 function pe(e) {
@@ -74,27 +74,22 @@ function pe(e) {
 }
 function me(e, t) {
   let n = he(e, t);
-  if (n?.kind === "search" && !h(e)) {
-    let n = p(e);
-    if (J.test(n.trim()) || he(n, t)?.kind !== "search") return null;
+  if (n?.kind === "search" && !g(e)) {
+    let n = m(e);
+    if (fe.test(n.trim()) || he(n, t)?.kind !== "search") return null;
   }
   return n;
 }
 function he(e, t) {
   let n = e.trim();
   if (!n) return null;
-  let r = null;
-  try {
-    r = new URL(t);
-  } catch {
-    r = null;
-  }
-  let i = r !== null && (r.protocol === "http:" || r.protocol === "https:");
-  if (i && (n === t || n === X(t))) return { kind: "navigate", url: t };
-  if (ue.test(n)) return null;
+  let r = URL.parse(t),
+    i = r !== null && (r.protocol === "http:" || r.protocol === "https:");
+  if (i && (n === t || n === Y(t))) return { kind: "navigate", url: t };
+  if (de.test(n)) return null;
   let a = n.slice(1, -1),
     o = a.trim();
-  if (n === `"${a}"` && !a.includes('"') && q.test(o))
+  if (n === `"${a}"` && !a.includes('"') && ue.test(o))
     return { kind: "file", path: o };
   if (/^file:/i.test(n)) {
     let e;
@@ -110,21 +105,17 @@ function he(e, t) {
   if (
     /^~($|[/\\])/.test(n) ||
     /^\.\.?[/\\]/.test(n) ||
-    q.test(n) ||
+    ue.test(n) ||
     (/^\/(?!\/)/.test(n) && !i)
   )
     return { kind: "file", path: n };
-  if (r !== null && r.protocol === "file:" && (J.test(n) || /\s/.test(n)))
+  if (r !== null && r.protocol === "file:" && (fe.test(n) || /\s/.test(n)))
     return null;
-  let s = G.exec(n);
-  if (s) {
-    if (!K.has(s[1].toLowerCase())) return Q(n);
-    try {
-      return (new URL(n), { kind: "navigate", url: n });
-    } catch {
-      return Q(n);
-    }
-  }
+  let s = se.exec(n);
+  if (s)
+    return ce.has(s[1].toLowerCase()) && URL.canParse(n)
+      ? { kind: "navigate", url: n }
+      : Q(n);
   if (n.startsWith("/") && i && r !== null)
     return { kind: "navigate", url: `${r.protocol}//${r.host}${n}` };
   let c = n.replace(/^\/+/, ""),
@@ -135,12 +126,12 @@ function he(e, t) {
     try {
       let t = new URL(e);
       e.startsWith("https://") &&
-        Y(t.hostname) &&
+        q(t.hostname) &&
         ((t.hostname.endsWith(".localhost") &&
           i &&
           r !== null &&
           t.port === r.port &&
-          Y(de(r.hostname))) ||
+          q(J(r.hostname))) ||
           (e = `http://${e.slice(8)}`));
     } catch {
       return Q(n);

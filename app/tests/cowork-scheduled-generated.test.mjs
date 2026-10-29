@@ -7,13 +7,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { extractCoworkScheduled } from '../scripts/extract-cowork-scheduled.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
-// R4g-routines RTC (CW-1): the Cowork Scheduled page's 2.42304.0 pieces (scripts/extract-cowork-scheduled.mjs: ccd3f68fe
-// qo detail / el templates, c97b955f1 Ca form, over routines-shared's cards and src/source-routine-cowork-adapters.jsx),
+// R4g-routines RTC (CW-1): the Cowork Scheduled page's 3.6556.2 pieces (w3-cowork-scheduled; scripts/extract-cowork-scheduled.mjs:
+// ccd3f68fe ps detail / su templates, c97b955f1 La form, over routines-shared's cards and src/source-routine-cowork-adapters.jsx),
 // and the page host (src/source-routine-cowork-page-adapters.jsx). SSR, and the form through a hook dispatcher (D21);
 // no browser, no network, no external process.
 const app = path.resolve(import.meta.dirname, '..');
-const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
+const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official = name => fs.readFileSync(path.join(v1, name), 'utf8');
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
@@ -71,7 +72,7 @@ function fixture(component, props, contexts) {
     useTransition: () => [false, fn => fn()], useDeferredValue: value => value,
   };
   hooks.useLayoutEffect = hooks.useEffect; hooks.useInsertionEffect = hooks.useEffect; hooks.useEffectEvent = fn => fn;
-  const render = () => { cursor = 0; const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H; internal.H = hooks; try { return (tree = component(props)); } finally { internal.H = old; } };
+  const render = () => { cursor = 0; const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H; internal.H = withMemoCache(hooks); try { return (tree = component(props)); } finally { internal.H = old; } };
   const settle = () => { for (let i = 0; i < 3; i++) { render(); while (effects.length) effects.shift()(); } render(); };
   settle();
   return { get tree() { return tree; }, settle };
@@ -96,52 +97,66 @@ function openForm(props, host) {
 
 test('the generated graph is current (--check), its roots and adapters exist, and it shares routines-shared', async () => {
   const manifest = await extractCoworkScheduled({ check: true });
-  assert.equal(manifest.referenceVersion, '2.42304.0');
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   for (const name of Object.keys(manifest.publicNames)) assert.ok(name in gen, `index.mjs exports ${name}`);
   for (const { name } of manifest.adapters) assert.ok(name in cowork, `adapter ${name}`);
   assert.ok(manifest.routinesSharedImports > 100, 'bindings routines-shared holds are imported, not copied');
   // The card menu and the scheduled copy are routines-shared's own objects.
-  assert.equal(manifest.publicNames.ScheduledTaskMenu.routinesShared, 'shared-18-D4XxL6Tg.mjs');
-  assert.match(local('src/generated/cowork-scheduled/index.mjs'), /export \{ Az as ScheduledTaskMenu \} from "\.\.\/routines-shared\/shared-18-D4XxL6Tg\.mjs";/);
+  assert.equal(manifest.publicNames.ScheduledTaskMenu.routinesShared, 'shared-18-D3y8YMFN.mjs');
+  assert.match(local('src/generated/cowork-scheduled/index.mjs'), /export \{ vW as ScheduledTaskMenu \} from "\.\.\/routines-shared\/shared-18-D3y8YMFN\.mjs";/);
+  // The form's focus-return hook (shared-7 kk) reads shared-frame rn through its view-tabs semantic name (D46).
+  assert.match(local('src/generated/cowork-scheduled/shared-7-DBAgAi5H.mjs'), /\bcanFocusComposerOnClick as [\w$]+,[^}]*\} from "\.\.\/view-tabs\/shared-frame-6jtSkIit\.js";/);
   // Nothing in the graph comes from the 2.31226.0 current-chat graph.
   for (const file of fs.readdirSync(path.join(app, 'src/generated/cowork-scheduled'))) assert.doesNotMatch(local(`src/generated/cowork-scheduled/${file}`), /current-chat/, file);
   // Official evidence of the roots (counted on the minified chunks).
-  const ccd = official('ccd3f68fe-DGWS8cEm.js'), form = official('c97b955f1-BlGH1qrk.js');
-  for (const needle of ['function qo({scheduledTask:e,routineAnswer:t,routineRead:u="unavailable"', 'function el({template:e,busy:t=!1,disabled:n=!1,onSelect:r})',
-    'Xc=[{id:"daily_briefing"', 'Approvals you grant during a run appear here.']) assert.equal(count(ccd, needle), 1, needle);
-  for (const needle of ['var Ki=e({UpsertScheduledTaskModal:()=>Ca})', 'Skip all approvals can stay on', 'qs=!!le?.createScheduledTask&&!w?.localTasksOff'])
-    assert.equal(count(form, needle), 1, needle);
+  const ccd = official('ccd3f68fe-C8Xiv_qI.js'), form = official('c97b955f1-Dd4YYfBl.js');
+  for (const needle of ['function ps(e){let $=J9(576),{scheduledTask:t,routineAnswer:d,routineRead:f,', 'function su(e){let $=J9(20),{template:t,busy:n,disabled:r,onSelect:a}=e',
+    'eu=[{id:"daily_briefing"', 'Approvals you grant during a run appear here.', 'backHref:se,']) assert.equal(count(ccd, needle), 1, needle);
+  for (const needle of ['var aa=e({UpsertScheduledTaskModal:()=>La})', 'which can keep its own permission setting. If Skip all approvals applies',
+    'qs=!!we?.createScheduledTask&&!He?.localTasksOff']) assert.equal(count(form, needle), 1, needle);
 });
 
-test('the page imports the 2.42304.0 pieces, not current-chat; current-chat no longer carries them', () => {
+test('the page imports the cowork-scheduled pieces; the 2.31226.0 current-chat graph is retired', () => {
   const source = local('src/source-routines.jsx');
   assert.doesNotMatch(source, /generated\/current-chat/);
   assert.match(source, /from '\.\/generated\/cowork-scheduled\/index\.mjs';/);
   assert.match(source, /ScheduledTaskStatusLine as RoutineStatus, ScheduledTaskDivider as RoutineDivider \} from '\.\/generated\/routines-shared\/index\.mjs';/);
-  const provenance = JSON.parse(local('src/generated/current-chat/provenance.json'));
-  for (const chunk of ['ccd3f68fe-', 'c97b955f1-', 'cdbc75b4b-', 'shared-150-', 'ca0c38004-', 'cff2bf6cb-'])
-    assert.equal(provenance.modules.some(m => m.source.startsWith(chunk)), false, chunk);
-  assert.equal(fs.existsSync(path.join(app, 'src/generated/current-chat/c97b955f1-BIk31E_b.js')), false);
+  // w10-curchat-retire (CC-14 / CC-16): the generator, its prepare script and the whole folder are gone, so its
+  // unreached scheduled-task adapter rows (ccd3f68fe, c97b955f1, cdbc75b4b, ...) went with them.
+  for (const rel of ['src/generated/current-chat', 'scripts/extract-current-chat-ui.mjs', 'scripts/prepare-current-chat-ui.mjs'])
+    assert.equal(fs.existsSync(path.join(app, rel)), false, rel);
 });
 
-test('templates: the 2.42304.0 el card over Xc / Yc, and the grid classes the page applies', () => {
+test('templates: the su card over eu / $l, and the grid classes the page applies', () => {
   const ids = gen.SCHEDULED_TASK_TEMPLATES.map(template => template.id);
   assert.deepEqual(ids, ['daily_briefing', 'inbox_triage', 'meeting_prep', 'weekly_review', 'content_ideas', 'monitor_topic']);
   const daily = gen.SCHEDULED_TASK_TEMPLATES[0];
   assert.equal(daily.cron, '0 8 * * 1-5');
   assert.equal(gen.scheduledTaskTemplateMessages[daily.title].defaultMessage, 'Daily briefing');
-  // 2.42304.0 templates carry a "Set up a … with Claude" prompt, no task prompt body (host difference: the form opens
+  // The templates carry a "Set up a … with Claude" prompt, no task prompt body (host difference: the form opens
   // with name, description and schedule; the instructions start empty).
   assert.equal('promptBody' in daily, false);
   assert.match(gen.scheduledTaskTemplateMessages[daily.prompt].defaultMessage, /^Set up a \{kind, select, routines \{routine\} other \{scheduled task\}\} that gives me/);
   const html = renderToStaticMarkup(h(gen.ScheduledTaskTemplateCard, { template: daily, onSelect() {} }));
-  assert.match(html, /^<button type="button" aria-busy="false" class="group relative flex w-full gap-md overflow-hidden rounded-lg p-2 text-start/);
+  // The card draws routines-shared's cdbc75b4b Gr, a hit row (RC-05).
+  assert.match(html, /^<button type="button" aria-busy="false" class="group relative hit-row hit-row-main flex w-full gap-md rounded-lg p-2 text-start/);
   assert.match(text(html), /Daily briefing What needs your attention today across calendar, email, and messages\.\W+Weekdays at 8:00 AM/);
   assert.equal(gen.routineGridClass, 'mb-3 grid auto-rows-fr grid-cols-1 gap-3 md:mb-6 md:grid-cols-2 md:gap-6');
-  assert.equal(`${gen.routineTemplateGridClass} ${gen.routineTemplateColumnsClass}`, 'grid w-full grid-cols-1 gap-x-6 gap-y-md md:grid-cols-2');
+  // RC-05 (w3-cowork-scheduled): the template grid is 3.6556.2 cdbc75b4b Wr(columns) (ccd3f68fe-C8Xiv_qI wraps it as
+  // `w-full ${Wr(u)}`, columns 2); 2.42304.0 ccd3f68fe Qc ("grid w-full grid-cols-1 gap-x-6 gap-y-md" + "md:grid-cols-2") is gone.
+  assert.equal(gen.routineTemplateGridClass, 'grid grid-cols-1 hit-grid-gap-y-md');
+  assert.equal(gen.routineTemplateTwoColumnGridClass, 'grid grid-cols-1 hit-grid-gap-y-md md:grid-cols-2 md:hit-grid-gap-x-6');
+  assert.equal('routineTemplateColumnsClass' in gen, false);
+  const manifest = JSON.parse(local('src/generated/cowork-scheduled/manifest.json'));
+  assert.deepEqual(manifest.literals.routineTemplateTwoColumnGridClass, { file: 'cdbc75b4b-BCUW8bqT.js', owner: 'Wr', value: gen.routineTemplateTwoColumnGridClass });
+  assert.ok(manifest.callSites.some(site => site.source === 'ccd3f68fe-C8Xiv_qI.js'
+    && site.features.includes('o("div",{className:`w-full ${eo(u)}`,children:[a,I.map((e,t)=>i(su,{template:e,')));
+  const pageSource = local('src/source-routines.jsx');
+  assert.match(pageSource, /<div className=\{`w-full \$\{routineTemplateTwoColumnGridClass\}`\}>/);
 });
 
-test('card: routines-shared Ji inside the page host, linking to the task and offering its menu', () => {
+test('card: the routines-shared card inside the page host, linking to the task and offering its menu', () => {
   const { host } = pageHost();
   const task = routine.sourceRoutine(row());
   const html = renderToStaticMarkup(inPage(host, h(page.CoworkScheduledTaskCard, { task, title: task.displayName,
@@ -152,22 +167,27 @@ test('card: routines-shared Ji inside the page host, linking to the task and off
   assert.match(text(html), /Daily digest Morning summary Active\W+Daily at 9:00 AM/);
 });
 
-test('detail: ccd3f68fe qo for a local task, its run history without the cloud-move "Only this computer" mark', () => {
+test('detail: ccd3f68fe ps for a local task, its run history without the cloud-move "Only this computer" mark', () => {
   const { host } = pageHost();
   const task = { ...routine.sourceRoutine(row()), missedRuns: [{ time: new Date(Date.now() - 864e5).toISOString(), reason: 'per_task_limit' }] };
   const sessions = [{ sessionId: 's1', createdAt: Date.now() - 36e5, origin: 'scheduled_trigger', ranOn: 'this_computer', lastActivityAt: Date.now() - 35e5, isRunning: false, liveStatus: 'idle' }];
   const html = renderToStaticMarkup(inPage(host, h(page.CoworkScheduledTaskDetail, { scheduledTask: task, sessions, isRunning: false, isDeleting: false,
-    onRunNow() {}, onEnable() {}, onDisable() {}, onEdit() {}, onDelete() {}, onBack() {}, onSessionClick() {}, sessionHrefPrefix: '/cowork' })));
+    onRunNow() {}, onEnable() {}, onDisable() {}, onEdit() {}, onDelete() {}, onBack() {}, onSessionOpen() {}, sessionHrefPrefix: '/cowork' })));
   const body = text(html);
   for (const part of ['All scheduled tasks', 'Daily digest', 'Morning summary', 'Active', 'Only on this computer', 'Next run:', 'Run now', 'History', 'Skipped',
     'Instructions', 'Summarize /notes today', 'Folder', '/tmp/digest', 'Repeats', 'Daily at 9:00 AM']) assert.ok(body.includes(part), part);
   // Local task: no device hold, no session host stop, no cloud move, and the run row has no ranOn mark.
   for (const absent of ['Only this computer', 'Move to cloud', 'Paused until', 'connection-hold', 'routine-moved']) assert.ok(!html.includes(absent), absent);
   assert.match(html, /aria-label="Enable schedule"/);
+  // 3.6556.2 ps draws the back link from backHref (the page adapter maps the page's onBack to it).
+  assert.match(html, /<a href="\/scheduled-task"[^>]*>.*?All scheduled tasks<\/a>/);
+  assert.equal(page.coworkDetailProps({ onBack() {}, sessions: [] }).backHref, page.COWORK_SCHEDULED_HREF);
+  assert.equal('onBack' in page.coworkDetailProps({ onBack() {}, sessions: [] }), false);
+  assert.equal('backHref' in page.coworkDetailProps({ sessions: [] }), false);
   assert.deepEqual(page.coworkDetailProps({ scheduledTask: { migratedFromLocalTask: { id: 'x' } }, sessions }).sessions[0].ranOn, 'this_computer');
 });
 
-test('form: c97b955f1 Ca creates a local Cowork task through the page bridge (local-routines create)', async () => {
+test('form: c97b955f1 La creates a local Cowork task through the page bridge (local-routines create)', async () => {
   const { host, calls } = pageHost();
   let closed = 0;
   const form = openForm({ onClose: () => closed++ }, host);
@@ -204,17 +224,17 @@ test('form: a template seeds name, description and schedule; editing maps the pi
   form.type('Instructions', 'Summarize my notes, briefly.');
   form.save().props.onClick();
   await new Promise(resolve => setTimeout(resolve, 20));
-  // The 2.42304.0 Cowork form offers Default / Auto / Skip all approvals; its Default is the host's ask.
+  // The Cowork form offers Default / Auto / Skip all approvals; its Default is the host's ask.
   assert.deepEqual(edited.calls, [{ action: 'update', id: 't1', name: 'Daily digest', description: 'Morning summary', prompt: 'Summarize my notes, briefly.',
     folder: '/tmp/digest', cron: '0 9 * * *', fireAt: null, execution: { model: 'deepseek-chat', permission: 'ask' } }]);
   assert.deepEqual(page.scheduledTaskRequest({ scheduledTaskId: 't1', displayName: 'Renamed' }, editingRow, {}).execution, { model: 'deepseek-chat', permission: 'acceptEdits' });
 });
 
-test('form folder picker (shared-8 rB adapter) chooses through the host directory dialog', async () => {
+test('form folder picker (shared-8 _J adapter) chooses through the host directory dialog', async () => {
   const { host, calls } = pageHost();
   const added = [];
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-  internal.H = { useContext: () => host, useCallback: fn => fn };
+  internal.H = withMemoCache({ useContext: () => host, useCallback: fn => fn });
   let picker;
   try { picker = cowork.FolderPicker({ controlledSelection: { selectedFolders: [], addSelectedFolder: folder => added.push(folder) }, placeholder: 'Work in a folder' }); }
   finally { internal.H = old; }
@@ -251,17 +271,22 @@ test('bridge: status changes go to local-routines; CoworkScheduledTasks forwards
 });
 
 test('host answers: gates off, no cloud / devices / projects / skills, unsupervised modes by host capability; zh-CN run status copy', () => {
-  assert.equal(cowork.useServerGate(), false);
+  assert.equal('useServerGate' in cowork, false, 'the 3.6556.2 graph reads no server gate adapter');
   assert.deepEqual(cowork.useClaudeAiFeature('dramatic_shrimp'), { status: 'blocked_by_platform', isAvailable: false, isPolicyBlocked: true, isUpsellEligible: false });
   assert.deepEqual(cowork.useGrowthBookFeature('x'), { value: null, on: false, off: true, source: 'unknownFeature', ruleId: '' });
   assert.equal(cowork.useDynamicConfig('yukon_silver_config', { memoryGB: 4 }).memoryGB, 4);
   assert.equal(cowork.useSkillChipCatalog().size, 0);
   assert.equal(cowork.useRemoteToolGrants().routineRead, 'unavailable');
+  assert.ok('storedPermissionMode' in cowork.useRemoteToolGrants());
+  assert.deepEqual(Object.keys(cowork.useRoutineDraftGenerator()), ['generateRoutineDraft']);
+  assert.equal(cowork.useConnectorLookup().mcpUrlKeyNamesOn, false);
+  assert.deepEqual(cowork.useOrgComputeSettings().defaultWorker, null);
+  assert.equal(cowork.useFormCloudEnvironmentsMissing(), false);
   for (const hook of ['useUnifiedRoutineForm', 'useCodeRoutineCreateOffered', 'useProjectsReady', 'useSubscriptionPastDue', 'useTaskFileModelUnavailable'])
     assert.equal(cowork[hook](), false, hook);
   const modes = patch => {
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-    internal.H = { useContext: () => ({ bypassEnabled: false, ...patch }), useMemo: fn => fn() };
+    internal.H = withMemoCache({ useContext: () => ({ bypassEnabled: false, ...patch }), useMemo: fn => fn() });
     try { return [...cowork.useUnsupervisedPermissionModes()]; } finally { internal.H = old; }
   };
   assert.deepEqual(modes({}), ['auto']);

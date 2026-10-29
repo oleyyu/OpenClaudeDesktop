@@ -1,50 +1,62 @@
-// R4f-rail SR-2: extract the 2.42304.0 Code session rail's view (the "Session details" aside) without executing any
-// desktop runtime (decision D0: own generator, own output folder src/generated/session-rail, own
+// R4f-rail SR-2: extract the Code session rail's view (the "Session details" aside) without executing any desktop
+// runtime (decision D0: own generator, own output folder src/generated/session-rail, own
 // scripts/verify-gen-session-rail.mjs). Spec: analysis/code-ui-migrate-20261017/research/r4-session-rail.md §1.2, §2,
 // §8 SR-2, §10. The rail's primitives, stores and shell are SR-1's session-rail-kit, imported by public name.
+// w5-session-rail-gen (2026-10-26): the originals are Claude Desktop 3.6556.2 (analysis/claude-3.6556.2-migrate-20261025,
+// research/panes.md §1.1 / §2.1 C1-5…C1-9, C1-13 / §3.2; plan R1–R15, E3/E5/E7/E34/E37). Target files and export names are
+// those of 2.42304.0 (R4/E7); the rail view adds the engine plugin card ($j) and its empty default (Wj).
 //
-//   rail-view.mjs          cf74bc599 iD (memo; the session key provider) → rD (<aside aria-label="Session details">: the
-//                          region entry, the scroll area and the card stack) → DE / wE (the dnd-kit sortable card stack:
-//                          order / hidden from epitaxy.sessionRailSections, slot presence, drop animation) and the cards:
-//                          Environment (environment row bD / xD, folder rows gD / _D / hD, branch row, worktree mark),
-//                          Connectors (lD / uD / cD), Outputs (xE / bE / _E / gE / hE), Changes (the PR bar slot under
-//                          the row / sans contexts), plus TD (the inline skeleton).
-//   rail-derive.mjs        cf74bc599's pure derivations fO feeds rD with: folder RE, extra folders ME, branch HE / VE,
-//                          worktree XE, lazy worktree ZE / QE, environment GE / KE / UE, connectors PE / uE, plan nD,
-//                          Remote Control zE, the meta fields rO, the composer menu → section map tO, the git-info select
-//                          sO, BE (6 s); rail-hooks.mjs: lO (the pending hold), cO (the checkout's branch and repo name over
-//                          the git-info query), nO (a composer menu request opens its rail section).
-//   dnd-kit.mjs            c09f6b4e5: core, sortable and utilities as DE / wE use them. R4i GR4: its 13 roots are imported
-//                          from sidebar-reorder's byte-for-byte copy of the chunk (the one copy) and re-exported here.
-//   save-environment.mjs   R4i-rail RL1: cf74bc599 Ay (the rail's "save this folder as an environment" setup), Iy (the flat
-//                          rail's "Save" link beside the environment row), Ly (the stacked rail's row), Py / Ny / My (the
-//                          save request on the scope store, its checkout, the outcome), ky (the suggested name); with
-//                          cd0cf5b5e p / Fe (target equality, model settings), cead7e0c5 b (the last session's settings for
-//                          a target) and their small originals (shared-20 Wk, shared-28 oh). The environment store (cd0cf5b5e
-//                          z), the local sessions store (shared-8 Q), the session → environment record (shared-19 D7), the
-//                          non-local environment create (c73f45bc3 Kc) and the model alias table (c4e18af0a c) are host
-//                          adapters in src/source-session-rail-adapters.jsx.
-//   …                      and the small originals those read (c4db265df ft, shared-25 zU / ZU / $U, shared-19 u$ / P7,
-//                          shared-frame iC, c96d752d0 qz / Yz, c5304ebdb O, ccc47c03f N, shared-52 Ha / UV / Gs, shared-7
-//                          MT / jT, shared-130 rR / FE / NE, shared-78 mN, shared-11 Ed, c73f45bc3 gg).
+//   rail-view.mjs          cf74bc599 Zj (memo; the session key provider) → Gj (<aside aria-label="Session details">: the
+//                          region entry, the scroll area and the card stack) → sj / ij (the dnd-kit sortable card stack:
+//                          order / hidden from the kit's rail sections store, slot presence, drop animation) and the
+//                          cards: Environment (environment row hM / gM, folder rows uM / dM / lM, branch row, worktree
+//                          mark), Connectors (rM / iM / nM), Outputs ($A / QA / YA / JA / qA), Changes (the PR bar slot
+//                          under the row / sans contexts), an engine plugin's rail pane ($j; the host passes none), plus
+//                          xM (the inline skeleton).
+//   rail-derive.mjs        cf74bc599's pure derivations TN feeds Gj with: folder Cj, extra folders _j, branch Dj / Ej,
+//                          worktree Lj, lazy worktree Rj / zj, environment Mj / Nj / Oj, connectors yj / HA, plan Uj,
+//                          Remote Control wj, the meta fields gN, the composer menu → section map pN, the git-info select
+//                          bN, Tj (6 s); rail-hooks.mjs: SN (the pending hold), xN (the checkout's branch and repo name
+//                          over the git-info query), mN (a composer menu request opens its rail section).
+//   dnd-kit.mjs            c09f6b4e5: core, sortable and utilities as sj / ij use them. Its 13 roots are imported from
+//                          sidebar-reorder's byte-for-byte copy of the chunk (the one copy) and re-exported here.
+//   save-environment.mjs   cf74bc599 Vx (the rail's "save this folder as an environment" setup), Qx (the flat rail's "Save"
+//                          link beside the environment row), $x (the stacked rail's row), Xx / Yx / Jx (the save request
+//                          on the scope store, its checkout, the outcome), Bx (the suggested name), Nx (the "Save as
+//                          environment" label); with cd0cf5b5e p / Fe (target equality, model settings), cead7e0c5 v (the
+//                          last session's settings for a target) and their small originals (shared-20 uA, shared-28 l_).
+//                          The environment store, the local sessions store, the session → environment record, the
+//                          non-local environment create and the model alias table are host adapters in
+//                          src/source-session-rail-adapters.jsx.
+//   …                      and the small originals those read (c4db265df Ze, shared-25 UH / DG / kG, shared-46 tM / WL,
+//                          shared-frame yT, c96d752d0 cL / dL, c5304ebdb E, ccc47c03f I, shared-52 Ro / hJ / Gc, shared-7
+//                          Ik / Fk, shared-130 EH / VA / zA / UV, shared-78 eB, shared-11 cm, c73f45bc3 _v).
 //
-// fO (the data assembly behind EpitaxySessionRailHost) is not emitted: it reads claude.ai session meta, remote
-// environments, Remote Control and artifacts. Its text is pinned as a call site; the host assembler (SR-7) builds iD's
-// props from host data with the derivations above and calls lO / BE / hg / cO / nO as fO does.
+// TN (the data assembly behind EpitaxySessionRailHost = LN = memo(TN)) is not emitted: it reads claude.ai session meta,
+// remote environments, Remote Control, engine plugins and artifacts. Its text is pinned as a call site; the host assembler
+// (SR-7) builds Zj's props from host data with the derivations above and calls SN / Tj / _v / xN / mN as TN does.
 //
-// Every emitted binding is an original top-level declaration sliced from the installed chunk (a module's bindings are
-// the reachable closure of its roots; free variables by Babel scope analysis; a top-level statement that initialises a
+// Every emitted binding is an original top-level declaration sliced from the 3.6556.2 chunk (a module's bindings are the
+// reachable closure of its roots; free variables by Babel scope analysis; a top-level statement that initialises a
 // binding — a TypeScript enum body, a static member — goes with it). An import or same-chunk binding resolves, in this
 // order, to: a host adapter in src/source-session-rail-adapters.jsx (feature-checked against the original it replaces),
-// an earlier module of this area, a session-rail-kit public name, a view-tabs public name (D1/D24; a member of a public
-// compound such as CdsDropdown.Item is read off the compound after checking its declaration names it), React, or an
-// export of another generated area that slices the same original binding (one copy). A module root another importable
-// area already slices and exports is imported from there and re-exported under this area's public name (R4i GR4: one
-// copy, the public name kept for this area's consumers). A binding another area slices without exporting it is refused
-// unless `duplicates` says why a second copy is harmless; a context view-tabs already instantiates is refused. Nothing
-// else is accepted.
+// an earlier module of this area, a session-rail-kit public name, a view-tabs public name (D1/D24; the React Compiler
+// helpers by their E3 names; a member of a public compound such as CdsDropdown.Item is read off the compound after
+// checking its declaration names it), React (a vendor-frame export alias of official.reactAliases), or an export of
+// another generated area that slices the same 3.6556.2 binding (one copy). A module root another importable area already
+// slices and exports is imported from there and re-exported under this area's public name (R4i GR4: one copy, the public
+// name kept for this area's consumers). A binding another area slices without exporting it is refused unless
+// `duplicates` says why a second copy is harmless; a context view-tabs already instantiates is refused. Nothing else is
+// accepted.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import { sidebarResizeManifestFor, sidebarResizeExportsFor } from './sidebar-resize-compat.mjs';
+import { turnBoxManifestFor, turnBoxExportsFor } from './turn-box-compat.mjs';
+import { routinesSharedManifestFor } from './routines-shared-compat.mjs';
+import { mcpAppCardManifestFor, mcpAppCardExportsFor } from './mcp-app-card-compat.mjs';
+import { sidebarReorderManifestFor, sidebarReorderExportsFor } from './sidebar-reorder-compat.mjs';
+import * as official from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -52,65 +64,84 @@ import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const referenceVersion = '2.42304.0';
-const referenceSnapshot = 'installed-2.42304.0-20261017';
-const source = path.resolve(root, '../reference', referenceSnapshot, 'ion-dist/assets/v1');
+// w5-session-rail-gen: 3.6556.2 (R1/E6). The constants come from official-3.6556.2.mjs.
+const referenceVersion = official.referenceVersion;
+const referenceSnapshot = official.referenceSnapshot;
+const source = official.ionSource;
 const output = path.join(root, 'src/generated/session-rail');
 const generatedRoot = path.join(root, 'src/generated');
 const adapterModule = '../../source-session-rail-adapters.jsx';
+const kitAdapterModule = '../../source-session-rail-kit-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-const VENDOR_FRAME = 'vendor-frame-DfPJ1QmD.js';
-
-const reactNamespaces = {
-  o: { module: 'react', features: ['.useSyncExternalStore=function', '.forwardRef=function', '.useEffectEvent=function'] },
-  fe: { module: 'react/jsx-runtime', features: ['.jsxs='] },
-  Ln: { module: 'react-dom', features: ['.createPortal=function', '.flushSync=function'] },
-};
-const reactNamespaceObjects = {
-  a: { module: 'react', features: ['useInsertionEffect: () => B,', 'useSyncExternalStore: () => G,', 'version: () => re,'] },
-};
+const VENDOR_FRAME = official.vendorFrame;
+const RAIL = 'cf74bc599-CRYqipWN.js';
+// E34 (producer side), removed in wave 7: transcript-rows linked this area through a frozen 2.42304.0 view
+// (scripts/session-rail-legacy-2.42304.0.json, written as `legacy['2.42304.0']`) until it moved to 3.6556.2 in wave 6.
+// Every importer now reads this version's manifest and imports semantic names, so no legacy segment is written.
 
 // Host dependencies, keyed by the original binding (file:local) an import or same-chunk reference resolves to.
-// `features` must appear in that binding's prettier form (`closure: true`: in its same-chunk closure).
+// `features` must appear in that binding's prettier form (`closure: true`: in the raw text of its same-chunk closure).
+// Export names are those of 2.42304.0.
 const adapters = {
-  'vendor-intl-Db7hDWRO.js:q': { name: 'useIntl', features: ['let e = o(K);', 'return (Mt(e), e);'] },
-  'vendor-intl-Db7hDWRO.js:Gt': { name: 'FormattedMessage', features: ['var Gt = u(Wt, Ut);'] },
-  'shared-4-CJsHhp5n.js:NE': { name: 'RegionEntry', features: ['let t = AE((e) => e.body);', 'return t === null ? null : z(t, e);'] },
-  'shared-frame-BfjMqbuN.js:qa': { name: 'useLayerElement', features: ['return W(Oa);'] },
-  'shared-frame-BfjMqbuN.js:Ya': { name: 'useLayerOwnerWindow', features: ['return Ji(W(Oa));'] },
-  'shared-7-B8UIMGDr.js:RT': { name: 'ConnectorIcon', features: ['disableServerUrlLookups: u,', 'case "favicon":', 'x(MT, { letter: h || "?", size: f, hideBorder: !d })',
-    '"!border-0 !shadow-none !bg-transparent"'] },
-  'shared-frame-BfjMqbuN.js:nd': { name: 'SkeletonGroup', features: ['"data-cds": "SkeletonGroup",', 'decorative: i = !1,', 'as: s,', 'motion: c = Ku,', 'let P = m ? X("block", r) : r;'] },
-  'shared-frame-BfjMqbuN.js:dd': { name: 'Skeleton', features: ['var dd = Object.assign(rd, { Rows: od, Chip: sd, Lines: ld, Block: ud });'] },
-  'shared-frame-BfjMqbuN.js:Jd': { name: 'useLayerAwareZIndex', features: ['let t = W(Vd);', 'return (Gd(`useCdsLayerAwareZIndex(${e})`, e), t + e);'] },
-  // shared-frame Cd (TextLink): R4i-rail RL1 reads view-tabs' CdsTextLink (no adapter).
-  'c856385e2-DVsjb2QL.js:In': { name: 'SessionFileRef', features: ['fileRef: e,', 'blockedClassName: c,', 'onOpenWithDefaultApp: () => {', 'return T === null'] },
-  'c280f9bbb-Dw5U-PIG.js:L': { name: 'useFileIconSetEnabled', closure: true, features: ['function L(){return a(F)}', 'F="__gb__2954460583"'] },
-  'c73f45bc3-CFrHin0p.js:Sv': { name: 'useScratchCopyOf', features: ['if (!t?.scratchCarried) return null;'] },
-  'shared-11-BuQ3CK5I.js:Fd': { name: 'useLiveCheckoutBranch', closure: true, features: ['let t=Dd(t=>e?t.rows[e]?.branch:void 0);return Id(e),t', 'Pe?.getGitStateSnapshot'] },
+  // react-intl useIntl / FormattedMessage over the local catalog (the kit's adapters, re-exported by this area's).
+  'vendor-intl-DYfox5Co.js:q': { name: 'useIntl', features: ['return (Mt(e), e);'] },
+  'vendor-intl-DYfox5Co.js:Gt': { name: 'FormattedMessage', features: ['var Gt = c(Wt, Ut);'] },
+  // shared-4 Sk (exported rt): a navigation region's registered body; no region registry here (the kit's adapter).
+  'shared-4-DUB1Oi0O.js:Sk': { name: 'RegionEntry', features: ['t = vk(Ck);', 't === null ? null : P(t, e)'] },
+  // c280f9bbb L (exported n): GrowthBook __gb__2954460583 (the file icon set) unless fizzy "icons". Off here (D29 / D31).
+  'c280f9bbb-CutcMso2.js:L': { name: 'useFileIconSetEnabled', closure: true, features: ['e&&!f("icons")', 'F="__gb__2954460583"'] },
+  // c856385e2 rr (exported m): the transcript's file reference (opens the path in the session's Files pane).
+  'c856385e2-aEyDzrcK.js:rr': { name: 'SessionFileRef', features: ['fileRef: n,', 'blockedClassName: u,', 'preferDiff: o,', 'isTranscriptMarkdown: s,'] },
+  // c73f45bc3 Vb (exported x): the scratch workspace's copy-of mapping (`scratchCarried` in the session meta). None here.
+  'c73f45bc3-B7hbL7H9.js:Vb': { name: 'useScratchCopyOf', features: ['if (!t?.scratchCarried) {', 'carried: e,'] },
+  // shared-11 _m (exported ki): the live branch of a checkout from the branch rows store the desktop's git-state bridge
+  // fills. No such bridge here.
+  'shared-11-_AVGLHEz.js:_m': { name: 'useLiveCheckoutBranch', closure: true, features: ['t.rows[e]?.branch', 'getGitStateSnapshot'] },
   // cf74bc599 same-chunk bindings the host stands in for.
-  'cf74bc599-D9NZWRyl.js:yE': { name: 'useSessionOutputPaths', features: ['let i = Sm(e),', 'c = f(() => qh(Yd(e, i, null, a, o, s), t, n, r), [e, i, a, o, s, t, n, r]);', 'return N(c);'] },
-  'cf74bc599-D9NZWRyl.js:sE': { name: 'useGoneOutputPaths', features: ['o = he?.resolveSessionFile !== void 0,', 'return rE;'] },
-  'cf74bc599-D9NZWRyl.js:ED': { name: 'RemoteControlRow', features: ['function ED({ remoteControl: e, icon: t }) {', 'e.lockedByRemoteClient'] },
-  'cf74bc599-D9NZWRyl.js:CD': { name: 'GoalCardBody', features: ['goal: e,', 'cutWhenLastShown: n,', 'children: e.condition,'] },
-  'cf74bc599-D9NZWRyl.js:pD': { name: 'ProgressCardBody', features: ['function pD({ steps: e, live: t, sessionKey: n }) {', 'disableCommentAttachment: !0,'] },
-  // R4i-rail RL1 (save-environment.mjs): the stores and creators Ay / Py read.
-  'cd0cf5b5e-BajR1nyG.js:z': { name: 'useEnvironmentStore', features: ['environments: [],', 'markStartedFrom: (t) =>', 'startedPlaces'] },
-  'shared-8-B5lJ8U5C.js:Q': { name: 'useLocalSessionsStore', features: ['sessions: [],', 'name: "ccd-sessions-filter",'] },
-  'shared-19-CkPOiIKm.js:D7': { name: 'recordSessionEnvironment', features: ['function D7(e, t) {', 'C7.getState().record(e, t)'] },
-  'c73f45bc3-CFrHin0p.js:Kc': { name: 'addRemoteEnvironment', features: ['r.addEnvironment({ ...e, name: e.name.trim() })', 'r.markStartedFrom(i.id),'] },
-  'c4e18af0a-BPhGaxmd.js:c': { name: 'canonicalModelId', features: ['let i = r(e),', 'return `${t(i)}${a}`;'] },
-  'cf74bc599-D9NZWRyl.js:mE': { name: 'ArtifactOutputRow', features: ['function mE({ artifact: e, onOpen: t }) {', 'surface: "session_rail",'] },
+  [`${RAIL}:ZA`]: { name: 'useSessionOutputPaths', features: ['{ sessionRef: t, checkouts: n, copyOf: r, folders: i } = e,', 'return fe(u);'] },
+  [`${RAIL}:zA`]: { name: 'useGoneOutputPaths', features: ['o = Ge?.resolveSessionFile !== void 0,', 'c.length === 0'] },
+  [`${RAIL}:SM`]: { name: 'RemoteControlRow', features: ['{ remoteControl: t, icon: n } = e,', 't.lockedByRemoteClient', 'defaultMessage: "Remote Control options",'] },
+  [`${RAIL}:vM`]: { name: 'GoalCardBody', features: ['cutWhenLastShown: r,', 'children: t.condition', 'defaultMessage: "Edit goal",'] },
+  [`${RAIL}:sM`]: { name: 'ProgressCardBody', features: ['disableCommentAttachment: !0,'] },
+  [`${RAIL}:KA`]: { name: 'ArtifactOutputRow', features: ['{ artifact: t, onOpen: n } = e,', 'defaultMessage: "Updated {when}",', 'defaultMessage: "Artifact", id: "PpIQsaWAR2"'] },
+  // The stores and creators of the rail's Save environment (save-environment.mjs: Vx / Xx).
+  'cd0cf5b5e-BCzJmEwZ.js:z': { name: 'useEnvironmentStore', features: ['environments: [],', 'markStartedFrom: (t) =>', 'startedPlaces'] },
+  'shared-8-Db1QN4mf.js:og': { name: 'useLocalSessionsStore', features: ['sessions: [],', 'name: "ccd-sessions-filter",'] },
+  // shared-46 IL (exported j): records the environment a session now belongs to (ML `record(sessionId, environmentId)`).
+  'shared-46-BIbZBGFq.js:IL': { name: 'recordSessionEnvironment', features: ['ML.getState().record(e, t)'] },
+  // c73f45bc3 du (exported Yn): creates a non-local environment straight from the setup (Xx's `__`).
+  'c73f45bc3-B7hbL7H9.js:du': { name: 'addRemoteEnvironment', features: ['r.addEnvironment({ ...e, name: e.name.trim() })', 'r.markStartedFrom(i.id),'] },
+  // cecbf1aa5 l (exported s; 2.42304.0 c4e18af0a c): a model id with Claude's alias table applied.
+  'cecbf1aa5-BT0v8IlE.js:l': { name: 'canonicalModelId', features: ['let i = r(e),', 'return `${t(i)}${a}`;'] },
+  // w10-ccres-rail-env-edit: the lazy dialog handles c73f45bc3 Zx preloads on intent (shared-78 t3 `e?.preload("intent")`):
+  // c73f45bc3 ou (the local environment dialog, ca690a791 EpitaxyEnvironmentDialog) and cc5b397c6 l (exported r, the cloud
+  // environment editor, c28ccf1ab EpitaxyEditEnvironmentDialog). The host bundles its saved environment dialog
+  // synchronously, so each is null (t3's optional call does nothing).
+  'c73f45bc3-B7hbL7H9.js:ou': { name: 'localEnvironmentDialogHandle', closure: true,
+    features: ['ou=iu.handle', 'id:"epitaxy_new_preset_dialog"', 'pick:e=>e.EpitaxyEnvironmentDialog'] },
+  'cc5b397c6-BgWEcD7A.js:l': { name: 'cloudEnvironmentDialogHandle', closure: true,
+    features: ['l=a.handle', 'id:"epitaxy_environment_dialogs"', 'pick:e=>e.EpitaxyEditEnvironmentDialog'] },
+  // c68c4283d _f (exported Bd): rail section telemetry (D17: nothing is sent; the kit's adapter).
+  'c68c4283d-CWbOoVxS.js:_f': { name: 'logRailSectionEvent', module: kitAdapterModule, features: ['d("claudeai.epitaxy.session_rail.section_moved", { section: t });'] },
 };
 // Original bindings this generator slices although another area also slices them (not exported there). Each entry says
 // why a second copy is harmless; anything that holds state is never listed here.
 const duplicates = {
-  // shared-130 Y: backslashes to slashes (code-current file-output-paths.mjs slices it without exporting it).
-  'shared-130-DnUXVlYq.js:Y': 'pure function (no state)',
+  // c96d752d0 vke / _ke / uL: the repo-name chip (dL = memo(vke)), its accent classes and the "inside the chip" flag (uL =
+  // createContext(!1)). session-rail-changes pr-rows.mjs slices the same chip for the PR rows without exporting it. Each
+  // copy of uL is provided by its own vke and read only by components of the same area (here lM, the path tail inside the
+  // folder chip; there the PR row's own children), so the two instances never meet.
+  'c96d752d0-CWv_7-n9.js:vke': 'stateless component (no module state)', 'c96d752d0-CWv_7-n9.js:_ke': 'plain data (no state)',
+  'c96d752d0-CWv_7-n9.js:uL': 'context provided and read within each area (see above)',
+  // c73f45bc3 sx / dx: the engine plugin sections and the section title resolver, hooks over the kit's
+  // RailPluginSectionsContext (ox, imported from the kit); session-rail-kit rail-card.mjs slices them without exporting them.
+  'c73f45bc3-B7hbL7H9.js:sx': 'hook over the kit\'s context (no module state)', 'c73f45bc3-B7hbL7H9.js:cx': 'pure function (no state)', 'c73f45bc3-B7hbL7H9.js:dx': 'hook over the kit\'s context (no module state)',
+  // shared-78 w4: a session's remote target (code-routines shared-78-D5Fw2h0a.mjs slices it without exporting it).
+  'shared-78-D5Fw2h0a.js:w4': 'pure function (no state)',
+  // shared-25 wG: the lazily built invisible-character pattern DG strips with (w8-turn-plan-renderer: turn-plan shared-25.mjs
+  // slices it for shared-11 qE, which the plain-node turn tail reads, so it cannot import this area's copy, E42).
+  'shared-25-DOWZRSlq.js:wG': 'lazily built RegExp, no other state',
 };
-// R4i GR4: the former `copiedLater` list (shared-25 IU / RU / JU / qU, sliced here first and copied again by turn-box
-// owner-window.mjs and routines-shared shared-25-DP8p7i1Z.mjs) is gone: stable-array.mjs now imports zU / ZU from
-// turn-box (their one copy) and slices only $U / YU, so this area holds none of those bindings any more.
 /** The other areas' slices of `file:local` that `duplicates` does not allow (one copy per binding). */
 export function unlistedSlices(key, elsewhere) {
   if (duplicates[key]) return [];
@@ -119,215 +150,294 @@ export function unlistedSlices(key, elsewhere) {
 const contextDuplicates = {};
 // Members of a view-tabs public compound component: `file:local` -> the compound's binding and member. The compound's
 // original declaration must name the member (`Member: local`); the module then reads `<compound>.<Member>`.
+// 3.6556.2 shared-frame: GT = Object.assign(CT, { …, Popup: cT, Item: dT, Separator: mT, Submenu: pT, SubmenuTrigger: fT, … })
+// (view-tabs CdsDropdown).
 const members = {
-  'shared-frame-BfjMqbuN.js:XS': { of: 'EC', member: 'Item' },
-  'shared-frame-BfjMqbuN.js:$S': { of: 'EC', member: 'Separator' },
-  'shared-frame-BfjMqbuN.js:QS': { of: 'EC', member: 'Submenu' },
-  'shared-frame-BfjMqbuN.js:ZS': { of: 'EC', member: 'SubmenuTrigger' },
-  'shared-frame-BfjMqbuN.js:qS': { of: 'EC', member: 'Popup' },
+  'shared-frame-6jtSkIit.js:dT': { of: 'GT', member: 'Item' },
+  'shared-frame-6jtSkIit.js:mT': { of: 'GT', member: 'Separator' },
+  'shared-frame-6jtSkIit.js:pT': { of: 'GT', member: 'Submenu' },
+  'shared-frame-6jtSkIit.js:fT': { of: 'GT', member: 'SubmenuTrigger' },
+  'shared-frame-6jtSkIit.js:cT': { of: 'GT', member: 'Popup' },
 };
 // Generated areas whose exported roots this generator may import (one copy), in order of preference. Composer-owned
-// areas (code-composer, landing-texture) are never imported, nor are the sibling rail areas generated in the same round
-// (session-rail-sections, session-rail-changes): a binding they also slice is refused unless `duplicates` names it.
-// R4i GR4 adds turn-box (shared-25 zU / ZU), routines-shared and sidebar-reorder (shared-19 u$), which own originals this
-// area used to slice a second time.
+// areas (code-composer) are never imported. The sibling rail areas (session-rail-sections / -changes / -context) moved to
+// 3.6556.2 in waves 3–4 and are importable now (their one copy of a shared original is reused instead of refused).
 const importableAreas = ['session-rail-kit', 'code-current', 'files-changes', 'r3b-transcript', 'r4e-findings', 'r4e-envbranch', 'r4e-plugin',
   'sidebar-sections', 'review-findings', 'session-load-error', 'retry-decision', 'app-switch', 'r3b-settings', 'r3b-tasks', 'btw-pane', 'sidebar-resize',
-  'turn-box', 'routines-shared', 'sidebar-reorder',
-  // R4i-rail RL1: mcp-app-card exports shared-52 Qf (as Pp, the selector memo Ay's local session read goes through).
-  'mcp-app-card'];
+  'turn-box', 'routines-shared', 'sidebar-reorder', 'mcp-app-card', 'session-rail-sections', 'session-rail-changes', 'session-rail-context',
+  // cowork-home (3.6556.2, W10) exports its shared-52 copy of mJ (plugin display name); the rail imports it (D1,
+  // w11-sweep-ccres) instead of keeping a second copy.
+  'cowork-home',
+  // cowork-progress (3.6556.2, W13 w13-coworkui-outputs) slices and exports shared-78's connector naming (eB / BP / UP / qz
+  // and their closure; qz is mcp-app-card's copy since w13-close-gen-dedup); the rail imports that one copy (D1,
+  // w13-close-rail-regen) instead of keeping connector-name.mjs's second slice. No host adapter of the Cowork graph is
+  // reached (E41).
+  'cowork-progress',
+  // cowork-scheduled (3.6556.2, W12) holds the CDS coachmark shared-frame Sj (its module imports only view-tabs and React);
+  // coachmark.mjs re-exports that copy (D1, w13-close-rail-regen cwui-46).
+  'cowork-scheduled'];
 
-const RAIL = 'cf74bc599-D9NZWRyl.js';
 // Emitted in dependency order. `exports` maps original local binding -> exported name; its keys are the roots and
-// `features` pins each root to strings of its original (prettier-formatted) text.
+// `features` pins each root to strings of its original (prettier-formatted) text, `closureFeatures` to the raw text of its
+// same-chunk closure (R2: literals, keys, class names, message ids).
 const modules = [
-  // ---- c09f6b4e5: dnd-kit (core, sortable, utilities) as the card stack DE / wE use it; imported from sidebar-reorder ----
-  { target: 'dnd-kit.mjs', source: 'c09f6b4e5-DErbwtLQ.js',
+  // ---- c09f6b4e5: dnd-kit (core, sortable, utilities) as the card stack sj / ij use it; imported from sidebar-reorder ----
+  { target: 'dnd-kit.mjs', source: 'c09f6b4e5-CLm8I7_i.js',
     exports: { fe: 'useSensors', de: 'useSensor', ct: 'PointerSensor', rt: 'KeyboardSensor', $n: 'sortableKeyboardCoordinates', N: 'isKeyboardEvent',
       Dn: 'arrayMove', on: 'DndContext', _e: 'closestCenter', Vn: 'SortableContext', Ln: 'verticalListSortingStrategy', Yn: 'useSortable', P: 'CSS' },
-    features: { fe: ['return a(() => [...e].filter((e) => e != null), [...e]);'], de: ['return a(() => ({ sensor: e, options: t ?? {} }), [e, t]);'],
-      ct: ['var ct = class extends ot {'], rt: ['this.autoScrollEnabled = !1'], $n: ['if (Qn.includes(e.code)) {'], N: ['let { KeyboardEvent: t } = y(e.target);'],
-      Dn: ['r.splice(n < 0 ? r.length + n : n, 0, r.splice(t, 1)[0])'], on: ['autoScroll: s = !0,', 'collisionDetection: m = be,'],
-      _e: ['i = ge(t, t.left, t.top),'], Vn: ['strategy: o = Fn,'], Ln: ['activeIndex: t,', 'overIndex: a,'], Yn: ['animateLayoutChanges: t = Un,'],
+    features: { fe: ['.filter((e) => e != null), [...e]);'], de: ['({ sensor: e, options: t ?? {} }), [e, t]);'], ct: ['var ct = class extends ot {'], rt: ['this.autoScrollEnabled = !1'], $n: ['if (Qn.includes(e.code)) {'], N: ['let { KeyboardEvent: t } = y(e.target);'],
+      Dn: ['r.splice(n < 0 ? r.length + n : n, 0, r.splice(t, 1)[0])'], on: ['autoScroll: c = !0,', 'collisionDetection: p = be,'],
+      _e: ['i = ge(t, t.left, t.top),'], Vn: ['strategy: o = Fn,'], Ln: ['activeIndex: t,', 'overIndex: a,'], Yn: ['animateLayoutChanges: n = Un,'],
       P: ['"translate3d(" +'] } },
-  // c4db265df ft: the region reading order rD hands the navigation region (`readingOrder: m(zg)`; nothing provides it here).
-  { target: 'region-reading-order.mjs', source: 'c4db265df-CAC3hDZP.js', exports: { ft: 'RegionReadingOrderContext' }, features: { ft: ['var ft = c([]);'] } },
-  // shared-25 zU (MU over RU / IU): an array kept while its items are the same (yE); ZU / $U: the shown output path.
-  { target: 'stable-array.mjs', source: 'shared-25-DP8p7i1Z.js', exports: { zU: 'useStableArray', ZU: 'stripInvisible', $U: 'displayPath' },
-    features: { zU: ['return MU(e, RU);'], ZU: ['return jU(e).replace(JU(), "");'], $U: ['return ZU(e).replace(YU(), "");'] } },
-  // shared-19 u$: swallow the click that ends a pointer drag (DE's onDragStart); P7 / F7: the folder's parent, `~` for home.
-  { target: 'drag-click-guard.mjs', source: 'shared-19-CkPOiIKm.js', exports: { u$: 'swallowNextClick', P7: 'homeRelativeParent' },
-    features: { u$: ['e.addEventListener("click", t, !0),'], P7: ['let t = F7(e).replace(/[\\\\/][^\\\\/]*$/, "");'] } },
-  // shared-frame iC: a CdsDropdown body from item descriptors (the folder chip's repo menu), its parts read as members of
-  // the view-tabs CdsDropdown (EC = Object.assign(cC, { …, Popup: qS, Item: XS, Separator: $S, Submenu: QS, SubmenuTrigger: ZS })).
-  { target: 'menu-items.mjs', source: 'shared-frame-BfjMqbuN.js', exports: { iC: 'renderMenuItems' },
-    features: { iC: ['e === "separator"', 'onClick: e.onSelect,', 'disabledReason: e.disabledReason,'] } },
-  // c96d752d0 qz: the Changes card's pull request count (rD's `Wo.Provider value: ge`; the PR bar slot reports into it).
-  { target: 'pr-count-context.mjs', source: 'c96d752d0-BOCqU7c2.js', exports: { qz: 'RailPrCountContext' }, features: { qz: ['var qz = E(null);'] } },
-  // c96d752d0 Yz (memo pLe): the folder name chip (Working folder / Additional folder), a menu trigger with repo items.
-  { target: 'repo-name-chip.mjs', source: 'c96d752d0-BOCqU7c2.js', exports: { Yz: 'RepoNameChip' },
-    features: { Yz: ['var Yz = M(pLe);'] } },
-  // c5304ebdb O: the preview card placement the Outputs list sets (`placement: "beside-start"`, popupClassName mx-pad-md).
-  { target: 'preview-placement.mjs', source: 'c5304ebdb-BdWv-4Wb.js', exports: { O: 'PreviewPlacementProvider' },
-    features: { O: ['return i(D.Provider, { value: r, children: n });'] } },
-  // ccc47c03f N: the Slack logo (an environment that started in Slack).
-  { target: 'slack-logo.mjs', source: 'ccc47c03f-CKf5zpck.js', exports: { N: 'SlackLogo' }, features: { N: ['viewBox: "0 0 123 123",', 'fill: "#E01E5A",'] } },
-  // shared-52 Ha / UV / Gs: "plugin:<plugin>:<connector>" names, the plugin's display name, an "owner/name" repo slug.
-  { target: 'plugin-connector.mjs', source: 'shared-52-DGviI8xb.js', exports: { Ha: 'parsePluginConnector', UV: 'pluginDisplayName', Gs: 'parseRepoSlug' },
-    features: { Ha: ['let t = e.match(/^plugin:([^:]+):(.+)$/);'], UV: ['return typeof e == "string" ? HV(e) : e.displayName || HV(e.name);'], Gs: ['let t = e.split("/");'] } },
-  // shared-7 MT / jT: the connector icon's letter avatar and tile (the host's ConnectorIcon adapter composes them as RT does).
-  { target: 'connector-icon-parts.mjs', source: 'shared-7-B8UIMGDr.js', exports: { MT: 'ConnectorLetterIcon', jT: 'ConnectorIconTile' },
-    features: { MT: ['"shrink-0 flex items-center justify-center bg-surface-3 text-secondary",'], jT: ['style: { width: e, height: e, borderRadius: e * 0.27 },'] } },
-  // shared-130 rR / FE / NE: a connector's saved tool-result file (`mcp-<server>-blob-<ms>-…`), identifier humanising, "-plugin".
-  // Y is exported (2026-10-18) for transcript-rows, which links this area instead of slicing Y a second time.
-  { target: 'saved-output.mjs', source: 'shared-130-DnUXVlYq.js', exports: { rR: 'savedConnectorOutput', FE: 'humanizeIdentifier', NE: 'stripPluginSuffix', Y: 'forwardSlashes' },
-    features: { rR: ['if (t !== null) return { server: t[1], savedMs: Number(t[2]) };'], FE: ['.split(/[-_\\s]+/)'], NE: ['return e.replace(/-plugin$/, "");'],
-      Y: ['return e.replace(/\\\\/g, "/");'] } },
-  // shared-78 mN: a connector's display name (Claude in Chrome, Computer use, …).
-  // YD / sN are exported (2026-10-18) for transcript-rows, which links this area instead of slicing them a second time.
-  { target: 'connector-name.mjs', source: 'shared-78-D6VXYXaQ.js', exports: { mN: 'connectorDisplayName', YD: 'isAgentsConnector', sN: 'CLAUDE_IN_CHROME_NAME' },
-    features: { mN: ['e === "claude-in-chrome"', 'e === "computer-use"'], YD: ['e.uuid === "f688f3fc-1d05-5bd1-9c48-9854ec083044"'], sN: ['var sN = "Claude in Chrome";'] } },
-  // shared-11 Ed: a detached HEAD ("HEAD" / "detached:…"), which cO's git-info select (sO) drops.
-  { target: 'branch-name.mjs', source: 'shared-11-BuQ3CK5I.js', exports: { Ed: 'isDetachedBranch' }, features: { Ed: ['return e === "HEAD" || e.startsWith("detached:");'] } },
-  // c73f45bc3 gg (fO's hg): how long an environment name may stay pending before the skeleton gives up.
-  { target: 'rail-timing.mjs', source: 'c73f45bc3-CFrHin0p.js', exports: { gg: 'NAME_PENDING_GIVE_UP_MS' }, features: { gg: ['var gg = 2e3;'] } },
+  // c4db265df Ze: the region reading order Gj hands the navigation region (`readingOrder`; nothing provides it here).
+  { target: 'region-reading-order.mjs', source: 'c4db265df-fNhlkQCj.js', exports: { Ze: 'RegionReadingOrderContext' }, features: { Ze: ['var Ze = l([]);'] } },
+  // shared-25 UH (IH over HH): an array kept while its items are the same (QA); DG / kG: the shown output path.
+  { target: 'stable-array.mjs', source: 'shared-25-DOWZRSlq.js', exports: { UH: 'useStableArray', DG: 'stripInvisible', kG: 'displayPath' },
+    features: { UH: ['return IH(e, HH);'], DG: ['.replace(wG(), "");'], kG: ['return DG(e).replace(TG(), "");'] },
+    closureFeatures: { UH: ['comparedWith:e,stable:e'], kG: ['\\p{Default_Ignorable_Code_Point}'] } },
+  // shared-46 tM: swallow the click that ends a pointer drag (sj's onDragStart); WL / GL: the folder's parent, `~` for home.
+  { target: 'drag-click-guard.mjs', source: 'shared-46-BIbZBGFq.js', exports: { tM: 'swallowNextClick', WL: 'homeRelativeParent' },
+    features: { tM: ['e.addEventListener("click", t, !0),'], WL: ['let t = GL(e).replace(/[\\\\/][^\\\\/]*$/, "");'] } },
+  // shared-frame yT: a CdsDropdown body from item descriptors (the folder chip's repo menu), its parts read as members of
+  // the view-tabs CdsDropdown.
+  { target: 'menu-items.mjs', source: 'shared-frame-6jtSkIit.js', exports: { yT: 'renderMenuItems' },
+    features: { yT: ['e === "separator"', 'onClick: e.onSelect,', 'disabledReason: e.disabledReason,'] } },
+  // c96d752d0 cL: the Changes card's pull request count (Gj's provider value; the PR bar slot reports into it).
+  { target: 'pr-count-context.mjs', source: 'c96d752d0-CWv_7-n9.js', exports: { cL: 'RailPrCountContext' }, features: { cL: ['var cL = N(null);'] } },
+  // c96d752d0 dL (memo vke): the folder name chip (Working folder / Additional folder), a menu trigger with repo items.
+  { target: 'repo-name-chip.mjs', source: 'c96d752d0-CWv_7-n9.js', exports: { dL: 'RepoNameChip', uL: 'RepoNameChipSlotContext' },
+    features: { dL: ['var dL = M(vke);'], uL: ['var uL = N(!1);'] }, closureFeatures: { dL: ['(uL.Provider,{value:!0,children:'] } },
+  // c5304ebdb E: the preview card placement the Outputs list sets (`placement: "beside-start"`).
+  { target: 'preview-placement.mjs', source: 'c5304ebdb-C8vzSQK_.js', exports: { E: 'PreviewPlacementProvider' },
+    features: { E: ['{ placement: n, popupClassName: r, children: i } = e,', 't(T.Provider, { value: a, children: i })'] } },
+  // ccc47c03f I: the Slack logo (an environment that started in Slack).
+  { target: 'slack-logo.mjs', source: 'ccc47c03f-nDk6qfjU.js', exports: { I: 'SlackLogo' }, features: { I: ['viewBox: "0 0 123 123",', 'fill: "#E01E5A",'] } },
+  // shared-52 Ro / hJ / Gc: "plugin:<plugin>:<connector>" names, the plugin's display name, an "owner/name" repo slug.
+  { target: 'plugin-connector.mjs', source: 'shared-52-uHFNjl7C.js', exports: { Ro: 'parsePluginConnector', hJ: 'pluginDisplayName', Gc: 'parseRepoSlug' },
+    features: { Ro: ['let t = e.match(/^plugin:([^:]+):(.+)$/);'], hJ: ['return typeof e == "string" ? mJ(e) : e.displayName || mJ(e.name);'], Gc: ['let t = e.split("/");'] } },
+  // shared-7 Ik / Fk: the connector icon's letter avatar and tile (the host's ConnectorIcon adapter composes them as the
+  // original shared-7 icon does).
+  { target: 'connector-icon-parts.mjs', source: 'shared-7-DBAgAi5H.js', exports: { Ik: 'ConnectorLetterIcon', Fk: 'ConnectorIconTile' },
+    features: { Ik: ['"shrink-0 flex items-center justify-center bg-surface-3 text-secondary",'], Fk: ['"shrink-0 bg-surface-3 border shadow-sm flex items-center justify-center",', 'a = i * 0.27,'] } },
+  // shared-130 EH / VA / zA / UV: a connector's saved tool-result file (`mcp-<server>-blob-<ms>-…`), identifier humanising,
+  // "-plugin", backslashes to slashes (UV is exported for transcript-rows, which links this area).
+  { target: 'saved-output.mjs', source: 'shared-130-dWztbTO1.js', exports: { EH: 'savedConnectorOutput', VA: 'humanizeIdentifier', zA: 'stripPluginSuffix', UV: 'forwardSlashes', WV: 'pathFileName' },
+    features: { EH: ['if (t !== null) return { server: t[1], savedMs: Number(t[2]) };'], VA: ['.split(/[-_\\s]+/)'], zA: ['return e.replace(/-plugin$/, "");'],
+      UV: ['return e.replace(/\\\\/g, "/");'], WV: ['e.startsWith("/") ? "/" : /[/\\\\]/', '.pop() || e'] } },
+  // shared-78 eB: a connector's display name (Claude in Chrome, Computer use, …). BP / qz are exported for transcript-rows,
+  // which links this area instead of slicing them a second time.
+  { target: 'connector-name.mjs', source: 'shared-78-D5Fw2h0a.js', exports: { eB: 'connectorDisplayName', BP: 'isAgentsConnector', qz: 'CLAUDE_IN_CHROME_NAME' },
+    features: { eB: ['e === "claude-in-chrome"', 'e === "computer-use"'], BP: ['e.uuid === "f688f3fc-1d05-5bd1-9c48-9854ec083044"'], qz: ['var qz = "Claude in Chrome";'] } },
+  // shared-11 cm: a detached HEAD ("HEAD" / "detached:…"), which xN's git-info select (bN) drops.
+  { target: 'branch-name.mjs', source: 'shared-11-_AVGLHEz.js', exports: { cm: 'isDetachedBranch' }, features: { cm: ['return e === "HEAD" || e.startsWith("detached:");'] } },
+  // c227f4d5e cJ: a connector row's target ("account:<id>" / "session:<id>", yj); nY: the Remote Control meta fields gN
+  // spreads (bridgeSessionUrl, remoteControlConnecting, remoteControlAvailable, startedViaRemoteControl, isCloudRun).
+  { target: 'connector-target.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { cJ: 'parseConnectorTarget' },
+    features: { cJ: ['/^(account|session):([^:]+)$/', '{ kind: t, id: decodeURIComponent(n) }'] } },
+  { target: 'remote-control-meta.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { nY: 'REMOTE_CONTROL_META_FIELDS' },
+    features: { nY: ['"bridgeSessionUrl",', '"remoteControlConnecting",', '"remoteControlAvailable",', '"startedViaRemoteControl",', '"isCloudRun",'] } },
+  // c227f4d5e RB: a folder path in a rail row, shrinking first (the extra folder rows).
+  { target: 'rail-path-label.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { RB: 'RailPathLabel' },
+    features: { RB: ['"flex min-w-[8ch] shrink-[9999] text-muted-as-secondary"', 'title: ""'] } },
+  // shared-20 Dh: the lined (panels) rail row's start inset.
+  { target: 'rail-lined-inset.mjs', source: 'shared-20-mUr7IqZY.js', exports: { Dh: 'RAIL_LINED_INSET_CLASS' },
+    features: { Dh: ['"[.epitaxy-rail-lined_&]:ps-[calc(var(--cds-gap-xs)-var(--cds-pad-xs))]"'] } },
+  // shared-46 BL: "this computer", the local place of a saved environment's label.
+  { target: 'this-computer-label.mjs', source: 'shared-46-BIbZBGFq.js', exports: { BL: 'thisComputerLabel' },
+    features: { BL: ['defaultMessage: "this computer", id: "ege0wZHHpb"'] } },
+  // cef1e6037 er: a session record's origin folder and working folder (Vx's checkout).
+  { target: 'session-checkout.mjs', source: 'cef1e6037-C9OZ_iaL.js', exports: { er: 'sessionCheckoutFolders' },
+    features: { er: ['let t = e.originCwd || e.cwd;', 'workingDir: e.harnessCwd ?? e.worktreePath ?? t'] } },
+  // c73f45bc3 sx / dx: the engine plugin rail panes (over the kit's RailPluginSectionsContext) and a section's title (a
+  // plugin pane's own title, else the kit's railSectionTitle).
+  { target: 'plugin-sections.mjs', source: 'c73f45bc3-B7hbL7H9.js', exports: { sx: 'useRailPluginSections', dx: 'useRailSectionTitle' },
+    features: { sx: ['e.map(cx)'], dx: ['(t.find((e) => e.id === n)?.title ?? "")', 'ux(e, n)'] } },
+  // shared-78 w4: a session's remote target (SSH / WSL), which Vx's setup keeps.
+  { target: 'remote-target.mjs', source: 'shared-78-D5Fw2h0a.js', exports: { w4: 'sessionRemoteTarget' },
+    features: { w4: ['let t = e?.remoteTarget;', 'case "wsl":', 'if (e?.sshConfig)'] } },
+  // c73f45bc3 _v (TN's e_): how long an environment name may stay pending before the skeleton gives up.
+  { target: 'rail-timing.mjs', source: 'c73f45bc3-B7hbL7H9.js', exports: { _v: 'NAME_PENDING_GIVE_UP_MS' }, features: { _v: ['var _v = 2e3;'] } },
 
-  // ---- cf74bc599: the rail's pure derivations, and the fO pieces the host assembler (SR-7) calls as written ----
+  // ---- cf74bc599: the rail's pure derivations, and the TN pieces the host assembler (SR-7) calls as written ----
   { target: 'rail-derive.mjs', source: RAIL,
-    exports: { RE: 'railFolder', LE: 'repoSlugName', $E: 'pathLeaf', ME: 'railExtraFolders', IE: 'folderTreeCwd', jE: 'otherRepos', VE: 'knownBranch',
-      HE: 'railBranch', XE: 'railWorktree', YE: 'CLAUDE_WORKTREE_PATH', ZE: 'lazyWorktreePending', QE: 'lazyWorktreeState', GE: 'railEnvironment',
-      KE: 'environmentLabel', UE: 'environmentKind', WE: 'isCloudEnvironment', PE: 'connectorRows', NE: 'plainConnectorLabel', AE: 'environmentConnection',
-      tD: 'isSideSessionNotesFolder', zE: 'remoteControlState', nD: 'railPlanSteps', qE: 'hasEnvironmentCard', JE: 'railHasContent',
-      vD: 'environmentSummary', yD: 'doneStepCount', uE: 'connectorLabel', lE: 'humanizedSlug', BE: 'RAIL_PENDING_GIVE_UP_MS', sO: 'checkoutInfo',
-      oO: 'NO_CHECKOUT_INFO', aD: 'RAIL_SLOT_CLASSES', sD: 'NO_CHECKOUTS', rO: 'RAIL_SESSION_META', tO: 'COMPOSER_MENU_SECTIONS' },
+    exports: { Cj: 'railFolder', Sj: 'repoSlugName', Bj: 'pathLeaf', _j: 'railExtraFolders', xj: 'folderTreeCwd', gj: 'otherRepos', Ej: 'knownBranch',
+      Dj: 'railBranch', Lj: 'railWorktree', Ij: 'CLAUDE_WORKTREE_PATH', Rj: 'lazyWorktreePending', zj: 'lazyWorktreeState', Mj: 'railEnvironment',
+      Nj: 'environmentLabel', Oj: 'environmentKind', kj: 'isCloudEnvironment', yj: 'connectorRows', vj: 'plainConnectorLabel', hj: 'environmentConnection',
+      Hj: 'isSideSessionNotesFolder', wj: 'remoteControlState', Uj: 'railPlanSteps', Pj: 'hasEnvironmentCard', Fj: 'railHasContent',
+      pM: 'environmentSummary', mM: 'doneStepCount', HA: 'connectorLabel', VA: 'humanizedSlug', Tj: 'RAIL_PENDING_GIVE_UP_MS', bN: 'checkoutInfo',
+      yN: 'NO_CHECKOUT_INFO', Qj: 'RAIL_SLOT_CLASSES', tM: 'NO_CHECKOUTS', gN: 'RAIL_SESSION_META', pN: 'COMPOSER_MENU_SECTIONS' },
     features: {
-      RE: ['if (r) return o ? { name: o, path: s, hidePath: !0 } : null;', 'name: LE(i) || a || $E(c),', '...(c !== s && { basePath: c }),'],
-      LE: ['return e ? $E(e) : void 0;'], $E: ['return e.split(/[\\\\/]/).filter(Boolean).pop() ?? e;'],
-      ME: ['trees: t = FE,', 'worktreeRemoved: !0,', 'worktree: { name: e.worktreeName, path: e.worktreePath },', '(t.repoLinks ??= e.repoLinks)'],
-      IE: ['? e.worktreePath + e.folder.slice(t.length)'], jE: ['return n === null ? e : e.filter((e) => e !== t);'],
-      VE: ['return (e ? void 0 : t) || n || t || r || void 0;'], HE: ['? { name: i }', '? { name: null }'],
-      XE: ['return !e || !n || n === t || (!r && !YE.test(n))', ': { name: $E(n), path: n };'], YE: ['YE = /[\\\\/]\\.claude[\\\\/]worktrees[\\\\/]/'],
-      ZE: ['return e && o === !0 && s !== !0 && !r && !i && !a && !!n && t === n;'],
-      QE: ['? { kind: "notEntered" }', '? { kind: "ready", branch: i }', ': { kind: "preparing" };'],
-      GE: ['labels: { local: null, cloud: null, bridge: null },', '...(n !== null && n !== e.name && { details: [{ value: n }] }),'],
-      KE: ['case "remoteHost":', 'return { label: o.local, kind: s.local };', 'place: "cloud",'], UE: ['?.type === "pool"', '? "selfHosted"'],
-      WE: ['return e === "cloud" || e === "selfHosted";'], PE: ['labelOf: i = NE,', 'n === "failed" || n === "needs-auth" || n === "unavailable"'],
-      NE: ['return { label: e };'], AE: ['case "idle":', 'return "notConnected";'], tD: ['return eD.test(e);'],
-      zE: ['return n && (e || !t)', '? "pending"'], nD: ['e.findIndex((e) => e.status === "in_progress")', 'n === t ? "current" : e.status === "completed" ? "done" : "pending",'],
-      qE: ['e.worktree !== null'], JE: ['e.artifacts.length > 0'], vD: ['return [e?.name, t?.name].find((e) => typeof e == "string" && e !== "");'],
-      yD: ['return e.filter((e) => e.state === "done").length;'], uE: ['label: lE(t.connectorName), plugin: rn(Ji(t.pluginName))'],
-      lE: ['return cE.test(e) ? Zi(e) : e;'], BE: ['var BE = 6e3;'], sO: ['branch: e?.branch && !no(e.branch) ? e.branch : void 0,', 'repoName: qt(e?.repo)?.name,'],
-      oO: ['var oO = { branch: void 0, repoName: void 0 };'], aD: ['"hidden has-[nav:not(:empty)]:flex has-[[data-epitaxy-branch-row-ghost]]:flex"'],
-      sD: ['var sD = [];'], rO: ['"hasDesktopWorktree",', '"startedWithWorktree",', '"worktreeRemoved",', '"remoteControlAvailable",'],
-      tO: ['context: "context",', 'effort: "settings",'],
+      Cj: ['if (r) return o ? { name: o, path: l, hidePath: !0 } : null;', 'name: Sj(i) || a || Bj(u),', '...(u !== l && { basePath: u }),', '...(m && { repoSlug: m }),',
+        'clonesRepos: s = !1,', 'repoSlugs: c = [],'],
+      Sj: ['return e ? Bj(e) : void 0;'], Bj: ['return e.split(/[\\\\/]/).filter(Boolean).pop() ?? e;'],
+      _j: ['trees: t = bj,', 'worktreeRemoved: !0,', 'worktree: { name: e.worktreeName, path: e.worktreePath },', '(t.repoLinks ??= e.repoLinks)', 'repoSlugs: r,'],
+      xj: ['? e.worktreePath + e.folder.slice(t.length)'], gj: ['return n === null ? e : e.filter((e) => e !== t);'],
+      Ej: ['return (e ? void 0 : t) || n || t || r || void 0;'], Dj: ['? { name: i }', '? { name: null }'],
+      Lj: ['return !e || !n || n === t || (!r && !Ij.test(n))', ': { name: Bj(n), path: n };'], Ij: ['/[\\\\/]\\.claude[\\\\/]worktrees[\\\\/]/'],
+      Rj: ['return e && o === !0 && s !== !0 && !r && !i && !a && !!n && t === n;'],
+      zj: ['? { kind: "notEntered" }', '? { kind: "ready", branch: i }', ': { kind: "preparing" };'],
+      Mj: ['labels: { local: null, cloud: null, bridge: null },', '...(n !== null && n !== e.name && { details: [{ value: n }] }),'],
+      Nj: ['case "remoteHost":', 'return { label: o.local, kind: s.local, ...(c && { icon: c }) };', 'place: "cloud",'], Oj: ['?.type === "pool"', '? "selfHosted"'],
+      kj: ['return e === "cloud" || e === "selfHosted";'], yj: ['labelOf: a = vj,', 'targets: i,', 'n === "failed" || n === "needs-auth" || n === "unavailable"'],
+      vj: ['return { label: e };'], hj: ['case "idle":', 'return "notConnected";'], Hj: ['return Vj.test(e);'],
+      wj: ['prefsPending: i,', 'return n && (e || !t) ? n : i || (r && t) ? "pending" : void 0;'],
+      Uj: ['e.findIndex((e) => e.status === "in_progress")', 'n === t ? "current" : e.status === "completed" ? "done" : "pending",'],
+      Pj: ['e.worktree !== null'], Fj: ['e.artifacts.length > 0'], pM: ['(fM(e) ? e.extraFolders[0] : e.folder)?.name', '(e) => typeof e == "string" && e !== "",'],
+      mM: ['return e.filter((e) => e.state === "done").length;'], HA: ['label: VA(t.connectorName),'],
+      VA: ['return BA.test(e) ? Xi(e) : e;'], Tj: ['var Tj = 6e3;'], bN: ['repoName: ', 'headUnread: '],
+      yN: ['branch: void 0,', 'repoName: void 0,', 'headUnread: '], Qj: ['"hidden has-[nav:not(:empty)]:flex has-[[data-epitaxy-branch-row-ghost]]:flex"'],
+      tM: ['var tM = [];'], gN: ['"hasDesktopWorktree",', '"startedWithWorktree",', '"worktreeRemoved",', '"sshConnectionRemoved",'],
+      pN: ['context: "context",', 'effort: "settings",'],
     } },
-  { target: 'rail-hooks.mjs', source: RAIL, exports: { lO: 'useRailPendingHold', cO: 'useCheckoutInfo', nO: 'useComposerMenuOpensRailSection' },
-    features: { lO: ['let i = setTimeout(() => r(!0), t);', 'e && !n'], cO: ['{ data: r } = Ti({ ...$a(e, n), select: sO }),', 'i = oo(n === "local" ? e : null);',
-      'return i && i !== e.branch ? { ...e, branch: i } : e;'],
-      nO: ['let i = n ? tO[n.menu] : void 0;', 'if (i === "settings" && r) {', '(i !== "environment" && e.setHidden(i, !1), e.setOpen(t, i, !0));'] } },
+  { target: 'rail-hooks.mjs', source: RAIL, exports: { SN: 'useRailPendingHold', xN: 'useCheckoutInfo', mN: 'useComposerMenuOpensRailSection' },
+    features: { SN: ['let i = setTimeout(() => r(!0), t);', 'e && !n'], xN: ['{ ...r, select: bN }', 'o = Fo(n === "local" ? e : null),',
+      'o && o !== s.branch ? { ...s, branch: o } : s'],
+      mN: ['let i = n ? pN[n.menu] : void 0;', 'if (i === "settings" && r) {', '(i !== "environment" && e.setHidden(i, !1), e.setOpen(t, i, !0));'] } },
 
   // ---- cf74bc599: the rail view ----
   { target: 'rail-view.mjs', source: RAIL,
-    exports: { iD: 'SessionRail', rD: 'SessionRailAside', DE: 'RailCardStack', wE: 'RailCardSlot', gD: 'RailFolderRows', _D: 'RailExtraFolderBranch',
-      hD: 'RailPathTail', xD: 'RailEnvironmentStatus', bD: 'environmentDetails', lD: 'RailConnectorsCard', uD: 'RailConnectorIcon', cD: 'connectorStateAction',
-      TD: 'RailSkeleton', xE: 'RailOutputsCard', bE: 'RailSessionOutputs', _E: 'RailOutputsList', gE: 'RailOutputFileRow', hE: 'RailOutputFileIcon' },
+    exports: { Zj: 'SessionRail', Gj: 'SessionRailAside', sj: 'RailCardStack', ij: 'RailCardSlot', uM: 'RailFolderRows', dM: 'RailExtraFolderBranch',
+      lM: 'RailPathTail', gM: 'RailEnvironmentStatus', hM: 'environmentDetails', rM: 'RailConnectorsCard', iM: 'RailConnectorIcon', nM: 'connectorStateAction',
+      xM: 'RailSkeleton', $A: 'RailOutputsCard', QA: 'RailSessionOutputs', YA: 'RailOutputsList', JA: 'RailOutputFileRow', qA: 'RailOutputFileIcon',
+      $j: 'RailPluginSectionCard', Wj: 'NO_PLUGIN_SECTIONS' },
     features: {
-      iD: ['var iD = y(function ({ sessionKey: e = Zu, ...t }) {', 'return u(rl.Provider, { value: e, children: u(rD, { ...t }) });'],
-      rD: ['defaultMessage: "Session details",', 'id: "v52hoKcuPM",', 'onMouseDownCapture: tl,', 'className: Vr(`flex ${Mi} min-h-0 flex-col font-sans outline-none`, I),',
-        'u(cn, { kind: "codeRail", railRef: be, readingOrder: xe }),', 'z = R ? "sans" : "mono",', 'value: R ? "row" : "stacked",', 'slotClasses: aD,',
+      Zj: ['({ sessionKey: n, ...t } = e)', 'let r = n === void 0 ? Vm : n,', 's(Gj, { ...t })', 's(Uf.Provider, { value: r, children: i })'],
+      Gj: ['defaultMessage: "Session details",', 'id: "v52hoKcuPM",', 'onMouseDownCapture: op,', 'kind: "codeRail",', 'pluginSections: P,', 'R = P === void 0 ? Wj : P,',
+        'Y = "flex shrink-0 ps-xs";', 'value: V ? "row" : "stacked",', 'slotClasses: Qj,', 'keepMounted: !0,',
         '"Claude is reading from {folder} on {branch}; it moves into this worktree before changing files.",',
         '"Claude hasn\\u2019t moved to this session\\u2019s worktree yet. Until it does, the folder and branch shown are your own.",',
-        'se = te && u(Rl, { pending: ne?.kind, hint: oe }),', 'settings:', '!R &&', 'u(pD, { steps: n, live: y, sessionKey: L })',
-        'defaultMessage: "Changes",', 'id: "dgqhUM6BxJ",', 'keepMounted: !0,', 'u(xE, {'],
-      DE: ['activationConstraint: { distance: 6 }', 'autoScroll: !1,', 'id: "UPaB6J5Q6m",',
+        'defaultMessage: "Environment", id: "K7kuIZkkhY"', 'defaultMessage: "Changes", id: "dgqhUM6BxJ"'],
+      sj: ['"moved"', 'activationConstraint: { distance: 6 }', 'id: "UPaB6J5Q6m",',
         '"To pick up a section, press Space or Enter. While it is picked up, press the up or down arrow key to move it, Space or Enter to drop it, or Escape to cancel.",',
-        '"Picked up {name}. It is section {position} of {count}.",', 'return n != null && n !== !1 && !Eu(t, i) && !al({ hidden: s }, t, i);', 'strategy: j_,'],
-      wE: ['defaultMessage: "Draggable section",', 'id: "1y61ZzlFkj",', 't.toggleAttribute("data-rail-slot-off", !i)', '"data-rail-card": e,', 'let C = Sr(1);',
-        '"relative flex-col rounded-card",', 't ?? "contents has-[[data-rail-section]]:flex",'],
-      gD: ['defaultMessage: "Additional folder",', 'defaultMessage: "Working folder",', 'defaultMessage: "Choose folder\\u2026",', 'icon: "Add",',
-        'm = e !== null && !e.hidePath ? ut(e.basePath ?? e.path) : "";'],
-      _D: ['face: n ? "sans" : "mono",', 'e.worktree !== void 0 && u(Rl, { hint: e.worktree.path })'],
-      hD: ['"flex w-[8ch] shrink-[9999] basis-[content] px-md text-muted-as-secondary"', 'content: () => (mD(t.current) ? e : void 0),'],
-      xD: ['defaultMessage: "Learn more", id: "TdTXXf940t"', 'defaultMessage: "Connecting", id: "6q3tCnkd2h"', 'defaultMessage: "Not connected", id: "kldl5VlIaI"'],
-      bD: ['e.label !== void 0 && o(i, { children: [e.label, " \\u00B7 "] }),'],
-      lD: ['defaultMessage: "{count} to reconnect",', 'defaultMessage: "{count} connected",', 'defaultMessage: "Manage connectors",', 'defaultMessage: "Unavailable",',
-        's = e === null ? null : Math.max(0, e - t - n);', 'limit: oD,'],
-      uD: ['type: t?.type ?? "favicon",', 'fadeInOnLoad: !1,'], cD: ['defaultMessage: "Reconnect", id: "IE7REaVJ6q"', 'defaultMessage: "Authenticate", id: "CKI/AUaH8H"'],
-      TD: ['decorative: !0,', 'as: "span",', 'children: u(mr, { width: e, height: 12 }),'],
-      xE: ['? u(_E, { files: pE, artifacts: r, onOpenArtifact: i })'], bE: ['let i = mg(e),', 's = sE(e, o),', 'c = f(() => (o === a && s.size === 0 ? a : vE(o, s)), [a, o, s]);'],
-      _E: ['defaultMessage: "Outputs", id: "ohKjpG6KDI"', 'placement: "beside-start",', 'limit: dE,', 'children: a.length'],
-      gE: ['defaultMessage: "{server} image",', 'defaultMessage: "{name} \\u00B7 {when}",', 'blockedClassName: "block w-full",', 'fileRef: { path: e },'],
-      hE: ['if (t) return u(Sl, { name: Ba(e) });', 'ln("panels") && (r = fa.size),'],
+        '"Picked up {name}. It is section {position} of {count}.",', 'defaultMessage: "Moving {name} was cancelled.",'],
+      ij: ['defaultMessage: "Draggable section",', 'id: "1y61ZzlFkj",', 'e.toggleAttribute("data-rail-slot-off", !r)', '"data-rail-card"', '"relative flex-col rounded-card",',
+        '"contents has-[[data-rail-section]]:flex"'],
+      uM: ['defaultMessage: "Additional folder",', 'defaultMessage: "Working folder",', 'defaultMessage: "Choose folder\\u2026",', 'icon: "Add",', 'flush: "end",',
+        '!t.repoSlug', 'repository: t.repoSlug !== void 0,'],
+      dM: ['"GitBranch"', 'defaultMessage: "Branch",', '"min-w-0 text-primary"'],
+      lM: ['"flex w-[8ch] shrink-[9999] basis-[content] px-md text-muted-as-secondary"'],
+      gM: ['defaultMessage: "Learn more", id: "TdTXXf940t"', 'defaultMessage: "Connecting", id: "6q3tCnkd2h"', 'defaultMessage: "Not connected", id: "kldl5VlIaI"',
+        '"shrink-0 text-footnote text-warning"', 'caution: r,'],
+      hM: ['" \\u00B7 "'],
+      rM: ['defaultMessage: "{count} to reconnect",', 'id: "NM9g1WPqsR",', 'defaultMessage: "{count} connected",', 'id: "aGQ0Kha73h",', 'defaultMessage: "Manage connectors",',
+        'defaultMessage: "Unavailable",', 'f = n === null ? null : Math.max(0, n - r - c),', 'limit: eM,', 'onClick: () => o(e.target),'],
+      iM: ['"favicon"', 'fadeInOnLoad: !1,'], nM: ['defaultMessage: "Reconnect", id: "ZHe7cLKE7v"', 'defaultMessage: "Authenticate", id: "CKI/AUaH8H"'],
+      xM: ['decorative: !0,', 'as: "span",', 'className: "flex min-w-0 items-center",', 's(ne, { width: t, height: 12 })'],
+      $A: ['files: GA, artifacts: i, onOpenArtifact: a'], QA: ['copyOf: a,', 'l = zA(i, c),', 'c === o && l.size === 0 ? o : XA(c, l)'],
+      YA: ['defaultMessage: "Outputs", id: "ohKjpG6KDI"', 'placement: "beside-start",', 'limit: UA,', 'id: "outputs",'],
+      JA: ['defaultMessage: "{server} image",', 'defaultMessage: "{name} \\u00B7 {when}",', 'blockedClassName: "block w-full",', '{ path: t }'],
+      qA: ['s(Wf, { name: "File" })', 'Un("panels") && (i = ma.size),'],
+      $j: ['className: "flex max-w-40",', 's(E, { lazy: !0, children: r })', 'defaultMessage: "Close", id: "rbrahOGMC3"', 'headerMenu: u,'],
+      Wj: ['var Wj = [];'],
     } },
-  // ---- R4i-rail RL1: Save environment (fO's St = Ay(…), the flat rail's environmentSave Iy, the stacked rail's Ly) ----
+  // ---- Save environment (TN's bn = Vx(…), the flat rail's environmentSave Qx, the stacked rail's $x) ----
   // cd0cf5b5e p (target equality without the folder lists, over code-current's m) / Fe (a preset's model and effort).
-  { target: 'environment-target.mjs', source: 'cd0cf5b5e-BajR1nyG.js', exports: { p: 'sameStoredEnvironmentTarget', Fe: 'environmentModelSettings' },
-    features: { p: ['return m(Ce(e), Ce(t));'], Fe: ['...(e?.modelId ? { modelId: e.modelId } : {}),'] } },
-  // shared-20 Wk: a target's key; shared-28 oh: an SSH host's key (cead7e0c5 b reads both).
-  { target: 'environment-target-key.mjs', source: 'shared-20-B7UqYfsi.js', exports: { Wk: 'environmentTargetKey' },
-    features: { Wk: ['return `local:${e.wslDistro ?? ""}:${e.cwd}`;'] } },
-  { target: 'ssh-host-key.mjs', source: 'shared-28-DcgD7xXH.js', exports: { oh: 'sshHostKey' }, features: { oh: ['return `${n === -1 ? "" : e.slice(0, n)}@${ah(e)}:${t ?? 22}`;'] } },
-  // cead7e0c5 b: the newest session record started at a target, as that target's settings (Ay's `m`).
-  { target: 'recent-target-settings.mjs', source: 'cead7e0c5-D6nt0a11.js', exports: { b: 'recentTargetSettings' },
-    features: { b: ['let e = t.lastActivityAt ?? t.createdAt ?? 0;', 'return o ? p(o, t, a) : null;'] } },
+  { target: 'environment-target.mjs', source: 'cd0cf5b5e-BCzJmEwZ.js', exports: { p: 'sameStoredEnvironmentTarget', Fe: 'environmentModelSettings', S: 'splitEnvironmentSettings' },
+    features: { p: ['return m(Ce(e), Ce(t));'], Fe: ['...(e?.modelId ? { modelId: e.modelId } : {}),'],
+      S: ['let { worktree: t, branch: n, ...r } = e ?? {},', 'place: Object.keys(i).length > 0 ? i : void 0,'] } },
+  // shared-20 uA: a target's key; shared-28 l_: an SSH host's key (cead7e0c5 v reads both).
+  { target: 'environment-target-key.mjs', source: 'shared-20-mUr7IqZY.js', exports: { uA: 'environmentTargetKey' },
+    features: { uA: ['return `local:${e.wslDistro ?? ""}:${e.cwd}`;'] } },
+  { target: 'ssh-host-key.mjs', source: 'shared-28-DNYlf4wu.js', exports: { l_: 'sshHostKey' }, features: { l_: ['return `${n === -1 ? "" : e.slice(0, n)}@${c_(e)}:${t ?? 22}`;'] } },
+  // cecbf1aa5 S: the one saved environment whose target matches (Vx's `m`).
+  { target: 'environment-match.mjs', source: 'cecbf1aa5-BT0v8IlE.js', exports: { S: 'uniqueMatchingEnvironment' },
+    features: { S: ['return n.length === 1 ? n[0] : void 0;'] } },
+  // cead7e0c5 v: the newest session record started at a target, as that target's settings (Vx's `m`).
+  { target: 'recent-target-settings.mjs', source: 'cead7e0c5-BwXFC-CL.js', exports: { v: 'recentTargetSettings' },
+    features: { v: ['let e = t.lastActivityAt ?? t.createdAt ?? 0;', 'return o ? d(o, t, a) : null;'] } },
   { target: 'save-environment.mjs', source: RAIL,
-    exports: { Ay: 'useSaveEnvironmentSetup', Iy: 'RailSaveEnvironmentLink', Ly: 'RailSaveEnvironmentRow', Py: 'requestSaveEnvironment',
-      My: 'recordSaveEnvironmentOutcome', Ny: 'saveEnvironmentCheckout', ky: 'environmentFolderName', Sy: 'SaveAsEnvironmentLabel' },
+    exports: { Vx: 'useSaveEnvironmentSetup', Qx: 'RailSaveEnvironmentLink', $x: 'RailSaveEnvironmentRow', Xx: 'requestSaveEnvironment',
+      Jx: 'recordSaveEnvironmentOutcome', Yx: 'saveEnvironmentCheckout', Bx: 'environmentFolderName', Nx: 'SaveAsEnvironmentLabel' },
     features: {
-      Ay: ['besideNamed: s = !1,', 'e.environments.some((e) => Og(e.target, { kind: "local", cwd: l })),', 'defaultMessage: "Folder",', 'label: `${ot(c)} \\u00B7 ${t}`,',
-        'startCount: d?.quiet ? 0 : (d?.starts ?? 1),'],
-      Iy: ['"data-testid": "rail-save-environment-link",', 'defaultMessage: "Save as environment",', 'defaultMessage: "Save",', 'onClick: () => Py(e, n, t),'],
-      Ly: ['return m(ki)', '"data-testid": "rail-save-environment",', 'defaultMessage: "Saved as environment \\u201C{name}\\u201D",', 'u(Sl, { name: "Bookmark" }),'],
-      Py: ['e.setState({', 'saveEnvironmentRequest: { setup: t, checkout: Ny(e, t, n), onSaved: r },', '(i && Og(r.target, t.target) && $e(i, r.id), My(e, t, { savedAs: r.name }));'],
-      My: ['if (n === "updated") {', 'moveLineOutcome: { cwd: t.target.cwd, ...n }'], Ny: ['?.startedWithWorktree', '? { worktree: !0 }'],
-      ky: ['.slice(0, Oy) || t'], Sy: ['defaultMessage: "Save as environment",', 'id: "9klNTvm9bE"'],
+      Vx: ['besideNamed: c,', 'defaultMessage: "Folder", id: "ukQpDs7M+0"'],
+      Qx: ['"data-testid": "rail-save-environment-link",', 'defaultMessage: "Save as environment",', 'defaultMessage: "Save", id: "fs11ci1KNs"', '() => Xx(t, r, n)',
+        '"shrink-0 text-footnote text-muted-control"'],
+      $x: ['"data-testid": "rail-save-environment",', 'defaultMessage: "Saved as environment \\u201C{name}\\u201D",', 's(Wf, { name: "Bookmark" })', 's(Nx, {})'],
+      Xx: ['saveEnvironmentRequest: { setup: t, checkout: Yx(e, t, n), onSaved: r },', 'Jx(e, t, { savedAs: r.name })'],
+      Jx: ['"updated"', 'moveLineOutcome:'], Yx: ['worktree: '],
+      Bx: ['.slice(0, zx) || t'], Nx: ['defaultMessage: "Save as environment", id: "9klNTvm9bE"'],
     } },
+  // ---- w10-ccres-rail-env-edit: TN's environmentAction (`kn`) over c73f45bc3 Zx (cf74bc599 M_) and fu (cf74bc599 n_) ----
+  // Zx: the environment row's ghost, xs, icon-only "Settings" button ("Edit environment" for a local environment, "Edit
+  // cloud environment" otherwise) that preloads its dialog on intent (shared-78 t3 over ou / cc5b397c6 l); fu: a saved
+  // environment the rail can edit in place (local, not WSL, no variant).
+  { target: 'environment-edit.mjs', source: 'c73f45bc3-B7hbL7H9.js', exports: { Zx: 'RailEditEnvironmentButton', fu: 'isRailEditableEnvironment' },
+    features: {
+      Zx: ['r = t === void 0 ? "cloud" : t,', 'o = yt(r === "local" ? ou : ml),', 'defaultMessage: "Edit environment", id: "cfNkVEwvig"',
+        'defaultMessage: "Edit cloud environment", id: "B2B5sIxbna"', 'variant: "ghost",', 'size: "xs",', 'iconOnly: !0,', 'flush: "end",',
+        'icon: "Settings",', '"aria-label": s,', 'onClick: n,'],
+      fu: ['return e?.target.kind === "local" && !e.target.wslDistro && !e.target.variant;'],
+    } },
+  // ---- w13-close-rail-regen (cwui-46): the Pinned section's drag-pin coachmark (shared-22 aM, readable :12520-12776) ----
+  // shared-22 rM: the Pinned section's messages ("Pinned", the coachmark's "Tip: you can drag {kind, select, …} here to pin
+  // them", the drop row's "Drag to pin" / "Drop here" / "Let go"). aM formats dragPinHint with kind = the sidebar's kind
+  // (`G && t === "chat" ? "code" : t`, G the hub look, off here).
+  { target: 'pinned-section-messages.mjs', source: 'shared-22-Bwn3sJTG.js', exports: { rM: 'pinnedSectionMessages' },
+    features: { rM: ['pinned: { defaultMessage: "Pinned", id: "A8GDlh2QW4" },', 'id: "3R0FD3r1RO",',
+      '"Tip: you can drag {kind, select, code {sessions} cowork {tasks} other {chats}} here to pin them"',
+      'dragToPin: { defaultMessage: "Drag to pin", id: "a6msxIE91i" },', 'dropHere: { defaultMessage: "Drop here", id: "Au4AP9NTeL" },',
+      'letGo: { defaultMessage: "Let go", id: "9Z0I31VbJD" },'] } },
+  // shared-frame Sj (exported Fi): the CDS coachmark aM opens (open, introDelay seconds before it shows, accent variant,
+  // showClose keeps it open on outside press / focus out / Escape). cowork-scheduled holds and exports the one copy; it is
+  // re-exported here under a semantic name for the sidebar host (src/source-drag-pin-hint.jsx).
+  { target: 'coachmark.mjs', source: 'shared-frame-6jtSkIit.js', exports: { Sj: 'CdsCoachmark' },
+    features: { Sj: ['({ open: i, onOpenChange: r, introDelay: n, variant: o, ...a } = e),', 'o === void 0 ? "accent" : o,',
+      'let e = window.setTimeout(() => l(!0), n * 1e3);', '_ = !!a.showClose || !!a.action,',
+      't.reason === "outside-press" || t.reason === "focus-out" || t.reason === "escape-key"'] } },
 ];
 
 // Original text the host wiring follows but cannot import (prettier form of the named top-level declaration).
 const callSites = [
-  // cf74bc599 fO (EpitaxySessionRailHost = pO = memo(fO)): the data assembly the host replaces (it reads claude.ai meta,
-  // remote environments, Remote Control, artifacts). SR-7's assembler builds iD's props from host data with the pure
-  // derivations above, and calls the timing / checkout hooks as fO does: lO with BE (6 s) for the discovery, meta and
-  // draft-rail holds, with hg (2 s) for the environment name; cO for the working folder and its origin; nO for the
-  // composer menu → section link. The prop wiring of iD (Changes = the PR bar slot unless the session has a live
-  // worktree, Context unless live worktree, Servers / Background tasks always, usage / controls off when flat) is here.
-  { source: RAIL, binding: 'fO', role: 'Rail host data assembly (EpitaxySessionRailHost): host replacement in SR-7, calling the generated pieces as written',
-    features: ['nO(t, e.id);', 'D = lO( !( E !== void 0 || T.isError || (T.isPending && T.fetchStatus !== "fetching") ), BE, ),', 'A = lO(!k && w, BE),',
-      'N = lO(j !== null && (!k || !M), BE);', 'ee = cO(I, k?.remote),', 'L = cO(x && k?.originCwd !== I ? k?.originCwd : void 0, k?.remote),',
-      'R = O !== void 0 && ZE({', 'V = R && !B && !z ? O?.lazyWorktreePath : void 0,', 'me = lO(!!U && !pe && ((ne && !te) || G), hg),',
-      'J = UE({', 'servers: PE({', 'labelOf: uE,', 'let e = GE({', 'labels: { local: je?.label ?? le, cloud: ue, bridge: de },', 'r = RE({',
-      'cachedRepoName: ee.repoName ?? L.repoName,', 'a = ME({', '(e) => !i.has(e) && !tD(e),', 'repos: D ? [] : jE(E ?? [], P, r).map((e) => ({',
-      'o = x && k.workingDir !== k.originCwd,', 's = VE({', 'branch: HE({', 'discovered: D ? void 0 : F?.currentBranch || F?.branch || null,',
-      'inCheckout: o || k.git !== void 0 || k.repoSlugs.length > 0,', 'worktree: XE({', 'worktreePending: QE({', 'goal: k.goal ?? null,',
-      'rt = lO(!C && w, BE),', 'at = zE({', 'lt = f(() => (ct ? [] : nD(st)), [ct, st]),', 'wt = u(iD, {',
-      'pullRequests: o ? void 0 : u( Sh, { sessionRef: e, layout: "rail", onRequestComposerFocus: i }, e.id, ),', 'outputsSession: e,', 'sessionKey: e.id,',
-      'repoMenuItems: Pe.folder?.path ? We : void 0,', 'contextSection: o ? void 0 : u(cg, { scopeStore: t, sessionRef: e }),',
-      'usageSection: o || c ? void 0 : u(Yh, { scopeStore: t, sessionRef: e }),', 'serversSection: u(QD, { sessionRef: e, readOnly: o }),',
-      'backgroundSection: u(BD, { sessionRef: e, readOnly: o }),', 'return u(ug, { snapshot: j, held: N, scopeStore: t, children: wt });'] },
+  // cf74bc599 TN (EpitaxySessionRailHost = LN = memo(TN)): the data assembly the host replaces (it reads claude.ai meta,
+  // remote environments, Remote Control, engine plugins, artifacts). SR-7's assembler builds Zj's props from host data with
+  // the pure derivations above, and calls the timing / checkout hooks as TN does: SN with Tj (6 s) for the discovery, meta
+  // and draft-rail holds, with e_ (_v, 2 s) for the environment name; xN for the working folder and its origin; mN for the
+  // composer menu → section link. 3.6556.2 adds the engine plugin rail panes (`pluginSections: wn`), the SSH
+  // `sshConnectionRemoved` meta field, the environment editor request and the Context card's Skills / Memory / MCP
+  // openers (panes §2.1 C1-5, C1-8, C1-10).
+  { source: RAIL, binding: 'TN', role: 'Rail host data assembly (EpitaxySessionRailHost): host replacement in SR-7, calling the generated pieces as written',
+    features: ['mN(n, t.id);', 'R = SN(!L && A, Tj),', 'H = SN(z !== null && (!L || !V), Tj),', 'K = xN(te, L?.remote),',
+      'ne = xN(E && L?.originCwd !== te ? L?.originCwd : void 0, L?.remote),', 'Ae = SN(!!Y && !ke && ((de && !X) || ue), e_),',
+      'Pe = L?.sshConnectionRemoved === !0,', 'labelOf: HA,', 'targets: e.counts.listedTargets,', 'repos: N ? [] : gj(M ?? [], G, r).map(AN),',
+      '.filter((e) => !i.has(e) && !Hj(e)),', 'openSkills: Je ? Ye : null,', 'openMemory: v,', 'mcpToolOpener: Ze,', 'pluginSections: wn,',
+      'n.setState({ editEnvironmentRequest: xn })', 's(Qx, { scopeStore: n, sessionId: t.id, setup: bn })'] },
 ];
-// Pinned on the minified bytes (each must occur exactly once).
+// Pinned on the minified bytes (each must occur exactly once). `loose: true` matches through official.looseFeature (R2/E5;
+// `keep` names stay literal).
 const rawCallSites = [
-  // R4i-rail RL1: fO's Connectors and Save environment wiring, and the originals around it the host stands in for.
-  { source: RAIL, role: 'fO reads the session MCP counts (c73f45bc3 Cd as _g) only for a local session with an opener, and passes them with that opener',
-    features: ['p=Q(t,e=>e.openSessionMcpDialog)', 'g=_g(e.type==="local"&&p!==null?e.id:null)', 'p?{counts:g,onOpen:p}:void 0',
-      'servers:PE({names:e.counts.listedNames,states:e.counts.listedStates,iconTypes:e.counts.listedIconTypes,iconSrcs:e.counts.listedIconSrcs,labelOf:uE})'] },
-  { source: RAIL, role: 'fO builds the save setup with Ay and passes Ly (stacked) / Iy (flat, beside an unnamed environment row)',
-    features: ['St=Ay({scopeStore:t,environmentsOn:ce,sessionId:e.id,isLocal:e.type==="local",meta:S.data,besideNamed:c&&!K})',
-      'saveEnvironment:St&&!o?u(Ly,{scopeStore:t,sessionId:e.id,setup:St}):void 0,environmentSave:St&&!o&&c&&!K?u(Iy,{scopeStore:t,sessionId:e.id,setup:St}):void 0'] },
-  { source: 'c73f45bc3-CFrHin0p.js', role: 'Cd (the session MCP counts): needs-auth / failed servers to reconnect, unavailable ones apart, every listed server with its state',
-    features: ['u=s.filter(e=>(e.status==="needs-auth"||e.status==="failed")&&(!Vs(e)||c(e)&&!l(e)))',
-      'p=new Set(s.filter(e=>e.status==="unavailable"||e.status==="failed"&&Vs(e)&&!f.has(e)))', 'needReconnect:u.length,unavailable:p.size',
-      'listedStates:s.map(e=>f.has(e)?e.status:p.has(e)?"unavailable":"").join('] },
-  { source: 'c73f45bc3-CFrHin0p.js', role: 'qc opens the environment dialog for the scope store\'s saveEnvironmentRequest and hands the created environment to onSaved',
-    features: ['initialTarget:r?.setup.target??null,initialKind:"local",focusName:!0', 'e.getState().saveEnvironmentRequest?.onSaved(r)'] },
-  { source: 'cc43287c9-DAfOi8yP.js', role: 'The session view puts the MCP opener (session MCP dialog, else Settings › Connectors) on the scope store while it is available',
-    features: ['if(Em)return e.setState({openSessionMcpDialog:jm}),()=>e.setState({openSessionMcpDialog:null})', 'J?.warmSession?.(G.id)?.catch(()=>void 0)'] },
-  { source: RAIL, role: 'cf74bc599 exports the rail host as EpitaxySessionRailHost (pO = memo(fO)); the kit lazy slot (hH) picks it',
-    features: ['pO as EpitaxySessionRailHost', 'pO=y(fO)'] },
-  // dnd-kit is in no other generated area (R4f-rail SR-2 checked view-tabs, code-current and every area manifest).
-  { source: RAIL, role: 'The card stack imports dnd-kit from c09f6b4e5 (13 names)',
-    features: ['import{_ as T_,a as E_,d as D_,i as O_,l as k_,n as A_,o as j_,p as M_,s as N_,t as P_,v as F_,x as I_,y as L_}from"./c09f6b4e5-DErbwtLQ.js"'] },
+  { source: RAIL, role: 'TN passes the session MCP counts to the Connectors card with their opener (by the server\'s target)', loose: true, keep: ['yj', 'HA'],
+    features: ['servers:yj({names:e.counts.listedNames,states:e.counts.listedStates,iconTypes:e.counts.listedIconTypes,iconSrcs:e.counts.listedIconSrcs,targets:e.counts.listedTargets,labelOf:HA}),onOpen:t=>Xe(t,e.onOpen)'] },
+  { source: RAIL, role: 'TN builds the save setup with Vx and passes $x (stacked) / Qx (flat, beside an unnamed environment row)', loose: true, keep: ['Vx', 'Qx', '$x'],
+    features: ['vn=t.type==="local",yn=d&&!_e,bn=Vx(', 's($x,{scopeStore:n,sessionId:t.id,setup:bn})', 's(Qx,{scopeStore:n,sessionId:t.id,setup:bn})'] },
+  // w10-ccres-rail-env-edit: TN's environmentAction. `y` is the scope store's cloud editor opener (PN), `xn` a local
+  // session's named environment the rail can edit (n_ = c73f45bc3 fu), `Sn` puts it on the scope store as the edit request
+  // and `kn` is M_ (c73f45bc3 Zx), handed to Zj as environmentAction.
+  { source: RAIL, role: 'TN builds the environment row\'s Edit environment action (M_ = c73f45bc3 Zx) and its edit request', loose: true,
+    keep: ['M_', 'n_', 'PN', 'Xr'],
+    features: ['y=Xr(n,PN)', 't.type==="local"&&!l&&n_(_e)?_e.id:null', '()=>n.setState({editEnvironmentRequest:xn})',
+      'y?s(M_,{onOpen:y}):xn===null?void 0:s(M_,{kind:"local",onOpen:Sn})', 'onEditGoal:ct,connectors:$e,computer:Dn,environmentAction:kn,saveEnvironment:An,'] },
+  { source: 'c73f45bc3-B7hbL7H9.js', role: 'c73f45bc3 exports fu as Jn and Zx as l', features: ['fu as Jn,', 'Zx as l,'] },
+  { source: RAIL, role: 'cf74bc599 imports c73f45bc3 Jn as n_ (fu) and l as M_ (Zx)', features: ['Jn as n_,', ',l as M_,'] },
+  { source: 'c73f45bc3-B7hbL7H9.js', role: 'The environment dialog clears the scope store\'s save / edit requests and hands the created environment to onSaved',
+    features: ['t.setState({saveEnvironmentRequest:null,editEnvironmentRequest:null})', 't.getState().saveEnvironmentRequest?.onSaved(r)'] },
+  { source: 'cc43287c9-Me-M2ucD.js', role: 'The session view puts the MCP opener on the scope store while it is available', loose: true,
+    features: ['t.setState({openSessionMcpDialog:iv}),()=>t.setState({openSessionMcpDialog:null})'] },
+  { source: RAIL, role: 'cf74bc599 exports the rail host as EpitaxySessionRailHost (LN = memo(TN)); the kit lazy slot picks it', loose: true, keep: ['LN', 'TN'],
+    features: ['LN as EpitaxySessionRailHost', 'LN=y(TN)'] },
+  // w13-close-rail-regen (cwui-46): aM's coachmark, written by the sidebar host (src/source-drag-pin-hint.jsx) over the
+  // generated CdsCoachmark (Sj, imported as j) and pinnedSectionMessages (rM); the menu pin (shared-11 Nw / shared-21 n0)
+  // asks for it, a drag pin (lW onFirstPin: HM / lP) and its close mark it seen, the sidebar store persists seenDragPinHint.
+  { source: 'shared-22-Bwn3sJTG.js', role: 'aM opens the drag-pin coachmark under the Pinned heading for the live kind, Hand icon and the hint',
+    features: ['Ae&&t===je&&!Ne&&o(j,{open:!0,onOpenChange:(e,t)=>!e&&t?.reason!=="outside-press"&&ke(),anchor:ze,side:gd("inline-end",oe),introDelay:.3,"aria-label":Me,showClose:!0,children:f("div",{className:"flex flex-row items-start gap-sm min-w-[13rem]",children:[o(L,{name:"Hand",size:"md",className:"shrink-0"}),o("p",{children:Me})]})})',
+      'W.formatMessage(rM.dragPinHint,{kind:G&&t==="chat"?"code":t})', 'o("div",{ref:ze,children:_t})', 'Fi as j,', 'od as L,', 'js as gd,'] },
+  { source: 'shared-22-Bwn3sJTG.js', role: 'A drag pin marks the hint seen (lW onFirstPin)', count: 2, features: ['return En.getState().markDragPinHintSeen()'] },
+  { source: 'shared-21-R7LldJ05.js', role: 'lW calls onFirstPin after a drag pin', features: ['t.type==="pin"&&o?.()'] },
+  { source: 'shared-11-_AVGLHEz.js', role: 'A menu pin asks for the hint (Nw)', features: ['t||J.getState().maybeShowDragPinHint()'] },
+  { source: 'shared-52-uHFNjl7C.js', role: 'The sidebar store: the hint shows once (not seen, sidebar not collapsed / docked / narrow / drilled down) and is persisted',
+    features: ['markDragPinHintSeen:()=>e({seenDragPinHint:!0,showDragPinHint:!1})',
+      'maybeShowDragPinHint:()=>e(e=>e.seenDragPinHint||e.collapsed||Hg(e)||e.isRouteDrilldown?e:{showDragPinHint:!0})', '["seenDragPinHint"]'] },
+  { source: RAIL, role: 'The card stack imports dnd-kit from c09f6b4e5 (13 names)', loose: true,
+    features: ['import{_ as hy,a as gy,d as _y,i as vy,l as yy,n as by,o as xy,p as Sy,s as Cy,t as wy,v as Ty,x as Ey,y as Dy}from"./c09f6b4e5-CLm8I7_i.js"'] },
 ];
 
 const cache = new Map();
@@ -438,10 +548,28 @@ function exportedNames(text) {
     }
   return out;
 }
+// An area's manifest for this release (its compat helper's view where it has one), or null while that area is on another
+// release with no view of this one (its modules then slice nothing of 3.6556.2). All five areas below are 3.6556.2 now
+// (turn-box included), so each answers its current manifest.
+const compatManifests = {
+  'sidebar-resize': () => sidebarResizeManifestFor(referenceVersion), 'turn-box': () => turnBoxManifestFor(referenceVersion),
+  'routines-shared': () => routinesSharedManifestFor(referenceVersion), 'mcp-app-card': () => mcpAppCardManifestFor(referenceVersion),
+  'sidebar-reorder': () => sidebarReorderManifestFor(referenceVersion),
+};
+async function areaManifest(area) {
+  const viewFor = compatManifests[area];
+  if (!viewFor) return readJson(path.join(generatedRoot, area, 'manifest.json')).catch(() => null);
+  try {
+    return await viewFor();
+  } catch (error) {
+    if (/ is .*, expected /.test(error.message)) return null;
+    throw error;
+  }
+}
 let areas;
 async function loadAreas() {
   if (areas) return areas;
-  const viewTabs = await readJson(path.join(generatedRoot, 'view-tabs/manifest.json'));
+  const viewTabs = await viewTabsManifestFor(referenceVersion);
   if (viewTabs.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${viewTabs.referenceVersion}, expected ${referenceVersion}`);
   const publicByLocal = new Map();
   for (const [name, entry] of Object.entries(viewTabs.publicNames ?? {})) publicByLocal.set(`${entry.file}#${entry.local}`, { name, ...entry });
@@ -455,7 +583,7 @@ async function loadAreas() {
   const slicedElsewhere = new Map();
   for (const area of (await fs.readdir(generatedRoot, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name)) {
     if (area === 'session-rail' || area === 'view-tabs') continue;
-    const manifest = await readJson(path.join(generatedRoot, area, 'manifest.json')).catch(() => null);
+    const manifest = await areaManifest(area);
     if (!manifest || !Array.isArray(manifest.modules)) continue;
     for (const m of manifest.modules) {
       if (typeof m.source !== 'string' || typeof m.target !== 'string') continue;
@@ -481,34 +609,26 @@ async function loadAreas() {
 const areaExports = new Map();
 async function areaExport(area, target) {
   const key = `${area}/${target}`;
-  if (!areaExports.has(key)) areaExports.set(key, exportedNames(await fs.readFile(path.join(generatedRoot, area, target), 'utf8')));
+  if (!areaExports.has(key)) areaExports.set(key, area === 'sidebar-resize' ? await sidebarResizeExportsFor(referenceVersion, target) : area === 'turn-box' ? await turnBoxExportsFor(referenceVersion, target) : area === 'mcp-app-card' ? await mcpAppCardExportsFor(referenceVersion, target) : area === 'sidebar-reorder' ? await sidebarReorderExportsFor(referenceVersion, target) : exportedNames(await fs.readFile(path.join(generatedRoot, area, target), 'utf8')));
   return areaExports.get(key);
 }
 
-const provedNamespaces = new Set();
+// vendor-frame: the export alias of `local` that official.reactAliases lists, proved once (R3; aliases were reused across
+// releases, so never by the old name).
+const provedAliases = new Set();
 async function reactMember(file, local) {
   if (file !== VENDOR_FRAME) return null;
   const src = await readSource(file);
-  const entry = src.top.get(local);
-  if (entry?.kind !== 'var') return null;
-  const object = reactNamespaceObjects[local];
-  if (object) {
-    assertFeatures(`React namespace object ${local}`, await featureText(src, entry), object.features);
-    return { from: object.module, name: '*' };
-  }
-  const init = entry.node.init;
-  if (init?.type !== 'MemberExpression' || init.computed || init.object.type !== 'Identifier' || init.property.type !== 'Identifier') return null;
-  const ns = reactNamespaces[init.object.name];
-  if (!ns) return null;
-  if (!provedNamespaces.has(init.object.name)) {
-    assertFeatures(`React namespace ${init.object.name}`, closureText(src, init.object.name), ns.features);
-    provedNamespaces.add(init.object.name);
-  }
-  const react = await import(ns.module === 'react/jsx-runtime' ? 'react/jsx-runtime' : ns.module);
-  if (!(init.property.name in react)) throw Error(`${ns.module} has no ${init.property.name} (vendor-frame ${local})`);
-  return { from: ns.module, name: init.property.name };
+  const alias = [...src.exported].find(([name, l]) => l === local && Object.hasOwn(official.reactAliases, name))?.[0];
+  if (!alias) return null;
+  if (!provedAliases.has(alias)) { official.assertVendorAlias(src.code, alias); provedAliases.add(alias); }
+  const [module, member] = official.reactAliases[alias];
+  return { from: module, name: member };
 }
 const rank = area => { const i = importableAreas.indexOf(area); return i === -1 ? importableAreas.length : i; };
+// W13 G11 (D1): shared-0 Pa (lazyInit) is routines-shared's import-free shared-0 copy; code-current lazy-init.mjs only
+// re-exports it, and the r4e / r3b `once` / `lazyValue` modules are per-graph copies, so the rail imports that one.
+const preferredArea = { 'shared-0-DDOOdL6P.js#Pa': 'routines-shared' };
 const posix = p => p.split(path.sep).join('/');
 const rel = (fromFile, toFile) => { const r = posix(path.relative(path.dirname(fromFile), toFile)); return r.startsWith('.') ? r : `./${r}`; };
 
@@ -525,7 +645,9 @@ export async function extractSessionRail({ check = false, explore = null } = {})
   const areaImport = async (spec, file, local, via) => {
     const self = path.join(output, spec.target);
     const elsewhere = slicedElsewhere.get(`${file}#${local}`) ?? [];
-    const importable = elsewhere.filter(e => importableAreas.includes(e.area)).sort((a, b) => rank(a.area) - rank(b.area));
+    const first = preferredArea[`${file}#${local}`];
+    const importable = elsewhere.filter(e => importableAreas.includes(e.area))
+      .sort((a, b) => (b.area === first) - (a.area === first) || rank(a.area) - rank(b.area));
     for (const { area, target } of importable) {
       const names = (await areaExport(area, target)).get(local);
       if (names?.length) return { from: rel(self, path.join(generatedRoot, area, target)), name: names[0], via, kind: area, original: `${file}:${local}` };
@@ -540,8 +662,13 @@ export async function extractSessionRail({ check = false, explore = null } = {})
       const dep = await readSource(file);
       const original = dep.top.get(local);
       if (!original || original.kind === 'import') throw Error(`${spec.target}: adapter ${via} (${local}) is not a declaration of ${file}`);
-      assertFeatures(`${spec.target}: adapter ${via} (${local})`, adapter.closure ? closureText(dep, local) : await featureText(dep, original), adapter.features);
-      return { from: adapterModule, name: adapter.name, via, kind: 'adapter', original: `${file}:${local}` };
+      try {
+        assertFeatures(`${spec.target}: adapter ${via} (${local})`, adapter.closure ? closureText(dep, local) : await featureText(dep, original), adapter.features);
+      } catch (error) {
+        if (!explore) throw error;
+        explore.push({ target: spec.target, via: 'ADAPTER-FEATURE', local, size: error.message });
+      }
+      return { from: adapter.module ?? adapterModule, name: adapter.name, via, kind: 'adapter', original: `${file}:${local}` };
     }
     const owner = ownModule(file, local);
     if (owner) return { from: `./${owner.spec.target}`, name: owner.spec.exports[local], via, kind: 'generated', original: `${file}:${local}` };
@@ -636,6 +763,7 @@ export async function extractSessionRail({ check = false, explore = null } = {})
       if (!entry || entry.kind === 'import') throw Error(`${spec.target}: root ${name} is not a declaration of ${spec.source}`);
       try {
         assertFeatures(`${spec.target}: root ${name}`, await featureText(src, entry), spec.features?.[name]);
+        assertFeatures(`${spec.target}: root ${name} (closure)`, closureText(src, name), spec.closureFeatures?.[name]);
       } catch (error) {
         if (!explore) throw error;
         explore.push({ target: spec.target, via: 'FEATURE', local: name, size: error.message });
@@ -674,7 +802,7 @@ export async function extractSessionRail({ check = false, explore = null } = {})
       'globalThis', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'parseFloat', 'parseInt', 'Date', 'Intl', 'undefined', 'Infinity',
       'WeakMap', 'WeakSet', 'Boolean', 'window', 'document', 'console', 'MutationObserver', 'requestAnimationFrame', 'cancelAnimationFrame',
       'TypeError', 'Reflect', 'navigator', 'queueMicrotask', 'performance', 'getComputedStyle', 'NaN', 'isNaN', 'isFinite', 'Element', 'HTMLElement',
-      'Node', 'reportError', 'ResizeObserver', 'URL', 'Event', 'KeyboardEvent', 'arguments', 'SVGElement', 'Image']);
+      'Node', 'reportError', 'ResizeObserver', 'URL', 'Event', 'KeyboardEvent', 'arguments', 'SVGElement', 'Image', 'decodeURIComponent']);
     const unbound = globals.filter(name => !allowed.has(name));
     if (unbound.length) throw Error(`${spec.target}: unbound ${unbound.join(', ')}`);
     files[spec.target] = text;
@@ -704,10 +832,10 @@ export async function extractSessionRail({ check = false, explore = null } = {})
     const bytes = await fs.readFile(path.join(source, site.source));
     const text = bytes.toString();
     for (const feature of site.features) {
-      const count = text.split(feature).length - 1;
+      const count = site.loose ? (text.match(official.looseFeature(feature, { keep: site.keep ?? [], flags: 'g' })) ?? []).length : text.split(feature).length - 1;
       if (count !== (site.count ?? 1)) throw Error(`call site ${site.source} (raw): ${JSON.stringify(feature)} occurs ${count} times, expected ${site.count ?? 1}`);
     }
-    manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, features: site.features });
+    manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, ...(site.loose ? { loose: true } : {}), features: site.features });
   }
   files['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';
   if (check) {

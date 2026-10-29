@@ -206,7 +206,9 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
   assert.doesNotMatch(html, /sle-error/);
   assert.match(html, /<button type="submit" hidden="" aria-hidden="true" tabindex="-1"><\/button>/);
   assert.match(html, /<div class="-mx-pad-xl mt-auto border-t px-xl pt-lg"><footer class="sdlg-footer mt-0"><button type="button" data-cds="Button" data-variant="secondary"[^>]*>.*?<span class="ssb-content">Cancel<\/span><\/button><button type="button" data-cds="Button" data-variant="primary"[^>]*>.*?<span class="ssb-content">Save changes<\/span><\/button><\/footer><\/div>/);
-  assert.match(html, /scroll-fade-y px-xl pt-3 pb-sm supports-\[min-height:calc-size\(auto,size\)\]:min-h-\[calc-size\(min-content,min\(size,6rem\)\)\]/);
+  // cc-rest-env-ui: 3.6556.2 c29df1c52 _ drops -mb-pad-sm and ends the body pb-lg.
+  assert.match(html, /<div class="-mx-pad-xl flex min-h-\[6rem\] flex-1 flex-col gap-lg overflow-y-auto overflow-x-hidden scroll-fade-y px-xl pt-3 pb-lg supports-\[min-height:calc-size\(auto,size\)\]:min-h-\[calc-size\(min-content,min\(size,6rem\)\)\]">/);
+  assert.doesNotMatch(html, /-mb-pad-sm|pt-3 pb-sm/);
   // A managed key: the error under the field (aria-invalid, described by it) and Save disabled.
   const invalid = form({ loadedText: 'PATH=/bin' });
   assert.match(invalid, /aria-invalid="true"/);
@@ -243,7 +245,13 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
     for (const pressed of ['ArrowUp', key]) menu.props.onKeyDown({ key: pressed, preventDefault() { prevents += 1; }, stopPropagation() { stops += 1; } });
   }
   assert.deepEqual({ opens, stops, prevents }, { opens: 2, stops: 2, prevents: 2 });
-  EnvironmentAction({ icon: 'Settings', onPress: onOpenSettings }).props.onClick({ stopPropagation() { stops += 1; } });
+  // cc-rest-env-ui: 3.6556.2 c227f4d5e B$ is React Compiler output; call it under a one-shot dispatcher that answers
+  // useMemoCache (R5, tests/support/react-memo-cache.mjs).
+  const { withMemoCache } = await import('./support/react-memo-cache.mjs');
+  const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
+  let action;
+  try { internals.H = withMemoCache({}); action = EnvironmentAction({ icon: 'Settings', onPress: onOpenSettings }); } finally { internals.H = previous; }
+  action.props.onClick({ stopPropagation() { stops += 1; } });
   assert.equal(opens, 3);
   assert.equal(stops, 3);
 });

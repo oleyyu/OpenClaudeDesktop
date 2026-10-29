@@ -19,6 +19,7 @@ import { withPreviewDom } from './fixtures/preview-r3b-dom.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const official = name => fs.readFileSync(path.join(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
+const current = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 
@@ -51,6 +52,34 @@ test('the shipped store, its gate, the pick path and the copy are pinned once ea
   assert.equal(KEPT_BYPASS_KILL_SWITCH, '__gb__3409701119');
   assert.equal(KEPT_BYPASS_CONFIRM_MS, 120000);
   assert.equal(KEPT_BYPASS_SESSION_READ_MS, 10000);
+});
+
+// w1-composer-pure (3.6556.2): the kept pick is unchanged — same store, kill switch, timeouts, keep/drop rules and copy;
+// only the names moved (cef1e6037-C9OZ_iaL Fn/Mn/Y/Pn, imported by c227f4d5e as vh/bh/gh/hh) and the copy now lives in
+// c3efc6f9e-BnLNtm1h (export p, the composer's Pv) since cc0051c10 is gone. Migration note: the E11 folder-map move to
+// "epitaxy-folder-permission-mode-v2" drops Bypass remembered on a local folder (permission-mode-resolution.mjs); it does
+// not touch this per-session kept pick, which lives in memory for one turn and is never stored with the folder.
+test('3.6556.2: the store, its gate, the pick path and the copy are the same, pinned once each in the new chunks', () => {
+  const store = current('cef1e6037-C9OZ_iaL.js');
+  assert.equal(count(store, 'var q=ye()(()=>({picks:{}})),vn="__gb__3409701119",yn=12e4,bn=1e4,'), 1);
+  assert.equal(count(store, 'e.message.includes("not launched with --dangerously-skip-permissions")&&kn(t)?.isRunning===!0&&!d()&&!a(vn)'), 1);
+  assert.equal(count(store, 'On(e,{modeAtPick:r.permissionMode,turnEnded:!1,sent:!1,tell:n})'), 1);
+  assert.equal(count(store, 'if(t===void 0||t.isArchived===!0||t.permissionMode!==r.modeAtPick&&!i){Y(e);return}'), 1);
+  assert.ok(/Fn as v,/.test(store) && /Mn as x,/.test(store) && /Y as b,/.test(store) && /Pn as S,/.test(store));
+  const composer = current('c227f4d5e-B-FYKrwT.js');
+  assert.equal(count(composer, 'import{S as hh,b as gh,m as _h,v as vh,w as yh,x as bh,y as xh}from"./cef1e6037-C9OZ_iaL.js"'), 1);
+  assert.equal(count(composer, 'e==="bypassPermissions"&&vh(o,Pn)&&bh(Pn,f,LR(t,r,n,a,Pn))?(y(),lt(null),i(t.formatMessage(Pv.bypassKeptToast)),"applied")'), 1);
+  assert.equal(count(composer, 'description:At&&e==="bypassPermissions"?t.formatMessage(Pv.bypassKeptRow):void 0'), 1);
+  assert.equal(count(composer, 'At=hh(s?.type==="local"?s.id:null)'), 1);
+  assert.equal(count(composer, 'import{n as Nv,p as Pv,r as Fv}from"./c3efc6f9e-BnLNtm1h.js"'), 1);
+  const copy = current('c3efc6f9e-BnLNtm1h.js');
+  assert.equal(count(copy, `bypassKeptRow:{defaultMessage:"${BYPASS_KEPT_ROW}",id:"RvbwIvF4xv"}`), 1);
+  assert.equal(count(copy, `bypassKeptToast:{defaultMessage:"${BYPASS_KEPT_TOAST}",id:"00YMYeBYsv"}`), 1);
+  assert.equal(fs.existsSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc0051c10-pi8fKHOz.js')), false);
+  // The folder map migration never reads or writes a kept pick: the v1 → v2 seed (OR) is the only new Bypass rule.
+  assert.equal(count(composer, 'function OR(e){return Object.fromEntries(Object.entries(e).filter(([e,t])=>t!=="bypassPermissions"||fR(e)))}'), 1);
+  assert.equal(count(store, 'epitaxy-folder-permission-mode'), 0);
+  assert.equal(count(local('src/permission-mode-kept-bypass.mjs'), 'epitaxy-folder-permission-mode'), 0);
 });
 
 test('the pick is kept only mid-turn on a core without live permissions, with the kill switch off', () => {

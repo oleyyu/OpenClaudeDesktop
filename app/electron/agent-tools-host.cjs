@@ -19,6 +19,10 @@
 //   mainOnly: true on a tool                  (optional: for the main conversation only — Workflow, set_session_title,
 //                                              mark_chapter, CronCreate: a sub-agent's call is refused, as Claude Code
 //                                              withholds them from its sub-agents)
+//   export const surfaces = ["chat"]          (optional: the product surfaces — chat / cowork / code — whose sessions are
+//                                              offered the module's tools; without it, every surface. A session's surface
+//                                              is the app's sessionSurface service (host.provide), unknown = code. A
+//                                              list read for the app itself with no connection still shows every tool.)
 // A handler's ctx is { sessionId, cwd, requestApproval, signal, log, ...services } where services are what the app
 // provided with host.provide(name, (session, ctx) => value) — preview (preview-service.cjs), terminals (terminal-service),
 // … — so a module asking for another service only needs one provide() call in main.cjs.
@@ -99,6 +103,15 @@ function nativeOf(tool, module) {
   return value && value.trim() ? value.trim() : null;
 }
 
+// The product surfaces (surface-policy.mjs SURFACES) a session can be on.
+const SURFACES = ["chat", "cowork", "code"];
+/** A module's `surfaces`: null when it doesn't say (every surface); a list it gives keeps only the known names, so a
+ * module naming none of them is offered to no session (closed, never open). */
+function surfacesOf(module) {
+  if (module?.surfaces === undefined) return null;
+  return Object.freeze(Array.isArray(module.surfaces) ? SURFACES.filter((surface) => module.surfaces.includes(surface)) : []);
+}
+
 function validTool(tool) {
   return tool && typeof tool === "object" && typeof tool.name === "string" && TOOL_NAME.test(tool.name)
     && typeof tool.description === "string" && typeof tool.handler === "function";
@@ -176,9 +189,10 @@ function createAgentToolsHost({
     for (const entry of list) {
       const module = entry.module ?? entry;
       const group = typeof module.group === "string" && module.group ? module.group : (entry.file ? entry.file.replace(/\.mjs$/, "") : "tools");
+      const surfaces = surfacesOf(module);
       for (const tool of Array.isArray(module.tools) ? module.tools : []) {
         if (!validTool(tool)) { logger.warn?.(`agent tools: skipped an invalid tool in ${entry.file ?? group}`); continue; }
-        const record = { tool, group, native: nativeOf(tool, module) };
+        const record = { tool, group, native: nativeOf(tool, module), surfaces };
         // A sharesName tool waits behind the other group's tool of its name (or takes the name when there is none).
         if (tool.sharesName === true) {
           if ((alternates.get(tool.name) ?? []).some((other) => other.group === group)) { logger.warn?.(`agent tools: duplicate tool ${tool.name} in ${entry.file ?? group}`); continue; }
@@ -205,6 +219,19 @@ function createAgentToolsHost({
   };
   // The thread a server identity names (a start token is followed to the thread it was bound to), or null.
   const threadOf = (identity) => (typeof identity === "string" && identity ? (START_TOKEN.test(identity) ? startTokens.get(identity) ?? null : identity) : null);
+  // The surface of the session a server identity names: the app's sessionSurface service, asked with { id: the thread
+  // (null for a start token not bound yet), identity }. No identity, no service or an unknown answer: code.
+  const surfaceOf = (identity) => {
+    const factory = services.get("sessionSurface");
+    const named = typeof identity === "string" && identity ? identity : null;
+    if (!factory || !named) return "code";
+    let value = null;
+    try { value = factory({ id: threadOf(named), identity: named }); } catch { value = null; }
+    return SURFACES.includes(value) ? value : "code";
+  };
+  const servedToSurface = ({ surfaces }, identity = null) => !surfaces || surfaces.includes(surfaceOf(identity));
+  /** What a connection's list offers: served to the core (servedToCore) and to its session's surface. */
+  const offered = (entry, identity = null) => servedToCore(entry, identity) && servedToSurface(entry, identity);
   /** The tool a session is served under an entry's name: a sharesName tool when prefersSharedTool picks it for that
    * session (its group on) or when the entry's own group is off, else the entry itself. */
   const servedEntry = (entry, identity = null) => {
@@ -251,7 +278,7 @@ function createAgentToolsHost({
     const listed = typeof isGroupListed === "function" ? isGroupListed : isGroupEnabled;
     const defer = deferred();
     const groups = [];
-    for (const entry of tools.values()) if (defer.has(entry.group) && !connection.loaded?.has(entry.group) && listed(entry.group) && servedToCore(entry, connection.identity) && !groups.includes(entry.group)) groups.push(entry.group);
+    for (const entry of tools.values()) if (defer.has(entry.group) && !connection.loaded?.has(entry.group) && listed(entry.group) && offered(entry, connection.identity) && !groups.includes(entry.group)) groups.push(entry.group);
     return groups;
   }
   function loadToolDefinition(groups) {
@@ -292,7 +319,8 @@ function createAgentToolsHost({
   function listTools(connection = null, { record = false } = {}) {
     const listed = typeof isGroupListed === "function" ? isGroupListed : isGroupEnabled;
     const defer = connection ? deferred() : new Set();
-    const served = [...tools.values()].map((entry) => servedEntry(entry, connection?.identity)).filter((entry) => listed(entry.group) && servedToCore(entry, connection?.identity) && (!defer.has(entry.group) || connection.loaded?.has(entry.group)));
+    // A list for the app itself (no connection) shows every surface's tools; a connection's, its session's surface only.
+    const served = [...tools.values()].map((entry) => servedEntry(entry, connection?.identity)).filter((entry) => listed(entry.group) && (connection ? offered(entry, connection.identity) : servedToCore(entry, null)) && (!defer.has(entry.group) || connection.loaded?.has(entry.group)));
     if (record && connection) connection.listedShared = new Map(served.filter(({ tool }) => shared.has(tool.name)).map(({ tool, group }) => [tool.name, group]));
     const out = served.map(({ tool }) => ({
       name: tool.name,
@@ -313,7 +341,7 @@ function createAgentToolsHost({
     const connection = [...connections].find((entry) => named(entry.identity) === threadId) ?? { identity: threadId, loaded: new Set() };
     const listed = typeof isGroupListed === "function" ? isGroupListed : isGroupEnabled;
     const pending = new Set(pendingGroups(connection));
-    const deferredTools = [...tools.values()].filter((entry) => pending.has(entry.group) && listed(entry.group) && servedToCore(entry, connection.identity))
+    const deferredTools = [...tools.values()].filter((entry) => pending.has(entry.group) && listed(entry.group) && offered(entry, connection.identity))
       .map(({ tool }) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema && typeof tool.inputSchema === "object" ? tool.inputSchema : { type: "object", properties: {} } }));
     return { tools: listTools(connection), deferred: deferredTools };
   }
@@ -329,7 +357,7 @@ function createAgentToolsHost({
     }
     connection.loaded ??= new Set();
     for (const group of chosen) connection.loaded.add(group);
-    const names = [...tools.values()].filter((entry) => chosen.includes(entry.group) && servedToCore(entry, connection.identity)).map(({ tool }) => tool.name);
+    const names = [...tools.values()].filter((entry) => chosen.includes(entry.group) && offered(entry, connection.identity)).map(({ tool }) => tool.name);
     const result = { content: [{ type: "text", text: `Loaded ${chosen.join(", ")}: ${names.join(", ")}. They are available from your next step.` }] };
     // The result waits for the core to read the list again: OpenCode re-lists in its tools/list_changed handler while
     // the next step's tools are already being resolved, so a result sent at once reaches a step without the tools
@@ -390,6 +418,8 @@ function createAgentToolsHost({
     if (!servedToCore(entry, identity)) throw new Error(`${name} isn’t offered to this agent: use its own ${entry.native ?? name} tool.`);
     const session = sessionFor(identity, meta, { scoped });
     if (!session?.id) throw new Error("This tool works only in an OpenClaude Desktop session.");
+    // A surface's tools (a module's `surfaces`) answer that surface's sessions only, whatever list the core holds.
+    if (!servedToSurface(entry, typeof identity === "string" && identity ? identity : session.id)) throw new Error(`${name} isn’t available in this session.`);
     const caller = callerOf(meta);
     if (entry.tool.mainOnly === true && caller && caller !== session.id)
       throw new Error(`${name} is for the main conversation only: a sub-agent can’t use it. Finish your task and report back; the main agent can use ${name} if it is needed.`);

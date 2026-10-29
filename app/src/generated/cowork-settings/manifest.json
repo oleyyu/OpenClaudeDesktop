@@ -1,0 +1,2474 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-cowork-settings.mjs",
+  "adapterModule": "src/source-cowork-settings-adapters.jsx",
+  "sharedAdapterModule": "src/source-routines-shared-adapters.jsx",
+  "publicNames": {
+    "CoworkSettingsPage": {
+      "file": "c71860c77-CKIsHnA3.js",
+      "local": "De"
+    }
+  },
+  "modules": [
+    {
+      "target": "c71860c77-CKIsHnA3.mjs",
+      "source": "c71860c77-CKIsHnA3.js",
+      "sourceSha256": "eb877dfff684f8395a95cd2ed813e84a47aa47dbba00ce3cbf696b4c646c279d",
+      "sha256": "8ddebb082243d01083f454190c7dc684ffab54d2d4b90a4a55754c31e1b03f26",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "pe",
+          "sha256": "686627067c6a5e22b3e695e676b497ab85dd73bc42d76aa67dc6182d22113b0a"
+        },
+        {
+          "name": "q",
+          "sha256": "3b60a1fffc2a9e6e4eabd1dfc413d878a6450199f2d751050807a49cc8e7052c"
+        },
+        {
+          "name": "me",
+          "sha256": "f05c745b07ed1ab1b5dce25676f3508c8489f2db9467e3b547d9451590d860d9"
+        },
+        {
+          "name": "he",
+          "sha256": "6acc809150f2f915976aa380acc4c430c0595a09250ace88cde7036b191e4d6a"
+        },
+        {
+          "name": "J",
+          "sha256": "6a27b2fe5db1ef80bca93f1ef40cc7ddb742f6dc484ad2e5eb84756634f46ff5"
+        },
+        {
+          "name": "Y",
+          "sha256": "0e1a2ec4b62baa1530c975843f6ed7f69810ccbbcaa2c8673aade05484759661"
+        },
+        {
+          "name": "ge",
+          "sha256": "cd1ff6b290abc48a3c60e7c6306e7ac8dde1064dc1ece45aedd3d25bb8c75b5a"
+        },
+        {
+          "name": "_e",
+          "sha256": "1649ec577ff3206c6624a8ad57c496518bae9acb8acfcba9e0cfdb3f0670640d"
+        },
+        {
+          "name": "ve",
+          "sha256": "376e3e695698db8723a011f48be32a658888a63232b30fe8cec65197c4e64f99"
+        },
+        {
+          "name": "ye",
+          "sha256": "8113cce363169a96b80c5e2541030040767bd7e598eedc78b2c7dceaf8e1effb"
+        },
+        {
+          "name": "be",
+          "sha256": "81ac2aa89c1f31e681d5534952b0aae622066ce074b5ce2dda3074bf400a1f3b"
+        },
+        {
+          "name": "De",
+          "sha256": "1c8fe8498ab0c8fa5c8d4445155d9c582e8995b097df1e83f228b41da2d1a215"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "P",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "usePreviewAllowedSitesAvailable",
+          "kind": "adapter",
+          "via": "shared-18-D3y8YMFN.js#Ev"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J8"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "V",
+          "from": "./cabd7b1c1-BLDBBA7m.mjs",
+          "name": "J",
+          "kind": "generated",
+          "via": "cabd7b1c1-BLDBBA7m.js#J"
+        },
+        {
+          "local": "le",
+          "from": "./cdc95db1a-DsLkT8qE.mjs",
+          "name": "f",
+          "kind": "generated",
+          "via": "cdc95db1a-DsLkT8qE.js#f"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "ue",
+          "from": "./cdc95db1a-DsLkT8qE.mjs",
+          "name": "p",
+          "kind": "generated",
+          "via": "cdc95db1a-DsLkT8qE.js#p"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#he"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "memo",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#k"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K0"
+        },
+        {
+          "local": "ee",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkPlacementBoundary",
+          "kind": "adapter",
+          "via": "shared-104-CTONUSaz.js#JR"
+        },
+        {
+          "local": "M",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#q"
+        },
+        {
+          "local": "S",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useErrors",
+          "kind": "shared-adapter",
+          "via": "shared-52-uHFNjl7C.js#cB"
+        },
+        {
+          "local": "D",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkMemorySupported",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#xE"
+        },
+        {
+          "local": "K",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkMemories",
+          "kind": "adapter",
+          "via": "cdef253bf-DfRc8pJ9.js#j"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J3"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K3"
+        },
+        {
+          "local": "k",
+          "from": "./shared-104-CTONUSaz.mjs",
+          "name": "mI",
+          "kind": "generated",
+          "via": "shared-104-CTONUSaz.js#mI"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "T",
+          "from": "./shared-78-D5Fw2h0a.mjs",
+          "name": "Zq",
+          "kind": "generated",
+          "via": "shared-78-D5Fw2h0a.js#Zq"
+        },
+        {
+          "local": "j",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#Gt"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J4"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K4"
+        },
+        {
+          "local": "y",
+          "from": "./shared-1-BJhqMmkf.mjs",
+          "name": "EC",
+          "kind": "generated",
+          "via": "shared-1-BJhqMmkf.js#EC"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSkeleton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#af"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsLoadingSkeleton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Kd"
+        },
+        {
+          "local": "_",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkSettingsAccount",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#Z"
+        },
+        {
+          "local": "E",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useUpdateAccountSettings",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#FO"
+        },
+        {
+          "local": "c",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSwitch",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#IA"
+        },
+        {
+          "local": "b",
+          "from": "./shared-1-BJhqMmkf.mjs",
+          "name": "xC",
+          "kind": "generated",
+          "via": "shared-1-BJhqMmkf.js#xC"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useState",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#G"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useId",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#B"
+        },
+        {
+          "local": "se",
+          "from": "./cdef253bf-DfRc8pJ9.mjs",
+          "name": "y",
+          "kind": "generated",
+          "via": "cdef253bf-DfRc8pJ9.js#y"
+        },
+        {
+          "local": "ce",
+          "from": "./cdef253bf-DfRc8pJ9.mjs",
+          "name": "b",
+          "kind": "generated",
+          "via": "cdef253bf-DfRc8pJ9.js#b"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I2"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I1"
+        },
+        {
+          "local": "Z2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Z2"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#us"
+        },
+        {
+          "local": "s",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Uu"
+        },
+        {
+          "local": "h",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useIsDesktopApp",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#cc"
+        },
+        {
+          "local": "C",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkEnabled",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#CE"
+        },
+        {
+          "local": "ne",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkAdditionalDirectoriesClaudeMd",
+          "kind": "adapter",
+          "via": "shared-18-D3y8YMFN.js#Ov"
+        },
+        {
+          "local": "m",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkInstructionsSeparate",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#dY"
+        },
+        {
+          "local": "x",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkHostLocation",
+          "kind": "adapter",
+          "via": "shared-52-uHFNjl7C.js#YO"
+        },
+        {
+          "local": "O",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkPlacement",
+          "kind": "adapter",
+          "via": "shared-104-CTONUSaz.js#cI"
+        },
+        {
+          "local": "B",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkTrustedDevicesSetting",
+          "kind": "adapter",
+          "via": "c79197f2b-DdO-gXlI.js#Ve"
+        },
+        {
+          "local": "z",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkTrustedDevicesList",
+          "kind": "adapter",
+          "via": "c79197f2b-DdO-gXlI.js#Ie"
+        },
+        {
+          "local": "H",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkBackendToggle",
+          "kind": "adapter",
+          "via": "cabd7b1c1-BLDBBA7m.js#ee"
+        },
+        {
+          "local": "R",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkGuestPassReferral",
+          "kind": "adapter",
+          "via": "c79197f2b-DdO-gXlI.js#Re"
+        },
+        {
+          "local": "W",
+          "from": "./ced6780ff-B4OnNWkF.mjs",
+          "name": "ye",
+          "kind": "generated",
+          "via": "ced6780ff-B4OnNWkF.js#ye"
+        },
+        {
+          "local": "oe",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkLockedNotice",
+          "kind": "adapter",
+          "via": "cbef3b9e7-D1tReYw7.js#s"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J5"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K5"
+        },
+        {
+          "local": "fe",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkDispatchRow",
+          "kind": "adapter",
+          "via": "cfea69990-BIgEsLcf.js#R"
+        },
+        {
+          "local": "de",
+          "from": "./cfea69990-BIgEsLcf.mjs",
+          "name": "P",
+          "kind": "generated",
+          "via": "cfea69990-BIgEsLcf.js#P"
+        },
+        {
+          "local": "U",
+          "from": "./cabd7b1c1-BLDBBA7m.mjs",
+          "name": "se",
+          "kind": "generated",
+          "via": "cabd7b1c1-BLDBBA7m.js#se"
+        },
+        {
+          "local": "G",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkLocalInstructionsImport",
+          "kind": "adapter",
+          "via": "ced6780ff-B4OnNWkF.js#Be"
+        }
+      ]
+    },
+    {
+      "target": "cabd7b1c1-BLDBBA7m.mjs",
+      "source": "cabd7b1c1-BLDBBA7m.js",
+      "sourceSha256": "fd593d144ea1cd2b7ea217c8848e31790cd6fe023f4d128cfded7e220a79c251",
+      "sha256": "be5c969f22361fcba9527cb95bc5fd62c5f74254795541560530aab75e12bcb9",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "K",
+          "sha256": "732d6c747dccecb29b94da3bec3e5a6092b0261ed5fc450571188a5ce3f8b8b6"
+        },
+        {
+          "name": "q",
+          "sha256": "52b3c71c5449e7efa9159f0d60c001a9e45ba3758e3015f2ecb3be370c49cc93"
+        },
+        {
+          "name": "J",
+          "sha256": "fcce71cf063b1873ee6ab40d9b9fd5a3ee3f62a15eb02e099759c7d654007555"
+        },
+        {
+          "name": "Z",
+          "sha256": "3dafa25d5faada7e666f89218384dbd654d4926756a4dc6ea7a691b87d434865"
+        },
+        {
+          "name": "Q",
+          "sha256": "e89715b347f26f0b995366af8830b6a51c0723bb5a423ccd20ed7187449ccc33"
+        },
+        {
+          "name": "te",
+          "sha256": "0998d92f5349155705b9c0b986ec8146587bd0812f87fc3e9e97064bd68a65c9"
+        },
+        {
+          "name": "ne",
+          "sha256": "a6fc0218e168f27ee77e8fa8ece4c25f45385ae60965f4691306f3e0c1954117"
+        },
+        {
+          "name": "re",
+          "sha256": "c72d8c52a4f38ebaca9ce82104016a3be6099028ac378d5804ecb12df1b56d09"
+        },
+        {
+          "name": "ie",
+          "sha256": "d81b5f01c1b624cc61827d77b7240fc95f40d954022e325bcbe91e29555f4515"
+        },
+        {
+          "name": "ae",
+          "sha256": "8e82864970926cf6e1a601ddc2cc2c40109e32067efed1b74e3c92308ea6d76a"
+        },
+        {
+          "name": "oe",
+          "sha256": "ca194c22269b8621319ce9d1cce608e44ad4dd9b4c1444f77612fa3f941eb0fd"
+        },
+        {
+          "name": "se",
+          "sha256": "fcb7ec5455ff4cbaf57991b17c7ad163639b705e7d2d26d12d8fbd0874dc8fe1"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useIsDesktopApp",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#cc"
+        },
+        {
+          "local": "O",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useClaudeInChromeAvailable",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#GT"
+        },
+        {
+          "local": "L",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkPreferredBrowser",
+          "kind": "adapter",
+          "via": "shared-18-D3y8YMFN.js#fv"
+        },
+        {
+          "local": "R",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkRemoteClaudeBrowser",
+          "kind": "adapter",
+          "via": "shared-18-D3y8YMFN.js#pv"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "P",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#q"
+        },
+        {
+          "local": "D",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useChromeExtensionMcpIntegration",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#lB"
+        },
+        {
+          "local": "T",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useClaudeInChromeConnectorEnabled",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#NR"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J8"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "N",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#Gt"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J5"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K5"
+        },
+        {
+          "local": "S",
+          "from": "./shared-1-BJhqMmkf.mjs",
+          "name": "xC",
+          "kind": "generated",
+          "via": "shared-1-BJhqMmkf.js#xC"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "h",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsInfoTooltip",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Tk"
+        },
+        {
+          "local": "c",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsCombobox",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#vP"
+        },
+        {
+          "local": "F",
+          "from": "./shared-18-D3y8YMFN.mjs",
+          "name": "uv",
+          "kind": "generated",
+          "via": "shared-18-D3y8YMFN.js#uv"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K0"
+        },
+        {
+          "local": "b",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "coworkLocalAgentModeSessions",
+          "kind": "adapter",
+          "via": "shared-0-DDOOdL6P.js#YS"
+        },
+        {
+          "local": "I",
+          "from": "../cowork-scheduled/shared-18-D3y8YMFN.mjs",
+          "name": "Nv",
+          "kind": "linked",
+          "via": "shared-18-D3y8YMFN.js#Nv"
+        },
+        {
+          "local": "x",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useGate3213217663",
+          "kind": "adapter",
+          "via": "shared-1-BJhqMmkf.js#Mx"
+        },
+        {
+          "local": "k",
+          "from": "../cowork-scheduled/shared-78-D5Fw2h0a.mjs",
+          "name": "K",
+          "kind": "linked",
+          "via": "shared-78-D5Fw2h0a.js#K"
+        },
+        {
+          "local": "w",
+          "from": "../routines-shared/shared-78-D5Fw2h0a.mjs",
+          "name": "SG",
+          "kind": "routines-shared",
+          "via": "shared-78-D5Fw2h0a.js#SG"
+        },
+        {
+          "local": "E",
+          "from": "../routines-shared/shared-78-D5Fw2h0a.mjs",
+          "name": "yG",
+          "kind": "routines-shared",
+          "via": "shared-78-D5Fw2h0a.js#yG"
+        },
+        {
+          "local": "n",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "useDirection",
+          "kind": "view-tabs",
+          "via": "vendor-frame-CnSY1sxv.js#un"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#W"
+        },
+        {
+          "local": "M",
+          "from": "./shared-5-Bg6ZMqvt.mjs",
+          "name": "Kg",
+          "kind": "generated",
+          "via": "shared-5-Bg6ZMqvt.js#Kg"
+        },
+        {
+          "local": "p",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsDialog",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#nb"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J4"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K4"
+        },
+        {
+          "local": "g",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#us"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTooltip",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Xm"
+        },
+        {
+          "local": "l",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Uu"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J3"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K3"
+        },
+        {
+          "local": "_",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "coworkFilePickers",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#Ui"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "memo",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#k"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useState",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#G"
+        },
+        {
+          "local": "v",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "coworkAppPreferences",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#Wi"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useEffect",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#R"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I1"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#he"
+        }
+      ]
+    },
+    {
+      "target": "cdc95db1a-DsLkT8qE.mjs",
+      "source": "cdc95db1a-DsLkT8qE.js",
+      "sourceSha256": "6fdc3fd1a61575cc77f7f1cbe3a04cb89f5be26606420d1636c0ef80c7e89157",
+      "sha256": "7fef0f70ace9aef23dbe5b2247e57c53ac35d68a41858e44c1de2c39e3d9c817",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "d",
+          "sha256": "45faa6dfc512365a3995849f4becbc63eb2fcb97314507fe1f637078bcc37142"
+        },
+        {
+          "name": "f",
+          "sha256": "57082d8994ec19bba21bdb39480de6ef6ffc67957d8ecb7cb7048c411f01c083"
+        },
+        {
+          "name": "p",
+          "sha256": "1fca2b870ca144238dd39f7341f88e23fcd417c2b8aac438a4c2b16bc87ed87d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "l",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useOpenLinksInBuiltInBrowser",
+          "kind": "adapter",
+          "via": "ce61829b3-DZ5WodUS.js#n"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J8"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "s",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#Gt"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "o",
+          "from": "./shared-1-BJhqMmkf.mjs",
+          "name": "xC",
+          "kind": "generated",
+          "via": "shared-1-BJhqMmkf.js#xC"
+        },
+        {
+          "local": "a",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSwitch",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#IA"
+        },
+        {
+          "local": "c",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useOpenLinksInBuiltInBrowserAvailable",
+          "kind": "adapter",
+          "via": "shared-18-D3y8YMFN.js#Tv"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K0"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useState",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#G"
+        },
+        {
+          "local": "i",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Uu"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#he"
+        },
+        {
+          "local": "u",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "PreviewAllowedSitesModal",
+          "kind": "adapter",
+          "via": "ce3a18f86-BH8aHGSP.js#r"
+        }
+      ]
+    },
+    {
+      "target": "cdef253bf-DfRc8pJ9.mjs",
+      "source": "cdef253bf-DfRc8pJ9.js",
+      "sourceSha256": "284a3730679077a9cc7a29b2928137b577815d400851e9d70dc44a4ddcd4942b",
+      "sha256": "845233ff5941ab88ea9ba16f9c693445fd59af04fa91c9ddba198e33e85e8d71",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "v",
+          "sha256": "0cb2250a3e10bc31ca433253da1b4aa26bfa9f0049a8fe2d46d9a6c8604368ca"
+        },
+        {
+          "name": "y",
+          "sha256": "654a86ef5d20b00556b809e3c537b0b02a6b267ce5897072a42459322b21b14e"
+        },
+        {
+          "name": "b",
+          "sha256": "0b768e790fed08cdbf415a9780c9613a46ce2a29c726e386be8a0337c44367d2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "_",
+          "from": "../cowork-progress/shared-130-dWztbTO1.mjs",
+          "name": "nU",
+          "kind": "linked",
+          "via": "shared-130-dWztbTO1.js#nU"
+        }
+      ]
+    },
+    {
+      "target": "ced6780ff-B4OnNWkF.mjs",
+      "source": "ced6780ff-B4OnNWkF.js",
+      "sourceSha256": "6e87452019b80a6da48d1a267879fa0335e3d1dbc614168f95c59d033236397d",
+      "sha256": "871938dd34c8686f619c654ee47ca4dac7123e26deb7f792660c7a2a84c19b1c",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "me",
+          "sha256": "b6403dee5c86e702fa060f0173149c2df72e2ca97760739d71145cb5d2ed8dd4"
+        },
+        {
+          "name": "K",
+          "sha256": "74859b2d2159433284ce421e81c2723528843936916f48cadad79f25502c640d"
+        },
+        {
+          "name": "q",
+          "sha256": "28ccd5c864af25f21f54a70afc0c6995a5e6171ff308ee87ae22685334106b73"
+        },
+        {
+          "name": "J",
+          "sha256": "73fc912a426183896061617894185f94b594dd7add670c511a04a56a24d57c55"
+        },
+        {
+          "name": "he",
+          "sha256": "0187ced48cc8160559634fde48524f2d4930e27e2bee5800f03a31b61bc17a94"
+        },
+        {
+          "name": "Y",
+          "sha256": "719cd7aa8576fcc3afcb5c35009d6b5800b6e4ca9620286256785ee53287a82d"
+        },
+        {
+          "name": "ye",
+          "sha256": "1bde1c7b83bef46e2e32cca392971105260dcc82eb517743405b435261f889e3"
+        },
+        {
+          "name": "be",
+          "sha256": "8cca28cdcb9a41ff3f5a1fd91711e2508a8872e9227d5b4798f2404bead64801"
+        },
+        {
+          "name": "X",
+          "sha256": "ec945715250fb0d9665531fc8408365eca1c4ba2e65a76d3c83f8148d2d23317"
+        },
+        {
+          "name": "xe",
+          "sha256": "bbfdaba8f512c71bbe3e90a8c234f30a2198ea4ea17015b2d4f8e4a29f6e05bc"
+        },
+        {
+          "name": "Se",
+          "sha256": "d2b30ef221c86a70a14f478f6c46f8208f9606331fedd3e6afa12a0a7807714e"
+        },
+        {
+          "name": "Ce",
+          "sha256": "36655edda333975deecd8dac69343dad4f1f30c7938cbe65ab924919d18f942e"
+        },
+        {
+          "name": "we",
+          "sha256": "22e7f6b7b0a927e90ebc7b5fbcc9a01193303fe5b39de863665d611913d35ede"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "V",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#Gt"
+        },
+        {
+          "local": "P",
+          "from": "../routines-shared/shared-78-D5Fw2h0a.mjs",
+          "name": "yG",
+          "kind": "routines-shared",
+          "via": "shared-78-D5Fw2h0a.js#yG"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#he"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K0"
+        },
+        {
+          "local": "m",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTextLink",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#_f"
+        },
+        {
+          "local": "D",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "V",
+          "kind": "routines-shared",
+          "via": "shared-0-DDOOdL6P.js#V"
+        },
+        {
+          "local": "C",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "coworkMemoryBridge",
+          "kind": "adapter",
+          "via": "shared-0-DDOOdL6P.js#QS"
+        },
+        {
+          "local": "e",
+          "from": "../view-tabs/preload-helper-D0dM6GpB.js",
+          "name": "tagErrorText",
+          "kind": "view-tabs",
+          "via": "preload-helper-D0dM6GpB.js#e"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "memo",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#k"
+        },
+        {
+          "local": "z",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "CoworkPlacementBoundary",
+          "kind": "adapter",
+          "via": "shared-104-CTONUSaz.js#JR"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Uu"
+        },
+        {
+          "local": "O",
+          "from": "./shared-1-BJhqMmkf.mjs",
+          "name": "xC",
+          "kind": "generated",
+          "via": "shared-1-BJhqMmkf.js#xC"
+        },
+        {
+          "local": "ue",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#q"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "h",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSkeleton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#af"
+        },
+        {
+          "local": "f",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsLoadingSkeleton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Kd"
+        },
+        {
+          "local": "x",
+          "from": "./shared-25-DOWZRSlq.mjs",
+          "name": "uY",
+          "kind": "generated",
+          "via": "shared-25-DOWZRSlq.js#uY"
+        },
+        {
+          "local": "oe",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useAnalytics",
+          "kind": "shared-adapter",
+          "via": "shared-52-uHFNjl7C.js#wT"
+        },
+        {
+          "local": "se",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useErrors",
+          "kind": "shared-adapter",
+          "via": "shared-52-uHFNjl7C.js#cB"
+        },
+        {
+          "local": "re",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useIsDesktopApp",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#cc"
+        },
+        {
+          "local": "ce",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useGate2142364912OrForeignOrg",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#lh"
+        },
+        {
+          "local": "U",
+          "from": "../cowork-scheduled/shared-18-D3y8YMFN.mjs",
+          "name": "Nv",
+          "kind": "linked",
+          "via": "shared-18-D3y8YMFN.js#Nv"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useState",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#G"
+        },
+        {
+          "local": "ve",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useCoworkGlobalInstructionsProfile",
+          "kind": "adapter",
+          "via": "ced6780ff-B4OnNWkF.js#ve"
+        },
+        {
+          "local": "v",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useSearchParams",
+          "kind": "shared-adapter",
+          "via": "shared-25-DOWZRSlq.js#nf"
+        },
+        {
+          "local": "te",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "usePathname",
+          "kind": "shared-adapter",
+          "via": "shared-25-DOWZRSlq.js#Zd"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useRef",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#W"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J5"
+        },
+        {
+          "local": "ne",
+          "from": "./shared-25-DOWZRSlq.mjs",
+          "name": "cY",
+          "kind": "generated",
+          "via": "shared-25-DOWZRSlq.js#cY"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K5"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useEffect",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#R"
+        },
+        {
+          "local": "R",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "coworkSessionHostReadState",
+          "kind": "adapter",
+          "via": "shared-104-CTONUSaz.js#pI"
+        },
+        {
+          "local": "N",
+          "from": "./shared-78-D5Fw2h0a.mjs",
+          "name": "Zq",
+          "kind": "generated",
+          "via": "shared-78-D5Fw2h0a.js#Zq"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J3"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K3"
+        },
+        {
+          "local": "L",
+          "from": "./shared-104-CTONUSaz.mjs",
+          "name": "mI",
+          "kind": "generated",
+          "via": "shared-104-CTONUSaz.js#mI"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I2"
+        },
+        {
+          "local": "Z3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Z3"
+        },
+        {
+          "local": "p",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTextArea",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#nk"
+        },
+        {
+          "local": "M",
+          "from": "../routines-shared/shared-78-D5Fw2h0a.mjs",
+          "name": "CG",
+          "kind": "routines-shared",
+          "via": "shared-78-D5Fw2h0a.js#CG"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J4"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K4"
+        },
+        {
+          "local": "le",
+          "from": "../cowork-scheduled/shared-78-D5Fw2h0a.mjs",
+          "name": "Z",
+          "kind": "linked",
+          "via": "shared-78-D5Fw2h0a.js#Z"
+        }
+      ]
+    },
+    {
+      "target": "cfea69990-BIgEsLcf.mjs",
+      "source": "cfea69990-BIgEsLcf.js",
+      "sourceSha256": "0494c27ed288479388fd4e447804d53dd7b213edbb8ce290b28eb35c90a247f7",
+      "sha256": "7f04986165a8f682275984e7ea510ad6fcfe904945270128a540ff86adb14a4d",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "j",
+          "sha256": "486e53651d33ae3b6fc24df8a23805fe3ec49a494d1f57f94add08461128b5c3"
+        },
+        {
+          "name": "M",
+          "sha256": "4ed7d9dca32bae69b9635f85779c5a40cd0e4cf4305d92eec9b0f158ce21a0db"
+        },
+        {
+          "name": "N",
+          "sha256": "6114986a4f1441a421e474430bacc88f9a7c157328fb81b4ac69b7f43e979c04"
+        },
+        {
+          "name": "P",
+          "sha256": "b1940a7cc18ef9ce5a6824bc378b68c42584db1108f69c2a444af68513325f64"
+        },
+        {
+          "name": "F",
+          "sha256": "b73e313083554fb020da30b22724998c45976c6a27bbc7811f94d96423b4aac4"
+        }
+      ],
+      "imports": [
+        {
+          "local": "S",
+          "from": "../routines-shared/vendor-intl-DYfox5Co.mjs",
+          "name": "tn",
+          "kind": "routines-shared",
+          "via": "vendor-intl-DYfox5Co.js#tn"
+        },
+        {
+          "local": "m",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "coworkUserFiles",
+          "kind": "adapter",
+          "via": "shared-0-DDOOdL6P.js#ZS"
+        },
+        {
+          "local": "y",
+          "from": "../routines-shared/shared-78-D5Fw2h0a.mjs",
+          "name": "CG",
+          "kind": "routines-shared",
+          "via": "shared-78-D5Fw2h0a.js#CG"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "memo",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#k"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "n",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "useDirection",
+          "kind": "view-tabs",
+          "via": "vendor-frame-CnSY1sxv.js#un"
+        },
+        {
+          "local": "w",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#q"
+        },
+        {
+          "local": "p",
+          "from": "../../source-cowork-settings-adapters.jsx",
+          "name": "useIsDesktopApp",
+          "kind": "adapter",
+          "via": "shared-25-DOWZRSlq.js#cc"
+        },
+        {
+          "local": "T",
+          "from": "../cowork-scheduled/shared-18-D3y8YMFN.mjs",
+          "name": "Nv",
+          "kind": "linked",
+          "via": "shared-18-D3y8YMFN.js#Nv"
+        },
+        {
+          "local": "v",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useErrors",
+          "kind": "shared-adapter",
+          "via": "shared-52-uHFNjl7C.js#cB"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useState",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#G"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useEffect",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#R"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J3"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K3"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K0"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "x",
+          "from": "../routines-shared/shared-78-D5Fw2h0a.mjs",
+          "name": "yG",
+          "kind": "routines-shared",
+          "via": "shared-78-D5Fw2h0a.js#yG"
+        },
+        {
+          "local": "C",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#Gt"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I2"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Z1"
+        },
+        {
+          "local": "f",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTextLink",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#_f"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTooltip",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Xm"
+        },
+        {
+          "local": "c",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Uu"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "g",
+          "from": "./shared-1-BJhqMmkf.mjs",
+          "name": "xC",
+          "kind": "generated",
+          "via": "shared-1-BJhqMmkf.js#xC"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J4"
+        },
+        {
+          "local": "I4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I4"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsDialog",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#nb"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#he"
+        }
+      ]
+    },
+    {
+      "target": "shared-0-DDOOdL6P.mjs",
+      "source": "shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "b059a3fd71600909af14d78045213cac7151a51a5b28bfdde65ef041e975e76d",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "ER",
+          "sha256": "b5993572e46315d32b3e16eb0c801f12f91dd16860a8d652e77cec0011b5e66f"
+        },
+        {
+          "name": "$U",
+          "sha256": "95b00ff1456724d5356f5a4253296f55497912b42c8c25a6dc5b593ee10e40c7"
+        },
+        {
+          "name": "eW",
+          "sha256": "ddc3b6910fb3d4cba4d528d821255dbcfcd58d9cc2db94f777e052465c593784"
+        }
+      ],
+      "imports": [
+        {
+          "local": "V",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "V",
+          "kind": "routines-shared",
+          "via": "shared-0-DDOOdL6P.js#V"
+        },
+        {
+          "local": "QU",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "QU",
+          "kind": "routines-shared",
+          "via": "shared-0-DDOOdL6P.js#QU"
+        }
+      ]
+    },
+    {
+      "target": "shared-1-BJhqMmkf.mjs",
+      "source": "shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+      "sha256": "c4b9fc2743a6575bf7bbdf582a6c96278391628378721e20d817a7c766eb5f02",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "FS",
+          "sha256": "e25555af58b94e774743e34b91638f97d1409c50b4286b0ca25b5ac53276fbe2"
+        },
+        {
+          "name": "US",
+          "sha256": "08715be68823527eb309e67a2abf51399a670e4e9cb2e2106aa7340c3fc40219"
+        },
+        {
+          "name": "xC",
+          "sha256": "d60edf3aa247b0fb5496909c1f8a81a1588dbd0b3fada56b42b7e7a89b44c65c"
+        },
+        {
+          "name": "wC",
+          "sha256": "94f1d96f28fd98fcc2412f1e8e301ecc7bf804eee14c4e17a61d3bd5ade6231e"
+        },
+        {
+          "name": "TC",
+          "sha256": "39fb14462fa5b0b4a32d870945504539d34c85a09d4c7f68242b12038b470d51"
+        },
+        {
+          "name": "EC",
+          "sha256": "ef6123cb99581b437a5feea32666c94713706b4f3bd0b9801bbcceff85073cb0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "mt",
+          "from": "../view-tabs/shared-25-DOWZRSlq.js",
+          "name": "getMutationObserverClass",
+          "kind": "view-tabs",
+          "via": "shared-25-DOWZRSlq.js#_f"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useId",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#B"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K5"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K4"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J3"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K3"
+        },
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#he"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J5"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "kind": "view-tabs",
+          "via": "vendor-frame-CnSY1sxv.js#ve"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "Children",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#d"
+        }
+      ]
+    },
+    {
+      "target": "shared-104-CTONUSaz.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "b9a0f2e6fa123b98f0668d1d7dcd796f3116288b544a9a642ef11ae8779c2996",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "mI",
+          "sha256": "daf87b0466efb3845b2de4c44f93d7fa1efe86a6b85afec6f5e376045dbc10d7"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Tn",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "V",
+          "kind": "routines-shared",
+          "via": "shared-0-DDOOdL6P.js#V"
+        },
+        {
+          "local": "Fn",
+          "from": "./shared-52-uHFNjl7C.mjs",
+          "name": "ND",
+          "kind": "generated",
+          "via": "shared-52-uHFNjl7C.js#ND"
+        },
+        {
+          "local": "Ei",
+          "from": "./shared-78-D5Fw2h0a.mjs",
+          "name": "Zq",
+          "kind": "generated",
+          "via": "shared-78-D5Fw2h0a.js#Zq"
+        },
+        {
+          "local": "yi",
+          "from": "./shared-78-D5Fw2h0a.mjs",
+          "name": "tJ",
+          "kind": "generated",
+          "via": "shared-78-D5Fw2h0a.js#tJ"
+        },
+        {
+          "local": "Ar",
+          "from": "./shared-52-uHFNjl7C.mjs",
+          "name": "rD",
+          "kind": "generated",
+          "via": "shared-52-uHFNjl7C.js#rD"
+        },
+        {
+          "local": "rr",
+          "from": "./shared-52-uHFNjl7C.mjs",
+          "name": "zD",
+          "kind": "generated",
+          "via": "shared-52-uHFNjl7C.js#zD"
+        }
+      ]
+    },
+    {
+      "target": "shared-18-D3y8YMFN.mjs",
+      "source": "shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "sha256": "112b8d4903483518017d3e01cc906d3adc134a77b9cd20f8cd38119448b5f0bd",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "uv",
+          "sha256": "8faca1b66f8abe5aa562109d893219930ffebad9f744dc7a07eb707619310367"
+        }
+      ],
+      "imports": []
+    },
+    {
+      "target": "shared-25-DOWZRSlq.mjs",
+      "source": "shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "sha256": "138f07003ad299c6e522de01a3eb89626e78ca21e72333608d4d242fad9ec54a",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "cY",
+          "sha256": "7429eec04d4306585f20b4470d285ed9cd0edd7f6c7cfd998c7b04bf1bb46965"
+        },
+        {
+          "name": "uY",
+          "sha256": "251190df87ebab2df5f5da332c275be1eca329a83c145cb50476205a52d98a41"
+        }
+      ],
+      "imports": []
+    },
+    {
+      "target": "shared-5-Bg6ZMqvt.mjs",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+      "sha256": "6cdeecbf19020e5837abb850b18fe1d94bd4ea6a8e388eefa2f64ab3bbfcd99c",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Wg",
+          "sha256": "0b7196673ff5a19fd0fdead9604c832679bc5b1271f308476d53e27d7dc730a8"
+        },
+        {
+          "name": "Kg",
+          "sha256": "eceb66edb67cac67467ba03a9c5c0c44d7ab695ed9530db73945c8ca60d02d0e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "B",
+          "from": "react",
+          "name": "createContext",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#C"
+        },
+        {
+          "local": "A",
+          "from": "react",
+          "name": "useContext",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#F"
+        }
+      ]
+    },
+    {
+      "target": "shared-52-uHFNjl7C.mjs",
+      "source": "shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "sha256": "91316adbba0cf2182cf86583e30cc61a6191839deba7b399f7031879bd4c35d3",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "eD",
+          "sha256": "67b9026872969c866043bffdb6ccc6d350daaf6597195481168bd8c0f4266e6e"
+        },
+        {
+          "name": "tD",
+          "sha256": "74089b6365dfb2b61b83b652acf300d7c286ebf2256293d2306cb9416ff55c12"
+        },
+        {
+          "name": "nD",
+          "sha256": "45b2e29be5d162550c938f1c50b4c603cb31de0fcb57f5e336a5f17aed6337ea"
+        },
+        {
+          "name": "rD",
+          "sha256": "95f7fff09f7f64aafb731aaade4fc4ec3940c7c7989f37b40784059e2b9690dc"
+        },
+        {
+          "name": "lD",
+          "sha256": "658c9059c9f49833e3b06e925cf266f79475f5a3e66dc35a32093c7c1f2998e6"
+        },
+        {
+          "name": "ND",
+          "sha256": "f7913b1d876366960e4ed845b7335e5345771bb93e4f0bfc232d443a9449fd78"
+        },
+        {
+          "name": "zD",
+          "sha256": "29376ec45b6f233d9a913b8f630e126aa54a5f470867919e0366cda82edc6ea1"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Jt",
+          "from": "./shared-0-DDOOdL6P.mjs",
+          "name": "eW",
+          "kind": "generated",
+          "via": "shared-0-DDOOdL6P.js#eW"
+        },
+        {
+          "local": "W",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "V",
+          "kind": "routines-shared",
+          "via": "shared-0-DDOOdL6P.js#V"
+        },
+        {
+          "local": "be",
+          "from": "../routines-shared/shared-25-DOWZRSlq.mjs",
+          "name": "NG",
+          "kind": "routines-shared",
+          "via": "shared-25-DOWZRSlq.js#NG"
+        },
+        {
+          "local": "li",
+          "from": "./shared-0-DDOOdL6P.mjs",
+          "name": "ER",
+          "kind": "generated",
+          "via": "shared-0-DDOOdL6P.js#ER"
+        }
+      ]
+    },
+    {
+      "target": "shared-78-D5Fw2h0a.mjs",
+      "source": "shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
+      "sha256": "037ecc6094ebc74faaadfcd1990ee401419fda08ef9aded53e066b337ea0c424",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "pq",
+          "sha256": "5e705d6d4531a7b627f99391644f542bfe2532c45d2e9fd24d3b04a3ee1ca391"
+        },
+        {
+          "name": "Zq",
+          "sha256": "3588aec0723795a4b66d0c829f0eea1a16ff84fbfba1d70571ddaf48dc01d6eb"
+        },
+        {
+          "name": "Qq",
+          "sha256": "b11008ee95fa4fa8b260abdead60ee7bf5185d0be6dbd353f37975942df41e44"
+        },
+        {
+          "name": "$q",
+          "sha256": "a4219fa671d4bf74f5521d1239b79b2923b27d05644e8f3654942aacee045b10"
+        },
+        {
+          "name": "tJ",
+          "sha256": "045ab160bc0995089ca4ba0c09dc78c06fa68b57ffe9af4e1bfe52762f460d1a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Z",
+          "from": "../cowork-scheduled/shared-78-D5Fw2h0a.mjs",
+          "name": "Z",
+          "kind": "linked",
+          "via": "shared-78-D5Fw2h0a.js#Z"
+        },
+        {
+          "local": "Oa",
+          "from": "./shared-52-uHFNjl7C.mjs",
+          "name": "lD",
+          "kind": "generated",
+          "via": "shared-52-uHFNjl7C.js#lD"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    "shared-5-Bg6ZMqvt.js#Wg"
+  ],
+  "callSites": [
+    {
+      "source": "c71860c77-CKIsHnA3.js",
+      "role": "De: the desktop page order (Dispatch and Cowork files on this device, Trusted folders, the backend toggle, the browser group, the guest pass, Global instructions or the account import, Memory)",
+      "sourceSha256": "eb877dfff684f8395a95cd2ed813e84a47aa47dbba00ce3cbf696b4c646c279d",
+      "raw": true,
+      "features": [
+        "children:[e(pe,{}),d&&e(fe,{}),d&&e(de,{}),e(U,{}),e(H,{}),d&&e(q,{}),e(R,{}),l&&e(W,{}),u&&e(G,{}),(d||f)&&e(me,{})]",
+        "t(\"main\",{className:\"flex flex-col gap-7\",children:[p,g,_]})",
+        "l=o&&c,u=o&&!c,d=x().onThisDevice,f=O()!==\"device\""
+      ]
+    },
+    {
+      "source": "c71860c77-CKIsHnA3.js",
+      "role": "De imports: B / z / R are c79197f2b (trusted devices, guest pass), fe is cfea69990 t (Dispatch), H is cabd7b1c1 r (the backend toggle), G is ced6780ff t (the account import)",
+      "sourceSha256": "eb877dfff684f8395a95cd2ed813e84a47aa47dbba00ce3cbf696b4c646c279d",
+      "raw": true,
+      "features": [
+        "import{n as R,r as z,t as B}from\"./c79197f2b-DdO-gXlI.js\"",
+        "import{n as de,t as fe}from\"./cfea69990-BIgEsLcf.js\"",
+        "import{a as V,r as H,t as U}from\"./cabd7b1c1-BLDBBA7m.js\"",
+        "import{n as W,t as G}from\"./ced6780ff-B4OnNWkF.js\""
+      ]
+    },
+    {
+      "source": "cfea69990-BIgEsLcf.js",
+      "role": "Dispatch (cwui-43) needs the phone pairing of a claude.ai account: hidden unless the bridge state reads",
+      "sourceSha256": "0494c27ed288479388fd4e447804d53dd7b213edbb8ce290b28eb35c90a247f7",
+      "raw": true,
+      "features": [
+        "if(c===!0&&!y&&S(!0),!e&&!v||!i||c===null||a&&!y)return null",
+        "{defaultMessage:\"Dispatch\",id:\"MIchTR1xRO\"}"
+      ]
+    },
+    {
+      "source": "c79197f2b-DdO-gXlI.js",
+      "role": "Trusted devices (cwui-44) need the account device registry",
+      "sourceSha256": "82c3f5ab0e4a540e4901bfa96af966c402653ca152d78db04bf7fa8f58ab13b3",
+      "raw": true,
+      "features": [
+        "label:{defaultMessage:\"Require trusted devices\",id:\"RCOlr8yhsq\"}",
+        "action:\"highlight-local-devices\""
+      ]
+    },
+    {
+      "source": "shared-46-BIbZBGFq.js",
+      "role": "Settings nav: the Cowork entry right after Claude Code, icon Fp (Tasks)",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
+      "raw": true,
+      "features": [
+        {
+          "loose": "e.push({id:\"cowork\",href:\"/settings/cowork\",label:t,name:a.formatMessage({defaultMessage:\"Cowork\",id:\"+MH0VdRCHz\"}),icon:Fp})"
+        },
+        "Fp={name:\"Tasks\""
+      ]
+    },
+    {
+      "source": "ca25db325-TTHrVIfM.js",
+      "role": "Settings search index: the Cowork page rows",
+      "sourceSha256": "8229796f223247c3d2ced4d3167a9641531a6d1bff87442d74c6043d370eeac6",
+      "raw": true,
+      "features": [
+        "{section:\"cowork\",label:{defaultMessage:\"Cowork files\",id:\"ciLKOe5nmN\"},desktopOnly:!0,localSessionRow:!0}",
+        "{section:\"cowork\",label:{defaultMessage:\"Trusted Cowork folders\",id:\"5UZ7woP+0X\"},hideCoworkLabel:\"12iymmb\",desktopOnly:!0}"
+      ]
+    }
+  ],
+  "adapters": [
+    {
+      "original": "shared-25-DOWZRSlq.js#cc",
+      "name": "useIsDesktopApp"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#Z",
+      "name": "useCoworkSettingsAccount"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#dY",
+      "name": "useCoworkInstructionsSeparate"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#Ui",
+      "name": "coworkFilePickers"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#Wi",
+      "name": "coworkAppPreferences"
+    },
+    {
+      "original": "shared-0-DDOOdL6P.js#YS",
+      "name": "coworkLocalAgentModeSessions"
+    },
+    {
+      "original": "shared-0-DDOOdL6P.js#ZS",
+      "name": "coworkUserFiles"
+    },
+    {
+      "original": "shared-0-DDOOdL6P.js#QS",
+      "name": "coworkMemoryBridge"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#CE",
+      "name": "useCoworkEnabled"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#xE",
+      "name": "useCoworkMemorySupported"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#FO",
+      "name": "useUpdateAccountSettings"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#GT",
+      "name": "useClaudeInChromeAvailable"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#lB",
+      "name": "useChromeExtensionMcpIntegration"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#NR",
+      "name": "useClaudeInChromeConnectorEnabled"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#lh",
+      "name": "useGate2142364912OrForeignOrg"
+    },
+    {
+      "original": "shared-18-D3y8YMFN.js#Ov",
+      "name": "useCoworkAdditionalDirectoriesClaudeMd"
+    },
+    {
+      "original": "shared-18-D3y8YMFN.js#fv",
+      "name": "useCoworkPreferredBrowser"
+    },
+    {
+      "original": "shared-18-D3y8YMFN.js#pv",
+      "name": "useCoworkRemoteClaudeBrowser"
+    },
+    {
+      "original": "shared-18-D3y8YMFN.js#Tv",
+      "name": "useOpenLinksInBuiltInBrowserAvailable"
+    },
+    {
+      "original": "shared-18-D3y8YMFN.js#Ev",
+      "name": "usePreviewAllowedSitesAvailable"
+    },
+    {
+      "original": "shared-52-uHFNjl7C.js#YO",
+      "name": "useCoworkHostLocation"
+    },
+    {
+      "original": "shared-104-CTONUSaz.js#pI",
+      "name": "coworkSessionHostReadState"
+    },
+    {
+      "original": "shared-104-CTONUSaz.js#cI",
+      "name": "useCoworkPlacement"
+    },
+    {
+      "original": "shared-104-CTONUSaz.js#JR",
+      "name": "CoworkPlacementBoundary"
+    },
+    {
+      "original": "shared-1-BJhqMmkf.js#Mx",
+      "name": "useGate3213217663"
+    },
+    {
+      "original": "c79197f2b-DdO-gXlI.js#Ve",
+      "name": "CoworkTrustedDevicesSetting"
+    },
+    {
+      "original": "c79197f2b-DdO-gXlI.js#Ie",
+      "name": "CoworkTrustedDevicesList"
+    },
+    {
+      "original": "c79197f2b-DdO-gXlI.js#Re",
+      "name": "CoworkGuestPassReferral"
+    },
+    {
+      "original": "cbef3b9e7-D1tReYw7.js#s",
+      "name": "CoworkLockedNotice"
+    },
+    {
+      "original": "cfea69990-BIgEsLcf.js#R",
+      "name": "CoworkDispatchRow"
+    },
+    {
+      "original": "cabd7b1c1-BLDBBA7m.js#ee",
+      "name": "CoworkBackendToggle"
+    },
+    {
+      "original": "ced6780ff-B4OnNWkF.js#Be",
+      "name": "CoworkLocalInstructionsImport"
+    },
+    {
+      "original": "ced6780ff-B4OnNWkF.js#ve",
+      "name": "useCoworkGlobalInstructionsProfile"
+    },
+    {
+      "original": "cdef253bf-DfRc8pJ9.js#j",
+      "name": "useCoworkMemories"
+    },
+    {
+      "original": "ce61829b3-DZ5WodUS.js#n",
+      "name": "useOpenLinksInBuiltInBrowser"
+    },
+    {
+      "original": "ce3a18f86-BH8aHGSP.js#r",
+      "name": "PreviewAllowedSitesModal"
+    }
+  ],
+  "sharedAdapters": [
+    {
+      "original": "shared-25-DOWZRSlq.js#Zd",
+      "name": "usePathname"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#nf",
+      "name": "useSearchParams"
+    },
+    {
+      "original": "shared-52-uHFNjl7C.js#cB",
+      "name": "useErrors"
+    },
+    {
+      "original": "shared-52-uHFNjl7C.js#wT",
+      "name": "useAnalytics"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#Gt",
+      "name": "FormattedMessage"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#q",
+      "name": "useIntl"
+    }
+  ],
+  "routinesSharedImports": 7,
+  "linkedImports": [
+    {
+      "original": "shared-130-dWztbTO1.js#nU",
+      "from": "../cowork-progress/shared-130-dWztbTO1.mjs",
+      "name": "nU"
+    },
+    {
+      "original": "shared-18-D3y8YMFN.js#Nv",
+      "from": "../cowork-scheduled/shared-18-D3y8YMFN.mjs",
+      "name": "Nv"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#K",
+      "from": "../cowork-scheduled/shared-78-D5Fw2h0a.mjs",
+      "name": "K"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#Z",
+      "from": "../cowork-scheduled/shared-78-D5Fw2h0a.mjs",
+      "name": "Z"
+    }
+  ],
+  "pendingDedupe": [
+    {
+      "original": "shared-52-uHFNjl7C.js#lD",
+      "heldBy": "transcript-rows"
+    }
+  ]
+}

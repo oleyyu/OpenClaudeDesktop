@@ -41,7 +41,9 @@ test('tasks-09: the Scheduled page uses the 2.42304.0 page shell and CdsPage, no
   assert.match(source, /import \{ SessionsPageShell as Page \} from '\.\/source-sessions-primitives\.jsx';/);
   assert.doesNotMatch(source, /c193cfc9b-2wgBbI8O/);
   const shell = fs.readFileSync(path.join(app, 'src/source-sessions-primitives.jsx'), 'utf8');
-  assert.match(shell, /import \{CdsPage as CurrentPage\} from '\.\/generated\/view-tabs\/c193cfc9b-DSvIG0kE\.js';/);
+  // 3.6556.2 (w2-cds-followup, R6): the shell reads CdsPage through the view-tabs facade; it is the 3.6556.2 c193cfc9b
+  // (c193cfc9b-C3NZYkrZ _); the 2.42304.0 c193cfc9b-DSvIG0kE shim that re-exported it is retired (W7).
+  assert.match(shell, /import \{CdsPage as CurrentPage\} from '\.\/generated\/view-tabs\/index\.js';/);
   // ccd3f68fe (the official Scheduled page) imports its Page from the cd75b47e6 shell, which wraps c193cfc9b n.
   assert.equal(count(official('ccd3f68fe-DGWS8cEm.js'), 'import{t as Oi}from"./cd75b47e6-DDrZDYuB.js"'), 1);
   const wrapper = official('cd75b47e6-DDrZDYuB.js');
@@ -55,10 +57,11 @@ test('tasks-09: SSR keeps the default fade (invisible opacity-0, opacity+visibil
   assert.match(html, /<header[^>]*data-cds="PageHeader"[^>]*data-band="compact"/);
   assert.match(html, /<h1[^>]*>Scheduled tasks<\/h1>/);
   // The page's own controls still reach the 2.42304.0 header: search (collapsed to its icon button while the query is
-  // empty, cf35aed38 L "collapsed"), the Sort icon menu and New task.
+  // empty, cf35aed38 L "collapsed"), the 3.6556.2 "Sort by …" secondary dropdown (ccd3f68fe Zu, w13-coworkui-scheduled-page)
+  // and New task.
   assert.match(html, /<div data-cds-part="controls"/);
   assert.match(html, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost=""[^>]*aria-label="Search scheduled tasks"/);
-  assert.match(html, /aria-label="Sort tasks"/);
+  assert.match(html, /<span class="text-muted-as-secondary">Sort by <\/span>Next run/);
   assert.match(html, />New task</);
   const fade = html.match(/<div aria-hidden="true" data-cds-part="fade" class="([^"]*)"/);
   assert.ok(fade, 'fade part rendered');
@@ -66,8 +69,8 @@ test('tasks-09: SSR keeps the default fade (invisible opacity-0, opacity+visibil
   for (const part of ['line', 'stuck-mark', 'level-mark', 'page-title-motion']) assert.doesNotMatch(html, new RegExp(`data-cds-part="${part}"`), part);
   // Gate closed: W = 0 before measuring, so the offsets are the non-panels fallbacks (10rem / 7rem).
   assert.match(html, /style="--cds-page-header-scroll-offset:10rem;--cds-page-header-pinned-height:7rem"/);
-  // The shell's content div (cd75b47e6) holds the page body.
-  assert.match(html, /<div class="flex flex-1 flex-col" style="--list-header-scroll-offset:var\(--cds-page-header-scroll-offset\)"><p class="text-body text-muted">Scheduled tasks run while/);
+  // The shell's content div (cd75b47e6) holds the page body; the list starts with the keep-awake Banner (ccd3f68fe Zu).
+  assert.match(html, /<div class="flex flex-1 flex-col" style="--list-header-scroll-offset:var\(--cds-page-header-scroll-offset\)"><div class="flex flex-col"><div class="w-full mb-6"><div data-cds="Banner"/);
   // The official chunk: one fade with both classes, panels behind u("panels") (shared-frame vr).
   const page = official('c193cfc9b-DSvIG0kE.js');
   for (const text of ['"invisible opacity-0"', 'page-fade-t absolute inset-x-0 -bottom-8 h-8 transition-[opacity,visibility] duration-fast',
@@ -211,13 +214,17 @@ test('cov1-03: branch empty states and "(Ant only)" live only in the Code routin
   // "(Ant only)" is the Runs-on machine picker's label for Anthropic accounts: c43d31dd8 h = _() = shared-52 Lm(account).
   const ant = official('c43d31dd8-EEJLxHyj.js');
   assert.equal(count(ant, 'function _(){return i(n()?.account)}'), 1);
-  // The host Cowork page renders the 2.42304.0 c97b955f1 Ca (cowork-scheduled UpsertScheduledTaskModal, R4g-routines RTC)
-  // through its page host wrapper; no branch picker or "(Ant only)" in it.
+  // The host Cowork page renders c97b955f1 (cowork-scheduled UpsertScheduledTaskModal, R4g-routines RTC; 3.6556.2 La since
+  // w3-cowork-scheduled, its module found by the stable chunk prefix) through its page host wrapper; no branch picker or
+  // "(Ant only)" in it.
   const local = fs.readFileSync(path.join(app, 'src/source-routines.jsx'), 'utf8');
   assert.match(local, /CoworkUpsertScheduledTaskModal as OriginalRoutineForm \} from '\.\/source-routine-cowork-page-adapters\.jsx';/);
   const wrapper = fs.readFileSync(path.join(app, 'src/source-routine-cowork-page-adapters.jsx'), 'utf8');
   assert.match(wrapper, /import \{ ScheduledTaskDetail, UpsertScheduledTaskModal \} from '\.\/generated\/cowork-scheduled\/index\.mjs';/);
-  const generated = fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled/c97b955f1-BlGH1qrk.mjs'), 'utf8');
+  const coworkForm = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled/manifest.json'), 'utf8')).modules
+    .filter(entry => entry.source.startsWith('c97b955f1-'));
+  assert.equal(coworkForm.length, 1);
+  const generated = fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled', coworkForm[0].target), 'utf8');
   for (const text of ['No branches', '(Ant only)']) assert.equal(generated.includes(text), false, text);
 });
 

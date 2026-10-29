@@ -276,8 +276,9 @@
    border-[0.5px] bg-surface-1 px-[3px] font-sans text-[10px] font-medium leading-none text-secondary).
    The nav also carries .df-session-list (for the oI stub's --df-iconless-pad), and the loaded shared-styles copy of
    desktop-layout.css:1600-1603 moves `.df-session-list [data-jump-hint-row] > kbd` to the row end (left:auto; right) for
-   the presets-gated list (shared-21 Jv claudeai_cc_epitaxy_session_presets_main, sidebar-session.js:16881). This
-   classic list keeps mj's leading-slot placement, so the selector outranks that override and resets right. */
+   the presets-gated list (shared-21 Jv claudeai_cc_epitaxy_session_presets_main, sidebar-session.js:16881). Only the
+   Chat (classic) rows keep mj's leading-slot placement through .source-jump-hint, so the selector outranks that override
+   and resets right; Code rows draw shared-21 q0's df-jump-hint instead and take the official row-end placement (W12b). */
 .source-sidebar .source-session-row > .source-jump-hint {
   pointer-events: none;
   position: absolute;

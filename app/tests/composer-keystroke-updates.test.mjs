@@ -15,7 +15,9 @@ const composer = fs.readFileSync(path.join(root, 'src/source-composer.jsx'), 'ut
 const main = fs.readFileSync(path.join(root, 'src/main.jsx'), 'utf8');
 
 test('per-keystroke resets in the composer skip a value that is already in place', () => {
-  assert.match(composer, /useEffect\(\(\) => \{ if \(composerNotice !== null\) setComposerNotice\(null\); \}, \[draft\]\);/);
+  // w12b-composer: the composer notice is gone (3.6556.2 c227f4d5e refuses a non-plain shell command with an addError
+  // toast), so there is no per-keystroke notice reset left.
+  assert.doesNotMatch(composer, /composerNotice/);
   // B05 C4: the dismissed '/' trigger is a text offset (shared-5 dismissedTriggerFrom), mapped through edits before it,
   // and touched only while it is set and only when it moves or goes.
   assert.match(composer, /useEffect\(\(\)=>\{if\(commandIndex!==0\)setCommandIndex\(0\);const previous=dismissedText\.current;dismissedText\.current=editorText;if\(dismissed===null\)return;/);

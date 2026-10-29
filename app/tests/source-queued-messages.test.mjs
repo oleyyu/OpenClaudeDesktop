@@ -48,8 +48,9 @@ test('while the entry is being sent only the busy Send now remains, with the Sen
 test('the row menu lists Edit in composer, Send now, then the separated Remove from queue (nS items)', async () => {
   const fs = await import('node:fs/promises');
   const source = await fs.readFile(path.resolve(import.meta.dirname, '../src/source-queued-messages.jsx'), 'utf8');
-  const menu = source.slice(source.indexOf('function RowMenu'), source.indexOf('// Sortable row'));
-  const order = ['t("Edit in composer")', 't("Send now")', '<SourceMenu.Separator />', 't("Remove from queue")'].map(text => menu.indexOf(text));
+  // w12b-composer: the ⋮ menu and the row's context menu share QueuedMenuItems (3.6556.2 cf74bc599 BE `R`).
+  const menu = source.slice(source.indexOf('function QueuedMenuItems'), source.indexOf('function RowMenu'));
+  const order = ['t("Edit in composer")', 't("Send now")', '<Menu.Separator />', 't("Remove from queue")'].map(text => menu.indexOf(text));
   assert.ok(order.every(index => index > 0) && order.every((index, i) => i === 0 || index > order[i - 1]), 'menu order');
   assert.match(menu, /disabled=\{locked \|\| steerBusy\}/, 'one promotion at a time');
 });

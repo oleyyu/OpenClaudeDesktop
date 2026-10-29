@@ -129,7 +129,9 @@ export function coalesceFileRuns(items) {
 // run too (their images go in the member's body inside the group, FN :17324); a hook's injected context does not.
 // Claude's stands-alone tools (ask_user_question, push_notification, send_to_user, report_findings) and the
 // DeepSeek core's `present` cards are never folded into a group either (agent-tool-titles.mjs appToolStandsAlone).
-const groupable = item => ['commandExecution', 'fileChange', 'webSearch', 'mcpToolCall', 'dynamicToolCall', 'collabAgentToolCall', 'computerUse', 'imageView', 'imageGeneration', 'sleep'].includes(item.type) && !questionReceipt(item) && !appToolStandsAlone(item);
+// w12b-transcript: the user's own '!' command (source userShell) is a user entry (c96d752d0 `ii === "bash"`), never a tool.
+const groupable = item => ['commandExecution', 'fileChange', 'webSearch', 'mcpToolCall', 'dynamicToolCall', 'collabAgentToolCall', 'computerUse', 'imageView', 'imageGeneration', 'sleep'].includes(item.type) && !questionReceipt(item) && !appToolStandsAlone(item)
+  && !(item.type === 'commandExecution' && item.source === 'userShell');
 // Npe/Die: a prose/turn boundary closes a tool segment. This surface adds
 // groups containing file or command tools (including pure command batches).
 // Members retain their real ids and original order.
