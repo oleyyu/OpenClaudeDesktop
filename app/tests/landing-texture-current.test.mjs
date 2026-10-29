@@ -83,7 +83,7 @@ function createEnvironment({ hidden = false, focused = true, media = {}, deviceB
   document.hasFocus = () => window.focused;
   const clock = {
     get now() { return now; },
-    pending: () => timers.size,
+    pending: () => timers.size + frames.size,
     // Due timers run in time order; each animation frame runs `frameLag` ms after it was requested and receives the
     // request time as its timestamp, so `frameLag` is exactly the lateness the official loop measures.
     advance(ms, { frameLag = 0 } = {}) {
@@ -154,7 +154,7 @@ test('generator output matches the pinned 2.42304.0 sources and manifest (check 
   assert.deepEqual(Object.keys(Adapters).sort(), ['chunkDependencies', 'preloadChunk', 'useOwnerWindow', 'useReduceMotion', 'withChunkLoadContext']);
 });
 
-test('every emitted declaration is AST-identical to the shipped minified source (only the recorded import rewrite differs)', async () => {
+test('emitted declarations preserve the shipped AST except the bounded viewport adapter and import rewrite', async () => {
   const { parsers } = await import('../../tools/node_modules/prettier/plugins/babel.mjs');
   const manifest = JSON.parse(await fs.readFile(path.join(generated, 'manifest.json'), 'utf8'));
   const strip = node => JSON.stringify(node, (key, value) => ['start', 'end', 'loc', 'range', 'extra', 'comments', 'leadingComments', 'trailingComments', 'innerComments'].includes(key) ? undefined : value);
@@ -167,6 +167,16 @@ test('every emitted declaration is AST-identical to the shipped minified source 
     for (const { name } of module.bindings) {
       let expected = strip(original.get(name));
       for (const rewrite of module.rewrites ?? []) if (rewrite.binding === name) expected = expected.replaceAll(JSON.stringify(rewrite.from), JSON.stringify(rewrite.to));
+      if (module.target === 'layer.mjs' && name === 'p') {
+        const statement = emitted.get(name).body.body.shift();
+        assert.equal(statement.expression.right.callee.name, 'landingRenderViewport');
+        assert.equal(statement.expression.left.name, 'e');
+      }
+      if (module.target === 'layer.mjs' && name === 'oe') {
+        assert.equal(emitted.get(name).body.body[0].argument.callee.name, 'createLandingFrameLoop');
+        compared += 1;
+        continue;
+      }
       assert.equal(strip(emitted.get(name)), expected, `${module.target}:${name}`);
       compared += 1;
     }
@@ -208,17 +218,17 @@ test('SSR: the layer is an aria-hidden, transparent box with the official classe
 });
 
 // ---------------------------------------------------------------- pure functions and shader text
-test('grid: 6.5 CSS px cells twice as tall, minimum 24x8, centred, capped at 21e6 device pixels', () => {
+test('grid: preserve CSS extent while bounding Retina resolution and total pixels', () => {
   const { landingGrid: grid, landingConfig: config } = Layer;
-  assert.deepEqual(grid({ deviceWidth: 1600, deviceHeight: 1000, devicePixelRatio: 2 }), { cellWidth: 13, cellHeight: 26, columns: 124, rows: 39, left: -6, top: -7, scale: 2 });
+  assert.deepEqual(grid({ deviceWidth: 1600, deviceHeight: 1000, devicePixelRatio: 2 }), { cellWidth: 10, cellHeight: 20, columns: 120, rows: 38, left: 0, top: -5, scale: 1.5 });
   assert.equal(grid({ deviceWidth: 160, deviceHeight: 1000, devicePixelRatio: 1 }), null, 'fewer than 24 columns');
   assert.equal(grid({ deviceWidth: 1000, deviceHeight: 90, devicePixelRatio: 1 }), null, 'fewer than 8 rows');
   assert.equal(grid({ deviceWidth: 0, deviceHeight: 900, devicePixelRatio: 1 }), null);
   const big = grid({ deviceWidth: 8000, deviceHeight: 5000, devicePixelRatio: 1 });
-  assert.equal(big.cellWidth, 7);
+  assert.equal(big.cellWidth, 5);
   assert.ok(big.columns < Math.ceil(8000 / 7) && big.rows < Math.ceil(5000 / 14));
   assert.ok(big.columns * big.cellWidth * big.rows * big.cellHeight <= config.grid.maxDevicePixels);
-  assert.equal(big.left, Math.round((8000 - big.columns * 7) / 2));
+  assert.ok(Math.abs(big.columns * big.cellWidth / big.scale - 8000) < 50, 'no centre crop on large displays');
 });
 
 test('glyph sequences, looks and wind are deterministic per seed and fall back the official way', () => {
@@ -268,7 +278,7 @@ test('software renderers are refused; shaders carry the calm card area, glow hea
   for (const name of ['Google SwiftShader', 'llvmpipe (LLVM 15.0.7, 256 bits)', 'Microsoft Basic Render Driver', 'softpipe']) assert.ok(software.test(name), name);
   assert.ok(!software.test('Apple M3'));
   assert.deepEqual(config.glow.color, { dark: [0.1, 0.68, 1], light: [0, 0.25, 1] });
-  assert.equal(config.power.frameMs, 40);
+  assert.equal(config.power.frameMs, 1000 / 60);
   assert.ok(windVertexShader.startsWith('#version 300 es') && windVertexShader.includes('out vec4 v_air;'));
   const wind = windFragmentShader();
   for (const line of ['const vec2 CALM = vec2(250.0, 80.0);', 'const float CALM_LEFT = 0.3;', 'const float CARD_Y = 0.45;', '// Thinner behind the content.', 'float heart(vec2 u)', 'vec4 tapsAt(vec2 p, out vec2 glow)'])
@@ -280,7 +290,7 @@ test('software renderers are refused; shaders carry the calm card area, glow hea
 });
 
 // ---------------------------------------------------------------- controlled events
-test('frame loop runs only while running, visible, focused and allowed; 40 ms default; 0.25 s step cap', () => {
+test('frame loop pauses while hidden, blurred or disallowed and caps resumed time steps', () => {
   const env = createEnvironment({ hidden: true });
   const times = [];
   let allowed = true;
@@ -289,10 +299,10 @@ test('frame loop runs only while running, visible, focused and allowed; 40 ms de
   assert.equal(env.clock.pending(), 0, 'hidden document schedules nothing');
   env.clock.setHidden(false);
   assert.equal(env.clock.pending(), 1);
-  env.clock.advance(39);
+  env.clock.advance(15, { frameLag: 1000 / 60 });
   assert.deepEqual(times, []);
-  env.clock.advance(81);
-  assert.deepEqual(times.map(t => Math.round(t * 1000)), [40, 80, 120]);
+  env.clock.advance(35, { frameLag: 1000 / 60 });
+  assert.deepEqual(times.map(t => Math.round(t * 1000)), [17, 33, 50]);
   env.clock.setFocused(false);
   assert.equal(env.clock.pending(), 0, 'blur cancels the pending frame');
   env.clock.advance(400);
@@ -305,7 +315,7 @@ test('frame loop runs only while running, visible, focused and allowed; 40 ms de
   assert.equal(env.clock.pending(), 1);
   env.clock.advance(3000, { frameLag: 1000 });
   const steps = times.slice(3).map((t, i) => Math.round((t - times[2 + i]) * 1000));
-  assert.deepEqual(steps, [250, 250], 'a one-second frame advances the texture clock by 0.25 s');
+  assert.deepEqual(steps, [250, 250, 250], 'a one-second frame advances the texture clock by 0.25 s');
   loop.destroy();
   assert.equal(env.document.listenerCount('visibilitychange') + env.window.listenerCount('focus') + env.window.listenerCount('blur'), 0);
   assert.equal(env.clock.pending(), 0);
@@ -316,19 +326,21 @@ test('frame loop reports late frames (5 of the last 10 over 17 ms) and stalls (3
   const late = [], stalls = [];
   const loop = Layer.landingFrameLoop(env.window, () => {}, { onLate: () => late.push(env.clock.now), onStall: () => stalls.push(env.clock.now) });
   loop.setRunning(true);
-  env.clock.advance(40 * 4, { frameLag: 0 });
-  env.clock.advance(60 * 4 + 20, { frameLag: 20 });
+  env.clock.advance(1000 / 60 * 4, { frameLag: 1000 / 60 });
+  env.clock.advance(20 * 4, { frameLag: 20 });
   assert.deepEqual(stalls, []);
   assert.equal(late.length, 0, 'four late frames are not yet a pattern');
-  env.clock.advance(60, { frameLag: 20 });
+  env.clock.advance(20, { frameLag: 20 });
   assert.equal(late.length, 1);
   const stallEnv = createEnvironment();
   const stalled = [];
-  const slow = Layer.landingFrameLoop(stallEnv.window, () => {}, { onStall: () => stalled.push(stallEnv.clock.now), intervalMs: () => 10 });
+  let work = 0;
+  stallEnv.window.performance.now = () => stallEnv.clock.now + work;
+  const slow = Layer.landingFrameLoop(stallEnv.window, () => { work += 60; }, { onStall: () => stalled.push(stallEnv.clock.now), intervalMs: () => 10 });
   slow.setRunning(true);
-  stallEnv.clock.advance(70 * 2, { frameLag: 60 });
+  stallEnv.clock.advance(40, { frameLag: 20 });
   assert.deepEqual(stalled, []);
-  stallEnv.clock.advance(70, { frameLag: 60 });
+  stallEnv.clock.advance(20, { frameLag: 20 });
   assert.equal(stalled.length, 1, 'intervalMs is honoured and the third slow frame stalls');
   loop.destroy();
   slow.destroy();
