@@ -2395,8 +2395,10 @@ async function openSessionPopout({ sessionId = null, from = win, position = null
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   watchZoom(window);
   attachContextMenu(window);
-  window.webContents.on("render-process-gone", () => void fileSearch.cancelAll());
-  window.webContents.once("destroyed", () => void fileSearch.cancelAll());
+  // Only this window's own searches (fileSearchScope keys them by sender id); the other windows' keep running.
+  const searchSenderId = window.webContents.id;
+  window.webContents.on("render-process-gone", () => void fileSearch.cancelScopes(`${searchSenderId}:`));
+  window.webContents.once("destroyed", () => void fileSearch.cancelScopes(`${searchSenderId}:`));
   window.webContents.on("will-navigate", (e, url) => {
     if (url !== window.webContents.getURL()) e.preventDefault();
   });
