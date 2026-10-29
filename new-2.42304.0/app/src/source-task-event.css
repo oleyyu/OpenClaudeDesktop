@@ -1,3 +1,7 @@
+/* h3e's card row (2.42304.0 c96d752d0): `${lp} flex min-w-0 flex-col empty:hidden`, lp = c8ba53634
+   ps-[var(--cds-assistant-message-text-inset,0px)]; its margin is the transcript's row gap (.source-message + .source-message). */
+.source-task-events.source-message { display: flex; flex-direction: column; min-width: 0; padding-inline-start: var(--cds-assistant-message-text-inset, 0px); }
+.source-task-events.source-message:empty { display: none; }
 /* L2 (approval-current.js:44262-44296) settled row: group/tool flex flex-col gap-1 py-0 max-w-full items-start text-left
    rounded-sm, focus-visible:shadow-focus; aue's line: flex min-w-0 items-center gap-1 max-w-full of text-body parts. */
 .source-task-event { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 100%; margin: 0; padding: 0; border: 0; border-radius: var(--radius-sm, .25rem); background: none; color: inherit; font: inherit; text-align: left; outline: none; }

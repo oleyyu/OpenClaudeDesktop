@@ -8,6 +8,20 @@
 // nudge never comes back after an update.
 export const RELEASE_NOTES = Object.freeze([
   {
+    version: "0.2.187",
+    date: "2026-10-29",
+    items: [
+      { kind: "feat", text: "Computer use: the agent works in the apps you allow, in the background without taking your keyboard, mouse or focus, or with full-screen control when you approve it. Teach mode walks you through an app step by step." },
+      { kind: "feat", text: "Claude in Chrome bridge: navigate, read pages, fill forms, click and run read-only scripts in your own Chrome, with a per-site approval." },
+      { kind: "feat", text: "On a Mac without Node.js or Git, Setup opens with a Check your Mac step that installs what is missing." },
+      { kind: "improvement", text: "A command the core keeps running in the background no longer spins beside the next step: the transcript shows one working mark at a time." },
+      { kind: "improvement", text: "A background command that finishes normally no longer adds a “Background command completed” line; failed or stopped tasks still get their own row." },
+      { kind: "improvement", text: "The click ripple on Home stays smooth." },
+      { kind: "improvement", text: "Settings › Models shows one line per model, and Settings › Harness fields line up." },
+      { kind: "improvement", text: "A full bug sweep across cores, terminals and tools: Stop also ends a running Chrome tool call, the model menu lists models on ACP cores again, and custom global instructions reach every core." },
+    ],
+  },
+  {
     version: "0.2.186",
     date: "2026-10-15",
     items: [

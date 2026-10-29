@@ -7025,7 +7025,7 @@ function App({ side = 0, initialSession = null }) {
                       {/* R4f-proposal P5: the turn's proposal group card (QL turnSuggestions → R$ → B$), after its tail. */}
                       {proposalAnchors.has(index) && <ProposalTurnCard cards={proposalCards} row={proposalAnchors.get(index)} />}
                       {item.turnId && taskEventsByTurn.has(item.turnId) && displayedItems.findLastIndex(row => row.turnId === item.turnId) === index
-                        && <SourceTaskEvent events={taskEventsByTurn.get(item.turnId)} itemId={`task-events:${item.turnId}`} onOpen={openTaskEvent} />}
+                        && <SourceTranscriptRowBoundary sessionId={current} item={item} kind="reply"><SourceTaskEvent events={taskEventsByTurn.get(item.turnId)} itemId={`task-events:${item.turnId}`} onOpen={openTaskEvent} /></SourceTranscriptRowBoundary>}
                       {(() => {
                         // Inside the failed turn, after its last displayed row (scroll-messages error item).
                         const variant = item.turnId && turnErrorView.get(item.turnId);

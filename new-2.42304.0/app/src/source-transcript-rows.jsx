@@ -9,7 +9,7 @@
 //   StatusStep           a tool row: TurnStatus.Step (qP / $Ae / HZ), or, while it runs and holds the turn's mark, ZAe's
 //                        busy TurnStatus.
 //   (the tool rows and groups themselves are the originals: source-transcript-tool-rows.jsx)
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { TurnStatusRowsProvider, useTurnStatusRows } from "./generated/working-line/turn-status-rows.mjs";
 import { TurnStatus } from "./generated/working-line/turn-status.mjs";
 import { TurnActivityContext } from "./generated/working-line/morph.mjs";
@@ -17,16 +17,25 @@ import { toolActivity } from "./generated/transcript-rows/tool-activity.mjs";
 import { TranscriptLiveScopeContext, TurnMarkBroker, TurnMarkOutlet } from "./generated/transcript-rows/turn-mark.mjs";
 import { RunningToolRow } from "./generated/transcript-rows/group-status.mjs";
 import { TranscriptHostScope } from "./transcript-host-scope.mjs";
-import { transcriptLiveScope, stepState } from "./transcript-rows-model.mjs";
+import { transcriptLiveScope, intersectLiveIds, stepState } from "./transcript-rows-model.mjs";
 
 export { useTurnStatusRows };
 
 export function TranscriptRowsScope({ sessionKey = null, turnId = null, items = null, itemPhases = null, responding = false, turnStats = null, awaiting = false, children }) {
   const scope = transcriptLiveScope({ sessionKey, turnId, items, itemPhases, responding, turnStats, awaiting });
-  const idsKey = [...scope.liveRunningToolIds].sort().join("\0");
-  // ho memoizes the live scope on its keys (sessionId, turnLive, the running ids).
-  const live = useMemo(() => ({ sessionId: scope.sessionId, turnLive: scope.turnLive, liveRunningToolIds: scope.liveRunningToolIds,
-    liveRunningShellCalls: undefined }), [scope.sessionId, scope.turnLive, idsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const current = [...scope.liveRunningToolIds].join("\n");
+  // cb6930dae ho: `[w,T]=re(y,()=>b.endsInUnansweredUserRow?"":C);!b.endsInUnansweredUserRow&&w!==C&&T(C);
+  // let E=…b.endsInUnansweredUserRow?lo(C,w):C` — the running ids last seen for the session (re: state keyed by the
+  // session id) while the user row is answered; right after a user row (a steer, no reply yet) only the ids still
+  // running among them stay live (lo, the intersection).
+  const [held, setHeld] = useState(() => ({ key: sessionKey, ids: scope.endsInUnansweredUserRow ? "" : current }));
+  const heldIds = held.key === sessionKey ? held.ids : scope.endsInUnansweredUserRow ? "" : current;
+  if (!scope.endsInUnansweredUserRow && (held.key !== sessionKey || held.ids !== current)) setHeld({ key: sessionKey, ids: current });
+  const idsKey = scope.endsInUnansweredUserRow ? intersectLiveIds(current, heldIds) : current;
+  // ho memoizes the live scope on its keys (sessionId, turnLive, the running ids): `liveRunningToolIds: fo(E)`.
+  const live = useMemo(() => ({ sessionId: scope.sessionId, turnLive: scope.turnLive,
+    liveRunningToolIds: new Set(idsKey === "" ? [] : idsKey.split("\n")), liveRunningShellCalls: undefined }),
+  [scope.sessionId, scope.turnLive, idsKey]);
   const host = useMemo(() => ({ sessionId: scope.sessionId, turnStartedAt: scope.turnStartedAt, awaiting: scope.awaiting }),
     [scope.sessionId, scope.turnStartedAt, scope.awaiting]);
   // ho: `D = ne && Lt(ne.name, ne.input)`, the last tool's activity while the turn responds.
