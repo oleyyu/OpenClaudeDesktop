@@ -1,88 +1,30 @@
-// Computer use in the transcript (source-computer-use.jsx). A core reports a step either as OpenClaude Desktop's own
-// item {type: "computerUse", id, status, action, screenshot?, app?, display?} (bridges emit this when their
-// agent controls the computer), or as an ordinary tool call in one of the shapes agents use:
-//   Anthropic computer tool   name "computer", {action: "left_click", coordinate: [x, y], text?, scroll_direction?, …}
-//   OpenAI computer use       {action: {type: "click", x, y, button?} | {type: "type", text} | {type: "keypress", keys} | …}
-//   computer-use MCP servers  tools named left_click / type / key / scroll / screenshot / … with {coordinate: [x, y]} or {x, y}
-// computerUseAction() normalizes all of them to one action, or null for anything else.
+// Computer use in the transcript (source-computer-use.jsx). Which items are computer-use steps and what each does is
+// electron/computer-use/actions.mjs (shared with the main process); this module adds the official verbs, the tool names
+// the original rows read, the screenshot and the request_access card's model.
 import { toolOutputImages } from "./generic-tool-model.mjs";
+import { APP_KINDS, SERVER_NAMES, computerUseAction, ownComputerUseTool } from "../electron/computer-use/actions.mjs";
 import { t } from "../electron/i18n/index.mjs";
 
 const record = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-const num = (value) => (typeof value === "number" && Number.isFinite(value) ? Math.round(value) : null);
 const str = (value) => (typeof value === "string" ? value : "");
 
-// Action names across the shapes → one kind.
-const KINDS = {
-  click: "click", left_click: "click", leftclick: "click", mouse_click: "click", tap: "click",
-  double_click: "double_click", doubleclick: "double_click", triple_click: "triple_click",
-  right_click: "right_click", rightclick: "right_click", middle_click: "middle_click",
-  type: "type", type_text: "type", input_text: "type", write: "type",
-  key: "key", keypress: "key", key_press: "key", hotkey: "key", press: "key",
-  scroll: "scroll", mouse_scroll: "scroll",
-  mouse_move: "move", move: "move", hover: "move", move_mouse: "move",
-  left_click_drag: "drag", drag: "drag", left_mouse_drag: "drag",
-  screenshot: "screenshot", take_screenshot: "screenshot", capture_screen: "screenshot",
-  zoom: "zoom", wait: "wait", sleep: "wait",
-  open_app: "open_app", open_application: "open_app", launch_app: "open_app",
-  cursor_position: "cursor", get_cursor_position: "cursor",
+// Each kind's official tool name (2.42304.0 shared-130 jI / the mcp__computer-use__ tables): what an engine item is
+// called in the original tool group (transcript-sdk-tools.mjs), so the original rows read the original verbs.
+const OFFICIAL_TOOLS = {
+  click: "left_click", double_click: "double_click", triple_click: "triple_click", right_click: "right_click", middle_click: "middle_click",
+  type: "type", key: "key", hold_key: "hold_key", scroll: "scroll", move: "mouse_move", drag: "left_click_drag", screenshot: "screenshot",
+  zoom: "zoom", wait: "wait", open_app: "open_application", cursor: "cursor_position", mouse_down: "left_mouse_down", mouse_up: "left_mouse_up",
+  request_access: "request_access", list_apps: "list_apps", read_clipboard: "read_clipboard", write_clipboard: "write_clipboard",
+  request_teach: "request_teach_access", teach_step: "teach_step", teach_batch: "teach_batch",
 };
-const TOOL_NAMES = /^(computer|computer_use|computer-use|computer_20\d{6})$/i;
-const SERVER_NAMES = /computer[-_ ]?use|^computer$|desktop[-_ ]?control/i;
-
-function pointOf(input) {
-  if (Array.isArray(input?.coordinate) && input.coordinate.length >= 2) return { x: num(input.coordinate[0]), y: num(input.coordinate[1]) };
-  if (num(input?.x) !== null && num(input?.y) !== null) return { x: num(input.x), y: num(input.y) };
-  return null;
+const OFFICIAL_APP_TOOLS = { ...Object.fromEntries(Object.entries(APP_KINDS).map(([tool, kind]) => [kind, tool])) };
+/** The official computer-use tool name for an action ("left_click", "app_click", …), or null. */
+export function computerUseToolName(action) {
+  if (!action) return null;
+  if (action.scope === "app") return OFFICIAL_APP_TOOLS[action.kind] ?? null;
+  return OFFICIAL_TOOLS[action.kind] ?? null;
 }
-
-function normalize(kind, input = {}) {
-  const point = pointOf(input);
-  const action = { kind, ...(point ?? {}) };
-  if (kind === "drag") {
-    const start = Array.isArray(input.start_coordinate) ? { x: num(input.start_coordinate[0]), y: num(input.start_coordinate[1]) }
-      : Array.isArray(input.path) && input.path.length ? pointOf(input.path[0]) : null;
-    const end = Array.isArray(input.path) && input.path.length > 1 ? pointOf(input.path.at(-1)) : point;
-    if (start) Object.assign(action, { x: start.x, y: start.y });
-    if (end) Object.assign(action, { x2: end.x, y2: end.y });
-  }
-  if (kind === "type") action.text = str(input.text) || str(input.value);
-  if (kind === "key") action.keys = Array.isArray(input.keys) ? input.keys.map(String) : str(input.text) || str(input.key) ? [str(input.text) || str(input.key)] : [];
-  if (kind === "scroll") {
-    action.direction = str(input.scroll_direction) || str(input.direction) || (num(input.scroll_y) ? (input.scroll_y > 0 ? "down" : "up") : num(input.scroll_x) ? (input.scroll_x > 0 ? "right" : "left") : "");
-    action.amount = num(input.scroll_amount) ?? num(input.amount) ?? (num(input.scroll_y) !== null ? Math.abs(input.scroll_y) : null);
-  }
-  if (kind === "wait") action.seconds = num(input.duration) ?? num(input.seconds) ?? null;
-  if (kind === "open_app") action.app = str(input.app) || str(input.name) || str(input.bundle_id);
-  if (kind === "zoom" && Array.isArray(input.region)) action.region = input.region.slice(0, 4).map(num);
-  return action;
-}
-
-/** The computer-use action a transcript item stands for, or null. */
-export function computerUseAction(item) {
-  if (!record(item)) return null;
-  if (item.type === "computerUse") {
-    const action = record(item.action) ? item.action : {};
-    const kind = KINDS[str(action.kind || action.type).toLowerCase()] ?? (str(action.kind) || "other");
-    return { ...normalize(kind, action), app: str(item.app) || str(action.app) || undefined };
-  }
-  if (item.type !== "mcpToolCall" && item.type !== "dynamicToolCall") return null;
-  const tool = str(item.tool) || str(item.name);
-  const server = str(item.server) || str(item.namespace);
-  const input = record(item.arguments) ? item.arguments : {};
-  // Anthropic / OpenAI single computer tool: the action is inside the input.
-  if (TOOL_NAMES.test(tool)) {
-    const inner = record(input.action) ? input.action : input;
-    const kind = KINDS[str(record(input.action) ? input.action.type : input.action).toLowerCase()];
-    return kind ? normalize(kind, inner) : { kind: "other", label: str(input.action) || tool };
-  }
-  // A computer-use MCP server: the tool name is the action.
-  if (SERVER_NAMES.test(server)) {
-    const kind = KINDS[tool.toLowerCase().replace(/^computer_/, "")];
-    return kind ? normalize(kind, input) : null;
-  }
-  return null;
-}
+export { computerUseAction };
 
 /** The step's screenshot (a data URL), or null: the item's own, else the tool's last output image. */
 export function computerUseScreenshot(item) {
@@ -99,31 +41,214 @@ export function keyLabel(keys = []) {
 
 const truncate = (text, max = 48) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
-/** The row's verb and meta for a state ("busy" | "done" | "failed" | …). */
+// The official Code-tab wording per kind (2.42304.0 shared-130 jI and the mcp__computer-use__ running / done tables,
+// c52b02f3f the "Failed to …" one per running verb). No coordinates, as the original.
+const VERBS = {
+  screenshot: () => [t("Capturing screen"), t("Captured screen"), t("Failed to capture screen")],
+  window_screenshot: () => [t("Capturing window"), t("Captured window"), t("Failed to capture window")],
+  click: () => [t("Clicking"), t("Clicked"), t("Failed to click")],
+  type: () => [t("Typing"), t("Typed"), t("Failed to type")],
+  key: () => [t("Pressing key"), t("Pressed key"), t("Failed to press key")],
+  hold_key: () => [t("Holding key"), t("Held key"), t("Failed to hold key")],
+  scroll: () => [t("Scrolling"), t("Scrolled"), t("Failed to scroll")],
+  move: () => [t("Hovering"), t("Hovered"), t("Failed to hover")],
+  drag: () => [t("Dragging"), t("Dragged"), t("Failed to drag")],
+  zoom: () => [t("Zooming in"), t("Zoomed in"), t("Failed to zoom in")],
+  wait: () => [t("Waiting"), t("Waited"), t("Failed to wait")],
+  open_app: () => [t("Opening app"), t("Opened app"), t("Failed to open app")],
+  cursor: () => [t("Checking pointer position"), t("Checked pointer position"), t("Failed to check pointer position")],
+  mouse_down: () => [t("Pressing mouse button"), t("Pressed mouse button"), t("Failed to press mouse button")],
+  mouse_up: () => [t("Releasing mouse button"), t("Released mouse button"), t("Failed to release mouse button")],
+  list_windows: () => [t("Listing windows"), t("Listed windows"), t("Failed to list windows")],
+  find: () => [t("Finding in window"), t("Found in window"), t("Failed to find in window")],
+  menu: () => [t("Using menu bar"), t("Used menu bar"), t("Failed to use menu bar")],
+  focus: () => [t("Moving keyboard focus"), t("Moved keyboard focus"), t("Failed to move keyboard focus")],
+  release: () => [t("Releasing apps"), t("Released apps"), t("Failed to release apps")],
+  request_access: () => [t("Asking to use apps on your computer"), t("Asked to use apps on your computer"), t("Failed to ask to use apps")],
+  read_clipboard: () => [t("Reading clipboard"), t("Read clipboard"), t("Failed to read clipboard")],
+  write_clipboard: () => [t("Copying to clipboard"), t("Copied to clipboard"), t("Failed to copy to clipboard")],
+  // Teach mode (shared-130 mcp__computer-use__ running / done; c52b02f3f the failed one per running verb).
+  request_teach: () => [t("Asking to guide you step by step"), t("Asked to guide you step by step"), t("Step-by-step guidance not approved")],
+  teach_step: () => [t("Showing a step"), t("Showed a step"), t("Failed to show a step")],
+  teach_batch: () => [t("Showing steps"), t("Showed steps"), t("Failed to show steps")],
+};
+const CLICKS = new Set(["click", "double_click", "triple_click", "right_click", "middle_click"]);
+
+// The row icon (2.42304.0 shared-130: each computer-use tool's icon key; cc1aae219 RW: key → icon name). The Code tab's
+// TurnStatus rows have no icon of their own; this follows the chat renderer's computer-use rows (user's call, 2026-10-20).
+const ICON_KEYS = {
+  screenshot: "camera", window_screenshot: "camera", type: "keyboard", key: "keyboard", hold_key: "keyboard", focus: "keyboard",
+  drag: "drag", zoom: "zoom", wait: "timer", menu: "menu", find: "search", list_windows: "eye",
+  read_clipboard: "clipboard", write_clipboard: "clipboard",
+};
+const ICON_NAMES = { camera: "Camera", keyboard: "Keyboard", timer: "Timer", eye: "Eye", search: "Search", click: "Cursor",
+  "scroll-up": "ArrowUp", "scroll-down": "ArrowDown", "scroll-left": "ArrowLeft", "scroll-right": "ArrowRight", drag: "Reorder",
+  zoom: "SearchCircle", computer: "Computer", menu: "Menu", clipboard: "Clipboard" };
+/** The row icon for an action: {name, dir} (zW: the side arrows keep dir="ltr"). */
+export function computerUseIcon(action) {
+  const key = !action ? "computer"
+    : CLICKS.has(action.kind) || action.kind === "mouse_down" || action.kind === "mouse_up" ? "click"
+      : action.kind === "scroll" ? `scroll-${["up", "down", "left", "right"].includes(action.direction) ? action.direction : "down"}`
+        : ICON_KEYS[action.kind] ?? "computer";
+  return { name: ICON_NAMES[key] ?? "Computer", dir: key === "scroll-left" || key === "scroll-right" ? "ltr" : undefined };
+}
+
+/** The row's verb and meta for a state ("busy" | "done" | "failed" | …): the official verbs; meta is what was typed or pressed. */
 export function computerUseLabel(action, state = "done") {
   const busy = state === "busy" || state === "blocked", failed = state === "failed";
-  const at = action.x != null && action.y != null ? `(${action.x}, ${action.y})` : null;
-  const pick = (running, done, fail) => (busy ? running : failed ? fail : done);
+  const verbs = (VERBS[CLICKS.has(action.kind) ? "click" : action.kind] ?? (() => [t("Using your computer"), t("Used your computer"), t("Couldn’t use your computer")]))();
+  const label = busy ? verbs[0] : failed ? verbs[2] : verbs[1];
   switch (action.kind) {
-    case "click": return { label: pick(t("Clicking"), t("Clicked"), t("Failed to click")), meta: at };
-    case "double_click": return { label: pick(t("Double-clicking"), t("Double-clicked"), t("Failed to double-click")), meta: at };
-    case "triple_click": return { label: pick(t("Triple-clicking"), t("Triple-clicked"), t("Failed to triple-click")), meta: at };
-    case "right_click": return { label: pick(t("Right-clicking"), t("Right-clicked"), t("Failed to right-click")), meta: at };
-    case "middle_click": return { label: pick(t("Middle-clicking"), t("Middle-clicked"), t("Failed to click")), meta: at };
-    case "type": return { label: pick(t("Typing"), t("Typed"), t("Failed to type")), meta: action.text ? `“${truncate(action.text)}”` : null };
-    case "key": return { label: pick(t("Pressing"), t("Pressed"), t("Failed to press")), meta: keyLabel(action.keys) || null };
-    case "scroll": return { label: pick(t("Scrolling"), t("Scrolled"), t("Failed to scroll")), meta: [action.direction && t(action.direction), at].filter(Boolean).join(" ") || null };
-    case "move": return { label: pick(t("Moving the pointer"), t("Moved the pointer"), t("Failed to move the pointer")), meta: at };
-    case "drag": return { label: pick(t("Dragging"), t("Dragged"), t("Failed to drag")), meta: at && action.x2 != null ? `${at} → (${action.x2}, ${action.y2})` : at };
-    case "screenshot": return { label: pick(t("Taking a screenshot"), t("Took a screenshot"), t("Failed to take a screenshot")), meta: null };
-    case "zoom": return { label: pick(t("Zooming in"), t("Zoomed in"), t("Failed to zoom")), meta: null };
-    case "wait": return { label: pick(t("Waiting"), t("Waited"), t("Failed to wait")), meta: action.seconds ? t("{seconds}s", { seconds: action.seconds }) : null };
-    case "open_app": return { label: pick(t("Opening"), t("Opened"), t("Failed to open")), meta: action.app || null };
-    case "cursor": return { label: pick(t("Finding the pointer"), t("Found the pointer"), t("Failed to find the pointer")), meta: null };
-    default: return { label: pick(t("Using the computer"), t("Used the computer"), t("Computer action failed")), meta: action.label || null };
+    case "type": return { label, meta: action.text ? `“${truncate(action.text)}”` : null };
+    case "key": case "hold_key": return { label, meta: keyLabel(action.keys) || null };
+    case "open_app": return { label, meta: action.app || null };
+    default: return { label, meta: null };
   }
 }
 
+// ── request_access: the access card (computer-use-approval-card.jsx; docs/computer-use-ui-css-source-20261020.md §1).
+// The request reaches the app as an MCP tool-call approval (mcpServer/elicitation/request, _meta.codex_approval_kind
+// "mcp_tool_call") for a computer-use server's request_access. What the official main process resolves before the card
+// (2.42304.0 BEf0UhNC: apps with name, tier and icon; the requested flags; the reason) travels in
+// _meta.computer_use_access {apps: [{bundleId, displayName, tier, iconDataUrl?, installed?, alreadyGranted?}], flags,
+// reason}. Without it, the call's own arguments ({apps: [names], reason, clipboardRead, clipboardWrite,
+// systemKeyCombos}) still describe the request, with no tier or icon.
+
+// Official ca31fdde5 Pi (macOS sets, verbatim): apps whose grant means more than its tier says.
+const SHELL_APPS = new Set(["com.apple.Terminal", "com.googlecode.iterm2", "com.microsoft.VSCode", "dev.warp.Warp-Stable",
+  "com.github.wez.wezterm", "org.alacritty", "io.alacritty", "net.kovidgoyal.kitty", "co.zeit.hyper", "com.mitchellh.ghostty",
+  "com.todesktop.230313mzl4w4u92", "com.vscodium", "com.exafunction.windsurf", "dev.zed.Zed", "org.tabby", "com.jetbrains.intellij",
+  "com.jetbrains.pycharm", "com.raphaelamorim.rio", "org.contourterminal.Contour", "com.neovide.neovide"]);
+const FILESYSTEM_APPS = new Set(["com.apple.finder"]);
+const SETTINGS_APPS = new Set(["com.apple.systempreferences"]);
+
+/** "shell" | "filesystem" | "system_settings" | null for a bundle id. */
+export function computerUseAppRisk(bundleId) {
+  if (SHELL_APPS.has(bundleId)) return "shell";
+  if (FILESYSTEM_APPS.has(bundleId)) return "filesystem";
+  if (SETTINGS_APPS.has(bundleId)) return "system_settings";
+  return null;
+}
+
+const TIER_LABELS = { read: () => t("View only"), click: () => t("Click only"), full: () => t("All") };
+const RISK_LABELS = {
+  shell: () => t("Can run commands on your computer"),
+  filesystem: () => t("Can open, change, or delete any file, and run apps and scripts"),
+  system_settings: () => t("Can change system settings"),
+};
+
+function accessApp(entry, index) {
+  if (typeof entry === "string") {
+    const name = entry.trim();
+    return name ? { key: `requested-${index}`, name, bundleId: null, tier: null, iconDataUrl: null, installed: null, alreadyGranted: false } : null;
+  }
+  if (!record(entry)) return null;
+  const bundleId = str(entry.bundleId) || str(entry.bundle_id) || null;
+  const name = (str(entry.displayName) || str(entry.display_name) || bundleId || str(entry.requestedName) || str(entry.name)).trim();
+  if (!name) return null;
+  const tier = Object.hasOwn(TIER_LABELS, entry.tier) ? entry.tier : null;
+  const icon = typeof entry.iconDataUrl === "string" && /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,/.test(entry.iconDataUrl) ? entry.iconDataUrl : null;
+  return { key: bundleId ?? `requested-${index}`, name, bundleId, tier, iconDataUrl: icon,
+    installed: typeof entry.installed === "boolean" ? entry.installed : null, alreadyGranted: entry.alreadyGranted === true };
+}
+
+const isAccessCall = (item) => item?.type === "mcpToolCall" && (SERVER_NAMES.test(str(item.server)) && str(item.tool).replace(/^computer_/, "") === "request_access"
+  || ownComputerUseTool(item) === "request_access");
+
+/**
+ * The access request an MCP tool-call approval stands for, or null.
+ * @returns {{apps: object[], flags: {clipboardRead: boolean, clipboardWrite: boolean, systemKeyCombos: boolean}, reason: string | null} | null}
+ */
+export function computerUseAccessRequest(params, item) {
+  const meta = record(params?._meta) ? params._meta : {};
+  if (meta.codex_approval_kind !== "mcp_tool_call") return null;
+  const resolved = record(meta.computer_use_access) ? meta.computer_use_access : null;
+  if (!resolved && !isAccessCall(item)) return null;
+  const args = record(meta.tool_params) ? meta.tool_params : record(item?.arguments) ? item.arguments : {};
+  const source = resolved ?? args;
+  const flagsIn = record(source.flags) ? source.flags : record(source.requestedFlags) ? source.requestedFlags : source;
+  const apps = (Array.isArray(source.apps) ? source.apps : []).slice(0, 64).map(accessApp).filter(Boolean);
+  const reason = str(source.reason).trim() || str(args.reason).trim() || null;
+  return { apps, reason, note: computerUseHideNote(resolved ?? {}),
+    flags: { clipboardRead: flagsIn.clipboardRead === true, clipboardWrite: flagsIn.clipboardWrite === true, systemKeyCombos: flagsIn.systemKeyCombos === true } };
+}
+
+/**
+ * A takeover request an MCP tool-call approval stands for (official c96d752d0 JEe with takeoverFrom / wa), or null.
+ * Switch from background to full-screen control: no app or capability rows, only the "Take over the screen?" title.
+ * @returns {{becausePreferredBackground: boolean, appName: string | null, reason: string | null} | null}
+ */
+export function computerUseTakeoverRequest(params) {
+  const meta = record(params?._meta) ? params._meta : {};
+  if (meta.codex_approval_kind !== "mcp_tool_call") return null;
+  const takeover = record(meta.computer_use_takeover) ? meta.computer_use_takeover : null;
+  if (!takeover) return null;
+  return { becausePreferredBackground: takeover.becausePreferredBackground === true,
+    appName: str(takeover.appName).trim() || null, reason: str(takeover.reason).trim() || null };
+}
+
+/**
+ * A request_teach_access call the MCP tool-call approval stands for (official ca31fdde5 Wa, for
+ * computer:request_teach_access), or null: the reason and the apps as main resolved them (_meta.computer_use_teach).
+ * Each app keeps its official row data: resolved (bundle id, name, icon) or not installed, its tier, already allowed.
+ * @returns {{reason: string, apps: {key: string, name: string, bundleId: string | null, iconDataUrl: string | null,
+ *   resolved: boolean, alreadyGranted: boolean, tier: "read" | "click" | "full" | null, risk: string | null}[]} | null}
+ */
+export function computerUseTeachRequest(params) {
+  const meta = record(params?._meta) ? params._meta : {};
+  if (meta.codex_approval_kind !== "mcp_tool_call") return null;
+  const teach = record(meta.computer_use_teach) ? meta.computer_use_teach : null;
+  if (!teach) return null;
+  const apps = (Array.isArray(teach.apps) ? teach.apps : []).slice(0, 64).map(accessApp).filter(Boolean)
+    .map((app) => ({ key: app.key, name: app.name, bundleId: app.bundleId, iconDataUrl: app.iconDataUrl, resolved: app.installed !== false && !!app.bundleId,
+      alreadyGranted: app.alreadyGranted, tier: app.tier, risk: app.bundleId ? computerUseAppRisk(app.bundleId) : null }));
+  const hide = computerUseHideNote(teach);
+  return { reason: str(teach.reason).trim(), apps, hide: hide?.kind === "hide" ? hide : null };
+}
+/**
+ * The cards' footnote (official c96d752d0 / ca31fdde5): preferredModeDefault "background" → the Background line;
+ * else apps the next full-screen action would hide (willHide) → the hiding line, "then restored" when autoUnhideEnabled.
+ * null when neither.
+ * @returns {{kind: "background"} | {kind: "hide", autoUnhide: boolean} | null}
+ */
+export function computerUseHideNote(meta) {
+  if (!record(meta)) return null;
+  if (meta.preferredModeDefault === "background") return { kind: "background" };
+  if (Array.isArray(meta.willHide) && meta.willHide.length > 0) return { kind: "hide", autoUnhide: meta.autoUnhideEnabled !== false };
+  return null;
+}
+/** The teach card's app row labels (official Ri / Li): the tier badge's text and the risk line, or null. */
+export function computerUseTeachRowLabels(app) {
+  return { tier: app.tier ? TIER_LABELS[app.tier]() : null, risk: app.risk ? RISK_LABELS[app.risk]() : null };
+}
+
+/** The card's rows: flags first (official order), then the apps not granted yet, risky ones first. */
+export function computerUseAccessRows(access) {
+  const flags = [
+    access.flags.clipboardRead && { key: "clipboardRead", icon: "Clipboard", label: t("Read your clipboard") },
+    access.flags.clipboardWrite && { key: "clipboardWrite", icon: "Copy", label: t("Write to your clipboard") },
+    access.flags.systemKeyCombos && { key: "systemKeyCombos", icon: "Keyboard", label: t("Use system shortcuts (⌘Q, ⌘Tab, and similar)") },
+  ].filter(Boolean);
+  const apps = access.apps.filter((app) => !app.alreadyGranted)
+    .map((app) => { const risk = app.bundleId ? computerUseAppRisk(app.bundleId) : null;
+      return { ...app, risk, riskLabel: risk ? RISK_LABELS[risk]() : null, tierLabel: app.tier && app.installed !== false ? TIER_LABELS[app.tier]() : null }; })
+    .sort((a, b) => Number(b.risk !== null) - Number(a.risk !== null));
+  return { flags, apps };
+}
+
+/**
+ * The title variant (official ZEe): one app and no flags names the app; several apps count them; flags make it
+ * "these capabilities"; nothing at all is "your computer". `text` is the plain title (aria label, announcement).
+ */
+export function computerUseAccessTitle(rows, who) {
+  const flags = rows.flags.length > 0, count = rows.apps.length;
+  if (count === 1 && !flags) return { kind: "app", app: rows.apps[0].name, text: t("Allow {name} to use {app}?", { name: who, app: rows.apps[0].name }) };
+  if (count > 1 && !flags) return { kind: "apps", count, text: t("Allow {name} to use {count} apps?", { name: who, count }) };
+  if (count > 0 || flags) return { kind: "capabilities", text: t("Allow {name} to use these capabilities?", { name: who }) };
+  return { kind: "computer", text: t("Allow {name} to use your computer?", { name: who }) };
+}
+
+// 0.1's transcript banner and screenshot ring (source-computer-use.jsx, main.jsx), kept beside the 2.42304.0 model.
 /**
  * Where to draw on a screenshot of natural size width × height: a ring at the point, a line for a drag.
  * Coordinates are in screenshot pixels; null when the action has no point inside it.

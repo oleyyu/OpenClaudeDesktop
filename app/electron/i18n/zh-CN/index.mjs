@@ -15,6 +15,7 @@ import terminal from './terminal.mjs';
 import preview from './preview.mjs';
 import workflows from './workflows.mjs';
 import agentTools from './agent-tools.mjs';
+import computerUse from './computer-use.mjs';
 
 // common.mjs is merged last: its wording wins where areas disagree.
-export default Object.freeze({ ...app, ...session, ...sidebar, ...customize, ...settings, ...panes, ...models, ...menus, ...terminal, ...windows, ...preview, ...workflows, ...agentTools, ...surfaces, ...common });
+export default Object.freeze({ ...app, ...session, ...sidebar, ...customize, ...settings, ...panes, ...models, ...menus, ...terminal, ...windows, ...preview, ...workflows, ...agentTools, ...computerUse, ...surfaces, ...common });

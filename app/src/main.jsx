@@ -621,7 +621,12 @@ function App({ side = 0, initialSession = null }) {
   // changes. While it matches the frame is collapsed (shared-2 Dg) to the 'Show sidebar' trigger and the
   // peek card, without writing preferences.sidebarCollapsed; widening restores the stored state.
   const narrowQuery = narrowViewportQuery(effectiveSidebarWidth(sidebarWidth, sidebarFloor));
-  const [narrowViewport, setNarrowViewport] = useState(() => typeof window.matchMedia === "function" && window.matchMedia(narrowQuery).matches);
+  const [narrowMedia, setNarrowViewport] = useState(() => typeof window.matchMedia === "function" && window.matchMedia(narrowQuery).matches);
+  // Full control docks this window as the side panel (main.cjs computer-use-dock-state; official onCuDockStateChanged →
+  // shared-52 setIsCuDocked): while docked the frame is laid out as a narrow viewport (shared-52 Bm: isCuDocked ||
+  // isNarrowViewport), at once, before the window has finished shrinking.
+  const [cuDocked, setCuDocked] = useState(false);
+  const narrowViewport = narrowMedia || cuDocked;
   const narrowRef = useRef(narrowViewport);
   narrowRef.current = narrowViewport;
   useLayoutEffect(() => {
@@ -2443,6 +2448,7 @@ function App({ side = 0, initialSession = null }) {
       // emitConfig): this side's list and appearance follow.
       if (e.kind === "session-list") applySessionList(e);
       if (e.kind === "config-updated" && e.config && typeof e.config === "object") applySharedConfig(e.config);
+      if (e.kind === "computer-use-dock-state") setCuDocked(e.docked === true);
     });
     init();
     // Stats load beside init, not after the whole connect: main.cjs needs only the
@@ -5208,6 +5214,12 @@ function App({ side = 0, initialSession = null }) {
     clearTimeout(peekTimer.current); peekTimer.current = null;
     setPeek((previous) => previous.hovering || previous.peeked ? { ...previous, hovering: false, peeked: false } : previous);
   }, [narrowViewport]);
+  // shared-52 setIsCuDocked(true) resets it the same way (Lm), also when the window was narrow already; undocking doesn't.
+  useEffect(() => {
+    if (!cuDocked) return;
+    clearTimeout(peekTimer.current); peekTimer.current = null;
+    setPeek((previous) => previous.hovering || previous.peeked ? { ...previous, hovering: false, peeked: false } : previous);
+  }, [cuDocked]);
   // shared-2 toggleCollapsed: while narrow (Dg) it opens or closes the peek card instead of the stored
   // preference. Used by ⌘B, View > Show/Hide Sidebar and the 'Show sidebar' trigger (Nb onClick Tb(r)).
   const toggleNarrowPeek = () => { if (peekState.current.hovering) closePeek(); else openPeek(); };

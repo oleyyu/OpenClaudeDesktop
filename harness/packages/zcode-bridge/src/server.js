@@ -161,6 +161,8 @@ export const WORKFLOW_TOOLS = Object.freeze(['CreateWorkflow', 'AmendWorkflow', 
 const BROWSER_USE_PLUGIN = 'browser-use@zcode-plugins-official'
 const COMPUTER_USE_PLUGIN = 'computer-use@zcode-plugins-official'
 export const NODE_REPL_TOOL = 'mcp__node_repl__js'
+// OpenClaude Desktop's computer use choice (codeDesktop.computerUse; app electron/computer-use/provider.cjs).
+const COMPUTER_USE_PROVIDERS = ['core', 'openclaude']
 // What GLM is told while Browser Use is on (its skills stay listed: ZCode has no per-session skill switch), so it
 // checks web pages with the tools that work here instead of loading a skill that can only fail.
 export const NO_BROWSER_NOTE = 'Browser Use is not available here: ZCode\'s browser-use skills (control-browser, web-gui-tester) need a ZCode browser, and OpenClaude Desktop provides none. Do not load those skills or call node_repl.'
@@ -363,6 +365,7 @@ export async function main() {
       permission: init.permission ?? meta.permission ?? { mode: 'auto', afterPlan: 'auto' },
       appliedMode: null, model: init.model ?? meta.model ?? null, effort: init.effort ?? meta.effort ?? null, appliedModel: null,
       tools: meta.tools ?? null, customization: meta.customization ?? null, developerInstructions: meta.developerInstructions ?? null, dynamicWorkflows: meta.dynamicWorkflows === true,
+      computerUse: COMPUTER_USE_PROVIDERS.includes(meta.computerUse) ? meta.computerUse : null,
       pendingInputs: [], steers: [], steerClientIds: new Map(), grants: new Set(), pending: new Map(), queue: meta.queue ?? [], title: meta.title ?? null, titleSource: null,
       createdAt: meta.createdAt ?? Date.now(), updatedAt: meta.updatedAt ?? Date.now(), parentId: meta.forkedFromId ?? null,
       turnWaiters: [], history: null, review: null, lastStatus: null, contextWindow: null,
@@ -544,6 +547,7 @@ export async function main() {
     }
     if (params.codeDesktop && Object.hasOwn(params.codeDesktop, 'tools')) thread.tools = normalizeTools(params.codeDesktop.tools)
     if (typeof params.codeDesktop?.dynamicWorkflows === 'boolean') thread.dynamicWorkflows = params.codeDesktop.dynamicWorkflows
+    if (COMPUTER_USE_PROVIDERS.includes(params.codeDesktop?.computerUse)) thread.computerUse = params.codeDesktop.computerUse
     if (customization && isRecord(params.codeDesktop?.customization)) {
       const custom = params.codeDesktop.customization
       const next = { ...(thread.customization ?? {}) }
@@ -552,7 +556,7 @@ export async function main() {
     }
     if (typeof params.developerInstructions === 'string') thread.developerInstructions = params.developerInstructions || null
     if (typeof params.cwd === 'string' && path.isAbsolute(params.cwd)) { try { thread.cwd = fs.realpathSync(params.cwd) } catch {} }
-    store.update(thread.id, { cwd: thread.cwd, permission: thread.permission, model: thread.model ?? undefined, effort: thread.effort ?? undefined, tools: thread.tools ?? undefined, customization: thread.customization ?? undefined, developerInstructions: thread.developerInstructions ?? undefined, dynamicWorkflows: thread.dynamicWorkflows ?? undefined })
+    store.update(thread.id, { cwd: thread.cwd, permission: thread.permission, model: thread.model ?? undefined, effort: thread.effort ?? undefined, tools: thread.tools ?? undefined, customization: thread.customization ?? undefined, developerInstructions: thread.developerInstructions ?? undefined, dynamicWorkflows: thread.dynamicWorkflows ?? undefined, computerUse: thread.computerUse ?? undefined })
   }
 
   function normalizeTools(tools) {
@@ -571,7 +575,9 @@ export async function main() {
     if (thread.dynamicWorkflows !== true) for (const name of WORKFLOW_TOOLS) names.add(name)
     // node_repl's `js` drives the browser ZCode's host provides (Browser Use) or the computer (Computer Use, which shares
     // it). OpenClaude Desktop provides no browser (interaction/browserList: no backends), so it stays only for Computer Use.
-    if (!officialPluginOn(COMPUTER_USE_PLUGIN, false)) names.add(NODE_REPL_TOOL)
+    // OpenClaude Desktop's Settings › Computer use › Computer use provider set to its own (codeDesktop.computerUse
+    // "openclaude"): ZCode's is withheld too, so the agent uses OpenClaude Desktop's computer-use tools.
+    if (!officialPluginOn(COMPUTER_USE_PLUGIN, false) || thread.computerUse === 'openclaude') names.add(NODE_REPL_TOOL)
     if (!thread.tools) return [...names]
     for (const name of thread.tools.disabled) names.add(name)
     for (const server of thread.tools.disabledServers) for (const tool of knownServerTools(server)) names.add(`mcp__${server}__${tool.name}`)
@@ -674,7 +680,7 @@ export async function main() {
     try { real = fs.realpathSync(cwd) } catch { throw new RpcError(INVALID_PARAMS, `The folder ${cwd} doesn’t exist.`) }
     const permission = permissionOf(params)
     const selection = selectionFor(params.model)
-    const draft = { id: null, cwd: real, permission, tools: params.codeDesktop && Object.hasOwn(params.codeDesktop, 'tools') ? normalizeTools(params.codeDesktop.tools) : null, dynamicWorkflows: params.codeDesktop?.dynamicWorkflows === true }
+    const draft = { id: null, cwd: real, permission, tools: params.codeDesktop && Object.hasOwn(params.codeDesktop, 'tools') ? normalizeTools(params.codeDesktop.tools) : null, dynamicWorkflows: params.codeDesktop?.dynamicWorkflows === true, computerUse: COMPUTER_USE_PROVIDERS.includes(params.codeDesktop?.computerUse) ? params.codeDesktop.computerUse : null }
     if (!modelCache) await settingsCatalog().catch(() => null)
     const effort = params.effort ?? params.config?.model_reasoning_effort ?? defaultEffort(selection ?? modelCache?.settings?.model?.current)
     const mcpServers = sessionMcpServers(draft, sessionIdentityOf(params))
@@ -711,6 +717,7 @@ export async function main() {
     thread ??= newThread(threadId, {})
     // The Dynamic workflows setting this request carries decides the runtime ZCode builds now (sessionWorkflowGate).
     if (typeof params?.codeDesktop?.dynamicWorkflows === 'boolean') thread.dynamicWorkflows = params.codeDesktop.dynamicWorkflows
+    if (COMPUTER_USE_PROVIDERS.includes(params?.codeDesktop?.computerUse)) thread.computerUse = params.codeDesktop.computerUse
     const workspace = meta?.cwd ? workspaceOf(meta.cwd) : undefined
     let result
     const mcpServers = sessionMcpServers(thread, threadId)
@@ -2202,7 +2209,10 @@ export async function main() {
           userAgent: `code-desktop-zcode-bridge/${BRIDGE_VERSION} (zcode ${version}; ${process.platform})`, codexHome: paths.root,
           platformFamily: process.platform === 'win32' ? 'windows' : 'unix', platformOs: process.platform === 'darwin' ? 'macos' : process.platform,
           engine: ENGINE, engineVersion: version,
-          capabilities: { ...BASE_CAPABILITIES, customization: !!proxy, modelParams: !!proxy, systemPromptPreview: !!proxy, perTokenBilling: !codingPlan },
+          capabilities: { ...BASE_CAPABILITIES, customization: !!proxy, modelParams: !!proxy, systemPromptPreview: !!proxy, perTokenBilling: !codingPlan,
+            // ZCode's own computer use (its official plugin, on in its config): OpenClaude Desktop then serves its
+            // computer-use tools only when the user chose them (Settings › Computer use › Computer use provider).
+            ownComputerUse: officialPluginOn(COMPUTER_USE_PLUGIN, false) },
           configPath: paths.cliConfig,
         }
       }
@@ -2222,6 +2232,12 @@ export async function main() {
       // OpenClaude Desktop's tools changed (a Settings switch turned Dynamic workflows or the preview on or off): ZCode keeps
       // the MCP tool list it read when the session opened, so every loaded session reopens with the new list.
       case 'codeDesktop/appTools/changed': {
+        // OpenClaude Desktop's computer use choice changed with it: every thread's next turn (its own queued and
+        // background turns too) and reopened session follow it.
+        if (COMPUTER_USE_PROVIDERS.includes(params?.computerUse)) for (const thread of threads.values()) {
+          thread.computerUse = params.computerUse
+          if (store.get(thread.id)) store.update(thread.id, { computerUse: thread.computerUse })
+        }
         if (appTools) void refreshMcpSessions().catch((error) => log(`zcode-bridge: tools refresh: ${error.message}`))
         return {}
       }
@@ -2519,7 +2535,7 @@ export async function main() {
         // ZCode opens the fork with its parent's runtime, MCP servers included: OpenClaude Desktop's code_desktop server would
         // still name the parent. Reopened (it is persisted), the fork gets one named for itself.
         if (appTools) await request('session/close', { sessionId: id }).catch(() => {})
-        store.update(id, { forkedFromId: threadId, cwd: source.cwd, permission: source.permission, model: source.model ?? undefined, effort: source.effort ?? undefined, tools: source.tools ?? undefined, customization: source.customization ?? undefined, developerInstructions: source.developerInstructions ?? undefined })
+        store.update(id, { forkedFromId: threadId, cwd: source.cwd, permission: source.permission, model: source.model ?? undefined, effort: source.effort ?? undefined, tools: source.tools ?? undefined, customization: source.customization ?? undefined, developerInstructions: source.developerInstructions ?? undefined, computerUse: source.computerUse ?? undefined })
         const thread = await loadThread(id)
         applyRequestParams(thread, params)
         notify('thread/started', { thread: threadObject(thread) })

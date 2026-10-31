@@ -74,8 +74,16 @@ export function SourceSplitRoot({ renderSide, store = splitStore }) {
   const split = store.getState();
   useEffect(() => {
     const api = desktop();
+    // shared-23 P4: the window docked as full control's side panel (main.cjs computer-use-dock-state, official
+    // onCuDockStateChanged) is constrained like a narrow one (a = narrow || isCuDocked). P4's gl(!0) ends a pane drag
+    // in progress; panes aren't dragged here, so there is nothing to end.
+    let docked = false;
+    // u1: a window ≤ 700px parks the extra panes and brings them back when it widens.
+    const query = typeof window.matchMedia === "function" ? window.matchMedia(SPLIT_CONSTRAINED_QUERY) : null;
+    const constrain = () => store.setConstrained(!!query?.matches || docked);
     const unsubscribe = api?.onEvent?.((event) => {
       if (event?.kind === "split-view" && SPLIT_COMMANDS.includes(event.command)) store.command(event.command);
+      if (event?.kind === "computer-use-dock-state") { docked = event.docked === true; constrain(); }
     });
     // B$: a chord is taken only when it does something (no pane to focus, no room for a new one: left alone).
     const key = (event) => {
@@ -84,9 +92,6 @@ export function SourceSplitRoot({ renderSide, store = splitStore }) {
       if (store.command(command)) event.preventDefault();
     };
     const flush = () => store.flushReport();
-    // u1: a window ≤ 700px parks the extra panes and brings them back when it widens.
-    const query = typeof window.matchMedia === "function" ? window.matchMedia(SPLIT_CONSTRAINED_QUERY) : null;
-    const constrain = () => store.setConstrained(!!query?.matches);
     constrain();
     query?.addEventListener?.("change", constrain);
     store.reportNow();

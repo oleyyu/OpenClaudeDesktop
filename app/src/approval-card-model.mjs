@@ -2,7 +2,7 @@
 // This model does not grant permissions, hold request identities or invoke IPC.
 import { assistantName, escapeRegExp } from "./persona-store.mjs";
 import { t, tn } from "../electron/i18n/index.mjs";
-import { computerUseAction, computerUseLabel } from "./computer-use-model.mjs";
+import { computerUseAction, computerUseLabel, computerUseAccessRequest, computerUseAccessRows, computerUseAccessTitle, computerUseTakeoverRequest, computerUseTeachRequest } from "./computer-use-model.mjs";
 import { displayCommand } from "./shell-command-model.mjs";
 const COMMAND = "item/commandExecution/requestApproval";
 const FILE = "item/fileChange/requestApproval";
@@ -312,6 +312,37 @@ export function elicitationModel(params, item) {
       ...(persist.has("session") ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []),
       { key: "accept", label: tool ? t("Allow once") : t("Allow"), primary: true }];
     if (!tool) return { mode: "confirm", server, message, title: t("{server} is asking for your approval", { server }), deny: decline(t("Deny")), allows };
+    // A computer-use request_access call: the access card (official c96d752d0 JEe): the apps and capabilities asked for,
+    // Deny and one "Allow for this session" (no once / always, no per-app choice).
+    const access = computerUseAccessRequest(params, item);
+    if (access) {
+      const rows = computerUseAccessRows(access);
+      const accessTitle = computerUseAccessTitle(rows, who);
+      return { mode: "computerUseAccess", server, message: null, access, rows, accessTitle, title: accessTitle.text, deny: decline(t("Deny")),
+        allows: [{ key: persist.has("session") ? "acceptForSession" : "accept", label: t("Allow for this session"), primary: true }] };
+    }
+    // A request_full_control call: the take-over card (official c96d752d0 JEe with takeoverFrom): no app or capability
+    // rows, the "Take over the screen?" title, "Deny" (esc) and "Allow for this session" (⌘↵). (c96d752d0 reads
+    // "Stay in background" only with suppressAlwaysAllowRule, and then has no allow button; this page never sets that.)
+    const takeover = computerUseTakeoverRequest(params);
+    if (takeover) {
+      const titleText = takeover.becausePreferredBackground
+        ? t("Take over the screen? You’ve set Background as your preferred mode, so {name} is checking before switching to full-screen control.", { name: who })
+        : takeover.appName
+          ? t("Take over the screen? {name} was working on {app} in the background and now needs full-screen control.", { name: who, app: takeover.appName })
+          : t("Take over the screen? {name} was working in the background and now needs full-screen control.", { name: who });
+      return { mode: "computerUseTakeover", server, message: null, takeover, reason: takeover.reason, title: titleText,
+        deny: decline(t("Deny")),
+        allows: [{ key: persist.has("session") ? "acceptForSession" : "accept", label: t("Allow for this session"), primary: true }] };
+    }
+    // A request_teach_access call: the teach card (official ca31fdde5 Wa): "Let Claude guide you step by step?", the
+    // reason, the apps, Deny (⌘.) and Start guide (⌘↵).
+    const teach = computerUseTeachRequest(params);
+    if (teach) {
+      return { mode: "computerUseTeach", server, message: null, teach, reason: teach.reason || null, title: t("Let {name} guide you step by step?", { name: who }),
+        deny: decline(t("Deny")),
+        allows: [{ key: persist.has("session") ? "acceptForSession" : "accept", label: t("Start guide"), primary: true }] };
+    }
     // The request describes the exact call it approves (Codex sends _meta.tool_title /
     // tool_params for it, mcp_tool_call.rs build_mcp_tool_approval_elicitation_meta), so
     // its own tool title (or the tool named by Codex's fallback wording) and arguments win.
@@ -379,6 +410,16 @@ export function approvalCardModel(request, item) {
       context.push({ key: "url-unopenable", text: t("This link can’t be opened from here. Copy it into a browser if you trust it.") });
     const detail = (elicitation.mode === "url" || elicitation.mode === "toolSuggestion") && elicitation.url ? { kind: "url", text: elicitation.url, value: elicitation.url } : elicitation.detail ?? null;
     const { deny, allows, title, heading } = elicitation;
+    // The access card's reason is the request's own (3-line Reason clamp, as every card's reason).
+    if (elicitation.mode === "computerUseAccess")
+      return { kind: "elicitation", supported: true, title, reason: elicitation.access.reason, message: null, context: [], detail: null,
+        deny, allows, elicitation, access: { rows: elicitation.rows, title: elicitation.accessTitle, note: elicitation.access.note ?? null } };
+    if (elicitation.mode === "computerUseTeach")
+      return { kind: "elicitation", supported: true, title, reason: elicitation.reason ?? null, message: null, context: [], detail: null,
+        deny, allows, elicitation, teach: elicitation.teach };
+    if (elicitation.mode === "computerUseTakeover")
+      return { kind: "elicitation", supported: true, title, reason: elicitation.reason ?? null, message: null, context: [], detail: null,
+        deny, allows, elicitation, takeover: elicitation.takeover };
     return { kind: "elicitation", supported: true, title, ...(heading && { heading }), reason: null,
       message: elicitation.message ?? null, context, detail, deny, allows, elicitation };
   }
@@ -637,11 +678,15 @@ export function approvalKeyIntent(event, { target, model, busy = false,
   if (event.repeat) return ["Enter", " ", "Escape"].includes(event.key) ? { type: "suppress" } : null;
   if (event.key === "Escape" && !event.metaKey && !event.ctrlKey && !event.shiftKey)
     return { type: "action", action: model.deny.key };
+  // The teach card's Deny is ⌘. (official Ua: mt onCmdPeriod).
+  if (model.teach && event.key === "." && (event.metaKey || event.ctrlKey) && !event.shiftKey) return { type: "action", action: model.deny.key };
   if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
     if (!armed) return { type: "suppress" };
     // The local permission adapter remains turn-only even for the shifted chord.
     // The shifted chord is the persistent allow (Claude's 'Always allow', ⇧⌘↵) where one is offered, else the session one.
+    // The computer-use access card has one allow, "Allow for this session", which ⌘↵ takes (official JEe handleAllow).
     const action = model.kind === "permissions" ? "allow"
+      : (model.access || model.takeover || model.teach) && !event.shiftKey ? model.allows.find(allow => allow.primary)?.key ?? "accept"
       : event.shiftKey ? model.allows.find(allow => allow.persistent)?.key ?? "acceptForSession" : "accept";
     // approval-hotkeys-current.js:100 allowPersistent?.(): no session grant, no action.
     if (!model.allows.some(allow => allow.key === action)) return { type: "suppress" };

@@ -180,6 +180,37 @@ test('ZCode: no browser here, so node_repl\'s js is withheld and GLM is pointed 
   } finally { await b.close() }
 })
 
+test('ZCode: its own computer use (the official plugin) is reported; OpenClaude Desktop’s computer use provider withholds it', { timeout: 60000 }, async () => {
+  const { NODE_REPL_TOOL } = await import('../packages/zcode-bridge/src/server.js')
+  const denied = (entry) => entry.params.toolDenylist.includes(NODE_REPL_TOOL)
+  const b = bridge(TOOLS)
+  try {
+    fs.writeFileSync(path.join(b.home, '.zcode', 'cli', 'config.json'), JSON.stringify({ plugins: { enabledPlugins: { 'computer-use@zcode-plugins-official': true } } }))
+    const init = await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })
+    assert.equal(init.capabilities.ownComputerUse, true)
+    // Agent’s own first: ZCode keeps node_repl.
+    const { thread } = await b.call('thread/start', { cwd: b.home, codeDesktop: { computerUse: 'core' } })
+    assert.ok(!denied(b.log().findLast((entry) => entry.method === 'session/create' && entry.params.toolDenylist)))
+    await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'hello' }] })
+    assert.ok(!denied(b.log().findLast((entry) => entry.method === 'session/send')))
+    // Switched to OpenClaude Desktop’s: the next turn withholds it, and so does a new session.
+    await b.call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'again' }], codeDesktop: { computerUse: 'openclaude' } })
+    assert.ok(denied(b.log().findLast((entry) => entry.method === 'session/send')))
+    const { thread: second } = await b.call('thread/start', { cwd: b.home, codeDesktop: { computerUse: 'openclaude' } })
+    assert.ok(denied(b.log().findLast((entry) => entry.method === 'session/create' && entry.params.toolDenylist)))
+    // The setting changed back (codeDesktop/appTools/changed carries it): a turn that names no choice follows it.
+    await b.call('codeDesktop/appTools/changed', { revision: 1, computerUse: 'core' })
+    await b.call('turn/start', { threadId: second.id, input: [{ type: 'text', text: 'queued' }] })
+    assert.ok(!denied(b.log().findLast((entry) => entry.method === 'session/send')))
+    // Plugin off: nothing of its own to report.
+    fs.writeFileSync(path.join(b.home, '.zcode', 'cli', 'config.json'), JSON.stringify({ plugins: { enabledPlugins: {} } }))
+    assert.equal((await b.call('initialize', { clientInfo: { name: 'test', version: '0' } })).capabilities.ownComputerUse, false)
+  } catch (error) {
+    error.message += `\n${b.stderr.join('').slice(-3000)}`
+    throw error
+  } finally { await b.close() }
+})
+
 test('ZCode: an attached PDF, video or image goes as its own kind with its MIME type; other files stay files', { timeout: 60000 }, async () => {
   const { fileAttachment } = await import('../packages/zcode-bridge/src/server.js')
   assert.deepEqual(fileAttachment('/w/spec.PDF'), { kind: 'pdf', localPath: '/w/spec.PDF', filename: 'spec.PDF', mimeType: 'application/pdf' })

@@ -18,12 +18,14 @@ test("the Anthropic computer tool, OpenAI computer use, MCP servers and computer
   assert.equal(computerUseAction({ type: "commandExecution", command: "ls" }), null);
 });
 
+// The 2.42304.0 verbs (computer-use-model.mjs, ported with OpenClaude Desktop's own computer use): a click or a drag
+// names no coordinates any more; typed text and keys keep theirs.
 test("labels name the action and its target for each state", () => {
-  assert.deepEqual(computerUseLabel({ kind: "click", x: 5, y: 6 }, "busy"), { label: "Clicking", meta: "(5, 6)" });
+  assert.deepEqual(computerUseLabel({ kind: "click", x: 5, y: 6 }, "busy"), { label: "Clicking", meta: null });
   assert.deepEqual(computerUseLabel({ kind: "type", text: "x".repeat(60) }, "done"), { label: "Typed", meta: `“${"x".repeat(47)}…”` });
-  assert.deepEqual(computerUseLabel({ kind: "key", keys: ["cmd+shift+4"] }, "failed"), { label: "Failed to press", meta: "⌘⇧4" });
+  assert.deepEqual(computerUseLabel({ kind: "key", keys: ["cmd+shift+4"] }, "failed"), { label: "Failed to press key", meta: "⌘⇧4" });
   assert.equal(keyLabel(["CTRL", "C"]), "⌃C");
-  assert.deepEqual(computerUseLabel({ kind: "drag", x: 1, y: 2, x2: 3, y2: 4 }), { label: "Dragged", meta: "(1, 2) → (3, 4)" });
+  assert.deepEqual(computerUseLabel({ kind: "drag", x: 1, y: 2, x2: 3, y2: 4 }), { label: "Dragged", meta: null });
 });
 
 test("the screenshot comes from the item or the tool's image output; the marker is relative and only inside it", () => {
