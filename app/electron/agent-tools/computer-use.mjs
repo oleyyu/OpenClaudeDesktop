@@ -34,6 +34,9 @@ const { tierFor, validBundleId } = grantsModule;
 const { CU_LOCK_HELD_MESSAGE } = fullControlModule;
 const { displayLabels, DESKTOP_SHELL_PROCESSES, DESKTOP_SHELL_REFUSAL } = serviceModule;
 export const group = "computer-use";
+// What this group stands in for: a core that lists "ComputerUse" in nativeTools has computer use of its own, and gets
+// these only when Settings › Computer use › Computer use provider says OpenClaude Desktop (computer-use/provider.cjs).
+export const native = "ComputerUse";
 
 const FLAGS = ["clipboardRead", "clipboardWrite", "systemKeyCombos"];
 const MAX_APPS = 32;

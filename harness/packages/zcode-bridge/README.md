@@ -259,7 +259,7 @@ message naming `outputSchema`. OpenClaude Desktop's own workflow runner needs it
 |---|---|
 | Structured-output turns | ZCode has no output-schema turn. |
 | OpenClaude Desktop's workflow runner | It needs structured output and asks no one about approvals. Workflows run on ZCode's own engine instead (see Dynamic workflows), one approval per run outside Bypass. |
-| Computer use | Needs ZCode's macOS helper app and the disabled-by-default official plugin. |
+| Computer use | Needs ZCode's macOS helper app and the disabled-by-default official plugin. `initialize` reports `ownComputerUse` (the plugin is on), so OpenClaude Desktop leaves its own computer-use tools out; with its Computer use provider set to OpenClaude Desktop (`codeDesktop.computerUse: "openclaude"` on thread/start, thread/resume and turn/start) node_repl's `js` is withheld instead. |
 | Browser control | Needs ZCode desktop's in-app browser. The bridge reports no browser backend and keeps node_repl's `js` tool off every session (unless ZCode's Computer Use, which shares it, is on). While Browser Use is on, GLM is told its skills can't run here and to use OpenClaude Desktop's preview tools instead. |
 | Fast service tier | GLM has no fast tier; GLM-5.3-Flash is a separate model. |
 | Scheduled tasks | ZCode's Cron* tools need ZCode desktop's automation store and scheduler (Settings › Automations), and OpenClaude Desktop has no Scheduled tasks surface yet. The tools are kept away from the model (see Tools). |

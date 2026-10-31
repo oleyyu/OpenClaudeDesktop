@@ -24,7 +24,7 @@ test('the official section: Computer use, a Beta badge, the cloud note, the swit
   const on = group();
   assert.deepEqual([on.tab, on.title, on.badge], ['general', 'Computer use', 'Beta']);
   assert.equal(on.description, 'Not available in cloud Code sessions, which don’t run on this computer.');
-  assert.deepEqual(on.rows.map((r) => r.id), ['agentComputerUse', 'computerUseAutoUnhide', 'computer-use-preferred-mode', 'computer-use-allowed-apps', 'computer-use-teach']);
+  assert.deepEqual(on.rows.map((r) => r.id), ['agentComputerUse', 'computerUseProvider', 'computerUseAutoUnhide', 'computer-use-preferred-mode', 'computer-use-allowed-apps', 'computer-use-teach']);
   assert.equal(on.rows[0].label, 'Enable computer use');
   assert.match(render(on.rows[0].control), /data-cds="Switch"[^>]*|aria-checked="true"/);
   const off = group({ agentComputerUse: false });
@@ -73,14 +73,31 @@ test('Teach mode: no control (the official Settings has no teach entry); the tex
 
 test('Unhide apps when Claude finishes (official chicagoAutoUnhide, c71860c77 ii): before the preferred mode, the official label and sentence, a switch on unless turned off', () => {
   const rows = group().rows;
-  const unhide = rows[1];
+  const unhide = rows[2];
   assert.equal(unhide.id, 'computerUseAutoUnhide');
   assert.equal(unhide.label, 'Unhide apps when Claude finishes');
   assert.equal(unhide.description, 'When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.');
   assert.match(render(unhide.control), /aria-checked="true"/, 'unset reads as on');
-  assert.match(render(group({ computerUseAutoUnhide: false }).rows[1].control), /aria-checked="false"/);
+  assert.match(render(group({ computerUseAutoUnhide: false }).rows[2].control), /aria-checked="false"/);
   const saved = [];
-  const control = group({}, { save: (key, value) => saved.push([key, value]) }).rows[1].control;
+  const control = group({}, { save: (key, value) => saved.push([key, value]) }).rows[2].control;
   control.props.onChange(false);
   assert.deepEqual(saved, [['computerUseAutoUnhide', false]]);
+});
+
+test('Computer use provider (local): right under the switch, a Select of the two choices, the agent’s own first unless saved otherwise', () => {
+  const saved = [];
+  const rowOf = (config) => group(config, { save: (key, value) => saved.push([key, value]) }).rows.find((r) => r.id === 'computerUseProvider');
+  const provider = rowOf({});
+  assert.equal(provider.label, 'Computer use provider');
+  assert.match(provider.description, /^Agent’s own first: .* Always OpenClaude Desktop’s: .* Applies to sessions you start from now on\.$/);
+  assert.deepEqual(mod.COMPUTER_USE_PROVIDER_ITEMS.map((item) => item.value), ['core', 'openclaude']);
+  const html = render(provider.control);
+  assert.match(html, /^<div class="sselect sselect-width-160" data-cds="Combobox"><button[^>]*role="combobox"[^>]*aria-label="Computer use provider"[^>]*data-value="core"/);
+  assert.match(html, /<span class="sselect-value">Agent’s own first<\/span>/, 'unset: the agent’s own first');
+  assert.match(render(rowOf({ computerUseProvider: 'openclaude' }).control), /data-value="openclaude"[^>]*><span class="sselect-value">Always OpenClaude Desktop’s<\/span>/);
+  assert.match(render(rowOf({ computerUseProvider: 'bogus' }).control), /data-value="core"/, 'unknown reads as the default');
+  provider.control.props.onChange('openclaude');
+  assert.deepEqual(saved, [['computerUseProvider', 'openclaude']]);
+  assert.ok(!group({ agentComputerUse: false }).rows.some((r) => r.id === 'computerUseProvider'), 'off: hidden with the other rows');
 });

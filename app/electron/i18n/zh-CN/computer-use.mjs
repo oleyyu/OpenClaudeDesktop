@@ -128,6 +128,11 @@ export default {
   "DeepSeek can guide you step by step through the apps you allow: ask it to teach you or show you how. A card asks before the walkthrough starts, and you can exit anytime.": "DeepSeek 可以在你允许的应用里一步步引导你：让它教你或演示怎么做即可。开始引导前会先弹出卡片询问，过程中随时可以退出。",
   "DeepSeek can guide you step by step through the apps you allow once this app has Accessibility and Screen Recording permission (System Settings › Privacy & Security).": "本应用获得“辅助功能”和“屏幕录制”权限后（系统设置 › 隐私与安全性），DeepSeek 就可以在你允许的应用里一步步引导你。",
   "Teach mode can’t run on this computer: computer use’s native part isn’t available.": "教学模式无法在这台电脑上运行：电脑使用的原生组件不可用。",
+  // Computer use provider (src/source-settings-computer-use.jsx; electron/computer-use/provider.cjs).
+  "Computer use provider": "电脑使用由谁提供",
+  "Agent’s own first": "优先用智能体自带的",
+  "Always OpenClaude Desktop’s": "始终用 OpenClaude 的",
+  "Agent’s own first: an agent that has computer use of its own (Codex with the Codex app’s, ZCode with its plugin on) uses it, the others use OpenClaude Desktop’s. Always OpenClaude Desktop’s: every agent uses OpenClaude Desktop’s, with its own turned off. Applies to sessions you start from now on.": "优先用智能体自带的：自带电脑使用的智能体（装了 Codex 应用电脑使用的 Codex、开了官方插件的 ZCode）用它自己的，其它智能体用 OpenClaude Desktop 的。始终用 OpenClaude 的：所有智能体都用 OpenClaude Desktop 的，并关掉它们自带的。对之后新建的会话生效。",
   // Unhide apps (src/source-settings-computer-use.jsx; official c71860c77 chicagoAutoUnhide).
   "Unhide apps when Claude finishes": "Claude 完成后取消隐藏应用",
   "When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.": "Claude 完整控制你的屏幕时，任务中被隐藏的应用会在 Claude 停止后恢复显示。",
