@@ -6,6 +6,10 @@
 // "Unhide apps when Claude finishes" (official chicagoAutoUnhide, Ess7TkMY61 / T7z5SKWO2K): the apps hidden before
 // full-screen actions come back when the turn ends (config.computerUseAutoUnhide; unset reads as on).
 //
+// "Computer use provider" (local, user's call 2026-10-30; config.computerUseProvider, electron/computer-use/provider.cjs):
+// whose computer use a session gets — the agent's own where its core has one, else OpenClaude Desktop's ("core", the
+// default), or always OpenClaude Desktop's ("openclaude"). A Select like Settings' other choices (Notification sound).
+//
 // Two local rows the official section doesn't have (user's call, 2026-10-20):
 //   Allowed apps  what sessions allowed right now ("Allow for this session" lasts until the app quits), each removable.
 //                 Drawn exactly as the official Denied apps block (`Xr`): chips in flex flex-wrap gap-1.5, each with its
@@ -19,6 +23,7 @@ import { t } from '../electron/i18n/index.mjs';
 import { SourceSwitch as SettingSwitch } from './source-switch.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSegments } from './source-segments.jsx';
+import { SourceSelect } from './source-select.jsx';
 
 /** The apps every session has allowed right now (service.cjs allGrants) and a revoke that refreshes them. */
 export function useComputerUseGrants(desktopCall, active) {
@@ -93,6 +98,13 @@ export function ComputerUsePreferredMode({ mode, onChange, disabled }) {
     onChange={onChange}/>;
 }
 
+/** The Computer use provider choices (config.computerUseProvider; unset reads as 'core'). */
+export const COMPUTER_USE_PROVIDER_ITEMS = Object.freeze([
+  { value: 'core', label: 'Agent’s own first' },
+  { value: 'openclaude', label: 'Always OpenClaude Desktop’s' },
+]);
+export const computerUseProviderValue = (value) => value === 'openclaude' ? 'openclaude' : 'core';
+
 /** The official Denied apps chips (`Xr`), for the allowed ones. */
 export function ComputerUseAllowedApps({ apps, onRemove, busy }) {
   if (!apps?.length) {
@@ -123,6 +135,12 @@ export function computerUseSettingsGroup({ row, shownValue, config, save, grants
       row('agentComputerUse', t('Enable computer use'), t('Let DeepSeek see and act in the apps you allow, working in the background.'),
         <SettingSwitch label={t('Enable computer use')} checked={enabled} onChange={(value) => save('agentComputerUse', value)}/>),
       ...(enabled ? [
+        row('computerUseProvider', t('Computer use provider'),
+          t('Agent’s own first: an agent that has computer use of its own (Codex with the Codex app’s, ZCode with its plugin on) uses it, the others use OpenClaude Desktop’s. Always OpenClaude Desktop’s: every agent uses OpenClaude Desktop’s, with its own turned off. Applies to sessions you start from now on.'),
+          <SourceSelect label={t('Computer use provider')} align="end" className="sselect-width-160"
+            value={computerUseProviderValue(shownValue('computerUseProvider', config.computerUseProvider))}
+            items={COMPUTER_USE_PROVIDER_ITEMS.map((item) => ({ value: item.value, label: t(item.label) }))}
+            onChange={(value) => save('computerUseProvider', value)}/>),
         row('computerUseAutoUnhide', t('Unhide apps when Claude finishes'),
           t('When Claude has full control of your screen, apps hidden during a task are restored when Claude stops.'),
           <SettingSwitch label={t('Unhide apps when Claude finishes')} checked={shownValue('computerUseAutoUnhide', config.computerUseAutoUnhide) !== false}

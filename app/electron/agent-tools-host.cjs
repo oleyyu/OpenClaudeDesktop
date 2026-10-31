@@ -206,7 +206,8 @@ function createAgentToolsHost({
   // The thread a server identity names (a start token is followed to the thread it was bound to), or null.
   const threadOf = (identity) => (typeof identity === "string" && identity ? (START_TOKEN.test(identity) ? startTokens.get(identity) ?? null : identity) : null);
   /** The tool a session is served under an entry's name: a sharesName tool when prefersSharedTool picks it for that
-   * session (its group on) or when the entry's own group is off, else the entry itself. */
+   * session (its group on) or when the entry's own group is off, else the entry itself. A sharesName tool the core isn't
+   * served (servedToCore: a core with computer use of its own) never stands in front. */
   const servedEntry = (entry, identity = null) => {
     const alternates = entry ? shared.get(entry.tool.name) : null;
     if (!alternates?.length) return entry;
@@ -214,9 +215,9 @@ function createAgentToolsHost({
     for (const alternate of alternates) {
       let preferred = false;
       try { preferred = prefersSharedTool({ name: alternate.tool.name, group: alternate.group }, { session }) === true; } catch { preferred = false; }
-      if (preferred && isGroupEnabled(alternate.group)) return alternate;
+      if (preferred && isGroupEnabled(alternate.group) && servedToCore(alternate, identity)) return alternate;
     }
-    if (!isGroupEnabled(entry.group)) return alternates.find((alternate) => isGroupEnabled(alternate.group)) ?? entry;
+    if (!isGroupEnabled(entry.group)) return alternates.find((alternate) => isGroupEnabled(alternate.group) && servedToCore(alternate, identity)) ?? entry;
     return entry;
   };
   const deferred = () => { try { const list = deferredGroups(); return new Set(Array.isArray(list) ? list.filter((group) => typeof group === "string") : []); } catch { return new Set(); } };
@@ -273,7 +274,7 @@ function createAgentToolsHost({
   const calledEntry = (entry, identity, connection, args) => {
     const alternates = entry ? shared.get(entry.tool.name) : null;
     if (!alternates?.length) return servedEntry(entry, identity);
-    const candidates = [entry, ...alternates].filter((candidate) => isGroupEnabled(candidate.group));
+    const candidates = [entry, ...alternates].filter((candidate) => isGroupEnabled(candidate.group) && servedToCore(candidate, identity));
     const listedGroup = connection?.listedShared?.get(entry.tool.name);
     let chosen = candidates.find((candidate) => candidate.group === listedGroup) ?? servedEntry(entry, identity);
     const keys = args && typeof args === "object" ? Object.keys(args) : [];

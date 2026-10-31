@@ -754,11 +754,14 @@ function agentToolsDeferred(owner = client) {
   try { defer = coreCapabilities(owner?.serverInfo ?? null).deferAppTools === true; } catch { defer = false; }
   return defer ? ["workflow", "monitor", "schedule", "findings", "notebook", "window", "browser"] : [];
 }
+const computerUseProviders = require("./computer-use/provider.cjs");
 /** Whether the running core gets an app tool: always, unless the tool stands in for one the core lists in nativeTools. */
 function agentToolServedToCore(tool, owner = client, session = null) {
   if (!tool?.native) return true;
   let native = [];
   try { native = coreCapabilities(owner?.serverInfo ?? config?.core ?? null).nativeTools; } catch { native = []; }
+  // Computer use: Settings › Computer use › Computer use provider decides between the core's own and OpenClaude Desktop's.
+  if (tool.native === computerUseProviders.NATIVE_NAME) return computerUseProviders.servesOpenClaudeComputerUse({ provider: computerUseProviders.computerUseProvider(config), own: coreOwnComputerUse(owner, session) });
   // Codex reads pages through its hosted web search (open_page / find_in_page) unless that is off for the session: then
   // it gets WebFetch, as Claude keeps WebFetch with web search off.
   if (tool.native === "WebFetch" && codexWebSearchOn(owner, session)) return false;
@@ -773,6 +776,23 @@ function rememberCodexWebSearch(identity, mode) {
   codexWebSearchModes.delete(identity);
   codexWebSearchModes.set(identity, mode);
   while (codexWebSearchModes.size > 1000) codexWebSearchModes.delete(codexWebSearchModes.keys().next().value);
+}
+// Each Codex session's own computer use, by the same identities, recorded with its web search: own (the Codex app's
+// computer use is on in the thread as it runs, not turned off by the overrides below) and off (the thread config
+// overrides that turn config.toml's off: computer-use/provider.cjs codexComputerUse), for its forks and reloads.
+const codexComputerUseOwn = new Map();
+function rememberCodexComputerUse(identity, state) {
+  if (typeof identity !== "string" || !identity || typeof state?.own !== "boolean" || !state.off || typeof state.off !== "object") return;
+  codexComputerUseOwn.delete(identity);
+  codexComputerUseOwn.set(identity, { own: state.own, off: state.off });
+  while (codexComputerUseOwn.size > 1000) codexComputerUseOwn.delete(codexComputerUseOwn.keys().next().value);
+}
+/** Whether the running core has computer use of its own for a session (its capabilities, else Codex's record). */
+function coreOwnComputerUse(owner = client, session = null) {
+  let capabilities = {};
+  try { capabilities = coreCapabilities(owner?.serverInfo ?? config?.core ?? null); } catch { capabilities = {}; }
+  if (computerUseProviders.coreHasComputerUse(capabilities)) return true;
+  return typeof session === "string" && codexComputerUseOwn.get(session)?.own === true;
 }
 function codexWebSearchOn(owner, session = null) {
   let codex = false;
@@ -1104,6 +1124,15 @@ function decorateAgentTools(method, params, owner = client) {
   params.config = { ...(params.config && typeof params.config === "object" ? params.config : {}), [AGENT_SESSION_KEY]: identity };
   // A fork runs with its parent's web search (thread config is inherited): so does its WebFetch.
   if (method === "thread/fork" && codexWebSearchModes.has(params.threadId)) rememberCodexWebSearch(identity, codexWebSearchModes.get(params.threadId));
+  // A fork, or a resume that isn't the window's own (compact, review: session-operations.cjs): the thread's recorded
+  // computer use, its own turned off again with Always OpenClaude Desktop's (the thread/start|resume decoration below
+  // reads config.toml afresh for the window's requests).
+  const recorded = ["thread/fork", "thread/resume"].includes(method) ? codexComputerUseOwn.get(params.threadId) : undefined;
+  if (recorded) {
+    const off = computerUseProviders.coreComputerUseOff({ provider: computerUseProviders.computerUseProvider(config), own: Object.keys(recorded.off).length > 0 });
+    if (off) params.config = { ...params.config, ...recorded.off };
+    rememberCodexComputerUse(identity, off ? { own: false, off: recorded.off } : recorded);
+  }
   // Codex: the thread's server carries that session's own credential (agent-tools-host.cjs sessionToken; a thread-level
   // env value wins over the launch's env_vars, checked against codex 0.155.1), so its process holds nothing that acts
   // for another session. The bridges derive it themselves from the identity.
@@ -1115,6 +1144,7 @@ function bindAgentTools(params, thread) {
   if (typeof identity === "string" && thread && typeof thread.id === "string") agentTools.bindThread(identity, thread.id);
   // A fork's or side chat's server names the thread itself: it serves WebFetch as the thread's own did.
   if (typeof identity === "string" && typeof thread?.id === "string" && codexWebSearchModes.has(identity)) rememberCodexWebSearch(thread.id, codexWebSearchModes.get(identity));
+  if (typeof identity === "string" && typeof thread?.id === "string" && codexComputerUseOwn.has(identity)) rememberCodexComputerUse(thread.id, codexComputerUseOwn.get(identity));
 }
 // decorateThread: Settings › Models' Codex provider on fork / resume (model-settings.cjs, created below).
 const sessionOperations = createSessionOperations({ getClient: () => client, getConfig: () => config, save, emit,
@@ -2876,6 +2906,9 @@ app.whenReady().then(async () => {
           const workflowsOn = workflowSettings().enabled;
           // dynamicWorkflows false: the bridge withholds its own workflow tool (off, or OpenClaude Desktop's engine chosen).
           params.codeDesktop = { ...params.codeDesktop, dynamicWorkflows: workflowsOn && currentWorkflowEngine() === "native" };
+          // Settings › Computer use › Computer use provider: "openclaude" turns the agent's own off (the ZCode bridge
+          // withholds node_repl, ZCode's computer-use tool).
+          params.codeDesktop.computerUse = computerUseProviders.computerUseProvider(config);
         }
         if (["codeDesktop/workflow/stop", "codeDesktop/workflow/member", "codeDesktop/workflow/pause", "codeDesktop/workflow/resume", "codeDesktop/workflow/artifact", "codeDesktop/workflow/settings"].includes(p.method) && (typeof params.threadId !== "string" || !config.threadIds.includes(params.threadId))) throw new Error("Unknown session.");
         if (p.method === "codeDesktop/sideQuestion" && (typeof params.threadId !== "string" || ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId))) throw new Error("Unknown session.");
@@ -3001,6 +3034,12 @@ app.whenReady().then(async () => {
           if (p.method !== "turn/start") {
             const effective = typeof params.config?.web_search === "string" ? params.config.web_search : typeof codexConfig?.web_search === "string" ? codexConfig.web_search : null;
             if (effective) rememberCodexWebSearch(params.config?.[AGENT_SESSION_KEY], effective);
+            // Settings › Computer use › Computer use provider: whether the session has the Codex app's computer use
+            // (agentToolServedToCore), and with Always OpenClaude Desktop's, the thread overrides that turn it off.
+            const found = computerUseProviders.codexComputerUse(codexConfig);
+            const off = computerUseProviders.coreComputerUseOff({ provider: computerUseProviders.computerUseProvider(config), own: found.own });
+            if (off) params.config = { ...(params.config && typeof params.config === "object" ? params.config : {}), ...found.off };
+            rememberCodexComputerUse(params.config?.[AGENT_SESSION_KEY], { own: found.own && !off, off: found.off });
           }
         }
         // A core without permission hints gets the app's Mode as its own collaboration mode (permission-policy.mjs
@@ -3567,16 +3606,18 @@ app.whenReady().then(async () => {
         if (typeof p.agentVisualize === "boolean") config.agentVisualize = p.agentVisualize;
         // Settings › System › Computer use: the computer-use tools come and go with it (agentToolGroupEnabled).
         if (typeof p.agentComputerUse === "boolean") config.agentComputerUse = p.agentComputerUse;
+        // Settings › Computer use › Computer use provider (computer-use/provider.cjs): whose computer-use tools the cores get.
+        if (computerUseProviders.PROVIDERS.includes(p.computerUseProvider)) config.computerUseProvider = p.computerUseProvider;
         // Settings › Computer use › Unhide apps when Claude finishes (official chicagoAutoUnhide; unset reads as on).
         if (typeof p.computerUseAutoUnhide === "boolean") config.computerUseAutoUnhide = p.computerUseAutoUnhide;
         // The Preview pane's "Open links in preview" (src/preview-links-model.mjs), for every window of the profile.
         if (typeof p.previewLinks === "boolean") config.previewLinks = p.previewLinks;
         if (typeof p.previewLinksChooserSeen === "boolean") config.previewLinksChooserSeen = p.previewLinksChooserSeen;
-        if (["dynamicWorkflows","workflowEngines","workflowSizeGuideline"].some((key) => key in p) || typeof p.agentComputerUse === "boolean" || typeof p.agentPreview === "boolean" || typeof p.agentVisualize === "boolean") {
+        if (["dynamicWorkflows","workflowEngines","workflowSizeGuideline"].some((key) => key in p) || typeof p.agentComputerUse === "boolean" || computerUseProviders.PROVIDERS.includes(p.computerUseProvider) || typeof p.agentPreview === "boolean" || typeof p.agentVisualize === "boolean") {
           agentTools.notifyListChanged();
           // A bridge whose agent keeps the tool list it read when the session opened (ZCode, the ACP agents) reopens
           // its sessions with the new list: an idle one before its next turn, a busy one once its turn ends.
-          if (client && coreForEngine(client.serverInfo?.engine).kind === "bridge") void client.request("codeDesktop/appTools/changed", { revision: agentTools.revision }).catch(() => {});
+          if (client && coreForEngine(client.serverInfo?.engine).kind === "bridge") void client.request("codeDesktop/appTools/changed", { revision: agentTools.revision, computerUse: computerUseProviders.computerUseProvider(config) }).catch(() => {});
         }
         // Settings › Code › Sandbox network access (permission-policy.mjs turnPermissionParams networkAccess).
         if (typeof p.sandboxNetworkAccess === "boolean") config.sandboxNetworkAccess = p.sandboxNetworkAccess;
