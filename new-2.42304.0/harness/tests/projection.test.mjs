@@ -751,3 +751,24 @@ test('Claude-classified shell results keep exit codes without marking no-match a
     }
   }
 })
+
+test('a cold replay ends a turn the log left open as interrupted, its open tools settled', () => {
+  const p = new ThreadProjector({ threadId: 't-stale', cwd: '/w' })
+  p.apply(ev('turn/start', { turn: 1 }))
+  p.apply(ev('user/message', { id: 'u-stale', role: 'user', content: [{ type: 'text', text: 'build' }], source: { kind: 'user' } }))
+  p.apply(ev('tool/call', { turn: 1, step: 1, callId: 'b-stale', name: 'bash', arguments: JSON.stringify({ command: 'make' }) }))
+  assert.equal(p.activeTurn?.id, 'turn-u-stale', 'the log stops mid-turn (a crash, a kill)')
+  const notes = p.settleStaleTurn()
+  assert.equal(p.activeTurn, null)
+  assert.equal(p.turns[0].status, 'interrupted')
+  assert.equal(p.turns[0].items.find((item) => item.id === 'b-stale').status, 'interrupted')
+  assert.equal(notes.filter((note) => note.method === 'turn/completed').length, 1)
+  assert.deepEqual(p.settleStaleTurn(), [], 'nothing open: nothing settled')
+  // A log that ended its turn is left as it is.
+  const done = new ThreadProjector({ threadId: 't-done', cwd: '/w' })
+  done.apply(ev('turn/start', { turn: 1 }))
+  done.apply(ev('user/message', { id: 'u-done', role: 'user', content: [{ type: 'text', text: 'hi' }], source: { kind: 'user' } }))
+  done.apply(ev('turn/end', { turn: 1, reason: { kind: 'completed' } }))
+  assert.deepEqual(done.settleStaleTurn(), [])
+  assert.equal(done.turns[0].status, 'completed')
+})

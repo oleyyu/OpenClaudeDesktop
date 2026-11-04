@@ -159,12 +159,21 @@ function hydrate(state, action) {
   // Turn.startedAt/completedAt from thread/read, resume initialTurnsPage and
   // thread/turns/list; live entries for turns absent from this page are kept.
   state = withTurnTimes(state, action.id, action.thread.turns || []);
-  const snapshot = (action.thread.turns || []).flatMap((turn) =>
-    (turn.items || []).map((item) => ({ ...item, ...(item.type === "contextCompaction" ? {status:turn.status} : {}), turnId: turn.id })),
+  // Only the newest turn can still be running, and none on a thread this connection hasn't loaded (notLoaded: an
+  // archived or unloaded session read with thread/read) or that failed (systemError). An older turn, or any on such a
+  // thread, left inProgress by a history cut off mid-turn (the core killed or crashed) is over: shown running, no
+  // turn/completed would ever end it, and its open rows would spin. A snapshot's idle is not taken as proof (it can
+  // trail a turn that has just started); the live thread/status/changed is.
+  const turns = action.thread.turns || [];
+  const newest = turns.at(-1);
+  const snapshotActive = newest?.status === "inProgress" && !UNLOADED_STATUSES.has(action.thread.status?.type) ? newest.id : null;
+  const staleTurn = (turn) => turn?.status === "inProgress" && turn.id !== snapshotActive;
+  const snapshot = turns.flatMap((turn) =>
+    (turn.items || []).map((item) => ({ ...item,
+      ...(item.type === "contextCompaction" ? {status: staleTurn(turn) ? "interrupted" : turn.status} : {}),
+      ...(staleTurn(turn) && ["inProgress", "running"].includes(item.status) ? { status: "interrupted" } : {}),
+      turnId: turn.id })),
   );
-  const snapshotActive = (action.thread.turns || []).find(
-    (turn) => turn.status === "inProgress",
-  )?.id || null;
   const hasBaseline = owns(action, "baselineItems");
   let items = snapshot;
   if (hasBaseline) {
@@ -232,6 +241,8 @@ export function liveOutputTail(text, limit = LIVE_OUTPUT_LIMIT) {
 }
 // ThreadStatus types (Codex ts/v2/ThreadStatus.ts) under which a thread has no turn running.
 const NOT_RUNNING_STATUSES = new Set(["idle", "notLoaded", "systemError"]);
+// …of which these hold for a snapshot too: no turn of this connection runs on the thread.
+const UNLOADED_STATUSES = new Set(["notLoaded", "systemError"]);
 function nextActiveVersion(state, id) {
   return { ...state.activeVersions, [id]: (state.activeVersions?.[id] || 0) + 1 };
 }

@@ -295,3 +295,27 @@ test("a running command's streamed output is kept to a bounded tail; other strea
   assert.equal(liveOutputTail("short"), "short");
 });
 
+test("hydrate shows only the newest turn running, and none on a thread this connection hasn't loaded", () => {
+  const command = (id, status = "inProgress") => ({ type: "commandExecution", id, command: "make", status });
+  const turn = (id, status, items = []) => ({ id, status, items });
+  // An older turn a crash left open is over; its open rows settle. The newest running turn is the active one.
+  let s = reduce(emptyState, { type: "hydrate", id: "a", thread: { id: "a", turns: [turn("old", "inProgress", [command("c-old"), { type: "contextCompaction", id: "k" }]), turn("new", "inProgress", [command("c-new")])] } });
+  assert.equal(s.active.a, "new");
+  assert.deepEqual(s.items.a.map((item) => [item.id, item.status]), [["c-old", "interrupted"], ["k", "interrupted"], ["c-new", "inProgress"]]);
+  // A stale turn under a finished newest one: nothing runs.
+  s = reduce(emptyState, { type: "hydrate", id: "a", thread: { id: "a", turns: [turn("old", "inProgress", [command("c-old")]), turn("new", "completed")] } });
+  assert.equal(s.active.a, null);
+  assert.equal(s.items.a[0].status, "interrupted");
+  // An archived or unloaded session (thread/read: notLoaded) or a failed one runs no turn here.
+  for (const type of ["notLoaded", "systemError"]) {
+    s = reduce(emptyState, { type: "hydrate", id: "a", thread: { id: "a", status: { type }, turns: [turn("t", "inProgress", [command("c")])] } });
+    assert.equal(s.active.a, null, type);
+    assert.equal(s.items.a[0].status, "interrupted", type);
+  }
+  // A loaded thread's running turn stays running (a snapshot's idle can trail a turn that just started).
+  for (const status of [{ type: "active", activeFlags: [] }, { type: "idle" }, undefined]) {
+    s = reduce(emptyState, { type: "hydrate", id: "a", thread: { id: "a", ...(status ? { status } : {}), turns: [turn("t", "inProgress", [command("c")])] } });
+    assert.equal(s.active.a, "t", JSON.stringify(status));
+    assert.equal(s.items.a[0].status, "inProgress");
+  }
+});

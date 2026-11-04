@@ -1542,6 +1542,8 @@ export function apply(ctx, config) {
     const projector = new ThreadProjector({ threadId, cwd: snapshot.session.cwd, toolDefinition: (toolName) => toolDefinition(toolName), inheritedHistory: inheritedHistoryFor(snapshot.session), imagePath })
     for (const event of snapshot.events ?? []) projector.apply(event)
     projector.settleStaleCompaction()
+    // Not loaded here: a turn the log left open (a crash, a kill) runs no more.
+    projector.settleStaleTurn()
     // Not loaded here: no agent of this process owns its jobs, so none still runs for it.
     projector.settleJobs()
     return { projector, header: snapshot.session, live: undefined, events: snapshot.events, inheritedEventCount: snapshot.inheritedEventCount }

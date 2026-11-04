@@ -727,6 +727,19 @@ export class ThreadProjector {
   }
 
   /**
+   * After a cold replay (the session is not loaded in this process, so nothing runs for it): a turn the log left open
+   * (the core was killed or crashed mid-turn) ends as interrupted, its open tools settled, as the Harness's own resume
+   * closes it (dsh-session interruptedTurnClosers). Otherwise a client reading this history shows the turn working, with
+   * no turn/completed ever to come. Synthetic compaction turns are settleStaleCompaction's.
+   * @returns {Array<{method: string, params: object}>}
+   */
+  settleStaleTurn(time = this.updatedAtMs ?? Date.now()) {
+    const turn = this.activeTurn
+    if (!turn || turn.synthetic || turn.dsh == null) return []
+    return this.apply({ type: 'turn/end', data: { turn: turn.dsh, reason: { kind: 'interrupted' } }, time })
+  }
+
+  /**
    * Apply one durable event.
    * @returns {Array<{method: string, params: object}>} Codex notifications implied by the event.
    */
