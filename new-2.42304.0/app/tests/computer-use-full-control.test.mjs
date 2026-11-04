@@ -371,7 +371,7 @@ test('displayPointer hit test: the desktop shell without a Finder grant is app_n
 test('main.cjs (final review): the turn end lets go of the app locks too; the global Esc is let go only for one model Escape at a time', () => {
   const main = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
   // Official finishTurnCleanup → pw.release: the full-screen lock and every app lock.
-  assert.match(main, /computerUseFullControl\.releaseTurn\(e\.params\.threadId\);[\s\S]{0,300}computerUse\.release\(e\.params\.threadId\);/);
+  assert.match(main, /computerUseFullControl\.releaseTurn\(e\.params\.threadId\)\)?;[\s\S]{0,300}computerUse\.release\(e\.params\.threadId\);/);
   // Official HNr / BNr / XNr: per press, at most 500 ms, re-registered from the lock and the count — never around a whole hold.
   assert.match(main, /withOwnEscape: async \(run, \{ releaseAfterMs \} = \{\}\) => \{\n    const release = await computerUseTakeOwnEscape\(\);/);
   assert.match(main, /timer = setTimeout\(release, 500\);/);

@@ -196,8 +196,8 @@ test('a worktree run matches by the folder relative to its own root; a failed an
 test('main.cjs answers covered requests before any observer or window sees them, and records from the card answer', async () => {
   const main = await fs.readFile(new URL('../electron/main.cjs', import.meta.url), 'utf8');
   const once = (needle) => { assert.equal(main.split(needle).length - 1, 1, needle); return main.indexOf(needle); };
-  const receive = once('function receive(e) {\n  e = withAppToolImages(e);\n');
-  const hook = once('  if (routineApprovals?.receive(e, client, respondToApproval)) return;\n');
+  const receive = once('function receive(e) {\n  const original = e;\n  e = observeSafely("app tool images", original, () => withAppToolImages(original)) ?? original;\n');
+  const hook = once('  if (safely("routine approvals", () => routineApprovals?.receive(e, client, respondToApproval))) return;\n');
   assert.ok(hook > receive && hook < main.indexOf('nativeSideChat.observe(e)', receive), 'first thing receive does');
   once('return routineApprovals ? routineApprovals.respond(client, p, respondToApproval) : respondToApproval(client, p);');
   const created = once('routineApprovals = createRoutineApprovals({ routines: localRoutines,');

@@ -1664,12 +1664,12 @@ function receive(e) {
   const original = e;
   e = observeSafely("app tool images", original, () => withAppToolImages(original)) ?? original;
   const safely = (label, run) => observeSafely(label, e, run);
-  safely("turn ends", () => noteTurnEnd(e));
   // R4g-routines RT6: a Code task run's command approval its task's rule covers is answered (accept, this call) before any card.
   if (safely("routine approvals", () => routineApprovals?.receive(e, client, respondToApproval))) return;
   // A side-chat fork's events stay in main: the panel gets its deltas, the sidebar never sees the fork.
   if (safely("side chat", () => nativeSideChat.observe(e))) return;
   if (safely("thread titles", () => nativeThreadTitles.observe(e))) return;
+  safely("turn ends", () => noteTurnEnd(e));
   safely("connection notices", () => {
     if (e.method === "externalAgentConfig/import/completed" && typeof e.params?.importId === "string") {
       // Kept briefly too: the notification can arrive before the import call's own response.
