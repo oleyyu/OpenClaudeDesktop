@@ -132,6 +132,7 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
     if (event.method === 'turn/completed') reviewing.delete(id);
     if (event.method === 'item/started' && p.item?.type === 'enteredReviewMode') {
       const entry = pending.get(id);
+      if (entry?.dispatched && entry.operation === 'review') entry.enteredReview = true;
       if (entry?.dispatched && entry.operation === 'review' && p.turnId) {
         entry.turnId = p.turnId; entry.phase = 'running'; publish(entry);
       }
@@ -142,9 +143,15 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
       if (entry?.dispatched && entry.operation !== 'fork') {
         if (entry.turnId === p.turn.id) completeTurn(entry, p.turn);
         else if (entry.operation === 'review' && !entry.turnId) entry.earlyTerminal = p.turn;
+        // A review whose turn ended before it entered review mode (its prompt blocked, or stopped at the start) can end
+        // under the id of the turn that started for it rather than the one review/start answered (the DeepSeek bridge's
+        // turn-n<N> before it kept the answered id): that turn's end still ends the review task, or the session refuses
+        // every message ("Wait for the current task to finish") until a reconnect.
+        else if (reviewEndedEarly(entry, p.turn)) completeTurn(entry, p.turn);
       }
     }
   }
+  const reviewEndedEarly = (entry, turn) => entry.operation === 'review' && !entry.enteredReview && !!entry.activeTurnId && entry.activeTurnId === turn?.id;
   function completeTurn(entry, turn) {
     // 0.153.4 inline review emits a nested turn/started ID but its outer
     // submission ID on item/turn completion. Keep Stop's active ID intact;
@@ -251,7 +258,7 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
       check();
       if (pending.get(threadId) === entry && result.turn?.id) {
         entry.turnId = result.turn.id;
-        if (entry.earlyTerminal?.id === entry.turnId) completeTurn(entry, entry.earlyTerminal);
+        if (entry.earlyTerminal?.id === entry.turnId || reviewEndedEarly(entry, entry.earlyTerminal)) completeTurn(entry, entry.earlyTerminal);
         else { entry.phase = 'running'; publish(entry); }
       }
       return result;

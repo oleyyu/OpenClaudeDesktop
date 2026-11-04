@@ -78,6 +78,33 @@ test('review target normalization rejects shell option refs, empty, NUL and exce
  await s.controller.run({...s.payload,operation:'review',target:{type:'custom',instructions:'Review'}});assert.equal(s.controller.snapshot().length,0);assert.equal(s.events.at(-1).phase,'completed');assert.doesNotThrow(()=>s.controller.assertAvailable('a'));
  });
 
+// A review whose turn ends before it enters review mode (its prompt blocked by a hook, or stopped before its first
+// step) under the id of the turn that started for it, not the one review/start answered: the task still ends.
+test('a review turn that ends before review mode under its own id still ends the review task',async()=>{
+ const s=setup(method=>method==='review/start'?{turn:{id:'turn-msg'}}:undefined);
+ await s.controller.run({...s.payload,operation:'review',target:{type:'custom',instructions:'Review'}});
+ assert.equal(s.controller.snapshot().length,1);
+ s.controller.observe(event('turn/started','turn-n7'));
+ s.controller.observe(event('turn/completed','turn-n7','interrupted'));
+ assert.equal(s.controller.snapshot().length,0);assert.equal(s.events.at(-1).phase,'failed');assert.equal(s.events.at(-1).error,'Task stopped.');
+ assert.doesNotThrow(()=>s.controller.reserveMessage('a')(),'the session takes messages again');
+});
+test('a review turn that ends before review mode ahead of the review/start answer still ends the task',async()=>{
+ let s;s=setup(method=>{if(method==='review/start'){s.controller.observe(event('turn/started','turn-n7'));s.controller.observe(event('turn/completed','turn-n7','interrupted'));return {turn:{id:'turn-msg'}};}});
+ await s.controller.run({...s.payload,operation:'review',target:{type:'custom',instructions:'Review'}});
+ assert.equal(s.controller.snapshot().length,0);assert.doesNotThrow(()=>s.controller.assertAvailable('a'));
+});
+test('a review in review mode is ended only by its own turn id',async()=>{
+ const s=setup(method=>method==='review/start'?{turn:{id:'outer'}}:undefined);
+ await s.controller.run({...s.payload,operation:'review',target:{type:'custom',instructions:'Review'}});
+ s.controller.observe(event('turn/started','nested'));
+ s.controller.observe({method:'item/started',params:{threadId:'a',turnId:'outer',item:{type:'enteredReviewMode',id:'r'}}});
+ s.controller.observe(event('turn/completed','nested'));
+ assert.equal(s.controller.snapshot().length,1,'the nested id does not end a review in progress');
+ s.controller.observe(event('turn/completed','outer'));
+ assert.equal(s.controller.snapshot().length,0);
+});
+
 // Codex 0.155.1 deprecations honoured by session operations.
 test('paginated sessions never request deprecated full history; legacy keeps the old path',async()=>{
  const paginated=setup();await paginated.controller.run({...paginated.payload,operation:'compact'});

@@ -811,7 +811,12 @@ export function apply(ctx, config) {
     if (!thread) return
     thread.queue.claimed(message)
     // The Harness turn that owns the review prompt (startReview): its end is the review's end.
-    if (thread.review && message?.id === thread.review.messageId) thread.review.dshTurn = turn
+    if (thread.review && message?.id === thread.review.messageId) {
+      thread.review.dshTurn = turn
+      // review/start already answered the review's turn id: the turn keeps it even if the prompt never reaches the log
+      // (a UserPromptSubmit hook blocks it, a Stop before its first step), so the app's review task ends with it.
+      thread.projector.turnIdHints.set(turn, thread.review.turnId)
+    }
   })
   ctx.on('agent/error', ({ agent, turn, error }) => {
     const thread = byAgent(agent)

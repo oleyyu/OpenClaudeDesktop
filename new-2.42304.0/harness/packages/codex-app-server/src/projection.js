@@ -588,6 +588,9 @@ export class ThreadProjector {
   reset() {
     this.turns = []
     this.byDshTurn = new Map()
+    // Harness turn → the Codex id a client was already given for it (review/start answers turn-<prompt id> before the
+    // prompt is logged): a turn whose prompt never reaches the log still ends under that id, not turn-n<N>.
+    this.turnIdHints = new Map()
     // `<turn>.<step>` → the Harness assistant message id, for per-message feedback (dsh-message-feedback targets it).
     this.assistantMessageIds = new Map()
     this.streamingResponse = null
@@ -667,7 +670,8 @@ export class ThreadProjector {
     const turn = this.current
     if (!turn) return null
     if (turn.id) return turn
-    turn.id = fallbackId ?? `turn-n${turn.dsh}`
+    turn.id = fallbackId ?? this.turnIdHints.get(turn.dsh) ?? `turn-n${turn.dsh}`
+    this.turnIdHints.delete(turn.dsh)
     this.turns.push(turn)
     notes.push({ method: 'turn/started', params: { threadId: this.threadId, turn: this.snapshot(turn) } })
     // A notice that opened the turn must not decide its id (a human message

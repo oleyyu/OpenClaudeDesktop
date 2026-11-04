@@ -158,3 +158,24 @@ test('Stop on the running turn still ends it exactly once, through the projectio
     }
   })
 })
+
+test('a review stopped before its prompt reached the log ends under the turn id review/start answered', { timeout: 180000 }, async () => {
+  await withCore(async ({ call, notes, workspace, modelId }) => {
+    const { thread } = await call('thread/start', { cwd: workspace, model: modelId, approvalPolicy: 'on-request', sandbox: 'workspace-write' })
+    const { turn } = await call('turn/start', { threadId: thread.id, input: [{ type: 'text', text: 'hi', text_elements: [] }] })
+    await until(() => completions(notes, 0, turn.id).length, 'the first turn/completed', 90000)
+    const from = notes.length
+    const review = await call('review/start', { threadId: thread.id, target: { type: 'uncommittedChanges' } })
+    await call('turn/interrupt', { threadId: thread.id })
+    const ended = await until(() => notes.slice(from).find((note) => note.method === 'turn/completed'), 'the stopped review turn', 90000)
+    assert.equal(ended.params.turn.id, review.turn.id, 'the app finds its review task by this id')
+    const started = notes.slice(from).find((note) => note.method === 'turn/started')
+    if (started) assert.equal(started.params.turn.id, review.turn.id)
+    // The review is over in the core too: it leaves read-only review mode, and the next review starts.
+    await until(() => notes.slice(from).some((note) => note.method === 'thread/status/changed' && note.params.threadId === thread.id && note.params.status.type === 'idle'), 'idle', 90000)
+    await sleep(200)
+    const again = await call('review/start', { threadId: thread.id, target: { type: 'uncommittedChanges' } })
+    assert.equal(again.reviewThreadId, thread.id)
+  })
+})
+
