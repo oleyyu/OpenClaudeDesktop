@@ -1684,7 +1684,7 @@ function receive(e) {
   });
   safely("session operations", () => sessionOperations.observe(e));
   safely("side sessions", () => btwSessions.observe(e));
-  safely("artifact index", () => { if (e.method === 'item/completed' && artifactIndex?.recordArtifactItem(config, e.params?.threadId, e.params?.item)) save(); });
+  safely("artifact index", () => { if (e.method === 'item/completed' && artifactIndex?.recordArtifactItem(config, e.params?.threadId, e.params?.item)) saveSoon(); });
   safely("live work", () => liveWork.observe(e));
   safely("computer use", () => computerUseInUse.observe(e));
   safely("computer use turns", () => computerUseObserveTurns(e));
@@ -1737,7 +1737,7 @@ function receive(e) {
   safely("desktop settings", () => desktopSettings?.observe(e));
   const p = e.params || {};
   const id = p.threadId;
-  safely("activity", () => { if (recordActivity(config, e)) save(); });
+  safely("activity", () => { if (recordActivity(config, e)) saveSoon(); });
   // B29: a session whose turn failed is 'Needs input' on Home until acknowledged (session-attention.cjs).
   if (typeof id === "string" && config.threadIds.includes(id)) safely("session attention", () => {
     const marked = sessionErrorPatch(config.sessionMetadata[id], e);
@@ -1789,7 +1789,27 @@ function pushCodeStats() {
   const pending = statsRead ? statsRead.catch(() => {}) : Promise.resolve();
   pending.then(readCodeStats).then((stats) => emit({ kind: "stats", stats }), () => {});
 }
+// The event stream's writes of preferences.json (a message's activity, its token usage, an artifact), coalesced: each
+// save() writes the whole file synchronously on the main process, and a busy turn reported usage and messages several
+// times a second, holding up every window's IPC as the file grew. A direct save() writes everything, a pending one
+// included; quitting writes what is pending (flushSave).
+const SAVE_SOON_MS = 1000;
+let pendingSave = null;
+function saveSoon() {
+  if (pendingSave) return;
+  pendingSave = setTimeout(() => {
+    pendingSave = null;
+    try { save(); } catch (error) { console.warn("[preferences] save failed:", error?.message ?? error); }
+  }, SAVE_SOON_MS);
+}
+function flushSave() {
+  if (!pendingSave) return;
+  clearTimeout(pendingSave);
+  pendingSave = null;
+  save();
+}
 function save() {
+  if (pendingSave) { clearTimeout(pendingSave); pendingSave = null; }
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.writeFileSync(configPath + ".tmp", JSON.stringify(config, null, 2));
   fs.renameSync(configPath + ".tmp", configPath);
@@ -4654,7 +4674,8 @@ installShutdownHandler(app, {
     }
     return quitGuard.handle(event);
   },
-  onStart: () => { quitting = true; try { savePopoutsForRelaunch(); } catch (error) { console.warn("Pane windows:", error?.message ?? error); } },
+  onStart: () => { quitting = true; try { savePopoutsForRelaunch(); } catch (error) { console.warn("Pane windows:", error?.message ?? error); }
+    try { flushSave(); } catch (error) { console.warn("[preferences] save failed:", error?.message ?? error); } },
   stop: async () => {
     customCommands.dispose();
     computerUseGlow?.dispose();
@@ -4674,8 +4695,12 @@ installShutdownHandler(app, {
     await Promise.all([stopAllCodexClients(), coworkSessions?.stop(), fileSearch.dispose(), workflowService?.dispose()]);
     agentTools.stop();
     await Promise.all([terminalsStopped, previewsStopped]);
+    // What the cores reported while they stopped.
+    try { flushSave(); } catch (error) { console.warn("[preferences] save failed:", error?.message ?? error); }
   },
 });
+// A quit that skipped the shutdown above (its deadline passed) still writes what is pending.
+app.on("will-quit", () => { try { flushSave(); } catch (error) { console.warn("[preferences] save failed:", error?.message ?? error); } });
 // index.chunk-ChZ67Jhw.js: window-all-closed does nothing (the app keeps
 // running; the main window only hides), and "activate" (a Dock click) restores
 // a minimized main window when nothing is visible, shows a hidden one, or

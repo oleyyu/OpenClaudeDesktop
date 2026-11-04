@@ -28,6 +28,8 @@ function readableLedger(ledger) {
   return !!ledger && typeof ledger === "object" && !Array.isArray(ledger)
     && !!ledger.days && typeof ledger.days === "object" && !Array.isArray(ledger.days);
 }
+// How many of a session's message ids the ledger keeps to skip an item/completed it already counted.
+const STATS_IDS_LIMIT = 1000;
 function recordActivity(config, event, now = new Date()) {
   const p = event.params || {};
   if (!p.threadId || !config.threadIds.includes(p.threadId)) return false;
@@ -43,6 +45,9 @@ function recordActivity(config, event, now = new Date()) {
     // Threads that already carried recorded messages are never re-counted.
     const firstObserved = p.item.type === "userMessage" && stats.ids.length === 0 && !stats.sessionDay;
     stats.ids.push(p.item.id);
+    // Only the recent ids de-duplicate (a core re-sends a message's item/completed around a resume, not a session's
+    // whole past): the list lives in preferences.json, written whole on every message.
+    if (stats.ids.length > STATS_IDS_LIMIT) stats.ids.splice(0, stats.ids.length - STATS_IDS_LIMIT);
     stats.messages++;
     const entry = day();
     entry.messages++;

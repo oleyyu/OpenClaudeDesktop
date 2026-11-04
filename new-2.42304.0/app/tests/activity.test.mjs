@@ -183,3 +183,15 @@ test("keptCodeStats: only the producing core's kept result paints first", () => 
   assert.equal(keptCodeStats(undefined, bridge, undefined), null);
   assert.equal(keptCodeStats({ codeStats: stats }, null, undefined), null);
 });
+
+test("a session's de-dup ids stay bounded; recent repeats still count once", () => {
+  const config = { threadIds: ["t"], stats: {} };
+  const now = new Date(2026, 8, 20, 4);
+  const message = (id) => ({ method: "item/completed", params: { threadId: "t", item: { id, type: id.startsWith("u") ? "userMessage" : "agentMessage" } } });
+  for (let i = 0; i < 1500; i++) recordActivity(config, message(`a${i}`), now);
+  assert.equal(config.stats.t.messages, 1500);
+  assert.equal(config.stats.t.ids.length, 1000, "only the recent ids are kept in preferences.json");
+  assert.equal(config.stats.t.ids.at(-1), "a1499");
+  assert.equal(recordActivity(config, message("a1499"), now), false, "a recent repeat is skipped");
+  assert.equal(config.stats.t.messages, 1500);
+});
