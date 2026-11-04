@@ -3,6 +3,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   commandCopyText,
+  transcriptOutput,
+  TRANSCRIPT_OUTPUT_LIMIT,
   commandOutput,
   commandRowLabel,
   commandRowState,
@@ -143,3 +145,14 @@ test("DeepSeek stopped and denied calls read as Stopped and Denied, never failed
   assert.equal(commandRowState(denied), "denied");
   assert.deepEqual(commandOutput(denied, "denied"), { text: "", isError: false });
 });
+
+test("transcriptOutput draws the tail of a long output from a line start, under the Tasks pane's notice", () => {
+  assert.equal(transcriptOutput("short"), "short");
+  const line = "x".repeat(99) + "\n";
+  const long = "first line\n" + line.repeat(Math.ceil(TRANSCRIPT_OUTPUT_LIMIT / line.length) + 5);
+  const shown = transcriptOutput(long);
+  assert.ok(shown.startsWith("(Earlier output not shown)\n" + "x"), shown.slice(0, 40));
+  assert.ok(shown.length <= TRANSCRIPT_OUTPUT_LIMIT + 40);
+  assert.ok(long.endsWith(shown.slice(shown.indexOf("\n") + 1)), "the shown text is the output's own tail");
+});
+

@@ -39,7 +39,7 @@ import {mergeWorkflow} from "./workflow-progress-model.mjs";
 import {parseWorkflowLaunch} from "./workflow-launch-model.mjs";
 import {isModelWorkflow,modelWorkflowRuns,withModelWorkflowRows,workflowTask,workflowKey} from "./model-workflow-model.mjs";
 import {SourceBackgroundTasks,taskRowsStore} from "./source-background-tasks.jsx";
-import {backgroundTasks,taskSections} from "./background-tasks-model.mjs";
+import {backgroundTasks,taskSections,backgroundPollDelay} from "./background-tasks-model.mjs";
 import { SourceTasksPane } from "./source-agent.jsx";
 import { agentView, subAgentMessageError } from "./agent-model.mjs";
 import { ADD_TO_PROMPT_EVENT, promptAdditions, serializeLineComment } from "./inline-comments.mjs";
@@ -1250,7 +1250,7 @@ function App({ side = 0, initialSession = null }) {
   const tasks=[...backgroundTasks(state,current,{connected:!!boot?.connected}),...[...workflows,...modelWorkflowRuns(items,current)].map(workflowTask)];
   useEffect(()=>{if(!current)return;let alive=true;call('workflow-list',{threadId:current}).then(rows=>{if(alive)setWorkflowRuns(old=>rows.reduce(mergeWorkflow,old));}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[current]);
   const openWorkflow=id=>{changeTileView({taskViews:[]});setTaskFocus('workflow:'+id);openPaneTile('tasks');};
-  useEffect(()=>{if(!current||!boot?.connected)return;let live=true,timer;const id=current,connectionId=state.approvalConnectionId;const poll=async()=>{const requestId=Symbol('background-read');dispatch({type:'backgroundReadStarted',id,connectionId,requestId});try{const snapshot=await call('background-read',{threadId:id});if(live)dispatch({type:'backgroundSnapshot',id,connectionId,requestId,snapshot});}catch(e){if(live)dispatch({type:'backgroundSnapshot',id,connectionId,requestId,snapshot:{errors:[e.message],terminals:[]}});}finally{if(live)timer=setTimeout(poll,2000);}};poll();return()=>{live=false;clearTimeout(timer);};},[current,boot?.connected,state.approvalConnectionId]);
+  useEffect(()=>{if(!current||!boot?.connected)return;let live=true,timer;const id=current,connectionId=state.approvalConnectionId;const poll=async()=>{const requestId=Symbol('background-read');dispatch({type:'backgroundReadStarted',id,connectionId,requestId});try{const snapshot=await call('background-read',{threadId:id});if(live)dispatch({type:'backgroundSnapshot',id,connectionId,requestId,snapshot});}catch(e){if(live)dispatch({type:'backgroundSnapshot',id,connectionId,requestId,snapshot:{errors:[e.message],terminals:[]}});}finally{if(live)timer=setTimeout(poll,backgroundPollDelay(latestState.current,id));}};poll();return()=>{live=false;clearTimeout(timer);};},[current,boot?.connected,state.approvalConnectionId,!!(current&&state.active[current])]);
   const openBackgroundTask=itemId=>{changeTileView({taskViews:[]});setTaskFocus('bash:'+itemId);openPaneTile('tasks');};
   // A task-event row (source-task-event.jsx, L2): the Background tasks pane, on the run its <task-id> names when listed.
   const openTaskEvent=event=>{const task=event?.taskKey?tasks.find(entry=>entry.id===event.taskKey):event?.taskId?tasks.find(entry=>entry.kind==='workflow'&&entry.run?.taskId===event.taskId):null;changeTileView({taskViews:[]});if(task)setTaskFocus(task.id);openPaneTile('tasks');};

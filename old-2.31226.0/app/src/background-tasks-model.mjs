@@ -3,6 +3,20 @@ import {connectionInterrupted} from "./item-observation.mjs";
 import {agentTargets,agentView} from './agent-model.mjs';
 import {commandRowState} from './command-row-model.mjs';
 import {commandText} from './shell-command-model.mjs';
+/**
+ * How soon the open session's background inventory (main.jsx background-read) is read again: every 2 s while anything
+ * of it runs (its turn or a sub-agent's, a background command, a child agent), else every 10 s. Each read is two
+ * reducer actions, each re-rendering the whole window: an idle session with a long transcript need not pay that every
+ * 2 s. A turn starting or ending in the session reads again at once (the poll's effect keys on it).
+ */
+export const BACKGROUND_POLL_MS=2000,BACKGROUND_IDLE_POLL_MS=10000;
+export function backgroundPollDelay(state,sessionId){
+ const owner=(id)=>{const seen=new Set();while(id&&state?.threadParents?.[id]&&!seen.has(id)){seen.add(id);id=state.threadParents[id];}return id;};
+ if(Object.entries(state?.active||{}).some(([id,turn])=>turn&&owner(id)===sessionId))return BACKGROUND_POLL_MS;
+ if(Object.keys(state?.backgroundStarts?.[sessionId]||{}).length)return BACKGROUND_POLL_MS;
+ try{if(backgroundTasks(state,sessionId).some(task=>task.status==='running'))return BACKGROUND_POLL_MS;}catch{return BACKGROUND_POLL_MS;}
+ return BACKGROUND_IDLE_POLL_MS;
+}
 export function backgroundTasks(state,sessionId,{connected=true}={}) {
  const items=state.items?.[sessionId]||[],snapshot=state.background?.[sessionId]?.connectionId===state.approvalConnectionId?state.background?.[sessionId]:undefined,terminals=snapshot?.terminals||[],tasks=[];
  const spawns=items.filter(item=>item.type==='collabAgentToolCall'&&item.tool==='spawnAgent');

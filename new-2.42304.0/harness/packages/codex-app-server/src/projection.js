@@ -546,6 +546,20 @@ export function isActivity(event) {
   }
 }
 
+/**
+ * A background job's output as its item keeps it: past JOB_OUTPUT_LIMIT characters only the last three quarters, from
+ * a line start. A dev server or a watcher left running streams for hours; the whole item is sent again when the job
+ * ends, on thread/resume and on every thread/turns/list page, each a synchronous JSON.stringify here and a parse and an
+ * IPC copy in the app. The live deltas still carry every byte.
+ */
+export const JOB_OUTPUT_LIMIT = 1000000
+export function jobOutputTail(text, limit = JOB_OUTPUT_LIMIT) {
+  if (typeof text !== 'string' || text.length <= limit) return text
+  const tail = text.slice(-Math.floor(limit * 0.75))
+  const newline = tail.indexOf('\n')
+  return newline >= 0 && newline < tail.length - 1 ? tail.slice(newline + 1) : tail
+}
+
 export class ThreadProjector {
   /**
    * `inheritedHistory: 'hide'` drops a fork child's seeded parent history at
@@ -1185,7 +1199,7 @@ export class ThreadProjector {
       delta = text.slice(current.length)
     }
     if (!delta) return []
-    this.replaceItem(entry.turn, { ...item, aggregatedOutput: current + delta })
+    this.replaceItem(entry.turn, { ...item, aggregatedOutput: jobOutputTail(current + delta) })
     return entry.turn.id ? [{ method: 'item/commandExecution/outputDelta', params: { threadId: this.threadId, turnId: entry.turn.id, itemId: item.id, delta } }] : []
   }
 
@@ -1214,7 +1228,7 @@ export class ThreadProjector {
       const entry = this.jobs.get(jobId)
       const output = jobReadOutput(text)
       const item = this.jobItem(jobId)
-      if (!entry.liveFed && output && item) this.replaceItem(entry.turn, { ...item, aggregatedOutput: `${item.aggregatedOutput ?? ''}${item.aggregatedOutput && !item.aggregatedOutput.endsWith('\n') ? '\n' : ''}${output}` })
+      if (!entry.liveFed && output && item) this.replaceItem(entry.turn, { ...item, aggregatedOutput: jobOutputTail(`${item.aggregatedOutput ?? ''}${item.aggregatedOutput && !item.aggregatedOutput.endsWith('\n') ? '\n' : ''}${output}`) })
       const status = jobStatusOf(text)
       if (status && status.status !== 'running' && status.status !== 'stopping') this.settleJob(notes, jobId, status, time)
     } else if (call.name === 'job_kill') {

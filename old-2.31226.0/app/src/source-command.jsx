@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons.jsx";
 import { createClipboardFeedback } from "./clipboard-feedback.mjs";
 import { useSettledHighlight } from "./use-settled-highlight.mjs";
@@ -9,6 +9,7 @@ import {
   commandOutput,
   elapsedSuffix,
   RUNNING_VERB,
+  transcriptOutput,
 } from "./command-row-model.mjs";
 import { displayCommand } from "./shell-command-model.mjs";
 import "./source-command.css";
@@ -132,6 +133,8 @@ export function SourceCommandLine({ command: source, scopeKey, action, prompt = 
 }
 
 export function CommandOutput({ text, isError }) {
+  // Only the tail of a very long output is drawn (transcriptOutput); the ANSI runs are parsed once per text.
+  const shown = useMemo(() => transcriptOutput(text), [text]);
   return (
     <div
       role="group"
@@ -140,7 +143,7 @@ export function CommandOutput({ text, isError }) {
       className="src-cmd-output"
       data-error={isError ? "" : undefined}
     >
-      <SourceAnsiText text={text}/>
+      <SourceAnsiText text={shown}/>
     </div>
   );
 }
@@ -210,9 +213,11 @@ export function SourceCommandBody({ item, state, scopeKey, inCard = false }) {
   const running = state === "busy";
   // Uoe :6878-6879: the copy text starts with the same prompt glyph as the line.
   const shell = shellPresentation(item.shell);
-  const copyText = command && shell.prompt !== "$"
+  // Built when Copy is pressed (CommandCopyButton takes a function): a running command's output changes on every
+  // delta, and stripping a long output's ANSI on each render of the transcript is not free.
+  const copyText = useCallback(() => command && shell.prompt !== "$"
     ? commandCopyText(command, output.text).replace(/^\$ /, `${shell.prompt} `)
-    : commandCopyText(command, output.text);
+    : commandCopyText(command, output.text), [command, output.text, shell.prompt]);
   const lineAction = command ? (
     running ? null : <CommandCopyButton text={copyText} compact={true} />
   ) : null;

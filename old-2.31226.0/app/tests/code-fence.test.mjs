@@ -92,6 +92,18 @@ function feedback(writeText) {
   return { api, states, timers };
 }
 
+test("copy builds a function's text only when pressed (a running command's copy text)", async () => {
+  const payloads = [];
+  let built = 0;
+  const f = feedback((text) => { payloads.push(text); return Promise.resolve(); });
+  f.api.setText(() => { built += 1; return "$ make\n\nok"; });
+  assert.equal(built, 0, "nothing is built until Copy");
+  assert.equal(await f.api.copy(), true);
+  assert.deepEqual(payloads, ["$ make\n\nok"]);
+  assert.equal(built, 1);
+  f.api.dispose();
+});
+
 test("copy sends complete text and confirms only after a real write, resetting after 1200ms", async () => {
   const pending = deferred(), payloads = [];
   const f = feedback((text) => { payloads.push(text); return pending.promise; });

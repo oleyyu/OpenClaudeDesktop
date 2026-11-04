@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { emptyState, reduce, ownerThreadId, isChildThread, childThreadIds, isSubAgentThread, hasPendingApproval, hasLiveWork, isItemStreaming } from "../src/state.js";
+import { emptyState, reduce, ownerThreadId, isChildThread, childThreadIds, isSubAgentThread, hasPendingApproval, hasLiveWork, isItemStreaming, LIVE_OUTPUT_LIMIT, liveOutputTail } from "../src/state.js";
 import { reasoningText } from "../src/transcript-item-visibility.mjs";
 
 const event = (method, params) => ({ event: { method, params } });
@@ -277,5 +277,21 @@ test("hasLiveWork: a finished turn's explicit null active entry is not a running
   assert.deepEqual(s.active, { a: null });
   assert.equal(hasLiveWork(s), false, "switching cores after a finished turn needs no 'a response is running' confirmation");
   assert.equal(hasLiveWork({ ...s, approvals: [{ id: 1, method: "item/commandExecution/requestApproval", params: { threadId: "a" } }] }), true);
+});
+
+test("a running command's streamed output is kept to a bounded tail; other streams are untouched", () => {
+  const line = "y".repeat(79) + "\n";
+  const chunk = line.repeat(Math.ceil(LIVE_OUTPUT_LIMIT / line.length / 4));
+  let s = reduce(emptyState, event("item/started", { threadId: "a", turnId: "t", item: { type: "commandExecution", id: "c", command: "tail -f log", status: "inProgress" } }));
+  for (let i = 0; i < 6; i++) s = reduce(s, event("item/commandExecution/outputDelta", { threadId: "a", turnId: "t", itemId: "c", delta: chunk }));
+  const kept = s.items.a[0].aggregatedOutput;
+  assert.ok(kept.length <= LIVE_OUTPUT_LIMIT && kept.length >= LIVE_OUTPUT_LIMIT / 2, `kept ${kept.length}`);
+  assert.ok(kept.startsWith("y") && kept.endsWith(line));
+  // The core's completed item still decides the final text.
+  s = reduce(s, event("item/completed", { threadId: "a", turnId: "t", item: { type: "commandExecution", id: "c", command: "tail -f log", status: "completed", aggregatedOutput: "done\n" } }));
+  assert.equal(s.items.a[0].aggregatedOutput, "done\n");
+  let m = reduce(emptyState, event("item/agentMessage/delta", { threadId: "a", turnId: "t", itemId: "m", delta: chunk.repeat(5) }));
+  assert.equal(m.items.a[0].text.length, chunk.length * 5, "an answer is never cut");
+  assert.equal(liveOutputTail("short"), "short");
 });
 

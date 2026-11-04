@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { SourceMenu } from './source-menu.jsx';
 import { CommandCopyButton, CommandOutput } from './source-command.jsx';
 import { useSettledHighlight } from './use-settled-highlight.mjs';
@@ -122,10 +122,12 @@ const factText = value => typeof value === 'string' ? value : JSON.stringify(val
 function DetailsBody({ item, action, state }) {
   const facts = fileActionFacts(item, action);
   const output = commandOutput(item, state), input = facts.map(([key, value]) => `${key}: ${factText(value)}`).join('\n');
+  // Built when Copy is pressed (CommandCopyButton takes a function), not on every render of the transcript.
+  const copyText = useCallback(() => [input, stripAnsi(output.text)].filter(Boolean).join('\n\n'), [input, output.text]);
   return <div className="sft-details"><div role="group" aria-label={t("Tool call details")} tabIndex={0}>
     {facts.map(([key, value]) => <div key={key}><span className="sft-key">{key}:</span>{' '}<span className={CODE_KEYS.has(key) || typeof value !== 'string' ? 'sft-command' : undefined}>{factText(value)}</span></div>)}
     {output.text && <CommandOutput text={output.text} isError={output.isError} />}
-    </div><CommandCopyButton text={[input, stripAnsi(output.text)].filter(Boolean).join('\n\n')} />
+    </div><CommandCopyButton text={copyText} />
   </div>;
 }
 export function FileToolMessage({ item, Step, pendingApprovalItemIds, defaultOpen, forcedOpen, inCard = false, after = null, ...props }) {

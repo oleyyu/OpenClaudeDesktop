@@ -19,7 +19,9 @@ export function createClipboardFeedback({ writeText, onState, schedule = setTime
       if (!active) return false;
       const revision = version;
       const id = ++request;
-      const payload = text;
+      // A function is the text built on demand: a running command's copy text changes with every output delta, so it
+      // is assembled (and its ANSI stripped) only when Copy is pressed.
+      const payload = typeof text === "function" ? text() : text;
       const current = () => active && revision === version && id === request;
       clear();
       publish("pending");

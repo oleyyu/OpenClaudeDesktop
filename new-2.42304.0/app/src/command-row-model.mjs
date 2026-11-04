@@ -118,6 +118,19 @@ export function commandOutput(item = {}, state = "done") {
   return { text: streamed, isError: state === "failed" };
 }
 
+/**
+ * The output a transcript row draws: its last TRANSCRIPT_OUTPUT_LIMIT characters, from a line start, under the Tasks
+ * pane's "(Earlier output not shown)" (background-tasks-model taskOutput). A build or a watcher can stream megabytes,
+ * and the row draws its whole output again (ANSI runs included) on each change: past this size that holds the window
+ * up while the core keeps working. Copy still takes the whole output.
+ */
+export const TRANSCRIPT_OUTPUT_LIMIT = 50000;
+export function transcriptOutput(text, limit = TRANSCRIPT_OUTPUT_LIMIT) {
+  if (typeof text !== "string" || text.length <= limit) return text;
+  const tail = text.slice(-limit), newline = tail.indexOf("\n");
+  return `${t("(Earlier output not shown)")}\n${newline >= 0 && newline < tail.length - 1 ? tail.slice(newline + 1) : tail}`;
+}
+
 /** DO :6364 - the prompt line, a blank line, then the output without ANSI. */
 export function commandCopyText(command, output) {
   const prompt = command ? `$ ${command}` : "";

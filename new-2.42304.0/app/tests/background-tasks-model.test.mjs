@@ -1,6 +1,6 @@
 import {fileRunState} from "../src/file-tool-model.mjs";
 import test from 'node:test';import assert from 'node:assert/strict';
-import {backgroundTasks,taskSections,taskOutput,dismissedTasks,earlierOutputCut,createDismissedTasksStore,DISMISSED_TASKS_KEY,stopsInDuration,stopsInLabel,monitorTasks} from '../src/background-tasks-model.mjs';
+import {backgroundTasks,taskSections,taskOutput,dismissedTasks,earlierOutputCut,createDismissedTasksStore,DISMISSED_TASKS_KEY,stopsInDuration,stopsInLabel,monitorTasks,backgroundPollDelay,BACKGROUND_POLL_MS,BACKGROUND_IDLE_POLL_MS} from '../src/background-tasks-model.mjs';
 import {reduce,emptyState} from '../src/state.js';import background from '../electron/background-tasks.cjs';
 const terminal={itemId:'cmd',processId:'42',command:'sleep 30',cwd:'/tmp'};
 const state=(item)=>({...emptyState,approvalConnectionId:'c',items:{parent:item?[item]:[]},background:{parent:{connectionId:'c',terminals:[terminal],knownTerminals:{cmd:terminal}}}});
@@ -187,3 +187,14 @@ test('a completed sub-agent transcript ends with tool calls, tokens and duration
  assert.equal(agentConclusionStats({...s,taskTurnFacts:{}},{id:'child',status:'completed',toolCallCount:3}),null,'unknown duration');
  assert.equal(agentConclusionStats({...s,items:{}},{id:'child',status:'completed',toolCallCount:0}),null,'transcript not loaded');
 });
+
+test('the background inventory is read every 2 s while the session has something running, else every 10 s',()=>{
+ const idle={...emptyState,approvalConnectionId:'c'};
+ assert.equal(backgroundPollDelay(idle,'parent'),BACKGROUND_IDLE_POLL_MS);
+ assert.equal(backgroundPollDelay({...idle,active:{parent:'t1'}},'parent'),BACKGROUND_POLL_MS,'its own turn');
+ assert.equal(backgroundPollDelay({...idle,active:{parent:null,child:'t2'},threadParents:{child:'parent'}},'parent'),BACKGROUND_POLL_MS,'a sub-agent turn');
+ assert.equal(backgroundPollDelay({...idle,active:{other:'t3'}},'parent'),BACKGROUND_IDLE_POLL_MS,'another session');
+ assert.equal(backgroundPollDelay({...idle,backgroundStarts:{parent:{cmd:{processId:'42',connectionId:'c'}}}},'parent'),BACKGROUND_POLL_MS,'a live background start');
+ assert.equal(backgroundPollDelay(state(),'parent'),BACKGROUND_POLL_MS,'a running background command');
+});
+

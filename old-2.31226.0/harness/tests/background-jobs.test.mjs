@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { ThreadProjector } from '../packages/codex-app-server/src/projection.js'
+import { JOB_OUTPUT_LIMIT, ThreadProjector, jobOutputTail } from '../packages/codex-app-server/src/projection.js'
 import { backgroundJobOf, backgroundTerminal, chunkText, jobReadOutput, jobStatusOf, killJobOf, noticeJobOf, pageOf, settledAgentJobItem, settledJobItem, subagentJobOf } from '../packages/codex-app-server/src/jobs.js'
 
 let seq = -1
@@ -277,3 +277,20 @@ test('settledAgentJobItem keeps a child outcome another record already gave', ()
   assert.deepEqual(settledAgentJobItem(item, { status: 'completed' }, 'out').agentsStates, { c: { status: 'errored', message: 'out' } })
   assert.deepEqual(settledAgentJobItem({ ...item, receiverThreadIds: [], agentsStates: {} }, { status: 'completed' }).agentsStates, {})
 })
+
+test('a running job keeps a bounded tail of its output; the live deltas still carry every byte', () => {
+  const p = new ThreadProjector({ threadId: 't', cwd: '/w' })
+  backgroundTurn(p, { result: PROMOTED })
+  p.jobOutput('bash-2', 'npm run dev\nready on :3000\n', { replace: true })
+  const line = 'GET / 200 '.repeat(9) + '\n'
+  const chunk = line.repeat(Math.ceil(JOB_OUTPUT_LIMIT / line.length / 4))
+  let sent = 0
+  for (let i = 0; i < 6; i++) sent += p.jobOutput('bash-2', chunk).reduce((size, note) => size + note.params.delta.length, 0)
+  assert.equal(sent, chunk.length * 6, 'every delta reaches the client')
+  const kept = p.jobItem('bash-2').aggregatedOutput
+  assert.ok(kept.length <= JOB_OUTPUT_LIMIT, `kept ${kept.length}`)
+  assert.ok(kept.startsWith('GET /') && kept.endsWith(line), 'the tail starts on a line')
+  assert.equal(jobOutputTail('short'), 'short')
+  assert.equal(jobOutputTail('a\n' + 'b'.repeat(10), 8), 'bbbbbb', 'a cut inside one long line keeps its tail')
+})
+

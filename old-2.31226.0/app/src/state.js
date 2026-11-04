@@ -219,6 +219,16 @@ function settleObservedItem(item, status) {
   return next;
 }
 
+// A running command's streamed output, as kept here: past LIVE_OUTPUT_LIMIT characters only its last three quarters,
+// from a line start. A watcher or a dev server left running streams without end, and every delta copies the string
+// the transcript then reads; the row draws only a tail of it anyway (command-row-model transcriptOutput).
+// item/completed still brings the core's own aggregatedOutput.
+export const LIVE_OUTPUT_LIMIT = 1000000;
+export function liveOutputTail(text, limit = LIVE_OUTPUT_LIMIT) {
+  if (typeof text !== "string" || text.length <= limit) return text;
+  const tail = text.slice(-Math.floor(limit * 0.75)), newline = tail.indexOf("\n");
+  return newline >= 0 && newline < tail.length - 1 ? tail.slice(newline + 1) : tail;
+}
 // ThreadStatus types (Codex ts/v2/ThreadStatus.ts) under which a thread has no turn running.
 const NOT_RUNNING_STATUSES = new Set(["idle", "notLoaded", "systemError"]);
 function nextActiveVersion(state, id) {
@@ -737,7 +747,8 @@ export function reduce(state, action) {
       });
     }
     if (field === "reasoningText") next[at] = withSummarySection(next[at], p.summaryIndex);
-    next[at] = { ...next[at], [field]: (next[at][field] || "") + p.delta };
+    const grown = (next[at][field] || "") + p.delta;
+    next[at] = { ...next[at], [field]: field === "aggregatedOutput" ? liveOutputTail(grown) : grown };
     // Output arrived: a wait on this process (terminalInteraction with empty stdin) is over.
     if (field === "aggregatedOutput" && next[at].terminalWaitingAt) delete next[at].terminalWaitingAt;
     return { ...state, items: { ...state.items, [id]: next },
