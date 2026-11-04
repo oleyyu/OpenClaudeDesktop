@@ -198,3 +198,11 @@ test('the background inventory is read every 2 s while the session has something
  assert.equal(backgroundPollDelay(state(),'parent'),BACKGROUND_POLL_MS,'a running background command');
 });
 
+test('the background inventory lists every sub-agent working for the session, at any depth',async()=>{
+ const owner={connection:{approvalConnectionId:'c',approvalConnectionEpoch:1},approvalSnapshot:()=>({closed:false}),start:async()=>{},request:async(method)=>method==='thread/list'?{data:[{id:'child',parentThreadId:'p'},{id:'grandchild',parentThreadId:'child'},{id:'deep',source:{subAgent:{thread_spawn:{parent_thread_id:'grandchild'}}}},{id:'foreign',parentThreadId:'x'},{id:'loop-a',parentThreadId:'loop-b'},{id:'loop-b',parentThreadId:'loop-a'}],nextCursor:null}:{data:[],nextCursor:null}};
+ const operations=background.createBackgroundTasks({getClient:()=>owner,getConfig:()=>({threadIds:['p']})});
+ const snapshot=await operations.read({threadId:'p'});
+ assert.deepEqual(snapshot.children.map(t=>t.id),['child','grandchild','deep']);
+ let s={...emptyState,approvalConnectionId:'c'};s=reduce(s,{type:'backgroundSnapshot',id:'p',connectionId:'c',snapshot});
+ assert.equal(s.threadParents.deep,'grandchild');assert.equal(s.threadParents.grandchild,'child');
+});

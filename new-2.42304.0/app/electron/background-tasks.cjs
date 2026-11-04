@@ -1,6 +1,9 @@
 const {connectionMatches}=require('./session-operations.cjs');
 const {coreError}=require('./codex.cjs');
 const parentId=thread=>thread?.parentThreadId||thread?.source?.subAgent?.thread_spawn?.parent_thread_id;
+// Every sub-agent working for the session, at any depth (a sub-agent can spawn its own), not just its direct children:
+// the renderer links each to its parent (state.js startThread), so a grandchild's approval card finds the session too.
+function descendants(threads,rootId){const parents=new Map(threads.map(t=>[t?.id,parentId(t)]));const owned=id=>{const seen=new Set();for(let at=parents.get(id);at&&!seen.has(at);at=parents.get(at)){if(at===rootId)return true;seen.add(at);}return false;};return threads.filter(t=>t&&typeof t.id==='string'&&owned(t.id));}
 // modelProviders: [] lists Codex children recorded under any provider (OpenAI or a saved custom endpoint); bridges ignore it.
 function createBackgroundTasks({getClient,getConfig}){
  const known=new Map(),reads=new Map();
@@ -8,7 +11,7 @@ function createBackgroundTasks({getClient,getConfig}){
   for(const [key,method,params] of [['children','thread/list',{sourceKinds:['subAgentThreadSpawn'],limit:100,modelProviders:[]}],['terminals','thread/backgroundTerminals/list',{threadId,limit:100}]]){
    try{let cursor=null;const seen=new Set();do{const page=await owner.request(method,{...params,...(cursor?{cursor}:{})});if(stale())throw Error('Connection changed.');if(!Array.isArray(page.data))throw Error('Background task list is unavailable.');result[key].push(...page.data);cursor=page.nextCursor;if(cursor&&seen.has(cursor))throw Error('Background task pagination did not advance.');if(cursor)seen.add(cursor);if(seen.size>=100)throw Error('Background task list is incomplete.');}while(cursor);
    }catch(error){result.errors.push(`${key}: ${error.message}`);if(stale())throw error;}}
-  result.children=result.children.filter(t=>parentId(t)===threadId);if(stale())throw Error('Connection changed.');if(reads.get(threadId)===request)known.set(threadId,{owner,connection,terminals:result.terminals});return result;
+  result.children=descendants(result.children,threadId);if(stale())throw Error('Connection changed.');if(reads.get(threadId)===request)known.set(threadId,{owner,connection,terminals:result.terminals});return result;
  }
  function terminate({threadId,processId,expected}){
   const owner=getClient(),connection=owner.connection,snapshot=known.get(threadId);

@@ -89,6 +89,7 @@ import {
   DotsThree,
 } from "./icons";
 import { emptyState, reduce, userText, isItemStreaming, isSubAgentThread, ownerThreadId, hasLiveWork } from "./state";
+import { linkThreadOwner, unknownCardOwners } from "./approval-owner-model.mjs";
 import { loadThreadHistory, historyMissing, historyRoute, readParams as historyReadParams, resumeParams as historyResumeParams } from "./thread-history-model.mjs";
 import { Icon } from "./icons";
 import { ToolButton } from "./code-ui";
@@ -2750,6 +2751,27 @@ function App({ side = 0, initialSession = null }) {
     try { setStatsSnapshot(await call("stats")); }
     catch { setStatsSnapshot(null); }
   }
+  // A sub-agent's card names the sub-agent's own thread, and the session that owns it is found through the parent links
+  // thread/started taught this window. A window that mounted after the spawn (a reload, a new window, the other split
+  // side) never saw it, and the background inventory reads only the open session: such a card showed nowhere while the
+  // core waited on it. The thread's own record names its parent: read it, and up the chain, once per unknown owner.
+  const ownerReads = useRef({ pending: new Set(), settled: new Set() });
+  useEffect(() => {
+    const known = new Set(sessions.map((thread) => thread.id));
+    for (const owner of unknownCardOwners(state, known)) {
+      if (ownerReads.current.pending.has(owner) || ownerReads.current.settled.has(owner)) continue;
+      ownerReads.current.pending.add(owner);
+      void linkThreadOwner(owner, {
+        read: async (threadId) => (await rpc("thread/read", { threadId, includeTurns: false }))?.thread,
+        isKnown: (threadId) => known.has(threadId),
+        onThread: (thread) => { childThreads.current.add(thread.id); dispatch({ event: { method: "thread/started", params: { thread } } }); },
+      }).then((settled) => {
+        ownerReads.current.pending.delete(owner);
+        // A failed read is tried again with the next change of cards; a chain read to its end is not read again.
+        if (settled) ownerReads.current.settled.add(owner);
+      });
+    }
+  }, [state.approvals, sessions]);
   // Attention rows (official Lk/Pk over local state): pending approval → blocked,
   // unread and not running → unread; pinned/archived/acked/responding skipped.
   const attentionRows = useMemo(() => {
